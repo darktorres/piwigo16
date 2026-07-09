@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Pest\Browser\Api\AwaitableWebpage;
+use Pest\Browser\Api\PendingAwaitablePage;
+use Pest\Browser\Api\Webpage;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
@@ -16,7 +19,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * don't reliably enter — not a meaningful regression net either way.
  */
 /**
- * @return array{0: object, 1: string}
+ * @return array{0: Webpage|PendingAwaitablePage|AwaitableWebpage, 1: string}
  */
 function albumTreePwgToken(object $test): array
 {
@@ -26,7 +29,7 @@ function albumTreePwgToken(object $test): array
     return [$page, $token];
 }
 
-function gotoAlbumsTree(object $page): object
+function gotoAlbumsTree(Webpage|PendingAwaitablePage|AwaitableWebpage $page): Webpage|PendingAwaitablePage|AwaitableWebpage
 {
     $page = H::navigateOk($page, '/admin.php?page=albums');
     $page->assertPresent('.tree');

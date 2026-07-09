@@ -39,13 +39,11 @@ SELECT
             if ($_GET['no_photo_yet'] == 'browse') {
                 $_SESSION['no_photo_yet'] = 'browse';
                 redirect(make_index_url());
-                exit();
             }
 
             if ($_GET['no_photo_yet'] == 'deactivate') {
                 conf_update_param('no_photo_yet', 'false');
                 redirect(make_index_url());
-                exit();
             }
         }
 

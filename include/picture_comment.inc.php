@@ -90,6 +90,8 @@ SELECT
     . $validated_clause . '
 ;';
     $row = pwg_db_fetch_assoc(pwg_query($query));
+    // a COUNT(*) query always returns exactly one row
+    assert(is_array($row));
 
     // navigation bar creation
     if (! isset($page['start'])) {

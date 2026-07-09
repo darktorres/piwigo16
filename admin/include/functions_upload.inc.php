@@ -204,7 +204,11 @@ SELECT
 
         // current date
         [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
-        [$year, $month, $day] = preg_split('/[^\d]/', (string) $dbnow, 4);
+        $date_parts = preg_split('/[^\d]/', (string) $dbnow, 4);
+        if ($date_parts === false) {
+            throw new Exception(__FUNCTION__ . '(): preg_split() failed');
+        }
+        [$year, $month, $day] = $date_parts;
 
         // upload directory hierarchy
         $upload_dir = sprintf(
@@ -220,7 +224,16 @@ SELECT
         $filename_wo_ext = $date_string . '-' . $random_string;
         $file_path = $upload_dir . '/' . $filename_wo_ext . '.';
 
-        [$width, $height, $type] = getimagesize($source_filepath);
+        $image_size = getimagesize($source_filepath);
+        if ($image_size === false) {
+            // not a real image (e.g. upload_form_all_types lets through a
+            // non-image file); fall through to the same "unrecognized
+            // type" handling as any other $type that isn't a known
+            // IMAGETYPE_* constant
+            $type = false;
+        } else {
+            [$width, $height, $type] = $image_size;
+        }
 
         if ($type == IMAGETYPE_PNG) {
             $file_path .= 'png';
@@ -234,6 +247,9 @@ SELECT
             $original_extension = strtolower(get_extension($original_filename));
 
             $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            if ($finfo === false) {
+                throw new Exception(__FUNCTION__ . '(): finfo_open() failed');
+            }
             $finfo_type = finfo_file($finfo, $source_filepath);
 
             if (in_array($finfo_type, ['image/svg', 'image/svg+xml']) and $original_extension != 'svg') {
@@ -377,7 +393,7 @@ SELECT
     if ($conf['use_exif'] and ! function_exists('exif_read_data')) {
         $conf['use_exif'] = false;
     }
-    sync_metadata([$image_id]);
+    sync_metadata([(int) $image_id]);
 
     // cache a derivative
     $query = '
@@ -389,6 +405,9 @@ SELECT
   WHERE id = ' . $image_id . '
 ;';
     $image_infos = pwg_db_fetch_assoc(pwg_query($query));
+    if (! is_array($image_infos)) {
+        throw new Exception(__FUNCTION__ . '(): image #' . $image_id . ' not found right after being saved');
+    }
     $src_image = new SrcImage($image_infos);
 
     set_make_full_url();
@@ -428,7 +447,7 @@ function add_uploaded_file_add_to_categories(int|string $image_id, ?array $categ
         if ($conf['lounge_active']) {
             fill_lounge([$image_id], $categories);
         } else {
-            associate_images_to_categories([$image_id], $categories);
+            associate_images_to_categories([(int) $image_id], $categories);
         }
     }
 
@@ -890,7 +909,13 @@ function need_resize(string $image_filepath, int $max_width, int $max_height): b
     // TODO : the resize check should take the orientation into account. If a
     // rotation must be applied to the resized photo, then we should test
     // invert width and height.
-    [$width, $height] = getimagesize($image_filepath);
+    $image_size = getimagesize($image_filepath);
+    if ($image_size === false) {
+        // can't determine dimensions, so we can't tell whether a resize
+        // is needed
+        return false;
+    }
+    [$width, $height] = $image_size;
 
     if ($width > $max_width or $height > $max_height) {
         $logger->info(__FUNCTION__ . ' ' . (string) $image_filepath . ' is too big (current=' . $width . 'x' . $height . 'px Vs max=' . $max_width . 'x' . $max_height . 'px)');
@@ -905,7 +930,13 @@ function need_resize(string $image_filepath, int $max_width, int $max_height): b
  */
 function pwg_image_infos(string $path): array
 {
-    [$width, $height] = getimagesize($path);
+    $image_size = getimagesize($path);
+    if ($image_size === false) {
+        // every caller stores width/height straight into the database;
+        // there is no sane fallback shape to return here
+        throw new Exception(__FUNCTION__ . '(): getimagesize() failed for ' . $path);
+    }
+    [$width, $height] = $image_size;
     $filesize = floor(filesize($path) / 1024);
 
     return [

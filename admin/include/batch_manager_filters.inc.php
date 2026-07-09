@@ -101,6 +101,7 @@ if (isset($page['no_md5sum_number'])) {
 // privacy level
 $level_options = [];
 foreach ($conf['available_permission_levels'] as $level) {
+    $level = (int) $level;
     $level_options[$level] = l10n(sprintf('Level %d', $level));
 
     if ($level == 0) {

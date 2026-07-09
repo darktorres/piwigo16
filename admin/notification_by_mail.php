@@ -59,7 +59,7 @@ function do_timeout_treatment(string $post_keyname, array $check_key_treated = [
             $post_count = count($_POST[$post_keyname]);
             $treated_count = count($check_key_treated);
             if ($treated_count != 0) {
-                $time_refresh = ceil((get_moment() - $env_nbm['start_time']) * $post_count / $treated_count);
+                $time_refresh = (int) ceil((get_moment() - $env_nbm['start_time']) * $post_count / $treated_count);
             } else {
                 $time_refresh = 0;
             }
@@ -628,10 +628,13 @@ switch ($page['mode']) {
         $template->assign($page['mode'], $tpl_var);
 
         if ($conf['auth_key_duration'] > 0) {
+            $auth_key_since = strtotime('now -' . $conf['auth_key_duration'] . ' second');
+            // the relative time expression above is always syntactically valid
+            assert($auth_key_since !== false);
             $template->assign(
                 'auth_key_duration',
                 time_since(
-                    strtotime('now -' . $conf['auth_key_duration'] . ' second'),
+                    $auth_key_since,
                     'second',
                     null,
                     false

@@ -40,14 +40,24 @@ if (isset($_POST['submit'])) {
 
 $query = 'SELECT * FROM ' . IMAGES_TABLE . ' WHERE id=' . $_GET['image_id'];
 $row = pwg_db_fetch_assoc(pwg_query($query));
+if (! is_array($row)) {
+    page_not_found('Requested photo does not exist');
+}
 
 if (isset($_POST['submit'])) {
+    $derivative_infos = [
+        'path' => (string) $row['path'],
+    ];
+    if (! empty($row['representative_ext'])) {
+        $derivative_infos['representative_ext'] = (string) $row['representative_ext'];
+    }
+
     foreach (ImageStdParams::get_defined_type_map() as $params) {
         if ($params->sizing->max_crop != 0) {
-            delete_element_derivatives($row, $params->type);
+            delete_element_derivatives($derivative_infos, $params->type);
         }
     }
-    delete_element_derivatives($row, IMG_CUSTOM);
+    delete_element_derivatives($derivative_infos, IMG_CUSTOM);
     $uid = '&b=' . time();
     $conf['question_mark_in_urls'] = $conf['php_extension_in_urls'] = true;
     if ($conf['derivative_url_style'] == 1) {

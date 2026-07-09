@@ -63,8 +63,8 @@ if (isset($_POST['submit'])) {
         asort($_POST['rank_of_image'], SORT_NUMERIC);
 
         save_images_order(
-            $page['category_id'],
-            array_keys($_POST['rank_of_image'])
+            (int) $page['category_id'],
+            array_map('intval', array_keys($_POST['rank_of_image']))
         );
     }
 
@@ -97,7 +97,10 @@ UPDATE ' . CATEGORIES_TABLE . '
     pwg_query($query);
 
     if (isset($_POST['image_order_subcats'])) {
-        $cat_info = get_cat_info($page['category_id']);
+        $cat_info = get_cat_info((int) $page['category_id']);
+        if (! is_array($cat_info)) {
+            page_not_found('Requested album does not exist');
+        }
 
         $query = '
 UPDATE ' . CATEGORIES_TABLE . '
@@ -130,6 +133,9 @@ SELECT *
   WHERE id = ' . $page['category_id'] . '
 ;';
 $category = pwg_db_fetch_assoc(pwg_query($query));
+if (! is_array($category)) {
+    page_not_found('Requested album does not exist');
+}
 
 if ($category['image_order'] == 'rank ASC' or $category['image_order'] == '`rank` ASC') {
     $image_order_choice = 'rank';

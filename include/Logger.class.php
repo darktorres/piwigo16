@@ -133,7 +133,9 @@ class Logger
                 throw new RuntimeException(self::$_messages['writefail']);
             }
 
-            if (($this->_fileHandle = fopen($this->options['filePath'], 'a')) != false) {
+            $handle = fopen($this->options['filePath'], 'a');
+            if ($handle !== false) {
+                $this->_fileHandle = $handle;
                 $this->_logStatus = self::STATUS_LOG_OPEN;
             } else {
                 $this->_logStatus = self::STATUS_OPEN_FAILED;
@@ -334,6 +336,9 @@ class Logger
     public function purge(): void
     {
         $files = glob($this->options['directory'] . $this->options['globPattern']);
+        if ($files === false) {
+            return;
+        }
         $limit = time() - $this->options['archiveDays'] * 86400;
 
         foreach ($files as $file) {

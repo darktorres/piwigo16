@@ -134,6 +134,9 @@ UPDATE ' . USER_INFOS_TABLE . '
         $target_charset = strtolower((string) $target_charset);
 
         $dir = opendir(PHPWG_ROOT_PATH . 'language');
+        if ($dir === false) {
+            return;
+        }
         while ($file = readdir($dir)) {
             if ($file != '.' and $file != '..') {
                 $path = PHPWG_ROOT_PATH . 'language/' . $file;
@@ -148,11 +151,18 @@ UPDATE ' . USER_INFOS_TABLE . '
                         'uri' => '',
                         'author' => '',
                     ];
-                    $plg_data = implode('', file($path . '/common.lang.php'));
+                    $plg_data_lines = file($path . '/common.lang.php');
+                    if ($plg_data_lines === false) {
+                        continue;
+                    }
+                    $plg_data = implode('', $plg_data_lines);
 
                     if (preg_match('|Language Name:\\s*(.+)|', $plg_data, $val)) {
                         $language['name'] = trim($val[1]);
-                        $language['name'] = convert_charset($language['name'], 'utf-8', $target_charset);
+                        $converted_name = convert_charset($language['name'], 'utf-8', $target_charset);
+                        if ($converted_name !== false) {
+                            $language['name'] = $converted_name;
+                        }
                     }
                     if (preg_match('|Version:\\s*([\\w.-]+)|', $plg_data, $val)) {
                         $language['version'] = trim($val[1]);
@@ -213,7 +223,9 @@ UPDATE ' . USER_INFOS_TABLE . '
         $version = PHPWG_VERSION;
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php';
-        if (fetchRemote($url, $result, $get_data) and $pem_versions = @unserialize($result)) {
+        // $result is never a resource here: no fopen() handle is passed to
+        // fetchRemote() above.
+        if (fetchRemote($url, $result, $get_data) and is_string($result) and $pem_versions = @unserialize($result)) {
             if (! preg_match('/^\d+\.\d+\.\d+$/', $version)) {
                 $version = $pem_versions[0]['name'];
             }
@@ -255,7 +267,9 @@ UPDATE ' . USER_INFOS_TABLE . '
             }
         }
 
-        if (fetchRemote($url, $result, $get_data)) {
+        // $result is never a resource here: no fopen() handle is passed to
+        // fetchRemote() above.
+        if (fetchRemote($url, $result, $get_data) and is_string($result)) {
             $pem_languages = @unserialize($result);
             if (! is_array($pem_languages)) {
                 return false;
@@ -291,7 +305,13 @@ UPDATE ' . USER_INFOS_TABLE . '
             ];
 
             if ($handle = @fopen($archive, 'wb') and fetchRemote($url, $handle, $get_data)) {
-                fclose($handle);
+                // fetchRemote()'s &$dest out-param could in principle reset
+                // to a string, but only when the value passed in wasn't
+                // already a resource — $handle always is here (just opened
+                // above), so it's still a resource after the call.
+                if (is_resource($handle)) {
+                    fclose($handle);
+                }
                 include_once PHPWG_ROOT_PATH . 'admin/include/functions_zip.inc.php';
                 if ($list = zip_list_filenames($archive)) {
                     foreach ($list as $file) {
@@ -338,6 +358,17 @@ UPDATE ' . USER_INFOS_TABLE . '
 
                                     $extract_path_realpath = realpath($extract_path);
 
+                                    // realpath() failing here would mean
+                                    // $extract_path (just populated by the
+                                    // zip_extract() above) doesn't actually
+                                    // exist as a real directory — skip the
+                                    // obsolete-file cleanup rather than risk
+                                    // the traversal check below against a
+                                    // non-canonical path.
+                                    if ($extract_path_realpath === false) {
+                                        $old_files = [];
+                                    }
+
                                     foreach ($old_files as $old_file) {
                                         $old_file = trim($old_file);
                                         $old_file = trim($old_file, '/'); // prevent path starting with a "/"
@@ -382,7 +413,9 @@ UPDATE ' . USER_INFOS_TABLE . '
             $status = 'temp_path_error';
         }
 
-        @unlink($archive);
+        if (is_string($archive)) {
+            @unlink($archive);
+        }
         return $status;
     }
 

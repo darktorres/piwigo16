@@ -91,9 +91,7 @@ function ws_tags_getImages(array $params, PwgServer &$service): array
     $tag_ids = array_keys($tags_by_id);
 
     $where_clauses = ws_std_image_sql_filter($params);
-    if (! empty($where_clauses)) {
-        $where_clauses = implode(' AND ', $where_clauses);
-    }
+    $where_clauses = ! empty($where_clauses) ? implode(' AND ', $where_clauses) : '';
 
     $order_by = ws_std_image_sql_order($params, 'i.');
     if (! empty($order_by)) {
@@ -472,7 +470,7 @@ SELECT DISTINCT(image_id)
   WHERE
     tag_id IN (' . implode(',', $merge_tag) . ')
 ;';
-    $image_in_merge_tags = query2array($query, null, 'image_id');
+    $image_in_merge_tags = array_values(query2array($query, null, 'image_id'));
 
     $query = '
 SELECT image_id
@@ -480,7 +478,7 @@ SELECT image_id
   WHERE tag_id = ' . $params['destination_tag_id'] . '
 ;';
 
-    $image_in_dest = query2array($query, null, 'image_id');
+    $image_in_dest = array_values(query2array($query, null, 'image_id'));
 
     $image_to_add = array_diff($image_in_merge_tags, $image_in_dest);
 

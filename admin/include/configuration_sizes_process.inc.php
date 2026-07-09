@@ -68,6 +68,13 @@ foreach ($pderivatives as $type => &$pderivative) {
 unset($pderivative);
 
 // step 2 - check validity
+//
+// $derivative_errors is kept separate from $errors (a flat field =>
+// message map) because it's a nested type => ['w' => message, ...] map;
+// the two are merged back together below for the 'ferrors' template
+// assignment
+/** @var array<string, array<string, string>> $derivative_errors */
+$derivative_errors = [];
 $prev_w = $prev_h = 0;
 foreach (ImageStdParams::get_all_types() as $type) {
     $pderivative = $pderivatives[$type];
@@ -78,42 +85,42 @@ foreach (ImageStdParams::get_all_types() as $type) {
     if ($type == IMG_THUMB) {
         $w = intval($pderivative['w']);
         if ($w <= 0) {
-            $errors[$type]['w'] = '>0';
+            $derivative_errors[$type]['w'] = '>0';
         }
 
         $h = intval($pderivative['h']);
         if ($h <= 0) {
-            $errors[$type]['h'] = '>0';
+            $derivative_errors[$type]['h'] = '>0';
         }
 
         if (max($w, $h) <= $prev_w) {
-            $errors[$type]['w'] = $errors[$type]['h'] = '>' . $prev_w;
+            $derivative_errors[$type]['w'] = $derivative_errors[$type]['h'] = '>' . $prev_w;
         }
     } else {
         $v = intval($pderivative['w']);
         if ($v <= 0 or $v <= $prev_w) {
-            $errors[$type]['w'] = '>' . $prev_w;
+            $derivative_errors[$type]['w'] = '>' . $prev_w;
         }
 
         $v = intval($pderivative['h']);
         if ($v <= 0 or $v <= $prev_h) {
-            $errors[$type]['h'] = '>' . $prev_h;
+            $derivative_errors[$type]['h'] = '>' . $prev_h;
         }
     }
 
-    if (count($errors) == 0) {
+    if (count($errors) == 0 && count($derivative_errors) == 0) {
         $prev_w = intval($pderivative['w']);
         $prev_h = intval($pderivative['h']);
     }
 
     $v = intval($pderivative['sharpen']);
     if ($v < 0 || $v > 100) {
-        $errors[$type]['sharpen'] = '[0..100]';
+        $derivative_errors[$type]['sharpen'] = '[0..100]';
     }
 }
 
 // step 3 - save data
-if (count($errors) == 0) {
+if (count($errors) == 0 && count($derivative_errors) == 0) {
     $quality_changed = ImageStdParams::$quality != intval($_POST['resize_quality']);
     ImageStdParams::$quality = intval($_POST['resize_quality']);
 
@@ -222,7 +229,7 @@ if (count($errors) == 0) {
     }
 
     $template->assign('derivatives', $pderivatives);
-    $template->assign('ferrors', $errors);
+    $template->assign('ferrors', $errors + $derivative_errors);
     $template->assign('resize_quality', $_POST['resize_quality']);
     $page['sizes_loaded_in_tpl'] = true;
 }

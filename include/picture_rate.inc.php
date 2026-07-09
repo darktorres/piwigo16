@@ -55,6 +55,7 @@ SELECT COUNT(rate) AS count
             $result = pwg_query($query);
             if (pwg_db_num_rows($result) > 0) {
                 $row = pwg_db_fetch_assoc($result);
+                assert(is_array($row));
                 $user_rate = $row['rate'];
             }
         }

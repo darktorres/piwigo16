@@ -252,8 +252,7 @@ INSERT INTO ' . FAVORITES_TABLE . '
 
             redirect($url_self);
 
-            break;
-
+            // no break
         case 'remove_from_favorites':
 
             $query = '
@@ -269,8 +268,7 @@ DELETE FROM ' . FAVORITES_TABLE . '
                 redirect($url_self);
             }
 
-            break;
-
+            // no break
         case 'set_as_representative':
 
             if (is_admin() and isset($page['category'])) {
@@ -291,14 +289,13 @@ UPDATE ' . CATEGORIES_TABLE . '
 
             redirect($url_self);
 
-            break;
-
+            // no break
         case 'add_to_caddie':
 
             fill_caddie([$page['image_id']]);
             redirect($url_self);
-            break;
 
+            // no break
         case 'rate':
 
             include_once PHPWG_ROOT_PATH . 'include/functions_rate.inc.php';
@@ -310,7 +307,11 @@ UPDATE ' . CATEGORIES_TABLE . '
 
             include_once PHPWG_ROOT_PATH . 'include/functions_comment.inc.php';
             check_input_parameter('comment_to_edit', $_GET, false, PATTERN_ID);
+            // false is unreachable here: $die_on_error defaults to true,
+            // and get_comment_author_id() calls fatal_error() (never) in
+            // that case instead of returning
             $author_id = get_comment_author_id($_GET['comment_to_edit']);
+            assert($author_id !== false);
 
             if (can_manage_comment('edit', $author_id)) {
                 if (! empty($_POST['content'])) {
@@ -359,7 +360,9 @@ UPDATE ' . CATEGORIES_TABLE . '
 
             check_input_parameter('comment_to_delete', $_GET, false, PATTERN_ID);
 
+            // false is unreachable here: see the edit_comment case above
             $author_id = get_comment_author_id($_GET['comment_to_delete']);
+            assert($author_id !== false);
 
             if (can_manage_comment('delete', $author_id)) {
                 delete_user_comment($_GET['comment_to_delete']);
@@ -376,7 +379,9 @@ UPDATE ' . CATEGORIES_TABLE . '
 
             check_input_parameter('comment_to_validate', $_GET, false, PATTERN_ID);
 
+            // false is unreachable here: see the edit_comment case above
             $author_id = get_comment_author_id($_GET['comment_to_validate']);
+            assert($author_id !== false);
 
             if (can_manage_comment('validate', $author_id)) {
                 validate_user_comment($_GET['comment_to_validate']);
@@ -494,6 +499,9 @@ while ($row = pwg_db_fetch_assoc($result)) {
         $picture['first'] = $picture[$i];
     }
     if ($i == 'next' and $page['next_item'] == $page['last_item']) {
+        // $picture[$i] (== $picture['next']) was set a few lines above,
+        // this same iteration ($i doesn't change within one iteration)
+        assert(isset($picture[$i]));
         $picture['last'] = $picture[$i];
     }
 }
@@ -521,7 +529,7 @@ if (isset($_GET['slideshow'])) {
             }
         }
 
-        if (! empty($id_pict_redirect)) {
+        if (! empty($id_pict_redirect) and isset($picture[$id_pict_redirect])) {
             // $refresh, $url_link and $title are required for creating
             // an automated refresh page in header.tpl
             $refresh = $slideshow_params['period'];
@@ -544,6 +552,9 @@ if ($page['slideshow'] and $conf['light_slideshow']) {
     ]);
 }
 
+// $page['image_id'] is always in $ids (see the query above) and always
+// hits the while loop's final `else { $i = 'current'; }` branch
+assert(isset($picture['current']));
 $title = $picture['current']['TITLE'];
 $title_nb = ($page['current_rank'] + 1) . '/' . count($page['items']);
 
@@ -765,6 +776,9 @@ SELECT COUNT(*) AS nb_fav
     AND user_id = ' . $user['id'] . '
 ;';
     $row = pwg_db_fetch_assoc(pwg_query($query));
+    if ($row === false || $row === null) {
+        throw new Exception('picture.php: favorite-count aggregate query returned no row');
+    }
     $is_favorite = $row['nb_fav'] != 0;
 
     $template->assign(

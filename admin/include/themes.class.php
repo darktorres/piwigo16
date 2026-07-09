@@ -99,7 +99,11 @@ class themes
             include_once $file_to_include;
 
             if (class_exists($classname)) {
-                return new $classname($theme_id);
+                $maintain = new $classname($theme_id);
+                if (! $maintain instanceof ThemeMaintain) {
+                    throw new \LogicException("build_maintain_class(): {$classname} does not extend ThemeMaintain");
+                }
+                return $maintain;
             }
         }
 
@@ -361,6 +365,9 @@ SELECT
     public function get_fs_themes(): void
     {
         $dir = opendir(PHPWG_THEMES_PATH);
+        if ($dir === false) {
+            return;
+        }
 
         while ($file = readdir($dir)) {
             if ($file != '.' and $file != '..') {
@@ -378,7 +385,11 @@ SELECT
                         'author' => '',
                         'mobile' => false,
                     ];
-                    $theme_data = implode('', file($path . '/themeconf.inc.php'));
+                    $theme_data_lines = file($path . '/themeconf.inc.php');
+                    if ($theme_data_lines === false) {
+                        continue;
+                    }
+                    $theme_data = implode('', $theme_data_lines);
                     if (preg_match('|Theme Name:\\s*(.+)|', $theme_data, $val)) {
                         $theme['name'] = trim($val[1]);
                     }
@@ -388,9 +399,10 @@ SELECT
                     if (preg_match('|Theme URI:\\s*(https?:\\/\\/.+)|', $theme_data, $val)) {
                         $theme['uri'] = trim($val[1]);
                     }
-                    if ($desc = load_language('description.txt', $path . '/', [
+                    $desc = load_language('description.txt', $path . '/', [
                         'return' => true,
-                    ])) {
+                    ]);
+                    if (is_string($desc) && $desc !== '') {
                         $theme['description'] = trim($desc);
                     } elseif (preg_match('|Description:\\s*(.+)|', $theme_data, $val)) {
                         $theme['description'] = trim($val[1]);
@@ -438,8 +450,15 @@ SELECT
                         $theme['admin_uri'] = get_root_url() . 'admin.php?page=theme&theme=' . $file;
                     }
 
-                    // IMPORTANT SECURITY !
-                    $theme = array_map(htmlspecialchars(...), $theme);
+                    // IMPORTANT SECURITY ! (only string fields — 'mobile'/
+                    // 'activable'/'use_standard_pages' are real bools,
+                    // which htmlspecialchars() can't accept under
+                    // strict_types)
+                    foreach ($theme as $theme_key => $theme_value) {
+                        if (is_string($theme_value)) {
+                            $theme[$theme_key] = htmlspecialchars($theme_value);
+                        }
+                    }
                     $this->fs_themes[$file] = $theme;
                 }
             }
@@ -484,7 +503,9 @@ SELECT
         $version = PHPWG_VERSION;
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php';
-        if (fetchRemote($url, $result, $get_data) and $pem_versions = @unserialize($result)) {
+        // $result is never a resource here: no fopen() handle is passed to
+        // fetchRemote() above.
+        if (fetchRemote($url, $result, $get_data) and is_string($result) and $pem_versions = @unserialize($result)) {
             if (! preg_match('/^\d+\.\d+\.\d+$/', $version)) {
                 $version = $pem_versions[0]['name'];
             }
@@ -526,7 +547,9 @@ SELECT
                 $get_data['extension_include'] = implode(',', $themes_to_check);
             }
         }
-        if (fetchRemote($url, $result, $get_data)) {
+        // $result is never a resource here: no fopen() handle is passed to
+        // fetchRemote() above.
+        if (fetchRemote($url, $result, $get_data) and is_string($result)) {
             $pem_themes = @unserialize($result);
             if (! is_array($pem_themes)) {
                 return false;
@@ -582,7 +605,13 @@ SELECT
             ];
 
             if ($handle = @fopen($archive, 'wb') and fetchRemote($url, $handle, $get_data)) {
-                fclose($handle);
+                // fetchRemote()'s &$dest out-param could in principle reset
+                // to a string, but only when the value passed in wasn't
+                // already a resource — $handle always is here (just opened
+                // above), so it's still a resource after the call.
+                if (is_resource($handle)) {
+                    fclose($handle);
+                }
                 include_once PHPWG_ROOT_PATH . 'admin/include/functions_zip.inc.php';
                 if ($list = zip_list_filenames($archive)) {
                     foreach ($list as $file) {
@@ -623,6 +652,17 @@ SELECT
                                 $logger->debug(__FUNCTION__ . ', $old_files = {' . join('},{', $old_files) . '}');
 
                                 $extract_path_realpath = realpath($extract_path);
+
+                                // realpath() failing here would mean
+                                // $extract_path (just populated by the
+                                // zip_extract() above) doesn't actually
+                                // exist as a real directory — skip the
+                                // obsolete-file cleanup rather than risk the
+                                // traversal check below against a
+                                // non-canonical path.
+                                if ($extract_path_realpath === false) {
+                                    $old_files = [];
+                                }
 
                                 foreach ($old_files as $old_file) {
                                     $old_file = trim($old_file);
@@ -665,7 +705,9 @@ SELECT
             $status = 'temp_path_error';
         }
 
-        @unlink($archive);
+        if (is_string($archive)) {
+            @unlink($archive);
+        }
         return $status;
     }
 

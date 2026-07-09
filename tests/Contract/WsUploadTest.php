@@ -48,20 +48,21 @@ final class WsUploadTest extends ContractTestCase
             $ch  = curl_init($url);
             self::assertNotFalse($ch, 'curl_init failed');
 
-            curl_setopt_array($ch, [
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_POST           => true,
-                CURLOPT_USERAGENT      => self::USER_AGENT,
-                CURLOPT_POSTFIELDS     => [
-                    'method'      => 'pwg.images.addSimple',
-                    'category'    => 1,
-                    'name'        => 'Contract Test Upload ' . uniqid(),
-                    'image'       => new \CURLFile($tmpFile, 'image/png', 'ct_upload.png'),
-                ],
-                CURLOPT_COOKIEJAR      => $this->cookieJar(),
-                CURLOPT_COOKIEFILE     => $this->cookieJar(),
-                CURLOPT_HTTPHEADER     => $this->testHeader(),
+            $userAgent = self::USER_AGENT;
+            $cookieJar = $this->cookieJar();
+            assert($cookieJar !== '');
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_USERAGENT, $userAgent);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, [
+                'method'   => 'pwg.images.addSimple',
+                'category' => 1,
+                'name'     => 'Contract Test Upload ' . uniqid(),
+                'image'    => new \CURLFile($tmpFile, 'image/png', 'ct_upload.png'),
             ]);
+            curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
+            curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $this->testHeader());
 
             $body   = curl_exec($ch);
             $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);

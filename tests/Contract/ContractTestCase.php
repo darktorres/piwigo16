@@ -27,7 +27,7 @@ abstract class ContractTestCase extends IntegrationTestCase
      * $_SERVER['HTTP_USER_AGENT'] unguarded — real HTTP clients always send
      * one, so the test client does too rather than special-casing curl.
      */
-    protected const string USER_AGENT = 'PiwigoContractTests/1.0';
+    protected const USER_AGENT = 'PiwigoContractTests/1.0';
 
     private static bool $fixtureReady = false;
 
@@ -62,6 +62,9 @@ abstract class ContractTestCase extends IntegrationTestCase
     /** Returns the path to the per-test cookie jar (for raw curl calls). */
     protected function cookieJar(): string
     {
+        // setUp() always populates this from tempnam() before any test body
+        // runs
+        assert($this->cookieJar !== '');
         return $this->cookieJar;
     }
 
@@ -99,13 +102,14 @@ abstract class ContractTestCase extends IntegrationTestCase
         // Step 1: GET the page so PHP starts a session and sets the cookie.
         $ch = curl_init($url);
         self::assertNotFalse($ch, 'curl_init failed');
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_USERAGENT      => self::USER_AGENT,
-            CURLOPT_COOKIEJAR      => $this->cookieJar,
-            CURLOPT_COOKIEFILE     => $this->cookieJar,
-            CURLOPT_HTTPHEADER     => $this->testHeader(),
-        ]);
+        $userAgent = self::USER_AGENT;
+        $cookieJar = $this->cookieJar();
+        assert($cookieJar !== '');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_USERAGENT, $userAgent);
+        curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
+        curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $this->testHeader());
         curl_exec($ch);
         unset($ch);
 
@@ -113,20 +117,19 @@ abstract class ContractTestCase extends IntegrationTestCase
         // and requires the session cookie established in step 1.
         $ch = curl_init($url);
         self::assertNotFalse($ch, 'curl_init failed');
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST           => true,
-            CURLOPT_USERAGENT      => self::USER_AGENT,
-            CURLOPT_POSTFIELDS     => http_build_query([
-                'login'    => '1',
-                'username' => 'fixture_admin',
-                'password' => 'fixture_admin',
-            ]),
-            CURLOPT_COOKIEJAR      => $this->cookieJar,
-            CURLOPT_COOKIEFILE     => $this->cookieJar,
-            CURLOPT_FOLLOWLOCATION => false,
-            CURLOPT_HTTPHEADER     => $this->testHeader(),
-        ]);
+        $userAgent = self::USER_AGENT;
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_USERAGENT, $userAgent);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
+            'login'    => '1',
+            'username' => 'fixture_admin',
+            'password' => 'fixture_admin',
+        ]));
+        curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
+        curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $this->testHeader());
 
         $body   = curl_exec($ch);
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -197,15 +200,16 @@ abstract class ContractTestCase extends IntegrationTestCase
         $ch = curl_init($url);
         self::assertNotFalse($ch, 'curl_init failed');
 
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST           => true,
-            CURLOPT_USERAGENT      => self::USER_AGENT,
-            CURLOPT_POSTFIELDS     => http_build_query(array_merge(['method' => $method], $params)),
-            CURLOPT_COOKIEJAR      => $this->cookieJar,
-            CURLOPT_COOKIEFILE     => $this->cookieJar,
-            CURLOPT_HTTPHEADER     => $this->testHeader(),
-        ]);
+        $userAgent = self::USER_AGENT;
+        $cookieJar = $this->cookieJar();
+        assert($cookieJar !== '');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_USERAGENT, $userAgent);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(array_merge(['method' => $method], $params)));
+        curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
+        curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $this->testHeader());
 
         $body   = curl_exec($ch);
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);

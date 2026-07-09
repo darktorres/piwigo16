@@ -246,9 +246,9 @@ if (! isset($_SESSION['cache_activity_last_weeks']) or $_SESSION['cache_activity
         }
         $day_nb = $day_date->format('N');
 
-        @$activity_last_weeks[$week][$day_nb]['details'][ucfirst((string) $action['object'])][ucfirst((string) $action['action'])] = $action['activity_counter'];
-        @$activity_last_weeks[$week][$day_nb]['number'] += $action['activity_counter'];
-        @$activity_last_weeks[$week][$day_nb]['date'] = format_date($day_date->getTimestamp());
+        $activity_last_weeks[$week][$day_nb]['details'][ucfirst((string) $action['object'])][ucfirst((string) $action['action'])] = $action['activity_counter'];
+        $activity_last_weeks[$week][$day_nb]['number'] = ($activity_last_weeks[$week][$day_nb]['number'] ?? 0) + $action['activity_counter'];
+        $activity_last_weeks[$week][$day_nb]['date'] = format_date($day_date->getTimestamp());
     }
 
     $logger->debug('[admin/intro::' . __LINE__ . '] recent activity calculated in ' . get_elapsed_time($start_time, get_moment()));
@@ -374,10 +374,10 @@ foreach ($file_extensions as $ext => $ext_details) {
         $type = 'Other';
     }
 
-    @$data_storage[$type]['total']['filesize'] += $ext_details['filesize'];
-    @$data_storage[$type]['total']['nb_files'] += $ext_details['ext_counter'];
+    $data_storage[$type]['total']['filesize'] = ($data_storage[$type]['total']['filesize'] ?? 0) + $ext_details['filesize'];
+    $data_storage[$type]['total']['nb_files'] = ($data_storage[$type]['total']['nb_files'] ?? 0) + $ext_details['ext_counter'];
 
-    @$data_storage[$type]['details'][strtoupper((string) $ext)] = [
+    $data_storage[$type]['details'][strtoupper((string) $ext)] = [
         'filesize' => $ext_details['filesize'],
         'nb_files' => $ext_details['ext_counter'],
     ];
@@ -397,10 +397,10 @@ $file_extensions = query2array($query, 'ext');
 foreach ($file_extensions as $ext => $ext_details) {
     $type = 'Formats';
 
-    @$data_storage[$type]['total']['filesize'] += $ext_details['filesize'];
-    @$data_storage[$type]['total']['nb_files'] += $ext_details['ext_counter'];
+    $data_storage[$type]['total']['filesize'] = ($data_storage[$type]['total']['filesize'] ?? 0) + $ext_details['filesize'];
+    $data_storage[$type]['total']['nb_files'] = ($data_storage[$type]['total']['nb_files'] ?? 0) + $ext_details['ext_counter'];
 
-    @$data_storage[$type]['details'][strtoupper((string) $ext)] = [
+    $data_storage[$type]['details'][strtoupper((string) $ext)] = [
         'filesize' => $ext_details['filesize'],
         'nb_files' => $ext_details['ext_counter'],
     ];

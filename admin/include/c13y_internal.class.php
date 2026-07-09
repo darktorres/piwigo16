@@ -21,7 +21,7 @@ class c13y_internal
     /**
      * Check version
      *
-     * @param object $c13y
+     * @param check_integrity $c13y
      */
     public function c13y_version($c13y): void
     {
@@ -58,7 +58,7 @@ class c13y_internal
     /**
      * Check exif
      *
-     * @param object $c13y
+     * @param check_integrity $c13y
      */
     public function c13y_exif($c13y): void
     {
@@ -81,7 +81,7 @@ class c13y_internal
     /**
      * Check user
      *
-     * @param object $c13y
+     * @param check_integrity $c13y
      */
     public function c13y_user($c13y): void
     {

@@ -78,8 +78,11 @@ class updates
     {
         $_SESSION['need_update' . PHPWG_VERSION] = null;
 
+        // $result is never a resource here: no fopen() handle is passed to
+        // fetchRemote() above.
         if (preg_match('/(\d+\.\d+)\.(\d+)/', PHPWG_VERSION, $matches)
-          and @fetchRemote(PHPWG_URL . '/download/all_versions.php?rand=' . md5(uniqid((string) mt_rand(), true)), $result)) {
+          and @fetchRemote(PHPWG_URL . '/download/all_versions.php?rand=' . md5(uniqid((string) mt_rand(), true)), $result)
+          and is_string($result)) {
             $all_versions = @explode("\n", $result);
             $new_version = trim($all_versions[0]);
             $_SESSION['need_update' . PHPWG_VERSION] = version_compare(PHPWG_VERSION, $new_version, '<');
@@ -121,7 +124,9 @@ class updates
             $url .= ($env === 'Official') ? '&docker' : '&show_requirements'; // Check docker version if in container
             $url .= '&origin_hash=' . sha1($conf['secret_key'] . get_absolute_root_url());
 
-            if (@fetchRemote($url, $result)) {
+            // $result is never a resource here: no fopen() handle is passed
+            // to fetchRemote() above.
+            if (@fetchRemote($url, $result) and is_string($result)) {
                 $all_versions = explode("\n", $result);
                 $new_versions['piwigo.org-checked'] = true;
                 $last_version = trim($all_versions[0]);
@@ -285,7 +290,9 @@ class updates
         // Retrieve PEM versions
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php';
-        if (fetchRemote($url, $result, $get_data) and $pem_versions = @unserialize($result)) {
+        // $result is never a resource here: no fopen() handle is passed to
+        // fetchRemote() above.
+        if (fetchRemote($url, $result, $get_data) and is_string($result) and $pem_versions = @unserialize($result)) {
             if (! preg_match('/^\d+\.\d+\.\d+$/', (string) $version)) {
                 $version = $pem_versions[0]['name'];
             }
@@ -328,7 +335,9 @@ class updates
             $post_data['extension_include'] = implode(',', array_keys($ext_to_check));
         }
 
-        if (fetchRemote($url, $result, $get_data, $post_data)) {
+        // $result is never a resource here: no fopen() handle is passed to
+        // fetchRemote() above.
+        if (fetchRemote($url, $result, $get_data, $post_data) and is_string($result)) {
             $pem_exts = @unserialize($result);
             if (! is_array($pem_exts)) {
                 return false;
@@ -439,7 +448,9 @@ class updates
 
     public function get_merged_extensions(string $version): void
     {
-        if (fetchRemote($this->merged_extension_url, $result)) {
+        // $result is never a resource here: no fopen() handle is passed to
+        // fetchRemote() above.
+        if (fetchRemote($this->merged_extension_url, $result) and is_string($result)) {
             $rows = explode("\n", $result);
             foreach ($rows as $row) {
                 if (preg_match('/^(\d+\.\d+): *(.*)$/', $row, $match)) {
@@ -504,17 +515,24 @@ class updates
 
             while (! $end) {
                 $chunk_num++;
+                // $result is never a resource here: no fopen() handle is
+                // passed to fetchRemote() above.
                 if (@fetchRemote(PHPWG_URL . '/download/dlcounter.php?code=' . $dl_code . '&chunk_num=' . $chunk_num, $result)
+                  and is_string($result)
                   and $input = @unserialize($result)) {
                     if ($input['remaining'] == 0) {
                         $end = true;
                     }
-                    @fwrite($zip, base64_decode((string) $input['data']));
+                    if ($zip !== false) {
+                        @fwrite($zip, base64_decode((string) $input['data']));
+                    }
                 } else {
                     $end = true;
                 }
             }
-            @fclose($zip);
+            if ($zip !== false) {
+                @fclose($zip);
+            }
 
             if (@filesize($filename)) {
                 include_once PHPWG_ROOT_PATH . 'admin/include/functions_zip.inc.php';

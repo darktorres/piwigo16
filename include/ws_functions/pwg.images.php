@@ -365,6 +365,9 @@ LIMIT 1
     }
 
     $image_row = pwg_db_fetch_assoc($result);
+    if ($image_row === false || $image_row === null) {
+        throw new Exception('ws_images_getInfo(): fetch failed after a non-zero pwg_db_num_rows()');
+    }
     $image_row = array_merge($image_row, ws_std_get_urls($image_row));
 
     $image_row['name_raw'] = $image_row['name'];
@@ -474,6 +477,9 @@ SELECT COUNT(rate) AS count, ROUND(AVG(rate),2) AS average
   WHERE element_id = ' . $image_row['id'] . '
 ;';
         $row = pwg_db_fetch_assoc(pwg_query($query));
+        if ($row === false || $row === null) {
+            throw new Exception('ws_images_getInfo(): rate aggregate query returned no row');
+        }
 
         $rating['score'] = (float) $rating['score'];
         $rating['average'] = (float) $row['average'];
@@ -1075,6 +1081,9 @@ SELECT MAX(`rank`) AS max_rank
   WHERE category_id = ' . $params['category_id'] . '
 ;';
     $row = pwg_db_fetch_assoc(pwg_query($query));
+    if ($row === false || $row === null) {
+        throw new Exception('ws_images_setRank(): max-rank aggregate query returned no row');
+    }
 
     if (is_numeric($row['max_rank'])) {
         if ($params['rank'] > $row['max_rank']) {
@@ -1196,6 +1205,9 @@ SELECT
     }
 
     $image = pwg_db_fetch_assoc($result);
+    if ($image === false || $image === null) {
+        throw new Exception('ws_images_addFile(): fetch failed after a non-zero pwg_db_num_rows()');
+    }
 
     // since Piwigo 2.4 and derivatives, we do not take the imported "thumb" into account
     if ($params['type'] == 'thumb') {
@@ -1368,7 +1380,7 @@ SELECT COUNT(*)
 
     // let's add links between the image and the categories
     if (isset($params['categories'])) {
-        ws_add_image_category_relations($image_id, $params['categories']);
+        ws_add_image_category_relations((int) $image_id, $params['categories']);
 
         if (preg_match('/^\d+/', (string) $params['categories'], $matches)) {
             $category_id = $matches[0];
@@ -1390,7 +1402,7 @@ SELECT id, name, permalink
     if (isset($params['tag_ids']) and ! empty($params['tag_ids'])) {
         set_tags(
             explode(',', (string) $params['tag_ids']),
-            $image_id
+            (int) $image_id
         );
     }
 
@@ -1496,12 +1508,15 @@ SELECT COUNT(*)
             }
         } else {
             $tag_names = preg_split('~(?<!\\\),~', (string) $params['tags']);
+            if ($tag_names === false) {
+                throw new Exception('ws_images_addSimple(): preg_split() failed');
+            }
             foreach ($tag_names as $tag_name) {
                 $tag_ids[] = tag_id_from_tag_name(preg_replace('#\\\\*,#', ',', $tag_name));
             }
         }
 
-        add_tags($tag_ids, [$image_id]);
+        add_tags($tag_ids, [(int) $image_id]);
     }
 
     $url_params = [
@@ -1524,7 +1539,7 @@ SELECT id, name, permalink
     // update metadata from the uploaded file (exif/iptc), even if the sync
     // was already performed by add_uploaded_file().
     require_once PHPWG_ROOT_PATH . 'admin/include/functions_metadata.php';
-    sync_metadata([$image_id]);
+    sync_metadata([(int) $image_id]);
 
     return [
         'image_id' => $image_id,
@@ -1706,6 +1721,9 @@ SELECT
   WHERE id = ' . $image_id . '
 ;';
         $image_infos = pwg_db_fetch_assoc(pwg_query($query));
+        if ($image_infos === false || $image_infos === null) {
+            throw new Exception('ws_images_upload(): image fetch failed right after inserting it');
+        }
 
         $query = '
 SELECT
@@ -1714,6 +1732,9 @@ SELECT
   WHERE category_id = ' . $params['category'][0] . '
 ;';
         $category_infos = pwg_db_fetch_assoc(pwg_query($query));
+        if ($category_infos === false || $category_infos === null) {
+            throw new Exception('ws_images_upload(): category-count aggregate query returned no row');
+        }
 
         $query = '
 SELECT
@@ -1880,7 +1901,8 @@ SELECT COUNT(*)
             ];
         }
 
-        if (! fwrite($fp, file_get_contents($chunkfile_path))) {
+        $chunk_contents = file_get_contents($chunkfile_path);
+        if ($chunk_contents === false || ! fwrite($fp, $chunk_contents)) {
             // could not append chunk
             $logger->error(__FUNCTION__ . ' error merging chunk ' . $chunkfile_path);
             flock($fp, LOCK_UN);
@@ -1932,7 +1954,7 @@ SELECT COUNT(*)
     if (isset($params['tag_ids']) and ! empty($params['tag_ids'])) {
         set_tags(
             explode(',', (string) $params['tag_ids']),
-            $image_id
+            (int) $image_id
         );
     }
 
@@ -1972,7 +1994,7 @@ SELECT COUNT(*)
 
     // delete chunks older than a week
     $now = time();
-    foreach (glob($conf['upload_dir'] . '/buffer/*.chunk') as $file) {
+    foreach (glob($conf['upload_dir'] . '/buffer/*.chunk') ?: [] as $file) {
         if (is_file($file)) {
             if ($now - filemtime($file) >= 60 * 60 * 24 * 7) { // 7 days
                 $logger->info(__FUNCTION__ . ' delete ' . $file);
@@ -1984,7 +2006,7 @@ SELECT COUNT(*)
     }
 
     // delete merged older than a week
-    foreach (glob($conf['upload_dir'] . '/buffer/*.merged') as $file) {
+    foreach (glob($conf['upload_dir'] . '/buffer/*.merged') ?: [] as $file) {
         if (is_file($file)) {
             if ($now - filemtime($file) >= 60 * 60 * 24 * 7) { // 7 days
                 $logger->info(__FUNCTION__ . ' delete ' . $file);
@@ -2025,6 +2047,9 @@ function ws_images_exist(array $params, PwgServer $service): array
             -1,
             PREG_SPLIT_NO_EMPTY
         );
+        if ($md5sums === false) {
+            throw new Exception('ws_images_exist(): preg_split() failed');
+        }
 
         $query = '
 SELECT id, md5sum
@@ -2048,6 +2073,9 @@ SELECT id, md5sum
             -1,
             PREG_SPLIT_NO_EMPTY
         );
+        if ($filenames === false) {
+            throw new Exception('ws_images_exist(): preg_split() failed');
+        }
 
         $query = '
 SELECT id, file
@@ -2176,12 +2204,16 @@ function ws_images_formats_delete(array $params, PwgServer $service): \PwgError|
     }
 
     if (! is_array($params['format_id'])) {
-        $params['format_id'] = preg_split(
+        $format_id_list = preg_split(
             '/[\s,;\|]/',
             (string) $params['format_id'],
             -1,
             PREG_SPLIT_NO_EMPTY
         );
+        if ($format_id_list === false) {
+            throw new Exception('ws_images_formats_delete(): preg_split() failed');
+        }
+        $params['format_id'] = $format_id_list;
     }
     $params['format_id'] = array_map(intval(...), $params['format_id']);
 
@@ -2501,12 +2533,16 @@ function ws_images_delete(array $params, PwgServer $service): \PwgError|int
     }
 
     if (! is_array($params['image_id'])) {
-        $params['image_id'] = preg_split(
+        $image_id_list = preg_split(
             '/[\s,;\|]/',
             (string) $params['image_id'],
             -1,
             PREG_SPLIT_NO_EMPTY
         );
+        if ($image_id_list === false) {
+            throw new Exception(__FUNCTION__ . '(): preg_split() failed');
+        }
+        $params['image_id'] = $image_id_list;
     }
     $params['image_id'] = array_map(intval(...), $params['image_id']);
 
@@ -2577,12 +2613,16 @@ function ws_images_uploadCompleted(array $params, PwgServer $service): \PwgError
     }
 
     if (! is_array($params['image_id'])) {
-        $params['image_id'] = preg_split(
+        $image_id_list = preg_split(
             '/[\s,;\|]/',
             (string) $params['image_id'],
             -1,
             PREG_SPLIT_NO_EMPTY
         );
+        if ($image_id_list === false) {
+            throw new Exception(__FUNCTION__ . '(): preg_split() failed');
+        }
+        $params['image_id'] = $image_id_list;
     }
     $params['image_id'] = array_map(intval(...), $params['image_id']);
 
@@ -2604,6 +2644,9 @@ SELECT
   WHERE category_id = ' . $params['category_id'] . '
 ;';
     $category_infos = pwg_db_fetch_assoc(pwg_query($query));
+    if ($category_infos === false || $category_infos === null) {
+        throw new Exception(__FUNCTION__ . '(): category-count aggregate query returned no row');
+    }
     $category_name = get_cat_display_name_from_id($params['category_id'], null);
 
     trigger_notify(
@@ -2668,12 +2711,16 @@ function ws_images_syncMetadata(array $params, PwgServer $service): \PwgError|ar
     }
 
     if (! is_array($params['image_id'])) {
-        $params['image_id'] = preg_split(
+        $image_id_list = preg_split(
             '/[\s,;\|]/',
             (string) $params['image_id'],
             -1,
             PREG_SPLIT_NO_EMPTY
         );
+        if ($image_id_list === false) {
+            throw new Exception(__FUNCTION__ . '(): preg_split() failed');
+        }
+        $params['image_id'] = $image_id_list;
     }
 
     $image_ids = [];

@@ -40,6 +40,9 @@ if (isset($conf['session_save_handler'])
  */
 function generate_key($size): string
 {
+    if ($size < 1) {
+        throw new \InvalidArgumentException('generate_key(): $size must be at least 1');
+    }
     $bytes = random_bytes($size + 10);
 
     return substr(
@@ -172,7 +175,7 @@ DELETE
     . $conf['session_length'] . '
 ;';
     pwg_query($query);
-    return pwg_db_changes();
+    return (int) pwg_db_changes();
 }
 
 /**

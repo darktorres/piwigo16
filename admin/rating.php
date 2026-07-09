@@ -35,19 +35,19 @@ $tabsheet->assign();
 // |                            initialization                             |
 // +-----------------------------------------------------------------------+
 if (isset($_GET['start']) and is_numeric($_GET['start'])) {
-    $start = $_GET['start'];
+    $start = (int) $_GET['start'];
 } else {
     $start = 0;
 }
 
 $elements_per_page = 10;
 if (isset($_GET['display']) and is_numeric($_GET['display'])) {
-    $elements_per_page = $_GET['display'];
+    $elements_per_page = (int) $_GET['display'];
 }
 
 $order_by_index = 0;
 if (isset($_GET['order_by']) and is_numeric($_GET['order_by'])) {
-    $order_by_index = $_GET['order_by'];
+    $order_by_index = (int) $_GET['order_by'];
 }
 
 $page['user_filter'] = '';
@@ -61,7 +61,7 @@ if (isset($_GET['users'])) {
 
 $page['cat_filter'] = '';
 if (isset($_GET['cat']) and is_numeric($_GET['cat'])) {
-    $cat_ids = get_subcat_ids([$_GET['cat']]);
+    $cat_ids = get_subcat_ids([(int) $_GET['cat']]);
 
     if (count($cat_ids) > 0) {
         $page['cat_filter'] = ' AND ic.category_id IN (' . implode(',', $cat_ids) . ')';

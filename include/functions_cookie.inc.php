@@ -15,7 +15,7 @@ declare(strict_types=1);
  * http://domain.org/meeting/gallery/
  * it will return : "/meeting/gallery"
  */
-function cookie_path(): ?string
+function cookie_path(): string
 {
     if (isset($_SERVER['REDIRECT_SCRIPT_NAME']) and
          ! empty($_SERVER['REDIRECT_SCRIPT_NAME'])) {
@@ -40,7 +40,10 @@ function cookie_path(): ?string
         $scr = $_SERVER['SCRIPT_NAME'];
     }
 
-    $scr = substr((string) $scr, 0, strrpos((string) $scr, '/'));
+    $scr = (string) $scr;
+    $slash_pos = strrpos($scr, '/');
+    assert($slash_pos !== false);
+    $scr = substr($scr, 0, $slash_pos);
 
     // add a trailing '/' if needed
     if ((strlen($scr) == 0) or ($scr[strlen($scr) - 1] !== '/')) {

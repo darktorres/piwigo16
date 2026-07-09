@@ -9,7 +9,9 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-class Inflector_en
+require_once __DIR__ . '/InflectorInterface.php';
+
+class Inflector_en implements InflectorInterface
 {
     /**
      * @var array<string, int|string>
@@ -119,7 +121,7 @@ class Inflector_en
     }
 
     /**
-     * @return array<int, string|null>
+     * @return array<int, string>
      */
     public function get_variants(string $word): array
     {
@@ -129,7 +131,7 @@ class Inflector_en
 
         $rc = $this->exceptions[$lword] ?? null;
         if (isset($rc)) {
-            if (! empty($rc)) {
+            if (is_string($rc) && $rc !== '') {
                 $res[] = $rc;
             }
             return $res;

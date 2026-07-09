@@ -191,13 +191,13 @@ function strip_html_in_metadata(mixed &$v, int|string $k): void
  */
 function parse_exif_gps_data(array $raw, $ref): float|int
 {
-    foreach ($raw as &$i) {
-        $i = explode('/', $i);
-        $i = $i[1] == 0 ? 0 : (float) $i[0] / (float) $i[1];
+    $parsed = [];
+    foreach ($raw as $component) {
+        $parts = explode('/', $component);
+        $parsed[] = $parts[1] == 0 ? 0 : (float) $parts[0] / (float) $parts[1];
     }
-    unset($i);
 
-    $v = $raw[0] + $raw[1] / 60 + $raw[2] / 3600;
+    $v = $parsed[0] + $parsed[1] / 60 + $parsed[2] / 3600;
 
     $ref = strtoupper($ref);
     if ($ref == 'S' or $ref == 'W') {

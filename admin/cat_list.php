@@ -136,7 +136,7 @@ if (isset($_GET['delete']) and is_numeric($_GET['delete'])) {
     if (isset($_GET['photo_deletion_mode'])) {
         $photo_deletion_mode = $_GET['photo_deletion_mode'];
     }
-    delete_categories([$_GET['delete']], $photo_deletion_mode);
+    delete_categories([(int) $_GET['delete']], $photo_deletion_mode);
 
     $_SESSION['page_infos'] = [l10n('Virtual album deleted')];
     update_global_rank();

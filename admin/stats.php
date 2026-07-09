@@ -93,7 +93,7 @@ SELECT
 }
 
 /**
- * @param int|string $last
+ * @param int|'all' $last
  * @return float[]|int[]
  */
 function get_month_of_last_years($last = 'all'): array
@@ -118,18 +118,18 @@ ORDER BY
         $limit = ($last - 1) * 12 + $date->format('n') - 1;
         $query .=
 ' LIMIT ' . $limit;
-        $result = query2array($query . ';');
+        $result = array_values(query2array($query . ';'));
         $lastDate = $date->sub(new DateInterval('P' . ($last - 1) . 'Y' . ($date->format('n') - 1) . 'M'));
         return set_missing_values('month', $result, $lastDate, new DateTime());
     }
 
     if (count(query2array($query . ';')) > 1) {
-        return set_missing_values('month', query2array($query . ';'));
+        return set_missing_values('month', array_values(query2array($query . ';')));
     } else {
         $last_year_date = new DateTime();
         return set_missing_values(
             'month',
-            query2array($query . ';'),
+            array_values(query2array($query . ';')),
             $last_year_date->sub(new DateInterval('P1Y')),
             new DateTime()
         );

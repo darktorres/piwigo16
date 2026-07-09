@@ -71,8 +71,11 @@ final class SrcImage
                     $this->rel_path = 'themes/default/icon/mimetypes/unknown.png';
                 }
                 $size = getimagesize(PHPWG_ROOT_PATH . $this->rel_path);
+                if ($size === false) {
+                    throw new Exception('SrcImage: unable to read size of fallback icon ' . $this->rel_path);
+                }
             }
-            $this->size = @[$size[0], $size[1]];
+            $this->size = [$size[0], $size[1]];
         }
 
         if (! $this->size) {
@@ -110,10 +113,7 @@ final class SrcImage
         return PHPWG_ROOT_PATH . $this->rel_path;
     }
 
-    /**
-     * @return string|array<int|string, mixed>
-     */
-    public function get_url(): string|array
+    public function get_url(): string
     {
         $url = get_root_url() . $this->rel_path;
         if (! ($this->flags & self::IS_MIMETYPE)) {
@@ -189,9 +189,8 @@ final class DerivativeImage
      * Generates the url of a thumbnail.
      *
      * @param array<string, mixed>|SrcImage $infos array of info from db or SrcImage
-     * @return string|array<int|string, mixed>
      */
-    public static function thumb_url($infos): string|array
+    public static function thumb_url($infos): string
     {
         return self::url(IMG_THUMB, $infos);
     }
@@ -202,9 +201,8 @@ final class DerivativeImage
      * @param string|DerivativeParams $type standard derivative param type (e.g. IMG_*)
      *    or a DerivativeParams object
      * @param array<string, mixed>|SrcImage $infos array of info from db or SrcImage
-     * @return string|array<int|string, mixed>
      */
-    public static function url($type, $infos): string|array
+    public static function url($type, $infos): string
     {
         $src_image = is_object($infos) ? $infos : new SrcImage($infos);
         $params = is_string($type) ? ImageStdParams::get_by_type($type) : $type;
@@ -324,7 +322,11 @@ final class DerivativeImage
         } elseif (substr_compare((string) $loc, '../', 0, 3) == 0) {
             $loc = substr((string) $loc, 3);
         }
-        $loc = substr_replace($loc, '-' . implode('_', $tokens), strrpos((string) $loc, '.'), 0);
+        $dot = strrpos((string) $loc, '.');
+        if ($dot === false) {
+            throw new Exception("DerivativeImage::build(): path '{$loc}' has no extension");
+        }
+        $loc = substr_replace($loc, '-' . implode('_', $tokens), $dot, 0);
 
         $rel_path = PWG_DERIVATIVE_DIR . $loc;
 
@@ -359,10 +361,7 @@ final class DerivativeImage
         return PHPWG_ROOT_PATH . $this->rel_path;
     }
 
-    /**
-     * @return string|array<int|string, mixed>
-     */
-    public function get_url(): string|array
+    public function get_url(): string
     {
         if ($this->params == null) {
             return $this->src_image->get_url();
@@ -458,9 +457,9 @@ final class DerivativeImage
             if ($ratio_w > 1 || $ratio_h > 1) {
                 if ($ratio_w > $ratio_h) {
                     $size[0] = $maxw;
-                    $size[1] = floor($size[1] / $ratio_w);
+                    $size[1] = (int) floor($size[1] / $ratio_w);
                 } else {
-                    $size[0] = floor($size[0] / $ratio_h);
+                    $size[0] = (int) floor($size[0] / $ratio_h);
                     $size[1] = $maxh;
                 }
             }

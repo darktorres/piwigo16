@@ -345,8 +345,14 @@ DELETE
   WHERE id IN (' . implode(',', $collection) . ')';
         $result = pwg_query($query);
         while ($info = pwg_db_fetch_assoc($result)) {
+            $derivative_infos = [
+                'path' => (string) $info['path'],
+            ];
+            if (! empty($info['representative_ext'])) {
+                $derivative_infos['representative_ext'] = (string) $info['representative_ext'];
+            }
             foreach ($_POST['del_derivatives_type'] as $type) {
-                delete_element_derivatives($info, $type);
+                delete_element_derivatives($derivative_infos, $type);
             }
         }
     } elseif ($action == 'generate_derivatives') {

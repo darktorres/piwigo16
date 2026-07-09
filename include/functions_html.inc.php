@@ -229,7 +229,7 @@ function tag_alpha_compare(array $a, array $b): int
 /**
  * Exits the current script.
  */
-function access_denied(): void
+function access_denied(): never
 {
     global $user, $conf;
 
@@ -258,7 +258,7 @@ function access_denied(): void
  * @param string $msg
  * @param string|null $alternate_url redirect to this url
  */
-function page_forbidden($msg, $alternate_url = null): void
+function page_forbidden($msg, $alternate_url = null): never
 {
     set_status_header(403);
     if ($alternate_url == null) {
@@ -280,7 +280,7 @@ function page_forbidden($msg, $alternate_url = null): void
  * @param string $msg
  * @param string|null $alternate_url redirect to this url
  */
-function bad_request($msg, $alternate_url = null): void
+function bad_request($msg, $alternate_url = null): never
 {
     set_status_header(400);
     if ($alternate_url == null) {
@@ -303,7 +303,7 @@ function bad_request($msg, $alternate_url = null): void
  *   concatenation); comments.php passes null when comments are disabled
  * @param string|null $alternate_url redirect to this url
  */
-function page_not_found($msg, $alternate_url = null): void
+function page_not_found($msg, $alternate_url = null): never
 {
     set_status_header(404);
     if ($alternate_url == null) {
@@ -337,7 +337,7 @@ function fatal_error($msg, $title = null, $show_trace = true): never
         $bt = debug_backtrace();
         for ($i = 1; $i < count($bt); $i++) {
             $class = isset($bt[$i]['class']) ? (@$bt[$i]['class'] . '::') : '';
-            $btrace_msg .= "#{$i}\t" . $class . @$bt[$i]['function'] . ' ' . @$bt[$i]['file'] . '(' . @$bt[$i]['line'] . ")\n";
+            $btrace_msg .= "#{$i}\t" . $class . $bt[$i]['function'] . ' ' . ($bt[$i]['file'] ?? '') . '(' . ($bt[$i]['line'] ?? '') . ")\n";
         }
         $btrace_msg = trim($btrace_msg);
         $msg .= "\n";
@@ -639,6 +639,10 @@ function flush_page_messages(): void
 function pwg_nl2br($string): array|null|int|float|false|string
 {
     if (empty($string)) {
+        return $string;
+    }
+
+    if (is_array($string)) {
         return $string;
     }
 

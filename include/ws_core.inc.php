@@ -187,14 +187,10 @@ abstract class PwgResponseEncoder
 
     private static function flatten(mixed &$value): void
     {
-        if (is_object($value)) {
-            $class = strtolower(@$value::class);
-            if ($class == 'pwgnamedarray') {
-                $value = $value->_content;
-            }
-            if ($class == 'pwgnamedstruct') {
-                $value = $value->_content;
-            }
+        if ($value instanceof PwgNamedArray) {
+            $value = $value->_content;
+        } elseif ($value instanceof PwgNamedStruct) {
+            $value = $value->_content;
         }
 
         if (! is_array($value)) {
@@ -225,7 +221,7 @@ class PwgServer
     public ?string $_responseFormat = null;
 
     /**
-     * @var array<string, array{callback: callable, description: string, signature: array<string, array<string, mixed>>, include: string, options: array<string, mixed>}>
+     * @var array<string, array{callback: string|array<int, string>, description: string, signature: array<string, array<string, mixed>>, include: string, options: array<string, mixed>}>
      */
     public $_methods = [];
 
@@ -344,9 +340,11 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
             $params = array_flip($params);
         }
 
+        $signature = [];
         foreach ($params as $param => $data) {
+            $param = (string) $param;
             if (! is_array($data)) {
-                $params[$param] = [
+                $signature[$param] = [
                     'flags' => 0,
                     'type' => 0,
                 ];
@@ -360,14 +358,14 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
                 if (! isset($data['type'])) {
                     $data['type'] = 0;
                 }
-                $params[$param] = $data;
+                $signature[$param] = $data;
             }
         }
 
         $this->_methods[$methodName] = [
             'callback' => $callback,
             'description' => $description,
-            'signature' => $params,
+            'signature' => $signature,
             'include' => $include_file,
             'options' => $options,
         ];
@@ -571,6 +569,10 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
             if (! empty($method['include'])) {
                 include_once $method['include'];
             }
+            // every real registration (ws.php, and this class's own
+            // reflection methods) passes a genuinely callable function
+            // name or [class, method] pair
+            assert(is_callable($method['callback']));
             $result = call_user_func_array($method['callback'], [$params, &$this]);
         }
 

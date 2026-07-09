@@ -47,6 +47,9 @@ function get_local_dir(int|string $category_id): string
         $query .= ' FROM ' . CATEGORIES_TABLE . ' WHERE id = ' . $category_id;
         $query .= ';';
         $row = pwg_db_fetch_assoc(pwg_query($query));
+        if (! is_array($row)) {
+            throw new Exception(__FUNCTION__ . "(): category #{$category_id} not found");
+        }
         $uppercats = $row['uppercats'];
     }
 
@@ -80,6 +83,9 @@ SELECT galleries_url
     AND c.id = ' . $category_id . '
 ;';
     $row = pwg_db_fetch_assoc(pwg_query($query));
+    if (! is_array($row)) {
+        throw new Exception(__FUNCTION__ . "(): category #{$category_id} not found");
+    }
     return $row['galleries_url'];
 }
 
@@ -315,7 +321,7 @@ $template->assign([
 ]);
 
 if (! $category['is_virtual']) {
-    $category['cat_full_dir'] = get_complete_dir($_GET['cat_id']);
+    $category['cat_full_dir'] = get_complete_dir((int) $_GET['cat_id']);
     $category_full_dir = preg_replace('/\/$/', '', (string) $category['cat_full_dir']);
     $template->assign(
         [

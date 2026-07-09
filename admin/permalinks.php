@@ -24,10 +24,12 @@ function parse_sort_variables(
     global $template;
 
     $url_components = parse_url((string) $_SERVER['REQUEST_URI']);
+    // REQUEST_URI is always a well-formed URI for a real HTTP request
+    assert($url_components !== false);
 
-    $base_url = $url_components['path'];
+    $base_url = $url_components['path'] ?? '';
 
-    parse_str($url_components['query'], $vars);
+    parse_str($url_components['query'] ?? '', $vars);
     $is_first = true;
     foreach ($vars as $key => $value) {
         if (! in_array($key, $get_rejects) and $key != $get_param) {
@@ -38,7 +40,7 @@ function parse_sort_variables(
                 fatal_error('unexpected URL get key');
             }
 
-            $base_url .= urlencode((string) $key) . '=' . urlencode($value);
+            $base_url .= urlencode((string) $key) . '=' . urlencode(is_array($value) ? '' : (string) $value);
         }
     }
 

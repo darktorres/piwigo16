@@ -27,7 +27,11 @@ class PwgTOTP
         // RFC 4226, section 5.3
         $offset = ord(substr($hash, -1)[0]) & 0x0F;
         $part = substr($hash, $offset, 4);
-        $number = unpack('N', $part)[1] & 0x7FFFFFFF;
+        $unpacked = unpack('N', $part);
+        // $part is always exactly 4 bytes, matching format 'N', so this
+        // always succeeds
+        assert($unpacked !== false);
+        $number = $unpacked[1] & 0x7FFFFFFF;
 
         $code = $number % 1000000; // code 6 digits $number % 10^6
         return str_pad((string) $code, 6, '0', STR_PAD_LEFT); // 123 become 000123
@@ -41,6 +45,9 @@ class PwgTOTP
      */
     public static function generateSecret($length = 20): string
     {
+        if ($length < 1) {
+            throw new \InvalidArgumentException('generateSecret(): $length must be at least 1');
+        }
         $random = random_bytes($length);
         return PwgBase32::encode($random, false);
     }

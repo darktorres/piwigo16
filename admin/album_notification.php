@@ -55,6 +55,8 @@ SELECT id, file, path, representative_ext
         $result = pwg_query($query);
         if (pwg_db_num_rows($result) > 0) {
             $element = pwg_db_fetch_assoc($result);
+            // the num_rows > 0 check above guarantees a row is available
+            assert(is_array($element));
 
             $img = [
                 'link' => make_picture_url(
@@ -201,10 +203,13 @@ $template->assign(
 );
 
 if ($conf['auth_key_duration'] > 0) {
+    $auth_key_since = strtotime('now -' . $conf['auth_key_duration'] . ' second');
+    // the relative time expression above is always syntactically valid
+    assert($auth_key_since !== false);
     $template->assign(
         'auth_key_duration',
         time_since(
-            strtotime('now -' . $conf['auth_key_duration'] . ' second'),
+            $auth_key_since,
             'second',
             null,
             false

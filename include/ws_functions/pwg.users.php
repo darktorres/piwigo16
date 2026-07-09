@@ -93,7 +93,16 @@ function ws_users_getList(array $params, PwgServer &$service): \PwgError|array
         $max_date_tokens = explode('-', (string) $params['max_register']);
         $max_register_year = $max_date_tokens[0];
         $max_register_month = $max_date_tokens[1] ?? 12;
-        $max_register_day = $max_date_tokens[2] ?? date('t', strtotime($max_register_year . '-' . $max_register_month . '-1'));
+        if (isset($max_date_tokens[2])) {
+            $max_register_day = $max_date_tokens[2];
+        } else {
+            // year/month were regex-validated above
+            // (\d\d\d\d(-\d{1,2}){0,2}), so this is always a well-formed
+            // date string
+            $max_register_month_ts = strtotime($max_register_year . '-' . $max_register_month . '-1');
+            assert($max_register_month_ts !== false);
+            $max_register_day = date('t', $max_register_month_ts);
+        }
         $max_date = sprintf('%u-%02u-%02u', $max_register_year, $max_register_month, $max_register_day);
         $where_clauses[] = 'ui.registration_date <= \'' . $max_date . ' 23:59:59\'';
     }

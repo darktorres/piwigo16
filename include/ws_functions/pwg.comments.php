@@ -47,12 +47,20 @@ function ws_userComments_getList(array $params, PwgServer &$service): \PwgError|
     }
 
     if (! empty($params['f_min_date'])) {
-        $min = date_format(date_create($params['f_min_date']), 'Y-m-d 00:00:00');
+        $min_date = date_create($params['f_min_date']);
+        if ($min_date === false) {
+            return new PwgError(401, 'Invalid f_min_date');
+        }
+        $min = date_format($min_date, 'Y-m-d 00:00:00');
         $where_clauses[] = 'date >= \'' . $min . '\'';
     }
 
     if (! empty($params['f_max_date'])) {
-        $max = date_format(date_create($params['f_max_date']), 'Y-m-d 23:59:59');
+        $max_date = date_create($params['f_max_date']);
+        if ($max_date === false) {
+            return new PwgError(401, 'Invalid f_max_date');
+        }
+        $max = date_format($max_date, 'Y-m-d 23:59:59');
         $where_clauses[] = 'date <= \'' . $max . '\'';
     }
 
@@ -73,6 +81,9 @@ WHERE ' . implode(' AND ', $where_clauses) . '
 ;';
 
     $summary = pwg_db_fetch_assoc(pwg_query($query));
+    if (! is_array($summary)) {
+        return new PwgError(500, 'Unable to compute comments summary');
+    }
     $total_comments = $summary['all_comments'];
 
     switch ($params['status']) {
@@ -160,6 +171,9 @@ WHERE ' . implode(' AND ', $where_clauses) . '
 ;';
 
     $dates = pwg_db_fetch_assoc(pwg_query($query));
+    if (! is_array($dates)) {
+        return new PwgError(500, 'Unable to compute comments date range');
+    }
 
     unset($where_clauses['author_id']);
     $query = '

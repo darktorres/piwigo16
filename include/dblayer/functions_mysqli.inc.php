@@ -192,6 +192,9 @@ function pwg_db_num_rows(mysqli_result|bool $result): int|string
  */
 function pwg_db_fetch_array(mysqli_result|bool $result): array|null|false
 {
+    if (! $result instanceof mysqli_result) {
+        return false;
+    }
     return $result->fetch_array();
 }
 
@@ -200,6 +203,9 @@ function pwg_db_fetch_array(mysqli_result|bool $result): array|null|false
  */
 function pwg_db_fetch_assoc(mysqli_result|bool $result): array|null|false
 {
+    if (! $result instanceof mysqli_result) {
+        return false;
+    }
     return $result->fetch_assoc();
 }
 
@@ -208,16 +214,25 @@ function pwg_db_fetch_assoc(mysqli_result|bool $result): array|null|false
  */
 function pwg_db_fetch_row(mysqli_result|bool $result): array|null
 {
+    if (! $result instanceof mysqli_result) {
+        return null;
+    }
     return $result->fetch_row();
 }
 
 function pwg_db_fetch_object(mysqli_result|bool $result): object|null|false
 {
+    if (! $result instanceof mysqli_result) {
+        return false;
+    }
     return $result->fetch_object();
 }
 
 function pwg_db_free_result(mysqli_result|bool $result): void
 {
+    if (! $result instanceof mysqli_result) {
+        return;
+    }
     $result->free_result();
 }
 
@@ -806,15 +821,18 @@ function query2array(string $query, ?string $key_name = null, ?string $value_nam
 {
     $result = pwg_query($query);
     $data = [];
+    if (! $result instanceof mysqli_result) {
+        return $data;
+    }
 
     if (isset($key_name)) {
         if (isset($value_name)) {
             while ($row = $result->fetch_assoc()) {
-                $data[$row[$key_name]] = $row[$value_name];
+                $data[is_float($row[$key_name]) ? (int) $row[$key_name] : $row[$key_name]] = $row[$value_name];
             }
         } else {
             while ($row = $result->fetch_assoc()) {
-                $data[$row[$key_name]] = $row;
+                $data[is_float($row[$key_name]) ? (int) $row[$key_name] : $row[$key_name]] = $row;
             }
         }
     } else {

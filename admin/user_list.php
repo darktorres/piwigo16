@@ -89,6 +89,9 @@ $template->set_filenames([
 ]);
 
 $default_user = get_default_user_info(true);
+if (! is_array($default_user)) {
+    fatal_error('Default user not found');
+}
 
 $protected_users = [
     $user['id'],

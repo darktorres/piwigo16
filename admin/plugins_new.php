@@ -133,7 +133,16 @@ if ($plugins->get_server_plugins(true, $beta_test)) {
         ;
 
         // get the age of the last revision in days
-        $last_revision_diff = date_diff(date_create($plugin['revision_date']), date_create());
+        $revision_date = date_create($plugin['revision_date']);
+        $now_date = date_create();
+        if ($revision_date === false || $now_date === false) {
+            // revision_date comes from the (external, less-trusted) PEM
+            // API response — fall back to "just now" rather than crash
+            // on a malformed value
+            $last_revision_diff = new DateInterval('P0D');
+        } else {
+            $last_revision_diff = date_diff($revision_date, $now_date);
+        }
 
         $certification = 1;
         $has_compatible_version = false;

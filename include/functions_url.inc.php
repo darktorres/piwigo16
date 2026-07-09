@@ -415,6 +415,19 @@ function parse_section_url(array $tokens, &$next_token): array
         $i = $next_token;
         $loop_counter = 0;
 
+        // Built up across loop iterations via dedicated locals (not $page
+        // sub-keys) — $category/$combined_category_ids hold raw ids
+        // (int|numeric-string) here, only becoming full category-info
+        // arrays once assigned into $page after the loop. Mixing both
+        // shapes under the same $page keys across loop back-edges is what
+        // previously defeated PHPStan's array-shape tracking.
+        /** @var int|numeric-string|null $category */
+        $category = null;
+        /** @var array<int, int|numeric-string> $combined_category_ids */
+        $combined_category_ids = [];
+        /** @var array{cat_url_name?: string, cat_permalink?: string} $hit_by */
+        $hit_by = [];
+
         while (isset($tokens[$next_token])) {
             if ($loop_counter++ > count($tokens) + 10) {
                 die('infinite loop?');
@@ -432,13 +445,13 @@ function parse_section_url(array $tokens, &$next_token): array
 
             if (preg_match('/^(\d+)(?:-(.+))?$/', $tokens[$next_token], $matches)) {
                 if (isset($matches[2])) {
-                    $page['hit_by']['cat_url_name'] = $matches[2];
+                    $hit_by['cat_url_name'] = $matches[2];
                 }
 
-                if (! isset($page['category'])) {
-                    $page['category'] = $matches[1];
+                if ($category === null) {
+                    $category = $matches[1];
                 } else {
-                    $page['combined_categories'][] = $matches[1];
+                    $combined_category_ids[] = $matches[1];
                 }
                 $next_token++;
             } else {// try a permalink
@@ -465,11 +478,11 @@ function parse_section_url(array $tokens, &$next_token): array
                     if (isset($cat_id)) {
                         $next_token += $perma_index + 1;
 
-                        if (! isset($page['category'])) {
-                            $page['category'] = $cat_id;
-                            $page['hit_by']['cat_permalink'] = $maybe_permalinks[$perma_index];
+                        if ($category === null) {
+                            $category = $cat_id;
+                            $hit_by['cat_permalink'] = $maybe_permalinks[$perma_index];
                         } else {
-                            $page['combined_categories'][] = $cat_id;
+                            $combined_category_ids[] = $cat_id;
                         }
                     } else {
                         page_not_found(l10n('Permalink for album not found'));
@@ -478,19 +491,23 @@ function parse_section_url(array $tokens, &$next_token): array
             }
         }
 
-        if (isset($page['category'])) {
-            $result = get_cat_info($page['category']);
+        if (! empty($hit_by)) {
+            $page['hit_by'] = $hit_by;
+        }
+
+        if ($category !== null) {
+            $result = get_cat_info((int) $category);
             if (empty($result)) {
                 page_not_found(l10n('Requested album does not exist'));
             }
             $page['category'] = $result;
         }
 
-        if (isset($page['combined_categories'])) {
+        if (! empty($combined_category_ids)) {
             $combined_categories = [];
 
-            foreach ($page['combined_categories'] as $cat_id) {
-                $result = get_cat_info($cat_id);
+            foreach ($combined_category_ids as $cat_id) {
+                $result = get_cat_info((int) $cat_id);
                 if (empty($result)) {
                     page_not_found(l10n('Requested album does not exist'));
                 }
@@ -712,10 +729,9 @@ function unset_make_full_url(): void
 /**
  * Embellish the url argument
  *
- * @param string|array<int|string, mixed> $url
- * @return string|array<int|string, mixed>
+ * @param string $url
  */
-function embellish_url($url): string|array
+function embellish_url($url): string
 {
     $url = str_replace('/./', '/', $url);
     while (($dotdot = strpos($url, '/../', 1)) !== false) {

@@ -228,7 +228,7 @@ function last_rate_compare(array $a, array $b): int
 
 $order_by_index = 4;
 if (isset($_GET['order_by']) and is_numeric($_GET['order_by'])) {
-    $order_by_index = $_GET['order_by'];
+    $order_by_index = (int) $_GET['order_by'];
 }
 
 $available_order_by = [

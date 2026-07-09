@@ -150,13 +150,13 @@ DELETE FROM ' . USER_CACHE_CATEGORIES_TABLE . '
  * Deletes all files (on disk) related to given image ids.
  *
  * @param int[] $ids
- * @return 0|int[] image ids where files were successfully deleted
+ * @return int[] image ids where files were successfully deleted
  */
-function delete_element_files($ids): int|array
+function delete_element_files($ids): array
 {
     global $conf;
     if (count($ids) == 0) {
-        return 0;
+        return [];
     }
 
     $new_ids = [];
@@ -217,7 +217,13 @@ SELECT
         }
 
         if ($ok) {
-            delete_element_derivatives($row);
+            $derivative_infos = [
+                'path' => (string) $row['path'],
+            ];
+            if (! empty($row['representative_ext'])) {
+                $derivative_infos['representative_ext'] = (string) $row['representative_ext'];
+            }
+            delete_element_derivatives($derivative_infos);
             $new_ids[] = $row['id'];
         } else {
             break;
@@ -414,7 +420,15 @@ SELECT
   WHERE tag_id IS NULL
     AND lastmodified < SUBDATE(NOW(), INTERVAL 1 DAY)
 ;';
-    return query2array($query);
+    $orphan_tags = [];
+    $result = pwg_query($query);
+    while ($row = pwg_db_fetch_assoc($result)) {
+        $orphan_tags[] = [
+            'id' => (string) $row['id'],
+            'name' => (string) $row['name'],
+        ];
+    }
+    return $orphan_tags;
 }
 
 /**
@@ -945,6 +959,9 @@ SELECT id,representative_ext,path
 ;';
 
     $row = pwg_db_fetch_assoc(pwg_query($query));
+    if ($row === false || $row === null) {
+        throw new Exception("get_category_representant_properties(): image {$image_id} does not exist (stale representative_picture_id?)");
+    }
     if ($size == null) {
         $src = DerivativeImage::thumb_url($row);
     } else {
@@ -1099,8 +1116,8 @@ function get_fs($path, $recursive = true)
                     $subdirs[] = $node;
                 }
             }
+            closedir($contents);
         }
-        closedir($contents);
 
         foreach ($subdirs as $subdir) {
             $tmp_fs = get_fs($path . '/' . $subdir);
@@ -1375,7 +1392,7 @@ SELECT MAX(`rank`) AS max_rank
 ;';
         $row = pwg_db_fetch_assoc(pwg_query($query));
 
-        if (is_numeric($row['max_rank'])) {
+        if ($row !== false && $row !== null && is_numeric($row['max_rank'])) {
             $rank = $row['max_rank'] + 1;
         }
     }
@@ -1423,6 +1440,11 @@ SELECT id, uppercats, global_rank, visible, status
   WHERE id = ' . $parent_id . '
 ;';
         $parent = pwg_db_fetch_assoc(pwg_query($query));
+        if ($parent === false || $parent === null) {
+            return [
+                'error' => l10n('The parent album does not exist'),
+            ];
+        }
 
         $insert['id_uppercat'] = $parent['id'];
         $insert['global_rank'] = $parent['global_rank'] . '.' . $insert['rank'];
@@ -1484,9 +1506,9 @@ SELECT id, uppercats, global_rank, visible, status
       WHERE cat_id = ' . $insert['id_uppercat'] . '
     ;';
         $granted_users = query2array($query, null, 'user_id');
-        add_permission_on_category($inserted_id, $granted_users);
+        add_permission_on_category((int) $inserted_id, $granted_users);
     } elseif ($insert['status'] == 'private') {
-        add_permission_on_category($inserted_id, array_unique(array_merge(get_admins(), [$user['id']])));
+        add_permission_on_category((int) $inserted_id, array_unique(array_merge(get_admins(), [$user['id']])));
     }
 
     trigger_notify('create_virtual_category', array_merge([
@@ -1606,9 +1628,8 @@ DELETE
  * Returns a tag id from its name. If nothing found, create a new tag.
  *
  * @param string $tag_name
- * @return int
  */
-function tag_id_from_tag_name($tag_name)
+function tag_id_from_tag_name($tag_name): int
 {
     global $page;
 
@@ -1655,7 +1676,7 @@ SELECT id
                     ]
                 );
 
-                $page['tag_id_from_tag_name_cache'][$tag_name] = pwg_db_insert_id();
+                $page['tag_id_from_tag_name_cache'][$tag_name] = (int) pwg_db_insert_id();
 
                 invalidate_user_cache_nb_tags();
 
@@ -1664,7 +1685,7 @@ SELECT id
         }
     }
 
-    $page['tag_id_from_tag_name_cache'][$tag_name] = $existing_tags[0];
+    $page['tag_id_from_tag_name_cache'][$tag_name] = (int) $existing_tags[0];
     return $page['tag_id_from_tag_name_cache'][$tag_name];
 }
 
@@ -1753,9 +1774,10 @@ SELECT
  * Compare the list of tags, for each image. Returns image_ids where tag list has changed.
  *
  * @since 2.9
- * @param array<int|string, array<int, int|string>> $taglist_before - for each image_id (key), list of tag ids
- * @param array<int|string, array<int, int|string>> $taglist_after - for each image_id (key), list of tag ids
- * @return array<int, int|string> - image_ids where the list has changed
+ * @param array<int, int[]> $taglist_before - for each image_id (key), list of tag ids;
+ *   all 3 real callers pass get_image_tag_ids()'s return directly
+ * @param array<int, int[]> $taglist_after - for each image_id (key), list of tag ids
+ * @return array<int, int> - image_ids where the list has changed
  */
 function compare_image_tag_lists(array $taglist_before, array $taglist_after): array
 {
@@ -1857,7 +1879,10 @@ SELECT
   ORDER BY category_id ASC, image_id ASC
 ;';
 
-    $rows = query2array($query);
+    // query2array() with no key_name/value_name always returns a
+    // sequential list (array<int, mixed>) — see qsearch_get_images()'s
+    // comment in functions_search.inc.php for the general pattern.
+    $rows = array_values(query2array($query));
 
     $images = [];
     foreach ($rows as $idx => $row) {
@@ -2109,7 +2134,7 @@ function invalidate_user_cache(bool $full = true): void
 {
     global $persistent_cache, $logger;
 
-    if (isset($logger) and gettype($logger) == 'object' and $logger::class == 'Logger') {
+    if (isset($logger) and $logger instanceof Logger) {
         $logger->info(__FUNCTION__ . ' called');
     }
 
@@ -2173,8 +2198,12 @@ function get_extents($start = ''): array
     if ($start == '') {
         $start = './template-extension';
     }
-    $dir = opendir($start);
     $extents = [];
+
+    $dir = opendir($start);
+    if ($dir === false) {
+        return $extents;
+    }
 
     while (($file = readdir($dir)) !== false) {
         if ($file == '.' or $file == '..' or $file == '.svn') {
@@ -2188,6 +2217,7 @@ function get_extents($start = ''): array
             $extents[] = substr($path, 21);
         }
     }
+    closedir($dir);
     return $extents;
 }
 
@@ -2612,7 +2642,7 @@ function get_tag_ids($raw_tags, $allow_create = true): array
 
     foreach ($raw_tags as $raw_tag) {
         if (preg_match('/^~~(\d+)~~$/', $raw_tag, $matches)) {
-            $tag_ids[] = $matches[1];
+            $tag_ids[] = (int) $matches[1];
         } elseif ($allow_create) {
             // we have to create a new tag
             $tag_ids[] = tag_id_from_tag_name(strip_tags($raw_tag));
@@ -2636,7 +2666,7 @@ function order_by_name($element_ids, array $name): array
     $ordered_element_ids = [];
     foreach ($element_ids as $k_id => $element_id) {
         $key = strtolower($name[$element_id]) . '-' . $name[$element_id] . '-' . $k_id;
-        $ordered_element_ids[$key] = $element_id;
+        $ordered_element_ids[$key] = (int) $element_id;
     }
     ksort($ordered_element_ids);
     return $ordered_element_ids;
@@ -2664,6 +2694,10 @@ function add_permission_on_category($category_ids, $user_ids): void
     if (count($category_ids) == 0 or count($user_ids) == 0) {
         return;
     }
+
+    // normalize: real callers pass a mix of int and numeric-string ids
+    // (see this function's own docblock)
+    $category_ids = array_map(intval(...), $category_ids);
 
     // make sure categories are private and select uppercats or subcats
     $cat_ids = get_uppercat_ids($category_ids);
@@ -2827,9 +2861,10 @@ function clear_derivative_cache_rec(string $path, string $pattern): bool
  * Deletes derivatives of a particular element
  *
  * @param array{path: string, representative_ext?: string} $infos
- * @param 'all'|int|'custom' $type IMG_CUSTOM (defined as the string
- *   'custom') is a legitimate value, not just the numeric IMG_* type
- *   constants — admin/picture_coi.php passes it directly
+ * @param string $type 'all', or one of the IMG_* constants (all defined as
+ *   strings — e.g. IMG_CUSTOM is 'custom'); real callers are
+ *   admin/picture_coi.php ($params->type / IMG_CUSTOM) and
+ *   admin/batch_manager_global.php (raw $_POST values), never an int
  */
 function delete_element_derivatives(array $infos, $type = 'all'): void
 {
@@ -2841,6 +2876,9 @@ function delete_element_derivatives(array $infos, $type = 'all'): void
         $path = substr((string) $path, 3);
     }
     $dot = strrpos((string) $path, '.');
+    if ($dot === false) {
+        throw new Exception("delete_element_derivatives(): path '{$path}' has no extension");
+    }
     if ($type == 'all') {
         $pattern = '-*';
     } else {
@@ -2887,17 +2925,19 @@ function deltree($path, $trash_path = null): ?bool
 {
     if (is_dir($path)) {
         $fh = opendir($path);
-        while ($file = readdir($fh)) {
-            if ($file != '.' and $file != '..') {
-                $pathfile = $path . '/' . $file;
-                if (is_dir($pathfile)) {
-                    deltree($pathfile, $trash_path);
-                } else {
-                    @unlink($pathfile);
+        if ($fh !== false) {
+            while ($file = readdir($fh)) {
+                if ($file != '.' and $file != '..') {
+                    $pathfile = $path . '/' . $file;
+                    if (is_dir($pathfile)) {
+                        deltree($pathfile, $trash_path);
+                    } else {
+                        @unlink($pathfile);
+                    }
                 }
             }
+            closedir($fh);
         }
-        closedir($fh);
 
         if (@rmdir($path)) {
             return true;
@@ -3221,8 +3261,8 @@ function get_cache_size_derivatives(string $path): array
                     }
                 }
             }
+            closedir($contents);
         }
-        closedir($contents);
     }
     return $msizes;
 }
@@ -3341,6 +3381,12 @@ function get_piwigo_news(): mixed
         if (fetchRemote($url, $content)) {
             $all_news = [];
 
+            // $content is never a resource here: no fopen() handle is
+            // passed to fetchRemote() above, unlike e.g. themes.class.php's
+            // archive-download call sites.
+            if (! is_string($content)) {
+                throw new Exception('get_piwigo_news(): unexpected resource from fetchRemote()');
+            }
             $porg_news_getLatest = json_decode($content, true);
 
             if (isset($porg_news_getLatest['result'])) {
@@ -3364,7 +3410,10 @@ function get_piwigo_news(): mixed
     }
 
     if ($news === null) {
-        $news = unserialize(file_get_contents($cache_path));
+        $cached_contents = file_get_contents($cache_path);
+        if ($cached_contents !== false) {
+            $news = unserialize($cached_contents);
+        }
     }
 
     return $news;

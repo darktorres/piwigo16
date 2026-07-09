@@ -72,6 +72,11 @@ SELECT COUNT(id) AS count
   WHERE galleries_url = \'' . $url . '\'
 ;';
     $row = pwg_db_fetch_assoc(pwg_query($query));
+    // a COUNT(*) query always returns exactly one row
+    assert(is_array($row));
+    // $page['errors'] is always a plain array, initialized by
+    // include/common.inc.php
+    assert(is_array($page['errors']));
     if ($row['count'] > 0) {
         $page['errors'][] = l10n('This site already exists') . ' [' . $url . ']';
     }

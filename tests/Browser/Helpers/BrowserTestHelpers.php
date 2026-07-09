@@ -78,9 +78,22 @@ final class BrowserTestHelpers
         ];
     }
 
-    /** Visits a path against the configured base URL, in test mode. */
+    /**
+     * Visits a path against the configured base URL, in test mode.
+     *
+     * $test is the Pest test case ($this from inside a test() closure).
+     * Pest mixes pest-plugin-browser's Browsable trait (visit(), etc.)
+     * into its generated test case class at runtime via its own plugin
+     * loader (Plugin::uses(Browsable::class) in the plugin's Autoload.php)
+     * — there is no interface or base class PHPStan can see this
+     * through, and this project doesn't wire in Pest's own PHPStan
+     * extension (which understands its plugin system). Confirmed by
+     * grepping every real call site of visit()/visitPwg() in this repo:
+     * $test is always $this from directly inside a Pest test() closure.
+     */
     public static function visitPwg(object $test, string $path): Webpage|PendingAwaitablePage|AwaitableWebpage
     {
+        // @phpstan-ignore method.notFound
         return $test->visit(self::baseUrl() . $path, self::testModeOptions());
     }
 
@@ -461,15 +474,15 @@ final class BrowserTestHelpers
     /** @param array<string, mixed> $fields */
     private static function curlWs(string $cookieJar, array $fields): string
     {
+        // the only caller passes tempnam()'s result, always a real path
+        assert($cookieJar !== '');
         $ch = curl_init(self::baseUrl() . '/ws.php?format=json');
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST           => true,
-            CURLOPT_POSTFIELDS     => $fields,
-            CURLOPT_COOKIEJAR      => $cookieJar,
-            CURLOPT_COOKIEFILE     => $cookieJar,
-            CURLOPT_HTTPHEADER     => ['X-Piwigo-Env: test'],
-        ]);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $fields);
+        curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
+        curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['X-Piwigo-Env: test']);
         $body = curl_exec($ch);
         unset($ch);
 

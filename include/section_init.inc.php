@@ -61,10 +61,16 @@ if (str_starts_with($page['root_path'], './')) {
     $page['root_path'] = substr($page['root_path'], 2);
 }
 
+// $_SERVER['PATH_INFO']/$_GET keys are usually strings, but PHP allows
+// array-valued query-string keys (e.g. ?foo[]=1) — not a valid section
+// URL, degrade to an empty path rather than crash
+if (! is_string($rewritten)) {
+    $rewritten = '';
+}
 $page['section_url'] = $rewritten;
 
 // deleting first "/" if displayed
-$tokens = explode('/', ltrim((string) $rewritten, '/'));
+$tokens = explode('/', ltrim($rewritten, '/'));
 // $tokens = array(
 //   0 => category,
 //   1 => 12-foo,
@@ -211,6 +217,9 @@ if ($page['section'] == 'categories') {
 
     // GET IMAGES LIST
     if (isset($page['combined_categories'])) {
+        // combined_categories is only ever set (by parse_section_url() in
+        // functions_url.inc.php) after category has already been set
+        assert(isset($page['category']));
         $cat_ids = [$page['category']['id']];
         foreach ($page['combined_categories'] as $category) {
             $cat_ids[] = $category['id'];
@@ -218,6 +227,8 @@ if ($page['section'] == 'categories') {
 
         $page['items'] = get_image_ids_for_categories($cat_ids);
     } elseif (
+        // startcat is always set at the top of this file
+        isset($page['startcat']) and
         $page['startcat'] == 0 and
         (! isset($page['chronology_field'])) and // otherwise the calendar will requery all subitems
         (
@@ -264,6 +275,11 @@ SELECT id
         }
         // normal mode
         else {
+            // the enclosing elseif requires isset($page['category']) or
+            // isset($page['flat']); $page['flat'] isn't set in this branch
+            // (see the `if (isset($page['flat']))` above), so category
+            // must be the one that's set
+            assert(isset($page['category']));
             $where_sql = 'category_id = ' . $page['category']['id'];
         }
 
@@ -293,6 +309,9 @@ else {
     // |                            tags section                               |
     // +-----------------------------------------------------------------------+
     if ($page['section'] == 'tags') {
+        // parse_section_url() (functions_url.inc.php) always sets 'tags'
+        // alongside 'section' => 'tags'
+        assert(isset($page['tags']));
         $page['tag_ids'] = [];
         foreach ($page['tags'] as $tag) {
             $page['tag_ids'][] = $tag['id'];
@@ -322,7 +341,11 @@ else {
     elseif ($page['section'] == 'search') {
         include_once PHPWG_ROOT_PATH . 'include/functions_search.inc.php';
 
-        $search_result = get_search_results($page['search'], @$page['super_order_by']);
+        // parse_section_url() (functions_url.inc.php) always sets 'search'
+        // alongside 'section' => 'search'; 'super_order_by' is genuinely
+        // optional (get_search_results()'s 2nd param is ?bool)
+        assert(isset($page['search']));
+        $search_result = get_search_results($page['search'], $page['super_order_by'] ?? null);
 
         // save the details of the query search
         if (isset($search_result['qs'])) {
@@ -511,6 +534,9 @@ SELECT DISTINCT(id)
     // |                             list section                              |
     // +-----------------------------------------------------------------------+
     elseif ($page['section'] == 'list') {
+        // parse_section_url() (functions_url.inc.php) always sets 'list'
+        // (a dummy [-1] or a real id list) alongside 'section' => 'list'
+        assert(isset($page['list']));
         $query = '
 SELECT DISTINCT(id)
   FROM ' . IMAGES_TABLE . '

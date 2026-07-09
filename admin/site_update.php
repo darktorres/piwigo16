@@ -31,7 +31,7 @@ check_status(ACCESS_ADMINISTRATOR);
 if (! is_numeric($_GET['site'])) {
     die('site param missing or invalid');
 }
-$site_id = $_GET['site'];
+$site_id = (int) $_GET['site'];
 
 $query = '
 SELECT galleries_url
@@ -163,11 +163,11 @@ SELECT id, uppercats, global_rank, status, visible
 
     // get categort full directories in an array for comparison with file
     // system directory tree
-    $db_fulldirs = get_fulldirs(array_keys($db_categories));
+    $db_fulldirs = get_fulldirs(array_map('intval', array_keys($db_categories)));
 
     // what is the base directory to search file system sub-directories ?
     if (isset($_POST['cat']) and is_numeric($_POST['cat'])) {
-        $basedir = $db_fulldirs[$_POST['cat']];
+        $basedir = $db_fulldirs[(int) $_POST['cat']];
     } else {
         $basedir = preg_replace('#/*$#', '', $site_url);
     }
@@ -644,7 +644,11 @@ DELETE
     // delete elements that are in database but not in the filesystem
     $to_delete_elements = [];
     foreach (array_diff($db_elements, array_keys($fs)) as $path) {
-        $to_delete_elements[] = array_search($path, $db_elements);
+        // $path is sourced from $db_elements itself (via array_diff), so
+        // it's always found in it
+        $element_id = array_search($path, $db_elements);
+        assert($element_id !== false);
+        $to_delete_elements[] = (int) $element_id;
         $infos[] = [
             'path' => $path,
             'info' => l10n('deleted'),

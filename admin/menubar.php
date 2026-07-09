@@ -20,7 +20,7 @@ if (! is_webmaster()) {
     $page['warnings'][] = str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'));
 }
 
-function abs_fn_cmp(int|float $a, int|float $b): float|int
+function abs_fn_cmp(int $a, int $b): int
 {
     return abs($a) - abs($b);
 }
@@ -82,7 +82,7 @@ foreach ($reg_blocks as $id => $block) {
 if (isset($_POST['submit']) and is_webmaster()) {
     foreach ($mb_conf as $id => $pos) {
         $hide = isset($_POST['hide_' . $id]);
-        $mb_conf[$id] = ($hide ? -1 : +1) * abs($pos);
+        $mb_conf[$id] = ($hide ? -1 : +1) * (int) abs($pos);
 
         $pos = (int) @$_POST['pos_' . $id];
         if ($pos > 0) {

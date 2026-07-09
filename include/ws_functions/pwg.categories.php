@@ -1050,6 +1050,9 @@ SELECT *
   WHERE id = ' . $params['category_id'] . '
 ;';
     $category = pwg_db_fetch_assoc(pwg_query($query));
+    // the category's existence was already verified above, and nothing
+    // in between could have deleted it
+    assert(is_array($category));
 
     return get_category_representant_properties($category['representative_picture_id'], IMG_SMALL);
 }
@@ -1085,6 +1088,9 @@ function ws_categories_delete(array $params, PwgServer &$service): ?\PwgError
             -1,
             PREG_SPLIT_NO_EMPTY
         );
+        if ($params['category_id'] === false) {
+            throw new Exception(__FUNCTION__ . '(): preg_split() failed');
+        }
     }
     $params['category_id'] = array_map(intval(...), $params['category_id']);
 
@@ -1142,6 +1148,9 @@ function ws_categories_move(array $params, PwgServer &$service): \PwgError|array
             -1,
             PREG_SPLIT_NO_EMPTY
         );
+        if ($params['category_id'] === false) {
+            throw new Exception(__FUNCTION__ . '(): preg_split() failed');
+        }
     }
     $params['category_id'] = array_map(intval(...), $params['category_id']);
 

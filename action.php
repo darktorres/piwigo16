@@ -72,6 +72,7 @@ if (! isset($_GET['id'])
     or ! in_array($_GET['part'], ['e', 'r', 'f'])) {
     do_error(400, 'Invalid request - id/part');
 }
+$_GET['id'] = (int) $_GET['id'];
 
 $query = '
 SELECT * FROM ' . IMAGES_TABLE . '
@@ -167,7 +168,10 @@ if (! url_is_remote($file)) {
         $ctype = mime_content_type($file);
     }
 
-    $gmt_mtime = gmdate('D, d M Y H:i:s', filemtime($file)) . ' GMT';
+    $file_mtime = filemtime($file);
+    // is_readable() was just checked above, so the file exists
+    assert($file_mtime !== false);
+    $gmt_mtime = gmdate('D, d M Y H:i:s', $file_mtime) . ' GMT';
     $http_headers[] = 'Last-Modified: ' . $gmt_mtime;
 
     // following lines would indicate how the client should handle the cache

@@ -24,9 +24,9 @@ function global_rank_compare(array $a, array $b): int
  * @param array<string, mixed> $a
  * @param array<string, mixed> $b
  */
-function rank_compare(array $a, array $b): int|float
+function rank_compare(array $a, array $b): int
 {
-    return $a['rank'] - $b['rank'];
+    return (int) $a['rank'] - (int) $b['rank'];
 }
 
 /**
@@ -619,7 +619,7 @@ SELECT id
     }
     $query .= "\n" . (empty($order_by) ? $conf['order_by'] : $order_by);
 
-    return query2array($query, null, 'id');
+    return array_values(query2array($query, null, 'id'));
 }
 
 /**
@@ -688,7 +688,11 @@ function get_related_categories_menu($items, $excluded_cat_ids = []): array
 {
     global $page, $conf;
 
-    $common_cats = get_common_categories($items, $conf['related_albums_display_limit'], $excluded_cat_ids);
+    $common_cats = get_common_categories(
+        array_map('intval', $items),
+        $conf['related_albums_display_limit'],
+        array_map('intval', $excluded_cat_ids)
+    );
     // echo '<pre>'; print_r($common_cats); echo '</pre>';
 
     if (count($common_cats) == 0) {

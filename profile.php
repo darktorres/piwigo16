@@ -47,6 +47,7 @@ SELECT ' . implode(',', $fields) . '
 ;';
     $result = pwg_query($query);
     $default_user = pwg_db_fetch_assoc($result);
+    assert(is_array($default_user));
     $template->assign('DEFAULT_USER_VALUES', $default_user);
 
     // Reset to default (Guest) custom settings

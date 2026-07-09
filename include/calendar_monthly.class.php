@@ -221,6 +221,7 @@ class CalendarMonthly extends CalendarBase
         // echo ('<pre>'. var_export($items, true) . '</pre>');
         if (count($items) == 1) {// only one year exists so bail out to year view
             [$y] = array_keys($items);
+            assert(is_array($page['chronology_date']));
             $page['chronology_date'][CYEAR] = $y;
             return false;
         }
@@ -350,6 +351,10 @@ class CalendarMonthly extends CalendarBase
             unset($page['chronology_date'][CDAY]);
 
             $row = pwg_db_fetch_assoc(pwg_query($query));
+            // $day came from the grouped count query above, which only
+            // includes days with at least one image, so this LIMIT 1
+            // query always finds a row
+            assert(is_array($row));
             $derivative = new DerivativeImage(IMG_SQUARE, new SrcImage($row));
             $items[$day]['derivative'] = $derivative;
             $items[$day]['file'] = $row['file'];

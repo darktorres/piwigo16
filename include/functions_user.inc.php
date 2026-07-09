@@ -168,7 +168,7 @@ function register_user($login, #[\SensitiveParameter] $password, ?string $mail_a
         ];
 
         single_insert(USERS_TABLE, $insert);
-        $user_id = pwg_db_insert_id();
+        $user_id = (int) pwg_db_insert_id();
 
         // Assign by default groups
         $query = '
@@ -326,6 +326,9 @@ SELECT ';
   WHERE ' . $conf['user_fields']['id'] . ' = \'' . $user_id . '\'';
 
     $row = pwg_db_fetch_assoc(pwg_query($query));
+    if ($row === false || $row === null) {
+        throw new Exception('getuserdata(): no such user_id ' . $user_id);
+    }
 
     // retrieve additional user data ?
     if ($conf['external_authentification']) {
@@ -358,6 +361,9 @@ SELECT
 
     $result = pwg_query($query);
     $user_infos_row = pwg_db_fetch_assoc($result);
+    if ($user_infos_row === false || $user_infos_row === null) {
+        throw new Exception('getuserdata(): user_infos fetch failed for user_id ' . $user_id);
+    }
 
     // then merge basic + additional user data
     $userdata = array_merge($row, $user_infos_row);
@@ -493,7 +499,11 @@ DELETE FROM ' . USER_CACHE_CATEGORIES_TABLE . '
                     'user_id', 'cat_id',
                     'date_last', 'max_date_last', 'nb_images', 'count_images', 'nb_categories', 'count_categories',
                 ],
-                $user_cache_cats,
+                // mass_inserts() only reads values (row shape/data), never
+                // this array's own keys — get_computed_categories() keys by
+                // cat_id (int|string, a raw DB fetch value) for the
+                // remove_computed_category() lookups above, not relevant here
+                array_values($user_cache_cats),
                 [
                     'ignore' => true,
                 ]
@@ -772,14 +782,14 @@ function get_default_user_value($value_name, $default)
  */
 function get_default_theme()
 {
-    $theme = get_default_user_value('theme', PHPWG_DEFAULT_TEMPLATE);
+    $theme = (string) get_default_user_value('theme', PHPWG_DEFAULT_TEMPLATE);
     if (check_theme_installed($theme)) {
         return $theme;
     }
 
     // let's find the first available theme
     $active_themes = array_keys(get_pwg_themes());
-    return $active_themes[0] ?? 'default';
+    return isset($active_themes[0]) ? (string) $active_themes[0] : 'default';
 }
 
 /**
@@ -941,6 +951,9 @@ WHERE ' . $conf['user_fields']['id'] . ' = ' . $user_id;
     $result = pwg_query($query);
     if (pwg_db_num_rows($result) > 0) {
         $row = pwg_db_fetch_assoc($result);
+        if ($row === false || $row === null) {
+            throw new Exception('calculate_auto_login_key(): fetch failed after a non-zero pwg_db_num_rows()');
+        }
         $username = stripslashes((string) $row['username']);
         $data = $time . $user_id . $username;
         $key = base64_encode(hash_hmac('sha1', $data, $conf['secret_key'] . $row['password'], true));
@@ -992,6 +1005,9 @@ function log_user($user_id, $remember_me): void
 
     if ($remember_me and $conf['authorize_remembering']) {
         $now = time();
+        // false is not reachable in practice here — see this function's
+        // own docblock on $user_id
+        assert($user_id !== false);
         $key = calculate_auto_login_key($user_id, $now, $username);
         if ($key !== false) {
             $cookie = $user_id . '-' . $now . '-' . $key;
@@ -1001,9 +1017,9 @@ function log_user($user_id, $remember_me): void
                 [
                     'expires' => time() + $conf['remember_me_length'],
                     'path' => cookie_path(),
-                    'domain' => ini_get('session.cookie_domain'),
-                    'secure' => ini_get('session.cookie_secure'),
-                    'httponly' => ini_get('session.cookie_httponly'),
+                    'domain' => (string) ini_get('session.cookie_domain'),
+                    'secure' => (bool) ini_get('session.cookie_secure'),
+                    'httponly' => (bool) ini_get('session.cookie_httponly'),
                 ]
             );
         }
@@ -1011,7 +1027,7 @@ function log_user($user_id, $remember_me): void
         setcookie($conf['remember_me_name'], '', [
             'expires' => 0,
             'path' => cookie_path(),
-            'domain' => ini_get('session.cookie_domain'),
+            'domain' => (string) ini_get('session.cookie_domain'),
         ]);
     }
     if (session_id() != '') { // we regenerate the session for security reasons
@@ -1037,10 +1053,10 @@ function auto_login(): bool
     if (isset($_COOKIE[$conf['remember_me_name']])) {
         $cookie = explode('-', stripslashes((string) $_COOKIE[$conf['remember_me_name']]));
         if (count($cookie) === 3
-            and is_numeric(@$cookie[0]) /* user id */
-            and is_numeric(@$cookie[1]) /* time */
-            and time() - $conf['remember_me_length'] <= @$cookie[1]
-            and time() >= @$cookie[1] /* cookie generated in the past */) {
+            and is_numeric($cookie[0]) /* user id */
+            and is_numeric($cookie[1]) /* time */
+            and time() - $conf['remember_me_length'] <= $cookie[1]
+            and time() >= $cookie[1] /* cookie generated in the past */) {
             $key = calculate_auto_login_key($cookie[0], $cookie[1], $username);
             if ($key !== false and $key === $cookie[2]) {
                 // Since Piwigo 16, 'connected_with' in the session defines the authentication context (UI, API, etc).
@@ -1056,7 +1072,7 @@ function auto_login(): bool
         setcookie($conf['remember_me_name'], '', [
             'expires' => 0,
             'path' => cookie_path(),
-            'domain' => ini_get('session.cookie_domain'),
+            'domain' => (string) ini_get('session.cookie_domain'),
         ]);
     }
     return false;
@@ -1404,19 +1420,22 @@ function logout_user(): void
     $_SESSION = [];
     session_unset();
     session_destroy();
-    setcookie(
-        session_name(),
-        '',
-        [
-            'expires' => 0,
-            'path' => ini_get('session.cookie_path'),
-            'domain' => ini_get('session.cookie_domain'),
-        ]
-    );
+    $current_session_name = session_name();
+    if ($current_session_name !== false) {
+        setcookie(
+            $current_session_name,
+            '',
+            [
+                'expires' => 0,
+                'path' => (string) ini_get('session.cookie_path'),
+                'domain' => (string) ini_get('session.cookie_domain'),
+            ]
+        );
+    }
     setcookie($conf['remember_me_name'], '', [
         'expires' => 0,
         'path' => cookie_path(),
-        'domain' => ini_get('session.cookie_domain'),
+        'domain' => (string) ini_get('session.cookie_domain'),
     ]);
 }
 
@@ -1936,8 +1955,12 @@ function generate_password_link($user_id, $first_login = false): array
 
     unset_make_full_url();
 
+    $validation_timestamp = strtotime('now -' . $duration . ' second');
+    if ($validation_timestamp === false) {
+        throw new Exception('strtotime() failed for duration ' . $duration);
+    }
     $time_validation = time_since(
-        strtotime('now -' . $duration . ' second'),
+        $validation_timestamp,
         'second',
         null,
         false
@@ -2471,7 +2494,7 @@ SELECT
  * @since 16
  * @param int $user_id
  * @param string $pkid
- * @return string|bool
+ * @return string|true
  */
 function revoke_api_key($user_id, $pkid)
 {
@@ -2509,7 +2532,7 @@ SELECT
  * @since 16
  * @param int $user_id
  * @param string $pkid
- * @return string|bool
+ * @return string|true
  */
 function edit_api_key($user_id, $pkid, ?string $api_name)
 {
@@ -2556,7 +2579,10 @@ SELECT *
   AND key_type = "api_key"
 ;';
 
-    $api_keys = query2array($query);
+    // query2array() with no key_name/value_name always returns a
+    // sequential list (array<int, mixed>) — see qsearch_get_images()'s
+    // comment in functions_search.inc.php for the general pattern.
+    $api_keys = array_values(query2array($query));
     if (! $api_keys) {
         return false;
     }
@@ -2582,6 +2608,9 @@ SELECT
 
         $expired_on = str2DateTime($api_key['expired_on']);
         $now = str2DateTime($now);
+        if ($expired_on === false || $now === false) {
+            throw new Exception('get_api_key(): str2DateTime() failed on a DB-stored date');
+        }
 
         $api_key['is_expired'] = $expired_on < $now;
         if ($api_key['is_expired']) {

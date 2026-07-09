@@ -287,7 +287,8 @@ class Template
      */
     public function get_template_dir()
     {
-        return $this->smarty->getTemplateDir();
+        $dir = $this->smarty->getTemplateDir(0);
+        return is_string($dir) ? $dir : '';
     }
 
     /**
@@ -399,7 +400,10 @@ class Template
               and ($thm == $theme or $thm == 'N/A')
               and (! isset($this->extents[$handle]) or $overwrite)
               and file_exists($dir . $filename)) {
-                $this->extents[$handle] = realpath($dir . $filename);
+                $real_path = realpath($dir . $filename);
+                if ($real_path !== false) {
+                    $this->extents[$handle] = $real_path;
+                }
             }
         }
         return true;
@@ -714,6 +718,9 @@ class Template
      */
     public static function mod_explode($text, $delimiter = ','): array
     {
+        if ($delimiter === '') {
+            throw new Exception('mod_explode(): delimiter must not be empty');
+        }
         return explode($delimiter, $text);
     }
 
@@ -911,9 +918,8 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      * Returns clean relative URL to script file.
      *
      * @param Combinable $script
-     * @return string|array<int|string, mixed>
      */
-    private static function make_script_src($script): string|array
+    private static function make_script_src($script): string
     {
         $ret = '';
         if ($script->is_remote()) {
@@ -924,8 +930,14 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
                 $ret .= '?v' . ($script->version ?: PHPWG_VERSION);
             }
         }
-        // trigger the event for eventual use of a cdn
+        // trigger the event for eventual use of a cdn — no in-tree listener
+        // registers for 'combined_script', so $ret is always still a string
+        // here, but a plugin listener could theoretically return something
+        // else, which would be a plugin bug worth surfacing loudly
         $ret = trigger_change('combined_script', $ret, $script);
+        if (! is_string($ret)) {
+            throw new Exception("make_script_src(): a 'combined_script' event listener returned a non-string value");
+        }
         return embellish_url($ret);
     }
 
@@ -1352,7 +1364,8 @@ final class Script extends Combinable
      * @param int $load_mode 0,1,2
      * @param string $id
      * @param string $path
-     * @param string $version
+     * @param string|false $version false disables version-based cache
+     *   busting, mirroring Combinable::$version's own contract
      * @param string[] $precedents
      */
     public function __construct(
@@ -1375,7 +1388,8 @@ final class Css extends Combinable
     /**
      * @param string $id
      * @param string $path
-     * @param string $version
+     * @param string|false $version false disables version-based cache
+     *   busting, mirroring Combinable::$version's own contract
      * @param int $order
      */
     public function __construct(
@@ -1796,6 +1810,12 @@ class ScriptLoader
      */
     private static function cmp_by_mode_and_order(Script $s1, Script $s2): int
     {
+        // both scripts always went through compute_script_topological_order()
+        // in the loop right before the uasort() call that uses this
+        // comparator (get_head_scripts()/get_footer_scripts()), which always
+        // sets extra['order'] before returning
+        assert(isset($s1->extra['order']) && isset($s2->extra['order']));
+
         $ret = intval($s1->load_mode) - intval($s2->load_mode);
         if ($ret) {
             return $ret;
@@ -1837,6 +1857,9 @@ final class FileCombiner
     public static function clear_combined_files(): void
     {
         $dir = opendir(PHPWG_ROOT_PATH . PWG_COMBINED_DIR);
+        if ($dir === false) {
+            return;
+        }
         while ($file = readdir($dir)) {
             if (get_extension($file) == 'js' || get_extension($file) == 'css') {
                 unlink(PHPWG_ROOT_PATH . PWG_COMBINED_DIR . $file);
@@ -1887,9 +1910,9 @@ final class FileCombiner
             }
 
             $key[] = $combinable->path;
-            $key[] = $combinable->version;
+            $key[] = (string) $combinable->version;
             if ($conf['template_compile_check']) {
-                $key[] = filemtime(PHPWG_ROOT_PATH . $combinable->path);
+                $key[] = (string) filemtime(PHPWG_ROOT_PATH . $combinable->path);
             }
             $pending[] = $combinable;
         }
@@ -1980,6 +2003,9 @@ final class FileCombiner
         }
         if ($return_content) {
             $content = file_get_contents(PHPWG_ROOT_PATH . $combinable->path);
+            if ($content === false) {
+                throw new Exception('do_combine(): unable to read ' . $combinable->path);
+            }
             if ($this->is_css) {
                 $content = self::process_css($content, $combinable->path, $header);
             } else {
@@ -2061,6 +2087,9 @@ final class FileCombiner
                     $replace[] = '';
                 } else {
                     $sub_css = file_get_contents(PHPWG_ROOT_PATH . $dir . "/{$match[1]}");
+                    if ($sub_css === false) {
+                        throw new Exception('process_css_rec(): unable to read ' . $dir . "/{$match[1]}");
+                    }
                     $replace[] = self::process_css_rec($sub_css, dirname($dir . "/{$match[1]}"), $header);
                 }
             }

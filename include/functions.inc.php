@@ -535,8 +535,13 @@ UPDATE ' . USER_INFOS_TABLE . '
         if (strlen($tags_string) > 50) {
             // we need to truncate, mysql won't accept a too long string
             $tags_string = substr($tags_string, 0, 50);
-            // the last tag_id may have been truncated itself, so we must remove it
-            $tags_string = substr($tags_string, 0, strrpos($tags_string, ','));
+            // the last tag_id may have been truncated itself, so we must
+            // remove it — unless there's no comma at all (a single tag_id
+            // >= 50 digits long, not realistic but keep the substring as-is)
+            $last_comma = strrpos($tags_string, ',');
+            if ($last_comma !== false) {
+                $tags_string = substr($tags_string, 0, $last_comma);
+            }
         }
     }
 
@@ -609,7 +614,7 @@ INSERT INTO ' . HISTORY_TABLE . '
 ;';
     pwg_query($query);
 
-    $history_id = pwg_db_insert_id();
+    $history_id = (int) pwg_db_insert_id();
     if ($history_id % 1000 == 0) {
         include_once PHPWG_ROOT_PATH . 'admin/include/functions_history.inc.php';
         history_summarize(50000);
@@ -642,10 +647,7 @@ function pwg_activity(string $object, $object_id, string $action, array $details
         return;
     }
 
-    $object_ids = $object_id;
-    if (! is_array($object_id)) {
-        $object_ids = [$object_id];
-    }
+    $object_ids = is_array($object_id) ? $object_id : [$object_id];
 
     if (isset($_REQUEST['method'])) {
         $details['method'] = $_REQUEST['method'];
@@ -751,9 +753,11 @@ function dateDiff($date1, $date2)
 /**
  * converts a string into a DateTime object
  *
- * @param int|string|DateTime $original timestamp, datetime string, or an
- *   already-converted DateTime (returned as-is; some callers pass the same
- *   value through this function repeatedly)
+ * @param int|string|DateTime|false $original timestamp, datetime string, or
+ *   an already-converted DateTime (returned as-is; some callers pass the
+ *   same value through this function repeatedly) — false/empty short-
+ *   circuits to the empty() check below, so callers may pass another
+ *   function's own DateTime|false return straight through
  * @param string $format input format respecting date() syntax
  * @return DateTime|false
  */
@@ -775,7 +779,7 @@ function str2DateTime($original, $format = null)
             return new DateTime('@' . $original);
         } else { // from unknown date format (assuming something like Y-m-d H:i:s)
             $ymdhms = [];
-            $tok = strtok($original, '- :/');
+            $tok = strtok((string) $original, '- :/');
             while ($tok !== false) {
                 $ymdhms[] = $tok;
                 $tok = strtok('- :/');
@@ -805,7 +809,9 @@ function str2DateTime($original, $format = null)
 /**
  * returns a formatted and localized date for display (LEGACY use format_date)
  *
- * @param int|string $original timestamp or datetime string
+ * @param int|string|DateTime|false $original timestamp, datetime string, or
+ *   an already-converted DateTime/false — same as format_date(), since this
+ *   re-derives via the same permissive str2DateTime()
  * @param string[]|null $show list of components displayed, default is ['day_name', 'day', 'month', 'year']
  * @param string $format input format respecting date() syntax
  * @return string
@@ -892,7 +898,10 @@ function format_date($original, $show = null, $format = null)
         }
 
         $fmt = new IntlDateFormatter($user['language'], $dateType, $timeType);
-        return $fmt->format($date);
+        $formatted = $fmt->format($date);
+        if ($formatted !== false) {
+            return $formatted;
+        }
     }
 
     return format_date_legacy($original, $show, $format);
@@ -909,6 +918,10 @@ function format_fromto($from, $to, $full = false)
 {
     $from = str2DateTime($from);
     $to = str2DateTime($to);
+
+    if ($from === false || $to === false) {
+        return l10n('N/A');
+    }
 
     if ($from->format('Y-m-d') == $to->format('Y-m-d')) {
         return format_date($from);
@@ -1020,6 +1033,9 @@ function transform_date($original, $format_in, $format_out, $default = null)
         return $default;
     }
     $date = str2DateTime($original, $format_in);
+    if ($date === false) {
+        return $default;
+    }
     return $date->format($format_out);
 }
 
@@ -1044,12 +1060,10 @@ function pwg_debug($string): void
 
 /**
  * Redirects to the given URL (HTTP method).
- * once this function called, the execution doesn't go further
- * (presence of an exit() instruction.
  *
  * @param string $url
  */
-function redirect_http($url): void
+function redirect_http($url): never
 {
     if (ob_get_length() !== false) {
         ob_clean();
@@ -1064,14 +1078,12 @@ function redirect_http($url): void
 
 /**
  * Redirects to the given URL (HTML method).
- * once this function called, the execution doesn't go further
- * (presence of an exit() instruction.
  *
  * @param string $url
  * @param string $msg
  * @param int $refresh_time
  */
-function redirect_html($url, $msg = '', $refresh_time = 0): void
+function redirect_html($url, $msg = '', $refresh_time = 0): never
 {
     global $user, $template, $lang_info, $conf, $lang, $t2, $page, $debug;
 
@@ -1116,14 +1128,12 @@ function redirect_html($url, $msg = '', $refresh_time = 0): void
 
 /**
  * Redirects to the given URL (automatically choose HTTP or HTML method).
- * once this function called, the execution doesn't go further
- * (presence of an exit() instruction.
  *
  * @param string $url
  * @param string $msg
  * @param int $refresh_time
  */
-function redirect($url, $msg = '', $refresh_time = 0): void
+function redirect($url, $msg = '', $refresh_time = 0): never
 {
     global $conf;
 
@@ -1739,12 +1749,12 @@ function load_language($filename, $dirname = '', array $options = []): string|bo
     global $user, $language_files;
 
     // keep trace of plugins loaded files for switch_lang_to() function
-    if (! empty($dirname) && ! empty($filename) && ! @$options['return']
+    if (! empty($dirname) && ! empty($filename) && ! ($options['return'] ?? false)
       && ! isset($language_files[$dirname][$filename])) {
         $language_files[$dirname][$filename] = $options;
     }
 
-    if (! @$options['return']) {
+    if (! ($options['return'] ?? false)) {
         $filename .= '.php';
     }
     if (empty($dirname)) {
@@ -1774,7 +1784,7 @@ function load_language($filename, $dirname = '', array $options = []): string|bo
         }
         $languages[] = $options['force_fallback'];
     }
-    if (! @$options['no_fallback']) { // default language
+    if (! ($options['no_fallback'] ?? false)) { // default language
         $languages[] = $default_language;
     }
 
@@ -1784,7 +1794,7 @@ function load_language($filename, $dirname = '', array $options = []): string|bo
     $source_file = '';
     $selected_language = '';
     foreach ($languages as $language) {
-        $f = @$options['local'] ?
+        $f = ($options['local'] ?? false) ?
           $dirname . $language . '.' . $filename :
           $dirname . $language . '/' . $filename;
 
@@ -1796,9 +1806,10 @@ function load_language($filename, $dirname = '', array $options = []): string|bo
     }
 
     if (! empty($source_file)) {
-        if (! @$options['return']) {
+        if (! ($options['return'] ?? false)) {
             // load forced fallback
-            if (isset($options['force_fallback']) && $options['force_fallback'] != $selected_language) {
+            if (isset($options['force_fallback']) && is_string($options['force_fallback'])
+              && $options['force_fallback'] != $selected_language) {
                 @include str_replace($selected_language, $options['force_fallback'], $source_file);
             }
 
@@ -1951,6 +1962,11 @@ function create_navigation_bar($url, int|string $nb_element, $start, $nb_element
 {
     global $conf;
 
+    // real callers pass numeric strings here (see docblock); all downstream
+    // logic is pure arithmetic/comparison, so normalize once at the entry
+    $nb_element = (int) $nb_element;
+    $start = (int) $start;
+
     $navbar = [];
     $pages_around = $conf['paginate_pages_around'];
     $start_str = $clean_url ? '/' . $param_name . '-' : (! str_contains($url, '?') ? '?' : '&amp;') . $param_name . '=';
@@ -2059,7 +2075,12 @@ function get_pwg_token(): string
 {
     global $conf;
 
-    return hash_hmac('md5', session_id(), (string) $conf['secret_key']);
+    $session_id = session_id();
+    if ($session_id === false) {
+        throw new Exception('get_pwg_token(): no active session');
+    }
+
+    return hash_hmac('md5', $session_id, (string) $conf['secret_key']);
 }
 
 /**
@@ -2473,7 +2494,9 @@ SELECT
     // $conf['pem_plugins_category'] = 12;
     // $conf['pem_themes_category'] = 10;
     $url = PEM_URL . '/api/get_extension_list.php';
-    if (fetchRemote($url, $result) and $pem_extensions = @unserialize($result)) {
+    // $result is never a resource here: no fopen() handle is passed to
+    // fetchRemote() above.
+    if (fetchRemote($url, $result) and is_string($result) and $pem_extensions = @unserialize($result)) {
         $official_exts = [];
         foreach ($pem_extensions as $eid => $ext) {
             if (! empty($ext['archive_root_dir'])) {
@@ -2708,7 +2731,7 @@ SELECT
     foreach ($activities as $activity) {
         foreach ($apps_pattern as $app_name => $pattern) {
             if (preg_match($pattern, (string) $activity['user_agent'])) {
-                @$apps[$app_name]['counter'] += $activity['counter'];
+                $apps[$app_name]['counter'] = ($apps[$app_name]['counter'] ?? 0) + $activity['counter'];
 
                 if (! isset($apps[$app_name]['first_encounter']) or strtotime($apps[$app_name]['first_encounter']) > strtotime((string) $activity['first_encounter'])) {
                     $apps[$app_name]['first_encounter'] = $activity['first_encounter'];

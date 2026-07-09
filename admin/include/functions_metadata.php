@@ -112,7 +112,7 @@ function get_sync_metadata_attributes(): array
         $update_fields =
           array_merge(
               $update_fields,
-              array_keys($conf['use_exif_mapping']),
+              array_map('strval', array_keys($conf['use_exif_mapping'])),
               ['latitude', 'longitude']
           );
     }
@@ -121,7 +121,7 @@ function get_sync_metadata_attributes(): array
         $update_fields =
           array_merge(
               $update_fields,
-              array_keys($conf['use_iptc_mapping'])
+              array_map('strval', array_keys($conf['use_iptc_mapping']))
           );
     }
 
@@ -167,26 +167,28 @@ function get_sync_metadata($infos)
     if (function_exists('mime_content_type')) {
         $mime_type = mime_content_type($file);
 
-        if (str_starts_with($mime_type, 'image/')) {
+        if ($mime_type !== false && str_starts_with($mime_type, 'image/')) {
             if (in_array($mime_type, ['image/svg+xml', 'image/svg'])) {
                 $xml = file_get_contents($file);
 
-                $xmlget = simplexml_load_string($xml);
-                $xmlattributes = $xmlget->attributes();
-                $width = $xmlattributes->width;
-                $height = $xmlattributes->height;
-                $vb = (string) $xmlattributes->viewBox;
+                $xmlget = $xml === false ? false : simplexml_load_string($xml);
+                if ($xmlget !== false) {
+                    $xmlattributes = $xmlget->attributes();
+                    $width = $xmlattributes->width;
+                    $height = $xmlattributes->height;
+                    $vb = (string) $xmlattributes->viewBox;
 
-                if (isset($width) and $width != '') {
-                    $infos['width'] = (int) $width;
-                } else {
-                    $infos['width'] = round((float) explode(' ', $vb)[2]);
-                }
+                    if (isset($width) and $width != '') {
+                        $infos['width'] = (int) $width;
+                    } else {
+                        $infos['width'] = round((float) explode(' ', $vb)[2]);
+                    }
 
-                if (isset($height) and $height != '') {
-                    $infos['height'] = (int) $height;
-                } else {
-                    $infos['height'] = round((float) explode(' ', $vb)[3]);
+                    if (isset($height) and $height != '') {
+                        $infos['height'] = (int) $height;
+                    } else {
+                        $infos['height'] = round((float) explode(' ', $vb)[3]);
+                    }
                 }
             }
             if ($image_size = @getimagesize($file)) {

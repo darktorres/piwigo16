@@ -43,6 +43,8 @@ function user_comment_check($action, array $comment)
         (string) $comment['content'],
         $matches
     );
+    // the pattern above is a hardcoded, always-valid regex
+    assert($link_count !== false);
 
     if (str_contains((string) $comment['author'], 'http://')) {
         $link_count++;
@@ -100,6 +102,8 @@ SELECT COUNT(*) AS user_exists
   FROM ' . USERS_TABLE . '
   WHERE ' . $conf['user_fields']['username'] . " = '" . addslashes((string) $comm['author']) . "'";
             $row = pwg_db_fetch_assoc(pwg_query($query));
+            // a COUNT(*) query always returns exactly one row
+            assert(is_array($row));
             if ($row['user_exists'] == 1) {
                 $infos[] = l10n('This login is already used by another user');
                 $comment_action = 'reject';

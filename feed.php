@@ -150,12 +150,17 @@ if (! $image_only) {
         }
         $description .= '</ul>';
 
+        $dbnow_ts = datetime_to_ts($dbnow);
+        // $dbnow is a NOW() value straight from the database, always a
+        // valid datetime string
+        assert($dbnow_ts !== false);
+
         $rss_items[] = [
             'title' => l10n('New on %s', format_date($dbnow)),
             'link' => get_gallery_home_url(),
             'description' => $description,
             'html' => true,
-            'date' => ts_to_iso8601(datetime_to_ts($dbnow)),
+            'date' => ts_to_iso8601($dbnow_ts),
             'author' => $conf['rss_feed_author'],
             'guid' => sprintf('%s', $dbnow),
         ];
@@ -197,12 +202,17 @@ foreach ($dates as $date_detail) { // for each recent post date we create a feed
     $description = '<a href="' . make_index_url() . '">' . $conf['gallery_title'] . '</a><br> ';
     $description .= get_html_description_recent_post_date($date_detail);
 
+    $date_ts = datetime_to_ts($date);
+    // $date is a date_available value straight from the database,
+    // always a valid datetime string
+    assert($date_ts !== false);
+
     $rss_items[] = [
         'title' => get_title_recent_post_date($date_detail),
         'link' => $link,
         'description' => $description,
         'html' => true,
-        'date' => ts_to_iso8601(datetime_to_ts($date)),
+        'date' => ts_to_iso8601($date_ts),
         'author' => $conf['rss_feed_author'],
         'guid' => sprintf('%s', 'pics-' . $date),
     ];

@@ -41,7 +41,7 @@ function get_std_sql_where_restrict_filter(
  * @param string $type 'new_comments', 'unvalidated_comments', 'new_elements', 'updated_categories', 'new_users'
  * @param string $start (mysql datetime format)
  * @param string $end (mysql datetime format)
- * @return int|array<int|string, mixed>|null int for action count, array for
+ * @return int|array<int>|null int for action count, int[] of ids for
  *   info, null for an unrecognized $type/$action
  */
 function custom_notification_query($action, $type, $start = null, $end = null)
@@ -158,7 +158,7 @@ function custom_notification_query($action, $type, $start = null, $end = null)
             }
             $query = 'SELECT COUNT(DISTINCT ' . $field_id . ') ' . $query . ';';
             [$count] = pwg_db_fetch_row(pwg_query($query));
-            return $count;
+            return (int) $count;
 
         case 'info':
 
@@ -180,8 +180,12 @@ function custom_notification_query($action, $type, $start = null, $end = null)
                     break;
             }
             $query = 'SELECT DISTINCT ' . $field_id . ' ' . $query . ';';
-            $infos = query2array($query);
-            return $infos;
+            // the result column is aliased by mysqli to the unqualified
+            // name (e.g. 'c.id' comes back as 'id'), so strip any
+            // table prefix before using it as query2array()'s value_name
+            $result_field = str_contains($field_id, '.') ? substr($field_id, strpos($field_id, '.') + 1) : $field_id;
+            $infos = query2array($query, null, $result_field);
+            return array_values(array_map(intval(...), $infos));
 
         default:
             return null; // stop and return nothing
@@ -197,7 +201,8 @@ function custom_notification_query($action, $type, $start = null, $end = null)
  */
 function nb_new_comments($start = null, $end = null)
 {
-    return custom_notification_query('count', 'new_comments', $start, $end);
+    $result = custom_notification_query('count', 'new_comments', $start, $end);
+    return is_int($result) ? $result : 0;
 }
 
 /**
@@ -209,7 +214,8 @@ function nb_new_comments($start = null, $end = null)
  */
 function new_comments($start = null, $end = null)
 {
-    return custom_notification_query('info', 'new_comments', $start, $end);
+    $result = custom_notification_query('info', 'new_comments', $start, $end);
+    return is_array($result) ? $result : [];
 }
 
 /**
@@ -221,7 +227,8 @@ function new_comments($start = null, $end = null)
  */
 function nb_unvalidated_comments($start = null, $end = null)
 {
-    return custom_notification_query('count', 'unvalidated_comments', $start, $end);
+    $result = custom_notification_query('count', 'unvalidated_comments', $start, $end);
+    return is_int($result) ? $result : 0;
 }
 
 /**
@@ -233,7 +240,8 @@ function nb_unvalidated_comments($start = null, $end = null)
  */
 function nb_new_elements($start = null, $end = null)
 {
-    return custom_notification_query('count', 'new_elements', $start, $end);
+    $result = custom_notification_query('count', 'new_elements', $start, $end);
+    return is_int($result) ? $result : 0;
 }
 
 /**
@@ -245,7 +253,8 @@ function nb_new_elements($start = null, $end = null)
  */
 function new_elements($start = null, $end = null)
 {
-    return custom_notification_query('info', 'new_elements', $start, $end);
+    $result = custom_notification_query('info', 'new_elements', $start, $end);
+    return is_array($result) ? $result : [];
 }
 
 /**
@@ -257,7 +266,8 @@ function new_elements($start = null, $end = null)
  */
 function nb_updated_categories($start = null, $end = null)
 {
-    return custom_notification_query('count', 'updated_categories', $start, $end);
+    $result = custom_notification_query('count', 'updated_categories', $start, $end);
+    return is_int($result) ? $result : 0;
 }
 
 /**
@@ -269,7 +279,8 @@ function nb_updated_categories($start = null, $end = null)
  */
 function updated_categories($start = null, $end = null)
 {
-    return custom_notification_query('info', 'updated_categories', $start, $end);
+    $result = custom_notification_query('info', 'updated_categories', $start, $end);
+    return is_array($result) ? $result : [];
 }
 
 /**
@@ -281,7 +292,8 @@ function updated_categories($start = null, $end = null)
  */
 function nb_new_users($start = null, $end = null)
 {
-    return custom_notification_query('count', 'new_users', $start, $end);
+    $result = custom_notification_query('count', 'new_users', $start, $end);
+    return is_int($result) ? $result : 0;
 }
 
 /**
@@ -293,7 +305,8 @@ function nb_new_users($start = null, $end = null)
  */
 function new_users($start = null, $end = null)
 {
-    return custom_notification_query('info', 'new_users', $start, $end);
+    $result = custom_notification_query('info', 'new_users', $start, $end);
+    return is_array($result) ? $result : [];
 }
 
 /**

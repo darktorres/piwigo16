@@ -103,16 +103,20 @@ function format_email($name, $email): string
  * Returns the email and the name from a formatted address.
  * @since 2.6
  *
- * @param string|string[] $input - if is an array must contain email[, name]
+ * @param string|array<int|string, mixed> $input - if is an array must contain email[, name]
  * @return array{email: string, name: string}
  */
 function unformat_email($input): array
 {
     if (is_array($input)) {
-        if (! isset($input['name'])) {
-            $input['name'] = '';
+        if (! isset($input['email']) || ! is_string($input['email'])) {
+            throw new InvalidArgumentException(__FUNCTION__ . '(): array input must contain a string "email" key');
         }
-        return $input;
+
+        return [
+            'email' => $input['email'],
+            'name' => isset($input['name']) && is_string($input['name']) ? $input['name'] : '',
+        ];
     }
 
     if (preg_match('/(.*)<(.*)>.*/', $input, $matches)) {
@@ -620,7 +624,7 @@ function pwg_mail($to, array $args = [], array $tpl = [])
     }
 
     // Bcc
-    $Bcc = get_clean_recipients_list(@$args['Bcc']);
+    $Bcc = get_clean_recipients_list($args['Bcc'] ?? null);
     if ($conf_mail['send_bcc_mail_webmaster']) {
         $Bcc[] = [
             'email' => get_webmaster_mail_address(),
@@ -663,7 +667,7 @@ function pwg_mail($to, array $args = [], array $tpl = [])
     }
 
     $content_type_list = [];
-    if ($conf_mail['mail_allow_html'] and @$args['email_format'] != 'text/plain') {
+    if ($conf_mail['mail_allow_html'] and ($args['email_format'] ?? null) != 'text/plain') {
         $content_type_list[] = 'text/html';
     }
     $content_type_list[] = 'text/plain';
@@ -865,6 +869,10 @@ function pwg_send_mail($result, $to, $subject, $content, $headers): mixed
  */
 function move_css_to_body(string $content)
 {
+    if ($content === '') {
+        return $content;
+    }
+
     try {
         return \Pelago\Emogrifier\CssInliner::fromHtml($content)->inlineCss()->render();
     } catch (\Exception) {
@@ -894,6 +902,9 @@ function pwg_send_mail_test($success, $mail, array $args, $error_message = null)
         }
 
         $file = fopen($filename, 'w+');
+        if ($file === false) {
+            return;
+        }
         if (! $success) {
             fwrite($file, 'ERROR: ' . $error_message . "\n\n");
         }

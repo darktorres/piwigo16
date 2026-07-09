@@ -46,7 +46,7 @@ SELECT
   OFFSET ' . ($params['per_page'] * $params['page']) . '
 ;';
 
-    $groups = array_from_query($query);
+    $groups = array_values(array_from_query($query));
 
     return [
         'paging' => new PwgNamedStruct([
@@ -116,7 +116,11 @@ function ws_groups_delete(array $params, PwgServer &$service): \PwgError|\PwgNam
     }
 
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-    $groupnames = array_values(delete_groups($params['group_id']));
+    $deleted_groups = delete_groups($params['group_id']);
+    if ($deleted_groups === false) {
+        return new PwgError(500, 'There is no group to delete');
+    }
+    $groupnames = array_values($deleted_groups);
 
     invalidate_user_cache();
 

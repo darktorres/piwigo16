@@ -12,7 +12,7 @@ declare(strict_types=1);
 class PwgXmlWriter
 {
     /**
-     * @var '	'
+     * @var string
      */
     public $_indentStr;
 
@@ -32,7 +32,7 @@ class PwgXmlWriter
     public $_indentLevel;
 
     /**
-     * @var ''
+     * @var string
      */
     public $_encodedXml;
 
@@ -260,11 +260,13 @@ class PwgRestEncoder extends PwgResponseEncoder
                 }
                 break;
             case 'object':
-                match (strtolower(@$data::class)) {
-                    'pwgnamedarray' => $this->encode_array($data->_content, $data->_itemName, $data->_xmlAttributes),
-                    'pwgnamedstruct' => $this->encode_struct($data->_content, false, $data->_xmlAttributes),
-                    default => $this->encode_struct(get_object_vars($data), true),
-                };
+                if ($data instanceof PwgNamedArray) {
+                    $this->encode_array($data->_content, $data->_itemName, $data->_xmlAttributes);
+                } elseif ($data instanceof PwgNamedStruct) {
+                    $this->encode_struct($data->_content, false, $data->_xmlAttributes);
+                } else {
+                    $this->encode_struct(get_object_vars($data), true);
+                }
                 break;
             default:
                 trigger_error('Invalid type ' . gettype($data) . ' ' . @$data::class, E_USER_WARNING);

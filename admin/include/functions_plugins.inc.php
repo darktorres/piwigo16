@@ -19,7 +19,9 @@ function get_admin_plugin_menu_link($file): string
     $real_file = realpath($file);
     $url = get_root_url() . 'admin.php?page=plugin';
     if ($real_file !== false) {
-        $real_plugin_path = rtrim(realpath(PHPWG_PLUGINS_PATH), '\\/');
+        $real_plugin_path = realpath(PHPWG_PLUGINS_PATH);
+        assert($real_plugin_path !== false);
+        $real_plugin_path = rtrim($real_plugin_path, '\\/');
         $file = substr($real_file, strlen($real_plugin_path) + 1);
         $file = str_replace('\\', '/', $file); // Windows
         $url .= '&amp;section=' . urlencode($file);

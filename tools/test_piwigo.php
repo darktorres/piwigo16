@@ -32,7 +32,7 @@ $mandatory_fields = [
 ];
 
 foreach ($mandatory_fields as $field) {
-    if (! isset($option[$field])) {
+    if (! isset($option[$field]) || ! is_string($option[$field])) {
         die('Missing --' . $field);
     }
 }
@@ -48,7 +48,7 @@ $cookies = dirname(__DIR__) . '/cookies.txt';
 // mysqli's default report mode (MYSQLI_REPORT_ERROR|MYSQLI_REPORT_STRICT since
 // PHP 8.1) throws on connection failure, so a plain constructor call here
 // either succeeds or never reaches the next line.
-$mysqli = new mysqli('localhost', $option['db_user'], $option['db_password']);
+$mysqli = new mysqli('localhost', (string) $option['db_user'], (string) $option['db_password']);
 
 // Check if database name is set otherwise we use a random name.
 // Then we create the database.
@@ -161,6 +161,9 @@ function install_piwigo(array $option): void
  */
 function test_log_user(array $option, string $cookies): mixed
 {
+    // the only real caller passes dirname(__DIR__) . '/cookies.txt', always non-empty
+    assert($cookies !== '');
+
     // Log an user - Admin here
     $data = [
         'method' => 'pwg.session.login',
@@ -170,16 +173,12 @@ function test_log_user(array $option, string $cookies): mixed
 
     $ch = curl_init();
 
-    $curLopt = [
-        CURLOPT_URL => $option['url'] . '/ws.php?format=json',
-        CURLOPT_COOKIEJAR => $cookies,
-        CURLOPT_COOKIEFILE => $cookies,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_POST => true,
-        CURLOPT_POSTFIELDS => $data,
-    ];
-
-    curl_setopt_array($ch, $curLopt);
+    curl_setopt($ch, CURLOPT_URL, $option['url'] . '/ws.php?format=json');
+    curl_setopt($ch, CURLOPT_COOKIEJAR, $cookies);
+    curl_setopt($ch, CURLOPT_COOKIEFILE, $cookies);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
 
     $content = curl_exec($ch);
     $err = curl_errno($ch);
@@ -193,22 +192,21 @@ function test_log_user(array $option, string $cookies): mixed
 
     $ch = curl_init();
 
-    $curLopt = [
-        CURLOPT_URL => $option['url'] . '/ws.php?format=json',
-        CURLOPT_COOKIEJAR => $cookies,
-        CURLOPT_COOKIEFILE => $cookies,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_POST => true,
-        CURLOPT_POSTFIELDS => $data,
-    ];
-
-    curl_setopt_array($ch, $curLopt);
+    curl_setopt($ch, CURLOPT_URL, $option['url'] . '/ws.php?format=json');
+    curl_setopt($ch, CURLOPT_COOKIEJAR, $cookies);
+    curl_setopt($ch, CURLOPT_COOKIEFILE, $cookies);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
 
     $content = curl_exec($ch);
     $err = curl_errno($ch);
     $errmsg = curl_error($ch);
     $response = curl_getinfo($ch);
 
+    if (! is_string($content)) {
+        throw new Exception('test_log_user(): curl_exec() failed');
+    }
     $result = json_decode($content, true);
     if ($result['stat'] == 'ok') {
         echo "Login OK!\n";
@@ -227,6 +225,9 @@ function test_log_user(array $option, string $cookies): mixed
  */
 function create_album(array $option, string $cookies): void
 {
+    // the only real caller passes dirname(__DIR__) . '/cookies.txt', always non-empty
+    assert($cookies !== '');
+
     $data = [
         'method' => 'pwg.categories.add',
         'name' => 'AlbumExample',
@@ -234,23 +235,22 @@ function create_album(array $option, string $cookies): void
 
     $ch = curl_init();
 
-    $curLopt = [
-        CURLOPT_URL => $option['url'] . '/ws.php?format=json',
-        CURLOPT_COOKIEJAR => $cookies,
-        CURLOPT_COOKIEFILE => $cookies,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_POST => true,
-        CURLOPT_POSTFIELDS => $data,
-    ];
-
-    curl_setopt_array($ch, $curLopt);
+    curl_setopt($ch, CURLOPT_URL, $option['url'] . '/ws.php?format=json');
+    curl_setopt($ch, CURLOPT_COOKIEJAR, $cookies);
+    curl_setopt($ch, CURLOPT_COOKIEFILE, $cookies);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
 
     $content = curl_exec($ch);
     $err = curl_errno($ch);
     $errmsg = curl_error($ch);
     $response = curl_getinfo($ch);
 
+    if (! is_string($content)) {
+        throw new Exception('create_album(): curl_exec() failed');
+    }
     $result = json_decode($content, true);
     if ($result['stat'] == 'ok') {
         echo "Album creation OK!\n";

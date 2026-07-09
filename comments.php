@@ -159,13 +159,16 @@ if (! empty($_GET['comment_id'])) {
 
 // search a substring among comments content
 if (! empty($_GET['keyword'])) {
+    $keywords = preg_split('/[\s,;]+/', (string) $_GET['keyword']);
+    // the pattern above is a hardcoded, always-valid regex
+    assert($keywords !== false);
     $page['where_clauses'][] =
       '(' .
       implode(
           ' AND ',
           array_map(
               fn ($s): string => "content LIKE '%{$s}%'",
-              preg_split('/[\s,;]+/', (string) $_GET['keyword'])
+              $keywords
           )
       ) .
       ')';
@@ -207,6 +210,8 @@ foreach ($actions as $loop_action) {
 
 if (isset($action)) {
     $comment_author_id = get_comment_author_id($comment_id);
+    // die_on_error defaults to true, so false is unreachable here
+    assert($comment_author_id !== false);
 
     if (can_manage_comment($action, $comment_author_id)) {
         $perform_redirect = false;

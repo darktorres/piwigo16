@@ -572,8 +572,10 @@ switch ($page['section']) {
     case 'watermark':
 
         $watermark_files = [];
-        foreach (glob(PHPWG_ROOT_PATH . 'themes/default/watermarks/*.png') as $file) {
-            $watermark_files[] = substr($file, strlen(PHPWG_ROOT_PATH));
+        if (($glob = glob(PHPWG_ROOT_PATH . 'themes/default/watermarks/*.png')) !== false) {
+            foreach ($glob as $file) {
+                $watermark_files[] = substr($file, strlen(PHPWG_ROOT_PATH));
+            }
         }
         if (($glob = glob(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'watermarks/*.png')) !== false) {
             foreach ($glob as $file) {

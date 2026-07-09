@@ -331,7 +331,7 @@ if (userprefs_get_param('show_whats_new_' . $whats_new_major_version, true) and 
 
             foreach (array_keys($user['preferences']) as $pref_param) {
                 if (preg_match('/^whats_new_/', (string) $pref_param)) {
-                    $userprefs_params_to_delete[] = $pref_param;
+                    $userprefs_params_to_delete[] = (string) $pref_param;
                 }
             }
 

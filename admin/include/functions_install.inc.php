@@ -23,6 +23,9 @@ declare(strict_types=1);
 function execute_sqlfile($filepath, $replaced, $replacing, $dblayer): void
 {
     $sql_lines = file($filepath);
+    if ($sql_lines === false) {
+        throw new \RuntimeException('Unable to read SQL file: ' . $filepath);
+    }
     $query = '';
     foreach ($sql_lines as $sql_line) {
         $sql_line = trim($sql_line);

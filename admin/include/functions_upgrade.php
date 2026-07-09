@@ -230,7 +230,9 @@ WHERE ' . $conf['user_fields']['username'] . '=\'' . $username . '\'
     }
     $row = pwg_db_fetch_assoc(pwg_query($query));
 
-    if (! pwg_password_verify($password, $row['password'])) {
+    if (! is_array($row)) {
+        $page['errors'][] = l10n('Invalid password!');
+    } elseif (! pwg_password_verify($password, $row['password'])) {
         $page['errors'][] = l10n('Invalid password!');
     } elseif ($row['status'] != 'admin' and $row['status'] != 'webmaster') {
         $page['errors'][] = l10n('You do not have access rights to run upgrade');

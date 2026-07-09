@@ -130,13 +130,13 @@ $template->assign(
         'USER_NAME' => @$form_param['user_name'],
         'IMAGE_ID' => $form_param['image_id'],
         'IP' => $form_param['ip'],
-        'START' => @$form['start'],
-        'END' => @$form['end'],
+        'START' => $form['start'] ?? null,
+        'END' => $form['end'] ?? null,
     ]
 );
 
 $template->assign('display_thumbnails', $display_thumbnails);
-$template->assign('display_thumbnail_selected', $form['display_thumbnail']);
+$template->assign('display_thumbnail_selected', $form['display_thumbnail'] ?? null);
 $template->assign('guest_id', $conf['guest_id']);
 $template->assign('ADMIN_PAGE_TITLE', l10n('History'));
 

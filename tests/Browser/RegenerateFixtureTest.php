@@ -52,6 +52,15 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         }
     }
 
+    /** Returns the path to the per-test cookie jar (for raw curl calls). */
+    private function cookieJar(): string
+    {
+        // setUp() always populates this from tempnam() before any test body
+        // runs
+        assert($this->cookieJar !== '');
+        return $this->cookieJar;
+    }
+
     public function test_regenerate_fixture(): void
     {
         if ($this->dbName === '' || $this->dbName === 'piwigo') {
@@ -347,15 +356,16 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         $url = $this->baseUrl . '/' . $scriptName;
         $ch  = curl_init($url);
         self::assertNotFalse($ch);
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST           => true,
-            CURLOPT_USERAGENT      => self::USER_AGENT,
-            CURLOPT_POSTFIELDS     => http_build_query($fields),
-            CURLOPT_COOKIEJAR      => $this->cookieJar,
-            CURLOPT_COOKIEFILE     => $this->cookieJar,
-            CURLOPT_HTTPHEADER     => $this->testHeader(),
-        ]);
+        $userAgent = self::USER_AGENT;
+        $cookieJar = $this->cookieJar();
+        assert($cookieJar !== '');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_USERAGENT, $userAgent);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($fields));
+        curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
+        curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $this->testHeader());
         $body = curl_exec($ch);
         self::assertIsString($body, 'postForm returned no body');
         unset($ch);
@@ -368,20 +378,21 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         $url = $this->baseUrl . '/ws.php?format=json';
         $ch  = curl_init($url);
         self::assertNotFalse($ch);
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST           => true,
-            CURLOPT_USERAGENT      => self::USER_AGENT,
-            CURLOPT_POSTFIELDS     => [
-                'method'   => 'pwg.images.addSimple',
-                'category' => (string) $albumId,
-                'name'     => $name,
-                'image'    => new \CURLFile($imagePath, 'image/jpeg', basename($imagePath)),
-            ],
-            CURLOPT_COOKIEJAR  => $this->cookieJar,
-            CURLOPT_COOKIEFILE => $this->cookieJar,
-            CURLOPT_HTTPHEADER => $this->testHeader(),
+        $userAgent = self::USER_AGENT;
+        $cookieJar = $this->cookieJar();
+        assert($cookieJar !== '');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_USERAGENT, $userAgent);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, [
+            'method'   => 'pwg.images.addSimple',
+            'category' => (string) $albumId,
+            'name'     => $name,
+            'image'    => new \CURLFile($imagePath, 'image/jpeg', basename($imagePath)),
         ]);
+        curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
+        curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $this->testHeader());
         $body = curl_exec($ch);
         unset($ch);
         self::assertIsString($body, 'photo upload returned no body');
@@ -406,15 +417,16 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         $url = $this->baseUrl . '/ws.php?format=json';
         $ch  = curl_init($url);
         self::assertNotFalse($ch);
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST           => true,
-            CURLOPT_USERAGENT      => self::USER_AGENT,
-            CURLOPT_POSTFIELDS     => http_build_query(array_merge(['method' => $method], $params)),
-            CURLOPT_COOKIEJAR      => $this->cookieJar,
-            CURLOPT_COOKIEFILE     => $this->cookieJar,
-            CURLOPT_HTTPHEADER     => $this->testHeader(),
-        ]);
+        $userAgent = self::USER_AGENT;
+        $cookieJar = $this->cookieJar();
+        assert($cookieJar !== '');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_USERAGENT, $userAgent);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(array_merge(['method' => $method], $params)));
+        curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
+        curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $this->testHeader());
         $body = curl_exec($ch);
         unset($ch);
         self::assertIsString($body, "WS call to $method returned no body");

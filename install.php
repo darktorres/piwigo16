@@ -297,8 +297,10 @@ define(\'DB_COLLATE\', \'\');
 
                 $tmp_filename = md5(uniqid((string) time()));
                 $fh = @fopen(PHPWG_ROOT_PATH . $conf['data_location'] . 'pwg_' . $tmp_filename, 'w');
-                @fputs($fh, $file_content, strlen($file_content));
-                @fclose($fh);
+                if ($fh !== false) {
+                    @fputs($fh, $file_content, strlen($file_content));
+                    @fclose($fh);
+                }
 
                 $template->assign(
                     [

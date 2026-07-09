@@ -665,7 +665,10 @@ SELECT
         if (count($image_ids_for_filter) > 1) {
             $items = array_values(array_unique(array_intersect(...array_values($image_ids_for_filter))));
         } else {
-            $items = $image_ids_for_filter[array_keys($image_ids_for_filter)[0]];
+            // exactly one filter is filled here — grab its (only) value
+            // without a dynamic re-lookup by key, which PHPStan can't
+            // verify against this array's many conditionally-set keys.
+            $items = reset($image_ids_for_filter);
         }
     }
 
@@ -1216,7 +1219,7 @@ class QMultiToken implements \Stringable
         for ($i = 0; $i < count($this->tokens); $i++) {
             $token = $this->tokens[$i];
             $remove = false;
-            if ($token->is_single) {
+            if ($token instanceof QSingleToken) {
                 if (($token->modifier & QST_QUOTED) == 0
                   && str_ends_with((string) $token->term, '*')) {
                     $token->term = rtrim((string) $token->term, '*');
@@ -1274,13 +1277,13 @@ class QMultiToken implements \Stringable
      */
     private function apply_scope(QSearchScope $scope): void
     {
-        for ($i = 0; $i < count($this->tokens); $i++) {
-            if ($this->tokens[$i]->is_single) {
-                if (! isset($this->tokens[$i]->scope)) {
-                    $this->tokens[$i]->scope = $scope;
+        foreach ($this->tokens as $token) {
+            if ($token instanceof QSingleToken) {
+                if (! isset($token->scope)) {
+                    $token->scope = $scope;
                 }
             } else {
-                $this->tokens[$i]->apply_scope($scope);
+                $token->apply_scope($scope);
             }
         }
     }
@@ -1297,16 +1300,17 @@ class QMultiToken implements \Stringable
         // initializer only keeps analysis sound.
         $crt_prio = 0;
         for ($i = 0; $i < count($this->tokens); $i++) {
-            if (! $this->tokens[$i]->is_single) {
-                $this->tokens[$i]->check_operator_priority();
+            $token = $this->tokens[$i];
+            if ($token instanceof self) {
+                $token->check_operator_priority();
             }
             if ($i == 1) {
-                $crt_prio = self::priority($this->tokens[$i]->modifier);
+                $crt_prio = self::priority($token->modifier);
             }
             if ($i <= 1) {
                 continue;
             }
-            $prio = self::priority($this->tokens[$i]->modifier);
+            $prio = self::priority($token->modifier);
             if ($prio > $crt_prio) {// e.g. 'a OR b c d' i=2, operator(c)=AND -> prio(AND) > prio(OR) = operator(b)
                 $term_count = 2; // at least b and c to be regrouped
                 for ($j = $i + 1; $j < count($this->tokens); $j++) {
@@ -1379,7 +1383,7 @@ class QExpression extends QMultiToken
             $token = $expr->tokens[$i];
             $crt_is_not = ($token->modifier ^ $this_is_not) & QST_NOT; // no negation OR double negation -> no negation;
 
-            if ($token->is_single) {
+            if ($token instanceof QSingleToken) {
                 $token->idx = count($this->stokens);
                 $this->stokens[] = $token;
 
@@ -1464,10 +1468,11 @@ function qsearch_get_text_token_search_sql(QSingleToken $token, array $fields): 
         }
 
         if ($use_ft) {
-            $max = max(array_map(
-                mb_strlen(...),
-                preg_split('/[' . preg_quote('-\'!"#$%&()*+,./:;<=>?@[\]^`{|}~', '/') . ']+/', (string) $variant)
-            ));
+            $parts = preg_split('/[' . preg_quote('-\'!"#$%&()*+,./:;<=>?@[\]^`{|}~', '/') . ']+/', (string) $variant);
+            if ($parts === false) {
+                throw new Exception('qsearch_get_text_token_search_sql(): preg_split() failed');
+            }
+            $max = max(array_map(mb_strlen(...), $parts));
             if ($max < 4) {
                 $use_ft = false;
             }
@@ -1575,7 +1580,10 @@ function qsearch_get_images(QExpression $expr, QResults $qsr): void
         }
         if (! empty($clauses)) {
             $query = $query_base . '(' . implode("\n OR ", $clauses) . ')';
-            $qsr->images_iids[$i] = query2array($query, null, 'id');
+            // query2array() with a value_name and no key_name always
+            // returns a sequential list (array<int, mixed>) — its
+            // declared return type is broader to cover its other modes.
+            $qsr->images_iids[$i] = array_values(query2array($query, null, 'id'));
         }
     }
 }
@@ -1627,7 +1635,8 @@ WHERE (' . implode("\n OR ", $clauses) . ')';
 SELECT image_id FROM ' . IMAGE_TAG_TABLE . '
   WHERE tag_id IN (' . implode(',', $tag_ids) . ')
   GROUP BY image_id';
-            $qsr->tag_iids[$i] = query2array($query, null, 'image_id');
+            // see qsearch_get_images()'s comment on query2array()'s return shape
+            $qsr->tag_iids[$i] = array_values(query2array($query, null, 'image_id'));
             if ($expr->stoken_modifiers[$i] & QST_NOT) {
                 $not_ids = array_merge($not_ids, $tag_ids);
             } else {
@@ -1637,9 +1646,9 @@ SELECT image_id FROM ' . IMAGE_TAG_TABLE . '
             }
         } elseif (isset($token->scope) && $token->scope->id == 'tag' && strlen($token->term) == 0) {
             if ($token->modifier & QST_WILDCARD) {// eg. 'tag:*' returns all tagged images
-                $qsr->tag_iids[$i] = query2array('SELECT DISTINCT image_id FROM ' . IMAGE_TAG_TABLE, null, 'image_id');
+                $qsr->tag_iids[$i] = array_values(query2array('SELECT DISTINCT image_id FROM ' . IMAGE_TAG_TABLE, null, 'image_id'));
             } else {// eg. 'tag:' returns all untagged images
-                $qsr->tag_iids[$i] = query2array('SELECT id FROM ' . IMAGES_TABLE . ' LEFT JOIN ' . IMAGE_TAG_TABLE . ' ON id=image_id WHERE image_id IS NULL', null, 'id');
+                $qsr->tag_iids[$i] = array_values(query2array('SELECT id FROM ' . IMAGES_TABLE . ' LEFT JOIN ' . IMAGE_TAG_TABLE . ' ON id=image_id WHERE image_id IS NULL', null, 'id'));
             }
         }
     }
@@ -1717,7 +1726,8 @@ SELECT
 SELECT image_id FROM ' . IMAGE_CATEGORY_TABLE . '
   WHERE category_id IN (' . implode(',', $cat_ids) . ')
   GROUP BY image_id';
-            $qsr->cat_iids[$i] = query2array($query, null, 'image_id');
+            // see qsearch_get_images()'s comment on query2array()'s return shape
+            $qsr->cat_iids[$i] = array_values(query2array($query, null, 'image_id'));
             if ($expr->stoken_modifiers[$i] & QST_NOT) {
                 $not_ids = array_merge($not_ids, $cat_ids);
             } else {
@@ -1727,9 +1737,9 @@ SELECT image_id FROM ' . IMAGE_CATEGORY_TABLE . '
             }
         } elseif (isset($token->scope) && $token->scope->id == 'category' && strlen($token->term) == 0) {
             if ($token->modifier & QST_WILDCARD) {// eg. 'category:*' returns all images associated to an album
-                $qsr->cat_iids[$i] = query2array('SELECT DISTINCT image_id FROM ' . IMAGE_CATEGORY_TABLE, null, 'image_id');
+                $qsr->cat_iids[$i] = array_values(query2array('SELECT DISTINCT image_id FROM ' . IMAGE_CATEGORY_TABLE, null, 'image_id'));
             } else {// eg. 'category:' returns all orphan images
-                $qsr->cat_iids[$i] = query2array('SELECT id FROM ' . IMAGES_TABLE . ' LEFT JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id=image_id WHERE image_id IS NULL', null, 'id');
+                $qsr->cat_iids[$i] = array_values(query2array('SELECT id FROM ' . IMAGES_TABLE . ' LEFT JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id=image_id WHERE image_id IS NULL', null, 'id'));
             }
         }
     }
@@ -1758,7 +1768,11 @@ function qsearch_eval(QMultiToken $expr, QResults $qsr, bool &$qualifies, array 
         $crt = $expr->tokens[$i];
         $crt_qualifies = false;
         $crt_ignored_terms = [];
-        if ($crt->is_single) {
+        if ($crt instanceof QSingleToken) {
+            // idx is only null before QExpression::build_single_tokens()
+            // runs; by the time qsearch_eval() is called (always on an
+            // already-built QExpression), every QSingleToken has one.
+            assert($crt->idx !== null);
             $crt_ids = $qsr->iids[$crt->idx] = array_unique(
                 array_merge(
                     $qsr->images_iids[$crt->idx],
@@ -1894,6 +1908,9 @@ function get_quick_search_results_no_cache(string $q, array $options): array
     $class_name = 'Inflector_' . $lang_code;
     if (class_exists($class_name)) {
         $inflector = new $class_name();
+        if (! $inflector instanceof InflectorInterface) {
+            throw new \LogicException("qsearch: {$class_name} does not implement InflectorInterface");
+        }
         foreach ($expression->stokens as $token) {
             if (isset($token->scope) && ! $token->scope->is_text) {
                 continue;
@@ -1993,6 +2010,9 @@ SELECT DISTINCT(id) FROM ' . IMAGES_TABLE . ' i';
 function get_search_results(int|string $search_id, ?bool $super_order_by, string $images_where = ''): array
 {
     $search = get_search_array($search_id);
+    if ($search === false) {
+        bad_request('this search identifier does not exist');
+    }
     if (! isset($search['q'])) {
         return get_regular_search_results($search, $images_where);
     } else {
@@ -2019,16 +2039,18 @@ function split_allwords(string $raw_allwords): ?array
         $drop_char_replace = [' ', ' ', ' ', ' ', ' ', ' ', '', '', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '', ' ', ' ', ' ', ' ', ' '];
 
         // Split words
-        $words = array_unique(
-            preg_split(
-                '/\s+/',
-                str_replace(
-                    $drop_char_match,
-                    $drop_char_replace,
-                    $raw_allwords
-                )
+        $split = preg_split(
+            '/\s+/',
+            str_replace(
+                $drop_char_match,
+                $drop_char_replace,
+                $raw_allwords
             )
         );
+        if ($split === false) {
+            throw new Exception('split_allwords(): preg_split() failed');
+        }
+        $words = array_unique($split);
     }
 
     return $words;

@@ -371,18 +371,20 @@ function autoupdate_plugin(array &$plugin): void
     $fs_version = null;
     $i = -1;
 
-    while (($line = fgets($fh)) !== false && $fs_version == null && $i < 10) {
-        $i++;
-        if ($i < 2) {
-            continue;
-        } // first lines are typically "<?php" and "/*"
+    if ($fh !== false) {
+        while (($line = fgets($fh)) !== false && $fs_version == null && $i < 10) {
+            $i++;
+            if ($i < 2) {
+                continue;
+            } // first lines are typically "<?php" and "/*"
 
-        if (preg_match('/Version:\\s*([\\w.-]+)/', $line, $matches)) {
-            $fs_version = $matches[1];
+            if (preg_match('/Version:\\s*([\\w.-]+)/', $line, $matches)) {
+                $fs_version = $matches[1];
+            }
         }
-    }
 
-    fclose($fh);
+        fclose($fh);
+    }
 
     // if version is auto (dev) or superior
     if ($fs_version != null && (
@@ -411,6 +413,9 @@ function autoupdate_plugin(array &$plugin): void
             $classname = str_replace('-', '_', $classname);
 
             $plugin_maintain = new $classname($plugin['id']);
+            if (! $plugin_maintain instanceof PluginMaintain) {
+                throw new \LogicException("autoupdate_plugin(): {$classname} does not extend PluginMaintain");
+            }
             $plugin_maintain->update($plugin['version'], $fs_version, $page['errors']);
         }
 

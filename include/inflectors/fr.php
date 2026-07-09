@@ -9,7 +9,9 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-class Inflector_fr
+require_once __DIR__ . '/InflectorInterface.php';
+
+class Inflector_fr implements InflectorInterface
 {
     /**
      * @var array<string, string>

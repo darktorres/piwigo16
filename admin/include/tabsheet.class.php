@@ -86,7 +86,7 @@ class tabsheet
         $this->sheets = trigger_change('tabsheet_before_select', $this->sheets, $this->uniqid);
         if (! array_key_exists((string) $name, $this->sheets)) {
             $keys = array_keys($this->sheets);
-            $name = $keys[0];
+            $name = (string) $keys[0];
         }
         $this->selected = $name;
     }

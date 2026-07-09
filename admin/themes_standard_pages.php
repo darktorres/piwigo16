@@ -70,7 +70,7 @@ if (isset($_POST['submit']) and is_webmaster()) {
 // Handle logo upload, allow png, jpg and svg
 if (isset($_FILES['std_pgs_logo']) and ! empty($_FILES['std_pgs_logo']['tmp_name'])) {
     $finfo = finfo_open(FILEINFO_MIME_TYPE);
-    $mime_type = finfo_file($finfo, $_FILES['std_pgs_logo']['tmp_name']);
+    $mime_type = $finfo === false ? false : finfo_file($finfo, $_FILES['std_pgs_logo']['tmp_name']);
 
     // Allowed MIME types
     $allowed_mimes = [
@@ -81,7 +81,7 @@ if (isset($_FILES['std_pgs_logo']) and ! empty($_FILES['std_pgs_logo']['tmp_name
         'image/webp' => 'webp',
     ];
 
-    if (! in_array($mime_type, array_keys($allowed_mimes))) {
+    if (! is_string($mime_type) || ! isset($allowed_mimes[$mime_type])) {
         $template->assign(
             [
                 'save_error' => 'Invalid image file.',

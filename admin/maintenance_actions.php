@@ -35,8 +35,8 @@ switch ($action) {
             'maintenance_action' => $action,
         ]);
         redirect(get_root_url() . 'admin.php?page=maintenance');
-        break;
 
+        // no break
     case 'unlock_gallery':
 
         conf_update_param('gallery_locked', 'false');
@@ -45,8 +45,8 @@ switch ($action) {
             'maintenance_action' => $action,
         ]);
         redirect(get_root_url() . 'admin.php?page=maintenance');
-        break;
 
+        // no break
     case 'categories':
 
         images_integrity();
@@ -211,7 +211,7 @@ DELETE
             $versions = [
                 'current' => PHPWG_VERSION,
             ];
-            $lines = @explode("\r\n", $result);
+            $lines = @explode("\r\n", (string) $result);
 
             // if the current version is a BSF (development branch) build, we check
             // the first line, for stable versions, we check the second line

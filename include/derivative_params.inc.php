@@ -58,7 +58,16 @@ function char_to_fraction($c): float|int
  */
 function fraction_to_char(float $f): string
 {
-    return chr(ord('a') + (int) round($f * 25));
+    // $f can come straight from user input (admin/picture_coi.php's COI
+    // form fields), so clamp rather than trust it's within [0, 1]
+    $codepoint = ord('a') + (int) round($f * 25);
+    if ($codepoint < 0) {
+        $codepoint = 0;
+    } elseif ($codepoint > 255) {
+        $codepoint = 255;
+    }
+
+    return chr($codepoint);
 }
 
 /**
@@ -343,7 +352,7 @@ final class DerivativeParams
     public function compute_final_size(array $in_size)
     {
         $this->sizing->compute($in_size, null, $crop_rect, $scale_size);
-        return $scale_size != null ? $scale_size : $in_size;
+        return $scale_size != null ? array_map('intval', $scale_size) : $in_size;
     }
 
     /**

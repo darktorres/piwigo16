@@ -125,7 +125,11 @@ class plugins
         // 2.7 pattern (OO only)
         if (file_exists($file_to_include . '.class.php')) {
             include_once $file_to_include . '.class.php';
-            return new $classname($plugin_id);
+            $maintain = new $classname($plugin_id);
+            if (! $maintain instanceof PluginMaintain) {
+                throw new \LogicException("build_maintain_class(): {$classname} does not extend PluginMaintain");
+            }
+            return $maintain;
         }
 
         // before 2.7 pattern (OO or procedural)
@@ -133,7 +137,11 @@ class plugins
             include_once $file_to_include . '.inc.php';
 
             if (class_exists($classname)) {
-                return new $classname($plugin_id);
+                $maintain = new $classname($plugin_id);
+                if (! $maintain instanceof PluginMaintain) {
+                    throw new \LogicException("build_maintain_class(): {$classname} does not extend PluginMaintain");
+                }
+                return $maintain;
             }
         }
 
@@ -189,6 +197,11 @@ INSERT INTO ' . PLUGINS_TABLE . ' (id,version)
             case 'update':
                 $previous_version = $this->fs_plugins[$plugin_id]['version'];
                 $activity_details['from_version'] = $previous_version;
+                // the only real caller (pwg.extensions.php's ws_extensions_ignoreUpdate
+                // upgrade path) always passes 'revision' alongside action='update'
+                if (! isset($options['revision'])) {
+                    throw new \LogicException("perform_action('update'): missing 'revision' option");
+                }
                 $errors[0] = $this->extract_plugin_files('upgrade', $options['revision'], $plugin_id);
 
                 if ($errors[0] === 'ok') {
@@ -323,6 +336,9 @@ DELETE FROM ' . PLUGINS_TABLE . '
     public function get_fs_plugins(): void
     {
         $dir = opendir(PHPWG_PLUGINS_PATH);
+        if ($dir === false) {
+            return;
+        }
         while ($file = readdir($dir)) {
             if ($file != '.' and $file != '..') {
                 if (preg_match('/^[a-zA-Z0-9-_]+$/', $file)) {
@@ -354,6 +370,9 @@ DELETE FROM ' . PLUGINS_TABLE . '
                 'hasSettings' => false,
             ];
             $plg_data = file_get_contents($path . '/main.inc.php', false, null, 0, 2048);
+            if ($plg_data === false) {
+                return false;
+            }
 
             if (preg_match('|Plugin Name:\\s*(.+)|', $plg_data, $val)) {
                 $plugin['name'] = trim($val[1]);
@@ -364,9 +383,10 @@ DELETE FROM ' . PLUGINS_TABLE . '
             if (preg_match('|Plugin URI:\\s*(https?:\\/\\/.+)|', $plg_data, $val)) {
                 $plugin['uri'] = trim($val[1]);
             }
-            if ($desc = load_language('description.txt', $path . '/', [
+            $desc = load_language('description.txt', $path . '/', [
                 'return' => true,
-            ])) {
+            ]);
+            if (is_string($desc) && $desc !== '') {
                 $plugin['description'] = trim($desc);
             } elseif (preg_match('|Description:\\s*(.+)|', $plg_data, $val)) {
                 $plugin['description'] = trim($val[1]);
@@ -443,7 +463,9 @@ DELETE FROM ' . PLUGINS_TABLE . '
 
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php?category_id=' . $conf['pem_plugins_category'] . '&format=php';
-        if (fetchRemote($url, $result) and $pem_versions = @unserialize($result)) {
+        // $result is never a resource here: no fopen() handle is passed to
+        // fetchRemote() above.
+        if (fetchRemote($url, $result) and is_string($result) and $pem_versions = @unserialize($result)) {
             $i = 0;
 
             // If the actual version exist, put the PEM id in $versions_to_check
@@ -526,7 +548,9 @@ DELETE FROM ' . PLUGINS_TABLE . '
                 $get_data['extension_include'] = implode(',', $plugins_to_check);
             }
         }
-        if (fetchRemote($url, $result, $get_data)) {
+        // $result is never a resource here: no fopen() handle is passed to
+        // fetchRemote() above.
+        if (fetchRemote($url, $result, $get_data) and is_string($result)) {
             $pem_plugins = @unserialize($result);
             if (! is_array($pem_plugins)) {
                 return false;
@@ -577,7 +601,9 @@ DELETE FROM ' . PLUGINS_TABLE . '
             'extension_include' => implode(',', $plugins_to_check),
         ];
 
-        if (fetchRemote($url, $result, $get_data)) {
+        // $result is never a resource here: no fopen() handle is passed to
+        // fetchRemote() above.
+        if (fetchRemote($url, $result, $get_data) and is_string($result)) {
             $pem_plugins = @unserialize($result);
             if (! is_array($pem_plugins)) {
                 return false;
@@ -646,7 +672,13 @@ DELETE FROM ' . PLUGINS_TABLE . '
             ];
 
             if ($handle = @fopen($archive, 'wb') and fetchRemote($url, $handle, $get_data)) {
-                fclose($handle);
+                // fetchRemote()'s &$dest out-param could in principle reset
+                // to a string, but only when the value passed in wasn't
+                // already a resource — $handle always is here (just opened
+                // above), so it's still a resource after the call.
+                if (is_resource($handle)) {
+                    fclose($handle);
+                }
                 include_once PHPWG_ROOT_PATH . 'admin/include/functions_zip.inc.php';
                 if ($list = zip_list_filenames($archive)) {
                     foreach ($list as $file) {
@@ -686,6 +718,17 @@ DELETE FROM ' . PLUGINS_TABLE . '
                                 $logger->debug(__FUNCTION__ . ', $old_files = {' . join('},{', $old_files) . '}');
 
                                 $extract_path_realpath = realpath($extract_path);
+
+                                // realpath() failing here would mean
+                                // $extract_path (just populated by the
+                                // zip_extract() above) doesn't actually
+                                // exist as a real directory — skip the
+                                // obsolete-file cleanup rather than risk the
+                                // traversal check below against a
+                                // non-canonical path.
+                                if ($extract_path_realpath === false) {
+                                    $old_files = [];
+                                }
 
                                 foreach ($old_files as $old_file) {
                                     $old_file = trim($old_file);
@@ -728,7 +771,9 @@ DELETE FROM ' . PLUGINS_TABLE . '
             $status = 'temp_path_error';
         }
 
-        @unlink($archive);
+        if (is_string($archive)) {
+            @unlink($archive);
+        }
         return $status;
     }
 

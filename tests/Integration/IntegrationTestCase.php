@@ -39,12 +39,19 @@ abstract class IntegrationTestCase extends TestCase
 
     protected function setUpConnectionFromEnv(): void
     {
-        $this->dbHost   = getenv('PIWIGO_DB_HOST') !== false ? getenv('PIWIGO_DB_HOST') : '127.0.0.1';
-        $this->dbUser   = getenv('PIWIGO_DB_USER') !== false ? getenv('PIWIGO_DB_USER') : '';
-        $this->dbPass   = getenv('PIWIGO_DB_PASSWORD') !== false ? getenv('PIWIGO_DB_PASSWORD') : '';
-        $this->dbName   = getenv('PIWIGO_DB_BASE') !== false ? getenv('PIWIGO_DB_BASE') : '';
-        $this->dbPrefix = getenv('PIWIGO_DB_PREFIX') !== false ? getenv('PIWIGO_DB_PREFIX') : 'piwigo_';
-        $this->baseUrl  = rtrim(getenv('PIWIGO_BASE_URL') !== false ? getenv('PIWIGO_BASE_URL') : '', '/');
+        $dbHost   = getenv('PIWIGO_DB_HOST');
+        $dbUser   = getenv('PIWIGO_DB_USER');
+        $dbPass   = getenv('PIWIGO_DB_PASSWORD');
+        $dbName   = getenv('PIWIGO_DB_BASE');
+        $dbPrefix = getenv('PIWIGO_DB_PREFIX');
+        $baseUrl  = getenv('PIWIGO_BASE_URL');
+
+        $this->dbHost   = $dbHost !== false ? $dbHost : '127.0.0.1';
+        $this->dbUser   = $dbUser !== false ? $dbUser : '';
+        $this->dbPass   = $dbPass !== false ? $dbPass : '';
+        $this->dbName   = $dbName !== false ? $dbName : '';
+        $this->dbPrefix = $dbPrefix !== false ? $dbPrefix : 'piwigo_';
+        $this->baseUrl  = rtrim($baseUrl !== false ? $baseUrl : '', '/');
     }
 
     protected function requireBaseUrl(): void

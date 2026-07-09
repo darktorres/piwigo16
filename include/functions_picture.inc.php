@@ -127,6 +127,9 @@ UPDATE
 function count_pdf_pages($pdfPath): int|false
 {
     $pdftext = file_get_contents($pdfPath);
+    if ($pdftext === false) {
+        return false;
+    }
     $num = preg_match_all("/\/Page\W/", $pdftext, $dummy);
 
     return $num;

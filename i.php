@@ -187,7 +187,11 @@ function parse_request(): \DerivativeParams
 
     $req = ltrim($req, '/');
 
-    foreach (preg_split('#/+#', $req) as $token) {
+    $req_tokens = preg_split('#/+#', $req);
+    if ($req_tokens === false) {
+        ierror('Invalid request', 400);
+    }
+    foreach ($req_tokens as $token) {
         preg_match($conf['sync_chars_regex'], $token) or ierror('Invalid chars in request', 400);
     }
 
@@ -342,8 +346,14 @@ function send_derivative(false|int $expires): void
         return;
     }
     $fp = fopen($page['derivative_path'], 'rb');
+    if ($fp === false) {
+        ierror('Unable to open derivative file', 500);
+    }
 
     $fstat = fstat($fp);
+    if ($fstat === false) {
+        ierror('Unable to stat derivative file', 500);
+    }
     header('Last-Modified: ' . gmdate('D, d M Y H:i:s', $fstat['mtime']) . ' GMT');
     if ($expires !== false) {
         header('Expires: ' . gmdate('D, d M Y H:i:s', $expires) . ' GMT');
@@ -544,7 +554,7 @@ if ($page['rotation_angle'] != 0) {
 }
 
 // Crop & scale
-$o_size = $d_size = [$image->get_width(), $image->get_height()];
+$o_size = $d_size = [(int) $image->get_width(), (int) $image->get_height()];
 $params->sizing->compute($o_size, $page['coi'], $crop_rect, $scaled_size);
 if ($crop_rect) {
     $changes++;
@@ -555,7 +565,7 @@ if ($crop_rect) {
 if ($scaled_size) {
     $changes++;
     $image->resize($scaled_size[0], $scaled_size[1]);
-    $d_size = $scaled_size;
+    $d_size = [(int) $scaled_size[0], (int) $scaled_size[1]];
     $timing['scale'] = time_step($step);
 }
 
@@ -567,7 +577,7 @@ if ($params->sharpen) {
 if ($params->will_watermark($d_size)) {
     $wm = ImageStdParams::get_watermark();
     $wm_image = new pwg_image(PHPWG_ROOT_PATH . $wm->file);
-    $wm_size = [$wm_image->get_width(), $wm_image->get_height()];
+    $wm_size = [(int) $wm_image->get_width(), (int) $wm_image->get_height()];
     if ($d_size[0] < $wm_size[0] or $d_size[1] < $wm_size[1]) {
         $wm_scaling_params = SizingParams::classic($d_size[0], $d_size[1]);
         $wm_scaling_params->compute($wm_size, null, $tmp, $wm_scaled_size);

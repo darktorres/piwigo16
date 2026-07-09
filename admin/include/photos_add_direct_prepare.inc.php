@@ -28,7 +28,10 @@ $template->assign(
 // what is the maximum number of pixels permitted by the memory_limit?
 if (pwg_image::get_library() == 'gd') {
     $fudge_factor = 1.7;
-    $available_memory = get_ini_size('memory_limit') - memory_get_usage();
+    $memory_limit = get_ini_size('memory_limit');
+    // memory_limit is a core php.ini directive, always present
+    assert($memory_limit !== false);
+    $available_memory = (int) $memory_limit - memory_get_usage();
     $max_upload_width = round(sqrt($available_memory / (2 * $fudge_factor)));
     $max_upload_height = round(2 * $max_upload_width / 3);
 
@@ -103,6 +106,8 @@ SELECT id, uppercats
         $selected_category = [$_GET['album']];
 
         $cat = pwg_db_fetch_assoc($result);
+        // the num_rows == 1 check above guarantees a row is available
+        assert(is_array($cat));
         $template->assign('ADD_TO_ALBUM', get_cat_display_name_cache($cat['uppercats'], null));
     } else {
         fatal_error('[Hacking attempt] the album id = "' . $_GET['album'] . '" is not valid');
@@ -121,6 +126,8 @@ SELECT category_id, c.uppercats
     $result = pwg_query($query);
     if (pwg_db_num_rows($result) > 0) {
         $row = pwg_db_fetch_assoc($result);
+        // the num_rows > 0 check above guarantees a row is available
+        assert(is_array($row));
         $selected_category = [$row['category_id']];
         $selected_category_name = get_cat_display_name_cache($row['uppercats'], null);
         $template->assign('selected_category_name', $selected_category_name);
@@ -191,10 +198,13 @@ if (! isset($_SESSION['upload_hide_warnings'])) {
     }
 
     if (get_ini_size('upload_max_filesize') < $conf['upload_form_chunk_size'] * 1024) {
+        $upload_max_filesize = get_ini_size('upload_max_filesize');
+        // upload_max_filesize is a core php.ini directive, always present
+        assert($upload_max_filesize !== false);
         $setup_warnings[] = sprintf(
             'Piwigo setting upload_form_chunk_size (%ukB) should be smaller than PHP configuration setting upload_max_filesize (%ukB)',
             $conf['upload_form_chunk_size'],
-            ceil(get_ini_size('upload_max_filesize') / 1024)
+            ceil((int) $upload_max_filesize / 1024)
         );
     }
 

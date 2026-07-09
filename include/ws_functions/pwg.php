@@ -445,12 +445,24 @@ function ws_getActivityList(array $param, PwgServer &$service): \PwgError|array
     $min = null;
     $max = null;
     if (! empty($param['date_min'])) {
-        $min = date_format(date_create($param['date_min']), 'Y-m-d H:i:s');
-        $max = date_format(date_create($param['date_max']), 'Y-m-d 23:59:59');
+        // is_valid_mysql_datetime() above already validated date_min; a
+        // valid Y-m-d[ H:i:s] string always parses
+        $min_date = date_create($param['date_min']);
+        assert($min_date !== false);
+        $min = date_format($min_date, 'Y-m-d H:i:s');
+
+        // date_max may be empty/unvalidated here — date_create() only
+        // returns false on a genuinely malformed string, never on ''
+        // (which means "now")
+        $max_date = date_create($param['date_max']);
+        assert($max_date !== false);
+        $max = date_format($max_date, 'Y-m-d 23:59:59');
     }
 
     if (! empty($param['date_max'])) {
-        $max = date_format(date_create($param['date_max']), 'Y-m-d 23:59:59');
+        $max_date = date_create($param['date_max']);
+        assert($max_date !== false);
+        $max = date_format($max_date, 'Y-m-d 23:59:59');
     }
 
     $where = 'WHERE object != \'system\'';
@@ -531,7 +543,7 @@ SELECT
                     $output_lines[count($output_lines) - 1]['counter']++;
                     $output_lines[count($output_lines) - 1]['object_id'][] = $row['object_id'];
                 } else {
-                    $row['details'] = str_replace('`groups`', 'groups', $row['details']);
+                    $row['details'] = str_replace('`groups`', 'groups', (string) $row['details']);
                     $row['details'] = str_replace('`rank`', 'rank', $row['details']);
                     $details = @unserialize($row['details']);
                     $detailsType = null;

@@ -295,7 +295,7 @@ function reset_password(): bool
     }
     unset($_SESSION['valid_reset_password_code']);
 
-    pwg_activity('user', $user_id, 'reset_password_success');
+    pwg_activity('user', (int) $user_id, 'reset_password_success');
 
     $page['infos'][] = l10n('Your password has been reset');
     $page['infos'][] = '<a href="' . get_root_url() . 'identification.php">' . l10n('Login') . '</a>';
@@ -315,8 +315,8 @@ function reset_password_key(): false|float|int|string
         return false;
     }
 
-    deactivate_password_reset_key($user_id);
-    deactivate_user_auth_keys($user_id);
+    deactivate_password_reset_key((int) $user_id);
+    deactivate_user_auth_keys((int) $user_id);
     return $user_id;
 }
 
@@ -369,10 +369,10 @@ if (isset($_GET['key']) and ! isset($_POST['submit'])) {
     $first_login = false;
     $user_id = check_password_reset_key($_GET['key']);
     if (is_numeric($user_id)) {
-        $userdata = getuserdata($user_id, false);
+        $userdata = getuserdata((int) $user_id, false);
         $page['username'] = $userdata['username'];
         $template->assign('key', $_GET['key']);
-        $first_login = has_already_logged_in($user_id);
+        $first_login = has_already_logged_in((int) $user_id);
 
         if (! isset($page['action'])) {
             $page['action'] = 'reset';

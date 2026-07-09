@@ -58,21 +58,21 @@ SELECT
     $result = pwg_query($query);
     array_push($output_lines, ['User', 'ID_User', 'Object', 'Object_ID', 'Action', 'Date', 'Hour', 'IP_Address', 'Details']);
     while ($row = pwg_db_fetch_assoc($result)) {
-        $row['details'] = str_replace('`groups`', 'groups', $row['details']);
+        $row['details'] = str_replace('`groups`', 'groups', (string) $row['details']);
         $row['details'] = str_replace('`rank`', 'rank', $row['details']);
 
         [$date, $hour] = explode(' ', (string) $row['occured_on']);
 
         $output_lines[] = [
-            'username' => $row['username'],
-            'user_id' => $row['performed_by'],
-            'object' => $row['object'],
-            'object_id' => $row['object_id'],
-            'action' => $row['action'],
+            'username' => (string) $row['username'],
+            'user_id' => (string) $row['performed_by'],
+            'object' => (string) $row['object'],
+            'object_id' => (string) $row['object_id'],
+            'action' => (string) $row['action'],
             'date' => $date,
             'hour' => $hour,
-            'ip_address' => $row['ip_address'],
-            'details' => $row['details'],
+            'ip_address' => (string) $row['ip_address'],
+            'details' => (string) $row['details'],
         ];
     }
 
@@ -81,6 +81,8 @@ SELECT
     header('Content-Transfer-Encoding: UTF-8');
 
     $f = fopen('php://output', 'w');
+    // the php://output stream wrapper always opens successfully
+    assert($f !== false);
     foreach ($output_lines as $line) {
         fputcsv($f, $line, ';', '"', '\\');
     }

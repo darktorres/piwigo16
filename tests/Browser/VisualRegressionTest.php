@@ -93,6 +93,29 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  *     wrapped calls incidentally spent longer than 1.8s per navigation,
  *     which had been masking this race. Fixed the same way as
  *     admin-history: H::waitUntilHidden($page, '.pageLoad').
+ *   - admin-dashboard's "Activity peak in the last weeks" widget
+ *     (admin/intro.php) is a second, distinct source of drift from the
+ *     `pwg_now()` fix noted above — that fix only froze the WINDOW the
+ *     chart queries (which weeks/days are in range), not the DATA rows
+ *     themselves. pwg_activity() (include/functions.inc.php) used to
+ *     rely on the `occured_on` column's DEFAULT CURRENT_TIMESTAMP — real
+ *     wall-clock time — so every H::loginAsAdmin() call this suite
+ *     performs before reaching this screenshot logged its own 'login'
+ *     row at real "now", drifting the chart's bubble positions with
+ *     whichever real calendar day the suite happened to run on. Two
+ *     test-harness-only fixes were tried and discarded here before
+ *     landing on the real one: a blanket `DELETE FROM piwigo_activity`
+ *     broke admin-album's "Created" card (which reads its own
+ *     `ACTIVITY_TABLE` 'album'/'add' row via a direct query in
+ *     admin/cat_modify.php); a narrower `DELETE ... WHERE action =
+ *     'login'` worked but was still a test-only workaround. Fixed
+ *     properly at the source instead: pwg_activity() now sets
+ *     `occured_on` explicitly from pwg_now(), the same mechanism
+ *     `time_since()` already used — real behavior outside test mode is
+ *     unaffected. This needed no change in this file at all beyond
+ *     regenerating this one baseline (the fixture's own baked-in
+ *     activity rows are a static, version-controlled file untouched by
+ *     this fix, so admin-album's baseline didn't need to change).
  */
 $routes = [
     // ── Gallery (anonymous) ──────────────────────────────────────────────

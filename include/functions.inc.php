@@ -706,6 +706,12 @@ function pwg_activity(string $object, $object_id, string $action, array $details
     $details_insert = pwg_db_real_escape_string(serialize($details));
     $ip_address = $_SERVER['REMOTE_ADDR'] ?? null;
     $session_id = ! empty(session_id()) ? session_id() : 'none';
+    // Explicit, not left to the column's DEFAULT CURRENT_TIMESTAMP, so
+    // this respects the frozen test-mode clock the same way time_since()
+    // already does — real behavior outside test mode is unaffected,
+    // pwg_now() returns the real current time there.
+    $occured_on = pwg_now()
+        ->format('Y-m-d H:i:s');
 
     foreach ($object_ids as $loop_object_id) {
         $performed_by = $user['id'] ?? 0; // on a plugin autoupdate, $user is not yet loaded
@@ -721,6 +727,7 @@ function pwg_activity(string $object, $object_id, string $action, array $details
             'performed_by' => $performed_by,
             'session_idx' => $session_id,
             'ip_address' => $ip_address,
+            'occured_on' => $occured_on,
             'details' => $details_insert,
             'user_agent' => pwg_db_real_escape_string($user_agent),
         ];

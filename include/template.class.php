@@ -282,10 +282,8 @@ class Template
 
     /**
      * Gets the template root directory for this Template object.
-     *
-     * @return string
      */
-    public function get_template_dir()
+    public function get_template_dir(): string
     {
         $dir = $this->smarty->getTemplateDir(0);
         return is_string($dir) ? $dir : '';
@@ -1007,9 +1005,8 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      *
      * @param string $handle
      * @param callable $callback
-     * @param int $weight
      */
-    public function set_prefilter($handle, $callback, $weight = 50): void
+    public function set_prefilter($handle, $callback, int $weight = 50): void
     {
         $this->external_filters[$handle][$weight][] = ['pre', $callback];
         ksort($this->external_filters[$handle]);
@@ -1022,9 +1019,8 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      *
      * @param string $handle
      * @param callable $callback
-     * @param int $weight
      */
-    public function set_postfilter($handle, $callback, $weight = 50): void
+    public function set_postfilter($handle, $callback, int $weight = 50): void
     {
         $this->external_filters[$handle][$weight][] = ['post', $callback];
         ksort($this->external_filters[$handle]);
@@ -1037,9 +1033,8 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      *
      * @param string $handle
      * @param callable $callback
-     * @param int $weight
      */
-    public function set_outputfilter($handle, $callback, $weight = 50): void
+    public function set_outputfilter($handle, $callback, int $weight = 50): void
     {
         $this->external_filters[$handle][$weight][] = ['output', $callback];
         ksort($this->external_filters[$handle]);
@@ -1192,9 +1187,8 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      * Registers a button to be displayed on picture page.
      *
      * @param string $content
-     * @param int $rank
      */
-    public function add_picture_button($content, $rank = BUTTONS_RANK_NEUTRAL): void
+    public function add_picture_button($content, int $rank = BUTTONS_RANK_NEUTRAL): void
     {
         $this->picture_buttons[$rank][] = $content;
     }
@@ -1203,9 +1197,8 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      * Registers a button to be displayed on index pages.
      *
      * @param string $content
-     * @param int $rank
      */
-    public function add_index_button($content, $rank = BUTTONS_RANK_NEUTRAL): void
+    public function add_index_button($content, int $rank = BUTTONS_RANK_NEUTRAL): void
     {
         $this->index_buttons[$rank][] = $content;
     }
@@ -1785,7 +1778,7 @@ class ScriptLoader
      * @param int $recursion_limiter
      * @return int
      */
-    private function compute_script_topological_order($script_id, int|float $recursion_limiter = 0)
+    private function compute_script_topological_order($script_id, int|float $recursion_limiter = 0): int|float
     {
         if (! isset($this->registered_scripts[$script_id])) {
             trigger_error("Undefined script {$script_id} is required by someone", E_USER_WARNING);

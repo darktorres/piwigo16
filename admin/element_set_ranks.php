@@ -64,7 +64,7 @@ if (isset($_POST['submit'])) {
 
         save_images_order(
             (int) $page['category_id'],
-            array_map('intval', array_keys($_POST['rank_of_image']))
+            array_map(intval(...), array_keys($_POST['rank_of_image']))
         );
     }
 

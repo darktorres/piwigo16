@@ -40,9 +40,9 @@ define('WS_XML_ATTRIBUTES', 'attributes_xml_');
  */
 class PwgError
 {
-    private int $_code;
+    private readonly int $_code;
 
-    private string $_codeText;
+    private readonly string $_codeText;
 
     public function __construct(
         int $code,
@@ -234,7 +234,7 @@ class PwgServer
      */
     private function requestHandler(): \PwgRequestHandler
     {
-        assert($this->_requestHandler !== null);
+        assert($this->_requestHandler instanceof \PwgRequestHandler);
         return $this->_requestHandler;
     }
 
@@ -244,7 +244,7 @@ class PwgServer
      */
     private function responseEncoder(): \PwgResponseEncoder
     {
-        assert($this->_responseEncoder !== null);
+        assert($this->_responseEncoder instanceof \PwgResponseEncoder);
         return $this->_responseEncoder;
     }
 
@@ -272,7 +272,7 @@ class PwgServer
      */
     public function run(): void
     {
-        if ($this->_responseEncoder === null) {
+        if (! $this->_responseEncoder instanceof \PwgResponseEncoder) {
             set_status_header(400);
             @header('Content-Type: text/plain');
             echo 'Cannot process your request. Unknown response format.
@@ -281,7 +281,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
             die(0);
         }
 
-        if ($this->_requestHandler === null) {
+        if (! $this->_requestHandler instanceof \PwgRequestHandler) {
             $this->sendResponse(new PwgError(400, 'Unknown request format'));
             return;
         }

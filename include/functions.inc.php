@@ -1609,13 +1609,10 @@ function prepend_append_array_items($array, $prepend_str, $append_str)
  * creates an simple hashmap based on a SQL query.
  * choose one to be the key, another one to be the value.
  *
- * @param string $query
- * @param string $keyname
- * @param string $valuename
  * @return array<int|string, mixed>
  */
 #[\Deprecated(message: '2.6')]
-function simple_hash_from_query($query, $keyname, $valuename): array
+function simple_hash_from_query(string $query, ?string $keyname, ?string $valuename): array
 {
     return query2array($query, $keyname, $valuename);
 }
@@ -1624,12 +1621,10 @@ function simple_hash_from_query($query, $keyname, $valuename): array
  * creates an associative array based on a SQL query.
  * choose one to be the key
  *
- * @param string $query
- * @param string $keyname
  * @return array<int|string, mixed>
  */
 #[\Deprecated(message: '2.6')]
-function hash_from_query($query, $keyname): array
+function hash_from_query(string $query, ?string $keyname): array
 {
     return query2array($query, $keyname);
 }
@@ -1639,12 +1634,11 @@ function hash_from_query($query, $keyname): array
  * if _$fieldname_ is empty the returned value will be an array of arrays
  * if _$fieldname_ is provided the returned value will be a one dimension array
  *
- * @param string $query
  * @param string|false $fieldname
  * @return array<int|string, mixed>
  */
 #[\Deprecated(message: '2.6')]
-function array_from_query($query, $fieldname = false): array
+function array_from_query(string $query, $fieldname = false): array
 {
     if ($fieldname === false) {
         return query2array($query);
@@ -2740,11 +2734,11 @@ SELECT
             if (preg_match($pattern, (string) $activity['user_agent'])) {
                 $apps[$app_name]['counter'] = ($apps[$app_name]['counter'] ?? 0) + $activity['counter'];
 
-                if (! isset($apps[$app_name]['first_encounter']) or strtotime($apps[$app_name]['first_encounter']) > strtotime((string) $activity['first_encounter'])) {
+                if (! isset($apps[$app_name]['first_encounter']) or strtotime((string) $apps[$app_name]['first_encounter']) > strtotime((string) $activity['first_encounter'])) {
                     $apps[$app_name]['first_encounter'] = $activity['first_encounter'];
                 }
 
-                if (! isset($apps[$app_name]['last_encounter']) or strtotime($apps[$app_name]['last_encounter']) < strtotime((string) $activity['last_encounter'])) {
+                if (! isset($apps[$app_name]['last_encounter']) or strtotime((string) $apps[$app_name]['last_encounter']) < strtotime((string) $activity['last_encounter'])) {
                     $apps[$app_name]['last_encounter'] = $activity['last_encounter'];
                 }
             }

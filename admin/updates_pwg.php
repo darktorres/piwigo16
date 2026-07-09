@@ -133,7 +133,7 @@ if (isset($new_versions['minor'])) {
             'MINOR_VERSION' => $new_versions['minor'],
             'MINOR_RELEASE_URL' => (
                 ($ct_env === 'Official')
-            ? 'https://github.com/Piwigo/piwigo-docker/wiki/Changelog#' . preg_replace('/\./', '', $new_versions['minor'])
+            ? 'https://github.com/Piwigo/piwigo-docker/wiki/Changelog#' . preg_replace('/\./', '', (string) $new_versions['minor'])
             : PHPWG_URL . '/releases/' . $new_versions['minor']
             ),
         ]
@@ -145,9 +145,9 @@ if (isset($new_versions['major'])) {
         [
             'MAJOR_VERSION' => $new_versions['major'],
             'MAJOR_RELEASE_URL' => PHPWG_URL . '/releases/' .
-              (($ct_env === 'Official') ? substr($new_versions['major'], 0, -1) : $new_versions['major']),
-            'MAJOR_DOCKER_RELEASE_URL' => 'https://github.com/Piwigo/piwigo-docker/wiki/Changelog#' . preg_replace('/\./', '', $new_versions['major']),
-            'MAJOR_VERSION_PWG' => preg_replace('/[a-z]$/', '', $new_versions['major']), // Remove container build ver
+              (($ct_env === 'Official') ? substr((string) $new_versions['major'], 0, -1) : $new_versions['major']),
+            'MAJOR_DOCKER_RELEASE_URL' => 'https://github.com/Piwigo/piwigo-docker/wiki/Changelog#' . preg_replace('/\./', '', (string) $new_versions['major']),
+            'MAJOR_VERSION_PWG' => preg_replace('/[a-z]$/', '', (string) $new_versions['major']), // Remove container build ver
         ]
     );
 }

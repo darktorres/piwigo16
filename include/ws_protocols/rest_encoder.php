@@ -156,7 +156,7 @@ class PwgRestEncoder extends PwgResponseEncoder
      */
     private function writer(): \PwgXmlWriter
     {
-        assert($this->_writer !== null);
+        assert($this->_writer instanceof \PwgXmlWriter);
         return $this->_writer;
     }
 

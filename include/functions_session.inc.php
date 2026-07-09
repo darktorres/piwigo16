@@ -122,10 +122,9 @@ SELECT data
  * Called by PHP session manager, writes data in the sessions table.
  *
  * @param string $session_id
- * @param string $data
  * @return true
  */
-function pwg_session_write($session_id, $data): bool
+function pwg_session_write($session_id, ?string $data): bool
 {
     // when the request is authenticated via api_key (PWG_API_KEY_REQUEST),
     // you do not want the session to be written to the database (no user session persistence)

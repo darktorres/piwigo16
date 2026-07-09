@@ -17,7 +17,7 @@ class PwgTOTP
      * @param float $timestamp 30s intervasl since 1970
      * @return string TOTP Code
      */
-    private static function generateCodeFromTimestamp($secret, float $timestamp): string
+    private static function generateCodeFromTimestamp(string $secret, float $timestamp): string
     {
         $key = PwgBase32::decode($secret);
 
@@ -83,7 +83,7 @@ class PwgTOTP
      * @param int $timestamp timestamp used in second (default: 30)
      * @return string 6 digits TOTP code
      */
-    public static function generateCode($secret, $timestamp = 30): string
+    public static function generateCode(string $secret, $timestamp = 30): string
     {
         $timestamp = floor(time() / $timestamp); // e.g 58338889 > 30-second intervals since 1970 at the moment T
         return self::generateCodeFromTimestamp($secret, $timestamp);
@@ -97,7 +97,7 @@ class PwgTOTP
      * @param int $timestamp timestamp used in second (default: 30)
      * @param int $check_interval Number of 30s steps to check before/after current (default: 1)
      */
-    public static function verifyCode($code, $secret, $timestamp = 30, $check_interval = 1): bool
+    public static function verifyCode($code, string $secret, $timestamp = 30, $check_interval = 1): bool
     {
         $timestamp = floor(time() / $timestamp);
 

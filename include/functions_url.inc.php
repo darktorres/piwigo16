@@ -113,9 +113,8 @@ function add_url_params($url, $params, string $arg_separator = '&amp;')
  * build an index URL for a specific section
  *
  * @param array<string, mixed> $params
- * @return string
  */
-function make_index_url(array $params = [])
+function make_index_url(array $params = []): string
 {
     global $conf;
     $url = get_root_url() . 'index';
@@ -150,9 +149,8 @@ function make_index_url(array $params = [])
  *
  * @param array<string, mixed> $redefined keys
  * @param array<int, string> $removed keys
- * @return string
  */
-function duplicate_index_url($redefined = [], $removed = [])
+function duplicate_index_url($redefined = [], $removed = []): string
 {
     return make_index_url(
         params_for_duplication($redefined, $removed)
@@ -189,9 +187,8 @@ function params_for_duplication($redefined, $removed)
  *
  * @param array<string, mixed> $redefined keys
  * @param array<int, string> $removed keys
- * @return string
  */
-function duplicate_picture_url($redefined = [], $removed = [])
+function duplicate_picture_url($redefined = [], $removed = []): string
 {
     return make_picture_url(
         params_for_duplication($redefined, $removed)
@@ -202,9 +199,8 @@ function duplicate_picture_url($redefined = [], $removed = [])
  * create a picture URL on a specific section for a specific picture
  *
  * @param array<string, mixed> $params
- * @return string
  */
-function make_picture_url(array $params)
+function make_picture_url(array $params): string
 {
     global $conf;
 

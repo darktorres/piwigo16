@@ -339,7 +339,7 @@ SELECT
 
     if (isset($image_id)) {
         $update = [
-            'file' => pwg_db_real_escape_string($original_filename ?? basename($file_path)),
+            'file' => pwg_db_real_escape_string($original_filename ?? basename((string) $file_path)),
             'filesize' => $file_infos['filesize'],
             'width' => $file_infos['width'],
             'height' => $file_infos['height'],

@@ -141,7 +141,7 @@ SELECT
         );
         // IMG_MEDIUM is a standard type, always present in the defined
         // type map — get_one() only returns null for an unknown type.
-        assert($medium_derivative !== null);
+        assert($medium_derivative instanceof \DerivativeImage);
         $medium = $medium_derivative->get_url();
 
         if (empty($row['author_id']) or $row['author_id'] == $conf['guest_id']) {

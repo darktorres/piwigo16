@@ -44,7 +44,7 @@ function get_std_sql_where_restrict_filter(
  * @return int|array<int>|null int for action count, int[] of ids for
  *   info, null for an unrecognized $type/$action
  */
-function custom_notification_query($action, $type, $start = null, $end = null)
+function custom_notification_query($action, $type, $start = null, $end = null): null|int|array
 {
     global $user;
 
@@ -199,9 +199,8 @@ function custom_notification_query($action, $type, $start = null, $end = null)
  *
  * @param string $start (mysql datetime format)
  * @param string $end (mysql datetime format)
- * @return int
  */
-function nb_new_comments($start = null, $end = null)
+function nb_new_comments($start = null, $end = null): int
 {
     $result = custom_notification_query('count', 'new_comments', $start, $end);
     return is_int($result) ? $result : 0;
@@ -214,7 +213,7 @@ function nb_new_comments($start = null, $end = null)
  * @param string $end (mysql datetime format)
  * @return int[] comment ids
  */
-function new_comments($start = null, $end = null)
+function new_comments($start = null, $end = null): array
 {
     $result = custom_notification_query('info', 'new_comments', $start, $end);
     return is_array($result) ? $result : [];
@@ -225,9 +224,8 @@ function new_comments($start = null, $end = null)
  *
  * @param string $start (mysql datetime format)
  * @param string $end (mysql datetime format)
- * @return int
  */
-function nb_unvalidated_comments($start = null, $end = null)
+function nb_unvalidated_comments($start = null, $end = null): int
 {
     $result = custom_notification_query('count', 'unvalidated_comments', $start, $end);
     return is_int($result) ? $result : 0;
@@ -238,9 +236,8 @@ function nb_unvalidated_comments($start = null, $end = null)
  *
  * @param string $start (mysql datetime format)
  * @param string $end (mysql datetime format)
- * @return int
  */
-function nb_new_elements($start = null, $end = null)
+function nb_new_elements($start = null, $end = null): int
 {
     $result = custom_notification_query('count', 'new_elements', $start, $end);
     return is_int($result) ? $result : 0;
@@ -253,7 +250,7 @@ function nb_new_elements($start = null, $end = null)
  * @param string $end (mysql datetime format)
  * @return int[] photos ids
  */
-function new_elements($start = null, $end = null)
+function new_elements($start = null, $end = null): array
 {
     $result = custom_notification_query('info', 'new_elements', $start, $end);
     return is_array($result) ? $result : [];
@@ -264,9 +261,8 @@ function new_elements($start = null, $end = null)
  *
  * @param string $start (mysql datetime format)
  * @param string $end (mysql datetime format)
- * @return int
  */
-function nb_updated_categories($start = null, $end = null)
+function nb_updated_categories($start = null, $end = null): int
 {
     $result = custom_notification_query('count', 'updated_categories', $start, $end);
     return is_int($result) ? $result : 0;
@@ -279,7 +275,7 @@ function nb_updated_categories($start = null, $end = null)
  * @param string $end (mysql datetime format)
  * @return int[] categories ids
  */
-function updated_categories($start = null, $end = null)
+function updated_categories($start = null, $end = null): array
 {
     $result = custom_notification_query('info', 'updated_categories', $start, $end);
     return is_array($result) ? $result : [];
@@ -290,9 +286,8 @@ function updated_categories($start = null, $end = null)
  *
  * @param string $start (mysql datetime format)
  * @param string $end (mysql datetime format)
- * @return int
  */
-function nb_new_users($start = null, $end = null)
+function nb_new_users($start = null, $end = null): int
 {
     $result = custom_notification_query('count', 'new_users', $start, $end);
     return is_int($result) ? $result : 0;
@@ -305,7 +300,7 @@ function nb_new_users($start = null, $end = null)
  * @param string $end (mysql datetime format)
  * @return int[] user ids
  */
-function new_users($start = null, $end = null)
+function new_users($start = null, $end = null): array
 {
     $result = custom_notification_query('info', 'new_users', $start, $end);
     return is_array($result) ? $result : [];

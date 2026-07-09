@@ -124,7 +124,7 @@ class pwg_image
      */
     private function getImage(): imageInterface
     {
-        if ($this->image === null) {
+        if (! $this->image instanceof \imageInterface) {
             throw new \LogicException('pwg_image: no image library instantiated');
         }
         return $this->image;
@@ -345,15 +345,15 @@ class pwg_image
 
     public static function get_rotation_code_from_angle(?int $rotation_angle): int
     {
-        switch ($rotation_angle) {
-            case 0:   return 0;
-            case 90:  return 1;
-            case 180: return 2;
-            case 270: return 3;
-        }
-        // unreachable for the real domain {null, 0, 90, 180, 270} returned by
-        // get_rotation_angle() (null loosely matches "case 0" above)
-        throw new Exception("get_rotation_code_from_angle(): unexpected rotation angle {$rotation_angle}");
+        return match ($rotation_angle) {
+            // null (no EXIF orientation / non-JPEG source, per
+            // get_rotation_angle()) means "no rotation", same as 0.
+            null, 0 => 0,
+            90 => 1,
+            180 => 2,
+            270 => 3,
+            default => throw new Exception("get_rotation_code_from_angle(): unexpected rotation angle {$rotation_angle}"),
+        };
     }
 
     /**
@@ -364,15 +364,13 @@ class pwg_image
      */
     public static function get_rotation_angle_from_code(int|string $rotation_code): int
     {
-        switch ($rotation_code % 4) {
-            case 0: return 0;
-            case 1: return 90;
-            case 2: return 180;
-            case 3: return 270;
-        }
-        // unreachable: $rotation_code is a tinyint unsigned db column,
-        // always 0-3, so % 4 always matches one of the cases above
-        throw new Exception("get_rotation_angle_from_code(): unexpected rotation code {$rotation_code}");
+        return match ($rotation_code % 4) {
+            0 => 0,
+            1 => 90,
+            2 => 180,
+            3 => 270,
+            default => throw new Exception("get_rotation_angle_from_code(): unexpected rotation code {$rotation_code}"),
+        };
     }
 
     /**

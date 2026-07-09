@@ -584,9 +584,8 @@ function get_thumbnail_title(array $info, $title, $comment = '')
  *
  * @param string $url
  * @param SrcImage $src_image
- * @return string
  */
-function get_src_image_url_protection_handler($url, $src_image)
+function get_src_image_url_protection_handler($url, $src_image): string
 {
     return get_action_url($src_image->id, $src_image->is_original() ? 'e' : 'r', false);
 }

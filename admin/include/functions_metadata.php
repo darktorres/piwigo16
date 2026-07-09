@@ -112,7 +112,7 @@ function get_sync_metadata_attributes(): array
         $update_fields =
           array_merge(
               $update_fields,
-              array_map('strval', array_keys($conf['use_exif_mapping'])),
+              array_map(strval(...), array_keys($conf['use_exif_mapping'])),
               ['latitude', 'longitude']
           );
     }
@@ -121,7 +121,7 @@ function get_sync_metadata_attributes(): array
         $update_fields =
           array_merge(
               $update_fields,
-              array_map('strval', array_keys($conf['use_iptc_mapping']))
+              array_map(strval(...), array_keys($conf['use_iptc_mapping']))
           );
     }
 
@@ -263,7 +263,7 @@ SELECT id, path, representative_ext
                     $tags_of[$id] = [];
                 }
 
-                foreach (explode(',', $data[$key]) as $tag_name) {
+                foreach (explode(',', (string) $data[$key]) as $tag_name) {
                     $tags_of[$id][] = tag_id_from_tag_name($tag_name);
                 }
             }

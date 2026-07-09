@@ -939,7 +939,7 @@ SELECT uppercats
     while ($row = pwg_db_fetch_assoc($result)) {
         $uppercats = array_merge(
             $uppercats,
-            array_map('intval', explode(',', (string) $row['uppercats']))
+            array_map(intval(...), explode(',', (string) $row['uppercats']))
         );
     }
     $uppercats = array_unique($uppercats);
@@ -1049,7 +1049,7 @@ SELECT id, uppercats, site_id
     $categories = query2array($query);
 
     // filling $cat_fulldirs
-    $cat_dirs_callback = (fn ($m) => $cat_dirs[$m[1]]);
+    $cat_dirs_callback = (fn ($m): mixed => $cat_dirs[$m[1]]);
 
     $cat_fulldirs = [];
     foreach ($categories as $category) {
@@ -1435,7 +1435,7 @@ SELECT MAX(`rank`) AS max_rank
 
     // any description for this album?
     if (isset($options['comment'])) {
-        $insert['comment'] = $conf['allow_html_descriptions'] ? $options['comment'] : strip_tags($options['comment']);
+        $insert['comment'] = $conf['allow_html_descriptions'] ? $options['comment'] : strip_tags((string) $options['comment']);
     }
 
     if (! empty($parent_id) and is_numeric($parent_id)) {

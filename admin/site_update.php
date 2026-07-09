@@ -166,13 +166,13 @@ SELECT id, uppercats, global_rank, status, visible
 
     // get categort full directories in an array for comparison with file
     // system directory tree
-    $db_fulldirs = get_fulldirs(array_map('intval', array_keys($db_categories)));
+    $db_fulldirs = get_fulldirs(array_map(intval(...), array_keys($db_categories)));
 
     // what is the base directory to search file system sub-directories ?
     if (isset($_POST['cat']) and is_numeric($_POST['cat'])) {
         $basedir = $db_fulldirs[(int) $_POST['cat']];
     } else {
-        $basedir = preg_replace('#/*$#', '', $site_url);
+        $basedir = preg_replace('#/*$#', '', (string) $site_url);
     }
 
     // we need to have fulldirs as keys to make efficient comparison
@@ -800,7 +800,7 @@ if (isset($_POST['submit']) and isset($_POST['sync_meta'])
                         $tags_of[$id] = [];
                     }
 
-                    foreach (explode(',', $data[$key]) as $tag_name) {
+                    foreach (explode(',', (string) $data[$key]) as $tag_name) {
                         $tags_of[$id][] = tag_id_from_tag_name($tag_name);
                     }
                 }

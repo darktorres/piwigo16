@@ -462,7 +462,7 @@ final class DerivativeImage
      * @param int $maxh
      * @return int[]|null
      */
-    public function get_scaled_size($maxw, $maxh)
+    public function get_scaled_size($maxw, $maxh): ?array
     {
         $size = $this->get_size();
         if ($size) {

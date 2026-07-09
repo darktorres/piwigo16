@@ -700,10 +700,8 @@ SELECT
  * Returns the SQL WHERE clause to be used to build filter values
  *
  * @since 15
- *
- * @param string $filter_name
  */
-function get_clause_for_filter($filter_name): string
+function get_clause_for_filter(string $filter_name): string
 {
     global $page;
 
@@ -819,7 +817,7 @@ class QNumericRangeScope extends QSearchScope
         string $id,
         array $aliases,
         bool $nullable = false,
-        private int|float $epsilon = 0
+        private readonly int|float $epsilon = 0
     ) {
         parent::__construct($id, $aliases, $nullable, false);
     }

@@ -151,7 +151,7 @@ WHERE ' . $where . '
  * @param int $id
  * @return array<string, mixed>|null
  */
-function get_cat_info($id)
+function get_cat_info($id): ?array
 {
     $query = '
 SELECT *
@@ -275,13 +275,12 @@ function display_select_categories(
 /**
  * Same as display_select_categories but categories are ordered by rank
  * @see display_select_categories()
- * @param string $query
  * @param array<int, mixed> $selecteds
  * @param string $blockname variable name in template
  * @param bool $fullname full breadcrumb or not
  */
 function display_select_cat_wrapper(
-    $query,
+    string $query,
     $selecteds,
     $blockname,
     $fullname = true
@@ -691,9 +690,9 @@ function get_related_categories_menu($items, $excluded_cat_ids = []): array
     global $page, $conf;
 
     $common_cats = get_common_categories(
-        array_map('intval', $items),
+        array_map(intval(...), $items),
         $conf['related_albums_display_limit'],
-        array_map('intval', $excluded_cat_ids)
+        array_map(intval(...), $excluded_cat_ids)
     );
     // echo '<pre>'; print_r($common_cats); echo '</pre>';
 

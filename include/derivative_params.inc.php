@@ -245,7 +245,7 @@ final class SizingParams
      * @param ImageRect|null $crop_rect by-ref out-param; always bound to a fresh, undefined variable at every real call site
      * @param array<int|float>|null $scale_size by-ref out-param; always bound to a fresh, undefined variable at every real call site
      */
-    public function compute(array $in_size, $coi, ?ImageRect &$crop_rect, ?array &$scale_size): void
+    public function compute(array $in_size, ?string $coi, ?ImageRect &$crop_rect, ?array &$scale_size): void
     {
         $destCrop = new ImageRect($in_size);
 
@@ -349,10 +349,10 @@ final class DerivativeParams
      * @param int[] $in_size
      * @return int[]
      */
-    public function compute_final_size(array $in_size)
+    public function compute_final_size(array $in_size): array
     {
         $this->sizing->compute($in_size, null, $crop_rect, $scale_size);
-        return $scale_size != null ? array_map('intval', $scale_size) : $in_size;
+        return $scale_size != null ? array_map(intval(...), $scale_size) : $in_size;
     }
 
     /**

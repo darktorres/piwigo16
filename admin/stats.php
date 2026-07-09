@@ -256,7 +256,7 @@ $template->assign(
  * @param array<int, array<string, mixed>> $data
  * @return float[]|int[]
  */
-function set_missing_values(string $unit, $data, ?DateTime $firstDate = null, ?DateTime $lastDate = null): array
+function set_missing_values(string $unit, array $data, ?DateTime $firstDate = null, ?DateTime $lastDate = null): array
 {
     $limit = count($data);
     $result = [];

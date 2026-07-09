@@ -119,7 +119,7 @@ function search_case_username($username)
  * @param bool $notify_user
  * @return int|false user id or false
  */
-function register_user($login, #[\SensitiveParameter] $password, ?string $mail_address, $notify_admin = true, &$errors = [], $notify_user = false)
+function register_user($login, #[\SensitiveParameter] $password, ?string $mail_address, $notify_admin = true, &$errors = [], $notify_user = false): int|false
 {
     global $conf;
 
@@ -790,10 +790,8 @@ function get_default_user_value($value_name, $default)
 /**
  * Returns the default theme.
  * If the default theme is not available it returns the first available one.
- *
- * @return string
  */
-function get_default_theme()
+function get_default_theme(): string
 {
     $theme = (string) get_default_user_value('theme', PHPWG_DEFAULT_TEMPLATE);
     if (check_theme_installed($theme)) {
@@ -1354,7 +1352,7 @@ function pwg_login(bool $success, $username, $password, $remember_me): bool
  * @param string $username_or_email
  * @return array<string, mixed>|null
  */
-function find_user_by_username_or_email($username_or_email)
+function find_user_by_username_or_email($username_or_email): ?array
 {
     global $conf;
 
@@ -1785,7 +1783,7 @@ SELECT
             and ! empty($key['email']) // the user have an email
             and (
                 $key['last_notified_on'] === null // we never send an email for this key
-                or strtotime($key['last_notified_on']) < strtotime((string) $key['48h_ago']) // OR when the last email was sent more than 48 hours ago
+                or strtotime((string) $key['last_notified_on']) < strtotime((string) $key['48h_ago']) // OR when the last email was sent more than 48 hours ago
             )
         ) {
             $page['notify_api_key_expiration'] = [

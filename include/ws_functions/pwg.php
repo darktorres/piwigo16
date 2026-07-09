@@ -1011,7 +1011,7 @@ SELECT
         if (isset($line['tag_ids'])) {
             $tag_names = preg_replace_callback(
                 '/(\d+)/',
-                fn ($m) => $name_of_tag[$m[1]] ?? $m[1],
+                fn ($m): mixed => $name_of_tag[$m[1]] ?? $m[1],
                 (string) $line['tag_ids']
             );
             $tag_ids = $line['tag_ids'];

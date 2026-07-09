@@ -392,7 +392,7 @@ UPDATE ' . protect_column_name($tablename) . ' AS t1, ' . $temporary_tablename .
           implode(
               "\n    AND ",
               array_map(
-                  fn ($s): string => "t1.{$s} = t2.{$s}",
+                  fn (string $s): string => "t1.{$s} = t2.{$s}",
                   $dbfields['primary']
               )
           );
@@ -646,7 +646,7 @@ function pwg_db_cast_to_text(string $string): string
  * @param string $field
  * @return string[]
  */
-function get_enums($table, $field)
+function get_enums($table, $field): array
 {
     $options = [];
     $result = pwg_query('DESC ' . $table);

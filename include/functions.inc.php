@@ -1927,6 +1927,10 @@ function verify_ephemeral_key($key, $aditionnal_data_to_hash = ''): bool
  * return an array which will be sent to template to display navigation bar
  *
  * @param string $url base url of all links
+ * @param int|string $nb_element may be a numeric string: comments.php,
+ *   include/category_cats.inc.php, include/picture_comment.inc.php and
+ *   admin/rating.php all pass a raw pwg_db_fetch_row()/FOUND_ROWS() value
+ *   straight through, unlike the other call sites which pass a count()
  * @param int|string $start may be a numeric string: index.php/category_cats.inc.php
  *   pass a raw preg_match() capture (include/functions_url.inc.php), and
  *   admin/rating.php/admin/batch_manager.php pass $_GET/$_REQUEST directly
@@ -1936,7 +1940,7 @@ function verify_ephemeral_key($key, $aditionnal_data_to_hash = ''): bool
  * @param string $param_name
  * @return array<string, mixed>
  */
-function create_navigation_bar($url, int $nb_element, $start, $nb_element_page, $clean_url = false, $param_name = 'start'): array
+function create_navigation_bar($url, int|string $nb_element, $start, $nb_element_page, $clean_url = false, $param_name = 'start'): array
 {
     global $conf;
 

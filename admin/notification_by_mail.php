@@ -18,6 +18,10 @@ if (! defined('PHPWG_ROOT_PATH')) {
 }
 
 // Bootstrap globals, set by include/common.inc.php.
+/**
+ * @var array<string, mixed> $conf
+ * @var \Template $template
+ */
 global $conf, $template;
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
@@ -52,6 +56,10 @@ $must_repost = false;
  */
 function do_timeout_treatment(string $post_keyname, array $check_key_treated = []): bool
 {
+    /**
+     * @var array<string, mixed> $env_nbm
+     * @var array<string, mixed> $page
+     */
     global $env_nbm, $page;
 
     if ($env_nbm['is_sendmail_timeout']) {
@@ -59,7 +67,12 @@ function do_timeout_treatment(string $post_keyname, array $check_key_treated = [
             $post_count = count($_POST[$post_keyname]);
             $treated_count = count($check_key_treated);
             if ($treated_count != 0) {
-                $time_refresh = (int) ceil((get_moment() - $env_nbm['start_time']) * $post_count / $treated_count);
+                // start_time is set (via get_moment(), always float) by the
+                // nbm_global_var bootstrap in
+                // admin/include/functions_notification_by_mail.inc.php.
+                $start_time = $env_nbm['start_time'];
+                $start_time_num = is_numeric($start_time) ? (float) $start_time : 0.0;
+                $time_refresh = (int) ceil((get_moment() - $start_time_num) * $post_count / $treated_count);
             } else {
                 $time_refresh = 0;
             }
@@ -69,11 +82,11 @@ function do_timeout_treatment(string $post_keyname, array $check_key_treated = [
             $check_key_treated_strings = array_filter($check_key_treated, is_string(...));
             $_POST[$post_keyname] = array_diff(array_filter($_POST[$post_keyname], 'is_string'), $check_key_treated_strings);
 
-            $page['errors'][] = l10n_dec(
+            push_page_message($page, 'errors', l10n_dec(
                 'Execution time is out, treatment must be continue [Estimated time: %d second].',
                 'Execution time is out, treatment must be continue [Estimated time: %d seconds].',
                 $time_refresh
-            );
+            ));
             return true;
         }
     }
@@ -101,28 +114,49 @@ function get_tab_status(string $mode): int
  */
 function insert_new_data_user_mail_notification(): void
 {
-    global $conf, $page, $env_nbm;
+    /**
+     * @var array<string, mixed> $conf
+     * @var array<string, mixed> $page
+     * @var array<string, mixed> $env_nbm
+     * @var string $base_url set at the top of this file
+     */
+    global $conf, $page, $env_nbm, $base_url;
+
+    // user_fields maps generic field names to table-specific column names
+    // (see include/config_default.inc.php); every value is a plain string.
+    $user_fields_raw = $conf['user_fields'];
+    $user_fields = [];
+    if (is_array($user_fields_raw)) {
+        foreach ($user_fields_raw as $field_key => $field_value) {
+            if (is_string($field_key) and is_string($field_value)) {
+                $user_fields[$field_key] = $field_value;
+            }
+        }
+    }
+    $user_field_email = $user_fields['email'] ?? 'mail_address';
+    $user_field_id = $user_fields['id'] ?? 'id';
+    $user_field_username = $user_fields['username'] ?? 'username';
 
     // Set null mail_address empty
     $query = '
 update
   ' . USERS_TABLE . '
 set
-  ' . $conf['user_fields']['email'] . ' = null
+  ' . $user_field_email . ' = null
 where
-  trim(' . $conf['user_fields']['email'] . ') = \'\';';
+  trim(' . $user_field_email . ') = \'\';';
     pwg_query($query);
 
     // null mail_address are not selected in the list
     $query = '
 select
-  u.' . $conf['user_fields']['id'] . ' as user_id,
-  u.' . $conf['user_fields']['username'] . ' as username,
-  u.' . $conf['user_fields']['email'] . ' as mail_address
+  u.' . $user_field_id . ' as user_id,
+  u.' . $user_field_username . ' as username,
+  u.' . $user_field_email . ' as mail_address
 from
-  ' . USERS_TABLE . ' as u left join ' . USER_MAIL_NOTIFICATION_TABLE . ' as m on u.' . $conf['user_fields']['id'] . ' = m.user_id
+  ' . USERS_TABLE . ' as u left join ' . USER_MAIL_NOTIFICATION_TABLE . ' as m on u.' . $user_field_id . ' = m.user_id
 where
-  u.' . $conf['user_fields']['email'] . ' is not null and
+  u.' . $user_field_email . ' is not null and
   m.user_id is null
 order by
   user_id;';
@@ -147,11 +181,11 @@ order by
                 'enabled' => 'false', // By default if false, set to true with specific functions
             ];
 
-            $page['infos'][] = l10n(
+            push_page_message($page, 'infos', l10n(
                 'User %s [%s] added.',
                 stripslashes((string) $nbm_user['username']),
                 $nbm_user['mail_address']
-            );
+            ));
         }
 
         // Insert new nbm_users
@@ -159,7 +193,7 @@ order by
         // Update field enabled with specific function
         $check_key_treated = do_subscribe_unsubscribe_notification_by_mail(
             true,
-            $conf['nbm_default_value_user_enabled'],
+            (bool) $conf['nbm_default_value_user_enabled'],
             $check_key_list
         );
 
@@ -186,6 +220,7 @@ order by
  */
 function render_global_customize_mail_content(mixed $customize_mail_content): mixed
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     // Real callers always pass a string (config value or POSTed content);
@@ -211,10 +246,15 @@ function render_global_customize_mail_content(mixed $customize_mail_content): mi
 /**
  * @param array<int, mixed> $check_key_list
  * @param mixed $customize_mail_content
- * @return mixed[]
+ * @return array<int, mixed>
  */
 function do_action_send_mail_notification(string $action = 'list_to_send', array $check_key_list = [], $customize_mail_content = ''): array
 {
+    /**
+     * @var array<string, mixed> $conf
+     * @var array<string, mixed> $page
+     * @var array<string, mixed> $env_nbm
+     */
     global $conf, $page, $user, $lang_info, $lang, $env_nbm;
     $return_list = [];
 
@@ -256,12 +296,12 @@ function do_action_send_mail_notification(string $action = 'list_to_send', array
                 foreach ($data_users as $nbm_user) {
                     if ((! $is_action_send) and check_sendmail_timeout()) {
                         // Stop fill list on 'list_to_send', if the quota is override
-                        $page['infos'][] = $msg_break_timeout;
+                        push_page_message($page, 'infos', $msg_break_timeout);
                         break;
                     }
                     if (($is_action_send) and check_sendmail_timeout()) {
                         // Stop fill list on 'send', if the quota is override
-                        $page['errors'][] = $msg_break_timeout;
+                        push_page_message($page, 'errors', $msg_break_timeout);
                         break;
                     }
 
@@ -290,21 +330,44 @@ function do_action_send_mail_notification(string $action = 'list_to_send', array
                         // Fill return list of "treated" check_key for 'send'
                         $return_list[] = $nbm_user['check_key'];
 
-                        if ($conf['nbm_send_detailed_content']) {
-                            $news = news($nbm_user['last_send'], $dbnow, false, $conf['nbm_send_html_mail'], $auth);
+                        // These nbm_* flags are plain booleans in
+                        // include/config_default.inc.php; (bool) is always a
+                        // safe, non-failing cast for a mixed config value.
+                        $nbm_send_detailed_content = (bool) $conf['nbm_send_detailed_content'];
+                        $nbm_send_html_mail = (bool) $conf['nbm_send_html_mail'];
+
+                        if ($nbm_send_detailed_content) {
+                            $news = news($nbm_user['last_send'], $dbnow, false, $nbm_send_html_mail, $auth);
                             $exist_data = count($news) > 0;
                         } else {
                             $exist_data = news_exists($nbm_user['last_send'], $dbnow);
                         }
 
                         if ($exist_data) {
-                            $subject = '[' . $conf['gallery_title'] . '] ' . l10n('New photos added');
+                            // gallery_title is always a configured string
+                            // (see include/config_default.inc.php).
+                            $gallery_title = is_string($conf['gallery_title']) ? $conf['gallery_title'] : '';
+                            $subject = '[' . $gallery_title . '] ' . l10n('New photos added');
+
+                            // email_format/mail_template were set by
+                            // begin_users_env_nbm($is_action_send) and
+                            // set_user_on_env_nbm($nbm_user, true) a few lines
+                            // above, which are always called (in that order)
+                            // before this branch can be reached; the
+                            // instanceof/is_string fallback mirrors the same
+                            // pattern used in assign_vars_nbm_mail_content()
+                            // for the same kind of mixed-valued cached-object
+                            // array slot.
+                            $mail_email_format = $env_nbm['email_format'] ?? null;
+                            $mail_email_format = is_string($mail_email_format) ? $mail_email_format : get_str_email_format($nbm_send_html_mail);
+                            $mail_template = $env_nbm['mail_template'] ?? null;
+                            $mail_template = $mail_template instanceof \Template ? $mail_template : get_mail_template($mail_email_format);
 
                             // Assign current var for nbm mail
                             assign_vars_nbm_mail_content($nbm_user);
 
                             if ($nbm_user['last_send'] !== null) {
-                                $env_nbm['mail_template']->assign(
+                                $mail_template->assign(
                                     'content_new_elements_between',
                                     [
                                         'DATE_BETWEEN_1' => $nbm_user['last_send'],
@@ -312,7 +375,7 @@ function do_action_send_mail_notification(string $action = 'list_to_send', array
                                     ]
                                 );
                             } else {
-                                $env_nbm['mail_template']->assign(
+                                $mail_template->assign(
                                     'content_new_elements_single',
                                     [
                                         'DATE_SINGLE' => $dbnow,
@@ -320,8 +383,8 @@ function do_action_send_mail_notification(string $action = 'list_to_send', array
                                 );
                             }
 
-                            if ($conf['nbm_send_detailed_content']) {
-                                $env_nbm['mail_template']->assign('global_new_lines', $news);
+                            if ($nbm_send_detailed_content) {
+                                $mail_template->assign('global_new_lines', $news);
                             }
 
                             $nbm_user_customize_mail_content =
@@ -331,16 +394,31 @@ function do_action_send_mail_notification(string $action = 'list_to_send', array
                                   $nbm_user
                               );
                             if (! empty($nbm_user_customize_mail_content)) {
-                                $env_nbm['mail_template']->assign(
+                                $mail_template->assign(
                                     'custom_mail_content',
                                     $nbm_user_customize_mail_content
                                 );
                             }
 
-                            if ($conf['nbm_send_html_mail'] and $conf['nbm_send_recent_post_dates']) {
-                                $recent_post_dates = get_recent_post_dates_array(
-                                    $conf['recent_post_dates']['NBM']
-                                );
+                            $nbm_send_recent_post_dates = (bool) $conf['nbm_send_recent_post_dates'];
+                            if ($nbm_send_html_mail and $nbm_send_recent_post_dates) {
+                                // recent_post_dates is a config array of
+                                // per-notification-kind int settings (see
+                                // include/config_default.inc.php); narrow the
+                                // 'NBM' entry to the array<string, int> shape
+                                // get_recent_post_dates_array() expects.
+                                $recent_post_dates_conf = $conf['recent_post_dates'];
+                                $nbm_recent_post_dates_raw = (is_array($recent_post_dates_conf) and is_array($recent_post_dates_conf['NBM'] ?? null))
+                                    ? $recent_post_dates_conf['NBM']
+                                    : [];
+                                $nbm_recent_post_dates_args = [];
+                                foreach ($nbm_recent_post_dates_raw as $arg_key => $arg_value) {
+                                    if (is_string($arg_key) and is_int($arg_value)) {
+                                        $nbm_recent_post_dates_args[$arg_key] = $arg_value;
+                                    }
+                                }
+
+                                $recent_post_dates = get_recent_post_dates_array($nbm_recent_post_dates_args);
                                 foreach ($recent_post_dates as $date_detail) {
                                     // get_recent_post_dates_array() is typed to
                                     // return array<int|string, mixed>; each
@@ -348,7 +426,7 @@ function do_action_send_mail_notification(string $action = 'list_to_send', array
                                     // date-detail row (array<string, mixed>).
                                     assert(is_array($date_detail));
                                     /** @var array<string, mixed> $date_detail */
-                                    $env_nbm['mail_template']->append(
+                                    $mail_template->append(
                                         'recent_posts',
                                         [
                                             'TITLE' => get_title_recent_post_date($date_detail),
@@ -359,26 +437,19 @@ function do_action_send_mail_notification(string $action = 'list_to_send', array
                             }
 
                             $gallery_home_url = get_gallery_home_url();
-                            $env_nbm['mail_template']->assign(
+                            $mail_template->assign(
                                 [
-                                    'GOTO_GALLERY_TITLE' => $conf['gallery_title'],
+                                    'GOTO_GALLERY_TITLE' => $gallery_title,
                                     'GOTO_GALLERY_URL' => add_url_params(is_string($gallery_home_url) ? $gallery_home_url : '', $add_url_params),
                                     'SEND_AS_NAME' => $env_nbm['send_as_name'],
                                 ]
                             );
 
-                            // $env_nbm is populated by begin_users_env_nbm()
-                            // (get_str_email_format() always returns string)
-                            // but the global is typed loosely; narrow here.
-                            $mail_email_format = is_string($env_nbm['email_format'])
-                                ? $env_nbm['email_format']
-                                : get_str_email_format((bool) $conf['nbm_send_html_mail']);
-
                             $mail_args = [
                                 'from' => $env_nbm['send_as_mail_formated'],
                                 'subject' => $subject,
                                 'email_format' => $mail_email_format,
-                                'content' => $env_nbm['mail_template']->parse('notification_by_mail', true),
+                                'content' => $mail_template->parse('notification_by_mail', true),
                                 'content_format' => $mail_email_format,
                             ];
                             if (is_string($auth)) {
@@ -434,7 +505,7 @@ function do_action_send_mail_notification(string $action = 'list_to_send', array
                 }
             } else {
                 if ($is_action_send) {
-                    $page['errors'][] = l10n('No user to send notifications by mail.');
+                    push_page_message($page, 'errors', l10n('No user to send notifications by mail.'));
                 }
             }
         } else {
@@ -455,15 +526,17 @@ function do_action_send_mail_notification(string $action = 'list_to_send', array
 if (! isset($_GET['mode']) or ! is_string($_GET['mode'])) {
     // check_input_parameter() above already fatal_error()s on a non-scalar
     // or non-matching value; $_GET entries are always strings in practice.
-    $page['mode'] = 'send';
+    $page_mode = 'send';
 } else {
-    $page['mode'] = $_GET['mode'];
+    $page_mode = $_GET['mode'];
 }
+/** @var array<string, mixed> $page */
+$page['mode'] = $page_mode;
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(get_tab_status($page['mode']));
+check_status(get_tab_status($page_mode));
 
 // +-----------------------------------------------------------------------+
 // | Add event handler                                                     |
@@ -487,7 +560,7 @@ if (! empty($_POST)) {
     check_pwg_token();
 }
 
-switch ($page['mode']) {
+switch ($page_mode) {
     case 'param':
 
         if (isset($_POST['param_submit'])) {
@@ -527,10 +600,16 @@ switch ($page['mode']) {
     case 'subscribe':
 
         if (isset($_POST['falsify']) and isset($_POST['cat_true']) and is_array($_POST['cat_true'])) {
-            $check_key_treated = unsubscribe_notification_by_mail(true, array_values($_POST['cat_true']));
+            // unsubscribe_notification_by_mail() is declared to return
+            // mixed[] (a list, always sequentially int-keyed in practice via
+            // $check_key_treated[] appends), but PHPStan reads that shorthand
+            // as array<mixed> (key type not pinned to int); array_values()
+            // re-keys it to the array<int, mixed> do_timeout_treatment()
+            // actually expects.
+            $check_key_treated = array_values(unsubscribe_notification_by_mail(true, array_values($_POST['cat_true'])));
             $must_repost = do_timeout_treatment('cat_true', $check_key_treated);
         } elseif (isset($_POST['trueify']) and isset($_POST['cat_false']) and is_array($_POST['cat_false'])) {
-            $check_key_treated = subscribe_notification_by_mail(true, array_values($_POST['cat_false']));
+            $check_key_treated = array_values(subscribe_notification_by_mail(true, array_values($_POST['cat_false'])));
             $must_repost = do_timeout_treatment('cat_false', $check_key_treated);
         }
         break;
@@ -574,7 +653,7 @@ if (is_autorize_status(ACCESS_WEBMASTER)) {
     // TabSheet
     $tabsheet = new tabsheet();
     $tabsheet->set_id('nbm');
-    $tabsheet->select($page['mode']);
+    $tabsheet->select($page_mode);
     $tabsheet->assign();
 }
 
@@ -592,11 +671,11 @@ if ($must_repost) {
     $template->assign('REPOST_SUBMIT_NAME', $repost_submit_name);
 }
 
-switch ($page['mode']) {
+switch ($page_mode) {
     case 'param':
 
         $template->assign(
-            $page['mode'],
+            $page_mode,
             [
                 'SEND_HTML_MAIL' => $conf['nbm_send_html_mail'],
                 'SEND_MAIL_AS' => $conf['nbm_send_mail_as'],
@@ -609,7 +688,7 @@ switch ($page['mode']) {
 
     case 'subscribe':
 
-        $template->assign($page['mode'], true);
+        $template->assign($page_mode, true);
 
         $template->assign(
             [
@@ -693,10 +772,14 @@ switch ($page['mode']) {
                 }
             }
         }
-        $template->assign($page['mode'], $tpl_var);
+        $template->assign($page_mode, $tpl_var);
 
-        if ($conf['auth_key_duration'] > 0) {
-            $auth_key_since = strtotime('now -' . $conf['auth_key_duration'] . ' second');
+        // auth_key_duration is a plain int config value (see
+        // include/config_default.inc.php).
+        $auth_key_duration = $conf['auth_key_duration'];
+        $auth_key_duration_num = is_numeric($auth_key_duration) ? (int) $auth_key_duration : 0;
+        if ($auth_key_duration_num > 0) {
+            $auth_key_since = strtotime('now -' . $auth_key_duration_num . ' second');
             // the relative time expression above is always syntactically valid
             assert($auth_key_since !== false);
             $template->assign(

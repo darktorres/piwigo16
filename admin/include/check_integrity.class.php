@@ -38,10 +38,16 @@ class check_integrity
      */
     public function check(): void
     {
-        global $page, $header_notes, $conf;
+        /** @var array<string, mixed> $page */
+        global $page;
+        /** @var array<string, mixed> $header_notes */
+        global $header_notes;
+        /** @var array<string, mixed> $conf */
+        global $conf;
 
         // Ignore list
-        $conf_c13y_ignore = unserialize($conf['c13y_ignore']);
+        $conf_c13y_ignore_raw = $conf['c13y_ignore'] ?? null;
+        $conf_c13y_ignore = is_string($conf_c13y_ignore_raw) ? unserialize($conf_c13y_ignore_raw) : false;
         if (
             is_array($conf_c13y_ignore) and
             isset($conf_c13y_ignore['version']) and
@@ -101,6 +107,9 @@ class check_integrity
             }
 
             if ($corrected_count > 0) {
+                if (! is_array($page['infos'] ?? null)) {
+                    $page['infos'] = [];
+                }
                 $page['infos'][] = l10n_dec(
                     '%d anomaly has been corrected.',
                     '%d anomalies have been detected corrected.',
@@ -108,6 +117,9 @@ class check_integrity
                 );
             }
             if ($not_corrected_count > 0) {
+                if (! is_array($page['errors'] ?? null)) {
+                    $page['errors'] = [];
+                }
                 $page['errors'][] = l10n_dec(
                     '%d anomaly has not been corrected.',
                     '%d anomalies have not been corrected.',
@@ -128,6 +140,9 @@ class check_integrity
                 }
 
                 if ($ignored_count > 0) {
+                    if (! is_array($page['infos'] ?? null)) {
+                        $page['infos'] = [];
+                    }
                     $page['infos'][] = l10n_dec(
                         '%d anomaly has been ignored.',
                         '%d anomalies have been ignored.',
@@ -156,6 +171,7 @@ class check_integrity
      */
     public function display(): void
     {
+        /** @var \Template $template */
         global $template;
 
         $check_automatic_correction = false;

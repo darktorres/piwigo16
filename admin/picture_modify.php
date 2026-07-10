@@ -15,7 +15,14 @@ if (! defined('PHPWG_ROOT_PATH')) {
 
 // Bootstrap globals. $admin_photo_base_url is set by admin/photo.php before
 // including this panel; the rest by include/common.inc.php.
-global $admin_photo_base_url, $cache, $conf, $template, $user;
+/**
+ * @var array<string, mixed> $cache
+ * @var array<string, mixed> $conf
+ * @var array<string, mixed> $page
+ * @var \Template $template
+ * @var array<string, mixed> $user
+ */
+global $admin_photo_base_url, $cache, $conf, $page, $template, $user;
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
@@ -90,10 +97,15 @@ if (isset($_GET['delete'])) {
 
 if (isset($_GET['sync_metadata'])) {
     sync_metadata([$image_id]);
+    if (! is_array($page['infos'] ?? null)) {
+        $page['infos'] = [];
+    }
     $page['infos'][] = l10n('Metadata synchronized from file');
 }
 
 // --------------------------------------------------------- update informations
+/** @var array<string, mixed> $data */
+$data = [];
 if (isset($_POST['submit'])) {
     check_pwg_token();
 
@@ -125,6 +137,7 @@ if (isset($_POST['submit'])) {
         $data = $pre_hook_data;
     }
 
+    /** @var array<string, mixed> $data */
     single_update(
         IMAGES_TABLE,
         $data,
@@ -218,6 +231,10 @@ SELECT
 ;';
 $tag_selection = get_taglist($query);
 
+// get_image_infos($image_id, true) fatal_errors (never returns) when the
+// photo doesn't exist, so $page['image'] is guaranteed to be a real
+// array<string, mixed> row by this point.
+/** @var array<string, mixed> $row */
 $row = $page['image'];
 
 if (isset($data['date_creation'])) {
@@ -241,7 +258,7 @@ $template->set_filenames(
     ]
 );
 
-$admin_url_start = $admin_photo_base_url . '-properties';
+$admin_url_start = (is_string($admin_photo_base_url) ? $admin_photo_base_url : '') . '-properties';
 
 $src_image = new SrcImage($row);
 
@@ -280,13 +297,13 @@ $template->assign(
 
         'TITLE' => render_element_name($row),
 
-        'DIMENSIONS' => @$row['width'] . ' * ' . @$row['height'],
+        'DIMENSIONS' => (is_scalar($row['width']) ? (string) $row['width'] : '') . ' * ' . (is_scalar($row['height']) ? (string) $row['height'] : ''),
 
         'FORMAT' => ($row['width'] >= $row['height']) ? 1 : 0, // 0:horizontal, 1:vertical
 
-        'FILESIZE' => @$row['filesize'] . ' KB',
+        'FILESIZE' => (is_scalar($row['filesize']) ? (string) $row['filesize'] : '') . ' KB',
 
-        'REGISTRATION_DATE' => format_date($row['date_available']),
+        'REGISTRATION_DATE' => format_date(is_string($row['date_available']) || is_int($row['date_available']) ? $row['date_available'] : false),
 
         'AUTHOR' => htmlspecialchars($author_value),
 
@@ -300,26 +317,31 @@ $template->assign(
 );
 
 $added_by = 'N/A';
+$user_fields = is_array($conf['user_fields']) ? $conf['user_fields'] : [];
+$uf_username = is_string($user_fields['username'] ?? null) ? $user_fields['username'] : '';
+$uf_id = is_string($user_fields['id'] ?? null) ? $user_fields['id'] : '';
+$row_added_by_str = is_numeric($row['added_by']) ? (string) (int) $row['added_by'] : '0';
 $query = '
-SELECT ' . $conf['user_fields']['username'] . ' AS username
+SELECT ' . $uf_username . ' AS username
   FROM ' . USERS_TABLE . '
-  WHERE ' . $conf['user_fields']['id'] . ' = ' . $row['added_by'] . '
+  WHERE ' . $uf_id . ' = ' . $row_added_by_str . '
 ;';
 $result = pwg_query($query);
 while ($user_row = pwg_db_fetch_assoc($result)) {
     $row['added_by'] = $user_row['username'];
 }
 
-$extTab = explode('.', (string) $row['file']);
+$row_file = is_string($row['file']) ? $row['file'] : '';
+$extTab = explode('.', $row_file);
 
 $intro_vars = [
-    'file' => l10n('%s', $row['file']),
-    'date' => l10n('Posted the %s', format_date($row['date_available'], ['day', 'month', 'year'])),
-    'age' => l10n(ucfirst(time_since($row['date_available'], 'year'))),
+    'file' => l10n('%s', $row_file),
+    'date' => l10n('Posted the %s', format_date(is_string($row['date_available']) || is_int($row['date_available']) ? $row['date_available'] : false, ['day', 'month', 'year'])),
+    'age' => l10n(ucfirst(time_since(is_string($row['date_available']) || is_int($row['date_available']) ? $row['date_available'] : '', 'year'))),
     'added_by' => l10n('Added by %s', $row['added_by']),
-    'size' => l10n('%s pixels, %.2f MB', $row['width'] . '&times;' . $row['height'], $row['filesize'] / 1024),
+    'size' => l10n('%s pixels, %.2f MB', (is_scalar($row['width']) ? (string) $row['width'] : '') . '&times;' . (is_scalar($row['height']) ? (string) $row['height'] : ''), (is_numeric($row['filesize']) ? (float) $row['filesize'] : 0.0) / 1024),
     'stats' => l10n('Visited %d times', $row['hit']),
-    'id' => l10n($row['id']),
+    'id' => l10n(is_string($row['id']) ? $row['id'] : ''),
     'ext' => l10n('%s file type', strtoupper(end($extTab))),
     'is_svg' => (strtoupper(end($extTab)) == 'SVG'),
 ];
@@ -332,16 +354,23 @@ SELECT
   WHERE element_id = ' . $image_id . '
 ;';
     $rate_row = pwg_db_fetch_row(pwg_query($query));
-    assert($rate_row !== null);
-    [$row['nb_rates']] = $rate_row;
+    // pwg_query() can return false (and pwg_db_fetch_row() then null) on a
+    // SQL error when $conf['die_on_sql_error'] is off; a COUNT(*) query
+    // always yields exactly one row otherwise, so this guard -- not
+    // assert(), which is a no-op under this app's zend.assertions=-1 -- is
+    // what actually protects the list-destructure below.
+    if ($rate_row !== null) {
+        [$row['nb_rates']] = $rate_row;
 
-    $intro_vars['stats'] .= ', ' . sprintf(l10n('Rated %d times, score : %.2f'), $row['nb_rates'], $row['rating_score']);
+        $intro_vars['stats'] .= ', ' . sprintf(l10n('Rated %d times, score : %.2f'), is_numeric($row['nb_rates']) ? (int) $row['nb_rates'] : 0, is_numeric($row['rating_score']) ? (float) $row['rating_score'] : 0.0);
+    }
 }
 
+$row_id_str = is_numeric($row['id']) ? (string) (int) $row['id'] : '0';
 $query = '
 SELECT *
   FROM ' . IMAGE_FORMAT_TABLE . '
-  WHERE image_id = ' . $row['id'] . '
+  WHERE image_id = ' . $row_id_str . '
 ;';
 $formats = query2array($query);
 
@@ -358,7 +387,9 @@ if (! empty($formats)) {
 
 $template->assign('INTRO', $intro_vars);
 
-if (in_array(get_extension($row['path']), $conf['picture_ext'])) {
+$row_path = is_string($row['path']) ? $row['path'] : null;
+$picture_ext = is_array($conf['picture_ext']) ? $conf['picture_ext'] : [];
+if (in_array(get_extension($row_path), $picture_ext)) {
     $template->assign('U_COI', get_root_url() . 'admin.php?page=picture_coi&amp;image_id=' . $image_id);
 }
 
@@ -414,11 +445,19 @@ $template->assign('related_categories_ids', $related_categories_ids);
 // 2. else if user level is higher than image level, randomly find an authorized category
 // 3. else no jumpto link
 
+// re-derived from $page['image'] rather than $row: the categories while()
+// loop above reassigns the local $row variable, so it no longer holds the
+// image row by this point.
+$image_level = 0;
+if (is_array($page['image']) && is_numeric($page['image']['level'] ?? null)) {
+    $image_level = (int) $page['image']['level'];
+}
+
 if ($custom_context = get_edit_context($image_id)) {
     $template->assign('U_JUMPTO', make_picture_url([
         'image_id' => $image_id,
     ]) . '/' . $custom_context);
-} elseif ($user['level'] >= $page['image']['level']) {
+} elseif ((is_numeric($user['level']) ? (int) $user['level'] : 0) >= $image_level) {
     $query = '
 SELECT category_id
   FROM ' . IMAGE_CATEGORY_TABLE . '
@@ -434,7 +473,7 @@ SELECT category_id
         $authorized_category_ids,
         explode(
             ',',
-            calculate_permissions($user['id'], $user['status'])
+            calculate_permissions(is_numeric($user['id']) ? (int) $user['id'] : 0, is_string($user['status']) ? $user['status'] : '')
         )
     );
 
@@ -442,11 +481,12 @@ SELECT category_id
         $authorizeds_values = array_values($authorizeds);
         $category = $authorizeds_values[random_int(0, count($authorizeds_values) - 1)];
 
+        $cat_names = is_array($cache['cat_names']) ? $cache['cat_names'] : [];
         $url_img = make_picture_url(
             [
                 'image_id' => $image_id,
                 'image_file' => $image_file,
-                'category' => $cache['cat_names'][$category],
+                'category' => $cat_names[$category] ?? null,
             ]
         );
 

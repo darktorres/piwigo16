@@ -14,9 +14,17 @@ if (! defined('PHPWG_ROOT_PATH')) {
 }
 
 // Bootstrap globals, set by include/common.inc.php.
+/**
+ * @var array<string, mixed> $conf
+ * @var \Template $template
+ */
 global $conf, $template;
 
 if (! is_webmaster()) {
+    /** @var array<string, mixed> $page */
+    if (! is_array($page['warnings'] ?? null)) {
+        $page['warnings'] = [];
+    }
     $page['warnings'][] = str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'));
 }
 

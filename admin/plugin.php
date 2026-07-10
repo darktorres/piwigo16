@@ -40,6 +40,9 @@ if (! preg_match('/^[\w-]+$/', $plugin_id)) {
     die('Invalid plugin identifier');
 }
 
+/** @var array<string, mixed> $pwg_loaded_plugins */
+global $pwg_loaded_plugins;
+
 if (! isset($pwg_loaded_plugins[$plugin_id])) {
     die('Invalid URL - plugin ' . $plugin_id . ' not active');
 }

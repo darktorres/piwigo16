@@ -49,6 +49,10 @@ final class WsGroupsMutationTest extends ContractTestCase
         $item = $items[0] ?? null;
         self::assertIsArray($item, sprintf('WS response "result.%s[0]" is not an array', $collection));
 
+        // assertIsArray() only proves "array", not the key type. WS collection
+        // items are decoded from JSON objects (field names like id/name/...),
+        // so keys are always strings in practice.
+        /** @var array<string, mixed> $item */
         return $item;
     }
 

@@ -185,9 +185,17 @@ abstract class ContractTestCase extends IntegrationTestCase
         $validator->validate($subject, $schema);
 
         if (!$validator->isValid()) {
-            $lines = array_map(
+            /**
+             * justinrainbow/json-schema's BaseConstraint::getErrors() is
+             * declared to return plain `array`, but every element is built
+             * by addError() with this exact shape (see
+             * vendor/justinrainbow/json-schema/src/JsonSchema/Constraints/BaseConstraint.php).
+             * @var list<array{property: string, pointer: string, message: string, constraint: array{name: string, params: array<string, mixed>}, context: int}> $errors
+             */
+            $errors = $validator->getErrors();
+            $lines  = array_map(
                 static fn (array $e): string => sprintf('  [%s] %s', $e['property'], $e['message']),
-                $validator->getErrors()
+                $errors
             );
             self::fail(
                 "Response does not match schema '{$schemaName}':\n" . implode("\n", $lines)
@@ -227,6 +235,10 @@ abstract class ContractTestCase extends IntegrationTestCase
         $decoded = json_decode($body, true);
         self::assertIsArray($decoded, sprintf('WS %s response is not valid JSON (HTTP %d): %s', $method, $status, $body));
 
+        // ws.php's JSON envelope is always a JSON object (stat/result/err
+        // keys), never a JSON array, so the decoded top level is always
+        // string-keyed.
+        /** @var array<string, mixed> $decoded */
         return $decoded;
     }
 }

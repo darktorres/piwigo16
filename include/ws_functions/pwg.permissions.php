@@ -21,7 +21,10 @@ declare(strict_types=1);
  */
 function ws_permissions_getList(array $params, PwgServer &$service): \PwgError|array
 {
-    $my_params = array_intersect(array_keys($params), ['cat_id', 'group_id', 'user_id']);
+    $my_params = array_filter(
+        ['cat_id', 'group_id', 'user_id'],
+        static fn (string $key): bool => array_key_exists($key, $params)
+    );
     if (count($my_params) > 1) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'Too many parameters, provide cat_id OR user_id OR group_id');
     }

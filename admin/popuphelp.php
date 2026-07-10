@@ -18,6 +18,7 @@ define('PWG_HELP', true);
 define('IN_ADMIN', true);
 
 // Bootstrap global, set by include/common.inc.php below.
+/** @var \Template $template */
 global $template;
 
 include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
@@ -29,6 +30,8 @@ check_status(ACCESS_ADMINISTRATOR);
 
 if (! isset($_GET['output']) or $_GET['output'] != 'content_only') {
     // Note on 2023-09-28 : calling popuphelp.php without output=content_only no longer occurs in Piwigo core.
+    /** @var array<string, mixed> $page */
+    global $page;
     $page['body_id'] = 'thePopuphelpPage';
     $title = l10n('Piwigo Help');
     $page['page_banner'] = '<h1>' . $title . '</h1>';

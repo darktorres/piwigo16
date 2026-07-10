@@ -10,6 +10,13 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 // Bootstrap globals, set by include/common.inc.php.
+/**
+ * @var array<string, mixed> $cache
+ * @var array<string, mixed> $conf
+ * @var array<string, mixed> $pwg_loaded_plugins
+ * @var \Template $template
+ * @var array<string, mixed> $user
+ */
 global $cache, $conf, $pwg_loaded_plugins, $template, $user;
 
 /**
@@ -28,6 +35,15 @@ include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 check_status(ACCESS_ADMINISTRATOR);
 
 trigger_notify('loc_begin_element_set_unit');
+
+// $page is bootstrap-initialized by include/common.inc.php with
+// 'infos'/'errors'/'warnings'/'messages'/'body_classes'/'body_data'
+// pre-populated as empty arrays; this file only ever appends to 'infos'
+// (matches the same established pattern in admin/batch_manager_global.php).
+// Declared unconditionally here, before the first (conditional) use below,
+// so the narrowing holds for every later read/write in this file.
+/** @var array<string, mixed> $page */
+assert(is_array($page['infos']));
 
 // +-----------------------------------------------------------------------+
 // |                        unit mode form submission                      |
@@ -173,12 +189,22 @@ if (! empty($_GET['display'])) {
 }
 $template->assign('per_page', $page['nb_images']);
 
-if (count($page['cat_elements_id']) > 0) {
+// $page['cat_elements_id'] is always an array of scalar image ids: it is
+// built by admin/batch_manager.php (which includes this file) via
+// array_filter($current_set, 'is_scalar') before this file runs; the
+// is_array()/array_filter() below re-establish that same shape for
+// PHPStan, which can't see across the include boundary.
+$cat_elements_id = is_array($page['cat_elements_id']) ? array_filter($page['cat_elements_id'], 'is_scalar') : [];
+
+if (count($cat_elements_id) > 0) {
+    $page_start = is_int($page['start']) || is_string($page['start']) ? $page['start'] : 0;
+    $page_nb_images = is_numeric($page['nb_images']) ? (int) $page['nb_images'] : 5;
+
     $nav_bar = create_navigation_bar(
         $base_url . get_query_string_diff(['start']),
-        count($page['cat_elements_id']),
-        $page['start'],
-        $page['nb_images']
+        count($cat_elements_id),
+        $page_start,
+        $page_nb_images
     );
     $template->assign([
         'navbar' => $nav_bar,
@@ -224,7 +250,7 @@ SELECT *
     }
 
     $query .= '
-  WHERE id IN (' . implode(',', $page['cat_elements_id']) . ')';
+  WHERE id IN (' . implode(',', $cat_elements_id) . ')';
 
     if ($is_category) {
         $query .= '
@@ -232,25 +258,45 @@ SELECT *
     }
 
     $query .= '
-  ' . $conf['order_by'] . '
-  LIMIT ' . $page['nb_images'] . ' OFFSET ' . $page['start'] . '
+  ' . (is_string($conf['order_by']) ? $conf['order_by'] : '') . '
+  LIMIT ' . $page_nb_images . ' OFFSET ' . $page_start . '
 ;';
     // $result = pwg_query($query);
     $images = query2array($query);
     $added_by_ids = array_unique(array_column($images, 'added_by'));
+    // Defaults to empty so the read inside the foreach loop below is always
+    // a real array, whether or not $added_by_ids was non-empty (the
+    // foreach loop only ever runs when $images -- and therefore
+    // $added_by_ids -- is non-empty, but this default avoids relying on
+    // that cross-block invariant).
+    $added_by_username_of = [];
     if (count($added_by_ids) > 0) {
+        // $conf['user_fields'] maps generic field names to table-specific
+        // DB column names (see include/config_default.inc.php); matches
+        // the established narrowing pattern used across
+        // include/functions_user.inc.php.
+        /** @var array<string, string> $user_fields */
+        $user_fields = $conf['user_fields'];
         $query = '
 SELECT
-    ' . $conf['user_fields']['username'] . ' AS username,
-    ' . $conf['user_fields']['id'] . ' AS id
+    ' . $user_fields['username'] . ' AS username,
+    ' . $user_fields['id'] . ' AS id
   FROM ' . USERS_TABLE . '
-  WHERE ' . $conf['user_fields']['id'] . ' IN ( ' . implode(',', $added_by_ids) . ' )
+  WHERE ' . $user_fields['id'] . ' IN ( ' . implode(',', $added_by_ids) . ' )
 ;';
         $added_by_username_of = query2array($query, 'id', 'username');
     }
 
+    // NOTE (pre-existing bug, not fixed here): $row is not defined by a
+    // per-image loop at this point -- it is whatever the earlier
+    // "unit mode form submission" while-loop (around line 55) left behind
+    // (or undefined, if that block didn't run), not the current image's
+    // row. $storage_category_id is therefore effectively always null in
+    // practice, and the STORAGE_CATEGORY highlighting below never
+    // triggers for the correct album. The isset()/is_array() guards here
+    // only preserve the current (buggy) runtime behavior for PHPStan.
     $storage_category_id = null;
-    if (! empty($row['storage_category_id'])) {
+    if (isset($row) && is_array($row) && ! empty($row['storage_category_id'])) {
         $storage_category_id = $row['storage_category_id'];
     }
 
@@ -301,7 +347,7 @@ SELECT
         $sub_result = pwg_query($query);
         $related_categories = [];
         $related_category_ids = [];
-        $media['image'] = get_image_infos($row['id'], true);
+        $media = ['image' => get_image_infos($row['id'], true)];
         // die_on_missing=true means get_image_infos() only returns null via
         // a fatal_error() path that never returns.
         assert($media['image'] !== null);
@@ -340,13 +386,29 @@ SELECT
     FROM ' . IMAGE_CATEGORY_TABLE . '
     WHERE image_id = ' . $row['id'] . '
     ;';
+        // $user['id']/$user['status'] are always numeric/string
+        // respectively: include/user.inc.php (part of the
+        // include/common.inc.php bootstrap that always runs before this
+        // file) populates $user via build_user(), whose 'id' is always the
+        // int passed to it and whose 'status' always comes from the
+        // USER_INFOS_TABLE.status column (a NOT NULL string column) --
+        // matches the same established pattern in
+        // admin/batch_manager_global.php.
+        assert(is_numeric($user['id']));
+        assert(is_string($user['status']));
         $authorizeds = array_diff(
             array_filter(array_from_query($query, 'category_id'), 'is_string'),
             explode(
                 ',',
-                calculate_permissions($user['id'], $user['status'])
+                calculate_permissions((int) $user['id'], $user['status'])
             )
         );
+
+        // $cache['cat_names'] is populated as array<int|string, array<string,
+        // mixed>> by get_cat_display_name_cache() (already called above,
+        // for every $item in the while loop, before this point) -- matches
+        // the established narrowing pattern in admin/picture_modify.php.
+        $cat_names = is_array($cache['cat_names']) ? $cache['cat_names'] : [];
 
         if (isset($row['cat_id'])
         and in_array($row['cat_id'], $authorizeds)) {
@@ -354,7 +416,7 @@ SELECT
                 [
                     'image_id' => $row['id'],
                     'image_file' => $image_file,
-                    'category' => $cache['cat_names'][$row['cat_id']],
+                    'category' => $cat_names[$row['cat_id']],
                 ]
             );
         } else {
@@ -363,7 +425,7 @@ SELECT
                     [
                         'image_id' => $row['id'], // utile ?
                         'image_file' => $image_file,
-                        'category' => $cache['cat_names'][$category],
+                        'category' => $cat_names[$category],
                     ]
                 );
                 break;
@@ -401,7 +463,7 @@ SELECT
                     'EXT' => l10n('%s file type', end($extTab)),
                     'POST_DATE' => l10n('Added on %s', format_date($row_date_available, ['day', 'month', 'year'])),
                     'AGE' => l10n(ucfirst(time_since($row_date_available, 'year'))),
-                    'ADDED_BY' => l10n('Added by %s', $added_by_username_of[$row['added_by']] ?? l10n('N/A')),
+                    'ADDED_BY' => l10n('Added by %s', is_string($row['added_by']) ? ($added_by_username_of[$row['added_by']] ?? l10n('N/A')) : l10n('N/A')),
                     'STATS' => l10n('Visited %d times', $row['hit']),
                     'FILE' => l10n('%s', $row['file']),
                     'related_categories' => $related_categories,

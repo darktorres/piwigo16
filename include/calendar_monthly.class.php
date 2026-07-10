@@ -24,7 +24,14 @@ class CalendarMonthly extends CalendarBase
     public function initialize($inner_sql): void
     {
         parent::initialize($inner_sql);
+        /** @var array<string, mixed> $lang */
         global $lang;
+        // $lang['month'] is a labels array (numeric month => translated name)
+        // defined by every language file as array<int, string>; filter to
+        // string values to match CalendarBase::$calendar_levels' declared
+        // element shape (array<int|string, string>|null) instead of a bare
+        // mixed cast.
+        $month_labels = is_array($lang['month']) ? array_filter($lang['month'], 'is_string') : null;
         $this->calendar_levels = [
             [
                 'sql' => pwg_db_get_year($this->date_field),
@@ -32,7 +39,7 @@ class CalendarMonthly extends CalendarBase
             ],
             [
                 'sql' => pwg_db_get_month($this->date_field),
-                'labels' => $lang['month'],
+                'labels' => $month_labels,
             ],
             [
                 'sql' => pwg_db_get_dayofmonth($this->date_field),
@@ -48,20 +55,30 @@ class CalendarMonthly extends CalendarBase
      */
     public function generate_category_content(): bool
     {
+        /**
+         * @var array<string, mixed> $conf
+         * @var array<string, mixed> $page
+         */
         global $conf, $page;
 
         $view_type = $page['chronology_view'];
         if ($view_type == CAL_VIEW_CALENDAR) {
+            /** @var \Template $template */
             global $template;
             $tpl_var = [];
-            if (count($page['chronology_date']) == 0) {// case A: no year given - display all years+months
+            $nb_date_parts = is_array($page['chronology_date']) ? count($page['chronology_date']) : 0;
+            if ($nb_date_parts == 0) {// case A: no year given - display all years+months
                 if ($this->build_global_calendar($tpl_var)) {
                     $template->assign('chronology_calendar', $tpl_var);
                     return true;
                 }
             }
 
-            if (count($page['chronology_date']) == 1) {// case B: year given - display all days in given year
+            // build_global_calendar() may have just narrowed the current
+            // selection down to a single year (see its own doc comment), so
+            // chronology_date must be re-read from $page, not cached above.
+            $nb_date_parts = is_array($page['chronology_date']) ? count($page['chronology_date']) : 0;
+            if ($nb_date_parts == 1) {// case B: year given - display all days in given year
                 if ($this->build_year_calendar($tpl_var)) {
                     $template->assign('chronology_calendar', $tpl_var);
                     $this->build_nav_bar(CYEAR); // years
@@ -69,7 +86,10 @@ class CalendarMonthly extends CalendarBase
                 }
             }
 
-            if (count($page['chronology_date']) == 2) {// case C: year+month given - display a nice month calendar
+            // same reasoning: build_year_calendar() may have narrowed down
+            // to a single month.
+            $nb_date_parts = is_array($page['chronology_date']) ? count($page['chronology_date']) : 0;
+            if ($nb_date_parts == 2) {// case C: year+month given - display a nice month calendar
                 if ($this->build_month_calendar($tpl_var)) {
                     $template->assign('chronology_calendar', $tpl_var);
                 }
@@ -78,18 +98,23 @@ class CalendarMonthly extends CalendarBase
             }
         }
 
-        if ($view_type == CAL_VIEW_LIST or count($page['chronology_date']) == 3) {
-            if (count($page['chronology_date']) == 0) {
+        $nb_date_parts = is_array($page['chronology_date']) ? count($page['chronology_date']) : 0;
+        if ($view_type == CAL_VIEW_LIST or $nb_date_parts == 3) {
+            if ($nb_date_parts == 0) {
                 $this->build_nav_bar(CYEAR); // years
             }
-            if (count($page['chronology_date']) == 1) {
+            if ($nb_date_parts == 1) {
                 $this->build_nav_bar(CMONTH); // month
             }
-            if (count($page['chronology_date']) == 2) {
-                $day_labels = range(1, $this->get_all_days_in_month(
-                    $page['chronology_date'][CYEAR],
-                    $page['chronology_date'][CMONTH]
-                ));
+            if ($nb_date_parts == 2) {
+                // $nb_date_parts can only be 2 if $page['chronology_date'] is
+                // already an array (see its computation above).
+                $chronology_date = $page['chronology_date'];
+                $year = $chronology_date[CYEAR] ?? null;
+                $year = is_int($year) || is_string($year) ? $year : 0;
+                $month = $chronology_date[CMONTH] ?? null;
+                $month = is_int($month) || is_string($month) ? $month : 0;
+                $day_labels = range(1, $this->get_all_days_in_month($year, $month));
                 array_unshift($day_labels, 0);
                 unset($day_labels[0]);
                 $this->build_nav_bar(CDAY, $day_labels); // days
@@ -106,44 +131,62 @@ class CalendarMonthly extends CalendarBase
      */
     public function get_date_where($max_levels = 3): string
     {
+        /** @var array<string, mixed> $page */
         global $page;
 
-        $date = $page['chronology_date'];
+        // chronology_date is always an array: set to [] by
+        // functions_calendar.inc.php::init_calendar_chronology() and to a
+        // list of int|string tokens by the URL router (functions_url.inc.php)
+        // or feed.php/picture.php (see get_all_days_in_month()'s own doc
+        // comment for the same invariant already documented in this class).
+        $date = is_array($page['chronology_date']) ? $page['chronology_date'] : [];
         while (count($date) > $max_levels) {
             array_pop($date);
         }
         $res = '';
         if (isset($date[CYEAR]) and $date[CYEAR] !== 'any') {
-            $b = $date[CYEAR] . '-';
-            $e = $date[CYEAR] . '-';
+            $year = $date[CYEAR];
+            $year = is_int($year) || is_string($year) ? $year : '';
+            $b = $year . '-';
+            $e = $year . '-';
             if (isset($date[CMONTH]) and $date[CMONTH] !== 'any') {
-                $b .= sprintf('%02d-', $date[CMONTH]);
-                $e .= sprintf('%02d-', $date[CMONTH]);
+                $month = $date[CMONTH];
+                $month = is_numeric($month) ? (int) $month : 0;
+                $b .= sprintf('%02d-', $month);
+                $e .= sprintf('%02d-', $month);
                 if (isset($date[CDAY]) and $date[CDAY] !== 'any') {
-                    $b .= sprintf('%02d', $date[CDAY]);
-                    $e .= sprintf('%02d', $date[CDAY]);
+                    $day = $date[CDAY];
+                    $day = is_numeric($day) ? (int) $day : 0;
+                    $b .= sprintf('%02d', $day);
+                    $e .= sprintf('%02d', $day);
                 } else {
                     $b .= '01';
-                    $e .= $this->get_all_days_in_month($date[CYEAR], $date[CMONTH]);
+                    $e .= $this->get_all_days_in_month($year, $month);
                 }
             } else {
                 $b .= '01-01';
                 $e .= '12-31';
-                if (isset($date[CMONTH]) and $date[CMONTH] !== 'any') {
-                    $res .= ' AND ' . $this->calendar_levels[CMONTH]['sql'] . '=' . $date[CMONTH];
-                }
+                // No CMONTH re-check here: this is the else of the exact
+                // same isset($date[CMONTH]) and $date[CMONTH] !== 'any'
+                // condition above, so it can never be true.
                 if (isset($date[CDAY]) and $date[CDAY] !== 'any') {
-                    $res .= ' AND ' . $this->calendar_levels[CDAY]['sql'] . '=' . $date[CDAY];
+                    $day = $date[CDAY];
+                    $day = is_int($day) || is_string($day) ? $day : '';
+                    $res .= ' AND ' . $this->calendar_levels[CDAY]['sql'] . '=' . $day;
                 }
             }
             $res = " AND {$this->date_field} BETWEEN '{$b}' AND '{$e} 23:59:59'" . $res;
         } else {
             $res = ' AND ' . $this->date_field . ' IS NOT NULL';
             if (isset($date[CMONTH]) and $date[CMONTH] !== 'any') {
-                $res .= ' AND ' . $this->calendar_levels[CMONTH]['sql'] . '=' . $date[CMONTH];
+                $month = $date[CMONTH];
+                $month = is_int($month) || is_string($month) ? $month : '';
+                $res .= ' AND ' . $this->calendar_levels[CMONTH]['sql'] . '=' . $month;
             }
             if (isset($date[CDAY]) and $date[CDAY] !== 'any') {
-                $res .= ' AND ' . $this->calendar_levels[CDAY]['sql'] . '=' . $date[CDAY];
+                $day = $date[CDAY];
+                $day = is_int($day) || is_string($day) ? $day : '';
+                $res .= ' AND ' . $this->calendar_levels[CDAY]['sql'] . '=' . $day;
             }
         }
         return $res;
@@ -192,9 +235,11 @@ class CalendarMonthly extends CalendarBase
      */
     protected function build_global_calendar(array &$tpl_var): bool
     {
+        /** @var array<string, mixed> $page */
         global $page;
 
-        assert(count($page['chronology_date']) == 0);
+        $page_chronology_date = is_array($page['chronology_date']) ? $page['chronology_date'] : [];
+        assert(count($page_chronology_date) == 0);
         $query = '
   SELECT ' . pwg_db_get_date_YYYYMM($this->date_field) . ' as period,
     COUNT(distinct id) as count';
@@ -209,14 +254,17 @@ class CalendarMonthly extends CalendarBase
         while ($row = pwg_db_fetch_assoc($result)) {
             $y = substr((string) $row['period'], 0, 4);
             $m = (int) substr((string) $row['period'], 4, 2);
+            // count is a COUNT(...) aggregate, always a numeric string from
+            // the driver (see pwg_db_fetch_assoc()'s own doc comment).
+            $count = is_numeric($row['count']) ? (int) $row['count'] : 0;
             if (! isset($items[$y])) {
                 $items[$y] = [
                     'nb_images' => 0,
                     'children' => [],
                 ];
             }
-            $items[$y]['children'][$m] = $row['count'];
-            $items[$y]['nb_images'] += $row['count'];
+            $items[$y]['children'][$m] = $count;
+            $items[$y]['nb_images'] += $count;
         }
         // echo ('<pre>'. var_export($items, true) . '</pre>');
         if (count($items) == 1) {// only one year exists so bail out to year view
@@ -226,7 +274,9 @@ class CalendarMonthly extends CalendarBase
             return false;
         }
 
+        /** @var array<string, mixed> $lang */
         global $lang;
+        $month_labels = is_array($lang['month']) ? array_filter($lang['month'], 'is_string') : null;
         $calendar_bars = [];
         foreach ($items as $year => $year_data) {
             $chronology_date = [$year];
@@ -239,7 +289,7 @@ class CalendarMonthly extends CalendarBase
                 $year_data['children'],
                 false,
                 false,
-                $lang['month']
+                $month_labels
             );
 
             $calendar_bars[] =
@@ -261,9 +311,11 @@ class CalendarMonthly extends CalendarBase
      */
     protected function build_year_calendar(array &$tpl_var): bool
     {
+        /** @var array<string, mixed> $page */
         global $page;
 
-        assert(count($page['chronology_date']) == 1);
+        $page_chronology_date = is_array($page['chronology_date']) ? $page['chronology_date'] : [];
+        assert(count($page_chronology_date) == 1);
         $query = 'SELECT ' . pwg_db_get_date_MMDD($this->date_field) . ' as period,
               COUNT(DISTINCT id) as count';
         $query .= $this->inner_sql;
@@ -277,24 +329,34 @@ class CalendarMonthly extends CalendarBase
         while ($row = pwg_db_fetch_assoc($result)) {
             $m = (int) substr((string) $row['period'], 0, 2);
             $d = substr((string) $row['period'], 2, 2);
+            // count is a COUNT(...) aggregate, always a numeric string from
+            // the driver (see pwg_db_fetch_assoc()'s own doc comment).
+            $count = is_numeric($row['count']) ? (int) $row['count'] : 0;
             if (! isset($items[$m])) {
                 $items[$m] = [
                     'nb_images' => 0,
                     'children' => [],
                 ];
             }
-            $items[$m]['children'][$d] = $row['count'];
-            $items[$m]['nb_images'] += $row['count'];
+            $items[$m]['children'][$d] = $count;
+            $items[$m]['nb_images'] += $count;
         }
         if (count($items) == 1) { // only one month exists so bail out to month view
             [$m] = array_keys($items);
             $page['chronology_date'][CMONTH] = $m;
             return false;
         }
+        /** @var array<string, mixed> $lang */
         global $lang;
+        $month_labels = is_array($lang['month']) ? array_filter($lang['month'], 'is_string') : [];
         $calendar_bars = [];
+        // $page['chronology_date'] is not mutated between the snapshot above
+        // and here (the only mutation happens in the early-return branch
+        // just above), so reusing the snapshot is equivalent to a fresh read.
+        $year = $page_chronology_date[CYEAR] ?? null;
+        $year = is_int($year) || is_string($year) ? $year : 0;
         foreach ($items as $month => $month_data) {
-            $chronology_date = [$page['chronology_date'][CYEAR], $month];
+            $chronology_date = [$year, $month];
             $url = duplicate_index_url([
                 'chronology_date' => $chronology_date,
             ]);
@@ -309,7 +371,7 @@ class CalendarMonthly extends CalendarBase
               [
                   'U_HEAD' => $url,
                   'NB_IMAGES' => $month_data['nb_images'],
-                  'HEAD_LABEL' => $lang['month'][$month],
+                  'HEAD_LABEL' => $month_labels[$month] ?? $month,
                   'items' => $nav_bar,
               ];
         }
@@ -324,7 +386,21 @@ class CalendarMonthly extends CalendarBase
      */
     protected function build_month_calendar(array &$tpl_var): bool
     {
+        /**
+         * @var array<string, mixed> $page
+         * @var array<string, mixed> $lang
+         * @var array<string, mixed> $conf
+         */
         global $page, $lang, $conf;
+
+        // CYEAR/CMONTH are never touched below (only CDAY is toggled, per
+        // day, inside the loop), so a single snapshot taken here stays valid
+        // for the rest of the method.
+        $page_chronology_date = is_array($page['chronology_date']) ? $page['chronology_date'] : [];
+        $year = $page_chronology_date[CYEAR] ?? null;
+        $year = is_int($year) || is_string($year) ? $year : 0;
+        $month = $page_chronology_date[CMONTH] ?? null;
+        $month = is_int($month) || is_string($month) ? $month : 0;
 
         $query = 'SELECT ' . pwg_db_get_dayofmonth($this->date_field) . ' as period,
               COUNT(DISTINCT id) as count';
@@ -344,6 +420,10 @@ class CalendarMonthly extends CalendarBase
         }
 
         foreach ($items as $day => $data) {
+            // chronology_date is always an array here (see get_date_where()'s
+            // doc comment for the invariant); narrow it right before writing
+            // the per-day offset back to the real global.
+            assert(is_array($page['chronology_date']));
             $page['chronology_date'][CDAY] = $day;
             $query = '
   SELECT id, file,representative_ext,path,width,height,rotation, ' . pwg_db_get_dayofweek($this->date_field) . '-1 as dow';
@@ -376,7 +456,7 @@ class CalendarMonthly extends CalendarBase
                 $first_day_dow += 7;
             }
             // first_day_dow = week day corresponding to the first day of this month
-            $wday_labels = $lang['day'];
+            $wday_labels = is_array($lang['day']) ? $lang['day'] : [];
 
             if ($conf['week_starts_on'] == 'monday') {
                 if ($first_day_dow == 0) {
@@ -403,10 +483,7 @@ class CalendarMonthly extends CalendarBase
             // the initializer only keeps analysis sound.
             $dow = 0;
             for ($day = 1;
-                $day <= $this->get_all_days_in_month(
-                    $page['chronology_date'][CYEAR],
-                    $page['chronology_date'][CMONTH]
-                );
+                $day <= $this->get_all_days_in_month($year, $month);
                 $day++) {
                 $dow = ($first_day_dow + $day - 1) % 7;
                 if ($dow == 0 and $day != 1) {
@@ -423,8 +500,8 @@ class CalendarMonthly extends CalendarBase
                     $url = duplicate_index_url(
                         [
                             'chronology_date' => [
-                                $page['chronology_date'][CYEAR],
-                                $page['chronology_date'][CMONTH],
+                                $year,
+                                $month,
                                 $day,
                             ],
                         ]

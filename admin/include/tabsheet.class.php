@@ -152,6 +152,7 @@ class tabsheet
      */
     public function assign(): void
     {
+        /** @var \Template $template */
         global $template;
 
         $template->set_filename('tabsheet', 'tabsheet.tpl');

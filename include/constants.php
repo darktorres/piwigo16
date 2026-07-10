@@ -10,6 +10,10 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 // Bootstrap globals, set by include/common.inc.php.
+/**
+ * @var array<string, mixed> $conf
+ * @var string $prefixeTable
+ */
 global $conf, $prefixeTable;
 
 // Default settings
@@ -21,9 +25,14 @@ define('PHPWG_DEFAULT_LANGUAGE', 'en_UK');
 // default value (see file install/piwigo_structure-mysql.sql)
 define('PHPWG_DEFAULT_TEMPLATE', 'modus');
 
-define('PHPWG_THEMES_PATH', $conf['themes_dir'] . '/');
-defined('PWG_COMBINED_DIR') or define('PWG_COMBINED_DIR', $conf['data_location'] . 'combined/');
-defined('PWG_DERIVATIVE_DIR') or define('PWG_DERIVATIVE_DIR', $conf['data_location'] . 'i/');
+/** @var string $themesDir */
+$themesDir = $conf['themes_dir'];
+define('PHPWG_THEMES_PATH', $themesDir . '/');
+
+/** @var string $dataLocation */
+$dataLocation = $conf['data_location'];
+defined('PWG_COMBINED_DIR') or define('PWG_COMBINED_DIR', $dataLocation . 'combined/');
+defined('PWG_DERIVATIVE_DIR') or define('PWG_DERIVATIVE_DIR', $dataLocation . 'i/');
 
 // Required versions
 define('REQUIRED_PHP_VERSION', '8.5.0');

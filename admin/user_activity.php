@@ -14,7 +14,12 @@ if (! defined('PHPWG_ROOT_PATH')) {
 }
 
 // Bootstrap globals, set by include/common.inc.php.
-global $conf, $template;
+/**
+ * @var array<string, mixed> $conf
+ * @var \Template $template
+ * @var array<string, mixed> $page
+ */
+global $conf, $template, $page;
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
@@ -35,6 +40,11 @@ check_input_parameter('group', $_GET, false, PATTERN_ID);
 $page['tab'] = 'user_activity';
 include PHPWG_ROOT_PATH . 'admin/include/user_tabs.inc.php';
 
+// $conf['user_fields'] maps generic field names to table-specific column
+// names; narrow once here and reuse below.
+/** @var array<string, string> $user_fields */
+$user_fields = $conf['user_fields'];
+
 if (isset($_GET['type']) && $_GET['type'] == 'download_logs') {
     $output_lines = [];
 
@@ -48,9 +58,9 @@ SELECT
     ip_address,
     occured_on,
     details,
-    ' . $conf['user_fields']['username'] . ' AS username
+    ' . $user_fields['username'] . ' AS username
   FROM ' . ACTIVITY_TABLE . '
-    JOIN ' . USERS_TABLE . ' AS u ON performed_by = u.' . $conf['user_fields']['id'] . '
+    JOIN ' . USERS_TABLE . ' AS u ON performed_by = u.' . $user_fields['id'] . '
     WHERE object = \'user\'
   ORDER BY activity_id DESC
 ;';
@@ -120,13 +130,18 @@ $nb_lines_for_user = query2array($query, 'performed_by', 'counter');
 if (count($nb_lines_for_user) > 0) {
     $query = '
   SELECT
-      ' . $conf['user_fields']['id'] . ' AS id,
-      ' . $conf['user_fields']['username'] . ' AS username
+      ' . $user_fields['id'] . ' AS id,
+      ' . $user_fields['username'] . ' AS username
     FROM ' . USERS_TABLE . '
-    WHERE ' . $conf['user_fields']['id'] . ' IN (' . implode(',', array_keys($nb_lines_for_user)) . ');';
+    WHERE ' . $user_fields['id'] . ' IN (' . implode(',', array_keys($nb_lines_for_user)) . ');';
+    $username_of = query2array($query, 'id', 'username');
+} else {
+    // no activity lines at all: skip the lookup query rather than
+    // re-running the stale $query from above (previously left in place
+    // from the "COUNT(*) as counter" query, whose rows have neither an
+    // 'id' nor a 'username' column).
+    $username_of = [];
 }
-
-$username_of = query2array($query, 'id', 'username');
 
 $filterable_users = [];
 

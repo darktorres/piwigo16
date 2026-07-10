@@ -247,7 +247,9 @@ include PHPWG_ROOT_PATH . 'include/user.inc.php';
 // visible here instead of appearing to still be exactly the pre-include
 // defaults above.
 $included_vars = get_defined_vars();
+/** @var array<string, mixed> $user */
 $user = $included_vars['user'];
+/** @var array<string, mixed> $page */
 $page = $included_vars['page'];
 
 // This fork does not call back to the real piwigo.org — upstream.example.invalid
@@ -286,6 +288,13 @@ if (is_a_guest()) {
 // in case an auth key was provided and is no longer valid, we must wait to
 // be here, with language loaded, to prepare the message
 if ($page['auth_key_invalid']) {
+    // $page itself is only known as array<string, mixed>, so $page['errors']
+    // needs its own guard before the nested push -- it's always set to []
+    // at the top of this file (line 57), but that specific narrowing is
+    // lost by the get_defined_vars()-based re-read above.
+    if (! is_array($page['errors'] ?? null)) {
+        $page['errors'] = [];
+    }
     $page['errors'][] =
       l10n('Your authentication key is no longer valid.')
       . sprintf(' <a href="%s">%s</a>', get_root_url() . 'identification.php', l10n('Login'))
@@ -300,9 +309,17 @@ if (is_array($page['notify_api_key_expiration'])) {
     // include (see comment above), which erases that per-key type info.
     $days_left = $page['notify_api_key_expiration']['days_left'] ?? null;
     $days_left = is_int($days_left) ? $days_left : (is_numeric($days_left) ? (int) $days_left : 0);
+    // build_user() always populates 'username'/'email' from the database (see
+    // getuserdata()), so these are real strings on every path that reaches
+    // here (an auth key was just validated); the is_string() checks are a
+    // defensive narrowing, not expected to ever fall back.
+    $notify_username = $user['username'];
+    $notify_username = is_string($notify_username) ? $notify_username : '';
+    $notify_email = $user['email'];
+    $notify_email = is_string($notify_email) ? $notify_email : '';
     $is_mail_send = notification_api_key_expiration(
-        $user['username'],
-        $user['email'],
+        $notify_username,
+        $notify_email,
         $days_left
     );
 
@@ -336,6 +353,7 @@ if (defined('IN_ADMIN') and IN_ADMIN) {// Admin template
     if (script_basename() != 'ws' and mobile_theme()) {
         $theme = $conf['mobile_theme'];
     }
+    $theme = is_string($theme) ? $theme : '';
     $template = new Template(PHPWG_ROOT_PATH . 'themes', $theme);
 }
 
@@ -343,7 +361,8 @@ if (! isset($conf['no_photo_yet'])) {
     include PHPWG_ROOT_PATH . 'include/no_photo_yet.inc.php';
 }
 
-if (($user['internal_status']['guest_must_be_guest'] ?? false) === true) {
+$user_internal_status = $user['internal_status'] ?? null;
+if (is_array($user_internal_status) && ($user_internal_status['guest_must_be_guest'] ?? false) === true) {
     $header_msgs[] = l10n('Bad status for user "guest", using default status. Please notify the webmaster.');
 }
 

@@ -14,6 +14,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
 }
 
 // Bootstrap globals, set by include/common.inc.php.
+/** @var array<string, mixed> $conf */
 global $conf;
 
 if (! $conf['enable_extensions_install'] and ! $conf['enable_core_update']) {
@@ -24,6 +25,7 @@ include_once PHPWG_ROOT_PATH . 'admin/include/tabsheet.class.php';
 
 $my_base_url = get_root_url() . 'admin.php?page=updates';
 
+/** @var array<string, mixed> $page */
 if (isset($_GET['tab']) && is_string($_GET['tab'])) {
     $page['tab'] = $_GET['tab'];
 } else {

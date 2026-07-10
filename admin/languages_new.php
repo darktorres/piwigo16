@@ -14,6 +14,11 @@ if (! defined('PHPWG_ROOT_PATH')) {
 }
 
 // Bootstrap globals, set by include/common.inc.php.
+/**
+ * @var array<string, mixed> $conf
+ * @var array<string, mixed> $page
+ * @var \Template $template
+ */
 global $conf, $page, $template;
 
 if (! $conf['enable_extensions_install']) {
@@ -22,11 +27,42 @@ if (! $conf['enable_extensions_install']) {
 
 include_once PHPWG_ROOT_PATH . 'admin/include/languages.class.php';
 
+/**
+ * Append a message to a $page message bucket (e.g. 'infos'/'errors'),
+ * narrowing it to an array first if it isn't provably one yet ($page itself
+ * is only known as array<string, mixed>, so $page[$key] is still mixed) --
+ * same pattern as
+ * admin/include/functions_notification_by_mail.inc.php::push_page_message()
+ * (uniquely named here, rather than that same name, since PHPStan analyzes
+ * every included file together and a second top-level push_page_message()
+ * declaration would collide with that one). A local closure was tried
+ * first, but PHPStan does not honor a @param docblock $key on a closure
+ * assigned to a variable the way it does for a real named function --
+ * every by-reference call through the closure re-widened $page back to
+ * mixed for all subsequent reads in this file.
+ *
+ * @param array<string, mixed> $page
+ */
+function push_languages_new_page_message(string $key, string $message, array &$page): void
+{
+    $list = $page[$key] ?? [];
+    $list = is_array($list) ? $list : [];
+    $list[] = $message;
+    $page[$key] = $list;
+}
+
 $template->set_filenames([
     'languages' => 'languages_new.tpl',
 ]);
 
-$base_url = get_root_url() . 'admin.php?page=' . $page['page'] . '&tab=' . $page['tab'];
+// $page['page']/$page['tab'] are set as plain strings by admin.php's
+// routing before this page module is included; $page itself is only known
+// as array<string, mixed>, so narrow the two offsets used here.
+$page_page = $page['page'] ?? null;
+$page_page = is_scalar($page_page) ? (string) $page_page : '';
+$page_tab = $page['tab'] ?? null;
+$page_tab = is_scalar($page_tab) ? (string) $page_tab : '';
+$base_url = get_root_url() . 'admin.php?page=' . $page_page . '&tab=' . $page_tab;
 
 $languages = new languages();
 $languages->get_db_languages();
@@ -37,7 +73,7 @@ $languages->get_db_languages();
 
 $languages_dir = PHPWG_ROOT_PATH . 'language';
 if (! is_writable($languages_dir)) {
-    $page['errors'][] = l10n('Add write access to the "%s" directory', 'language');
+    push_languages_new_page_message('errors', l10n('Add write access to the "%s" directory', 'language'), $page);
 }
 
 // +-----------------------------------------------------------------------+
@@ -46,7 +82,7 @@ if (! is_writable($languages_dir)) {
 
 if (isset($_GET['revision'])) {
     if (! is_webmaster()) {
-        $page['errors'][] = l10n('Webmaster status is required.');
+        push_languages_new_page_message('errors', l10n('Webmaster status is required.'), $page);
     } else {
         check_pwg_token();
 
@@ -75,23 +111,23 @@ if (isset($_GET['installstatus'])) {
 
     switch ($installstatus) {
         case 'ok':
-            $page['infos'][] = l10n('Language has been successfully installed');
+            push_languages_new_page_message('infos', l10n('Language has been successfully installed'), $page);
             break;
 
         case 'temp_path_error':
-            $page['errors'][] = l10n('Can\'t create temporary file.');
+            push_languages_new_page_message('errors', l10n('Can\'t create temporary file.'), $page);
             break;
 
         case 'dl_archive_error':
-            $page['errors'][] = l10n('Can\'t download archive.');
+            push_languages_new_page_message('errors', l10n('Can\'t download archive.'), $page);
             break;
 
         case 'archive_error':
-            $page['errors'][] = l10n('Can\'t read or extract archive.');
+            push_languages_new_page_message('errors', l10n('Can\'t read or extract archive.'), $page);
             break;
 
         default:
-            $page['errors'][] = l10n('An error occured during extraction (%s).', htmlspecialchars($installstatus));
+            push_languages_new_page_message('errors', l10n('An error occured during extraction (%s).', htmlspecialchars($installstatus)), $page);
     }
 }
 
@@ -99,6 +135,12 @@ if (isset($_GET['installstatus'])) {
 // |                     start template output                             |
 // +-----------------------------------------------------------------------+
 if ($languages->get_server_languages(true)) {
+    // PEM_URL is defined via define('PEM_URL', $conf['alternative_pem_url'])
+    // in one branch of include/common.inc.php, so PHPStan can't prove it's
+    // a string across that file boundary -- narrow it once here (same
+    // pattern as languages.class.php::get_server_languages()).
+    $pem_base_url = is_string(PEM_URL) ? PEM_URL : '';
+
     foreach ($languages->server_languages as $language) {
         // $language comes from an untyped unserialize() of a remote PEM
         // payload (see languages::get_server_languages()); only cast
@@ -126,7 +168,7 @@ if ($languages->get_server_languages(true)) {
         $template->append('languages', [
             'EXT_NAME' => $language['extension_name'],
             'EXT_DESC' => $language['extension_description'],
-            'EXT_URL' => PEM_URL . '/extension_view.php?eid=' . $extension_id,
+            'EXT_URL' => $pem_base_url . '/extension_view.php?eid=' . $extension_id,
             'VERSION' => $language['revision_name'],
             'VER_DESC' => $language['revision_description'],
             'DATE' => $date,
@@ -136,7 +178,7 @@ if ($languages->get_server_languages(true)) {
         ]);
     }
 } else {
-    $page['errors'][] = l10n('Can\'t connect to server.');
+    push_languages_new_page_message('errors', l10n('Can\'t connect to server.'), $page);
 }
 $template->assign('ADMIN_PAGE_TITLE', l10n('Languages'));
 $template->assign('isWebmaster', (is_webmaster()) ? 1 : 0);

@@ -20,12 +20,21 @@ declare(strict_types=1);
  */
 function rate_picture($image_id, int|string|null $rate)
 {
-    global $conf, $user;
+    /** @var array<string, mixed> $conf */
+    global $conf;
+    /** @var array<string, mixed> $user */
+    global $user;
+
+    // $conf['rate_items'] is config_default.inc.php's list of allowed rate
+    // values (an int[]); narrow it once so in_array() gets a real array
+    // regardless of what a plugin/local config override might have put there.
+    $rate_items = $conf['rate_items'];
+    $rate_items = is_array($rate_items) ? $rate_items : [];
 
     if (! isset($rate)
         or ! $conf['rate']
         or ! preg_match('/^[0-9]+$/', (string) $rate)
-        or ! in_array($rate, $conf['rate_items'])) {
+        or ! in_array($rate, $rate_items)) {
         return false;
     }
 
@@ -34,6 +43,12 @@ function rate_picture($image_id, int|string|null $rate)
     if ($user_anonymous and ! $conf['rate_anonymous']) {
         return false;
     }
+
+    // $user['id'] is the current user's numeric id (int, or a numeric string
+    // when it comes straight from the DB layer); narrow it once here and
+    // reuse the local everywhere below instead of re-reading the mixed offset.
+    $user_id = $user['id'];
+    $user_id = is_numeric($user_id) ? (int) $user_id : 0;
 
     $remote_addr = $_SERVER['REMOTE_ADDR'];
     $remote_addr = is_string($remote_addr) ? $remote_addr : '';
@@ -54,7 +69,7 @@ function rate_picture($image_id, int|string|null $rate)
             $query = '
 SELECT element_id
   FROM ' . RATE_TABLE . '
-  WHERE user_id = ' . $user['id'] . '
+  WHERE user_id = ' . $user_id . '
     AND anonymous_id = \'' . $anonymous_id . '\'
 ;';
             $already_there = array_from_query($query, 'element_id');
@@ -67,7 +82,7 @@ SELECT element_id
                 $query = '
 DELETE
   FROM ' . RATE_TABLE . '
-  WHERE user_id = ' . $user['id'] . '
+  WHERE user_id = ' . $user_id . '
     AND anonymous_id = \'' . $save_anonymous_id . '\'
     AND element_id IN (' . implode(',', $already_there) . ')
 ;';
@@ -77,7 +92,7 @@ DELETE
             $query = '
 UPDATE ' . RATE_TABLE . '
   SET anonymous_id = \'' . $anonymous_id . '\'
-  WHERE user_id = ' . $user['id'] . '
+  WHERE user_id = ' . $user_id . '
     AND anonymous_id = \'' . $save_anonymous_id . '\'
 ;';
             pwg_query($query);
@@ -90,7 +105,7 @@ UPDATE ' . RATE_TABLE . '
 DELETE
   FROM ' . RATE_TABLE . '
   WHERE element_id = ' . $image_id . '
-    AND user_id = ' . $user['id'] . '
+    AND user_id = ' . $user_id . '
 ';
     if ($user_anonymous) {
         $query .= ' AND anonymous_id = \'' . $anonymous_id . '\'';
@@ -102,7 +117,7 @@ INSERT
   (user_id,anonymous_id,element_id,rate,date)
   VALUES
   ('
-      . $user['id'] . ','
+      . $user_id . ','
       . '\'' . $anonymous_id . '\','
       . $image_id . ','
       . $rate

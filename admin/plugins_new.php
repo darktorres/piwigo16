@@ -14,6 +14,11 @@ if (! defined('PHPWG_ROOT_PATH')) {
 }
 
 // Bootstrap globals, set by include/common.inc.php.
+/**
+ * @var array<string, mixed> $conf
+ * @var array<string, mixed> $page
+ * @var \Template $template
+ */
 global $conf, $page, $template;
 
 if (! $conf['enable_extensions_install']) {
@@ -22,11 +27,42 @@ if (! $conf['enable_extensions_install']) {
 
 include_once PHPWG_ROOT_PATH . 'admin/include/plugins.class.php';
 
+/**
+ * Append a message to a $page message bucket (e.g. 'infos'/'errors'),
+ * narrowing it to an array first if it isn't provably one yet ($page itself
+ * is only known as array<string, mixed>, so $page[$key] is still mixed) --
+ * same pattern as
+ * admin/include/functions_notification_by_mail.inc.php::push_page_message()
+ * (uniquely named here, rather than that same name, since PHPStan analyzes
+ * every included file together and a second top-level push_page_message()
+ * declaration would collide with that one). A local closure was tried
+ * first, but PHPStan does not honor a @param docblock $key on a closure
+ * assigned to a variable the way it does for a real named function --
+ * every by-reference call through the closure re-widened $page back to
+ * mixed for all subsequent reads in this file.
+ *
+ * @param array<string, mixed> $page
+ */
+function push_plugins_new_page_message(string $key, string $message, array &$page): void
+{
+    $list = $page[$key] ?? [];
+    $list = is_array($list) ? $list : [];
+    $list[] = $message;
+    $page[$key] = $list;
+}
+
 $template->set_filenames([
     'plugins' => 'plugins_new.tpl',
 ]);
 
-$base_url = get_root_url() . 'admin.php?page=' . $page['page'] . '&tab=' . $page['tab'];
+// $page['page']/$page['tab'] are set as plain strings by admin.php's
+// routing before this page module is included; $page itself is only known
+// as array<string, mixed>, so narrow the two offsets used here.
+$page_page = $page['page'] ?? null;
+$page_page = is_scalar($page_page) ? (string) $page_page : '';
+$page_tab = $page['tab'] ?? null;
+$page_tab = is_scalar($page_tab) ? (string) $page_tab : '';
+$base_url = get_root_url() . 'admin.php?page=' . $page_page . '&tab=' . $page_tab;
 
 $plugins = new plugins();
 
@@ -35,10 +71,11 @@ if (isset($_GET['revision']) and isset($_GET['extension'])
     and is_string($_GET['revision']) and is_string($_GET['extension'])
 ) {
     if (! is_webmaster()) {
-        $page['errors'][] = l10n('Webmaster status is required.');
+        push_plugins_new_page_message('errors', l10n('Webmaster status is required.'), $page);
     } else {
         check_pwg_token();
 
+        $plugin_id = null;
         $install_status = $plugins->extract_plugin_files('install', $_GET['revision'], $_GET['extension'], $plugin_id);
 
         redirect($base_url . '&installstatus=' . $install_status . '&plugin_id=' . $plugin_id);
@@ -55,8 +92,8 @@ if (isset($_GET['installstatus'])) {
             // installed plugin and click on the activation switch.
             $activate_url = get_root_url() . 'admin.php?page=plugins&amp;filter=deactivated';
 
-            $page['infos'][] = l10n('Plugin has been successfully copied');
-            $page['infos'][] = '<a href="' . $activate_url . '">' . l10n('Activate it now') . '</a>';
+            push_plugins_new_page_message('infos', l10n('Plugin has been successfully copied'), $page);
+            push_plugins_new_page_message('infos', '<a href="' . $activate_url . '">' . l10n('Activate it now') . '</a>', $page);
 
             $installed_plugin_id = $_GET['plugin_id'] ?? null;
             if (is_string($installed_plugin_id) && isset($plugins->fs_plugins[$installed_plugin_id])) {
@@ -73,22 +110,22 @@ if (isset($_GET['installstatus'])) {
             break;
 
         case 'temp_path_error':
-            $page['errors'][] = l10n('Can\'t create temporary file.');
+            push_plugins_new_page_message('errors', l10n('Can\'t create temporary file.'), $page);
             break;
 
         case 'dl_archive_error':
-            $page['errors'][] = l10n('Can\'t download archive.');
+            push_plugins_new_page_message('errors', l10n('Can\'t download archive.'), $page);
             break;
 
         case 'archive_error':
-            $page['errors'][] = l10n('Can\'t read or extract archive.');
+            push_plugins_new_page_message('errors', l10n('Can\'t read or extract archive.'), $page);
             break;
 
         default:
             $installstatus_raw = $_GET['installstatus'];
             $installstatus_str = is_scalar($installstatus_raw) ? (string) $installstatus_raw : '';
-            $page['errors'][] = l10n('An error occured during extraction (%s).', htmlspecialchars($installstatus_str));
-            $page['errors'][] = l10n('Please check "plugins" folder and sub-folders permissions (CHMOD).');
+            push_plugins_new_page_message('errors', l10n('An error occured during extraction (%s).', htmlspecialchars($installstatus_str)), $page);
+            push_plugins_new_page_message('errors', l10n('Please check "plugins" folder and sub-folders permissions (CHMOD).'), $page);
     }
 }
 
@@ -115,6 +152,12 @@ $beta_test = false;
 if (isset($_GET['beta-test']) && $_GET['beta-test'] == 'true') {
     $beta_test = true;
 }
+
+// PEM_URL is defined via define('PEM_URL', $conf['alternative_pem_url']) in
+// one branch of include/common.inc.php, so PHPStan can't prove it's a
+// string across that file boundary -- narrow it once here (same pattern as
+// plugins.class.php::extract_plugin_files()).
+$pem_base_url = is_string(PEM_URL) ? PEM_URL : '';
 
 if ($plugins->get_server_plugins(true, $beta_test)) {
     /* order plugins */
@@ -193,7 +236,7 @@ if ($plugins->get_server_plugins(true, $beta_test)) {
         $template->append('plugins', [
             'ID' => $plugin['extension_id'],
             'EXT_NAME' => $plugin['extension_name'],
-            'EXT_URL' => PEM_URL . '/extension_view.php?eid=' . $extension_id,
+            'EXT_URL' => $pem_base_url . '/extension_view.php?eid=' . $extension_id,
             'SMALL_DESC' => trim($small_desc, " \r\n"),
             'BIG_DESC' => $ext_desc,
             'VERSION' => $plugin['revision_name'],
@@ -211,7 +254,7 @@ if ($plugins->get_server_plugins(true, $beta_test)) {
     }
 
 } else {
-    $page['errors'][] = l10n('Can\'t connect to server.');
+    push_plugins_new_page_message('errors', l10n('Can\'t connect to server.'), $page);
 }
 
 if (! $beta_test and preg_match('/(beta|RC)/', PHPWG_VERSION)) {

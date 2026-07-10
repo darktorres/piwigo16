@@ -15,14 +15,30 @@ declare(strict_types=1);
  */
 
 // Bootstrap globals, set by include/common.inc.php.
+/**
+ * @var array<string, mixed> $conf
+ * @var array<string, mixed> $page
+ * @var \Template $template
+ * @var array<string, mixed> $user
+ */
 global $conf, $page, $template, $user;
 
 $pictures = [];
 
+// $page's own values are only known as mixed -- narrow each one for real
+// before handing it to array_slice(), same pattern as
+// include/ws_functions/pwg.images.php's get_quick_search_results() caller.
+$page_items = $page['items'];
+if (! is_array($page_items)) {
+    $page_items = [];
+}
+$page_start = is_numeric($page['start'] ?? null) ? (int) $page['start'] : 0;
+$page_nb_image_page = is_numeric($page['nb_image_page'] ?? null) ? (int) $page['nb_image_page'] : 0;
+
 $selection = array_slice(
-    $page['items'],
-    $page['start'],
-    (int) $page['nb_image_page']
+    $page_items,
+    $page_start,
+    $page_nb_image_page
 );
 
 $selection = trigger_change('loc_index_thumbnails_selection', $selection);
@@ -58,6 +74,13 @@ SELECT *
     usort($pictures, rank_compare(...));
     unset($rank_of);
 }
+
+// Only conditionally populated below (activate_comments + show_nb_comments
+// both truthy AND at least one picture) -- declared up front (rather than
+// relying on isset() to gate a maybe-undefined variable) so PHPStan can
+// prove its real type -- null, or query2array()'s actual inferred return
+// type -- at every later read.
+$nb_comments_of = null;
 
 if (count($pictures) > 0) {
     // define category slideshow url
@@ -111,7 +134,7 @@ foreach ($pictures as $row) {
         ['start']
     );
 
-    if (isset($nb_comments_of)) {
+    if ($nb_comments_of !== null) {
         $row['NB_COMMENTS'] = $row['nb_comments'] = (int) @$nb_comments_of[$image_id];
     }
 

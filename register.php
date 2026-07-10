@@ -14,7 +14,18 @@ define('PHPWG_ROOT_PATH', './');
 include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 
 // Bootstrap globals, set by include/common.inc.php.
-global $conf, $template, $user;
+/**
+ * @var array<string, mixed> $conf
+ * @var array<string, mixed> $page
+ * @var \Template $template
+ * @var array<string, mixed> $user
+ */
+global $conf, $page, $template, $user;
+
+// $page['errors'] is always initialized to an array by common.inc.php, but
+// that isn't visible across the include() boundary -- narrow it once here
+// so every top-level $page['errors'][...] = ... write below type-checks.
+$page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
@@ -51,14 +62,34 @@ if (isset($_POST['submit'])) {
     $post_password = is_string($_POST['password'] ?? null) ? $_POST['password'] : '';
     $post_mail_address = is_string($_POST['mail_address'] ?? null) ? $_POST['mail_address'] : null;
 
+    // register_user()'s by-ref $errors is a plain array<int, string> list of
+    // validation messages -- it reindexes it internally via
+    // array_values(array_filter(...)) before returning (see
+    // include/functions_user.inc.php). That is a different shape than
+    // $page['errors'], which register.tpl reads by the specific keys
+    // 'register_page_error'/'register_form_error' set above. Passing
+    // $page['errors'] directly as the by-ref argument used to let
+    // register_user() silently overwrite it with its own reindexed list,
+    // erasing those keys so the form-key/password error messages stopped
+    // rendering whenever register_user() also ran. Use a separate list and
+    // fold it into 'register_form_error' instead.
+    $registration_errors = [];
     register_user(
         $post_login,
         $post_password,
         $post_mail_address,
         true,
-        $page['errors'],
+        $registration_errors,
         isset($_POST['send_password_by_mail'])
     );
+
+    if ($registration_errors !== []) {
+        $existing_form_error = $page['errors']['register_form_error'] ?? null;
+        $form_error_messages = is_string($existing_form_error)
+            ? [$existing_form_error, ...$registration_errors]
+            : $registration_errors;
+        $page['errors']['register_form_error'] = implode(' ', $form_error_messages);
+    }
 
     if (count($page['errors']) == 0) {
         // email notification
@@ -106,7 +137,8 @@ $template->assign([
 
 // include menubar
 $themeconf = $template->get_template_vars('themeconf');
-if (! isset($themeconf['hide_menu_on']) or ! in_array('theRegisterPage', $themeconf['hide_menu_on'])) {
+$hide_menu_on = is_array($themeconf) ? ($themeconf['hide_menu_on'] ?? null) : null;
+if (! is_array($hide_menu_on) or ! in_array('theRegisterPage', $hide_menu_on)) {
     include PHPWG_ROOT_PATH . 'include/menubar.inc.php';
 }
 
@@ -138,7 +170,9 @@ $template->assign([
 ]);
 
 // Get link to doc
-if (str_starts_with((string) $user['language'], 'fr')) {
+$user_language_for_help = $user['language'] ?? '';
+$user_language_for_help = is_string($user_language_for_help) ? $user_language_for_help : '';
+if (str_starts_with($user_language_for_help, 'fr')) {
     $help_link = 'https://upstream.example.invalid/help/fr/';
 } else {
     $help_link = 'https://upstream.example.invalid/help/';

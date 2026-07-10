@@ -15,7 +15,13 @@ if (! defined('PHPWG_ROOT_PATH')) {
 
 // Bootstrap globals. Set by admin/maintenance.php (which dynamically
 // includes this tab panel) or include/common.inc.php.
-global $conf, $persistent_cache, $template;
+/**
+ * @var array<string, mixed> $conf
+ * @var array<string, mixed> $page
+ * @var \PersistentFileCache $persistent_cache
+ * @var \Template $template
+ */
+global $conf, $page, $persistent_cache, $template;
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 include_once PHPWG_ROOT_PATH . 'admin/include/image.class.php';
@@ -115,9 +121,14 @@ SELECT
 ;';
         $sessions = query2array($query);
 
+        // $conf['user_fields'] maps generic field names to actual DB column
+        // names (see config_default.inc.php).
+        /** @var array<string, string> $user_fields */
+        $user_fields = $conf['user_fields'];
+
         $query = '
 SELECT
-    ' . $conf['user_fields']['id'] . ' AS id
+    ' . $user_fields['id'] . ' AS id
   FROM ' . USERS_TABLE . '
 ;';
         $all_user_ids = query2array($query, 'id', null);
@@ -194,6 +205,17 @@ DELETE
 
     case 'check_upgrade':
 
+        // $page itself is only known as array<string, mixed>, so
+        // $page['errors']/['infos'] need their own guard before the
+        // nested pushes below.
+        if (! is_array($page['errors'] ?? null)) {
+            $page['errors'] = [];
+        }
+        if (! is_array($page['infos'] ?? null)) {
+            $page['infos'] = [];
+        }
+
+        $result = '';
         if (! fetchRemote(PHPWG_URL . '/download/latest_version', $result)) {
             $page['errors'][] = l10n('Unable to check for upgrade.');
         } else {
@@ -247,6 +269,8 @@ $template->set_filenames([
 
 $url_format = get_root_url() . 'admin.php?page=maintenance&amp;action=%s&amp;pwg_token=' . get_pwg_token();
 
+/** @var array<string, string> $purge_urls */
+$purge_urls = [];
 $purge_urls[l10n('All')] = sprintf($url_format, 'derivatives') . '&amp;type=all';
 foreach (ImageStdParams::get_defined_type_map() as $params) {
     $purge_urls[l10n($params->type)] = sprintf($url_format, 'derivatives') . '&amp;type=' . $params->type;

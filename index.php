@@ -15,16 +15,43 @@ include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 include PHPWG_ROOT_PATH . 'include/section_init.inc.php';
 
 // Bootstrap globals, set by include/common.inc.php.
+/**
+ * @var array<string, mixed> $conf
+ * @var array<string, mixed> $page
+ * @var \Template $template
+ */
 global $conf, $page, $template;
 
 // Check Access and exit when user status is not ok
 check_status(ACCESS_GUEST);
 
-// access authorization check
-if (isset($page['category'])) {
-    check_restrictions($page['category']['id']);
+// Real invariant: $page['items'] always holds a list of numeric image ids
+// (array_from_query()/query2array() single-column results in
+// include/section_init.inc.php), possibly as numeric strings coming
+// straight from the database.
+$page_items = [];
+if (is_array($page['items'])) {
+    foreach ($page['items'] as $page_item_id) {
+        if (is_numeric($page_item_id)) {
+            $page_items[] = (int) $page_item_id;
+        }
+    }
 }
-if ($page['start'] > 0 && $page['start'] >= count($page['items'])) {
+
+// Real invariant: $page['start'] is either the int 0 default set in
+// include/section_init.inc.php, or a numeric string captured from the URL
+// (see the preg_match capture group in include/functions_url.inc.php).
+$page_start = is_numeric($page['start']) ? (int) $page['start'] : 0;
+
+// Real invariant: $page['nb_image_page'] comes from $user['nb_image_page'],
+// a numeric value read from the database (see include/section_init.inc.php).
+$page_nb_image_page = is_numeric($page['nb_image_page']) ? (int) $page['nb_image_page'] : 0;
+
+// access authorization check
+if (isset($page['category']) && is_array($page['category']) && is_numeric($page['category']['id'] ?? null)) {
+    check_restrictions((int) $page['category']['id']);
+}
+if ($page_start > 0 && $page_start >= count($page_items)) {
     page_not_found('', duplicate_index_url([
         'start' => 0,
     ]));
@@ -47,6 +74,9 @@ if (isset($_GET['image_order'])) {
     );
 }
 if (isset($_GET['display'])) {
+    if (! isset($page['meta_robots']) || ! is_array($page['meta_robots'])) {
+        $page['meta_robots'] = [];
+    }
     $page['meta_robots']['noindex'] = 1;
     if (is_string($_GET['display']) && array_key_exists($_GET['display'], ImageStdParams::get_defined_type_map())) {
         pwg_set_session_var('index_deriv', $_GET['display']);
@@ -56,12 +86,12 @@ if (isset($_GET['display'])) {
 // -------------------------------------------------------------- initialization
 // navigation bar
 $page['navigation_bar'] = [];
-if (count($page['items']) > $page['nb_image_page']) {
+if (count($page_items) > $page_nb_image_page) {
     $page['navigation_bar'] = create_navigation_bar(
         duplicate_index_url([], ['start']),
-        count($page['items']),
-        $page['start'],
-        $page['nb_image_page'],
+        count($page_items),
+        $page_start,
+        $page_nb_image_page,
         true,
         'start'
     );
@@ -71,16 +101,16 @@ $template->assign('thumb_navbar', $page['navigation_bar']);
 
 // caddie filling :-)
 if (isset($_GET['caddie'])) {
-    fill_caddie($page['items']);
+    fill_caddie($page_items);
     redirect(duplicate_index_url());
 }
 
 if (isset($page['is_homepage']) and $page['is_homepage']) {
     $canonical_url = get_gallery_home_url();
 } else {
-    $start = $page['nb_image_page'] * round($page['start'] / $page['nb_image_page']);
-    if ($start > 0 && $start >= count($page['items'])) {
-        $start -= $page['nb_image_page'];
+    $start = $page_nb_image_page * round($page_start / $page_nb_image_page);
+    if ($start > 0 && $start >= count($page_items)) {
+        $start -= $page_nb_image_page;
     }
     $canonical_url = duplicate_index_url([
         'start' => $start,
@@ -95,7 +125,7 @@ $template->assign('use_standard_pages', conf_get_param('use_standard_pages', fal
 // -------------------------------------------------------------- page title
 $title = $page['title'];
 $template_title = $page['section_title'];
-$nb_items = count($page['items']);
+$nb_items = count($page_items);
 $template->assign('TITLE', $template_title);
 $template->assign('NB_ITEMS', $nb_items);
 
@@ -168,25 +198,41 @@ if (empty($page['is_external'])) {
 
     include PHPWG_ROOT_PATH . 'include/search_filters.inc.php';
 
-    if ($page['section'] == 'categories' and isset($page['category']) and ! isset($page['combined_categories'])) {
+    if ($page['section'] == 'categories' and isset($page['category']) and is_array($page['category']) and ! isset($page['combined_categories'])) {
         $template->assign(
             [
                 'SEARCH_IN_SET_BUTTON' => $conf['index_search_in_set_button'],
                 'SEARCH_IN_SET_ACTION' => $conf['index_search_in_set_action'],
-                'SEARCH_IN_SET_URL' => get_root_url() . 'search.php?cat_id=' . $page['category']['id'],
+                'SEARCH_IN_SET_URL' => get_root_url() . 'search.php?cat_id=' . (is_numeric($page['category']['id'] ?? null) ? (int) $page['category']['id'] : 0),
             ]
         );
     }
 
-    if (isset($page['body_data']['tag_ids'])) {
+    if (isset($page['body_data']) and is_array($page['body_data']) and isset($page['body_data']['tag_ids']) and is_array($page['body_data']['tag_ids'])) {
         // get tags for related tags "button", with the possibility to combine them
+        //
+        // NB: the excluded tag ids intentionally come from $page['tag_ids']
+        // (the tags currently being viewed, only set on the "tags" section),
+        // not from $page['body_data']['tag_ids'] (a broader, always-present
+        // mirror of the same data used for JS/body attributes).
+        $excluded_tag_ids = [];
+        if (isset($page['tag_ids']) and is_array($page['tag_ids'])) {
+            foreach ($page['tag_ids'] as $excluded_tag_id) {
+                if (is_numeric($excluded_tag_id)) {
+                    $excluded_tag_ids[] = (int) $excluded_tag_id;
+                }
+            }
+        }
+
         $tags = get_common_tags(
-            $page['items'],
-            $conf['menubar_tag_cloud_items_number'],
-            $page['tag_ids']
+            $page_items,
+            is_numeric($conf['menubar_tag_cloud_items_number']) ? (int) $conf['menubar_tag_cloud_items_number'] : 0,
+            $excluded_tag_ids
         );
 
         $tags = add_level_to_tags($tags);
+
+        $page_tags = is_array($page['tags']) ? $page['tags'] : [];
 
         $related_tags = [];
 
@@ -197,7 +243,7 @@ if (empty($page['is_external'])) {
                     'U_ADD' => make_index_url(
                         [
                             'tags' => array_merge(
-                                $page['tags'],
+                                $page_tags,
                                 [$tag]
                             ),
                         ]
@@ -216,24 +262,26 @@ if (empty($page['is_external'])) {
 
         include_once PHPWG_ROOT_PATH . 'include/selected_tags.inc.php';
 
+        $body_data_tag_ids = array_values(array_filter($page['body_data']['tag_ids'], 'is_scalar'));
+
         $template->assign(
             [
                 'SEARCH_IN_SET_BUTTON' => $conf['index_search_in_set_button'],
                 'SEARCH_IN_SET_ACTION' => $conf['index_search_in_set_action'],
-                'SEARCH_IN_SET_URL' => get_root_url() . 'search.php?tag_id=' . implode(',', $page['body_data']['tag_ids']),
+                'SEARCH_IN_SET_URL' => get_root_url() . 'search.php?tag_id=' . implode(',', $body_data_tag_ids),
                 'COMBINABLE_TAGS' => $related_tags,
             ]
         );
     }
 
-    if (isset($page['category']) and is_admin() and $conf['index_edit_icon']) {
+    if (isset($page['category']) and is_array($page['category']) and is_admin() and $conf['index_edit_icon']) {
         $template->assign(
             'U_EDIT',
-            get_root_url() . 'admin.php?page=album-' . $page['category']['id']
+            get_root_url() . 'admin.php?page=album-' . (is_numeric($page['category']['id'] ?? null) ? (int) $page['category']['id'] : 0)
         );
     }
 
-    if (is_admin() and ! empty($page['items']) and $conf['index_caddie_icon']) {
+    if (is_admin() and ! empty($page_items) and $conf['index_caddie_icon']) {
         $template->assign(
             'U_CADDIE',
             add_url_params(duplicate_index_url(), [
@@ -242,12 +290,23 @@ if (empty($page['is_external'])) {
         );
     }
 
-    if ($page['section'] == 'search' and $page['start'] == 0 and
+    if ($page['section'] == 'search' and $page_start == 0 and
         ! isset($page['chronology_field']) and isset($page['qsearch_details'])) {
-        $cats = array_merge(
-            (array) @$page['qsearch_details']['matching_cats_no_images'],
-            (array) @$page['qsearch_details']['matching_cats']
-        );
+        $matching_cats_no_images = [];
+        $matching_cats = [];
+        if (is_array($page['qsearch_details'])) {
+            if (is_array($page['qsearch_details']['matching_cats_no_images'] ?? null)) {
+                $matching_cats_no_images = array_values(array_filter($page['qsearch_details']['matching_cats_no_images'], 'is_array'));
+            }
+            if (is_array($page['qsearch_details']['matching_cats'] ?? null)) {
+                $matching_cats = array_values(array_filter($page['qsearch_details']['matching_cats'], 'is_array'));
+            }
+        }
+        /**
+         * @var array<int, array<string, mixed>> $matching_cats_no_images
+         * @var array<int, array<string, mixed>> $matching_cats
+         */
+        $cats = array_merge($matching_cats_no_images, $matching_cats);
         if (count($cats)) {
             usort($cats, name_compare(...));
             $hints = [];
@@ -257,31 +316,42 @@ if (empty($page['is_external'])) {
             $template->assign('category_search_results', $hints);
         }
 
-        $tags = (array) @$page['qsearch_details']['matching_tags'];
-        foreach ($tags as $tag) {
+        $matching_tags = [];
+        if (is_array($page['qsearch_details']) and is_array($page['qsearch_details']['matching_tags'] ?? null)) {
+            $matching_tags = array_values(array_filter($page['qsearch_details']['matching_tags'], 'is_array'));
+        }
+        /** @var array<int, array<string, mixed>> $matching_tags */
+        foreach ($matching_tags as $tag) {
             $tag['URL'] = make_index_url([
                 'tags' => [$tag],
             ]);
             $template->append('tag_search_results', $tag);
         }
 
-        if (empty($page['items'])) {
-            $template->append('no_search_results', htmlspecialchars((string) $page['qsearch_details']['q']));
-        } elseif (! empty($page['qsearch_details']['unmatched_terms'])) {
-            $template->assign('no_search_results', array_map(htmlspecialchars(...), $page['qsearch_details']['unmatched_terms']));
+        if (empty($page_items)) {
+            $search_query = is_array($page['qsearch_details']) ? ($page['qsearch_details']['q'] ?? null) : null;
+            $template->append('no_search_results', htmlspecialchars(is_string($search_query) ? $search_query : ''));
+        } else {
+            $unmatched_terms = is_array($page['qsearch_details']) ? ($page['qsearch_details']['unmatched_terms'] ?? null) : null;
+            if (is_array($unmatched_terms) && $unmatched_terms !== []) {
+                /** @var list<string> $unmatched_terms */
+                $unmatched_terms = array_values(array_filter($unmatched_terms, 'is_string'));
+                $template->assign('no_search_results', array_map(htmlspecialchars(...), $unmatched_terms));
+            }
         }
     }
 
     // image order
     if ($conf['index_sort_order_input']
-        and count($page['items']) > 0
+        and count($page_items) > 0
         and $page['section'] != 'most_visited'
         and $page['section'] != 'best_rated') {
         $preferred_image_orders = get_category_preferred_image_orders();
         $order_idx = pwg_get_session_var('image_order', 0);
 
         // get first order field and direction
-        $first_order = substr((string) $conf['order_by'], 9);
+        $order_by = is_string($conf['order_by']) ? $conf['order_by'] : '';
+        $first_order = substr($order_by, 9);
         if (($pos = strpos($first_order, ',')) !== false) {
             $first_order = substr($first_order, 0, $pos);
         }
@@ -317,25 +387,25 @@ if (empty($page['is_external'])) {
     }
 
     // category comment
-    if (($page['start'] == 0 or $conf['album_description_on_all_pages']) and ! isset($page['chronology_field']) and ! empty($page['comment'])) {
+    if (($page_start == 0 or $conf['album_description_on_all_pages']) and ! isset($page['chronology_field']) and ! empty($page['comment'])) {
         $template->assign('CONTENT_DESCRIPTION', $page['comment']);
     }
 
-    if (isset($page['category']['count_categories']) and $page['category']['count_categories'] == 0) {// count_categories might be computed by menubar - if the case unassign flat link if no sub albums
+    if (isset($page['category']) and is_array($page['category']) and isset($page['category']['count_categories']) and $page['category']['count_categories'] == 0) {// count_categories might be computed by menubar - if the case unassign flat link if no sub albums
         $template->clear_assign('U_MODE_FLAT');
     }
 
     // ------------------------------------------------------ main part : thumbnails
-    if ($page['start'] == 0
+    if ($page_start == 0
       and ! isset($page['flat'])
       and ! isset($page['chronology_field'])
       and ($page['section'] == 'recent_cats' or $page['section'] == 'categories')
-      and (! isset($page['category']['count_categories']) or $page['category']['count_categories'] > 0)
+      and (! isset($page['category']) or ! is_array($page['category']) or ! isset($page['category']['count_categories']) or $page['category']['count_categories'] > 0)
     ) {
         include PHPWG_ROOT_PATH . 'include/category_cats.inc.php';
     }
 
-    if (! empty($page['items'])) {
+    if (! empty($page_items)) {
         include PHPWG_ROOT_PATH . 'include/category_default.inc.php';
 
         if ($conf['index_sizes_icon']) {
@@ -346,8 +416,8 @@ if (empty($page['is_external'])) {
                 ]
             );
 
-            $selected_type = $template->get_template_vars('derivative_params')
-                ->type;
+            $derivative_params_var = $template->get_template_vars('derivative_params');
+            $selected_type = ($derivative_params_var instanceof DerivativeParams) ? $derivative_params_var->type : null;
             $template->clear_assign('derivative_params');
             $type_map = ImageStdParams::get_defined_type_map();
             unset($type_map[IMG_XXLARGE], $type_map[IMG_XLARGE]);
@@ -369,7 +439,9 @@ if (empty($page['is_external'])) {
     // execute after init thumbs in order to have all picture informations
     if (! empty($page['cat_slideshow_url'])) {
         if (isset($_GET['slideshow'])) {
-            redirect($page['cat_slideshow_url']);
+            if (is_string($page['cat_slideshow_url'])) {
+                redirect($page['cat_slideshow_url']);
+            }
         } elseif ($conf['index_slideshow_icon']) {
             $template->assign('U_SLIDESHOW', $page['cat_slideshow_url']);
         }
@@ -377,9 +449,9 @@ if (empty($page['is_external'])) {
 
     // We want all pages that display thumbnails, except on the tags page
     // Fill related tags action
-    if (! empty($page['items']) and $page['body_data']['section'] != 'tags') {
-        $selection = array_slice($page['items'], $page['start'], (int) $page['nb_image_page']);
-        $tags = add_level_to_tags(get_common_tags($selection, $conf['content_tag_cloud_items_number']));
+    if (! empty($page_items) and is_array($page['body_data'] ?? null) and ($page['body_data']['section'] ?? null) != 'tags') {
+        $selection = array_slice($page_items, $page_start, $page_nb_image_page);
+        $tags = add_level_to_tags(get_common_tags($selection, is_numeric($conf['content_tag_cloud_items_number']) ? (int) $conf['content_tag_cloud_items_number'] : 0));
         $related_tags = [];
         foreach ($tags as $tag) {
             $related_tags[] =

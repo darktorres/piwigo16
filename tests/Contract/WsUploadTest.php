@@ -76,6 +76,7 @@ final class WsUploadTest extends ContractTestCase
 
         $response = json_decode($body, true);
         self::assertIsArray($response, 'addSimple response is not valid JSON: ' . $body);
+        /** @var array<string, mixed> $response */
         self::assertSame('ok', $response['stat'], 'addSimple failed: ' . $body);
 
         self::assertMatchesSchema('pwg.images.addSimple', $response);

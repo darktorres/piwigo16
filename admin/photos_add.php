@@ -14,7 +14,12 @@ if (! defined('PHPWG_ROOT_PATH')) {
 }
 
 // Bootstrap globals, set by include/common.inc.php.
+/** @var \Template $template */
 global $template;
+
+// Bootstrap $page, set by admin.php before including this tab dispatcher.
+/** @var array<string, mixed> $page */
+global $page;
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 include_once PHPWG_ROOT_PATH . 'admin/include/tabsheet.class.php';

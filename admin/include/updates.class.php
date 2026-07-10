@@ -103,6 +103,7 @@ class updates
      */
     public function get_piwigo_new_versions(): array
     {
+        /** @var array<string, mixed> $conf */
         global $conf;
 
         $new_versions = [
@@ -122,7 +123,9 @@ class updates
             $url = PHPWG_URL . '/download/all_versions.php';
             $url .= '?rand=' . md5(uniqid((string) mt_rand(), true)); // Avoid server cache
             $url .= ($env === 'Official') ? '&docker' : '&show_requirements'; // Check docker version if in container
-            $url .= '&origin_hash=' . sha1($conf['secret_key'] . get_absolute_root_url());
+            $secret_key_raw = $conf['secret_key'] ?? null;
+            $secret_key = is_string($secret_key_raw) ? $secret_key_raw : '';
+            $url .= '&origin_hash=' . sha1($secret_key . get_absolute_root_url());
 
             // $result is never a resource here: no fopen() handle is passed
             // to fetchRemote() above.
@@ -191,6 +194,7 @@ class updates
      */
     public function notify_piwigo_new_versions(): void
     {
+        /** @var array<string, mixed> $conf */
         global $conf;
 
         if (! pwg_is_dbconf_writeable()) {
@@ -229,19 +233,28 @@ class updates
             // safe_unserialize() returns mixed (unserialize() of an
             // untyped conf value) — narrow to the array{version,
             // notified_on} shape this key is always written as further
-            // down in this method.
-            $last_notification_raw = safe_unserialize($conf['update_notify_last_notification']);
+            // down in this method. safe_unserialize()'s own parameter
+            // requires array<int|string, mixed>|string, so validate the
+            // raw conf value's shape before passing it in.
+            // isset() above already guarantees this offset exists.
+            $last_notification_setting = $conf['update_notify_last_notification'];
+            $last_notification_raw = (is_array($last_notification_setting) || is_string($last_notification_setting))
+                ? safe_unserialize($last_notification_setting)
+                : false;
             $last_notification_data = is_array($last_notification_raw) ? $last_notification_raw : [];
             $conf['update_notify_last_notification'] = $last_notification_data;
             $last_notification = $last_notification_data['notified_on'] ?? null;
             $last_notification_version = $last_notification_data['version'] ?? null;
 
+            $reminder_period_raw = $conf['update_notify_reminder_period'] ?? null;
+            $reminder_period = is_numeric($reminder_period_raw) ? (int) $reminder_period_raw : 0;
+
             if ($new_versions_string != $last_notification_version) {
                 $notify = true;
             } elseif (
-                $conf['update_notify_reminder_period'] > 0
+                $reminder_period > 0
                 and is_string($last_notification)
-                and strtotime($last_notification) < strtotime($conf['update_notify_reminder_period'] . ' seconds ago')
+                and strtotime($last_notification) < strtotime($reminder_period . ' seconds ago')
             ) {
                 $notify = true;
             }
@@ -290,7 +303,13 @@ class updates
 
     public function get_server_extensions(string $version = PHPWG_VERSION): bool
     {
+        /** @var array<string, mixed> $user */
         global $user;
+
+        // PEM_URL is defined via define('PEM_URL', $conf['alternative_pem_url']) in
+        // one branch of include/common.inc.php, so PHPStan can't prove it's a
+        // string across that file boundary — narrow it once here.
+        $pem_base_url = is_string(PEM_URL) ? PEM_URL : '';
 
         $get_data = [
             'format' => 'php',
@@ -298,7 +317,7 @@ class updates
 
         // Retrieve PEM versions
         $versions_to_check = [];
-        $url = PEM_URL . '/api/get_version_list.php';
+        $url = $pem_base_url . '/api/get_version_list.php';
         // $result is never a resource here: no fopen() handle is passed to
         // fetchRemote() above.
         if (fetchRemote($url, $result, $get_data) and is_string($result) and $pem_versions = @unserialize($result)) {
@@ -339,21 +358,29 @@ class updates
         $ext_to_check = [];
         foreach ($this->types as $type) {
             $fs = 'fs_' . $type;
-            foreach ($this->{$type}->{$fs} as $ext) {
-                if (isset($ext['extension'])) {
-                    $ext_to_check[$ext['extension']] = $type;
+            // $this->{$type}->{$fs} is a dynamic property access (the class
+            // named by $type is one of plugins/themes/languages, all of
+            // which declare fs_plugins/fs_themes/fs_languages consistently
+            // as array<string, array<string, mixed>>); PHPStan can't
+            // resolve the dynamic property name, so narrow explicitly.
+            /** @var array<string, array<string, mixed>> $fs_extensions */
+            $fs_extensions = $this->{$type}->{$fs};
+            foreach ($fs_extensions as $ext) {
+                $extension_key = $ext['extension'] ?? null;
+                if (is_string($extension_key) || is_int($extension_key)) {
+                    $ext_to_check[$extension_key] = $type;
                 }
             }
         }
 
         // Retrieve PEM plugins infos
-        $url = PEM_URL . '/api/get_revision_list.php';
+        $url = $pem_base_url . '/api/get_revision_list.php';
         $get_data = array_merge(
             $get_data,
             [
                 'last_revision_only' => 'true',
                 'version' => implode(',', $versions_to_check),
-                'lang' => substr((string) $user['language'], 0, 2),
+                'lang' => substr(is_string($user['language']) ? $user['language'] : get_default_language(), 0, 2),
                 'get_nb_downloads' => 'true',
             ]
         );
@@ -410,6 +437,7 @@ class updates
     // Check all extensions upgrades
     public function check_extensions(): void
     {
+        /** @var array<string, mixed> $conf */
         global $conf;
 
         if (! $this->get_server_extensions()) {
@@ -418,30 +446,51 @@ class updates
 
         $_SESSION['extensions_need_update'] = [];
 
+        $updates_ignored_raw = $conf['updates_ignored'] ?? null;
+        $updates_ignored = is_array($updates_ignored_raw) ? $updates_ignored_raw : [];
+
         foreach ($this->types as $type) {
             $fs = 'fs_' . $type;
             $server = 'server_' . $type;
+            // Dynamic property access on plugins/themes/languages -- see the
+            // identical narrowing (and rationale) in get_server_extensions().
+            /** @var array<int|string, array<string, mixed>> $server_ext */
             $server_ext = $this->{$type}->{$server};
+            /** @var array<string, array<string, mixed>> $fs_ext */
             $fs_ext = $this->{$type}->{$fs};
 
             $ignore_list = [];
             $need_upgrade = [];
 
-            foreach ($fs_ext as $ext_id => $fs_ext) {
-                if (isset($fs_ext['extension']) and isset($server_ext[$fs_ext['extension']])) {
-                    $ext_info = $server_ext[$fs_ext['extension']];
+            $ignored_for_type_raw = $updates_ignored[$type] ?? null;
+            $ignored_for_type = is_array($ignored_for_type_raw) ? $ignored_for_type_raw : [];
 
-                    if (! safe_version_compare($fs_ext['version'], $ext_info['revision_name'], '>=')) {
-                        if (in_array($ext_id, $conf['updates_ignored'][$type])) {
-                            $ignore_list[] = $ext_id;
-                        } else {
-                            $_SESSION['extensions_need_update'][$type][$ext_id] = $ext_info['revision_name'];
-                        }
+            foreach ($fs_ext as $ext_id => $fs_ext) {
+                $extension_key = $fs_ext['extension'] ?? null;
+                if (! is_string($extension_key) && ! is_int($extension_key)) {
+                    continue;
+                }
+                if (! isset($server_ext[$extension_key])) {
+                    continue;
+                }
+                $ext_info = $server_ext[$extension_key];
+
+                $fs_version_raw = $fs_ext['version'] ?? null;
+                $fs_version = is_string($fs_version_raw) ? $fs_version_raw : '';
+                $revision_name_raw = $ext_info['revision_name'] ?? null;
+                $revision_name = is_string($revision_name_raw) ? $revision_name_raw : '';
+
+                if (! safe_version_compare($fs_version, $revision_name, '>=')) {
+                    if (in_array($ext_id, $ignored_for_type)) {
+                        $ignore_list[] = $ext_id;
+                    } else {
+                        $_SESSION['extensions_need_update'][$type][$ext_id] = $revision_name;
                     }
                 }
             }
-            $conf['updates_ignored'][$type] = $ignore_list;
+            $updates_ignored[$type] = $ignore_list;
         }
+        $conf['updates_ignored'] = $updates_ignored;
         conf_update_param('updates_ignored', pwg_db_real_escape_string(serialize($conf['updates_ignored'])));
     }
 
@@ -461,11 +510,17 @@ class updates
             }
 
             $fs = 'fs_' . $type;
-            foreach ($this->{$type}->{$fs} as $ext_id => $fs_ext) {
+            // Dynamic property access on plugins/themes/languages -- see the
+            // identical narrowing (and rationale) in get_server_extensions().
+            /** @var array<string, array<string, mixed>> $fs_extensions */
+            $fs_extensions = $this->{$type}->{$fs};
+            foreach ($fs_extensions as $ext_id => $fs_ext) {
                 $needed_version = $type_updates_raw[$ext_id] ?? null;
+                $fs_version_raw = $fs_ext['version'] ?? null;
+                $fs_version = is_string($fs_version_raw) ? $fs_version_raw : '';
                 if (isset($needed_version)
                   and is_string($needed_version)
-                  and safe_version_compare($fs_ext['version'], $needed_version, '>=')) {
+                  and safe_version_compare($fs_version, $needed_version, '>=')) {
                     // Extension have been upgraded
                     $this->check_extensions();
                     break;
@@ -475,16 +530,27 @@ class updates
     }
 
     /**
-     * @param array<string, string> $missing
+     * $missing is built by get_server_extensions() from extension
+     * identifiers used as array keys; a numeric-looking identifier would be
+     * coerced to an int key by PHP, so the true key type is int|string, not
+     * string alone (single caller, verified in this file).
+     *
+     * @param array<int|string, string> $missing
      */
     public function check_missing_extensions(array $missing): void
     {
         foreach ($missing as $id => $type) {
             $fs = 'fs_' . $type;
             $default = 'default_' . $type;
-            foreach ($this->{$type}->{$fs} as $ext_id => $ext) {
+            // Dynamic property access on plugins/themes/languages -- see the
+            // identical narrowing (and rationale) in get_server_extensions().
+            /** @var array<string, array<string, mixed>> $fs_extensions */
+            $fs_extensions = $this->{$type}->{$fs};
+            /** @var string[] $default_list */
+            $default_list = $this->{$default};
+            foreach ($fs_extensions as $ext_id => $ext) {
                 if (isset($ext['extension']) and $id == $ext['extension']
-                  and ! in_array($ext_id, $this->{$default})
+                  and ! in_array($ext_id, $default_list)
                   and ! in_array($ext['extension'], $this->merged_extensions)) {
                     $this->missing[$type][] = $ext;
                     break;
@@ -528,7 +594,21 @@ class updates
 
     public static function upgrade_to(string $upgrade_to, int|string &$step, bool $check_current_version = true): void
     {
+        /**
+         * @var array<string, mixed> $page
+         * @var array<string, mixed> $conf
+         * @var \Template $template
+         */
         global $page, $conf, $template;
+
+        // $page['errors']/$page['infos'] are always initialized to an array by
+        // common.inc.php, but that isn't visible across the include() boundary
+        // -- narrow them once here so the appends below type-check.
+        $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
+        $page['infos'] = is_array($page['infos'] ?? null) ? $page['infos'] : [];
+
+        $data_location_raw = $conf['data_location'] ?? null;
+        $data_location = is_string($data_location_raw) ? $data_location_raw : '';
 
         if ($check_current_version and ! version_compare($upgrade_to, PHPWG_VERSION, '>')) {
             // TODO why redirect to a plugin page? maybe a remaining code from when
@@ -552,7 +632,7 @@ class updates
         }
 
         if (empty($page['errors'])) {
-            $path = PHPWG_ROOT_PATH . $conf['data_location'] . 'update';
+            $path = PHPWG_ROOT_PATH . $data_location . 'update';
             $filename = $path . '/' . $code . '.zip';
             @mkgetdir($path);
 
@@ -622,7 +702,7 @@ class updates
                             self::process_obsolete_list($obsolete_list);
                         }
 
-                        deltree(PHPWG_ROOT_PATH . $conf['data_location'] . 'update');
+                        deltree(PHPWG_ROOT_PATH . $data_location . 'update');
                         invalidate_user_cache(true);
                         conf_update_param('piwigo_installed_version', $upgrade_to);
                         pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'update', [
@@ -646,15 +726,15 @@ class updates
                             redirect(PHPWG_ROOT_PATH . 'upgrade.php?now=');
                         }
                     } else {
-                        file_put_contents(PHPWG_ROOT_PATH . $conf['data_location'] . 'update/log_error.txt', $error);
+                        file_put_contents(PHPWG_ROOT_PATH . $data_location . 'update/log_error.txt', $error);
 
                         $page['errors'][] = l10n(
                             'An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href="%s">Click here to show log error</a>.',
-                            get_root_url() . $conf['data_location'] . 'update/log_error.txt'
+                            get_root_url() . $data_location . 'update/log_error.txt'
                         );
                     }
                 } else {
-                    deltree(PHPWG_ROOT_PATH . $conf['data_location'] . 'update');
+                    deltree(PHPWG_ROOT_PATH . $data_location . 'update');
                     $page['errors'][] = l10n('An error has occured during upgrade.');
                 }
             } else {

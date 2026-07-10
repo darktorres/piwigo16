@@ -16,12 +16,21 @@ include PHPWG_ROOT_PATH . 'include/config_default.inc.php';
 @include PHPWG_ROOT_PATH . 'local/config/config.inc.php';
 
 // Bootstrap global, set by include/config_default.inc.php.
+/** @var array<string, mixed> $conf */
 global $conf;
 // Set by parse_request(), called below.
+/** @var array<string, mixed> $page */
 global $page;
 
 defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
-defined('PWG_DERIVATIVE_DIR') or define('PWG_DERIVATIVE_DIR', $conf['data_location'] . 'i/');
+// $conf['data_location'] needs narrowing here specifically (used before
+// pwg_apply_env_to_conf() below widens $conf's per-key type info again —
+// see the comment near the Logger construction).
+$data_location = $conf['data_location'];
+if (! is_string($data_location)) {
+    die("Invalid \$conf['data_location'] configuration: expected a string.");
+}
+defined('PWG_DERIVATIVE_DIR') or define('PWG_DERIVATIVE_DIR', $data_location . 'i/');
 
 include PHPWG_ROOT_PATH . 'include/env.inc.php';
 pwg_load_env_file(PHPWG_ROOT_PATH);
@@ -66,12 +75,17 @@ function get_extension(?string $filename): string
 function mkgetdir(string $dir): bool
 {
     if (! is_dir($dir)) {
+        /** @var array<string, mixed> $conf */
         global $conf;
         if (str_starts_with(PHP_OS, 'WIN')) {
             $dir = str_replace('/', DIRECTORY_SEPARATOR, $dir);
         }
         $umask = umask(0);
-        $mkd = @mkdir($dir, $conf['chmod_value'], true);
+        // config_default.inc.php always sets $conf['chmod_value'] to an int
+        // literal (0777/0755); guard rather than trust a local-config override.
+        $chmod_value = $conf['chmod_value'];
+        $chmod_value = is_int($chmod_value) ? $chmod_value : 0755;
+        $mkd = @mkdir($dir, $chmod_value, true);
         umask($umask);
         if ($mkd == false && ! is_dir($dir) /* retest existence because of potential concurrent i.php with slow file systems */) {
             return false;
@@ -90,6 +104,7 @@ function mkgetdir(string $dir): bool
 
 function ierror(string $msg, int $code): never
 {
+    /** @var \Logger $logger */
     global $logger;
     if ($code == 301 || $code == 302) {
         if (ob_get_length() !== false) {
@@ -179,6 +194,10 @@ function parse_custom_params(array $tokens): \DerivativeParams
 
 function parse_request(): \DerivativeParams
 {
+    /**
+     * @var array<string, mixed> $conf
+     * @var array<string, mixed> $page
+     */
     global $conf, $page;
 
     if ($conf['question_mark_in_urls'] == false and
@@ -213,8 +232,14 @@ function parse_request(): \DerivativeParams
     if ($req_tokens === false) {
         ierror('Invalid request', 400);
     }
+    // config_default.inc.php always sets $conf['sync_chars_regex'] to a
+    // string literal; guard rather than trust a local-config override.
+    $sync_chars_regex = $conf['sync_chars_regex'];
+    if (! is_string($sync_chars_regex)) {
+        ierror('Invalid sync_chars_regex configuration', 500);
+    }
     foreach ($req_tokens as $token) {
-        preg_match($conf['sync_chars_regex'], $token) or ierror('Invalid chars in request', 400);
+        preg_match($sync_chars_regex, $token) or ierror('Invalid chars in request', 400);
     }
 
     $page['derivative_path'] = PHPWG_ROOT_PATH . PWG_DERIVATIVE_DIR . $req;
@@ -278,17 +303,37 @@ function parse_request(): \DerivativeParams
     $page['src_path'] = PHPWG_ROOT_PATH . $page['src_location'];
     $page['src_url'] = $page['root_path'] . $page['src_location'];
 
-    return $page['derivative_params'];
+    // Every non-erroring path above sets $page['derivative_params'] itself
+    // (either from the ImageStdParams::get_defined_type_map() match or from
+    // parse_custom_params()) before reaching this point; guard explicitly
+    // rather than trust flow analysis across the foreach/if branches above.
+    $derivative_params = $page['derivative_params'];
+    if (! $derivative_params instanceof DerivativeParams) {
+        ierror('Internal error: unresolved derivative params', 500);
+    }
+    return $derivative_params;
 }
 
 function try_switch_source(DerivativeParams $params, int $original_mtime): bool
 {
+    /** @var array<string, mixed> $page */
     global $page;
     if (! isset($page['original_size'])) {
         return false;
     }
 
+    // $page['original_size'] is only ever set (see i.php's top-level flow)
+    // from a DB row's width/height columns, which pwg_db_fetch_assoc() types
+    // as numeric strings; guard the shape and coerce rather than trust it.
     $original_size = $page['original_size'];
+    if (! is_array($original_size)
+        || ! isset($original_size[0], $original_size[1])
+        || ! is_numeric($original_size[0])
+        || ! is_numeric($original_size[1])) {
+        return false;
+    }
+    $original_size = [(int) $original_size[0], (int) $original_size[1]];
+
     if ($page['rotation_angle'] == 90 || $page['rotation_angle'] == 270) {
         $tmp = $original_size[0];
         $original_size[0] = $original_size[1];
@@ -337,6 +382,9 @@ function try_switch_source(DerivativeParams $params, int $original_mtime): bool
 
     foreach (array_reverse($candidates) as $candidate) {
         $candidate_path = $page['derivative_path'];
+        if (! is_string($candidate_path)) {
+            continue;
+        }
         $candidate_path = str_replace('-' . derivative_to_url($params->type), '-' . derivative_to_url($candidate->type), $candidate_path);
         $candidate_mtime = @filemtime($candidate_path);
         if ($candidate_mtime === false
@@ -347,7 +395,9 @@ function try_switch_source(DerivativeParams $params, int $original_mtime): bool
         $params->use_watermark = false;
         $params->sharpen = min(1, $params->sharpen);
         $page['src_path'] = $candidate_path;
-        $page['src_url'] = $page['root_path'] . substr($candidate_path, strlen(PHPWG_ROOT_PATH));
+        $root_path = $page['root_path'];
+        $root_path = is_string($root_path) ? $root_path : '';
+        $page['src_url'] = $root_path . substr($candidate_path, strlen(PHPWG_ROOT_PATH));
         $page['rotation_angle'] = 0;
         return true;
     }
@@ -356,18 +406,25 @@ function try_switch_source(DerivativeParams $params, int $original_mtime): bool
 
 function send_derivative(false|int $expires): void
 {
+    /** @var array<string, mixed> $page */
     global $page;
+
+    // 'derivative_path' is always built as a string concatenation inside
+    // parse_request() (a separate scope PHPStan can't trace here); narrow
+    // once for every read in this function rather than trust a bare cast.
+    $derivative_path = $page['derivative_path'];
+    $derivative_path = is_string($derivative_path) ? $derivative_path : '';
 
     if (isset($_GET['ajaxload']) and $_GET['ajaxload'] == 'true') {
         include_once PHPWG_ROOT_PATH . 'include/functions_cookie.inc.php';
         include_once PHPWG_ROOT_PATH . 'include/functions_url.inc.php';
 
         echo json_encode([
-            'url' => embellish_url(get_absolute_root_url() . $page['derivative_path']),
+            'url' => embellish_url(get_absolute_root_url() . $derivative_path),
         ]);
         return;
     }
-    $fp = fopen($page['derivative_path'], 'rb');
+    $fp = fopen($derivative_path, 'rb');
     if ($fp === false) {
         ierror('Unable to open derivative file', 500);
     }
@@ -382,8 +439,11 @@ function send_derivative(false|int $expires): void
     }
     header('Connection: close');
 
+    $derivative_ext = $page['derivative_ext'];
+    $derivative_ext = is_string($derivative_ext) ? $derivative_ext : '';
+
     $ctype = 'application/octet-stream';
-    switch (strtolower((string) $page['derivative_ext'])) {
+    switch (strtolower($derivative_ext)) {
         case '.jpe': case '.jpeg': case '.jpg': $ctype = 'image/jpeg';
             break;
         case '.png': $ctype = 'image/png';
@@ -609,6 +669,11 @@ if ($page['rotation_angle'] != 0) {
 
 // Crop & scale
 $o_size = $d_size = [(int) $image->get_width(), (int) $image->get_height()];
+// $crop_rect/$scaled_size are by-ref out-params; pre-declare as null so the
+// call site's argument type matches SizingParams::compute()'s ?ImageRect/
+// ?array parameter types (an undefined variable is otherwise seen as mixed).
+$crop_rect = null;
+$scaled_size = null;
 $params->sizing->compute($o_size, $page['coi'], $crop_rect, $scaled_size);
 if ($crop_rect) {
     $changes++;
@@ -634,12 +699,21 @@ if ($params->will_watermark($d_size)) {
     $wm_size = [(int) $wm_image->get_width(), (int) $wm_image->get_height()];
     if ($d_size[0] < $wm_size[0] or $d_size[1] < $wm_size[1]) {
         $wm_scaling_params = SizingParams::classic($d_size[0], $d_size[1]);
+        // $tmp/$wm_scaled_size are by-ref out-params; pre-declare as null
+        // (see the analogous compute() call above).
+        $tmp = null;
+        $wm_scaled_size = null;
         $wm_scaling_params->compute($wm_size, null, $tmp, $wm_scaled_size);
-        // compute()'s $scale_size out-param is only null when neither ratio
-        // exceeds 1 — impossible here, since we're inside the same
-        // "watermark bigger than destination in some dimension" guard that
-        // condition is derived from.
-        assert($wm_scaled_size !== null);
+        if ($wm_scaled_size === null) {
+            // compute()'s $scale_size out-param is only null when neither
+            // ratio exceeds 1 — impossible here, since we're inside the same
+            // "watermark bigger than destination in some dimension" guard
+            // that condition is derived from. Guard explicitly instead of
+            // asserting: assert() is a no-op in this environment
+            // (zend.assertions=-1) and would silently let a null through to
+            // the array accesses below if the invariant were ever violated.
+            ierror('Internal error: unexpected watermark scaling result', 500);
+        }
         $wm_size = $wm_scaled_size;
         $wm_image->resize($wm_scaled_size[0], $wm_scaled_size[1]);
     }

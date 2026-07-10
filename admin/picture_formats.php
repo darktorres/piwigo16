@@ -14,7 +14,11 @@ if (! defined('PHPWG_ROOT_PATH')) {
 }
 
 // Bootstrap globals, set by include/common.inc.php.
+/** @var \Template $template */
 global $template;
+
+/** @var array<string, mixed> $lang */
+global $lang;
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
@@ -50,11 +54,13 @@ foreach ($formats as &$format) {
 
     $format['label'] = strtoupper((string) $format['ext']);
     $lang_key = 'format ' . strtoupper((string) $format['ext']);
-    if (isset($lang[$lang_key])) {
-        $format['label'] = $lang[$lang_key];
+    $lang_label = isset($lang[$lang_key]) && is_string($lang[$lang_key]) ? $lang[$lang_key] : null;
+    if ($lang_label !== null) {
+        $format['label'] = $lang_label;
     }
 
-    $format['filesize'] = round($format['filesize'] / 1024, 2);
+    $filesize = is_numeric($format['filesize']) ? (float) $format['filesize'] : 0.0;
+    $format['filesize'] = round($filesize / 1024, 2);
 }
 
 $template->assign([

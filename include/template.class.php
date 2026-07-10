@@ -89,6 +89,10 @@ class Template
         string $theme = '',
         string $path = 'template'
     ) {
+        /**
+         * @var array<string, mixed> $conf
+         * @var array<string, mixed> $lang_info
+         */
         global $conf, $lang_info;
 
         // \Smarty\Exception::$escape = false;
@@ -97,22 +101,39 @@ class Template
         $this->cssLoader = new CssLoader();
         $this->smarty = new Smarty();
         $this->smarty->escape_html = false;
-        $this->smarty->debugging = $conf['debug_template'];
+        // config_default.inc.php ships these as plain bool, but Smarty's own
+        // $debugging accepts bool|int -- a hand-edited config is allowed to
+        // set debug_template=2 for Smarty's "per-template debug window"
+        // mode (vendor/smarty/smarty/src/Smarty.php), so int must survive
+        // as-is and only non-int values fall back to a bool coercion.
+        $debug_template = $conf['debug_template'];
+        $this->smarty->debugging = is_int($debug_template) ? $debug_template : (bool) $debug_template;
         if (! $this->smarty->debugging) {
             $this->smarty->error_reporting = error_reporting() & ~E_NOTICE;
         }
-        $this->smarty->compile_check = $conf['template_compile_check'];
-        $this->smarty->force_compile = $conf['template_force_compile'];
+        // compile_check/force_compile mirror Smarty's own setCompileCheck()/
+        // setForceCompile() coercions (vendor/smarty/smarty/src/TemplateBase.php,
+        // vendor/smarty/smarty/src/Smarty.php), whose own @var docblocks
+        // (int / boolean respectively) don't carry the same bool|int
+        // flexibility as $debugging above.
+        $compile_check = $conf['template_compile_check'];
+        $this->smarty->compile_check = is_scalar($compile_check) ? (int) $compile_check : Smarty::COMPILECHECK_ON;
+        $this->smarty->force_compile = (bool) $conf['template_force_compile'];
+
+        $conf_data_location = $conf['data_location'] ?? null;
+        if (! is_string($conf_data_location)) {
+            fatal_error("Invalid \$conf['data_location'] configuration: expected a string.");
+        }
 
         if (! isset($conf['data_dir_checked'])) {
-            $dir = PHPWG_ROOT_PATH . $conf['data_location'];
+            $dir = PHPWG_ROOT_PATH . $conf_data_location;
             mkgetdir($dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR);
             if (! is_writable($dir)) {
                 load_language('admin.lang');
                 fatal_error(
                     l10n(
                         'Give write access (chmod 777) to "%s" directory at the root of your Piwigo installation',
-                        $conf['data_location']
+                        $conf_data_location
                     ),
                     l10n('an error happened'),
                     false // show trace
@@ -123,7 +144,7 @@ class Template
             }
         }
 
-        $compile_dir = PHPWG_ROOT_PATH . $conf['data_location'] . 'templates_c';
+        $compile_dir = PHPWG_ROOT_PATH . $conf_data_location . 'templates_c';
         mkgetdir($compile_dir);
 
         $this->smarty->setCompileDir($compile_dir);
@@ -193,13 +214,13 @@ class Template
             $lang_info['jquery_code'] = $lang_info['code'];
         }
 
-        if (isset($lang_info['jquery_code']) and ! isset($lang_info['plupload_code'])) {
+        if (isset($lang_info['jquery_code']) and is_string($lang_info['jquery_code']) and ! isset($lang_info['plupload_code'])) {
             $lang_info['plupload_code'] = str_replace('-', '_', $lang_info['jquery_code']);
         }
 
         $this->smarty->assign('lang_info', $lang_info);
 
-        if (! defined('IN_ADMIN') and isset($conf['extents_for_templates'])) {
+        if (! defined('IN_ADMIN') and isset($conf['extents_for_templates']) and is_string($conf['extents_for_templates'])) {
             $tpl_extents = unserialize($conf['extents_for_templates']);
             $this->set_extents($tpl_extents, './template-extension/', true, $theme);
         }
@@ -372,7 +393,7 @@ class Template
      * Sets template extentions filenames for handles.
      *
      * @param mixed $filename_array hashmap of handle=>filename; the real
-     *   caller (load_themeconf()) passes unserialize($conf['extents_for_templates']),
+     *   caller (__construct()) passes unserialize($conf['extents_for_templates']),
      *   which is not guaranteed to be an array
      * @param string $dir
      * @param bool $overwrite
@@ -510,11 +531,9 @@ class Template
      * Loads the template file of the handle, compiles it and appends the result to the output
      * (or returns it if _$return_ is true).
      *
-     * @param string $handle
-     * @param bool $return
-     * @return null|string
+     * @phpstan-return ($return is true ? string : null)
      */
-    public function parse($handle, $return = false)
+    public function parse(string $handle, bool $return = false): ?string
     {
         if (! isset($this->files[$handle])) {
             fatal_error("Template->parse(): Couldn't load template file for handle {$handle}");
@@ -525,8 +544,12 @@ class Template
         $save_compile_id = $this->smarty->compile_id;
         $this->load_external_filters($handle);
 
+        /**
+         * @var array<string, mixed> $conf
+         * @var array<string, mixed> $lang_info
+         */
         global $conf, $lang_info;
-        if ($conf['compiled_template_cache_language'] and isset($lang_info['code'])) {
+        if ($conf['compiled_template_cache_language'] and isset($lang_info['code']) and is_string($lang_info['code'])) {
             $this->smarty->compile_id .= '_' . $lang_info['code'];
         }
 
@@ -625,6 +648,7 @@ class Template
         $this->flush();
 
         if ($this->smarty->debugging) {
+            /** @var float $t2 */
             global $t2;
             $this->smarty->assign(
                 [
@@ -663,12 +687,22 @@ class Template
      */
     public static function modcompiler_translate(array $params): string
     {
+        /**
+         * @var array<string, mixed> $conf
+         * @var array<string, mixed> $lang
+         */
         global $conf, $lang;
 
         switch (count($params)) {
             case 1:
+                $key = self::get_php_str_val($params[0]);
+                // get_php_str_val() evaluates a quoted PHP string literal
+                // via eval(), which PHPStan can't trace the return type of
+                // -- it's always a real string here since $params[0] is a
+                // template-compiled string literal expression, but narrow
+                // explicitly since the callee's return type is opaque.
                 if ($conf['compiled_template_cache_language']
-                  && ($key = self::get_php_str_val($params[0])) !== null
+                  && is_string($key)
                   && isset($lang[$key])
                 ) {
                     return var_export($lang[$key], true);
@@ -696,6 +730,10 @@ class Template
      */
     public static function modcompiler_translate_dec(array $params): string
     {
+        /**
+         * @var array<string, mixed> $conf
+         * @var array<string, mixed> $lang_info
+         */
         global $conf, $lang, $lang_info;
         if ($conf['compiled_template_cache_language']) {
             $ret = 'sprintf(';
@@ -1199,9 +1237,19 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
         // replaces echo PHP_STRING_LITERAL; with the string literal value
         $source = preg_replace_callback(
             '/\\<\\?php echo ((?:\'(?:(?:\\\\.)|[^\'])*\')|(?:"(?:(?:\\\\.)|[^"])*"));\\?\\>\\n/',
-            function (array $matches) {
+            /**
+             * @param array<string> $matches
+             */
+            function (array $matches): string {
                 eval('$tmp=' . $matches[1] . ';');
-                return $tmp;
+                // $matches[1] is always a quoted PHP string literal (per the
+                // regex above), so eval() always produces a real string here.
+                // PHPStan treats variables only ever assigned inside eval()
+                // as undefined in the enclosing scope (it doesn't parse the
+                // evaluated string) -- there's no provable guard possible,
+                // this is a genuine static-analysis blind spot on eval().
+                // @phpstan-ignore cast.string, isset.variable
+                return isset($tmp) ? (string) $tmp : '';
             },
             $source
         );
@@ -1250,6 +1298,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      */
     public function load_themeconf($dir)
     {
+        /** @var array<string, array<string, mixed>> $themeconfs */
         global $themeconfs, $conf;
 
         $dir = realpath($dir);
@@ -1567,7 +1616,7 @@ class CssLoader
 class ScriptLoader
 {
     /**
-     * @var Script[]
+     * @var array<string, Script>
      */
     private array $registered_scripts;
 
@@ -1623,7 +1672,7 @@ class ScriptLoader
     }
 
     /**
-     * @return Script[]
+     * @return array<string, Script>
      */
     public function get_all(): array
     {
@@ -1782,6 +1831,7 @@ class ScriptLoader
      */
     private static function check_load_dep(array $scripts): void
     {
+        /** @var array<string, mixed> $conf */
         global $conf;
         do {
             $changed = false;
@@ -1861,8 +1911,6 @@ class ScriptLoader
      * Assigned to $script->extra['order'].
      *
      * @param string $script_id
-     * @param int $recursion_limiter
-     * @return int
      */
     private function compute_script_topological_order($script_id, int $recursion_limiter = 0): int
     {
@@ -1966,6 +2014,7 @@ final class FileCombiner
      */
     public function combine(): array
     {
+        /** @var array<string, mixed> $conf */
         global $conf;
         $force = false;
         if (is_admin() && ($this->is_css || ! $conf['template_compile_check'])) {
@@ -2046,6 +2095,7 @@ final class FileCombiner
      */
     private function process_combinable($combinable, bool $return_content, bool $force, string &$header): ?string
     {
+        /** @var array<string, mixed> $conf */
         global $conf;
         if ($combinable->is_template) {
             if (! $return_content) {
@@ -2062,10 +2112,18 @@ final class FileCombiner
                 }
             }
 
+            /** @var \Template $template */
             global $template;
             $handle = $this->type . '.' . $combinable->id;
-            $template->set_filename($handle, realpath(PHPWG_ROOT_PATH . $combinable->path));
+            $real_path = realpath(PHPWG_ROOT_PATH . $combinable->path);
+            if ($real_path === false) {
+                throw new Exception("process_combinable(): file not found for {$combinable->path}");
+            }
+            $template->set_filename($handle, $real_path);
             trigger_notify('combinable_preparse', $template, $combinable, $this); // allow themes and plugins to set their own vars to template ...
+            // parse($handle, true) is always string (never null) since we
+            // always pass true here (see Template::parse()'s conditional
+            // return type).
             $content = $template->parse($handle, true);
 
             if ($this->is_css) {
@@ -2115,7 +2173,6 @@ final class FileCombiner
      * @param string $file
      * @param string $header CSS directives that must appear first in
      *                       the minified file.
-     * @return string
      */
     private static function process_css($css, $file, string &$header): string
     {
@@ -2137,7 +2194,9 @@ final class FileCombiner
      */
     private static function process_css_rec($css, string $dir, &$header)
     {
+        /** @var string */
         static $PATTERN_URL = "#url\(\s*['|\"]{0,1}(.*?)['|\"]{0,1}\s*\)#";
+        /** @var string */
         static $PATTERN_IMPORT = "#@import\s*['|\"]{0,1}(.*?)['|\"]{0,1};#";
 
         if (preg_match_all($PATTERN_URL, $css, $matches, PREG_SET_ORDER)) {

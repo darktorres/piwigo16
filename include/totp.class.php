@@ -29,8 +29,8 @@ class PwgTOTP
         $part = substr($hash, $offset, 4);
         $unpacked = unpack('N', $part);
         // $part is always exactly 4 bytes, matching format 'N', so this
-        // always succeeds
-        assert($unpacked !== false);
+        // always succeeds and yields an int at offset 1
+        assert($unpacked !== false && is_int($unpacked[1]));
         $number = $unpacked[1] & 0x7FFFFFFF;
 
         $code = $number % 1000000; // code 6 digits $number % 10^6
@@ -58,9 +58,12 @@ class PwgTOTP
      */
     public static function getOtpAuthUrl($secret): string
     {
+        /** @var array<string, mixed> $user */
         global $user;
+        $username = $user['username'] ?? null;
+        $username = is_string($username) ? $username : '';
         $url = substr((string) get_absolute_root_url(), 0, -1);
-        return 'otpauth://totp/' . $user['username'] . ':' . $url . '?secret=' . $secret . '&issuer=Piwigo&algorithm=sha1&digits=6&period=30';
+        return 'otpauth://totp/' . $username . ':' . $url . '?secret=' . $secret . '&issuer=Piwigo&algorithm=sha1&digits=6&period=30';
     }
 
     /**

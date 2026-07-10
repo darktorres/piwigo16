@@ -14,6 +14,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
 }
 
 // Bootstrap globals, set by include/common.inc.php.
+/** @var \Template $template */
 global $template;
 
 // +-----------------------------------------------------------------------+
@@ -22,6 +23,11 @@ global $template;
 check_status(ACCESS_ADMINISTRATOR);
 
 if (! is_webmaster()) {
+    /** @var array<string, mixed> $page */
+    if (! is_array($page['warnings'] ?? null)) {
+        $page['warnings'] = [];
+    }
+
     $page['warnings'][] = str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'));
 }
 
@@ -107,9 +113,7 @@ if (
 
             conf_update_param('standard_pages_selected_logo_path', $file_path, true);
 
-            if (move_uploaded_file($std_pgs_logo_tmp_name, $file_path)) {
-                $logo['file'] = substr($file_path, strlen(PHPWG_ROOT_PATH));
-            } else {
+            if (! move_uploaded_file($std_pgs_logo_tmp_name, $file_path)) {
                 $template->assign(
                     [
                         'save_error' => "{$file_path} " . l10n('no write access'),

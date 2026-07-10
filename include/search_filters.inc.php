@@ -10,6 +10,13 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 // Bootstrap globals, set by include/common.inc.php.
+/**
+ * @var array<string, mixed> $conf
+ * @var array<string, mixed> $lang
+ * @var array<string, mixed> $page
+ * @var \Template $template
+ * @var array<string, mixed> $user
+ */
 global $conf, $lang, $page, $persistent_cache, $template, $user;
 if (! $persistent_cache instanceof PersistentCache) {
     fatal_error('persistent cache not initialized');
@@ -42,7 +49,7 @@ $template->assign('display_filter', $filters_views);
 // we add isset($page['search_details']) in this condition because it only
 // applies to regular search, not the legacy qsearch. As Piwigo 14 will still
 // be able to show an old quicksearch result, we must check this condtion too.
-if ($page['section'] == 'search' and isset($page['search_details'])) {
+if ($page['section'] == 'search' and isset($page['search_details']) and is_array($page['search_details'])) {
     $display_filters = $filters_views;
 
     foreach ($filters_views as $filt_name => $filt_conf) {
@@ -57,7 +64,18 @@ if ($page['section'] == 'search' and isset($page['search_details'])) {
 
     include_once PHPWG_ROOT_PATH . 'include/functions_search.inc.php';
 
-    $my_search = get_search_array($page['search']);
+    // $user['id'] and $user['cache_update_time'] key every persistent-cache entry
+    // built by the filter blocks below; narrow them once to real strings.
+    $user_id = is_scalar($user['id'] ?? null) ? (string) $user['id'] : '';
+    $user_cache_update_time = is_scalar($user['cache_update_time'] ?? null) ? (string) $user['cache_update_time'] : '';
+
+    // $lang['month'] is the language file's month-index (1-12) to name map;
+    // narrow it once for the date_posted/date_created breakdowns below.
+    $lang_month = is_array($lang['month'] ?? null) ? $lang['month'] : [];
+
+    $search_id = $page['search'] ?? null;
+    $search_id = (is_int($search_id) || is_string($search_id)) ? $search_id : '';
+    $my_search = get_search_array($search_id);
     if (! is_array($my_search)) {
         // get_search_array() only returns false when unserialize() fails on
         // malformed data; this file only runs for an already-validated
@@ -84,8 +102,9 @@ if ($page['section'] == 'search' and isset($page['search_details'])) {
     // we want filters to be filled with values related to current items ONLY IF we have some filters filled
     if ($page['search_details']['has_filters_filled']) {
         $search_items = [-1];
-        if (! empty($page['items'])) {
-            $search_items = $page['items'];
+        if (! empty($page['items']) && is_array($page['items'])) {
+            /** @var list<int|string|float|bool> $search_items */
+            $search_items = array_values(array_filter($page['items'], 'is_scalar'));
         }
 
         $search_items_clause = 'image_id IN (' . implode(',', $search_items) . ')';
@@ -123,6 +142,9 @@ if ($page['section'] == 'search' and isset($page['search_details'])) {
         $extract_tag_ids = static function (array $tags): array {
             $ids = [];
             foreach ($tags as $tag) {
+                if (! is_array($tag)) {
+                    continue;
+                }
                 $tag_id = $tag['id'] ?? null;
                 if (is_int($tag_id) || is_string($tag_id)) {
                     $ids[] = $tag_id;
@@ -190,7 +212,7 @@ SELECT
 
         if (! preg_match('/^image_id IN/', $filter_clause)) {
             // we use persistent_cache only for fetching lines filtered only by permissions
-            $cache_key = $persistent_cache->make_key('filter_author_rows' . $user['id'] . $user['cache_update_time']);
+            $cache_key = $persistent_cache->make_key('filter_author_rows' . $user_id . $user_cache_update_time);
             $filter_rows = null;
             if (! $persistent_cache->get($cache_key, $filter_rows)) {
                 $filter_rows = query2array($query);
@@ -244,7 +266,7 @@ SELECT
 
     if (isset($search_fields['date_posted']) and $display_filters['post_date']['access']) {
         $filter_clause = get_clause_for_filter('date_posted');
-        $cache_key = $persistent_cache->make_key('filter_date_posted' . $user['id'] . $user['cache_update_time']);
+        $cache_key = $persistent_cache->make_key('filter_date_posted' . $user_id . $user_cache_update_time);
         // we use persistent_cache only for fetching lines filtered only by permissions
         $cache_applicable = ! preg_match('/^image_id IN/', $filter_clause);
         $cached_date_posted = null;
@@ -347,7 +369,9 @@ SELECT
                     }
 
                     [, $m] = explode('-', (string) $ym);
-                    $month_bucket['label'] = $lang['month'][(int) $m] . ' ' . $y;
+                    $month_name = $lang_month[(int) $m] ?? null;
+                    $month_name = is_string($month_name) ? $month_name : '';
+                    $month_bucket['label'] = $month_name . ' ' . $y;
 
                     $days_bucket = $month_bucket['days'] ?? null;
                     if (is_array($days_bucket)) {
@@ -379,7 +403,7 @@ SELECT
 
     if (isset($search_fields['date_created']) and $display_filters['creation_date']['access']) {
         $filter_clause = get_clause_for_filter('date_created');
-        $cache_key = $persistent_cache->make_key('filter_date_created' . $user['id'] . $user['cache_update_time']);
+        $cache_key = $persistent_cache->make_key('filter_date_created' . $user_id . $user_cache_update_time);
         // we use persistent_cache only for fetching lines filtered only by permissions
         $cache_applicable = ! preg_match('/^image_id IN/', $filter_clause);
         $cached_date_created = null;
@@ -484,7 +508,9 @@ SELECT
                     }
 
                     [, $m] = explode('-', (string) $ym);
-                    $month_bucket['label'] = $lang['month'][(int) $m] . ' ' . $y;
+                    $month_name = $lang_month[(int) $m] ?? null;
+                    $month_name = is_string($month_name) ? $month_name : '';
+                    $month_bucket['label'] = $month_name . ' ' . $y;
 
                     $days_bucket = $month_bucket['days'] ?? null;
                     if (is_array($days_bucket)) {
@@ -530,7 +556,7 @@ SELECT
 
         if (! preg_match('/^image_id IN/', $filter_clause)) {
             // we use persistent_cache only for fetching lines filtered only by permissions
-            $cache_key = $persistent_cache->make_key('filter_added_by_rows' . $user['id'] . $user['cache_update_time']);
+            $cache_key = $persistent_cache->make_key('filter_added_by_rows' . $user_id . $user_cache_update_time);
             $filter_rows = null;
             if (! $persistent_cache->get($cache_key, $filter_rows)) {
                 $filter_rows = query2array($query);
@@ -566,12 +592,19 @@ SELECT
                 }
             }
 
+            // $conf['user_fields'] maps generic field names to actual DB columns;
+            // fall back to the generic names, matching functions_mail.inc.php.
+            $conf_user_fields = $conf['user_fields'] ?? null;
+            $conf_user_fields = is_array($conf_user_fields) ? $conf_user_fields : [];
+            $user_field_id = is_string($conf_user_fields['id'] ?? null) ? $conf_user_fields['id'] : 'id';
+            $user_field_username = is_string($conf_user_fields['username'] ?? null) ? $conf_user_fields['username'] : 'username';
+
             $query = '
 SELECT
-    ' . $conf['user_fields']['id'] . ' AS id,
-    ' . $conf['user_fields']['username'] . ' AS username
+    ' . $user_field_id . ' AS id,
+    ' . $user_field_username . ' AS username
   FROM ' . USERS_TABLE . '
-  WHERE ' . $conf['user_fields']['id'] . ' IN (' . implode(',', $user_ids) . ')
+  WHERE ' . $user_field_id . ' IN (' . implode(',', $user_ids) . ')
 ;';
             $username_of = query2array($query, 'id', 'username');
 
@@ -619,7 +652,7 @@ SELECT
     id,
     uppercats
   FROM ' . CATEGORIES_TABLE . '
-    INNER JOIN ' . USER_CACHE_CATEGORIES_TABLE . ' ON id = cat_id AND user_id = ' . $user['id'] . '
+    INNER JOIN ' . USER_CACHE_CATEGORIES_TABLE . ' ON id = cat_id AND user_id = ' . $user_id . '
   WHERE id IN (' . implode(',', $cat_words) . ')
 ;';
             $result = pwg_query($query);
@@ -655,7 +688,7 @@ SELECT
         $filter_clause = get_clause_for_filter('filetypes');
 
         // get all file extensions for this user in the gallery, whatever the current filters
-        $cache_key = $persistent_cache->make_key('file_exts' . $user['id'] . $user['cache_update_time']);
+        $cache_key = $persistent_cache->make_key('file_exts' . $user_id . $user_cache_update_time);
         $all_exts_query = '
 SELECT
     SUBSTRING_INDEX(path, ".", -1) AS ext,
@@ -711,7 +744,7 @@ SELECT
         if (isset($search_fields['ratings']) and $display_filters['rating']['access']) {
             $filter_clause = get_clause_for_filter('ratings');
 
-            $cache_key = $persistent_cache->make_key('filter_ratings' . $user['id'] . $user['cache_update_time']);
+            $cache_key = $persistent_cache->make_key('filter_ratings' . $user_id . $user_cache_update_time);
 
             $ratings = null;
             $set_persistent_cache = ! preg_match('/^image_id IN/', $filter_clause) and ! $persistent_cache->get($cache_key, $ratings);
@@ -821,7 +854,7 @@ SELECT
     if (isset($search_fields['ratios']) and $display_filters['ratio']['access']) {
         $filter_clause = get_clause_for_filter('ratios');
 
-        $cache_key = $persistent_cache->make_key('filter_ratios' . $user['id'] . $user['cache_update_time']);
+        $cache_key = $persistent_cache->make_key('filter_ratios' . $user_id . $user_cache_update_time);
 
         $ratios = null;
         $set_persistent_cache = ! preg_match('/^image_id IN/', $filter_clause) and ! $persistent_cache->get($cache_key, $ratios);
@@ -900,7 +933,7 @@ SELECT
 
         if (! preg_match('/^image_id IN/', $filter_clause)) {
             // we use persistent_cache only for fetching lines filtered only by permissions
-            $cache_key = $persistent_cache->make_key('filter_height_rows' . $user['id'] . $user['cache_update_time']);
+            $cache_key = $persistent_cache->make_key('filter_height_rows' . $user_id . $user_cache_update_time);
             $filter_rows = null;
             if (! $persistent_cache->get($cache_key, $filter_rows)) {
                 $filter_rows = query2array($query, null, 'height');
@@ -959,7 +992,7 @@ SELECT
 
         if (! preg_match('/^image_id IN/', $filter_clause)) {
             // we use persistent_cache only for fetching lines filtered only by permissions
-            $cache_key = $persistent_cache->make_key('filter_width_rows' . $user['id'] . $user['cache_update_time']);
+            $cache_key = $persistent_cache->make_key('filter_width_rows' . $user_id . $user_cache_update_time);
             $filter_rows = null;
             if (! $persistent_cache->get($cache_key, $filter_rows)) {
                 $filter_rows = query2array($query, null, 'width');
@@ -1009,15 +1042,19 @@ SELECT
         ]
     );
 
-    if ($page['start'] == 0 and ! isset($page['chronology_field']) and isset($page['search_details'])) {
-        if (isset($page['search_details']['matching_cat_ids'])) {
-            $cat_ids = $page['search_details']['matching_cat_ids'];
-            if (count($cat_ids)) {
+    // $page['search_details'] is already known array here (guarded above).
+    if ($page['start'] == 0 and ! isset($page['chronology_field'])) {
+        $matching_cat_ids = $page['search_details']['matching_cat_ids'] ?? null;
+        if (is_array($matching_cat_ids)) {
+            // shape from get_search_info(): list<string|null>; keep only real ids.
+            /** @var list<string> $cat_ids */
+            $cat_ids = array_values(array_filter($matching_cat_ids, 'is_string'));
+            if (count($cat_ids) > 0) {
                 $query = '
 SELECT
     c.*
   FROM ' . CATEGORIES_TABLE . ' AS c
-    INNER JOIN ' . USER_CACHE_CATEGORIES_TABLE . ' ON c.id = cat_id and user_id = ' . $user['id'] . '
+    INNER JOIN ' . USER_CACHE_CATEGORIES_TABLE . ' ON c.id = cat_id and user_id = ' . $user_id . '
   WHERE id IN (' . implode(',', $cat_ids) . ')
 ;';
                 $cats = query2array($query);
@@ -1041,8 +1078,11 @@ SELECT
                 }
             }
         }
-        if (isset($page['search_details']['matching_tag_ids'])) {
-            $tag_ids = $page['search_details']['matching_tag_ids'];
+        $matching_tag_ids = $page['search_details']['matching_tag_ids'] ?? null;
+        if (is_array($matching_tag_ids)) {
+            // shape from get_search_info(): list<string|null>; keep only real ids.
+            /** @var list<string> $tag_ids */
+            $tag_ids = array_values(array_filter($matching_tag_ids, 'is_string'));
 
             if (count($tag_ids) > 0) {
                 $tags = get_available_tags($tag_ids);

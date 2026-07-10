@@ -19,6 +19,10 @@ if (function_exists('ini_set')) {
 define('PHPWG_ROOT_PATH', './');
 
 // Bootstrap globals, set by include/config_default.inc.php and $config_file.
+/**
+ * @var array<string, mixed> $conf
+ * @var string $prefixeTable
+ */
 global $conf, $prefixeTable;
 
 // load config file
@@ -113,11 +117,16 @@ function print_time(mixed $message): void
     global $last_time;
 
     $new_time = get_moment();
+    // $last_time is only ever assigned via get_moment() (this function, or
+    // install/upgrade_1.4.0.php's top-level init, which runs in this same
+    // include-shared scope but isn't visible to static analysis); if this is
+    // the very first call before that init has run, treat elapsed time as 0.
+    $start_time = is_float($last_time) ? $last_time : $new_time;
     $message_str = is_scalar($message) || $message instanceof Stringable
         ? (string) $message
         : print_r($message, true);
 
-    echo '<pre>[' . get_elapsed_time($last_time, $new_time) . ']';
+    echo '<pre>[' . get_elapsed_time($start_time, $new_time) . ']';
     echo ' ' . $message_str;
     echo '</pre>';
     flush();
@@ -190,7 +199,15 @@ load_language('upgrade.lang', '', [
 // |                          database connection                          |
 // +-----------------------------------------------------------------------+
 include_once PHPWG_ROOT_PATH . 'admin/include/functions_upgrade.php';
-include PHPWG_ROOT_PATH . 'include/dblayer/functions_' . $conf['dblayer'] . '.inc.php';
+// config_default.inc.php/database.inc.php always set $conf['dblayer'] to a
+// string ('mysqli'), but the value crosses an include() boundary invisible
+// to static analysis, so we re-narrow at the point of use (same pattern as
+// include/common.inc.php).
+$dblayer = $conf['dblayer'];
+if (! is_string($dblayer)) {
+    die("Invalid \$conf['dblayer'] configuration: expected a string.");
+}
+include PHPWG_ROOT_PATH . 'include/dblayer/functions_' . $dblayer . '.inc.php';
 
 upgrade_db_connect();
 pwg_db_check_charset();
@@ -233,13 +250,18 @@ while ($row = pwg_db_fetch_assoc($result)) {
 if ($has_remote_site) {
     include_once PHPWG_ROOT_PATH . 'admin/include/updates.class.php';
 
+    /** @var array<string, mixed> $page */
     $page['errors'] = [];
     $step = 3;
     updates::upgrade_to('2.3.4', $step, false);
 
-    if (! empty($page['errors'])) {
+    // updates::upgrade_to() mutates $page['errors'] from its own function
+    // scope via global $page -- static analysis can't trace that, so
+    // re-narrow here rather than trust the pre-call [] assignment.
+    $upgrade_errors = is_array($page['errors']) ? array_filter($page['errors'], 'is_string') : [];
+    if (! empty($upgrade_errors)) {
         echo '<ul>';
-        foreach ($page['errors'] as $error) {
+        foreach ($upgrade_errors as $error) {
             echo '<li>' . $error . '</li>';
         }
         echo '</ul>';
@@ -329,6 +351,11 @@ SELECT id
 // +-----------------------------------------------------------------------+
 // |                            upgrade launch                             |
 // +-----------------------------------------------------------------------+
+// The if($has_remote_site){...} block above always exits() before falling
+// through, so PHPStan's flow analysis merges only the "false" branch here —
+// $page needs a fresh @var since that earlier block's narrowing does not
+// reach this point.
+/** @var array<string, mixed> $page */
 $page['infos'] = [];
 $page['errors'] = [];
 $mysql_changes = [];
@@ -357,7 +384,11 @@ if ((isset($_POST['submit']) or isset($_GET['now']))
         // keeps its real, post-include shape visible here instead of
         // appearing to still be the empty array set above.
         $included_vars = get_defined_vars();
-        $mysql_changes = $included_vars['mysql_changes'];
+        // array_push($mysql_changes, '...') calls in install/upgrade_*.php
+        // (e.g. upgrade_1.3.1.php) only ever push PHP source-code strings,
+        // but get_defined_vars() itself returns array<string, mixed>.
+        $mysql_changes_raw = $included_vars['mysql_changes'] ?? null;
+        $mysql_changes = is_array($mysql_changes_raw) ? array_filter($mysql_changes_raw, 'is_string') : [];
 
         conf_update_param('piwigo_db_version', get_branch_from_version(PHPWG_VERSION));
 
@@ -373,6 +404,12 @@ if ((isset($_POST['submit']) or isset($_GET['now']))
               . substr($config_file_contents, $php_end_tag);
 
             if (! @file_put_contents($config_file, $config_file_contents)) {
+                // various by-ref function calls above (global $page inside
+                // their own scope) mutate $page in ways static analysis
+                // can't trace, so re-narrow before appending.
+                if (! is_array($page['infos'] ?? null)) {
+                    $page['infos'] = [];
+                }
                 $page['infos'][] = l10n(
                     'In <i>%s</i>, before <b>?></b>, insert:',
                     PWG_LOCAL_DIR . 'config/database.inc.php'
@@ -389,16 +426,24 @@ if ((isset($_POST['submit']) or isset($_GET['now']))
 
         $page['upgrade_end'] = get_moment();
 
+        // $page['upgrade_start']/'upgrade_end'/'queries_time'] are only ever
+        // set within this same scope: get_moment() (native float return)
+        // above and at reset time, and 'queries_time' as a numeric
+        // accumulator, never touched elsewhere.
+        $upgrade_start = $page['upgrade_start'];
+        $upgrade_end = $page['upgrade_end'];
+        $queries_time = $page['queries_time'];
+
         $template->assign(
             'upgrade',
             [
                 'VERSION' => $current_release,
                 'TOTAL_TIME' => get_elapsed_time(
-                    $page['upgrade_start'],
-                    $page['upgrade_end']
+                    $upgrade_start,
+                    $upgrade_end
                 ),
                 'SQL_TIME' => number_format(
-                    $page['queries_time'],
+                    $queries_time,
                     3,
                     '.',
                     ' '
@@ -407,6 +452,9 @@ if ((isset($_POST['submit']) or isset($_GET['now']))
             ]
         );
 
+        if (! is_array($page['infos'] ?? null)) {
+            $page['infos'] = [];
+        }
         $page['infos'][] = l10n('Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem.');
 
         // Save $page['infos'] in order to restore after maintenance actions
@@ -494,12 +542,18 @@ else {
     }
 }
 
-if (count($page['errors']) != 0) {
-    $template->assign('errors', $page['errors']);
+// $page['errors']/'infos' are always arrays: initialized to [] in the
+// "upgrade launch" block above and only ever appended to via []= throughout
+// this script.
+$page_errors = $page['errors'];
+if (count($page_errors) != 0) {
+    $template->assign('errors', $page_errors);
 }
 
-if (count($page['infos']) != 0) {
-    $template->assign('infos', $page['infos']);
+$page_infos = $page['infos'];
+$page_infos = is_array($page_infos) ? $page_infos : [];
+if (count($page_infos) != 0) {
+    $template->assign('infos', $page_infos);
 }
 
 // +-----------------------------------------------------------------------+

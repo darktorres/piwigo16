@@ -42,7 +42,7 @@ DELETE FROM ' . SITES_TABLE . '
  *    - all the links between elements and this category
  *    - all the restrictions linked to the category
  *
- * @param int[] $ids
+ * @param array<int, int> $ids
  * @param string $photo_deletion_mode
  *    - no_delete : delete no photo, may create orphans
  *    - delete_orphans : delete photos that are no longer linked to any category
@@ -150,10 +150,12 @@ DELETE FROM ' . USER_CACHE_CATEGORIES_TABLE . '
  * Deletes all files (on disk) related to given image ids.
  *
  * @param int[] $ids
- * @return int[] image ids where files were successfully deleted
+ * @return array<int, int> image ids where files were successfully deleted (always
+ *   int-keyed: $new_ids is only ever appended to via [] on a plain array)
  */
 function delete_element_files($ids): array
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
     if (count($ids) == 0) {
         return [];
@@ -250,7 +252,7 @@ SELECT
  *    - all the favorites/rates associated to elements
  *    - removes elements from caddie
  *
- * @param int[] $ids
+ * @param array<int, int> $ids
  * @param bool $physical_deletion
  * @return int number of deleted elements
  */
@@ -352,6 +354,7 @@ SELECT
  */
 function delete_user($user_id): void
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
     $tables = [
         // destruction of the access linked to the user
@@ -387,9 +390,11 @@ DELETE FROM ' . $table . '
     delete_user_sessions($user_id);
 
     // destruction of the user
+    $user_fields = $conf['user_fields'];
+    $user_id_field = is_array($user_fields) && is_string($user_fields['id'] ?? null) ? $user_fields['id'] : 'id';
     $query = '
 DELETE FROM ' . USERS_TABLE . '
-  WHERE ' . $conf['user_fields']['id'] . ' = ' . $user_id . '
+  WHERE ' . $user_id_field . ' = ' . $user_id . '
 ;';
     pwg_query($query);
 
@@ -452,6 +457,7 @@ SELECT
  */
 function update_category($ids = 'all'): ?false
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     if ($ids == 'all') {
@@ -579,13 +585,19 @@ DELETE
  */
 function get_fs_directories(string $path, bool $recursive = true): array
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     $dirs = [];
     $path = rtrim((string) $path, '/');
 
+    $sync_exclude_folders = $conf['sync_exclude_folders'];
+    $sync_exclude_folders = is_array($sync_exclude_folders)
+        ? array_filter($sync_exclude_folders, 'is_string')
+        : [];
+
     $exclude_folders = array_merge(
-        $conf['sync_exclude_folders'],
+        $sync_exclude_folders,
         [
             '.', '..', '.svn',
             'thumbnail', 'pwg_high',
@@ -702,7 +714,13 @@ SELECT id, id_uppercat, uppercats, `rank`, global_rank
 
     $datas = [];
 
-    $cat_map_callback = (fn ($m): string => (string) $cat_map[$m[1]]['rank']);
+    $cat_map_callback = function (array $m) use ($cat_map): string {
+        $matched_id = $m[1] ?? null;
+        if (! is_string($matched_id) || ! isset($cat_map[$matched_id])) {
+            return '';
+        }
+        return (string) $cat_map[$matched_id]['rank'];
+    };
 
     foreach ($cat_map as $id => $cat) {
         $new_global_rank = preg_replace_callback(
@@ -1078,7 +1096,10 @@ SELECT id, uppercats, site_id
     $categories = query2array($query);
 
     // filling $cat_fulldirs
-    $cat_dirs_callback = (fn ($m): mixed => $cat_dirs[$m[1]]);
+    $cat_dirs_callback = function (array $m) use ($cat_dirs): string {
+        $matched_id = $m[1] ?? null;
+        return (is_string($matched_id) && isset($cat_dirs[$matched_id])) ? $cat_dirs[$matched_id] : '';
+    };
 
     $cat_fulldirs = [];
     foreach ($categories as $category) {
@@ -1113,15 +1134,25 @@ SELECT id, uppercats, site_id
 #[\Deprecated(message: '2.4')]
 function get_fs($path, $recursive = true)
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     // because isset is faster than in_array...
     if (! isset($conf['flip_picture_ext'])) {
-        $conf['flip_picture_ext'] = array_flip($conf['picture_ext']);
+        $picture_ext = $conf['picture_ext'];
+        $picture_ext = is_array($picture_ext) ? array_filter($picture_ext, 'is_string') : [];
+        $conf['flip_picture_ext'] = array_flip($picture_ext);
     }
     if (! isset($conf['flip_file_ext'])) {
-        $conf['flip_file_ext'] = array_flip($conf['file_ext']);
+        $file_ext = $conf['file_ext'];
+        $file_ext = is_array($file_ext) ? array_filter($file_ext, 'is_string') : [];
+        $conf['flip_file_ext'] = array_flip($file_ext);
     }
+
+    $flip_picture_ext = $conf['flip_picture_ext'];
+    $flip_picture_ext = is_array($flip_picture_ext) ? $flip_picture_ext : [];
+    $flip_file_ext = $conf['flip_file_ext'];
+    $flip_file_ext = is_array($flip_file_ext) ? $flip_file_ext : [];
 
     $fs['elements'] = [];
     $fs['thumbnails'] = [];
@@ -1138,7 +1169,7 @@ function get_fs($path, $recursive = true)
                 if (is_file($path . '/' . $node)) {
                     $extension = get_extension($node);
 
-                    if (isset($conf['flip_picture_ext'][$extension])) {
+                    if (isset($flip_picture_ext[$extension])) {
                         if (basename($path) == 'thumbnail') {
                             $fs['thumbnails'][] = $path . '/' . $node;
                         } elseif (basename($path) == 'pwg_representative') {
@@ -1146,7 +1177,7 @@ function get_fs($path, $recursive = true)
                         } else {
                             $fs['elements'][] = $path . '/' . $node;
                         }
-                    } elseif (isset($conf['flip_file_ext'][$extension])) {
+                    } elseif (isset($flip_file_ext[$extension])) {
                         $fs['elements'][] = $path . '/' . $node;
                     }
                 } elseif (is_dir($path . '/' . $node) and $node != 'pwg_high' and $recursive) {
@@ -1188,10 +1219,13 @@ function get_fs($path, $recursive = true)
  */
 function sync_users(): void
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
+    $user_fields = $conf['user_fields'];
+    $user_id_field = is_array($user_fields) && is_string($user_fields['id'] ?? null) ? $user_fields['id'] : 'id';
     $query = '
-SELECT ' . $conf['user_fields']['id'] . ' AS id
+SELECT ' . $user_id_field . ' AS id
   FROM ' . USERS_TABLE . '
 ;';
     $base_users = array_map(intval(...), query2array($query, null, 'id'));
@@ -1305,12 +1339,19 @@ UPDATE ' . IMAGES_TABLE . '
  * Change the parent category of the given categories. The categories are
  * supposed virtual.
  *
- * @param int[] $category_ids
+ * @param array<int, int> $category_ids
  * @param int $new_parent (-1 for root)
  */
 function move_categories($category_ids, $new_parent = -1): void
 {
+    /** @var array<string, mixed> $page */
     global $page;
+
+    // $page['errors']/$page['infos'] are always initialized to an array by
+    // common.inc.php, but that isn't visible across the include() boundary
+    // -- narrow them once here so the appends below type-check.
+    $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
+    $page['infos'] = is_array($page['infos'] ?? null) ? $page['infos'] : [];
 
     if (count($category_ids) == 0) {
         return;
@@ -1418,6 +1459,10 @@ SELECT status
  */
 function create_virtual_category($category_name, $parent_id = null, array $options = []): array
 {
+    /**
+     * @var array<string, mixed> $conf
+     * @var array<string, mixed> $user
+     */
     global $conf, $user;
 
     // is the given category name only containing blank spaces ?
@@ -1554,7 +1599,9 @@ SELECT id, uppercats, global_rank, visible, status
         $granted_users = array_map(intval(...), query2array($query, null, 'user_id'));
         add_permission_on_category((int) $inserted_id, $granted_users);
     } elseif ($insert['status'] == 'private') {
-        add_permission_on_category((int) $inserted_id, array_unique(array_merge(get_admins(), [$user['id']])));
+        $current_user_id = $user['id'];
+        $current_user_id = is_numeric($current_user_id) ? (int) $current_user_id : 0;
+        add_permission_on_category((int) $inserted_id, array_unique(array_merge(get_admins(), [$current_user_id])));
     }
 
     trigger_notify('create_virtual_category', array_merge([
@@ -1581,7 +1628,7 @@ SELECT id, uppercats, global_rank, visible, status
 function set_tags($tags, $image_id): void
 {
     set_tags_of([
-        $image_id => $tags,
+        $image_id => array_values($tags),
     ]);
 }
 
@@ -1597,7 +1644,9 @@ function add_tags($tags, $images): void
         return;
     }
 
-    $taglist_before = get_image_tag_ids($images);
+    $image_ids = array_values($images);
+
+    $taglist_before = get_image_tag_ids($image_ids);
 
     // we can't insert twice the same {image_id,tag_id} so we must first
     // delete lines we'll insert later
@@ -1624,7 +1673,7 @@ DELETE
         $inserts
     );
 
-    $taglist_after = get_image_tag_ids($images);
+    $taglist_after = get_image_tag_ids($image_ids);
     $images_to_update = compare_image_tag_lists($taglist_before, $taglist_after);
     update_images_lastmodified($images_to_update);
 
@@ -1678,11 +1727,18 @@ DELETE
  */
 function tag_id_from_tag_name($tag_name): int
 {
+    /** @var array<string, mixed> $page */
     global $page;
 
+    if (! isset($page['tag_id_from_tag_name_cache']) || ! is_array($page['tag_id_from_tag_name_cache'])) {
+        $page['tag_id_from_tag_name_cache'] = [];
+    }
+    /** @var array<string, int> $tag_id_cache */
+    $tag_id_cache = &$page['tag_id_from_tag_name_cache'];
+
     $tag_name = trim($tag_name);
-    if (isset($page['tag_id_from_tag_name_cache'][$tag_name])) {
-        return $page['tag_id_from_tag_name_cache'][$tag_name];
+    if (isset($tag_id_cache[$tag_name])) {
+        return $tag_id_cache[$tag_name];
     }
 
     // search existing by exact name
@@ -1729,17 +1785,17 @@ SELECT id
                     ]
                 );
 
-                $page['tag_id_from_tag_name_cache'][$tag_name] = (int) pwg_db_insert_id();
+                $tag_id_cache[$tag_name] = (int) pwg_db_insert_id();
 
                 invalidate_user_cache_nb_tags();
 
-                return $page['tag_id_from_tag_name_cache'][$tag_name];
+                return $tag_id_cache[$tag_name];
             }
         }
     }
 
-    $page['tag_id_from_tag_name_cache'][$tag_name] = (int) $existing_tags[0];
-    return $page['tag_id_from_tag_name_cache'][$tag_name];
+    $tag_id_cache[$tag_name] = (int) $existing_tags[0];
+    return $tag_id_cache[$tag_name];
 }
 
 /**
@@ -1751,6 +1807,7 @@ function set_tags_of($tags_of): void
 {
     if (count($tags_of) > 0) {
         $taglist_before = get_image_tag_ids(array_keys($tags_of));
+        /** @var \Logger $logger */
         global $logger;
         $logger->debug('taglist_before', $taglist_before);
 
@@ -1781,9 +1838,11 @@ DELETE
         }
 
         $taglist_after = get_image_tag_ids(array_keys($tags_of));
+        /** @var \Logger $logger */
         global $logger;
         $logger->debug('taglist_after', $taglist_after);
         $images_to_update = compare_image_tag_lists($taglist_before, $taglist_after);
+        /** @var \Logger $logger */
         global $logger;
         $logger->debug('$images_to_update', $images_to_update);
 
@@ -1896,10 +1955,16 @@ function fill_lounge($images, $categories): void
  */
 function empty_lounge($invalidate_user_cache = true): ?array
 {
+    /**
+     * @var \Logger $logger
+     * @var array<string, mixed> $conf
+     */
     global $logger, $conf;
 
     if (isset($conf['empty_lounge_running'])) {
-        [$running_exec_id, $running_exec_start_time] = explode('-', $conf['empty_lounge_running']);
+        $empty_lounge_running = $conf['empty_lounge_running'];
+        $empty_lounge_running = is_string($empty_lounge_running) ? $empty_lounge_running : '';
+        [$running_exec_id, $running_exec_start_time] = explode('-', $empty_lounge_running);
         if (time() - (int) $running_exec_start_time > 60) {
             $logger->debug(__FUNCTION__ . ', exec=' . $running_exec_id . ', timeout stopped by another call to the function');
             conf_delete_param('empty_lounge_running');
@@ -2035,6 +2100,10 @@ SELECT
         $query,
         'category_id',
         'max_rank'
+    );
+    $current_rank_of = array_map(
+        static fn (mixed $rank): int => is_numeric($rank) ? (int) $rank : 0,
+        $current_rank_of
     );
 
     // associate only not already associated images
@@ -2203,11 +2272,13 @@ function pwg_URL(): array
  */
 function invalidate_user_cache(bool $full = true): void
 {
+    /**
+     * @var \PersistentCache $persistent_cache
+     * @var \Logger $logger
+     */
     global $persistent_cache, $logger;
 
-    if (isset($logger) and $logger instanceof Logger) {
-        $logger->info(__FUNCTION__ . ' called');
-    }
+    $logger->info(__FUNCTION__ . ' called');
 
     if ($full) {
         $query = '
@@ -2232,6 +2303,7 @@ UPDATE ' . USER_CACHE_TABLE . '
  */
 function invalidate_user_cache_nb_tags(): void
 {
+    /** @var array<string, mixed> $user */
     global $user;
     unset($user['nb_available_tags']);
 
@@ -2342,11 +2414,14 @@ SELECT id
  */
 function cat_admin_access($category_id): bool
 {
+    /** @var array<string, mixed> $user */
     global $user;
 
     // $filter['visible_categories'] and $filter['visible_images']
     // are not used because it's not necessary (filter <> restriction)
-    if (in_array($category_id, @explode(',', (string) $user['forbidden_categories']))) {
+    $forbidden_categories = $user['forbidden_categories'];
+    $forbidden_categories = is_string($forbidden_categories) ? $forbidden_categories : '';
+    if (in_array($category_id, @explode(',', $forbidden_categories))) {
         return false;
     }
     return true;
@@ -2362,6 +2437,7 @@ function cat_admin_access($category_id): bool
  */
 function pwg_http_client()
 {
+    /** @var \Symfony\Contracts\HttpClient\HttpClientInterface|null $client */
     static $client = null;
     if ($client === null) {
         $client = \Symfony\Component\HttpClient\HttpClient::create();
@@ -2380,6 +2456,7 @@ function pwg_http_client()
  */
 function fetchRemote($src, &$dest, $get_data = [], $post_data = [], $user_agent = 'Piwigo'): bool
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     // Try to retrieve data from local file?
@@ -2435,9 +2512,12 @@ function fetchRemote($src, &$dest, $get_data = [], $post_data = [], $user_agent 
     }
 
     if (! empty($conf['use_proxy']) && ! empty($conf['proxy_server'])) {
-        $proxy_url = $conf['proxy_server'];
+        $proxy_server = $conf['proxy_server'];
+        $proxy_url = is_string($proxy_server) ? $proxy_server : '';
         if (! empty($conf['proxy_auth'])) {
-            $proxy_url = preg_replace('#^(https?://)#', '$1' . $conf['proxy_auth'] . '@', (string) $proxy_url);
+            $proxy_auth = $conf['proxy_auth'];
+            $proxy_auth = is_string($proxy_auth) ? $proxy_auth : '';
+            $proxy_url = preg_replace('#^(https?://)#', '$1' . $proxy_auth . '@', $proxy_url);
         }
         $options['proxy'] = $proxy_url;
     }
@@ -2558,12 +2638,16 @@ DELETE
  */
 function get_username($user_id): false|string
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
+    $user_fields = $conf['user_fields'];
+    $username_field = is_array($user_fields) && is_string($user_fields['username'] ?? null) ? $user_fields['username'] : 'username';
+    $user_id_field = is_array($user_fields) && is_string($user_fields['id'] ?? null) ? $user_fields['id'] : 'id';
     $query = '
-SELECT ' . $conf['user_fields']['username'] . '
+SELECT ' . $username_field . '
   FROM ' . USERS_TABLE . '
-  WHERE ' . $conf['user_fields']['id'] . ' = ' . intval($user_id) . '
+  WHERE ' . $user_id_field . ' = ' . intval($user_id) . '
 ;';
     $result = pwg_query($query);
     if (pwg_db_num_rows($result) > 0) {
@@ -2605,9 +2689,10 @@ function get_old_newsletters_base_url($language = 'en_UK'): string
  */
 function get_active_menu($menu_page)
 {
+    /** @var array<string, mixed> $page */
     global $page;
 
-    if (isset($page['active_menu'])) {
+    if (isset($page['active_menu']) && is_int($page['active_menu'])) {
         return $page['active_menu'];
     }
 
@@ -3183,7 +3268,8 @@ SELECT
 /**
  * Return the list of image ids associated to no album
  *
- * @return int[] $image_ids
+ * @return list<int> $image_ids array_map() below preserves query2array()'s
+ *   list-ness (int-keyed, sequential) from its 2-arg (key_name=null) call
  */
 function get_orphans(): array
 {
@@ -3329,12 +3415,11 @@ SELECT *
  * Return each cache image sizes.
  *
  * @since 12
- * @return mixed[][]|float[]|int[]
+ * @return array<string, int>
  */
 function get_cache_size_derivatives(string $path): array
 {
     $msizes = []; // final res
-    $subdirs = []; // sous-rep
 
     if (is_dir($path)) {
         if ($contents = opendir($path)) {
@@ -3346,11 +3431,13 @@ function get_cache_size_derivatives(string $path): array
                 if (is_file($path . '/' . $node)) {
                     $split = explode('-', $node);
                     $size_code = substr(end($split), 0, 2);
-                    @$msizes[$size_code] += filesize($path . '/' . $node);
+                    $file_size = filesize($path . '/' . $node);
+                    $file_size = $file_size === false ? 0 : $file_size;
+                    $msizes[$size_code] = ($msizes[$size_code] ?? 0) + $file_size;
                 } elseif (is_dir($path . '/' . $node)) {
                     $tmp_msizes = get_cache_size_derivatives($path . '/' . $node);
                     foreach ($tmp_msizes as $size_key => $value) {
-                        @$msizes[$size_key] += $value;
+                        $msizes[$size_key] = ($msizes[$size_key] ?? 0) + $value;
                     }
                 }
             }
@@ -3367,6 +3454,10 @@ function get_cache_size_derivatives(string $path): array
  */
 function fs_quick_check(): void
 {
+    /**
+     * @var array<string, mixed> $page
+     * @var array<string, mixed> $conf
+     */
     global $page, $conf;
 
     if ($conf['fs_quick_check_period'] == 0) {
@@ -3421,6 +3512,7 @@ SELECT
         // path is a NOT NULL column in the images table.
         assert(is_string($path));
         if (! file_exists($path)) {
+            /** @var \Template $template */
             global $template;
 
             $template->assign(
@@ -3445,6 +3537,7 @@ SELECT
     $duplicate_paths = query2array($query);
 
     if (count($duplicate_paths) > 0) {
+        /** @var \Template $template */
         global $template;
 
         $template->assign(
@@ -3465,13 +3558,16 @@ SELECT
  */
 function get_piwigo_news(): mixed
 {
+    /** @var array<string, mixed> $lang_info */
     global $lang_info;
 
     $news = null;
 
     $data_location = conf_get_param('data_location');
     $data_location = is_string($data_location) ? $data_location : '';
-    $cache_path = PHPWG_ROOT_PATH . $data_location . 'cache/piwigo_latest_news-' . $lang_info['code'] . '.cache.php';
+    $lang_code = $lang_info['code'] ?? null;
+    $lang_code = is_string($lang_code) ? $lang_code : '';
+    $cache_path = PHPWG_ROOT_PATH . $data_location . 'cache/piwigo_latest_news-' . $lang_code . '.cache.php';
     if (! is_file($cache_path) or filemtime($cache_path) < strtotime('24 hours ago')) {
         $url = PHPWG_URL . '/ws.php?method=porg.news.getLatest&format=json';
 
@@ -3520,6 +3616,7 @@ function get_piwigo_news(): mixed
 
 function get_graphics_library(): string|false
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     include_once PHPWG_ROOT_PATH . 'admin/include/image.class.php';
@@ -3528,7 +3625,9 @@ function get_graphics_library(): string|false
 
     switch (pwg_image::get_library()) {
         case 'ext_imagick':
-            exec($conf['ext_imagick_dir'] . pwg_image::get_ext_imagick_command() . ' -version', $returnarray);
+            $ext_imagick_dir = $conf['ext_imagick_dir'];
+            $ext_imagick_dir = is_string($ext_imagick_dir) ? $ext_imagick_dir : '';
+            exec($ext_imagick_dir . pwg_image::get_ext_imagick_command() . ' -version', $returnarray);
             if (preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
                 $library .= '/' . $match[1];
             }
@@ -3544,7 +3643,9 @@ function get_graphics_library(): string|false
 
         case 'gd':
             $gd_info = gd_info();
-            $library .= '/' . @$gd_info['GD Version'];
+            $gd_version = $gd_info['GD Version'] ?? null;
+            $gd_version = is_string($gd_version) ? $gd_version : '';
+            $library .= '/' . $gd_version;
             break;
     }
 

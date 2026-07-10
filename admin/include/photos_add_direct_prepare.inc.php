@@ -10,6 +10,10 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 // Bootstrap globals, set by include/common.inc.php.
+/**
+ * @var array<string, mixed> $conf
+ * @var \Template $template
+ */
 global $conf, $template;
 
 // +-----------------------------------------------------------------------+
@@ -70,12 +74,11 @@ $template->assign(
     ]
 );
 
-$unique_exts = array_unique(
-    array_map(
-        strtolower(...),
-        $conf['upload_form_all_types'] ? $conf['file_ext'] : $conf['picture_ext']
-    )
-);
+$upload_extensions = $conf['upload_form_all_types'] ? $conf['file_ext'] : $conf['picture_ext'];
+// $conf values are inherently mixed; only string elements can safely
+// be passed to strtolower() below.
+$upload_extensions = is_array($upload_extensions) ? array_filter($upload_extensions, 'is_string') : [];
+$unique_exts = array_unique(array_map(strtolower(...), $upload_extensions));
 
 $template->assign(
     [
@@ -211,13 +214,15 @@ if (! isset($_SESSION['upload_hide_warnings'])) {
         );
     }
 
-    if (get_ini_size('upload_max_filesize') < $conf['upload_form_chunk_size'] * 1024) {
+    $upload_form_chunk_size = $conf['upload_form_chunk_size'];
+    $upload_form_chunk_size = is_numeric($upload_form_chunk_size) ? (int) $upload_form_chunk_size : 0;
+    if (get_ini_size('upload_max_filesize') < $upload_form_chunk_size * 1024) {
         $upload_max_filesize = get_ini_size('upload_max_filesize');
         // upload_max_filesize is a core php.ini directive, always present
         assert($upload_max_filesize !== false);
         $setup_warnings[] = sprintf(
             'Piwigo setting upload_form_chunk_size (%ukB) should be smaller than PHP configuration setting upload_max_filesize (%ukB)',
-            $conf['upload_form_chunk_size'],
+            $upload_form_chunk_size,
             ceil((int) $upload_max_filesize / 1024)
         );
     }

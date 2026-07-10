@@ -14,8 +14,18 @@ declare(strict_types=1);
  */
 
 // Bootstrap globals, set by include/common.inc.php.
+/**
+ * @var array<string, mixed> $conf
+ * @var array<string, mixed> $page
+ * @var \Template $template
+ * @var array<string, mixed> $user
+ */
 global $conf, $page, $template, $user;
 // Set by picture.php, right before this include.
+/**
+ * @var array<string, array<string, mixed>> $picture
+ * @var string $url_self
+ */
 global $picture, $url_self;
 
 if ($conf['rate']) {
@@ -25,11 +35,17 @@ if ($conf['rate']) {
         'average' => null,
     ];
     if ($rate_summary['score'] != null) {
+        // images.id is the NOT NULL primary key, always a numeric string
+        // once fetched (see pwg_db_fetch_assoc()'s return type and the
+        // matching assert in picture.php).
+        $picture_current_id = $picture['current']['id'];
+        assert(is_string($picture_current_id));
+
         $query = '
 SELECT COUNT(rate) AS count
      , ROUND(AVG(rate),2) AS average
   FROM ' . RATE_TABLE . '
-  WHERE element_id = ' . $picture['current']['id'] . '
+  WHERE element_id = ' . $picture_current_id . '
 ;';
         $row = pwg_db_fetch_row(pwg_query($query));
         assert($row !== null);
@@ -40,10 +56,17 @@ SELECT COUNT(rate) AS count
     $user_rate = null;
     if ($conf['rate_anonymous'] or is_autorize_status(ACCESS_CLASSIC)) {
         if ($rate_summary['count'] > 0) {
+            // $page['image_id'] / $user['id'] are always numeric (int or
+            // numeric string) -- see the identical narrowing in picture.php.
+            $rate_image_id = $page['image_id'];
+            $rate_image_id = is_numeric($rate_image_id) ? (int) $rate_image_id : 0;
+            $rate_user_id = $user['id'];
+            $rate_user_id = is_numeric($rate_user_id) ? (int) $rate_user_id : 0;
+
             $query = 'SELECT rate
       FROM ' . RATE_TABLE . '
-      WHERE element_id = ' . $page['image_id'] . '
-      AND user_id = ' . $user['id'];
+      WHERE element_id = ' . $rate_image_id . '
+      AND user_id = ' . $rate_user_id;
 
             if (! is_autorize_status(ACCESS_CLASSIC)) {
                 $remote_addr = $_SERVER['REMOTE_ADDR'] ?? '';

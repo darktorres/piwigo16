@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 // Bootstrap globals, set by include/common.inc.php.
+/** @var array<string, mixed> $conf */
+/** @var array<string, mixed> $page */
 global $conf, $page;
 
 $themeconf = [

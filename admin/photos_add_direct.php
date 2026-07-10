@@ -13,8 +13,21 @@ if (! defined('PHOTOS_ADD_BASE_URL')) {
     die('Hacking attempt!');
 }
 
-// Bootstrap globals, set by include/common.inc.php.
-global $conf, $template, $user;
+// Bootstrap globals, set by include/common.inc.php. $page is set by
+// admin.php before including this panel.
+/**
+ * @var array<string, mixed> $conf
+ * @var array<string, mixed> $page
+ * @var \Template $template
+ * @var array<string, mixed> $user
+ */
+global $conf, $page, $template, $user;
+
+// $user['id'] (the logged in / guest user id) is always numeric here (DB
+// primary key, or $conf['guest_id']); narrow once and reuse at every site
+// below instead of re-reading the offset (each re-read is `mixed`), same
+// pattern as admin/batch_manager.php.
+$user_id = is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0;
 
 // +-----------------------------------------------------------------------+
 // |                        batch management request                       |
@@ -25,7 +38,7 @@ if (isset($_GET['batch'])) {
 
     $query = '
 DELETE FROM ' . CADDIE_TABLE . '
-  WHERE user_id = ' . $user['id'] . '
+  WHERE user_id = ' . $user_id . '
 ;';
     pwg_query($query);
 
@@ -33,7 +46,7 @@ DELETE FROM ' . CADDIE_TABLE . '
     $batch_param = $_GET['batch'];
     foreach (array_unique(explode(',', is_scalar($batch_param) ? (string) $batch_param : '')) as $image_id) {
         $inserts[] = [
-            'user_id' => $user['id'],
+            'user_id' => $user_id,
             'element_id' => $image_id,
         ];
     }
@@ -138,6 +151,10 @@ SELECT *
 
         $have_formats_original = true;
     } else {
+        // $page['errors'] is always initialized to an array by
+        // include/common.inc.php; re-assert it here so PHPStan can prove
+        // the push below is array-like (same pattern as admin/cat_list.php).
+        $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
         $page['errors'][] = l10n('The original picture selected dosen\'t exists.');
     }
 
@@ -155,6 +172,11 @@ include_once PHPWG_ROOT_PATH . 'admin/include/photos_add_direct_prepare.inc.php'
 
 trigger_notify('loc_end_photo_add_direct');
 
+// $conf['format_ext'] is read twice below; narrow once and reuse instead of
+// re-reading the offset (each re-read is `mixed`), same pattern as
+// admin/batch_manager.php.
+$conf_format_ext = is_array($conf['format_ext'] ?? null) ? $conf['format_ext'] : [];
+
 $template->assign([
     'ENABLE_FORMATS' => $conf['enable_formats'],
     'DISPLAY_FORMATS' => $display_formats,
@@ -162,8 +184,8 @@ $template->assign([
     'FORMATS_ORIGINAL_INFO' => $formats_original_info,
     'FORMATS_EXT_INFO' => $formats_ext_info,
     'SWITCH_FORMAT_MODE_URL' => get_root_url() . 'admin.php?page=photos_add' . ($display_formats ? '' : '&formats'),
-    'format_ext' => implode(',', $conf['format_ext']),
-    'str_format_ext' => implode(', ', $conf['format_ext']),
+    'format_ext' => implode(',', array_filter($conf_format_ext, 'is_string')),
+    'str_format_ext' => implode(', ', array_filter($conf_format_ext, 'is_string')),
 ]);
 
 $template->assign_var_from_handle('ADMIN_CONTENT', 'photos_add');

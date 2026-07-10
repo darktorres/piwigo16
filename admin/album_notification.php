@@ -14,8 +14,17 @@ if (! defined('PHPWG_ROOT_PATH')) {
 }
 
 // Bootstrap globals, set by include/common.inc.php. $admin_album_base_url
-// and $category are set by admin/album.php before including this panel.
-global $admin_album_base_url, $category, $conf, $template;
+// and $category are set by admin/album.php before including this panel;
+// $page originates in admin.php and is further populated by
+// admin/album.php ($page['tab']) before reaching this panel.
+/**
+ * @var string $admin_album_base_url
+ * @var array<string, string|null> $category
+ * @var array<string, mixed> $conf
+ * @var array<string, mixed> $page
+ * @var \Template $template
+ */
+global $admin_album_base_url, $category, $conf, $page, $template;
 
 include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php';
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
@@ -30,7 +39,23 @@ check_status(ACCESS_ADMINISTRATOR);
 // |                       variable initialization                         |
 // +-----------------------------------------------------------------------+
 
-$page['cat'] = $category['id'];
+$page['cat'] = (int) $category['id'];
+
+// $conf['user_fields'] maps generic field names to table-specific column
+// names (see include/config_default.inc.php); every value is a plain
+// string. Extracted once here and reused by both user-list queries below.
+$user_fields_raw = $conf['user_fields'];
+$user_fields = [];
+if (is_array($user_fields_raw)) {
+    foreach ($user_fields_raw as $field_key => $field_value) {
+        if (is_string($field_key) and is_string($field_value)) {
+            $user_fields[$field_key] = $field_value;
+        }
+    }
+}
+$user_field_id = $user_fields['id'] ?? 'id';
+$user_field_username = $user_fields['username'] ?? 'username';
+$user_field_email = $user_fields['email'] ?? 'mail_address';
 
 // +-----------------------------------------------------------------------+
 // |                           form submission                             |
@@ -119,10 +144,10 @@ SELECT
     ui.user_id,
     ui.status,
     ui.language,
-    u.' . $conf['user_fields']['email'] . ' AS email,
-    u.' . $conf['user_fields']['username'] . ' AS username
+    u.' . $user_field_email . ' AS email,
+    u.' . $user_field_username . ' AS username
   FROM ' . USER_INFOS_TABLE . ' AS ui
-    JOIN ' . USERS_TABLE . ' AS u ON u.' . $conf['user_fields']['id'] . ' = ui.user_id
+    JOIN ' . USERS_TABLE . ' AS u ON u.' . $user_field_id . ' = ui.user_id
   WHERE ui.user_id IN (' . implode(',', $post_user_ids) . ')
 ;';
         $users = query2array($query);
@@ -213,11 +238,16 @@ SELECT
 
 $template->set_filename('album_notification', 'album_notification.tpl');
 
+// $page['cat'] was set to (int) $category['id'] above, in this same
+// top-level script scope with no intervening by-reference calls, so its
+// narrowing is still provably int here.
+$page_cat = $page['cat'];
+
 $template->assign(
     [
         'CATEGORIES_NAV' => trim(
             get_cat_display_name_from_id(
-                $page['cat'],
+                $page_cat,
                 'admin.php?page=album-'
             )
         ),
@@ -226,8 +256,12 @@ $template->assign(
     ]
 );
 
-if ($conf['auth_key_duration'] > 0) {
-    $auth_key_since = strtotime('now -' . $conf['auth_key_duration'] . ' second');
+// auth_key_duration is a plain int config value (see
+// include/config_default.inc.php).
+$auth_key_duration = $conf['auth_key_duration'];
+$auth_key_duration_num = is_numeric($auth_key_duration) ? (int) $auth_key_duration : 0;
+if ($auth_key_duration_num > 0) {
+    $auth_key_since = strtotime('now -' . $auth_key_duration_num . ' second');
     // the relative time expression above is always syntactically valid
     assert($auth_key_since !== false);
     $template->assign(
@@ -251,6 +285,10 @@ SELECT
   FROM `' . GROUPS_TABLE . '`
 ;';
 $all_group_ids = array_from_query($query, 'group_id');
+// group_ids stays [] (rather than undefined) when the gallery has no
+// groups at all, so the "private album" branch below can safely read it
+// unconditionally instead of guarding on definedness.
+$group_ids = [];
 
 if (count($all_group_ids) == 0) {
     $template->assign('no_group_in_gallery', true);
@@ -299,12 +337,12 @@ $all_user_ids = query2array($query, null, 'user_id');
 if ($category['status'] == 'private') {
     $user_ids_access_indirect = [];
 
-    if (isset($group_ids) and count($group_ids) > 0) {
+    if (count($group_ids) > 0) {
         $query = '
 SELECT
     user_id
   FROM ' . USER_GROUP_TABLE . '
-  WHERE group_id IN (' . implode(',', $group_ids) . ')
+  WHERE group_id IN (' . implode(',', array_filter($group_ids, 'is_string')) . ')
 ';
         $user_ids_access_indirect = query2array($query, null, 'user_id');
     }
@@ -327,8 +365,8 @@ SELECT
 if (count($user_ids) > 0) {
     $query = '
 SELECT
-    ' . $conf['user_fields']['id'] . ' AS id,
-    ' . $conf['user_fields']['username'] . ' AS username
+    ' . $user_field_id . ' AS id,
+    ' . $user_field_username . ' AS username
   FROM ' . USERS_TABLE . '
   WHERE id IN (' . implode(',', $user_ids) . ')
 ;';

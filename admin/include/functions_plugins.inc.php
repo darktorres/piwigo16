@@ -15,6 +15,7 @@ declare(strict_types=1);
  */
 function get_admin_plugin_menu_link($file): string
 {
+    /** @var array<string, mixed> $page */
     global $page;
     $real_file = realpath($file);
     $url = get_root_url() . 'admin.php?page=plugin';
@@ -25,7 +26,7 @@ function get_admin_plugin_menu_link($file): string
         $file = substr($real_file, strlen($real_plugin_path) + 1);
         $file = str_replace('\\', '/', $file); // Windows
         $url .= '&amp;section=' . urlencode($file);
-    } elseif (isset($page['errors'])) {
+    } elseif (is_array($page['errors'] ?? null)) {
         $page['errors'][] = 'PLUGIN ERROR: "' . $file . '" is not a valid file';
     }
     return $url;

@@ -14,6 +14,10 @@ if (! defined('PHPWG_ROOT_PATH')) {
 }
 
 // Bootstrap globals, set by include/common.inc.php.
+/**
+ * @var array<string, mixed> $conf
+ * @var \Template $template
+ */
 global $conf, $template;
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
@@ -50,27 +54,34 @@ if (isset($_GET['order_by']) and is_numeric($_GET['order_by'])) {
     $order_by_index = (int) $_GET['order_by'];
 }
 
-$page['user_filter'] = '';
+// $conf['guest_id'] is set as a PHP int literal in
+// include/config_default.inc.php.
+$conf_guest_id = $conf['guest_id'];
+$guest_id = is_numeric($conf_guest_id) ? (int) $conf_guest_id : 0;
+
+$user_filter = '';
 if (isset($_GET['users'])) {
     if ($_GET['users'] == 'user') {
-        $page['user_filter'] = ' AND r.user_id <> ' . $conf['guest_id'];
+        $user_filter = ' AND r.user_id <> ' . $guest_id;
     } elseif ($_GET['users'] == 'guest') {
-        $page['user_filter'] = ' AND r.user_id = ' . $conf['guest_id'];
+        $user_filter = ' AND r.user_id = ' . $guest_id;
     }
 }
 
-$page['cat_filter'] = '';
+$cat_filter = '';
 if (isset($_GET['cat']) and is_numeric($_GET['cat'])) {
     $cat_ids = get_subcat_ids([(int) $_GET['cat']]);
 
     if (count($cat_ids) > 0) {
-        $page['cat_filter'] = ' AND ic.category_id IN (' . implode(',', $cat_ids) . ')';
+        $cat_filter = ' AND ic.category_id IN (' . implode(',', $cat_ids) . ')';
     }
 }
 
 $users = [];
+/** @var array<string, string> $user_fields */
+$user_fields = $conf['user_fields'];
 $query = '
-SELECT ' . $conf['user_fields']['username'] . ' as username, ' . $conf['user_fields']['id'] . ' as id
+SELECT ' . $user_fields['username'] . ' as username, ' . $user_fields['id'] . ' as id
   FROM ' . USERS_TABLE . '
 ;';
 $result = pwg_query($query);
@@ -85,14 +96,14 @@ SELECT
     COUNT(DISTINCT(r.element_id))
   FROM ' . RATE_TABLE . ' AS r';
 
-if (! empty($page['cat_filter'])) {
+if (! empty($cat_filter)) {
     $query .= '
     JOIN ' . IMAGES_TABLE . ' AS i ON r.element_id = i.id
     JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON ic.image_id = i.id';
 }
 
 $query .= '
-WHERE 1=1' . $page['user_filter'];
+WHERE 1=1' . $user_filter;
 $count_row = pwg_db_fetch_row(pwg_query($query));
 assert($count_row !== null);
 [$nb_images] = $count_row;
@@ -171,13 +182,13 @@ SELECT i.id,
   FROM ' . RATE_TABLE . ' AS r
     LEFT JOIN ' . IMAGES_TABLE . ' AS i ON r.element_id = i.id';
 
-if (! empty($page['cat_filter'])) {
+if (! empty($cat_filter)) {
     $query .= '
     JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON ic.image_id = i.id';
 }
 
 $query .= '
-  WHERE 1 = 1 ' . $page['user_filter'] . $page['cat_filter'] . '
+  WHERE 1 = 1 ' . $user_filter . $cat_filter . '
   GROUP BY i.id,
         i.path,
         i.file,

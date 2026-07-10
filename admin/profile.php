@@ -14,6 +14,10 @@ if (! defined('PHPWG_ROOT_PATH')) {
 }
 
 // Bootstrap globals, set by include/common.inc.php.
+/**
+ * @var array<string, mixed> $page
+ * @var \Template $template
+ */
 global $page, $template;
 
 check_input_parameter('user_id', $_GET, false, PATTERN_ID);
@@ -46,6 +50,12 @@ load_profile_in_template(
     get_root_url() . 'admin.php?page=user_list',
     $edit_user
 );
+// $page['errors'] is always initialized to [] by include/common.inc.php,
+// but that isn't visible across the include() boundary -- narrow before
+// merging.
+if (! is_array($page['errors'] ?? null)) {
+    $page['errors'] = [];
+}
 $page['errors'] = array_merge($page['errors'], $errors);
 
 $template->set_filename('profile', 'profile.tpl');

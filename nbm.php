@@ -13,8 +13,17 @@ declare(strict_types=1);
 define('PHPWG_ROOT_PATH', './');
 include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 
-// Bootstrap global, set by include/common.inc.php.
-global $template;
+// Bootstrap globals, set by include/common.inc.php.
+/**
+ * @var array<string, mixed> $page
+ * @var \Template $template
+ */
+global $page, $template;
+
+// $page['errors'] is always initialized to an array by common.inc.php, but
+// that isn't visible across the include() boundary -- narrow it once here
+// so the top-level $page['errors'][...] = ... write below type-checks.
+$page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
 
 check_status(ACCESS_FREE);
 include_once PHPWG_ROOT_PATH . 'include/functions_notification.inc.php';
@@ -55,7 +64,9 @@ $template->set_filenames([
 
 // include menubar
 $themeconf = $template->get_template_vars('themeconf');
-if (! isset($themeconf['hide_menu_on']) or ! in_array('theNBMPage', $themeconf['hide_menu_on'])) {
+$themeconf = is_array($themeconf) ? $themeconf : [];
+$hide_menu_on = $themeconf['hide_menu_on'] ?? null;
+if (! is_array($hide_menu_on) or ! in_array('theNBMPage', $hide_menu_on)) {
     include PHPWG_ROOT_PATH . 'include/menubar.inc.php';
 }
 

@@ -16,8 +16,13 @@ if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
-// Bootstrap globals, set by include/common.inc.php.
-global $template;
+// Bootstrap globals. $page is set by admin.php before including this
+// panel via admin/album.php; $template by include/common.inc.php.
+/**
+ * @var array<string, mixed> $page
+ * @var \Template $template
+ */
+global $page, $template;
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 

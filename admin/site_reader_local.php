@@ -15,12 +15,17 @@ class LocalSiteReader
     public function __construct(
         public string $site_url
     ) {
+        /** @var array<string, mixed> $conf */
         global $conf;
         if (! isset($conf['flip_file_ext'])) {
-            $conf['flip_file_ext'] = array_flip($conf['file_ext']);
+            $file_ext = $conf['file_ext'];
+            $file_ext = is_array($file_ext) ? array_filter($file_ext, 'is_string') : [];
+            $conf['flip_file_ext'] = array_flip($file_ext);
         }
         if (! isset($conf['flip_picture_ext'])) {
-            $conf['flip_picture_ext'] = array_flip($conf['picture_ext']);
+            $picture_ext = $conf['picture_ext'];
+            $picture_ext = is_array($picture_ext) ? array_filter($picture_ext, 'is_string') : [];
+            $conf['flip_picture_ext'] = array_flip($picture_ext);
         }
     }
 
@@ -31,6 +36,7 @@ class LocalSiteReader
      */
     public function open(): bool
     {
+        /** @var list<array<string, string>> $errors */
         global $errors;
 
         if (! is_dir($this->site_url)) {
@@ -63,7 +69,13 @@ class LocalSiteReader
      */
     public function get_elements($path): array
     {
+        /** @var array<string, mixed> $conf */
         global $conf;
+
+        $flip_file_ext = $conf['flip_file_ext'];
+        $flip_file_ext = is_array($flip_file_ext) ? $flip_file_ext : [];
+        $flip_picture_ext = $conf['flip_picture_ext'];
+        $flip_picture_ext = is_array($flip_picture_ext) ? $flip_picture_ext : [];
 
         $subdirs = [];
         $fs = [];
@@ -77,9 +89,9 @@ class LocalSiteReader
                     $extension = strtolower(get_extension($node));
                     $filename_wo_ext = get_filename_wo_extension($node);
 
-                    if (isset($conf['flip_file_ext'][$extension])) {
+                    if (isset($flip_file_ext[$extension])) {
                         $representative_ext = null;
-                        if (! isset($conf['flip_picture_ext'][$extension])) {
+                        if (! isset($flip_picture_ext[$extension])) {
                             $representative_ext = $this->get_representative_ext($path, $filename_wo_ext);
                         }
 
@@ -125,14 +137,18 @@ class LocalSiteReader
      */
     public function get_element_update_attributes(string $file): array
     {
+        /** @var array<string, mixed> $conf */
         global $conf;
         $data = [];
 
         $filename = basename((string) $file);
         $extension = get_extension($filename);
 
+        $flip_picture_ext = $conf['flip_picture_ext'];
+        $flip_picture_ext = is_array($flip_picture_ext) ? $flip_picture_ext : [];
+
         $representative_ext = null;
-        if (! isset($conf['flip_picture_ext'][$extension])) {
+        if (! isset($flip_picture_ext[$extension])) {
             $dirname = dirname((string) $file);
             $filename_wo_ext = get_filename_wo_extension($filename);
             $representative_ext = $this->get_representative_ext($dirname, $filename_wo_ext);
@@ -165,9 +181,12 @@ class LocalSiteReader
     // -------------------------------------------------- private functions --------
     public function get_representative_ext(string $path, string $filename_wo_ext): ?string
     {
+        /** @var array<string, mixed> $conf */
         global $conf;
         $base_test = $path . '/pwg_representative/' . $filename_wo_ext . '.';
-        foreach ($conf['picture_ext'] as $ext) {
+        $picture_ext = $conf['picture_ext'];
+        $picture_ext = is_array($picture_ext) ? array_filter($picture_ext, 'is_string') : [];
+        foreach ($picture_ext as $ext) {
             $test = $base_test . $ext;
             if (is_file($test)) {
                 return $ext;
@@ -181,13 +200,17 @@ class LocalSiteReader
      */
     public function get_formats(string $path, string $filename_wo_ext): array
     {
+        /** @var array<string, mixed> $conf */
         global $conf;
 
         $formats = [];
 
         $base_test = $path . '/pwg_format/' . $filename_wo_ext . '.';
 
-        foreach ($conf['format_ext'] as $ext) {
+        $format_ext = $conf['format_ext'];
+        $format_ext = is_array($format_ext) ? array_filter($format_ext, 'is_string') : [];
+
+        foreach ($format_ext as $ext) {
             $test = $base_test . $ext;
 
             if (is_file($test)) {

@@ -15,6 +15,11 @@ if (! defined('PHPWG_ROOT_PATH')) {
 
 // Bootstrap globals. $admin_album_base_url is set by admin/album.php
 // before including this panel; the rest by include/common.inc.php.
+/**
+ * @var string $admin_album_base_url
+ * @var array<string, mixed> $conf
+ * @var \Template $template
+ */
 global $admin_album_base_url, $conf, $template;
 
 include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php';
@@ -35,13 +40,22 @@ function get_complete_dir(int|string $category_id): string
 // get_local_dir(22) returns "pets/rex/1_year_old/"
 function get_local_dir(int|string $category_id): string
 {
+    /** @var array<string, mixed> $page */
     global $page;
 
     $uppercats = '';
     $local_dir = '';
 
-    if (isset($page['plain_structure'][$category_id]['uppercats'])) {
-        $uppercats = $page['plain_structure'][$category_id]['uppercats'];
+    // $page['plain_structure'] is a legacy category-structure cache key;
+    // grepped the whole codebase and nothing ever populates it, so this
+    // branch is dead in practice. Kept (and typed defensively rather than
+    // assumed) in case a future cache layer starts filling it in.
+    $plain_structure = $page['plain_structure'] ?? null;
+    $structure_entry = is_array($plain_structure) ? ($plain_structure[$category_id] ?? null) : null;
+    $structure_uppercats = is_array($structure_entry) ? ($structure_entry['uppercats'] ?? null) : null;
+
+    if (is_string($structure_uppercats)) {
+        $uppercats = $structure_uppercats;
     } else {
         $query = 'SELECT uppercats';
         $query .= ' FROM ' . CATEGORIES_TABLE . ' WHERE id = ' . $category_id;
@@ -50,7 +64,7 @@ function get_local_dir(int|string $category_id): string
         if (! is_array($row)) {
             throw new Exception(__FUNCTION__ . "(): category #{$category_id} not found");
         }
-        $uppercats = $row['uppercats'];
+        $uppercats = is_string($row['uppercats']) ? $row['uppercats'] : '';
     }
 
     $upper_array = explode(',', $uppercats);
@@ -126,6 +140,7 @@ if (isset($redirect)) {
 
 // nullable fields
 foreach (['comment', 'dir', 'site_id', 'id_uppercat'] as $nullable) {
+    /** @var array<string, mixed> $category */
     if (! isset($category[$nullable])) {
         $category[$nullable] = '';
     }
@@ -141,18 +156,24 @@ $result = pwg_query($query);
 $category['has_images'] = pwg_db_num_rows($result) > 0 ? true : false;
 
 // number of sub-categories
-$subcat_ids = get_subcat_ids([$category['id']]);
+// 'id' is the categories table primary key (NOT NULL); pwg_db_fetch_assoc()
+// in admin/album.php (one file over the include boundary PHPStan can't see
+// into) always returns it as a numeric string. Narrow once here and reuse
+// throughout the rest of this file's many uses of the category id.
+$category_id = is_numeric($category['id']) ? (int) $category['id'] : 0;
+$subcat_ids = get_subcat_ids([$category_id]);
 
 $category['nb_subcats'] = count($subcat_ids) - 1;
 
 // Navigation path
+$category_uppercats = is_string($category['uppercats']) ? $category['uppercats'] : '';
 $navigation = get_cat_display_name_cache(
-    $category['uppercats'],
+    $category_uppercats,
     get_root_url() . 'admin.php?page=album-'
 );
 
 // Parent navigation path
-$uppercats_array = explode(',', (string) $category['uppercats']);
+$uppercats_array = explode(',', $category_uppercats);
 if (count($uppercats_array) > 1) {
     array_pop($uppercats_array);
     $parent_navigation = get_cat_display_name_cache(
@@ -169,24 +190,32 @@ $template->set_filename('album_properties', 'cat_modify.tpl');
 $base_url = get_root_url() . 'admin.php?page=';
 $cat_list_url = $base_url . 'albums';
 
+// 'id_uppercat' is one of the nullable fields normalized to '' above;
+// otherwise it is the parent category id, a numeric string from the DB.
+$category_id_uppercat = is_string($category['id_uppercat']) ? $category['id_uppercat'] : '';
+
 $self_url = $cat_list_url;
-if (! empty($category['id_uppercat'])) {
-    $self_url .= '&amp;parent_id=' . $category['id_uppercat'];
+if (! empty($category_id_uppercat)) {
+    $self_url .= '&amp;parent_id=' . $category_id_uppercat;
 }
 
 // We show or hide this warning in JS
+/** @var array<string, mixed> $page */
+if (! is_array($page['warnings'] ?? null)) {
+    $page['warnings'] = [];
+}
 $page['warnings'][] = l10n('This album is currently locked, visible only to administrators.') . '<span class="icon-cone unlock-album">' . l10n('Unlock it') . '</span>';
 
 $template->assign(
     [
         'CATEGORIES_NAV' => preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation)),
         'CATEGORIES_PARENT_NAV' => preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $parent_navigation)),
-        'PARENT_CAT_ID' => ! empty($category['id_uppercat']) ? $category['id_uppercat'] : 0,
-        'CAT_ID' => $category['id'],
-        'CAT_NAME' => @htmlspecialchars((string) $category['name']),
-        'CAT_COMMENT' => @htmlspecialchars((string) $category['comment']),
+        'PARENT_CAT_ID' => ! empty($category_id_uppercat) ? $category_id_uppercat : 0,
+        'CAT_ID' => $category_id,
+        'CAT_NAME' => @htmlspecialchars(is_string($category['name']) ? $category['name'] : ''),
+        'CAT_COMMENT' => @htmlspecialchars(is_string($category['comment']) ? $category['comment'] : ''),
         'IS_VISIBLE' => boolean_to_string($category['visible']),
-        'CAT_ADMIN_ACCESS' => cat_admin_access($category['id']),
+        'CAT_ADMIN_ACCESS' => cat_admin_access($category_id),
 
         'U_DELETE' => $base_url . 'albums',
 
@@ -196,10 +225,10 @@ $template->assign(
             ]
         ),
 
-        'U_ADD_PHOTOS_ALBUM' => $base_url . 'photos_add&amp;album=' . $category['id'],
-        'U_CHILDREN' => $cat_list_url . '&amp;parent_id=' . $category['id'],
-        'U_MOVE' => $base_url . 'albums&amp;parent_id=' . $category['id'],
-        'U_ACTIVITY' => get_root_url() . 'admin.php?page=user_activity&album=' . $category['id'],
+        'U_ADD_PHOTOS_ALBUM' => $base_url . 'photos_add&amp;album=' . $category_id,
+        'U_CHILDREN' => $cat_list_url . '&amp;parent_id=' . $category_id,
+        'U_MOVE' => $base_url . 'albums&amp;parent_id=' . $category_id,
+        'U_ACTIVITY' => get_root_url() . 'admin.php?page=user_activity&album=' . $category_id,
     ]
 );
 
@@ -213,7 +242,7 @@ $info_title = '';
 if ($category['has_images']) {
     $template->assign(
         'U_MANAGE_ELEMENTS',
-        $base_url . 'batch_manager&amp;filter=album-' . $category['id']
+        $base_url . 'batch_manager&amp;filter=album-' . $category_id
     );
 
     $query = '
@@ -223,11 +252,11 @@ SELECT
     MAX(DATE(date_available))
   FROM ' . IMAGES_TABLE . '
     JOIN ' . IMAGE_CATEGORY_TABLE . ' ON image_id = id
-  WHERE category_id = ' . $category['id'] . '
+  WHERE category_id = ' . $category_id . '
 ;';
     $row = pwg_db_fetch_row(pwg_query($query));
     if (! is_array($row)) {
-        throw new Exception("cat_modify.php: aggregate photo count/date query returned no row for category #{$category['id']}");
+        throw new Exception("cat_modify.php: aggregate photo count/date query returned no row for category #{$category_id}");
     }
     [$image_count, $min_date, $max_date] = $row;
     // date_available is a NOT NULL column but the driver still types every
@@ -279,7 +308,7 @@ $category['nb_images_recursive'] = count($image_ids_recursive);
 $query = '
 SELECT occured_on
   FROM `' . ACTIVITY_TABLE . '`
-  WHERE object_id = ' . $category['id'] . '
+  WHERE object_id = ' . $category_id . '
     AND object = "album"
     AND action = "add"
 ';
@@ -302,7 +331,7 @@ if (count($result) > 0) {
 $query = '
 SELECT COUNT(*)
   FROM `' . CATEGORIES_TABLE . '`
-  WHERE id_uppercat = ' . $category['id'] . '
+  WHERE id_uppercat = ' . $category_id . '
 ';
 $result = query2array($query);
 
@@ -315,11 +344,15 @@ $template->assign(
     ]
 );
 
+// lastmodified is a NOT NULL DATETIME column, but the driver still types
+// every fetched value as string|null; narrow with real fallbacks (matching
+// the min_date/max_date/occured_on pattern above) rather than assuming.
+$category_lastmodified = is_string($category['lastmodified']) ? $category['lastmodified'] : null;
 $template->assign(
     [
-        'INFO_ID' => l10n('Numeric identifier : %d', $category['id']),
-        'INFO_LAST_MODIFIED_SINCE' => time_since($category['lastmodified'], 'minute', $format = null, $with_text = true, $with_week = true, $only_last_unit = true),
-        'INFO_LAST_MODIFIED' => format_date($category['lastmodified'], ['day', 'month', 'year']),
+        'INFO_ID' => l10n('Numeric identifier : %d', $category_id),
+        'INFO_LAST_MODIFIED_SINCE' => time_since($category_lastmodified ?? '', 'minute', $format = null, $with_text = true, $with_week = true, $only_last_unit = true),
+        'INFO_LAST_MODIFIED' => format_date($category_lastmodified ?? false, ['day', 'month', 'year']),
         'INFO_IMAGES_RECURSIVE' => l10n(
             '%d including sub-albums',
             $category['nb_images_recursive']
@@ -334,7 +367,7 @@ $template->assign(
 );
 
 $template->assign([
-    'U_MANAGE_RANKS' => $base_url . 'element_set_ranks&amp;cat_id=' . $category['id'],
+    'U_MANAGE_RANKS' => $base_url . 'element_set_ranks&amp;cat_id=' . $category_id,
     'CACHE_KEYS' => get_admin_client_cache_keys(['categories']),
 ]);
 
@@ -352,39 +385,45 @@ if (! $category['is_virtual']) {
     if ($conf['enable_synchronization']) {
         $template->assign(
             'U_SYNC',
-            $base_url . 'site_update&amp;site=' . $category['site_id'] . '&amp;cat_id=' . $category['id']
+            $base_url . 'site_update&amp;site=' . (is_string($category['site_id']) ? $category['site_id'] : '') . '&amp;cat_id=' . $category_id
         );
     }
 
 }
 
 // representant management
-if ($category['has_images'] or ! empty($category['representative_picture_id'])) {
+// 'representative_picture_id' is a nullable FK column; the driver types it
+// string|null (never int, even though the referenced images.id is an int
+// PK), so narrow with a real fallback rather than assuming.
+$category_representative_picture_id = is_string($category['representative_picture_id']) ? $category['representative_picture_id'] : 0;
+if ($category['has_images'] or ! empty($category_representative_picture_id)) {
     $tpl_representant = [];
 
     // picture to display : the identified representant or the generic random
     // representant ?
-    if (! empty($category['representative_picture_id'])) {
-        $tpl_representant['picture'] = get_category_representant_properties($category['representative_picture_id'], IMG_MEDIUM);
+    if (! empty($category_representative_picture_id)) {
+        $tpl_representant['picture'] = get_category_representant_properties($category_representative_picture_id, IMG_MEDIUM);
     }
 
     // can the admin choose to set a new random representant ?
     $tpl_representant['ALLOW_SET_RANDOM'] = ($category['has_images'] ? true : false);
 
     // can the admin delete the current representant ?
+    // the outer `if` above already guarantees
+    // !empty($category_representative_picture_id) whenever
+    // !$category['has_images'], since that's the only way its own
+    // has_images-or-!empty(...) condition could be true here.
     if (
         ($category['has_images']
          and $conf['allow_random_representative'])
-        or
-        (! $category['has_images']
-         and ! empty($category['representative_picture_id']))) {
+        or ! $category['has_images']) {
         $tpl_representant['ALLOW_DELETE'] = true;
     }
     $template->assign('representant', $tpl_representant);
 }
 
 if ($category['is_virtual']) {
-    $template->assign('parent_category', empty($category['id_uppercat']) ? [] : [$category['id_uppercat']]);
+    $template->assign('parent_category', empty($category_id_uppercat) ? [] : [$category_id_uppercat]);
 }
 
 $template->assign('PWG_TOKEN', get_pwg_token());

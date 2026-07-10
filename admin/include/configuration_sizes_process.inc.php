@@ -14,7 +14,12 @@ if (! defined('PHPWG_ROOT_PATH')) {
 }
 
 // Bootstrap globals, set by include/common.inc.php.
-global $conf, $template, $page;
+/** @var array<string, mixed> $conf */
+global $conf;
+/** @var \Template $template */
+global $template;
+/** @var array<string, mixed> $page */
+global $page;
 
 if (! is_webmaster()) {
     return;
@@ -37,7 +42,25 @@ foreach ($original_fields as $field) {
     $updates[$field] = $value;
 }
 
-save_upload_form_config($updates, $page['errors'], $errors);
+// $page['errors'] is only known to be array<string, mixed> one level deep;
+// narrow the nested value to array<int, string> before passing it by
+// reference into save_upload_form_config() (same filter-into-a-fresh-array
+// pattern as $pderivatives below), then write the possibly-appended-to
+// result back so callers of this include still see the errors.
+$page_errors_raw = $page['errors'] ?? null;
+/** @var array<int, string> $page_errors */
+$page_errors = [];
+if (is_array($page_errors_raw)) {
+    foreach ($page_errors_raw as $page_error) {
+        if (is_string($page_error)) {
+            $page_errors[] = $page_error;
+        }
+    }
+}
+
+save_upload_form_config($updates, $page_errors, $errors);
+
+$page['errors'] = $page_errors;
 
 if ($_POST['resize_quality'] < 50 or $_POST['resize_quality'] > 98) {
     $errors['resize_quality'] = '[50..98]';

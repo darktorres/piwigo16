@@ -22,7 +22,7 @@ abstract class PersistentCache
      * @param array<int|string, mixed>|string $key
      * @return string a key that can be safely be used with get/set methods
      */
-    public function make_key(array|string $key)
+    public function make_key(array|string $key): string
     {
         if (is_array($key)) {
             $parts = array_map(
@@ -68,8 +68,11 @@ class PersistentFileCache extends PersistentCache
 
     public function __construct()
     {
+        /** @var array<string, mixed> $conf */
         global $conf;
-        $this->dir = PHPWG_ROOT_PATH . $conf['data_location'] . 'cache/';
+        $data_location = $conf['data_location'];
+        $data_location = is_string($data_location) ? $data_location : '';
+        $this->dir = PHPWG_ROOT_PATH . $data_location . 'cache/';
     }
 
     public function get($key, mixed &$value): bool

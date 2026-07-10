@@ -14,6 +14,12 @@ declare(strict_types=1);
  */
 
 // Bootstrap globals, set by include/common.inc.php.
+/**
+ * @var array<string, mixed> $conf
+ * @var array<string, mixed> $page
+ * @var \Template $template
+ * @var array<string, mixed> $user
+ */
 global $conf, $page, $template, $user;
 
 check_input_parameter('group', $_GET, false, PATTERN_ID);
@@ -97,14 +103,24 @@ if (! is_array($default_user)) {
     fatal_error('Default user not found');
 }
 
+// conf's guest_id/default_user_id/webmaster_id are always scalar (raw DB
+// fetch value or int config default -- same normalization already used by
+// functions.inc.php's get_webmaster_mail_address() and build_user()).
+$guest_id = $conf['guest_id'];
+$guest_id = is_numeric($guest_id) ? (int) $guest_id : 0;
+$default_user_id = $conf['default_user_id'];
+$default_user_id = is_numeric($default_user_id) ? (int) $default_user_id : 0;
+$webmaster_id = $conf['webmaster_id'];
+$webmaster_id = is_numeric($webmaster_id) ? (int) $webmaster_id : 0;
+
 $protected_users = [
     $user['id'],
-    $conf['guest_id'],
-    $conf['default_user_id'],
-    $conf['webmaster_id'],
+    $guest_id,
+    $default_user_id,
+    $webmaster_id,
 ];
 
-$password_protected_users = [$conf['guest_id']];
+$password_protected_users = [$guest_id];
 
 // an admin can't delete other admin/webmaster
 if ($user['status'] == 'admin') {
@@ -118,18 +134,38 @@ SELECT
 
     $protected_users = array_merge($protected_users, $admin_ids);
 
+    // user_infos.id (primary key, NOT NULL): a raw DB fetch value is a
+    // numeric string, build_user() may also set it as int -- either way
+    // it's always scalar and string-castable (same invariant as the
+    // equivalent block in functions_user.inc.php's ws_users_setInfo()).
+    $current_user_id = $user['id'];
+    $current_user_id = is_scalar($current_user_id) ? (string) $current_user_id : '0';
+
     // we add all admin+webmaster users BUT the user herself
-    $password_protected_users = array_merge($password_protected_users, array_diff($admin_ids, [$user['id']]));
+    $password_protected_users = array_merge($password_protected_users, array_diff($admin_ids, [$current_user_id]));
 }
+
+// user_fields is a string=>string map (see config_default.inc.php's
+// $conf['user_fields']); same invariant relied on by
+// functions_user.inc.php's ws_users_setInfo().
+/** @var array<string, string> $user_fields */
+$user_fields = $conf['user_fields'];
 
 $query = '
 SELECT
-    ' . $conf['user_fields']['username'] . ' AS username
+    ' . $user_fields['username'] . ' AS username
     FROM ' . USERS_TABLE . '
-    WHERE ' . $conf['user_fields']['id'] . ' = ' . $conf['webmaster_id'] . '
+    WHERE ' . $user_fields['id'] . ' = ' . $webmaster_id . '
 ;';
 
 $owner_username = query2array($query, null, 'username');
+
+// protected_users/password_protected_users mix $user['id'], several $conf
+// ids (already normalized to int above) and $admin_ids (query2array
+// user_id values, always numeric strings from a NOT NULL primary key);
+// stringify for implode() below.
+$protected_users = array_map('strval', array_filter($protected_users, 'is_scalar'));
+$password_protected_users = array_map('strval', array_filter($password_protected_users, 'is_scalar'));
 
 $template->assign(
     [
@@ -144,12 +180,12 @@ $template->assign(
         'association_options' => $groups,
         'protected_users' => implode(',', array_unique($protected_users)),
         'password_protected_users' => implode(',', array_unique($password_protected_users)),
-        'guest_user' => $conf['guest_id'],
+        'guest_user' => $guest_id,
         'filter_group' => ($_GET['group'] ?? null),
         'search_input' => ((isset($_GET['user_id']) && is_string($_GET['user_id'])) ? 'id:' . $_GET['user_id'] : null),
         'connected_user' => $user['id'],
         'connected_user_status' => $user['status'],
-        'owner' => $conf['webmaster_id'],
+        'owner' => $webmaster_id,
         'owner_username' => $owner_username[0],
     ]
 );
@@ -169,7 +205,7 @@ SELECT
     status,
     COUNT(*) AS nb_users_of
   FROM ' . USER_INFOS_TABLE . '
-  WHERE user_id != ' . $conf['guest_id'] . '
+  WHERE user_id != ' . $guest_id . '
   GROUP BY status
 ';
 
@@ -202,8 +238,17 @@ $template->assign('pref_status_selected', 'normal');
 $template->assign('nb_users_by_status', $nb_users_by_status);
 
 // user level options
+// $conf['available_permission_levels'] defaults to [0, 1, 2, 4, 8] (see
+// include/config_default.inc.php), always a list of ints -- same invariant
+// relied on by functions.inc.php's get_privacy_level_options().
+$available_permission_levels = $conf['available_permission_levels'];
+$available_permission_levels = is_array($available_permission_levels) ? $available_permission_levels : [];
+
 $level_options = [];
-foreach ($conf['available_permission_levels'] as $level) {
+foreach ($available_permission_levels as $level) {
+    if (! is_int($level)) {
+        continue;
+    }
     $level_options[$level] = l10n(sprintf('Level %d', $level));
 }
 
@@ -212,7 +257,7 @@ SELECT
     level,
     COUNT(*) AS nb_users_of
   FROM ' . USER_INFOS_TABLE . '
-  WHERE user_id != ' . $conf['guest_id'] . '
+  WHERE user_id != ' . $guest_id . '
   GROUP BY level
 ';
 
@@ -250,7 +295,7 @@ while ($row = pwg_db_fetch_assoc($result)) {
 
 $template->assign('groups_arr_id', implode(',', $groups_arr_id));
 $template->assign('groups_arr_name', implode(',', $groups_arr_name));
-$template->assign('guest_id', $conf['guest_id']);
+$template->assign('guest_id', $guest_id);
 
 $template->assign('view_selector', userprefs_get_param('user-manager-view', 'line'));
 
@@ -280,7 +325,15 @@ function webmaster_id_is_local(): mixed
 }
 
 if (webmaster_id_is_local()) {
-    $page['warnings'][] = l10n('You have specified <i>$conf[\'webmaster_id\']</i> in your local configuration file, this parameter in deprecated, please remove it!');
+    // include/common.inc.php seeds $page['warnings'] as [] -- always an
+    // array; defensively re-initialized here in case that invariant is
+    // ever broken by a prior include.
+    $page_warnings = $page['warnings'] ?? [];
+    if (! is_array($page_warnings)) {
+        $page_warnings = [];
+    }
+    $page_warnings[] = l10n('You have specified <i>$conf[\'webmaster_id\']</i> in your local configuration file, this parameter in deprecated, please remove it!');
+    $page['warnings'] = $page_warnings;
 }
 // +-----------------------------------------------------------------------+
 // | html code display                                                     |

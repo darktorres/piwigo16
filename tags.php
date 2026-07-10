@@ -17,7 +17,12 @@ define('PHPWG_ROOT_PATH', './');
 include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 
 // Bootstrap globals, set by include/common.inc.php.
-global $conf, $template;
+/**
+ * @var array<string, mixed> $conf
+ * @var array<string, mixed> $page
+ * @var \Template $template
+ */
+global $conf, $page, $template;
 
 check_status(ACCESS_GUEST);
 
@@ -61,6 +66,8 @@ if ($page['display_mode'] == 'letters') {
     // we want tags diplayed in alphabetic order
     usort($tags, tag_alpha_compare(...));
 
+    $tag_letters_column_number = is_numeric($conf['tag_letters_column_number']) ? (int) $conf['tag_letters_column_number'] : 4;
+
     $current_letter = null;
     $nb_tags = count($tags);
     $current_column = 1;
@@ -84,8 +91,8 @@ if ($page['display_mode'] == 'letters') {
 
         // lettre precedente differente de la lettre suivante
         if ($tag_letter !== $current_letter) {
-            if ($current_column < $conf['tag_letters_column_number']
-                and $current_tag_idx > $current_column * $nb_tags / $conf['tag_letters_column_number']) {
+            if ($current_column < $tag_letters_column_number
+                and $current_tag_idx > $current_column * $nb_tags / $tag_letters_column_number) {
                 $letter['CHANGE_COLUMN'] = true;
                 $current_column++;
             }
@@ -132,7 +139,8 @@ if ($page['display_mode'] == 'letters') {
     // we want only the first most represented tags, so we sort them by counter
     // and take the first tags
     usort($tags, tags_counter_compare(...));
-    $tags = array_slice($tags, 0, $conf['full_tag_cloud_items_number']);
+    $full_tag_cloud_items_number = is_numeric($conf['full_tag_cloud_items_number']) ? (int) $conf['full_tag_cloud_items_number'] : 200;
+    $tags = array_slice($tags, 0, $full_tag_cloud_items_number);
 
     // depending on its counter and the other tags counter, each tag has a level
     $tags = add_level_to_tags($tags);
@@ -159,7 +167,8 @@ if ($page['display_mode'] == 'letters') {
 }
 // include menubar
 $themeconf = $template->get_template_vars('themeconf');
-if (! isset($themeconf['hide_menu_on']) or ! in_array('theTagsPage', $themeconf['hide_menu_on'])) {
+$themeconf = is_array($themeconf) ? $themeconf : [];
+if (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('theTagsPage', $themeconf['hide_menu_on'])) {
     include PHPWG_ROOT_PATH . 'include/menubar.inc.php';
 }
 

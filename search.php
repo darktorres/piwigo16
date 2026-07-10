@@ -15,6 +15,10 @@ include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 include_once PHPWG_ROOT_PATH . 'include/functions_search.inc.php';
 
 // Bootstrap globals, set by include/common.inc.php.
+/**
+ * @var array<string, mixed> $conf
+ * @var array<string, mixed> $user
+ */
 global $conf, $user;
 
 // +-----------------------------------------------------------------------+
@@ -105,12 +109,21 @@ if (isset($_GET['cat_id'])) {
 
     $cat_id = (string) $cat_id_value;
 
+    // $user['id'] is always numeric here: build_user() (include/user.inc.php)
+    // sets it to an int derived from $conf['guest_id'] or the session user
+    // id; this is a defensive narrowing to satisfy the SQL query below,
+    // matching the guest_id fallback pattern used in build_user()'s caller.
+    $user_id_raw = $user['id'] ?? null;
+    $guest_id = $conf['guest_id'];
+    $guest_id_str = is_scalar($guest_id) ? (string) $guest_id : '2';
+    $user_id = is_numeric($user_id_raw) ? (string) $user_id_raw : $guest_id_str;
+
     $query = '
 SELECT
     *
   FROM ' . USER_CACHE_CATEGORIES_TABLE . '
   WHERE cat_id = ' . $cat_id . '
-    AND user_id = ' . $user['id'] . '
+    AND user_id = ' . $user_id . '
 ;';
     $found_categories = query2array($query);
     if (empty($found_categories)) {

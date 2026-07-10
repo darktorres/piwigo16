@@ -10,6 +10,10 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 // Bootstrap globals, set by include/common.inc.php.
+/**
+ * @var array<string, mixed> $conf
+ * @var array<string, mixed> $user
+ */
 global $conf, $user;
 
 // The "No Photo Yet" feature: if you have no photo yet in your gallery, the
@@ -35,7 +39,9 @@ SELECT
     if ($nb_photos == 0) {
         // make sure we don't use the mobile theme, which is not compatible with
         // the "no photo yet" feature
-        $template = new Template(PHPWG_ROOT_PATH . 'themes', $user['theme']);
+        $user_theme = $user['theme'] ?? null;
+        $user_theme = is_string($user_theme) ? $user_theme : get_default_theme();
+        $template = new Template(PHPWG_ROOT_PATH . 'themes', $user_theme);
 
         if (isset($_GET['no_photo_yet'])) {
             if ($_GET['no_photo_yet'] == 'browse') {
@@ -56,7 +62,8 @@ SELECT
 
         if (is_admin()) {
             $url = $conf['no_photo_yet_url'];
-            if (! str_starts_with((string) $url, 'http')) {
+            $url = is_string($url) ? $url : '';
+            if (! str_starts_with($url, 'http')) {
                 $url = get_root_url() . $url;
             }
 

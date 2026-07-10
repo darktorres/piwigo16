@@ -50,6 +50,7 @@ final class SrcImage
     public function __construct(
         array $infos
     ) {
+        /** @var array<string, mixed> $conf */
         global $conf;
 
         // images.id/.path/.file are all NOT NULL DB columns, but every
@@ -66,7 +67,9 @@ final class SrcImage
         // handling of a missing/non-string key is preserved via `?? null`.
         $representative_ext_raw = $infos['representative_ext'] ?? null;
         $representative_ext = is_string($representative_ext_raw) ? $representative_ext_raw : '';
-        if (in_array($ext, $conf['picture_ext'])) {
+        // $conf['picture_ext'] is always a string[] set by config_default.inc.php.
+        $picture_ext = is_array($conf['picture_ext']) ? $conf['picture_ext'] : [];
+        if (in_array($ext, $picture_ext)) {
             $this->rel_path = $path;
             $this->flags |= self::IS_ORIGINAL;
         } elseif (! empty($representative_ext)) {
@@ -365,6 +368,7 @@ final class DerivativeImage
 
         $rel_path = PWG_DERIVATIVE_DIR . $loc;
 
+        /** @var array<string, mixed> $conf */
         global $conf;
         $url_style = $conf['derivative_url_style'];
         if (! $url_style) {

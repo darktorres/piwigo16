@@ -276,8 +276,7 @@ class PwgRestEncoder extends PwgResponseEncoder
                     ->write_content($data);
                 break;
             case 'array':
-                $is_array = range(0, count($data) - 1) === array_keys($data);
-                if ($is_array) {
+                if (array_is_list($data)) {
                     $this->encode_array($data, 'item');
                 } else {
                     $this->encode_struct($data, false, $xml_attributes);

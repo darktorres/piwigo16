@@ -55,9 +55,15 @@ function wsListedUsers(array $response): array
 
     $out = [];
     foreach ($users as $user) {
-        if (is_array($user)) {
-            $out[] = $user;
+        if (!is_array($user)) {
+            continue;
         }
+
+        // pwg.users.getList rows are JSON objects keyed by field name
+        // (id, username, email, status, ...), so decoding always yields
+        // string keys here.
+        /** @var array<string, mixed> $user */
+        $out[] = $user;
     }
 
     return $out;

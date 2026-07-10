@@ -10,6 +10,10 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 // Bootstrap globals, set by include/common.inc.php.
+/**
+ * @var array<string, mixed> $conf
+ * @var array<string, mixed> $user
+ */
 global $conf, $user;
 // Set by include/ws_init.inc.php, included conditionally below.
 global $service;
@@ -72,6 +76,7 @@ if (
         $authenticate = auth_key_login($auth_header, true);
         if (! $authenticate) {
             include_once PHPWG_ROOT_PATH . 'include/ws_init.inc.php';
+            /** @var \PwgServer $service */
             $service->sendResponse(new PwgError(401, 'Invalid api_key'));
             exit;
         }
@@ -81,6 +86,7 @@ if (
         $_POST['pwg_token'] = $_GET['pwg_token'] = get_pwg_token();
 
         // logger
+        /** @var \Logger $logger */
         global $logger;
         $logger->info('[api_key][pkid=' . explode(':', (string) $auth_header)[0] . '][method=' . $_REQUEST['method'] . ']');
     }
@@ -101,6 +107,7 @@ if (
         'password' => $_POST['password'],
     ];
 
+    /** @var \PwgServer $service */
     $login = ws_session_login($credentials, $service);
 
     if ($login !== true) {
@@ -110,19 +117,31 @@ if (
     $_SESSION['connected_with'] = 'pwg.images.uploadAsync';
 }
 
-$page['user_use_cache'] = true;
+$user_use_cache = true;
 if (defined('IN_ADMIN') and IN_ADMIN) {
-    $page['user_use_cache'] = false;
+    $user_use_cache = false;
 } elseif (
     isset($_REQUEST['method'])
     and isset($_SERVER['HTTP_REFERER'])
     and is_string($_SERVER['HTTP_REFERER'])
     and preg_match('/\/admin\.php\?page=/', $_SERVER['HTTP_REFERER'])
 ) {
-    $page['user_use_cache'] = false;
+    $user_use_cache = false;
 }
+/** @var array<string, mixed> $page */
+$page['user_use_cache'] = $user_use_cache;
 
-$user = build_user($user['id'], $page['user_use_cache']);
+// $user['id'] is always numeric here (either $conf['guest_id'], a
+// $_SESSION['pwg_uid'] set by a prior login, or the int|false result of
+// get_userid()/register_user() coerced above); the is_numeric() check is a
+// defensive narrowing to satisfy build_user()'s int $user_id, matching the
+// guest_id fallback already used earlier in this file.
+$user_id = $user['id'];
+$guest_id = $conf['guest_id'];
+$guest_id_int = is_numeric($guest_id) ? (int) $guest_id : 2;
+$user_id_int = is_numeric($user_id) ? (int) $user_id : $guest_id_int;
+
+$user = build_user($user_id_int, $user_use_cache);
 
 if ($conf['browser_language'] and (is_a_guest() or is_generic()) and $language = get_browser_language()) {
     $user['language'] = $language;

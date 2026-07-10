@@ -46,11 +46,14 @@ function rank_compare(array $a, array $b): int
  */
 function check_restrictions($category_id): void
 {
+    /** @var array<string, mixed> $user */
     global $user;
 
     // $filter['visible_categories'] and $filter['visible_images']
     // are not used because it's not necessary (filter <> restriction)
-    if (in_array($category_id, explode(',', (string) $user['forbidden_categories']))) {
+    $forbidden_categories = $user['forbidden_categories'] ?? null;
+    $forbidden_categories_str = is_scalar($forbidden_categories) ? (string) $forbidden_categories : '';
+    if (in_array($category_id, explode(',', $forbidden_categories_str))) {
         access_denied();
     }
 }
@@ -62,7 +65,21 @@ function check_restrictions($category_id): void
  */
 function get_categories_menu(): array
 {
+    /**
+     * @var array<string, mixed> $page
+     * @var array<string, mixed> $user
+     * @var array<string, mixed> $filter
+     * @var array<string, mixed> $conf
+     */
     global $page, $user, $filter, $conf;
+
+    $user_id = $user['id'] ?? null;
+    $user_id_str = is_scalar($user_id) ? (string) $user_id : '0';
+
+    // category currently displayed, if any; narrowed once here and reused
+    // at every nested-offset access site below (see fix pattern #4/#7)
+    $category_page_raw = $page['category'] ?? null;
+    $category_page = is_array($category_page_raw) ? $category_page_raw : null;
 
     $query = '
 SELECT ';
@@ -76,14 +93,15 @@ SELECT ';
     // $user['forbidden_categories'] including with USER_CACHE_CATEGORIES_TABLE
     $query .= '
 FROM ' . CATEGORIES_TABLE . ' INNER JOIN ' . USER_CACHE_CATEGORIES_TABLE . '
-  ON id = cat_id and user_id = ' . $user['id'];
+  ON id = cat_id and user_id = ' . $user_id_str;
 
     // Always expand when filter is activated
     if (! $user['expand'] and ! $filter['enabled']) {
         $where = '
 (id_uppercat is NULL';
-        if (isset($page['category'])) {
-            $where .= ' OR id_uppercat IN (' . $page['category']['uppercats'] . ')';
+        if ($category_page !== null) {
+            $uppercats = $category_page['uppercats'] ?? null;
+            $where .= ' OR id_uppercat IN (' . (is_scalar($uppercats) ? (string) $uppercats : '') . ')';
         }
         $where .= ')';
     } else {
@@ -111,7 +129,7 @@ WHERE ' . $where . '
 
     $result = pwg_query($query);
     $cats = [];
-    $selected_category = $page['category'] ?? null;
+    $selected_category = $category_page;
     while ($row = pwg_db_fetch_assoc($result)) {
         $child_date_last = @$row['max_date_last'] > @$row['date_last'];
         $row = array_merge(
@@ -133,8 +151,8 @@ WHERE ' . $where . '
                     'category' => $row,
                 ]),
                 'LEVEL' => substr_count((string) $row['global_rank'], '.') + 1,
-                'SELECTED' => ($selected_category !== null && $selected_category['id'] == $row['id']) ? true : false,
-                'IS_UPPERCAT' => ($selected_category !== null && $selected_category['id_uppercat'] == $row['id']) ? true : false,
+                'SELECTED' => ($selected_category !== null && ($selected_category['id'] ?? null) == $row['id']) ? true : false,
+                'IS_UPPERCAT' => ($selected_category !== null && ($selected_category['id_uppercat'] ?? null) == $row['id']) ? true : false,
             ]
         );
         if ($conf['index_new_icon']) {
@@ -142,8 +160,10 @@ WHERE ' . $where . '
             $row['icon_ts'] = get_icon(is_string($max_date_last) ? $max_date_last : '', $child_date_last);
         }
         $cats[] = $row;
-        if ($row['id'] == @$page['category']['id']) { // save the number of subcats for later optim
-            $page['category']['count_categories'] = $row['count_categories'];
+        if ($category_page !== null && ($category_page['id'] ?? null) == $row['id']) { // save the number of subcats for later optim
+            if (is_array($page['category'] ?? null)) {
+                $page['category']['count_categories'] = $row['count_categories'];
+            }
         }
     }
     usort($cats, global_rank_compare(...));
@@ -219,6 +239,7 @@ SELECT *
  */
 function get_category_preferred_image_orders()
 {
+    /** @var array<string, mixed> $conf */
     global $conf, $page;
 
     $orders = trigger_change('get_category_preferred_image_orders', [
@@ -267,6 +288,7 @@ function display_select_categories(
     $blockname,
     $fullname = true
 ): void {
+    /** @var Template $template */
     global $template;
 
     $tpl_cats = [];
@@ -327,7 +349,7 @@ function display_select_cat_wrapper(
  * @param array<int|string> $ids several callers (comments.php, admin/rating.php)
  *   wrap a raw, unvalidated $_GET value directly — the is_numeric() check
  *   below is a real guard, not dead code
- * @return int[]
+ * @return list<int> array_values() below always reindexes the result
  */
 function get_subcat_ids($ids): array
 {
@@ -669,6 +691,7 @@ function remove_computed_category(array &$cats, array $cat): void
  */
 function get_image_ids_for_categories($cat_ids, $mode = 'AND', $extra_images_where_sql = '', $order_by = '', bool $use_permissions = true): array
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     if (empty($cat_ids)) {
@@ -699,7 +722,9 @@ SELECT id
         $query .= '
   HAVING COUNT(DISTINCT category_id)=' . count($cat_ids);
     }
-    $query .= "\n" . (empty($order_by) ? $conf['order_by'] : $order_by);
+    $order_by_conf = $conf['order_by'] ?? null;
+    $order_by_conf_str = is_scalar($order_by_conf) ? (string) $order_by_conf : '';
+    $query .= "\n" . (empty($order_by) ? $order_by_conf_str : $order_by);
 
     $ids = query2array($query, null, 'id');
 
@@ -776,11 +801,18 @@ SELECT
  */
 function get_related_categories_menu($items, $excluded_cat_ids = []): array
 {
+    /**
+     * @var array<string, mixed> $page
+     * @var array<string, mixed> $conf
+     */
     global $page, $conf;
+
+    $related_albums_display_limit = $conf['related_albums_display_limit'] ?? null;
+    $related_albums_display_limit_int = is_numeric($related_albums_display_limit) ? (int) $related_albums_display_limit : null;
 
     $common_cats = get_common_categories(
         array_map(intval(...), $items),
-        $conf['related_albums_display_limit'],
+        $related_albums_display_limit_int,
         array_map(intval(...), $excluded_cat_ids)
     );
     // echo '<pre>'; print_r($common_cats); echo '</pre>';
@@ -831,8 +863,9 @@ SELECT
                 $url_params['category'] = $page['category'];
 
                 $url_params['combined_categories'] = [$cat];
-                if (isset($page['combined_categories'])) {
-                    $url_params['combined_categories'] = array_merge($page['combined_categories'], [$cat]);
+                $combined_categories = $page['combined_categories'] ?? null;
+                if (is_array($combined_categories)) {
+                    $url_params['combined_categories'] = array_merge($combined_categories, [$cat]);
                 }
             } else {
                 $url_params['category'] = $cat;

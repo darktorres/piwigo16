@@ -10,6 +10,11 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 // Bootstrap globals, set by include/common.inc.php.
+/**
+ * @var array<string, mixed> $conf
+ * @var \Template $template
+ * @var array<string, mixed> $user
+ */
 global $conf, $template, $user;
 
 /**
@@ -92,6 +97,16 @@ $bulk_manager_filter = isset($_SESSION['bulk_manager_filter']) && is_array($_SES
 // $page['prefilter'] is a shortcut to test if the current filter contains a
 // given prefilter. The idea is to make conditions simpler to write in the
 // code.
+//
+// $page is bootstrap-initialized by include/common.inc.php (always run
+// before this file) with 'infos'/'errors'/'warnings' pre-populated as empty
+// arrays; this file only ever appends to those three keys (never reassigns
+// them wholesale), so the invariant holds for every use below. PHPStan
+// can't see across the include boundary, hence the explicit narrowing.
+/** @var array<string, mixed> $page */
+assert(is_array($page['errors']));
+assert(is_array($page['infos']));
+assert(is_array($page['warnings']));
 $page['prefilter'] = 'none';
 if (isset($bulk_manager_filter['prefilter'])) {
     $page['prefilter'] = $bulk_manager_filter['prefilter'];
@@ -111,6 +126,11 @@ if (isset($_POST['submit'])) {
     $redirect = false;
 
     if ($action == 'remove_from_caddie') {
+        // $user['id'] is always numeric: include/user.inc.php (part of the
+        // include/common.inc.php bootstrap that always runs before this
+        // file) sets it from $conf['guest_id'], $_SESSION['pwg_uid'], or
+        // get_userid()/register_user(), all of which are ints.
+        assert(is_numeric($user['id']));
         $query = '
 DELETE
   FROM ' . CADDIE_TABLE . '
@@ -441,13 +461,21 @@ include PHPWG_ROOT_PATH . 'admin/include/batch_manager_filters.inc.php';
 // +-----------------------------------------------------------------------+
 $template->assign('IN_CADDIE', $page['prefilter'] == 'caddie');
 
+// $page['cat_elements_id'] is always set (a list of scalar image ids) by
+// admin/batch_manager.php (which includes this file) before this file runs;
+// PHPStan cannot see across that include boundary, so we narrow it once here
+// for every downstream use in this file.
+$cat_elements_id = is_array($page['cat_elements_id'])
+    ? array_map('intval', array_filter($page['cat_elements_id'], 'is_numeric'))
+    : [];
+
 // +-----------------------------------------------------------------------+
 // |                           global mode form                            |
 // +-----------------------------------------------------------------------+
 
-if (count($page['cat_elements_id']) > 0) {
+if (count($cat_elements_id) > 0) {
     // remove tags
-    $template->assign('associated_tags', get_common_tags($page['cat_elements_id'], -1));
+    $template->assign('associated_tags', get_common_tags($cat_elements_id, -1));
 }
 
 // creation date
@@ -496,7 +524,7 @@ $template->assign(
 // how many items to display on this page
 if (! empty($_GET['display'])) {
     if ($_GET['display'] == 'all') {
-        $page['nb_images'] = count($page['cat_elements_id']);
+        $page['nb_images'] = count($cat_elements_id);
     } else {
         $page['nb_images'] = is_numeric($_GET['display']) ? intval($_GET['display']) : 0;
     }
@@ -506,14 +534,23 @@ if (! empty($_GET['display'])) {
     $page['nb_images'] = 20;
 }
 
+// Locally-typed snapshot of $page['nb_images']/$page['start']. 'nb_images'
+// is always set to an int by the block above; 'start' is always set (0 or a
+// validated numeric $_REQUEST value) by admin/batch_manager.php (which
+// includes this file) before this file runs. $page's general
+// array<string, mixed> shape means PHPStan still sees these offsets as mixed
+// at the read sites below, so we narrow once here.
+$nb_images = is_numeric($page['nb_images']) ? (int) $page['nb_images'] : 20;
+$start = is_numeric($page['start']) ? (int) $page['start'] : 0;
+
 $nb_thumbs_page = 0;
 
-if (count($page['cat_elements_id']) > 0) {
+if (count($cat_elements_id) > 0) {
     $nav_bar = create_navigation_bar(
         $base_url . get_query_string_diff(['start']),
-        count($page['cat_elements_id']),
-        $page['start'],
-        $page['nb_images']
+        count($cat_elements_id),
+        $start,
+        $nb_images
     );
     $template->assign('navbar', $nav_bar);
 
@@ -529,8 +566,11 @@ if (count($page['cat_elements_id']) > 0) {
     // order by the fields that are used to find duplicates.
     if (isset($bulk_manager_filter['prefilter'])
         and $bulk_manager_filter['prefilter'] === 'duplicates'
-        and isset($duplicates_on_fields)) {
+        and isset($duplicates_on_fields) and is_array($duplicates_on_fields)) {
         // The $duplicates_on_fields variable is defined in ./batch_manager.php
+        // (always a list of column-name strings when set); PHPStan can't see
+        // across that include boundary, hence the is_array()/is_string() checks.
+        $duplicates_on_fields = array_filter($duplicates_on_fields, 'is_string');
         $order_by_fields = array_merge($duplicates_on_fields, ['id']);
         $conf['order_by'] = ' ORDER BY ' . join(', ', $order_by_fields);
     }
@@ -552,16 +592,22 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
     }
 
     $query .= '
-  WHERE id IN (' . implode(',', $page['cat_elements_id']) . ')';
+  WHERE id IN (' . implode(',', $cat_elements_id) . ')';
 
     if ($is_category) {
         $query .= '
     AND category_id = ' . $filter_category_id;
     }
 
+    // $conf['order_by'] is always a string here: it's either loaded verbatim
+    // from the piwigo_config DB table by load_conf_from_db() in
+    // include/common.inc.php (install/config.sql always inserts this row),
+    // or overwritten above with a string built from string concatenation.
+    $order_by = is_string($conf['order_by']) ? $conf['order_by'] : '';
+
     $query .= '
-  ' . $conf['order_by'] . '
-  LIMIT ' . $page['nb_images'] . ' OFFSET ' . $page['start'] . '
+  ' . $order_by . '
+  LIMIT ' . $nb_images . ' OFFSET ' . $start . '
 ;';
     $result = pwg_query($query);
 
@@ -598,7 +644,7 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
 
 $template->assign([
     'nb_thumbs_page' => $nb_thumbs_page,
-    'nb_thumbs_set' => count($page['cat_elements_id']),
+    'nb_thumbs_set' => count($cat_elements_id),
     'CACHE_KEYS' => get_admin_client_cache_keys(['tags', 'categories']),
 ]);
 

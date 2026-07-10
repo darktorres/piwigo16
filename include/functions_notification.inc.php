@@ -438,11 +438,19 @@ function news($start = null, $end = null, $exclude_img_cats = false, $add_url = 
  */
 function get_recent_post_dates($max_dates, $max_elements, $max_cats)
 {
+    /** @var array<string, mixed> $user */
     global $conf, $user, $persistent_cache;
+    if (! $persistent_cache instanceof PersistentCache) {
+        fatal_error('persistent cache not initialized');
+    }
 
-    $cache_key = $persistent_cache->make_key('recent_posts' . $user['id'] . $user['cache_update_time'] . $max_dates . $max_elements . $max_cats);
+    $user_id = $user['id'] ?? null;
+    $user_id = is_scalar($user_id) ? (string) $user_id : '';
+    $user_cache_update_time = $user['cache_update_time'] ?? null;
+    $user_cache_update_time = is_scalar($user_cache_update_time) ? (string) $user_cache_update_time : '';
+    $cache_key = $persistent_cache->make_key('recent_posts' . $user_id . $user_cache_update_time . $max_dates . $max_elements . $max_cats);
     if ($persistent_cache->get($cache_key, $cached)) {
-        return $cached;
+        return is_array($cached) ? $cached : [];
     }
     $where_sql = get_std_sql_where_restrict_filter('WHERE', 'i.id', true);
 
@@ -614,6 +622,7 @@ function get_html_description_recent_post_date(array $date_detail, $auth_key = n
  */
 function get_title_recent_post_date(array $date_detail): string
 {
+    /** @var array<string, mixed> $lang */
     global $lang;
 
     $nb_elements = $date_detail['nb_elements'] ?? null;
@@ -623,7 +632,11 @@ function get_title_recent_post_date(array $date_detail): string
     $date_available = $date_detail['date_available'] ?? null;
     $date_available = is_string($date_available) ? $date_available : '';
     if (preg_match('/^\d+-(\d+)-(\d+) /', $date_available, $matches)) {
-        $title .= ' (' . $lang['month'][(int) $matches[1]] . ' ' . $matches[2] . ')';
+        // $lang['month'] is the language file's month-index (1-12) to name map
+        $lang_month = is_array($lang['month'] ?? null) ? $lang['month'] : [];
+        $month_name = $lang_month[(int) $matches[1]] ?? '';
+        $month_name = is_string($month_name) ? $month_name : '';
+        $title .= ' (' . $month_name . ' ' . $matches[2] . ')';
     }
 
     return $title;

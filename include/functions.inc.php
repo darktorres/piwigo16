@@ -104,12 +104,15 @@ define('MKGETDIR_DEFAULT', MKGETDIR_RECURSIVE | MKGETDIR_DIE_ON_ERROR | MKGETDIR
 function mkgetdir($dir, $flags = MKGETDIR_DEFAULT): bool
 {
     if (! is_dir($dir)) {
+        /** @var array<string, mixed> $conf */
         global $conf;
         if (str_starts_with(PHP_OS, 'WIN')) {
             $dir = str_replace('/', DIRECTORY_SEPARATOR, $dir);
         }
         $umask = umask(0);
-        $mkd = @mkdir($dir, $conf['chmod_value'], ($flags & MKGETDIR_RECURSIVE) ? true : false);
+        $chmod_value = $conf['chmod_value'];
+        $chmod_value = is_numeric($chmod_value) ? (int) $chmod_value : 0755;
+        $mkd = @mkdir($dir, $chmod_value, ($flags & MKGETDIR_RECURSIVE) ? true : false);
         umask($umask);
         if ($mkd == false) {
             ! ($flags & MKGETDIR_DIE_ON_ERROR) or fatal_error("{$dir} " . l10n('no write access'));
@@ -490,6 +493,7 @@ SELECT id, name
  */
 function do_log($image_id = null, $image_type = null)
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     $do_log = $conf['log'];
@@ -517,20 +521,32 @@ function do_log($image_id = null, $image_type = null)
  */
 function pwg_log($image_id = null, $image_type = null, int|string|null $format_id = null): bool
 {
+    /**
+     * @var array<string, mixed> $conf
+     * @var array<string, mixed> $user
+     * @var array<string, mixed> $page
+     */
     global $conf, $user, $page;
 
+    $last_visit = $user['last_visit'] ?? null;
+    $last_visit_str = is_string($last_visit) ? $last_visit : (is_numeric($last_visit) ? (string) $last_visit : '');
+    $session_length = $conf['session_length'];
+    $session_length = is_numeric($session_length) ? (int) $session_length : 0;
+
     $update_last_visit = false;
-    if (empty($user['last_visit']) or strtotime((string) $user['last_visit']) < time() - $conf['session_length']) {
+    if (empty($last_visit) or strtotime($last_visit_str) < time() - $session_length) {
         $update_last_visit = true;
     }
     $update_last_visit = trigger_change('pwg_log_update_last_visit', $update_last_visit);
+
+    $user_id = is_numeric($user['id']) ? (int) $user['id'] : 0;
 
     if ($update_last_visit) {
         $query = '
 UPDATE ' . USER_INFOS_TABLE . '
   SET last_visit = NOW(),
       lastmodified = lastmodified
-  WHERE user_id = ' . $user['id'] . '
+  WHERE user_id = ' . $user_id . '
 ';
         pwg_query($query);
     }
@@ -539,9 +555,14 @@ UPDATE ' . USER_INFOS_TABLE . '
         return false;
     }
 
+    $page_section = $page['section'] ?? null;
+    $page_section = is_string($page_section) ? $page_section : null;
+
     $tags_string = null;
-    if (@$page['section'] == 'tags') {
-        $tags_string = implode(',', $page['tag_ids']);
+    if ($page_section === 'tags') {
+        $tag_ids = $page['tag_ids'] ?? [];
+        $tag_ids = is_array($tag_ids) ? array_filter($tag_ids, 'is_scalar') : [];
+        $tags_string = implode(',', $tag_ids);
 
         if (strlen($tags_string) > 50) {
             // we need to truncate, mysql won't accept a too long string
@@ -565,7 +586,7 @@ UPDATE ' . USER_INFOS_TABLE . '
     }
 
     // If plugin developers add their own sections, Piwigo will automatically add it in the history.section enum column
-    if (isset($page['section'])) {
+    if ($page_section !== null) {
         // set cache if not available
         if (! isset($conf['history_sections_cache'])) {
             conf_update_param('history_sections_cache', get_enums(HISTORY_TABLE, 'section'), true);
@@ -587,13 +608,13 @@ UPDATE ' . USER_INFOS_TABLE . '
         $conf['history_sections_cache'] = $history_sections_cache;
 
         if (
-            in_array($page['section'], $history_sections_cache)
-            or in_array(strtolower($page['section']), array_map(strtolower(...), $history_sections_cache))
+            in_array($page_section, $history_sections_cache)
+            or in_array(strtolower($page_section), array_map(strtolower(...), $history_sections_cache))
         ) {
-            $section = $page['section'];
-        } elseif (preg_match('/^[a-zA-Z0-9_-]+$/', $page['section'])) {
+            $section = $page_section;
+        } elseif (preg_match('/^[a-zA-Z0-9_-]+$/', $page_section)) {
             $history_sections = get_enums(HISTORY_TABLE, 'section');
-            $history_sections[] = $page['section'];
+            $history_sections[] = $page_section;
 
             // alter history table structure, to include a new section
             pwg_query('ALTER TABLE ' . HISTORY_TABLE . ' CHANGE section section enum(\'' . implode("','", array_unique($history_sections)) . '\') DEFAULT NULL;');
@@ -601,15 +622,16 @@ UPDATE ' . USER_INFOS_TABLE . '
             // and refresh cache
             conf_update_param('history_sections_cache', get_enums(HISTORY_TABLE, 'section'), true);
 
-            $section = $page['section'];
+            $section = $page_section;
         }
     }
 
     // $user['id']/$page[...] are read from loosely-typed global bags fed by
     // DB rows (string|null) and session/config data (mixed); narrow each
     // to the scalar the column actually stores before splicing into SQL.
-    $user_id = is_numeric($user['id']) ? (int) $user['id'] : 0;
-    $category_id = $page['category']['id'] ?? null;
+    $category = $page['category'] ?? null;
+    $category = is_array($category) ? $category : [];
+    $category_id = $category['id'] ?? null;
     $category_id = is_numeric($category_id) ? (int) $category_id : null;
     $search_id = $page['search_id'] ?? null;
     $search_id = is_numeric($search_id) ? (int) $search_id : null;
@@ -656,7 +678,9 @@ INSERT INTO ' . HISTORY_TABLE . '
         history_summarize(50000);
     }
 
-    if ($conf['history_autopurge_every'] > 0 and $history_id % $conf['history_autopurge_every'] == 0) {
+    $history_autopurge_every = $conf['history_autopurge_every'];
+    $history_autopurge_every = is_numeric($history_autopurge_every) ? (int) $history_autopurge_every : 0;
+    if ($history_autopurge_every > 0 and $history_id % $history_autopurge_every == 0) {
         include_once PHPWG_ROOT_PATH . 'admin/include/functions_history.inc.php';
         history_autopurge();
     }
@@ -670,6 +694,7 @@ INSERT INTO ' . HISTORY_TABLE . '
  */
 function pwg_activity(string $object, $object_id, string $action, array $details = []): void
 {
+    /** @var array<string, mixed> $user */
     global $user;
 
     // in case of uploadAsync, do not log the automatic login as an independant activity
@@ -854,6 +879,7 @@ function str2DateTime($original, $format = null)
  */
 function format_date_legacy($original, $show = null, $format = null)
 {
+    /** @var array<string, mixed> $lang */
     global $lang;
 
     $date = str2DateTime($original, $format);
@@ -866,9 +892,15 @@ function format_date_legacy($original, $show = null, $format = null)
         $show = ['day_name', 'day', 'month', 'year'];
     }
 
+    $day_names = $lang['day'] ?? [];
+    $day_names = is_array($day_names) ? $day_names : [];
+    $month_names = $lang['month'] ?? [];
+    $month_names = is_array($month_names) ? $month_names : [];
+
     $print = '';
     if (in_array('day_name', $show)) {
-        $print .= $lang['day'][$date->format('w')] . ' ';
+        $day_name = $day_names[$date->format('w')] ?? '';
+        $print .= (is_string($day_name) ? $day_name : '') . ' ';
     }
 
     if (in_array('day', $show)) {
@@ -876,7 +908,8 @@ function format_date_legacy($original, $show = null, $format = null)
     }
 
     if (in_array('month', $show)) {
-        $print .= $lang['month'][$date->format('n')] . ' ';
+        $month_name = $month_names[$date->format('n')] ?? '';
+        $print .= (is_string($month_name) ? $month_name : '') . ' ';
     }
 
     if (in_array('year', $show)) {
@@ -909,6 +942,7 @@ function format_date_legacy($original, $show = null, $format = null)
  */
 function format_date($original, $show = null, $format = null)
 {
+    /** @var array<string, mixed> $user */
     global $user;
 
     $date = str2DateTime($original, $format);
@@ -933,7 +967,9 @@ function format_date($original, $show = null, $format = null)
             $dateType = IntlDateFormatter::LONG;
         }
 
-        $fmt = new IntlDateFormatter($user['language'], $dateType, $timeType);
+        $user_language = $user['language'] ?? null;
+        $user_language = is_string($user_language) ? $user_language : null;
+        $fmt = new IntlDateFormatter($user_language, $dateType, $timeType);
         $formatted = $fmt->format($date);
         if ($formatted !== false) {
             return $formatted;
@@ -1082,15 +1118,24 @@ function transform_date($original, $format_in, $format_out, $default = null)
  */
 function pwg_debug($string): void
 {
+    /**
+     * @var string $debug
+     * @var float $t2
+     * @var array<string, mixed> $page
+     */
     global $debug,$t2,$page;
 
     $now = explode(' ', microtime());
     $now2 = explode('.', $now[0]);
-    $now2 = $now[1] . '.' . $now2[1];
-    $time = number_format($now2 - $t2, 3, '.', ' ') . ' s';
+    // microtime()'s own format ("<fraction> <seconds>", both always numeric)
+    // guarantees this concatenation is always a numeric string.
+    $now2_float = (float) ($now[1] . '.' . $now2[1]);
+    $time = number_format($now2_float - $t2, 3, '.', ' ') . ' s';
     $debug .= '<p>';
     $debug .= '[' . $time . ', ';
-    $debug .= $page['count_queries'] . ' queries] : ' . $string;
+    $count_queries = $page['count_queries'] ?? 0;
+    $count_queries = is_numeric($count_queries) ? $count_queries : 0;
+    $debug .= $count_queries . ' queries] : ' . $string;
     $debug .= "</p>\n";
 }
 
@@ -1121,10 +1166,18 @@ function redirect_http($url): never
  */
 function redirect_html($url, $msg = '', $refresh_time = 0): never
 {
+    /** @var array<string, mixed> $conf */
     global $user, $template, $lang_info, $conf, $lang, $t2, $page, $debug;
 
+    // $template/$lang_info are genuinely not always set here: this function
+    // can be called very early (e.g. a fatal before common.inc.php finishes
+    // bootstrapping), which is exactly what this isset() check detects --
+    // do not declare $template's type above, it would make PHPStan wrongly
+    // treat this real fallback path as dead code.
     if (! isset($lang_info) || ! isset($template)) {
-        $user = build_user($conf['guest_id'], true);
+        $guest_id = $conf['guest_id'];
+        $guest_id = is_numeric($guest_id) ? (int) $guest_id : 0;
+        $user = build_user($guest_id, true);
         load_language('common.lang');
         trigger_notify('loading_lang');
         load_language('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, [
@@ -1133,6 +1186,13 @@ function redirect_html($url, $msg = '', $refresh_time = 0): never
         ]);
         $template = new Template(PHPWG_ROOT_PATH . 'themes', get_default_theme());
     } elseif (defined('IN_ADMIN') and IN_ADMIN) {
+        $template = new Template(PHPWG_ROOT_PATH . 'themes', get_default_theme());
+    }
+
+    // Neither branch above runs when $template was already set and we're
+    // not in admin -- it's the pre-existing bootstrap Template in that case,
+    // but re-check for real since that isn't provable here statically.
+    if (! ($template instanceof Template)) {
         $template = new Template(PHPWG_ROOT_PATH . 'themes', get_default_theme());
     }
 
@@ -1171,6 +1231,7 @@ function redirect_html($url, $msg = '', $refresh_time = 0): never
  */
 function redirect($url, $msg = '', $refresh_time = 0): never
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     // with RefeshTime <> 0, only html must be used
@@ -1192,6 +1253,7 @@ function redirect($url, $msg = '', $refresh_time = 0): never
  */
 function get_pwg_themes($show_mobile = false)
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     $themes = [];
@@ -1245,9 +1307,13 @@ SELECT
  */
 function check_theme_installed($theme_id): bool
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
-    return file_exists($conf['themes_dir'] . '/' . $theme_id . '/themeconf.inc.php');
+    $themes_dir = $conf['themes_dir'];
+    $themes_dir = is_string($themes_dir) ? $themes_dir : '';
+
+    return file_exists($themes_dir . '/' . $theme_id . '/themeconf.inc.php');
 }
 
 /**
@@ -1303,12 +1369,15 @@ function get_element_path(array $element_info): string
  */
 function fill_caddie($elements_id): void
 {
+    /** @var array<string, mixed> $user */
     global $user;
+
+    $user_id = is_numeric($user['id']) ? (int) $user['id'] : 0;
 
     $query = '
 SELECT element_id
   FROM ' . CADDIE_TABLE . '
-  WHERE user_id = ' . $user['id'] . '
+  WHERE user_id = ' . $user_id . '
 ;';
     $in_caddie = query2array($query, null, 'element_id');
 
@@ -1319,7 +1388,7 @@ SELECT element_id
     foreach ($caddiables as $caddiable) {
         $datas[] = [
             'element_id' => $caddiable,
-            'user_id' => $user['id'],
+            'user_id' => $user_id,
         ];
     }
 
@@ -1350,14 +1419,25 @@ function get_name_from_file($filename): string
  */
 function l10n($key)
 {
+    /**
+     * @var array<string, mixed> $lang
+     * @var array<string, mixed> $conf
+     */
     global $lang, $conf;
 
     if (($val = @$lang[$key]) === null) {
-        if ($conf['debug_l10n'] and ! isset($lang[$key]) and ! empty($key)) {
+        $debug_l10n = $conf['debug_l10n'] ?? false;
+        if ($debug_l10n and ! isset($lang[$key]) and ! empty($key)) {
             trigger_error('[l10n] language key "' . $key . '" not defined', E_USER_WARNING);
         }
         $val = $key;
     }
+
+    // $lang[$key] is read from a loosely-typed global bag (language files
+    // are plain PHP arrays with no enforced value type); the translation
+    // contract is always a string, so a non-string value falls back to the
+    // key itself rather than being trusted blindly.
+    $val = is_string($val) ? $val : $key;
 
     if (func_num_args() > 1) {
         $args = array_slice(func_get_args(), 1);
@@ -1385,6 +1465,7 @@ function l10n($key)
  */
 function l10n_dec($singular_key, $plural_key, $decimal): string
 {
+    /** @var array<string, mixed> $lang_info */
     global $lang_info;
 
     return
@@ -1409,7 +1490,10 @@ function l10n_dec($singular_key, $plural_key, $decimal): string
 function get_l10n_args($key, $args = ''): array
 {
     if (is_array($args)) {
-        $key_arg = array_merge([$key], $args);
+        // array_values() guarantees a plain list even when $args carries
+        // string keys, so the merged result stays an int-keyed list
+        // matching the documented return shape (positional sprintf args).
+        $key_arg = array_merge([$key], array_values($args));
     } else {
         $key_arg = [$key,  $args];
     }
@@ -1491,12 +1575,22 @@ function get_themeconf($key): string
  */
 function get_webmaster_mail_address(): string
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
+    $user_fields = $conf['user_fields'] ?? [];
+    $user_fields = is_array($user_fields) ? $user_fields : [];
+    $email_field = $user_fields['email'] ?? 'email';
+    $email_field = is_string($email_field) ? $email_field : 'email';
+    $id_field = $user_fields['id'] ?? 'id';
+    $id_field = is_string($id_field) ? $id_field : 'id';
+    $webmaster_id = $conf['webmaster_id'] ?? 0;
+    $webmaster_id = is_numeric($webmaster_id) ? (int) $webmaster_id : 0;
+
     $query = '
-SELECT ' . $conf['user_fields']['email'] . '
+SELECT ' . $email_field . '
   FROM ' . USERS_TABLE . '
-  WHERE ' . $conf['user_fields']['id'] . ' = ' . $conf['webmaster_id'] . '
+  WHERE ' . $id_field . ' = ' . $webmaster_id . '
 ;';
     $row = pwg_db_fetch_row(pwg_query($query));
     assert($row !== null);
@@ -1517,6 +1611,7 @@ SELECT ' . $conf['user_fields']['email'] . '
  */
 function load_conf_from_db($condition = '', bool $die_on_condition_with_no_result = true): void
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     $query = '
@@ -1538,7 +1633,14 @@ SELECT param, value
         } elseif ($val == 'false') {
             $val = false;
         }
-        $conf[$row['param']] = $val;
+        // config.param is `varchar(40) NOT NULL` in the schema, but the
+        // fetch helper's return type is nullable per-column; guard rather
+        // than trust it blindly since it feeds an array key.
+        $param = $row['param'] ?? null;
+        if (! is_string($param)) {
+            continue;
+        }
+        $conf[$param] = $val;
     }
 
     trigger_notify('load_conf', $condition);
@@ -1602,6 +1704,7 @@ INSERT INTO
     pwg_query($query);
 
     if ($updateGlobal) {
+        /** @var array<string, mixed> $conf */
         global $conf;
         $conf[$param] = $value;
     }
@@ -1615,6 +1718,7 @@ INSERT INTO
  */
 function conf_delete_param($params): void
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     if (! is_array($params)) {
@@ -1646,6 +1750,7 @@ DELETE FROM ' . CONFIG_TABLE . '
  */
 function conf_get_param($param, $default_value = null)
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
     return $conf[$param] ?? $default_value;
 }
@@ -1748,6 +1853,7 @@ function array_from_query(string $query, $fieldname = false): array
  */
 function script_basename(): string
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     foreach (['SCRIPT_NAME', 'SCRIPT_FILENAME', 'PHP_SELF'] as $key) {
@@ -1774,15 +1880,21 @@ function script_basename(): string
  */
 function get_filter_page_value($value_name)
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     $page_name = script_basename();
 
-    if (isset($conf['filter_pages'][$page_name][$value_name])) {
-        return $conf['filter_pages'][$page_name][$value_name];
+    $filter_pages = $conf['filter_pages'] ?? [];
+    $filter_pages = is_array($filter_pages) ? $filter_pages : [];
+
+    $page_filters = $filter_pages[$page_name] ?? null;
+    if (is_array($page_filters) && isset($page_filters[$value_name])) {
+        return $page_filters[$value_name];
     }
-    if (isset($conf['filter_pages']['default'][$value_name])) {
-        return $conf['filter_pages']['default'][$value_name];
+    $default_filters = $filter_pages['default'] ?? null;
+    if (is_array($default_filters) && isset($default_filters[$value_name])) {
+        return $default_filters[$value_name];
     } else {
         return null;
     }
@@ -1811,13 +1923,17 @@ function get_pwg_charset(): string
 function get_parent_language($lang_id = null)
 {
     if (empty($lang_id)) {
+        /** @var array<string, mixed> $lang_info */
         global $lang_info;
-        return ! empty($lang_info['parent']) ? $lang_info['parent'] : null;
+        $parent = $lang_info['parent'] ?? null;
+        return (is_string($parent) && ! empty($parent)) ? $parent : null;
     } else {
         $f = PHPWG_ROOT_PATH . 'language/' . $lang_id . '/common.lang.php';
         if (file_exists($f)) {
             include $f;
-            return ! empty($lang_info['parent']) ? $lang_info['parent'] : null;
+            /** @var array<string, mixed> $lang_info */
+            $parent = $lang_info['parent'] ?? null;
+            return (is_string($parent) && ! empty($parent)) ? $parent : null;
         }
     }
     return null;
@@ -1841,6 +1957,10 @@ function get_parent_language($lang_id = null)
  */
 function load_language($filename, $dirname = '', array $options = []): string|bool
 {
+    /**
+     * @var array<string, mixed> $user
+     * @var array<string, array<string, mixed>> $language_files
+     */
     global $user, $language_files;
 
     // keep trace of plugins loaded files for switch_lang_to() function
@@ -1861,11 +1981,16 @@ function load_language($filename, $dirname = '', array $options = []): string|bo
         get_default_language() : PHPWG_DEFAULT_LANGUAGE;
 
     // construct list of potential languages
+    // Every element pushed here must be a real string: $user['language'] and
+    // $options['force_fallback'] are the only entries whose static type
+    // isn't already a plain string, so both get an explicit is_string()
+    // guard before joining the list (array_unique()/implode() below need
+    // string-castable elements, not just an array container).
     $languages = [];
     if (! empty($options['language'])) { // explicit language
         $languages[] = $options['language'];
     }
-    if (! empty($user['language'])) { // use language
+    if (! empty($user['language']) && is_string($user['language'])) { // use language
         $languages[] = $user['language'];
     }
     if (($parent = get_parent_language()) != null) { // parent language
@@ -1877,7 +2002,9 @@ function load_language($filename, $dirname = '', array $options = []): string|bo
         if ($options['force_fallback'] === true) {
             $options['force_fallback'] = $default_language;
         }
-        $languages[] = $options['force_fallback'];
+        if (is_string($options['force_fallback'])) {
+            $languages[] = $options['force_fallback'];
+        }
     }
     if (! ($options['no_fallback'] ?? false)) { // default language
         $languages[] = $default_language;
@@ -1917,19 +2044,23 @@ function load_language($filename, $dirname = '', array $options = []): string|bo
             $load_lang = $included_vars['lang'] ?? null;
             $load_lang_info = $included_vars['lang_info'] ?? null;
 
-            // access already existing values
+            // access already existing values -- genuinely possibly unset on
+            // a first call (e.g. very early bootstrap), which is exactly
+            // what these isset() checks detect; do not declare $lang's/
+            // $lang_info's type above, it would make PHPStan wrongly treat
+            // this real fallback as dead code.
             global $lang, $lang_info;
-            if (! isset($lang)) {
+            if (! isset($lang) || ! is_array($lang)) {
                 $lang = [];
             }
-            if (! isset($lang_info)) {
+            if (! isset($lang_info) || ! is_array($lang_info)) {
                 $lang_info = [];
             }
 
             // load parent language content directly in global
-            if (is_array($load_lang_info) && ! empty($load_lang_info['parent'])) {
+            if (is_array($load_lang_info) && ! empty($load_lang_info['parent']) && is_string($load_lang_info['parent'])) {
                 $parent_language = $load_lang_info['parent'];
-            } elseif (! empty($lang_info['parent'])) {
+            } elseif (! empty($lang_info['parent']) && is_string($lang_info['parent'])) {
                 $parent_language = $lang_info['parent'];
             } else {
                 $parent_language = null;
@@ -2001,15 +2132,18 @@ function secure_directory($dir): void
  */
 function get_ephemeral_key($valid_after_seconds, $aditionnal_data_to_hash = ''): string
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
     $time = round(microtime(true), 1);
     $remote_addr = $_SERVER['REMOTE_ADDR'];
     $remote_addr = is_string($remote_addr) ? $remote_addr : '';
+    $secret_key = $conf['secret_key'];
+    $secret_key = is_scalar($secret_key) ? (string) $secret_key : '';
     return $time . ':' . $valid_after_seconds . ':'
         . hash_hmac(
             'md5',
             $time . substr($remote_addr, 0, 5) . $valid_after_seconds . $aditionnal_data_to_hash,
-            (string) $conf['secret_key']
+            $secret_key
         );
 }
 
@@ -2021,18 +2155,21 @@ function get_ephemeral_key($valid_after_seconds, $aditionnal_data_to_hash = ''):
  */
 function verify_ephemeral_key($key, $aditionnal_data_to_hash = ''): bool
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
     $time = microtime(true);
     $key_parts = explode(':', (string) $key);
     $remote_addr = $_SERVER['REMOTE_ADDR'];
     $remote_addr = is_string($remote_addr) ? $remote_addr : '';
+    $secret_key = $conf['secret_key'];
+    $secret_key = is_scalar($secret_key) ? (string) $secret_key : '';
     if (count($key_parts) != 3
         or $key_parts[0] > $time - (float) $key_parts[1] // page must have been retrieved more than X sec ago
         or $key_parts[0] < $time - 3600 // 60 minutes expiration
         or hash_hmac(
             'md5',
             $key_parts[0] . substr($remote_addr, 0, 5) . $key_parts[1] . $aditionnal_data_to_hash,
-            (string) $conf['secret_key']
+            $secret_key
         ) != $key_parts[2]
     ) {
         return false;
@@ -2059,6 +2196,7 @@ function verify_ephemeral_key($key, $aditionnal_data_to_hash = ''): bool
  */
 function create_navigation_bar($url, int|string $nb_element, $start, $nb_element_page, $clean_url = false, $param_name = 'start'): array
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     // real callers pass numeric strings here (see docblock); all downstream
@@ -2068,6 +2206,7 @@ function create_navigation_bar($url, int|string $nb_element, $start, $nb_element
 
     $navbar = [];
     $pages_around = $conf['paginate_pages_around'];
+    $pages_around = is_numeric($pages_around) ? (int) $pages_around : 0;
     $start_str = $clean_url ? '/' . $param_name . '-' : (! str_contains($url, '?') ? '?' : '&amp;') . $param_name . '=';
 
     if ($start < 0) {
@@ -2119,36 +2258,47 @@ function create_navigation_bar($url, int|string $nb_element, $start, $nb_element
  */
 function get_icon($date, $is_child_date = false): false|array
 {
+    /**
+     * @var array<string, mixed> $cache
+     * @var array<string, mixed> $user
+     */
     global $cache, $user;
 
     if (empty($date)) {
         return false;
     }
 
-    if (! isset($cache['get_icon']['title'])) {
-        $cache['get_icon']['title'] = l10n(
+    $recent_period = $user['recent_period'] ?? null;
+    $recent_period = is_numeric($recent_period) ? (int) $recent_period : (is_string($recent_period) ? $recent_period : 0);
+
+    $get_icon_cache = is_array($cache['get_icon'] ?? null) ? $cache['get_icon'] : [];
+
+    if (! isset($get_icon_cache['title'])) {
+        $get_icon_cache['title'] = l10n(
             'photos posted during the last %d days',
-            $user['recent_period']
+            $recent_period
         );
     }
 
     $icon = [
-        'TITLE' => $cache['get_icon']['title'],
+        'TITLE' => $get_icon_cache['title'],
         'IS_CHILD_DATE' => $is_child_date,
     ];
 
-    if (isset($cache['get_icon'][$date])) {
-        return $cache['get_icon'][$date] ? $icon : [];
+    if (isset($get_icon_cache[$date])) {
+        $cache['get_icon'] = $get_icon_cache;
+        return $get_icon_cache[$date] ? $icon : [];
     }
 
-    if (! isset($cache['get_icon']['sql_recent_date'])) {
+    if (! isset($get_icon_cache['sql_recent_date'])) {
         // Use MySql date in order to standardize all recent "actions/queries"
-        $cache['get_icon']['sql_recent_date'] = pwg_db_get_recent_period($user['recent_period']);
+        $get_icon_cache['sql_recent_date'] = pwg_db_get_recent_period($recent_period);
     }
 
-    $cache['get_icon'][$date] = $date > $cache['get_icon']['sql_recent_date'];
+    $get_icon_cache[$date] = $date > $get_icon_cache['sql_recent_date'];
+    $cache['get_icon'] = $get_icon_cache;
 
-    return $cache['get_icon'][$date] ? $icon : [];
+    return $get_icon_cache[$date] ? $icon : [];
 }
 
 /**
@@ -2172,6 +2322,7 @@ function check_pwg_token(): void
  */
 function get_pwg_token(): string
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     $session_id = session_id();
@@ -2179,7 +2330,10 @@ function get_pwg_token(): string
         throw new Exception('get_pwg_token(): no active session');
     }
 
-    return hash_hmac('md5', $session_id, (string) $conf['secret_key']);
+    $secret_key = $conf['secret_key'];
+    $secret_key = is_scalar($secret_key) ? (string) $secret_key : '';
+
+    return hash_hmac('md5', $session_id, $secret_key);
 }
 
 /**
@@ -2243,11 +2397,21 @@ function check_input_parameter($param_name, array $param_array, $is_array, $patt
  */
 function get_privacy_level_options(): array
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
+
+    $available_permission_levels = $conf['available_permission_levels'];
+    $available_permission_levels = is_array($available_permission_levels) ? $available_permission_levels : [];
 
     $options = [];
     $label = '';
-    foreach (array_reverse($conf['available_permission_levels']) as $level) {
+    foreach (array_reverse($available_permission_levels) as $level) {
+        // config_default.inc.php seeds this as [0, 1, 2, 4, 8] (always
+        // int); a non-int entry would come from a broken custom config
+        // override and has no meaningful privacy level to render.
+        if (! is_int($level)) {
+            continue;
+        }
         if ($level == 0) {
             $label = l10n('Everybody');
         } else {
@@ -2299,6 +2463,7 @@ function get_device(): string
  */
 function mobile_theme(): bool
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     if (empty($conf['mobile_theme'])) {
@@ -2355,6 +2520,7 @@ function email_check_format(?string $mail_address): bool
  */
 function get_nb_available_comments()
 {
+    /** @var array<string, mixed> $user */
     global $user;
     if (! isset($user['nb_available_comments'])) {
         $where = [];
@@ -2381,17 +2547,20 @@ SELECT COUNT(DISTINCT(com.id))
         assert($row !== null);
         [$user['nb_available_comments']] = $row;
 
+        $user_id = is_numeric($user['id']) ? (int) $user['id'] : 0;
+
         single_update(
             USER_CACHE_TABLE,
             [
                 'nb_available_comments' => $user['nb_available_comments'],
             ],
             [
-                'user_id' => $user['id'],
+                'user_id' => $user_id,
             ]
         );
     }
-    return $user['nb_available_comments'];
+    $nb_available_comments = $user['nb_available_comments'];
+    return is_numeric($nb_available_comments) ? (int) $nb_available_comments : 0;
 }
 
 /**
@@ -2406,7 +2575,7 @@ SELECT COUNT(DISTINCT(com.id))
  */
 function safe_version_compare($a, $b, $op = null): int|bool
 {
-    $replace_chars = (fn ($m): string => (string) ord(strtolower((string) $m[1])[0]));
+    $replace_chars = (fn (array $m): string => (string) ord(strtolower(is_string($m[1] ?? null) ? $m[1] : '')[0]));
 
     // add dot before groups of letters (version_compare does the same thing)
     $a = preg_replace('#([0-9]+)([a-z]+)#i', '$1.$2', $a);
@@ -2430,6 +2599,7 @@ function safe_version_compare($a, $b, $op = null): int|bool
  */
 function check_lounge(): void
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     if (! isset($conf['lounge_active']) or ! $conf['lounge_active']) {
@@ -2456,7 +2626,9 @@ SELECT
         $voyager = $voyagers[0];
         $age = strtotime((string) $voyager['dbnow']) - strtotime((string) $voyager['date_available']);
 
-        if ($age > $conf['lounge_max_duration']) {
+        $lounge_max_duration = $conf['lounge_max_duration'];
+        $lounge_max_duration = is_numeric($lounge_max_duration) ? (int) $lounge_max_duration : 0;
+        if ($age > $lounge_max_duration) {
             include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
             empty_lounge();
         }
@@ -2472,6 +2644,10 @@ SELECT
  */
 function send_piwigo_infos(): void
 {
+    /**
+     * @var \Logger $logger
+     * @var array<string, mixed> $conf
+     */
     global $logger, $conf;
 
     $start_time = get_moment();
@@ -2486,14 +2662,20 @@ function send_piwigo_infos(): void
     load_conf_from_db('param = "send_piwigo_infos_last_notice"', false);
 
     $do_send = false;
-    if (isset($conf['send_piwigo_infos_last_notice'])) {
+    $last_notice = $conf['send_piwigo_infos_last_notice'] ?? null;
+    // conf_get_param()/load_conf_from_db() both feed $conf through a
+    // loosely-typed mixed pipeline, but this particular param is always a
+    // MySQL datetime string once set; only strtotime()'s argument needs the
+    // narrowing since the isset() check above doesn't provide a type.
+    $last_notice_str = is_string($last_notice) ? $last_notice : null;
+    if ($last_notice_str !== null) {
         // conf_get_param() reads $conf with a dynamic (non-literal) key, so
         // its return stays mixed even though this specific param is always
         // an int of seconds; narrow it before splicing into strtotime()'s
         // relative-time string.
         $period = conf_get_param('send_piwigo_infos_period', 7 * 24 * 60 * 60);
         $period = is_numeric($period) ? (int) $period : 7 * 24 * 60 * 60;
-        if (strtotime($conf['send_piwigo_infos_last_notice']) < strtotime($period . ' second ago')) {
+        if (strtotime($last_notice_str) < strtotime($period . ' second ago')) {
             $do_send = true;
         }
     } else {
@@ -2504,7 +2686,7 @@ function send_piwigo_infos(): void
         return;
     }
 
-    $logger->info('[' . __FUNCTION__ . '] current conf.send_piwigo_infos_last_notice=' . ($conf['send_piwigo_infos_last_notice'] ?? 'notFound') . ' => lets do it');
+    $logger->info('[' . __FUNCTION__ . '] current conf.send_piwigo_infos_last_notice=' . ($last_notice_str ?? 'notFound') . ' => lets do it');
 
     if (! pwg_is_dbconf_writeable()) {
         $logger->info('[' . __FUNCTION__ . '] conf is not writeable, abort');
@@ -2613,15 +2795,22 @@ SELECT
 
     // $conf['pem_plugins_category'] = 12;
     // $conf['pem_themes_category'] = 10;
-    $url = PEM_URL . '/api/get_extension_list.php';
+    // PEM_URL is defined via define('PEM_URL', $conf['alternative_pem_url'])
+    // in common.inc.php on one branch, so PHPStan infers the constant's
+    // global type as mixed even though it's always a URL string at runtime.
+    $pem_url = PEM_URL;
+    $pem_url = is_string($pem_url) ? $pem_url : '';
+    $url = $pem_url . '/api/get_extension_list.php';
     // $result is never a resource here: no fopen() handle is passed to
-    // fetchRemote() above.
+    // fetchRemote() above. Seeded as a string so the by-reference $dest
+    // parameter isn't inferred as mixed before the call.
     // unserialize() is typed mixed by PHP's own stub; the PEM API's
     // contract is an array of {eid: {...}} extension records, but a
     // malformed/unexpected response must degrade to the retry-later path
     // instead of crashing on a foreach/array-access of something else.
     $pem_extensions = [];
     $pem_decode_ok = false;
+    $result = '';
     if (fetchRemote($url, $result) and is_string($result)) {
         $decoded_extensions = @unserialize($result);
         if (is_array($decoded_extensions) and $decoded_extensions !== []) {
@@ -2683,7 +2872,9 @@ SELECT
 
             if (empty($eid)) {
                 // let's search in the data fetched from PEM
-                $eid = $official_exts[$conf['pem_plugins_category']][$plugin_id] ?? null;
+                $pem_plugins_category = $conf['pem_plugins_category'];
+                $pem_plugins_category = (is_int($pem_plugins_category) || is_string($pem_plugins_category)) ? $pem_plugins_category : 0;
+                $eid = $official_exts[$pem_plugins_category][$plugin_id] ?? null;
             }
 
             // we must exclude "private extensions". A private extension :
@@ -2734,7 +2925,9 @@ SELECT
 
         if (empty($eid)) {
             // let's search in the data fetched from PEM
-            $eid = $official_exts[$conf['pem_themes_category']][$theme_id] ?? null;
+            $pem_themes_category = $conf['pem_themes_category'];
+            $pem_themes_category = (is_int($pem_themes_category) || is_string($pem_themes_category)) ? $pem_themes_category : 0;
+            $eid = $official_exts[$pem_themes_category][$theme_id] ?? null;
         }
 
         // we must exclude "private extensions". A private extension :
@@ -2772,13 +2965,20 @@ SELECT
   ORDER BY theme
 ;';
     $themes_used = query2array($query, 'theme', 'theme_counter');
+    // built as a separate local accumulator (rather than mutating
+    // $piwigo_infos directly with a dynamic key) so PHPStan keeps tracking
+    // a precise array<string, int> type instead of widening the whole
+    // $piwigo_infos shape to mixed after a non-literal-key write.
+    $themes_usage = [];
     foreach ($themes_used as $theme_used => $counter) {
         if (isset($private_themes[$theme_used])) {
             $theme_used = 'private theme';
         }
 
-        @$piwigo_infos['themes_usage'][$theme_used] += $counter;
+        $counter_value = is_numeric($counter) ? (int) $counter : 0;
+        $themes_usage[$theme_used] = ($themes_usage[$theme_used] ?? 0) + $counter_value;
     }
+    $piwigo_infos['themes_usage'] = $themes_usage;
 
     $piwigo_infos['general_stats']['default_language'] = get_default_language();
 
@@ -2814,8 +3014,11 @@ SELECT
     // disjoint $object keys, so the merge never overwrites either side.
     /** @var array<string, array<string, string|null>> $piwigo_activities_flat */
     $piwigo_activities_flat = [];
+    // separate local accumulator for the same reason as $themes_usage above.
+    $nb_activities = 0;
     foreach ($activities as $activity) {
-        $piwigo_infos['general_stats']['nb_activities'] += $activity['counter'];
+        $counter_value = is_numeric($activity['counter']) ? (int) $activity['counter'] : 0;
+        $nb_activities += $counter_value;
 
         // piwigo_activity.object/action are `NOT NULL` in the schema.
         $object = $activity['object'];
@@ -2857,6 +3060,7 @@ SELECT
         $piwigo_activities_system[$object][$label][$action] = $activity['counter'];
     }
     $piwigo_infos['activities'] = $piwigo_activities_flat + $piwigo_activities_system;
+    $piwigo_infos['general_stats']['nb_activities'] = $nb_activities;
 
     $query = '
 SELECT
@@ -2930,13 +3134,26 @@ SELECT
     foreach ($activities as $activity) {
         foreach ($apps_pattern as $app_name => $pattern) {
             if (preg_match($pattern, (string) $activity['user_agent'])) {
-                $apps[$app_name]['counter'] = ($apps[$app_name]['counter'] ?? 0) + $activity['counter'];
+                // $apps is written with a dynamic ($app_name) key, so PHPStan
+                // can't track a precise per-key value type for it and every
+                // read below comes back mixed; narrow explicitly instead of
+                // bare-casting.
+                $counter_value = is_numeric($activity['counter']) ? (int) $activity['counter'] : 0;
+                $current_counter = $apps[$app_name]['counter'] ?? 0;
+                $current_counter = is_numeric($current_counter) ? (int) $current_counter : 0;
+                $apps[$app_name]['counter'] = $current_counter + $counter_value;
 
-                if (! isset($apps[$app_name]['first_encounter']) or strtotime((string) $apps[$app_name]['first_encounter']) > strtotime((string) $activity['first_encounter'])) {
+                $activity_first_encounter = is_string($activity['first_encounter']) ? $activity['first_encounter'] : '';
+                $known_first_encounter = $apps[$app_name]['first_encounter'] ?? null;
+                $known_first_encounter = is_string($known_first_encounter) ? $known_first_encounter : null;
+                if ($known_first_encounter === null or strtotime($known_first_encounter) > strtotime($activity_first_encounter)) {
                     $apps[$app_name]['first_encounter'] = $activity['first_encounter'];
                 }
 
-                if (! isset($apps[$app_name]['last_encounter']) or strtotime((string) $apps[$app_name]['last_encounter']) < strtotime((string) $activity['last_encounter'])) {
+                $activity_last_encounter = is_string($activity['last_encounter']) ? $activity['last_encounter'] : '';
+                $known_last_encounter = $apps[$app_name]['last_encounter'] ?? null;
+                $known_last_encounter = is_string($known_last_encounter) ? $known_last_encounter : null;
+                if ($known_last_encounter === null or strtotime($known_last_encounter) < strtotime($activity_last_encounter)) {
                     $apps[$app_name]['last_encounter'] = $activity['last_encounter'];
                 }
             }
@@ -2979,7 +3196,7 @@ SELECT
     } else {
         $last_notice = date('c');
         conf_update_param('send_piwigo_infos_last_notice', $last_notice, true);
-        $logger->info('[' . __FUNCTION__ . '][exec=' . $exec_id . '] fetchRemote success, new send_piwigo_infos_last_notice=' . $conf['send_piwigo_infos_last_notice']);
+        $logger->info('[' . __FUNCTION__ . '][exec=' . $exec_id . '] fetchRemote success, new send_piwigo_infos_last_notice=' . $last_notice);
     }
 
     pwg_unique_exec_ends('send_piwigo_infos');
@@ -2988,25 +3205,37 @@ SELECT
 
 function send_piwigo_infos_retry_later(int $wait_time): void
 {
+    /**
+     * @var array<string, mixed> $conf
+     * @var \Logger $logger
+     */
     global $conf, $logger;
 
     // let's fake a last_notice so that we only try 1 day later
-    $last_notice = isset($conf['send_piwigo_infos_last_notice']) ? strtotime($conf['send_piwigo_infos_last_notice']) : time();
-    $last_notice += $wait_time;
+    $existing_last_notice = $conf['send_piwigo_infos_last_notice'] ?? null;
+    $last_notice = is_string($existing_last_notice) ? strtotime($existing_last_notice) : time();
+    $last_notice = ($last_notice === false ? time() : $last_notice) + $wait_time;
 
-    conf_update_param('send_piwigo_infos_last_notice', date('c', $last_notice), true);
-    $logger->info('[' . __FUNCTION__ . '] new send_piwigo_infos_last_notice=' . $conf['send_piwigo_infos_last_notice']);
+    $new_last_notice = date('c', $last_notice);
+    conf_update_param('send_piwigo_infos_last_notice', $new_last_notice, true);
+    $logger->info('[' . __FUNCTION__ . '] new send_piwigo_infos_last_notice=' . $new_last_notice);
 }
 
 function pwg_unique_exec_begins(string $token_name, int $timeout = 60): false|string
 {
+    /**
+     * @var array<string, mixed> $conf
+     * @var \Logger $logger
+     */
     global $conf, $logger;
 
     $exec_id = substr(sha1(random_bytes(1000)), 0, 8);
     $logger->info('[' . $token_name . '][exec=' . $exec_id . '] starts now');
 
     if (isset($conf[$token_name . '_running'])) {
-        [$running_exec_id, $running_exec_start_time] = explode('-', $conf[$token_name . '_running']);
+        $running_token = $conf[$token_name . '_running'];
+        $running_token = is_scalar($running_token) ? (string) $running_token : '';
+        [$running_exec_id, $running_exec_start_time] = explode('-', $running_token);
         if (time() - (int) $running_exec_start_time > $timeout) {
             $logger->info('[' . $token_name . '][exec=' . $exec_id . '] exec=' . $running_exec_id . ', timeout stopped by another call to the function');
             pwg_unique_exec_ends($token_name);
@@ -3052,6 +3281,7 @@ SELECT
 
 function pwg_unique_exec_ends(string $token_name): void
 {
+    /** @var \Logger $logger */
     global $logger;
 
     conf_delete_param($token_name . '_running');

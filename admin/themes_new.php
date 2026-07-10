@@ -14,6 +14,11 @@ if (! defined('PHPWG_ROOT_PATH')) {
 }
 
 // Bootstrap globals, set by include/common.inc.php.
+/**
+ * @var array<string, mixed> $conf
+ * @var array<string, mixed> $page
+ * @var \Template $template
+ */
 global $conf, $page, $template;
 
 if (! $conf['enable_extensions_install']) {
@@ -22,7 +27,38 @@ if (! $conf['enable_extensions_install']) {
 
 include_once PHPWG_ROOT_PATH . 'admin/include/themes.class.php';
 
-$base_url = get_root_url() . 'admin.php?page=' . $page['page'] . '&tab=' . $page['tab'];
+/**
+ * Append a message to a $page message bucket (e.g. 'infos'/'errors'),
+ * narrowing it to an array first if it isn't provably one yet ($page itself
+ * is only known as array<string, mixed>, so $page[$key] is still mixed) --
+ * same pattern as
+ * admin/include/functions_notification_by_mail.inc.php::push_page_message()
+ * (uniquely named here, rather than that same name, since PHPStan analyzes
+ * every included file together and a second top-level push_page_message()
+ * declaration would collide with that one). A local closure was tried
+ * first, but PHPStan does not honor a @param docblock $key on a closure
+ * assigned to a variable the way it does for a real named function --
+ * every by-reference call through the closure re-widened $page back to
+ * mixed for all subsequent reads in this file.
+ *
+ * @param array<string, mixed> $page
+ */
+function push_themes_new_page_message(string $key, string $message, array &$page): void
+{
+    $list = $page[$key] ?? [];
+    $list = is_array($list) ? $list : [];
+    $list[] = $message;
+    $page[$key] = $list;
+}
+
+// $page['page']/$page['tab'] are set as plain strings by admin.php's
+// routing before this page module is included; $page itself is only known
+// as array<string, mixed>, so narrow the two offsets used here.
+$page_page = $page['page'] ?? null;
+$page_page = is_scalar($page_page) ? (string) $page_page : '';
+$page_tab = $page['tab'] ?? null;
+$page_tab = is_scalar($page_tab) ? (string) $page_tab : '';
+$base_url = get_root_url() . 'admin.php?page=' . $page_page . '&tab=' . $page_tab;
 
 $themes = new themes();
 
@@ -32,7 +68,7 @@ $themes = new themes();
 
 $themes_dir = PHPWG_ROOT_PATH . 'themes';
 if (! is_writable($themes_dir)) {
-    $page['errors'][] = l10n('Add write access to the "%s" directory', 'themes');
+    push_themes_new_page_message('errors', l10n('Add write access to the "%s" directory', 'themes'), $page);
 }
 
 // +-----------------------------------------------------------------------+
@@ -43,10 +79,11 @@ if (isset($_GET['revision']) and isset($_GET['extension'])
     and is_string($_GET['revision']) and is_string($_GET['extension'])
 ) {
     if (! is_webmaster()) {
-        $page['errors'][] = l10n('Webmaster status is required.');
+        push_themes_new_page_message('errors', l10n('Webmaster status is required.'), $page);
     } else {
         check_pwg_token();
 
+        $theme_id = null;
         $install_status = $themes->extract_theme_files(
             'install',
             $_GET['revision'],
@@ -65,7 +102,7 @@ if (isset($_GET['revision']) and isset($_GET['extension'])
 if (isset($_GET['installstatus'])) {
     switch ($_GET['installstatus']) {
         case 'ok':
-            $page['infos'][] = l10n('Theme has been successfully installed');
+            push_themes_new_page_message('infos', l10n('Theme has been successfully installed'), $page);
 
             $installed_theme_id = $_GET['theme_id'] ?? null;
             if (is_string($installed_theme_id) && isset($themes->fs_themes[$installed_theme_id])) {
@@ -82,23 +119,27 @@ if (isset($_GET['installstatus'])) {
             break;
 
         case 'temp_path_error':
-            $page['errors'][] = l10n('Can\'t create temporary file.');
+            push_themes_new_page_message('errors', l10n('Can\'t create temporary file.'), $page);
             break;
 
         case 'dl_archive_error':
-            $page['errors'][] = l10n('Can\'t download archive.');
+            push_themes_new_page_message('errors', l10n('Can\'t download archive.'), $page);
             break;
 
         case 'archive_error':
-            $page['errors'][] = l10n('Can\'t read or extract archive.');
+            push_themes_new_page_message('errors', l10n('Can\'t read or extract archive.'), $page);
             break;
 
         default:
             $installstatus_raw = $_GET['installstatus'];
             $installstatus_str = is_scalar($installstatus_raw) ? (string) $installstatus_raw : '';
-            $page['errors'][] = l10n(
-                'An error occured during extraction (%s).',
-                htmlspecialchars($installstatus_str)
+            push_themes_new_page_message(
+                'errors',
+                l10n(
+                    'An error occured during extraction (%s).',
+                    htmlspecialchars($installstatus_str)
+                ),
+                $page
             );
     }
 }
@@ -139,7 +180,7 @@ if ($themes->get_server_themes(true)) { // only new themes
         );
     }
 } else {
-    $page['errors'][] = l10n('Can\'t connect to server.');
+    push_themes_new_page_message('errors', l10n('Can\'t connect to server.'), $page);
 }
 
 $admin_theme_pref = userprefs_get_param('admin_theme', 'clear');

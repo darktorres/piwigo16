@@ -14,10 +14,23 @@ if (! defined('PHPWG_ROOT_PATH')) {
 }
 
 // Bootstrap globals, set by include/common.inc.php.
+/**
+ * @var array<string, mixed> $conf
+ * @var array<string, mixed> $page
+ * @var \Template $template
+ */
 global $conf, $page, $template;
 
 if (! is_webmaster()) {
-    $page['warnings'][] = str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'));
+    // include/common.inc.php seeds $page['warnings'] as [] -- always an
+    // array; defensively re-initialized here in case that invariant is
+    // ever broken by a prior include.
+    $page_warnings = $page['warnings'] ?? [];
+    if (! is_array($page_warnings)) {
+        $page_warnings = [];
+    }
+    $page_warnings[] = str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'));
+    $page['warnings'] = $page_warnings;
 }
 
 include_once PHPWG_ROOT_PATH . 'admin/include/languages.class.php';
@@ -26,7 +39,12 @@ $template->set_filenames([
     'languages' => 'languages_installed.tpl',
 ]);
 
-$base_url = get_root_url() . 'admin.php?page=' . $page['page'];
+// admin.php sets $page['page'] to the requested admin page slug (a string)
+// before including this script; narrow the mixed read-back from the
+// array<string, mixed>-typed $page global before interpolating into the URL.
+$page_id = $page['page'] ?? null;
+$page_id = is_scalar($page_id) ? (string) $page_id : '';
+$base_url = get_root_url() . 'admin.php?page=' . $page_id;
 
 $languages = new languages();
 $languages->get_db_languages();

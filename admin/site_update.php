@@ -15,6 +15,12 @@ if (! defined('PHPWG_ROOT_PATH')) {
 
 // Bootstrap globals, set by include/common.inc.php.
 global $conf, $logger, $template, $user;
+/**
+ * @var array<string, mixed> $conf
+ * @var \Logger $logger
+ * @var \Template $template
+ * @var array<string, mixed> $user
+ */
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
@@ -68,11 +74,13 @@ $counts = [
     'new_elements' => 0,
     'upd_elements' => 0,
 ];
-// $basedir/$db_categories/$to_delete are always set by the "directories /
-// categories" block below whenever sync is 'dirs' or 'files' — the only
-// two values the "files / elements" block (which reads them) also requires.
+// $basedir/$db_categories/$db_fulldirs/$to_delete are always set by the
+// "directories / categories" block below whenever sync is 'dirs' or 'files'
+// — the only values the "files / elements" block (which reads them) also
+// requires.
 $basedir = '';
 $db_categories = [];
+$db_fulldirs = [];
 $to_delete = [];
 // $simulate is only set once $_POST['submit'] is set (see below), which
 // also gates every later block that reads it.
@@ -85,6 +93,7 @@ if ($site_is_remote) {
     $site_reader = new LocalSiteReader($site_url);
 }
 
+/** @var array<string, mixed> $page */
 if (isset($page['no_md5sum_number'])) {
     $template->assign(
         [
@@ -192,13 +201,18 @@ SELECT id, uppercats, global_rank, status, visible
 
     // finding next rank for each id_uppercat. By default, each category id
     // has 1 for next rank on its sub-categories to create
-    $next_rank['NULL'] = 1;
+    $next_rank = ['NULL' => 1];
 
     $query = '
 SELECT id
   FROM ' . CATEGORIES_TABLE;
     $result = pwg_query($query);
     while ($row = pwg_db_fetch_assoc($result)) {
+        // id is a NOT NULL primary key; skip defensively rather than use a
+        // null value as an invalid array key.
+        if ($row['id'] === null) {
+            continue;
+        }
         $next_rank[$row['id']] = 1;
     }
 
@@ -213,7 +227,11 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
         if (! isset($row['id_uppercat']) or $row['id_uppercat'] == '') {
             $row['id_uppercat'] = 'NULL';
         }
-        $next_rank[$row['id_uppercat']] = $row['next_rank'];
+        // next_rank is a computed "MAX(`rank`)+1" aggregate, always a
+        // positive numeric string; fall back to the same default used above
+        // for categories without any sub-category yet.
+        $row_next_rank = $row['next_rank'];
+        $next_rank[$row['id_uppercat']] = is_numeric($row_next_rank) ? (int) $row_next_rank : 1;
     }
 
     // next category id available
@@ -241,7 +259,10 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
     // new categories are the directories not present yet in the database
     foreach (array_diff($fs_fulldirs, array_keys($db_fulldirs)) as $fulldir) {
         $dir = basename((string) $fulldir);
-        if (preg_match($conf['sync_chars_regex'], $dir)) {
+        // sync_chars_regex is a config default, always a regex string; treat
+        // a non-string config value the same as a non-matching name below.
+        $sync_chars_regex = $conf['sync_chars_regex'];
+        if (is_string($sync_chars_regex) && preg_match($sync_chars_regex, $dir)) {
             $insert = [
                 'id' => $next_id++,
                 'dir' => $dir,
@@ -335,6 +356,10 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
 
             $category_up = implode(',', array_unique($category_up));
             if ($conf['inheritance_by_default'] and ! empty($category_up)) {
+                // predeclared so both stay real arrays below even if a
+                // query below ever returns an empty/falsy result set.
+                $granted_grps = [];
+                $granted_users = [];
                 $query = '
           SELECT *
           FROM ' . GROUP_ACCESS_TABLE . '
@@ -523,7 +548,10 @@ SELECT id, path
             continue;
         }
         $filename = basename((string) $path);
-        if (! preg_match($conf['sync_chars_regex'], $filename)) {
+        // sync_chars_regex is a config default, always a regex string; treat
+        // a non-string config value the same as a non-matching name below.
+        $sync_chars_regex = $conf['sync_chars_regex'];
+        if (! is_string($sync_chars_regex) || ! preg_match($sync_chars_regex, $filename)) {
             $errors[] = [
                 'path' => $path,
                 'type' => 'PWG-UPDATE-1',
@@ -761,10 +789,13 @@ if (isset($_POST['submit'])
 
     if ($_POST['sync'] == 'files') {
         $start = get_moment();
-        $opts['category_id'] = '';
-        $opts['recursive'] = true;
+        $opts = [
+            'category_id' => '',
+            'recursive' => true,
+        ];
         if (isset($_POST['cat'])) {
-            $opts['category_id'] = $_POST['cat'];
+            $cat = $_POST['cat'];
+            $opts['category_id'] = is_string($cat) || is_int($cat) ? $cat : '';
             if (! isset($_POST['subcats-included']) or $_POST['subcats-included'] != 1) {
                 $opts['recursive'] = false;
             }
@@ -836,12 +867,15 @@ if (isset($_POST['submit'])
 if (isset($_POST['submit']) and isset($_POST['sync_meta'])
          and ! $general_failure) {
     // sync only never synchronized files ?
-    $opts['only_new'] = isset($_POST['meta_all']) ? false : true;
-    $opts['category_id'] = '';
-    $opts['recursive'] = true;
+    $opts = [
+        'only_new' => isset($_POST['meta_all']) ? false : true,
+        'category_id' => '',
+        'recursive' => true,
+    ];
 
     if (isset($_POST['cat'])) {
-        $opts['category_id'] = $_POST['cat'];
+        $cat = $_POST['cat'];
+        $opts['category_id'] = is_string($cat) || is_int($cat) ? $cat : '';
         // recursive ?
         if (! isset($_POST['subcats-included']) or $_POST['subcats-included'] != 1) {
             $opts['recursive'] = false;

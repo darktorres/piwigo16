@@ -20,9 +20,19 @@ include_once PHPWG_ROOT_PATH . '/include/functions_metadata.inc.php';
  */
 function get_sync_iptc_data($file): array
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
-    $map = $conf['use_iptc_mapping'];
+    $map_raw = $conf['use_iptc_mapping'] ?? null;
+    /** @var array<string, string> $map */
+    $map = [];
+    if (is_array($map_raw)) {
+        foreach ($map_raw as $map_key => $map_value) {
+            if (is_string($map_key) && is_string($map_value)) {
+                $map[$map_key] = $map_value;
+            }
+        }
+    }
 
     $iptc = get_iptc_data($file, $map);
 
@@ -63,9 +73,21 @@ function get_sync_iptc_data($file): array
  */
 function get_sync_exif_data($file): array
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
-    $exif = get_exif_data($file, $conf['use_exif_mapping']);
+    $map_raw = $conf['use_exif_mapping'] ?? null;
+    /** @var array<string, string> $map */
+    $map = [];
+    if (is_array($map_raw)) {
+        foreach ($map_raw as $map_key => $map_value) {
+            if (is_string($map_key) && is_string($map_value)) {
+                $map[$map_key] = $map_value;
+            }
+        }
+    }
+
+    $exif = get_exif_data($file, $map);
 
     foreach ($exif as $pwg_key => $value) {
         // get_exif_data() returns array<string, mixed> because raw EXIF/trigger_change()
@@ -110,24 +132,29 @@ function get_sync_exif_data($file): array
  */
 function get_sync_metadata_attributes(): array
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     $update_fields = ['filesize', 'width', 'height'];
 
     if ($conf['use_exif']) {
+        $exif_mapping = $conf['use_exif_mapping'] ?? null;
+        $exif_mapping = is_array($exif_mapping) ? $exif_mapping : [];
         $update_fields =
           array_merge(
               $update_fields,
-              array_map(strval(...), array_keys($conf['use_exif_mapping'])),
+              array_map(strval(...), array_keys($exif_mapping)),
               ['latitude', 'longitude']
           );
     }
 
     if ($conf['use_iptc']) {
+        $iptc_mapping = $conf['use_iptc_mapping'] ?? null;
+        $iptc_mapping = is_array($iptc_mapping) ? $iptc_mapping : [];
         $update_fields =
           array_merge(
               $update_fields,
-              array_map(strval(...), array_keys($conf['use_iptc_mapping']))
+              array_map(strval(...), array_keys($iptc_mapping))
           );
     }
 
@@ -143,6 +170,7 @@ function get_sync_metadata_attributes(): array
  */
 function get_sync_metadata($infos)
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
     $path = $infos['path'] ?? null;
     $path = is_string($path) ? $path : '';
@@ -386,9 +414,15 @@ SELECT id, path, representative_ext
  */
 function metadata_normalize_keywords_string($keywords_string): string
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
-    $keywords_string = preg_replace($conf['metadata_keyword_separator_regex'], ',', $keywords_string);
+    $separator_regex = $conf['metadata_keyword_separator_regex'] ?? null;
+    // matches the built-in default (see config_default.inc.php) if the
+    // config value is somehow missing/mistyped at runtime
+    $separator_regex = is_string($separator_regex) ? $separator_regex : '/[.,;]/';
+
+    $keywords_string = preg_replace($separator_regex, ',', $keywords_string);
     assert($keywords_string !== null);
     // new lines are always considered as keyword separators
     $keywords_string = str_replace(["\r\n", "\n", "\r"], ',', $keywords_string);

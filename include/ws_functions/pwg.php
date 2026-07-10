@@ -23,6 +23,7 @@ declare(strict_types=1);
  */
 function ws_getMissingDerivatives(array $params, PwgServer &$service): \PwgError|array
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     if (empty($params['types'])) {
@@ -225,10 +226,14 @@ function ws_getInfos($params, PwgServer &$service): array
  */
 function ws_getCacheSize($params, PwgServer &$service): array
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
+    $data_location = $conf['data_location'];
+    $data_location = is_string($data_location) ? $data_location : '';
+
     // Cache size
-    $path_cache = $conf['data_location'];
+    $path_cache = $data_location;
     $infos['cache_size'] = null;
     if (function_exists('exec')) {
         @exec('du -sk ' . $path_cache, $return_array_cache);
@@ -242,7 +247,7 @@ function ws_getCacheSize($params, PwgServer &$service): array
 
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
     // Multiples sizes size
-    $path_msizes = $conf['data_location'] . 'i';
+    $path_msizes = $data_location . 'i';
     $msizes = get_cache_size_derivatives($path_msizes);
 
     $infos['msizes'] = array_fill_keys(array_keys(ImageStdParams::get_defined_type_map()), 0);
@@ -250,13 +255,28 @@ function ws_getCacheSize($params, PwgServer &$service): array
     $all = 0;
 
     foreach (array_keys($infos['msizes']) as $size_type) {
-        $infos['msizes'][$size_type] += @$msizes[derivative_to_url($size_type)];
+        $current_size = $infos['msizes'][$size_type];
+
+        // get_cache_size_derivatives()'s array<string, int> return type
+        // doesn't capture that it's a sparse map -- it only contains keys
+        // for derivative sizes that actually have files on disk (see its
+        // real implementation, admin/include/functions.php), so a given
+        // $size_type is genuinely, verifiably absent at runtime when no
+        // such file exists. treatPhpDocTypesAsCertain makes PHPStan
+        // (wrongly) prove this offset always exists and is always int;
+        // @ suppresses the resulting real undefined-key warning, and the
+        // two guards below are the actual runtime safety net, not dead code.
+        $added_size = @$msizes[derivative_to_url($size_type)];
+        // @phpstan-ignore function.alreadyNarrowedType
+        $added_size = is_int($added_size) ? $added_size : 0;
+
+        $infos['msizes'][$size_type] = $current_size + $added_size;
         $all += $infos['msizes'][$size_type];
     }
     $infos['msizes']['all'] = $all;
 
     // Compiled templates size
-    $path_template_c = $conf['data_location'] . 'templates_c';
+    $path_template_c = $data_location . 'templates_c';
     $infos['tsizes'] = null;
     if (function_exists('exec')) {
         @exec('du -sk ' . $path_template_c, $return_array_template_c);
@@ -270,6 +290,8 @@ function ws_getCacheSize($params, PwgServer &$service): array
 
     $infos['last_date_calc'] = date('Y-m-d H:i:s');
 
+    /** @var array<int, mixed> $output */
+    $output = [];
     foreach ($infos as $name => $value) {
         $output[] = [
             'name' => $name,
@@ -293,13 +315,17 @@ function ws_getCacheSize($params, PwgServer &$service): array
  */
 function ws_caddie_add(array $params, PwgServer &$service): int
 {
+    /** @var array<string, mixed> $user */
     global $user;
+
+    $user_id = $user['id'];
+    $user_id = is_numeric($user_id) ? (int) $user_id : 0;
 
     $query = '
 SELECT id
   FROM ' . IMAGES_TABLE . '
       LEFT JOIN ' . CADDIE_TABLE . '
-      ON id=element_id AND user_id=' . $user['id'] . '
+      ON id=element_id AND user_id=' . $user_id . '
   WHERE id IN (' . implode(',', $params['image_id']) . ')
     AND element_id IS NULL
 ;';
@@ -309,7 +335,7 @@ SELECT id
     foreach ($result as $id) {
         $datas[] = [
             'element_id' => $id,
-            'user_id' => $user['id'],
+            'user_id' => $user_id,
         ];
     }
     if (count($datas)) {
@@ -403,9 +429,15 @@ function ws_session_logout($params, PwgServer &$service): \PwgError|true
  */
 function ws_session_getStatus($params, PwgServer &$service): array
 {
+    /**
+     * @var array<string, mixed> $user
+     * @var array<string, mixed> $conf
+     */
     global $user, $conf;
 
-    $res['username'] = is_a_guest() ? 'guest' : stripslashes((string) $user['username']);
+    $username_raw = $user['username'];
+    $username_raw = is_string($username_raw) ? $username_raw : '';
+    $res['username'] = is_a_guest() ? 'guest' : stripslashes($username_raw);
     foreach (['status', 'theme', 'language'] as $k) {
         $res[$k] = $user[$k];
     }
@@ -434,17 +466,21 @@ function ws_session_getStatus($params, PwgServer &$service): array
     }
 
     if (is_admin()) {
+        $upload_ext_list = $conf['upload_form_all_types'] ? $conf['file_ext'] : $conf['picture_ext'];
+        $upload_ext_list = is_array($upload_ext_list) ? array_values(array_filter($upload_ext_list, 'is_string')) : [];
+
         $res['upload_file_types'] = implode(
             ',',
             array_unique(
                 array_map(
                     strtolower(...),
-                    $conf['upload_form_all_types'] ? $conf['file_ext'] : $conf['picture_ext']
+                    $upload_ext_list
                 )
             )
         );
 
-        $res['upload_form_chunk_size'] = $conf['upload_form_chunk_size'];
+        $chunk_size = $conf['upload_form_chunk_size'];
+        $res['upload_form_chunk_size'] = is_numeric($chunk_size) ? (int) $chunk_size : 0;
     }
 
     return $res;
@@ -463,6 +499,7 @@ function ws_session_getStatus($params, PwgServer &$service): array
  */
 function ws_getActivityList(array $param, PwgServer &$service): \PwgError|array
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     foreach (['date_min', 'date_max'] as $datefield) {
@@ -648,12 +685,19 @@ SELECT
     $username_of = [];
     $user_id_list = [];
     if (count($user_ids) > 0) {
+        $user_fields = $conf['user_fields'];
+        $user_fields = is_array($user_fields) ? $user_fields : [];
+        $user_field_id = $user_fields['id'] ?? 'id';
+        $user_field_id = is_string($user_field_id) ? $user_field_id : 'id';
+        $user_field_username = $user_fields['username'] ?? 'username';
+        $user_field_username = is_string($user_field_username) ? $user_field_username : 'username';
+
         $query = '
 SELECT
-    `' . $conf['user_fields']['id'] . '` AS user_id,
-    `' . $conf['user_fields']['username'] . '` AS username
+    `' . $user_field_id . '` AS user_id,
+    `' . $user_field_username . '` AS username
   FROM ' . USERS_TABLE . '
-  WHERE `' . $conf['user_fields']['id'] . '` IN (' . implode(',', array_keys($user_ids)) . ')
+  WHERE `' . $user_field_id . '` IN (' . implode(',', array_keys($user_ids)) . ')
 ;';
         $username_of = query2array($query, 'user_id', 'username');
     }
@@ -715,6 +759,7 @@ SELECT
  */
 function ws_history_log(array $params, PwgServer &$service): void
 {
+    /** @var array<string, mixed> $page */
     global $logger, $page;
 
     if (! empty($params['section']) and in_array($params['section'], get_enums(HISTORY_TABLE, 'section'))) {
@@ -767,11 +812,14 @@ function ws_history_search(array $param, PwgServer &$service): array
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
     include_once PHPWG_ROOT_PATH . 'admin/include/functions_history.inc.php';
 
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     if (isset($_GET['start']) and is_numeric($_GET['start'])) {
+        /** @var array<string, mixed> $page */
         $page['start'] = $_GET['start'];
     } else {
+        /** @var array<string, mixed> $page */
         $page['start'] = 0;
     }
 
@@ -789,6 +837,7 @@ function ws_history_search(array $param, PwgServer &$service): array
 
     $page['errors'] = [];
     $search = [];
+    $search['fields'] = [];
 
     // date start
     if (! empty($param['start'])) {
@@ -941,6 +990,10 @@ SELECT rules
     }
 
     // prepare reference data (users, tags, categories...)
+    // Declared unconditionally (not just inside the "if" below) so it is
+    // always defined by the time it is read later, even when $search_ids
+    // is empty.
+    $search_details = [];
     if (count($search_ids) > 0) {
         $query = '
 SELECT
@@ -949,9 +1002,12 @@ SELECT
   FROM ' . SEARCH_TABLE . '
   WHERE id IN (' . implode(',', $search_ids) . ')
 ;';
-        $search_details = query2array($query, 'id', 'rules');
-
-        foreach ($search_details as $id_search => $rules_search_raw) {
+        $search_details_raw = query2array($query, 'id', 'rules');
+        // Built into a fresh array (rather than mutating $search_details_raw
+        // while iterating over it) so PHPStan can keep a precise
+        // array<int|string, array<array-key, mixed>> element type instead of
+        // widening to mixed from the in-place self-reassignment.
+        foreach ($search_details_raw as $id_search => $rules_search_raw) {
             if (! is_string($rules_search_raw)) {
                 continue;
             }
@@ -989,9 +1045,16 @@ SELECT
     }
 
     if (count($user_ids) > 0) {
+        $user_fields = $conf['user_fields'];
+        $user_fields = is_array($user_fields) ? $user_fields : [];
+        $user_field_id = $user_fields['id'] ?? 'id';
+        $user_field_id = is_string($user_field_id) ? $user_field_id : 'id';
+        $user_field_username = $user_fields['username'] ?? 'username';
+        $user_field_username = is_string($user_field_username) ? $user_field_username : 'username';
+
         $query = '
-SELECT ' . $conf['user_fields']['id'] . ' AS id
-     , ' . $conf['user_fields']['username'] . ' AS username
+SELECT ' . $user_field_id . ' AS id
+     , ' . $user_field_username . ' AS username
   FROM ' . USERS_TABLE . '
   WHERE id IN (' . implode(',', array_keys($user_ids)) . ')
 ;';
@@ -1007,6 +1070,12 @@ SELECT ' . $conf['user_fields']['id'] . ' AS id
     }
 
     $name_of_category = [];
+    // Declared unconditionally (not just inside the "if" below), matching
+    // $name_of_category above: it is read later regardless of whether
+    // $category_ids was empty here, and previously stayed genuinely
+    // undefined in that case (a real pre-existing bug, not just a PHPStan
+    // false positive).
+    $full_cat_path = [];
     if (count($category_ids) > 0) {
         $query = '
 SELECT id, uppercats
@@ -1014,8 +1083,6 @@ SELECT id, uppercats
   WHERE id IN (' . implode(',', $category_ids) . ')
 ;';
         $uppercats_of = query2array($query, 'id', 'uppercats');
-
-        $full_cat_path = [];
 
         foreach ($uppercats_of as $category_id => $uppercats) {
             if ($uppercats === null) {
@@ -1069,10 +1136,18 @@ SELECT
         }
     }
 
-    $i = 0;
-    $first_line = $page['start'] + 1;
-    $last_line = $page['start'] + $conf['nb_logs_page'];
+    $page_start = $page['start'];
+    $page_start = is_numeric($page_start) ? (int) $page_start : 0;
 
+    $nb_logs_page = $conf['nb_logs_page'];
+    $nb_logs_page = is_numeric($nb_logs_page) ? (int) $nb_logs_page : 0;
+
+    $i = 0;
+    $first_line = $page_start + 1;
+    $last_line = $page_start + $nb_logs_page;
+
+    /** @var array<string, mixed> $summary */
+    $summary = [];
     $summary['total_filesize'] = 0;
     $summary['guests_IP'] = [];
 
@@ -1104,16 +1179,26 @@ SELECT
         $line_category_id = is_string($line_category_id) ? $line_category_id : null;
 
         if ($line_image_type === 'high' and $line_image_id !== null) {
-            $summary['total_filesize'] += @intval($image_infos[$line_image_id]['filesize'] ?? null);
+            // 'total_filesize' is only ever set to int by this same loop
+            // (initialized to 0 above, then always int + int below).
+            $running_total_filesize = $summary['total_filesize'];
+            $summary['total_filesize'] = $running_total_filesize + @intval($image_infos[$line_image_id]['filesize'] ?? null);
         }
 
         if ($line_user_id == $conf['guest_id']) {
             $ip_key = $line_ip ?? '';
-            if (! isset($summary['guests_IP'][$ip_key])) {
-                $summary['guests_IP'][$ip_key] = 0;
+            // 'guests_IP' is only ever set to array by this same loop
+            // (initialized to [] above, then always reassigned as array below).
+            $guests_ip = $summary['guests_IP'];
+            if (! isset($guests_ip[$ip_key])) {
+                $guests_ip[$ip_key] = 0;
             }
 
-            $summary['guests_IP'][$ip_key]++;
+            // always int: either the literal 0 just set above, or a value
+            // this same loop previously wrote as int + 1.
+            $guest_ip_count = $guests_ip[$ip_key];
+            $guests_ip[$ip_key] = $guest_ip_count + 1;
+            $summary['guests_IP'] = $guests_ip;
         }
 
         $i++;
@@ -1176,7 +1261,9 @@ SELECT
                     'path' => $image_infos[$line_image_id]['path'],
                     'representative_ext' => $image_infos[$line_image_id]['representative_ext'],
                 ];
-                $thumbnail_display = $page['search']['fields']['display_thumbnail'];
+                $page_search = $page['search'];
+                $page_search_fields = is_array($page_search) ? ($page_search['fields'] ?? null) : null;
+                $thumbnail_display = is_array($page_search_fields) ? ($page_search_fields['display_thumbnail'] ?? 'no_display_thumbnail') : 'no_display_thumbnail';
             } else {
                 $thumbnail_display = 'no_display_thumbnail';
             }
@@ -1200,14 +1287,34 @@ SELECT
         }
 
         if ($line_search_id !== null) {
+            $search_detail_fields = $search_details[$line_search_id] ?? null;
+            $search_detail_fields = is_array($search_detail_fields) ? $search_detail_fields : [];
+
+            $allwords_words = is_array($search_detail_fields['allwords'] ?? null) ? ($search_detail_fields['allwords']['words'] ?? null) : null;
+
+            $tags_words = is_array($search_detail_fields['tags'] ?? null) ? ($search_detail_fields['tags']['words'] ?? null) : null;
+            $tags_words = is_array($tags_words) ? array_values(array_filter($tags_words, 'is_string')) : null;
+
+            $date_posted = $search_detail_fields['date_posted'] ?? null;
+
+            $cat_words = is_array($search_detail_fields['cat'] ?? null) ? ($search_detail_fields['cat']['words'] ?? null) : null;
+            $cat_words = is_array($cat_words) ? array_values(array_filter($cat_words, 'is_string')) : null;
+
+            $author_words = is_array($search_detail_fields['author'] ?? null) ? ($search_detail_fields['author']['words'] ?? null) : null;
+
+            $added_by = $search_detail_fields['added_by'] ?? null;
+            $added_by = is_array($added_by) ? array_values(array_filter($added_by, 'is_string')) : null;
+
+            $filetypes = $search_detail_fields['filetypes'] ?? null;
+
             $search_detail = [
-                'allwords' => ! empty($search_details[$line_search_id]['allwords']['words']) ? $search_details[$line_search_id]['allwords']['words'] : null,
-                'tags' => ! empty($search_details[$line_search_id]['tags']['words']) ? array_intersect_key($name_of_tag, array_flip($search_details[$line_search_id]['tags']['words'])) : null,
-                'date_posted' => ! empty($search_details[$line_search_id]['date_posted']) ? $search_details[$line_search_id]['date_posted'] : null,
-                'cat' => ! empty($search_details[$line_search_id]['cat']['words']) ? array_intersect_key($name_of_category, array_flip($search_details[$line_search_id]['cat']['words'])) : null,
-                'author' => ! empty($search_details[$line_search_id]['author']['words']) ? $search_details[$line_search_id]['author']['words'] : null,
-                'added_by' => ! empty($search_details[$line_search_id]['added_by']) ? array_intersect_key($username_of, array_flip($search_details[$line_search_id]['added_by'])) : null,
-                'filetypes' => ! empty($search_details[$line_search_id]['filetypes']) ? $search_details[$line_search_id]['filetypes'] : null,
+                'allwords' => ! empty($allwords_words) ? $allwords_words : null,
+                'tags' => ! empty($tags_words) ? array_intersect_key($name_of_tag, array_flip($tags_words)) : null,
+                'date_posted' => ! empty($date_posted) ? $date_posted : null,
+                'cat' => ! empty($cat_words) ? array_intersect_key($name_of_category, array_flip($cat_words)) : null,
+                'author' => ! empty($author_words) ? $author_words : null,
+                'added_by' => ! empty($added_by) ? array_intersect_key($username_of, array_flip($added_by)) : null,
+                'filetypes' => ! empty($filetypes) ? $filetypes : null,
             ];
         } else {
             $search_detail = null;
@@ -1244,13 +1351,20 @@ SELECT
     $result = array_reverse($result, true);
     $result = array_slice($result, $param['pageNumber'] * 300, 300);
 
+    // always array: see the loop-invariant comment on 'guests_IP' above.
+    $guests_ip_final = $summary['guests_IP'];
+
     $summary['nb_guests'] = 0;
-    if (count(array_keys($summary['guests_IP'])) > 0) {
-        $summary['nb_guests'] = count(array_keys($summary['guests_IP']));
+    if (count(array_keys($guests_ip_final)) > 0) {
+        $summary['nb_guests'] = count(array_keys($guests_ip_final));
 
         // we delete the "guest" from the $username_of hash so that it is
         // avoided in next steps
-        unset($username_of[$conf['guest_id']]);
+        $guest_id = $conf['guest_id'];
+        $guest_id_key = is_string($guest_id) || is_int($guest_id) ? $guest_id : null;
+        if ($guest_id_key !== null) {
+            unset($username_of[$guest_id_key]);
+        }
     }
 
     $summary['nb_members'] = count($username_of);
@@ -1266,25 +1380,34 @@ SELECT
     arsort($sorted_members);
     unset($sorted_members['guest']);
 
+    // 'total_filesize'/'nb_members'/'nb_guests' are only ever set to int by
+    // this same function (see the loop-invariant comments above, plus the
+    // count()-based assignments for nb_members/nb_guests); 'nb_lines' is set
+    // once above from count($data).
+    $summary_total_filesize = $summary['total_filesize'];
+    $summary_nb_members = $summary['nb_members'];
+    $summary_nb_guests = $summary['nb_guests'];
+    $page_nb_lines = $page['nb_lines'];
+
     $search_summary =
     [
         'NB_LINES' => l10n_dec(
             '%d line filtered',
             '%d lines filtered',
-            $page['nb_lines']
+            $page_nb_lines
         ),
-        'FILESIZE' => $summary['total_filesize'] != 0 ? ceil($summary['total_filesize'] / 1024) : 0,
+        'FILESIZE' => $summary_total_filesize != 0 ? ceil($summary_total_filesize / 1024) : 0,
         'USERS' => l10n_dec(
             '%d user',
             '%d users',
-            $summary['nb_members'] + $summary['nb_guests']
+            $summary_nb_members + $summary_nb_guests
         ),
         'MEMBERS' => $member_strings,
         'SORTED_MEMBERS' => $sorted_members,
         'GUESTS' => l10n_dec(
             '%d guest',
             '%d guests',
-            $summary['nb_guests']
+            $summary_nb_guests
         ),
     ];
 

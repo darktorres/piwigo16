@@ -10,6 +10,10 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 // Bootstrap globals, set by include/common.inc.php below.
+/**
+ * @var array<string, mixed> $conf
+ * @var array<string, mixed> $user
+ */
 global $conf, $user;
 
 define('PHPWG_ROOT_PATH', './');
@@ -119,6 +123,15 @@ if (! $is_admin_download and pwg_db_num_rows(pwg_query($query)) < 1) {
 }
 
 include_once PHPWG_ROOT_PATH . 'include/functions_picture.inc.php';
+
+// $format is only set when the enable_formats block above ran; part=f is
+// reachable directly by request even when it never ran. PHPStan's
+// control-flow merge loses the original query2array() row-shape narrowing
+// of $format across the switch below (and the later part=='f' check), so
+// resolve it once into a typed local reused at every read site.
+/** @var array<string, mixed>|null $format_row */
+$format_row = (isset($format) && is_array($format)) ? $format : null;
+
 $file = '';
 switch ($_GET['part']) {
     case 'e':
@@ -141,17 +154,19 @@ switch ($_GET['part']) {
         $file = original_to_representative(get_element_path($element_info), $representative_ext);
         break;
     case 'f':
-        // part=f is reachable directly by request even when the earlier
-        // enable_formats block (which sets $format) never ran.
-        if (! isset($format)) {
+        if ($format_row === null) {
             do_error(400, 'Invalid request - format');
         }
-        $file = original_to_format(get_element_path($element_info), $format['ext']);
+        $format_ext = $format_row['ext'];
+        // image_format.ext is `varchar(255) NOT NULL` in the schema — a
+        // genuine DB row for this format always carries a string here.
+        assert(is_string($format_ext));
+        $file = original_to_format(get_element_path($element_info), $format_ext);
         $original_file = $element_info['file'];
         // images.file is `varchar(255) NOT NULL` in the schema — a genuine
         // DB row for this element always carries a string here.
         assert(is_string($original_file));
-        $element_info['file'] = get_filename_wo_extension($original_file) . '.' . $format['ext'];
+        $element_info['file'] = get_filename_wo_extension($original_file) . '.' . $format_ext;
         break;
 }
 
@@ -164,10 +179,12 @@ if ($_GET['part'] == 'e') {
 } elseif ($_GET['part'] == 'r') {
     pwg_log($_GET['id'], 'other');
 } elseif ($_GET['part'] == 'f') {
-    if (! isset($format)) {
+    if ($format_row === null) {
         do_error(400, 'Invalid request - format');
     }
-    pwg_log($_GET['id'], 'high', $format['format_id']);
+    $format_id_val = $format_row['format_id'] ?? null;
+    $format_id_val = is_string($format_id_val) ? $format_id_val : null;
+    pwg_log($_GET['id'], 'high', $format_id_val);
 }
 
 trigger_notify('loc_action_before_http_headers');

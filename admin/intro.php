@@ -15,7 +15,24 @@ if (! defined('PHPWG_ROOT_PATH')) {
 
 // Bootstrap globals. $link_start is set by admin.php before including this
 // page; the rest by include/common.inc.php.
+/**
+ * @var array<string, mixed> $conf
+ * @var array<string, mixed> $lang
+ * @var string $link_start
+ * @var \Logger $logger
+ * @var array<string, mixed> $page
+ * @var array<string, mixed> $pwg_loaded_plugins
+ * @var \Template $template
+ * @var array<string, mixed> $user
+ */
 global $conf, $lang, $link_start, $logger, $page, $pwg_loaded_plugins, $template, $user;
+
+if (! is_array($page['messages'] ?? null)) {
+    $page['messages'] = [];
+}
+if (! is_array($page['warnings'] ?? null)) {
+    $page['warnings'] = [];
+}
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 include_once PHPWG_ROOT_PATH . 'admin/include/check_integrity.class.php';
@@ -60,9 +77,11 @@ if (isset($page['nb_pending_comments'])) {
 
 // any orphan photo?
 $nb_orphans = $page['nb_orphans']; // already calculated in admin.php
+$nb_orphans = is_numeric($nb_orphans) ? (int) $nb_orphans : 0;
 
 if ($page['nb_photos_total'] >= 100000) { // but has not been calculated on a big gallery, so force it now
     $nb_orphans = count_orphans();
+    $nb_orphans = is_numeric($nb_orphans) ? (int) $nb_orphans : 0;
 }
 
 if ($nb_orphans > 0) {
@@ -134,11 +153,14 @@ if ($conf['show_newsletter_subscription'] and userprefs_get_param('show_newslett
     // To see the newsletter promote, the account must have 2 weeks ancient, 3 albums created and 30 photos uploaded
 
     if (strtotime((string) $register_date) < strtotime('2 weeks ago') and $nb_cats >= 3 and $nb_images >= 30) {
+        $user_language = $user['language'] ?? null;
+        $user_language = is_string($user_language) ? $user_language : 'en_UK';
+
         $template->assign(
             [
                 'EMAIL' => $user['email'],
-                'SUBSCRIBE_BASE_URL' => get_newsletter_subscribe_base_url($user['language']),
-                'OLD_NEWSLETTERS_URL' => get_old_newsletters_base_url($user['language']),
+                'SUBSCRIBE_BASE_URL' => get_newsletter_subscribe_base_url($user_language),
+                'OLD_NEWSLETTERS_URL' => get_old_newsletters_base_url($user_language),
             ]
         );
     }
@@ -287,8 +309,17 @@ if ($session_cache_calculated_on === null or $session_cache_calculated_on < pwg_
         }
         $day_nb = $day_date->format('N');
 
-        $activity_last_weeks[$week][$day_nb]['details'][ucfirst((string) $action['object'])][ucfirst((string) $action['action'])] = $action['activity_counter'];
-        $activity_last_weeks[$week][$day_nb]['number'] = ($activity_last_weeks[$week][$day_nb]['number'] ?? 0) + $action['activity_counter'];
+        // COUNT(*) always returns a numeric string from the DB layer.
+        $activity_counter = $action['activity_counter'] ?? null;
+        $activity_counter = is_numeric($activity_counter) ? (int) $activity_counter : 0;
+
+        $activity_last_weeks[$week][$day_nb]['details'][ucfirst((string) $action['object'])][ucfirst((string) $action['action'])] = $activity_counter;
+
+        // 'number' is only ever set below to an int (this same accumulation),
+        // so this is always int|missing -- the ?? 0 fallback covers both.
+        $current_number = $activity_last_weeks[$week][$day_nb]['number'] ?? 0;
+        $activity_last_weeks[$week][$day_nb]['number'] = $current_number + $activity_counter;
+
         $activity_last_weeks[$week][$day_nb]['date'] = format_date($day_date->getTimestamp());
     }
 
@@ -408,10 +439,15 @@ $template->assign('ACTIVITY_LAST_WEEKS', $activity_last_weeks);
 $template->assign('ACTIVITY_CHART_DATA', $chart_data);
 $template->assign('ACTIVITY_CHART_NUMBER_SIZES', $size);
 
+$lang_days = $lang['day'] ?? null;
+$lang_days = is_array($lang_days) ? $lang_days : [];
+
 $day_labels = [];
 for ($i = 0; $i <= 6; $i++) {
     // first 3 letters of day name
-    $day_labels[] = mb_substr((string) $lang['day'][($i + 1) % 7], 0, 3);
+    $day_name = $lang_days[($i + 1) % 7] ?? null;
+    $day_name = is_string($day_name) ? $day_name : '';
+    $day_labels[] = mb_substr($day_name, 0, 3);
 }
 $template->assign('DAY_LABELS', $day_labels);
 
@@ -420,7 +456,11 @@ $template->assign('DAY_LABELS', $day_labels);
 // +-----------------------------------------------------------------------+
 
 $video_format = ['webm', 'webmv', 'ogg', 'ogv', 'mp4', 'm4v', 'mov'];
+/** @var array<string, array<string, array<string, mixed>>> $data_storage */
 $data_storage = [];
+
+$picture_ext = $conf['picture_ext'] ?? null;
+$picture_ext = is_array($picture_ext) ? $picture_ext : [];
 
 // Select files in Image_Table
 $query = '
@@ -436,7 +476,7 @@ $file_extensions = query2array($query, 'ext');
 
 foreach ($file_extensions as $ext => $ext_details) {
     $type = null;
-    if (in_array(strtolower((string) $ext), $conf['picture_ext'])) {
+    if (in_array(strtolower((string) $ext), $picture_ext)) {
         $type = 'Photos';
     } elseif (in_array(strtolower((string) $ext), $video_format)) {
         $type = 'Videos';
@@ -444,12 +484,25 @@ foreach ($file_extensions as $ext => $ext_details) {
         $type = 'Other';
     }
 
-    $data_storage[$type]['total']['filesize'] = ($data_storage[$type]['total']['filesize'] ?? 0) + $ext_details['filesize'];
-    $data_storage[$type]['total']['nb_files'] = ($data_storage[$type]['total']['nb_files'] ?? 0) + $ext_details['ext_counter'];
+    // SUM()/COUNT(*) always return numeric strings (or NULL for an empty
+    // group) from the DB layer.
+    $ext_filesize = $ext_details['filesize'] ?? null;
+    $ext_filesize = is_numeric($ext_filesize) ? (float) $ext_filesize : 0.0;
+
+    $ext_counter = $ext_details['ext_counter'] ?? null;
+    $ext_counter = is_numeric($ext_counter) ? (int) $ext_counter : 0;
+
+    $current_filesize = $data_storage[$type]['total']['filesize'] ?? 0;
+    $current_filesize = is_numeric($current_filesize) ? (float) $current_filesize : 0.0;
+    $data_storage[$type]['total']['filesize'] = $current_filesize + $ext_filesize;
+
+    $current_nb_files = $data_storage[$type]['total']['nb_files'] ?? 0;
+    $current_nb_files = is_numeric($current_nb_files) ? (int) $current_nb_files : 0;
+    $data_storage[$type]['total']['nb_files'] = $current_nb_files + $ext_counter;
 
     $data_storage[$type]['details'][strtoupper((string) $ext)] = [
-        'filesize' => $ext_details['filesize'],
-        'nb_files' => $ext_details['ext_counter'],
+        'filesize' => $ext_filesize,
+        'nb_files' => $ext_counter,
     ];
 }
 
@@ -467,18 +520,43 @@ $file_extensions = query2array($query, 'ext');
 foreach ($file_extensions as $ext => $ext_details) {
     $type = 'Formats';
 
-    $data_storage[$type]['total']['filesize'] = ($data_storage[$type]['total']['filesize'] ?? 0) + $ext_details['filesize'];
-    $data_storage[$type]['total']['nb_files'] = ($data_storage[$type]['total']['nb_files'] ?? 0) + $ext_details['ext_counter'];
+    // SUM()/COUNT(*) always return numeric strings (or NULL for an empty
+    // group) from the DB layer.
+    $ext_filesize = $ext_details['filesize'] ?? null;
+    $ext_filesize = is_numeric($ext_filesize) ? (float) $ext_filesize : 0.0;
+
+    $ext_counter = $ext_details['ext_counter'] ?? null;
+    $ext_counter = is_numeric($ext_counter) ? (int) $ext_counter : 0;
+
+    $current_filesize = $data_storage[$type]['total']['filesize'] ?? 0;
+    $current_filesize = is_numeric($current_filesize) ? (float) $current_filesize : 0.0;
+    $data_storage[$type]['total']['filesize'] = $current_filesize + $ext_filesize;
+
+    $current_nb_files = $data_storage[$type]['total']['nb_files'] ?? 0;
+    $current_nb_files = is_numeric($current_nb_files) ? (int) $current_nb_files : 0;
+    $data_storage[$type]['total']['nb_files'] = $current_nb_files + $ext_counter;
 
     $data_storage[$type]['details'][strtoupper((string) $ext)] = [
-        'filesize' => $ext_details['filesize'],
-        'nb_files' => $ext_details['ext_counter'],
+        'filesize' => $ext_filesize,
+        'nb_files' => $ext_counter,
     ];
 }
 
 // Add cache size if requested and known.
+// $conf['cache_sizes'] is normally the serialized string as loaded from the
+// config table, but conf_update_param(..., true) can also leave the raw
+// array in place within the same request (see admin/maintenance_env.php).
 if ($conf['add_cache_to_storage_chart'] && isset($conf['cache_sizes'])) {
-    $cache_sizes = unserialize($conf['cache_sizes']);
+    $cache_sizes = null;
+    if (is_string($conf['cache_sizes'])) {
+        $unserialized_cache_sizes = unserialize($conf['cache_sizes']);
+        if (is_array($unserialized_cache_sizes)) {
+            $cache_sizes = $unserialized_cache_sizes;
+        }
+    } elseif (is_array($conf['cache_sizes'])) {
+        $cache_sizes = $conf['cache_sizes'];
+    }
+
     if (is_array($cache_sizes)) {
         $cache_size_zero = $cache_sizes[0] ?? null;
         $cache_size_value = is_array($cache_size_zero) ? ($cache_size_zero['value'] ?? null) : null;
@@ -491,7 +569,9 @@ if ($conf['add_cache_to_storage_chart'] && isset($conf['cache_sizes'])) {
 // Calculate total storage
 $total_storage = 0;
 foreach ($data_storage as $value) {
-    $total_storage += $value['total']['filesize'];
+    $storage_filesize = $value['total']['filesize'] ?? 0;
+    $storage_filesize = is_numeric($storage_filesize) ? (float) $storage_filesize : 0.0;
+    $total_storage += $storage_filesize;
 }
 
 // Pass data to HTML

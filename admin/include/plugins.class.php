@@ -187,6 +187,7 @@ class plugins
      */
     public function perform_action($action, $plugin_id, array $options = []): array
     {
+        /** @var array<string, mixed> $conf */
         global $conf;
 
         if (! $conf['enable_extensions_install'] and $action == 'delete') {
@@ -437,9 +438,10 @@ DELETE FROM ' . PLUGINS_TABLE . '
             }
             if (preg_match('/Has Settings:\\s*([Tt]rue|[Ww]ebmaster)/', $plg_data, $val)) {
                 if (strtolower($val[1]) == 'webmaster') {
+                    /** @var array<string, mixed> $user */
                     global $user;
 
-                    if (isset($user) and $user['status'] == 'webmaster') {
+                    if ($user['status'] == 'webmaster') {
                         $plugin['hasSettings'] = true;
                     }
                 } else {
@@ -497,13 +499,30 @@ DELETE FROM ' . PLUGINS_TABLE . '
      */
     public function get_versions_to_check(bool $beta_test = false, string $version = PHPWG_VERSION): array
     {
+        /** @var array<string, mixed> $conf */
         global $conf;
 
+        // PEM_URL is defined via define('PEM_URL', $conf['alternative_pem_url']) in
+        // one branch of include/common.inc.php, so PHPStan can't prove it's a
+        // string across that file boundary — narrow it once here (same
+        // pattern as updates.class.php::get_server_extensions()).
+        $pem_base_url = is_string(PEM_URL) ? PEM_URL : '';
+
         $versions_to_check = [];
-        $url = PEM_URL . '/api/get_version_list.php?category_id=' . $conf['pem_plugins_category'] . '&format=php';
+        $url = $pem_base_url . '/api/get_version_list.php';
+        // category_id/format go through fetchRemote()'s $get_data (like
+        // get_server_plugins()/get_incompatible_plugins() below) instead of
+        // being string-concatenated into the URL: $conf['pem_plugins_category']
+        // is mixed (from $conf's array<string, mixed> shape) and fetchRemote()
+        // already accepts array<string, mixed> $get_data, so this avoids
+        // concatenating a non-string value into the query string.
+        $get_data = [
+            'category_id' => $conf['pem_plugins_category'],
+            'format' => 'php',
+        ];
         // $result is never a resource here: no fopen() handle is passed to
         // fetchRemote() above.
-        if (fetchRemote($url, $result) and is_string($result) and $pem_versions = @unserialize($result)) {
+        if (fetchRemote($url, $result, $get_data) and is_string($result) and $pem_versions = @unserialize($result)) {
             // unserialize() of a remote PEM response is genuinely
             // untyped — validate it's an array of arrays before indexing
             // into it below, rather than trusting the external payload.
@@ -568,6 +587,10 @@ DELETE FROM ' . PLUGINS_TABLE . '
      */
     public function get_server_plugins(bool $new = false, bool $beta_test = false): bool
     {
+        /**
+         * @var array<string, mixed> $user
+         * @var array<string, mixed> $conf
+         */
         global $user, $conf;
 
         $versions_to_check = $this->get_versions_to_check($beta_test);
@@ -595,13 +618,20 @@ DELETE FROM ' . PLUGINS_TABLE . '
         }
 
         // Retrieve PEM plugins infos
-        $url = PEM_URL . '/api/get_revision_list-next.php';
+        // PEM_URL is defined via define('PEM_URL', $conf['alternative_pem_url']) in
+        // one branch of include/common.inc.php, so PHPStan can't prove it's a
+        // string across that file boundary — narrow it once here (same
+        // pattern as updates.class.php::get_server_extensions()).
+        $pem_base_url = is_string(PEM_URL) ? PEM_URL : '';
+        $url = $pem_base_url . '/api/get_revision_list-next.php';
+        $user_language = $user['language'] ?? null;
+        $user_language = is_scalar($user_language) ? (string) $user_language : '';
         $get_data = [
             'category_id' => $conf['pem_plugins_category'],
             'format' => 'php',
             'last_revision_only' => 'true',
             'version' => implode(',', $versions_to_check_strings),
-            'lang' => substr((string) $user['language'], 0, 2),
+            'lang' => substr($user_language, 0, 2),
             'get_nb_downloads' => 'true',
         ];
 
@@ -673,6 +703,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
             }
         }
 
+        /** @var array<string, mixed> $conf */
         global $conf;
 
         // Plugins to check
@@ -684,7 +715,12 @@ DELETE FROM ' . PLUGINS_TABLE . '
         }
 
         // Retrieve PEM plugins infos
-        $url = PEM_URL . '/api/get_revision_list.php';
+        // PEM_URL is defined via define('PEM_URL', $conf['alternative_pem_url']) in
+        // one branch of include/common.inc.php, so PHPStan can't prove it's a
+        // string across that file boundary — narrow it once here (same
+        // pattern as updates.class.php::get_server_extensions()).
+        $pem_base_url = is_string(PEM_URL) ? PEM_URL : '';
+        $url = $pem_base_url . '/api/get_revision_list.php';
         $get_data = [
             'category_id' => $conf['pem_plugins_category'],
             'format' => 'php',
@@ -765,10 +801,16 @@ DELETE FROM ' . PLUGINS_TABLE . '
      */
     public function extract_plugin_files($action, $revision, $dest, ?string &$plugin_id = null): string
     {
+        /** @var \Logger $logger */
         global $logger;
 
         if ($archive = tempnam(PHPWG_PLUGINS_PATH, 'zip')) {
-            $url = PEM_URL . '/download.php';
+            // PEM_URL is defined via define('PEM_URL', $conf['alternative_pem_url']) in
+            // one branch of include/common.inc.php, so PHPStan can't prove it's a
+            // string across that file boundary — narrow it once here (same
+            // pattern as updates.class.php::get_server_extensions()).
+            $pem_base_url = is_string(PEM_URL) ? PEM_URL : '';
+            $url = $pem_base_url . '/download.php';
             $get_data = [
                 'rid' => $revision,
                 'origin' => 'piwigo_' . $action,
@@ -784,16 +826,24 @@ DELETE FROM ' . PLUGINS_TABLE . '
                 }
                 include_once PHPWG_ROOT_PATH . 'admin/include/functions_zip.inc.php';
                 if ($list = zip_list_filenames($archive)) {
+                    // zip_list_filenames() is typed to return
+                    // array<int, array{filename: string}>|false, so
+                    // $file['filename'] is already a real string here.
+                    // $main_filepath is narrowed to string|null (instead of
+                    // relying on isset()-across-`or` flow narrowing, which
+                    // PHPStan doesn't track reliably through a loop) so its
+                    // type stays known at every later read below.
+                    $main_filepath = null;
                     foreach ($list as $file) {
                         // we search main.inc.php in archive
-                        if (basename((string) $file['filename']) == 'main.inc.php'
-                          and (! isset($main_filepath)
-                          or strlen((string) $file['filename']) < strlen($main_filepath))) {
+                        if (basename($file['filename']) == 'main.inc.php'
+                          and ($main_filepath === null
+                          or strlen($file['filename']) < strlen($main_filepath))) {
                             $main_filepath = $file['filename'];
                         }
                     }
 
-                    if (isset($main_filepath)) {
+                    if ($main_filepath !== null) {
                         $logger->debug(__FUNCTION__ . ', $main_filepath = ' . $main_filepath);
 
                         $root = dirname($main_filepath); // main.inc.php path in archive

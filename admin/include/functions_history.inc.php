@@ -17,12 +17,14 @@ include_once PHPWG_ROOT_PATH . 'admin/include/tabsheet.class.php';
  */
 function history_tabsheet(): void
 {
+    /** @var array<string, mixed> $page */
     global $page, $link_start;
 
     // TabSheet
     $tabsheet = new tabsheet();
     $tabsheet->set_id('history');
-    $tabsheet->select($page['page']);
+    $page_tab = isset($page['page']) && is_string($page['page']) ? $page['page'] : '';
+    $tabsheet->select($page_tab);
     $tabsheet->assign();
 }
 
@@ -234,12 +236,17 @@ SELECT
 ;';
     $result = pwg_query($query);
 
+    /** @var array<string, array{nb_pages: int, history_id_from: int, history_id_to: int}> $need_update */
     $need_update = [];
 
     $is_first = true;
     $first_time_key = null;
 
     while ($row = pwg_db_fetch_assoc($result)) {
+        $row_min_id = isset($row['min_id']) && is_numeric($row['min_id']) ? (int) $row['min_id'] : 0;
+        $row_max_id = isset($row['max_id']) && is_numeric($row['max_id']) ? (int) $row['max_id'] : 0;
+        $row_nb_pages = isset($row['nb_pages']) && is_numeric($row['nb_pages']) ? (int) $row['nb_pages'] : 0;
+
         $time_keys = [
             substr((string) $row['date'], 0, 4), // yyyy
             substr((string) $row['date'], 0, 7), // yyyy-mm
@@ -255,18 +262,18 @@ SELECT
             if (! isset($need_update[$time_key])) {
                 $need_update[$time_key] = [
                     'nb_pages' => 0,
-                    'history_id_from' => $row['min_id'],
-                    'history_id_to' => $row['max_id'],
+                    'history_id_from' => $row_min_id,
+                    'history_id_to' => $row_max_id,
                 ];
             }
-            $need_update[$time_key]['nb_pages'] += $row['nb_pages'];
+            $need_update[$time_key]['nb_pages'] += $row_nb_pages;
 
-            if ($row['min_id'] < $need_update[$time_key]['history_id_from']) {
-                $need_update[$time_key]['history_id_from'] = $row['min_id'];
+            if ($row_min_id < $need_update[$time_key]['history_id_from']) {
+                $need_update[$time_key]['history_id_from'] = $row_min_id;
             }
 
-            if ($row['max_id'] > $need_update[$time_key]['history_id_to']) {
-                $need_update[$time_key]['history_id_to'] = $row['max_id'];
+            if ($row_max_id > $need_update[$time_key]['history_id_to']) {
+                $need_update[$time_key]['history_id_to'] = $row_max_id;
             }
         }
 
@@ -325,7 +332,8 @@ SELECT *
             }
 
             if (isset($need_update[$key])) {
-                $row['nb_pages'] += $need_update[$key]['nb_pages'];
+                $row_nb_pages = isset($row['nb_pages']) && is_numeric($row['nb_pages']) ? (int) $row['nb_pages'] : 0;
+                $row['nb_pages'] = $row_nb_pages + $need_update[$key]['nb_pages'];
                 $row['history_id_to'] = $need_update[$key]['history_id_to'];
                 $updates[] = $row;
                 unset($need_update[$key]);
@@ -374,9 +382,15 @@ SELECT *
  */
 function history_autopurge(): void
 {
+    /**
+     * @var array<string, mixed> $conf
+     * @var \Logger $logger
+     */
     global $conf, $logger;
 
-    if ($conf['history_autopurge_keep_lines'] == 0) {
+    $keep_lines = is_numeric($conf['history_autopurge_keep_lines'] ?? null) ? (int) $conf['history_autopurge_keep_lines'] : 0;
+
+    if ($keep_lines == 0) {
         return;
     }
 
@@ -391,7 +405,7 @@ SELECT
     assert($row !== null);
     [$count] = $row;
 
-    if ($count <= $conf['history_autopurge_keep_lines']) {
+    if ($count <= $keep_lines) {
         history_remove_summarized_column();
         return; // no need to purge for now
     }
@@ -410,7 +424,8 @@ SELECT
         return; // lines not summarized, no purge
     }
 
-    $history_id_last_summarized = $summary_lines[0]['history_id_to'];
+    $history_id_last_summarized_raw = $summary_lines[0]['history_id_to'];
+    $history_id_last_summarized = is_numeric($history_id_last_summarized_raw) ? (int) $history_id_last_summarized_raw : 0;
 
     // 2) find the latest history line (and substract the number of lines to keep)
     $query = '
@@ -425,7 +440,8 @@ SELECT
         return;
     }
 
-    $history_id_latest = $history_lines[0]['id'];
+    $history_id_latest_raw = $history_lines[0]['id'];
+    $history_id_latest = is_numeric($history_id_latest_raw) ? (int) $history_id_latest_raw : 0;
 
     // 3) find the oldest history line (and add the number of lines to delete)
     $query = '
@@ -436,17 +452,20 @@ SELECT
   LIMIT 1
 ;';
     $history_lines = query2array($query);
-    $history_id_oldest = $history_lines[0]['id'];
+    $history_id_oldest_raw = $history_lines[0]['id'];
+    $history_id_oldest = is_numeric($history_id_oldest_raw) ? (int) $history_id_oldest_raw : 0;
+
+    $blocksize = is_numeric($conf['history_autopurge_blocksize'] ?? null) ? (int) $conf['history_autopurge_blocksize'] : 0;
 
     $search_min = [
         $history_id_last_summarized,
-        $history_id_latest - $conf['history_autopurge_keep_lines'],
-        $history_id_oldest + $conf['history_autopurge_blocksize'],
+        $history_id_latest - $keep_lines,
+        $history_id_oldest + $blocksize,
     ];
 
     $history_id_delete_before = min($search_min);
 
-    $logger->debug(__FUNCTION__ . ', ' . join('/', $search_min));
+    $logger->debug(__FUNCTION__ . ', ' . join('/', array_map('strval', $search_min)));
 
     $query = '
 DELETE
@@ -460,6 +479,7 @@ DELETE
 
 function history_remove_summarized_column(): void
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     if (isset($conf['history_summarized_dropped']) and $conf['history_summarized_dropped']) {
@@ -475,7 +495,10 @@ SELECT
     assert($row !== null);
     [$count] = $row;
 
-    if ($count > $conf['history_autopurge_keep_lines'] + $conf['history_autopurge_blocksize']) {
+    $keep_lines = is_numeric($conf['history_autopurge_keep_lines'] ?? null) ? (int) $conf['history_autopurge_keep_lines'] : 0;
+    $blocksize = is_numeric($conf['history_autopurge_blocksize'] ?? null) ? (int) $conf['history_autopurge_blocksize'] : 0;
+
+    if ($count > $keep_lines + $blocksize) {
         // it's not yet time to remove history.summarized
         return;
     }

@@ -155,6 +155,11 @@ function add_uploaded_file(string $source_filepath, ?string $original_filename =
     //
     // 3) register in database
 
+    /**
+     * @var array<string, mixed> $conf
+     * @var array<string, mixed> $user
+     * @var \Logger $logger
+     */
     global $conf, $user, $logger;
 
     if ($original_filename !== null) {
@@ -234,8 +239,10 @@ SELECT
         [$year, $month, $day] = $date_parts;
 
         // upload directory hierarchy
+        $conf_upload_dir = $conf['upload_dir'];
+        $conf_upload_dir = is_string($conf_upload_dir) ? $conf_upload_dir : '';
         $upload_dir = sprintf(
-            PHPWG_ROOT_PATH . $conf['upload_dir'] . '/%s/%s/%s',
+            PHPWG_ROOT_PATH . $conf_upload_dir . '/%s/%s/%s',
             $year,
             $month,
             $day
@@ -279,6 +286,7 @@ SELECT
                 unlink($source_filepath);
                 $error_msg = 'File extension "' . $original_extension . '" for file "' . $original_filename . '" does not match file MIME type "' . $finfo_type . '"';
                 if (defined('IN_WS')) {
+                    /** @var \PwgServer $service */
                     global $service;
                     $service->sendResponse(new PwgError(415, $error_msg));
                     exit;
@@ -287,7 +295,9 @@ SELECT
                 die($error_msg);
             }
 
-            if (in_array($original_extension, $conf['file_ext'])) {
+            $conf_file_ext = $conf['file_ext'];
+            $conf_file_ext = is_array($conf_file_ext) ? $conf_file_ext : [];
+            if (in_array($original_extension, $conf_file_ext)) {
                 $file_path .= $original_extension;
             } else {
                 unlink($source_filepath);
@@ -335,17 +345,26 @@ SELECT
 
     if (pwg_image::get_library() != 'gd') {
         if ($conf['original_resize']) {
-            $need_resize = need_resize($file_path, $conf['original_resize_maxwidth'], $conf['original_resize_maxheight']);
+            $original_resize_maxwidth = $conf['original_resize_maxwidth'];
+            $original_resize_maxwidth = is_numeric($original_resize_maxwidth) ? (int) $original_resize_maxwidth : 2000;
+
+            $original_resize_maxheight = $conf['original_resize_maxheight'];
+            $original_resize_maxheight = is_numeric($original_resize_maxheight) ? (int) $original_resize_maxheight : 2000;
+
+            $need_resize = need_resize($file_path, $original_resize_maxwidth, $original_resize_maxheight);
 
             if ($need_resize) {
                 $img = new pwg_image($file_path);
 
+                $original_resize_quality = $conf['original_resize_quality'];
+                $original_resize_quality = is_numeric($original_resize_quality) ? (int) $original_resize_quality : 95;
+
                 $img->pwg_resize(
                     $file_path,
-                    $conf['original_resize_maxwidth'],
-                    $conf['original_resize_maxheight'],
-                    $conf['original_resize_quality'],
-                    $conf['upload_form_automatic_rotation'],
+                    $original_resize_maxwidth,
+                    $original_resize_maxheight,
+                    $original_resize_quality,
+                    (bool) $conf['upload_form_automatic_rotation'],
                     false
                 );
 
@@ -460,6 +479,7 @@ SELECT
  */
 function add_uploaded_file_add_to_categories(int|string $image_id, ?array $categories): void
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     if (! isset($conf['lounge_active'])) {
@@ -478,7 +498,10 @@ function add_uploaded_file_add_to_categories(int|string $image_id, ?array $categ
 
     if (isset($categories) and count($categories) > 0) {
         if ($conf['lounge_active']) {
-            fill_lounge([$image_id], $categories);
+            // fill_lounge() requires int keys for $categories; a WS param
+            // forced into an array by makeArrayParam() could theoretically
+            // carry non-sequential/string keys, so reindex to guarantee it.
+            fill_lounge([$image_id], array_values($categories));
         } else {
             associate_images_to_categories([(int) $image_id], $categories);
         }
@@ -588,6 +611,10 @@ SELECT
 add_event_handler('upload_file', 'upload_file_pdf');
 function upload_file_pdf(?string $representative_ext, string $file_path): ?string
 {
+    /**
+     * @var array<string, mixed> $conf
+     * @var \Logger $logger
+     */
     global $logger, $conf;
 
     $logger->info(__FUNCTION__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
@@ -617,7 +644,9 @@ function upload_file_pdf(?string $representative_ext, string $file_path): ?strin
     $representative_file_path = original_to_representative($file_path, $ext);
     prepare_directory(dirname($representative_file_path));
 
-    $exec = $conf['ext_imagick_dir'] . pwg_image::get_ext_imagick_command();
+    $ext_imagick_dir = $conf['ext_imagick_dir'];
+    $ext_imagick_dir = is_string($ext_imagick_dir) ? $ext_imagick_dir : '';
+    $exec = $ext_imagick_dir . pwg_image::get_ext_imagick_command();
     $exec .= ' "' . realpath($file_path) . '"[0]';
     if ($ext == 'jpg') {
         $exec .= ' -quality ' . $jpg_quality;
@@ -637,6 +666,10 @@ function upload_file_pdf(?string $representative_ext, string $file_path): ?strin
 add_event_handler('upload_file', 'upload_file_heic');
 function upload_file_heic(?string $representative_ext, string $file_path): ?string
 {
+    /**
+     * @var array<string, mixed> $conf
+     * @var \Logger $logger
+     */
     global $logger, $conf;
 
     $logger->info(__FUNCTION__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
@@ -661,7 +694,9 @@ function upload_file_heic(?string $representative_ext, string $file_path): ?stri
 
     [$w, $h] = get_optimal_dimensions_for_representative();
 
-    $exec = $conf['ext_imagick_dir'] . pwg_image::get_ext_imagick_command();
+    $ext_imagick_dir = $conf['ext_imagick_dir'];
+    $ext_imagick_dir = is_string($ext_imagick_dir) ? $ext_imagick_dir : '';
+    $exec = $ext_imagick_dir . pwg_image::get_ext_imagick_command();
     $exec .= ' "' . realpath($file_path) . '"';
     $exec .= ' -sampling-factor 4:2:0 -quality 85 -interlace JPEG -colorspace sRGB -auto-orient +repage -resize "' . $w . 'x' . $h . '>"';
     $exec .= ' "' . $representative_file_path . '"';
@@ -682,6 +717,10 @@ function upload_file_heic(?string $representative_ext, string $file_path): ?stri
 add_event_handler('upload_file', 'upload_file_tiff');
 function upload_file_tiff(?string $representative_ext, string $file_path): ?string
 {
+    /**
+     * @var array<string, mixed> $conf
+     * @var \Logger $logger
+     */
     global $logger, $conf;
 
     $logger->info(__FUNCTION__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
@@ -702,15 +741,18 @@ function upload_file_tiff(?string $representative_ext, string $file_path): ?stri
     $representative_file_path = dirname((string) $file_path) . '/pwg_representative/';
     $representative_file_path .= get_filename_wo_extension(basename((string) $file_path)) . '.';
 
-    $representative_ext = $conf['tiff_representative_ext'];
+    $conf_tiff_representative_ext = $conf['tiff_representative_ext'];
+    $representative_ext = is_string($conf_tiff_representative_ext) ? $conf_tiff_representative_ext : 'jpg';
     $representative_file_path .= $representative_ext;
 
     prepare_directory(dirname($representative_file_path));
 
-    $exec = $conf['ext_imagick_dir'] . pwg_image::get_ext_imagick_command();
+    $ext_imagick_dir = $conf['ext_imagick_dir'];
+    $ext_imagick_dir = is_string($ext_imagick_dir) ? $ext_imagick_dir : '';
+    $exec = $ext_imagick_dir . pwg_image::get_ext_imagick_command();
     $exec .= ' "' . realpath($file_path) . '"';
 
-    if ($conf['tiff_representative_ext'] == 'jpg') {
+    if ($representative_ext == 'jpg') {
         $exec .= ' -quality 98';
     }
 
@@ -742,6 +784,10 @@ function upload_file_tiff(?string $representative_ext, string $file_path): ?stri
 add_event_handler('upload_file', 'upload_file_video');
 function upload_file_video(?string $representative_ext, string $file_path): ?string
 {
+    /**
+     * @var array<string, mixed> $conf
+     * @var \Logger $logger
+     */
     global $logger, $conf;
 
     $logger->info(__FUNCTION__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
@@ -779,7 +825,9 @@ function upload_file_video(?string $representative_ext, string $file_path): ?str
     $logger->info(__FUNCTION__ . ', Poster at ' . $second . 's');
 
     // Generate poster, see https://trac.ffmpeg.org/wiki/Seeking
-    $ffmpeg = $conf['ffmpeg_dir'] . 'ffmpeg';
+    $ffmpeg_dir = $conf['ffmpeg_dir'];
+    $ffmpeg_dir = is_string($ffmpeg_dir) ? $ffmpeg_dir : '';
+    $ffmpeg = $ffmpeg_dir . 'ffmpeg';
     $ffmpeg .= ' -ss ' . $second;  // Fast seeking
     $ffmpeg .= ' -i "' . $file_path . '"'; // Video file
     $ffmpeg .= ' -frames:v 1';  // Extract one frame
@@ -814,6 +862,10 @@ function upload_file_video(?string $representative_ext, string $file_path): ?str
 add_event_handler('upload_file', 'upload_file_psd');
 function upload_file_psd(?string $representative_ext, string $file_path): ?string
 {
+    /**
+     * @var array<string, mixed> $conf
+     * @var \Logger $logger
+     */
     global $logger, $conf;
 
     $logger->info(__FUNCTION__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
@@ -839,7 +891,9 @@ function upload_file_psd(?string $representative_ext, string $file_path): ?strin
 
     prepare_directory(dirname($representative_file_path));
 
-    $exec = $conf['ext_imagick_dir'] . pwg_image::get_ext_imagick_command();
+    $ext_imagick_dir = $conf['ext_imagick_dir'];
+    $ext_imagick_dir = is_string($ext_imagick_dir) ? $ext_imagick_dir : '';
+    $exec = $ext_imagick_dir . pwg_image::get_ext_imagick_command();
 
     $exec .= ' "' . realpath($file_path) . '"';
 
@@ -872,6 +926,10 @@ function upload_file_psd(?string $representative_ext, string $file_path): ?strin
 add_event_handler('upload_file', 'upload_file_eps');
 function upload_file_eps(?string $representative_ext, string $file_path): ?string
 {
+    /**
+     * @var array<string, mixed> $conf
+     * @var \Logger $logger
+     */
     global $logger, $conf;
 
     $logger->info(__FUNCTION__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
@@ -897,7 +955,9 @@ function upload_file_eps(?string $representative_ext, string $file_path): ?strin
 
     // convert -density 300 image.eps -resize 2048x2048 image.png
 
-    $exec = $conf['ext_imagick_dir'] . pwg_image::get_ext_imagick_command();
+    $ext_imagick_dir = $conf['ext_imagick_dir'];
+    $ext_imagick_dir = is_string($ext_imagick_dir) ? $ext_imagick_dir : '';
+    $exec = $ext_imagick_dir . pwg_image::get_ext_imagick_command();
     $exec .= ' "' . realpath($file_path) . '"';
     $exec .= ' -density 300';
     $exec .= ' -resize 2048x2048';
@@ -947,9 +1007,15 @@ function prepare_directory(string $directory): void
 
 function need_resize(string $image_filepath, int $max_width, int $max_height): bool
 {
+    /**
+     * @var array<string, mixed> $conf
+     * @var \Logger $logger
+     */
     global $conf, $logger;
 
-    if (! in_array(strtolower(get_extension($image_filepath)), $conf['picture_ext'])) {
+    $picture_ext = $conf['picture_ext'];
+    $picture_ext = is_array($picture_ext) ? $picture_ext : [];
+    if (! in_array(strtolower(get_extension($image_filepath)), $picture_ext)) {
         return false;
     }
 
@@ -998,6 +1064,7 @@ function pwg_image_infos(string $path): array
  */
 function is_valid_image_extension(string $extension): array
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     if (isset($conf['upload_form_all_types']) and $conf['upload_form_all_types']) {
@@ -1005,6 +1072,10 @@ function is_valid_image_extension(string $extension): array
     } else {
         $extensions = $conf['picture_ext'];
     }
+
+    // $conf values are inherently mixed; only string elements can safely
+    // be passed to strtolower() below.
+    $extensions = is_array($extensions) ? array_filter($extensions, 'is_string') : [];
 
     return array_unique(array_map(strtolower(...), $extensions));
 }
@@ -1072,22 +1143,31 @@ function add_upload_error(int|string $upload_id, string $error_message): void
 
 function ready_for_upload_message(): ?string
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
-    $relative_dir = preg_replace('#^' . PHPWG_ROOT_PATH . '#', '', (string) $conf['upload_dir']);
+    $upload_dir = $conf['upload_dir'];
+    $upload_dir = is_string($upload_dir) ? $upload_dir : '';
 
-    if (! is_dir($conf['upload_dir'])) {
-        if (! is_writable(dirname((string) $conf['upload_dir']))) {
+    $relative_dir = preg_replace('#^' . PHPWG_ROOT_PATH . '#', '', $upload_dir);
+
+    if (! is_dir($upload_dir)) {
+        if (! is_writable(dirname($upload_dir))) {
             return sprintf(
                 l10n('Create the "%s" directory at the root of your Piwigo installation'),
                 $relative_dir
             );
         }
     } else {
-        if (! is_writable($conf['upload_dir'])) {
-            @chmod($conf['upload_dir'], 0777);
+        if (! is_writable($upload_dir)) {
+            @chmod($upload_dir, 0777);
 
-            if (! is_writable($conf['upload_dir'])) {
+            // PHPStan has no model of chmod()'s real filesystem side effect,
+            // so it (wrongly) proves this repeat is_writable() call must
+            // still return the same false as the enclosing if — this is a
+            // genuine re-check of chmod()'s actual outcome, not dead code.
+            // @phpstan-ignore booleanNot.alwaysTrue
+            if (! is_writable($upload_dir)) {
                 return sprintf(
                     l10n('Give write access (chmod 777) to "%s" directory at the root of your Piwigo installation'),
                     $relative_dir

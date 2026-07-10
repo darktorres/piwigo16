@@ -15,6 +15,12 @@ if (! defined('PHPWG_ROOT_PATH')) {
 
 // Bootstrap globals. $base_url/$collection are set by the two including
 // batch_manager_*.php controllers; the rest by include/common.inc.php.
+/**
+ * @var string $base_url
+ * @var array<string, mixed> $conf
+ * @var array<string, mixed> $page
+ * @var \Template $template
+ */
 global $base_url, $collection, $conf, $page, $template;
 
 // Locally-typed snapshot of $_SESSION['bulk_manager_filter']. It is always
@@ -25,6 +31,17 @@ global $base_url, $collection, $conf, $page, $template;
 // writes to $_SESSION['bulk_manager_filter']).
 /** @var array<string, mixed> $bulk_manager_filter */
 $bulk_manager_filter = isset($_SESSION['bulk_manager_filter']) && is_array($_SESSION['bulk_manager_filter']) ? $_SESSION['bulk_manager_filter'] : [];
+
+// $page['cat_elements_id'] is always a list of scalar image ids, and
+// $page['start'] is always set (0 or a validated numeric $_REQUEST value),
+// set by admin/batch_manager.php (which includes this file, via
+// batch_manager_global.php / batch_manager_unit.php) before this file runs;
+// PHPStan cannot see across that include boundary, so we narrow both once
+// here for every use below.
+$cat_elements_id = is_array($page['cat_elements_id'])
+    ? array_map('intval', array_filter($page['cat_elements_id'], 'is_numeric'))
+    : [];
+$page_start = is_numeric($page['start']) ? (int) $page['start'] : 0;
 
 $prefilters = [
     [
@@ -69,8 +86,13 @@ if ($conf['enable_synchronization']) {
 }
 
 /**
- * @param array<string, mixed> $a
- * @param array<string, mixed> $b
+ * usort()'s callable contract requires accepting any array key type (not
+ * just string), even though $prefilters entries are always string-keyed
+ * in practice -- narrowing the @param here would make this incompatible
+ * with usort's expected callable(array<mixed>, array<mixed>): int shape.
+ *
+ * @param array<mixed> $a
+ * @param array<mixed> $b
  */
 function UC_name_compare(array $a, array $b): int
 {
@@ -89,7 +111,7 @@ if (is_array($changed_prefilters)) {
 }
 
 // Sort prefilters by localized name.
-usort($prefilters, fn (array $a, array $b): int => strcmp(strtolower((string) $a['NAME']), strtolower((string) $b['NAME'])));
+usort($prefilters, 'UC_name_compare');
 
 $template->assign(
     [
@@ -97,8 +119,8 @@ $template->assign(
         'prefilters' => $prefilters,
         'filter' => $bulk_manager_filter,
         'selection' => $collection,
-        'all_elements' => $page['cat_elements_id'],
-        'START' => $page['start'],
+        'all_elements' => $cat_elements_id,
+        'START' => $page_start,
         'PWG_TOKEN' => get_pwg_token(),
         'U_DISPLAY' => $base_url . get_query_string_diff(['display']),
         'F_ACTION' => $base_url . get_query_string_diff(['cat', 'start', 'tag', 'filter']),
@@ -117,9 +139,18 @@ if (isset($page['no_md5sum_number'])) {
 }
 
 // privacy level
+$available_permission_levels = $conf['available_permission_levels'];
+$available_permission_levels = is_array($available_permission_levels) ? $available_permission_levels : [];
+
 $level_options = [];
-foreach ($conf['available_permission_levels'] as $level) {
-    $level = (int) $level;
+foreach ($available_permission_levels as $level) {
+    // config_default.inc.php seeds this as [0, 1, 2, 4, 8] (always int); a
+    // non-int entry would come from a broken custom config override and has
+    // no meaningful privacy level to render.
+    if (! is_int($level)) {
+        continue;
+    }
+
     $level_options[$level] = l10n(sprintf('Level %d', $level));
 
     if ($level == 0) {
@@ -170,13 +201,13 @@ $template->assign('filter_category_selected', $selected_category);
 // categories can't be broken.
 $associated_categories = [];
 
-if (count($page['cat_elements_id']) > 0) {
+if (count($cat_elements_id) > 0) {
     $query = '
 SELECT
     DISTINCT(category_id) AS id
   FROM ' . IMAGE_CATEGORY_TABLE . ' AS ic
     JOIN ' . IMAGES_TABLE . ' AS i ON i.id = ic.image_id
-  WHERE ic.image_id IN (' . implode(',', $page['cat_elements_id']) . ')
+  WHERE ic.image_id IN (' . implode(',', $cat_elements_id) . ')
     AND (
       ic.category_id != i.storage_category_id
       OR i.storage_category_id IS NULL

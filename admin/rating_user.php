@@ -12,7 +12,10 @@ declare(strict_types=1);
 defined('PHPWG_ROOT_PATH') or die('Hacking attempt!');
 
 // Bootstrap globals, set by include/common.inc.php.
-global $conf, $template;
+/** @var array<string, mixed> $conf */
+global $conf;
+/** @var \Template $template */
+global $template;
 
 include_once PHPWG_ROOT_PATH . 'admin/include/tabsheet.class.php';
 $tabsheet = new tabsheet();
@@ -25,19 +28,20 @@ if (isset($_GET['f_min_rates']) && is_numeric($_GET['f_min_rates'])) {
     $filter_min_rates = (int) $_GET['f_min_rates'];
 }
 
-$consensus_top_number = $conf['top_number'];
+$consensus_top_number = is_numeric($conf['top_number']) ? (int) $conf['top_number'] : 15;
 if (isset($_GET['consensus_top_number']) && is_numeric($_GET['consensus_top_number'])) {
     $consensus_top_number = (int) $_GET['consensus_top_number'];
 }
 
 // build users
-global $conf;
+/** @var array<string, string> $user_fields */
+$user_fields = $conf['user_fields'];
 $query = 'SELECT DISTINCT
-  u.' . $conf['user_fields']['id'] . ' AS id,
-  u.' . $conf['user_fields']['username'] . ' AS name,
+  u.' . $user_fields['id'] . ' AS id,
+  u.' . $user_fields['username'] . ' AS name,
   ui.status
   FROM ' . USERS_TABLE . ' AS u INNER JOIN ' . USER_INFOS_TABLE . ' AS ui
-    ON u.' . $conf['user_fields']['id'] . ' = ui.user_id';
+    ON u.' . $user_fields['id'] . ' = ui.user_id';
 
 $users_by_id = [];
 $result = pwg_query($query);
@@ -49,10 +53,14 @@ while ($row = pwg_db_fetch_assoc($result)) {
     ];
 }
 
+$rate_items_raw = $conf['rate_items'];
+/** @var list<int> $rate_items */
+$rate_items = is_array($rate_items_raw) ? array_map(intval(...), array_filter($rate_items_raw, 'is_numeric')) : [];
+
 $by_user_rating_model = [
     'rates' => [],
 ];
-foreach ($conf['rate_items'] as $rate) {
+foreach ($rate_items as $rate) {
     $by_user_rating_model['rates'][$rate] = [];
 }
 

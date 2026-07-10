@@ -14,6 +14,11 @@ if (! defined('PHPWG_ROOT_PATH')) {
 }
 
 // Bootstrap globals, set by include/common.inc.php.
+/**
+ * @var array<string, mixed> $conf
+ * @var array<string, mixed> $page
+ * @var \Template $template
+ */
 global $conf, $page, $template;
 
 include_once PHPWG_ROOT_PATH . 'admin/include/plugins.class.php';
@@ -37,7 +42,12 @@ if (isset($_GET['show_details'])) {
     $show_details = false;
 }
 
-$base_url = get_root_url() . 'admin.php?page=' . $page['page'];
+// admin.php always populates $page['page'] with a string (either the
+// validated $_GET['page'] or the 'intro' fallback) before including this
+// file, but the shared $page array is typed array<string, mixed>.
+$page_page = $page['page'] ?? null;
+$page_page = is_string($page_page) ? $page_page : '';
+$base_url = get_root_url() . 'admin.php?page=' . $page_page;
 $pwg_token = get_pwg_token();
 $action_url = $base_url . '&amp;plugin=%s&amp;pwg_token=' . $pwg_token;
 
@@ -137,7 +147,12 @@ foreach ($plugins->fs_plugins as $plugin_id => $fs_plugin) {
     // under 'uri' (defaults to '', overwritten by a regex-extracted URI).
     $fs_plugin_uri = $fs_plugin['uri'] ?? '';
     $fs_plugin_uri = is_string($fs_plugin_uri) ? $fs_plugin_uri : '';
-    $visit_url = str_replace($url_to_replace, PEM_URL, $fs_plugin_uri);
+    // PEM_URL is defined via define('PEM_URL', $conf['alternative_pem_url'])
+    // in common.inc.php on one branch, so PHPStan infers the constant's
+    // global type as mixed even though it's always a URL string at runtime.
+    $pem_url = PEM_URL;
+    $pem_url = is_string($pem_url) ? $pem_url : '';
+    $visit_url = str_replace($url_to_replace, $pem_url, $fs_plugin_uri);
 
     $tpl_plugin = [
         'ID' => $plugin_id,

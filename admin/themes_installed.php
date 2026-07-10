@@ -14,15 +14,28 @@ if (! defined('PHPWG_ROOT_PATH')) {
 }
 
 // Bootstrap globals, set by include/common.inc.php.
+/**
+ * @var array<string, mixed> $conf
+ * @var array<string, mixed> $page
+ * @var \Template $template
+ */
 global $conf, $page, $template;
 
 if (! is_webmaster()) {
+    if (! is_array($page['warnings'] ?? null)) {
+        $page['warnings'] = [];
+    }
     $page['warnings'][] = str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'));
 }
 
 include_once PHPWG_ROOT_PATH . 'admin/include/themes.class.php';
 
-$base_url = get_root_url() . 'admin.php?page=' . $page['page'];
+// admin.php always populates $page['page'] with a string (either the
+// validated $_GET['page'] or the 'intro' fallback) before including this
+// file, but the shared $page array is typed array<string, mixed>.
+$page_page = $page['page'] ?? null;
+$page_page = is_string($page_page) ? $page_page : '';
+$base_url = get_root_url() . 'admin.php?page=' . $page_page;
 
 $themes = new themes();
 

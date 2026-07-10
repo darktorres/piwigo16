@@ -22,6 +22,7 @@ declare(strict_types=1);
  */
 function ws_categories_getImages(array $params, PwgServer &$service): \PwgError|array
 {
+    /** @var array<string, mixed> $conf */
     global $user, $conf;
 
     $params['cat_id'] = array_unique($params['cat_id']);
@@ -99,7 +100,7 @@ SELECT
         ) {
             $order_by = $cats[$params['cat_id'][0]]['image_order'];
         }
-        $order_by = empty($order_by) ? $conf['order_by'] : 'ORDER BY ' . $order_by;
+        $order_by = empty($order_by) ? (is_string($conf['order_by']) ? $conf['order_by'] : '') : 'ORDER BY ' . $order_by;
         $favorite_ids = get_user_favorites();
 
         $query = '
@@ -255,6 +256,10 @@ SELECT
  */
 function ws_categories_getList(array $params, PwgServer &$service): \PwgError|array
 {
+    /**
+     * @var array<string, mixed> $user
+     * @var array<string, mixed> $conf
+     */
     global $user, $conf;
 
     if (! in_array($params['thumbnail_size'], array_keys(ImageStdParams::get_defined_type_map()))) {
@@ -268,7 +273,10 @@ function ws_categories_getList(array $params, PwgServer &$service): \PwgError|ar
     $output = [];
     $where = ['1=1'];
     $join_type = 'INNER';
-    $join_user = $user['id'];
+    // narrowed once and reused everywhere below instead of re-reading the
+    // mixed $user['id'] offset at each site.
+    $user_id = is_numeric($user['id']) ? (int) $user['id'] : 0;
+    $join_user = $user_id;
 
     if (! $params['recursive']) {
         if ($params['cat_id'] > 0) {
@@ -288,14 +296,15 @@ function ws_categories_getList(array $params, PwgServer &$service): \PwgError|ar
         $where[] = 'status = "public"';
         $where[] = 'visible = "true"';
 
-        $join_user = $conf['guest_id'];
+        $join_user = is_numeric($conf['guest_id']) ? (int) $conf['guest_id'] : 0;
     } elseif (is_admin()) {
         // in this very specific case, we don't want to hide empty
         // categories. Function calculate_permissions will only return
         // categories that are either locked or private and not permitted
         //
         // calculate_permissions does not consider empty categories as forbidden
-        $forbidden_categories = calculate_permissions($user['id'], $user['status']);
+        $user_status = is_string($user['status']) ? $user['status'] : '';
+        $forbidden_categories = calculate_permissions($user_id, $user_status);
         $where[] = 'id NOT IN (' . $forbidden_categories . ')';
         $join_type = 'LEFT';
     }
@@ -317,7 +326,7 @@ SELECT SQL_CALC_FOUND_ROWS
         $query .= '
     AND name LIKE \'%' . pwg_db_real_escape_string($params['search']) . '%\'';
         if (! isset($params['limit'])) {
-            $query .= ' LIMIT ' . $conf['linked_album_search_limit'];
+            $query .= ' LIMIT ' . (is_numeric($conf['linked_album_search_limit']) ? (int) $conf['linked_album_search_limit'] : 0);
         }
     }
 
@@ -412,7 +421,7 @@ SELECT SQL_CALC_FOUND_ROWS
 SELECT representative_picture_id
   FROM ' . CATEGORIES_TABLE . '
     INNER JOIN ' . USER_CACHE_CATEGORIES_TABLE . '
-    ON id=cat_id AND user_id=' . $user['id'] . '
+    ON id=cat_id AND user_id=' . $user_id . '
   WHERE uppercats LIKE \'' . $row['uppercats'] . ',%\'
     AND representative_picture_id IS NOT NULL
         ' . get_sql_condition_FandF(
@@ -447,7 +456,7 @@ SELECT representative_picture_id
         // management of the album thumbnail -- stops here
 
         if (empty($row['image_order'])) {
-            $row['image_order'] = str_replace('ORDER BY ', '', $conf['order_by']);
+            $row['image_order'] = str_replace('ORDER BY ', '', is_string($conf['order_by']) ? $conf['order_by'] : '');
         }
 
         $cats[] = $row;
@@ -523,7 +532,7 @@ SELECT id, path, representative_ext
 
         foreach ($user_representative_updates_for as $cat_id => $image_id) {
             $updates[] = [
-                'user_id' => $user['id'],
+                'user_id' => $user_id,
                 'cat_id' => $cat_id,
                 'user_representative_picture_id' => $image_id,
             ];
@@ -581,6 +590,7 @@ SELECT id, path, representative_ext
  */
 function ws_categories_getAdminList(array $params, PwgServer &$service): array
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     if (! isset($params['additional_output'])) {
@@ -621,7 +631,7 @@ SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, statu
     if (isset($params['search']) and $params['search'] != '') {
         $query .= '
   AND name LIKE \'%' . pwg_db_real_escape_string($params['search']) . '%\'
-  LIMIT ' . $conf['linked_album_search_limit'];
+  LIMIT ' . (is_numeric($conf['linked_album_search_limit']) ? (int) $conf['linked_album_search_limit'] : 0);
     }
 
     $query .= '
@@ -664,7 +674,7 @@ SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, statu
         );
 
         if (empty($row['image_order'])) {
-            $row['image_order'] = str_replace('ORDER BY ', '', $conf['order_by']);
+            $row['image_order'] = str_replace('ORDER BY ', '', is_string($conf['order_by']) ? $conf['order_by'] : '');
         }
 
         if (in_array('full_name_with_admin_links', $params['additional_output'])) {
@@ -729,6 +739,7 @@ function ws_categories_add(array $params, PwgServer &$service): \PwgError|array
 {
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     if (isset($params['pwg_token']) and get_pwg_token() != $params['pwg_token']) {
@@ -857,6 +868,7 @@ SELECT id
  */
 function ws_categories_setInfo(array $params, PwgServer &$service): ?\PwgError
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     if (isset($params['pwg_token']) and get_pwg_token() != $params['pwg_token']) {
@@ -1010,6 +1022,7 @@ UPDATE ' . USER_CACHE_CATEGORIES_TABLE . '
  */
 function ws_categories_deleteRepresentative(array $params, PwgServer &$service): ?\PwgError
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     // does the category really exist?
@@ -1202,6 +1215,7 @@ SELECT id
  */
 function ws_categories_move(array $params, PwgServer &$service): \PwgError|array
 {
+    /** @var array<string, mixed> $page */
     global $page;
 
     if (get_pwg_token() != $params['pwg_token']) {
@@ -1302,10 +1316,12 @@ SELECT id, name, dir, uppercats
     // directly) keeps its real, post-call shape visible here instead of
     // appearing to still be exactly the empty array set above.
     $included_vars = get_defined_vars();
+    /** @var array<string, mixed> $page */
     $page = $included_vars['page'];
 
-    if (count($page['errors']) != 0) {
-        return new PwgError(403, implode('; ', $page['errors']));
+    $page_errors = is_array($page['errors'] ?? null) ? $page['errors'] : [];
+    if (count($page_errors) != 0) {
+        return new PwgError(403, implode('; ', array_filter($page_errors, 'is_string')));
     }
 
     $query = '
@@ -1342,7 +1358,8 @@ SELECT
         $sub_cat_without_parent = array_diff(get_subcat_ids([$update_cat]), [$update_cat]);
 
         foreach ($sub_cat_without_parent as $id_sub_cat) {
-            $nb_sub_photos += $nb_photos_in[$id_sub_cat] ?? 0;
+            $nb_photos_for_sub_cat = $nb_photos_in[$id_sub_cat] ?? 0;
+            $nb_sub_photos += is_numeric($nb_photos_for_sub_cat) ? (int) $nb_photos_for_sub_cat : 0;
         }
 
         $update_cats[] = [

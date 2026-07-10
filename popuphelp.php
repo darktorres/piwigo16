@@ -17,6 +17,7 @@ define('PHPWG_ROOT_PATH', './');
 define('PWG_HELP', true);
 
 // Bootstrap global, set by include/common.inc.php below.
+/** @var \Template $template */
 global $template;
 
 include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
@@ -26,6 +27,7 @@ include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 // +-----------------------------------------------------------------------+
 check_status(ACCESS_GUEST);
 
+/** @var array<string, mixed> $page */
 $page['body_id'] = 'thePopuphelpPage';
 $title = l10n('Piwigo Help');
 $page['page_banner'] = '';

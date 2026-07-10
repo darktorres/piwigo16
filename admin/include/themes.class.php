@@ -147,6 +147,7 @@ class themes
      */
     public function perform_action($action, $theme_id): array
     {
+        /** @var array<string, mixed> $conf */
         global $conf;
 
         if (! $conf['enable_extensions_install'] and $action == 'delete') {
@@ -346,6 +347,7 @@ DELETE
 
     public function set_default_theme(string $theme_id): void
     {
+        /** @var array<string, mixed> $conf */
         global $conf;
 
         // first we need to know which users are using the current default theme
@@ -357,10 +359,27 @@ SELECT
   FROM ' . USER_INFOS_TABLE . '
   WHERE theme = \'' . $default_theme . '\'
 ;';
+        // array_from_query() returns array<int|string, mixed>; only scalar
+        // user_id values are ever selected by the query above, but narrow
+        // defensively rather than trusting it, same as elsewhere in this
+        // file (e.g. get_children_themes()).
+        $user_ids_str = [];
+        foreach (array_from_query($query, 'user_id') as $query_user_id) {
+            if (is_scalar($query_user_id)) {
+                $user_ids_str[] = (string) $query_user_id;
+            }
+        }
+
+        // $conf['default_user_id']/'guest_id' are always ints (see
+        // include/config_default.inc.php); same narrowing as
+        // languages.class.php::perform_action()'s 'set_default' case.
+        $default_user_id = is_numeric($conf['default_user_id']) ? (int) $conf['default_user_id'] : 0;
+        $guest_id = is_numeric($conf['guest_id']) ? (int) $conf['guest_id'] : 0;
+
         $user_ids = array_unique(
             array_merge(
-                array_from_query($query, 'user_id'),
-                [$conf['guest_id'], $conf['default_user_id']]
+                $user_ids_str,
+                [(string) $guest_id, (string) $default_user_id]
             )
         );
 
@@ -536,7 +555,17 @@ SELECT
      */
     public function get_server_themes(bool $new = false): bool
     {
+        /**
+         * @var array<string, mixed> $user
+         * @var array<string, mixed> $conf
+         */
         global $user, $conf;
+
+        // PEM_URL is defined via define('PEM_URL', $conf['alternative_pem_url']) in
+        // one branch of include/common.inc.php, so PHPStan can't prove it's a
+        // string across that file boundary — narrow it once here (same
+        // pattern as updates.class.php::get_server_extensions()).
+        $pem_base_url = is_string(PEM_URL) ? PEM_URL : '';
 
         $get_data = [
             'category_id' => $conf['pem_themes_category'],
@@ -546,7 +575,7 @@ SELECT
         // Retrieve PEM versions
         $version = PHPWG_VERSION;
         $versions_to_check = [];
-        $url = PEM_URL . '/api/get_version_list.php';
+        $url = $pem_base_url . '/api/get_version_list.php';
         // $result is never a resource here: no fopen() handle is passed to
         // fetchRemote() above.
         if (fetchRemote($url, $result, $get_data) and is_string($result) and $pem_versions = @unserialize($result)) {
@@ -592,13 +621,15 @@ SELECT
         }
 
         // Retrieve PEM themes infos
-        $url = PEM_URL . '/api/get_revision_list-next.php';
+        $url = $pem_base_url . '/api/get_revision_list-next.php';
+        $user_language = $user['language'] ?? null;
+        $user_language = is_scalar($user_language) ? (string) $user_language : '';
         $get_data = array_merge(
             $get_data,
             [
                 'last_revision_only' => 'true',
                 'version' => implode(',', $versions_to_check),
-                'lang' => substr((string) $user['language'], 0, 2),
+                'lang' => substr($user_language, 0, 2),
                 'get_nb_downloads' => 'true',
             ]
         );
@@ -666,10 +697,17 @@ SELECT
      */
     public function extract_theme_files($action, $revision, $dest, ?string &$theme_id = null): string
     {
+        /** @var \Logger $logger */
         global $logger;
 
+        // PEM_URL is defined via define('PEM_URL', $conf['alternative_pem_url']) in
+        // one branch of include/common.inc.php, so PHPStan can't prove it's a
+        // string across that file boundary — narrow it once here (same
+        // pattern as updates.class.php::get_server_extensions()).
+        $pem_base_url = is_string(PEM_URL) ? PEM_URL : '';
+
         if ($archive = tempnam(PHPWG_THEMES_PATH, 'zip')) {
-            $url = PEM_URL . '/download.php';
+            $url = $pem_base_url . '/download.php';
             $get_data = [
                 'rid' => $revision,
                 'origin' => 'piwigo_' . $action,
@@ -685,16 +723,28 @@ SELECT
                 }
                 include_once PHPWG_ROOT_PATH . 'admin/include/functions_zip.inc.php';
                 if ($list = zip_list_filenames($archive)) {
+                    // Declared before the loop (rather than relying on
+                    // isset($main_filepath) to narrow it after the loop) --
+                    // PHPStan doesn't reliably preserve isset()-based
+                    // narrowing for a variable only ever conditionally
+                    // assigned inside a foreach body.
+                    $main_filepath = null;
                     foreach ($list as $file) {
                         // we search main.inc.php in archive
                         if (basename((string) $file['filename']) == 'themeconf.inc.php'
-                          and (! isset($main_filepath)
+                          and ($main_filepath === null
                           or strlen((string) $file['filename']) < strlen($main_filepath))) {
-                            $main_filepath = $file['filename'];
+                            // cast once at assignment (rather than at every
+                            // read site below) since zip_list_filenames()'s
+                            // 'filename' entry is PHPStan-mixed but is
+                            // always a real string archive entry name (same
+                            // pattern as
+                            // languages.class.php::extract_language_files()).
+                            $main_filepath = (string) $file['filename'];
                         }
                     }
 
-                    if (isset($main_filepath)) {
+                    if ($main_filepath !== null) {
                         $logger->debug(__FUNCTION__ . ', $main_filepath = ' . $main_filepath);
 
                         $root = dirname($main_filepath); // main.inc.php path in archive

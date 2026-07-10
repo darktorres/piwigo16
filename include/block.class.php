@@ -76,6 +76,7 @@ class BlockManager
      */
     public function prepare_display(): void
     {
+        /** @var array<string, mixed> $conf */
         global $conf;
         $conf_id = 'blk_' . $this->id;
         $mb_conf = $conf[$conf_id] ?? [];
@@ -169,6 +170,7 @@ class BlockManager
      */
     public function apply($var, $file): void
     {
+        /** @var \Template $template */
         global $template;
 
         $template->set_filename('menubar', $file);

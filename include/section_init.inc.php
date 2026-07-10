@@ -29,6 +29,14 @@ declare(strict_types=1);
 //   );
 
 // Bootstrap globals, set by include/common.inc.php.
+/**
+ * @var array<string, mixed> $conf
+ * @var array<string, mixed> $filter
+ * @var array<string, mixed> $page
+ * @var array<string, mixed> $user
+ * @var \Logger $logger
+ * @var \Template $template
+ */
 global $conf, $filter, $logger, $page, $persistent_cache, $template, $user;
 if (! $persistent_cache instanceof PersistentCache) {
     fatal_error('persistent cache not initialized');
@@ -125,8 +133,15 @@ if (! isset($page['section'])) {
             // No section defined, go to random url
             if (! empty($conf['random_index_redirect']) and empty($tokens[$next_token])) {
                 $random_index_redirect = [];
-                foreach ($conf['random_index_redirect'] as $random_url => $random_url_condition) {
-                    if (empty($random_url_condition) or eval($random_url_condition)) {
+                // $conf['random_index_redirect'] is a map of URL => PHP
+                // condition string (see include/config_default.inc.php); a
+                // malformed local override shouldn't crash this page.
+                $redirect_candidates = is_array($conf['random_index_redirect']) ? $conf['random_index_redirect'] : [];
+                foreach ($redirect_candidates as $random_url => $random_url_condition) {
+                    if (! is_string($random_url)) {
+                        continue;
+                    }
+                    if (empty($random_url_condition) or (is_string($random_url_condition) and eval($random_url_condition))) {
                         $random_index_redirect[] = $random_url;
                     }
                 }
@@ -182,7 +197,7 @@ if (pwg_get_session_var('image_order', 0) > 0) {
         $conf['order_by'] = str_replace(
             'ORDER BY ',
             'ORDER BY ' . $orders[$image_order_id][1] . ',',
-            $conf['order_by']
+            is_string($conf['order_by']) ? $conf['order_by'] : ''
         );
         $page['super_order_by'] = true;
     } else {
@@ -200,22 +215,41 @@ $forbidden = get_sql_condition_FandF(
     'AND'
 );
 
+// parse_section_url()'s own return type is the generic array<string, mixed>
+// (functions_url.inc.php), so $page['category'] loses the more precise
+// array<string, mixed> shape that get_cat_info() actually returns;
+// re-narrow it once here, unconditionally, so it stays defined (and
+// PHPStan-visible) for every later use in this file, not just inside the
+// 'categories' section branch below.
+$page_category = null;
+if (isset($page['category']) and is_array($page['category'])) {
+    /** @var array<string, mixed> $page_category */
+    $page_category = $page['category'];
+}
+
 // +-----------------------------------------------------------------------+
 // |                              category                                 |
 // +-----------------------------------------------------------------------+
 if ($page['section'] == 'categories') {
     if (isset($page['combined_categories'])) {
         $page['title'] = get_combined_categories_content_title();
-    } elseif (isset($page['category'])) {
+    } elseif ($page_category !== null) {
+        $upper_names_raw = $page_category['upper_names'] ?? null;
+        if (! is_array($upper_names_raw)) {
+            $upper_names_raw = [];
+        }
+        /** @var array<int, array<string, mixed>> $upper_names */
+        $upper_names = array_filter($upper_names_raw, 'is_array');
+
         $page = array_merge(
             $page,
             [
                 'comment' => trigger_change(
                     'render_category_description',
-                    $page['category']['comment'],
+                    $page_category['comment'],
                     'main_page_category_description'
                 ),
-                'title' => get_cat_display_name($page['category']['upper_names'], ''),
+                'title' => get_cat_display_name($upper_names, ''),
             ]
         );
     } else {
@@ -226,10 +260,18 @@ if ($page['section'] == 'categories') {
     if (isset($page['combined_categories'])) {
         // combined_categories is only ever set (by parse_section_url() in
         // functions_url.inc.php) after category has already been set
-        assert(isset($page['category']));
-        $cat_ids = [$page['category']['id']];
-        foreach ($page['combined_categories'] as $category) {
-            $cat_ids[] = $category['id'];
+        assert($page_category !== null);
+        $cat_ids = [];
+        $first_cat_id = $page_category['id'] ?? null;
+        if (is_numeric($first_cat_id)) {
+            $cat_ids[] = (int) $first_cat_id;
+        }
+        $combined_categories_raw = is_array($page['combined_categories']) ? $page['combined_categories'] : [];
+        foreach ($combined_categories_raw as $category) {
+            $combined_id = is_array($category) ? ($category['id'] ?? null) : null;
+            if (is_numeric($combined_id)) {
+                $cat_ids[] = (int) $combined_id;
+            }
         }
 
         $page['items'] = get_image_ids_for_categories($cat_ids);
@@ -239,23 +281,26 @@ if ($page['section'] == 'categories') {
         $page['startcat'] == 0 and
         (! isset($page['chronology_field'])) and // otherwise the calendar will requery all subitems
         (
-            (isset($page['category'])) or
+            ($page_category !== null) or
             (isset($page['flat']))
         )
     ) {
-        if (! empty($page['category']['image_order']) and ! isset($page['super_order_by'])) {
-            $conf['order_by'] = ' ORDER BY ' . $page['category']['image_order'];
+        if ($page_category !== null and ! empty($page_category['image_order']) and ! isset($page['super_order_by'])) {
+            $image_order = $page_category['image_order'];
+            $conf['order_by'] = ' ORDER BY ' . (is_string($image_order) ? $image_order : '');
         }
 
         // flat categories mode
         if (isset($page['flat'])) {
             // get all allowed sub-categories
-            if (isset($page['category'])) {
+            if ($page_category !== null) {
+                $uppercats = $page_category['uppercats'] ?? null;
+                $uppercats = is_string($uppercats) ? $uppercats : '';
                 $query = '
 SELECT id
   FROM ' . CATEGORIES_TABLE . '
   WHERE
-    uppercats LIKE \'' . $page['category']['uppercats'] . ',%\' '
+    uppercats LIKE \'' . $uppercats . ',%\' '
     . get_sql_condition_FandF(
         [
             'forbidden_categories' => 'id',
@@ -264,8 +309,12 @@ SELECT id
         "\n  AND"
     );
 
-                $subcat_ids = query2array($query, null, 'id');
-                $subcat_ids[] = $page['category']['id'];
+                $subcat_ids_raw = query2array($query, null, 'id');
+                $subcat_ids = array_values(array_filter($subcat_ids_raw, 'is_string'));
+                $cat_id = $page_category['id'] ?? null;
+                if (is_scalar($cat_id)) {
+                    $subcat_ids[] = (string) $cat_id;
+                }
                 $where_sql = 'category_id IN (' . implode(',', $subcat_ids) . ')';
                 // remove categories from forbidden because just checked above
                 $forbidden = get_sql_condition_FandF(
@@ -275,7 +324,12 @@ SELECT id
                     'AND'
                 );
             } else {
-                $cache_key = $persistent_cache->make_key('all_iids' . $user['id'] . $user['cache_update_time'] . $conf['order_by']);
+                $user_id_for_cache = $user['id'] ?? null;
+                $user_id_for_cache = is_scalar($user_id_for_cache) ? $user_id_for_cache : '';
+                $cache_update_time = $user['cache_update_time'] ?? null;
+                $cache_update_time = is_scalar($cache_update_time) ? $cache_update_time : '';
+                $order_by_for_cache = is_string($conf['order_by']) ? $conf['order_by'] : '';
+                $cache_key = $persistent_cache->make_key('all_iids' . $user_id_for_cache . $cache_update_time . $order_by_for_cache);
                 unset($page['is_homepage']);
                 $where_sql = '1=1';
             }
@@ -286,11 +340,14 @@ SELECT id
             // isset($page['flat']); $page['flat'] isn't set in this branch
             // (see the `if (isset($page['flat']))` above), so category
             // must be the one that's set
-            assert(isset($page['category']));
-            $where_sql = 'category_id = ' . $page['category']['id'];
+            assert($page_category !== null);
+            $normal_mode_cat_id = $page_category['id'] ?? null;
+            $where_sql = 'category_id = ' . (is_scalar($normal_mode_cat_id) ? $normal_mode_cat_id : '0');
         }
 
-        if (! isset($cache_key) || ! $persistent_cache->get($cache_key, $page['items'])) {
+        $cache_key_str = isset($cache_key) && is_string($cache_key) ? $cache_key : null;
+
+        if ($cache_key_str === null || ! $persistent_cache->get($cache_key_str, $page['items'])) {
             // main query
             $query = '
 SELECT DISTINCT(image_id)
@@ -299,13 +356,13 @@ SELECT DISTINCT(image_id)
   WHERE
     ' . $where_sql . '
 ' . $forbidden . '
-  ' . $conf['order_by'] . '
+  ' . (is_string($conf['order_by']) ? $conf['order_by'] : '') . '
 ;';
 
             $page['items'] = query2array($query, null, 'image_id');
 
-            if (isset($cache_key)) {
-                $persistent_cache->set($cache_key, $page['items']);
+            if ($cache_key_str !== null) {
+                $persistent_cache->set($cache_key_str, $page['items']);
             }
         }
     }
@@ -319,18 +376,31 @@ else {
         // parse_section_url() (functions_url.inc.php) always sets 'tags'
         // alongside 'section' => 'tags'
         assert(isset($page['tags']));
-        $page['tag_ids'] = [];
-        foreach ($page['tags'] as $tag) {
-            $page['tag_ids'][] = $tag['id'];
+        $tags_raw = is_array($page['tags']) ? $page['tags'] : [];
+        $tag_ids = [];
+        foreach ($tags_raw as $tag) {
+            // PHPStan proves $tag is always string here, apparently cross-
+            // referencing some unrelated $page['tags'] write elsewhere in
+            // the codebase -- but the real, original (pre-L10) behavior of
+            // *this* code path is find_tags()'s row shape (array with an
+            // 'id' key, confirmed via `git log -p` on this file's prior
+            // revision), so this is a real defensive check, not dead code.
+            // @phpstan-ignore function.impossibleType, nullCoalesce.offset
+            $tag_id = is_array($tag) ? ($tag['id'] ?? null) : null;
+            // @phpstan-ignore function.impossibleType
+            if (is_numeric($tag_id)) {
+                $tag_ids[] = (int) $tag_id;
+            }
         }
+        $page['tag_ids'] = $tag_ids;
 
-        $items = get_image_ids_for_tags($page['tag_ids']);
+        $items = get_image_ids_for_tags($tag_ids);
 
         if (count($items) == 0) {
             $remote_addr = $_SERVER['REMOTE_ADDR'];
             $remote_addr = is_string($remote_addr) ? $remote_addr : '';
             $logger->info(
-                'attempt to see the name of the tag #' . implode(', #', $page['tag_ids'])
+                'attempt to see the name of the tag #' . implode(', #', array_map('strval', $tag_ids))
         . ' from the address : ' . $remote_addr
             );
             access_denied();
@@ -354,7 +424,10 @@ else {
         // alongside 'section' => 'search'; 'super_order_by' is genuinely
         // optional (get_search_results()'s 2nd param is ?bool)
         assert(isset($page['search']));
-        $search_result = get_search_results($page['search'], $page['super_order_by'] ?? null);
+        $search_id = is_string($page['search']) ? $page['search'] : '';
+        $search_super_order_by = $page['super_order_by'] ?? null;
+        $search_super_order_by = is_bool($search_super_order_by) ? $search_super_order_by : null;
+        $search_result = get_search_results($search_id, $search_super_order_by);
 
         // save the details of the query search
         if (isset($search_result['qs'])) {
@@ -390,10 +463,12 @@ else {
             ]
         );
 
+        $user_id_sql = $user['id'] ?? null;
+        $user_id_sql = is_scalar($user_id_sql) ? $user_id_sql : 0;
         if (! empty($_GET['action']) && ($_GET['action'] == 'remove_all_from_favorites')) {
             $query = '
 DELETE FROM ' . FAVORITES_TABLE . '
-  WHERE user_id = ' . $user['id'] . '
+  WHERE user_id = ' . $user_id_sql . '
 ;';
             pwg_query($query);
             redirect(make_index_url([
@@ -404,14 +479,14 @@ DELETE FROM ' . FAVORITES_TABLE . '
 SELECT image_id
   FROM ' . FAVORITES_TABLE . '
     INNER JOIN ' . IMAGES_TABLE . ' ON image_id = id
-  WHERE user_id = ' . $user['id'] . '
+  WHERE user_id = ' . $user_id_sql . '
 ' . get_sql_condition_FandF(
                 [
                     'visible_images' => 'id',
                 ],
                 'AND'
             ) . '
-  ' . $conf['order_by'] . '
+  ' . (is_string($conf['order_by']) ? $conf['order_by'] : '') . '
 ;';
             $page = array_merge(
                 $page,
@@ -445,7 +520,7 @@ SELECT image_id
             $conf['order_by'] = str_replace(
                 'ORDER BY ',
                 'ORDER BY date_available DESC,',
-                $conf['order_by']
+                is_string($conf['order_by']) ? $conf['order_by'] : ''
             );
         }
 
@@ -456,7 +531,7 @@ SELECT DISTINCT(id)
   WHERE '
   . get_recent_photos_sql('date_available') . '
   ' . $forbidden
-  . $conf['order_by'] . '
+  . (is_string($conf['order_by']) ? $conf['order_by'] : '') . '
 ;';
 
         $page = array_merge(
@@ -491,6 +566,8 @@ SELECT DISTINCT(id)
         $page['super_order_by'] = true;
         $conf['order_by'] = ' ORDER BY hit DESC, id DESC';
 
+        $top_number = is_numeric($conf['top_number']) ? (int) $conf['top_number'] : 15;
+
         $query = '
 SELECT DISTINCT(id)
   FROM ' . IMAGES_TABLE . '
@@ -498,7 +575,7 @@ SELECT DISTINCT(id)
   WHERE hit > 0
     ' . $forbidden . '
     ' . $conf['order_by'] . '
-  LIMIT ' . $conf['top_number'] . '
+  LIMIT ' . $top_number . '
 ;';
 
         $page = array_merge(
@@ -507,7 +584,7 @@ SELECT DISTINCT(id)
                 'title' => '<a href="' . duplicate_index_url([
                     'start' => 0,
                 ]) . '">'
-                            . $conf['top_number'] . ' ' . l10n('Most visited') . '</a>',
+                            . $top_number . ' ' . l10n('Most visited') . '</a>',
                 'items' => query2array($query, null, 'id'),
             ]
         );
@@ -519,6 +596,8 @@ SELECT DISTINCT(id)
         $page['super_order_by'] = true;
         $conf['order_by'] = ' ORDER BY rating_score DESC, id DESC';
 
+        $top_number = is_numeric($conf['top_number']) ? (int) $conf['top_number'] : 15;
+
         $query = '
 SELECT DISTINCT(id)
   FROM ' . IMAGES_TABLE . '
@@ -526,7 +605,7 @@ SELECT DISTINCT(id)
   WHERE rating_score IS NOT NULL
     ' . $forbidden . '
     ' . $conf['order_by'] . '
-  LIMIT ' . $conf['top_number'] . '
+  LIMIT ' . $top_number . '
 ;';
         $page = array_merge(
             $page,
@@ -534,7 +613,7 @@ SELECT DISTINCT(id)
                 'title' => '<a href="' . duplicate_index_url([
                     'start' => 0,
                 ]) . '">'
-                            . $conf['top_number'] . ' ' . l10n('Best rated') . '</a>',
+                            . $top_number . ' ' . l10n('Best rated') . '</a>',
                 'items' => query2array($query, null, 'id'),
             ]
         );
@@ -546,13 +625,15 @@ SELECT DISTINCT(id)
         // parse_section_url() (functions_url.inc.php) always sets 'list'
         // (a dummy [-1] or a real id list) alongside 'section' => 'list'
         assert(isset($page['list']));
+        $list_ids_raw = is_array($page['list']) ? array_filter($page['list'], 'is_scalar') : [];
+        $list_ids = array_map('strval', $list_ids_raw);
         $query = '
 SELECT DISTINCT(id)
   FROM ' . IMAGES_TABLE . '
     INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id
-  WHERE image_id IN (' . implode(',', $page['list']) . ')
+  WHERE image_id IN (' . implode(',', $list_ids) . ')
     ' . $forbidden . '
-  ' . $conf['order_by'] . '
+  ' . (is_string($conf['order_by']) ? $conf['order_by'] : '') . '
 ;';
 
         $page = array_merge(
@@ -587,7 +668,9 @@ if (isset($page['title'])) {
     $gallery_home_url = is_string($gallery_home_url) ? $gallery_home_url : '';
     $page['section_title'] = '<a href="' . $gallery_home_url . '">' . l10n('Home') . '</a>';
     if (! empty($page['title'])) {
-        $page['section_title'] .= $conf['level_separator'] . $page['title'];
+        $level_separator = is_string($conf['level_separator']) ? $conf['level_separator'] : ' / ';
+        $title_value = is_string($page['title']) ? $page['title'] : '';
+        $page['section_title'] .= $level_separator . $title_value;
     } else {
         $page['title'] = $page['section_title'];
     }
@@ -603,7 +686,8 @@ if (isset($page['chronology_field'])
         'nofollow' => 1,
     ];
 } elseif ($page['section'] == 'tags') {
-    if (count($page['tag_ids']) > 1) {
+    $page_tag_ids = $page['tag_ids'] ?? null;
+    if (is_countable($page_tag_ids) and count($page_tag_ids) > 1) {
         $page['meta_robots'] = [
             'noindex' => 1,
             'nofollow' => 1,
@@ -630,21 +714,28 @@ if ($filter['enabled']) {
 }
 
 // see if we need a redirect because of a permalink
-if ($page['section'] == 'categories' and isset($page['category']) and ! isset($page['combined_categories'])) {
+if ($page['section'] == 'categories' and $page_category !== null and ! isset($page['combined_categories'])) {
     $need_redirect = false;
-    if (empty($page['category']['permalink'])) {
+    $hit_by = is_array($page['hit_by'] ?? null) ? $page['hit_by'] : [];
+    $category_permalink = $page_category['permalink'] ?? null;
+    if (empty($category_permalink)) {
+        $hit_by_cat_url_name = $hit_by['cat_url_name'] ?? null;
+        $category_name = $page_category['name'] ?? null;
+        $category_name = is_string($category_name) ? $category_name : '';
         if ($conf['category_url_style'] == 'id-name' and
-            @$page['hit_by']['cat_url_name'] !== str2url($page['category']['name'])) {
+            $hit_by_cat_url_name !== str2url($category_name)) {
             $need_redirect = true;
         }
     } else {
-        if ($page['category']['permalink'] !== @$page['hit_by']['cat_permalink']) {
+        $hit_by_cat_permalink = $hit_by['cat_permalink'] ?? null;
+        if ($category_permalink !== $hit_by_cat_permalink) {
             $need_redirect = true;
         }
     }
 
     if ($need_redirect) {
-        check_restrictions($page['category']['id']);
+        $redirect_category_id = $page_category['id'] ?? null;
+        check_restrictions(is_numeric($redirect_category_id) ? (int) $redirect_category_id : 0);
         $redirect_url = script_basename() == 'picture' ? duplicate_picture_url() : duplicate_index_url();
 
         if (! headers_sent()) { // this is a permanent redirection
@@ -656,35 +747,59 @@ if ($page['section'] == 'categories' and isset($page['category']) and ! isset($p
     unset($need_redirect, $page['hit_by']);
 }
 
-array_push($page['body_classes'], 'section-' . $page['section']);
-$page['body_data']['section'] = $page['section'];
+// $page['body_classes']/$page['body_data'] are seeded as [] in
+// include/common.inc.php, but that's a different file/scope from
+// PHPStan's point of view, so re-prove array-ness once here and work on
+// local copies (repeatedly array_push()-ing into a mixed-typed nested
+// offset defeats PHPStan's tracking even when the offset is provably an
+// array at each individual call site).
+$body_classes = is_array($page['body_classes'] ?? null) ? $page['body_classes'] : [];
+$body_data = is_array($page['body_data'] ?? null) ? $page['body_data'] : [];
 
-if ($page['section'] == 'categories' && isset($page['category'])) {
-    array_push($page['body_classes'], 'category-' . $page['category']['id']);
-    $page['body_data']['category_id'] = $page['category']['id'];
+$page_section = is_string($page['section']) ? $page['section'] : '';
+array_push($body_classes, 'section-' . $page_section);
+$body_data['section'] = $page['section'];
+
+if ($page['section'] == 'categories' && $page_category !== null) {
+    $body_category_id = $page_category['id'] ?? null;
+    $body_category_id = is_scalar($body_category_id) ? $body_category_id : '';
+    array_push($body_classes, 'category-' . $body_category_id);
+    $body_data['category_id'] = $body_category_id;
 
     if (isset($page['combined_categories'])) {
-        $page['body_data']['combined_category_ids'] = [];
-        foreach ($page['combined_categories'] as $combined_categories) {
-            array_push($page['body_classes'], 'category-' . $combined_categories['id']);
-            array_push($page['body_data']['combined_category_ids'], $combined_categories['id']);
+        $combined_category_ids = [];
+        $combined_categories_for_body = is_array($page['combined_categories']) ? $page['combined_categories'] : [];
+        foreach ($combined_categories_for_body as $combined_category) {
+            $combined_body_id = is_array($combined_category) ? ($combined_category['id'] ?? null) : null;
+            $combined_body_id = is_scalar($combined_body_id) ? $combined_body_id : '';
+            array_push($body_classes, 'category-' . $combined_body_id);
+            $combined_category_ids[] = $combined_body_id;
         }
+        $body_data['combined_category_ids'] = $combined_category_ids;
     }
 } elseif (isset($page['tags'])) {
-    $page['body_data']['tag_ids'] = [];
-    foreach ($page['tags'] as $tag) {
-        array_push($page['body_classes'], 'tag-' . $tag['id']);
-        array_push($page['body_data']['tag_ids'], $tag['id']);
+    $body_tag_ids = [];
+    $tags_for_body = is_array($page['tags']) ? $page['tags'] : [];
+    foreach ($tags_for_body as $tag) {
+        $body_tag_id = is_array($tag) ? ($tag['id'] ?? null) : null;
+        $body_tag_id = is_scalar($body_tag_id) ? $body_tag_id : '';
+        array_push($body_classes, 'tag-' . $body_tag_id);
+        $body_tag_ids[] = $body_tag_id;
     }
-
+    $body_data['tag_ids'] = $body_tag_ids;
 } elseif (isset($page['search'])) {
-    array_push($page['body_classes'], 'search-' . $page['search']);
-    $page['body_data']['search_id'] = $page['search'];
+    $body_search_id = is_scalar($page['search']) ? $page['search'] : '';
+    array_push($body_classes, 'search-' . $body_search_id);
+    $body_data['search_id'] = $body_search_id;
 }
 
 if (isset($page['image_id'])) {
-    array_push($page['body_classes'], 'image-' . $page['image_id']);
-    $page['body_data']['image_id'] = $page['image_id'];
+    $body_image_id = is_scalar($page['image_id']) ? $page['image_id'] : '';
+    array_push($body_classes, 'image-' . $body_image_id);
+    $body_data['image_id'] = $body_image_id;
 }
+
+$page['body_classes'] = $body_classes;
+$page['body_data'] = $body_data;
 
 trigger_notify('loc_end_section_init');

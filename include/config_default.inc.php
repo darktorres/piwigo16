@@ -46,7 +46,9 @@ declare(strict_types=1);
 //
 // Specific note for SVG support: do not add 'svg' in picture_ext, have it only
 // in file_ext
-$conf['picture_ext'] = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+/** @var array<string, mixed> $conf */
+$picture_ext = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+$conf['picture_ext'] = $picture_ext;
 
 // file_ext : file extensions (case sensitive) authorized
 //
@@ -55,7 +57,7 @@ $conf['picture_ext'] = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
 // * do not forget to set $conf['upload_form_all_types'] = true; if you want
 //   to permit upload of file_ext files
 $conf['file_ext'] = array_merge(
-    $conf['picture_ext'],
+    $picture_ext,
     ['tiff', 'tif', 'mpg', 'zip', 'avi', 'mp3', 'ogg', 'pdf', 'svg', 'heic']
 );
 

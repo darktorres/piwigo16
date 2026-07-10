@@ -47,6 +47,7 @@ function ws_std_image_sql_filter(array $params, string $tbl_name = ''): array
 {
     foreach (['f_min_date_available', 'f_max_date_available', 'f_min_date_created', 'f_max_date_created'] as $datefield) {
         if (isset($params[$datefield]) and ! is_valid_mysql_datetime($params[$datefield])) {
+            /** @var PwgServer $service */
             global $service;
             $service->sendResponse(new PwgError(WS_ERR_INVALID_PARAM, 'Invalid ' . $datefield));
             exit;
@@ -161,6 +162,7 @@ function ws_std_get_urls(array $image_row): array
     $provide_download_url = false;
 
     if ($src_image->is_original()) {// we have a photo
+        /** @var array<string, mixed> $user */
         global $user;
         if ($user['enabled_high']) {
             $ret['element_url'] = $src_image->get_url();

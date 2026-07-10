@@ -14,7 +14,18 @@ define('PHPWG_ROOT_PATH', './');
 include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 
 // Bootstrap globals, set by include/common.inc.php.
-global $conf, $template, $user;
+/**
+ * @var array<string, mixed> $conf
+ * @var array<string, mixed> $page
+ * @var \Template $template
+ * @var array<string, mixed> $user
+ */
+global $conf, $page, $template, $user;
+
+// $page['errors'] is always initialized to an array by common.inc.php, but
+// that isn't visible across the include() boundary -- narrow it once here
+// so every top-level $page['errors'][...] = ... write below type-checks.
+$page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
@@ -126,7 +137,9 @@ if (! $conf['gallery_locked']) {
 
 // include menubar
 $themeconf = $template->get_template_vars('themeconf');
-if (! $conf['gallery_locked'] && (! isset($themeconf['hide_menu_on']) or ! in_array('theIdentificationPage', $themeconf['hide_menu_on']))) {
+$themeconf = is_array($themeconf) ? $themeconf : [];
+$hide_menu_on = $themeconf['hide_menu_on'] ?? null;
+if (! $conf['gallery_locked'] && (! is_array($hide_menu_on) or ! in_array('theIdentificationPage', $hide_menu_on))) {
     include PHPWG_ROOT_PATH . 'include/menubar.inc.php';
 }
 
@@ -158,7 +171,9 @@ $template->assign([
 ]);
 
 // Get link to doc
-if (str_starts_with((string) $user['language'], 'fr')) {
+$user_language_for_help = $user['language'] ?? '';
+$user_language_for_help = is_string($user_language_for_help) ? $user_language_for_help : '';
+if (str_starts_with($user_language_for_help, 'fr')) {
     $help_link = 'https://upstream.example.invalid/help/fr/';
 } else {
     $help_link = 'https://upstream.example.invalid/help/';

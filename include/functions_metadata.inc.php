@@ -18,6 +18,7 @@ declare(strict_types=1);
  */
 function get_iptc_data($filename, $map, string $array_sep = ','): array
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     $result = [];
@@ -27,7 +28,8 @@ function get_iptc_data($filename, $map, string $array_sep = ','): array
         return $result;
     }
 
-    if (isset($imginfo['APP13'])) {
+    /** @var array<string, mixed> $imginfo */
+    if (isset($imginfo['APP13']) && is_string($imginfo['APP13'])) {
         $iptc = iptcparse($imginfo['APP13']);
         if (is_array($iptc)) {
             $rmap = array_flip($map);
@@ -118,6 +120,10 @@ function clean_iptc_value($value)
  */
 function get_exif_data($filename, $map): array
 {
+    /**
+     * @var array<string, mixed> $conf
+     * @var \Logger $logger
+     */
     global $conf, $logger;
 
     $result = [];

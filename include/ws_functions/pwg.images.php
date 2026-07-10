@@ -177,6 +177,10 @@ SELECT category_id, MAX(`rank`) AS max_rank
  */
 function merge_chunks(string $output_filepath, string $original_sum, string $type): ?\PwgError
 {
+    /**
+     * @var array<string, mixed> $conf
+     * @var \Logger $logger
+     */
     global $conf, $logger;
 
     $logger->debug('[merge_chunks] input parameter $output_filepath : ' . $output_filepath, 'WS');
@@ -189,7 +193,9 @@ function merge_chunks(string $output_filepath, string $original_sum, string $typ
         }
     }
 
-    $upload_dir = $conf['upload_dir'] . '/buffer';
+    $upload_dir_conf = $conf['upload_dir'];
+    $upload_dir_conf = is_string($upload_dir_conf) ? $upload_dir_conf : '';
+    $upload_dir = $upload_dir_conf . '/buffer';
     $pattern = '/' . $original_sum . '-' . $type . '/';
     $chunks = [];
 
@@ -246,9 +252,12 @@ function merge_chunks(string $output_filepath, string $original_sum, string $typ
  */
 function remove_chunks($original_sum, $type): void
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
-    $upload_dir = $conf['upload_dir'] . '/buffer';
+    $upload_dir_conf = $conf['upload_dir'];
+    $upload_dir_conf = is_string($upload_dir_conf) ? $upload_dir_conf : '';
+    $upload_dir = $upload_dir_conf . '/buffer';
     $pattern = '/' . $original_sum . '-' . $type . '/';
     $chunks = [];
 
@@ -283,6 +292,7 @@ function remove_chunks($original_sum, $type): void
  */
 function ws_images_addComment(array $params, PwgServer $service): \PwgError|array
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     if (! $conf['activate_comments']) {
@@ -317,6 +327,7 @@ SELECT DISTINCT image_id
 
     include_once PHPWG_ROOT_PATH . 'include/functions_comment.inc.php';
 
+    $infos = [];
     $comment_action = insert_user_comment($comm, $params['key'], $infos);
 
     switch ($comment_action) {
@@ -350,6 +361,10 @@ SELECT DISTINCT image_id
  */
 function ws_images_getInfo(array $params, PwgServer $service): \PwgError|array
 {
+    /**
+     * @var array<string, mixed> $user
+     * @var array<string, mixed> $conf
+     */
     global $user, $conf;
 
     $query = '
@@ -546,7 +561,8 @@ SELECT id, date, author, content
           or $conf['comments_forall']
         )
     ) {
-        $comment_post_data['author'] = stripslashes((string) $user['username']);
+        $username = $user['username'];
+        $comment_post_data['author'] = stripslashes(is_string($username) ? $username : '');
         $comment_post_data['key'] = get_ephemeral_key(2, (string) $params['image_id']);
     }
 
@@ -633,8 +649,11 @@ SELECT DISTINCT id
     $res = rate_picture($params['image_id'], (int) $params['rate']);
 
     if ($res == false) {
+        /** @var array<string, mixed> $conf */
         global $conf;
-        return new PwgError(403, 'Forbidden or rate not in ' . implode(',', $conf['rate_items']));
+        $rate_items = $conf['rate_items'];
+        $rate_items = is_array($rate_items) ? array_filter($rate_items, 'is_scalar') : [];
+        return new PwgError(403, 'Forbidden or rate not in ' . implode(',', $rate_items));
     }
     return $res;
 }
@@ -658,6 +677,7 @@ function ws_images_search(array $params, PwgServer $service): array
 
     $super_order_by = false;
     if (! empty($order_by)) {
+        /** @var array<string, mixed> $conf */
         global $conf;
         $conf['order_by'] = 'ORDER BY ' . $order_by;
         $super_order_by = true; // quick_search_result might be faster
@@ -756,11 +776,16 @@ SELECT *
  */
 function ws_images_filteredSearch_create(array $params, PwgServer $service): \PwgError|array
 {
+    /**
+     * @var array<string, mixed> $user
+     * @var array<string, mixed> $conf
+     */
     global $user, $conf;
 
     include_once PHPWG_ROOT_PATH . 'include/functions_search.inc.php';
 
     // * check the search exists
+    $search_info = null;
     if (isset($params['search_id'])) {
         if (empty(get_search_id_pattern($params['search_id']))) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid search_id input parameter.');
@@ -772,8 +797,16 @@ function ws_images_filteredSearch_create(array $params, PwgServer $service): \Pw
         }
     }
 
+    // 'fields' (and its 'date_posted'/'date_created' sub-arrays) are
+    // predeclared so PHPStan can track $search's shape as it's built up
+    // below -- this changes nothing at runtime (PHP would auto-vivify the
+    // same nested arrays via the assignments further down anyway).
     $search = [
         'mode' => 'AND',
+        'fields' => [
+            'date_posted' => [],
+            'date_created' => [],
+        ],
     ];
 
     // * check all parameters
@@ -1010,7 +1043,9 @@ function ws_images_filteredSearch_create(array $params, PwgServer $service): \Pw
         $search['fields']['height_max'] = $params['height_max'];
     }
 
-    [$search_uuid, $search_url] = save_search($search, $search_info['id'] ?? null);
+    $search_info_id = $search_info['id'] ?? null;
+    $forked_from = is_numeric($search_info_id) ? (int) $search_info_id : null;
+    [$search_uuid, $search_url] = save_search($search, $forked_from);
 
     return [
         'search_id' => $search_uuid,
@@ -1029,9 +1064,12 @@ function ws_images_filteredSearch_create(array $params, PwgServer $service): \Pw
  */
 function ws_images_setPrivacyLevel(array $params, PwgServer $service): \PwgError|int|string
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
-    if (! in_array($params['level'], $conf['available_permission_levels'])) {
+    $available_permission_levels = $conf['available_permission_levels'];
+    $available_permission_levels = is_array($available_permission_levels) ? $available_permission_levels : [];
+    if (! in_array($params['level'], $available_permission_levels)) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid level');
     }
 
@@ -1178,6 +1216,10 @@ UPDATE ' . IMAGE_CATEGORY_TABLE . '
  */
 function ws_images_add_chunk(array $params, PwgServer $service): ?\PwgError
 {
+    /**
+     * @var array<string, mixed> $conf
+     * @var \Logger $logger
+     */
     global $conf, $logger;
 
     foreach ($params as $param_key => $param_value) {
@@ -1188,11 +1230,13 @@ function ws_images_add_chunk(array $params, PwgServer $service): ?\PwgError
         $logger->debug(sprintf(
             '[ws_images_add_chunk] input param "%s" : "%s"',
             $param_key,
-            $param_value ?? 'NULL'
+            is_scalar($param_value) ? $param_value : 'NULL'
         ), 'WS');
     }
 
-    $upload_dir = $conf['upload_dir'] . '/buffer';
+    $upload_dir_conf = $conf['upload_dir'];
+    $upload_dir_conf = is_string($upload_dir_conf) ? $upload_dir_conf : '';
+    $upload_dir = $upload_dir_conf . '/buffer';
 
     // create the upload directory tree if not exists
     if (! mkgetdir($upload_dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
@@ -1232,6 +1276,10 @@ function ws_images_add_chunk(array $params, PwgServer $service): ?\PwgError
  */
 function ws_images_addFile(array $params, PwgServer $service): \PwgError|bool|null
 {
+    /**
+     * @var array<string, mixed> $conf
+     * @var \Logger $logger
+     */
     global $conf, $logger;
 
     $logger->debug(__FUNCTION__, 'WS', $params);
@@ -1274,7 +1322,9 @@ SELECT
         $original_type = 'high';
     }
 
-    $file_path = $conf['upload_dir'] . '/buffer/' . $image['md5sum'] . '-original';
+    $upload_dir_conf = $conf['upload_dir'];
+    $upload_dir_conf = is_string($upload_dir_conf) ? $upload_dir_conf : '';
+    $file_path = $upload_dir_conf . '/buffer/' . $image['md5sum'] . '-original';
 
     merge_chunks($file_path, $image['md5sum'], $original_type);
     chmod($file_path, 0644);
@@ -1326,13 +1376,18 @@ SELECT
  */
 function ws_images_add(array $params, PwgServer $service): \PwgError|array
 {
+    /**
+     * @var array<string, mixed> $conf
+     * @var array<string, mixed> $user
+     * @var \Logger $logger
+     */
     global $conf, $user, $logger;
 
     foreach ($params as $param_key => $param_value) {
         $logger->debug(sprintf(
             '[pwg.images.add] input param "%s" : "%s"',
             $param_key,
-            $param_value ?? 'NULL'
+            is_scalar($param_value) ? $param_value : 'NULL'
         ), 'WS');
     }
 
@@ -1386,7 +1441,9 @@ SELECT COUNT(*)
         $original_type = 'file';
     }
 
-    $file_path = $conf['upload_dir'] . '/buffer/' . $params['original_sum'] . '-original';
+    $upload_dir_conf = $conf['upload_dir'];
+    $upload_dir_conf = is_string($upload_dir_conf) ? $upload_dir_conf : '';
+    $file_path = $upload_dir_conf . '/buffer/' . $params['original_sum'] . '-original';
 
     merge_chunks($file_path, $params['original_sum'], $original_type);
     chmod($file_path, 0644);
@@ -1482,6 +1539,10 @@ SELECT id, name, permalink
  */
 function ws_images_addSimple(array $params, PwgServer $service): \PwgError|array
 {
+    /**
+     * @var array<string, mixed> $conf
+     * @var \Logger $logger
+     */
     global $conf, $logger;
 
     if (! isset($_FILES['image']) || ! is_array($_FILES['image'])) {
@@ -1628,6 +1689,7 @@ SELECT id, name, permalink
  */
 function ws_images_upload(array $params, PwgServer $service): \PwgError|array|null
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     $format_ext = null;
@@ -1642,13 +1704,16 @@ function ws_images_upload(array $params, PwgServer $service): \PwgError|array|nu
             return new PwgError(401, 'formats are disabled');
         }
 
+        $format_ext_list = $conf['format_ext'];
+        $format_ext_list = is_array($format_ext_list) ? array_filter($format_ext_list, 'is_string') : [];
+
         // We must check if the extension is in the authorized list.
-        if (preg_match('/\.(' . implode('|', $conf['format_ext']) . ')$/', (string) $params['name'], $matches)) {
+        if (preg_match('/\.(' . implode('|', $format_ext_list) . ')$/', (string) $params['name'], $matches)) {
             $format_ext = $matches[1];
         }
 
         if (empty($format_ext)) {
-            return new PwgError(401, 'unexpected format extension of file "' . $params['name'] . '" (authorized extensions: ' . implode(', ', $conf['format_ext']) . ')');
+            return new PwgError(401, 'unexpected format extension of file "' . $params['name'] . '" (authorized extensions: ' . implode(', ', $format_ext_list) . ')');
         }
     }
 
@@ -1663,7 +1728,9 @@ function ws_images_upload(array $params, PwgServer $service): \PwgError|array|nu
     // file_put_contents('/tmp/plupload.log', '$_FILES = '.var_export($_FILES, true)."\n", FILE_APPEND);
     // file_put_contents('/tmp/plupload.log', '$_POST = '.var_export($_POST, true)."\n", FILE_APPEND);
 
-    $upload_dir = $conf['upload_dir'] . '/buffer';
+    $upload_dir_conf = $conf['upload_dir'];
+    $upload_dir_conf = is_string($upload_dir_conf) ? $upload_dir_conf : '';
+    $upload_dir = $upload_dir_conf . '/buffer';
 
     // create the upload directory tree if not exists
     if (! mkgetdir($upload_dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
@@ -1863,6 +1930,11 @@ SELECT
  */
 function ws_images_uploadAsync(array $params, PwgServer &$service): mixed
 {
+    /**
+     * @var array<string, mixed> $conf
+     * @var array<string, mixed> $user
+     * @var \Logger $logger
+     */
     global $conf, $user, $logger;
 
     // the username/password parameters have been used in include/user.inc.php
@@ -1890,7 +1962,11 @@ SELECT COUNT(*)
     // handle upload error as in ws_images_addSimple
     // if (isset($_FILES['image']['error']) && $_FILES['image']['error'] != 0)
 
-    $output_filepath_prefix = $conf['upload_dir'] . '/buffer/' . $params['original_sum'] . '-u' . $user['id'];
+    $upload_dir_conf = $conf['upload_dir'];
+    $upload_dir_conf = is_string($upload_dir_conf) ? $upload_dir_conf : '';
+    $user_id_raw = $user['id'] ?? null;
+    $user_id_for_path = is_numeric($user_id_raw) ? (int) $user_id_raw : 0;
+    $output_filepath_prefix = $upload_dir_conf . '/buffer/' . $params['original_sum'] . '-u' . $user_id_for_path;
     $chunkfile_path_pattern = $output_filepath_prefix . '-%03uof%03u.chunk';
 
     $chunkfile_path = sprintf($chunkfile_path_pattern, $params['chunk'] + 1, $params['chunks']);
@@ -2077,7 +2153,7 @@ SELECT COUNT(*)
 
     // delete chunks older than a week
     $now = time();
-    foreach (glob($conf['upload_dir'] . '/buffer/*.chunk') ?: [] as $file) {
+    foreach (glob($upload_dir_conf . '/buffer/*.chunk') ?: [] as $file) {
         if (is_file($file)) {
             if ($now - filemtime($file) >= 60 * 60 * 24 * 7) { // 7 days
                 $logger->info(__FUNCTION__ . ' delete ' . $file);
@@ -2089,7 +2165,7 @@ SELECT COUNT(*)
     }
 
     // delete merged older than a week
-    foreach (glob($conf['upload_dir'] . '/buffer/*.merged') ?: [] as $file) {
+    foreach (glob($upload_dir_conf . '/buffer/*.merged') ?: [] as $file) {
         if (is_file($file)) {
             if ($now - filemtime($file) >= 60 * 60 * 24 * 7) { // 7 days
                 $logger->info(__FUNCTION__ . ' delete ' . $file);
@@ -2114,6 +2190,10 @@ SELECT COUNT(*)
  */
 function ws_images_exist(array $params, PwgServer $service): array
 {
+    /**
+     * @var array<string, mixed> $conf
+     * @var \Logger $logger
+     */
     global $conf, $logger;
 
     $logger->debug(__FUNCTION__, 'WS', $params);
@@ -2188,6 +2268,10 @@ SELECT id, file
  */
 function ws_images_formats_searchImage(array $params, PwgServer $service): array
 {
+    /**
+     * @var array<string, mixed> $conf
+     * @var \Logger $logger
+     */
     global $conf, $logger;
 
     $logger->debug(__FUNCTION__, 'WS', $params);
@@ -2213,7 +2297,13 @@ SELECT
     }
 
     // we want "long" format extensions first to match "cmyk.jpg" before "jpg" for example
-    usort($conf['format_ext'], fn ($a, $b): int => strlen((string) $b) - strlen((string) $a));
+    // (kept as a local variable, not written back to $conf: the original
+    // in-place usort() by reference on $conf['format_ext'] only ever
+    // mutated the request-local config copy anyway, since $conf is reloaded
+    // from scratch on every request)
+    $format_ext_list = $conf['format_ext'];
+    $format_ext_list = is_array($format_ext_list) ? array_values(array_filter($format_ext_list, 'is_string')) : [];
+    usort($format_ext_list, static fn (string $a, string $b): int => strlen($b) - strlen($a));
 
     $query = '
 SELECT
@@ -2240,7 +2330,7 @@ SELECT
             continue;
         }
 
-        if (preg_match('/^(.*?)\.(' . implode('|', $conf['format_ext']) . ')$/', $format_filename, $matches)) {
+        if (preg_match('/^(.*?)\.(' . implode('|', $format_ext_list) . ')$/', $format_filename, $matches)) {
             $candidate_filename_wo_ext = $matches[1];
         }
 
@@ -2408,6 +2498,7 @@ DELETE FROM ' . IMAGE_FORMAT_TABLE . '
  */
 function ws_images_checkFiles(array $params, PwgServer $service): \PwgError|array
 {
+    /** @var \Logger $logger */
     global $logger;
 
     $logger->debug(__FUNCTION__, 'WS', $params);
@@ -2471,6 +2562,7 @@ SELECT path
  */
 function ws_images_setInfo(array $params, PwgServer $service): ?\PwgError
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     if (isset($params['pwg_token']) and get_pwg_token() != $params['pwg_token']) {
@@ -2672,6 +2764,7 @@ function ws_images_checkUpload(array $params, PwgServer $service): array
 {
     include_once PHPWG_ROOT_PATH . 'admin/include/functions_upload.inc.php';
 
+    $ret = [];
     $ret['message'] = ready_for_upload_message();
     $ret['ready_for_upload'] = true;
     if (! empty($ret['message'])) {

@@ -14,6 +14,8 @@ include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 include_once PHPWG_ROOT_PATH . 'include/functions_notification.inc.php';
 
 // Bootstrap globals, set by include/common.inc.php.
+/** @var array<string, mixed> $conf */
+/** @var array<string, mixed> $user */
 global $conf, $user;
 
 // +-----------------------------------------------------------------------+
@@ -143,7 +145,9 @@ SELECT user_id,
 } else {
     $image_only = true;
     if (! is_a_guest()) {// auto session was created - so switch to guest
-        $user = build_user($conf['guest_id'], true);
+        $guest_id = $conf['guest_id'];
+        $guest_id = is_numeric($guest_id) ? (int) $guest_id : 0;
+        $user = build_user($guest_id, true);
     }
 }
 
@@ -160,7 +164,18 @@ assert(is_string($dbnow));
 set_make_full_url();
 
 $rss_encoding = get_pwg_charset();
-$rss_title = $conf['gallery_title'] . ' (as ' . stripslashes((string) $user['username']) . ')';
+
+// $conf/$user are typed array<string, mixed> (see the global declaration
+// above); each of these values is read again later in this script, so
+// narrow once here and reuse the local variable at every later read.
+$conf_gallery_title = $conf['gallery_title'] ?? '';
+$conf_gallery_title = is_string($conf_gallery_title) ? $conf_gallery_title : '';
+$conf_rss_feed_author = $conf['rss_feed_author'] ?? '';
+$conf_rss_feed_author = is_string($conf_rss_feed_author) ? $conf_rss_feed_author : '';
+$user_username = $user['username'] ?? '';
+$user_username = is_string($user_username) ? $user_username : '';
+
+$rss_title = $conf_gallery_title . ' (as ' . stripslashes($user_username) . ')';
 $rss_link = get_gallery_home_url();
 $rss_items = [];
 
@@ -191,7 +206,7 @@ if (! $image_only) {
             'description' => $description,
             'html' => true,
             'date' => ts_to_iso8601($dbnow_ts),
-            'author' => $conf['rss_feed_author'],
+            'author' => $conf_rss_feed_author,
             'guid' => sprintf('%s', $dbnow),
         ];
 
@@ -216,8 +231,22 @@ UPDATE ' . $user_feed_table . '
     }
 }
 
+// recent_post_dates is a config array of per-notification-kind int
+// settings (see include/config_default.inc.php); narrow the 'RSS' entry
+// to the array<string, int> shape get_recent_post_dates_array() expects.
+$recent_post_dates_conf = $conf['recent_post_dates'];
+$rss_recent_post_dates_raw = (is_array($recent_post_dates_conf) and is_array($recent_post_dates_conf['RSS'] ?? null))
+    ? $recent_post_dates_conf['RSS']
+    : [];
+$rss_recent_post_dates_args = [];
+foreach ($rss_recent_post_dates_raw as $arg_key => $arg_value) {
+    if (is_string($arg_key) and is_int($arg_value)) {
+        $rss_recent_post_dates_args[$arg_key] = $arg_value;
+    }
+}
+
 /** @var array<int, array<string, mixed>> $dates */
-$dates = get_recent_post_dates_array($conf['recent_post_dates']['RSS']);
+$dates = get_recent_post_dates_array($rss_recent_post_dates_args);
 
 foreach ($dates as $date_detail) { // for each recent post date we create a feed item
     $date = $date_detail['date_available'];
@@ -232,7 +261,7 @@ foreach ($dates as $date_detail) { // for each recent post date we create a feed
         ]
     );
 
-    $description = '<a href="' . make_index_url() . '">' . $conf['gallery_title'] . '</a><br> ';
+    $description = '<a href="' . make_index_url() . '">' . $conf_gallery_title . '</a><br> ';
     $description .= get_html_description_recent_post_date($date_detail);
 
     $date_ts = datetime_to_ts($date);
@@ -246,7 +275,7 @@ foreach ($dates as $date_detail) { // for each recent post date we create a feed
         'description' => $description,
         'html' => true,
         'date' => ts_to_iso8601($date_ts),
-        'author' => $conf['rss_feed_author'],
+        'author' => $conf_rss_feed_author,
         'guid' => sprintf('%s', 'pics-' . $date),
     ];
 }
@@ -260,7 +289,14 @@ $feed_content = pwg_generate_rss2_feed(
     $rss_items
 );
 
-$fileName = PHPWG_ROOT_PATH . $conf['data_location'] . 'tmp';
+// $conf['data_location'] needs narrowing here specifically (used to build
+// the on-disk tmp path this script writes the generated feed to).
+$data_location = $conf['data_location'];
+if (! is_string($data_location)) {
+    die("Invalid \$conf['data_location'] configuration: expected a string.");
+}
+
+$fileName = PHPWG_ROOT_PATH . $data_location . 'tmp';
 mkgetdir($fileName); // just in case
 $fileName .= '/feed.xml';
 file_put_contents($fileName, $feed_content);

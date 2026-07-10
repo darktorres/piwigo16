@@ -14,7 +14,12 @@ if (! defined('PHPWG_ROOT_PATH')) {
 }
 
 // Bootstrap globals, set by include/common.inc.php.
-global $conf, $template;
+/**
+ * @var array<string, mixed> $conf
+ * @var array<string, mixed> $page
+ * @var \Template $template
+ */
+global $conf, $page, $template;
 
 if (! $conf['enable_core_update']) {
     die('Piwigo core update system is disabled');
@@ -119,6 +124,10 @@ if (isset($new_versions['major_php']) and is_string($new_versions['major_php']) 
 // +-----------------------------------------------------------------------+
 
 if (! is_webmaster()) {
+    if (! is_array($page['warnings'] ?? null)) {
+        $page['warnings'] = [];
+    }
+
     $page['warnings'][] = str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'));
 }
 

@@ -10,7 +10,12 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 // Bootstrap globals, set by include/common.inc.php.
-global $template, $user;
+/**
+ * @var array<string, mixed> $page
+ * @var \Template $template
+ * @var array<string, mixed> $user
+ */
+global $page, $template, $user;
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 include_once PHPWG_ROOT_PATH . 'admin/include/tabsheet.class.php';
@@ -53,7 +58,13 @@ $template->assign(
     ]
 );
 
-$language_prefix = substr((string) $user['language'], 0, 3);
+if (! is_array($page['messages'] ?? null)) {
+    $page['messages'] = [];
+}
+
+$user_language = $user['language'] ?? null;
+$user_language = is_string($user_language) ? $user_language : 'en_UK';
+$language_prefix = substr($user_language, 0, 3);
 if ($language_prefix == 'en_') {
     $page['messages'][] = sprintf(
         'Need help to use Piwigo? <a href="%s" target="_blank">Check the online documentation</a> !',

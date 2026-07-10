@@ -14,11 +14,26 @@ declare(strict_types=1);
  */
 
 // Bootstrap globals, set by include/common.inc.php.
+/**
+ * @var array<string, mixed> $conf
+ * @var array<string, mixed> $page
+ * @var \Template $template
+ * @var array<string, mixed> $user
+ */
 global $conf, $page, $template, $user;
 // Set by picture.php, right before this include.
+/**
+ * @var list<array<string, string|null>> $related_categories
+ * @var string $url_self
+ */
 global $related_categories, $url_self;
 
 $comment_action = null;
+
+// $page['image_id'] is int|numeric-string (include/section_init.inc.php sets
+// it from a URL token via is_numeric(), possibly re-resolved by picture.php).
+$image_id = $page['image_id'];
+$image_id = is_numeric($image_id) ? (int) $image_id : 0;
 
 // the picture is commentable if it belongs at least to one category which
 // is commentable
@@ -46,28 +61,43 @@ if ($page['show_comments'] and isset($_POST['content'])) {
         'content' => is_string($post_content) && ! empty($post_content) ? trim($post_content) : '',
         'website_url' => is_string($post_website_url) && ! empty($post_website_url) ? trim($post_website_url) : '',
         'email' => is_string($post_email) && ! empty($post_email) ? trim($post_email) : '',
-        'image_id' => $page['image_id'],
+        'image_id' => $image_id,
     ];
 
     include_once PHPWG_ROOT_PATH . 'include/functions_comment.inc.php';
 
     $post_key = $_POST['key'] ?? null;
-    $comment_action = insert_user_comment($comm, is_string($post_key) ? $post_key : '', $page['errors']);
+    // insert_user_comment() overwrites $comment_errors unconditionally as its
+    // very first statement, so whatever was previously in $page['errors'] is
+    // never actually read by it; a fresh array is passed and the result is
+    // written back below.
+    $comment_errors = [];
+    $comment_action = insert_user_comment($comm, is_string($post_key) ? $post_key : '', $comment_errors);
+    $page['errors'] = $comment_errors;
+
+    // Narrowed once into local variables and written back after the switch,
+    // so the case bodies below don't re-read the $page[...] offsets
+    // directly (switch branches lose array-offset narrowing in this
+    // codebase, see the other L10 fixes for the same pattern).
+    $comment_infos = is_array($page['infos'] ?? null) ? $page['infos'] : [];
 
     switch ($comment_action) {
         case 'moderate':
-            $page['infos'][] = l10n('An administrator must authorize your comment before it is visible.');
+            $comment_infos[] = l10n('An administrator must authorize your comment before it is visible.');
             // no break
         case 'validate':
-            $page['infos'][] = l10n('Your comment has been registered');
+            $comment_infos[] = l10n('Your comment has been registered');
             break;
         case 'reject':
             set_status_header(403);
-            $page['errors'][] = l10n('Your comment has NOT been registered because it did not pass the validation rules');
+            $comment_errors[] = l10n('Your comment has NOT been registered because it did not pass the validation rules');
             break;
         default:
             trigger_error('Invalid comment action ' . $comment_action, E_USER_WARNING);
     }
+
+    $page['infos'] = $comment_infos;
+    $page['errors'] = $comment_errors;
 
     // allow plugins to notify what's going on
     trigger_notify(
@@ -93,7 +123,7 @@ if ($page['show_comments']) {
 SELECT
     COUNT(*) AS nb_comments
   FROM ' . COMMENTS_TABLE . '
-  WHERE image_id = ' . $page['image_id']
+  WHERE image_id = ' . $image_id
     . $validated_clause . '
 ;';
     $row = pwg_db_fetch_assoc(pwg_query($query));
@@ -105,12 +135,17 @@ SELECT
     if (! isset($page['start'])) {
         $page['start'] = 0;
     }
+    $start = $page['start'];
+    $start = is_numeric($start) ? (int) $start : 0;
+
+    $nb_comment_page = $conf['nb_comment_page'];
+    $nb_comment_page = is_numeric($nb_comment_page) ? (int) $nb_comment_page : 0;
 
     $navigation_bar = create_navigation_bar(
         duplicate_picture_url([], ['start']),
         $nb_comments,
-        $page['start'],
-        $conf['nb_comment_page'],
+        $start,
+        $nb_comment_page,
         true // We want a clean URL
     );
 
@@ -138,12 +173,21 @@ SELECT
             'COMMENTS_ORDER_TITLE' => $comments_order == 'ASC' ? l10n('Show latest comments first') : l10n('Show oldest comments first'),
         ]);
 
+        // $conf['user_fields'] maps generic field names to actual DB column
+        // names; it is always set by config_default.inc.php.
+        $user_fields = $conf['user_fields'] ?? null;
+        $user_fields = is_array($user_fields) ? $user_fields : [];
+        $user_field_email = $user_fields['email'] ?? null;
+        $user_field_email = is_string($user_field_email) ? $user_field_email : '';
+        $user_field_id = $user_fields['id'] ?? null;
+        $user_field_id = is_string($user_field_id) ? $user_field_id : '';
+
         $query = '
 SELECT
     com.id,
     com.author,
     com.author_id,
-    u.' . $conf['user_fields']['email'] . ' AS user_email,
+    u.' . $user_field_email . ' AS user_email,
     com.date,
     com.image_id,
     com.website_url,
@@ -152,11 +196,11 @@ SELECT
     com.validated
   FROM ' . COMMENTS_TABLE . ' AS com
   LEFT JOIN ' . USERS_TABLE . ' AS u
-    ON u.' . $conf['user_fields']['id'] . ' = author_id
-  WHERE com.image_id = ' . $page['image_id'] . '
+    ON u.' . $user_field_id . ' = author_id
+  WHERE com.image_id = ' . $image_id . '
     ' . $validated_clause . '
   ORDER BY com.date ' . $comments_order . '
-  LIMIT ' . $conf['nb_comment_page'] . ' OFFSET ' . $page['start'] . '
+  LIMIT ' . $nb_comment_page . ' OFFSET ' . $start . '
 ;';
         $result = pwg_query($query);
 
@@ -209,7 +253,7 @@ SELECT
                 );
                 if (isset($edit_comment) and ($row['id'] == $edit_comment)) {
                     $tpl_comment['IN_EDIT'] = true;
-                    $key = get_ephemeral_key(2, $page['image_id']);
+                    $key = get_ephemeral_key(2, (string) $image_id);
                     $tpl_comment['KEY'] = $key;
                     $tpl_comment['CONTENT'] = $row['content'];
                     $tpl_comment['PWG_TOKEN'] = get_pwg_token();
@@ -243,7 +287,7 @@ SELECT
     }
 
     if ($show_add_comment_form) {
-        $key = get_ephemeral_key(3, $page['image_id']);
+        $key = get_ephemeral_key(3, (string) $image_id);
 
         $tpl_var = [
             'F_ACTION' => $url_self,

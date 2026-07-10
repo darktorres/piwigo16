@@ -17,7 +17,12 @@ define('PHPWG_ROOT_PATH', './');
 include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 
 // Bootstrap globals, set by include/common.inc.php.
-global $template, $user;
+/**
+ * @var array<string, mixed> $page
+ * @var \Template $template
+ * @var array<string, mixed> $user
+ */
+global $page, $template, $user;
 
 /**
  * search an available feed_id
@@ -53,22 +58,29 @@ trigger_notify('loc_begin_notification');
 // |                          new feed creation                            |
 // +-----------------------------------------------------------------------+
 
-$page['feed'] = find_available_feed_id();
+// find_available_feed_id() always returns a string; $page['feed'] is kept
+// in sync but the query/URLs below read this local variable so its type
+// stays narrowed to string instead of widening back to mixed via $page.
+$feed_id = find_available_feed_id();
+$page['feed'] = $feed_id;
+
+// $user['id'] (the logged in / guest user id) is never reassigned below.
+$user_id = is_numeric($user['id']) ? (int) $user['id'] : 0;
 
 $query = '
 INSERT INTO ' . USER_FEED_TABLE . '
   (id, user_id, last_check)
   VALUES
-  (\'' . $page['feed'] . '\', ' . $user['id'] . ', NULL)
+  (\'' . $feed_id . '\', ' . $user_id . ', NULL)
 ;';
 pwg_query($query);
 
 $feed_url = PHPWG_ROOT_PATH . 'feed.php';
 if (is_a_guest()) {
     $feed_image_only_url = $feed_url;
-    $feed_url .= '?feed=' . $page['feed'];
+    $feed_url .= '?feed=' . $feed_id;
 } else {
-    $feed_url .= '?feed=' . $page['feed'];
+    $feed_url .= '?feed=' . $feed_id;
     $feed_image_only_url = $feed_url . '&amp;image_only';
 }
 
@@ -96,7 +108,8 @@ $template->assign(
 
 // include menubar
 $themeconf = $template->get_template_vars('themeconf');
-if (! isset($themeconf['hide_menu_on']) or ! in_array('theNotificationPage', $themeconf['hide_menu_on'])) {
+$themeconf = is_array($themeconf) ? $themeconf : [];
+if (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('theNotificationPage', $themeconf['hide_menu_on'])) {
     include PHPWG_ROOT_PATH . 'include/menubar.inc.php';
 }
 

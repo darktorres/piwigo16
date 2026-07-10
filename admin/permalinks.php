@@ -21,6 +21,7 @@ function parse_sort_variables(
     string $template_var,
     string $anchor = ''
 ): array {
+    /** @var \Template $template */
     global $template;
 
     $request_uri = $_SERVER['REQUEST_URI'] ?? '';
@@ -77,6 +78,10 @@ if (! defined('PHPWG_ROOT_PATH')) {
 }
 
 // Bootstrap globals, set by include/common.inc.php.
+/**
+ * @var array<string, mixed> $page
+ * @var \Template $template
+ */
 global $page, $template;
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions_permalinks.php';
@@ -107,6 +112,9 @@ DELETE FROM ' . OLD_PERMALINKS_TABLE . '
   LIMIT 1';
     $result = pwg_query($query);
     if (pwg_db_changes() == 0) {
+        if (! is_array($page['errors'] ?? null)) {
+            $page['errors'] = [];
+        }
         $page['errors'][] = l10n('Cannot delete the old permalink !');
     }
 }

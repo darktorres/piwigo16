@@ -66,6 +66,7 @@ abstract class CalendarBase
      */
     public function initialize($inner_sql): void
     {
+        /** @var array<string, mixed> $page */
         global $page;
         if ($page['chronology_field'] == 'posted') {
             $this->date_field = 'date_available';
@@ -82,27 +83,43 @@ abstract class CalendarBase
      */
     public function get_display_name()
     {
+        /**
+         * @var array<string, mixed> $conf
+         * @var array<string, mixed> $page
+         */
         global $conf, $page;
         $res = '';
 
-        for ($i = 0; $i < count($page['chronology_date']); $i++) {
-            $res .= $conf['level_separator'];
-            if (isset($page['chronology_date'][$i + 1])) {
-                $chronology_date = array_slice($page['chronology_date'], 0, $i + 1);
+        // level_separator is documented as a character string
+        // (see config_default.inc.php); see the identical pattern in
+        // include/section_init.inc.php and admin/cat_list.php.
+        $level_separator = is_string($conf['level_separator']) ? $conf['level_separator'] : ' / ';
+        // chronology_date is always an array by the time calendar classes
+        // run (see functions_calendar.inc.php::init_calendar_chronology(),
+        // which sanitizes it before this is ever called); see the identical
+        // pattern in calendar_monthly.class.php.
+        $page_chronology_date = is_array($page['chronology_date']) ? $page['chronology_date'] : [];
+
+        for ($i = 0; $i < count($page_chronology_date); $i++) {
+            $res .= $level_separator;
+            $date_component = $page_chronology_date[$i];
+            $date_component = is_int($date_component) || is_string($date_component) ? (string) $date_component : '';
+            if (isset($page_chronology_date[$i + 1])) {
+                $chronology_date_slice = array_slice($page_chronology_date, 0, $i + 1);
                 $url = duplicate_index_url(
                     [
-                        'chronology_date' => $chronology_date,
+                        'chronology_date' => $chronology_date_slice,
                     ],
                     ['start']
                 );
                 $res .=
                   '<a href="' . $url . '">'
-                  . $this->get_date_component_label($i, $page['chronology_date'][$i])
+                  . $this->get_date_component_label($i, $date_component)
                   . '</a>';
             } else {
                 $res .=
                   '<span class="calInHere">'
-                  . $this->get_date_component_label($i, $page['chronology_date'][$i])
+                  . $this->get_date_component_label($i, $date_component)
                   . '</span>';
             }
         }
@@ -164,6 +181,7 @@ abstract class CalendarBase
         $show_empty = false,
         $labels = null
     ) {
+        /** @var array<string, mixed> $conf */
         global $conf, $page, $template;
 
         $nav_bar_datas = [];
@@ -230,6 +248,11 @@ abstract class CalendarBase
      */
     protected function build_nav_bar($level, ?array $labels = null): void
     {
+        /**
+         * @var \Template $template
+         * @var array<string, mixed> $conf
+         * @var array<string, mixed> $page
+         */
         global $template, $conf, $page;
 
         $query = '
@@ -241,20 +264,34 @@ $this->get_date_where($level) . '
 
         $level_items = query2array($query, 'period', 'nb_images');
 
-        if (count($level_items) == 1 and
-             count($page['chronology_date']) < count($this->calendar_levels) - 1) {
-            if (! isset($page['chronology_date'][$level])) {
-                [$key] = array_keys($level_items);
-                $page['chronology_date'][$level] = (int) $key;
+        // chronology_date is always an array by the time calendar classes
+        // run (see functions_calendar.inc.php::init_calendar_chronology(),
+        // which sanitizes it before initialize()/generate_category_content()
+        // are ever called); see the identical pattern in
+        // calendar_monthly.class.php.
+        $page_chronology_date = is_array($page['chronology_date']) ? $page['chronology_date'] : [];
 
-                if ($level < count($page['chronology_date']) and
+        if (count($level_items) == 1 and
+             count($page_chronology_date) < count($this->calendar_levels) - 1) {
+            if (! isset($page_chronology_date[$level])) {
+                [$key] = array_keys($level_items);
+                assert(is_array($page['chronology_date']));
+                $page['chronology_date'][$level] = (int) $key;
+                $page_chronology_date = $page['chronology_date'];
+
+                if ($level < count($page_chronology_date) and
                      $level != count($this->calendar_levels) - 1) {
                     return;
                 }
             }
         }
 
-        $dates = $page['chronology_date'];
+        $dates = [];
+        foreach ($page_chronology_date as $date_part) {
+            if (is_int($date_part) || is_string($date_part)) {
+                $dates[] = $date_part;
+            }
+        }
         while ($level < count($dates)) {
             array_pop($dates);
         }
@@ -281,6 +318,10 @@ $this->get_date_where($level) . '
      */
     protected function build_next_prev(): void
     {
+        /**
+         * @var \Template $template
+         * @var array<string, mixed> $page
+         */
         global $template, $page;
 
         $prev = $next = null;
@@ -288,10 +329,16 @@ $this->get_date_where($level) . '
             return;
         }
 
+        // chronology_date is always an array by the time calendar classes
+        // run (see functions_calendar.inc.php::init_calendar_chronology(),
+        // which sanitizes it before this is ever called); see the identical
+        // pattern in calendar_monthly.class.php.
+        $page_chronology_date = is_array($page['chronology_date']) ? $page['chronology_date'] : [];
+
         $sub_queries = [];
-        $nb_elements = count($page['chronology_date']);
+        $nb_elements = count($page_chronology_date);
         for ($i = 0; $i < $nb_elements; $i++) {
-            if ($page['chronology_date'][$i] === 'any') {
+            if ($page_chronology_date[$i] === 'any') {
                 $sub_queries[] = '\'any\'';
             } else {
                 $sub_queries[] = pwg_db_cast_to_text($this->calendar_levels[$i]['sql']);
@@ -302,7 +349,7 @@ $this->get_date_where($level) . '
 AND ' . $this->date_field . ' IS NOT NULL
 GROUP BY period';
 
-        $current = implode('-', $page['chronology_date']);
+        $current = implode('-', array_filter($page_chronology_date, 'is_string'));
         // period is a concatenation of non-null date parts (enforced by the
         // "date_field IS NOT NULL" clause above), but query2array()'s generic
         // signature still types each element as string|null, so filter for real.
@@ -352,9 +399,17 @@ GROUP BY period';
         }
 
         if (! empty($tpl_var)) {
+            // Smarty::getTemplateVars() is declared to return mixed (see
+            // vendor/smarty/smarty/src/Data.php); every write to
+            // 'chronology_navigation_bars' (build_nav_bar() above, and the
+            // append() below) stores a list of arrays, so narrow with
+            // is_array() rather than trusting the vendor signature.
             $existing = $template->smarty->getTemplateVars('chronology_navigation_bars');
-            if (! empty($existing)) {
-                $existing[sizeof($existing) - 1] = array_merge($existing[sizeof($existing) - 1], $tpl_var);
+            if (is_array($existing) && ! empty($existing)) {
+                $last_index = count($existing) - 1;
+                $last_item = $existing[$last_index] ?? null;
+                $last_item = is_array($last_item) ? $last_item : [];
+                $existing[$last_index] = array_merge($last_item, $tpl_var);
                 $template->assign('chronology_navigation_bars', $existing);
             } else {
                 $template->append('chronology_navigation_bars', $tpl_var);

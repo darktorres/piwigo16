@@ -56,6 +56,8 @@ function ws_plugins_performAction(array $params, PwgServer &$service): \PwgError
 {
     global $template, $conf;
 
+    /** @var \Template $template */
+    /** @var array<string, mixed> $conf */
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
@@ -96,6 +98,8 @@ function ws_themes_performAction(array $params, PwgServer &$service): \PwgError|
 {
     global $template, $conf;
 
+    /** @var \Template $template */
+    /** @var array<string, mixed> $conf */
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
@@ -135,6 +139,7 @@ function ws_extensions_update(array $params, PwgServer &$service): \PwgError|str
 {
     global $conf;
 
+    /** @var array<string, mixed> $conf */
     if (! $conf['enable_extensions_install']) {
         return new PwgError(401, 'Piwigo extensions install/update system is disabled');
     }
@@ -222,6 +227,8 @@ function ws_extensions_update(array $params, PwgServer &$service): \PwgError|str
     }
 
     global $template;
+
+    /** @var \Template $template */
     $template->delete_compiled_templates();
 
     return match ($upgrade_status) {
@@ -246,6 +253,7 @@ function ws_extensions_ignoreupdate(array $params, PwgServer &$service): \PwgErr
 {
     global $conf;
 
+    /** @var array<string, mixed> $conf */
     define('IN_ADMIN', true);
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
@@ -261,7 +269,12 @@ function ws_extensions_ignoreupdate(array $params, PwgServer &$service): \PwgErr
     // known {plugins,themes,languages} shape (each a plain list of
     // extension id strings, per the install-time default row in
     // install/db/103-database.php) before any offset access below.
-    $updates_ignored_raw = unserialize($conf['updates_ignored']);
+    // $conf['updates_ignored'] is a serialized string written by
+    // conf_update_param() a few lines below and in
+    // ws_extensions_checkupdates(); guard with is_string() rather than
+    // assuming, since $conf is only known as array<string, mixed>.
+    $updates_ignored_conf = $conf['updates_ignored'];
+    $updates_ignored_raw = is_string($updates_ignored_conf) ? unserialize($updates_ignored_conf) : false;
     $updates_ignored_raw = is_array($updates_ignored_raw) ? $updates_ignored_raw : [];
 
     $ignored_plugins = $updates_ignored_raw['plugins'] ?? null;
@@ -318,6 +331,8 @@ function ws_extensions_checkupdates(array $params, PwgServer &$service): array
 {
     global $conf;
 
+    /** @var array<string, mixed> $conf */
+
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
     include_once PHPWG_ROOT_PATH . 'admin/include/updates.class.php';
 
@@ -330,7 +345,12 @@ function ws_extensions_checkupdates(array $params, PwgServer &$service): array
 
     $result['piwigo_need_update'] = $_SESSION['need_update' . PHPWG_VERSION];
 
-    $conf['updates_ignored'] = unserialize($conf['updates_ignored']);
+    // $conf['updates_ignored'] is a serialized string written by
+    // conf_update_param() (see ws_extensions_ignoreupdate() above); guard
+    // with is_string() rather than assuming, since $conf is only known
+    // as array<string, mixed>.
+    $updates_ignored_conf = $conf['updates_ignored'];
+    $conf['updates_ignored'] = is_string($updates_ignored_conf) ? unserialize($updates_ignored_conf) : false;
 
     if (! isset($_SESSION['extensions_need_update'])) {
         $update->check_extensions();

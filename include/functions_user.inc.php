@@ -19,6 +19,7 @@ declare(strict_types=1);
  */
 function validate_mail_address($user_id, ?string $mail_address)
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     if (empty($mail_address) and
@@ -32,11 +33,16 @@ function validate_mail_address($user_id, ?string $mail_address)
     }
 
     if (defined('PHPWG_INSTALLED') and ! empty($mail_address)) {
+        // $conf['user_fields'] maps generic field names to table-specific DB
+        // column names (see include/config_default.inc.php); always a
+        // string=>string map at runtime.
+        /** @var array<string, string> $user_fields */
+        $user_fields = $conf['user_fields'];
         $query = '
 SELECT count(*)
 FROM ' . USERS_TABLE . '
-WHERE upper(' . $conf['user_fields']['email'] . ') = upper(\'' . $mail_address . '\')
-' . (is_numeric($user_id) ? 'AND ' . $conf['user_fields']['id'] . ' != \'' . $user_id . '\'' : '') . '
+WHERE upper(' . $user_fields['email'] . ') = upper(\'' . $mail_address . '\')
+' . (is_numeric($user_id) ? 'AND ' . $user_fields['id'] . ' != \'' . $user_id . '\'' : '') . '
 ;';
         $row = pwg_db_fetch_row(pwg_query($query));
         assert($row !== null);
@@ -56,13 +62,17 @@ WHERE upper(' . $conf['user_fields']['email'] . ') = upper(\'' . $mail_address .
  */
 function validate_login_case($login)
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     if (defined('PHPWG_INSTALLED')) {
+        // see validate_mail_address() for why this is string=>string
+        /** @var array<string, string> $user_fields */
+        $user_fields = $conf['user_fields'];
         $query = '
-SELECT ' . $conf['user_fields']['username'] . '
+SELECT ' . $user_fields['username'] . '
 FROM ' . USERS_TABLE . '
-WHERE LOWER(' . stripslashes((string) $conf['user_fields']['username']) . ") = '" . strtolower($login) . "'
+WHERE LOWER(' . stripslashes($user_fields['username']) . ") = '" . strtolower($login) . "'
 ;";
 
         $count = pwg_db_num_rows(pwg_query($query));
@@ -80,14 +90,18 @@ WHERE LOWER(' . stripslashes((string) $conf['user_fields']['username']) . ") = '
  */
 function search_case_username($username)
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     $username_lo = strtolower($username);
 
     $SCU_users = [];
 
+    // see validate_mail_address() for why this is string=>string
+    /** @var array<string, string> $user_fields */
+    $user_fields = $conf['user_fields'];
     $q = pwg_query('
-    SELECT ' . $conf['user_fields']['username'] . ' AS username
+    SELECT ' . $user_fields['username'] . ' AS username
     FROM `' . USERS_TABLE . '`;
   ');
     while ($r = pwg_db_fetch_assoc($q)) {
@@ -127,6 +141,7 @@ function search_case_username($username)
  */
 function register_user($login, #[\SensitiveParameter] $password, ?string $mail_address, $notify_admin = true, &$errors = [], $notify_user = false): int|false
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     if ($login == '') {
@@ -177,10 +192,13 @@ function register_user($login, #[\SensitiveParameter] $password, ?string $mail_a
 
     // if no error until here, registration of the user
     if (empty($errors)) {
+        // see validate_mail_address() for why this is string=>string
+        /** @var array<string, string> $user_fields */
+        $user_fields = $conf['user_fields'];
         $insert = [
-            $conf['user_fields']['username'] => $login,
-            $conf['user_fields']['password'] => pwg_password_hash($password),
-            $conf['user_fields']['email'] => $mail_address,
+            $user_fields['username'] => $login,
+            $user_fields['password'] => pwg_password_hash($password),
+            $user_fields['email'] => $mail_address,
         ];
 
         single_insert(USERS_TABLE, $insert);
@@ -232,7 +250,9 @@ SELECT id
             ];
 
             $group_id = null;
-            if (preg_match('/^group:(\d+)$/', (string) $conf['email_admin_on_new_user'], $matches)) {
+            $email_admin_on_new_user = $conf['email_admin_on_new_user'];
+            $email_admin_on_new_user = is_scalar($email_admin_on_new_user) ? (string) $email_admin_on_new_user : '';
+            if (preg_match('/^group:(\d+)$/', $email_admin_on_new_user, $matches)) {
                 $group_id = $matches[1];
             }
 
@@ -265,10 +285,12 @@ SELECT id
                 get_l10n_args('If you think you\'ve received this email in error, please contact us at %s', get_webmaster_mail_address()),
             ];
 
+            $gallery_title = $conf['gallery_title'];
+            $gallery_title = is_string($gallery_title) ? $gallery_title : '';
             pwg_mail(
                 $mail_address,
                 [
-                    'subject' => '[' . $conf['gallery_title'] . '] ' . l10n('Registration'),
+                    'subject' => '[' . $gallery_title . '] ' . l10n('Registration'),
                     'content' => l10n_args($keyargs_content),
                     'content_format' => 'text/plain',
                 ]
@@ -301,6 +323,7 @@ SELECT id
  */
 function build_user($user_id, bool $use_cache = true): array
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     $user['id'] = $user_id;
@@ -337,13 +360,21 @@ function build_user($user_id, bool $use_cache = true): array
  */
 function getuserdata($user_id, $use_cache = false)
 {
+    /**
+     * @var array<string, mixed> $conf
+     * @var \Logger $logger
+     */
     global $conf, $logger;
+
+    // see validate_mail_address() for why this is string=>string
+    /** @var array<string, string> $user_fields */
+    $user_fields = $conf['user_fields'];
 
     // retrieve basic user data
     $query = '
 SELECT ';
     $is_first = true;
-    foreach ($conf['user_fields'] as $pwgfield => $dbfield) {
+    foreach ($user_fields as $pwgfield => $dbfield) {
         if ($is_first) {
             $is_first = false;
         } else {
@@ -354,7 +385,7 @@ SELECT ';
     }
     $query .= '
   FROM ' . USERS_TABLE . '
-  WHERE ' . $conf['user_fields']['id'] . ' = \'' . $user_id . '\'';
+  WHERE ' . $user_fields['id'] . ' = \'' . $user_id . '\'';
 
     $row = pwg_db_fetch_assoc(pwg_query($query));
     if ($row === false || $row === null) {
@@ -619,11 +650,18 @@ INSERT IGNORE INTO ' . USER_CACHE_TABLE . '
  */
 function check_user_favorites(): void
 {
+    /** @var array<string, mixed> $user */
     global $user;
 
     if ($user['forbidden_categories'] == '') {
         return;
     }
+
+    // user_infos.id (primary key, NOT NULL): a raw DB fetch value is a
+    // numeric string, build_user() may also set it as int -- either way
+    // it's always scalar and safe to interpolate into SQL below.
+    $user_id_val = $user['id'];
+    $user_id_str = is_scalar($user_id_val) ? (string) $user_id_val : '0';
 
     // $filter['visible_categories'] and $filter['visible_images']
     // must be not used because filter <> restriction
@@ -633,7 +671,7 @@ function check_user_favorites(): void
 SELECT DISTINCT f.image_id
   FROM ' . FAVORITES_TABLE . ' AS f INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic
     ON f.image_id = ic.image_id
-  WHERE f.user_id = ' . $user['id'] . '
+  WHERE f.user_id = ' . $user_id_str . '
   ' . get_sql_condition_FandF(
         [
             'forbidden_categories' => 'ic.category_id',
@@ -646,7 +684,7 @@ SELECT DISTINCT f.image_id
     $query = '
 SELECT image_id
   FROM ' . FAVORITES_TABLE . '
-  WHERE user_id = ' . $user['id'] . '
+  WHERE user_id = ' . $user_id_str . '
 ;';
     $favorites = query2array($query, null, 'image_id');
 
@@ -655,7 +693,7 @@ SELECT image_id
         $query = '
 DELETE FROM ' . FAVORITES_TABLE . '
   WHERE image_id IN (' . implode(',', $to_deletes) . ')
-    AND user_id = ' . $user['id'] . '
+    AND user_id = ' . $user_id_str . '
 ;';
         pwg_query($query);
     }
@@ -738,14 +776,19 @@ SELECT id
  */
 function get_userid($username)
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
+
+    // see validate_mail_address() for why this is string=>string
+    /** @var array<string, string> $user_fields */
+    $user_fields = $conf['user_fields'];
 
     $username = pwg_db_real_escape_string($username);
 
     $query = '
-SELECT ' . $conf['user_fields']['id'] . '
+SELECT ' . $user_fields['id'] . '
   FROM ' . USERS_TABLE . '
-  WHERE ' . $conf['user_fields']['username'] . ' = \'' . $username . '\'
+  WHERE ' . $user_fields['username'] . ' = \'' . $username . '\'
 ;';
     $result = pwg_query($query);
 
@@ -770,15 +813,20 @@ SELECT ' . $conf['user_fields']['id'] . '
  */
 function get_userid_by_email($email)
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
+
+    // see validate_mail_address() for why this is string=>string
+    /** @var array<string, string> $user_fields */
+    $user_fields = $conf['user_fields'];
 
     $email = pwg_db_real_escape_string($email);
 
     $query = '
 SELECT
-    ' . $conf['user_fields']['id'] . '
+    ' . $user_fields['id'] . '
   FROM ' . USERS_TABLE . '
-  WHERE UPPER(' . $conf['user_fields']['email'] . ') = UPPER(\'' . $email . '\')
+  WHERE UPPER(' . $user_fields['email'] . ') = UPPER(\'' . $email . '\')
 ;';
     $result = pwg_query($query);
 
@@ -803,32 +851,52 @@ SELECT
  */
 function get_default_user_info(bool $convert_str = true)
 {
+    /**
+     * @var array<string, mixed> $cache
+     * @var array<string, mixed> $conf
+     */
     global $cache, $conf;
 
     if (! isset($cache['default_user'])) {
+        // default_user_id defaults to $conf['guest_id'] (int) in
+        // include/config_default.inc.php, but once persisted to the config
+        // DB table it comes back as a raw string (see load_conf_from_db())
+        $default_user_id = $conf['default_user_id'];
+        $default_user_id = is_numeric($default_user_id) ? (int) $default_user_id : 0;
+
         $query = '
 SELECT *
   FROM ' . USER_INFOS_TABLE . '
-  WHERE user_id = ' . $conf['default_user_id'] . '
+  WHERE user_id = ' . $default_user_id . '
 ;';
 
         $result = pwg_query($query);
 
         if (pwg_db_num_rows($result) > 0) {
-            $cache['default_user'] = pwg_db_fetch_assoc($result);
+            $default_user_row = pwg_db_fetch_assoc($result);
 
-            unset($cache['default_user']['user_id']);
-            unset($cache['default_user']['status']);
-            unset($cache['default_user']['registration_date']);
-            unset($cache['default_user']['last_visit']);
-            unset($cache['default_user']['last_visit_from_history']);
+            if (is_array($default_user_row)) {
+                // user_infos columns are always string keys
+                /** @var array<string, mixed> $default_user_row */
+                unset($default_user_row['user_id']);
+                unset($default_user_row['status']);
+                unset($default_user_row['registration_date']);
+                unset($default_user_row['last_visit']);
+                unset($default_user_row['last_visit_from_history']);
+            }
+
+            $cache['default_user'] = $default_user_row;
         } else {
             $cache['default_user'] = false;
         }
     }
 
-    if (is_array($cache['default_user']) and $convert_str) {
-        $default_user = $cache['default_user'];
+    $default_user_cached = $cache['default_user'];
+
+    if (is_array($default_user_cached) and $convert_str) {
+        // user_infos columns are always string keys
+        /** @var array<string, mixed> $default_user */
+        $default_user = $default_user_cached;
         foreach ($default_user as &$value) {
             // If the field is true or false, the variable is transformed into a boolean value.
             if ($value == 'true') {
@@ -837,9 +905,14 @@ SELECT *
                 $value = false;
             }
         }
+        unset($value);
         return $default_user;
+    } elseif (is_array($default_user_cached)) {
+        // user_infos columns are always string keys
+        /** @var array<string, mixed> $default_user_cached */
+        return $default_user_cached;
     } else {
-        return $cache['default_user'];
+        return false;
     }
 }
 
@@ -970,6 +1043,7 @@ function get_browser_language(): false|int|string
  */
 function create_user_infos($user_ids, $override_values = null): void
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     if (! is_array($user_ids)) {
@@ -996,7 +1070,13 @@ function create_user_infos($user_ids, $override_values = null): void
             $level = $default_user['level'] ?? 0;
             if ($user_id == $conf['webmaster_id']) {
                 $status = 'webmaster';
-                $level = max($conf['available_permission_levels']);
+                // $conf['available_permission_levels'] defaults to [0, 1, 2,
+                // 4, 8] (see include/config_default.inc.php), always a
+                // non-empty array
+                $available_permission_levels = $conf['available_permission_levels'];
+                $level = is_array($available_permission_levels) && $available_permission_levels !== []
+                    ? max($available_permission_levels)
+                    : 0;
             } elseif (($user_id == $conf['guest_id']) or
                      ($user_id == $conf['default_user_id'])) {
                 $status = 'guest';
@@ -1040,12 +1120,18 @@ function create_user_infos($user_ids, $override_values = null): void
  */
 function calculate_auto_login_key($user_id, $time, &$username): string|false
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
+
+    // see validate_mail_address() for why this is string=>string
+    /** @var array<string, string> $user_fields */
+    $user_fields = $conf['user_fields'];
+
     $query = '
-SELECT ' . $conf['user_fields']['username'] . ' AS username
-  , ' . $conf['user_fields']['password'] . ' AS password
+SELECT ' . $user_fields['username'] . ' AS username
+  , ' . $user_fields['password'] . ' AS password
 FROM ' . USERS_TABLE . '
-WHERE ' . $conf['user_fields']['id'] . ' = ' . $user_id;
+WHERE ' . $user_fields['id'] . ' = ' . $user_id;
     $result = pwg_query($query);
     if (pwg_db_num_rows($result) > 0) {
         $row = pwg_db_fetch_assoc($result);
@@ -1054,7 +1140,11 @@ WHERE ' . $conf['user_fields']['id'] . ' = ' . $user_id;
         }
         $username = stripslashes((string) $row['username']);
         $data = $time . $user_id . $username;
-        $key = base64_encode(hash_hmac('sha1', $data, $conf['secret_key'] . $row['password'], true));
+        // secret_key is a random string generated at install time (see
+        // install/index.php), always a string in a working install
+        $secret_key = $conf['secret_key'];
+        $secret_key = is_string($secret_key) ? $secret_key : '';
+        $key = base64_encode(hash_hmac('sha1', $data, $secret_key . $row['password'], true));
         return $key;
     }
     return false;
@@ -1072,7 +1162,20 @@ WHERE ' . $conf['user_fields']['id'] . ' = ' . $user_id;
  */
 function log_user($user_id, $remember_me): void
 {
+    /**
+     * @var array<string, mixed> $conf
+     * @var array<string, mixed> $user
+     */
     global $conf, $user;
+
+    // remember_me_name defaults to 'pwg_remember' (string), remember_me_length
+    // to 5184000 (int) in include/config_default.inc.php, but once persisted
+    // to the config DB table both come back as raw strings (see
+    // load_conf_from_db()) -- accept either.
+    $remember_me_name = $conf['remember_me_name'];
+    $remember_me_name = is_string($remember_me_name) ? $remember_me_name : 'pwg_remember';
+    $remember_me_length = $conf['remember_me_length'];
+    $remember_me_length = is_numeric($remember_me_length) ? (int) $remember_me_length : 5184000;
 
     // New default login and register pages, if users changes languages and succesfully logs in
     // we want to update the userpref language stored in a cookie
@@ -1114,10 +1217,10 @@ function log_user($user_id, $remember_me): void
         if ($key !== false) {
             $cookie = $user_id . '-' . $now . '-' . $key;
             setcookie(
-                $conf['remember_me_name'],
+                $remember_me_name,
                 $cookie,
                 [
-                    'expires' => time() + $conf['remember_me_length'],
+                    'expires' => time() + $remember_me_length,
                     'path' => cookie_path(),
                     'domain' => (string) ini_get('session.cookie_domain'),
                     'secure' => (bool) ini_get('session.cookie_secure'),
@@ -1126,7 +1229,7 @@ function log_user($user_id, $remember_me): void
             );
         }
     } else { // make sure we clean any remember me ...
-        setcookie($conf['remember_me_name'], '', [
+        setcookie($remember_me_name, '', [
             'expires' => 0,
             'path' => cookie_path(),
             'domain' => (string) ini_get('session.cookie_domain'),
@@ -1150,16 +1253,24 @@ function log_user($user_id, $remember_me): void
  */
 function auto_login(): bool
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
-    if (isset($_COOKIE[$conf['remember_me_name']])) {
-        $remember_me_cookie = $_COOKIE[$conf['remember_me_name']];
+    // see log_user() for why these accept both the config-default scalar
+    // type and the DB-persisted string form
+    $remember_me_name = $conf['remember_me_name'];
+    $remember_me_name = is_string($remember_me_name) ? $remember_me_name : 'pwg_remember';
+    $remember_me_length = $conf['remember_me_length'];
+    $remember_me_length = is_numeric($remember_me_length) ? (int) $remember_me_length : 5184000;
+
+    if (isset($_COOKIE[$remember_me_name])) {
+        $remember_me_cookie = $_COOKIE[$remember_me_name];
         if (is_string($remember_me_cookie)) {
             $cookie = explode('-', stripslashes($remember_me_cookie));
             if (count($cookie) === 3
                 and is_numeric($cookie[0]) /* user id */
                 and is_numeric($cookie[1]) /* time */
-                and time() - $conf['remember_me_length'] <= $cookie[1]
+                and time() - $remember_me_length <= $cookie[1]
                 and time() >= $cookie[1] /* cookie generated in the past */) {
                 $key = calculate_auto_login_key($cookie[0], $cookie[1], $username);
                 if ($key !== false and $key === $cookie[2]) {
@@ -1174,7 +1285,7 @@ function auto_login(): bool
                 }
             }
         }
-        setcookie($conf['remember_me_name'], '', [
+        setcookie($remember_me_name, '', [
             'expires' => 0,
             'path' => cookie_path(),
             'domain' => (string) ini_get('session.cookie_domain'),
@@ -1201,6 +1312,7 @@ function pwg_phpass_verify_legacy(
     #[\SensitiveParameter]
     $hash
 ) {
+    /** @var string $itoa64 */
     static $itoa64 = './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 
     if (strlen($password) > 4096 or strlen($hash) != 34) {
@@ -1212,7 +1324,7 @@ function pwg_phpass_verify_legacy(
         return false;
     }
 
-    $count_log2 = strpos((string) $itoa64, $hash[3]);
+    $count_log2 = strpos($itoa64, $hash[3]);
     if ($count_log2 === false or $count_log2 < 7 or $count_log2 > 30) {
         return false;
     }
@@ -1302,6 +1414,7 @@ function pwg_password_verify(
     $hash,
     $user_id = null
 ) {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     if (str_starts_with($hash, '$P$') or str_starts_with($hash, '$H$')) {
@@ -1472,24 +1585,29 @@ function pwg_login(bool $success, $username, $password, $remember_me): bool
  */
 function find_user_by_username_or_email($username_or_email): ?array
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
+
+    // see validate_mail_address() for why this is string=>string
+    /** @var array<string, string> $user_fields */
+    $user_fields = $conf['user_fields'];
 
     $username_or_email = pwg_db_real_escape_string($username_or_email);
 
     $query = '
 SELECT
-  ' . $conf['user_fields']['id'] . ' AS id,
-  ' . $conf['user_fields']['username'] . ' AS username,
-  ' . $conf['user_fields']['email'] . ' AS email,
-  ' . $conf['user_fields']['password'] . ' AS password,
+  ' . $user_fields['id'] . ' AS id,
+  ' . $user_fields['username'] . ' AS username,
+  ' . $user_fields['email'] . ' AS email,
+  ' . $user_fields['password'] . ' AS password,
   status
 FROM ' . USERS_TABLE . ' AS u
   LEFT JOIN ' . USER_INFOS_TABLE . ' AS i
-    ON u.' . $conf['user_fields']['id'] . ' = i.user_id
+    ON u.' . $user_fields['id'] . ' = i.user_id
   WHERE ';
 
-    $where_username = $conf['user_fields']['username'] . ' = \'' . $username_or_email . '\'';
-    $where_email = $conf['user_fields']['email'] . ' = \'' . $username_or_email . '\'';
+    $where_username = $user_fields['username'] . ' = \'' . $username_or_email . '\'';
+    $where_email = $user_fields['email'] . ' = \'' . $username_or_email . '\'';
 
     $user = pwg_db_fetch_assoc(pwg_query($query . $where_username))
       ?: pwg_db_fetch_assoc(pwg_query($query . $where_email));
@@ -1551,6 +1669,7 @@ function clear_fake_user_cache(): void
  */
 function logout_user(): void
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     $pwg_uid = $_SESSION['pwg_uid'] ?? null;
@@ -1574,7 +1693,11 @@ function logout_user(): void
             ]
         );
     }
-    setcookie($conf['remember_me_name'], '', [
+    // see log_user() for why this accepts both the config-default scalar
+    // type and the DB-persisted string form
+    $remember_me_name = $conf['remember_me_name'];
+    $remember_me_name = is_string($remember_me_name) ? $remember_me_name : 'pwg_remember';
+    setcookie($remember_me_name, '', [
         'expires' => 0,
         'path' => cookie_path(),
         'domain' => (string) ini_get('session.cookie_domain'),
@@ -1589,10 +1712,11 @@ function logout_user(): void
  */
 function get_user_status($user_status = '')
 {
+    /** @var array<string, mixed> $user */
     global $user;
 
     if (empty($user_status)) {
-        if (isset($user['status'])) {
+        if (isset($user['status']) and is_string($user['status'])) {
             $user_status = $user['status'];
         } else {
             // swicth to default value
@@ -1610,6 +1734,7 @@ function get_user_status($user_status = '')
  */
 function get_access_type_status($user_status = ''): int
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     $access_type_status = match (get_user_status($user_status)) {
@@ -1704,6 +1829,10 @@ function is_webmaster($user_status = ''): bool
  */
 function can_manage_comment($action, $comment_author_id): bool
 {
+    /**
+     * @var array<string, mixed> $user
+     * @var array<string, mixed> $conf
+     */
     global $user, $conf;
 
     if (is_a_guest()) {
@@ -1750,7 +1879,28 @@ function get_sql_condition_FandF(
     $prefix_condition = null,
     $force_one_condition = false
 ): string {
+    /**
+     * @var array<string, mixed> $user
+     * @var array<string, mixed> $filter
+     */
     global $user, $filter;
+
+    // forbidden_categories/image_access_list are comma-separated id lists
+    // built with implode(',', ...) in getuserdata(), level is a raw DB
+    // fetch value (string|null); image_access_type is the literal string
+    // 'NOT IN' (see getuserdata()) -- all always scalar/string-castable.
+    $user_forbidden_categories = $user['forbidden_categories'] ?? null;
+    $user_forbidden_categories = is_scalar($user_forbidden_categories) ? (string) $user_forbidden_categories : '';
+    $filter_visible_categories = $filter['visible_categories'] ?? null;
+    $filter_visible_categories = is_scalar($filter_visible_categories) ? (string) $filter_visible_categories : '';
+    $filter_visible_images = $filter['visible_images'] ?? null;
+    $filter_visible_images = is_scalar($filter_visible_images) ? (string) $filter_visible_images : '';
+    $user_level = $user['level'] ?? null;
+    $user_level = is_scalar($user_level) ? (string) $user_level : '';
+    $user_image_access_type = $user['image_access_type'] ?? null;
+    $user_image_access_type = is_scalar($user_image_access_type) ? (string) $user_image_access_type : '';
+    $user_image_access_list = $user['image_access_list'] ?? null;
+    $user_image_access_list = is_scalar($user_image_access_list) ? (string) $user_image_access_list : '';
 
     $sql_list = [];
 
@@ -1758,31 +1908,31 @@ function get_sql_condition_FandF(
         switch ($condition) {
             case 'forbidden_categories':
 
-                if (! empty($user['forbidden_categories'])) {
+                if (! empty($user_forbidden_categories)) {
                     $sql_list[] =
-                      $field_name . ' NOT IN (' . $user['forbidden_categories'] . ')';
+                      $field_name . ' NOT IN (' . $user_forbidden_categories . ')';
                 }
                 break;
 
             case 'visible_categories':
 
-                if (! empty($filter['visible_categories'])) {
+                if (! empty($filter_visible_categories)) {
                     $sql_list[] =
-                      $field_name . ' IN (' . $filter['visible_categories'] . ')';
+                      $field_name . ' IN (' . $filter_visible_categories . ')';
                 }
                 break;
 
             case 'visible_images':
-                if (! empty($filter['visible_images'])) {
+                if (! empty($filter_visible_images)) {
                     $sql_list[] =
-                      $field_name . ' IN (' . $filter['visible_images'] . ')';
+                      $field_name . ' IN (' . $filter_visible_images . ')';
                 }
                 // note there is no break - visible include forbidden
                 // no break
             case 'forbidden_images':
                 if (
-                    ! empty($user['image_access_list'])
-                    or $user['image_access_type'] != 'NOT IN'
+                    ! empty($user_image_access_list)
+                    or $user_image_access_type != 'NOT IN'
                 ) {
                     $table_prefix = null;
                     if ($field_name == 'id') {
@@ -1791,10 +1941,10 @@ function get_sql_condition_FandF(
                         $table_prefix = 'i.';
                     }
                     if (isset($table_prefix)) {
-                        $sql_list[] = $table_prefix . 'level<=' . $user['level'];
-                    } elseif (! empty($user['image_access_list']) and ! empty($user['image_access_type'])) {
-                        $sql_list[] = $field_name . ' ' . $user['image_access_type']
-                            . ' (' . $user['image_access_list'] . ')';
+                        $sql_list[] = $table_prefix . 'level<=' . $user_level;
+                    } elseif (! empty($user_image_access_list) and ! empty($user_image_access_type)) {
+                        $sql_list[] = $field_name . ' ' . $user_image_access_type
+                            . ' (' . $user_image_access_list . ')';
                     }
                 }
                 break;
@@ -1824,13 +1974,23 @@ function get_sql_condition_FandF(
  */
 function get_recent_photos_sql($db_field): string
 {
+    /** @var array<string, mixed> $user */
     global $user;
     if (! isset($user['last_photo_date'])) {
         return '0=1';
     }
+
+    // same narrowing as get_icon()'s $recent_period handling in
+    // functions.inc.php: a raw user_infos DB value, numeric string or int
+    $recent_period = $user['recent_period'] ?? null;
+    $recent_period = is_numeric($recent_period) ? (int) $recent_period : (is_string($recent_period) ? $recent_period : 0);
+
+    $last_photo_date = $user['last_photo_date'];
+    $last_photo_date = is_string($last_photo_date) ? $last_photo_date : '';
+
     return $db_field . '>=LEAST('
-      . pwg_db_get_recent_period_expression($user['recent_period'])
-      . ',' . pwg_db_get_recent_period_expression(1, $user['last_photo_date']) . ')';
+      . pwg_db_get_recent_period_expression($recent_period)
+      . ',' . pwg_db_get_recent_period_expression(1, $last_photo_date) . ')';
 }
 
 /**
@@ -1844,7 +2004,16 @@ function get_recent_photos_sql($db_field): string
  */
 function auth_key_login($auth_key, bool $connection_by_header = false): bool
 {
+    /**
+     * @var array<string, mixed> $conf
+     * @var array<string, mixed> $user
+     * @var array<string, mixed> $page
+     */
     global $conf, $user, $page;
+
+    // see validate_mail_address() for why this is string=>string
+    /** @var array<string, string> $user_fields */
+    $user_fields = $conf['user_fields'];
 
     $auth_key = is_string($auth_key) ? $auth_key : '';
 
@@ -1866,14 +2035,14 @@ function auth_key_login($auth_key, bool $connection_by_header = false): bool
     $query = '
 SELECT
     *,
-    ' . $conf['user_fields']['username'] . ' AS username,
-    ' . $conf['user_fields']['email'] . ' AS email,
+    ' . $user_fields['username'] . ' AS username,
+    ' . $user_fields['email'] . ' AS email,
     NOW() AS dbnow,
     DATEDIFF(uak.expired_on, NOW()) AS days_left,
     SUBDATE(NOW(), INTERVAL 48 HOUR) AS 48h_ago
   FROM ' . USER_AUTH_KEYS_TABLE . ' AS uak
     JOIN ' . USER_INFOS_TABLE . ' AS ui ON uak.user_id = ui.user_id
-    JOIN ' . USERS_TABLE . ' AS u ON u.' . $conf['user_fields']['id'] . ' = ui.user_id
+    JOIN ' . USERS_TABLE . ' AS u ON u.' . $user_fields['id'] . ' = ui.user_id
   WHERE auth_key = \'' . $auth_key . '\'
 ;';
     $keys = query2array($query);
@@ -1970,9 +2139,16 @@ SELECT
  */
 function create_user_auth_key($user_id, ?string $user_status = null)
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
-    if ($conf['auth_key_duration'] == 0) {
+    // auth_key_duration defaults to 3*24*60*60 (int) in
+    // include/config_default.inc.php, but once persisted to the config DB
+    // table it comes back as a raw string (see load_conf_from_db())
+    $auth_key_duration = $conf['auth_key_duration'];
+    $auth_key_duration = is_numeric($auth_key_duration) ? (int) $auth_key_duration : 0;
+
+    if ($auth_key_duration == 0) {
         return false;
     }
 
@@ -2003,7 +2179,7 @@ SELECT
 SELECT
     COUNT(*),
     NOW(),
-    ADDDATE(NOW(), INTERVAL ' . $conf['auth_key_duration'] . ' SECOND)
+    ADDDATE(NOW(), INTERVAL ' . $auth_key_duration . ' SECOND)
   FROM ' . USER_AUTH_KEYS_TABLE . '
   WHERE auth_key = \'' . $candidate . '\'
 ;';
@@ -2015,7 +2191,7 @@ SELECT
             'auth_key' => $candidate,
             'user_id' => $user_id,
             'created_on' => $now,
-            'duration' => $conf['auth_key_duration'],
+            'duration' => $auth_key_duration,
             'expired_on' => $expiration,
             'key_type' => 'auth_key',
         ];
@@ -2078,13 +2254,18 @@ function deactivate_password_reset_key($user_id): void
  */
 function generate_password_link($user_id, $first_login = false): array
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     $activation_key = generate_key(20);
 
+    // password_activation_duration/password_reset_duration default to ints
+    // in include/config_default.inc.php, but once persisted to the config
+    // DB table they come back as raw strings (see load_conf_from_db())
     $duration = $first_login
     ? $conf['password_activation_duration']
     : $conf['password_reset_duration'];
+    $duration = is_numeric($duration) ? (int) $duration : 0;
     $row = pwg_db_fetch_row(pwg_query('SELECT ADDDATE(NOW(), INTERVAL ' . $duration . ' SECOND)'));
     assert($row !== null);
     [$expire] = $row;
@@ -2169,14 +2350,21 @@ UPDATE ' . USER_INFOS_TABLE . '
  */
 function userprefs_save(): void
 {
+    /** @var array<string, mixed> $user */
     global $user;
 
     $dbValue = pwg_db_real_escape_string(serialize($user['preferences']));
 
+    // user_infos.id (primary key, NOT NULL): a raw DB fetch value is a
+    // numeric string, build_user() may also set it as int -- either way
+    // it's always scalar and safe to interpolate into SQL below.
+    $user_id_val = $user['id'];
+    $user_id_str = is_scalar($user_id_val) ? (string) $user_id_val : '0';
+
     $query = '
 UPDATE ' . USER_INFOS_TABLE . '
   SET preferences = \'' . $dbValue . '\'
-  WHERE user_id = ' . $user['id'] . '
+  WHERE user_id = ' . $user_id_str . '
 ;';
     pwg_query($query);
 }
@@ -2193,6 +2381,7 @@ UPDATE ' . USER_INFOS_TABLE . '
  */
 function userprefs_update_param($param, $value): void
 {
+    /** @var array<string, mixed> $user */
     global $user;
 
     // If the field is true or false, the variable is transformed into a boolean value.
@@ -2202,7 +2391,12 @@ function userprefs_update_param($param, $value): void
         $value = false;
     }
 
-    $user['preferences'][$param] = $value;
+    $preferences = $user['preferences'] ?? [];
+    if (! is_array($preferences)) {
+        $preferences = [];
+    }
+    $preferences[$param] = $value;
+    $user['preferences'] = $preferences;
 
     userprefs_save();
 }
@@ -2215,6 +2409,7 @@ function userprefs_update_param($param, $value): void
  */
 function userprefs_delete_param($params): void
 {
+    /** @var array<string, mixed> $user */
     global $user;
 
     if (! is_array($params)) {
@@ -2224,11 +2419,16 @@ function userprefs_delete_param($params): void
         return;
     }
 
+    $preferences = $user['preferences'] ?? [];
+    if (! is_array($preferences)) {
+        $preferences = [];
+    }
     foreach ($params as $param) {
-        if (isset($user['preferences'][$param])) {
-            unset($user['preferences'][$param]);
+        if (isset($preferences[$param])) {
+            unset($preferences[$param]);
         }
     }
+    $user['preferences'] = $preferences;
 
     userprefs_save();
 }
@@ -2244,9 +2444,12 @@ function userprefs_delete_param($params): void
  */
 function userprefs_get_param($param, $default_value = null)
 {
+    /** @var array<string, mixed> $user */
     global $user;
 
-    return $user['preferences'][$param] ?? $default_value;
+    $preferences = $user['preferences'] ?? null;
+
+    return is_array($preferences) ? ($preferences[$param] ?? $default_value) : $default_value;
 }
 
 /**
@@ -2308,7 +2511,15 @@ function check_and_save_user_infos(array $params): array
         }
     }
 
+    /**
+     * @var array<string, mixed> $conf
+     * @var array<string, mixed> $user
+     */
     global $conf, $user, $service;
+
+    // see validate_mail_address() for why this is string=>string
+    /** @var array<string, string> $user_fields */
+    $user_fields = $conf['user_fields'];
 
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
@@ -2360,7 +2571,7 @@ function check_and_save_user_infos(array $params): array
                     ],
                 ];
             }
-            $updates[$conf['user_fields']['username']] = $username_param;
+            $updates[$user_fields['username']] = $username_param;
         }
 
         if (! empty($params['email'])) {
@@ -2375,7 +2586,7 @@ function check_and_save_user_infos(array $params): array
                     ],
                 ];
             }
-            $updates[$conf['user_fields']['email']] = $email_param;
+            $updates[$user_fields['email']] = $email_param;
         }
 
         if (! empty($params['password'])) {
@@ -2390,8 +2601,14 @@ SELECT
 ;';
                 $admin_ids = query2array($query, null, 'user_id');
 
+                // user_infos.id (primary key, NOT NULL): a raw DB fetch
+                // value is a numeric string, build_user() may also set it as
+                // int -- either way it's always scalar and string-castable.
+                $current_user_id_val = $user['id'];
+                $current_user_id_str = is_scalar($current_user_id_val) ? (string) $current_user_id_val : '0';
+
                 // we add all admin+webmaster users BUT the user herself
-                $password_protected_users = array_merge($password_protected_users, array_diff($admin_ids, [$user['id']]));
+                $password_protected_users = array_merge($password_protected_users, array_diff($admin_ids, [$current_user_id_str]));
 
                 if (in_array($user_ids[0], $password_protected_users)) {
                     // return new PwgError(403, 'Only webmasters can change password of other "webmaster/admin" users');
@@ -2406,7 +2623,7 @@ SELECT
 
             $password_param = $params['password'];
             assert(is_string($password_param));
-            $updates[$conf['user_fields']['password']] = pwg_password_hash($password_param);
+            $updates[$user_fields['password']] = pwg_password_hash($password_param);
         }
     }
 
@@ -2431,11 +2648,16 @@ SELECT
             ];
         }
 
-        $protected_users = [
-            $user['id'],
-            $conf['guest_id'],
-            $conf['webmaster_id'],
-        ];
+        // user['id']/conf's guest_id/webmaster_id are always scalar (raw DB
+        // fetch value / int config values) and string-castable.
+        $protected_users = array_filter(
+            [
+                $user['id'],
+                $conf['guest_id'],
+                $conf['webmaster_id'],
+            ],
+            'is_scalar'
+        );
 
         // an admin can't change status of other admin/webmaster
         if ($user['status'] == 'admin') {
@@ -2450,7 +2672,7 @@ SELECT
 
         // status update query is separated from the rest as not applying to the same
         // set of users (current, guest and webmaster can't be changed)
-        $user_ids_for_status = array_diff($user_ids, $protected_users);
+        $user_ids_for_status = array_diff($user_ids, array_filter($protected_users, 'is_scalar'));
 
         $status_param = $params['status'];
         assert(is_string($status_param));
@@ -2458,7 +2680,11 @@ SELECT
     }
 
     if (! empty($params['level']) or @$params['level'] === 0) {
-        if (! in_array($params['level'], $conf['available_permission_levels'])) {
+        // $conf['available_permission_levels'] defaults to [0, 1, 2, 4, 8]
+        // (see include/config_default.inc.php), always an array
+        $available_permission_levels = $conf['available_permission_levels'];
+        $available_permission_levels = is_array($available_permission_levels) ? $available_permission_levels : [];
+        if (! in_array($params['level'], $available_permission_levels)) {
             // return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid level');
             return [
                 'error' => [
@@ -2525,15 +2751,15 @@ SELECT
         USERS_TABLE,
         $updates,
         [
-            $conf['user_fields']['id'] => $user_ids[0],
+            $user_fields['id'] => $user_ids[0],
         ]
     );
 
-    if (isset($updates[$conf['user_fields']['password']])) {
+    if (isset($updates[$user_fields['password']])) {
         deactivate_user_auth_keys($user_ids[0]);
     }
 
-    if (isset($updates[$conf['user_fields']['email']])) {
+    if (isset($updates[$user_fields['email']])) {
         deactivate_password_reset_key($user_ids[0]);
     }
 
@@ -2902,6 +3128,7 @@ function connected_with_pwg_ui(): bool
  */
 function notification_api_key_expiration(string $username, string $email, int $days_left)
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php';
@@ -2914,10 +3141,13 @@ function notification_api_key_expiration(string $username, string $email, int $d
     $message .= '<p style="margin: 20px 0">' . l10n('To continue using the API, please renew your key before it expires.') . '</p>';
     $message .= '<p style="margin: 20px 0">' . l10n('You can manage your API keys in your <a href="%s">account settings.</a>', get_absolute_root_url() . 'profile.php') . '</p>';
 
+    $gallery_title = $conf['gallery_title'];
+    $gallery_title = is_string($gallery_title) ? $gallery_title : '';
+
     $result = @pwg_mail(
         $email,
         [
-            'subject' => '[' . $conf['gallery_title'] . '] ' . l10n('Your API key will expire soon'),
+            'subject' => '[' . $gallery_title . '] ' . l10n('Your API key will expire soon'),
             'content' => $message,
             'content_format' => 'text/html',
         ]
@@ -2934,11 +3164,17 @@ function notification_api_key_expiration(string $username, string $email, int $d
  */
 function generate_user_code(): array
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     require_once PHPWG_ROOT_PATH . 'include/totp.class.php';
     $secret = PwgTOTP::generateSecret();
-    $code = PwgTOTP::generateCode($secret, min($conf['password_reset_code_duration'], 900)); // max 15 minutes
+    // password_reset_code_duration defaults to 5*60 (int) in
+    // include/config_default.inc.php, but once persisted to the config DB
+    // table it comes back as a raw string (see load_conf_from_db())
+    $password_reset_code_duration = $conf['password_reset_code_duration'];
+    $password_reset_code_duration = is_numeric($password_reset_code_duration) ? (int) $password_reset_code_duration : 300;
+    $code = PwgTOTP::generateCode($secret, min($password_reset_code_duration, 900)); // max 15 minutes
 
     return [
         'secret' => $secret,
@@ -2955,10 +3191,14 @@ function generate_user_code(): array
  */
 function verify_user_code($secret, $code): bool
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     require_once PHPWG_ROOT_PATH . 'include/totp.class.php';
-    return PwgTOTP::verifyCode($code, $secret, min($conf['password_reset_code_duration'], 900), 1);
+    // see generate_user_code() for why this needs numeric narrowing
+    $password_reset_code_duration = $conf['password_reset_code_duration'];
+    $password_reset_code_duration = is_numeric($password_reset_code_duration) ? (int) $password_reset_code_duration : 300;
+    return PwgTOTP::verifyCode($code, $secret, min($password_reset_code_duration, 900), 1);
 }
 
 /**
@@ -2968,11 +3208,23 @@ function verify_user_code($secret, $code): bool
  */
 function save_edit_context(): void
 {
+    /** @var array<string, mixed> $page */
     global $page;
 
     if (! is_admin() or ! isset($page['section_url']) or ! isset($page['image_id'])) {
         return;
     }
+
+    // $page['image_id'] is int|numeric-string (include/section_init.inc.php
+    // sets it from a URL token via is_numeric(), or the literal int 0),
+    // $page['section_url'] always a string.
+    $image_id = $page['image_id'];
+    if (! is_int($image_id) && ! (is_string($image_id) && is_numeric($image_id))) {
+        return;
+    }
+    $image_id = (int) $image_id;
+    $section_url = $page['section_url'];
+    $section_url = is_string($section_url) ? $section_url : '';
 
     $edit_context = $_SESSION['edit_context'] ?? null;
     if (! is_array($edit_context)) {
@@ -2992,7 +3244,7 @@ function save_edit_context(): void
 
     // let's add the item on top of previous registered values and keep only the last 10 values
     $_SESSION['edit_context'] = array_slice([
-        $page['image_id'] => $page['section_url'],
+        $image_id => $section_url,
     ] + $edit_context, 0, 10, true);
 }
 

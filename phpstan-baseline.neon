@@ -55,12 +55,6 @@ parameters:
 			path: admin/include/themes.class.php
 
 		-
-			message: '#^Undefined variable\: \$base_url$#'
-			identifier: variable.undefined
-			count: 1
-			path: admin/notification_by_mail.php
-
-		-
 			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
 			identifier: include.fileNotFound
 			count: 2
@@ -137,24 +131,6 @@ parameters:
 			identifier: return.missing
 			count: 1
 			path: include/derivative.inc.php
-
-		-
-			message: '#^Undefined variable\: \$cached$#'
-			identifier: variable.undefined
-			count: 2
-			path: include/functions_notification.inc.php
-
-		-
-			message: '#^Undefined variable\: \$res$#'
-			identifier: variable.undefined
-			count: 2
-			path: include/functions_search.inc.php
-
-		-
-			message: '#^Undefined variable\: \$tag_counters$#'
-			identifier: variable.undefined
-			count: 1
-			path: include/functions_tag.inc.php
 
 		-
 			message: '#^Call to static method display_debug\(\) on an unknown class Smarty_Internal_Debug\.$#'

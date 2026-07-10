@@ -18,6 +18,7 @@ declare(strict_types=1);
  */
 function get_default_slideshow_params(): array
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     return [
@@ -34,6 +35,7 @@ function get_default_slideshow_params(): array
  */
 function correct_slideshow_params(array $params = []): array
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     if ($params['period'] < $conf['slideshow_period_min']) {
@@ -101,7 +103,7 @@ function encode_slideshow_params(array $decode_params = []): string
     foreach ($params as $name => $value) {
         // boolean_to_string return $value, if it's not a bool
         $value = boolean_to_string($value);
-        if (!is_scalar($value)) {
+        if (! is_scalar($value)) {
             continue;
         }
 

@@ -385,6 +385,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
                     'type' => 0,
                 ];
             } else {
+                /** @var array<string, mixed> $data */
                 // every real registration in ws.php that sets 'flags' uses
                 // one of the WS_PARAM_* int constants; fall back to 0 for
                 // anything else (missing, or a non-int value).
@@ -456,7 +457,15 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
 
     public static function checkType(mixed &$param, int $type, string $name): ?\PwgError
     {
-        $opts = [];
+        // pre-seed the 'options' sub-array so the nested writes below
+        // ($opts['options']['min_range'] = ...) target a known array type
+        // instead of auto-vivifying through an untyped offset; functionally
+        // identical to [] as far as filter_var() is concerned (an empty
+        // 'options' map disables the min_range check, same as no options
+        // array at all).
+        $opts = [
+            'options' => [],
+        ];
         $msg = '';
         if (self::hasFlag($type, WS_TYPE_POSITIVE | WS_TYPE_NOTNULL)) {
             $opts['options']['min_range'] = 1;
@@ -714,6 +723,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
 
     public function isAuthorizedMethodForAPIKEY(): bool
     {
+        /** @var array<string, mixed> $conf */
         global $conf;
 
         // if the request is made with an API key (via header or session API key),
@@ -724,7 +734,12 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
             defined('PWG_API_KEY_REQUEST')
             or (isset($_SESSION['connected_with']) and $_SESSION['connected_with'] === 'ws_session_login_api_key')
         ) {
-            if (in_array($_REQUEST['method'], $conf['api_key_forbidden_methods'])) {
+            $forbidden_methods = $conf['api_key_forbidden_methods'] ?? [];
+            if (! is_array($forbidden_methods)) {
+                $forbidden_methods = [];
+            }
+
+            if (in_array($_REQUEST['method'], $forbidden_methods)) {
                 return false;
             }
         }

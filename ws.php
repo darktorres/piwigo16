@@ -15,6 +15,7 @@ define('IN_WS', true);
 include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 
 // Bootstrap global, set by include/common.inc.php.
+/** @var array<string, mixed> $conf */
 global $conf;
 
 check_status(ACCESS_FREE);
@@ -26,6 +27,7 @@ if (! $conf['allow_web_services']) {
 include_once PHPWG_ROOT_PATH . 'include/ws_init.inc.php';
 
 // Set by include/ws_init.inc.php, right above.
+/** @var PwgServer $service */
 global $service;
 
 $service->run();
@@ -37,11 +39,26 @@ $service->run();
  */
 function ws_addDefaultMethods(array $arr): void
 {
-    global $conf, $user;
+    /** @var array<string, mixed> $conf */
+    global $conf;
+    /** @var array<string, mixed> $user */
+    global $user;
     $service = &$arr[0];
 
     include_once PHPWG_ROOT_PATH . 'include/ws_functions.inc.php';
     $ws_functions_root = PHPWG_ROOT_PATH . 'include/ws_functions/';
+
+    // $conf['available_permission_levels'] defaults to [0, 1, 2, 4, 8] (see
+    // include/config_default.inc.php); guard against a misconfigured/empty value
+    // since max() requires a non-empty array.
+    $available_permission_levels = $conf['available_permission_levels'];
+    $available_permission_levels = is_array($available_permission_levels) && $available_permission_levels !== []
+        ? $available_permission_levels
+        : [0, 1, 2, 4, 8];
+
+    // $conf['nb_comment_page'] is a numeric config value (see admin/configuration.php).
+    $nb_comment_page = $conf['nb_comment_page'];
+    $nb_comment_page = is_numeric($nb_comment_page) ? (int) $nb_comment_page : 0;
 
     $f_params = [
         'f_min_rate' => [
@@ -320,8 +337,8 @@ function ws_addDefaultMethods(array $arr): void
                 'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
             ],
             'comments_per_page' => [
-                'default' => $conf['nb_comment_page'],
-                'maxValue' => 2 * $conf['nb_comment_page'],
+                'default' => $nb_comment_page,
+                'maxValue' => 2 * $nb_comment_page,
                 'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
             ],
         ],
@@ -376,7 +393,7 @@ function ws_addDefaultMethods(array $arr): void
                 'type' => WS_TYPE_ID,
             ],
             'level' => [
-                'maxValue' => max($conf['available_permission_levels']),
+                'maxValue' => max($available_permission_levels),
                 'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
             ],
         ],
@@ -660,7 +677,7 @@ function ws_addDefaultMethods(array $arr): void
             ],
             'level' => [
                 'default' => 0,
-                'maxValue' => max($conf['available_permission_levels']),
+                'maxValue' => max($available_permission_levels),
                 'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
             ],
             'check_uniqueness' => [
@@ -701,7 +718,7 @@ function ws_addDefaultMethods(array $arr): void
             ],
             'level' => [
                 'default' => 0,
-                'maxValue' => max($conf['available_permission_levels']),
+                'maxValue' => max($available_permission_levels),
                 'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
             ],
             'tags' => [
@@ -738,7 +755,7 @@ function ws_addDefaultMethods(array $arr): void
             ],
             'level' => [
                 'default' => 0,
-                'maxValue' => max($conf['available_permission_levels']),
+                'maxValue' => max($available_permission_levels),
                 'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
             ],
             'format_of' => [
@@ -802,7 +819,7 @@ function ws_addDefaultMethods(array $arr): void
             ],
             'level' => [
                 'default' => 0,
-                'maxValue' => max($conf['available_permission_levels']),
+                'maxValue' => max($available_permission_levels),
                 'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
             ],
             'tag_ids' => [
@@ -1293,7 +1310,7 @@ function ws_addDefaultMethods(array $arr): void
             ],
             'level' => [
                 'default' => null,
-                'maxValue' => max($conf['available_permission_levels']),
+                'maxValue' => max($available_permission_levels),
                 'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
             ],
             'single_value_mode' => [
@@ -1682,7 +1699,7 @@ function ws_addDefaultMethods(array $arr): void
             ],
             'min_level' => [
                 'default' => 0,
-                'maxValue' => max($conf['available_permission_levels']),
+                'maxValue' => max($available_permission_levels),
                 'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
             ],
             'group_id' => [
@@ -1830,7 +1847,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
             ],
             'level' => [
                 'flags' => WS_PARAM_OPTIONAL,
-                'maxValue' => max($conf['available_permission_levels']),
+                'maxValue' => max($available_permission_levels),
                 'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
             ],
             'language' => [

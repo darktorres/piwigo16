@@ -15,6 +15,12 @@ include PHPWG_ROOT_PATH . 'include/section_init.inc.php';
 include_once PHPWG_ROOT_PATH . 'include/functions_picture.inc.php';
 
 // Bootstrap globals, set by include/common.inc.php.
+/**
+ * @var array<string, mixed> $conf
+ * @var array<string, mixed> $page
+ * @var \Template $template
+ * @var array<string, mixed> $user
+ */
 global $conf, $page, $template, $user;
 
 save_edit_context();
@@ -22,26 +28,55 @@ save_edit_context();
 // Check Access and exit when user status is not ok
 check_status(ACCESS_GUEST);
 
+// $page['category'] (see include/section_init.inc.php / get_cat_info())
+// is set at most once, before this script runs, and is never reassigned
+// below -- snapshot it locally once so every isset($page['category'])
+// check below can be replaced with a real is_array() narrowing.
+$page_category = (isset($page['category']) and is_array($page['category'])) ? $page['category'] : null;
+
 // access authorization check
-if (isset($page['category'])) {
-    check_restrictions($page['category']['id']);
+if ($page_category !== null) {
+    $category_id = $page_category['id'] ?? null;
+    check_restrictions(is_numeric($category_id) ? (int) $category_id : 0);
 }
 
-$page['rank_of'] = array_flip($page['items']);
+// $page['items'] (see include/section_init.inc.php) is always a list of
+// image ids (int or numeric string); mutated in place below (best_rated
+// fallback) so it is kept as a local variable synced back into $page.
+$page_items = $page['items'];
+$items = [];
+if (is_array($page_items)) {
+    foreach ($page_items as $page_item) {
+        if (is_int($page_item) || is_string($page_item)) {
+            $items[] = $page_item;
+        }
+    }
+}
+$page['items'] = $items;
+$rank_of = array_flip($items);
+$page['rank_of'] = $rank_of;
+
+$image_id = $page['image_id'];
+$image_id = is_numeric($image_id) ? (int) $image_id : 0;
+
+// $user['id'] (the logged in / guest user id) is never reassigned below.
+$user_id = $user['id'];
+$user_id = is_numeric($user_id) ? (int) $user_id : 0;
 
 // if this image_id doesn't correspond to this category, an error message is
 // displayed, and execution is stopped
-if (! isset($page['rank_of'][$page['image_id']])) {
+if (! isset($rank_of[$image_id])) {
     $query = '
 SELECT id, file, level
   FROM ' . IMAGES_TABLE . '
   WHERE ';
-    if ($page['image_id'] > 0) {
-        $query .= 'id = ' . $page['image_id'];
+    if ($image_id > 0) {
+        $query .= 'id = ' . $image_id;
     } else {// url given by file name
         assert(! empty($page['image_file']));
+        $page_image_file = $page['image_file'];
         $query .= 'file LIKE \'' .
-          str_replace(['_', '%'], ['/_', '/%'], $page['image_file']) .
+          str_replace(['_', '%'], ['/_', '/%'], is_string($page_image_file) ? $page_image_file : '') .
           '.%\' ESCAPE \'/\' LIMIT 1';
     }
     if (! ($row = pwg_db_fetch_assoc(pwg_query($query)))) {// element does not exist
@@ -50,28 +85,36 @@ SELECT id, file, level
             duplicate_index_url()
         );
     }
-    if ($row['level'] > $user['level']) {
+    $row_level = $row['level'];
+    $user_level = $user['level'];
+    if ((is_numeric($row_level) ? (int) $row_level : 0) > (is_numeric($user_level) ? (int) $user_level : 0)) {
         access_denied();
     }
 
-    $page['image_id'] = $row['id'];
+    $row_id = $row['id'];
+    assert(is_string($row_id)); // images.id is the NOT NULL primary key
+    $image_id = (int) $row_id;
+    $page['image_id'] = $image_id;
     $page['image_file'] = $row['file'];
-    if (! isset($page['rank_of'][$page['image_id']])) {// the image can still be non accessible (filter/cat perm) and/or not in the set
+    if (! isset($rank_of[$image_id])) {// the image can still be non accessible (filter/cat perm) and/or not in the set
+        /** @var array<string, mixed> $filter */
         global $filter;
-        if (! empty($filter['visible_images']) and
-          ! in_array($page['image_id'], explode(',', (string) $filter['visible_images']))) {
+        $visible_images = $filter['visible_images'] ?? null;
+        if (! empty($visible_images) and
+          ! in_array($image_id, explode(',', is_scalar($visible_images) ? (string) $visible_images : ''))) {
             page_not_found(
                 'The requested image is filtered',
                 duplicate_index_url()
             );
         }
-        if ($page['section'] == 'categories' and ! isset($page['category'])) {// flat view - all items
+        $page_section = $page['section'];
+        if ($page_section == 'categories' and $page_category === null) {// flat view - all items
             access_denied();
         } else {// try to see if we can access it differently
             $query = '
 SELECT id
   FROM ' . IMAGES_TABLE . ' INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id=image_id
-  WHERE id=' . $page['image_id']
+  WHERE id=' . $image_id
               . get_sql_condition_FandF(
                   [
                       'forbidden_categories' => 'category_id',
@@ -82,19 +125,21 @@ SELECT id
             if (pwg_db_num_rows(pwg_query($query)) == 0) {
                 access_denied();
             } else {
-                if ($page['section'] == 'best_rated') {
-                    $page['rank_of'][$page['image_id']] = count($page['items']);
-                    $page['items'][] = $page['image_id'];
+                if ($page_section == 'best_rated') {
+                    $rank_of[$image_id] = count($items);
+                    $page['rank_of'] = $rank_of;
+                    $items[] = $image_id;
+                    $page['items'] = $items;
                 } else {
                     $url = make_picture_url(
                         [
-                            'image_id' => $page['image_id'],
+                            'image_id' => $image_id,
                             'image_file' => $page['image_file'],
                             'section' => 'categories',
                             'flat' => true,
                         ]
                     );
-                    set_status_header($page['section'] == 'recent_pics' ? 301 : 302);
+                    set_status_header($page_section == 'recent_pics' ? 301 : 302);
                     redirect_http($url);
                 }
             }
@@ -132,8 +177,9 @@ trigger_notify('loc_begin_picture');
  *     ...
  * } $element_info
  */
-function default_picture_content(string $content, array $element_info): ?string
+function default_picture_content(string $content, array $element_info): string
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     if (! empty($content)) {// someone hooked us - so we skip;
@@ -179,6 +225,10 @@ function default_picture_content(string $content, array $element_info): ?string
         }
     }
 
+    /**
+     * @var array<string, mixed> $page
+     * @var \Template $template
+     */
     global $page, $template;
 
     if ($show_original and isset($element_info['element_url'])) {
@@ -211,29 +261,45 @@ function default_picture_content(string $content, array $element_info): ?string
 
 // caching first_rank, last_rank, current_rank in the displayed
 // section. This should also help in readability.
-$page['first_rank'] = 0;
-$page['last_rank'] = count($page['items']) - 1;
-$page['current_rank'] = $page['rank_of'][$page['image_id']];
+$first_rank = 0;
+$last_rank = count($items) - 1;
+// the isset($rank_of[$image_id]) checks above (falling through to
+// page_not_found()/access_denied() otherwise) already guarantee this key
+// exists by this point.
+$current_rank = $rank_of[$image_id];
+$page['first_rank'] = $first_rank;
+$page['last_rank'] = $last_rank;
+$page['current_rank'] = $current_rank;
 
 // caching current item : readability purpose
-$page['current_item'] = $page['image_id'];
+$page['current_item'] = $image_id;
 
-if ($page['current_rank'] != $page['first_rank']) {
+$previous_item = null;
+$first_item = null;
+if ($current_rank != $first_rank) {
     // caching first & previous item : readability purpose
-    $page['previous_item'] = $page['items'][$page['current_rank'] - 1];
-    $page['first_item'] = $page['items'][$page['first_rank']];
+    $previous_item = $items[$current_rank - 1];
+    $first_item = $items[$first_rank];
+    $page['previous_item'] = $previous_item;
+    $page['first_item'] = $first_item;
 }
 
-if ($page['current_rank'] != $page['last_rank']) {
+$next_item = null;
+$last_item = null;
+if ($current_rank != $last_rank) {
     // caching next & last item : readability purpose
-    $page['next_item'] = $page['items'][$page['current_rank'] + 1];
-    $page['last_item'] = $page['items'][$page['last_rank']];
+    $next_item = $items[$current_rank + 1];
+    $last_item = $items[$last_rank];
+    $page['next_item'] = $next_item;
+    $page['last_item'] = $last_item;
 }
 
+$nb_image_page = $page['nb_image_page'];
+$nb_image_page = is_numeric($nb_image_page) ? (int) $nb_image_page : 0;
 $url_up = duplicate_index_url(
     [
-        'start' => floor($page['current_rank'] / $page['nb_image_page'])
-          * $page['nb_image_page'],
+        'start' => floor($current_rank / $nb_image_page)
+          * $nb_image_page,
     ],
     [
         'start',
@@ -260,7 +326,7 @@ if (isset($_GET['action'])) {
 INSERT INTO ' . FAVORITES_TABLE . '
   (image_id,user_id)
   VALUES
-  (' . $page['image_id'] . ',' . $user['id'] . ')
+  (' . $image_id . ',' . $user_id . ')
 ;';
             pwg_query($query);
 
@@ -271,8 +337,8 @@ INSERT INTO ' . FAVORITES_TABLE . '
 
             $query = '
 DELETE FROM ' . FAVORITES_TABLE . '
-  WHERE user_id = ' . $user['id'] . '
-    AND image_id = ' . $page['image_id'] . '
+  WHERE user_id = ' . $user_id . '
+    AND image_id = ' . $image_id . '
 ;';
             pwg_query($query);
 
@@ -285,16 +351,18 @@ DELETE FROM ' . FAVORITES_TABLE . '
             // no break
         case 'set_as_representative':
 
-            if (is_admin() and isset($page['category'])) {
+            if (is_admin() and $page_category !== null) {
+                $representative_category_id = $page_category['id'] ?? null;
+                $representative_category_id = is_numeric($representative_category_id) ? (int) $representative_category_id : 0;
                 $query = '
 UPDATE ' . CATEGORIES_TABLE . '
-  SET representative_picture_id = ' . $page['image_id'] . '
-  WHERE id = ' . $page['category']['id'] . '
+  SET representative_picture_id = ' . $image_id . '
+  WHERE id = ' . $representative_category_id . '
 ;';
                 pwg_query($query);
-                pwg_activity('album', $page['category']['id'], 'edit', [
+                pwg_activity('album', $representative_category_id, 'edit', [
                     'action' => $_GET['action'],
-                    'image_id' => $page['image_id'],
+                    'image_id' => $image_id,
                 ]);
 
                 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
@@ -306,7 +374,7 @@ UPDATE ' . CATEGORIES_TABLE . '
             // no break
         case 'add_to_caddie':
 
-            fill_caddie([$page['image_id']]);
+            fill_caddie([$image_id]);
             redirect($url_self);
 
             // no break
@@ -317,7 +385,7 @@ UPDATE ' . CATEGORIES_TABLE . '
             if (! is_int($rate) and ! is_string($rate)) {
                 $rate = null;
             }
-            rate_picture($page['image_id'], $rate);
+            rate_picture($image_id, $rate);
             redirect($url_self);
 
             // no break
@@ -439,15 +507,15 @@ if (isset($_SERVER['HTTP_X_MOZ']) and $_SERVER['HTTP_X_MOZ'] == 'prefetch') {
     $inc_hit_count = false;
 } else {
     // don't increment counter if comming from the same picture (actions)
-    if (pwg_get_session_var('referer_image_id', 0) == $page['image_id']) {
+    if (pwg_get_session_var('referer_image_id', 0) == $image_id) {
         $inc_hit_count = false;
     }
-    pwg_set_session_var('referer_image_id', $page['image_id']);
+    pwg_set_session_var('referer_image_id', $image_id);
 }
 
 // don't increment if adding a comment
-if (trigger_change('allow_increment_element_hit_count', $inc_hit_count, $page['image_id'])) {
-    increase_image_visit_counter($page['image_id']);
+if (trigger_change('allow_increment_element_hit_count', $inc_hit_count, $image_id)) {
+    increase_image_visit_counter($image_id);
 }
 
 // ---------------------------------------------------------- related categories
@@ -455,7 +523,7 @@ $query = '
 SELECT id,uppercats,commentable,visible,status,global_rank
   FROM ' . IMAGE_CATEGORY_TABLE . '
     INNER JOIN ' . CATEGORIES_TABLE . ' ON category_id = id
-  WHERE image_id = ' . $page['image_id'] . '
+  WHERE image_id = ' . $image_id . '
 ' . get_sql_condition_FandF(
     [
         'forbidden_categories' => 'id',
@@ -473,14 +541,14 @@ usort($related_categories, global_rank_compare(...));
 // -------------------------first, prev, current, next & last picture management
 $picture = [];
 
-$ids = [$page['image_id']];
-if (isset($page['previous_item'])) {
-    $ids[] = $page['previous_item'];
-    $ids[] = $page['first_item'];
+$ids = [(string) $image_id];
+if ($previous_item !== null) {
+    $ids[] = (string) $previous_item;
+    $ids[] = (string) $first_item;
 }
-if (isset($page['next_item'])) {
-    $ids[] = $page['next_item'];
-    $ids[] = $page['last_item'];
+if ($next_item !== null) {
+    $ids[] = (string) $next_item;
+    $ids[] = (string) $last_item;
 }
 
 $query = '
@@ -492,13 +560,13 @@ SELECT *
 $result = pwg_query($query);
 
 while ($row = pwg_db_fetch_assoc($result)) {
-    if (isset($page['previous_item']) and $row['id'] == $page['previous_item']) {
+    if ($previous_item !== null and $row['id'] == $previous_item) {
         $i = 'previous';
-    } elseif (isset($page['next_item']) and $row['id'] == $page['next_item']) {
+    } elseif ($next_item !== null and $row['id'] == $next_item) {
         $i = 'next';
-    } elseif (isset($page['first_item']) and $row['id'] == $page['first_item']) {
+    } elseif ($first_item !== null and $row['id'] == $first_item) {
         $i = 'first';
-    } elseif (isset($page['last_item']) and $row['id'] == $page['last_item']) {
+    } elseif ($last_item !== null and $row['id'] == $last_item) {
         $i = 'last';
     } else {
         $i = 'current';
@@ -552,10 +620,10 @@ while ($row = pwg_db_fetch_assoc($result)) {
     $picture[$i]['TITLE'] = render_element_name($row);
     $picture[$i]['TITLE_ESC'] = str_replace('"', '&quot;', $picture[$i]['TITLE']);
 
-    if ($i == 'previous' and $page['previous_item'] == $page['first_item']) {
+    if ($i == 'previous' and $previous_item == $first_item) {
         $picture['first'] = $picture[$i];
     }
-    if ($i == 'next' and $page['next_item'] == $page['last_item']) {
+    if ($i == 'next' and $next_item == $last_item) {
         // $picture[$i] (== $picture['next']) was set a few lines above,
         // this same iteration ($i doesn't change within one iteration)
         assert(isset($picture[$i]));
@@ -579,10 +647,10 @@ if (isset($_GET['slideshow'])) {
 
     if ($slideshow_params['play']) {
         $id_pict_redirect = '';
-        if (isset($page['next_item'])) {
+        if ($next_item !== null) {
             $id_pict_redirect = 'next';
         } else {
-            if ($slideshow_params['repeat'] and isset($page['first_item'])) {
+            if ($slideshow_params['repeat'] and $first_item !== null) {
                 $id_pict_redirect = 'first';
             }
         }
@@ -614,7 +682,7 @@ if ($page['slideshow'] and $conf['light_slideshow']) {
 // hits the while loop's final `else { $i = 'current'; }` branch
 assert(isset($picture['current']));
 $title = $picture['current']['TITLE'];
-$title_nb = ($page['current_rank'] + 1) . '/' . count($page['items']);
+$title_nb = ($current_rank + 1) . '/' . count($items);
 
 // metadata
 $url_metadata = duplicate_picture_url();
@@ -727,11 +795,14 @@ SELECT *
             $format_ext = is_string($format_ext) ? $format_ext : '';
             $format['label'] = strtoupper($format_ext);
             $lang_key = 'format ' . strtoupper($format_ext);
+            /** @var array<string, mixed> $lang */
             if (isset($lang[$lang_key])) {
                 $format['label'] = $lang[$lang_key];
             }
 
-            $format['filesize'] = sprintf('%.1fMB', $format['filesize'] / 1024);
+            $format_filesize = $format['filesize'];
+            $format_filesize = is_numeric($format_filesize) ? (float) $format_filesize : 0.0;
+            $format['filesize'] = sprintf('%.1fMB', $format_filesize / 1024);
         }
         $template->append('current', [
             'formats' => $formats,
@@ -777,7 +848,9 @@ if ($page['slideshow']) {
         // practice (int default, or a preg-captured \d+ string).
         $current_period = $slideshow_params['period'];
         $current_period = is_numeric($current_period) ? (int) $current_period : 0;
-        $new_period = $current_period + ((($op == 'dec') ? -1 : 1) * $conf['slideshow_period_step']);
+        $slideshow_period_step = $conf['slideshow_period_step'];
+        $slideshow_period_step = is_numeric($slideshow_period_step) ? (int) $slideshow_period_step : 0;
+        $new_period = $current_period + ((($op == 'dec') ? -1 : 1) * $slideshow_period_step);
         $new_slideshow_params =
           correct_slideshow_params(
               array_merge(
@@ -817,7 +890,7 @@ $template->assign(
     [
         'SECTION_TITLE' => $page['section_title'],
         'PHOTO' => $title_nb,
-        'IS_HOME' => ($page['section'] == 'categories' and ! isset($page['category'])),
+        'IS_HOME' => ($page['section'] == 'categories' and $page_category === null),
 
         'LEVEL_SEPARATOR' => $conf['level_separator'],
 
@@ -835,7 +908,7 @@ if ($conf['picture_metadata_icon']) {
 
 // admin links
 if (is_admin()) {
-    if (isset($page['category']) and $conf['picture_representative_icon']) {
+    if ($page_category !== null and $conf['picture_representative_icon']) {
         $template->assign(
             [
                 'U_SET_AS_REPRESENTATIVE' => add_url_params(
@@ -849,7 +922,7 @@ if (is_admin()) {
     }
 
     if ($conf['picture_edit_icon']) {
-        $template->assign('U_PHOTO_ADMIN', get_root_url() . 'admin.php?page=photo-' . $page['image_id']);
+        $template->assign('U_PHOTO_ADMIN', get_root_url() . 'admin.php?page=photo-' . $image_id);
     }
 
     if ($conf['picture_caddie_icon']) {
@@ -869,8 +942,8 @@ if (! is_a_guest() and $conf['picture_favorite_icon']) {
     $query = '
 SELECT COUNT(*) AS nb_fav
   FROM ' . FAVORITES_TABLE . '
-  WHERE image_id = ' . $page['image_id'] . '
-    AND user_id = ' . $user['id'] . '
+  WHERE image_id = ' . $image_id . '
+    AND user_id = ' . $user_id . '
 ;';
     $row = pwg_db_fetch_assoc(pwg_query($query));
     if ($row === false || $row === null) {
@@ -893,6 +966,10 @@ SELECT COUNT(*) AS nb_fav
 }
 
 // --------------------------------------------------------- picture information
+// $infos was previously used without initialization (relying on PHP's
+// implicit array creation on first offset write) -- make it explicit.
+$infos = [];
+
 // legend
 if (isset($picture['current']['comment'])
     and ! empty($picture['current']['comment'])) {
@@ -960,10 +1037,11 @@ $infos['INFO_VISITS'] = $picture['current']['hit'];
 $infos['INFO_FILE'] = $picture['current']['file'];
 
 $template->assign($infos);
-$template->assign('display_info', unserialize($conf['picture_informations']));
+$picture_informations = $conf['picture_informations'];
+$template->assign('display_info', unserialize(is_string($picture_informations) ? $picture_informations : ''));
 
 // related tags
-$tags = get_common_tags([$page['image_id']], -1);
+$tags = get_common_tags([$image_id], -1);
 if (count($tags)) {
     foreach ($tags as $tag) {
         $template->append(
@@ -990,11 +1068,16 @@ if (count($tags)) {
 
 // related categories
 if (count($related_categories) == 1 and
-    isset($page['category']) and
-    $related_categories[0]['id'] == $page['category']['id']) { // no need to go to db, we have all the info
+    $page_category !== null and
+    $related_categories[0]['id'] == ($page_category['id'] ?? null)) { // no need to go to db, we have all the info
+    // Mirrors the narrowing in include/functions_html.inc.php
+    // (get_cat_display_name_from_id()) for the same 'upper_names' shape.
+    $upper_names = $page_category['upper_names'] ?? [];
+    $upper_names = is_array($upper_names) ? $upper_names : [];
+    /** @var array<int, array<string, mixed>> $upper_names */
     $template->append(
         'related_categories',
-        get_cat_display_name($page['category']['upper_names'])
+        get_cat_display_name($upper_names)
     );
 } else { // use only 1 sql query to get names for all related categories
     $ids = [];
@@ -1021,9 +1104,11 @@ SELECT id, name, permalink
 }
 
 if (in_array(strtolower(get_extension($picture['current']['file'])), ['pdf'])) {
+    $pdf_viewer_filesize_threshold = $conf['pdf_viewer_filesize_threshold'];
+    $pdf_viewer_filesize_threshold = is_numeric($pdf_viewer_filesize_threshold) ? (int) $pdf_viewer_filesize_threshold : 0;
     $template->assign(
         [
-            'PDF_VIEWER_FILESIZE_THRESHOLD' => $conf['pdf_viewer_filesize_threshold'] * 1024,
+            'PDF_VIEWER_FILESIZE_THRESHOLD' => $pdf_viewer_filesize_threshold * 1024,
             'PDF_NB_PAGES' => count_pdf_pages($picture['current']['path']),
         ]
     );
@@ -1078,7 +1163,8 @@ if ($metadata_showable and pwg_get_session_var('show_metadata') != null) {
 
 // include menubar
 $themeconf = $template->get_template_vars('themeconf');
-if ($conf['picture_menu'] and (! isset($themeconf['hide_menu_on']) or ! in_array('thePicturePage', $themeconf['hide_menu_on']))) {
+$themeconf = is_array($themeconf) ? $themeconf : [];
+if ($conf['picture_menu'] and (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('thePicturePage', $themeconf['hide_menu_on']))) {
     if (! isset($page['start'])) {
         $page['start'] = 0;
     }

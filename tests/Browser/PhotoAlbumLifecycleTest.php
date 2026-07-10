@@ -5,13 +5,16 @@ declare(strict_types=1);
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
- * Narrows a WS response's `result` field to an array. H::wsCall() only
- * guarantees array<string, mixed> — the decoded JSON body isn't typed any
- * further — so this asserts the shape this file's own WS calls always
- * produce, rather than trusting it blindly.
+ * Narrows a WS response's `result` field to a string-keyed array.
+ * H::wsCall() only guarantees array<string, mixed> for the top-level
+ * response — the nested `result` value comes straight out of
+ * json_decode() and isn't typed any further, so this asserts the shape
+ * this file's own WS calls always produce (a JSON object), normalizing
+ * keys to string the same way H::wsCall() itself does, rather than
+ * trusting the decoded shape blindly.
  *
  * @param  array<string, mixed>  $response
- * @return array<array-key, mixed>
+ * @return array<string, mixed>
  */
 function lifecycleWsResult(array $response, string $context): array
 {
@@ -20,7 +23,12 @@ function lifecycleWsResult(array $response, string $context): array
         throw new RuntimeException("{$context} response missing result: " . var_export($response, true));
     }
 
-    return $result;
+    $normalized = [];
+    foreach ($result as $key => $value) {
+        $normalized[(string) $key] = $value;
+    }
+
+    return $normalized;
 }
 
 /**
@@ -39,10 +47,12 @@ function lifecycleResultId(array $result, string $context): int
 }
 
 /**
- * Narrows `result.<listKey>` to a list of arrays, e.g. the `images` list
- * from pwg.categories.getImages or the `categories` list from
- * pwg.categories.getAdminList — skipping any entry that isn't itself an
- * array (array_column needs array-shaped rows, not scalars).
+ * Narrows `result.<listKey>` to a list of string-keyed arrays, e.g. the
+ * `images` list from pwg.categories.getImages or the `categories` list
+ * from pwg.categories.getAdminList — skipping any entry that isn't
+ * itself an array (array_column needs array-shaped rows, not scalars),
+ * and normalizing each row's keys to string the same way
+ * H::wsCall() / lifecycleWsResult() do.
  *
  * @param  array<string, mixed>  $result
  * @return list<array<string, mixed>>
@@ -56,9 +66,16 @@ function lifecycleResultList(array $result, string $listKey, string $context): a
 
     $out = [];
     foreach ($list as $item) {
-        if (is_array($item)) {
-            $out[] = $item;
+        if (!is_array($item)) {
+            continue;
         }
+
+        $normalizedItem = [];
+        foreach ($item as $key => $value) {
+            $normalizedItem[(string) $key] = $value;
+        }
+
+        $out[] = $normalizedItem;
     }
 
     return $out;

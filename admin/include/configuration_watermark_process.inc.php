@@ -14,7 +14,18 @@ if (! defined('PHPWG_ROOT_PATH')) {
 }
 
 // Bootstrap globals, set by include/common.inc.php.
+/** @var \Template $template */
 global $template;
+
+// $page['errors'] is always initialized to [] by admin/configuration.php
+// (the only caller that include()s this file), but that isn't visible
+// across the include() boundary -- narrow once here so the appends below
+// type-check.
+/** @var array<string, mixed> $page */
+global $page;
+if (! is_array($page['errors'] ?? null)) {
+    $page['errors'] = [];
+}
 
 if (! is_webmaster()) {
     return;
@@ -142,19 +153,30 @@ switch ($pwatermark['position']) {
 }
 
 // step 2 - check validity
+// Accumulate into a local array and only assign it into $errors['watermark']
+// if non-empty, matching this file's original auto-vivification behavior --
+// pre-creating $errors['watermark'] unconditionally would make count($errors)
+// never 0, permanently skipping "step 3 - save data" below. (xpos/ypos come
+// from raw user input when position=custom -- see configuration_watermark.tpl
+// -- so out-of-range values are a real, reachable case, not dead code.)
+$watermark_errors = [];
 $v = intval($pwatermark['xpos']);
 if ($v < 0 or $v > 100) {
-    $errors['watermark']['xpos'] = '[0..100]';
+    $watermark_errors['xpos'] = '[0..100]';
 }
 
 $v = intval($pwatermark['ypos']);
 if ($v < 0 or $v > 100) {
-    $errors['watermark']['ypos'] = '[0..100]';
+    $watermark_errors['ypos'] = '[0..100]';
 }
 
 $v = intval($pwatermark['opacity']);
 if ($v <= 0 or $v > 100) {
-    $errors['watermark']['opacity'] = '(0..100]';
+    $watermark_errors['opacity'] = '(0..100]';
+}
+
+if ($watermark_errors !== []) {
+    $errors['watermark'] = $watermark_errors;
 }
 
 // step 3 - save data

@@ -10,8 +10,14 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 // Bootstrap globals, set by include/common.inc.php.
+/**
+ * @var array<string, mixed> $conf
+ * @var array<string, mixed> $page
+ * @var \Template $template
+ */
 global $conf, $page, $template;
 // Set by the including page script, right before this include.
+/** @var string $title */
 global $title;
 
 //
@@ -28,16 +34,24 @@ if (defined('IN_ADMIN') and IN_ADMIN) {
     $show_mobile_app_banner = conf_get_param('show_mobile_app_banner_in_admin', true);
 }
 
+// Config values loaded from the piwigo_config DB table (TEXT column) are
+// always strings; $page['page_banner'] is only ever assigned string literals
+// (see popuphelp.php, admin.php, admin/popuphelp.php).
+/** @var string $conf_gallery_title */
+$conf_gallery_title = $conf['gallery_title'];
+/** @var string $page_banner */
+$page_banner = $page['page_banner'] ?? $conf['page_banner'];
+
 $template->assign(
     [
-        'GALLERY_TITLE' => $page['gallery_title'] ?? $conf['gallery_title'],
+        'GALLERY_TITLE' => $page['gallery_title'] ?? $conf_gallery_title,
 
         'PAGE_BANNER' => trigger_change(
             'render_page_banner',
             str_replace(
                 '%gallery_title%',
-                $conf['gallery_title'],
-                $page['page_banner'] ?? $conf['page_banner']
+                $conf_gallery_title,
+                $page_banner
             )
         ),
 
@@ -64,6 +78,12 @@ if (! empty($header_notes)) {
 }
 
 // No referencing is required
+// (real invariant: $page['meta_robots'], when set, is always a name=>1 map --
+// see notification.php, popuphelp.php, picture.php, index.php,
+// admin/popuphelp.php, include/section_init.inc.php)
+if (! isset($page['meta_robots']) || ! is_array($page['meta_robots'])) {
+    $page['meta_robots'] = [];
+}
 if (! $conf['meta_ref']) {
     $page['meta_robots']['noindex'] = 1;
     $page['meta_robots']['nofollow'] = 1;
@@ -82,12 +102,16 @@ if (! isset($page['meta_robots']['noindex'])) {
 }
 
 // refresh
-if (isset($refresh) and intval($refresh) >= 0
+// $refresh/$url_link are optional variables the including page script may
+// set in top-level scope right before this include (mirrors $title above);
+// no current caller sets them, but the contract predates this file.
+$refresh_numeric = isset($refresh) && is_numeric($refresh) ? $refresh : null;
+if ($refresh_numeric !== null and intval($refresh_numeric) >= 0
     and isset($url_link)) {
     $template->assign(
         [
             'page_refresh' => [
-                'TIME' => $refresh,
+                'TIME' => $refresh_numeric,
                 'U_REFRESH' => $url_link,
             ],
         ]

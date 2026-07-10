@@ -26,6 +26,7 @@ function get_search_id_pattern(int|string $candidate): ?string
  */
 function get_search_info(int|string $candidate): ?array
 {
+    /** @var array<string, mixed> $page */
     global $page;
 
     // $candidate might be a search.id or a search_uuid
@@ -109,6 +110,10 @@ function get_search_array(int|string $search_id): mixed
  */
 function get_regular_search_results(array $search, string $images_where = ''): array
 {
+    /**
+     * @var array<string, mixed> $conf
+     * @var \Logger $logger
+     */
     global $conf, $logger;
 
     $logger->debug(__FUNCTION__, 'search', $search);
@@ -818,7 +823,7 @@ SELECT
     id
   FROM ' . IMAGES_TABLE . ' i
   WHERE id IN (' . implode(',', $items) . ')
-  ' . $conf['order_by'];
+  ' . (is_string($conf['order_by']) ? $conf['order_by'] : '');
 
         $items = array_from_query($query, 'id');
     }
@@ -841,11 +846,17 @@ SELECT
  */
 function get_clause_for_filter(string $filter_name): string
 {
+    /** @var array<string, mixed> $page */
     global $page;
 
     $other_filters_items = get_items_for_filter($filter_name);
     if ($other_filters_items === false) {
-        return '1=1' . $page['search_details']['forbidden'];
+        // $page['search_details'] is set (as get_regular_search_results()'s
+        // return['search_details']) in section_init.inc.php; 'forbidden' is
+        // itself set as a string a few lines above in search_filters.inc.php.
+        $search_details = is_array($page['search_details'] ?? null) ? $page['search_details'] : [];
+        $forbidden = $search_details['forbidden'] ?? null;
+        return '1=1' . (is_string($forbidden) ? $forbidden : '');
     }
 
     // get_items_for_filter() ultimately pulls its values from
@@ -871,9 +882,18 @@ function get_clause_for_filter(string $filter_name): string
  */
 function get_items_for_filter(string $filter_name)
 {
+    /**
+     * @var array<string, mixed> $page
+     * @var \Logger $logger
+     */
     global $page, $logger;
 
-    $other_filters = array_diff(array_keys($page['search_details']['image_ids_for_filter']), [$filter_name]);
+    // $page['search_details'] is set (as get_regular_search_results()'s
+    // return['search_details']) in section_init.inc.php.
+    $search_details = is_array($page['search_details'] ?? null) ? $page['search_details'] : [];
+    $image_ids_for_filter = is_array($search_details['image_ids_for_filter'] ?? null) ? $search_details['image_ids_for_filter'] : [];
+
+    $other_filters = array_diff(array_keys($image_ids_for_filter), [$filter_name]);
 
     if (empty($other_filters)) {
         return false;
@@ -881,12 +901,38 @@ function get_items_for_filter(string $filter_name)
 
     $cache_key = md5(implode(',', $other_filters));
 
-    if (! isset($page['search_details'][__FUNCTION__][$cache_key])) {
+    $filter_cache = is_array($search_details[__FUNCTION__] ?? null) ? $search_details[__FUNCTION__] : [];
+
+    if (! isset($filter_cache[$cache_key])) {
         $function_start = get_moment();
 
-        $other_filters_items = $page['search_details']['image_ids_for_filter'][array_shift($other_filters)];
+        // every entry of $image_ids_for_filter is either a query2array() id
+        // list (list<string|null>) or, for 'expert', the already-narrowed
+        // result of get_quick_search_results() — normalize each to a plain
+        // string-id list here so array_intersect() below has an unambiguous
+        // element type (same normalization as get_regular_search_results()
+        // above).
+        $first_filter_raw = $image_ids_for_filter[array_shift($other_filters)] ?? null;
+        $other_filters_items = [];
+        if (is_array($first_filter_raw)) {
+            foreach ($first_filter_raw as $id) {
+                if (is_scalar($id)) {
+                    $other_filters_items[] = (string) $id;
+                }
+            }
+        }
+
         foreach ($other_filters as $other_filter) {
-            $other_filters_items = array_intersect($other_filters_items, $page['search_details']['image_ids_for_filter'][$other_filter]);
+            $next_filter_raw = $image_ids_for_filter[$other_filter] ?? null;
+            $next_filter_items = [];
+            if (is_array($next_filter_raw)) {
+                foreach ($next_filter_raw as $id) {
+                    if (is_scalar($id)) {
+                        $next_filter_items[] = (string) $id;
+                    }
+                }
+            }
+            $other_filters_items = array_intersect($other_filters_items, $next_filter_items);
         }
 
         $other_filters_items = array_unique($other_filters_items);
@@ -900,10 +946,25 @@ function get_items_for_filter(string $filter_name)
             $other_filters_items = [-1];
         }
 
-        @$page['search_details'][__FUNCTION__][$cache_key] = $other_filters_items;
+        // write the whole 'search_details' structure back at once (rather
+        // than chaining offset-writes through $page directly) so every
+        // intermediate container is a value we've already proven is an array.
+        $filter_cache[$cache_key] = $other_filters_items;
+        $search_details[__FUNCTION__] = $filter_cache;
+        $page['search_details'] = $search_details;
+
+        return $other_filters_items;
     }
 
-    return $page['search_details'][__FUNCTION__][$cache_key];
+    $cached_items = $filter_cache[$cache_key];
+    if (! is_array($cached_items)) {
+        return [];
+    }
+
+    // only ever populated a few lines above (in this same function) with an
+    // array<int, mixed> $other_filters_items.
+    /** @var array<int, mixed> $cached_items */
+    return $cached_items;
 }
 
 define('QST_QUOTED', 0x01);
@@ -1626,6 +1687,7 @@ class QResults
  */
 function qsearch_get_text_token_search_sql(QSingleToken $token, array $fields): array
 {
+    /** @var array<string, mixed> $page */
     global $page;
 
     $clauses = [];
@@ -1858,7 +1920,15 @@ SELECT image_id FROM ' . IMAGE_TAG_TABLE . '
 
 function qsearch_get_categories(QExpression $expr, QResults $qsr): void
 {
+    /**
+     * @var array<string, mixed> $user
+     * @var array<string, mixed> $conf
+     */
     global $user, $conf;
+
+    // $user['id'] is always numeric (DB primary key, or the guest id
+    // fallback set in common.inc.php) by the time any page reaches a search.
+    $user_id = is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0;
 
     $token_cat_ids = $qsr->cat_iids = array_fill(0, count($expr->stokens), []);
     $all_cats = [];
@@ -1877,7 +1947,7 @@ function qsearch_get_categories(QExpression $expr, QResults $qsr): void
 SELECT
     *
   FROM ' . CATEGORIES_TABLE . '
-    INNER JOIN ' . USER_CACHE_CATEGORIES_TABLE . ' ON id = cat_id and user_id = ' . $user['id'] . '
+    INNER JOIN ' . USER_CACHE_CATEGORIES_TABLE . ' ON id = cat_id and user_id = ' . $user_id . '
   WHERE (' . implode("\n OR ", $clauses) . ')';
         $result = pwg_query($query);
         while ($cat = pwg_db_fetch_assoc($result)) {
@@ -1917,7 +1987,7 @@ SELECT
 SELECT
     id
   FROM ' . CATEGORIES_TABLE . '
-    INNER JOIN ' . USER_CACHE_CATEGORIES_TABLE . ' ON id = cat_id and user_id = ' . $user['id'] . '
+    INNER JOIN ' . USER_CACHE_CATEGORIES_TABLE . ' ON id = cat_id and user_id = ' . $user_id . '
   WHERE id IN (' . implode(',', get_subcat_ids($cat_ids)) . ')
 ;';
                 // id is CATEGORIES_TABLE's NOT NULL primary key.
@@ -2036,6 +2106,11 @@ function qsearch_eval(QMultiToken $expr, QResults $qsr, bool &$qualifies, array 
  */
 function get_quick_search_results(string $q, array $options)
 {
+    /**
+     * @var \PersistentFileCache $persistent_cache
+     * @var array<string, mixed> $conf
+     * @var array<string, mixed> $user
+     */
     global $persistent_cache, $conf, $user;
 
     $cache_key = $persistent_cache->make_key([
@@ -2045,8 +2120,14 @@ function get_quick_search_results(string $q, array $options)
         isset($options['permissions']) ? (bool) $options['permissions'] : true,
         $options['images_where'] ?? '',
     ]);
-    if ($persistent_cache->get($cache_key, $res)) {
-        return $res;
+    $cached = null;
+    if ($persistent_cache->get($cache_key, $cached) and is_array($cached)) {
+        // the persistent cache only ever stores a get_quick_search_results()/
+        // get_quick_search_results_no_cache() return value at this cache_key,
+        // both of which are documented array<string, mixed> (see this
+        // function's own docblock).
+        /** @var array<string, mixed> $cached */
+        return $cached;
     }
 
     $res = get_quick_search_results_no_cache($q, $options);
@@ -2065,6 +2146,7 @@ function get_quick_search_results(string $q, array $options)
  */
 function get_quick_search_results_no_cache(string $q, array $options): array
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     $q = trim(stripslashes((string) $q));
@@ -2076,6 +2158,11 @@ function get_quick_search_results_no_cache(string $q, array $options): array
               'unmatched_terms' => [],
           ],
       ];
+
+    // accumulates debug info appended (and only appended) via `$debug[] =
+    // ...` below; rendered into the page footer as HTML comment lines.
+    /** @var list<string> $debug */
+    $debug = [];
 
     // no in-tree listener registers for 'qsearch_pre', so $q is always still
     // a string here, but a plugin listener could theoretically return
@@ -2187,6 +2274,7 @@ function get_quick_search_results_no_cache(string $q, array $options): array
         $ids = array_merge($ids, $extra_ids);
     }
 
+    /** @var \Template $template */
     global $template;
 
     if (empty($ids)) {
@@ -2221,7 +2309,7 @@ SELECT DISTINCT(id) FROM ' . IMAGES_TABLE . ' i';
     }
     $query .= '
   WHERE ' . implode("\n AND ", $where_clauses) . "\n" .
-    $conf['order_by'];
+    (is_string($conf['order_by']) ? $conf['order_by'] : '');
 
     $ids = query2array($query, null, 'id');
 
@@ -2313,6 +2401,7 @@ SELECT
  */
 function save_search(array $rules, ?int $forked_from = null): array
 {
+    /** @var array<string, mixed> $user */
     global $user;
 
     $row = pwg_db_fetch_row(pwg_query('SELECT NOW()'));
@@ -2320,12 +2409,18 @@ function save_search(array $rules, ?int $forked_from = null): array
     [$dbnow] = $row;
     $search_uuid = get_available_search_uuid();
 
+    // 'created_by' is piwigo_search.created_by (MEDIUMINT UNSIGNED, same
+    // domain as piwigo_users.id) — the global $user array's key is 'id'
+    // (never 'user_id'; see functions_user.inc.php), and it's always numeric
+    // (DB primary key, or the guest id fallback set in common.inc.php).
+    $user_id = is_numeric($user['id'] ?? null) ? (int) $user['id'] : null;
+
     single_insert(
         SEARCH_TABLE,
         [
             'rules' => pwg_db_real_escape_string(serialize($rules)),
             'created_on' => $dbnow,
-            'created_by' => $user['user_id'],
+            'created_by' => $user_id,
             'search_uuid' => $search_uuid,
             'forked_from' => $forked_from,
         ]

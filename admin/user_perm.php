@@ -14,7 +14,11 @@ if (! defined('IN_ADMIN')) {
 }
 
 // Bootstrap globals, set by include/common.inc.php.
-global $template;
+/**
+ * @var array<string, mixed> $page
+ * @var \Template $template
+ */
+global $page, $template;
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 

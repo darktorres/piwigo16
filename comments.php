@@ -17,6 +17,10 @@ include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 include_once PHPWG_ROOT_PATH . 'include/functions_comment.inc.php';
 
 // Bootstrap globals, set by include/common.inc.php.
+/**
+ * @var array<string, mixed> $conf
+ * @var \Template $template
+ */
 global $conf, $template;
 
 if (! $conf['activate_comments']) {
@@ -45,15 +49,22 @@ $sort_by = [
 // items_number : list of number of items to display per page
 $items_number = [5, 10, 20, 50, 'all'];
 
+// $conf['comments_page_nb_comments'] is a plain int setting (see
+// include/config_default.inc.php); $conf itself is only known as
+// array<string, mixed>, so narrow with a fallback matching the shipped
+// default rather than trust the shape blindly.
+$comments_page_nb_comments = $conf['comments_page_nb_comments'];
+$comments_page_nb_comments = is_numeric($comments_page_nb_comments) ? (int) $comments_page_nb_comments : 10;
+
 // if the default value is not in the expected values, we add it in the $items_number array
-if (! in_array($conf['comments_page_nb_comments'], $items_number)) {
+if (! in_array($comments_page_nb_comments, $items_number)) {
     $items_number_new = [];
 
     $is_inserted = false;
 
     foreach ($items_number as $number) {
-        if ($number > $conf['comments_page_nb_comments'] or ($number == 'all' and ! $is_inserted)) {
-            $items_number_new[] = $conf['comments_page_nb_comments'];
+        if ($number > $comments_page_nb_comments or ($number == 'all' and ! $is_inserted)) {
+            $items_number_new[] = $comments_page_nb_comments;
             $is_inserted = true;
         }
 
@@ -86,6 +97,7 @@ $since_options = [
 
 trigger_notify('loc_begin_comments');
 
+/** @var array<string, mixed> $page */
 if (! empty($_GET['since']) and is_scalar($_GET['since'])) {
     $page['since'] = intval($_GET['since']);
 } else {
@@ -99,6 +111,9 @@ $page['sort_by'] = 'date';
 if (isset($_GET['sort_by']) and is_string($_GET['sort_by']) and isset($sort_by[$_GET['sort_by']])) {
     $page['sort_by'] = $_GET['sort_by'];
 }
+// $page['sort_by'] is always a string by construction above (literal
+// 'date' or a validated $_GET string).
+$sort_by_value = $page['sort_by'];
 
 // order to sort
 //
@@ -107,16 +122,22 @@ $page['sort_order'] = 'DESC';
 if (isset($_GET['sort_order']) and is_string($_GET['sort_order']) and isset($sort_order[$_GET['sort_order']])) {
     $page['sort_order'] = $_GET['sort_order'];
 }
+// $page['sort_order'] is always a string by construction above (literal
+// 'DESC' or a validated $_GET string).
+$sort_order_value = $page['sort_order'];
 
 // number of items to display
 //
-$page['items_number'] = $conf['comments_page_nb_comments'];
+$page['items_number'] = $comments_page_nb_comments;
 if (isset($_GET['items_number'])) {
     $page['items_number'] = $_GET['items_number'];
 }
 if (! is_numeric($page['items_number']) and $page['items_number'] != 'all') {
     $page['items_number'] = 10;
 }
+// after the checks above, items_number is guaranteed to be either numeric
+// or the literal string 'all'.
+$selected_items_number = is_numeric($page['items_number']) ? $page['items_number'] : 'all';
 
 $page['where_clauses'] = [];
 
@@ -136,11 +157,22 @@ if (isset($_GET['cat']) and $_GET['cat'] != 0) {
       'category_id IN (' . implode(',', $category_ids) . ')';
 }
 
+// $conf['user_fields'] maps generic field names to actual DB column names
+// (see include/config_default.inc.php, always a string=>string map);
+// $conf itself is only known as array<string, mixed>, so narrow with
+// fallbacks matching the shipped defaults rather than trust the shape
+// blindly.
+$user_fields = $conf['user_fields'] ?? null;
+$user_fields = is_array($user_fields) ? $user_fields : [];
+$username_field = is_string($user_fields['username'] ?? null) ? $user_fields['username'] : 'username';
+$email_field = is_string($user_fields['email'] ?? null) ? $user_fields['email'] : 'mail_address';
+$id_field = is_string($user_fields['id'] ?? null) ? $user_fields['id'] : 'id';
+
 // search a particular author
 if (! empty($_GET['author']) and is_scalar($_GET['author'])) {
     $author_search = (string) $_GET['author'];
     $page['where_clauses'][] =
-      '(u.' . $conf['user_fields']['username'] . ' = \'' . $author_search . '\' OR author = \'' . $author_search . '\')';
+      '(u.' . $username_field . ' = \'' . $author_search . '\' OR author = \'' . $author_search . '\')';
 }
 
 // search a specific comment (if you're coming directly from an admin
@@ -185,7 +217,10 @@ if (! empty($_GET['keyword']) and is_scalar($_GET['keyword'])) {
       ')';
 }
 
-$page['where_clauses'][] = $since_options[$page['since']]['clause'];
+// $page['since'] is always an int by construction above (intval() result
+// or the literal 4).
+$since_id = $page['since'];
+$page['where_clauses'][] = $since_options[$since_id]['clause'];
 
 // which status to filter on ?
 if (! is_admin()) {
@@ -378,13 +413,17 @@ $comments = [];
 $element_ids = [];
 $category_ids = [];
 
+// $page['where_clauses'] only ever receives string pushes above; narrow it
+// once here for implode().
+$where_clauses = array_filter($page['where_clauses'], 'is_string');
+
 $query = '
 SELECT SQL_CALC_FOUND_ROWS com.id AS comment_id,
        com.image_id,
        ic.category_id,
        com.author,
        com.author_id,
-       u.' . $conf['user_fields']['email'] . ' AS user_email,
+       u.' . $email_field . ' AS user_email,
        com.email,
        com.date,
        com.website_url,
@@ -394,14 +433,14 @@ SELECT SQL_CALC_FOUND_ROWS com.id AS comment_id,
     INNER JOIN ' . COMMENTS_TABLE . ' AS com
     ON ic.image_id = com.image_id
     LEFT JOIN ' . USERS_TABLE . ' As u
-    ON u.' . $conf['user_fields']['id'] . ' = com.author_id
+    ON u.' . $id_field . ' = com.author_id
   WHERE ' . implode('
-    AND ', $page['where_clauses']) . '
+    AND ', $where_clauses) . '
   GROUP BY comment_id
-  ORDER BY ' . $page['sort_by'] . ' ' . $page['sort_order'];
-if ($page['items_number'] != 'all') {
+  ORDER BY ' . $sort_by_value . ' ' . $sort_order_value;
+if ($selected_items_number !== 'all') {
     $query .= '
-  LIMIT ' . $page['items_number'] . ' OFFSET ' . $start;
+  LIMIT ' . $selected_items_number . ' OFFSET ' . $start;
 }
 $query .= '
 ;';
@@ -420,11 +459,16 @@ assert($counter !== null);
 $url = PHPWG_ROOT_PATH . 'comments.php'
   . get_query_string_diff(['start', 'edit', 'delete', 'validate', 'pwg_token']);
 
+// when 'all' items are shown there is no real page size; PHP_INT_MAX makes
+// create_navigation_bar's own "more than one page" check always false, so
+// no pagination controls are rendered (matching the 'all' UX intent).
+$items_number_for_navbar = is_numeric($selected_items_number) ? (int) $selected_items_number : PHP_INT_MAX;
+
 $navbar = create_navigation_bar(
     $url,
     $counter,
     $start,
-    $page['items_number']
+    $items_number_for_navbar
 );
 
 $template->assign('navbar', $navbar);
@@ -556,7 +600,8 @@ $template->assign('comment_derivative_params', $derivative_params);
 
 // include menubar
 $themeconf = $template->get_template_vars('themeconf');
-if (! isset($themeconf['hide_menu_on']) or ! in_array('theCommentsPage', $themeconf['hide_menu_on'])) {
+$themeconf = is_array($themeconf) ? $themeconf : [];
+if (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('theCommentsPage', $themeconf['hide_menu_on'])) {
     include PHPWG_ROOT_PATH . 'include/menubar.inc.php';
 }
 

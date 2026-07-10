@@ -14,7 +14,12 @@ if (! defined('PHPWG_ROOT_PATH')) {
 }
 
 // Bootstrap globals, set by include/common.inc.php.
-global $conf, $page, $template;
+/** @var array<string, mixed> $conf */
+global $conf;
+/** @var array<string, mixed> $page */
+global $page;
+/** @var \Template $template */
+global $template;
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
@@ -95,6 +100,9 @@ INSERT INTO ' . SITES_TABLE . '
   (\'' . $url . '\')
 ;';
         pwg_query($query);
+        // $page['infos'] is always a plain array, initialized by
+        // include/common.inc.php
+        assert(is_array($page['infos']));
         $page['infos'][] = $url . ' ' . l10n('created');
     }
 }
@@ -105,18 +113,22 @@ INSERT INTO ' . SITES_TABLE . '
 if (isset($_GET['site']) and is_numeric($_GET['site'])) {
     $page['site'] = $_GET['site'];
 }
-if (isset($_GET['action']) and isset($page['site'])) {
+if (isset($_GET['action']) and isset($page['site']) and is_numeric($page['site'])) {
+    $site_id = (int) $page['site'];
     $query = '
 SELECT galleries_url
   FROM ' . SITES_TABLE . '
-  WHERE id = ' . $page['site'] . '
+  WHERE id = ' . $site_id . '
 ;';
     $row = pwg_db_fetch_row(pwg_query($query));
     $galleries_url = $row !== null ? $row[0] : null;
     switch ($_GET['action']) {
         case 'delete':
 
-            delete_site($page['site']);
+            delete_site($site_id);
+            // $page['infos'] is always a plain array, initialized by
+            // include/common.inc.php
+            assert(is_array($page['infos']));
             $page['infos'][] = $galleries_url . ' ' . l10n('deleted');
             break;
 

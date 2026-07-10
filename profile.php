@@ -15,6 +15,11 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 // Bootstrap globals, set by include/common.inc.php.
+/**
+ * @var array<string, mixed> $conf
+ * @var \Template $template
+ * @var array<string, mixed> $user
+ */
 global $conf, $template, $user;
 
 if (! defined('PHPWG_ROOT_PATH')) {// direct script access
@@ -40,14 +45,22 @@ if (! defined('PHPWG_ROOT_PATH')) {// direct script access
     ];
 
     // Get the Guest custom settings
+    // $conf['default_user_id'] is always an int (see
+    // include/config_default.inc.php: derived from the int guest_id).
+    $default_user_id = is_numeric($conf['default_user_id']) ? (int) $conf['default_user_id'] : 0;
     $query = '
 SELECT ' . implode(',', $fields) . '
   FROM ' . USER_INFOS_TABLE . '
-  WHERE user_id = ' . $conf['default_user_id'] . '
+  WHERE user_id = ' . $default_user_id . '
 ;';
     $result = pwg_query($query);
     $default_user = pwg_db_fetch_assoc($result);
-    assert(is_array($default_user));
+    // The guest user_infos row can plausibly be missing (deleted directly in
+    // DB, broken migration, ...); fall back to an empty array rather than
+    // trusting a no-op assert() (zend.assertions=-1 in this environment --
+    // see getuserdata() in functions_user.inc.php for the same "fetch may
+    // fail" invariant handled with a real guard instead of assert()).
+    $default_user = is_array($default_user) ? $default_user : [];
     $template->assign('DEFAULT_USER_VALUES', $default_user);
 
     // Reset to default (Guest) custom settings
@@ -55,7 +68,10 @@ SELECT ' . implode(',', $fields) . '
         $userdata = array_merge($userdata, $default_user);
     }
 
-    save_profile_from_post($userdata, $page['errors']);
+    /** @var array<string, mixed> $page */
+    $page_errors = is_array($page['errors']) ? array_values(array_filter($page['errors'], 'is_string')) : [];
+    save_profile_from_post($userdata, $page_errors);
+    $page['errors'] = $page_errors;
 
     $title = l10n('Your Gallery Customization');
     $page['body_id'] = 'theProfilePage';
@@ -71,7 +87,8 @@ SELECT ' . implode(',', $fields) . '
 
     // include menubar
     $themeconf = $template->get_template_vars('themeconf');
-    if (! isset($themeconf['hide_menu_on']) or ! in_array('theProfilePage', $themeconf['hide_menu_on'])) {
+    $themeconf = is_array($themeconf) ? $themeconf : [];
+    if (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('theProfilePage', $themeconf['hide_menu_on'])) {
         if ($themeconf['id'] !== 'standard_pages') {
             include PHPWG_ROOT_PATH . 'include/menubar.inc.php';
         }
@@ -117,7 +134,12 @@ SELECT ' . implode(',', $fields) . '
     ]);
 
     // Get link to doc
-    if (str_starts_with((string) $user['language'], 'fr')) {
+    // $user['language'] is always a language code string (from
+    // get_default_language(), a cookie value already validated against
+    // get_languages(), or a DB-persisted value); a non-string means no
+    // language could be determined, so it degrades to the default link.
+    $user_language = $user['language'];
+    if (is_string($user_language) and str_starts_with($user_language, 'fr')) {
         $help_link = 'https://upstream.example.invalid/help/fr/';
     } else {
         $help_link = 'https://upstream.example.invalid/help/';
@@ -138,6 +160,10 @@ SELECT ' . implode(',', $fields) . '
  */
 function save_profile_from_post(array $userdata, &$errors): bool
 {
+    /**
+     * @var array<string, mixed> $conf
+     * @var array<string, mixed> $page
+     */
     global $conf, $page;
     $errors = [];
 
@@ -150,6 +176,13 @@ function save_profile_from_post(array $userdata, &$errors): bool
     // $_SESSION['pwg_uid'], never a raw untyped value); narrow once here
     // for reuse below.
     $user_id = is_numeric($userdata['id']) ? (int) $userdata['id'] : 0;
+
+    // $conf['user_fields'] maps generic field names to table-specific DB
+    // column names (see include/config_default.inc.php); always a
+    // string=>string map at runtime (same invariant documented in
+    // validate_mail_address(), functions_user.inc.php).
+    /** @var array<string, string> $user_fields */
+    $user_fields = $conf['user_fields'];
 
     $special_user = in_array($userdata['id'], [$conf['guest_id'], $conf['default_user_id']]);
     if ($special_user) {
@@ -214,9 +247,9 @@ function save_profile_from_post(array $userdata, &$errors): bool
 
         if (! defined('IN_ADMIN')) {// changing password requires old password
             $query = '
-  SELECT ' . $conf['user_fields']['password'] . ' AS password
+  SELECT ' . $user_fields['password'] . ' AS password
     FROM ' . USERS_TABLE . '
-    WHERE ' . $conf['user_fields']['id'] . ' = \'' . $user_id . '\'
+    WHERE ' . $user_fields['id'] . ' = \'' . $user_id . '\'
   ;';
             $row = pwg_db_fetch_row(pwg_query($query));
             assert($row !== null);
@@ -242,17 +275,17 @@ function save_profile_from_post(array $userdata, &$errors): bool
 
         if (isset($_POST['mail_address'])) {
             // update common user informations
-            $fields = [$conf['user_fields']['email']];
+            $fields = [$user_fields['email']];
             $mail_address = is_string($_POST['mail_address']) ? $_POST['mail_address'] : '';
 
             $data = [];
-            $data[$conf['user_fields']['id']] = $userdata['id'];
-            $data[$conf['user_fields']['email']] = $mail_address;
+            $data[$user_fields['id']] = $userdata['id'];
+            $data[$user_fields['email']] = $mail_address;
 
             // password is updated only if filled
             if (! empty($_POST['use_new_pwd']) and is_string($_POST['use_new_pwd'])) {
-                $fields[] = $conf['user_fields']['password'];
-                $data[$conf['user_fields']['password']] = pwg_password_hash($_POST['use_new_pwd']);
+                $fields[] = $user_fields['password'];
+                $data[$user_fields['password']] = pwg_password_hash($_POST['use_new_pwd']);
 
                 deactivate_user_auth_keys($user_id);
             }
@@ -261,11 +294,14 @@ function save_profile_from_post(array $userdata, &$errors): bool
             if (! empty($_POST['username']) and is_string($_POST['username'])) {
                 $username = $_POST['username'];
                 if ($username != $userdata['username'] and get_userid($username)) {
+                    if (! is_array($page['errors'])) {
+                        $page['errors'] = [];
+                    }
                     $page['errors'][] = l10n('this login is already used');
                     unset($_POST['redirect']);
                 } else {
-                    $fields[] = $conf['user_fields']['username'];
-                    $data[$conf['user_fields']['username']] = $username;
+                    $fields[] = $user_fields['username'];
+                    $data[$user_fields['username']] = $username;
 
                     // send email to the user
                     if ($username != $userdata['username']) {
@@ -278,10 +314,11 @@ function save_profile_from_post(array $userdata, &$errors): bool
                             get_l10n_args('Your username has been successfully changed to : %s', $username),
                         ];
 
+                        $gallery_title = is_string($conf['gallery_title']) ? $conf['gallery_title'] : '';
                         pwg_mail(
                             $mail_address,
                             [
-                                'subject' => '[' . $conf['gallery_title'] . '] ' . l10n('Username modification'),
+                                'subject' => '[' . $gallery_title . '] ' . l10n('Username modification'),
                                 'content' => l10n_args($keyargs_content),
                                 'content_format' => 'text/plain',
                             ]
@@ -295,7 +332,7 @@ function save_profile_from_post(array $userdata, &$errors): bool
             mass_updates(
                 USERS_TABLE,
                 [
-                    'primary' => [$conf['user_fields']['id']],
+                    'primary' => [$user_fields['id']],
                     'update' => $fields,
                 ],
                 [$data]
@@ -361,6 +398,11 @@ function save_profile_from_post(array $userdata, &$errors): bool
  */
 function load_profile_in_template($url_action, $url_redirect, array $userdata, ?string $template_prefixe = null): void
 {
+    /**
+     * @var \Template $template
+     * @var array<string, mixed> $conf
+     * @var array<string, mixed> $user
+     */
     global $template, $conf, $user;
 
     $template->assign(
@@ -413,7 +455,10 @@ function load_profile_in_template($url_action, $url_redirect, array $userdata, ?
     $duration = [];
     $display_duration = [];
     $has_custom = false;
-    foreach ($conf['api_key_duration'] as $day) {
+    // $conf['api_key_duration'] is a plain list of day-count strings (plus
+    // the literal 'custom' sentinel) -- see include/config_default.inc.php.
+    $api_key_duration = is_array($conf['api_key_duration']) ? array_filter($conf['api_key_duration'], 'is_string') : [];
+    foreach ($api_key_duration as $day) {
         if ($day === 'custom') {
             $has_custom = true;
             continue;

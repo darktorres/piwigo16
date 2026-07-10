@@ -12,7 +12,11 @@ declare(strict_types=1);
 function check_upgrade(): bool
 {
     if (defined('PHPWG_IN_UPGRADE')) {
-        return PHPWG_IN_UPGRADE;
+        // PHPWG_IN_UPGRADE is only ever define()'d with a bool literal `true`
+        // (see check_upgrade_access_rights() below); is_bool() reflects that
+        // real invariant without resorting to an unsafe cast on a mixed constant.
+        $in_upgrade = PHPWG_IN_UPGRADE;
+        return is_bool($in_upgrade) && $in_upgrade;
     }
     return false;
 }
@@ -20,6 +24,7 @@ function check_upgrade(): bool
 // concerning upgrade, we use the default tables
 function prepare_conf_upgrade(): void
 {
+    /** @var string $prefixeTable */
     global $prefixeTable;
 
     // $conf is not used for users tables
@@ -59,7 +64,12 @@ function prepare_conf_upgrade(): void
 // Deactivate all non-standard plugins
 function deactivate_non_standard_plugins(): void
 {
+    /** @var array<string, mixed> $page */
     global $page;
+
+    if (! is_array($page['infos'] ?? null)) {
+        $page['infos'] = [];
+    }
 
     $standard_plugins = [
         'AdminTools',
@@ -97,7 +107,15 @@ WHERE id IN (\'' . implode('\',\'', $plugins) . '\')
 // Deactivate all non-standard themes
 function deactivate_non_standard_themes(): void
 {
+    /**
+     * @var array<string, mixed> $page
+     * @var array<string, mixed> $conf
+     */
     global $page, $conf;
+
+    if (! is_array($page['infos'] ?? null)) {
+        $page['infos'] = [];
+    }
 
     $standard_themes = [
         'modus',
@@ -132,10 +150,12 @@ DELETE
                             . '<p><i>' . implode(', ', $theme_names) . '</i></p>';
 
         // what is the default theme?
+        // $conf['default_user_id'] is always an int (see include/config_default.inc.php)
+        $default_user_id = is_numeric($conf['default_user_id']) ? (int) $conf['default_user_id'] : 0;
         $query = '
 SELECT theme
   FROM ' . PREFIX_TABLE . 'user_infos
-  WHERE user_id = ' . $conf['default_user_id'] . '
+  WHERE user_id = ' . $default_user_id . '
 ;';
         $row = pwg_db_fetch_row(pwg_query($query));
         assert($row !== null);
@@ -164,7 +184,7 @@ SELECT
             $query = '
 UPDATE ' . PREFIX_TABLE . 'user_infos
   SET theme = \'' . PHPWG_DEFAULT_TEMPLATE . '\'
-  WHERE user_id = ' . $conf['default_user_id'] . '
+  WHERE user_id = ' . $default_user_id . '
 ;';
             pwg_query($query);
         }
@@ -180,7 +200,16 @@ function deactivate_templates(): void
 // Check access rights
 function check_upgrade_access_rights(): void
 {
+    /**
+     * @var array<string, mixed> $conf
+     * @var array<string, mixed> $page
+     * @var string $current_release
+     */
     global $conf, $page, $current_release;
+
+    if (! is_array($page['errors'] ?? null)) {
+        $page['errors'] = [];
+    }
 
     if (version_compare($current_release, '2.0', '>=') and isset($_COOKIE[session_name()])) {
         // Check if user is already connected as webmaster
@@ -230,12 +259,18 @@ FROM ' . USERS_TABLE . '
 WHERE username = \'' . $username . '\'
 ;';
     } else {
+        // $conf['user_fields'] maps generic field names to table specific
+        // field names and is always array<string, string> (see
+        // include/config_default.inc.php).
+        $user_fields = is_array($conf['user_fields']) ? $conf['user_fields'] : [];
+        $id_field = isset($user_fields['id']) && is_string($user_fields['id']) ? $user_fields['id'] : 'id';
+        $username_field = isset($user_fields['username']) && is_string($user_fields['username']) ? $user_fields['username'] : 'username';
         $query = '
 SELECT u.password, ui.status
 FROM ' . USERS_TABLE . ' AS u
 INNER JOIN ' . USER_INFOS_TABLE . ' AS ui
-ON u.' . $conf['user_fields']['id'] . '=ui.user_id
-WHERE ' . $conf['user_fields']['username'] . '=\'' . $username . '\'
+ON u.' . $id_field . '=ui.user_id
+WHERE ' . $username_field . '=\'' . $username . '\'
 ;';
     }
     $row = pwg_db_fetch_assoc(pwg_query($query));
@@ -295,14 +330,22 @@ SELECT id
 
 function upgrade_db_connect(): void
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     try {
+        $db_host = $conf['db_host'];
+        $db_user = $conf['db_user'];
+        $db_password = $conf['db_password'];
+        $db_base = $conf['db_base'];
+        if (! is_string($db_host) || ! is_string($db_user) || ! is_string($db_password) || ! is_string($db_base)) {
+            throw new Exception("Invalid database configuration: \$conf['db_host'], 'db_user', 'db_password' and 'db_base' must be strings.");
+        }
         pwg_db_connect(
-            $conf['db_host'],
-            $conf['db_user'],
-            $conf['db_password'],
-            $conf['db_base']
+            $db_host,
+            $db_user,
+            $db_password,
+            $db_base
         );
         pwg_db_check_version();
     } catch (Exception $e) {

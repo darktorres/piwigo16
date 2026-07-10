@@ -17,6 +17,7 @@ add_event_handler('tabsheet_before_select', 'add_core_tabs');
  */
 function add_core_tabs(array $sheets, mixed $tab_id): array
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     switch ($tab_id) {
@@ -28,6 +29,7 @@ function add_core_tabs(array $sheets, mixed $tab_id): array
             break;
 
         case 'tags':
+            /** @var string $my_base_url */
             global $my_base_url;
             $sheets[''] = [
                 'caption' => '<span class="icon-menu"></span>' . l10n('List'),
@@ -36,6 +38,7 @@ function add_core_tabs(array $sheets, mixed $tab_id): array
             break;
 
         case 'album':
+            /** @var string $admin_album_base_url */
             global $admin_album_base_url;
             $sheets['properties'] = [
                 'caption' => '<span class="icon-pencil"></span>' . l10n('Properties'),
@@ -56,6 +59,7 @@ function add_core_tabs(array $sheets, mixed $tab_id): array
             break;
 
         case 'albums':
+            /** @var string $my_base_url */
             global $my_base_url;
             $sheets['list'] = [
                 'caption' => '<span class="icon-menu"></span>' . l10n('List'),
@@ -68,6 +72,7 @@ function add_core_tabs(array $sheets, mixed $tab_id): array
             break;
 
         case 'users':
+            /** @var string $my_base_url */
             global $my_base_url;
             $sheets['user_list'] = [
                 'caption' => '<span class="icon-menu"></span>' . l10n('List'),
@@ -80,6 +85,7 @@ function add_core_tabs(array $sheets, mixed $tab_id): array
             break;
 
         case 'batch_manager':
+            /** @var string $manager_link */
             global $manager_link;
             $sheets['global'] = [
                 'caption' => '<span class="icon-th"></span>' . l10n('global mode'),
@@ -92,6 +98,7 @@ function add_core_tabs(array $sheets, mixed $tab_id): array
             break;
 
         case 'cat_options':
+            /** @var string $link_start */
             global $link_start;
             $sheets['status'] = [
                 'caption' => '<span class="icon-lock"></span>' . l10n('Public / Private'),
@@ -116,6 +123,7 @@ function add_core_tabs(array $sheets, mixed $tab_id): array
             break;
 
         case 'comments':
+            /** @var string $my_base_url */
             global $my_base_url;
             $sheets[''] = [
                 'caption' => '<span class="icon-menu"></span>' . l10n('List'),
@@ -124,6 +132,7 @@ function add_core_tabs(array $sheets, mixed $tab_id): array
             break;
 
         case 'users':
+            /** @var string $my_base_url */
             global $my_base_url;
             $sheets[''] = [
                 'caption' => '<span class="icon-users"> </span>' . l10n('User list'),
@@ -132,6 +141,7 @@ function add_core_tabs(array $sheets, mixed $tab_id): array
             break;
 
         case 'groups':
+            /** @var string $my_base_url */
             global $my_base_url;
             $sheets[''] = [
                 'caption' => '<span class="icon-menu"> </span>' . l10n('List'),
@@ -140,6 +150,7 @@ function add_core_tabs(array $sheets, mixed $tab_id): array
             break;
 
         case 'configuration':
+            /** @var string $conf_link */
             global $conf_link;
             $sheets['main'] = [
                 'caption' => '<span class="icon-cog"></span>' . l10n('General'),
@@ -169,6 +180,7 @@ function add_core_tabs(array $sheets, mixed $tab_id): array
             break;
 
         case 'help':
+            /** @var string $help_link */
             global $help_link;
             $sheets['add_photos'] = [
                 'caption' => l10n('Add Photos'),
@@ -193,6 +205,7 @@ function add_core_tabs(array $sheets, mixed $tab_id): array
             break;
 
         case 'history':
+            /** @var string $link_start */
             global $link_start;
             $sheets['stats'] = [
                 'caption' => '<span class="icon-signal"></span>' . l10n('Statistics'),
@@ -205,6 +218,7 @@ function add_core_tabs(array $sheets, mixed $tab_id): array
             break;
 
         case 'languages':
+            /** @var string $my_base_url */
             global $my_base_url;
             $sheets['installed'] = [
                 'caption' => '<span class="icon-menu"></span>' . l10n('List'),
@@ -223,6 +237,7 @@ function add_core_tabs(array $sheets, mixed $tab_id): array
             break;
 
         case 'menus':
+            /** @var string $my_base_url */
             global $my_base_url;
             $sheets[''] = [
                 'caption' => '<span class="icon-menu"></span>' . l10n('List'),
@@ -231,6 +246,7 @@ function add_core_tabs(array $sheets, mixed $tab_id): array
             break;
 
         case 'nbm':
+            /** @var string $base_url */
             global $base_url;
             $sheets['param'] = [
                 'caption' => l10n('Parameter'),
@@ -247,6 +263,10 @@ function add_core_tabs(array $sheets, mixed $tab_id): array
             break;
 
         case 'photo':
+            /**
+             * @var string $admin_photo_base_url
+             * @var array<string, mixed> $conf
+             */
             global $admin_photo_base_url, $conf;
             $sheets['properties'] = [
                 'caption' => '<span class="icon-file-image"></span>' . l10n('Properties'),
@@ -282,6 +302,7 @@ function add_core_tabs(array $sheets, mixed $tab_id): array
             break;
 
         case 'plugins':
+            /** @var string $my_base_url */
             global $my_base_url;
             $sheets['installed'] = [
                 'caption' => '<span class="icon-menu"></span>' . l10n('List'),
@@ -311,6 +332,7 @@ function add_core_tabs(array $sheets, mixed $tab_id): array
             break;
 
         case 'themes':
+            /** @var string $my_base_url */
             global $my_base_url;
             $sheets['installed'] = [
                 'caption' => '<span class="icon-menu"></span>' . l10n('List'),
@@ -333,6 +355,7 @@ function add_core_tabs(array $sheets, mixed $tab_id): array
             break;
 
         case 'updates':
+            /** @var string $my_base_url */
             global $my_base_url;
 
             if ($conf['enable_core_update']) {
@@ -350,6 +373,7 @@ function add_core_tabs(array $sheets, mixed $tab_id): array
             }
             break;
         case 'site_update':
+            /** @var string $my_base_url */
             global $my_base_url;
             $sheets['synchronization'] = [
                 'caption' => '<span class="icon-exchange"></span>' . l10n('Synchronization'),
@@ -361,6 +385,7 @@ function add_core_tabs(array $sheets, mixed $tab_id): array
             ];
             break;
         case 'maintenance':
+            /** @var string $my_base_url */
             global $my_base_url;
             $sheets['actions'] = [
                 'caption' => '<span class="icon-tools"></span>' . l10n('Actions'),

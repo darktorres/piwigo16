@@ -17,7 +17,14 @@ declare(strict_types=1);
 // $filter['visible_images']: List of visible images
 
 // Bootstrap global, set by include/common.inc.php.
+/** @var array<string, mixed> $user */
 global $user;
+
+/**
+ * @var array<string, mixed> $filter
+ * @var array<string, mixed> $header_notes
+ */
+global $filter, $header_notes;
 
 if (! get_filter_page_value('cancel')) {
     if (isset($_GET['filter'])) {
@@ -54,11 +61,24 @@ if ($filter['enabled']) {
         ];
     }
 
-    if (isset($filter['matches'])) {
-        $filter['recent_period'] = $filter['matches'][1];
+    // $filter['matches'] was populated by preg_match()'s by-reference
+    // $matches parameter above -- that call re-widens PHPStan's prior
+    // narrowing of the array's value type, so re-narrow here.
+    $filter_matches = is_array($filter['matches'] ?? null) ? $filter['matches'] : null;
+    if ($filter_matches !== null) {
+        // matches[1] always exists here: this branch is only reached when
+        // $filter['enabled'] was set true via a successful preg_match()
+        // above (see the single-capture-group regex), which always
+        // populates both matches[0] and matches[1].
+        $filter['recent_period'] = $filter_matches[1] ?? null;
     } else {
         $filter['recent_period'] = $filter_key['recent_period'] > 0 ? $filter_key['recent_period'] : $user['recent_period'];
     }
+
+    // $filter['recent_period'] above comes from an untyped regex capture,
+    // the cached session value, or $user['recent_period'] -- all of unknown
+    // origin -- narrow once to a definite int for every numeric use below.
+    $filter_recent_period = is_numeric($filter['recent_period']) ? (int) $filter['recent_period'] : 0;
 
     if (
         // New filter
@@ -72,13 +92,13 @@ if ($filter['enabled']) {
     ) {
         // Need to compute dats
         $filter_key = [
-            'user' => (int) $user['id'],
-            'recent_period' => (int) $filter['recent_period'],
+            'user' => is_numeric($user['id']) ? (int) $user['id'] : 0,
+            'recent_period' => $filter_recent_period,
             'time' => time(),
             'date' => date('Ymd'),
         ];
 
-        $filter['categories'] = get_computed_categories($user, (int) $filter['recent_period']);
+        $filter['categories'] = get_computed_categories($user, $filter_recent_period);
 
         $filter['visible_categories'] = implode(',', array_keys($filter['categories']));
         if (empty($filter['visible_categories'])) {
@@ -92,12 +112,13 @@ SELECT
 FROM ' .
   IMAGE_CATEGORY_TABLE . ' INNER JOIN ' . IMAGES_TABLE . ' ON image_id = id
 WHERE ';
-        if (! empty($filter['visible_categories'])) {
-            $query .= '
-  category_id  IN (' . $filter['visible_categories'] . ') and';
-        }
+        // $filter['visible_categories'] is always non-empty here: either a
+        // non-empty string (from the implode() above) or the literal -1
+        // fallback set right above when that implode() was empty.
         $query .= '
-    date_available >= ' . pwg_db_get_recent_period_expression($filter['recent_period']);
+  category_id  IN (' . $filter['visible_categories'] . ') and';
+        $query .= '
+    date_available >= ' . pwg_db_get_recent_period_expression($filter_recent_period);
 
         $visible_image_ids = array_from_query($query, 'image_id');
         $filter['visible_images'] = implode(',', array_filter($visible_image_ids, 'is_string'));
@@ -125,7 +146,7 @@ WHERE ';
         $header_notes[] = l10n_dec(
             'Photos posted within the last %d day.',
             'Photos posted within the last %d days.',
-            $filter['recent_period']
+            $filter_recent_period
         );
     }
     include_once PHPWG_ROOT_PATH . 'include/functions_filter.inc.php';

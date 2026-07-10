@@ -28,6 +28,7 @@ declare(strict_types=1);
  */
 function ws_userComments_getList(array $params, PwgServer &$service): \PwgError|array
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     if (! $conf['activate_comments']) {
@@ -112,6 +113,8 @@ WHERE ' . implode(' AND ', $where_clauses) . '
     }
 
     // comments
+    /** @var array<string, string> $user_fields */
+    $user_fields = $conf['user_fields'];
     $query = '
 SELECT
     c.id,
@@ -119,7 +122,7 @@ SELECT
     c.date,
     c.author,
     c.author_id,
-    ' . $conf['user_fields']['username'] . ' AS username,
+    ' . $user_fields['username'] . ' AS username,
     ui.status,
     c.content,
     i.path,
@@ -132,7 +135,7 @@ SELECT
     INNER JOIN ' . IMAGES_TABLE . ' AS i
       ON i.id = c.image_id
     LEFT JOIN ' . USERS_TABLE . ' AS u
-      ON u.' . $conf['user_fields']['id'] . ' = c.author_id
+      ON u.' . $user_fields['id'] . ' = c.author_id
     LEFT JOIN ' . USER_INFOS_TABLE . ' AS ui
       ON ui.user_id = c.author_id
   WHERE ' . implode(' AND ', $where_clauses) . '

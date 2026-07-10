@@ -18,7 +18,17 @@ include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php';
 
 // Bootstrap globals, set by include/common.inc.php.
+/**
+ * @var array<string, mixed> $page
+ * @var \Template $template
+ * @var array<string, mixed> $user
+ */
 global $page, $template, $user;
+
+// $page['infos'] is always initialized to an array by common.inc.php, but
+// that isn't visible across the include() boundary -- narrow it once here
+// so every top-level $page['infos'][] = ... append below type-checks.
+$page['infos'] = is_array($page['infos'] ?? null) ? $page['infos'] : [];
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
@@ -40,7 +50,13 @@ check_input_parameter('action', $_GET, false, '/^(lost|reset|lost_code|reset_end
  */
 function process_verification_code(): bool
 {
+    /**
+     * @var array<string, mixed> $page
+     * @var array<string, mixed> $conf
+     */
     global $page, $conf, $logger;
+
+    $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
 
     if (isset($_SESSION['reset_password_code'])) {
         return true;
@@ -55,18 +71,21 @@ function process_verification_code(): bool
     }
 
     // retrievies user by email is not try by username
-    $user_id = get_userid_by_email($username_or_email);
+    $user_id_raw = get_userid_by_email($username_or_email);
 
-    if (! is_numeric($user_id)) {
-        $user_id = get_userid($username_or_email);
+    if (! is_numeric($user_id_raw)) {
+        $user_id_raw = get_userid($username_or_email);
     }
 
     // when no user is found, we assign guest_id instead of stopping.
     // this lets the function behave identically for unknown users,
     // preventing username/email enumeration through timing or responses.
-    $is_user_found = is_numeric($user_id);
-    if (! $is_user_found) {
-        $user_id = $conf['guest_id'];
+    $is_user_found = is_numeric($user_id_raw);
+    if ($is_user_found) {
+        $user_id = (int) $user_id_raw;
+    } else {
+        $guest_id = $conf['guest_id'] ?? null;
+        $user_id = is_numeric($guest_id) ? (int) $guest_id : 0;
     }
 
     $userdata = getuserdata($user_id, false);
@@ -132,7 +151,13 @@ function process_verification_code(): bool
  */
 function process_password_request(): bool
 {
+    /**
+     * @var array<string, mixed> $page
+     * @var array<string, mixed> $user
+     */
     global $page, $user;
+
+    $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
 
     $state = $_SESSION['reset_password_code'] ?? null;
     if (! is_array($state)) {
@@ -237,7 +262,10 @@ function process_password_request(): bool
  */
 function check_password_reset_key(mixed $reset_key): mixed
 {
+    /** @var array<string, mixed> $page */
     global $page, $conf;
+
+    $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
 
     $key = is_string($reset_key) ? $reset_key : '';
     if (! preg_match('/^[a-z0-9]{20}$/i', $key)) {
@@ -289,7 +317,14 @@ SELECT
  */
 function reset_password(): bool
 {
+    /**
+     * @var array<string, mixed> $page
+     * @var array<string, mixed> $conf
+     */
     global $page, $conf;
+
+    $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
+    $page['infos'] = is_array($page['infos'] ?? null) ? $page['infos'] : [];
 
     $new_password_raw = $_POST['use_new_pwd'] ?? '';
     $new_password = is_string($new_password_raw) ? $new_password_raw : '';
@@ -308,13 +343,17 @@ function reset_password(): bool
         return false;
     }
 
+    // see validate_mail_address() for why this is string=>string
+    /** @var array<string, string> $user_fields */
+    $user_fields = $conf['user_fields'];
+
     single_update(
         USERS_TABLE,
         [
-            $conf['user_fields']['password'] => pwg_password_hash($new_password),
+            $user_fields['password'] => pwg_password_hash($new_password),
         ],
         [
-            $conf['user_fields']['id'] => $user_id,
+            $user_fields['id'] => $user_id,
         ]
     );
 
@@ -493,7 +532,9 @@ $template->assign(
 
 // include menubar
 $themeconf = $template->get_template_vars('themeconf');
-if (! isset($themeconf['hide_menu_on']) or ! in_array('thePasswordPage', $themeconf['hide_menu_on'])) {
+$themeconf = is_array($themeconf) ? $themeconf : [];
+$hide_menu_on = $themeconf['hide_menu_on'] ?? null;
+if (! is_array($hide_menu_on) or ! in_array('thePasswordPage', $hide_menu_on)) {
     include PHPWG_ROOT_PATH . 'include/menubar.inc.php';
 }
 
@@ -522,7 +563,9 @@ $template->assign([
 ]);
 
 // Get link to doc
-if (str_starts_with((string) $user['language'], 'fr')) {
+$user_language_for_help = $user['language'] ?? '';
+$user_language_for_help = is_string($user_language_for_help) ? $user_language_for_help : '';
+if (str_starts_with($user_language_for_help, 'fr')) {
     $help_link = 'https://upstream.example.invalid/help/fr/';
 } else {
     $help_link = 'https://upstream.example.invalid/help/';

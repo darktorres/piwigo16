@@ -10,6 +10,11 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 // Bootstrap globals, set by include/common.inc.php below.
+/**
+ * @var array<string, mixed> $conf
+ * @var \Template $template
+ * @var array<string, mixed> $user
+ */
 global $conf, $template, $user;
 
 // +-----------------------------------------------------------------------+
@@ -41,8 +46,19 @@ check_input_parameter('section', $_GET, false, '/^[a-z]+[a-z_\/-]*(\.php)?$/i');
 
 if ($conf['fs_quick_check_period'] > 0) {
     $perform_fsqc = false;
-    if (isset($conf['fs_quick_check_last_check'])) {
-        if (strtotime($conf['fs_quick_check_last_check']) < strtotime($conf['fs_quick_check_period'] . ' seconds ago')) {
+
+    // Real invariant: fs_quick_check_last_check is only written (as an ISO
+    // 8601 string, see fs_quick_check()) once the quick check has run at
+    // least once — on a fresh install the config key genuinely does not
+    // exist yet, so this isset() is a real "has it ever run" guard, not
+    // just type-narrowing boilerplate.
+    $fs_quick_check_last_check = isset($conf['fs_quick_check_last_check']) && is_string($conf['fs_quick_check_last_check'])
+        ? $conf['fs_quick_check_last_check']
+        : null;
+
+    if ($fs_quick_check_last_check !== null) {
+        $fs_quick_check_period = $conf['fs_quick_check_period'];
+        if (is_numeric($fs_quick_check_period) and strtotime($fs_quick_check_last_check) < strtotime($fs_quick_check_period . ' seconds ago')) {
             $perform_fsqc = true;
         }
     } else {
@@ -154,6 +170,7 @@ if (isset($_GET['page']) and is_string($_GET['page']) and preg_match('/^photo-(\
     }
 }
 
+/** @var array<string, mixed> $page */
 if (isset($_GET['page'])
     and is_string($_GET['page'])
     and preg_match('/^[a-z_]*$/', $_GET['page'])
@@ -247,10 +264,13 @@ SELECT COUNT(*)
 }
 
 // any photo in the caddie?
+// Real invariant: $user['id'] is always the numeric user id set in
+// build_user() (include/functions_user.inc.php).
+$user_id = is_numeric($user['id']) ? (int) $user['id'] : 0;
 $query = '
 SELECT COUNT(*)
   FROM ' . CADDIE_TABLE . '
-  WHERE user_id = ' . $user['id'] . '
+  WHERE user_id = ' . $user_id . '
 ;';
 $row = pwg_db_fetch_row(pwg_query($query));
 assert($row !== null);
@@ -335,10 +355,15 @@ if (userprefs_get_param('show_whats_new_' . $whats_new_major_version, true) and 
         userprefs_update_param('show_whats_new_' . $whats_new_major_version, false);
     } else {
         // purge old whats_new_*
-        if (isset($user['preferences'])) {
+        // Real invariant: build_user()/getuserdata() always populate the
+        // 'preferences' key (as [] when there is nothing to unserialize),
+        // so this is a type guard against a corrupted unserialize()
+        // result, not a "key might be absent" check.
+        $user_preferences = $user['preferences'] ?? null;
+        if (is_array($user_preferences)) {
             $userprefs_params_to_delete = [];
 
-            foreach (array_keys($user['preferences']) as $pref_param) {
+            foreach (array_keys($user_preferences) as $pref_param) {
                 if (preg_match('/^whats_new_/', (string) $pref_param)) {
                     $userprefs_params_to_delete[] = (string) $pref_param;
                 }
@@ -362,8 +387,12 @@ $whats_new_imgs = [
 ];
 
 // If last major update conf is less than a month old then display bell for whats new popin
+// Real invariant: include/common.inc.php always writes last_major_update as
+// a DB NOW() string (see the `! isset($conf['last_major_update'])` block
+// there) before admin.php runs.
 $display_bell = false;
-if (strtotime((string) $conf['last_major_update']) > strtotime('1 month ago')) {
+$last_major_update = $conf['last_major_update'];
+if (is_string($last_major_update) and strtotime($last_major_update) > strtotime('1 month ago')) {
     $display_bell = true;
 }
 
@@ -382,9 +411,15 @@ $template->assign(
 // +-----------------------------------------------------------------------+
 
 trigger_notify('loc_begin_admin_page');
-include PHPWG_ROOT_PATH . 'admin/' . $page['page'] . '.php';
 
-$template->assign('ACTIVE_MENU', get_active_menu($page['page']));
+// $page['page'] is always a valid admin page slug — set above to either
+// the validated $_GET['page'] or the literal 'intro' fallback (both
+// string), so this offset is always string here.
+$page_slug = $page['page'];
+
+include PHPWG_ROOT_PATH . 'admin/' . $page_slug . '.php';
+
+$template->assign('ACTIVE_MENU', get_active_menu($page_slug));
 
 // +-----------------------------------------------------------------------+
 // | Sending html code                                                     |

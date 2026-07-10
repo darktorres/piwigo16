@@ -13,8 +13,14 @@ if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
-// Bootstrap globals, set by include/common.inc.php.
-global $conf, $template;
+// Bootstrap globals. $page is set by admin.php before including this
+// panel; $conf/$template by include/common.inc.php.
+/**
+ * @var array<string, mixed> $conf
+ * @var array<string, mixed> $page
+ * @var \Template $template
+ */
+global $conf, $page, $template;
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
@@ -169,6 +175,12 @@ elseif (isset($_POST['submitAdd'])) {
     );
 
     invalidate_user_cache();
+    // $page['errors']/$page['infos'] are always initialized to an array by
+    // include/common.inc.php; re-assert it here so PHPStan can prove the
+    // pushes below are array-like (same pattern as
+    // admin/include/functions.php).
+    $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
+    $page['infos'] = is_array($page['infos'] ?? null) ? $page['infos'] : [];
     if (isset($output_create['error'])) {
         $page['errors'][] = $output_create['error'];
     } else {
@@ -181,7 +193,11 @@ elseif (isset($_POST['submitAdd'])) {
 // +-----------------------------------------------------------------------+
 
 if ($parent_id !== null) {
-    $navigation .= $conf['level_separator'];
+    // same fallback default as include/config_default.inc.php's
+    // $conf['level_separator'] (' / '); see the identical pattern in
+    // include/section_init.inc.php.
+    $level_separator = is_string($conf['level_separator']) ? $conf['level_separator'] : ' / ';
+    $navigation .= $level_separator;
 
     $navigation .= get_cat_display_name_from_id(
         $parent_id,

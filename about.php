@@ -10,6 +10,10 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 // Bootstrap globals, set by include/common.inc.php below.
+/**
+ * @var \Template $template
+ * @var array<string, mixed> $user
+ */
 global $template, $user;
 
 // ----------------------------------------------------------- include
@@ -26,6 +30,7 @@ check_status(ACCESS_GUEST);
 // Start output of page
 //
 $title = l10n('About Piwigo');
+/** @var array<string, mixed> $page */
 $page['body_id'] = 'theAboutPage';
 
 trigger_notify('loc_begin_about');
@@ -36,7 +41,15 @@ $template->assign('ABOUT_MESSAGE', load_language('about.html', '', [
     'return' => true,
 ]));
 
-$theme_about = load_language('about.html', PHPWG_THEMES_PATH . $user['theme'] . '/', [
+// build_user() (include/functions_user.inc.php) always resolves
+// $user['theme'] to a validated, installed theme string before
+// include/common.inc.php returns; $user itself is only known here as
+// array<string, mixed>, so narrow with a defensive fallback rather than
+// trust the shape blindly.
+$user_theme = $user['theme'] ?? null;
+$user_theme = is_string($user_theme) ? $user_theme : '';
+
+$theme_about = load_language('about.html', PHPWG_THEMES_PATH . $user_theme . '/', [
     'return' => true,
 ]);
 if ($theme_about !== false) {
@@ -45,7 +58,8 @@ if ($theme_about !== false) {
 
 // include menubar
 $themeconf = $template->get_template_vars('themeconf');
-if (! isset($themeconf['hide_menu_on']) or ! in_array('theAboutPage', $themeconf['hide_menu_on'])) {
+$themeconf = is_array($themeconf) ? $themeconf : [];
+if (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('theAboutPage', $themeconf['hide_menu_on'])) {
     include PHPWG_ROOT_PATH . 'include/menubar.inc.php';
 }
 

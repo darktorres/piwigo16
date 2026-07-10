@@ -14,6 +14,12 @@ if (! defined('PHPWG_ROOT_PATH')) {
 }
 
 // Bootstrap globals, set by include/common.inc.php.
+/**
+ * @var array<string, mixed> $conf
+ * @var array<string, mixed> $lang
+ * @var \Template $template
+ * @var array<string, mixed> $user
+ */
 global $conf, $lang, $template, $user;
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
@@ -375,17 +381,38 @@ if (count(get_last(60, 'year')) > 1) {
     );
 }
 
-ksort($lang['month']);
+// $lang['month'] is the language file's month-index (1-12) to name map;
+// narrow it once, sort it, then write the sorted copy back so both the
+// ksort() mutation and the join() below observe the same array.
+$lang_month = is_array($lang['month'] ?? null) ? $lang['month'] : [];
+ksort($lang_month);
+$lang['month'] = $lang_month;
+
+// $conf['stat_compare_year_displayed'] can come back as a numeric string
+// when overridden from the config table (see load_conf_from_db()), or the
+// int default from config_default.inc.php; narrow it once to the 'all'|int
+// shape get_month_of_last_years() expects.
+$stat_compare_year_displayed = $conf['stat_compare_year_displayed'] ?? 5;
+if (is_numeric($stat_compare_year_displayed)) {
+    $stat_compare_year_displayed = (int) $stat_compare_year_displayed;
+} elseif ($stat_compare_year_displayed === 'all') {
+    $stat_compare_year_displayed = 'all';
+} else {
+    $stat_compare_year_displayed = 5;
+}
+
+$user_language = $user['language'] ?? null;
+$user_language = is_scalar($user_language) ? $user_language : '';
 
 $template->assign([
-    'compareYears' => get_month_of_last_years($conf['stat_compare_year_displayed']),
+    'compareYears' => get_month_of_last_years($stat_compare_year_displayed),
     'monthStats' => get_month_stats(),
     'lastHours' => $last_hours,
     'lastDays' => $last_days,
     'lastMonths' => $last_months,
     'lastYears' => $last_years,
-    'langCode' => strval($user['language']),
-    'month_labels' => join('~', $lang['month']),
+    'langCode' => strval($user_language),
+    'month_labels' => join('~', array_filter($lang_month, 'is_string')),
     'ADMIN_PAGE_TITLE' => l10n('History'),
 ]);
 

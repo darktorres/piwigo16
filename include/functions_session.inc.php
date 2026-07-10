@@ -15,19 +15,30 @@ declare(strict_types=1);
 // https://github.com/Piwigo/Piwigo/issues/2296
 include_once PHPWG_ROOT_PATH . '/include/pwgsession.class.php';
 
+/** @var array<string, mixed> $conf */
 if (isset($conf['session_save_handler'])
   and ($conf['session_save_handler'] == 'db')
   and defined('PHPWG_INSTALLED')) {
     session_set_save_handler(new PwgSession());
 
     if (function_exists('ini_set')) {
-        ini_set('session.use_cookies', $conf['session_use_cookies']);
-        ini_set('session.use_only_cookies', $conf['session_use_only_cookies']);
-        ini_set('session.use_trans_sid', intval($conf['session_use_trans_sid']));
+        $session_use_cookies = $conf['session_use_cookies'];
+        $session_use_cookies = is_scalar($session_use_cookies) ? $session_use_cookies : null;
+        ini_set('session.use_cookies', $session_use_cookies);
+
+        $session_use_only_cookies = $conf['session_use_only_cookies'];
+        $session_use_only_cookies = is_scalar($session_use_only_cookies) ? $session_use_only_cookies : null;
+        ini_set('session.use_only_cookies', $session_use_only_cookies);
+
+        $session_use_trans_sid = $conf['session_use_trans_sid'];
+        $session_use_trans_sid = is_scalar($session_use_trans_sid) ? $session_use_trans_sid : 0;
+        ini_set('session.use_trans_sid', intval($session_use_trans_sid));
         ini_set('session.cookie_httponly', 1);
     }
 
-    session_name($conf['session_name']);
+    $session_name = $conf['session_name'];
+    $session_name = is_string($session_name) ? $session_name : null;
+    session_name($session_name);
     session_set_cookie_params(0, cookie_path());
     register_shutdown_function(session_write_close(...));
 }
@@ -83,6 +94,7 @@ function pwg_session_close(): bool
  */
 function get_remote_addr_session_hash(): string
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     if (! $conf['session_use_ip_address']) {
@@ -168,13 +180,17 @@ DELETE
  */
 function pwg_session_gc(): int
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
+
+    $session_length = $conf['session_length'];
+    $session_length = is_scalar($session_length) ? $session_length : 0;
 
     $query = '
 DELETE
   FROM ' . SESSIONS_TABLE . '
   WHERE ' . pwg_db_date_to_ts('NOW()') . ' - ' . pwg_db_date_to_ts('expiration') . ' > '
-    . $conf['session_length'] . '
+    . $session_length . '
 ;';
     pwg_query($query);
     return (int) pwg_db_changes();

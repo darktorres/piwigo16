@@ -16,12 +16,16 @@ declare(strict_types=1);
  */
 function get_root_url()
 {
+    /** @var array<string, mixed> $page */
     global $page;
-    if (($root_url = @$page['root_path']) == null) {// TODO - add HERE the possibility to call PWG functions from external scripts
+    $root_path = $page['root_path'] ?? null;
+    if (! is_string($root_path) || $root_path === '') {// TODO - add HERE the possibility to call PWG functions from external scripts
         $root_url = PHPWG_ROOT_PATH;
         if (str_starts_with($root_url, './')) {
             return substr($root_url, 2);
         }
+    } else {
+        $root_url = $root_path;
     }
     return $root_url;
 }
@@ -32,6 +36,7 @@ function get_root_url()
  */
 function get_absolute_root_url($with_scheme = true): string
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
     // TODO - add HERE the possibility to call PWG functions from external scripts
 
@@ -69,7 +74,7 @@ function get_absolute_root_url($with_scheme = true): string
                 }
             } else {
                 // we have a custom port
-                $url_port = ':' . $conf['url_port'];
+                $url_port = ':' . (is_scalar($conf['url_port']) ? $conf['url_port'] : '');
             }
 
             if (! empty($url_port) and strrchr($url, ':') != $url_port) {
@@ -120,6 +125,7 @@ function add_url_params($url, $params, string $arg_separator = '&amp;')
  */
 function make_index_url(array $params = []): string
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
     $url = get_root_url() . 'index';
     if ($conf['php_extension_in_urls']) {
@@ -170,6 +176,7 @@ function duplicate_index_url($redefined = [], $removed = []): string
  */
 function params_for_duplication($redefined, $removed)
 {
+    /** @var array<string, mixed> $page */
     global $page;
 
     $params = $page;
@@ -206,6 +213,7 @@ function duplicate_picture_url($redefined = [], $removed = []): string
  */
 function make_picture_url(array $params): string
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     $url = get_root_url() . 'picture';
@@ -217,7 +225,8 @@ function make_picture_url(array $params): string
     }
     $url .= '/';
     $image_id = $params['image_id'] ?? null;
-    switch ($conf['picture_url_style']) {
+    $picture_url_style = $conf['picture_url_style'] ?? null;
+    switch ($picture_url_style) {
         case 'id-file':
             $url .= is_scalar($image_id) ? $image_id : '';
             if (isset($params['image_file']) and is_string($params['image_file'])) {
@@ -289,6 +298,7 @@ function add_well_known_params_in_url(string $url, array $params): string
  */
 function make_section_in_url(array $params): string
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
     $section_string = '';
     $section_raw = $params['section'] ?? null;
@@ -376,13 +386,14 @@ function make_section_in_url(array $params): string
             $section_string .= '/tags';
 
             $tags_param = $params['tags'] ?? [];
+            $tag_url_style = $conf['tag_url_style'] ?? null;
             foreach ((is_array($tags_param) ? $tags_param : []) as $tag) {
                 if (! is_array($tag)) {
                     $tag = [];
                 }
                 $tag_id = $tag['id'] ?? null;
                 $tag_url_name = $tag['url_name'] ?? null;
-                switch ($conf['tag_url_style']) {
+                switch ($tag_url_style) {
                     case 'id':
                         $section_string .= '/' . (is_scalar($tag_id) ? $tag_id : '');
                         break;
@@ -550,6 +561,7 @@ function parse_section_url(array $tokens, &$next_token): array
             $page['combined_categories'] = $combined_categories;
         }
     } elseif (@$tokens[$next_token] == 'tags') {
+        /** @var array<string, mixed> $conf */
         global $conf;
 
         $page['section'] = 'tags';
@@ -724,16 +736,23 @@ function get_element_url(array $element_info): mixed
  */
 function set_make_full_url(): void
 {
+    /** @var array<string, mixed> $page */
     global $page;
 
-    if (! isset($page['save_root_path'])) {
+    if (! is_array($page['save_root_path'] ?? null)) {
+        $save_root_path = [];
         if (isset($page['root_path'])) {
-            $page['save_root_path']['path'] = $page['root_path'];
+            $save_root_path['path'] = $page['root_path'];
         }
-        $page['save_root_path']['count'] = 1;
+        $save_root_path['count'] = 1;
+        $page['save_root_path'] = $save_root_path;
         $page['root_path'] = get_absolute_root_url();
     } else {
-        ++$page['save_root_path']['count'];
+        $save_root_path = $page['save_root_path'];
+        $count = $save_root_path['count'] ?? 0;
+        $count = is_scalar($count) ? (int) $count : 0;
+        $save_root_path['count'] = $count + 1;
+        $page['save_root_path'] = $save_root_path;
     }
 }
 
@@ -742,18 +761,23 @@ function set_make_full_url(): void
  */
 function unset_make_full_url(): void
 {
+    /** @var array<string, mixed> $page */
     global $page;
 
-    if (isset($page['save_root_path'])) {
-        if ($page['save_root_path']['count'] == 1) {
-            if (isset($page['save_root_path']['path'])) {
-                $page['root_path'] = $page['save_root_path']['path'];
+    $save_root_path = $page['save_root_path'] ?? null;
+    if (is_array($save_root_path)) {
+        $count = $save_root_path['count'] ?? null;
+        if ($count == 1) {
+            if (isset($save_root_path['path'])) {
+                $page['root_path'] = $save_root_path['path'];
             } else {
                 unset($page['root_path']);
             }
             unset($page['save_root_path']);
         } else {
-            --$page['save_root_path']['count'];
+            $count_int = is_scalar($count) ? (int) $count : 0;
+            $save_root_path['count'] = $count_int - 1;
+            $page['save_root_path'] = $save_root_path;
         }
     }
 }
@@ -782,12 +806,14 @@ function embellish_url($url): string
  */
 function get_gallery_home_url(): mixed
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
-    if (! empty($conf['gallery_url'])) {
-        if (url_is_remote($conf['gallery_url']) or $conf['gallery_url'][0] == '/') {
-            return $conf['gallery_url'];
+    $gallery_url = $conf['gallery_url'] ?? null;
+    if (is_string($gallery_url) && $gallery_url !== '') {
+        if (url_is_remote($gallery_url) or $gallery_url[0] == '/') {
+            return $gallery_url;
         }
-        return get_root_url() . $conf['gallery_url'];
+        return get_root_url() . $gallery_url;
     } else {
         return make_index_url();
     }
@@ -834,18 +860,21 @@ function url_is_remote($url): bool
  */
 function get_user_favorites(): array
 {
+    /** @var array<string, mixed> $user */
     global $user;
 
     if (is_a_guest()) {
         return [];
     }
 
+    $user_id = is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0;
+
     $query = '
 SELECT
     image_id,
     1 as fake_value
   FROM ' . FAVORITES_TABLE . '
-  WHERE user_id = ' . $user['id'] . '
+  WHERE user_id = ' . $user_id . '
 ';
 
     return query2array($query, 'image_id', 'fake_value');

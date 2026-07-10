@@ -73,6 +73,7 @@ function pwg_db_connect($host, $user, $password, $database): void
  */
 function pwg_db_check_charset(): void
 {
+    /** @var \mysqli $mysqli */
     global $mysqli;
 
     $db_charset = 'utf8';
@@ -106,6 +107,7 @@ function pwg_db_check_version(): void
  */
 function pwg_get_db_version()
 {
+    /** @var \mysqli $mysqli */
     global $mysqli;
 
     return $mysqli->server_info;
@@ -119,29 +121,44 @@ function pwg_get_db_version()
  */
 function pwg_query($query)
 {
+    /**
+     * @var \mysqli $mysqli
+     * @var array<string, mixed> $conf
+     * @var array<string, mixed> $page
+     * @var string $debug
+     * @var float $t2
+     */
     global $mysqli, $conf, $page, $debug, $t2;
 
+    $die_on_sql_error = (bool) ($conf['die_on_sql_error'] ?? false);
+
     $start = microtime(true);
-    ($result = $mysqli->query($query)) or my_error($query, $conf['die_on_sql_error']);
+    ($result = $mysqli->query($query)) or my_error($query, $die_on_sql_error);
 
     $time = microtime(true) - $start;
 
-    if (! isset($page['count_queries'])) {
-        $page['count_queries'] = 0;
+    $count_queries = $page['count_queries'] ?? null;
+    if (! is_int($count_queries)) {
+        $count_queries = 0;
         $page['queries_time'] = 0;
     }
 
-    $page['count_queries']++;
-    $page['queries_time'] += $time;
+    $count_queries++;
+    $page['count_queries'] = $count_queries;
+
+    $queries_time = $page['queries_time'] ?? 0;
+    $queries_time = is_numeric($queries_time) ? (float) $queries_time : 0.0;
+    $queries_time += $time;
+    $page['queries_time'] = $queries_time;
 
     if ($conf['show_queries']) {
         $output = '';
-        $output .= '<pre>[' . $page['count_queries'] . '] ';
+        $output .= '<pre>[' . $count_queries . '] ';
         $output .= "\n" . $query;
         $output .= "\n" . '(this query time : ';
         $output .= '<b>' . number_format($time, 3, '.', ' ') . ' s)</b>';
         $output .= "\n" . '(total SQL time  : ';
-        $output .= number_format($page['queries_time'], 3, '.', ' ') . ' s)';
+        $output .= number_format($queries_time, 3, '.', ' ') . ' s)';
         $output .= "\n" . '(total time      : ';
         $output .= number_format(($time + $start - $t2), 3, '.', ' ') . ' s)';
         if ($result != null and preg_match('/\s*SELECT\s+/i', $query)) {
@@ -184,6 +201,7 @@ SELECT IF(MAX(' . $column . ')+1 IS NULL, 1, MAX(' . $column . ')+1)
 
 function pwg_db_changes(): int|string
 {
+    /** @var \mysqli $mysqli */
     global $mysqli;
 
     return $mysqli->affected_rows;
@@ -199,16 +217,29 @@ function pwg_db_num_rows(mysqli_result|bool $result): int|string
  * MYSQLI_OPT_INT_AND_FLOAT_NATIVE (grepped, confirmed absent), and this was
  * verified empirically against the real test DB across int/timestamp/
  * computed-aggregate columns -- fetch_assoc()/fetch_row() never return
- * bool/int/float, only string or NULL.
+ * bool/int/float, only string or NULL. fetch_array() is called with the
+ * default MYSQLI_BOTH mode, so each row is keyed by both the numeric
+ * column index and the column name.
  *
- * @return array<int, string|null>|null|false
+ * @return array<int|string, string|null>|null|false
  */
 function pwg_db_fetch_array(mysqli_result|bool $result): array|null|false
 {
     if (! $result instanceof mysqli_result) {
         return false;
     }
-    return $result->fetch_array();
+
+    $row = $result->fetch_array();
+    if (! is_array($row)) {
+        return $row;
+    }
+
+    // See the invariant documented above -- normalize defensively so the
+    // return type holds even if that assumption is ever violated.
+    return array_map(
+        static fn (mixed $value): string|null => is_scalar($value) ? (string) $value : null,
+        $row
+    );
 }
 
 /**
@@ -233,7 +264,7 @@ function pwg_db_fetch_assoc(mysqli_result|bool $result): array|null|false
     // (rather than a mutating foreach) so the callback's own return type
     // lets PHPStan re-infer $row as array<string, string|null> directly.
     $row = array_map(
-        static fn (mixed $value): string|null => is_string($value) || $value === null ? $value : (string) $value,
+        static fn (mixed $value): string|null => is_scalar($value) ? (string) $value : null,
         $row
     );
 
@@ -248,7 +279,20 @@ function pwg_db_fetch_row(mysqli_result|bool $result): array|null
     if (! $result instanceof mysqli_result) {
         return null;
     }
-    return $result->fetch_row();
+
+    $row = $result->fetch_row();
+    if (! is_array($row)) {
+        return $row;
+    }
+
+    // See the invariant documented above pwg_db_fetch_array() -- normalize
+    // defensively so the return type holds even if that assumption is ever
+    // violated. array_values() guarantees the declared int-keyed return
+    // type (fetch_row()'s own stub doesn't specify a list key type).
+    return array_values(array_map(
+        static fn (mixed $value): string|null => is_scalar($value) ? (string) $value : null,
+        $row
+    ));
 }
 
 function pwg_db_fetch_object(mysqli_result|bool $result): object|null|false
@@ -269,6 +313,7 @@ function pwg_db_free_result(mysqli_result|bool $result): void
 
 function pwg_db_real_escape_string(?string $s): ?string
 {
+    /** @var \mysqli $mysqli */
     global $mysqli;
 
     return isset($s) ? $mysqli->real_escape_string($s) : null;
@@ -276,6 +321,7 @@ function pwg_db_real_escape_string(?string $s): ?string
 
 function pwg_db_insert_id(): int|string
 {
+    /** @var \mysqli $mysqli */
     global $mysqli;
 
     return $mysqli->insert_id;
@@ -283,6 +329,7 @@ function pwg_db_insert_id(): int|string
 
 function pwg_db_errno(): int
 {
+    /** @var \mysqli $mysqli */
     global $mysqli;
 
     return $mysqli->errno;
@@ -290,6 +337,7 @@ function pwg_db_errno(): int
 
 function pwg_db_error(): string
 {
+    /** @var \mysqli $mysqli */
     global $mysqli;
 
     return $mysqli->error;
@@ -297,6 +345,7 @@ function pwg_db_error(): string
 
 function pwg_db_close(): bool
 {
+    /** @var \mysqli $mysqli */
     global $mysqli;
 
     return $mysqli->close();
@@ -402,9 +451,9 @@ CREATE TABLE ' . $temporary_tablename . '
         mass_inserts($temporary_tablename, $all_fields, $datas);
 
         if ($flags & MASS_UPDATES_SKIP_EMPTY) {
-            $func_set = (fn ($s): string => "t1.{$s} = IFNULL(t2.{$s}, t1.{$s})");
+            $func_set = (fn (string $s): string => "t1.{$s} = IFNULL(t2.{$s}, t1.{$s})");
         } else {
-            $func_set = (fn ($s): string => "t1.{$s} = t2.{$s}");
+            $func_set = (fn (string $s): string => "t1.{$s} = t2.{$s}");
         }
 
         // update of table by joining with temporary table
@@ -604,7 +653,18 @@ function protect_column_name(string $column_name): string
  */
 function do_maintenance_all_tables(): void
 {
+    /**
+     * @var string $prefixeTable
+     * @var array<string, mixed> $page
+     */
     global $prefixeTable, $page;
+
+    // $page['infos']/$page['errors'] are always initialized to arrays by
+    // common.inc.php (see the PAGE default there), but that isn't visible
+    // from this function's own scope -- narrow it once here so the
+    // $page['infos'][]/$page['errors'][] appends below type-check.
+    $page['infos'] = is_array($page['infos'] ?? null) ? $page['infos'] : [];
+    $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
 
     $all_tables = [];
 
@@ -813,6 +873,7 @@ function pwg_db_date_to_ts(string $date): string
  */
 function my_error(string $header, bool $die = true): void
 {
+    /** @var \mysqli $mysqli */
     global $mysqli;
 
     $error = '[mysql error ' . $mysqli->errno . '] ' . $mysqli->error . "\n";

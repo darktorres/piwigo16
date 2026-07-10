@@ -21,6 +21,7 @@ add_event_handler('user_comment_check', 'user_comment_check');
  */
 function user_comment_check($action, array $comment)
 {
+    /** @var array<string, mixed> $conf */
     global $conf,$user;
 
     if ($action == 'reject') {
@@ -72,6 +73,10 @@ function user_comment_check($action, array $comment)
  */
 function insert_user_comment(&$comm, $key, &$infos)
 {
+    /**
+     * @var array<string, mixed> $conf
+     * @var array<string, mixed> $user
+     */
     global $conf, $user;
 
     $comm = array_merge(
@@ -103,10 +108,15 @@ function insert_user_comment(&$comm, $key, &$infos)
         // rejected
         if ($comm['author'] != 'guest') {
             $comment_author_name = is_string($comm['author']) ? $comm['author'] : '';
+            // $conf['user_fields'] maps generic field names to actual DB
+            // column names; it is always set by config_default.inc.php.
+            $user_fields = $conf['user_fields'] ?? null;
+            $user_fields = is_array($user_fields) ? $user_fields : [];
+            $username_field = is_string($user_fields['username'] ?? null) ? $user_fields['username'] : 'username';
             $query = '
 SELECT COUNT(*) AS user_exists
   FROM ' . USERS_TABLE . '
-  WHERE ' . $conf['user_fields']['username'] . " = '" . addslashes($comment_author_name) . "'";
+  WHERE ' . $username_field . " = '" . addslashes($comment_author_name) . "'";
             $row = pwg_db_fetch_assoc(pwg_query($query));
             // a COUNT(*) query always returns exactly one row
             assert(is_array($row));
@@ -116,7 +126,9 @@ SELECT COUNT(*) AS user_exists
             }
         }
     } else {
-        $comm['author'] = addslashes((string) $user['username']);
+        $user_username = $user['username'] ?? null;
+        $user_username = is_string($user_username) ? $user_username : '';
+        $comm['author'] = addslashes($user_username);
         $comm['author_id'] = $user['id'];
     }
 
@@ -124,7 +136,8 @@ SELECT COUNT(*) AS user_exists
         $comment_action = 'reject';
     }
 
-    if (! verify_ephemeral_key(@$key, $comm['image_id'])) {
+    $comm_image_id = is_scalar($comm['image_id'] ?? null) ? (string) $comm['image_id'] : '';
+    if (! verify_ephemeral_key(@$key, $comm_image_id)) {
         $comment_action = 'reject';
         if (! isset($_POST['cr']) or ! is_array($_POST['cr'])) {
             $_POST['cr'] = [];
@@ -162,9 +175,12 @@ SELECT COUNT(*) AS user_exists
             $infos[] = l10n('Email address is missing. Please specify an email address.');
             $comment_action = 'reject';
         }
-    } elseif (! email_check_format($comm['email'])) {
-        $infos[] = l10n('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
-        $comment_action = 'reject';
+    } else {
+        $comm_email = is_string($comm['email']) ? $comm['email'] : null;
+        if (! email_check_format($comm_email)) {
+            $infos[] = l10n('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
+            $comment_action = 'reject';
+        }
     }
 
     // anonymous id = ip address
@@ -175,13 +191,20 @@ SELECT COUNT(*) AS user_exists
     }
     $anonymous_id = implode('.', $ip_components);
 
-    if ($comment_action != 'reject' and $conf['anti-flood_time'] > 0 and ! is_admin()) { // anti-flood system
-        $reference_date = pwg_db_get_flood_period_expression($conf['anti-flood_time']);
+    // $comm['author_id'] was set above to either $conf['guest_id'] or
+    // $user['id'], both of which are always scalar.
+    $comm_author_id = is_scalar($comm['author_id'] ?? null) ? (string) $comm['author_id'] : '0';
+
+    $anti_flood_time = $conf['anti-flood_time'] ?? 0;
+    $anti_flood_time = is_int($anti_flood_time) || is_string($anti_flood_time) ? $anti_flood_time : 0;
+
+    if ($comment_action != 'reject' and $anti_flood_time > 0 and ! is_admin()) { // anti-flood system
+        $reference_date = pwg_db_get_flood_period_expression($anti_flood_time);
 
         $query = '
 SELECT count(1) FROM ' . COMMENTS_TABLE . '
   WHERE date > ' . $reference_date . '
-    AND author_id = ' . $comm['author_id'];
+    AND author_id = ' . $comm_author_id;
         if (! is_classic_user()) {
             $query .= '
       AND anonymous_id LIKE "' . $anonymous_id . '.%"';
@@ -224,13 +247,13 @@ INSERT INTO ' . COMMENTS_TABLE . '
   (author, author_id, anonymous_id, content, date, validated, validation_date, image_id, website_url, email)
   VALUES (
     \'' . $comment_author . '\',
-    ' . $comm['author_id'] . ',
+    ' . $comm_author_id . ',
     \'' . $comment_ip . '\',
     \'' . $comment_content . '\',
     NOW(),
     \'' . ($comment_action == 'validate' ? 'true' : 'false') . '\',
     ' . ($comment_action == 'validate' ? 'NOW()' : 'NULL') . ',
-    ' . $comm['image_id'] . ',
+    ' . $comm_image_id . ',
     ' . (! empty($comment_website_url) ? '\'' . $comment_website_url . '\'' : 'NULL') . ',
     ' . (! empty($comment_email) ? '\'' . $comment_email . '\'' : 'NULL') . '
   )
@@ -278,11 +301,14 @@ INSERT INTO ' . COMMENTS_TABLE . '
  */
 function delete_user_comment($comment_id): bool
 {
+    /** @var array<string, mixed> $user */
     global $user;
 
     $user_where_clause = '';
     if (! is_admin()) {
-        $user_where_clause = '   AND author_id = \'' . $user['id'] . '\'';
+        $user_id_value = $user['id'] ?? null;
+        $user_id_str = is_scalar($user_id_value) ? (string) $user_id_value : '';
+        $user_where_clause = '   AND author_id = \'' . $user_id_str . '\'';
     }
 
     if (is_array($comment_id)) {
@@ -327,7 +353,15 @@ $user_where_clause . '
  */
 function update_user_comment(array $comment, $post_key)
 {
+    /**
+     * @var array<string, mixed> $conf
+     * @var array<string, mixed> $page
+     * @var array<string, mixed> $user
+     */
     global $conf, $page, $user;
+
+    $user_username = $user['username'] ?? null;
+    $user_username = is_string($user_username) ? $user_username : '';
 
     $comment_action = 'validate';
 
@@ -349,7 +383,7 @@ function update_user_comment(array $comment, $post_key)
           array_merge(
               $comment,
               [
-                  'author' => $user['username'],
+                  'author' => $user_username,
               ]
           )
       );
@@ -366,6 +400,9 @@ function update_user_comment(array $comment, $post_key)
         }
         $comment['website_url'] = $website_url;
         if (! url_check_format($website_url)) {
+            if (! is_array($page['errors'] ?? null)) {
+                $page['errors'] = [];
+            }
             $page['errors'][] = l10n('Your website URL is invalid');
             $comment_action = 'reject';
         }
@@ -374,8 +411,10 @@ function update_user_comment(array $comment, $post_key)
     if ($comment_action != 'reject') {
         $user_where_clause = '';
         if (! is_admin()) {
+            $user_id_value = $user['id'] ?? null;
+            $user_id_str = is_scalar($user_id_value) ? (string) $user_id_value : '';
             $user_where_clause = '   AND author_id = \'' .
-    $user['id'] . '\'';
+    $user_id_str . '\'';
         }
 
         $comment_content = is_string($comment['content']) ? $comment['content'] : '';
@@ -400,7 +439,7 @@ $user_where_clause . '
             $comment_url = get_absolute_root_url() . 'comments.php?comment_id=' . $comment_id_value;
 
             $keyargs_content = [
-                get_l10n_args('Author: %s', stripslashes((string) $user['username'])),
+                get_l10n_args('Author: %s', stripslashes($user_username)),
                 get_l10n_args('Comment: %s', stripslashes($comment_content)),
                 get_l10n_args(''),
                 get_l10n_args('Manage this user comment: %s', $comment_url),
@@ -408,7 +447,7 @@ $user_where_clause . '
             ];
 
             pwg_mail_notification_admins(
-                get_l10n_args('Comment by %s', stripslashes((string) $user['username'])),
+                get_l10n_args('Comment by %s', stripslashes($user_username)),
                 $keyargs_content
             );
         }
@@ -433,6 +472,7 @@ $user_where_clause . '
  */
 function email_admin($action, array $comment): void
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     if (! in_array($action, ['edit', 'delete'])
@@ -521,6 +561,7 @@ UPDATE ' . COMMENTS_TABLE . '
  */
 function invalidate_user_cache_nb_comments(): void
 {
+    /** @var array<string, mixed> $user */
     global $user;
 
     unset($user['nb_available_comments']);

@@ -30,7 +30,21 @@ declare(strict_types=1);
  */
 function ws_users_getList(array $params, PwgServer &$service): \PwgError|array
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
+
+    // $conf['user_fields'] maps generic field names to table-specific DB
+    // column names (see include/functions_user.inc.php for the same
+    // pattern); extracted once here since this function reads id/username/
+    // email repeatedly below.
+    $user_fields = $conf['user_fields'];
+    $user_fields = is_array($user_fields) ? $user_fields : [];
+    $user_field_id = is_string($user_fields['id'] ?? null) ? $user_fields['id'] : 'id';
+    $user_field_username = is_string($user_fields['username'] ?? null) ? $user_fields['username'] : 'username';
+    $user_field_email = is_string($user_fields['email'] ?? null) ? $user_fields['email'] : 'email';
+
+    $available_permission_levels = $conf['available_permission_levels'];
+    $available_permission_levels = is_array($available_permission_levels) ? $available_permission_levels : [];
 
     if (! preg_match(PATTERN_ORDER, (string) $params['order'])) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid input parameter order');
@@ -44,11 +58,11 @@ function ws_users_getList(array $params, PwgServer &$service): \PwgError|array
     $where_clauses = ['1=1'];
 
     if (! empty($params['user_id'])) {
-        $where_clauses[] = 'u.' . $conf['user_fields']['id'] . ' IN(' . implode(',', $params['user_id']) . ')';
+        $where_clauses[] = 'u.' . $user_field_id . ' IN(' . implode(',', $params['user_id']) . ')';
     }
 
     if (! empty($params['username'])) {
-        $where_clauses[] = 'u.' . $conf['user_fields']['username'] . ' LIKE \'' . pwg_db_real_escape_string($params['username']) . '\'';
+        $where_clauses[] = 'u.' . $user_field_username . ' LIKE \'' . pwg_db_real_escape_string($params['username']) . '\'';
     }
 
     $filtered_groups = [];
@@ -58,9 +72,9 @@ function ws_users_getList(array $params, PwgServer &$service): \PwgError|array
         while ($row = pwg_db_fetch_assoc($filtered_groups_res)) {
             $filtered_groups[] = $row['id'];
         }
-        $filter_where_clause = '(u.' . $conf['user_fields']['username'] . ' LIKE \'%' .
+        $filter_where_clause = '(u.' . $user_field_username . ' LIKE \'%' .
         pwg_db_real_escape_string($params['filter']) . '%\' OR '
-        . 'u.' . $conf['user_fields']['email'] . ' LIKE \'%' .
+        . 'u.' . $user_field_email . ' LIKE \'%' .
         pwg_db_real_escape_string($params['filter']) . '%\'';
 
         if (! empty($filtered_groups)) {
@@ -112,17 +126,21 @@ function ws_users_getList(array $params, PwgServer &$service): \PwgError|array
     }
 
     if (! empty($params['min_level'])) {
-        if (! in_array($params['min_level'], $conf['available_permission_levels'])) {
+        if (! in_array($params['min_level'], $available_permission_levels)) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid level');
         }
         $where_clauses[] = 'ui.level >= ' . $params['min_level'];
     }
 
     if (! empty($params['max_level'])) {
-        if (! in_array($params['max_level'], $conf['available_permission_levels'])) {
+        if (! in_array($params['max_level'], $available_permission_levels)) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid level');
         }
-        $where_clauses[] = 'ui.level <= ' . $params['max_level'];
+        // 'max_level' is not a registered ws.php param (see this function's
+        // @param docblock) -- reachable only via the shape's open tail, so
+        // it's genuinely `mixed` here, unlike 'min_level'.
+        $max_level = is_numeric($params['max_level']) ? (int) $params['max_level'] : 0;
+        $where_clauses[] = 'ui.level <= ' . $max_level;
     }
 
     if (! empty($params['group_id'])) {
@@ -130,11 +148,11 @@ function ws_users_getList(array $params, PwgServer &$service): \PwgError|array
     }
 
     if (! empty($params['exclude'])) {
-        $where_clauses[] = 'u.' . $conf['user_fields']['id'] . ' NOT IN(' . implode(',', $params['exclude']) . ')';
+        $where_clauses[] = 'u.' . $user_field_id . ' NOT IN(' . implode(',', $params['exclude']) . ')';
     }
 
     $display = [
-        'u.' . $conf['user_fields']['id'] => 'id',
+        'u.' . $user_field_id => 'id',
     ];
 
     // $params['display'] is a comma-separated string per the WS contract
@@ -179,10 +197,10 @@ function ws_users_getList(array $params, PwgServer &$service): \PwgError|array
         }
 
         if (isset($display_flags['username'])) {
-            $display['u.' . $conf['user_fields']['username']] = 'username';
+            $display['u.' . $user_field_username] = 'username';
         }
         if (isset($display_flags['email'])) {
-            $display['u.' . $conf['user_fields']['email']] = 'email';
+            $display['u.' . $user_field_email] = 'email';
         }
 
         $ui_fields = [
@@ -222,9 +240,9 @@ SELECT DISTINCT ';
     $query .= '
   FROM ' . USERS_TABLE . ' AS u
     INNER JOIN ' . USER_INFOS_TABLE . ' AS ui
-      ON u.' . $conf['user_fields']['id'] . ' = ui.user_id
+      ON u.' . $user_field_id . ' = ui.user_id
     LEFT JOIN ' . USER_GROUP_TABLE . ' AS ug
-      ON u.' . $conf['user_fields']['id'] . ' = ug.user_id
+      ON u.' . $user_field_id . ' = ug.user_id
   WHERE
     ' . implode(' AND ', $where_clauses) . '
   ORDER BY ' . $params['order'];
@@ -402,6 +420,7 @@ function ws_users_add(array $params, PwgServer &$service): mixed
         return new PwgError(WS_ERR_INVALID_PARAM, 'Name field must not be empty');
     }
 
+    /** @var array<string, mixed> $conf */
     global $conf;
 
     if ($conf['double_password_type_in_admin']) {
@@ -477,6 +496,10 @@ function ws_users_delete(array $params, PwgServer &$service): \PwgError|string
         return new PwgError(403, 'Invalid security token');
     }
 
+    /**
+     * @var array<string, mixed> $conf
+     * @var array<string, mixed> $user
+     */
     global $conf, $user;
 
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
@@ -500,6 +523,13 @@ SELECT
     }
 
     // protect some users
+    // array_diff() requires every element to be string-castable;
+    // query2array()'s list<string|null> return (key_name=null,
+    // value_name='user_id') can contain null for a NULL user_id column, and
+    // $protected_users' own entries are still `mixed` even after typing
+    // $conf/$user above, so filter down to scalars (int/string) before
+    // diffing.
+    $protected_users = array_filter($protected_users, 'is_scalar');
     $params['user_id'] = array_diff($params['user_id'], $protected_users);
 
     $counter = 0;
@@ -578,6 +608,10 @@ function ws_users_setMyInfo(array $params, PwgServer &$service): \PwgError|strin
         return new PwgError(401, 'Access Denied');
     }
 
+    /**
+     * @var array<string, mixed> $user
+     * @var array<string, mixed> $conf
+     */
     global $user, $conf;
 
     // ACTIVATE_COMMENTS
@@ -613,17 +647,32 @@ function ws_users_setMyInfo(array $params, PwgServer &$service): \PwgError|strin
             return new PwgError(403, l10n('The passwords do not match'));
         }
 
+        // $conf['user_fields'] maps generic field names to table-specific
+        // DB column names (see include/functions_user.inc.php for the same
+        // pattern).
+        $user_fields = $conf['user_fields'];
+        $user_fields = is_array($user_fields) ? $user_fields : [];
+        $user_field_password = is_string($user_fields['password'] ?? null) ? $user_fields['password'] : 'password';
+        $user_field_id = is_string($user_fields['id'] ?? null) ? $user_fields['id'] : 'id';
+        $current_user_id = is_scalar($user['id']) ? (string) $user['id'] : '';
+
         $query = '
-SELECT ' . $conf['user_fields']['password'] . ' AS password
+SELECT ' . $user_field_password . ' AS password
   FROM ' . USERS_TABLE . '
-  WHERE ' . $conf['user_fields']['id'] . ' = \'' . $user['id'] . '\'
+  WHERE ' . $user_field_id . ' = \'' . $current_user_id . '\'
 ;';
         $row = pwg_db_fetch_row(pwg_query($query));
         assert($row !== null);
         [$current_password] = $row;
         $current_password = is_string($current_password) ? $current_password : '';
 
-        if (! pwg_password_verify($params['password'], $current_password)) {
+        // $params['password'] is declared string via this function's own
+        // @param docblock, but the conditional unset($params['password'])
+        // above (SPECIAL_USER branch) makes PHPStan lose that offset's
+        // precise type after the merge, so it's read back as mixed here.
+        $params_password = is_string($params['password']) ? $params['password'] : '';
+
+        if (! pwg_password_verify($params_password, $current_password)) {
             return new PwgError(403, l10n('Current password is wrong'));
         }
 
@@ -671,6 +720,7 @@ SELECT ' . $conf['user_fields']['password'] . ' AS password
  */
 function ws_users_preferences_set(array $params, PwgServer &$service): mixed
 {
+    /** @var array<string, mixed> $user */
     global $user;
 
     if (! preg_match('/^[a-zA-Z0-9_-]+$/', (string) $params['param'])) {
@@ -696,6 +746,7 @@ function ws_users_preferences_set(array $params, PwgServer &$service): mixed
  */
 function ws_users_favorites_add(array $params, PwgServer &$service): \PwgError|true
 {
+    /** @var array<string, mixed> $user */
     global $user;
 
     if (is_a_guest()) {
@@ -738,6 +789,7 @@ SELECT COUNT(*)
  */
 function ws_users_favorites_remove(array $params, PwgServer &$service): \PwgError|true
 {
+    /** @var array<string, mixed> $user */
     global $user;
 
     if (is_a_guest()) {
@@ -757,10 +809,11 @@ SELECT COUNT(*)
         return new PwgError(404, 'image_id not found');
     }
 
+    $current_user_id = is_scalar($user['id']) ? (string) $user['id'] : '';
     $query = '
 DELETE
   FROM ' . FAVORITES_TABLE . '
-  WHERE user_id = ' . $user['id'] . '
+  WHERE user_id = ' . $current_user_id . '
     AND image_id = ' . $params['image_id'] . '
 ;';
 
@@ -781,6 +834,10 @@ DELETE
  */
 function ws_users_favorites_getList(array $params, PwgServer &$service): false|array
 {
+    /**
+     * @var array<string, mixed> $conf
+     * @var array<string, mixed> $user
+     */
     global $conf, $user;
 
     if (is_a_guest()) {
@@ -790,14 +847,16 @@ function ws_users_favorites_getList(array $params, PwgServer &$service): false|a
     check_user_favorites();
 
     $order_by = ws_std_image_sql_order($params, 'i.');
-    $order_by = empty($order_by) ? $conf['order_by'] : 'ORDER BY ' . $order_by;
+    $conf_order_by = is_string($conf['order_by'] ?? null) ? $conf['order_by'] : '';
+    $order_by = empty($order_by) ? $conf_order_by : 'ORDER BY ' . $order_by;
+    $current_user_id = is_scalar($user['id']) ? (string) $user['id'] : '';
 
     $query = '
 SELECT
     i.*
   FROM ' . FAVORITES_TABLE . '
     INNER JOIN ' . IMAGES_TABLE . ' i ON image_id = i.id
-  WHERE user_id = ' . $user['id'] . '
+  WHERE user_id = ' . $current_user_id . '
 ' . get_sql_condition_FandF(
         [
             'visible_images' => 'id',
@@ -856,6 +915,10 @@ SELECT
  */
 function ws_users_generate_password_link(array $params, PwgServer &$service): \PwgError|array
 {
+    /**
+     * @var array<string, mixed> $user
+     * @var array<string, mixed> $conf
+     */
     global $user, $conf;
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
     include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php';
@@ -895,12 +958,17 @@ function ws_users_generate_password_link(array $params, PwgServer &$service): \P
 
     $user_lost_email = is_string($user_lost['email']) ? $user_lost['email'] : null;
 
+    // $conf['gallery_title'] is a raw config string; pwg_generate_set/
+    // reset_password_mail() both require a real string for their 3rd
+    // parameter.
+    $gallery_title = is_string($conf['gallery_title'] ?? null) ? $conf['gallery_title'] : '';
+
     if ($params['send_by_mail'] and ! empty($user_lost_email)) {
         $user_lost_username = is_string($user_lost['username']) ? $user_lost['username'] : '';
         if ($first_login) {
-            $email_params = pwg_generate_set_password_mail($user_lost_username, $generate_link['password_link'], $conf['gallery_title'], $generate_link['time_validation']);
+            $email_params = pwg_generate_set_password_mail($user_lost_username, $generate_link['password_link'], $gallery_title, $generate_link['time_validation']);
         } else {
-            $email_params = pwg_generate_reset_password_mail($user_lost_username, $generate_link['password_link'], $conf['gallery_title'], $generate_link['time_validation']);
+            $email_params = pwg_generate_reset_password_mail($user_lost_username, $generate_link['password_link'], $gallery_title, $generate_link['time_validation']);
         }
         // Here we remove the display of errors because they prevent the response from being parsed
         if (@pwg_mail($user_lost_email, $email_params)) {
@@ -969,6 +1037,10 @@ function ws_set_main_user(array $params, PwgServer &$service): \PwgError|string
  */
 function ws_create_api_key(array $params, PwgServer &$service): \PwgError|array
 {
+    /**
+     * @var array<string, mixed> $user
+     * @var \Logger $logger
+     */
     global $user, $logger;
 
     if (is_a_guest() or ! connected_with_pwg_ui()) {
@@ -993,9 +1065,14 @@ function ws_create_api_key(array $params, PwgServer &$service): \PwgError|array
     // it can never be 0 here.
     $duration = $params['duration'];
 
-    $secret = create_api_key($user['id'], $duration, $key_name);
+    // create_api_key() requires a real int $user_id (its own @param
+    // docblock, include/functions_user.inc.php); a logged-in, non-guest
+    // session's $user['id'] is always the numeric users.id primary key.
+    $user_id = is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0;
 
-    $logger->info('[api_key][user_id=' . $user['id'] . '][action=create][key_name=' . $params['key_name'] . ']');
+    $secret = create_api_key($user_id, $duration, $key_name);
+
+    $logger->info('[api_key][user_id=' . $user_id . '][action=create][key_name=' . $params['key_name'] . ']');
 
     return $secret;
 }
@@ -1010,6 +1087,10 @@ function ws_create_api_key(array $params, PwgServer &$service): \PwgError|array
  */
 function ws_revoke_api_key(array $params, PwgServer &$service): \PwgError|string
 {
+    /**
+     * @var array<string, mixed> $user
+     * @var \Logger $logger
+     */
     global $user, $logger;
 
     if (is_a_guest() or ! connected_with_pwg_ui()) {
@@ -1024,13 +1105,18 @@ function ws_revoke_api_key(array $params, PwgServer &$service): \PwgError|string
         return new PwgError(403, l10n('Invalid pkid format'));
     }
 
-    $revoked_key = revoke_api_key($user['id'], $params['pkid']);
+    // revoke_api_key() requires a real int $user_id (its own @param
+    // docblock, include/functions_user.inc.php); a logged-in, non-guest
+    // session's $user['id'] is always the numeric users.id primary key.
+    $user_id = is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0;
+
+    $revoked_key = revoke_api_key($user_id, $params['pkid']);
 
     if ($revoked_key !== true) {
         return new PwgError(403, $revoked_key);
     }
 
-    $logger->info('[api_key][user_id=' . $user['id'] . '][action=revoke][pkid=' . $params['pkid'] . ']');
+    $logger->info('[api_key][user_id=' . $user_id . '][action=revoke][pkid=' . $params['pkid'] . ']');
 
     return l10n('API Key has been successfully revoked.');
 }
@@ -1046,6 +1132,10 @@ function ws_revoke_api_key(array $params, PwgServer &$service): \PwgError|string
  */
 function ws_edit_api_key(array $params, PwgServer &$service): \PwgError|string
 {
+    /**
+     * @var array<string, mixed> $user
+     * @var \Logger $logger
+     */
     global $user, $logger;
 
     if (is_a_guest()) {
@@ -1065,13 +1155,17 @@ function ws_edit_api_key(array $params, PwgServer &$service): \PwgError|string
     }
 
     $key_name = pwg_db_real_escape_string($params['key_name']);
-    $edited_key = edit_api_key($user['id'], $params['pkid'], $key_name);
+    // edit_api_key() requires a real int $user_id (its own @param
+    // docblock, include/functions_user.inc.php); a logged-in, non-guest
+    // session's $user['id'] is always the numeric users.id primary key.
+    $user_id = is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0;
+    $edited_key = edit_api_key($user_id, $params['pkid'], $key_name);
 
     if ($edited_key !== true) {
         return new PwgError(403, $edited_key);
     }
 
-    $logger->info('[api_key][user_id=' . $user['id'] . '][action=edit][pkid=' . $params['pkid'] . '][new_name=' . $key_name . ']');
+    $logger->info('[api_key][user_id=' . $user_id . '][action=edit][pkid=' . $params['pkid'] . '][new_name=' . $key_name . ']');
 
     return l10n('API Key has been successfully edited.');
 }
@@ -1087,6 +1181,7 @@ function ws_edit_api_key(array $params, PwgServer &$service): \PwgError|string
  */
 function ws_get_api_key(array $params, PwgServer &$service): \PwgError|array|string
 {
+    /** @var array<string, mixed> $user */
     global $user;
 
     if (is_a_guest()) {
@@ -1101,7 +1196,13 @@ function ws_get_api_key(array $params, PwgServer &$service): \PwgError|array|str
         return new PwgError(403, 'Invalid security token');
     }
 
-    $api_keys = get_api_key($user['id']);
+    // get_api_key() requires a string $user_id (its own @param docblock,
+    // include/functions_user.inc.php -- inconsistent with create/revoke/
+    // edit_api_key()'s int $user_id, but that's the declared contract of
+    // this specific helper); a logged-in, non-guest session's $user['id']
+    // is always the numeric users.id primary key.
+    $user_id = is_numeric($user['id'] ?? null) ? (string) (int) $user['id'] : '';
+    $api_keys = get_api_key($user_id);
 
     return $api_keys ?: l10n('No API key found');
 }

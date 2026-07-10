@@ -42,6 +42,7 @@ class languages
      */
     public function perform_action($action, $language_id): array
     {
+        /** @var array<string, mixed> $conf */
         global $conf;
 
         if (! $conf['enable_extensions_install'] and $action == 'delete') {
@@ -122,10 +123,15 @@ UPDATE ' . USER_INFOS_TABLE . '
                 break;
 
             case 'set_default':
+                // $conf['default_user_id']/'guest_id' are always ints (see
+                // include/config_default.inc.php); same narrowing as
+                // admin/include/functions_upgrade.php and profile.php.
+                $default_user_id = is_numeric($conf['default_user_id']) ? (int) $conf['default_user_id'] : 0;
+                $guest_id = is_numeric($conf['guest_id']) ? (int) $conf['guest_id'] : 0;
                 $query = '
 UPDATE ' . USER_INFOS_TABLE . '
   SET language = \'' . $language_id . '\'
-  WHERE user_id IN (' . $conf['default_user_id'] . ', ' . $conf['guest_id'] . ')
+  WHERE user_id IN (' . $default_user_id . ', ' . $guest_id . ')
 ;';
                 pwg_query($query);
                 break;
@@ -228,7 +234,17 @@ UPDATE ' . USER_INFOS_TABLE . '
      */
     public function get_server_languages(bool $new = false): bool
     {
+        /**
+         * @var array<string, mixed> $user
+         * @var array<string, mixed> $conf
+         */
         global $user, $conf;
+
+        // PEM_URL is defined via define('PEM_URL', $conf['alternative_pem_url']) in
+        // one branch of include/common.inc.php, so PHPStan can't prove it's a
+        // string across that file boundary — narrow it once here (same
+        // pattern as updates.class.php::get_server_extensions()).
+        $pem_base_url = is_string(PEM_URL) ? PEM_URL : '';
 
         $get_data = [
             'category_id' => $conf['pem_languages_category'],
@@ -238,7 +254,7 @@ UPDATE ' . USER_INFOS_TABLE . '
         // Retrieve PEM versions
         $version = PHPWG_VERSION;
         $versions_to_check = [];
-        $url = PEM_URL . '/api/get_version_list.php';
+        $url = $pem_base_url . '/api/get_version_list.php';
         // $result is never a resource here: no fopen() handle is passed to
         // fetchRemote() above.
         if (fetchRemote($url, $result, $get_data) and is_string($result) and $pem_versions = @unserialize($result)) {
@@ -286,7 +302,7 @@ UPDATE ' . USER_INFOS_TABLE . '
         }
 
         // Retrieve PEM languages infos
-        $url = PEM_URL . '/api/get_revision_list.php';
+        $url = $pem_base_url . '/api/get_revision_list.php';
         $get_data = array_merge(
             $get_data,
             [
@@ -341,10 +357,17 @@ UPDATE ' . USER_INFOS_TABLE . '
      */
     public function extract_language_files($action, $revision, $dest = '')
     {
+        /** @var \Logger $logger */
         global $logger;
 
+        // PEM_URL is defined via define('PEM_URL', $conf['alternative_pem_url']) in
+        // one branch of include/common.inc.php, so PHPStan can't prove it's a
+        // string across that file boundary — narrow it once here (same
+        // pattern as updates.class.php::get_server_extensions()).
+        $pem_base_url = is_string(PEM_URL) ? PEM_URL : '';
+
         if ($archive = tempnam(PHPWG_ROOT_PATH . 'language', 'zip')) {
-            $url = PEM_URL . '/download.php';
+            $url = $pem_base_url . '/download.php';
             $get_data = [
                 'rid' => $revision,
                 'origin' => 'piwigo_' . $action,
@@ -360,16 +383,27 @@ UPDATE ' . USER_INFOS_TABLE . '
                 }
                 include_once PHPWG_ROOT_PATH . 'admin/include/functions_zip.inc.php';
                 if ($list = zip_list_filenames($archive)) {
+                    // Declared before the loop (rather than relying on
+                    // isset($main_filepath) to narrow it after the loop) --
+                    // PHPStan doesn't reliably preserve isset()-based
+                    // narrowing for a variable only ever conditionally
+                    // assigned inside a foreach body.
+                    $main_filepath = null;
                     foreach ($list as $file) {
                         // we search common.lang.php in archive
                         if (basename((string) $file['filename']) == 'common.lang.php'
-                          and (! isset($main_filepath)
+                          and ($main_filepath === null
                           or strlen((string) $file['filename']) < strlen($main_filepath))) {
-                            $main_filepath = $file['filename'];
+                            // cast once at assignment (rather than at every
+                            // read site below) since zip_list_filenames()'s
+                            // 'filename' entry is PHPStan-mixed (it comes
+                            // from ZipArchive::statIndex()['name']) but is
+                            // always a real string archive entry name.
+                            $main_filepath = (string) $file['filename'];
                         }
                     }
 
-                    if (isset($main_filepath)) {
+                    if ($main_filepath !== null) {
                         $logger->debug(__FUNCTION__ . ', $main_filepath = ' . $main_filepath);
 
                         $root = basename(dirname($main_filepath)); // common.lang.php path in archive

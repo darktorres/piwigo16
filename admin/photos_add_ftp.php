@@ -14,6 +14,7 @@ if (! defined('PHOTOS_ADD_BASE_URL')) {
 }
 
 // Bootstrap globals, set by include/common.inc.php.
+/** @var \Template $template */
 global $template;
 
 // +-----------------------------------------------------------------------+

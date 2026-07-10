@@ -55,6 +55,7 @@ include PHPWG_ROOT_PATH . 'include/config_default.inc.php';
 defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
 
 // Bootstrap global, set by include/config_default.inc.php.
+/** @var array<string, mixed> $conf */
 global $conf;
 
 include PHPWG_ROOT_PATH . 'include/functions.inc.php';
@@ -63,9 +64,17 @@ include PHPWG_ROOT_PATH . 'include/template.class.php';
 // download database config file if exists
 check_input_parameter('dl', $_GET, false, '/^[a-f0-9]{32}$/');
 
+// $conf['data_location'] needs narrowing here specifically (used to build
+// on-disk paths below); narrowed once and reused for every use in this
+// script, same pattern as feed.php/i.php/common.inc.php.
+$conf_data_location = $conf['data_location'] ?? null;
+if (! is_string($conf_data_location)) {
+    die("Invalid \$conf['data_location'] configuration: expected a string.");
+}
+
 $dl_param = $_GET['dl'] ?? null;
-if (is_string($dl_param) && $dl_param !== '' && file_exists(PHPWG_ROOT_PATH . $conf['data_location'] . 'pwg_' . $dl_param)) {
-    $filename = PHPWG_ROOT_PATH . $conf['data_location'] . 'pwg_' . $dl_param;
+if (is_string($dl_param) && $dl_param !== '' && file_exists(PHPWG_ROOT_PATH . $conf_data_location . 'pwg_' . $dl_param)) {
+    $filename = PHPWG_ROOT_PATH . $conf_data_location . 'pwg_' . $dl_param;
     header('Cache-Control: no-cache, must-revalidate');
     header('Pragma: no-cache');
     header('Content-Disposition: attachment; filename="database.inc.php"');
@@ -280,10 +289,10 @@ define(\'DB_COLLATE\', \'\');
             // writing the configuration file
             if (! ($fp = @fopen($config_file, 'w'))) {
                 // make sure nobody can list files of _data directory
-                secure_directory(PHPWG_ROOT_PATH . $conf['data_location']);
+                secure_directory(PHPWG_ROOT_PATH . $conf_data_location);
 
                 $tmp_filename = md5(uniqid((string) time()));
-                $fh = @fopen(PHPWG_ROOT_PATH . $conf['data_location'] . 'pwg_' . $tmp_filename, 'w');
+                $fh = @fopen(PHPWG_ROOT_PATH . $conf_data_location . 'pwg_' . $tmp_filename, 'w');
                 if ($fh !== false) {
                     @fputs($fh, $file_content, strlen($file_content));
                     @fclose($fh);
@@ -440,12 +449,22 @@ if ($step == 1) {
         // See include/functions_session.inc.php
         session_set_save_handler(new PwgSession());
         if (function_exists('ini_set')) {
-            ini_set('session.use_cookies', $conf['session_use_cookies']);
-            ini_set('session.use_only_cookies', $conf['session_use_only_cookies']);
-            ini_set('session.use_trans_sid', intval($conf['session_use_trans_sid']));
+            $session_use_cookies = $conf['session_use_cookies'];
+            $session_use_cookies = is_scalar($session_use_cookies) ? $session_use_cookies : null;
+            ini_set('session.use_cookies', $session_use_cookies);
+
+            $session_use_only_cookies = $conf['session_use_only_cookies'];
+            $session_use_only_cookies = is_scalar($session_use_only_cookies) ? $session_use_only_cookies : null;
+            ini_set('session.use_only_cookies', $session_use_only_cookies);
+
+            $session_use_trans_sid = $conf['session_use_trans_sid'];
+            $session_use_trans_sid = is_scalar($session_use_trans_sid) ? $session_use_trans_sid : 0;
+            ini_set('session.use_trans_sid', intval($session_use_trans_sid));
             ini_set('session.cookie_httponly', 1);
         }
-        session_name($conf['session_name']);
+        $session_name = $conf['session_name'];
+        $session_name = is_string($session_name) ? $session_name : null;
+        session_name($session_name);
         session_set_cookie_params(0, cookie_path());
         register_shutdown_function(session_write_close(...));
 
@@ -469,6 +488,10 @@ if ($step == 1) {
 
         // newsletter subscription
         if ($is_newsletter_subscribe) {
+            // $result is never a resource here: no fopen() handle is passed to
+            // fetchRemote() above. Seeded as a string so the by-reference $dest
+            // out-param satisfies fetchRemote()'s string|resource contract.
+            $result = '';
             fetchRemote(
                 get_newsletter_subscribe_base_url($language) . $admin_mail,
                 $result,

@@ -10,7 +10,14 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 // Bootstrap globals, set by include/common.inc.php.
-global $conf, $debug, $t2, $template;
+/**
+ * @var array<string, mixed> $conf
+ * @var string $debug
+ * @var float $t2
+ * @var \Template $template
+ * @var array<string, mixed> $page
+ */
+global $conf, $debug, $t2, $template, $page;
 
 $template->set_filenames([
     'tail' => 'footer.tpl',
@@ -35,10 +42,15 @@ if (! is_a_guest()) {
 }
 
 // --------------------------------------------------------- update notification
-if ($conf['update_notify_check_period'] > 0) {
+$update_notify_check_period = $conf['update_notify_check_period'];
+if (is_int($update_notify_check_period) && $update_notify_check_period > 0) {
     $check_for_updates = false;
-    if (isset($conf['update_notify_last_check'])) {
-        if (strtotime($conf['update_notify_last_check']) < strtotime($conf['update_notify_check_period'] . ' seconds ago')) {
+
+    $update_notify_last_check = $conf['update_notify_last_check'] ?? null;
+    $update_notify_last_check = is_string($update_notify_last_check) ? $update_notify_last_check : null;
+
+    if ($update_notify_last_check !== null) {
+        if (strtotime($update_notify_last_check) < strtotime($update_notify_check_period . ' seconds ago')) {
             $check_for_updates = true;
         }
     } else {
@@ -70,18 +82,24 @@ if ($conf['show_queries']) {
 }
 
 if ($conf['show_gt']) {
-    if (! isset($page['count_queries'])) {
+    $count_queries = $page['count_queries'] ?? null;
+    if (! is_int($count_queries)) {
+        $count_queries = 0;
         $page['count_queries'] = 0;
         $page['queries_time'] = 0;
     }
+
+    $queries_time = $page['queries_time'] ?? 0;
+    $queries_time = is_numeric($queries_time) ? (float) $queries_time : 0.0;
+
     $time = get_elapsed_time($t2, get_moment());
 
     $debug_vars = array_merge(
         $debug_vars,
         [
             'TIME' => $time,
-            'NB_QUERIES' => $page['count_queries'],
-            'SQL_TIME' => number_format($page['queries_time'], 3, '.', ' ') . ' s',
+            'NB_QUERIES' => $count_queries,
+            'SQL_TIME' => number_format($queries_time, 3, '.', ' ') . ' s',
         ]
     );
 }

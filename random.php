@@ -17,6 +17,10 @@ define('PHPWG_ROOT_PATH', './');
 include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 
 // Bootstrap globals, set by include/common.inc.php.
+/**
+ * @var array<string, mixed> $conf
+ * @var array<string, mixed> $user
+ */
 global $conf, $user;
 
 // +-----------------------------------------------------------------------+
@@ -27,6 +31,11 @@ check_status(ACCESS_GUEST);
 // +-----------------------------------------------------------------------+
 // |                     generate random element list                      |
 // +-----------------------------------------------------------------------+
+
+// top_number/nb_image_page are DB-backed smallint columns (default 15);
+// see include/config_default.inc.php and install/piwigo_structure-mysql.sql.
+$top_number = is_numeric($conf['top_number'] ?? null) ? (int) $conf['top_number'] : 15;
+$nb_image_page = is_numeric($user['nb_image_page'] ?? null) ? (int) $user['nb_image_page'] : 15;
 
 $query = '
 SELECT id
@@ -41,7 +50,7 @@ SELECT id
     'WHERE'
 ) . '
   ORDER BY ' . DB_RANDOM_FUNCTION . '()
-  LIMIT ' . min(50, $conf['top_number'], $user['nb_image_page']) . '
+  LIMIT ' . min(50, $top_number, $nb_image_page) . '
 ;';
 
 // +-----------------------------------------------------------------------+

@@ -14,6 +14,10 @@ if (! defined('PHPWG_ROOT_PATH')) {
 }
 
 // Bootstrap globals, set by include/common.inc.php.
+/**
+ * @var array<string, mixed> $conf
+ * @var \Template $template
+ */
 global $conf, $template;
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
@@ -76,12 +80,15 @@ $toggle_is_default_url = $admin_url . 'group_list&amp;toggle_is_default=';
 
 $group_counter = 0;
 
+/** @var array<string, string> $user_fields */
+$user_fields = $conf['user_fields'];
+
 while ($row = pwg_db_fetch_assoc($result)) {
     $query = '
-SELECT u.' . $conf['user_fields']['username'] . ' AS username
+SELECT u.' . $user_fields['username'] . ' AS username
   FROM ' . USERS_TABLE . ' AS u
   INNER JOIN ' . USER_GROUP_TABLE . ' AS ug
-    ON u.' . $conf['user_fields']['id'] . ' = ug.user_id
+    ON u.' . $user_fields['id'] . ' = ug.user_id
   WHERE ug.group_id = ' . $row['id'] . '
 ;';
     $members = [];

@@ -10,7 +10,10 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 // Bootstrap globals, set by include/common.inc.php.
-global $page, $template;
+/** @var array<string, mixed> $page */
+global $page;
+/** @var \Template $template */
+global $template;
 
 include_once PHPWG_ROOT_PATH . 'admin/include/tabsheet.class.php';
 
@@ -18,7 +21,8 @@ $my_base_url = get_root_url() . 'admin.php?page=';
 
 $tabsheet = new tabsheet();
 $tabsheet->set_id('albums');
-$tabsheet->select($page['tab']);
+$page_tab = $page['tab'] ?? null;
+$tabsheet->select(is_string($page_tab) ? $page_tab : '');
 $tabsheet->assign();
 
 $query = '

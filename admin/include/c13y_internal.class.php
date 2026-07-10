@@ -62,6 +62,7 @@ class c13y_internal
      */
     public function c13y_exif($c13y): void
     {
+        /** @var array<string, mixed> $conf */
         global $conf;
 
         foreach (['show_exif', 'use_exif'] as $value) {
@@ -85,35 +86,54 @@ class c13y_internal
      */
     public function c13y_user($c13y): void
     {
+        /** @var array<string, mixed> $conf */
         global $conf;
 
+        // guest_id/default_user_id/webmaster_id are always scalar (raw DB
+        // primary keys or config defaults, see include/config_default.inc.php).
+        $guest_id = $conf['guest_id'];
+        $guest_id = is_numeric($guest_id) ? (int) $guest_id : 0;
+
+        $default_user_id = $conf['default_user_id'];
+        $default_user_id = is_numeric($default_user_id) ? (int) $default_user_id : 0;
+
+        $webmaster_id = $conf['webmaster_id'];
+        $webmaster_id = is_numeric($webmaster_id) ? (int) $webmaster_id : 0;
+
         $c13y_users = [];
-        $c13y_users[$conf['guest_id']] = [
+        $c13y_users[$guest_id] = [
             'status' => 'guest',
             'l10n_non_existent' => 'Main "guest" user does not exist',
             'l10n_bad_status' => 'Main "guest" user status is incorrect',
         ];
 
-        if ($conf['guest_id'] != $conf['default_user_id']) {
-            $c13y_users[$conf['default_user_id']] = [
+        if ($guest_id != $default_user_id) {
+            $c13y_users[$default_user_id] = [
                 'password' => null,
                 'l10n_non_existent' => 'Default user does not exist',
             ];
         }
 
-        $c13y_users[$conf['webmaster_id']] = [
+        $c13y_users[$webmaster_id] = [
             'status' => 'webmaster',
             'l10n_non_existent' => 'Main "webmaster" user does not exist',
             'l10n_bad_status' => 'Main "webmaster" user status is incorrect',
         ];
 
+        // $conf['user_fields'] maps generic field names to table-specific DB
+        // column names (see include/config_default.inc.php); always a
+        // string=>string map at runtime.
+        /** @var array<string, string> $user_fields */
+        $user_fields = $conf['user_fields'];
+        $user_id_field = $user_fields['id'];
+
         $query = '
-  select u.' . $conf['user_fields']['id'] . ' as id, ui.status
+  select u.' . $user_id_field . ' as id, ui.status
   from ' . USERS_TABLE . ' as u
     left join ' . USER_INFOS_TABLE . ' as ui
-        on u.' . $conf['user_fields']['id'] . ' = ui.user_id
+        on u.' . $user_id_field . ' = ui.user_id
   where
-    u.' . $conf['user_fields']['id'] . ' in (' . implode(',', array_keys($c13y_users)) . ')
+    u.' . $user_id_field . ' in (' . implode(',', array_keys($c13y_users)) . ')
   ;';
 
         $status = [];
@@ -159,7 +179,27 @@ class c13y_internal
      */
     public function c13y_correction_user($id, $action)
     {
+        /**
+         * @var array<string, mixed> $conf
+         * @var array<string, mixed> $page
+         */
         global $conf, $page;
+
+        // $page['infos'] is always initialized to an array by common.inc.php,
+        // but that isn't visible across the include() boundary -- narrow it
+        // once here so every $page['infos'][] = ... append below type-checks.
+        $page['infos'] = is_array($page['infos'] ?? null) ? $page['infos'] : [];
+
+        // guest_id/default_user_id/webmaster_id are always scalar (raw DB
+        // primary keys or config defaults, see include/config_default.inc.php).
+        $guest_id = $conf['guest_id'];
+        $guest_id = is_numeric($guest_id) ? (int) $guest_id : 0;
+
+        $default_user_id = $conf['default_user_id'];
+        $default_user_id = is_numeric($default_user_id) ? (int) $default_user_id : 0;
+
+        $webmaster_id = $conf['webmaster_id'];
+        $webmaster_id = is_numeric($webmaster_id) ? (int) $webmaster_id : 0;
 
         $result = false;
 
@@ -169,11 +209,11 @@ class c13y_internal
                     $name = null;
                     $password = null;
 
-                    if ($id == $conf['guest_id']) {
+                    if ($id == $guest_id) {
                         $name = 'guest';
-                    } elseif ($id == $conf['default_user_id']) {
+                    } elseif ($id == $default_user_id) {
                         $name = 'guest';
-                    } elseif ($id == $conf['webmaster_id']) {
+                    } elseif ($id == $webmaster_id) {
                         $name = 'webmaster';
                         $password = generate_key(6);
                     }
@@ -204,11 +244,11 @@ class c13y_internal
                     }
                     break;
                 case 'status':
-                    if ($id == $conf['guest_id']) {
+                    if ($id == $guest_id) {
                         $status = 'guest';
-                    } elseif ($id == $conf['default_user_id']) {
+                    } elseif ($id == $default_user_id) {
                         $status = 'guest';
-                    } elseif ($id == $conf['webmaster_id']) {
+                    } elseif ($id == $webmaster_id) {
                         $status = 'webmaster';
                     }
 

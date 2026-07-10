@@ -147,12 +147,15 @@ final class ImageStdParams
      */
     public static function get_disabled_type_map()
     {
+        /** @var array<string, mixed> $conf */
         global $conf;
 
         if (count(self::$disabled_type_map)) {
             return self::$disabled_type_map;
         }
-        return $conf['disabled_derivatives'] ?? [];
+
+        $disabled_derivatives = $conf['disabled_derivatives'] ?? null;
+        return is_string($disabled_derivatives) ? $disabled_derivatives : [];
     }
 
     /**
@@ -209,8 +212,17 @@ final class ImageStdParams
      */
     public static function load_from_db(): void
     {
+        /** @var array<string, mixed> $conf */
         global $conf;
-        $arr = @unserialize($conf['derivatives']);
+
+        // $conf['derivatives'] does not exist at all until save() has been
+        // called once (a fresh install's config.sql has no 'derivatives'
+        // row) -- guard with is_string() rather than unserialize()-ing a
+        // possibly-null value directly, which would throw a TypeError
+        // under strict_types instead of falling through to the "build
+        // defaults" branch below like this function intends.
+        $derivatives_raw = $conf['derivatives'] ?? null;
+        $arr = is_string($derivatives_raw) ? @unserialize($derivatives_raw) : false;
         // unserialize() is only typed mixed by PHP itself (the serialized
         // blob could decode to any PHP value, or to a malformed non-array
         // shape from a hand-edited config row) -- narrow every sub-value

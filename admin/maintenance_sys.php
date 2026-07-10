@@ -13,9 +13,13 @@ if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
-// Bootstrap globals. Set by admin/maintenance.php (which dynamically
-// includes this tab panel) or include/common.inc.php.
-global $conf, $template;
+// Bootstrap globals. $maint_actions is set by admin/maintenance.php before
+// dynamically including this tab panel; the rest by include/common.inc.php.
+/**
+ * @var array<string, mixed> $conf
+ * @var \Template $template
+ */
+global $conf, $maint_actions, $template;
 
 // +-----------------------------------------------------------------------+
 // |                    Only Webmaster can see this tab                    |
@@ -26,6 +30,15 @@ if (is_webmaster()) {
     if (isset($_GET['method']) && $_GET['method'] == 'pwg.activity_sys.getList') {
         $response = [];
         $data = [];
+        $maint_actions_arr = is_array($maint_actions) ? $maint_actions : [];
+
+        // $conf['user_fields'] maps generic field names to actual DB column
+        // names (see include/config_default.inc.php); its values are
+        // configuration-supplied, not statically typed, hence the fallback.
+        $user_fields = $conf['user_fields'] ?? null;
+        $user_fields = is_array($user_fields) ? $user_fields : [];
+        $username_field = is_string($user_fields['username'] ?? null) ? $user_fields['username'] : 'username';
+        $id_field = is_string($user_fields['id'] ?? null) ? $user_fields['id'] : 'id';
 
         $query = '
   SELECT
@@ -36,9 +49,9 @@ if (is_webmaster()) {
       performed_by,
       occured_on,
       details,
-  IF(performed_by = 0, \'System\', ' . $conf['user_fields']['username'] . ') AS username
+  IF(performed_by = 0, \'System\', ' . $username_field . ') AS username
   FROM ' . ACTIVITY_TABLE . '
-  LEFT JOIN ' . USERS_TABLE . ' ON performed_by = ' . $conf['user_fields']['id'] . '
+  LEFT JOIN ' . USERS_TABLE . ' ON performed_by = ' . $id_field . '
   WHERE object = \'system\'
   ORDER BY activity_id DESC';
 
@@ -134,10 +147,16 @@ if (is_webmaster()) {
                             // for maintenance we need to specific format details
                             if (isset($details['maintenance_action'])) {
                                 $action_detail = $details['maintenance_action'];
+                                // Array keys are only ever int|string; anything else
+                                // (e.g. leftover legacy bool/array payloads) falls back
+                                // to an empty-string key, which simply misses the lookup.
+                                $action_detail_key = is_string($action_detail) || is_int($action_detail) ? $action_detail : '';
+                                $maint_action_entry = $maint_actions_arr[$action_detail_key] ?? null;
+                                $maint_action_entry = is_array($maint_action_entry) ? $maint_action_entry : [];
                                 $detail = [
                                     'type' => 'maintenance_action',
-                                    'icon' => $maint_actions[$action_detail]['icon'] ?? 'icon-cone',
-                                    'text' => $maint_actions[$action_detail]['label'] ?? $action_detail,
+                                    'icon' => is_string($maint_action_entry['icon'] ?? null) ? $maint_action_entry['icon'] : 'icon-cone',
+                                    'text' => $maint_action_entry['label'] ?? $action_detail,
                                 ];
                             }
                             break;
@@ -349,6 +368,10 @@ if (is_webmaster()) {
         exit;
     }
 } else {
+    /** @var array<string, mixed> $page */
+    if (! is_array($page['warnings'] ?? null)) {
+        $page['warnings'] = [];
+    }
     $page['warnings'][] = str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'));
 }
 

@@ -14,9 +14,17 @@ if (! defined('PHPWG_ROOT_PATH')) {
 }
 
 // Bootstrap globals. $admin_album_base_url and $category are set by
-// admin/album.php before including this panel; the rest by
-// include/common.inc.php.
-global $admin_album_base_url, $category, $conf, $template;
+// admin/album.php before including this panel; $page originates in
+// admin.php and is further populated by admin/album.php ($page['tab'])
+// before reaching this panel; the rest by include/common.inc.php.
+/**
+ * @var string $admin_album_base_url
+ * @var array<string, string|null> $category
+ * @var array<string, mixed> $conf
+ * @var array<string, mixed> $page
+ * @var \Template $template
+ */
+global $admin_album_base_url, $category, $conf, $template, $page;
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
@@ -29,7 +37,7 @@ check_status(ACCESS_ADMINISTRATOR);
 // |                       variable initialization                         |
 // +-----------------------------------------------------------------------+
 
-$page['cat'] = $category['id'];
+$page['cat'] = (int) $category['id'];
 
 // +-----------------------------------------------------------------------+
 // |                           form submission                             |
@@ -248,9 +256,24 @@ $template->assign('groups_selected', $group_granted_ids);
 // users...
 $users = [];
 
+// $conf['user_fields'] maps generic field names to table-specific column
+// names (see include/config_default.inc.php); every value is a plain
+// string.
+$user_fields_raw = $conf['user_fields'];
+$user_fields = [];
+if (is_array($user_fields_raw)) {
+    foreach ($user_fields_raw as $field_key => $field_value) {
+        if (is_string($field_key) and is_string($field_value)) {
+            $user_fields[$field_key] = $field_value;
+        }
+    }
+}
+$user_field_id = $user_fields['id'] ?? 'id';
+$user_field_username = $user_fields['username'] ?? 'username';
+
 $query = '
-SELECT ' . $conf['user_fields']['id'] . ' AS id,
-       ' . $conf['user_fields']['username'] . ' AS username
+SELECT ' . $user_field_id . ' AS id,
+       ' . $user_field_username . ' AS username
   FROM ' . USERS_TABLE . '
 ;';
 $users = simple_hash_from_query($query, 'id', 'username');

@@ -11,7 +11,23 @@ declare(strict_types=1);
 
 // Bootstrap globals. $maint_actions is set by admin/maintenance.php before
 // dynamically including this tab panel; the rest by include/common.inc.php.
+/**
+ * @var array<string, mixed> $conf
+ * @var \PersistentFileCache $persistent_cache
+ * @var \Template $template
+ */
 global $conf, $maint_actions, $persistent_cache, $template;
+
+/** @var array<string, mixed> $page */
+if (! is_array($page['infos'] ?? null)) {
+    $page['infos'] = [];
+}
+if (! is_array($page['errors'] ?? null)) {
+    $page['errors'] = [];
+}
+if (! is_array($page['warnings'] ?? null)) {
+    $page['warnings'] = [];
+}
 
 fs_quick_check();
 
@@ -113,9 +129,16 @@ SELECT
 ;';
         $sessions = query2array($query);
 
+        // $conf['user_fields'] maps generic field names to actual DB column
+        // names (see include/config_default.inc.php); its values are
+        // configuration-supplied, not statically typed, hence the fallback.
+        $user_fields = $conf['user_fields'] ?? null;
+        $user_fields = is_array($user_fields) ? $user_fields : [];
+        $id_field = is_string($user_fields['id'] ?? null) ? $user_fields['id'] : 'id';
+
         $query = '
 SELECT
-    ' . $conf['user_fields']['id'] . ' AS id
+    ' . $id_field . ' AS id
   FROM ' . USERS_TABLE . '
 ;';
         $all_user_ids = query2array($query, 'id', null);
@@ -206,6 +229,7 @@ DELETE
 
     case 'check_upgrade':
 
+        $result = '';
         if (! fetchRemote(PHPWG_URL . '/download/latest_version', $result)) {
             $page['errors'][] = l10n('Unable to check for upgrade.');
         } else {
@@ -268,6 +292,8 @@ if (! is_webmaster()) {
     $page['warnings'][] = str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'));
 }
 
+/** @var array<string, string> $purge_urls */
+$purge_urls = [];
 $purge_urls[l10n('All')] = 'all';
 foreach (ImageStdParams::get_defined_type_map() as $params) {
     $purge_urls[l10n($params->type)] = $params->type;
@@ -283,7 +309,8 @@ assert($row !== null);
 // $conf['cache_sizes'] is a serialized 4-row [name, value] list produced by
 // ws_getCacheSize() (cache_size, msizes, tsizes, last_date_calc); row 3's
 // value is the last_date_calc date string used for time_since().
-$cache_sizes = isset($conf['cache_sizes']) ? unserialize($conf['cache_sizes']) : null;
+$cache_sizes_raw = $conf['cache_sizes'] ?? null;
+$cache_sizes = is_string($cache_sizes_raw) ? unserialize($cache_sizes_raw) : null;
 if (! is_array($cache_sizes)) {
     $cache_sizes = null;
 }
@@ -337,7 +364,9 @@ $template->assign(
 switch (pwg_image::get_library()) {
     case 'ext_imagick':
         $library = 'External ImageMagick';
-        exec($conf['ext_imagick_dir'] . pwg_image::get_ext_imagick_command() . ' -version', $returnarray);
+        $ext_imagick_dir = $conf['ext_imagick_dir'] ?? null;
+        $ext_imagick_dir = is_string($ext_imagick_dir) ? $ext_imagick_dir : '';
+        exec($ext_imagick_dir . pwg_image::get_ext_imagick_command() . ' -version', $returnarray);
         if (preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
             $library .= ' ' . $match[1];
         }
@@ -356,7 +385,9 @@ switch (pwg_image::get_library()) {
 
     case 'gd':
         $gd_info = gd_info();
-        $template->assign('GRAPHICS_LIBRARY', 'GD ' . @$gd_info['GD Version']);
+        $gd_version = $gd_info['GD Version'] ?? null;
+        $gd_version = is_string($gd_version) ? $gd_version : '';
+        $template->assign('GRAPHICS_LIBRARY', 'GD ' . $gd_version);
         break;
 }
 

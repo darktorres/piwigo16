@@ -13,8 +13,15 @@ if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
-// Bootstrap globals, set by include/common.inc.php.
-global $conf, $template, $user;
+// Bootstrap globals. $page is set by admin.php before including this page;
+// the rest by include/common.inc.php.
+/**
+ * @var array<string, mixed> $conf
+ * @var array<string, mixed> $page
+ * @var \Template $template
+ * @var array<string, mixed> $user
+ */
+global $conf, $page, $template, $user;
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
@@ -182,8 +189,23 @@ foreach ($allAlbum as $album) {
     // inferred type to mixed for the rest of this iteration.
     $parents = explode(',', (string) $album['uppercats']);
     $the_place = &$associatedTree[strval($parents[0])];
+    if (! is_array($the_place)) {
+        // Matches PHP's own null-to-array autovivification on the offset
+        // write below -- made explicit so PHPStan can prove $the_place is
+        // array-like at every depth of this dynamically built tree.
+        $the_place = [];
+    }
+    /** @var array<string, mixed> $the_place */
     for ($i = 1; $i < count($parents); $i++) {
-        $the_place = &$the_place['children'][strval($parents[$i])];
+        $child_key = strval($parents[$i]);
+        if (! is_array($the_place['children'] ?? null)) {
+            $the_place['children'] = [];
+        }
+        if (! is_array($the_place['children'][$child_key] ?? null)) {
+            $the_place['children'][$child_key] = [];
+        }
+        $the_place = &$the_place['children'][$child_key];
+        /** @var array<string, mixed> $the_place */
     }
 
     $rendered_name = trigger_change('render_category_name', $album['name'], 'admin_cat_list');
@@ -198,7 +220,12 @@ foreach ($allAlbum as $album) {
 // of an album or change permissions, this variable is reset and not recalculated until
 // you open the gallery. As this situation doesn't occur each time you use the
 // administration, it's quite reliable but not as much as on gallery side.
-$is_forbidden = array_fill_keys(@explode(',', (string) $user['forbidden_categories']), 1);
+// $user is array<string, mixed> -- re-derive a real string the same way
+// $_POST values are validated above, rather than casting a still-mixed
+// offset value directly (array/object-without-__toString would fatal).
+$forbidden_categories = $user['forbidden_categories'] ?? null;
+$forbidden_categories = is_scalar($forbidden_categories) ? (string) $forbidden_categories : '';
+$is_forbidden = array_fill_keys(@explode(',', $forbidden_categories), 1);
 
 // Make an ordered tree
 /**
@@ -216,6 +243,11 @@ function cmpCat(array $a, array $b): int
  */
 function assocToOrderedTree(array $assocT): array
 {
+    /**
+     * @var array<int|string, string|null> $nb_photos_in
+     * @var array<int|string, int> $nb_sub_photos
+     * @var array<int|string, int> $is_forbidden
+     */
     global $nb_photos_in, $nb_sub_photos, $is_forbidden;
 
     $orderedTree = [];
@@ -232,6 +264,10 @@ function assocToOrderedTree(array $assocT): array
         }
         /** @var array<string, string|null> $cat_row */
         $cat_row = $cat['cat'];
+        // 'id' is the category primary key (NOT NULL in schema); narrow
+        // once here since it's reused below as an array key, which
+        // requires a non-null type.
+        $cat_id = is_string($cat_row['id']) ? $cat_row['id'] : '';
 
         $orderedCat = [];
         $orderedCat['rank'] = $cat_row['rank'];
@@ -240,10 +276,10 @@ function assocToOrderedTree(array $assocT): array
         $orderedCat['id'] = $cat_row['id'];
         $orderedCat['visible'] = $cat_row['visible'];
         $orderedCat['uppercats'] = $cat_row['uppercats'];
-        $orderedCat['nb_images'] = $nb_photos_in[$cat_row['id']] ?? 0;
+        $orderedCat['nb_images'] = $nb_photos_in[$cat_id] ?? 0;
         $orderedCat['last_updates'] = $cat_row['lastmodified'];
-        $orderedCat['has_not_access'] = isset($is_forbidden[$cat_row['id']]);
-        $orderedCat['nb_sub_photos'] = $nb_sub_photos[$cat_row['id']] ?? 0;
+        $orderedCat['has_not_access'] = isset($is_forbidden[$cat_id]);
+        $orderedCat['nb_sub_photos'] = $nb_sub_photos[$cat_id] ?? 0;
         if (isset($cat['children']) && is_array($cat['children'])) {
             // Does not update when moving a node
             $orderedCat['nb_subcats'] = count($cat['children']);
@@ -286,7 +322,10 @@ foreach ($subcats_of as $cat_id => $subcat_ids) {
     $nb_photos = 0;
     foreach ($subcat_ids as $id) {
         if (isset($nb_photos_in[$id])) {
-            $nb_photos += $nb_photos_in[$id];
+            // COUNT(*) always yields a numeric string per this driver's
+            // string|null fetch convention (see query2array()); cast so the
+            // accumulator stays a provably-int running total.
+            $nb_photos += (int) $nb_photos_in[$id];
         }
     }
 

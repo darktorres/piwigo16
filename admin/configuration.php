@@ -14,7 +14,26 @@ if (! defined('PHPWG_ROOT_PATH')) {
 }
 
 // Bootstrap globals, set by include/common.inc.php.
+/**
+ * @var array<string, mixed> $conf
+ * @var array<string, mixed> $lang
+ * @var \Template $template
+ */
 global $conf, $lang, $template;
+
+// $page['errors']/['warnings']/['infos'] are always initialized to [] by
+// include/common.inc.php, but that isn't visible across the include()
+// boundary -- narrow once here so every top-level append below type-checks.
+/** @var array<string, mixed> $page */
+if (! is_array($page['errors'] ?? null)) {
+    $page['errors'] = [];
+}
+if (! is_array($page['warnings'] ?? null)) {
+    $page['warnings'] = [];
+}
+if (! is_array($page['infos'] ?? null)) {
+    $page['infos'] = [];
+}
 
 if (! is_webmaster()) {
     $page['warnings'][] = str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'));
@@ -33,11 +52,16 @@ check_status(ACCESS_ADMINISTRATOR);
 
 check_input_parameter('section', $_GET, false, '/^[a-z]+$/i');
 
-if (! isset($_GET['section'])) {
-    $page['section'] = 'main';
+// check_input_parameter() above fatal_error()s unless $_GET['section'] is a
+// scalar matching /^[a-z]+$/i, but that guarantee isn't visible to static
+// analysis; re-derive it into a definite string (query string values from
+// $_GET are always strings in practice, never int/float/bool).
+if (! isset($_GET['section']) or ! is_string($_GET['section'])) {
+    $page_section = 'main';
 } else {
-    $page['section'] = $_GET['section'];
+    $page_section = $_GET['section'];
 }
+$page['section'] = $page_section;
 
 $main_checkboxes = [
     'allow_user_registration',
@@ -295,7 +319,9 @@ if (isset($_POST['submit'])) {
     }
 
     // updating configuration if no error found
-    if (! in_array($page['section'], ['sizes', 'watermark']) and count($page['errors']) == 0 and is_webmaster()) {
+    // ($page['errors'] is already narrowed to array above).
+    $page_errors_for_count = $page['errors'];
+    if (! in_array($page_section, ['sizes', 'watermark']) and count($page_errors_for_count) == 0 and is_webmaster()) {
         // echo '<pre>'; print_r($_POST); echo '</pre>';
         $result = pwg_query('SELECT param FROM ' . CONFIG_TABLE);
         while ($row = pwg_db_fetch_assoc($result)) {
@@ -360,16 +386,16 @@ if ($page['section'] == 'sizes' and isset($_GET['action']) and $_GET['action'] =
 }
 
 // ----------------------------------------------------- template initialization
-$template->set_filename('config', 'configuration_' . $page['section'] . '.tpl');
+$template->set_filename('config', 'configuration_' . $page_section . '.tpl');
 
 // TabSheet
 $tabsheet = new tabsheet();
 $tabsheet->set_id('configuration');
-$tabsheet->select($page['section']);
+$tabsheet->select($page_section);
 $tabsheet->assign();
 
 $action = get_root_url() . 'admin.php?page=configuration';
-$action .= '&amp;section=' . $page['section'];
+$action .= '&amp;section=' . $page_section;
 
 $template->assign(
     [
@@ -412,28 +438,40 @@ switch ($page['section']) {
             $template->assign('ORDER_BY_IS_CUSTOM', true);
         } else {
             $out = [];
-            $order_by = trim((string) $conf['order_by_inside_category']);
+            $conf_order_by_inside_category = $conf['order_by_inside_category'];
+            $order_by = trim(is_string($conf_order_by_inside_category) ? $conf_order_by_inside_category : '');
             $order_by = str_replace('ORDER BY ', '', $order_by);
             $order_by = explode(', ', $order_by);
         }
 
+        $conf_gallery_title = $conf['gallery_title'];
+        $conf_page_banner = $conf['page_banner'];
+        $conf_email_admin_on_new_user = $conf['email_admin_on_new_user'];
+        $conf_email_admin_on_new_user_str = is_string($conf_email_admin_on_new_user) ? $conf_email_admin_on_new_user : '';
+        // $lang['day'] is always a 7-entry array of weekday names, defined
+        // per-locale in each language/*/common.lang.php; guard rather than
+        // trust that shape blindly since $lang is typed as
+        // array<string, mixed> here.
+        $lang_day = $lang['day'];
+        $lang_day = is_array($lang_day) ? $lang_day : [];
+
         $template->assign(
             'main',
             [
-                'CONF_GALLERY_TITLE' => htmlspecialchars((string) $conf['gallery_title']),
-                'CONF_PAGE_BANNER' => htmlspecialchars((string) $conf['page_banner']),
+                'CONF_GALLERY_TITLE' => htmlspecialchars(is_string($conf_gallery_title) ? $conf_gallery_title : ''),
+                'CONF_PAGE_BANNER' => htmlspecialchars(is_string($conf_page_banner) ? $conf_page_banner : ''),
                 'week_starts_on_options' => [
-                    'sunday' => $lang['day'][0],
-                    'monday' => $lang['day'][1],
+                    'sunday' => $lang_day[0] ?? '',
+                    'monday' => $lang_day[1] ?? '',
                 ],
                 'week_starts_on_options_selected' => $conf['week_starts_on'],
                 'mail_theme' => $conf['mail_theme'],
                 'mail_theme_options' => $mail_themes,
                 'order_by' => $order_by,
                 'order_by_options' => $sort_fields,
-                'email_admin_on_new_user' => $conf['email_admin_on_new_user'] != 'none',
-                'email_admin_on_new_user_filter' => in_array($conf['email_admin_on_new_user'], ['none', 'all']) ? 'all' : 'group',
-                'email_admin_on_new_user_filter_group' => preg_match('/^group:(\d+)$/', (string) $conf['email_admin_on_new_user'], $matches) ? $matches[1] : -1,
+                'email_admin_on_new_user' => $conf_email_admin_on_new_user != 'none',
+                'email_admin_on_new_user_filter' => in_array($conf_email_admin_on_new_user, ['none', 'all']) ? 'all' : 'group',
+                'email_admin_on_new_user_filter_group' => preg_match('/^group:(\d+)$/', $conf_email_admin_on_new_user_str, $matches) ? $matches[1] : -1,
             ]
         );
 
@@ -488,13 +526,21 @@ switch ($page['section']) {
 
     case 'default':
 
-        $edit_user = build_user($conf['guest_id'], false);
+        // $conf['guest_id'] is set as a PHP int literal in
+        // include/config_default.inc.php (never overridden from the DB
+        // config table, which only stores admin-editable params); guard
+        // rather than trust that invariant blindly since $conf is typed as
+        // array<string, mixed> here.
+        $conf_guest_id = $conf['guest_id'];
+        $guest_id = is_numeric($conf_guest_id) ? (int) $conf_guest_id : 0;
+
+        $edit_user = build_user($guest_id, false);
         include_once PHPWG_ROOT_PATH . 'profile.php';
 
         $errors = [];
         if (save_profile_from_post($edit_user, $errors)) {
             // Reload user
-            $edit_user = build_user($conf['guest_id'], false);
+            $edit_user = build_user($guest_id, false);
             $page['infos'][] = l10n('Information data registered in database');
         }
         $page['errors'] = array_merge($page['errors'], $errors);
@@ -519,10 +565,15 @@ switch ($page['section']) {
                 true
             );
         }
+        // config.value is stored as a serialized string (see the
+        // addslashes(serialize(...)) write-back for this same param
+        // earlier in this file); guard rather than trust that shape
+        // blindly since $conf is typed as array<string, mixed> here.
+        $conf_picture_informations = $conf['picture_informations'];
         $template->append(
             'display',
             [
-                'picture_informations' => unserialize($conf['picture_informations']),
+                'picture_informations' => is_string($conf_picture_informations) ? unserialize($conf_picture_informations) : [],
                 'NB_CATEGORIES_PAGE' => $conf['nb_categories_page'],
             ],
             true
@@ -665,10 +716,15 @@ switch ($page['section']) {
 
     case 'search':
 
+        $conf_filters_views_for_search = $conf['filters_views'];
+        $conf_filters_views_for_search = (is_array($conf_filters_views_for_search) or is_string($conf_filters_views_for_search))
+            ? $conf_filters_views_for_search
+            : [];
+
         $template->assign(
             'search',
             [
-                'filters_views' => safe_unserialize($conf['filters_views']),
+                'filters_views' => safe_unserialize($conf_filters_views_for_search),
                 'filters_names' => $filters_names_checkboxes,
             ],
         );

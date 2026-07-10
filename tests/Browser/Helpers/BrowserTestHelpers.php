@@ -94,7 +94,20 @@ final class BrowserTestHelpers
     public static function visitPwg(object $test, string $path): Webpage|PendingAwaitablePage|AwaitableWebpage
     {
         // @phpstan-ignore method.notFound
-        return $test->visit(self::baseUrl() . $path, self::testModeOptions());
+        $result = $test->visit(self::baseUrl() . $path, self::testModeOptions());
+
+        if (
+            !$result instanceof Webpage
+            && !$result instanceof PendingAwaitablePage
+            && !$result instanceof AwaitableWebpage
+        ) {
+            throw new ExpectationFailedException(
+                'visit() did not return a Webpage/PendingAwaitablePage/AwaitableWebpage — '
+                . 'pest-plugin-browser may have changed its return type.'
+            );
+        }
+
+        return $result;
     }
 
     /**

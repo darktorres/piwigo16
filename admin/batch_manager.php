@@ -10,7 +10,13 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 // Bootstrap globals, set by include/common.inc.php.
-global $conf, $template, $user;
+/**
+ * @var array<string, mixed> $conf
+ * @var array<string, mixed> $page
+ * @var \Template $template
+ * @var array<string, mixed> $user
+ */
+global $conf, $page, $template, $user;
 
 /**
  * Management of elements set. Elements can belong to a category or to the
@@ -32,6 +38,17 @@ check_status(ACCESS_ADMINISTRATOR);
 check_input_parameter('selection', $_POST, true, PATTERN_ID);
 check_input_parameter('display', $_REQUEST, false, '/^(\d+|all)$/');
 
+// $user['id'] (the logged in / guest user id) is always numeric here (DB
+// primary key, or $conf['guest_id']); narrow once and reuse at every query
+// site below instead of re-reading the offset (each re-read is `mixed`).
+$user_id = is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0;
+
+// $conf['available_permission_levels'] and $conf['order_by'] are read from
+// a loosely-typed config bag at several sites below; narrow each once and
+// reuse the local variable everywhere instead of re-reading the offset.
+$available_permission_levels = is_array($conf['available_permission_levels'] ?? null) ? $conf['available_permission_levels'] : [];
+$conf_order_by = is_string($conf['order_by'] ?? null) ? $conf['order_by'] : '';
+
 // +-----------------------------------------------------------------------+
 // | specific actions                                                      |
 // +-----------------------------------------------------------------------+
@@ -44,7 +61,7 @@ if (isset($_GET['action'])) {
     if ($_GET['action'] == 'empty_caddie') {
         $query = '
 DELETE FROM ' . CADDIE_TABLE . '
-  WHERE user_id = ' . $user['id'] . '
+  WHERE user_id = ' . $user_id . '
 ;';
         pwg_query($query);
 
@@ -160,7 +177,7 @@ if (isset($_POST['submitFilter'])) {
     if (isset($_POST['filter_level_use'])) {
         check_input_parameter('filter_level', $_POST, false, '/^\d+$/');
 
-        if (in_array($_POST['filter_level'], $conf['available_permission_levels'])) {
+        if (in_array($_POST['filter_level'], $available_permission_levels)) {
             $_SESSION['bulk_manager_filter']['level'] = $_POST['filter_level'];
 
             if (isset($_POST['filter_level_include_lower'])) {
@@ -191,6 +208,9 @@ if (isset($_POST['submitFilter'])) {
     }
 
     if (isset($_POST['filter_search_use'])) {
+        // $_SESSION['bulk_manager_filter'] was reset to [] at the top of
+        // this block, so 'search' can't already exist here.
+        $_SESSION['bulk_manager_filter']['search'] = [];
         $_SESSION['bulk_manager_filter']['search']['q'] = $_POST['q'];
     }
 
@@ -241,7 +261,7 @@ elseif (isset($_GET['filter'])) {
                 break;
 
             case 'level':
-                if (is_numeric($value) && in_array($value, $conf['available_permission_levels'])) {
+                if (is_numeric($value) && in_array($value, $available_permission_levels)) {
                     $url_filter['level'] = $value;
                 }
                 break;
@@ -351,7 +371,7 @@ if (isset($bulk_filter['prefilter'])) {
             $query = '
 SELECT element_id
   FROM ' . CADDIE_TABLE . '
-  WHERE user_id = ' . $user['id'] . '
+  WHERE user_id = ' . $user_id . '
 ;';
             $filter_sets[] = query2array($query, null, 'element_id');
 
@@ -361,7 +381,7 @@ SELECT element_id
             $query = '
 SELECT image_id
   FROM ' . FAVORITES_TABLE . '
-  WHERE user_id = ' . $user['id'] . '
+  WHERE user_id = ' . $user_id . '
 ;';
             $filter_sets[] = query2array($query, null, 'image_id');
 
@@ -490,7 +510,7 @@ SELECT
                 $query = '
 SELECT id
   FROM ' . IMAGES_TABLE . '
-  ' . $conf['order_by'];
+  ' . $conf_order_by;
 
                 $filter_sets[] = query2array($query, null, 'id');
             }
@@ -553,7 +573,7 @@ if (isset($bulk_filter['level']) && is_numeric($bulk_filter['level'])) {
 SELECT id
   FROM ' . IMAGES_TABLE . '
   WHERE level ' . $operator . ' ' . $level . '
-  ' . $conf['order_by'];
+  ' . $conf_order_by;
 
     $filter_sets[] = query2array($query, null, 'id');
 }
@@ -604,7 +624,7 @@ if (isset($bulk_filter['dimension']) && is_array($bulk_filter['dimension'])) {
 SELECT id
   FROM ' . IMAGES_TABLE . '
   WHERE ' . implode(' AND ', $where_clause) . '
-  ' . $conf['order_by'];
+  ' . $conf_order_by;
 
     $filter_sets[] = query2array($query, null, 'id');
 }
@@ -627,7 +647,7 @@ if (isset($bulk_filter['filesize']) && is_array($bulk_filter['filesize'])) {
 SELECT id
   FROM ' . IMAGES_TABLE . '
   WHERE ' . implode(' AND ', $where_clause) . '
-  ' . $conf['order_by'];
+  ' . $conf_order_by;
 
     $filter_sets[] = query2array($query, null, 'id');
 }

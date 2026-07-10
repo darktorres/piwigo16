@@ -25,8 +25,14 @@ if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
-// Bootstrap globals, set by include/common.inc.php.
-global $conf, $template;
+// Bootstrap globals. $conf/$template are set by include/common.inc.php;
+// $page is set by admin.php before including this panel.
+/**
+ * @var array<string, mixed> $conf
+ * @var \Template $template
+ * @var array<string, mixed> $page
+ */
+global $conf, $template, $page;
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 include_once PHPWG_ROOT_PATH . 'admin/include/functions_history.inc.php';
@@ -70,11 +76,23 @@ $template->assign(
 // +-----------------------------------------------------------------------+
 
 if (isset($page['search_id'])) {
+    // $page['nb_lines']/['start'] and $conf['nb_logs_page'] come from
+    // loosely-typed global bags; create_navigation_bar() needs a real
+    // int|string/int, so narrow each before the call.
+    $nb_lines = $page['nb_lines'] ?? null;
+    $nb_lines = is_numeric($nb_lines) ? (int) $nb_lines : 0;
+
+    $navbar_start = $page['start'] ?? null;
+    $navbar_start = is_numeric($navbar_start) ? (int) $navbar_start : 0;
+
+    $nb_logs_page = $conf['nb_logs_page'] ?? null;
+    $nb_logs_page = is_numeric($nb_logs_page) ? (int) $nb_logs_page : 0;
+
     $navbar = create_navigation_bar(
         get_root_url() . 'admin.php' . get_query_string_diff(['start']),
-        $page['nb_lines'],
-        $page['start'],
-        $conf['nb_logs_page']
+        $nb_lines,
+        $navbar_start,
+        $nb_logs_page
     );
 
     $template->assign('navbar', $navbar);
@@ -86,13 +104,20 @@ if (isset($page['search_id'])) {
 
 $form = [];
 
-if (isset($page['search'])) {
-    if (isset($page['search']['fields']['date-after'])) {
-        $form['start'] = $page['search']['fields']['date-after'];
+// $page['search'] is an unserialize()'d value (see ws_history_search() in
+// include/ws_functions/pwg.php); only provably mixed, so narrow to an
+// array (and its 'fields' sub-array) before reading nested offsets.
+$page_search = $page['search'] ?? null;
+$page_search_fields = is_array($page_search) ? ($page_search['fields'] ?? null) : null;
+$page_search_fields = is_array($page_search_fields) ? $page_search_fields : null;
+
+if (is_array($page_search)) {
+    if (isset($page_search_fields['date-after'])) {
+        $form['start'] = $page_search_fields['date-after'];
     }
 
-    if (isset($page['search']['fields']['date-before'])) {
-        $form['end'] = $page['search']['fields']['date-before'];
+    if (isset($page_search_fields['date-before'])) {
+        $form['end'] = $page_search_fields['date-before'];
     }
 } else {
     // by default, at page load, we want the selected date to be the current
@@ -104,6 +129,7 @@ if (isset($page['search'])) {
       pwg_get_cookie_var('display_thumbnail', 'no_display_thumbnail');
 }
 
+$form_param = [];
 $form_param['ip'] = $_GET['filter_ip'] ?? null;
 $form_param['image_id'] = $_GET['filter_image_id'] ?? null;
 
@@ -129,13 +155,15 @@ if ($form_param['user_id'] !== -1) {
 
     $row = pwg_db_fetch_row(pwg_query($query));
     $form_param['user_name'] = $row !== null ? $row[0] : null;
-    $form_param['user_id'] = empty(pwg_db_fetch_row(pwg_query($query))) ? -1 : $form_param['user_id'];
+    // $row already holds this exact query's result; re-running the query a
+    // second time just to test emptiness was a redundant duplicate DB call.
+    $form_param['user_id'] = empty($row) ? -1 : $form_param['user_id'];
 }
 
 $template->assign(
     [
         'USER_ID' => $form_param['user_id'],
-        'USER_NAME' => @$form_param['user_name'],
+        'USER_NAME' => $form_param['user_name'] ?? null,
         'IMAGE_ID' => $form_param['image_id'],
         'IP' => $form_param['ip'],
         'START' => $form['start'] ?? null,

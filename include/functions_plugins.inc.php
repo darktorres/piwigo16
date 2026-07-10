@@ -126,6 +126,7 @@ function add_event_handler(
     $priority = EVENT_HANDLER_PRIORITY_NEUTRAL,
     $include_path = null
 ): bool {
+    /** @var array<string, array<int, list<array{function: callable, include_path: string|null}>>> $pwg_event_handlers */
     global $pwg_event_handlers;
 
     if (isset($pwg_event_handlers[$event][$priority])) {
@@ -158,6 +159,7 @@ function remove_event_handler(
     $func,
     $priority = EVENT_HANDLER_PRIORITY_NEUTRAL
 ): bool {
+    /** @var array<string, array<int, list<array{function: callable, include_path: string|null}>>> $pwg_event_handlers */
     global $pwg_event_handlers;
 
     if (! isset($pwg_event_handlers[$event][$priority])) {
@@ -195,6 +197,7 @@ function remove_event_handler(
  */
 function trigger_change($event, $data = null)
 {
+    /** @var array<string, array<int, list<array{function: callable, include_path: string|null}>>> $pwg_event_handlers */
     global $pwg_event_handlers;
 
     if (isset($pwg_event_handlers['trigger'])) {// debugging
@@ -251,6 +254,7 @@ function trigger_change($event, $data = null)
  */
 function trigger_notify($event, ...$args): void
 {
+    /** @var array<string, array<int, list<array{function: callable, include_path: string|null}>>> $pwg_event_handlers */
     global $pwg_event_handlers;
 
     if (isset($pwg_event_handlers['trigger']) and $event != 'trigger') {// debugging - avoid recursive calls
@@ -289,6 +293,7 @@ function trigger_notify($event, ...$args): void
  */
 function set_plugin_data($plugin_id, &$data): bool
 {
+    /** @var array<string, array<string, mixed>> $pwg_loaded_plugins */
     global $pwg_loaded_plugins;
     if (isset($pwg_loaded_plugins[$plugin_id])) {
         $pwg_loaded_plugins[$plugin_id]['plugin_data'] = &$data;
@@ -307,6 +312,7 @@ function set_plugin_data($plugin_id, &$data): bool
  */
 function &get_plugin_data($plugin_id)
 {
+    /** @var array<string, array<string, mixed>> $pwg_loaded_plugins */
     global $pwg_loaded_plugins;
     return $pwg_loaded_plugins[$plugin_id]['plugin_data'] ?? null;
 }
@@ -362,6 +368,7 @@ function load_plugin(array $plugin): void
     $file_name = PHPWG_PLUGINS_PATH . $plugin_id . '/main.inc.php';
     if (file_exists($file_name)) {
         autoupdate_plugin($plugin);
+        /** @var array<string, array<string, mixed>> $pwg_loaded_plugins */
         global $pwg_loaded_plugins;
         $pwg_loaded_plugins[$plugin_id] = $plugin;
         include_once $file_name;
@@ -427,6 +434,7 @@ function autoupdate_plugin(array &$plugin): void
 
         // autoupdate is applicable only to plugins with 2.7 architecture
         if (file_exists($maintain_file)) {
+            /** @var array<string, mixed> $page */
             global $page;
 
             // call update method
@@ -442,6 +450,10 @@ function autoupdate_plugin(array &$plugin): void
             if (! $plugin_maintain instanceof PluginMaintain) {
                 throw new \LogicException("autoupdate_plugin(): {$classname} does not extend PluginMaintain");
             }
+            // $page['errors'] is initialized to an array by common.inc.php,
+            // but PHPStan can't prove it here; re-narrow to list<string> to
+            // match PluginMaintain::update()'s array<int, string> $errors.
+            $page['errors'] = is_array($page['errors'] ?? null) ? array_values(array_filter($page['errors'], 'is_string')) : [];
             // $old_version (pre-mutation), not $plugin['version'] (already
             // overwritten with $fs_version above) -- passing the mutated
             // value here made update() always see old==new, defeating any
@@ -473,6 +485,10 @@ UPDATE ' . PLUGINS_TABLE . '
  */
 function load_plugins(): void
 {
+    /**
+     * @var array<string, mixed> $conf
+     * @var array<string, array<string, mixed>> $pwg_loaded_plugins
+     */
     global $conf, $pwg_loaded_plugins;
     $pwg_loaded_plugins = [];
     if ($conf['enable_plugins']) {

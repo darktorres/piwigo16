@@ -53,7 +53,17 @@ SELECT c.id
  */
 function delete_cat_permalink($cat_id, $save): bool
 {
+    /**
+     * @var array<string, mixed> $page
+     * @var array<string, mixed> $cache
+     */
     global $page, $cache;
+
+    // $page['errors'] is always initialized to an array by common.inc.php,
+    // but that isn't visible across the include() boundary -- narrow it
+    // once here so the append below type-checks.
+    $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
+
     $query = '
 SELECT permalink
   FROM ' . CATEGORIES_TABLE . '
@@ -115,7 +125,16 @@ VALUES
  */
 function set_cat_permalink($cat_id, $permalink, $save): bool
 {
+    /**
+     * @var array<string, mixed> $page
+     * @var array<string, mixed> $cache
+     */
     global $page, $cache;
+
+    // $page['errors'] is always initialized to an array by common.inc.php,
+    // but that isn't visible across the include() boundary -- narrow it
+    // once here so the appends below type-check.
+    $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
 
     $sanitized_permalink = preg_replace('#[^a-zA-Z0-9_/-]#', '', $permalink);
     $sanitized_permalink = trim((string) $sanitized_permalink, '/');

@@ -18,6 +18,13 @@ initialize_menu();
  */
 function initialize_menu(): void
 {
+    /**
+     * @var array<string, mixed> $page
+     * @var array<string, mixed> $conf
+     * @var array<string, mixed> $user
+     * @var \Template $template
+     * @var array<string, mixed> $filter
+     */
     global $page, $conf, $user, $template, $filter;
 
     $menu = new BlockManager('menubar');
@@ -28,12 +35,14 @@ function initialize_menu(): void
     }
     $menu->prepare_display();
 
-    if (@$page['section'] == 'search' and isset($page['qsearch_details'])) {
-        $template->assign('QUERY_SEARCH', htmlspecialchars((string) $page['qsearch_details']['q']));
+    if (@$page['section'] == 'search' and isset($page['qsearch_details']) and is_array($page['qsearch_details'])) {
+        $qsearch_q = $page['qsearch_details']['q'] ?? '';
+        $qsearch_q = is_string($qsearch_q) ? $qsearch_q : '';
+        $template->assign('QUERY_SEARCH', htmlspecialchars($qsearch_q));
     }
 
     // --------------------------------------------------------------- external links
-    if (($block = $menu->get_block('mbLinks')) and ! empty($conf['links'])) {
+    if (($block = $menu->get_block('mbLinks')) and ! empty($conf['links']) and is_array($conf['links'])) {
         $block->data = [];
         foreach ($conf['links'] as $url => $url_data) {
             if (! is_array($url_data)) {
@@ -79,10 +88,12 @@ function initialize_menu(): void
                 ])
             );
         } else {
+            $recent_period = $user['recent_period'] ?? null;
+            $recent_period = is_numeric($recent_period) ? (int) $recent_period : (is_string($recent_period) ? $recent_period : 0);
             $template->assign(
                 'U_START_FILTER',
                 add_url_params(make_index_url([]), [
-                    'filter' => 'start-recent-' . $user['recent_period'],
+                    'filter' => 'start-recent-' . $recent_period,
                 ])
             );
         }
@@ -102,24 +113,37 @@ function initialize_menu(): void
     // ------------------------------------------------------------ related categories
     $block = $menu->get_block('mbRelatedCategories');
 
+    $page_items = $page['items'] ?? null;
+
     if (
-        isset($page['items'])
-        and count($page['items']) < $conf['related_albums_maximum_items_to_compute']
+        is_array($page_items)
+        and count($page_items) < $conf['related_albums_maximum_items_to_compute']
         and $block != null
-        and ! empty($page['items'])
+        and ! empty($page_items)
     ) {
         $exclude_cat_ids = [];
-        if (isset($page['category'])) {
-            $exclude_cat_ids = [$page['category']['id']];
-            if (isset($page['combined_categories'])) {
-                foreach ($page['combined_categories'] as $cat) {
-                    $exclude_cat_ids[] = $cat['id'];
+        $page_category = $page['category'] ?? null;
+        $page_category_id = is_array($page_category) ? ($page_category['id'] ?? null) : null;
+        if (is_int($page_category_id) or is_string($page_category_id)) {
+            $exclude_cat_ids = [$page_category_id];
+            $combined_categories = $page['combined_categories'] ?? null;
+            if (is_array($combined_categories)) {
+                foreach ($combined_categories as $cat) {
+                    $cat_id = is_array($cat) ? ($cat['id'] ?? null) : null;
+                    if (is_int($cat_id) or is_string($cat_id)) {
+                        $exclude_cat_ids[] = $cat_id;
+                    }
                 }
             }
         }
 
+        $related_items = array_values(array_filter(
+            $page_items,
+            static fn (mixed $item): bool => is_int($item) or is_string($item)
+        ));
+
         $block->data = [
-            'MENU_CATEGORIES' => get_related_categories_menu($page['items'], $exclude_cat_ids),
+            'MENU_CATEGORIES' => get_related_categories_menu($related_items, $exclude_cat_ids),
         ];
 
         if (! empty($block->data['MENU_CATEGORIES'])) {
@@ -133,7 +157,9 @@ function initialize_menu(): void
         $block->data = [];
         $tags = get_available_tags();
         usort($tags, tags_counter_compare(...));
-        $tags = array_slice($tags, 0, $conf['menubar_tag_cloud_items_number']);
+        $tag_cloud_items_number = $conf['menubar_tag_cloud_items_number'] ?? null;
+        $tag_cloud_items_number = is_numeric($tag_cloud_items_number) ? (int) $tag_cloud_items_number : null;
+        $tags = array_slice($tags, 0, $tag_cloud_items_number);
         foreach ($tags as $tag) {
             $block->data[] = array_merge(
                 $tag,
@@ -295,7 +321,9 @@ function initialize_menu(): void
             $template->assign('U_REGISTER', get_root_url() . 'register.php');
         }
     } else {
-        $template->assign('USERNAME', stripslashes((string) $user['username']));
+        $username = $user['username'] ?? null;
+        $username = is_string($username) ? $username : '';
+        $template->assign('USERNAME', stripslashes($username));
         if (is_autorize_status(ACCESS_CLASSIC)) {
             $template->assign('U_PROFILE', get_root_url() . 'profile.php');
         }

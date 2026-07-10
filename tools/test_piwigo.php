@@ -69,6 +69,7 @@ add_picture($option, $cookies, $pwg_token);
  */
 function create_database(array $option): string
 {
+    /** @var mysqli $mysqli */
     global $mysqli;
 
     $db_name = $option['db_name'] ?? null;
@@ -81,6 +82,9 @@ function create_database(array $option): string
   ;';
 
     $res = $mysqli->query($query);
+    if (! $res instanceof mysqli_result) {
+        throw new Exception('create_database(): SHOW DATABASES query failed');
+    }
 
     while (($row = $res->fetch_row())) {
         if ($row[0] == $db_name) {
@@ -291,6 +295,7 @@ function create_album(array $option, string $cookies): void
  */
 function add_picture(array $option, string $cookies, mixed $pwg_token): void
 {
+    /** @var mysqli $mysqli */
     global $mysqli;
 
     $url = $option['url'];
@@ -300,7 +305,11 @@ function add_picture(array $option, string $cookies, mixed $pwg_token): void
 
     exec('perl piwigo_upload.pl --url=' . $url . ' --user=admin --password=pwg123 --file=temp.png --album_id=1');
 
-    $mysqli->select_db($option['db_name']);
+    $db_name = $option['db_name'];
+    if (! is_string($db_name)) {
+        throw new Exception('add_picture(): option db_name must be a string');
+    }
+    $mysqli->select_db($db_name);
 
     $query = '
     SELECT count(*)
@@ -308,7 +317,11 @@ function add_picture(array $option, string $cookies, mixed $pwg_token): void
   ;';
 
     $res = $mysqli->query($query);
-    if (($row = $res->fetch_row())[0] > 0) {
+    if (! $res instanceof mysqli_result) {
+        throw new Exception('add_picture(): SELECT count(*) query failed');
+    }
+    $row = $res->fetch_row();
+    if (is_array($row) && ($row[0] ?? 0) > 0) {
         echo "Add a Picture OK!\n";
     } else {
         echo "Add a picture KO!\n";

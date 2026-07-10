@@ -80,6 +80,7 @@ class pwg_image
         public string $source_filepath,
         ?string $library = null
     ) {
+        /** @var array<string, mixed> $conf */
         global $conf;
 
         trigger_notify('load_image_library', [&$this]);
@@ -90,7 +91,8 @@ class pwg_image
 
         $extension = strtolower(get_extension($this->source_filepath));
 
-        if (! in_array($extension, $conf['picture_ext'])) {
+        $picture_ext = is_array($conf['picture_ext']) ? $conf['picture_ext'] : [];
+        if (! in_array($extension, $picture_ext)) {
             die('[Image] unsupported file extension');
         }
 
@@ -329,7 +331,11 @@ class pwg_image
 
         $exif = @exif_read_data($source_filepath);
 
-        if (isset($exif['Orientation']) and preg_match('/^\s*(\d)/', $exif['Orientation'], $matches)) {
+        $exif_orientation = is_array($exif) && isset($exif['Orientation']) && is_scalar($exif['Orientation'])
+            ? (string) $exif['Orientation']
+            : null;
+
+        if ($exif_orientation !== null and preg_match('/^\s*(\d)/', $exif_orientation, $matches)) {
             $orientation = $matches[1];
             if (in_array($orientation, [3, 4])) {
                 $rotation = 180;
@@ -423,32 +429,37 @@ class pwg_image
 
     public static function get_ext_imagick_command(): string
     {
+        /**
+         * @var array<string, mixed> $page
+         * @var array<string, mixed> $conf
+         */
         global $page, $conf;
 
-        if (! isset($page['ext_imagick_command'])) {
+        $command = $page['ext_imagick_command'] ?? null;
+        if (! is_string($command)) {
             $retval = null;
             $cmd_out = null;
+            $imagick_dir = is_string($conf['ext_imagick_dir']) ? $conf['ext_imagick_dir'] : '';
             // check if magick is in path
-            exec('command -v ' . $conf['ext_imagick_dir'] . 'magick', $cmd_out, $retval);
-            if ($retval == 0) {
-                $page['ext_imagick_command'] = 'magick';
-            } else {
-                $page['ext_imagick_command'] = 'convert';
-            }
+            exec('command -v ' . $imagick_dir . 'magick', $cmd_out, $retval);
+            $command = ($retval == 0) ? 'magick' : 'convert';
+            $page['ext_imagick_command'] = $command;
         }
 
-        return $page['ext_imagick_command'];
+        return $command;
     }
 
     public static function is_ext_imagick(): bool
     {
+        /** @var array<string, mixed> $conf */
         global $conf;
 
         if (! function_exists('exec')) {
             return false;
         }
 
-        @exec($conf['ext_imagick_dir'] . self::get_ext_imagick_command() . ' -version', $returnarray);
+        $imagick_dir = is_string($conf['ext_imagick_dir']) ? $conf['ext_imagick_dir'] : '';
+        @exec($imagick_dir . self::get_ext_imagick_command() . ' -version', $returnarray);
         if (! empty($returnarray[0]) and preg_match('/ImageMagick/i', $returnarray[0])) {
             if (preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
                 self::$ext_imagick_version = $match[1];
@@ -465,14 +476,16 @@ class pwg_image
 
     public static function get_library(?string $library = null, ?string $extension = null): string|false
     {
+        /** @var array<string, mixed> $conf */
         global $conf;
 
         if ($library === null) {
-            $library = $conf['graphics_library'];
+            $conf_library = $conf['graphics_library'];
+            $library = is_string($conf_library) ? $conf_library : 'auto';
         }
 
         // Choose image library
-        switch (strtolower((string) $library)) {
+        switch (strtolower($library)) {
             case 'auto':
             case 'ext_imagick':
                 if ($extension != 'gif' and self::is_ext_imagick()) {
@@ -502,7 +515,12 @@ class pwg_image
     {
         $image = $this->getImage();
         if (method_exists($image, 'destroy')) {
-            return $image->destroy();
+            // $image's static type is imageInterface, which doesn't declare
+            // destroy() (only image_gd implements it; a plugin-provided
+            // backend loaded via the 'load_image_library' event may also
+            // implement it, per __construct()'s comment) — method_exists()
+            // proves the call is safe but its return stays mixed to PHPStan.
+            return (bool) $image->destroy();
         }
         return true;
     }
@@ -650,8 +668,10 @@ class image_ext_imagick implements imageInterface
     public function __construct(
         public string $source_filepath
     ) {
+        /** @var array<string, mixed> $conf */
         global $conf;
-        $this->imagickdir = $conf['ext_imagick_dir'];
+        $imagick_dir = $conf['ext_imagick_dir'];
+        $this->imagickdir = is_string($imagick_dir) ? $imagick_dir : '';
 
         $script_filename = $_SERVER['SCRIPT_FILENAME'] ?? null;
         if (is_string($script_filename) && str_starts_with($script_filename, '/kunden/')) {  // 1and1
@@ -736,13 +756,16 @@ class image_ext_imagick implements imageInterface
 
     public function set_compression_quality(int $quality): bool
     {
+        /** @var array<string, mixed> $conf */
         global $conf;
 
         if ($this->is_animated_webp) {
             // in cas of animated WebP, we need to maximize quality to 70 to avoid
             // heavy thumbnails (or square or whatever is displayed on the thumbnails
             // page)
-            $quality = min($quality, $conf['animated_webp_compression_quality']);
+            $max_quality = $conf['animated_webp_compression_quality'];
+            $max_quality = is_numeric($max_quality) ? (int) $max_quality : $quality;
+            $quality = min($quality, $max_quality);
         }
 
         $this->add_command('quality', $quality);
@@ -796,6 +819,10 @@ class image_ext_imagick implements imageInterface
 
     public function write(string $destination_filepath): bool
     {
+        // Set unconditionally by i.php / include/common.inc.php before any
+        // code in this file runs (both entry points construct it during
+        // bootstrap) — not a lazy-init global.
+        /** @var \Logger $logger */
         global $logger;
 
         $this->add_command('interlace', 'line'); // progressive rendering

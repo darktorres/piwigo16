@@ -486,6 +486,10 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         $decoded = json_decode($body, true);
         self::assertIsArray($decoded, "WS $method response is not valid JSON: $body");
 
+        // ws.php's JSON envelope is always a JSON object (stat/result/err
+        // keys), never a JSON array, so the decoded top level is always
+        // string-keyed.
+        /** @var array<string, mixed> $decoded */
         return $decoded;
     }
 }

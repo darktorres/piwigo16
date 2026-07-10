@@ -15,7 +15,18 @@ declare(strict_types=1);
  */
 
 // Bootstrap globals, set by include/common.inc.php.
+/**
+ * @var array<string, mixed> $conf
+ * @var \Logger $logger
+ * @var array<string, mixed> $page
+ * @var \Template $template
+ * @var array<string, mixed> $user
+ */
 global $conf, $logger, $page, $template, $user;
+
+// $user['id'] is always numeric (DB primary key, or $conf['guest_id']);
+// narrow once here and reuse for every raw-SQL concatenation below.
+$user_id = is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0;
 
 // $user['forbidden_categories'] including with USER_CACHE_CATEGORIES_TABLE
 $query = '
@@ -31,7 +42,7 @@ SELECT SQL_CALC_FOUND_ROWS
   FROM ' . CATEGORIES_TABLE . ' c
     INNER JOIN ' . USER_CACHE_CATEGORIES_TABLE . ' ucc
     ON id = cat_id
-    AND user_id = ' . $user['id'] . '
+    AND user_id = ' . $user_id . '
   WHERE count_images > 0
 ';
 
@@ -39,8 +50,14 @@ if ($page['section'] == 'recent_cats') {
     $query .= '
   AND ' . get_recent_photos_sql('date_last');
 } else {
+    // $page['category'] is a get_cat_info()-shaped array<string, mixed> when
+    // set (see include/section_init.inc.php's own is_array() re-narrowing of
+    // this same global); its 'id' is the categories table primary key.
+    $page_category = $page['category'] ?? null;
+    $page_category_id = is_array($page_category) ? ($page_category['id'] ?? null) : null;
+    $page_category_id = is_numeric($page_category_id) ? (int) $page_category_id : 0;
     $query .= '
-  AND id_uppercat ' . (! isset($page['category']) ? 'is NULL' : '= ' . $page['category']['id']);
+  AND id_uppercat ' . (! isset($page['category']) ? 'is NULL' : '= ' . $page_category_id);
 }
 
 $query .= '
@@ -61,8 +78,13 @@ if ($page['section'] != 'recent_cats') {
   ORDER BY `rank`';
 }
 
+// $conf['nb_categories_page']/$page['startcat'] are read from loosely-typed
+// global bags; narrow once here and reuse for the navigation bar below.
+$nb_categories_page = is_numeric($conf['nb_categories_page'] ?? null) ? (int) $conf['nb_categories_page'] : 0;
+$startcat = is_numeric($page['startcat'] ?? null) ? (int) $page['startcat'] : 0;
+
 $query .= '
-  LIMIT ' . $conf['nb_categories_page'] . ' OFFSET ' . ($page['startcat'] ?? 0) . '
+  LIMIT ' . $nb_categories_page . ' OFFSET ' . $startcat . '
 ;';
 
 $filtered_query = trigger_change('loc_begin_index_category_thumbnails_query', $query);
@@ -79,6 +101,7 @@ $categories = [];
 $category_ids = [];
 $image_ids = [];
 $user_representative_updates_for = [];
+$dates_of_category = [];
 
 while ($row = pwg_db_fetch_assoc($result)) {
     $cat_id = $row['id'];
@@ -100,7 +123,7 @@ while ($row = pwg_db_fetch_assoc($result)) {
         $query = '
 SELECT representative_picture_id
   FROM ' . CATEGORIES_TABLE . ' INNER JOIN ' . USER_CACHE_CATEGORIES_TABLE . '
-  ON id = cat_id and user_id = ' . $user['id'] . '
+  ON id = cat_id and user_id = ' . $user_id . '
   WHERE uppercats LIKE \'' . $row['uppercats'] . ',%\'
     AND representative_picture_id IS NOT NULL'
   . get_sql_condition_FandF(
@@ -118,6 +141,13 @@ SELECT representative_picture_id
             assert($subrow !== null);
             [$image_id] = $subrow;
         }
+    }
+
+    // every branch above sets either a raw numeric DB value (string) or the
+    // int|null return of get_random_image_in_category(); normalize to a
+    // numeric string once so $image_ids stays string-castable for implode()
+    if (isset($image_id)) {
+        $image_id = is_numeric($image_id) ? (string) $image_id : null;
     }
 
     if (isset($image_id)) {
@@ -175,7 +205,7 @@ if (count($categories) > 0) {
     $query = '
 SELECT *
   FROM ' . IMAGES_TABLE . '
-  WHERE id IN (' . implode(',', $image_ids) . ')
+  WHERE id IN (' . implode(',', array_filter($image_ids, 'is_string')) . ')
 ;';
     $result = pwg_query($query);
     while ($row = pwg_db_fetch_assoc($result)) {
@@ -206,7 +236,13 @@ SELECT *
                     }
 
                     if ($conf['representative_cache_on_level']) {
-                        $user_representative_updates_for[$category['id']] = $image_id;
+                        // 'id' is the categories table primary key (NOT NULL,
+                        // always a string here, see is_string($cat_id) guard
+                        // above); narrow defensively for the array key type
+                        $category_id_for_update = $category['id'];
+                        if (is_string($category_id_for_update)) {
+                            $user_representative_updates_for[$category_id_for_update] = $image_id;
+                        }
                     }
 
                     $category['representative_picture_id'] = $image_id;
@@ -246,7 +282,7 @@ if (count($user_representative_updates_for)) {
     foreach ($user_representative_updates_for as $cat_id => $image_id) {
         $updates[] =
           [
-              'user_id' => $user['id'],
+              'user_id' => $user_id,
               'cat_id' => $cat_id,
               'user_representative_picture_id' => $image_id,
           ];
@@ -289,12 +325,28 @@ if (count($categories) > 0) {
             : (is_string($category['name']) ? $category['name'] : '');
 
         if ($page['section'] == 'recent_cats') {
-            $name = get_cat_display_name_cache($category['uppercats'], null);
+            $category_uppercats = $category['uppercats'];
+            $category_uppercats = is_string($category_uppercats) ? $category_uppercats : '';
+            $name = get_cat_display_name_cache($category_uppercats, null);
         } else {
             $name = $category['name'];
         }
 
-        $representative_infos = $infos_of_image[$category['representative_picture_id']];
+        // 'representative_picture_id' is always a numeric string or int by
+        // this point (see the normalization in the loops above); narrow
+        // defensively to satisfy the array key type
+        $representative_picture_id = $category['representative_picture_id'];
+        $representative_picture_id = (is_string($representative_picture_id) or is_int($representative_picture_id))
+            ? $representative_picture_id
+            : 0;
+        $representative_infos = $infos_of_image[$representative_picture_id] ?? null;
+
+        $cat_nb_images = $category['nb_images'];
+        $cat_nb_images = is_numeric($cat_nb_images) ? (int) $cat_nb_images : 0;
+        $cat_count_images = $category['count_images'];
+        $cat_count_images = is_numeric($cat_count_images) ? (int) $cat_count_images : 0;
+        $cat_count_categories = $category['count_categories'];
+        $cat_count_categories = is_numeric($cat_count_categories) ? (int) $cat_count_categories : 0;
 
         $tpl_var = array_merge($category, [
             'ID' => $category['id'] /* obsolete */,
@@ -307,9 +359,9 @@ if (count($categories) > 0) {
                 ]
             ),
             'CAPTION_NB_IMAGES' => get_display_images_count(
-                $category['nb_images'],
-                $category['count_images'],
-                $category['count_categories'],
+                $cat_nb_images,
+                $cat_count_images,
+                $cat_count_categories,
                 true,
                 '<br>'
             ),
@@ -324,13 +376,22 @@ if (count($categories) > 0) {
             'NAME' => $name,
         ]);
         if ($conf['index_new_icon']) {
-            $tpl_var['icon_ts'] = get_icon($category['max_date_last'], $category['is_child_date_last']);
+            $category_max_date_last = $category['max_date_last'];
+            $category_max_date_last = is_string($category_max_date_last) ? $category_max_date_last : '';
+            $category_is_child_date_last = $category['is_child_date_last'];
+            $category_is_child_date_last = is_bool($category_is_child_date_last) ? $category_is_child_date_last : false;
+            $tpl_var['icon_ts'] = get_icon($category_max_date_last, $category_is_child_date_last);
         }
 
         if ($conf['display_fromto']) {
-            if (isset($dates_of_category[$category['id']])) {
-                $from = $dates_of_category[$category['id']]['from'];
-                $to = $dates_of_category[$category['id']]['to'];
+            // 'id' is the categories table primary key (NOT NULL, always a
+            // string here); narrow defensively for the array key type
+            $category_id_key = $category['id'];
+            $category_id_key = (is_string($category_id_key) or is_int($category_id_key)) ? $category_id_key : 0;
+            if (isset($dates_of_category[$category_id_key])) {
+                $from = $dates_of_category[$category_id_key]['from'];
+                $to = $dates_of_category[$category_id_key]['to'];
+                $to = is_string($to) ? $to : '';
 
                 if (! empty($from)) {
                     $tpl_var['INFO_DATES'] = format_fromto($from, $to);
@@ -356,12 +417,13 @@ if (count($categories) > 0) {
 
     // navigation bar
     $page['cats_navigation_bar'] = [];
-    if ($page['total_categories'] > $conf['nb_categories_page']) {
+    $total_categories = is_numeric($page['total_categories'] ?? null) ? (int) $page['total_categories'] : 0;
+    if ($total_categories > $nb_categories_page) {
         $page['cats_navigation_bar'] = create_navigation_bar(
             duplicate_index_url([], ['startcat']),
-            $page['total_categories'],
-            $page['startcat'],
-            $conf['nb_categories_page'],
+            $total_categories,
+            $startcat,
+            $nb_categories_page,
             true,
             'startcat'
         );

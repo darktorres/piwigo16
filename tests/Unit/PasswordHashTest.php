@@ -81,6 +81,7 @@ test('pwg_password_verify accepts a legacy phpass hash without touching the DB',
 test('pwg_password_verify rehashes a legacy phpass hash when a user_id is given', function (): void {
     global $conf;
     $conf ??= [];
+    /** @var array<string, mixed> $conf */
     $conf['external_authentification'] = false;
 
     $phpassHash = '$P$5testsalt/.6ES3kLR5L.kwZkBtHpD/';

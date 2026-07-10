@@ -21,7 +21,9 @@ declare(strict_types=1);
  */
 function get_cat_display_name($cat_informations, $url = ''): string
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
+    $level_separator = is_string($conf['level_separator']) ? $conf['level_separator'] : ' / ';
 
     // $output = '<a href="'.get_absolute_root_url().$conf['home_page'].'">'.l10n('Home').'</a>';
     $output = '';
@@ -43,7 +45,7 @@ function get_cat_display_name($cat_informations, $url = ''): string
         if ($is_first) {
             $is_first = false;
         } else {
-            $output .= $conf['level_separator'];
+            $output .= $level_separator;
         }
 
         if (! isset($url)) {
@@ -83,7 +85,12 @@ function get_cat_display_name_cache(
     $link_class = null,
     $auth_key = null
 ): string {
+    /**
+     * @var array<string, mixed> $cache
+     * @var array<string, mixed> $conf
+     */
     global $cache, $conf;
+    $level_separator = is_string($conf['level_separator']) ? $conf['level_separator'] : ' / ';
 
     $add_url_params = [];
     if (isset($auth_key)) {
@@ -97,6 +104,10 @@ SELECT id, name, permalink
 ;';
         $cache['cat_names'] = query2array($query, 'id');
     }
+    // Narrowed once here (fix pattern #7): $cache is array<string, mixed>,
+    // proving $cache is array-like does not prove $cache['cat_names'] is
+    // also array-like, since the declared value type is mixed.
+    $cat_names = is_array($cache['cat_names']) ? $cache['cat_names'] : [];
 
     $output = '';
     if ($single_link) {
@@ -110,7 +121,8 @@ SELECT id, name, permalink
     }
     $is_first = true;
     foreach (explode(',', $uppercats) as $category_id) {
-        $cat = $cache['cat_names'][$category_id];
+        $cat = $cat_names[$category_id] ?? null;
+        $cat = is_array($cat) ? $cat : [];
 
         $cat['name'] = trigger_change(
             'render_category_name',
@@ -127,7 +139,7 @@ SELECT id, name, permalink
         if ($is_first) {
             $is_first = false;
         } else {
-            $output .= '<span>' . $conf['level_separator'] . '</span>';
+            $output .= '<span>' . $level_separator . '</span>';
         }
 
         if (! isset($url) or $single_link) {
@@ -240,18 +252,32 @@ function name_compare(array $a, array $b): int
  */
 function tag_alpha_compare(array $a, array $b): int
 {
+    /** @var array<string, mixed> $cache */
     global $cache;
 
     $name_a = is_string($a['name'] ?? null) ? $a['name'] : '';
     $name_b = is_string($b['name'] ?? null) ? $b['name'] : '';
 
+    // Narrowed once here (fix pattern #7): $cache is array<string, mixed>,
+    // so $cache[__FUNCTION__] is still mixed even after $cache is typed.
+    $transliterated = is_array($cache[__FUNCTION__] ?? null) ? $cache[__FUNCTION__] : [];
+
     foreach ([$name_a, $name_b] as $tag_name) {
-        if (! isset($cache[__FUNCTION__][$tag_name])) {
-            $cache[__FUNCTION__][$tag_name] = pwg_transliterate($tag_name);
+        // pwg_transliterate() always returns string, so a cached entry that
+        // isn't a string was never written by this loop and must be
+        // (re)computed -- a real runtime guard equivalent to the original
+        // isset() check (fix pattern #6).
+        if (! is_string($transliterated[$tag_name] ?? null)) {
+            $transliterated[$tag_name] = pwg_transliterate($tag_name);
         }
     }
 
-    return strcmp((string) $cache[__FUNCTION__][$name_a], (string) $cache[__FUNCTION__][$name_b]);
+    $cache[__FUNCTION__] = $transliterated;
+
+    $translit_a = is_string($transliterated[$name_a] ?? null) ? $transliterated[$name_a] : pwg_transliterate($name_a);
+    $translit_b = is_string($transliterated[$name_b] ?? null) ? $transliterated[$name_b] : pwg_transliterate($name_b);
+
+    return strcmp($translit_a, $translit_b);
 }
 
 /**
@@ -403,9 +429,13 @@ function fatal_error($msg, $title = null, $show_trace = true): never
  */
 function get_tags_content_title(): string
 {
+    /** @var array<string, mixed> $page */
     global $page;
+
+    $tags = is_array($page['tags'] ?? null) ? $page['tags'] : [];
+
     $title = '<a href="' . get_root_url() . 'tags.php" title="' . l10n('display available tags') . '">'
-      . l10n(count($page['tags']) > 1 ? 'Tags' : 'Tag')
+      . l10n(count($tags) > 1 ? 'Tags' : 'Tag')
       . '</a> ';
 
     return $title;
@@ -416,13 +446,20 @@ function get_tags_content_title(): string
  */
 function get_combined_categories_content_title(): string
 {
+    /** @var array<string, mixed> $page */
     global $page;
 
     $title = l10n('Albums') . ' ';
 
+    // Narrowed once here (fix pattern #7): $page is array<string, mixed>,
+    // so $page['combined_categories'] is still mixed even after $page is
+    // typed.
+    $combined_categories = is_array($page['combined_categories'] ?? null) ? $page['combined_categories'] : [];
     $is_first = true;
-    $all_categories = array_merge([$page['category']], $page['combined_categories']);
+    $all_categories = array_merge([$page['category']], $combined_categories);
     foreach ($all_categories as $idx => $category) {
+        $category = is_array($category) ? $category : [];
+        /** @var array<string, mixed> $category */
         $title .= $is_first ? '' : ' + ';
         $is_first = false;
 
@@ -542,7 +579,6 @@ function register_default_menubar_blocks(array $menu_ref_arr): void
  * Returns 'name' if exists of name from 'file'.
  *
  * @param array<string, mixed> $info at least file or name
- * @return string
  */
 function render_element_name(array $info): string
 {
@@ -561,7 +597,6 @@ function render_element_name(array $info): string
  *
  * @param array<string, mixed> $info at least comment
  * @param string $param used to identify the trigger
- * @return string
  */
 function render_element_description(array $info, $param = ''): string
 {
@@ -581,10 +616,10 @@ function render_element_description(array $info, $param = ''): string
  * @param array<string, mixed> $info hit, rating_score, nb_comments
  * @param string $title
  * @param string $comment
- * @return string
  */
 function get_thumbnail_title(array $info, $title, $comment = ''): string
 {
+    /** @var array<string, mixed> $conf */
     global $conf, $user;
 
     $details = [];
@@ -637,11 +672,13 @@ function get_src_image_url_protection_handler($url, $src_image): string
  */
 function get_element_url_protection_handler($url, array $infos)
 {
+    /** @var array<string, mixed> $conf */
     global $conf;
     if ($conf['original_url_protection'] == 'images') {// protect only images and not other file types (for example large movies that we don't want to send through our file proxy)
         $path = $infos['path'] ?? null;
         $ext = get_extension(is_string($path) ? $path : null);
-        if (! in_array($ext, $conf['picture_ext'])) {
+        $picture_ext = is_array($conf['picture_ext'] ?? null) ? $conf['picture_ext'] : [];
+        if (! in_array($ext, $picture_ext)) {
             return $url;
         }
     }
@@ -655,21 +692,31 @@ function get_element_url_protection_handler($url, array $infos)
  */
 function flush_page_messages(): void
 {
+    /**
+     * @var \Template $template
+     * @var array<string, mixed> $page
+     */
     global $template, $page;
     if ($template->get_template_vars('page_refresh') === null) {
         foreach (['errors', 'infos', 'warnings', 'messages'] as $mode) {
+            // Narrowed once here (fix pattern #7): $page is
+            // array<string, mixed>, so $page[$mode] is still mixed even
+            // after $page is typed.
+            $page_messages = is_array($page[$mode] ?? null) ? $page[$mode] : [];
+
             // Every writer of $_SESSION['page_*'] elsewhere in the codebase
             // (comments.php, picture.php, admin/batch_manager*.php, ...)
             // guards with is_array() before appending, so this mirrors that
             // same invariant instead of trusting the superglobal's mixed
             // element type.
             if (isset($_SESSION['page_' . $mode]) and is_array($_SESSION['page_' . $mode])) {
-                $page[$mode] = array_merge($page[$mode], $_SESSION['page_' . $mode]);
+                $page_messages = array_merge($page_messages, $_SESSION['page_' . $mode]);
                 unset($_SESSION['page_' . $mode]);
             }
+            $page[$mode] = $page_messages;
 
-            if (! empty($page[$mode])) {
-                $template->assign($mode, $page[$mode]);
+            if (! empty($page_messages)) {
+                $template->assign($mode, $page_messages);
             }
         }
     }

@@ -32,7 +32,18 @@ if (! defined('PHPWG_ROOT_PATH')) {
 }
 
 // Bootstrap globals, set by include/common.inc.php.
-global $template;
+/**
+ * @var array<string, mixed> $conf
+ * @var array<string, mixed> $page
+ * @var \Template $template
+ */
+global $conf, $page, $template;
+
+// $page['infos'] is always initialized to an array by common.inc.php, but
+// that isn't visible across the include() boundary -- narrow it once here
+// so the $page['infos'][] = ... append below type-checks.
+$page['infos'] = is_array($page['infos'] ?? null) ? $page['infos'] : [];
+
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 check_status(ACCESS_ADMINISTRATOR);
 

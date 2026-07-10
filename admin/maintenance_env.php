@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Admin\Integrity\check_integrity;
 use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Image\ImageStdParams;
 
@@ -173,7 +174,6 @@ DELETE
 
     case 'c13y':
 
-        include_once PHPWG_ROOT_PATH . 'admin/include/check_integrity.class.php';
         $c13y = new check_integrity();
         $c13y->maintenance();
         break;

@@ -9,6 +9,9 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Admin\Integrity\c13y_internal;
+use Piwigo\Admin\Integrity\check_integrity;
+
 if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
@@ -35,8 +38,6 @@ if (! is_array($page['warnings'] ?? null)) {
 }
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-include_once PHPWG_ROOT_PATH . 'admin/include/check_integrity.class.php';
-include_once PHPWG_ROOT_PATH . 'admin/include/c13y_internal.class.php';
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |

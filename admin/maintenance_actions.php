@@ -10,6 +10,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\Image\pwg_image;
+use Piwigo\Admin\Integrity\check_integrity;
 use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Image\ImageStdParams;
 
@@ -186,7 +187,6 @@ DELETE
 
     case 'c13y':
 
-        include_once PHPWG_ROOT_PATH . 'admin/include/check_integrity.class.php';
         $c13y = new check_integrity();
         $c13y->maintenance();
         $page['infos'][] = sprintf('%s : %s', l10n('Reinitialize check integrity'), l10n('action successfully performed.'));

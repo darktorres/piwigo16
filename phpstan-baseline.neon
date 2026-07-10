@@ -447,78 +447,6 @@ parameters:
 		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
-			count: 2
-			path: admin/include/c13y_internal.class.php
-
-		-
-			rawMessage: 'Loose comparison via "!=" between int and int is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 1
-			path: admin/include/c13y_internal.class.php
-
-		-
-			rawMessage: 'Loose comparison via "!=" between string|null and string is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 1
-			path: admin/include/c13y_internal.class.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between int<min, -1>|int<1, max> and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 6
-			path: admin/include/c13y_internal.class.php
-
-		-
-			rawMessage: 'Out of 1741 possible param types, only 979 - 56.2 %% actually have it. Add more param types to get over 99 %%'
-			identifier: typeCoverage.paramTypeCoverage
-			count: 5
-			path: admin/include/c13y_internal.class.php
-
-		-
-			rawMessage: 'Out of 609 possible return types, only 561 - 92.1 %% actually have it. Add more return types to get over 99 %%'
-			identifier: typeCoverage.returnTypeCoverage
-			count: 1
-			path: admin/include/c13y_internal.class.php
-
-		-
-			rawMessage: 'Array has 2 duplicate keys with value ''correction_error_fct'' (''correction_error_fct'', ''correction_error_fct'').'
-			identifier: array.duplicateKey
-			count: 1
-			path: admin/include/check_integrity.class.php
-
-		-
-			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
-			identifier: function.strict
-			count: 3
-			path: admin/include/check_integrity.class.php
-
-		-
-			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
-			identifier: empty.notAllowed
-			count: 3
-			path: admin/include/check_integrity.class.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: admin/include/check_integrity.class.php
-
-		-
-			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
-			identifier: typeCoverage.propertyTypeCoverage
-			count: 3
-			path: admin/include/check_integrity.class.php
-
-		-
-			rawMessage: 'Out of 1741 possible param types, only 979 - 56.2 %% actually have it. Add more param types to get over 99 %%'
-			identifier: typeCoverage.paramTypeCoverage
-			count: 5
-			path: admin/include/check_integrity.class.php
-
-		-
-			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
-			identifier: empty.notAllowed
 			count: 1
 			path: admin/include/configuration_sizes_process.inc.php
 
@@ -4775,6 +4703,78 @@ parameters:
 			identifier: method.dynamicName
 			count: 1
 			path: src/Piwigo/Admin/Image/pwg_image.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 2
+			path: src/Piwigo/Admin/Integrity/c13y_internal.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: src/Piwigo/Admin/Integrity/c13y_internal.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string|null and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: src/Piwigo/Admin/Integrity/c13y_internal.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<min, -1>|int<1, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 6
+			path: src/Piwigo/Admin/Integrity/c13y_internal.php
+
+		-
+			rawMessage: 'Out of 1741 possible param types, only 979 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 5
+			path: src/Piwigo/Admin/Integrity/c13y_internal.php
+
+		-
+			rawMessage: 'Out of 609 possible return types, only 561 - 92.1 %% actually have it. Add more return types to get over 99 %%'
+			identifier: typeCoverage.returnTypeCoverage
+			count: 1
+			path: src/Piwigo/Admin/Integrity/c13y_internal.php
+
+		-
+			rawMessage: 'Array has 2 duplicate keys with value ''correction_error_fct'' (''correction_error_fct'', ''correction_error_fct'').'
+			identifier: array.duplicateKey
+			count: 1
+			path: src/Piwigo/Admin/Integrity/check_integrity.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 3
+			path: src/Piwigo/Admin/Integrity/check_integrity.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 3
+			path: src/Piwigo/Admin/Integrity/check_integrity.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Admin/Integrity/check_integrity.php
+
+		-
+			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 3
+			path: src/Piwigo/Admin/Integrity/check_integrity.php
+
+		-
+			rawMessage: 'Out of 1741 possible param types, only 979 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 5
+			path: src/Piwigo/Admin/Integrity/check_integrity.php
 
 		-
 			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'

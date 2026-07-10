@@ -50,7 +50,7 @@ DELETE
         $cat_id = $token_parts[0];
         $rank = $token_parts[1] ?? 'auto';
 
-        if (! preg_match('/^\d+$/', $cat_id)) {
+        if (! (bool) preg_match('/^\d+$/', $cat_id)) {
             continue;
         }
 
@@ -199,9 +199,9 @@ function merge_chunks(string $output_filepath, string $original_sum, string $typ
     $pattern = '/' . $original_sum . '-' . $type . '/';
     $chunks = [];
 
-    if ($handle = opendir($upload_dir)) {
+    if ((bool) ($handle = opendir($upload_dir))) {
         while (false !== ($file = readdir($handle))) {
-            if (preg_match($pattern, $file)) {
+            if ((bool) preg_match($pattern, $file)) {
                 $logger->debug($file, 'WS');
                 $chunks[] = $upload_dir . '/' . $file;
             }
@@ -224,7 +224,7 @@ function merge_chunks(string $output_filepath, string $original_sum, string $typ
             $logger->debug('[merge_chunks] memory_get_usage on chunk ' . ++$i . ': ' . memory_get_usage(), 'WS');
         }
 
-        if (! file_put_contents($output_filepath, $string, FILE_APPEND)) {
+        if (! (bool) file_put_contents($output_filepath, $string, FILE_APPEND)) {
             return new PwgError(500, '[merge_chunks] error while writting chunks for ' . $output_filepath);
         }
 
@@ -261,9 +261,9 @@ function remove_chunks($original_sum, $type): void
     $pattern = '/' . $original_sum . '-' . $type . '/';
     $chunks = [];
 
-    if ($handle = opendir($upload_dir)) {
+    if ((bool) ($handle = opendir($upload_dir))) {
         while (false !== ($file = readdir($handle))) {
-            if (preg_match($pattern, $file)) {
+            if ((bool) preg_match($pattern, $file)) {
                 $chunks[] = $upload_dir . '/' . $file;
             }
         }
@@ -295,7 +295,7 @@ function ws_images_addComment(array $params, PwgServer $service): \PwgError|arra
     /** @var array<string, mixed> $conf */
     global $conf;
 
-    if (! $conf['activate_comments']) {
+    if (! (bool) $conf['activate_comments']) {
         return new PwgError(403, 'Comments are disabled');
     }
 
@@ -315,13 +315,13 @@ SELECT DISTINCT image_id
       ) . '
 ;';
 
-    if (! pwg_db_num_rows(pwg_query($query))) {
+    if (! (bool) pwg_db_num_rows(pwg_query($query))) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid image_id');
     }
 
     $comm = [
-        'author' => trim((string) $params['author']),
-        'content' => trim((string) $params['content']),
+        'author' => trim($params['author']),
+        'content' => trim($params['content']),
         'image_id' => $params['image_id'],
     ];
 
@@ -436,7 +436,7 @@ SELECT id, name, permalink, uppercats, global_rank, commentable
 
     $is_commentable = false;
     $related_categories = [];
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         if ($row['commentable'] == 'true') {
             $is_commentable = true;
         }
@@ -543,22 +543,22 @@ SELECT id, date, author, content
   FROM ' . COMMENTS_TABLE . '
   WHERE ' . $where_comments . '
   ORDER BY date
-  LIMIT ' . (int) $params['comments_per_page'] . '
-  OFFSET ' . (int) ($params['comments_per_page'] * $params['comments_page']) . '
+  LIMIT ' . $params['comments_per_page'] . '
+  OFFSET ' . ($params['comments_per_page'] * $params['comments_page']) . '
 ;';
         $result = pwg_query($query);
 
-        while ($row = pwg_db_fetch_assoc($result)) {
+        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
             $row['id'] = (int) $row['id'];
             $related_comments[] = $row;
         }
     }
 
     $comment_post_data = null;
-    if ($conf['activate_comments'] and
+    if ((bool) $conf['activate_comments'] and
         $is_commentable and
         (! is_a_guest()
-          or $conf['comments_forall']
+          or (bool) $conf['comments_forall']
         )
     ) {
         $username = $user['username'];
@@ -709,7 +709,7 @@ function ws_images_search(array $params, PwgServer $service): array
         )
     );
 
-    if (count($image_ids)) {
+    if ((bool) count($image_ids)) {
         $query = '
 SELECT *
   FROM ' . IMAGES_TABLE . '
@@ -719,7 +719,7 @@ SELECT *
         $image_ids = array_flip($image_ids);
         $favorite_ids = get_user_favorites();
 
-        while ($row = pwg_db_fetch_assoc($result)) {
+        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
             $image = [];
             assert($row['id'] !== null);
             $image['is_favorite'] = isset($favorite_ids[$row['id']]);
@@ -816,7 +816,7 @@ function ws_images_filteredSearch_create(array $params, PwgServer $service): \Pw
         if (! isset($params['allwords_mode'])) {
             $params['allwords_mode'] = 'AND';
         }
-        if (! preg_match('/^(OR|AND)$/', (string) $params['allwords_mode'])) {
+        if (! (bool) preg_match('/^(OR|AND)$/', $params['allwords_mode'])) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter allwords_mode');
         }
         $search['fields']['allwords']['mode'] = $params['allwords_mode'];
@@ -837,7 +837,7 @@ function ws_images_filteredSearch_create(array $params, PwgServer $service): \Pw
 
     if (isset($params['tags'])) {
         foreach ($params['tags'] as $tag_id) {
-            if (! preg_match('/^\d+$/', (string) $tag_id)) {
+            if (! (bool) preg_match('/^\d+$/', (string) $tag_id)) {
                 return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter tags');
             }
         }
@@ -845,7 +845,7 @@ function ws_images_filteredSearch_create(array $params, PwgServer $service): \Pw
         if (! isset($params['tags_mode'])) {
             $params['tags_mode'] = 'AND';
         }
-        if (! preg_match('/^(OR|AND)$/', (string) $params['tags_mode'])) {
+        if (! (bool) preg_match('/^(OR|AND)$/', $params['tags_mode'])) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter tags_mode');
         }
 
@@ -857,7 +857,7 @@ function ws_images_filteredSearch_create(array $params, PwgServer $service): \Pw
 
     if (isset($params['categories'])) {
         foreach ($params['categories'] as $cat_id) {
-            if (! preg_match('/^\d+$/', (string) $cat_id)) {
+            if (! (bool) preg_match('/^\d+$/', (string) $cat_id)) {
                 return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter categories');
             }
         }
@@ -872,7 +872,7 @@ function ws_images_filteredSearch_create(array $params, PwgServer $service): \Pw
         $authors = [];
 
         foreach ($params['authors'] as $author) {
-            $authors[] = strip_tags((string) $author);
+            $authors[] = strip_tags($author);
         }
 
         $search['fields']['author'] = [
@@ -883,7 +883,7 @@ function ws_images_filteredSearch_create(array $params, PwgServer $service): \Pw
 
     if (isset($params['filetypes'])) {
         foreach ($params['filetypes'] as $ext) {
-            if (! preg_match('/^[a-z0-9]+$/i', (string) $ext)) {
+            if (! (bool) preg_match('/^[a-z0-9]+$/i', $ext)) {
                 return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter filetypes');
             }
         }
@@ -893,7 +893,7 @@ function ws_images_filteredSearch_create(array $params, PwgServer $service): \Pw
 
     if (isset($params['added_by'])) {
         foreach ($params['added_by'] as $user_id) {
-            if (! preg_match('/^\d+$/', (string) $user_id)) {
+            if (! (bool) preg_match('/^\d+$/', (string) $user_id)) {
                 return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter added_by');
             }
         }
@@ -902,7 +902,7 @@ function ws_images_filteredSearch_create(array $params, PwgServer $service): \Pw
     }
 
     if (isset($params['date_posted_preset'])) {
-        if (! preg_match('/^(24h|7d|30d|3m|6m|custom|)$/', (string) $params['date_posted_preset'])) {
+        if (! (bool) preg_match('/^(24h|7d|30d|3m|6m|custom|)$/', $params['date_posted_preset'])) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter date_posted_preset');
         }
 
@@ -921,20 +921,20 @@ function ws_images_filteredSearch_create(array $params, PwgServer $service): \Pw
         foreach ($params['date_posted_custom'] as $date) {
             $correct_format = false;
 
-            $ymd = substr((string) $date, 0, 1);
+            $ymd = substr($date, 0, 1);
             if ($ymd == 'y') {
-                if (preg_match('/^y(\d{4})$/', (string) $date, $matches)) {
+                if ((bool) preg_match('/^y(\d{4})$/', $date, $matches)) {
                     $correct_format = true;
                 }
             } elseif ($ymd == 'm') {
-                if (preg_match('/^m(\d{4}-\d{2})$/', (string) $date, $matches)) {
+                if ((bool) preg_match('/^m(\d{4}-\d{2})$/', $date, $matches)) {
                     [$year, $month] = explode('-', $matches[1]);
                     if ($month >= 1 and $month <= 12) {
                         $correct_format = true;
                     }
                 }
             } elseif ($ymd == 'd') {
-                if (preg_match('/^d(\d{4}-\d{2}-\d{2})$/', (string) $date, $matches)) {
+                if ((bool) preg_match('/^d(\d{4}-\d{2}-\d{2})$/', $date, $matches)) {
                     [$year, $month, $day] = explode('-', $matches[1]);
                     if ($month >= 1 and $month <= 12 and $day >= 1 and $day <= cal_days_in_month(CAL_GREGORIAN, (int) $month, (int) $year)) {
                         $correct_format = true;
@@ -951,7 +951,7 @@ function ws_images_filteredSearch_create(array $params, PwgServer $service): \Pw
     }
 
     if (isset($params['date_created_preset'])) {
-        if (! preg_match('/^(7d|30d|3m|6m|12m|custom|)$/', (string) $params['date_created_preset'])) {
+        if (! (bool) preg_match('/^(7d|30d|3m|6m|12m|custom|)$/', $params['date_created_preset'])) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter date_created_preset');
         }
 
@@ -970,20 +970,20 @@ function ws_images_filteredSearch_create(array $params, PwgServer $service): \Pw
         foreach ($params['date_created_custom'] as $date) {
             $correct_format = false;
 
-            $ymd = substr((string) $date, 0, 1);
+            $ymd = substr($date, 0, 1);
             if ($ymd == 'y') {
-                if (preg_match('/^y(\d{4})$/', (string) $date, $matches)) {
+                if ((bool) preg_match('/^y(\d{4})$/', $date, $matches)) {
                     $correct_format = true;
                 }
             } elseif ($ymd == 'm') {
-                if (preg_match('/^m(\d{4}-\d{2})$/', (string) $date, $matches)) {
+                if ((bool) preg_match('/^m(\d{4}-\d{2})$/', $date, $matches)) {
                     [$year, $month] = explode('-', $matches[1]);
                     if ($month >= 1 and $month <= 12) {
                         $correct_format = true;
                     }
                 }
             } elseif ($ymd == 'd') {
-                if (preg_match('/^d(\d{4}-\d{2}-\d{2})$/', (string) $date, $matches)) {
+                if ((bool) preg_match('/^d(\d{4}-\d{2}-\d{2})$/', $date, $matches)) {
                     [$year, $month, $day] = explode('-', $matches[1]);
                     if ($month >= 1 and $month <= 12 and $day >= 1 and $day <= cal_days_in_month(CAL_GREGORIAN, (int) $month, (int) $year)) {
                         $correct_format = true;
@@ -1001,7 +1001,7 @@ function ws_images_filteredSearch_create(array $params, PwgServer $service): \Pw
 
     if (isset($params['ratios'])) {
         foreach ($params['ratios'] as $ext) {
-            if (! preg_match('/^[a-z0-9]+$/i', (string) $ext)) {
+            if (! (bool) preg_match('/^[a-z0-9]+$/i', $ext)) {
                 return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter ratios');
             }
         }
@@ -1015,7 +1015,7 @@ function ws_images_filteredSearch_create(array $params, PwgServer $service): \Pw
         ];
     }
 
-    if ($conf['rate'] and isset($params['ratings'])) {
+    if ((bool) $conf['rate'] and isset($params['ratings'])) {
         $search['fields']['ratings'] = $params['ratings'];
     }
 
@@ -1075,7 +1075,7 @@ function ws_images_setPrivacyLevel(array $params, PwgServer $service): \PwgError
 
     $query = '
 UPDATE ' . IMAGES_TABLE . '
-  SET level=' . (int) $params['level'] . '
+  SET level=' . $params['level'] . '
   WHERE id IN (' . implode(',', $params['image_id']) . ')
 ;';
     $result = pwg_query($query);
@@ -1083,7 +1083,7 @@ UPDATE ' . IMAGES_TABLE . '
     pwg_activity('photo', $params['image_id'], 'edit');
 
     $affected_rows = pwg_db_changes();
-    if ($affected_rows) {
+    if ((bool) $affected_rows) {
         include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
         invalidate_user_cache();
     }
@@ -1250,11 +1250,11 @@ function ws_images_add_chunk(array $params, PwgServer $service): ?\PwgError
         $params['position']
     );
 
-    $logger->debug('[ws_images_add_chunk] data length : ' . strlen((string) $params['data']), 'WS');
+    $logger->debug('[ws_images_add_chunk] data length : ' . strlen($params['data']), 'WS');
 
     $bytes_written = file_put_contents(
         $upload_dir . '/' . $filename,
-        base64_decode((string) $params['data'])
+        base64_decode($params['data'])
     );
 
     if ($bytes_written === false) {
@@ -1491,7 +1491,7 @@ SELECT COUNT(*)
     if (isset($params['categories'])) {
         ws_add_image_category_relations((int) $image_id, $params['categories']);
 
-        if (preg_match('/^\d+/', (string) $params['categories'], $matches)) {
+        if ((bool) preg_match('/^\d+/', $params['categories'], $matches)) {
             $category_id = $matches[0];
 
             $query = '
@@ -1510,7 +1510,7 @@ SELECT id, name, permalink
     // and now, let's create tag associations
     if (isset($params['tag_ids']) and ! empty($params['tag_ids'])) {
         set_tags(
-            explode(',', (string) $params['tag_ids']),
+            explode(',', $params['tag_ids']),
             (int) $image_id
         );
     }
@@ -1631,7 +1631,7 @@ SELECT COUNT(*)
                 $tag_ids[] = tag_id_from_tag_name($tag_name);
             }
         } else {
-            $tag_names = preg_split('~(?<!\\\),~', (string) $params['tags']);
+            $tag_names = preg_split('~(?<!\\\),~', $params['tags']);
             if ($tag_names === false) {
                 throw new Exception('ws_images_addSimple(): preg_split() failed');
             }
@@ -1700,7 +1700,7 @@ function ws_images_upload(array $params, PwgServer $service): \PwgError|array|nu
 
     if (isset($params['format_of'])) {
         // are formats enabled?
-        if (! $conf['enable_formats']) {
+        if (! (bool) $conf['enable_formats']) {
             return new PwgError(401, 'formats are disabled');
         }
 
@@ -1708,7 +1708,7 @@ function ws_images_upload(array $params, PwgServer $service): \PwgError|array|nu
         $format_ext_list = is_array($format_ext_list) ? array_filter($format_ext_list, is_string(...)) : [];
 
         // We must check if the extension is in the authorized list.
-        if (preg_match('/\.(' . implode('|', $format_ext_list) . ')$/', (string) $params['name'], $matches)) {
+        if ((bool) preg_match('/\.(' . implode('|', $format_ext_list) . ')$/', (string) $params['name'], $matches)) {
             $format_ext = $matches[1];
         }
 
@@ -1759,7 +1759,7 @@ function ws_images_upload(array $params, PwgServer $service): \PwgError|array|nu
     // file_put_contents('/tmp/plupload.log', "[".date('c')."] ".__FUNCTION__.', '.$fileName.' '.($chunk+1).'/'.$chunks."\n", FILE_APPEND);
 
     // Open temp file
-    if (! $out = @fopen("{$filePath}.part", $chunks ? 'ab' : 'wb')) {
+    if (! (bool) ($out = @fopen("{$filePath}.part", ((bool) $chunks) ? 'ab' : 'wb'))) {
         die('{"jsonrpc" : "2.0", "error" : {"code": 102, "message": "Failed to open output stream."}, "id" : "id"}');
     }
 
@@ -1775,16 +1775,16 @@ function ws_images_upload(array $params, PwgServer $service): \PwgError|array|nu
         }
 
         // Read binary input stream and append it to temp file
-        if (! $in = @fopen($uploaded_file_tmp_name, 'rb')) {
+        if (! (bool) ($in = @fopen($uploaded_file_tmp_name, 'rb'))) {
             die('{"jsonrpc" : "2.0", "error" : {"code": 101, "message": "Failed to open input stream."}, "id" : "id"}');
         }
     } else {
-        if (! $in = @fopen('php://input', 'rb')) {
+        if (! (bool) ($in = @fopen('php://input', 'rb'))) {
             die('{"jsonrpc" : "2.0", "error" : {"code": 101, "message": "Failed to open input stream."}, "id" : "id"}');
         }
     }
 
-    while ($buff = fread($in, 4096)) {
+    while ((bool) ($buff = fread($in, 4096))) {
         fwrite($out, $buff);
     }
 
@@ -1793,7 +1793,7 @@ function ws_images_upload(array $params, PwgServer $service): \PwgError|array|nu
 
     $add_status = 'add';
     // Check if file has been uploaded
-    if (! $chunks || $chunk == $chunks - 1) {
+    if (! (bool) $chunks || $chunk == $chunks - 1) {
         // Strip the temp .part suffix off
         rename("{$filePath}.part", $filePath);
 
@@ -1941,7 +1941,7 @@ function ws_images_uploadAsync(array $params, PwgServer &$service): mixed
     // to authenticate the request (a much better time/place than here)
 
     // additional check for some parameters
-    if (! preg_match('/^[a-fA-F0-9]{32}$/', (string) $params['original_sum'])) {
+    if (! (bool) preg_match('/^[a-fA-F0-9]{32}$/', $params['original_sum'])) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid original_sum');
     }
 
@@ -2028,7 +2028,7 @@ SELECT COUNT(*)
 
     // create merged and open it for writing only
     $fp = fopen($output_filepath, 'wb');
-    if (! $fp) {
+    if (! (bool) $fp) {
         // unable to create file and open it for writing only
         $logger->error(__FUNCTION__ . ' ' . $chunkfile_path . ' unable to create merge file');
         return new PwgError(500, 'error while creating merged ' . $chunkfile_path);
@@ -2061,7 +2061,7 @@ SELECT COUNT(*)
         }
 
         $chunk_contents = file_get_contents($chunkfile_path);
-        if ($chunk_contents === false || ! fwrite($fp, $chunk_contents)) {
+        if ($chunk_contents === false || ! (bool) fwrite($fp, $chunk_contents)) {
             // could not append chunk
             $logger->error(__FUNCTION__ . ' error merging chunk ' . $chunkfile_path);
             flock($fp, LOCK_UN);
@@ -2112,7 +2112,7 @@ SELECT COUNT(*)
     // and now, let's create tag associations
     if (isset($params['tag_ids']) and ! empty($params['tag_ids'])) {
         set_tags(
-            explode(',', (string) $params['tag_ids']),
+            explode(',', $params['tag_ids']),
             (int) $image_id
         );
     }
@@ -2153,7 +2153,8 @@ SELECT COUNT(*)
 
     // delete chunks older than a week
     $now = time();
-    foreach (glob($upload_dir_conf . '/buffer/*.chunk') ?: [] as $file) {
+    $chunk_files = glob($upload_dir_conf . '/buffer/*.chunk');
+    foreach (($chunk_files !== false ? $chunk_files : []) as $file) {
         if (is_file($file)) {
             if ($now - filemtime($file) >= 60 * 60 * 24 * 7) { // 7 days
                 $logger->info(__FUNCTION__ . ' delete ' . $file);
@@ -2165,7 +2166,8 @@ SELECT COUNT(*)
     }
 
     // delete merged older than a week
-    foreach (glob($upload_dir_conf . '/buffer/*.merged') ?: [] as $file) {
+    $merged_files = glob($upload_dir_conf . '/buffer/*.merged');
+    foreach (($merged_files !== false ? $merged_files : []) as $file) {
         if (is_file($file)) {
             if ($now - filemtime($file) >= 60 * 60 * 24 * 7) { // 7 days
                 $logger->info(__FUNCTION__ . ' delete ' . $file);
@@ -2276,7 +2278,7 @@ function ws_images_formats_searchImage(array $params, PwgServer $service): array
 
     $logger->debug(__FUNCTION__, 'WS', $params);
 
-    $candidates = json_decode(stripslashes((string) $params['filename_list']), true);
+    $candidates = json_decode(stripslashes($params['filename_list']), true);
     if (! is_array($candidates)) {
         $candidates = [];
     }
@@ -2290,7 +2292,7 @@ SELECT
   FROM ' . IMAGES_TABLE . '
 ;';
     $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         assert($row['file'] !== null);
         $filename_wo_ext = get_filename_wo_extension($row['file']);
         @$unique_filenames_db[$filename_wo_ext][] = $row['id'];
@@ -2312,7 +2314,8 @@ SELECT
   FROM ' . IMAGE_FORMAT_TABLE . '
 ;';
     $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    $format_db = [];
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         assert($row['image_id'] !== null);
         $format_image_id = $row['image_id'];
         @$format_db[$format_image_id][] = $row['ext'];
@@ -2330,7 +2333,7 @@ SELECT
             continue;
         }
 
-        if (preg_match('/^(.*?)\.(' . implode('|', $format_ext_list) . ')$/', $format_filename, $matches)) {
+        if ((bool) preg_match('/^(.*?)\.(' . implode('|', $format_ext_list) . ')$/', $format_filename, $matches)) {
             $candidate_filename_wo_ext = $matches[1];
         }
 
@@ -2426,7 +2429,7 @@ SELECT
   WHERE format_id IN (' . implode(',', $format_ids) . ')
 ;';
     $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         assert($row['image_id'] !== null);
         assert($row['ext'] !== null);
 
@@ -2451,7 +2454,7 @@ SELECT
   WHERE id IN (' . implode(',', $image_ids) . ')
 ;';
     $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         assert($row['path'] !== null);
         if (url_is_remote($row['path'])) {
             continue;
@@ -2597,7 +2600,7 @@ SELECT *
 
     foreach ($info_columns as $key) {
         if (isset($params[$key])) {
-            if (! $conf['allow_html_descriptions'] or ! isset($params['pwg_token'])) {
+            if (! (bool) $conf['allow_html_descriptions'] or ! isset($params['pwg_token'])) {
                 $params[$key] = strip_tags((string) $params[$key], '<b><strong><em><i>');
             }
 
@@ -2627,7 +2630,7 @@ SELECT *
         }
 
         // prevent XSS, remove HTML tags
-        $update['file'] = strip_tags((string) $params['file']);
+        $update['file'] = strip_tags($params['file']);
         if (empty($update['file'])) {
             unset($update['file']);
         }
@@ -2659,10 +2662,10 @@ SELECT *
     if (isset($params['tag_ids'])) {
         $tag_ids = [];
 
-        foreach (explode(',', (string) $params['tag_ids']) as $candidate) {
+        foreach (explode(',', $params['tag_ids']) as $candidate) {
             $candidate = trim($candidate);
 
-            if (preg_match(PATTERN_ID, $candidate)) {
+            if ((bool) preg_match(PATTERN_ID, $candidate)) {
                 $tag_ids[] = $candidate;
             }
         }
@@ -2729,7 +2732,7 @@ function ws_images_delete(array $params, PwgServer $service): \PwgError|int
     if (! is_array($params['image_id'])) {
         $image_id_list = preg_split(
             '/[\s,;\|]/',
-            (string) $params['image_id'],
+            $params['image_id'],
             -1,
             PREG_SPLIT_NO_EMPTY
         );
@@ -2814,7 +2817,7 @@ function ws_images_uploadCompleted(array $params, PwgServer $service): \PwgError
     if (! is_array($params['image_id'])) {
         $image_id_list = preg_split(
             '/[\s,;\|]/',
-            (string) $params['image_id'],
+            $params['image_id'],
             -1,
             PREG_SPLIT_NO_EMPTY
         );
@@ -2914,7 +2917,7 @@ function ws_images_syncMetadata(array $params, PwgServer $service): \PwgError|ar
     if (! is_array($params['image_id'])) {
         $image_id_list = preg_split(
             '/[\s,;\|]/',
-            (string) $params['image_id'],
+            $params['image_id'],
             -1,
             PREG_SPLIT_NO_EMPTY
         );
@@ -2926,9 +2929,9 @@ function ws_images_syncMetadata(array $params, PwgServer $service): \PwgError|ar
 
     $image_ids = [];
     foreach ($params['image_id'] as $image_id) {
-        $image_id = trim((string) $image_id);
+        $image_id = trim($image_id);
 
-        if (! preg_match(PATTERN_ID, $image_id)) {
+        if (! (bool) preg_match(PATTERN_ID, $image_id)) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid image_id "' . $image_id . '"');
         }
 

@@ -1,29 +1,3 @@
-# This baseline was regenerated after the "beyond L10" pass (see git log
-# for the "phpstan bleeding-edge safe fixes" commits): phpstan-strict-rules
-# and bleedingEdge.neon were re-enabled, and every mechanically-safe
-# finding (missing (bool) casts on non-boolean condition/operand
-# expressions, PHPStan-proven-useless casts, a few implicit-array-creation
-# and varTag fixes) was fixed directly rather than baselined. Everything
-# still listed below was deliberately deferred, in three groups:
-#
-#   - Loose comparison / empty() / strict-function-argument findings
-#     (equal.notAllowed, notEqual.notAllowed, empty.notAllowed,
-#     function.strict): converting these requires per-callsite judgment
-#     about PHP's type-juggling semantics and is a documented hazard in
-#     this codebase -- an earlier StrictComparisonRector-based sweep on
-#     the 16.x-v2 branch produced real behavioral regressions (see
-#     docs/PLAN-REPLAY.md). Not safe to fix mechanically.
-#   - Type-coverage findings (typeCoverage.paramTypeCoverage/
-#     propertyTypeCoverage/returnTypeCoverage/constantTypeCoverage):
-#     bulk native-type promotion across hundreds of signatures, each with
-#     real per-callsite runtime risk at this volume. Deferred as a
-#     possible dedicated future initiative.
-#   - Heterogeneous tail (method.internalClass, property/variable/method.
-#     dynamicName, argument.type, offsetAccess.*, foreach.valueOverwrite,
-#     switch.type, return.missing, non-numeric arithmetic, etc.): a long
-#     list of individually distinct findings needing L9/L10-long-tail-style
-#     one-by-one review. Deferred as a possible dedicated future
-#     initiative.
 parameters:
 	ignoreErrors:
 		-
@@ -147,12 +121,6 @@ parameters:
 			path: admin/batch_manager.php
 
 		-
-			rawMessage: Foreach overwrites $value with its value variable.
-			identifier: foreach.valueOverwrite
-			count: 2
-			path: admin/batch_manager.php
-
-		-
 			rawMessage: 'Loose comparison via "==" between int<1, max> and int is not allowed.'
 			identifier: equal.notAllowed
 			count: 1
@@ -168,12 +136,6 @@ parameters:
 			rawMessage: 'Loose comparison via "==" between string|null and int is not allowed.'
 			identifier: equal.notAllowed
 			count: 1
-			path: admin/batch_manager.php
-
-		-
-			rawMessage: Variable variables are not allowed.
-			identifier: variable.dynamicName
-			count: 4
 			path: admin/batch_manager.php
 
 		-
@@ -267,12 +229,6 @@ parameters:
 			path: admin/batch_manager_unit.php
 
 		-
-			rawMessage: Cannot access offset int on mixed.
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 3
-			path: admin/cat_list.php
-
-		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
 			count: 3
@@ -281,12 +237,6 @@ parameters:
 		-
 			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
 			identifier: equal.notAllowed
-			count: 1
-			path: admin/cat_list.php
-
-		-
-			rawMessage: 'Parameter #1 $value of function count expects array|Countable, mixed given.'
-			identifier: argument.type
 			count: 1
 			path: admin/cat_list.php
 
@@ -660,18 +610,6 @@ parameters:
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
 			count: 21
-			path: admin/include/functions.php
-
-		-
-			rawMessage: 'Dynamic call to static method Imagick::getVersion().'
-			identifier: staticMethod.dynamicCall
-			count: 1
-			path: admin/include/functions.php
-
-		-
-			rawMessage: Foreach overwrites $row with its value variable.
-			identifier: foreach.valueOverwrite
-			count: 1
 			path: admin/include/functions.php
 
 		-
@@ -1065,12 +1003,6 @@ parameters:
 			path: admin/include/functions_upload.inc.php
 
 		-
-			rawMessage: 'Only numeric types are allowed in /, int<0, max>|false given on the left side.'
-			identifier: div.leftNonNumeric
-			count: 1
-			path: admin/include/functions_upload.inc.php
-
-		-
 			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
 			identifier: function.strict
 			count: 6
@@ -1128,12 +1060,6 @@ parameters:
 			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
 			identifier: equal.notAllowed
 			count: 8
-			path: admin/include/image.class.php
-
-		-
-			rawMessage: 'Only numeric types are allowed in /, int<0, max>|false given on the left side.'
-			identifier: div.leftNonNumeric
-			count: 1
 			path: admin/include/image.class.php
 
 		-
@@ -1425,12 +1351,6 @@ parameters:
 			path: admin/include/updates.class.php
 
 		-
-			rawMessage: Foreach overwrites $fs_ext with its value variable.
-			identifier: foreach.valueOverwrite
-			count: 1
-			path: admin/include/updates.class.php
-
-		-
 			rawMessage: 'Loose comparison via "!=" between string and mixed is not allowed.'
 			identifier: notEqual.notAllowed
 			count: 1
@@ -1543,12 +1463,6 @@ parameters:
 			identifier: equal.notAllowed
 			count: 2
 			path: admin/languages_installed.php
-
-		-
-			rawMessage: 'Dynamic call to static method Imagick::getVersion().'
-			identifier: staticMethod.dynamicCall
-			count: 1
-			path: admin/maintenance_actions.php
 
 		-
 			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
@@ -1881,12 +1795,6 @@ parameters:
 			path: admin/site_reader_local.php
 
 		-
-			rawMessage: 'Only numeric types are allowed in /, int<0, max>|false given on the left side.'
-			identifier: div.leftNonNumeric
-			count: 1
-			path: admin/site_reader_local.php
-
-		-
 			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 2
@@ -2022,12 +1930,6 @@ parameters:
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
 			count: 2
-			path: admin/updates_ext.php
-
-		-
-			rawMessage: Foreach overwrites $fs_ext with its value variable.
-			identifier: foreach.valueOverwrite
-			count: 1
 			path: admin/updates_ext.php
 
 		-
@@ -2781,12 +2683,6 @@ parameters:
 			path: include/dblayer/functions_mysqli.inc.php
 
 		-
-			rawMessage: 'Result of function my_error (void) is used.'
-			identifier: function.void
-			count: 1
-			path: include/dblayer/functions_mysqli.inc.php
-
-		-
 			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
 			identifier: function.strict
 			count: 1
@@ -3438,12 +3334,6 @@ parameters:
 			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 34
-			path: include/functions_mail.inc.php
-
-		-
-			rawMessage: 'Parameter #2 $args of function pwg_mail expects array{from?: mixed, reply_to_mail_address?: string, reply_to_name?: string, Cc?: mixed, Bcc?: mixed, subject?: mixed, content?: mixed, content_format?: string, ...}, array{language_selected?: string, from?: mixed, reply_to_mail_address?: string, reply_to_name?: string, Cc?: mixed, Bcc?: mixed, subject?: mixed, content?: mixed, ...} given.'
-			identifier: argument.type
-			count: 1
 			path: include/functions_mail.inc.php
 
 		-
@@ -4287,12 +4177,6 @@ parameters:
 			path: include/template.class.php
 
 		-
-			rawMessage: Possibly invalid array key type string|false.
-			identifier: offsetAccess.invalidOffset
-			count: 3
-			path: include/template.class.php
-
-		-
 			rawMessage: 'Undefined variable: $tmp'
 			identifier: variable.undefined
 			count: 2
@@ -4404,12 +4288,6 @@ parameters:
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
 			count: 18
-			path: include/ws_functions/pwg.categories.php
-
-		-
-			rawMessage: Foreach overwrites $image with its value variable.
-			identifier: foreach.valueOverwrite
-			count: 1
 			path: include/ws_functions/pwg.categories.php
 
 		-
@@ -4554,12 +4432,6 @@ parameters:
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
 			count: 6
-			path: include/ws_functions/pwg.extensions.php
-
-		-
-			rawMessage: 'Dynamic call to static method updates::check_piwigo_upgrade().'
-			identifier: staticMethod.dynamicCall
-			count: 1
 			path: include/ws_functions/pwg.extensions.php
 
 		-
@@ -4755,21 +4627,9 @@ parameters:
 			path: include/ws_functions/pwg.images.php
 
 		-
-			rawMessage: 'Only numeric types are allowed in -, int<0, max>|false given on the right side.'
-			identifier: minus.rightNonNumeric
-			count: 2
-			path: include/ws_functions/pwg.images.php
-
-		-
 			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 5
-			path: include/ws_functions/pwg.images.php
-
-		-
-			rawMessage: 'Parameter #2 $subject of function preg_split expects string, string|null given.'
-			identifier: argument.type
-			count: 1
 			path: include/ws_functions/pwg.images.php
 
 		-
@@ -4812,12 +4672,6 @@ parameters:
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
 			count: 33
-			path: include/ws_functions/pwg.php
-
-		-
-			rawMessage: Foreach overwrites $row with its value variable.
-			identifier: foreach.valueOverwrite
-			count: 1
 			path: include/ws_functions/pwg.php
 
 		-
@@ -5160,12 +5014,6 @@ parameters:
 			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
 			identifier: equal.notAllowed
 			count: 2
-			path: install.php
-
-		-
-			rawMessage: 'Parameter #3 $options of function load_language expects array{language?: string, return?: bool, no_fallback?: bool, force_fallback?: bool|string, local?: bool}, array{language: string, target_charset: ''utf-8''} given.'
-			identifier: argument.type
-			count: 3
 			path: install.php
 
 		-
@@ -5682,12 +5530,6 @@ parameters:
 			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 1
-			path: upgrade.php
-
-		-
-			rawMessage: 'Parameter #3 $options of function load_language expects array{language?: string, return?: bool, no_fallback?: bool, force_fallback?: bool|string, local?: bool}, array{language: string, target_charset: ''utf-8'', no_fallback: true} given.'
-			identifier: argument.type
-			count: 4
 			path: upgrade.php
 
 		-

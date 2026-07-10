@@ -9,11 +9,12 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Session\PwgSession;
+
 // In PHP 8.4+ calling session_set_save_handler with
 // two parameters is deprecated. To correct this,
 // we pass a SessionHandlerInterface instance.
 // https://github.com/Piwigo/Piwigo/issues/2296
-include_once PHPWG_ROOT_PATH . '/include/pwgsession.class.php';
 
 /** @var array<string, mixed> $conf */
 if (isset($conf['session_save_handler'])

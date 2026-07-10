@@ -20,7 +20,7 @@ global $conf;
 
 check_status(ACCESS_FREE);
 
-if (! $conf['allow_web_services']) {
+if (! (bool) $conf['allow_web_services']) {
     page_forbidden('Web services are disabled');
 }
 

@@ -190,8 +190,8 @@ if (isset($_POST['install'])) {
 
     if (
         strlen($prefixeTable) > 20
-        or preg_match('/^\d/', $prefixeTable)
-        or ! preg_match('/^[a-zA-Z0-9_$]*$/u', $prefixeTable)
+        or (bool) preg_match('/^\d/', $prefixeTable)
+        or ! (bool) preg_match('/^[a-zA-Z0-9_$]*$/u', $prefixeTable)
     ) {
         $errors[] = 'invalid table prefix';
     }
@@ -199,7 +199,7 @@ if (isset($_POST['install'])) {
     $webmaster = trim((string) preg_replace('/\s{2,}/', ' ', $admin_name));
     if (empty($webmaster)) {
         $errors[] = l10n('enter a login for webmaster');
-    } elseif (preg_match('/[\'"]/', $webmaster)) {
+    } elseif ((bool) preg_match('/[\'"]/', $webmaster)) {
         $errors[] = l10n('webmaster login can\'t contain characters \' or "');
     }
     if ($admin_pass1 != $admin_pass2 || empty($admin_pass1)) {
@@ -287,7 +287,7 @@ define(\'DB_COLLATE\', \'\');
 
             @umask(0111);
             // writing the configuration file
-            if (! ($fp = @fopen($config_file, 'w'))) {
+            if (! (bool) ($fp = @fopen($config_file, 'w'))) {
                 // make sure nobody can list files of _data directory
                 secure_directory(PHPWG_ROOT_PATH . $conf_data_location);
 

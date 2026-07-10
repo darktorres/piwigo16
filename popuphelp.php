@@ -40,7 +40,7 @@ include PHPWG_ROOT_PATH . 'include/page_header.php';
 if (
     isset($_GET['page'])
     and is_string($_GET['page'])
-    and preg_match('/^[a-z_]*$/', $_GET['page'])
+    and (bool) preg_match('/^[a-z_]*$/', $_GET['page'])
 ) {
     $help_page = $_GET['page'];
 

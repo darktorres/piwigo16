@@ -47,7 +47,7 @@ include_once PHPWG_ROOT_PATH . 'admin/include/functions_upgrade.php';
 // | Check Access and exit when it is not ok                               |
 // +-----------------------------------------------------------------------+
 
-if (! $conf['check_upgrade_feed']) {
+if (! (bool) $conf['check_upgrade_feed']) {
     die('upgrade feed is not active');
 }
 

@@ -79,7 +79,7 @@ SELECT id, file, level
           str_replace(['_', '%'], ['/_', '/%'], is_string($page_image_file) ? $page_image_file : '') .
           '.%\' ESCAPE \'/\' LIMIT 1';
     }
-    if (! ($row = pwg_db_fetch_assoc(pwg_query($query)))) {// element does not exist
+    if (! (bool) ($row = pwg_db_fetch_assoc(pwg_query($query)))) {// element does not exist
         page_not_found(
             'The requested image does not exist',
             duplicate_index_url()
@@ -220,7 +220,7 @@ function default_picture_content(string $content, array $element_info): string
         $show_original &= ! ($derivative->same_as_source());
 
         // in case we do not display the sizes icon, we only add the selected size to unique_derivatives
-        if ($conf['picture_sizes_icon'] or $type == $deriv_type) {
+        if ((bool) $conf['picture_sizes_icon'] or $type == $deriv_type) {
             $unique_derivatives[$type] = $derivative;
         }
     }
@@ -231,7 +231,7 @@ function default_picture_content(string $content, array $element_info): string
      */
     global $page, $template;
 
-    if ($show_original and isset($element_info['element_url'])) {
+    if ((bool) $show_original and isset($element_info['element_url'])) {
         $template->assign('U_ORIGINAL', $element_info['element_url']);
     }
 
@@ -514,7 +514,7 @@ if (isset($_SERVER['HTTP_X_MOZ']) and $_SERVER['HTTP_X_MOZ'] == 'prefetch') {
 }
 
 // don't increment if adding a comment
-if (trigger_change('allow_increment_element_hit_count', $inc_hit_count, $image_id)) {
+if ((bool) trigger_change('allow_increment_element_hit_count', $inc_hit_count, $image_id)) {
     increase_image_visit_counter($image_id);
 }
 
@@ -559,7 +559,7 @@ SELECT *
 
 $result = pwg_query($query);
 
-while ($row = pwg_db_fetch_assoc($result)) {
+while ((bool) ($row = pwg_db_fetch_assoc($result))) {
     if ($previous_item !== null and $row['id'] == $previous_item) {
         $i = 'previous';
     } elseif ($next_item !== null and $row['id'] == $next_item) {
@@ -645,12 +645,12 @@ if (isset($_GET['slideshow'])) {
     $slideshow_params = decode_slideshow_params(is_string($get_slideshow) ? $get_slideshow : null);
     $slideshow_url_params['slideshow'] = encode_slideshow_params($slideshow_params);
 
-    if ($slideshow_params['play']) {
+    if ((bool) $slideshow_params['play']) {
         $id_pict_redirect = '';
         if ($next_item !== null) {
             $id_pict_redirect = 'next';
         } else {
-            if ($slideshow_params['repeat'] and $first_item !== null) {
+            if ((bool) $slideshow_params['repeat'] and $first_item !== null) {
                 $id_pict_redirect = 'first';
             }
         }
@@ -668,7 +668,7 @@ if (isset($_GET['slideshow'])) {
 } else {
     $page['slideshow'] = false;
 }
-if ($page['slideshow'] and $conf['light_slideshow']) {
+if ($page['slideshow'] and (bool) $conf['light_slideshow']) {
     $template->set_filenames([
         'slideshow' => 'slideshow.tpl',
     ]);
@@ -694,7 +694,7 @@ $url_metadata = add_url_params($url_metadata, [
 $metadata_showable = trigger_change(
     'get_element_metadata_available',
     (
-        ($conf['show_exif'] or $conf['show_iptc'])
+        ((bool) $conf['show_exif'] or (bool) $conf['show_iptc'])
     and ! $picture['current']['src_image']->is_mimetype()
     ),
     $picture['current']
@@ -757,12 +757,12 @@ foreach (['first', 'previous', 'next', 'last', 'current'] as $which_image) {
         );
     }
 }
-if ($conf['picture_download_icon'] and ! empty($picture['current']['download_url']) and $user['enabled_high'] == 'true') {
+if ((bool) $conf['picture_download_icon'] and ! empty($picture['current']['download_url']) and $user['enabled_high'] == 'true') {
     $template->append('current', [
         'U_DOWNLOAD' => $picture['current']['download_url'],
     ], true);
 
-    if ($conf['enable_formats']) {
+    if ((bool) $conf['enable_formats']) {
         $query = '
 SELECT *
   FROM ' . IMAGE_FORMAT_TABLE . '
@@ -823,7 +823,7 @@ if ($page['slideshow']) {
     foreach (['repeat', 'play'] as $p) {
         $var_name =
           'U_'
-          . ($slideshow_params[$p] ? 'STOP_' : 'START_')
+          . ((bool) $slideshow_params[$p] ? 'STOP_' : 'START_')
           . strtoupper($p);
 
         $tpl_slideshow[$var_name] =
@@ -834,7 +834,7 @@ if ($page['slideshow']) {
                           array_merge(
                               $slideshow_params,
                               [
-                                  $p => ! $slideshow_params[$p],
+                                  $p => ! (bool) $slideshow_params[$p],
                               ]
                           )
                       ),
@@ -873,7 +873,7 @@ if ($page['slideshow']) {
         }
     }
     $template->assign('slideshow', $tpl_slideshow);
-} elseif ($conf['picture_slideshow_icon']) {
+} elseif ((bool) $conf['picture_slideshow_icon']) {
     $template->assign(
         [
             'U_SLIDESHOW_START' => add_url_params(
@@ -900,7 +900,7 @@ $template->assign(
     ]
 );
 
-if ($conf['picture_metadata_icon']) {
+if ((bool) $conf['picture_metadata_icon']) {
     $template->assign('U_METADATA', $url_metadata);
 }
 
@@ -908,7 +908,7 @@ if ($conf['picture_metadata_icon']) {
 
 // admin links
 if (is_admin()) {
-    if ($page_category !== null and $conf['picture_representative_icon']) {
+    if ($page_category !== null and (bool) $conf['picture_representative_icon']) {
         $template->assign(
             [
                 'U_SET_AS_REPRESENTATIVE' => add_url_params(
@@ -921,11 +921,11 @@ if (is_admin()) {
         );
     }
 
-    if ($conf['picture_edit_icon']) {
+    if ((bool) $conf['picture_edit_icon']) {
         $template->assign('U_PHOTO_ADMIN', get_root_url() . 'admin.php?page=photo-' . $image_id);
     }
 
-    if ($conf['picture_caddie_icon']) {
+    if ((bool) $conf['picture_caddie_icon']) {
         $template->assign(
             'U_CADDIE',
             add_url_params($url_self, [
@@ -937,7 +937,7 @@ if (is_admin()) {
 }
 
 // favorite manipulation
-if (! is_a_guest() and $conf['picture_favorite_icon']) {
+if (! is_a_guest() and (bool) $conf['picture_favorite_icon']) {
     // verify if the picture is already in the favorite of the user
     $query = '
 SELECT COUNT(*) AS nb_fav
@@ -1042,7 +1042,7 @@ $template->assign('display_info', unserialize(is_string($picture_informations) ?
 
 // related tags
 $tags = get_common_tags([$image_id], -1);
-if (count($tags)) {
+if ((bool) count($tags)) {
     foreach ($tags as $tag) {
         $template->append(
             'related_tags',
@@ -1154,17 +1154,17 @@ $template->assign(
 // +-----------------------------------------------------------------------+
 
 include PHPWG_ROOT_PATH . 'include/picture_rate.inc.php';
-if ($conf['activate_comments']) {
+if ((bool) $conf['activate_comments']) {
     include PHPWG_ROOT_PATH . 'include/picture_comment.inc.php';
 }
-if ($metadata_showable and pwg_get_session_var('show_metadata') != null) {
+if ((bool) $metadata_showable and pwg_get_session_var('show_metadata') != null) {
     include PHPWG_ROOT_PATH . 'include/picture_metadata.inc.php';
 }
 
 // include menubar
 $themeconf = $template->get_template_vars('themeconf');
 $themeconf = is_array($themeconf) ? $themeconf : [];
-if ($conf['picture_menu'] and (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('thePicturePage', $themeconf['hide_menu_on']))) {
+if ((bool) $conf['picture_menu'] and (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('thePicturePage', $themeconf['hide_menu_on']))) {
     if (! isset($page['start'])) {
         $page['start'] = 0;
     }
@@ -1174,7 +1174,7 @@ if ($conf['picture_menu'] and (! isset($themeconf['hide_menu_on']) or ! is_array
 include PHPWG_ROOT_PATH . 'include/page_header.php';
 trigger_notify('loc_end_picture');
 flush_page_messages();
-if ($page['slideshow'] and $conf['light_slideshow']) {
+if ($page['slideshow'] and (bool) $conf['light_slideshow']) {
     $template->pparse('slideshow');
 } else {
     $template->parse_picture_buttons();

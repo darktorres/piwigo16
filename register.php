@@ -34,7 +34,7 @@ check_status(ACCESS_FREE);
 
 // ----------------------------------------------------------- user registration
 
-if (! $conf['allow_user_registration']) {
+if (! (bool) $conf['allow_user_registration']) {
     page_forbidden('User registration closed');
 }
 

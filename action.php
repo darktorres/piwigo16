@@ -25,7 +25,7 @@ check_status(ACCESS_GUEST);
 
 function guess_mime_type(string $ext): string
 {
-    $ctype = match (strtolower((string) $ext)) {
+    $ctype = match (strtolower($ext)) {
         'jpe', 'jpeg', 'jpg' => 'image/jpeg',
         'png' => 'image/png',
         'gif' => 'image/gif',
@@ -49,7 +49,7 @@ function do_error(int $code, string $str): never
     exit();
 }
 
-if ($conf['enable_formats'] and isset($_GET['format'])) {
+if ((bool) $conf['enable_formats'] and isset($_GET['format'])) {
     check_input_parameter('format', $_GET, false, PATTERN_ID);
 
     if (! is_numeric($_GET['format'])) {
@@ -135,7 +135,7 @@ $format_row = (isset($format) && is_array($format)) ? $format : null;
 $file = '';
 switch ($_GET['part']) {
     case 'e':
-        if ($src_image->is_original() and ! $user['enabled_high']) {// we have a photo and the user has no access to HD
+        if ($src_image->is_original() and ! (bool) $user['enabled_high']) {// we have a photo and the user has no access to HD
             $deriv = new DerivativeImage(IMG_XXLARGE, $src_image);
             if (! $deriv->same_as_source()) {
                 do_error(401, 'Access denied e');

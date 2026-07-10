@@ -23,7 +23,7 @@ include_once PHPWG_ROOT_PATH . 'include/functions_comment.inc.php';
  */
 global $conf, $template;
 
-if (! $conf['activate_comments']) {
+if (! (bool) $conf['activate_comments']) {
     page_not_found(null);
 }
 
@@ -445,7 +445,7 @@ if ($selected_items_number !== 'all') {
 $query .= '
 ;';
 $result = pwg_query($query);
-while ($row = pwg_db_fetch_assoc($result)) {
+while ((bool) ($row = pwg_db_fetch_assoc($result))) {
     $comments[] = $row;
     $element_ids[] = $row['image_id'];
     $category_ids[] = $row['category_id'];

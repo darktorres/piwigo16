@@ -50,12 +50,12 @@ unset($_SESSION['reset_password_code']);
 if (isset($_POST['redirect']) && is_string($_POST['redirect'])) {
     $_POST['redirect_decoded'] = urldecode($_POST['redirect']);
 }
-check_input_parameter('redirect_decoded', $_POST, false, '{^' . preg_quote((string) cookie_path()) . '}');
+check_input_parameter('redirect_decoded', $_POST, false, '{^' . preg_quote(cookie_path()) . '}');
 
 $redirect_to = '';
 if (! empty($_GET['redirect']) && is_string($_GET['redirect'])) {
     $redirect_to = urldecode($_GET['redirect']);
-    if ($conf['guest_access'] and ! isset($_GET['hide_redirect_error'])) {
+    if ((bool) $conf['guest_access'] and ! isset($_GET['hide_redirect_error'])) {
         $page['errors']['login_page_error'] = l10n('You are not authorized to access the requested page');
     }
 }
@@ -99,7 +99,7 @@ if (isset($_POST['login'])) {
             redirect(
                 empty($redirect_to)
                 ? (is_string($gallery_home_url) ? $gallery_home_url : '')
-                : substr((string) $root_url, 0, strlen((string) $root_url) - strlen((string) cookie_path())) . $redirect_to
+                : substr($root_url, 0, strlen($root_url) - strlen(cookie_path())) . $redirect_to
             );
         } else {
             $page['errors']['login_form_error'] = l10n('Invalid username or password!');
@@ -127,11 +127,11 @@ $template->assign(
     ]
 );
 
-if (! $conf['gallery_locked'] && $conf['allow_user_registration']) {
+if (! (bool) $conf['gallery_locked'] && (bool) $conf['allow_user_registration']) {
     $template->assign('U_REGISTER', get_root_url() . 'register.php');
 }
 
-if (! $conf['gallery_locked']) {
+if (! (bool) $conf['gallery_locked']) {
     $template->assign('U_LOST_PASSWORD', get_root_url() . 'password.php');
 }
 
@@ -139,7 +139,7 @@ if (! $conf['gallery_locked']) {
 $themeconf = $template->get_template_vars('themeconf');
 $themeconf = is_array($themeconf) ? $themeconf : [];
 $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
-if (! $conf['gallery_locked'] && (! is_array($hide_menu_on) or ! in_array('theIdentificationPage', $hide_menu_on))) {
+if (! (bool) $conf['gallery_locked'] && (! is_array($hide_menu_on) or ! in_array('theIdentificationPage', $hide_menu_on))) {
     include PHPWG_ROOT_PATH . 'include/menubar.inc.php';
 }
 

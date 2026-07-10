@@ -82,7 +82,7 @@ function process_verification_code(): bool
     // preventing username/email enumeration through timing or responses.
     $is_user_found = is_numeric($user_id_raw);
     if ($is_user_found) {
-        $user_id = (int) $user_id_raw;
+        $user_id = $user_id_raw;
     } else {
         $guest_id = $conf['guest_id'] ?? null;
         $user_id = is_numeric($guest_id) ? (int) $guest_id : 0;
@@ -192,7 +192,7 @@ function process_password_request(): bool
 
     if (
         empty($user_code) // empty user code
-        || ! preg_match('/^\d{6}$/', $user_code) // check digit 6
+        || ! (bool) preg_match('/^\d{6}$/', $user_code) // check digit 6
         || ! verify_user_code($secret, $user_code)) { // verify user code
         $is_valid = false;
     }
@@ -268,7 +268,7 @@ function check_password_reset_key(mixed $reset_key): mixed
     $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
 
     $key = is_string($reset_key) ? $reset_key : '';
-    if (! preg_match('/^[a-z0-9]{20}$/i', $key)) {
+    if (! (bool) preg_match('/^[a-z0-9]{20}$/i', $key)) {
         $page['errors']['password_page_error'] = l10n('Invalid key');
         return false;
     }
@@ -284,7 +284,7 @@ SELECT
 ;';
     $result = pwg_query($query);
     $user_id = null;
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         $activation_key = $row['activation_key'] ?? null;
         if (! is_string($activation_key)) {
             continue;
@@ -336,7 +336,8 @@ function reset_password(): bool
         return false;
     }
 
-    $user_id = reset_password_key() ?: reset_password_code();
+    $reset_password_key_result = reset_password_key();
+    $user_id = (bool) $reset_password_key_result ? $reset_password_key_result : reset_password_code();
 
     if (! is_numeric($user_id)) {
         $page['errors']['password_form_error'] = l10n('Invalid key or code');
@@ -366,7 +367,7 @@ function reset_password(): bool
         $reset_user_id = $reset_session['user_id'] ?? null;
         $reset_user_id_str = is_numeric($reset_user_id) ? (string) $reset_user_id : '';
         $api_keys = get_available_api_key($reset_user_id_str);
-        $nb_of_apikeys = $api_keys ? count($api_keys) : 0;
+        $nb_of_apikeys = (bool) $api_keys ? count($api_keys) : 0;
 
         $reset_username = $reset_session['username'] ?? '';
         $reset_username = is_string($reset_username) ? $reset_username : '';

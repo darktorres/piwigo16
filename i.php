@@ -92,7 +92,7 @@ function mkgetdir(string $dir): bool
         }
 
         $file = $dir . '/index.htm';
-        file_exists($file) or @file_put_contents($file, 'Not allowed!');
+        file_exists($file) or (bool) @file_put_contents($file, 'Not allowed!');
     }
     if (! is_writable($dir)) {
         return false;
@@ -111,7 +111,7 @@ function ierror(string $msg, int $code): never
             ob_clean();
         }
         // default url is on html format
-        $url = html_entity_decode((string) $msg);
+        $url = html_entity_decode($msg);
         $logger->debug($code . ' ' . $url, 'i.php', [
             'url' => $_SERVER['REQUEST_URI'],
         ]);
@@ -151,11 +151,11 @@ function time_step(float &$step): int
  */
 function url_to_size(string $s): array
 {
-    $pos = strpos((string) $s, 'x');
+    $pos = strpos($s, 'x');
     if ($pos === false) {
         return [(int) $s, (int) $s];
     }
-    return [(int) substr((string) $s, 0, $pos), (int) substr((string) $s, $pos + 1)];
+    return [(int) substr($s, 0, $pos), (int) substr($s, $pos + 1)];
 }
 
 /**
@@ -172,10 +172,10 @@ function parse_custom_params(array $tokens): \DerivativeParams
 
     $token = array_shift($tokens);
     if ($token[0] == 's') {
-        $size = url_to_size(substr((string) $token, 1));
+        $size = url_to_size(substr($token, 1));
     } elseif ($token[0] == 'e') {
         $crop = 1;
-        $size = $min_size = url_to_size(substr((string) $token, 1));
+        $size = $min_size = url_to_size(substr($token, 1));
     } else {
         $size = url_to_size($token);
         if (count($tokens) < 2) {
@@ -214,7 +214,7 @@ function parse_request(): \DerivativeParams
     } else {
         $req = $_SERVER['QUERY_STRING'];
         $req = is_string($req) ? $req : '';
-        if ($pos = strpos($req, '&')) {
+        if ((bool) ($pos = strpos($req, '&'))) {
             $req = substr($req, 0, $pos);
         }
         $req = rawurldecode($req);
@@ -239,7 +239,7 @@ function parse_request(): \DerivativeParams
         ierror('Invalid sync_chars_regex configuration', 500);
     }
     foreach ($req_tokens as $token) {
-        preg_match($sync_chars_regex, $token) or ierror('Invalid chars in request', 400);
+        (bool) preg_match($sync_chars_regex, $token) or ierror('Invalid chars in request', 400);
     }
 
     $page['derivative_path'] = PHPWG_ROOT_PATH . PWG_DERIVATIVE_DIR . $req;
@@ -517,7 +517,7 @@ SELECT param, value
 ;';
 
 $result = pwg_query($query);
-while ($row = pwg_db_fetch_assoc($result)) {
+while ((bool) ($row = pwg_db_fetch_assoc($result))) {
     // 'param' is the config table's primary key column (never NULL in
     // practice), but pwg_db_fetch_assoc() types every column as
     // string|null, so an array key still needs narrowing.
@@ -597,7 +597,7 @@ SELECT *
   WHERE path=\'' . addslashes($page['src_location']) . '\'
 ;';
 
-        if (($row = pwg_db_fetch_assoc(pwg_query($query)))) {
+        if ((bool) ($row = pwg_db_fetch_assoc(pwg_query($query)))) {
             if (isset($row['width'])) {
                 $page['original_size'] = [$row['width'], $row['height']];
             }
@@ -629,7 +629,7 @@ SELECT *
                 $page['rotation_angle'] = pwg_image::get_rotation_angle_from_code($rotation);
             }
         }
-        if (! $row) {
+        if (! (bool) $row) {
             ierror('Db file path not found', 404);
         }
     } catch (Exception $e) {
@@ -675,20 +675,20 @@ $o_size = $d_size = [(int) $image->get_width(), (int) $image->get_height()];
 $crop_rect = null;
 $scaled_size = null;
 $params->sizing->compute($o_size, $page['coi'], $crop_rect, $scaled_size);
-if ($crop_rect) {
+if ((bool) $crop_rect) {
     $changes++;
     $image->crop($crop_rect->width(), $crop_rect->height(), $crop_rect->l, $crop_rect->t);
     $timing['crop'] = time_step($step);
 }
 
-if ($scaled_size) {
+if ((bool) $scaled_size) {
     $changes++;
     $image->resize($scaled_size[0], $scaled_size[1]);
     $d_size = [(int) $scaled_size[0], (int) $scaled_size[1]];
     $timing['scale'] = time_step($step);
 }
 
-if ($params->sharpen) {
+if ((bool) $params->sharpen) {
     $changes += $image->sharpen($params->sharpen);
     $timing['sharpen'] = time_step($step);
 }
@@ -721,13 +721,13 @@ if ($params->will_watermark($d_size)) {
     $y = round(($wm->ypos / 100) * ($d_size[1] - $wm_size[1]));
     if ($image->compose($wm_image, $x, $y, $wm->opacity)) {
         $changes++;
-        if ($wm->xrepeat || $wm->yrepeat) {
+        if ((bool) $wm->xrepeat || (bool) $wm->yrepeat) {
             $xpad = $wm_size[0] + max(30, round($wm_size[0] / 4));
             $ypad = $wm_size[1] + max(30, round($wm_size[1] / 4));
 
             for ($i = -$wm->xrepeat; $i <= $wm->xrepeat; $i++) {
                 for ($j = -$wm->yrepeat; $j <= $wm->yrepeat; $j++) {
-                    if (! $i && ! $j) {
+                    if (! (bool) $i && ! (bool) $j) {
                         continue;
                     }
                     $x2 = $x + $i * $xpad;
@@ -747,7 +747,7 @@ if ($params->will_watermark($d_size)) {
 }
 
 // no change required - redirect to source
-if (! $changes) {
+if (! (bool) $changes) {
     header('X-i: No change');
     ierror($page['src_url'], 301);
 }

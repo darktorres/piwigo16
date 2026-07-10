@@ -105,7 +105,7 @@ if (isset($_GET['caddie'])) {
     redirect(duplicate_index_url());
 }
 
-if (isset($page['is_homepage']) and $page['is_homepage']) {
+if (isset($page['is_homepage']) and (bool) $page['is_homepage']) {
     $canonical_url = get_gallery_home_url();
 } else {
     $start = $page_nb_image_page * round($page_start / $page_nb_image_page);
@@ -148,7 +148,7 @@ if (empty($page['is_external'])) {
         );
     }
 
-    if ($conf['index_flat_icon'] and ! isset($page['flat']) and $page['section'] == 'categories') {
+    if ((bool) $conf['index_flat_icon'] and ! isset($page['flat']) and $page['section'] == 'categories') {
         $template->assign(
             'U_MODE_FLAT',
             duplicate_index_url([
@@ -163,13 +163,13 @@ if (empty($page['is_external'])) {
             'chronology_style' => 'monthly',
             'chronology_view' => 'list',
         ];
-        if ($conf['index_created_date_icon']) {
+        if ((bool) $conf['index_created_date_icon']) {
             $template->assign(
                 'U_MODE_CREATED',
                 duplicate_index_url($chronology_params, ['start', 'flat'])
             );
         }
-        if ($conf['index_posted_date_icon']) {
+        if ((bool) $conf['index_posted_date_icon']) {
             $chronology_params['chronology_field'] = 'posted';
             $template->assign(
                 'U_MODE_POSTED',
@@ -182,7 +182,7 @@ if (empty($page['is_external'])) {
         } else {
             $chronology_field = 'created';
         }
-        if ($conf['index_' . $chronology_field . '_date_icon']) {
+        if ((bool) $conf['index_' . $chronology_field . '_date_icon']) {
             $url = duplicate_index_url(
                 [
                     'chronology_field' => $chronology_field,
@@ -274,14 +274,14 @@ if (empty($page['is_external'])) {
         );
     }
 
-    if (isset($page['category']) and is_array($page['category']) and is_admin() and $conf['index_edit_icon']) {
+    if (isset($page['category']) and is_array($page['category']) and is_admin() and (bool) $conf['index_edit_icon']) {
         $template->assign(
             'U_EDIT',
             get_root_url() . 'admin.php?page=album-' . (is_numeric($page['category']['id'] ?? null) ? (int) $page['category']['id'] : 0)
         );
     }
 
-    if (is_admin() and ! empty($page_items) and $conf['index_caddie_icon']) {
+    if (is_admin() and ! empty($page_items) and (bool) $conf['index_caddie_icon']) {
         $template->assign(
             'U_CADDIE',
             add_url_params(duplicate_index_url(), [
@@ -307,7 +307,7 @@ if (empty($page['is_external'])) {
          * @var array<int, array<string, mixed>> $matching_cats
          */
         $cats = array_merge($matching_cats_no_images, $matching_cats);
-        if (count($cats)) {
+        if ((bool) count($cats)) {
             usort($cats, name_compare(...));
             $hints = [];
             foreach ($cats as $cat) {
@@ -342,7 +342,7 @@ if (empty($page['is_external'])) {
     }
 
     // image order
-    if ($conf['index_sort_order_input']
+    if ((bool) $conf['index_sort_order_input']
         and count($page_items) > 0
         and $page['section'] != 'most_visited'
         and $page['section'] != 'best_rated') {
@@ -387,7 +387,7 @@ if (empty($page['is_external'])) {
     }
 
     // category comment
-    if (($page_start == 0 or $conf['album_description_on_all_pages']) and ! isset($page['chronology_field']) and ! empty($page['comment'])) {
+    if (($page_start == 0 or (bool) $conf['album_description_on_all_pages']) and ! isset($page['chronology_field']) and ! empty($page['comment'])) {
         $template->assign('CONTENT_DESCRIPTION', $page['comment']);
     }
 
@@ -408,7 +408,7 @@ if (empty($page['is_external'])) {
     if (! empty($page_items)) {
         include PHPWG_ROOT_PATH . 'include/category_default.inc.php';
 
-        if ($conf['index_sizes_icon']) {
+        if ((bool) $conf['index_sizes_icon']) {
             $url = add_url_params(
                 duplicate_index_url(),
                 [
@@ -442,7 +442,7 @@ if (empty($page['is_external'])) {
             if (is_string($page['cat_slideshow_url'])) {
                 redirect($page['cat_slideshow_url']);
             }
-        } elseif ($conf['index_slideshow_icon']) {
+        } elseif ((bool) $conf['index_slideshow_icon']) {
             $template->assign('U_SLIDESHOW', $page['cat_slideshow_url']);
         }
     }

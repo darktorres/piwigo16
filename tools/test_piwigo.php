@@ -48,7 +48,7 @@ $cookies = dirname(__DIR__) . '/cookies.txt';
 // mysqli's default report mode (MYSQLI_REPORT_ERROR|MYSQLI_REPORT_STRICT since
 // PHP 8.1) throws on connection failure, so a plain constructor call here
 // either succeeds or never reaches the next line.
-$mysqli = new mysqli('localhost', (string) $option['db_user'], (string) $option['db_password']);
+$mysqli = new mysqli('localhost', $option['db_user'], $option['db_password']);
 
 // Check if database name is set otherwise we use a random name.
 // Then we create the database.
@@ -86,7 +86,7 @@ function create_database(array $option): string
         throw new Exception('create_database(): SHOW DATABASES query failed');
     }
 
-    while (($row = $res->fetch_row())) {
+    while ((bool) ($row = $res->fetch_row())) {
         if ($row[0] == $db_name) {
             die('Database name already exist');
         }

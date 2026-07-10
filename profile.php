@@ -203,19 +203,19 @@ function save_profile_from_post(array $userdata, &$errors): bool
         unset($_POST['username']);
     }
 
-    if ($conf['allow_user_customization'] or defined('IN_ADMIN')) {
+    if ((bool) $conf['allow_user_customization'] or defined('IN_ADMIN')) {
         $int_pattern = '/^\d+$/';
         $nb_image_page = $_POST['nb_image_page'] ?? null;
         if (empty($nb_image_page)
             or (! is_scalar($nb_image_page))
-            or (! preg_match($int_pattern, (string) $nb_image_page))) {
+            or (! (bool) preg_match($int_pattern, (string) $nb_image_page))) {
             $errors[] = l10n('The number of photos per page must be a not null scalar');
         }
 
         // periods must be integer values, they represents number of days
         $recent_period = $_POST['recent_period'] ?? null;
         if (! is_scalar($recent_period)
-            or ! preg_match($int_pattern, (string) $recent_period)
+            or ! (bool) preg_match($int_pattern, (string) $recent_period)
             or $recent_period < 0) {
             $errors[] = l10n('Recent period must be a positive integer value');
         }
@@ -293,7 +293,7 @@ function save_profile_from_post(array $userdata, &$errors): bool
             // username is updated only if allowed
             if (! empty($_POST['username']) and is_string($_POST['username'])) {
                 $username = $_POST['username'];
-                if ($username != $userdata['username'] and get_userid($username)) {
+                if ($username != $userdata['username'] and (bool) get_userid($username)) {
                     if (! is_array($page['errors'])) {
                         $page['errors'] = [];
                     }
@@ -345,14 +345,14 @@ function save_profile_from_post(array $userdata, &$errors): bool
             $activity_details_tables[] = 'users';
         }
 
-        if ($conf['allow_user_customization'] or defined('IN_ADMIN')) {
+        if ((bool) $conf['allow_user_customization'] or defined('IN_ADMIN')) {
             // update user "additional" informations (specific to Piwigo)
             $fields = [
                 'nb_image_page', 'language',
                 'expand', 'show_nb_hits', 'recent_period', 'theme',
             ];
 
-            if ($conf['activate_comments']) {
+            if ((bool) $conf['activate_comments']) {
                 $fields[] = 'show_nb_comments';
             }
 
@@ -421,9 +421,9 @@ function load_profile_in_template($url_action, $url_redirect, array $userdata, ?
             $template_prefixe . 'ACTIVATE_COMMENTS' => $conf['activate_comments'],
             $template_prefixe . 'NB_IMAGE_PAGE' => $userdata['nb_image_page'],
             $template_prefixe . 'RECENT_PERIOD' => $userdata['recent_period'],
-            $template_prefixe . 'EXPAND' => $userdata['expand'] ? 'true' : 'false',
-            $template_prefixe . 'NB_COMMENTS' => $userdata['show_nb_comments'] ? 'true' : 'false',
-            $template_prefixe . 'NB_HITS' => $userdata['show_nb_hits'] ? 'true' : 'false',
+            $template_prefixe . 'EXPAND' => (bool) $userdata['expand'] ? 'true' : 'false',
+            $template_prefixe . 'NB_COMMENTS' => (bool) $userdata['show_nb_comments'] ? 'true' : 'false',
+            $template_prefixe . 'NB_HITS' => (bool) $userdata['show_nb_hits'] ? 'true' : 'false',
             $template_prefixe . 'REDIRECT' => $url_redirect,
             $template_prefixe . 'F_ACTION' => $url_action,
         ]
@@ -482,7 +482,7 @@ SELECT
     $template->assign('API_SELECTED_EXPIRATION', array_key_first($display_duration));
     $template->assign('API_CAN_MANAGE', 'pwg_ui' === ($_SESSION['connected_with'] ?? null));
 
-    $email_notifications_infos = $user['email'] ?
+    $email_notifications_infos = (bool) $user['email'] ?
       l10n('The email <em>%s</em> will be used to notify you when your API key is about to expire.', $user['email'])
       : l10n('You have no email address, so you will not be notified when your API key is about to expire.');
     $template->assign('API_EMAIL_INFOS', $email_notifications_infos);

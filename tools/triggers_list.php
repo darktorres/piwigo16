@@ -1022,7 +1022,7 @@ $core = [
       <td>';
         $f = 1;
         foreach ($trigger['files'] as $file) {
-            if (! $f) {
+            if (! (bool) $f) {
                 echo '<br>';
             } $f = 0;
             echo preg_replace('#\((.+)\)#', '(<i>$1</i>)', (string) $file);

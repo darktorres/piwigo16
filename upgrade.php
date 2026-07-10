@@ -69,12 +69,12 @@ SHOW TABLES
 ;';
     $result = pwg_query($query);
 
-    while ($row = pwg_db_fetch_row($result)) {
+    while ((bool) ($row = pwg_db_fetch_row($result))) {
         $table_name = $row[0];
         if (! is_string($table_name)) {
             continue;
         }
-        if (preg_match('/^' . PREFIX_TABLE . '/', $table_name)) {
+        if ((bool) preg_match('/^' . PREFIX_TABLE . '/', $table_name)) {
             $tables[] = $table_name;
         }
     }
@@ -100,7 +100,7 @@ DESC `' . $table . '`
 
         $columns_of[$table] = [];
 
-        while ($row = pwg_db_fetch_row($result)) {
+        while ((bool) ($row = pwg_db_fetch_row($result))) {
             $column_name = $row[0];
             if (! is_string($column_name)) {
                 continue;
@@ -240,7 +240,7 @@ $has_remote_site = false;
 
 $query = 'SELECT galleries_url FROM ' . SITES_TABLE . ';';
 $result = pwg_query($query);
-while ($row = pwg_db_fetch_assoc($result)) {
+while ((bool) ($row = pwg_db_fetch_assoc($result))) {
     $galleries_url = $row['galleries_url'] ?? null;
     if (is_string($galleries_url) && url_is_remote($galleries_url)) {
         $has_remote_site = true;
@@ -403,7 +403,7 @@ if ((isset($_POST['submit']) or isset($_GET['now']))
               . implode("\r\n", $mysql_changes) . "\r\n"
               . substr($config_file_contents, $php_end_tag);
 
-            if (! @file_put_contents($config_file, $config_file_contents)) {
+            if (! (bool) @file_put_contents($config_file, $config_file_contents)) {
                 // various by-ref function calls above (global $page inside
                 // their own scope) mutate $page in ways static analysis
                 // can't trace, so re-narrow before appending.

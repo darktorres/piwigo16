@@ -186,7 +186,7 @@ abstract class CalendarBase
 
         $nav_bar_datas = [];
 
-        if ($conf['calendar_show_empty'] and $show_empty and ! empty($labels)) {
+        if ((bool) $conf['calendar_show_empty'] and $show_empty and ! empty($labels)) {
             foreach ($labels as $item => $label) {
                 if (! isset($items[$item])) {
                     $items[$item] = -1;
@@ -223,7 +223,7 @@ abstract class CalendarBase
 
         }
 
-        if ($conf['calendar_show_any'] and $show_any and count($items) > 1 and
+        if ((bool) $conf['calendar_show_any'] and $show_any and count($items) > 1 and
               count($date_components) < count($this->calendar_levels) - 1) {
             $url = duplicate_index_url(
                 [
@@ -370,7 +370,7 @@ GROUP BY period';
 
         if ($current_rank > 0) { // has previous
             $prev = $upper_items[$current_rank - 1];
-            $chronology_date = explode('-', (string) $prev);
+            $chronology_date = explode('-', $prev);
             $tpl_var['previous'] =
               [
                   'LABEL' => $this->get_date_nice_name($prev),
@@ -385,7 +385,7 @@ GROUP BY period';
 
         if ($current_rank < count($upper_items) - 1) { // has next
             $next = $upper_items[$current_rank + 1];
-            $chronology_date = explode('-', (string) $next);
+            $chronology_date = explode('-', $next);
             $tpl_var['next'] =
               [
                   'LABEL' => $this->get_date_nice_name($next),

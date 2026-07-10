@@ -47,7 +47,7 @@ function get_iptc_data($filename, $map, string $array_sep = ','): array
                     foreach (array_keys($map, $iptc_key) as $pwg_key) {
                         $result[$pwg_key] = $value;
 
-                        if (! $conf['allow_html_in_metadata']) {
+                        if (! (bool) $conf['allow_html_in_metadata']) {
                             // in case the origin of the photo is unsecure (user upload), we
                             // remove HTML tags to avoid XSS (malicious execution of
                             // javascript)
@@ -75,7 +75,7 @@ function clean_iptc_value($value): string
     // remove binary nulls
     $value = str_replace(chr(0x00), ' ', $value);
 
-    if (preg_match('/[\x80-\xff]/', $value)) {
+    if ((bool) preg_match('/[\x80-\xff]/', $value)) {
         // apparently mac uses some MacRoman crap encoding. I don't know
         // how to detect it so a plugin should do the trick.
         $changed_value = trigger_change('clean_iptc_value', $value);
@@ -132,7 +132,7 @@ function get_exif_data($filename, $map): array
     }
 
     // Read EXIF data
-    if ($exif = @exif_read_data($filename) or $exif2 = trigger_change('format_exif_data', $exif = null, $filename, $map)) {
+    if ((bool) ($exif = @exif_read_data($filename)) or (bool) ($exif2 = trigger_change('format_exif_data', $exif = null, $filename, $map))) {
         if (! empty($exif2)) {
             $exif = $exif2;
         } else {
@@ -145,12 +145,12 @@ function get_exif_data($filename, $map): array
 
         // configured fields
         foreach ($map as $key => $field) {
-            if (! str_contains((string) $field, ';')) {
+            if (! str_contains($field, ';')) {
                 if (isset($exif[$field])) {
                     $result[$key] = $exif[$field];
                 }
             } else {
-                $tokens = explode(';', (string) $field);
+                $tokens = explode(';', $field);
                 $sub_value = $exif[$tokens[0]] ?? null;
                 if (is_array($sub_value) && isset($sub_value[$tokens[1]])) {
                     $result[$key] = $sub_value[$tokens[1]];
@@ -186,7 +186,7 @@ function get_exif_data($filename, $map): array
         }
     }
 
-    if (! $conf['allow_html_in_metadata']) {
+    if (! (bool) $conf['allow_html_in_metadata']) {
         foreach ($result as $key => $value) {
             // in case the origin of the photo is unsecure (user upload), we remove
             // HTML tags to avoid XSS (malicious execution of javascript)

@@ -80,7 +80,7 @@ function pwg_error_collector_handle_error(int $errno, string $errstr, string $er
     global $pwg_error_collector_collected;
 
     // Respect the @ error-suppression operator.
-    if (! (error_reporting() & $errno)) {
+    if (! (bool) (error_reporting() & $errno)) {
         return false;
     }
 
@@ -104,7 +104,7 @@ function pwg_error_collector_flush(): void
 
     // Catch fatal errors that set_error_handler() cannot intercept.
     $last = error_get_last();
-    if ($last !== null && ($last['type'] & (E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR))) {
+    if ($last !== null && (bool) ($last['type'] & (E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR))) {
         $label = pwg_error_collector_label($last['type']);
         $short = basename($last['file']) . ':' . $last['line'];
         $pwg_error_collector_collected[] = "[{$label}] {$last['message']} in {$short}";

@@ -26,7 +26,7 @@ global $user;
  */
 global $filter, $header_notes;
 
-if (! get_filter_page_value('cancel')) {
+if (! (bool) get_filter_page_value('cancel')) {
     if (isset($_GET['filter'])) {
         $filter['matches'] = [];
         $filter_get_param = $_GET['filter'];
@@ -40,7 +40,7 @@ if (! get_filter_page_value('cancel')) {
     $filter['enabled'] = false;
 }
 
-if ($filter['enabled']) {
+if ((bool) $filter['enabled']) {
     $filter_key = pwg_get_session_var('filter_check_key', [
         'user' => 0,
         'recent_period' => -1,
@@ -82,7 +82,7 @@ if ($filter['enabled']) {
 
     if (
         // New filter
-        ! pwg_get_session_var('filter_enabled', false) or
+        ! (bool) pwg_get_session_var('filter_enabled', false) or
         // Cache data updated
         $filter_key['time'] <= $user['cache_update_time'] or
         // Date, period, user are changed
@@ -142,7 +142,7 @@ WHERE ';
         $filter['visible_images'] = pwg_get_session_var('filter_visible_images', '');
     }
     unset($filter_key);
-    if (get_filter_page_value('add_notes')) {
+    if ((bool) get_filter_page_value('add_notes')) {
         $header_notes[] = l10n_dec(
             'Photos posted within the last %d day.',
             'Photos posted within the last %d days.',
@@ -151,7 +151,7 @@ WHERE ';
     }
     include_once PHPWG_ROOT_PATH . 'include/functions_filter.inc.php';
 } else {
-    if (pwg_get_session_var('filter_enabled', false)) {
+    if ((bool) pwg_get_session_var('filter_enabled', false)) {
         pwg_unset_session_var('filter_enabled');
         pwg_unset_session_var('filter_check_key');
         pwg_unset_session_var('filter_categories');

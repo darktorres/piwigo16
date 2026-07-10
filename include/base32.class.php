@@ -73,7 +73,7 @@ class PwgBase32
         if (empty($input)) {
             return '';
         }
-        $input = str_split((string) $input);
+        $input = str_split($input);
         $binaryString = '';
         for ($i = 0; $i < count($input); $i++) {
             $binaryString .= str_pad(base_convert((string) ord($input[$i]), 10, 2), 8, '0', STR_PAD_LEFT);
@@ -87,11 +87,11 @@ class PwgBase32
         }
         if ($padding && ($x = strlen($binaryString) % 40) != 0) {
             if ($x == 8) {
-                $base32 .= str_repeat((string) self::$map[32], 6);
+                $base32 .= str_repeat(self::$map[32], 6);
             } elseif ($x == 16) {
-                $base32 .= str_repeat((string) self::$map[32], 4);
+                $base32 .= str_repeat(self::$map[32], 4);
             } elseif ($x == 24) {
-                $base32 .= str_repeat((string) self::$map[32], 3);
+                $base32 .= str_repeat(self::$map[32], 3);
             } elseif ($x == 32) {
                 $base32 .= self::$map[32];
             }
@@ -104,7 +104,7 @@ class PwgBase32
         if (empty($input)) {
             return null;
         }
-        $paddingCharCount = substr_count((string) $input, (string) self::$map[32]);
+        $paddingCharCount = substr_count($input, self::$map[32]);
         $allowedValues = [6, 4, 3, 1, 0];
         if (! in_array($paddingCharCount, $allowedValues)) {
             return false;
@@ -112,7 +112,7 @@ class PwgBase32
         for ($i = 0; $i < 4; $i++) {
             if (
                 $paddingCharCount == $allowedValues[$i] &&
-                substr((string) $input, -($allowedValues[$i])) != str_repeat((string) self::$map[32], $allowedValues[$i])
+                substr($input, -($allowedValues[$i])) != str_repeat(self::$map[32], $allowedValues[$i])
             ) {
                 return false;
             }
@@ -126,12 +126,12 @@ class PwgBase32
                 return false;
             }
             for ($j = 0; $j < 8; $j++) {
-                $x .= str_pad(base_convert((string) @self::$flippedMap[@$input[$i + $j]], 10, 2), 5, '0', STR_PAD_LEFT);
+                $x .= str_pad(base_convert(@self::$flippedMap[@$input[$i + $j]], 10, 2), 5, '0', STR_PAD_LEFT);
             }
             $eightBits = str_split($x, 8);
             for ($z = 0; $z < count($eightBits); $z++) {
                 $codepoint = max(0, min(255, (int) base_convert($eightBits[$z], 2, 10)));
-                $binaryString .= (($y = chr($codepoint)) || ord($y[0]) == 48) ? $y : '';
+                $binaryString .= ((bool) ($y = chr($codepoint)) || ord($y[0]) == 48) ? $y : '';
             }
         }
         return $binaryString;

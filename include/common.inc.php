@@ -96,7 +96,7 @@ if (isset($conf['show_php_errors']) && ! empty($conf['show_php_errors'])) {
     if (is_scalar($conf['show_php_errors'])) {
         @ini_set('error_reporting', $conf['show_php_errors']);
     }
-    if ($conf['show_php_errors_on_frontend']) {
+    if ((bool) $conf['show_php_errors_on_frontend']) {
         // Route errors to DevTools (X-PHP-Error-N response headers) instead of
         // inline output, which corrupts JSON/XML/binary responses (see
         // include/error_collector.inc.php).
@@ -171,7 +171,7 @@ $logger = new Logger([
     'archiveDays' => $conf['log_archive_days'],
 ]);
 
-if (! $conf['check_upgrade_feed']) {
+if (! (bool) $conf['check_upgrade_feed']) {
     if (! isset($conf['piwigo_db_version']) or $conf['piwigo_db_version'] != get_branch_from_version(PHPWG_VERSION)) {
         redirect(get_root_url() . 'upgrade.php');
     }
@@ -205,7 +205,7 @@ if (! isset($conf['last_major_update'])) {
 // use a "rank", even if admin/configuration.php should have removed it. We must remove it.
 // TODO remove this data update as soon as 2025 arrives
 $conf_order_by = $conf['order_by'];
-if (is_string($conf_order_by) && preg_match('/(, )?`rank` ASC/', $conf_order_by)) {
+if (is_string($conf_order_by) && (bool) preg_match('/(, )?`rank` ASC/', $conf_order_by)) {
     $order_by = preg_replace('/(, )?`rank` ASC/', '', $conf_order_by);
     if ($order_by == 'ORDER BY ') {
         $order_by = 'ORDER BY id ASC';
@@ -287,7 +287,7 @@ if (is_a_guest()) {
 
 // in case an auth key was provided and is no longer valid, we must wait to
 // be here, with language loaded, to prepare the message
-if ($page['auth_key_invalid']) {
+if ((bool) $page['auth_key_invalid']) {
     // $page itself is only known as array<string, mixed>, so $page['errors']
     // needs its own guard before the nested push -- it's always set to []
     // at the top of this file (line 57), but that specific narrowing is
@@ -366,7 +366,7 @@ if (is_array($user_internal_status) && ($user_internal_status['guest_must_be_gue
     $header_msgs[] = l10n('Bad status for user "guest", using default status. Please notify the webmaster.');
 }
 
-if ($conf['gallery_locked']) {
+if ((bool) $conf['gallery_locked']) {
     $header_msgs[] = l10n('The gallery is locked for maintenance. Please, come back later.');
 
     if (script_basename() != 'identification' and ! is_admin()) {
@@ -379,7 +379,7 @@ if ($conf['gallery_locked']) {
     }
 }
 
-if ($conf['check_upgrade_feed']) {
+if ((bool) $conf['check_upgrade_feed']) {
     include_once PHPWG_ROOT_PATH . 'admin/include/functions_upgrade.php';
     if (check_upgrade_feed()) {
         $header_msgs[] = 'Some database upgrades are missing, '
@@ -392,7 +392,7 @@ if (count($header_msgs) > 0) {
     $header_msgs = [];
 }
 
-if (! empty($conf['filter_pages']) and get_filter_page_value('used')) {
+if (! empty($conf['filter_pages']) and (bool) get_filter_page_value('used')) {
     include PHPWG_ROOT_PATH . 'include/filter.inc.php';
 } else {
     $filter['enabled'] = false;
@@ -404,7 +404,7 @@ if (isset($conf['header_notes']) && is_array($conf['header_notes'])) {
 
 // default event handlers
 add_event_handler('render_category_literal_description', 'render_category_literal_description');
-if (! $conf['allow_html_descriptions']) {
+if (! (bool) $conf['allow_html_descriptions']) {
     add_event_handler('render_category_description', 'pwg_nl2br');
 }
 add_event_handler('render_comment_content', 'render_comment_content');

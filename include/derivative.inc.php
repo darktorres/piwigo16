@@ -96,7 +96,7 @@ final class SrcImage
             $this->size = [$size[0], $size[1]];
         }
 
-        if (! $this->size) {
+        if (! (bool) $this->size) {
             if (isset($infos['width']) && isset($infos['height'])) {
                 $width = is_numeric($infos['width']) ? (int) $infos['width'] : 0;
                 $height = is_numeric($infos['height']) ? (int) $infos['height'] : 0;
@@ -105,7 +105,7 @@ final class SrcImage
                 $this->rotation = is_numeric($rotation_raw) ? intval($rotation_raw) % 4 : 0;
                 // 1 or 5 =>  90 clockwise
                 // 3 or 7 => 270 clockwise
-                if ($this->rotation % 2) {
+                if ((bool) ($this->rotation % 2)) {
                     [$width, $height] = [$height, $width];
                 }
 
@@ -134,7 +134,7 @@ final class SrcImage
     public function get_url(): string
     {
         $url = get_root_url() . $this->rel_path;
-        if (! ($this->flags & self::IS_MIMETYPE)) {
+        if (! (bool) ($this->flags & self::IS_MIMETYPE)) {
             $filtered_url = trigger_change('get_src_image_url', $url, $this);
             // trigger_change() hands the value through arbitrary registered
             // event handlers (mixed return); fall back to the pre-filter
@@ -155,7 +155,7 @@ final class SrcImage
     public function get_size(): ?array
     {
         if ($this->size == null) {
-            if ($this->flags & self::DIM_NOT_GIVEN) {
+            if ((bool) ($this->flags & self::DIM_NOT_GIVEN)) {
                 fatal_error('SrcImage dimensions required but not provided');
             }
             // probably not metadata synced
@@ -325,7 +325,7 @@ final class DerivativeImage
             // returns non-null here.
             assert($src_size !== null);
             if ($params->is_identity($src_size)) {// the source image is smaller than what we should do - we do not upsample
-                if (! $params->will_watermark($src_size) && ! $src->rotation) {// no watermark, no rotation required -> we will use the source image
+                if (! $params->will_watermark($src_size) && ! (bool) $src->rotation) {// no watermark, no rotation required -> we will use the source image
                     $params = null;
                     $rel_path = $rel_url = $src->rel_path;
                     return;
@@ -348,19 +348,19 @@ final class DerivativeImage
         }
 
         $tokens = [];
-        $tokens[] = substr((string) $params->type, 0, 2);
+        $tokens[] = substr($params->type, 0, 2);
 
         if ($params->type == IMG_CUSTOM) {
             $params->add_url_tokens($tokens);
         }
 
         $loc = $src->rel_path;
-        if (substr_compare((string) $loc, './', 0, 2) == 0) {
-            $loc = substr((string) $loc, 2);
-        } elseif (substr_compare((string) $loc, '../', 0, 3) == 0) {
-            $loc = substr((string) $loc, 3);
+        if (substr_compare($loc, './', 0, 2) == 0) {
+            $loc = substr($loc, 2);
+        } elseif (substr_compare($loc, '../', 0, 3) == 0) {
+            $loc = substr($loc, 3);
         }
-        $dot = strrpos((string) $loc, '.');
+        $dot = strrpos($loc, '.');
         if ($dot === false) {
             throw new Exception("DerivativeImage::build(): path '{$loc}' has no extension");
         }
@@ -371,7 +371,7 @@ final class DerivativeImage
         /** @var array<string, mixed> $conf */
         global $conf;
         $url_style = $conf['derivative_url_style'];
-        if (! $url_style) {
+        if (! (bool) $url_style) {
             $mtime = @filemtime(PHPWG_ROOT_PATH . $rel_path);
             if ($mtime === false or $mtime < $params->last_mod_time) {
                 $is_cached = false;
@@ -383,10 +383,10 @@ final class DerivativeImage
 
         if ($url_style == 2) {
             $rel_url = 'i';
-            if ($conf['php_extension_in_urls']) {
+            if ((bool) $conf['php_extension_in_urls']) {
                 $rel_url .= '.php';
             }
-            if ($conf['question_mark_in_urls']) {
+            if ((bool) $conf['question_mark_in_urls']) {
                 $rel_url .= '?';
             }
             $rel_url .= '/' . $loc;
@@ -455,7 +455,7 @@ final class DerivativeImage
     public function get_size_css()
     {
         $size = $this->get_size();
-        if ($size) {
+        if ((bool) $size) {
             return 'width:' . $size[0] . 'px; height:' . $size[1] . 'px';
         }
     }
@@ -468,7 +468,7 @@ final class DerivativeImage
     public function get_size_htm()
     {
         $size = $this->get_size();
-        if ($size) {
+        if ((bool) $size) {
             return 'width="' . $size[0] . '" height="' . $size[1] . '"';
         }
     }
@@ -481,7 +481,7 @@ final class DerivativeImage
     public function get_size_hr()
     {
         $size = $this->get_size();
-        if ($size) {
+        if ((bool) $size) {
             return $size[0] . ' x ' . $size[1];
         }
     }
@@ -494,7 +494,7 @@ final class DerivativeImage
     public function get_scaled_size($maxw, $maxh): ?array
     {
         $size = $this->get_size();
-        if ($size) {
+        if ((bool) $size) {
             $ratio_w = $size[0] / $maxw;
             $ratio_h = $size[1] / $maxh;
             if ($ratio_w > 1 || $ratio_h > 1) {
@@ -520,7 +520,7 @@ final class DerivativeImage
     public function get_scaled_size_htm($maxw = 9999, $maxh = 9999)
     {
         $size = $this->get_scaled_size($maxw, $maxh);
-        if ($size) {
+        if ((bool) $size) {
             return 'width="' . $size[0] . '" height="' . $size[1] . '"';
         }
     }

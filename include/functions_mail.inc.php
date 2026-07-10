@@ -125,7 +125,7 @@ function unformat_email($input): array
         ];
     }
 
-    if (preg_match('/(.*)<(.*)>.*/', $input, $matches)) {
+    if ((bool) preg_match('/(.*)<(.*)>.*/', $input, $matches)) {
         return [
             'email' => trim($matches[2]),
             'name' => trim($matches[1]),
@@ -787,7 +787,7 @@ function pwg_mail($to, array $args = [], array $tpl = [])
 
     // Bcc
     $Bcc = get_clean_recipients_list($args['Bcc'] ?? null);
-    if ($conf_mail['send_bcc_mail_webmaster']) {
+    if ((bool) $conf_mail['send_bcc_mail_webmaster']) {
         $Bcc[] = [
             'email' => get_webmaster_mail_address(),
             'name' => '',
@@ -812,7 +812,7 @@ function pwg_mail($to, array $args = [], array $tpl = [])
 
     // try to decompose subject like "[....] ...."
     if (! isset($args['mail_title']) and ! isset($args['mail_subtitle'])) {
-        if (preg_match('#^\[(.*)\](.*)$#', $args['subject'], $matches)) {
+        if ((bool) preg_match('#^\[(.*)\](.*)$#', $args['subject'], $matches)) {
             $args['mail_title'] = $matches[1];
             $args['mail_subtitle'] = $matches[2];
         }
@@ -830,7 +830,7 @@ function pwg_mail($to, array $args = [], array $tpl = [])
     }
 
     $content_type_list = [];
-    if ($conf_mail['mail_allow_html'] and ($args['email_format'] ?? null) != 'text/plain') {
+    if ((bool) $conf_mail['mail_allow_html'] and ($args['email_format'] ?? null) != 'text/plain') {
         $content_type_list[] = 'text/html';
     }
     $content_type_list[] = 'text/plain';
@@ -887,7 +887,7 @@ function pwg_mail($to, array $args = [], array $tpl = [])
                 [
                     'GALLERY_URL' => add_url_params($gallery_home_url, $add_url_params),
                     'GALLERY_TITLE' => $page['gallery_title'] ?? $conf['gallery_title'],
-                    'VERSION' => $conf['show_version'] ? PHPWG_VERSION : '',
+                    'VERSION' => ((bool) $conf['show_version']) ? PHPWG_VERSION : '',
                     'PHPWG_URL' => defined('PHPWG_URL') ? PHPWG_URL : '',
                     'CONTENT_ENCODING' => get_pwg_charset(),
                     'CONTACT_MAIL' => $email_webmaster,
@@ -986,7 +986,7 @@ function pwg_mail($to, array $args = [], array $tpl = [])
     }
     $email->text($contents['text/plain']);
 
-    if ($conf_mail['use_smtp']) {
+    if ((bool) $conf_mail['use_smtp']) {
         $smtp_host_raw = $conf_mail['smtp_host'] ?? null;
         $smtp_host_raw = is_string($smtp_host_raw) ? $smtp_host_raw : '';
 
@@ -1024,7 +1024,7 @@ function pwg_mail($to, array $args = [], array $tpl = [])
     $error_message = null;
     $pre_result = trigger_change('before_send_mail', true, $to, $args, $email);
 
-    if ($pre_result) {
+    if ((bool) $pre_result) {
         try {
             $mailer->send($email);
         } catch (TransportExceptionInterface $e) {
@@ -1032,10 +1032,10 @@ function pwg_mail($to, array $args = [], array $tpl = [])
             $error_message = $e->getMessage();
         }
 
-        if (! $ret and (! ini_get('display_errors') or is_admin())) {
+        if (! $ret and (! (bool) ini_get('display_errors') or is_admin())) {
             trigger_error('Mailer Error: ' . $error_message, E_USER_WARNING);
         }
-        if ($conf['debug_mail']) {
+        if ((bool) $conf['debug_mail']) {
             pwg_send_mail_test($ret, $email, $args, $error_message);
         }
     }
@@ -1057,7 +1057,7 @@ function pwg_send_mail($result, $to, $subject, $content, $headers): mixed
         trigger_error('pwg_send_mail function is deprecated', E_USER_NOTICE);
     }
 
-    if (! $result) {
+    if (! (bool) $result) {
         return pwg_mail($to, [
             'content' => $content,
             'subject' => $subject,

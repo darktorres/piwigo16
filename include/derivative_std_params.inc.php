@@ -150,7 +150,7 @@ final class ImageStdParams
         /** @var array<string, mixed> $conf */
         global $conf;
 
-        if (count(self::$disabled_type_map)) {
+        if ((bool) count(self::$disabled_type_map)) {
             return self::$disabled_type_map;
         }
 

@@ -46,7 +46,7 @@ function pwg_db_connect($host, $user, $password, $database): void
     $dbname = '';
 
     $mysqli = new mysqli($host, $user, $password, $dbname, $port, $socket);
-    if (mysqli_connect_error()) {
+    if ((bool) mysqli_connect_error()) {
         throw new Exception("Can't connect to server");
     }
     if (! $mysqli->select_db($database)) {
@@ -61,7 +61,7 @@ function pwg_db_connect($host, $user, $password, $database): void
     [$sql_mode_current] = $row;
 
     // remove ONLY_FULL_GROUP_BY from the list
-    $sql_mode_altered = implode(',', array_diff(explode(',', (string) $sql_mode_current), ['ONLY_FULL_GROUP_BY']));
+    $sql_mode_altered = implode(',', array_diff(explode(',', $sql_mode_current), ['ONLY_FULL_GROUP_BY']));
 
     if ($sql_mode_altered != $sql_mode_current) {
         pwg_query("SET SESSION sql_mode='" . $sql_mode_altered . "'");
@@ -133,7 +133,7 @@ function pwg_query($query)
     $die_on_sql_error = (bool) ($conf['die_on_sql_error'] ?? false);
 
     $start = microtime(true);
-    ($result = $mysqli->query($query)) or my_error($query, $die_on_sql_error);
+    ((bool) ($result = $mysqli->query($query))) or (bool) my_error($query, $die_on_sql_error);
 
     $time = microtime(true) - $start;
 
@@ -151,7 +151,7 @@ function pwg_query($query)
     $queries_time += $time;
     $page['queries_time'] = $queries_time;
 
-    if ($conf['show_queries']) {
+    if ((bool) $conf['show_queries']) {
         $output = '';
         $output .= '<pre>[' . $count_queries . '] ';
         $output .= "\n" . $query;
@@ -161,11 +161,11 @@ function pwg_query($query)
         $output .= number_format($queries_time, 3, '.', ' ') . ' s)';
         $output .= "\n" . '(total time      : ';
         $output .= number_format(($time + $start - $t2), 3, '.', ' ') . ' s)';
-        if ($result != null and preg_match('/\s*SELECT\s+/i', $query)) {
+        if ($result != null and (bool) preg_match('/\s*SELECT\s+/i', $query)) {
             $output .= "\n" . '(num rows        : ';
             $output .= pwg_db_num_rows($result) . ' )';
         } elseif ($result != null
-          and preg_match('/\s*INSERT|UPDATE|REPLACE|DELETE\s+/i', $query)) {
+          and (bool) preg_match('/\s*INSERT|UPDATE|REPLACE|DELETE\s+/i', $query)) {
             $output .= "\n" . '(affected rows   : ';
             $output .= pwg_db_changes() . ' )';
         }
@@ -380,7 +380,7 @@ UPDATE ' . protect_column_name($tablename) . '
                 if (isset($data[$key]) and $data[$key] != '' and is_scalar($data[$key])) {
                     $query .= $separator . protect_column_name($key) . ' = \'' . $data[$key] . '\'';
                 } else {
-                    if ($flags & MASS_UPDATES_SKIP_EMPTY) {
+                    if ((bool) ($flags & MASS_UPDATES_SKIP_EMPTY)) {
                         continue; // next field
                     }
                     $query .= $separator . protect_column_name($key) . ' = NULL';
@@ -415,7 +415,7 @@ UPDATE ' . protect_column_name($tablename) . '
         $columns = [];
         $all_fields = array_merge($dbfields['primary'], $dbfields['update']);
 
-        while ($row = pwg_db_fetch_assoc($result)) {
+        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
             if (in_array($row['Field'], $all_fields)) {
                 $column = '`' . $row['Field'] . '`';
                 $column .= ' ' . $row['Type'];
@@ -449,7 +449,7 @@ CREATE TABLE ' . $temporary_tablename . '
         pwg_query($query);
         mass_inserts($temporary_tablename, $all_fields, $datas);
 
-        if ($flags & MASS_UPDATES_SKIP_EMPTY) {
+        if ((bool) ($flags & MASS_UPDATES_SKIP_EMPTY)) {
             $func_set = (fn (string $s): string => "t1.{$s} = IFNULL(t2.{$s}, t1.{$s})");
         } else {
             $func_set = (fn (string $s): string => "t1.{$s} = t2.{$s}");
@@ -502,7 +502,7 @@ UPDATE ' . protect_column_name($tablename) . '
         if (isset($value) and $value !== '' and is_scalar($value)) {
             $query .= $separator . protect_column_name($key) . ' = \'' . $value . '\'';
         } else {
-            if ($flags & MASS_UPDATES_SKIP_EMPTY) {
+            if ((bool) ($flags & MASS_UPDATES_SKIP_EMPTY)) {
                 continue; // next field
             }
             $query .= $separator . protect_column_name($key) . ' = NULL';
@@ -543,7 +543,7 @@ UPDATE ' . protect_column_name($tablename) . '
 function mass_inserts(string $table_name, array $dbfields, array $datas, array $options = []): void
 {
     $ignore = '';
-    if (isset($options['ignore']) and $options['ignore']) {
+    if (isset($options['ignore']) and (bool) $options['ignore']) {
         $ignore = 'IGNORE';
     }
 
@@ -607,7 +607,7 @@ INSERT ' . $ignore . ' INTO ' . protect_column_name($table_name) . '
 function single_insert(string $table_name, array $data, array $options = []): void
 {
     $ignore = '';
-    if (isset($options['ignore']) and $options['ignore']) {
+    if (isset($options['ignore']) and (bool) $options['ignore']) {
         $ignore = 'IGNORE';
     }
 
@@ -670,7 +670,7 @@ function do_maintenance_all_tables(): void
     // List all tables
     $query = 'SHOW TABLES LIKE \'' . $prefixeTable . '%\'';
     $result = pwg_query($query);
-    while ($row = pwg_db_fetch_row($result)) {
+    while ((bool) ($row = pwg_db_fetch_row($result))) {
         $all_tables[] = $row[0];
     }
 
@@ -684,7 +684,7 @@ function do_maintenance_all_tables(): void
 
         $query = 'DESC ' . $table_name . ';';
         $result = pwg_query($query);
-        while ($row = pwg_db_fetch_assoc($result)) {
+        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
             if ($row['Key'] == 'PRI') {
                 $all_primary_key[] = $row['Field'];
             }
@@ -692,13 +692,13 @@ function do_maintenance_all_tables(): void
 
         if (count($all_primary_key) != 0) {
             $query = 'ALTER TABLE ' . $table_name . ' ORDER BY ' . implode(', ', $all_primary_key) . ';';
-            $mysqli_rc = $mysqli_rc && pwg_query($query);
+            $mysqli_rc = ((bool) $mysqli_rc) && ((bool) pwg_query($query));
         }
     }
 
     // Optimize all tables
     $query = 'OPTIMIZE TABLE ' . implode(', ', $all_tables);
-    $mysqli_rc = $mysqli_rc && pwg_query($query);
+    $mysqli_rc = ((bool) $mysqli_rc) && ((bool) pwg_query($query));
     if ($mysqli_rc) {
         $page['infos'][] = l10n('All optimizations have been successfully completed.');
     } else {
@@ -740,7 +740,7 @@ function get_enums($table, $field): array
 {
     $options = [];
     $result = pwg_query('DESC ' . $table);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         if ($row['Field'] == $field) {
             // parse enum('blue','green','black')
             $options = explode(',', substr((string) $row['Type'], 5, -1));
@@ -837,7 +837,7 @@ function pwg_db_get_month(string $date): string
 
 function pwg_db_get_week(string $date, ?int $mode = null): string
 {
-    if ($mode) {
+    if ((bool) $mode) {
         return 'WEEK(' . $date . ', ' . $mode . ')';
     } else {
         return 'WEEK(' . $date . ')';
@@ -930,7 +930,7 @@ function query2array(string $query, ?string $key_name = null, ?string $value_nam
 
     if (isset($key_name)) {
         if (isset($value_name)) {
-            while ($row = pwg_db_fetch_assoc($result)) {
+            while ((bool) ($row = pwg_db_fetch_assoc($result))) {
                 $key = $row[$key_name];
                 // matches PHP's own implicit null-key coercion; made
                 // explicit here only to satisfy the array key type.
@@ -938,7 +938,7 @@ function query2array(string $query, ?string $key_name = null, ?string $value_nam
                 $data[$key] = $row[$value_name];
             }
         } else {
-            while ($row = pwg_db_fetch_assoc($result)) {
+            while ((bool) ($row = pwg_db_fetch_assoc($result))) {
                 $key = $row[$key_name];
                 $key ??= '';
                 $data[$key] = $row;
@@ -946,11 +946,11 @@ function query2array(string $query, ?string $key_name = null, ?string $value_nam
         }
     } else {
         if (isset($value_name)) {
-            while ($row = pwg_db_fetch_assoc($result)) {
+            while ((bool) ($row = pwg_db_fetch_assoc($result))) {
                 $data[] = $row[$value_name];
             }
         } else {
-            while ($row = pwg_db_fetch_assoc($result)) {
+            while ((bool) ($row = pwg_db_fetch_assoc($result))) {
                 $data[] = $row;
             }
         }

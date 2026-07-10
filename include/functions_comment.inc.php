@@ -28,7 +28,7 @@ function user_comment_check($action, array $comment)
         return $action;
     }
 
-    $my_action = $conf['comment_spam_reject'] ? 'reject' : 'moderate';
+    $my_action = ((bool) $conf['comment_spam_reject']) ? 'reject' : 'moderate';
 
     if ($action == $my_action) {
         return $action;
@@ -88,7 +88,7 @@ function insert_user_comment(&$comm, $key, &$infos): string
     );
 
     $infos = [];
-    if (! $conf['comments_validation'] or is_admin()) {
+    if (! (bool) $conf['comments_validation'] or is_admin()) {
         $comment_action = 'validate'; // one of validate, moderate, reject
     } else {
         $comment_action = 'moderate'; // one of validate, moderate, reject
@@ -97,7 +97,7 @@ function insert_user_comment(&$comm, $key, &$infos): string
     // display author field if the user status is guest or generic
     if (! is_classic_user()) {
         if (empty($comm['author'])) {
-            if ($conf['comments_author_mandatory']) {
+            if ((bool) $conf['comments_author_mandatory']) {
                 $infos[] = l10n('Username is mandatory');
                 $comment_action = 'reject';
             }
@@ -147,7 +147,7 @@ SELECT COUNT(*) AS user_exists
 
     // website
     if (! empty($comm['website_url'])) {
-        if (! $conf['comments_enable_website']) { // honeypot: if the field is disabled, it should be empty !
+        if (! (bool) $conf['comments_enable_website']) { // honeypot: if the field is disabled, it should be empty !
             $comment_action = 'reject';
             if (! isset($_POST['cr']) or ! is_array($_POST['cr'])) {
                 $_POST['cr'] = [];
@@ -156,7 +156,7 @@ SELECT COUNT(*) AS user_exists
         } else {
             $website_url = is_string($comm['website_url']) ? $comm['website_url'] : '';
             $website_url = strip_tags($website_url);
-            if (! preg_match('/^https?/i', $website_url)) {
+            if (! (bool) preg_match('/^https?/i', $website_url)) {
                 $website_url = 'http://' . $website_url;
             }
             $comm['website_url'] = $website_url;
@@ -171,7 +171,7 @@ SELECT COUNT(*) AS user_exists
     if (empty($comm['email'])) {
         if (! empty($user['email'])) {
             $comm['email'] = $user['email'];
-        } elseif ($conf['comments_email_mandatory']) {
+        } elseif ((bool) $conf['comments_email_mandatory']) {
             $infos[] = l10n('Email address is missing. Please specify an email address.');
             $comment_action = 'reject';
         }
@@ -263,8 +263,8 @@ INSERT INTO ' . COMMENTS_TABLE . '
 
         invalidate_user_cache_nb_comments();
 
-        if (($conf['email_admin_on_comment'] && $comment_action == 'validate')
-            or ($conf['email_admin_on_comment_validation'] and $comment_action == 'moderate')) {
+        if (((bool) $conf['email_admin_on_comment'] && $comment_action == 'validate')
+            or ((bool) $conf['email_admin_on_comment_validation'] and $comment_action == 'moderate')) {
             include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php';
 
             $comment_url = get_absolute_root_url() . 'comments.php?comment_id=' . $comm['id'];
@@ -324,7 +324,7 @@ $user_where_clause . '
 ;';
     pwg_query($query);
 
-    if (pwg_db_changes()) {
+    if ((bool) pwg_db_changes()) {
         invalidate_user_cache_nb_comments();
 
         email_admin(
@@ -369,7 +369,7 @@ function update_user_comment(array $comment, $post_key): string
 
     if (! verify_ephemeral_key($post_key, $comment_image_id)) {
         $comment_action = 'reject';
-    } elseif (! $conf['comments_validation'] or is_admin()) { // should the updated comment must be validated
+    } elseif (! (bool) $conf['comments_validation'] or is_admin()) { // should the updated comment must be validated
         $comment_action = 'validate'; // one of validate, moderate, reject
     } else {
         $comment_action = 'moderate'; // one of validate, moderate, reject
@@ -395,7 +395,7 @@ function update_user_comment(array $comment, $post_key): string
     if (! empty($comment['website_url'])) {
         $website_url = is_string($comment['website_url']) ? $comment['website_url'] : '';
         $website_url = strip_tags($website_url);
-        if (! preg_match('/^https?/i', $website_url)) {
+        if (! (bool) preg_match('/^https?/i', $website_url)) {
             $website_url = 'http://' . $website_url;
         }
         $comment['website_url'] = $website_url;
@@ -433,7 +433,7 @@ $user_where_clause . '
         $result = pwg_query($query);
 
         // mail admin and ask to validate the comment
-        if ($result and $conf['email_admin_on_comment_validation'] and $comment_action == 'moderate') {
+        if ((bool) $result and (bool) $conf['email_admin_on_comment_validation'] and $comment_action == 'moderate') {
             include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php';
 
             $comment_url = get_absolute_root_url() . 'comments.php?comment_id=' . $comment_id_value;
@@ -452,7 +452,7 @@ $user_where_clause . '
             );
         }
         // just mail admin
-        elseif ($result) {
+        elseif ((bool) $result) {
             email_admin('edit', [
                 'author' => $user['username'],
                 'content' => stripslashes($comment_content),
@@ -476,8 +476,8 @@ function email_admin($action, array $comment): void
     global $conf;
 
     if (! in_array($action, ['edit', 'delete'])
-        or (($action == 'edit') and ! $conf['email_admin_on_comment_edition'])
-        or (($action == 'delete') and ! $conf['email_admin_on_comment_deletion'])) {
+        or (($action == 'edit') and ! (bool) $conf['email_admin_on_comment_edition'])
+        or (($action == 'delete') and ! (bool) $conf['email_admin_on_comment_deletion'])) {
         return;
     }
 

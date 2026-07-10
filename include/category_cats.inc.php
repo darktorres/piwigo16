@@ -103,7 +103,7 @@ $image_ids = [];
 $user_representative_updates_for = [];
 $dates_of_category = [];
 
-while ($row = pwg_db_fetch_assoc($result)) {
+while ((bool) ($row = pwg_db_fetch_assoc($result))) {
     $cat_id = $row['id'];
     if (! is_string($cat_id)) {
         // 'id' is the categories table primary key (NOT NULL); this should never happen
@@ -116,7 +116,7 @@ while ($row = pwg_db_fetch_assoc($result)) {
         $image_id = $row['user_representative_picture_id'];
     } elseif (! empty($row['representative_picture_id'])) { // if a representative picture is set, it has priority
         $image_id = $row['representative_picture_id'];
-    } elseif ($conf['allow_random_representative']) { // searching a random representant among elements in sub-categories
+    } elseif ((bool) $conf['allow_random_representative']) { // searching a random representant among elements in sub-categories
         $image_id = get_random_image_in_category($row);
     } elseif ($row['count_categories'] > 0 and $row['count_images'] > 0) { // at this point, $row['count_images'] should always be >0 (used as condition in SQL)
         // searching a random representant among representant of sub-categories
@@ -151,7 +151,7 @@ SELECT representative_picture_id
     }
 
     if (isset($image_id)) {
-        if ($conf['representative_cache_on_subcats'] and $row['user_representative_picture_id'] != $image_id) {
+        if ((bool) $conf['representative_cache_on_subcats'] and $row['user_representative_picture_id'] != $image_id) {
             $user_representative_updates_for[$cat_id] = $image_id;
         }
 
@@ -171,7 +171,7 @@ SELECT representative_picture_id
     unset($image_id);
 }
 
-if ($conf['display_fromto']) {
+if ((bool) $conf['display_fromto']) {
     if (count($category_ids) > 0) {
         $query = '
 SELECT
@@ -208,7 +208,7 @@ SELECT *
   WHERE id IN (' . implode(',', array_filter($image_ids, is_string(...))) . ')
 ;';
     $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         $image_row_id = $row['id'];
         if (! is_string($image_row_id)) {
             // 'id' is the images table primary key (NOT NULL); this should never happen
@@ -235,7 +235,7 @@ SELECT *
                         $new_image_ids[] = $image_id;
                     }
 
-                    if ($conf['representative_cache_on_level']) {
+                    if ((bool) $conf['representative_cache_on_level']) {
                         // 'id' is the categories table primary key (NOT NULL,
                         // always a string here, see is_string($cat_id) guard
                         // above); narrow defensively for the array key type
@@ -259,7 +259,7 @@ SELECT *
   WHERE id IN (' . implode(',', $new_image_ids) . ')
 ;';
         $result = pwg_query($query);
-        while ($row = pwg_db_fetch_assoc($result)) {
+        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
             $new_image_row_id = $row['id'];
             if (! is_string($new_image_row_id)) {
                 // 'id' is the images table primary key (NOT NULL); this should never happen
@@ -276,7 +276,7 @@ SELECT *
     unset($info);
 }
 
-if (count($user_representative_updates_for)) {
+if ((bool) count($user_representative_updates_for)) {
     $updates = [];
 
     foreach ($user_representative_updates_for as $cat_id => $image_id) {
@@ -375,7 +375,7 @@ if (count($categories) > 0) {
             ),
             'NAME' => $name,
         ]);
-        if ($conf['index_new_icon']) {
+        if ((bool) $conf['index_new_icon']) {
             $category_max_date_last = $category['max_date_last'];
             $category_max_date_last = is_string($category_max_date_last) ? $category_max_date_last : '';
             $category_is_child_date_last = $category['is_child_date_last'];
@@ -383,7 +383,7 @@ if (count($categories) > 0) {
             $tpl_var['icon_ts'] = get_icon($category_max_date_last, $category_is_child_date_last);
         }
 
-        if ($conf['display_fromto']) {
+        if ((bool) $conf['display_fromto']) {
             // 'id' is the categories table primary key (NOT NULL, always a
             // string here); narrow defensively for the array key type
             $category_id_key = $category['id'];

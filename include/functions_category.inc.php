@@ -96,7 +96,7 @@ FROM ' . CATEGORIES_TABLE . ' INNER JOIN ' . USER_CACHE_CATEGORIES_TABLE . '
   ON id = cat_id and user_id = ' . $user_id_str;
 
     // Always expand when filter is activated
-    if (! $user['expand'] and ! $filter['enabled']) {
+    if (! (bool) $user['expand'] and ! (bool) $filter['enabled']) {
         $where = '
 (id_uppercat is NULL';
         if ($category_page !== null) {
@@ -130,7 +130,7 @@ WHERE ' . $where . '
     $result = pwg_query($query);
     $cats = [];
     $selected_category = $category_page;
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         $child_date_last = @$row['max_date_last'] > @$row['date_last'];
         $row = array_merge(
             $row,
@@ -155,7 +155,7 @@ WHERE ' . $where . '
                 'IS_UPPERCAT' => ($selected_category !== null && ($selected_category['id_uppercat'] ?? null) == $row['id']) ? true : false,
             ]
         );
-        if ($conf['index_new_icon']) {
+        if ((bool) $conf['index_new_icon']) {
             $max_date_last = $row['max_date_last'];
             $row['icon_ts'] = get_icon(is_string($max_date_last) ? $max_date_last : '', $child_date_last);
         }
@@ -416,7 +416,7 @@ SELECT id, permalink, 0 AS is_old
                 return null;
             }
             $cat_id = (int) $cat_id_raw;
-            if ($perma_hash[$permalinks[$i]]['is_old']) {
+            if ((bool) $perma_hash[$permalinks[$i]]['is_old']) {
                 $query = '
 UPDATE ' . OLD_PERMALINKS_TABLE . ' SET last_hit=NOW(), hit=hit+1
   WHERE permalink=\'' . $permalinks[$i] . '\' AND cat_id=' . $cat_id . '
@@ -557,7 +557,7 @@ FROM ' . CATEGORIES_TABLE . ' as c
 
     $userdata['last_photo_date'] = null;
     $cats = [];
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         $cat_id = is_numeric($row['cat_id']) ? (int) $row['cat_id'] : 0;
         $id_uppercat_raw = $row['id_uppercat'];
         $id_uppercat = is_numeric($id_uppercat_raw) ? (int) $id_uppercat_raw : null;
@@ -782,7 +782,7 @@ SELECT
 
     $result = pwg_query($query);
     $cats = [];
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         $id = $row['id'];
         if (is_string($id)) {
             $cats[$id] = $row;

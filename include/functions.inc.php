@@ -112,23 +112,23 @@ function mkgetdir($dir, $flags = MKGETDIR_DEFAULT): bool
         $umask = umask(0);
         $chmod_value = $conf['chmod_value'];
         $chmod_value = is_numeric($chmod_value) ? (int) $chmod_value : 0755;
-        $mkd = @mkdir($dir, $chmod_value, ($flags & MKGETDIR_RECURSIVE) ? true : false);
+        $mkd = @mkdir($dir, $chmod_value, ((bool) ($flags & MKGETDIR_RECURSIVE)) ? true : false);
         umask($umask);
         if ($mkd == false) {
-            ! ($flags & MKGETDIR_DIE_ON_ERROR) or fatal_error("{$dir} " . l10n('no write access'));
+            ! (bool) ($flags & MKGETDIR_DIE_ON_ERROR) or fatal_error("{$dir} " . l10n('no write access'));
             return false;
         }
-        if ($flags & MKGETDIR_PROTECT_HTACCESS) {
+        if ((bool) ($flags & MKGETDIR_PROTECT_HTACCESS)) {
             $file = $dir . '/.htaccess';
-            file_exists($file) or @file_put_contents($file, 'deny from all');
+            file_exists($file) or (bool) @file_put_contents($file, 'deny from all');
         }
-        if ($flags & MKGETDIR_PROTECT_INDEX) {
+        if ((bool) ($flags & MKGETDIR_PROTECT_INDEX)) {
             $file = $dir . '/index.htm';
-            file_exists($file) or @file_put_contents($file, 'Not allowed!');
+            file_exists($file) or (bool) @file_put_contents($file, 'Not allowed!');
         }
     }
     if (! is_writable($dir)) {
-        ! ($flags & MKGETDIR_DIE_ON_ERROR) or fatal_error("{$dir} " . l10n('no write access'));
+        ! (bool) ($flags & MKGETDIR_DIE_ON_ERROR) or fatal_error("{$dir} " . l10n('no write access'));
         return false;
     }
     return true;
@@ -142,7 +142,7 @@ function mkgetdir($dir, $flags = MKGETDIR_DEFAULT): bool
 function qualify_utf8(string $Str): int
 {
     $ret = 0;
-    for ($i = 0; $i < strlen((string) $Str); $i++) {
+    for ($i = 0; $i < strlen($Str); $i++) {
         if (ord($Str[$i]) < 0x80) {
             continue;
         } # 0bbbbbbb
@@ -166,7 +166,7 @@ function qualify_utf8(string $Str): int
             return -1;
         } # Does not match any model
         for ($j = 0; $j < $n; $j++) { # n bytes matching 10bbbbbb follow ?
-            if ((++$i == strlen((string) $Str)) || ((ord($Str[$i]) & 0xC0) != 0x80)) {
+            if ((++$i == strlen($Str)) || ((ord($Str[$i]) & 0xC0) != 0x80)) {
                 return -1;
             }
         }
@@ -387,6 +387,7 @@ function remove_accents($string)
         $string = strtr($string, $chars);
     } else {
         // Assume ISO-8859-1 if not UTF-8
+        $chars = [];
         $chars['in'] = chr(128) . chr(131) . chr(138) . chr(142) . chr(154) . chr(158)
           . chr(159) . chr(162) . chr(165) . chr(181) . chr(192) . chr(193) . chr(194)
           . chr(195) . chr(196) . chr(197) . chr(199) . chr(200) . chr(201) . chr(202)
@@ -401,6 +402,7 @@ function remove_accents($string)
         $chars['out'] = 'EfSZszYcYuAAAAAACEEEEIIIINOOOOOOUUUUYaaaaaaceeeeiiiinoooooouuuuyy';
 
         $string = strtr($string, $chars['in'], $chars['out']);
+        $double_chars = [];
         $double_chars['in'] = [chr(140), chr(156), chr(198), chr(208), chr(222), chr(223), chr(230), chr(240), chr(254)];
         $double_chars['out'] = ['OE', 'oe', 'AE', 'DH', 'TH', 'ss', 'ae', 'dh', 'th'];
         $string = str_replace($double_chars['in'], $double_chars['out'], $string);
@@ -427,7 +429,7 @@ if (function_exists('mb_strtolower') && defined('PWG_CHARSET')) {
      */
     function pwg_transliterate($term): string
     {
-        return remove_accents(strtolower((string) $term));
+        return remove_accents(strtolower($term));
     }
 }
 
@@ -466,7 +468,7 @@ SELECT id, name
     $result = pwg_query($query);
 
     $languages = [];
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         $id = $row['id'];
         $name = $row['name'];
         if (! is_string($id) || ! is_string($name)) {
@@ -539,7 +541,7 @@ function pwg_log($image_id = null, $image_type = null, int|string|null $format_i
 
     $user_id = is_numeric($user['id']) ? (int) $user['id'] : 0;
 
-    if ($update_last_visit) {
+    if ((bool) $update_last_visit) {
         $query = '
 UPDATE ' . USER_INFOS_TABLE . '
   SET last_visit = NOW(),
@@ -610,7 +612,7 @@ UPDATE ' . USER_INFOS_TABLE . '
             or in_array(strtolower($page_section), array_map(strtolower(...), $history_sections_cache))
         ) {
             $section = $page_section;
-        } elseif (preg_match('/^[a-zA-Z0-9_-]+$/', $page_section)) {
+        } elseif ((bool) preg_match('/^[a-zA-Z0-9_-]+$/', $page_section)) {
             $history_sections = get_enums(HISTORY_TABLE, 'section');
             $history_sections[] = $page_section;
 
@@ -749,7 +751,7 @@ function pwg_activity(string $object, $object_id, string $action, array $details
 
     if ($object == 'photo' and $action == 'add' and ! isset($details['sync'])) {
         $details['added_with'] = 'app';
-        if (isset($_SERVER['HTTP_REFERER']) and is_string($_SERVER['HTTP_REFERER']) and preg_match('/page=photos_add/', $_SERVER['HTTP_REFERER'])) {
+        if (isset($_SERVER['HTTP_REFERER']) and is_string($_SERVER['HTTP_REFERER']) and (bool) preg_match('/page=photos_add/', $_SERVER['HTTP_REFERER'])) {
             $details['added_with'] = 'browser';
         }
     }
@@ -882,7 +884,7 @@ function format_date_legacy($original, $show = null, $format = null)
 
     $date = str2DateTime($original, $format);
 
-    if (! $date) {
+    if (! (bool) $date) {
         return l10n('N/A');
     }
 
@@ -945,7 +947,7 @@ function format_date($original, $show = null, $format = null)
 
     $date = str2DateTime($original, $format);
 
-    if (! $date) {
+    if (! (bool) $date) {
         return l10n('N/A');
     }
 
@@ -1022,7 +1024,7 @@ function time_since($original, $stop = 'minute', $format = null, $with_text = tr
 {
     $date = str2DateTime($original, $format);
 
-    if (! $date) {
+    if (! (bool) $date) {
         return l10n('N/A');
     }
 
@@ -1078,7 +1080,15 @@ function time_since($original, $stop = 'minute', $format = null, $with_text = tr
     $print = trim($print);
 
     if ($with_text) {
-        if ($diff->invert) {
+        // $diff->invert is 0 both when $date is strictly after $now AND
+        // when $date == $now exactly (PHP's own DateInterval semantics: a
+        // zero-length interval isn't "negative") -- comparing the DateTime
+        // objects directly instead of trusting $diff->invert avoids
+        // misreporting an exact-equality result ("0 seconds ago") as "in
+        // the future". Real-clock callers essentially never hit this exact
+        // tie; a frozen pwg_now() test clock hits it whenever the compared
+        // timestamp was itself written via pwg_now().
+        if ($now >= $date) {
             $print = l10n('%s ago', $print);
         } else {
             $print = l10n('%s in the future', $print);
@@ -1264,7 +1274,7 @@ SELECT
   ORDER BY name ASC
 ;';
     $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         $id = $row['id'];
         $name = $row['name'];
         if (! is_string($id) || ! is_string($name)) {
@@ -1425,7 +1435,7 @@ function l10n($key)
 
     if (($val = @$lang[$key]) === null) {
         $debug_l10n = $conf['debug_l10n'] ?? false;
-        if ($debug_l10n and ! isset($lang[$key]) and ! empty($key)) {
+        if ((bool) $debug_l10n and ! isset($lang[$key]) and ! empty($key)) {
             trigger_error('[l10n] language key "' . $key . '" not defined', E_USER_WARNING);
         }
         $val = $key;
@@ -1469,7 +1479,7 @@ function l10n_dec($singular_key, $plural_key, $decimal): string
     return
       sprintf(
           l10n((
-              (($decimal > 1) or ($decimal == 0 and $lang_info['zero_plural']))
+              (($decimal > 1) or ($decimal == 0 and (bool) $lang_info['zero_plural']))
           ? $plural_key
           : $singular_key
           )),
@@ -1623,7 +1633,7 @@ SELECT param, value
         fatal_error('No configuration data');
     }
 
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         $val = $row['value'] ?? '';
         // If the field is true or false, the variable is transformed into a boolean value.
         if ($val == 'true') {
@@ -1858,7 +1868,7 @@ function script_basename(): string
         $raw = $_SERVER[$key] ?? null;
         if (is_string($raw) && $raw !== '') {
             $filename = strtolower($raw);
-            if ($conf['php_extension_in_urls'] and get_extension($filename) !== 'php') {
+            if ((bool) $conf['php_extension_in_urls'] and get_extension($filename) !== 'php') {
                 continue;
             }
             $basename = basename($filename, '.php');
@@ -2155,7 +2165,7 @@ function verify_ephemeral_key($key, $aditionnal_data_to_hash = ''): bool
     /** @var array<string, mixed> $conf */
     global $conf;
     $time = microtime(true);
-    $key_parts = explode(':', (string) $key);
+    $key_parts = explode(':', $key);
     $remote_addr = $_SERVER['REMOTE_ADDR'];
     $remote_addr = is_string($remote_addr) ? $remote_addr : '';
     $secret_key = $conf['secret_key'];
@@ -2284,7 +2294,7 @@ function get_icon($date, $is_child_date = false): false|array
 
     if (isset($get_icon_cache[$date])) {
         $cache['get_icon'] = $get_icon_cache;
-        return $get_icon_cache[$date] ? $icon : [];
+        return ((bool) $get_icon_cache[$date]) ? $icon : [];
     }
 
     if (! isset($get_icon_cache['sql_recent_date'])) {
@@ -2370,7 +2380,7 @@ function check_input_parameter($param_name, array $param_array, $is_array, $patt
                 fatal_error('[Hacking attempt] an item is not valid in input parameter "' . $param_name . '"');
             }
 
-            if (! preg_match(PATTERN_ID, (string) $key) or ! preg_match($pattern, (string) $item_to_check)) {
+            if (! (bool) preg_match(PATTERN_ID, (string) $key) or ! (bool) preg_match($pattern, (string) $item_to_check)) {
                 fatal_error('[Hacking attempt] an item is not valid in input parameter "' . $param_name . '"');
             }
         }
@@ -2379,7 +2389,7 @@ function check_input_parameter($param_name, array $param_array, $is_array, $patt
             fatal_error('[Hacking attempt] the input parameter "' . $param_name . '" is not valid');
         }
 
-        if (! preg_match($pattern, (string) $param_value)) {
+        if (! (bool) preg_match($pattern, (string) $param_value)) {
             fatal_error('[Hacking attempt] the input parameter "' . $param_name . '" is not valid');
         }
     }
@@ -2412,7 +2422,7 @@ function get_privacy_level_options(): array
         if ($level == 0) {
             $label = l10n('Everybody');
         } else {
-            if (strlen($label)) {
+            if ((bool) strlen($label)) {
                 $label .= ', ';
             }
             $label .= l10n(sprintf('Level %d', $level));
@@ -2597,7 +2607,7 @@ function check_lounge(): void
     /** @var array<string, mixed> $conf */
     global $conf;
 
-    if (! isset($conf['lounge_active']) or ! $conf['lounge_active']) {
+    if (! isset($conf['lounge_active']) or ! (bool) $conf['lounge_active']) {
         return;
     }
 
@@ -2617,7 +2627,7 @@ SELECT
   LIMIT 1
 ;';
     $voyagers = query2array($query);
-    if (count($voyagers)) {
+    if ((bool) count($voyagers)) {
         $voyager = $voyagers[0];
         $age = strtotime((string) $voyager['dbnow']) - strtotime((string) $voyager['date_available']);
 
@@ -2647,7 +2657,7 @@ function send_piwigo_infos(): void
 
     $start_time = get_moment();
 
-    if (! $conf['send_piwigo_infos']) {
+    if (! (bool) $conf['send_piwigo_infos']) {
         return;
     }
 
@@ -2858,7 +2868,7 @@ SELECT
             $eid = null;
             if (isset($plugins->fs_plugins[$plugin_id])) {
                 $uri = $plugins->fs_plugins[$plugin_id]['uri'] ?? null;
-                if (is_string($uri) and preg_match('/eid=(\d+)/', $uri, $matches)) {
+                if (is_string($uri) and (bool) preg_match('/eid=(\d+)/', $uri, $matches)) {
                     if (isset($pem_extensions[$matches[1]])) {
                         $eid = $matches[1];
                     }
@@ -2911,7 +2921,7 @@ SELECT
         $eid = null;
         if (isset($themes->fs_themes[$theme_id])) {
             $uri = $themes->fs_themes[$theme_id]['uri'] ?? null;
-            if (is_string($uri) and preg_match('/eid=(\d+)/', $uri, $matches)) {
+            if (is_string($uri) and (bool) preg_match('/eid=(\d+)/', $uri, $matches)) {
                 if (isset($pem_extensions[$matches[1]])) {
                     $eid = $matches[1];
                 }
@@ -3128,7 +3138,7 @@ SELECT
 
     foreach ($activities as $activity) {
         foreach ($apps_pattern as $app_name => $pattern) {
-            if (preg_match($pattern, (string) $activity['user_agent'])) {
+            if ((bool) preg_match($pattern, (string) $activity['user_agent'])) {
                 // $apps is written with a dynamic ($app_name) key, so PHPStan
                 // can't track a precise per-key value type for it and every
                 // read below comes back mixed; narrow explicitly instead of
@@ -3166,7 +3176,7 @@ SELECT
     ];
 
     foreach ($features as $feature) {
-        $piwigo_infos['features'][$feature] = $conf[$feature] ? 'yes' : 'no';
+        $piwigo_infos['features'][$feature] = ((bool) $conf[$feature]) ? 'yes' : 'no';
     }
 
     // conf_get_param() reads $conf with a dynamic (non-literal) key, so its
@@ -3304,7 +3314,7 @@ function get_container_info(): array
     if ((strtoupper(substr(PHP_OS, 0, 5)) === 'LINUX' and empty(ini_get('open_basedir')))) {
         if (file_exists('/proc/2/sched')) { // Check if PID2 exist
             $file = file_get_contents('/proc/2/sched'); // Read PID2 name
-            if ($file and str_starts_with($file, 'kthreadd')) { // If PID 2 is kthreadd PHP is not running in a container
+            if ((bool) $file and str_starts_with($file, 'kthreadd')) { // If PID 2 is kthreadd PHP is not running in a container
                 return ['none', null];
             }
         }
@@ -3319,7 +3329,7 @@ function get_container_info(): array
             if (is_array($file_lines) and trim($file_lines[0]) === 'Official Piwigo container') {
                 $container_version = null;
                 // Take the last line and remove prefix (Build Version)
-                if (preg_match('/^Build Version (.*)$/', $file_lines[count($file_lines) - 1], $matches)) {
+                if ((bool) preg_match('/^Build Version (.*)$/', $file_lines[count($file_lines) - 1], $matches)) {
                     $container_version = $matches[1];
                 }
                 return ['Official', $container_version];
@@ -3330,7 +3340,7 @@ function get_container_info(): array
             $file_lines = file($info_file_linuxserver);
             if (is_array($file_lines) and str_starts_with($file_lines[0], 'Linuxserver.io')) {
                 $container_version = null;
-                if (preg_match('/version:\s*(.*)$/', $file_lines[0], $matches)) {
+                if ((bool) preg_match('/version:\s*(.*)$/', $file_lines[0], $matches)) {
                     $container_version = $matches[1];
                 }
                 return ['LinuxServer.io', $container_version];
@@ -3356,14 +3366,14 @@ function is_valid_mysql_datetime(string $datetime): bool
     // first we check the full date+time
     $format = 'Y-m-d H:i:s';
     $date = DateTime::createFromFormat($format, $datetime);
-    if ($date and $date->format($format) === $datetime) {
+    if ((bool) $date and $date->format($format) === $datetime) {
         return true;
     }
 
     // in case it fails, let's check with only date and no time
     $format = 'Y-m-d';
     $date = DateTime::createFromFormat($format, $datetime);
-    if ($date and $date->format($format) === $datetime) {
+    if ((bool) $date and $date->format($format) === $datetime) {
         return true;
     }
 

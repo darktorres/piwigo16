@@ -58,8 +58,8 @@ function cookie_path(): string
     if (str_starts_with(PHPWG_ROOT_PATH, '../')) { // this is maybe a plugin inside pwg directory
         // TODO - what if it is an external script outside PWG ?
         $scr .= PHPWG_ROOT_PATH;
-        while (1) {
-            $new = preg_replace('#[^/]+/\.\.(/|$)#', '', (string) $scr);
+        while (true) {
+            $new = preg_replace('#[^/]+/\.\.(/|$)#', '', $scr);
             // fixed, valid pattern -- preg_replace() only returns null on a
             // compile error, which is unreachable here.
             assert($new !== null);

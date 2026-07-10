@@ -628,7 +628,7 @@ function get_thumbnail_title(array $info, $title, $comment = ''): string
         $details[] = l10n('%d visits', $info['hit']);
     }
 
-    if ($conf['rate'] and ! empty($info['rating_score'])) {
+    if ((bool) $conf['rate'] and ! empty($info['rating_score'])) {
         $details[] = l10n('rating score %s', $info['rating_score']);
     }
 

@@ -631,7 +631,7 @@ function get_title_recent_post_date(array $date_detail): string
 
     $date_available = $date_detail['date_available'] ?? null;
     $date_available = is_string($date_available) ? $date_available : '';
-    if (preg_match('/^\d+-(\d+)-(\d+) /', $date_available, $matches)) {
+    if ((bool) preg_match('/^\d+-(\d+)-(\d+) /', $date_available, $matches)) {
         // $lang['month'] is the language file's month-index (1-12) to name map
         $lang_month = is_array($lang['month'] ?? null) ? $lang['month'] : [];
         $month_name = $lang_month[(int) $matches[1]] ?? '';

@@ -251,7 +251,7 @@ class CalendarMonthly extends CalendarBase
 
         $result = pwg_query($query);
         $items = [];
-        while ($row = pwg_db_fetch_assoc($result)) {
+        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
             $y = substr((string) $row['period'], 0, 4);
             $m = (int) substr((string) $row['period'], 4, 2);
             // count is a COUNT(...) aggregate, always a numeric string from
@@ -326,7 +326,7 @@ class CalendarMonthly extends CalendarBase
 
         $result = pwg_query($query);
         $items = [];
-        while ($row = pwg_db_fetch_assoc($result)) {
+        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
             $m = (int) substr((string) $row['period'], 0, 2);
             $d = substr((string) $row['period'], 2, 2);
             // count is a COUNT(...) aggregate, always a numeric string from
@@ -412,7 +412,7 @@ class CalendarMonthly extends CalendarBase
 
         $items = [];
         $result = pwg_query($query);
-        while ($row = pwg_db_fetch_assoc($result)) {
+        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
             $d = (int) $row['period'];
             $items[$d] = [
                 'nb_images' => $row['count'],

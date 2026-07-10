@@ -63,7 +63,7 @@ SELECT *
   WHERE id IN (' . implode(',', $selection) . ')
 ;';
     $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         // 'id' is the images table's NOT NULL primary key -- the '' fallback
         // only satisfies the array-key type, it never changes real behavior.
         $image_id = $row['id'] ?? '';
@@ -100,7 +100,7 @@ if (count($pictures) > 0) {
           ]
       );
 
-    if ($conf['activate_comments'] and $user['show_nb_comments']) {
+    if ((bool) $conf['activate_comments'] and (bool) $user['show_nb_comments']) {
         $query = '
 SELECT image_id, COUNT(*) AS nb_comments
   FROM ' . COMMENTS_TABLE . '
@@ -157,14 +157,14 @@ foreach ($pictures as $row) {
         'file_ext' => strtolower(get_extension($row_file)),
     ]);
 
-    if ($conf['index_new_icon']) {
+    if ((bool) $conf['index_new_icon']) {
         // '' falls through get_icon()'s own empty($date) guard exactly like
         // a non-string/null column value would, so behavior is unchanged.
         $date_available = is_string($row['date_available']) ? $row['date_available'] : '';
         $tpl_var['icon_ts'] = get_icon($date_available);
     }
 
-    if ($user['show_nb_hits']) {
+    if ((bool) $user['show_nb_hits']) {
         $tpl_var['NB_HITS'] = $row['hit'];
     }
 
@@ -177,7 +177,7 @@ foreach ($pictures as $row) {
 
         case 'most_visited':
 
-            if (! $user['show_nb_hits']) {
+            if (! (bool) $user['show_nb_hits']) {
                 $hit = $row['hit'];
                 $name = '(' . (is_string($hit) || is_int($hit) ? $hit : '') . ') ' . $name;
             }

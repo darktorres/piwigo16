@@ -18,7 +18,7 @@ function update_cats_with_filtered_data(array &$cats): void
     /** @var array<string, mixed> $filter */
     global $filter;
 
-    if ($filter['enabled']) {
+    if ((bool) $filter['enabled']) {
         $upd_fields = ['date_last', 'max_date_last', 'count_images', 'count_categories', 'nb_images'];
 
         // $filter['categories'] is populated either from

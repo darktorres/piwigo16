@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Admin\Image\pwg_image;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageRect;
 use Piwigo\Image\ImageStdParams;
@@ -590,7 +591,6 @@ if (! $need_generate) {
     exit;
 }
 
-include_once PHPWG_ROOT_PATH . 'admin/include/image.class.php';
 $page['coi'] = null;
 if (! str_contains($page['src_location'], '/pwg_representative/')
     && ! str_contains($page['src_location'], 'themes/')

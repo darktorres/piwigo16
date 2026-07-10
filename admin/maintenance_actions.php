@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Admin\Image\pwg_image;
 use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Image\ImageStdParams;
 

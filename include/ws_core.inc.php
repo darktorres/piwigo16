@@ -34,4 +34,3 @@ define('WS_ERR_MISSING_PARAM', 1002);
 define('WS_ERR_INVALID_PARAM', 1003);
 
 define('WS_XML_ATTRIBUTES', 'attributes_xml_');
-

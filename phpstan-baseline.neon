@@ -1003,78 +1003,6 @@ parameters:
 			path: admin/include/functions_upload.inc.php
 
 		-
-			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
-			identifier: function.strict
-			count: 6
-			path: admin/include/image.class.php
-
-		-
-			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
-			identifier: empty.notAllowed
-			count: 5
-			path: admin/include/image.class.php
-
-		-
-			rawMessage: 'Loose comparison via "!=" between int and int is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 1
-			path: admin/include/image.class.php
-
-		-
-			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 3
-			path: admin/include/image.class.php
-
-		-
-			rawMessage: 'Loose comparison via "!=" between string|null and string is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 2
-			path: admin/include/image.class.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between float|int and float|int is not allowed.'
-			identifier: equal.notAllowed
-			count: 2
-			path: admin/include/image.class.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between float|int<min, -1>|int<1, max> and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 2
-			path: admin/include/image.class.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: admin/include/image.class.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between int<-1, 1> and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 2
-			path: admin/include/image.class.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
-			identifier: equal.notAllowed
-			count: 8
-			path: admin/include/image.class.php
-
-		-
-			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
-			identifier: typeCoverage.propertyTypeCoverage
-			count: 5
-			path: admin/include/image.class.php
-
-		-
-			rawMessage: Variable method call on imageInterface.
-			identifier: method.dynamicName
-			count: 1
-			path: admin/include/image.class.php
-
-		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
 			count: 6
@@ -4745,6 +4673,108 @@ parameters:
 			identifier: equal.notAllowed
 			count: 1
 			path: search.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 3
+			path: src/Piwigo/Admin/Image/image_ext_imagick.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between float|int<min, -1>|int<1, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: src/Piwigo/Admin/Image/image_ext_imagick.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Admin/Image/image_ext_imagick.php
+
+		-
+			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 4
+			path: src/Piwigo/Admin/Image/image_ext_imagick.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: src/Piwigo/Admin/Image/image_gd.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 4
+			path: src/Piwigo/Admin/Image/image_gd.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<-1, 1> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: src/Piwigo/Admin/Image/image_imagick.php
+
+		-
+			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 1
+			path: src/Piwigo/Admin/Image/image_imagick.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 5
+			path: src/Piwigo/Admin/Image/pwg_image.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 2
+			path: src/Piwigo/Admin/Image/pwg_image.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: src/Piwigo/Admin/Image/pwg_image.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 3
+			path: src/Piwigo/Admin/Image/pwg_image.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string|null and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: src/Piwigo/Admin/Image/pwg_image.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between float|int and float|int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: src/Piwigo/Admin/Image/pwg_image.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Admin/Image/pwg_image.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 3
+			path: src/Piwigo/Admin/Image/pwg_image.php
+
+		-
+			rawMessage: Variable method call on Piwigo\Admin\Image\imageInterface.
+			identifier: method.dynamicName
+			count: 1
+			path: src/Piwigo/Admin/Image/pwg_image.php
 
 		-
 			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'

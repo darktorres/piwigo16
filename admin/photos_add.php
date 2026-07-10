@@ -24,7 +24,6 @@ global $page;
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 include_once PHPWG_ROOT_PATH . 'admin/include/tabsheet.class.php';
 include_once PHPWG_ROOT_PATH . 'admin/include/functions_upload.inc.php';
-include_once PHPWG_ROOT_PATH . 'admin/include/image.class.php';
 
 define(
     'PHOTOS_ADD_BASE_URL',

@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Admin\Image\pwg_image;
 use Piwigo\Cache\PersistentCache;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
@@ -3621,8 +3622,6 @@ function get_graphics_library(): string|false
 {
     /** @var array<string, mixed> $conf */
     global $conf;
-
-    include_once PHPWG_ROOT_PATH . 'admin/include/image.class.php';
 
     $library = pwg_image::get_library();
 

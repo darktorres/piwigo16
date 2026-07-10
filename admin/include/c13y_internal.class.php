@@ -66,7 +66,7 @@ class c13y_internal
         global $conf;
 
         foreach (['show_exif', 'use_exif'] as $value) {
-            if (($conf[$value]) and (! function_exists('exif_read_data'))) {
+            if (((bool) $conf[$value]) and (! function_exists('exif_read_data'))) {
                 $c13y->add_anomaly(
                     sprintf(l10n('%s value is not correct file because exif are not supported'), '$conf[\'' . $value . '\']'),
                     null,
@@ -139,7 +139,7 @@ class c13y_internal
         $status = [];
 
         $result = pwg_query($query);
-        while ($row = pwg_db_fetch_assoc($result)) {
+        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
             if (! is_string($row['id'])) {
                 continue;
             }

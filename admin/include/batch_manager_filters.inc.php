@@ -74,7 +74,7 @@ $prefilters = [
     ],
 ];
 
-if ($conf['enable_synchronization']) {
+if ((bool) $conf['enable_synchronization']) {
     $prefilters[] = [
         'ID' => 'no_virtual_album',
         'NAME' => l10n('With no virtual album'),

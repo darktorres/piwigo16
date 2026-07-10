@@ -260,7 +260,7 @@ if (count($errors) == 0 && count($derivative_errors) == 0) {
     ImageStdParams::set_and_save($enabled_by);
     ImageStdParams::set_and_save_disabled($disabled);
 
-    if (count($changed_types)) {
+    if ((bool) count($changed_types)) {
         clear_derivative_cache($changed_types);
     }
 

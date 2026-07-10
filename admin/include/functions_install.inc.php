@@ -29,19 +29,19 @@ function execute_sqlfile($filepath, $replaced, $replacing, $dblayer): void
     $query = '';
     foreach ($sql_lines as $sql_line) {
         $sql_line = trim($sql_line);
-        if (preg_match('/(^--|^$)/', $sql_line)) {
+        if ((bool) preg_match('/(^--|^$)/', $sql_line)) {
             continue;
         }
         $query .= ' ' . $sql_line;
         // if we reached the end of query, we execute it and reinitialize the
         // variable "query"
-        if (preg_match('/;$/', $sql_line)) {
+        if ((bool) preg_match('/;$/', $sql_line)) {
             $query = trim($query);
             $query = str_replace($replaced, $replacing, $query);
             // we don't execute "DROP TABLE" queries
-            if (! preg_match('/^DROP TABLE/i', $query)) {
+            if (! (bool) preg_match('/^DROP TABLE/i', $query)) {
                 if ($dblayer == 'mysql') {
-                    if (preg_match('/^(CREATE TABLE .*)[\s]*;[\s]*/im', $query, $matches)) {
+                    if ((bool) preg_match('/^(CREATE TABLE .*)[\s]*;[\s]*/im', $query, $matches)) {
                         $query = $matches[1] . ' DEFAULT CHARACTER SET utf8;';
                     }
                 }

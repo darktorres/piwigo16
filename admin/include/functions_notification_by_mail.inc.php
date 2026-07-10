@@ -199,7 +199,7 @@ order by';
 
         $result = pwg_query($query);
         if (! empty($result)) {
-            while ($nbm_user = pwg_db_fetch_assoc($result)) {
+            while ((bool) ($nbm_user = pwg_db_fetch_assoc($result))) {
                 $data_users[] = $nbm_user;
             }
         }
@@ -273,7 +273,7 @@ function end_users_env_nbm(): void
     // Restore current language to stack, necessary because $user change during NBM
     switch_lang_back();
 
-    if ($env_nbm['is_to_send_mail']) {
+    if ((bool) $env_nbm['is_to_send_mail']) {
         unset($env_nbm['email_format']);
         unset($env_nbm['send_as_name']);
         unset($env_nbm['send_as_mail_address']);

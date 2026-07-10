@@ -84,7 +84,7 @@ class check_integrity
 
             foreach ($this->retrieve_list as $i => $c13y) {
                 if (! empty($c13y['correction_fct']) and
-                    $c13y['is_callable'] and
+                    (bool) $c13y['is_callable'] and
                     in_array($c13y['id'], $c13y_selection)) {
                     if (is_array($c13y['correction_fct_args'])) {
                         $args = $c13y['correction_fct_args'];
@@ -97,7 +97,7 @@ class check_integrity
                     if (is_callable($correction_fct)) {
                         $this->retrieve_list[$i]['corrected'] = call_user_func_array($correction_fct, $args);
 
-                        if ($this->retrieve_list[$i]['corrected']) {
+                        if ((bool) $this->retrieve_list[$i]['corrected']) {
                             ++$corrected_count;
                         } else {
                             ++$not_corrected_count;
@@ -198,7 +198,7 @@ class check_integrity
                 ];
 
                 if (isset($c13y['ignored'])) {
-                    if ($c13y['ignored']) {
+                    if ((bool) $c13y['ignored']) {
                         $c13y_display['show_ignore_msg'] = true;
                     } else {
                         die('$c13y[\'ignored\'] cannot be false');
@@ -206,12 +206,12 @@ class check_integrity
                 } else {
                     if (! empty($c13y['correction_fct'])) {
                         if (isset($c13y['corrected'])) {
-                            if ($c13y['corrected']) {
+                            if ((bool) $c13y['corrected']) {
                                 $c13y_display['show_correction_success_fct'] = true;
                             } else {
                                 $c13y_display['correction_error_fct'] = $this->get_htlm_links_more_info();
                             }
-                        } elseif ($c13y['is_callable']) {
+                        } elseif ((bool) $c13y['is_callable']) {
                             $c13y_display['show_correction_fct'] = true;
                             $template->append('c13y_do_check', $c13y['id']);
                             $submit_automatic_correction = true;

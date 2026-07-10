@@ -215,11 +215,11 @@ if (count($errors) == 0) {
         }
         if (! $changed and $params->use_watermark) {
             // if thresholds change and before/after the threshold is lower than the corresponding derivative side -> some derivatives might switch the watermark
-            $changed |= $watermark->min_size[0] != $old_watermark->min_size[0] and ($watermark->min_size[0] < $params->max_width() or $old_watermark->min_size[0] < $params->max_width());
-            $changed |= $watermark->min_size[1] != $old_watermark->min_size[1] and ($watermark->min_size[1] < $params->max_height() or $old_watermark->min_size[1] < $params->max_height());
+            (bool) ($changed |= $watermark->min_size[0] != $old_watermark->min_size[0]) and ($watermark->min_size[0] < $params->max_width() or $old_watermark->min_size[0] < $params->max_width());
+            (bool) ($changed |= $watermark->min_size[1] != $old_watermark->min_size[1]) and ($watermark->min_size[1] < $params->max_height() or $old_watermark->min_size[1] < $params->max_height());
         }
 
-        if ($changed) {
+        if ((bool) $changed) {
             $params->last_mod_time = time();
             $changed_types[] = $type;
         }
@@ -227,7 +227,7 @@ if (count($errors) == 0) {
 
     ImageStdParams::save();
 
-    if (count($changed_types)) {
+    if ((bool) count($changed_types)) {
         clear_derivative_cache($changed_types);
     }
 

@@ -162,7 +162,7 @@ SELECT
 
     $result = pwg_query($query);
 
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         $data[] = $row;
     }
 
@@ -242,7 +242,7 @@ SELECT
     $is_first = true;
     $first_time_key = null;
 
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         $row_min_id = isset($row['min_id']) && is_numeric($row['min_id']) ? (int) $row['min_id'] : 0;
         $row_max_id = isset($row['max_id']) && is_numeric($row['max_id']) ? (int) $row['max_id'] : 0;
         $row_nb_pages = isset($row['nb_pages']) && is_numeric($row['nb_pages']) ? (int) $row['nb_pages'] : 0;
@@ -319,7 +319,7 @@ SELECT *
     )
 ;';
         $result = pwg_query($query);
-        while ($row = pwg_db_fetch_assoc($result)) {
+        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
             $key = sprintf('%4u', $row['year']);
             if (isset($row['month'])) {
                 $key .= sprintf('-%02u', $row['month']);
@@ -482,7 +482,7 @@ function history_remove_summarized_column(): void
     /** @var array<string, mixed> $conf */
     global $conf;
 
-    if (isset($conf['history_summarized_dropped']) and $conf['history_summarized_dropped']) {
+    if (isset($conf['history_summarized_dropped']) and (bool) $conf['history_summarized_dropped']) {
         return;
     }
 
@@ -504,7 +504,7 @@ SELECT
     }
 
     $result = pwg_query('SHOW COLUMNS FROM `' . HISTORY_TABLE . '` LIKE "summarized";');
-    if (pwg_db_num_rows($result)) {
+    if ((bool) pwg_db_num_rows($result)) {
         pwg_query('ALTER TABLE `' . HISTORY_TABLE . '` DROP COLUMN `summarized`;');
     }
 

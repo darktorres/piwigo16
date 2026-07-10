@@ -37,7 +37,7 @@ SELECT c.id
   LIMIT 1';
     $result = pwg_query($query);
     $cat_id = null;
-    if (pwg_db_num_rows($result)) {
+    if ((bool) pwg_db_num_rows($result)) {
         $row = pwg_db_fetch_row($result);
         assert($row !== null);
         [$cat_id] = $row;
@@ -70,7 +70,7 @@ SELECT permalink
   WHERE id=\'' . $cat_id . '\'
 ;';
     $result = pwg_query($query);
-    if (pwg_db_num_rows($result)) {
+    if ((bool) pwg_db_num_rows($result)) {
         $row = pwg_db_fetch_row($result);
         assert($row !== null);
         [$permalink] = $row;
@@ -140,7 +140,7 @@ function set_cat_permalink($cat_id, $permalink, $save): bool
     $sanitized_permalink = trim((string) $sanitized_permalink, '/');
     $sanitized_permalink = str_replace('//', '/', $sanitized_permalink);
     if ($sanitized_permalink != $permalink
-        or preg_match('#^(\d)+(-.*)?$#', $permalink)) {
+        or (bool) preg_match('#^(\d)+(-.*)?$#', $permalink)) {
         $page['errors'][] = '{' . $permalink . '} ' . l10n('The permalink name must be composed of a-z, A-Z, 0-9, "-", "_" or "/". It must not be numeric or start with number followed by "-"');
         return false;
     }

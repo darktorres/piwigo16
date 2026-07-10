@@ -38,7 +38,7 @@ function get_sync_iptc_data($file): array
 
     foreach ($iptc as $pwg_key => $value) {
         if (in_array($pwg_key, ['date_creation', 'date_available'])) {
-            if (preg_match('/(\d{4})(\d{2})(\d{2})/', (string) $value, $matches)) {
+            if ((bool) preg_match('/(\d{4})(\d{2})(\d{2})/', $value, $matches)) {
                 $year = (int) $matches[1];
                 $month = (int) $matches[2];
                 $day = (int) $matches[3];
@@ -59,7 +59,7 @@ function get_sync_iptc_data($file): array
     }
 
     foreach ($iptc as $pwg_key => $value) {
-        $iptc[$pwg_key] = addslashes((string) $iptc[$pwg_key]);
+        $iptc[$pwg_key] = addslashes($iptc[$pwg_key]);
     }
 
     return $iptc;
@@ -96,12 +96,12 @@ function get_sync_exif_data($file): array
         $value_str = is_scalar($value) ? (string) $value : '';
 
         if (in_array($pwg_key, ['date_creation', 'date_available'])) {
-            if (preg_match('/^(\d{4}).(\d{2}).(\d{2}) (\d{2}).(\d{2}).(\d{2})/', $value_str, $matches)) {
+            if ((bool) preg_match('/^(\d{4}).(\d{2}).(\d{2}) (\d{2}).(\d{2}).(\d{2})/', $value_str, $matches)) {
                 $exif[$pwg_key] = $matches[1] . '-' . $matches[2] . '-' . $matches[3] . ' ' . $matches[4] . ':' . $matches[5] . ':' . $matches[6];
                 if ($exif[$pwg_key] == '0000-00-00 00:00:00') {
                     $exif[$pwg_key] = null;
                 }
-            } elseif (preg_match('/^(\d{4}).(\d{2}).(\d{2})/', $value_str, $matches)) {
+            } elseif ((bool) preg_match('/^(\d{4}).(\d{2}).(\d{2})/', $value_str, $matches)) {
                 $exif[$pwg_key] = $matches[1] . '-' . $matches[2] . '-' . $matches[3];
             } else {
                 unset($exif[$pwg_key]);
@@ -137,7 +137,7 @@ function get_sync_metadata_attributes(): array
 
     $update_fields = ['filesize', 'width', 'height'];
 
-    if ($conf['use_exif']) {
+    if ((bool) $conf['use_exif']) {
         $exif_mapping = $conf['use_exif_mapping'] ?? null;
         $exif_mapping = is_array($exif_mapping) ? $exif_mapping : [];
         $update_fields =
@@ -148,7 +148,7 @@ function get_sync_metadata_attributes(): array
           );
     }
 
-    if ($conf['use_iptc']) {
+    if ((bool) $conf['use_iptc']) {
         $iptc_mapping = $conf['use_iptc_mapping'] ?? null;
         $iptc_mapping = is_array($iptc_mapping) ? $iptc_mapping : [];
         $update_fields =
@@ -186,7 +186,7 @@ function get_sync_metadata($infos)
     $is_tiff = false;
 
     if (isset($infos['representative_ext'])) {
-        if ($image_size = @getimagesize($file)) {
+        if ((bool) ($image_size = @getimagesize($file))) {
             $type = $image_size[2];
 
             if ($type == IMAGETYPE_TIFF_MM or $type == IMAGETYPE_TIFF_II) {
@@ -229,7 +229,7 @@ function get_sync_metadata($infos)
                     }
                 }
             }
-            if ($image_size = @getimagesize($file)) {
+            if ((bool) ($image_size = @getimagesize($file))) {
                 $infos['width'] = $image_size[0];
                 $infos['height'] = $image_size[1];
             }
@@ -241,12 +241,12 @@ function get_sync_metadata($infos)
         $file = PHPWG_ROOT_PATH . $path;
     }
 
-    if ($conf['use_exif']) {
+    if ((bool) $conf['use_exif']) {
         $exif = get_sync_exif_data($file);
         $infos = array_merge($infos, $exif);
     }
 
-    if ($conf['use_iptc']) {
+    if ((bool) $conf['use_iptc']) {
         $iptc = get_sync_iptc_data($file);
         $infos = array_merge($infos, $iptc);
     }
@@ -291,7 +291,7 @@ SELECT id, path, representative_ext
 ;';
 
     $result = pwg_query($query);
-    while ($data = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($data = pwg_db_fetch_assoc($result))) {
         $data = get_sync_metadata($data);
         if ($data === false) {
             continue;
@@ -384,7 +384,7 @@ SELECT id
     $query .= '
 ;';
     $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         $cat_ids[] = $row['id'];
     }
 

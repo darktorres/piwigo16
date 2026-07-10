@@ -475,7 +475,7 @@ parameters:
 			path: admin/include/c13y_internal.class.php
 
 		-
-			rawMessage: 'Out of 611 possible return types, only 563 - 92.1 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 609 possible return types, only 561 - 92.1 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 1
 			path: admin/include/c13y_internal.class.php
@@ -1105,7 +1105,7 @@ parameters:
 			path: admin/include/languages.class.php
 
 		-
-			rawMessage: 'Out of 611 possible return types, only 563 - 92.1 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 609 possible return types, only 561 - 92.1 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 1
 			path: admin/include/languages.class.php
@@ -2275,7 +2275,7 @@ parameters:
 			path: include/Logger.class.php
 
 		-
-			rawMessage: 'Out of 611 possible return types, only 563 - 92.1 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 609 possible return types, only 561 - 92.1 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 1
 			path: include/Logger.class.php
@@ -2365,7 +2365,7 @@ parameters:
 			path: include/block.class.php
 
 		-
-			rawMessage: 'Out of 611 possible return types, only 563 - 92.1 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 609 possible return types, only 561 - 92.1 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 9
 			path: include/block.class.php
@@ -2389,7 +2389,7 @@ parameters:
 			path: include/cache.class.php
 
 		-
-			rawMessage: 'Out of 611 possible return types, only 563 - 92.1 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 609 possible return types, only 561 - 92.1 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 2
 			path: include/cache.class.php
@@ -2443,7 +2443,7 @@ parameters:
 			path: include/calendar_base.class.php
 
 		-
-			rawMessage: 'Out of 611 possible return types, only 563 - 92.1 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 609 possible return types, only 561 - 92.1 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 6
 			path: include/calendar_base.class.php
@@ -2779,7 +2779,7 @@ parameters:
 			path: include/derivative.inc.php
 
 		-
-			rawMessage: 'Out of 611 possible return types, only 563 - 92.1 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 609 possible return types, only 561 - 92.1 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 5
 			path: include/derivative.inc.php
@@ -2827,7 +2827,7 @@ parameters:
 			path: include/derivative_params.inc.php
 
 		-
-			rawMessage: 'Out of 611 possible return types, only 563 - 92.1 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 609 possible return types, only 561 - 92.1 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 3
 			path: include/derivative_params.inc.php
@@ -2851,7 +2851,7 @@ parameters:
 			path: include/derivative_std_params.inc.php
 
 		-
-			rawMessage: 'Out of 611 possible return types, only 563 - 92.1 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 609 possible return types, only 561 - 92.1 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 5
 			path: include/derivative_std_params.inc.php
@@ -3523,7 +3523,7 @@ parameters:
 			path: include/functions_plugins.inc.php
 
 		-
-			rawMessage: 'Out of 611 possible return types, only 563 - 92.1 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 609 possible return types, only 561 - 92.1 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 8
 			path: include/functions_plugins.inc.php
@@ -3567,13 +3567,7 @@ parameters:
 		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
-			count: 31
-			path: include/functions_search.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "!=" between mixed and string is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 2
+			count: 27
 			path: include/functions_search.inc.php
 
 		-
@@ -3589,15 +3583,9 @@ parameters:
 			path: include/functions_search.inc.php
 
 		-
-			rawMessage: 'Loose comparison via "==" between int<0, 1> and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 2
-			path: include/functions_search.inc.php
-
-		-
 			rawMessage: 'Loose comparison via "==" between int<0, 25> and int is not allowed.'
 			identifier: equal.notAllowed
-			count: 4
+			count: 3
 			path: include/functions_search.inc.php
 
 		-
@@ -3609,7 +3597,7 @@ parameters:
 		-
 			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
 			identifier: equal.notAllowed
-			count: 5
+			count: 3
 			path: include/functions_search.inc.php
 
 		-
@@ -3639,19 +3627,13 @@ parameters:
 		-
 			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
 			identifier: equal.notAllowed
-			count: 24
+			count: 11
 			path: include/functions_search.inc.php
 
 		-
 			rawMessage: 'Loose comparison via "==" between string|null and int is not allowed.'
 			identifier: equal.notAllowed
 			count: 1
-			path: include/functions_search.inc.php
-
-		-
-			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
-			identifier: typeCoverage.propertyTypeCoverage
-			count: 6
 			path: include/functions_search.inc.php
 
 		-
@@ -3927,12 +3909,6 @@ parameters:
 		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
-			count: 1
-			path: include/inflectors/fr.php
-
-		-
-			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
-			identifier: empty.notAllowed
 			count: 6
 			path: include/menubar.inc.php
 
@@ -4171,7 +4147,7 @@ parameters:
 			path: include/template.class.php
 
 		-
-			rawMessage: 'Out of 611 possible return types, only 563 - 92.1 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 609 possible return types, only 561 - 92.1 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 7
 			path: include/template.class.php
@@ -5261,6 +5237,90 @@ parameters:
 			identifier: equal.notAllowed
 			count: 1
 			path: search.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: src/Piwigo/Search/Inflector/Inflector_fr.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: src/Piwigo/Search/QDateRangeScope.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between mixed and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: src/Piwigo/Search/QDateRangeScope.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 4
+			path: src/Piwigo/Search/QDateRangeScope.php
+
+		-
+			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 3
+			path: src/Piwigo/Search/QExpression.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, 1> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: src/Piwigo/Search/QMultiToken.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, 25> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Search/QMultiToken.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Search/QMultiToken.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 5
+			path: src/Piwigo/Search/QMultiToken.php
+
+		-
+			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 1
+			path: src/Piwigo/Search/QMultiToken.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 3
+			path: src/Piwigo/Search/QNumericRangeScope.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 4
+			path: src/Piwigo/Search/QNumericRangeScope.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Search/QSearchScope.php
+
+		-
+			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 2
+			path: src/Piwigo/Search/QSingleToken.php
 
 		-
 			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'

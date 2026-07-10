@@ -51,27 +51,26 @@ function findMissingOverrideAttributes(string $fqcn): array
 }
 
 test('findMissingOverrideAttributes() flags a missing #[\Override]', function (): void {
-    interface StructuralTestFixtureInterface
-    {
-        public function run(): void;
-    }
-
-    $withoutAttribute = new class () implements StructuralTestFixtureInterface {
-        public function run(): void {}
+    // Reuses a built-in interface (rather than declaring a new named
+    // fixture interface here) so this file has nothing for
+    // `composer dump-autoload --strict-psr` to flag as PSR-4-noncompliant.
+    $withoutAttribute = new class () implements Countable {
+        public function count(): int
+        {
+            return 0;
+        }
     };
 
-    expect(findMissingOverrideAttributes($withoutAttribute::class))->toBe([$withoutAttribute::class . '::run()']);
+    expect(findMissingOverrideAttributes($withoutAttribute::class))->toBe([$withoutAttribute::class . '::count()']);
 });
 
 test('findMissingOverrideAttributes() accepts a present #[\Override]', function (): void {
-    interface StructuralTestFixtureInterface2
-    {
-        public function run(): void;
-    }
-
-    $withAttribute = new class () implements StructuralTestFixtureInterface2 {
+    $withAttribute = new class () implements Countable {
         #[Override]
-        public function run(): void {}
+        public function count(): int
+        {
+            return 0;
+        }
     };
 
     expect(findMissingOverrideAttributes($withAttribute::class))->toBe([]);

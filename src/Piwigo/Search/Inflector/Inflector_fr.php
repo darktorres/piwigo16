@@ -9,7 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-require_once __DIR__ . '/InflectorInterface.php';
+namespace Piwigo\Search\Inflector;
 
 class Inflector_fr implements InflectorInterface
 {
@@ -63,6 +63,7 @@ class Inflector_fr implements InflectorInterface
     /**
      * @return array<int, string>
      */
+    #[\Override]
     public function get_variants(string $word): array
     {
         $res = [];

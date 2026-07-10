@@ -456,8 +456,8 @@ class updates
             // identical narrowing (and rationale) in get_server_extensions().
             /** @var array<int|string, array<string, mixed>> $server_ext */
             $server_ext = $this->{$type}->{$server};
-            /** @var array<string, array<string, mixed>> $fs_ext */
-            $fs_ext = $this->{$type}->{$fs};
+            /** @var array<string, array<string, mixed>> $fs_extensions */
+            $fs_extensions = $this->{$type}->{$fs};
 
             $ignore_list = [];
             $need_upgrade = [];
@@ -465,7 +465,7 @@ class updates
             $ignored_for_type_raw = $updates_ignored[$type] ?? null;
             $ignored_for_type = is_array($ignored_for_type_raw) ? $ignored_for_type_raw : [];
 
-            foreach ($fs_ext as $ext_id => $fs_ext) {
+            foreach ($fs_extensions as $ext_id => $fs_ext) {
                 $extension_key = $fs_ext['extension'] ?? null;
                 if (! is_string($extension_key) && ! is_int($extension_key)) {
                     continue;

@@ -1050,7 +1050,13 @@ function pwg_image_infos(string $path): array
         throw new Exception(__FUNCTION__ . '(): getimagesize() failed for ' . $path);
     }
     [$width, $height] = $image_size;
-    $filesize = floor(filesize($path) / 1024);
+    $filesize_bytes = filesize($path);
+    if ($filesize_bytes === false) {
+        // same rationale as the getimagesize() guard above: every caller
+        // stores this straight into the database, no sane fallback shape.
+        throw new Exception(__FUNCTION__ . '(): filesize() failed for ' . $path);
+    }
+    $filesize = floor($filesize_bytes / 1024);
 
     return [
         'width' => $width,

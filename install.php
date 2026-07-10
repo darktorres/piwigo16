@@ -149,15 +149,12 @@ define('PHPWG_URL', 'https://' . PHPWG_DOMAIN);
 
 load_language('common.lang', '', [
     'language' => $language,
-    'target_charset' => 'utf-8',
 ]);
 load_language('admin.lang', '', [
     'language' => $language,
-    'target_charset' => 'utf-8',
 ]);
 load_language('install.lang', '', [
     'language' => $language,
-    'target_charset' => 'utf-8',
 ]);
 
 header('Content-Type: text/html; charset=UTF-8');

@@ -924,9 +924,9 @@ SELECT rules
   FROM ' . SEARCH_TABLE . '
   WHERE id = ' . $search_id . '
 ;';
-    $row = pwg_db_fetch_row(pwg_query($query));
-    assert($row !== null);
-    [$serialized_rules] = $row;
+    $rules_row = pwg_db_fetch_row(pwg_query($query));
+    assert($rules_row !== null);
+    [$serialized_rules] = $rules_row;
     // this row is the one we just INSERTed above (via $search_id =
     // pwg_db_insert_id()) with a serialize() call we made ourselves, so
     // the 'rules' column is guaranteed to be a non-null string here.

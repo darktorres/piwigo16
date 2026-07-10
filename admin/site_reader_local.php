@@ -214,7 +214,10 @@ class LocalSiteReader
             $test = $base_test . $ext;
 
             if (is_file($test)) {
-                $formats[$ext] = floor(filesize($test) / 1024);
+                $test_filesize = filesize($test);
+                if ($test_filesize !== false) {
+                    $formats[$ext] = floor($test_filesize / 1024);
+                }
             }
         }
 

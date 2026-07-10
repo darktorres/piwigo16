@@ -184,10 +184,10 @@ SELECT
                 $details_for_category = query2array($query, 'id');
             }
 
-            foreach ($images as $idx => $image) {
+            foreach ($images as $idx => $img) {
                 $image_cats = [];
 
-                $image_id = $image['id'];
+                $image_id = $img['id'];
                 if (! is_int($image_id)) {
                     continue;
                 }
@@ -206,7 +206,7 @@ SELECT
                         [
                             'category' => $details_for_category[$cat_id],
                             'image_id' => $image_id,
-                            'image_file' => $image['file'],
+                            'image_file' => $img['file'],
                         ]
                     );
 

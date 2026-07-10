@@ -411,12 +411,16 @@ class pwg_image
      */
     protected function get_resize_result(string $destination_filepath, int|float $width, int|float $height, ?float $time = null): array
     {
+        // this is purely diagnostic/log output -- fall back to 0 KB rather
+        // than throwing if the destination somehow isn't readable.
+        $destination_filesize = filesize($destination_filepath);
+        $destination_filesize = $destination_filesize !== false ? $destination_filesize : 0;
         return [
             'source' => $this->source_filepath,
             'destination' => $destination_filepath,
             'width' => $width,
             'height' => $height,
-            'size' => floor(filesize($destination_filepath) / 1024) . ' KB',
+            'size' => floor($destination_filesize / 1024) . ' KB',
             'time' => ((bool) $time) ? number_format((get_moment() - $time) * 1000, 2, '.', ' ') . ' ms' : null,
             'library' => $this->library,
         ];

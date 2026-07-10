@@ -71,8 +71,8 @@ foreach ($autoupdate->types as $type) {
     // identical narrowing (and rationale) in updates::get_server_extensions().
     /** @var array<int|string, array<string, mixed>> $server_ext */
     $server_ext = $autoupdate->{$type}->{$server};
-    /** @var array<string, array<string, mixed>> $fs_ext */
-    $fs_ext = $autoupdate->{$type}->{$fs};
+    /** @var array<string, array<string, mixed>> $fs_extensions */
+    $fs_extensions = $autoupdate->{$type}->{$fs};
 
     if (empty($server_ext)) {
         continue;
@@ -85,7 +85,7 @@ foreach ($autoupdate->types as $type) {
         $ignored_ids = [];
     }
 
-    foreach ($fs_ext as $ext_id => $fs_ext) {
+    foreach ($fs_extensions as $ext_id => $fs_ext) {
         $extension_key = $fs_ext['extension'] ?? null;
         if (! is_string($extension_key) && ! is_int($extension_key)) {
             continue;

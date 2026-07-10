@@ -1986,9 +1986,9 @@ INSERT IGNORE
 ;';
     pwg_query($query);
 
-    $row = pwg_db_fetch_row(pwg_query('SELECT value FROM ' . CONFIG_TABLE . ' WHERE param = "empty_lounge_running"'));
-    assert($row !== null);
-    [$empty_lounge_running] = $row;
+    $running_row = pwg_db_fetch_row(pwg_query('SELECT value FROM ' . CONFIG_TABLE . ' WHERE param = "empty_lounge_running"'));
+    assert($running_row !== null);
+    [$empty_lounge_running] = $running_row;
     [$running_exec_id] = explode('-', (string) $empty_lounge_running);
 
     if ($running_exec_id != $exec_id) {
@@ -3633,8 +3633,7 @@ function get_graphics_library(): string|false
             break;
 
         case 'imagick':
-            $img = new Imagick();
-            $version = $img->getVersion();
+            $version = Imagick::getVersion();
             if ((bool) preg_match('/ImageMagick \d+\.\d+\.\d+-?\d*/', $version['versionString'], $match)) {
                 $library .= '/' . $match[0];
             }

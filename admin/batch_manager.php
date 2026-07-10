@@ -295,8 +295,8 @@ elseif (isset($_GET['filter'])) {
                         ];
 
                         $valid = true;
-                        foreach ($values as $value) {
-                            if (filter_var($value, $filter_to_validate_for_type[$type]) === false) {
+                        foreach ($values as $bound_value) {
+                            if (filter_var($bound_value, $filter_to_validate_for_type[$type]) === false) {
                                 $valid = false;
                             }
                         }
@@ -317,8 +317,8 @@ elseif (isset($_GET['filter'])) {
                 $values = explode('..', $value);
 
                 $valid = true;
-                foreach ($values as $value) {
-                    if (filter_var($value, FILTER_VALIDATE_FLOAT) === false) {
+                foreach ($values as $bound_value) {
+                    if (filter_var($bound_value, FILTER_VALIDATE_FLOAT) === false) {
                         $valid = false;
                     }
                 }
@@ -755,11 +755,13 @@ if (empty($widths)) { // arbitrary values, only used when no photos on the galle
     $ratios = [1.25, 1.52, 1.78];
 }
 
-foreach (['widths', 'heights', 'ratios'] as $type) {
-    ${$type} = array_unique(${$type});
-    sort(${$type});
-    $dimensions[$type] = implode(',', ${$type});
+$dimension_arrays = ['widths' => &$widths, 'heights' => &$heights, 'ratios' => &$ratios];
+foreach ($dimension_arrays as $type => &$dimension_values) {
+    $dimension_values = array_unique($dimension_values);
+    sort($dimension_values);
+    $dimensions[$type] = implode(',', $dimension_values);
 }
+unset($dimension_values);
 
 $dimensions['bounds'] = [
     'min_width' => $widths[0],

@@ -176,22 +176,18 @@ define('PHPWG_URL', 'https://' . PHPWG_DOMAIN);
 
 load_language('common.lang', '', [
     'language' => $language,
-    'target_charset' => 'utf-8',
     'no_fallback' => true,
 ]);
 load_language('admin.lang', '', [
     'language' => $language,
-    'target_charset' => 'utf-8',
     'no_fallback' => true,
 ]);
 load_language('install.lang', '', [
     'language' => $language,
-    'target_charset' => 'utf-8',
     'no_fallback' => true,
 ]);
 load_language('upgrade.lang', '', [
     'language' => $language,
-    'target_charset' => 'utf-8',
     'no_fallback' => true,
 ]);
 

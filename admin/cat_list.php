@@ -248,6 +248,9 @@ $categories = hash_from_query($query, 'id');
 
 // get the categories containing images directly
 $categories_with_images = [];
+$nb_photos_in = [];
+$subcats_of = [];
+$nb_sub_photos = [];
 if ((bool) count($categories)) {
     $query = '
 SELECT

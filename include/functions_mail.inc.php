@@ -676,6 +676,10 @@ SELECT
             }
 
             $user_args = $args;
+            // language_selected is this function's own filtering option
+            // (already consumed above to build the SQL query); pwg_mail()
+            // doesn't accept it.
+            unset($user_args['language_selected']);
             if ($authkey !== false) {
                 $auth_key = $authkey['auth_key'] ?? null;
                 if (is_string($auth_key)) {

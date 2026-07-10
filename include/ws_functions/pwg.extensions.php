@@ -340,7 +340,7 @@ function ws_extensions_checkupdates(array $params, PwgServer &$service): array
     $result = [];
 
     if (! isset($_SESSION['need_update' . PHPWG_VERSION])) {
-        $update->check_piwigo_upgrade();
+        updates::check_piwigo_upgrade();
     }
 
     $result['piwigo_need_update'] = $_SESSION['need_update' . PHPWG_VERSION];

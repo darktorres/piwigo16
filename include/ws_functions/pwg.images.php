@@ -2156,7 +2156,11 @@ SELECT COUNT(*)
     $chunk_files = glob($upload_dir_conf . '/buffer/*.chunk');
     foreach (($chunk_files !== false ? $chunk_files : []) as $file) {
         if (is_file($file)) {
-            if ($now - filemtime($file) >= 60 * 60 * 24 * 7) { // 7 days
+            $file_mtime = filemtime($file);
+            // filemtime() can race with a concurrent cleanup pass removing
+            // $file between the is_file() check above and here; skip it
+            // this round rather than treat a failed stat as "old".
+            if ($file_mtime !== false && $now - $file_mtime >= 60 * 60 * 24 * 7) { // 7 days
                 $logger->info(__FUNCTION__ . ' delete ' . $file);
                 unlink($file);
             } else {
@@ -2169,7 +2173,11 @@ SELECT COUNT(*)
     $merged_files = glob($upload_dir_conf . '/buffer/*.merged');
     foreach (($merged_files !== false ? $merged_files : []) as $file) {
         if (is_file($file)) {
-            if ($now - filemtime($file) >= 60 * 60 * 24 * 7) { // 7 days
+            $file_mtime = filemtime($file);
+            // filemtime() can race with a concurrent cleanup pass removing
+            // $file between the is_file() check above and here; skip it
+            // this round rather than treat a failed stat as "old".
+            if ($file_mtime !== false && $now - $file_mtime >= 60 * 60 * 24 * 7) { // 7 days
                 $logger->info(__FUNCTION__ . ' delete ' . $file);
                 unlink($file);
             } else {

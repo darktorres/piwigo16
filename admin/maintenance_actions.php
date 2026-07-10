@@ -375,8 +375,7 @@ switch (pwg_image::get_library()) {
 
     case 'imagick':
         $library = 'ImageMagick';
-        $img = new Imagick();
-        $version = $img->getVersion();
+        $version = Imagick::getVersion();
         if ((bool) preg_match('/ImageMagick \d+\.\d+\.\d+-?\d*/', $version['versionString'], $match)) {
             $library = $match[0];
         }

@@ -142,7 +142,7 @@ $is_standard_pages_used = false;
 $standard_pages_used_by = [];
 
 foreach ($themes->fs_themes as $theme) {
-    if (isset($theme['use_standard_pages']) and $theme['use_standard_pages']) {
+    if (isset($theme['use_standard_pages']) and (bool) $theme['use_standard_pages']) {
         $is_standard_pages_used = true;
         array_push($standard_pages_used_by, $theme['name']);
     }

@@ -91,7 +91,7 @@ SELECT
     $result = pwg_query($query);
 
     $output = [];
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         $output[] = $row;
     }
 

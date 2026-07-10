@@ -67,7 +67,7 @@ SELECT
 
     $result = pwg_query($query);
     array_push($output_lines, ['User', 'ID_User', 'Object', 'Object_ID', 'Action', 'Date', 'Hour', 'IP_Address', 'Details']);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         $row['details'] = str_replace('`groups`', 'groups', (string) $row['details']);
         $row['details'] = str_replace('`rank`', 'rank', $row['details']);
 
@@ -82,7 +82,7 @@ SELECT
             'date' => $date,
             'hour' => $hour,
             'ip_address' => (string) $row['ip_address'],
-            'details' => (string) $row['details'],
+            'details' => $row['details'],
         ];
     }
 
@@ -190,8 +190,8 @@ $max_date = $row !== null ? $row[0] : null;
 $template->assign(
     'ACTIVITY_DATES',
     [
-        'min' => empty($min_date) ? '' : substr((string) $min_date, 0, 10),
-        'max' => empty($max_date) ? '' : substr((string) $max_date, 0, 10),
+        'min' => empty($min_date) ? '' : substr($min_date, 0, 10),
+        'max' => empty($max_date) ? '' : substr($max_date, 0, 10),
     ]
 );
 
@@ -247,7 +247,7 @@ SELECT
   FROM ' . ACTIVITY_TABLE . '
   WHERE object != \'system\'';
 
-if ($additional_filt_type) {
+if ((bool) $additional_filt_type) {
     $query .= '
     AND object = "' . $additional_filt_type . '"';
 }

@@ -80,7 +80,7 @@ if (isset($_GET['delete'])) {
     // 2. else use the first reachable linked category
     // 3. redirect to gallery root
 
-    if ($custom_context = get_edit_context($image_id)) {
+    if ((bool) ($custom_context = get_edit_context($image_id))) {
         // considering we have a context available, we fake one to build the url
         // and we replace it with the context found in the session for this image_id
         redirect(str_replace('list/1,2', $custom_context, make_index_url([
@@ -117,7 +117,7 @@ if (isset($_POST['submit'])) {
     foreach ($to_sanitize_fields as $field) {
         $raw_field_value = $_POST[$field] ?? null;
         $field_value = is_scalar($raw_field_value) ? (string) $raw_field_value : '';
-        $data[$field] = $conf['allow_html_descriptions'] ? $field_value : strip_tags($field_value);
+        $data[$field] = ((bool) $conf['allow_html_descriptions']) ? $field_value : strip_tags($field_value);
     }
 
     if (! empty($_POST['date_creation'])) {
@@ -327,7 +327,7 @@ SELECT ' . $uf_username . ' AS username
   WHERE ' . $uf_id . ' = ' . $row_added_by_str . '
 ;';
 $result = pwg_query($query);
-while ($user_row = pwg_db_fetch_assoc($result)) {
+while ((bool) ($user_row = pwg_db_fetch_assoc($result))) {
     $row['added_by'] = $user_row['username'];
 }
 
@@ -346,7 +346,7 @@ $intro_vars = [
     'is_svg' => (strtoupper(end($extTab)) == 'SVG'),
 ];
 
-if ($conf['rate'] and ! empty($row['rating_score'])) {
+if ((bool) $conf['rate'] and ! empty($row['rating_score'])) {
     $query = '
 SELECT
     COUNT(*)
@@ -415,7 +415,7 @@ $result = pwg_query($query);
 $related_categories = [];
 $related_categories_ids = [];
 
-while ($row = pwg_db_fetch_assoc($result)) {
+while ((bool) ($row = pwg_db_fetch_assoc($result))) {
     $row_category_id = is_string($row['category_id']) ? $row['category_id'] : '';
     $row_uppercats = is_string($row['uppercats']) ? $row['uppercats'] : '';
 
@@ -453,7 +453,7 @@ if (is_array($page['image']) && is_numeric($page['image']['level'] ?? null)) {
     $image_level = (int) $page['image']['level'];
 }
 
-if ($custom_context = get_edit_context($image_id)) {
+if ((bool) ($custom_context = get_edit_context($image_id))) {
     $template->assign('U_JUMPTO', make_picture_url([
         'image_id' => $image_id,
     ]) . '/' . $custom_context);

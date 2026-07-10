@@ -62,7 +62,7 @@ function do_timeout_treatment(string $post_keyname, array $check_key_treated = [
      */
     global $env_nbm, $page;
 
-    if ($env_nbm['is_sendmail_timeout']) {
+    if ((bool) $env_nbm['is_sendmail_timeout']) {
         if (isset($_POST[$post_keyname]) and is_array($_POST[$post_keyname])) {
             $post_count = count($_POST[$post_keyname]);
             $treated_count = count($check_key_treated);
@@ -167,7 +167,7 @@ order by
         $inserts = [];
         $check_key_list = [];
 
-        while ($nbm_user = pwg_db_fetch_assoc($result)) {
+        while ((bool) ($nbm_user = pwg_db_fetch_assoc($result))) {
             // Calculate key
             $nbm_user['check_key'] = find_available_check_key();
 
@@ -198,7 +198,7 @@ order by
         );
 
         // On timeout simulate like tabsheet send
-        if ($env_nbm['is_sendmail_timeout']) {
+        if ((bool) $env_nbm['is_sendmail_timeout']) {
             // do_subscribe_unsubscribe_notification_by_mail() returns mixed[]
             // of check_key strings; narrow before array_diff() needs values
             // castable to string.
@@ -229,7 +229,7 @@ function render_global_customize_mail_content(mixed $customize_mail_content): mi
     // non-scalar value.
     $customize_mail_content_str = is_string($customize_mail_content) ? $customize_mail_content : '';
 
-    if ($conf['nbm_send_html_mail'] and ! str_starts_with($customize_mail_content_str, '<')) {
+    if ((bool) $conf['nbm_send_html_mail'] and ! str_starts_with($customize_mail_content_str, '<')) {
         // On HTML mail, detects if the content are HTML format.
         // If it's plain text format, convert content to readable HTML
         return nl2br(htmlspecialchars($customize_mail_content_str));
@@ -269,7 +269,7 @@ function do_action_send_mail_notification(string $action = 'list_to_send', array
         $data_users = get_user_notifications('send', $check_key_list);
 
         // List all if it's define on options or on timeout
-        $is_list_all_without_test = ($env_nbm['is_sendmail_timeout'] or $conf['nbm_list_all_enabled_users_to_send']);
+        $is_list_all_without_test = ((bool) $env_nbm['is_sendmail_timeout'] or (bool) $conf['nbm_list_all_enabled_users_to_send']);
 
         // Check if exist news to list user or send mails
         if ((! $is_list_all_without_test) or ($is_action_send)) {
@@ -574,7 +574,7 @@ switch ($page_mode) {
             $updated_param_count = 0;
             // Update param
             $result = pwg_query('select param, value from ' . CONFIG_TABLE . ' where param like \'nbm\\_%\'');
-            while ($nbm_user = pwg_db_fetch_assoc($result)) {
+            while ((bool) ($nbm_user = pwg_db_fetch_assoc($result))) {
                 // 'param' is the config table's primary key, never null.
                 if (! is_string($nbm_user['param'])) {
                     continue;
@@ -748,7 +748,7 @@ switch ($page_mode) {
             ? $_POST['send_selection']
             : [];
 
-        if (count($data_users)) {
+        if ((bool) count($data_users)) {
             foreach ($data_users as $nbm_user) {
                 // do_action_send_mail_notification('list_to_send') returns
                 // get_user_notifications() rows unchanged.

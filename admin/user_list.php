@@ -48,7 +48,7 @@ SELECT id, name, COUNT(ug.user_id) as nb_users_of
 ;';
 $result = pwg_query($query);
 
-while ($row = pwg_db_fetch_assoc($result)) {
+while ((bool) ($row = pwg_db_fetch_assoc($result))) {
     $group_id = $row['id'];
     if (! is_string($group_id)) {
         continue;
@@ -77,7 +77,7 @@ ORDER BY registration_date
 $result = pwg_query($query);
 
 $register_dates = [];
-while ($row = pwg_db_fetch_assoc($result)) {
+while ((bool) ($row = pwg_db_fetch_assoc($result))) {
     $register_dates[] = $row['registration_year'] . '-' . sprintf('%02u', $row['registration_month']);
 }
 
@@ -211,7 +211,7 @@ SELECT
 
 $result = pwg_query($query);
 $nb_users_by_status = [];
-while ($row = pwg_db_fetch_assoc($result)) {
+while ((bool) ($row = pwg_db_fetch_assoc($result))) {
     $status = $row['status'];
     if (! is_string($status)) {
         continue;
@@ -263,7 +263,7 @@ SELECT
 
 $result = pwg_query($query);
 $nb_users_by_level = $level_options;
-while ($row = pwg_db_fetch_assoc($result)) {
+while ((bool) ($row = pwg_db_fetch_assoc($result))) {
     $level = $row['level'];
     if (! is_numeric($level)) {
         continue;
@@ -288,7 +288,7 @@ $result = pwg_query($query);
 
 $groups_arr_id = [];
 $groups_arr_name = [];
-while ($row = pwg_db_fetch_assoc($result)) {
+while ((bool) ($row = pwg_db_fetch_assoc($result))) {
     $groups_arr_name[] = '"' . pwg_db_real_escape_string($row['name']) . '"';
     $groups_arr_id[] = $row['id'];
 }
@@ -324,7 +324,7 @@ function webmaster_id_is_local(): mixed
     return $conf['webmaster_id'] ?? false;
 }
 
-if (webmaster_id_is_local()) {
+if ((bool) webmaster_id_is_local()) {
     // include/common.inc.php seeds $page['warnings'] as [] -- always an
     // array; defensively re-initialized here in case that invariant is
     // ever broken by a prior include.

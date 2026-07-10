@@ -25,7 +25,7 @@ for ($i = 0; $i < count($sections); $i++) {
         continue;
     }
 
-    if ($sections[$i] == '..' or ! preg_match('/^[a-zA-Z0-9_\.-]+$/', $sections[$i])) {
+    if ($sections[$i] == '..' or ! (bool) preg_match('/^[a-zA-Z0-9_\.-]+$/', $sections[$i])) {
         die('invalid section token [' . htmlentities($sections[$i]) . ']');
     }
 }
@@ -36,7 +36,7 @@ if (count($sections) < 2) {
 
 $plugin_id = $sections[0];
 
-if (! preg_match('/^[\w-]+$/', $plugin_id)) {
+if (! (bool) preg_match('/^[\w-]+$/', $plugin_id)) {
     die('Invalid plugin identifier');
 }
 

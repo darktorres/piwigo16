@@ -115,7 +115,7 @@ $result = pwg_query($query);
 
 if (pwg_db_num_rows($result) > 0) {
     $cats = [];
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         $cats[] = $row;
         $group_authorized[] = $row['cat_id'];
     }
@@ -149,7 +149,7 @@ display_select_cat_wrapper($query_true, [], 'category_option_true');
 
 $result = pwg_query($query_true);
 $authorized_ids = [];
-while ($row = pwg_db_fetch_assoc($result)) {
+while ((bool) ($row = pwg_db_fetch_assoc($result))) {
     $authorized_ids[] = $row['id'];
 }
 

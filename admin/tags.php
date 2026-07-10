@@ -130,7 +130,7 @@ SELECT name, id, url_name
 ;';
 $result = pwg_query($query);
 $all_tags = [];
-while ($tag = pwg_db_fetch_assoc($result)) {
+while ((bool) ($tag = pwg_db_fetch_assoc($result))) {
     $raw_name = $tag['name'];
     $tag['raw_name'] = $raw_name;
     $rendered_name = trigger_change('render_tag_name', $raw_name, $tag);
@@ -152,7 +152,7 @@ while ($tag = pwg_db_fetch_assoc($result)) {
     $alt_names = trigger_change('get_tag_alt_names', [], $raw_name);
     $alt_names = is_array($alt_names) ? array_filter($alt_names, is_string(...)) : [];
     $alt_names = array_diff(array_unique($alt_names), [$rendered_name]);
-    if (count($alt_names)) {
+    if ((bool) count($alt_names)) {
         $tag['alt_names'] = implode(', ', $alt_names);
     }
     $all_tags[] = $tag;

@@ -27,7 +27,7 @@ include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
 
-if (! $conf['enable_synchronization']) {
+if (! (bool) $conf['enable_synchronization']) {
     die('synchronization is disabled');
 }
 
@@ -158,7 +158,7 @@ SELECT *
 ;';
 $result = pwg_query($query);
 
-while ($row = pwg_db_fetch_assoc($result)) {
+while ((bool) ($row = pwg_db_fetch_assoc($result))) {
     // 'id' and 'galleries_url' are both NOT NULL columns on the sites
     // table (see install/piwigo_structure-mysql.sql), so
     // pwg_db_fetch_assoc() never returns null for either of these keys

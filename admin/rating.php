@@ -85,7 +85,7 @@ SELECT ' . $user_fields['username'] . ' as username, ' . $user_fields['id'] . ' 
   FROM ' . USERS_TABLE . '
 ;';
 $result = pwg_query($query);
-while ($row = pwg_db_fetch_assoc($result)) {
+while ((bool) ($row = pwg_db_fetch_assoc($result))) {
     if (is_string($row['id'])) {
         $users[$row['id']] = stripslashes((string) $row['username']);
     }
@@ -201,7 +201,7 @@ $query .= '
 
 $images = [];
 $result = pwg_query($query);
-while ($row = pwg_db_fetch_assoc($result)) {
+while ((bool) ($row = pwg_db_fetch_assoc($result))) {
     $images[] = $row;
 }
 
@@ -232,7 +232,7 @@ ORDER BY date DESC;';
           'rates' => [],
       ];
 
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         $row_user_id = is_string($row['user_id']) ? $row['user_id'] : '';
         if (isset($users[$row_user_id])) {
             $user_rate = $users[$row_user_id];

@@ -17,7 +17,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
 /** @var array<string, mixed> $conf */
 global $conf;
 
-if (! $conf['enable_extensions_install'] and ! $conf['enable_core_update']) {
+if (! (bool) $conf['enable_extensions_install'] and ! (bool) $conf['enable_core_update']) {
     die('update system is disabled');
 }
 

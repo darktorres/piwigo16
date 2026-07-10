@@ -67,7 +67,7 @@ if (isset($_POST['submit'])) {
         'path' => (string) $row['path'],
     ];
     if (! empty($row['representative_ext'])) {
-        $derivative_infos['representative_ext'] = (string) $row['representative_ext'];
+        $derivative_infos['representative_ext'] = $row['representative_ext'];
     }
 
     foreach (ImageStdParams::get_defined_type_map() as $params) {

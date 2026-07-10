@@ -28,7 +28,7 @@ include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
 
-if (! $conf['enable_synchronization']) {
+if (! (bool) $conf['enable_synchronization']) {
     die('synchronization is disabled');
 }
 
@@ -193,7 +193,7 @@ SELECT id, uppercats, global_rank, status, visible
         // preg_replace() can return null on a regex engine error; the base
         // directory is never allowed to be null downstream (LocalSiteReader
         // expects a real string path).
-        $basedir = preg_replace('#/*$#', '', (string) $site_url) ?? '';
+        $basedir = preg_replace('#/*$#', '', $site_url) ?? '';
     }
 
     // we need to have fulldirs as keys to make efficient comparison
@@ -201,13 +201,15 @@ SELECT id, uppercats, global_rank, status, visible
 
     // finding next rank for each id_uppercat. By default, each category id
     // has 1 for next rank on its sub-categories to create
-    $next_rank = ['NULL' => 1];
+    $next_rank = [
+        'NULL' => 1,
+    ];
 
     $query = '
 SELECT id
   FROM ' . CATEGORIES_TABLE;
     $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         // id is a NOT NULL primary key; skip defensively rather than use a
         // null value as an invalid array key.
         if ($row['id'] === null) {
@@ -222,7 +224,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
   FROM ' . CATEGORIES_TABLE . '
   GROUP BY id_uppercat';
     $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         // for the id_uppercat NULL, we write 'NULL' and not the empty string
         if (! isset($row['id_uppercat']) or $row['id_uppercat'] == '') {
             $row['id_uppercat'] = 'NULL';
@@ -258,11 +260,11 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
     $inserts = [];
     // new categories are the directories not present yet in the database
     foreach (array_diff($fs_fulldirs, array_keys($db_fulldirs)) as $fulldir) {
-        $dir = basename((string) $fulldir);
+        $dir = basename($fulldir);
         // sync_chars_regex is a config default, always a regex string; treat
         // a non-string config value the same as a non-matching name below.
         $sync_chars_regex = $conf['sync_chars_regex'];
-        if (is_string($sync_chars_regex) && preg_match($sync_chars_regex, $dir)) {
+        if (is_string($sync_chars_regex) && (bool) preg_match($sync_chars_regex, $dir)) {
             $insert = [
                 'id' => $next_id++,
                 'dir' => $dir,
@@ -273,8 +275,8 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                 'visible' => boolean_to_string($conf['newcat_default_visible']),
             ];
 
-            if (isset($db_fulldirs[dirname((string) $fulldir)])) {
-                $parent = $db_fulldirs[dirname((string) $fulldir)];
+            if (isset($db_fulldirs[dirname($fulldir)])) {
+                $parent = $db_fulldirs[dirname($fulldir)];
 
                 // $db_categories[$parent] can be either a raw DB row
                 // (uppercats/global_rank as string|null) or a previously
@@ -355,7 +357,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
             ]);
 
             $category_up = implode(',', array_unique($category_up));
-            if ($conf['inheritance_by_default'] and ! empty($category_up)) {
+            if ((bool) $conf['inheritance_by_default'] and ! empty($category_up)) {
                 // predeclared so both stay real arrays below even if a
                 // query below ever returns an empty/falsy result set.
                 $granted_grps = [];
@@ -368,7 +370,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                 $result = pwg_query($query);
                 if (! empty($result)) {
                     $granted_grps = [];
-                    while ($row = pwg_db_fetch_assoc($result)) {
+                    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
                         // cat_id is a NOT NULL foreign key; skip defensively
                         // if it's ever missing/non-numeric rather than using
                         // it as an invalid array key.
@@ -397,7 +399,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                 $result = pwg_query($query);
                 if (! empty($result)) {
                     $granted_users = [];
-                    while ($row = pwg_db_fetch_assoc($result)) {
+                    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
                         // cat_id is a NOT NULL foreign key; skip defensively
                         // if it's ever missing/non-numeric rather than using
                         // it as an invalid array key.
@@ -473,8 +475,8 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
             'info' => l10n('deleted'),
         ];
 
-        if (substr_compare((string) $fulldir, '../', 0, 3) == 0) {
-            $fulldir = substr((string) $fulldir, 3);
+        if (substr_compare($fulldir, '../', 0, 3) == 0) {
+            $fulldir = substr($fulldir, 3);
         }
         $to_delete_derivative_dirs[] = PHPWG_ROOT_PATH . PWG_DERIVATIVE_DIR . $fulldir;
     }
@@ -543,15 +545,15 @@ SELECT id, path
     foreach (array_diff(array_keys($fs), $db_elements) as $path) {
         $insert = [];
         // storage category must exist
-        $dirname = dirname((string) $path);
+        $dirname = dirname($path);
         if (! isset($db_fulldirs[$dirname])) {
             continue;
         }
-        $filename = basename((string) $path);
+        $filename = basename($path);
         // sync_chars_regex is a config default, always a regex string; treat
         // a non-string config value the same as a non-matching name below.
         $sync_chars_regex = $conf['sync_chars_regex'];
-        if (! is_string($sync_chars_regex) || ! preg_match($sync_chars_regex, $filename)) {
+        if (! is_string($sync_chars_regex) || ! (bool) preg_match($sync_chars_regex, $filename)) {
             $errors[] = [
                 'path' => $path,
                 'type' => 'PWG-UPDATE-1',
@@ -587,7 +589,7 @@ SELECT id, path
             'info' => l10n('added'),
         ];
 
-        if ($conf['enable_formats']) {
+        if ((bool) $conf['enable_formats']) {
             // 'formats' is only known as mixed here (get_elements()'s
             // declared value type is array<string, mixed>), but it's always
             // the get_formats() float[] result when set.
@@ -612,7 +614,7 @@ SELECT id, path
     }
 
     // search new/removed formats on photos already registered in database
-    if ($conf['enable_formats']) {
+    if ((bool) $conf['enable_formats']) {
         $db_elements_flip = array_flip($db_elements);
 
         $existing_ids = [];
@@ -633,7 +635,7 @@ SELECT *
   WHERE image_id IN (' . implode(',', $existing_ids) . ')
 ;';
             $result = pwg_query($query);
-            while ($row = pwg_db_fetch_assoc($result)) {
+            while ((bool) ($row = pwg_db_fetch_assoc($result))) {
                 // image_id/ext are NOT NULL columns; skip defensively rather
                 // than use a null/non-scalar value as an array key.
                 $format_image_id = $row['image_id'];

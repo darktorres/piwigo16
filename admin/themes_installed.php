@@ -111,7 +111,7 @@ foreach ($themes->fs_themes as $theme_id => $fs_theme) {
         $tpl_theme['STATE'] = 'inactive';
 
         // is the theme "activable" ?
-        if (isset($fs_theme['activable']) and ! $fs_theme['activable']) {
+        if (isset($fs_theme['activable']) and ! (bool) $fs_theme['activable']) {
             $tpl_theme['ACTIVABLE'] = false;
             $tpl_theme['ACTIVABLE_TOOLTIP'] = l10n('This theme was not designed to be directly activated');
         } else {
@@ -158,10 +158,10 @@ function cmp(array $a, array $b): int
         'inactive' => 1,
     ];
 
-    if (@$a['IS_DEFAULT']) {
+    if ((bool) @$a['IS_DEFAULT']) {
         return -1;
     }
-    if (@$b['IS_DEFAULT']) {
+    if ((bool) @$b['IS_DEFAULT']) {
         return 1;
     }
 

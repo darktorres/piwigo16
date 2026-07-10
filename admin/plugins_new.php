@@ -21,7 +21,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
  */
 global $conf, $page, $template;
 
-if (! $conf['enable_extensions_install']) {
+if (! (bool) $conf['enable_extensions_install']) {
     die('Piwigo extensions install/update system is disabled');
 }
 
@@ -257,7 +257,7 @@ if ($plugins->get_server_plugins(true, $beta_test)) {
     push_plugins_new_page_message('errors', l10n('Can\'t connect to server.'), $page);
 }
 
-if (! $beta_test and preg_match('/(beta|RC)/', PHPWG_VERSION)) {
+if (! $beta_test and (bool) preg_match('/(beta|RC)/', PHPWG_VERSION)) {
     $template->assign('BETA_URL', $base_url . '&amp;beta-test=true');
 }
 $template->assign('ADMIN_PAGE_TITLE', l10n('Plugins'));

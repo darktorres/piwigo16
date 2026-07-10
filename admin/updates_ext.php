@@ -27,7 +27,7 @@ global $conf, $page, $template;
 $page['warnings'] = is_array($page['warnings'] ?? null) ? $page['warnings'] : [];
 $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
 
-if (! $conf['enable_extensions_install']) {
+if (! (bool) $conf['enable_extensions_install']) {
     die('Piwigo extensions install/update system is disabled');
 }
 
@@ -107,7 +107,7 @@ foreach ($autoupdate->types as $type) {
         $revision_name_raw = $ext_info['revision_name'] ?? null;
         $revision_name = is_string($revision_name_raw) ? $revision_name_raw : '';
 
-        if (! safe_version_compare($fs_version, $revision_name, '>=')) {
+        if (! (bool) safe_version_compare($fs_version, $revision_name, '>=')) {
             $extension_id_raw = $ext_info['extension_id'] ?? null;
             $extension_id = (is_string($extension_id_raw) || is_int($extension_id_raw)) ? $extension_id_raw : '';
             $download_url_raw = $ext_info['download_url'] ?? null;

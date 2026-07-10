@@ -21,7 +21,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
  */
 global $conf, $page, $template;
 
-if (! $conf['enable_core_update']) {
+if (! (bool) $conf['enable_core_update']) {
     die('Piwigo core update system is disabled');
 }
 

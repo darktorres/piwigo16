@@ -59,7 +59,7 @@ DELETE FROM ' . CADDIE_TABLE . '
     redirect(get_root_url() . 'admin.php?page=batch_manager&filter=prefilter-caddie');
 }
 
-if (userprefs_get_param('promote-mobile-apps', true)) {
+if ((bool) userprefs_get_param('promote-mobile-apps', true)) {
     $query = '
 SELECT registration_date
   FROM ' . USER_INFOS_TABLE . '
@@ -98,19 +98,19 @@ $template->assign('PHPWG_URL', PHPWG_URL);
 // |                             Formats Mode                              |
 // +-----------------------------------------------------------------------+
 
-$display_formats = $conf['enable_formats'] && isset($_GET['formats']);
+$display_formats = (bool) $conf['enable_formats'] && isset($_GET['formats']);
 
 $have_formats_original = false;
 $formats_original_info = [];
 $formats_ext_info = null;
 
 // If URL parameter isn't empty
-if ($display_formats && $_GET['formats']) {
+if ($display_formats && (bool) $_GET['formats']) {
     check_input_parameter('formats', $_GET, false, PATTERN_ID, false);
 
     $formats_id_param = $_GET['formats'];
     $formats_original_info = get_image_infos(is_int($formats_id_param) || is_string($formats_id_param) ? $formats_id_param : '');
-    if ($formats_original_info) {
+    if ((bool) $formats_original_info) {
         $src_image = new SrcImage($formats_original_info);
 
         $formats_original_info['src'] = DerivativeImage::url(IMG_SQUARE, $src_image);

@@ -43,7 +43,7 @@ function parse_sort_variables(
                 fatal_error('unexpected URL get key');
             }
 
-            $base_url .= urlencode((string) $key) . '=' . urlencode(is_array($value) ? '' : (string) $value);
+            $base_url .= urlencode((string) $key) . '=' . urlencode(is_array($value) ? '' : $value);
         }
     }
 
@@ -66,7 +66,7 @@ function parse_sort_variables(
             $disp = '<em>' . $disp . '</em>';
         }
         $template->assign(
-            $template_var . strtoupper((string) $field),
+            $template_var . strtoupper($field),
             '<a href="' . $url . $anchor . '" title="' . l10n('Sort order') . '">' . $disp . '</a>'
         );
     }
@@ -158,7 +158,7 @@ if ($sort_by[0] == 'id' or $sort_by[0] == 'permalink') {
 }
 $categories = [];
 $result = pwg_query($query);
-while ($row = pwg_db_fetch_assoc($result)) {
+while ((bool) ($row = pwg_db_fetch_assoc($result))) {
     // uppercats is NOT NULL in the schema; is_string() is a defensive
     // narrowing of the driver's generic string|null column type, not a
     // documented nullability.
@@ -185,12 +185,12 @@ $sort_by = parse_sort_variables(
 
 $url_del_base = get_root_url() . 'admin.php?page=permalinks';
 $query = 'SELECT * FROM ' . OLD_PERMALINKS_TABLE;
-if (count($sort_by)) {
+if ((bool) count($sort_by)) {
     $query .= ' ORDER BY ' . $sort_by[0];
 }
 $result = pwg_query($query);
 $deleted_permalinks = [];
-while ($row = pwg_db_fetch_assoc($result)) {
+while ((bool) ($row = pwg_db_fetch_assoc($result))) {
     // cat_id is NOT NULL in the schema; is_string() is a defensive
     // narrowing of the driver's generic string|null column type, not a
     // documented nullability.

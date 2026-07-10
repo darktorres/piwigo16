@@ -79,7 +79,7 @@ class LocalSiteReader
 
         $subdirs = [];
         $fs = [];
-        if (is_dir($path) && $contents = opendir($path)) {
+        if (is_dir($path) && (bool) ($contents = opendir($path))) {
             while (($node = readdir($contents)) !== false) {
                 if ($node == '.' or $node == '..') {
                     continue;
@@ -99,7 +99,7 @@ class LocalSiteReader
                             'representative_ext' => $representative_ext,
                         ];
 
-                        if ($conf['enable_formats']) {
+                        if ((bool) $conf['enable_formats']) {
                             $fs[$path . '/' . $node]['formats'] = $this->get_formats($path, $filename_wo_ext);
                         }
                     }
@@ -141,7 +141,7 @@ class LocalSiteReader
         global $conf;
         $data = [];
 
-        $filename = basename((string) $file);
+        $filename = basename($file);
         $extension = get_extension($filename);
 
         $flip_picture_ext = $conf['flip_picture_ext'];
@@ -149,7 +149,7 @@ class LocalSiteReader
 
         $representative_ext = null;
         if (! isset($flip_picture_ext[$extension])) {
-            $dirname = dirname((string) $file);
+            $dirname = dirname($file);
             $filename_wo_ext = get_filename_wo_extension($filename);
             $representative_ext = $this->get_representative_ext($dirname, $filename_wo_ext);
         }

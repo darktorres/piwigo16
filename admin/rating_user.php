@@ -45,7 +45,7 @@ $query = 'SELECT DISTINCT
 
 $users_by_id = [];
 $result = pwg_query($query);
-while ($row = pwg_db_fetch_assoc($result)) {
+while ((bool) ($row = pwg_db_fetch_assoc($result))) {
     $status = $row['status'];
     $users_by_id[(int) $row['id']] = [
         'name' => is_string($row['name']) ? $row['name'] : '',
@@ -70,7 +70,7 @@ $by_user_ratings = [];
 $query = '
 SELECT * FROM ' . RATE_TABLE . ' ORDER by date DESC';
 $result = pwg_query($query);
-while ($row = pwg_db_fetch_assoc($result)) {
+while ((bool) ($row = pwg_db_fetch_assoc($result))) {
     $user_id = (int) $row['user_id'];
     if (! isset($users_by_id[$user_id])) {
         $users_by_id[$user_id] = [
@@ -111,7 +111,7 @@ if (count($image_ids) > 0) {
   WHERE id IN (' . implode(',', array_keys($image_ids)) . ')';
     $result = pwg_query($query);
     $params = ImageStdParams::get_by_type(IMG_SQUARE);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         $image_urls[(int) $row['id']] = [
             'tn' => DerivativeImage::url($params, $row),
             'page' => make_picture_url([
@@ -129,7 +129,7 @@ $query = 'SELECT element_id,
   GROUP BY element_id';
 $all_img_sum = [];
 $result = pwg_query($query);
-while ($row = pwg_db_fetch_assoc($result)) {
+while ((bool) ($row = pwg_db_fetch_assoc($result))) {
     $all_img_sum[(int) $row['element_id']] = [
         'avg' => (float) $row['avg'],
     ];
@@ -170,7 +170,7 @@ foreach ($by_user_ratings as $id => &$rating) {
     }
 
     $consensus_dev /= $c;
-    if ($consensus_dev_top_count) {
+    if ((bool) $consensus_dev_top_count) {
         $consensus_dev_top /= $consensus_dev_top_count;
     }
 
@@ -181,7 +181,7 @@ foreach ($by_user_ratings as $id => &$rating) {
         'avg' => $s / $c,
         'cv' => $s == 0 ? -1 : sqrt($var) / ($s / $c), // http://en.wikipedia.org/wiki/Coefficient_of_variation
         'cd' => $consensus_dev,
-        'cdtop' => $consensus_dev_top_count ? $consensus_dev_top : '',
+        'cdtop' => ((bool) $consensus_dev_top_count) ? $consensus_dev_top : '',
     ];
 }
 unset($rating);

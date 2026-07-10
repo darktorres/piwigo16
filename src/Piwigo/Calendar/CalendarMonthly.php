@@ -9,7 +9,14 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-include_once PHPWG_ROOT_PATH . 'include/calendar_base.class.php';
+namespace Piwigo\Calendar;
+
+// DerivativeImage/SrcImage/ImageStdParams are still global-namespace at the
+// time of this extraction (P6 batch 7) -- they move to Piwigo\Image\ in
+// batch 9, which must come back and update these three imports.
+use DerivativeImage;
+use ImageStdParams;
+use SrcImage;
 
 /**
  * Monthly calendar style (composed of years/months and days)
@@ -53,6 +60,7 @@ class CalendarMonthly extends CalendarBase
      *
      * @return bool false indicates that thumbnails where not included
      */
+    #[\Override]
     public function generate_category_content(): bool
     {
         /**
@@ -129,6 +137,7 @@ class CalendarMonthly extends CalendarBase
      *
      * @param int $max_levels (e.g. 2=only year and month)
      */
+    #[\Override]
     public function get_date_where($max_levels = 3): string
     {
         /** @var array<string, mixed> $page */

@@ -10,6 +10,8 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Cache\PersistentCache;
+use Piwigo\Calendar\CalendarMonthly;
+use Piwigo\Calendar\CalendarWeekly;
 
 /** URL keyword for list view */
 define('CAL_VIEW_LIST', 'list');
@@ -104,15 +106,13 @@ WHERE id IN (' . implode(',', array_filter($page['items'], is_scalar(...))) . ')
     $styles = [
         // Monthly style
         'monthly' => [
-            'include' => 'calendar_monthly.class.php',
             'view_calendar' => true,
-            'classname' => 'CalendarMonthly',
+            'classname' => CalendarMonthly::class,
         ],
         // Weekly style
         'weekly' => [
-            'include' => 'calendar_weekly.class.php',
             'view_calendar' => false,
-            'classname' => 'CalendarWeekly',
+            'classname' => CalendarWeekly::class,
         ],
     ];
 
@@ -133,7 +133,6 @@ WHERE id IN (' . implode(',', array_filter($page['items'], is_scalar(...))) . ')
     $cal_style = $chronology_style;
     $classname = $styles[$cal_style]['classname'];
 
-    include PHPWG_ROOT_PATH . 'include/' . $styles[$cal_style]['include'];
     $calendar = new $classname();
 
     // Retrieve view
@@ -279,7 +278,7 @@ WHERE id IN (' . implode(',', array_filter($page['items'], is_scalar(...))) . ')
               . $calendar->date_field . $order_by);
         }
 
-        $cache_key_str = isset($cache_key) && is_string($cache_key) ? $cache_key : null;
+        $cache_key_str = $cache_key ?? null;
 
         if ($cache_key_str === null || ! $persistent_cache->get($cache_key_str, $page['items'])) {
             $query = 'SELECT DISTINCT id '

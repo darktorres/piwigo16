@@ -2311,138 +2311,6 @@ parameters:
 			path: include/block.class.php
 
 		-
-			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
-			identifier: empty.notAllowed
-			count: 4
-			path: include/calendar_base.class.php
-
-		-
-			rawMessage: 'Loose comparison via "!=" between int and int<1, max> is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 1
-			path: include/calendar_base.class.php
-
-		-
-			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 1
-			path: include/calendar_base.class.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: include/calendar_base.class.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between mixed and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: include/calendar_base.class.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: include/calendar_base.class.php
-
-		-
-			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
-			identifier: typeCoverage.propertyTypeCoverage
-			count: 3
-			path: include/calendar_base.class.php
-
-		-
-			rawMessage: 'Out of 1741 possible param types, only 979 - 56.2 %% actually have it. Add more param types to get over 99 %%'
-			identifier: typeCoverage.paramTypeCoverage
-			count: 7
-			path: include/calendar_base.class.php
-
-		-
-			rawMessage: 'Out of 609 possible return types, only 561 - 92.1 %% actually have it. Add more return types to get over 99 %%'
-			identifier: typeCoverage.returnTypeCoverage
-			count: 6
-			path: include/calendar_base.class.php
-
-		-
-			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
-			identifier: empty.notAllowed
-			count: 1
-			path: include/calendar_monthly.class.php
-
-		-
-			rawMessage: 'Loose comparison via "!=" between int<-399, 399> and int is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 1
-			path: include/calendar_monthly.class.php
-
-		-
-			rawMessage: 'Loose comparison via "!=" between int<-99, 99> and int is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 1
-			path: include/calendar_monthly.class.php
-
-		-
-			rawMessage: 'Loose comparison via "!=" between int<1, max> and int is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 1
-			path: include/calendar_monthly.class.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between int<-3, 3> and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: include/calendar_monthly.class.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between int<0, 6> and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 2
-			path: include/calendar_monthly.class.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 11
-			path: include/calendar_monthly.class.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between int|string and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: include/calendar_monthly.class.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
-			identifier: equal.notAllowed
-			count: 3
-			path: include/calendar_monthly.class.php
-
-		-
-			rawMessage: 'Out of 1741 possible param types, only 979 - 56.2 %% actually have it. Add more param types to get over 99 %%'
-			identifier: typeCoverage.paramTypeCoverage
-			count: 2
-			path: include/calendar_monthly.class.php
-
-		-
-			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
-			identifier: empty.notAllowed
-			count: 1
-			path: include/calendar_weekly.class.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 3
-			path: include/calendar_weekly.class.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: include/calendar_weekly.class.php
-
-		-
 			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
 			identifier: function.strict
 			count: 1
@@ -5153,6 +5021,138 @@ parameters:
 			identifier: equal.notAllowed
 			count: 1
 			path: src/Piwigo/Cache/PersistentFileCache.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 4
+			path: src/Piwigo/Calendar/CalendarBase.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int and int<1, max> is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: src/Piwigo/Calendar/CalendarBase.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: src/Piwigo/Calendar/CalendarBase.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Calendar/CalendarBase.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Calendar/CalendarBase.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Calendar/CalendarBase.php
+
+		-
+			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 3
+			path: src/Piwigo/Calendar/CalendarBase.php
+
+		-
+			rawMessage: 'Out of 1741 possible param types, only 979 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 7
+			path: src/Piwigo/Calendar/CalendarBase.php
+
+		-
+			rawMessage: 'Out of 609 possible return types, only 561 - 92.1 %% actually have it. Add more return types to get over 99 %%'
+			identifier: typeCoverage.returnTypeCoverage
+			count: 6
+			path: src/Piwigo/Calendar/CalendarBase.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: src/Piwigo/Calendar/CalendarMonthly.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int<-399, 399> and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: src/Piwigo/Calendar/CalendarMonthly.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int<-99, 99> and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: src/Piwigo/Calendar/CalendarMonthly.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int<1, max> and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: src/Piwigo/Calendar/CalendarMonthly.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<-3, 3> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Calendar/CalendarMonthly.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, 6> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: src/Piwigo/Calendar/CalendarMonthly.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 11
+			path: src/Piwigo/Calendar/CalendarMonthly.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int|string and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Calendar/CalendarMonthly.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 3
+			path: src/Piwigo/Calendar/CalendarMonthly.php
+
+		-
+			rawMessage: 'Out of 1741 possible param types, only 979 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 2
+			path: src/Piwigo/Calendar/CalendarMonthly.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: src/Piwigo/Calendar/CalendarWeekly.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 3
+			path: src/Piwigo/Calendar/CalendarWeekly.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Calendar/CalendarWeekly.php
 
 		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'

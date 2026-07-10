@@ -9,7 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-include_once PHPWG_ROOT_PATH . 'include/calendar_base.class.php';
+namespace Piwigo\Calendar;
 
 /**
  * Weekly calendar style (composed of years/week in years and days in week)
@@ -77,6 +77,7 @@ class CalendarWeekly extends CalendarBase
      *
      * @return bool false indicates that thumbnails where not included
      */
+    #[\Override]
     public function generate_category_content(): bool
     {
         /** @var array<string, mixed> $page */
@@ -101,6 +102,7 @@ class CalendarWeekly extends CalendarBase
      *
      * @param int $max_levels (e.g. 2=only year and month)
      */
+    #[\Override]
     public function get_date_where($max_levels = 3): string
     {
         /** @var array<string, mixed> $page */

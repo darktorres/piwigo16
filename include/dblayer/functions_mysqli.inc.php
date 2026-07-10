@@ -133,7 +133,9 @@ function pwg_query($query)
     $die_on_sql_error = (bool) ($conf['die_on_sql_error'] ?? false);
 
     $start = microtime(true);
-    ((bool) ($result = $mysqli->query($query))) or (bool) my_error($query, $die_on_sql_error);
+    if (! (bool) ($result = $mysqli->query($query))) {
+        my_error($query, $die_on_sql_error);
+    }
 
     $time = microtime(true) - $start;
 

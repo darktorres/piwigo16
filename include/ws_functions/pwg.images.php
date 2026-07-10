@@ -2814,7 +2814,12 @@ function ws_images_uploadCompleted(array $params, PwgServer $service): \PwgError
         return new PwgError(403, 'Invalid security token');
     }
 
-    if (! is_array($params['image_id'])) {
+    if ($params['image_id'] === null) {
+        // documented null default (no image_id filter provided) -- treat
+        // the same as an empty list rather than reaching preg_split()
+        // with a null subject.
+        $params['image_id'] = [];
+    } elseif (! is_array($params['image_id'])) {
         $image_id_list = preg_split(
             '/[\s,;\|]/',
             $params['image_id'],

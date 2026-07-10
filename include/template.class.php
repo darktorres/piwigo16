@@ -1298,7 +1298,15 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
         /** @var array<string, array<string, mixed>> $themeconfs */
         global $themeconfs, $conf;
 
-        $dir = realpath($dir);
+        $real_dir = realpath($dir);
+        if ($real_dir === false) {
+            // Theme directory doesn't actually exist on disk -- don't cache
+            // under a coerced-to-0 array key (every broken $dir would
+            // collide on the same cache slot) or attempt to include a
+            // bogus root-relative path.
+            return [];
+        }
+        $dir = $real_dir;
         if (! isset($themeconfs[$dir])) {
             $themeconf = [];
             // themeconf.inc.php may set this to push extra template

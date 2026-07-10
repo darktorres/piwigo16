@@ -9,6 +9,9 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Menu\BlockManager;
+use Piwigo\Menu\RegisteredBlock;
+
 /**
  * Generates breadcrumb from categories list.
  * Categories string returned contains categories as given in the input

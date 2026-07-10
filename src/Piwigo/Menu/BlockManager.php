@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+namespace Piwigo\Menu;
+
 /**
  * Manages a set of RegisteredBlock and DisplayBlock.
  */
@@ -151,7 +153,7 @@ class BlockManager
      */
     protected function sort_blocks(): void
     {
-        uasort($this->display_blocks, ['BlockManager', 'cmp_by_position']);
+        uasort($this->display_blocks, [self::class, 'cmp_by_position']);
     }
 
     /**
@@ -184,135 +186,5 @@ class BlockManager
         $this->sort_blocks();
         $template->assign('blocks', $this->display_blocks);
         $template->assign_var_from_handle($var, 'menubar');
-    }
-}
-
-/**
- * Represents a menu block registered in a BlockManager object.
- */
-class RegisteredBlock
-{
-    /**
-     * @param string $id
-     * @param string $name
-     * @param string $owner
-     */
-    public function __construct(
-        protected $id,
-        protected $name,
-        protected $owner
-    ) {}
-
-    /**
-     * @return string
-     */
-    public function get_id()
-    {
-        return $this->id;
-    }
-
-    /**
-     * @return string
-     */
-    public function get_name()
-    {
-        return $this->name;
-    }
-
-    /**
-     * @return string
-     */
-    public function get_owner()
-    {
-        return $this->owner;
-    }
-}
-
-/**
- * Represents a menu block ready for display in the BlockManager object.
- */
-class DisplayBlock
-{
-    /**
-     * @var int
-     */
-    protected $_position;
-
-    /**
-     * @var string|null null until set_title() is called (the constructor
-     *   never sets it) — get_title() falls back to the registered block's
-     *   own name in that case
-     */
-    protected $_title;
-
-    /**
-     * @var mixed
-     */
-    public $data;
-
-    /**
-     * @var string
-     */
-    public $template;
-
-    /**
-     * @var string
-     */
-    public $raw_content;
-
-    /**
-     * @var mixed
-     */
-    public $id;
-
-    /**
-     * @param RegisteredBlock $_registeredBlock
-     */
-    public function __construct(
-        protected $_registeredBlock
-    ) {}
-
-    /**
-     * @return RegisteredBlock
-     */
-    public function get_block()
-    {
-        return $this->_registeredBlock;
-    }
-
-    /**
-     * @return int
-     */
-    public function get_position()
-    {
-        return $this->_position;
-    }
-
-    /**
-     * @param int $position
-     */
-    public function set_position($position): void
-    {
-        $this->_position = $position;
-    }
-
-    /**
-     * @return string
-     */
-    public function get_title()
-    {
-        if (isset($this->_title)) {
-            return $this->_title;
-        } else {
-            return $this->_registeredBlock->get_name();
-        }
-    }
-
-    /**
-     * @param string $title
-     */
-    public function set_title($title): void
-    {
-        $this->_title = $title;
     }
 }

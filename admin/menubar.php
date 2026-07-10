@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Menu\BlockManager;
+
 if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
@@ -45,8 +47,6 @@ function make_consecutive(array &$orders, int $step = 50): void
         $crt++;
     }
 }
-
-include_once PHPWG_ROOT_PATH . 'include/block.class.php';
 
 // +-----------------------------------------------------------------------+
 // | tabs                                                                  |

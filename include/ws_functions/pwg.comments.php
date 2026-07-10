@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Image\DerivativeImage;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 
@@ -160,7 +161,7 @@ SELECT
         );
         // IMG_MEDIUM is a standard type, always present in the defined
         // type map — get_one() only returns null for an unknown type.
-        assert($medium_derivative instanceof \DerivativeImage);
+        assert($medium_derivative instanceof DerivativeImage);
         $medium = $medium_derivative->get_url();
 
         if (empty($row['author_id']) or $row['author_id'] == $conf['guest_id']) {

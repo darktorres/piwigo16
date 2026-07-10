@@ -19,7 +19,8 @@ include_once PHPWG_ROOT_PATH . 'include/functions_tag.inc.php';
 include_once PHPWG_ROOT_PATH . 'include/functions_url.inc.php';
 include_once PHPWG_ROOT_PATH . 'include/derivative_params.inc.php';
 include_once PHPWG_ROOT_PATH . 'include/derivative_std_params.inc.php';
-include_once PHPWG_ROOT_PATH . 'include/derivative.inc.php';
+
+use Piwigo\Image\ImageStdParams;
 
 /**
  * returns the current microsecond since Unix epoch

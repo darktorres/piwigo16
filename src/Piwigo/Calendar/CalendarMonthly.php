@@ -11,12 +11,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Calendar;
 
-// DerivativeImage/SrcImage/ImageStdParams are still global-namespace at the
-// time of this extraction (P6 batch 7) -- they move to Piwigo\Image\ in
-// batch 9, which must come back and update these three imports.
-use DerivativeImage;
-use ImageStdParams;
-use SrcImage;
+use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\SrcImage;
 
 /**
  * Monthly calendar style (composed of years/months and days)

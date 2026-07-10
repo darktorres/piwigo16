@@ -9,6 +9,11 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Image\DerivativeParams;
+use Piwigo\Image\ImageRect;
+use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\SizingParams;
+
 define('PHPWG_ROOT_PATH', './');
 
 // fast bootstrap - no db connection
@@ -161,7 +166,7 @@ function url_to_size(string $s): array
 /**
  * @param string[] $tokens
  */
-function parse_custom_params(array $tokens): \DerivativeParams
+function parse_custom_params(array $tokens): DerivativeParams
 {
     if (count($tokens) < 1) {
         ierror('Empty array while parsing Sizing', 400);
@@ -192,7 +197,7 @@ function parse_custom_params(array $tokens): \DerivativeParams
     return new DerivativeParams(new SizingParams($size, $crop, $min_size));
 }
 
-function parse_request(): \DerivativeParams
+function parse_request(): DerivativeParams
 {
     /**
      * @var array<string, mixed> $conf

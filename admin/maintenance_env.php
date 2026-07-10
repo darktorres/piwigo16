@@ -10,6 +10,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Cache\PersistentFileCache;
+use Piwigo\Image\ImageStdParams;
 
 if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');

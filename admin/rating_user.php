@@ -9,6 +9,9 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageStdParams;
+
 defined('PHPWG_ROOT_PATH') or die('Hacking attempt!');
 
 // Bootstrap globals, set by include/common.inc.php.

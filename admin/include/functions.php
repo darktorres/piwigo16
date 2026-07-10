@@ -10,6 +10,8 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Cache\PersistentCache;
+use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageStdParams;
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions_metadata.php';
 

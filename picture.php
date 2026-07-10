@@ -9,6 +9,10 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\SrcImage;
+
 define('PHPWG_ROOT_PATH', './');
 include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 include PHPWG_ROOT_PATH . 'include/section_init.inc.php';
@@ -167,8 +171,8 @@ trigger_notify('loc_begin_picture');
 /**
  * $element_info is always $picture['current'] (see the trigger_change() call
  * near the end of this file) — 'derivatives' is populated by
- * DerivativeImage::get_all() (include/derivative.inc.php), keyed by the
- * IMG_* type strings.
+ * DerivativeImage::get_all() (src/Piwigo/Image/DerivativeImage.php), keyed by
+ * the IMG_* type strings.
  *
  * @param array{
  *     file: string,

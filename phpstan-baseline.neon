@@ -2443,178 +2443,16 @@ parameters:
 			path: include/dblayer/functions_mysqli.inc.php
 
 		-
-			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
-			identifier: function.strict
-			count: 1
-			path: include/derivative.inc.php
-
-		-
-			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
-			identifier: empty.notAllowed
-			count: 1
-			path: include/derivative.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "!=" between array<int>|null and null is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 1
-			path: include/derivative.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between (int|string) and string is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: include/derivative.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between DerivativeParams|null and null is not allowed.'
-			identifier: equal.notAllowed
-			count: 5
-			path: include/derivative.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between array<int>|null and null is not allowed.'
-			identifier: equal.notAllowed
-			count: 2
-			path: include/derivative.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between float and float is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: include/derivative.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 2
-			path: include/derivative.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between mixed and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: include/derivative.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
-			identifier: equal.notAllowed
-			count: 2
-			path: include/derivative.inc.php
-
-		-
-			rawMessage: 'Method DerivativeImage::get_scaled_size_htm() should return string but return statement is missing.'
-			identifier: return.missing
-			count: 1
-			path: include/derivative.inc.php
-
-		-
-			rawMessage: 'Method DerivativeImage::get_size_css() should return string but return statement is missing.'
-			identifier: return.missing
-			count: 1
-			path: include/derivative.inc.php
-
-		-
-			rawMessage: 'Method DerivativeImage::get_size_hr() should return string but return statement is missing.'
-			identifier: return.missing
-			count: 1
-			path: include/derivative.inc.php
-
-		-
-			rawMessage: 'Method DerivativeImage::get_size_htm() should return string but return statement is missing.'
-			identifier: return.missing
-			count: 1
-			path: include/derivative.inc.php
-
-		-
-			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
-			identifier: typeCoverage.propertyTypeCoverage
-			count: 5
-			path: include/derivative.inc.php
-
-		-
-			rawMessage: 'Out of 1741 possible param types, only 979 - 56.2 %% actually have it. Add more param types to get over 99 %%'
-			identifier: typeCoverage.paramTypeCoverage
-			count: 15
-			path: include/derivative.inc.php
-
-		-
-			rawMessage: 'Out of 609 possible return types, only 561 - 92.1 %% actually have it. Add more return types to get over 99 %%'
-			identifier: typeCoverage.returnTypeCoverage
-			count: 5
-			path: include/derivative.inc.php
-
-		-
-			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
-			identifier: empty.notAllowed
-			count: 2
-			path: include/derivative_params.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "!=" between array<float|int>|null and null is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 1
-			path: include/derivative_params.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "!=" between float|int and int is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 2
-			path: include/derivative_params.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between float and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 2
-			path: include/derivative_params.inc.php
-
-		-
 			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
 			identifier: equal.notAllowed
 			count: 3
 			path: include/derivative_params.inc.php
 
 		-
-			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
-			identifier: typeCoverage.propertyTypeCoverage
-			count: 8
-			path: include/derivative_params.inc.php
-
-		-
 			rawMessage: 'Out of 1741 possible param types, only 979 - 56.2 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
-			count: 10
-			path: include/derivative_params.inc.php
-
-		-
-			rawMessage: 'Out of 609 possible return types, only 561 - 92.1 %% actually have it. Add more return types to get over 99 %%'
-			identifier: typeCoverage.returnTypeCoverage
-			count: 3
-			path: include/derivative_params.inc.php
-
-		-
-			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
-			identifier: empty.notAllowed
 			count: 2
-			path: include/derivative_std_params.inc.php
-
-		-
-			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
-			identifier: typeCoverage.propertyTypeCoverage
-			count: 13
-			path: include/derivative_std_params.inc.php
-
-		-
-			rawMessage: 'Out of 1741 possible param types, only 979 - 56.2 %% actually have it. Add more param types to get over 99 %%'
-			identifier: typeCoverage.paramTypeCoverage
-			count: 8
-			path: include/derivative_std_params.inc.php
-
-		-
-			rawMessage: 'Out of 609 possible return types, only 561 - 92.1 %% actually have it. Add more return types to get over 99 %%'
-			identifier: typeCoverage.returnTypeCoverage
-			count: 5
-			path: include/derivative_std_params.inc.php
+			path: include/derivative_params.inc.php
 
 		-
 			rawMessage: 'Call to internal function pwg_error_collector_flush().'
@@ -5129,6 +4967,216 @@ parameters:
 			identifier: equal.notAllowed
 			count: 1
 			path: src/Piwigo/Calendar/CalendarWeekly.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between (int|string) and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Image/DerivativeImage.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between Piwigo\Image\DerivativeParams|null and null is not allowed.'
+			identifier: equal.notAllowed
+			count: 5
+			path: src/Piwigo/Image/DerivativeImage.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between array<int>|null and null is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Image/DerivativeImage.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between float and float is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Image/DerivativeImage.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: src/Piwigo/Image/DerivativeImage.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Image/DerivativeImage.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Image/DerivativeImage.php
+
+		-
+			rawMessage: 'Method Piwigo\Image\DerivativeImage::get_scaled_size_htm() should return string but return statement is missing.'
+			identifier: return.missing
+			count: 1
+			path: src/Piwigo/Image/DerivativeImage.php
+
+		-
+			rawMessage: 'Method Piwigo\Image\DerivativeImage::get_size_css() should return string but return statement is missing.'
+			identifier: return.missing
+			count: 1
+			path: src/Piwigo/Image/DerivativeImage.php
+
+		-
+			rawMessage: 'Method Piwigo\Image\DerivativeImage::get_size_hr() should return string but return statement is missing.'
+			identifier: return.missing
+			count: 1
+			path: src/Piwigo/Image/DerivativeImage.php
+
+		-
+			rawMessage: 'Method Piwigo\Image\DerivativeImage::get_size_htm() should return string but return statement is missing.'
+			identifier: return.missing
+			count: 1
+			path: src/Piwigo/Image/DerivativeImage.php
+
+		-
+			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 2
+			path: src/Piwigo/Image/DerivativeImage.php
+
+		-
+			rawMessage: 'Out of 1741 possible param types, only 979 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 15
+			path: src/Piwigo/Image/DerivativeImage.php
+
+		-
+			rawMessage: 'Out of 609 possible return types, only 561 - 92.1 %% actually have it. Add more return types to get over 99 %%'
+			identifier: typeCoverage.returnTypeCoverage
+			count: 5
+			path: src/Piwigo/Image/DerivativeImage.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between array<float|int>|null and null is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: src/Piwigo/Image/DerivativeParams.php
+
+		-
+			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 4
+			path: src/Piwigo/Image/DerivativeParams.php
+
+		-
+			rawMessage: 'Out of 1741 possible param types, only 979 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 1
+			path: src/Piwigo/Image/DerivativeParams.php
+
+		-
+			rawMessage: 'Out of 609 possible return types, only 561 - 92.1 %% actually have it. Add more return types to get over 99 %%'
+			identifier: typeCoverage.returnTypeCoverage
+			count: 3
+			path: src/Piwigo/Image/DerivativeParams.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 2
+			path: src/Piwigo/Image/ImageRect.php
+
+		-
+			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 4
+			path: src/Piwigo/Image/ImageRect.php
+
+		-
+			rawMessage: 'Out of 1741 possible param types, only 979 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 2
+			path: src/Piwigo/Image/ImageRect.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 2
+			path: src/Piwigo/Image/ImageStdParams.php
+
+		-
+			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 6
+			path: src/Piwigo/Image/ImageStdParams.php
+
+		-
+			rawMessage: 'Out of 1741 possible param types, only 979 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 8
+			path: src/Piwigo/Image/ImageStdParams.php
+
+		-
+			rawMessage: 'Out of 609 possible return types, only 561 - 92.1 %% actually have it. Add more return types to get over 99 %%'
+			identifier: typeCoverage.returnTypeCoverage
+			count: 5
+			path: src/Piwigo/Image/ImageStdParams.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between float|int and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: src/Piwigo/Image/SizingParams.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between float and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: src/Piwigo/Image/SizingParams.php
+
+		-
+			rawMessage: 'Out of 1741 possible param types, only 979 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 5
+			path: src/Piwigo/Image/SizingParams.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: src/Piwigo/Image/SrcImage.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: src/Piwigo/Image/SrcImage.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between array<int>|null and null is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: src/Piwigo/Image/SrcImage.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between array<int>|null and null is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Image/SrcImage.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Image/SrcImage.php
+
+		-
+			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 3
+			path: src/Piwigo/Image/SrcImage.php
+
+		-
+			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 7
+			path: src/Piwigo/Image/WatermarkParams.php
 
 		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'

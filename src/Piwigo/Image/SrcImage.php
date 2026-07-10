@@ -1,0 +1,171 @@
+<?php
+
+declare(strict_types=1);
+
+// +-----------------------------------------------------------------------+
+// | This file is part of Piwigo.                                          |
+// |                                                                       |
+// | For copyright and license information, please view the COPYING.txt    |
+// | file that was distributed with this source code.                      |
+// +-----------------------------------------------------------------------+
+
+namespace Piwigo\Image;
+
+/**
+ * A source image is used to get a derivative image. It is either
+ * the original file for a jpg/png/... or a 'representative' image
+ * of a  non image file or a standard icon for the non-image file.
+ */
+final class SrcImage
+{
+    public const int IS_ORIGINAL = 0x01;
+
+    public const int IS_MIMETYPE = 0x02;
+
+    public const int DIM_NOT_GIVEN = 0x04;
+
+    /**
+     * @var int
+     */
+    public $id;
+
+    /**
+     * @var string
+     */
+    public $rel_path;
+
+    /**
+     * @var int
+     */
+    public $rotation = 0;
+
+    /**
+     * @var int[]
+     */
+    private ?array $size = null;
+
+    private int $flags = 0;
+
+    /**
+     * @param array<string, mixed> $infos assoc array of data from images table
+     */
+    public function __construct(
+        array $infos
+    ) {
+        /** @var array<string, mixed> $conf */
+        global $conf;
+
+        // images.id/.path/.file are all NOT NULL DB columns, but every
+        // element read back from a DB row is string|null per this driver
+        // (no MYSQLI_OPT_INT_AND_FLOAT_NATIVE); narrow explicitly rather
+        // than trusting the schema at the type-check level.
+        $this->id = is_numeric($infos['id']) ? (int) $infos['id'] : 0;
+        $path = is_string($infos['path']) ? $infos['path'] : '';
+        $file = is_string($infos['file']) ? $infos['file'] : null;
+        $ext = strtolower(get_extension($path));
+        $infos['file_ext'] = @strtolower(get_extension($file));
+        $infos['path_ext'] = $ext;
+        // representative_ext is a nullable DB column; empty()'s silent
+        // handling of a missing/non-string key is preserved via `?? null`.
+        $representative_ext_raw = $infos['representative_ext'] ?? null;
+        $representative_ext = is_string($representative_ext_raw) ? $representative_ext_raw : '';
+        // $conf['picture_ext'] is always a string[] set by config_default.inc.php.
+        $picture_ext = is_array($conf['picture_ext']) ? $conf['picture_ext'] : [];
+        if (in_array($ext, $picture_ext)) {
+            $this->rel_path = $path;
+            $this->flags |= self::IS_ORIGINAL;
+        } elseif (! empty($representative_ext)) {
+            $this->rel_path = original_to_representative($path, $representative_ext);
+        } else {
+            $default_mimetype_location = get_themeconf('mime_icon_dir') . $ext . '.png';
+            $mimetype_location = trigger_change('get_mimetype_location', $default_mimetype_location, $ext);
+            // trigger_change() hands the value through arbitrary registered
+            // event handlers (mixed return); fall back to the pre-filter
+            // location if a misbehaving handler returns a non-string.
+            $this->rel_path = is_string($mimetype_location) ? $mimetype_location : $default_mimetype_location;
+            $this->flags |= self::IS_MIMETYPE;
+            if (($size = @getimagesize(PHPWG_ROOT_PATH . $this->rel_path)) === false) {
+                if ($ext == 'svg') {
+                    $this->rel_path = $path;
+                } else {
+                    $this->rel_path = 'themes/default/icon/mimetypes/unknown.png';
+                }
+                $size = getimagesize(PHPWG_ROOT_PATH . $this->rel_path);
+                if ($size === false) {
+                    throw new \Exception('SrcImage: unable to read size of fallback icon ' . $this->rel_path);
+                }
+            }
+            $this->size = [$size[0], $size[1]];
+        }
+
+        if (! (bool) $this->size) {
+            if (isset($infos['width']) && isset($infos['height'])) {
+                $width = is_numeric($infos['width']) ? (int) $infos['width'] : 0;
+                $height = is_numeric($infos['height']) ? (int) $infos['height'] : 0;
+
+                $rotation_raw = $infos['rotation'] ?? null;
+                $this->rotation = is_numeric($rotation_raw) ? intval($rotation_raw) % 4 : 0;
+                // 1 or 5 =>  90 clockwise
+                // 3 or 7 => 270 clockwise
+                if ((bool) ($this->rotation % 2)) {
+                    [$width, $height] = [$height, $width];
+                }
+
+                $this->size = [$width, $height];
+            } elseif (! array_key_exists('width', $infos)) {
+                $this->flags |= self::DIM_NOT_GIVEN;
+            }
+        }
+    }
+
+    public function is_original(): bool
+    {
+        return (bool) ($this->flags & self::IS_ORIGINAL);
+    }
+
+    public function is_mimetype(): bool
+    {
+        return (bool) ($this->flags & self::IS_MIMETYPE);
+    }
+
+    public function get_path(): string
+    {
+        return PHPWG_ROOT_PATH . $this->rel_path;
+    }
+
+    public function get_url(): string
+    {
+        $url = get_root_url() . $this->rel_path;
+        if (! (bool) ($this->flags & self::IS_MIMETYPE)) {
+            $filtered_url = trigger_change('get_src_image_url', $url, $this);
+            // trigger_change() hands the value through arbitrary registered
+            // event handlers (mixed return); fall back to the pre-filter
+            // url if a misbehaving handler returns a non-string.
+            $url = is_string($filtered_url) ? $filtered_url : $url;
+        }
+        return embellish_url($url);
+    }
+
+    public function has_size(): bool
+    {
+        return $this->size != null;
+    }
+
+    /**
+     * @return int[]|null 0=width, 1=height or null if fail to compute size
+     */
+    public function get_size(): ?array
+    {
+        if ($this->size == null) {
+            if ((bool) ($this->flags & self::DIM_NOT_GIVEN)) {
+                fatal_error('SrcImage dimensions required but not provided');
+            }
+            // probably not metadata synced
+            if (($size = getimagesize($this->get_path())) !== false) {
+                $this->size = [$size[0], $size[1]];
+                pwg_query('UPDATE ' . IMAGES_TABLE . ' SET width=' . $size[0] . ', height=' . $size[1] . ' WHERE id=' . $this->id);
+            }
+        }
+        return $this->size;
+    }
+}

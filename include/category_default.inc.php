@@ -9,6 +9,9 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\SrcImage;
+
 /**
  * This file is included by the main page to show thumbnails for the default
  * case

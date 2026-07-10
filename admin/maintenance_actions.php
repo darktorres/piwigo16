@@ -10,6 +10,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Cache\PersistentFileCache;
+use Piwigo\Image\ImageStdParams;
 
 // Bootstrap globals. $maint_actions is set by admin/maintenance.php before
 // dynamically including this tab panel; the rest by include/common.inc.php.

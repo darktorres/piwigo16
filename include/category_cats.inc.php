@@ -9,6 +9,9 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\SrcImage;
+
 /**
  * This file is included by the main page to show subcategories of a category
  * or to show recent categories or main page categories list

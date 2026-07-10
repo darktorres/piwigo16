@@ -9,6 +9,10 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\DerivativeParams;
+use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\SrcImage;
 use Smarty\Smarty;
 
 /** default rank for buttons */
@@ -1419,7 +1423,7 @@ class PwgTemplateAdapter
      * @param string $type
      * @param array<string, mixed>|SrcImage $img
      */
-    public function derivative($type, $img): \DerivativeImage
+    public function derivative($type, $img): DerivativeImage
     {
         // Mirrors derivative_url()/DerivativeImage::url()'s own
         // is_object($infos) ? $infos : new SrcImage($infos) handling — the

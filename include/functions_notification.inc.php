@@ -10,6 +10,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Cache\PersistentCache;
+use Piwigo\Image\DerivativeImage;
 
 /**
  * Get standard sql where in order to restrict and filter categories and images.

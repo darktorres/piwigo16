@@ -62,7 +62,7 @@ class PwgTOTP
         global $user;
         $username = $user['username'] ?? null;
         $username = is_string($username) ? $username : '';
-        $url = substr((string) get_absolute_root_url(), 0, -1);
+        $url = substr(get_absolute_root_url(), 0, -1);
         return 'otpauth://totp/' . $username . ':' . $url . '?secret=' . $secret . '&issuer=Piwigo&algorithm=sha1&digits=6&period=30';
     }
 

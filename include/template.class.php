@@ -108,7 +108,7 @@ class Template
         // as-is and only non-int values fall back to a bool coercion.
         $debug_template = $conf['debug_template'];
         $this->smarty->debugging = is_int($debug_template) ? $debug_template : (bool) $debug_template;
-        if (! $this->smarty->debugging) {
+        if (! (bool) $this->smarty->debugging) {
             $this->smarty->error_reporting = error_reporting() & ~E_NOTICE;
         }
         // compile_check/force_compile mirror Smarty's own setCompileCheck()/
@@ -196,7 +196,7 @@ class Template
         $this->smarty->registerPlugin('modifier', 'sizeOf', 'sizeOf');
         $this->smarty->registerPlugin('modifier', 'array_key_exists', 'array_key_exists');
 
-        if ($conf['compiled_template_cache_language']) {
+        if ((bool) $conf['compiled_template_cache_language']) {
             $this->smarty->registerFilter('post', ['Template', 'postfilter_language']);
         }
 
@@ -245,7 +245,7 @@ class Template
         if (
             $theme != 'default'
             and in_array(script_basename(), ['identification', 'register', 'password', 'profile'])
-            and (($themeconf['use_standard_pages'] ?? false) or conf_get_param('use_standard_pages', false))
+            and ((bool) ($themeconf['use_standard_pages'] ?? false) or (bool) conf_get_param('use_standard_pages', false))
         ) {
             $theme = 'standard_pages';
             $themeconf = $this->load_themeconf($root . '/' . $theme);
@@ -548,7 +548,7 @@ class Template
          * @var array<string, mixed> $lang_info
          */
         global $conf, $lang_info;
-        if ($conf['compiled_template_cache_language'] and isset($lang_info['code']) and is_string($lang_info['code'])) {
+        if ((bool) $conf['compiled_template_cache_language'] and isset($lang_info['code']) and is_string($lang_info['code'])) {
             $this->smarty->compile_id .= '_' . $lang_info['code'];
         }
 
@@ -602,7 +602,7 @@ class Template
         foreach ($css as $combi) {
             $href = embellish_url(get_root_url() . $combi->path);
             if ($combi->version !== false) {
-                $href .= '?v' . ($combi->version ?: PHPWG_VERSION);
+                $href .= '?v' . ((bool) $combi->version ? $combi->version : PHPWG_VERSION);
             }
             // trigger the event for eventual use of a cdn
             $href = trigger_change('combined_css', $href, $combi);
@@ -618,12 +618,12 @@ class Template
         );
         $this->cssLoader->clear();
 
-        if (count($this->html_head_elements) || strlen($this->html_style)) {
+        if ((bool) count($this->html_head_elements) || (bool) strlen($this->html_style)) {
             $search = "\n</head>";
             $pos = strpos($this->output, $search);
             if ($pos !== false) {
                 $rep = "\n" . implode("\n", $this->html_head_elements);
-                if (strlen($this->html_style)) {
+                if ((bool) strlen($this->html_style)) {
                     $rep .= '<style type="text/css">' . $this->html_style . '</style>';
                 }
                 $this->output = substr_replace($this->output, $rep, $pos, 0);
@@ -644,7 +644,7 @@ class Template
     {
         $this->flush();
 
-        if ($this->smarty->debugging) {
+        if ((bool) $this->smarty->debugging) {
             /** @var float $t2 */
             global $t2;
             $this->smarty->assign(
@@ -698,7 +698,7 @@ class Template
                 // -- it's always a real string here since $params[0] is a
                 // template-compiled string literal expression, but narrow
                 // explicitly since the callee's return type is opaque.
-                if ($conf['compiled_template_cache_language']
+                if ((bool) $conf['compiled_template_cache_language']
                   && is_string($key)
                   && isset($lang[$key])
                 ) {
@@ -707,7 +707,7 @@ class Template
                 return 'l10n(' . $params[0] . ')';
 
             default:
-                if ($conf['compiled_template_cache_language']) {
+                if ((bool) $conf['compiled_template_cache_language']) {
                     $ret = 'sprintf(';
                     $ret .= self::modcompiler_translate([$params[0]]);
                     $ret .= ',' . implode(',', array_slice($params, 1));
@@ -732,9 +732,9 @@ class Template
          * @var array<string, mixed> $lang_info
          */
         global $conf, $lang, $lang_info;
-        if ($conf['compiled_template_cache_language']) {
+        if ((bool) $conf['compiled_template_cache_language']) {
             $ret = 'sprintf(';
-            if ($lang_info['zero_plural']) {
+            if ((bool) $lang_info['zero_plural']) {
                 $ret .= '($tmp=(' . $params[0] . '))>1||$tmp==0';
             } else {
                 $ret .= '($tmp=(' . $params[0] . '))>1';
@@ -779,7 +779,7 @@ class Template
      */
     public static function mod_ternary($param, $true, $false)
     {
-        return $param ? $true : $false;
+        return (bool) $param ? $true : $false;
     }
 
     /**
@@ -787,7 +787,7 @@ class Template
      * </head> element in the output after the head has been parsed.
      *
      * @param array<int, mixed> $params (unused)
-     * @param string $content
+     * @param string|null $content
      */
     public function block_html_head($params, $content): void
     {
@@ -804,7 +804,7 @@ class Template
      * </head> element in the output after the head has been parsed.
      *
      * @param array<int, mixed> $params (unused)
-     * @param string $content
+     * @param string|null $content
      */
     public function block_html_style($params, $content): void
     {
@@ -864,7 +864,7 @@ class Template
                 $crop = round((float) $crop_val / 100, 2);
             }
 
-            if ($crop) {
+            if ((bool) $crop) {
                 if (empty($params['min_width'])) {
                     $minw = $w;
                 } else {
@@ -971,14 +971,14 @@ class Template
                   . self::make_script_src($script)
                   . '"></script>';
             }
-            if (count($this->scriptLoader->inline_scripts)) {
+            if ((bool) count($this->scriptLoader->inline_scripts)) {
                 $content[] = '<script type="text/javascript">//<![CDATA[
 ';
                 $content = array_merge($content, $this->scriptLoader->inline_scripts);
                 $content[] = '//]]></script>';
             }
 
-            if (count($scripts[1])) {
+            if ((bool) count($scripts[1])) {
                 $content[] = '<script type="text/javascript">';
                 $content[] = '(function() {
 var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTagName(\'script\').length-1];';
@@ -1009,7 +1009,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
         } else {
             $ret = get_root_url() . $script->path;
             if ($script->version !== false) {
-                $ret .= '?v' . ($script->version ?: PHPWG_VERSION);
+                $ret .= '?v' . ((bool) $script->version ? $script->version : PHPWG_VERSION);
             }
         }
         // trigger the event for eventual use of a cdn — no in-tree listener
@@ -1029,7 +1029,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      * @param array $params
      *    - require (optional) comma separated list of script ids
      * @param array<string, mixed> $params
-     * @param string $content
+     * @param string|null $content
      */
     public function block_footer_script(array $params, $content): void
     {
@@ -1682,7 +1682,7 @@ class ScriptLoader
      */
     public function add_inline($code, $require): void
     {
-        ! $this->did_footer || trigger_error('Attempt to add inline script but the footer has been written', E_USER_WARNING);
+        ! (bool) $this->did_footer || trigger_error('Attempt to add inline script but the footer has been written', E_USER_WARNING);
         if (! empty($require)) {
             foreach ($require as $id) {
                 if (! isset($this->registered_scripts[$id])) {
@@ -1710,7 +1710,7 @@ class ScriptLoader
     {
         if ($this->did_head && $load_mode == 0) {
             trigger_error("Attempt to add script {$id} but the head has been written", E_USER_WARNING);
-        } elseif ($this->did_footer) {
+        } elseif ((bool) $this->did_footer) {
             trigger_error("Attempt to add script {$id} but the footer has been written", E_USER_WARNING);
         }
         if (! isset($this->registered_scripts[$id])) {
@@ -1734,11 +1734,11 @@ class ScriptLoader
             }
         } else {
             $script = $this->registered_scripts[$id];
-            if (count($require)) {
+            if ((bool) count($require)) {
                 $script->precedents = array_unique(array_merge($script->precedents, $require));
             }
             $script->set_path($path);
-            if ($version && $script->version !== false && version_compare($script->version, $version) < 0) {
+            if ((bool) $version && $script->version !== false && version_compare($script->version, $version) < 0) {
                 $script->version = $version;
             }
             if ($load_mode < $script->load_mode) {
@@ -1842,7 +1842,7 @@ class ScriptLoader
                         $scripts[$precedent]->load_mode = $load;
                         $changed = true;
                     }
-                    if ($load == 2 && $scripts[$precedent]->load_mode == 2 && ($scripts[$precedent]->is_remote() or ! $conf['template_combine_files'])) {// we are async -> a predecessor cannot be async unlesss it can be merged; otherwise script execution order is not guaranteed
+                    if ($load == 2 && $scripts[$precedent]->load_mode == 2 && ($scripts[$precedent]->is_remote() or ! (bool) $conf['template_combine_files'])) {// we are async -> a predecessor cannot be async unlesss it can be merged; otherwise script execution order is not guaranteed
                         $scripts[$precedent]->load_mode = 1;
                         $changed = true;
                     }
@@ -1868,7 +1868,7 @@ class ScriptLoader
                 $required_ids = ['jquery', 'jquery.ui.effect'];
 
                 if (empty($script->path)) {
-                    $script->path = dirname((string) self::$known_paths['jquery.ui.effect']) . "/{$id}.min.js";
+                    $script->path = dirname(self::$known_paths['jquery.ui.effect']) . "/{$id}.min.js";
                 }
             } elseif (str_starts_with($id, 'jquery.ui.')) {
                 if (! isset(self::$ui_core_dependencies[$id])) {
@@ -1876,7 +1876,7 @@ class ScriptLoader
                 }
 
                 if (empty($script->path)) {
-                    $script->path = dirname((string) self::$known_paths['jquery.ui']) . "/{$id}.min.js";
+                    $script->path = dirname(self::$known_paths['jquery.ui']) . "/{$id}.min.js";
                 }
             }
 
@@ -1943,19 +1943,19 @@ class ScriptLoader
         assert(isset($s1->extra['order']) && isset($s2->extra['order']));
 
         $ret = intval($s1->load_mode) - intval($s2->load_mode);
-        if ($ret) {
+        if ((bool) $ret) {
             return $ret;
         }
 
         $ret = $s1->extra['order'] - $s2->extra['order'];
-        if ($ret) {
+        if ((bool) $ret) {
             return $ret;
         }
 
         if ($s1->extra['order'] == 0 and ($s1->is_remote() xor $s2->is_remote())) {
             return $s1->is_remote() ? -1 : 1;
         }
-        return strcmp((string) $s1->id, (string) $s2->id);
+        return strcmp($s1->id, $s2->id);
     }
 }
 
@@ -1986,7 +1986,7 @@ final class FileCombiner
         if ($dir === false) {
             return;
         }
-        while ($file = readdir($dir)) {
+        while ((bool) ($file = readdir($dir))) {
             if (get_extension($file) == 'js' || get_extension($file) == 'css') {
                 unlink(PHPWG_ROOT_PATH . PWG_COMBINED_DIR . $file);
             }
@@ -2014,9 +2014,9 @@ final class FileCombiner
         /** @var array<string, mixed> $conf */
         global $conf;
         $force = false;
-        if (is_admin() && ($this->is_css || ! $conf['template_compile_check'])) {
+        if (is_admin() && ($this->is_css || ! (bool) $conf['template_compile_check'])) {
             $force = (isset($_SERVER['HTTP_CACHE_CONTROL']) && is_string($_SERVER['HTTP_CACHE_CONTROL']) && str_contains($_SERVER['HTTP_CACHE_CONTROL'], 'max-age=0'))
-              || (isset($_SERVER['HTTP_PRAGMA']) && is_string($_SERVER['HTTP_PRAGMA']) && strpos($_SERVER['HTTP_PRAGMA'], 'no-cache'));
+              || (isset($_SERVER['HTTP_PRAGMA']) && is_string($_SERVER['HTTP_PRAGMA']) && (bool) strpos($_SERVER['HTTP_PRAGMA'], 'no-cache'));
         }
 
         $result = [];
@@ -2031,14 +2031,14 @@ final class FileCombiner
                 $result[] = $combinable;
                 continue;
             }
-            if (! $conf['template_combine_files']) {
+            if (! (bool) $conf['template_combine_files']) {
                 $this->flush_pending($result, $pending, $key, $force);
                 $key = $ini_key;
             }
 
             $key[] = $combinable->path;
             $key[] = (string) $combinable->version;
-            if ($conf['template_compile_check']) {
+            if ((bool) $conf['template_compile_check']) {
                 $key[] = (string) filemtime(PHPWG_ROOT_PATH . $combinable->path);
             }
             $pending[] = $combinable;
@@ -2097,7 +2097,7 @@ final class FileCombiner
         if ($combinable->is_template) {
             if (! $return_content) {
                 $key = [$combinable->path, $combinable->version];
-                if ($conf['template_compile_check']) {
+                if ((bool) $conf['template_compile_check']) {
                     $key[] = filemtime(PHPWG_ROOT_PATH . $combinable->path);
                 }
                 $file = PWG_COMBINED_DIR . 't' . base_convert(hash('crc32b', implode(',', $key)), 16, 36) . '.' . $this->type;
@@ -2196,7 +2196,7 @@ final class FileCombiner
         /** @var string */
         static $PATTERN_IMPORT = "#@import\s*['|\"]{0,1}(.*?)['|\"]{0,1};#";
 
-        if (preg_match_all($PATTERN_URL, $css, $matches, PREG_SET_ORDER)) {
+        if ((bool) preg_match_all($PATTERN_URL, $css, $matches, PREG_SET_ORDER)) {
             $search = $replace = [];
             foreach ($matches as $match) {
                 if (! url_is_remote($match[1]) && $match[1][0] != '/' && ! str_contains($match[1], 'data:image/')) {
@@ -2208,7 +2208,7 @@ final class FileCombiner
             $css = str_replace($search, $replace, $css);
         }
 
-        if (preg_match_all($PATTERN_IMPORT, $css, $matches, PREG_SET_ORDER)) {
+        if ((bool) preg_match_all($PATTERN_IMPORT, $css, $matches, PREG_SET_ORDER)) {
             $search = $replace = [];
 
             foreach ($matches as $match) {

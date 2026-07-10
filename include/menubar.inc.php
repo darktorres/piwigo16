@@ -30,7 +30,7 @@ function initialize_menu(): void
     $menu = new BlockManager('menubar');
 
     // if guest_access is disabled, we only display the menus if the user is identified
-    if ($conf['guest_access'] or ! is_a_guest()) {
+    if ((bool) $conf['guest_access'] or ! is_a_guest()) {
         $menu->load_registered_blocks();
     }
     $menu->prepare_display();
@@ -42,7 +42,7 @@ function initialize_menu(): void
     }
 
     // --------------------------------------------------------------- external links
-    if (($block = $menu->get_block('mbLinks')) and ! empty($conf['links']) and is_array($conf['links'])) {
+    if ((bool) ($block = $menu->get_block('mbLinks')) and ! empty($conf['links']) and is_array($conf['links'])) {
         $block->data = [];
         foreach ($conf['links'] as $url => $url_data) {
             if (! is_array($url_data)) {
@@ -61,7 +61,7 @@ function initialize_menu(): void
                     'LABEL' => $url_data['label'],
                 ];
 
-                if (! isset($url_data['new_window']) or $url_data['new_window']) {
+                if (! isset($url_data['new_window']) or (bool) $url_data['new_window']) {
                     $tpl_var['new_window'] =
                       [
                           'NAME' => ($url_data['nw_name'] ?? ''),
@@ -79,8 +79,8 @@ function initialize_menu(): void
     // -------------------------------------------------------------- categories
     $block = $menu->get_block('mbCategories');
     // ------------------------------------------------------------------------ filter
-    if ($conf['menubar_filter_icon'] and ! empty($conf['filter_pages']) and get_filter_page_value('used')) {
-        if ($filter['enabled']) {
+    if ((bool) $conf['menubar_filter_icon'] and ! empty($conf['filter_pages']) and (bool) get_filter_page_value('used')) {
+        if ((bool) $filter['enabled']) {
             $template->assign(
                 'U_STOP_FILTER',
                 add_url_params(make_index_url([]), [
@@ -199,7 +199,7 @@ function initialize_menu(): void
               'NAME' => l10n('Most visited'),
           ];
 
-        if ($conf['rate']) {
+        if ((bool) $conf['rate']) {
             $block->data['best_rated'] =
              [
                  'URL' => make_index_url([
@@ -278,7 +278,7 @@ function initialize_menu(): void
               'REL' => 'rel="search"',
           ];
 
-        if ($conf['activate_comments']) {
+        if ((bool) $conf['activate_comments']) {
             // comments link
             $block->data['comments'] =
               [
@@ -317,7 +317,7 @@ function initialize_menu(): void
                 'AUTHORIZE_REMEMBERING' => $conf['authorize_remembering'],
             ]
         );
-        if ($conf['allow_user_registration']) {
+        if ((bool) $conf['allow_user_registration']) {
             $template->assign('U_REGISTER', get_root_url() . 'register.php');
         }
     } else {
@@ -330,7 +330,7 @@ function initialize_menu(): void
 
         // the logout link has no meaning with Apache authentication : it is not
         // possible to logout with this kind of authentication.
-        if (! $conf['apache_authentication']) {
+        if (! (bool) $conf['apache_authentication']) {
             $template->assign('U_LOGOUT', get_root_url() . '?act=logout');
         }
         if (is_admin()) {

@@ -340,7 +340,7 @@ SELECT * FROM ' . PLUGINS_TABLE;
     if (! empty($id)) {
         $clauses[] = 'id="' . $id . '"';
     }
-    if (count($clauses)) {
+    if ((bool) count($clauses)) {
         $query .= '
   WHERE ' . implode(' AND ', $clauses);
     }
@@ -406,7 +406,7 @@ function autoupdate_plugin(array &$plugin): void
                 continue;
             } // first lines are typically "<?php" and "/*"
 
-            if (preg_match('/Version:\\s*([\\w.-]+)/', $line, $matches)) {
+            if ((bool) preg_match('/Version:\\s*([\\w.-]+)/', $line, $matches)) {
                 $fs_version = $matches[1];
             }
         }
@@ -422,7 +422,7 @@ function autoupdate_plugin(array &$plugin): void
     // if version is auto (dev) or superior
     if ($fs_version != null && (
         $fs_version == 'auto' || $plugin_version == 'auto' ||
-          safe_version_compare($plugin_version, $fs_version, '<')
+          (bool) safe_version_compare($plugin_version, $fs_version, '<')
     )
     ) {
         $old_version = $plugin_version;
@@ -491,7 +491,7 @@ function load_plugins(): void
      */
     global $conf, $pwg_loaded_plugins;
     $pwg_loaded_plugins = [];
-    if ($conf['enable_plugins']) {
+    if ((bool) $conf['enable_plugins']) {
         $plugins = get_db_plugins('active');
         foreach ($plugins as $plugin) {// include main from a function to avoid using same function context
             load_plugin($plugin);

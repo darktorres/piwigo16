@@ -158,7 +158,7 @@ class Logger
      */
     public function __destruct()
     {
-        if ($this->_fileHandle) {
+        if ((bool) $this->_fileHandle) {
             fclose($this->_fileHandle);
         }
     }

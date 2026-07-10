@@ -40,7 +40,7 @@ if ($user['id'] == $conf['guest_id']) {
 }
 
 // using Apache authentication override the above user search
-if ($conf['apache_authentication']) {
+if ((bool) $conf['apache_authentication']) {
     $remote_user = null;
     foreach (['REMOTE_USER', 'REDIRECT_REMOTE_USER'] as $server_key) {
         if (isset($_SERVER[$server_key]) and is_string($_SERVER[$server_key])) {
@@ -50,7 +50,7 @@ if ($conf['apache_authentication']) {
     }
 
     if (isset($remote_user)) {
-        if (! ($user['id'] = get_userid($remote_user))) {
+        if (! (bool) ($user['id'] = get_userid($remote_user))) {
             $user['id'] = register_user($remote_user, '', '', false);
         }
     }
@@ -72,7 +72,7 @@ if (
 ) {
     $auth_header = pwg_db_real_escape_string($_SERVER['HTTP_X_PIWIGO_API']) ?? null;
 
-    if ($auth_header) {
+    if ((bool) $auth_header) {
         $authenticate = auth_key_login($auth_header, true);
         if (! $authenticate) {
             include_once PHPWG_ROOT_PATH . 'include/ws_init.inc.php';
@@ -88,7 +88,7 @@ if (
         // logger
         /** @var \Logger $logger */
         global $logger;
-        $logger->info('[api_key][pkid=' . explode(':', (string) $auth_header)[0] . '][method=' . $_REQUEST['method'] . ']');
+        $logger->info('[api_key][pkid=' . explode(':', $auth_header)[0] . '][method=' . $_REQUEST['method'] . ']');
     }
 }
 
@@ -124,7 +124,7 @@ if (defined('IN_ADMIN') and IN_ADMIN) {
     isset($_REQUEST['method'])
     and isset($_SERVER['HTTP_REFERER'])
     and is_string($_SERVER['HTTP_REFERER'])
-    and preg_match('/\/admin\.php\?page=/', $_SERVER['HTTP_REFERER'])
+    and (bool) preg_match('/\/admin\.php\?page=/', $_SERVER['HTTP_REFERER'])
 ) {
     $user_use_cache = false;
 }
@@ -143,7 +143,7 @@ $user_id_int = is_numeric($user_id) ? (int) $user_id : $guest_id_int;
 
 $user = build_user($user_id_int, $user_use_cache);
 
-if ($conf['browser_language'] and (is_a_guest() or is_generic()) and $language = get_browser_language()) {
+if ((bool) $conf['browser_language'] and (is_a_guest() or is_generic()) and (bool) ($language = get_browser_language())) {
     $user['language'] = $language;
 }
 trigger_notify('user_init', $user);

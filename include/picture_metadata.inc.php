@@ -51,7 +51,7 @@ global $conf, $lang, $template;
 global $picture;
 
 include_once PHPWG_ROOT_PATH . '/include/functions_metadata.inc.php';
-if (($conf['show_exif']) and (function_exists('exif_read_data'))) {
+if (((bool) $conf['show_exif']) and (function_exists('exif_read_data'))) {
     // $conf's own values are only known as mixed -- narrow show_exif_fields
     // once here and reuse it for both foreach loops below (config_default.inc.php
     // documents it as a list of field names, some using the 'GROUP;FIELD' form).
@@ -105,7 +105,7 @@ if (($conf['show_exif']) and (function_exists('exif_read_data'))) {
     }
 }
 
-if ($conf['show_iptc']) {
+if ((bool) $conf['show_iptc']) {
     // $conf's own values are only known as mixed -- get_iptc_data() requires
     // a real array<string, string> map, so rebuild it from validated
     // string=>string pairs only (config_default.inc.php documents

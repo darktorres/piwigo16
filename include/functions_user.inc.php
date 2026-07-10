@@ -23,7 +23,7 @@ function validate_mail_address($user_id, ?string $mail_address)
     global $conf;
 
     if (empty($mail_address) and
-        ! ($conf['obligatory_user_mail_address'] and
+        ! ((bool) $conf['obligatory_user_mail_address'] and
         in_array(script_basename(), ['register', 'profile']))) {
         return '';
     }
@@ -104,7 +104,7 @@ function search_case_username($username)
     SELECT ' . $user_fields['username'] . ' AS username
     FROM `' . USERS_TABLE . '`;
   ');
-    while ($r = pwg_db_fetch_assoc($q)) {
+    while ((bool) ($r = pwg_db_fetch_assoc($q))) {
         $username_value = $r['username'];
         if ($username_value === null) {
             // username is NOT NULL in schema; skip defensively rather than
@@ -147,13 +147,13 @@ function register_user($login, #[\SensitiveParameter] $password, ?string $mail_a
     if ($login == '') {
         $errors[] = l10n('Please, enter a login');
     }
-    if (preg_match('/^.* $/', $login)) {
+    if ((bool) preg_match('/^.* $/', $login)) {
         $errors[] = l10n('login mustn\'t end with a space character');
     }
-    if (preg_match('/^ .*$/', $login)) {
+    if ((bool) preg_match('/^ .*$/', $login)) {
         $errors[] = l10n('login mustn\'t start with a space character');
     }
-    if (get_userid($login)) {
+    if ((bool) get_userid($login)) {
         $errors[] = l10n('this login is already used');
     }
     if ($login != strip_tags($login)) {
@@ -220,7 +220,7 @@ SELECT id
         $result = pwg_query($query);
 
         $inserts = [];
-        while ($row = pwg_db_fetch_assoc($result)) {
+        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
             $inserts[] = [
                 'user_id' => $user_id,
                 'group_id' => $row['id'],
@@ -232,7 +232,7 @@ SELECT id
         }
 
         $override = [];
-        if ($conf['browser_language'] and $language = get_browser_language()) {
+        if ((bool) $conf['browser_language'] and (bool) ($language = get_browser_language())) {
             $override['language'] = $language;
         }
 
@@ -252,7 +252,7 @@ SELECT id
             $group_id = null;
             $email_admin_on_new_user = $conf['email_admin_on_new_user'];
             $email_admin_on_new_user = is_scalar($email_admin_on_new_user) ? (string) $email_admin_on_new_user : '';
-            if (preg_match('/^group:(\d+)$/', $email_admin_on_new_user, $matches)) {
+            if ((bool) preg_match('/^group:(\d+)$/', $email_admin_on_new_user, $matches)) {
                 $group_id = $matches[1];
             }
 
@@ -326,6 +326,7 @@ function build_user($user_id, bool $use_cache = true): array
     /** @var array<string, mixed> $conf */
     global $conf;
 
+    $user = [];
     $user['id'] = $user_id;
     $user = array_merge($user, getuserdata($user_id, $use_cache));
 
@@ -393,7 +394,7 @@ SELECT ';
     }
 
     // retrieve additional user data ?
-    if ($conf['external_authentification']) {
+    if ((bool) $conf['external_authentification']) {
         $query = '
 SELECT
     COUNT(1) AS counter
@@ -875,7 +876,7 @@ SELECT *
 
             if (is_array($default_user_row)) {
                 // user_infos columns are always string keys
-                /** @var array<string, mixed> $default_user_row */
+                /** @var array<string, string|null> $default_user_row */
                 unset($default_user_row['user_id']);
                 unset($default_user_row['status']);
                 unset($default_user_row['registration_date']);
@@ -980,7 +981,7 @@ function get_browser_language(): false|int|string
     preg_match_all($match_pattern, $language_header, $matches);
     $accept_languages_full = $matches[1];  // ['en-us', 'fr-ch', 'kok-in']
     $accept_languages_short = $matches[2];  // ['en', 'fr', 'kok']
-    if (! count($accept_languages_full)) {
+    if (! (bool) count($accept_languages_full)) {
         return false;
     }
 
@@ -1205,7 +1206,7 @@ function log_user($user_id, $remember_me): void
         ]);
     }
 
-    if ($remember_me and $conf['authorize_remembering']) {
+    if ($remember_me and (bool) $conf['authorize_remembering']) {
         $now = time();
         // false is not reachable in practice here — see this function's
         // own docblock on $user_id
@@ -1335,7 +1336,7 @@ function pwg_phpass_verify_legacy(
     $computed = md5($salt . $password, true);
     do {
         $computed = md5($computed . $password, true);
-    } while (--$count);
+    } while ((bool) --$count);
 
     // phpass's custom base64-like encoding (not RFC 4648)
     $output = substr($hash, 0, 12);
@@ -1419,7 +1420,7 @@ function pwg_password_verify(
             return false;
         }
 
-        if (! isset($user_id) or $conf['external_authentification']) {
+        if (! isset($user_id) or (bool) $conf['external_authentification']) {
             return true;
         }
 
@@ -1547,9 +1548,9 @@ function pwg_login(bool $success, $username, $password, $remember_me): bool
     // trigger_change()'s own return type is mixed; `&&` always yields a
     // real bool regardless of operand types, which is what narrows
     // $can_login/$authenticated below without needing an assert().
-    $can_login = is_array($state) && ($state['can_login'] ?? null);
+    $can_login = is_array($state) && (bool) ($state['can_login'] ?? null);
     $reason = is_array($state) ? ($state['reason'] ?? null) : null;
-    $authenticated = is_array($state) && ($state['authenticated'] ?? null);
+    $authenticated = is_array($state) && (bool) ($state['authenticated'] ?? null);
 
     if (! $can_login) {
         $found_user_id = $user_found['id'];
@@ -1605,8 +1606,8 @@ FROM ' . USERS_TABLE . ' AS u
     $where_username = $user_fields['username'] . ' = \'' . $username_or_email . '\'';
     $where_email = $user_fields['email'] . ' = \'' . $username_or_email . '\'';
 
-    $user = pwg_db_fetch_assoc(pwg_query($query . $where_username))
-      ?: pwg_db_fetch_assoc(pwg_query($query . $where_email));
+    $user_by_username = pwg_db_fetch_assoc(pwg_query($query . $where_username));
+    $user = (bool) $user_by_username ? $user_by_username : pwg_db_fetch_assoc(pwg_query($query . $where_email));
 
     if (! empty($user)) {
         // The user may not exist in the user_infos table, so we consider it's a "normal" user by default
@@ -1734,7 +1735,7 @@ function get_access_type_status($user_status = ''): int
     global $conf;
 
     $access_type_status = match (get_user_status($user_status)) {
-        'guest' => $conf['guest_access'] ? ACCESS_GUEST : ACCESS_FREE,
+        'guest' => (bool) $conf['guest_access'] ? ACCESS_GUEST : ACCESS_FREE,
         'generic' => ACCESS_GUEST,
         'normal' => ACCESS_CLASSIC,
         'admin' => ACCESS_ADMINISTRATOR,
@@ -1843,13 +1844,13 @@ function can_manage_comment($action, $comment_author_id): bool
         return true;
     }
 
-    if ($action == 'edit' and $conf['user_can_edit_comment']) {
+    if ($action == 'edit' and (bool) $conf['user_can_edit_comment']) {
         if ($comment_author_id == $user['id']) {
             return true;
         }
     }
 
-    if ($action == 'delete' and $conf['user_can_delete_comment']) {
+    if ($action == 'delete' and (bool) $conf['user_can_delete_comment']) {
         if ($comment_author_id == $user['id']) {
             return true;
         }
@@ -2015,16 +2016,16 @@ function auth_key_login($auth_key, bool $connection_by_header = false): bool
 
     $valid_key = false;
     $secret_key = null;
-    if (preg_match('/^[a-z0-9]{30}$/i', $auth_key)) {
+    if ((bool) preg_match('/^[a-z0-9]{30}$/i', $auth_key)) {
         $valid_key = 'auth_key';
-    } elseif (preg_match('/^pkid-\d{8}-[a-z0-9]{20}:[a-z0-9]{40}$/i', $auth_key)) {
+    } elseif ((bool) preg_match('/^pkid-\d{8}-[a-z0-9]{20}:[a-z0-9]{40}$/i', $auth_key)) {
         $valid_key = 'api_key';
         $tmp_key = explode(':', $auth_key);
         $auth_key = $tmp_key[0];
         $secret_key = $tmp_key[1];
     }
 
-    if (! $valid_key) {
+    if (! (bool) $valid_key) {
         return false;
     }
 
@@ -2080,7 +2081,7 @@ SELECT
             and ! empty($key['email']) // the user have an email
             and (
                 $key['last_notified_on'] === null // we never send an email for this key
-                or strtotime((string) $key['last_notified_on']) < strtotime((string) $key['48h_ago']) // OR when the last email was sent more than 48 hours ago
+                or strtotime($key['last_notified_on']) < strtotime((string) $key['48h_ago']) // OR when the last email was sent more than 48 hours ago
             )
         ) {
             $page['notify_api_key_expiration'] = [
@@ -2322,7 +2323,7 @@ FROM ' . HISTORY_TABLE . '
   LIMIT 1
 ;';
     $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         $last_visit = $row['date'] . ' ' . $row['time'];
     }
 
@@ -2549,7 +2550,7 @@ function check_and_save_user_infos(array $params): array
             $username_param = $params['username'];
             assert(is_string($username_param));
             $user_id = get_userid($username_param);
-            if ($user_id and $user_id != $user_ids[0]) {
+            if ((bool) $user_id and $user_id != $user_ids[0]) {
                 // return new PwgError(WS_ERR_INVALID_PARAM, l10n('this login is already used'));
                 return [
                     'error' => [
@@ -3000,7 +3001,7 @@ SELECT *
     // comment in functions_search.inc.php for the general pattern; it's
     // already a list, so no array_values() wrapper is needed.
     $api_keys = query2array($query);
-    if (! $api_keys) {
+    if (! (bool) $api_keys) {
         return false;
     }
 
@@ -3035,7 +3036,7 @@ SELECT
         $revoked_on = $api_key['revoked_on'];
 
         $api_key['last_used_on_since'] =
-          $api_key['last_used_on']
+          (bool) $api_key['last_used_on']
           ? time_since($api_key['last_used_on'], 'day')
           : l10n('Never');
 
@@ -3062,12 +3063,12 @@ SELECT
         $api_key['expired_on_since'] = time_since($expired_on_raw, 'day');
 
         $api_key['revoked_on_since'] =
-          $revoked_on
+          (bool) $revoked_on
           ? time_since($revoked_on, 'day')
           : null;
 
         $api_key['revoked_on_message'] =
-          $revoked_on
+          (bool) $revoked_on
           ? l10n('This API key was manually revoked on %s', format_date($revoked_on, ['day', 'month', 'year']))
           : null;
 
@@ -3088,13 +3089,13 @@ function get_available_api_key($user_id)
 {
     $api_keys = get_api_key($user_id);
 
-    if (! $api_keys) {
+    if (! (bool) $api_keys) {
         return false;
     }
 
     $available = [];
     foreach ($api_keys as $api_key) {
-        if (! $api_key['is_expired'] && empty($api_key['revoked_on'])) {
+        if (! (bool) $api_key['is_expired'] && empty($api_key['revoked_on'])) {
             $available[] = $api_key;
         }
     }

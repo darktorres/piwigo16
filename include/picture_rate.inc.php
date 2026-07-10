@@ -28,7 +28,7 @@ global $conf, $page, $template, $user;
  */
 global $picture, $url_self;
 
-if ($conf['rate']) {
+if ((bool) $conf['rate']) {
     $rate_summary = [
         'count' => 0,
         'score' => $picture['current']['rating_score'],
@@ -54,7 +54,7 @@ SELECT COUNT(rate) AS count
     $template->assign('rate_summary', $rate_summary);
 
     $user_rate = null;
-    if ($conf['rate_anonymous'] or is_autorize_status(ACCESS_CLASSIC)) {
+    if ((bool) $conf['rate_anonymous'] or is_autorize_status(ACCESS_CLASSIC)) {
         if ($rate_summary['count'] > 0) {
             // $page['image_id'] / $user['id'] are always numeric (int or
             // numeric string) -- see the identical narrowing in picture.php.

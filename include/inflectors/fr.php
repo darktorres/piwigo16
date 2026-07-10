@@ -79,7 +79,7 @@ class Inflector_fr implements InflectorInterface
 
         foreach ($this->pluralizers as $rule => $replacement) {
             $rc = preg_replace($rule, $replacement, $word, -1, $count);
-            if ($count) {
+            if ((bool) $count) {
                 // $pluralizers is this class's own fixed, valid regex
                 // literal array -- preg_replace() only returns null on a
                 // compile error, which is unreachable here.
@@ -91,7 +91,7 @@ class Inflector_fr implements InflectorInterface
 
         foreach ($this->singularizers as $rule => $replacement) {
             $rc = preg_replace($rule, $replacement, $word, -1, $count);
-            if ($count) {
+            if ((bool) $count) {
                 // same invariant as $pluralizers above.
                 assert($rc !== null);
                 $res[] = $rc;

@@ -58,7 +58,7 @@ $template->assign(
         'BODY_ID' => $page['body_id'] ?? '',
 
         'CONTENT_ENCODING' => get_pwg_charset(),
-        'PAGE_TITLE' => strip_tags((string) $title),
+        'PAGE_TITLE' => strip_tags($title),
 
         'U_HOME' => get_gallery_home_url(),
 
@@ -84,7 +84,7 @@ if (! empty($header_notes)) {
 if (! isset($page['meta_robots']) || ! is_array($page['meta_robots'])) {
     $page['meta_robots'] = [];
 }
-if (! $conf['meta_ref']) {
+if (! (bool) $conf['meta_ref']) {
     $page['meta_robots']['noindex'] = 1;
     $page['meta_robots']['nofollow'] = 1;
 }

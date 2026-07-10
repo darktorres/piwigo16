@@ -46,7 +46,7 @@ foreach ($related_categories as $category) {
 }
 
 if ($page['show_comments'] and isset($_POST['content'])) {
-    if (is_a_guest() and ! $conf['comments_forall']) {
+    if (is_a_guest() and ! (bool) $conf['comments_forall']) {
         die('Session expired');
     }
 
@@ -204,7 +204,7 @@ SELECT
 ;';
         $result = pwg_query($query);
 
-        while ($row = pwg_db_fetch_assoc($result)) {
+        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
             if ($row['author'] == 'guest') {
                 $row['author'] = l10n('guest');
             }
@@ -282,7 +282,7 @@ SELECT
     if (isset($edit_comment)) {
         $show_add_comment_form = false;
     }
-    if (is_a_guest() and ! $conf['comments_forall']) {
+    if (is_a_guest() and ! (bool) $conf['comments_forall']) {
         $show_add_comment_form = false;
     }
 

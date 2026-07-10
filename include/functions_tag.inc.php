@@ -112,7 +112,7 @@ SELECT *
     $result = pwg_query($query);
 
     $tags = [];
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         if (! is_string($row['id'])) {
             continue;
         }
@@ -140,7 +140,7 @@ SELECT *
 ;';
     $result = pwg_query($query);
     $tags = [];
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         $row['name_raw'] = $row['name'];
         $row['name'] = trigger_change('render_tag_name', $row['name'], $row);
         $tags[] = $row;
@@ -301,7 +301,7 @@ SELECT t.*, count(*) AS counter
 
     $result = pwg_query($query);
     $tags = [];
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         $row['name'] = trigger_change('render_tag_name', $row['name'], $row);
         $tags[] = $row;
     }

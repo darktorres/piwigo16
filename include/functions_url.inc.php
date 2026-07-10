@@ -127,10 +127,10 @@ function make_index_url(array $params = []): string
     /** @var array<string, mixed> $conf */
     global $conf;
     $url = get_root_url() . 'index';
-    if ($conf['php_extension_in_urls']) {
+    if ((bool) $conf['php_extension_in_urls']) {
         $url .= '.php';
     }
-    if ($conf['question_mark_in_urls']) {
+    if ((bool) $conf['question_mark_in_urls']) {
         $url .= '?';
     }
 
@@ -216,10 +216,10 @@ function make_picture_url(array $params): string
     global $conf;
 
     $url = get_root_url() . 'picture';
-    if ($conf['php_extension_in_urls']) {
+    if ((bool) $conf['php_extension_in_urls']) {
         $url .= '.php';
     }
-    if ($conf['question_mark_in_urls']) {
+    if ((bool) $conf['question_mark_in_urls']) {
         $url .= '?';
     }
     $url .= '/';
@@ -235,7 +235,7 @@ function make_picture_url(array $params): string
         case 'file':
             if (isset($params['image_file']) and is_string($params['image_file'])) {
                 $fname_wo_ext = get_filename_wo_extension($params['image_file']);
-                if (ord($fname_wo_ext) > ord('9') or ! preg_match('/^\d+(-|$)/', $fname_wo_ext)) {
+                if (ord($fname_wo_ext) > ord('9') or ! (bool) preg_match('/^\d+(-|$)/', $fname_wo_ext)) {
                     $url .= $fname_wo_ext;
                     break;
                 }
@@ -485,7 +485,7 @@ function parse_section_url(array $tokens, &$next_token): array
                 break;
             }
 
-            if (preg_match('/^(\d+)(?:-(.+))?$/', $tokens[$next_token], $matches)) {
+            if ((bool) preg_match('/^(\d+)(?:-(.+))?$/', $tokens[$next_token], $matches)) {
                 if (isset($matches[2])) {
                     $hit_by['cat_url_name'] = $matches[2];
                 }
@@ -515,7 +515,7 @@ function parse_section_url(array $tokens, &$next_token): array
                     $current_token++;
                 }
 
-                if (count($maybe_permalinks)) {
+                if ((bool) count($maybe_permalinks)) {
                     $cat_id = get_cat_id_from_permalinks($maybe_permalinks, $perma_index);
                     if (isset($cat_id)) {
                         $next_token += $perma_index + 1;
@@ -579,7 +579,7 @@ function parse_section_url(array $tokens, &$next_token): array
                 break;
             }
 
-            if ($conf['tag_url_style'] != 'tag' and preg_match('/^(\d+)(?:-(.*)|)$/', $tokens[$i], $matches)) {
+            if ($conf['tag_url_style'] != 'tag' and (bool) preg_match('/^(\d+)(?:-(.*)|)$/', $tokens[$i], $matches)) {
                 $requested_tag_ids[] = $matches[1];
             } else {
                 $requested_tag_url_names[] = $tokens[$i];
@@ -615,9 +615,9 @@ function parse_section_url(array $tokens, &$next_token): array
         $page['section'] = 'search';
         $next_token++;
 
-        preg_match('/^(psk-\d{8}-[a-zA-Z0-9]{10})$/', (string) @$tokens[$next_token], $matches);
+        preg_match('/^(psk-\d{8}-[a-zA-Z0-9]{10})$/', @$tokens[$next_token], $matches);
         if (! isset($matches[1])) {
-            preg_match('/(\d+)/', (string) @$tokens[$next_token], $matches);
+            preg_match('/(\d+)/', @$tokens[$next_token], $matches);
             if (! isset($matches[1])) {
                 bad_request('search identifier is missing');
             }
@@ -637,10 +637,10 @@ function parse_section_url(array $tokens, &$next_token): array
         }
         // With pictures list
         else {
-            if (! preg_match('/^\d+(,\d+)*$/', (string) $tokens[$next_token])) {
+            if (! (bool) preg_match('/^\d+(,\d+)*$/', $tokens[$next_token])) {
                 bad_request('wrong format on list GET parameter');
             }
-            foreach (explode(',', (string) $tokens[$next_token]) as $image_id) {
+            foreach (explode(',', $tokens[$next_token]) as $image_id) {
                 $page['list'][] = $image_id;
             }
         }
@@ -685,14 +685,14 @@ function parse_well_known_params_url(array $tokens, int &$i): array
 
                 foreach ($page['chronology_date'] as $date_token) {
                     // each date part must be an integer (number of the year, number of the month, number of the week or number of the day)
-                    if (! preg_match('/^(\d+|any)$/', $date_token)) {
+                    if (! (bool) preg_match('/^(\d+|any)$/', $date_token)) {
                         fatal_error('bad chronology field (date)');
                     }
                 }
             }
-        } elseif (preg_match('/^start-(\d+)/', $tokens[$i], $matches)) {
+        } elseif ((bool) preg_match('/^start-(\d+)/', $tokens[$i], $matches)) {
             $page['start'] = $matches[1];
-        } elseif (preg_match('/^startcat-(\d+)/', $tokens[$i], $matches)) {
+        } elseif ((bool) preg_match('/^startcat-(\d+)/', $tokens[$i], $matches)) {
             $page['startcat'] = $matches[1];
         }
         $i++;

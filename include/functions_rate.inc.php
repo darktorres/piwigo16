@@ -32,15 +32,15 @@ function rate_picture($image_id, int|string|null $rate): false|array
     $rate_items = is_array($rate_items) ? $rate_items : [];
 
     if (! isset($rate)
-        or ! $conf['rate']
-        or ! preg_match('/^[0-9]+$/', (string) $rate)
+        or ! (bool) $conf['rate']
+        or ! (bool) preg_match('/^[0-9]+$/', (string) $rate)
         or ! in_array($rate, $rate_items)) {
         return false;
     }
 
     $user_anonymous = is_autorize_status(ACCESS_CLASSIC) ? false : true;
 
-    if ($user_anonymous and ! $conf['rate_anonymous']) {
+    if ($user_anonymous and ! (bool) $conf['rate_anonymous']) {
         return false;
     }
 
@@ -164,7 +164,7 @@ SELECT element_id,
     $by_item = [];
 
     $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         // COUNT()/SUM()/the grouped-by column all come back as string|null
         // from the DB layer; COUNT() is never null, and this GROUP BY only
         // ever yields rows that have at least one rate, so all three are

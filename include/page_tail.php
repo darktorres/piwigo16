@@ -27,7 +27,7 @@ trigger_notify('loc_begin_page_tail');
 
 $template->assign(
     [
-        'VERSION' => $conf['show_version'] ? PHPWG_VERSION : '',
+        'VERSION' => (bool) $conf['show_version'] ? PHPWG_VERSION : '',
         'PHPWG_URL' => defined('PHPWG_URL') ? str_replace('http:', 'https:', PHPWG_URL) : '',
     ]
 );
@@ -75,13 +75,13 @@ send_piwigo_infos();
 // ------------------------------------------------------------- generation time
 $debug_vars = [];
 
-if ($conf['show_queries']) {
+if ((bool) $conf['show_queries']) {
     $debug_vars = array_merge($debug_vars, [
         'QUERIES_LIST' => $debug,
     ]);
 }
 
-if ($conf['show_gt']) {
+if ((bool) $conf['show_gt']) {
     $count_queries = $page['count_queries'] ?? null;
     if (! is_int($count_queries)) {
         $count_queries = 0;

@@ -97,7 +97,7 @@ function get_remote_addr_session_hash(): string
     /** @var array<string, mixed> $conf */
     global $conf;
 
-    if (! $conf['session_use_ip_address']) {
+    if (! (bool) $conf['session_use_ip_address']) {
         return '';
     }
 
@@ -127,7 +127,7 @@ SELECT data
   WHERE id = \'' . get_remote_addr_session_hash() . $session_id . '\'
 ;';
     $result = pwg_query($query);
-    if (($row = pwg_db_fetch_assoc($result))) {
+    if ((bool) ($row = pwg_db_fetch_assoc($result))) {
         return $row['data'] ?? '';
     }
     return '';
@@ -248,7 +248,7 @@ function delete_user_sessions($user_id): void
     $query = '
 DELETE
   FROM ' . SESSIONS_TABLE . '
-  WHERE data LIKE \'%pwg_uid|i:' . (int) $user_id . ';%\'
+  WHERE data LIKE \'%pwg_uid|i:' . $user_id . ';%\'
 ;';
     pwg_query($query);
 }

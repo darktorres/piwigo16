@@ -100,7 +100,7 @@ if ($page['section'] == 'search' and isset($page['search_details']) and is_array
     );
 
     // we want filters to be filled with values related to current items ONLY IF we have some filters filled
-    if ($page['search_details']['has_filters_filled']) {
+    if ((bool) $page['search_details']['has_filters_filled']) {
         $search_items = [-1];
         if (! empty($page['items']) && is_array($page['items'])) {
             /** @var list<int|string|float|bool> $search_items */
@@ -112,11 +112,11 @@ if ($page['section'] == 'search' and isset($page['search_details']) and is_array
         $search_items_clause = '1=1';
     }
 
-    if (isset($search_fields['allwords']) and ! ($display_filters['words']['access'])) {
+    if (isset($search_fields['allwords']) and ! ((bool) $display_filters['words']['access'])) {
         unset($search_fields['allwords']);
     }
 
-    if (isset($search_fields['tags']) and $display_filters['tags']['access']) {
+    if (isset($search_fields['tags']) and (bool) $display_filters['tags']['access']) {
         $filter_tags = [];
 
         // TODO calling get_available_tags(), with lots of photos/albums/tags may cost time,
@@ -189,14 +189,14 @@ if ($page['section'] == 'search' and isset($page['search_details']) and is_array
     }
 
     if (isset($search_fields['expert'])) {
-        if (! $display_filters['expert']['access']) {
+        if (! (bool) $display_filters['expert']['access']) {
             unset($search_fields['expert']);
         } else {
             load_language('help_quick_search.lang');
         }
     }
 
-    if (isset($search_fields['author']) and $display_filters['author']['access']) {
+    if (isset($search_fields['author']) and (bool) $display_filters['author']['access']) {
         $filter_clause = get_clause_for_filter('author');
 
         $query = '
@@ -210,7 +210,7 @@ SELECT
   GROUP BY author
 ;';
 
-        if (! preg_match('/^image_id IN/', $filter_clause)) {
+        if (! (bool) preg_match('/^image_id IN/', $filter_clause)) {
             // we use persistent_cache only for fetching lines filtered only by permissions
             $cache_key = $persistent_cache->make_key('filter_author_rows' . $user_id . $user_cache_update_time);
             $filter_rows = null;
@@ -264,11 +264,11 @@ SELECT
         unset($search_fields['author']);
     }
 
-    if (isset($search_fields['date_posted']) and $display_filters['post_date']['access']) {
+    if (isset($search_fields['date_posted']) and (bool) $display_filters['post_date']['access']) {
         $filter_clause = get_clause_for_filter('date_posted');
         $cache_key = $persistent_cache->make_key('filter_date_posted' . $user_id . $user_cache_update_time);
         // we use persistent_cache only for fetching lines filtered only by permissions
-        $cache_applicable = ! preg_match('/^image_id IN/', $filter_clause);
+        $cache_applicable = ! (bool) preg_match('/^image_id IN/', $filter_clause);
         $cached_date_posted = null;
         $has_cached_date_posted = $cache_applicable and $persistent_cache->get($cache_key, $cached_date_posted);
 
@@ -303,7 +303,7 @@ SELECT
             $pre_counters = [];
 
             $result = pwg_query($query);
-            while ($row = pwg_db_fetch_assoc($result)) {
+            while ((bool) ($row = pwg_db_fetch_assoc($result))) {
                 foreach ($thresholds as $threshold => $date_limit) {
                     if ($row['date'] > $date_limit) {
                         @$pre_counters[$threshold]++;
@@ -401,11 +401,11 @@ SELECT
         unset($search_fields['date_posted']);
     }
 
-    if (isset($search_fields['date_created']) and $display_filters['creation_date']['access']) {
+    if (isset($search_fields['date_created']) and (bool) $display_filters['creation_date']['access']) {
         $filter_clause = get_clause_for_filter('date_created');
         $cache_key = $persistent_cache->make_key('filter_date_created' . $user_id . $user_cache_update_time);
         // we use persistent_cache only for fetching lines filtered only by permissions
-        $cache_applicable = ! preg_match('/^image_id IN/', $filter_clause);
+        $cache_applicable = ! (bool) preg_match('/^image_id IN/', $filter_clause);
         $cached_date_created = null;
         $has_cached_date_created = $cache_applicable and $persistent_cache->get($cache_key, $cached_date_created);
 
@@ -440,7 +440,7 @@ SELECT
             $pre_counters = [];
 
             $result = pwg_query($query);
-            while ($row = pwg_db_fetch_assoc($result)) {
+            while ((bool) ($row = pwg_db_fetch_assoc($result))) {
                 if (! empty($row['date'])) {
                     foreach ($thresholds as $threshold => $date_limit) {
                         if ($row['date'] > $date_limit) {
@@ -448,7 +448,7 @@ SELECT
                         }
                     }
 
-                    [$date_without_time] = explode(' ', (string) $row['date']);
+                    [$date_without_time] = explode(' ', $row['date']);
                     [$y, $m] = explode('-', $date_without_time);
 
                     $list_of_dates[$y]['months'][$y . '-' . $m]['days'][$date_without_time]['count'] =
@@ -540,7 +540,7 @@ SELECT
         unset($search_fields['date_created']);
     }
 
-    if (isset($search_fields['added_by']) and $display_filters['added_by']['access']) {
+    if (isset($search_fields['added_by']) and (bool) $display_filters['added_by']['access']) {
         $filter_clause = get_clause_for_filter('added_by');
 
         $query = '
@@ -554,7 +554,7 @@ SELECT
   ORDER BY counter DESC
 ;';
 
-        if (! preg_match('/^image_id IN/', $filter_clause)) {
+        if (! (bool) preg_match('/^image_id IN/', $filter_clause)) {
             // we use persistent_cache only for fetching lines filtered only by permissions
             $cache_key = $persistent_cache->make_key('filter_added_by_rows' . $user_id . $user_cache_update_time);
             $filter_rows = null;
@@ -634,7 +634,7 @@ SELECT
         unset($search_fields['added_by']);
     }
 
-    if (isset($search_fields['cat']) and $display_filters['album']['access']) {
+    if (isset($search_fields['cat']) and (bool) $display_filters['album']['access']) {
         $cat_words = [];
         if (is_array($search_fields['cat']) && is_array($search_fields['cat']['words'] ?? null)) {
             foreach ($search_fields['cat']['words'] as $cat_word) {
@@ -657,7 +657,7 @@ SELECT
 ;';
             $result = pwg_query($query);
 
-            while ($row = pwg_db_fetch_assoc($result)) {
+            while ((bool) ($row = pwg_db_fetch_assoc($result))) {
                 if ($row['id'] === null || $row['uppercats'] === null) {
                     continue;
                 }
@@ -684,7 +684,7 @@ SELECT
         unset($search_fields['cat']);
     }
 
-    if (isset($search_fields['filetypes']) and $display_filters['file_type']['access']) {
+    if (isset($search_fields['filetypes']) and (bool) $display_filters['file_type']['access']) {
         $filter_clause = get_clause_for_filter('filetypes');
 
         // get all file extensions for this user in the gallery, whatever the current filters
@@ -711,7 +711,7 @@ SELECT
             $all_exts = query2array($all_exts_query, 'ext', 'counter');
         }
 
-        if (preg_match('/^image_id IN/', $filter_clause)) {
+        if ((bool) preg_match('/^image_id IN/', $filter_clause)) {
             $query = '
 SELECT
     SUBSTRING_INDEX(path, ".", -1) AS ext,
@@ -738,16 +738,16 @@ SELECT
     }
 
     // For rating
-    if ($conf['rate']) {
+    if ((bool) $conf['rate']) {
         $template->assign('SHOW_FILTER_RATINGS', true);
 
-        if (isset($search_fields['ratings']) and $display_filters['rating']['access']) {
+        if (isset($search_fields['ratings']) and (bool) $display_filters['rating']['access']) {
             $filter_clause = get_clause_for_filter('ratings');
 
             $cache_key = $persistent_cache->make_key('filter_ratings' . $user_id . $user_cache_update_time);
 
             $ratings = null;
-            $set_persistent_cache = ! preg_match('/^image_id IN/', $filter_clause) and ! $persistent_cache->get($cache_key, $ratings);
+            $set_persistent_cache = ! (bool) preg_match('/^image_id IN/', $filter_clause) and ! $persistent_cache->get($cache_key, $ratings);
 
             if (! isset($ratings)) {
                 $query = '
@@ -798,7 +798,7 @@ SELECT
     }
 
     // For filesize
-    if (isset($search_fields['filesize_min']) && isset($search_fields['filesize_max']) and $display_filters['file_size']['access']) {
+    if (isset($search_fields['filesize_min']) && isset($search_fields['filesize_max']) and (bool) $display_filters['file_size']['access']) {
         $filter_clause = get_clause_for_filter('filesize');
 
         $filesizes = [];
@@ -813,7 +813,7 @@ SELECT
   WHERE ' . $filter_clause . '
 ;';
         $result = pwg_query($query);
-        while ($row = pwg_db_fetch_assoc($result)) {
+        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
             if (! is_numeric($row['filesize'])) {
                 continue;
             }
@@ -846,18 +846,18 @@ SELECT
         ];
 
         $template->assign('FILESIZE', $filesize);
-    } elseif (isset($search_fields['filesize_min']) && isset($search_fields['filesize_max']) and ! ($display_filters['file_size']['access'])) {
+    } elseif (isset($search_fields['filesize_min']) && isset($search_fields['filesize_max']) and ! ((bool) $display_filters['file_size']['access'])) {
         unset($search_fields['filesize_min']);
         unset($search_fields['filesize_max']);
     }
 
-    if (isset($search_fields['ratios']) and $display_filters['ratio']['access']) {
+    if (isset($search_fields['ratios']) and (bool) $display_filters['ratio']['access']) {
         $filter_clause = get_clause_for_filter('ratios');
 
         $cache_key = $persistent_cache->make_key('filter_ratios' . $user_id . $user_cache_update_time);
 
         $ratios = null;
-        $set_persistent_cache = ! preg_match('/^image_id IN/', $filter_clause) and ! $persistent_cache->get($cache_key, $ratios);
+        $set_persistent_cache = ! (bool) preg_match('/^image_id IN/', $filter_clause) and ! $persistent_cache->get($cache_key, $ratios);
 
         if (! isset($ratios)) {
             $query = '
@@ -917,7 +917,7 @@ SELECT
         unset($search_fields['ratios']);
     }
 
-    if (isset($search_fields['height_min']) and isset($search_fields['height_max']) and $display_filters['height']['access']) {
+    if (isset($search_fields['height_min']) and isset($search_fields['height_max']) and (bool) $display_filters['height']['access']) {
         $filter_clause = get_clause_for_filter('height');
 
         $query = '
@@ -931,7 +931,7 @@ SELECT
   ORDER BY height ASC
 ;';
 
-        if (! preg_match('/^image_id IN/', $filter_clause)) {
+        if (! (bool) preg_match('/^image_id IN/', $filter_clause)) {
             // we use persistent_cache only for fetching lines filtered only by permissions
             $cache_key = $persistent_cache->make_key('filter_height_rows' . $user_id . $user_cache_update_time);
             $filter_rows = null;
@@ -971,12 +971,12 @@ SELECT
         ];
 
         $template->assign('HEIGHT', $height);
-    } elseif (isset($search_fields['height_min']) && isset($search_fields['height_max']) and ! ($display_filters['height']['access'])) {
+    } elseif (isset($search_fields['height_min']) && isset($search_fields['height_max']) and ! ((bool) $display_filters['height']['access'])) {
         unset($search_fields['height_min']);
         unset($search_fields['height_max']);
     }
 
-    if (isset($search_fields['width_min']) and isset($search_fields['width_max']) and $display_filters['width']['access']) {
+    if (isset($search_fields['width_min']) and isset($search_fields['width_max']) and (bool) $display_filters['width']['access']) {
         $filter_clause = get_clause_for_filter('width');
 
         $query = '
@@ -990,7 +990,7 @@ SELECT
   ORDER BY width ASC
 ;';
 
-        if (! preg_match('/^image_id IN/', $filter_clause)) {
+        if (! (bool) preg_match('/^image_id IN/', $filter_clause)) {
             // we use persistent_cache only for fetching lines filtered only by permissions
             $cache_key = $persistent_cache->make_key('filter_width_rows' . $user_id . $user_cache_update_time);
             $filter_rows = null;
@@ -1030,7 +1030,7 @@ SELECT
         ];
 
         $template->assign('WIDTH', $width);
-    } elseif (isset($search_fields['width_min']) && isset($search_fields['width_max']) and ! ($display_filters['width']['access'])) {
+    } elseif (isset($search_fields['width_min']) && isset($search_fields['width_max']) and ! ((bool) $display_filters['width']['access'])) {
         unset($search_fields['width_min']);
         unset($search_fields['width_max']);
     }

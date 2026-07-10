@@ -127,7 +127,7 @@ class Inflector_en implements InflectorInterface
     {
         $res = [];
 
-        $lword = strtolower((string) $word);
+        $lword = strtolower($word);
 
         $rc = $this->exceptions[$lword] ?? null;
         if (isset($rc)) {
@@ -139,10 +139,10 @@ class Inflector_en implements InflectorInterface
 
         self::run($this->pluralizers, $word, $res);
         self::run($this->singularizers, $word, $res);
-        if (strlen((string) $word) > 4) {
+        if (strlen($word) > 4) {
             self::run($this->er2ing, $word, $res);
         }
-        if (strlen((string) $word) > 5) {
+        if (strlen($word) > 5) {
             $rc = self::run($this->ing2er, $word, $res);
             if ($rc !== false) {
                 self::run($this->pluralizers, $rc, $res);
@@ -159,8 +159,8 @@ class Inflector_en implements InflectorInterface
     private static function run(array $rules, string $word, array &$res): string|false
     {
         foreach ($rules as $rule => $replacement) {
-            $rc = preg_replace($rule . 'i', (string) $replacement, (string) $word, -1, $count);
-            if ($count) {
+            $rc = preg_replace($rule . 'i', $replacement, $word, -1, $count);
+            if ((bool) $count) {
                 // fixed, valid pattern -- preg_replace() only returns null
                 // on a compile error, which is unreachable here.
                 assert($rc !== null);

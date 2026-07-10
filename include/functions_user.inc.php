@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Auth\PwgTOTP;
 use Piwigo\Ws\PwgError;
 
 /**
@@ -3166,7 +3167,6 @@ function generate_user_code(): array
     /** @var array<string, mixed> $conf */
     global $conf;
 
-    require_once PHPWG_ROOT_PATH . 'include/totp.class.php';
     $secret = PwgTOTP::generateSecret();
     // password_reset_code_duration defaults to 5*60 (int) in
     // include/config_default.inc.php, but once persisted to the config DB
@@ -3192,7 +3192,6 @@ function verify_user_code(string $secret, $code): bool
     /** @var array<string, mixed> $conf */
     global $conf;
 
-    require_once PHPWG_ROOT_PATH . 'include/totp.class.php';
     // see generate_user_code() for why this needs numeric narrowing
     $password_reset_code_duration = $conf['password_reset_code_duration'];
     $password_reset_code_duration = is_numeric($password_reset_code_duration) ? (int) $password_reset_code_duration : 300;

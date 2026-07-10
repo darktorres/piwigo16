@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-defined('PHPWG_ROOT_PATH') or die('Hacking attempt!');
+namespace Piwigo\Auth;
 
 /**
  * Encode in Base32 based on RFC 4648.

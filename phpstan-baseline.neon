@@ -2287,66 +2287,6 @@ parameters:
 			path: include/Logger.class.php
 
 		-
-			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
-			identifier: function.strict
-			count: 2
-			path: include/base32.class.php
-
-		-
-			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
-			identifier: empty.notAllowed
-			count: 2
-			path: include/base32.class.php
-
-		-
-			rawMessage: 'Loose comparison via "!=" between int<0, 39> and int is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 1
-			path: include/base32.class.php
-
-		-
-			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 1
-			path: include/base32.class.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: include/base32.class.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between int<0, 255> and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: include/base32.class.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between int<1, 39> and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: include/base32.class.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between int<1, 7>|int<9, 15>|int<17, 23>|int<25, 39> and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: include/base32.class.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between int<1, 7>|int<9, 15>|int<17, 39> and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: include/base32.class.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between int<1, 7>|int<9, 39> and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: include/base32.class.php
-
-		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
 			count: 2
@@ -4159,12 +4099,6 @@ parameters:
 			path: include/template.class.php
 
 		-
-			rawMessage: 'Out of 1741 possible param types, only 979 - 56.2 %% actually have it. Add more param types to get over 99 %%'
-			identifier: typeCoverage.paramTypeCoverage
-			count: 7
-			path: include/totp.class.php
-
-		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
 			count: 2
@@ -5153,6 +5087,72 @@ parameters:
 			identifier: equal.notAllowed
 			count: 1
 			path: search.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 2
+			path: src/Piwigo/Auth/PwgBase32.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 2
+			path: src/Piwigo/Auth/PwgBase32.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int<0, 39> and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: src/Piwigo/Auth/PwgBase32.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: src/Piwigo/Auth/PwgBase32.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Auth/PwgBase32.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, 255> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Auth/PwgBase32.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<1, 39> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Auth/PwgBase32.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<1, 7>|int<9, 15>|int<17, 23>|int<25, 39> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Auth/PwgBase32.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<1, 7>|int<9, 15>|int<17, 39> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Auth/PwgBase32.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<1, 7>|int<9, 39> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Auth/PwgBase32.php
+
+		-
+			rawMessage: 'Out of 1741 possible param types, only 979 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 7
+			path: src/Piwigo/Auth/PwgTOTP.php
 
 		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'

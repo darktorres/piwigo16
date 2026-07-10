@@ -8,6 +8,10 @@ declare(strict_types=1);
 // | For copyright and license information, please view the COPYING.txt    |
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
+
+use Piwigo\Ws\PwgError;
+use Piwigo\Ws\PwgServer;
+
 /**
  * API method
  * Returns the list of all plugins
@@ -52,7 +56,7 @@ function ws_plugins_getList(array $params, PwgServer &$service): array
  *   none has a 'default' key -- all mandatory, always present, no 'type'
  *   flag.
  */
-function ws_plugins_performAction(array $params, PwgServer &$service): \PwgError|true
+function ws_plugins_performAction(array $params, PwgServer &$service): PwgError|true
 {
     global $template, $conf;
 
@@ -94,7 +98,7 @@ function ws_plugins_performAction(array $params, PwgServer &$service): \PwgError
  *   none has a 'default' key -- all mandatory, always present, no 'type'
  *   flag.
  */
-function ws_themes_performAction(array $params, PwgServer &$service): \PwgError|true
+function ws_themes_performAction(array $params, PwgServer &$service): PwgError|true
 {
     global $template, $conf;
 
@@ -135,7 +139,7 @@ function ws_themes_performAction(array $params, PwgServer &$service): \PwgError|
  *   self-redirect a few lines below that appends it as a raw extra query
  *   param) -- covered by the shape's open tail, never explicitly typed.
  */
-function ws_extensions_update(array $params, PwgServer &$service): \PwgError|string
+function ws_extensions_update(array $params, PwgServer &$service): PwgError|string
 {
     global $conf;
 
@@ -249,7 +253,7 @@ function ws_extensions_update(array $params, PwgServer &$service): \PwgError|str
  *   reset: non-null bool default, WS_TYPE_BOOL -- always present.
  *   pwg_token: no 'default' key -- mandatory, always present.
  */
-function ws_extensions_ignoreupdate(array $params, PwgServer &$service): \PwgError|true
+function ws_extensions_ignoreupdate(array $params, PwgServer &$service): PwgError|true
 {
     global $conf;
 

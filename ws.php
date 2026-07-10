@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Ws\PwgServer;
+
 define('PHPWG_ROOT_PATH', './');
 define('IN_WS', true);
 

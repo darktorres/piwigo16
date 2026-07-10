@@ -9,12 +9,18 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-class PwgJsonEncoder extends PwgResponseEncoder
+namespace Piwigo\Ws\Protocol;
+
+use Piwigo\Ws\Encoder\PwgResponseEncoder;
+use Piwigo\Ws\PwgError;
+
+class PwgSerialPhpEncoder extends PwgResponseEncoder
 {
-    public function encodeResponse($response): string|false
+    #[\Override]
+    public function encodeResponse($response): string
     {
         if ($response instanceof PwgError) {
-            return json_encode(
+            return serialize(
                 [
                     'stat' => 'fail',
                     'err' => $response->code(),
@@ -23,7 +29,7 @@ class PwgJsonEncoder extends PwgResponseEncoder
             );
         }
         parent::flattenResponse($response);
-        return json_encode(
+        return serialize(
             [
                 'stat' => 'ok',
                 'result' => $response,
@@ -31,6 +37,7 @@ class PwgJsonEncoder extends PwgResponseEncoder
         );
     }
 
+    #[\Override]
     public function getContentType(): string
     {
         return 'text/plain';

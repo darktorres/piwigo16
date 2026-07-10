@@ -9,6 +9,11 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Ws\PwgError;
+use Piwigo\Ws\PwgNamedArray;
+use Piwigo\Ws\PwgNamedStruct;
+use Piwigo\Ws\PwgServer;
+
 /**
  * API method
  * Returns a list of users
@@ -26,9 +31,9 @@ declare(strict_types=1);
  *   $params['max_level'] but absent from this method's ws.php signature)
  *   -- reachable only if a client sends an unregistered extra GET/POST
  *   key, covered by the shape's open tail, never explicitly typed.
- * @return \PwgError|array<int|string, mixed>
+ * @return PwgError|array<int|string, mixed>
  */
-function ws_users_getList(array $params, PwgServer &$service): \PwgError|array
+function ws_users_getList(array $params, PwgServer &$service): PwgError|array
 {
     /** @var array<string, mixed> $conf */
     global $conf;
@@ -490,7 +495,7 @@ function ws_users_getAuthKey(array $params, PwgServer &$service): mixed
  *   neither has a 'default' key -- both mandatory, always present;
  *   FORCE_ARRAY always coerces user_id to a list of positive ints.
  */
-function ws_users_delete(array $params, PwgServer &$service): \PwgError|string
+function ws_users_delete(array $params, PwgServer &$service): PwgError|string
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -598,7 +603,7 @@ function ws_users_setInfo(array $params, PwgServer &$service): mixed
  *   ws.php registration at all -- harmless no-ops, not part of the real
  *   shape.)
  */
-function ws_users_setMyInfo(array $params, PwgServer &$service): \PwgError|string
+function ws_users_setMyInfo(array $params, PwgServer &$service): PwgError|string
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -744,7 +749,7 @@ function ws_users_preferences_set(array $params, PwgServer &$service): mixed
  * @param array{image_id: int, ...} $params no 'default' key -- mandatory,
  *   always present, WS_TYPE_ID guarantees a plain int.
  */
-function ws_users_favorites_add(array $params, PwgServer &$service): \PwgError|true
+function ws_users_favorites_add(array $params, PwgServer &$service): PwgError|true
 {
     /** @var array<string, mixed> $user */
     global $user;
@@ -787,7 +792,7 @@ SELECT COUNT(*)
  * @param array{image_id: int, ...} $params no 'default' key -- mandatory,
  *   always present, WS_TYPE_ID guarantees a plain int.
  */
-function ws_users_favorites_remove(array $params, PwgServer &$service): \PwgError|true
+function ws_users_favorites_remove(array $params, PwgServer &$service): PwgError|true
 {
     /** @var array<string, mixed> $user */
     global $user;
@@ -911,9 +916,9 @@ SELECT
  *   user_id/pwg_token: no 'default' key -- mandatory, always present,
  *   WS_TYPE_ID guarantees a plain int for user_id. send_by_mail: non-null
  *   bool default, WS_TYPE_BOOL -- always present.
- * @return \PwgError|array{generated_link: mixed, send_by_mail: string|false|null, time_validation: mixed}
+ * @return PwgError|array{generated_link: mixed, send_by_mail: string|false|null, time_validation: mixed}
  */
-function ws_users_generate_password_link(array $params, PwgServer &$service): \PwgError|array
+function ws_users_generate_password_link(array $params, PwgServer &$service): PwgError|array
 {
     /**
      * @var array<string, mixed> $user
@@ -995,7 +1000,7 @@ function ws_users_generate_password_link(array $params, PwgServer &$service): \P
  *   'default' key -- both mandatory, always present, WS_TYPE_ID guarantees
  *   a plain int for user_id.
  */
-function ws_set_main_user(array $params, PwgServer &$service): \PwgError|string
+function ws_set_main_user(array $params, PwgServer &$service): PwgError|string
 {
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
@@ -1033,9 +1038,9 @@ function ws_set_main_user(array $params, PwgServer &$service): \PwgError|string
  * @param array{key_name: string, duration: int, pwg_token: string, ...} $params
  *   none has a 'default' key -- all mandatory, always present; duration:
  *   WS_TYPE_INT|WS_TYPE_POSITIVE guarantees a plain int.
- * @return \PwgError|array<string, mixed>
+ * @return PwgError|array<string, mixed>
  */
-function ws_create_api_key(array $params, PwgServer &$service): \PwgError|array
+function ws_create_api_key(array $params, PwgServer &$service): PwgError|array
 {
     /**
      * @var array<string, mixed> $user
@@ -1085,7 +1090,7 @@ function ws_create_api_key(array $params, PwgServer &$service): \PwgError|array
  * @param array{pkid: string, pwg_token: string, ...} $params neither has a
  *   'default' key -- both mandatory, always present, no 'type' flag.
  */
-function ws_revoke_api_key(array $params, PwgServer &$service): \PwgError|string
+function ws_revoke_api_key(array $params, PwgServer &$service): PwgError|string
 {
     /**
      * @var array<string, mixed> $user
@@ -1130,7 +1135,7 @@ function ws_revoke_api_key(array $params, PwgServer &$service): \PwgError|string
  *   none has a 'default' key -- all mandatory, always present, no 'type'
  *   flag.
  */
-function ws_edit_api_key(array $params, PwgServer &$service): \PwgError|string
+function ws_edit_api_key(array $params, PwgServer &$service): PwgError|string
 {
     /**
      * @var array<string, mixed> $user
@@ -1177,9 +1182,9 @@ function ws_edit_api_key(array $params, PwgServer &$service): \PwgError|string
  *
  * @param array{pwg_token: string, ...} $params no 'default' key --
  *   mandatory, always present, no 'type' flag.
- * @return \PwgError|array<int, mixed>|string
+ * @return PwgError|array<int, mixed>|string
  */
-function ws_get_api_key(array $params, PwgServer &$service): \PwgError|array|string
+function ws_get_api_key(array $params, PwgServer &$service): PwgError|array|string
 {
     /** @var array<string, mixed> $user */
     global $user;

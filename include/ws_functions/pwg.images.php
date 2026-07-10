@@ -9,6 +9,11 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Ws\PwgError;
+use Piwigo\Ws\PwgNamedArray;
+use Piwigo\Ws\PwgNamedStruct;
+use Piwigo\Ws\PwgServer;
+
 // +-----------------------------------------------------------------------+
 // | UTILITIES                                                             |
 // +-----------------------------------------------------------------------+
@@ -19,7 +24,7 @@ declare(strict_types=1);
  * @param string $categories_string - "cat_id[,rank];cat_id[,rank]"
  * @param bool $replace_mode - removes old associations
  */
-function ws_add_image_category_relations($image_id, $categories_string, $replace_mode = false): true|\PwgError
+function ws_add_image_category_relations($image_id, $categories_string, $replace_mode = false): true|PwgError
 {
     // let's add links between the image and the categories
     //
@@ -175,7 +180,7 @@ SELECT category_id, MAX(`rank`) AS max_rank
 /**
  * Merge chunks added by pwg.images.addChunk
  */
-function merge_chunks(string $output_filepath, string $original_sum, string $type): ?\PwgError
+function merge_chunks(string $output_filepath, string $original_sum, string $type): ?PwgError
 {
     /**
      * @var array<string, mixed> $conf
@@ -288,9 +293,9 @@ function remove_chunks($original_sum, $type): void
  *    value for any registered param without WS_PARAM_ACCEPT_ARRAY, so
  *    they're always plain strings too (author has a string default,
  *    content/key are mandatory)
- * @return \PwgError|array{comment: PwgNamedStruct}
+ * @return PwgError|array{comment: PwgNamedStruct}
  */
-function ws_images_addComment(array $params, PwgServer $service): \PwgError|array
+function ws_images_addComment(array $params, PwgServer $service): PwgError|array
 {
     /** @var array<string, mixed> $conf */
     global $conf;
@@ -357,9 +362,9 @@ SELECT DISTINCT image_id
  *    all three are WS_TYPE_INT|WS_TYPE_POSITIVE (image_id: WS_TYPE_ID) --
  *    always plain ints by the time this runs (comments_page/
  *    comments_per_page have defaults, so always present too)
- * @return \PwgError|array<string, mixed>
+ * @return PwgError|array<string, mixed>
  */
-function ws_images_getInfo(array $params, PwgServer $service): \PwgError|array
+function ws_images_getInfo(array $params, PwgServer $service): PwgError|array
 {
     /**
      * @var array<string, mixed> $user
@@ -772,9 +777,9 @@ SELECT *
  * arrays (never a bare scalar).
  *
  * @param array{search_id?: string, allwords?: string, allwords_mode?: string, allwords_fields?: array<int, string>, tags?: array<int, int>, tags_mode?: string, categories?: array<int, int>, categories_withsubs?: bool, authors?: array<int, string>, added_by?: array<int, int>, filetypes?: array<int, string>, date_posted_preset?: string, date_posted_custom?: array<int, string>, date_created_preset?: string, date_created_custom?: array<int, string>, ratios?: array<int, string>, ratings?: array<int, string>, filesize_min?: int, filesize_max?: int, height_min?: int, height_max?: int, width_min?: int, width_max?: int, ...} $params
- * @return \PwgError|array{search_id: string, search_url: string}
+ * @return PwgError|array{search_id: string, search_url: string}
  */
-function ws_images_filteredSearch_create(array $params, PwgServer $service): \PwgError|array
+function ws_images_filteredSearch_create(array $params, PwgServer $service): PwgError|array
 {
     /**
      * @var array<string, mixed> $user
@@ -1062,7 +1067,7 @@ function ws_images_filteredSearch_create(array $params, PwgServer $service): \Pw
  *    level: WS_TYPE_INT|WS_TYPE_POSITIVE, mandatory (no 'default') -- always
  *      a plain int by the time this runs
  */
-function ws_images_setPrivacyLevel(array $params, PwgServer $service): \PwgError|int|string
+function ws_images_setPrivacyLevel(array $params, PwgServer $service): PwgError|int|string
 {
     /** @var array<string, mixed> $conf */
     global $conf;
@@ -1098,9 +1103,9 @@ UPDATE ' . IMAGES_TABLE . '
  *    ints. category_id: WS_TYPE_ID, mandatory. rank: WS_TYPE_INT|POSITIVE|
  *    NOTNULL with a null default -- int when the caller provides it, null
  *    otherwise
- * @return array<string, mixed>|\PwgError
+ * @return array<string, mixed>|PwgError
  */
-function ws_images_setRank(array $params, PwgServer $service): array|\PwgError
+function ws_images_setRank(array $params, PwgServer $service): array|PwgError
 {
     if (count($params['image_id']) > 1) {
         include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
@@ -1214,7 +1219,7 @@ UPDATE ' . IMAGE_CATEGORY_TABLE . '
  *    mandatory (no 'default'), type defaults to 'file' -- all always plain
  *    strings (see PwgServer::invoke()'s array-rejection check)
  */
-function ws_images_add_chunk(array $params, PwgServer $service): ?\PwgError
+function ws_images_add_chunk(array $params, PwgServer $service): ?PwgError
 {
     /**
      * @var array<string, mixed> $conf
@@ -1274,7 +1279,7 @@ function ws_images_add_chunk(array $params, PwgServer $service): ?\PwgError
  *    image_id: WS_TYPE_ID, mandatory. type: no WS_TYPE flag, defaults to
  *    'file'. sum: no WS_TYPE flag, mandatory -- both always plain strings
  */
-function ws_images_addFile(array $params, PwgServer $service): \PwgError|bool|null
+function ws_images_addFile(array $params, PwgServer $service): PwgError|bool|null
 {
     /**
      * @var array<string, mixed> $conf
@@ -1372,9 +1377,9 @@ SELECT
  *    check). level: WS_TYPE_INT|POSITIVE, default 0 (non-null) -- always
  *    int. check_uniqueness: WS_TYPE_BOOL, default true -- always bool.
  *    image_id: WS_TYPE_ID, null default -- int|null.
- * @return \PwgError|array{image_id: int|string, url: string}
+ * @return PwgError|array{image_id: int|string, url: string}
  */
-function ws_images_add(array $params, PwgServer $service): \PwgError|array
+function ws_images_add(array $params, PwgServer $service): PwgError|array
 {
     /**
      * @var array<string, mixed> $conf
@@ -1535,9 +1540,9 @@ SELECT id, name, permalink
  *    FORCE), no WS_TYPE flag, null default -- string, array (if the
  *    caller uses bracket syntax), or null. image_id: WS_TYPE_ID, null
  *    default -- int|null.
- * @return \PwgError|array{image_id: int|string, url: string}
+ * @return PwgError|array{image_id: int|string, url: string}
  */
-function ws_images_addSimple(array $params, PwgServer $service): \PwgError|array
+function ws_images_addSimple(array $params, PwgServer $service): PwgError|array
 {
     /**
      * @var array<string, mixed> $conf
@@ -1685,9 +1690,9 @@ SELECT id, name, permalink
  *    WS_TYPE_ID, null default -- int|null. update_mode: WS_TYPE_BOOL,
  *    default false (non-null) -- always bool. pwg_token: no WS_TYPE flag,
  *    mandatory -- always a plain string.
- * @return \PwgError|array<string, mixed>|null
+ * @return PwgError|array<string, mixed>|null
  */
-function ws_images_upload(array $params, PwgServer $service): \PwgError|array|null
+function ws_images_upload(array $params, PwgServer $service): PwgError|array|null
 {
     /** @var array<string, mixed> $conf */
     global $conf;
@@ -2394,7 +2399,7 @@ SELECT
  *    plain int, a list of ints, or null. pwg_token: no WS_TYPE flag,
  *    mandatory -- always a plain string.
  */
-function ws_images_formats_delete(array $params, PwgServer $service): \PwgError|bool
+function ws_images_formats_delete(array $params, PwgServer $service): PwgError|bool
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -2505,9 +2510,9 @@ DELETE FROM ' . IMAGE_FORMAT_TABLE . '
  * @param array{image_id: int, file_sum: string|null, thumbnail_sum: string|null, high_sum: string|null, ...} $params
  *    image_id: WS_TYPE_ID, mandatory -- always int. file_sum/
  *    thumbnail_sum/high_sum: no WS_TYPE flag, null default -- string|null.
- * @return \PwgError|array<string, string>
+ * @return PwgError|array<string, string>
  */
-function ws_images_checkFiles(array $params, PwgServer $service): \PwgError|array
+function ws_images_checkFiles(array $params, PwgServer $service): PwgError|array
 {
     /** @var \Logger $logger */
     global $logger;
@@ -2571,7 +2576,7 @@ SELECT path
  *    non-null string defaults -- always string. pwg_token:
  *    WS_PARAM_OPTIONAL with no 'default' key -- may be entirely absent.
  */
-function ws_images_setInfo(array $params, PwgServer $service): ?\PwgError
+function ws_images_setInfo(array $params, PwgServer $service): ?PwgError
 {
     /** @var array<string, mixed> $conf */
     global $conf;
@@ -2731,7 +2736,7 @@ SELECT *
  *    mandatory -- a plain string or an array, never null. pwg_token: no
  *    WS_TYPE flag, mandatory -- always a plain string.
  */
-function ws_images_delete(array $params, PwgServer $service): \PwgError|int
+function ws_images_delete(array $params, PwgServer $service): PwgError|int
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -2812,9 +2817,9 @@ function ws_images_emptyLounge(array $params, PwgServer $service): array
  *    default -- string, array, or null. pwg_token: no WS_TYPE flag,
  *    mandatory -- always string. category_id: WS_TYPE_ID, mandatory --
  *    always int.
- * @return \PwgError|array<string, mixed>
+ * @return PwgError|array<string, mixed>
  */
-function ws_images_uploadCompleted(array $params, PwgServer $service): \PwgError|array
+function ws_images_uploadCompleted(array $params, PwgServer $service): PwgError|array
 {
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
@@ -2889,9 +2894,9 @@ SELECT
  * @param array{block_size: int, pwg_token: string, ...} $params
  *    block_size: WS_TYPE_INT|POSITIVE, default is a non-null $conf value
  *    -- always int. pwg_token: no WS_TYPE flag, mandatory -- always string.
- * @return \PwgError|array{nb_added: int, nb_no_md5sum: int}
+ * @return PwgError|array{nb_added: int, nb_no_md5sum: int}
  */
-function ws_images_setMd5sum(array $params, PwgServer $service): \PwgError|array
+function ws_images_setMd5sum(array $params, PwgServer $service): PwgError|array
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -2919,9 +2924,9 @@ function ws_images_setMd5sum(array $params, PwgServer $service): \PwgError|array
  * @param array{image_id: string|array<array-key, string>, pwg_token: string, ...} $params
  *    image_id: WS_PARAM_ACCEPT_ARRAY, no WS_TYPE flag, mandatory -- a
  *    plain string or an array, never null. pwg_token: mandatory string.
- * @return \PwgError|array{nb_synchronized: int}
+ * @return PwgError|array{nb_synchronized: int}
  */
-function ws_images_syncMetadata(array $params, PwgServer $service): \PwgError|array
+function ws_images_syncMetadata(array $params, PwgServer $service): PwgError|array
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -2983,9 +2988,9 @@ SELECT id
  * @param array{block_size: int, pwg_token: string, ...} $params
  *    block_size: WS_TYPE_INT|POSITIVE, default 1000 (non-null) -- always
  *    int. pwg_token: no WS_TYPE flag, mandatory -- always string.
- * @return \PwgError|array{nb_deleted: int, nb_orphans: int}
+ * @return PwgError|array{nb_deleted: int, nb_orphans: int}
  */
-function ws_images_deleteOrphans(array $params, PwgServer $service): \PwgError|array
+function ws_images_deleteOrphans(array $params, PwgServer $service): PwgError|array
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -3014,7 +3019,7 @@ function ws_images_deleteOrphans(array $params, PwgServer $service): \PwgError|a
  *    WS_TYPE flag, but always plain strings (action has a string default,
  *    pwg_token is mandatory)
  */
-function ws_images_setCategory(array $params, PwgServer $service): ?\PwgError
+function ws_images_setCategory(array $params, PwgServer $service): ?PwgError
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');

@@ -9,6 +9,11 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Ws\PwgError;
+use Piwigo\Ws\PwgNamedArray;
+use Piwigo\Ws\PwgNamedStruct;
+use Piwigo\Ws\PwgServer;
+
 /**
  * API method
  * Returns a list of tags
@@ -235,9 +240,9 @@ SELECT *
  *
  * @param array{name: string, ...} $params no 'default' key -- mandatory,
  *   always present.
- * @return \PwgError|array{info: string, id: int|string, name: string, url_name: string}
+ * @return PwgError|array{info: string, id: int|string, name: string, url_name: string}
  */
-function ws_tags_add(array $params, PwgServer &$service): \PwgError|array
+function ws_tags_add(array $params, PwgServer &$service): PwgError|array
 {
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
@@ -273,9 +278,9 @@ WHERE id = ' . $creation_output['id'] . ';';
  * @param array{tag_id: array<int, int>, pwg_token: string, ...} $params
  *   neither has a 'default' key -- both mandatory, always present;
  *   FORCE_ARRAY always coerces tag_id to a list of positive ints.
- * @return \PwgError|array{id: array<int, int>}
+ * @return PwgError|array{id: array<int, int>}
  */
-function ws_tags_delete(array $params, PwgServer &$service): \PwgError|array
+function ws_tags_delete(array $params, PwgServer &$service): PwgError|array
 {
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
@@ -316,9 +321,9 @@ SELECT COUNT(*)
  * @param array{tag_id: int, new_name: string, pwg_token: string, ...} $params
  *   none has a 'default' key -- all mandatory, always present, WS_TYPE_ID
  *   guarantees a plain int for tag_id.
- * @return \PwgError|array<string, mixed>
+ * @return PwgError|array<string, mixed>
  */
-function ws_tags_rename(array $params, PwgServer &$service): \PwgError|array
+function ws_tags_rename(array $params, PwgServer &$service): PwgError|array
 {
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
@@ -395,9 +400,9 @@ SELECT
  * @param array{tag_id: int, copy_name: string, pwg_token: string, ...} $params
  *   none has a 'default' key -- all mandatory, always present, WS_TYPE_ID
  *   guarantees a plain int for tag_id.
- * @return \PwgError|array{id: int|string, name: string, url_name: mixed, count: int}
+ * @return PwgError|array{id: int|string, name: string, url_name: mixed, count: int}
  */
-function ws_tags_duplicate(array $params, PwgServer &$service): \PwgError|array
+function ws_tags_duplicate(array $params, PwgServer &$service): PwgError|array
 {
 
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
@@ -492,9 +497,9 @@ SELECT image_id
  *   none has a 'default' key -- all mandatory, always present;
  *   destination_tag_id: WS_TYPE_ID guarantees a plain int; merge_tag_id:
  *   FORCE_ARRAY always coerces to a list of positive ints.
- * @return \PwgError|array{destination_tag: int, deleted_tag: array<int, int>, images_in_merged_tag: array<int, mixed>}
+ * @return PwgError|array{destination_tag: int, deleted_tag: array<int, int>, images_in_merged_tag: array<int, mixed>}
  */
-function ws_tags_merge(array $params, PwgServer &$service): \PwgError|array
+function ws_tags_merge(array $params, PwgServer &$service): PwgError|array
 {
 
     if (get_pwg_token() != $params['pwg_token']) {

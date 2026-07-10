@@ -9,6 +9,10 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Ws\PwgError;
+use Piwigo\Ws\PwgNamedArray;
+use Piwigo\Ws\PwgServer;
+
 /**
  * API method
  * Returns permissions
@@ -17,9 +21,9 @@ declare(strict_types=1);
  *   all three keys: WS_PARAM_OPTIONAL with no 'default' key -- may be
  *   entirely absent; FORCE_ARRAY always coerces to a list of positive
  *   ints when present.
- * @return \PwgError|array{categories: PwgNamedArray}
+ * @return PwgError|array{categories: PwgNamedArray}
  */
-function ws_permissions_getList(array $params, PwgServer &$service): \PwgError|array
+function ws_permissions_getList(array $params, PwgServer &$service): PwgError|array
 {
     $my_params = array_filter(
         ['cat_id', 'group_id', 'user_id'],
@@ -139,7 +143,7 @@ SELECT group_id, cat_id
  *   same FORCE_ARRAY coercion when present. recursive: non-null bool
  *   default, WS_TYPE_BOOL -- always present. pwg_token: no 'default'
  *   key -- mandatory, always present.
- * @return mixed \PwgError, or the result of the pwg.permissions.getList invocation
+ * @return mixed PwgError, or the result of the pwg.permissions.getList invocation
  */
 function ws_permissions_add(array $params, PwgServer &$service): mixed
 {
@@ -204,7 +208,7 @@ SELECT id
  *   FORCE_ARRAY always coerces cat_id to a list of positive ints.
  *   group_id/user_id: WS_PARAM_OPTIONAL with no 'default' key -- may be
  *   entirely absent, same FORCE_ARRAY coercion when present.
- * @return mixed \PwgError, or the result of the pwg.permissions.getList invocation
+ * @return mixed PwgError, or the result of the pwg.permissions.getList invocation
  */
 function ws_permissions_remove(array $params, PwgServer &$service): mixed
 {

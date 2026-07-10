@@ -9,6 +9,10 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Ws\PwgError;
+use Piwigo\Ws\PwgNamedArray;
+use Piwigo\Ws\PwgServer;
+
 /**
  * API method
  * Returns a list of missing derivatives (not generated yet)
@@ -19,9 +23,9 @@ declare(strict_types=1);
  *    POSITIVE, null default -- int|null. f_* (see
  *    ws_std_image_sql_filter()'s docblock): shared filter set merged in
  *    via ws.php's $f_params.
- * @return \PwgError|array{next_page?: int|string, urls?: string[]}
+ * @return PwgError|array{next_page?: int|string, urls?: string[]}
  */
-function ws_getMissingDerivatives(array $params, PwgServer &$service): \PwgError|array
+function ws_getMissingDerivatives(array $params, PwgServer &$service): PwgError|array
 {
     /** @var array<string, mixed> $conf */
     global $conf;
@@ -387,7 +391,7 @@ DELETE FROM ' . RATE_TABLE . '
  *    username: no WS_TYPE flag, mandatory -- always a plain string.
  *    password: no WS_TYPE flag, null default -- string|null.
  */
-function ws_session_login(array $params, PwgServer &$service): \PwgError|true
+function ws_session_login(array $params, PwgServer &$service): PwgError|true
 {
     if (defined('PWG_API_KEY_REQUEST')) {
         return new PwgError(401, 'Cannot use this method with an api key');
@@ -412,7 +416,7 @@ function ws_session_login(array $params, PwgServer &$service): \PwgError|true
  * Performs a logout
  * @param mixed[] $params
  */
-function ws_session_logout($params, PwgServer &$service): \PwgError|true
+function ws_session_logout($params, PwgServer &$service): PwgError|true
 {
     if (defined('PWG_API_KEY_REQUEST')) {
         return new PwgError(401, 'Cannot use this method with an api key');
@@ -499,9 +503,9 @@ function ws_session_getStatus($params, PwgServer &$service): array
  *    int|null. offset: WS_TYPE_INT|POSITIVE, default 0 (non-null) ->
  *    always int. date_min/date_max/object/action: no WS_TYPE flag, null
  *    default -> string|null.
- * @return \PwgError|array{result_lines: array<int, array<string, mixed>>, page_offset: int, end_page: bool, params: array<string, mixed>}
+ * @return PwgError|array{result_lines: array<int, array<string, mixed>>, page_offset: int, end_page: bool, params: array<string, mixed>}
  */
-function ws_getActivityList(array $param, PwgServer &$service): \PwgError|array
+function ws_getActivityList(array $param, PwgServer &$service): PwgError|array
 {
     /** @var array<string, mixed> $conf */
     global $conf;

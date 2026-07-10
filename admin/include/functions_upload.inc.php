@@ -9,6 +9,9 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Ws\PwgError;
+use Piwigo\Ws\PwgServer;
+
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 include_once PHPWG_ROOT_PATH . 'admin/include/image.class.php';
 
@@ -286,7 +289,7 @@ SELECT
                 unlink($source_filepath);
                 $error_msg = 'File extension "' . $original_extension . '" for file "' . $original_filename . '" does not match file MIME type "' . $finfo_type . '"';
                 if (defined('IN_WS')) {
-                    /** @var \PwgServer $service */
+                    /** @var PwgServer $service */
                     global $service;
                     $service->sendResponse(new PwgError(415, $error_msg));
                     exit;

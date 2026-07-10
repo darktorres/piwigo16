@@ -9,8 +9,15 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+namespace Piwigo\Ws\Protocol;
+
+use Piwigo\Ws\PwgError;
+use Piwigo\Ws\PwgRequestHandler;
+use Piwigo\Ws\PwgServer;
+
 class PwgRestRequestHandler extends PwgRequestHandler
 {
+    #[\Override]
     public function handleRequest(PwgServer &$service): void
     {
         $params = [];

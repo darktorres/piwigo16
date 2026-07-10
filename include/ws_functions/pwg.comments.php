@@ -9,6 +9,9 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Ws\PwgError;
+use Piwigo\Ws\PwgServer;
+
 /**
  * API method
  * Get comments
@@ -24,9 +27,9 @@ declare(strict_types=1);
  *   flag, default is $conf['comments_page_nb_comments'] (a real int,
  *   confirmed 10 in config_default.inc.php) -- always present, always
  *   int.
- * @return \PwgError|array<string, mixed>
+ * @return PwgError|array<string, mixed>
  */
-function ws_userComments_getList(array $params, PwgServer &$service): \PwgError|array
+function ws_userComments_getList(array $params, PwgServer &$service): PwgError|array
 {
     /** @var array<string, mixed> $conf */
     global $conf;
@@ -240,7 +243,7 @@ GROUP BY author_id
  *   neither has a 'default' key -- both mandatory, always present;
  *   FORCE_ARRAY always coerces comment_id to a list of positive ints.
  */
-function ws_userComments_delete(array $params, PwgServer &$service): \PwgError|string
+function ws_userComments_delete(array $params, PwgServer &$service): PwgError|string
 {
     include_once PHPWG_ROOT_PATH . 'include/functions_comment.inc.php';
 
@@ -262,7 +265,7 @@ function ws_userComments_delete(array $params, PwgServer &$service): \PwgError|s
  *   neither has a 'default' key -- both mandatory, always present;
  *   FORCE_ARRAY always coerces comment_id to a list of positive ints.
  */
-function ws_userComments_validate(array $params, PwgServer &$service): \PwgError|string
+function ws_userComments_validate(array $params, PwgServer &$service): PwgError|string
 {
     include_once PHPWG_ROOT_PATH . 'include/functions_comment.inc.php';
 

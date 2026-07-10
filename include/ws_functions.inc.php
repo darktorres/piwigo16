@@ -9,6 +9,10 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Ws\PwgError;
+use Piwigo\Ws\PwgNamedArray;
+use Piwigo\Ws\PwgServer;
+
 /**
  * Event handler for method invocation security check. Should return a PwgError
  * if the preconditions are not satifsied for method invocation.

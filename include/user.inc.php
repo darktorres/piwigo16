@@ -9,6 +9,9 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Ws\PwgError;
+use Piwigo\Ws\PwgServer;
+
 // Bootstrap globals, set by include/common.inc.php.
 /**
  * @var array<string, mixed> $conf
@@ -76,7 +79,7 @@ if (
         $authenticate = auth_key_login($auth_header, true);
         if (! $authenticate) {
             include_once PHPWG_ROOT_PATH . 'include/ws_init.inc.php';
-            /** @var \PwgServer $service */
+            /** @var PwgServer $service */
             $service->sendResponse(new PwgError(401, 'Invalid api_key'));
             exit;
         }
@@ -107,7 +110,7 @@ if (
         'password' => $_POST['password'],
     ];
 
-    /** @var \PwgServer $service */
+    /** @var PwgServer $service */
     $login = ws_session_login($credentials, $service);
 
     if ($login !== true) {

@@ -9,6 +9,11 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Ws\PwgError;
+use Piwigo\Ws\PwgNamedArray;
+use Piwigo\Ws\PwgNamedStruct;
+use Piwigo\Ws\PwgServer;
+
 /**
  * API method
  * Returns the list of groups
@@ -19,9 +24,9 @@ declare(strict_types=1);
  *   positive ints when present. per_page/page: non-null int default --
  *   always present. order: non-null string default ('name'), no 'type'
  *   flag -- always present, always string.
- * @return \PwgError|array{paging: PwgNamedStruct, groups: PwgNamedArray}
+ * @return PwgError|array{paging: PwgNamedStruct, groups: PwgNamedArray}
  */
-function ws_groups_getList(array $params, PwgServer &$service): \PwgError|array
+function ws_groups_getList(array $params, PwgServer &$service): PwgError|array
 {
     if (! (bool) preg_match(PATTERN_ORDER, $params['order'])) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid input parameter order');
@@ -69,7 +74,7 @@ SELECT
  * @param array{name: string, is_default: bool, ...} $params name has no
  *   'default' key -- mandatory, always present. is_default: non-null
  *   bool default, WS_TYPE_BOOL -- always present.
- * @return mixed \PwgError, or the result of the pwg.groups.getList invocation
+ * @return mixed PwgError, or the result of the pwg.groups.getList invocation
  */
 function ws_groups_add(array $params, PwgServer &$service): mixed
 {
@@ -120,7 +125,7 @@ SELECT COUNT(*)
  *   neither has a 'default' key -- both mandatory, always present;
  *   FORCE_ARRAY always coerces group_id to a list of positive ints.
  */
-function ws_groups_delete(array $params, PwgServer &$service): \PwgError|\PwgNamedArray
+function ws_groups_delete(array $params, PwgServer &$service): PwgError|PwgNamedArray
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -146,7 +151,7 @@ function ws_groups_delete(array $params, PwgServer &$service): \PwgError|\PwgNam
  *   group_id/pwg_token: no 'default' key -- mandatory, always present,
  *   WS_TYPE_ID guarantees a plain int for group_id. name/is_default:
  *   WS_PARAM_OPTIONAL with no 'default' key -- may be entirely absent.
- * @return mixed \PwgError, or the result of the pwg.groups.getList invocation
+ * @return mixed PwgError, or the result of the pwg.groups.getList invocation
  */
 function ws_groups_setInfo(array $params, PwgServer &$service): mixed
 {
@@ -223,7 +228,7 @@ SELECT COUNT(*)
  *   none has a 'default' key -- all mandatory, always present; group_id:
  *   WS_TYPE_ID guarantees a plain int; user_id: FORCE_ARRAY always
  *   coerces to a list of positive ints.
- * @return mixed \PwgError, or the result of the pwg.groups.getList invocation
+ * @return mixed PwgError, or the result of the pwg.groups.getList invocation
  */
 function ws_groups_addUser(array $params, PwgServer &$service): mixed
 {
@@ -281,9 +286,9 @@ SELECT COUNT(*)
  *   destination_group_id: WS_TYPE_ID guarantees a plain int;
  *   merge_group_id: FORCE_ARRAY always coerces to a list of positive
  *   ints.
- * @return \PwgError|array{destination_group: mixed, deleted_group: mixed}
+ * @return PwgError|array{destination_group: mixed, deleted_group: mixed}
  */
-function ws_groups_merge(array $params, PwgServer &$service): \PwgError|array
+function ws_groups_merge(array $params, PwgServer &$service): PwgError|array
 {
 
     if (get_pwg_token() != $params['pwg_token']) {
@@ -384,7 +389,7 @@ SELECT user_id
  * @param array{group_id: int, copy_name: string, pwg_token: string, ...} $params
  *   none has a 'default' key -- all mandatory, always present,
  *   WS_TYPE_ID guarantees a plain int for group_id.
- * @return mixed \PwgError, or the result of the pwg.groups.getList invocation
+ * @return mixed PwgError, or the result of the pwg.groups.getList invocation
  */
 function ws_groups_duplicate(array $params, PwgServer &$service): mixed
 {
@@ -491,7 +496,7 @@ SELECT is_default
  *   none has a 'default' key -- all mandatory, always present; group_id:
  *   WS_TYPE_ID guarantees a plain int; user_id: FORCE_ARRAY always
  *   coerces to a list of positive ints.
- * @return mixed \PwgError, or the result of the pwg.groups.getList invocation
+ * @return mixed PwgError, or the result of the pwg.groups.getList invocation
  */
 function ws_groups_deleteUser(array $params, PwgServer &$service): mixed
 {

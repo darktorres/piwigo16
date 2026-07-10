@@ -9,6 +9,11 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Ws\PwgError;
+use Piwigo\Ws\PwgNamedArray;
+use Piwigo\Ws\PwgNamedStruct;
+use Piwigo\Ws\PwgServer;
+
 /**
  * API method
  * Returns images per category
@@ -18,9 +23,9 @@ declare(strict_types=1);
  *   -- makeArrayParam() converts the null default to [], always a list of
  *   positive ints. f_* keys: the shared $f_params block merged into this
  *   registration, see ws_std_image_sql_filter()/ws_std_image_sql_order().
- * @return \PwgError|array{paging: PwgNamedStruct, images: PwgNamedArray}
+ * @return PwgError|array{paging: PwgNamedStruct, images: PwgNamedArray}
  */
-function ws_categories_getImages(array $params, PwgServer &$service): \PwgError|array
+function ws_categories_getImages(array $params, PwgServer &$service): PwgError|array
 {
     /** @var array<string, mixed> $conf */
     global $user, $conf;
@@ -253,9 +258,9 @@ SELECT
  *   is a real possible runtime value since they have no non-null-forcing
  *   type flag beyond INT|POSITIVE (which still allows the null default
  *   through unchanged).
- * @return \PwgError|array<int|string, mixed>
+ * @return PwgError|array<int|string, mixed>
  */
-function ws_categories_getList(array $params, PwgServer &$service): \PwgError|array
+function ws_categories_getList(array $params, PwgServer &$service): PwgError|array
 {
     /**
      * @var array<string, mixed> $user
@@ -734,9 +739,9 @@ SELECT
  *   name: no 'default' key in ws.php's registration -- mandatory, always
  *   present. pwg_token: WS_PARAM_OPTIONAL with no 'default' key -- may be
  *   entirely absent.
- * @return \PwgError|array{info: string, id: int|string}
+ * @return PwgError|array{info: string, id: int|string}
  */
-function ws_categories_add(array $params, PwgServer &$service): \PwgError|array
+function ws_categories_add(array $params, PwgServer &$service): PwgError|array
 {
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
@@ -785,7 +790,7 @@ function ws_categories_add(array $params, PwgServer &$service): \PwgError|array
  *   always coerces to a list of positive ints. rank: WS_PARAM_OPTIONAL
  *   (explicit flag) with no 'default' key -- may be entirely absent.
  */
-function ws_categories_setRank(array $params, PwgServer &$service): ?\PwgError
+function ws_categories_setRank(array $params, PwgServer &$service): ?PwgError
 {
     // does the category really exist?
     $query = '
@@ -867,7 +872,7 @@ SELECT id
  *   always present. pwg_token: WS_PARAM_OPTIONAL with no 'default' key --
  *   may be entirely absent.
  */
-function ws_categories_setInfo(array $params, PwgServer &$service): ?\PwgError
+function ws_categories_setInfo(array $params, PwgServer &$service): ?PwgError
 {
     /** @var array<string, mixed> $conf */
     global $conf;
@@ -962,7 +967,7 @@ UPDATE ' . CATEGORIES_TABLE . '
  *   'default' key -- both mandatory, always present, WS_TYPE_ID guarantees
  *   plain ints.
  */
-function ws_categories_setRepresentative(array $params, PwgServer &$service): ?\PwgError
+function ws_categories_setRepresentative(array $params, PwgServer &$service): ?PwgError
 {
     // does the category really exist?
     $query = '
@@ -1021,7 +1026,7 @@ UPDATE ' . USER_CACHE_CATEGORIES_TABLE . '
  * @param array{category_id: int, ...} $params no 'default' key -- mandatory,
  *   always present, WS_TYPE_ID guarantees a plain int.
  */
-function ws_categories_deleteRepresentative(array $params, PwgServer &$service): ?\PwgError
+function ws_categories_deleteRepresentative(array $params, PwgServer &$service): ?PwgError
 {
     /** @var array<string, mixed> $conf */
     global $conf;
@@ -1069,9 +1074,9 @@ UPDATE ' . CATEGORIES_TABLE . '
  *
  * @param array{category_id: int, ...} $params no 'default' key -- mandatory,
  *   always present, WS_TYPE_ID guarantees a plain int.
- * @return \PwgError|array<string, mixed>
+ * @return PwgError|array<string, mixed>
  */
-function ws_categories_refreshRepresentative(array $params, PwgServer &$service): \PwgError|array
+function ws_categories_refreshRepresentative(array $params, PwgServer &$service): PwgError|array
 {
     global $conf;
 
@@ -1139,7 +1144,7 @@ SELECT *
  *   'type' flag, non-null default -- always a plain string. pwg_token: no
  *   'default' key, no flags -- mandatory, always present, plain string.
  */
-function ws_categories_delete(array $params, PwgServer &$service): ?\PwgError
+function ws_categories_delete(array $params, PwgServer &$service): ?PwgError
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -1212,9 +1217,9 @@ SELECT id
  *   caller value. parent: WS_TYPE_INT|WS_TYPE_POSITIVE, no 'default' key --
  *   mandatory, always a plain int. pwg_token: no 'default' key, no flags --
  *   mandatory, always present, plain string.
- * @return \PwgError|array{new_ariane_string: string, updated_cats: array<int, array{cat_id: string, nb_sub_photos: int}>}
+ * @return PwgError|array{new_ariane_string: string, updated_cats: array<int, array{cat_id: string, nb_sub_photos: int}>}
  */
-function ws_categories_move(array $params, PwgServer &$service): \PwgError|array
+function ws_categories_move(array $params, PwgServer &$service): PwgError|array
 {
     /** @var array<string, mixed> $page */
     global $page;

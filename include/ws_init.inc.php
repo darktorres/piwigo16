@@ -9,6 +9,13 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Ws\Protocol\PwgJsonEncoder;
+use Piwigo\Ws\Protocol\PwgRestEncoder;
+use Piwigo\Ws\Protocol\PwgRestRequestHandler;
+use Piwigo\Ws\Protocol\PwgSerialPhpEncoder;
+use Piwigo\Ws\Protocol\PwgXmlRpcEncoder;
+use Piwigo\Ws\PwgServer;
+
 defined('PHPWG_ROOT_PATH') or trigger_error('Hacking attempt!', E_USER_ERROR);
 
 include_once PHPWG_ROOT_PATH . 'include/ws_core.inc.php';
@@ -37,7 +44,6 @@ $service = new PwgServer();
 $handler = null;
 switch ($requestFormat) {
     case 'rest':
-        include_once PHPWG_ROOT_PATH . 'include/ws_protocols/rest_handler.php';
         $handler = new PwgRestRequestHandler();
         break;
 }
@@ -48,18 +54,17 @@ $service->setHandler($requestFormat, $handler);
 $encoder = null;
 switch ($responseFormat) {
     case 'rest':
-        include_once PHPWG_ROOT_PATH . 'include/ws_protocols/rest_encoder.php';
         $encoder = new PwgRestEncoder();
         break;
     case 'php':
-        include_once PHPWG_ROOT_PATH . 'include/ws_protocols/php_encoder.php';
         $encoder = new PwgSerialPhpEncoder();
         break;
     case 'json':
-        include_once PHPWG_ROOT_PATH . 'include/ws_protocols/json_encoder.php';
         $encoder = new PwgJsonEncoder();
         break;
     case 'xmlrpc':
+        // xmlrpc_encoder.php is still procedural (xmlrpc_encode()'s home,
+        // not autoloadable) -- PwgXmlRpcEncoder itself is autoloaded.
         include_once PHPWG_ROOT_PATH . 'include/ws_protocols/xmlrpc_encoder.php';
         $encoder = new PwgXmlRpcEncoder();
         break;

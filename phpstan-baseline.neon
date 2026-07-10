@@ -4191,48 +4191,6 @@ parameters:
 		-
 			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
 			identifier: function.strict
-			count: 2
-			path: include/ws_core.inc.php
-
-		-
-			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
-			identifier: empty.notAllowed
-			count: 5
-			path: include/ws_core.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between array<string, array<int|string, mixed>|string> and null is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: include/ws_core.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: include/ws_core.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between mixed and null is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: include/ws_core.inc.php
-
-		-
-			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
-			identifier: typeCoverage.propertyTypeCoverage
-			count: 3
-			path: include/ws_core.inc.php
-
-		-
-			rawMessage: 'Out of 1741 possible param types, only 979 - 56.2 %% actually have it. Add more param types to get over 99 %%'
-			identifier: typeCoverage.paramTypeCoverage
-			count: 1
-			path: include/ws_core.inc.php
-
-		-
-			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
-			identifier: function.strict
 			count: 1
 			path: include/ws_functions.inc.php
 
@@ -4857,48 +4815,6 @@ parameters:
 		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
-			count: 1
-			path: include/ws_protocols/rest_encoder.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
-			identifier: equal.notAllowed
-			count: 3
-			path: include/ws_protocols/rest_encoder.php
-
-		-
-			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
-			identifier: typeCoverage.propertyTypeCoverage
-			count: 5
-			path: include/ws_protocols/rest_encoder.php
-
-		-
-			rawMessage: 'Switch condition type (''array''|''boolean''|''double''|''integer''|''NULL''|''object''|''resource''|''resource (closed)''|''string''|''unknown type'') does not match case condition ''null'' (string).'
-			identifier: switch.type
-			count: 1
-			path: include/ws_protocols/rest_encoder.php
-
-		-
-			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
-			identifier: empty.notAllowed
-			count: 2
-			path: include/ws_protocols/rest_handler.php
-
-		-
-			rawMessage: 'Dynamic call to static method PwgServer::isPost().'
-			identifier: staticMethod.dynamicCall
-			count: 1
-			path: include/ws_protocols/rest_handler.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between (int|string) and string is not allowed.'
-			identifier: equal.notAllowed
-			count: 2
-			path: include/ws_protocols/rest_handler.php
-
-		-
-			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
-			identifier: empty.notAllowed
 			count: 8
 			path: index.php
 
@@ -5321,6 +5237,114 @@ parameters:
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 2
 			path: src/Piwigo/Search/QSingleToken.php
+
+		-
+			rawMessage: 'Out of 1741 possible param types, only 979 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 1
+			path: src/Piwigo/Ws/Encoder/PwgResponseEncoder.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 3
+			path: src/Piwigo/Ws/Protocol/PwgRestEncoder.php
+
+		-
+			rawMessage: 'Switch condition type (''array''|''boolean''|''double''|''integer''|''NULL''|''object''|''resource''|''resource (closed)''|''string''|''unknown type'') does not match case condition ''null'' (string).'
+			identifier: switch.type
+			count: 1
+			path: src/Piwigo/Ws/Protocol/PwgRestEncoder.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 2
+			path: src/Piwigo/Ws/Protocol/PwgRestRequestHandler.php
+
+		-
+			rawMessage: 'Dynamic call to static method Piwigo\Ws\PwgServer::isPost().'
+			identifier: staticMethod.dynamicCall
+			count: 1
+			path: src/Piwigo/Ws/Protocol/PwgRestRequestHandler.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between (int|string) and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: src/Piwigo/Ws/Protocol/PwgRestRequestHandler.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: src/Piwigo/Ws/Protocol/PwgXmlWriter.php
+
+		-
+			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 5
+			path: src/Piwigo/Ws/Protocol/PwgXmlWriter.php
+
+		-
+			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 1
+			path: src/Piwigo/Ws/PwgNamedArray.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: src/Piwigo/Ws/PwgNamedStruct.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 2
+			path: src/Piwigo/Ws/PwgNamedStruct.php
+
+		-
+			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 1
+			path: src/Piwigo/Ws/PwgNamedStruct.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: src/Piwigo/Ws/PwgServer.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 3
+			path: src/Piwigo/Ws/PwgServer.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between array<string, array<int|string, mixed>|string> and null is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Ws/PwgServer.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Ws/PwgServer.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and null is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Ws/PwgServer.php
+
+		-
+			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 1
+			path: src/Piwigo/Ws/PwgServer.php
 
 		-
 			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'

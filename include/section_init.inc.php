@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Cache\PersistentCache;
+
 /**
  * This included page checks section related parameter and provides
  * following informations:

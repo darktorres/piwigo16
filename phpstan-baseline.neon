@@ -2313,30 +2313,6 @@ parameters:
 		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
-			count: 1
-			path: include/cache.class.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between int<0, 96> and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: include/cache.class.php
-
-		-
-			rawMessage: 'Out of 1741 possible param types, only 979 - 56.2 %% actually have it. Add more param types to get over 99 %%'
-			identifier: typeCoverage.paramTypeCoverage
-			count: 5
-			path: include/cache.class.php
-
-		-
-			rawMessage: 'Out of 609 possible return types, only 561 - 92.1 %% actually have it. Add more return types to get over 99 %%'
-			identifier: typeCoverage.returnTypeCoverage
-			count: 2
-			path: include/cache.class.php
-
-		-
-			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
-			identifier: empty.notAllowed
 			count: 4
 			path: include/calendar_base.class.php
 
@@ -5153,6 +5129,30 @@ parameters:
 			identifier: typeCoverage.paramTypeCoverage
 			count: 7
 			path: src/Piwigo/Auth/PwgTOTP.php
+
+		-
+			rawMessage: 'Out of 1741 possible param types, only 979 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 5
+			path: src/Piwigo/Cache/PersistentCache.php
+
+		-
+			rawMessage: 'Out of 609 possible return types, only 561 - 92.1 %% actually have it. Add more return types to get over 99 %%'
+			identifier: typeCoverage.returnTypeCoverage
+			count: 2
+			path: src/Piwigo/Cache/PersistentCache.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: src/Piwigo/Cache/PersistentFileCache.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, 96> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Cache/PersistentFileCache.php
 
 		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'

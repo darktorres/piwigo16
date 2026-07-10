@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Search\Inflector\InflectorInterface;
 use Piwigo\Search\QDateRangeScope;
 use Piwigo\Search\QExpression;
@@ -1410,7 +1411,7 @@ function qsearch_eval(QMultiToken $expr, QResults $qsr, bool &$qualifies, array 
 function get_quick_search_results(string $q, array $options): array
 {
     /**
-     * @var \PersistentFileCache $persistent_cache
+     * @var PersistentFileCache $persistent_cache
      * @var array<string, mixed> $conf
      * @var array<string, mixed> $user
      */

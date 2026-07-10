@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Cache\PersistentCache;
+
 include_once PHPWG_ROOT_PATH . 'admin/include/functions_metadata.php';
 
 /**
@@ -2274,7 +2276,7 @@ function pwg_URL(): array
 function invalidate_user_cache(bool $full = true): void
 {
     /**
-     * @var \PersistentCache $persistent_cache
+     * @var PersistentCache $persistent_cache
      * @var \Logger $logger
      */
     global $persistent_cache, $logger;

@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Cache\PersistentCache;
+
 /**
  * Get standard sql where in order to restrict and filter categories and images.
  * IMAGE_CATEGORY_TABLE must be named "ic" in the query

@@ -9,11 +9,13 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Cache\PersistentFileCache;
+
 // Bootstrap globals. $maint_actions is set by admin/maintenance.php before
 // dynamically including this tab panel; the rest by include/common.inc.php.
 /**
  * @var array<string, mixed> $conf
- * @var \PersistentFileCache $persistent_cache
+ * @var PersistentFileCache $persistent_cache
  * @var \Template $template
  */
 global $conf, $maint_actions, $persistent_cache, $template;

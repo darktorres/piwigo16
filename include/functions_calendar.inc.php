@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Cache\PersistentCache;
+
 /** URL keyword for list view */
 define('CAL_VIEW_LIST', 'list');
 /** URL keyword for calendar view */

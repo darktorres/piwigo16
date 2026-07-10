@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Cache\PersistentFileCache;
+
 if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
@@ -18,7 +20,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
 /**
  * @var array<string, mixed> $conf
  * @var array<string, mixed> $page
- * @var \PersistentFileCache $persistent_cache
+ * @var PersistentFileCache $persistent_cache
  * @var \Template $template
  */
 global $conf, $page, $persistent_cache, $template;

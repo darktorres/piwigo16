@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Cache\PersistentFileCache;
+
 // right after the overwrite of previous version files by the unzip in the administration,
 // PHP engine might still have old files in cache. We do not want to use the cache and
 // force reload of all application files. Thus we disable opcache.
@@ -493,8 +495,6 @@ REPLACE INTO ' . PLUGINS_TABLE . '
         }
 
         // Delete cache data
-        include PHPWG_ROOT_PATH . 'include/cache.class.php';
-
         // invalidate_user_cache will purge persistent_cache so it needs to be instantiated first
         $persistent_cache = new PersistentFileCache();
 

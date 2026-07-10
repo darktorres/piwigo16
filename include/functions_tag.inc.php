@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Cache\PersistentFileCache;
+
 /**
  * Returns the number of available tags for the connected user.
  */
@@ -42,7 +44,7 @@ function get_nb_available_tags(): int
 function get_available_tags(array $tag_ids = []): array
 {
     /**
-     * @var \PersistentFileCache $persistent_cache
+     * @var PersistentFileCache $persistent_cache
      * @var array<string, mixed> $user
      */
     global $persistent_cache, $user;

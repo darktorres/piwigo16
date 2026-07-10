@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Cache\PersistentFileCache;
+
 defined('PHPWG_ROOT_PATH') or trigger_error('Hacking attempt!', E_USER_ERROR);
 
 // determine the initial instant to indicate the generation time of this page
@@ -115,7 +117,6 @@ if ($conf['session_gc_probability'] > 0) {
 include PHPWG_ROOT_PATH . 'include/constants.php';
 include PHPWG_ROOT_PATH . 'include/functions.inc.php';
 include PHPWG_ROOT_PATH . 'include/template.class.php';
-include PHPWG_ROOT_PATH . 'include/cache.class.php';
 include PHPWG_ROOT_PATH . 'include/Logger.class.php';
 
 $page['execution_uuid'] = generate_key(10);

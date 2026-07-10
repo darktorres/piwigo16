@@ -80,7 +80,7 @@ function do_timeout_treatment(string $post_keyname, array $check_key_treated = [
             // helpers (typed mixed[] there); keep only the string ones so
             // array_diff() gets values it can actually compare.
             $check_key_treated_strings = array_filter($check_key_treated, is_string(...));
-            $_POST[$post_keyname] = array_diff(array_filter($_POST[$post_keyname], 'is_string'), $check_key_treated_strings);
+            $_POST[$post_keyname] = array_diff(array_filter($_POST[$post_keyname], is_string(...)), $check_key_treated_strings);
 
             push_page_message($page, 'errors', l10n_dec(
                 'Execution time is out, treatment must be continue [Estimated time: %d second].',

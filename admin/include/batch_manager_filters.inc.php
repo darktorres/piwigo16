@@ -39,7 +39,7 @@ $bulk_manager_filter = isset($_SESSION['bulk_manager_filter']) && is_array($_SES
 // PHPStan cannot see across that include boundary, so we narrow both once
 // here for every use below.
 $cat_elements_id = is_array($page['cat_elements_id'])
-    ? array_map('intval', array_filter($page['cat_elements_id'], 'is_numeric'))
+    ? array_map(intval(...), array_filter($page['cat_elements_id'], is_numeric(...)))
     : [];
 $page_start = is_numeric($page['start']) ? (int) $page['start'] : 0;
 
@@ -107,11 +107,11 @@ $changed_prefilters = trigger_change('get_batch_manager_prefilters', $prefilters
 // Plugins may return anything from this modifier event; only accept a real
 // array of arrays back, otherwise keep the built-in prefilter list above.
 if (is_array($changed_prefilters)) {
-    $prefilters = array_filter($changed_prefilters, 'is_array');
+    $prefilters = array_filter($changed_prefilters, is_array(...));
 }
 
 // Sort prefilters by localized name.
-usort($prefilters, 'UC_name_compare');
+usort($prefilters, UC_name_compare(...));
 
 $template->assign(
     [
@@ -169,7 +169,7 @@ $template->assign(
 $filter_tags = [];
 
 if (! empty($bulk_manager_filter['tags']) && is_array($bulk_manager_filter['tags'])) {
-    $filter_tags_ids = array_filter($bulk_manager_filter['tags'], 'is_scalar');
+    $filter_tags_ids = array_filter($bulk_manager_filter['tags'], is_scalar(...));
 
     $query = '
 SELECT

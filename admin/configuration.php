@@ -194,7 +194,7 @@ if (isset($_POST['submit'])) {
                     // $pattern, but that guarantee isn't visible to static
                     // analysis; re-derive it into a local, string-only copy
                     // (values from an HTTP request are always strings here).
-                    $order_by_input = is_array($_POST['order_by']) ? array_filter($_POST['order_by'], 'is_string') : [];
+                    $order_by_input = is_array($_POST['order_by']) ? array_filter($_POST['order_by'], is_string(...)) : [];
 
                     $used = [];
                     foreach ($order_by_input as $i => $val) {

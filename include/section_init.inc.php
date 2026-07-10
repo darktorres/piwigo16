@@ -239,7 +239,7 @@ if ($page['section'] == 'categories') {
             $upper_names_raw = [];
         }
         /** @var array<int, array<string, mixed>> $upper_names */
-        $upper_names = array_filter($upper_names_raw, 'is_array');
+        $upper_names = array_filter($upper_names_raw, is_array(...));
 
         $page = array_merge(
             $page,
@@ -310,7 +310,7 @@ SELECT id
     );
 
                 $subcat_ids_raw = query2array($query, null, 'id');
-                $subcat_ids = array_values(array_filter($subcat_ids_raw, 'is_string'));
+                $subcat_ids = array_values(array_filter($subcat_ids_raw, is_string(...)));
                 $cat_id = $page_category['id'] ?? null;
                 if (is_scalar($cat_id)) {
                     $subcat_ids[] = (string) $cat_id;
@@ -400,7 +400,7 @@ else {
             $remote_addr = $_SERVER['REMOTE_ADDR'];
             $remote_addr = is_string($remote_addr) ? $remote_addr : '';
             $logger->info(
-                'attempt to see the name of the tag #' . implode(', #', array_map('strval', $tag_ids))
+                'attempt to see the name of the tag #' . implode(', #', array_map(strval(...), $tag_ids))
         . ' from the address : ' . $remote_addr
             );
             access_denied();
@@ -625,8 +625,8 @@ SELECT DISTINCT(id)
         // parse_section_url() (functions_url.inc.php) always sets 'list'
         // (a dummy [-1] or a real id list) alongside 'section' => 'list'
         assert(isset($page['list']));
-        $list_ids_raw = is_array($page['list']) ? array_filter($page['list'], 'is_scalar') : [];
-        $list_ids = array_map('strval', $list_ids_raw);
+        $list_ids_raw = is_array($page['list']) ? array_filter($page['list'], is_scalar(...)) : [];
+        $list_ids = array_map(strval(...), $list_ids_raw);
         $query = '
 SELECT DISTINCT(id)
   FROM ' . IMAGES_TABLE . '

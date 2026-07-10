@@ -415,7 +415,7 @@ $category_ids = [];
 
 // $page['where_clauses'] only ever receives string pushes above; narrow it
 // once here for implode().
-$where_clauses = array_filter($page['where_clauses'], 'is_string');
+$where_clauses = array_filter($page['where_clauses'], is_string(...));
 
 $query = '
 SELECT SQL_CALC_FOUND_ROWS com.id AS comment_id,

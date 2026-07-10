@@ -109,26 +109,13 @@ if (isset($_GET['installstatus'])) {
     $installstatus = $_GET['installstatus'];
     $installstatus = is_string($installstatus) ? $installstatus : '';
 
-    switch ($installstatus) {
-        case 'ok':
-            push_languages_new_page_message('infos', l10n('Language has been successfully installed'), $page);
-            break;
-
-        case 'temp_path_error':
-            push_languages_new_page_message('errors', l10n('Can\'t create temporary file.'), $page);
-            break;
-
-        case 'dl_archive_error':
-            push_languages_new_page_message('errors', l10n('Can\'t download archive.'), $page);
-            break;
-
-        case 'archive_error':
-            push_languages_new_page_message('errors', l10n('Can\'t read or extract archive.'), $page);
-            break;
-
-        default:
-            push_languages_new_page_message('errors', l10n('An error occured during extraction (%s).', htmlspecialchars($installstatus)), $page);
-    }
+    match ($installstatus) {
+        'ok' => push_languages_new_page_message('infos', l10n('Language has been successfully installed'), $page),
+        'temp_path_error' => push_languages_new_page_message('errors', l10n('Can\'t create temporary file.'), $page),
+        'dl_archive_error' => push_languages_new_page_message('errors', l10n('Can\'t download archive.'), $page),
+        'archive_error' => push_languages_new_page_message('errors', l10n('Can\'t read or extract archive.'), $page),
+        default => push_languages_new_page_message('errors', l10n('An error occured during extraction (%s).', htmlspecialchars($installstatus)), $page),
+    };
 }
 
 // +-----------------------------------------------------------------------+

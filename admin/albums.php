@@ -90,7 +90,7 @@ SELECT id
     // string per this driver's string|null fetch convention -- filter out
     // the (never-actually-occurring) null case so downstream implode()/
     // get_subcat_ids() calls get values castable to string.
-    $category_ids = array_values(array_filter($category_ids, 'is_string'));
+    $category_ids = array_values(array_filter($category_ids, is_string(...)));
 
     if (isset($_POST['recursiveAutoOrder'])) {
         $category_ids = get_subcat_ids($category_ids);

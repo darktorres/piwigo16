@@ -679,10 +679,10 @@ $current_set = array_shift($filter_sets);
 // results or a plugin-returned replacement set), so only scalar elements
 // are ever meaningful here -- array_intersect() also requires
 // string-castable values.
-$current_set = is_array($current_set) ? array_filter($current_set, 'is_scalar') : [];
+$current_set = is_array($current_set) ? array_filter($current_set, is_scalar(...)) : [];
 foreach ($filter_sets as $set) {
     if (is_array($set)) {
-        $current_set = array_intersect($current_set, array_filter($set, 'is_scalar'));
+        $current_set = array_intersect($current_set, array_filter($set, is_scalar(...)));
     }
 }
 $page['cat_elements_id'] = empty($current_set) ? [] : $current_set;

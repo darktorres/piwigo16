@@ -467,7 +467,7 @@ function ws_session_getStatus($params, PwgServer &$service): array
 
     if (is_admin()) {
         $upload_ext_list = $conf['upload_form_all_types'] ? $conf['file_ext'] : $conf['picture_ext'];
-        $upload_ext_list = is_array($upload_ext_list) ? array_values(array_filter($upload_ext_list, 'is_string')) : [];
+        $upload_ext_list = is_array($upload_ext_list) ? array_values(array_filter($upload_ext_list, is_string(...))) : [];
 
         $res['upload_file_types'] = implode(
             ',',
@@ -726,7 +726,7 @@ SELECT
 
             $details = $output_lines[$idx]['details'];
             if (is_array($details) and isset($details['users']) and is_array($details['users'])) {
-                $details['users_string'] = implode(', ', array_filter($details['users'], 'is_string'));
+                $details['users_string'] = implode(', ', array_filter($details['users'], is_string(...)));
                 $output_lines[$idx]['details'] = $details;
             }
         }
@@ -1293,17 +1293,17 @@ SELECT
             $allwords_words = is_array($search_detail_fields['allwords'] ?? null) ? ($search_detail_fields['allwords']['words'] ?? null) : null;
 
             $tags_words = is_array($search_detail_fields['tags'] ?? null) ? ($search_detail_fields['tags']['words'] ?? null) : null;
-            $tags_words = is_array($tags_words) ? array_values(array_filter($tags_words, 'is_string')) : null;
+            $tags_words = is_array($tags_words) ? array_values(array_filter($tags_words, is_string(...))) : null;
 
             $date_posted = $search_detail_fields['date_posted'] ?? null;
 
             $cat_words = is_array($search_detail_fields['cat'] ?? null) ? ($search_detail_fields['cat']['words'] ?? null) : null;
-            $cat_words = is_array($cat_words) ? array_values(array_filter($cat_words, 'is_string')) : null;
+            $cat_words = is_array($cat_words) ? array_values(array_filter($cat_words, is_string(...))) : null;
 
             $author_words = is_array($search_detail_fields['author'] ?? null) ? ($search_detail_fields['author']['words'] ?? null) : null;
 
             $added_by = $search_detail_fields['added_by'] ?? null;
-            $added_by = is_array($added_by) ? array_values(array_filter($added_by, 'is_string')) : null;
+            $added_by = is_array($added_by) ? array_values(array_filter($added_by, is_string(...))) : null;
 
             $filetypes = $search_detail_fields['filetypes'] ?? null;
 

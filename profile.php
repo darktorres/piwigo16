@@ -69,7 +69,7 @@ SELECT ' . implode(',', $fields) . '
     }
 
     /** @var array<string, mixed> $page */
-    $page_errors = is_array($page['errors']) ? array_values(array_filter($page['errors'], 'is_string')) : [];
+    $page_errors = is_array($page['errors']) ? array_values(array_filter($page['errors'], is_string(...))) : [];
     save_profile_from_post($userdata, $page_errors);
     $page['errors'] = $page_errors;
 
@@ -457,7 +457,7 @@ function load_profile_in_template($url_action, $url_redirect, array $userdata, ?
     $has_custom = false;
     // $conf['api_key_duration'] is a plain list of day-count strings (plus
     // the literal 'custom' sentinel) -- see include/config_default.inc.php.
-    $api_key_duration = is_array($conf['api_key_duration']) ? array_filter($conf['api_key_duration'], 'is_string') : [];
+    $api_key_duration = is_array($conf['api_key_duration']) ? array_filter($conf['api_key_duration'], is_string(...)) : [];
     foreach ($api_key_duration as $day) {
         if ($day === 'custom') {
             $has_custom = true;

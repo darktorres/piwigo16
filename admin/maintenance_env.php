@@ -196,7 +196,7 @@ DELETE
 
         $derivative_type = $_GET['type'] ?? 'all';
         if (is_array($derivative_type)) {
-            $derivative_type = array_values(array_filter($derivative_type, 'is_string'));
+            $derivative_type = array_values(array_filter($derivative_type, is_string(...)));
         } elseif (! is_string($derivative_type)) {
             $derivative_type = 'all';
         }

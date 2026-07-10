@@ -44,9 +44,7 @@ if (isset($_POST['submit'])) {
     if (strlen($coi_l_str) == 0) {
         $query .= ' SET coi=NULL';
     } else {
-        $to_fraction = static function (mixed $v): float {
-            return is_numeric($v) ? (float) $v : 0.0;
-        };
+        $to_fraction = (static fn (mixed $v): float => is_numeric($v) ? (float) $v : 0.0);
 
         $coi = fraction_to_char($to_fraction($coi_l))
           . fraction_to_char($to_fraction($_POST['t'] ?? null))

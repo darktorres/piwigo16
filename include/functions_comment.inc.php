@@ -71,7 +71,7 @@ function user_comment_check($action, array $comment)
  * @param array<int, string> $infos output array of error messages
  * @return string validate, moderate, reject
  */
-function insert_user_comment(&$comm, $key, &$infos)
+function insert_user_comment(&$comm, $key, &$infos): string
 {
     /**
      * @var array<string, mixed> $conf
@@ -351,7 +351,7 @@ $user_where_clause . '
  * @param string $post_key secret key sent back to the browser
  * @return string validate, moderate, reject
  */
-function update_user_comment(array $comment, $post_key)
+function update_user_comment(array $comment, $post_key): string
 {
     /**
      * @var array<string, mixed> $conf
@@ -507,7 +507,7 @@ function email_admin($action, array $comment): void
  * @param bool $die_on_error
  * @return int|false false if $die_on_error is false and the comment doesn't exist
  */
-function get_comment_author_id($comment_id, $die_on_error = true)
+function get_comment_author_id($comment_id, $die_on_error = true): false|int
 {
     $query = '
 SELECT

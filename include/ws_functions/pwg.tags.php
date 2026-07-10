@@ -120,7 +120,7 @@ function ws_tags_getImages(array $params, PwgServer &$service): array
     // Cast to int at the source (not just at each read site) so
     // array_flip($image_ids) below produces int keys matching $row_id's
     // (int) cast, instead of leaving PHPStan-only string keys.
-    $image_ids = array_values(array_map(intval(...), array_filter($image_ids, 'is_numeric')));
+    $image_ids = array_values(array_map(intval(...), array_filter($image_ids, is_numeric(...))));
 
     $count_set = count($image_ids);
     $image_ids = array_slice($image_ids, $params['per_page'] * $params['page'], $params['per_page']);
@@ -454,7 +454,7 @@ SELECT image_id
   WHERE tag_id = ' . $tag_id . '
 ;';
     $destination_tag_image_ids = array_from_query($query, 'image_id');
-    $destination_tag_image_ids = array_values(array_filter($destination_tag_image_ids, 'is_string'));
+    $destination_tag_image_ids = array_values(array_filter($destination_tag_image_ids, is_string(...)));
 
     $inserts = [];
 
@@ -540,7 +540,7 @@ SELECT image_id
     $image_in_dest = query2array($query, null, 'image_id');
 
     $image_to_add = array_diff($image_in_merge_tags, $image_in_dest);
-    $image_to_add = array_values(array_filter($image_to_add, 'is_string'));
+    $image_to_add = array_values(array_filter($image_to_add, is_string(...)));
 
     $inserts = [];
     foreach ($image_to_add as $image) {

@@ -468,10 +468,9 @@ class Template
      * This is equivalent to assign($varname, $this->parse($handle, true)).
      *
      * @param string $varname
-     * @param string $handle
      * @return true
      */
-    public function assign_var_from_handle($varname, $handle): bool
+    public function assign_var_from_handle($varname, string $handle): bool
     {
         $this->assign($varname, $this->parse($handle, true));
         return true;
@@ -569,10 +568,8 @@ class Template
     /**
      * Loads the template file of the handle, compiles it and appends the result to the output,
      * then sends the output to the browser.
-     *
-     * @param string $handle
      */
-    public function pparse($handle): void
+    public function pparse(string $handle): void
     {
         $this->parse($handle, false);
         $this->flush();

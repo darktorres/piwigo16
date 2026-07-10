@@ -121,7 +121,7 @@ WHERE ';
     date_available >= ' . pwg_db_get_recent_period_expression($filter_recent_period);
 
         $visible_image_ids = array_from_query($query, 'image_id');
-        $filter['visible_images'] = implode(',', array_filter($visible_image_ids, 'is_string'));
+        $filter['visible_images'] = implode(',', array_filter($visible_image_ids, is_string(...)));
 
         if (empty($filter['visible_images'])) {
             // Must be not empty

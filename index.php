@@ -262,7 +262,7 @@ if (empty($page['is_external'])) {
 
         include_once PHPWG_ROOT_PATH . 'include/selected_tags.inc.php';
 
-        $body_data_tag_ids = array_values(array_filter($page['body_data']['tag_ids'], 'is_scalar'));
+        $body_data_tag_ids = array_values(array_filter($page['body_data']['tag_ids'], is_scalar(...)));
 
         $template->assign(
             [
@@ -296,10 +296,10 @@ if (empty($page['is_external'])) {
         $matching_cats = [];
         if (is_array($page['qsearch_details'])) {
             if (is_array($page['qsearch_details']['matching_cats_no_images'] ?? null)) {
-                $matching_cats_no_images = array_values(array_filter($page['qsearch_details']['matching_cats_no_images'], 'is_array'));
+                $matching_cats_no_images = array_values(array_filter($page['qsearch_details']['matching_cats_no_images'], is_array(...)));
             }
             if (is_array($page['qsearch_details']['matching_cats'] ?? null)) {
-                $matching_cats = array_values(array_filter($page['qsearch_details']['matching_cats'], 'is_array'));
+                $matching_cats = array_values(array_filter($page['qsearch_details']['matching_cats'], is_array(...)));
             }
         }
         /**
@@ -318,7 +318,7 @@ if (empty($page['is_external'])) {
 
         $matching_tags = [];
         if (is_array($page['qsearch_details']) and is_array($page['qsearch_details']['matching_tags'] ?? null)) {
-            $matching_tags = array_values(array_filter($page['qsearch_details']['matching_tags'], 'is_array'));
+            $matching_tags = array_values(array_filter($page['qsearch_details']['matching_tags'], is_array(...)));
         }
         /** @var array<int, array<string, mixed>> $matching_tags */
         foreach ($matching_tags as $tag) {
@@ -335,7 +335,7 @@ if (empty($page['is_external'])) {
             $unmatched_terms = is_array($page['qsearch_details']) ? ($page['qsearch_details']['unmatched_terms'] ?? null) : null;
             if (is_array($unmatched_terms) && $unmatched_terms !== []) {
                 /** @var list<string> $unmatched_terms */
-                $unmatched_terms = array_values(array_filter($unmatched_terms, 'is_string'));
+                $unmatched_terms = array_values(array_filter($unmatched_terms, is_string(...)));
                 $template->assign('no_search_results', array_map(htmlspecialchars(...), $unmatched_terms));
             }
         }

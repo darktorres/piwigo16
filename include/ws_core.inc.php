@@ -373,7 +373,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
             // (strings); array_filter() proves that to PHPStan since the
             // declared type also allows the array<string, mixed> options-map
             // form, whose values aren't guaranteed int|string.
-            $params = array_flip(array_filter($params, 'is_string'));
+            $params = array_flip(array_filter($params, is_string(...)));
         }
 
         $signature = [];

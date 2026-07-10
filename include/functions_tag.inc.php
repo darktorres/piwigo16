@@ -11,10 +11,8 @@ declare(strict_types=1);
 
 /**
  * Returns the number of available tags for the connected user.
- *
- * @return int
  */
-function get_nb_available_tags()
+function get_nb_available_tags(): int
 {
     /** @var array<string, mixed> $user */
     global $user;
@@ -164,7 +162,7 @@ SELECT *
  * @param array<int, array<string, mixed>> $tags at least [id, counter]
  * @return array<int, array<string, mixed>> [..., level]
  */
-function add_level_to_tags($tags)
+function add_level_to_tags($tags): array
 {
     /** @var array<string, mixed> $conf */
     global $conf;

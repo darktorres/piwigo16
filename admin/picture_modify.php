@@ -151,7 +151,7 @@ if (isset($_POST['submit'])) {
     $raw_tags_post = $_POST['tags'] ?? null;
     if (! empty($raw_tags_post)) {
         if (is_array($raw_tags_post)) {
-            $tag_ids = get_tag_ids(array_filter($raw_tags_post, 'is_string'));
+            $tag_ids = get_tag_ids(array_filter($raw_tags_post, is_string(...)));
         } elseif (is_string($raw_tags_post)) {
             $tag_ids = get_tag_ids($raw_tags_post);
         }
@@ -467,7 +467,7 @@ SELECT category_id
     // array_from_query() is deprecated and returns array<int|string, mixed>;
     // query2array() is its typed replacement, giving list<string|null> here
     // since only the 'category_id' column is selected.
-    $authorized_category_ids = array_filter(query2array($query, null, 'category_id'), 'is_string');
+    $authorized_category_ids = array_filter(query2array($query, null, 'category_id'), is_string(...));
 
     $authorizeds = array_diff(
         $authorized_category_ids,

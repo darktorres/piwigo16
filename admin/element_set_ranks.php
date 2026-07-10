@@ -65,7 +65,7 @@ $image_order_choice = 'default';
 
 if (isset($_POST['submit'])) {
     if (isset($_POST['rank_of_image']) && is_array($_POST['rank_of_image'])) {
-        $rank_of_image = array_filter($_POST['rank_of_image'], 'is_numeric');
+        $rank_of_image = array_filter($_POST['rank_of_image'], is_numeric(...));
         asort($rank_of_image, SORT_NUMERIC);
 
         save_images_order(

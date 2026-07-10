@@ -19,12 +19,12 @@ class LocalSiteReader
         global $conf;
         if (! isset($conf['flip_file_ext'])) {
             $file_ext = $conf['file_ext'];
-            $file_ext = is_array($file_ext) ? array_filter($file_ext, 'is_string') : [];
+            $file_ext = is_array($file_ext) ? array_filter($file_ext, is_string(...)) : [];
             $conf['flip_file_ext'] = array_flip($file_ext);
         }
         if (! isset($conf['flip_picture_ext'])) {
             $picture_ext = $conf['picture_ext'];
-            $picture_ext = is_array($picture_ext) ? array_filter($picture_ext, 'is_string') : [];
+            $picture_ext = is_array($picture_ext) ? array_filter($picture_ext, is_string(...)) : [];
             $conf['flip_picture_ext'] = array_flip($picture_ext);
         }
     }
@@ -185,7 +185,7 @@ class LocalSiteReader
         global $conf;
         $base_test = $path . '/pwg_representative/' . $filename_wo_ext . '.';
         $picture_ext = $conf['picture_ext'];
-        $picture_ext = is_array($picture_ext) ? array_filter($picture_ext, 'is_string') : [];
+        $picture_ext = is_array($picture_ext) ? array_filter($picture_ext, is_string(...)) : [];
         foreach ($picture_ext as $ext) {
             $test = $base_test . $ext;
             if (is_file($test)) {
@@ -208,7 +208,7 @@ class LocalSiteReader
         $base_test = $path . '/pwg_format/' . $filename_wo_ext . '.';
 
         $format_ext = $conf['format_ext'];
-        $format_ext = is_array($format_ext) ? array_filter($format_ext, 'is_string') : [];
+        $format_ext = is_array($format_ext) ? array_filter($format_ext, is_string(...)) : [];
 
         foreach ($format_ext as $ext) {
             $test = $base_test . $ext;

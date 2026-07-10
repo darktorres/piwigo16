@@ -529,7 +529,7 @@ SELECT
     // $protected_users' own entries are still `mixed` even after typing
     // $conf/$user above, so filter down to scalars (int/string) before
     // diffing.
-    $protected_users = array_filter($protected_users, 'is_scalar');
+    $protected_users = array_filter($protected_users, is_scalar(...));
     $params['user_id'] = array_diff($params['user_id'], $protected_users);
 
     $counter = 0;

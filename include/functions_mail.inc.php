@@ -17,10 +17,8 @@ use Symfony\Component\Mime\Email;
 
 /**
  * Returns the name of the mail sender
- *
- * @return string
  */
-function get_mail_sender_name()
+function get_mail_sender_name(): string
 {
     /** @var array<string, mixed> $conf */
     global $conf;
@@ -35,9 +33,8 @@ function get_mail_sender_name()
  * Returns the email of the mail sender
  *
  * @since 2.6
- * @return string
  */
-function get_mail_sender_email()
+function get_mail_sender_email(): string
 {
     /** @var array<string, mixed> $conf */
     global $conf;

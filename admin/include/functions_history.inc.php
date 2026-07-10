@@ -76,7 +76,7 @@ SELECT
   FROM ' . IMAGES_TABLE . '
   WHERE file LIKE \'' . $filename . '\'
 ;';
-        $image_ids = array_filter(array_from_query($query, 'id'), 'is_string');
+        $image_ids = array_filter(array_from_query($query, 'id'), is_string(...));
     }
 
     // echo '<pre>'; print_r($search); echo '</pre>';
@@ -92,7 +92,7 @@ SELECT
     }
 
     if (isset($fields['types']) and is_array($fields['types'])) {
-        $search_types = array_filter($fields['types'], 'is_string');
+        $search_types = array_filter($fields['types'], is_string(...));
         $local_clauses = [];
 
         foreach ($types as $type) {
@@ -465,7 +465,7 @@ SELECT
 
     $history_id_delete_before = min($search_min);
 
-    $logger->debug(__FUNCTION__ . ', ' . join('/', array_map('strval', $search_min)));
+    $logger->debug(__FUNCTION__ . ', ' . join('/', array_map(strval(...), $search_min)));
 
     $query = '
 DELETE

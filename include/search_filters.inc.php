@@ -42,7 +42,7 @@ if (! is_array($filters_views_raw)) {
 // arrays by name, so drop the flag here to give $filters_views a uniform,
 // narrow shape.
 /** @var array<string, array<string, mixed>> $filters_views */
-$filters_views = array_filter($filters_views_raw, 'is_array');
+$filters_views = array_filter($filters_views_raw, is_array(...));
 
 $template->assign('display_filter', $filters_views);
 
@@ -104,7 +104,7 @@ if ($page['section'] == 'search' and isset($page['search_details']) and is_array
         $search_items = [-1];
         if (! empty($page['items']) && is_array($page['items'])) {
             /** @var list<int|string|float|bool> $search_items */
-            $search_items = array_values(array_filter($page['items'], 'is_scalar'));
+            $search_items = array_values(array_filter($page['items'], is_scalar(...)));
         }
 
         $search_items_clause = 'image_id IN (' . implode(',', $search_items) . ')';
@@ -1048,7 +1048,7 @@ SELECT
         if (is_array($matching_cat_ids)) {
             // shape from get_search_info(): list<string|null>; keep only real ids.
             /** @var list<string> $cat_ids */
-            $cat_ids = array_values(array_filter($matching_cat_ids, 'is_string'));
+            $cat_ids = array_values(array_filter($matching_cat_ids, is_string(...)));
             if (count($cat_ids) > 0) {
                 $query = '
 SELECT
@@ -1082,7 +1082,7 @@ SELECT
         if (is_array($matching_tag_ids)) {
             // shape from get_search_info(): list<string|null>; keep only real ids.
             /** @var list<string> $tag_ids */
-            $tag_ids = array_values(array_filter($matching_tag_ids, 'is_string'));
+            $tag_ids = array_values(array_filter($matching_tag_ids, is_string(...)));
 
             if (count($tag_ids) > 0) {
                 $tags = get_available_tags($tag_ids);

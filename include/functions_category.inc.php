@@ -237,7 +237,7 @@ SELECT *
  *
  * @return array<int, array{0: string, 1: string, 2: bool}>
  */
-function get_category_preferred_image_orders()
+function get_category_preferred_image_orders(): array
 {
     /** @var array<string, mixed> $conf */
     global $conf, $page;
@@ -374,8 +374,8 @@ SELECT DISTINCT(id)
     $row_ids = query2array($query, null, 'id');
 
     return array_values(array_map(
-        static fn ($id): int => (int) $id,
-        array_filter($row_ids, static fn ($id): bool => is_numeric($id))
+        static fn (string $id): int => (int) $id,
+        array_filter($row_ids, is_numeric(...))
     ));
 }
 
@@ -384,9 +384,8 @@ SELECT DISTINCT(id)
  *
  * @param string[] $permalinks
  * @param int $idx filled with the index in $permalinks that matches
- * @return int|null
  */
-function get_cat_id_from_permalinks(array $permalinks, &$idx)
+function get_cat_id_from_permalinks(array $permalinks, &$idx): ?int
 {
     $in = '';
     foreach ($permalinks as $permalink) {
@@ -471,9 +470,8 @@ function get_display_images_count($cat_nb_images, $cat_count_images, $cat_count_
  *
  * @param array<string, mixed> $category (at least id,uppercats,count_images)
  * @param bool $recursive
- * @return int|null
  */
-function get_random_image_in_category(array $category, $recursive = true)
+function get_random_image_in_category(array $category, $recursive = true): ?int
 {
     $image_id = null;
     if ($category['count_images'] > 0) {
@@ -729,8 +727,8 @@ SELECT id
     $ids = query2array($query, null, 'id');
 
     return array_values(array_map(
-        static fn ($id): int => (int) $id,
-        array_filter($ids, static fn ($id): bool => is_numeric($id))
+        static fn (string $id): int => (int) $id,
+        array_filter($ids, is_numeric(...))
     ));
 }
 

@@ -93,8 +93,8 @@ function encode_slideshow_params(array $decode_params = []): string
     // scalar values (period/repeat as int|numeric-string, play and the
     // regex-matched flags as bool|string); filter defensively so
     // array_diff_assoc() only ever compares string-castable values.
-    $corrected = array_filter(correct_slideshow_params($decode_params), 'is_scalar');
-    $defaults = array_filter(get_default_slideshow_params(), 'is_scalar');
+    $corrected = array_filter(correct_slideshow_params($decode_params), is_scalar(...));
+    $defaults = array_filter(get_default_slideshow_params(), is_scalar(...));
     $params = array_diff_assoc($corrected, $defaults);
     $result = '';
 

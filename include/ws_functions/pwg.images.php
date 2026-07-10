@@ -84,7 +84,7 @@ SELECT id
 ;';
     // $value_name is given, so every element is a single 'id' column value
     // (string|null), never the nested-row array branch.
-    $db_cat_ids = array_map(static fn ($v) => is_string($v) ? $v : '', query2array($query, null, 'id'));
+    $db_cat_ids = array_map(static fn (?string $v): string => is_string($v) ? $v : '', query2array($query, null, 'id'));
 
     $unknown_cat_ids = array_diff($cat_ids, $db_cat_ids);
     if (count($unknown_cat_ids) != 0) {
@@ -104,7 +104,7 @@ SELECT category_id
 ;';
     // $value_name is given, so every element is a single 'category_id'
     // column value (string|null), never the nested-row array branch.
-    $existing_cat_ids = array_map(static fn ($v) => is_string($v) ? $v : '', query2array($query, null, 'category_id'));
+    $existing_cat_ids = array_map(static fn (?string $v): string => is_string($v) ? $v : '', query2array($query, null, 'category_id'));
 
     if ($replace_mode) {
         $to_remove_cat_ids = array_diff($existing_cat_ids, $cat_ids);
@@ -652,7 +652,7 @@ SELECT DISTINCT id
         /** @var array<string, mixed> $conf */
         global $conf;
         $rate_items = $conf['rate_items'];
-        $rate_items = is_array($rate_items) ? array_filter($rate_items, 'is_scalar') : [];
+        $rate_items = is_array($rate_items) ? array_filter($rate_items, is_scalar(...)) : [];
         return new PwgError(403, 'Forbidden or rate not in ' . implode(',', $rate_items));
     }
     return $res;
@@ -1705,7 +1705,7 @@ function ws_images_upload(array $params, PwgServer $service): \PwgError|array|nu
         }
 
         $format_ext_list = $conf['format_ext'];
-        $format_ext_list = is_array($format_ext_list) ? array_filter($format_ext_list, 'is_string') : [];
+        $format_ext_list = is_array($format_ext_list) ? array_filter($format_ext_list, is_string(...)) : [];
 
         // We must check if the extension is in the authorized list.
         if (preg_match('/\.(' . implode('|', $format_ext_list) . ')$/', (string) $params['name'], $matches)) {
@@ -2302,7 +2302,7 @@ SELECT
     // mutated the request-local config copy anyway, since $conf is reloaded
     // from scratch on every request)
     $format_ext_list = $conf['format_ext'];
-    $format_ext_list = is_array($format_ext_list) ? array_values(array_filter($format_ext_list, 'is_string')) : [];
+    $format_ext_list = is_array($format_ext_list) ? array_values(array_filter($format_ext_list, is_string(...))) : [];
     usort($format_ext_list, static fn (string $a, string $b): int => strlen($b) - strlen($a));
 
     $query = '
@@ -2703,7 +2703,7 @@ SELECT *
 
         // pwg_db_real_escape_string() only returns null for a null input,
         // and every element pushed above is already a string.
-        $tag_list = get_tag_ids(array_filter($cleaned_tag_list, 'is_string'));
+        $tag_list = get_tag_ids(array_filter($cleaned_tag_list, is_string(...)));
         set_tags($tag_list, $params['image_id']);
     }
 

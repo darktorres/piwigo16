@@ -183,10 +183,10 @@ function get_regular_search_results(array $search, string $images_where = ''): a
     //
     $allwords_field = $search_fields['allwords'] ?? null;
     $allwords_words = is_array($allwords_field) && is_array($allwords_field['words'] ?? null)
-        ? array_values(array_filter($allwords_field['words'], 'is_string'))
+        ? array_values(array_filter($allwords_field['words'], is_string(...)))
         : [];
     $allwords_search_fields = is_array($allwords_field) && is_array($allwords_field['fields'] ?? null)
-        ? array_values(array_filter($allwords_field['fields'], 'is_string'))
+        ? array_values(array_filter($allwords_field['fields'], is_string(...)))
         : [];
     if (isset($search_fields['allwords']) and count($allwords_words) > 0 and count($allwords_search_fields) > 0 and ($display_filters['words']['access'] ?? false)) {
         $has_filters_filled = true;
@@ -350,7 +350,7 @@ SELECT
     //
     $author_field = $search_fields['author'] ?? null;
     $author_words = is_array($author_field) && is_array($author_field['words'] ?? null)
-        ? array_values(array_filter($author_field['words'], 'is_string'))
+        ? array_values(array_filter($author_field['words'], is_string(...)))
         : [];
     if (isset($search_fields['author']) and count($author_words) > 0 and ($display_filters['author']['access'] ?? false)) {
         $has_filters_filled = true;
@@ -375,7 +375,7 @@ SELECT
     // filetypes
     //
     $filetypes_field = $search_fields['filetypes'] ?? null;
-    $filetypes = is_array($filetypes_field) ? array_values(array_filter($filetypes_field, 'is_string')) : [];
+    $filetypes = is_array($filetypes_field) ? array_values(array_filter($filetypes_field, is_string(...))) : [];
     if (count($filetypes) > 0 and ($display_filters['file_type']['access'] ?? false)) {
         $has_filters_filled = true;
 
@@ -399,7 +399,7 @@ SELECT
     // added_by
     //
     $added_by_field = $search_fields['added_by'] ?? null;
-    $added_by_ids = is_array($added_by_field) ? array_values(array_filter($added_by_field, 'is_string')) : [];
+    $added_by_ids = is_array($added_by_field) ? array_values(array_filter($added_by_field, is_string(...))) : [];
     if (count($added_by_ids) > 0 and ($display_filters['added_by']['access'] ?? false)) {
         $has_filters_filled = true;
 
@@ -632,7 +632,7 @@ SELECT
     // ratios
     //
     $ratios_field = $search_fields['ratios'] ?? null;
-    $ratios = is_array($ratios_field) ? array_values(array_filter($ratios_field, 'is_string')) : [];
+    $ratios = is_array($ratios_field) ? array_values(array_filter($ratios_field, is_string(...))) : [];
     if (count($ratios) > 0 and ($display_filters['ratio']['access'] ?? false)) {
         $has_filters_filled = true;
 
@@ -665,7 +665,7 @@ SELECT
     // ratings
     //
     $ratings_field = $search_fields['ratings'] ?? null;
-    $ratings = is_array($ratings_field) ? array_values(array_filter($ratings_field, 'is_string')) : [];
+    $ratings = is_array($ratings_field) ? array_values(array_filter($ratings_field, is_string(...))) : [];
     if ($conf['rate'] and count($ratings) > 0 and ($display_filters['rating']['access'] ?? false)) {
         $has_filters_filled = true;
 
@@ -880,7 +880,7 @@ function get_clause_for_filter(string $filter_name): string
  *
  * @return array<int, mixed>|false array of image_ids, or false
  */
-function get_items_for_filter(string $filter_name)
+function get_items_for_filter(string $filter_name): false|array
 {
     /**
      * @var array<string, mixed> $page
@@ -1824,7 +1824,7 @@ function qsearch_get_images(QExpression $expr, QResults $qsr): void
             default:
                 // allow plugins to have their own scope with columns added in db by themselves
                 $clauses_after_hook = trigger_change('qsearch_get_images_sql_scopes', $clauses, $token, $expr);
-                $clauses = is_array($clauses_after_hook) ? array_values(array_filter($clauses_after_hook, 'is_string')) : $clauses;
+                $clauses = is_array($clauses_after_hook) ? array_values(array_filter($clauses_after_hook, is_string(...))) : $clauses;
                 break;
         }
         if (! empty($clauses)) {
@@ -2104,7 +2104,7 @@ function qsearch_eval(QMultiToken $expr, QResults $qsr, bool &$qualifies, array 
  * @param array<string, mixed> $options
  * @return array<string, mixed>
  */
-function get_quick_search_results(string $q, array $options)
+function get_quick_search_results(string $q, array $options): array
 {
     /**
      * @var \PersistentFileCache $persistent_cache

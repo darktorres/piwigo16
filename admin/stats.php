@@ -412,7 +412,7 @@ $template->assign([
     'lastMonths' => $last_months,
     'lastYears' => $last_years,
     'langCode' => strval($user_language),
-    'month_labels' => join('~', array_filter($lang_month, 'is_string')),
+    'month_labels' => join('~', array_filter($lang_month, is_string(...))),
     'ADMIN_PAGE_TITLE' => l10n('History'),
 ]);
 

@@ -55,7 +55,7 @@ while ($row = pwg_db_fetch_assoc($result)) {
 
 $rate_items_raw = $conf['rate_items'];
 /** @var list<int> $rate_items */
-$rate_items = is_array($rate_items_raw) ? array_map(intval(...), array_filter($rate_items_raw, 'is_numeric')) : [];
+$rate_items = is_array($rate_items_raw) ? array_map(intval(...), array_filter($rate_items_raw, is_numeric(...))) : [];
 
 $by_user_rating_model = [
     'rates' => [],
@@ -144,7 +144,7 @@ $query = 'SELECT id
 // single-column mode); filter to numeric strings and cast to int (matching
 // how $id_date['id'] -- this array's lookup key below -- is always a real
 // int) before array_flip().
-$best_rated = array_flip(array_map(intval(...), array_filter(array_from_query($query, 'id'), 'is_numeric')));
+$best_rated = array_flip(array_map(intval(...), array_filter(array_from_query($query, 'id'), is_numeric(...))));
 
 // by user stats
 foreach ($by_user_ratings as $id => &$rating) {

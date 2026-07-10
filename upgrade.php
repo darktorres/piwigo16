@@ -258,7 +258,7 @@ if ($has_remote_site) {
     // updates::upgrade_to() mutates $page['errors'] from its own function
     // scope via global $page -- static analysis can't trace that, so
     // re-narrow here rather than trust the pre-call [] assignment.
-    $upgrade_errors = is_array($page['errors']) ? array_filter($page['errors'], 'is_string') : [];
+    $upgrade_errors = is_array($page['errors']) ? array_filter($page['errors'], is_string(...)) : [];
     if (! empty($upgrade_errors)) {
         echo '<ul>';
         foreach ($upgrade_errors as $error) {
@@ -388,7 +388,7 @@ if ((isset($_POST['submit']) or isset($_GET['now']))
         // (e.g. upgrade_1.3.1.php) only ever push PHP source-code strings,
         // but get_defined_vars() itself returns array<string, mixed>.
         $mysql_changes_raw = $included_vars['mysql_changes'] ?? null;
-        $mysql_changes = is_array($mysql_changes_raw) ? array_filter($mysql_changes_raw, 'is_string') : [];
+        $mysql_changes = is_array($mysql_changes_raw) ? array_filter($mysql_changes_raw, is_string(...)) : [];
 
         conf_update_param('piwigo_db_version', get_branch_from_version(PHPWG_VERSION));
 

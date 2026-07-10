@@ -152,8 +152,8 @@ class check_integrity
             }
         }
 
-        $scalar_ignore_list = array_filter($this->ignore_list, 'is_scalar');
-        $scalar_build_ignore_list = array_filter($this->build_ignore_list, 'is_scalar');
+        $scalar_ignore_list = array_filter($this->ignore_list, is_scalar(...));
+        $scalar_build_ignore_list = array_filter($this->build_ignore_list, is_scalar(...));
         $ignore_list_changed =
           (
               ($ignore_list_changed) or

@@ -38,10 +38,10 @@ if (! empty($_POST)) {
 // are arrays of digit-only strings, but that guarantee isn't visible to
 // static analysis across the call; re-derive real array types here.
 $cat_true = isset($_POST['cat_true']) && is_array($_POST['cat_true'])
-    ? array_filter($_POST['cat_true'], 'is_string')
+    ? array_filter($_POST['cat_true'], is_string(...))
     : [];
 $cat_false = isset($_POST['cat_false']) && is_array($_POST['cat_false'])
-    ? array_map('intval', array_filter($_POST['cat_false'], 'is_numeric'))
+    ? array_map(intval(...), array_filter($_POST['cat_false'], is_numeric(...)))
     : [];
 
 // +-----------------------------------------------------------------------+

@@ -77,7 +77,7 @@ $template->assign(
 $upload_extensions = $conf['upload_form_all_types'] ? $conf['file_ext'] : $conf['picture_ext'];
 // $conf values are inherently mixed; only string elements can safely
 // be passed to strtolower() below.
-$upload_extensions = is_array($upload_extensions) ? array_filter($upload_extensions, 'is_string') : [];
+$upload_extensions = is_array($upload_extensions) ? array_filter($upload_extensions, is_string(...)) : [];
 $unique_exts = array_unique(array_map(strtolower(...), $upload_extensions));
 
 $template->assign(

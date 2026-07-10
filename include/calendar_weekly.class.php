@@ -40,7 +40,7 @@ class CalendarWeekly extends CalendarBase
         // string values to match CalendarBase::$calendar_levels' declared
         // element shape (array<int|string, string>|null) instead of a bare
         // mixed cast.
-        $day_labels = is_array($lang['day']) ? array_filter($lang['day'], 'is_string') : null;
+        $day_labels = is_array($lang['day']) ? array_filter($lang['day'], is_string(...)) : null;
 
         $this->calendar_levels = [
             [

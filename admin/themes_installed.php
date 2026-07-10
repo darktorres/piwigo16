@@ -138,7 +138,7 @@ foreach ($themes->fs_themes as $theme_id => $fs_theme) {
 
             $tpl_theme['DELETE_TOOLTIP'] = l10n(
                 'Impossible to delete this theme. Other themes depends on it: %s',
-                implode(', ', array_filter($children, 'is_string'))
+                implode(', ', array_filter($children, is_string(...)))
             );
         }
     }

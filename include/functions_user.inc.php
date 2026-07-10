@@ -772,9 +772,8 @@ SELECT id
  * Returns user identifier thanks to his name.
  *
  * @param string $username
- * @return int|false
  */
-function get_userid($username)
+function get_userid($username): false|int
 {
     /** @var array<string, mixed> $conf */
     global $conf;
@@ -809,9 +808,8 @@ SELECT ' . $user_fields['id'] . '
  * Returns user identifier thanks to his email.
  *
  * @param string $email
- * @return int|false
  */
-function get_userid_by_email($email)
+function get_userid_by_email($email): false|int
 {
     /** @var array<string, mixed> $conf */
     global $conf;
@@ -907,7 +905,8 @@ SELECT *
         }
         unset($value);
         return $default_user;
-    } elseif (is_array($default_user_cached)) {
+    }
+    if (is_array($default_user_cached)) {
         // user_infos columns are always string keys
         /** @var array<string, mixed> $default_user_cached */
         return $default_user_cached;
@@ -954,10 +953,8 @@ function get_default_theme(): string
 
 /**
  * Returns the default language.
- *
- * @return string
  */
-function get_default_language()
+function get_default_language(): string
 {
     $language = get_default_user_value('language', PHPWG_DEFAULT_LANGUAGE);
     return is_string($language) ? $language : PHPWG_DEFAULT_LANGUAGE;
@@ -1312,7 +1309,7 @@ function pwg_phpass_verify_legacy(
     #[\SensitiveParameter]
     $hash
 ) {
-    /** @var string $itoa64 */
+    /** @var string */
     static $itoa64 = './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 
     if (strlen($password) > 4096 or strlen($hash) != 34) {
@@ -1453,9 +1450,8 @@ function pwg_password_verify(
  *   $_POST, ws_session_login()'s optional WS param) can genuinely pass
  *   null when the field is omitted
  * @param bool $remember_me
- * @return bool
  */
-function try_log_user($username, $password, $remember_me)
+function try_log_user($username, $password, $remember_me): bool
 {
     $result = trigger_change('try_log_user', false, $username, $password, $remember_me);
     // trigger_change()'s own return type is mixed; the only registered
@@ -1631,7 +1627,7 @@ FROM ' . USERS_TABLE . ' AS u
  * @since 16
  * @return array{id: null, password: string} id and password
  */
-function generate_fake_user()
+function generate_fake_user(): array
 {
     // Generate once per session to avoid repeated hashing overhead.
     // Uses current password_hash algorithm to match real user verification costs.
@@ -2656,7 +2652,7 @@ SELECT
                 $conf['guest_id'],
                 $conf['webmaster_id'],
             ],
-            'is_scalar'
+            is_scalar(...)
         );
 
         // an admin can't change status of other admin/webmaster
@@ -2672,7 +2668,7 @@ SELECT
 
         // status update query is separated from the rest as not applying to the same
         // set of users (current, guest and webmaster can't be changed)
-        $user_ids_for_status = array_diff($user_ids, array_filter($protected_users, 'is_scalar'));
+        $user_ids_for_status = array_diff($user_ids, array_filter($protected_users, is_scalar(...)));
 
         $status_param = $params['status'];
         assert(is_string($status_param));
@@ -3186,10 +3182,9 @@ function generate_user_code(): array
  * Verify user code
  *
  * @since 16
- * @param string $secret
  * @param string $code
  */
-function verify_user_code($secret, $code): bool
+function verify_user_code(string $secret, $code): bool
 {
     /** @var array<string, mixed> $conf */
     global $conf;

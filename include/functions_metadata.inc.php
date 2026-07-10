@@ -65,9 +65,8 @@ function get_iptc_data($filename, $map, string $array_sep = ','): array
  * return a cleaned IPTC value.
  *
  * @param string $value
- * @return string
  */
-function clean_iptc_value($value)
+function clean_iptc_value($value): string
 {
     // strip leading zeros (weird Kodak Scanner software)
     while (isset($value[0]) and $value[0] == chr(0)) {
@@ -171,8 +170,8 @@ function get_exif_data($filename, $map): array
                 is_array($lat_raw) and is_string($lat_ref) and in_array($lat_ref, ['S', 'N']) and
                 is_array($lon_raw) and is_string($lon_ref) and in_array($lon_ref, ['W', 'E'])
             ) {
-                $lat_raw = array_filter($lat_raw, 'is_string');
-                $lon_raw = array_filter($lon_raw, 'is_string');
+                $lat_raw = array_filter($lat_raw, is_string(...));
+                $lon_raw = array_filter($lon_raw, is_string(...));
 
                 $latitude = parse_exif_gps_data($lat_raw, $lat_ref);
                 $longitude = parse_exif_gps_data($lon_raw, $lon_ref);

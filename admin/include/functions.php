@@ -593,7 +593,7 @@ function get_fs_directories(string $path, bool $recursive = true): array
 
     $sync_exclude_folders = $conf['sync_exclude_folders'];
     $sync_exclude_folders = is_array($sync_exclude_folders)
-        ? array_filter($sync_exclude_folders, 'is_string')
+        ? array_filter($sync_exclude_folders, is_string(...))
         : [];
 
     $exclude_folders = array_merge(
@@ -1140,12 +1140,12 @@ function get_fs($path, $recursive = true)
     // because isset is faster than in_array...
     if (! isset($conf['flip_picture_ext'])) {
         $picture_ext = $conf['picture_ext'];
-        $picture_ext = is_array($picture_ext) ? array_filter($picture_ext, 'is_string') : [];
+        $picture_ext = is_array($picture_ext) ? array_filter($picture_ext, is_string(...)) : [];
         $conf['flip_picture_ext'] = array_flip($picture_ext);
     }
     if (! isset($conf['flip_file_ext'])) {
         $file_ext = $conf['file_ext'];
-        $file_ext = is_array($file_ext) ? array_filter($file_ext, 'is_string') : [];
+        $file_ext = is_array($file_ext) ? array_filter($file_ext, is_string(...)) : [];
         $conf['flip_file_ext'] = array_flip($file_ext);
     }
 
@@ -1763,7 +1763,7 @@ SELECT id
         if (count($existing_tags = query2array($query, null, 'id')) == 0) {
             // search by extended description (plugin sub name)
             $sub_name_where = trigger_change('get_tag_name_like_where', [], $tag_name);
-            $sub_name_where = is_array($sub_name_where) ? array_filter($sub_name_where, 'is_string') : [];
+            $sub_name_where = is_array($sub_name_where) ? array_filter($sub_name_where, is_string(...)) : [];
             if (count($sub_name_where)) {
                 $query = '
 SELECT id
@@ -2437,7 +2437,7 @@ function cat_admin_access($category_id): bool
  */
 function pwg_http_client()
 {
-    /** @var \Symfony\Contracts\HttpClient\HttpClientInterface|null $client */
+    /** @var \Symfony\Contracts\HttpClient\HttpClientInterface|null */
     static $client = null;
     if ($client === null) {
         $client = \Symfony\Component\HttpClient\HttpClient::create();
@@ -2543,9 +2543,8 @@ function fetchRemote($src, &$dest, $get_data = [], $post_data = [], $user_agent 
  * Returns the groupname corresponding to the given group identifier if exists.
  *
  * @param int $group_id
- * @return string|false
  */
-function get_groupname($group_id)
+function get_groupname($group_id): false|string
 {
     $query = '
 SELECT name
@@ -2685,9 +2684,8 @@ function get_old_newsletters_base_url($language = 'en_UK'): string
  * Return admin menu id for accordion.
  *
  * @param string $menu_page
- * @return int
  */
-function get_active_menu($menu_page)
+function get_active_menu($menu_page): int
 {
     /** @var array<string, mixed> $page */
     global $page;

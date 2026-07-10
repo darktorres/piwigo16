@@ -31,7 +31,7 @@ class CalendarMonthly extends CalendarBase
         // string values to match CalendarBase::$calendar_levels' declared
         // element shape (array<int|string, string>|null) instead of a bare
         // mixed cast.
-        $month_labels = is_array($lang['month']) ? array_filter($lang['month'], 'is_string') : null;
+        $month_labels = is_array($lang['month']) ? array_filter($lang['month'], is_string(...)) : null;
         $this->calendar_levels = [
             [
                 'sql' => pwg_db_get_year($this->date_field),
@@ -276,7 +276,7 @@ class CalendarMonthly extends CalendarBase
 
         /** @var array<string, mixed> $lang */
         global $lang;
-        $month_labels = is_array($lang['month']) ? array_filter($lang['month'], 'is_string') : null;
+        $month_labels = is_array($lang['month']) ? array_filter($lang['month'], is_string(...)) : null;
         $calendar_bars = [];
         foreach ($items as $year => $year_data) {
             $chronology_date = [$year];
@@ -348,7 +348,7 @@ class CalendarMonthly extends CalendarBase
         }
         /** @var array<string, mixed> $lang */
         global $lang;
-        $month_labels = is_array($lang['month']) ? array_filter($lang['month'], 'is_string') : [];
+        $month_labels = is_array($lang['month']) ? array_filter($lang['month'], is_string(...)) : [];
         $calendar_bars = [];
         // $page['chronology_date'] is not mutated between the snapshot above
         // and here (the only mutation happens in the early-return branch

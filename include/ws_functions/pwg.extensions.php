@@ -77,7 +77,7 @@ function ws_plugins_performAction(array $params, PwgServer &$service): \PwgError
     $errors = $plugins->perform_action($params['action'], $params['plugin']);
 
     if (! empty($errors)) {
-        return new PwgError(500, implode(', ', array_filter($errors, 'is_string')));
+        return new PwgError(500, implode(', ', array_filter($errors, is_string(...))));
     } else {
         if (in_array($params['action'], ['activate', 'deactivate'])) {
             $template->delete_compiled_templates();
@@ -282,9 +282,9 @@ function ws_extensions_ignoreupdate(array $params, PwgServer &$service): \PwgErr
     $ignored_languages = $updates_ignored_raw['languages'] ?? null;
 
     $conf['updates_ignored'] = [
-        'plugins' => is_array($ignored_plugins) ? array_values(array_filter($ignored_plugins, 'is_string')) : [],
-        'themes' => is_array($ignored_themes) ? array_values(array_filter($ignored_themes, 'is_string')) : [],
-        'languages' => is_array($ignored_languages) ? array_values(array_filter($ignored_languages, 'is_string')) : [],
+        'plugins' => is_array($ignored_plugins) ? array_values(array_filter($ignored_plugins, is_string(...))) : [],
+        'themes' => is_array($ignored_themes) ? array_values(array_filter($ignored_themes, is_string(...))) : [],
+        'languages' => is_array($ignored_languages) ? array_values(array_filter($ignored_languages, is_string(...))) : [],
     ];
 
     // Reset ignored extension

@@ -453,7 +453,7 @@ function autoupdate_plugin(array &$plugin): void
             // $page['errors'] is initialized to an array by common.inc.php,
             // but PHPStan can't prove it here; re-narrow to list<string> to
             // match PluginMaintain::update()'s array<int, string> $errors.
-            $page['errors'] = is_array($page['errors'] ?? null) ? array_values(array_filter($page['errors'], 'is_string')) : [];
+            $page['errors'] = is_array($page['errors'] ?? null) ? array_values(array_filter($page['errors'], is_string(...))) : [];
             // $old_version (pre-mutation), not $plugin['version'] (already
             // overwritten with $fs_version above) -- passing the mutated
             // value here made update() always see old==new, defeating any

@@ -164,8 +164,8 @@ $owner_username = query2array($query, null, 'username');
 // ids (already normalized to int above) and $admin_ids (query2array
 // user_id values, always numeric strings from a NOT NULL primary key);
 // stringify for implode() below.
-$protected_users = array_map('strval', array_filter($protected_users, 'is_scalar'));
-$password_protected_users = array_map('strval', array_filter($password_protected_users, 'is_scalar'));
+$protected_users = array_map(strval(...), array_filter($protected_users, is_scalar(...)));
+$password_protected_users = array_map(strval(...), array_filter($password_protected_users, is_scalar(...)));
 
 $template->assign(
     [

@@ -12,9 +12,8 @@ declare(strict_types=1);
 /**
  * returns a prefix for each url link on displayed page
  * and return an empty string for current path
- * @return string
  */
-function get_root_url()
+function get_root_url(): string
 {
     /** @var array<string, mixed> $page */
     global $page;
@@ -273,7 +272,7 @@ function add_well_known_params_in_url(string $url, array $params): string
         }
         if (! empty($params['chronology_date'])) {
             $chronology_date = $params['chronology_date'];
-            $url .= '-' . implode('-', is_array($chronology_date) ? array_filter($chronology_date, 'is_scalar') : []);
+            $url .= '-' . implode('-', is_array($chronology_date) ? array_filter($chronology_date, is_scalar(...)) : []);
         }
     }
 
@@ -422,7 +421,7 @@ function make_section_in_url(array $params): string
         case 'list':
 
             $list_param = $params['list'] ?? [];
-            $section_string .= '/list/' . implode(',', is_array($list_param) ? array_filter($list_param, 'is_scalar') : []);
+            $section_string .= '/list/' . implode(',', is_array($list_param) ? array_filter($list_param, is_scalar(...)) : []);
             break;
 
         case 'none':

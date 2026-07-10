@@ -488,10 +488,8 @@ SELECT id, name
  *
  * @param int $image_id
  * @param string $image_type
- *
- * @return bool
  */
-function do_log($image_id = null, $image_type = null)
+function do_log($image_id = null, $image_type = null): bool
 {
     /** @var array<string, mixed> $conf */
     global $conf;
@@ -561,7 +559,7 @@ UPDATE ' . USER_INFOS_TABLE . '
     $tags_string = null;
     if ($page_section === 'tags') {
         $tag_ids = $page['tag_ids'] ?? [];
-        $tag_ids = is_array($tag_ids) ? array_filter($tag_ids, 'is_scalar') : [];
+        $tag_ids = is_array($tag_ids) ? array_filter($tag_ids, is_scalar(...)) : [];
         $tags_string = implode(',', $tag_ids);
 
         if (strlen($tags_string) > 50) {
@@ -1251,7 +1249,7 @@ function redirect($url, $msg = '', $refresh_time = 0): never
  * @param bool $show_mobile
  * @return array<int|string, string>
  */
-function get_pwg_themes($show_mobile = false)
+function get_pwg_themes($show_mobile = false): array
 {
     /** @var array<string, mixed> $conf */
     global $conf;
@@ -1918,9 +1916,8 @@ function get_pwg_charset(): string
  * @since 2.6
  *
  * @param string $lang_id
- * @return string|null
  */
-function get_parent_language($lang_id = null)
+function get_parent_language($lang_id = null): ?string
 {
     if (empty($lang_id)) {
         /** @var array<string, mixed> $lang_info */
@@ -2515,10 +2512,8 @@ function email_check_format(?string $mail_address): bool
 
 /**
  * returns the number of available comments for the connected user
- *
- * @return int
  */
-function get_nb_available_comments()
+function get_nb_available_comments(): int
 {
     /** @var array<string, mixed> $user */
     global $user;

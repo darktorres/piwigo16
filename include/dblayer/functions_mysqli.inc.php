@@ -182,9 +182,8 @@ function pwg_query($query)
  *
  * @param string $column
  * @param string $table
- * @return int
  */
-function pwg_db_nextval($column, $table)
+function pwg_db_nextval($column, $table): int
 {
     $query = '
 SELECT IF(MAX(' . $column . ')+1 IS NULL, 1, MAX(' . $column . ')+1)

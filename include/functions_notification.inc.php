@@ -436,7 +436,7 @@ function news($start = null, $end = null, $exclude_img_cats = false, $add_url = 
  * @param int $max_cats maximum number of categories per date
  * @return array<int|string, mixed>
  */
-function get_recent_post_dates($max_dates, $max_elements, $max_cats)
+function get_recent_post_dates($max_dates, $max_elements, $max_cats): array
 {
     /** @var array<string, mixed> $user */
     global $conf, $user, $persistent_cache;
@@ -519,7 +519,7 @@ SELECT
  * @param array<string, int> $args
  * @return array<int|string, mixed>
  */
-function get_recent_post_dates_array(array $args)
+function get_recent_post_dates_array(array $args): array
 {
     return get_recent_post_dates(
         (empty($args['max_dates']) ? 3 : $args['max_dates']),

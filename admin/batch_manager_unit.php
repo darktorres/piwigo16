@@ -100,7 +100,7 @@ SELECT id, date_creation
         $raw_tags_post = $_POST['tags-' . $row['id']] ?? null;
         if (! empty($raw_tags_post)) {
             if (is_array($raw_tags_post)) {
-                $tag_ids = get_tag_ids(array_filter($raw_tags_post, 'is_string'));
+                $tag_ids = get_tag_ids(array_filter($raw_tags_post, is_string(...)));
             } elseif (is_string($raw_tags_post)) {
                 $tag_ids = get_tag_ids($raw_tags_post);
             }
@@ -194,7 +194,7 @@ $template->assign('per_page', $page['nb_images']);
 // array_filter($current_set, 'is_scalar') before this file runs; the
 // is_array()/array_filter() below re-establish that same shape for
 // PHPStan, which can't see across the include boundary.
-$cat_elements_id = is_array($page['cat_elements_id']) ? array_filter($page['cat_elements_id'], 'is_scalar') : [];
+$cat_elements_id = is_array($page['cat_elements_id']) ? array_filter($page['cat_elements_id'], is_scalar(...)) : [];
 
 if (count($cat_elements_id) > 0) {
     $page_start = is_int($page['start']) || is_string($page['start']) ? $page['start'] : 0;
@@ -347,7 +347,9 @@ SELECT
         $sub_result = pwg_query($query);
         $related_categories = [];
         $related_category_ids = [];
-        $media = ['image' => get_image_infos($row['id'], true)];
+        $media = [
+            'image' => get_image_infos($row['id'], true),
+        ];
         // die_on_missing=true means get_image_infos() only returns null via
         // a fatal_error() path that never returns.
         assert($media['image'] !== null);
@@ -397,7 +399,7 @@ SELECT
         assert(is_numeric($user['id']));
         assert(is_string($user['status']));
         $authorizeds = array_diff(
-            array_filter(array_from_query($query, 'category_id'), 'is_string'),
+            array_filter(array_from_query($query, 'category_id'), is_string(...)),
             explode(
                 ',',
                 calculate_permissions((int) $user['id'], $user['status'])

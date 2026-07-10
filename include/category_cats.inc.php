@@ -205,7 +205,7 @@ if (count($categories) > 0) {
     $query = '
 SELECT *
   FROM ' . IMAGES_TABLE . '
-  WHERE id IN (' . implode(',', array_filter($image_ids, 'is_string')) . ')
+  WHERE id IN (' . implode(',', array_filter($image_ids, is_string(...))) . ')
 ;';
     $result = pwg_query($query);
     while ($row = pwg_db_fetch_assoc($result)) {

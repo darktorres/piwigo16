@@ -688,7 +688,7 @@ SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, statu
         $cats_ids = array_column($cats, 'id');
         $nb_subcats_of = [];
         if (! empty($cats_ids)) {
-            $cats_ids = array_map(strval(...), array_filter($cats_ids, 'is_scalar'));
+            $cats_ids = array_map(strval(...), array_filter($cats_ids, is_scalar(...)));
 
             $query = '
 SELECT
@@ -1187,7 +1187,7 @@ SELECT id
     // install/piwigo_structure-mysql.sql. query2array() is used directly
     // (rather than the deprecated array_from_query() wrapper) so the return
     // type stays precise enough to narrow.
-    $category_ids = array_map(intval(...), array_filter(query2array($query, null, 'id'), 'is_numeric'));
+    $category_ids = array_map(intval(...), array_filter(query2array($query, null, 'id'), is_numeric(...)));
 
     if (count($category_ids) == 0) {
         return null;
@@ -1321,7 +1321,7 @@ SELECT id, name, dir, uppercats
 
     $page_errors = is_array($page['errors'] ?? null) ? $page['errors'] : [];
     if (count($page_errors) != 0) {
-        return new PwgError(403, implode('; ', array_filter($page_errors, 'is_string')));
+        return new PwgError(403, implode('; ', array_filter($page_errors, is_string(...))));
     }
 
     $query = '
@@ -1451,7 +1451,7 @@ SELECT DISTINCT
         else {
             // image_id is a NOT NULL column of image_category -- verified
             // against install/piwigo_structure-mysql.sql.
-            $image_ids_recursive_keys = array_flip(array_filter($image_ids_recursive, 'is_string'));
+            $image_ids_recursive_keys = array_flip(array_filter($image_ids_recursive, is_string(...)));
 
             $query = '
   SELECT

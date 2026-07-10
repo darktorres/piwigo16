@@ -18,7 +18,7 @@ declare(strict_types=1);
  * @return array<string, mixed>|false as returned by update_rating_score(), or false if the
  *   rate is invalid or forbidden
  */
-function rate_picture($image_id, int|string|null $rate)
+function rate_picture($image_id, int|string|null $rate): false|array
 {
     /** @var array<string, mixed> $conf */
     global $conf;
@@ -76,7 +76,7 @@ SELECT element_id
             // array_from_query() is typed array<int|string, mixed>; the
             // element_id column is a string|null DB value, and implode()
             // needs every element to be string-castable.
-            $already_there = array_filter($already_there, 'is_string');
+            $already_there = array_filter($already_there, is_string(...));
 
             if (count($already_there) > 0) {
                 $query = '
@@ -137,7 +137,7 @@ INSERT
  * @param int|false $element_id if false applies to all
  * @return array<string, mixed> (score, average, count) values are null if $element_id is false
  */
-function update_rating_score($element_id = false)
+function update_rating_score($element_id = false): array
 {
     if (($alt_result = trigger_change('update_rating_score', false, $element_id)) !== false) {
         // trigger_change()'s own return type is mixed; the contract of this
@@ -228,7 +228,7 @@ SELECT id FROM ' . IMAGES_TABLE . '
         // array_from_query() is typed array<int|string, mixed>; the id
         // column is a string|null DB value, and implode() needs every
         // element to be string-castable.
-        $to_update = array_filter($to_update, 'is_string');
+        $to_update = array_filter($to_update, is_string(...));
 
         if (! empty($to_update)) {
             $query = '

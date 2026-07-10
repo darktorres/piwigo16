@@ -82,7 +82,7 @@ WHERE category_id IN (' . implode(',', $sub_ids) . ')';
             return; // nothing to do
         }
         $inner_sql .= '
-WHERE id IN (' . implode(',', array_filter($page['items'], 'is_scalar')) . ')';
+WHERE id IN (' . implode(',', array_filter($page['items'], is_scalar(...))) . ')';
     }
 
     // -------------------------------------- initialize the calendar parameters ---

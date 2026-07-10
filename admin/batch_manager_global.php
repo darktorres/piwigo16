@@ -160,7 +160,7 @@ DELETE
             }
         }
     } elseif ($action == 'del_tags') {
-        $del_tags = isset($_POST['del_tags']) && is_array($_POST['del_tags']) ? array_filter($_POST['del_tags'], 'is_scalar') : [];
+        $del_tags = isset($_POST['del_tags']) && is_array($_POST['del_tags']) ? array_filter($_POST['del_tags'], is_scalar(...)) : [];
         if (count($del_tags) > 0) {
             $taglist_before = get_image_tag_ids($collection);
 
@@ -177,7 +177,7 @@ DELETE
             update_images_lastmodified($images_to_update);
 
             if (isset($bulk_manager_filter['tags']) && is_array($bulk_manager_filter['tags']) &&
-              count(array_intersect(array_filter($bulk_manager_filter['tags'], 'is_scalar'), $del_tags))) {
+              count(array_intersect(array_filter($bulk_manager_filter['tags'], is_scalar(...)), $del_tags))) {
                 $redirect = true;
             }
         } else {
@@ -466,7 +466,7 @@ $template->assign('IN_CADDIE', $page['prefilter'] == 'caddie');
 // PHPStan cannot see across that include boundary, so we narrow it once here
 // for every downstream use in this file.
 $cat_elements_id = is_array($page['cat_elements_id'])
-    ? array_map('intval', array_filter($page['cat_elements_id'], 'is_numeric'))
+    ? array_map(intval(...), array_filter($page['cat_elements_id'], is_numeric(...)))
     : [];
 
 // +-----------------------------------------------------------------------+
@@ -570,7 +570,7 @@ if (count($cat_elements_id) > 0) {
         // The $duplicates_on_fields variable is defined in ./batch_manager.php
         // (always a list of column-name strings when set); PHPStan can't see
         // across that include boundary, hence the is_array()/is_string() checks.
-        $duplicates_on_fields = array_filter($duplicates_on_fields, 'is_string');
+        $duplicates_on_fields = array_filter($duplicates_on_fields, is_string(...));
         $order_by_fields = array_merge($duplicates_on_fields, ['id']);
         $conf['order_by'] = ' ORDER BY ' . join(', ', $order_by_fields);
     }

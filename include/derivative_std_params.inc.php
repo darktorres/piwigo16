@@ -94,7 +94,7 @@ final class ImageStdParams
     /**
      * @var DerivativeParams[]
      */
-    private static $disabled_type_map = [];
+    private static array $disabled_type_map = [];
 
     /**
      * @var string[]
@@ -145,7 +145,7 @@ final class ImageStdParams
      *   stored serialized in the database — callers must safe_unserialize()
      *   this when it falls through to that fallback
      */
-    public static function get_disabled_type_map()
+    public static function get_disabled_type_map(): array|string
     {
         /** @var array<string, mixed> $conf */
         global $conf;

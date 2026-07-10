@@ -215,7 +215,7 @@ class updates
             $new_versions,
             array_fill_keys(['minor', 'major'], 1)
         );
-        $new_versions_string = join(' & ', array_filter($matching_new_versions, 'is_string'));
+        $new_versions_string = join(' & ', array_filter($matching_new_versions, is_string(...)));
 
         if (empty($new_versions_string)) {
             return;

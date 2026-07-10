@@ -184,8 +184,8 @@ $template->assign([
     'FORMATS_ORIGINAL_INFO' => $formats_original_info,
     'FORMATS_EXT_INFO' => $formats_ext_info,
     'SWITCH_FORMAT_MODE_URL' => get_root_url() . 'admin.php?page=photos_add' . ($display_formats ? '' : '&formats'),
-    'format_ext' => implode(',', array_filter($conf_format_ext, 'is_string')),
-    'str_format_ext' => implode(', ', array_filter($conf_format_ext, 'is_string')),
+    'format_ext' => implode(',', array_filter($conf_format_ext, is_string(...))),
+    'str_format_ext' => implode(', ', array_filter($conf_format_ext, is_string(...))),
 ]);
 
 $template->assign_var_from_handle('ADMIN_CONTENT', 'photos_add');

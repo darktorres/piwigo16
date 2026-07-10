@@ -528,7 +528,7 @@ function add_format(string $source_filepath, string $format_ext, int|string $for
     // conf_get_param() is inherently mixed (config values come straight
     // from the $conf global); only elements that are actually strings can
     // be safely passed to in_array()/implode() below.
-    $authorized_format_exts = is_array($authorized_format_exts) ? array_filter($authorized_format_exts, 'is_string') : ['cr2'];
+    $authorized_format_exts = is_array($authorized_format_exts) ? array_filter($authorized_format_exts, is_string(...)) : ['cr2'];
 
     if (! in_array($format_ext, $authorized_format_exts)) {
         die('[' . __FUNCTION__ . '] unexpected format extension "' . $format_ext . '" (authorized extensions: ' . implode(', ', $authorized_format_exts) . ')');
@@ -1075,7 +1075,7 @@ function is_valid_image_extension(string $extension): array
 
     // $conf values are inherently mixed; only string elements can safely
     // be passed to strtolower() below.
-    $extensions = is_array($extensions) ? array_filter($extensions, 'is_string') : [];
+    $extensions = is_array($extensions) ? array_filter($extensions, is_string(...)) : [];
 
     return array_unique(array_map(strtolower(...), $extensions));
 }

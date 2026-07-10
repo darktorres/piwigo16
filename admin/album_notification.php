@@ -137,7 +137,7 @@ SELECT id, file, path, representative_ext
         // check_input_parameter() above already validated that every item
         // matches PATTERN_ID (digits only), so this filter only exists to
         // give implode() a provably string-castable array.
-        $post_user_ids = array_filter($_POST['users'], 'is_string');
+        $post_user_ids = array_filter($_POST['users'], is_string(...));
 
         $query = '
 SELECT
@@ -313,7 +313,7 @@ SELECT
     id,
     name
   FROM `' . GROUPS_TABLE . '`
-  WHERE id IN (' . implode(',', array_filter($group_ids, 'is_string')) . ')
+  WHERE id IN (' . implode(',', array_filter($group_ids, is_string(...))) . ')
   ORDER BY name ASC
 ;';
         $template->assign(
@@ -342,7 +342,7 @@ if ($category['status'] == 'private') {
 SELECT
     user_id
   FROM ' . USER_GROUP_TABLE . '
-  WHERE group_id IN (' . implode(',', array_filter($group_ids, 'is_string')) . ')
+  WHERE group_id IN (' . implode(',', array_filter($group_ids, is_string(...))) . ')
 ';
         $user_ids_access_indirect = query2array($query, null, 'user_id');
     }

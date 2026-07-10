@@ -223,7 +223,14 @@ $forbidden = get_sql_condition_FandF(
 // 'categories' section branch below.
 $page_category = null;
 if (isset($page['category']) and is_array($page['category'])) {
+    // same cross-file $page[...] false-narrowing as the tag_ids block below
+    // -- PHPStan infers list<string> for $page['category'] from an
+    // unrelated write elsewhere in the codebase, but get_cat_info() (this
+    // key's real, original source) returns array<string, mixed>, which is
+    // what every downstream $page_category['...'] read in this file relies
+    // on (see the file-level comment above).
     /** @var array<string, mixed> $page_category */
+    // @phpstan-ignore varTag.type
     $page_category = $page['category'];
 }
 
@@ -389,6 +396,11 @@ else {
             $tag_id = is_array($tag) ? ($tag['id'] ?? null) : null;
             // @phpstan-ignore function.impossibleType
             if (is_numeric($tag_id)) {
+                // same cross-file $page[...] false-narrowing as above --
+                // PHPStan believes $tag_id is already int here, but the
+                // real, original row shape (see comment above) can yield a
+                // numeric string, so this cast is load-bearing.
+                // @phpstan-ignore cast.useless
                 $tag_ids[] = (int) $tag_id;
             }
         }
@@ -709,7 +721,7 @@ if (isset($page['chronology_field'])
     }
 }
 
-if ($filter['enabled']) {
+if ((bool) $filter['enabled']) {
     $page['meta_robots']['noindex'] = 1;
 }
 

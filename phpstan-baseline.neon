@@ -163,7 +163,7 @@ parameters:
 			path: ready.php
 
 		-
-			message: '#^Cannot unset offset ''CHANGE_COLUMN'' on array\{tags\: non\-empty\-list\<non\-empty\-array\<string, mixed\>\>, TITLE\?\: string\}\.$#'
+			message: '#^Cannot unset offset ''CHANGE_COLUMN'' on array\{tags\: non\-empty\-list\<array\{URL\: string, \.\.\.\<string, mixed\>\}\>, TITLE\?\: string\}\.$#'
 			identifier: unset.offset
 			count: 1
 			path: tags.php

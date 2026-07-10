@@ -1,0 +1,70 @@
+deptrac:
+  paths:
+    - ./src/Piwigo
+  layers:
+    # L0 Data — no first-party classes yet (P6 doesn't create any); enumerated
+    # ahead of time per docs/PLAN-REPLAY.md's P6 6-layer model, populated by
+    # later phases.
+    - name: L0-Data
+      collectors:
+        - type: classLike
+          value: ^Piwigo\\(Common|Event|Exception)\\.*
+    # L1 Infrastructure — Cache/Session land here in P6; Config/Core/Db etc.
+    # are later-phase additions, enumerated ahead of time.
+    - name: L1-Infrastructure
+      collectors:
+        - type: classLike
+          value: ^Piwigo\\(Config|Core|Db|Cache|Session)\\.*
+    # L2a Core Domain — Auth/Image land here in P6; Users/Permission/Category/
+    # Tag are later-phase additions.
+    - name: L2a-CoreDomain
+      collectors:
+        - type: classLike
+          value: ^Piwigo\\(Auth|Users|Permission|Category|Image|Tag)\\.*
+    # L2b Extended Domain — every other first-party domain namespace. Search/
+    # Calendar/Site land here in P6. Explicit enumeration (not a catch-all
+    # regex) so a future phase adding a namespace has to deliberately place
+    # it in the right layer instead of silently falling into this one.
+    - name: L2b-ExtendedDomain
+      collectors:
+        - type: classLike
+          value: ^Piwigo\\(Search|Calendar|Site)\\.*
+    # L3 Presentation — Menu/Template land here in P6; Html/Http/Page/Asset/
+    # Listener are later-phase additions.
+    - name: L3-Presentation
+      collectors:
+        - type: classLike
+          value: ^Piwigo\\(Html|Http|Menu|Page|Template|Asset|Listener)\\.*
+    # L4 Integration — Admin (incl. Admin\Image, Admin\Integrity) and Ws
+    # (incl. Ws\Encoder, Ws\Protocol) land here in P6; Bootstrap/Controller/
+    # Job are later-phase additions.
+    - name: L4-Integration
+      collectors:
+        - type: classLike
+          value: ^Piwigo\\(Admin|Bootstrap|Controller|Job|Ws)\\.*
+  ruleset:
+    # Each layer may depend only on layers below it — standard layered
+    # architecture. Violations are recorded as a baseline (P6 wrap-up) and
+    # ratchet down over subsequent phases, per docs/PLAN-REPLAY.md's P6
+    # section.
+    L4-Integration:
+      - L3-Presentation
+      - L2b-ExtendedDomain
+      - L2a-CoreDomain
+      - L1-Infrastructure
+      - L0-Data
+    L3-Presentation:
+      - L2b-ExtendedDomain
+      - L2a-CoreDomain
+      - L1-Infrastructure
+      - L0-Data
+    L2b-ExtendedDomain:
+      - L2a-CoreDomain
+      - L1-Infrastructure
+      - L0-Data
+    L2a-CoreDomain:
+      - L1-Infrastructure
+      - L0-Data
+    L1-Infrastructure:
+      - L0-Data
+    L0-Data: []

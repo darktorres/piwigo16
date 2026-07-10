@@ -57,6 +57,11 @@
     "symplify/easy-coding-standard": "^13.1",
     "vimeo/psalm": "^6.16"
   },
+  "autoload": {
+    "psr-4": {
+      "Piwigo\\": "src/Piwigo/"
+    }
+  },
   "autoload-dev": {
     "psr-4": {
       "Piwigo\\Tests\\": "tests/"

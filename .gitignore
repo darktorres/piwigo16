@@ -21,6 +21,9 @@
 # pest-plugin-browser auto-captures a screenshot here on assertion failure
 /tests/Browser/Screenshots
 
+# deptrac's incremental-analysis cache (P6+)
+/.deptrac.cache
+
 # Piwigo specific directories
 /_data/*
 !/_data/.gitkeep

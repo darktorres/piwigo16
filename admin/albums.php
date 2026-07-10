@@ -118,7 +118,7 @@ SELECT id, name, id_uppercat
   WHERE id IN (' . implode(',', $category_ids) . ')
 ;';
     $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         /** @var array<string, string|null> $row */
         $rendered_name = trigger_change('render_category_name', $row['name'], 'admin_cat_list');
         $row['name'] = is_string($rendered_name) ? $rendered_name : $row['name'];
@@ -400,7 +400,7 @@ SELECT
         $subcat_ids = [];
 
         foreach ($uppercats_of as $id => $uppercats) {
-            if (preg_match('/(^|,)' . $cat_id . '(,|$)/', (string) $uppercats)) {
+            if ((bool) preg_match('/(^|,)' . $cat_id . '(,|$)/', (string) $uppercats)) {
                 $subcat_ids[] = $id;
             }
         }

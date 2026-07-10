@@ -136,7 +136,7 @@ SELECT
         $sessions_to_delete = [];
 
         foreach ($sessions as $session) {
-            if (preg_match('/pwg_uid\|i:(\d+);/', (string) $session['data'], $matches)) {
+            if ((bool) preg_match('/pwg_uid\|i:(\d+);/', (string) $session['data'], $matches)) {
                 if (! isset($all_user_ids[$matches[1]])) {
                     $sessions_to_delete[] = $session['id'];
                 }
@@ -226,7 +226,7 @@ DELETE
 
             // if the current version is a BSF (development branch) build, we check
             // the first line, for stable versions, we check the second line
-            if (preg_match('/^BSF/', $versions['current'])) {
+            if ((bool) preg_match('/^BSF/', $versions['current'])) {
                 $versions['latest'] = trim($lines[0]);
 
                 // because integer are limited to 4,294,967,296 we need to split BSF
@@ -349,7 +349,7 @@ if (! empty($graphics_library)) {
     $template->assign('GRAPHICS_LIBRARY', $graphics_library);
 }
 
-if ($conf['gallery_locked']) {
+if ((bool) $conf['gallery_locked']) {
     $template->assign(
         [
             'U_MAINT_UNLOCK_GALLERY' => sprintf($url_format, 'unlock_gallery'),

@@ -98,7 +98,7 @@ foreach ($reg_blocks as $id => $block) {
 if (isset($_POST['submit']) and is_webmaster()) {
     foreach ($mb_conf as $id => $pos) {
         $hide = isset($_POST['hide_' . $id]);
-        $mb_conf[$id] = ($hide ? -1 : +1) * (int) abs($pos);
+        $mb_conf[$id] = ($hide ? -1 : +1) * abs($pos);
 
         $pos_input = $_POST['pos_' . $id] ?? null;
         $pos = is_numeric($pos_input) ? (int) $pos_input : 0;

@@ -57,7 +57,7 @@ if (is_webmaster()) {
 
         // Format our data for frontend
         $result = pwg_query($query);
-        while ($rows = pwg_db_fetch_assoc($result)) {
+        while ((bool) ($rows = pwg_db_fetch_assoc($result))) {
             $major_infos = false;
             $object = '';
             $object_icon = '';

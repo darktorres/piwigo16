@@ -204,7 +204,7 @@ if (isset($_POST['submit'])) {
                             $used[$val] = true;
                         }
                     }
-                    if (! count($order_by_input)) {
+                    if (! (bool) count($order_by_input)) {
                         $page['errors'][] = l10n('No order field selected');
                     } else {
                         // limit to the number of available parameters
@@ -261,7 +261,7 @@ if (isset($_POST['submit'])) {
             // the number of comments per page must be an integer between 5 and 50
             // included
             $nb_comment_page = $_POST['nb_comment_page'] ?? null;
-            if (! preg_match($int_pattern, is_scalar($nb_comment_page) ? (string) $nb_comment_page : '')
+            if (! (bool) preg_match($int_pattern, is_scalar($nb_comment_page) ? (string) $nb_comment_page : '')
                  or $_POST['nb_comment_page'] < 5
                  or $_POST['nb_comment_page'] > 50) {
                 $page['errors'][] = l10n('The number of comments a page must be between 5 and 50 included.');
@@ -279,7 +279,7 @@ if (isset($_POST['submit'])) {
         case 'display':
 
             $nb_categories_page = $_POST['nb_categories_page'] ?? null;
-            if (! preg_match($int_pattern, is_scalar($nb_categories_page) ? (string) $nb_categories_page : '')
+            if (! (bool) preg_match($int_pattern, is_scalar($nb_categories_page) ? (string) $nb_categories_page : '')
                   or $_POST['nb_categories_page'] < 4) {
                 $page['errors'][] = l10n('The number of albums a page must be above 4.');
             }
@@ -324,7 +324,7 @@ if (isset($_POST['submit'])) {
     if (! in_array($page_section, ['sizes', 'watermark']) and count($page_errors_for_count) == 0 and is_webmaster()) {
         // echo '<pre>'; print_r($_POST); echo '</pre>';
         $result = pwg_query('SELECT param FROM ' . CONFIG_TABLE);
-        while ($row = pwg_db_fetch_assoc($result)) {
+        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
             if (! is_string($row['param'])) {
                 // `param` is the config table's NOT NULL primary key; a
                 // non-string row here would mean the query result changed
@@ -337,7 +337,7 @@ if (isset($_POST['submit'])) {
                 $value = is_scalar($post_value) ? (string) $post_value : '';
 
                 if ($row['param'] == 'gallery_title') {
-                    if (! $conf['allow_html_descriptions']) {
+                    if (! (bool) $conf['allow_html_descriptions']) {
                         $value = strip_tags($value);
                     }
                 }
@@ -408,6 +408,11 @@ $template->assign(
 switch ($page['section']) {
     case 'main':
 
+        // same external-file rationale as the isset.offset/logicalOr.alwaysFalse
+        // ignores inside the function body below: PHPStan can't see
+        // local/config/config.inc.php's content, so it proves the function always
+        // returns false even though it can genuinely return true.
+        // @phpstan-ignore return.tooWideBool
         function order_by_is_local(): bool
         {
             // include/config_default.inc.php never sets local_dir_site/
@@ -471,7 +476,7 @@ switch ($page['section']) {
                 'order_by_options' => $sort_fields,
                 'email_admin_on_new_user' => $conf_email_admin_on_new_user != 'none',
                 'email_admin_on_new_user_filter' => in_array($conf_email_admin_on_new_user, ['none', 'all']) ? 'all' : 'group',
-                'email_admin_on_new_user_filter_group' => preg_match('/^group:(\d+)$/', $conf_email_admin_on_new_user_str, $matches) ? $matches[1] : -1,
+                'email_admin_on_new_user_filter_group' => ((bool) preg_match('/^group:(\d+)$/', $conf_email_admin_on_new_user_str, $matches)) ? $matches[1] : -1,
             ]
         );
 
@@ -618,7 +623,7 @@ switch ($page['section']) {
                 $tpl_var['must_square'] = ($type == IMG_SQUARE ? true : false);
                 $tpl_var['must_enable'] = ($type == IMG_SQUARE || $type == IMG_THUMB || $type == $conf['derivative_default_size']) ? true : false;
 
-                if ($params = $enabled[$type] ?? null) {
+                if ((bool) ($params = $enabled[$type] ?? null)) {
                     $tpl_var['enabled'] = true;
                 } else {
                     $tpl_var['enabled'] = false;
@@ -626,7 +631,7 @@ switch ($page['section']) {
                     $params = $disabled_candidate instanceof DerivativeParams ? $disabled_candidate : null;
                 }
 
-                if ($params) {
+                if ((bool) $params) {
                     [$tpl_var['w'], $tpl_var['h']] = $params->sizing->ideal_size;
                     if (($tpl_var['crop'] = round(100 * $params->sizing->max_crop)) > 0) {
                         [$tpl_var['minw'], $tpl_var['minh']] = $params->sizing->min_size;

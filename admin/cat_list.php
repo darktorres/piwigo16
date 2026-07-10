@@ -88,7 +88,7 @@ SELECT
             if (! is_string($uppercats)) {
                 continue;
             }
-            if (preg_match('/(^|,)' . $cat_id . '(,|$)/', $uppercats)) {
+            if ((bool) preg_match('/(^|,)' . $cat_id . '(,|$)/', $uppercats)) {
                 $subcat_ids[] = $id;
             }
         }
@@ -248,7 +248,7 @@ $categories = hash_from_query($query, 'id');
 
 // get the categories containing images directly
 $categories_with_images = [];
-if (count($categories)) {
+if ((bool) count($categories)) {
     $query = '
 SELECT
     category_id,
@@ -350,7 +350,7 @@ foreach ($categories as $category) {
         $tpl_cat['U_DELETE'] = $self_url . '&amp;delete=' . $cat_id;
         $tpl_cat['U_DELETE'] .= '&amp;pwg_token=' . get_pwg_token();
     } else {
-        if ($conf['enable_synchronization']) {
+        if ((bool) $conf['enable_synchronization']) {
             $tpl_cat['U_SYNC'] = $base_url . 'site_update&amp;site=1&amp;cat_id=' . $cat_id;
         }
     }

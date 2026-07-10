@@ -235,7 +235,7 @@ elseif (isset($_GET['filter'])) {
 
         switch ($type) {
             case 'prefilter':
-                if (preg_match('/^duplicates-?/', $value)) {
+                if ((bool) preg_match('/^duplicates-?/', $value)) {
                     [, $duplicate_field] = explode('-', $value, 2);
                     $url_filter['prefilter'] = 'duplicates';
 
@@ -654,7 +654,7 @@ SELECT id
 
 if (isset($bulk_filter['search']) && is_array($bulk_filter['search'])
     && isset($bulk_filter['search']['q']) && is_string($bulk_filter['search']['q'])
-    && strlen($bulk_filter['search']['q'])) {
+    && (bool) strlen($bulk_filter['search']['q'])) {
     include_once PHPWG_ROOT_PATH . 'include/functions_search.inc.php';
     $res = get_quick_search_results_no_cache($bulk_filter['search']['q'], [
         'permissions' => false,
@@ -740,8 +740,8 @@ SELECT
 ;';
 $result = pwg_query($query);
 
-if (pwg_db_num_rows($result)) {
-    while ($row = pwg_db_fetch_assoc($result)) {
+if ((bool) pwg_db_num_rows($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         if (is_numeric($row['width']) && is_numeric($row['height']) && $row['width'] > 0 && $row['height'] > 0) {
             $widths[] = $row['width'];
             $heights[] = $row['height'];
@@ -825,7 +825,7 @@ SELECT
 ;';
 $result = pwg_query($query);
 
-while ($row = pwg_db_fetch_assoc($result)) {
+while ((bool) ($row = pwg_db_fetch_assoc($result))) {
     if (is_numeric($row['filesize'])) {
         $filesizes[] = sprintf('%.1f', (float) $row['filesize'] / 1024);
     }

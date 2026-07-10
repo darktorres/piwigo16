@@ -146,7 +146,7 @@ SELECT
         $sessions_to_delete = [];
 
         foreach ($sessions as $session) {
-            if (preg_match('/pwg_uid\|i:(\d+);/', (string) $session['data'], $matches)) {
+            if ((bool) preg_match('/pwg_uid\|i:(\d+);/', (string) $session['data'], $matches)) {
                 if (! isset($all_user_ids[$matches[1]])) {
                     $sessions_to_delete[] = $session['id'];
                 }
@@ -240,7 +240,7 @@ DELETE
 
             // if the current version is a BSF (development branch) build, we check
             // the first line, for stable versions, we check the second line
-            if (preg_match('/^BSF/', $versions['current'])) {
+            if ((bool) preg_match('/^BSF/', $versions['current'])) {
                 $versions['latest'] = trim($lines[0]);
 
                 // because integer are limited to 4,294,967,296 we need to split BSF
@@ -367,7 +367,7 @@ switch (pwg_image::get_library()) {
         $ext_imagick_dir = $conf['ext_imagick_dir'] ?? null;
         $ext_imagick_dir = is_string($ext_imagick_dir) ? $ext_imagick_dir : '';
         exec($ext_imagick_dir . pwg_image::get_ext_imagick_command() . ' -version', $returnarray);
-        if (preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
+        if ((bool) preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
             $library .= ' ' . $match[1];
         }
         $template->assign('GRAPHICS_LIBRARY', $library);
@@ -377,7 +377,7 @@ switch (pwg_image::get_library()) {
         $library = 'ImageMagick';
         $img = new Imagick();
         $version = $img->getVersion();
-        if (preg_match('/ImageMagick \d+\.\d+\.\d+-?\d*/', $version['versionString'], $match)) {
+        if ((bool) preg_match('/ImageMagick \d+\.\d+\.\d+-?\d*/', $version['versionString'], $match)) {
             $library = $match[0];
         }
         $template->assign('GRAPHICS_LIBRARY', $library);
@@ -391,7 +391,7 @@ switch (pwg_image::get_library()) {
         break;
 }
 
-if ($conf['gallery_locked']) {
+if ((bool) $conf['gallery_locked']) {
     $template->assign(
         [
             'U_MAINT_UNLOCK_GALLERY' => sprintf($url_format, 'unlock_gallery'),

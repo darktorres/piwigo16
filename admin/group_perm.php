@@ -92,7 +92,7 @@ SELECT id
   AND status = \'private\'
 ;';
     $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         $private_uppercats[] = $row['id'];
     }
 
@@ -108,7 +108,7 @@ SELECT cat_id
 ;';
     $result = pwg_query($query);
 
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         $authorized_ids[] = $row['cat_id'];
     }
 
@@ -162,7 +162,7 @@ display_select_cat_wrapper($query_true, [], 'category_option_true');
 
 $result = pwg_query($query_true);
 $authorized_ids = [];
-while ($row = pwg_db_fetch_assoc($result)) {
+while ((bool) ($row = pwg_db_fetch_assoc($result))) {
     $authorized_ids[] = $row['id'];
 }
 

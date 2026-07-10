@@ -64,7 +64,7 @@ SELECT id, date_creation
 ;';
     $result = pwg_query($query);
 
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         // IMAGES_TABLE.id is a NOT NULL auto_increment primary key; this
         // guard only defends against the generic string|null element type
         // pwg_db_fetch_assoc() carries for every column.
@@ -80,7 +80,7 @@ SELECT id, date_creation
         $data['author'] = $_POST['author-' . $row['id']];
         $data['level'] = $_POST['level-' . $row['id']];
 
-        if ($conf['allow_html_descriptions']) {
+        if ((bool) $conf['allow_html_descriptions']) {
             $data['comment'] = @$_POST['description-' . $row['id']];
         } else {
             $description_post = $_POST['description-' . $row['id']] ?? null;
@@ -141,7 +141,7 @@ if (isset($_POST['nb_photos_deleted'])) {
     $collection = explode(',', is_string($whole_set_param) ? $whole_set_param : '');
 
     foreach ($collection as $id) {
-        if (! preg_match('/^\d+$/', $id)) {
+        if (! (bool) preg_match('/^\d+$/', $id)) {
             fatal_error('[Hacking attempt] the input parameter "whole_set" is not valid');
         }
     }
@@ -354,7 +354,7 @@ SELECT
         // a fatal_error() path that never returns.
         assert($media['image'] !== null);
 
-        while ($item = pwg_db_fetch_assoc($sub_result)) {
+        while ((bool) ($item = pwg_db_fetch_assoc($sub_result))) {
             // IMAGE_CATEGORY_TABLE/CATEGORIES_TABLE.category_id/uppercats are
             // NOT NULL; this guard only defends against the generic
             // string|null element type pwg_db_fetch_assoc() carries for

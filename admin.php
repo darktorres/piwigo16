@@ -116,7 +116,7 @@ if (isset($_GET['change_theme'])) {
 // +-----------------------------------------------------------------------+
 
 // sync_user() is only useful when external authentication is activated
-if ($conf['external_authentification']) {
+if ((bool) $conf['external_authentification']) {
     sync_users();
 }
 
@@ -137,10 +137,10 @@ $change_theme_url .= 'change_theme=1';
 
 // ?page=plugin-community-pendings is an clean alias of
 // ?page=plugin&section=community/admin.php&tab=pendings
-if (isset($_GET['page']) and is_string($_GET['page']) and preg_match('/^plugin-([^-]*)(?:-(.*))?$/', $_GET['page'], $matches)) {
+if (isset($_GET['page']) and is_string($_GET['page']) and (bool) preg_match('/^plugin-([^-]*)(?:-(.*))?$/', $_GET['page'], $matches)) {
     $_GET['page'] = 'plugin';
 
-    if (preg_match('/^piwigo_(videojs|openstreetmap)$/', $matches[1])) {
+    if ((bool) preg_match('/^piwigo_(videojs|openstreetmap)$/', $matches[1])) {
         $matches[1] = str_replace('_', '-', $matches[1]);
     }
 
@@ -152,7 +152,7 @@ if (isset($_GET['page']) and is_string($_GET['page']) and preg_match('/^plugin-(
 
 // ?page=album-134-properties is an clean alias of
 // ?page=album&cat_id=134&tab=properties
-if (isset($_GET['page']) and is_string($_GET['page']) and preg_match('/^album-(\d+)(?:-(.*))?$/', $_GET['page'], $matches)) {
+if (isset($_GET['page']) and is_string($_GET['page']) and (bool) preg_match('/^album-(\d+)(?:-(.*))?$/', $_GET['page'], $matches)) {
     $_GET['page'] = 'album';
     $_GET['cat_id'] = $matches[1];
     if (isset($matches[2])) {
@@ -162,7 +162,7 @@ if (isset($_GET['page']) and is_string($_GET['page']) and preg_match('/^album-(\
 
 // ?page=photo-1234-properties is an clean alias of
 // ?page=photo&image_id=1234&tab=properties
-if (isset($_GET['page']) and is_string($_GET['page']) and preg_match('/^photo-(\d+)(?:-(.*))?$/', $_GET['page'], $matches)) {
+if (isset($_GET['page']) and is_string($_GET['page']) and (bool) preg_match('/^photo-(\d+)(?:-(.*))?$/', $_GET['page'], $matches)) {
     $_GET['page'] = 'photo';
     $_GET['image_id'] = $matches[1];
     if (isset($matches[2])) {
@@ -173,7 +173,7 @@ if (isset($_GET['page']) and is_string($_GET['page']) and preg_match('/^photo-(\
 /** @var array<string, mixed> $page */
 if (isset($_GET['page'])
     and is_string($_GET['page'])
-    and preg_match('/^[a-z_]*$/', $_GET['page'])
+    and (bool) preg_match('/^[a-z_]*$/', $_GET['page'])
     and is_file(PHPWG_ROOT_PATH . 'admin/' . $_GET['page'] . '.php')) {
     $page['page'] = $_GET['page'];
 } else {
@@ -240,11 +240,11 @@ $template->assign(
     ]
 );
 
-if ($conf['enable_core_update']) {
+if ((bool) $conf['enable_core_update']) {
     $template->assign('U_UPDATES', $link_start . 'updates');
 }
 
-if ($conf['activate_comments']) {
+if ((bool) $conf['activate_comments']) {
     $template->assign('U_COMMENTS', $link_start . 'comments');
 
     // pending comments
@@ -350,7 +350,7 @@ $show_whats_new = false;
 
 $whats_new_major_version = get_branch_from_version(PHPWG_VERSION);
 
-if (userprefs_get_param('show_whats_new_' . $whats_new_major_version, true) and pwg_is_dbconf_writeable()) {
+if ((bool) userprefs_get_param('show_whats_new_' . $whats_new_major_version, true) and pwg_is_dbconf_writeable()) {
     if ($user['registration_date'] > $conf['last_major_update']) {
         userprefs_update_param('show_whats_new_' . $whats_new_major_version, false);
     } else {
@@ -364,7 +364,7 @@ if (userprefs_get_param('show_whats_new_' . $whats_new_major_version, true) and 
             $userprefs_params_to_delete = [];
 
             foreach (array_keys($user_preferences) as $pref_param) {
-                if (preg_match('/^whats_new_/', (string) $pref_param)) {
+                if ((bool) preg_match('/^whats_new_/', (string) $pref_param)) {
                     $userprefs_params_to_delete[] = (string) $pref_param;
                 }
             }

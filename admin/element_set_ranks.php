@@ -187,7 +187,7 @@ if (pwg_db_num_rows($result) > 0) {
     // template thumbnail initialization
     $current_rank = 1;
     $derivativeParams = ImageStdParams::get_by_type(IMG_SQUARE);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         $derivative = new DerivativeImage($derivativeParams, new SrcImage($row));
 
         if (! empty($row['name'])) {

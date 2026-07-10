@@ -21,7 +21,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
  */
 global $conf, $page, $template;
 
-if (! $conf['enable_extensions_install']) {
+if (! (bool) $conf['enable_extensions_install']) {
     die('Piwigo extensions install/update system is disabled');
 }
 

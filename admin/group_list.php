@@ -83,7 +83,7 @@ $group_counter = 0;
 /** @var array<string, string> $user_fields */
 $user_fields = $conf['user_fields'];
 
-while ($row = pwg_db_fetch_assoc($result)) {
+while ((bool) ($row = pwg_db_fetch_assoc($result))) {
     $query = '
 SELECT u.' . $user_fields['username'] . ' AS username
   FROM ' . USERS_TABLE . ' AS u
@@ -93,7 +93,7 @@ SELECT u.' . $user_fields['username'] . ' AS username
 ;';
     $members = [];
     $res = pwg_query($query);
-    while ($us = pwg_db_fetch_assoc($res)) {
+    while ((bool) ($us = pwg_db_fetch_assoc($res))) {
         $members[] = $us['username'];
     }
     $template->append(

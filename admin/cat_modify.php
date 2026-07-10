@@ -74,7 +74,7 @@ function get_local_dir(int|string $category_id): string
     $query .= ' FROM ' . CATEGORIES_TABLE . ' WHERE id IN (' . $uppercats . ')';
     $query .= ';';
     $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         $row_id = $row['id'];
         if (is_string($row_id)) {
             $database_dirs[$row_id] = $row['dir'];
@@ -146,6 +146,7 @@ foreach (['comment', 'dir', 'site_id', 'id_uppercat'] as $nullable) {
     }
 }
 
+/** @var array<string, mixed> $category */
 $category['is_virtual'] = empty($category['dir']) ? true : false;
 
 $query = 'SELECT DISTINCT category_id
@@ -232,7 +233,7 @@ $template->assign(
     ]
 );
 
-if ($conf['activate_comments']) {
+if ((bool) $conf['activate_comments']) {
     $template->assign('CAT_COMMENTABLE', boolean_to_string($category['commentable']));
 }
 
@@ -371,9 +372,9 @@ $template->assign([
     'CACHE_KEYS' => get_admin_client_cache_keys(['categories']),
 ]);
 
-if (! $category['is_virtual']) {
+if (! (bool) $category['is_virtual']) {
     $category['cat_full_dir'] = get_complete_dir((int) $_GET['cat_id']);
-    $category_full_dir = preg_replace('/\/$/', '', (string) $category['cat_full_dir']);
+    $category_full_dir = preg_replace('/\/$/', '', $category['cat_full_dir']);
     $template->assign(
         [
             'CAT_FULL_DIR' => $category_full_dir,
@@ -382,7 +383,7 @@ if (! $category['is_virtual']) {
     $template->assign('CAT_DIR_NAME', basename((string) $category_full_dir));
     $template->assign('CAT_MIN_DIR', get_min_local_dir($category_full_dir));
 
-    if ($conf['enable_synchronization']) {
+    if ((bool) $conf['enable_synchronization']) {
         $template->assign(
             'U_SYNC',
             $base_url . 'site_update&amp;site=' . (is_string($category['site_id']) ? $category['site_id'] : '') . '&amp;cat_id=' . $category_id
@@ -415,14 +416,14 @@ if ($category['has_images'] or ! empty($category_representative_picture_id)) {
     // has_images-or-!empty(...) condition could be true here.
     if (
         ($category['has_images']
-         and $conf['allow_random_representative'])
+         and (bool) $conf['allow_random_representative'])
         or ! $category['has_images']) {
         $tpl_representant['ALLOW_DELETE'] = true;
     }
     $template->assign('representant', $tpl_representant);
 }
 
-if ($category['is_virtual']) {
+if ((bool) $category['is_virtual']) {
     $template->assign('parent_category', empty($category_id_uppercat) ? [] : [$category_id_uppercat]);
 }
 

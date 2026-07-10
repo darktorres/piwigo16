@@ -69,7 +69,7 @@ if (isset($_POST['nb_photos_deleted'])) {
     $whole_set = isset($_POST['whole_set']) && is_string($_POST['whole_set']) ? $_POST['whole_set'] : '';
 
     foreach (explode(',', $whole_set) as $id) {
-        if (! preg_match('/^\d+$/', $id)) {
+        if (! (bool) preg_match('/^\d+$/', $id)) {
             fatal_error('[Hacking attempt] the input parameter "whole_set" is not valid');
         }
         $collection[] = (int) $id;
@@ -177,7 +177,7 @@ DELETE
             update_images_lastmodified($images_to_update);
 
             if (isset($bulk_manager_filter['tags']) && is_array($bulk_manager_filter['tags']) &&
-              count(array_intersect(array_filter($bulk_manager_filter['tags'], is_scalar(...)), $del_tags))) {
+              (bool) count(array_intersect(array_filter($bulk_manager_filter['tags'], is_scalar(...)), $del_tags))) {
                 $redirect = true;
             }
         } else {
@@ -412,12 +412,12 @@ DELETE
         $query = 'SELECT path,representative_ext FROM ' . IMAGES_TABLE . '
   WHERE id IN (' . implode(',', $collection) . ')';
         $result = pwg_query($query);
-        while ($info = pwg_db_fetch_assoc($result)) {
+        while ((bool) ($info = pwg_db_fetch_assoc($result))) {
             $derivative_infos = [
                 'path' => (string) $info['path'],
             ];
             if (! empty($info['representative_ext'])) {
-                $derivative_infos['representative_ext'] = (string) $info['representative_ext'];
+                $derivative_infos['representative_ext'] = $info['representative_ext'];
             }
             foreach ($_POST['del_derivatives_type'] as $type) {
                 if (is_string($type)) {
@@ -613,7 +613,7 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
 
     $thumb_params = ImageStdParams::get_by_type(IMG_SQUARE);
     // template thumbnail initialization
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         $nb_thumbs_page++;
         $src_image = new SrcImage($row);
 

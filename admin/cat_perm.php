@@ -305,7 +305,7 @@ SELECT user_id, group_id
   WHERE group_id IN (' . implode(',', $group_granted_ids) . ')
 ';
     $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         // group_id/user_id are NOT NULL numeric columns; this driver
         // returns every column as string|null, so guard before using
         // group_id as an array key and collecting user_id

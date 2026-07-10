@@ -123,7 +123,7 @@ $template->set_filenames([
     'intro' => 'intro.tpl',
 ]);
 
-if ($conf['show_newsletter_subscription'] and userprefs_get_param('show_newsletter_subscription', true)) {
+if ((bool) $conf['show_newsletter_subscription'] and (bool) userprefs_get_param('show_newsletter_subscription', true)) {
     $query = '
   SELECT registration_date
     FROM ' . USER_INFOS_TABLE . '
@@ -201,7 +201,7 @@ $template->assign(
     ]
 );
 
-if ($conf['activate_comments']) {
+if ((bool) $conf['activate_comments']) {
     $query = '
 SELECT COUNT(*)
   FROM ' . COMMENTS_TABLE . '
@@ -214,7 +214,7 @@ SELECT COUNT(*)
     $template->assign('NB_COMMENTS', 0);
 }
 
-if ($conf['show_piwigo_latest_news']) {
+if ((bool) $conf['show_piwigo_latest_news']) {
     $latest_news = get_piwigo_news();
 
     // get_piwigo_news() is declared to return mixed (it can come straight
@@ -546,7 +546,7 @@ foreach ($file_extensions as $ext => $ext_details) {
 // $conf['cache_sizes'] is normally the serialized string as loaded from the
 // config table, but conf_update_param(..., true) can also leave the raw
 // array in place within the same request (see admin/maintenance_env.php).
-if ($conf['add_cache_to_storage_chart'] && isset($conf['cache_sizes'])) {
+if ((bool) $conf['add_cache_to_storage_chart'] && isset($conf['cache_sizes'])) {
     $cache_sizes = null;
     if (is_string($conf['cache_sizes'])) {
         $unserialized_cache_sizes = unserialize($conf['cache_sizes']);

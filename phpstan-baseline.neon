@@ -1,205 +1,5715 @@
+# This baseline was regenerated after the "beyond L10" pass (see git log
+# for the "phpstan bleeding-edge safe fixes" commits): phpstan-strict-rules
+# and bleedingEdge.neon were re-enabled, and every mechanically-safe
+# finding (missing (bool) casts on non-boolean condition/operand
+# expressions, PHPStan-proven-useless casts, a few implicit-array-creation
+# and varTag fixes) was fixed directly rather than baselined. Everything
+# still listed below was deliberately deferred, in three groups:
+#
+#   - Loose comparison / empty() / strict-function-argument findings
+#     (equal.notAllowed, notEqual.notAllowed, empty.notAllowed,
+#     function.strict): converting these requires per-callsite judgment
+#     about PHP's type-juggling semantics and is a documented hazard in
+#     this codebase -- an earlier StrictComparisonRector-based sweep on
+#     the 16.x-v2 branch produced real behavioral regressions (see
+#     docs/PLAN-REPLAY.md). Not safe to fix mechanically.
+#   - Type-coverage findings (typeCoverage.paramTypeCoverage/
+#     propertyTypeCoverage/returnTypeCoverage/constantTypeCoverage):
+#     bulk native-type promotion across hundreds of signatures, each with
+#     real per-callsite runtime risk at this volume. Deferred as a
+#     possible dedicated future initiative.
+#   - Heterogeneous tail (method.internalClass, property/variable/method.
+#     dynamicName, argument.type, offsetAccess.*, foreach.valueOverwrite,
+#     switch.type, return.missing, non-numeric arithmetic, etc.): a long
+#     list of individually distinct findings needing L9/L10-long-tail-style
+#     one-by-one review. Deferred as a possible dedicated future
+#     initiative.
 parameters:
 	ignoreErrors:
 		-
-			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: about.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: action.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 3
+			path: action.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between mixed and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: action.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: action.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 3
+			path: action.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and mixed is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: action.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|false and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: action.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 3
+			path: admin.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 2
+			path: admin.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 3
+			path: admin/album.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 3
+			path: admin/album_notification.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/album_notification.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: admin/album_notification.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|null and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: admin/album_notification.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: admin/albums.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 3
+			path: admin/albums.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 5
+			path: admin/batch_manager.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 9
+			path: admin/batch_manager.php
+
+		-
+			rawMessage: Foreach overwrites $value with its value variable.
+			identifier: foreach.valueOverwrite
+			count: 2
+			path: admin/batch_manager.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<1, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/batch_manager.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 5
+			path: admin/batch_manager.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|null and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/batch_manager.php
+
+		-
+			rawMessage: Variable variables are not allowed.
+			identifier: variable.dynamicName
+			count: 4
+			path: admin/batch_manager.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 2
+			path: admin/batch_manager_global.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 11
+			path: admin/batch_manager_global.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int|null and mixed is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: admin/batch_manager_global.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between mixed and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: admin/batch_manager_global.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: admin/batch_manager_global.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/batch_manager_global.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/batch_manager_global.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 22
+			path: admin/batch_manager_global.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 2
+			path: admin/batch_manager_unit.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 6
+			path: admin/batch_manager_unit.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and mixed is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: admin/batch_manager_unit.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: admin/batch_manager_unit.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/batch_manager_unit.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and mixed is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/batch_manager_unit.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/batch_manager_unit.php
+
+		-
+			rawMessage: Cannot access offset int on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: admin/cat_list.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 3
+			path: admin/cat_list.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/cat_list.php
+
+		-
+			rawMessage: 'Parameter #1 $value of function count expects array|Countable, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: admin/cat_list.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 6
+			path: admin/cat_modify.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|false and string|false is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/cat_modify.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: admin/cat_options.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: admin/cat_perm.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: admin/cat_perm.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string|null and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: admin/cat_perm.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/cat_perm.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|null and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/cat_perm.php
+
+		-
+			rawMessage: 'Call to function array_search() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: admin/configuration.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 2
+			path: admin/configuration.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 11
+			path: admin/configuration.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: admin/configuration.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between mixed and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: admin/configuration.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 10
+			path: admin/configuration.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: admin/configuration.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: admin/configuration.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and mixed is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/configuration.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 5
+			path: admin/configuration.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|false and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/configuration.php
+
+		-
+			rawMessage: 'Path in include() "./local/config/config.inc.php" is not a file or it does not exist.'
 			identifier: include.fileNotFound
 			count: 2
 			path: admin/configuration.php
 
 		-
-			message: '#^Array has 2 duplicate keys with value ''correction_error_fct'' \(''correction_error_fct'', ''correction_error_fct''\)\.$#'
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: admin/element_set_ranks.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 3
+			path: admin/element_set_ranks.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string|null and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: admin/element_set_ranks.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: admin/element_set_ranks.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|null and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: admin/element_set_ranks.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: admin/extend_for_templates.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: admin/extend_for_templates.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: admin/extend_for_templates.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: admin/group_list.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: admin/group_perm.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: admin/help.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: admin/history.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: admin/include/batch_manager_filters.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/include/batch_manager_filters.inc.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 2
+			path: admin/include/c13y_internal.class.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: admin/include/c13y_internal.class.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string|null and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: admin/include/c13y_internal.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<min, -1>|int<1, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 6
+			path: admin/include/c13y_internal.class.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 5
+			path: admin/include/c13y_internal.class.php
+
+		-
+			rawMessage: 'Out of 607 possible return types, only 559 - 92.0 %% actually have it. Add more return types to get over 99 %%'
+			identifier: typeCoverage.returnTypeCoverage
+			count: 1
+			path: admin/include/c13y_internal.class.php
+
+		-
+			rawMessage: 'Array has 2 duplicate keys with value ''correction_error_fct'' (''correction_error_fct'', ''correction_error_fct'').'
 			identifier: array.duplicateKey
 			count: 1
 			path: admin/include/check_integrity.class.php
 
 		-
-			message: '#^Function plugin_activate not found\.$#'
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 3
+			path: admin/include/check_integrity.class.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 3
+			path: admin/include/check_integrity.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/include/check_integrity.class.php
+
+		-
+			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 3
+			path: admin/include/check_integrity.class.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 5
+			path: admin/include/check_integrity.class.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: admin/include/configuration_sizes_process.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between float and float is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: admin/include/configuration_sizes_process.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between float and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: admin/include/configuration_sizes_process.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: admin/include/configuration_sizes_process.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 4
+			path: admin/include/configuration_sizes_process.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and mixed is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/include/configuration_sizes_process.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 4
+			path: admin/include/configuration_sizes_process.inc.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: admin/include/configuration_watermark_process.inc.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: admin/include/configuration_watermark_process.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between bool and bool is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: admin/include/configuration_watermark_process.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 8
+			path: admin/include/configuration_watermark_process.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int|false and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: admin/include/configuration_watermark_process.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: admin/include/configuration_watermark_process.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, 2> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/include/configuration_watermark_process.inc.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 4
+			path: admin/include/functions.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 21
+			path: admin/include/functions.php
+
+		-
+			rawMessage: 'Dynamic call to static method Imagick::getVersion().'
+			identifier: staticMethod.dynamicCall
+			count: 1
+			path: admin/include/functions.php
+
+		-
+			rawMessage: Foreach overwrites $row with its value variable.
+			identifier: foreach.valueOverwrite
+			count: 1
+			path: admin/include/functions.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int<1, max> and string|null is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: admin/include/functions.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int<1, max>|string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: admin/include/functions.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between list<int> and list<int> is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: admin/include/functions.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 9
+			path: admin/include/functions.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string|null is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: admin/include/functions.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string|null and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: admin/include/functions.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string|null and string|null is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: admin/include/functions.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between array<int|string>|int|string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/include/functions.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/include/functions.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 25
+			path: admin/include/functions.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<1, max>|string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/include/functions.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int|string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/include/functions.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/include/functions.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 4
+			path: admin/include/functions.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 24
+			path: admin/include/functions.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|null and null is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/include/functions.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|null and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 4
+			path: admin/include/functions.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 78
+			path: admin/include/functions.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: admin/include/functions_history.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/include/functions_history.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 3
+			path: admin/include/functions_history.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/include/functions_history.inc.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 2
+			path: admin/include/functions_history.inc.php
+
+		-
+			rawMessage: 'Parameter #2 of function sprintf is expected to be int by placeholder #1 ("%%02u"), string given.'
+			identifier: argument.type
+			count: 3
+			path: admin/include/functions_history.inc.php
+
+		-
+			rawMessage: 'Parameter #2 of function sprintf is expected to be int by placeholder #1 ("%%4u"), string|null given.'
+			identifier: argument.type
+			count: 1
+			path: admin/include/functions_history.inc.php
+
+		-
+			rawMessage: 'Parameter #3 of function sprintf is expected to be int by placeholder #2 ("%%02u"), string|null given.'
+			identifier: argument.type
+			count: 1
+			path: admin/include/functions_history.inc.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 2
+			path: admin/include/functions_install.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/include/functions_install.inc.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 6
+			path: admin/include/functions_install.inc.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 4
+			path: admin/include/functions_metadata.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: admin/include/functions_metadata.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between SimpleXMLElement and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: admin/include/functions_metadata.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/include/functions_metadata.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/include/functions_metadata.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<min, 7>|int<9, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/include/functions_metadata.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/include/functions_metadata.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 9
+			path: admin/include/functions_metadata.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: admin/include/functions_notification_by_mail.inc.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 2
+			path: admin/include/functions_notification_by_mail.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between bool|string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: admin/include/functions_notification_by_mail.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: admin/include/functions_notification_by_mail.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int<0, max> and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 3
+			path: admin/include/functions_notification_by_mail.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string|null and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: admin/include/functions_notification_by_mail.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/include/functions_notification_by_mail.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: admin/include/functions_notification_by_mail.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|null and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/include/functions_notification_by_mail.inc.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 11
+			path: admin/include/functions_notification_by_mail.inc.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: admin/include/functions_permalinks.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: admin/include/functions_permalinks.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: admin/include/functions_permalinks.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: admin/include/functions_permalinks.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 7
+			path: admin/include/functions_permalinks.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 1
+			path: admin/include/functions_plugins.inc.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: admin/include/functions_upgrade.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 3
+			path: admin/include/functions_upgrade.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string|null and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: admin/include/functions_upgrade.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/include/functions_upgrade.php
+
+		-
+			rawMessage: Possibly invalid array key type string|false.
+			identifier: offsetAccess.invalidOffset
+			count: 1
+			path: admin/include/functions_upgrade.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 10
+			path: admin/include/functions_upload.inc.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 5
+			path: admin/include/functions_upload.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: admin/include/functions_upload.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string|false and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 6
+			path: admin/include/functions_upload.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/include/functions_upload.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int|false and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 4
+			path: admin/include/functions_upload.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 5
+			path: admin/include/functions_upload.inc.php
+
+		-
+			rawMessage: 'Only numeric types are allowed in /, int<0, max>|false given on the left side.'
+			identifier: div.leftNonNumeric
+			count: 1
+			path: admin/include/functions_upload.inc.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 6
+			path: admin/include/image.class.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 5
+			path: admin/include/image.class.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: admin/include/image.class.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 3
+			path: admin/include/image.class.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string|null and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: admin/include/image.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between float|int and float|int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: admin/include/image.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between float|int<min, -1>|int<1, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: admin/include/image.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/include/image.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<-1, 1> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: admin/include/image.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 8
+			path: admin/include/image.class.php
+
+		-
+			rawMessage: 'Only numeric types are allowed in /, int<0, max>|false given on the left side.'
+			identifier: div.leftNonNumeric
+			count: 1
+			path: admin/include/image.class.php
+
+		-
+			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 5
+			path: admin/include/image.class.php
+
+		-
+			rawMessage: Variable method call on imageInterface.
+			identifier: method.dynamicName
+			count: 1
+			path: admin/include/image.class.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 6
+			path: admin/include/languages.class.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: admin/include/languages.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 7
+			path: admin/include/languages.class.php
+
+		-
+			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 3
+			path: admin/include/languages.class.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 5
+			path: admin/include/languages.class.php
+
+		-
+			rawMessage: 'Out of 607 possible return types, only 559 - 92.0 %% actually have it. Add more return types to get over 99 %%'
+			identifier: typeCoverage.returnTypeCoverage
+			count: 1
+			path: admin/include/languages.class.php
+
+		-
+			rawMessage: 'Parameter #2 $needle of function str_starts_with expects string, string|false given.'
+			identifier: argument.type
+			count: 1
+			path: admin/include/languages.class.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: admin/include/photos_add_direct_prepare.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int|string and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/include/photos_add_direct_prepare.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|false and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/include/photos_add_direct_prepare.inc.php
+
+		-
+			rawMessage: 'Parameter #3 of function sprintf is expected to be int by placeholder #2 ("%%u"), float given.'
+			identifier: argument.type
+			count: 1
+			path: admin/include/photos_add_direct_prepare.inc.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 2
+			path: admin/include/plugins.class.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 10
+			path: admin/include/plugins.class.php
+
+		-
+			rawMessage: Function plugin_activate not found.
 			identifier: function.notFound
 			count: 1
 			path: admin/include/plugins.class.php
 
 		-
-			message: '#^Function plugin_deactivate not found\.$#'
+			rawMessage: Function plugin_deactivate not found.
 			identifier: function.notFound
 			count: 1
 			path: admin/include/plugins.class.php
 
 		-
-			message: '#^Function plugin_install not found\.$#'
+			rawMessage: Function plugin_install not found.
 			identifier: function.notFound
 			count: 1
 			path: admin/include/plugins.class.php
 
 		-
-			message: '#^Function plugin_uninstall not found\.$#'
+			rawMessage: Function plugin_uninstall not found.
 			identifier: function.notFound
 			count: 1
 			path: admin/include/plugins.class.php
 
 		-
-			message: '#^Function theme_activate not found\.$#'
+			rawMessage: 'Loose comparison via "!=" between mixed and mixed is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: admin/include/plugins.class.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between mixed and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: admin/include/plugins.class.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 3
+			path: admin/include/plugins.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: admin/include/plugins.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<-1, 1> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: admin/include/plugins.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 4
+			path: admin/include/plugins.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 7
+			path: admin/include/plugins.class.php
+
+		-
+			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 4
+			path: admin/include/plugins.class.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 6
+			path: admin/include/plugins.class.php
+
+		-
+			rawMessage: 'Parameter #2 $needle of function str_starts_with expects string, string|false given.'
+			identifier: argument.type
+			count: 1
+			path: admin/include/plugins.class.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: admin/include/tabsheet.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/include/tabsheet.class.php
+
+		-
+			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 3
+			path: admin/include/tabsheet.class.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 8
+			path: admin/include/themes.class.php
+
+		-
+			rawMessage: Function theme_activate not found.
 			identifier: function.notFound
 			count: 1
 			path: admin/include/themes.class.php
 
 		-
-			message: '#^Function theme_deactivate not found\.$#'
+			rawMessage: Function theme_deactivate not found.
 			identifier: function.notFound
 			count: 1
 			path: admin/include/themes.class.php
 
 		-
-			message: '#^Function theme_delete not found\.$#'
+			rawMessage: Function theme_delete not found.
 			identifier: function.notFound
 			count: 1
 			path: admin/include/themes.class.php
 
 		-
-			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
+			rawMessage: 'Loose comparison via "!=" between mixed and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: admin/include/themes.class.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: admin/include/themes.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<-1, 1> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: admin/include/themes.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int|string and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/include/themes.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: admin/include/themes.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 8
+			path: admin/include/themes.class.php
+
+		-
+			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 3
+			path: admin/include/themes.class.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 6
+			path: admin/include/themes.class.php
+
+		-
+			rawMessage: 'Parameter #2 $needle of function str_starts_with expects string, string|false given.'
+			identifier: argument.type
+			count: 1
+			path: admin/include/themes.class.php
+
+		-
+			rawMessage: 'Call to function base64_decode() requires parameter #2 to be set.'
+			identifier: function.strict
+			count: 1
+			path: admin/include/updates.class.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 5
+			path: admin/include/updates.class.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 7
+			path: admin/include/updates.class.php
+
+		-
+			rawMessage: Foreach overwrites $fs_ext with its value variable.
+			identifier: foreach.valueOverwrite
+			count: 1
+			path: admin/include/updates.class.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and mixed is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: admin/include/updates.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between bool|int|null and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: admin/include/updates.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int|string and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: admin/include/updates.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int|string and mixed is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/include/updates.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/include/updates.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 5
+			path: admin/include/updates.class.php
+
+		-
+			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 7
+			path: admin/include/updates.class.php
+
+		-
+			rawMessage: 'Variable property access on $this(updates).'
+			identifier: property.dynamicName
+			count: 7
+			path: admin/include/updates.class.php
+
+		-
+			rawMessage: Variable property access on mixed.
+			identifier: property.dynamicName
+			count: 6
+			path: admin/include/updates.class.php
+
+		-
+			rawMessage: 'Call to function array_search() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: admin/intro.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 2
+			path: admin/intro.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between float|int and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/intro.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/intro.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: admin/intro.php
+
+		-
+			rawMessage: 'Possibly invalid array key type int<0, max>|false.'
+			identifier: offsetAccess.invalidOffset
+			count: 1
+			path: admin/intro.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/languages.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: admin/languages_installed.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: admin/languages_installed.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: admin/languages_installed.php
+
+		-
+			rawMessage: 'Dynamic call to static method Imagick::getVersion().'
+			identifier: staticMethod.dynamicCall
+			count: 1
+			path: admin/maintenance_actions.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: admin/maintenance_actions.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: admin/maintenance_env.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 2
+			path: admin/maintenance_env.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/maintenance_env.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: admin/maintenance_sys.php
+
+		-
+			rawMessage: 'Switch condition type (string|null) does not match case condition \ACTIVITY_SYSTEM_CORE (int).'
+			identifier: switch.type
+			count: 1
+			path: admin/maintenance_sys.php
+
+		-
+			rawMessage: 'Switch condition type (string|null) does not match case condition \ACTIVITY_SYSTEM_PLUGIN (int).'
+			identifier: switch.type
+			count: 1
+			path: admin/maintenance_sys.php
+
+		-
+			rawMessage: 'Switch condition type (string|null) does not match case condition \ACTIVITY_SYSTEM_THEME (int).'
+			identifier: switch.type
+			count: 1
+			path: admin/maintenance_sys.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 5
+			path: admin/notification_by_mail.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 2
+			path: admin/notification_by_mail.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int<0, max> and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: admin/notification_by_mail.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/notification_by_mail.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/notification_by_mail.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 1
+			path: admin/notification_by_mail.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 2
+			path: admin/permalinks.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: admin/permalinks.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int|string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: admin/permalinks.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string|null and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: admin/permalinks.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int|string and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/permalinks.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 3
+			path: admin/permalinks.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 3
+			path: admin/photo.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/photos_add.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: admin/photos_add_direct.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 2
+			path: admin/picture_coi.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between float and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: admin/picture_coi.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/picture_coi.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/picture_coi.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 2
+			path: admin/picture_modify.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 5
+			path: admin/picture_modify.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and mixed is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: admin/picture_modify.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and mixed is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/picture_modify.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/picture_modify.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: admin/plugin.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/plugin.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/plugins.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between mixed and mixed is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: admin/plugins_installed.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between mixed and null is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: admin/plugins_installed.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/plugins_installed.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/plugins_installed.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between mixed and null is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: admin/plugins_new.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/plugins_new.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/plugins_new.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between mixed and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: admin/popuphelp.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between bool|string and false is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/popuphelp.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/popuphelp.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: admin/profile.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 2
+			path: admin/rating.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: admin/rating.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between float and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 4
+			path: admin/rating_user.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/rating_user.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 2
+			path: admin/site_manager.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: admin/site_manager.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: admin/site_manager.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 4
+			path: admin/site_reader_local.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: admin/site_reader_local.php
+
+		-
+			rawMessage: 'Only numeric types are allowed in /, int<0, max>|false given on the left side.'
+			identifier: div.leftNonNumeric
+			count: 1
+			path: admin/site_reader_local.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 2
+			path: admin/site_reader_local.php
+
+		-
+			rawMessage: 'Call to function array_search() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: admin/site_update.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: admin/site_update.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 4
+			path: admin/site_update.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between mixed and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 4
+			path: admin/site_update.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/site_update.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 7
+			path: admin/site_update.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 11
+			path: admin/site_update.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/site_update.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between mixed and null is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 3
+			path: admin/stats.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between DateTime|null and null is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: admin/stats.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 1
+			path: admin/stats.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/tags.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: admin/theme.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: admin/theme.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/themes.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: admin/themes_installed.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: admin/themes_installed.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 6
+			path: admin/themes_installed.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 2
+			path: admin/themes_standard_pages.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: admin/themes_standard_pages.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: admin/updates_ext.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 2
+			path: admin/updates_ext.php
+
+		-
+			rawMessage: Foreach overwrites $fs_ext with its value variable.
+			identifier: foreach.valueOverwrite
+			count: 1
+			path: admin/updates_ext.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/updates_ext.php
+
+		-
+			rawMessage: Variable property access on mixed.
+			identifier: property.dynamicName
+			count: 2
+			path: admin/updates_ext.php
+
+		-
+			rawMessage: Variable property access on updates.
+			identifier: property.dynamicName
+			count: 2
+			path: admin/updates_ext.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int|string and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 4
+			path: admin/updates_pwg.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 2
+			path: admin/user_activity.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/user_activity.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: admin/user_activity.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 3
+			path: admin/user_list.php
+
+		-
+			rawMessage: 'Parameter #2 of function sprintf is expected to be int by placeholder #1 ("%%02u"), string|null given.'
+			identifier: argument.type
+			count: 1
+			path: admin/user_list.php
+
+		-
+			rawMessage: 'Path in include() "./local/config/config.inc.php" is not a file or it does not exist.'
 			identifier: include.fileNotFound
 			count: 2
 			path: admin/user_list.php
 
 		-
-			message: '#^Class PhpCsFixer\\Fixer\\Alias\\RandomApiMigrationFixer not found\.$#'
-			identifier: class.notFound
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
 			count: 1
-			path: ecs.php
+			path: admin/user_perm.php
 
 		-
-			message: '#^Class PhpCsFixer\\Fixer\\Basic\\SingleLineEmptyBodyFixer not found\.$#'
-			identifier: class.notFound
-			count: 1
-			path: ecs.php
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 2
+			path: comments.php
 
 		-
-			message: '#^Class PhpCsFixer\\Fixer\\Phpdoc\\GeneralPhpdocAnnotationRemoveFixer not found\.$#'
-			identifier: class.notFound
-			count: 1
-			path: ecs.php
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 9
+			path: comments.php
 
 		-
-			message: '#^Class PhpCsFixer\\Fixer\\Strict\\DeclareStrictTypesFixer not found\.$#'
-			identifier: class.notFound
+			rawMessage: 'Loose comparison via "!=" between mixed and int is not allowed.'
+			identifier: notEqual.notAllowed
 			count: 1
-			path: ecs.php
+			path: comments.php
 
 		-
-			message: '#^Class PhpCsFixer\\Fixer\\StringNotation\\NoTrailingWhitespaceInStringFixer not found\.$#'
-			identifier: class.notFound
+			rawMessage: 'Loose comparison via "!=" between mixed and string is not allowed.'
+			identifier: notEqual.notAllowed
 			count: 1
-			path: ecs.php
+			path: comments.php
 
 		-
-			message: '#^Class PhpCsFixer\\Fixer\\Whitespace\\LineEndingFixer not found\.$#'
-			identifier: class.notFound
+			rawMessage: 'Loose comparison via "!=" between string|null and string is not allowed.'
+			identifier: notEqual.notAllowed
 			count: 1
-			path: ecs.php
+			path: comments.php
 
 		-
-			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
+			rawMessage: 'Loose comparison via "==" between int|string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: comments.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 3
+			path: comments.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|null and mixed is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: comments.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 1
+			path: comments.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 7
+			path: feed.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string|null and mixed is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: feed.php
+
+		-
+			rawMessage: 'Only numeric types are allowed in -, int|false given on the right side.'
+			identifier: minus.rightNonNumeric
+			count: 1
+			path: feed.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 2
+			path: feed.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: i.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: i.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between array<int> and array<int> is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: i.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between bool and bool is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: i.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between float and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: i.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int|null and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: i.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: i.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between bool and false is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: i.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between float and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: i.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: i.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<min, 300>|int<302, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: i.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int|false and int<0, max> is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: i.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and false is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: i.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: i.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: i.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 6
+			path: i.php
+
+		-
+			rawMessage: 'Only numeric types are allowed in +, bool given on the right side.'
+			identifier: plus.rightNonNumeric
+			count: 1
+			path: i.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 1
+			path: i.php
+
+		-
+			rawMessage: 'Path in include() "./local/config/config.inc.php" is not a file or it does not exist.'
 			identifier: include.fileNotFound
 			count: 1
 			path: i.php
 
 		-
-			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: identification.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 2
+			path: identification.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between mixed and mixed is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: identification.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: identification.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and true is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: identification.php
+
+		-
+			rawMessage: Possibly invalid array key type string|false.
+			identifier: offsetAccess.invalidOffset
+			count: 1
+			path: identification.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: include/Logger.class.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between mixed and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/Logger.class.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string|null and null is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/Logger.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: include/Logger.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, 96> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/Logger.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and null is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/Logger.class.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 38
+			path: include/Logger.class.php
+
+		-
+			rawMessage: 'Out of 29 possible constant types, only 13 - 44.8 %% actually have it. Add more constant types to get over 99 %%'
+			identifier: typeCoverage.constantTypeCoverage
+			count: 13
+			path: include/Logger.class.php
+
+		-
+			rawMessage: 'Out of 607 possible return types, only 559 - 92.0 %% actually have it. Add more return types to get over 99 %%'
+			identifier: typeCoverage.returnTypeCoverage
+			count: 1
+			path: include/Logger.class.php
+
+		-
+			rawMessage: 'Parameter #2 of function sprintf is expected to be int by placeholder #1 ("%%06d"), float given.'
+			identifier: argument.type
+			count: 1
+			path: include/Logger.class.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 2
+			path: include/base32.class.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 2
+			path: include/base32.class.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int<0, 39> and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/base32.class.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/base32.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/base32.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, 255> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/base32.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<1, 39> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/base32.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<1, 7>|int<9, 15>|int<17, 23>|int<25, 39> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/base32.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<1, 7>|int<9, 15>|int<17, 39> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/base32.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<1, 7>|int<9, 39> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/base32.class.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 2
+			path: include/block.class.php
+
+		-
+			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 8
+			path: include/block.class.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 15
+			path: include/block.class.php
+
+		-
+			rawMessage: 'Out of 607 possible return types, only 559 - 92.0 %% actually have it. Add more return types to get over 99 %%'
+			identifier: typeCoverage.returnTypeCoverage
+			count: 9
+			path: include/block.class.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: include/cache.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, 96> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/cache.class.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 5
+			path: include/cache.class.php
+
+		-
+			rawMessage: 'Out of 607 possible return types, only 559 - 92.0 %% actually have it. Add more return types to get over 99 %%'
+			identifier: typeCoverage.returnTypeCoverage
+			count: 2
+			path: include/cache.class.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 4
+			path: include/calendar_base.class.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int and int<1, max> is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/calendar_base.class.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/calendar_base.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/calendar_base.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/calendar_base.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/calendar_base.class.php
+
+		-
+			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 3
+			path: include/calendar_base.class.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 7
+			path: include/calendar_base.class.php
+
+		-
+			rawMessage: 'Out of 607 possible return types, only 559 - 92.0 %% actually have it. Add more return types to get over 99 %%'
+			identifier: typeCoverage.returnTypeCoverage
+			count: 6
+			path: include/calendar_base.class.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: include/calendar_monthly.class.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int<-399, 399> and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/calendar_monthly.class.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int<-99, 99> and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/calendar_monthly.class.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int<1, max> and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/calendar_monthly.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<-3, 3> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/calendar_monthly.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, 6> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: include/calendar_monthly.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 11
+			path: include/calendar_monthly.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int|string and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/calendar_monthly.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 3
+			path: include/calendar_monthly.class.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 2
+			path: include/calendar_monthly.class.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: include/calendar_weekly.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 3
+			path: include/calendar_weekly.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/calendar_weekly.class.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: include/category_cats.inc.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 3
+			path: include/category_cats.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between bool|string|null and mixed is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/category_cats.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between mixed and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/category_cats.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/category_cats.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 3
+			path: include/category_cats.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and mixed is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/category_cats.inc.php
+
+		-
+			rawMessage: 'Parameter #3 of function sprintf is expected to be int by placeholder #2 ("%%u"), string given.'
+			identifier: argument.type
+			count: 1
+			path: include/category_cats.inc.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 1
+			path: include/category_default.inc.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 4
+			path: include/common.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between mixed and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 3
+			path: include/common.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: include/common.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|null and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/common.inc.php
+
+		-
+			rawMessage: 'Path in include() "./local/config/config.inc.php" is not a file or it does not exist.'
 			identifier: include.fileNotFound
 			count: 1
 			path: include/common.inc.php
 
 		-
-			message: '#^Method DerivativeImage\:\:get_scaled_size_htm\(\) should return string but return statement is missing\.$#'
+			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/config_default.inc.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: include/dblayer/functions_mysqli.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between bool|mysqli_result and null is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: include/dblayer/functions_mysqli.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int<0, max> and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 3
+			path: include/dblayer/functions_mysqli.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between mixed and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/dblayer/functions_mysqli.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 3
+			path: include/dblayer/functions_mysqli.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string|null is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/dblayer/functions_mysqli.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: include/dblayer/functions_mysqli.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: include/dblayer/functions_mysqli.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|null and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: include/dblayer/functions_mysqli.inc.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 11
+			path: include/dblayer/functions_mysqli.inc.php
+
+		-
+			rawMessage: 'Parameter #2 $string of function explode expects string, string|null given.'
+			identifier: argument.type
+			count: 1
+			path: include/dblayer/functions_mysqli.inc.php
+
+		-
+			rawMessage: 'Result of function my_error (void) is used.'
+			identifier: function.void
+			count: 1
+			path: include/dblayer/functions_mysqli.inc.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: include/derivative.inc.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: include/derivative.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between array<int>|null and null is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/derivative.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between (int|string) and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/derivative.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between DerivativeParams|null and null is not allowed.'
+			identifier: equal.notAllowed
+			count: 5
+			path: include/derivative.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between array<int>|null and null is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: include/derivative.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between float and float is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/derivative.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: include/derivative.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/derivative.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: include/derivative.inc.php
+
+		-
+			rawMessage: 'Method DerivativeImage::get_scaled_size_htm() should return string but return statement is missing.'
 			identifier: return.missing
 			count: 1
 			path: include/derivative.inc.php
 
 		-
-			message: '#^Method DerivativeImage\:\:get_size_css\(\) should return string but return statement is missing\.$#'
+			rawMessage: 'Method DerivativeImage::get_size_css() should return string but return statement is missing.'
 			identifier: return.missing
 			count: 1
 			path: include/derivative.inc.php
 
 		-
-			message: '#^Method DerivativeImage\:\:get_size_hr\(\) should return string but return statement is missing\.$#'
+			rawMessage: 'Method DerivativeImage::get_size_hr() should return string but return statement is missing.'
 			identifier: return.missing
 			count: 1
 			path: include/derivative.inc.php
 
 		-
-			message: '#^Method DerivativeImage\:\:get_size_htm\(\) should return string but return statement is missing\.$#'
+			rawMessage: 'Method DerivativeImage::get_size_htm() should return string but return statement is missing.'
 			identifier: return.missing
 			count: 1
 			path: include/derivative.inc.php
 
 		-
-			message: '#^Call to static method display_debug\(\) on an unknown class Smarty_Internal_Debug\.$#'
+			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 5
+			path: include/derivative.inc.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 15
+			path: include/derivative.inc.php
+
+		-
+			rawMessage: 'Out of 607 possible return types, only 559 - 92.0 %% actually have it. Add more return types to get over 99 %%'
+			identifier: typeCoverage.returnTypeCoverage
+			count: 5
+			path: include/derivative.inc.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 2
+			path: include/derivative_params.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between array<float|int>|null and null is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/derivative_params.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between float|int and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: include/derivative_params.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between float and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: include/derivative_params.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 3
+			path: include/derivative_params.inc.php
+
+		-
+			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 8
+			path: include/derivative_params.inc.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 10
+			path: include/derivative_params.inc.php
+
+		-
+			rawMessage: 'Out of 607 possible return types, only 559 - 92.0 %% actually have it. Add more return types to get over 99 %%'
+			identifier: typeCoverage.returnTypeCoverage
+			count: 3
+			path: include/derivative_params.inc.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 2
+			path: include/derivative_std_params.inc.php
+
+		-
+			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 13
+			path: include/derivative_std_params.inc.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 8
+			path: include/derivative_std_params.inc.php
+
+		-
+			rawMessage: 'Out of 607 possible return types, only 559 - 92.0 %% actually have it. Add more return types to get over 99 %%'
+			identifier: typeCoverage.returnTypeCoverage
+			count: 5
+			path: include/derivative_std_params.inc.php
+
+		-
+			rawMessage: 'Call to internal function pwg_error_collector_flush().'
+			identifier: function.internal
+			count: 1
+			path: include/error_collector.inc.php
+
+		-
+			rawMessage: 'Call to internal function pwg_error_collector_handle_error().'
+			identifier: function.internal
+			count: 1
+			path: include/error_collector.inc.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 2
+			path: include/error_collector.inc.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 2
+			path: include/filter.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between mixed and mixed is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: include/filter.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between mixed and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/filter.inc.php
+
+		-
+			rawMessage: 'Call to function array_search() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 13
+			path: include/functions.inc.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 39
+			path: include/functions.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between (callable)|null and null is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between (float|int) and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: include/functions.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: include/functions.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int<0, 192> and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int<1, max> and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between mixed and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and mixed is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 7
+			path: include/functions.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string|null and null is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string|null and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between bool and false is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 9
+			path: include/functions.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<-999, 999> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<1, max> and int<1, max> is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<min, 1> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int|string and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 5
+			path: include/functions.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and mixed is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 23
+			path: include/functions.inc.php
+
+		-
+			rawMessage: 'Only numeric types are allowed in +, int|false given on the left side.'
+			identifier: plus.leftNonNumeric
+			count: 4
+			path: include/functions.inc.php
+
+		-
+			rawMessage: 'Only numeric types are allowed in -, int|false given on the left side.'
+			identifier: minus.leftNonNumeric
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			rawMessage: 'Only numeric types are allowed in -, int|false given on the right side.'
+			identifier: minus.rightNonNumeric
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 100
+			path: include/functions.inc.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 2
+			path: include/functions_calendar.inc.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 2
+			path: include/functions_calendar.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 3
+			path: include/functions_calendar.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 3
+			path: include/functions_calendar.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<1, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/functions_calendar.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 7
+			path: include/functions_calendar.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and mixed is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/functions_calendar.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/functions_calendar.inc.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: include/functions_category.inc.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 12
+			path: include/functions_category.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: include/functions_category.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/functions_category.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<1, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/functions_category.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string|null is not allowed.'
+			identifier: equal.notAllowed
+			count: 3
+			path: include/functions_category.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/functions_category.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|null and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: include/functions_category.inc.php
+
+		-
+			rawMessage: 'Offset ''count_categories'' might not exist on array{NAME: mixed, TITLE: string, URL: string, LEVEL: int<1, max>, SELECTED: bool, IS_UPPERCAT: bool, icon_ts?: array<string, mixed>|false, id: string|null, ...<string, string|null>}.'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: include/functions_category.inc.php
+
+		-
+			rawMessage: 'Offset ''id'' might not exist on array{NAME: mixed, TITLE: string, URL: string, LEVEL: int<1, max>, SELECTED: bool, IS_UPPERCAT: bool, icon_ts?: array<string, mixed>|false, ...<string, string|null>}.'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: include/functions_category.inc.php
+
+		-
+			rawMessage: 'Offset ''max_date_last'' might not exist on array{NAME: mixed, TITLE: string, URL: string, LEVEL: int<1, max>, SELECTED: bool, IS_UPPERCAT: bool, ...<string, string|null>}.'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: include/functions_category.inc.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 27
+			path: include/functions_category.inc.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: include/functions_comment.inc.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 9
+			path: include/functions_comment.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between mixed and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/functions_comment.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 3
+			path: include/functions_comment.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int|string and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/functions_comment.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 13
+			path: include/functions_comment.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|null and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/functions_comment.inc.php
+
+		-
+			rawMessage: 'Offset ''content'' might not exist on array{ip: mixed, agent: mixed, author: mixed, author_id: mixed, ...<string, mixed>}.'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: include/functions_comment.inc.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 10
+			path: include/functions_comment.inc.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 2
+			path: include/functions_cookie.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/functions_cookie.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and null is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/functions_cookie.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/functions_cookie.inc.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 4
+			path: include/functions_cookie.inc.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: include/functions_html.inc.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 9
+			path: include/functions_html.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 4
+			path: include/functions_html.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/functions_html.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: include/functions_html.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|null and null is not allowed.'
+			identifier: equal.notAllowed
+			count: 3
+			path: include/functions_html.inc.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 28
+			path: include/functions_html.inc.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 2
+			path: include/functions_mail.inc.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 29
+			path: include/functions_mail.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/functions_mail.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string|null and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/functions_mail.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/functions_mail.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 5
+			path: include/functions_mail.inc.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 34
+			path: include/functions_mail.inc.php
+
+		-
+			rawMessage: 'Parameter #2 $args of function pwg_mail expects array{from?: mixed, reply_to_mail_address?: string, reply_to_name?: string, Cc?: mixed, Bcc?: mixed, subject?: mixed, content?: mixed, content_format?: string, ...}, array{language_selected?: string, from?: mixed, reply_to_mail_address?: string, reply_to_name?: string, Cc?: mixed, Bcc?: mixed, subject?: mixed, content?: mixed, ...} given.'
+			identifier: argument.type
+			count: 1
+			path: include/functions_mail.inc.php
+
+		-
+			rawMessage: 'Call to function array_keys() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: include/functions_metadata.inc.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 2
+			path: include/functions_metadata.inc.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: include/functions_metadata.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/functions_metadata.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between array<int|string, int|string>|false and false is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/functions_metadata.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, 4> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/functions_metadata.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/functions_metadata.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 4
+			path: include/functions_metadata.inc.php
+
+		-
+			rawMessage: 'Offset ''GPSLatitude'' might not exist on non-empty-array{GPSLatitudeRef?: mixed, GPSLatitude?: mixed, GPSLongitudeRef?: mixed, GPSLongitude?: mixed}.'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: include/functions_metadata.inc.php
+
+		-
+			rawMessage: 'Offset ''GPSLatitudeRef'' might not exist on non-empty-array{GPSLatitudeRef?: mixed, GPSLatitude?: mixed, GPSLongitudeRef?: mixed, GPSLongitude?: mixed}.'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: include/functions_metadata.inc.php
+
+		-
+			rawMessage: 'Offset ''GPSLongitude'' might not exist on non-empty-array{GPSLatitudeRef?: mixed, GPSLatitude?: mixed, GPSLongitudeRef?: mixed, GPSLongitude?: mixed}.'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: include/functions_metadata.inc.php
+
+		-
+			rawMessage: 'Offset ''GPSLongitudeRef'' might not exist on non-empty-array{GPSLatitudeRef?: mixed, GPSLatitude?: mixed, GPSLongitudeRef?: mixed, GPSLongitude?: mixed}.'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: include/functions_metadata.inc.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 6
+			path: include/functions_metadata.inc.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 14
+			path: include/functions_notification.inc.php
+
+		-
+			rawMessage: 'Only numeric types are allowed in +, int<0, max>|false given on the left side.'
+			identifier: plus.leftNonNumeric
+			count: 1
+			path: include/functions_notification.inc.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 41
+			path: include/functions_notification.inc.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 3
+			path: include/functions_picture.inc.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 6
+			path: include/functions_plugins.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: include/functions_plugins.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string|null and null is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/functions_plugins.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between callable and callable is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: include/functions_plugins.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: include/functions_plugins.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|null and null is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/functions_plugins.inc.php
+
+		-
+			rawMessage: 'Method PluginMaintain::activate() should return mixed but return statement is missing.'
+			identifier: return.missing
+			count: 1
+			path: include/functions_plugins.inc.php
+
+		-
+			rawMessage: 'Method PluginMaintain::deactivate() should return mixed but return statement is missing.'
+			identifier: return.missing
+			count: 1
+			path: include/functions_plugins.inc.php
+
+		-
+			rawMessage: 'Method PluginMaintain::install() should return mixed but return statement is missing.'
+			identifier: return.missing
+			count: 1
+			path: include/functions_plugins.inc.php
+
+		-
+			rawMessage: 'Method PluginMaintain::uninstall() should return mixed but return statement is missing.'
+			identifier: return.missing
+			count: 1
+			path: include/functions_plugins.inc.php
+
+		-
+			rawMessage: 'Method ThemeMaintain::activate() should return mixed but return statement is missing.'
+			identifier: return.missing
+			count: 1
+			path: include/functions_plugins.inc.php
+
+		-
+			rawMessage: 'Method ThemeMaintain::deactivate() should return mixed but return statement is missing.'
+			identifier: return.missing
+			count: 1
+			path: include/functions_plugins.inc.php
+
+		-
+			rawMessage: 'Method ThemeMaintain::delete() should return mixed but return statement is missing.'
+			identifier: return.missing
+			count: 1
+			path: include/functions_plugins.inc.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 19
+			path: include/functions_plugins.inc.php
+
+		-
+			rawMessage: 'Out of 607 possible return types, only 559 - 92.0 %% actually have it. Add more return types to get over 99 %%'
+			identifier: typeCoverage.returnTypeCoverage
+			count: 8
+			path: include/functions_plugins.inc.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: include/functions_rate.inc.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: include/functions_rate.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/functions_rate.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int and int|false is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/functions_rate.inc.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 2
+			path: include/functions_rate.inc.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: include/functions_search.inc.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 31
+			path: include/functions_search.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between mixed and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: include/functions_search.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 3
+			path: include/functions_search.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, 17> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/functions_search.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, 1> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: include/functions_search.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, 25> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 4
+			path: include/functions_search.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, 57> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: include/functions_search.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 5
+			path: include/functions_search.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int<3, max> is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/functions_search.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<1, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: include/functions_search.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 5
+			path: include/functions_search.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/functions_search.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 24
+			path: include/functions_search.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|null and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/functions_search.inc.php
+
+		-
+			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 6
+			path: include/functions_search.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/functions_session.inc.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 12
+			path: include/functions_session.inc.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 10
+			path: include/functions_tag.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/functions_tag.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and mixed is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/functions_tag.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/functions_tag.inc.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 11
+			path: include/functions_tag.inc.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: include/functions_url.inc.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 15
+			path: include/functions_url.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between mixed and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: include/functions_url.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between mixed and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/functions_url.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/functions_url.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string|false and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/functions_url.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between bool|float|int|string and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/functions_url.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/functions_url.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 5
+			path: include/functions_url.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 15
+			path: include/functions_url.inc.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 16
+			path: include/functions_url.inc.php
+
+		-
+			rawMessage: 'Call to function array_keys() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: include/functions_user.inc.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 10
+			path: include/functions_user.inc.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 40
+			path: include/functions_user.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int<0, max> and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 4
+			path: include/functions_user.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int<min, -1>|int<1, max> and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/functions_user.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int|string|null and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/functions_user.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between mixed and mixed is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/functions_user.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between mixed and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: include/functions_user.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 4
+			path: include/functions_user.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string|false and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/functions_user.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string|null and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/functions_user.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string|null and null is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/functions_user.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string|null and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 3
+			path: include/functions_user.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between bool and true is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/functions_user.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/functions_user.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int and mixed is not allowed.'
+			identifier: equal.notAllowed
+			count: 5
+			path: include/functions_user.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 4
+			path: include/functions_user.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int|string and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: include/functions_user.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/functions_user.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and mixed is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/functions_user.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 6
+			path: include/functions_user.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and true is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/functions_user.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 8
+			path: include/functions_user.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|null and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 3
+			path: include/functions_user.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|null and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: include/functions_user.inc.php
+
+		-
+			rawMessage: 'Offset ''status'' might not exist on array{id: mixed, ...<string, mixed>}.'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: include/functions_user.inc.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 77
+			path: include/functions_user.inc.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: include/inflectors/fr.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 6
+			path: include/menubar.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between DisplayBlock|null and null is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 6
+			path: include/menubar.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/menubar.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: include/menubar.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 4
+			path: include/no_photo_yet.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: include/no_photo_yet.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|null and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/no_photo_yet.inc.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 2
+			path: include/page_header.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: include/page_tail.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/page_tail.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: include/picture_comment.inc.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 8
+			path: include/picture_comment.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string|null and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/picture_comment.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: include/picture_comment.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|null and mixed is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/picture_comment.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|null and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 3
+			path: include/picture_comment.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between mixed and null is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/picture_rate.inc.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 9
+			path: include/search_filters.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/search_filters.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 4
+			path: include/search_filters.inc.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 11
+			path: include/section_init.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/section_init.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and false is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/section_init.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/section_init.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 21
+			path: include/section_init.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/section_init.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 3
+			path: include/section_init.inc.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 2
+			path: include/template.class.php
+
+		-
+			rawMessage: 'Call to static method display_debug() on an unknown class Smarty_Internal_Debug.'
 			identifier: class.notFound
 			count: 1
 			path: include/template.class.php
 
 		-
-			message: '#^Undefined variable\: \$tmp$#'
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 22
+			path: include/template.class.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 3
+			path: include/template.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between bool|float|int|string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 3
+			path: include/template.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 6
+			path: include/template.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, 1> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/template.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/template.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/template.class.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 9
+			path: include/template.class.php
+
+		-
+			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 13
+			path: include/template.class.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 89
+			path: include/template.class.php
+
+		-
+			rawMessage: 'Out of 29 possible constant types, only 13 - 44.8 %% actually have it. Add more constant types to get over 99 %%'
+			identifier: typeCoverage.constantTypeCoverage
+			count: 2
+			path: include/template.class.php
+
+		-
+			rawMessage: 'Out of 607 possible return types, only 559 - 92.0 %% actually have it. Add more return types to get over 99 %%'
+			identifier: typeCoverage.returnTypeCoverage
+			count: 7
+			path: include/template.class.php
+
+		-
+			rawMessage: Possibly invalid array key type string|false.
+			identifier: offsetAccess.invalidOffset
+			count: 3
+			path: include/template.class.php
+
+		-
+			rawMessage: 'Undefined variable: $tmp'
 			identifier: variable.undefined
 			count: 2
 			path: include/template.class.php
 
 		-
-			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 7
+			path: include/totp.class.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 2
+			path: include/user.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and mixed is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/user.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: include/user.inc.php
+
+		-
+			rawMessage: Possibly invalid array key type string|false.
+			identifier: offsetAccess.invalidOffset
+			count: 1
+			path: include/user.inc.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 2
+			path: include/ws_core.inc.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 5
+			path: include/ws_core.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between array<string, array<int|string, mixed>|string> and null is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/ws_core.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/ws_core.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and null is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/ws_core.inc.php
+
+		-
+			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 3
+			path: include/ws_core.inc.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 1
+			path: include/ws_core.inc.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: include/ws_functions.inc.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 2
+			path: include/ws_functions.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/ws_functions.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between array<int>|null and null is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/ws_functions.inc.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 7
+			path: include/ws_functions/pwg.categories.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 18
+			path: include/ws_functions/pwg.categories.php
+
+		-
+			rawMessage: Foreach overwrites $image with its value variable.
+			identifier: foreach.valueOverwrite
+			count: 1
+			path: include/ws_functions/pwg.categories.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/ws_functions/pwg.categories.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int<0, max> and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/ws_functions/pwg.categories.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int<0, max> and int<1, max> is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/ws_functions/pwg.categories.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int|string|null and int|string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/ws_functions/pwg.categories.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 6
+			path: include/ws_functions/pwg.categories.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string|null is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: include/ws_functions/pwg.categories.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string|null and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/ws_functions/pwg.categories.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 7
+			path: include/ws_functions/pwg.categories.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<1, max> and int|null is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/ws_functions/pwg.categories.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int|string and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: include/ws_functions/pwg.categories.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int|string|null and int|string|null is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/ws_functions/pwg.categories.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|null and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: include/ws_functions/pwg.categories.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|null and int|string|null is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/ws_functions/pwg.categories.php
+
+		-
+			rawMessage: 'Offset ''file'' might not exist on array{is_favorite: mixed, name: mixed, comment: mixed, ...<string, mixed>}.'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: include/ws_functions/pwg.categories.php
+
+		-
+			rawMessage: 'Offset ''id'' might not exist on array{is_favorite: mixed, name: mixed, comment: mixed, ...<string, mixed>}.'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: include/ws_functions/pwg.categories.php
+
+		-
+			rawMessage: 'Parameter #3 of function sprintf is expected to be int by placeholder #2 ("%%u"), string|null given.'
+			identifier: argument.type
+			count: 1
+			path: include/ws_functions/pwg.categories.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 2
+			path: include/ws_functions/pwg.comments.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 6
+			path: include/ws_functions/pwg.comments.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: include/ws_functions/pwg.comments.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string|null is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/ws_functions/pwg.comments.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and mixed is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/ws_functions/pwg.comments.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|null and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/ws_functions/pwg.comments.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 5
+			path: include/ws_functions/pwg.extensions.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 6
+			path: include/ws_functions/pwg.extensions.php
+
+		-
+			rawMessage: 'Dynamic call to static method updates::check_piwigo_upgrade().'
+			identifier: staticMethod.dynamicCall
+			count: 1
+			path: include/ws_functions/pwg.extensions.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 4
+			path: include/ws_functions/pwg.extensions.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/ws_functions/pwg.extensions.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 3
+			path: include/ws_functions/pwg.extensions.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 4
+			path: include/ws_functions/pwg.groups.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 6
+			path: include/ws_functions/pwg.groups.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string|null and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 3
+			path: include/ws_functions/pwg.groups.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string|null and int<1, max> is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/ws_functions/pwg.groups.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: include/ws_functions/pwg.groups.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|null and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 4
+			path: include/ws_functions/pwg.groups.php
+
+		-
+			rawMessage: 'Call to function array_search() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: include/ws_functions/pwg.images.php
+
+		-
+			rawMessage: 'Call to function base64_decode() requires parameter #2 to be set.'
+			identifier: function.strict
+			count: 1
+			path: include/ws_functions/pwg.images.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 2
+			path: include/ws_functions/pwg.images.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 24
+			path: include/ws_functions/pwg.images.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int and int<0, max> is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/ws_functions/pwg.images.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int<0, max> and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/ws_functions/pwg.images.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between list<array<string, string|null>> and null is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/ws_functions/pwg.images.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between mixed and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/ws_functions/pwg.images.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 11
+			path: include/ws_functions/pwg.images.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string|false and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: include/ws_functions/pwg.images.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string|false and string|null is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/ws_functions/pwg.images.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string|null and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/ws_functions/pwg.images.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string|null and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/ws_functions/pwg.images.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between (int|string) and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/ws_functions/pwg.images.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between array<string, mixed>|false and false is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/ws_functions/pwg.images.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int and int<min, -2>|int<0, max> is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/ws_functions/pwg.images.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 5
+			path: include/ws_functions/pwg.images.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int|string and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 5
+			path: include/ws_functions/pwg.images.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int|string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/ws_functions/pwg.images.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 4
+			path: include/ws_functions/pwg.images.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 21
+			path: include/ws_functions/pwg.images.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|null and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 5
+			path: include/ws_functions/pwg.images.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|null and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/ws_functions/pwg.images.php
+
+		-
+			rawMessage: 'Only numeric types are allowed in -, int<0, max>|false given on the right side.'
+			identifier: minus.rightNonNumeric
+			count: 2
+			path: include/ws_functions/pwg.images.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 5
+			path: include/ws_functions/pwg.images.php
+
+		-
+			rawMessage: 'Parameter #2 $subject of function preg_split expects string, string|null given.'
+			identifier: argument.type
+			count: 1
+			path: include/ws_functions/pwg.images.php
+
+		-
+			rawMessage: 'Parameter #3 of function sprintf is expected to be string by placeholder #2 ("%%s"), bool|float|int|string given.'
+			identifier: argument.type
+			count: 2
+			path: include/ws_functions/pwg.images.php
+
+		-
+			rawMessage: 'Parameter #4 of function sprintf is expected to be int by placeholder #3 ("%%05u"), string given.'
+			identifier: argument.type
+			count: 1
+			path: include/ws_functions/pwg.images.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 11
+			path: include/ws_functions/pwg.permissions.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: include/ws_functions/pwg.permissions.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 3
+			path: include/ws_functions/pwg.permissions.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: include/ws_functions/pwg.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 33
+			path: include/ws_functions/pwg.php
+
+		-
+			rawMessage: Foreach overwrites $row with its value variable.
+			identifier: foreach.valueOverwrite
+			count: 1
+			path: include/ws_functions/pwg.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between (int|string) and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/ws_functions/pwg.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/ws_functions/pwg.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between float and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/ws_functions/pwg.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/ws_functions/pwg.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/ws_functions/pwg.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: include/ws_functions/pwg.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|null and mixed is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/ws_functions/pwg.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|null and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: include/ws_functions/pwg.php
+
+		-
+			rawMessage: 'Offset ''details'' might not exist on array{id?: int<0, max>, object?: string|null, object_id: non-empty-list<string|null>, action?: string|null, ip_address?: string|null, date?: string, hour?: string, user_id?: string|null, ...}.'
+			identifier: offsetAccess.notFound
+			count: 2
+			path: include/ws_functions/pwg.php
+
+		-
+			rawMessage: 'Offset ''object'' might not exist on array{id?: int<0, max>, object?: string|null, object_id: non-empty-list<string|null>, action?: string|null, ip_address?: string|null, date?: string, hour?: string, user_id?: string|null, ...}.'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: include/ws_functions/pwg.php
+
+		-
+			rawMessage: 'Offset ''object_id'' might not exist on array{id?: int<0, max>, object?: string|null, object_id?: non-empty-list<string|null>, action?: string|null, ip_address?: string|null, date?: string, hour?: string, user_id?: string|null, ...}.'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: include/ws_functions/pwg.php
+
+		-
+			rawMessage: 'Offset ''user_id'' might not exist on array{id?: int<0, max>, object?: string|null, object_id: non-empty-list<string|null>, action?: string|null, ip_address?: string|null, date?: string, hour?: string, user_id?: string|null, ...}.'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: include/ws_functions/pwg.php
+
+		-
+			rawMessage: 'Only numeric types are allowed in *, int|null given on the left side.'
+			identifier: mul.leftNonNumeric
+			count: 1
+			path: include/ws_functions/pwg.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 5
+			path: include/ws_functions/pwg.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: include/ws_functions/pwg.tags.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 5
+			path: include/ws_functions/pwg.tags.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 4
+			path: include/ws_functions/pwg.tags.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string|null and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/ws_functions/pwg.tags.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string|null and int<0, max> is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/ws_functions/pwg.tags.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string|null and int<1, max> is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/ws_functions/pwg.tags.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|null and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: include/ws_functions/pwg.tags.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 3
+			path: include/ws_functions/pwg.users.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 17
+			path: include/ws_functions/pwg.users.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: include/ws_functions/pwg.users.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 12
+			path: include/ws_functions/pwg.users.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string|null and string|null is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: include/ws_functions/pwg.users.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/ws_functions/pwg.users.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/ws_functions/pwg.users.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: include/ws_functions/pwg.users.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|null and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: include/ws_functions/pwg.users.php
+
+		-
+			rawMessage: 'Parameter #2 of function sprintf is expected to be int by placeholder #1 ("%%u"), string given.'
+			identifier: argument.type
+			count: 2
+			path: include/ws_functions/pwg.users.php
+
+		-
+			rawMessage: 'Parameter #3 of function sprintf is expected to be int by placeholder #2 ("%%02u"), int|string given.'
+			identifier: argument.type
+			count: 2
+			path: include/ws_functions/pwg.users.php
+
+		-
+			rawMessage: 'Parameter #4 of function sprintf is expected to be int by placeholder #3 ("%%02u"), int|string given.'
+			identifier: argument.type
+			count: 1
+			path: include/ws_functions/pwg.users.php
+
+		-
+			rawMessage: 'Parameter #4 of function sprintf is expected to be int by placeholder #3 ("%%02u"), string given.'
+			identifier: argument.type
+			count: 1
+			path: include/ws_functions/pwg.users.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: include/ws_protocols/rest_encoder.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 3
+			path: include/ws_protocols/rest_encoder.php
+
+		-
+			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 5
+			path: include/ws_protocols/rest_encoder.php
+
+		-
+			rawMessage: 'Switch condition type (''array''|''boolean''|''double''|''integer''|''NULL''|''object''|''resource''|''resource (closed)''|''string''|''unknown type'') does not match case condition ''null'' (string).'
+			identifier: switch.type
+			count: 1
+			path: include/ws_protocols/rest_encoder.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 2
+			path: include/ws_protocols/rest_handler.php
+
+		-
+			rawMessage: 'Dynamic call to static method PwgServer::isPost().'
+			identifier: staticMethod.dynamicCall
+			count: 1
+			path: include/ws_protocols/rest_handler.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between (int|string) and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: include/ws_protocols/rest_handler.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 8
+			path: index.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between mixed and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 3
+			path: index.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 3
+			path: index.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: index.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 6
+			path: index.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: index.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string|null is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: index.php
+
+		-
+			rawMessage: 'Offset ''counter'' might not exist on array{U_ADD: string, URL: string, ...<string, mixed>}.'
+			identifier: offsetAccess.notFound
+			count: 2
+			path: index.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: install.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 13
+			path: install.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int<0, max> and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: install.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: install.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: install.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: install.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: install.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: install.php
+
+		-
+			rawMessage: 'Parameter #3 $options of function load_language expects array{language?: string, return?: bool, no_fallback?: bool, force_fallback?: bool|string, local?: bool}, array{language: string, target_charset: ''utf-8''} given.'
+			identifier: argument.type
+			count: 3
+			path: install.php
+
+		-
+			rawMessage: 'Path in include() "./local/config/config.inc.php" is not a file or it does not exist.'
 			identifier: include.fileNotFound
 			count: 1
 			path: install.php
 
 		-
-			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
-			identifier: include.fileNotFound
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
 			count: 1
-			path: install/upgrade_1.5.0.php
+			path: nbm.php
 
 		-
-			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: notification.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|null and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: notification.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 2
+			path: password.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 9
+			path: password.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between mixed and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: password.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: password.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 9
+			path: password.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 3
+			path: picture.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 10
+			path: picture.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int<0, max> and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: picture.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int<0, max> and int<-1, max> is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: picture.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between mixed and null is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: picture.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string|null and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: picture.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: picture.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int|string and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: picture.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int|string and int|string|null is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: picture.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: picture.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and null is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: picture.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 8
+			path: picture.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 7
+			path: picture.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|null and int|string is not allowed.'
+			identifier: equal.notAllowed
+			count: 4
+			path: picture.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|null and mixed is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: picture.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between bool|string and false is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: popuphelp.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 5
+			path: profile.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 7
+			path: profile.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between mixed and mixed is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: profile.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and mixed is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 3
+			path: profile.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, 5> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: profile.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and (int|string) is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: profile.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 3
+			path: profile.php
+
+		-
+			rawMessage: 'Path in include() "./local/config/config.inc.php" is not a file or it does not exist.'
 			identifier: include.fileNotFound
 			count: 1
 			path: ready.php
 
 		-
-			message: '#^Cannot unset offset ''CHANGE_COLUMN'' on array\{tags\: non\-empty\-list\<array\{URL\: string, \.\.\.\<string, mixed\>\}\>, TITLE\?\: string\}\.$#'
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: register.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 4
+			path: register.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between mixed and mixed is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: register.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: register.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 7
+			path: search.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 2
+			path: search.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and false is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: search.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and true is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: search.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 2
+			path: tags.php
+
+		-
+			rawMessage: 'Cannot unset offset ''CHANGE_COLUMN'' on array{tags: non-empty-list<array{URL: string, ...<string, mixed>}>, TITLE?: string}.'
 			identifier: unset.offset
 			count: 1
 			path: tags.php
 
 		-
-			message: '#^Instantiated class Github\\Client not found\.$#'
-			identifier: class.notFound
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
 			count: 1
-			path: tools/github_issues.php
+			path: tags.php
 
 		-
-			message: '#^Path in require_once\(\) "\.\.//local/config/database\.inc\.php" is not a file or it does not exist\.$#'
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: tags.php
+
+		-
+			rawMessage: Access to constant on internal class Pest\Arch\PendingArchExpectation.
+			identifier: classConstant.internalClass
+			count: 1
+			path: tests/Arch/StructuralTest.php
+
+		-
+			rawMessage: 'Call to method toBeTrue() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
+			identifier: method.internalClass
+			count: 1
+			path: tests/Arch/StructuralTest.php
+
+		-
+			rawMessage: 'Call to method toBe() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
+			identifier: method.internalClass
+			count: 1
+			path: tests/Browser/AlbumCreateTest.php
+
+		-
+			rawMessage: 'Call to method toBeGreaterThan() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
+			identifier: method.internalClass
+			count: 1
+			path: tests/Browser/AlbumCreateTest.php
+
+		-
+			rawMessage: Instanceof references internal class Pest\Browser\Playwright\Page.
+			identifier: instanceof.internalClass
+			count: 1
+			path: tests/Browser/Helpers/BrowserTestHelpers.php
+
+		-
+			rawMessage: 'Call to method toBe() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
+			identifier: method.internalClass
+			count: 8
+			path: tests/Browser/PhotoAlbumLifecycleTest.php
+
+		-
+			rawMessage: 'Call to method toBeGreaterThan() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
+			identifier: method.internalClass
+			count: 1
+			path: tests/Browser/PhotoAlbumLifecycleTest.php
+
+		-
+			rawMessage: 'Call to method toContain() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
+			identifier: method.internalClass
+			count: 2
+			path: tests/Browser/PhotoAlbumLifecycleTest.php
+
+		-
+			rawMessage: 'Call to method toBe() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
+			identifier: method.internalClass
+			count: 4
+			path: tests/Browser/PhotoUploadApiTest.php
+
+		-
+			rawMessage: 'Call to method toBeGreaterThan() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
+			identifier: method.internalClass
+			count: 3
+			path: tests/Browser/PhotoUploadApiTest.php
+
+		-
+			rawMessage: 'Call to method toBeGreaterThanOrEqual() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
+			identifier: method.internalClass
+			count: 1
+			path: tests/Browser/PhotoUploadApiTest.php
+
+		-
+			rawMessage: 'Call to method toBe() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
+			identifier: method.internalClass
+			count: 1
+			path: tests/Browser/RememberMeTest.php
+
+		-
+			rawMessage: 'Call to method toBe() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
+			identifier: method.internalClass
+			count: 1
+			path: tests/Browser/SearchTest.php
+
+		-
+			rawMessage: 'Call to method toContain() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
+			identifier: method.internalClass
+			count: 1
+			path: tests/Browser/SearchTest.php
+
+		-
+			rawMessage: 'Call to method toBe() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
+			identifier: method.internalClass
+			count: 1
+			path: tests/Browser/SettingsRoundtripTest.php
+
+		-
+			rawMessage: 'Call to method toBe() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
+			identifier: method.internalClass
+			count: 4
+			path: tests/Browser/TagCrudTest.php
+
+		-
+			rawMessage: 'Call to method toBeGreaterThan() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
+			identifier: method.internalClass
+			count: 1
+			path: tests/Browser/TagCrudTest.php
+
+		-
+			rawMessage: 'Call to method toContain() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
+			identifier: method.internalClass
+			count: 2
+			path: tests/Browser/TagCrudTest.php
+
+		-
+			rawMessage: 'Call to method toBe() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
+			identifier: method.internalClass
+			count: 3
+			path: tests/Browser/UserManagementTest.php
+
+		-
+			rawMessage: 'Call to method toBeGreaterThan() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
+			identifier: method.internalClass
+			count: 1
+			path: tests/Browser/UserManagementTest.php
+
+		-
+			rawMessage: 'Call to method toContain() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
+			identifier: method.internalClass
+			count: 2
+			path: tests/Browser/UserManagementTest.php
+
+		-
+			rawMessage: 'Call to method group() of internal class Pest\PendingCalls\TestCall from outside its root namespace Pest.'
+			identifier: method.internalClass
+			count: 3
+			path: tests/Browser/VisualRegressionTest.php
+
+		-
+			rawMessage: 'Out of 29 possible constant types, only 13 - 44.8 %% actually have it. Add more constant types to get over 99 %%'
+			identifier: typeCoverage.constantTypeCoverage
+			count: 1
+			path: tests/Contract/ContractTestCase.php
+
+		-
+			rawMessage: 'Call to method in() of internal class Pest\PendingCalls\UsesCall from outside its root namespace Pest.'
+			identifier: method.internalClass
+			count: 1
+			path: tests/Pest.php
+
+		-
+			rawMessage: 'Call to method toBeFalse() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
+			identifier: method.internalClass
+			count: 4
+			path: tests/Unit/PasswordHashTest.php
+
+		-
+			rawMessage: 'Call to method toBeTrue() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
+			identifier: method.internalClass
+			count: 4
+			path: tests/Unit/PasswordHashTest.php
+
+		-
+			rawMessage: 'Call to method toStartWith() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
+			identifier: method.internalClass
+			count: 2
+			path: tests/Unit/PasswordHashTest.php
+
+		-
+			rawMessage: Access to constant on internal class Pest\PendingCalls\TestCall.
+			identifier: classConstant.internalClass
+			count: 1
+			path: tests/Unit/SmokeTest.php
+
+		-
+			rawMessage: 'Call to method toBeGreaterThanOrEqual() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
+			identifier: method.internalClass
+			count: 1
+			path: tests/Unit/SmokeTest.php
+
+		-
+			rawMessage: 'Call to method toBeTrue() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
+			identifier: method.internalClass
+			count: 1
+			path: tests/Unit/SmokeTest.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: themes/standard_pages/themeconf.inc.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between list<mixed>|string|false and true is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: tools/test_piwigo.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: tools/test_piwigo.php
+
+		-
+			rawMessage: 'Path in require_once() "..//local/config/database.inc.php" is not a file or it does not exist.'
 			identifier: requireOnce.fileNotFound
 			count: 1
 			path: tools/test_piwigo.php
 
 		-
-			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: tools/triggers_list.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 24
+			path: upgrade.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 2
+			path: upgrade.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: upgrade.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int<0, max> and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: upgrade.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: upgrade.php
+
+		-
+			rawMessage: 'Out of 1740 possible param types, only 978 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 1
+			path: upgrade.php
+
+		-
+			rawMessage: 'Parameter #3 $options of function load_language expects array{language?: string, return?: bool, no_fallback?: bool, force_fallback?: bool|string, local?: bool}, array{language: string, target_charset: ''utf-8'', no_fallback: true} given.'
+			identifier: argument.type
+			count: 4
+			path: upgrade.php
+
+		-
+			rawMessage: 'Path in include() "./local/config/config.inc.php" is not a file or it does not exist.'
 			identifier: include.fileNotFound
 			count: 1
 			path: upgrade.php
 
 		-
-			message: '#^Path in include\(\) "\./local/config/database\.inc\.php" is not a file or it does not exist\.$#'
+			rawMessage: 'Path in include() "./local/config/database.inc.php" is not a file or it does not exist.'
 			identifier: include.fileNotFound
 			count: 1
 			path: upgrade.php
 
 		-
-			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
+			rawMessage: 'Path in include() "./local/config/config.inc.php" is not a file or it does not exist.'
 			identifier: include.fileNotFound
 			count: 1
 			path: upgrade_feed.php
 
 		-
-			message: '#^Path in include\(\) "\./local/config/database\.inc\.php" is not a file or it does not exist\.$#'
+			rawMessage: 'Path in include() "./local/config/database.inc.php" is not a file or it does not exist.'
 			identifier: include.fileNotFound
 			count: 1
 			path: upgrade_feed.php

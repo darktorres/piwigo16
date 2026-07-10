@@ -48,7 +48,9 @@
     "pestphp/pest-plugin-mutate": "^4.0",
     "pestphp/pest-plugin-type-coverage": "^4.0",
     "phpbench/phpbench": "^1.4",
+    "phpstan/extension-installer": "^1.4",
     "phpstan/phpstan": "^2.1",
+    "phpstan/phpstan-strict-rules": "^2.0",
     "rector/rector": "^2.0",
     "roave/security-advisories": "dev-latest",
     "symfony/yaml": "^8.1",
@@ -91,8 +93,9 @@
     "sort-packages": true,
     "process-timeout": 0,
     "allow-plugins": {
+      "cyclonedx/cyclonedx-php-composer": true,
       "pestphp/pest-plugin": true,
-      "cyclonedx/cyclonedx-php-composer": true
+      "phpstan/extension-installer": true
     }
   },
   "minimum-stability": "dev",

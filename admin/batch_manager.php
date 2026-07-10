@@ -755,7 +755,11 @@ if (empty($widths)) { // arbitrary values, only used when no photos on the galle
     $ratios = [1.25, 1.52, 1.78];
 }
 
-$dimension_arrays = ['widths' => &$widths, 'heights' => &$heights, 'ratios' => &$ratios];
+$dimension_arrays = [
+    'widths' => &$widths,
+    'heights' => &$heights,
+    'ratios' => &$ratios,
+];
 foreach ($dimension_arrays as $type => &$dimension_values) {
     $dimension_values = array_unique($dimension_values);
     sort($dimension_values);

@@ -76,7 +76,7 @@ SELECT
     $result = pwg_query($query);
 
     $cats = [];
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         $row['id'] = (int) $row['id'];
         $cats[$row['id']] = $row;
     }
@@ -115,7 +115,7 @@ SELECT SQL_CALC_FOUND_ROWS i.*
 ;';
         $result = pwg_query($query);
 
-        while ($row = pwg_db_fetch_assoc($result)) {
+        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
             // id is images.id, a NOT NULL primary key -- verified against
             // install/piwigo_structure-mysql.sql.
             assert(is_string($row['id']));
@@ -162,7 +162,8 @@ SELECT
             ], null, true) . '
 ;';
             $result = pwg_query($query);
-            while ($row = pwg_db_fetch_assoc($result)) {
+            $categories_of_image = [];
+            while ((bool) ($row = pwg_db_fetch_assoc($result))) {
                 $category_ids[] = $row['category_id'];
                 // image_id/category_id are NOT NULL columns of image_category
                 // -- verified against install/piwigo_structure-mysql.sql.
@@ -210,7 +211,7 @@ SELECT
                     );
 
                     $image_cats[] = [
-                        'id' => (int) $cat_id,
+                        'id' => $cat_id,
                         'url' => $url,
                         'page_url' => $page_url,
                     ];
@@ -281,15 +282,15 @@ function ws_categories_getList(array $params, PwgServer &$service): \PwgError|ar
     if (! $params['recursive']) {
         if ($params['cat_id'] > 0) {
             $where[] = '(
-        id_uppercat = ' . (int) ($params['cat_id']) . '
-        OR id=' . (int) ($params['cat_id']) . '
+        id_uppercat = ' . $params['cat_id'] . '
+        OR id=' . $params['cat_id'] . '
       )';
         } else {
             $where[] = 'id_uppercat IS NULL';
         }
     } elseif ($params['cat_id'] > 0) {
         $where[] = 'uppercats ' . DB_REGEX_OPERATOR . ' \'(^|,)' .
-          (int) ($params['cat_id']) . '(,|$)\'';
+          $params['cat_id'] . '(,|$)\'';
     }
 
     if ($params['public']) {
@@ -362,7 +363,7 @@ SELECT SQL_CALC_FOUND_ROWS
     // management of the album thumbnail -- stops here
 
     $cats = [];
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         $row['url'] = make_index_url(
             [
                 'category' => $row,
@@ -412,7 +413,7 @@ SELECT SQL_CALC_FOUND_ROWS
             $image_id = $row['user_representative_picture_id'];
         } elseif (! empty($row['representative_picture_id'])) { // if a representative picture is set, it has priority
             $image_id = $row['representative_picture_id'];
-        } elseif ($conf['allow_random_representative']) {
+        } elseif ((bool) $conf['allow_random_representative']) {
             // searching a random representant among elements in sub-categories
             $image_id = get_random_image_in_category($row);
         } else { // searching a random representant among representant of sub-categories
@@ -444,7 +445,7 @@ SELECT representative_picture_id
         }
 
         if (isset($image_id)) {
-            if ($conf['representative_cache_on_subcats'] and $row['user_representative_picture_id'] != $image_id) {
+            if ((bool) $conf['representative_cache_on_subcats'] and $row['user_representative_picture_id'] != $image_id) {
                 $user_representative_updates_for[$row['id']] = $image_id;
             }
 
@@ -475,7 +476,7 @@ SELECT id, path, representative_ext, level
 ;';
         $result = pwg_query($query);
 
-        while ($row = pwg_db_fetch_assoc($result)) {
+        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
             if ($row['level'] <= $user['level']) {
                 // id is images.id, a NOT NULL primary key -- verified
                 // against install/piwigo_structure-mysql.sql.
@@ -496,7 +497,7 @@ SELECT id, path, representative_ext, level
                         if (isset($image_id) and ! in_array($image_id, $image_ids)) {
                             $new_image_ids[] = $image_id;
                         }
-                        if ($conf['representative_cache_on_level']) {
+                        if ((bool) $conf['representative_cache_on_level']) {
                             $category_id = $category['id'];
                             if (is_numeric($category_id)) {
                                 $user_representative_updates_for[(int) $category_id] = $image_id;
@@ -518,7 +519,7 @@ SELECT id, path, representative_ext
 ;';
             $result = pwg_query($query);
 
-            while ($row = pwg_db_fetch_assoc($result)) {
+            while ((bool) ($row = pwg_db_fetch_assoc($result))) {
                 $thumbnail_src_of[(int) $row['id']] = DerivativeImage::url($params['thumbnail_size'], $row);
             }
         }
@@ -527,7 +528,7 @@ SELECT id, path, representative_ext
     // compared to code in include/category_cats, we only persist the new
     // user_representative if we have used $user['id'] and not the guest id,
     // or else the real guest may see thumbnail that he should not
-    if (! $params['public'] and count($user_representative_updates_for)) {
+    if (! $params['public'] and (bool) count($user_representative_updates_for)) {
         $updates = [];
 
         foreach ($user_representative_updates_for as $cat_id => $image_id) {
@@ -596,7 +597,7 @@ function ws_categories_getAdminList(array $params, PwgServer &$service): array
     if (! isset($params['additional_output'])) {
         $params['additional_output'] = '';
     }
-    $params['additional_output'] = array_map(trim(...), explode(',', (string) $params['additional_output']));
+    $params['additional_output'] = array_map(trim(...), explode(',', $params['additional_output']));
 
     $query = '
 SELECT category_id, COUNT(*) AS counter
@@ -612,15 +613,15 @@ SELECT category_id, COUNT(*) AS counter
     if (! $params['recursive']) {
         if ($params['cat_id'] > 0) {
             $where[] = '(
-        id_uppercat = ' . (int) ($params['cat_id']) . '
-        OR id=' . (int) ($params['cat_id']) . '
+        id_uppercat = ' . $params['cat_id'] . '
+        OR id=' . $params['cat_id'] . '
       )';
         } else {
             $where[] = 'id_uppercat IS NULL';
         }
     } elseif ($params['cat_id'] > 0) {
         $where[] = 'uppercats ' . DB_REGEX_OPERATOR . ' \'(^|,)' .
-          (int) ($params['cat_id']) . '(,|$)\'';
+          $params['cat_id'] . '(,|$)\'';
     }
 
     $query = '
@@ -643,7 +644,7 @@ SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, statu
     [$counter] = $row;
 
     $cats = [];
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         // id/uppercats are NOT NULL columns of the categories table --
         // verified against install/piwigo_structure-mysql.sql.
         $id = $row['id'];
@@ -757,11 +758,11 @@ function ws_categories_add(array $params, PwgServer &$service): \PwgError|array
     }
 
     if (! empty($params['comment'])) {
-        $options['comment'] = (! $conf['allow_html_descriptions'] or ! isset($params['pwg_token'])) ? strip_tags((string) $params['comment']) : $params['comment'];
+        $options['comment'] = (! (bool) $conf['allow_html_descriptions'] or ! isset($params['pwg_token'])) ? strip_tags($params['comment']) : $params['comment'];
     }
 
     $creation_output = create_virtual_category(
-        (! $conf['allow_html_descriptions'] or ! isset($params['pwg_token'])) ? strip_tags((string) $params['name']) : $params['name'],
+        (! (bool) $conf['allow_html_descriptions'] or ! isset($params['pwg_token'])) ? strip_tags($params['name']) : $params['name'],
         $params['parent'],
         $options
     );
@@ -904,7 +905,7 @@ SELECT *
     ];
 
     foreach (['visible', 'commentable'] as $param_name) {
-        if (isset($params[$param_name]) and ! preg_match('/^(true|false)$/i', (string) $params[$param_name])) {
+        if (isset($params[$param_name]) and ! (bool) preg_match('/^(true|false)$/i', $params[$param_name])) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid param ' . $param_name . ' : ' . $params[$param_name]);
         }
     }
@@ -920,11 +921,11 @@ SELECT *
     foreach ($info_columns as $key) {
         if (isset($params[$key])) {
             $perform_update = true;
-            $update[$key] = (! $conf['allow_html_descriptions'] or ! isset($params['pwg_token'])) ? strip_tags((string) $params[$key]) : $params[$key];
+            $update[$key] = (! (bool) $conf['allow_html_descriptions'] or ! isset($params['pwg_token'])) ? strip_tags($params[$key]) : $params[$key];
         }
     }
 
-    if (isset($params['commentable']) && isset($params['apply_commentable_to_subalbums']) && $params['apply_commentable_to_subalbums']) {
+    if (isset($params['commentable']) && isset($params['apply_commentable_to_subalbums']) && (bool) $params['apply_commentable_to_subalbums']) {
         $subcats = get_subcat_ids([$params['category_id']]);
         if (count($subcats) > 0) {
             $query = '
@@ -1045,7 +1046,7 @@ SELECT COUNT(*)
     assert($row !== null);
     [$nb_images] = $row;
 
-    if (! $conf['allow_random_representative'] and $nb_images != 0) {
+    if (! (bool) $conf['allow_random_representative'] and $nb_images != 0) {
         return new PwgError(401, 'not permitted');
     }
 
@@ -1157,7 +1158,7 @@ function ws_categories_delete(array $params, PwgServer &$service): ?\PwgError
     if (! is_array($params['category_id'])) {
         $params['category_id'] = preg_split(
             '/[\s,;\|]/',
-            (string) $params['category_id'],
+            $params['category_id'],
             -1,
             PREG_SPLIT_NO_EMPTY
         );
@@ -1225,7 +1226,7 @@ function ws_categories_move(array $params, PwgServer &$service): \PwgError|array
     if (! is_array($params['category_id'])) {
         $params['category_id'] = preg_split(
             '/[\s,;\|]/',
-            (string) $params['category_id'],
+            $params['category_id'],
             -1,
             PREG_SPLIT_NO_EMPTY
         );
@@ -1256,7 +1257,7 @@ SELECT id, name, dir, uppercats
   WHERE id IN (' . implode(',', $category_ids) . ')
 ;';
     $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         // id is a NOT NULL primary key -- verified against
         // install/piwigo_structure-mysql.sql.
         $categories_in_db[(int) $row['id']] = $row;
@@ -1331,7 +1332,7 @@ SELECT id, name, dir, uppercats
   ;';
     $result = pwg_query($query);
     $cat_display_name = '';
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         // uppercats is a NOT NULL column of the categories table --
         // verified against install/piwigo_structure-mysql.sql.
         assert(is_string($row['uppercats']));
@@ -1399,6 +1400,7 @@ SELECT DISTINCT
     category_id = ' . $category_id . '
   LIMIT 1';
     $result = pwg_query($query);
+    $category = [];
     $category['has_images'] = pwg_db_num_rows($result) > 0 ? true : false;
 
     // number of sub-categories
@@ -1478,6 +1480,7 @@ SELECT DISTINCT
         }
     }
 
+    $output = [];
     $output[] = [
         'nb_images_associated_outside' => $category['nb_images_associated_outside'],
         'nb_images_becoming_orphan' => $category['nb_images_becoming_orphan'],

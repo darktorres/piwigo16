@@ -44,7 +44,7 @@ SELECT user_id, cat_id
 ;';
     $result = pwg_query($query);
 
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         if (! isset($row['cat_id']) || ! is_numeric($row['cat_id'])) {
             continue;
         }
@@ -65,7 +65,7 @@ SELECT ug.user_id, ga.cat_id
 ;';
     $result = pwg_query($query);
 
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         if (! isset($row['cat_id']) || ! is_numeric($row['cat_id'])) {
             continue;
         }
@@ -84,7 +84,7 @@ SELECT group_id, cat_id
 ;';
     $result = pwg_query($query);
 
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         if (! isset($row['cat_id']) || ! is_numeric($row['cat_id'])) {
             continue;
         }

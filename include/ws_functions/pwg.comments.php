@@ -31,7 +31,7 @@ function ws_userComments_getList(array $params, PwgServer &$service): \PwgError|
     /** @var array<string, mixed> $conf */
     global $conf;
 
-    if (! $conf['activate_comments']) {
+    if (! (bool) $conf['activate_comments']) {
         return new PwgError(403, 'Comments are disabled');
     }
 
@@ -145,7 +145,7 @@ SELECT
     $result = pwg_query($query);
 
     $list = [];
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
 
         $medium_derivative = DerivativeImage::get_one(
             IMG_MEDIUM,
@@ -163,7 +163,7 @@ SELECT
         if (empty($row['author_id']) or $row['author_id'] == $conf['guest_id']) {
             $author_name = $row['author'];
         } else {
-            $author_name = stripslashes((string) ($row['username'] ?? $row['author'] ?? l10n('guest')));
+            $author_name = stripslashes($row['username'] ?? $row['author'] ?? l10n('guest'));
         }
 
         // date/date_available are NOT NULL columns but the driver still

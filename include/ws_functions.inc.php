@@ -19,12 +19,12 @@ function ws_isInvokeAllowed(mixed $res, string $methodName, array $params): mixe
 {
     global $conf;
 
-    if (str_starts_with((string) $methodName, 'reflection.')) { // OK for reflection
+    if (str_starts_with($methodName, 'reflection.')) { // OK for reflection
         return $res;
     }
 
     if (! is_autorize_status(ACCESS_GUEST) and
-        ! str_starts_with((string) $methodName, 'pwg.session.')) {
+        ! str_starts_with($methodName, 'pwg.session.')) {
         return new PwgError(401, 'Access denied');
     }
 
@@ -108,7 +108,7 @@ function ws_std_image_sql_order(array $params, string $tbl_name = ''): string
     $matches = [];
     preg_match_all(
         '/([a-z_]+) *(?:(asc|desc)(?:ending)?)? *(?:, *|$)/i',
-        (string) $params['order'],
+        $params['order'],
         $matches
     );
     for ($i = 0; $i < count($matches[1]); $i++) {
@@ -164,7 +164,7 @@ function ws_std_get_urls(array $image_row): array
     if ($src_image->is_original()) {// we have a photo
         /** @var array<string, mixed> $user */
         global $user;
-        if ($user['enabled_high']) {
+        if ((bool) $user['enabled_high']) {
             $ret['element_url'] = $src_image->get_url();
             $provide_download_url = true;
         }

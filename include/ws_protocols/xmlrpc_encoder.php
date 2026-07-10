@@ -51,7 +51,7 @@ class PwgXmlRpcEncoder extends PwgResponseEncoder
     {
         if ($response instanceof PwgError) {
             $code = $response->code();
-            $msg = htmlspecialchars((string) $response->message());
+            $msg = htmlspecialchars($response->message());
             $ret = <<<EOD
 <methodResponse>
   <fault>

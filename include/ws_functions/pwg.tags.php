@@ -137,7 +137,7 @@ SELECT image_id, GROUP_CONCAT(tag_id) AS tag_ids
 ;';
         $result = pwg_query($query);
 
-        while ($row = pwg_db_fetch_assoc($result)) {
+        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
             $row['image_id'] = (int) $row['image_id'];
             $image_tag_map[$row['image_id']] = explode(',', (string) $row['tag_ids']);
         }
@@ -155,7 +155,7 @@ SELECT *
 ;';
         $result = pwg_query($query);
 
-        while ($row = pwg_db_fetch_assoc($result)) {
+        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
             if (! is_numeric($row['id'])) {
                 continue;
             }
@@ -327,7 +327,7 @@ function ws_tags_rename(array $params, PwgServer &$service): \PwgError|array
     }
 
     $tag_id = $params['tag_id'];
-    $tag_name = strip_tags(stripslashes((string) $params['new_name']));
+    $tag_name = strip_tags(stripslashes($params['new_name']));
 
     // does the tag exist ?
     $query = '

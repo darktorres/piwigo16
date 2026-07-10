@@ -81,7 +81,7 @@ SELECT id, path, representative_ext, width, height, rotation
         $result = pwg_query(str_replace('start_id', (string) $start_id, $query_model));
         $is_last = pwg_db_num_rows($result) < $qlimit;
 
-        while ($row = pwg_db_fetch_assoc($result)) {
+        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
             $start_id = is_numeric($row['id']) ? (int) $row['id'] : 0;
             $src_image = new SrcImage($row);
             if ($src_image->is_mimetype()) {
@@ -105,10 +105,10 @@ SELECT id, path, representative_ext, width, height, rotation
         if ($is_last) {
             $start_id = 0;
         }
-    } while (count($urls) < $max_urls and $start_id);
+    } while (count($urls) < $max_urls and (bool) $start_id);
 
     $ret = [];
-    if ($start_id) {
+    if ((bool) $start_id) {
         $ret['next_page'] = $start_id;
     }
     $ret['urls'] = $urls;
@@ -133,6 +133,7 @@ function ws_getVersion($params, PwgServer &$service): string
  */
 function ws_getInfos($params, PwgServer &$service): array
 {
+    $infos = [];
     $infos['version'] = PHPWG_VERSION;
 
     $query = 'SELECT COUNT(*) FROM ' . IMAGES_TABLE . ';';
@@ -205,6 +206,7 @@ function ws_getInfos($params, PwgServer &$service): array
     // TODO for real later
     $infos['cache_size'] = 4242;
 
+    $output = [];
     foreach ($infos as $name => $value) {
         $output[] = [
             'name' => $name,
@@ -234,12 +236,13 @@ function ws_getCacheSize($params, PwgServer &$service): array
 
     // Cache size
     $path_cache = $data_location;
+    $infos = [];
     $infos['cache_size'] = null;
     if (function_exists('exec')) {
         @exec('du -sk ' . $path_cache, $return_array_cache);
         if (
             ! empty($return_array_cache[0])
-            and preg_match('/^(\d+)\s/', $return_array_cache[0], $matches_cache)
+            and (bool) preg_match('/^(\d+)\s/', $return_array_cache[0], $matches_cache)
         ) {
             $infos['cache_size'] = $matches_cache[1] * 1024;
         }
@@ -282,7 +285,7 @@ function ws_getCacheSize($params, PwgServer &$service): array
         @exec('du -sk ' . $path_template_c, $return_array_template_c);
         if (
             ! empty($return_array_template_c[0])
-            and preg_match('/^(\d+)\s/', $return_array_template_c[0], $matches_template_c)
+            and (bool) preg_match('/^(\d+)\s/', $return_array_template_c[0], $matches_template_c)
         ) {
             $infos['tsizes'] = $matches_template_c[1] * 1024;
         }
@@ -338,7 +341,7 @@ SELECT id
             'user_id' => $user_id,
         ];
     }
-    if (count($datas)) {
+    if ((bool) count($datas)) {
         mass_inserts(
             CADDIE_TABLE,
             ['element_id', 'user_id'],
@@ -370,7 +373,7 @@ DELETE FROM ' . RATE_TABLE . '
     }
 
     $changes = pwg_db_changes();
-    if ($changes) {
+    if ((bool) $changes) {
         include_once PHPWG_ROOT_PATH . 'include/functions_rate.inc.php';
         update_rating_score();
     }
@@ -390,7 +393,7 @@ function ws_session_login(array $params, PwgServer &$service): \PwgError|true
         return new PwgError(401, 'Cannot use this method with an api key');
     }
 
-    if (preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', (string) $params['username'])) {
+    if ((bool) preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $params['username'])) {
         $secret = pwg_db_real_escape_string($params['password']);
         $authenticate = auth_key_login($params['username'] . ':' . $secret);
         if ($authenticate) {
@@ -437,6 +440,7 @@ function ws_session_getStatus($params, PwgServer &$service): array
 
     $username_raw = $user['username'];
     $username_raw = is_string($username_raw) ? $username_raw : '';
+    $res = [];
     $res['username'] = is_a_guest() ? 'guest' : stripslashes($username_raw);
     foreach (['status', 'theme', 'language'] as $k) {
         $res[$k] = $user[$k];
@@ -454,7 +458,7 @@ function ws_session_getStatus($params, PwgServer &$service): array
 
     // Piwigo Remote Sync does not support receiving the new (version 14) output "save_visits"
     $http_user_agent = $_SERVER['HTTP_USER_AGENT'] ?? null;
-    if (is_string($http_user_agent) and preg_match('/^PiwigoRemoteSync/', $http_user_agent)) {
+    if (is_string($http_user_agent) and (bool) preg_match('/^PiwigoRemoteSync/', $http_user_agent)) {
         unset($res['save_visits']);
         unset($res['connected_with']);
     }
@@ -466,7 +470,7 @@ function ws_session_getStatus($params, PwgServer &$service): array
     }
 
     if (is_admin()) {
-        $upload_ext_list = $conf['upload_form_all_types'] ? $conf['file_ext'] : $conf['picture_ext'];
+        $upload_ext_list = ((bool) $conf['upload_form_all_types']) ? $conf['file_ext'] : $conf['picture_ext'];
         $upload_ext_list = is_array($upload_ext_list) ? array_values(array_filter($upload_ext_list, is_string(...))) : [];
 
         $res['upload_file_types'] = implode(
@@ -621,13 +625,11 @@ SELECT
                     // I increment the counter of the previous line
                     $last_idx = count($output_lines) - 1;
                     $prev_counter = $output_lines[$last_idx]['counter'];
-                    $output_lines[$last_idx]['counter'] = (is_int($prev_counter) ? $prev_counter : 0) + 1;
+                    $output_lines[$last_idx]['counter'] = $prev_counter + 1;
 
                     $prev_object_ids = $output_lines[$last_idx]['object_id'];
-                    if (is_array($prev_object_ids)) {
-                        $prev_object_ids[] = $row['object_id'];
-                        $output_lines[$last_idx]['object_id'] = $prev_object_ids;
-                    }
+                    $prev_object_ids[] = $row['object_id'];
+                    $output_lines[$last_idx]['object_id'] = $prev_object_ids;
                 } else {
                     $row['details'] = str_replace('`groups`', 'groups', (string) $row['details']);
                     $row['details'] = str_replace('`rank`', 'rank', $row['details']);
@@ -703,16 +705,13 @@ SELECT
     }
 
     foreach ($output_lines as $idx => $output_line) {
-        if ($output_line['object'] == 'user' and is_array($output_line['object_id'])) {
+        if ($output_line['object'] == 'user') {
             foreach ($output_line['object_id'] as $user_id) {
-                if (! is_string($user_id) and ! is_int($user_id)) {
+                if (! is_string($user_id)) {
                     continue;
                 }
 
                 $details = $output_lines[$idx]['details'];
-                if (! is_array($details)) {
-                    $details = [];
-                }
 
                 $users = $details['users'] ?? [];
                 if (! is_array($users)) {
@@ -725,14 +724,14 @@ SELECT
             }
 
             $details = $output_lines[$idx]['details'];
-            if (is_array($details) and isset($details['users']) and is_array($details['users'])) {
+            if (isset($details['users']) and is_array($details['users'])) {
                 $details['users_string'] = implode(', ', array_filter($details['users'], is_string(...)));
                 $output_lines[$idx]['details'] = $details;
             }
         }
 
         $user_id_val = $output_lines[$idx]['user_id'];
-        $user_id_key = is_string($user_id_val) || is_int($user_id_val) ? $user_id_val : '';
+        $user_id_key = is_string($user_id_val) ? $user_id_val : '';
         $output_lines[$idx]['username'] = 'user#' . $user_id_key;
         if (isset($username_of[$user_id_key])) {
             $output_lines[$idx]['username'] = $username_of[$user_id_key];
@@ -772,8 +771,8 @@ function ws_history_log(array $params, PwgServer &$service): void
         ];
     }
 
-    if (! empty($params['tags_string']) and preg_match('/^\d+(,\d+)*$/', (string) $params['tags_string'])) {
-        $page['tag_ids'] = explode(',', (string) $params['tags_string']);
+    if (! empty($params['tags_string']) and (bool) preg_match('/^\d+(,\d+)*$/', $params['tags_string'])) {
+        $page['tag_ids'] = explode(',', $params['tags_string']);
     }
 
     // when visiting a photo (which is currently, in version 14, the only event registered
@@ -1061,7 +1060,7 @@ SELECT ' . $user_field_id . ' AS id
         $result = pwg_query($query);
 
         $username_of = [];
-        while ($row = pwg_db_fetch_assoc($result)) {
+        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
             if ($row['id'] === null) {
                 continue;
             }
@@ -1128,7 +1127,7 @@ SELECT
   FROM ' . TAGS_TABLE;
 
         $result = pwg_query($query);
-        while ($row = pwg_db_fetch_assoc($result)) {
+        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
             if ($row['id'] === null) {
                 continue;
             }

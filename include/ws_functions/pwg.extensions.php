@@ -66,7 +66,7 @@ function ws_plugins_performAction(array $params, PwgServer &$service): \PwgError
         return new PwgError(403, l10n('Webmaster status is required.'));
     }
 
-    if (! $conf['enable_extensions_install'] and $params['action'] == 'delete') {
+    if (! (bool) $conf['enable_extensions_install'] and $params['action'] == 'delete') {
         return new PwgError(401, 'Piwigo extensions install/update/delete system is disabled');
     }
 
@@ -104,7 +104,7 @@ function ws_themes_performAction(array $params, PwgServer &$service): \PwgError|
         return new PwgError(403, 'Invalid security token');
     }
 
-    if (! $conf['enable_extensions_install'] and $params['action'] == 'delete') {
+    if (! (bool) $conf['enable_extensions_install'] and $params['action'] == 'delete') {
         return new PwgError(401, 'Piwigo extensions install/update/delete system is disabled');
     }
 
@@ -140,7 +140,7 @@ function ws_extensions_update(array $params, PwgServer &$service): \PwgError|str
     global $conf;
 
     /** @var array<string, mixed> $conf */
-    if (! $conf['enable_extensions_install']) {
+    if (! (bool) $conf['enable_extensions_install']) {
         return new PwgError(401, 'Piwigo extensions install/update system is disabled');
     }
 

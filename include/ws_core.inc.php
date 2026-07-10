@@ -542,11 +542,11 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
             return new PwgError(WS_ERR_INVALID_METHOD, 'Method name is not valid');
         }
 
-        if (isset($method['options']['post_only']) and $method['options']['post_only'] and ! self::isPost()) {
+        if (isset($method['options']['post_only']) and (bool) $method['options']['post_only'] and ! self::isPost()) {
             return new PwgError(405, 'This method requires HTTP POST');
         }
 
-        if (isset($method['options']['admin_only']) and $method['options']['admin_only'] and ! is_admin()) {
+        if (isset($method['options']['admin_only']) and (bool) $method['options']['admin_only'] and ! is_admin()) {
             return new PwgError(401, 'Access denied');
         }
 
@@ -566,7 +566,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
             $flags = is_int($flags) ? $flags : 0;
 
             // parameter not provided in the request
-            if (! array_key_exists((string) $name, $params)) {
+            if (! array_key_exists($name, $params)) {
                 if (! self::hasFlag($flags, WS_PARAM_OPTIONAL)) {
                     $missing_params[] = $name;
                 } elseif (array_key_exists('default', $options)) {
@@ -610,7 +610,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
             }
         }
 
-        if (count($missing_params)) {
+        if ((bool) count($missing_params)) {
             return new PwgError(WS_ERR_MISSING_PARAM, 'Missing parameters: ' . implode(',', $missing_params));
         }
 

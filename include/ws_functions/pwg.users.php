@@ -46,7 +46,7 @@ function ws_users_getList(array $params, PwgServer &$service): \PwgError|array
     $available_permission_levels = $conf['available_permission_levels'];
     $available_permission_levels = is_array($available_permission_levels) ? $available_permission_levels : [];
 
-    if (! preg_match(PATTERN_ORDER, (string) $params['order'])) {
+    if (! (bool) preg_match(PATTERN_ORDER, $params['order'])) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid input parameter order');
     }
 
@@ -69,7 +69,7 @@ function ws_users_getList(array $params, PwgServer &$service): \PwgError|array
     if (! empty($params['filter'])) {
         $filter_query = 'SELECT id FROM `' . GROUPS_TABLE . '` WHERE name LIKE \'%' . pwg_db_real_escape_string($params['filter']) . '%\';';
         $filtered_groups_res = pwg_query($filter_query);
-        while ($row = pwg_db_fetch_assoc($filtered_groups_res)) {
+        while ((bool) ($row = pwg_db_fetch_assoc($filtered_groups_res))) {
             $filtered_groups[] = $row['id'];
         }
         $filter_where_clause = '(u.' . $user_field_username . ' LIKE \'%' .
@@ -84,11 +84,11 @@ function ws_users_getList(array $params, PwgServer &$service): \PwgError|array
     }
 
     if (! empty($params['min_register'])) {
-        if (! preg_match('/^\d\d\d\d(-\d{1,2}){0,2}$/', (string) $params['min_register'])) {
+        if (! (bool) preg_match('/^\d\d\d\d(-\d{1,2}){0,2}$/', $params['min_register'])) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid input parameter min_register');
         }
 
-        $date_tokens = explode('-', (string) $params['min_register']);
+        $date_tokens = explode('-', $params['min_register']);
         $min_register_year = $date_tokens[0];
         $min_register_month = $date_tokens[1] ?? 1;
         $min_register_day = $date_tokens[2] ?? 1;
@@ -97,11 +97,11 @@ function ws_users_getList(array $params, PwgServer &$service): \PwgError|array
     }
 
     if (! empty($params['max_register'])) {
-        if (! preg_match('/^\d\d\d\d(-\d{1,2}){0,2}$/', (string) $params['max_register'])) {
+        if (! (bool) preg_match('/^\d\d\d\d(-\d{1,2}){0,2}$/', $params['max_register'])) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid input parameter max_register');
         }
 
-        $max_date_tokens = explode('-', (string) $params['max_register']);
+        $max_date_tokens = explode('-', $params['max_register']);
         $max_register_year = $max_date_tokens[0];
         $max_register_month = $max_date_tokens[1] ?? 12;
         if (isset($max_date_tokens[2])) {
@@ -165,7 +165,7 @@ function ws_users_getList(array $params, PwgServer &$service): \PwgError|array
     // of a partially-literal list would.
     $display_flags = [];
     if ($params['display'] != 'none') {
-        $requested_display = array_map(trim(...), explode(',', (string) $params['display']));
+        $requested_display = array_map(trim(...), explode(',', $params['display']));
 
         if (in_array('all', $requested_display, true)) {
             $requested_display = [
@@ -269,7 +269,7 @@ SELECT DISTINCT ';
     // type narrowing otherwise mis-infers the offset as unconditionally
     // present after the loop.
     $want_groups = isset($display_flags['groups']);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         $row['id'] = intval($row['id']);
         if ($want_groups) {
             $row['groups'] = []; // will be filled later
@@ -289,7 +289,7 @@ SELECT DISTINCT ';
             // a dedicated $group_row (instead of reusing $row from the loop
             // above, which iterates a differently-shaped result set) keeps
             // PHPStan's per-loop type inference precise.
-            while ($group_row = pwg_db_fetch_assoc($result)) {
+            while ((bool) ($group_row = pwg_db_fetch_assoc($result))) {
                 $group_user_id = is_numeric($group_row['user_id']) ? (int) $group_row['user_id'] : null;
                 $group_id = is_numeric($group_row['group_id']) ? (int) $group_row['group_id'] : null;
                 if ($group_user_id === null || $group_id === null || ! isset($users[$group_user_id]) || ! is_array($users[$group_user_id]['groups'] ?? null)) {
@@ -423,7 +423,7 @@ function ws_users_add(array $params, PwgServer &$service): mixed
     /** @var array<string, mixed> $conf */
     global $conf;
 
-    if ($conf['double_password_type_in_admin']) {
+    if ((bool) $conf['double_password_type_in_admin']) {
         if ($params['password'] != ($params['password_confirm'] ?? null)) {
             return new PwgError(WS_ERR_INVALID_PARAM, l10n('The passwords do not match'));
         }
@@ -450,7 +450,7 @@ function ws_users_add(array $params, PwgServer &$service): mixed
         false // $params['send_password_by_mail']
     );
 
-    if (! $user_id) {
+    if (! (bool) $user_id) {
         return new PwgError(WS_ERR_INVALID_PARAM, $errors[0]);
     }
 
@@ -615,12 +615,12 @@ function ws_users_setMyInfo(array $params, PwgServer &$service): \PwgError|strin
     global $user, $conf;
 
     // ACTIVATE_COMMENTS
-    if (! $conf['activate_comments']) {
+    if (! (bool) $conf['activate_comments']) {
         unset($params['show_nb_comments']);
     }
 
     // ALLOW_USER_CUSTOMIZATION
-    if (! $conf['allow_user_customization']) {
+    if (! (bool) $conf['allow_user_customization']) {
         unset(
             $params['nb_image_page'],
             $params['theme'],
@@ -723,11 +723,11 @@ function ws_users_preferences_set(array $params, PwgServer &$service): mixed
     /** @var array<string, mixed> $user */
     global $user;
 
-    if (! preg_match('/^[a-zA-Z0-9_-]+$/', (string) $params['param'])) {
+    if (! (bool) preg_match('/^[a-zA-Z0-9_-]+$/', $params['param'])) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid param name #' . $params['param'] . '#');
     }
 
-    $value = stripslashes((string) ($params['value'] ?? ''));
+    $value = stripslashes($params['value'] ?? '');
     if ($params['is_json']) {
         $value = json_decode($value, true);
     }
@@ -867,7 +867,7 @@ SELECT
 ;';
     $images = [];
     $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         $image = [];
 
         foreach (['id', 'width', 'height', 'hit'] as $k) {
@@ -1055,11 +1055,11 @@ function ws_create_api_key(array $params, PwgServer &$service): \PwgError|array
         return new PwgError(400, 'Invalid duration max days is 999999');
     }
 
-    if (strlen((string) $params['key_name']) > 100) {
+    if (strlen($params['key_name']) > 100) {
         return new PwgError(400, 'Key name is too long');
     }
 
-    $key_name = pwg_db_real_escape_string((string) $params['key_name']);
+    $key_name = pwg_db_real_escape_string($params['key_name']);
     assert($key_name !== null);
     // the guard above already rejects any duration outside [1, 999999], so
     // it can never be 0 here.
@@ -1101,7 +1101,7 @@ function ws_revoke_api_key(array $params, PwgServer &$service): \PwgError|string
         return new PwgError(403, l10n('Invalid security token'));
     }
 
-    if (! preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', (string) $params['pkid'])) {
+    if (! (bool) preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $params['pkid'])) {
         return new PwgError(403, l10n('Invalid pkid format'));
     }
 
@@ -1150,7 +1150,7 @@ function ws_edit_api_key(array $params, PwgServer &$service): \PwgError|string
         return new PwgError(403, l10n('Invalid security token'));
     }
 
-    if (! preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', (string) $params['pkid'])) {
+    if (! (bool) preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $params['pkid'])) {
         return new PwgError(403, l10n('Invalid pkid format'));
     }
 
@@ -1204,5 +1204,5 @@ function ws_get_api_key(array $params, PwgServer &$service): \PwgError|array|str
     $user_id = is_numeric($user['id'] ?? null) ? (string) (int) $user['id'] : '';
     $api_keys = get_api_key($user_id);
 
-    return $api_keys ?: l10n('No API key found');
+    return ((bool) $api_keys) ? $api_keys : l10n('No API key found');
 }

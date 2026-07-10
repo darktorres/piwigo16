@@ -23,7 +23,7 @@ declare(strict_types=1);
  */
 function ws_groups_getList(array $params, PwgServer &$service): \PwgError|array
 {
-    if (! preg_match(PATTERN_ORDER, (string) $params['order'])) {
+    if (! (bool) preg_match(PATTERN_ORDER, $params['order'])) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid input parameter order');
     }
 
@@ -75,7 +75,7 @@ function ws_groups_add(array $params, PwgServer &$service): mixed
 {
     // pwg_db_real_escape_string() only returns null for a null input, and
     // the (string) cast above already rules that out.
-    $params['name'] = pwg_db_real_escape_string(strip_tags(stripslashes((string) $params['name'])));
+    $params['name'] = pwg_db_real_escape_string(strip_tags(stripslashes($params['name'])));
     assert($params['name'] !== null);
 
     // is the name not already used ?
@@ -176,7 +176,7 @@ SELECT COUNT(*)
     if (! empty($params['name'])) {
         // pwg_db_real_escape_string() only returns null for a null input,
         // and the (string) cast above already rules that out.
-        $params['name'] = pwg_db_real_escape_string(strip_tags(stripslashes((string) $params['name'])));
+        $params['name'] = pwg_db_real_escape_string(strip_tags(stripslashes($params['name'])));
         assert($params['name'] !== null);
 
         // is the name not already used ?

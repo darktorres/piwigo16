@@ -96,7 +96,7 @@ class pwg_image
             die('[Image] unsupported file extension');
         }
 
-        if (! ($this->library = self::get_library($library, $extension))) {
+        if (! (bool) ($this->library = self::get_library($library, $extension))) {
             die('No image library available on your server.');
         }
 
@@ -243,7 +243,7 @@ class pwg_image
             'height' => $destination_height,
         ];
 
-        if ($crop and ($x or $y)) {
+        if ($crop and ((bool) $x or (bool) $y)) {
             $result['crop'] = [
                 'width' => $width,
                 'height' => $height,
@@ -267,7 +267,7 @@ class pwg_image
         // https://stackoverflow.com/questions/61221874/detect-if-a-webp-image-is-transparent-in-php
 
         $fp = fopen($source_filepath, 'rb');
-        if (! $fp) {
+        if (! (bool) $fp) {
             throw new Exception("webp_info(): fopen({$source_filepath}): Failed");
         }
         $buf = fread($fp, 25);
@@ -296,15 +296,15 @@ class pwg_image
                 return [
                     'type' => 'VP8L',
                     'has-animation' => false,
-                    'has-transparent' => (bool) ((bool) (ord($buf[24]) & 0x00000010)),
+                    'has-transparent' => (bool) (ord($buf[24]) & 0x00000010),
                 ];
 
             case $buf[15] == 'X':
                 // Extended File Format
                 return [
                     'type' => 'VP8X',
-                    'has-animation' => (bool) ((bool) (ord($buf[20]) & 0x00000002)),
-                    'has-transparent' => (bool) ((bool) (ord($buf[20]) & 0x00000010)),
+                    'has-animation' => (bool) (ord($buf[20]) & 0x00000002),
+                    'has-transparent' => (bool) (ord($buf[20]) & 0x00000010),
                 ];
 
             default:
@@ -335,7 +335,7 @@ class pwg_image
             ? (string) $exif['Orientation']
             : null;
 
-        if ($exif_orientation !== null and preg_match('/^\s*(\d)/', $exif_orientation, $matches)) {
+        if ($exif_orientation !== null and (bool) preg_match('/^\s*(\d)/', $exif_orientation, $matches)) {
             $orientation = $matches[1];
             if (in_array($orientation, [3, 4])) {
                 $rotation = 180;
@@ -417,7 +417,7 @@ class pwg_image
             'width' => $width,
             'height' => $height,
             'size' => floor(filesize($destination_filepath) / 1024) . ' KB',
-            'time' => $time ? number_format((get_moment() - $time) * 1000, 2, '.', ' ') . ' ms' : null,
+            'time' => ((bool) $time) ? number_format((get_moment() - $time) * 1000, 2, '.', ' ') . ' ms' : null,
             'library' => $this->library,
         ];
     }
@@ -460,8 +460,8 @@ class pwg_image
 
         $imagick_dir = is_string($conf['ext_imagick_dir']) ? $conf['ext_imagick_dir'] : '';
         @exec($imagick_dir . self::get_ext_imagick_command() . ' -version', $returnarray);
-        if (! empty($returnarray[0]) and preg_match('/ImageMagick/i', $returnarray[0])) {
-            if (preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
+        if (! empty($returnarray[0]) and (bool) preg_match('/ImageMagick/i', $returnarray[0])) {
+            if ((bool) preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
                 self::$ext_imagick_version = $match[1];
             }
             return true;
@@ -699,7 +699,7 @@ class image_ext_imagick implements imageInterface
 
         $command = $this->imagickdir . 'identify -format "%wx%h" "' . realpath($this->source_filepath) . '"';
         @exec($command, $returnarray);
-        if (empty($returnarray[0]) or ! preg_match('/^(\d+)x(\d+)$/', $returnarray[0], $match)) {
+        if (empty($returnarray[0]) or ! (bool) preg_match('/^(\d+)x(\d+)$/', $returnarray[0], $match)) {
             die("[External ImageMagick] Corrupt image\n" . var_export($returnarray, true));
         }
 
@@ -851,7 +851,7 @@ class image_ext_imagick implements imageInterface
                 $exec .= ' ' . $params;
             }
         }
-        $dest = pathinfo((string) $destination_filepath);
+        $dest = pathinfo($destination_filepath);
         if (! isset($dest['dirname'])) {
             throw new Exception("write(): unable to determine directory for {$destination_filepath}");
         }

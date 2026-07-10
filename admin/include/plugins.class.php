@@ -190,7 +190,7 @@ class plugins
         /** @var array<string, mixed> $conf */
         global $conf;
 
-        if (! $conf['enable_extensions_install'] and $action == 'delete') {
+        if (! (bool) $conf['enable_extensions_install'] and $action == 'delete') {
             die('Piwigo extensions install/update/delete system is disabled');
         }
 
@@ -378,9 +378,9 @@ DELETE FROM ' . PLUGINS_TABLE . '
         if ($dir === false) {
             return;
         }
-        while ($file = readdir($dir)) {
+        while ((bool) ($file = readdir($dir))) {
             if ($file != '.' and $file != '..') {
-                if (preg_match('/^[a-zA-Z0-9-_]+$/', $file)) {
+                if ((bool) preg_match('/^[a-zA-Z0-9-_]+$/', $file)) {
                     $this->get_fs_plugin($file);
                 }
             }
@@ -413,13 +413,13 @@ DELETE FROM ' . PLUGINS_TABLE . '
                 return false;
             }
 
-            if (preg_match('|Plugin Name:\\s*(.+)|', $plg_data, $val)) {
+            if ((bool) preg_match('|Plugin Name:\\s*(.+)|', $plg_data, $val)) {
                 $plugin['name'] = trim($val[1]);
             }
-            if (preg_match('|Version:\\s*([\\w.-]+)|', $plg_data, $val)) {
+            if ((bool) preg_match('|Version:\\s*([\\w.-]+)|', $plg_data, $val)) {
                 $plugin['version'] = trim($val[1]);
             }
-            if (preg_match('|Plugin URI:\\s*(https?:\\/\\/.+)|', $plg_data, $val)) {
+            if ((bool) preg_match('|Plugin URI:\\s*(https?:\\/\\/.+)|', $plg_data, $val)) {
                 $plugin['uri'] = trim($val[1]);
             }
             $desc = load_language('description.txt', $path . '/', [
@@ -427,16 +427,16 @@ DELETE FROM ' . PLUGINS_TABLE . '
             ]);
             if (is_string($desc) && $desc !== '') {
                 $plugin['description'] = trim($desc);
-            } elseif (preg_match('|Description:\\s*(.+)|', $plg_data, $val)) {
+            } elseif ((bool) preg_match('|Description:\\s*(.+)|', $plg_data, $val)) {
                 $plugin['description'] = trim($val[1]);
             }
-            if (preg_match('|Author:\\s*(.+)|', $plg_data, $val)) {
+            if ((bool) preg_match('|Author:\\s*(.+)|', $plg_data, $val)) {
                 $plugin['author'] = trim($val[1]);
             }
-            if (preg_match('|Author URI:\\s*(https?:\\/\\/.+)|', $plg_data, $val)) {
+            if ((bool) preg_match('|Author URI:\\s*(https?:\\/\\/.+)|', $plg_data, $val)) {
                 $plugin['author uri'] = trim($val[1]);
             }
-            if (preg_match('/Has Settings:\\s*([Tt]rue|[Ww]ebmaster)/', $plg_data, $val)) {
+            if ((bool) preg_match('/Has Settings:\\s*([Tt]rue|[Ww]ebmaster)/', $plg_data, $val)) {
                 if (strtolower($val[1]) == 'webmaster') {
                     /** @var array<string, mixed> $user */
                     global $user;
@@ -448,7 +448,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
                     $plugin['hasSettings'] = true;
                 }
             }
-            if (! empty($plugin['uri']) and strpos($plugin['uri'], 'extension_view.php?eid=')) {
+            if (! empty($plugin['uri']) and (bool) strpos($plugin['uri'], 'extension_view.php?eid=')) {
                 [, $extension] = explode('extension_view.php?eid=', $plugin['uri']);
                 if (is_numeric($extension)) {
                     $plugin['extension'] = $extension;
@@ -522,7 +522,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
         ];
         // $result is never a resource here: no fopen() handle is passed to
         // fetchRemote() above.
-        if (fetchRemote($url, $result, $get_data) and is_string($result) and $pem_versions = @unserialize($result)) {
+        if (fetchRemote($url, $result, $get_data) and is_string($result) and (bool) ($pem_versions = @unserialize($result))) {
             // unserialize() of a remote PEM response is genuinely
             // untyped — validate it's an array of arrays before indexing
             // into it below, rather than trusting the external payload.
@@ -816,7 +816,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
                 'origin' => 'piwigo_' . $action,
             ];
 
-            if ($handle = @fopen($archive, 'wb') and fetchRemote($url, $handle, $get_data)) {
+            if ((bool) ($handle = @fopen($archive, 'wb')) and fetchRemote($url, $handle, $get_data)) {
                 // fetchRemote()'s &$dest out-param could in principle reset
                 // to a string, but only when the value passed in wasn't
                 // already a resource — $handle always is here (just opened
@@ -825,7 +825,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
                     fclose($handle);
                 }
                 include_once PHPWG_ROOT_PATH . 'admin/include/functions_zip.inc.php';
-                if ($list = zip_list_filenames($archive)) {
+                if ((bool) ($list = zip_list_filenames($archive))) {
                     // zip_list_filenames() is typed to return
                     // array<int, array{filename: string}>|false, so
                     // $file['filename'] is already a real string here.
@@ -855,7 +855,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
                         $extract_path = PHPWG_PLUGINS_PATH . $plugin_id;
                         $logger->debug(__FUNCTION__ . ', $extract_path = ' . $extract_path);
 
-                        if ($result = zip_extract($archive, $extract_path, $root)) {
+                        if ((bool) ($result = zip_extract($archive, $extract_path, $root))) {
                             // extraction succeeded; 'ok' if the extracted result
                             // list doesn't happen to include main.inc.php itself
                             $status = 'ok';
@@ -866,7 +866,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
                                 }
                             }
                             if (file_exists($extract_path . '/obsolete.list')
-                              and $old_files = file($extract_path . '/obsolete.list', FILE_IGNORE_NEW_LINES)) {
+                              and (bool) ($old_files = file($extract_path . '/obsolete.list', FILE_IGNORE_NEW_LINES))) {
                                 $old_files[] = 'obsolete.list';
                                 $logger->debug(__FUNCTION__ . ', $old_files = {' . join('},{', $old_files) . '}');
 
@@ -938,9 +938,9 @@ DELETE FROM ' . PLUGINS_TABLE . '
         $file = PHPWG_ROOT_PATH . 'install/obsolete_extensions.list';
         $merged_extensions = [];
 
-        if (file_exists($file) and $obsolete_ext = file($file, FILE_IGNORE_NEW_LINES)) {
+        if (file_exists($file) and (bool) ($obsolete_ext = file($file, FILE_IGNORE_NEW_LINES))) {
             foreach ($obsolete_ext as $ext) {
-                if (preg_match('/^(\d+) ?: ?(.*?)$/', $ext, $matches)) {
+                if ((bool) preg_match('/^(\d+) ?: ?(.*?)$/', $ext, $matches)) {
                     $merged_extensions[$matches[1]] = $matches[2];
                 }
             }

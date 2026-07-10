@@ -108,7 +108,7 @@ class tabsheet
 
         if (! array_key_exists($name, $this->sheets)) {
             $keys = array_keys($this->sheets);
-            $name = (string) $keys[0];
+            $name = $keys[0];
         }
         $this->selected = $name;
     }

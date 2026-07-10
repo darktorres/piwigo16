@@ -45,7 +45,7 @@ class languages
         /** @var array<string, mixed> $conf */
         global $conf;
 
-        if (! $conf['enable_extensions_install'] and $action == 'delete') {
+        if (! (bool) $conf['enable_extensions_install'] and $action == 'delete') {
             die('Piwigo extensions install/update/delete system is disabled');
         }
 
@@ -147,17 +147,17 @@ UPDATE ' . USER_INFOS_TABLE . '
         if (empty($target_charset)) {
             $target_charset = get_pwg_charset();
         }
-        $target_charset = strtolower((string) $target_charset);
+        $target_charset = strtolower($target_charset);
 
         $dir = opendir(PHPWG_ROOT_PATH . 'language');
         if ($dir === false) {
             return;
         }
-        while ($file = readdir($dir)) {
+        while ((bool) ($file = readdir($dir))) {
             if ($file != '.' and $file != '..') {
                 $path = PHPWG_ROOT_PATH . 'language/' . $file;
                 if (is_dir($path) and ! is_link($path)
-                    and preg_match('/^[a-zA-Z0-9-_]+$/', $file)
+                    and (bool) preg_match('/^[a-zA-Z0-9-_]+$/', $file)
                     and file_exists($path . '/common.lang.php')
                 ) {
                     $language = [
@@ -173,26 +173,26 @@ UPDATE ' . USER_INFOS_TABLE . '
                     }
                     $plg_data = implode('', $plg_data_lines);
 
-                    if (preg_match('|Language Name:\\s*(.+)|', $plg_data, $val)) {
+                    if ((bool) preg_match('|Language Name:\\s*(.+)|', $plg_data, $val)) {
                         $language['name'] = trim($val[1]);
                         $converted_name = convert_charset($language['name'], 'utf-8', $target_charset);
                         if ($converted_name !== false) {
                             $language['name'] = $converted_name;
                         }
                     }
-                    if (preg_match('|Version:\\s*([\\w.-]+)|', $plg_data, $val)) {
+                    if ((bool) preg_match('|Version:\\s*([\\w.-]+)|', $plg_data, $val)) {
                         $language['version'] = trim($val[1]);
                     }
-                    if (preg_match('|Language URI:\\s*(https?:\\/\\/.+)|', $plg_data, $val)) {
+                    if ((bool) preg_match('|Language URI:\\s*(https?:\\/\\/.+)|', $plg_data, $val)) {
                         $language['uri'] = trim($val[1]);
                     }
-                    if (preg_match('|Author:\\s*(.+)|', $plg_data, $val)) {
+                    if ((bool) preg_match('|Author:\\s*(.+)|', $plg_data, $val)) {
                         $language['author'] = trim($val[1]);
                     }
-                    if (preg_match('|Author URI:\\s*(https?:\\/\\/.+)|', $plg_data, $val)) {
+                    if ((bool) preg_match('|Author URI:\\s*(https?:\\/\\/.+)|', $plg_data, $val)) {
                         $language['author uri'] = trim($val[1]);
                     }
-                    if (! empty($language['uri']) and strpos($language['uri'], 'extension_view.php?eid=')) {
+                    if (! empty($language['uri']) and (bool) strpos($language['uri'], 'extension_view.php?eid=')) {
                         [, $extension] = explode('extension_view.php?eid=', $language['uri']);
                         if (is_numeric($extension)) {
                             $language['extension'] = $extension;
@@ -218,7 +218,7 @@ UPDATE ' . USER_INFOS_TABLE . '
   ;';
         $result = pwg_query($query);
 
-        while ($row = pwg_db_fetch_assoc($result)) {
+        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
             // 'id' is the LANGUAGES_TABLE primary key (NOT NULL); guard it
             // anyway since pwg_db_fetch_assoc() types every column string|null.
             $id = $row['id'];
@@ -257,13 +257,13 @@ UPDATE ' . USER_INFOS_TABLE . '
         $url = $pem_base_url . '/api/get_version_list.php';
         // $result is never a resource here: no fopen() handle is passed to
         // fetchRemote() above.
-        if (fetchRemote($url, $result, $get_data) and is_string($result) and $pem_versions = @unserialize($result)) {
+        if (fetchRemote($url, $result, $get_data) and is_string($result) and (bool) ($pem_versions = @unserialize($result))) {
             // unserialize() of a remote PEM response is genuinely untyped —
             // validate it's an array of arrays before indexing into it
             // below, rather than trusting the external payload (see the
             // identical narrowing in plugins.class.php::get_versions_to_check()).
             if (is_array($pem_versions)) {
-                if (! preg_match('/^\d+\.\d+\.\d+$/', $version)) {
+                if (! (bool) preg_match('/^\d+\.\d+\.\d+$/', $version)) {
                     $first_pem_version = $pem_versions[0] ?? null;
                     if (is_array($first_pem_version)) {
                         $first_pem_version_name = $first_pem_version['name'] ?? null;
@@ -337,7 +337,7 @@ UPDATE ' . USER_INFOS_TABLE . '
                     continue;
                 }
                 $extension_name = $language['extension_name'] ?? null;
-                if (is_string($extension_name) and preg_match('/^.*? \[[A-Z]{2}\]$/', $extension_name)) {
+                if (is_string($extension_name) and (bool) preg_match('/^.*? \[[A-Z]{2}\]$/', $extension_name)) {
                     $this->server_languages[$extension_id] = $language;
                 }
             }
@@ -373,7 +373,7 @@ UPDATE ' . USER_INFOS_TABLE . '
                 'origin' => 'piwigo_' . $action,
             ];
 
-            if ($handle = @fopen($archive, 'wb') and fetchRemote($url, $handle, $get_data)) {
+            if ((bool) ($handle = @fopen($archive, 'wb')) and fetchRemote($url, $handle, $get_data)) {
                 // fetchRemote()'s &$dest out-param could in principle reset
                 // to a string, but only when the value passed in wasn't
                 // already a resource — $handle always is here (just opened
@@ -382,7 +382,7 @@ UPDATE ' . USER_INFOS_TABLE . '
                     fclose($handle);
                 }
                 include_once PHPWG_ROOT_PATH . 'admin/include/functions_zip.inc.php';
-                if ($list = zip_list_filenames($archive)) {
+                if ((bool) ($list = zip_list_filenames($archive))) {
                     // Declared before the loop (rather than relying on
                     // isset($main_filepath) to narrow it after the loop) --
                     // PHPStan doesn't reliably preserve isset()-based
@@ -391,15 +391,15 @@ UPDATE ' . USER_INFOS_TABLE . '
                     $main_filepath = null;
                     foreach ($list as $file) {
                         // we search common.lang.php in archive
-                        if (basename((string) $file['filename']) == 'common.lang.php'
+                        if (basename($file['filename']) == 'common.lang.php'
                           and ($main_filepath === null
-                          or strlen((string) $file['filename']) < strlen($main_filepath))) {
+                          or strlen($file['filename']) < strlen($main_filepath))) {
                             // cast once at assignment (rather than at every
                             // read site below) since zip_list_filenames()'s
                             // 'filename' entry is PHPStan-mixed (it comes
                             // from ZipArchive::statIndex()['name']) but is
                             // always a real string archive entry name.
-                            $main_filepath = (string) $file['filename'];
+                            $main_filepath = $file['filename'];
                         }
                     }
 
@@ -407,7 +407,7 @@ UPDATE ' . USER_INFOS_TABLE . '
                         $logger->debug(__FUNCTION__ . ', $main_filepath = ' . $main_filepath);
 
                         $root = basename(dirname($main_filepath)); // common.lang.php path in archive
-                        if (preg_match('/^[a-z]{2}_[A-Z]{2}$/', $root)) {
+                        if ((bool) preg_match('/^[a-z]{2}_[A-Z]{2}$/', $root)) {
                             if ($action == 'install') {
                                 $dest = $root;
                             }
@@ -415,7 +415,7 @@ UPDATE ' . USER_INFOS_TABLE . '
 
                             $logger->debug(__FUNCTION__ . ', $extract_path = ' . $extract_path);
 
-                            if ($result = zip_extract($archive, $extract_path, $root)) {
+                            if ((bool) ($result = zip_extract($archive, $extract_path, $root))) {
                                 // extraction succeeded; 'ok' if the extracted result
                                 // list doesn't happen to include the main file itself
                                 $status = 'ok';
@@ -432,7 +432,7 @@ UPDATE ' . USER_INFOS_TABLE . '
                                     }
                                 }
                                 if (file_exists($extract_path . '/obsolete.list')
-                                  and $old_files = file($extract_path . '/obsolete.list', FILE_IGNORE_NEW_LINES)) {
+                                  and (bool) ($old_files = file($extract_path . '/obsolete.list', FILE_IGNORE_NEW_LINES))) {
                                     $old_files[] = 'obsolete.list';
                                     $logger->debug(__FUNCTION__ . ', $old_files = {' . join('},{', $old_files) . '}');
 

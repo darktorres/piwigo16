@@ -112,7 +112,7 @@ function save_upload_form_config(array $data, array &$errors = [], array &$form_
                 continue;
             }
 
-            if (preg_match($pattern, (string) $value) and $value >= $min and $value <= $max) {
+            if ((bool) preg_match($pattern, (string) $value) and $value >= $min and $value <= $max) {
                 $updates[] = [
                     'param' => $field,
                     'value' => $value,
@@ -173,7 +173,7 @@ function add_uploaded_file(string $source_filepath, ?string $original_filename =
     }
 
     // we only try to detect duplicate on a new image, not when updating an existing image
-    if (! isset($image_id) and $conf['upload_detect_duplicate']) {
+    if (! isset($image_id) and (bool) $conf['upload_detect_duplicate']) {
         $query = '
 SELECT
     id
@@ -215,7 +215,7 @@ SELECT
   WHERE id = ' . $image_id . '
 ;';
         $result = pwg_query($query);
-        while ($row = pwg_db_fetch_assoc($result)) {
+        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
             $file_path = $row['path'];
         }
 
@@ -273,7 +273,7 @@ SELECT
             $file_path .= 'jpg';
         } elseif ($type == IMAGETYPE_WEBP) {
             $file_path .= 'webp';
-        } elseif (isset($conf['upload_form_all_types']) and $conf['upload_form_all_types']) {
+        } elseif (isset($conf['upload_form_all_types']) and (bool) $conf['upload_form_all_types']) {
             $original_extension = strtolower(get_extension($original_filename));
 
             $finfo = finfo_open(FILEINFO_MIME_TYPE);
@@ -341,10 +341,10 @@ SELECT
         $representative_ext = null;
     }
 
-    $logger->info('Handling ' . (string) $file_path . ' got ' . ($representative_ext ?? ''));
+    $logger->info('Handling ' . $file_path . ' got ' . ($representative_ext ?? ''));
 
     if (pwg_image::get_library() != 'gd') {
-        if ($conf['original_resize']) {
+        if ((bool) $conf['original_resize']) {
             $original_resize_maxwidth = $conf['original_resize_maxwidth'];
             $original_resize_maxwidth = is_numeric($original_resize_maxwidth) ? (int) $original_resize_maxwidth : 2000;
 
@@ -382,7 +382,7 @@ SELECT
 
     if (isset($image_id)) {
         $update = [
-            'file' => pwg_db_real_escape_string($original_filename ?? basename((string) $file_path)),
+            'file' => pwg_db_real_escape_string($original_filename ?? basename($file_path)),
             'filesize' => $file_infos['filesize'],
             'width' => $file_infos['width'],
             'height' => $file_infos['height'],
@@ -439,7 +439,7 @@ SELECT
     add_uploaded_file_add_to_categories($image_id, $categories);
 
     // update metadata from the uploaded file (exif/iptc)
-    if ($conf['use_exif'] and ! function_exists('exif_read_data')) {
+    if ((bool) $conf['use_exif'] and ! function_exists('exif_read_data')) {
         $conf['use_exif'] = false;
     }
     sync_metadata([(int) $image_id]);
@@ -486,7 +486,7 @@ function add_uploaded_file_add_to_categories(int|string $image_id, ?array $categ
         conf_update_param('lounge_active', false, true);
     }
 
-    if (! $conf['lounge_active']) {
+    if (! (bool) $conf['lounge_active']) {
         // check if we need to use the lounge from now
         $row = pwg_db_fetch_row(pwg_query('SELECT COUNT(*) FROM ' . IMAGES_TABLE . ';'));
         assert($row !== null);
@@ -497,7 +497,7 @@ function add_uploaded_file_add_to_categories(int|string $image_id, ?array $categ
     }
 
     if (isset($categories) and count($categories) > 0) {
-        if ($conf['lounge_active']) {
+        if ((bool) $conf['lounge_active']) {
             // fill_lounge() requires int keys for $categories; a WS param
             // forced into an array by makeArrayParam() could theoretically
             // carry non-sequential/string keys, so reindex to guarantee it.
@@ -507,7 +507,7 @@ function add_uploaded_file_add_to_categories(int|string $image_id, ?array $categ
         }
     }
 
-    if (! $conf['lounge_active']) {
+    if (! (bool) $conf['lounge_active']) {
         invalidate_user_cache();
     }
 }
@@ -520,7 +520,7 @@ function add_format(string $source_filepath, string $format_ext, int|string $for
     //
     // 3) register in database
 
-    if (! conf_get_param('enable_formats', false)) {
+    if (! (bool) conf_get_param('enable_formats', false)) {
         die('[' . __FUNCTION__ . '] formats are disabled');
     }
 
@@ -576,7 +576,7 @@ SELECT
 ;';
 
     $formats = query2array($query);
-    if ($formats) {
+    if ((bool) $formats) {
         $set_fields = [
             'filesize' => $file_infos['filesize'],
         ];
@@ -738,8 +738,8 @@ function upload_file_tiff(?string $representative_ext, string $file_path): ?stri
     }
 
     // move the uploaded file to pwg_representative sub-directory
-    $representative_file_path = dirname((string) $file_path) . '/pwg_representative/';
-    $representative_file_path .= get_filename_wo_extension(basename((string) $file_path)) . '.';
+    $representative_file_path = dirname($file_path) . '/pwg_representative/';
+    $representative_file_path .= get_filename_wo_extension(basename($file_path)) . '.';
 
     $conf_tiff_representative_ext = $conf['tiff_representative_ext'];
     $representative_ext = is_string($conf_tiff_representative_ext) ? $conf_tiff_representative_ext : 'jpg';
@@ -805,8 +805,8 @@ function upload_file_video(?string $representative_ext, string $file_path): ?str
         return $representative_ext;
     }
 
-    $representative_file_path = dirname((string) $file_path) . '/pwg_representative/';
-    $representative_file_path .= get_filename_wo_extension(basename((string) $file_path)) . '.';
+    $representative_file_path = dirname($file_path) . '/pwg_representative/';
+    $representative_file_path .= get_filename_wo_extension(basename($file_path)) . '.';
 
     $representative_ext = 'jpg';
     $representative_file_path .= $representative_ext;
@@ -883,8 +883,8 @@ function upload_file_psd(?string $representative_ext, string $file_path): ?strin
     }
 
     // move the uploaded file to pwg_representative sub-directory
-    $representative_file_path = dirname((string) $file_path) . '/pwg_representative/';
-    $representative_file_path .= get_filename_wo_extension(basename((string) $file_path)) . '.';
+    $representative_file_path = dirname($file_path) . '/pwg_representative/';
+    $representative_file_path .= get_filename_wo_extension(basename($file_path)) . '.';
 
     $representative_ext = 'png';
     $representative_file_path .= $representative_ext;
@@ -1031,7 +1031,7 @@ function need_resize(string $image_filepath, int $max_width, int $max_height): b
     [$width, $height] = $image_size;
 
     if ($width > $max_width or $height > $max_height) {
-        $logger->info(__FUNCTION__ . ' ' . (string) $image_filepath . ' is too big (current=' . $width . 'x' . $height . 'px Vs max=' . $max_width . 'x' . $max_height . 'px)');
+        $logger->info(__FUNCTION__ . ' ' . $image_filepath . ' is too big (current=' . $width . 'x' . $height . 'px Vs max=' . $max_width . 'x' . $max_height . 'px)');
         return true;
     }
 
@@ -1067,7 +1067,7 @@ function is_valid_image_extension(string $extension): array
     /** @var array<string, mixed> $conf */
     global $conf;
 
-    if (isset($conf['upload_form_all_types']) and $conf['upload_form_all_types']) {
+    if (isset($conf['upload_form_all_types']) and (bool) $conf['upload_form_all_types']) {
         $extensions = $conf['file_ext'];
     } else {
         $extensions = $conf['picture_ext'];
@@ -1222,7 +1222,7 @@ function get_optimal_dimensions_for_representative(): array
         // exhaustive.
         $params = array_key_exists($type, $enabled) ? $enabled[$type] : ($disabled[$type] ?? null);
 
-        if ($params) {
+        if ((bool) $params) {
             [$w, $h] = $params->sizing->ideal_size;
         }
     }

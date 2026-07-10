@@ -58,7 +58,7 @@ if (pwg_image::get_library() == 'gd') {
 }
 
 // warn the user if the picture will be resized after upload
-if ($conf['original_resize']) {
+if ((bool) $conf['original_resize']) {
     $template->assign(
         [
             'original_resize_maxwidth' => $conf['original_resize_maxwidth'],
@@ -74,7 +74,7 @@ $template->assign(
     ]
 );
 
-$upload_extensions = $conf['upload_form_all_types'] ? $conf['file_ext'] : $conf['picture_ext'];
+$upload_extensions = ((bool) $conf['upload_form_all_types']) ? $conf['file_ext'] : $conf['picture_ext'];
 // $conf values are inherently mixed; only string elements can safely
 // be passed to strtolower() below.
 $upload_extensions = is_array($upload_extensions) ? array_filter($upload_extensions, is_string(...)) : [];
@@ -202,7 +202,7 @@ if (isset($_GET['hide_warnings'])) {
 if (! isset($_SESSION['upload_hide_warnings'])) {
     $setup_warnings = [];
 
-    if ($conf['use_exif'] and ! function_exists('exif_read_data')) {
+    if ((bool) $conf['use_exif'] and ! function_exists('exif_read_data')) {
         $setup_warnings[] = l10n('Exif extension not available, admin should disable exif use');
     }
 

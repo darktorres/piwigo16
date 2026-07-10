@@ -80,7 +80,7 @@ class updates
 
         // $result is never a resource here: no fopen() handle is passed to
         // fetchRemote() above.
-        if (preg_match('/(\d+\.\d+)\.(\d+)/', PHPWG_VERSION, $matches)
+        if ((bool) preg_match('/(\d+\.\d+)\.(\d+)/', PHPWG_VERSION, $matches)
           and @fetchRemote(PHPWG_URL . '/download/all_versions.php?rand=' . md5(uniqid((string) mt_rand(), true)), $result)
           and is_string($result)) {
             $all_versions = @explode("\n", $result);
@@ -112,7 +112,7 @@ class updates
         ];
 
         [$env, $build_version] = get_container_info();
-        if (preg_match('/^(\d+\.\d+)\.(\d+)$/', PHPWG_VERSION)) {
+        if ((bool) preg_match('/^(\d+\.\d+)\.(\d+)$/', PHPWG_VERSION)) {
             $new_versions['is_dev'] = false;
             $actual_branch = get_branch_from_version(
                 ($env === 'Official')
@@ -204,7 +204,7 @@ class updates
         $new_versions = $this->get_piwigo_new_versions();
         conf_update_param('update_notify_last_check', date('c'));
 
-        if ($new_versions['is_dev']) {
+        if ((bool) $new_versions['is_dev']) {
             return;
         }
 
@@ -320,13 +320,13 @@ class updates
         $url = $pem_base_url . '/api/get_version_list.php';
         // $result is never a resource here: no fopen() handle is passed to
         // fetchRemote() above.
-        if (fetchRemote($url, $result, $get_data) and is_string($result) and $pem_versions = @unserialize($result)) {
+        if (fetchRemote($url, $result, $get_data) and is_string($result) and (bool) ($pem_versions = @unserialize($result))) {
             // unserialize() of a remote PEM response is genuinely untyped —
             // validate it's an array of arrays before indexing into it
             // below, rather than trusting the external payload (see the
             // identical narrowing in plugins.class.php::get_versions_to_check()).
             if (is_array($pem_versions)) {
-                if (! preg_match('/^\d+\.\d+\.\d+$/', $version)) {
+                if (! (bool) preg_match('/^\d+\.\d+\.\d+$/', $version)) {
                     $first_pem_version = $pem_versions[0] ?? null;
                     if (is_array($first_pem_version)) {
                         $first_pem_version_name = $first_pem_version['name'] ?? null;
@@ -480,7 +480,7 @@ class updates
                 $revision_name_raw = $ext_info['revision_name'] ?? null;
                 $revision_name = is_string($revision_name_raw) ? $revision_name_raw : '';
 
-                if (! safe_version_compare($fs_version, $revision_name, '>=')) {
+                if (! (bool) safe_version_compare($fs_version, $revision_name, '>=')) {
                     if (in_array($ext_id, $ignored_for_type)) {
                         $ignore_list[] = $ext_id;
                     } else {
@@ -520,7 +520,7 @@ class updates
                 $fs_version = is_string($fs_version_raw) ? $fs_version_raw : '';
                 if (isset($needed_version)
                   and is_string($needed_version)
-                  and safe_version_compare($fs_version, $needed_version, '>=')) {
+                  and (bool) safe_version_compare($fs_version, $needed_version, '>=')) {
                     // Extension have been upgraded
                     $this->check_extensions();
                     break;
@@ -566,7 +566,7 @@ class updates
         if (fetchRemote($this->merged_extension_url, $result) and is_string($result)) {
             $rows = explode("\n", $result);
             foreach ($rows as $row) {
-                if (preg_match('/^(\d+\.\d+): *(.*)$/', $row, $match)) {
+                if ((bool) preg_match('/^(\d+\.\d+): *(.*)$/', $row, $match)) {
                     if (version_compare($version, $match[1], '>=')) {
                         $extensions = explode(',', trim($match[2]));
                         $this->merged_extensions = array_merge($this->merged_extensions, $extensions);
@@ -579,7 +579,7 @@ class updates
     public static function process_obsolete_list(string $file): void
     {
         if (file_exists(PHPWG_ROOT_PATH . $file)
-          and $old_files = file(PHPWG_ROOT_PATH . $file, FILE_IGNORE_NEW_LINES)) {
+          and (bool) ($old_files = file(PHPWG_ROOT_PATH . $file, FILE_IGNORE_NEW_LINES))) {
             $old_files[] = $file;
             foreach ($old_files as $old_file) {
                 $path = PHPWG_ROOT_PATH . $old_file;
@@ -646,7 +646,7 @@ class updates
                 // passed to fetchRemote() above.
                 if (@fetchRemote(PHPWG_URL . '/download/dlcounter.php?code=' . $dl_code . '&chunk_num=' . $chunk_num, $result)
                   and is_string($result)
-                  and $input = @unserialize($result)) {
+                  and (bool) ($input = @unserialize($result))) {
                     // unserialize() of a remote dlcounter response is
                     // genuinely untyped — validate it's an array before
                     // indexing into it below.
@@ -672,16 +672,16 @@ class updates
                 @fclose($zip);
             }
 
-            if (@filesize($filename)) {
+            if ((bool) @filesize($filename)) {
                 include_once PHPWG_ROOT_PATH . 'admin/include/functions_zip.inc.php';
-                if ($result = zip_extract($filename, PHPWG_ROOT_PATH, $remove_path, 0755)) {
+                if ((bool) ($result = zip_extract($filename, PHPWG_ROOT_PATH, $remove_path, 0755))) {
                     // Check if all files were extracted
                     $error = '';
                     foreach ($result as $extract) {
                         if (! in_array($extract['status'], ['ok', 'filtered', 'already_a_directory'])) {
                             // Try to change chmod and extract
                             if (@chmod(PHPWG_ROOT_PATH . $extract['filename'], 0777)
-                              and ($res = zip_extract(
+                              and (bool) ($res = zip_extract(
                                   $filename,
                                   PHPWG_ROOT_PATH,
                                   $remove_path,
@@ -750,8 +750,8 @@ class updates
         // Split 16.2.0d into "16.2.0" as semantic_ver and "d" as sub_ver
         $v1_semantic_ver = substr((string) $v1, 0, -1);
         $v1_sub_ver = substr((string) $v1, -1);
-        $v2_semantic_ver = substr((string) $v2, 0, -1);
-        $v2_sub_ver = substr((string) $v2, -1);
+        $v2_semantic_ver = substr($v2, 0, -1);
+        $v2_sub_ver = substr($v2, -1);
 
         $res = version_compare($v1_semantic_ver, $v2_semantic_ver);
 

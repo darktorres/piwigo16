@@ -87,7 +87,7 @@ AND id NOT IN (\'' . implode('\',\'', $standard_plugins) . '\')
 
     $result = pwg_query($query);
     $plugins = [];
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         $plugins[] = $row['id'];
     }
 
@@ -133,7 +133,7 @@ SELECT
     $result = pwg_query($query);
     $theme_ids = [];
     $theme_names = [];
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         $theme_ids[] = $row['id'];
         $theme_names[] = $row['name'];
     }
@@ -296,10 +296,10 @@ function get_available_upgrade_ids(): array
 
     $available_upgrade_ids = [];
 
-    if ($contents = opendir($upgrades_path)) {
+    if ((bool) ($contents = opendir($upgrades_path))) {
         while (($node = readdir($contents)) !== false) {
             if (is_file($upgrades_path . '/' . $node)
-                and preg_match('/^(.*?)-database\.php$/', $node, $match)) {
+                and (bool) preg_match('/^(.*?)-database\.php$/', $node, $match)) {
                 $available_upgrade_ids[] = $match[1];
             }
         }

@@ -150,7 +150,7 @@ class themes
         /** @var array<string, mixed> $conf */
         global $conf;
 
-        if (! $conf['enable_extensions_install'] and $action == 'delete') {
+        if (! (bool) $conf['enable_extensions_install'] and $action == 'delete') {
             die('Piwigo extensions install/update/delete system is disabled');
         }
 
@@ -185,7 +185,7 @@ class themes
                     break;
                 }
 
-                if ($this->fs_themes[$theme_id]['mobile']
+                if ((bool) $this->fs_themes[$theme_id]['mobile']
                     and ! empty($conf['mobile_theme'])
                     and $conf['mobile_theme'] != $theme_id) {
                     $errors[] = l10n('You can activate only one mobile theme.');
@@ -209,7 +209,7 @@ INSERT INTO ' . THEMES_TABLE . '
 
                     $activity_details['version'] = $fs_version;
 
-                    if ($this->fs_themes[$theme_id]['mobile']) {
+                    if ((bool) $this->fs_themes[$theme_id]['mobile']) {
                         conf_update_param('mobile_theme', $theme_id);
                     }
                 }
@@ -261,7 +261,7 @@ DELETE
 ;';
                 pwg_query($query);
 
-                if ($this->fs_themes[$theme_id]['mobile']) {
+                if ((bool) $this->fs_themes[$theme_id]['mobile']) {
                     conf_update_param('mobile_theme', '');
                 }
                 break;
@@ -415,7 +415,7 @@ SELECT
 
         $result = pwg_query($query);
         $themes = [];
-        while ($row = pwg_db_fetch_assoc($result)) {
+        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
             $themes[] = $row;
         }
         return $themes;
@@ -431,11 +431,11 @@ SELECT
             return;
         }
 
-        while ($file = readdir($dir)) {
+        while ((bool) ($file = readdir($dir))) {
             if ($file != '.' and $file != '..') {
                 $path = PHPWG_THEMES_PATH . $file;
                 if (is_dir($path)
-                    and preg_match('/^[a-zA-Z0-9-_]+$/', $file)
+                    and (bool) preg_match('/^[a-zA-Z0-9-_]+$/', $file)
                     and file_exists($path . '/themeconf.inc.php')
                 ) {
                     $theme = [
@@ -452,13 +452,13 @@ SELECT
                         continue;
                     }
                     $theme_data = implode('', $theme_data_lines);
-                    if (preg_match('|Theme Name:\\s*(.+)|', $theme_data, $val)) {
+                    if ((bool) preg_match('|Theme Name:\\s*(.+)|', $theme_data, $val)) {
                         $theme['name'] = trim($val[1]);
                     }
-                    if (preg_match('|Version:\\s*([\\w.-]+)|', $theme_data, $val)) {
+                    if ((bool) preg_match('|Version:\\s*([\\w.-]+)|', $theme_data, $val)) {
                         $theme['version'] = trim($val[1]);
                     }
-                    if (preg_match('|Theme URI:\\s*(https?:\\/\\/.+)|', $theme_data, $val)) {
+                    if ((bool) preg_match('|Theme URI:\\s*(https?:\\/\\/.+)|', $theme_data, $val)) {
                         $theme['uri'] = trim($val[1]);
                     }
                     $desc = load_language('description.txt', $path . '/', [
@@ -466,31 +466,31 @@ SELECT
                     ]);
                     if (is_string($desc) && $desc !== '') {
                         $theme['description'] = trim($desc);
-                    } elseif (preg_match('|Description:\\s*(.+)|', $theme_data, $val)) {
+                    } elseif ((bool) preg_match('|Description:\\s*(.+)|', $theme_data, $val)) {
                         $theme['description'] = trim($val[1]);
                     }
-                    if (preg_match('|Author:\\s*(.+)|', $theme_data, $val)) {
+                    if ((bool) preg_match('|Author:\\s*(.+)|', $theme_data, $val)) {
                         $theme['author'] = trim($val[1]);
                     }
-                    if (preg_match('|Author URI:\\s*(https?:\\/\\/.+)|', $theme_data, $val)) {
+                    if ((bool) preg_match('|Author URI:\\s*(https?:\\/\\/.+)|', $theme_data, $val)) {
                         $theme['author uri'] = trim($val[1]);
                     }
-                    if (! empty($theme['uri']) and strpos($theme['uri'], 'extension_view.php?eid=')) {
+                    if (! empty($theme['uri']) and (bool) strpos($theme['uri'], 'extension_view.php?eid=')) {
                         [, $extension] = explode('extension_view.php?eid=', $theme['uri']);
                         if (is_numeric($extension)) {
                             $theme['extension'] = $extension;
                         }
                     }
-                    if (preg_match('/["\']parent["\'][^"\']+["\']([^"\']+)["\']/', $theme_data, $val)) {
+                    if ((bool) preg_match('/["\']parent["\'][^"\']+["\']([^"\']+)["\']/', $theme_data, $val)) {
                         $theme['parent'] = $val[1];
                     }
-                    if (preg_match('/["\']activable["\'].*?(true|false)/i', $theme_data, $val)) {
+                    if ((bool) preg_match('/["\']activable["\'].*?(true|false)/i', $theme_data, $val)) {
                         $theme['activable'] = get_boolean($val[1]);
                     }
-                    if (preg_match('/["\']mobile["\'].*?(true|false)/i', $theme_data, $val)) {
+                    if ((bool) preg_match('/["\']mobile["\'].*?(true|false)/i', $theme_data, $val)) {
                         $theme['mobile'] = get_boolean($val[1]);
                     }
-                    if (preg_match('/["\']use_standard_pages["\'].*?(true|false)/i', $theme_data, $val)) {
+                    if ((bool) preg_match('/["\']use_standard_pages["\'].*?(true|false)/i', $theme_data, $val)) {
                         $theme['use_standard_pages'] = get_boolean($val[1]);
                     }
 
@@ -578,7 +578,7 @@ SELECT
         $url = $pem_base_url . '/api/get_version_list.php';
         // $result is never a resource here: no fopen() handle is passed to
         // fetchRemote() above.
-        if (fetchRemote($url, $result, $get_data) and is_string($result) and $pem_versions = @unserialize($result)) {
+        if (fetchRemote($url, $result, $get_data) and is_string($result) and (bool) ($pem_versions = @unserialize($result))) {
             // unserialize() of a remote PEM response is genuinely untyped —
             // validate it's an array of arrays before indexing into it
             // below, rather than trusting the external payload (see
@@ -587,7 +587,7 @@ SELECT
                 return false;
             }
 
-            if (! preg_match('/^\d+\.\d+\.\d+$/', $version)) {
+            if (! (bool) preg_match('/^\d+\.\d+\.\d+$/', $version)) {
                 $first_pem_version = $pem_versions[0] ?? null;
                 $first_pem_version_name = is_array($first_pem_version) ? ($first_pem_version['name'] ?? null) : null;
                 if (is_string($first_pem_version_name)) {
@@ -713,7 +713,7 @@ SELECT
                 'origin' => 'piwigo_' . $action,
             ];
 
-            if ($handle = @fopen($archive, 'wb') and fetchRemote($url, $handle, $get_data)) {
+            if ((bool) ($handle = @fopen($archive, 'wb')) and fetchRemote($url, $handle, $get_data)) {
                 // fetchRemote()'s &$dest out-param could in principle reset
                 // to a string, but only when the value passed in wasn't
                 // already a resource — $handle always is here (just opened
@@ -722,7 +722,7 @@ SELECT
                     fclose($handle);
                 }
                 include_once PHPWG_ROOT_PATH . 'admin/include/functions_zip.inc.php';
-                if ($list = zip_list_filenames($archive)) {
+                if ((bool) ($list = zip_list_filenames($archive))) {
                     // Declared before the loop (rather than relying on
                     // isset($main_filepath) to narrow it after the loop) --
                     // PHPStan doesn't reliably preserve isset()-based
@@ -731,16 +731,16 @@ SELECT
                     $main_filepath = null;
                     foreach ($list as $file) {
                         // we search main.inc.php in archive
-                        if (basename((string) $file['filename']) == 'themeconf.inc.php'
+                        if (basename($file['filename']) == 'themeconf.inc.php'
                           and ($main_filepath === null
-                          or strlen((string) $file['filename']) < strlen($main_filepath))) {
+                          or strlen($file['filename']) < strlen($main_filepath))) {
                             // cast once at assignment (rather than at every
                             // read site below) since zip_list_filenames()'s
                             // 'filename' entry is PHPStan-mixed but is
                             // always a real string archive entry name (same
                             // pattern as
                             // languages.class.php::extract_language_files()).
-                            $main_filepath = (string) $file['filename'];
+                            $main_filepath = $file['filename'];
                         }
                     }
 
@@ -756,7 +756,7 @@ SELECT
                         $extract_path = PHPWG_THEMES_PATH . $theme_id;
                         $logger->debug(__FUNCTION__ . ', $extract_path = ' . $extract_path);
 
-                        if ($result = zip_extract($archive, $extract_path, $root)) {
+                        if ((bool) ($result = zip_extract($archive, $extract_path, $root))) {
                             // extraction succeeded; 'ok' if the extracted result
                             // list doesn't happen to include main.inc.php itself
                             $status = 'ok';
@@ -767,7 +767,7 @@ SELECT
                                 }
                             }
                             if (file_exists($extract_path . '/obsolete.list')
-                              and $old_files = file($extract_path . '/obsolete.list', FILE_IGNORE_NEW_LINES)) {
+                              and (bool) ($old_files = file($extract_path . '/obsolete.list', FILE_IGNORE_NEW_LINES))) {
                                 $old_files[] = 'obsolete.list';
 
                                 $logger->debug(__FUNCTION__ . ', $old_files = {' . join('},{', $old_files) . '}');

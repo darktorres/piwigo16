@@ -172,7 +172,7 @@ SELECT
   WHERE image_id IN (' . implode(',', $ids) . ')
 ;';
     $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         $format_image_id = $row['image_id'];
         $ext = $row['ext'];
         assert(is_numeric($format_image_id) && is_string($ext));
@@ -194,7 +194,7 @@ SELECT
   WHERE id IN (' . implode(',', $ids) . ')
 ;';
     $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         $row_id = $row['id'];
         $row_path = $row['path'];
         assert(is_numeric($row_id) && is_string($row_path));
@@ -233,7 +233,7 @@ SELECT
                 'path' => $row_path,
             ];
             if (! empty($row['representative_ext'])) {
-                $derivative_infos['representative_ext'] = (string) $row['representative_ext'];
+                $derivative_infos['representative_ext'] = $row['representative_ext'];
             }
             delete_element_derivatives($derivative_infos);
             $new_ids[] = $row_id;
@@ -437,7 +437,7 @@ SELECT
 ;';
     $orphan_tags = [];
     $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         $orphan_tags[] = [
             'id' => (string) $row['id'],
             'name' => (string) $row['name'],
@@ -492,7 +492,7 @@ UPDATE ' . CATEGORIES_TABLE . '
         pwg_query($query);
     }
 
-    if (! $conf['allow_random_representative']) {
+    if (! (bool) $conf['allow_random_representative']) {
         // If the random representant is not allowed, we need to find
         // categories with elements and with no representant. Those categories
         // must be added to the list of categories to set to a random
@@ -589,7 +589,7 @@ function get_fs_directories(string $path, bool $recursive = true): array
     global $conf;
 
     $dirs = [];
-    $path = rtrim((string) $path, '/');
+    $path = rtrim($path, '/');
 
     $sync_exclude_folders = $conf['sync_exclude_folders'];
     $sync_exclude_folders = is_array($sync_exclude_folders)
@@ -608,7 +608,7 @@ function get_fs_directories(string $path, bool $recursive = true): array
     $exclude_folders = array_flip($exclude_folders);
 
     if (is_dir($path)) {
-        if ($contents = opendir($path)) {
+        if ((bool) ($contents = opendir($path))) {
             while (($node = readdir($contents)) !== false) {
                 if (is_dir($path . '/' . $node) and ! isset($exclude_folders[$node])) {
                     $dirs[] = $path . '/' . $node;
@@ -690,7 +690,7 @@ SELECT id, id_uppercat, uppercats, `rank`, global_rank
     $current_uppercat = '';
 
     $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         if ($row['id_uppercat'] != $current_uppercat) {
             $current_rank = 0;
             $current_uppercat = $row['id_uppercat'];
@@ -980,7 +980,7 @@ SELECT uppercats
   WHERE id IN (' . implode(',', $cat_ids) . ')
 ;';
     $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         $uppercats = array_merge(
             $uppercats,
             array_map(intval(...), explode(',', (string) $row['uppercats']))
@@ -1154,13 +1154,14 @@ function get_fs($path, $recursive = true)
     $flip_file_ext = $conf['flip_file_ext'];
     $flip_file_ext = is_array($flip_file_ext) ? $flip_file_ext : [];
 
+    $fs = [];
     $fs['elements'] = [];
     $fs['thumbnails'] = [];
     $fs['representatives'] = [];
     $subdirs = [];
 
     if (is_dir($path)) {
-        if ($contents = opendir($path)) {
+        if ((bool) ($contents = opendir($path))) {
             while (($node = readdir($contents)) !== false) {
                 if ($node == '.' or $node == '..') {
                     continue;
@@ -1292,7 +1293,7 @@ SELECT id, id_uppercat, uppercats
         $upper_list = [];
 
         $uppercat = $id;
-        while ($uppercat) {
+        while ((bool) $uppercat) {
             $upper_list[] = $uppercat;
             $uppercat = $cat_map[$uppercat]['id_uppercat'];
         }
@@ -1367,7 +1368,7 @@ SELECT id, id_uppercat, status, uppercats
   WHERE id IN (' . implode(',', $category_ids) . ')
 ;';
     $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         $row_id = $row['id'];
         assert(is_string($row_id));
 
@@ -1395,7 +1396,7 @@ SELECT uppercats
         foreach ($categories as $category) {
             // technically, you can't move a category with uppercats 12,125,13,14
             // into a new parent category with uppercats 12,125,13,14,24
-            if (preg_match('/^' . $category['uppercats'] . '(,|$)/', $new_parent_uppercats)) {
+            if ((bool) preg_match('/^' . $category['uppercats'] . '(,|$)/', $new_parent_uppercats)) {
                 $page['errors'][] = l10n('You cannot move an album in its own sub album');
                 return;
             }
@@ -1466,7 +1467,7 @@ function create_virtual_category($category_name, $parent_id = null, array $optio
     global $conf, $user;
 
     // is the given category name only containing blank spaces ?
-    if (preg_match('/^\s*$/', $category_name)) {
+    if ((bool) preg_match('/^\s*$/', $category_name)) {
         return [
             'error' => l10n('The name of an album must not be empty'),
         ];
@@ -1521,7 +1522,7 @@ SELECT MAX(`rank`) AS max_rank
     // any description for this album?
     if (isset($options['comment'])) {
         $comment = is_scalar($options['comment']) ? (string) $options['comment'] : '';
-        $insert['comment'] = $conf['allow_html_descriptions'] ? $options['comment'] : strip_tags($comment);
+        $insert['comment'] = ((bool) $conf['allow_html_descriptions']) ? $options['comment'] : strip_tags($comment);
     }
 
     if (! empty($parent_id) and is_numeric($parent_id)) {
@@ -1575,7 +1576,7 @@ SELECT id, uppercats, global_rank, visible, status
 
     update_global_rank();
 
-    if ($insert['status'] == 'private' and ! empty($insert['id_uppercat']) and ((isset($options['inherit']) and $options['inherit']) or $conf['inheritance_by_default'])) {
+    if ($insert['status'] == 'private' and ! empty($insert['id_uppercat']) and ((isset($options['inherit']) and (bool) $options['inherit']) or (bool) $conf['inheritance_by_default'])) {
         $query = '
       SELECT group_id
       FROM ' . GROUP_ACCESS_TABLE . '
@@ -1764,7 +1765,7 @@ SELECT id
             // search by extended description (plugin sub name)
             $sub_name_where = trigger_change('get_tag_name_like_where', [], $tag_name);
             $sub_name_where = is_array($sub_name_where) ? array_filter($sub_name_where, is_string(...)) : [];
-            if (count($sub_name_where)) {
+            if ((bool) count($sub_name_where)) {
                 $query = '
 SELECT id
   FROM ' . TAGS_TABLE . '
@@ -1829,7 +1830,7 @@ DELETE
             }
         }
 
-        if (count($inserts)) {
+        if ((bool) count($inserts)) {
             mass_inserts(
                 IMAGE_TAG_TABLE,
                 array_keys($inserts[0]),
@@ -1933,7 +1934,7 @@ function fill_lounge($images, $categories): void
         }
     }
 
-    if (count($inserts)) {
+    if ((bool) count($inserts)) {
         mass_inserts(
             LOUNGE_TABLE,
             array_keys($inserts[0]),
@@ -2078,7 +2079,7 @@ SELECT
     $result = pwg_query($query);
 
     $existing = [];
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         $existing_category_id = $row['category_id'];
         $existing_image_id = $row['image_id'];
         assert(is_numeric($existing_category_id) && is_numeric($existing_image_id));
@@ -2129,7 +2130,7 @@ SELECT
         }
     }
 
-    if (count($inserts)) {
+    if ((bool) count($inserts)) {
         mass_inserts(
             IMAGE_CATEGORY_TABLE,
             array_keys($inserts[0]),
@@ -2579,7 +2580,7 @@ function delete_groups($group_ids): false|array
 
     $email_admin_on_new_user = conf_get_param('email_admin_on_new_user', 'undefined');
     $email_admin_on_new_user = is_scalar($email_admin_on_new_user) ? (string) $email_admin_on_new_user : 'undefined';
-    if (preg_match('/^group:(\d+)$/', $email_admin_on_new_user, $matches)) {
+    if ((bool) preg_match('/^group:(\d+)$/', $email_admin_on_new_user, $matches)) {
         foreach ($group_ids as $group_id) {
             if ($group_id == $matches[1]) {
                 conf_update_param('email_admin_on_new_user', 'all', true);
@@ -2755,7 +2756,7 @@ function get_taglist($query, $only_user_language = true): array
 
     $taglist = [];
     $altlist = [];
-    while ($row = pwg_db_fetch_assoc($result)) {
+    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         $raw_name = $row['name'];
         $name = trigger_change('render_tag_name', $raw_name, $row);
 
@@ -2779,7 +2780,7 @@ function get_taglist($query, $only_user_language = true): array
     }
 
     usort($taglist, tag_alpha_compare(...));
-    if (count($altlist)) {
+    if ((bool) count($altlist)) {
         usort($altlist, tag_alpha_compare(...));
         $taglist = array_merge($taglist, $altlist);
     }
@@ -2807,7 +2808,7 @@ function get_tag_ids($raw_tags, $allow_create = true): array
     }
 
     foreach ($raw_tags as $raw_tag) {
-        if (preg_match('/^~~(\d+)~~$/', $raw_tag, $matches)) {
+        if ((bool) preg_match('/^~~(\d+)~~$/', $raw_tag, $matches)) {
             $tag_ids[] = (int) $matches[1];
         } elseif ($allow_create) {
             // we have to create a new tag
@@ -2962,7 +2963,7 @@ function clear_derivative_cache($types = 'all'): void
     }
     $pattern .= '\.[a-zA-Z0-9]{3,4}$#';
 
-    if ($contents = @opendir(PHPWG_ROOT_PATH . PWG_DERIVATIVE_DIR)) {
+    if ((bool) ($contents = @opendir(PHPWG_ROOT_PATH . PWG_DERIVATIVE_DIR))) {
         while (($node = readdir($contents)) !== false) {
             if ($node != '.'
                 and $node != '..'
@@ -2983,7 +2984,7 @@ function clear_derivative_cache_rec(string $path, string $pattern): bool
     $rmdir = true;
     $rm_index = false;
 
-    if ($contents = opendir($path)) {
+    if ((bool) ($contents = opendir($path))) {
         while (($node = readdir($contents)) !== false) {
             if ($node == '.' or $node == '..') {
                 continue;
@@ -2999,7 +3000,7 @@ function clear_derivative_cache_rec(string $path, string $pattern): bool
                 $sub_rmdir = clear_derivative_cache_rec($path . '/' . $node, $pattern);
                 $rmdir = $rmdir && $sub_rmdir;
             } else {
-                if (preg_match($pattern, $node)) {
+                if ((bool) preg_match($pattern, $node)) {
                     unlink($path . '/' . $node);
                 } elseif ($node == 'index.htm') {
                     $rm_index = true;
@@ -3038,10 +3039,10 @@ function delete_element_derivatives(array $infos, $type = 'all'): void
     if (! empty($infos['representative_ext'])) {
         $path = original_to_representative($path, $infos['representative_ext']);
     }
-    if (substr_compare((string) $path, '../', 0, 3) == 0) {
-        $path = substr((string) $path, 3);
+    if (substr_compare($path, '../', 0, 3) == 0) {
+        $path = substr($path, 3);
     }
-    $dot = strrpos((string) $path, '.');
+    $dot = strrpos($path, '.');
     if ($dot === false) {
         throw new Exception("delete_element_derivatives(): path '{$path}' has no extension");
     }
@@ -3067,8 +3068,8 @@ function delete_element_derivatives(array $infos, $type = 'all'): void
 function get_dirs($directory): array
 {
     $sub_dirs = [];
-    if ($opendir = opendir($directory)) {
-        while ($file = readdir($opendir)) {
+    if ((bool) ($opendir = opendir($directory))) {
+        while ((bool) ($file = readdir($opendir))) {
             if ($file != '.'
                 and $file != '..'
                 and is_dir($directory . '/' . $file)
@@ -3092,7 +3093,7 @@ function deltree($path, $trash_path = null): ?bool
     if (is_dir($path)) {
         $fh = opendir($path);
         if ($fh !== false) {
-            while ($file = readdir($fh)) {
+            while ((bool) ($file = readdir($fh))) {
                 if ($file != '.' and $file != '..') {
                     $pathfile = $path . '/' . $file;
                     if (is_dir($pathfile)) {
@@ -3112,7 +3113,7 @@ function deltree($path, $trash_path = null): ?bool
             if (! is_dir($trash_path)) {
                 @mkgetdir($trash_path, MKGETDIR_RECURSIVE | MKGETDIR_DIE_ON_ERROR | MKGETDIR_PROTECT_HTACCESS);
             }
-            while ($r = $trash_path . '/' . md5(uniqid((string) mt_rand(), true))) {
+            while ((bool) ($r = $trash_path . '/' . md5(uniqid((string) mt_rand(), true)))) {
                 if (! is_dir($r)) {
                     @rename($path, $r);
                     break;
@@ -3157,7 +3158,7 @@ function get_admin_client_cache_keys($requested = []): array
     }
 
     $keys = [
-        '_hash' => md5((string) get_absolute_root_url()),
+        '_hash' => md5(get_absolute_root_url()),
     ];
 
     foreach ($requested as $item) {
@@ -3420,7 +3421,7 @@ function get_cache_size_derivatives(string $path): array
     $msizes = []; // final res
 
     if (is_dir($path)) {
-        if ($contents = opendir($path)) {
+        if ((bool) ($contents = opendir($path))) {
             while (($node = readdir($contents)) !== false) {
                 if ($node == '.' or $node == '..') {
                     continue;
@@ -3626,7 +3627,7 @@ function get_graphics_library(): string|false
             $ext_imagick_dir = $conf['ext_imagick_dir'];
             $ext_imagick_dir = is_string($ext_imagick_dir) ? $ext_imagick_dir : '';
             exec($ext_imagick_dir . pwg_image::get_ext_imagick_command() . ' -version', $returnarray);
-            if (preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
+            if ((bool) preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
                 $library .= '/' . $match[1];
             }
             break;
@@ -3634,7 +3635,7 @@ function get_graphics_library(): string|false
         case 'imagick':
             $img = new Imagick();
             $version = $img->getVersion();
-            if (preg_match('/ImageMagick \d+\.\d+\.\d+-?\d*/', $version['versionString'], $match)) {
+            if ((bool) preg_match('/ImageMagick \d+\.\d+\.\d+-?\d*/', $version['versionString'], $match)) {
                 $library .= '/' . $match[0];
             }
             break;
@@ -3793,7 +3794,7 @@ SELECT
         $candidate = $users[0]['registration_date'];
     }
 
-    if (empty($candidate) or strtotime((string) $candidate) < strtotime($piwigo_origins)) {
+    if (empty($candidate) or strtotime($candidate) < strtotime($piwigo_origins)) {
         $query = '
 SELECT
     MIN(registration_date) AS min_registration_date
@@ -3806,7 +3807,7 @@ SELECT
         }
     }
 
-    if (empty($candidate) or strtotime((string) $candidate) < strtotime($piwigo_origins)) {
+    if (empty($candidate) or strtotime($candidate) < strtotime($piwigo_origins)) {
         // let's find another candidate
         $query = '
 SELECT

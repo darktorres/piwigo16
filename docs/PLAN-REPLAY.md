@@ -126,7 +126,7 @@ then the reference is forward-looking, not dangling.
 | Doc | Created in | Status |
 | --- | --- | --- |
 | `docs/DEVELOPMENT.md` | P0 | planned |
-| `docs/ARCHITECTURE.md` | P6 (extended P7–P23, P27, P32) | planned |
+| `docs/ARCHITECTURE.md` | P6 (extended P7–P23, P27, P32) | created (P6) |
 | `docs/CONFIG.md` | P13 | planned |
 | `docs/FRONTEND.md` | P24 (extended P29–P30) | planned |
 | `docs/API.md` (REST) | P26 | planned |

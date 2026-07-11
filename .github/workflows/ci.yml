@@ -153,9 +153,7 @@ jobs:
           coverage: none
           extensions: ${{ env.PHP_EXTENSIONS }}
       - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
-      # deptrac.yaml lands in P6 once PSR-4 namespaces exist — no-op until then.
-      - if: hashFiles('deptrac.yaml') != ''
-        run: vendor/bin/deptrac analyse --no-progress
+      - run: vendor/bin/deptrac analyse --no-progress
 
   require-checker:
     name: composer-require-checker

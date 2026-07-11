@@ -11,6 +11,7 @@ use Piwigo\Http\Middleware\RoutingMiddleware;
 use Piwigo\Http\Middleware\SecurityHeadersMiddleware;
 use Piwigo\Http\Middleware\SentryMiddleware;
 use Piwigo\Http\Middleware\ServerTimingMiddleware;
+use Piwigo\Http\Middleware\SessionMiddleware;
 use Piwigo\Http\MiddlewarePipeline;
 use Piwigo\Http\ResponseFactory;
 use Psr\Container\ContainerInterface;
@@ -20,15 +21,17 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
 /**
- * Runs the real 6-middleware pipeline. Not yet reachable from any real
+ * Runs the real 7-middleware pipeline. Not yet reachable from any real
  * request -- index.php still only calls CommonBootstrap::run() (P7);
  * nothing routes real traffic through here until P22 has real Controllers
  * for config/routes.php to reference. Trimmed to the middleware buildable
- * without Config/CurrentUser/Session/real Controllers -- Session/Auth/
- * Csrf/Filter land in P11/P16/P16+.
+ * without Config/CurrentUser/real Controllers -- Auth/Csrf/Filter land in
+ * P16/P16+.
  *
  * Order: Exception stays outermost to catch everything downstream.
- * SecurityHeaders next. ServerTiming/Sentry wrap everything downstream of
+ * SecurityHeaders next. Session before ServerTiming/Sentry so a session
+ * exists before anything downstream might want request-scoped state
+ * (nothing does yet). ServerTiming/Sentry wrap everything downstream of
  * security headers so they measure/trace the real work (routing +
  * controller invocation), not header assembly.
  *
@@ -57,6 +60,7 @@ final class RequestPipeline
             [
                 self::resolveMiddleware($container, ExceptionHandlerMiddleware::class),
                 self::resolveMiddleware($container, SecurityHeadersMiddleware::class),
+                self::resolveMiddleware($container, SessionMiddleware::class),
                 self::resolveMiddleware($container, ServerTimingMiddleware::class),
                 self::resolveMiddleware($container, SentryMiddleware::class),
                 self::resolveMiddleware($container, RoutingMiddleware::class),

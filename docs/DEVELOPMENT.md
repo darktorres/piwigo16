@@ -353,7 +353,7 @@ thresholds don't all match this repo 1:1 — see below):
 | `deptrac` | guarded on `hashFiles('deptrac.yaml')` | no-op until P6 |
 | `require-checker` / `composer-unused` / `knip` | as `composer`/`bun run` scripts | blocking |
 | `actionlint` | `reviewdog/action-actionlint` | blocking, self-validates every workflow file |
-| `phpbench` | `--report=aggregate`, uploaded as an artifact | blocking (passes trivially with 0 subjects until P12) |
+| `phpbench` | `--report=aggregate`, uploaded as an artifact | blocking (0 subjects until P11; `KernelBootBench` is the first real one) |
 | `size-limit` | `bun run build && bun run size-limit` | blocking (real placeholder budget) |
 | `k6-load` | guarded on `hashFiles('tests/Load/**')` | no-op + non-blocking until P29 |
 | `test-file-inventory` | `find tests/<Dir> -name '*Test.php'` per suite | blocking — catches a testsuite silently running 0 tests (see below) |
@@ -414,3 +414,45 @@ rewrite lineage, so "push to main" (the plan doc's phrasing) doesn't apply liter
 - CI uses PHP's built-in server (`php -S`), not Apache — this app has no `.htaccess` or
   `RewriteRule` dependency yet (every tested route is `?page=`-style query strings, not
   pretty URLs), confirmed by reading the full route list before deciding this.
+
+## Cache, session, and opcache.preload (P11)
+
+**Cache adapter** — `Piwigo\Cache\CacheFactory` selects a `symfony/cache` PSR-6 pool via
+the `PIWIGO_CACHE_ADAPTER` env var (`apcu` | `redis` | `filesystem`; add to `.env`/
+`.env.test`, not yet `Config`-driven — that's P13). When unset, it auto-detects: APCu if
+`ext-apcu` is loaded and enabled, else filesystem — `ext-apcu` is genuinely optional, not
+every environment has it (this dev environment doesn't). An *explicit*
+`PIWIGO_CACHE_ADAPTER=apcu` with no `ext-apcu` fails loudly (`RuntimeException`) instead of
+silently falling back — only the auto-detect default degrades gracefully. `redis` reads
+`PIWIGO_REDIS_DSN` (default `redis://localhost:6379`); neither `ext-redis` nor
+`predis/predis` is a project dependency yet (no named pool has a real consumer today), so
+the `redis` adapter path isn't exercised by the test suite in this environment — verify it
+manually against a real Redis instance before relying on it in production.
+
+**Session storage** — unchanged from the legacy path: `Piwigo\Session\PwgSession`
+(`SessionHandlerInterface`, P6) is already registered via
+`include/functions_session.inc.php`'s `session_set_save_handler(new PwgSession())`, DB-backed
+through the legacy DB layer, on every real request. To move sessions to Redis instead, set
+`session.save_handler = redis` and `session.save_path = "tcp://localhost:6379"` in `php.ini`
+— this is a deployment config choice PHP's session extension handles natively, no code
+change. `Piwigo\Http\Middleware\SessionMiddleware` (new pipeline, not yet reachable from
+real traffic) deliberately does not register its own save handler — see the class's own
+docblock for why.
+
+**Messenger** — not built this phase. The reference's `config/messenger.php` routes 5
+`Piwigo\Job\*` classes that don't exist in this codebase yet (they belong to the P17-23
+service-layer epoch and the Image rewrite); its default transport also needs Doctrine
+(P14). Revisit once a real async job exists to dispatch.
+
+**`opcache.preload`** — `config/preload.php` lists hot classes to preload into shared
+memory at Apache start, scoped to what exists today (grows automatically as later phases
+add their own hot classes). **Not enabled** in any `php.ini` here — this is a deployment
+config step. To enable in production:
+
+```ini
+opcache.preload=/path/to/piwigo/config/preload.php
+opcache.preload_user=www-data
+```
+
+CI and local dev run without preload — tests need fresh class resolution per run, and the
+doc's own text is explicit that preload is a production-only optimization.

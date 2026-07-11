@@ -5,8 +5,13 @@ declare(strict_types=1);
 use Monolog\Formatter\JsonFormatter;
 use Monolog\Handler\RotatingFileHandler;
 use Monolog\Logger as MonologLogger;
+use Piwigo\Cache\CacheFactory;
 use Piwigo\Routing\Router;
+use Psr\Cache\CacheItemPoolInterface;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use Psr\SimpleCache\CacheInterface;
+use Symfony\Component\Cache\Psr16Cache;
 use function DI\factory;
 
 // DI\autowire() is the default -- a service with only typed class-reference
@@ -36,5 +41,25 @@ return [
         $handler->setFormatter(new JsonFormatter());
 
         return new MonologLogger('app', [$handler]);
+    }),
+
+    // Non-obvious construction (adapter selection reads env vars --
+    // Config::cacheAdapter() doesn't exist yet, P13). No named pools yet
+    // (config/permissions/category_tree/tag_cloud/general/rate_limiter) --
+    // none have a real consumer today; each gets its own entry only when
+    // its owning phase lands.
+    CacheItemPoolInterface::class => factory(static fn (): CacheItemPoolInterface => CacheFactory::create()),
+
+    // PSR-16 wraps the same PSR-6 pool instance (container-shared by
+    // default) rather than building a second one -- symfony/cache adapters
+    // implement Symfony's own Contracts\Cache\CacheInterface, not PSR-16
+    // directly; Psr16Cache is the real adapter for that.
+    CacheInterface::class => factory(static function (ContainerInterface $c): CacheInterface {
+        $pool = $c->get(CacheItemPoolInterface::class);
+        if (! $pool instanceof CacheItemPoolInterface) {
+            throw new \LogicException('Container returned an unexpected type for ' . CacheItemPoolInterface::class);
+        }
+
+        return new Psr16Cache($pool);
     }),
 ];

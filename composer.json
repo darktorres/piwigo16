@@ -35,6 +35,7 @@
     "psr/log": "^3.0",
     "sentry/sentry": "^4",
     "smarty/smarty": "^5",
+    "symfony/cache": "^8.0",
     "symfony/dotenv": "^8.1",
     "symfony/http-client": "^8.0",
     "symfony/mailer": "^8",

@@ -1333,24 +1333,6 @@ parameters:
 			path: admin/site_manager.php
 
 		-
-			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 4
-			path: admin/site_reader_local.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
-			identifier: equal.notAllowed
-			count: 2
-			path: admin/site_reader_local.php
-
-		-
-			rawMessage: 'Out of 1741 possible param types, only 979 - 56.2 %% actually have it. Add more param types to get over 99 %%'
-			identifier: typeCoverage.paramTypeCoverage
-			count: 2
-			path: admin/site_reader_local.php
-
-		-
 			rawMessage: 'Call to function array_search() requires parameter #3 to be set.'
 			identifier: function.strict
 			count: 1
@@ -5363,6 +5345,24 @@ parameters:
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 2
 			path: src/Piwigo/Search/QSingleToken.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 4
+			path: src/Piwigo/Site/LocalSiteReader.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: src/Piwigo/Site/LocalSiteReader.php
+
+		-
+			rawMessage: 'Out of 1741 possible param types, only 979 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 2
+			path: src/Piwigo/Site/LocalSiteReader.php
 
 		-
 			rawMessage: 'Out of 1741 possible param types, only 979 - 56.2 %% actually have it. Add more param types to get over 99 %%'

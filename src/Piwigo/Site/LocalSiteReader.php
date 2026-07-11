@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+namespace Piwigo\Site;
+
 // provides data for site synchronization from the local file system
 class LocalSiteReader
 {

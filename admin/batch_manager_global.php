@@ -12,6 +12,7 @@ declare(strict_types=1);
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Site\LocalSiteReader;
 
 // Bootstrap globals, set by include/common.inc.php.
 /**
@@ -497,7 +498,6 @@ $template->assign(
 );
 
 // metadata
-include_once PHPWG_ROOT_PATH . 'admin/site_reader_local.php';
 $site_reader = new LocalSiteReader('./');
 $used_metadata = implode(', ', $site_reader->get_metadata_attributes());
 

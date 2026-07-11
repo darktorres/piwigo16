@@ -10,6 +10,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\tabsheet;
+use Piwigo\Site\LocalSiteReader;
 
 if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
@@ -91,7 +92,6 @@ $simulate = false;
 if ($site_is_remote) {
     fatal_error('remote sites not supported');
 } else {
-    include_once PHPWG_ROOT_PATH . 'admin/site_reader_local.php';
     $site_reader = new LocalSiteReader($site_url);
 }
 

@@ -2,14 +2,29 @@
 
 declare(strict_types=1);
 
+use Piwigo\Config\Config;
 use Piwigo\Url\UrlService;
 
 if (! defined('PHPWG_ROOT_PATH')) {
     define('PHPWG_ROOT_PATH', './');
 }
 
+// getAbsoluteRootUrl() calls the real cookie_path() (unqualified, resolves
+// to the global namespace) -- a stable, already-migrated (P17) function,
+// but one that needs $_SERVER state this isolated test doesn't want to
+// depend on. Same "minimal stub to load standalone" pattern as
+// tests/Unit/PasswordHashTest.php.
+if (! function_exists('cookie_path')) {
+    function cookie_path(): string
+    {
+        return '/piwigo/';
+    }
+}
+
 beforeEach(function (): void {
-    unset($_SERVER['HTTPS'], $_SERVER['HTTP_X_FORWARDED_PROTO'], $_SERVER['HTTP_X_FORWARDED_HOST']);
+    unset($_SERVER['HTTPS'], $_SERVER['HTTP_X_FORWARDED_PROTO'], $_SERVER['HTTP_X_FORWARDED_HOST'], $_SERVER['HTTP_HOST']);
+    Config::reset();
+    $GLOBALS['conf'] = ['url_port' => 'none'];
 });
 
 test('urlIsRemote is true for http and https URLs', function (): void {
@@ -140,4 +155,51 @@ test('parseWellKnownParamsUrl parses a chronology token', function (): void {
         'chronology_style' => 'monthly',
         'chronology_date' => ['2026', '07'],
     ]);
+});
+
+test('getAbsoluteRootUrl trusts the Host header when allowed_hosts is unconfigured', function (): void {
+    $_SERVER['HTTP_HOST'] = 'gallery.example.test';
+    $service = new UrlService();
+
+    expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test/piwigo/');
+});
+
+test('getAbsoluteRootUrl uses gallery_url\'s host, ignoring the Host header entirely', function (): void {
+    Config::override('gallery_url', 'https://canonical.example.test/gallery/');
+    $_SERVER['HTTP_HOST'] = 'evil.test';
+    $service = new UrlService();
+
+    expect($service->getAbsoluteRootUrl())->toBe('http://canonical.example.test/piwigo/');
+});
+
+test('getAbsoluteRootUrl keeps gallery_url\'s configured port', function (): void {
+    Config::override('gallery_url', 'https://canonical.example.test:8080/gallery/');
+    $service = new UrlService();
+
+    expect($service->getAbsoluteRootUrl())->toBe('http://canonical.example.test:8080/piwigo/');
+});
+
+test('getAbsoluteRootUrl accepts a Host that matches the allowed_hosts list', function (): void {
+    Config::override('allowed_hosts', ['gallery.example.test']);
+    $_SERVER['HTTP_HOST'] = 'gallery.example.test';
+    $service = new UrlService();
+
+    expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test/piwigo/');
+});
+
+test('getAbsoluteRootUrl [SEC-29] falls back to the first allowed host when Host is forged', function (): void {
+    Config::override('allowed_hosts', ['gallery.example.test', 'gallery-alt.example.test']);
+    $_SERVER['HTTP_HOST'] = 'evil.test';
+    $service = new UrlService();
+
+    expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test/piwigo/');
+});
+
+test('getAbsoluteRootUrl [SEC-29] falls back for a forged X-Forwarded-Host too', function (): void {
+    Config::override('allowed_hosts', ['gallery.example.test']);
+    $_SERVER['HTTP_HOST'] = 'gallery.example.test';
+    $_SERVER['HTTP_X_FORWARDED_HOST'] = 'evil.test';
+    $service = new UrlService();
+
+    expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test/piwigo/');
 });

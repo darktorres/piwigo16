@@ -659,6 +659,15 @@ $conf['history_autopurge_blocksize'] = 50000;
 // setting when move your gallery to a new directory or a new domain name.
 $conf['gallery_url'] = null;
 
+// allowed_hosts : hostnames (optionally with :port) that UrlService trusts
+// when building absolute URLs (password-reset emails, notification links)
+// from the request's Host / X-Forwarded-Host header. Empty by default
+// (auto-detect, matching every prior release); set this whenever
+// gallery_url is left unset and the server sits behind anything that lets
+// an attacker influence the Host header, so a forged header can't get
+// embedded into outbound links. [SEC-29]
+$conf['allowed_hosts'] = [];
+
 // question_mark_in_urls : the generated urls contain a ? sign. This can be
 // changed to false only if the server translates PATH_INFO variable
 // (depends on the server AcceptPathInfo directive configuration)

@@ -637,7 +637,7 @@ parameters:
 			path: admin/include/functions.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 78
 			path: admin/include/functions.php
@@ -667,7 +667,7 @@ parameters:
 			path: admin/include/functions_history.inc.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 2
 			path: admin/include/functions_history.inc.php
@@ -703,7 +703,7 @@ parameters:
 			path: admin/include/functions_install.inc.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 6
 			path: admin/include/functions_install.inc.php
@@ -751,7 +751,7 @@ parameters:
 			path: admin/include/functions_metadata.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 9
 			path: admin/include/functions_metadata.php
@@ -811,19 +811,19 @@ parameters:
 			path: admin/include/functions_notification_by_mail.inc.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 11
 			path: admin/include/functions_notification_by_mail.inc.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 7
 			path: admin/include/functions_permalinks.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 1
 			path: admin/include/functions_plugins.inc.php
@@ -1069,7 +1069,7 @@ parameters:
 			path: admin/notification_by_mail.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 1
 			path: admin/notification_by_mail.php
@@ -1363,7 +1363,7 @@ parameters:
 			path: admin/stats.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 1
 			path: admin/stats.php
@@ -1543,7 +1543,7 @@ parameters:
 			path: comments.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 1
 			path: comments.php
@@ -1651,7 +1651,7 @@ parameters:
 			path: i.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 1
 			path: i.php
@@ -1747,7 +1747,7 @@ parameters:
 			path: include/category_cats.inc.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 1
 			path: include/category_default.inc.php
@@ -1837,7 +1837,7 @@ parameters:
 			path: include/dblayer/functions_mysqli.inc.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 11
 			path: include/dblayer/functions_mysqli.inc.php
@@ -1855,7 +1855,7 @@ parameters:
 			path: include/derivative_params.inc.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 2
 			path: include/derivative_params.inc.php
@@ -2035,7 +2035,7 @@ parameters:
 			path: include/functions.inc.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 100
 			path: include/functions.inc.php
@@ -2155,7 +2155,7 @@ parameters:
 			path: include/functions_category.inc.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 27
 			path: include/functions_category.inc.php
@@ -2209,19 +2209,19 @@ parameters:
 			path: include/functions_comment.inc.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 10
 			path: include/functions_comment.inc.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 4
 			path: include/functions_cookie.inc.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 28
 			path: include/functions_html.inc.php
@@ -2263,7 +2263,7 @@ parameters:
 			path: include/functions_mail.inc.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 34
 			path: include/functions_mail.inc.php
@@ -2341,7 +2341,7 @@ parameters:
 			path: include/functions_metadata.inc.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 6
 			path: include/functions_metadata.inc.php
@@ -2359,13 +2359,13 @@ parameters:
 			path: include/functions_notification.inc.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 41
 			path: include/functions_notification.inc.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 3
 			path: include/functions_picture.inc.php
@@ -2407,7 +2407,7 @@ parameters:
 			path: include/functions_plugins.inc.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 8
 			path: include/functions_plugins.inc.php
@@ -2437,7 +2437,7 @@ parameters:
 			path: include/functions_rate.inc.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 2
 			path: include/functions_rate.inc.php
@@ -2521,7 +2521,7 @@ parameters:
 			path: include/functions_search.inc.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 12
 			path: include/functions_session.inc.php
@@ -2551,13 +2551,13 @@ parameters:
 			path: include/functions_tag.inc.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 11
 			path: include/functions_tag.inc.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 16
 			path: include/functions_url.inc.php
@@ -2719,7 +2719,7 @@ parameters:
 			path: include/functions_user.inc.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 77
 			path: include/functions_user.inc.php
@@ -3283,7 +3283,7 @@ parameters:
 			path: include/ws_functions/pwg.images.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 5
 			path: include/ws_functions/pwg.images.php
@@ -3409,7 +3409,7 @@ parameters:
 			path: include/ws_functions/pwg.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 5
 			path: include/ws_functions/pwg.php
@@ -3811,7 +3811,7 @@ parameters:
 			path: profile.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 3
 			path: profile.php
@@ -4039,13 +4039,13 @@ parameters:
 			path: src/Piwigo/Admin/Integrity/c13y_internal.php
 
 		-
-			rawMessage: 'Out of 1308 possible return types, only 1259 - 96.2 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 1311 possible return types, only 1262 - 96.2 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 1
 			path: src/Piwigo/Admin/Integrity/c13y_internal.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 5
 			path: src/Piwigo/Admin/Integrity/c13y_internal.php
@@ -4075,7 +4075,7 @@ parameters:
 			path: src/Piwigo/Admin/Integrity/check_integrity.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 5
 			path: src/Piwigo/Admin/Integrity/check_integrity.php
@@ -4111,13 +4111,13 @@ parameters:
 			path: src/Piwigo/Admin/PluginMaintain.php
 
 		-
-			rawMessage: 'Out of 1308 possible return types, only 1259 - 96.2 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 1311 possible return types, only 1262 - 96.2 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 5
 			path: src/Piwigo/Admin/PluginMaintain.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 8
 			path: src/Piwigo/Admin/PluginMaintain.php
@@ -4141,13 +4141,13 @@ parameters:
 			path: src/Piwigo/Admin/ThemeMaintain.php
 
 		-
-			rawMessage: 'Out of 1308 possible return types, only 1259 - 96.2 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 1311 possible return types, only 1262 - 96.2 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 3
 			path: src/Piwigo/Admin/ThemeMaintain.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 3
 			path: src/Piwigo/Admin/ThemeMaintain.php
@@ -4171,13 +4171,13 @@ parameters:
 			path: src/Piwigo/Admin/languages.php
 
 		-
-			rawMessage: 'Out of 1308 possible return types, only 1259 - 96.2 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 1311 possible return types, only 1262 - 96.2 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 1
 			path: src/Piwigo/Admin/languages.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 5
 			path: src/Piwigo/Admin/languages.php
@@ -4249,7 +4249,7 @@ parameters:
 			path: src/Piwigo/Admin/plugins.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 6
 			path: src/Piwigo/Admin/plugins.php
@@ -4327,7 +4327,7 @@ parameters:
 			path: src/Piwigo/Admin/themes.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 6
 			path: src/Piwigo/Admin/themes.php
@@ -4477,19 +4477,19 @@ parameters:
 			path: src/Piwigo/Auth/PwgBase32.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 7
 			path: src/Piwigo/Auth/PwgTOTP.php
 
 		-
-			rawMessage: 'Out of 1308 possible return types, only 1259 - 96.2 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 1311 possible return types, only 1262 - 96.2 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 2
 			path: src/Piwigo/Cache/PersistentCache.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 5
 			path: src/Piwigo/Cache/PersistentCache.php
@@ -4543,13 +4543,13 @@ parameters:
 			path: src/Piwigo/Calendar/CalendarBase.php
 
 		-
-			rawMessage: 'Out of 1308 possible return types, only 1259 - 96.2 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 1311 possible return types, only 1262 - 96.2 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 6
 			path: src/Piwigo/Calendar/CalendarBase.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 7
 			path: src/Piwigo/Calendar/CalendarBase.php
@@ -4615,7 +4615,7 @@ parameters:
 			path: src/Piwigo/Calendar/CalendarMonthly.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 2
 			path: src/Piwigo/Calendar/CalendarMonthly.php
@@ -4675,13 +4675,13 @@ parameters:
 			path: src/Piwigo/Core/Logger.php
 
 		-
-			rawMessage: 'Out of 1308 possible return types, only 1259 - 96.2 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 1311 possible return types, only 1262 - 96.2 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 1
 			path: src/Piwigo/Core/Logger.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 38
 			path: src/Piwigo/Core/Logger.php
@@ -4765,13 +4765,13 @@ parameters:
 			path: src/Piwigo/Image/DerivativeImage.php
 
 		-
-			rawMessage: 'Out of 1308 possible return types, only 1259 - 96.2 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 1311 possible return types, only 1262 - 96.2 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 5
 			path: src/Piwigo/Image/DerivativeImage.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 15
 			path: src/Piwigo/Image/DerivativeImage.php
@@ -4789,13 +4789,13 @@ parameters:
 			path: src/Piwigo/Image/DerivativeParams.php
 
 		-
-			rawMessage: 'Out of 1308 possible return types, only 1259 - 96.2 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 1311 possible return types, only 1262 - 96.2 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 3
 			path: src/Piwigo/Image/DerivativeParams.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 1
 			path: src/Piwigo/Image/DerivativeParams.php
@@ -4813,7 +4813,7 @@ parameters:
 			path: src/Piwigo/Image/ImageRect.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 2
 			path: src/Piwigo/Image/ImageRect.php
@@ -4831,13 +4831,13 @@ parameters:
 			path: src/Piwigo/Image/ImageStdParams.php
 
 		-
-			rawMessage: 'Out of 1308 possible return types, only 1259 - 96.2 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 1311 possible return types, only 1262 - 96.2 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 5
 			path: src/Piwigo/Image/ImageStdParams.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 8
 			path: src/Piwigo/Image/ImageStdParams.php
@@ -4861,7 +4861,7 @@ parameters:
 			path: src/Piwigo/Image/SizingParams.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 5
 			path: src/Piwigo/Image/SizingParams.php
@@ -4915,13 +4915,13 @@ parameters:
 			path: src/Piwigo/Menu/BlockManager.php
 
 		-
-			rawMessage: 'Out of 1308 possible return types, only 1259 - 96.2 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 1311 possible return types, only 1262 - 96.2 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 3
 			path: src/Piwigo/Menu/BlockManager.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 9
 			path: src/Piwigo/Menu/BlockManager.php
@@ -4933,13 +4933,13 @@ parameters:
 			path: src/Piwigo/Menu/BlockManager.php
 
 		-
-			rawMessage: 'Out of 1308 possible return types, only 1259 - 96.2 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 1311 possible return types, only 1262 - 96.2 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 3
 			path: src/Piwigo/Menu/DisplayBlock.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 3
 			path: src/Piwigo/Menu/DisplayBlock.php
@@ -4951,13 +4951,13 @@ parameters:
 			path: src/Piwigo/Menu/DisplayBlock.php
 
 		-
-			rawMessage: 'Out of 1308 possible return types, only 1259 - 96.2 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 1311 possible return types, only 1262 - 96.2 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 3
 			path: src/Piwigo/Menu/RegisteredBlock.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 3
 			path: src/Piwigo/Menu/RegisteredBlock.php
@@ -5059,7 +5059,7 @@ parameters:
 			path: src/Piwigo/Site/LocalSiteReader.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 2
 			path: src/Piwigo/Site/LocalSiteReader.php
@@ -5071,7 +5071,7 @@ parameters:
 			path: src/Piwigo/Template/Combinable.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 4
 			path: src/Piwigo/Template/Combinable.php
@@ -5083,7 +5083,7 @@ parameters:
 			path: src/Piwigo/Template/Combinable.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 5
 			path: src/Piwigo/Template/CssLoader.php
@@ -5107,19 +5107,19 @@ parameters:
 			path: src/Piwigo/Template/FileCombiner.php
 
 		-
-			rawMessage: 'Out of 1308 possible return types, only 1259 - 96.2 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 1311 possible return types, only 1262 - 96.2 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 1
 			path: src/Piwigo/Template/FileCombiner.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 9
 			path: src/Piwigo/Template/FileCombiner.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 4
 			path: src/Piwigo/Template/PwgTemplateAdapter.php
@@ -5161,7 +5161,7 @@ parameters:
 			path: src/Piwigo/Template/ScriptLoader.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 11
 			path: src/Piwigo/Template/ScriptLoader.php
@@ -5221,13 +5221,13 @@ parameters:
 			path: src/Piwigo/Template/Template.php
 
 		-
-			rawMessage: 'Out of 1308 possible return types, only 1259 - 96.2 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 1311 possible return types, only 1262 - 96.2 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 6
 			path: src/Piwigo/Template/Template.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 56
 			path: src/Piwigo/Template/Template.php
@@ -5251,13 +5251,13 @@ parameters:
 			path: src/Piwigo/Template/Template.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 3
 			path: src/Piwigo/Url/UrlService.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 1
 			path: src/Piwigo/Ws/Encoder/PwgResponseEncoder.php
@@ -6121,7 +6121,7 @@ parameters:
 			path: tests/Unit/Http/Middleware/ControllerInvokerMiddlewareTest.php
 
 		-
-			rawMessage: 'Out of 1308 possible return types, only 1259 - 96.2 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 1311 possible return types, only 1262 - 96.2 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 1
 			path: tests/Unit/Http/Middleware/ControllerInvokerMiddlewareTest.php
@@ -6447,7 +6447,7 @@ parameters:
 		-
 			rawMessage: 'Call to method toBe() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
 			identifier: method.internalClass
-			count: 18
+			count: 24
 			path: tests/Unit/Url/UrlServiceTest.php
 
 		-
@@ -6697,7 +6697,7 @@ parameters:
 			path: upgrade.php
 
 		-
-			rawMessage: 'Out of 2118 possible param types, only 1355 - 63.9 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 2121 possible param types, only 1358 - 64.0 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 1
 			path: upgrade.php

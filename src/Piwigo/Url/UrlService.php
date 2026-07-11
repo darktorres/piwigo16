@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Url;
 
+use Piwigo\Config\Config;
 use Piwigo\Db\Tables;
 
 /**
@@ -68,36 +69,83 @@ final class UrlService
             } else {
                 $url .= 'http://';
             }
-            $forwarded_host = $_SERVER['HTTP_X_FORWARDED_HOST'] ?? null;
-            if (is_string($forwarded_host)) {
-                $url .= $forwarded_host;
+            // A configured gallery_url is a canonical, admin-set base URL --
+            // its host is trusted outright and never derived from a
+            // client-controlled header. [SEC-29]
+            $configured_host = $this->configuredHost();
+
+            if ($configured_host !== null) {
+                $url .= $configured_host;
             } else {
-                $http_host = $_SERVER['HTTP_HOST'] ?? null;
-                $url .= is_string($http_host) ? $http_host : '';
-
-                $url_port = null;
-
-                if ($conf['url_port'] === 'none') {
-                    // do nothing
-                } elseif ($conf['url_port'] === 'auto') {
-                    $server_port_raw = $_SERVER['SERVER_PORT'] ?? null;
-                    $server_port = is_numeric($server_port_raw) ? (int) $server_port_raw : null;
-                    if ((! $is_https && $server_port !== 80) || ($is_https && $server_port !== 443)) {
-                        $url_port = ':' . ((is_string($server_port_raw) || is_int($server_port_raw)) ? $server_port_raw : '');
-                    }
+                $forwarded_host = $_SERVER['HTTP_X_FORWARDED_HOST'] ?? null;
+                if (is_string($forwarded_host)) {
+                    $url .= $this->trustedHost($forwarded_host);
                 } else {
-                    // we have a custom port
-                    $url_port = ':' . (is_scalar($conf['url_port']) ? $conf['url_port'] : '');
-                }
+                    $http_host = $_SERVER['HTTP_HOST'] ?? null;
+                    $url .= $this->trustedHost(is_string($http_host) ? $http_host : '');
 
-                if ($url_port !== null and strrchr($url, ':') !== $url_port) {
-                    $url .= $url_port;
+                    $url_port = null;
+
+                    if ($conf['url_port'] === 'none') {
+                        // do nothing
+                    } elseif ($conf['url_port'] === 'auto') {
+                        $server_port_raw = $_SERVER['SERVER_PORT'] ?? null;
+                        $server_port = is_numeric($server_port_raw) ? (int) $server_port_raw : null;
+                        if ((! $is_https && $server_port !== 80) || ($is_https && $server_port !== 443)) {
+                            $url_port = ':' . ((is_string($server_port_raw) || is_int($server_port_raw)) ? $server_port_raw : '');
+                        }
+                    } else {
+                        // we have a custom port
+                        $url_port = ':' . (is_scalar($conf['url_port']) ? $conf['url_port'] : '');
+                    }
+
+                    if ($url_port !== null and strrchr($url, ':') !== $url_port) {
+                        $url .= $url_port;
+                    }
                 }
             }
         }
         $url .= cookie_path();
 
         return $url;
+    }
+
+    /**
+     * Returns Config::galleryUrl()'s host[:port], or null when unconfigured
+     * (auto-detect mode).
+     */
+    private function configuredHost(): ?string
+    {
+        $gallery_url = Config::galleryUrl();
+        if ($gallery_url === null) {
+            return null;
+        }
+
+        $host = parse_url($gallery_url, \PHP_URL_HOST);
+        if (! is_string($host) || $host === '') {
+            return null;
+        }
+
+        $port = parse_url($gallery_url, \PHP_URL_PORT);
+
+        return is_int($port) ? $host . ':' . $port : $host;
+    }
+
+    /**
+     * [SEC-29] Host-header poisoning guard: when Config::allowedHosts() is
+     * non-empty, an unrecognized candidate host is never embedded into an
+     * outbound URL -- falls back to the first configured host instead.
+     * Empty allow-list means "not configured", preserving the historical
+     * auto-detect (trust the header) behavior.
+     */
+    private function trustedHost(string $candidate): string
+    {
+        $allowed = Config::allowedHosts();
+        if ($allowed === [] || in_array($candidate, $allowed, true)) {
+            return $candidate;
+        }
+
+        return $allowed[0];
     }
 
     /**

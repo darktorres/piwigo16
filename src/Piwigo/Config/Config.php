@@ -139,6 +139,13 @@ final class Config
             'method' => 'allowWebServices',
             'description' => 'Enable the Piwigo web-service (API) endpoint.',
         ],
+        'allowed_hosts' => [
+            'type' => 'array',
+            'default' => null,
+            'method' => 'allowedHosts',
+            'custom' => true,
+            'description' => 'Hostnames UrlService trusts when building absolute URLs from the Host / X-Forwarded-Host header. Empty means auto-detect (trust the header), matching prior releases.',
+        ],
         'alternative_pem_url' => [
             'type' => 'string',
             'default' => '',
@@ -3139,6 +3146,19 @@ final class Config
     {
         $v = self::src()['db_port'] ?? null;
         return is_numeric($v) ? (int) $v : null;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function allowedHosts(): array
+    {
+        $v = self::src()['allowed_hosts'] ?? [];
+        if (! is_array($v)) {
+            return [];
+        }
+
+        return array_values(array_filter(array_map(static fn (mixed $x): string => is_scalar($x) ? (string) $x : '', $v), static fn (string $x): bool => $x !== ''));
     }
 
     /**

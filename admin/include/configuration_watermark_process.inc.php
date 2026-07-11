@@ -11,13 +11,14 @@ declare(strict_types=1);
 
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\WatermarkParams;
+use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
 // Bootstrap globals, set by include/common.inc.php.
-/** @var \Template $template */
+/** @var Template $template */
 global $template;
 
 // $page['errors'] is always initialized to [] by admin/configuration.php

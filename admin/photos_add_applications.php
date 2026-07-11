@@ -9,12 +9,14 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Template\Template;
+
 if (! defined('PHOTOS_ADD_BASE_URL')) {
     die('Hacking attempt!');
 }
 
 // Bootstrap globals, set by include/common.inc.php.
-/** @var \Template $template */
+/** @var Template $template */
 global $template;
 
 // +-----------------------------------------------------------------------+

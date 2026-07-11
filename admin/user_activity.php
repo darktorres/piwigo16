@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Template\Template;
+
 if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
@@ -16,7 +18,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
 // Bootstrap globals, set by include/common.inc.php.
 /**
  * @var array<string, mixed> $conf
- * @var \Template $template
+ * @var Template $template
  * @var array<string, mixed> $page
  */
 global $conf, $template, $page;

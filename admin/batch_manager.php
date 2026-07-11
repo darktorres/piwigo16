@@ -10,12 +10,13 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\tabsheet;
+use Piwigo\Template\Template;
 
 // Bootstrap globals, set by include/common.inc.php.
 /**
  * @var array<string, mixed> $conf
  * @var array<string, mixed> $page
- * @var \Template $template
+ * @var Template $template
  * @var array<string, mixed> $user
  */
 global $conf, $page, $template, $user;

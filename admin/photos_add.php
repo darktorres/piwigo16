@@ -10,13 +10,14 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\tabsheet;
+use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
 // Bootstrap globals, set by include/common.inc.php.
-/** @var \Template $template */
+/** @var Template $template */
 global $template;
 
 // Bootstrap $page, set by admin.php before including this tab dispatcher.

@@ -12,6 +12,7 @@ declare(strict_types=1);
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Template\Template;
 
 define('PHPWG_ROOT_PATH', './');
 include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
@@ -22,7 +23,7 @@ include_once PHPWG_ROOT_PATH . 'include/functions_picture.inc.php';
 /**
  * @var array<string, mixed> $conf
  * @var array<string, mixed> $page
- * @var \Template $template
+ * @var Template $template
  * @var array<string, mixed> $user
  */
 global $conf, $page, $template, $user;
@@ -231,7 +232,7 @@ function default_picture_content(string $content, array $element_info): string
 
     /**
      * @var array<string, mixed> $page
-     * @var \Template $template
+     * @var Template $template
      */
     global $page, $template;
 

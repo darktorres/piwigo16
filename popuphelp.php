@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Template\Template;
+
 // +-----------------------------------------------------------------------+
 // |                           initialization                              |
 // +-----------------------------------------------------------------------+
@@ -17,7 +19,7 @@ define('PHPWG_ROOT_PATH', './');
 define('PWG_HELP', true);
 
 // Bootstrap global, set by include/common.inc.php below.
-/** @var \Template $template */
+/** @var Template $template */
 global $template;
 
 include_once PHPWG_ROOT_PATH . 'include/common.inc.php';

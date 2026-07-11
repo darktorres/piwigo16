@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Template\Template;
 
 // +-----------------------------------------------------------------------+
 // |                           initialization                              |
@@ -22,7 +23,7 @@ include_once PHPWG_ROOT_PATH . 'include/functions_comment.inc.php';
 // Bootstrap globals, set by include/common.inc.php.
 /**
  * @var array<string, mixed> $conf
- * @var \Template $template
+ * @var Template $template
  */
 global $conf, $template;
 

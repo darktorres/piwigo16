@@ -12,6 +12,7 @@ declare(strict_types=1);
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Template\Template;
 
 /**
  * Change rank of images inside a category
@@ -24,7 +25,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
 // panel via admin/album.php; $template by include/common.inc.php.
 /**
  * @var array<string, mixed> $page
- * @var \Template $template
+ * @var Template $template
  */
 global $page, $template;
 

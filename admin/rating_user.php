@@ -12,13 +12,14 @@ declare(strict_types=1);
 use Piwigo\Admin\tabsheet;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Template\Template;
 
 defined('PHPWG_ROOT_PATH') or die('Hacking attempt!');
 
 // Bootstrap globals, set by include/common.inc.php.
 /** @var array<string, mixed> $conf */
 global $conf;
-/** @var \Template $template */
+/** @var Template $template */
 global $template;
 
 $tabsheet = new tabsheet();

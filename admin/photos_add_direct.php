@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\SrcImage;
+use Piwigo\Template\Template;
 
 if (! defined('PHOTOS_ADD_BASE_URL')) {
     die('Hacking attempt!');
@@ -21,7 +22,7 @@ if (! defined('PHOTOS_ADD_BASE_URL')) {
 /**
  * @var array<string, mixed> $conf
  * @var array<string, mixed> $page
- * @var \Template $template
+ * @var Template $template
  * @var array<string, mixed> $user
  */
 global $conf, $page, $template, $user;

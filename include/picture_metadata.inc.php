@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\SrcImage;
+use Piwigo\Template\Template;
 
 /**
  * This file is included by the picture page to manage picture metadata
@@ -20,7 +21,7 @@ use Piwigo\Image\SrcImage;
 /**
  * @var array<string, mixed> $conf
  * @var array<string, mixed> $lang
- * @var \Template $template
+ * @var Template $template
  */
 global $conf, $lang, $template;
 // Set by picture.php, right before this include.

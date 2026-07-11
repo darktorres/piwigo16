@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Menu;
 
+use Piwigo\Template\Template;
+
 /**
  * Manages a set of RegisteredBlock and DisplayBlock.
  */
@@ -172,7 +174,7 @@ class BlockManager
      */
     public function apply($var, $file): void
     {
-        /** @var \Template $template */
+        /** @var Template $template */
         global $template;
 
         $template->set_filename('menubar', $file);

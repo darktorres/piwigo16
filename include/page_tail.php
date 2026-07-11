@@ -10,13 +10,14 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\updates;
+use Piwigo\Template\Template;
 
 // Bootstrap globals, set by include/common.inc.php.
 /**
  * @var array<string, mixed> $conf
  * @var string $debug
  * @var float $t2
- * @var \Template $template
+ * @var Template $template
  * @var array<string, mixed> $page
  */
 global $conf, $debug, $t2, $template, $page;

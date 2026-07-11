@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\SrcImage;
+use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
@@ -22,7 +23,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
  * @var array<string, mixed> $cache
  * @var array<string, mixed> $conf
  * @var array<string, mixed> $page
- * @var \Template $template
+ * @var Template $template
  * @var array<string, mixed> $user
  */
 global $admin_photo_base_url, $cache, $conf, $page, $template, $user;

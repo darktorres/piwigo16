@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 use Piwigo\Cache\PersistentCache;
 use Piwigo\Core\Logger;
+use Piwigo\Template\Template;
 
 /**
  * This included page checks section related parameter and provides
@@ -38,7 +39,7 @@ use Piwigo\Core\Logger;
  * @var array<string, mixed> $page
  * @var array<string, mixed> $user
  * @var Logger $logger
- * @var \Template $template
+ * @var Template $template
  */
 global $conf, $filter, $logger, $page, $persistent_cache, $template, $user;
 if (! $persistent_cache instanceof PersistentCache) {

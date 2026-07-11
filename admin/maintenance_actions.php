@@ -13,13 +13,15 @@ use Piwigo\Admin\Image\pwg_image;
 use Piwigo\Admin\Integrity\check_integrity;
 use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Template\FileCombiner;
+use Piwigo\Template\Template;
 
 // Bootstrap globals. $maint_actions is set by admin/maintenance.php before
 // dynamically including this tab panel; the rest by include/common.inc.php.
 /**
  * @var array<string, mixed> $conf
  * @var PersistentFileCache $persistent_cache
- * @var \Template $template
+ * @var Template $template
  */
 global $conf, $maint_actions, $persistent_cache, $template;
 

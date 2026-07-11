@@ -11,13 +11,14 @@ declare(strict_types=1);
 
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\SrcImage;
+use Piwigo\Template\Template;
 
 // Bootstrap globals, set by include/common.inc.php.
 /**
  * @var array<string, mixed> $cache
  * @var array<string, mixed> $conf
  * @var array<string, mixed> $pwg_loaded_plugins
- * @var \Template $template
+ * @var Template $template
  * @var array<string, mixed> $user
  */
 global $cache, $conf, $pwg_loaded_plugins, $template, $user;

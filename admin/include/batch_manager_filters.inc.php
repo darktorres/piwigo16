@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Template\Template;
+
 if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
@@ -19,7 +21,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
  * @var string $base_url
  * @var array<string, mixed> $conf
  * @var array<string, mixed> $page
- * @var \Template $template
+ * @var Template $template
  */
 global $base_url, $collection, $conf, $page, $template;
 

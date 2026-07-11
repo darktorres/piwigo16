@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Template\Template;
+
 /**
  * Define replacement conditions for each template from template-extension
  * (template called "replacer").
@@ -35,7 +37,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
 /**
  * @var array<string, mixed> $conf
  * @var array<string, mixed> $page
- * @var \Template $template
+ * @var Template $template
  */
 global $conf, $page, $template;
 

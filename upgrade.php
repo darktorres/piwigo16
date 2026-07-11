@@ -12,6 +12,7 @@ declare(strict_types=1);
 use Piwigo\Admin\languages;
 use Piwigo\Admin\updates;
 use Piwigo\Cache\PersistentFileCache;
+use Piwigo\Template\Template;
 
 // right after the overwrite of previous version files by the unzip in the administration,
 // PHP engine might still have old files in cache. We do not want to use the cache and

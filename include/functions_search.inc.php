@@ -19,6 +19,7 @@ use Piwigo\Search\QNumericRangeScope;
 use Piwigo\Search\QResults;
 use Piwigo\Search\QSearchScope;
 use Piwigo\Search\QSingleToken;
+use Piwigo\Template\Template;
 
 function get_search_id_pattern(int|string $candidate): ?string
 {
@@ -1580,7 +1581,7 @@ function get_quick_search_results_no_cache(string $q, array $options): array
         $ids = array_merge($ids, $extra_ids);
     }
 
-    /** @var \Template $template */
+    /** @var Template $template */
     global $template;
 
     if (empty($ids)) {

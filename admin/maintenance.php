@@ -10,6 +10,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\tabsheet;
+use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
@@ -19,7 +20,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
 // $template by include/common.inc.php.
 /**
  * @var array<string, mixed> $page
- * @var \Template $template
+ * @var Template $template
  */
 global $page, $template;
 

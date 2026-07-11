@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Template\Template;
+
 class tabsheet
 {
     /**
@@ -154,7 +156,7 @@ class tabsheet
      */
     public function assign(): void
     {
-        /** @var \Template $template */
+        /** @var Template $template */
         global $template;
 
         $template->set_filename('tabsheet', 'tabsheet.tpl');

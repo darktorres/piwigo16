@@ -12,6 +12,7 @@ declare(strict_types=1);
 use Piwigo\Cache\PersistentCache;
 use Piwigo\Calendar\CalendarMonthly;
 use Piwigo\Calendar\CalendarWeekly;
+use Piwigo\Template\Template;
 
 /** URL keyword for list view */
 define('CAL_VIEW_LIST', 'list');
@@ -27,7 +28,7 @@ function initialize_calendar(): void
      * @var array<string, mixed> $page
      * @var array<string, mixed> $conf
      * @var array<string, mixed> $user
-     * @var \Template $template
+     * @var Template $template
      */
     global $page, $conf, $user, $template, $persistent_cache, $filter;
     if (! $persistent_cache instanceof PersistentCache) {

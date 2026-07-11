@@ -13,6 +13,7 @@ use Piwigo\Admin\Image\pwg_image;
 use Piwigo\Admin\tabsheet;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
@@ -22,7 +23,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
 /**
  * @var array<string, mixed> $conf
  * @var array<string, mixed> $lang
- * @var \Template $template
+ * @var Template $template
  */
 global $conf, $lang, $template;
 

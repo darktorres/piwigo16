@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Template\Template;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\Mailer;
 use Symfony\Component\Mailer\Transport;
@@ -234,7 +235,7 @@ function get_strict_email_list($email_list): string
  *
  * @param string $email_format - text/html or text/plain
  */
-function &get_mail_template($email_format): \Template
+function &get_mail_template($email_format): Template
 {
     $template = new Template(PHPWG_ROOT_PATH . 'themes', 'default', 'template/mail/' . $email_format);
     return $template;
@@ -867,7 +868,7 @@ function pwg_mail($to, array $args = [], array $tpl = [])
                 trigger_notify('before_parse_mail_template', $cache_key, $content_type);
             }
             $cached_template = $cache_entry['theme'];
-            $template = $cached_template instanceof \Template ? $cached_template : get_mail_template($content_type);
+            $template = $cached_template instanceof Template ? $cached_template : get_mail_template($content_type);
 
             $template->set_filename('mail_header', 'header.tpl');
             $template->set_filename('mail_footer', 'footer.tpl');
@@ -913,7 +914,7 @@ function pwg_mail($to, array $args = [], array $tpl = [])
 
         $cache_entry = $conf_mail[$cache_key] ?? null;
         $cached_template = is_array($cache_entry) ? ($cache_entry['theme'] ?? null) : null;
-        $template = $cached_template instanceof \Template ? $cached_template : get_mail_template($content_type);
+        $template = $cached_template instanceof Template ? $cached_template : get_mail_template($content_type);
         $template->assign(
             [
                 'MAIL_TITLE' => $args['mail_title'],

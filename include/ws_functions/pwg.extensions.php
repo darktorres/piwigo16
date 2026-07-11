@@ -13,6 +13,7 @@ use Piwigo\Admin\languages;
 use Piwigo\Admin\plugins;
 use Piwigo\Admin\themes;
 use Piwigo\Admin\updates;
+use Piwigo\Template\Template;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 
@@ -62,7 +63,7 @@ function ws_plugins_performAction(array $params, PwgServer &$service): PwgError|
 {
     global $template, $conf;
 
-    /** @var \Template $template */
+    /** @var Template $template */
     /** @var array<string, mixed> $conf */
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -103,7 +104,7 @@ function ws_themes_performAction(array $params, PwgServer &$service): PwgError|t
 {
     global $template, $conf;
 
-    /** @var \Template $template */
+    /** @var Template $template */
     /** @var array<string, mixed> $conf */
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -231,7 +232,7 @@ function ws_extensions_update(array $params, PwgServer &$service): PwgError|stri
 
     global $template;
 
-    /** @var \Template $template */
+    /** @var Template $template */
     $template->delete_compiled_templates();
 
     return match ($upgrade_status) {

@@ -9,5 +9,23 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-/** default rank for buttons */
-define('BUTTONS_RANK_NEUTRAL', 50);
+namespace Piwigo\Template;
+
+final class Css extends Combinable
+{
+    /**
+     * @param string $id
+     * @param string $path
+     * @param string|false $version false disables version-based cache
+     *   busting, mirroring Combinable::$version's own contract
+     * @param int $order
+     */
+    public function __construct(
+        $id,
+        $path,
+        $version = '0',
+        public $order = 0
+    ) {
+        parent::__construct($id, $path, $version);
+    }
+}

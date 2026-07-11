@@ -8,6 +8,9 @@ declare(strict_types=1);
 // | For copyright and license information, please view the COPYING.txt    |
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
+
+use Piwigo\Template\Template;
+
 /**
  * @param array<int, string> $sortable_by
  * @param array<int, string> $get_rejects
@@ -21,7 +24,7 @@ function parse_sort_variables(
     string $template_var,
     string $anchor = ''
 ): array {
-    /** @var \Template $template */
+    /** @var Template $template */
     global $template;
 
     $request_uri = $_SERVER['REQUEST_URI'] ?? '';
@@ -80,7 +83,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
 // Bootstrap globals, set by include/common.inc.php.
 /**
  * @var array<string, mixed> $page
- * @var \Template $template
+ * @var Template $template
  */
 global $page, $template;
 

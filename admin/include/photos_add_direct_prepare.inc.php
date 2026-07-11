@@ -10,11 +10,12 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\Image\pwg_image;
+use Piwigo\Template\Template;
 
 // Bootstrap globals, set by include/common.inc.php.
 /**
  * @var array<string, mixed> $conf
- * @var \Template $template
+ * @var Template $template
  */
 global $conf, $template;
 

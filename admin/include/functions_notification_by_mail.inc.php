@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Template\Template;
+
 // Bootstrap global, set by include/common.inc.php.
 /** @var array<string, mixed> $conf */
 global $conf;
@@ -457,7 +459,7 @@ function assign_vars_nbm_mail_content(array $nbm_user): void
     $email_format = $env_nbm['email_format'] ?? null;
     $email_format = is_string($email_format) ? $email_format : get_str_email_format(false);
     $mail_template = $env_nbm['mail_template'] ?? null;
-    $mail_template = $mail_template instanceof \Template ? $mail_template : get_mail_template($email_format);
+    $mail_template = $mail_template instanceof Template ? $mail_template : get_mail_template($email_format);
 
     $mail_template->assign(
         [
@@ -556,7 +558,7 @@ function do_subscribe_unsubscribe_notification_by_mail($is_admin_request, $is_su
                 $email_format = $env_nbm['email_format'] ?? null;
                 $email_format = is_string($email_format) ? $email_format : get_str_email_format(false);
                 $mail_template = $env_nbm['mail_template'] ?? null;
-                $mail_template = $mail_template instanceof \Template ? $mail_template : get_mail_template($email_format);
+                $mail_template = $mail_template instanceof Template ? $mail_template : get_mail_template($email_format);
 
                 $mail_template->assign(
                     [

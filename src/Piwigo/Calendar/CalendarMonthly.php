@@ -14,6 +14,7 @@ namespace Piwigo\Calendar;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Template\Template;
 
 /**
  * Monthly calendar style (composed of years/months and days)
@@ -68,7 +69,7 @@ class CalendarMonthly extends CalendarBase
 
         $view_type = $page['chronology_view'];
         if ($view_type == CAL_VIEW_CALENDAR) {
-            /** @var \Template $template */
+            /** @var Template $template */
             global $template;
             $tpl_var = [];
             $nb_date_parts = is_array($page['chronology_date']) ? count($page['chronology_date']) : 0;

@@ -14,6 +14,7 @@ use Piwigo\Cache\PersistentCache;
 use Piwigo\Core\Logger;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Template\Template;
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions_metadata.php';
 
@@ -3517,7 +3518,7 @@ SELECT
         // path is a NOT NULL column in the images table.
         assert(is_string($path));
         if (! file_exists($path)) {
-            /** @var \Template $template */
+            /** @var Template $template */
             global $template;
 
             $template->assign(
@@ -3542,7 +3543,7 @@ SELECT
     $duplicate_paths = query2array($query);
 
     if (count($duplicate_paths) > 0) {
-        /** @var \Template $template */
+        /** @var Template $template */
         global $template;
 
         $template->assign(

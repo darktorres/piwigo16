@@ -12,6 +12,7 @@ declare(strict_types=1);
 use Piwigo\Image\SrcImage;
 use Piwigo\Menu\BlockManager;
 use Piwigo\Menu\RegisteredBlock;
+use Piwigo\Template\Template;
 
 /**
  * Generates breadcrumb from categories list.
@@ -697,7 +698,7 @@ function get_element_url_protection_handler($url, array $infos)
 function flush_page_messages(): void
 {
     /**
-     * @var \Template $template
+     * @var Template $template
      * @var array<string, mixed> $page
      */
     global $template, $page;

@@ -12,6 +12,8 @@ declare(strict_types=1);
 use Piwigo\Admin\Integrity\check_integrity;
 use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Template\FileCombiner;
+use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
@@ -23,7 +25,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
  * @var array<string, mixed> $conf
  * @var array<string, mixed> $page
  * @var PersistentFileCache $persistent_cache
- * @var \Template $template
+ * @var Template $template
  */
 global $conf, $page, $persistent_cache, $template;
 

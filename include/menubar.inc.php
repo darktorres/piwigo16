@@ -10,6 +10,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Menu\BlockManager;
+use Piwigo\Template\Template;
 
 initialize_menu();
 
@@ -22,7 +23,7 @@ function initialize_menu(): void
      * @var array<string, mixed> $page
      * @var array<string, mixed> $conf
      * @var array<string, mixed> $user
-     * @var \Template $template
+     * @var Template $template
      * @var array<string, mixed> $filter
      */
     global $page, $conf, $user, $template, $filter;

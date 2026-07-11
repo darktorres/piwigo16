@@ -8,9 +8,12 @@ declare(strict_types=1);
 // | For copyright and license information, please view the COPYING.txt    |
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
+
+use Piwigo\Template\Template;
+
 /**
  * @var array<string, mixed> $page
- * @var \Template $template
+ * @var Template $template
  */
 global $page, $template;
 

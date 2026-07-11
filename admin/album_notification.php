@@ -10,6 +10,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
@@ -24,7 +25,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
  * @var array<string, string|null> $category
  * @var array<string, mixed> $conf
  * @var array<string, mixed> $page
- * @var \Template $template
+ * @var Template $template
  */
 global $admin_album_base_url, $category, $conf, $page, $template;
 

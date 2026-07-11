@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Template\Template;
+
 /**
  * Display filtered history lines
  */
@@ -29,7 +31,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
 // $page is set by admin.php before including this panel.
 /**
  * @var array<string, mixed> $conf
- * @var \Template $template
+ * @var Template $template
  * @var array<string, mixed> $page
  */
 global $conf, $template, $page;

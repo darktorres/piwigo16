@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Template\Template;
 
 // --------------------------------------------------------------------- include
 define('PHPWG_ROOT_PATH', './');
@@ -21,7 +22,7 @@ include PHPWG_ROOT_PATH . 'include/section_init.inc.php';
 /**
  * @var array<string, mixed> $conf
  * @var array<string, mixed> $page
- * @var \Template $template
+ * @var Template $template
  */
 global $conf, $page, $template;
 

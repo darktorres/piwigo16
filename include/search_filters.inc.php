@@ -10,13 +10,14 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Cache\PersistentCache;
+use Piwigo\Template\Template;
 
 // Bootstrap globals, set by include/common.inc.php.
 /**
  * @var array<string, mixed> $conf
  * @var array<string, mixed> $lang
  * @var array<string, mixed> $page
- * @var \Template $template
+ * @var Template $template
  * @var array<string, mixed> $user
  */
 global $conf, $lang, $page, $persistent_cache, $template, $user;

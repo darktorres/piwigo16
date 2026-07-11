@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Template\Template;
+
 // customize appearance of the site for a user
 // +-----------------------------------------------------------------------+
 // |                           initialization                              |
@@ -17,7 +19,7 @@ declare(strict_types=1);
 // Bootstrap globals, set by include/common.inc.php.
 /**
  * @var array<string, mixed> $conf
- * @var \Template $template
+ * @var Template $template
  * @var array<string, mixed> $user
  */
 global $conf, $template, $user;
@@ -399,7 +401,7 @@ function save_profile_from_post(array $userdata, &$errors): bool
 function load_profile_in_template($url_action, $url_redirect, array $userdata, ?string $template_prefixe = null): void
 {
     /**
-     * @var \Template $template
+     * @var Template $template
      * @var array<string, mixed> $conf
      * @var array<string, mixed> $user
      */

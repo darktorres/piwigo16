@@ -12,6 +12,7 @@ declare(strict_types=1);
 use Piwigo\Admin\plugins;
 use Piwigo\Admin\themes;
 use Piwigo\Core\Logger;
+use Piwigo\Template\Template;
 
 include_once PHPWG_ROOT_PATH . 'include/functions_plugins.inc.php';
 include_once PHPWG_ROOT_PATH . 'include/functions_user.inc.php';

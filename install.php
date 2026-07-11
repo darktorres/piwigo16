@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 use Piwigo\Admin\languages;
 use Piwigo\Session\PwgSession;
+use Piwigo\Template\Template;
 
 // ----------------------------------------------------------- include
 define('PHPWG_ROOT_PATH', './');

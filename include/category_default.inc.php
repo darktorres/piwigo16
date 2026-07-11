@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Template\Template;
 
 /**
  * This file is included by the main page to show thumbnails for the default
@@ -21,7 +22,7 @@ use Piwigo\Image\SrcImage;
 /**
  * @var array<string, mixed> $conf
  * @var array<string, mixed> $page
- * @var \Template $template
+ * @var Template $template
  * @var array<string, mixed> $user
  */
 global $conf, $page, $template, $user;

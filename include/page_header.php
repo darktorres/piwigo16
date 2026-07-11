@@ -9,11 +9,13 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Template\Template;
+
 // Bootstrap globals, set by include/common.inc.php.
 /**
  * @var array<string, mixed> $conf
  * @var array<string, mixed> $page
- * @var \Template $template
+ * @var Template $template
  */
 global $conf, $page, $template;
 // Set by the including page script, right before this include.

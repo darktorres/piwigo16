@@ -12,6 +12,7 @@ declare(strict_types=1);
 use Piwigo\Core\Logger;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Template\Template;
 
 /**
  * This file is included by the main page to show subcategories of a category
@@ -23,7 +24,7 @@ use Piwigo\Image\SrcImage;
  * @var array<string, mixed> $conf
  * @var Logger $logger
  * @var array<string, mixed> $page
- * @var \Template $template
+ * @var Template $template
  * @var array<string, mixed> $user
  */
 global $conf, $logger, $page, $template, $user;

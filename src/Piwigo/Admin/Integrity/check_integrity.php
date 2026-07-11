@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Integrity;
 
+use Piwigo\Template\Template;
+
 class check_integrity
 {
     /**
@@ -173,7 +175,7 @@ class check_integrity
      */
     public function display(): void
     {
-        /** @var \Template $template */
+        /** @var Template $template */
         global $template;
 
         $check_automatic_correction = false;

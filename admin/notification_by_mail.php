@@ -10,6 +10,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\tabsheet;
+use Piwigo\Template\Template;
 
 // +-----------------------------------------------------------------------+
 // | include                                                               |
@@ -22,7 +23,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
 // Bootstrap globals, set by include/common.inc.php.
 /**
  * @var array<string, mixed> $conf
- * @var \Template $template
+ * @var Template $template
  */
 global $conf, $template;
 
@@ -362,7 +363,7 @@ function do_action_send_mail_notification(string $action = 'list_to_send', array
                             $mail_email_format = $env_nbm['email_format'] ?? null;
                             $mail_email_format = is_string($mail_email_format) ? $mail_email_format : get_str_email_format($nbm_send_html_mail);
                             $mail_template = $env_nbm['mail_template'] ?? null;
-                            $mail_template = $mail_template instanceof \Template ? $mail_template : get_mail_template($mail_email_format);
+                            $mail_template = $mail_template instanceof Template ? $mail_template : get_mail_template($mail_email_format);
 
                             // Assign current var for nbm mail
                             assign_vars_nbm_mail_content($nbm_user);

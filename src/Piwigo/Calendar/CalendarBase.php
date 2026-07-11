@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Calendar;
 
+use Piwigo\Template\Template;
+
 /**
  * Base class for monthly and weekly calendar styles
  */
@@ -242,7 +244,7 @@ abstract class CalendarBase
     protected function build_nav_bar($level, ?array $labels = null): void
     {
         /**
-         * @var \Template $template
+         * @var Template $template
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $page
          */
@@ -312,7 +314,7 @@ $this->get_date_where($level) . '
     protected function build_next_prev(): void
     {
         /**
-         * @var \Template $template
+         * @var Template $template
          * @var array<string, mixed> $page
          */
         global $template, $page;

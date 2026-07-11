@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Template\Template;
+
 class updates
 {
     /**
@@ -606,7 +608,7 @@ class updates
         /**
          * @var array<string, mixed> $page
          * @var array<string, mixed> $conf
-         * @var \Template $template
+         * @var Template $template
          */
         global $page, $conf, $template;
 

@@ -29,7 +29,7 @@ phases:
   - {id: P14, tier: T2,    depends_on: [P13],   status: done,    epoch: D}
   - {id: P15, tier: T1-T2, depends_on: [P14],   status: done,    epoch: D}
   - {id: P16, tier: T1-T2, depends_on: [P15],   status: done,    epoch: D}
-  - {id: P17, tier: T1,    depends_on: [P16],   status: planned, epoch: E}
+  - {id: P17, tier: T1,    depends_on: [P16],   status: done,    epoch: E}
   - {id: P18, tier: T1,    depends_on: [P17],   status: planned, epoch: E}
   - {id: P19, tier: T1,    depends_on: [P18],   status: planned, epoch: E}
   - {id: P20, tier: T1,    depends_on: [P19],   status: planned, epoch: E}
@@ -71,19 +71,34 @@ sec:
   - {id: SEC-14, phase: P9,  threat: "Session hijacking / fixation", verified_by: "cookie-attribute + session-regen tests (P18/P28)", status: planned}
   - {id: SEC-15, phase: P20, threat: "Command / code injection", verified_by: "no-eval/exec grep gate + unit tests (P20/P31)", status: planned}
   - {id: SEC-16, phase: P19, threat: "Command / code injection", verified_by: "no-eval/exec grep gate + unit tests (P20/P31)", status: planned}
+  # SEC-17's own fix ("URL validation in RedirectResponder::redirect()")
+  # targets a class that doesn't exist in this repo yet -- RedirectResponder
+  # is P21-23 controller-era infrastructure. Investigated during P17: the
+  # concrete open-redirect vector that DOES exist today (identification.php's
+  # redirect param) already has working validation predating P17 (anchored
+  # to cookie_path() via check_input_parameter()). Left phase: P17 so this
+  # note stays attached to where it was investigated; the RedirectResponder
+  # half genuinely belongs to whichever of P21-23 builds that class.
   - {id: SEC-17, phase: P17, threat: "Open redirect / host-header poisoning", verified_by: "redirect + host-header integration tests (P17)", status: planned}
   - {id: SEC-18, phase: P19, threat: "SQL injection", verified_by: "SearchService unit + REST contract tests (P19/P26)", status: planned}
   - {id: SEC-19, phase: P21, threat: "Missing input validation (mass assignment, type confusion)", verified_by: "Request-DTO validation tests (P27)", status: planned}
   - {id: SEC-20, phase: P19, threat: "Stored XSS via uploaded SVG or HTML descriptions", verified_by: "upload-sanitization tests (P19/P29)", status: planned}
   - {id: SEC-21, phase: P19, threat: "Stored XSS via uploaded SVG or HTML descriptions", verified_by: "upload-sanitization tests (P19/P29)", status: planned}
   - {id: SEC-22, phase: P21, threat: "Information disclosure (errors / debug output)", verified_by: "error-path integration tests (P21/P26)", status: planned}
-  - {id: SEC-23, phase: P17, threat: "SSRF via remote fetch", verified_by: "fetchRemote unit tests with blocked targets (P17)", status: planned}
-  - {id: SEC-24, phase: P17, threat: "SSRF via remote fetch", verified_by: "fetchRemote unit tests with blocked targets (P17)", status: planned}
+  - {id: SEC-23, phase: P17, threat: "SSRF via remote fetch", verified_by: "HttpClientServiceTest unit tests: private/reserved-IP + non-https rejection, redirect-target re-validation (P17)", status: done}
+  - {id: SEC-24, phase: P17, threat: "SSRF via remote fetch", verified_by: "fetchRemote() local-file-read fallback deleted; HttpClientServiceTest covers the guarded replacement path (P17)", status: done}
   - {id: SEC-25, phase: P18, threat: "Session hijacking / fixation", verified_by: "cookie-attribute + session-regen tests (P18/P28)", status: planned}
   - {id: SEC-26, phase: P16, threat: "Local file inclusion via locale", verified_by: "LangService unit test (P16)", status: planned}
   - {id: SEC-27, phase: P18, threat: "Session hijacking / fixation", verified_by: "cookie-attribute + session-regen tests (P18/P28)", status: planned}
   - {id: SEC-28, phase: P18, threat: "Session hijacking / fixation", verified_by: "cookie-attribute + session-regen tests (P18/P28)", status: planned}
-  - {id: SEC-29, phase: P17, threat: "Open redirect / host-header poisoning", verified_by: "redirect + host-header integration tests (P17)", status: planned}
+  - {id: SEC-29, phase: P17, threat: "Open redirect / host-header poisoning", verified_by: "UrlServiceTest unit tests: gallery_url-configured host takes priority over Host header; allowed_hosts rejects an unrecognized Host/X-Forwarded-Host (P17)", status: done}
+  # SEC-30's own fix ("add a userMessage() method to PiwigoException") targets
+  # a class that doesn't exist in this repo -- investigated during P17.
+  # This repo's real ExceptionHandlerMiddleware (built P9) already returns a
+  # generic "Internal Server Error" with no internal details on any
+  # uncaught exception, a different, already-safe design; the doc's own
+  # prose elsewhere scopes this as a "P17-P22" range, not P17-only, so
+  # nothing here was actually expected to fully close in P17 alone.
   - {id: SEC-30, phase: P17, threat: "Information disclosure (errors / debug output)", verified_by: "error-path integration tests (P21/P26)", status: planned}
   - {id: SEC-31, phase: P18, threat: "Account enumeration via registration", verified_by: "registration integration test (P18)", status: planned}
   - {id: SEC-32, phase: P20, threat: "DoS (zip bomb, unbounded API/queries)", verified_by: "zip-bomb unit test + rate-limit + idempotency-replay tests (P20/P26/P28)", status: planned}

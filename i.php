@@ -38,7 +38,6 @@ $data_location = $conf['data_location'];
 if (! is_string($data_location)) {
     die("Invalid \$conf['data_location'] configuration: expected a string.");
 }
-defined('Config::derivativeDir()') or define('Config::derivativeDir()', $data_location . 'i/');
 
 include PHPWG_ROOT_PATH . 'include/env.inc.php';
 pwg_load_env_file(PHPWG_ROOT_PATH);

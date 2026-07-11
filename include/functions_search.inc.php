@@ -10,6 +10,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Cache\PersistentFileCache;
+use Piwigo\Core\Logger;
 use Piwigo\Search\Inflector\InflectorInterface;
 use Piwigo\Search\QDateRangeScope;
 use Piwigo\Search\QExpression;
@@ -122,7 +123,7 @@ function get_regular_search_results(array $search, string $images_where = ''): a
 {
     /**
      * @var array<string, mixed> $conf
-     * @var \Logger $logger
+     * @var Logger $logger
      */
     global $conf, $logger;
 
@@ -894,7 +895,7 @@ function get_items_for_filter(string $filter_name): false|array
 {
     /**
      * @var array<string, mixed> $page
-     * @var \Logger $logger
+     * @var Logger $logger
      */
     global $page, $logger;
 

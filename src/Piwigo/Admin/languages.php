@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Core\Logger;
+
 class languages
 {
     /**
@@ -359,7 +361,7 @@ UPDATE ' . USER_INFOS_TABLE . '
      */
     public function extract_language_files($action, $revision, $dest = '')
     {
-        /** @var \Logger $logger */
+        /** @var Logger $logger */
         global $logger;
 
         // PEM_URL is defined via define('PEM_URL', $conf['alternative_pem_url']) in

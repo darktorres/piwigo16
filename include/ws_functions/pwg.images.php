@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\Logger;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Ws\PwgError;
@@ -186,7 +187,7 @@ function merge_chunks(string $output_filepath, string $original_sum, string $typ
 {
     /**
      * @var array<string, mixed> $conf
-     * @var \Logger $logger
+     * @var Logger $logger
      */
     global $conf, $logger;
 
@@ -1225,7 +1226,7 @@ function ws_images_add_chunk(array $params, PwgServer $service): ?PwgError
 {
     /**
      * @var array<string, mixed> $conf
-     * @var \Logger $logger
+     * @var Logger $logger
      */
     global $conf, $logger;
 
@@ -1285,7 +1286,7 @@ function ws_images_addFile(array $params, PwgServer $service): PwgError|bool|nul
 {
     /**
      * @var array<string, mixed> $conf
-     * @var \Logger $logger
+     * @var Logger $logger
      */
     global $conf, $logger;
 
@@ -1386,7 +1387,7 @@ function ws_images_add(array $params, PwgServer $service): PwgError|array
     /**
      * @var array<string, mixed> $conf
      * @var array<string, mixed> $user
-     * @var \Logger $logger
+     * @var Logger $logger
      */
     global $conf, $user, $logger;
 
@@ -1548,7 +1549,7 @@ function ws_images_addSimple(array $params, PwgServer $service): PwgError|array
 {
     /**
      * @var array<string, mixed> $conf
-     * @var \Logger $logger
+     * @var Logger $logger
      */
     global $conf, $logger;
 
@@ -1940,7 +1941,7 @@ function ws_images_uploadAsync(array $params, PwgServer &$service): mixed
     /**
      * @var array<string, mixed> $conf
      * @var array<string, mixed> $user
-     * @var \Logger $logger
+     * @var Logger $logger
      */
     global $conf, $user, $logger;
 
@@ -2209,7 +2210,7 @@ function ws_images_exist(array $params, PwgServer $service): array
 {
     /**
      * @var array<string, mixed> $conf
-     * @var \Logger $logger
+     * @var Logger $logger
      */
     global $conf, $logger;
 
@@ -2287,7 +2288,7 @@ function ws_images_formats_searchImage(array $params, PwgServer $service): array
 {
     /**
      * @var array<string, mixed> $conf
-     * @var \Logger $logger
+     * @var Logger $logger
      */
     global $conf, $logger;
 
@@ -2516,7 +2517,7 @@ DELETE FROM ' . IMAGE_FORMAT_TABLE . '
  */
 function ws_images_checkFiles(array $params, PwgServer $service): PwgError|array
 {
-    /** @var \Logger $logger */
+    /** @var Logger $logger */
     global $logger;
 
     $logger->debug(__FUNCTION__, 'WS', $params);

@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+namespace Piwigo\Core;
+
 /**
  * Modified version of KLogger 0.2.0
  *
@@ -139,7 +141,7 @@ class Logger
 
             if (file_exists($filePath) && ! is_writable($filePath)) {
                 $this->_logStatus = self::STATUS_OPEN_FAILED;
-                throw new RuntimeException(self::$_messages['writefail']);
+                throw new \RuntimeException(self::$_messages['writefail']);
             }
 
             $handle = fopen($filePath, 'a');
@@ -148,7 +150,7 @@ class Logger
                 $this->_logStatus = self::STATUS_LOG_OPEN;
             } else {
                 $this->_logStatus = self::STATUS_OPEN_FAILED;
-                throw new RuntimeException(self::$_messages['openfail']);
+                throw new \RuntimeException(self::$_messages['openfail']);
             }
         }
     }
@@ -336,7 +338,7 @@ class Logger
             // also assigns _fileHandle a real resource.
             assert($this->_fileHandle !== null);
             if (fwrite($this->_fileHandle, $line) === false) {
-                throw new RuntimeException(self::$_messages['writefail']);
+                throw new \RuntimeException(self::$_messages['writefail']);
             }
         }
     }
@@ -403,7 +405,7 @@ class Logger
     {
         $originalTime = microtime(true);
         $micro = sprintf('%06d', ($originalTime - floor($originalTime)) * 1000000);
-        $date = new DateTime(date('Y-m-d H:i:s.' . $micro, intval($originalTime)));
+        $date = new \DateTime(date('Y-m-d H:i:s.' . $micro, intval($originalTime)));
 
         $dateFormat = $this->options['dateFormat'];
         $dateFormat = is_string($dateFormat) ? $dateFormat : 'Y-m-d G:i:s';
@@ -467,7 +469,7 @@ class Logger
             self::WARNING => 'WARNING',
             self::DEBUG => 'DEBUG',
             self::ERROR => 'ERROR',
-            default => throw new RuntimeException('Unknown severity level ' . $level),
+            default => throw new \RuntimeException('Unknown severity level ' . $level),
         };
     }
 
@@ -487,7 +489,7 @@ class Logger
             'WARNING' => self::WARNING,
             'DEBUG' => self::DEBUG,
             'ERROR' => self::ERROR,
-            default => throw new RuntimeException('Unknown severity code ' . $code),
+            default => throw new \RuntimeException('Unknown severity code ' . $code),
         };
     }
 }

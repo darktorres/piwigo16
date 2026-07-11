@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\Logger;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 
@@ -20,7 +21,7 @@ use Piwigo\Image\SrcImage;
 // Bootstrap globals, set by include/common.inc.php.
 /**
  * @var array<string, mixed> $conf
- * @var \Logger $logger
+ * @var Logger $logger
  * @var array<string, mixed> $page
  * @var \Template $template
  * @var array<string, mixed> $user

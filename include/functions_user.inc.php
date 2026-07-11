@@ -10,6 +10,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Auth\PwgTOTP;
+use Piwigo\Core\Logger;
 use Piwigo\Ws\PwgError;
 
 /**
@@ -366,7 +367,7 @@ function getuserdata($user_id, $use_cache = false)
 {
     /**
      * @var array<string, mixed> $conf
-     * @var \Logger $logger
+     * @var Logger $logger
      */
     global $conf, $logger;
 

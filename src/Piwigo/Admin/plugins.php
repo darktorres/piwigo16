@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Core\Logger;
+
 class plugins
 {
     /**
@@ -738,7 +740,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
      */
     public function extract_plugin_files($action, $revision, $dest, ?string &$plugin_id = null): string
     {
-        /** @var \Logger $logger */
+        /** @var Logger $logger */
         global $logger;
 
         if ($archive = tempnam(PHPWG_PLUGINS_PATH, 'zip')) {

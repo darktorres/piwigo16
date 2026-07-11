@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\Logger;
+
 /**
  * returns informations from IPTC metadata, mapping is done in this function.
  *
@@ -121,7 +123,7 @@ function get_exif_data($filename, $map): array
 {
     /**
      * @var array<string, mixed> $conf
-     * @var \Logger $logger
+     * @var Logger $logger
      */
     global $conf, $logger;
 

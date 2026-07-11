@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\Logger;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 
@@ -89,7 +90,7 @@ if (
         $_POST['pwg_token'] = $_GET['pwg_token'] = get_pwg_token();
 
         // logger
-        /** @var \Logger $logger */
+        /** @var Logger $logger */
         global $logger;
         $logger->info('[api_key][pkid=' . explode(':', $auth_header)[0] . '][method=' . $_REQUEST['method'] . ']');
     }

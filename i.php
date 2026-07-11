@@ -10,6 +10,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\Image\pwg_image;
+use Piwigo\Core\Logger;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageRect;
 use Piwigo\Image\ImageStdParams;
@@ -42,8 +43,6 @@ include PHPWG_ROOT_PATH . 'include/env.inc.php';
 pwg_load_env_file(PHPWG_ROOT_PATH);
 $prefixeTable = '';
 pwg_apply_env_to_conf($conf, $prefixeTable);
-
-include PHPWG_ROOT_PATH . 'include/Logger.class.php';
 
 // $conf['data_location']/'log_dir'/'db_password' lost their specific string
 // types the same way include/common.inc.php's equivalent config reads do
@@ -110,7 +109,7 @@ function mkgetdir(string $dir): bool
 
 function ierror(string $msg, int $code): never
 {
-    /** @var \Logger $logger */
+    /** @var Logger $logger */
     global $logger;
     if ($code == 301 || $code == 302) {
         if (ob_get_length() !== false) {

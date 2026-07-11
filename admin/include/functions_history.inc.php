@@ -10,6 +10,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\tabsheet;
+use Piwigo\Core\Logger;
 
 /**
  * Init tabsheet for history pages
@@ -384,7 +385,7 @@ function history_autopurge(): void
 {
     /**
      * @var array<string, mixed> $conf
-     * @var \Logger $logger
+     * @var Logger $logger
      */
     global $conf, $logger;
 

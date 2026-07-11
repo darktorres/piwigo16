@@ -10,6 +10,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Cache\PersistentFileCache;
+use Piwigo\Core\Logger;
 use Piwigo\Image\ImageStdParams;
 
 defined('PHPWG_ROOT_PATH') or trigger_error('Hacking attempt!', E_USER_ERROR);
@@ -118,7 +119,6 @@ if ($conf['session_gc_probability'] > 0) {
 include PHPWG_ROOT_PATH . 'include/constants.php';
 include PHPWG_ROOT_PATH . 'include/functions.inc.php';
 include PHPWG_ROOT_PATH . 'include/template.class.php';
-include PHPWG_ROOT_PATH . 'include/Logger.class.php';
 
 $page['execution_uuid'] = generate_key(10);
 

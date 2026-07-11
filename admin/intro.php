@@ -12,6 +12,7 @@ declare(strict_types=1);
 use Piwigo\Admin\Integrity\c13y_internal;
 use Piwigo\Admin\Integrity\check_integrity;
 use Piwigo\Admin\tabsheet;
+use Piwigo\Core\Logger;
 
 if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
@@ -23,7 +24,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
  * @var array<string, mixed> $conf
  * @var array<string, mixed> $lang
  * @var string $link_start
- * @var \Logger $logger
+ * @var Logger $logger
  * @var array<string, mixed> $page
  * @var array<string, mixed> $pwg_loaded_plugins
  * @var \Template $template

@@ -10,6 +10,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\tabsheet;
+use Piwigo\Core\Logger;
 use Piwigo\Site\LocalSiteReader;
 
 if (! defined('PHPWG_ROOT_PATH')) {
@@ -20,7 +21,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
 global $conf, $logger, $template, $user;
 /**
  * @var array<string, mixed> $conf
- * @var \Logger $logger
+ * @var Logger $logger
  * @var \Template $template
  * @var array<string, mixed> $user
  */

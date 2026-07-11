@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\Logger;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
@@ -1044,7 +1045,7 @@ function ws_create_api_key(array $params, PwgServer &$service): PwgError|array
 {
     /**
      * @var array<string, mixed> $user
-     * @var \Logger $logger
+     * @var Logger $logger
      */
     global $user, $logger;
 
@@ -1094,7 +1095,7 @@ function ws_revoke_api_key(array $params, PwgServer &$service): PwgError|string
 {
     /**
      * @var array<string, mixed> $user
-     * @var \Logger $logger
+     * @var Logger $logger
      */
     global $user, $logger;
 
@@ -1139,7 +1140,7 @@ function ws_edit_api_key(array $params, PwgServer &$service): PwgError|string
 {
     /**
      * @var array<string, mixed> $user
-     * @var \Logger $logger
+     * @var Logger $logger
      */
     global $user, $logger;
 

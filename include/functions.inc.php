@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 use Piwigo\Admin\plugins;
 use Piwigo\Admin\themes;
+use Piwigo\Core\Logger;
 
 include_once PHPWG_ROOT_PATH . 'include/functions_plugins.inc.php';
 include_once PHPWG_ROOT_PATH . 'include/functions_user.inc.php';
@@ -2654,7 +2655,7 @@ SELECT
 function send_piwigo_infos(): void
 {
     /**
-     * @var \Logger $logger
+     * @var Logger $logger
      * @var array<string, mixed> $conf
      */
     global $logger, $conf;
@@ -3214,7 +3215,7 @@ function send_piwigo_infos_retry_later(int $wait_time): void
 {
     /**
      * @var array<string, mixed> $conf
-     * @var \Logger $logger
+     * @var Logger $logger
      */
     global $conf, $logger;
 
@@ -3232,7 +3233,7 @@ function pwg_unique_exec_begins(string $token_name, int $timeout = 60): false|st
 {
     /**
      * @var array<string, mixed> $conf
-     * @var \Logger $logger
+     * @var Logger $logger
      */
     global $conf, $logger;
 
@@ -3288,7 +3289,7 @@ SELECT
 
 function pwg_unique_exec_ends(string $token_name): void
 {
-    /** @var \Logger $logger */
+    /** @var Logger $logger */
     global $logger;
 
     conf_delete_param($token_name . '_running');

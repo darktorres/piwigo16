@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 use Piwigo\Admin\Image\pwg_image;
 use Piwigo\Cache\PersistentCache;
+use Piwigo\Core\Logger;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 
@@ -1813,7 +1814,7 @@ function set_tags_of($tags_of): void
 {
     if (count($tags_of) > 0) {
         $taglist_before = get_image_tag_ids(array_keys($tags_of));
-        /** @var \Logger $logger */
+        /** @var Logger $logger */
         global $logger;
         $logger->debug('taglist_before', $taglist_before);
 
@@ -1844,11 +1845,11 @@ DELETE
         }
 
         $taglist_after = get_image_tag_ids(array_keys($tags_of));
-        /** @var \Logger $logger */
+        /** @var Logger $logger */
         global $logger;
         $logger->debug('taglist_after', $taglist_after);
         $images_to_update = compare_image_tag_lists($taglist_before, $taglist_after);
-        /** @var \Logger $logger */
+        /** @var Logger $logger */
         global $logger;
         $logger->debug('$images_to_update', $images_to_update);
 
@@ -1962,7 +1963,7 @@ function fill_lounge($images, $categories): void
 function empty_lounge($invalidate_user_cache = true): ?array
 {
     /**
-     * @var \Logger $logger
+     * @var Logger $logger
      * @var array<string, mixed> $conf
      */
     global $logger, $conf;
@@ -2280,7 +2281,7 @@ function invalidate_user_cache(bool $full = true): void
 {
     /**
      * @var PersistentCache $persistent_cache
-     * @var \Logger $logger
+     * @var Logger $logger
      */
     global $persistent_cache, $logger;
 

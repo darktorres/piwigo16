@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Core\Logger;
+
 class themes
 {
     /**
@@ -652,7 +654,7 @@ SELECT
      */
     public function extract_theme_files($action, $revision, $dest, ?string &$theme_id = null): string
     {
-        /** @var \Logger $logger */
+        /** @var Logger $logger */
         global $logger;
 
         // PEM_URL is defined via define('PEM_URL', $conf['alternative_pem_url']) in

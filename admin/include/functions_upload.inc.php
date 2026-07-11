@@ -10,6 +10,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\Image\pwg_image;
+use Piwigo\Core\Logger;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
@@ -165,7 +166,7 @@ function add_uploaded_file(string $source_filepath, ?string $original_filename =
     /**
      * @var array<string, mixed> $conf
      * @var array<string, mixed> $user
-     * @var \Logger $logger
+     * @var Logger $logger
      */
     global $conf, $user, $logger;
 
@@ -620,7 +621,7 @@ function upload_file_pdf(?string $representative_ext, string $file_path): ?strin
 {
     /**
      * @var array<string, mixed> $conf
-     * @var \Logger $logger
+     * @var Logger $logger
      */
     global $logger, $conf;
 
@@ -675,7 +676,7 @@ function upload_file_heic(?string $representative_ext, string $file_path): ?stri
 {
     /**
      * @var array<string, mixed> $conf
-     * @var \Logger $logger
+     * @var Logger $logger
      */
     global $logger, $conf;
 
@@ -726,7 +727,7 @@ function upload_file_tiff(?string $representative_ext, string $file_path): ?stri
 {
     /**
      * @var array<string, mixed> $conf
-     * @var \Logger $logger
+     * @var Logger $logger
      */
     global $logger, $conf;
 
@@ -793,7 +794,7 @@ function upload_file_video(?string $representative_ext, string $file_path): ?str
 {
     /**
      * @var array<string, mixed> $conf
-     * @var \Logger $logger
+     * @var Logger $logger
      */
     global $logger, $conf;
 
@@ -871,7 +872,7 @@ function upload_file_psd(?string $representative_ext, string $file_path): ?strin
 {
     /**
      * @var array<string, mixed> $conf
-     * @var \Logger $logger
+     * @var Logger $logger
      */
     global $logger, $conf;
 
@@ -935,7 +936,7 @@ function upload_file_eps(?string $representative_ext, string $file_path): ?strin
 {
     /**
      * @var array<string, mixed> $conf
-     * @var \Logger $logger
+     * @var Logger $logger
      */
     global $logger, $conf;
 
@@ -1016,7 +1017,7 @@ function need_resize(string $image_filepath, int $max_width, int $max_height): b
 {
     /**
      * @var array<string, mixed> $conf
-     * @var \Logger $logger
+     * @var Logger $logger
      */
     global $conf, $logger;
 

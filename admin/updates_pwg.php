@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Admin\updates;
+
 if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
@@ -26,7 +28,6 @@ if (! (bool) $conf['enable_core_update']) {
 }
 
 include_once PHPWG_ROOT_PATH . 'include/functions.inc.php';
-include_once PHPWG_ROOT_PATH . 'admin/include/updates.class.php';
 
 /*
 STEP:

@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Admin\themes;
+
 if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
@@ -27,8 +29,6 @@ if (! is_webmaster()) {
     }
     $page['warnings'][] = str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'));
 }
-
-include_once PHPWG_ROOT_PATH . 'admin/include/themes.class.php';
 
 // admin.php always populates $page['page'] with a string (either the
 // validated $_GET['page'] or the 'intro' fallback) before including this

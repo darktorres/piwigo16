@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Admin\plugins;
+
 if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
@@ -20,8 +22,6 @@ if (! defined('PHPWG_ROOT_PATH')) {
  * @var \Template $template
  */
 global $conf, $page, $template;
-
-include_once PHPWG_ROOT_PATH . 'admin/include/plugins.class.php';
 
 $template->set_filenames([
     'plugins' => 'plugins_installed.tpl',

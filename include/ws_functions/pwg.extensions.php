@@ -9,6 +9,10 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Admin\languages;
+use Piwigo\Admin\plugins;
+use Piwigo\Admin\themes;
+use Piwigo\Admin\updates;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 
@@ -23,8 +27,6 @@ use Piwigo\Ws\PwgServer;
  */
 function ws_plugins_getList(array $params, PwgServer &$service): array
 {
-    include_once PHPWG_ROOT_PATH . 'admin/include/plugins.class.php';
-
     $plugins = new plugins();
     $plugins->sort_fs_plugins('name');
     $plugin_list = [];
@@ -75,7 +77,6 @@ function ws_plugins_performAction(array $params, PwgServer &$service): PwgError|
     }
 
     define('IN_ADMIN', true);
-    include_once PHPWG_ROOT_PATH . 'admin/include/plugins.class.php';
 
     $plugins = new plugins();
     $errors = $plugins->perform_action($params['action'], $params['plugin']);
@@ -113,7 +114,6 @@ function ws_themes_performAction(array $params, PwgServer &$service): PwgError|t
     }
 
     define('IN_ADMIN', true);
-    include_once PHPWG_ROOT_PATH . 'admin/include/themes.class.php';
 
     $themes = new themes();
     $errors = $themes->perform_action($params['action'], $params['theme']);
@@ -161,7 +161,6 @@ function ws_extensions_update(array $params, PwgServer &$service): PwgError|stri
     }
 
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-    include_once PHPWG_ROOT_PATH . 'admin/include/' . $params['type'] . '.class.php';
 
     $type = $params['type'];
     $extension_id = $params['id'];
@@ -338,7 +337,6 @@ function ws_extensions_checkupdates(array $params, PwgServer &$service): array
     /** @var array<string, mixed> $conf */
 
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-    include_once PHPWG_ROOT_PATH . 'admin/include/updates.class.php';
 
     $update = new updates();
     $result = [];

@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Admin\languages;
 use Piwigo\Session\PwgSession;
 
 // ----------------------------------------------------------- include
@@ -122,7 +123,6 @@ if (file_exists(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . pwg_test_mode_installed_stamp(
 include PHPWG_ROOT_PATH . 'include/constants.php';
 include PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
-include PHPWG_ROOT_PATH . 'admin/include/languages.class.php';
 $languages = new languages('utf-8');
 
 if (isset($_GET['language']) && is_string($_GET['language'])) {

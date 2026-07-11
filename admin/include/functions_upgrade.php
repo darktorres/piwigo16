@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Admin\themes;
+
 function check_upgrade(): bool
 {
     if (defined('PHPWG_IN_UPGRADE')) {
@@ -175,7 +177,6 @@ SELECT
             [$counter] = $row;
             if ($counter < 1) {
                 // we need to activate theme first
-                include_once PHPWG_ROOT_PATH . 'admin/include/themes.class.php';
                 $themes = new themes();
                 $themes->perform_action('activate', PHPWG_DEFAULT_TEMPLATE);
             }

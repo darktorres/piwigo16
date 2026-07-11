@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Admin\languages;
+
 if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
@@ -32,8 +34,6 @@ if (! is_webmaster()) {
     $page_warnings[] = str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'));
     $page['warnings'] = $page_warnings;
 }
-
-include_once PHPWG_ROOT_PATH . 'admin/include/languages.class.php';
 
 $template->set_filenames([
     'languages' => 'languages_installed.tpl',

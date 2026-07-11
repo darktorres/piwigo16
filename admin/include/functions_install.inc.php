@@ -9,6 +9,9 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Admin\plugins;
+use Piwigo\Admin\themes;
+
 /**
  * Loads a SQL file and executes all queries.
  * Before executing a query, $replaced is... replaced by $replacing. This is
@@ -57,7 +60,6 @@ function execute_sqlfile($filepath, $replaced, $replacing, $dblayer): void
  */
 function activate_core_themes(): void
 {
-    include_once PHPWG_ROOT_PATH . 'admin/include/themes.class.php';
     $themes = new themes();
     foreach ($themes->fs_themes as $theme_id => $fs_theme) {
         if (in_array($theme_id, ['modus'])) {
@@ -71,8 +73,6 @@ function activate_core_themes(): void
  */
 function activate_core_plugins(): void
 {
-    include_once PHPWG_ROOT_PATH . 'admin/include/plugins.class.php';
-
     $plugins = new plugins();
 
     foreach ($plugins->fs_plugins as $plugin_id => $fs_plugin) {

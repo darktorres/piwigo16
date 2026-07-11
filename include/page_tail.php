@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Admin\updates;
+
 // Bootstrap globals, set by include/common.inc.php.
 /**
  * @var array<string, mixed> $conf
@@ -61,7 +63,6 @@ if (is_int($update_notify_check_period) && $update_notify_check_period > 0) {
         $exec_id = pwg_unique_exec_begins('check_for_updates');
         if ($exec_id !== false) {
             include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-            include_once PHPWG_ROOT_PATH . 'admin/include/updates.class.php';
             $updates = new updates();
             $updates->notify_piwigo_new_versions();
 

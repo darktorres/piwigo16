@@ -933,48 +933,6 @@ parameters:
 		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
-			count: 6
-			path: admin/include/languages.class.php
-
-		-
-			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 2
-			path: admin/include/languages.class.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
-			identifier: equal.notAllowed
-			count: 7
-			path: admin/include/languages.class.php
-
-		-
-			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
-			identifier: typeCoverage.propertyTypeCoverage
-			count: 3
-			path: admin/include/languages.class.php
-
-		-
-			rawMessage: 'Out of 1741 possible param types, only 979 - 56.2 %% actually have it. Add more param types to get over 99 %%'
-			identifier: typeCoverage.paramTypeCoverage
-			count: 5
-			path: admin/include/languages.class.php
-
-		-
-			rawMessage: 'Out of 609 possible return types, only 561 - 92.1 %% actually have it. Add more return types to get over 99 %%'
-			identifier: typeCoverage.returnTypeCoverage
-			count: 1
-			path: admin/include/languages.class.php
-
-		-
-			rawMessage: 'Parameter #2 $needle of function str_starts_with expects string, string|false given.'
-			identifier: argument.type
-			count: 1
-			path: admin/include/languages.class.php
-
-		-
-			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
-			identifier: empty.notAllowed
 			count: 1
 			path: admin/include/photos_add_direct_prepare.inc.php
 
@@ -997,102 +955,6 @@ parameters:
 			path: admin/include/photos_add_direct_prepare.inc.php
 
 		-
-			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
-			identifier: function.strict
-			count: 2
-			path: admin/include/plugins.class.php
-
-		-
-			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
-			identifier: empty.notAllowed
-			count: 10
-			path: admin/include/plugins.class.php
-
-		-
-			rawMessage: Function plugin_activate not found.
-			identifier: function.notFound
-			count: 1
-			path: admin/include/plugins.class.php
-
-		-
-			rawMessage: Function plugin_deactivate not found.
-			identifier: function.notFound
-			count: 1
-			path: admin/include/plugins.class.php
-
-		-
-			rawMessage: Function plugin_install not found.
-			identifier: function.notFound
-			count: 1
-			path: admin/include/plugins.class.php
-
-		-
-			rawMessage: Function plugin_uninstall not found.
-			identifier: function.notFound
-			count: 1
-			path: admin/include/plugins.class.php
-
-		-
-			rawMessage: 'Loose comparison via "!=" between mixed and mixed is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 1
-			path: admin/include/plugins.class.php
-
-		-
-			rawMessage: 'Loose comparison via "!=" between mixed and string is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 2
-			path: admin/include/plugins.class.php
-
-		-
-			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 3
-			path: admin/include/plugins.class.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 2
-			path: admin/include/plugins.class.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between int<-1, 1> and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 2
-			path: admin/include/plugins.class.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
-			identifier: equal.notAllowed
-			count: 4
-			path: admin/include/plugins.class.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
-			identifier: equal.notAllowed
-			count: 7
-			path: admin/include/plugins.class.php
-
-		-
-			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
-			identifier: typeCoverage.propertyTypeCoverage
-			count: 4
-			path: admin/include/plugins.class.php
-
-		-
-			rawMessage: 'Out of 1741 possible param types, only 979 - 56.2 %% actually have it. Add more param types to get over 99 %%'
-			identifier: typeCoverage.paramTypeCoverage
-			count: 6
-			path: admin/include/plugins.class.php
-
-		-
-			rawMessage: 'Parameter #2 $needle of function str_starts_with expects string, string|false given.'
-			identifier: argument.type
-			count: 1
-			path: admin/include/plugins.class.php
-
-		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
 			count: 1
@@ -1109,156 +971,6 @@ parameters:
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 3
 			path: admin/include/tabsheet.class.php
-
-		-
-			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
-			identifier: empty.notAllowed
-			count: 8
-			path: admin/include/themes.class.php
-
-		-
-			rawMessage: Function theme_activate not found.
-			identifier: function.notFound
-			count: 1
-			path: admin/include/themes.class.php
-
-		-
-			rawMessage: Function theme_deactivate not found.
-			identifier: function.notFound
-			count: 1
-			path: admin/include/themes.class.php
-
-		-
-			rawMessage: Function theme_delete not found.
-			identifier: function.notFound
-			count: 1
-			path: admin/include/themes.class.php
-
-		-
-			rawMessage: 'Loose comparison via "!=" between mixed and string is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 1
-			path: admin/include/themes.class.php
-
-		-
-			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 2
-			path: admin/include/themes.class.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between int<-1, 1> and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 2
-			path: admin/include/themes.class.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between int|string and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: admin/include/themes.class.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
-			identifier: equal.notAllowed
-			count: 2
-			path: admin/include/themes.class.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
-			identifier: equal.notAllowed
-			count: 8
-			path: admin/include/themes.class.php
-
-		-
-			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
-			identifier: typeCoverage.propertyTypeCoverage
-			count: 3
-			path: admin/include/themes.class.php
-
-		-
-			rawMessage: 'Out of 1741 possible param types, only 979 - 56.2 %% actually have it. Add more param types to get over 99 %%'
-			identifier: typeCoverage.paramTypeCoverage
-			count: 6
-			path: admin/include/themes.class.php
-
-		-
-			rawMessage: 'Parameter #2 $needle of function str_starts_with expects string, string|false given.'
-			identifier: argument.type
-			count: 1
-			path: admin/include/themes.class.php
-
-		-
-			rawMessage: 'Call to function base64_decode() requires parameter #2 to be set.'
-			identifier: function.strict
-			count: 1
-			path: admin/include/updates.class.php
-
-		-
-			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
-			identifier: function.strict
-			count: 5
-			path: admin/include/updates.class.php
-
-		-
-			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
-			identifier: empty.notAllowed
-			count: 7
-			path: admin/include/updates.class.php
-
-		-
-			rawMessage: 'Loose comparison via "!=" between string and mixed is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 1
-			path: admin/include/updates.class.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between bool|int|null and string is not allowed.'
-			identifier: equal.notAllowed
-			count: 2
-			path: admin/include/updates.class.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between int|string and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 2
-			path: admin/include/updates.class.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between int|string and mixed is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: admin/include/updates.class.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between mixed and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: admin/include/updates.class.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
-			identifier: equal.notAllowed
-			count: 5
-			path: admin/include/updates.class.php
-
-		-
-			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
-			identifier: typeCoverage.propertyTypeCoverage
-			count: 7
-			path: admin/include/updates.class.php
-
-		-
-			rawMessage: 'Variable property access on $this(updates).'
-			identifier: property.dynamicName
-			count: 7
-			path: admin/include/updates.class.php
-
-		-
-			rawMessage: Variable property access on mixed.
-			identifier: property.dynamicName
-			count: 6
-			path: admin/include/updates.class.php
 
 		-
 			rawMessage: 'Call to function array_search() requires parameter #3 to be set.'
@@ -1795,13 +1507,13 @@ parameters:
 			path: admin/updates_ext.php
 
 		-
-			rawMessage: Variable property access on mixed.
+			rawMessage: Variable property access on Piwigo\Admin\updates.
 			identifier: property.dynamicName
 			count: 2
 			path: admin/updates_ext.php
 
 		-
-			rawMessage: Variable property access on updates.
+			rawMessage: Variable property access on mixed.
 			identifier: property.dynamicName
 			count: 2
 			path: admin/updates_ext.php
@@ -2929,56 +2641,8 @@ parameters:
 			path: include/functions_plugins.inc.php
 
 		-
-			rawMessage: 'Method PluginMaintain::activate() should return mixed but return statement is missing.'
-			identifier: return.missing
-			count: 1
-			path: include/functions_plugins.inc.php
-
-		-
-			rawMessage: 'Method PluginMaintain::deactivate() should return mixed but return statement is missing.'
-			identifier: return.missing
-			count: 1
-			path: include/functions_plugins.inc.php
-
-		-
-			rawMessage: 'Method PluginMaintain::install() should return mixed but return statement is missing.'
-			identifier: return.missing
-			count: 1
-			path: include/functions_plugins.inc.php
-
-		-
-			rawMessage: 'Method PluginMaintain::uninstall() should return mixed but return statement is missing.'
-			identifier: return.missing
-			count: 1
-			path: include/functions_plugins.inc.php
-
-		-
-			rawMessage: 'Method ThemeMaintain::activate() should return mixed but return statement is missing.'
-			identifier: return.missing
-			count: 1
-			path: include/functions_plugins.inc.php
-
-		-
-			rawMessage: 'Method ThemeMaintain::deactivate() should return mixed but return statement is missing.'
-			identifier: return.missing
-			count: 1
-			path: include/functions_plugins.inc.php
-
-		-
-			rawMessage: 'Method ThemeMaintain::delete() should return mixed but return statement is missing.'
-			identifier: return.missing
-			count: 1
-			path: include/functions_plugins.inc.php
-
-		-
 			rawMessage: 'Out of 1741 possible param types, only 979 - 56.2 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
-			count: 19
-			path: include/functions_plugins.inc.php
-
-		-
-			rawMessage: 'Out of 609 possible return types, only 561 - 92.1 %% actually have it. Add more return types to get over 99 %%'
-			identifier: typeCoverage.returnTypeCoverage
 			count: 8
 			path: include/functions_plugins.inc.php
 
@@ -4603,6 +4267,48 @@ parameters:
 			path: search.php
 
 		-
+			rawMessage: Function plugin_activate not found.
+			identifier: function.notFound
+			count: 1
+			path: src/Piwigo/Admin/DummyPlugin_maintain.php
+
+		-
+			rawMessage: Function plugin_deactivate not found.
+			identifier: function.notFound
+			count: 1
+			path: src/Piwigo/Admin/DummyPlugin_maintain.php
+
+		-
+			rawMessage: Function plugin_install not found.
+			identifier: function.notFound
+			count: 1
+			path: src/Piwigo/Admin/DummyPlugin_maintain.php
+
+		-
+			rawMessage: Function plugin_uninstall not found.
+			identifier: function.notFound
+			count: 1
+			path: src/Piwigo/Admin/DummyPlugin_maintain.php
+
+		-
+			rawMessage: Function theme_activate not found.
+			identifier: function.notFound
+			count: 1
+			path: src/Piwigo/Admin/DummyTheme_maintain.php
+
+		-
+			rawMessage: Function theme_deactivate not found.
+			identifier: function.notFound
+			count: 1
+			path: src/Piwigo/Admin/DummyTheme_maintain.php
+
+		-
+			rawMessage: Function theme_delete not found.
+			identifier: function.notFound
+			count: 1
+			path: src/Piwigo/Admin/DummyTheme_maintain.php
+
+		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
 			count: 3
@@ -4775,6 +4481,318 @@ parameters:
 			identifier: typeCoverage.paramTypeCoverage
 			count: 5
 			path: src/Piwigo/Admin/Integrity/check_integrity.php
+
+		-
+			rawMessage: 'Method Piwigo\Admin\PluginMaintain::activate() should return mixed but return statement is missing.'
+			identifier: return.missing
+			count: 1
+			path: src/Piwigo/Admin/PluginMaintain.php
+
+		-
+			rawMessage: 'Method Piwigo\Admin\PluginMaintain::deactivate() should return mixed but return statement is missing.'
+			identifier: return.missing
+			count: 1
+			path: src/Piwigo/Admin/PluginMaintain.php
+
+		-
+			rawMessage: 'Method Piwigo\Admin\PluginMaintain::install() should return mixed but return statement is missing.'
+			identifier: return.missing
+			count: 1
+			path: src/Piwigo/Admin/PluginMaintain.php
+
+		-
+			rawMessage: 'Method Piwigo\Admin\PluginMaintain::uninstall() should return mixed but return statement is missing.'
+			identifier: return.missing
+			count: 1
+			path: src/Piwigo/Admin/PluginMaintain.php
+
+		-
+			rawMessage: 'Out of 1741 possible param types, only 979 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 8
+			path: src/Piwigo/Admin/PluginMaintain.php
+
+		-
+			rawMessage: 'Out of 609 possible return types, only 561 - 92.1 %% actually have it. Add more return types to get over 99 %%'
+			identifier: typeCoverage.returnTypeCoverage
+			count: 5
+			path: src/Piwigo/Admin/PluginMaintain.php
+
+		-
+			rawMessage: 'Method Piwigo\Admin\ThemeMaintain::activate() should return mixed but return statement is missing.'
+			identifier: return.missing
+			count: 1
+			path: src/Piwigo/Admin/ThemeMaintain.php
+
+		-
+			rawMessage: 'Method Piwigo\Admin\ThemeMaintain::deactivate() should return mixed but return statement is missing.'
+			identifier: return.missing
+			count: 1
+			path: src/Piwigo/Admin/ThemeMaintain.php
+
+		-
+			rawMessage: 'Method Piwigo\Admin\ThemeMaintain::delete() should return mixed but return statement is missing.'
+			identifier: return.missing
+			count: 1
+			path: src/Piwigo/Admin/ThemeMaintain.php
+
+		-
+			rawMessage: 'Out of 1741 possible param types, only 979 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 3
+			path: src/Piwigo/Admin/ThemeMaintain.php
+
+		-
+			rawMessage: 'Out of 609 possible return types, only 561 - 92.1 %% actually have it. Add more return types to get over 99 %%'
+			identifier: typeCoverage.returnTypeCoverage
+			count: 3
+			path: src/Piwigo/Admin/ThemeMaintain.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 6
+			path: src/Piwigo/Admin/languages.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: src/Piwigo/Admin/languages.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 7
+			path: src/Piwigo/Admin/languages.php
+
+		-
+			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 3
+			path: src/Piwigo/Admin/languages.php
+
+		-
+			rawMessage: 'Out of 1741 possible param types, only 979 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 5
+			path: src/Piwigo/Admin/languages.php
+
+		-
+			rawMessage: 'Out of 609 possible return types, only 561 - 92.1 %% actually have it. Add more return types to get over 99 %%'
+			identifier: typeCoverage.returnTypeCoverage
+			count: 1
+			path: src/Piwigo/Admin/languages.php
+
+		-
+			rawMessage: 'Parameter #2 $needle of function str_starts_with expects string, string|false given.'
+			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Admin/languages.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 2
+			path: src/Piwigo/Admin/plugins.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 10
+			path: src/Piwigo/Admin/plugins.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between mixed and mixed is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: src/Piwigo/Admin/plugins.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between mixed and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: src/Piwigo/Admin/plugins.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 3
+			path: src/Piwigo/Admin/plugins.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: src/Piwigo/Admin/plugins.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<-1, 1> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: src/Piwigo/Admin/plugins.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 4
+			path: src/Piwigo/Admin/plugins.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 7
+			path: src/Piwigo/Admin/plugins.php
+
+		-
+			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 4
+			path: src/Piwigo/Admin/plugins.php
+
+		-
+			rawMessage: 'Out of 1741 possible param types, only 979 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 6
+			path: src/Piwigo/Admin/plugins.php
+
+		-
+			rawMessage: 'Parameter #2 $needle of function str_starts_with expects string, string|false given.'
+			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Admin/plugins.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 8
+			path: src/Piwigo/Admin/themes.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between mixed and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: src/Piwigo/Admin/themes.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: src/Piwigo/Admin/themes.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<-1, 1> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: src/Piwigo/Admin/themes.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int|string and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Admin/themes.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: src/Piwigo/Admin/themes.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 8
+			path: src/Piwigo/Admin/themes.php
+
+		-
+			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 3
+			path: src/Piwigo/Admin/themes.php
+
+		-
+			rawMessage: 'Out of 1741 possible param types, only 979 - 56.2 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 6
+			path: src/Piwigo/Admin/themes.php
+
+		-
+			rawMessage: 'Parameter #2 $needle of function str_starts_with expects string, string|false given.'
+			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Admin/themes.php
+
+		-
+			rawMessage: 'Call to function base64_decode() requires parameter #2 to be set.'
+			identifier: function.strict
+			count: 1
+			path: src/Piwigo/Admin/updates.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 5
+			path: src/Piwigo/Admin/updates.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 7
+			path: src/Piwigo/Admin/updates.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and mixed is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: src/Piwigo/Admin/updates.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between bool|int|null and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: src/Piwigo/Admin/updates.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int|string and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: src/Piwigo/Admin/updates.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int|string and mixed is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Admin/updates.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Admin/updates.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 5
+			path: src/Piwigo/Admin/updates.php
+
+		-
+			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 7
+			path: src/Piwigo/Admin/updates.php
+
+		-
+			rawMessage: 'Variable property access on $this(Piwigo\Admin\updates).'
+			identifier: property.dynamicName
+			count: 7
+			path: src/Piwigo/Admin/updates.php
+
+		-
+			rawMessage: Variable property access on mixed.
+			identifier: property.dynamicName
+			count: 6
+			path: src/Piwigo/Admin/updates.php
 
 		-
 			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'

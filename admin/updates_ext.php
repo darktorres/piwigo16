@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Admin\updates;
+
 if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
@@ -44,7 +46,6 @@ $updates_ignored_setting = $conf['updates_ignored'] ?? null;
 $updates_ignored_raw = is_string($updates_ignored_setting) ? unserialize($updates_ignored_setting) : false;
 $conf['updates_ignored'] = is_array($updates_ignored_raw) ? $updates_ignored_raw : [];
 
-include_once PHPWG_ROOT_PATH . 'admin/include/updates.class.php';
 // $page['page'] is always set to a validated string page slug by admin.php
 // before this file is included -- see the identical narrowing in admin.php.
 $page_slug = is_string($page['page'] ?? null) ? $page['page'] : 'updates';

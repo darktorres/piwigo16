@@ -9,11 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-if (! defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
-}
-
-include_once PHPWG_ROOT_PATH . 'include/functions.inc.php';
+namespace Piwigo\Admin;
 
 class updates
 {
@@ -69,8 +65,21 @@ class updates
         $this->default_plugins = ['AdminTools', 'TakeATour', 'language_switch', 'LocalFilesEditor'];
 
         foreach ($this->types as $type) {
-            include_once PHPWG_ROOT_PATH . 'admin/include/' . $type . '.class.php';
-            $this->{$type} = new $type();
+            // Assigns directly to each named property (rather than a single
+            // dynamic `$this->{$type} = match(...)`) so PHPStan can verify
+            // each match arm against its own property's real type instead of
+            // the union of all three -- $this->{$type} = match(...) would
+            // otherwise require every property to accept
+            // plugins|themes|languages.
+            match ($type) {
+                'plugins' => $this->plugins = new plugins(),
+                'themes' => $this->themes = new themes(),
+                // 'languages' is the only value that can still reach here:
+                // $type is already restricted to plugins/themes/languages by
+                // the literal array above (same pattern as
+                // ws_functions/pwg.extensions.php's identical match()).
+                default => $this->languages = new languages(),
+            };
         }
     }
 

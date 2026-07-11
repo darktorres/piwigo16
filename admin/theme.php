@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Admin\themes;
+
 if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
@@ -21,7 +23,6 @@ if (empty($_GET['theme']) || ! is_string($_GET['theme'])) {
 }
 $theme = $_GET['theme'];
 
-include_once PHPWG_ROOT_PATH . 'admin/include/themes.class.php';
 $themes = new themes();
 if (! in_array($theme, array_keys($themes->fs_themes))) {
     die('Invalid theme');

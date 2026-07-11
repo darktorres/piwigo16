@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Admin\languages;
+use Piwigo\Admin\updates;
 use Piwigo\Cache\PersistentFileCache;
 
 // right after the overwrite of previous version files by the unzip in the administration,
@@ -150,7 +152,6 @@ function print_time(mixed $message): void
 // +-----------------------------------------------------------------------+
 // |                             language                                  |
 // +-----------------------------------------------------------------------+
-include PHPWG_ROOT_PATH . 'admin/include/languages.class.php';
 $languages = new languages('utf-8');
 if (isset($_GET['language'])) {
     $language = is_string($_GET['language']) ? strip_tags($_GET['language']) : '';
@@ -246,8 +247,6 @@ while ((bool) ($row = pwg_db_fetch_assoc($result))) {
 }
 
 if ($has_remote_site) {
-    include_once PHPWG_ROOT_PATH . 'admin/include/updates.class.php';
-
     /** @var array<string, mixed> $page */
     $page['errors'] = [];
     $step = 3;
@@ -516,7 +515,6 @@ else {
         define('PWG_CHARSET', 'utf-8');
     }
 
-    include_once PHPWG_ROOT_PATH . 'admin/include/languages.class.php';
     $languages = new languages();
 
     $languages_options = [];

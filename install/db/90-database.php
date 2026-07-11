@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Admin\languages;
+
 if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
@@ -31,7 +33,6 @@ pwg_query($query);
 
 // Fill table
 include_once PHPWG_ROOT_PATH . 'include/constants.php';
-include_once PHPWG_ROOT_PATH . 'admin/include/languages.class.php';
 
 $languages = new languages(PWG_CHARSET);
 

@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Admin\languages;
+
 if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
@@ -24,8 +26,6 @@ global $conf, $page, $template;
 if (! (bool) $conf['enable_extensions_install']) {
     die('Piwigo extensions install/update system is disabled');
 }
-
-include_once PHPWG_ROOT_PATH . 'admin/include/languages.class.php';
 
 /**
  * Append a message to a $page message bucket (e.g. 'infos'/'errors'),

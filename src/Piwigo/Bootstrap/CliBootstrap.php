@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Bootstrap;
 
+use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\ShutdownHandler;
 use Symfony\Component\Console\Application;
@@ -22,6 +23,15 @@ use Symfony\Component\Console\Input\ArgvInput;
  * config/container.php needs zero new entries) rather than constructed
  * directly, so they can receive real service dependencies the same way
  * every other P7-P11 service does.
+ *
+ * P14 adds ConfigLoader::applyDefaults()/applyEnvOverrides() before
+ * Kernel::boot() -- a real gap found while testing migrations:migrate:
+ * config/container.php's Connection/EntityManagerInterface factories read
+ * Config::dbHost()/etc (static, P13), and until now nothing seeded
+ * Config::$data on the CLI path (P12's own commands read DB creds
+ * directly via DbCredentials::fromEnv(), never through Config, so this
+ * never surfaced before). Mirrors CommonBootstrap::run()'s equivalent
+ * P13 addition on the HTTP path exactly.
  */
 final class CliBootstrap
 {
@@ -43,6 +53,8 @@ final class CliBootstrap
      */
     public static function buildApplication(): Application
     {
+        ConfigLoader::applyDefaults();
+        ConfigLoader::applyEnvOverrides();
         Kernel::boot();
         $container = Kernel::container();
 

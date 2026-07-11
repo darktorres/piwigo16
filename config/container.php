@@ -2,10 +2,23 @@
 
 declare(strict_types=1);
 
+use Doctrine\DBAL\Connection;
+use Doctrine\Migrations\Configuration\EntityManager\ExistingEntityManager;
+use Doctrine\Migrations\Configuration\Migration\ConfigurationArray;
+use Doctrine\Migrations\DependencyFactory;
+use Doctrine\Migrations\Tools\Console\Command\MigrateCommand;
+use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Events;
+use Doctrine\ORM\ORMSetup;
 use Monolog\Formatter\JsonFormatter;
 use Monolog\Handler\RotatingFileHandler;
 use Monolog\Logger as MonologLogger;
 use Piwigo\Cache\CacheFactory;
+use Piwigo\Config\ConfigEntry;
+use Piwigo\Config\ConfigRepository;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\TablePrefixListener;
 use Piwigo\Routing\Router;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Container\ContainerInterface;
@@ -62,4 +75,85 @@ return [
 
         return new Psr16Cache($pool);
     }),
+
+    // Pure factory, no Kernel-awareness -- see DbConnection's own docblock
+    // for the server-session-mode deviation from the reference
+    // implementation's equivalent.
+    Connection::class => factory(static fn (): Connection => DbConnection::build()),
+
+    // ORMSetup::createAttributeMetadataConfig() (not the deprecated
+    // ...Configuration() variant -- PHP 8.4+ triggers a deprecation
+    // notice for that one, confirmed by reading the installed
+    // doctrine/orm source). enableNativeLazyObjects(true): PHP 8.4+
+    // lazy objects instead of generated proxy classes -- no proxyDir,
+    // nothing for cache:clear to purge. isDevMode: true -- no
+    // environment-detection mechanism exists yet to key this on
+    // (revisit once one does; only affects metadata/query/result cache
+    // behavior, not correctness). TablePrefixListener applies
+    // Config::dbPrefix() to every entity's bare table name at metadata
+    // load time (PHP attributes can't embed a runtime value directly).
+    EntityManagerInterface::class => factory(static function (Connection $conn): EntityManagerInterface {
+        $config = ORMSetup::createAttributeMetadataConfig(
+            paths: [dirname(__DIR__) . '/src/Piwigo'],
+            isDevMode: true,
+        );
+        $config->enableNativeLazyObjects(true);
+
+        $em = new EntityManager($conn, $config);
+        $em->getEventManager()
+            ->addEventListener(Events::loadClassMetadata, new TablePrefixListener());
+
+        return $em;
+    }),
+
+    // Not constructor-autowired -- EntityRepository's real constructor
+    // takes ClassMetadata, which PHP-DI can't autowire. Resolved the
+    // standard Doctrine way: EntityManager::getRepository() reads the
+    // #[ORM\Entity(repositoryClass: ...)] attribute and instantiates the
+    // custom repository class correctly.
+    ConfigRepository::class => factory(static function (EntityManagerInterface $em): ConfigRepository {
+        $repo = $em->getRepository(ConfigEntry::class);
+        if (! $repo instanceof ConfigRepository) {
+            throw new \LogicException('Container returned an unexpected type for ' . ConfigRepository::class);
+        }
+
+        return $repo;
+    }),
+
+    // Backs bin/piwigo's registered `migrations:migrate` command. Reusing
+    // Doctrine's own real, fully-featured
+    // Doctrine\Migrations\Tools\Console\Command\MigrateCommand (dry-run,
+    // rollback, interactive confirmation) beats re-implementing a thinner
+    // Piwigo\Command wrapper. config/migrations.php starts with an empty
+    // migrations_paths directory -- P15 adds the first real migration.
+    DependencyFactory::class => factory(static function (EntityManagerInterface $em): DependencyFactory {
+        $raw = require dirname(__DIR__) . '/config/migrations.php';
+        if (! is_array($raw)) {
+            throw new \RuntimeException('config/migrations.php must return an array.');
+        }
+
+        /** @var array<string, mixed> $migrationsConfig */
+        $migrationsConfig = [];
+        foreach ($raw as $key => $value) {
+            if (! is_string($key)) {
+                throw new \RuntimeException('config/migrations.php keys must be strings.');
+            }
+            $migrationsConfig[$key] = $value;
+        }
+
+        return DependencyFactory::fromEntityManager(
+            new ConfigurationArray($migrationsConfig),
+            new ExistingEntityManager($em),
+        );
+    }),
+
+    // MigrateCommand's constructor param is an OPTIONAL/nullable
+    // DependencyFactory -- verified empirically that PHP-DI's default
+    // reflection autowiring does NOT inject optional class-typed
+    // constructor params (confirmed via a throwaway script showing the
+    // property stayed null even with the DependencyFactory entry above
+    // already registered), so it needs this explicit factory entry.
+    MigrateCommand::class => factory(
+        static fn (DependencyFactory $df): MigrateCommand => new MigrateCommand($df),
+    ),
 ];

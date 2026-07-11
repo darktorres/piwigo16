@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Doctrine\Migrations\Tools\Console\Command\MigrateCommand;
 use Piwigo\Command\BackupCreateCommand;
 use Piwigo\Command\BackupRestoreCommand;
 use Piwigo\Command\CacheClearCommand;
@@ -12,7 +13,14 @@ use Piwigo\Command\UserListCommand;
 // gain real backing services -- same discipline as config/container.php
 // and config/routes.php. See docs/PLAN-REPLAY.md P12's scope-decision
 // section for what's deliberately not here yet (maintenance:*,
-// migration:run, schema:dump).
+// schema:dump -- needs P15's multi-provider migration content to be
+// meaningful).
+//
+// MigrateCommand (registered as `migrations:migrate`) is Doctrine's own
+// command, not a Piwigo\Command wrapper (P14) -- its constructor takes a
+// nullable DependencyFactory and is otherwise autowireable, and reusing
+// Doctrine's real, fully-featured command (dry-run, rollback, interactive
+// confirmation) beats re-implementing a thinner version.
 
 /**
  * @return list<class-string<\Symfony\Component\Console\Command\Command>>
@@ -22,4 +30,5 @@ return [
     BackupCreateCommand::class,
     BackupRestoreCommand::class,
     UserListCommand::class,
+    MigrateCommand::class,
 ];

@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 use Piwigo\Admin\Integrity\c13y_internal;
 use Piwigo\Admin\Integrity\check_integrity;
+use Piwigo\Admin\tabsheet;
 
 if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
@@ -53,8 +54,6 @@ if (isset($_GET['action']) and $_GET['action'] == 'hide_newsletter_subscription'
     userprefs_update_param('show_newsletter_subscription', 'false');
     exit();
 }
-
-include_once PHPWG_ROOT_PATH . 'admin/include/tabsheet.class.php';
 
 $my_base_url = get_root_url() . 'admin.php?page=';
 

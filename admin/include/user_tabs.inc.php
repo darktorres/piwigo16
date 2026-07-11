@@ -9,11 +9,11 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Admin\tabsheet;
+
 // Bootstrap global, set by include/common.inc.php.
 /** @var array<string, mixed> $page */
 global $page;
-
-include_once PHPWG_ROOT_PATH . 'admin/include/tabsheet.class.php';
 
 $my_base_url = get_root_url() . 'admin.php?page=';
 

@@ -955,24 +955,6 @@ parameters:
 			path: admin/include/photos_add_direct_prepare.inc.php
 
 		-
-			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
-			identifier: empty.notAllowed
-			count: 1
-			path: admin/include/tabsheet.class.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: admin/include/tabsheet.class.php
-
-		-
-			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
-			identifier: typeCoverage.propertyTypeCoverage
-			count: 3
-			path: admin/include/tabsheet.class.php
-
-		-
 			rawMessage: 'Call to function array_search() requires parameter #3 to be set.'
 			identifier: function.strict
 			count: 1
@@ -4661,6 +4643,24 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: src/Piwigo/Admin/plugins.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: src/Piwigo/Admin/tabsheet.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Admin/tabsheet.php
+
+		-
+			rawMessage: 'Out of 172 possible property types, only 80 - 46.5 %% actually have it. Add more property types to get over 99 %%'
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 3
+			path: src/Piwigo/Admin/tabsheet.php
 
 		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'

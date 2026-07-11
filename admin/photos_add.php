@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Admin\tabsheet;
+
 if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
@@ -22,7 +24,6 @@ global $template;
 global $page;
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-include_once PHPWG_ROOT_PATH . 'admin/include/tabsheet.class.php';
 include_once PHPWG_ROOT_PATH . 'admin/include/functions_upload.inc.php';
 
 define(

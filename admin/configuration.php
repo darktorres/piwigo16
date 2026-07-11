@@ -10,6 +10,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\Image\pwg_image;
+use Piwigo\Admin\tabsheet;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
 
@@ -45,7 +46,6 @@ if (! is_webmaster()) {
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 include_once PHPWG_ROOT_PATH . 'admin/include/functions_upload.inc.php';
-include_once PHPWG_ROOT_PATH . 'admin/include/tabsheet.class.php';
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |

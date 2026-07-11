@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Admin\tabsheet;
+
 // Bootstrap globals, set by include/common.inc.php.
 /**
  * @var array<string, mixed> $conf
@@ -27,7 +29,6 @@ if (! defined('PHPWG_ROOT_PATH')) {
 }
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-include_once PHPWG_ROOT_PATH . 'admin/include/tabsheet.class.php';
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |

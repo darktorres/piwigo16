@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Admin\tabsheet;
+
 if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
@@ -20,8 +22,6 @@ global $conf;
 if (! (bool) $conf['enable_extensions_install'] and ! (bool) $conf['enable_core_update']) {
     die('update system is disabled');
 }
-
-include_once PHPWG_ROOT_PATH . 'admin/include/tabsheet.class.php';
 
 $my_base_url = get_root_url() . 'admin.php?page=updates';
 

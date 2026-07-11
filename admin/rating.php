@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Admin\tabsheet;
 use Piwigo\Image\DerivativeImage;
 
 if (! defined('PHPWG_ROOT_PATH')) {
@@ -31,7 +32,6 @@ check_status(ACCESS_ADMINISTRATOR);
 
 check_input_parameter('display', $_GET, false, PATTERN_ID);
 
-include_once PHPWG_ROOT_PATH . 'admin/include/tabsheet.class.php';
 $tabsheet = new tabsheet();
 $tabsheet->set_id('rating');
 $tabsheet->select('rating');

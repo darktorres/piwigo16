@@ -9,7 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-include_once PHPWG_ROOT_PATH . 'admin/include/tabsheet.class.php';
+use Piwigo\Admin\tabsheet;
 
 /**
  * Init tabsheet for history pages

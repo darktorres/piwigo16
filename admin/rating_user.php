@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Admin\tabsheet;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 
@@ -20,7 +21,6 @@ global $conf;
 /** @var \Template $template */
 global $template;
 
-include_once PHPWG_ROOT_PATH . 'admin/include/tabsheet.class.php';
 $tabsheet = new tabsheet();
 $tabsheet->set_id('rating');
 $tabsheet->select('rating_user');

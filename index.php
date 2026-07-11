@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Bootstrap\CommonBootstrap;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Template\Template;
@@ -16,6 +17,12 @@ use Piwigo\Template\Template;
 // --------------------------------------------------------------------- include
 define('PHPWG_ROOT_PATH', './');
 include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
+
+// P7 boot skeleton: proves the new Kernel boots on every real request.
+// CommonBootstrap::run() is currently a no-op beyond that (see its
+// docblock) -- everything below this line is unchanged legacy behavior.
+CommonBootstrap::run();
+
 include PHPWG_ROOT_PATH . 'include/section_init.inc.php';
 
 // Bootstrap globals, set by include/common.inc.php.

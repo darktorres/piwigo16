@@ -106,3 +106,112 @@ test('every Piwigo\ class under src/Piwigo/ has #[\Override] on every overriding
 
     expect($violations)->toBe([]);
 });
+
+// P7: Kernel::container() is a service locator -- services must receive
+// dependencies via constructor injection instead. It exists only to let
+// Bootstrap/ and the root index.php reach into the container before
+// injection is possible. docs/PLAN-REPLAY.md: "Gate: arch test enforcing
+// this boundary from P7 onward, not deferred to P32."
+
+/**
+ * @return list<array{path: string, line: int}>
+ */
+function findCallSites(string $dir, string $needle): array
+{
+    $hits = [];
+    if (!is_dir($dir)) {
+        return $hits;
+    }
+    $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS));
+
+    foreach ($iterator as $file) {
+        /** @var SplFileInfo $file RecursiveIteratorIterator loses this over RecursiveDirectoryIterator */
+        if (! $file->isFile() || $file->getExtension() !== 'php') {
+            continue;
+        }
+
+        $lines = file($file->getPathname());
+        foreach ($lines !== false ? $lines : [] as $lineNumber => $line) {
+            if (str_contains($line, $needle)) {
+                $hits[] = ['path' => $file->getPathname(), 'line' => $lineNumber + 1];
+            }
+        }
+    }
+
+    return $hits;
+}
+
+/**
+ * @return list<array{path: string, line: int}>
+ */
+function findCallSitesInRootPhpFiles(string $root, string $needle): array
+{
+    $hits = [];
+    $paths = glob($root . '/*.php');
+    foreach ($paths !== false ? $paths : [] as $pathname) {
+        $lines = file($pathname);
+        foreach ($lines !== false ? $lines : [] as $lineNumber => $line) {
+            if (str_contains($line, $needle)) {
+                $hits[] = ['path' => $pathname, 'line' => $lineNumber + 1];
+            }
+        }
+    }
+
+    return $hits;
+}
+
+/**
+ * @param list<array{path: string, line: int}> $hits
+ * @return list<string>
+ */
+function describeCallSites(array $hits): array
+{
+    return array_map(static fn (array $hit): string => "{$hit['path']}:{$hit['line']}", $hits);
+}
+
+test('Kernel::container() is only called from src/Piwigo/Bootstrap/ and root index.php', function (): void {
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSites($repoRoot . '/src/Piwigo', 'Kernel::container('),
+        ...findCallSitesInRootPhpFiles($repoRoot, 'Kernel::container('),
+    ];
+
+    $disallowed = array_values(array_filter(
+        $hits,
+        static fn (array $hit): bool => ! str_contains($hit['path'], '/src/Piwigo/Bootstrap/')
+            && basename($hit['path']) !== 'index.php'
+    ));
+
+    expect(describeCallSites($disallowed))->toBe([]);
+});
+
+test('Kernel::reset() is only called from tests/', function (): void {
+    // reset() exists purely so tests can isolate Kernel's static state between
+    // cases; production code must never touch it (src/Piwigo/ and the root
+    // entry points are scanned -- tests/ itself is deliberately not scanned,
+    // since that's the one place calls are expected).
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSites($repoRoot . '/src/Piwigo', 'Kernel::reset('),
+        ...findCallSitesInRootPhpFiles($repoRoot, 'Kernel::reset('),
+    ];
+
+    expect(describeCallSites($hits))->toBe([]);
+});
+
+test('RequestFactory, ResponseEmitter, and CommonBootstrap declare no mutable state', function (): void {
+    // SEC-60 (worker-isolation, partial verification): these classes must stay
+    // pure so a future FrankenPHP worker loop can reuse them across requests
+    // without cross-request state bleed. Kernel's own static state is the
+    // sanctioned exception -- it's request-isolated via Kernel::reset(), which
+    // a worker loop will call between requests once that mode exists.
+    foreach ([
+        Piwigo\Http\RequestFactory::class,
+        Piwigo\Http\ResponseEmitter::class,
+        Piwigo\Bootstrap\CommonBootstrap::class,
+    ] as $fqcn) {
+        expect((new ReflectionClass($fqcn))->getProperties())->toBe([]);
+    }
+});

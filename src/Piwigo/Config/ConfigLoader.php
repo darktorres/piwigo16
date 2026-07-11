@@ -34,6 +34,8 @@ final class ConfigLoader
         'PIWIGO_DB_PASSWORD' => 'db_password',
         'PIWIGO_DB_BASE' => 'db_base',
         'PIWIGO_DB_PREFIX' => 'db_prefix',
+        'PIWIGO_DB_DRIVER' => 'db_driver',
+        'PIWIGO_DB_PORT' => 'db_port',
     ];
 
     /**

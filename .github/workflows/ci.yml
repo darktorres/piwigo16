@@ -384,7 +384,7 @@ jobs:
       - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
       - name: Provision piwigo_test from the committed fixture
         run: |
-          mysql -h127.0.0.1 -uroot -proot piwigo_test < tests/Fixtures/piwigo-16.x.sql
+          mysql -h127.0.0.1 -uroot -proot piwigo_test < tests/Fixtures/piwigo-17.0.sql
           until mysql -h127.0.0.1 -uroot -proot piwigo_test -e 'SELECT COUNT(*) FROM piwigo_images;' > /dev/null 2>&1; do sleep 0.5; done
       - name: Write .env.test
         run: |
@@ -399,6 +399,103 @@ jobs:
           ENVEOF
       - run: mkdir -p local && touch local/.installed.test
       - run: composer test:integration
+
+  # P15: Doctrine Migrations run for real against MySQL 9.7, MariaDB 12.x,
+  # and PostgreSQL 18 from a genuinely blank database (no committed fixture
+  # -- the DB-layer test files exercise ConfigRepository/EntityManager/
+  # SchemaParity against whatever the migrations themselves produce). This
+  # is additive to, not a replacement for, the `integration` job above: the
+  # bulk of Integration/Contract/Browser/Visual suites exercise legacy
+  # procedural code that isn't provider-portable yet (P17-23 domain
+  # migration work), so they stay MySQL-only -- and even the ORM-based
+  # Integration test files here only run on the mysql/mariadb legs, since
+  # IntegrationTestCase's resetDatabase()/loadFixture() are themselves
+  # hard-coded to mysqli (see the step-level comment below). schema:dump
+  # also writes install/schema/{provider}.sql for real here -- the final
+  # step diffs that against the committed copy, so a migration that drifts
+  # from the committed schema snapshot fails the build instead of shipping
+  # silently stale install artifacts.
+  db-multi-provider:
+    name: DB layer (${{ matrix.provider }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - provider: mysql
+            image: mysql:9.7
+            port: 3306
+            driver: mysqli
+            user: root
+          - provider: mariadb
+            image: mariadb:12
+            port: 3306
+            driver: mysqli
+            user: root
+          - provider: pgsql
+            image: postgres:18
+            port: 5432
+            driver: pgsql
+            user: postgres
+    services:
+      db:
+        image: ${{ matrix.image }}
+        env:
+          # mysql/mariadb read the MYSQL_* vars, postgres reads POSTGRES_*
+          # -- each image ignores the vars meant for the other, so a single
+          # combined env block covers all 3 matrix legs.
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: piwigo_test
+          POSTGRES_PASSWORD: root
+          POSTGRES_DB: piwigo_test
+        ports:
+          - ${{ matrix.port }}:${{ matrix.port }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: "8.5"
+          coverage: none
+          # pgsql (native driver, matching ADR-0021's mysqli-not-pdo_mysql
+          # precedent) added on top of the standard set -- unused but
+          # harmless on the mysql/mariadb legs.
+          extensions: ${{ env.PHP_EXTENSIONS }},pgsql
+      - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
+      - name: Wait for the database to accept connections
+        run: |
+          if [ "${{ matrix.provider }}" = "pgsql" ]; then
+            until PGPASSWORD=root pg_isready -h 127.0.0.1 -p ${{ matrix.port }} -U postgres > /dev/null 2>&1; do sleep 0.5; done
+          else
+            until mysqladmin ping -h127.0.0.1 -P${{ matrix.port }} -uroot -proot --silent > /dev/null 2>&1; do sleep 0.5; done
+          fi
+      - name: Write .env.test
+        run: |
+          cat > .env.test <<ENVEOF
+          PIWIGO_DB_HOST=127.0.0.1
+          PIWIGO_DB_PORT=${{ matrix.port }}
+          PIWIGO_DB_USER=${{ matrix.user }}
+          PIWIGO_DB_PASSWORD=root
+          PIWIGO_DB_BASE=piwigo_test
+          PIWIGO_DB_PREFIX=piwigo_
+          PIWIGO_DB_DRIVER=${{ matrix.driver }}
+          PIWIGO_BASE_URL=http://localhost:8080
+          ENVEOF
+      - run: mkdir -p local && touch local/.installed.test
+      - run: php bin/piwigo migrations:migrate --no-interaction
+      - run: vendor/bin/pest tests/Unit/Db tests/Unit/Config tests/Arch
+      # tests/Integration/IntegrationTestCase's resetDatabase()/loadFixture()
+      # are hard-coded to mysqli (newMysqli() + the `mysql` CLI client) --
+      # a real, structural PG incompatibility, not an oversight to route
+      # around here. Every other Integration test file inherits that same
+      # base class, so this run is genuinely mysql/mariadb-only; the
+      # explicit `schema:dump` CLI step below (not the SchemaDumpServiceTest
+      # PHPUnit test, same reason) is what proves PostgreSQL for real.
+      - if: matrix.provider != 'pgsql'
+        run: vendor/bin/pest tests/Integration/ConfigRepositoryTest.php tests/Integration/EntityManagerSmokeTest.php tests/Integration/SchemaParityTest.php
+      - run: php bin/piwigo schema:dump
+      - name: Verify install/schema/${{ matrix.provider }}.sql has no drift
+        run: git diff --exit-code -- install/schema/${{ matrix.provider }}.sql
 
   contract:
     name: Pest (WS contract)
@@ -425,7 +522,7 @@ jobs:
       - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
       - name: Provision piwigo_test from the committed fixture
         run: |
-          mysql -h127.0.0.1 -uroot -proot piwigo_test < tests/Fixtures/piwigo-16.x.sql
+          mysql -h127.0.0.1 -uroot -proot piwigo_test < tests/Fixtures/piwigo-17.0.sql
           until mysql -h127.0.0.1 -uroot -proot piwigo_test -e 'SELECT COUNT(*) FROM piwigo_images;' > /dev/null 2>&1; do sleep 0.5; done
       - name: Write .env.test
         run: |
@@ -488,7 +585,7 @@ jobs:
         run: bunx playwright install-deps chromium
       - name: Provision piwigo_test from the committed fixture
         run: |
-          mysql -h127.0.0.1 -uroot -proot piwigo_test < tests/Fixtures/piwigo-16.x.sql
+          mysql -h127.0.0.1 -uroot -proot piwigo_test < tests/Fixtures/piwigo-17.0.sql
           until mysql -h127.0.0.1 -uroot -proot piwigo_test -e 'SELECT COUNT(*) FROM piwigo_images;' > /dev/null 2>&1; do sleep 0.5; done
       - name: Write .env.test
         run: |
@@ -551,7 +648,7 @@ jobs:
         run: bunx playwright install-deps chromium
       - name: Provision piwigo_test from the committed fixture
         run: |
-          mysql -h127.0.0.1 -uroot -proot piwigo_test < tests/Fixtures/piwigo-16.x.sql
+          mysql -h127.0.0.1 -uroot -proot piwigo_test < tests/Fixtures/piwigo-17.0.sql
           until mysql -h127.0.0.1 -uroot -proot piwigo_test -e 'SELECT COUNT(*) FROM piwigo_images;' > /dev/null 2>&1; do sleep 0.5; done
       - name: Write .env.test
         run: |
@@ -606,7 +703,7 @@ jobs:
           PIWIGO_DB_BASE=piwigo_test
           PIWIGO_DB_PREFIX=piwigo_
           ENVEOF
-      # Restores tests/Fixtures/piwigo-16.x.sql into a scratch DB (never
+      # Restores tests/Fixtures/piwigo-17.0.sql into a scratch DB (never
       # piwigo_test itself) and asserts row counts + a join query — proves
       # the restore mechanism actually works on every run, not just that
       # tools/restore-drill.sh exists. See docs/RUNBOOK.md's Restore section.
@@ -644,7 +741,7 @@ jobs:
       - run: bun install --frozen-lockfile
       - name: Provision piwigo_test from the committed fixture
         run: |
-          mysql -h127.0.0.1 -uroot -proot piwigo_test < tests/Fixtures/piwigo-16.x.sql
+          mysql -h127.0.0.1 -uroot -proot piwigo_test < tests/Fixtures/piwigo-17.0.sql
           until mysql -h127.0.0.1 -uroot -proot piwigo_test -e 'SELECT COUNT(*) FROM piwigo_images;' > /dev/null 2>&1; do sleep 0.5; done
       - name: Write .env (non-test — lighthouserc.json hits the plain URL)
         run: |
@@ -744,7 +841,7 @@ jobs:
           until curl -s -o /dev/null http://localhost/; do sleep 0.5; done
       - name: Assert sensitive paths are denied
         run: |
-          for path in tools/index.php install/config.sql tests/Fixtures/piwigo-16.x.sql \
+          for path in tools/index.php install/config.sql tests/Fixtures/piwigo-17.0.sql \
               vendor/autoload.php node_modules/.bin/vite docs/PLAN-REPLAY.md deploy/helm/piwigo/values.yaml \
               composer.json composer.lock package.json bun.lock phpstan.neon psalm.xml rector.php ecs.php \
               knip.json lefthook.yml tsconfig.json .stylelintrc.json .prettierrc.json lighthouserc.json .size-limit.json \

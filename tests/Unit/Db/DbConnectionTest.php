@@ -54,3 +54,28 @@ test('params() treats a host starting with / as a unix socket path', function ()
     expect($params)->toHaveKey('unix_socket', '/var/run/mysqld/mysqld.sock')
         ->and($params)->not->toHaveKey('host');
 });
+
+test('params() switches to the native pgsql driver when db_driver is pgsql', function (): void {
+    Config::override('db_driver', 'pgsql');
+    Config::override('db_host', 'pg.example.test');
+    Config::override('db_user', 'piwigo_app');
+    Config::override('db_password', 'secret');
+    Config::override('db_base', 'piwigo_prod');
+
+    $params = DbConnection::params();
+
+    expect($params['driver'])->toBe('pgsql')
+        ->and($params)->toHaveKey('host', 'pg.example.test')
+        ->and($params)->not->toHaveKey('charset')
+        ->and($params)->not->toHaveKey('driverOptions')
+        ->and($params)->not->toHaveKey('unix_socket');
+});
+
+test('params() defaults to mysqli when db_driver is unset', function (): void {
+    Config::override('db_host', 'db.example.test');
+    Config::override('db_user', 'piwigo_app');
+    Config::override('db_password', 'secret');
+    Config::override('db_base', 'piwigo_prod');
+
+    expect(DbConnection::params()['driver'])->toBe('mysqli');
+});

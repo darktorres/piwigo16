@@ -34,7 +34,7 @@ composer test:visual                             # run separately — see docs/D
 `test:fixture-regen` is destructive to `piwigo_test` (never production) and only needs
 rerunning when the fixture itself must change. `test:integration`/`test:contract`/
 `test:browser`/`test:visual` don't need it re-run first — each reimports the committed
-`tests/Fixtures/piwigo-16.x.sql` dump itself before its tests start (`test:integration`
+`tests/Fixtures/piwigo-17.0.sql` dump itself before its tests start (`test:integration`
 via `DatabaseConnectionTest::setUp()`; `test:contract` via `ContractTestCase::setUp()`;
 `test:browser`/`test:visual` via `tools/reimport-fixture.sh`), so they're self-contained
 regardless of what a previous run left the DB looking like — even a fully dropped
@@ -45,7 +45,7 @@ regardless of what a previous run left the DB looking like — even a fully drop
 `.github/workflows/ci.yml` runs the full gate set above on every push/PR — see
 `docs/DEVELOPMENT.md`'s CI section for the job list and what's guarded vs. live today.
 Unlike local dev, CI provisions its own ephemeral `piwigo_test` per run (a `mysql:9.7`
-service container, fixture imported fresh via `mysql < tests/Fixtures/piwigo-16.x.sql`)
+service container, fixture imported fresh via `mysql < tests/Fixtures/piwigo-17.0.sql`)
 and serves the checkout via PHP's built-in server (`php -S`) rather than Apache — this
 app has no `.htaccess`/pretty-URL dependency yet, so this is a faithful, lower-setup
 substitute for the Integration/Contract/Browser/Visual suites. P4 adds two additional,
@@ -103,7 +103,7 @@ built to stay minimal. Real command-level proof instead comes from
 `tests/Integration/BackupServiceTest.php`, which round-trips
 `BackupService::create()`/`restore()` against `piwigo_test` into a scratch DB, reusing
 the exact row-count + join-query smoke assertions below. `restore-drill.sh` itself
-keeps restoring the tracked `tests/Fixtures/piwigo-16.x.sql` mysqldump directly (never
+keeps restoring the tracked `tests/Fixtures/piwigo-17.0.sql` mysqldump directly (never
 `piwigo_test`/production) as its own independent, lean proof:
 
 ```

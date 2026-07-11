@@ -24,16 +24,20 @@ final readonly class DbCredentials
         public string $password,
         public string $database,
         public string $prefix,
+        public ?int $port = null,
     ) {}
 
     public static function fromEnv(): self
     {
+        $portEnv = getenv('PIWIGO_DB_PORT');
+
         return new self(
             host: self::env('PIWIGO_DB_HOST', 'localhost'),
             user: self::env('PIWIGO_DB_USER', 'root'),
             password: self::env('PIWIGO_DB_PASSWORD', ''),
             database: self::env('PIWIGO_DB_BASE', 'piwigo'),
             prefix: self::env('PIWIGO_DB_PREFIX', 'piwigo_'),
+            port: $portEnv !== false && $portEnv !== '' && is_numeric($portEnv) ? (int) $portEnv : null,
         );
     }
 
@@ -43,6 +47,9 @@ final readonly class DbCredentials
     public function toMysqlArgs(): array
     {
         $args = ['-h' . $this->host, '-u' . $this->user];
+        if ($this->port !== null) {
+            $args[] = '-P' . $this->port;
+        }
         if ($this->password !== '') {
             $args[] = '-p' . $this->password;
         }

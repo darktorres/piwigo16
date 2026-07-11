@@ -34,18 +34,45 @@ final class DbConnection
     }
 
     /**
-     * Split from build() so the host-vs-unix-socket branching is testable
-     * as a plain array without touching a getter Doctrine\DBAL\Connection
+     * Split from build() so the driver/host branching is testable as a
+     * plain array without touching a getter Doctrine\DBAL\Connection
      * itself marks as implementation-detail-only. The precise shape (not
      * a generic array<string,mixed>) is what lets PHPStan verify it
      * against DriverManager::getConnection()'s own sealed parameter shape
      * at the build() call site.
      *
-     * @return array{driver: 'mysqli', user: string, password: string, dbname: string, charset: string, driverOptions: array<int, bool>, host?: string, unix_socket?: string}
+     * Native drivers only (mysqli, pgsql) -- not pdo_mysql/pdo_pgsql,
+     * matching ADR-0021's native-platform-first policy and the precedent
+     * already set by mysqli. MariaDB speaks the same wire protocol as
+     * MySQL, so it shares the mysqli branch; there is no separate
+     * 'mariadb' driver value.
+     *
+     * @return array{driver: 'mysqli', user: string, password: string, dbname: string, charset: string, driverOptions: array<int, bool>, host?: string, unix_socket?: string, port?: int}
+     *       | array{driver: 'pgsql', user: string, password: string, dbname: string, host: string, port?: int}
      */
     public static function params(): array
     {
         $host = Config::dbHost();
+        $port = Config::dbPort();
+
+        if (Config::dbDriver() === 'pgsql') {
+            // pg_connect() accepts a Unix socket directory directly via
+            // 'host' (unlike mysqli, PostgreSQL has no separate
+            // unix_socket param) -- no branching needed here.
+            $params = [
+                'driver' => 'pgsql',
+                'user' => Config::dbUser(),
+                'password' => Config::dbPassword(),
+                'dbname' => Config::dbName(),
+                'host' => $host,
+            ];
+            if ($port !== null) {
+                $params['port'] = $port;
+            }
+
+            return $params;
+        }
+
         $params = [
             'driver' => 'mysqli',
             'user' => Config::dbUser(),
@@ -66,6 +93,9 @@ final class DbConnection
             $params['unix_socket'] = $host;
         } else {
             $params['host'] = $host;
+        }
+        if ($port !== null) {
+            $params['port'] = $port;
         }
 
         return $params;

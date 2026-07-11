@@ -59,7 +59,7 @@ final class Config
      * SCHEMA entry lacks its accessor or any public static accessor lacks
      * its SCHEMA entry.
      *
-     * PHPStan can't shape-infer a 277-entry literal precisely enough to
+     * PHPStan can't shape-infer a literal this large precisely enough to
      * satisfy a sealed array{...} shape at classConstant.value -- kept as
      * a generic array<string, mixed> per-entry type instead; individual
      * accessors still narrow via is_*() guards against the actual value.
@@ -371,6 +371,12 @@ final class Config
             'required' => true,
             'description' => 'MySQL/MariaDB database name.',
         ],
+        'db_driver' => [
+            'type' => 'string',
+            'default' => 'mysqli',
+            'method' => 'dbDriver',
+            'description' => "DBAL driver: 'mysqli' (MySQL/MariaDB) or 'pgsql' (PostgreSQL). Native drivers only, matching ADR-0021's native-platform-first policy -- not pdo_mysql/pdo_pgsql.",
+        ],
         'db_host' => [
             'type' => 'string',
             'default' => 'localhost',
@@ -384,6 +390,14 @@ final class Config
             'method' => 'dbPassword',
             'sensitive' => true,
             'description' => 'MySQL/MariaDB password for the database user.',
+        ],
+        'db_port' => [
+            'type' => 'int',
+            'default' => null,
+            'nullable' => true,
+            'method' => 'dbPort',
+            'custom' => true,
+            'description' => "Database server port. Null uses the driver's own default (3306 for mysqli, 5432 for pgsql). Previously read from PIWIGO_DB_PORT but silently unused until P15's multi-provider work needed it for real.",
         ],
         'db_prefix' => [
             'type' => 'string',
@@ -2086,6 +2100,11 @@ final class Config
         return self::getString('db_base', '');
     }
 
+    public static function dbDriver(): string
+    {
+        return self::getString('db_driver', 'mysqli');
+    }
+
     public static function dbHost(): string
     {
         return self::getString('db_host', 'localhost');
@@ -3115,6 +3134,12 @@ final class Config
     // <<<CONFIG-ACCESSORS-END>>>
 
     // ---- Custom accessors (hand-written) --------------------------------
+
+    public static function dbPort(): ?int
+    {
+        $v = self::src()['db_port'] ?? null;
+        return is_numeric($v) ? (int) $v : null;
+    }
 
     /**
      * @return array<string>

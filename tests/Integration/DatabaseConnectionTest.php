@@ -23,7 +23,7 @@ final class DatabaseConnectionTest extends IntegrationTestCase
 
         if (!self::$fixtureReady) {
             $this->resetDatabase();
-            $this->loadFixture(dirname(__DIR__, 2) . '/tests/Fixtures/piwigo-16.x.sql');
+            $this->loadFixture(dirname(__DIR__, 2) . '/tests/Fixtures/piwigo-17.0.sql');
             self::$fixtureReady = true;
         }
     }

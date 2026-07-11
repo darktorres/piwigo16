@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Reimports the committed tests/Fixtures/piwigo-16.x.sql into the local test DB
+# Reimports the committed tests/Fixtures/piwigo-17.0.sql into the local test DB
 # and waits for it to settle before returning. Used as a preceding step for
 # composer test:browser/test:visual so those suites are self-contained and
 # never depend on whatever state a previous manual run happened to leave the
@@ -22,7 +22,7 @@ if [ -n "${PIWIGO_DB_PASSWORD:-}" ]; then
   mysql_args+=(-p"${PIWIGO_DB_PASSWORD}")
 fi
 
-mysql "${mysql_args[@]}" "${PIWIGO_DB_BASE}" < tests/Fixtures/piwigo-16.x.sql
+mysql "${mysql_args[@]}" "${PIWIGO_DB_BASE}" < tests/Fixtures/piwigo-17.0.sql
 
 until mysql "${mysql_args[@]}" "${PIWIGO_DB_BASE}" -e "SELECT COUNT(*) FROM ${PIWIGO_DB_PREFIX}images;" > /dev/null 2>&1; do
   sleep 0.5

@@ -3,7 +3,7 @@
 # Placeholder restore drill (docs/PLAN-REPLAY.md P4). "Restore drills" per
 # the plan means restoring a real backup — but the actual backup/restore CLI
 # is P12, three phases away, and doesn't exist yet. This proves the honest
-# subset available today: restoring the tracked tests/Fixtures/piwigo-16.x.sql
+# subset available today: restoring the tracked tests/Fixtures/piwigo-17.0.sql
 # mysqldump into a scratch DB, then asserting row counts + a schema smoke
 # query, so the drill mechanism and assertions are proven correct now.
 # Rewire onto the real `bin/piwigo backup:restore` once P12 lands — see
@@ -32,7 +32,7 @@ cleanup() {
 trap cleanup EXIT
 
 mysql "${mysql_args[@]}" -e "DROP DATABASE IF EXISTS \`${SCRATCH_DB}\`; CREATE DATABASE \`${SCRATCH_DB}\`;"
-mysql "${mysql_args[@]}" "${SCRATCH_DB}" < tests/Fixtures/piwigo-16.x.sql
+mysql "${mysql_args[@]}" "${SCRATCH_DB}" < tests/Fixtures/piwigo-17.0.sql
 
 image_count=$(mysql "${mysql_args[@]}" "${SCRATCH_DB}" -N -e "SELECT COUNT(*) FROM ${PIWIGO_DB_PREFIX}images;")
 user_count=$(mysql "${mysql_args[@]}" "${SCRATCH_DB}" -N -e "SELECT COUNT(*) FROM ${PIWIGO_DB_PREFIX}users;")

@@ -145,7 +145,7 @@ package is the entirety of this phase's scope for it.
 | `composer test:contract`      | Pest `Contract` — WS API contract tests against the committed fixture |
 | `composer test:browser`       | Pest `Browser` — E2E flows via `pest-plugin-browser` (Chromium)       |
 | `composer test:visual`        | Visual regression only — **run in isolation**, see below              |
-| `composer test:fixture-regen` | Rebuilds `tests/Fixtures/piwigo-16.x.sql` from a fresh install + seed |
+| `composer test:fixture-regen` | Rebuilds `tests/Fixtures/piwigo-17.0.sql` from a fresh install + seed |
 
 ### Env split (P2)
 
@@ -168,7 +168,7 @@ few other not-yet-migrated scripts keep working (P13 unifies config loading prop
 
 ### Fixture
 
-`tests/Fixtures/piwigo-16.x.sql` is a committed dump — a fresh install (`fixture_admin`/
+`tests/Fixtures/piwigo-17.0.sql` is a committed dump — a fresh install (`fixture_admin`/
 `fixture_admin`) plus seed content (2 albums, 5 photos, 3 tags, 5 comments, 3 groups, 2
 extra users, ratings/favorites/a permalink/some config tweaks). Contract and most Browser
 tests load this same file rather than reseeding per run.
@@ -278,7 +278,7 @@ corrupting it for every real client, not just this test. Fixed at the source
 **`composer test:integration`/`test:contract`/`test:browser`/`test:visual` all
 self-provision a pristine DB before running now** — none of them depend on run order or
 on `test:fixture-regen` having been run first. `test:browser`/`test:visual` reimport
-`tests/Fixtures/piwigo-16.x.sql` themselves via `tools/reimport-fixture.sh` (prepended
+`tests/Fixtures/piwigo-17.0.sql` themselves via `tools/reimport-fixture.sh` (prepended
 as a first `composer.json` step); `test:contract` (`ContractTestCase::setUp()`) and
 `test:integration` (`DatabaseConnectionTest::setUp()`, mirroring the same
 static-flag-guarded `resetDatabase()`+`loadFixture()` pattern) do it in PHP directly,

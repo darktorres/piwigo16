@@ -2,7 +2,11 @@
 
 declare(strict_types=1);
 
+use Monolog\Formatter\JsonFormatter;
+use Monolog\Handler\RotatingFileHandler;
+use Monolog\Logger as MonologLogger;
 use Piwigo\Routing\Router;
+use Psr\Log\LoggerInterface;
 use function DI\factory;
 
 // DI\autowire() is the default -- a service with only typed class-reference
@@ -23,4 +27,14 @@ return [
     // Unresolvable string param (the routes file path) -- Router::fromFile()
     // needs a path autowire can't provide.
     Router::class => factory(static fn (): Router => Router::fromFile(dirname(__DIR__) . '/config/routes.php')),
+
+    // Non-obvious construction (handler + formatter wiring). Monolog "app"
+    // channel only -- the "security" channel (a named $securityLogger
+    // parameter) is deferred until a real consumer exists (P11/P16/P28).
+    LoggerInterface::class => factory(static function (): LoggerInterface {
+        $handler = new RotatingFileHandler(dirname(__DIR__) . '/_data/logs/piwigo.log', 30);
+        $handler->setFormatter(new JsonFormatter());
+
+        return new MonologLogger('app', [$handler]);
+    }),
 ];

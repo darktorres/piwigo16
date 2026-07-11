@@ -42,7 +42,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libicu-dev libzip-dev libwebp-dev libjpeg62-turbo-dev libpng-dev \
         libxml2-dev libmagickwand-dev \
     && docker-php-ext-configure gd --with-jpeg --with-webp \
-    && docker-php-ext-install -j"$(nproc)" calendar gd intl mysqli zip \
+    && docker-php-ext-install -j"$(nproc)" calendar gd intl mysqli pcntl zip \
     && pecl install imagick redis apcu \
     && docker-php-ext-enable imagick redis apcu \
     # No --auto-remove: that would cascade into removing the runtime shared
@@ -104,7 +104,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libicu-dev libzip-dev libwebp-dev libjpeg62-turbo-dev libpng-dev \
         libxml2-dev libmagickwand-dev \
     && docker-php-ext-configure gd --with-jpeg --with-webp \
-    && docker-php-ext-install -j"$(nproc)" calendar gd intl mysqli zip \
+    && docker-php-ext-install -j"$(nproc)" calendar gd intl mysqli pcntl zip \
     && pecl install imagick redis apcu \
     && docker-php-ext-enable imagick redis apcu \
     && a2enmod rewrite headers \

@@ -10,11 +10,13 @@ deptrac:
         - type: classLike
           value: ^Piwigo\\(Common|Event|Exception)\\.*
     # L1 Infrastructure — Cache/Session land here in P6; Config/Core/Db etc.
-    # are later-phase additions, enumerated ahead of time.
+    # are later-phase additions, enumerated ahead of time. Db lands in P12
+    # (Piwigo\Db\DbCredentials); Backup lands in P12 too (Piwigo\Backup\
+    # BackupService) — infrastructure-adjacent, no domain-layer dependency.
     - name: L1Infrastructure
       collectors:
         - type: classLike
-          value: ^Piwigo\\(Config|Core|Db|Cache|Session)\\.*
+          value: ^Piwigo\\(Config|Core|Db|Cache|Session|Backup)\\.*
     # L2a Core Domain — Auth/Image land here in P6; Users/Permission/Category/
     # Tag are later-phase additions.
     - name: L2aCoreDomain
@@ -41,11 +43,12 @@ deptrac:
           value: ^Piwigo\\(Html|Http|Menu|Page|Template|Asset|Listener|Routing)\\.*
     # L4 Integration — Admin (incl. Admin\Image, Admin\Integrity) and Ws
     # (incl. Ws\Encoder, Ws\Protocol) land here in P6; Bootstrap/Controller/
-    # Job are later-phase additions.
+    # Job are later-phase additions. Command lands in P12 (bin/piwigo's
+    # Symfony Console commands) — same edge-of-the-app shape as Controller.
     - name: L4Integration
       collectors:
         - type: classLike
-          value: ^Piwigo\\(Admin|Bootstrap|Controller|Job|Ws)\\.*
+          value: ^Piwigo\\(Admin|Bootstrap|Command|Controller|Job|Ws)\\.*
   ruleset:
     # Each layer may depend only on layers below it — standard layered
     # architecture. Violations are recorded as a baseline (P6 wrap-up) and

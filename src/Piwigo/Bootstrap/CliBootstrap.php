@@ -1,0 +1,74 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Piwigo\Bootstrap;
+
+use Piwigo\Core\Kernel;
+use Piwigo\Core\ShutdownHandler;
+use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\ArgvInput;
+
+/**
+ * P12 CLI entry orchestrator -- the bin/piwigo counterpart to
+ * CommonBootstrap::run() for the HTTP path. Kept in Bootstrap/ (not
+ * bin/piwigo itself) so Kernel::container() access stays inside the
+ * existing arch-test-allowed boundary rather than widening it; bin/piwigo
+ * stays a thin delegator, mirroring index.php's own minimalism.
+ *
+ * Commands are resolved via the DI container (autowired -- every command
+ * class this phase adds has only class-typed constructor params, so
+ * config/container.php needs zero new entries) rather than constructed
+ * directly, so they can receive real service dependencies the same way
+ * every other P7-P11 service does.
+ */
+final class CliBootstrap
+{
+    /**
+     * @param list<string> $argv
+     */
+    public static function run(array $argv): int
+    {
+        ShutdownHandler::install();
+
+        return self::buildApplication()->run(new ArgvInput($argv));
+    }
+
+    /**
+     * Split out from run() so tests can inspect the registered command set
+     * (tests/Unit/Bootstrap/CliBootstrapTest.php) without actually running
+     * one -- ContainerDefinitionsTest.php's "every entry resolves" shape,
+     * applied to config/commands.php instead of config/container.php.
+     */
+    public static function buildApplication(): Application
+    {
+        Kernel::boot();
+        $container = Kernel::container();
+
+        $commandClasses = require dirname(__DIR__, 3) . '/config/commands.php';
+        if (! is_array($commandClasses)) {
+            throw new \RuntimeException('config/commands.php must return an array of Command class-strings.');
+        }
+
+        $application = new Application('piwigo');
+        $application->setAutoExit(false);
+
+        foreach ($commandClasses as $commandClass) {
+            if (! is_string($commandClass)) {
+                throw new \RuntimeException('config/commands.php entries must be class-strings.');
+            }
+
+            $command = $container->get($commandClass);
+            if (! $command instanceof Command) {
+                throw new \LogicException(
+                    "config/commands.php entry {$commandClass} did not resolve to a Symfony Console Command."
+                );
+            }
+
+            $application->addCommand($command);
+        }
+
+        return $application;
+    }
+}

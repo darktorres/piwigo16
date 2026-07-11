@@ -1,0 +1,78 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Piwigo\Command;
+
+use Piwigo\Db\DbCredentials;
+use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Helper\Table;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Process\Process;
+
+/**
+ * New CLI-only capability (no web equivalent). Reads via a raw `mysql`
+ * client shell-out (env-var credentials, Piwigo\Db\DbCredentials) rather
+ * than the legacy include/common.inc.php bootstrap chain or a Users domain
+ * service -- neither is available to CLI code yet (see
+ * docs/PLAN-REPLAY.md P12's scope-decision section). A stopgap expected to
+ * be replaced once Doctrine DBAL (P14) or a real Users domain service
+ * (P16+) lands.
+ */
+#[AsCommand(name: 'user:list', description: 'List registered users (id, username, email, status, registered)')]
+final class UserListCommand extends Command
+{
+    #[\Override]
+    protected function execute(InputInterface $input, OutputInterface $output): int
+    {
+        $credentials = DbCredentials::fromEnv();
+
+        $query = sprintf(
+            'SELECT u.id, u.username, u.mail_address, i.status, i.registration_date '
+            . 'FROM %1$susers u LEFT JOIN %1$suser_infos i ON i.user_id = u.id ORDER BY u.id',
+            $credentials->prefix
+        );
+
+        $process = new Process([
+            'mysql',
+            ...$credentials->toMysqlArgs(),
+            '--batch',
+            '--raw',
+            '-N',
+            $credentials->database,
+            '-e',
+            $query,
+        ]);
+        $process->setTimeout(60);
+        $process->run();
+
+        if (! $process->isSuccessful()) {
+            $output->writeln('<error>Query failed: ' . $process->getErrorOutput() . '</error>');
+
+            return Command::FAILURE;
+        }
+
+        $rows = [];
+        foreach (explode("\n", trim($process->getOutput())) as $line) {
+            if ($line === '') {
+                continue;
+            }
+            $rows[] = explode("\t", $line);
+        }
+
+        if ($rows === []) {
+            $output->writeln('No users found.');
+
+            return Command::SUCCESS;
+        }
+
+        $table = new Table($output);
+        $table->setHeaders(['ID', 'Username', 'Email', 'Status', 'Registered']);
+        $table->setRows($rows);
+        $table->render();
+
+        return Command::SUCCESS;
+    }
+}

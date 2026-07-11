@@ -456,3 +456,42 @@ opcache.preload_user=www-data
 
 CI and local dev run without preload — tests need fresh class resolution per run, and the
 doc's own text is explicit that preload is a production-only optimization.
+
+## CLI (`bin/piwigo`) and graceful shutdown (P12)
+
+`bin/piwigo` is a thin script (mirrors `index.php`'s own minimalism) that delegates to
+`Piwigo\Bootstrap\CliBootstrap`, which boots the DI container and resolves each command
+in `config/commands.php` (autowired — no `config/container.php` entries needed). Run
+`bin/piwigo list` to see every registered command.
+
+**Real commands this phase:**
+
+| Command | What it does |
+| --- | --- |
+| `cache:clear` | Purges the Latte compiled-template cache (`_data/templates_c/latte/`) and the `CacheFactory` PSR-6 pool. Does **not** touch the legacy Smarty compiled-template files or `_data/cache/*.cache` PersistentCache files — see the class docblock. |
+| `backup:create` | Dumps the DB (`mysqldump`) + `galleries/` (+ `local/config/config.inc.php` if present) into a timestamped `.tar.gz` in `_data/backups/`. |
+| `backup:restore <file> --force [--database=NAME]` | Restores an archive from `backup:create`. `--force` is required (destructive: drops/recreates the target database). |
+| `user:list` | New CLI-only capability — lists users via a raw `mysql` query. |
+
+**Deliberately not built this phase** (see `docs/PLAN-REPLAY.md` P12's scope-decision
+section for the full reasoning): `maintenance:orphan-tags`/`repair-db`/`purge-history`/
+`purge-sessions` (the web-UI equivalents all exist in `admin/maintenance_actions.php`,
+but every one calls `pwg_query()`, which needs the full legacy `include/common.inc.php`
+bootstrap chain — untested under CLI SAPI in this codebase); `migration:run`/
+`schema:dump` (need Doctrine Migrations, P14).
+
+Every DB-touching command reads credentials via `Piwigo\Db\DbCredentials::fromEnv()`
+(the same `PIWIGO_DB_*` vars `.env`/`.env.test` already provide) and shells out to
+`mysqldump`/`mysql`/`tar` via `symfony/process` (array-form, no shell interpolation) —
+the same CLI-safe mechanism `tools/restore-drill.sh`/`tools/reimport-fixture.sh` already
+use, not the legacy bootstrap chain.
+
+**Graceful shutdown** — `Piwigo\Core\ShutdownHandler` wires `SIGTERM` (via `ext-pcntl`,
+now a hard `composer.json` requirement and built into both Dockerfile stages) to run
+registered cleanup callbacks before exiting. `BackupService::create()`/`restore()`
+register their temp-directory cleanup so a `docker stop`/container-restart mid-backup
+doesn't leave partial state behind. No-ops entirely if `ext-pcntl` isn't loaded. Scoped
+to `bin/piwigo`'s own process only — Messenger-worker and FrankenPHP/Apache
+`STOPSIGNAL` graceful shutdown are **not** implemented: Messenger doesn't exist
+(deferred whole in P11) and FrankenPHP worker mode isn't live (`docker/Caddyfile` uses
+plain `php_server`, no `worker` block) — nothing to gracefully drain yet.

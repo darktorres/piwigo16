@@ -165,6 +165,34 @@ function findCallSitesInRootPhpFiles(string $root, string $needle): array
 }
 
 /**
+ * P12: bin/piwigo has no .php extension, so it's invisible to
+ * findCallSitesInRootPhpFiles()'s glob('*.php'). Scans bin/* explicitly so
+ * a future second bin/ script can't bypass the same locator boundary rules
+ * root index.php and src/Piwigo/ are already held to.
+ *
+ * @return list<array{path: string, line: int}>
+ */
+function findCallSitesInBinFiles(string $root, string $needle): array
+{
+    $hits = [];
+    $paths = glob($root . '/bin/*');
+    foreach ($paths !== false ? $paths : [] as $pathname) {
+        if (! is_file($pathname)) {
+            continue;
+        }
+
+        $lines = file($pathname);
+        foreach ($lines !== false ? $lines : [] as $lineNumber => $line) {
+            if (str_contains($line, $needle)) {
+                $hits[] = ['path' => $pathname, 'line' => $lineNumber + 1];
+            }
+        }
+    }
+
+    return $hits;
+}
+
+/**
  * @param list<array{path: string, line: int}> $hits
  * @return list<string>
  */
@@ -179,6 +207,7 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/ and root ind
     $hits = [
         ...findCallSites($repoRoot . '/src/Piwigo', 'Kernel::container('),
         ...findCallSitesInRootPhpFiles($repoRoot, 'Kernel::container('),
+        ...findCallSitesInBinFiles($repoRoot, 'Kernel::container('),
     ];
 
     $disallowed = array_values(array_filter(
@@ -201,6 +230,7 @@ test('Container::build() is only called from src/Piwigo/Core/Kernel.php', functi
     $hits = [
         ...findCallSites($repoRoot . '/src/Piwigo', 'Container::build('),
         ...findCallSitesInRootPhpFiles($repoRoot, 'Container::build('),
+        ...findCallSitesInBinFiles($repoRoot, 'Container::build('),
     ];
 
     $disallowed = array_values(array_filter(
@@ -221,6 +251,21 @@ test('Kernel::reset() is only called from tests/', function (): void {
     $hits = [
         ...findCallSites($repoRoot . '/src/Piwigo', 'Kernel::reset('),
         ...findCallSitesInRootPhpFiles($repoRoot, 'Kernel::reset('),
+        ...findCallSitesInBinFiles($repoRoot, 'Kernel::reset('),
+    ];
+
+    expect(describeCallSites($hits))->toBe([]);
+});
+
+test('ShutdownHandler::reset() is only called from tests/', function (): void {
+    // Mirrors the Kernel::reset() rule above -- reset() exists purely for
+    // test isolation between cases; production code must never touch it.
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSites($repoRoot . '/src/Piwigo', 'ShutdownHandler::reset('),
+        ...findCallSitesInRootPhpFiles($repoRoot, 'ShutdownHandler::reset('),
+        ...findCallSitesInBinFiles($repoRoot, 'ShutdownHandler::reset('),
     ];
 
     expect(describeCallSites($hits))->toBe([]);

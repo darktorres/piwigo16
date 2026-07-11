@@ -80,28 +80,41 @@ default branch, `16.x-rewrite`, is an unrelated earlier rewrite lineage).
 5. **Post-incident**: rotate every secret the incident could have exposed (see Secret
    rotation below) even if exposure is only suspected, not confirmed.
 
-## Restore (placeholder — see P12)
+## Restore (real CLI landed in P12)
 
-The real backup/restore CLI is `bin/piwigo backup:*`, landing in P12 (three phases after
-this one) — it doesn't exist yet. `tools/restore-drill.sh` proves the honest subset
-available today: it restores the tracked `tests/Fixtures/piwigo-16.x.sql` mysqldump into
-a scratch DB (never `piwigo_test`/production) and asserts row counts + a schema smoke
-query, so the drill mechanism and assertions are already correct by the time P12 lands a
-real backup artifact to point them at. Runs on every CI build (`.github/workflows/ci.yml`'s
-`restore-drill` job) — not just a documented manual command — so a schema change that
-breaks the restore path fails CI immediately instead of being discovered during a real
-incident. Also runnable locally with `.env.test` sourced, same convention as
-`tools/reimport-fixture.sh` (which `just db-fixture` wraps — this is a separate script,
-touching its own scratch DB, never `piwigo_test`):
+`bin/piwigo backup:create` / `bin/piwigo backup:restore <file> --force` are real —
+`mysqldump`/`mysql`/`tar` shelled out via `PIWIGO_DB_*` env vars (`Piwigo\Db\
+DbCredentials`), same CLI-safe mechanism `tools/restore-drill.sh`/`tools/
+reimport-fixture.sh` already used. `backup:create` writes a timestamped `.tar.gz`
+(db dump + `galleries/` + `local/config/config.inc.php` if present) to
+`_data/backups/`; `backup:restore` validates the archive's `manifest.json`, restores
+the DB into `--database` (defaults to `PIWIGO_DB_BASE`), and restores `galleries/`.
+`--force` is required — it drops/recreates the target database. Neither "stops the
+app" nor "runs pending migrations": no live traffic is routed through the new request
+pipeline yet (nothing to stop), and Doctrine Migrations don't exist until P14 (nothing
+to run).
+
+`tools/restore-drill.sh` was written back in P4 anticipating a rewire onto these
+commands once P12 landed — deliberately **not done**. That CI job
+(`.github/workflows/ci.yml`'s `restore-drill` job) is intentionally PHP-dependency-free
+(checkout + write `.env.test` + bash script, no `composer install` step, ~10s);
+rewiring it onto `bin/piwigo` would mean adding a full PHP/composer setup to a job
+built to stay minimal. Real command-level proof instead comes from
+`tests/Integration/BackupServiceTest.php`, which round-trips
+`BackupService::create()`/`restore()` against `piwigo_test` into a scratch DB, reusing
+the exact row-count + join-query smoke assertions below. `restore-drill.sh` itself
+keeps restoring the tracked `tests/Fixtures/piwigo-16.x.sql` mysqldump directly (never
+`piwigo_test`/production) as its own independent, lean proof:
 
 ```
 bash tools/restore-drill.sh
 ```
 
-For an actual production restore today (pre-P12): restore the most recent
-`mysqldump`/snapshot of the production database into a scratch database first, run the
-same two smoke assertions `restore-drill.sh` does (row counts on a couple of core
-tables, one join query) against it, and only then point the real deployment at it. Never
+For an actual production restore: prefer `bin/piwigo backup:restore <file> --force
+--database=<scratch>` into a scratch database first, run the same two smoke assertions
+`restore-drill.sh` does (row counts on a couple of core tables, one join query)
+against it, and only then point the real deployment at it (or re-run
+`backup:restore` against the real target once the scratch dry run passes). Never
 restore directly onto a live production database without a scratch-DB dry run first.
 
 ## Secret rotation
@@ -122,8 +135,9 @@ restore directly onto a live production database without a scratch-DB dry run fi
 
 RPO/RTO target: the `_data`/`local`/`galleries`/`upload` volumes and the production
 database are the only stateful assets (the container image itself is rebuildable from
-this repo at any commit) — back up the database on the same schedule production
-backup/restore tooling defines (P12) and replicate `galleries`/`upload` (original
-photos, the least replaceable asset) to offsite storage at least daily. Full recovery is:
-rebuild/pull the image at the last known-good tag, restore the database (Restore
-section above), restore the volumes from their offsite copy, redeploy.
+this repo at any commit) — run `bin/piwigo backup:create` (P12) on the same schedule
+and replicate `galleries/` (original photos — the least replaceable asset; `upload/`
+is transient incoming-upload staging, not durable storage, per the Dockerfile's own
+volume comment) to offsite storage at least daily. Full recovery is: rebuild/pull the
+image at the last known-good tag, restore the database (Restore section above),
+restore the volumes from their offsite copy, redeploy.

@@ -65,7 +65,7 @@ coverage:
 typecheck:
     bun run typecheck
 
-# PHPBench (0 subjects until P12 adds tests/Bench/*.php)
+# PHPBench (first real subject, KernelBootBench, landed in P11)
 bench:
     composer bench
 

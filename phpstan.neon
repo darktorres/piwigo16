@@ -41,3 +41,6 @@ parameters:
             - ecs.php
     bootstrapFiles:
         - tools/phpstan-bootstrap.php
+
+rules:
+    - Piwigo\Tools\PhpStan\ConfigKeyExistsRule

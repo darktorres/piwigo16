@@ -271,6 +271,33 @@ test('ShutdownHandler::reset() is only called from tests/', function (): void {
     expect(describeCallSites($hits))->toBe([]);
 });
 
+test('Config::reset() is only called from tests/', function (): void {
+    // Mirrors the Kernel::reset() rule above -- reset() exists purely for
+    // test isolation between cases; production code must never touch it.
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSites($repoRoot . '/src/Piwigo', 'Config::reset('),
+        ...findCallSitesInRootPhpFiles($repoRoot, 'Config::reset('),
+        ...findCallSitesInBinFiles($repoRoot, 'Config::reset('),
+    ];
+
+    expect(describeCallSites($hits))->toBe([]);
+});
+
+test('Config::loadArray() is only called from tests/', function (): void {
+    // Same test-isolation rationale as Config::reset() above.
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSites($repoRoot . '/src/Piwigo', 'Config::loadArray('),
+        ...findCallSitesInRootPhpFiles($repoRoot, 'Config::loadArray('),
+        ...findCallSitesInBinFiles($repoRoot, 'Config::loadArray('),
+    ];
+
+    expect(describeCallSites($hits))->toBe([]);
+});
+
 test('RequestFactory, ResponseEmitter, CommonBootstrap, and the P9 middleware/pipeline/routing classes declare only readonly state', function (): void {
     // SEC-60 (worker-isolation, partial verification): these classes must stay
     // free of MUTABLE state so a future FrankenPHP worker loop can reuse them

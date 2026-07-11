@@ -78,7 +78,8 @@
   },
   "autoload-dev": {
     "psr-4": {
-      "Piwigo\\Tests\\": "tests/"
+      "Piwigo\\Tests\\": "tests/",
+      "Piwigo\\Tools\\PhpStan\\": "tools/phpstan/"
     }
   },
   "scripts": {

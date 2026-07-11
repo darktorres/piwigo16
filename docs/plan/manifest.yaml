@@ -28,7 +28,7 @@ phases:
   - {id: P13, tier: T2,    depends_on: [P12],   status: done, epoch: D}
   - {id: P14, tier: T2,    depends_on: [P13],   status: done,    epoch: D}
   - {id: P15, tier: T1-T2, depends_on: [P14],   status: done,    epoch: D}
-  - {id: P16, tier: T1-T2, depends_on: [P15],   status: planned, epoch: D}
+  - {id: P16, tier: T1-T2, depends_on: [P15],   status: done,    epoch: D}
   - {id: P17, tier: T1,    depends_on: [P16],   status: planned, epoch: E}
   - {id: P18, tier: T1,    depends_on: [P17],   status: planned, epoch: E}
   - {id: P19, tier: T1,    depends_on: [P18],   status: planned, epoch: E}

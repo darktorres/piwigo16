@@ -9,45 +9,36 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-use Piwigo\Db\Tables;
+use Piwigo\Db\DbConnection;
+use Piwigo\Permalink\PermalinkRepository;
+use Piwigo\Permalink\PermalinkService;
 
-/** returns a category id that corresponds to the given permalink (or null)
+/**
+ * returns a category id that corresponds to the given permalink (or null)
  * @param string $permalink
  */
 function get_cat_id_from_permalink($permalink): ?string
 {
-    $query = '
-SELECT id FROM ' . Tables::categories() . '
-  WHERE permalink=\'' . $permalink . '\'';
-    $ids = array_from_query($query, 'id');
-    if (! empty($ids) && is_string($ids[0])) {
-        return $ids[0];
-    }
-    return null;
+    $id = new PermalinkRepository(DbConnection::build())
+        ->findCategoryIdByPermalink($permalink);
+
+    return $id !== null ? (string) $id : null;
 }
 
-/** returns a category id that has used before this permalink (or null)
+/**
+ * returns a category id that has used before this permalink (or null)
  * @param string $permalink
  */
 function get_cat_id_from_old_permalink($permalink): ?string
 {
-    $query = '
-SELECT c.id
-  FROM ' . Tables::oldPermalinks() . ' op INNER JOIN ' . Tables::categories() . ' c
-    ON op.cat_id=c.id
-  WHERE op.permalink=\'' . $permalink . '\'
-  LIMIT 1';
-    $result = pwg_query($query);
-    $cat_id = null;
-    if ((bool) pwg_db_num_rows($result)) {
-        $row = pwg_db_fetch_row($result);
-        assert($row !== null);
-        [$cat_id] = $row;
-    }
-    return $cat_id;
+    $id = new PermalinkRepository(DbConnection::build())
+        ->findOldCategoryId($permalink);
+
+    return $id !== null ? (string) $id : null;
 }
 
-/** deletes the permalink associated with a category
+/**
+ * deletes the permalink associated with a category
  * returns true on success
  * @param int $cat_id the target category id
  * @param bool $save if true, the current category-permalink association
@@ -55,70 +46,12 @@ SELECT c.id
  */
 function delete_cat_permalink($cat_id, $save): bool
 {
-    /**
-     * @var array<string, mixed> $page
-     * @var array<string, mixed> $cache
-     */
-    global $page, $cache;
-
-    // $page['errors'] is always initialized to an array by common.inc.php,
-    // but that isn't visible across the include() boundary -- narrow it
-    // once here so the append below type-checks.
-    $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
-
-    $query = '
-SELECT permalink
-  FROM ' . Tables::categories() . '
-  WHERE id=\'' . $cat_id . '\'
-;';
-    $result = pwg_query($query);
-    if ((bool) pwg_db_num_rows($result)) {
-        $row = pwg_db_fetch_row($result);
-        assert($row !== null);
-        [$permalink] = $row;
-    }
-    if (! isset($permalink)) {// no permalink; nothing to do
-        return true;
-    }
-    if ($save) {
-        $old_cat_id = get_cat_id_from_old_permalink($permalink);
-        if (isset($old_cat_id) and $old_cat_id != $cat_id) {
-            $page['errors'][] =
-              sprintf(
-                  l10n('Permalink %s has been previously used by album %s. Delete from the permalink history first'),
-                  $permalink,
-                  $old_cat_id
-              );
-            return false;
-        }
-    }
-    $query = '
-UPDATE ' . Tables::categories() . '
-  SET permalink=NULL
-  WHERE id=' . $cat_id . '
-  LIMIT 1';
-    pwg_query($query);
-
-    unset($cache['cat_names']); // force regeneration
-    if ($save) {
-        if (isset($old_cat_id)) {
-            $query = '
-UPDATE ' . Tables::oldPermalinks() . '
-  SET date_deleted=NOW()
-  WHERE cat_id=' . $cat_id . ' AND permalink=\'' . $permalink . '\'';
-        } else {
-            $query = '
-INSERT INTO ' . Tables::oldPermalinks() . '
-  (permalink, cat_id, date_deleted)
-VALUES
-  ( \'' . $permalink . '\',' . $cat_id . ',NOW() )';
-        }
-        pwg_query($query);
-    }
-    return true;
+    return new PermalinkService(new PermalinkRepository(DbConnection::build()))
+        ->deleteCatPermalink($cat_id, $save);
 }
 
-/** sets a new permalink for a category
+/**
+ * sets a new permalink for a category
  * returns true on success
  * @param int $cat_id the target category id
  * @param string $permalink the new permalink
@@ -127,74 +60,6 @@ VALUES
  */
 function set_cat_permalink($cat_id, $permalink, $save): bool
 {
-    /**
-     * @var array<string, mixed> $page
-     * @var array<string, mixed> $cache
-     */
-    global $page, $cache;
-
-    // $page['errors'] is always initialized to an array by common.inc.php,
-    // but that isn't visible across the include() boundary -- narrow it
-    // once here so the appends below type-check.
-    $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
-
-    $sanitized_permalink = preg_replace('#[^a-zA-Z0-9_/-]#', '', $permalink);
-    $sanitized_permalink = trim((string) $sanitized_permalink, '/');
-    $sanitized_permalink = str_replace('//', '/', $sanitized_permalink);
-    if ($sanitized_permalink != $permalink
-        or (bool) preg_match('#^(\d)+(-.*)?$#', $permalink)) {
-        $page['errors'][] = '{' . $permalink . '} ' . l10n('The permalink name must be composed of a-z, A-Z, 0-9, "-", "_" or "/". It must not be numeric or start with number followed by "-"');
-        return false;
-    }
-
-    // check if the new permalink is actively used
-    $existing_cat_id = get_cat_id_from_permalink($permalink);
-    if (isset($existing_cat_id)) {
-        if ($existing_cat_id == $cat_id) {// no change required
-            return true;
-        } else {
-            $page['errors'][] =
-              sprintf(
-                  l10n('Permalink %s is already used by album %s'),
-                  $permalink,
-                  $existing_cat_id
-              );
-            return false;
-        }
-    }
-
-    // check if the new permalink was historically used
-    $old_cat_id = get_cat_id_from_old_permalink($permalink);
-    if (isset($old_cat_id) and $old_cat_id != $cat_id) {
-        $page['errors'][] =
-          sprintf(
-              l10n('Permalink %s has been previously used by album %s. Delete from the permalink history first'),
-              $permalink,
-              $old_cat_id
-          );
-        return false;
-    }
-
-    if (! delete_cat_permalink($cat_id, $save)) {
-        return false;
-    }
-
-    if (isset($old_cat_id)) {// the new permalink must not be active and old at the same time
-        assert($old_cat_id == $cat_id);
-        $query = '
-DELETE FROM ' . Tables::oldPermalinks() . '
-  WHERE cat_id=' . $old_cat_id . ' AND permalink=\'' . $permalink . '\'';
-        pwg_query($query);
-    }
-
-    $query = '
-UPDATE ' . Tables::categories() . '
-  SET permalink=\'' . $permalink . '\'
-  WHERE id=' . $cat_id;
-    //  LIMIT 1';
-    pwg_query($query);
-
-    unset($cache['cat_names']); // force regeneration
-
-    return true;
+    return new PermalinkService(new PermalinkRepository(DbConnection::build()))
+        ->setCatPermalink($cat_id, $permalink, $save);
 }

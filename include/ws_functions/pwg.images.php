@@ -9,11 +9,13 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Config\Config;
 use Piwigo\Core\Logger;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Storage\StorageRegistry;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
@@ -1993,7 +1995,19 @@ SELECT COUNT(*)
     if (! is_string($uploaded_chunk_tmp_name)) {
         return new PwgError(500, 'missing uploaded chunk file');
     }
-    move_uploaded_file($uploaded_chunk_tmp_name, $chunkfile_path);
+    // $chunkfile_path is relative (built from $conf['upload_dir'] without a
+    // PHPWG_ROOT_PATH prefix) -- normalize to absolute before stripRoot()
+    // can compute the 'uploads' disk-relative path; everything downstream
+    // keeps using the original relative $chunkfile_path unchanged, since
+    // the 'uploads' disk is rooted at the same real filesystem location.
+    $chunk_root = PHPWG_ROOT_PATH . Config::uploadDir();
+    $chunk_abs_path = PHPWG_ROOT_PATH . ltrim(str_replace(['\\', '/./'], ['/', '/'], $chunkfile_path), '/');
+    $chunk_rel_path = StorageRegistry::stripRoot($chunk_root, $chunk_abs_path);
+    $chunk_stream = fopen($uploaded_chunk_tmp_name, 'rb');
+    if ($chunk_stream !== false) {
+        StorageRegistry::disk('uploads')->writeStream($chunk_rel_path, $chunk_stream);
+        fclose($chunk_stream);
+    }
     $logger->debug(__FUNCTION__ . ' uploaded ' . $chunkfile_path);
 
     // MD5 checksum

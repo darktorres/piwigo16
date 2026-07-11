@@ -11,7 +11,9 @@ declare(strict_types=1);
 
 use Piwigo\Admin\tabsheet;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Site\SiteRepository;
 use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
@@ -76,18 +78,11 @@ if (isset($_POST['submit']) and ! empty($_POST['galleries_url']) and is_string($
     }
 
     // site must not exists
-    $query = '
-SELECT COUNT(id) AS count
-  FROM ' . Tables::sites() . '
-  WHERE galleries_url = \'' . $url . '\'
-;';
-    $row = pwg_db_fetch_assoc(pwg_query($query));
-    // a COUNT(*) query always returns exactly one row
-    assert(is_array($row));
+    $site_repo = new SiteRepository(DbConnection::build());
     // $page['errors'] is always a plain array, initialized by
     // include/common.inc.php
     assert(is_array($page['errors']));
-    if ($row['count'] > 0) {
+    if ($site_repo->countByUrl($url) > 0) {
         $page['errors'][] = l10n('This site already exists') . ' [' . $url . ']';
     }
     if (count($page['errors']) == 0) {
@@ -97,13 +92,7 @@ SELECT COUNT(id) AS count
     }
 
     if (count($page['errors']) == 0) {
-        $query = '
-INSERT INTO ' . Tables::sites() . '
-  (galleries_url)
-  VALUES
-  (\'' . $url . '\')
-;';
-        pwg_query($query);
+        $site_repo->insert($url);
         // $page['infos'] is always a plain array, initialized by
         // include/common.inc.php
         assert(is_array($page['infos']));
@@ -119,13 +108,8 @@ if (isset($_GET['site']) and is_numeric($_GET['site'])) {
 }
 if (isset($_GET['action']) and isset($page['site']) and is_numeric($page['site'])) {
     $site_id = (int) $page['site'];
-    $query = '
-SELECT galleries_url
-  FROM ' . Tables::sites() . '
-  WHERE id = ' . $site_id . '
-;';
-    $row = pwg_db_fetch_row(pwg_query($query));
-    $galleries_url = $row !== null ? $row[0] : null;
+    $galleries_url = new SiteRepository(DbConnection::build())
+        ->findGalleriesUrlById($site_id);
     switch ($_GET['action']) {
         case 'delete':
 
@@ -154,42 +138,36 @@ SELECT c.site_id, COUNT(DISTINCT c.id) AS nb_categories, COUNT(i.id) AS nb_image
   WHERE c.site_id IS NOT NULL
   GROUP BY c.site_id
 ;';
-$sites_detail = hash_from_query($query, 'site_id');
 /** @var array<int|string, array<string, string|null>> $sites_detail */
-$query = '
-SELECT *
-  FROM ' . Tables::sites() . '
-;';
-$result = pwg_query($query);
+$sites_detail = hash_from_query($query, 'site_id');
 
-while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+foreach (new SiteRepository(DbConnection::build())->findAll() as $row) {
     // 'id' and 'galleries_url' are both NOT NULL columns on the sites
-    // table (see install/piwigo_structure-mysql.sql), so
-    // pwg_db_fetch_assoc() never returns null for either of these keys
-    // here.
-    assert(is_string($row['id']));
-    assert(is_string($row['galleries_url']));
-    $is_remote = url_is_remote($row['galleries_url']);
+    // table (see install/piwigo_structure-mysql.sql), so findAll() never
+    // returns null for either of these keys here.
+    $id = is_scalar($row['id']) ? (string) $row['id'] : '';
+    $galleries_url = is_string($row['galleries_url']) ? $row['galleries_url'] : '';
+    $is_remote = url_is_remote($galleries_url);
     $base_url = PHPWG_ROOT_PATH . 'admin.php';
     $base_url .= '?page=site_manager';
-    $base_url .= '&amp;site=' . $row['id'];
+    $base_url .= '&amp;site=' . $id;
     $base_url .= '&amp;pwg_token=' . get_pwg_token();
     $base_url .= '&amp;action=';
 
     $update_url = PHPWG_ROOT_PATH . 'admin.php';
     $update_url .= '?page=site_update';
-    $update_url .= '&amp;site=' . $row['id'];
+    $update_url .= '&amp;site=' . $id;
 
     $tpl_var =
       [
-          'NAME' => $row['galleries_url'],
+          'NAME' => $galleries_url,
           'TYPE' => l10n($is_remote ? 'Remote' : 'Local'),
-          'CATEGORIES' => (int) @$sites_detail[$row['id']]['nb_categories'],
-          'IMAGES' => (int) @$sites_detail[$row['id']]['nb_images'],
+          'CATEGORIES' => (int) @$sites_detail[$id]['nb_categories'],
+          'IMAGES' => (int) @$sites_detail[$id]['nb_images'],
           'U_SYNCHRONIZE' => $update_url,
       ];
 
-    if ($row['id'] != 1) {
+    if ((int) $id !== 1) {
         $tpl_var['U_DELETE'] = $base_url . 'delete';
     }
 
@@ -199,7 +177,7 @@ while ((bool) ($row = pwg_db_fetch_assoc($result))) {
       trigger_change(
           'get_admins_site_links',
           $plugin_links,
-          $row['id'],
+          $id,
           $is_remote
       );
     $tpl_var['plugin_links'] = $plugin_links;

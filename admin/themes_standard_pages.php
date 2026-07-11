@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 use Piwigo\Admin\themes;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Storage\StorageRegistry;
 use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
@@ -117,7 +118,15 @@ if (
 
             conf_update_param('standard_pages_selected_logo_path', $file_path, true);
 
-            if (! move_uploaded_file($std_pgs_logo_tmp_name, $file_path)) {
+            // $upload_dir is PWG_LOCAL_DIR . 'logo', a subdirectory of the
+            // 'local' disk's own root -- the disk-relative path needs the
+            // 'logo/' prefix back on (unlike the watermarks disk, whose
+            // root IS its upload dir).
+            $logo_stream = fopen($std_pgs_logo_tmp_name, 'rb');
+            if ($logo_stream !== false) {
+                StorageRegistry::disk('local')->writeStream('logo/' . basename($file_path), $logo_stream);
+                fclose($logo_stream);
+            } else {
                 $template->assign(
                     [
                         'save_error' => "{$file_path} " . l10n('no write access'),

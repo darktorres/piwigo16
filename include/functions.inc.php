@@ -17,6 +17,7 @@ use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Logger;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Tables;
 use Piwigo\Lang\Translator;
 use Piwigo\Template\Template;
@@ -2416,12 +2417,12 @@ function get_icon($date, $is_child_date = false): false|array
  */
 function check_pwg_token(): void
 {
-    if (! empty($_REQUEST['pwg_token'])) {
-        if (get_pwg_token() != $_REQUEST['pwg_token']) {
-            access_denied();
-        }
-    } else {
+    $result = new CsrfService()
+        ->check();
+    if ($result === null) {
         bad_request('missing token');
+    } elseif ($result === false) {
+        access_denied();
     }
 }
 
@@ -2430,18 +2431,8 @@ function check_pwg_token(): void
  */
 function get_pwg_token(): string
 {
-    /** @var array<string, mixed> $conf */
-    global $conf;
-
-    $session_id = session_id();
-    if ($session_id === false) {
-        throw new Exception('get_pwg_token(): no active session');
-    }
-
-    $secret_key = $conf['secret_key'];
-    $secret_key = is_scalar($secret_key) ? (string) $secret_key : '';
-
-    return hash_hmac('md5', $session_id, $secret_key);
+    return new CsrfService()
+        ->getToken();
 }
 
 /**

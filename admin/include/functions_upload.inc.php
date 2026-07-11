@@ -10,12 +10,14 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\Image\pwg_image;
+use Piwigo\Config\Config;
 use Piwigo\Core\Logger;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Storage\StorageRegistry;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 
@@ -328,10 +330,24 @@ SELECT
         } while (file_exists($file_path));
     }
 
-    if (is_uploaded_file($source_filepath)) {
-        move_uploaded_file($source_filepath, $file_path);
-    } else {
-        rename($source_filepath, $file_path);
+    // move_uploaded_file()/rename() both write $source_filepath's content
+    // to $file_path under the uploads tree and consume the source -- routed
+    // through StorageRegistry's 'uploads' disk instead so a future non-local
+    // adapter (S3/SFTP) needs no call-site change here. PHP's own SAPI-level
+    // upload cleanup deletes a real is_uploaded_file() tmp file at request
+    // end even without an explicit unlink() (verified via PHP's documented
+    // upload garbage-collection guarantee), matching what move_uploaded_file()
+    // used to do immediately; the "already local" (rename()) branch still
+    // needs an explicit unlink() since nothing else will remove that source.
+    $upload_root = rtrim(PHPWG_ROOT_PATH . Config::uploadDir(), '/');
+    $upload_rel_path = StorageRegistry::stripRoot($upload_root, $file_path);
+    $upload_stream = fopen($source_filepath, 'rb');
+    if ($upload_stream !== false) {
+        StorageRegistry::disk('uploads')->writeStream($upload_rel_path, $upload_stream);
+        fclose($upload_stream);
+        if (! is_uploaded_file($source_filepath)) {
+            @unlink($source_filepath);
+        }
     }
     @chmod($file_path, 0644);
 
@@ -561,10 +577,21 @@ SELECT
 
     prepare_directory(dirname($format_path));
 
-    if (is_uploaded_file($source_filepath)) {
-        move_uploaded_file($source_filepath, $format_path);
-    } else {
-        rename($source_filepath, $format_path);
+    // Same StorageRegistry-routed migration as add_uploaded_file()'s own
+    // move_uploaded_file()/rename() pair above -- $format_path here (built
+    // from the DB-stored images.path column) is relative, not yet prefixed
+    // with PHPWG_ROOT_PATH, so it needs normalizing to an absolute path
+    // before stripRoot() can compute the disk-relative path.
+    $format_root = PHPWG_ROOT_PATH . Config::uploadDir();
+    $format_abs_path = PHPWG_ROOT_PATH . ltrim(str_replace(['\\', '/./'], ['/', '/'], $format_path), '/');
+    $format_rel_path = StorageRegistry::stripRoot($format_root, $format_abs_path);
+    $format_stream = fopen($source_filepath, 'rb');
+    if ($format_stream !== false) {
+        StorageRegistry::disk('uploads')->writeStream($format_rel_path, $format_stream);
+        fclose($format_stream);
+        if (! is_uploaded_file($source_filepath)) {
+            @unlink($source_filepath);
+        }
     }
     @chmod($format_path, 0644);
 

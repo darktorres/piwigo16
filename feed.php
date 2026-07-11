@@ -10,7 +10,9 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Core\AccessLevel;
-use Piwigo\Db\Tables;
+use Piwigo\Db\DbConnection;
+use Piwigo\Feed\FeedHelper;
+use Piwigo\Feed\FeedRepository;
 
 define('PHPWG_ROOT_PATH', './');
 include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
@@ -21,97 +23,8 @@ include_once PHPWG_ROOT_PATH . 'include/functions_notification.inc.php';
 /** @var array<string, mixed> $user */
 global $conf, $user;
 
-// +-----------------------------------------------------------------------+
-// |                               functions                               |
-// +-----------------------------------------------------------------------+
-
-/**
- * creates a Unix timestamp (number of seconds since 1970-01-01 00:00:00
- * GMT) from a MySQL datetime format (2005-07-14 23:01:37)
- *
- * @param string $datetime mysql datetime format
- * @return int timestamp
- */
-function datetime_to_ts($datetime): int|false
-{
-    return strtotime($datetime);
-}
-
-/**
- * creates an ISO 8601 format date (2003-01-20T18:05:41+04:00) from Unix
- * timestamp (number of seconds since 1970-01-01 00:00:00 GMT)
- *
- * function copied from Dotclear project http://dotclear.net
- *
- * @param int $ts timestamp
- * @return string ISO 8601 date format
- */
-function ts_to_iso8601($ts): string
-{
-    $tz = date('O', $ts);
-    $tz = substr($tz, 0, -2) . ':' . substr($tz, -2);
-    return date('Y-m-d\\TH:i:s', $ts) . $tz;
-}
-
-/**
- * Builds a well-formed RSS 2.0 feed from channel metadata and items. Covers
- * exactly this file's own usage (no image/language/copyright/enclosure/etc.
- * -- feed.php never sets any of those), not a general-purpose feed library.
- *
- * @param array<string, mixed> $channel keys: title, link, encoding
- * @param array<int, array<string, mixed>> $items each: title, link, description, html (bool -- wrap
- *        description in CDATA instead of escaping it), date (ISO 8601
- *        string), author, guid
- */
-function pwg_generate_rss2_feed(array $channel, array $items): string
-{
-    $channel_encoding = $channel['encoding'] ?? '';
-    $channel_encoding = is_string($channel_encoding) ? $channel_encoding : '';
-    $channel_title = $channel['title'] ?? '';
-    $channel_title = is_string($channel_title) ? $channel_title : '';
-    $channel_link = $channel['link'] ?? '';
-    $channel_link = is_string($channel_link) ? $channel_link : '';
-
-    $feed = '<?xml version="1.0" encoding="' . $channel_encoding . '"?>' . "\n";
-    $feed .= "<rss version=\"2.0\">\n";
-    $feed .= "  <channel>\n";
-    $feed .= '    <title>' . htmlspecialchars($channel_title) . "</title>\n";
-    $feed .= '    <link>' . htmlspecialchars($channel_link) . "</link>\n";
-    $feed .= "    <description></description>\n";
-    $feed .= '    <lastBuildDate>' . new DateTimeImmutable()->format(DATE_RFC2822) . "</lastBuildDate>\n";
-
-    foreach ($items as $item) {
-        $item_title = $item['title'] ?? '';
-        $item_title = is_string($item_title) ? $item_title : '';
-        $item_link = $item['link'] ?? '';
-        $item_link = is_string($item_link) ? $item_link : '';
-        $item_description = $item['description'] ?? '';
-        $item_description = is_string($item_description) ? $item_description : '';
-        $item_author = $item['author'] ?? '';
-        $item_author = is_string($item_author) ? $item_author : '';
-        $item_date = $item['date'] ?? '';
-        $item_date = is_string($item_date) ? $item_date : '';
-        $item_guid = $item['guid'] ?? '';
-        $item_guid = is_string($item_guid) ? $item_guid : '';
-
-        $feed .= "    <item>\n";
-        $feed .= '      <title>' . htmlspecialchars(strip_tags($item_title)) . "</title>\n";
-        $feed .= '      <link>' . htmlspecialchars($item_link) . "</link>\n";
-        $feed .= '      <description>' . (! empty($item['html']) ? '<![CDATA[' . $item_description . ']]>' : htmlspecialchars($item_description)) . "</description>\n";
-        if (! empty($item_author)) {
-            $feed .= '      <author>' . htmlspecialchars($item_author) . "</author>\n";
-        }
-        if (! empty($item_date)) {
-            $feed .= '      <pubDate>' . new DateTimeImmutable($item_date)->format(DATE_RFC2822) . "</pubDate>\n";
-        }
-        $feed .= '      <guid isPermaLink="false">' . htmlspecialchars($item_guid !== '' ? $item_guid : $item_link) . "</guid>\n";
-        $feed .= "    </item>\n";
-    }
-
-    $feed .= "  </channel>\n";
-    $feed .= "</rss>\n";
-    return $feed;
-}
+$feed_helper = new FeedHelper();
+$feed_repo = new FeedRepository(DbConnection::build());
 
 // +-----------------------------------------------------------------------+
 // |                            initialization                             |
@@ -121,29 +34,21 @@ check_input_parameter('feed', $_GET, false, '/^[0-9a-z]{50}$/i');
 
 $feed_id = $_GET['feed'] ?? '';
 $feed_id = is_string($feed_id) ? $feed_id : '';
-$user_feed_table = Tables::userFeed();
 $image_only = isset($_GET['image_only']);
 // Only read below when $image_only is false, which implies $feed_id was
 // non-empty and the branch below already populated it.
-$feed_row = [];
+$feed_last_check = null;
 
 // echo '<pre>'.generate_key(50).'</pre>';
-if (! empty($feed_id)) {
-    $query = '
-SELECT user_id,
-       last_check
-  FROM ' . $user_feed_table . '
-  WHERE id = \'' . $feed_id . '\'
-;';
-    $feed_row = pwg_db_fetch_assoc(pwg_query($query));
-    if (empty($feed_row)) {
+if ($feed_id !== '') {
+    $feed_row = $feed_repo->findById($feed_id);
+    if ($feed_row === null) {
         page_not_found(l10n('Unknown feed identifier'));
     }
-    if ($feed_row['user_id'] != $user['id']) { // new user
-        $feed_user_id = $feed_row['user_id'];
-        if (is_numeric($feed_user_id)) {
-            $user = build_user((int) $feed_user_id, true);
-        }
+    $feed_last_check = $feed_row['lastCheck'];
+    $user_id_before = is_numeric($user['id']) ? (int) $user['id'] : null;
+    if ($feed_row['userId'] !== $user_id_before) { // new user
+        $user = build_user($feed_row['userId'], true);
     }
 } else {
     $image_only = true;
@@ -188,7 +93,7 @@ $rss_items = [];
 
 $news = [];
 if (! $image_only) {
-    $news = news($feed_row['last_check'], $dbnow, true, true);
+    $news = news($feed_last_check?->format('Y-m-d H:i:s'), $dbnow, true, true);
 
     if (count($news) > 0) {
         // content creation
@@ -198,7 +103,7 @@ if (! $image_only) {
         }
         $description .= '</ul>';
 
-        $dbnow_ts = datetime_to_ts($dbnow);
+        $dbnow_ts = $feed_helper->datetimeToTs($dbnow);
         // $dbnow is a NOW() value straight from the database, always a
         // valid datetime string
         assert($dbnow_ts !== false);
@@ -208,29 +113,24 @@ if (! $image_only) {
             'link' => get_gallery_home_url(),
             'description' => $description,
             'html' => true,
-            'date' => ts_to_iso8601($dbnow_ts),
+            'date' => $feed_helper->ts8601($dbnow_ts),
             'author' => $conf_rss_feed_author,
             'guid' => sprintf('%s', $dbnow),
         ];
 
-        $query = '
-UPDATE ' . $user_feed_table . '
-  SET last_check = \'' . $dbnow . '\'
-  WHERE id = \'' . $feed_id . '\'
-;';
-        pwg_query($query);
+        if ($feed_id !== '') {
+            $feed_repo->updateLastCheck($feed_id, new DateTimeImmutable($dbnow));
+        }
     }
 }
 
-if (! empty($feed_id) and empty($news)) {// update the last check from time to time to avoid deletion by maintenance tasks
-    if (! isset($feed_row['last_check'])
-      or time() - datetime_to_ts($feed_row['last_check']) > 30 * 24 * 3600) {
-        $query = '
-UPDATE ' . $user_feed_table . '
-  SET last_check = ' . pwg_db_get_recent_period_expression(-15, $dbnow) . '
-  WHERE id = \'' . $feed_id . '\'
-;';
-        pwg_query($query);
+if ($feed_id !== '' && count($news) === 0) {// update the last check from time to time to avoid deletion by maintenance tasks
+    if ($feed_last_check === null
+      || time() - $feed_last_check->getTimestamp() > 30 * 24 * 3600) {
+        // SUBDATE($dbnow, INTERVAL -15 DAY) computed in PHP instead --
+        // cross-provider safe (SUBDATE() is MySQL-only), same reasoning as
+        // FeedRepository::updateLastCheck()'s own doc comment.
+        $feed_repo->updateLastCheck($feed_id, new DateTimeImmutable($dbnow)->modify('+15 days'));
     }
 }
 
@@ -267,7 +167,7 @@ foreach ($dates as $date_detail) { // for each recent post date we create a feed
     $description = '<a href="' . make_index_url() . '">' . $conf_gallery_title . '</a><br> ';
     $description .= get_html_description_recent_post_date($date_detail);
 
-    $date_ts = datetime_to_ts($date);
+    $date_ts = $feed_helper->datetimeToTs($date);
     // $date is a date_available value straight from the database,
     // always a valid datetime string
     assert($date_ts !== false);
@@ -277,13 +177,13 @@ foreach ($dates as $date_detail) { // for each recent post date we create a feed
         'link' => $link,
         'description' => $description,
         'html' => true,
-        'date' => ts_to_iso8601($date_ts),
+        'date' => $feed_helper->ts8601($date_ts),
         'author' => $conf_rss_feed_author,
         'guid' => sprintf('%s', 'pics-' . $date),
     ];
 }
 
-$feed_content = pwg_generate_rss2_feed(
+$feed_content = $feed_helper->generateRss2Feed(
     [
         'title' => $rss_title,
         'link' => $rss_link,

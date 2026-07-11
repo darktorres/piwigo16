@@ -298,6 +298,32 @@ test('Config::loadArray() is only called from tests/', function (): void {
     expect(describeCallSites($hits))->toBe([]);
 });
 
+test('SessionService::reset() is only called from tests/', function (): void {
+    // Same test-isolation rationale as Config::reset() above.
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSites($repoRoot . '/src/Piwigo', 'SessionService::reset('),
+        ...findCallSitesInRootPhpFiles($repoRoot, 'SessionService::reset('),
+        ...findCallSitesInBinFiles($repoRoot, 'SessionService::reset('),
+    ];
+
+    expect(describeCallSites($hits))->toBe([]);
+});
+
+test('StorageRegistry::reset() is only called from tests/', function (): void {
+    // Same test-isolation rationale as Config::reset() above.
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSites($repoRoot . '/src/Piwigo', 'StorageRegistry::reset('),
+        ...findCallSitesInRootPhpFiles($repoRoot, 'StorageRegistry::reset('),
+        ...findCallSitesInBinFiles($repoRoot, 'StorageRegistry::reset('),
+    ];
+
+    expect(describeCallSites($hits))->toBe([]);
+});
+
 // P16: src/Piwigo/ is the typed source of truth for the 52 retired
 // include/constants.php constants (AppInfo/AccessLevel/ActivitySystem/
 // ValidationPattern/Tables/Config accessors) -- a regression guard, not a

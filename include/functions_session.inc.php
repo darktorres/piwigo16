@@ -9,8 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-use Piwigo\Db\Tables;
 use Piwigo\Session\PwgSession;
+use Piwigo\Session\SessionService;
 
 // In PHP 8.4+ calling session_set_save_handler with
 // two parameters is deprecated. To correct this,
@@ -19,7 +19,7 @@ use Piwigo\Session\PwgSession;
 
 /** @var array<string, mixed> $conf */
 if (isset($conf['session_save_handler'])
-  and ($conf['session_save_handler'] == 'db')
+  and ($conf['session_save_handler'] === 'db')
   and defined('PHPWG_INSTALLED')) {
     session_set_save_handler(new PwgSession());
 
@@ -53,20 +53,8 @@ if (isset($conf['session_save_handler'])
  */
 function generate_key($size): string
 {
-    if ($size < 1) {
-        throw new \InvalidArgumentException('generate_key(): $size must be at least 1');
-    }
-    $bytes = random_bytes($size + 10);
-
-    return substr(
-        str_replace(
-            ['+', '/'],
-            '',
-            base64_encode($bytes)
-        ),
-        0,
-        $size
-    );
+    return SessionService::get()
+        ->generateKey($size);
 }
 
 /**
@@ -78,7 +66,7 @@ function generate_key($size): string
  */
 function pwg_session_open($path, $name): bool
 {
-    return true;
+    return SessionService::get()->sessionOpen();
 }
 
 /**
@@ -88,7 +76,7 @@ function pwg_session_open($path, $name): bool
  */
 function pwg_session_close(): bool
 {
-    return true;
+    return SessionService::get()->sessionClose();
 }
 
 /**
@@ -96,23 +84,8 @@ function pwg_session_close(): bool
  */
 function get_remote_addr_session_hash(): string
 {
-    /** @var array<string, mixed> $conf */
-    global $conf;
-
-    if (! (bool) $conf['session_use_ip_address']) {
-        return '';
-    }
-
-    $remote_addr = $_SERVER['REMOTE_ADDR'];
-    $remote_addr = is_string($remote_addr) ? $remote_addr : '';
-
-    if (! str_contains($remote_addr, ':')) {// ipv4
-        return vsprintf(
-            '%02X%02X',
-            explode('.', $remote_addr)
-        );
-    }
-    return ''; // ipv6 not yet
+    return SessionService::get()
+        ->getRemoteAddrSessionHash();
 }
 
 /**
@@ -123,16 +96,8 @@ function get_remote_addr_session_hash(): string
  */
 function pwg_session_read($session_id)
 {
-    $query = '
-SELECT data
-  FROM ' . Tables::sessions() . '
-  WHERE id = \'' . get_remote_addr_session_hash() . $session_id . '\'
-;';
-    $result = pwg_query($query);
-    if ((bool) ($row = pwg_db_fetch_assoc($result))) {
-        return $row['data'] ?? '';
-    }
-    return '';
+    return SessionService::get()
+        ->sessionRead($session_id);
 }
 
 /**
@@ -143,19 +108,8 @@ SELECT data
  */
 function pwg_session_write($session_id, ?string $data): bool
 {
-    // when the request is authenticated via api_key (PWG_API_KEY_REQUEST),
-    // you do not want the session to be written to the database (no user session persistence)
-    // this avoids polluting the session table with stateless API accesses
-    if (defined('PWG_API_KEY_REQUEST')) {
-        return true;
-    }
-    $query = '
-REPLACE INTO ' . Tables::sessions() . '
-  (id,data,expiration)
-  VALUES(\'' . get_remote_addr_session_hash() . $session_id . '\',\'' . pwg_db_real_escape_string($data) . '\',now())
-;';
-    pwg_query($query);
-    return true;
+    return SessionService::get()
+        ->sessionWrite($session_id, $data ?? '');
 }
 
 /**
@@ -166,13 +120,8 @@ REPLACE INTO ' . Tables::sessions() . '
  */
 function pwg_session_destroy($session_id): bool
 {
-    $query = '
-DELETE
-  FROM ' . Tables::sessions() . '
-  WHERE id = \'' . get_remote_addr_session_hash() . $session_id . '\'
-;';
-    pwg_query($query);
-    return true;
+    return SessionService::get()
+        ->sessionDestroy($session_id);
 }
 
 /**
@@ -182,20 +131,8 @@ DELETE
  */
 function pwg_session_gc(): int
 {
-    /** @var array<string, mixed> $conf */
-    global $conf;
-
-    $session_length = $conf['session_length'];
-    $session_length = is_scalar($session_length) ? $session_length : 0;
-
-    $query = '
-DELETE
-  FROM ' . Tables::sessions() . '
-  WHERE ' . pwg_db_date_to_ts('NOW()') . ' - ' . pwg_db_date_to_ts('expiration') . ' > '
-    . $session_length . '
-;';
-    pwg_query($query);
-    return (int) pwg_db_changes();
+    return SessionService::get()
+        ->sessionGc();
 }
 
 /**
@@ -206,11 +143,8 @@ DELETE
  */
 function pwg_set_session_var($var, $value): bool
 {
-    if (! isset($_SESSION)) {
-        return false;
-    }
-    $_SESSION['pwg_' . $var] = $value;
-    return true;
+    return SessionService::get()
+        ->setSessionVar($var, $value);
 }
 
 /**
@@ -222,7 +156,8 @@ function pwg_set_session_var($var, $value): bool
  */
 function pwg_get_session_var($var, $default = null)
 {
-    return $_SESSION['pwg_' . $var] ?? $default;
+    return SessionService::get()
+        ->getSessionVar($var, $default);
 }
 
 /**
@@ -232,11 +167,8 @@ function pwg_get_session_var($var, $default = null)
  */
 function pwg_unset_session_var($var): bool
 {
-    if (! isset($_SESSION)) {
-        return false;
-    }
-    unset($_SESSION['pwg_' . $var]);
-    return true;
+    return SessionService::get()
+        ->unsetSessionVar($var);
 }
 
 /**
@@ -247,10 +179,6 @@ function pwg_unset_session_var($var): bool
  */
 function delete_user_sessions($user_id): void
 {
-    $query = '
-DELETE
-  FROM ' . Tables::sessions() . '
-  WHERE data LIKE \'%pwg_uid|i:' . $user_id . ';%\'
-;';
-    pwg_query($query);
+    SessionService::get()
+        ->deleteUserSessions($user_id);
 }

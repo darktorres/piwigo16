@@ -10,7 +10,8 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Core\AccessLevel;
-use Piwigo\Db\Tables;
+use Piwigo\Db\DbConnection;
+use Piwigo\Feed\FeedRepository;
 use Piwigo\Template\Template;
 
 // +-----------------------------------------------------------------------+
@@ -33,19 +34,11 @@ global $page, $template, $user;
  *
  * @return string feed identifier
  */
-function find_available_feed_id(): string
+function find_available_feed_id(FeedRepository $feed_repo): string
 {
     while (true) {
         $key = generate_key(50);
-        $query = '
-SELECT COUNT(*)
-  FROM ' . Tables::userFeed() . '
-  WHERE id = \'' . $key . '\'
-;';
-        $row = pwg_db_fetch_row(pwg_query($query));
-        assert($row !== null);
-        [$count] = $row;
-        if ($count == 0) {
+        if (! $feed_repo->existsById($key)) {
             return $key;
         }
     }
@@ -62,22 +55,18 @@ trigger_notify('loc_begin_notification');
 // |                          new feed creation                            |
 // +-----------------------------------------------------------------------+
 
+$feed_repo = new FeedRepository(DbConnection::build());
+
 // find_available_feed_id() always returns a string; $page['feed'] is kept
 // in sync but the query/URLs below read this local variable so its type
 // stays narrowed to string instead of widening back to mixed via $page.
-$feed_id = find_available_feed_id();
+$feed_id = find_available_feed_id($feed_repo);
 $page['feed'] = $feed_id;
 
 // $user['id'] (the logged in / guest user id) is never reassigned below.
 $user_id = is_numeric($user['id']) ? (int) $user['id'] : 0;
 
-$query = '
-INSERT INTO ' . Tables::userFeed() . '
-  (id, user_id, last_check)
-  VALUES
-  (\'' . $feed_id . '\', ' . $user_id . ', NULL)
-;';
-pwg_query($query);
+$feed_repo->insert($feed_id, $user_id);
 
 $feed_url = PHPWG_ROOT_PATH . 'feed.php';
 if (is_a_guest()) {

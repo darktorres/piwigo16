@@ -12,6 +12,7 @@ declare(strict_types=1);
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\WatermarkParams;
+use Piwigo\Storage\StorageRegistry;
 use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
@@ -108,7 +109,12 @@ if (! empty($watermark_tmp_name)) {
 
             $file_path = $upload_dir . '/' . get_watermark_filename($watermark_files, $new_name);
 
-            if (move_uploaded_file($watermark_tmp_name, $file_path)) {
+            // $upload_dir is exactly the 'watermarks' disk's own root, so
+            // the disk-relative path is just the filename.
+            $watermark_stream = fopen($watermark_tmp_name, 'rb');
+            if ($watermark_stream !== false) {
+                StorageRegistry::disk('watermarks')->writeStream(basename($file_path), $watermark_stream);
+                fclose($watermark_stream);
                 $pwatermark['file'] = substr($file_path, strlen(PHPWG_ROOT_PATH));
             } else {
                 $page['errors'][] = $errors['watermarkImage'] = "{$file_path} " . l10n('no write access');

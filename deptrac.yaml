@@ -22,10 +22,14 @@ deptrac:
     # Users\CurrentUser itself (a real DependsOnDisallowedLayer violation
     # caught via deptrac analyse — L1Infrastructure may only depend on
     # L0Data, not upward on L2aCoreDomain; callers resolve the locale).
+    # Storage lands in P17 (Piwigo\Storage\StorageRegistry) -- a technical
+    # file-I/O capability alongside Cache/Db, no domain-layer dependency;
+    # self-managed singleton (current()/set()/reset()), same shape as
+    # PageState/Translator/SessionService, not container-wired.
     - name: L1Infrastructure
       collectors:
         - type: classLike
-          value: ^Piwigo\\(Config|Core|Db|Cache|Session|Backup|Migrations|Lang)\\.*
+          value: ^Piwigo\\(Config|Core|Db|Cache|Session|Backup|Migrations|Lang|Storage)\\.*
     # L2a Core Domain — Auth/Image land here in P6; Users/Permission/Category/
     # Tag are later-phase additions.
     - name: L2aCoreDomain
@@ -36,16 +40,35 @@ deptrac:
     # Calendar/Site land here in P6. Explicit enumeration (not a catch-all
     # regex) so a future phase adding a namespace has to deliberately place
     # it in the right layer instead of silently falling into this one.
+    # Url lands in P17 (Piwigo\Url\UrlService) -- injects nothing (matches
+    # the reference implementation's own settled design), so it has no
+    # cross-layer dependency of its own to place carefully. Csrf lands in
+    # P17 too (Piwigo\Csrf\CsrfService) -- deliberately built with no
+    # HtmlService dependency (check() returns bool instead of calling
+    # accessDenied()/badRequest() itself) specifically so it can live here
+    # without an upward L2b→L3 dependency on Html. Permalink lands in P17
+    # too (Piwigo\Permalink\PermalinkRepository/Service) -- no other domain
+    # namespace dependency, plain constructor injection. Feed lands in P17
+    # too (Piwigo\Feed\FeedHelper/FeedRepository) -- FeedHelper injects
+    # nothing (same shape as Url/Html); FeedRepository is plain constructor
+    # injection like Permalink's.
     - name: L2bExtendedDomain
       collectors:
         - type: classLike
-          value: ^Piwigo\\(Search|Calendar|Site)\\.*
+          value: ^Piwigo\\(Search|Calendar|Site|Url|Csrf|Permalink|Feed)\\.*
     # L3 Presentation — Menu/Template land here in P6; Http (incl.
     # Http\Middleware) and Routing land here in P9 -- Routing wasn't
     # pre-anticipated in P6's list, but Http\RoutingMiddleware depends on
     # Routing\Router, and L3 may only depend on layers at or below itself,
     # so Routing has to live at L3 too (same-layer, always allowed).
-    # Html/Page/Asset/Listener are later-phase additions.
+    # Html lands in P17 (Piwigo\Html\HtmlService) -- injects nothing (same
+    # "no constructor deps" shape as Url\UrlService, its P17 sibling), same
+    # layer as Menu (used directly by registerDefaultMenubarBlocks()) and
+    # Template (used via the free-function $template global, unchanged).
+    # Piwigo\Http\HttpClientService also lands in P17 -- a new class inside
+    # the already-existing Http namespace (no regex change needed), a
+    # PSR-18 wrapper around pwg_http_client() with an SSRF guard (SEC-23).
+    # Page/Asset/Listener are later-phase additions.
     - name: L3Presentation
       collectors:
         - type: classLike

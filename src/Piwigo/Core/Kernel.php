@@ -4,15 +4,14 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
-use DI\ContainerBuilder;
 use Psr\Container\ContainerInterface;
 
 /**
- * P7 boot skeleton. Builds a bare, zero-definition DI container and nothing
- * else — no Config/PageState/Lang/CurrentUser wiring (P16), no middleware
- * pipeline (P9), no real service definitions (P8's config/container.php).
- * This class is retrofitted incrementally by those later phases rather than
- * written once complete now.
+ * P7 boot skeleton, growing via P8's Container. Still no
+ * Config/PageState/Lang/CurrentUser wiring (P16), no middleware pipeline
+ * (P9), and config/container.php itself is still empty (real entries land
+ * P9 onward). This class is retrofitted incrementally by those later phases
+ * rather than written once complete now.
  *
  * The `self::$booted` guard makes boot() idempotent — CommonBootstrap::run()
  * calling it more than once per request (e.g. from a nested include) must
@@ -31,7 +30,7 @@ final class Kernel
         }
         self::$booted = true;
 
-        self::$container = new ContainerBuilder()->build();
+        self::$container = Container::build();
     }
 
     /**

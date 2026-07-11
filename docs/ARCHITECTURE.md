@@ -89,24 +89,22 @@ A layer may depend on itself and any layer below it, never a layer above it
 
 ### Baseline
 
-Running `deptrac analyse` against the P6 result surfaced **10 violations**,
-all Presentation/Extended-Domain code reaching directly into L2a-CoreDomain's
-`Image` classes:
-
-- `Calendar\CalendarMonthly` → `Image\{DerivativeImage,ImageStdParams,SrcImage}`
-  (calendar thumbnail rendering)
-- `Template\Template` → `Image\ImageStdParams` (the `define_derivative`
-  Smarty function)
-- `Template\PwgTemplateAdapter` → `Image\{DerivativeImage,SrcImage}` (the
-  `$pwg->derivative(...)` template helper)
-
-These are recorded in `deptrac.yaml`'s `skip_violations` block rather than
-fixed — P6 is a pure extraction pass, and untangling them properly needs a
-real service layer between the Presentation/Extended-Domain layers and
-`Image` (P17–P23's job, not P6's). **Ratchet this list down, never up**: a
-future phase introducing the service layer should remove entries here as it
-fixes each dependency, and no new phase should add to it without an
-equivalent architectural justification.
+**No violations, no `skip_violations` entries.** P6 originally recorded a
+10-entry baseline here (Calendar/Template code reaching into `Image`), but
+P8 found this was a false positive: deptrac 4.6.2's Symfony Config layer
+parser silently breaks ruleset resolution when a layer name contains a
+hyphen. `deptrac.yaml`'s original layer names (`L0-Data`, `L1-Infrastructure`,
+etc.) all had one, so every cross-layer dependency the ruleset explicitly
+allowed — including the Calendar/Template → `Image` calls above, which the
+6-layer model always intended to permit (L2b/L3 depending on L2a is exactly
+what the ruleset's own allow-lists state) — was being misreported as a
+violation. Confirmed via an isolated minimal reproduction (a bare
+`LayerA: [LayerB]` ruleset resolves correctly; renaming to
+`Layer-A: [Layer-B]` makes the identical dependency register as a
+violation). Fixed by dropping the hyphen from every layer name (`L0Data`,
+`L1Infrastructure`, `L2aCoreDomain`, `L2bExtendedDomain`, `L3Presentation`,
+`L4Integration`) — re-running `deptrac analyse` confirms 0 violations
+project-wide. There was never a real architecture problem to baseline.
 
 ## What P6 did not do
 

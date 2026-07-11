@@ -186,6 +186,27 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/ and root ind
     expect(describeCallSites($disallowed))->toBe([]);
 });
 
+test('Container::build() is only called from src/Piwigo/Core/Kernel.php', function (): void {
+    // Mirrors the Kernel::container() boundary rule above: production code
+    // only ever reaches the DI container through Kernel::boot(), never by
+    // building one directly. Tests are exempt (not scanned) -- they need to
+    // call Container::build() directly to exercise the extraDefinitions
+    // override mechanism.
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSites($repoRoot . '/src/Piwigo', 'Container::build('),
+        ...findCallSitesInRootPhpFiles($repoRoot, 'Container::build('),
+    ];
+
+    $disallowed = array_values(array_filter(
+        $hits,
+        static fn (array $hit): bool => ! str_ends_with($hit['path'], '/src/Piwigo/Core/Kernel.php')
+    ));
+
+    expect(describeCallSites($disallowed))->toBe([]);
+});
+
 test('Kernel::reset() is only called from tests/', function (): void {
     // reset() exists purely so tests can isolate Kernel's static state between
     // cases; production code must never touch it (src/Piwigo/ and the root

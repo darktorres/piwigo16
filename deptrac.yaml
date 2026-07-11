@@ -5,19 +5,19 @@ deptrac:
     # L0 Data — no first-party classes yet (P6 doesn't create any); enumerated
     # ahead of time per docs/PLAN-REPLAY.md's P6 6-layer model, populated by
     # later phases.
-    - name: L0-Data
+    - name: L0Data
       collectors:
         - type: classLike
           value: ^Piwigo\\(Common|Event|Exception)\\.*
     # L1 Infrastructure — Cache/Session land here in P6; Config/Core/Db etc.
     # are later-phase additions, enumerated ahead of time.
-    - name: L1-Infrastructure
+    - name: L1Infrastructure
       collectors:
         - type: classLike
           value: ^Piwigo\\(Config|Core|Db|Cache|Session)\\.*
     # L2a Core Domain — Auth/Image land here in P6; Users/Permission/Category/
     # Tag are later-phase additions.
-    - name: L2a-CoreDomain
+    - name: L2aCoreDomain
       collectors:
         - type: classLike
           value: ^Piwigo\\(Auth|Users|Permission|Category|Image|Tag)\\.*
@@ -25,20 +25,20 @@ deptrac:
     # Calendar/Site land here in P6. Explicit enumeration (not a catch-all
     # regex) so a future phase adding a namespace has to deliberately place
     # it in the right layer instead of silently falling into this one.
-    - name: L2b-ExtendedDomain
+    - name: L2bExtendedDomain
       collectors:
         - type: classLike
           value: ^Piwigo\\(Search|Calendar|Site)\\.*
     # L3 Presentation — Menu/Template land here in P6; Html/Http/Page/Asset/
     # Listener are later-phase additions.
-    - name: L3-Presentation
+    - name: L3Presentation
       collectors:
         - type: classLike
           value: ^Piwigo\\(Html|Http|Menu|Page|Template|Asset|Listener)\\.*
     # L4 Integration — Admin (incl. Admin\Image, Admin\Integrity) and Ws
     # (incl. Ws\Encoder, Ws\Protocol) land here in P6; Bootstrap/Controller/
     # Job are later-phase additions.
-    - name: L4-Integration
+    - name: L4Integration
       collectors:
         - type: classLike
           value: ^Piwigo\\(Admin|Bootstrap|Controller|Job|Ws)\\.*
@@ -47,43 +47,36 @@ deptrac:
     # architecture. Violations are recorded as a baseline (P6 wrap-up) and
     # ratchet down over subsequent phases, per docs/PLAN-REPLAY.md's P6
     # section.
-    L4-Integration:
-      - L3-Presentation
-      - L2b-ExtendedDomain
-      - L2a-CoreDomain
-      - L1-Infrastructure
-      - L0-Data
-    L3-Presentation:
-      - L2b-ExtendedDomain
-      - L2a-CoreDomain
-      - L1-Infrastructure
-      - L0-Data
-    L2b-ExtendedDomain:
-      - L2a-CoreDomain
-      - L1-Infrastructure
-      - L0-Data
-    L2a-CoreDomain:
-      - L1-Infrastructure
-      - L0-Data
-    L1-Infrastructure:
-      - L0-Data
-    L0-Data: []
-  # P6 wrap-up baseline (10 violations, generated 2026-07-10 via
-  # `deptrac analyse -f baseline -o deptrac-baseline.yaml`, then merged here
-  # since deptrac's baseline mechanism is consumed by merging into the main
-  # depfile, not via a separate CLI flag). All 10 are Presentation/Extended
-  # Domain layers reaching into L2a-CoreDomain's Image classes
-  # (CalendarMonthly's calendar thumbnails, Template's derivative helpers) --
-  # expected fallout of a pure extraction pass, not fixed here. Ratchet this
-  # down in a later phase that introduces a real service layer between
-  # Template/Calendar and Image, rather than adding to it.
-  skip_violations:
-    Piwigo\Calendar\CalendarMonthly:
-      - Piwigo\Image\DerivativeImage
-      - Piwigo\Image\ImageStdParams
-      - Piwigo\Image\SrcImage
-    Piwigo\Template\PwgTemplateAdapter:
-      - Piwigo\Image\DerivativeImage
-      - Piwigo\Image\SrcImage
-    Piwigo\Template\Template:
-      - Piwigo\Image\ImageStdParams
+    L4Integration:
+      - L3Presentation
+      - L2bExtendedDomain
+      - L2aCoreDomain
+      - L1Infrastructure
+      - L0Data
+    L3Presentation:
+      - L2bExtendedDomain
+      - L2aCoreDomain
+      - L1Infrastructure
+      - L0Data
+    L2bExtendedDomain:
+      - L2aCoreDomain
+      - L1Infrastructure
+      - L0Data
+    L2aCoreDomain:
+      - L1Infrastructure
+      - L0Data
+    L1Infrastructure:
+      - L0Data
+    L0Data: []
+  # No skip_violations. P6's original "10 violations" baseline here (removed
+  # P8) was a false positive: deptrac 4.6.2's Symfony Config layer parsing
+  # silently breaks ruleset resolution when layer names contain a hyphen
+  # (confirmed via an isolated minimal reproduction -- a bare `LayerA: [LayerB]`
+  # ruleset entry resolves correctly, but renaming to `Layer-A: [Layer-B]`
+  # makes the identical dependency register as a violation). The P6 layer
+  # names (`L0-Data`, `L1-Infrastructure`, etc.) all had hyphens, so every
+  # cross-layer dependency the ruleset explicitly allowed was being
+  # misreported as a violation -- there was never a real Calendar/Template ->
+  # Image architecture problem to baseline. Fixed by dropping the hyphens
+  # from every layer name (`L0Data`, `L1Infrastructure`, ...); re-running
+  # confirms 0 violations project-wide.

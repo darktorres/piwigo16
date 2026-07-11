@@ -10,6 +10,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\Image\pwg_image;
+use Piwigo\Config\Config;
 use Piwigo\Core\Logger;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageRect;
@@ -37,7 +38,7 @@ $data_location = $conf['data_location'];
 if (! is_string($data_location)) {
     die("Invalid \$conf['data_location'] configuration: expected a string.");
 }
-defined('PWG_DERIVATIVE_DIR') or define('PWG_DERIVATIVE_DIR', $data_location . 'i/');
+defined('Config::derivativeDir()') or define('Config::derivativeDir()', $data_location . 'i/');
 
 include PHPWG_ROOT_PATH . 'include/env.inc.php';
 pwg_load_env_file(PHPWG_ROOT_PATH);
@@ -247,7 +248,7 @@ function parse_request(): DerivativeParams
         (bool) preg_match($sync_chars_regex, $token) or ierror('Invalid chars in request', 400);
     }
 
-    $page['derivative_path'] = PHPWG_ROOT_PATH . PWG_DERIVATIVE_DIR . $req;
+    $page['derivative_path'] = PHPWG_ROOT_PATH . Config::derivativeDir() . $req;
 
     $pos = strrpos($req, '.');
     $pos !== false || ierror('Missing .', 400);

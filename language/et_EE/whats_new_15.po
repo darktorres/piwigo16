@@ -1,0 +1,23 @@
+# Piwigo translation — et_EE
+# Source: whats_new_15.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: et_EE\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "A new interface for user management"
+msgstr "Uus liides kasutajate haldamiseks"
+
+msgid "Brand new features : Activities logs and PDF reader"
+msgstr "Täiesti uued funktsioonid: tegevuste logid ja PDF lugeja"
+
+msgid "Enhanced interface for batch manager and album selector"
+msgstr "Täiustatud liides partiihalduri ja albumivalija jaoks"
+
+msgid "Even more filters for the gallery search engine"
+msgstr "Veel rohkem filtreid galerii otsingumootori jaoks"
+

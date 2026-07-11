@@ -1,0 +1,1541 @@
+# Piwigo translation — he_IL
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: he_IL\n"
+"Plural-Forms: nplurals=3; plural=(n == 1 ? 0 : n == 2 ? 1 : 2);\n"
+"X-Piwigo-Language-Name: Hebrew\n"
+"X-Piwigo-Country: Israel\n"
+"X-Piwigo-Direction: rtl\n"
+"X-Piwigo-Code: he\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "%d Kb"
+msgstr "%d KB"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d אלבום עודכן"
+msgstr[1] "%d אלבומים עודכנו"
+
+msgid "%d comment to validate"
+msgstr "%d תגובה לאישור"
+
+msgid "%d comments to validate"
+msgstr "%d תגובות לאישור"
+
+msgid "%d new comment"
+msgstr "%d תגובה חדשה"
+
+msgid "%d new comments"
+msgstr "%d תגובות חדשות"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d תגובה"
+msgstr[1] "%d תגובות"
+
+msgid "%d hit"
+msgid_plural "%d hits"
+msgstr[0] "%d פגיעה"
+msgstr[1] "%d פגיעות"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "%d תמונה חדשה"
+msgstr[1] "%d תמונות חדשות"
+
+msgid "%d new user"
+msgstr "%d משתמש חדש"
+
+msgid "%d new users"
+msgstr "%d משתמשים חדשים"
+
+msgid "About"
+msgstr "אודות"
+
+msgid "All tags"
+msgstr "כל התגיות"
+
+msgid "Any tag"
+msgstr "תגית כלשהי"
+
+msgid "Author"
+msgstr "יוצר"
+
+msgid "Albums"
+msgstr "אלבומים"
+
+msgid "Album"
+msgstr "אלבום"
+
+msgid "Close this window"
+msgstr "סגור חלון זה"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "עדכון RSS מלא (תמונות, הערות)"
+
+msgid "Confirm Password"
+msgstr "אשר סיסמא"
+
+msgid "Connection settings"
+msgstr "הגדרות חיבור"
+
+msgid "Login"
+msgstr "התחברות"
+
+msgid "Contact webmaster"
+msgstr "צור קשר עם מנהל האתר"
+
+msgid "Create a new account"
+msgstr "צור חשבון חדש"
+
+msgid "Created on"
+msgstr "נוצר ב"
+
+msgid "Creation date"
+msgstr "תאריך יצירה"
+
+msgid "Current password is wrong"
+msgstr "סיסמא שגויה"
+
+msgid "Dimensions"
+msgstr "מימדים"
+
+msgid "Display"
+msgstr "תצוגה"
+
+msgid "Email address"
+msgstr "כתובת דואר אלקטרוני"
+
+msgid "Enter your personnal informations"
+msgstr "הזן את הנתונים האישיים שלך"
+
+msgid "Error sending email"
+msgstr "שגיאה בעת שליחת דואר אלקטרוני"
+
+msgid "File name"
+msgstr "שם קובץ"
+
+msgid "File"
+msgstr "קובץ"
+
+msgid "Filesize"
+msgstr "גודל הקובץ"
+
+msgid "Filter and display"
+msgstr "סנן והצג"
+
+msgid "Filter"
+msgstr "מסנן"
+
+msgid "Forgot your password?"
+msgstr "שכחת את הסיסמא?"
+
+msgid "Go through the gallery as a visitor"
+msgstr "נווט בגלריה כמבקר"
+
+msgid "Help"
+msgstr "עזרה"
+
+msgid "Identification"
+msgstr "הזדהה"
+
+msgid "Photos only RSS feed"
+msgstr "תמונות בלבד RSS "
+
+msgid "Keyword"
+msgstr "מילת מפתח"
+
+msgid "Links"
+msgstr "קישורים"
+
+msgid "N/A"
+msgstr "N/A"
+
+msgid "New on %s"
+msgstr "חדש ב %s"
+
+msgid "Notification"
+msgstr "הודעה"
+
+msgid "Number of items"
+msgstr "מספר הפריטים"
+
+msgid "Original dimensions"
+msgstr "מידות מקוריות"
+
+msgid "Password forgotten"
+msgstr "שכחתי את הסיסמא"
+
+msgid "Password"
+msgstr "סיסמא"
+
+msgid "Post date"
+msgstr "תאריך פרסום"
+
+msgid "Posted on"
+msgstr "פורסם ב"
+
+msgid "Profile"
+msgstr "פרופיל"
+
+msgid "Quick connect"
+msgstr "חיבור מהיר"
+
+msgid "RSS feed"
+msgstr "הזנות (RSS)"
+
+msgid "Register"
+msgstr "הירשם"
+
+msgid "Registration"
+msgstr "הרשמה"
+
+msgid "Related tags"
+msgstr "תגיות קשורות"
+
+msgid "Reset"
+msgstr "אפס"
+
+msgid "Retrieve password"
+msgstr "שחזר את הסיסמא"
+
+msgid "Search tags"
+msgstr "חפש תגיות"
+
+msgid "Search"
+msgstr "חיפוש"
+
+msgid "display available tags"
+msgstr "הצג תגיות קיימות"
+
+msgid "Since"
+msgstr "מאז"
+
+msgid "Sort by"
+msgstr "מיין לפי"
+
+msgid "Sort order"
+msgstr "סדר מיון"
+
+msgid "Tag"
+msgstr "תגית"
+
+msgid "Tags"
+msgstr "תגיות"
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "ה-RSS מספק התראה על אירועים חדשים מאתר זה: תמונות חדשות, קטגוריות מעודכן, הערות חדשות. כדי להשתמש עם קורא RSS."
+
+msgid "Unknown feed identifier"
+msgstr "מזהה לא ידוע"
+
+msgid "User comments"
+msgstr "תגובות משתמש"
+
+msgid "Username"
+msgstr "שם משתמש"
+
+msgid "Visits"
+msgstr "ביקורים"
+
+msgid "Webmaster"
+msgstr "מנהל אתר"
+
+msgid "Week %d"
+msgstr "שבוע %d"
+
+msgid "About Piwigo"
+msgstr "אודות Piwigo"
+
+msgid "You are not authorized to access the requested page"
+msgstr "אינך מורשה לגשת לדף זה"
+
+msgid "add this photo to your favorites"
+msgstr "הוסף תמונה זאת למועדפים שלך"
+
+msgid "Administration"
+msgstr "ניהול אדמינים"
+
+msgid "all"
+msgstr "הכול"
+
+msgid "ascending"
+msgstr "עולה"
+
+msgid "Expand all albums"
+msgstr "הרחב את כל האלבומים"
+
+msgid "posted after %s (%s)"
+msgstr "פורסם אחרי %s (%s)"
+
+msgid "posted before %s (%s)"
+msgstr "פורסם לפני %s (%s)"
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "פורסם בין %s (%s) ו %s (%s)"
+
+msgid "posted on %s"
+msgstr "פורסם ב %"
+
+msgid "Best rated"
+msgstr "מדורג במקום הגבוה ביותר"
+
+msgid "display best rated photos"
+msgstr "הצג את התמונות בדירוגים הגבוהים ביותר"
+
+msgid "Calendar"
+msgstr "לוח שנה"
+
+msgid "All"
+msgstr "הכול"
+
+msgid "display each day with photos, month per month"
+msgstr "הצג כל יום עם תמונות, חודש אחרי חודש"
+
+msgid "View"
+msgstr "צפה"
+
+msgid "chronology_monthly_calendar"
+msgstr "לוח שנה חודשי"
+
+msgid "chronology_monthly_list"
+msgstr "רשימה חודשית"
+
+msgid "chronology_weekly_list"
+msgstr "רשימה שבועית"
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "לחץ כאן אם הדפדפן לא העביר אותך אוטומטית"
+
+msgid "comment date"
+msgstr "תאריך תגובה"
+
+msgid "Comment"
+msgstr "תגובה"
+
+msgid "Your comment has been registered"
+msgstr "התגובה שלך נרשמה"
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "מערכת למניעת הצפה: אנא המתן רגע לפני שליחת התגובה הבאה"
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "התגובה שלך לא נרשמה כיוון שלא עמדה בכללי האישור"
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "אדמין חייב לאשר את התגובה שלך לפני שהיא תופיע."
+
+msgid "This login is already used by another user"
+msgstr "חיבור זה בשימוש כבר על ידי משתמש אחר"
+
+msgid "Comments"
+msgstr "תגובות"
+
+msgid "Add a comment"
+msgstr "הוסף תגובה"
+
+msgid "created after %s (%s)"
+msgstr "נוצר אחרי %s (%s)"
+
+msgid "created before %s (%s)"
+msgstr "נוצר לפני %s (%s)"
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "נוצר בין %s (%s) ל %s (%s)"
+
+msgid "created on %s"
+msgstr "נוצר ב %s"
+
+msgid "Your Gallery Customization"
+msgstr "התאמה אישית של הגלריה שלך"
+
+msgid "Default"
+msgstr "ברירת מחדל"
+
+msgid "delete this photo from your favorites"
+msgstr "מחק תמונה זו מהמועדפים שלך"
+
+msgid "Delete"
+msgstr "מחק"
+
+msgid "descending"
+msgstr "יורד"
+
+msgid "Download"
+msgstr "הורד"
+
+msgid "Download this file"
+msgstr "הורד את הקובץ"
+
+msgid "edit"
+msgstr "ערוך"
+
+msgid "wrong date"
+msgstr "תאריך שגוי"
+
+msgid "excluded"
+msgstr "לא כולל"
+
+msgid "Your favorites"
+msgstr "המועדפים שלך"
+
+msgid "display your favorites photos"
+msgstr "הצג את התמונות המועדפות שלך"
+
+msgid "Favorites"
+msgstr "מועדפים"
+
+msgid "First"
+msgstr "ראשון"
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "הגלריה נעולה לצורכי תחזוקה. אנא חזור מאוחר יותר."
+
+msgid "Page generated in"
+msgstr "הדף נוצר ב"
+
+msgid "guest"
+msgstr "אורח"
+
+msgid "Hello"
+msgstr "שלום"
+
+msgid "available for administrators only"
+msgstr "זמין לאדמינים בלבד"
+
+msgid "display this album"
+msgstr "הצג אלבום זה"
+
+msgid "display last user comments"
+msgstr "הצג את תגובות המשתמשים האחרונות"
+
+msgid "search"
+msgstr "חפש"
+
+msgid "Home"
+msgstr "בית"
+
+msgid "in this album"
+msgstr "באלבום זה"
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] "ב %d אלבום משנה"
+msgstr[1] "ב %d אלבומי משנה"
+
+msgid "included"
+msgstr "כולל"
+
+msgid "Invalid password!"
+msgstr "סיסמא שגויה!"
+
+msgid "Language"
+msgstr "שפה"
+
+msgid "last %d days"
+msgstr "%d ימים אחרונים"
+
+msgid "Last"
+msgstr "אחרון"
+
+msgid "Logout"
+msgstr "התנתק"
+
+msgid "obligatory"
+msgstr "חובה"
+
+msgid "display a calendar by creation date"
+msgstr "הצג לוח שנה לפי תאריך יצירה"
+
+msgid "display all photos in all sub-albums"
+msgstr "הצג את כל התמונות בכל אלבומי המשנה"
+
+msgid "return to normal view mode"
+msgstr "חזור למצב תצוגה רגילה"
+
+msgid "display a calendar by posted date"
+msgstr "הצג לוח שנה לפי תאריך פרסום"
+
+msgid "Most visited"
+msgstr "הכי נצפה"
+
+msgid "display most visited photos"
+msgstr "הצג את התמונות הנצפות ביותר"
+
+msgid "Unknown identifier"
+msgstr "מזהה לא ידוע"
+
+msgid "New password"
+msgstr "סיסמא חדשה"
+
+msgid "Rate this photo"
+msgstr "דרג תמונה זאת"
+
+msgid "Next"
+msgstr "הבא"
+
+msgid "no rate"
+msgstr "ללא דירוג"
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "פריטים שנוספו ב %d הימים האחרונים."
+msgstr[1] "פריטים שנוספו ב %d הימים האחרונים."
+
+msgid "password updated"
+msgstr "הסיסמא עודכנה"
+
+msgid "Recent period must be a positive integer value"
+msgstr "התקופה האחרונה חייבת להיות מספר שלם חיובי"
+
+msgid "photo"
+msgstr "תמונה"
+
+msgid "Click on the photo to see it in high definition"
+msgstr "לחץ על התמונה על מנת לראות אותה באיכות גבוהה"
+
+msgid "Show file metadata"
+msgstr "הראה את המידע על הקובץ"
+
+msgid "Powered by"
+msgstr "Powered by"
+
+msgid "Preferences"
+msgstr "העדפות"
+
+msgid "Previous"
+msgstr "קודם"
+
+msgid "Random photos"
+msgstr "תמונות אקראיות"
+
+msgid "display a set of random photos"
+msgstr "הראה מספר תמונות אקראיות"
+
+msgid "Recent albums"
+msgstr "אלבומים אחרונים"
+
+msgid "display recently updated albums"
+msgstr "הצג אלבומים שעודכנו לאחרונה"
+
+msgid "Recent period"
+msgstr "תקופה אחרונה"
+
+msgid "Recent photos"
+msgstr "תמונות אחרונות"
+
+msgid "display most recent photos"
+msgstr "הצג את התמונות הכי חדשות"
+
+msgid "Redirection..."
+msgstr "העברה..."
+
+msgid "Please, enter a login"
+msgstr "אנא הזן שם משתמש"
+
+msgid "login mustn't end with a space character"
+msgstr "שם משתמש לא יכול להיגמר ברווח"
+
+msgid "login mustn't start with a space character"
+msgstr "שם משתמש לא יכול להתחיל עם רווח"
+
+msgid "this login is already used"
+msgstr "שם המשתמש הזה כבר בשימוש"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "דואר אלקטרוני חייב להיות כמו xxx@yyyy.eeee (לדוגמה : gates@gmail.com)"
+
+msgid "Auto login"
+msgstr "התחברות אוטומטית"
+
+msgid "remove this tag from the list"
+msgstr "הסר את התגית הזאת מהרשימה"
+
+msgid "representative"
+msgstr "צלמית אלבום"
+
+msgid "Search for Author"
+msgstr "חפש לפי יוצר"
+
+msgid "Search in albums"
+msgstr "חפש באלבומים"
+
+msgid "Search by date"
+msgstr "חפש לפי תאריך"
+
+msgid "Date"
+msgstr "תאריך"
+
+msgid "End-Date"
+msgstr "תאריך סיום"
+
+msgid "Kind of date"
+msgstr "סוג של תאריך"
+
+msgid "Search for words"
+msgstr "חפש את המילים"
+
+msgid "Search for all terms"
+msgstr "חפש לפי כל התנאים"
+
+msgid "Search for any term"
+msgstr "חפש לפי תנאי כלשהו"
+
+msgid "Empty query. No criteria has been entered."
+msgstr "שאילתה ריקה. לא הוכנסו קריטריונים."
+
+msgid "Search results"
+msgstr "תוצאות חיפוש"
+
+msgid "Search in sub-albums"
+msgstr "חפש באלבומי המשנה"
+
+msgid "Contact"
+msgstr "צור קשר"
+
+msgid "set as album representative"
+msgstr "בחר כצלמית אלבום"
+
+msgid "Show number of comments"
+msgstr "הראה מספר תגובות"
+
+msgid "Show number of hits"
+msgstr "הראה מספר פגיעות"
+
+msgid "slideshow"
+msgstr "מצגת"
+
+msgid "stop the slideshow"
+msgstr "עצור את המצגת"
+
+msgid "Specials"
+msgstr "מיוחדים"
+
+msgid "SQL queries in"
+msgstr "שאילתות SQL"
+
+msgid "display only recently posted photos"
+msgstr "הצג רק תמונות שפורסמו לאחרונה"
+
+msgid "return to the display of all photos"
+msgstr "חזור להצגת כל התמונות"
+
+msgid "the beginning"
+msgstr "ההתחלה"
+
+msgid "Thumbnails"
+msgstr "צלמיות"
+
+msgid "Menu"
+msgstr "תפריט"
+
+msgid "A comment on your site"
+msgstr "תגובה באתר שלך"
+
+msgid "today"
+msgstr "היום"
+
+msgid "Update your rating"
+msgstr "עדכן את הדירוג שלך"
+
+msgid "the username must be given"
+msgstr "שם משתמש חובה"
+
+msgid "useful when password forgotten"
+msgstr "שימושי במקרה ששכחת את הסיסמא"
+
+msgid "Quick search"
+msgstr "חיפוש מהיר"
+
+msgid "Connected user: %s"
+msgstr "משתמש מחובר: %s"
+
+msgid "IP: %s"
+msgstr "IP: %s"
+
+msgid "Browser: %s"
+msgstr "דפדפן: %s"
+
+msgid "Author: %s"
+msgstr "יוצר: %s"
+
+msgid "Comment: %s"
+msgstr "תגובה: %s"
+
+msgid "Comment by %s"
+msgstr "תגובה של %s"
+
+msgid "User: %s"
+msgstr "משתמש: %s"
+
+msgid "Email: %s"
+msgstr "דואר אלקטרוני: %s"
+
+msgid "Admin: %s"
+msgstr "אדמין: %s"
+
+msgid "Registration of %s"
+msgstr "רישום של %s"
+
+msgid "Album: %s"
+msgstr "אלבום: %s"
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "מצב שגוי עבור משתמש \"אורח\", משתמש במצב ברירת מחדל. עדכן בבקשה את מנהל האתר."
+
+msgid "this email address is already in use"
+msgstr "הדואר האלקטרוני הזה כבר בשימוש"
+
+msgid "Album results for"
+msgstr "תוצאות אלבום עבור"
+
+msgid "Tag results for"
+msgstr "תוצאות עבור התגיות"
+
+msgid "from %s to %s"
+msgstr "מ %s עד %s"
+
+msgid "Play of slideshow"
+msgstr "נגן מצגת"
+
+msgid "Pause of slideshow"
+msgstr "עצור מצגת"
+
+msgid "Repeat the slideshow"
+msgstr "חזור על המצגת"
+
+msgid "Not repeat the slideshow"
+msgstr "אל תחזור על אותם שקופיות"
+
+msgid "Reduce diaporama speed"
+msgstr "האט את המצגת"
+
+msgid "Accelerate diaporama speed"
+msgstr "הגבר מהירות המצגת"
+
+msgid "Submit"
+msgstr "שלח"
+
+msgid "Yes"
+msgstr "כן"
+
+msgid "No"
+msgstr "לא"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "%d תמונה"
+msgstr[1] "%d תמונות"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "%d תמונה כבר מקושרת לתגית זו"
+msgstr[1] "%d תמונות מקושרות גם לתגיות אלה"
+
+msgid "display photos linked to this tag"
+msgstr "הצג תמונות המקושרות לתגית זאת"
+
+msgid "photos posted during the last %d days"
+msgstr "תמונות שפורסמו במשך %d ימים אחרונים"
+
+msgid "Piwigo Help"
+msgstr "עזרת Piwigo"
+
+msgid "Rank"
+msgstr "דירוג"
+
+msgid "group by letters"
+msgstr "קבץ לפי אותיות"
+
+msgid "letters"
+msgstr "אותיות"
+
+msgid "show tag cloud"
+msgstr "הצג ענן תגיות"
+
+msgid "cloud"
+msgstr "ענן"
+
+msgid "Reset to default values"
+msgstr "אפס לערכי ברירת מחדל"
+
+msgid "delete all photos from your favorites"
+msgstr "מחק את כל התמונות מהמועדפים שלך"
+
+msgid "Sent by"
+msgstr "נשלח על ידי"
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "הדפדפן שלך חוסם קוקיז או לא תומך בהם. אתה חייב להפעיל את הקוקיז בשביל להתחבר."
+
+msgid "Edit a comment"
+msgstr "ערוך תגובה"
+
+msgid "Are you sure?"
+msgstr "האם אתה בטוח?"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) תגובה זאת דורשת אישור"
+
+msgid "Welcome"
+msgstr "ברוך הבא"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "ברוך הבא לגלריית ה Piwigo שלך!"
+
+msgid "... or browse your empty gallery"
+msgstr "... או שוטט בגלריה הריקה שלך"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "... או בטל הודעה זאת, אני אמצא את דרכי לבד"
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "שלום %s, גלרית הPiwigo שלך ריקה!"
+
+msgid "I want to add photos"
+msgstr "אני רוצה להוסיף תמונות"
+
+msgid "Manage this user comment: %s"
+msgstr "נהל את תגובת משתמש זה: %s"
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "חסרה כתובת דואר אלקטרוני. הזן בבקשה כתובת דואר אלקטרוני."
+
+msgid "This author modified following comment:"
+msgstr "יוצר זה ערך את התגובה הבאה:"
+
+msgid "This author removed the comment with id %d"
+msgstr "יוצר זה מחק את התגובה עם מספר זיהוי %d"
+
+msgid "html tags are not allowed in login"
+msgstr "לא ניתן להשתמש בתגי html בהתחברות"
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "מספר התמונות בדף חייב להיות גדול מאפס"
+
+msgid "Number of photos per page"
+msgstr "מספר תמונות בדף"
+
+msgid "Change my password"
+msgstr "שנה את הסיסמא שלי"
+
+msgid "Check your email for the confirmation link"
+msgstr "קישור אימות ממתין אצלך באימייל"
+
+msgid "Desktop"
+msgstr "שולחן העבודה"
+
+msgid "Edit"
+msgstr "ערוך"
+
+msgid "Enter your new password below."
+msgstr "הזן את סיסמתך החדשה מתחת"
+
+msgid "Hello %s,"
+msgstr "שלום %s,"
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "אם זו היתה טעות, פשוט התעלם ממייל זה ודבר לא יקרה"
+
+msgid "%d rate"
+msgid_plural "%d rates"
+msgstr[0] "%d דירוג"
+msgstr[1] "%d דירוגים"
+
+msgid "2small"
+msgstr "XXS - זעיר"
+
+msgid "Bad request"
+msgstr "בקשה שגויה"
+
+msgid "Date created, new &rarr; old"
+msgstr "תאריך יצירה, חדש &larr; ישן"
+
+msgid "Date created, old &rarr; new"
+msgstr "תאריך יצירה, ישן &larr; חדש"
+
+msgid "Date posted, new &rarr; old"
+msgstr "תאריך פרסום, חדש &larr; ישן"
+
+msgid "Date posted, old &rarr; new"
+msgstr "תאריך פרסום, ישן &larr; חדש"
+
+msgid "EXIF Metadata"
+msgstr "EXIF Metadata"
+
+msgid "File name, A &rarr; Z"
+msgstr "שם הקובץ, א &larr; ת"
+
+msgid "File name, Z &rarr; A"
+msgstr "שם הקובץ, ת &larr; א"
+
+msgid "Forbidden"
+msgstr "אסור"
+
+msgid "Here are your connection settings"
+msgstr "הנה הגדרות ההתחברות שלך"
+
+msgid "IPTC Metadata"
+msgstr "IPTC Metadata"
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "אם אתה חושב שקיבלת את האימייל הזה בטעות, אנא צור קשר איתנו ב %s"
+
+msgid "Invalid key"
+msgstr "מקש שגוי"
+
+msgid "Invalid username or email"
+msgstr "שם משתמש או אימייל שגויים"
+
+msgid "Manual sort order"
+msgstr "מיון ידני"
+
+msgid "Mobile"
+msgstr "מובייל"
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "מספרי זיהוי, 1 %larr; 9"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "מספרי זיהוי, 9 %larr; 1"
+
+msgid "Original"
+msgstr "מקורי"
+
+msgid "Page not found"
+msgstr "דף לא נמצא"
+
+msgid "Password Reset"
+msgstr "אפס סיסמא"
+
+msgid "Password reset is not allowed for this user"
+msgstr "משתמש זה לא רשאי לאפס סיסמא"
+
+msgid "Password: %s"
+msgstr "סיסמא: %s"
+
+msgid "Permalink for album not found"
+msgstr "לא נמצא קישור קבוע לאלבום"
+
+msgid "Photo sizes"
+msgstr "מידות התמונה"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "כותרת התמונה, א &larr; ת"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "כותרת התמונה, א &larr; ת"
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "Piiwigo נתקל בשגיאה שלא ניתנת לתיקון"
+
+msgid "Please enter your username or email address."
+msgstr "הכנס בבקשה את שם המשתמש או האימייל שלך."
+
+msgid "Rating score, high &rarr; low"
+msgstr "ציון דירוג, גבוהה %larr; נמוך"
+
+msgid "Rating score, low &rarr; high"
+msgstr "ציון דירוג, נמוך %larr; גבוהה"
+
+msgid "Rating score"
+msgstr "ציון דירוג"
+
+msgid "Requested album does not exist"
+msgstr "האלבום המבוקש לא קיים"
+
+msgid "Requested tag does not exist"
+msgstr "התגית המבוקשת לא קיימת"
+
+msgid "Return to home page"
+msgstr "חזור לדף הבית"
+
+msgid "Send my connection settings by email"
+msgstr "שלח את פרטי ההתחברות שלי באימייל"
+
+msgid "Show latest comments first"
+msgstr "הראה את התגובות האחרונות בהתחלה"
+
+msgid "Show oldest comments first"
+msgstr "הראה את התגובות הישנות ביותר בהתחלה"
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "מישהו ביקש לאפס סיסמא לחשבון משתמש:"
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "נרשמת בהצלחה, בקרוב תקבל אימייל עם פרטי ההתחברות שלך. ברוך הבא!"
+
+msgid "Thank you for registering at %s!"
+msgstr "תודה לך על רישומך אל %s!"
+
+msgid "The passwords do not match"
+msgstr "הסיסמאות לא תואמות"
+
+msgid "To reset your password, visit the following address:"
+msgstr "לאיפוס הסיסמא, הכנס לכתובת הבאה"
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "למשתמש ״%s\" אין כתובת אימייל, לא ניתן לשחזר סיסמא."
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "שם משתמש ״%s\" בגלריה %s"
+
+msgid "Username modification"
+msgstr "שינוי שם משתמש"
+
+msgid "Username or email"
+msgstr "שם משתמש או אימייל"
+
+msgid "Username: %s"
+msgstr "שם משתמש: %s"
+
+msgid "View in"
+msgstr "צפייה ב"
+
+msgid "Visits, high &rarr; low"
+msgstr "ביקורים, גבוה %larr; נמוך"
+
+msgid "Visits, low &rarr; high"
+msgstr "ביקורים, נמוך %larr; גבוה"
+
+msgid "You will receive a link to create a new password via email."
+msgstr "אתה תקבל קישור אל האימייל שלך כדי ליצור סיסמא חדשה"
+
+msgid "Your password has been reset"
+msgstr "הסיסמא שלך אופסה"
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "שם המשתמש שלך שונה בהצלחה ל: %s"
+
+msgid "large"
+msgstr "L - גדול"
+
+msgid "medium"
+msgstr "M - בינוני"
+
+msgid "small"
+msgstr "S - קטן"
+
+msgid "square"
+msgstr "מרובע"
+
+msgid "thumb"
+msgstr "צלמית"
+
+msgid "xlarge"
+msgstr "XL - גדול מאוד"
+
+msgid "xsmall"
+msgstr "XS - קטן מאוד"
+
+msgid "xxlarge"
+msgstr "XXL - ענק"
+
+msgid "Your website URL is invalid"
+msgstr "כתובת האתר שלך לא תקינה"
+
+msgid "Email address is mandatory"
+msgstr "שדה דואר אלקטרוני חובה"
+
+msgid "Username is mandatory"
+msgstr "שם משתמש חובה"
+
+msgid "Website"
+msgstr "אתר"
+
+msgid "mandatory"
+msgstr "חובה"
+
+msgid "Password is missing. Please enter the password."
+msgstr "סיסמא חסרה. אנא הזן את הסיסמא."
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "אישור סיסמא חסר. אנא אשר את הסיסמא."
+
+msgid "Last Page"
+msgstr "עמוד אחרון"
+
+msgid "Theme"
+msgstr "ערכת נושא"
+
+msgid "Go back to the album"
+msgstr "חזור לאלבום"
+
+msgid "First Page"
+msgstr "עמוד ראשון"
+
+msgid "Email"
+msgstr "אימייל"
+
+msgid "%d photos per page"
+msgstr "%d תמונות לעמוד"
+
+msgid "No results for"
+msgstr "לא נמצאו תוצאות עבור"
+
+msgid "Album name, A &rarr; Z"
+msgstr "שם אלבום, A &rarr; Z"
+
+msgid "Album name, Z &rarr; A"
+msgstr "שם אלבום, Z &rarr; A"
+
+msgid "Apply on properties"
+msgstr "עדכן תכונות"
+
+msgid "Link: %s"
+msgstr "קישור: %s"
+
+msgid "Photo description"
+msgstr "תיאור התמונה"
+
+msgid "Photo title"
+msgstr "כותרת התמונה"
+
+msgid "Your authentication key is no longer valid."
+msgstr "מפתח האימות שלך אינו תקף יותר."
+
+msgid "generate random password"
+msgstr "ייצר סיסמא אקראית"
+
+msgid "Invalid username or password!"
+msgstr "שם משתמש או סיסמא שגויים!"
+
+msgid "last 24 hours"
+msgstr "24 השעות האחרונות"
+
+msgid "last 3 months"
+msgstr "3 החודשים האחרונים"
+
+msgid "last 30 days"
+msgstr "30 הימים האחרונים"
+
+msgid "last 6 months"
+msgstr "6 החודשים האחרונים"
+
+msgid "last 7 days"
+msgstr "7 הימים האחרונים"
+
+msgid "last year"
+msgstr "שנה שעברה"
+
+msgid "rating score %s"
+msgstr "ציון דירוג %s"
+
+msgid "year %d"
+msgstr "שנה %d"
+
+msgid "Pages"
+msgstr "עמודים"
+
+msgid "Password: ********** (no copy by email)"
+msgstr "סיסמה: ********** (אין העתקה באמצעות אימייל)"
+
+msgid "Pre-established filters are proposed, but you can add or remove them using the \"Choose filters\" button."
+msgstr "מסננים שהוגדרו מראש מוצעים, אך ניתן להוסיף או להסיר אותם באמצעות כפתור \"בחר מסננים\"."
+
+msgid "Related albums"
+msgstr "אלבומים קשורים"
+
+msgid "Search in :"
+msgstr "חפש ב:"
+
+msgid "Search in this set"
+msgstr "חפש בקבוצה זו"
+
+msgid "Start-Date"
+msgstr "תאריך התחלה"
+
+msgid "Tags found"
+msgstr "תגיות שנמצאו"
+
+msgid "Tags listed here match your search by word. Click on one to browse by tag."
+msgstr "התגיות המופיעות כאן תואמות את החיפוש לפי מילה. לחץ על אחת כדי לעיין לפי תגית."
+
+msgid "The PDF you requested is too large to display on this page."
+msgstr "ה-PDF שביקשת גדול מדי להצגה בעמוד זה."
+
+msgid "There are no authors available for the photos currently filtered"
+msgstr "אין מחברים זמינים עבור התמונות שמוצגות כרגע"
+
+msgid "There are no creation dates available for the photos currently filtered"
+msgstr "אין תאריכי יצירה זמינים עבור התמונות המוצגות כרגע"
+
+msgid "There are no tags available for the photos currently filtered"
+msgstr "אין תגיות זמינות עבור התמונות המוצגות כרגע"
+
+msgid "Unknown time period"
+msgstr "תקופת זמן לא ידועה"
+
+msgid "You can try to edit your filters and perform a new search."
+msgstr "תוכל לנסות לערוך את המסננים ולבצע חיפוש חדש."
+
+msgid "last 12 months"
+msgstr "12 החודשים האחרונים"
+
+msgid "%d visits"
+msgstr "%d ביקורים"
+
+msgid "Added by"
+msgstr "נוסף על ידי"
+
+msgid "Album already selected"
+msgstr "האלבום כבר נבחר"
+
+msgid "Album description"
+msgstr "תיאור האלבום"
+
+msgid "Album title"
+msgstr "כותרת האלבום"
+
+msgid "Albums found"
+msgstr "אלבומים נמצאו"
+
+msgid "Albums listed here match your search by word. Click on one to browse by album."
+msgstr "האלבומים המופיעים כאן תואמים את החיפוש לפי מילה. לחץ על אחד כדי לעיין לפי אלבום."
+
+msgid "Cancel"
+msgstr "בטל"
+
+msgid "Choose filters"
+msgstr "בחר מסננים"
+
+msgid "Clear"
+msgstr "נקה"
+
+msgid "Click here to display it"
+msgstr "לחץ כאן כדי להציג"
+
+msgid "Custom dates"
+msgstr "תאריכים מותאמים אישית"
+
+msgid "File type"
+msgstr "סוג קובץ"
+
+msgid "Fill in the filters to start a search"
+msgstr "מלא את המסננים כדי להתחיל חיפוש"
+
+msgid "Filters"
+msgstr "מסננים"
+
+msgid "No results are available."
+msgstr "אין תוצאות זמינות."
+
+msgid "Only the first %d albums are displayed, out of %d."
+msgstr "רק %d האלבומים הראשונים מוצגים, מתוך %d."
+
+msgid "Album name, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+msgstr "שם אלבום, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+
+msgid "Album name, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+msgstr "שם אלבום, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+
+msgid "Empty filters"
+msgstr "נקה סינון"
+
+msgid "Validate"
+msgstr "אמת"
+
+msgid "Set your password below."
+msgstr "הגדירו סיסמתכם מטה."
+
+msgid "Your API key will expire in %d day."
+msgstr "מפתח ה-API שלך יפוג בעוד %d יום."
+
+msgid "Your API key will expire in %d days."
+msgstr "מפתח ה-API שלך יפוג בעוד %d ימים."
+
+msgid "Your API key will expire soon"
+msgstr "מפתח ה-API שלך עומד לפוג בקרוב"
+
+msgid "Your changes have been applied."
+msgstr "השינויים שלך הוחלו."
+
+msgid "Your password was successfully reset"
+msgstr "הסיסמה שלך אופסה בהצלחה"
+
+msgid "Your password was successfully set"
+msgstr "הסיסמה שלך הוגדרה בהצלחה"
+
+msgid "must not be empty"
+msgstr "אסור שיהיה ריק"
+
+msgid "you must choose a date"
+msgstr "עליך לבחור תאריך"
+
+msgid "Options"
+msgstr "אפשרויות"
+
+msgid "Return to <a href=\"identification.php\" title=\"Sign in\">Sign in</a>"
+msgstr "חזור אל<a href=\"identification.php\" title=\"Sign in\">התחברות</a>"
+
+msgid "Return to the gallery"
+msgstr "חזור לגלריה"
+
+msgid "Revoke"
+msgstr "בטל הרשאה"
+
+msgid "Revoked"
+msgstr "בוטלה ההרשאה"
+
+msgid "Set my password"
+msgstr "קבע את הסיסמה שלי"
+
+msgid "Show expired keys"
+msgstr "הצג מפתחות שפגו"
+
+msgid "The api key has been successfully created."
+msgstr "מפתח ה-API נוצר בהצלחה."
+
+msgid "The email %s will be used to notify you when your API key is about to expire."
+msgstr "הדוא\"ל %s ישמש להודעה אליך כאשר מפתח ה-API שלך עומד לפוג."
+
+msgid "The secret key can no longer be displayed."
+msgstr "לא ניתן עוד להציג את מפתח הסוד."
+
+msgid "This API key was manually revoked on %s"
+msgstr "מפתח ה-API הזה בוטל ידנית ב-%s"
+
+msgid "To continue using the API, please renew your key before it expires."
+msgstr "כדי להמשיך להשתמש ב-API, נא לחדש את מפתחך לפני שיפוג."
+
+msgid "To manage your API keys, please log in with your username/password."
+msgstr "כדי לנהל את מפתחות ה-API שלך, אנא התחבר עם שם המשתמש/סיסמה שלך."
+
+msgid "When enabled, a common template is used for the login and registration pages, regardless of the theme."
+msgstr "כאשר מופעל, תבנית משותפת נמצאת בשימוש עבור דפי ההתחברות וההרשמה, ללא קשר לערכת הנושא."
+
+msgid "You can manage your API keys in your <a href=\"%s\">account settings.</a>"
+msgstr "באפשרותך לנהל את מפתחות ה-API שלך ב<a href=\"%s\">הגדרות החשבון שלך.</a>"
+
+msgid "You have no email address, so you will not be notified when your API key is about to expire."
+msgstr "אין לך כתובת דוא\"ל, ולכן לא תקבל הודעה כאשר מפתח ה-API שלך עומד לפוג."
+
+msgid "Custom date"
+msgstr "תאריך מותאם אישית"
+
+msgid "Do you really want to revoke the \"%s\" API key?"
+msgstr "האם אתה באמת רוצה לבטל את מפתח ה-API \"%s\"?"
+
+msgid "Don't have an account yet ?"
+msgstr "עדיין אין לך חשבון?"
+
+msgid "Done"
+msgstr "גמור"
+
+msgid "Duration"
+msgstr "משך זמן"
+
+msgid "Edit API Key"
+msgstr "ערוך מפתח API"
+
+msgid "Expert mode"
+msgstr "מצב מומחה"
+
+msgid "Expired"
+msgstr "פג תוקף"
+
+msgid "Expired on"
+msgstr "פג תוקף בתאריך"
+
+msgid "Expires in"
+msgstr "פג תוקף בעוד"
+
+msgid "Generate API Key"
+msgstr "צור מפתח API"
+
+msgid "Generate key"
+msgstr "צור מפתח"
+
+msgid "Hello <em>%s</em>, enter your new password below."
+msgstr "שלום<em>%s</em>, הזן את סיסמתך החדשה למטה."
+
+msgid "Hide expired keys"
+msgstr "הסתר מפתחות שפג תוקפם"
+
+msgid "Impossible to copy automatically. Please copy manually."
+msgstr "בלתי אפשרי להעתיק אוטומטית. אנא העתק באופן ידני."
+
+msgid "Last use"
+msgstr "שימוש אחרון"
+
+msgid "Manage your account"
+msgstr "נהל את חשבונך"
+
+msgid "Never"
+msgstr "לעולם"
+
+msgid "New API Key"
+msgstr "מפתח API חדש"
+
+msgid "No expiration"
+msgstr "ללא תוקף"
+
+msgid "3xlarge"
+msgstr "3XL - ענק מאוד"
+
+msgid "4xlarge"
+msgstr "4XL - עצום"
+
+msgid "API Key has been successfully edited."
+msgstr "מפתח API נערך בהצלחה."
+
+msgid "API Key has been successfully revoked."
+msgstr "מפתח API בוטל בהצלחה."
+
+msgid "API Key name"
+msgstr "שם מפתח API"
+
+msgid "API Key not found"
+msgstr "מפתח API לא נמצא"
+
+msgid "API Keys"
+msgstr "מפתחות API"
+
+msgid "Account"
+msgstr "חשבון"
+
+msgid "Already have an account ?"
+msgstr "כבר יש לך חשבון?"
+
+msgid "An email has been sent with a link to reset your password"
+msgstr "נשלח אימייל עם קישור לאיפוס הסיסמה שלך"
+
+msgid "An error has occured please got back to <a href=\"identification.php\" title=\"Sign in\">Sign in</a> or <a href=\"register.php\">Register</a>"
+msgstr "אירעה שגיאה, אנא חזור ל<a href=\"identification.php\" title=\"Sign in\">התחברות</a> או <a href=\"register.php\">הרשמה</a>"
+
+msgid "Change your password"
+msgstr "שנה את הסיסמה שלך"
+
+msgid "Check your inbox"
+msgstr "בדוק את תיבת הדואר שלך"
+
+msgid "Choose how you want to see your gallery"
+msgstr "בחר כיצד ברצונך לראות את הגלריה שלך"
+
+msgid "Confirm my new password"
+msgstr "אשר את הסיסמה החדשה שלי"
+
+msgid "Confirm new password"
+msgstr "אשר סיסמה חדשה"
+
+msgid "Create API Keys to secure your acount"
+msgstr "צור מפתחות API כדי לאבטח את חשבונך"
+
+msgid "Create a new API key to secure your account."
+msgstr "צור מפתח API חדש כדי לאבטח את חשבונך."
+
+msgid "Create an account"
+msgstr "צור חשבון"
+
+msgid "Created at"
+msgstr "נוצר בתאריך"
+
+msgid "An email has been sent with a verification code"
+msgstr "נשלחה הודעת דוא\"ל עם קוד אימות"
+
+msgid "ID copied."
+msgstr "המזהה הועתק."
+
+msgid "If you do not receive the email, please contact your webmaster."
+msgstr "אם אינך מקבל את הדוא\"ל, נא ליצור קשר עם מנהל האתר שלך."
+
+msgid "Invalid verification code"
+msgstr "קוד אימות לא חוקי"
+
+msgid "Save your ID and secret"
+msgstr "שמור את המזהה והסוד שלך"
+
+msgid "Secret copied. Keep it in a safe place."
+msgstr "הסוד הועתק. שמור אותו במקום בטוח."
+
+msgid "The secret will no longer be displayed. You must copy it to continue."
+msgstr "הסוד לא יוצג יותר. עליך להעתיק אותו כדי להמשיך."
+
+msgid "Verification code"
+msgstr "קוד אימות"
+
+msgid "Verify"
+msgstr "אמת"
+
+msgid "Here is your verification code:"
+msgstr "הנה קוד האימות שלך:"
+
+msgid "If this wasn't you, please change your password immediately or contact your webmaster."
+msgstr "אם זה לא היית אתה, אנא שנה את סיסמתך מיד או צור קשר עם מנהל האתר שלך."
+
+msgid "If you changed your password because you think it was stolen, we recommend revoking your %d API keys <a href=\"%s\">in your profile</a>."
+msgstr "אם שינית את סיסמתך מפני שחשבת שהיא נגנבה, אנו ממליצים לבטל את מפתחות ה-API שלך במספר %d<a href=\"%s\">בפרופיל שלך</a>."
+
+msgid "Too many attempts, please try later.."
+msgstr "נעשו יותר מדי ניסיונות, אנא נסה שוב מאוחר יותר."
+
+msgid "Verification successful! You can now choose a new password."
+msgstr "אימות הצליח! כעת תוכל לבחור סיסמה חדשה."
+
+msgid "Your verification code"
+msgstr "קוד האימות שלך"
+
+msgid "edit user preferences"
+msgstr "ערוך העדפות משתמש"
+
+msgid "piwigo_day_0"
+msgstr "ראשון"
+
+msgid "piwigo_day_1"
+msgstr "שני"
+
+msgid "piwigo_day_2"
+msgstr "שלישי"
+
+msgid "piwigo_day_3"
+msgstr "רביעי"
+
+msgid "piwigo_day_4"
+msgstr "חמישי"
+
+msgid "piwigo_day_5"
+msgstr "שישי"
+
+msgid "piwigo_day_6"
+msgstr "שבת"
+
+msgid "piwigo_month_10"
+msgstr "אוקטובר"
+
+msgid "piwigo_month_11"
+msgstr "נובמבר"
+
+msgid "piwigo_month_12"
+msgstr "דצמבר"
+
+msgid "piwigo_month_1"
+msgstr "ינואר"
+
+msgid "piwigo_month_2"
+msgstr "פברואר"
+
+msgid "piwigo_month_3"
+msgstr "מרץ"
+
+msgid "piwigo_month_4"
+msgstr "אפריל"
+
+msgid "piwigo_month_5"
+msgstr "מאי"
+
+msgid "piwigo_month_6"
+msgstr "יוני"
+
+msgid "piwigo_month_7"
+msgstr "יולי"
+
+msgid "piwigo_month_8"
+msgstr "אוגוסט"
+
+msgid "piwigo_month_9"
+msgstr "ספטמבר"
+

@@ -1,0 +1,1542 @@
+# Piwigo translation — ko_KR
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ko_KR\n"
+"Plural-Forms: nplurals=1; plural=(0);\n"
+"X-Piwigo-Language-Name: 한국어\n"
+"X-Piwigo-Country: 대한민국\n"
+"X-Piwigo-Jquery-Code: ko\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: en\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "앨범 %d개가 업데이트 되었습니다"
+msgstr[1] "앨범 %d개가 업데이트 되었습니다"
+
+msgid "%d comment to validate"
+msgstr "승인 대기중인 댓글 %d개가 있습니다"
+
+msgid "%d comments to validate"
+msgstr "승인 대기중인 댓글 %d개가 있습니다"
+
+msgid "%d new comment"
+msgstr "새 댓글 %d개가 있습니다"
+
+msgid "%d new comments"
+msgstr "새 댓글 %d개가 있습니다"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "댓글 %d개"
+msgstr[1] "댓글 %d개"
+
+msgid "%d hit"
+msgid_plural "%d hits"
+msgstr[0] "조회 %d회"
+msgstr[1] "조회 %d회"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "새 사진 %d장"
+msgstr[1] "새 사진 %d장"
+
+msgid "%d new user"
+msgstr "신규 사용자 %d명"
+
+msgid "%d new users"
+msgstr "신규 사용자 %d명"
+
+msgid "About"
+msgstr "정보"
+
+msgid "All tags"
+msgstr "모든 태그"
+
+msgid "Any tag"
+msgstr "아무 태그"
+
+msgid "Author"
+msgstr "작성자"
+
+msgid "Albums"
+msgstr "앨범"
+
+msgid "Album"
+msgstr "앨범"
+
+msgid "Close this window"
+msgstr "창 닫기"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "RSS피드 (사진과 댓글)"
+
+msgid "Confirm Password"
+msgstr "비밀번호 확인"
+
+msgid "Connection settings"
+msgstr "접속설정"
+
+msgid "Login"
+msgstr "로그인"
+
+msgid "Contact webmaster"
+msgstr "웹마스터에게 연락하기"
+
+msgid "Create a new account"
+msgstr "새 계정 만들기"
+
+msgid "Created on"
+msgstr "생성일"
+
+msgid "Creation date"
+msgstr "생성 날짜"
+
+msgid "Current password is wrong"
+msgstr "현재 비밀번호가 잘못되었습니다"
+
+msgid "Dimensions"
+msgstr "해상도"
+
+msgid "Display"
+msgstr "표시"
+
+msgid "Email address"
+msgstr "메일 주소"
+
+msgid "Enter your personnal informations"
+msgstr "개인 정보를 입력해 주세요"
+
+msgid "Error sending email"
+msgstr "메일을 보내는 중 오류가 발생하였습니다"
+
+msgid "File name"
+msgstr "파일 이름"
+
+msgid "File"
+msgstr "파일"
+
+msgid "Filesize"
+msgstr "파일 크기"
+
+msgid "Filter and display"
+msgstr "필터 후 표시"
+
+msgid "Filter"
+msgstr "필터"
+
+msgid "Forgot your password?"
+msgstr "비밀번호를 잊으셨나요?"
+
+msgid "Go through the gallery as a visitor"
+msgstr "손님으로 앨범 구경"
+
+msgid "Help"
+msgstr "도움말"
+
+msgid "Identification"
+msgstr "확인"
+
+msgid "Photos only RSS feed"
+msgstr "RSS피드 사진들"
+
+msgid "Keyword"
+msgstr "키워드"
+
+msgid "Notification"
+msgstr "알림"
+
+msgid "Number of items"
+msgstr "항목 수"
+
+msgid "Original dimensions"
+msgstr "원본 해상도"
+
+msgid "Password forgotten"
+msgstr "비밀번호를 잃어버렸습니다"
+
+msgid "Password"
+msgstr "비밀번호"
+
+msgid "Post date"
+msgstr "등록일"
+
+msgid "Posted on"
+msgstr "등록일"
+
+msgid "Profile"
+msgstr "프로필"
+
+msgid "Quick connect"
+msgstr "빠른 연결"
+
+msgid "RSS feed"
+msgstr "RSS 피드"
+
+msgid "Register"
+msgstr "신규 가입"
+
+msgid "Registration"
+msgstr "새 사용자 등록"
+
+msgid "Related tags"
+msgstr "관련 태그"
+
+msgid "Reset"
+msgstr "초기화"
+
+msgid "Retrieve password"
+msgstr "비밀번호 찾기"
+
+msgid "Search tags"
+msgstr "태그 검색"
+
+msgid "Search"
+msgstr "검색"
+
+msgid "display available tags"
+msgstr "사용 가능한 태그 보기"
+
+msgid "Since"
+msgstr "기간"
+
+msgid "Sort by"
+msgstr "정렬 기준"
+
+msgid "Sort order"
+msgstr "정렬 순서"
+
+msgid "Tag"
+msgstr "태그"
+
+msgid "Tags"
+msgstr "태그"
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "RSS 피드 알림은 이 사이트의 새 사진, 댓글, 업데이트된 앨범에 대해 알려줍니다. RSS 리더와 함께 사용하세요."
+
+msgid "Unknown feed identifier"
+msgstr "알 수 없는 피드 식별자입니다"
+
+msgid "User comments"
+msgstr "사용자 댓글"
+
+msgid "Username"
+msgstr "사용자 이름"
+
+msgid "Visits"
+msgstr "방문자"
+
+msgid "Webmaster"
+msgstr "웹마스터"
+
+msgid "Week %d"
+msgstr "%d 주"
+
+msgid "About Piwigo"
+msgstr "Piwigo 정보"
+
+msgid "You are not authorized to access the requested page"
+msgstr "이 페이지에 접근할 권한이 없습니다"
+
+msgid "add this photo to your favorites"
+msgstr "이 사진을 즐겨찾기에 추가"
+
+msgid "Administration"
+msgstr "관리"
+
+msgid "all"
+msgstr "모두"
+
+msgid "ascending"
+msgstr "오름차순"
+
+msgid "Expand all albums"
+msgstr "모든 앨범 열기"
+
+msgid "posted after %s (%s)"
+msgstr "%s (%s) 이후의 포스트"
+
+msgid "posted before %s (%s)"
+msgstr "%s (%s) 이전의 포스트"
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "%s (%s) 부터 %s (%s) 까지의 포스트"
+
+msgid "posted on %s"
+msgstr "%s 의 포스트"
+
+msgid "Best rated"
+msgstr "최고 등급"
+
+msgid "display best rated photos"
+msgstr "최고 등급의 사진들 보기"
+
+msgid "Calendar"
+msgstr "캘린더"
+
+msgid "All"
+msgstr "모두"
+
+msgid "display each day with photos, month per month"
+msgstr "연도별, 월별, 일별 표시"
+
+msgid "View"
+msgstr "보기"
+
+msgid "chronology_monthly_calendar"
+msgstr "월별 캘린더"
+
+msgid "chronology_monthly_list"
+msgstr "월별 리스트"
+
+msgid "chronology_weekly_list"
+msgstr "주간 리스트"
+
+msgid "New on %s"
+msgstr "새로 등록됨(%s)"
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "자동으로 이동되지 않을 땐 이곳을 클릭하세요"
+
+msgid "comment date"
+msgstr "댓글 등록일"
+
+msgid "Comment"
+msgstr "댓글"
+
+msgid "Your comment has been registered"
+msgstr "댓글이 등록되었습니다"
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "도배 방지 시스템: 다른 댓글을 달기 전까지 잠시만 기다려 주세요."
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "유효 조건에 어긋난 의견이기 때문에 댓글이 등록되지 않았습니다"
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "관리자의 승인이 있기 전까지 다른 사용자들이 이 댓글을 볼 수 없습니다."
+
+msgid "This login is already used by another user"
+msgstr "다른 사용자가 이미 이 계정을 사용중입니다"
+
+msgid "Comments"
+msgstr "댓글"
+
+msgid "Add a comment"
+msgstr "댓글 남기기"
+
+msgid "created after %s (%s)"
+msgstr "%s 이후 생성됨 (%s)"
+
+msgid "created before %s (%s)"
+msgstr "%s 이전 생성됨(%s)"
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "%s (%s) 에서 %s (%s) 사이에 생성됨"
+
+msgid "created on %s"
+msgstr "%s 에 생성됨"
+
+msgid "Your Gallery Customization"
+msgstr "갤러리 개인화"
+
+msgid "Default"
+msgstr "기본값"
+
+msgid "delete this photo from your favorites"
+msgstr "이 사진을 즐겨찾기에서 삭제"
+
+msgid "Delete"
+msgstr "삭제"
+
+msgid "descending"
+msgstr "내림차순"
+
+msgid "Download"
+msgstr "내려받기"
+
+msgid "Download this file"
+msgstr "이 파일을 내려받기"
+
+msgid "edit"
+msgstr "편집"
+
+msgid "wrong date"
+msgstr "잘못된 날짜"
+
+msgid "excluded"
+msgstr "제외됨"
+
+msgid "Your favorites"
+msgstr "나의 즐겨찾기"
+
+msgid "display your favorites photos"
+msgstr "나의 즐겨찾기 사진을 보여줍니다"
+
+msgid "Favorites"
+msgstr "즐겨찾기"
+
+msgid "First"
+msgstr "처음"
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "이 갤러리는 유지/보수를 위해 잠겨 있습니다. 나중에 다시 방문해 주세요."
+
+msgid "Page generated in"
+msgstr "페이지 생성됨"
+
+msgid "guest"
+msgstr "손님"
+
+msgid "Hello"
+msgstr "안녕하세요!"
+
+msgid "available for administrators only"
+msgstr "관리자만 사용 가능합니다"
+
+msgid "display this album"
+msgstr "이 앨범을 표시"
+
+msgid "display last user comments"
+msgstr "마지막 사용자 댓글을 표시"
+
+msgid "search"
+msgstr "검색"
+
+msgid "Home"
+msgstr "홈"
+
+msgid "Links"
+msgstr "링크"
+
+msgid "in this album"
+msgstr "(이 앨범)"
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] "(%d개 하위 앨범)"
+msgstr[1] "(%d개 하위 앨범)"
+
+msgid "included"
+msgstr "포함됨"
+
+msgid "Invalid password!"
+msgstr "잘못된 비밀번호!"
+
+msgid "Language"
+msgstr "언어"
+
+msgid "last %d days"
+msgstr "최근 %d일"
+
+msgid "Last"
+msgstr "마지막"
+
+msgid "Logout"
+msgstr "로그아웃"
+
+msgid "obligatory"
+msgstr "필수"
+
+msgid "display a calendar by creation date"
+msgstr "생성 날짜별로 캘린더 표시"
+
+msgid "display all photos in all sub-albums"
+msgstr "하위 앨범의 모든 사진 표시"
+
+msgid "return to normal view mode"
+msgstr "일반 모드로 돌아감"
+
+msgid "display a calendar by posted date"
+msgstr "등록 날짜별로 캘린더 표시"
+
+msgid "Most visited"
+msgstr "최다 방문"
+
+msgid "display most visited photos"
+msgstr "가장 많이 본 사진을 보여줍니다"
+
+msgid "Unknown identifier"
+msgstr "알 수 없는 식별자"
+
+msgid "New password"
+msgstr "새 비밀번호"
+
+msgid "Rate this photo"
+msgstr "이 사진 평가"
+
+msgid "Next"
+msgstr "다음"
+
+msgid "no rate"
+msgstr "평점 없음"
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "최근 %d일 이내 등록된 사진만 표시됩니다."
+msgstr[1] "최근 %d일 이내 등록된 사진만 표시됩니다."
+
+msgid "password updated"
+msgstr "비밀번호가 변경되었습니다"
+
+msgid "Recent period must be a positive integer value"
+msgstr "최근 기간은 양의 정수여야 합니다"
+
+msgid "photo"
+msgstr "사진"
+
+msgid "Click on the photo to see it in high definition"
+msgstr "고해상도로 보시려면 사진을 클릭하세요"
+
+msgid "Show file metadata"
+msgstr "Metadata 보기"
+
+msgid "Powered by"
+msgstr "서비스 제공:"
+
+msgid "Preferences"
+msgstr "환경설정"
+
+msgid "Previous"
+msgstr "이전"
+
+msgid "Random photos"
+msgstr "무작위 사진"
+
+msgid "display a set of random photos"
+msgstr "무작위로 사진들을 보여줍니다"
+
+msgid "Recent albums"
+msgstr "최근 앨범"
+
+msgid "display recently updated albums"
+msgstr "최근에 업데이트된 앨범을 보여줍니다"
+
+msgid "Recent period"
+msgstr "최근 기간"
+
+msgid "Recent photos"
+msgstr "최근 사진"
+
+msgid "display most recent photos"
+msgstr "가장 최근의 사진을 보여줍니다"
+
+msgid "Redirection..."
+msgstr "연결중..."
+
+msgid "Please, enter a login"
+msgstr "로그인 정보를 입력하세요"
+
+msgid "login mustn't end with a space character"
+msgstr "공백문자로 끝낼 수 없습니다"
+
+msgid "login mustn't start with a space character"
+msgstr "공백문자로 시작할 수 없습니다"
+
+msgid "this login is already used"
+msgstr "이 로그인은 이미 사용 중입니다"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "메일 주소는 xxx@yyy.eee 처럼 되야 합니다. (예 : jack@altern.org)"
+
+msgid "Auto login"
+msgstr "자동 로그인"
+
+msgid "remove this tag from the list"
+msgstr "목록에서 이 태그를 삭제"
+
+msgid "representative"
+msgstr "대표사진"
+
+msgid "Search for Author"
+msgstr "작성자로 검색"
+
+msgid "Search in albums"
+msgstr "앨범에서 검색"
+
+msgid "Search by date"
+msgstr "날짜로 검색"
+
+msgid "Date"
+msgstr "날짜"
+
+msgid "End-Date"
+msgstr "끝나는 날짜"
+
+msgid "Kind of date"
+msgstr "날짜의 종류"
+
+msgid "Submit"
+msgstr "등록"
+
+msgid "Yes"
+msgstr "예"
+
+msgid "No"
+msgstr "아니요"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "사진 %d장"
+msgstr[1] "사진 %d장"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "현재 태그에 %d장의 사진이 연결되어 있습니다"
+msgstr[1] "현재 태그에 사진 %d장이 연결되어 있습니다"
+
+msgid "display photos linked to this tag"
+msgstr "이 태그에 연결된 사진들 보이기"
+
+msgid "photos posted during the last %d days"
+msgstr "최근 %d일간 등록된 사진"
+
+msgid "Piwigo Help"
+msgstr "Piwigo 도움말"
+
+msgid "Rank"
+msgstr "등급"
+
+msgid "group by letters"
+msgstr "문자로 그룹화"
+
+msgid "letters"
+msgstr "문자"
+
+msgid "show tag cloud"
+msgstr "태그 클라우드 보이기"
+
+msgid "cloud"
+msgstr "클라우드"
+
+msgid "Reset to default values"
+msgstr "기본값으로 설정"
+
+msgid "delete all photos from your favorites"
+msgstr "즐겨찾기의 모든 사진을 지웁니다"
+
+msgid "Sent by"
+msgstr "보낸이"
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "쿠키가 차단되었거나 지원되지 않는 브라우저입니다. 로그인하기 위해서는 쿠키를 사용해야 합니다."
+
+msgid "Edit a comment"
+msgstr "댓글 편집"
+
+msgid "Are you sure?"
+msgstr "확실합니까?"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) 이 댓글은 확인이 필요합니다."
+
+msgid "Welcome"
+msgstr "환영합니다"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "Piwigo 포토 갤러리에 오신것을 환영합니다!"
+
+msgid "... or browse your empty gallery"
+msgstr "... 혹은 빈 갤러리를 탐색합니다"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "... 혹은 이 메시지를 비활성화합니다. 스스로 무언가를 해 봅니다."
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "안녕하세요 %s, 현재 갤러리가 비었습니다!"
+
+msgid "I want to add photos"
+msgstr "사진을 등록하고 싶습니다"
+
+msgid "Manage this user comment: %s"
+msgstr "이 사용자 댓글 관리: %s"
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "메일 주소란이 비었습니다. 메일 주소를 확인 해 주세요."
+
+msgid "This author modified following comment:"
+msgstr "이 작성자가 다음 댓글을 수정하였습니다:"
+
+msgid "This author removed the comment with id %d"
+msgstr "이 작성자가 다음 사용자의 댓글을 삭제하였습니다: %d"
+
+msgid "A comment on your site"
+msgstr "당신의 웹 사이트에 댓글이 있습니다"
+
+msgid "Accelerate diaporama speed"
+msgstr "슬라이드쇼 속도 증가"
+
+msgid "Admin: %s"
+msgstr "관리자: %s"
+
+msgid "Album results for"
+msgstr "앨범 결과"
+
+msgid "Album: %s"
+msgstr "앨범: %s"
+
+msgid "Author: %s"
+msgstr "작성자: %s"
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "\"손님\"사용자의 상태가 나빠 기본 상태를 사용합니다. 관리자에게 알려주세요."
+
+msgid "Browser: %s"
+msgstr "브라우저: %s"
+
+msgid "Change my password"
+msgstr "비밀번호 변경"
+
+msgid "Check your email for the confirmation link"
+msgstr "인증을 위해 이메일을 확인 해 주세요"
+
+msgid "Comment by %s"
+msgstr "%s님의 댓글"
+
+msgid "Comment: %s"
+msgstr "댓글: %s"
+
+msgid "Connected user: %s"
+msgstr "접속중인 사용자: %s"
+
+msgid "Contact"
+msgstr "연락처"
+
+msgid "display only recently posted photos"
+msgstr "최근 등록된 사진만 보기"
+
+msgid "Edit"
+msgstr "편집"
+
+msgid "Email: %s"
+msgstr "이메일: %s"
+
+msgid "Empty query. No criteria has been entered."
+msgstr "없는 요청입니다. 조건이 비었을 수 있습니다."
+
+msgid "Enter your new password below."
+msgstr "새 비밀번호를 입력해주세요."
+
+msgid "EXIF Metadata"
+msgstr "EXIF 메타데이터"
+
+msgid "from %s to %s"
+msgstr "%s님이 %s님에게"
+
+msgid "Hello %s,"
+msgstr "%s님 안녕하세요,"
+
+msgid "html tags are not allowed in login"
+msgstr "로그인 폼에 html태그는 허용되지 않습니다"
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "만약 실수였다면 이 이메일을 무시하셔도 됩니다."
+
+msgid "Invalid key"
+msgstr "잘못된 키"
+
+msgid "Invalid username or email"
+msgstr "잘못된 사용자 이름이나 이메일"
+
+msgid "IP: %s"
+msgstr "IP: %s"
+
+msgid "IPTC Metadata"
+msgstr "IPTC 메타데이터"
+
+msgid "Menu"
+msgstr "메뉴"
+
+msgid "Email address is mandatory"
+msgstr "이메일 주소는 필수항목입니다"
+
+msgid "First Page"
+msgstr "첫 페이지"
+
+msgid "Manual sort order"
+msgstr "사용자 정의 순서"
+
+msgid "N/A"
+msgstr "N/A"
+
+msgid "Not repeat the slideshow"
+msgstr "슬라이드쇼 반복하지 않기"
+
+msgid "Number of photos per page"
+msgstr "페이지당 사진 수"
+
+msgid "Page not found"
+msgstr "페이지를 찾을 수 없습니다"
+
+msgid "Username: %s"
+msgstr "사용자 이름: %s"
+
+msgid "Website"
+msgstr "웹사이트"
+
+msgid "You will receive a link to create a new password via email."
+msgstr "이메일로 새로운 비밀번호 설정을 위한 링크가 전송되었습니다."
+
+msgid "Your password has been reset"
+msgstr "비밀번호가 초기화 되었습니다."
+
+msgid "Your website URL is invalid"
+msgstr "웹사이트 URL이 올바르지 않습니다"
+
+msgid "Password Reset"
+msgstr "비밀번호 초기화"
+
+msgid "Return to home page"
+msgstr "홈페이지로 돌아가기"
+
+msgid "Search results"
+msgstr "검색 결과"
+
+msgid "set as album representative"
+msgstr "앨범 표지로 등록"
+
+msgid "slideshow"
+msgstr "슬라이드쇼"
+
+msgid "square"
+msgstr "사각형"
+
+msgid "stop the slideshow"
+msgstr "슬라이드쇼 정지"
+
+msgid "the beginning"
+msgstr "시작"
+
+msgid "the username must be given"
+msgstr "사용자 이름이 필요합니다"
+
+msgid "this email address is already in use"
+msgstr "이미 사용중인 이메일입니다"
+
+msgid "thumb"
+msgstr "대표사진"
+
+msgid "today"
+msgstr "오늘"
+
+msgid "Show latest comments first"
+msgstr "최신 댓글을  먼저 보기"
+
+msgid "Show number of comments"
+msgstr "댓글 개수 보기"
+
+msgid "Show oldest comments first"
+msgstr "오래된 댓글을 먼저 보기"
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "누군가가 다음 사용자 계정에 대해 비밀번호 초기화를 요청했습니다:"
+
+msgid "Thank you for registering at %s!"
+msgstr "%s에 등록 해 주셔서 감사합니다!"
+
+msgid "The passwords do not match"
+msgstr "비밀번호가 일치하지 않습니다"
+
+msgid "Thumbnails"
+msgstr "썸네일"
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "사용자 \"%s\"의 이메일 정보가 없어, 비밀번호 초기화를 할 수 없습니다."
+
+msgid "User: %s"
+msgstr "사용자: %s"
+
+msgid "Username is mandatory"
+msgstr "사용자 이름은 필수 항목입니다."
+
+msgid "Username modification"
+msgstr "사용자 이름 변경"
+
+msgid "Username or email"
+msgstr "사용자 이름 혹은 이메일"
+
+msgid "mandatory"
+msgstr "필수"
+
+msgid "Password: %s"
+msgstr "비밀번호: %s"
+
+msgid "Pause of slideshow"
+msgstr "슬라이드쇼 일시정지"
+
+msgid "Photo sizes"
+msgstr "사진 크기"
+
+msgid "Play of slideshow"
+msgstr "슬라이드쇼 재생"
+
+msgid "Quick search"
+msgstr "빠른 검색"
+
+msgid "Repeat the slideshow"
+msgstr "슬라이드쇼 반복"
+
+msgid "Requested album does not exist"
+msgstr "요청한 앨범이 존재하지 않습니다"
+
+msgid "Requested tag does not exist"
+msgstr "요청한 태그가 존재하지 않습니다"
+
+msgid "Original"
+msgstr "원본"
+
+msgid "Mobile"
+msgstr "모바일"
+
+msgid "Bad request"
+msgstr "잘못된 요청"
+
+msgid "Email"
+msgstr "이메일"
+
+msgid "File name, A &rarr; Z"
+msgstr "파일 이름, A &rarr; Z"
+
+msgid "File name, Z &rarr; A"
+msgstr "파일 이름, Z &rarr; A"
+
+msgid "Go back to the album"
+msgstr "앨범으로 돌아가기"
+
+msgid "Last Page"
+msgstr "마지막 페이지"
+
+msgid "return to the display of all photos"
+msgstr "모든 사진 보기로 돌아가기"
+
+msgid "%d Kb"
+msgstr "%d KB"
+
+msgid "%d rate"
+msgid_plural "%d rates"
+msgstr[0] "평점 %d개"
+msgstr[1] "평점 %d개"
+
+msgid "2small"
+msgstr "XXS - tiny"
+
+msgid "xxlarge"
+msgstr "XXL - huge"
+
+msgid "small"
+msgstr "S - small"
+
+msgid "xlarge"
+msgstr "XL - extra large"
+
+msgid "xsmall"
+msgstr "XS - extra small"
+
+msgid "large"
+msgstr "L - large"
+
+msgid "medium"
+msgstr "M - medium"
+
+msgid "To reset your password, visit the following address:"
+msgstr "비밀번호 초기화를 위해 다음 주소를 방문하십시오:"
+
+msgid "Show number of hits"
+msgstr "방문자 수 보기"
+
+msgid "Permalink for album not found"
+msgstr "앨범의 Permalink를 찾을 수 없습니다"
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "Piwigo가 복구할 수 없는 예외를 만났습니다."
+
+msgid "Date created, new &rarr; old"
+msgstr "생성일, 최신 &rarr; 이전"
+
+msgid "Date created, old &rarr; new"
+msgstr "생성일, 이전 &rarr; 최신"
+
+msgid "Date posted, new &rarr; old"
+msgstr "작성일, 최신 &rarr; 이전"
+
+msgid "Date posted, old &rarr; new"
+msgstr "작성일, 이전 &rarr; 최신"
+
+msgid "Visits, high &rarr; low"
+msgstr "방문자수, 내림차순"
+
+msgid "Visits, low &rarr; high"
+msgstr "방문자수, 오름차순"
+
+msgid "Update your rating"
+msgstr "평점 변경"
+
+msgid "Reduce diaporama speed"
+msgstr "슬라이드쇼 느리게"
+
+msgid "Rating score, low &rarr; high"
+msgstr "평점, 오름차순"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "사진 제목, A->Z"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "사진 제목, Z->A"
+
+msgid "Rating score, high &rarr; low"
+msgstr "평점, 내림차순"
+
+msgid "Rating score"
+msgstr "평점"
+
+msgid "useful when password forgotten"
+msgstr "비밀번호를 잊은 경우를 대비"
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "갤러리 %s에 있는 사용자 이름 \"%s\""
+
+msgid "Tag results for"
+msgstr "태그 겸색 결과 : "
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "페이지당 사진 수는 0이 아닌 정수여야 합니다"
+
+msgid "Password reset is not allowed for this user"
+msgstr "해당 사용자는 비밀번호 초기화를 할 수 없습니다."
+
+msgid "Please enter your username or email address."
+msgstr "사용자 이름 혹은 이메일 주소를 입력하십시오."
+
+msgid "Specials"
+msgstr "특별"
+
+msgid "Registration of %s"
+msgstr "%s 등록"
+
+msgid "Search for all terms"
+msgstr "전체 단어 검색"
+
+msgid "Search for any term"
+msgstr "하나 이상의 단어 검색"
+
+msgid "Search for words"
+msgstr "단어로 검색"
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "성공적으로 사용자 이름을 %s로 변경하였습니다."
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "숫자 식별자, 1 &rarr; 9"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "숫자 식별자,  9 &rarr; 1"
+
+msgid "SQL queries in"
+msgstr "SQL 쿼리에 "
+
+msgid "Here are your connection settings"
+msgstr "접속 설정은 다음과 같습니다"
+
+msgid "Send my connection settings by email"
+msgstr "접속 설정을 이메일로 보내기"
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "성공적으로 가입되었습니다. 곧 접속 설정이 있는 이메일을 받으실겁니다. 환영합니다."
+
+msgid "View in"
+msgstr "다음에서 보기 : "
+
+msgid "Search in sub-albums"
+msgstr "하위 앨범에서 검색"
+
+msgid "Desktop"
+msgstr "컴퓨터"
+
+msgid "Forbidden"
+msgstr "금지됨"
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "만약 오류로 이 메일을 수신했다고 생각하시면, %s 로 연락 바랍니다."
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "비밀번호 확인이 누락되었습니다. 선택한 비밀번호를 확인해 주세요."
+
+msgid "Password is missing. Please enter the password."
+msgstr "비밀번호가 입력되지 않았습니다. 비밀번호를 입력하십시오."
+
+msgid "%d photos per page"
+msgstr "페이지당 사진 %d장"
+
+msgid "Theme"
+msgstr "테마"
+
+msgid "Apply on properties"
+msgstr "속성 적용"
+
+msgid "Album name, A &rarr; Z"
+msgstr "앨범 이름, A &rarr; Z"
+
+msgid "Album name, Z &rarr; A"
+msgstr "앨범 이름, Z &rarr; A"
+
+msgid "Link: %s"
+msgstr "링크: %s"
+
+msgid "Photo description"
+msgstr "사진 설명"
+
+msgid "Photo title"
+msgstr "사진 제목"
+
+msgid "No results for"
+msgstr "다음의 검색 결과가 없음"
+
+msgid "Invalid username or password!"
+msgstr "시용자 이름 또는 비밀번호가 올바르지 않습니다."
+
+msgid "Your authentication key is no longer valid."
+msgstr "인증키가 유효하지 않습니다."
+
+msgid "generate random password"
+msgstr "랜덤 비밀번호 생성"
+
+msgid "Album name, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+msgstr "앨범 이름, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+
+msgid "Album name, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+msgstr "앨범 이름, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+
+msgid "Password: ********** (no copy by email)"
+msgstr "비밀번호: ********** (이메일 복사 불가)"
+
+msgid "Related albums"
+msgstr "관련 앨범"
+
+msgid "Start-Date"
+msgstr "시작 날짜"
+
+msgid "Expert mode"
+msgstr "전문가 모드"
+
+msgid "Do you really want to revoke the \"%s\" API key?"
+msgstr "정말 \"%s\" API 키를 해지하시겠습니까?"
+
+msgid "Edit API Key"
+msgstr "API 키 편집"
+
+msgid "Create a new API key to secure your account."
+msgstr "계정 보안을 위해 새 API 키를 생성하세요."
+
+msgid "Create an account"
+msgstr "계정 만들기"
+
+msgid "Created at"
+msgstr "생성일"
+
+msgid "Confirm new password"
+msgstr "새 비밀번호 확인"
+
+msgid "Confirm my new password"
+msgstr "새 비밀번호 확인"
+
+msgid "Clear"
+msgstr "지우기"
+
+msgid "Click here to display it"
+msgstr "여기를 클릭하여 표시하세요"
+
+msgid "Choose how you want to see your gallery"
+msgstr "갤러리 보기 방식 선택"
+
+msgid "Choose filters"
+msgstr "필터 선택"
+
+msgid "Check your inbox"
+msgstr "수신함을 확인하세요"
+
+msgid "Cancel"
+msgstr "취소"
+
+msgid "Change your password"
+msgstr "비밀번호 변경"
+
+msgid "An error has occured please got back to <a href=\"identification.php\" title=\"Sign in\">Sign in</a> or <a href=\"register.php\">Register</a>"
+msgstr "오류가 발생했습니다. <a href=\"identification.php\" title=\"로그인\">로그인</a> 또는 <a href=\"register.php\">회원가입</a>으로 돌아가 주세요"
+
+msgid "An email has been sent with a verification code"
+msgstr "인증 코드가 포함된 이메일이 발송되었습니다"
+
+msgid "An email has been sent with a link to reset your password"
+msgstr "비밀번호 재설정 링크가 포함된 이메일이 발송되었습니다."
+
+msgid "Albums listed here match your search by word. Click on one to browse by album."
+msgstr "여기에 나열된 앨범은 검색어와 일치합니다. 앨범을 클릭하면 해당 앨범으로 탐색할 수 있습니다."
+
+msgid "Album title"
+msgstr "앨범 제목"
+
+msgid "Album description"
+msgstr "앨범 설명"
+
+msgid "Album already selected"
+msgstr "앨범이 이미 선택되었습니다"
+
+msgid "Added by"
+msgstr "추가됨"
+
+msgid "Account"
+msgstr "계정"
+
+msgid "API Keys"
+msgstr "API 키"
+
+msgid "API Key not found"
+msgstr "API 키를 찾을 수 없습니다"
+
+msgid "API Key name"
+msgstr "API 키 이름"
+
+msgid "API Key has been successfully edited."
+msgstr "API 키가 성공적으로 수정되었습니다."
+
+msgid "API Key has been successfully revoked."
+msgstr "API 키가 성공적으로 해지되었습니다."
+
+msgid "%d visits"
+msgstr "방문 %d회 "
+
+msgid "3xlarge"
+msgstr "3XL - extra huge"
+
+msgid "4xlarge"
+msgstr "4XL - gigantic"
+
+msgid "Never"
+msgstr "없음"
+
+msgid "Create API Keys to secure your acount"
+msgstr "계정 보안을 위한 API 키 생성"
+
+msgid "Your password was successfully set"
+msgstr "비밀번호 설정이 완료되었습니다"
+
+msgid "Your verification code"
+msgstr "인증 코드"
+
+msgid "edit user preferences"
+msgstr "사용자 설정 편집"
+
+msgid "last 12 months"
+msgstr "최근 12 개월"
+
+msgid "last 24 hours"
+msgstr "최근 24 시간"
+
+msgid "last 3 months"
+msgstr "최근 3 개월"
+
+msgid "last 30 days"
+msgstr "최근 30 일"
+
+msgid "last 6 months"
+msgstr "최근 6 개월"
+
+msgid "last 7 days"
+msgstr "최근 7 일"
+
+msgid "last year"
+msgstr "최근 1 년"
+
+msgid "must not be empty"
+msgstr "비어 있어서는 안 됩니다"
+
+msgid "rating score %s"
+msgstr "평점 점수 %s"
+
+msgid "year %d"
+msgstr "%d년"
+
+msgid "you must choose a date"
+msgstr "날짜를 선택해야 합니다"
+
+msgid "You can manage your API keys in your <a href=\"%s\">account settings.</a>"
+msgstr "<a href=\"%s\">계정 설정</a>에서 API 키를 관리할 수 있습니다."
+
+msgid "You can try to edit your filters and perform a new search."
+msgstr "필터를 수정하고 새 검색을 시도해 보세요."
+
+msgid "You have no email address, so you will not be notified when your API key is about to expire."
+msgstr "이메일 주소가 등록되어 있지 않아 API 키 만료 시 알림을 받지 못합니다."
+
+msgid "Your API key will expire in %d day."
+msgstr "API 키가 %d일 후 만료됩니다."
+
+msgid "Your API key will expire in %d days."
+msgstr "API 키가 %d일 후 만료됩니다."
+
+msgid "Your API key will expire soon"
+msgstr "API 키가 곧 만료됩니다"
+
+msgid "Your changes have been applied."
+msgstr "변경 사항이 적용되었습니다."
+
+msgid "Your password was successfully reset"
+msgstr "비밀번호 재설정이 완료되었습니다"
+
+msgid "Too many attempts, please try later.."
+msgstr "너무 많은 시도가 있었습니다. 나중에 다시 시도해 주세요.."
+
+msgid "Unknown time period"
+msgstr "알 수 없는 시기"
+
+msgid "Validate"
+msgstr "확인"
+
+msgid "Verification code"
+msgstr "인증 코드"
+
+msgid "Verification successful! You can now choose a new password."
+msgstr "인증 성공! 이제 새 비밀번호를 선택할 수 있습니다."
+
+msgid "Verify"
+msgstr "확인"
+
+msgid "When enabled, a common template is used for the login and registration pages, regardless of the theme."
+msgstr "활성화 시 테마와 무관하게 로그인 및 가입 페이지에 공통 템플릿이 적용됩니다."
+
+msgid "The email %s will be used to notify you when your API key is about to expire."
+msgstr "API 키 만료 예정 시 알림을 받으실 이메일 주소는 %s 입니다."
+
+msgid "The secret key can no longer be displayed."
+msgstr "비밀 키를 더 이상 표시할 수 없습니다."
+
+msgid "The secret will no longer be displayed. You must copy it to continue."
+msgstr "비밀 키가 더 이상 표시되지 않습니다. 계속하려면 복사해야 합니다."
+
+msgid "There are no authors available for the photos currently filtered"
+msgstr "현재 필터링된 사진에 대한 작성자가 없습니다"
+
+msgid "There are no creation dates available for the photos currently filtered"
+msgstr "현재 필터링된 사진에 대한 생성 날짜가 없습니다"
+
+msgid "There are no tags available for the photos currently filtered"
+msgstr "현재 필터링된 사진에 대한 태그가 없습니다"
+
+msgid "This API key was manually revoked on %s"
+msgstr "이 API 키는 %s에 수동으로 해지되었습니다"
+
+msgid "To continue using the API, please renew your key before it expires."
+msgstr "API 사용을 계속하려면 키가 만료되기 전에 갱신해 주세요."
+
+msgid "To manage your API keys, please log in with your username/password."
+msgstr "API 키를 관리하려면 사용자 이름/비밀번호로 로그인해 주세요."
+
+msgid "Return to <a href=\"identification.php\" title=\"Sign in\">Sign in</a>"
+msgstr "<a href=\"identification.php\" title=\"로그인\">로그인</a>으로 돌아가기"
+
+msgid "Return to the gallery"
+msgstr "갤러리로 돌아가기"
+
+msgid "Revoke"
+msgstr "해지"
+
+msgid "Revoked"
+msgstr "해지됨"
+
+msgid "Save your ID and secret"
+msgstr "ID와 비밀번호 저장"
+
+msgid "Search in :"
+msgstr "검색 대상:"
+
+msgid "Search in this set"
+msgstr "이 세트에서 검색"
+
+msgid "Secret copied. Keep it in a safe place."
+msgstr "비밀번호가 복사되었습니다. 안전한 곳에 보관하세요."
+
+msgid "Set my password"
+msgstr "비밀번호 설정"
+
+msgid "Set your password below."
+msgstr "아래에 비밀번호를 설정하세요."
+
+msgid "Show expired keys"
+msgstr "만료된 키 표시"
+
+msgid "Tags found"
+msgstr "태그 검색됨"
+
+msgid "Tags listed here match your search by word. Click on one to browse by tag."
+msgstr "여기에 나열된 태그는 검색어와 일치합니다. 태그를 클릭하면 해당 태그로 분류된 콘텐츠를 볼 수 있습니다."
+
+msgid "The PDF you requested is too large to display on this page."
+msgstr "요청하신 PDF 파일은 이 페이지에 표시하기에는 너무 큽니다."
+
+msgid "The api key has been successfully created."
+msgstr "API 키가 성공적으로 생성되었습니다."
+
+msgid "Only the first %d albums are displayed, out of %d."
+msgstr "처음 %d개(총 %d개) 앨범만 표시됩니다."
+
+msgid "Options"
+msgstr "옵션"
+
+msgid "Pages"
+msgstr "페이지"
+
+msgid "Pre-established filters are proposed, but you can add or remove them using the \"Choose filters\" button."
+msgstr "사전 설정된 필터가 제안되지만, \"필터 선택\" 버튼을 사용하여 필터를 추가하거나 제거할 수 있습니다."
+
+msgid "If this wasn't you, please change your password immediately or contact your webmaster."
+msgstr "본인이 아닌 경우, 즉시 비밀번호를 변경하거나 웹마스터에게 문의해 주십시오."
+
+msgid "If you changed your password because you think it was stolen, we recommend revoking your %d API keys <a href=\"%s\">in your profile</a>."
+msgstr "비밀번호가 도난당했다고 생각되어 변경하신 경우, <a href=\"%s\">프로필에서</a> %d개의 API 키를 해지하시길 권장합니다."
+
+msgid "If you do not receive the email, please contact your webmaster."
+msgstr "이메일을 받지 못하신 경우, 웹마스터에게 문의해 주십시오."
+
+msgid "Impossible to copy automatically. Please copy manually."
+msgstr "자동 복사가 불가능합니다. 수동으로 복사해 주십시오."
+
+msgid "Invalid verification code"
+msgstr "유효하지 않은 인증 코드"
+
+msgid "Last use"
+msgstr "마지막 사용"
+
+msgid "Manage your account"
+msgstr "계정 관리"
+
+msgid "New API Key"
+msgstr "새 API 키"
+
+msgid "No expiration"
+msgstr "만료일 없음"
+
+msgid "No results are available."
+msgstr "결과가 없습니다."
+
+msgid "File type"
+msgstr "파일 형식"
+
+msgid "Fill in the filters to start a search"
+msgstr "필터를 입력하여 검색을 시작하세요"
+
+msgid "Filters"
+msgstr "필터"
+
+msgid "Generate API Key"
+msgstr "API 키 생성"
+
+msgid "Generate key"
+msgstr "키 생성"
+
+msgid "Hello <em>%s</em>, enter your new password below."
+msgstr "안녕하세요 <em>%s</em>, 아래에 새 비밀번호를 입력하세요."
+
+msgid "Here is your verification code:"
+msgstr "다음은 귀하의 인증 코드입니다:"
+
+msgid "Hide expired keys"
+msgstr "만료된 키 숨기기"
+
+msgid "ID copied."
+msgstr "ID가 복사되었습니다."
+
+msgid "Albums found"
+msgstr "앨범 발견됨"
+
+msgid "Already have an account ?"
+msgstr "이미 계정이 있으신가요?"
+
+msgid "Custom date"
+msgstr "사용자 지정 날짜"
+
+msgid "Custom dates"
+msgstr "사용자 지정 날짜"
+
+msgid "Don't have an account yet ?"
+msgstr "아직 계정이 없으신가요?"
+
+msgid "Done"
+msgstr "완료"
+
+msgid "Duration"
+msgstr "기간"
+
+msgid "Empty filters"
+msgstr "빈 필터"
+
+msgid "Expired"
+msgstr "만료됨"
+
+msgid "Expired on"
+msgstr "만료일"
+
+msgid "Expires in"
+msgstr "만료 예정일"
+
+msgid "piwigo_day_0"
+msgstr "일요일"
+
+msgid "piwigo_day_1"
+msgstr "월요일"
+
+msgid "piwigo_day_2"
+msgstr "화요일"
+
+msgid "piwigo_day_3"
+msgstr "수요일"
+
+msgid "piwigo_day_4"
+msgstr "목요일"
+
+msgid "piwigo_day_5"
+msgstr "금요일"
+
+msgid "piwigo_day_6"
+msgstr "토요일"
+
+msgid "piwigo_month_10"
+msgstr "10월"
+
+msgid "piwigo_month_11"
+msgstr "11월"
+
+msgid "piwigo_month_12"
+msgstr "12월"
+
+msgid "piwigo_month_1"
+msgstr "1월"
+
+msgid "piwigo_month_2"
+msgstr "2월"
+
+msgid "piwigo_month_3"
+msgstr "3월"
+
+msgid "piwigo_month_4"
+msgstr "4월"
+
+msgid "piwigo_month_5"
+msgstr "5월"
+
+msgid "piwigo_month_6"
+msgstr "6월"
+
+msgid "piwigo_month_7"
+msgstr "7월"
+
+msgid "piwigo_month_8"
+msgstr "8월"
+
+msgid "piwigo_month_9"
+msgstr "9월"
+

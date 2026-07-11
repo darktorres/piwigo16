@@ -1,0 +1,146 @@
+# Piwigo translation — ja_JP
+# Source: install.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ja_JP\n"
+"Plural-Forms: nplurals=1; plural=(0);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Installation"
+msgstr "インストール"
+
+msgid "Basic configuration"
+msgstr "基本設定"
+
+msgid "Default gallery language"
+msgstr "ギャラリーのデフォルトの言語"
+
+msgid "Database configuration"
+msgstr "データベース設定"
+
+msgid "Admin configuration"
+msgstr "管理設定"
+
+msgid "Start Install"
+msgstr "インストールを開始する"
+
+msgid "It will be shown to the visitors. It is necessary for website administration"
+msgstr "ゲスト一覧に表示されます。ウェブサイト管理に必要です。"
+
+msgid "Connection to server succeed, but it was impossible to connect to database"
+msgstr "サーバへ接続することができましたが、データベースに接続できません。"
+
+msgid "Can't connect to server"
+msgstr "サーバに接続できません。"
+
+msgid "Host"
+msgstr "ホスト"
+
+msgid "User"
+msgstr "ユーザー"
+
+msgid "user login given by your host provider"
+msgstr "あなたのホスティング業者から提供されたデータベースユーザー名です。"
+
+msgid "user password given by your host provider"
+msgstr "あなたのホスティング業者から提供されたデータベースパスワードです。"
+
+msgid "Database name"
+msgstr "データベース名"
+
+msgid "also given by your host provider"
+msgstr "こちらも、あなたのホスティング業者から提供されたデータベース名です。"
+
+msgid "Database table prefix"
+msgstr "データベーステーブル接頭辞"
+
+msgid "database tables names will be prefixed with it (enables you to manage better your tables)"
+msgstr "データベーステーブルに接頭辞として付けられます (あなたのテーブルを管理しやすくします)。"
+
+msgid "enter a login for webmaster"
+msgstr "ウェブマスターのユーザIDを入力してください。"
+
+msgid "webmaster login can't contain characters ' or \""
+msgstr "ウェブマスターのユーザーIDには、「'」または「\"」を含まないでください。"
+
+msgid "please enter your password again"
+msgstr "もう一度あなたのパスワードを入力してください。"
+
+msgid "Keep it confidential, it enables you to access administration panel"
+msgstr "ウェブマスターパスワードは、秘密にしてください。ウェブマスターパスワードを使用して、管理パネルにアクセスできます。"
+
+msgid "Password [confirm]"
+msgstr "パスワード [もう一度]"
+
+msgid "verification"
+msgstr "確認"
+
+msgid "Need help ? Ask your question on <a href=\"%s\">Piwigo message board</a>."
+msgstr "ヘルプが必要ですか? <a href=\"%s\">Piwigoメッセージボード</a>にて、あなたの質問を投稿してください。"
+
+msgid "Visitors will be able to contact site administrator with this mail"
+msgstr "訪問者は、このメールアドレスでサイト管理者に連絡することができます。"
+
+msgid "PHP 5 is required"
+msgstr "PHP 5.3が必要です"
+
+msgid "It appears your webhost is currently running PHP %s."
+msgstr "あなたのウェブホストは現在PHP %sを使っています。"
+
+msgid "Piwigo may try to switch your configuration to PHP 5 by creating or modifying a .htaccess file."
+msgstr "Piwigoは.htaccess ファイルを作成するか変更して、PHP 5.3を設定してみます。"
+
+msgid "Note you can change your configuration by yourself and restart Piwigo after that."
+msgstr "注：自分で設定を変更し、その後Piwigoを再起動できます。"
+
+msgid "Try to configure PHP 5"
+msgstr "PHP 5.3を設定してみます。"
+
+msgid "Sorry!"
+msgstr "申し訳ありません!"
+
+msgid "Piwigo was not able to configure PHP 5."
+msgstr "PiwigoはPHP 5.3を設定できませんでした。"
+
+msgid "You may referer to your hosting provider's support and see how you could switch to PHP 5 by yourself."
+msgstr "あなたのホスティング業者のサポートに連絡し、どうやったらPHP 5.3を設定できるか確認すべきです。"
+
+msgid "Hope to see you back soon."
+msgstr "またお越し下さい"
+
+msgid "Congratulations, Piwigo installation is completed"
+msgstr "おめでとうございます。Piwigo のインストールが完了しました。"
+
+msgid "An alternate solution is to copy the text in the box above and paste it into the file \"local/config/database.inc.php\" (Warning : database.inc.php must only contain what is in the textarea, no line return or space character)"
+msgstr "その他の解決方法としては、上のボックスにあるテキストをコピーし、\"local/config/database.inc.php\"に貼り付ける方法があります。（注意：database.inc.php は上のテキスト内容以外のこと（改行やスペースなど）を含めないでください。)"
+
+msgid "Creation of config file local/config/database.inc.php failed."
+msgstr "local/config/database.inc.php の設定ファイル作成に失敗しました。"
+
+msgid "Download the config file"
+msgstr "設定ファイルをダウンロードします。"
+
+msgid "You can download the config file and upload it to local/config directory of your installation."
+msgstr "設定ファイルをダウンロードし、インストールされたlocal/configディレクトリーにアップロードすることができます。"
+
+msgid "Don't hesitate to consult our forums for any help : %s"
+msgstr "ヘルプが必要な際には、気軽にフォーラムで相談してください: %s"
+
+msgid "Just another Piwigo gallery"
+msgstr "他のPiwigoギャラリー"
+
+msgid "Welcome to your new installation of Piwigo!"
+msgstr "新しくPiwigoをインストールしていただき、ありがとうざいます!"
+
+msgid "Welcome to my photo gallery"
+msgstr "私のフォトギャラリーへようこそ"
+
+msgid "localhost or other, supplied by your host provider"
+msgstr "あなたのホスティング業者から提供されたホスト名です。localhostまたはその他の何かです。"
+
+msgid "PHP version %s required (you are running on PHP %s)"
+msgstr "PHPのバージョン%sが必要です（現在PHP %sを利用中です）"
+

@@ -9,6 +9,9 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\AccessLevel;
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Template\Template;
@@ -34,7 +37,7 @@ if (! (bool) $conf['activate_comments']) {
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_GUEST);
+check_status(AccessLevel::Guest);
 
 $url_self = PHPWG_ROOT_PATH . 'comments.php'
   . get_query_string_diff(['delete', 'edit', 'validate', 'pwg_token']);
@@ -147,7 +150,7 @@ $page['where_clauses'] = [];
 
 // which category to filter on ?
 if (isset($_GET['cat']) and $_GET['cat'] != 0) {
-    check_input_parameter('cat', $_GET, false, PATTERN_ID);
+    check_input_parameter('cat', $_GET, false, ValidationPattern::ID);
 
     $cat_id = $_GET['cat'];
     $cat_id = is_scalar($cat_id) ? (string) $cat_id : '0';
@@ -182,8 +185,8 @@ if (! empty($_GET['author']) and is_scalar($_GET['author'])) {
 // search a specific comment (if you're coming directly from an admin
 // notification email)
 if (! empty($_GET['comment_id'])) {
-    check_input_parameter('comment_id', $_GET, false, PATTERN_ID);
-    // check_input_parameter() validated this against PATTERN_ID (/^\d+$/)
+    check_input_parameter('comment_id', $_GET, false, ValidationPattern::ID);
+    // check_input_parameter() validated this against ValidationPattern::ID (/^\d+$/)
     // above -- it would have called fatal_error() otherwise.
     assert(is_numeric($_GET['comment_id']));
     $get_comment_id = (string) $_GET['comment_id'];
@@ -252,8 +255,8 @@ $actions = ['delete', 'validate', 'edit'];
 foreach ($actions as $loop_action) {
     if (isset($_GET[$loop_action])) {
         $action = $loop_action;
-        check_input_parameter($action, $_GET, false, PATTERN_ID);
-        // check_input_parameter() validated this against PATTERN_ID
+        check_input_parameter($action, $_GET, false, ValidationPattern::ID);
+        // check_input_parameter() validated this against ValidationPattern::ID
         // (/^\d+$/) above -- it would have called fatal_error() otherwise.
         assert(is_numeric($_GET[$action]));
         $comment_id = (int) $_GET[$action];
@@ -363,7 +366,7 @@ $blockname = 'categories';
 
 $query = '
 SELECT id, name, uppercats, global_rank
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
 ' . get_sql_condition_FandF(
     [
         'forbidden_categories' => 'id',
@@ -433,10 +436,10 @@ SELECT SQL_CALC_FOUND_ROWS com.id AS comment_id,
        com.website_url,
        com.content,
        com.validated
-  FROM ' . IMAGE_CATEGORY_TABLE . ' AS ic
-    INNER JOIN ' . COMMENTS_TABLE . ' AS com
+  FROM ' . Tables::imageCategory() . ' AS ic
+    INNER JOIN ' . Tables::comments() . ' AS com
     ON ic.image_id = com.image_id
-    LEFT JOIN ' . USERS_TABLE . ' As u
+    LEFT JOIN ' . Tables::users() . ' As u
     ON u.' . $id_field . ' = com.author_id
   WHERE ' . implode('
     AND ', $where_clauses) . '
@@ -481,14 +484,14 @@ if (count($comments) > 0) {
     // retrieving element informations
     $query = '
 SELECT *
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', $element_ids) . ')
 ;';
     $elements = query2array($query, 'id');
 
     // retrieving category informations
     $query = 'SELECT id, name, permalink, uppercats
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE id IN (' . implode(',', $category_ids) . ')';
     $categories = query2array($query, 'id');
 

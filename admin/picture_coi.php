@@ -9,6 +9,9 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\AccessLevel;
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -28,12 +31,12 @@ global $conf, $template;
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_ADMINISTRATOR);
+check_status(AccessLevel::Administrator);
 
-check_input_parameter('image_id', $_GET, false, PATTERN_ID);
+check_input_parameter('image_id', $_GET, false, ValidationPattern::ID);
 
 // check_input_parameter() only validates the raw $_GET value against
-// PATTERN_ID (or dies); it does not narrow $_GET's type for PHPStan, so
+// ValidationPattern::ID (or dies); it does not narrow $_GET's type for PHPStan, so
 // re-derive a real int here for every later use.
 $image_id = 0;
 if (isset($_GET['image_id']) && is_numeric($_GET['image_id'])) {
@@ -41,7 +44,7 @@ if (isset($_GET['image_id']) && is_numeric($_GET['image_id'])) {
 }
 
 if (isset($_POST['submit'])) {
-    $query = 'UPDATE ' . IMAGES_TABLE;
+    $query = 'UPDATE ' . Tables::images();
 
     $coi_l = $_POST['l'] ?? null;
     $coi_l_str = is_scalar($coi_l) ? (string) $coi_l : '';
@@ -61,7 +64,7 @@ if (isset($_POST['submit'])) {
     pwg_query($query);
 }
 
-$query = 'SELECT * FROM ' . IMAGES_TABLE . ' WHERE id=' . $image_id;
+$query = 'SELECT * FROM ' . Tables::images() . ' WHERE id=' . $image_id;
 $row = pwg_db_fetch_assoc(pwg_query($query));
 if (! is_array($row)) {
     page_not_found('Requested photo does not exist');

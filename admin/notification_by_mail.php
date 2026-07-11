@@ -10,6 +10,8 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\tabsheet;
+use Piwigo\Core\AccessLevel;
+use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 // +-----------------------------------------------------------------------+
@@ -36,7 +38,7 @@ include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php';
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_ADMINISTRATOR);
+check_status(AccessLevel::Administrator);
 
 check_input_parameter('mode', $_GET, false, '/^(param|subscribe|send)$/');
 
@@ -102,11 +104,11 @@ function do_timeout_treatment(string $post_keyname, array $check_key_treated = [
  */
 function get_tab_status(string $mode): int
 {
-    $result = ACCESS_WEBMASTER;
+    $result = AccessLevel::Webmaster;
     $result = match ($mode) {
-        'param', 'subscribe' => ACCESS_WEBMASTER,
-        'send' => ACCESS_ADMINISTRATOR,
-        default => ACCESS_WEBMASTER,
+        'param', 'subscribe' => AccessLevel::Webmaster,
+        'send' => AccessLevel::Administrator,
+        default => AccessLevel::Webmaster,
     };
     return $result;
 }
@@ -142,7 +144,7 @@ function insert_new_data_user_mail_notification(): void
     // Set null mail_address empty
     $query = '
 update
-  ' . USERS_TABLE . '
+  ' . Tables::users() . '
 set
   ' . $user_field_email . ' = null
 where
@@ -156,7 +158,7 @@ select
   u.' . $user_field_username . ' as username,
   u.' . $user_field_email . ' as mail_address
 from
-  ' . USERS_TABLE . ' as u left join ' . USER_MAIL_NOTIFICATION_TABLE . ' as m on u.' . $user_field_id . ' = m.user_id
+  ' . Tables::users() . ' as u left join ' . Tables::userMailNotification() . ' as m on u.' . $user_field_id . ' = m.user_id
 where
   u.' . $user_field_email . ' is not null and
   m.user_id is null
@@ -191,7 +193,7 @@ order by
         }
 
         // Insert new nbm_users
-        mass_inserts(USER_MAIL_NOTIFICATION_TABLE, ['user_id', 'check_key', 'enabled'], $inserts);
+        mass_inserts(Tables::userMailNotification(), ['user_id', 'check_key', 'enabled'], $inserts);
         // Update field enabled with specific function
         $check_key_treated = do_subscribe_unsubscribe_notification_by_mail(
             true,
@@ -207,7 +209,7 @@ order by
             $check_key_treated_strings = array_filter($check_key_treated, is_string(...));
             $quoted_check_key_list = quote_check_key_list(array_diff($check_key_list, $check_key_treated_strings));
             if (count($quoted_check_key_list) != 0) {
-                $query = 'delete from ' . USER_MAIL_NOTIFICATION_TABLE . ' where check_key in (' . implode(',', $quoted_check_key_list) . ');';
+                $query = 'delete from ' . Tables::userMailNotification() . ' where check_key in (' . implode(',', $quoted_check_key_list) . ');';
                 $result = pwg_query($query);
 
                 redirect($base_url . get_query_string_diff([], false), l10n('Operation in progress') . "\n" . l10n('Please wait...'));
@@ -495,7 +497,7 @@ function do_action_send_mail_notification(string $action = 'list_to_send', array
 
                 if ($is_action_send) {
                     mass_updates(
-                        USER_MAIL_NOTIFICATION_TABLE,
+                        Tables::userMailNotification(),
                         [
                             'primary' => ['user_id'],
                             'update' => ['last_send'],
@@ -575,7 +577,7 @@ switch ($page_mode) {
 
             $updated_param_count = 0;
             // Update param
-            $result = pwg_query('select param, value from ' . CONFIG_TABLE . ' where param like \'nbm\\_%\'');
+            $result = pwg_query('select param, value from ' . Tables::config() . ' where param like \'nbm\\_%\'');
             while ((bool) ($nbm_user = pwg_db_fetch_assoc($result))) {
                 // 'param' is the config table's primary key, never null.
                 if (! is_string($nbm_user['param'])) {
@@ -651,7 +653,7 @@ $template->assign(
     ]
 );
 
-if (is_autorize_status(ACCESS_WEBMASTER)) {
+if (is_autorize_status(AccessLevel::Webmaster)) {
     // TabSheet
     $tabsheet = new tabsheet();
     $tabsheet->set_id('nbm');

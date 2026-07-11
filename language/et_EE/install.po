@@ -1,0 +1,143 @@
+# Piwigo translation — et_EE
+# Source: install.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: et_EE\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Admin configuration"
+msgstr "Halduri häälestamine"
+
+msgid "An alternate solution is to copy the text in the box above and paste it into the file \"local/config/database.inc.php\" (Warning : database.inc.php must only contain what is in the textarea, no line return or space character)"
+msgstr "Alternatiivne viis lahendada, on kopeerida üleval pool kastis oleva teksti faili \"local/config/database.inc.php\" (NB! fail peab sisaldama vaid selle teksti, ei midagi muud ega ühtki tühikutki)"
+
+msgid "Basic configuration"
+msgstr "Põhiline häälestamine"
+
+msgid "Can't connect to server"
+msgstr "Ühendumine serveriga nurjus"
+
+msgid "Congratulations, Piwigo installation is completed"
+msgstr "Palju õnne! Piwigo paigaldamine on valmis."
+
+msgid "Connection to server succeed, but it was impossible to connect to database"
+msgstr "Serveriga ühendati ära, aga andmebaasiga ühendumine nurjus."
+
+msgid "Creation of config file local/config/database.inc.php failed."
+msgstr "Häälestusfaili loomine ebaõnnestus (\"local/config/database.inc.php\")."
+
+msgid "Database configuration"
+msgstr "Andmebaasi häälestamine"
+
+msgid "Database name"
+msgstr "Andmebaasi nimi"
+
+msgid "Database table prefix"
+msgstr "Andmebaasi tabelinimede eesliide"
+
+msgid "Default gallery language"
+msgstr "Gallerii vaikimisi keel"
+
+msgid "Download the config file"
+msgstr "Laadi häälestusfail alla"
+
+msgid "Hope to see you back soon."
+msgstr "Loodame sind varsti jälle näha."
+
+msgid "Host"
+msgstr "Host"
+
+msgid "Installation"
+msgstr "Paigaldamine"
+
+msgid "It appears your webhost is currently running PHP %s."
+msgstr "Paistab, et su serveris jooksutatakse PHP versiooni %s."
+
+msgid "It will be shown to the visitors. It is necessary for website administration"
+msgstr "Seda näidetakse külastajatele ning on vajalik veebilehe haldamiseks"
+
+msgid "Just another Piwigo gallery"
+msgstr "Lihtsalt veel üks järjekordne Piwigo gallerii"
+
+msgid "Keep it confidential, it enables you to access administration panel"
+msgstr "Hoia seda salaja, sellega saad lehekülje haldurisse sisse"
+
+msgid "PHP 5 is required"
+msgstr "Vajatakse PHP versiooni 5.2"
+
+msgid "Sorry!"
+msgstr "Vabandust!"
+
+msgid "Start Install"
+msgstr "Alusta paigaldamist"
+
+msgid "Try to configure PHP 5"
+msgstr "Proovi häälestada PHP 5.2"
+
+msgid "User"
+msgstr "Kasutaja"
+
+msgid "Welcome to my photo gallery"
+msgstr "Tere tulemast mu fotogalleriisse"
+
+msgid "Welcome to your new installation of Piwigo!"
+msgstr "Tere tulemast äsja installitud Piwigosse!"
+
+msgid "You can download the config file and upload it to local/config directory of your installation."
+msgstr "Sa võid laadida häälestusfaili alla ja ise paigaldada selle oma \"local/config\" kaustasse."
+
+msgid "You may referer to your hosting provider's support and see how you could switch to PHP 5 by yourself."
+msgstr "Sa peaksid küsima oma veebimajutuse teenusepakkuja käest, kas on võimalik minna üle PHP versioonile 5.2"
+
+msgid "Don't hesitate to consult our forums for any help : %s"
+msgstr "Muidugi kasuta meie foorumeid abi leidmiseks: %s"
+
+msgid "Need help ? Ask your question on <a href=\"%s\">Piwigo message board</a>."
+msgstr "Vajad abi? Küsi <a href=\"%s\">Piwigo abilauast</a>."
+
+msgid "Note you can change your configuration by yourself and restart Piwigo after that."
+msgstr "Sa võid teha muudatusi seadistusfailis ja pärast ümberkäivitada Piwigo."
+
+msgid "Piwigo may try to switch your configuration to PHP 5 by creating or modifying a .htaccess file."
+msgstr "Piwigo oskab ise proovida seadistada PHP 5.2, seadistades selleks .htaccess faili."
+
+msgid "Piwigo was not able to configure PHP 5."
+msgstr "Piwigo ei suutnud seadistada PHP 5.2 kasutamist."
+
+msgid "Visitors will be able to contact site administrator with this mail"
+msgstr "Külalised võivad kasutada seda epost-aadressi et ühendust võtta administraatoriga"
+
+msgid "also given by your host provider"
+msgstr "samuti antud veebimajutuse teenusepakkuja poolt"
+
+msgid "database tables names will be prefixed with it (enables you to manage better your tables)"
+msgstr "andmebaasi tabelite nimed alustatakse selle eesliitega (see hõlpsustab tabelite korraspidamist samas andmebaasis)"
+
+msgid "enter a login for webmaster"
+msgstr "sisesta veebimeistri jaoks kasutajanimi"
+
+msgid "please enter your password again"
+msgstr "palun sisesta parool uuesti"
+
+msgid "user login given by your host provider"
+msgstr "veebimajutuse kasutajanimi"
+
+msgid "user password given by your host provider"
+msgstr "veebimajutuse parool"
+
+msgid "verification"
+msgstr "kinnitamine"
+
+msgid "webmaster login can't contain characters ' or \""
+msgstr "veebimeistri kasutajanimi ei saa sisaldada jutumärke"
+
+msgid "localhost or other, supplied by your host provider"
+msgstr "localhost või teised, antud teenusepakkuja poolt"
+
+msgid "PHP version %s required (you are running on PHP %s)"
+msgstr "Vajalik on PHP versioon %s (Teil on kasutusel PHP %s)"
+

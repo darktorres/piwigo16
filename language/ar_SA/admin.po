@@ -1,0 +1,2883 @@
+# Piwigo translation — ar_SA
+# Source: admin.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ar_SA\n"
+"Plural-Forms: nplurals=6; plural=(n == 0 ? 0 : n == 1 ? 1 : n == 2 ? 2 : n % 100 >= 3 && n % 100 <= 10 ? 3 : n % 100 >= 11 && n % 100 <= 99 ? 4 : 5);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "%d association"
+msgstr "%d مجموعه"
+
+msgid "%d associations"
+msgstr "%d جمعيات"
+
+msgid "%d album including"
+msgstr "%d ألبوم متضمن "
+
+msgid "%d albums including"
+msgstr "%d ألبومات متضامنه "
+
+msgid "%d physical"
+msgstr "%d طبيعي"
+
+msgid " and %d virtual"
+msgstr " و %d افتراضي"
+
+msgid "%d album moved"
+msgid_plural "%d albums moved"
+msgstr[0] "%d نقل الألبوم"
+msgstr[1] "%d نقل الألبومات"
+
+msgid "%d group"
+msgstr "%d مجموعه"
+
+msgid "%d groups"
+msgstr "%d مجموعات"
+
+msgid "%d member"
+msgid_plural "%d members"
+msgstr[0] "%d عدد"
+msgstr[1] "%d أعداد"
+
+msgid "%d tag"
+msgstr "%d كلمة دلائلية"
+
+msgid "%d tags"
+msgstr "%d كلمات"
+
+msgid "%d user comment rejected"
+msgstr "%d تعليق المستخدم رُفض"
+
+msgid "%d user comments rejected"
+msgstr "%d تعليقات المستخدمين رفض"
+
+msgid "%d user comment validated"
+msgstr "%d تم مصادقة التعليق"
+
+msgid "%d user comments validated"
+msgstr "%d تم مصادقة التلعيقات"
+
+msgid "%d user deleted"
+msgid_plural "%d users deleted"
+msgstr[0] "%d تم حذف المستخدم"
+msgstr[1] "%d تم حذف المستخدمين"
+
+msgid "%d user"
+msgid_plural "%d users"
+msgstr[0] "%d مستخدم"
+msgstr[1] "%d مستخدمين"
+
+msgid "%d waiting for validation"
+msgstr "%d ينتظر المصادقة"
+
+msgid "Actions"
+msgstr "الاجراءات"
+
+msgid "Activate"
+msgstr "تفعيل"
+
+msgid "Add/delete a permalink"
+msgstr "اضافة/حذف الرابط الدائم"
+
+msgid "Add a tag"
+msgstr "اضافة كلمة دلائلية"
+
+msgid "Add a user"
+msgstr "اضافة مستخدم"
+
+msgid "Add group"
+msgstr "اضافة مجموعه"
+
+msgid "Add"
+msgstr "أضف"
+
+msgid "Allow user registration"
+msgstr "السماح للمستخدمين بالتسجيل"
+
+msgid "Apply to sub-albums"
+msgstr "التطبيق على الألبوم الفرعي"
+
+msgid "Associated"
+msgstr "مرتبط"
+
+msgid "Caddie management"
+msgstr "ادارة السلة"
+
+msgid "Caddie"
+msgstr "السلة"
+
+msgid "Albums authorized thanks to group associations"
+msgstr "تم المصادقة عى الألبومات ، شكرا لله"
+
+msgid "Album manual order was saved"
+msgstr "طلب الألبومات اليدوية تم حفظه"
+
+msgid "Check for upgrade failed for unknown reasons."
+msgstr "لم يتم التحدث لاسباب غير معروفه."
+
+msgid "Check for upgrade"
+msgstr "التأكد من التحديثات"
+
+msgid "Comments for all"
+msgstr "يسمح للجميع بالتعليق دون استثناء :)"
+
+msgid "Current name"
+msgstr "الاسم الحالي"
+
+msgid "Database"
+msgstr "قاعدة البيانات"
+
+msgid "Deactivate"
+msgstr "تعطيل"
+
+msgid "Delete Representant"
+msgstr "حذف هذا الرد"
+
+msgid "Delete selected tags"
+msgstr "حذف الكلمات المختارة"
+
+msgid "Delete selected users"
+msgstr "حذف المستخدمين المحددين"
+
+msgid "Deletions"
+msgstr "الازالة"
+
+msgid "Deny selected groups"
+msgstr "نفي المجموعات المختارة"
+
+msgid "Deny selected users"
+msgstr "حذف المستخدم المحدد"
+
+msgid "Description"
+msgstr "الوصف"
+
+msgid "Display options"
+msgstr "عرض الخيارت"
+
+msgid "Dissociated"
+msgstr "فصل"
+
+msgid "Does not represent"
+msgstr "لا يمكن الرد"
+
+msgid "Edit selected tags"
+msgstr "تحرير الكلمات المختارة"
+
+msgid "Edit tags"
+msgstr "تحرير الكلمات الدلائلية"
+
+msgid "Email admins when a new user registers"
+msgstr "ارسل للمدير عند تسجيل مستخدم جديد"
+
+msgid "Email admins when a valid comment is entered"
+msgstr "اعلم المدير عند اي تعليق جديد"
+
+msgid "Email admins when a comment requires validation"
+msgstr "اعلم المدير للمصادقة على تعليقات جديدة"
+
+msgid "Environment"
+msgstr "البيئة"
+
+msgid "Form"
+msgstr "نموذج"
+
+msgid "Gallery title"
+msgstr "عنوان المعرض"
+
+msgid "Grant selected groups"
+msgstr "تصريح المجموعه المختارة"
+
+msgid "Grant selected users"
+msgstr "تصريح المستخدم المحدد"
+
+msgid "Group name"
+msgstr "اسم المجموهة"
+
+msgid "Groups"
+msgstr "مجموعات"
+
+msgid "Guests"
+msgstr "الضيوف"
+
+msgid "History"
+msgstr "السجل"
+
+msgid "Informations"
+msgstr "المعلومات"
+
+msgid "Install"
+msgstr "تثبيت"
+
+msgid "Link all album photos to a new album"
+msgstr "اربط جميع عناصر الألبومات بالألبوم الجديد"
+
+msgid "Link all album photos to some existing albums"
+msgstr "اربط جميع عناصر الألبوم للقائمة الألبومات المشابهه"
+
+msgid "Linked albums"
+msgstr "ربط الألبومات"
+
+msgid "Lock gallery"
+msgstr "اغلاق المعرض"
+
+msgid "Maintenance"
+msgstr "صيانة"
+
+msgid "Edit album permissions"
+msgstr "ادراة تصاريح الألبومات"
+
+msgid "Manage permissions for group \"%s\""
+msgstr "ادارة تصاريح المجموعه \"%s\""
+
+msgid "Manage permissions for user \"%s\""
+msgstr "ادارة تصاريح المشتركين \"%s\""
+
+msgid "Manage tags"
+msgstr "ادارة الكلمات الدلائلية"
+
+msgid "Members"
+msgstr "الاعضاء"
+
+msgid "Metadata synchronized from file"
+msgstr "تزامن البيانات الوصفية للملف"
+
+msgid "Move albums"
+msgstr "نقل الألبومات"
+
+msgid "Move"
+msgstr "نقل"
+
+msgid "Name"
+msgstr "الاسم"
+
+msgid "New name"
+msgstr "اسم جديد"
+
+msgid "New parent album"
+msgstr "ألبوم فرعي جديد"
+
+msgid "New tag"
+msgstr "كلمة جديد"
+
+msgid "Number of comments per page"
+msgstr "عدد التلعيقات في الصفحة"
+
+msgid "Number of rates"
+msgstr "عدد التقيمات"
+
+msgid "Only private albums are listed"
+msgstr "فقط للألبومات المدرجة"
+
+msgid "Operating system"
+msgstr "نظام المعالجة"
+
+msgid "Options"
+msgstr "خيارات"
+
+msgid "Other private albums"
+msgstr "ألبومات أخرى مدرجة"
+
+msgid "Page banner"
+msgstr "عنوان المعرض ( أعلى الصفحة) يمكنك استخدام HTML"
+
+msgid "Parent album"
+msgstr "الألبوم الرئيسي"
+
+msgid "Path"
+msgstr "مسار"
+
+msgid "Permalink"
+msgstr "رابط دائم"
+
+msgid "Permalink %s has been previously used by album %s. Delete from the permalink history first"
+msgstr "الرابط الدائم %sكان يستخدم من قبل الألبوم سابقا أحذفه   اولا من تاريخ %sالرابط الدائم"
+
+msgid "The permalink name must be composed of a-z, A-Z, 0-9, \"-\", \"_\" or \"/\". It must not be numeric or start with number followed by \"-\""
+msgstr "يجب ان يكون الرابط من الحروف الانجليزية   فقط مع امكانية استخدام الارقام "
+
+msgid "Permalink %s is already used by album %s"
+msgstr "هذا الرابط   %s بمستخدم من قبل هذا الألبوم ـ%s "
+
+msgid "Permalink history"
+msgstr "سجل الرابط الدائم"
+
+msgid "Permalinks"
+msgstr "الروابط الدائمة"
+
+msgid "Permission denied"
+msgstr "تصريح مرفوض"
+
+msgid "Permission granted thanks to a group"
+msgstr "تم التصريح مع الشكر للمجموعه"
+
+msgid "Permission granted"
+msgstr "منح التصريح"
+
+msgid "Photo informations updated"
+msgstr "تم تحديث معلومات الصورة"
+
+msgid "Plugins"
+msgstr "الاضافات"
+
+msgid "Position"
+msgstr "المـوقع"
+
+msgid "Preferences"
+msgstr "التفضبلات"
+
+msgid "Properties"
+msgstr "الخصائص"
+
+msgid "Random photo"
+msgstr "صورة عشوائية"
+
+msgid "Rate date"
+msgstr "تاريخ التقييم"
+
+msgid "Rating by guests"
+msgstr "امكانية التقييم للضيوف"
+
+msgid "Rating"
+msgstr "تقييم"
+
+msgid "Reject"
+msgstr "رفض"
+
+msgid "Representant"
+msgstr " موصوف أو مُـمثل"
+
+msgid "Representation of albums"
+msgstr "توصيف الألبومات"
+
+msgid "Representative"
+msgstr "التوصيف  أو التمثيل"
+
+msgid "Represents"
+msgstr "يُـمثل"
+
+msgid "Save order"
+msgstr "حفظ المطلوب"
+
+msgid "Save to permalink history"
+msgstr "حفظ في سجل الرابط الدائم"
+
+msgid "Select at least one album"
+msgstr "اختر على الاقل ألبوم واحد يا أخي"
+
+msgid "Select at least one photo"
+msgstr "اختر على الاقل صورة واحدة يا حبيبي"
+
+msgid "Select at least one user"
+msgstr "اختر  عضوا واحد على الاقل"
+
+msgid "Show info"
+msgstr "اعرض المعلومات"
+
+msgid "Site manager"
+msgstr "إدارة الموقع"
+
+msgid "Status"
+msgstr "الحالة"
+
+msgid "Statistics"
+msgstr "الأحصائيات"
+
+msgid "Storage album"
+msgstr "مخزن الألبومات"
+
+msgid "Sum of rates"
+msgstr "مجموع التقييم"
+
+msgid "Tag \"%s\" already exists"
+msgstr "الكلمات  \"%s\" موجودة بالفعل"
+
+msgid "Tag \"%s\" was added"
+msgstr "تم اضافة هذه الكلمة \"%s\""
+
+msgid "Tag selection"
+msgstr "اختيار الكلمات الدلائلية"
+
+msgid "The %d following tags were deleted"
+msgstr "تم حذف هذه الكلمات %d مسبقا"
+
+msgid "Unable to check for upgrade."
+msgstr "لا يمكن التأكد عن تحديثات جديدة"
+
+msgid "Uninstall"
+msgstr "إلغاء التثبيت"
+
+msgid "Use the default photo sort order"
+msgstr "استخدام الصورة الافتراضية من أجل نوع"
+
+msgid "User comments validation"
+msgstr "تعليقات تنتظر التصريح"
+
+msgid "Users"
+msgstr "المستخدمين"
+
+msgid "Validate"
+msgstr "تصريح"
+
+msgid "Validation"
+msgstr "التصريح"
+
+msgid "Version"
+msgstr "الاصدار"
+
+msgid "Virtual albums to move"
+msgstr "لنقل الألبومات"
+
+msgid "Virtual album name"
+msgstr "أسم الألبوم"
+
+msgid "Webmaster cannot be deleted"
+msgstr "لا يمكنك حذف مدير الموقع"
+
+msgid "You are running on development sources, no check possible."
+msgstr "ربما لا يمكن تطوير المصادر"
+
+msgid "You cannot delete your account"
+msgstr "لا تستطيع حذف حسابك"
+
+msgid "You cannot move an album in its own sub album"
+msgstr "لايمكن حذف ألبوم يحتوي على ألبوم فرعي"
+
+msgid "You need to confirm deletion"
+msgstr "تحتاج  تأكيد الحذف"
+
+msgid "Associate to album"
+msgstr "المرتبط بهذا الألبوم"
+
+msgid "associate to group"
+msgstr "مرتبط بهذه المجموعه"
+
+msgid "Authorized"
+msgstr "المرخص"
+
+msgid "Add a virtual album"
+msgstr "انشاء ألبوم"
+
+msgid "Authorize users to add comments on selected albums"
+msgstr "السماح للمستخدمين باضافة تعليق على ألبومات معينة"
+
+msgid "The name of an album must not be empty"
+msgstr "لا يمكن ان  تبقي اسم الألبوم خالي"
+
+msgid "Lock albums"
+msgstr "قفل الألبوم"
+
+msgid "Private"
+msgstr "ألبوم خاص"
+
+msgid "Public"
+msgstr "ألبوم عام"
+
+msgid "Find a new representant by random"
+msgstr "اظهر  جديد التواصيف او التمثيل بطريقة عشوائية"
+
+msgid "Public / Private"
+msgstr "العام/ الخاص"
+
+msgid "Manage authorizations for selected albums"
+msgstr "ادارة  تصريح التعليقات على الألبومات"
+
+msgid "Virtual album added"
+msgstr "الألبوم المضاف"
+
+msgid "Virtual album deleted"
+msgstr "الألبوم المحذوف"
+
+msgid "Access type"
+msgstr "طريقة الدخول"
+
+msgid "Information data registered in database"
+msgstr "     تم تحديث المعرض بنجاح  "
+
+msgid "Default display"
+msgstr "العرض الافتراضي"
+
+msgid "The gallery URL is not valid."
+msgstr "رابط المعرض غير صحيح"
+
+msgid "The number of comments a page must be between 5 and 50 included."
+msgstr "عدد التعليقات في الصفحة يجب أن تكون ما بين 5 و 50."
+
+msgid "Configuration"
+msgstr "التهيئة"
+
+msgid "confirm"
+msgstr "تـأكيد"
+
+msgid "Date"
+msgstr "التاريخ"
+
+msgid "delete album"
+msgstr "حذف الألبوم"
+
+msgid "Dissociate from album"
+msgstr "فصل من الألبوم"
+
+msgid "dissociate from group"
+msgstr "فصل من المجموعه"
+
+msgid "Album updated successfully"
+msgstr "تم تحديث معلومات الألبومات بنجاح منقط النظير."
+
+msgid "photos per page"
+msgstr "عدد في كل صفحة"
+
+msgid "High definition enabled"
+msgstr "تمكين ابعاد الارتفاع"
+
+msgid "File"
+msgstr "ملف"
+
+msgid "first photo added on %s"
+msgstr " اول ما اضيف في  %s"
+
+msgid "Forbidden"
+msgstr "ممنوع"
+
+msgid "global mode"
+msgstr "النمط الشائع"
+
+msgid "group \"%s\" added"
+msgstr "المجموعه  \"%s\"  أضيفت"
+
+msgid "group \"%s\" deleted"
+msgstr "المجموعه  \"%s\"  جذفت"
+
+msgid "group \"%s\" updated"
+msgstr "المجموعه  \"%s\"  تم تحميلها"
+
+msgid "The name of a group must not contain \" or ' or be empty."
+msgstr "لا تستخدم الترقيم \"/\" و لا تترك اسم المجموع فارغ"
+
+msgid "This name is already used by another group."
+msgstr "هذا الاسم مستخدم من قبل مجموعه أ×خرى."
+
+msgid "High definition"
+msgstr "ابعاد الارتفاع"
+
+msgid "jump to album"
+msgstr "اغفز للمجموعة"
+
+msgid "jump to photo"
+msgstr "اغفز للصورة"
+
+msgid "leave"
+msgstr "تـَرك"
+
+msgid "Lock"
+msgstr "قفل"
+
+msgid "Locked"
+msgstr "مقفول"
+
+msgid "manage album photos"
+msgstr "ادارةعناصر الألبوم"
+
+msgid "manage sub-albums"
+msgstr "صور الألبوم الفرعي"
+
+msgid "Manage"
+msgstr "إدارة"
+
+msgid "Execution time is out, treatment must be continue [Estimated time: %d second]."
+msgid_plural "Execution time is out, treatment must be continue [Estimated time: %d seconds]."
+msgstr[0] " أستنفذت الوقت المتاح للتنفيذ وهو %d دقيقة"
+msgstr[1] "أستنفذت الوقت المتاح للتنفيذ وهو %d دقائق"
+
+msgid "Prepared time for list of users to send mail is limited. Others users are not listed."
+msgstr "الوقت المتاح لامراسلة قائمة المستخدمين محدود ،هناك متخدمين لم يتم اضافتهم في القائمة."
+
+msgid "Time to send mail is limited. Others mails are skipped."
+msgstr "الوقت للارسال محدود ، تم تجاهل بعض العناوين."
+
+msgid "To send ?"
+msgstr "إرسـال؟"
+
+msgid "Last send"
+msgstr "الارسال الاخير"
+
+msgid "User"
+msgstr "المستخدم"
+
+msgid "See you soon,"
+msgstr "ستسعدنا جدا  زيارتك"
+
+msgid "Go to"
+msgstr "يمكنك زيارتنا من خلال هذا الرابط "
+
+msgid "Hello"
+msgstr "السلام عليكم و رحمة الله و بركاته "
+
+msgid "New photos were added"
+msgstr "هناك صور جديدة في المعرض"
+
+msgid "on"
+msgstr "صور واحدة جديدة "
+
+msgid "between"
+msgstr " بين "
+
+msgid "and"
+msgstr " و "
+
+msgid "The webmaster has subscribed you to receiving notifications by mail."
+msgstr "تم اضافة بريدك لقائمة مراسلات المعرض ..لنعلمك بكل جديد "
+
+msgid "You have subscribed to receiving notifications by mail."
+msgstr "نشكر لك ثقتك بنا .. تم اضافة بريدك  الى  قائمة  المراسلات  بنجاح"
+
+msgid "To subscribe"
+msgstr "للاشتراك"
+
+msgid "If you encounter problems or have any question, please send a message to"
+msgstr "إذا واجهتك اي مشكلة او كان لديك سؤال  أرسل فورا إلي "
+
+msgid "[NBM] Problems or questions"
+msgstr "[NBM] مشكلةأو استفسار"
+
+msgid "The webmaster has unsubscribed you from receiving notifications by mail."
+msgstr "تم الغاء بريدك من قائمة المراسلات .. و نحن جداآسفون لذلك"
+
+msgid "You have unsubscribed from receiving notifications by mail."
+msgstr "نأسف جدا لعدم تمكننا من خدمتك ..تم إلغاء بريدك  "
+
+msgid ", click on"
+msgstr ", اضغط على "
+
+msgid "To unsubscribe"
+msgstr "لإلغاء الاشتراك"
+
+msgid "With blank value, gallery title will be used"
+msgstr "القيمة فارغة ،عنوان المعرض سيستخدم"
+
+msgid "Notification"
+msgstr "إدارة التبليغات"
+
+msgid "Error when sending email to %s [%s]."
+msgstr "هناك خطأ عند الارسال الي %s [%s]."
+
+msgid "Mail sent to %s [%s]."
+msgstr "تم الارسل الي %s [%s]."
+
+msgid "%d mail was sent."
+msgid_plural "%d mails were sent."
+msgstr[0] "%d تم ارسال البريد."
+msgstr[1] "%d تم ارسال الرسائل ."
+
+msgid "%d mail was not sent."
+msgid_plural "%d mails were not sent."
+msgstr[0] "%d لم يتم الارسال."
+msgstr[1] "%d لم يتم ارسال الرسائل."
+
+msgid "No mail to send."
+msgstr "البريد ليس موجود في قائمة المرسلات"
+
+msgid "There is no available subscribers to mail."
+msgstr "ليس هناك مشتركين للارسال."
+
+msgid "Subscribers could be listed (available) only if there is new elements to notify."
+msgstr "ممكنه لقائمة المشتركين فقط إذا كان مصرح لهم  بالعلم بمستجدات المعرض."
+
+msgid "Anyway only webmasters can see this tab and never administrators."
+msgstr "متاح فقط لمسؤول المعرض المشاهدة."
+
+msgid "No user to send notifications by mail."
+msgstr "لا يوجد مستخدمين للارسال."
+
+msgid "New photos added"
+msgstr "هناك صور جديدة في المعرض"
+
+msgid "Subscribe to notification by mail"
+msgstr " تم اضافة بريدك"
+
+msgid "Unsubscribe from notification by mail"
+msgstr "تم الغاء بريدك "
+
+msgid "Parameter"
+msgstr "نموذج الارسال"
+
+msgid "Continue processing treatment"
+msgstr "معالجة المعاملة مسـتمرة"
+
+msgid "Complementary mail content"
+msgstr "استكمال حساب البريد"
+
+msgid "Add detailed content"
+msgstr "تم اضافة تفاصيل أخرى للحساب"
+
+msgid "Send mail as"
+msgstr "أرسل بريد كـ "
+
+msgid "Send mail to users"
+msgstr "ارسل بريد للمستخدمين"
+
+msgid "Send"
+msgstr "أرسل"
+
+msgid "Subscribed"
+msgstr "مشترك"
+
+msgid "Subscribe"
+msgstr "اشتـراك"
+
+msgid "Parameters"
+msgstr "البارامترات"
+
+msgid "Select recipients"
+msgstr "اختيار المستفيدين"
+
+msgid "Subscribe/unsubscribe users"
+msgstr "اشتراك/الغاء اشتراك المستخدمين"
+
+msgid "Unsubscribed"
+msgstr "الغاء الاشتراك"
+
+msgid "%d parameter was updated."
+msgid_plural "%d parameters were updated."
+msgstr[0] "%d تم تحديث البارامتر."
+msgstr[1] "%d البارمتر حُـدث."
+
+msgid "%d user was not updated."
+msgid_plural "%d users were not updated."
+msgstr[0] "%d المستخدم لم يتم تحديثه."
+msgstr[1] "%d المستخدمين لم يتم تحديثهم."
+
+msgid "User %s [%s] was removed from the subscription list."
+msgstr "أسم المستخدم%s [%s] تم إزالة هذا البريد من قائمة المراسلات."
+
+msgid "User %s [%s] was added to the subscription list."
+msgstr "بأسم : %s [%s] تم اضافة هذا البريد الي قائمة المراسلات."
+
+msgid "%d user was updated."
+msgid_plural "%d users were updated."
+msgstr[0] "%d المستخدم تم تحديثه."
+msgstr[1] "%d تم تحديث قائمة المراسلات"
+
+msgid "User %s [%s] was not removed from the subscription list."
+msgstr "المستخدم%s [%s] تم ازالة هذا البريد من قائمة المراسلات."
+
+msgid "User %s [%s] was not added to the subscription list."
+msgstr "المستخدم %s [%s] تم اضافة هذا البريد الى قائمة المراسلات."
+
+msgid "User %s [%s] added."
+msgstr "المستخدم %s [%s]تم اضافة."
+
+msgid "Warning: subscribing or unsubscribing will send mails to users"
+msgstr "تحذير : سيتم اعلام المشتركين باالاغلاء و الاشتراك"
+
+msgid "Send mail on HTML format"
+msgstr "ارسال البريد بصيغة HTML"
+
+msgid "Include display of recent photos grouped by dates"
+msgstr "تضمين عرض الصور الاخير حسب تاريخها"
+
+msgid "Available only with HTML format"
+msgstr "متاح فقط بصيغة HTML"
+
+msgid "no write access"
+msgstr "حرية التنفيذ مقيدة"
+
+msgid "Permissions"
+msgstr "أذونات"
+
+msgid "private"
+msgstr "خاص"
+
+msgid "public"
+msgstr "العام"
+
+msgid "Purge never used notification feeds"
+msgstr "عدم تسهيل استخدام التغذية الراجعه "
+
+msgid "Purge sessions"
+msgstr "تبسط او تسهيل الجلسات"
+
+msgid "randomly represented"
+msgstr "تمثيل عشوائي"
+
+msgid "registration date"
+msgstr "تاريخ التسجيل"
+
+msgid "clean"
+msgstr "نظـيف"
+
+msgid "Create this site"
+msgstr "عيّـن هذا الموقع"
+
+msgid "test"
+msgstr "أختبار"
+
+msgid "test this remote site"
+msgstr "اختبر هذا الموقع البعيد"
+
+msgid "remove tags"
+msgstr "ازالة الكلمات الدلائلية"
+
+msgid "Repair and optimize database"
+msgstr "اصلاح و تحسين قاعدة البيانات"
+
+msgid "selection"
+msgstr "الاختيار"
+
+msgid "set to"
+msgstr "تعيين إلى"
+
+msgid "singly represented"
+msgstr "نوصيف او تمثيل منفرد"
+
+msgid "This site already exists"
+msgstr "هذا الموقع موجود بالفعل"
+
+msgid "created"
+msgstr "تم الانشاء"
+
+msgid "delete"
+msgstr "حـذف"
+
+msgid "delete this site and all its attached elements"
+msgstr "احذف هذا الموقع بكل عناصره المرتبطه به"
+
+msgid "deleted"
+msgstr "تم الحذف للاسف الشديد"
+
+msgid "an error happened"
+msgstr "هناك خطأ ما"
+
+msgid "Local"
+msgstr "محلي"
+
+msgid "Remote"
+msgstr "البعيد"
+
+msgid "update the database from files"
+msgstr "تحديث قاعدة البيانات من الملف"
+
+msgid "status"
+msgstr "الحالة"
+
+msgid "Directory"
+msgstr "الدليل"
+
+msgid "sub-albums"
+msgstr "الألبوم الفرعي"
+
+msgid "Synchronize metadata"
+msgstr "مزامنة البيانات الوصفية"
+
+msgid "target"
+msgstr "الهـدف"
+
+msgid "Thumbnail"
+msgstr "المــصغرة"
+
+msgid "Title"
+msgstr "العنوان"
+
+msgid "Album list management"
+msgstr "إدارة الألبومات"
+
+msgid "Piwigo configuration"
+msgstr "تهيئة المعرض"
+
+msgid "Edit album"
+msgstr "تحرير الألبوم"
+
+msgid "Group management"
+msgstr "ادارة المجموعات"
+
+msgid "User list"
+msgstr "قائمة المستخدم"
+
+msgid "Database synchronization with files"
+msgstr "قاعدة بيانت المزامنة مع الملفات"
+
+msgid "all"
+msgstr "الكل"
+
+msgid "height must be a number superior to"
+msgstr "يجب عن يكون عدد الارتفاع يتعدى"
+
+msgid "width must be a number superior to"
+msgstr "يجب ان يكون عدد العرض يتعدى"
+
+msgid "for the file format"
+msgstr "لتنسيق الملف"
+
+msgid "Photo unreachable or no support"
+msgstr "صور لا يمكن الوصول لها او لم تدعم"
+
+msgid "GD version"
+msgstr "GD أصدار"
+
+msgid "General statistics"
+msgstr "الاحصائيات العامة"
+
+msgid "average time"
+msgstr "متوسط الوقت"
+
+msgid "total time"
+msgstr "الوقت الكلي"
+
+msgid "for this file format"
+msgstr "لتنسيق هذا الملف"
+
+msgid "unit mode"
+msgstr "نمط موحد"
+
+msgid "Unlocked"
+msgstr "غيرمقفل"
+
+msgid "unset"
+msgstr "غير مهيأ"
+
+msgid "Update albums informations"
+msgstr "تحديث ملعومات الألبومات"
+
+msgid "Update photos information"
+msgstr "تحديث معلومات الصور"
+
+msgid "Synchronize"
+msgstr "التزامن"
+
+msgid "reduce to single existing albums"
+msgstr "تقليص الألبومات الحاليه"
+
+msgid "Choose an option"
+msgstr "اختر واحد من الخيارات"
+
+msgid "display maximum informations (added albums and photos, deleted albums and photos)"
+msgstr "الحد الاقصى لعرض الملعومات (حذف ،اضافة صور او ألبومات)"
+
+msgid "Error list"
+msgstr "خطأ في القائمة"
+
+msgid "Errors caption"
+msgstr "أخطاء في الايجاد"
+
+msgid "Detailed informations"
+msgstr "ملعومات محذوفة"
+
+msgid "File/directory read error"
+msgstr "خطأ في قراءة ملف/دليل"
+
+msgid "The file or directory cannot be accessed (either it does not exist or the access is denied)"
+msgstr "ملف أو دليل لا يمكن الوصول إليها (أي أنه لا وجود لها ، أو منعوا من الدخول)"
+
+msgid "albums deleted in the database"
+msgstr "الألبومات محذوفة من قاعدة البيانات"
+
+msgid "photos deleted from the database"
+msgstr "الصور محذوفة من قاعدة البيانات"
+
+msgid "photos candidates for metadata synchronization"
+msgstr "تزامن المعلومات التفصيلة للصور المرشحه"
+
+msgid "photos informations synchronized with files metadata"
+msgstr "ملعومات الصور متزامنة مع المعلومات التفصيلة للصور"
+
+msgid "errors during synchronization"
+msgstr "أخطاء اثناء التزامن"
+
+msgid "albums added in the database"
+msgstr "ألبومات اضيفت في قاعدة البيانات"
+
+msgid "photos added in the database"
+msgstr "صور اضيفت في قاعدة البيانات"
+
+msgid "photos updated in the database"
+msgstr "تم تحديث الصور في قاعدة البيانات"
+
+msgid "Search for new images in the directories"
+msgstr "البحث عن صور جديدة في الألبومات"
+
+msgid "added"
+msgstr "تمت الاضافة"
+
+msgid "Metadata synchronization results"
+msgstr "نتائج تزامن المعلومات التفصيلية"
+
+msgid "only perform a simulation (no change in database will be made)"
+msgstr "اداة للمحاكاة فقط (لن يتم أي تغير في قاعدة البيانات)"
+
+msgid "Simulation"
+msgstr "محاكات"
+
+msgid "directories + files"
+msgstr "مجلدات + ملفات"
+
+msgid "only directories"
+msgstr "فقط المجلدات"
+
+msgid "synchronize files structure with database"
+msgstr "مزامنة الملفات مع هيكل قاعدة البيانات"
+
+msgid "synchronize files metadata with database photos informations"
+msgstr "مزامنة الملعومات التفصيلة مع الصور الموجودة في قاعدة البيانات"
+
+msgid "even already synchronized photos"
+msgstr "سبق التزامن مع الصور"
+
+msgid "Used metadata"
+msgstr "معومات التفصيلة مُـستخدمة"
+
+msgid "The name of directories and files must be composed of letters, numbers, \"-\", \"_\" or \".\""
+msgstr "اسم الأدلة والملفات يجب أن تكون مكونة من الحروف والأرقام ، \"--\" ، \"_\" أو \".\""
+
+msgid "wrong filename"
+msgstr "خطأ فادح  في اسم الملف"
+
+msgid "Upload"
+msgstr "تحميل"
+
+msgid "user \"%s\" added"
+msgstr " تم اضافة المستخدم\"%s\"  بنجاح"
+
+msgid "User status"
+msgstr "حالة المستخدم"
+
+msgid "user_status_admin"
+msgstr "مدير عام"
+
+msgid "user_status_generic"
+msgstr "عام"
+
+msgid "user_status_guest"
+msgstr "ضيف محترم"
+
+msgid "user_status_webmaster"
+msgstr "مسؤول الموقع"
+
+msgid "Virtual album"
+msgstr "ألبوم افتراضي"
+
+msgid "Waiting"
+msgstr "تحت الانتظار"
+
+msgid "default"
+msgstr "افتراضي"
+
+msgid "Toggle 'default group' property"
+msgstr "ترجيح 'مجموعة افتراضية' الخصوصية"
+
+msgid "Advanced features"
+msgstr "مميزات متقدمة"
+
+msgid "Overall"
+msgstr "اجماليا"
+
+msgid "Year"
+msgstr "سنة"
+
+msgid "Month"
+msgstr "شهر"
+
+msgid "Day"
+msgstr "يوم"
+
+msgid "Pages seen"
+msgstr "صفحة مشاهده"
+
+msgid "Time"
+msgstr "الوقت"
+
+msgid "IP"
+msgstr "IP"
+
+msgid "Element"
+msgstr "عنصر"
+
+msgid "Section"
+msgstr "القسم"
+
+msgid "An information email was sent to group \"%s\""
+msgstr "معلومات تم ارسالها الي المجموعة \"%s"
+
+msgid "Send an information email to group members"
+msgstr "أرسل الملعومات الي أعضاء المجموعة"
+
+msgid "Group"
+msgstr "مجموعه"
+
+msgid "[%s] Visit album %s"
+msgstr "ألبوم تم تحديثه [%s]"
+
+msgid "Hello,"
+msgstr "  السلام عليكم و رحمة الله و بركاته,"
+
+msgid "See you soon."
+msgstr "زيارتك للمعرض تعني لي الكثير .."
+
+msgid "Discover album:"
+msgstr " البوم يحتوي صور جديدة :"
+
+msgid "Mail content"
+msgstr "محتوى البريد"
+
+msgid "none"
+msgstr "لا شيء"
+
+msgid "high"
+msgstr "الارتفاع"
+
+msgid "other"
+msgstr "آخــر"
+
+msgid "Element type"
+msgstr "نوع العنـصر"
+
+msgid "Image id"
+msgstr "هوية الصورة"
+
+msgid "Summary"
+msgstr "ملخص"
+
+msgid "%d line filtered"
+msgid_plural "%d lines filtered"
+msgstr[0] "%d خط مـُرشح"
+msgstr[1] "%d خطوط مُـرشح"
+
+msgid "%d guest"
+msgid_plural "%d guests"
+msgstr[0] "%d ضيف كريم"
+msgstr[1] "%d ضيوف كرام"
+
+msgid "Hour"
+msgstr "سـاعـة"
+
+msgid "guest"
+msgstr "ضيف"
+
+msgid "default values"
+msgstr "قيم أفتراضية"
+
+msgid "Guest cannot be deleted"
+msgstr "هل انت جاد بطرد الضيف و حذفه (لايمكن ذلك)"
+
+msgid "Default user cannot be deleted"
+msgstr "المستخدم الافتراضي لا يمكن حذفه"
+
+msgid "Purge history detail"
+msgstr "معالجة تفاصيل السجل"
+
+msgid "Purge history summary"
+msgstr "معالجة ملخص التفاصيل"
+
+msgid "Check integrity"
+msgstr "فحص سلامة المراقبة"
+
+msgid "Anomaly"
+msgstr "الوضع الشاذ"
+
+msgid "Correction"
+msgstr "التصحيح"
+
+msgid "Automatic correction"
+msgstr "تصحيح تلقائي"
+
+msgid "Impossible automatic correction"
+msgstr "استحالة التصحيح التلقائي"
+
+msgid "Correction applied with success"
+msgstr "تم التصحيح بنجاح منقطع التظير"
+
+msgid "Correction applied with error"
+msgstr "لم يتم التحصيح هناك خطأ ما"
+
+msgid "%d anomaly has been detected."
+msgid_plural "%d anomalies have been detected."
+msgstr[0] "%d تم العثور على شذوذ ."
+msgstr[1] "%d تم اكتشاف حالات شاذة."
+
+msgid "%d anomaly has been corrected."
+msgid_plural "%d anomalies have been detected corrected."
+msgstr[0] "%d تم تصحيح الحالة الشاذة."
+msgstr[1] "%d تم تصحيح الحالات الشاذة."
+
+msgid "%d anomaly has not been corrected."
+msgid_plural "%d anomalies have not been corrected."
+msgstr[0] "%d للاسف لم يتم تصحيح الحالة الشاذة."
+msgstr[1] "%d أوه..لم يتم تصحيح الحالات الشاذة."
+
+msgid "Go to %s or %s for more informations"
+msgstr "أذهب الي %s أو %s لمزيد من المعلومات"
+
+msgid "the forum"
+msgstr "النـموذج"
+
+msgid "the wiki"
+msgstr "the wiki"
+
+msgid "%s value is not correct file because exif are not supported"
+msgstr "%s القيم غير صحيح لانه exif غير مدعوم"
+
+msgid "%s must be to set to false in your local/config/config.inc.php file"
+msgstr "%s لابد ان هناك فشل ما في ملف config_local.inc.php"
+
+msgid "Main \"guest\" user does not exist"
+msgstr "الرئيسية \"ضيفا\" المستخدم غير موجود"
+
+msgid "Main \"guest\" user status is incorrect"
+msgstr "حالة المستخدم غير صحيح"
+
+msgid "Default user does not exist"
+msgstr "المستخدم الافتراضي غير صحيح"
+
+msgid "Main \"webmaster\" user does not exist"
+msgstr "الرئيسية \"مدير الموقع\"غير موجود"
+
+msgid "Main \"webmaster\" user status is incorrect"
+msgstr "الرئيسية حالة مدير الموقع \" غير موجودة"
+
+msgid "User \"%s\" created with \"%s\" like password"
+msgstr "المستخدم \"%s\" أنشأ مع  \"%s\" مثل كلمة المرور"
+
+msgid "Status of user \"%s\" updated"
+msgstr "تم نحديث حالة المستخدم\"%s\" "
+
+msgid "add new photos to caddie"
+msgstr "اضف صور جديدة الى السلة"
+
+msgid "No display"
+msgstr "لم يعرض"
+
+msgid "Classic display"
+msgstr "عرض عادي"
+
+msgid "Hoverbox display"
+msgstr "عرض مربعات عائمة"
+
+msgid "Minimum privacy level"
+msgstr "الحد الأدنى لمستوى الخصوصية"
+
+msgid "Privacy level"
+msgstr "مستوى الخصوصية"
+
+msgid "Level 0"
+msgstr "---"
+
+msgid "Level 1"
+msgstr "متصلين"
+
+msgid "Level 2"
+msgstr "اصدقاء"
+
+msgid "Level 4"
+msgstr "العائلة"
+
+msgid "Level 8"
+msgstr "مدراء"
+
+msgid "Reinitialize check integrity"
+msgstr "اعادة فحص السلامة"
+
+msgid "Check all"
+msgstr "أختر الجميع"
+
+msgid "Uncheck all"
+msgstr "إلغاء الاختيار"
+
+msgid "Check automatic corrections"
+msgstr "فحص وتصحيح آلي"
+
+msgid "Apply selected corrections"
+msgstr "تطبيق التصحيح على البنود المختارة"
+
+msgid "Ignore selected anomalies"
+msgstr "تجاهل اختيار المفارقات"
+
+msgid "Refresh"
+msgstr "إنعاش"
+
+msgid "The anomaly will be ignored until next application version"
+msgstr "سيتم تجاهل الشذوذ في النسخ القادمة"
+
+msgid "Correction the anomaly will cancel the fact that it's ignored"
+msgstr "تصحيح وضع شاذ سيلغي أنه's متجاهل"
+
+msgid "%d anomaly has been ignored."
+msgid_plural "%d anomalies have been ignored."
+msgstr[0] "%d تم تجاهل هذا الشيئ الشاذ."
+msgstr[1] "%d تم تجاهل هذه الحلات الشاذه."
+
+msgid "Plugins which need upgrade"
+msgstr "اضافات تحتاج لتحديث"
+
+msgid "Plugin list"
+msgstr "قائمة الاضافات"
+
+msgid "Check for updates"
+msgstr "فحص للتحديث"
+
+msgid "Other plugins"
+msgstr "اضافات أخرى"
+
+msgid "Last revisions"
+msgstr "الاصدارت الاخيرة"
+
+msgid "Are you sure you want to delete this plugin?"
+msgstr "هل انت متأكد من حذف هذه الاضاة?"
+
+msgid "Are you sure you want to install this plugin?"
+msgstr "هل تريد فعلا تثبيت هذه الاضافة?"
+
+msgid "Are you sure to install this upgrade? You must verify if this version does not need uninstallation."
+msgstr "هل فعلا تريد ترقية هذا التحديث ؟ قد تحتاج ان تتأكد انك لن تحتاج لعلمية الغاء التنصيب."
+
+msgid "Plugin has been successfully copied"
+msgstr "تم نسخ الاضافة الجديدة بنجاح"
+
+msgid "Can't create temporary file."
+msgstr "يمكن'لا انشاء ملف مؤقت."
+
+msgid "Can't download archive."
+msgstr "يمكن'لا تحميل الارشيف."
+
+msgid "Can't read or extract archive."
+msgstr "يمكن'لا قراءة او استخراج الارشيف."
+
+msgid "An error occured during extraction (%s)."
+msgstr " (%s)حدث خطأ أثناء استخراج"
+
+msgid "Please check \"plugins\" folder and sub-folders permissions (CHMOD)."
+msgstr "ارجوا فحص \"الاضافات\" المجلدو المجلد الفرعي (CHMOD)."
+
+msgid "Can't connect to server."
+msgstr "يمكن'لا الاتصال بالخادم."
+
+msgid "Purge compiled templates"
+msgstr "معالجة جميع النماذج"
+
+msgid "ACCESS_0"
+msgstr "حرية الوصول"
+
+msgid "ACCESS_1"
+msgstr "الوصول للجميع"
+
+msgid "ACCESS_2"
+msgstr "للمشتركين فقط"
+
+msgid "ACCESS_3"
+msgstr "للمدراء"
+
+msgid "ACCESS_4"
+msgstr "لمدير الموقع"
+
+msgid "ACCESS_5"
+msgstr "ليس لاحد"
+
+msgid "Support"
+msgstr "الدعم الفني"
+
+msgid "Documentation"
+msgstr "الوثائق"
+
+msgid "A new version of Piwigo is available."
+msgstr "هناك نسخة جديدة من Piwigo متاحة."
+
+msgid "Piwigo Administration"
+msgstr "Piwigo الإدارة"
+
+msgid "Piwigo version"
+msgstr "Piwigo الاصدار"
+
+msgid "You are running the latest version of Piwigo."
+msgstr "انت تستعمل آخر نسخة من سكبرت المعرض ."
+
+msgid "The version of %s [%s] installed is not compatible with the version required [%s]"
+msgstr "اصدار الـ %s [%s] ليس متوافق من تنسيق الاصدار المطلوب[%s]"
+
+msgid "You need to upgrade your system to take full advantage of the application else the application will not work correctly, or not at all"
+msgstr "انت بحاجة لتطوير النظام للتمع بكل امتيازات هذا البرنامج او انك لن تتمكن من تشغيل البرنامج على الاطلاق"
+
+msgid "Deleted on"
+msgstr "محذزف"
+
+msgid "Last hit"
+msgstr "النقرة الاخيرة"
+
+msgid "GD library is missing"
+msgstr "  مفقودة GD مكتبة "
+
+msgid "Templates"
+msgstr "النماذج"
+
+msgid "Extend for templates"
+msgstr "توسيع النماذج"
+
+msgid "Replacement of original templates by customized templates from template-extension subfolder"
+msgstr "استبدال النماذج الأصلية من خلال نماذج من قالب مخصص في المجلد الفرعي"
+
+msgid "Replacers (customized templates)"
+msgstr "تبديل(نماذج مخصصة)"
+
+msgid "Original templates"
+msgstr "نماذج اصلية"
+
+msgid "Optional URL keyword"
+msgstr "الكلمات الاساسية URL خيارات"
+
+msgid "Templates configuration has been recorded."
+msgstr "تم تسجيل قاولب التشكيل"
+
+msgid "All optimizations have been successfully completed."
+msgstr "تمت عملية التحسينات بنجاح."
+
+msgid "Optimizations have been completed with some errors."
+msgstr "اكتملت عملية التحسين مع"
+
+msgid "Modify information"
+msgstr "تعديل المعلومات"
+
+msgid "nothing"
+msgstr "لا شيء"
+
+msgid "overrides existing values with empty ones"
+msgstr "استبدل القيم الموجودة بقيم فارغة"
+
+msgid "Manage photo ranks"
+msgstr "إدارة ترتيب الصور"
+
+msgid "Edit ranks"
+msgstr "تحرير الترتيب"
+
+msgid "No photo in this album"
+msgstr "لا يوجد صور في الالبوم"
+
+msgid "Images manual order was saved"
+msgstr "تم حفظ الصور المطلوبة يديويا"
+
+msgid "ranks"
+msgstr "الترتيب"
+
+msgid "Drag to re-order"
+msgstr "أسحب لتغيير"
+
+msgid "Quick Local Synchronization"
+msgstr "فحص سريع للمستجدات"
+
+msgid "No photo can be deleted"
+msgstr "لا صور يمكن حذفها"
+
+msgid "Delete selected photos"
+msgstr "حذف الصورالمختارة"
+
+msgid "%d photo was deleted"
+msgid_plural "%d photos were deleted"
+msgstr[0] " صورة محذوفة %d"
+msgstr[1] " صور محذوفة %d"
+
+msgid "Downloads"
+msgstr "تنزيل"
+
+msgid "Released on"
+msgstr "Released on تمكين استخدام"
+
+msgid "Number of downloads"
+msgstr "عدد التنزيلات"
+
+msgid "Piwigo Announcements Newsletter"
+msgstr "اعلانات Piwigo الإخبارية"
+
+msgid "Keep in touch with Piwigo project, subscribe to Piwigo Announcement Newsletter. You will receive emails when a new release is available (sometimes including a security bug fix, it's important to know and upgrade) and when major events happen to the project. Only a few emails a year."
+msgstr "البقاء على اتصال مع Piwigo المشروع ، الاشتراك في النشرة Piwigo إعلان. سوف تتلقى رسائل البريد الإلكتروني عندما يتوفر الإصدار الجديد (في بعض الأحيان بما في تثبيت الأمن علة ، / / من المهم معرفة والارتقاء) ، وعندما يحدث الأحداث الرئيسية لهذا المشروع. سوى عدد قليل من الرسائل الإلكترونية في السنة."
+
+msgid "Subscribe %s"
+msgstr " %s اشتراك "
+
+msgid "Subscribe %s to Piwigo Announcements Newsletter"
+msgstr "اشترك  %s لـ اعلانات Piwigo الإخبارية"
+
+msgid "Purge search history"
+msgstr "معالجة احصائيات البحث"
+
+msgid "Hide"
+msgstr "أخفاء"
+
+msgid "Menu Management"
+msgstr "القائمة الرئيسية"
+
+msgid "Operation in progress"
+msgstr "معالجة العرض"
+
+msgid "Please wait..."
+msgstr "لحظات الانتظار أشغلها بالإستغفار .."
+
+msgid "By rank"
+msgstr "حسب المنزلة"
+
+msgid "Manual order"
+msgstr "دليل النظام"
+
+msgid "Password is missing. Please enter the password."
+msgstr "لم تكتب كلمة المرور، فضلا ً أكتب كلمة المرور"
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "لم يتم تأكيد كلمة المرور، فضلا ً لا أمر أكد المرور رحم الله والديك"
+
+msgid "Allow users to edit their own comments"
+msgstr "اسمح للمستخدم بتحريرتعليقه الخاص"
+
+msgid "Allow users to delete their own comments"
+msgstr "اسمح للمستخدم بحذف تعليقه الخاص"
+
+msgid "Email administrators when a comment is modified"
+msgstr "ابلغ المديرعن تعديل التعليم "
+
+msgid "Email administrators when a comment is deleted"
+msgstr "ابلغ المدير عند حذف تعليق عن طريق البريد"
+
+msgid "Cannot delete the old permalink !"
+msgstr "الروابط الدائمة و القديمة لا يمكن حذفها"
+
+msgid "Hit"
+msgstr "نقرة"
+
+msgid "Tools"
+msgstr "أدوات"
+
+msgid "Photos"
+msgstr "الصور"
+
+msgid "Themes"
+msgstr "واجهة العرض"
+
+msgid "Instructions to use Piwigo"
+msgstr "دليل استخدام Piwigo"
+
+msgid "Installed Themes"
+msgstr "تثبيت واجهات العرض"
+
+msgid "Add New Theme"
+msgstr "اضف واجهة جديدة"
+
+msgid "Forbid this theme to users"
+msgstr "امنع هذه الواجهة عن المستخدمين"
+
+msgid "Set as default theme for unregistered and new users"
+msgstr "اجعلها كواجهة افتراضية لغير المسجلين و المستخدمين الجدد"
+
+msgid "unknown"
+msgstr "غير معروف"
+
+msgid "Upload Photos"
+msgstr "رفع الصور"
+
+msgid "Drop into album"
+msgstr "اتركها داخل الالبوم"
+
+msgid "+ Add an upload box"
+msgstr "+ اضف عن طريق برنامج الرفع"
+
+msgid "Create the \"%s\" directory at the root of your Piwigo installation"
+msgstr "إنشاء \"%s\" دليل على جذر التثبيت الخاص Piwigo"
+
+msgid "Give write access (chmod 777) to \"%s\" directory at the root of your Piwigo installation"
+msgstr "اعطي تصريح الكتابة (chmod 777) على مجلد \"%s\" الذي ثبت فيه المعرض  "
+
+msgid "existing album"
+msgstr "الالبومات الموجودة"
+
+msgid "create a new album"
+msgstr "انشأ ألبوم جديد "
+
+msgid "Album name"
+msgstr "أسم الألبوم"
+
+msgid "Album \"%s\" has been added"
+msgstr "تم اضافته\"%s\"الألبوم "
+
+msgid "Uploaded Photos"
+msgstr "رفع الصور"
+
+msgid "%d photos uploaded"
+msgstr "صور تم رفعها %d"
+
+msgid "Privacy level set to \"%s\""
+msgstr "\"%s\"اعد مستوى الخصوصية "
+
+msgid "Album \"%s\" now contains %d photos"
+msgstr " الألبوم \"%s\" يحوي الآن %d صورة "
+
+msgid "Manage this set of %d photos"
+msgstr "%d إدارة اعدادت صور"
+
+msgid "Select files"
+msgstr "اختيار الملفات"
+
+msgid "Everybody"
+msgstr "الجميع"
+
+msgid "Who can see these photos?"
+msgstr "من يمكنه رؤية هذه الصور"
+
+msgid "Who can see this photo?"
+msgstr "من يمكنه رؤية هذه الصورة؟"
+
+msgid "Settings"
+msgstr "الإعدادت"
+
+msgid "Resize"
+msgstr "تغيير المقاس"
+
+msgid "Maximum width"
+msgstr "الحد الأعلى لعرض الصورة"
+
+msgid "pixels"
+msgstr "بكسل "
+
+msgid "Maximum height"
+msgstr "الحد الاعلى لطول الصورة"
+
+msgid "Image Quality"
+msgstr "جودة الصورة"
+
+msgid "Save Settings"
+msgstr "حفظ الإعدادات"
+
+msgid "Your configuration settings are saved"
+msgstr "تم حفظ الإعدادت "
+
+msgid "Active Themes"
+msgstr "تنشيط الواجهة"
+
+msgid "Add write access to the \"%s\" directory"
+msgstr " \"%s\" اعطي تصريح الوصول و الكتابة على المجلد "
+
+msgid "Administration Home"
+msgstr "الأدارة الرئيسية"
+
+msgid "Change Admin Colors"
+msgstr "تغير ألوان لوحة التحكم"
+
+msgid "Delete this theme"
+msgstr "أحذف هذه الواجهة"
+
+msgid "Directory does not exist"
+msgstr "المجلد غير موجود"
+
+msgid "Download,"
+msgstr ",تحميل"
+
+msgid "FTP + Synchronization"
+msgstr "أف تي بي + التزامن "
+
+msgid "Get Support on Piwigo Forum"
+msgstr "أحصل على الدعم الفني من منتدى Piwigo"
+
+msgid "Help Me"
+msgstr "ساعدني"
+
+msgid "Impossible to activate this theme, the parent theme is missing: %s"
+msgstr " %s لا يمكن تفعيل هذه الواجهة شيء ما مفقود "
+
+msgid "Impossible to delete this theme. Other themes depends on it: %s"
+msgstr " %sلا يمكن حذف هذه الواجهة لرتباطها  بأشياء أخرى : "
+
+msgid "Inactive Themes"
+msgstr "الواجهات المفعلة"
+
+msgid "Install on your computer,"
+msgstr "التثبيب على جهاز الكمبيوتر,"
+
+msgid "Make this theme available to users"
+msgstr "أجعل هذه الواجهة متاحة للمستخدمين"
+
+msgid "Page end"
+msgstr "نهاية الصفحة"
+
+msgid "Piwigo Uploader"
+msgstr "برنامج piwigo للتحميل الصور"
+
+msgid "Read Piwigo Documentation"
+msgstr "وثائق عن Piwigo"
+
+msgid "Start pLoader and add your photos."
+msgstr "بدء pLoader وإضافة الصور الخاصة بك."
+
+msgid "Switch to clear or dark colors for administration"
+msgstr "تغير لون لوحة التحكم أسود أو ابيض"
+
+msgid "Theme has been successfully installed"
+msgstr "تم تثبيت واجهة المعرض بنجاح"
+
+msgid "Visit Gallery"
+msgstr "معاينة المعرض"
+
+msgid "Visit Piwigo project website"
+msgstr "زيارة الموقع الرئيسي لمشروع Piwigo "
+
+msgid "Guest Settings"
+msgstr "اعدادت الضيوف"
+
+msgid "Main Page"
+msgstr "صفحة رئيسية"
+
+msgid "Photo Page"
+msgstr "صفحة الصورة"
+
+msgid "Activate Navigation Bar"
+msgstr "اظهار لوح تبديل و اظهار الصور"
+
+msgid "Activate Navigation Thumbnails"
+msgstr "تنشيط التنقل بين الصور المصغرة"
+
+msgid "Activate icon \"%s\""
+msgstr "اظهار ايقونة  \"%s\""
+
+msgid "Photo Properties"
+msgstr "خصائص الصور"
+
+msgid "Allow user customization"
+msgstr "السماح للمستخدم بتغيير خصائص العرض"
+
+msgid "Languages"
+msgstr "اللغة"
+
+msgid "Installed Languages"
+msgstr "تثبيت لغة"
+
+msgid "Add New Language"
+msgstr "اضف لغة جديدة"
+
+msgid "Language has been successfully installed"
+msgstr "تم تثبيت اللغة بنجاح"
+
+msgid "Select:"
+msgstr "أختيار:"
+
+msgid "None"
+msgstr "لا شيء"
+
+msgid "Invert"
+msgstr "عكس"
+
+msgid "Impossible to deactivate this theme, you need at least one theme."
+msgstr "لا يمكن حذف الواجهة لانها الأخيرة ، لابد من وجود واجهة واحدة "
+
+msgid "Webmaster status is required."
+msgstr "تم تغير حالة المدير العالم ."
+
+msgid "Bound Theme"
+msgstr "واجهة إلزامية"
+
+msgid "Allow rating"
+msgstr "السماح بالتوصويت"
+
+msgid "Select at least one comment"
+msgstr "أختر تعليقا واحدا على الأقل"
+
+msgid "Active Plugins"
+msgstr "تنشيط الإضافات"
+
+msgid "Inactive Plugins"
+msgstr "تعطيل الإضافات"
+
+msgid "Missing Plugins"
+msgstr "إضافات مفقودة"
+
+msgid "Uninstalled Plugins"
+msgstr "اضافات غير مثبته"
+
+msgid "By %s"
+msgstr " %s بواسطة"
+
+msgid "Visit plugin site"
+msgstr "زيارة موقع الاضافة"
+
+msgid "Active Languages"
+msgstr "تنشيط اللغة"
+
+msgid "Delete this language"
+msgstr "اخذف هذه اللغة"
+
+msgid "Forbid this language to users"
+msgstr "أمنع هذه اللغة عن المستخدمين"
+
+msgid "Impossible to deactivate this language, first set another language as default."
+msgstr "لا يمكن تعطيل هذه اللغة ، أولا ً قم باختيار لغة أخرى كلغة افتراضية"
+
+msgid "Impossible to deactivate this language, you need at least one language."
+msgstr " لا يمكن تعطيل هذه اللغة ، يجب اختيار لغة واحدة على الأقل"
+
+msgid "Inactive Languages"
+msgstr "تعطيل اللغات"
+
+msgid "Make this language available to users"
+msgstr "اجعل هذه اللغة متاحة للمستخدمين"
+
+msgid "Set as default language for unregistered and new users"
+msgstr "اجعلها كلغة افتراضية لغير المسجلين و المستخدمين الجدد"
+
+msgid "Add Photos"
+msgstr "أضف صور"
+
+msgid "The following tag was deleted"
+msgstr "هذه الكلمات الدلائلية حُـذفت"
+
+msgid "Miscellaneous"
+msgstr "متفرقات"
+
+msgid "Virtual Links"
+msgstr "روابط ظاهرة"
+
+msgid "There is no other language available."
+msgstr "ليس هناك لغة أخرى متاحة."
+
+msgid "There is no other plugin available."
+msgstr "ليس هناك اضافة أخرى متاحة."
+
+msgid "There is no other theme available."
+msgstr "ليس هناك واجهة عرض أخرى متاحة."
+
+msgid "Add another set of photos"
+msgstr "اضف مجوعة أخرى من الصور"
+
+msgid "Order of menubar items has been updated successfully."
+msgstr "تم تحديث ترتيب العناصر بنجاح"
+
+msgid "This theme was not designed to be directly activated"
+msgstr "لم يتم تصميم هذه الواجهة لتفعيلها مباشرة"
+
+msgid "Pending Comments"
+msgstr "تعليقات تحت الانتظار"
+
+msgid "In your php.ini file, the upload_max_filesize (%sB) is bigger than post_max_size (%sB), you should change this setting"
+msgstr "ملف PHP.ini the upload_max_filesize (%sB) أكبر منpost_max_size (%sB), يتوجب عليك تغير الاعدادت"
+
+msgid "Exif extension not available, admin should disable exif use"
+msgstr "خاصية Exif غير متاحة ، ينبغي على المدير تعطيلها"
+
+msgid "The uploaded file exceeds the upload_max_filesize directive in php.ini: %sB"
+msgstr "الملف الذي تم تحميله يتجاوز upload_max_filesize  مباشرة في php.ini: %sB"
+
+msgid "The uploaded files exceed the post_max_size directive in php.ini: %sB"
+msgstr "الملف الذي تم تحميلة يتجاوز post_max_size مباشرة في php.ini: %sB"
+
+msgid "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form"
+msgstr "الملف الذي تم تحميلة يتجاور  MAX_FILE_SIZE التوجيه الذي تم تحديده في شكل أتش تي أم أل"
+
+msgid "The uploaded file was only partially uploaded"
+msgstr "الملف الذي رُفع ، تم رفه جزئيا ً "
+
+msgid "No file was uploaded"
+msgstr "لم يتم رفع الملفات"
+
+msgid "Missing a temporary folder"
+msgstr "مجلد الملفات المؤقته مفقود"
+
+msgid "Failed to write file to disk"
+msgstr "فشل في كتابة الملف للقرص"
+
+msgid "File upload stopped by extension"
+msgstr "تم يقاف رفع الملفات بسبب امتداد الملفات"
+
+msgid "Unknown upload error"
+msgstr "خطأ غير معروف في رفع الملفات"
+
+msgid "Error on file \"%s\" : %s"
+msgstr " \"%s\" : %s خطأ في الملف"
+
+msgid "automatic order"
+msgstr "ترتيب آلي"
+
+msgid "manual order"
+msgstr "ترتيب يدوي"
+
+msgid "Albums automatically sorted"
+msgstr "ترتيب الألبومات آليا ً "
+
+msgid "Batch Manager"
+msgstr "دعم المدير"
+
+msgid "include child albums"
+msgstr "تضمين الالبومات الفرعية"
+
+msgid "Selection"
+msgstr "الاختيار"
+
+msgid "Action"
+msgstr "الأداء"
+
+msgid "Set author"
+msgstr "تعيين كاتب"
+
+msgid "Set title"
+msgstr "تعيين عنوان"
+
+msgid "Set creation date"
+msgstr "تعين تاريخ الأنشاء"
+
+msgid "Apply action"
+msgstr "تطبيق الأجراءات"
+
+msgid "on the %d selected photos"
+msgstr "تم اختيار الصور  %d في "
+
+msgid "%d of %d photos selected"
+msgstr "%d من %d اختيار الصور"
+
+msgid "No photo selected, %d photos in current set"
+msgstr "لم يتم اختيار صوره, %d صور في المجموعة الحالية"
+
+msgid "All %d photos are selected"
+msgstr "كل %d الصور المختارة "
+
+msgid "remove this filter"
+msgstr "ازل هذه المرشح"
+
+msgid "Duplicates"
+msgstr "المكرر"
+
+msgid "Add a filter"
+msgstr "أضف مُـرشح"
+
+msgid "Remove all filters"
+msgstr "احذف جميع المُرشحات"
+
+msgid "Refresh photo set"
+msgstr "حدث مجموعة الصور"
+
+msgid "The whole page"
+msgstr "صفحة كاملة"
+
+msgid "The whole set"
+msgstr "مجموعة كلمة"
+
+msgid "No photo in the current set."
+msgstr "لا صور في المجموعة الحالية"
+
+msgid "No photos selected, no actions possible."
+msgstr "لا توجد صور محددة ، أي إجراء ممكن"
+
+msgid "Choose an action"
+msgstr "اختر اجراء"
+
+msgid "remove author"
+msgstr "احذف الكاتب"
+
+msgid "Type here the author name"
+msgstr "أكتب هنا أسم الكاتب "
+
+msgid "remove title"
+msgstr "احذف العنوان"
+
+msgid "Type here the title"
+msgstr "أكتب هنا عنوان "
+
+msgid "remove creation date"
+msgstr "احذف تاريخ الانشاء"
+
+msgid "Album photos associated to the following albums: %s"
+msgstr "صور الالبوم المرتبطة بالابومات اللاحقة : %s"
+
+msgid "Delete orphan tags"
+msgstr "جذف الاكواد اليتيمة"
+
+msgid "delete photo"
+msgstr "حذف صورة"
+
+msgid "Orphan tags deleted"
+msgstr "الاكواد اليتيمة حذفت"
+
+msgid "Remove from caddie"
+msgstr "حذف من السلة"
+
+msgid "Week starts on"
+msgstr "يبدأ الاسبوع بيوم"
+
+msgid "You have %d orphan tags: %s."
+msgstr "يوجد %d اكواد يتيمة :%s"
+
+msgid "Themes which need upgrade"
+msgstr "الثيمات التي تحتاج الى تحديث"
+
+msgid "Languages which need upgrade"
+msgstr "اللغات التي تحتاج الى تحديث"
+
+msgid "All themes are up to date."
+msgstr "كل الثيم محدثة"
+
+msgid "All plugins are up to date."
+msgstr "كل الادوات محدثة"
+
+msgid "All languages are up to date."
+msgstr "كل اللغات محدثة"
+
+msgid "Visit theme site"
+msgstr "زر موقع الثيمات"
+
+msgid "Visit language site"
+msgstr "زر موقع اللغات"
+
+msgid "New Version"
+msgstr "اصدار جديد"
+
+msgid "Obsolete Plugins"
+msgstr "ادوات قديمة"
+
+msgid "WARNING! This plugin does not seem to be compatible with this version of Piwigo."
+msgstr "تحذير !! هذه الاضافة لا تبدو ناها متوافقة مع اصدار PIWIGO."
+
+msgid "Do you want to activate anyway?"
+msgstr "هل تريد تفعيلها بأي شكل تفعيلها"
+
+msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
+msgstr "هذه الاداة اصبحت جزءا من PIWIGO نفسها يجب ان تزيلها الان"
+
+msgid "ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW."
+msgstr "خطأ : هذه الاداة مفقودة لكنها مثبتة, الغ تثبيتها الان"
+
+msgid "new"
+msgstr "جديد"
+
+msgid "No results"
+msgstr "لا نتائج"
+
+msgid "Searching..."
+msgstr "جاري البحث .."
+
+msgid "Type in a search term"
+msgstr "اكتب كلمات البحث"
+
+msgid "display"
+msgstr "عرض"
+
+msgid "Learn more"
+msgstr "تعلم أكثر"
+
+msgid "An error has occured during upgrade."
+msgstr "حصل خطأ ما أثناء الترقية."
+
+msgid "An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href=\"%s\">Click here to show log error</a>."
+msgstr "حدث خطأ أثناء الأستخراج. يرجى التحقق من أذونات الملفات من التثبيت piwigo الخاص.<br><a href=\"%s\">اضغط هنا لإظهار الخطأ</a>."
+
+msgid "Piwigo cannot retrieve upgrade file from server"
+msgstr "لا يمكن Piwigo استرداد ملف الترقية من الملقم"
+
+msgid "Rate"
+msgstr "قيمة"
+
+msgid "Average rate"
+msgstr "متوسط التصويت"
+
+msgid "Update Complete"
+msgstr "اكتملت الترقية"
+
+msgid "Piwigo Update"
+msgstr "ترقية Piwigo"
+
+msgid "Extensions Update"
+msgstr "ترقية الاضافات"
+
+msgid "Update in progress... Please wait."
+msgstr "يتم معالجة التحديثات ،لحظات الانتظار .. املئها بالاستغفار"
+
+msgid "Ignore this update"
+msgstr "اهمال هذا التحديث"
+
+msgid "Reset ignored updates"
+msgstr "اعادة تعييين التحديثات المهملة"
+
+msgid "Update All"
+msgstr "تحديث الكل"
+
+msgid "ERROR"
+msgstr "خطأ"
+
+msgid "All extensions are up to date."
+msgstr "كل الاضافة محدثة."
+
+msgid "Following plugins may not be compatible with the new version of Piwigo:"
+msgstr "الادوات التالية يمكن ان تكون غير متوافقة مع الاصدار الجديد ل Piwigo :"
+
+msgid "Following themes may not be compatible with the new version of Piwigo:"
+msgstr "الثيمات التالية يمكن ان تكون غير مكتملة مع الاصدار الجديد ل Piwigo:"
+
+msgid "I decide to update anyway"
+msgstr "أقر التحديث بأي شكل"
+
+msgid "Update to Piwigo %s"
+msgstr " Piwigo %s الترقية إلى "
+
+msgid "Two updates are available"
+msgstr "هناك ترقيتان متاحة"
+
+msgid "This is a minor update, with only bug corrections."
+msgstr "هذه ترقية ثانوية لتصحيح بعض الأخطاء."
+
+msgid "This is a major update, with <a href=\"%s\">new exciting features</a>."
+msgstr "هذه تحديثات رئيسية مع <a href=\"%s\"> ملحقات جديدة و مميزة</a>."
+
+msgid "You can update to Piwigo %s directly, without upgrading to Piwigo %s (recommended)."
+msgstr "تستطيع ترقية Piwigo إلى %s مباشرة ، بدون  تحديث Piwigo إلى %s (مستحسن )"
+
+msgid "Dump Database"
+msgstr "تفريغ قاعدة البيانات"
+
+msgid "Save Template Directory"
+msgstr "حفظ نماذج الدليل"
+
+msgid "Some themes and plugins may be not available yet."
+msgstr "بعض الواجهات مع بعض الإضافات قد لا يمكن تشغليها في الوقت الحالي"
+
+msgid "Include history data (Warning: server memory limit may be exceeded)"
+msgstr "تضمين تاريخ البيانات (تنبيه:يجب توسيع ذاكرة الخادم)ـ"
+
+msgid "Unable to dump database."
+msgstr "غير قادرعلى تفريق قاعدة البيانات."
+
+msgid "Some upgrades are available for extensions."
+msgstr "تتوفر بعض الترقية للاضافات"
+
+msgid "Height"
+msgstr "الارتفاع"
+
+msgid "Width"
+msgstr "العرض"
+
+msgid "Add to caddie"
+msgstr "اضفها الي السلة"
+
+msgid "%s has been successfully updated."
+msgstr "\n%s تم تحديثه بنجاح "
+
+msgid "%s photos can not be regenerated"
+msgstr "%s لا يمكن إعادة إنشاء الصور"
+
+msgid "%s photos have been regenerated"
+msgstr "%s تم إعادة إنشاء الصور"
+
+msgid "(this tag will be deleted)"
+msgstr "( الكلمه الدلاذليه سيتم حذفها )"
+
+msgid "... or "
+msgstr "..أو"
+
+msgid "Add a criteria"
+msgstr "إضافة معايير"
+
+msgid "Add tags"
+msgstr "إضافه كلمات دلائليه"
+
+msgid "Allowed file types: %s."
+msgstr " %s :انواع ملفات الصور المسموح بها "
+
+msgid "Approximate maximum resolution: %dM pixels (that's %dx%d pixels)."
+msgstr "الحد الاقصى التقريبي لدقه العرض: %dM بكسلات (هكذا  %dx%d بكسلات)."
+
+msgid "By default, Piwigo will create a new websize from the HD (high definition) version of your photo."
+msgstr "افتراضياً سيتم انشاء معرض Piwigo بالقيم عاليه الدقه من صوزك"
+
+msgid "Confirm merge"
+msgstr "تأكيد الدمج"
+
+msgid "Create"
+msgstr "انشأ"
+
+msgid "Crop"
+msgstr "اعاده قص"
+
+msgid "Deactivate all"
+msgstr "تعطيل الكل"
+
+msgid "Default photos order"
+msgstr "طلب القيم الافتراضيه للصور"
+
+msgid "Follow Orientation"
+msgstr "اتبع التوجيهات"
+
+msgid "Graphics Library"
+msgstr "مكتبة الرسومات"
+
+msgid "hide details"
+msgstr "اخفاء التفاصيل"
+
+msgid "Ignore All"
+msgstr "تجاهل الكل"
+
+msgid "Last import"
+msgstr "الاستيراد الاخير"
+
+msgid "Manage Permissions"
+msgstr "اداره التصاريح"
+
+msgid "Activate comments"
+msgstr "نشّط التعليقات"
+
+msgid "Activate icon \"new\" next to albums and pictures"
+msgstr "فعل ايقونه \"جديد\" بجانب الالبومات و الصور"
+
+msgid "Default comments order"
+msgstr "الوضع الافتراضي للتعليقات"
+
+msgid "Maximum file size: %sB."
+msgstr "الحد الآعلى لحجم الملف : %sB. "
+
+msgid "Merge selected tags"
+msgstr "دمج الكلمات الدلائليه المختاره"
+
+msgid "Merge tags"
+msgstr "دمج الكلمات الدلائليه"
+
+msgid "Photo %s of %s"
+msgstr "صوره %s من %s"
+
+msgid "Photo name"
+msgstr "آسم الصوره "
+
+msgid "Photos generation in progress..."
+msgstr "يتم معالجة  مجموعه الصور .."
+
+msgid "Restore"
+msgstr "استعاده"
+
+msgid "Select an album"
+msgstr "اختيار الالبوم"
+
+msgid "Select at least two tags for merging"
+msgstr "اختر آخر كلمتين دلاليتين للدمج"
+
+msgid "A locked gallery is only visible to administrators"
+msgstr "غلق المعرض متاح لمدير المعرض فقط"
+
+msgid "administrators"
+msgstr "الأدارة"
+
+msgid "Applications"
+msgstr "تطبيقات"
+
+msgid "apply automatic sort order"
+msgstr "نفذ حسب الترتيب الآلي"
+
+msgid "Automatic sort order"
+msgstr "ترتيب آلي "
+
+msgid "Available on"
+msgstr "متاح لـ"
+
+msgid "cancel manual order"
+msgstr "إلغي الأمر اليدوي"
+
+msgid "Cancel"
+msgstr "إلغي"
+
+msgid "Center of interest"
+msgstr "مركز الإهتمام"
+
+msgid "Gallery unlocked"
+msgstr "تم فتح المعرض"
+
+msgid "If no HD is available and if the current websize is bigger than resize dimensions, Piwigo will move it as HD and create a downsized websize photo from it."
+msgstr "إذا لم تكن هناك جوده عالية متاحة وكانت الإعدادات الحالية  أكبر من الأبعاد,سيقوم المعرض بتقليص الصورة  بما يناسب ابعاد صفحة الويب"
+
+msgid "List"
+msgstr "آخر"
+
+msgid "modified"
+msgstr "تعديل"
+
+msgid "Move to album"
+msgstr "حرك إلى الألبوم"
+
+msgid "No destination tag selected"
+msgstr "لم يتم تحديد كلمات دلائلية مستهدفه"
+
+msgid "Not cropped correctly?"
+msgstr "الإقتطاع غير صحيح؟"
+
+msgid "Notify administrators when a comment is"
+msgstr "أبلغ المدير عندالتعليق"
+
+msgid "Original Size"
+msgstr "الحجم الأصلي"
+
+msgid "pending validation"
+msgstr "في إنتظار التصريح"
+
+msgid "Piwigo for Android"
+msgstr "Piwigo for Android"
+
+msgid "Piwigo for iOS (iPhone, iPad, iPod Touch)"
+msgstr "Piwigo for iOS (iPhone, iPad, iPod Touch)"
+
+msgid "Piwigo Publish plugin for Lightroom"
+msgstr "Piwigo أضافة للنشر بوا سطة برنامج  Lightroom"
+
+msgid "Predefined filter"
+msgstr "مُرشح مُحدد مُسبقاً"
+
+msgid "registered users"
+msgstr "تسجيل المستخدمين"
+
+msgid "Resize after upload"
+msgstr "غير الحجم بعد الرفع"
+
+msgid "Restore default configuration. You will lose your plugin settings!"
+msgstr "استعادة التكوين الإفتراضي . سوف تفقد إعدادات الإضافات!"
+
+msgid "Save manual order"
+msgstr "حفظ الأمر يدوياً"
+
+msgid "Save visits in history for"
+msgstr "حفظ سجل الزوار لـ"
+
+msgid "Select the destination tag"
+msgstr "أختر الكلمات الدلائلية المُستهدفة"
+
+msgid "Send connection settings by email"
+msgstr "أرسل معلومات الاتصال عبر البريد"
+
+msgid "show details"
+msgstr "أظهر التفاصيل"
+
+msgid "Show menubar"
+msgstr "أظهر الأرقام"
+
+msgid "simple visitors"
+msgstr "زوار عاديين"
+
+msgid "Start Upload"
+msgstr "إبدأ الرفع"
+
+msgid "Tags <em>%s</em> merged into tag <em>%s</em>"
+msgstr " <em>%s</em>تم دمج الكلمات الدلائلية <em>%s</em> مع الكلمات الدلائية "
+
+msgid "The original image quality must be a number between %d and %d"
+msgstr "جودةالصورة الأصلية يجب أن تكون بين الرقم %d و %d"
+
+msgid "The original maximum height must be a number between %d and %d"
+msgstr "الحد الأدنى لإرتفاع الصورة يجب أن يكون بين الرقم %d و %d"
+
+msgid "The original maximum width must be a number between %d and %d"
+msgstr "الحد الأدنى لعرض الصورة يجب أن يكون بين الرقم %d و %d"
+
+msgid "This album contains %d photos, added between %s and %s."
+msgstr "هذا الألبوم يحتوي على %d أضيفت بين %s و %s ."
+
+msgid "This album contains %d photos, added on %s."
+msgstr "هذا الألبوم يحتوي على %d صورة,أضيفت في %s."
+
+msgid "This album contains no photo."
+msgstr "هذا الألبوم لايحوي أي صورة"
+
+msgid "Thumbnails generation in progress..."
+msgstr "معالجة إنشاء الصور المصغرة.."
+
+msgid "Unlock gallery"
+msgstr "أفتح المعرض"
+
+msgid "Updates"
+msgstr "تحديثات"
+
+msgid "Web Form"
+msgstr "نموذج ويب"
+
+msgid "With no album"
+msgstr "من غير ألبوم"
+
+msgid "With no tag"
+msgstr "من غير كلمات دلائلية"
+
+msgid "With no virtual album"
+msgstr "من غير ألبوم ظاهر"
+
+msgid "You are using the Browser uploader. Try the <a href=\"%s\">Flash uploader</a> instead."
+msgstr "أنت تستخدم رافع الصور الخاص بالمتصفح .جرب استخدام <a href=\"%s\">Flash uploader</a> بدلا ً منه "
+
+msgid "You are using the Flash uploader. Problems? Try the <a href=\"%s\">Browser uploader</a> instead."
+msgstr " هل تجد مشكله في رفع الصور بالفلاش جرب استخدام  <a href=\"%s\">Browser uploader</a>  بدلً"
+
+msgid "You can activate only one mobile theme."
+msgstr "تستطيع تفعيل واجهة واحدة فقط  للموبايلي "
+
+msgid "Zoom"
+msgstr "تكبير"
+
+msgid "%u users have automatic permission because they belong to a granted group."
+msgstr "تصريح المستخدم %u تلقائي  لانه ضمن مجموعه لها تصريح"
+
+msgid "any visitor can see this album"
+msgstr "أي زائر يمكنه مشاهدة هذا الألبوم"
+
+msgid "custom"
+msgstr "تخصيص"
+
+msgid "Delete multiple size images"
+msgstr "خذف الصور المتعددة الأحجام"
+
+msgid "Features include gallery browsing, album creation and photo upload."
+msgstr "ملامح استعراض المعرض , إنشاء ألبوم  و رفع الصور"
+
+msgid "Generate multiple size images"
+msgstr "توليد صور بأحجام متعدده"
+
+msgid "Groups and users"
+msgstr "مجموعات و مستخدمين"
+
+msgid "include photos with lower privacy level"
+msgstr "استدعاء الصور بمستوى خصوصية أقل"
+
+msgid "No group is permitted to see this private album"
+msgstr "لا يمكن لأي مجموعه مشاهدة هذا الألبوم"
+
+msgid "Permission granted for groups"
+msgstr "تصريح ممنوح للمجموعات"
+
+msgid "Permission granted for users"
+msgstr "التصريح الممنوح للمستخدم"
+
+msgid "Permission management"
+msgstr "إدارة التصريحات"
+
+msgid "Select groups..."
+msgstr "تحديد مجموعات .."
+
+msgid "Select users..."
+msgstr "تحديد المستخدمين"
+
+msgid "There is no group in this gallery."
+msgstr "لا توجد مجموعه لهذا الألبوم"
+
+msgid "visitors need to login and have the appropriate permissions to see this album"
+msgstr "الزوار في حاجه لتسجيل الدخول او  التصريح حتى يمكنهم مشاهده هذا الألبوم"
+
+msgid "<em>Piwigo for Android</em> application empowers you to connect your Android phone or table to your Piwigo gallery, create some albums and upload several photos at once."
+msgstr "<em>Piwigo for Android</em> تطبيقات للاجهزه اللمسيه التي تعمل علي نظام آندرويذ ، يتيح لهذه الاجهزه رفع الصور و انشاء الآلبومات"
+
+msgid "<em>Piwigo for iOS</em> application empowers you to connect to your Piwigo gallery from your iPhone, iPad or iPod Touch, create some albums and upload several photos at once."
+msgstr "<em>Piwigo for iOS</em>  تطبيقات للاجهزه اللمسيه الخاصة بشركه أبل ،آيفون ، آيباد و آيبود  ، تطبيق يتيح لهذه الاجهزه الاتصال بمعرضك الخاص و رفع الصور و انشاء و الألبومات "
+
+msgid "Adobe Photoshop Lightroom is a photography software designed to manage large quantities of digital images and doing post production work."
+msgstr "أدوبي فوتوشوب لايتروم  هو برنامج التصوير المصممة لإدارة كميات كبيرة من الصور الرقمية والقيام بأعمال ما بعد الإنتاج."
+
+msgid "Piwigo publish plugin for Shotwell"
+msgstr "اضافة النشر في Piwigo  الخاصه ببرنامج  Shotwell"
+
+msgid "Shotwell is an open source digital photo organizer that runs on Linux. It is the default photo manager in Ubuntu and Fedora."
+msgstr "Shotwell برنامج مفتوح المصدر لتنظيم و إدارة و معالجة الصور يعمل في بيئه لينوكس \nهذا البرنامج باداره  Ubuntu و Fedora. "
+
+msgid "The Piwigo publish Plug-in allows you to export and synchronize photos from Lightroom directly to your Piwigo photo gallery."
+msgstr "اضافة للنشر في Piwigo  تسمح لك بتصدير ومزامنة الصور من لايترووم مباشرة إلى معرض الصور الخاص بك Piwigo. "
+
+msgid "You can't define a default photo order because you have a custom setting in your local configuration."
+msgstr "لا يمكنك تحديد ترتيب الصورة الافتراضية لأنه لديك إعداد مخصص في التكوين الخاص بك "
+
+msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
+msgstr "لقد حددت   <i>$conf['order_by']</i>  في ملف التكوينات  ستم اهمال هذه التغيرات ، الرجاد تحزيك اوتغيير الاسم إلي <i>$conf['order_by_custom']</i> !"
+
+msgid "Aperture is a powerful tool to refine images and manage massive libraries on Mac."
+msgstr " Aperture برنامج بأدوات قوية لتحسين و ادارة الصور  خاص ببئة الماكنتوش"
+
+msgid "Aperture is designed for professional photographers with iPhoto simplicity."
+msgstr "Aperture صمم من اجل الفوتوغرافين المحترفين  مع بساطة  iPhoto"
+
+msgid "Apply watermark if height is bigger than"
+msgstr "تطبيق العلامة المائية إذا كان الإرتفاع أكبر من "
+
+msgid "Apply watermark if width is bigger than"
+msgstr "تطبيق العلامة المائية إذا كان العرض أكبر من"
+
+msgid "By default, the center of interest is placed in the middle of the photo."
+msgstr "افتراضيا ، سيكون مركز الاهتمام في الوسط"
+
+msgid "For photo sizes with crop, such as \"Square\", Piwigo will do its best to include the center of interest."
+msgstr "لتحجيم الصور مع الاستقطاع \" لتكون مربعه الشكل مثلا \"   سيتم المحافظة على مركز الاهتمام  بأقصى ما يمكن"
+
+msgid "On your Linux, simply install Shotwell with your package manager and the activate Piwigo publishing option."
+msgstr "على اللينكس الخاص بك ، ثبت Shotwell ببساطه  عن طريق ادارة الحزم  ثم فعل خيارات النشر في Piwigo ."
+
+msgid "Opacity"
+msgstr "غموض"
+
+msgid "Photo sizes with crop"
+msgstr "حجم الصورة مع الاستقطاع"
+
+msgid "Piwigo export plugin for Aperture"
+msgstr "إضافة التصدير الى Piwigo  لبرنامج  Aperture"
+
+msgid "Piwigo export plugin for iPhoto"
+msgstr "إضافة التصدير الى Piwigo  لبرنامج iPhoto"
+
+msgid "Piwigo publish plugin for digiKam"
+msgstr "إضافة النشر الخاص بـ digikam"
+
+msgid "ReGalAndroid (RemoteGallery client for Android) is an open source (GPL v3) Piwigo client for the Android platform."
+msgstr "ReGalAndroid (RemoteGallery client for Android) is an open source (GPL v3) Piwigo client for the Android platform."
+
+msgid "Select a file"
+msgstr "حدد الملف"
+
+msgid "Select a zone with your mouse to define a new center of interest."
+msgstr "حدد منطقة الاهتمام  بالفأرة لإنشاء  مركز جديد للاهتمام"
+
+msgid "The Piwigo export plugin allows you to create albums and export photos."
+msgstr "الاضافة للتصدير الى Piwigo  اضافة تتيج لك أن تنشأ الألبوم و اضافة الصور"
+
+msgid "The center of interest is the most meaningful zone in the photo."
+msgstr "مركز الاهتمام ، هي المنطقة الأكثر وضوحا في الصورة"
+
+msgid "To export your photos from digiKam to Piwigo, simply install digiKam and the Kipi-plugins."
+msgstr "لتصدير صورك من digiKam  الى  Piwigo  ، ثبت digiKam ببساطه و اضف Kipi-plugins."
+
+msgid "X Position"
+msgstr " موضع X"
+
+msgid "X Repeat"
+msgstr "كرر X"
+
+msgid "Y Position"
+msgstr "موضع Y"
+
+msgid "add a new watermark"
+msgstr "أضف علامة مائية جديدة"
+
+msgid "bottom left corner"
+msgstr "الزاوية اليسرى السفلى"
+
+msgid "bottom right corner"
+msgstr "الزاوية اليمنى السفلى"
+
+msgid "digiKam is an advanced digital photo management free software for Linux, Windows, and MacOSX."
+msgstr "digiKam برنامج متقدم لتحرير  و ادارة الصور الرقمية ، يمكن تشغيله على  الوندوز و الماكنتوش و اللينكس"
+
+msgid "digiKam is designed for photographers who want to view, manage, edit, enhance, organize, tag, and share photographs."
+msgstr "تم تصميم digiKam للمصورين الذين يرغبون في عرض وإدارة وتحرير وتعزيز وتنظيم والعلامة، ومشاركة الصورالفوتوغرافية."
+
+msgid "iPhoto is the default photo manager on MacOSX. The Piwigo export plugin let you create new albums and export your photos directly from iPhoto to your Piwigo photo gallery."
+msgstr "iPhoto هو البرنامج الافتراضي لتحرير و تنظيم الصور لأجهزة المكنتوش .  إضافة التصدير  لهذا البرنامج تتيح لك انشاء الألبومات و تصدير الصور الى المعرض"
+
+msgid "middle"
+msgstr "وسط"
+
+msgid "top left corner"
+msgstr "الزاوية اليسرى العليا"
+
+msgid "top right corner"
+msgstr "الزاوية اليمنى العليا"
+
+msgid "Multiple Size"
+msgstr "حجم متعدد"
+
+msgid "%d day"
+msgstr "%d يوم"
+
+msgid "%d days"
+msgstr "%d ايام"
+
+msgid "%d hour"
+msgstr "%d ساعة"
+
+msgid "%d hours"
+msgstr "%d ساعات"
+
+msgid "%d minute"
+msgstr "%d دقيقة"
+
+msgid "%d minutes"
+msgstr "%d دقائق "
+
+msgid "%d month"
+msgstr "%d  شهر"
+
+msgid "%d months"
+msgstr "%d  شهور"
+
+msgid "%d second"
+msgstr "%d ثانية"
+
+msgid "%d seconds"
+msgstr "%d ثواني"
+
+msgid "%d year"
+msgstr "سنة %d"
+
+msgid "%d years"
+msgstr "%d  سنين"
+
+msgid "%s ago"
+msgstr "منذ %s"
+
+msgid "%s in the future"
+msgstr "%s  في المستقبل"
+
+msgid "Added by %s"
+msgstr "أضيفت بواسطة %s"
+
+msgid "Numeric identifier : %d"
+msgstr "المعرف الرقمي :%d"
+
+msgid "Original file : %s"
+msgstr ": %s الملف الأصلي "
+
+msgid "Posted %s on %s"
+msgstr "أضيفت  %s في %s"
+
+msgid "Rated %d times, score : %.2f"
+msgstr "تم التصويت %d مرة ، المجموع : : %.2f"
+
+msgid "Sharpen"
+msgstr "الحدة"
+
+msgid "Visited %d times"
+msgstr "عدد التصويتات  %d  مرة"
+
+msgid "Watermark"
+msgstr "علامة مائية"
+
+msgid " and %d virtuals"
+msgstr "و %d الظاهري"
+
+msgid "%d physicals"
+msgstr "%d  مادي"
+
+msgid "%d week"
+msgstr "%d أسبوع"
+
+msgid "%d weeks"
+msgstr "%d أسابيع"
+
+msgid "Edit photo"
+msgstr " تحرير الصورة"
+
+msgid "No order field selected"
+msgstr "لم يتم اختيار أي خافة"
+
+msgid "create a new site"
+msgstr "انشأ موقع جديد"
+
+msgid "Duplicate selected tags"
+msgstr "كرر الكلمه الدائليه المحددة"
+
+msgid "Name of the duplicate"
+msgstr "تسميه المكرر"
+
+msgid "Source tag"
+msgstr "مصدر الكلمه الدلائليه"
+
+msgid "Tag \"%s\" is now a duplicate of \"%s\""
+msgstr "الكلمه الدلائليه \"%s\" كررت لـ \"%s\""
+
+msgid "Landscape"
+msgstr "منظر طبيعي"
+
+msgid "Manage photos"
+msgstr "إدارة الصور"
+
+msgid "Minimum height"
+msgstr "الحد الأدني للارتفاع"
+
+msgid "Minimum width"
+msgstr "الحد الادني للعرض"
+
+msgid "Number of albums per page"
+msgstr "عدد الالبومات في كل صفحة"
+
+msgid "Panorama"
+msgstr "بانوراما"
+
+msgid "Portrait"
+msgstr "صوره شخصية"
+
+msgid "View in gallery"
+msgstr "عرض في المعرض"
+
+msgid "Duplicate"
+msgstr "كرر "
+
+msgid "Manage the members"
+msgstr "إدارة الأعضاء"
+
+msgid "This group will be unset to default"
+msgstr "لم يتم استخدام هذه المجموعة من قبل"
+
+msgid "Ratio"
+msgstr "نبسة"
+
+msgid "Please select at least two groups"
+msgstr "فضلا ً لا أمرا ٍ أختر فيما لا يقل عن مجموعتين "
+
+msgid "No members to manage"
+msgstr "لا يوجد أعضاد لإدارتهم"
+
+msgid "No groups selected, no actions possible."
+msgstr "لم يتم تحديد أي مجموعة  ، لا تتوقع التفاعل"
+
+msgid "Merge selected groups"
+msgstr "إدارة المجموعة المختارة"
+
+msgid "between %d and %d pixels"
+msgstr "ما بين  %d و %d  بكسل"
+
+msgid "between %.2f and %.2f"
+msgstr "ما بين %.2f  و %.2f "
+
+msgid "Type here the name of the new group"
+msgstr "أكتب هنا أسم المجموعة الجديدة"
+
+msgid "Rename"
+msgstr "إعادة تسمية"
+
+msgid "This group will be set to default"
+msgstr "هذا المجموعة ستستخدم كمجموعة افتراضية"
+
+msgid "Purge user cache"
+msgstr "مسح الذاكرة المؤقتة للمستخدم"
+
+msgid "Resize after upload disabled due to the use of GD as graphic library"
+msgstr "تغيير حجم بعد تعطيل الرفع نتيجة لاستخدام GD كما مكتبة الرسم"
+
+msgid "The picture dimensions will be reduced to %dx%d pixels."
+msgstr "سيتم تخفيض أبعاد الصورة لل %dx%d  بكسل."
+
+msgid "Select at least one tag"
+msgstr "حدد علامة واحدة على الأقل"
+
+msgid "Mail theme"
+msgstr "طراز بريد"
+
+msgid "General"
+msgstr "عام"
+
+msgid "Basic settings"
+msgstr "الإعدادات الأساسية"
+
+msgid "Change password"
+msgstr "تغيير كلمة السر"
+
+msgid "Registered on %s, %s."
+msgstr "سُجِّل في%s, %s"
+
+msgid "Change username"
+msgstr "تغيير اسم المستخدم"
+
+msgid "Loading..."
+msgstr "تحميل ..."
+
+msgid "No matching user found"
+msgstr "لم يتم العثور على مستخدم مطابق"
+
+msgid "No users selected, no actions possible."
+msgstr "لم يتم إختيار المستخدم، أي إجراء غير ممكن"
+
+msgid "Password updated"
+msgstr "كلمة السر تم تحديثها"
+
+msgid "Update user"
+msgstr "تحديث المستعمل"
+
+msgid "Users modified"
+msgstr "المستخدمين تم تعديلهم"
+
+msgid "%d of %d users selected"
+msgstr "%d من %d المستخدمين المحددين"
+
+msgid "(filtered from %s total users)"
+msgstr "(التي تمت تصفيتها من إجمالي المستخدمين %s)"
+
+msgid "All %d users are selected"
+msgstr "يتم تحديد كافة المستخدمين %d"
+
+msgid "Close user details"
+msgstr "تفاصيل المستخدم إغلاق"
+
+msgid "Last visit on %s, %s."
+msgstr "آخر زيارة على %s %s."
+
+msgid "Open user details"
+msgstr "أفتح تفاصيل المستخدم"
+
+msgid "User %s added"
+msgstr "تم إضافة المستخدم %s"
+
+msgid "User %s updated"
+msgstr "تم تحديث المستخدم %s"
+
+msgid "close"
+msgstr "إغلاق"
+
+msgid "on the %d selected users"
+msgstr "على %d المستخدمين المحددين"
+
+msgid "Show %s users"
+msgstr "أظهر المستخدم  %s"
+
+msgid "Showing %s to %s of %s users"
+msgstr "إظهار%s  إلي %s من %s المستخدمين "
+
+msgid "No user selected of %d users"
+msgstr "لا يوجد مستخدم محدد من %d المستخدمين"
+
+msgid "Activate it now"
+msgstr "نشط ذلك الآن"
+
+msgid "Allow users to add a link to their website"
+msgstr "السماح للمستخدمين بإضافة وصلة لموقعه على الإنترنت"
+
+msgid "Upload in progress"
+msgstr "تحميل و معالجة"
+
+msgid "based on"
+msgstr "استناداً إلى"
+
+msgid "between %s and %s MB"
+msgstr "بين %s و %s ميغابايت"
+
+msgid "date & time"
+msgstr "وقت و تاريخ"
+
+msgid "file name"
+msgstr "أسم الملف"
+
+msgid "width & height"
+msgstr "العرض و الطول"
+
+msgid "The settings for the guest are from the %s user"
+msgstr "الإعدادات للضيف يتم من قبل المستخدم %s"
+
+msgid "No and unlock sub-albums"
+msgstr "لا و إلغي اتاحة الإلبومات الفرعية "
+
+msgid "Mail address is mandatory for registration"
+msgstr "عنوان البريد إلزامية للتسجيل"
+
+msgid "Impossible to deactivate the default theme."
+msgstr "من المستحيل إلغاء تنشيط السمة الافتراضية."
+
+msgid "Empty caddie"
+msgstr "العلبة فارغة"
+
+msgid "Delete %d orphan photos"
+msgstr "حذف  %d الصور مجهولة المصدر"
+
+msgid "Each email sent will contain its own automatic authentication key on links, valid for %s."
+msgstr "كل الرسائل ستتضمن  رابط مفتاح المصادقة التلقائي  %s."
+
+msgid "Edit user"
+msgstr "تحرير المستخدم"
+
+msgid "For security reason, authentication keys do not work for administrators."
+msgstr "لأسباب أمنية، مفاتيح التوثيق لا تعمل للمسؤولين."
+
+msgid "No recipient selected"
+msgstr "لم يتم تحديد مستلم"
+
+msgid "No user is permitted to see this private album"
+msgstr "لا يجوز للمستخدم أن يرى هذا الألبوم الخاص"
+
+msgid "Orphans"
+msgstr "مجهول المصدر"
+
+msgid "Recipients"
+msgstr "متلقي"
+
+msgid "Y Repeat"
+msgstr "Y كرر"
+

@@ -1,0 +1,20 @@
+# Piwigo translation — fr_FR
+# Source: whats_new_16.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: fr_FR\n"
+"Plural-Forms: nplurals=3; plural=((n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Brand new login & preferences with Standard pages !"
+msgstr "Nouvelle connexion et préférences avec les pages standard !"
+
+msgid "Two factor authentication is here"
+msgstr "L'authentification à deux facteurs est disponible ici"
+
+msgid "UI redesigns that make a difference"
+msgstr "Des refontes d'interface utilisateur qui font la différence"
+

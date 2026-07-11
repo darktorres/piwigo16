@@ -9,6 +9,9 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\AccessLevel;
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\SrcImage;
 
@@ -24,7 +27,7 @@ session_cache_limiter('public');
 include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 
 // Check Access and exit when user status is not ok
-check_status(ACCESS_GUEST);
+check_status(AccessLevel::Guest);
 
 function guess_mime_type(string $ext): string
 {
@@ -53,7 +56,7 @@ function do_error(int $code, string $str): never
 }
 
 if ((bool) $conf['enable_formats'] and isset($_GET['format'])) {
-    check_input_parameter('format', $_GET, false, PATTERN_ID);
+    check_input_parameter('format', $_GET, false, ValidationPattern::ID);
 
     if (! is_numeric($_GET['format'])) {
         do_error(400, 'Invalid request - format');
@@ -63,7 +66,7 @@ if ((bool) $conf['enable_formats'] and isset($_GET['format'])) {
     $query = '
 SELECT
     *
-  FROM ' . IMAGE_FORMAT_TABLE . '
+  FROM ' . Tables::imageFormat() . '
   WHERE format_id = ' . $format_id . '
 ;';
     $formats = query2array($query);
@@ -87,7 +90,7 @@ if (! isset($_GET['id'])
 $_GET['id'] = (int) $_GET['id'];
 
 $query = '
-SELECT * FROM ' . IMAGES_TABLE . '
+SELECT * FROM ' . Tables::images() . '
   WHERE id=' . $_GET['id'] . '
 ;';
 
@@ -109,8 +112,8 @@ $src_image = new SrcImage($element_info);
 // are not used because it's not necessary (filter <> restriction)
 $query = '
 SELECT id
-  FROM ' . CATEGORIES_TABLE . '
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' ON category_id = id
+  FROM ' . Tables::categories() . '
+    INNER JOIN ' . Tables::imageCategory() . ' ON category_id = id
   WHERE image_id = ' . $_GET['id'] . '
 ' . get_sql_condition_FandF(
     [

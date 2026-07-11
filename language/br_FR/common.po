@@ -1,0 +1,1247 @@
+# Piwigo translation — br_FR
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: br_FR\n"
+"Plural-Forms: nplurals=5; plural=(n % 10 == 1 && n % 100 != 11 && n % 100 != 71 && n % 100 != 91 ? 0 : n % 10 == 2 && n % 100 != 12 && n % 100 != 72 && n % 100 != 92 ? 1 : ((n % 10 == 3 || n % 10 == 4) || n % 10 == 9) && (n % 100 < 10 || n % 100 > 19) && (n % 100 < 70 || n % 100 > 79) && (n % 100 < 90 || n % 100 > 99) ? 2 : n != 0 && n % 1000000 == 0 ? 3 : 4);\n"
+"X-Piwigo-Language-Name: Brezhoneg\n"
+"X-Piwigo-Country: Frañs\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: br\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "%d hit"
+msgid_plural "%d hits"
+msgstr[0] "%d klik"
+msgstr[1] "%d klik"
+
+msgid "%d Kb"
+msgstr "%d Ko"
+
+msgid "%d new comment"
+msgstr "%d evezhiadenn nevez"
+
+msgid "%d new comments"
+msgstr "%d evezhiadenn nevez"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "%d luc'hskeudenn nevez"
+msgstr[1] "%d luc'hskeudenn nevez"
+
+msgid "%d new user"
+msgstr "%d implijer nevez"
+
+msgid "%d new users"
+msgstr "%d implijer nevez"
+
+msgid "Date"
+msgstr "Deiziad"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "... pe ziweredekait ar c'hemenn-mañ, va-unan e tibabin"
+
+msgid "2small"
+msgstr "XXS - bihan"
+
+msgid "... or browse your empty gallery"
+msgstr "... pe verdeit d'ho palier goullo"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) Ret eo kadarnaat an evezhiadenn-mañ"
+
+msgid "%d rate"
+msgid_plural "%d rates"
+msgstr[0] "%d notenn"
+msgstr[1] "%d notenn"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "%d luc'hskeudenn a zo liammet d'ar merkerioù red ivez"
+msgstr[1] "%d luc'hskeudenn a zo liammet d'ar merkerioù red ivez"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d rummad hizivaet"
+msgstr[1] "%d rummad hizivaet"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d evezhiadenn"
+msgstr[1] "%d evezhiadenn"
+
+msgid "%d comment to validate"
+msgstr "%d evezhiadenn implijer da gadarnaat"
+
+msgid "%d comments to validate"
+msgstr "%d evezhiadenn implijerien da gadarnaat"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "%d luc'hskeudenn"
+msgstr[1] "%d luc'hskeudenn"
+
+msgid "About Piwigo"
+msgstr "Diwar-benn Piwigo"
+
+msgid "About"
+msgstr "Diwar-benn"
+
+msgid "A comment on your site"
+msgstr "Un evezhiadenn war ho lec'hienn"
+
+msgid "All tags"
+msgstr "An holl merkerioù"
+
+msgid "Album"
+msgstr "Rummad"
+
+msgid "Album results for"
+msgstr "Disoc'hoù ar rummadoù evit"
+
+msgid "Album: %s"
+msgstr "Rummad : %s"
+
+msgid "Albums"
+msgstr "Rummadoù"
+
+msgid "All"
+msgstr "Holl"
+
+msgid "Administration"
+msgstr "Mererezh"
+
+msgid "Admin: %s"
+msgstr "Mererezh : %s"
+
+msgid "Add a comment"
+msgstr "Lakaat un evezhiadenn ouzhpenn"
+
+msgid "Accelerate diaporama speed"
+msgstr "Buanaat an diaporama"
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "Gwelet vo hoc'h evezhiadenn goude ma vo aotreet gant ur merour"
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "Lusker enepstrob : gortozit a-raok lakaat un evezhiadenn ouzhpenn"
+
+msgid "Any tag"
+msgstr "Ur merker bennak"
+
+msgid "Best rated"
+msgstr "Notet ar gwellañ"
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "Statud fall evit an implijer \"guest\", ar statud dre ziouer a vo implijet. Kemennit ar mestr-gwiad."
+
+msgid "Bad request"
+msgstr "Reked fall"
+
+msgid "Author"
+msgstr "Oberour"
+
+msgid "Author: %s"
+msgstr "Oberour: %s"
+
+msgid "Auto login"
+msgstr "Kevreadenn emgefre"
+
+msgid "Are you sure?"
+msgstr "Ha sur oc'h ?"
+
+msgid "Calendar"
+msgstr "Deiziadur"
+
+msgid "Browser: %s"
+msgstr "Ergerzher: %s"
+
+msgid "Check your email for the confirmation link"
+msgstr "Sellit ouzh ho posteloù evit al liamm-kadarnaat"
+
+msgid "Change my password"
+msgstr "Cheñch va ger-tremen"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "Gwazh RSS klok (luc'hskeudennoù, evezhiadennoù)"
+
+msgid "Comment"
+msgstr "evezhiadenn"
+
+msgid "Comment by %s"
+msgstr "evezhiadenn gant %s"
+
+msgid "Comment: %s"
+msgstr "evezhiadenn : %s"
+
+msgid "Comments"
+msgstr "Evezhiadennoù"
+
+msgid "Close this window"
+msgstr "Serriñ ar prenestr-mañ"
+
+msgid "Click on the photo to see it in high definition"
+msgstr "Klikit war al luc'hskeudenn evit gwelet anezhi uhel e zespizadur"
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "Klikit amañ ma ne vez ket kerzhet emgefreek"
+
+msgid "Confirm Password"
+msgstr "Kadarnaat ar ger-tremen"
+
+msgid "Contact"
+msgstr "Mont e darempred"
+
+msgid "Contact webmaster"
+msgstr "Mont e darempred gant ar mestr-gwiad"
+
+msgid "Connection settings"
+msgstr "Arventennoù kevreañ"
+
+msgid "Connected user: %s"
+msgstr "Implijer enlinenn : %s"
+
+msgid "Default"
+msgstr "Dre ziouer"
+
+msgid "Delete"
+msgstr "Dilemel"
+
+msgid "Desktop"
+msgstr "Klasel"
+
+msgid "Date posted, new &rarr; old"
+msgstr "Deiziad ouzhpennañ, nevez &rarr; kozh"
+
+msgid "Date posted, old &rarr; new"
+msgstr "Deiziad ouzhpennañ, kozh &rarr; nevez"
+
+msgid "Date created, new &rarr; old"
+msgstr "Deiziad krouiñ, nevez &rarr; kozh"
+
+msgid "Date created, old &rarr; new"
+msgstr "Deiziad krouiñ, kozh &rarr; nevez"
+
+msgid "Creation date"
+msgstr "Deiziad krouiñ"
+
+msgid "Current password is wrong"
+msgstr "Fazi gant ar ger-tremen a vremañ"
+
+msgid "Created on"
+msgstr "Krouet d'an"
+
+msgid "Create a new account"
+msgstr "Krouiñ ur gont nevez"
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "Stanket eo an toupinoù pe n'int ket skoret gant hoc'h ergerzher. Ret eo deoc'h aotren an toupinoù evit kevreañ."
+
+msgid "Email: %s"
+msgstr "Postel: %s"
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "Mankout a ra ar chomlec'h postel. Lakit ho postel mar-plij."
+
+msgid "Edit"
+msgstr "Aozañ"
+
+msgid "Edit a comment"
+msgstr "Aozañ un evezhiadenn"
+
+msgid "Email address"
+msgstr "Chomlec'h postel"
+
+msgid "Email address is mandatory"
+msgstr "Chomlec'h postel a zo ret"
+
+msgid "EXIF Metadata"
+msgstr "Metaroadennoù EXIF"
+
+msgid "Download this file"
+msgstr "Pellgargañ ar restr-mañ"
+
+msgid "Download"
+msgstr "Pellgargañ"
+
+msgid "Display"
+msgstr "Diskwel"
+
+msgid "Dimensions"
+msgstr "Mentoù"
+
+msgid "Password: %s"
+msgstr "Ger-tremen: %s"
+
+msgid "Your password has been reset"
+msgstr "Ho ger-tremen a zo bet adderaouekaet"
+
+msgid "Enter your new password below."
+msgstr "Lakait ho ger-tremen nevez amañ dindan."
+
+msgid "Forgot your password?"
+msgstr "Disoñjet ho ger-tremen ?"
+
+msgid "Password Reset"
+msgstr "Adderaouekaat ar ger-tremen"
+
+msgid "Password forgotten"
+msgstr "Ger-tremen disoñjet"
+
+msgid "Invalid password!"
+msgstr "Ger-tremen direiz !"
+
+msgid "New password"
+msgstr "Ger-tremen nevez"
+
+msgid "End-Date"
+msgstr "Deizad an dibenn"
+
+msgid "Empty query. No criteria has been entered."
+msgstr "Reked goullo. Dezverk ebet a zo bet lakaet."
+
+msgid "Error sending email"
+msgstr "Fazi en ur gas ar postel"
+
+msgid "this email address is already in use"
+msgstr "En implij emañ ar postel-se dija"
+
+msgid "Please enter your username or email address."
+msgstr "Lakait ho anv implijer pe postel"
+
+msgid "Invalid username or email"
+msgstr "Anv implijer pe postel direiz"
+
+msgid "Username or email"
+msgstr "Anv implijer pe postel"
+
+msgid "Username: %s"
+msgstr "Anv implijer: %s"
+
+msgid "Favorites"
+msgstr "Pennrolloù"
+
+msgid "add this photo to your favorites"
+msgstr "Lakaat al luc'hskeudenn-mañ en ho pennrolloù"
+
+msgid "delete all photos from your favorites"
+msgstr "Dilemel an holl luc'hskeudennoù eus ho pennrolloù"
+
+msgid "delete this photo from your favorites"
+msgstr "Dilemel al luc'hskeudenn-mañ eus ho pennrolloù"
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "Prennet eo ar palier evit trezalc'h. Deuit en-dro diwezhatoc'h."
+
+msgid "Go through the gallery as a visitor"
+msgstr "Dedreuziñ ar palier evel un implijer"
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "Demat %s, ho palier luc'hskeudennoù Piwigo a zo goullo !"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "Degemer mat war ho palier-luc'hskeudennoù Piwigo !"
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "Gwazh RSS a kemenn an darvoudoù ar palier : luc'hskeudennoù nevez, rummadoù hizivaet, evezhiadennoù nevez an implijerien. Da vezañ implijet gant ul lenner-gwazhioù RSS."
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "Implijer \"%s\" war palier %s"
+
+msgid "display recently updated albums"
+msgstr "diskouez ar rummadoù krouet pe hizivaet nevez-zo"
+
+msgid "Search in sub-albums"
+msgstr "Klask en iz-rummadoù"
+
+msgid "display this album"
+msgstr "diskouez al luc'hskeudennoù e pennelfenn ar rummad-mañ"
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] "e %d iz-rummad"
+msgstr[1] "e %d iz-rummad"
+
+msgid "set as album representative"
+msgstr "Dibab evel dileuriad ar rummad-mañ"
+
+msgid "Requested album does not exist"
+msgstr "N'ez eus ket ar rummad goulennet"
+
+msgid "in this album"
+msgstr "er rummad-mañ"
+
+msgid "Search in albums"
+msgstr "Klask er rummadoù"
+
+msgid "Permalink for album not found"
+msgstr "N'eo ket bet kavet peurliamm ar rummad "
+
+msgid "Recent albums"
+msgstr "Rummadoù a-nevez"
+
+msgid "Expand all albums"
+msgstr "Displegañ an holl rummadoù"
+
+msgid "Please, enter a login"
+msgstr "Lakait un anv implijer"
+
+msgid "Enter your personnal informations"
+msgstr "Lakait ho titouroù personel"
+
+msgid "This author removed the comment with id %d"
+msgstr "An oberour-mañ en deus dilemet an evezhiadenn gant an anavezer %d"
+
+msgid "Here are your connection settings"
+msgstr "Setu hoc'h anavezerioù"
+
+msgid "Identification"
+msgstr "Anaout"
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "Anavezer, 1 &rarr; 9"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "Anavezer, 9 &rarr; 1"
+
+msgid "Unknown feed identifier"
+msgstr "Anavezer gwazh dianav"
+
+msgid "Unknown identifier"
+msgstr "Anavezerioù dianav"
+
+msgid "Help"
+msgstr "Skoazell"
+
+msgid "Hello"
+msgstr "Demat"
+
+msgid "Hello %s,"
+msgstr "Demat %s,"
+
+msgid "Forbidden"
+msgstr "Berzet"
+
+msgid "First"
+msgstr "Kentañ"
+
+msgid "Filter"
+msgstr "Sil"
+
+msgid "Filter and display"
+msgstr "Ober gant ar siloù ha diskouez"
+
+msgid "Show file metadata"
+msgstr "Diskouez metaroadennoù ar restr"
+
+msgid "IPTC Metadata"
+msgstr "Metaroadennoù IPTC"
+
+msgid "File name, A &rarr; Z"
+msgstr "Anv ar restr, A &rarr; Z"
+
+msgid "File name, Z &rarr; A"
+msgstr "Anv ar restr, Z &rarr; A"
+
+msgid "File"
+msgstr "Restr"
+
+msgid "File name"
+msgstr "Anv ar restr"
+
+msgid "Filesize"
+msgstr "Ment ar restr"
+
+msgid "Email"
+msgstr "Postel"
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "Ma 'z eus bet ur fazi, ne grit netra ha netra a c'hoarvezo."
+
+msgid "User comments"
+msgstr "Evezhiadennoù implijerien"
+
+msgid "comment date"
+msgstr "deiziad an evezhiadenn"
+
+msgid "Show latest comments first"
+msgstr "Diskouez an evezhiadennoù diwezhañ da gentañ"
+
+msgid "Show number of comments"
+msgstr "Diskouez niver an evezhiadennoù"
+
+msgid "Show oldest comments first"
+msgstr "Diskouez an evezhiadennoù kozhañ da gentañ"
+
+msgid "This author modified following comment:"
+msgstr "An oberour-mañ en deus cheñchet an evezhiadenn-se :"
+
+msgid "Manage this user comment: %s"
+msgstr "Merañ an evezhiadenn-mañ : %s"
+
+msgid "Keyword"
+msgstr "Ger alc'hwez "
+
+msgid "Password"
+msgstr "Ger-tremen"
+
+msgid "Menu"
+msgstr "Lañser"
+
+msgid "Most visited"
+msgstr "Muiañ-gwelet"
+
+msgid "New on %s"
+msgstr "Nevez d'%s"
+
+msgid "Next"
+msgstr "Da-heul"
+
+msgid "Logout"
+msgstr "Digevreañ"
+
+msgid "Login"
+msgstr "Kevreañ"
+
+msgid "Links"
+msgstr "Liammoù"
+
+msgid "Last"
+msgstr "Diwezhañ"
+
+msgid "Last Page"
+msgstr "Pajenn diwezhañ"
+
+msgid "IP: %s"
+msgstr "IP : %s"
+
+msgid "Language"
+msgstr "Yezh"
+
+msgid "I want to add photos"
+msgstr "C'hoant am eus da lakaat luc'hskeudennoù ouzhpenn"
+
+msgid "Home"
+msgstr "Degemer"
+
+msgid "display all photos in all sub-albums"
+msgstr "diskouez luc'hskeudennoù ar rummadoù hag iz-rummadoù a-blad"
+
+msgid "Go back to the album"
+msgstr "Distreiñ d'ar rummad"
+
+msgid "First Page"
+msgstr "Pajenn gentañ"
+
+msgid "Posted on"
+msgstr "Ouzhpennet d'an"
+
+msgid "photos posted during the last %d days"
+msgstr "luc'hskeudennoù ouzhpennet e-pad an %d devezh diwezhañ"
+
+msgid "posted after %s (%s)"
+msgstr "ouzhpennet goude %s (%s)"
+
+msgid "posted before %s (%s)"
+msgstr "ouzhpennet a-raok %s (%s)"
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "ouzhpennet etre %s (%s) ha %s (%s)"
+
+msgid "posted on %s"
+msgstr "ouzhpennet d'an %s"
+
+msgid "Photos only RSS feed"
+msgstr "Gwazh RSS gant al luc'hskeudennoù hepken"
+
+msgid "RSS feed"
+msgstr "Gwazh RSS"
+
+msgid "Photo sizes"
+msgstr "Ment al luc'hskeudennoù"
+
+msgid "Return to home page"
+msgstr "Mont en-dro da bajenn-degemer"
+
+msgid "Number of photos per page"
+msgstr "Niver a skeudennig e pep pajenn"
+
+msgid "Page generated in"
+msgstr "Pajenn jedet e "
+
+msgid "display a set of random photos"
+msgstr "diskouez ur stroll dargouezhek a luc'hskeudennoù"
+
+msgid "display only recently posted photos"
+msgstr "diskouez luc'hskeudennoù nevez hepken"
+
+msgid "display most visited photos"
+msgstr "diskouez al luc'hskeudennoù ar muiañ-gwelet"
+
+msgid "display most recent photos"
+msgstr "diskouez al luc'hskeudennoù nevezañ"
+
+msgid "Rate this photo"
+msgstr "Reiñ un notenn d'al luc'hskeudenn-se"
+
+msgid "Recent photos"
+msgstr "Luc'hskeudennoù nevez"
+
+msgid "photo"
+msgstr "luc'hskeudenn"
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "Niver al luc'hskeudennoù a pep pajenn a rank bezañ un niver pegementiñ"
+
+msgid "display best rated photos"
+msgstr "diskouez al luc'hskeudennoù gant an notennoù uhelañ"
+
+msgid "Related tags"
+msgstr "Merkerioù stag"
+
+msgid "Requested tag does not exist"
+msgstr "N'ez eus ket ar merker goulennet"
+
+msgid "Search tags"
+msgstr "Klask merkerioù"
+
+msgid "Tag"
+msgstr "Merker"
+
+msgid "Tags"
+msgstr "Merkerioù"
+
+msgid "Page not found"
+msgstr "N'eo ket bet kavet ar bajenn"
+
+msgid "Rating score, high &rarr; low"
+msgstr "Notenn, uhel &rarr; izel"
+
+msgid "Rating score, low &rarr; high"
+msgstr "Notenn, izel &rarr; uhel"
+
+msgid "Previous"
+msgstr "War-gil"
+
+msgid "Quick connect"
+msgstr "Kevreadenn buan"
+
+msgid "Piwigo Help"
+msgstr "Skoazell Piwigo"
+
+msgid "Manual sort order"
+msgstr "Urzh dre zorn"
+
+msgid "Preferences"
+msgstr "Dibaboù"
+
+msgid "Notification"
+msgstr "Kemennoù RSS"
+
+msgid "Not repeat the slideshow"
+msgstr "Harzañ adlenn an diaporama"
+
+msgid "Pause of slideshow"
+msgstr "Ehanañ an diaporama"
+
+msgid "Play of slideshow"
+msgstr "Lenn an diaporama"
+
+msgid "Post date"
+msgstr "Deiziad-ouzhpennañ"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "Titl al luc'hskeudenn, A &rarr; Z"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "Titl al luc'hskeudenn, Z &rarr; A"
+
+msgid "Original"
+msgstr "Skouerenn orin"
+
+msgid "Original dimensions"
+msgstr "Mentoù orin"
+
+msgid "Invalid key"
+msgstr "Alc'hwez direiz"
+
+msgid "Your website URL is invalid"
+msgstr "Chomlec'h hol lec'hienn web a zo direiz"
+
+msgid "The passwords do not match"
+msgstr "Ar gerioù-tremen n'int ket mat"
+
+msgid "To reset your password, visit the following address:"
+msgstr "Evit cheñch ho ger-tremen, kit d'ar chomlec'h-mañ :"
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "N'en deus ket an implijer \"%s\" a bostel, n'eo ket posubl cheñch e ger-tremen"
+
+msgid "Password reset is not allowed for this user"
+msgstr "N'eo ket posubl cheñch ger-tremen an implijer-mañ"
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "Unan-bennak en deus goulennet cheñchamant ar ger-tremen evit an implijer :"
+
+msgid "Retrieve password"
+msgstr "Adtapout ur ger-tremen"
+
+msgid "You will receive a link to create a new password via email."
+msgstr "Dre bostel, ul liamm a resevit da glikañ evit cheñch ho ger-tremen."
+
+msgid "password updated"
+msgstr "Ger-tremen hizivaet"
+
+msgid "useful when password forgotten"
+msgstr "Talvoudus m'ho peus ankounac'haet ho ger-tremen"
+
+msgid "No"
+msgstr "Ket"
+
+msgid "Powered by"
+msgstr "Pajennoù graet gant"
+
+msgid "Profile"
+msgstr "Profil"
+
+msgid "Rank"
+msgstr "Renk"
+
+msgid "Rating score"
+msgstr "Skor"
+
+msgid "Reset"
+msgstr "Nullañ"
+
+msgid "Search"
+msgstr "Klask"
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "N'eo ket bet enrollet hoc'h evezhiadenn peogwir ne pleg ket d'ar reolennoù kadarnaat"
+
+msgid "display last user comments"
+msgstr "Gwelet evezhiadennoù diwezhañ an implijerien"
+
+msgid "Register"
+msgstr "Enrollañ"
+
+msgid "Registration"
+msgstr "Enrollañ"
+
+msgid "Registration of %s"
+msgstr "Enrolladenn %s"
+
+msgid "Your comment has been registered"
+msgstr "Enrollet eo bet hoc'h evezhiadenn"
+
+msgid "Mobile"
+msgstr "Hezoug"
+
+msgid "User: %s"
+msgstr "Implijer: %s"
+
+msgid "Username"
+msgstr "Anv implijer"
+
+msgid "Username modification"
+msgstr "Cheñch anv an implijer"
+
+msgid "this login is already used"
+msgstr "En implij emañ an anv-implijer-mañ dija"
+
+msgid "N/A"
+msgstr "dizimplijadus"
+
+msgid "Sent by"
+msgstr "Kaset gant"
+
+msgid "Submit"
+msgstr "Gwiriekaat"
+
+msgid "Send my connection settings by email"
+msgstr "Bezañ kelaouet gant ma anavezerioù dre bostel"
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "Enrollet mat out, kelaouet e voc'h gant hoc'h anavezerioù dre bostel. Degemer mat !"
+
+msgid "Thank you for registering at %s!"
+msgstr "Trugarez evit bezañ enrollet war %s !"
+
+msgid "Tag results for"
+msgstr "Disoc'h ar merkerioù evit"
+
+msgid "display available tags"
+msgstr "Gwelet ar merkerioù hegerz"
+
+msgid "display photos linked to this tag"
+msgstr "Gwelet luc'hskeudennoù liammet gant ar merker-mañ hepken"
+
+msgid "remove this tag from the list"
+msgstr "Lemel ar merker-mañ diouzh al listenn"
+
+msgid "show tag cloud"
+msgstr "Diskouez koumoulenn ar merkerioù"
+
+msgid "Recent period must be a positive integer value"
+msgstr "Ar prantad diwezhañ a rank bezañ un niver pegementiñ muiel"
+
+msgid "Recent period"
+msgstr "Prantad diwezhañ"
+
+msgid "Sort by"
+msgstr "Rummañ dre"
+
+msgid "Sort order"
+msgstr "Urzh rummañ"
+
+msgid "Kind of date"
+msgstr "Seurt deiziad"
+
+msgid "display a calendar by creation date"
+msgstr "diskouez un deiziadur dre deiziad krouiñ"
+
+msgid "display a calendar by posted date"
+msgstr "diskouez un deiziadur dre deiziad ouzhpennañ"
+
+msgid "wrong date"
+msgstr "deiziad fall"
+
+msgid "Quick search"
+msgstr "Klask buan"
+
+msgid "Search by date"
+msgstr "Klask dre deiziad"
+
+msgid "Search for words"
+msgstr "Klask gerioù"
+
+msgid "Search results"
+msgstr "Disoc'hoù an enklask"
+
+msgid "search"
+msgstr "enklask"
+
+msgid "Search for Author"
+msgstr "Klask un oberour"
+
+msgid "Search for all terms"
+msgstr "Klask an holl ger"
+
+msgid "Search for any term"
+msgstr "Klask ur ger"
+
+msgid "Thumbnails"
+msgstr "Skeudennoùigoù"
+
+msgid "thumb"
+msgstr "Skeudennig"
+
+msgid "today"
+msgstr "hiziv"
+
+msgid "Update your rating"
+msgstr "Hizivaat ho notenn"
+
+msgid "no rate"
+msgstr "Notenn ebet"
+
+msgid "Visits"
+msgstr "Gweladennoù"
+
+msgid "Welcome"
+msgstr "Degemer mat"
+
+msgid "Yes"
+msgstr "Ya"
+
+msgid "This login is already used by another user"
+msgstr "En implij emañ an anv-implijer-mañ dija"
+
+msgid "login mustn't end with a space character"
+msgstr "Arabat eo echuiñ an anv implijer gant un arouezenn esaouiñ"
+
+msgid "login mustn't start with a space character"
+msgstr "Arabat eo kregiñ an anv implijer gant un arouezenn esaouiñ"
+
+msgid "the username must be given"
+msgstr "Ret eo lakaat an anv implijer"
+
+msgid "Username is mandatory"
+msgstr "Anv implijer ret"
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "Hoc'h anv implijer a zo bet cheñchet evit : %s"
+
+msgid "Since"
+msgstr "Abaoe"
+
+msgid "Specials"
+msgstr "Dibar"
+
+msgid "View"
+msgstr "Gwellet"
+
+msgid "View in"
+msgstr "Diskouez"
+
+msgid "Visits, high &rarr; low"
+msgstr "Niver a gweladenn, bras &rarr; bihan"
+
+msgid "Visits, low &rarr; high"
+msgstr "Niver a gweladenn, bihan &rarr; bras"
+
+msgid "Show number of hits"
+msgstr "Diskouez niver a taolioù lagad"
+
+msgid "SQL queries in"
+msgstr "rekedoù SQL e"
+
+msgid "Reset to default values"
+msgstr "Adlakaat talvoudoù dre ziouer."
+
+msgid "Reduce diaporama speed"
+msgstr "Gorrekaat an diaporama"
+
+msgid "Repeat the slideshow"
+msgstr "Adlenn an diaporama"
+
+msgid "slideshow"
+msgstr "diaporama"
+
+msgid "stop the slideshow"
+msgstr "Paouez an diaporama"
+
+msgid "Redirection..."
+msgstr "O sturiañ d'ul lec'h all…"
+
+msgid "Random photos"
+msgstr "Luc'hskeudennoù dre zegouezh"
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "Ur fazi diremed a zo c'hoarvezet gant Piwigo"
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "Diskouez al luc'hskeudennoù nevezoc'h eget %d deizad"
+msgstr[1] "Diskouez al luc'hskeudennoù nevezoc'h eget %d deizad"
+
+msgid "Number of items"
+msgstr "Niver a elfennoù"
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "Ma soñjit ho peus resevet ar postel-mañ dre fazi, deuit e darempred ganeomp dre "
+
+msgid "cloud"
+msgstr "koumoulenn"
+
+msgid "created after %s (%s)"
+msgstr "Krouet goude an %s (%s)"
+
+msgid "created before %s (%s)"
+msgstr "Krouet a-raok an %s (%s)"
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "Krouet etre an %s (%s) hag an %s (%s)"
+
+msgid "created on %s"
+msgstr "Krouet d'an %s"
+
+msgid "representative"
+msgstr "Dileuriad ar rummad"
+
+msgid "available for administrators only"
+msgstr "Hegerz evit merourien hepken"
+
+msgid "display your favorites photos"
+msgstr "Diskouez luc'hskeudennoù eus ho pennrolloù"
+
+msgid "Your favorites"
+msgstr "Ho pennrolloù"
+
+msgid "chronology_weekly_list"
+msgstr "Listenn ur Sizhunvezh"
+
+msgid "chronology_monthly_list"
+msgstr "Listenn ur mizvezh"
+
+msgid "all"
+msgstr "pep tra"
+
+msgid "Your Gallery Customization"
+msgstr "Personeladur ho palier"
+
+msgid "chronology_monthly_calendar"
+msgstr "Deiziadur ar mizvezh"
+
+msgid "You are not authorized to access the requested page"
+msgstr "Difennet eo deoc'h mont d'ar bajenn-mañ"
+
+msgid "Week %d"
+msgstr "Sizhun %d"
+
+msgid "Website"
+msgstr "Lec'hienn web"
+
+msgid "Webmaster"
+msgstr "Mestr-gwiad"
+
+msgid "return to the display of all photos"
+msgstr "distreiñ d'ar gwel an holl luc'hskeudenn"
+
+msgid "return to normal view mode"
+msgstr "distreiñ d'ar gwel reizh"
+
+msgid "last %d days"
+msgstr "an %s dewezhioù diwezhañ"
+
+msgid "letters"
+msgstr "lizherennoù"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "Ret eo ar chomlec'h bostel bezhañ e stumm xxx@yyy.eee (da skouer jakez@altern.org)"
+
+msgid "mandatory"
+msgstr "ret"
+
+msgid "obligatory"
+msgstr "ret"
+
+msgid "square"
+msgstr "Karrez"
+
+msgid "the beginning"
+msgstr "penn-kentañ"
+
+msgid "included"
+msgstr "e-barzh"
+
+msgid "large"
+msgstr "L - bras"
+
+msgid "medium"
+msgstr "M - krenn"
+
+msgid "small"
+msgstr "S - bihan"
+
+msgid "xlarge"
+msgstr "XL - bras-kenañ"
+
+msgid "xsmall"
+msgstr "XS - bihan-kenañ"
+
+msgid "xxlarge"
+msgstr "XXL - ramzeg"
+
+msgid "html tags are not allowed in login"
+msgstr "Difennet eo lakaat balizennoù HTML en anv implijer"
+
+msgid "guest"
+msgstr "implijer"
+
+msgid "ascending"
+msgstr "war gresk"
+
+msgid "descending"
+msgstr "war zigresk"
+
+msgid "display each day with photos, month per month"
+msgstr "Diskouez dre vloaz, dre viz, dre zeiz"
+
+msgid "edit"
+msgstr "aozañ"
+
+msgid "excluded"
+msgstr "dispelled"
+
+msgid "from %s to %s"
+msgstr "eus an %s betek an %s"
+
+msgid "group by letters"
+msgstr "strollañ dre lizherenn"
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "N'ho peus ket kadarnaet ar ger-tremen. Kadarnait ar ger-tremen ho peus skrivet."
+
+msgid "Password is missing. Please enter the password."
+msgstr "Mankout a ra ar ger-tremen. Skrivit ar ger-tremen."
+
+msgid "%d photos per page"
+msgstr "%d luc'hskeudenn e pep pajenn"
+
+msgid "Theme"
+msgstr "Tem"
+
+msgid "No results for"
+msgstr "Disoc'h ebet evit"
+
+msgid "Apply on properties"
+msgstr "Arloañ war ar perzhioù"
+
+msgid "Photo description"
+msgstr "Deskrivadur al luc'hskeudenn"
+
+msgid "Photo title"
+msgstr "Titl al luc'hskeudenn"
+
+msgid "Album name, A &rarr; Z"
+msgstr "Anv ar rummad, A &rarr; Z"
+
+msgid "Album name, Z &rarr; A"
+msgstr "Anv ar rummad, Z &rarr; A"
+
+msgid "Link: %s"
+msgstr "Liamm: %s"
+
+msgid "Your authentication key is no longer valid."
+msgstr "N'eo ket gwiriek ken hoc'h alc'hwez dilesadur"
+
+msgid "generate random password"
+msgstr "Jediñ ur ger-tremen dre zegouezh"
+
+msgid "Invalid username or password!"
+msgstr "Anv implijer pe ger-tremen direiz !"
+
+msgid "Related albums"
+msgstr "Rummadoù stag"
+
+msgid "Password: ********** (no copy by email)"
+msgstr "Ger-tremen: ********** (eilad ebet kaset dre bostel)"
+
+msgid "Album name, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+msgstr "Anv ar rummad, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+
+msgid "Album name, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+msgstr "Anv ar rummad, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+
+msgid "Start-Date"
+msgstr "Deiziad deroù"
+
+msgid "last 24 hours"
+msgstr "24 eurvezh divezhañ"
+
+msgid "last 3 months"
+msgstr "3 mizvezh divezhañ"
+
+msgid "last 30 days"
+msgstr "30 devezh divezhañ"
+
+msgid "last 6 months"
+msgstr "6 mizvezh divezhañ"
+
+msgid "last 7 days"
+msgstr "7 devezh divezhañ"
+
+msgid "last year"
+msgstr "Bloavezh divezhañ"
+
+msgid "year %d"
+msgstr "Bloavezh %d"
+
+msgid "Clear"
+msgstr "Dilemel"
+
+msgid "Tags found"
+msgstr "Merkerioù kavet"
+
+msgid "File type"
+msgstr "Seurt restroù"
+
+msgid "Choose filters"
+msgstr "Dibab ar siloù"
+
+msgid "Empty filters"
+msgstr "Skarzhañ ar siloù"
+
+msgid "Filters"
+msgstr "Siloù"
+
+msgid "Cancel"
+msgstr "Nullañ"
+
+msgid "Album title"
+msgstr "Titl ar rummad"
+
+msgid "Albums found"
+msgstr "Rummadoù kavet"
+
+msgid "Album description"
+msgstr "Deskrivadur ar rummad"
+
+msgid "%d visits"
+msgstr "%d gweladenn"
+
+msgid "Added by"
+msgstr "Ouzhpennet gant"
+
+msgid "No results are available."
+msgstr "N'eus disoc'h ebet da gaout."
+
+msgid "Validate"
+msgstr "Kadarnaat"
+
+msgid "Search in :"
+msgstr "Klask e-barzh:"
+
+msgid "Pages"
+msgstr "Pajennoù"
+
+msgid "piwigo_day_0"
+msgstr "ar Sul"
+
+msgid "piwigo_day_1"
+msgstr "al Lun"
+
+msgid "piwigo_day_2"
+msgstr "ar Meurzh"
+
+msgid "piwigo_day_3"
+msgstr "ar Merc'her"
+
+msgid "piwigo_day_4"
+msgstr "ar Yaou"
+
+msgid "piwigo_day_5"
+msgstr "ar Gwener"
+
+msgid "piwigo_day_6"
+msgstr "ar Sadorn"
+
+msgid "piwigo_month_10"
+msgstr "a viz Here"
+
+msgid "piwigo_month_11"
+msgstr "a viz Du"
+
+msgid "piwigo_month_12"
+msgstr "a viz Kerzu"
+
+msgid "piwigo_month_1"
+msgstr "a viz Genver"
+
+msgid "piwigo_month_2"
+msgstr "a viz C'hwevrer"
+
+msgid "piwigo_month_3"
+msgstr "a viz Meurzh"
+
+msgid "piwigo_month_4"
+msgstr "a viz Ebrel"
+
+msgid "piwigo_month_5"
+msgstr "a viz Mae"
+
+msgid "piwigo_month_6"
+msgstr "a viz Even"
+
+msgid "piwigo_month_7"
+msgstr "a viz Gouere"
+
+msgid "piwigo_month_8"
+msgstr "a viz Eost"
+
+msgid "piwigo_month_9"
+msgstr "a viz Gwengolo"
+

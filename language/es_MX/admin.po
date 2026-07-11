@@ -1,0 +1,114 @@
+# Piwigo translation — es_MX
+# Source: admin.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: es_MX\n"
+"Plural-Forms: nplurals=3; plural=(n == 1 ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "%d albums including"
+msgstr "%d álbumes incluidos"
+
+msgid "%d albums edited"
+msgstr "%d álbumes editados"
+
+msgid "%d albums deleted"
+msgstr "%d álbumes eliminados"
+
+msgid "%d albums added"
+msgstr "%d álbumes agregados"
+
+msgid "%d album including"
+msgstr "%d álbum incluido"
+
+msgid "%d album edited"
+msgstr "%d álbum editado"
+
+msgid "%d album deleted"
+msgstr "%d álbum eliminado"
+
+msgid "%d album added"
+msgstr "%d álbum agregado"
+
+msgid "%d Activity"
+msgstr "%d Actividad"
+
+msgid "%d Activities"
+msgstr "%d actividades"
+
+msgid " and %d virtuals"
+msgstr "y %d virtuales"
+
+msgid " and %d virtual"
+msgstr "y %d virtuales"
+
+msgid " (copy)"
+msgstr "(copiar)"
+
+msgid " (copy %s)"
+msgstr "(copiar %s)"
+
+msgid "%d album moved"
+msgid_plural "%d albums moved"
+msgstr[0] "%d álbum movidos"
+msgstr[1] "%d álbumes movidos"
+
+msgid "%d anomaly has been corrected."
+msgid_plural "%d anomalies have been detected corrected."
+msgstr[0] "Se ha corregido la anomalía %d."
+msgstr[1] "Se han detectado y corregido %d anomalías."
+
+msgid "%d anomaly has been detected."
+msgid_plural "%d anomalies have been detected."
+msgstr[0] "Se ha detectado %d anomalía."
+msgstr[1] "Se han detectado %d anomalías."
+
+msgid "%d anomaly has been ignored."
+msgid_plural "%d anomalies have been ignored."
+msgstr[0] "Se ha ignorado la anomalía %d."
+msgstr[1] "Se han ignorado %d anomalías."
+
+msgid "%d anomaly has not been corrected."
+msgid_plural "%d anomalies have not been corrected."
+msgstr[0] "%d anomalía no ha sido corregida."
+msgstr[1] "No se han corregido %d anomalías."
+
+msgid "%d association"
+msgstr "%d asociación"
+
+msgid "%d associations"
+msgstr "%d asociaciónes"
+
+msgid "%d checksums were added"
+msgstr "Se agregaron %d checksums"
+
+msgid "%d day"
+msgstr "%d día"
+
+msgid "%d days"
+msgstr "%d días"
+
+msgid "%d formats uploaded for %d photos"
+msgstr "%d formatos cargados para %d fotos"
+
+msgid "%d group"
+msgstr "%d grupo"
+
+msgid "%d group added"
+msgstr "%d grupo añadido"
+
+msgid "%d group deleted"
+msgstr "%d grupo eliminado"
+
+msgid "%d group edited"
+msgstr "%d grupo editado"
+
+msgid "%d group moved"
+msgstr "%d grupo movido"
+
+msgid "%d groups"
+msgstr "%d grupos"
+

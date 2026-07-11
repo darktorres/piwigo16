@@ -1,0 +1,143 @@
+# Piwigo translation — ar_SA
+# Source: install.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ar_SA\n"
+"Plural-Forms: nplurals=6; plural=(n == 0 ? 0 : n == 1 ? 1 : n == 2 ? 2 : n % 100 >= 3 && n % 100 <= 10 ? 3 : n % 100 >= 11 && n % 100 <= 99 ? 4 : 5);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Installation"
+msgstr "التثبيت "
+
+msgid "Basic configuration"
+msgstr "التكوينات الأساسية"
+
+msgid "Default gallery language"
+msgstr "اللغة الافتراضية للمعرض"
+
+msgid "Database configuration"
+msgstr "تكوين قاعدة البيانات"
+
+msgid "Admin configuration"
+msgstr "اعدادات المدير"
+
+msgid "Start Install"
+msgstr "ابدأ التثبيت"
+
+msgid "It will be shown to the visitors. It is necessary for website administration"
+msgstr "سوف تظهر للزوار ، ضرورية للادارة و لوحة التحكم"
+
+msgid "Connection to server succeed, but it was impossible to connect to database"
+msgstr "تم الاتصال بالخادم الموقع ، لكن لم يتم يتم الاتصال بقاعدة البيانات"
+
+msgid "Can't connect to server"
+msgstr "لا يمكن الاتصال بالخادم"
+
+msgid "Host"
+msgstr "المضيف"
+
+msgid "User"
+msgstr "المستخدم"
+
+msgid "user login given by your host provider"
+msgstr "اصرح للمستخدم  الدخول بواسطة المضيف الخاص بك"
+
+msgid "user password given by your host provider"
+msgstr "اعطي  للمستخدم كلمة المرور  بواسطة المضيف الخاص بك"
+
+msgid "Database name"
+msgstr "أسم قاعدة البيانات"
+
+msgid "also given by your host provider"
+msgstr "ايضا بواسط المضيف الخاص بك "
+
+msgid "Database table prefix"
+msgstr "بداية جداول قاعدة البيانات"
+
+msgid "database tables names will be prefixed with it (enables you to manage better your tables)"
+msgstr "الاسماءالمبتدأ في جداول قاعدة البيانات ( تمكنك من أدارة قاعدة البيانات بشكل أفضل)ـ"
+
+msgid "enter a login for webmaster"
+msgstr "دخول مدير الموقع"
+
+msgid "webmaster login can't contain characters ' or \""
+msgstr "دخول المدر لا \\ يمكن تتضمن الأحرف  ' أو \""
+
+msgid "please enter your password again"
+msgstr "فضلا ً أعد كتابة كلمة المرور مرةأخرى"
+
+msgid "Keep it confidential, it enables you to access administration panel"
+msgstr "ابقائه سريا، فإنه يتيح لك الوصول إلى لوحة الإدارة"
+
+msgid "Password [confirm]"
+msgstr "كلمة المرور [confirm]"
+
+msgid "verification"
+msgstr "التحقق"
+
+msgid "Need help ? Ask your question on <a href=\"%s\">Piwigo message board</a>."
+msgstr "هل تحتاج لمساعده؟ يمكنك السؤال  <a href=\"%s\">Piwigo لجنة الأسئلة في </a>."
+
+msgid "Visitors will be able to contact site administrator with this mail"
+msgstr " سيتمكن الزوار لاستخدام هذا البريد إلى الاتصال بالمسؤول عن الموقع"
+
+msgid "PHP 5 is required"
+msgstr "مطلوب  PHP 5.2 "
+
+msgid "It appears your webhost is currently running PHP %s."
+msgstr "PHP %s يبدوا أن المضيف يستخدم حاليا "
+
+msgid "Piwigo may try to switch your configuration to PHP 5 by creating or modifying a .htaccess file."
+msgstr "قد يحاول تبديل التكوين الخاص بك إلىPHP 5.2 عن طريق إنشاء أو تعديل ملف htaccess . Piwigo "
+
+msgid "Note you can change your configuration by yourself and restart Piwigo after that."
+msgstr "ملاحظة يمكنك تغيير التكوين الخاص بك من نفسك وإعادة Piwigo بعد ذلك."
+
+msgid "Try to configure PHP 5"
+msgstr "PHP 5.2 محاولة تكوين "
+
+msgid "Sorry!"
+msgstr "مـعـذرة !1"
+
+msgid "Piwigo was not able to configure PHP 5."
+msgstr " Piwigo غير قادر على تكوين PHP 5.2"
+
+msgid "You may referer to your hosting provider's support and see how you could switch to PHP 5 by yourself."
+msgstr "تحقق من مزود الاستضافة حول دعمه لـ PHP 5.2"
+
+msgid "Hope to see you back soon."
+msgstr "نأمل أن نرى عودتك إلى هنا قريبا"
+
+msgid "Congratulations, Piwigo installation is completed"
+msgstr "تم بحمد الله تثبيت معرضPiwigo  بنجاح  ، مبروك "
+
+msgid "An alternate solution is to copy the text in the box above and paste it into the file \"local/config/database.inc.php\" (Warning : database.inc.php must only contain what is in the textarea, no line return or space character)"
+msgstr "حل آخر هو نسخ النص في المربع أعلاه ولصقه في ملف\"local/config/database.inc.php\" (تحذير : database.inc.php يجب أن تحتوي فقط ما هو موجود في   النص،  الخط أو حرف مسافة)"
+
+msgid "Creation of config file local/config/database.inc.php failed."
+msgstr "فشل في إنشاء ملف التكوين local/config/database.inc.php "
+
+msgid "Download the config file"
+msgstr "تحميل ملف التكوين"
+
+msgid "You can download the config file and upload it to local/config directory of your installation."
+msgstr "يمكنك تحميل ملف التكوين وتحميله إلى الدليل المحلي"
+
+msgid "Don't hesitate to consult our forums for any help : %s"
+msgstr "لاتتردد في طلب الإستشارة و الاستفسار من خلال منتدانا للمساعده : %s"
+
+msgid "Just another Piwigo gallery"
+msgstr "معرض آخر من Piwigo"
+
+msgid "Welcome to my photo gallery"
+msgstr "مرحباً بك في معرض الصور"
+
+msgid "Welcome to your new installation of Piwigo!"
+msgstr "مرحبا بكم في التثبيت الجديد من Piwigo!"
+
+msgid "localhost or other, supplied by your host provider"
+msgstr "المضيف المحلي او المقدم من قبل موفر الخدمة الخاص بك"
+

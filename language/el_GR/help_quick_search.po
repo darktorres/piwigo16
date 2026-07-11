@@ -1,0 +1,161 @@
+# Piwigo translation — el_GR
+# Source: help_quick_search.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: el_GR\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "photos posted in 2003"
+msgstr "φωτογραφίες που δημοσιεύθηκαν το 2003"
+
+msgid "photos taken in 2003"
+msgstr "φωτογραφίες που λήφθηκαν το 2003"
+
+msgid "return photos less than 700px high"
+msgstr "φωτογραφίες με ύψος μικρότερο των 700px"
+
+msgid "return photos wider than 500px"
+msgstr "φωτογραφίες με πλάτος μεγαλύτερο από 500px"
+
+msgid "return photos with at least 1,000 views"
+msgstr "επιστρέφει φωτογραφίες με τουλάχιστον 1.000 θεάσεις"
+
+msgid "returns photos of 12 megapixels or more"
+msgstr "επιστρέφει φωτογραφίες μεγέθους 12 megapixels ή παραπάνω"
+
+msgid "returns photos of 5 megapixels"
+msgstr "επιστρέφει φωτογραφίες των 5 megapixels"
+
+msgid "up to 100 (inclusive)"
+msgstr "μέχρι 100 (συμπεριλαμβανομένου)"
+
+msgid "will give you all photos with at least one note."
+msgstr "θα σας δώσει όλες τις φωτογραφίες με 1 σημείωση τουλάχιστον."
+
+msgid "will give you photos without notes."
+msgstr "θα σας δώσει φωτογραφίες χωρίς σημειώσεις."
+
+msgid "Searches photos by taken date."
+msgstr "Έρευνα για φωτογραφίες με την ημερομηνία λήψης."
+
+msgid "Searches photos by width/height ratio."
+msgstr "Έρευνα για φωτογραφίες με την σχέση πλάτους/ύψους."
+
+msgid "Searches photos with a given width or height."
+msgstr "Έρευνα για φωτογραφίες με ένα δεδομένο πλάτος ή ύψος."
+
+msgid "Supported numeric operators"
+msgstr "Υποστηριζόμενοι αριθμητικοί συντελεστές"
+
+msgid "The quick search engine allows you to use boolean operators to refine your search. By default, the search applies to all keywords. Searches are not case sensitive."
+msgstr "Η γρήγορη μηχανή αναζήτησης σας επιτρέπει να χρησιμοποιήσετε λογικούς συντελεστές για να εξειδικεύσετε την αναζήτησή σας. Η αναζήτηση εφαρμόζεται σε όλες τις λέξεις-κλειδιά εξ ορισμού. Οι αναζητήσεις δεν κάνουν διάκριση πεζών-ΚΕΦΑΛΑΙΩΝ."
+
+msgid "These operators can be used with numeric fields such as"
+msgstr "Αυτοί οι συντελεστές μπορούν να χρησιμοποιηθούν με αριθμητικά πεδία όπως"
+
+msgid "Use quotes to search for an exact keyword or phrase."
+msgstr "Χρησιμοποιήστε εισαγωγικά για ακριβή αναζήτηση λέξης-κλειδί ή φράσης."
+
+msgid "With keywords"
+msgstr "Με τις λέξεις-κλειδιά"
+
+msgid "between 10 and 100 (inclusive)"
+msgstr "ανάμεσα σε 10 και 100 (συμπεριλαμβανομένου)"
+
+msgid "equals 100"
+msgstr "ίσο με 100"
+
+msgid "finds files between 1MB and 10MB."
+msgstr "βρίσκει αρχεία μεγέθους ανάμεσα σε 1ΜΒ και 10ΜΒ."
+
+msgid "finds panoramas"
+msgstr "βρίσκει πανοράματα"
+
+msgid "finds photo 123 to 126 (it may find between 0 and 4 photos, because photos can be deleted)"
+msgstr "βρίσκει τις φωτογραφίες 123 έως 126 (μπορεί να βρεί από 0 έως 4 φωτογραφίες, γιατί μπορεί να διαγραφούν)"
+
+msgid "finds photos from compact cameras in portrait or landscape modes"
+msgstr "βρίσκει φωτογραφίες από μικρές μηχανές σε οριζόντιο ή κάθετο προσανατολισμό"
+
+msgid "from 100 and above"
+msgstr "από 100 και πάνω"
+
+msgid "greater than 100"
+msgstr "μεγαλύτερο από 100"
+
+msgid "less than 100"
+msgstr "μικρότερο από 100"
+
+msgid "photos after Jan 1st 2008"
+msgstr "φωτογραφίες μετά την 1η Ιανουαρίου 2008"
+
+msgid "photos from 2003 to 2008"
+msgstr "φωτογραφίες από το 2003 έως το 2008"
+
+msgid "photos from may 2003"
+msgstr "φωτογραφίες από τον Μάϊο του 2003"
+
+msgid "Add a dash (-) or NOT before a word to exclude from search. Note that NOT acts as a filtering operator so you cannot have a search containing only NOT operators. You cannot combine OR with NOT (john OR NOT bill is not valid)"
+msgstr "Προσθέστε μιά παύλα (-) ή ΝΟΤ πριν από μία λέξη για να την αποκλείσετε από την έρευνα. Σημειώστε ότι το ΝΟΤ λειτουργεί σαν συντελεστής φίλτρου έτσι δεν μπορείτε να έχετε μια έρευνα που να περιέχει μόνον συντελεστές ΝΟΤ. Δεν μπορείτε να συνδυάσετε το OR με το ΝΟΤ. (π.χ. το john OR NOT bill δεν είναι έγκυρο"
+
+msgid "Add an OR between words."
+msgstr "Προσθέστε ένα OR ανάμεσα στις λέξεις"
+
+msgid "Exact search"
+msgstr "Ακριβής αναζήτηση"
+
+msgid "Exclude"
+msgstr "Εξαίρεσε"
+
+msgid "Grouping"
+msgstr "Ομαδοποίηση"
+
+msgid "Here is a list of actions you can perform:"
+msgstr "Ορίστε ένας κατάλογος ενεργειών που μπορείτε να κάνετε:"
+
+msgid "OR inclusive"
+msgstr "συμπεριλαμβανομένου του OR"
+
+msgid "Others"
+msgstr "Άλλα"
+
+msgid "Same principle as for"
+msgstr "Ίδιος όρος με το"
+
+msgid "Search using extended syntax"
+msgstr "Αναζητήστε χρησιμοποιώντας επεκταμένη σύνταξη"
+
+msgid "Searches by author."
+msgstr "Αναζήτηση με τον δημιουργό."
+
+msgid "Searches by file name."
+msgstr "Αναζήτηση με το όνομα αρχείου."
+
+msgid "Searches for photos by number of views."
+msgstr "Αναζήτηση για φωτογραφίες με τον αριθμό θεάσεων."
+
+msgid "Searches only for photos with the given words in title or description."
+msgstr "Αναζήτηση μόνο για τις φωτογραφίες με τις δοθείσες λέξεις στον τίτλο ή την περιγραφή."
+
+msgid "Searches only in tag names without looking at photo titles or descriptions."
+msgstr "Αναζήτηση μόνο στα ονόματα ετικετών χωρίς έρευνα στους τίτλους ή τις περιγραφές φωτογραφιών."
+
+msgid "Searches photos by file size."
+msgstr "Αναζήτηση φωτογραφιών με το μέγεθος."
+
+msgid "Searches photos by its numeric identifier in Piwigo."
+msgstr "Αναζήτηση φωτογραφιών με την αριθμητική τους ταυτοποίηση στο Piwigo."
+
+msgid "Searches photos by posted date."
+msgstr "Αναζήτηση φωτογραφιών με την ημερομηνία δημοσίευσης."
+
+msgid "Searches photos by rating."
+msgstr "Αναζήτηση φωτογραφιών με την αξιολόγηση."
+
+msgid "Searches photos by size in pixels."
+msgstr "Αναζήτηση φωτογραφιών με το μέγεθος σε pixels."
+

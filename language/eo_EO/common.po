@@ -1,0 +1,1178 @@
+# Piwigo translation — eo_EO
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: eo_EO\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Language-Name: Esperanto\n"
+"X-Piwigo-Country: Esperantio\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: eo\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "%d Kb"
+msgstr "%d ko"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d fotaro ĝisdatigita"
+msgstr[1] "%d fotaroj ĝisdatigitaj"
+
+msgid "%d comment to validate"
+msgstr "%d validigenda komento"
+
+msgid "%d comments to validate"
+msgstr "%d validigendaj komentoj"
+
+msgid "%d new comment"
+msgstr "%d nova komento"
+
+msgid "%d new comments"
+msgstr "%d novaj komentoj"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d komento"
+msgstr[1] "%d komentoj"
+
+msgid "%d hit"
+msgid_plural "%d hits"
+msgstr[0] "vidita %d foje"
+msgstr[1] "vidita %d foje"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "%d nova foto"
+msgstr[1] "%d novaj fotoj"
+
+msgid "%d new user"
+msgstr "%d nova uzanto"
+
+msgid "%d new users"
+msgstr "%d novaj uzantoj"
+
+msgid "About"
+msgstr "Pri"
+
+msgid "All tags"
+msgstr "Ĉiuj etikedoj"
+
+msgid "Any tag"
+msgstr "Iu ajn etikedo"
+
+msgid "At least one listed rule must be satisfied."
+msgstr "Almenaŭ unu regulo devas kongrui."
+
+msgid "Albums"
+msgstr "Fotaroj"
+
+msgid "Album"
+msgstr "Fotaro"
+
+msgid "Close this window"
+msgstr "Fermi la fenestron"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "Plena RSS-fluo (fotoj kaj komentoj)"
+
+msgid "Confirm Password"
+msgstr "Konfirmi pasvorton"
+
+msgid "Connection settings"
+msgstr "Konekta agordo"
+
+msgid "Login"
+msgstr "Ensaluti"
+
+msgid "Contact webmaster"
+msgstr "Kontakti la retestron"
+
+msgid "Create a new account"
+msgstr "Krei novan konton"
+
+msgid "Created on"
+msgstr "Kreita je la "
+
+msgid "Creation date"
+msgstr "Kreita dato"
+
+msgid "Current password is wrong"
+msgstr "Neĝusta pasvorto"
+
+msgid "Dimensions"
+msgstr "Grandeco"
+
+msgid "Display"
+msgstr "Ekrano"
+
+msgid "Each listed rule must be satisfied."
+msgstr "Ĉiuj reguloj devas kongrui"
+
+msgid "Email address"
+msgstr "Retadreso"
+
+msgid "Enter your personnal informations"
+msgstr "Entajpu viajn personajn informojn"
+
+msgid "Error sending email"
+msgstr "Eraro okazis dum sendo de la retmesaĝo"
+
+msgid "File name"
+msgstr "Dosiernomo"
+
+msgid "File"
+msgstr "Dosiero"
+
+msgid "Filesize"
+msgstr "Dosierpezo"
+
+msgid "Filter and display"
+msgstr "Filtri kaj surekranigi"
+
+msgid "Filter"
+msgstr "Filtrilo"
+
+msgid "Forgot your password?"
+msgstr "Ĉu vi forgesis vian pasvorton?"
+
+msgid "Go through the gallery as a visitor"
+msgstr "Trairi la galerion kiel vizitanto"
+
+msgid "Help"
+msgstr "Helpo"
+
+msgid "Identification"
+msgstr "Identigado"
+
+msgid "Photos only RSS feed"
+msgstr "Nur fota RSS-fluo"
+
+msgid "Keyword"
+msgstr "Ŝlosilvorto"
+
+msgid "Links"
+msgstr "Ligiloj"
+
+msgid "N/A"
+msgstr "ne disponeblas"
+
+msgid "New on %s"
+msgstr "Nova je la %s"
+
+msgid "Notification"
+msgstr "Sciigo"
+
+msgid "Number of items"
+msgstr "Nombro de eroj"
+
+msgid "Original dimensions"
+msgstr "Originala grandeco"
+
+msgid "Password forgotten"
+msgstr "Forgesita pasvorto"
+
+msgid "Password"
+msgstr "Pasvorto"
+
+msgid "Post date"
+msgstr "Dato de aldonado"
+
+msgid "Posted on"
+msgstr "Aldonita je la"
+
+msgid "Profile"
+msgstr "Profilo"
+
+msgid "Quick connect"
+msgstr "Rapida konekto"
+
+msgid "RSS feed"
+msgstr "RSS-fluo"
+
+msgid "Register"
+msgstr "Registri"
+
+msgid "Registration"
+msgstr "Registrado"
+
+msgid "Related tags"
+msgstr "Ligitaj etikedoj"
+
+msgid "Reset"
+msgstr "Rekomenci"
+
+msgid "Retrieve password"
+msgstr "Ricevi pasvorton"
+
+msgid "Search rules"
+msgstr "Serĉadaj reguloj"
+
+msgid "Search tags"
+msgstr "Serĉi etikedojn"
+
+msgid "Search"
+msgstr "Serĉi"
+
+msgid "display available tags"
+msgstr "Montri la disponeblajn etikedojn"
+
+msgid "Since"
+msgstr "De"
+
+msgid "Sort by"
+msgstr "Ordigi laŭ"
+
+msgid "Sort order"
+msgstr "Ordigo"
+
+msgid "Tag"
+msgstr "Etikedo"
+
+msgid "Tags"
+msgstr "Etikedoj"
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "La RSS-fluo sciigas pri eventoj de la galerio: novaj fotoj, ĝisdatigitaj fotaroj, novaj komentoj de uzantoj. Tio uziĝas per RSS-legilo."
+
+msgid "Unknown feed identifier"
+msgstr "Nekonata fadena identigilo"
+
+msgid "User comments"
+msgstr "Uzantaj komentoj"
+
+msgid "Username"
+msgstr "Uzantnomo"
+
+msgid "Visits"
+msgstr "Vizitoj"
+
+msgid "Webmaster"
+msgstr "Retestro"
+
+msgid "Week %d"
+msgstr "Semajno %d"
+
+msgid "About Piwigo"
+msgstr "Pri Piwigo"
+
+msgid "You are not authorized to access the requested page"
+msgstr "Vi ne rajtas legi tiun paĝon. Forfikiĝu!"
+
+msgid "add this photo to your favorites"
+msgstr "Aldoni tiun foton al via legosigno"
+
+msgid "Administration"
+msgstr "Administrado"
+
+msgid "all"
+msgstr "ĉio"
+
+msgid "ascending"
+msgstr "kreskanta"
+
+msgid "author(s) : %s"
+msgstr "aŭtoro(j): %s"
+
+msgid "Expand all albums"
+msgstr "Etendi ĉiujn fotarojn"
+
+msgid "posted after %s (%s)"
+msgstr "aldonita post la %s (%s)"
+
+msgid "posted before %s (%s)"
+msgstr "aldonita antaŭ la %s (%s)"
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "aldonita inter la %s (%s) kaj la %s (%s)"
+
+msgid "posted on %s"
+msgstr "aldonita je la %s"
+
+msgid "Best rated"
+msgstr "Plej bonaj"
+
+msgid "display best rated photos"
+msgstr "Montri la plej bonajn fotojn"
+
+msgid "Calendar"
+msgstr "Kalendaro"
+
+msgid "All"
+msgstr "Ĉio"
+
+msgid "display each day with photos, month per month"
+msgstr "Montri ĉiujn tagojn, laŭ monatoj"
+
+msgid "View"
+msgstr "Vido"
+
+msgid "chronology_monthly_calendar"
+msgstr "Monata kalendaro"
+
+msgid "chronology_monthly_list"
+msgstr "Monata listo"
+
+msgid "chronology_weekly_list"
+msgstr "Semajna listo"
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "Musklaku tien se via foliumilo ne mem plusendas vin."
+
+msgid "comment date"
+msgstr "dato de la komento"
+
+msgid "Comment"
+msgstr "Komento"
+
+msgid "Your comment has been registered"
+msgstr "Via komento estis registrita"
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "Kontraŭ-fekula sistemo: bonvolu pacienciĝi antaŭ aldoni novan komenton"
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "Via komento ne validiĝis ĉar ĝi ne kongruas al nia striktaj reguloj"
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "Administranto devas validigi vian komenton antaŭ ke ĝi iĝu videbla."
+
+msgid "This login is already used by another user"
+msgstr "Tiu uzanta nomo jam ekzistas"
+
+msgid "Comments"
+msgstr "Komentoj"
+
+msgid "Add a comment"
+msgstr "Aldoni komenton"
+
+msgid "created after %s (%s)"
+msgstr "kreita post la %s (%s)"
+
+msgid "created before %s (%s)"
+msgstr "kreita antaŭ la %s (%s)"
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "kreita antaŭ la %s (%s) kaj la %s (%s)"
+
+msgid "created on %s"
+msgstr "kreita la %s"
+
+msgid "Your Gallery Customization"
+msgstr "Personigado de via galerio "
+
+msgid "Default"
+msgstr "Apriora"
+
+msgid "delete this photo from your favorites"
+msgstr "Forigi tiun foton el viaj legosignoj"
+
+msgid "Delete"
+msgstr "Forigi"
+
+msgid "descending"
+msgstr "malkreskante"
+
+msgid "edit"
+msgstr "redakti"
+
+msgid "wrong date"
+msgstr "maltaŭga dato"
+
+msgid "excluded"
+msgstr "eksigita"
+
+msgid "Your favorites"
+msgstr "Miaj legosignoj"
+
+msgid "display your favorites photos"
+msgstr "montri fotojn de miaj legosignoj"
+
+msgid "Favorites"
+msgstr "Legosignoj"
+
+msgid "First"
+msgstr "Unua"
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "Ni ŝlosis la galerion por plibonigi ĝin, bonvolu reveni poste."
+
+msgid "Page generated in"
+msgstr "Paĝo kreita en"
+
+msgid "guest"
+msgstr "Vizitanto"
+
+msgid "Hello"
+msgstr "Saluton"
+
+msgid "available for administrators only"
+msgstr "disponeblaj nur por la administrantoj"
+
+msgid "display this album"
+msgstr "montri tiun fotaron"
+
+msgid "display last user comments"
+msgstr "Montri la lasatjn komentoj"
+
+msgid "search"
+msgstr "serĉi"
+
+msgid "Home"
+msgstr "Akceptejo"
+
+msgid "in this album"
+msgstr "en tiu fotaro"
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] "en %d sub-fotaro"
+msgstr[1] "en %d sub-fotaroj"
+
+msgid "included"
+msgstr "inkluzivita"
+
+msgid "Invalid password!"
+msgstr "Nevalida pasvorto!"
+
+msgid "Language"
+msgstr "Lingvo"
+
+msgid "last %d days"
+msgstr "%d lastaj tagoj"
+
+msgid "Last"
+msgstr "Lasta"
+
+msgid "Logout"
+msgstr "Elsaluti"
+
+msgid "obligatory"
+msgstr "devigata"
+
+msgid "display a calendar by creation date"
+msgstr "montri kalendaron laŭ kreigita dato"
+
+msgid "display all photos in all sub-albums"
+msgstr "montri ĉiujn fotojn en ĉiuj sub-fotaroj"
+
+msgid "return to normal view mode"
+msgstr "reiri al la normala vido"
+
+msgid "display a calendar by posted date"
+msgstr "montri kalendaron laŭ aldonita dato"
+
+msgid "Most visited"
+msgstr "Plej ofte vizitita"
+
+msgid "display most visited photos"
+msgstr "montri la plej ofte vizititajn fotojn"
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "Nombro de fotoj en unu paĝo devas esti ne-nula nombro"
+
+msgid "Number of photos per page"
+msgstr "Nombro de miniaturoj sur paĝo"
+
+msgid "Unknown identifier"
+msgstr "Nekonata identigilo"
+
+msgid "New password"
+msgstr "Nova pasvorto"
+
+msgid "Rate this photo"
+msgstr "Taksu tiun foton"
+
+msgid "Next"
+msgstr "Venonta"
+
+msgid "no rate"
+msgstr "neniu taksado"
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "Montri nur fotojn aldonitaj dum la lasta %d tago."
+msgstr[1] "Montri nur fotojn aldonitaj dum la lastaj %d tagoj."
+
+msgid "password updated"
+msgstr "ĝisdatigita pasvorto"
+
+msgid "Recent period must be a positive integer value"
+msgstr "Tiu periodo devas esti pozitiva entjera nombro"
+
+msgid "photo"
+msgstr "foto"
+
+msgid "Click on the photo to see it in high definition"
+msgstr "Musklaku la foton por grandigi ĝin (aŭ proksimiĝu la ekranon)"
+
+msgid "Show file metadata"
+msgstr "Montri dosiermetadatumojn"
+
+msgid "Powered by"
+msgstr "Potencigita per"
+
+msgid "Preferences"
+msgstr "Agordo"
+
+msgid "Previous"
+msgstr "Antaŭa"
+
+msgid "Random photos"
+msgstr "Hazardaj fotoj"
+
+msgid "display a set of random photos"
+msgstr "montri hazarde plurajn fotojn"
+
+msgid "Recent albums"
+msgstr "Lastaj fotaroj"
+
+msgid "display recently updated albums"
+msgstr "montri la plej freŝajn fotarojn"
+
+msgid "Recent period"
+msgstr "Lasta periodo"
+
+msgid "Recent photos"
+msgstr "Lastaj fotoj"
+
+msgid "display most recent photos"
+msgstr "montri la plej lastajn fotojn"
+
+msgid "Redirection..."
+msgstr "Alidirektado..."
+
+msgid "Please, enter a login"
+msgstr "Bonvolu entajpi salutnomon"
+
+msgid "login mustn't end with a space character"
+msgstr "Uzantnomo ne finiĝu per spaceto"
+
+msgid "login mustn't start with a space character"
+msgstr "Uzantnomo ne komenciĝu per spaceto"
+
+msgid "this login is already used"
+msgstr "Tiu uzantnomo jam uziĝas"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "La retadreso devas simili al xxx@yyy.eee (ekzemple: zamenhof@bialistoko.pl)"
+
+msgid "Auto login"
+msgstr "Aŭtomata konekto"
+
+msgid "remove this tag from the list"
+msgstr "forigi tiun etikedon de la listo"
+
+msgid "representative"
+msgstr "delegito"
+
+msgid "Search for Author"
+msgstr "Serĉi aŭtoron"
+
+msgid "Search in albums"
+msgstr "Serĉi en la fotaroj"
+
+msgid "Date"
+msgstr "Dato"
+
+msgid "End-Date"
+msgstr "Fin-dato"
+
+msgid "Kind of date"
+msgstr "Dato-tipo"
+
+msgid "Search for words"
+msgstr "Serĉi vorton"
+
+msgid "Search for all terms"
+msgstr "Serĉi ĉiujn vortojn"
+
+msgid "Empty query. No criteria has been entered."
+msgstr "Malplena demando, neniu kritero entajpigita."
+
+msgid "Search results"
+msgstr "Serĉa rezulto"
+
+msgid "Search in sub-albums"
+msgstr "Serĉi en la sub-fotaroj"
+
+msgid "searched words : %s"
+msgstr "serĉitaj vortoj: %s"
+
+msgid "Contact"
+msgstr "Kontakto"
+
+msgid "set as album representative"
+msgstr "Elekti kiel delegito de tiu fotaro"
+
+msgid "Show number of comments"
+msgstr "Montri la nombron de komentoj"
+
+msgid "Show number of hits"
+msgstr "Montri la nombron de vidoj"
+
+msgid "slideshow"
+msgstr "bildoserio"
+
+msgid "stop the slideshow"
+msgstr "halti la bildoserion"
+
+msgid "Specials"
+msgstr "Apartaj"
+
+msgid "SQL queries in"
+msgstr "SQL peto en"
+
+msgid "display only recently posted photos"
+msgstr "montri nur la lastaj fotoj"
+
+msgid "return to the display of all photos"
+msgstr "reiri al ĉiuj fotoj"
+
+msgid "the beginning"
+msgstr "la komenco"
+
+msgid "Thumbnails"
+msgstr "Miniaturo"
+
+msgid "Menu"
+msgstr "Menuo"
+
+msgid "A comment on your site"
+msgstr "Komento sur via retejo"
+
+msgid "today"
+msgstr "Hodiaŭ"
+
+msgid "Update your rating"
+msgstr "Ĝisdatigu vian taksadon"
+
+msgid "the username must be given"
+msgstr "vi devas indiki la uzantnomon"
+
+msgid "useful when password forgotten"
+msgstr "helpinda se vi forgesas vian pasvorton"
+
+msgid "Quick search"
+msgstr "Rapida serĉo"
+
+msgid "Connected user: %s"
+msgstr "Konektita uzanto: %s"
+
+msgid "IP: %s"
+msgstr "IP: %s"
+
+msgid "Browser: %s"
+msgstr "Foliumilo: %s"
+
+msgid "Author: %s"
+msgstr "Aŭtoro: %s"
+
+msgid "Comment: %s"
+msgstr "Komento: %s"
+
+msgid "Comment by %s"
+msgstr "Komentis %s"
+
+msgid "User: %s"
+msgstr "Uzanto: %s"
+
+msgid "Email: %s"
+msgstr "Retadreso: %s"
+
+msgid "Admin: %s"
+msgstr "Administrado: %s"
+
+msgid "Registration of %s"
+msgstr "Registris %s"
+
+msgid "Album: %s"
+msgstr "Fotaro: %s"
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "Malbona stato por la uzanto \"Vizitanto\", uzo de la apriora stato. Bonvolu averti la retestron."
+
+msgid "this email address is already in use"
+msgstr "tiu retadreso jam uziĝas"
+
+msgid "Album results for"
+msgstr "Rezulto de fotaro por"
+
+msgid "Tag results for"
+msgstr "Rezulto de la etikedoj por"
+
+msgid "from %s to %s"
+msgstr "de %s al %s"
+
+msgid "Play of slideshow"
+msgstr "Legi la bildoserion"
+
+msgid "Pause of slideshow"
+msgstr "Paŭzi la bildserion"
+
+msgid "Repeat the slideshow"
+msgstr "Ripeti la bildserion"
+
+msgid "Not repeat the slideshow"
+msgstr "Ne ripeti la bildoserion"
+
+msgid "Reduce diaporama speed"
+msgstr "Malrapidigi la bildoserion"
+
+msgid "Accelerate diaporama speed"
+msgstr "Rapidigi la bildoserion"
+
+msgid "Submit"
+msgstr "Validigi"
+
+msgid "Yes"
+msgstr "Jes"
+
+msgid "No"
+msgstr "Ne"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "%d foto"
+msgstr[1] "%d fotoj"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "%d foto ankaŭ ligiĝas al la kurantaj etikedoj"
+msgstr[1] "%d fotoj ankaŭ ligiĝas al la kurantaj etikedoj"
+
+msgid "display photos linked to this tag"
+msgstr "montri fotojn ligita al tiu etikedo"
+
+msgid "photos posted during the last %d days"
+msgstr "fotoj aldonitaj tiuj lastaj %d tagoj"
+
+msgid "Piwigo Help"
+msgstr "Helpo de Piwigo"
+
+msgid "Rank"
+msgstr "Rango"
+
+msgid "group by letters"
+msgstr "grupigi per literoj"
+
+msgid "letters"
+msgstr "literoj"
+
+msgid "show tag cloud"
+msgstr "montri etikedoj nube"
+
+msgid "cloud"
+msgstr "nubo"
+
+msgid "Reset to default values"
+msgstr "Reŝarĝi la apriorajn valuojn"
+
+msgid "delete all photos from your favorites"
+msgstr "Forigi ĉiujn fotojn el viaj legosignoj"
+
+msgid "Sent by"
+msgstr "Senditaj de"
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "La kuketoj ne disponeblas sur via komputilo. Aktivu ilin por ensaluti."
+
+msgid "Edit a comment"
+msgstr "Redakti komenton"
+
+msgid "Are you sure?"
+msgstr "Ĉu vi certas?"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) Tiu komento validigendas"
+
+msgid "Welcome"
+msgstr "Bonvenon"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "Bonvenon en via Galerio Piwigo!"
+
+msgid "... or browse your empty gallery"
+msgstr "... aŭ foliumu en via malplenan galerion"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "... aŭ kaŝu tiun mesaĝon, mi mem elturniĝos"
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "Saluton %s, via galerio Piwigo estas malplena!"
+
+msgid "I want to add photos"
+msgstr "Mi deziras aldoni fotojn"
+
+msgid "Manage this user comment: %s"
+msgstr "Mastrumi tiun uzantan komenton: %s"
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "Retadreso mankas. Bonvolu specifi retadreson."
+
+msgid "This author modified following comment:"
+msgstr "Tiu aŭtoro ŝanĝis la jenan komenton:"
+
+msgid "This author removed the comment with id %d"
+msgstr "Tiu aŭtoro forviŝis la komenton kies identigilo estas  %d"
+
+msgid "html tags are not allowed in login"
+msgstr "html etikedoj ne estas rajtigitaj en la salutnomo"
+
+msgid "Invalid username or email"
+msgstr "Nevalida salutnomo aŭ retadreso"
+
+msgid "Password reset is not allowed for this user"
+msgstr "La renovigo de la pasvorto ne estas permesita por tiu uzanto"
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "La uzanto \"%s\" ne havas retadreson, la renovigo de ŝlia pasvorto ne eblas"
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "Iu petis renovigon de la pasvorto por la jena uzanto: "
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "Uzanto \"%s\" ĉe la galerio  %s"
+
+msgid "To reset your password, visit the following address:"
+msgstr "Por renovigi vian pasvorton, musklaku la jenan ligilon:"
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "Se vi ĵus eraris, nur ignoru tiun mesaĝon kaj nenio okazos."
+
+msgid "Password Reset"
+msgstr "Renovigo de via pasvorto"
+
+msgid "Check your email for the confirmation link"
+msgstr "Kontrolu viajn retmesaĝojn por trovi la konfirman ligilon"
+
+msgid "Invalid key"
+msgstr "Nevalida ŝlosilo"
+
+msgid "The passwords do not match"
+msgstr "La pasvortoj ne kongruas"
+
+msgid "Your password has been reset"
+msgstr "Via pasvorto estis renovigita"
+
+msgid "Return to home page"
+msgstr "Reiri al la akceptejo"
+
+msgid "Please enter your username or email address."
+msgstr "Bonvolu entajpi vian salutnomon aŭ vian retadreson."
+
+msgid "You will receive a link to create a new password via email."
+msgstr "Vi ricevos retmesaĝe musklakendan ligilon por renovigi vian pasvorton."
+
+msgid "Username or email"
+msgstr "Salutnomon aŭ retadreso"
+
+msgid "Change my password"
+msgstr "Ŝanĝi mian pasvorton"
+
+msgid "Enter your new password below."
+msgstr "Entajpu suben vian novan pasvorton."
+
+msgid "Author"
+msgstr "Aŭtoro"
+
+msgid "Rating score"
+msgstr "Poento"
+
+msgid "EXIF Metadata"
+msgstr "Datumoj EXIF"
+
+msgid "IPTC Metadata"
+msgstr "Datumoj IPTC"
+
+msgid "Download this file"
+msgstr "Elŝuti tiun dosieron"
+
+msgid "Download"
+msgstr "Elŝuti"
+
+msgid "Edit"
+msgstr "Redakti"
+
+msgid "Hello %s,"
+msgstr "Saluton %s,"
+
+msgid "Search by date"
+msgstr "Serĉi laŭ dato"
+
+msgid "Search for any term"
+msgstr "Serĉi por iu ajn vorto"
+
+msgid "Send my connection settings by email"
+msgstr "Sendi mian konektan agordon per retmesaĝo"
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "Vi sukcese registris, vi baldaŭ ricevos retmesaĝe viajn konektajn agordojn. Bonvenon!"
+
+msgid "Username modification"
+msgstr "ŝanĝo de uzantnomo"
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "Via uzantnomo sukcese ŝanĝiĝis por: %s"
+
+msgid "square"
+msgstr "Kvadrata"
+
+msgid "thumb"
+msgstr "miniaturo"
+
+msgid "small"
+msgstr "Malgranda"
+
+msgid "medium"
+msgstr "Mezgranda"
+
+msgid "large"
+msgstr "Larĝa"
+
+msgid "xlarge"
+msgstr "Larĝega"
+
+msgid "xxlarge"
+msgstr "Giganta"
+
+msgid "Original"
+msgstr "Originala"
+
+msgid "Thank you for registering at %s!"
+msgstr "Dankon pro via registrado ĉe %s!"
+
+msgid "Here are your connection settings"
+msgstr "Jen viaj konektaj agordoj"
+
+msgid "Password: %s"
+msgstr "Pasvorto: %s"
+
+msgid "Username: %s"
+msgstr "Uzantnomo: %s"
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "Se vi erare ricevis tiun mesaĝon, bonvolu kontakti na %s"
+
+msgid "Show latest comments first"
+msgstr "Montru unue la plej freŝajn komentojn"
+
+msgid "Show oldest comments first"
+msgstr "Montru unue la plej malnovaj komentojn"
+
+msgid "View in"
+msgstr "Montrado"
+
+msgid "Mobile"
+msgstr "Portebla"
+
+msgid "Desktop"
+msgstr "Komputila"
+
+msgid "Photo sizes"
+msgstr "Grandeco de la fotoj"
+
+msgid "2small"
+msgstr "XXS - malgrandega"
+
+msgid "xsmall"
+msgstr "Tre malgranda"
+
+msgid "File name, A &rarr; Z"
+msgstr "Dosiernomo, A &rarr; Z"
+
+msgid "File name, Z &rarr; A"
+msgstr "Dosiernomo, Z &rarr; A"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "Fota titolo, A &rarr; Z"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "Fota titolo, Z &rarr; A"
+
+msgid "Date created, new &rarr; old"
+msgstr "Kreita dato, nova &rarr; malnova"
+
+msgid "Date created, old &rarr; new"
+msgstr "Kreita dato, malnova &rarr; nova"
+
+msgid "Date posted, new &rarr; old"
+msgstr "Aldonita dato, nova &rarr; malnova"
+
+msgid "Date posted, old &rarr; new"
+msgstr "Aldonita dato, malnova &rarr; nova"
+
+msgid "Rating score, high &rarr; low"
+msgstr "Poento, alta &rarr; malalta"
+
+msgid "Rating score, low &rarr; high"
+msgstr "Poento, malalta &rarr; alta"
+
+msgid "Visits, high &rarr; low"
+msgstr "Vizitoj, alta &rarr; malalta"
+
+msgid "Visits, low &rarr; high"
+msgstr "Vizitoj, malalta &rarr; alta"
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "Identigilo, 1 &rarr; 9"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "Identigilo, 9 &rarr; 1"
+
+msgid "Manual sort order"
+msgstr "Permana ordigado"
+
+msgid "%d rate"
+msgid_plural "%d rates"
+msgstr[0] "%d taksado"
+msgstr[1] "%d taksado"
+
+msgid "Bad request"
+msgstr "Fuŝa peto"
+
+msgid "Forbidden"
+msgstr "Malpermesita"
+
+msgid "Page not found"
+msgstr "Ne trovebla paĝo"
+
+msgid "Permalink for album not found"
+msgstr "Daŭra ligilo por tiu fotaro ne troviĝas"
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "Piwigo trafis ne ripareblan eraron"
+
+msgid "Requested album does not exist"
+msgstr "Petita fotaro ne ekzistas"
+
+msgid "Requested tag does not exist"
+msgstr "Petita etikedo ne ekzistas"
+
+msgid "Email address is mandatory"
+msgstr "Retadreso estas deviga"
+
+msgid "Username is mandatory"
+msgstr "Uzantnomo estas deviga"
+
+msgid "mandatory"
+msgstr "deviga"
+
+msgid "Your website URL is invalid"
+msgstr "Via reteja URL ne validas."
+
+msgid "Website"
+msgstr "Retejo"
+
+msgid "Email"
+msgstr "Retmesaĝo"
+
+msgid "First Page"
+msgstr "Unua paĝo"
+
+msgid "Go back to the album"
+msgstr "Reiri al la fotaro"
+
+msgid "Last Page"
+msgstr "Lasta paĝo"
+
+msgid "Password is missing. Please enter the password."
+msgstr "Mankas pasvorto. Bonvolu redakti la pasvorton."
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Mankas konfirmado de pasvorto. Bonvolu konfirmi la elektitan pasvorton."
+
+msgid "%d photos per page"
+msgstr "%d fotoj sur ĉiu paĝo"
+
+msgid "Theme"
+msgstr "Temo"
+
+msgid "No results for"
+msgstr "Neniu rezulto por"
+
+msgid "Apply on properties"
+msgstr "Apliku al la ecoj"
+
+msgid "Photo description"
+msgstr "Fotopriskribo"
+
+msgid "Photo title"
+msgstr "Fototitolo"
+
+msgid "Album name, A &rarr; Z"
+msgstr "Fotara nomo, A &rarr; Z"
+
+msgid "Album name, Z &rarr; A"
+msgstr "Fotara nomo, Z &rarr; A"
+
+msgid "Link: %s"
+msgstr "Ligilo: %s"
+
+msgid "Your authentication key is no longer valid."
+msgstr "Via identigila ŝlosilo ne plu validas"
+
+msgid "generate random password"
+msgstr "generi hazardan pasvorton"
+
+msgid "Invalid username or password!"
+msgstr "Ne valida uzantnomo aŭ pasvorto!"
+
+msgid "piwigo_day_0"
+msgstr "Dimanĉo"
+
+msgid "piwigo_day_1"
+msgstr "Lundo"
+
+msgid "piwigo_day_2"
+msgstr "Mardo"
+
+msgid "piwigo_day_3"
+msgstr "Merkredo"
+
+msgid "piwigo_day_4"
+msgstr "Ĵaŭdo"
+
+msgid "piwigo_day_5"
+msgstr "Vendredo"
+
+msgid "piwigo_day_6"
+msgstr "Sabato"
+
+msgid "piwigo_month_10"
+msgstr "Oktobro"
+
+msgid "piwigo_month_11"
+msgstr "Novembro"
+
+msgid "piwigo_month_12"
+msgstr "Decembro"
+
+msgid "piwigo_month_1"
+msgstr "Januaro"
+
+msgid "piwigo_month_2"
+msgstr "Februaro"
+
+msgid "piwigo_month_3"
+msgstr "Marto"
+
+msgid "piwigo_month_4"
+msgstr "Aprilo"
+
+msgid "piwigo_month_5"
+msgstr "Majo"
+
+msgid "piwigo_month_6"
+msgstr "Junio"
+
+msgid "piwigo_month_7"
+msgstr "Julio"
+
+msgid "piwigo_month_8"
+msgstr "Aŭgusto"
+
+msgid "piwigo_month_9"
+msgstr "Septembro"
+

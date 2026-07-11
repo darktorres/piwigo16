@@ -1,0 +1,143 @@
+# Piwigo translation — is_IS
+# Source: install.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: is_IS\n"
+"Plural-Forms: nplurals=2; plural=(n % 10 != 1 || n % 100 == 11);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "user password given by your host provider"
+msgstr "notandalykilorð útvegað af hýsingaraðila þínum"
+
+msgid "verification"
+msgstr "sannprófun"
+
+msgid "webmaster login can't contain characters ' or \""
+msgstr "innskráning vefstjóra má ekki innihalda stafina ' eða \""
+
+msgid "user login given by your host provider"
+msgstr "notandainnskráning útveguð af hýsingaraðila þínum"
+
+msgid "please enter your password again"
+msgstr "vinsamlegast sláðu inn lykilorðið þitt aftur"
+
+msgid "localhost or other, supplied by your host provider"
+msgstr "localhost eða annað, útvegað af hýsingaraðila þínum"
+
+msgid "enter a login for webmaster"
+msgstr "vinsamlegast sláðu inn notandanafn vefstjóra"
+
+msgid "database tables names will be prefixed with it (enables you to manage better your tables)"
+msgstr "gagnagrunnstöfluheiti verða með forskeyti (gerir þér kleift að stjórna töflunum þínum betur)"
+
+msgid "also given by your host provider"
+msgstr "einnig útvegað af hýsingaraðila þínum"
+
+msgid "You may referer to your hosting provider's support and see how you could switch to PHP 5 by yourself."
+msgstr "Þú ættir að leita til hýsingaraðila þíns með þjónustu og sjá hvernig þú getur skipt yfir í PHP 5.3 sjálfur."
+
+msgid "Sorry!"
+msgstr "Því miður!"
+
+msgid "Start Install"
+msgstr "Byrjaðu uppsetningu"
+
+msgid "Try to configure PHP 5"
+msgstr "Reyndu að stilla PHP 5.3"
+
+msgid "User"
+msgstr "Notandi"
+
+msgid "Visitors will be able to contact site administrator with this mail"
+msgstr "Gestir munu geta notað þetta netfang til að hafa samband við síðustjórann"
+
+msgid "Welcome to my photo gallery"
+msgstr "Velkomin í myndagalleríið mitt"
+
+msgid "Welcome to your new installation of Piwigo!"
+msgstr "Velkomin í nýju uppsetninguna þína á Piwigo!"
+
+msgid "You can download the config file and upload it to local/config directory of your installation."
+msgstr "Þú getur halað niður stillingarskránni og hlaðið henni upp í local/config möppuna í uppsetningunni þinni."
+
+msgid "Piwigo was not able to configure PHP 5."
+msgstr "Piwigo gat ekki stillt PHP 5.3"
+
+msgid "Piwigo may try to switch your configuration to PHP 5 by creating or modifying a .htaccess file."
+msgstr "Piwigo gæti reynt að skipta þinni stillingu yfir í PHP 5.3 með því að búa til eða breyta .htaccess file."
+
+msgid "PHP version %s required (you are running on PHP %s)"
+msgstr "PHP útgáfu %s krafist (þú keyrir á PHP %s)"
+
+msgid "PHP 5 is required"
+msgstr "PHP 5.3 er krafist"
+
+msgid "Note you can change your configuration by yourself and restart Piwigo after that."
+msgstr "Athugaðu að þú getur breytt stillingum þínum sjálfur og endurræst síðan Piwigo."
+
+msgid "Need help ? Ask your question on <a href=\"%s\">Piwigo message board</a>."
+msgstr "Þarftu hjálp? Spurðu spurninga á <a href=\"%s\">Piwigo skilaboðaborði</a>."
+
+msgid "Keep it confidential, it enables you to access administration panel"
+msgstr "Haltu því í trúnaði, það gerir þér kleift að fá aðgang að stjórnborðinu"
+
+msgid "Just another Piwigo gallery"
+msgstr "Bara annað Piwigo gallerí"
+
+msgid "It will be shown to the visitors. It is necessary for website administration"
+msgstr "Það verður sýnt gestum. Það er nauðsynlegt fyrir vefsíðustjórnun"
+
+msgid "It appears your webhost is currently running PHP %s."
+msgstr "Svo virðist sem vefhýsingaraðilinn þinn sé að keyra PHP %s."
+
+msgid "Installation"
+msgstr "Uppsetning"
+
+msgid "Host"
+msgstr "Hýsingaraðili"
+
+msgid "Hope to see you back soon."
+msgstr "Vona að sjá þig aftur fljótlega."
+
+msgid "Download the config file"
+msgstr "Sækja stillingarskrána"
+
+msgid "Don't hesitate to consult our forums for any help : %s"
+msgstr "Ekki hika við að leita ráða hjá spjallborðum okkar við að fá hjálp: %s"
+
+msgid "Default gallery language"
+msgstr "Sjálfgefið tungumál gallerísins"
+
+msgid "Database table prefix"
+msgstr "Gagnagrunnstöflur forskeyti"
+
+msgid "Database name"
+msgstr "Heiti gagnagrunns"
+
+msgid "Database configuration"
+msgstr "Uppsetning gagnagrunns"
+
+msgid "Creation of config file local/config/database.inc.php failed."
+msgstr "Ekki tókst að búa til stillingarskrána local/config/database.inc.php."
+
+msgid "Connection to server succeed, but it was impossible to connect to database"
+msgstr "Tenging við netþjón tókst, en tenging við gagnagrunninn var ekki möguleg"
+
+msgid "Congratulations, Piwigo installation is completed"
+msgstr "Til hamingju, Piwigo uppsetningu er lokið"
+
+msgid "Basic configuration"
+msgstr "Grunnstilling"
+
+msgid "Can't connect to server"
+msgstr "Get ekki tengst þjóninum"
+
+msgid "An alternate solution is to copy the text in the box above and paste it into the file \"local/config/database.inc.php\" (Warning : database.inc.php must only contain what is in the textarea, no line return or space character)"
+msgstr "Önnur lausn er að afrita textann í reitnum hér að ofan og líma hann inn í skrána \"local/config/database.inc.php\" (Viðvörun: database.inc.php má aðeins innihalda það sem er á textasvæðinu, engin línuskil eða stafabil)"
+
+msgid "Admin configuration"
+msgstr "Stjórnunarstillingar"
+

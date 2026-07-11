@@ -1,0 +1,143 @@
+# Piwigo translation — th_TH
+# Source: install.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: th_TH\n"
+"Plural-Forms: nplurals=1; plural=(0);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Installation"
+msgstr "การติดตั้ง"
+
+msgid "Basic configuration"
+msgstr "การตั้งค่าพื้นฐาน"
+
+msgid "Default gallery language"
+msgstr "กำหนดภาษาพื้นฐานสำหรับแกลลอรี่"
+
+msgid "Database configuration"
+msgstr "การตั้งค่าฐานข้อมูล"
+
+msgid "Admin configuration"
+msgstr "การตั้งค่าผู้ดูแลระบบ"
+
+msgid "Start Install"
+msgstr "เริ่มการติดตั้ง"
+
+msgid "It will be shown to the visitors. It is necessary for website administration"
+msgstr "มันจะแสดงส่วนนี้ไปยังผู้เยี่ยมชม. ซึ่งมันจำเป็นสำหรับผู้ดูแลระบบของเว็บไซต์"
+
+msgid "Connection to server succeed, but it was impossible to connect to database"
+msgstr "เชื่อมต่อเซิร์ฟเวอร์เรียบร้อยแล้ว, แต่ไม่สามารถเชื่อมต่อฐานข้อมูลได้"
+
+msgid "Can't connect to server"
+msgstr "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้"
+
+msgid "Host"
+msgstr "เซิร์ฟเวอร์"
+
+msgid "User"
+msgstr "ชื่อผู้ใช้งาน"
+
+msgid "user login given by your host provider"
+msgstr "ชื่อผู้ใช้งานจะได้รับจากผู้ให้บริการเซิร์ฟเวอร์"
+
+msgid "user password given by your host provider"
+msgstr "รหัสผ่านของผู้ใช้งานจะได้รับจากผู้ให้บริการเซิร์ฟเวอร์"
+
+msgid "Database name"
+msgstr "ชื่อฐานข้อมูล"
+
+msgid "also given by your host provider"
+msgstr "ซึ่งจะได้รับจากผู้ให้บริการเซิร์ฟเวอร์ของคุณ"
+
+msgid "Database table prefix"
+msgstr "คำนำหน้าตารางฐานข้อมูล"
+
+msgid "database tables names will be prefixed with it (enables you to manage better your tables)"
+msgstr "ชื่อฐานข้อมูลจะถูกกำกับด้วยคำนำหน้าตารางฐานข้อมูล ที่คุณได้กำหนดไว้  (หากคุณกำหนดไว้ มันจะง่ายต่อการจัดการฐานข้อมูล)"
+
+msgid "enter a login for webmaster"
+msgstr "กำหนดชื่อในการเข้าสู่ระบบสำหรับเว็บมาสเตอร์"
+
+msgid "webmaster login can't contain characters ' or \""
+msgstr "ชื่อเข้าสู่ระบบจะต้องไม่ประกอบด้วยเครื่องหมาย ' หรือ \""
+
+msgid "please enter your password again"
+msgstr "กรุณากรอกรหัสผ่านอีกครั้ง"
+
+msgid "Keep it confidential, it enables you to access administration panel"
+msgstr "โปรดเก็บไว้เป็นความลับ, เพราะมันสามารถใช้เพื่อเข้าถึงหน้าการจัดการระบบ Piwigo แกลลอรี่ ของคุณได้"
+
+msgid "Password [confirm]"
+msgstr "รหัสผ่าน [ยืนยัน]"
+
+msgid "verification"
+msgstr "การยืนยัน"
+
+msgid "Need help ? Ask your question on <a href=\"%s\">Piwigo message board</a>."
+msgstr "ต้องการความช่วยเหลือ? โปรดถามคำถามไว้ได้ที่ <a href=\"%s\">บอร์ดข้อความของ Piwigo</a>."
+
+msgid "Visitors will be able to contact site administrator with this mail"
+msgstr "ผู้เยี่ยมชมจะสามารถที่จะใช้อีเมลนี้ เพื่อติดต่อกับผู้ดูแลระบบได้"
+
+msgid "PHP 5 is required"
+msgstr "PHP 5.2 จำเป็นต้องมี"
+
+msgid "It appears your webhost is currently running PHP %s."
+msgstr "มันจะแสดงบนเวิร์ฟเวอร์ที่คุณใช้งานอยู่ ซึ่งคุณใช้งานอยู่บน PHP %s."
+
+msgid "Piwigo may try to switch your configuration to PHP 5 by creating or modifying a .htaccess file."
+msgstr "Piwigo อาจจะลองปรับการตั้งค่าของคุณไปยัง PHP 5.2 โดยการสร้างหรือแก้ไขปรับแต่งไฟล์ .htaccess."
+
+msgid "Note you can change your configuration by yourself and restart Piwigo after that."
+msgstr "จำไว้ว่า คุณสามารถเปลี่ยนแปลงการตั้งค่าในภายหลังได้ด้วยตนเอง."
+
+msgid "Try to configure PHP 5"
+msgstr "ลองตั้งค่า PHP 5.2 ใหม่"
+
+msgid "Sorry!"
+msgstr "เสียใจ!"
+
+msgid "Piwigo was not able to configure PHP 5."
+msgstr "Piwigo ไม่สามารถตั้งค่า PHP 5.2 ได้"
+
+msgid "You may referer to your hosting provider's support and see how you could switch to PHP 5 by yourself."
+msgstr "คุณควรติดต่อไปยังผู้ให้บริการเซิร์ฟเวอร์ของคุณเพื่อสอบถามว่า เซิร์ฟเวอร์ดังกล่าวนี้สนับสนุนการทำงานของ PHP 5.2 หรือว่าคุณสามารถสลับไปใช้งาน PHP 5 ด้วยตนเอง ได้หรือไม่อย่างไร."
+
+msgid "Hope to see you back soon."
+msgstr "หวังว่าจะได้เจอคุณเร็วๆ นี้."
+
+msgid "Congratulations, Piwigo installation is completed"
+msgstr "ยินดีด้วย, การติดตั้ง Piwigo ได้ดำเนินการเสร็จเรียบร้อยแล้ว"
+
+msgid "An alternate solution is to copy the text in the box above and paste it into the file \"local/config/database.inc.php\" (Warning : database.inc.php must only contain what is in the textarea, no line return or space character)"
+msgstr "คัดลอกข้อความในกล่องข้อความด้านล่าง เพื่อนำไปวางในไฟล์ \"local/config/database.inc.php\" (ข้อควรระวัง : ไฟล์ database.inc.php จะต้องเป็นข้อความที่ได้คัดลอกจากภายในกล่องข้อความเท่านั้น, จะต้องไม่มีบรรทัดเกิน หรืออักขระว่าง)"
+
+msgid "Creation of config file local/config/database.inc.php failed."
+msgstr "การสร้างไฟล์ตั้งค่า local/config/database.inc.php ล้มเหลว."
+
+msgid "Download the config file"
+msgstr "ดาวน์โหลดไฟล์ตั้งค่า"
+
+msgid "You can download the config file and upload it to local/config directory of your installation."
+msgstr "คุณสามารถดาวน์โหลดไฟล์ตั้งค่า และอัพไปไว้ยังไดเรกทอรี่ local/config ของ Piwigo."
+
+msgid "Just another Piwigo gallery"
+msgstr "เพียงแค่ Piwigo แกลลอรี่ เว็บหนึ่ง"
+
+msgid "Welcome to my photo gallery"
+msgstr "ยินดีต้อนรับสู่แกลลอรี่รูปภาพของฉัน"
+
+msgid "Don't hesitate to consult our forums for any help : %s"
+msgstr "อย่าลังเลที่จะปรึกษาหรือโพสคำถามในฟอรั่มของเรา เพื่อขอความช่วยเหลือใดๆ :%s"
+
+msgid "Welcome to your new installation of Piwigo!"
+msgstr "ยินดีต้อนรับสู่การติดตั้งใหม่ของ Piwigo!"
+
+msgid "localhost or other, supplied by your host provider"
+msgstr "localhost หรืออื่น ๆ ที่จัดทำโดยผู้ให้บริการโฮสต์ของคุณ"
+

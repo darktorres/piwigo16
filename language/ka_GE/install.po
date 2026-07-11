@@ -1,0 +1,140 @@
+# Piwigo translation — ka_GE
+# Source: install.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ka_GE\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Installation"
+msgstr "დაყენება"
+
+msgid "Basic configuration"
+msgstr "საბაზო გასწორება"
+
+msgid "Default gallery language"
+msgstr "პრიორიტეტული ენა"
+
+msgid "Database configuration"
+msgstr "მონაცემთა ბაზის გასწორება"
+
+msgid "Admin configuration"
+msgstr "ადმინისტრირების გასწორება"
+
+msgid "Start Install"
+msgstr "დავიწყოთ დაყენება"
+
+msgid "It will be shown to the visitors. It is necessary for website administration"
+msgstr "მას დაინახავენ მნახველები.საჭიროა საიტის ადმინისტრირებისათვის"
+
+msgid "Connection to server succeed, but it was impossible to connect to database"
+msgstr "წარმატებით დაუკავშირდით სერვერს,მაგრამ მონაცემთა ბაზასთან დაკავშირება შეუძლებელია"
+
+msgid "Can't connect to server"
+msgstr "შეუძლებელია სერვერთან დაკავშირება"
+
+msgid "Host"
+msgstr "MySQL ხოსტი"
+
+msgid "User"
+msgstr "მომხმარებელი"
+
+msgid "user login given by your host provider"
+msgstr "სახელი(ლოგინი),რომელიც პროვაიდერმა მოგცათ"
+
+msgid "user password given by your host provider"
+msgstr "პაროლი,რომელიც პროვაიდერმა მოგცათ"
+
+msgid "Database name"
+msgstr "მონაცემთა ბაზის სახელი"
+
+msgid "also given by your host provider"
+msgstr "ასევე გაიცემა პროვაიდერის მიერ.ხშირად ემთხვევა სახელს(ლოგინს)"
+
+msgid "Database table prefix"
+msgstr "ცხრილის პრეფიქსი მონაცემთა ბაზაში"
+
+msgid "database tables names will be prefixed with it (enables you to manage better your tables)"
+msgstr "ცხრილის სათაური დაიწყება ამითი(რაც გააადვილებს მის მომსახურებას)"
+
+msgid "enter a login for webmaster"
+msgstr "საჭიროა შეიყვანოთ ლოგინი ვებმასტერისათვის"
+
+msgid "webmaster login can't contain characters ' or \""
+msgstr "ლოგინი ვებმასტერისათვის არ უნდა შეიცავდეს სიმბოლოებს  ' ან \""
+
+msgid "please enter your password again"
+msgstr "პაროლი კიდევ ერთხელ"
+
+msgid "Keep it confidential, it enables you to access administration panel"
+msgstr "არ გაუმხილოთ არავის,იგი საჭიროა ადმინისტრირების პანელთან დასაშვებად"
+
+msgid "Password [confirm]"
+msgstr "გაიმეორეთ პაროლი"
+
+msgid "verification"
+msgstr "კიდევ ერთხელ,შეცდომის გამოსარიცხად"
+
+msgid "Need help ? Ask your question on <a href=\"%s\">Piwigo message board</a>."
+msgstr "გჭირდებათ დახმარება?დასვით შეკითხვები <a href=\"%s\">Piwigo–ს ფორუმზე</a>."
+
+msgid "Visitors will be able to contact site administrator with this mail"
+msgstr "გამოყენებული იქნება მომხმარებლების მიერ ადმინისტრატორთან კავშირისათვის"
+
+msgid "PHP 5 is required"
+msgstr "საჭიროა PHP 5.2"
+
+msgid "It appears your webhost is currently running PHP %s."
+msgstr "სავარაუდოდ თქვენი ხოსტინგი ამჟამად იყენებს PHP %s."
+
+msgid "Piwigo may try to switch your configuration to PHP 5 by creating or modifying a .htaccess file."
+msgstr "Piwigo–ს შეუძლია შეეცადოს გადართოს თქვენი კონფიგურაცია PHP 5.2, .htaccess ფაილს შექმნით ან შეცვლით."
+
+msgid "Note you can change your configuration by yourself and restart Piwigo after that."
+msgstr "აღნიშნეთ,რომ თქვენ შეგიძლიათ თქვენით შეცვალოთ კონფიგურაცია და ამის შემდეგ ახლიდან გაუშვით Piwigo."
+
+msgid "Try to configure PHP 5"
+msgstr "შვეცადოთ PHP 5.2 გადაკონფიგურირება"
+
+msgid "Sorry!"
+msgstr "ბოდიში!"
+
+msgid "Piwigo was not able to configure PHP 5."
+msgstr "Piwigo–ს არ შეუძლია PHP 5.2 გადაკონფიგურირება."
+
+msgid "You may referer to your hosting provider's support and see how you could switch to PHP 5 by yourself."
+msgstr "თქვენ უნდა მიმართოთ პროვაიდერს დახმარებისა და განმარტებისათვის ტუ როგორ მოახერხოთ PHP 5.2 ზე გადართვა."
+
+msgid "Hope to see you back soon."
+msgstr "იმედი გავქვს მალე შემოგვიერთდებით."
+
+msgid "Congratulations, Piwigo installation is completed"
+msgstr "გილოცავთ,Piwigo–ს დაყენება დამთავრებულია"
+
+msgid "An alternate solution is to copy the text in the box above and paste it into the file \"local/config/database.inc.php\" (Warning : database.inc.php must only contain what is in the textarea, no line return or space character)"
+msgstr "ალტერნატიული გადაწყვეტილება მდგომარეობს შემდეგში,შეგიძლიათ დააკოპიროთ ტექსტი მაღლა ბლოკიდან და ჩასვათ ამ ფაილში \"local/config/database.inc.php\"   (გაფრთხილება: database.inc.php უნდა შეიცავდეს მხოლოდ იმას რაც წერია textarea–ში, თავისუფალი ადგილების და დაბრუნების ხაზების გარეშე)"
+
+msgid "Creation of config file local/config/database.inc.php failed."
+msgstr "კონფიგურაციის ფაილის local/config/database.inc.php შექმნა არ მოხერხდა."
+
+msgid "Download the config file"
+msgstr "ავტვირთოთ კონფიგურაციის ფაილი"
+
+msgid "You can download the config file and upload it to local/config directory of your installation."
+msgstr "თქვენ შეგიძლიათ ატვირთოთ კონფიგურაციის ფაილი და გადასცეთ იგი local/config directory ში."
+
+msgid "Don't hesitate to consult our forums for any help : %s"
+msgstr "ნუ მოგერიდებათ დახმარებისა და კონსულტაციისათვის მოგვმართოთ ჩვენს ფორუმზე: %s"
+
+msgid "Just another Piwigo gallery"
+msgstr "Piwigo -ს კიდევ ერთი გალერეა"
+
+msgid "Welcome to my photo gallery"
+msgstr "კეთილი იყოს ჩემს ფოტო გალერეაში თქვენი მობრძანება"
+
+msgid "Welcome to your new installation of Piwigo!"
+msgstr "კეთილი იყოს თქვენს მიერ Piwigo -ს დაყენება!"
+

@@ -6,7 +6,11 @@ namespace Piwigo\Bootstrap;
 
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\ServerTiming;
+use Piwigo\Users\CurrentUser;
 
 /**
  * P7 boot skeleton. Grows into the full boot orchestrator (superglobal
@@ -25,17 +29,32 @@ use Piwigo\Core\ServerTiming;
  * PIWIGO_SECRET_KEY env-var convention lands -- calling it today would
  * throw on every real request. See ConfigLoader::validateRequired()'s own
  * docblock.
+ *
+ * P16 adds the `Paths` parameter (minted by index.php via
+ * `Paths::fromIndex(__FILE__)`, threaded through to `Kernel::boot()`) and
+ * `CurrentUser::attachGlobals()` (guest-user init -- called here, not from
+ * Kernel, since `Users` is L2aCoreDomain and Kernel/L1Infrastructure may
+ * only depend on L0Data). `PageState::attachGlobals()` is also called
+ * here rather than from Kernel: it reference-bridges $GLOBALS['page'] etc,
+ * an HTTP-only concept (index.php's own include/common.inc.php has
+ * already populated those globals by the time this runs) that has no
+ * meaning on the CLI path -- CliBootstrap deliberately never calls it.
+ * `Lang::attachGlobals()` follows the identical reasoning for
+ * $GLOBALS['lang'] (populated by common.inc.php's load_language() calls).
  */
 final class CommonBootstrap
 {
-    public static function run(): void
+    public static function run(Paths $paths): void
     {
         SentryBootstrap::init();
 
         ServerTiming::start('boot');
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
-        Kernel::boot();
+        Kernel::boot($paths);
+        CurrentUser::attachGlobals();
+        PageState::attachGlobals();
+        Lang::attachGlobals();
         ServerTiming::stop('boot');
     }
 }

@@ -1,0 +1,143 @@
+# Piwigo translation — fi_FI
+# Source: install.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: fi_FI\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Admin configuration"
+msgstr "Pääkäyttäjän konfiguroiminen"
+
+msgid "Basic configuration"
+msgstr "Perusasetukset"
+
+msgid "Can't connect to server"
+msgstr "Ei pysty yhdistämään palvelimeen"
+
+msgid "Connection to server succeed, but it was impossible to connect to database"
+msgstr "Yhteys palvelimeen onnistui, mutta yhteys tietokantaan on mahdotonta."
+
+msgid "Database configuration"
+msgstr "Tietokannan konfiguroiminen"
+
+msgid "Database name"
+msgstr "Tietokannan nimi"
+
+msgid "Database table prefix"
+msgstr "Tietokannan taulun etuliite"
+
+msgid "Default gallery language"
+msgstr "Gallerian oletuskieli"
+
+msgid "Host"
+msgstr "Isäntäkone"
+
+msgid "Installation"
+msgstr "Asennus"
+
+msgid "It will be shown to the visitors. It is necessary for website administration"
+msgstr "Tullaan näyttämään vierailijoille. Olennainen sivuston hallintaa ajatellen"
+
+msgid "Start Install"
+msgstr "Aloita asennus"
+
+msgid "User"
+msgstr "Käyttäjä"
+
+msgid "also given by your host provider"
+msgstr "myöskin palveluntarjoajan määrittelemä"
+
+msgid "localhost or other, supplied by your host provider"
+msgstr "paikallinen isäntäkone"
+
+msgid "user login given by your host provider"
+msgstr "käyttäjänimi, jonka palveluntarjoaja on määrittänyt"
+
+msgid "user password given by your host provider"
+msgstr "käyttäjän salasana, jonka palveluntarjoaja on määrittänyt"
+
+msgid "Congratulations, Piwigo installation is completed"
+msgstr "Onnittelut, Piwigon asennus on onnistunut"
+
+msgid "Don't hesitate to consult our forums for any help : %s"
+msgstr "Älä epäröi ottaa yhteyttä, kysy apua foorumiltamme: %s"
+
+msgid "It appears your webhost is currently running PHP %s."
+msgstr "Näyttää että palveluntarjoajasi käyttää PHP %s."
+
+msgid "Need help ? Ask your question on <a href=\"%s\">Piwigo message board</a>."
+msgstr "Tarvitsetko apua? Kysy asiasta <a href=\"%s\">Piwigon keskustelupalstalla</a>"
+
+msgid "Note you can change your configuration by yourself and restart Piwigo after that."
+msgstr "Voit muokata asetuksia itse ja käynnistää Piwigon uudelleen tämän jälkeen."
+
+msgid "PHP 5 is required"
+msgstr "PHP 5.2 vaaditaan"
+
+msgid "Try to configure PHP 5"
+msgstr "Yritä määrittää PHP 5.2"
+
+msgid "Visitors will be able to contact site administrator with this mail"
+msgstr "Vierailijat voivat ottaa yhteyttä sivuston ylläpitäjään tätä sähköpostiosoitetta käyttäen"
+
+msgid "Welcome to my photo gallery"
+msgstr "Tervetuloa kuvagalleriaani"
+
+msgid "enter a login for webmaster"
+msgstr "Lisää käyttäjätunnus ylläpitäjälle"
+
+msgid "please enter your password again"
+msgstr "Salasana uudelleen"
+
+msgid "webmaster login can't contain characters ' or \""
+msgstr "Ylläpitäjän käyttäjätunnus ei voi sisältää ' tai \" merkkejä"
+
+msgid "An alternate solution is to copy the text in the box above and paste it into the file \"local/config/database.inc.php\" (Warning : database.inc.php must only contain what is in the textarea, no line return or space character)"
+msgstr "Vaihtoehtoinen tapa on kopioida teksti ylläolevasta laatikosta ja liittää se tiedostoon \"local/config/database.inc.php\"(Varoitus: tiedoston database.inc.php tulee sisältää vain tekstiosuus, ei välejä eikä tyhjiä rivejä) "
+
+msgid "Creation of config file local/config/database.inc.php failed."
+msgstr "Konfigurointitiedoston local/config/database.inc.php luominen epäonnistui."
+
+msgid "Download the config file"
+msgstr "Lataa konfigurointitiedosto"
+
+msgid "Hope to see you back soon."
+msgstr "Toivottavasti näemme pian"
+
+msgid "Just another Piwigo gallery"
+msgstr "Yksi Piwigo -galleria lisää"
+
+msgid "Keep it confidential, it enables you to access administration panel"
+msgstr "Pidä salassa, se mahdollistaa pääsyn pääkäyttäjän paneeliin"
+
+msgid "Piwigo may try to switch your configuration to PHP 5 by creating or modifying a .htaccess file."
+msgstr "Piwigo voi yrittää vaihtaa konfiguraation PHP 5.2 :seen luomalla tai muuttamalla .htaccess -tiedostoa."
+
+msgid "Piwigo was not able to configure PHP 5."
+msgstr "Piwigo ei pystynyt konfiguroimaan PHP5.2 :sta."
+
+msgid "Sorry!"
+msgstr "Anteeksi!"
+
+msgid "Welcome to your new installation of Piwigo!"
+msgstr "Tervetuloa uuteen Piwigo -asennukseesi!"
+
+msgid "You can download the config file and upload it to local/config directory of your installation."
+msgstr "Voit ladata konfiguraatiotiedoston ja siirtää sen asennuksesi local/config -hakemistoon. "
+
+msgid "You may referer to your hosting provider's support and see how you could switch to PHP 5 by yourself."
+msgstr "Sinun tulee kääntyä hosting -palveluntarjoajasi puoleen ja kysyä kuinka voit vaihtaa PHP 5.2 :seen itse."
+
+msgid "database tables names will be prefixed with it (enables you to manage better your tables)"
+msgstr "se tulee tietokannan taulun nimen etuliitteeksi (mahdollistaa taulujen helpomman hallinnan)"
+
+msgid "verification"
+msgstr "vahvistus"
+
+msgid "PHP version %s required (you are running on PHP %s)"
+msgstr "PHP-versio %s vaaditaan. (sinulla on PHP-versio %s)"
+

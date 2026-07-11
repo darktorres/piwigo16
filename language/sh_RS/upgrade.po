@@ -1,0 +1,62 @@
+# Piwigo translation — sh_RS
+# Source: upgrade.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: sh_RS\n"
+"Plural-Forms: nplurals=3; plural=(n % 10 == 1 && n % 100 != 11 ? 0 : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 1 : 2);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Upgrade"
+msgstr "Nadogradnja"
+
+msgid "This page proposes to upgrade your database corresponding to your old version of Piwigo to the current version. The upgrade assistant thinks you are currently running a <strong>release %s</strong> (or equivalent)."
+msgstr "Ova stranica predlaže nadogradnju baze sa Piwigo stare verzije na novu.\nAsistent nadogradnje procenjuje da trenutno koristite <strong>izdanje %s</strong> (ili ekvivalentnu)."
+
+msgid "Upgrade from version %s to %s"
+msgstr "Nadogradnja sa verzije %s na %s"
+
+msgid "Statistics"
+msgstr "Statistika"
+
+msgid "total upgrade time"
+msgstr "ukupno vreme nadogradnje"
+
+msgid "total SQL time"
+msgstr "ukupno SQL vreme"
+
+msgid "SQL queries"
+msgstr "SQL upiti"
+
+msgid "Upgrade informations"
+msgstr "Informacije o nadogradnji"
+
+msgid "Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem."
+msgstr "Izvršiti proveru održavanja u [Administracija>Alati>Održavanje] ako naiđšete na neki problem."
+
+msgid "As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:"
+msgstr "Kao meru predostrožnost, dati dodaci su deaktivirani. Morate proveriti za nadogradnju dodataka pre nego ih ponovo aktivirate :"
+
+msgid "Only administrator can run upgrade: please sign in below."
+msgstr "Samo administrator može da pokrene nadogradnju: prijavite se ispod."
+
+msgid "You do not have access rights to run upgrade"
+msgstr "Nemate pristupna prava da pokrenete nadogradnju"
+
+msgid "All sub-albums of private albums become private"
+msgstr "Sve podkategorije privatnih kategorija postaju privatne"
+
+msgid "User permissions and group permissions have been erased"
+msgstr "Korisničke i grupne dozvole su obrisane"
+
+msgid "Only thumbnails prefix and webmaster mail address have been saved from previous configuration"
+msgstr "Samo prefix za povezne sličice i webmaster e-mail adresa su sačuvane iz prethodne konfiguracije"
+
+msgid "As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:"
+msgstr "Iz predustrožnosti, sledeće teme su deaktivirane. Proverite nadogradnje tema pre nego što ih reaktivirate:"
+
+msgid "In <i>%s</i>, before <b>?></b>, insert:"
+msgstr "U <i>%s</i>, pre <b>?></b>, dodajte:"
+

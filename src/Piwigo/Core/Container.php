@@ -17,21 +17,33 @@ use Psr\Container\ContainerInterface;
  * why the layer names have no hyphens -- a real deptrac 4.6.2 parsing bug,
  * found while verifying this placement.)
  *
- * No Paths parameter yet -- Paths doesn't exist until P16. Loads
- * config/container.php from a fixed relative path instead. No compilation
- * caching yet either -- that needs both Paths and enough real definitions
- * to be worth caching; premature with zero entries.
+ * P16 adds an optional `Paths` parameter -- when the caller has already
+ * minted one at the entry point (`index.php`/`bin/piwigo`), it's
+ * registered as a container instance so any service can receive it via
+ * constructor injection. Still loads `config/container.php` from a fixed
+ * relative path (its own location, not Paths -- Container itself must be
+ * constructible without Paths for the rare caller that doesn't have one
+ * yet, e.g. not-yet-updated tests). No compilation caching yet either --
+ * that needs both Paths and enough real definitions to be worth caching;
+ * premature with zero entries.
  */
 final class Container
 {
     /**
      * @param array<string, mixed> $extraDefinitions test-time overrides,
-     *   merged after config/container.php so they win
+     *   merged after config/container.php so they win. $extraDefinitions
+     *   stays the first (positional-compatible) parameter -- callers
+     *   passing $paths use the named-argument form (`build(paths: $paths)`).
      */
-    public static function build(array $extraDefinitions = []): ContainerInterface
+    public static function build(array $extraDefinitions = [], ?Paths $paths = null): ContainerInterface
     {
         $builder = new ContainerBuilder();
         $builder->addDefinitions(dirname(__DIR__, 3) . '/config/container.php');
+        if ($paths !== null) {
+            $builder->addDefinitions([
+                Paths::class => $paths,
+            ]);
+        }
         if ($extraDefinitions !== []) {
             $builder->addDefinitions($extraDefinitions);
         }

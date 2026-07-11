@@ -10,6 +10,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\tabsheet;
+use Piwigo\Core\AccessLevel;
 use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
@@ -24,13 +25,22 @@ if (! defined('PHPWG_ROOT_PATH')) {
  */
 global $page, $template;
 
+// Explicit `global` for $maint_actions (assigned as a bare `$maint_actions =
+// [...]` below) so admin/maintenance_actions.php's and
+// admin/maintenance_sys.php's own `global $maint_actions;` reads see this
+// array. A no-op today, while this file is still include_once'd from real
+// top-level script scope -- but load-bearing the moment that inclusion is
+// wrapped in a function/method call frame (e.g. a future dispatcher), which
+// would otherwise make the bare assignment invisible to those includes.
+global $maint_actions;
+
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
 
-check_status(ACCESS_ADMINISTRATOR);
+check_status(AccessLevel::Administrator);
 
 if (isset($_GET['action'])) {
     check_pwg_token();

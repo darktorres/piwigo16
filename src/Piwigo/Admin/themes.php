@@ -11,7 +11,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Config\Config;
+use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\Logger;
+use Piwigo\Db\Tables;
 
 class themes
 {
@@ -53,7 +57,7 @@ class themes
      */
     private static function build_maintain_class($theme_id): ThemeMaintain
     {
-        $file_to_include = PHPWG_THEMES_PATH . '/' . $theme_id . '/admin/maintain.inc.php';
+        $file_to_include = Config::themesPath() . '/' . $theme_id . '/admin/maintain.inc.php';
         $classname = $theme_id . '_maintain';
 
         if (file_exists($file_to_include)) {
@@ -156,7 +160,7 @@ class themes
                 if (empty($errors)) {
                     $fs_name = $this->fs_theme_name($theme_id);
                     $query = '
-INSERT INTO ' . THEMES_TABLE . '
+INSERT INTO ' . Tables::themes() . '
   (id, version, name)
   VALUES(\'' . $theme_id . '\',
          \'' . $fs_version . '\',
@@ -190,7 +194,7 @@ INSERT INTO ' . THEMES_TABLE . '
 
                     $query = '
 SELECT id
-  FROM ' . THEMES_TABLE . '
+  FROM ' . Tables::themes() . '
   WHERE id != \'' . $theme_id . '\'
 ;';
                     $result = pwg_query($query);
@@ -213,7 +217,7 @@ SELECT id
 
                 $query = '
 DELETE
-  FROM ' . THEMES_TABLE . '
+  FROM ' . Tables::themes() . '
   WHERE id= \'' . $theme_id . '\'
 ;';
                 pwg_query($query);
@@ -246,7 +250,7 @@ DELETE
                 $theme_maintain->delete();
 
                 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-                deltree(PHPWG_THEMES_PATH . $theme_id, PHPWG_THEMES_PATH . 'trash');
+                deltree(Config::themesPath() . $theme_id, Config::themesPath() . 'trash');
                 break;
 
             case 'set_default':
@@ -255,7 +259,7 @@ DELETE
                 break;
         }
 
-        pwg_activity('system', ACTIVITY_SYSTEM_THEME, $action, $activity_details);
+        pwg_activity('system', ActivitySystem::Theme, $action, $activity_details);
 
         return $errors;
     }
@@ -313,7 +317,7 @@ DELETE
         $query = '
 SELECT
     user_id
-  FROM ' . USER_INFOS_TABLE . '
+  FROM ' . Tables::userInfos() . '
   WHERE theme = \'' . $default_theme . '\'
 ;';
         // array_from_query() returns array<int|string, mixed>; only scalar
@@ -344,7 +348,7 @@ SELECT
         // theme
 
         $query = '
-UPDATE ' . USER_INFOS_TABLE . '
+UPDATE ' . Tables::userInfos() . '
   SET theme = \'' . $theme_id . '\'
   WHERE user_id IN (' . implode(',', $user_ids) . ')
 ;';
@@ -359,7 +363,7 @@ UPDATE ' . USER_INFOS_TABLE . '
         $query = '
 SELECT
     *
-  FROM ' . THEMES_TABLE;
+  FROM ' . Tables::themes();
 
         $clauses = [];
         if (! empty($id)) {
@@ -383,14 +387,14 @@ SELECT
      */
     public function get_fs_themes(): void
     {
-        $dir = opendir(PHPWG_THEMES_PATH);
+        $dir = opendir(Config::themesPath());
         if ($dir === false) {
             return;
         }
 
         while ((bool) ($file = readdir($dir))) {
             if ($file != '.' and $file != '..') {
-                $path = PHPWG_THEMES_PATH . $file;
+                $path = Config::themesPath() . $file;
                 if (is_dir($path)
                     and (bool) preg_match('/^[a-zA-Z0-9-_]+$/', $file)
                     and file_exists($path . '/themeconf.inc.php')
@@ -530,7 +534,7 @@ SELECT
         ];
 
         // Retrieve PEM versions
-        $version = PHPWG_VERSION;
+        $version = AppInfo::VERSION;
         $versions_to_check = [];
         $url = $pem_base_url . '/api/get_version_list.php';
         // $result is never a resource here: no fopen() handle is passed to
@@ -663,7 +667,7 @@ SELECT
         // pattern as updates.class.php::get_server_extensions()).
         $pem_base_url = is_string(PEM_URL) ? PEM_URL : '';
 
-        if ($archive = tempnam(PHPWG_THEMES_PATH, 'zip')) {
+        if ($archive = tempnam(Config::themesPath(), 'zip')) {
             $url = $pem_base_url . '/download.php';
             $get_data = [
                 'rid' => $revision,
@@ -710,7 +714,7 @@ SELECT
                         } else {
                             $theme_id = ($root == '.' ? 'extension_' . $dest : basename($root));
                         }
-                        $extract_path = PHPWG_THEMES_PATH . $theme_id;
+                        $extract_path = Config::themesPath() . $theme_id;
                         $logger->debug(__FUNCTION__ . ', $extract_path = ' . $extract_path);
 
                         if ((bool) ($result = zip_extract($archive, $extract_path, $root))) {
@@ -763,7 +767,7 @@ SELECT
                                     if (is_file($path)) {
                                         @unlink($path);
                                     } elseif (is_dir($path)) {
-                                        deltree($path, PHPWG_THEMES_PATH . 'trash');
+                                        deltree($path, Config::themesPath() . 'trash');
                                     }
                                 }
                             }

@@ -1,0 +1,1127 @@
+# Piwigo translation — ka_GE
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ka_GE\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Language-Name: Georgian\n"
+"X-Piwigo-Country: Georgia\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: ge\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "%d Kb"
+msgstr "%d კბ"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d კატეგორიაა დამატებული"
+msgstr[1] "დამატებული კატეგორიები: %d"
+
+msgid "%d comment to validate"
+msgstr "%d შესამოწმებელი კომენტარი"
+
+msgid "%d comments to validate"
+msgstr "შესამოწმებელი კომენტარები: %d"
+
+msgid "%d new comment"
+msgstr "%d ახალი კომენტარი"
+
+msgid "%d new comments"
+msgstr "ახალი კომენტარები: %d"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d კომენტარი"
+msgstr[1] "კომენტარები: %d"
+
+msgid "%d hit"
+msgid_plural "%d hits"
+msgstr[0] "%d ნახვა"
+msgstr[1] "ნახვები: %d"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "%d ახალი ელემენტი"
+msgstr[1] "%d ახალი ელემენტები"
+
+msgid "%d new user"
+msgstr "%d ახალი მნახველი"
+
+msgid "%d new users"
+msgstr "%d ახალი მნახველები"
+
+msgid "About"
+msgstr "საიტის ძრავი"
+
+msgid "All tags"
+msgstr "ყველა სიტყვა"
+
+msgid "Any tag"
+msgstr "ნებისმიერი სიტყვა"
+
+msgid "At least one listed rule must be satisfied."
+msgstr "ერთი წესი მაინც უნდა სრულდებოდეს."
+
+msgid "Author"
+msgstr "ავტორი"
+
+msgid "Albums"
+msgstr "გალერეა"
+
+msgid "Album"
+msgstr "გალერეა"
+
+msgid "Close this window"
+msgstr "დავხუროთ ეს ფანჯარა"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "სრული RSS ლენტა (ფოტოები, კომენტარები)"
+
+msgid "Confirm Password"
+msgstr "გაიმეორეთ პაროლი"
+
+msgid "Connection settings"
+msgstr "დაკავშირების გასწორება"
+
+msgid "Login"
+msgstr "ავტორიზაცია"
+
+msgid "Contact webmaster"
+msgstr "ტექდახმარება"
+
+msgid "Create a new account"
+msgstr "ახალი აკკაუნტის შექმნა"
+
+msgid "Created on"
+msgstr "გადაღების დრო"
+
+msgid "Creation date"
+msgstr "გადაღების დრო"
+
+msgid "Current password is wrong"
+msgstr "არასწორი პაროლი"
+
+msgid "Dimensions"
+msgstr "ზომები"
+
+msgid "Display"
+msgstr "წესი"
+
+msgid "Each listed rule must be satisfied."
+msgstr "ყველა ჩამოთვლილი წესი უნდა შესრულდეს"
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "ელ.ფოსტის მისამართი არ არის მითითებული"
+
+msgid "Email address"
+msgstr "ელ.ფოსტის მისამართი "
+
+msgid "Enter your personnal informations"
+msgstr "მიუთითეთ პერსონალური მონაცემები"
+
+msgid "Error sending email"
+msgstr "შეცდომა ელ.ფოსტის გაგზავნისას"
+
+msgid "File name"
+msgstr "ფაილის სახელი"
+
+msgid "File"
+msgstr "ფაილი"
+
+msgid "Filesize"
+msgstr "ფაილის ზომა"
+
+msgid "Filter and display"
+msgstr "გავფილტროთ და ვნახოთ"
+
+msgid "Filter"
+msgstr "ფილტრი"
+
+msgid "Forgot your password?"
+msgstr "დაგავიწყდათ პაროლი?"
+
+msgid "Go through the gallery as a visitor"
+msgstr "შევიდეთ გალერეაში როგორც სტუმარი"
+
+msgid "Help"
+msgstr "დახმარება"
+
+msgid "Identification"
+msgstr "შესვლა"
+
+msgid "Photos only RSS feed"
+msgstr "RSS ლენტი ფოტოებით"
+
+msgid "Keyword"
+msgstr "ძირითადი სიტყვები"
+
+msgid "Links"
+msgstr "ბმულები"
+
+msgid "N/A"
+msgstr "გაურკვეველია"
+
+msgid "New on %s"
+msgstr "ახალი %s"
+
+msgid "Notification"
+msgstr "RSS-შეტყობინება"
+
+msgid "Number of items"
+msgstr "რაოდენობა გვერდზე"
+
+msgid "Original dimensions"
+msgstr "საწყისი ზომა"
+
+msgid "Password forgotten"
+msgstr "პაროლი დაკარგულია"
+
+msgid "Password"
+msgstr "პაროლი"
+
+msgid "Post date"
+msgstr "გამოქვეყნების თარიღი"
+
+msgid "Posted on"
+msgstr "გამოქვეყნების თარიღი"
+
+msgid "Profile"
+msgstr "პროფილი"
+
+msgid "Quick connect"
+msgstr "სწრაფი შესვლა"
+
+msgid "RSS feed"
+msgstr "RSS ლენტი"
+
+msgid "Register"
+msgstr "რეგისტრაცია"
+
+msgid "Registration"
+msgstr "რეგისტრაცია"
+
+msgid "Related tags"
+msgstr "დამოკიდებული სიტყვები"
+
+msgid "Reset"
+msgstr "უარი"
+
+msgid "Retrieve password"
+msgstr "პაროლის შეხსენება"
+
+msgid "Search rules"
+msgstr "ძიების პირობა"
+
+msgid "Search tags"
+msgstr "საძიებო ტეგები"
+
+msgid "Search"
+msgstr "ძიება"
+
+msgid "display available tags"
+msgstr "შესაძლო ტეგების ნახვა"
+
+msgid "Since"
+msgstr "პერიოდი"
+
+msgid "Sort by"
+msgstr "სორტირება"
+
+msgid "Sort order"
+msgstr "სორტირების წესი"
+
+msgid "Tag"
+msgstr "სიტყვა"
+
+msgid "Tags"
+msgstr "საძიებო სიტყვები"
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "RSS შეტყობინებები გიამბობენ ახალ ფოტოებზე, გალერეის განახლებაზე, ახალ კომენტარებზე. ამისათვის გამოიყენეთ RSS-წამკითხველი."
+
+msgid "Unknown feed identifier"
+msgstr "ლენტის გაურკვეველი იდენტიფიკატორი"
+
+msgid "User comments"
+msgstr "მნახველების კომენტარები"
+
+msgid "Username"
+msgstr "მომხმარებლის სახელი"
+
+msgid "Visits"
+msgstr "ნახვები"
+
+msgid "Webmaster"
+msgstr "მოგვწერეთ"
+
+msgid "Week %d"
+msgstr "კვირა %d"
+
+msgid "About Piwigo"
+msgstr "PhpWebGallery–ზე"
+
+msgid "You are not authorized to access the requested page"
+msgstr "თქვენ არ გაქვთ ავტორიზაციის გარეშე გვერდის ნახვის უფლება"
+
+msgid "add this photo to your favorites"
+msgstr " დავამატოთეს ფოტო რჩეულებში"
+
+msgid "Administration"
+msgstr "ადმინისტრირება"
+
+msgid "all"
+msgstr "ყველა"
+
+msgid "ascending"
+msgstr "ზრდის მიხედვით"
+
+msgid "author(s) : %s"
+msgstr "ავტორი(ები) : %s"
+
+msgid "Expand all albums"
+msgstr "გავხსნათ ყველა კატეგორია"
+
+msgid "posted after %s (%s)"
+msgstr "გამოქვეყნებულია %s (%s) შემდეგ"
+
+msgid "posted before %s (%s)"
+msgstr "გამოქვეყნებულია  %s (%s) მდე"
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "გამოქვეყნებულია %s (%s) და %s (%s) შორის"
+
+msgid "posted on %s"
+msgstr "გამოქვეყნებულია %s"
+
+msgid "Best rated"
+msgstr "შეფასებებით"
+
+msgid "display best rated photos"
+msgstr "ვნახოთ მაღალშეფასებადი "
+
+msgid "Calendar"
+msgstr "კალენდარი"
+
+msgid "All"
+msgstr "ყველა"
+
+msgid "display each day with photos, month per month"
+msgstr "ვნახოთ ყველა დღე ფოტოებით,თვე თვეზე"
+
+msgid "View"
+msgstr "ნახვა"
+
+msgid "chronology_monthly_calendar"
+msgstr "თვე"
+
+msgid "chronology_monthly_list"
+msgstr "რიცხვი"
+
+msgid "chronology_weekly_list"
+msgstr "კვირის დღე"
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "გადადით ამ მისამართზე,თუკი ბროუზერი არ გადაგამისამართებთ ავტომატურად"
+
+msgid "comment date"
+msgstr "კომენტარის თარიღი"
+
+msgid "Comment"
+msgstr "კომენტარი"
+
+msgid "Your comment has been registered"
+msgstr "თქვენი კომენტარი გაგზავნილია"
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "ანტიფლუდი: დაიცადეთ ცოტა ხანი სანამ გააგზავნით შემდეგ კომენტარს"
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "თქვენი კომენტარი არ არის გაგზავნილი, რადგან არ შეესაბამება ჩვენს წესებს"
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "ადმინისტრატორმა უნდა შეამოწმოს თქვენი კომენტარი,სანამ იგი ნაჩვენები იქნება."
+
+msgid "This login is already used by another user"
+msgstr "ეს სახელი(ლოგინი) უკვე დაკავებულია"
+
+msgid "Comments"
+msgstr "კომენტარი"
+
+msgid "Add a comment"
+msgstr "კომენტარის დამატება"
+
+msgid "created after %s (%s)"
+msgstr "შექმნილი %s (%s) შემდეგ"
+
+msgid "created before %s (%s)"
+msgstr "შექმნილი %s (%s) მდე"
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "შექმნილი %s (%s) და %s (%s) შორის"
+
+msgid "created on %s"
+msgstr "შექმნილი %s"
+
+msgid "Your Gallery Customization"
+msgstr "გალერეის გასწორება "
+
+msgid "Default"
+msgstr "ძირითადად"
+
+msgid "delete this photo from your favorites"
+msgstr "ამოვიღოთ ეს ფოტო რჩეულიდან"
+
+msgid "Delete"
+msgstr "გადავაგდოთ"
+
+msgid "descending"
+msgstr "კლებით"
+
+msgid "Download"
+msgstr "ატვირთვა"
+
+msgid "Download this file"
+msgstr " ავტვირთოთ ეს ფაილი"
+
+msgid "edit"
+msgstr "რედაქტირება"
+
+msgid "wrong date"
+msgstr "შეცდომა თარიღში"
+
+msgid "excluded"
+msgstr "გამორიცხული"
+
+msgid "Your favorites"
+msgstr "რჩეული"
+
+msgid "display your favorites photos"
+msgstr "ვნახოთ არჩეული ფოტოები"
+
+msgid "Favorites"
+msgstr "რჩეული"
+
+msgid "First"
+msgstr "პირველი"
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "გალერეა დროებით დაკეტილია. გთხოვთ მოგვიანებით მობრძანდეთ"
+
+msgid "Page generated in"
+msgstr "გვერდი გენერირებილია"
+
+msgid "guest"
+msgstr "სტუმარი"
+
+msgid "Hello"
+msgstr "გამარჯობა"
+
+msgid "available for administrators only"
+msgstr "დაშვება მხოლოდ ადმინისტრატორისათვის"
+
+msgid "display this album"
+msgstr "ვნახოთ ფოტოები კატეგორიის ძირიდან"
+
+msgid "display last user comments"
+msgstr "მომხმარებლების ბოლო კომენტარები"
+
+msgid "search"
+msgstr "ძიება"
+
+msgid "Home"
+msgstr "დასაწყისი"
+
+msgid "in this album"
+msgstr "ამ კატეგირიაში"
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] " %d ქვეკატეგორიაში"
+msgstr[1] "( %d ქვეკატეგორიებში)"
+
+msgid "included"
+msgstr "ჩართულია"
+
+msgid "Invalid password!"
+msgstr "არასწორი პაროლი!"
+
+msgid "Language"
+msgstr "ენა"
+
+msgid "last %d days"
+msgstr "ბოლო %d დღე"
+
+msgid "Last"
+msgstr "ბოლო"
+
+msgid "Logout"
+msgstr "გამოსვლა"
+
+msgid "obligatory"
+msgstr "აუცილებელი"
+
+msgid "Maximum photo height"
+msgstr "სურათის მაქსიმალური სიმაღლე"
+
+msgid "Maximum height must be a number superior to 50"
+msgstr "სურათის მაქსიმალური სიმაღლე უნდა იყოს 50–ზე მეტი"
+
+msgid "Maximum photo width"
+msgstr "სურათის მაქსიმალური სიგანე"
+
+msgid "Maximum width must be a number superior to 50"
+msgstr "სურათის მაქსიმალური სიგანე უნდა იყოს 50–ზე მეტი"
+
+msgid "display a calendar by creation date"
+msgstr " ვნახოთ კალენდარი შექმნის თარიღით"
+
+msgid "display all photos in all sub-albums"
+msgstr " ვნახოთ ყველა ფოტო ყველა ქვეკატეგორიებში"
+
+msgid "return to normal view mode"
+msgstr "ჩვეულებრივ რეჯიმში დაბრუნება"
+
+msgid "display a calendar by posted date"
+msgstr " ვნახოთ კალენდარი გაგზავნის დროის მიხედვით"
+
+msgid "Most visited"
+msgstr "პოპულარურობის მიხედვით"
+
+msgid "display most visited photos"
+msgstr "ვნახოთ ყველაზე პოპულარული ფოტოები"
+
+msgid "Unknown identifier"
+msgstr "უცნობი იდენტიფიკატორი"
+
+msgid "New password"
+msgstr "ახალი პაროლი"
+
+msgid "Rate this photo"
+msgstr "შეაფასეთ ეს ფოტო"
+
+msgid "Next"
+msgstr "შემდეგი"
+
+msgid "no rate"
+msgstr "არ არის შეფასებული"
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "ვნახოთ ფოტოები, გამოქვეყნებული ბოლო %s დღეში."
+msgstr[1] "ვნახოთ ფოტოები, გამოქვეყნებული ბოლო %s დღეში."
+
+msgid "password updated"
+msgstr "პაროლი შეცვლილია"
+
+msgid "Recent period must be a positive integer value"
+msgstr "ბოლო პერიოდი უნდა იყოს დადებითი ციფრი"
+
+msgid "photo"
+msgstr "ფოტო"
+
+msgid "Click on the photo to see it in high definition"
+msgstr "დაკლიკეთ ფოტოზე, რათა ნახოთ იგი დიდი ფორმატით"
+
+msgid "Show file metadata"
+msgstr "ვნახოთ მეტამონაცემები"
+
+msgid "Powered by"
+msgstr "სკრიპტი"
+
+msgid "Preferences"
+msgstr "უპირატესი"
+
+msgid "Previous"
+msgstr "წინა"
+
+msgid "Random photos"
+msgstr "შემთხვევითი"
+
+msgid "display a set of random photos"
+msgstr "რამდენიმე შემთხვევითი ფოტო"
+
+msgid "Recent albums"
+msgstr "ახალი გალერეები"
+
+msgid "display recently updated albums"
+msgstr "ვნახოთ განახლებული გალერეები"
+
+msgid "Recent period"
+msgstr "\"ახლების\" ვადა"
+
+msgid "Recent photos"
+msgstr "ახალი ფოტოები"
+
+msgid "display most recent photos"
+msgstr "ვნახოთ ახალი ფოტოები"
+
+msgid "Redirection..."
+msgstr "გადამისამართება..."
+
+msgid "Please, enter a login"
+msgstr "გთხოვთ, შეიყვანეთ სახელი(ლოგინი)"
+
+msgid "login mustn't end with a space character"
+msgstr "სახელი(ლოგინი) არ უნდა მთავრდებოდეს ცარიელი ადგილით(პრობელით)"
+
+msgid "login mustn't start with a space character"
+msgstr "სახელი(ლოგინი) არ უნდა იწყებოდეს ცარიელი ადგილით(პრობელით)"
+
+msgid "this login is already used"
+msgstr "ეს სახელი(ლოგინი) უკვე არსებობს"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "ელ.ფოსტის მისამართი უნდა გამოიყურებოდეს ესე xxx@yyy.eee (მაგალითად: jack@altern.org)"
+
+msgid "Auto login"
+msgstr "დამიმახსოვრე"
+
+msgid "remove this tag from the list"
+msgstr "გადავაგდოთ ეს ტეგი სიიდან"
+
+msgid "representative"
+msgstr "წარმომადგენელი"
+
+msgid "Search for Author"
+msgstr "ძიება ავტორის მიხედვით"
+
+msgid "Search in albums"
+msgstr "ძიება კატეგორიებში"
+
+msgid "Search by date"
+msgstr "ძიება თარიღით"
+
+msgid "Date"
+msgstr "საწყისი თარიღი"
+
+msgid "End-Date"
+msgstr "საბოლოო თარიღი"
+
+msgid "Kind of date"
+msgstr "თარიღის ტიპი"
+
+msgid "Search for words"
+msgstr "ძიება სიტყვებით"
+
+msgid "Search for all terms"
+msgstr "ძიება ყველა კრიტერიუმით "
+
+msgid "Search for any term"
+msgstr "ძიება ნებისმიერი კრიტერიუმით"
+
+msgid "Empty query. No criteria has been entered."
+msgstr "ცარიელი მოთხოვნა. ძიების კრიტერიუმი არ რსებობს."
+
+msgid "Search results"
+msgstr "ძიების რეზულტატი"
+
+msgid "Search in sub-albums"
+msgstr "ქვეკატეგორიებშიც"
+
+msgid "searched words : %s"
+msgstr "მოსაძებნი სიტყვები: %s"
+
+msgid "Contact"
+msgstr "კონტაქტი"
+
+msgid "set as album representative"
+msgstr "გავხადოთ კატეგორიის წარმომადგენელი"
+
+msgid "Show number of comments"
+msgstr "ვაჩვენოთ კომენტარების რაოდენობა"
+
+msgid "Show number of hits"
+msgstr "ვაჩვენოთ ნახვების რაოდენობა"
+
+msgid "slideshow"
+msgstr " სლაიდშოუ"
+
+msgid "stop the slideshow"
+msgstr "სლაიდშოუს გაჩერება"
+
+msgid "Specials"
+msgstr "რჩეული"
+
+msgid "SQL queries in"
+msgstr "SQL-მოთხოვნა"
+
+msgid "display only recently posted photos"
+msgstr " ვნახოთ მხოლოდ ახლახანს გამოქვეყნებული ფოტოები"
+
+msgid "return to the display of all photos"
+msgstr "ყველა ფოტოს ნახვასთან დაბრუნება"
+
+msgid "the beginning"
+msgstr "თავიდან"
+
+msgid "Thumbnails"
+msgstr "მინიატურები"
+
+msgid "Menu"
+msgstr "მენიუ"
+
+msgid "A comment on your site"
+msgstr "კომენტარები თქვენი საიტიდან"
+
+msgid "today"
+msgstr "დღეს"
+
+msgid "Update your rating"
+msgstr "განვაახლოთ შეფასება"
+
+msgid "the username must be given"
+msgstr "მომხმარებლის სახელი უნდა არსებობდეს"
+
+msgid "useful when password forgotten"
+msgstr "დაკარგული პაროლის აღსადგენად"
+
+msgid "Quick search"
+msgstr "ჩქარი ძიება"
+
+msgid "Connected user: %s"
+msgstr "დაკავშირებული მომხმარებლები: %s"
+
+msgid "IP: %s"
+msgstr "IP: %s"
+
+msgid "Browser: %s"
+msgstr "ბროუზერი: %s"
+
+msgid "Author: %s"
+msgstr "ავტორი: %s"
+
+msgid "Comment: %s"
+msgstr "კომენტარები: %s"
+
+msgid "Comment by %s"
+msgstr "კომენტარები %s _სგან"
+
+msgid "User: %s"
+msgstr "სტუმარი: %s"
+
+msgid "Email: %s"
+msgstr "მისამართი: %s"
+
+msgid "Admin: %s"
+msgstr "ადმინისტრატორი: %s"
+
+msgid "Registration of %s"
+msgstr "რეგისტრაცია %s"
+
+msgid "Album: %s"
+msgstr "კატეგორია: %s"
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "მომხმარებლის არასწორი სტატუსი \"სტუმარი\", გამოიყენეთ ძირითადი სტატუსი. გთხოვთ შეატყობინოთ ადმინისტრატორს."
+
+msgid "this email address is already in use"
+msgstr "მომხმარებელი ასეთი მისამართით უკვე არსებობს"
+
+msgid "Album results for"
+msgstr "დღის კატეგორიების რეზულტატი"
+
+msgid "Tag results for"
+msgstr "დღის სიტყვა–რეზულტატი"
+
+msgid "from %s to %s"
+msgstr " %s დან  %s მდე"
+
+msgid "Play of slideshow"
+msgstr "ვნახოთ სლაიდშოუ"
+
+msgid "Pause of slideshow"
+msgstr "გავაჩეროთ სლაიდშოუ"
+
+msgid "Repeat the slideshow"
+msgstr "გავიმეოროთ სლაიდშოუ"
+
+msgid "Not repeat the slideshow"
+msgstr "არ გავიმეოროთ სლაიდშოუ"
+
+msgid "Reduce diaporama speed"
+msgstr "შევამციროთ პანორამის სიჩქარე"
+
+msgid "Accelerate diaporama speed"
+msgstr "გავზარდოთ პანორამის სიჩქარე"
+
+msgid "Submit"
+msgstr "გაგზავნა"
+
+msgid "Yes"
+msgstr "დიახ"
+
+msgid "No"
+msgstr "არა"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "%d ფოტო"
+msgstr[1] "ფოტოები: %d"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "%d ფოტო ასევე დაკავშირებულია ამ სიტყვებთან"
+msgstr[1] "%d ფოტოები ასევე დაკავშირებულია ამ სიტყვებთან"
+
+msgid "display photos linked to this tag"
+msgstr "ვნახოთ ფოტოები დაკავშირებული მხოლოდ ამ სიტყვასთან"
+
+msgid "photos posted during the last %d days"
+msgstr "ფოტოები გამოქვეყნებული ბოლო %d დღეში"
+
+msgid "Piwigo Help"
+msgstr "დახმარება"
+
+msgid "Rank"
+msgstr "წყობა"
+
+msgid "group by letters"
+msgstr "დავაჯგუფოთ ასოებით"
+
+msgid "letters"
+msgstr "ასოები"
+
+msgid "show tag cloud"
+msgstr "ვაჩვენოთ სიტყვების ღრუბელი"
+
+msgid "cloud"
+msgstr "ღრუბელი"
+
+msgid "Are you sure?"
+msgstr "დარწმუნებული ხართ?"
+
+msgid "Reset to default values"
+msgstr "აღვადგინოთ ძირითადი მნიშვნელობები"
+
+msgid "delete all photos from your favorites"
+msgstr "გადავაგდოთ ყველა ფოტო რჩეულიდან"
+
+msgid "Sent by"
+msgstr "გაგზავნა"
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "თქვენს როუზერს არ აქვს კუკების(Cookies) მხარდაჭერა, ან ბლოკავს მათ. გთხოვთ ჩართოთ ან გაასწოროთ იგი."
+
+msgid "Edit a comment"
+msgstr "კომენტარის რედაქტირება"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) ეს კომენტარი ელოდება შემოწმებას"
+
+msgid "Welcome"
+msgstr "კეთილი იყოს თქვენი მობრძანება"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "კეთილი იყოს თქვენი მობრძანება Piwigo–ს ფოტო გალერეაში!"
+
+msgid "... or browse your empty gallery"
+msgstr "... ან ნახეთ თქვენი ცარიელი გალერეა"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "... ან ნუ მაჩვენებთ ამ შეტყობინებას. მე თვითონ გადავწყვიტავ რას ვიმოქმედებ"
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "გამარჯობა %s, თქვენი გალერეა ცარიელია!"
+
+msgid "I want to add photos"
+msgstr "მსურს დავამატო ფოტო"
+
+msgid "Manage this user comment: %s"
+msgstr "ამ მომხმარებლის კომენტარის მართვა: %s"
+
+msgid "This author modified following comment:"
+msgstr "ამ ავტორმა შეცვალა  შემდეგი კომენტარი:"
+
+msgid "This author removed the comment with id %d"
+msgstr "ამ ავტორმა წაშალა კომენტარი ნომერი %d"
+
+msgid "html tags are not allowed in login"
+msgstr "შესასვლელად html ტეგების გამოყენება აკრძალულია"
+
+msgid "%d rate"
+msgid_plural "%d rates"
+msgstr[0] "%d შეფასება"
+msgstr[1] "%d განაკვეთი"
+
+msgid "2small"
+msgstr "XXS - უმცირესი"
+
+msgid "Bad request"
+msgstr "არასწორი მოთხოვნა"
+
+msgid "Change my password"
+msgstr "პაროლის შეცვლა"
+
+msgid "Check your email for the confirmation link"
+msgstr "შეამოწმეთ თქვენი ელ ფოსტა დადასტურების ბმულით"
+
+msgid "Date created, new &rarr; old"
+msgstr "შექმნის თარიღი, ახალი  &rarr; ძველი"
+
+msgid "Date created, old &rarr; new"
+msgstr "შექმნის თარიღი, ძველი  &rarr; ახალი"
+
+msgid "Date posted, new &rarr; old"
+msgstr "გამოქვეყნების თარიღი, ახალი  &rarr; ძველი"
+
+msgid "Date posted, old &rarr; new"
+msgstr "გამოქვეყნების თარიღი, ძველი  &rarr; ახალი "
+
+msgid "Desktop"
+msgstr "კომპიუტერი"
+
+msgid "EXIF Metadata"
+msgstr "EXIF მეტადატა"
+
+msgid "Edit"
+msgstr "რედაქტირება"
+
+msgid "Enter your new password below."
+msgstr "ჩაწერეთ თქვენი ახალი პაროლი"
+
+msgid "File name, A &rarr; Z"
+msgstr "ფაილის სახელი, ა &rarr; ჰ"
+
+msgid "File name, Z &rarr; A"
+msgstr "ფაილის სახელი, ჰ &rarr; ა"
+
+msgid "Forbidden"
+msgstr "აკრძალულია"
+
+msgid "Hello %s,"
+msgstr "გამარჯობა %s,"
+
+msgid "Here are your connection settings"
+msgstr "თქვენი დაკავშირების პარამეტრებია"
+
+msgid "IPTC Metadata"
+msgstr "IPTC მეტადატა"
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "თუ შეცდომით მოგივიდათ ეს წერილი, იგნორირება გაუკეთეთ და ნუ უპასუხებთ მას."
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "თუ ტქვენ თვლით რომ წერილი შეცდომით მიიღეთ, დაგვიკავშირდით მისამართზე  %s"
+
+msgid "Invalid key"
+msgstr "არასწორი გასაღები"
+
+msgid "Invalid username or email"
+msgstr "არასწორი სახელი ან ელ-ფოსტის მისამართი"
+
+msgid "Manual sort order"
+msgstr "ხელით დალაგება"
+
+msgid "Mobile"
+msgstr "მობილური"
+
+msgid "Number of photos per page"
+msgstr "ფოტოების რაოდენობა გვერდზე"
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "საიდეტიფიკაციო ნომერი, 1 &rarr; 9"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "საიდეტიფიკაციო ნომერი, 9 &rarr; 1"
+
+msgid "Original"
+msgstr "ორიგინალი"
+
+msgid "Page not found"
+msgstr "გვერდი არ მოიძებნა"
+
+msgid "Password Reset"
+msgstr "პაროლი შეიცვალა"
+
+msgid "Password reset is not allowed for this user"
+msgstr "პაროლის შეცვლა შეუძლებელია ამ მომხმარებლისათვის"
+
+msgid "Password: %s"
+msgstr "პაროლი: %s"
+
+msgid "Permalink for album not found"
+msgstr "ბმული ალბომზე არ მოიძებნა"
+
+msgid "Photo sizes"
+msgstr "ფოტოს ზომები"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "ფოტოს სახელი, ა &rarr; ჰ"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "ფოტოს სახელი, ჰ &rarr; ა"
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "Piwigo -მ აღმოაჩინა გამოუსწორებელი შეცდომა"
+
+msgid "Please enter your username or email address."
+msgstr "გთხოვთ ჩაწეროთ თქვენი სახელი ან ელ-ფოსტის მისამართი."
+
+msgid "Rating score, high &rarr; low"
+msgstr "შეფასება, მაღალი &rarr; დაბალი "
+
+msgid "Rating score, low &rarr; high"
+msgstr "შეფასება, დაბალი &rarr; მაღალი"
+
+msgid "Rating score"
+msgstr "შეფასების ანგარიში"
+
+msgid "Requested album does not exist"
+msgstr "მოთხოვნილი ალბომი არ არსებობს"
+
+msgid "Requested tag does not exist"
+msgstr "მოთხოვნილი ტეგი არ არსებობს"
+
+msgid "Return to home page"
+msgstr "მთავარ გვერდზე დაბრუნება"
+
+msgid "Send my connection settings by email"
+msgstr "დაკავშირების პარამეტრების ელ-ფოსტაზე გაგზავნა"
+
+msgid "Show latest comments first"
+msgstr "პირველი ვაჩვენოთ ახალი კომენტარი "
+
+msgid "Show oldest comments first"
+msgstr "პირველი ვაჩვენოთ ძველი კომენტარი "
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "ვიღაცამ მოითხოვა პაროლის აღდგენა შემდეგი  მომხმარებლებისათვის:"
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "გამარჯობა! თქვენ წარმატებით დარეგისტრირდით. მალე მიიღებთ დაკავშირების პარამეტრებს ელ-ფოსტაზე.  "
+
+msgid "Thank you for registering at %s!"
+msgstr "გმადლობთ რეგისტრაციისათვის  %s!"
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "ფოტოების რაოდენობა გვერდზე უნდა იყოს ნულზე მეტი როცხვი."
+
+msgid "The passwords do not match"
+msgstr "პაროლები ერთმანეთს არ ემთხვევა"
+
+msgid "To reset your password, visit the following address:"
+msgstr "პაროლის შესაცვლელად ეწვიეთ შემდეგ მისამართს:"
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "მომხმარებელ  \"%s\" არა აქვს მითითებული ელ ფოსტის მისამართი. აროლის შეცვლა შეუძლებელია."
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "მომხმარებლის სახელი \"%s\" გალერეა %s "
+
+msgid "Username modification"
+msgstr "მომხმარებლის სახელის მოდიფიკაცია"
+
+msgid "Username or email"
+msgstr "მომხმარებლის სახელი ან ელ-ფოსტა"
+
+msgid "Username: %s"
+msgstr "მომხმარებლის სახელი: %s"
+
+msgid "View in"
+msgstr "ვნახოთ"
+
+msgid "Visits, high &rarr; low"
+msgstr "ნახვები, მეტი &rarr; ნაკლები"
+
+msgid "Visits, low &rarr; high"
+msgstr "ნახვები, ნაკლები &rarr; მეტი"
+
+msgid "You will receive a link to create a new password via email."
+msgstr "თქვენ გამოგეგზავნათ წერილი თქვენს ელ-ფოსტის მისამართზე პაროლის შესაცვლელი ბმულით. "
+
+msgid "Your password has been reset"
+msgstr "თქვენი პაროლი შეიცვალა"
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "თქვენი მომხმარებლის სახელი შეიცვალა:  %s -ით"
+
+msgid "large"
+msgstr "L - დიდი"
+
+msgid "medium"
+msgstr "M - საშუალო"
+
+msgid "small"
+msgstr "S - პატარა"
+
+msgid "square"
+msgstr "ველი"
+
+msgid "thumb"
+msgstr "ხატულა"
+
+msgid "xlarge"
+msgstr "XL -ძალიან დიდი"
+
+msgid "xsmall"
+msgstr "XS - ძალიან პატარა"
+
+msgid "xxlarge"
+msgstr "XXL - უდიდესი"
+
+msgid "Password is missing. Please enter the password."
+msgstr "პაროლი არა სწორია. გთხოვთ გაიმეოროთ."
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "პაროლის დადასტურება არ არის. გთხოვთ დაადასტურეთ არჩეული პაროლი."
+
+msgid "piwigo_day_0"
+msgstr "კვ"
+
+msgid "piwigo_day_1"
+msgstr "ორშ"
+
+msgid "piwigo_day_2"
+msgstr "სამ"
+
+msgid "piwigo_day_3"
+msgstr "ოთხ"
+
+msgid "piwigo_day_4"
+msgstr "ხუთ"
+
+msgid "piwigo_day_5"
+msgstr "პარ"
+
+msgid "piwigo_day_6"
+msgstr "შაბ"
+
+msgid "piwigo_month_10"
+msgstr "ოქტომბერი"
+
+msgid "piwigo_month_11"
+msgstr "ნოემბერი"
+
+msgid "piwigo_month_12"
+msgstr "დეკემბერი"
+
+msgid "piwigo_month_1"
+msgstr "იანვარი"
+
+msgid "piwigo_month_2"
+msgstr "თებერვალი"
+
+msgid "piwigo_month_3"
+msgstr "მარტი"
+
+msgid "piwigo_month_4"
+msgstr "აპრილი"
+
+msgid "piwigo_month_5"
+msgstr "მაისი"
+
+msgid "piwigo_month_6"
+msgstr "ივნისი"
+
+msgid "piwigo_month_7"
+msgstr "ივლისი"
+
+msgid "piwigo_month_8"
+msgstr "აგვისტო"
+
+msgid "piwigo_month_9"
+msgstr "სექტემბერი"
+

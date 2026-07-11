@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Core\Logger;
+use Piwigo\Db\Tables;
 use Piwigo\Search\Inflector\InflectorInterface;
 use Piwigo\Search\QDateRangeScope;
 use Piwigo\Search\QExpression;
@@ -50,7 +51,7 @@ function get_search_info(int|string $candidate): ?array
 
     $query = '
 SELECT *
-  FROM ' . SEARCH_TABLE . '
+  FROM ' . Tables::search() . '
   WHERE ' . sprintf($clause_pattern, $candidate) . '
 ;';
     $searches = query2array($query);
@@ -243,7 +244,7 @@ function get_regular_search_results(array $search, string $images_where = ''): a
                 $query = '
 SELECT
     id
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE ' . implode(' OR ', $cat_word_clauses) . '
 ;';
                 $cat_ids = query2array($query, null, 'id');
@@ -252,7 +253,7 @@ SELECT
                     $query = '
 SELECT
     image_id
-  FROM ' . IMAGE_CATEGORY_TABLE . '
+  FROM ' . Tables::imageCategory() . '
   WHERE category_id IN (' . implode(',', $cat_ids) . ')
 ;';
                     $cat_image_ids = query2array($query, null, 'image_id');
@@ -268,7 +269,7 @@ SELECT
                 $query = '
 SELECT
     id
-  FROM ' . TAGS_TABLE . '
+  FROM ' . Tables::tags() . '
   WHERE name LIKE \'%' . $word . '%\'
 ;';
                 $tag_ids = query2array($query, null, 'id');
@@ -277,7 +278,7 @@ SELECT
                     $query = '
 SELECT
     image_id
-  FROM ' . IMAGE_TAG_TABLE . '
+  FROM ' . Tables::imageTag() . '
   WHERE tag_id IN (' . implode(',', $tag_ids) . ')
 ;';
                     $tag_image_ids = query2array($query, null, 'image_id');
@@ -321,8 +322,8 @@ SELECT
         $query = '
 SELECT
     DISTINCT(id)
-  FROM ' . IMAGES_TABLE . ' AS i
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id
+  FROM ' . Tables::images() . ' AS i
+    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
   WHERE ' . $filter_clause . '
   ' . $forbidden . '
 ;';
@@ -375,8 +376,8 @@ SELECT
         $query = '
 SELECT
     DISTINCT(id)
-  FROM ' . IMAGES_TABLE . ' AS i
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id
+  FROM ' . Tables::images() . ' AS i
+    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
   WHERE (' . implode(' OR ', $author_clauses) . ')
   ' . $forbidden . '
 ;';
@@ -399,8 +400,8 @@ SELECT
         $query = '
 SELECT
     DISTINCT(id)
-  FROM ' . IMAGES_TABLE . ' AS i
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id
+  FROM ' . Tables::images() . ' AS i
+    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
   WHERE (' . implode(' OR ', $filetypes_clauses) . ')
   ' . $forbidden . '
 ;';
@@ -418,8 +419,8 @@ SELECT
         $query = '
 SELECT
     DISTINCT(id)
-  FROM ' . IMAGES_TABLE . ' AS i
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id
+  FROM ' . Tables::images() . ' AS i
+    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
   WHERE added_by IN (' . implode(',', $added_by_ids) . ')
   ' . $forbidden . '
 ;';
@@ -457,8 +458,8 @@ SELECT
             $query = '
 SELECT
     DISTINCT(id)
-  FROM ' . IMAGES_TABLE . ' AS i
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id
+  FROM ' . Tables::images() . ' AS i
+    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
   WHERE category_id IN (' . implode(',', $cat_ids) . ')
   ' . $forbidden . '
 ;';
@@ -544,8 +545,8 @@ SELECT
         $query = '
 SELECT
     DISTINCT(id)
-  FROM ' . IMAGES_TABLE . ' AS i
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id
+  FROM ' . Tables::images() . ' AS i
+    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
   WHERE ' . $date_posted_clause . '
   ' . $forbidden . '
 ;';
@@ -631,8 +632,8 @@ SELECT
         $query = '
 SELECT
     DISTINCT(id)
-  FROM ' . IMAGES_TABLE . ' AS i
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id
+  FROM ' . Tables::images() . ' AS i
+    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
   WHERE ' . $date_created_clause . '
   ' . $forbidden . '
 ;';
@@ -665,8 +666,8 @@ SELECT
         $query = '
 SELECT
     DISTINCT(id)
-  FROM ' . IMAGES_TABLE . ' AS i
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id
+  FROM ' . Tables::images() . ' AS i
+    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
   WHERE (' . implode(' OR ', $ratios_clauses) . ')
   ' . $forbidden . '
 ;';
@@ -693,8 +694,8 @@ SELECT
         $query = '
 SELECT
     DISTINCT(id)
-  FROM ' . IMAGES_TABLE . ' AS i
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id
+  FROM ' . Tables::images() . ' AS i
+    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
   WHERE (' . implode(' OR ', $filter_clauses) . ')
   ' . $forbidden . '
 ;';
@@ -714,8 +715,8 @@ SELECT
         $query = '
 SELECT
     DISTINCT(id)
-  FROM ' . IMAGES_TABLE . ' AS i
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id
+  FROM ' . Tables::images() . ' AS i
+    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
   WHERE filesize BETWEEN ' . ((float) $filesize_min_raw - 100) . ' AND ' . ((float) $filesize_max_raw + 100) . '
   ' . $forbidden . '
 ;';
@@ -733,8 +734,8 @@ SELECT
         $query = '
 SELECT
     DISTINCT(id)
-  FROM ' . IMAGES_TABLE . ' AS i
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id
+  FROM ' . Tables::images() . ' AS i
+    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
   WHERE height BETWEEN ' . (string) $height_min_raw . ' AND ' . (string) $height_max_raw . '
   ' . $forbidden . '
 ;';
@@ -752,8 +753,8 @@ SELECT
         $query = '
 SELECT
     DISTINCT(id)
-  FROM ' . IMAGES_TABLE . ' AS i
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id
+  FROM ' . Tables::images() . ' AS i
+    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
   WHERE width BETWEEN ' . (string) $width_min_raw . ' AND ' . (string) $width_max_raw . '
   ' . $forbidden . '
 ;';
@@ -789,8 +790,8 @@ SELECT
         $query = '
 SELECT
     DISTINCT(id)
-  FROM ' . IMAGES_TABLE . ' AS i
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id
+  FROM ' . Tables::images() . ' AS i
+    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
   WHERE ' . $images_where . '
   ' . $forbidden . '
 ;';
@@ -833,7 +834,7 @@ SELECT
         $query = '
 SELECT
     id
-  FROM ' . IMAGES_TABLE . ' i
+  FROM ' . Tables::images() . ' i
   WHERE id IN (' . implode(',', $items) . ')
   ' . (is_string($conf['order_by']) ? $conf['order_by'] : '');
 
@@ -1057,7 +1058,7 @@ function qsearch_get_images(QExpression $expr, QResults $qsr): void
 {
     $qsr->images_iids = array_fill(0, count($expr->stokens), []);
 
-    $query_base = 'SELECT id from ' . IMAGES_TABLE . ' i WHERE
+    $query_base = 'SELECT id from ' . Tables::images() . ' i WHERE
 ';
     for ($i = 0; $i < count($expr->stokens); $i++) {
         $token = $expr->stokens[$i];
@@ -1157,11 +1158,11 @@ function qsearch_get_tags(QExpression $expr, QResults $qsr): void
         }
 
         $clauses = qsearch_get_text_token_search_sql($token, ['name']);
-        $query = 'SELECT * FROM ' . TAGS_TABLE . '
+        $query = 'SELECT * FROM ' . Tables::tags() . '
 WHERE (' . implode("\n OR ", $clauses) . ')';
         $result = pwg_query($query);
         while ((bool) ($tag = pwg_db_fetch_assoc($result))) {
-            // 'id' is TAGS_TABLE's non-null auto-increment primary key, so it's
+            // 'id' is Tables::tags()'s non-null auto-increment primary key, so it's
             // always a numeric string here — the is_numeric() guard only
             // protects against a genuinely malformed row.
             if (! is_numeric($tag['id'])) {
@@ -1193,7 +1194,7 @@ WHERE (' . implode("\n OR ", $clauses) . ')';
 
         if (! empty($tag_ids)) {
             $query = '
-SELECT image_id FROM ' . IMAGE_TAG_TABLE . '
+SELECT image_id FROM ' . Tables::imageTag() . '
   WHERE tag_id IN (' . implode(',', $tag_ids) . ')
   GROUP BY image_id';
             // query2array() with a value_name and no key_name always returns a
@@ -1208,9 +1209,9 @@ SELECT image_id FROM ' . IMAGE_TAG_TABLE . '
             }
         } elseif (isset($token->scope) && $token->scope->id == 'tag' && strlen($token->term) == 0) {
             if ((bool) ($token->modifier & QST_WILDCARD)) {// eg. 'tag:*' returns all tagged images
-                $qsr->tag_iids[$i] = query2array('SELECT DISTINCT image_id FROM ' . IMAGE_TAG_TABLE, null, 'image_id');
+                $qsr->tag_iids[$i] = query2array('SELECT DISTINCT image_id FROM ' . Tables::imageTag(), null, 'image_id');
             } else {// eg. 'tag:' returns all untagged images
-                $qsr->tag_iids[$i] = query2array('SELECT id FROM ' . IMAGES_TABLE . ' LEFT JOIN ' . IMAGE_TAG_TABLE . ' ON id=image_id WHERE image_id IS NULL', null, 'id');
+                $qsr->tag_iids[$i] = query2array('SELECT id FROM ' . Tables::images() . ' LEFT JOIN ' . Tables::imageTag() . ' ON id=image_id WHERE image_id IS NULL', null, 'id');
             }
         }
     }
@@ -1252,12 +1253,12 @@ function qsearch_get_categories(QExpression $expr, QResults $qsr): void
         $query = '
 SELECT
     *
-  FROM ' . CATEGORIES_TABLE . '
-    INNER JOIN ' . USER_CACHE_CATEGORIES_TABLE . ' ON id = cat_id and user_id = ' . $user_id . '
+  FROM ' . Tables::categories() . '
+    INNER JOIN ' . Tables::userCacheCategories() . ' ON id = cat_id and user_id = ' . $user_id . '
   WHERE (' . implode("\n OR ", $clauses) . ')';
         $result = pwg_query($query);
         while ((bool) ($cat = pwg_db_fetch_assoc($result))) {
-            // 'id' is CATEGORIES_TABLE's non-null auto-increment primary key, so
+            // 'id' is Tables::categories()'s non-null auto-increment primary key, so
             // it's always a numeric string here — the is_numeric() guard only
             // protects against a genuinely malformed row.
             if (! is_numeric($cat['id'])) {
@@ -1292,16 +1293,16 @@ SELECT
                 $query = '
 SELECT
     id
-  FROM ' . CATEGORIES_TABLE . '
-    INNER JOIN ' . USER_CACHE_CATEGORIES_TABLE . ' ON id = cat_id and user_id = ' . $user_id . '
+  FROM ' . Tables::categories() . '
+    INNER JOIN ' . Tables::userCacheCategories() . ' ON id = cat_id and user_id = ' . $user_id . '
   WHERE id IN (' . implode(',', get_subcat_ids($cat_ids)) . ')
 ;';
-                // id is CATEGORIES_TABLE's NOT NULL primary key.
+                // id is Tables::categories()'s NOT NULL primary key.
                 $cat_ids = array_map(intval(...), query2array($query, null, 'id'));
             }
 
             $query = '
-SELECT image_id FROM ' . IMAGE_CATEGORY_TABLE . '
+SELECT image_id FROM ' . Tables::imageCategory() . '
   WHERE category_id IN (' . implode(',', $cat_ids) . ')
   GROUP BY image_id';
             // query2array() with a value_name and no key_name always returns a
@@ -1316,9 +1317,9 @@ SELECT image_id FROM ' . IMAGE_CATEGORY_TABLE . '
             }
         } elseif (isset($token->scope) && $token->scope->id == 'category' && strlen($token->term) == 0) {
             if ((bool) ($token->modifier & QST_WILDCARD)) {// eg. 'category:*' returns all images associated to an album
-                $qsr->cat_iids[$i] = query2array('SELECT DISTINCT image_id FROM ' . IMAGE_CATEGORY_TABLE, null, 'image_id');
+                $qsr->cat_iids[$i] = query2array('SELECT DISTINCT image_id FROM ' . Tables::imageCategory(), null, 'image_id');
             } else {// eg. 'category:' returns all orphan images
-                $qsr->cat_iids[$i] = query2array('SELECT id FROM ' . IMAGES_TABLE . ' LEFT JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id=image_id WHERE image_id IS NULL', null, 'id');
+                $qsr->cat_iids[$i] = query2array('SELECT id FROM ' . Tables::images() . ' LEFT JOIN ' . Tables::imageCategory() . ' ON id=image_id WHERE image_id IS NULL', null, 'id');
             }
         }
     }
@@ -1609,10 +1610,10 @@ function get_quick_search_results_no_cache(string $q, array $options): array
     }
 
     $query = '
-SELECT DISTINCT(id) FROM ' . IMAGES_TABLE . ' i';
+SELECT DISTINCT(id) FROM ' . Tables::images() . ' i';
     if ((bool) $permissions) {
         $query .= '
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id';
+    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id';
     }
     $query .= '
   WHERE ' . implode("\n AND ", $where_clauses) . "\n" .
@@ -1689,7 +1690,7 @@ function get_available_search_uuid(): string
     $query = '
 SELECT
     COUNT(*)
-  FROM ' . SEARCH_TABLE . '
+  FROM ' . Tables::search() . '
   WHERE search_uuid = \'' . $candidate . '\'
 ;';
     $row = pwg_db_fetch_row(pwg_query($query));
@@ -1723,7 +1724,7 @@ function save_search(array $rules, ?int $forked_from = null): array
     $user_id = is_numeric($user['id'] ?? null) ? (int) $user['id'] : null;
 
     single_insert(
-        SEARCH_TABLE,
+        Tables::search(),
         [
             'rules' => pwg_db_real_escape_string(serialize($rules)),
             'created_on' => $dbnow,

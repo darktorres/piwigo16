@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\AppInfo;
 use Piwigo\Template\Template;
 
 class updates
@@ -87,16 +89,16 @@ class updates
 
     public static function check_piwigo_upgrade(): void
     {
-        $_SESSION['need_update' . PHPWG_VERSION] = null;
+        $_SESSION['need_update' . AppInfo::VERSION] = null;
 
         // $result is never a resource here: no fopen() handle is passed to
         // fetchRemote() above.
-        if ((bool) preg_match('/(\d+\.\d+)\.(\d+)/', PHPWG_VERSION, $matches)
+        if ((bool) preg_match('/(\d+\.\d+)\.(\d+)/', AppInfo::VERSION, $matches)
           and @fetchRemote(PHPWG_URL . '/download/all_versions.php?rand=' . md5(uniqid((string) mt_rand(), true)), $result)
           and is_string($result)) {
             $all_versions = @explode("\n", $result);
             $new_version = trim($all_versions[0]);
-            $_SESSION['need_update' . PHPWG_VERSION] = version_compare(PHPWG_VERSION, $new_version, '<');
+            $_SESSION['need_update' . AppInfo::VERSION] = version_compare(AppInfo::VERSION, $new_version, '<');
         }
     }
 
@@ -123,12 +125,12 @@ class updates
         ];
 
         [$env, $build_version] = get_container_info();
-        if ((bool) preg_match('/^(\d+\.\d+)\.(\d+)$/', PHPWG_VERSION)) {
+        if ((bool) preg_match('/^(\d+\.\d+)\.(\d+)$/', AppInfo::VERSION)) {
             $new_versions['is_dev'] = false;
             $actual_branch = get_branch_from_version(
                 ($env === 'Official')
         ? substr((string) $build_version, 0, -1)
-        : PHPWG_VERSION
+        : AppInfo::VERSION
             );
 
             $url = PHPWG_URL . '/download/all_versions.php';
@@ -166,7 +168,7 @@ class updates
                 } else {
                     [$last_version_number, $last_version_php] = explode('/', trim($all_versions[0]));
 
-                    if (version_compare(PHPWG_VERSION, $last_version_number, '<')) {
+                    if (version_compare(AppInfo::VERSION, $last_version_number, '<')) {
                         $last_branch = get_branch_from_version($last_version_number);
 
                         if ($last_branch == $actual_branch) {
@@ -182,7 +184,7 @@ class updates
                                 $branch = get_branch_from_version($version_number);
 
                                 if ($branch == $actual_branch) {
-                                    if (version_compare(PHPWG_VERSION, $version_number, '<')) {
+                                    if (version_compare(AppInfo::VERSION, $version_number, '<')) {
                                         $new_versions['minor'] = $version_number;
                                         $new_versions['minor_php'] = $version_php;
                                     }
@@ -312,7 +314,7 @@ class updates
         }
     }
 
-    public function get_server_extensions(string $version = PHPWG_VERSION): bool
+    public function get_server_extensions(string $version = AppInfo::VERSION): bool
     {
         /** @var array<string, mixed> $user */
         global $user;
@@ -621,7 +623,7 @@ class updates
         $data_location_raw = $conf['data_location'] ?? null;
         $data_location = is_string($data_location_raw) ? $data_location_raw : '';
 
-        if ($check_current_version and ! version_compare($upgrade_to, PHPWG_VERSION, '>')) {
+        if ($check_current_version and ! version_compare($upgrade_to, AppInfo::VERSION, '>')) {
             // TODO why redirect to a plugin page? maybe a remaining code from when
             // the update system was provided as a plugin?
             redirect(get_root_url() . 'admin.php?page=plugin-' . basename(__DIR__));
@@ -630,7 +632,7 @@ class updates
         $obsolete_list = null;
 
         if ($step == 2) {
-            $code = get_branch_from_version(PHPWG_VERSION) . '.x_to_' . $upgrade_to;
+            $code = get_branch_from_version(AppInfo::VERSION) . '.x_to_' . $upgrade_to;
             $dl_code = str_replace(['.', '_'], '', $code);
             $remove_path = $code;
             // no longer try to delete files on a minor upgrade
@@ -716,8 +718,8 @@ class updates
                         deltree(PHPWG_ROOT_PATH . $data_location . 'update');
                         invalidate_user_cache(true);
                         conf_update_param('piwigo_installed_version', $upgrade_to);
-                        pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'update', [
-                            'from_version' => PHPWG_VERSION,
+                        pwg_activity('system', ActivitySystem::Core, 'update', [
+                            'from_version' => AppInfo::VERSION,
                             'to_version' => $upgrade_to,
                         ]);
 

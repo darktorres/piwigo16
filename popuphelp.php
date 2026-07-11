@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\AccessLevel;
 use Piwigo\Template\Template;
 
 // +-----------------------------------------------------------------------+
@@ -27,7 +28,7 @@ include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_GUEST);
+check_status(AccessLevel::Guest);
 
 /** @var array<string, mixed> $page */
 $page['body_id'] = 'thePopuphelpPage';

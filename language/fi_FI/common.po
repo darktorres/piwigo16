@@ -1,0 +1,1379 @@
+# Piwigo translation — fi_FI
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: fi_FI\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Language-Name: Finnish\n"
+"X-Piwigo-Country: Suomi\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: fi\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d albumi päivitetty"
+msgstr[1] "%d albumit päivitetty"
+
+msgid "%d comment to validate"
+msgstr "%d kommentin vahvistus"
+
+msgid "%d comments to validate"
+msgstr "%d kommentien vahvistus"
+
+msgid "%d new comment"
+msgstr "%d uusi kommentti"
+
+msgid "%d new comments"
+msgstr "%d uudet kommentit"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d kommentti"
+msgstr[1] "%d kommenttia"
+
+msgid "%d hit"
+msgid_plural "%d hits"
+msgstr[0] "%d osuma"
+msgstr[1] "%d osumat"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "%d uusi kuva"
+msgstr[1] "%d uudet kuvat"
+
+msgid "%d new user"
+msgstr "%d uusi käyttäjä"
+
+msgid "%d new users"
+msgstr "%d uudet käyttäjät"
+
+msgid "About"
+msgstr "Yleistä"
+
+msgid "All tags"
+msgstr "Kaikki tunnisteet"
+
+msgid "Any tag"
+msgstr "Tunniste"
+
+msgid "Author"
+msgstr "Tekijä"
+
+msgid "Albums"
+msgstr "Albumit"
+
+msgid "Album"
+msgstr "Albumi"
+
+msgid "Close this window"
+msgstr "Sulje tämä ikkuna"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "Täydellinen RSS-syöte (kuvat, kommentit)"
+
+msgid "Confirm Password"
+msgstr "Vahvista salasana"
+
+msgid "Connection settings"
+msgstr "Yhteysasetukset"
+
+msgid "Login"
+msgstr "Kirjaudu"
+
+msgid "Contact webmaster"
+msgstr "Ota yhteys Ylläpitäjään"
+
+msgid "Create a new account"
+msgstr "Luo uusi tili"
+
+msgid "Created on"
+msgstr "Luotu"
+
+msgid "Creation date"
+msgstr "Luontipäivä"
+
+msgid "Current password is wrong"
+msgstr "Salasana on väärä"
+
+msgid "Dimensions"
+msgstr "Koko"
+
+msgid "Display"
+msgstr "Näytä"
+
+msgid "Email address"
+msgstr "Sähköpostiosoite"
+
+msgid "Enter your personnal informations"
+msgstr "Kirjoita henkilökohtaiset tietosi"
+
+msgid "Error sending email"
+msgstr "Virhe sähköpostin lähettämisessä"
+
+msgid "File name"
+msgstr "Tiedostonimi"
+
+msgid "File"
+msgstr "Tiedosto"
+
+msgid "Filesize"
+msgstr "Tiedoston koko"
+
+msgid "Filter and display"
+msgstr "Suodatin ja näyttö"
+
+msgid "Filter"
+msgstr "Suodatin"
+
+msgid "Forgot your password?"
+msgstr "Unohditko salasanasi?"
+
+msgid "Go through the gallery as a visitor"
+msgstr "Selaa galleriaa vieraana"
+
+msgid "Help"
+msgstr "Apua"
+
+msgid "Identification"
+msgstr "Tunnistus"
+
+msgid "Photos only RSS feed"
+msgstr "RSS -syöte (vain kuvat)"
+
+msgid "Keyword"
+msgstr "Avainsana"
+
+msgid "Date"
+msgstr "Päivämäärä"
+
+msgid "Default"
+msgstr "Oletus"
+
+msgid "Download"
+msgstr "lataa"
+
+msgid "Edit a comment"
+msgstr "Muokkaa kommenttia"
+
+msgid "edit"
+msgstr "muokkaa"
+
+msgid "Edit"
+msgstr "Muokkaa"
+
+msgid "First"
+msgstr "Ensimmäinen"
+
+msgid "from %s to %s"
+msgstr "alkaen %s päättyen %s"
+
+msgid "group by letters"
+msgstr "järjestä kirjainten mukaan"
+
+msgid "guest"
+msgstr "vieras"
+
+msgid "Hello"
+msgstr "Hei"
+
+msgid "Home"
+msgstr "Etusivu"
+
+msgid "Search"
+msgstr "Etsi"
+
+msgid "search"
+msgstr "Tarkka haku"
+
+msgid "Sent by"
+msgstr "Lähettäjä"
+
+msgid "A comment on your site"
+msgstr "Palaute sivultasi"
+
+msgid "About Piwigo"
+msgstr "Yleistä Piwigosta"
+
+msgid "Accelerate diaporama speed"
+msgstr "Kasvata diaesityksen nopeutta"
+
+msgid "Add a comment"
+msgstr "Lisää kommentti"
+
+msgid "add this photo to your favorites"
+msgstr "lisää tämä kuva suosikkeihisi"
+
+msgid "Admin: %s"
+msgstr "Ylläpitäjä: %s"
+
+msgid "Administration"
+msgstr "Hallinta"
+
+msgid "Album results for"
+msgstr "Albumin tulokset"
+
+msgid "Album: %s"
+msgstr "Albumi: %s"
+
+msgid "all"
+msgstr "all"
+
+msgid "All"
+msgstr "Kaikki"
+
+msgid "Are you sure?"
+msgstr "Oletko varma?"
+
+msgid "ascending"
+msgstr "nouseva"
+
+msgid "Author: %s"
+msgstr "Tekijä: %s"
+
+msgid "Auto login"
+msgstr "Muista minut"
+
+msgid "available for administrators only"
+msgstr "Vain ylläpitäjille"
+
+msgid "Best rated"
+msgstr "Parhaiten arvioidut"
+
+msgid "Browser: %s"
+msgstr "Selain: %s"
+
+msgid "Calendar"
+msgstr "Kalenteri"
+
+msgid "Change my password"
+msgstr "Vaihda salasana"
+
+msgid "%d Kb"
+msgstr "%d kB"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "%d kuva"
+msgstr[1] "%d kuvaa"
+
+msgid "Comment"
+msgstr "Kommentti"
+
+msgid "Comment: %s"
+msgstr "Kommentti: %s"
+
+msgid "Comments"
+msgstr "Kommentit"
+
+msgid "Contact"
+msgstr "Ota yhteyttä"
+
+msgid "created before %s (%s)"
+msgstr "luotu ennen %s (%s)"
+
+msgid "created on %s"
+msgstr "Luotu %s"
+
+msgid "Delete"
+msgstr "Poista"
+
+msgid "delete all photos from your favorites"
+msgstr "poista kaikki kuvat suosikeista"
+
+msgid "descending"
+msgstr "laskeva"
+
+msgid "Expand all albums"
+msgstr "Laajenna kaikki albumit"
+
+msgid "Favorites"
+msgstr "Suosikit"
+
+msgid "Hello %s,"
+msgstr "Hei %s,"
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "Hei %s, Piwigo kuvagalleriasi on tyhjä!"
+
+msgid "IP: %s"
+msgstr "IP: %s"
+
+msgid "Language"
+msgstr "Kieli"
+
+msgid "large"
+msgstr "Iso"
+
+msgid "letters"
+msgstr "kirjaimet"
+
+msgid "Links"
+msgstr "Linkit"
+
+msgid "Logout"
+msgstr "Kirjaudu ulos"
+
+msgid "medium"
+msgstr "Keskikokoinen"
+
+msgid "Menu"
+msgstr "Valikko"
+
+msgid "Most visited"
+msgstr "Suosituimmat kuvat"
+
+msgid "New password"
+msgstr "Uusi salasana"
+
+msgid "Next"
+msgstr "Seuraava"
+
+msgid "No"
+msgstr "Ei"
+
+msgid "Notification"
+msgstr "Tiedoksi"
+
+msgid "Number of photos per page"
+msgstr "Kuvien määrä sivulla"
+
+msgid "obligatory"
+msgstr "pakollinen"
+
+msgid "Original"
+msgstr "Alkuperäinen"
+
+msgid "Original dimensions"
+msgstr "Alkuperäinen koko"
+
+msgid "Password"
+msgstr "Salasana"
+
+msgid "Password forgotten"
+msgstr "Unohdettu salasana"
+
+msgid "Password Reset"
+msgstr "Salasanan palautus"
+
+msgid "password updated"
+msgstr "salasana uusittu"
+
+msgid "Pause of slideshow"
+msgstr "Pysäytä diaesitys"
+
+msgid "photo"
+msgstr "kuva"
+
+msgid "Photo sizes"
+msgstr "Kuvien koot"
+
+msgid "Previous"
+msgstr "Edellinen"
+
+msgid "Profile"
+msgstr "Profiili"
+
+msgid "Recent albums"
+msgstr "Viimeisimmät albumit"
+
+msgid "Recent photos"
+msgstr "Viimeisimmät kuvat"
+
+msgid "Registration"
+msgstr "Rekisteröityminen"
+
+msgid "Repeat the slideshow"
+msgstr "Toista diaesitys"
+
+msgid "representative"
+msgstr "albumin esikatselukuva"
+
+msgid "Search in albums"
+msgstr "Etsi albumeista"
+
+msgid "Search results"
+msgstr "Hakutulos"
+
+msgid "set as album representative"
+msgstr "aseta albumin esikatselukuvaksi"
+
+msgid "slideshow"
+msgstr "diaesitys"
+
+msgid "small"
+msgstr "Pieni"
+
+msgid "Sort by"
+msgstr "Lajitteluperuste"
+
+msgid "Sort order"
+msgstr "Lajittelujärjestys"
+
+msgid "Thumbnails"
+msgstr "Esikatselukuvat"
+
+msgid "Visits"
+msgstr "Vierailut"
+
+msgid "Webmaster"
+msgstr "Ylläpitäjä"
+
+msgid "Week %d"
+msgstr "Viikko %d"
+
+msgid "Welcome"
+msgstr "Tervetuloa"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "Tervetuloa Piwigo kuvagalleriaasi!"
+
+msgid "xlarge"
+msgstr "Isompi"
+
+msgid "xxlarge"
+msgstr "Isoin"
+
+msgid "Yes"
+msgstr "Kyllä"
+
+msgid "Your favorites"
+msgstr "Suosikit"
+
+msgid "Your password has been reset"
+msgstr "Salasanasi on nollattu"
+
+msgid "display this album"
+msgstr "näytä tämä albumi"
+
+msgid "Download this file"
+msgstr "Lataa tämä tiedosto"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "%d valokuva on liitetty myös nykyisiin tunnisteisiin"
+msgstr[1] "%d valokuvat on liitetty myös nykyisiin tunnisteisiin"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) Tämä kommentti vaatii hyväksynnän"
+
+msgid "... or browse your empty gallery"
+msgstr "...tai selaa tyhjää kuvagalleriaasi"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "...tai poista tämä viesti käytöstä, otan itse selvää"
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "Ylläpitäjän on hyväksyttävä kommenttisi ennen kuin se tulee näkyviin."
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "Floodauksen esto: Odota hetki ennen kuin yrität lähettää uuden kommentin"
+
+msgid "Check your email for the confirmation link"
+msgstr "Tarkista sähköpostistasi vahvistuslinkki"
+
+msgid "chronology_monthly_calendar"
+msgstr "Kuukausikalenteri"
+
+msgid "chronology_monthly_list"
+msgstr "Kuukausittainen lista"
+
+msgid "chronology_weekly_list"
+msgstr "Viikottainen lista"
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "Paina tästä mikäli selain ei automaattisesti siirrä sinua eteenpäin"
+
+msgid "Click on the photo to see it in high definition"
+msgstr "Paina kuvaa nähdäksesi sen korkealaatuisena"
+
+msgid "cloud"
+msgstr "pilvi"
+
+msgid "Comment by %s"
+msgstr "Kommentti käyttäjältä %s"
+
+msgid "comment date"
+msgstr "kommentin päivämäärä"
+
+msgid "Connected user: %s"
+msgstr "Kytketty käyttäjä: %s"
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "Evästeet eivät ole sallittu tai selaimesi ei tue niitä. Evästeet on laitettava päälle kirjautuaksesi sisään."
+
+msgid "created after %s (%s)"
+msgstr "luotu %s (%s) jälkeen"
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "luotu %s(%s) ja %s (%s) välissä"
+
+msgid "delete this photo from your favorites"
+msgstr "poista tämä kuva suosikeista"
+
+msgid "display a calendar by creation date"
+msgstr "näytä kalenteri luomispäivän mukaan"
+
+msgid "display a calendar by posted date"
+msgstr "näytä kalenteri lähetyspäivän mukaan"
+
+msgid "display a set of random photos"
+msgstr "näytä satunnaisia kuvia"
+
+msgid "display all photos in all sub-albums"
+msgstr "näytä kaikki kuvat kaikista ala-albumeista"
+
+msgid "display available tags"
+msgstr "näytä käytettävissä olevat tunnisteet"
+
+msgid "display best rated photos"
+msgstr "näytä parhaiten arvioidut kuvat"
+
+msgid "display last user comments"
+msgstr "näytä viimeisimmät käyttäjien kommentit"
+
+msgid "display most recent photos"
+msgstr "näytä viimeisimmät kuvat"
+
+msgid "display most visited photos"
+msgstr "näytä useimmin katsotut kuvat"
+
+msgid "display only recently posted photos"
+msgstr "näytä vain viimeisimmäksi lähetetyt kuvat"
+
+msgid "display photos linked to this tag"
+msgstr "näytä tähän tunnisteeseen linkitetyt kuvat"
+
+msgid "display recently updated albums"
+msgstr "näytä viimeisimmäksi päivitetyt albumit"
+
+msgid "display your favorites photos"
+msgstr "näytä suosikkikuvat"
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "Sähköpostiosoite puuttuu. Määritä sähköpostiosoite."
+
+msgid "Email: %s"
+msgstr "Sähköposti: %s"
+
+msgid "Empty query. No criteria has been entered."
+msgstr "Tyhjä haku. Mitään ei haettu."
+
+msgid "End-Date"
+msgstr "Päättymispäivä"
+
+msgid "Enter your new password below."
+msgstr "Kirjoita uusi salasanasi alapuolelle."
+
+msgid "EXIF Metadata"
+msgstr "EXIF Metatiedot"
+
+msgid "html tags are not allowed in login"
+msgstr "html tunnisteet eivät ole sallittuja käyttäjätunnuksessa"
+
+msgid "I want to add photos"
+msgstr "Haluan lisätä kuvia"
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] "%d ala-albumissa"
+msgstr[1] "%d ala-albumissa"
+
+msgid "in this album"
+msgstr "tässä albumissa"
+
+msgid "included"
+msgstr "sisältyy"
+
+msgid "Invalid key"
+msgstr "Väärä avain"
+
+msgid "Invalid password!"
+msgstr "Väärä salasana!"
+
+msgid "Invalid username or email"
+msgstr "Väärä käyttäjätunnus tai sähköpostiosoite"
+
+msgid "IPTC Metadata"
+msgstr "IPTC Metatiedot"
+
+msgid "Last"
+msgstr "Viimeinen"
+
+msgid "last %d days"
+msgstr "viimeisimmät %d päivät"
+
+msgid "Here are your connection settings"
+msgstr "Tässä on rekisteröitymistietosi"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "Sähköpostiosoitteen tulee olla muotoa xxx@yyy.eee (esimerkiksi jack@altern.org)"
+
+msgid "no rate"
+msgstr "ei arvosteltu"
+
+msgid "Not repeat the slideshow"
+msgstr "Älä toista diaesitystä"
+
+msgid "Page generated in"
+msgstr "Sivu luotu"
+
+msgid "Password reset is not allowed for this user"
+msgstr "Salasanan palautus ei ole sallittu tälle käyttäjälle"
+
+msgid "Password: %s"
+msgstr "Salasana:%s"
+
+msgid "Play of slideshow"
+msgstr "Käynnistä diaesitys"
+
+msgid "Please enter your username or email address."
+msgstr "Kirjoita käyttäjätunnus tai sähköpostiosoite"
+
+msgid "posted after %s (%s)"
+msgstr "lähetetty %s(%s) jälkeen"
+
+msgid "posted before %s (%s)"
+msgstr "lähetetty ennen %s(%s)"
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "lähetetty %s(%s) ja %s(%s) välissä"
+
+msgid "Posted on"
+msgstr "Lähetetty"
+
+msgid "posted on %s"
+msgstr "lähetetty %s"
+
+msgid "Preferences"
+msgstr "Asetukset"
+
+msgid "Quick search"
+msgstr "Pikahaku"
+
+msgid "Random photos"
+msgstr "Satunnaiset valokuvat"
+
+msgid "Rank"
+msgstr "Sijoitus"
+
+msgid "Rate this photo"
+msgstr "Arvostele tämä kuva"
+
+msgid "Recent period"
+msgstr "Viimeisin ajanjakso"
+
+msgid "Redirection..."
+msgstr "Uudelleenohjaus..."
+
+msgid "Reduce diaporama speed"
+msgstr "Vähennä diaesityksen nopeutta"
+
+msgid "Register"
+msgstr "Rekisteröidy"
+
+msgid "remove this tag from the list"
+msgstr "poista tämä tunniste listasta"
+
+msgid "Reset"
+msgstr "Tyhjennä"
+
+msgid "Reset to default values"
+msgstr "Palauta alkuperäisasetukset"
+
+msgid "Return to home page"
+msgstr "Palaa etusivulle"
+
+msgid "return to normal view mode"
+msgstr "palaa normaaliin katselunäkymään"
+
+msgid "RSS feed"
+msgstr "RSS syöte"
+
+msgid "Search by date"
+msgstr "Hae päivämäärän mukaan"
+
+msgid "Search for Author"
+msgstr "Hae tekijän mukaan"
+
+msgid "Search for words"
+msgstr "Hae sanoja"
+
+msgid "Search in sub-albums"
+msgstr "Etsi ala-albumeista"
+
+msgid "Send my connection settings by email"
+msgstr "Lähetä rekisteröitymistiedot sähköpostiini"
+
+msgid "Show file metadata"
+msgstr "Näytä kuvan metatiedot"
+
+msgid "Show latest comments first"
+msgstr "Näytä viimeisin kommentti ensin"
+
+msgid "Show number of comments"
+msgstr "Näytä kommenttien lukumäärä"
+
+msgid "Show oldest comments first"
+msgstr "Näytä vanhin kommentti ensin"
+
+msgid "Since"
+msgstr "Alkaen"
+
+msgid "SQL queries in"
+msgstr "SQL haut"
+
+msgid "stop the slideshow"
+msgstr "pysäytä diaesitys"
+
+msgid "Submit"
+msgstr "Lähetä"
+
+msgid "Tag"
+msgstr "Tunniste"
+
+msgid "Tags"
+msgstr "Tunnisteet"
+
+msgid "the beginning"
+msgstr "alku"
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "Kuvien lukumäärä sivulla on oltava enemmän kuin nolla"
+
+msgid "The passwords do not match"
+msgstr "Salasanat eivät täsmää"
+
+msgid "the username must be given"
+msgstr "käyttäjätunnus vaaditaan"
+
+msgid "This author modified following comment:"
+msgstr "Tekijä on muokannut seuraavaa kommenttia:"
+
+msgid "This author removed the comment with id %d"
+msgstr "Tekijä poisti kommentin id: %d"
+
+msgid "this email address is already in use"
+msgstr "sähköpostiosoite on jo käytössä"
+
+msgid "today"
+msgstr "tänään"
+
+msgid "User comments"
+msgstr "Käyttäjien kommentit"
+
+msgid "User: %s"
+msgstr "Käyttäjä:%s"
+
+msgid "Username"
+msgstr "Käyttäjätunnus"
+
+msgid "Username modification"
+msgstr "Käyttäjätunnuksen muokkaaminen"
+
+msgid "Username or email"
+msgstr "Käyttäjätunnus tai sähköpostiosoite"
+
+msgid "Username: %s"
+msgstr "Käyttäjätunnus:%s"
+
+msgid "View"
+msgstr "Katso"
+
+msgid "View in"
+msgstr "Katso"
+
+msgid "wrong date"
+msgstr "väärä päivämäärä"
+
+msgid "Your comment has been registered"
+msgstr "Kommenttisi on kirjattu"
+
+msgid "Your Gallery Customization"
+msgstr "Kuvagallerian muokkaus"
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "Käyttäjätunnuksesi on vaihdettu, uusi käyttäjätunnus on: %s"
+
+msgid "Desktop"
+msgstr "Työpöytä"
+
+msgid "display each day with photos, month per month"
+msgstr "näytä joka päivä kuvia, kuukausi kuukaudelta"
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "Jos tämä oli vahinko, älä huomioi viestiä niin mitään ei tapahdu."
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "Jos sait tämän sähköpostin vahingossa, otathan yhteyttä %s"
+
+msgid "login mustn't end with a space character"
+msgstr "käyttäjätunnus ei voi päättyä välilyöntiin"
+
+msgid "login mustn't start with a space character"
+msgstr "käyttäjätunnus ei voi alkaa välilyönnillä"
+
+msgid "Manage this user comment: %s"
+msgstr "Muokkaa käyttäjän kommenttia: %s"
+
+msgid "Mobile"
+msgstr "Mobiili"
+
+msgid "N/A"
+msgstr "N/A"
+
+msgid "New on %s"
+msgstr "Uusi %s"
+
+msgid "photos posted during the last %d days"
+msgstr "kuvat lisätty viimeisen %d päivän aikana"
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "Kuvat lisätty vain viimeisen %d päivän aikana."
+msgstr[1] "Kuvat lisätty vain viimeisten %d päivien aikana."
+
+msgid "Piwigo Help"
+msgstr "Piwigo help"
+
+msgid "Please, enter a login"
+msgstr "Kirjoita käyttäjätunnuksesi"
+
+msgid "Post date"
+msgstr "Lähetyspäivä"
+
+msgid "Powered by"
+msgstr "Powered by"
+
+msgid "Quick connect"
+msgstr "Pikayhteys"
+
+msgid "Rating score"
+msgstr "Pisteet"
+
+msgid "Recent period must be a positive integer value"
+msgstr "Viimeisimmän ajanjakson tulee olla positiivinen kokonaisluku"
+
+msgid "Registration of %s"
+msgstr "%s Rekisteröinti"
+
+msgid "Related tags"
+msgstr "Samankaltaiset tunnisteet"
+
+msgid "Retrieve password"
+msgstr "Palauta salasana"
+
+msgid "return to the display of all photos"
+msgstr "palaa kaikkien kuvien näkymään"
+
+msgid "Search for all terms"
+msgstr "Hae kaikkia sanoja"
+
+msgid "Search for any term"
+msgstr "Hae mitä tahansa sanaa"
+
+msgid "Search tags"
+msgstr "Haettavat tunnisteet"
+
+msgid "Show number of hits"
+msgstr "Näytä osumien lukumäärä"
+
+msgid "show tag cloud"
+msgstr "näytä tunnistepilvi"
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "Salasanan nollausta on pyytänyt käyttäjätili:"
+
+msgid "square"
+msgstr "Neliö"
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "Rekisteröinti onnistui, saat kohta sähköpostissa rekisteröitymistietosi. Tervetuloa käyttäjäksi!"
+
+msgid "Tag results for"
+msgstr "Tunnisteen tulokset"
+
+msgid "Thank you for registering at %s!"
+msgstr "Kiitos rekisteröitymisestäsi %s!"
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "Galleria on suljettu huollon ajaksi. Tule takaisin myöhemmin."
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "RSS-syöte tarjoaa ilmoitukset uusista tapahtumista tältä sivustolta: uudet kuvat, päivitetyt albumit ja uudet kommentit. Käytä RSS -lukijaa."
+
+msgid "This login is already used by another user"
+msgstr "Käyttäjätunnus on jo käytössä"
+
+msgid "this login is already used"
+msgstr "käyttäjätunnus on jo käytössä"
+
+msgid "thumb"
+msgstr "Kuvake"
+
+msgid "To reset your password, visit the following address:"
+msgstr "Palauttaaksesi salasanan, mene seuraavaan osoitteeseen:"
+
+msgid "Unknown feed identifier"
+msgstr "Tuntematon syötteen tunniste"
+
+msgid "Unknown identifier"
+msgstr "Tuntematon tunniste"
+
+msgid "Update your rating"
+msgstr "Päivitä arvostelut"
+
+msgid "useful when password forgotten"
+msgstr "hyödyllinen jos unohdat salasanasi"
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "Käyttäjällä \"%s\" ei ole sähköpostiosoitetta, salasanan palautus ei ole mahdollista"
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "Käyttäjätunnus \"%s\" galleriassa %s"
+
+msgid "You are not authorized to access the requested page"
+msgstr "Käyttöoikeutesi ei riitä sivun avaamiseen"
+
+msgid "You will receive a link to create a new password via email."
+msgstr "Saat sähköpostiisi ohjeet uuden salasanan luomiseksi."
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "Kommenttiasi EI ole kirjattu, koska se ei läpäissyt tarkistus sääntöjä"
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "Tunnusta \"vieras\" ei voida käyttää, käytetään oletustunnusta. Ilmoitathan ylläpitäjälle."
+
+msgid "Kind of date"
+msgstr "Päivän valinta"
+
+msgid "Number of items"
+msgstr "Tiedostojen lukumäärä"
+
+msgid "Specials"
+msgstr "Ekstrat"
+
+msgid "2small"
+msgstr "XXS - pikkuinen"
+
+msgid "Date created, new &rarr; old"
+msgstr "Luontipäivä, uusi &rarr; vanha"
+
+msgid "Date created, old &rarr; new"
+msgstr "Luontipäivä, vanha &rarr; uusi"
+
+msgid "Date posted, new &rarr; old"
+msgstr "Lähetyspäivä, uusi &rarr; vanha"
+
+msgid "Date posted, old &rarr; new"
+msgstr "Lähetyspäivä, vanha &rarr; uusi"
+
+msgid "File name, A &rarr; Z"
+msgstr "Tiedoston nimi, A &rarr; Z"
+
+msgid "File name, Z &rarr; A"
+msgstr "Tiedoston nimi, Z &rarr; A"
+
+msgid "Manual sort order"
+msgstr "Manuaalinen lajittelujärjestys"
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "Numerotunniste, 1 &rarr; 9"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "Numerotunniste, 9 &rarr; 1"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "Kuvan otsikko, A &rarr; Z"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "Kuvan otsikko, Z &rarr; A"
+
+msgid "Rating score, high &rarr; low"
+msgstr "Arvostelu, korkea &rarr; matala"
+
+msgid "Rating score, low &rarr; high"
+msgstr "Arvostelu, matala &rarr; korkea"
+
+msgid "Visits, high &rarr; low"
+msgstr "Käynnit, korkea &rarr; matala"
+
+msgid "Visits, low &rarr; high"
+msgstr "Käynnit, matala &rarr; korkea"
+
+msgid "excluded"
+msgstr "pois jätetty"
+
+msgid "xsmall"
+msgstr "XS - extra pieni"
+
+msgid "%d rate"
+msgid_plural "%d rates"
+msgstr[0] "%d määrä"
+msgstr[1] "%d arvostelut"
+
+msgid "Bad request"
+msgstr "Väärä pyyntö"
+
+msgid "Forbidden"
+msgstr "Ei sallittu"
+
+msgid "Page not found"
+msgstr "Sivua ei löytynyt"
+
+msgid "Permalink for album not found"
+msgstr "Permalinkkiä albumille ei löytynyt"
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "Piwigo aiheutti virheen jota ei voi korjata"
+
+msgid "Requested album does not exist"
+msgstr "Pyydettyä albumia ei ole"
+
+msgid "Requested tag does not exist"
+msgstr "Pyydettyä tagia ei ole"
+
+msgid "Email address is mandatory"
+msgstr "Sähköpostiosoite on pakollinen"
+
+msgid "Username is mandatory"
+msgstr "Käyttäjätunnus on pakollinen"
+
+msgid "mandatory"
+msgstr "pakollinen"
+
+msgid "Your website URL is invalid"
+msgstr "Sivustosi URL osoite on virheellinen"
+
+msgid "Website"
+msgstr "Verkkosivusto"
+
+msgid "Email"
+msgstr "Sähköposti"
+
+msgid "First Page"
+msgstr "Ensimmäinen sivu"
+
+msgid "Go back to the album"
+msgstr "Takaisin albumiin"
+
+msgid "Last Page"
+msgstr "Viimeinen sivu"
+
+msgid "%d photos per page"
+msgstr "%d kuvaa sivua kohti"
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Salasanan vahvistus puuttuu. Ole hyvä ja vahvista salasanasi."
+
+msgid "Password is missing. Please enter the password."
+msgstr "Salasana puuttuu. "
+
+msgid "Theme"
+msgstr "Teema"
+
+msgid "No results for"
+msgstr "Ei tuloksia haulle"
+
+msgid "Photo description"
+msgstr "Kuvan kuvaus"
+
+msgid "Photo title"
+msgstr "Kuvan otsikko"
+
+msgid "Album name, A &rarr; Z"
+msgstr "Albumin nimi, A &rarr; Z"
+
+msgid "Album name, Z &rarr; A"
+msgstr "Albumin nimi, Z &rarr; A"
+
+msgid "Apply on properties"
+msgstr "Käytä asetuksia"
+
+msgid "Link: %s"
+msgstr "Linkki: %s"
+
+msgid "Your authentication key is no longer valid."
+msgstr "Todennusavaimesi ei ole enää voimassa."
+
+msgid "Invalid username or password!"
+msgstr "Väärä käyttäjänimi tai salasana!"
+
+msgid "generate random password"
+msgstr "luo satunnainen salasana"
+
+msgid "Password: ********** (no copy by email)"
+msgstr "Salasana: ********** (ei kopioa sähköpostitse)"
+
+msgid "Related albums"
+msgstr "Aiheeseen liittyvät albumit"
+
+msgid "Start-Date"
+msgstr "Aloituspäivämäärä"
+
+msgid "Album name, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+msgstr "Albumin nimi, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+
+msgid "Album name, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+msgstr "Albumin nimi, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+
+msgid "last 24 hours"
+msgstr "viimeinen vuorokausi"
+
+msgid "last 3 months"
+msgstr "Viimeiset 3 kuukautta"
+
+msgid "last 30 days"
+msgstr "Viimeist 30 päivää"
+
+msgid "last 6 months"
+msgstr "Viimeiset 6 kuukautta"
+
+msgid "last 7 days"
+msgstr "Viimeiset 7 päivään"
+
+msgid "last year"
+msgstr "Viimeinen vuosi"
+
+msgid "rating score %s"
+msgstr "arvostelupisteet %s"
+
+msgid "year %d"
+msgstr "vuosi %d"
+
+msgid "File type"
+msgstr "Tiedostotyyppi"
+
+msgid "Empty filters"
+msgstr "Tyhjennä suodattimet"
+
+msgid "Clear"
+msgstr "Tyhjennä"
+
+msgid "Choose filters"
+msgstr "Valitse suodattimet"
+
+msgid "Cancel"
+msgstr "Peruuta"
+
+msgid "Album title"
+msgstr "Albumin otsikko"
+
+msgid "Album description"
+msgstr "Albumin kuvaus"
+
+msgid "%d visits"
+msgstr "%d vierailua"
+
+msgid "Pre-established filters are proposed, but you can add or remove them using the \"Choose filters\" button."
+msgstr "Ennaltamääriteltyjä suodattimia ehdotetaan, mutta voit lisätä tai poistaa niitä käyttämällä \"Valitse suodattimet\" -painiketta."
+
+msgid "Tags listed here match your search by word. Click on one to browse by tag."
+msgstr "Tässä listatut tagit vastaavat hakusanaasi. Paina sellaisesta selataksesi tageittain."
+
+msgid "Search in :"
+msgstr "Hae täältä : "
+
+msgid "Search in this set"
+msgstr "Hae tästä joukosta"
+
+msgid "You can try to edit your filters and perform a new search."
+msgstr "Voit yrittää muokata suodattimia ja tehdä uuden haun."
+
+msgid "Tags found"
+msgstr "Tageja löydetty"
+
+msgid "The PDF you requested is too large to display on this page."
+msgstr "Pyytämäsi PDF on liian suuri tällä sivulla näytettäväksi."
+
+msgid "Unknown time period"
+msgstr "Tuntematon aikaväli"
+
+msgid "Validate"
+msgstr "Tarkista"
+
+msgid "Fill in the filters to start a search"
+msgstr "Täytä suodattimet aloittaaksesi haun"
+
+msgid "Filters"
+msgstr "Suodattimet"
+
+msgid "No results are available."
+msgstr "Ei tuloksia."
+
+msgid "Only the first %d albums are displayed, out of %d."
+msgstr "Vain %d ensimmäistä albumia näkyvissä, yhteensä %d:sta."
+
+msgid "Pages"
+msgstr "Sivut"
+
+msgid "Added by"
+msgstr "Lisännyt"
+
+msgid "Album already selected"
+msgstr "Albumi on jo valittu"
+
+msgid "Albums found"
+msgstr "Albumeita löydetty"
+
+msgid "Albums listed here match your search by word. Click on one to browse by album."
+msgstr "Tässä listatut albumit vastaavat hakusanaasi. Klikkaa sellaisesta selataksesi albumeittain."
+
+msgid "Click here to display it"
+msgstr "Klikkaa tästä näyttääksesi sen"
+
+msgid "last 12 months"
+msgstr "Viimeisimmät 12 kuukautta"
+
+msgid "Custom dates"
+msgstr "Tietyt päivät"
+
+msgid "There are no creation dates available for the photos currently filtered"
+msgstr "Nykyisen suodatuksen mukaisille kuville ei ole saatavissa luomispäiviä"
+
+msgid "There are no tags available for the photos currently filtered"
+msgstr "Nykyisen suodatuksen mukaisille kuville ei ole saatavissa tageja"
+
+msgid "There are no authors available for the photos currently filtered"
+msgstr "Nykyisen suodatuksen mukaisille kuville ei ole saatavissa tekijätietoja"
+
+msgid "Set your password below."
+msgstr "Aseta salasana alla."
+
+msgid "Done"
+msgstr "Valmis"
+
+msgid "Duration"
+msgstr "Kesto"
+
+msgid "Expired"
+msgstr "Vanhentunut"
+
+msgid "Expired on"
+msgstr "Vanheni"
+
+msgid "Expires in"
+msgstr "Vanhenee"
+
+msgid "Create an account"
+msgstr "Luo käyttäjätili"
+
+msgid "Created at"
+msgstr "Luotu"
+
+msgid "Do you really want to revoke the \"%s\" API key?"
+msgstr "Haluatko varmasti perua API-avaimen \"%s\"?"
+
+msgid "Create API Keys to secure your acount"
+msgstr "Luo API-avain turvataksesi tilisi"
+
+msgid "Create a new API key to secure your account."
+msgstr "Luo uusi API-avain turvataksesi tilisi."
+
+msgid "Change your password"
+msgstr "Vaihda salasanasi"
+
+msgid "Check your inbox"
+msgstr "Tarkista saapuneet"
+
+msgid "Choose how you want to see your gallery"
+msgstr "Valitse miten haluat nähdä galleriasi"
+
+msgid "Confirm my new password"
+msgstr "Vahvista uusi salasanasi"
+
+msgid "Confirm new password"
+msgstr "Vahvista uusi salasana"
+
+msgid "Already have an account ?"
+msgstr "Onko sinulla jo käyttäjätili?"
+
+msgid "An email has been sent with a link to reset your password"
+msgstr "Salasanan nollauslinkki on lähetetty sähköpostitse"
+
+msgid "An email has been sent with a verification code"
+msgstr "Vahvistuskoodi on lähetetty sähköpostitse"
+
+msgid "Account"
+msgstr "Käyttäjätili"
+
+msgid "API Key has been successfully edited."
+msgstr "API-avaimen muokkaus onnistui."
+
+msgid "API Key has been successfully revoked."
+msgstr "API-avaimen peruminen onnistui."
+
+msgid "API Key name"
+msgstr "API-avaimen nimi"
+
+msgid "API Key not found"
+msgstr "API-avainta ei löytynyt"
+
+msgid "API Keys"
+msgstr "API-avaimet"
+
+msgid "3xlarge"
+msgstr "3XL - erityisen jättimäinen"
+
+msgid "4xlarge"
+msgstr "4XL - giganttinen"
+
+msgid "piwigo_day_0"
+msgstr "Sunnuntai"
+
+msgid "piwigo_day_1"
+msgstr "Maanantai"
+
+msgid "piwigo_day_2"
+msgstr "Tiistai"
+
+msgid "piwigo_day_3"
+msgstr "Keskiviikko"
+
+msgid "piwigo_day_4"
+msgstr "Torstai"
+
+msgid "piwigo_day_5"
+msgstr "Perjantai"
+
+msgid "piwigo_day_6"
+msgstr "Lauantai"
+
+msgid "piwigo_month_10"
+msgstr "Lokakuu"
+
+msgid "piwigo_month_11"
+msgstr "Marraskuu"
+
+msgid "piwigo_month_12"
+msgstr "Joulukuu"
+
+msgid "piwigo_month_1"
+msgstr "Tammikuu"
+
+msgid "piwigo_month_2"
+msgstr "Helmikuu"
+
+msgid "piwigo_month_3"
+msgstr "Maaliskuu"
+
+msgid "piwigo_month_4"
+msgstr "Huhtikuu"
+
+msgid "piwigo_month_5"
+msgstr "Toukokuu"
+
+msgid "piwigo_month_6"
+msgstr "Kesäkuu"
+
+msgid "piwigo_month_7"
+msgstr "Heinäkuu"
+
+msgid "piwigo_month_8"
+msgstr "Elokuu"
+
+msgid "piwigo_month_9"
+msgstr "Syyskuu"
+

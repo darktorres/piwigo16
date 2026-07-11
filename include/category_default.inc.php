@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Db\Tables;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Template\Template;
@@ -63,7 +64,7 @@ if (count($selection) > 0) {
 
     $query = '
 SELECT *
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', $selection) . ')
 ;';
     $result = pwg_query($query);
@@ -107,7 +108,7 @@ if (count($pictures) > 0) {
     if ((bool) $conf['activate_comments'] and (bool) $user['show_nb_comments']) {
         $query = '
 SELECT image_id, COUNT(*) AS nb_comments
-  FROM ' . COMMENTS_TABLE . '
+  FROM ' . Tables::comments() . '
   WHERE validated = \'true\'
     AND image_id IN (' . implode(',', $selection) . ')
   GROUP BY image_id

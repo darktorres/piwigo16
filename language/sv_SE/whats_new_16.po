@@ -1,0 +1,20 @@
+# Piwigo translation — sv_SE
+# Source: whats_new_16.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: sv_SE\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Brand new login & preferences with Standard pages !"
+msgstr "Helt ny inloggning och inställningar med standardsidor!"
+
+msgid "Two factor authentication is here"
+msgstr "Tvåfaktorsautentisering finns tillgänglig"
+
+msgid "UI redesigns that make a difference"
+msgstr "Uppdatering av användargränssnittet som gör skillnad"
+

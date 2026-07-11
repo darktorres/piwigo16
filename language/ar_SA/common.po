@@ -1,0 +1,1172 @@
+# Piwigo translation — ar_SA
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ar_SA\n"
+"Plural-Forms: nplurals=6; plural=(n == 0 ? 0 : n == 1 ? 1 : n == 2 ? 2 : n % 100 >= 3 && n % 100 <= 10 ? 3 : n % 100 >= 11 && n % 100 <= 99 ? 4 : 5);\n"
+"X-Piwigo-Language-Name: Arbic\n"
+"X-Piwigo-Country: saudi\n"
+"X-Piwigo-Direction: rtl\n"
+"X-Piwigo-Code: ar\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "%d Kb"
+msgstr "%d كيلوبايت"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d ألبوم يحوي صور جديدة"
+msgstr[1] "%d ألبومات تحتوي على صور جديدة"
+
+msgid "%d comment to validate"
+msgstr "%d مصادقة التعليق"
+
+msgid "%d comments to validate"
+msgstr "%d مصادقة التعليقات"
+
+msgid "%d new comment"
+msgstr "%d تعليق جديد"
+
+msgid "%d new comments"
+msgstr "%d تعليقات جديدة"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] " التعليقات %d "
+msgstr[1] " عدد التعليقات %d "
+
+msgid "%d hit"
+msgid_plural "%d hits"
+msgstr[0] " المشاهد %d "
+msgstr[1] " المشاهدين %d "
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "%d صورة جديدة"
+msgstr[1] "%d صور جديدة"
+
+msgid "%d new user"
+msgstr "%d مسخدم جديد"
+
+msgid "%d new users"
+msgstr "%d مستخدمين جدد"
+
+msgid "About"
+msgstr "ماذا عن Piwgo ?"
+
+msgid "All tags"
+msgstr "كل الكلمات الدلائلية"
+
+msgid "Any tag"
+msgstr "أي كلمة دلائلية"
+
+msgid "At least one listed rule must be satisfied."
+msgstr "على الأقل واحدة لهذه يجب أن تكون مستوفية."
+
+msgid "Author"
+msgstr "بواسطة :"
+
+msgid "Albums"
+msgstr "الألبومات"
+
+msgid "Album"
+msgstr "ألبوم"
+
+msgid "Close this window"
+msgstr "أغلق هذه النافذة"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "تابع تحديثات الموقع من صور جديدة و تعليقات  عبر الاشتراك في هذه الخدمة RSS"
+
+msgid "Confirm Password"
+msgstr "تأكيد كلمة المرور"
+
+msgid "Connection settings"
+msgstr "إعداد الاتصال"
+
+msgid "Login"
+msgstr "دخول"
+
+msgid "Contact webmaster"
+msgstr "اتصل بمدير الموقع"
+
+msgid "Create a new account"
+msgstr "حساب جديد"
+
+msgid "Created on"
+msgstr "تاريخ الصورة"
+
+msgid "Creation date"
+msgstr "تاريخ الصورة"
+
+msgid "Current password is wrong"
+msgstr "كلمة المرور غير صحيحة"
+
+msgid "Dimensions"
+msgstr "الأبعاد"
+
+msgid "Display"
+msgstr "المظهر"
+
+msgid "Each listed rule must be satisfied."
+msgstr "كل العناصر يجب ان تكون مكتملة."
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "البريد الإلكتروني غير موجود"
+
+msgid "Email address"
+msgstr "البريد الالكتروني"
+
+msgid "Enter your personnal informations"
+msgstr "ادخل معلوماتك الشخصية"
+
+msgid "Error sending email"
+msgstr "خطأ في إرسال الرسالة"
+
+msgid "File name"
+msgstr "أسم الملف"
+
+msgid "File"
+msgstr "ملف"
+
+msgid "Filesize"
+msgstr "حجم الملف"
+
+msgid "Filter and display"
+msgstr "أعرض مع الترشيح"
+
+msgid "Filter"
+msgstr "مُرشح "
+
+msgid "Forgot your password?"
+msgstr "هل نسيت كلمة المرور?"
+
+msgid "Go through the gallery as a visitor"
+msgstr "شاهد معرض الصور كأحد الزوار"
+
+msgid "Help"
+msgstr "مساعدة"
+
+msgid "Identification"
+msgstr "إدارة المستخدمين"
+
+msgid "Photos only RSS feed"
+msgstr "التغذية الراجعه للصورة RSS"
+
+msgid "Keyword"
+msgstr "كلمة مفتاحية"
+
+msgid "Links"
+msgstr "روابط"
+
+msgid "N/A"
+msgstr "غير معروف"
+
+msgid "New on %s"
+msgstr "جديد لـ  %s"
+
+msgid "Notification"
+msgstr "تحديثات جديدة"
+
+msgid "Number of items"
+msgstr "عدد البنود"
+
+msgid "Original dimensions"
+msgstr "الأبعاد الأصلية"
+
+msgid "Password forgotten"
+msgstr "نسيت كلمة المرور"
+
+msgid "Password"
+msgstr "كلمة المرور"
+
+msgid "Post date"
+msgstr " تاريخ الإضافة"
+
+msgid "Posted on"
+msgstr "تاريخ إضافة الصورة في المعرض"
+
+msgid "Profile"
+msgstr "ملف التعريف"
+
+msgid "Quick connect"
+msgstr "تسجيل الدخول"
+
+msgid "RSS feed"
+msgstr "RSS التغذية الراجعه"
+
+msgid "Register"
+msgstr "تسجيل"
+
+msgid "Registration"
+msgstr "التسجيل"
+
+msgid "Related tags"
+msgstr " كلمات الدلائلية لها صلة"
+
+msgid "Reset"
+msgstr "إستعادة"
+
+msgid "Retrieve password"
+msgstr "إسترجاع كلمة المرور"
+
+msgid "Search rules"
+msgstr "شروط البحث"
+
+msgid "Search tags"
+msgstr "كلمات البحث"
+
+msgid "Search"
+msgstr "بحث"
+
+msgid "display available tags"
+msgstr "أنظر في الكلمات الدلائلية"
+
+msgid "Since"
+msgstr "منذ"
+
+msgid "Sort by"
+msgstr "ترتيب حسب .."
+
+msgid "Sort order"
+msgstr "طريقة العرض"
+
+msgid "Tag"
+msgstr "كلمة دلائلية"
+
+msgid "Tags"
+msgstr "الكلمات الدلائلية"
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "استخدم خدمة التغذية الراجعه RSS للحصول التحديثات الجديدة من تعليقات و اضافات في هذا الموقع"
+
+msgid "Unknown feed identifier"
+msgstr "التغذية غير معرفة"
+
+msgid "User comments"
+msgstr "آخر التلعيقات في المعرض"
+
+msgid "Username"
+msgstr "أسم المستخدم"
+
+msgid "Visits"
+msgstr "الزوار"
+
+msgid "Webmaster"
+msgstr "مدير المعرض"
+
+msgid "Week %d"
+msgstr "أسبوع %d"
+
+msgid "About Piwigo"
+msgstr "ماذا عن Piwigo"
+
+msgid "You are not authorized to access the requested page"
+msgstr "لم تقم بتسجيل الدخول أو انك غير مشترك  أو .. غير مصرح لك"
+
+msgid "add this photo to your favorites"
+msgstr "أضف هذه الصوة لمفضلتك "
+
+msgid "Administration"
+msgstr "الإدارة"
+
+msgid "all"
+msgstr "كل"
+
+msgid "ascending"
+msgstr "تصاعدي"
+
+msgid "author(s) : %s"
+msgstr "الكتاب(s) : %s"
+
+msgid "Expand all albums"
+msgstr "عرض جميع الألبومات المتفرعه"
+
+msgid "posted after %s (%s)"
+msgstr "أضيفت بعد %s (%s)"
+
+msgid "posted before %s (%s)"
+msgstr "أضيفت قبل %s (%s)"
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "أضيفت بين %s (%s) و %s (%s)"
+
+msgid "posted on %s"
+msgstr "أضيفت لـ . %s"
+
+msgid "Best rated"
+msgstr "افضل تصويت"
+
+msgid "display best rated photos"
+msgstr "اعرض الصور الاكثر تقيما من قبل المشاهدين"
+
+msgid "Calendar"
+msgstr "التقويم"
+
+msgid "All"
+msgstr "الجميع"
+
+msgid "display each day with photos, month per month"
+msgstr "أعرض جميع صور هذا اليوم ،شهريا"
+
+msgid "View"
+msgstr "عرض"
+
+msgid "chronology_monthly_calendar"
+msgstr "تقويم شهري"
+
+msgid "chronology_monthly_list"
+msgstr "القائم الشهرية"
+
+msgid "chronology_weekly_list"
+msgstr "القائمة الأسبوعية"
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "إذا كان متصفحك لا يدعم الإنتقال الآلي أضغط هنا"
+
+msgid "comment date"
+msgstr "تاريخ التعليق"
+
+msgid "Comment"
+msgstr "التلعيق"
+
+msgid "Your comment has been registered"
+msgstr "سيتم إعتماد كلماتك الطيبة في أقرب وقت"
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "نرجوا الانتظار قبل اضافة تعليق آخر "
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "لم يتم إعتماد تعليقك لأنه مخالف للشروط و التعليمات"
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "لن يطول انتظارك حتى ترى تعليقك هنا بعد مراجعة الإدارة."
+
+msgid "This login is already used by another user"
+msgstr "يبدو أن هناك مستخدم آخر بنفس هذا المعلومات"
+
+msgid "Comments"
+msgstr "آخر التلعيقات"
+
+msgid "Add a comment"
+msgstr "اكتب تعليق"
+
+msgid "created after %s (%s)"
+msgstr "انشأ قبل %s (%s)"
+
+msgid "created before %s (%s)"
+msgstr "اُنشأ بعد %s (%s)"
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "اُنشأ بين %s (%s) و %s (%s)"
+
+msgid "created on %s"
+msgstr "تاريخ الإنشاء %s"
+
+msgid "Your Gallery Customization"
+msgstr "تخصيص المعرض "
+
+msgid "Default"
+msgstr "إفتراضي"
+
+msgid "delete this photo from your favorites"
+msgstr "حذف هذه الصورة من مفضلتك"
+
+msgid "descending"
+msgstr "تنازلي"
+
+msgid "Download"
+msgstr "تحميل"
+
+msgid "Download this file"
+msgstr "تحميل هذا الصورة"
+
+msgid "edit"
+msgstr "تحرير"
+
+msgid "wrong date"
+msgstr "تاريخ خطأ"
+
+msgid "excluded"
+msgstr "استبعاد"
+
+msgid "Your favorites"
+msgstr "مفضلتي"
+
+msgid "display your favorites photos"
+msgstr "عرض صور المفضلة"
+
+msgid "Favorites"
+msgstr "المفضلات"
+
+msgid "First"
+msgstr "الأولى"
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "مغلق للصيانة و التحديث .. نرجوا إعادة الزيارة مرة أخرى."
+
+msgid "Page generated in"
+msgstr "صفحة أنشئت في .."
+
+msgid "guest"
+msgstr "ضيف"
+
+msgid "Hello"
+msgstr "مرحبا"
+
+msgid "available for administrators only"
+msgstr "متاح للأدارين فقط"
+
+msgid "display this album"
+msgstr "عرض  جميع صور هذا الألبوم"
+
+msgid "display last user comments"
+msgstr "شاهد آخر التعليقات"
+
+msgid "search"
+msgstr "بحث"
+
+msgid "Home"
+msgstr "الرئيسية"
+
+msgid "in this album"
+msgstr "في هذا الألبوم"
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] "في %d البوم فرعي"
+msgstr[1] "في %d ألبومات فرعية"
+
+msgid "included"
+msgstr "تشمل"
+
+msgid "Invalid password!"
+msgstr "عفوا كلمة المرور غير صحيحة!"
+
+msgid "Language"
+msgstr "اللغة"
+
+msgid "last %d days"
+msgstr "آخر %d الأيام"
+
+msgid "Last"
+msgstr "الأخيرة"
+
+msgid "Logout"
+msgstr "خروج"
+
+msgid "obligatory"
+msgstr "مهم"
+
+msgid "display a calendar by creation date"
+msgstr "عرض التقويم حسب الألبومات"
+
+msgid "display all photos in all sub-albums"
+msgstr "عرض جميع الصور "
+
+msgid "return to normal view mode"
+msgstr "العودة لنمط العرض العادي"
+
+msgid "display a calendar by posted date"
+msgstr "عرض التقويم حسب تاريخ الصورة المضافة"
+
+msgid "Most visited"
+msgstr "الصور الأكثر مشاهدة"
+
+msgid "display most visited photos"
+msgstr " عرض الصور الأكثر مشاهدة"
+
+msgid "Unknown identifier"
+msgstr "معرف مجهول"
+
+msgid "New password"
+msgstr "كلمة مرور جديدة"
+
+msgid "Rate this photo"
+msgstr "قيم هذه الصورة"
+
+msgid "Next"
+msgstr "التالي"
+
+msgid "no rate"
+msgstr "كن أول من يعطي تقيمه لهذه الصورة"
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "صور اضيفت في آخر  %d يوم."
+msgstr[1] "صور ادخلت في آخر %d الايام."
+
+msgid "password updated"
+msgstr "تم تغير كلمة المرور "
+
+msgid "Recent period must be a positive integer value"
+msgstr "يجب أن تكون القيمة إيجابية في الفترة السابقة"
+
+msgid "photo"
+msgstr "صورة"
+
+msgid "Click on the photo to see it in high definition"
+msgstr "أنقر على الصورة لتراها بحجم أكبر "
+
+msgid "Show file metadata"
+msgstr "أظهر المعلومات الفوتوغرافية للصورة"
+
+msgid "Powered by"
+msgstr "بدعم من"
+
+msgid "Preferences"
+msgstr "التفضيلات"
+
+msgid "Previous"
+msgstr "الصورة السابقة"
+
+msgid "Random photos"
+msgstr "صور  عشوائية"
+
+msgid "display a set of random photos"
+msgstr "عرض مجموعة من الصورة عشوائياً"
+
+msgid "Recent albums"
+msgstr "الألبومات الأخيرة"
+
+msgid "display recently updated albums"
+msgstr "عرض أحدث الألبومات الحالية"
+
+msgid "Recent period"
+msgstr "الفترة الأخيرة"
+
+msgid "Recent photos"
+msgstr "الصور الأخيرة"
+
+msgid "display most recent photos"
+msgstr "عرض أحدث الصور"
+
+msgid "Redirection..."
+msgstr "إعادة التوجيه ....."
+
+msgid "Please, enter a login"
+msgstr "من فضلك ، سجل دخولك"
+
+msgid "login mustn't end with a space character"
+msgstr "لا يمكن تسجيل الدخول بترك مسافه خاليه"
+
+msgid "login mustn't start with a space character"
+msgstr "لا يمكن تسجيل الدخول بالبدء بمسافه حرف خاليه"
+
+msgid "this login is already used"
+msgstr "هذا المستخدم موجود حاليا"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "يجب ان يكون البريد بهذه الكيفيةxxx@yyy.eee (مثلا : jack@altern.org)"
+
+msgid "Auto login"
+msgstr "دخول آلي"
+
+msgid "remove this tag from the list"
+msgstr "حذف هذه الكلمات من القائمة"
+
+msgid "representative"
+msgstr "صفه /نموذجي"
+
+msgid "Search for Author"
+msgstr "أبحث عن الكاتب"
+
+msgid "Search in albums"
+msgstr "أبحث في الألبومات"
+
+msgid "Search by date"
+msgstr "بحث حسب التاريخ"
+
+msgid "Date"
+msgstr "التاريح"
+
+msgid "End-Date"
+msgstr "نهاية التاريح"
+
+msgid "Kind of date"
+msgstr "صيغة التاريخ"
+
+msgid "Search for words"
+msgstr "بحث بواسطة الكلمة"
+
+msgid "Search for all terms"
+msgstr "بحث بوسطة جميع البنود "
+
+msgid "Search for any term"
+msgstr "بحث بواسطة أي بند"
+
+msgid "Empty query. No criteria has been entered."
+msgstr "الاستعلام فارغ .. ماذا تريد أن تفعل ؟!!."
+
+msgid "Search results"
+msgstr "نتائج البحث "
+
+msgid "Search in sub-albums"
+msgstr "بحث في الألبومات الفرعية"
+
+msgid "searched words : %s"
+msgstr "نتيجة البحث عن : %s"
+
+msgid "Contact"
+msgstr "إتصل بـ"
+
+msgid "set as album representative"
+msgstr "تحديد فئة الصفة او النموذج"
+
+msgid "Show number of comments"
+msgstr "أظهر عدد التعليقات"
+
+msgid "Show number of hits"
+msgstr "أظهر عدد الزيارت"
+
+msgid "slideshow"
+msgstr "عرض الشرائح"
+
+msgid "stop the slideshow"
+msgstr "إيقاف العرض"
+
+msgid "Specials"
+msgstr "إمتيازات"
+
+msgid "SQL queries in"
+msgstr "استفسارات في SQL"
+
+msgid "display only recently posted photos"
+msgstr "عرض الصور المضافة حديثا"
+
+msgid "return to the display of all photos"
+msgstr "العودة لعرض جميع الصورة"
+
+msgid "the beginning"
+msgstr "البداية"
+
+msgid "Thumbnails"
+msgstr "الصور المصغرة"
+
+msgid "Menu"
+msgstr "القائمة الرئيسية"
+
+msgid "A comment on your site"
+msgstr "استفسار مهم"
+
+msgid "today"
+msgstr "اليوم"
+
+msgid "Update your rating"
+msgstr "حدث تقييمك"
+
+msgid "the username must be given"
+msgstr "اسم المستخدم ضروري"
+
+msgid "useful when password forgotten"
+msgstr "مهم ( لاستعاده كلمه المرور حال فقدانها )ـ"
+
+msgid "Quick search"
+msgstr "بحث سريع"
+
+msgid "Connected user: %s"
+msgstr "الاتصال بالمستخدم: %s"
+
+msgid "IP: %s"
+msgstr "IP: %s"
+
+msgid "Browser: %s"
+msgstr "استعراض: %s"
+
+msgid "Author: %s"
+msgstr "بواسطة: %s"
+
+msgid "Comment: %s"
+msgstr "تعليق : %s"
+
+msgid "Comment by %s"
+msgstr "كاتب التعليق  %s"
+
+msgid "User: %s"
+msgstr "المستخدم: %s"
+
+msgid "Email: %s"
+msgstr "البريد الالكتروني: %s"
+
+msgid "Admin: %s"
+msgstr "المدير: %s"
+
+msgid "Registration of %s"
+msgstr "تسجيل  %s"
+
+msgid "Album: %s"
+msgstr "الألبوم: %s"
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "وضغ سيئ للضيف \"ضيف\", استخدم الحالة الافتراضية. يرجى ابلاغ المسؤول عن الموقع."
+
+msgid "this email address is already in use"
+msgstr "هذا البريد مسجل لدينا من قبل"
+
+msgid "Album results for"
+msgstr "نتيجة البحث في الألبومات عن:"
+
+msgid "Tag results for"
+msgstr "نتائج الكلمات الدلائلية"
+
+msgid "from %s to %s"
+msgstr "من%s الي %s"
+
+msgid "Play of slideshow"
+msgstr " عرض شرائح الصور"
+
+msgid "Pause of slideshow"
+msgstr "إيقاف العرض"
+
+msgid "Repeat the slideshow"
+msgstr "أعد عرض الشرائح"
+
+msgid "Not repeat the slideshow"
+msgstr "لا تكرر عرض الشرائح"
+
+msgid "Reduce diaporama speed"
+msgstr "خفض سرعة العرض"
+
+msgid "Accelerate diaporama speed"
+msgstr "تسريع العرض"
+
+msgid "Submit"
+msgstr "أرسل"
+
+msgid "Yes"
+msgstr "نعم"
+
+msgid "No"
+msgstr "لا"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] " صورة %d"
+msgstr[1] "مجموع الصور %d"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "%d صورة لها صله بالكلمات"
+msgstr[1] "%d صور لها ارتباط بــ"
+
+msgid "display photos linked to this tag"
+msgstr "شاهد الصور التي لها إرتباط بالكلمات الدلائلية "
+
+msgid "photos posted during the last %d days"
+msgstr "صور الايــ %d ــام الاخيرة "
+
+msgid "Piwigo Help"
+msgstr "الدعم الفني "
+
+msgid "Rank"
+msgstr "الألبوم"
+
+msgid "group by letters"
+msgstr "عرض الكلمات في مجموعات"
+
+msgid "letters"
+msgstr "الرسائل"
+
+msgid "show tag cloud"
+msgstr "عرض سحابة الكلمات الدلائيه"
+
+msgid "cloud"
+msgstr "سحابة"
+
+msgid "Are you sure?"
+msgstr "هل انت متأكد?"
+
+msgid "Reset to default values"
+msgstr "إستعادة القيم الافتراضيه"
+
+msgid "delete all photos from your favorites"
+msgstr "حذف كل الصور من مفضلتي"
+
+msgid "Sent by"
+msgstr "أرسل بواسطة : "
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "ملفات الإرتباط محضورة في متصفحك أو غير معتمده ،يجب تمكين الكوكيز للتمكن من التسجيل"
+
+msgid "Edit a comment"
+msgstr "حرر تعليق"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) التعليق يحتاج تصريح"
+
+msgid "Welcome"
+msgstr "أهلاً وسهلا ً"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr " Piwigo مرحبا بك في  معرض الصور الخاص بك"
+
+msgid "... or browse your empty gallery"
+msgstr ".. أو تصفح معرضك الفارغ"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "... أو أخفي هذه الرسالة ، وسوف أجد طريقي بنفسي"
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "مرحبا بك %s، معرض الصور Piwigo فارغ "
+
+msgid "I want to add photos"
+msgstr "أريد أن أضيف صور"
+
+msgid "Manage this user comment: %s"
+msgstr " %s حرر تعليق المستخدم :"
+
+msgid "This author modified following comment:"
+msgstr "هذا الكاتب حرر تعليقه  : "
+
+msgid "This author removed the comment with id %d"
+msgstr "هذا الكاتب حذف تعليقه : %d"
+
+msgid "html tags are not allowed in login"
+msgstr "اكواد html غير مسموحة في تسجيل الدخول"
+
+msgid "Change my password"
+msgstr "غيّر كلمة المرور"
+
+msgid "Check your email for the confirmation link"
+msgstr "تم أرسال رابط التأكيد الى بريدك الإلكتروني ..أفحص بريدك"
+
+msgid "Delete"
+msgstr "حذف"
+
+msgid "Edit"
+msgstr "تحرير"
+
+msgid "Enter your new password below."
+msgstr "ادخل كلمة المرور الجديدة ."
+
+msgid "EXIF Metadata"
+msgstr "البيانات الوصفية EXIF"
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "اذا وصلتك هذه الرسالة عن طريق الخطأ فقط تجاهل هذه الرسالة  و لا شيء سوف يحدث "
+
+msgid "Invalid key"
+msgstr "مفتاح خاطئ"
+
+msgid "Invalid username or email"
+msgstr "اسم المستخدم او البريد الالكتروني غير صحيح "
+
+msgid "IPTC Metadata"
+msgstr "IPTC البيانات الوصفية "
+
+msgid "Number of photos per page"
+msgstr "عدد الصور في كل صفحة"
+
+msgid "Password reset is not allowed for this user"
+msgstr "لا يمكن تغير كلمة المرور لهذا المستخدم"
+
+msgid "Password Reset"
+msgstr "إعادة تعين كلمة المرور "
+
+msgid "Please enter your username or email address."
+msgstr "فضلاً أكتب أسم المستخدم أو بريدك الألكتروني "
+
+msgid "Rating score"
+msgstr "حسب معدل التقييم"
+
+msgid "Return to home page"
+msgstr "العودة للصفحة الرئيسية للمعرض"
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "أحدهم طلب إعادة تعين كلمة المرور للحساب : "
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "عدد الصور في كل صفحة لا يمكن ان يكون صفر"
+
+msgid "The passwords do not match"
+msgstr "كلمة المرور لا تتطابق "
+
+msgid "To reset your password, visit the following address:"
+msgstr "لإعادة تعين كلمة المرور تفضل بزيارة العنوان التالي :"
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "ليس للمستخدم \"%s\" بريد الكتروني .. لا يمكن اعادة تعين كامة المرور "
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "اسم المستخدم \"%s\"  في  معرض %s "
+
+msgid "Username or email"
+msgstr "أسم المستخدم أو البريد الإلكتروني "
+
+msgid "You will receive a link to create a new password via email."
+msgstr "ستصل إلى بريدك رسالة فيها رابط إنشاء كلمة مرور جديدة "
+
+msgid "Your password has been reset"
+msgstr " تم إعادة تعيين كلمة المرور بنجاج "
+
+msgid "large"
+msgstr "كبير"
+
+msgid "medium"
+msgstr "متوسط"
+
+msgid "Original"
+msgstr "الاصلي"
+
+msgid "small"
+msgstr "صغير"
+
+msgid "square"
+msgstr "مربع"
+
+msgid "thumb"
+msgstr "تصفح"
+
+msgid "xlarge"
+msgstr "كبير جداً"
+
+msgid "xxlarge"
+msgstr "كبير جداً جداً"
+
+msgid "2small"
+msgstr "XXS-صغير"
+
+msgid "Desktop"
+msgstr "سطح المكتب"
+
+msgid "Hello %s,"
+msgstr "السلام عليكم %s."
+
+msgid "Here are your connection settings"
+msgstr "هنا تجد معلومات الدخول "
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "إذا كنت تعتقد أن هناك خطأ في تلقيك  هذه الرسالة , فضلاً اتصل بنا عبر %s"
+
+msgid "Mobile"
+msgstr "محمول"
+
+msgid "Password: %s"
+msgstr "كلمة المرور:  %s"
+
+msgid "Photo sizes"
+msgstr "حجم الصورة "
+
+msgid "Send my connection settings by email"
+msgstr "أرسل إعدادات الإتصال عبر البريد"
+
+msgid "Show latest comments first"
+msgstr "أظهر آخر التعليقات أولا ً"
+
+msgid "Show oldest comments first"
+msgstr "أظهر التعليقات الاقدم  أولا ً"
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "تم التسجيل بنجاح , قريبا ً تصلك معلومات الدخول إلى بريدك . مرحبا بك"
+
+msgid "Thank you for registering at %s!"
+msgstr "شكراً لتسجيلك بأسم %s!"
+
+msgid "Username modification"
+msgstr "تعديل أسم المستخدم"
+
+msgid "Username: %s"
+msgstr "أسم المستخدم : %s"
+
+msgid "View in"
+msgstr "عرض كـ"
+
+msgid "xsmall"
+msgstr "XS - صغير أكثر"
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "تم تغيير أسم المستخدم الخاص بك  إلى : %s."
+
+msgid "Date created, new &rarr; old"
+msgstr "تاريخ الإنشاء , جديد  &rarr; قديم "
+
+msgid "Date created, old &rarr; new"
+msgstr "تاريخ الإنشاء , جديد  &rarr; قديم"
+
+msgid "Date posted, new &rarr; old"
+msgstr "تاريخ الإضافة , جديد  &rarr; قديم "
+
+msgid "Date posted, old &rarr; new"
+msgstr "تاريخ الإضافة , جديد  &rarr; قديم"
+
+msgid "File name, A &rarr; Z"
+msgstr "أسم الملف , أ  &rarr; ي"
+
+msgid "File name, Z &rarr; A"
+msgstr "أسم الملف , أ  &rarr; ي"
+
+msgid "Manual sort order"
+msgstr "ترتيب يدوي"
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "رقمي , 1  &rarr; 9"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "رقمي , 1  &rarr; 9"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "عنوان الصورة , أ  &rarr; ي"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "عنوان الصورة , أ  &rarr; ي"
+
+msgid "Rating score, high &rarr; low"
+msgstr "درجة التقييم ,عالية &rarr; متدنية"
+
+msgid "Rating score, low &rarr; high"
+msgstr "درجة التقييم , عالية &rarr; متدنية"
+
+msgid "Visits, high &rarr; low"
+msgstr "المشاهدة , عالية&rarr; متدنية"
+
+msgid "Visits, low &rarr; high"
+msgstr "المشاهدة , عالية &rarr; متدنية"
+
+msgid "%d rate"
+msgid_plural "%d rates"
+msgstr[0] " نسبة التصويت %d"
+msgstr[1] "%d التقييم"
+
+msgid "Bad request"
+msgstr "طلب غير صالح"
+
+msgid "Forbidden"
+msgstr "محظور"
+
+msgid "Page not found"
+msgstr "الصفحة غير موجودة"
+
+msgid "Permalink for album not found"
+msgstr "لم يتم العثور على رابط الألبوم"
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "صادف معرض Piwigo  خطأ لايمكن معالجته"
+
+msgid "Requested album does not exist"
+msgstr "الألبوم المطلوب غير موجود"
+
+msgid "Requested tag does not exist"
+msgstr "الكلمة الدلائلية غير موجوده"
+
+msgid "Email address is mandatory"
+msgstr "عنوان البريد الإلكتروني إلزامي"
+
+msgid "Username is mandatory"
+msgstr "أسم المستخدم  إلزامي"
+
+msgid "mandatory"
+msgstr "إلزامي"
+
+msgid "Website"
+msgstr "الموقع"
+
+msgid "Your website URL is invalid"
+msgstr "URL موقع الويب الخاص بك غير صالح"
+
+msgid "Email"
+msgstr "البريد الإلكتروني"
+
+msgid "First Page"
+msgstr "الصفحة الأولى"
+
+msgid "Go back to the album"
+msgstr "إرجع للألبوم"
+
+msgid "Last Page"
+msgstr "الصفحة الأخيرة"
+
+msgid "Password is missing. Please enter the password."
+msgstr "لم تكتب كلمة المرور، فضلا ً أكتب كلمة المرور"
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "لم يتم تأكيد كلمة المرور، فضلا ً لا أمر أكد المرور رحم الله والديك"
+
+msgid "%d photos per page"
+msgstr "عدد الصور في كل صفحة %d"
+
+msgid "Theme"
+msgstr "الواجهة"
+
+msgid "Album name, A &rarr; Z"
+msgstr "اسم الألبوم, A &rarr; Z"
+
+msgid "Album name, Z &rarr; A"
+msgstr "اسم الألبوم, A &rarr; Z"
+
+msgid "Apply on properties"
+msgstr "تطبيق على خصائص"
+
+msgid "Link: %s"
+msgstr "الرابط: %s"
+
+msgid "No results for"
+msgstr "لا يوجد نتائج"
+
+msgid "Photo description"
+msgstr "وصف الصورة"
+
+msgid "Photo title"
+msgstr "عنوان الصورة"
+
+msgid "Your authentication key is no longer valid."
+msgstr "مفتاح المصادقة الخاصة بك لم يعد صالحا."
+
+msgid "piwigo_day_0"
+msgstr "الأحد"
+
+msgid "piwigo_day_1"
+msgstr "الأثنين"
+
+msgid "piwigo_day_2"
+msgstr "الثلاثاء"
+
+msgid "piwigo_day_3"
+msgstr "الأربعاء"
+
+msgid "piwigo_day_4"
+msgstr "الخميس"
+
+msgid "piwigo_day_5"
+msgstr "الجمعه"
+
+msgid "piwigo_day_6"
+msgstr "السبت"
+
+msgid "piwigo_month_10"
+msgstr "أكتوبر"
+
+msgid "piwigo_month_11"
+msgstr "نوفمبر"
+
+msgid "piwigo_month_12"
+msgstr "ديسمبر"
+
+msgid "piwigo_month_1"
+msgstr "جينوري"
+
+msgid "piwigo_month_2"
+msgstr "فبراير"
+
+msgid "piwigo_month_3"
+msgstr "مارس"
+
+msgid "piwigo_month_4"
+msgstr "ابريل"
+
+msgid "piwigo_month_5"
+msgstr "ماي"
+
+msgid "piwigo_month_6"
+msgstr "يونيو"
+
+msgid "piwigo_month_7"
+msgstr "جولاي"
+
+msgid "piwigo_month_8"
+msgstr "أغسطس"
+
+msgid "piwigo_month_9"
+msgstr "سبتمبر"
+

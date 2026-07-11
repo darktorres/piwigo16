@@ -1,0 +1,1169 @@
+# Piwigo translation — ta_IN
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ta_IN\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Language-Name: தமிழ்\n"
+"X-Piwigo-Country: இந்தியா\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: ta\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d ஆல்பம் புதுப்பிக்கப்பட்டது"
+msgstr[1] "%d ஆல்பங்கள் மேம்படுத்தப்பட்டது"
+
+msgid "%d comment to validate"
+msgstr "%d கருத்து பரிசீலிக்கப்படுகிறது"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d கருத்து"
+msgstr[1] "%d கருத்துரைகள்"
+
+msgid "%d comments to validate"
+msgstr "%d கருத்து பரிசீலிக்கப்படுகிறது"
+
+msgid "%d hit"
+msgid_plural "%d hits"
+msgstr[0] "%d ஹிட்"
+msgstr[1] "%d ஹிட்ஸ்"
+
+msgid "%d Kb"
+msgstr "%d கேபி"
+
+msgid "%d new comment"
+msgstr "%d புதிய கருத்து"
+
+msgid "%d new comments"
+msgstr "%d புதிய கருத்துக்கள்"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "%d புதிய புகைப்படம்"
+msgstr[1] "%d புதிய புகைப்படங்கள்"
+
+msgid "%d new user"
+msgstr "%d புதிய உறுப்பினர்"
+
+msgid "%d new users"
+msgstr "%d புதிய உறுப்பினர்கள்"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "%d புகைப்படங்களுக்கும் தற்போதைய குறிச்சொற்கள் இணைக்கப்பட்டது"
+msgstr[1] "%d புகைப்படங்களுக்கும் தற்போதைய குறிச்சொற்கள் இணைக்கப்பட்டது"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "%d புகைப்படம்"
+msgstr[1] "%d புகைப்படங்கள்"
+
+msgid "(!) This comment requires validation"
+msgstr "(!)இந்தக் கருத்துக்கு பரிசீலனை தேவைப்படுகிறது"
+
+msgid "... or browse your empty gallery"
+msgstr "... அல்லது உங்களுடைய காலியான ஆல்பத்தில் உலவு"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "... அல்லது தயவு செய்து இந்த செய்தியை செயலிழக்க செய்யவும், நான் என் வழியில் கண்டுகொள்கிறேன்"
+
+msgid "A comment on your site"
+msgstr "உங்கள் தளத்திற்கு ஒரு கருத்து வந்துள்ளது"
+
+msgid "About Piwigo"
+msgstr "Piwigo பற்றி"
+
+msgid "About"
+msgstr "பற்றி"
+
+msgid "Search for Author"
+msgstr "ஒரு பதிவருக்கான தேடல்"
+
+msgid "Search for all terms"
+msgstr "அனைத்து ஒப்பந்தத்திலிருந்து தேடவும்"
+
+msgid "Search for any term"
+msgstr "ஏதாவது ஒப்பந்தத்திலிருந்து தேடவும்"
+
+msgid "Search for words"
+msgstr "வார்த்தைகள் தேடவும்"
+
+msgid "Search in albums"
+msgstr "ஆல்பங்களில் தேடவும்"
+
+msgid "Search in sub-albums"
+msgstr "துணை ஆல்பங்களில் தேடவும்"
+
+msgid "Search results"
+msgstr "தேடல் முடிவுகள்"
+
+msgid "Search rules"
+msgstr "கட்டளை விதி தேடல்"
+
+msgid "Search tags"
+msgstr "குறிச்சொற்கள் தேடல்"
+
+msgid "Send my connection settings by email"
+msgstr "மின்னஞ்சல் மூலம் என் இணைப்பு அமைப்புகள் அனுப்பு"
+
+msgid "Sent by"
+msgstr "அனுப்பியர்"
+
+msgid "Show file metadata"
+msgstr "மேல்நிலை தரவு கோப்பைக் காட்டு"
+
+msgid "Show latest comments first"
+msgstr "முதலில் சமீபத்திய கருத்துக்கள் காட்டு"
+
+msgid "Show number of comments"
+msgstr "கருத்துரைகள் எண்ணிக்கை காட்டு"
+
+msgid "Show number of hits"
+msgstr "ஹிட் எண்ணிக்கைகள் காட்டு"
+
+msgid "Show oldest comments first"
+msgstr "முதலில் பழய கருத்துக்கள் காட்டு"
+
+msgid "Since"
+msgstr "தொடங்கி"
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "யாரோ கடவுச்சொல்லை பின்வரும் பயனர் கணக்கை மீட்டமைக்க வேண்டும் என்று கேட்டுள்ளார்:"
+
+msgid "Sort by"
+msgstr "வரிசைப்படுத்து"
+
+msgid "Sort order"
+msgstr "வரிசை அமைப்பு"
+
+msgid "Recent albums"
+msgstr "சமீபத்திய ஆல்பங்கள்"
+
+msgid "Recent period"
+msgstr "சமீப காலம்"
+
+msgid "Recent period must be a positive integer value"
+msgstr "சமீப காலத்தில் ஒரு நேர்மறையான முழு மதிப்பு இருக்க வேண்டும்"
+
+msgid "Recent photos"
+msgstr "சமீபத்திய புகைப்படங்கள்"
+
+msgid "Redirection..."
+msgstr "திருப்பிவிடுகிறது ..."
+
+msgid "Reduce diaporama speed"
+msgstr "வில்லைக்காட்சி வேகத்தைக் குறைக்க"
+
+msgid "Register"
+msgstr "பதிவுசெய்"
+
+msgid "Registration"
+msgstr "பதிவு செய்தல்"
+
+msgid "Registration of %s"
+msgstr "பதிவு செய்தது %s"
+
+msgid "Related tags"
+msgstr "தொடர்புடைய குறிச்சொற்கள்"
+
+msgid "Repeat the slideshow"
+msgstr "வில்லைக்காட்சி மீண்டும் இயக்கு"
+
+msgid "Requested album does not exist"
+msgstr "கோரப்பட்ட ஆல்பம் இல்லை"
+
+msgid "Requested tag does not exist"
+msgstr "கோரப்பட்ட குறிச்சொல் இல்லை"
+
+msgid "Reset"
+msgstr "மீட்டமை"
+
+msgid "Reset to default values"
+msgstr "இயல்பிருப்பு மதிப்புக்கு மீட்டமை"
+
+msgid "Retrieve password"
+msgstr "கடவுச்சொல்லை மீட்டெடுக்க"
+
+msgid "Return to home page"
+msgstr "முதல் பக்கத்திற்கு திரும்பு"
+
+msgid "SQL queries in"
+msgstr "SQL வினவல்"
+
+msgid "Search"
+msgstr "தேடு"
+
+msgid "Search by date"
+msgstr "தேதி வாரியாக தேடு"
+
+msgid "Piwigo Help"
+msgstr "Piwigo உதவி"
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "Piwigo ஒரு சரிசெய்யமுடியாத பிழை ஏற்பட்டுள்ளது"
+
+msgid "Play of slideshow"
+msgstr "வில்லைக்காட்சி இயக்கு"
+
+msgid "Please enter your username or email address."
+msgstr "உங்கள் பயனர் பெயர் அல்லது மின்னஞ்சல் முகவரியை உள்ளிடவும்."
+
+msgid "Please, enter a login"
+msgstr "தயவுசெய்து, ஒரு உள்நுழைவு உள்ளிடுக"
+
+msgid "Post date"
+msgstr "பதிந்த தேதி"
+
+msgid "Posted on"
+msgstr "பதிவிட்டவர்"
+
+msgid "Powered by"
+msgstr "உரிமையானவர்"
+
+msgid "Preferences"
+msgstr "விருப்பங்கள்"
+
+msgid "Previous"
+msgstr "முந்தைய"
+
+msgid "Profile"
+msgstr "சுயவிவரம்"
+
+msgid "Quick connect"
+msgstr "விரைவு இணைப்பு"
+
+msgid "Quick search"
+msgstr "விரைவு தேடல்"
+
+msgid "RSS feed"
+msgstr "RSS ஓடை"
+
+msgid "Random photos"
+msgstr "வரிசையற்ற புகைப்படங்கள்"
+
+msgid "Rank"
+msgstr "தரம்"
+
+msgid "Rate this photo"
+msgstr "இந்த புகைப்படத்தை மதிப்பிடு"
+
+msgid "Rating score"
+msgstr "மதிப்பு வரையீடு"
+
+msgid "Rating score, high &rarr; low"
+msgstr "மதிப்பு வரையீடு, அதிகம் &rarr; குறைவு"
+
+msgid "Rating score, low &rarr; high"
+msgstr "மதிப்பு வரையீடு, குறைவு &rarr; அதிகம்"
+
+msgid "Number of photos per page"
+msgstr "ஒரு பக்கத்திற்கான புகைப்படங்களின் எண்ணிக்கை"
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "எண் அடையாளங்காட்டி, 1 &rarr; 9"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "எண் அடையாளங்காட்டி, 9 &rarr; 1"
+
+msgid "Original"
+msgstr "அசல்"
+
+msgid "Original dimensions"
+msgstr "அசல் பரிமாணங்கள்"
+
+msgid "Page generated in"
+msgstr "உருவாக்கப்பட்ட பக்கத்தில்"
+
+msgid "Page not found"
+msgstr "பக்கம் கிடைக்கப்பெறவில்லை"
+
+msgid "Password"
+msgstr "கடவுச்சொல்"
+
+msgid "Password Reset"
+msgstr "கடவுச்சொல்லை மீட்டமை"
+
+msgid "Password forgotten"
+msgstr "கடவுச்சொல்லை மறந்துவிட்டேன்"
+
+msgid "Password reset is not allowed for this user"
+msgstr "கடவுச்சொல் மீட்டமைக்க இந்த பயனருக்கு அனுமதி இல்லை"
+
+msgid "Password: %s"
+msgstr "கடவுச்சொல்: %s"
+
+msgid "Pause of slideshow"
+msgstr "வில்லைக்காட்சி இடை நிறுத்தம்"
+
+msgid "Permalink for album not found"
+msgstr "ஆல்பத்திற்கு நிரந்தரத் தொடுப்பு காணவில்லை"
+
+msgid "Photo sizes"
+msgstr "புகைப்படங்களின் அளவுகள்"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "புகைப்பட அளவு, A &rarr; Z"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "புகைப்பட அளவு, Z &rarr; A"
+
+msgid "Photos only RSS feed"
+msgstr "RSS ஓடை புகைப்படங்கள் மட்டும்"
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "புகைப்படங்கள் கடந்  %d நாளில் பதிவிடப்பட்டது"
+msgstr[1] "புகைப்படங்கள் கடந்  %d நாட்களில் பதிவிடப்பட்டது"
+
+msgid "Keyword"
+msgstr "திறவுச் சொல்"
+
+msgid "Kind of date"
+msgstr "தேதி வகையான"
+
+msgid "Language"
+msgstr "மொழி"
+
+msgid "Last"
+msgstr "இறுதி"
+
+msgid "Links"
+msgstr "இணைப்புகள்"
+
+msgid "Login"
+msgstr "உள்நுழை"
+
+msgid "Logout"
+msgstr "வெளியேறு"
+
+msgid "Manage this user comment: %s"
+msgstr "இந்த பயனர் கருத்தை மேலாண்மை செய்: %s"
+
+msgid "Manual sort order"
+msgstr "கைமுறை வரிசைப்படுத்து"
+
+msgid "Menu"
+msgstr "பட்டியல்"
+
+msgid "Mobile"
+msgstr "மொபைல்"
+
+msgid "Most visited"
+msgstr "அதிகம் பார்வையிடப்பட்டது"
+
+msgid "N/A"
+msgstr "N/A"
+
+msgid "New on %s"
+msgstr "புதிய %s"
+
+msgid "New password"
+msgstr "புதிய கடவுச்சொல்"
+
+msgid "Next"
+msgstr "அடுத்து"
+
+msgid "No"
+msgstr "இல்லை"
+
+msgid "Not repeat the slideshow"
+msgstr "வில்லைக்காட்சியை திரும்பக் காட்ட வேண்டாம்."
+
+msgid "Notification"
+msgstr "அறிவிப்பு"
+
+msgid "Number of items"
+msgstr "உருப்படிகளின் எண்ணிக்கை"
+
+msgid "First"
+msgstr "முதல்"
+
+msgid "Forbidden"
+msgstr "தடை செய்"
+
+msgid "Forgot your password?"
+msgstr "உங்கள் கடவுச்சொல்லை மறந்துவிட்டீர்களா?"
+
+msgid "Go through the gallery as a visitor"
+msgstr "காட்சியகத்தை ஒரு பார்வையாளர் போல் நடத்திச் செல்லவும் "
+
+msgid "Hello"
+msgstr "வணக்கம்"
+
+msgid "Hello %s,"
+msgstr "வணக்கம் %s,"
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "வணக்கம் %s, உங்கள் புகைப்படத் தொகுப்பு காலியாக உள்ளது!"
+
+msgid "Help"
+msgstr "உதவி"
+
+msgid "Here are your connection settings"
+msgstr "இங்கு உங்கள் இணைப்பு அமைப்பு உள்ளது"
+
+msgid "Home"
+msgstr "இல்லம்"
+
+msgid "I want to add photos"
+msgstr "நான் புகைப்படங்கள் சேர்க்க வேண்டும்"
+
+msgid "IP: %s"
+msgstr "ஐபி: %s"
+
+msgid "IPTC Metadata"
+msgstr "IPTC மேல்நிலை தரவு"
+
+msgid "Identification"
+msgstr "அடையாளம்"
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "இது தவறு என்றால், இந்த மின்னஞ்சல் புறக்கணிக்கவும், எதுவும் நடக்காது."
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "நீங்கள் தவறுதலாக இந்த மின்னஞ்சல் வந்துள்ளது நினைத்தால், எங்களைத் தொடர்பு கொள்க %s"
+
+msgid "Invalid key"
+msgstr "செல்லாத விசை"
+
+msgid "Invalid password!"
+msgstr "கடவுச்சொல்லை தவறானது!"
+
+msgid "Invalid username or email"
+msgstr "தவறான பயனர்பெயர் அல்லது மின்னஞ்சல்"
+
+msgid "Edit"
+msgstr "திருத்து"
+
+msgid "Edit a comment"
+msgstr "ஒரு கருத்தை திருத்து"
+
+msgid "Email address"
+msgstr "மின்னஞ்சல் முகவரி"
+
+msgid "Email address is mandatory"
+msgstr "மின்னஞ்சல் முகவரி அவசியமானதாகும்"
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "மின்னஞ்சல் முகவரி இல்லை. ஒரு மின்னஞ்சல் முகவரியை குறிப்பிடவும்."
+
+msgid "Email: %s"
+msgstr "மின்னஞ்சல்: %s"
+
+msgid "Empty query. No criteria has been entered."
+msgstr "வெற்றுக் கேள்வி. எந்த வரன்முறையும் உள்ளிடப்படவில்லை."
+
+msgid "End-Date"
+msgstr "முடிவு தேதி"
+
+msgid "Enter your new password below."
+msgstr "கீழே உங்கள் புதிய கடவுச்சொல்லை உள்ளிடவும்."
+
+msgid "Enter your personnal informations"
+msgstr "உங்கள் தனிப்பட்ட தரவை உள்ளிடவும்"
+
+msgid "Error sending email"
+msgstr "மின்னஞ்சல் அனுப்பும் பொழுது பிழை"
+
+msgid "Expand all albums"
+msgstr "அனைத்து ஆல்பங்கள் விரிவாக்கு"
+
+msgid "Favorites"
+msgstr "பிடித்தவை"
+
+msgid "File"
+msgstr "கோப்பு"
+
+msgid "File name"
+msgstr "கோப்பின் பெயர்"
+
+msgid "File name, A &rarr; Z"
+msgstr "கோப்பின் பெயர்,  A &rarr; Z"
+
+msgid "File name, Z &rarr; A"
+msgstr "கோப்பின் பெயர், Z &rarr; A"
+
+msgid "Filesize"
+msgstr "கோப்பு அளவு"
+
+msgid "Filter"
+msgstr "வடிகட்டி"
+
+msgid "Filter and display"
+msgstr "வடிகட்டி மற்றும் காட்சி"
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "குக்கீகள் உங்கள் உலாவியில் தடுக்கப்பட்டது அல்லது ஒத்துப்போகாது. நீங்கள் குக்கீகளை உள்நுழைய செயல்படுத்த வேண்டும்"
+
+msgid "Create a new account"
+msgstr "ஒரு புதிய கணக்கை உருவாக்க"
+
+msgid "Created on"
+msgstr "அன்று உருவாக்கப்பட்டது"
+
+msgid "Creation date"
+msgstr "உருவாக்கிய தேதி"
+
+msgid "Current password is wrong"
+msgstr "தற்போதைய கடவுச்சொல் தவறு"
+
+msgid "Date"
+msgstr "தேதி"
+
+msgid "Date created, new &rarr; old"
+msgstr "தேதி உருவாக்கப்பட்டது, புதிய &rarr; பழைய"
+
+msgid "Date created, old &rarr; new"
+msgstr "தேதி உருவாக்கப்பட்டது, பழைய &rarr; புதிய"
+
+msgid "Date posted, new &rarr; old"
+msgstr "பதிவிடப்பட்ட தேதி, புதிய &rarr; பழைய"
+
+msgid "Date posted, old &rarr; new"
+msgstr "பதிவிடப்பட்ட தேதி, பழைய &rarr; புதிய "
+
+msgid "Default"
+msgstr "இயல்பிருப்பு"
+
+msgid "Delete"
+msgstr "நீக்கு"
+
+msgid "Desktop"
+msgstr "மேசைத்தளம்"
+
+msgid "Dimensions"
+msgstr "பரிமானங்கள்"
+
+msgid "Display"
+msgstr "காட்சி"
+
+msgid "Download"
+msgstr "பதிவிறக்கம்"
+
+msgid "Download this file"
+msgstr "இந்த கோப்பை பதிவிறக்கு"
+
+msgid "EXIF Metadata"
+msgstr "EXIF மேல்நிலை தரவு"
+
+msgid "Each listed rule must be satisfied."
+msgstr "ஒவ்வொரு பட்டியலிடப்பட்ட அளவுகோல் திருப்தி"
+
+msgid "Bad request"
+msgstr "தவறான கோரிக்கை"
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "மோசமான நிலையில் பயனர் \"விருந்தினர்\", முன்னிருப்பு நிலை பயன்படுத்தப்படும். தயவு செய்து தளநிர்வாகிக்கு தெரியப்படுத்தவும்."
+
+msgid "Best rated"
+msgstr "சிறந்த மதிப்பிடப்பட்டது"
+
+msgid "Browser: %s"
+msgstr "உலாவி: %s"
+
+msgid "Calendar"
+msgstr "அட்டவணை"
+
+msgid "Change my password"
+msgstr "என்னுடைய கடவுச்சொல்லை மாற்றுக"
+
+msgid "Check your email for the confirmation link"
+msgstr "உறுதிப்படுத்தல் சுட்டிக்கு உங்கள் மின்னஞ்சலைப் பார்க்கவும்"
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "உங்கள் உலாவி தானாக முன் அனுப்பவில்லை என்றால் இங்கு அழுத்தவும்\n"
+
+msgid "Click on the photo to see it in high definition"
+msgstr "உயர் வரையறையாகப் பார்க்க படத்தின் மீது அழுத்தவும்"
+
+msgid "Close this window"
+msgstr "இந்த சாளரத்தை மூடவும்"
+
+msgid "Comment"
+msgstr "கருத்து"
+
+msgid "Comment by %s"
+msgstr "கருத்திட்டவர் %s"
+
+msgid "Comment: %s"
+msgstr "கருத்து: %s"
+
+msgid "Comments"
+msgstr "கருத்துக்கள்"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "முழு செய்தியோடை (புகைப்படங்கள், கருத்துக்கள்)"
+
+msgid "Confirm Password"
+msgstr "கடவுச்சொல் உறுதிப்படுத்து"
+
+msgid "Connected user: %s"
+msgstr "இணைக்கப்பட்ட பயனர்: %s"
+
+msgid "Connection settings"
+msgstr "இணைப்பு அமைப்புகள்"
+
+msgid "Contact"
+msgstr "தொடர்புகொள்ள"
+
+msgid "Contact webmaster"
+msgstr "தளநிர்வாகியை தொடர்புகொள்ள"
+
+msgid "%d rate"
+msgid_plural "%d rates"
+msgstr[0] "%d மதிப்பீடு"
+msgstr[1] "%d மதிப்பீடுகள்"
+
+msgid "2small"
+msgstr "XXS - சிறிய"
+
+msgid "Accelerate diaporama speed"
+msgstr "படவில்லைக்காட்சி வேகத்தை அதிகரிக்க"
+
+msgid "Add a comment"
+msgstr "கருத்தைச் சேர்"
+
+msgid "Admin: %s"
+msgstr "நிர்வாகி"
+
+msgid "Administration"
+msgstr "நிர்வாகம்"
+
+msgid "Album"
+msgstr "ஆல்பம்"
+
+msgid "Album results for"
+msgstr "இந்த ஆல்பம் முடிவு"
+
+msgid "Album: %s"
+msgstr "ஆல்பம்"
+
+msgid "Albums"
+msgstr "ஆல்பங்கள்"
+
+msgid "All"
+msgstr "அனைத்தும்"
+
+msgid "All tags"
+msgstr "அனைத்து குறிச்சொற்கள்"
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "உங்கள் பின்னூட்டம் தெரிவதற்கு தள நிர்வாகி உங்கள் கருத்தை அங்கீகரிக்க வேண்டும்."
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "Anti-flood system : மற்றொரு கருத்தை முன் தயவு செய்து சிறிது நேரம் காத்திருக்கவும்"
+
+msgid "Any tag"
+msgstr "ஏதாவது குறிச்சொல்"
+
+msgid "Are you sure?"
+msgstr "நீங்கள் உறுதியாக இருக்கிறீர்களா?"
+
+msgid "At least one listed rule must be satisfied."
+msgstr "குறைந்தது ஒரு பட்டியலிடப்பட்ட அடிப்படை திருப்தி."
+
+msgid "Author"
+msgstr "ஆசிரியர்"
+
+msgid "Author: %s"
+msgstr "ஆசிரியர்r: %s"
+
+msgid "Auto login"
+msgstr "தானாக உள்நுழை"
+
+msgid "Specials"
+msgstr "சிறப்புகள்"
+
+msgid "Submit"
+msgstr "பதிவிடு"
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "வெற்றிகரமாக பதிவு செய்யப்பட்டது, விரைவில் நீங்கள் உங்கள் இணைப்பு அமைப்புகளை ஒரு மின்னஞ்சலில் பெறுவீர்கள். வருக!"
+
+msgid "Tag"
+msgstr "குறிச்சொல்"
+
+msgid "Tag results for"
+msgstr "குறிச்சொல் முடிவுகள்"
+
+msgid "Tags"
+msgstr "குறிச்சொற்கள்"
+
+msgid "Thank you for registering at %s!"
+msgstr "பதிவு செய்ததற்கு நன்றி %s!"
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "RSS ஓடை இந்த வலைத்தளத்தில் இருந்து புதிய நிகழ்வுகளை அறிவிப்பு வழங்குகிறது: புதிய புகைப்படங்கள், மேம்படுத்தப்பட்ட ஆல்பங்கள், புதிய கருத்துக்கள். ஒரு RSS ஓடை படிப்பான் பயன்படுத்த வேண்டும்."
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "காட்சியகம் பராமரிப்பிற்காக பூட்டப்பட்டுள்ளது. தயவு செய்து பின்னர் திரும்பி வாருங்கள்."
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "பக்கத்திற்கான புகைப்படங்களின் எண்ணிக்கை சுழியமில்லாத முழு எண்ணாக இருக்க வேண்டும்"
+
+msgid "The passwords do not match"
+msgstr "கடவுச்சொற்கள் பொருந்தவில்லை"
+
+msgid "This author modified following comment:"
+msgstr "இந்த பதிவர் பின்வரும் கருத்தை மாற்றம் செய்துள்ளார்:"
+
+msgid "This author removed the comment with id %d"
+msgstr "இந்த பதிவர் கருத்துடன் ஐடியையும் நீக்கியுள்ளார் %d"
+
+msgid "This login is already used by another user"
+msgstr "இந்த உள்நுழைவு மற்றொரு பயனரால் ஏற்கனவே பயன்படுத்தப்படுகிறது"
+
+msgid "Thumbnails"
+msgstr "சிறுபடவுருக்கள்"
+
+msgid "To reset your password, visit the following address:"
+msgstr "உங்கள் கடவுச்சொல்லை மீட்டமைக்க, பின்வரும் முகவரியை பார்க்கவும்:"
+
+msgid "Unknown feed identifier"
+msgstr "தெரியாத ஓடை அடையாளங்காட்டி"
+
+msgid "Unknown identifier"
+msgstr "தெரியாத அடையாளங்காட்டி"
+
+msgid "Update your rating"
+msgstr "உங்கள் மதிப்பீட்டை புதுப்பிக்கவும்"
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "பயனர் \"%s\" என்ற மின்னஞ்சல் முகவரி இல்லை, கடவுச்சொல்லை மீட்டமை முடியாது"
+
+msgid "this email address is already in use"
+msgstr "இந்த மின்னஞ்சல் முகவரி ஏற்கனவே பயன்பாட்டில் உள்ளது"
+
+msgid "this login is already used"
+msgstr "இந்த உள்நுழைவு ஏற்கனவே பயன்படுத்தப்படுகிறது"
+
+msgid "thumb"
+msgstr "வில்லைப்படம்"
+
+msgid "today"
+msgstr "இன்று"
+
+msgid "useful when password forgotten"
+msgstr "ஒருவேளை கடவுச்சொல்லை மறந்துவிட்டால் பயனுள்ளதாக இருக்கும்"
+
+msgid "wrong date"
+msgstr "தவறான தேதி"
+
+msgid "xlarge"
+msgstr "XL - மிகப் பெரியது"
+
+msgid "xsmall"
+msgstr "XS - மிகப் சிறியது"
+
+msgid "xxlarge"
+msgstr "XXL - பிரம்மாண்டமான"
+
+msgid "photos posted during the last %d days"
+msgstr "கடந்த %d நாட்களில் இடப்பட்ட புகைப்படங்கள்"
+
+msgid "posted after %s (%s)"
+msgstr "பிறகு பதிவிடப்பட்டது %s (%s)"
+
+msgid "posted before %s (%s)"
+msgstr "முன்னர் பதிவிடப்பட்டது %s (%s)"
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "இடையே பதிவிடப்பட்டது %s (%s) மறும் %s (%s)"
+
+msgid "posted on %s"
+msgstr "பதிவிடப்பட்டது %s"
+
+msgid "remove this tag from the list"
+msgstr "பட்டியலில் இருந்து இந்த குறிச்சொல்லை நீக்க"
+
+msgid "representative"
+msgstr "ஆல்பம் வில்லைப்படம்"
+
+msgid "return to normal view mode"
+msgstr "சாதாரண காட்சி முறைக்குத் திரும்ப"
+
+msgid "return to the display of all photos"
+msgstr "அனைத்து புகைப்படங்கள் காட்சிக்குத் திரும்ப"
+
+msgid "search"
+msgstr "தேடுக"
+
+msgid "searched words : %s"
+msgstr "தேடப்பட்ட சொற்கள் : %s"
+
+msgid "set as album representative"
+msgstr "ஆல்பம் சிறுபடமாக இணைக்க"
+
+msgid "show tag cloud"
+msgstr "குறிமேகச் சொற்களைக் காட்டு"
+
+msgid "slideshow"
+msgstr "வில்லைக்காட்சி"
+
+msgid "small"
+msgstr "S - சிறியது"
+
+msgid "square"
+msgstr "சதுரம்"
+
+msgid "stop the slideshow"
+msgstr "வில்லைக்காட்சியை நிறுத்து"
+
+msgid "the beginning"
+msgstr "ஆரம்பத்தில்"
+
+msgid "the username must be given"
+msgstr "பயனர் பெயர் தேவை"
+
+msgid "login mustn't start with a space character"
+msgstr "உள்நுழைவு கண்டிப்பாக வெற்றிடத்துடன் துவங்கக் கூடாது"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "மின்னஞ்சல் முகவரி இதுபோன்று இருக்க வேண்டும் xxx@yyy.eee (example : jack@altern.org)"
+
+msgid "mandatory"
+msgstr "கட்டளை"
+
+msgid "medium"
+msgstr "M - நடுத்தர"
+
+msgid "no rate"
+msgstr "மதிப்பீடு இல்லை"
+
+msgid "obligatory"
+msgstr "கட்டளை"
+
+msgid "password updated"
+msgstr "கடவுச்சொல் மேம்படுத்தப்பட்டது"
+
+msgid "photo"
+msgstr "புகைப்படம்"
+
+msgid "display most visited photos"
+msgstr "அதிகம் பார்வையிடப்பட்ட புகைப்படங்களைக் காட்சிப்படுத்து"
+
+msgid "display only recently posted photos"
+msgstr "சமீபத்தில் பதிந்த புகைப்படங்களை மட்டும் காட்சிப்படுத்து"
+
+msgid "display photos linked to this tag"
+msgstr "இந்த குறிச்சொல் இணைக்கப்பட்ட படங்களைக் காட்சிப்படுத்து"
+
+msgid "display recently updated albums"
+msgstr "சமீபத்தில் புதுப்பிக்கப்பட்ட ஆல்பங்கள் காட்சிப்படுத்து"
+
+msgid "display this album"
+msgstr "இந்த ஆல்பத்தைக் காட்சிப்படுத்து"
+
+msgid "display your favorites photos"
+msgstr "உங்கள் அபிமான புகைப்படங்கள் காட்சிப்படுத்து"
+
+msgid "edit"
+msgstr "திருத்து"
+
+msgid "excluded"
+msgstr "விலக்கப்பட்டது"
+
+msgid "from %s to %s"
+msgstr "இருந்து %s to %s"
+
+msgid "group by letters"
+msgstr "எழுத்துக்கள் மூலம் குழு"
+
+msgid "guest"
+msgstr "விருந்தினர்"
+
+msgid "html tags are not allowed in login"
+msgstr "html குறிச்சொற்கள் உள்நுழைவுக்கு அனுமதி இல்லை"
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] "ல் %d துணை-ஆலப்ம்"
+msgstr[1] "ல் %d துணை-ஆலப்ம்"
+
+msgid "in this album"
+msgstr "இந்த ஆல்பத்தில்"
+
+msgid "included"
+msgstr "உள்ளடக்கிய"
+
+msgid "large"
+msgstr "L - பெரிது"
+
+msgid "last %d days"
+msgstr "கடந்த %d நாட்கள்"
+
+msgid "letters"
+msgstr "எழுத்துக்கள்"
+
+msgid "login mustn't end with a space character"
+msgstr "உள்நுழைவு கண்டிப்பாக இறுதியில் வெற்றிடமாக முடியக்கூடாது"
+
+msgid "delete all photos from your favorites"
+msgstr "உங்கள் அபிமான அனைத்து புகைப்படங்களையும் நீக்க"
+
+msgid "delete this photo from your favorites"
+msgstr "உங்கள் அபிமான அனைத்து புகைப்படங்களையும் நீக்க"
+
+msgid "descending"
+msgstr "இறங்குமுகம்"
+
+msgid "display a calendar by creation date"
+msgstr "உருவாக்கப்பட்ட தேதியாக நாட்காட்டியைக் காட்டு"
+
+msgid "display a calendar by posted date"
+msgstr "பதிந்த தேதியாக நாட்காட்டியைக் காட்டு"
+
+msgid "display a set of random photos"
+msgstr "சீரற்ற புகைப்படங்கள் ஒரு தொகுப்பாகக் காட்டு"
+
+msgid "display all photos in all sub-albums"
+msgstr "அனைத்து துணை ஆல்பங்களின் அனைத்து புகைப்படங்களையும் காட்டு"
+
+msgid "display available tags"
+msgstr "கிடைக்கக்கூடிய குறிச்சொற்களைக் காட்டு"
+
+msgid "display best rated photos"
+msgstr "சிறந்த மதிப்பிடப்பட்ட புகைப்படங்களைக் காட்டு"
+
+msgid "display each day with photos, month per month"
+msgstr " மாதத்திற்கு மாதம் ஒவ்வொரு நாளையும் படத்துடன் காட்டு"
+
+msgid "display last user comments"
+msgstr "கடந்த பயனரின் கருத்துரைகளைக் காட்டு"
+
+msgid "display most recent photos"
+msgstr "மிக சமீபத்திய புகைப்படங்களைக் காட்டு"
+
+msgid "Your Gallery Customization"
+msgstr "உங்கள் காட்சியகம் தனிபயனாக்கத்திற்கு"
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "உங்கள் கருத்து பதிவு செய்யப்படவில்லை ஏனெனில் சரிபார்த்தல் விதிகள் வெற்றி பெறவில்லை"
+
+msgid "Your comment has been registered"
+msgstr "உங்கள் கருத்து பதிவுசெய்யப்பட்டது"
+
+msgid "Your favorites"
+msgstr "உங்களுக்கு பிடித்தவை"
+
+msgid "Your password has been reset"
+msgstr "உங்கள் கடவுச்சொல் மீட்டமைக்கப்பட்டது"
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "உங்கள் பயனர் பெயர் வெற்றிகரமாக மாற்றப்பட்டுள்ளது : %s"
+
+msgid "add this photo to your favorites"
+msgstr "உங்களுக்குப் பிடித்ததாக இந்த புகைப்படத்தை சேர்க்க"
+
+msgid "all"
+msgstr "அனைத்தும்"
+
+msgid "ascending"
+msgstr "ஏறுமுகம்"
+
+msgid "author(s) : %s"
+msgstr "பயனர்(கள்) : %s"
+
+msgid "available for administrators only"
+msgstr "நிர்வாகிகளுக்கு மட்டுமே கிடைக்கும்"
+
+msgid "chronology_monthly_calendar"
+msgstr "மாத நாட்காட்டி"
+
+msgid "chronology_monthly_list"
+msgstr "மாதாந்திர பட்டியல்"
+
+msgid "chronology_weekly_list"
+msgstr "வாராந்திர பட்டியல்"
+
+msgid "cloud"
+msgstr "மேகம்"
+
+msgid "comment date"
+msgstr "கருத்திட்ட தேதி"
+
+msgid "created after %s (%s)"
+msgstr "பிறகு உருவாக்கப்பட்டது %s (%s)"
+
+msgid "created before %s (%s)"
+msgstr "முன்னர் உருவாக்கப்பட்டது %s (%s)"
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "இடையே உருவாக்கப்பட்டது %s (%s) மற்றும் %s (%s)"
+
+msgid "created on %s"
+msgstr "உருவாக்கப்பட்டது %s"
+
+msgid "User comments"
+msgstr "பயனர் கருத்துரைகள்"
+
+msgid "User: %s"
+msgstr "பயனர்: %s"
+
+msgid "Username"
+msgstr "பயனர் பெயர்"
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "கேலரியில் \"%s\" பயனர் பெயர் %s"
+
+msgid "Username is mandatory"
+msgstr "பயனர்பெயர் அவசியமானதாகும்"
+
+msgid "Username modification"
+msgstr "பயனர் பெயர் மாற்றம்"
+
+msgid "Username or email"
+msgstr "பயனர் பெயர் அல்லது மின்னஞ்சல்"
+
+msgid "Username: %s"
+msgstr "பயனர்பெயர்: %s"
+
+msgid "View"
+msgstr "பார்க்க"
+
+msgid "View in"
+msgstr "காண்க"
+
+msgid "Visits"
+msgstr "வருகைகள்"
+
+msgid "Visits, high &rarr; low"
+msgstr "வருகைகள், உயர் &rarr; குறைந்த"
+
+msgid "Visits, low &rarr; high"
+msgstr "வருகைகள், குறைந்த &rarr; உயர்"
+
+msgid "Webmaster"
+msgstr "தளநிறுவனர்"
+
+msgid "Week %d"
+msgstr "வாரம் %d"
+
+msgid "Welcome"
+msgstr "வருக"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "உங்களை Piwigo புகைப்படத் தொகுப்புக்கு வரவேற்கிறோம்!"
+
+msgid "Yes"
+msgstr "ஆம்"
+
+msgid "You are not authorized to access the requested page"
+msgstr "நீங்கள் கோரிய பக்கத்தை அணுக உங்களுக்கு அதிகாரம் இல்லை"
+
+msgid "You will receive a link to create a new password via email."
+msgstr "மின்னஞ்சல் வழியாக ஒரு புதிய கடவுச்சொல்லை உருவாக்க ஒரு இணைப்பை பெறுவீர்கள்."
+
+msgid "Email"
+msgstr "மின்னஞ்சல்"
+
+msgid "Go back to the album"
+msgstr "மீண்டும்,ஆல்பம் செல்ல"
+
+msgid "Last Page"
+msgstr "கடைசி பக்கம்"
+
+msgid "Website"
+msgstr "இணையதளம்"
+
+msgid "Your website URL is invalid"
+msgstr "உங்கள் வலைத்தளத்தின் URL தவறானது"
+
+msgid "First Page"
+msgstr "முதல் பக்கம்"
+
+msgid "Password is missing. Please enter the password."
+msgstr "கடவுச்சொல் விடுபட்டுள்ளது. தயவு செய்து\nகடவுச்சொல்லை உள்ளிடவும்"
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "கடவுச்சொல்லை உறுதிப்படுத்தல் விடுபட்டுள்ளது. தேர்ந்தெடுத்த கடவுச்சொல்லை உறுதிப்படுத்தவும்"
+
+msgid "Theme"
+msgstr "கருப்பொருள்"
+
+msgid "%d photos per page"
+msgstr "பக்கம் ஒன்றுக்கு%d புகைப்படங்கள்"
+
+msgid "No results for"
+msgstr "க்கான முடிவுகள் இல்லை"
+
+msgid "Photo title"
+msgstr "புகைப்பட தலைப்பு"
+
+msgid "Photo description"
+msgstr "புகைப்பட விளக்கம்"
+
+msgid "Apply on properties"
+msgstr "பண்புகள் மீது விண்ணப்பிக்க"
+
+msgid "Album name, Z &rarr; A"
+msgstr "ஆல்பத்தின் பெயர், இசட் & rarr; ஒரு"
+
+msgid "Album name, A &rarr; Z"
+msgstr "ஆல்பத்தின் பெயர், ஒரு & rarr; Z"
+
+msgid "Link: %s"
+msgstr "\nஇணைப்பு:%s"
+
+msgid "piwigo_day_0"
+msgstr "ஞாயிறு"
+
+msgid "piwigo_day_1"
+msgstr "திங்கள்"
+
+msgid "piwigo_day_2"
+msgstr "செவ்வாய்"
+
+msgid "piwigo_day_3"
+msgstr "புதன்"
+
+msgid "piwigo_day_4"
+msgstr "வியாழன்"
+
+msgid "piwigo_day_5"
+msgstr "வெள்ளி"
+
+msgid "piwigo_day_6"
+msgstr "ஞாயிறு"
+
+msgid "piwigo_month_10"
+msgstr "அக்டோபர்"
+
+msgid "piwigo_month_11"
+msgstr "நவம்பர்"
+
+msgid "piwigo_month_12"
+msgstr "டிசம்பர்"
+
+msgid "piwigo_month_1"
+msgstr "ஜனவரி"
+
+msgid "piwigo_month_2"
+msgstr "பிப்ரவரி"
+
+msgid "piwigo_month_3"
+msgstr "மார்ச்"
+
+msgid "piwigo_month_4"
+msgstr "ஏப்ரல்"
+
+msgid "piwigo_month_5"
+msgstr "மே"
+
+msgid "piwigo_month_6"
+msgstr "ஜூன்"
+
+msgid "piwigo_month_7"
+msgstr "ஜுலை"
+
+msgid "piwigo_month_8"
+msgstr "ஆகஸ்ட்"
+
+msgid "piwigo_month_9"
+msgstr "செப்டம்பர்"
+

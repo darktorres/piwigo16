@@ -10,11 +10,12 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Cache\PersistentCache;
+use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 
 /**
  * Get standard sql where in order to restrict and filter categories and images.
- * IMAGE_CATEGORY_TABLE must be named "ic" in the query
+ * The image/category junction table must be named "ic" in the query
  *
  * @param string $prefix_condition
  * @param string $img_field
@@ -55,8 +56,8 @@ function custom_notification_query($action, $type, $start = null, $end = null): 
         case 'new_comments':
 
             $query = '
-  FROM ' . COMMENTS_TABLE . ' AS c
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON c.image_id = ic.image_id
+  FROM ' . Tables::comments() . ' AS c
+    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON c.image_id = ic.image_id
   WHERE 1=1';
             if (! empty($start)) {
                 $query .= '
@@ -72,7 +73,7 @@ function custom_notification_query($action, $type, $start = null, $end = null): 
         case 'unvalidated_comments':
 
             $query = '
-  FROM ' . COMMENTS_TABLE . '
+  FROM ' . Tables::comments() . '
   WHERE 1=1';
             if (! empty($start)) {
                 $query .= '
@@ -89,8 +90,8 @@ function custom_notification_query($action, $type, $start = null, $end = null): 
         case 'new_elements':
 
             $query = '
-  FROM ' . IMAGES_TABLE . '
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON image_id = id
+  FROM ' . Tables::images() . '
+    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON image_id = id
   WHERE 1=1';
             if (! empty($start)) {
                 $query .= '
@@ -106,8 +107,8 @@ function custom_notification_query($action, $type, $start = null, $end = null): 
         case 'updated_categories':
 
             $query = '
-  FROM ' . IMAGES_TABLE . '
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON image_id = id
+  FROM ' . Tables::images() . '
+    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON image_id = id
   WHERE 1=1';
             if (! empty($start)) {
                 $query .= '
@@ -123,7 +124,7 @@ function custom_notification_query($action, $type, $start = null, $end = null): 
         case 'new_users':
 
             $query = '
-  FROM ' . USER_INFOS_TABLE . '
+  FROM ' . Tables::userInfos() . '
   WHERE 1=1';
             if (! empty($start)) {
                 $query .= '
@@ -462,7 +463,7 @@ SELECT
     date_available,
     COUNT(DISTINCT id) AS nb_elements,
     COUNT(DISTINCT category_id) AS nb_cats
-  FROM ' . IMAGES_TABLE . ' i INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id=image_id
+  FROM ' . Tables::images() . ' i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id=image_id
   ' . $where_sql . '
   GROUP BY date_available
   ORDER BY date_available DESC
@@ -482,8 +483,8 @@ SELECT
         if ($max_elements > 0) { // get some thumbnails ...
             $query = '
 SELECT DISTINCT i.*
-  FROM ' . IMAGES_TABLE . ' i
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id=image_id
+  FROM ' . Tables::images() . ' i
+    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id=image_id
   ' . $where_sql . '
     AND date_available=\'' . $date_available . '\'
   ORDER BY ' . DB_RANDOM_FUNCTION . '()
@@ -497,9 +498,9 @@ SELECT DISTINCT i.*
 SELECT
     DISTINCT c.uppercats,
     COUNT(DISTINCT i.id) AS img_count
-  FROM ' . IMAGES_TABLE . ' i
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON i.id=image_id
-    INNER JOIN ' . CATEGORIES_TABLE . ' c ON c.id=category_id
+  FROM ' . Tables::images() . ' i
+    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON i.id=image_id
+    INNER JOIN ' . Tables::categories() . ' c ON c.id=category_id
   ' . $where_sql . '
     AND date_available=\'' . $date_available . '\'
   GROUP BY category_id, c.uppercats

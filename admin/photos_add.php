@@ -10,6 +10,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\tabsheet;
+use Piwigo\Core\AccessLevel;
 use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
@@ -36,7 +37,7 @@ define(
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
 
-check_status(ACCESS_ADMINISTRATOR);
+check_status(AccessLevel::Administrator);
 
 // +-----------------------------------------------------------------------+
 // |                          Load configuration                           |

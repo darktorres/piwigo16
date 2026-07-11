@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Db\Tables;
+
 add_event_handler('user_comment_check', 'user_comment_check');
 
 /**
@@ -115,7 +117,7 @@ function insert_user_comment(&$comm, $key, &$infos): string
             $username_field = is_string($user_fields['username'] ?? null) ? $user_fields['username'] : 'username';
             $query = '
 SELECT COUNT(*) AS user_exists
-  FROM ' . USERS_TABLE . '
+  FROM ' . Tables::users() . '
   WHERE ' . $username_field . " = '" . addslashes($comment_author_name) . "'";
             $row = pwg_db_fetch_assoc(pwg_query($query));
             // a COUNT(*) query always returns exactly one row
@@ -202,7 +204,7 @@ SELECT COUNT(*) AS user_exists
         $reference_date = pwg_db_get_flood_period_expression($anti_flood_time);
 
         $query = '
-SELECT count(1) FROM ' . COMMENTS_TABLE . '
+SELECT count(1) FROM ' . Tables::comments() . '
   WHERE date > ' . $reference_date . '
     AND author_id = ' . $comm_author_id;
         if (! is_classic_user()) {
@@ -243,7 +245,7 @@ SELECT count(1) FROM ' . COMMENTS_TABLE . '
         $comment_email = is_string($comm['email'] ?? null) ? $comm['email'] : '';
 
         $query = '
-INSERT INTO ' . COMMENTS_TABLE . '
+INSERT INTO ' . Tables::comments() . '
   (author, author_id, anonymous_id, content, date, validated, validation_date, image_id, website_url, email)
   VALUES (
     \'' . $comment_author . '\',
@@ -318,7 +320,7 @@ function delete_user_comment($comment_id): bool
     }
 
     $query = '
-DELETE FROM ' . COMMENTS_TABLE . '
+DELETE FROM ' . Tables::comments() . '
   WHERE ' . $where_clause .
 $user_where_clause . '
 ;';
@@ -422,7 +424,7 @@ function update_user_comment(array $comment, $post_key): string
         $comment_id_value = is_scalar($comment['comment_id']) ? (string) $comment['comment_id'] : '0';
 
         $query = '
-UPDATE ' . COMMENTS_TABLE . '
+UPDATE ' . Tables::comments() . '
   SET content = \'' . $comment_content . '\',
       website_url = ' . (! empty($comment_website_url) ? '\'' . $comment_website_url . '\'' : 'NULL') . ',
       validated = \'' . ($comment_action == 'validate' ? 'true' : 'false') . '\',
@@ -512,7 +514,7 @@ function get_comment_author_id($comment_id, $die_on_error = true): false|int
     $query = '
 SELECT
     author_id
-  FROM ' . COMMENTS_TABLE . '
+  FROM ' . Tables::comments() . '
   WHERE id = ' . $comment_id . '
 ;';
     $result = pwg_query($query);
@@ -545,7 +547,7 @@ function validate_user_comment($comment_id): void
     }
 
     $query = '
-UPDATE ' . COMMENTS_TABLE . '
+UPDATE ' . Tables::comments() . '
   SET validated = \'true\'
     , validation_date = NOW()
   WHERE ' . $where_clause . '
@@ -567,7 +569,7 @@ function invalidate_user_cache_nb_comments(): void
     unset($user['nb_available_comments']);
 
     $query = '
-UPDATE ' . USER_CACHE_TABLE . '
+UPDATE ' . Tables::userCache() . '
   SET nb_available_comments = NULL
 ;';
     pwg_query($query);

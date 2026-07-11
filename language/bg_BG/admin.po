@@ -1,0 +1,4203 @@
+# Piwigo translation — bg_BG
+# Source: admin.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: bg_BG\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Hello"
+msgstr "Здравей"
+
+msgid "Notification"
+msgstr "Съобщение"
+
+msgid "File"
+msgstr "Файл"
+
+msgid "Preferences"
+msgstr "Предпочитания"
+
+msgid "Rate"
+msgstr "Оценка"
+
+msgid "Average rate"
+msgstr "Средна оценка"
+
+msgid "Zoom"
+msgstr "Увеличи"
+
+msgid "Add to caddie"
+msgstr "Добави в колекцията"
+
+msgid "Width"
+msgstr "Ширина"
+
+msgid "With blank value, gallery title will be used"
+msgstr "Ако е празно, ще се ползва името на галерията"
+
+msgid "With no album"
+msgstr "Без албум"
+
+msgid "With no tag"
+msgstr "Без етикет"
+
+msgid "With no virtual album"
+msgstr "Без виртуален албум"
+
+msgid "wrong filename"
+msgstr "грешно име на файл"
+
+msgid "Year"
+msgstr "Година"
+
+msgid "You are running on development sources, no check possible."
+msgstr "Вие сте стартирали разработващ се код, не е възможна проверка."
+
+msgid "You are running the latest version of Piwigo."
+msgstr "Вие използвате последната версия на Piwigo."
+
+msgid "You are using the Browser uploader. Try the <a href=\"%s\">Flash uploader</a> instead."
+msgstr "Вие използвате качване през Браузер. Можете да превключите в режим <a href=\"%s\">Качване чрез Флаш</a>."
+
+msgid "You are using the Flash uploader. Problems? Try the <a href=\"%s\">Browser uploader</a> instead."
+msgstr "Вие използвате качване чрез Флаш. Имате проблем? Можете да превключите в режим <a href=\"%s\">Качване през Браузер</a>."
+
+msgid "You can update to Piwigo %s directly, without upgrading to Piwigo %s (recommended)."
+msgstr "Може да ъпдейтвате до Piwigo %s директно, без ъпгрейдване до Piwigo %s (препоръчително)."
+
+msgid "You cannot delete your account"
+msgstr "Не може да изтриете собствения си акаунт"
+
+msgid "You cannot move an album in its own sub album"
+msgstr "Не може да преместите албум в негов собствен под-албум"
+
+msgid "You can't define a default photo order because you have a custom setting in your local configuration."
+msgstr "Не може да дефинирате ред на снимките по подразбиране, поради потребителските настройки в локалната конфигурация."
+
+msgid "You have %d orphan tags: %s."
+msgstr "Имате %d необвързани етикета: %s."
+
+msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
+msgstr "Вие сте задали <i>$conf['order_by']</i> в локалния си конфигурационен файл, този параметър не се използва вече, моля премахнете го или го преименувайте на<i>$conf['order_by_custom']</i>!"
+
+msgid "You have subscribed to receiving notifications by mail."
+msgstr "Вие се абонирахте да получавате известия с имейл."
+
+msgid "You have unsubscribed from receiving notifications by mail."
+msgstr "Вие прекратихте абонамента си за получавате известия с имейл."
+
+msgid "You need to confirm deletion"
+msgstr "Трябва да потвърдите изтриването"
+
+msgid "You need to upgrade your system to take full advantage of the application else the application will not work correctly, or not at all"
+msgstr "Необходимо е да актуализирате вашата система за да може да използвате пълните функции на програмата, в противен случай тя може да не работи коректно или изцяло"
+
+msgid "Your configuration settings are saved"
+msgstr "Вашите конфигурационни настройки са записани"
+
+msgid "[%s] Visit album %s"
+msgstr "[%s] Посетен албум %s"
+
+msgid "[NBM] Problems or questions"
+msgstr "[NBM] Проблеми или въпроси"
+
+msgid "Resize after upload"
+msgstr "Промени размера след качването"
+
+msgid "Original Size"
+msgstr "Оригинален размер"
+
+msgid "A locked gallery is only visible to administrators"
+msgstr "Заключена галерия е видима само за администратори"
+
+msgid "Unlock gallery"
+msgstr "Отключи галерията"
+
+msgid "Gallery unlocked"
+msgstr "Галерията е отключена"
+
+msgid "%d group"
+msgstr "%d група"
+
+msgid "%d groups"
+msgstr "%d групи"
+
+msgid "%d guest"
+msgid_plural "%d guests"
+msgstr[0] "%d посетител"
+msgstr[1] "%d посетители"
+
+msgid "WARNING! This plugin does not seem to be compatible with this version of Piwigo."
+msgstr "ВНИМАНИЕ!Това разширение не е съвместимо с тази версия на Piwigo."
+
+msgid "Week starts on"
+msgstr "Седмицата започва от"
+
+msgid "Who can see these photos?"
+msgstr "Кой може да види тези снимки?"
+
+msgid "Who can see this photo?"
+msgstr "Кой може да види тази снимка?"
+
+msgid "width must be a number superior to"
+msgstr "ширината трябва да бъде число, по-голямо от"
+
+msgid "Upload Photos"
+msgstr "Качи снимки"
+
+msgid "Select an album"
+msgstr "Избор на албум"
+
+msgid "... or "
+msgstr "... или "
+
+msgid "create a new album"
+msgstr "Създай нов албум"
+
+msgid "Select files"
+msgstr "Избор на файлове"
+
+msgid "Start Upload"
+msgstr "Стартирай качването"
+
+msgid "Learn more"
+msgstr "Научи повече"
+
+msgid "Maximum file size: %sB."
+msgstr "Максимален размер за файл: %sB."
+
+msgid "Allowed file types: %s."
+msgstr "Позволени файлови формати: %s."
+
+msgid "+ Add an upload box"
+msgstr "+ Добави каре за качване"
+
+msgid "Add another set of photos"
+msgstr "Добави друг набор от снимки"
+
+msgid "Photo %s of %s"
+msgstr "Снимка %s от %s"
+
+msgid "%d photos uploaded"
+msgstr "%d снимки качени"
+
+msgid "All %d photos are selected"
+msgstr "Всичките %d снимки са селектирани"
+
+msgid "Exif extension not available, admin should disable exif use"
+msgstr "Exif разширение не е налично, администраторът трябва да забрани използването на exif"
+
+msgid "Hide"
+msgstr "Скрий"
+
+msgid "ACCESS_0"
+msgstr "Свободен достъп"
+
+msgid "ACCESS_1"
+msgstr "Достъп за всички"
+
+msgid "ACCESS_2"
+msgstr "Достъп за регистрирани потребители"
+
+msgid "ACCESS_3"
+msgstr "Достъп за администратори"
+
+msgid "ACCESS_4"
+msgstr "Достъп за уебмастери"
+
+msgid "ACCESS_5"
+msgstr "Достъп забранен"
+
+msgid "Level 1"
+msgstr "Контакти"
+
+msgid "Level 2"
+msgstr "Приятели"
+
+msgid "Photo Properties"
+msgstr "Характеристика на снимка"
+
+msgid "Photo name"
+msgstr "Име на снимка"
+
+msgid "Name"
+msgstr "Име"
+
+msgid "Description"
+msgstr "Описание"
+
+msgid "Parent album"
+msgstr "Родителски албум"
+
+msgid "Album name"
+msgstr "Име на албума"
+
+msgid "Create"
+msgstr "Създай"
+
+msgid "Level 4"
+msgstr "Семейство"
+
+msgid "Level 8"
+msgstr "Администратори"
+
+msgid "Informations"
+msgstr "Информация"
+
+msgid "Discover album:"
+msgstr "Разгледай албум:"
+
+msgid "See you soon."
+msgstr "До скоро."
+
+msgid "Hello,"
+msgstr "Здравейте,"
+
+msgid "The webmaster has subscribed you to receiving notifications by mail."
+msgstr "Администраторът на сайта ви е абонирал за получаване на известия с имейл."
+
+msgid "The webmaster has unsubscribed you from receiving notifications by mail."
+msgstr "Администраторът на сайта ви е отписал от абонамента за получаване на известия с имейл."
+
+msgid "New photos were added"
+msgstr "Нови снимки са добавени"
+
+msgid "on"
+msgstr "на"
+
+msgid "between"
+msgstr "между"
+
+msgid "Go to"
+msgstr "Посети"
+
+msgid "See you soon,"
+msgstr "До скоро,"
+
+msgid "To unsubscribe"
+msgstr "За да се отпишете от абонамента"
+
+msgid "To subscribe"
+msgstr "За да се абонирате"
+
+msgid "If you encounter problems or have any question, please send a message to"
+msgstr "Ако имате проблеми или въпроси, моля изпратете съобщение до"
+
+msgid "This album contains %d photos, added on %s."
+msgstr "Този албум съдържа %d снимки, добавени на %s."
+
+msgid " and %d virtual"
+msgstr "и %d витруален"
+
+msgid "%d album including"
+msgstr "%d албум наличен"
+
+msgid "%d album moved"
+msgid_plural "%d albums moved"
+msgstr[0] "%d албум преместен"
+msgstr[1] "%d албума са преместени"
+
+msgid "%d albums including"
+msgstr "%d налични албума"
+
+msgid "%d anomaly has been corrected."
+msgid_plural "%d anomalies have been detected corrected."
+msgstr[0] "%d оправена аномалия."
+msgstr[1] "%d открити и оправени аномалии."
+
+msgid "%d anomaly has been detected."
+msgid_plural "%d anomalies have been detected."
+msgstr[0] "%d открита аномалия."
+msgstr[1] "%d открити аномалии."
+
+msgid "%d anomaly has been ignored."
+msgid_plural "%d anomalies have been ignored."
+msgstr[0] "%d игнорирана аномалия."
+msgstr[1] "%d игнорирани аномалии."
+
+msgid "%d anomaly has not been corrected."
+msgid_plural "%d anomalies have not been corrected."
+msgstr[0] "%d неоправена аномалия."
+msgstr[1] "%d неоправени аномалии."
+
+msgid "%d mail was not sent."
+msgid_plural "%d mails were not sent."
+msgstr[0] "%d имейл не е изпратен."
+msgstr[1] "%d имейли не са изпратени."
+
+msgid "%d mail was sent."
+msgid_plural "%d mails were sent."
+msgstr[0] "%d имейл е изпратен."
+msgstr[1] "%d имейли са изпратени."
+
+msgid "%d member"
+msgid_plural "%d members"
+msgstr[0] "%d член"
+msgstr[1] "%d члена"
+
+msgid "%d of %d photos selected"
+msgstr "избрани са %d от %d снимки"
+
+msgid "%d parameter was updated."
+msgid_plural "%d parameters were updated."
+msgstr[0] "%d параметър променен"
+msgstr[1] "%d параметъра променени"
+
+msgid "%d photo was deleted"
+msgid_plural "%d photos were deleted"
+msgstr[0] "%d снимка изтрита"
+msgstr[1] "%d снимки изтрити"
+
+msgid "%d tag"
+msgstr "%d етикет"
+
+msgid "%d tags"
+msgstr "%d етикета"
+
+msgid "%d user deleted"
+msgid_plural "%d users deleted"
+msgstr[0] "%d изтрит потребител"
+msgstr[1] "%d изтрити потребители"
+
+msgid "%d waiting for validation"
+msgstr "%d чакат за одобрение"
+
+msgid "%d user was not updated."
+msgid_plural "%d users were not updated."
+msgstr[0] "%d потребител не е актуализиран"
+msgstr[1] "%d потребители не са актуализирани"
+
+msgid "%d user was updated."
+msgid_plural "%d users were updated."
+msgstr[0] "%d актуализиран потребител"
+msgstr[1] "%d актуализирани потребители."
+
+msgid "%d user"
+msgid_plural "%d users"
+msgstr[0] "%d потребител"
+msgstr[1] "%d потребители"
+
+msgid "%s has been successfully updated."
+msgstr "%s са успешно актуализирани"
+
+msgid "%u users have automatic permission because they belong to a granted group."
+msgstr "%u потребители имат автоматични права, като част от правоимаща група."
+
+msgid "A new version of Piwigo is available."
+msgstr "Налична е нова версия на Piwigo."
+
+msgid "Active Languages"
+msgstr "Активни езици"
+
+msgid "Active Plugins"
+msgstr "Активни разширения"
+
+msgid "Active Themes"
+msgstr "Активни теми"
+
+msgid "Add a criteria"
+msgstr "Добави критерий"
+
+msgid "Add a filter"
+msgstr "Добави филтър"
+
+msgid "Add a tag"
+msgstr "Добави етикет"
+
+msgid "Add a user"
+msgstr "Добави потребител"
+
+msgid "Add a virtual album"
+msgstr "Добави виртуален албум"
+
+msgid "Add group"
+msgstr "Добави група"
+
+msgid "Add New Language"
+msgstr "Добави нов език"
+
+msgid "Add New Theme"
+msgstr "Добави нова тема"
+
+msgid "Add Photos"
+msgstr "Добави снимки"
+
+msgid "Add tags"
+msgstr "Добави етикети"
+
+msgid "Add"
+msgstr "Добави"
+
+msgid "added"
+msgstr "добавен"
+
+msgid "administrators"
+msgstr "администратори"
+
+msgid "Advanced features"
+msgstr "Разширени възможности"
+
+msgid "Album updated successfully"
+msgstr "Албумът е обновен успешно"
+
+msgid "albums added in the database"
+msgstr "албуми добавени в базата данни"
+
+msgid "all"
+msgstr "всички"
+
+msgid "and"
+msgstr "и"
+
+msgid "any visitor can see this album"
+msgstr "албума е видим от всички"
+
+msgid "Applications"
+msgstr "Приложения"
+
+msgid "Apply action"
+msgstr "Приложи действието"
+
+msgid "Apply selected corrections"
+msgstr "Приложи избраните корекции"
+
+msgid "Available on"
+msgstr "Налично на"
+
+msgid "Cancel"
+msgstr "Отказ"
+
+msgid "Groups and users"
+msgstr "Групи и потребители"
+
+msgid "List"
+msgstr "Списък"
+
+msgid "Move to album"
+msgstr "Премести в албум"
+
+msgid "Permission granted for groups"
+msgstr "Достъп е разрешен за групи"
+
+msgid "Permission granted for users"
+msgstr "Достъпа е разрешен за потребители"
+
+msgid "Piwigo for iOS (iPhone, iPad, iPod Touch)"
+msgstr "Piwigo за iOS (iPhone, iPad, iPod Touch)"
+
+msgid "registered users"
+msgstr "регистрирани потребители"
+
+msgid "Select groups..."
+msgstr "Избор на групи..."
+
+msgid "Select users..."
+msgstr "Избор на потребители..."
+
+msgid "simple visitors"
+msgstr "обикновенни посетители"
+
+msgid "There is no group in this gallery."
+msgstr "Няма групи в тази галерия."
+
+msgid "visitors need to login and have the appropriate permissions to see this album"
+msgstr "необходима е регистрация и разрешен достъп за да видите този албум"
+
+msgid "Web Form"
+msgstr "Уеб бланка"
+
+msgid " and %d virtuals"
+msgstr "и %d витруални"
+
+msgid "%d association"
+msgstr "%d асоциация"
+
+msgid "%d associations"
+msgstr "%d асоциации"
+
+msgid "%d line filtered"
+msgid_plural "%d lines filtered"
+msgstr[0] "%d линия филтрирана"
+msgstr[1] "%d линии филтрирани"
+
+msgid "%d physical"
+msgstr "%d реален"
+
+msgid "%d physicals"
+msgstr "%d реални"
+
+msgid "%d user comment rejected"
+msgstr "%d потребителски коментар отхвърлен"
+
+msgid "%d user comment validated"
+msgstr "%d user comment одобрен"
+
+msgid "%d user comments rejected"
+msgstr "%d потребителски коментара отхвърлени"
+
+msgid "%d user comments validated"
+msgstr "%d потребителски коментара одобрени"
+
+msgid "(this tag will be deleted)"
+msgstr "(този етикет ще бъде изтрит)"
+
+msgid ", click on"
+msgstr ", кликни"
+
+msgid "Access type"
+msgstr "Вид достъп"
+
+msgid "Action"
+msgstr "Действие"
+
+msgid "Actions"
+msgstr "Действия"
+
+msgid "Activate"
+msgstr "Активирай"
+
+msgid "Add detailed content"
+msgstr "Добави детайлно съдържание"
+
+msgid "Add write access to the \"%s\" directory"
+msgstr "Разреши запис в папка \"%s\""
+
+msgid "Add/delete a permalink"
+msgstr "Добави/изтрий пермалинк"
+
+msgid "Administration Home"
+msgstr "Начало админ панел"
+
+msgid "Album list management"
+msgstr "Управление на списъка с албуми"
+
+msgid "Albums automatically sorted"
+msgstr "Албумите са сортирани автоматично"
+
+msgid "All plugins are up to date."
+msgstr "Всички разширения са актуални."
+
+msgid "All themes are up to date."
+msgstr "Всички теми са актуални."
+
+msgid "Allow rating"
+msgstr "Позволи оценяване"
+
+msgid "Select a file"
+msgstr "Избор на файл"
+
+msgid "Version"
+msgstr "Версия"
+
+msgid "Virtual album added"
+msgstr "Добавен виртуален албум"
+
+msgid "Virtual album deleted"
+msgstr "Изтрит виртуален албум"
+
+msgid "Virtual album name"
+msgstr "Име на виртуален албум"
+
+msgid "Virtual album"
+msgstr "Виртуален албум"
+
+msgid "X Position"
+msgstr "X позиция"
+
+msgid "Y Position"
+msgstr "Y позиция"
+
+msgid "add a new watermark"
+msgstr "добавяне на нов воден знак"
+
+msgid "add new photos to caddie"
+msgstr "добавяне на нови снимки в колекцията"
+
+msgid "albums deleted in the database"
+msgstr "албуми изтрити от базата данни"
+
+msgid "bottom left corner"
+msgstr "долен ляв ъгъл"
+
+msgid "bottom right corner"
+msgstr "долен десен ъгъл"
+
+msgid "top left corner"
+msgstr "горен ляв ъгъл"
+
+msgid "top right corner"
+msgstr "горен десен ъгъл"
+
+msgid "user_status_guest"
+msgstr "Гост"
+
+msgid "user_status_webmaster"
+msgstr "Уебмастър"
+
+msgid "%s must be to set to false in your local/config/config.inc.php file"
+msgstr "%s трябва да се зададе като \"false\" във файл local/config/config.inc.php"
+
+msgid "%s photos can not be regenerated"
+msgstr "%s снимки не могат да бъдат регенерирани"
+
+msgid "%s photos have been regenerated"
+msgstr "%s снимки са регенерирани"
+
+msgid "%s value is not correct file because exif are not supported"
+msgstr "стойност %s не е коректна, защото EXIF не се поддържа"
+
+msgid "Activate Navigation Bar"
+msgstr "Активирай навигационна лента"
+
+msgid "Activate Navigation Thumbnails"
+msgstr "Активирай навигационни миниатюри"
+
+msgid "Activate comments"
+msgstr "Активирай коментари"
+
+msgid "Activate icon \"%s\""
+msgstr "Активирай икона \"%s\""
+
+msgid "Activate icon \"new\" next to albums and pictures"
+msgstr "Активирай икона \"нов\" до албуми и снимки "
+
+msgid "Album \"%s\" has been added"
+msgstr "Албум \"%s\" е добавен"
+
+msgid "Album \"%s\" now contains %d photos"
+msgstr "Албум \"%s\" сега съдържа %d снимки"
+
+msgid "Album manual order was saved"
+msgstr "Зададената подредба на албума е записана"
+
+msgid "Album photos associated to the following albums: %s"
+msgstr "Снимките в албума са асоциирани със следните албуми: %s"
+
+msgid "Albums authorized thanks to group associations"
+msgstr "Албумите са разрешени съответно на групавите асоциации"
+
+msgid "All extensions are up to date."
+msgstr "Всички разширения са актуални."
+
+msgid "All languages are up to date."
+msgstr "Всички езици са актуални."
+
+msgid "All optimizations have been successfully completed."
+msgstr "Всички оптимизации приключиха успешно."
+
+msgid "Allow user customization"
+msgstr "Позволи потребителски настройки"
+
+msgid "Allow user registration"
+msgstr "Позволи регистрация на потребители"
+
+msgid "Allow users to delete their own comments"
+msgstr "Позволи на потребителите да изтриват собствените си коментари"
+
+msgid "Allow users to edit their own comments"
+msgstr "Позволи на потребителите да редактират собствените си коментари"
+
+msgid "Anomaly"
+msgstr "Аномалия"
+
+msgid "Apply to sub-albums"
+msgstr "Приложи за под-албумите"
+
+msgid "Associate to album"
+msgstr "Асоциирай с албум"
+
+msgid "Associated"
+msgstr "Асоцииран"
+
+msgid "Authorized"
+msgstr "Оторизиран"
+
+msgid "Automatic correction"
+msgstr "Автоматична корекция"
+
+msgid "Available only with HTML format"
+msgstr "Налично само с HTML формат"
+
+msgid "Batch Manager"
+msgstr "Групово управление"
+
+msgid "By rank"
+msgstr "По ранг"
+
+msgid "Can't connect to server."
+msgstr "Няма връзка със сървъра."
+
+msgid "Can't create temporary file."
+msgstr "Не може да бъде създаден временен файл."
+
+msgid "Can't download archive."
+msgstr "Архивът не може да бъде изтеглен."
+
+msgid "Can't read or extract archive."
+msgstr "Архивът не може да прочетен или извлечен."
+
+msgid "Cannot delete the old permalink !"
+msgstr "Старият пермалинк неможе да бъде изтрит!"
+
+msgid "Change Admin Colors"
+msgstr "Промяна цветовете в администрацията"
+
+msgid "Check all"
+msgstr "Маркирай всички"
+
+msgid "Check automatic corrections"
+msgstr "Провери автоматични корекции"
+
+msgid "Check for upgrade"
+msgstr "Провери за ъпгрейд"
+
+msgid "Choose an action"
+msgstr "Изберете действие"
+
+msgid "Choose an option"
+msgstr "Изберете опция"
+
+msgid "Classic display"
+msgstr "Класически изглед"
+
+msgid "Comments for all"
+msgstr "Коментари за всички"
+
+msgid "Configuration"
+msgstr "Конфигурация"
+
+msgid "Correction"
+msgstr "Корекция"
+
+msgid "Database"
+msgstr "База данни"
+
+msgid "Date"
+msgstr "Дата"
+
+msgid "Day"
+msgstr "Ден"
+
+msgid "an error happened"
+msgstr "възникна грешка"
+
+msgid "associate to group"
+msgstr "асоцииран с група"
+
+msgid "automatic order"
+msgstr "автоматична подредба"
+
+msgid "average time"
+msgstr "средно време"
+
+msgid "clean"
+msgstr "изчистване"
+
+msgid "confirm"
+msgstr "потвърждение"
+
+msgid "created"
+msgstr "създаден"
+
+msgid "%d day"
+msgstr "%d ден"
+
+msgid "%d days"
+msgstr "%d дни"
+
+msgid "%d hour"
+msgstr "%d час"
+
+msgid "%d hours"
+msgstr "%d часове"
+
+msgid "%d minute"
+msgstr "%d минута"
+
+msgid "%d minutes"
+msgstr "%d минути"
+
+msgid "%d month"
+msgstr "%d месец"
+
+msgid "%d months"
+msgstr "%d месеца"
+
+msgid "%d second"
+msgstr "%d секунда"
+
+msgid "%d seconds"
+msgstr "%d секунди"
+
+msgid "%d week"
+msgstr "%d седмица"
+
+msgid "%d weeks"
+msgstr "%d седмици"
+
+msgid "%d year"
+msgstr "%d година"
+
+msgid "%d years"
+msgstr "%d години"
+
+msgid "%s ago"
+msgstr "преди %s"
+
+msgid "%s in the future"
+msgstr "%s в бъдеще"
+
+msgid "Added by %s"
+msgstr "Добавено от %s"
+
+msgid "Apply watermark if height is bigger than"
+msgstr "Сложи водния знак, ако височината е по-голям от"
+
+msgid "Apply watermark if width is bigger than"
+msgstr "Сложи водния знак, ако ширината е по-голям от"
+
+msgid "By %s"
+msgstr "От %s"
+
+msgid "Check for updates"
+msgstr "Провери за актуализации"
+
+msgid "Check for upgrade failed for unknown reasons."
+msgstr "Провери за ъпгрейд прекъснат поради неизвестни причини."
+
+msgid "Confirm merge"
+msgstr "Потвърди обединяването"
+
+msgid "Crop"
+msgstr "Отрязване"
+
+msgid "Current name"
+msgstr "Текущо име"
+
+msgid "Database synchronization with files"
+msgstr "Синхронизация на базата данни с файлове"
+
+msgid "Deactivate all"
+msgstr "Деактивирай всички"
+
+msgid "Deactivate"
+msgstr "Деактивирай"
+
+msgid "Default user cannot be deleted"
+msgstr "Потребителят по подразбиране не може да бъде изтрит"
+
+msgid "Default user does not exist"
+msgstr "Потребителят по подразбиране не същиствува"
+
+msgid "Delete multiple size images"
+msgstr "Изтриване на няколкото размера на изображенията"
+
+msgid "Delete orphan tags"
+msgstr "Изтриване на осиротели етикети"
+
+msgid "Delete selected photos"
+msgstr "Изтриване на избраните снимки"
+
+msgid "Edit photo"
+msgstr "Редакция на снимка"
+
+msgid "Generate multiple size images"
+msgstr "Генериране на няколко размера изображения"
+
+msgid "Multiple Size"
+msgstr "Няколко размера"
+
+msgid "No group is permitted to see this private album"
+msgstr "Няма групи с разрешение да виждат този личен албум"
+
+msgid "Numeric identifier : %d"
+msgstr "Идентификатор: %d"
+
+msgid "Opacity"
+msgstr "Непрозрачност"
+
+msgid "Original file : %s"
+msgstr "Оригинален файл: %s"
+
+msgid "Permission management"
+msgstr "Управление на права за достъп"
+
+msgid "Photo sizes with crop"
+msgstr "Размери за изрязана снимка"
+
+msgid "Posted %s on %s"
+msgstr "Изпратил %s на %s"
+
+msgid "Rated %d times, score : %.2f"
+msgstr "Оценено %d пъти, резултат: %.2f"
+
+msgid "Sharpen"
+msgstr "Изостряне"
+
+msgid "Visited %d times"
+msgstr "Посещения %d пъти"
+
+msgid "Watermark"
+msgstr "Воден знак"
+
+msgid "X Repeat"
+msgstr "X повторение"
+
+msgid "custom"
+msgstr "Потребителски"
+
+msgid "default"
+msgstr "по подразбиране"
+
+msgid "delete album"
+msgstr "изтриване на албум"
+
+msgid "delete photo"
+msgstr "изтриване на снимка"
+
+msgid "include photos with lower privacy level"
+msgstr "включително снимки с по-ниско ниво на поверителност"
+
+msgid "middle"
+msgstr "средно"
+
+msgid "Create this site"
+msgstr "Създай този сайт"
+
+msgid "Default display"
+msgstr "Изглед по подразбиране"
+
+msgid "Delete selected users"
+msgstr "Изтриване на избранете потребители"
+
+msgid "Deny selected groups"
+msgstr "Забрани избраните групи"
+
+msgid "Deny selected users"
+msgstr "Забрани избраните потребители"
+
+msgid "Directory does not exist"
+msgstr "Директорията не съществува"
+
+msgid "Directory"
+msgstr "Директория"
+
+msgid "Display options"
+msgstr "Опции за показване"
+
+msgid "Download,"
+msgstr "Сваляне,"
+
+msgid "Downloads"
+msgstr "Сваляния"
+
+msgid "Drop into album"
+msgstr "Избор на албум"
+
+msgid "ERROR"
+msgstr "ГРЕШКА"
+
+msgid "Edit album permissions"
+msgstr "Редактиране албумни разрешения"
+
+msgid "Edit album"
+msgstr "Редакция на албум"
+
+msgid "Edit selected tags"
+msgstr "Редактиране на избраните етикети"
+
+msgid "Edit tags"
+msgstr "Редактиране на етикети"
+
+msgid "Element"
+msgstr "Елемент"
+
+msgid "Error list"
+msgstr "Списък на грешките"
+
+msgid "Everybody"
+msgstr "Всички"
+
+msgid "FTP + Synchronization"
+msgstr "FTP + Синхронизация"
+
+msgid "Forbidden"
+msgstr "Забранен достъп"
+
+msgid "Form"
+msgstr "Форма"
+
+msgid "GD library is missing"
+msgstr "GD библиотеката липсва"
+
+msgid "GD version"
+msgstr "GD версия"
+
+msgid "Gallery title"
+msgstr "Заглавие на галерията"
+
+msgid "Guests"
+msgstr "Гости"
+
+msgid "Height"
+msgstr "Височина"
+
+msgid "High definition enabled"
+msgstr "Разрешена висока разолюция"
+
+msgid "High definition"
+msgstr "Висока разолюция"
+
+msgid "delete"
+msgstr "изтриване"
+
+msgid "deleted"
+msgstr "изтрито"
+
+msgid "directories + files"
+msgstr "директории + файлове"
+
+msgid "existing album"
+msgstr "съществуващ албум"
+
+msgid "guest"
+msgstr "гост"
+
+msgid "hide details"
+msgstr "скриване на детайли"
+
+msgid "high"
+msgstr "високо"
+
+msgid "Unlocked"
+msgstr "Отключен"
+
+msgid "Uncheck all"
+msgstr "Отмаркирай всички"
+
+msgid "Uninstall"
+msgstr "Деинсталирай"
+
+msgid "To send ?"
+msgstr "За изпращане?"
+
+msgid "Templates"
+msgstr "Шаблони"
+
+msgid "Support"
+msgstr "Поддръжка"
+
+msgid "Status"
+msgstr "Статус"
+
+msgid "Statistics"
+msgstr "Статистика"
+
+msgid "Show info"
+msgstr "Покажи инфо"
+
+msgid "Settings"
+msgstr "Настройки"
+
+msgid "Send"
+msgstr "Изпрати"
+
+msgid "Selection"
+msgstr "Селекция"
+
+msgid "Select:"
+msgstr "Избери:"
+
+msgid "Searching..."
+msgstr "Търсене..."
+
+msgid "Section"
+msgstr "Раздел"
+
+msgid "Save Template Directory"
+msgstr "Запази директория за шаблони"
+
+msgid "Save Settings"
+msgstr "Запази настройките"
+
+msgid "Restore"
+msgstr "Възстанови"
+
+msgid "Resize"
+msgstr "Преоразмеряване"
+
+msgid "Refresh"
+msgstr "Опресняване"
+
+msgid "Random photo"
+msgstr "Произволна снимка"
+
+msgid "Rating"
+msgstr "Рейтинг"
+
+msgid "Please wait..."
+msgstr "Моля изчакайте..."
+
+msgid "Plugins"
+msgstr "Разширения"
+
+msgid "Public / Private"
+msgstr "Публичен / Частен"
+
+msgid "Public"
+msgstr "Публичен"
+
+msgid "Properties"
+msgstr "Свойства"
+
+msgid "Private"
+msgstr "Личен"
+
+msgid "Position"
+msgstr "Позиция"
+
+msgid "Plugins which need upgrade"
+msgstr "Разширения за обновяване"
+
+msgid "Piwigo version"
+msgstr "Piwigo версия"
+
+msgid "Piwigo for Android"
+msgstr "Piwigo за Android"
+
+msgid "Piwigo configuration"
+msgstr "Piwigo конфигурация"
+
+msgid "Piwigo Administration"
+msgstr "Piwigo Администриране"
+
+msgid "Piwigo Update"
+msgstr "Piwigo ъпдейт"
+
+msgid "Piwigo Uploader"
+msgstr "Piwigo качване на файлове"
+
+msgid "Parameters"
+msgstr "Параметри"
+
+msgid "Photos"
+msgstr "Снимки"
+
+msgid "Photo Page"
+msgstr "Страница със снимка"
+
+msgid "Permissions"
+msgstr "Права за достъп"
+
+msgid "Path"
+msgstr "Път"
+
+msgid "Parameter"
+msgstr "Настройки"
+
+msgid "Page end"
+msgstr "Край на страница"
+
+msgid "Original templates"
+msgstr "Оргинални шаблони"
+
+msgid "Options"
+msgstr "Опции"
+
+msgid "Operating system"
+msgstr "Операционна система"
+
+msgid "None"
+msgstr "Нищо"
+
+msgid "No results"
+msgstr "Няма резултати"
+
+msgid "New tag"
+msgstr "Нов етикет"
+
+msgid "New name"
+msgstr "Ново име"
+
+msgid "New Version"
+msgstr "Нова версия"
+
+msgid "Month"
+msgstr "Месец"
+
+msgid "Move"
+msgstr "Премести"
+
+msgid "Menu Management"
+msgstr "Менюта"
+
+msgid "Members"
+msgstr "Членове"
+
+msgid "Lock"
+msgstr "Заключи"
+
+msgid "Lock albums"
+msgstr "Заключи албуми"
+
+msgid "Lock gallery"
+msgstr "Заключи галерията"
+
+msgid "Locked"
+msgstr "Заключен"
+
+msgid "Local"
+msgstr "Локален"
+
+msgid "Languages"
+msgstr "Езици"
+
+msgid "Install"
+msgstr "Инсталирай"
+
+msgid "Image id"
+msgstr "Номер снимка"
+
+msgid "Image Quality"
+msgstr "Качество на снимка"
+
+msgid "Ignore selected anomalies"
+msgstr "Игнорирай избраните аномалии"
+
+msgid "Ignore this update"
+msgstr "Игнорирай този ъпдейт"
+
+msgid "Ignore All"
+msgstr "Игнорий всички"
+
+msgid "IP"
+msgstr "IP адрес"
+
+msgid "Hour"
+msgstr "Час"
+
+msgid "History"
+msgstr "История"
+
+msgid "Guest cannot be deleted"
+msgstr "\"Гост\" не може да бъде изтрит"
+
+msgid "Help Me"
+msgstr "Помощ"
+
+msgid "Guest Settings"
+msgstr "Настройки за \"гост\""
+
+msgid "Groups"
+msgstr "Групи"
+
+msgid "Group name"
+msgstr "Име на група"
+
+msgid "Group"
+msgstr "Група"
+
+msgid "Edit ranks"
+msgstr "Редакция на ранговете"
+
+msgid "Documentation"
+msgstr "Документация"
+
+msgid "Thumbnail"
+msgstr "Миниатюра"
+
+msgid "Themes"
+msgstr "Теми"
+
+msgid "Tools"
+msgstr "Инструменти"
+
+msgid "Title"
+msgstr "Заглавие"
+
+msgid "Time"
+msgstr "Време"
+
+msgid "User list"
+msgstr "Списък на потребителите"
+
+msgid "User"
+msgstr "Потребител"
+
+msgid "Uploaded Photos"
+msgstr "Качени снимки"
+
+msgid "Upload"
+msgstr "Качване"
+
+msgid "Updates"
+msgstr "Обновявания"
+
+msgid "Update albums informations"
+msgstr "Обновяване на информацията в албумите"
+
+msgid "Update Complete"
+msgstr "Обнавяването е завършено"
+
+msgid "Update All"
+msgstr "Обновяване на всички"
+
+msgid "errors during synchronization"
+msgstr "грешки по време на синхронизация"
+
+msgid "default values"
+msgstr "стойности по подразбиране"
+
+msgid "create a new site"
+msgstr "Създай нов сайт"
+
+msgid "cancel manual order"
+msgstr "отказване на ръчна подредба"
+
+msgid "Validate"
+msgstr "Одобри"
+
+msgid "Webmaster status is required."
+msgstr "Статус на уебмастъра е необходим."
+
+msgid "Webmaster cannot be deleted"
+msgstr "Уебмастърът не може да бъде изтрит"
+
+msgid "Visit Piwigo project website"
+msgstr "Посети уебсайта на Piwigo"
+
+msgid "Visit language site"
+msgstr "Посети езиковият сайт"
+
+msgid "Visit plugin site"
+msgstr "Посети сайта с разширения"
+
+msgid "Visit theme site"
+msgstr "Посети сайта на теми"
+
+msgid "Waiting"
+msgstr "В очакване"
+
+msgid "Visit Gallery"
+msgstr "Посети галерията"
+
+msgid "Virtual Links"
+msgstr "Виртуални линкове"
+
+msgid "Validation"
+msgstr "Одобрение"
+
+msgid "User status"
+msgstr "Статус на потребител"
+
+msgid "Users"
+msgstr "Потребител"
+
+msgid "jump to album"
+msgstr "директно към албума"
+
+msgid "jump to photo"
+msgstr "директно към снимката"
+
+msgid "global mode"
+msgstr "глобален режим"
+
+msgid "for this file format"
+msgstr "за този файлов формат"
+
+msgid "for the file format"
+msgstr "за файлов формат"
+
+msgid "display"
+msgstr "покажи"
+
+msgid "manage album photos"
+msgstr "управление на снимките в албума"
+
+msgid "photos deleted from the database"
+msgstr "снимките са изтрити от базата данни"
+
+msgid "photos added in the database"
+msgstr "снимките са добавени в базата данни"
+
+msgid "pending validation"
+msgstr "в очакване на потвърждаване"
+
+msgid "other"
+msgstr "друг"
+
+msgid "only directories"
+msgstr "само за директории"
+
+msgid "manage sub-albums"
+msgstr "управление на под-албумите"
+
+msgid "manual order"
+msgstr "ръчна подредба"
+
+msgid "modified"
+msgstr "променен"
+
+msgid "new"
+msgstr "нов"
+
+msgid "none"
+msgstr "никой"
+
+msgid "nothing"
+msgstr "нищо"
+
+msgid "no write access"
+msgstr "забранен запис"
+
+msgid "reduce to single existing albums"
+msgstr "намали до еденични съществуващите албуми"
+
+msgid "photos informations synchronized with files metadata"
+msgstr "информацията за снимките е синхронизирана с метаданните от файловете"
+
+msgid "photos per page"
+msgstr "снимки на страница"
+
+msgid "photos updated in the database"
+msgstr "снимки актуализирани в базата данни"
+
+msgid "randomly represented"
+msgstr "произволна миниатюра за албума"
+
+msgid "public"
+msgstr "публичен"
+
+msgid "private"
+msgstr "личен"
+
+msgid "pixels"
+msgstr "пиксела"
+
+msgid "ranks"
+msgstr "рангове"
+
+msgid "registration date"
+msgstr "дата на регистрация"
+
+msgid "remove author"
+msgstr "премахване на автора"
+
+msgid "remove creation date"
+msgstr "премахване датата на създаване"
+
+msgid "remove tags"
+msgstr "Премахване на етикети"
+
+msgid "remove this filter"
+msgstr "премахване на този филтър"
+
+msgid "remove title"
+msgstr "премахване на заглавие"
+
+msgid "selection"
+msgstr "избор"
+
+msgid "set to"
+msgstr "задай"
+
+msgid "show details"
+msgstr "показване детайли"
+
+msgid "singly represented"
+msgstr "фиксирана миниатюра за албума"
+
+msgid "status"
+msgstr "статус"
+
+msgid "target"
+msgstr "цел"
+
+msgid "test this remote site"
+msgstr "тест на този отдалечен сайт"
+
+msgid "synchronize files metadata with database photos informations"
+msgstr "синхронизиране на записите за снимките с метаданните от файловете"
+
+msgid "synchronize files structure with database"
+msgstr "синхронизиране на файловата структура с базата данни"
+
+msgid "user_status_generic"
+msgstr "Общ"
+
+msgid "user_status_admin"
+msgstr "Администратор"
+
+msgid "user \"%s\" added"
+msgstr "потребител \"%s\" е добавен"
+
+msgid "update the database from files"
+msgstr "обновяване на базата данни с файлове"
+
+msgid "unset"
+msgstr "незададено"
+
+msgid "unit mode"
+msgstr "единичен режим"
+
+msgid "unknown"
+msgstr "непознат"
+
+msgid "the wiki"
+msgstr "уйкипедията"
+
+msgid "total time"
+msgstr "общо време"
+
+msgid "the forum"
+msgstr "форумът"
+
+msgid "test"
+msgstr "тест"
+
+msgid "sub-albums"
+msgstr "под-албуми"
+
+msgid "Graphics Library"
+msgstr "Графична библиотека"
+
+msgid "General statistics"
+msgstr "Обща статистика"
+
+msgid "Installed Languages"
+msgstr "Инсталирани езици"
+
+msgid "Install on your computer,"
+msgstr "Инсталирай на твоя компютър,"
+
+msgid "Invert"
+msgstr "Обърни"
+
+msgid "Maximum width"
+msgstr "Максимална ширина"
+
+msgid "Maximum height"
+msgstr "Максимална височина"
+
+msgid "Manual order"
+msgstr "Ръчна подредба"
+
+msgid "Manage Permissions"
+msgstr "Промяна на права за достъп"
+
+msgid "Main Page"
+msgstr "Основна страница"
+
+msgid "New photos added"
+msgstr "Добавени нови снимки"
+
+msgid "Move albums"
+msgstr "Преместване на албуми"
+
+msgid "Page banner"
+msgstr "Банер на страница"
+
+msgid "Overall"
+msgstr "Преглед"
+
+msgid "Permission granted"
+msgstr "Достъп разрешен"
+
+msgid "Permission denied"
+msgstr "Достъп отказан"
+
+msgid "Read Piwigo Documentation"
+msgstr "Piwigo документация"
+
+msgid "Plugin list"
+msgstr "Списък разширения"
+
+msgid "Remove all filters"
+msgstr "Примахни всички филтри"
+
+msgid "Set author"
+msgstr "Задай автор"
+
+msgid "Show menubar"
+msgstr "Показване на лентата с менюто"
+
+msgid "Set title"
+msgstr "Задай заглавие"
+
+msgid "Set creation date"
+msgstr "Задай дата на създаване"
+
+msgid "Send mail to users"
+msgstr "Изпрати до потребителите"
+
+msgid "Send mail as"
+msgstr "Избратете като"
+
+msgid "Synchronize"
+msgstr "Синхронизация"
+
+msgid "Site manager"
+msgstr "Сайт менажер"
+
+msgid "Simulation"
+msgstr "Симулация"
+
+msgid "The gallery URL is not valid."
+msgstr "Адреса на галерията е невалиден."
+
+msgid "The whole page"
+msgstr "Цялата страница"
+
+msgid "Update to Piwigo %s"
+msgstr "Актуализирай до Piwigo %s"
+
+msgid "Unable to check for upgrade."
+msgstr "Невъзможна е проверката за актуализации."
+
+msgid "Two updates are available"
+msgstr "Две актуализации са налични"
+
+msgid "Uninstalled Plugins"
+msgstr "Деинсталирани разширения"
+
+msgid "Type here the title"
+msgstr "Въведете заглавието тук"
+
+msgid "Type here the author name"
+msgstr "Въведете името на автора тук"
+
+msgid "This site already exists"
+msgstr "Този сайт вече съществува"
+
+msgid "leave"
+msgstr "оставяне"
+
+msgid "<em>Piwigo for Android</em> application empowers you to connect your Android phone or table to your Piwigo gallery, create some albums and upload several photos at once."
+msgstr "<em>Piwigo за Android</em> приложение ви позволява да свържете вашия Android телефон или таблет с галерията, да създавате албуми и да качване няколко снимки наведнъж."
+
+msgid "<em>Piwigo for iOS</em> application empowers you to connect to your Piwigo gallery from your iPhone, iPad or iPod Touch, create some albums and upload several photos at once."
+msgstr "<em>Piwigo за iOS</ EM> приложение ви дава възможност да се свържете към галерия от вашия iPhone, iPad или iPod Touch, да създаване албуми и да качване няколко снимки наведнъж."
+
+msgid "Adobe Photoshop Lightroom is a photography software designed to manage large quantities of digital images and doing post production work."
+msgstr "Adobe Photoshop Lightroom е фотографски софтуер, предназначен за управление на големи количества цифрови изображения и публикуването им след редактирането."
+
+msgid "An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href=\"%s\">Click here to show log error</a>."
+msgstr "Възникнала е грешка по време на извличането. Моля проверете правата за файловете в инсталацията.<br><a href=\"%s\">Кликнете тук за да видите грешката</a>."
+
+msgid "An error has occured during upgrade."
+msgstr "Възникнала е грешка по време на ъпгрейд."
+
+msgid "An error occured during extraction (%s)."
+msgstr "Възникнала е грешка по време на извличането на файлове (%s)."
+
+msgid "An information email was sent to group \"%s\""
+msgstr "Информационен имейл е изпратен до група \"%s\""
+
+msgid "Anyway only webmasters can see this tab and never administrators."
+msgstr "Само уебмастъри могат да видят този раздел, не администратори."
+
+msgid "Aperture is a powerful tool to refine images and manage massive libraries on Mac."
+msgstr "Aperture е мощен инструмент за обработка на изображения и управление на големи библиотеки на Mac."
+
+msgid "Aperture is designed for professional photographers with iPhoto simplicity."
+msgstr "Aperture е предназначена за професионални фотографи с iPhoto."
+
+msgid "Approximate maximum resolution: %dM pixels (that's %dx%d pixels)."
+msgstr "Приблизителна максимална резолюция: %dM пиксела (това е %dx%d пиксела)."
+
+msgid "Are you sure to install this upgrade? You must verify if this version does not need uninstallation."
+msgstr "Сигурен ли сте, че искате да инсталирате този ъпгрейд? Трябва да проверите дали тази версия не се нуждае от предварително деинсталиране."
+
+msgid "Are you sure you want to delete this plugin?"
+msgstr "Сигурен ли сте, че искате да изтриете това разширение?"
+
+msgid "Are you sure you want to install this plugin?"
+msgstr "Сигурен ли сте, че искате да инсталирате това разширение?"
+
+msgid "Authorize users to add comments on selected albums"
+msgstr "Разреши на потребителите да добавят коментари в избраните албуми"
+
+msgid "Automatic sort order"
+msgstr "Автоматично подреждане"
+
+msgid "Bound Theme"
+msgstr "Обвързана тема"
+
+msgid "By default, Piwigo will create a new websize from the HD (high definition) version of your photo."
+msgstr "По подразбиране, Piwigo ще създаде нов уебразмер от HD (висока разолюция) версията на снимката."
+
+msgid "By default, the center of interest is placed in the middle of the photo."
+msgstr "По подразбиране, центъра на вниманието се поставя в средата на снимката."
+
+msgid "Caddie"
+msgstr "Колекция"
+
+msgid "between %.2f and %.2f"
+msgstr "между %.2f и %.2f"
+
+msgid "between %d and %d pixels"
+msgstr "между %d и %d пиксела"
+
+msgid "delete this site and all its attached elements"
+msgstr "изтрийте този сайт с цялата информация свързана с него"
+
+msgid "dissociate from group"
+msgstr "разасоциирай от групата"
+
+msgid "group \"%s\" added"
+msgstr "група  \"%s\" е добавена"
+
+msgid "group \"%s\" deleted"
+msgstr "група  \"%s\" е изтрита"
+
+msgid "group \"%s\" updated"
+msgstr "група  \"%s\" е обновена"
+
+msgid "Caddie management"
+msgstr "Управление на колекция"
+
+msgid "Center of interest"
+msgstr "Център на внимание"
+
+msgid "Check integrity"
+msgstr "Проверка на интегритет"
+
+msgid "Complementary mail content"
+msgstr "Допълнително съдържание на писмото"
+
+msgid "Continue processing treatment"
+msgstr "Продължи провежданата манипулация"
+
+msgid "Correction applied with error"
+msgstr "Корекцията е приложена с грешка"
+
+msgid "Correction applied with success"
+msgstr "Корекцията е успешно приложена"
+
+msgid "Correction the anomaly will cancel the fact that it's ignored"
+msgstr "Коригираната аномалия вече няма да бъде игнорирана"
+
+msgid "Create the \"%s\" directory at the root of your Piwigo installation"
+msgstr "Създай директория \"%s\" в основната папака на Piwigo инсталацията"
+
+msgid "Default comments order"
+msgstr "Подредба на коментари по подразбиране"
+
+msgid "Default photos order"
+msgstr "Подредба на снимки по подразбиране"
+
+msgid "Delete Representant"
+msgstr "Изтриване на миниатюрите на албуми"
+
+msgid "Delete selected tags"
+msgstr "Изтриване на избраните етикети"
+
+msgid "Delete this language"
+msgstr "Изтрий този език"
+
+msgid "Delete this theme"
+msgstr "Изтрий тази тема"
+
+msgid "Deleted on"
+msgstr "Изтрити на"
+
+msgid "Deletions"
+msgstr "Изтривания"
+
+msgid "Detailed informations"
+msgstr "Подробна информация"
+
+msgid "Dissociate from album"
+msgstr "Разасоциирай от албум"
+
+msgid "Dissociated"
+msgstr "Разасоцииран"
+
+msgid "Execution time is out, treatment must be continue [Estimated time: %d second]."
+msgid_plural "Execution time is out, treatment must be continue [Estimated time: %d seconds]."
+msgstr[0] "Времето за изпълнение изтече, обработването трябва да се продължи [Приблизително време: %d секунди]."
+msgstr[1] "Времето за изпълнение е просрочено, обработването трябва да се продължи [Приблизително време: %d секунди]."
+
+msgid "Features include gallery browsing, album creation and photo upload."
+msgstr "Възможностите включват разглеждане на галерии, създаване на албум и качване на снимки."
+
+msgid "File/directory read error"
+msgstr "Грешка при четене на файл/директория"
+
+msgid "Find a new representant by random"
+msgstr "Избор на случаен принцип на нова миниатюра за албума"
+
+msgid "Follow Orientation"
+msgstr "Следвай ориентацията"
+
+msgid "Forbid this language to users"
+msgstr "Забрани този език за потребителите"
+
+msgid "Forbid this theme to users"
+msgstr "Забрани тази тема за потребителите"
+
+msgid "Get Support on Piwigo Forum"
+msgstr "Получете помощ от форума на Piwigo "
+
+msgid "Give write access (chmod 777) to \"%s\" directory at the root of your Piwigo installation"
+msgstr "Дайте права (chmod 777) на директория \"%s\" в основата на инсталацията"
+
+msgid "Go to %s or %s for more informations"
+msgstr "Отидете на %s или %s за повече информация"
+
+msgid "Extensions Update"
+msgstr "Актуализация на разширения"
+
+msgid "Failed to write file to disk"
+msgstr "Записът на файла е неуспешен"
+
+msgid "I decide to update anyway"
+msgstr "Решавам да направя ъпгрейд все пак"
+
+msgid "Inactive Languages"
+msgstr "Неактивни езици"
+
+msgid "Inactive Plugins"
+msgstr "Неактивни разширения"
+
+msgid "Inactive Themes"
+msgstr "Неактивни теми"
+
+msgid "Installed Themes"
+msgstr "Инсталирани теми"
+
+msgid "Instructions to use Piwigo"
+msgstr "Инструкции за ползване на Piwigo"
+
+msgid "Landscape"
+msgstr "Пейзаж"
+
+msgid "Language has been successfully installed"
+msgstr "Езикът е инсталиран успешно"
+
+msgid "Languages which need upgrade"
+msgstr "Езици, които се нуждаят от ъпгрейд"
+
+msgid "Extend for templates"
+msgstr "Надграждане на шаблони"
+
+msgid "File upload stopped by extension"
+msgstr "Качването на файла е спряно заради разширението"
+
+msgid "Following plugins may not be compatible with the new version of Piwigo:"
+msgstr "Следните разширения може да не са съвместими с новата версия на Piwigo:"
+
+msgid "Following themes may not be compatible with the new version of Piwigo:"
+msgstr "Следните теми може да не са съвместими с новата версия на Piwigo:"
+
+msgid "For photo sizes with crop, such as \"Square\", Piwigo will do its best to include the center of interest."
+msgstr "За размери на снимки, такива като \"Квадрат\", Piwigo ще направи всичко възможно да се включи центъра на внимание."
+
+msgid "Grant selected groups"
+msgstr "Дайте права на избраните групи"
+
+msgid "Do you want to activate anyway?"
+msgstr "Искате ли да активирате все пак?"
+
+msgid "Does not represent"
+msgstr "Не е миниатюра за"
+
+msgid "Drag to re-order"
+msgstr "Кликнете и влачете, за да пренаредите"
+
+msgid "Duplicate"
+msgstr "Дубликат"
+
+msgid "Duplicate selected tags"
+msgstr "Дублиране на избраните етикети"
+
+msgid "Duplicates"
+msgstr "Дубликати"
+
+msgid "ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW."
+msgstr "ГРЕШКА: Този плъгин липсва, но е инсталиран! Деинсталирайте го сега."
+
+msgid "Element type"
+msgstr "Тип елемент"
+
+msgid "Email administrators when a comment is deleted"
+msgstr "Прати имейл до администраторите при изтрит коментар"
+
+msgid "Email administrators when a comment is modified"
+msgstr "Прати имейл до администраторите при променен коментар"
+
+msgid "Email admins when a comment requires validation"
+msgstr "Прати имейл до администраторите когато коментар изисква одобрение"
+
+msgid "Email admins when a new user registers"
+msgstr "Прати имейл до администраторите когато нов потребител се регистрира"
+
+msgid "Email admins when a valid comment is entered"
+msgstr "Прати имейл до администраторите при нов валиден коментар"
+
+msgid "Environment"
+msgstr "Програмна среда"
+
+msgid "Error on file \"%s\" : %s"
+msgstr "Грешка на файл \"%s\" : %s"
+
+msgid "Error when sending email to %s [%s]."
+msgstr "Грешка при изпращане на имейл до %s [%s]."
+
+msgid "Errors caption"
+msgstr "Грешки"
+
+msgid "This album contains %d photos, added between %s and %s."
+msgstr "Този албум съдържа %d снимки, добавен между %s и %s."
+
+msgid "There is no other language available."
+msgstr "Няма наличен друг език."
+
+msgid "There is no other plugin available."
+msgstr "Няма друго налично разширение."
+
+msgid "There is no other theme available."
+msgstr "Няма друга налична тема."
+
+msgid "The name of an album must not be empty"
+msgstr "Имената на албумите не може да са празни"
+
+msgid "Representative"
+msgstr "Миниатюра за албума"
+
+msgid "Representation of albums"
+msgstr "Миниатюра за албума"
+
+msgid "Representant"
+msgstr "Миниатюра за албума"
+
+msgid "Please select at least two groups"
+msgstr "Моля изберете най-малко две групи"
+
+msgid "Portrait"
+msgstr "Портрет"
+
+msgid "Other private albums"
+msgstr "Други лични албуми"
+
+msgid "Panorama"
+msgstr "Панорама"
+
+msgid "Manage the members"
+msgstr "Управление на регистрираните потребители"
+
+msgid "Manage tags"
+msgstr "Управление на етикети"
+
+msgid "Manage photos"
+msgstr "Управление на снимки"
+
+msgid "Manage photo ranks"
+msgstr "Управление на снимките"
+
+msgid "Manage permissions for user \"%s\""
+msgstr "Управление правата на потребител \"%s\""
+
+msgid "Manage permissions for group \"%s\""
+msgstr "Управление на правата на група \"%s\""
+
+msgid "Manage authorizations for selected albums"
+msgstr "Управление на правата за избрани албуми"
+
+msgid "Manage"
+msgstr "Управление"
+
+msgid "Make this theme available to users"
+msgstr "Направи тази тема достъпна за потребителите"
+
+msgid "Make this language available to users"
+msgstr "Направи този език достъпен за потребителите"
+
+msgid "Last send"
+msgstr "Последно изпратено"
+
+msgid "Mail sent to %s [%s]."
+msgstr "Имейлът е изпратен до %s [%s]."
+
+msgid "Maintenance"
+msgstr "Поддръжка"
+
+msgid "Include display of recent photos grouped by dates"
+msgstr "Включва показване на последните снимки, групирани по дати"
+
+msgid "Information data registered in database"
+msgstr "Информацията е записана в базата данни"
+
+msgid "Last hit"
+msgstr "Последно посещение"
+
+msgid "Last import"
+msgstr "Последен импорт"
+
+msgid "Last revisions"
+msgstr "Последни ревизии"
+
+msgid "Impossible to delete this theme. Other themes depends on it: %s"
+msgstr "Тази тема не може да бъде изтрита, защото други теми зависят от нея: %s"
+
+msgid "Impossible to deactivate this theme, you need at least one theme."
+msgstr "Невъзможно е да деактивирате тази тема, трябва има най-малко една тема."
+
+msgid "Impossible to deactivate this language, you need at least one language."
+msgstr "Невъзможно е да деактивирате този език, трябва има най-малко един език."
+
+msgid "Impossible to deactivate this language, first set another language as default."
+msgstr "Невъзможно е да деактивирате този език, преди това изберете друг език по подразбиране."
+
+msgid "Impossible automatic correction"
+msgstr "Автоматична корекция е невъзможна"
+
+msgid "Hit"
+msgstr "Показване"
+
+msgid "Group management"
+msgstr "Управление на групите"
+
+msgid "Grant selected users"
+msgstr "Дайте права на избраните потребители"
+
+msgid "No members to manage"
+msgstr "Няма членове за управление"
+
+msgid "No order field selected"
+msgstr "Не е избраното поле"
+
+msgid "No photo can be deleted"
+msgstr "Не може да бъде изтрита снимка"
+
+msgid "No photo in the current set."
+msgstr "Няма снимка в текущия набор."
+
+msgid "Link all album photos to some existing albums"
+msgstr "Свържи всички снимки в албума към съществуващи албуми"
+
+msgid "Minimum height"
+msgstr "Минимална височина"
+
+msgid "Minimum privacy level"
+msgstr "Минимално ниво на поверителност"
+
+msgid "Minimum width"
+msgstr "Минимална ширина"
+
+msgid "Miscellaneous"
+msgstr "Разни"
+
+msgid "Missing Plugins"
+msgstr "Липсващи разширения"
+
+msgid "Missing a temporary folder"
+msgstr "Липсва временна папка"
+
+msgid "Modify information"
+msgstr "Промени информацията"
+
+msgid "Name of the duplicate"
+msgstr "Име на дубликата"
+
+msgid "Link all album photos to a new album"
+msgstr "Свържи всички снимки в албума към нов албум"
+
+msgid "Linked albums"
+msgstr "Свързани албуми"
+
+msgid "Manage this set of %d photos"
+msgstr "Управление на този набор от %d снимки"
+
+msgid "Merge selected groups"
+msgstr "Обединяване на избраните групи"
+
+msgid "Merge selected tags"
+msgstr "Обединяване на избраните етикети"
+
+msgid "Merge tags"
+msgstr "Обединяване на етикети"
+
+msgid "Metadata synchronization results"
+msgstr "Резултати от синхронизация на метаданни"
+
+msgid "Metadata synchronized from file"
+msgstr "Метаданните синхронизирани от файл"
+
+msgid "Hoverbox display"
+msgstr "Показване на каре при посочване с мишка"
+
+msgid "Impossible to activate this theme, the parent theme is missing: %s"
+msgstr "Тази тема не може да бъде активирана, тъй като родителската тема липсва: %s"
+
+msgid "No user to send notifications by mail."
+msgstr "Няма потребител, който да бъде уведомен с имейл."
+
+msgid "No photos selected, no actions possible."
+msgstr "Не е избрана снимка, не може да бъде предприето действие"
+
+msgid "No photo selected, %d photos in current set"
+msgstr "Не е избрана снимка, %d снимки в текущия набор"
+
+msgid "No groups selected, no actions possible."
+msgstr "Не е избрана група, не може да бъде предприето действие."
+
+msgid "Images manual order was saved"
+msgstr "Ръчно избраният ред е запазен"
+
+msgid "New parent album"
+msgstr "Нов родителски албум"
+
+msgid "No destination tag selected"
+msgstr "Не е избран етикет"
+
+msgid "No display"
+msgstr "Без показване"
+
+msgid "No file was uploaded"
+msgstr "Не е качен файл"
+
+msgid "No mail to send."
+msgstr "Няма имейл за изпращане."
+
+msgid "No photo in this album"
+msgstr "Няма снимки в този албум"
+
+msgid "Main \"webmaster\" user status is incorrect"
+msgstr "Статусът на основния потребител \"уебмастер\" е некоректен"
+
+msgid "Main \"webmaster\" user does not exist"
+msgstr "Основният потребител \"уебмастер\" не съществува"
+
+msgid "Main \"guest\" user status is incorrect"
+msgstr "Статусът на основния потребител \"гост\" е некоректен"
+
+msgid "Main \"guest\" user does not exist"
+msgstr "Основният потребител \"гост\" не съществува"
+
+msgid "Mail content"
+msgstr "Съдържание на имейла"
+
+msgid "Level 0"
+msgstr "–––"
+
+msgid "Keep in touch with Piwigo project, subscribe to Piwigo Announcement Newsletter. You will receive emails when a new release is available (sometimes including a security bug fix, it's important to know and upgrade) and when major events happen to the project. Only a few emails a year."
+msgstr "Дръжте връзка с проектът Piwigo, абонирайте се за бюлетина на Piwigo. Ще ви бъдат изпращани имейли за новости (понякога включващи оправяне на бъгове касаещи сигурността, за които е важно да знаете и да правите ъпгрейд), както и когато се случват същестшени промени с проекта. Само няколко имейла в годината."
+
+msgid "In your php.ini file, the upload_max_filesize (%sB) is bigger than post_max_size (%sB), you should change this setting"
+msgstr "Във вашият php.ini файл, параметърът upload_max_filesize (%sB) е по-голям от post_max_size (%sB), трябва да промените тази настройка"
+
+msgid "If no HD is available and if the current websize is bigger than resize dimensions, Piwigo will move it as HD and create a downsized websize photo from it."
+msgstr "Ако няма налично HD и ако настоящият уеб размер е по-голям от преоразмереното изображение, Piwigo  ще го премести като HD и ще създаде по-малка по размер снимка от него."
+
+msgid "Number of albums per page"
+msgstr "Брой албуми на страница"
+
+msgid "Number of comments per page"
+msgstr "Брой коментари на страница"
+
+msgid "Number of downloads"
+msgstr "Брой на сваляния"
+
+msgid "Number of rates"
+msgstr "Брой на оценки"
+
+msgid "Only private albums are listed"
+msgstr "Показани са само личните албуми"
+
+msgid "Optimizations have been completed with some errors."
+msgstr "Извършени са оптимизации с възникнали някои грешки."
+
+msgid "Pages seen"
+msgstr "Посетени страници"
+
+msgid "Pending Comments"
+msgstr "Очакващи одобрение коментари"
+
+msgid "User comments validation"
+msgstr "Одобряване на потребителски коментари"
+
+msgid "View in gallery"
+msgstr "Преглед в галерия"
+
+msgid "Used metadata"
+msgstr "Използвани метаданни"
+
+msgid "Update photos information"
+msgstr "Обновяване на информацията на снимки"
+
+msgid "Unknown upload error"
+msgstr "Нейзвестна грешка при качване"
+
+msgid "Synchronize metadata"
+msgstr "Синхронизиране на метаданни"
+
+msgid "Summary"
+msgstr "Общо"
+
+msgid "Rename"
+msgstr "Преименуване"
+
+msgid "Ratio"
+msgstr "Съотношение"
+
+msgid "Privacy level"
+msgstr "Ниво на поверителност"
+
+msgid "Photo informations updated"
+msgstr "Имформацията за снимки е променена"
+
+msgid "Password is missing. Please enter the password."
+msgstr "Липсва парола. Моля въведете парола."
+
+msgid "Permalink"
+msgstr "Пермалинк"
+
+msgid "Permalink %s is already used by album %s"
+msgstr "Пермалинк %s вече се използва от албум %s"
+
+msgid "Permalink history"
+msgstr "История на пермалинковете"
+
+msgid "Permalinks"
+msgstr "Пермалинкове"
+
+msgid "Other plugins"
+msgstr "Други налични разширения"
+
+msgid "Please check \"plugins\" folder and sub-folders permissions (CHMOD)."
+msgstr "Моля проверете папката \"plugins\" и под-папките за права (CHMOD). "
+
+msgid "Operation in progress"
+msgstr "Обработка в процес на изпълнение."
+
+msgid "Notify administrators when a comment is"
+msgstr "Уведомяване на администраторите когато коментар е"
+
+msgid "The permalink name must be composed of a-z, A-Z, 0-9, \"-\", \"_\" or \"/\". It must not be numeric or start with number followed by \"-\""
+msgstr "Името на пермалинка може да съдържа само a-z, A-Z, 0-9, \"-\", \"_\" или \"/\". Не трябва да е само число или да започва с \"-\""
+
+msgid "Sum of rates"
+msgstr "Обща оценка"
+
+msgid "The Piwigo publish Plug-in allows you to export and synchronize photos from Lightroom directly to your Piwigo photo gallery."
+msgstr "Piwigo разширението  за публикуване ви позволява да експортирате и синхронизирате снимки от Lightroom директно в Piwigo галерията."
+
+msgid "Subscribers could be listed (available) only if there is new elements to notify."
+msgstr "Абонатите ще бъдат изброени (налични), само ако има нови позиции за уведомяване."
+
+msgid "Permalink %s has been previously used by album %s. Delete from the permalink history first"
+msgstr "Пермалинк %s вече се използва от албум %s. Изтрийте го първо от списъка с история на пермалинковете."
+
+msgid "The Piwigo export plugin allows you to create albums and export photos."
+msgstr " Piwigo разширението за експорт ви позволява да създадете албуми и експортирате снимки."
+
+msgid "Use the default photo sort order"
+msgstr "Използвай сортиране на снимки по подръзбиране"
+
+msgid "This is a major update, with <a href=\"%s\">new exciting features</a>."
+msgstr "Този е важен ъпдейт, с <a href=\"%s\">нови вълнуващи възможности</a>."
+
+msgid "The name of directories and files must be composed of letters, numbers, \"-\", \"_\" or \".\""
+msgstr "Името на директориите и файловете трябва да съдържат само букви, цифри, \"-\", \"_\" или \".\""
+
+msgid "The file or directory cannot be accessed (either it does not exist or the access is denied)"
+msgstr "Файлът или директорията не е достъпен (или липсва или е със забранен достъп)"
+
+msgid "The center of interest is the most meaningful zone in the photo."
+msgstr "Цевтърът на внимание е най-важното място в снимката."
+
+msgid "Some upgrades are available for extensions."
+msgstr "Някой актуализации са налични за разширенията."
+
+msgid "Some themes and plugins may be not available yet."
+msgstr "Някои теми и разширения може още да не са налични."
+
+msgid "Shotwell is an open source digital photo organizer that runs on Linux. It is the default photo manager in Ubuntu and Fedora."
+msgstr "Shotwell е организатор на цифрови снимки с отворен код, който работи на Linux. Това е фото менажерът по подразбиране и в Ubuntu и Fedora."
+
+msgid "Select a zone with your mouse to define a new center of interest."
+msgstr "Изберете зона с мишката, за да се определи нов център на внимание."
+
+msgid "Replacement of original templates by customized templates from template-extension subfolder"
+msgstr "Подмяна на оригиналните шаблони с персонализирани шаблони от съответната под-папка"
+
+msgid "To export your photos from digiKam to Piwigo, simply install digiKam and the Kipi-plugins."
+msgstr "За да експортирате вашите снимки от digiKam към Piwigo, просто инсталирайте digiKam и Kipi-разширенията."
+
+msgid "User %s [%s] was added to the subscription list."
+msgstr "Потребител %s [%s] е добавен в абонаментния списък."
+
+msgid "Switch to clear or dark colors for administration"
+msgstr "Изберете светли или тъмни цветове за админ панела"
+
+msgid "User %s [%s] was not added to the subscription list."
+msgstr "Потребител %s [%s] не е добавен в абонаментния списък."
+
+msgid "iPhoto is the default photo manager on MacOSX. The Piwigo export plugin let you create new albums and export your photos directly from iPhoto to your Piwigo photo gallery."
+msgstr "iPhoto е мениджърът по подразбиране на снимки в MacOSX. Piwigo разширението за експорт ви позволи да създадете нови албуми и експортирате вашите снимки директно от iPhoto към Piwigo галерията."
+
+msgid "The name of a group must not contain \" or ' or be empty."
+msgstr "Името на група не може да съдържа  \" or ' или да е празно."
+
+msgid "Toggle 'default group' property"
+msgstr "Обърни 'default group' характеристиката"
+
+msgid "Prepared time for list of users to send mail is limited. Others users are not listed."
+msgstr "Времето за подготвка на списъка с потребителите, на които ще бъде изпратена поща е ограничен. Останалите потребители не са изброени."
+
+msgid "ReGalAndroid (RemoteGallery client for Android) is an open source (GPL v3) Piwigo client for the Android platform."
+msgstr "ReGalAndroid (RemoteGallery клиент за Android) е с отворен код (GPL v3) Piwigo клиент за платформата Android."
+
+msgid "Purge user cache"
+msgstr "Почистване на потребителския кеш"
+
+msgid "Purge compiled templates"
+msgstr "Почестване на компилираните шаблони"
+
+msgid "Photos generation in progress..."
+msgstr "Генерирането на снимки е в прогрес..."
+
+msgid "Type in a search term"
+msgstr "Въведете дума за търсене"
+
+msgid "This name is already used by another group."
+msgstr "Името вече е използвано от друга група"
+
+msgid "Time to send mail is limited. Others mails are skipped."
+msgstr "Времето за изпращане на поща е ограничено. Останалите имейли ще бъдат пропуснати."
+
+msgid "This is a minor update, with only bug corrections."
+msgstr "Това е малък ъпдейт, само с корекции на грешки."
+
+msgid "There is no available subscribers to mail."
+msgstr "Няма налични абонати за уведомяване с имейл."
+
+msgid "display maximum informations (added albums and photos, deleted albums and photos)"
+msgstr "показване на максимална информация (добавени албуми и снимки, изтрити албуми и снимки)"
+
+msgid "digiKam is designed for photographers who want to view, manage, edit, enhance, organize, tag, and share photographs."
+msgstr "digiKam е предназначен за фотографи, които искат да преглеждат, управляват, редактират, подобряват, организират и споделят снимки."
+
+msgid "digiKam is an advanced digital photo management free software for Linux, Windows, and MacOSX."
+msgstr "digiKam e сериозен и безплатен фото менажер за Linux, Windows и MacOSX."
+
+msgid "Warning: subscribing or unsubscribing will send mails to users"
+msgstr "Предупреждение: абониране или отписване ще изпрати имейли до потребителите"
+
+msgid "The uploaded file exceeds the upload_max_filesize directive in php.ini: %sB"
+msgstr "Каченият файл надвишава upload_max_filesize ограничението, записано в php.ini: %sB"
+
+msgid "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form"
+msgstr "Каченият файл надвишава MAX_FILE_SIZE ограничението, записано в HTML формата"
+
+msgid "The original maximum height must be a number between %d and %d"
+msgstr "Оригиналната максимална височина трябва да е число между %d и %d"
+
+msgid "The original maximum width must be a number between %d and %d"
+msgstr "Оригиналната максимална ширина трябва да е число между %d и %d"
+
+msgid "The original image quality must be a number between %d and %d"
+msgstr "Оригиналното качество на изображението трябва да е число между %d и %d"
+
+msgid "The number of comments a page must be between 5 and 50 included."
+msgstr "Броя коментари на страница трябва да бъде между 5 и 50 включително"
+
+msgid "apply automatic sort order"
+msgstr "задай автоматичния ред на сортиране"
+
+msgid "only perform a simulation (no change in database will be made)"
+msgstr "изпълнява само симулация (нищо няма да се промени в базата данни)"
+
+msgid "even already synchronized photos"
+msgstr "дори вече синхронизирани снимки"
+
+msgid "Subscribe/unsubscribe users"
+msgstr "Абониране/отписване на потребители"
+
+msgid "The anomaly will be ignored until next application version"
+msgstr "Нередността ще бъде игнорирана до следващата версия на програмата"
+
+msgid "Refresh photo set"
+msgstr "Опресни набор от снимки"
+
+msgid "Start pLoader and add your photos."
+msgstr "Стартиране на pLoader и добавяне на снимки."
+
+msgid "Repair and optimize database"
+msgstr "Поправка и оптимизация на базата данни"
+
+msgid "Reinitialize check integrity"
+msgstr "Повторна проверка на интегритета"
+
+msgid "Photo unreachable or no support"
+msgstr "Снимката недостъпна или има неподдържан формат"
+
+msgid "Permission granted thanks to a group"
+msgstr "Достъп разрешен благодарине на група"
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Липсва потвърждение на паролата. Моля повторете избраната парола."
+
+msgid "Order of menubar items has been updated successfully."
+msgstr "Подредбата на елементите в лентата с меню е променена успешно"
+
+msgid "Optional URL keyword"
+msgstr "Незадължителна URL ключова дума"
+
+msgid "On your Linux, simply install Shotwell with your package manager and the activate Piwigo publishing option."
+msgstr "В Linux, просто инсталирайте Shotwell и след това активирайте опцията за публикуване в Piwigo."
+
+msgid "Select recipients"
+msgstr "Избор на получатели"
+
+msgid "Send an information email to group members"
+msgstr "Изпратете имейл с информация до членовете на групата"
+
+msgid "Select the destination tag"
+msgstr "Изберете етикета приемник"
+
+msgid "Predefined filter"
+msgstr "Предварително зададен филтър"
+
+msgid "Type here the name of the new group"
+msgstr "Въведете името на новата група тук"
+
+msgid "This theme was not designed to be directly activated"
+msgstr "Тази тема не е създадена за директно активиране"
+
+msgid "This group will be set to default"
+msgstr "Тази група ще се използва по подразбиране"
+
+msgid "This group will be unset to default"
+msgstr "Тази група вече няма да се използва по подразбиране"
+
+msgid "User %s [%s] was not removed from the subscription list."
+msgstr "Потребител %s [%s] не е премахнат от абонаментния списък."
+
+msgid "User %s [%s] was removed from the subscription list."
+msgstr "Потребител %s [%s] е премахнат от абонаментния списък."
+
+msgid "Select at least one comment"
+msgstr "Изберете поне един коментар"
+
+msgid "Select at least one album"
+msgstr "Изберете поне един албум"
+
+msgid "Source tag"
+msgstr "Етикет източник"
+
+msgid "Select at least two tags for merging"
+msgstr "Изберете поне два етикета за обединяване"
+
+msgid "Select at least one user"
+msgstr "Изберете поне един потребител"
+
+msgid "Select at least one photo"
+msgstr "Изберете поне една снимка"
+
+msgid "Replacers (customized templates)"
+msgstr "Заместители (персонализирани шаблони)"
+
+msgid "Search for new images in the directories"
+msgstr "Търсене на нови изображения в директориите"
+
+msgid "Save to permalink history"
+msgstr "Запази в история на пармалинковете"
+
+msgid "Reset ignored updates"
+msgstr "Отказване на игнорираните ъпдейти"
+
+msgid "Represents"
+msgstr "е миниатюра за"
+
+msgid "The %d following tags were deleted"
+msgstr "Следните %d етикета са изтрити"
+
+msgid "Templates configuration has been recorded."
+msgstr "Конфигурацията на шаблона е записана."
+
+msgid "Tags <em>%s</em> merged into tag <em>%s</em>"
+msgstr "Етикети <em>%s</em> са обединени в етикет <em>%s</em>"
+
+msgid "Tag \"%s\" is now a duplicate of \"%s\""
+msgstr "Етикет \"%s\" сега се дубликат на \"%s\""
+
+msgid "Tag \"%s\" was added"
+msgstr "Етикет \"%s\" е добавен"
+
+msgid "Remove from caddie"
+msgstr "Премахни от колекцията"
+
+msgid "Remote"
+msgstr "Дистанционно"
+
+msgid "Released on"
+msgstr "Издадено на"
+
+msgid "Rating by guests"
+msgstr "Рейтинг от гости"
+
+msgid "Reject"
+msgstr "Отхвърляне"
+
+msgid "Subscribed"
+msgstr "Абонирани"
+
+msgid "Tag selection"
+msgstr "Избор на етикети"
+
+msgid "Subscribe to notification by mail"
+msgstr "Абониране за уведомяване по имейл"
+
+msgid "Subscribe %s to Piwigo Announcements Newsletter"
+msgstr "Абониране на %s за Piwigo новини и съобщения"
+
+msgid "Status of user \"%s\" updated"
+msgstr "Статусът на потребител \"%s\" е актуализиран"
+
+msgid "Subscribe"
+msgstr "Абониране"
+
+msgid "Subscribe %s"
+msgstr "Абониране на %s"
+
+msgid "Thumbnails generation in progress..."
+msgstr "Генерирането на миниатюри е в ход..."
+
+msgid "This album contains no photo."
+msgstr "Този албум не съдържа снимки."
+
+msgid "Themes which need upgrade"
+msgstr "Теми нуждаещи се от актуализация"
+
+msgid "The following tag was deleted"
+msgstr "Следният етикет е изтрит"
+
+msgid "Orphan tags deleted"
+msgstr "Необвързаните етикети са изтрити"
+
+msgid "Obsolete Plugins"
+msgstr "Остаряли разширения"
+
+msgid "Rate date"
+msgstr "Дата на оценяване"
+
+msgid "Purge sessions"
+msgstr "Почистване на сесиите"
+
+msgid "Purge search history"
+msgstr "Почистване на историята с търсения"
+
+msgid "Purge never used notification feeds"
+msgstr "Почистване на никога не използвани емисии за известяване"
+
+msgid "Purge history summary"
+msgstr "Почистване на историята с резюмета"
+
+msgid "Purge history detail"
+msgstr "Почистване на историята с детайли"
+
+msgid "Theme has been successfully installed"
+msgstr "Темата е успешно инсталирана"
+
+msgid "The whole set"
+msgstr "Целият набор"
+
+msgid "The uploaded files exceed the post_max_size directive in php.ini: %sB"
+msgstr "Качените файлове надхвърлят post_max_size директивата в php.ini: %sB"
+
+msgid "The uploaded file was only partially uploaded"
+msgstr "Качваният файл е качен само частично"
+
+msgid "height must be a number superior to"
+msgstr "височината трябва да е число, по-голямо от"
+
+msgid "Virtual albums to move"
+msgstr "Виртуални албуми за местене"
+
+msgid "Unsubscribe from notification by mail"
+msgstr "Отписване от уведомявания с имейл"
+
+msgid "Unsubscribed"
+msgstr "Отписани"
+
+msgid "You can activate only one mobile theme."
+msgstr "Може да активирате само една мобилна тема."
+
+msgid "Update in progress... Please wait."
+msgstr "Обработката е в ход... Моля изчакайте."
+
+msgid "User \"%s\" created with \"%s\" like password"
+msgstr "Потребител \"%s\" е създаден с \"%s\" за парола"
+
+msgid "User %s [%s] added."
+msgstr "Потребител %s [%s] е добавен."
+
+msgid "include child albums"
+msgstr "включително под-албуми"
+
+msgid "on the %d selected photos"
+msgstr "във %d избрани снимки"
+
+msgid "overrides existing values with empty ones"
+msgstr "замяна на съществуващите стойности с празини такива"
+
+msgid "photos candidates for metadata synchronization"
+msgstr "снимки кандидати за синхронизация на метаданните"
+
+msgid "Tag \"%s\" already exists"
+msgstr "Етикет \"%s\" вече съществува"
+
+msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
+msgstr "ТОВА РАЗШИРЕНИЕ НЕ Е ЧАСТ ОТ ЯДРОТО НА PIWIGO! ДЕИНСТАЛИРАЙТЕ ГО СЕГА!"
+
+msgid "Storage album"
+msgstr "Албум за съхранение"
+
+msgid "Set as default theme for unregistered and new users"
+msgstr "Задаване на тема по подразбиране за нерегистрирани и нови потрибители"
+
+msgid "Set as default language for unregistered and new users"
+msgstr "Задаване на език по подразбиране за нерегистрирани и нови потрибители"
+
+msgid "Send mail on HTML format"
+msgstr "Изпрати в HTML формат"
+
+msgid "Send connection settings by email"
+msgstr "Изпрати найстройките за връзка по имейл"
+
+msgid "Save visits in history for"
+msgstr "Запазване на посещенията в историята за"
+
+msgid "Save manual order"
+msgstr "Запази ръчна подредба"
+
+msgid "Save order"
+msgstr "Запази подредба"
+
+msgid "Restore default configuration. You will lose your plugin settings!"
+msgstr "Връщане на конфигурацията по подразбиране. Ще загубите всички настройки на инсталираните разширения."
+
+msgid "Quick Local Synchronization"
+msgstr "Бърза локална синхронизация"
+
+msgid "Privacy level set to \"%s\""
+msgstr "Зададено е ниво на поверителност \"%s\""
+
+msgid "Piwigo export plugin for Aperture"
+msgstr "Piwigo разширение за експорт за Aperture"
+
+msgid "Piwigo cannot retrieve upgrade file from server"
+msgstr "Piwigo не може да изтегли файла за актуализация от сървъра"
+
+msgid "Piwigo Publish plugin for Lightroom"
+msgstr "Piwigo разширение за публикуване за Lightroom"
+
+msgid "Piwigo Announcements Newsletter"
+msgstr "Piwigo бюлетин"
+
+msgid "Not cropped correctly?"
+msgstr "Не е изрязано провилно?"
+
+msgid "Plugin has been successfully copied"
+msgstr "Разширението е копирано успешно"
+
+msgid "Piwigo publish plugin for digiKam"
+msgstr "Piwigo разширение за публикуване за digiKam"
+
+msgid "Piwigo publish plugin for Shotwell"
+msgstr "Piwigo разширение за публикуване за Shotwell"
+
+msgid "Piwigo export plugin for iPhoto"
+msgstr "Piwigo разширение за експорт за iPhoto"
+
+msgid "The picture dimensions will be reduced to %dx%d pixels."
+msgstr "Размерите на снимката ще бъдат редуцирани до %dx%d пиксела."
+
+msgid "Resize after upload disabled due to the use of GD as graphic library"
+msgstr "Преоразмеряване след качването не е активно поради използване на GD за графична библиотека"
+
+msgid "Select at least one tag"
+msgstr "Изберете поне един етикет"
+
+msgid "General"
+msgstr "Общо"
+
+msgid "Mail theme"
+msgstr "Тема за имейл"
+
+msgid "Basic settings"
+msgstr "Основни настройки"
+
+msgid "on the %d selected users"
+msgstr "на избраните %d потребители"
+
+msgid "Users modified"
+msgstr "Потребителите са променени"
+
+msgid "User %s updated"
+msgstr "Обновени %s потребители"
+
+msgid "User %s added"
+msgstr "Добавени %s потребители"
+
+msgid "Update user"
+msgstr "Обновяване на потребител"
+
+msgid "Showing %s to %s of %s users"
+msgstr "Показва %s до %s от %s потребители"
+
+msgid "Show %s users"
+msgstr "Показани %s потребители"
+
+msgid "Registered on %s, %s."
+msgstr "Регистриран на %s, %s."
+
+msgid "Password updated"
+msgstr "Паролата е обновена"
+
+msgid "No users selected, no actions possible."
+msgstr "Няма избран потребител, не е възможна операция."
+
+msgid "No user selected of %d users"
+msgstr "Няма избран потребител от %d потребители"
+
+msgid "No matching user found"
+msgstr "Няма намерено съвпадение по потребител"
+
+msgid "Loading..."
+msgstr "Зареждане..."
+
+msgid "Last visit on %s, %s."
+msgstr "Последно посещение на %s, %s."
+
+msgid "(filtered from %s total users)"
+msgstr "(филтрирани от общо %s потребители)"
+
+msgid "%d of %d users selected"
+msgstr "избрани са %d от %d потребители"
+
+msgid "Change username"
+msgstr "Смяна на потребителско име"
+
+msgid "Change password"
+msgstr "Смяна на парола"
+
+msgid "All %d users are selected"
+msgstr "Всичките %d потребители са избрани"
+
+msgid "close"
+msgstr "затвори"
+
+msgid "Close user details"
+msgstr "Затвори потребителски детайли"
+
+msgid "Open user details"
+msgstr "Отваряне на потребителски детайли"
+
+msgid "Allow users to add a link to their website"
+msgstr "Позволи на потребителите да добавят линк към техен уебсайт"
+
+msgid "Activate it now"
+msgstr "Активирай сега"
+
+msgid "width & height"
+msgstr "ширина и височина"
+
+msgid "file name"
+msgstr "име на файл"
+
+msgid "date & time"
+msgstr "дата и час"
+
+msgid "between %s and %s MB"
+msgstr "между %s и %s MB"
+
+msgid "based on"
+msgstr "въз основа на"
+
+msgid "The settings for the guest are from the %s user"
+msgstr "Настройките за гости са от потребител %s"
+
+msgid "No and unlock sub-albums"
+msgstr "Не и отключване на под-албумите"
+
+msgid "Mail address is mandatory for registration"
+msgstr "Имейл адресът е задължителна за регистрация"
+
+msgid "Impossible to deactivate the default theme."
+msgstr "Невъзможно е деактивиране на темата по подразбиране."
+
+msgid "Empty caddie"
+msgstr "Изпразване на колекцията"
+
+msgid "Upload in progress"
+msgstr "Качването е в ход"
+
+msgid "Recipients"
+msgstr "Получатели"
+
+msgid "Orphans"
+msgstr "Самотни"
+
+msgid "No user is permitted to see this private album"
+msgstr "Никой потребител не е избран да вижда този личен албум"
+
+msgid "For security reason, authentication keys do not work for administrators."
+msgstr "От съображения за сигурност, уникалните ключове няма да работят за администратори."
+
+msgid "Each email sent will contain its own automatic authentication key on links, valid for %s."
+msgstr "Всеки изпратен имейл ще съдържа свой уникален ключ към линковете, валиден за %s.\n"
+
+msgid "Delete %d orphan photos"
+msgstr "Изтриване %d самотни снимки"
+
+msgid "No recipient selected"
+msgstr "Не е избран получател"
+
+msgid "Edit user"
+msgstr "Редакция на потребител"
+
+msgid "Y Repeat"
+msgstr "Y Повторение"
+
+msgid "delete album and all %d photos, even the %d associated to other albums"
+msgstr "изтриване на албума и всички %d снимки, дори и %d свързани в други албуми"
+
+msgid "Piwigo Remote Sync is able to upload a whole folder hierarchy. If you run it again, only new photos will be uploaded."
+msgstr "Piwigo Remote Sync ви дава възможност да качите цяла папка със снимки. Ако я качите отново, само новите снимки ще се добавят."
+
+msgid "Display form"
+msgstr "Дисплей форма"
+
+msgid "Delete album \"%s\" and its %d sub-albums."
+msgstr "Изтриване на албум  \"%s\" и на неговите %d под-албуми."
+
+msgid "(determined from photos)"
+msgstr "(определени от снимки)"
+
+msgid "Time has come to update your Piwigo with version %s, go to %s"
+msgstr "Време е да ъпдейтвате вашата галерия Piwigo с версия %s, идете на %s"
+
+msgid "Share / Send your photos directly from your Mac Os X (10.10 and following) to Piwigo"
+msgstr "Споделете/Изпратете снимки директно от вашия macOS (10.10 или по-нова) до Piwigo"
+
+msgid "Running on an up-to-date Piwigo is important for security."
+msgstr "Ъпдейтване до последната версия на  Piwigo е нужно с цел сигурност."
+
+msgid "Piwigo %s is available, please update"
+msgstr "Piwigo %s е наличен, моля ъпдейтвайте."
+
+msgid "No tags selected, no actions possible."
+msgstr "Няма избран етикет, невъзможно действие."
+
+msgid "No filter on album. Select one or type to search"
+msgstr "Не филтрай по албум. Избери само вид търсене"
+
+msgid "It only takes a few clicks."
+msgstr "Ще отнеме няколко клика."
+
+msgid "delete album and the %d orphan photos"
+msgstr "изтриване на албум и %d снимки без албум"
+
+msgid "delete only album, not photos"
+msgstr "изтриване на албум, без снимките"
+
+msgid "orphans to delete"
+msgstr "без албум за изтриване"
+
+msgid "Storage used"
+msgstr "Използвано място"
+
+msgid "Delete album \"%s\"."
+msgstr "Изтриване на албум \"%s\"."
+
+msgid "Confirm deletion"
+msgstr "Потвърдете изтриването"
+
+msgid "Dashboard"
+msgstr "Табло"
+
+msgid "Select tags"
+msgstr "Избор на етикети"
+
+msgid "checksum"
+msgstr "контролно число"
+
+msgid " (copy)"
+msgstr "копирай"
+
+msgid "Piwigo core"
+msgstr "Piwigo ядро (основна система)"
+
+msgid "Tile View"
+msgstr "Плочков изглед"
+
+msgid "There is currently %d photos in the lounge (upload buffer)"
+msgstr "В момента има %d снимки в лаунджа (буфер за качване)"
+
+msgid "This albums is already in related categories list"
+msgstr "Този албум вече е в списъка на свързани албуми"
+
+msgid "This user must first be defined as the webmaster before it can be upgraded to the main user"
+msgstr "Този потребител трябва първо да бъде определен като уебмастър, преди да може да бъде повишен до основен потребител"
+
+msgid "Upload Formats"
+msgstr "Формати за качване"
+
+msgid "Use standard Piwigo template for common pages."
+msgstr "Използвай стандартния шаблон на Piwigo за общите страници."
+
+msgid "User \"%s\" dissociated from this group"
+msgstr "Потребител „%s“ бе отделен от тази група"
+
+msgid "User associated"
+msgstr "Потребителят е свързан"
+
+msgid "Users not logged in will have these settings applied, these settings are used by default for new users"
+msgstr "На потребителите, които не са влезли, ще се прилагат тези настройки; те се използват по подразбиране и за нови потребители"
+
+msgid "Visit"
+msgstr "Посещение"
+
+msgid "Visit history"
+msgstr "История на посещенията"
+
+msgid "Visited"
+msgstr "Посетено"
+
+msgid "We have found %d duplicate paths. Details provided by plugin Check Uploads"
+msgstr "Намерихме %d дублиращи се пътища. Подробности са предоставени от приставката Check Uploads"
+
+msgid "Webmaster status required"
+msgstr "Изисква се статус уебмастър"
+
+msgid "What's new in version %s"
+msgstr "Какво ново има във версия %s?"
+
+msgid "When enabled, a common template is used for the login, registration and forgotten password pages, regardless of the theme. Some themes might use these templates even if you uncheck this option"
+msgstr "При активиране се използва общ шаблон за страниците за вход, регистрация и забравена парола, независимо от темата. Някои теми може да използват тези шаблони, дори ако махнете отметката от тази опция"
+
+msgid "While restoring this plugin, it will be reset to its original parameters and associated data is going to be reset"
+msgstr "При възстановяване на тази приставка тя ще бъде върната към първоначалните ѝ настройки и свързаните данни ще бъдат нулирани"
+
+msgid "With no checksum"
+msgstr "Без контролна сума"
+
+msgid "Picture to associate formats with"
+msgstr "Изображение, с което да се асоциират форматите"
+
+msgid "On %d rating(s)"
+msgstr "На %d оценка(и)"
+
+msgid "This plugin has no recent update"
+msgstr "Този плъгин няма скорошна актуализация"
+
+msgid "This plugin have been updated recently"
+msgstr "Този плъгин е обновен наскоро"
+
+msgid "This plugin have no update since 3 years ! It may be outdated"
+msgstr "Този плъгин няма актуализации от 3 години! Възможно е да е остарял."
+
+msgid "This plugin is incompatible with your version"
+msgstr "Този плъгин е несъвместим с версията ви"
+
+msgid "This plugin was updated less than 6 months ago"
+msgstr "Този плъгин е обновен преди по-малко от 6 месеца"
+
+msgid "Username successfully modified"
+msgstr "Името на потребителя е променено успешно"
+
+msgid "Welcome to %s"
+msgstr "Добре дошли в %s"
+
+msgid "Welcome!"
+msgstr "Добре дошли!"
+
+msgid "Who can see ?"
+msgstr "Кой може да вижда?"
+
+msgid "You have %s1 orphan : %s2"
+msgstr "Имате %s1 празни: %s2"
+
+msgid "checksums to add"
+msgstr "сума за добавяне"
+
+msgid "never calculated"
+msgstr "никога не е калкулирано"
+
+msgid "right now"
+msgstr "точно сега"
+
+msgid "since the beginning"
+msgstr "от началото"
+
+msgid "to"
+msgstr "до"
+
+msgid "was succesfully deleted"
+msgstr "беше услешно изтрит/а"
+
+msgid "You are about to set %s as main user instead of %s, do you wish to continue ?"
+msgstr "На път сте да направите %s главен потребител, вместо %s, искате ли да продължите?"
+
+msgid "You are not authorised to change the main user, please ask your webmaster"
+msgstr "Нямате права да сменяте главния потребител, попитайте администратора."
+
+msgid "You can now change the main user from %s to %s."
+msgstr "Вече можете са смените главния потребител от %s на %s."
+
+msgid "You cannot copy the password if the connection to this site is not secure."
+msgstr "Не може да копирате паролата, ако връзката ви към този сайт не е сигурна."
+
+msgid "You don't have access to this photo"
+msgstr "Нямате достъп до това изображение"
+
+msgid "You have %d orphan tags %s"
+msgstr "Имате %d празни етикети %s"
+
+msgid "You have %s inactive plugins"
+msgstr "Имате %s неактивни плъгини"
+
+msgid "image(s) contains unsaved changes"
+msgstr "има незапомнени промени в изображението/ията"
+
+msgid "in administration"
+msgstr "в администрация"
+
+msgid "in gallery"
+msgstr "в галерия"
+
+msgid "level of confidentiality"
+msgstr "ниво на поверителност"
+
+msgid "months ago"
+msgstr "месеца назад"
+
+msgid "move"
+msgstr "премести"
+
+msgid "no photo"
+msgstr "няма изображение"
+
+msgid "or"
+msgstr "или"
+
+msgid "Yes, I am sure"
+msgstr "Да, сигурен съм"
+
+msgid "Yes, delete"
+msgstr "Да, изтрий"
+
+msgid "Yes, let's proceed"
+msgstr "Да, нека продължим"
+
+msgid "Yes, rename"
+msgstr "Да, пренаименовай"
+
+msgid "You have unsaved changes"
+msgstr "Имате незапаметени промени"
+
+msgid "Your selection"
+msgstr "Вашата селекция"
+
+msgid "action successfully performed."
+msgstr "действието е завършено успешно"
+
+msgid "add"
+msgstr "добави"
+
+msgid "and %d more"
+msgstr "и още %d"
+
+msgid "and %s others"
+msgstr "и %s други"
+
+msgid "between %d and %d"
+msgstr "между %d и %d"
+
+msgid "between %s and %s"
+msgstr "между %s и %s"
+
+msgid "calculated"
+msgstr "изчислено"
+
+msgid "deletion"
+msgstr "изтриване"
+
+msgid "edit"
+msgstr "редактирай"
+
+msgid "login"
+msgstr "Вход"
+
+msgid "logout"
+msgstr "Изход"
+
+msgid "Are you sure you want to delete the plugin \"%s\"?"
+msgstr "Сигурни и сте, че искате да изтриете този плъгин \"%s\"?"
+
+msgid "To be sure, please rewrite the word “%s” below"
+msgstr "За да сте сигурни, моля препишете думата “%s” по-долу"
+
+msgid "To set your password, visit the following address:"
+msgstr "За да зададете парола, последвайте този линк:"
+
+msgid "Try now !"
+msgstr "Опитай сега!"
+
+msgid "Understood, do not show again"
+msgstr "Разбрах, не показвай повече"
+
+msgid "Unlock it"
+msgstr "Отключи"
+
+msgid "Unlocked album"
+msgstr "Отключи албума"
+
+msgid "Unset as group for new users"
+msgstr "Премахни като група за нови потребители"
+
+msgid "Update"
+msgstr "Обнови"
+
+msgid "User updated"
+msgstr "Потребителя е обновен"
+
+msgid "Version %s"
+msgstr "Версия  \"%s\"?"
+
+msgid "Videos"
+msgstr "Видеа"
+
+msgid "Showing %s users out of %s"
+msgstr "Показва %s потребители от %s"
+
+msgid "Storage"
+msgstr "Памет"
+
+msgid "This photo no longer exists"
+msgstr "Тази снимка не съществува вече"
+
+msgid "This picture is physically linked to this album, you can't dissociate them"
+msgstr "\n"
+
+msgid "Synchronization in progress"
+msgstr "Синхронизацията е в ход"
+
+msgid "System Activities"
+msgstr "Системни дейности"
+
+msgid "Tag \"%s\" created"
+msgstr "Етикетът „%s“ е създаден"
+
+msgid "Tag \"%s\" succesfully deleted"
+msgstr "Етикетът „%s“ е успешно изтрит"
+
+msgid "Tag \"%s1\" renamed in \"%s2\""
+msgstr "Етикетът „%s1“ е преименуван на „%s2“"
+
+msgid "Tag Manager"
+msgstr "Управление на етикети"
+
+msgid "Tag name"
+msgstr "Име на етикет"
+
+msgid "Tag(s) \\{%s1\\} succesfully merged into \"%s2\""
+msgstr "Етикет(и) {%s1} са успешно обединени в „%s2“"
+
+msgid "Tags \\{%s\\} succesfully deleted"
+msgstr "Етикет(и) {%s} са успешно изтрити"
+
+msgid "The %d tags on this page are selected"
+msgstr "%d етикета на тази страница са избрани"
+
+msgid "The best is to have them made automatically on a regular basis."
+msgstr "Най-добре е да се извършват автоматично и редовно."
+
+msgid "The comment has been validated."
+msgstr "Коментарът е одобрен."
+
+msgid "The comments have been validated."
+msgstr "Коментарите са одобрени."
+
+msgid "The original picture will be detected with the filename (without extension)."
+msgstr "Оригиналната снимка ще бъде открита по името на файла (без разширение)."
+
+msgid "The other tags will be removed"
+msgstr "Останалите етикети ще бъдат премахнати"
+
+msgid "The passwords do not match"
+msgstr "Паролите не съвпадат"
+
+msgid "Theme"
+msgstr "Тема"
+
+msgid "There is multiple image in the database with the following names : %s."
+msgstr "Има няколко снимки в база данните със следните имена: %s."
+
+msgid "This album is currently locked, visible only to administrators."
+msgstr "Този албум в момента в заключен и видим само за администратори."
+
+msgid "This is already the default theme"
+msgstr "Това вече е темата по подразбиране"
+
+msgid "This link is valid for %s. After this time, you will need to request a new link."
+msgstr "Линкът е валиден за %s. След този период, ще трябва да поискате нов линк.\n"
+
+msgid "This photo is an orphan"
+msgstr "Тазни снимка не е включена в албум"
+
+msgid "Save"
+msgstr "Запази"
+
+msgid "Save all photos"
+msgstr "Запази всички снимки"
+
+msgid "Search albums"
+msgstr "Търси албуми"
+
+msgid "Search tips"
+msgstr "Съвети за търсене"
+
+msgid "Select"
+msgstr "Избери"
+
+msgid "Select all %d tags"
+msgstr "Избери всички %d етикета"
+
+msgid "Select an album... or type it!"
+msgstr "Избери албум... или го въведи!"
+
+msgid "Select groups or type them"
+msgstr "Избери групи или ги въведи"
+
+msgid "Select or create an album"
+msgstr "Избери или създай албум"
+
+msgid "Selected user"
+msgstr "Избран потребител"
+
+msgid "Selection mode"
+msgstr "Режим на избор"
+
+msgid "Sep"
+msgstr "Септ."
+
+msgid "Set as default"
+msgstr "Задай по подразбиране"
+
+msgid "Set as group for new users"
+msgstr "Задай като група за нови потребители"
+
+msgid "Set as main user"
+msgstr "Задай като главен потребител"
+
+msgid "Show"
+msgstr "Покажи"
+
+msgid "Show beta test plugins"
+msgstr "Покажи плъгини в бета тест"
+
+msgid "Show inactive plugins"
+msgstr "Покажи неактивни плъгини"
+
+msgid "Show plugins compatible with previous version of Piwigo"
+msgstr "Покажи плъгини, съвместими с предишна версия на Piwigo"
+
+msgid "Show sub-albums"
+msgstr "Покажи подалбумите"
+
+msgid "Shrink"
+msgstr "Намали"
+
+msgid "Some checksums are missing."
+msgstr "Липсват някои контролни суми."
+
+msgid "Some photos are missing from your file system. Details provided by plugin Check Uploads"
+msgstr "Някои снимки липсват във файловата система. Подробности са налични чрез плъгина Check Uploads."
+
+msgid "Synchronization"
+msgstr "Синхронизация"
+
+msgid "Piwigo is also on mobile."
+msgstr "Piwigo е достъпен и за мобилни устройства."
+
+msgid "Piwigo requires an album to add photos."
+msgstr "За добавяне на снимки в Piwigo е необходим албум."
+
+msgid "Place first"
+msgstr "Постави първи"
+
+msgid "Place last"
+msgstr "Постави последен"
+
+msgid "Please complete all fields"
+msgstr "Моля, попълнете всички полета."
+
+msgid "Please upgrade your PHP version before any update."
+msgstr "Моля, обновете версията на PHP преди да извършите актуализация."
+
+msgid "Plugin \"%s\" deleted!"
+msgstr "Плъгинът „%s“ е изтрит!"
+
+msgid "Plugin \"%s\" has been activated!"
+msgstr "Плъгинът „%s“ беше активиран!"
+
+msgid "Portraits"
+msgstr "Портрети"
+
+msgid "Posted %s"
+msgstr "Публикувано %s"
+
+msgid "Promote mobile app on mobile devices"
+msgstr "Популяризирай мобилното приложение на мобилни устройства"
+
+msgid "Properties of abums"
+msgstr "Свойства на албуми"
+
+msgid "Purge Actions"
+msgstr "Изчисти действията"
+
+msgid "Purge Cache"
+msgstr "Изчисти кеша"
+
+msgid "Put at the root"
+msgstr "Постави в основната директория"
+
+msgid "Rating greater than"
+msgstr "Рейтинг по-голям от"
+
+msgid "Read the release note"
+msgstr "Прочетете бележките към версията"
+
+msgid "Refresh thumbnail"
+msgstr "Опресни миниатюрата"
+
+msgid "Registered"
+msgstr "Регистриран"
+
+msgid "Remove thumbnail"
+msgstr "Премахни миниатюрата"
+
+msgid "Rename \"%s\""
+msgstr "Преименувай „%s“"
+
+msgid "Requires PHP %s"
+msgstr "Изисква PHP %s"
+
+msgid "Resend password link"
+msgstr "Изпрати повторно линка за парола"
+
+msgid "Restored"
+msgstr "Възстановено"
+
+msgid "Review"
+msgstr "Преглед"
+
+msgid "Root"
+msgstr "Основна директория"
+
+msgid "Name field must not be empty"
+msgstr "Полето за име не може да бъде празно"
+
+msgid "Name is already taken"
+msgstr "Името вече е заето"
+
+msgid "New user added"
+msgstr "Добавен е нов потребител"
+
+msgid "No access to administration, can see private content with appropriate permissions."
+msgstr "Няма достъп до администраторския панел, но може да вижда частно съдържание при съответните права."
+
+msgid "No albums found"
+msgstr "Не са открити албуми"
+
+msgid "No comments selected, no actions possible."
+msgstr "Не са избрани коментари, не могат да се извършват действия."
+
+msgid "No format for this picture"
+msgstr "Няма формат за тази снимка"
+
+msgid "No picture found with the following name : %s."
+msgstr "Не е намерена снимка с това име: %s.\n"
+
+msgid "No plugin activated"
+msgstr "Няма активни плъгини."
+
+msgid "No plugins found"
+msgstr "Не са намерени плъгини."
+
+msgid "No research in progress"
+msgstr "Не се извършва проучване в момента"
+
+msgid "No search in progress"
+msgstr "Не се извършва търсене в момента"
+
+msgid "No tag found"
+msgstr "Не е намерен етикет."
+
+msgid "No, I have changed my mind"
+msgstr "Не, промених желанието си"
+
+msgid "Nov"
+msgstr "Нов"
+
+msgid "Object"
+msgstr "Обект"
+
+msgid "Oct"
+msgstr "Окт"
+
+msgid "Ok, got it!"
+msgstr "Разбрах!"
+
+msgid "Only admins in a specific group"
+msgstr "Само администратори в определена група"
+
+msgid "Open in gallery"
+msgstr "Отвори в галерията"
+
+msgid "Other"
+msgstr "Други"
+
+msgid "Page Visited"
+msgstr "Посетена страница"
+
+msgid "Page Visited in %s"
+msgstr "Посетена страница в %s"
+
+msgid "Pagination has changed and needs to be reloaded !"
+msgstr "Начинът на страниране е променен и трябва да се презареди!"
+
+msgid "Password copied"
+msgstr "Паролата е копирана"
+
+msgid "Photos per page"
+msgstr "Снимки на страница"
+
+msgid "Hide sub-albums"
+msgstr "Скрий подалбумите"
+
+msgid "If a photo in this album has the same filename, update the file without changing the photo's properties"
+msgstr "Ако снимка в този албум има същото име, актуализирай файла без да променяш свойствата на снимката."
+
+msgid "If anything bad happens during the update, you would be able to restore a backup."
+msgstr "Ако нещо се обърка по време на обновяването, ще можете да възстановите резервно копие."
+
+msgid "Image"
+msgstr "Изображение"
+
+msgid "Install Piwigo on mobile"
+msgstr "Инсталирай Piwigo на мобилно устройство"
+
+msgid "Installed on %s, %s"
+msgstr "Инсталирано на %s, %s"
+
+msgid "Jan"
+msgstr "Ян"
+
+msgid "Jul"
+msgstr "Юли"
+
+msgid "Jun"
+msgstr "Юни"
+
+msgid "Keep them"
+msgstr "Запази ги"
+
+msgid "Language"
+msgstr "Език"
+
+msgid "Last revision date is newer than"
+msgstr "Датата на последната ревизия е по-нова от"
+
+msgid "Last visit"
+msgstr "Последно посещение"
+
+msgid "Latest Piwigo news"
+msgstr "Последни новини за Piwigo"
+
+msgid "Line View"
+msgstr "Изглед по редове"
+
+msgid "Locked album"
+msgstr "Заключен албум"
+
+msgid "Locked albums are disabled for maintenance. Only administrators can view them in the gallery. Lock this album will also lock his Sub-albums"
+msgstr "Заключените албуми са изключени за поддръжка. Само администратори могат да ги виждат в галерията."
+
+msgid "Main user"
+msgstr "Главен потребител"
+
+msgid "Manage album photos"
+msgstr "Управлявай снимките в албума"
+
+msgid "Manage sub-albums"
+msgstr "Управлявай подалбумите"
+
+msgid "Manage users"
+msgstr "Управлявай потребители"
+
+msgid "Manage users with user manager"
+msgstr "Управлявай потребителите чрез мениджъра на потребители"
+
+msgid "Mar"
+msgstr "Март"
+
+msgid "May"
+msgstr "Май"
+
+msgid "Memories"
+msgstr "Спомени"
+
+msgid "Merge"
+msgstr "Обедини"
+
+msgid "Metadata sync complete"
+msgstr "Синхронизирането на метаданни е завършено"
+
+msgid "Modified"
+msgstr "Променено"
+
+msgid "More information"
+msgstr "Повече информация"
+
+msgid "Download all activities"
+msgstr "Изтегли всички дейности  "
+
+msgid "Downloaded"
+msgstr "Изтеглено  "
+
+msgid "Drag and drop to reorder albums"
+msgstr "Изтеглете и пуснете, за да пренаредите албумите  "
+
+msgid "During upload, if Piwigo detects the photo already exists, associate the existing photo to the destination album, without duplicating file"
+msgstr "Ако при качване, Piwigo открие, че снимката вече съществува, ще я свърже с целевия албум без да създава дубликат на файла.  "
+
+msgid "Edit"
+msgstr "Редактирай  "
+
+msgid "Edit guest user"
+msgstr "Редактирай гост потребител  "
+
+msgid "Edit photo #%s"
+msgstr "Редактирай снимка №%s  "
+
+msgid "Edited on %s"
+msgstr "Редактирано на %s  "
+
+msgid "Email"
+msgstr "Имейл  "
+
+msgid "Email Adress"
+msgstr "Имейл адрес  "
+
+msgid "Empty lounge"
+msgstr "Изпразни зоната за качване  "
+
+msgid "Equivalent to deactivation. The user is still in the list, but can no longer log in."
+msgstr "Еквивалентно на деактивация. Потребителят остава в списъка, но вече не може да влиза.  "
+
+msgid "Error when trying to detect formats"
+msgstr "Грешка при опит за засичане на формати  "
+
+msgid "Expand"
+msgstr "Разгъни  "
+
+msgid "Extensions"
+msgstr "Разширения  "
+
+msgid "Feb"
+msgstr "Фебр."
+
+msgid "File type: %s"
+msgstr "Тип файл: %s  "
+
+msgid "Filters"
+msgstr "Филтри  "
+
+msgid "First choose an album, then add your files"
+msgstr "Първо изберете албум, после добавете вашите файлове  "
+
+msgid "Formats"
+msgstr "Формати  "
+
+msgid "Generate random password"
+msgstr "Генерирай произволна парола"
+
+msgid "Global Gallery Actions"
+msgstr "Глобални действия за галерията"
+
+msgid "Group \"%s\" succesfully deleted"
+msgstr "Групата „%s“ беше успешно изтрита"
+
+msgid "Group added"
+msgstr "Групата е добавена"
+
+msgid "Group renamed"
+msgstr "Името на групата е променено"
+
+msgid "Group(s) \\{%s1\\} succesfully merged into \"%s2\""
+msgstr "Групите {%s1} бяха успешно обединени в „%s2“"
+
+msgid "Groups \\{%s\\} succesfully deleted"
+msgstr "Групите {%s} бяха успешно изтрити"
+
+msgid "Has access to administration. Can only manage content: photos/albums/users/tags/groups."
+msgstr "Има достъп до администраторския панел. Може да управлява само съдържанието: снимки, албуми, потребители, етикети и групи."
+
+msgid "Has access to all administration functionnalities. Can manage both configuration and content."
+msgstr "Има достъп до всички административни функции. Може да управлява както настройките, така и съдържанието."
+
+msgid "Create a root album"
+msgstr "Създай основен албум  "
+
+msgid "Create a sub-album of \"%s\""
+msgstr "Създай подалбум на „%s“  "
+
+msgid "Create and select"
+msgstr "Създай и избери  "
+
+msgid "Create your first album"
+msgstr "Създай първия си албум  "
+
+msgid "Created"
+msgstr "Създаден  "
+
+msgid "Created on %s"
+msgstr "Създаден на %s  "
+
+msgid "Creation mode"
+msgstr "Режим на създаване  "
+
+msgid "Current Version"
+msgstr "Текуща версия  "
+
+msgid "Currently running version %s"
+msgstr "Изпълнявана версия %s  "
+
+msgid "Deactivated"
+msgstr "Деактивирано  "
+
+msgid "Dec"
+msgstr "Дек  "
+
+msgid "Delete %s format ?"
+msgstr "Да се изтрие ли форматът %s?  "
+
+msgid "Delete album"
+msgstr "Изтрий албум  "
+
+msgid "Delete orphan tags ?"
+msgstr "Да се изтрият ли празните етикети?  "
+
+msgid "Delete tag \"%s\"?"
+msgstr "Да се изтрие ли етикетът „%s“?  "
+
+msgid "Delete tags \\{%s\\}?"
+msgstr "Да се изтрият ли етикетите \\{%s}?  "
+
+msgid "Delete them"
+msgstr "Изтрий ги  "
+
+msgid "Delete these sizes"
+msgstr "Изтрий тези размери  "
+
+msgid "Delete user"
+msgstr "Изтрий потребител  "
+
+msgid "Deletion in progress"
+msgstr "Изтриването е в ход  "
+
+msgid "Details"
+msgstr "Подробности  "
+
+msgid "Detect and avoid duplicates during upload"
+msgstr "Засичай и избягвай дубликати при качване  "
+
+msgid "Disallow comments for sub-albums"
+msgstr "Забрани коментари за подалбуми  "
+
+msgid "Discover"
+msgstr "Открий  "
+
+msgid "Display"
+msgstr "Покажи"
+
+msgid "Display album date period"
+msgstr "Показвай периода, свързан с всеки албум, напр. „от 12 до 15 юли 2018 г.“  "
+
+msgid "Display category date"
+msgstr "Показвай датата на категорията  "
+
+msgid "Displays a banner to install or open the official Piwigo app"
+msgstr "Показва банер за инсталиране или отваряне на официалното приложение Piwigo  "
+
+msgid "Dissociate user from this group"
+msgstr "Премахни потребителя от тази група  "
+
+msgid "Associate User"
+msgstr "Свържи потребител"
+
+msgid "At least 2 selected tags are needed to merge"
+msgstr "Необходими са поне 2 избрани етикета, за да бъдат обединени.  "
+
+msgid "Aug"
+msgstr "Авг"
+
+msgid "Authorize comments"
+msgstr "Разреши коментари"
+
+msgid "Auto-update"
+msgstr "Автоматично обновяване"
+
+msgid "Average last 12 months"
+msgstr "Средно за последните 12 месеца"
+
+msgid "Cache"
+msgstr "Кеш"
+
+msgid "Cache size"
+msgstr "Размер на кеша"
+
+msgid "Can be shared by several individuals without conflict (they cannot change the password)."
+msgstr "Може да бъде споделян от няколко потребители без конфликт (те не могат да променят паролата)."
+
+msgid "Cannot send an email to this user because he doesn't have an email address"
+msgstr "Не може да бъде изпратен имейл на този потребител, защото няма зададен имейл адрес.  "
+
+msgid "Certification higher or equal to"
+msgstr "Сертификация по-висока или равна на  "
+
+msgid "Change Password"
+msgstr "Смени парола  "
+
+msgid "Changes saved"
+msgstr "Промените са запазени  "
+
+msgid "Changing the main user"
+msgstr "Промяна на главния потребител  "
+
+msgid "Choose which tag to merge these tags into"
+msgstr "Избери в кой етикет да се обединят тези етикети  "
+
+msgid "Clear Selection"
+msgstr "Изчисти избора  "
+
+msgid "Close"
+msgstr "Затвори  "
+
+msgid "Comments allowed for sub-albums"
+msgstr "Разрешени са коментари за подалбуми  "
+
+msgid "Comments disallowed for sub-albums"
+msgstr "Забранени са коментари за подалбуми  "
+
+msgid "Compact View"
+msgstr "Компактен изглед  "
+
+msgid "Compare mode"
+msgstr "Режим на сравнение  "
+
+msgid "Compute %d missing checksums"
+msgstr "Изчисли липсващите %d контролни суми  "
+
+msgid "Copied link"
+msgstr "Копиран линк  "
+
+msgid "Copy password"
+msgstr "Копирай парола  "
+
+msgid "Copy the link below and send it to the user so the password can be set."
+msgstr "Копирайте връзката по"
+
+msgid "Copy the password link"
+msgstr "Копирай връзката за парола  "
+
+msgid "Core"
+msgstr "Ядро  "
+
+msgid "Create a first album"
+msgstr "Създай първи албум  "
+
+msgid "Create a new album at root"
+msgstr "Създай нов албум като основен"
+
+msgid "Allow comments for sub-albums"
+msgstr "Разреши коментари за подалбуми  "
+
+msgid "Always have a backup of your database and files."
+msgstr "Винаги правете резервно копие на базата данни и файловете си."
+
+msgid "An activation link valid for %s has been sent to \"%s\". If the user doesn't receive the link, you can generate and copy a new one by editing the user and managing her password."
+msgstr "Изпратена е връзка за активиране, валидна за %s, на „%s“. Ако не бъде получена, може да се генерира нова, като редактирате потребителя и управлявате паролата му."
+
+msgid "An activation link valid for %s was created but could not be sent. You can now copy the link below and send it to the user."
+msgstr "Създадена е връзка за активиране, валидна за %s, но не можа да бъде изпратена. Можете да копирате връзката по"
+
+msgid "An error has occured"
+msgstr "Възникна грешка"
+
+msgid "Apply an automatic order to root albums"
+msgstr "Приложи автоматично подреждане към основните"
+
+msgid "Apply to direct sub-albums"
+msgstr "Приложи към непосредствените подалбуми  "
+
+msgid "Apply to root albums"
+msgstr "Приложи към основните албуми  "
+
+msgid "Apply to the whole hierarchy"
+msgstr "Приложи към цялата йерархия  "
+
+msgid "Apr"
+msgstr "Апр"
+
+msgid "Are you sure you want to delete \"%d\" comments?"
+msgstr "Сигурни ли сте, че искате да изтриете „%d“ коментара?"
+
+msgid "Are you sure you want to delete all sizes?"
+msgstr "Сигурни ли сте, че искате да изтриете всички размери?"
+
+msgid "Are you sure you want to delete comment #%s?"
+msgstr "Сигурни ли сте, че искате да изтриете коментар №%s?"
+
+msgid "Are you sure you want to delete group \"%s\"?"
+msgstr "Сигурни ли сте, че искате да изтриете групата „%s“?"
+
+msgid "Are you sure you want to delete the language \"%s\"?"
+msgstr "Сигурни ли сте, че искате да изтриете езика „%s“?"
+
+msgid "Are you sure you want to delete the ratings of the user \"%s\"?"
+msgstr "Сигурни ли сте, че искате да изтриете оценките на потребителя „%s“?"
+
+msgid "Are you sure you want to delete the theme \"%s\"?"
+msgstr "Сигурни ли сте, че искате да изтриете темата „%s“?"
+
+msgid "Are you sure you want to delete the user \"%s\"?"
+msgstr "Сигурни ли сте, че искате да изтриете потребителя „%s“?"
+
+msgid "Are you sure you want to delete this site?"
+msgstr "Сигурни ли сте, че искате да изтриете този сайт?"
+
+msgid "Are you sure you want to delete this theme?"
+msgstr "Сигурни ли сте, че искате да изтриете тази тема?"
+
+msgid "Are you sure you want to delete this?"
+msgstr "Сигурни ли сте, че искате да изтриете това?"
+
+msgid "Are you sure you want to install the plugin \"%s\"?"
+msgstr "Сигурни ли сте, че искате да инсталирате плъгина „%s“?"
+
+msgid "Are you sure you want to lock the gallery?"
+msgstr "Сигурни ли сте, че искате да заключите галерията?"
+
+msgid "Are you sure you want to restore the plugin \"%s\"?"
+msgstr "Сигурни ли сте, че искате да възстановите плъгина „%s“?"
+
+msgid "Are you sure you want to restore this plugin?"
+msgstr "Сигурни ли сте, че искате да възстановите този плъгин?"
+
+msgid "Are you sure you want to restore to default settings?"
+msgstr "Сигурни ли сте, че искате да върнете настройките по подразбиране?"
+
+msgid "Are you sure you want to uninstall the plugin \"%s\"?"
+msgstr "Сигурни ли сте, че искате да деинсталирате плъгина „%s“?"
+
+msgid "Are you sure you want to unlock the gallery?"
+msgstr "Сигурни ли сте, че искате да отключите галерията?"
+
+msgid "Are you sure you want to update all extensions?"
+msgstr "Сигурни ли сте, че искате да обновите всички разширения?"
+
+msgid "<b>%d+</b> albums found, try to refine the search"
+msgstr "намерени са <b>%d+</b> албума, опитайте да прецизирате търсенето"
+
+msgid "<b>%d</b> albums found"
+msgstr "намерени са <b>%d</b> албума"
+
+msgid "<b>%d</b> filtered user"
+msgstr "филтриран е <b>%d</b> потребител"
+
+msgid "<b>%d</b> filtered users"
+msgstr "филтрирани са <b>%d</b> потребители"
+
+msgid "<b>%d</b> tag found"
+msgstr "намерен е <b>%d</b> етикет"
+
+msgid "<b>%d</b> tag selected"
+msgstr "избран е <b>%d</b> етикет"
+
+msgid "<b>%d</b> tags found"
+msgstr "намерени са <b>%d</b> етикета"
+
+msgid "<b>1</b> album found"
+msgstr "намерен е <b>1</b> албум"
+
+msgid "A photo library administrator has created the following account for you:"
+msgstr "Администратор на фотогалерията е създал следния акаунт за вас::\n"
+
+msgid "Activate button \"%s\""
+msgstr "Активирайте бутон \"%s\""
+
+msgid "Activate create mode to create and select an album"
+msgstr "Активирай режим за създаване и избор на албум  "
+
+msgid "Activated"
+msgstr "Активирано  "
+
+msgid "Activated plugin list"
+msgstr "Активни плъгини"
+
+msgid "Activity"
+msgstr "Активност  "
+
+msgid "Activity peak in the last weeks"
+msgstr "Пик на активността през последните седмици  "
+
+msgid "Activity time from"
+msgstr "Време на активност от  "
+
+msgid "Add Album"
+msgstr "Добави албум  "
+
+msgid "Add New Plugin"
+msgstr "Добави нов плъгин  "
+
+msgid "Add User"
+msgstr "Добави потребител  "
+
+msgid "Add a new user"
+msgstr "Добави нов потребител  "
+
+msgid "Add a sub-album to “%s”"
+msgstr "Добави подалбум към „%s“  "
+
+msgid "Add another set of formats"
+msgstr "Добави друг набор от формати  "
+
+msgid "Add as filter"
+msgstr "Добави като филтър  "
+
+msgid "Add formats"
+msgstr "Добави формати  "
+
+msgid "Added on %s"
+msgstr "Добавено на %s  "
+
+msgid "Additional filters"
+msgstr "Допълнителни филтри  "
+
+msgid "Advanced filters"
+msgstr "Разширени филтри  "
+
+msgid "Album name must not be empty"
+msgstr "Името на албума не може да бъде празно  "
+
+msgid "Album search tool"
+msgstr "Инструмент за търсене на албум  "
+
+msgid "All admins"
+msgstr "Всички администратори  "
+
+msgid "%s plugins found"
+msgstr "намерени плъг ини <b>%s</b>"
+
+msgid "%s status is required to edit parameters."
+msgstr " необходим е статус %s за редактиране на параметрите"
+
+msgid "%sGB"
+msgstr "%s GB"
+
+msgid "%sMB"
+msgstr "%s MB"
+
+msgid "... or hide this link"
+msgstr "... или скрий този линк"
+
+msgid "%d photos moved"
+msgstr "качени са %d снимки"
+
+msgid "%d photos were moved from the upload lounge to their albums"
+msgstr "%d снимки бяха преместени от зоната за качване в техните албуми"
+
+msgid "%d pictures in sub-albums"
+msgstr "%d снимки в под-албуми"
+
+msgid "%d sub-albums"
+msgstr "%d под-албуми"
+
+msgid "%d tag added"
+msgstr "добавен е %d етикет"
+
+msgid "%d tag deleted"
+msgstr "изтрит е %d етикет"
+
+msgid "%d tag edited"
+msgstr "редактиран е %d етикет"
+
+msgid "%d tag moved"
+msgstr "преместен е %d етикет"
+
+msgid "%d tags added"
+msgstr "добавени са %d етикета"
+
+msgid "%d tags deleted"
+msgstr "изтрити са %d етикета"
+
+msgid "%d tags edited"
+msgstr "редактирани са %d етикета"
+
+msgid "%d tags moved"
+msgstr "преместени са %d етикета"
+
+msgid "%d user added"
+msgstr "добавен е %d потребител"
+
+msgid "%d user edited"
+msgstr "редактиран е %d потребител"
+
+msgid "%d user logged in"
+msgstr "%d потребител влезе"
+
+msgid "%d user logged out"
+msgstr "%d потребител излезе"
+
+msgid "%d users added"
+msgstr "добавени са %d потребители"
+
+msgid "%d users edited"
+msgstr "редактирани са %d потребители"
+
+msgid "%d users logged in"
+msgstr "%d потребители влязоха"
+
+msgid "%d users logged out"
+msgstr "%d потребители излязоха"
+
+msgid "%s GB used"
+msgstr "използвани са %s GB"
+
+msgid "%s MB"
+msgstr "%s MB"
+
+msgid "%s MB used"
+msgstr "използвани са %s MB"
+
+msgid "%s file type"
+msgstr "%s тип файл"
+
+msgid "%s is the new main user"
+msgstr "%s е нов основен потребител"
+
+msgid "%s line"
+msgstr "%s ред"
+
+msgid "%s lines"
+msgstr "%s редове"
+
+msgid "%s other tags available.."
+msgstr "%s други налични тагове"
+
+msgid "%s pixels, %.2f MB"
+msgstr "%s поксела, %.2f MB"
+
+msgid "%s plugin found"
+msgstr "намерен плъг ин <b>%s</b>"
+
+msgid " (copy %s)"
+msgstr "(копирай %s)"
+
+msgid "%d Activities"
+msgstr "%d дейности"
+
+msgid "%d Activity"
+msgstr "%d дейност"
+
+msgid "%d album added"
+msgstr "добавен е %d албум"
+
+msgid "%d album deleted"
+msgstr "изтрит е %d албум"
+
+msgid "%d album edited"
+msgstr "редактиран е %d албум"
+
+msgid "%d albums added"
+msgstr "добавени са %d албума"
+
+msgid "%d albums deleted"
+msgstr "изтрити са %d албума"
+
+msgid "%d albums edited"
+msgstr "редактирани са %d албума"
+
+msgid "%d checksums were added"
+msgstr "добавени са %d контролни суми"
+
+msgid "%d files"
+msgstr "%d файла"
+
+msgid "%d formats uploaded for %d photos"
+msgstr "качени са %d формата за %d снимки"
+
+msgid "%d group added"
+msgstr "добавена е %d група"
+
+msgid "%d group deleted"
+msgstr "изтрита е %d група"
+
+msgid "%d group edited"
+msgstr "редактирана е %d група"
+
+msgid "%d group moved"
+msgstr "преместена е %d група"
+
+msgid "%d groups added"
+msgstr "добавени са %d групи"
+
+msgid "%d groups deleted"
+msgstr "изтрити са %d групи"
+
+msgid "%d groups edited"
+msgstr "редактирани са %d групи"
+
+msgid "%d groups moved"
+msgstr "преместени са %d групи"
+
+msgid "%d in whole branch"
+msgstr "%d в цялата структура"
+
+msgid "%d including sub-albums"
+msgstr "%d вкл. под-албуми"
+
+msgid "%d photo added"
+msgstr "добавена е %d снимка"
+
+msgid "%d photo deleted"
+msgstr "изтрита е %d снимка"
+
+msgid "%d photo edited"
+msgstr "редактирана е %d снимка"
+
+msgid "%d photo moved"
+msgstr "преместена е %d снимка"
+
+msgid "%d photos"
+msgstr "добавени са %d снимки"
+
+msgid "%d photos added"
+msgstr "изтрити са %d снимки"
+
+msgid "%d photos deleted"
+msgstr "редактирани са %d снимки"
+
+msgid "%d photos edited"
+msgstr "преместени са %d снимки"
+

@@ -9,9 +9,16 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Gettext\Headers;
+use Gettext\Loader\PoLoader;
 use Piwigo\Admin\plugins;
 use Piwigo\Admin\themes;
+use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\Logger;
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
+use Piwigo\Lang\Translator;
 use Piwigo\Template\Template;
 
 include_once PHPWG_ROOT_PATH . 'include/functions_plugins.inc.php';
@@ -468,7 +475,7 @@ function get_languages(): array
 {
     $query = '
 SELECT id, name
-  FROM ' . LANGUAGES_TABLE . '
+  FROM ' . Tables::languages() . '
   ORDER BY name ASC
 ;';
     $result = pwg_query($query);
@@ -549,7 +556,7 @@ function pwg_log($image_id = null, $image_type = null, int|string|null $format_i
 
     if ((bool) $update_last_visit) {
         $query = '
-UPDATE ' . USER_INFOS_TABLE . '
+UPDATE ' . Tables::userInfos() . '
   SET last_visit = NOW(),
       lastmodified = lastmodified
   WHERE user_id = ' . $user_id . '
@@ -595,13 +602,13 @@ UPDATE ' . USER_INFOS_TABLE . '
     if ($page_section !== null) {
         // set cache if not available
         if (! isset($conf['history_sections_cache'])) {
-            conf_update_param('history_sections_cache', get_enums(HISTORY_TABLE, 'section'), true);
+            conf_update_param('history_sections_cache', get_enums(Tables::history(), 'section'), true);
         }
 
         $cached_sections = $conf['history_sections_cache'];
         $cached_sections = is_string($cached_sections) || is_array($cached_sections) ? safe_unserialize($cached_sections) : null;
         if (! is_array($cached_sections)) {
-            $cached_sections = get_enums(HISTORY_TABLE, 'section');
+            $cached_sections = get_enums(Tables::history(), 'section');
         }
 
         $history_sections_cache = [];
@@ -619,14 +626,14 @@ UPDATE ' . USER_INFOS_TABLE . '
         ) {
             $section = $page_section;
         } elseif ((bool) preg_match('/^[a-zA-Z0-9_-]+$/', $page_section)) {
-            $history_sections = get_enums(HISTORY_TABLE, 'section');
+            $history_sections = get_enums(Tables::history(), 'section');
             $history_sections[] = $page_section;
 
             // alter history table structure, to include a new section
-            pwg_query('ALTER TABLE ' . HISTORY_TABLE . ' CHANGE section section enum(\'' . implode("','", array_unique($history_sections)) . '\') DEFAULT NULL;');
+            pwg_query('ALTER TABLE ' . Tables::history() . ' CHANGE section section enum(\'' . implode("','", array_unique($history_sections)) . '\') DEFAULT NULL;');
 
             // and refresh cache
-            conf_update_param('history_sections_cache', get_enums(HISTORY_TABLE, 'section'), true);
+            conf_update_param('history_sections_cache', get_enums(Tables::history(), 'section'), true);
 
             $section = $page_section;
         }
@@ -645,7 +652,7 @@ UPDATE ' . USER_INFOS_TABLE . '
     $auth_key_id = is_numeric($auth_key_id) ? (int) $auth_key_id : null;
 
     $query = '
-INSERT INTO ' . HISTORY_TABLE . '
+INSERT INTO ' . Tables::history() . '
   (
     date,
     time,
@@ -802,7 +809,7 @@ function pwg_activity(string $object, $object_id, string $action, array $details
         ];
     }
 
-    mass_inserts(ACTIVITY_TABLE, array_keys($inserts[0]), $inserts);
+    mass_inserts(Tables::activity(), array_keys($inserts[0]), $inserts);
 }
 
 /**
@@ -1276,7 +1283,7 @@ function get_pwg_themes($show_mobile = false): array
 SELECT
     id,
     name
-  FROM ' . THEMES_TABLE . '
+  FROM ' . Tables::themes() . '
   ORDER BY name ASC
 ;';
     $result = pwg_query($query);
@@ -1390,7 +1397,7 @@ function fill_caddie($elements_id): void
 
     $query = '
 SELECT element_id
-  FROM ' . CADDIE_TABLE . '
+  FROM ' . Tables::caddie() . '
   WHERE user_id = ' . $user_id . '
 ;';
     $in_caddie = query2array($query, null, 'element_id');
@@ -1407,7 +1414,7 @@ SELECT element_id
     }
 
     if (count($caddiables) > 0) {
-        mass_inserts(CADDIE_TABLE, ['element_id', 'user_id'], $datas);
+        mass_inserts(Tables::caddie(), ['element_id', 'user_id'], $datas);
     }
 }
 
@@ -1475,22 +1482,24 @@ function l10n($key)
  *
  * @param string $singular_key
  * @param string $plural_key
- * @param int $decimal
+ * @param int|float|string $decimal real callers pass numeric DB-row
+ *     strings here too (e.g. menubar.inc.php's $user['nb_total_images'],
+ *     a raw query-result value) -- the old body's loose `>`/`==`
+ *     comparisons tolerated that silently; Translator::plural() takes a
+ *     strict native int, so this coerces before delegating (confirmed via
+ *     a real 500: menubar_categories.tpl's compiled l10n_dec() call
+ *     passed exactly such a string).
  */
 function l10n_dec($singular_key, $plural_key, $decimal): string
 {
-    /** @var array<string, mixed> $lang_info */
-    global $lang_info;
+    // Delegates to Translator's real ngettext()-based plural evaluation
+    // (P16) -- the locale's actual Plural-Forms rule from its .po header,
+    // not the old zero_plural-only heuristic (which only ever
+    // distinguished "1" from "everything else", wrong for 3+-form
+    // locales like Russian/Arabic).
+    $n = is_numeric($decimal) ? (int) $decimal : 0;
 
-    return
-      sprintf(
-          l10n((
-              (($decimal > 1) or ($decimal == 0 and (bool) $lang_info['zero_plural']))
-          ? $plural_key
-          : $singular_key
-          )),
-          $decimal
-      );
+    return Translator::get()->plural($singular_key, $plural_key, $n);
 }
 
 /**
@@ -1603,7 +1612,7 @@ function get_webmaster_mail_address(): string
 
     $query = '
 SELECT ' . $email_field . '
-  FROM ' . USERS_TABLE . '
+  FROM ' . Tables::users() . '
   WHERE ' . $id_field . ' = ' . $webmaster_id . '
 ;';
     $row = pwg_db_fetch_row(pwg_query($query));
@@ -1630,7 +1639,7 @@ function load_conf_from_db($condition = '', bool $die_on_condition_with_no_resul
 
     $query = '
 SELECT param, value
- FROM ' . CONFIG_TABLE . '
+ FROM ' . Tables::config() . '
  ' . (! empty($condition) ? 'WHERE ' . $condition : '') . '
 ;';
     $result = pwg_query($query);
@@ -1670,7 +1679,7 @@ function pwg_is_dbconf_writeable(): bool
     [$param, $value] = ['pwg_is_dbconf_writeable_' . generate_key(12), date('c') . ' ' . generate_key(20)];
 
     conf_update_param($param, $value);
-    $row = pwg_db_fetch_row(pwg_query('SELECT value FROM ' . CONFIG_TABLE . ' WHERE param = \'' . $param . '\''));
+    $row = pwg_db_fetch_row(pwg_query('SELECT value FROM ' . Tables::config() . ' WHERE param = \'' . $param . '\''));
     assert($row !== null);
     [$dbvalue] = $row;
 
@@ -1710,7 +1719,7 @@ function conf_update_param($param, $value, $updateGlobal = false, $parser = null
 
     $query = '
 INSERT INTO
-  ' . CONFIG_TABLE . ' (param, value)
+  ' . Tables::config() . ' (param, value)
   VALUES(\'' . $param . '\', \'' . $dbValue . '\')
   ON DUPLICATE KEY UPDATE value = \'' . $dbValue . '\'
 ;';
@@ -1743,7 +1752,7 @@ function conf_delete_param($params): void
     }
 
     $query = '
-DELETE FROM ' . CONFIG_TABLE . '
+DELETE FROM ' . Tables::config() . '
   WHERE param IN(\'' . implode('\',\'', $params) . '\')
 ;';
     pwg_query($query);
@@ -1941,15 +1950,49 @@ function get_parent_language($lang_id = null): ?string
         $parent = $lang_info['parent'] ?? null;
         return (is_string($parent) && ! empty($parent)) ? $parent : null;
     } else {
-        $f = PHPWG_ROOT_PATH . 'language/' . $lang_id . '/common.lang.php';
-        if (file_exists($f)) {
-            include $f;
-            /** @var array<string, mixed> $lang_info */
-            $parent = $lang_info['parent'] ?? null;
-            return (is_string($parent) && ! empty($parent)) ? $parent : null;
+        $f = PHPWG_ROOT_PATH . 'language/' . $lang_id . '/common.po';
+        if (is_readable($f)) {
+            $parent = (new PoLoader())->loadFile($f)
+                ->getHeaders()
+                ->get('X-Piwigo-Parent');
+            return ($parent !== null && $parent !== '') ? $parent : null;
         }
     }
     return null;
+}
+
+/**
+ * Rebuilds the legacy $lang_info array shape from a .po file's headers --
+ * load_language()'s PO path uses this so callers that still read
+ * $lang_info['language_name']/['country']/['direction']/['code']/
+ * ['zero_plural']/['parent']/['jquery_code']/['plupload_code'] (admin
+ * Smarty templates, get_parent_language()) keep working unchanged after
+ * the .lang.php source files are gone -- see php-to-po-fn.php's own
+ * X-Piwigo-* header list for what's preserved and why.
+ *
+ * @return array<string, string|bool>
+ */
+function po_headers_to_lang_info(Headers $headers): array
+{
+    $info = [];
+    $map = [
+        'X-Piwigo-Language-Name' => 'language_name',
+        'X-Piwigo-Country' => 'country',
+        'X-Piwigo-Direction' => 'direction',
+        'X-Piwigo-Code' => 'code',
+        'X-Piwigo-Parent' => 'parent',
+        'X-Piwigo-Jquery-Code' => 'jquery_code',
+        'X-Piwigo-Plupload-Code' => 'plupload_code',
+    ];
+    foreach ($map as $header => $key) {
+        $value = $headers->get($header);
+        if ($value !== null && $value !== '') {
+            $info[$key] = $value;
+        }
+    }
+    $info['zero_plural'] = $headers->get('X-Piwigo-Zero-Plural') === 'true';
+
+    return $info;
 }
 
 /**
@@ -1991,7 +2034,7 @@ function load_language($filename, $dirname = '', array $options = []): string|bo
     $dirname .= 'language/';
 
     $default_language = (defined('PHPWG_INSTALLED') and ! defined('UPGRADES_PATH')) ?
-        get_default_language() : PHPWG_DEFAULT_LANGUAGE;
+        get_default_language() : AppInfo::DEFAULT_LANGUAGE;
 
     // construct list of potential languages
     // Every element pushed here must be a real string: $user['language'] and
@@ -2033,7 +2076,15 @@ function load_language($filename, $dirname = '', array $options = []): string|bo
           $dirname . $language . '.' . $filename :
           $dirname . $language . '/' . $filename;
 
-        if (file_exists($f)) {
+        // Core language files were converted to .po in P16 -- $f is a
+        // .lang.php-style path (the '.php' suffix appended above), which no
+        // longer exists on disk for the ~322 converted core files (only
+        // their .po sibling does now). Plugins/themes without a .po file
+        // yet still ship the plain .lang.php this existence check originally
+        // relied on exclusively.
+        $po_sibling = preg_replace('/\.lang\.php$/', '.po', $f);
+
+        if (file_exists($f) || ($po_sibling !== null && $po_sibling !== $f && file_exists($po_sibling))) {
             $selected_language = $language;
             $source_file = $f;
             break;
@@ -2042,6 +2093,63 @@ function load_language($filename, $dirname = '', array $options = []): string|bo
 
     if (! empty($source_file)) {
         if (! ($options['return'] ?? false)) {
+            // $source_file is a .lang.php path here (see the '.php' suffix
+            // appended above); its sibling .po -- core content only, P16
+            // converted all 322 real ones -- takes priority. Plugins/
+            // themes without a .po file yet keep working via the PHP-
+            // array include path below (Translator::translate()'s own
+            // $GLOBALS['lang'] fallback is what makes that safe to mix
+            // with PO-loaded core strings).
+            $po_file = preg_replace('/\.lang\.php$/', '.po', $source_file);
+
+            global $lang, $lang_info;
+            if (! isset($lang) || ! is_array($lang)) {
+                $lang = [];
+            }
+            if (! isset($lang_info) || ! is_array($lang_info)) {
+                $lang_info = [];
+            }
+
+            if ($po_file !== null && is_readable($po_file)) {
+                $translations = Translator::get()->load($selected_language, $po_file);
+                $load_lang_info = $translations !== null ? po_headers_to_lang_info($translations->getHeaders()) : [];
+
+                if (isset($options['force_fallback']) && is_string($options['force_fallback'])
+                  && $options['force_fallback'] !== $selected_language) {
+                    $fallback_po = $dirname . $options['force_fallback'] . '/' . basename($po_file);
+                    if (is_readable($fallback_po)) {
+                        Translator::get()->load($options['force_fallback'], $fallback_po);
+                    }
+                }
+
+                $parent_language = is_string($load_lang_info['parent'] ?? null) && $load_lang_info['parent'] !== ''
+                    ? $load_lang_info['parent']
+                    : (is_string($lang_info['parent'] ?? null) ? $lang_info['parent'] : null);
+
+                if (! empty($parent_language) && $parent_language !== $selected_language) {
+                    $parent_po = $dirname . $parent_language . '/' . basename($po_file);
+                    if (is_readable($parent_po)) {
+                        // Load the parent, then re-load the child (already
+                        // loaded above) -- Translator::load()'s merge
+                        // (gettext/translator's addTranslations() ->
+                        // array_replace_recursive(), and mirrorToGlobal()'s
+                        // own $GLOBALS['lang'] writes) both give precedence
+                        // to whichever load() call happens last. Loading
+                        // only the parent here would let it silently
+                        // override the child's own strings for any key both
+                        // define; re-loading the child restores the correct
+                        // "child overrides parent, parent fills the gaps"
+                        // precedence (e.g. en_US inherits piwigo_day_N from
+                        // its en_UK parent, but keeps its own overrides).
+                        Translator::get()->load($parent_language, $parent_po);
+                        Translator::get()->load($selected_language, $po_file);
+                    }
+                }
+
+                $lang_info = array_merge($lang_info, $load_lang_info);
+                return true;
+            }
+
             // load forced fallback
             if (isset($options['force_fallback']) && is_string($options['force_fallback'])
               && $options['force_fallback'] != $selected_language) {
@@ -2056,19 +2164,6 @@ function load_language($filename, $dirname = '', array $options = []): string|bo
             $included_vars = get_defined_vars();
             $load_lang = $included_vars['lang'] ?? null;
             $load_lang_info = $included_vars['lang_info'] ?? null;
-
-            // access already existing values -- genuinely possibly unset on
-            // a first call (e.g. very early bootstrap), which is exactly
-            // what these isset() checks detect; do not declare $lang's/
-            // $lang_info's type above, it would make PHPStan wrongly treat
-            // this real fallback as dead code.
-            global $lang, $lang_info;
-            if (! isset($lang) || ! is_array($lang)) {
-                $lang = [];
-            }
-            if (! isset($lang_info) || ! is_array($lang_info)) {
-                $lang_info = [];
-            }
 
             // load parent language content directly in global
             if (is_array($load_lang_info) && ! empty($load_lang_info['parent']) && is_string($load_lang_info['parent'])) {
@@ -2386,7 +2481,7 @@ function check_input_parameter($param_name, array $param_array, $is_array, $patt
                 fatal_error('[Hacking attempt] an item is not valid in input parameter "' . $param_name . '"');
             }
 
-            if (! (bool) preg_match(PATTERN_ID, (string) $key) or ! (bool) preg_match($pattern, (string) $item_to_check)) {
+            if (! (bool) preg_match(ValidationPattern::ID, (string) $key) or ! (bool) preg_match($pattern, (string) $item_to_check)) {
                 fatal_error('[Hacking attempt] an item is not valid in input parameter "' . $param_name . '"');
             }
         }
@@ -2549,8 +2644,8 @@ function get_nb_available_comments(): int
 
         $query = '
 SELECT COUNT(DISTINCT(com.id))
-  FROM ' . IMAGE_CATEGORY_TABLE . ' AS ic
-    INNER JOIN ' . COMMENTS_TABLE . ' AS com
+  FROM ' . Tables::imageCategory() . ' AS ic
+    INNER JOIN ' . Tables::comments() . ' AS com
     ON ic.image_id = com.image_id
   WHERE ' . implode('
     AND ', $where);
@@ -2561,7 +2656,7 @@ SELECT COUNT(DISTINCT(com.id))
         $user_id = is_numeric($user['id']) ? (int) $user['id'] : 0;
 
         single_update(
-            USER_CACHE_TABLE,
+            Tables::userCache(),
             [
                 'nb_available_comments' => $user['nb_available_comments'],
             ],
@@ -2627,8 +2722,8 @@ SELECT
     image_id,
     date_available,
     NOW() AS dbnow
-  FROM ' . LOUNGE_TABLE . '
-    JOIN ' . IMAGES_TABLE . ' ON image_id = id
+  FROM ' . Tables::lounge() . '
+    JOIN ' . Tables::images() . ' ON image_id = id
   ORDER BY image_id ASC
   LIMIT 1
 ;';
@@ -2726,7 +2821,7 @@ function send_piwigo_infos(): void
         'origin_hash' => $conf['send_piwigo_infos_origin_hash'],
         'technical' => [
             'php_version' => PHP_VERSION,
-            'piwigo_version' => PHPWG_VERSION,
+            'piwigo_version' => AppInfo::VERSION,
             'os_version' => PHP_OS,
             'container_type' => $container_type,
             'container_version' => $container_version,
@@ -2755,7 +2850,7 @@ function send_piwigo_infos(): void
         $query = '
 SELECT
     COUNT(*) AS counter
-  FROM `' . IMAGES_TABLE . '`
+  FROM `' . Tables::images() . '`
   WHERE storage_category_id IS NOT NULL
 ;';
         if (query2array($query, null, 'counter')[0] > 0) {
@@ -2765,7 +2860,7 @@ SELECT
     IF(storage_category_id IS NULL, \'api\', \'sync\') AS add_method,
     MAX(date_available) AS last_added_on,
     COUNT(*) AS nb_files
-  FROM `' . IMAGES_TABLE . '`
+  FROM `' . Tables::images() . '`
   GROUP BY add_method
 ;';
             $files_added_by = query2array($query, 'add_method');
@@ -2783,7 +2878,7 @@ SELECT
             $query = '
 SELECT
     date_available
-  FROM `' . IMAGES_TABLE . '`
+  FROM `' . Tables::images() . '`
   ORDER BY id DESC
   LIMIT 1
 ;';
@@ -2798,7 +2893,7 @@ SELECT
     SUBSTRING_INDEX(path,".",-1) AS ext,
     COUNT(*) AS counter,
     SUM(filesize) AS filesize
-  FROM `' . IMAGES_TABLE . '`
+  FROM `' . Tables::images() . '`
   GROUP BY ext
 ;';
         $piwigo_infos['file_extensions'] = query2array($query, 'ext');
@@ -2969,7 +3064,7 @@ SELECT
 SELECT
     theme,
     COUNT(*) AS theme_counter
-  FROM ' . USER_INFOS_TABLE . '
+  FROM ' . Tables::userInfos() . '
   GROUP BY theme
   ORDER BY theme
 ;';
@@ -2995,7 +3090,7 @@ SELECT
 SELECT
     language,
     COUNT(*) AS language_counter
-  FROM ' . USER_INFOS_TABLE . '
+  FROM ' . Tables::userInfos() . '
   GROUP BY language
   ORDER BY language
 ;';
@@ -3009,7 +3104,7 @@ SELECT
     object,
     action,
     COUNT(*) AS counter
-  FROM ' . ACTIVITY_TABLE . '
+  FROM ' . Tables::activity() . '
   WHERE object != \'system\'
   GROUP BY object, action
 ;';
@@ -3049,7 +3144,7 @@ SELECT
     object_id,
     action,
     COUNT(*) AS counter
-  FROM ' . ACTIVITY_TABLE . '
+  FROM ' . Tables::activity() . '
   WHERE object = \'system\'
   GROUP BY object, object_id, action
 ;';
@@ -3076,9 +3171,9 @@ SELECT
     action,
     occured_on,
     details
-  FROM ' . ACTIVITY_TABLE . '
+  FROM ' . Tables::activity() . '
   WHERE object = \'system\'
-    AND object_id = ' . ACTIVITY_SYSTEM_CORE . '
+    AND object_id = ' . ActivitySystem::Core . '
     AND action IN (\'update\', \'autoupdate\')
   ORDER BY activity_id ASC
 ;';
@@ -3119,7 +3214,7 @@ SELECT
     COUNT(*) AS counter,
     MIN(occured_on) AS first_encounter,
     MAX(occured_on) AS last_encounter
-  FROM ' . ACTIVITY_TABLE . '
+  FROM ' . Tables::activity() . '
   WHERE user_agent NOT LIKE \'Mozilla/5%\'
   GROUP BY user_agent
 ;';
@@ -3253,13 +3348,13 @@ function pwg_unique_exec_begins(string $token_name, int $timeout = 60): false|st
 
     $query = '
 INSERT IGNORE
-  INTO ' . CONFIG_TABLE . '
+  INTO ' . Tables::config() . '
   SET param="' . $token_name . '_running"
     , value="' . $exec_id . '-' . time() . '"
 ;';
     pwg_query($query);
 
-    $row = pwg_db_fetch_row(pwg_query('SELECT value FROM ' . CONFIG_TABLE . ' WHERE param = "' . $token_name . '_running"'));
+    $row = pwg_db_fetch_row(pwg_query('SELECT value FROM ' . Tables::config() . ' WHERE param = "' . $token_name . '_running"'));
     assert($row !== null);
     [$running_exec] = $row;
     [$running_exec_id] = explode('-', (string) $running_exec);
@@ -3278,7 +3373,7 @@ function pwg_unique_exec_is_running(string $token_name): bool
     $query = '
 SELECT
     COUNT(*)
-  FROM ' . CONFIG_TABLE . '
+  FROM ' . Tables::config() . '
   WHERE param = "' . $token_name . '_running"
 ;';
     $row = pwg_db_fetch_row(pwg_query($query));

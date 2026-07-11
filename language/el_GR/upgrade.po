@@ -1,0 +1,65 @@
+# Piwigo translation — el_GR
+# Source: upgrade.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: el_GR\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "All sub-albums of private albums become private"
+msgstr "Όλα τα υπο-άλμπουμ των ιδιωτικών άλμπουμ γίνονται ιδιωτικά"
+
+msgid "As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:"
+msgstr "Ως προληπτικό μέτρο, οι παρακάτω επεκτάσεις έχουν απενεργοποιηθεί. Θα πρέπει να ελέγξετε για αναβαθμίσεις επεκτάσεων πριν από την επανενεργοποίηση τους:"
+
+msgid "As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:"
+msgstr "Ως προληπτικό μέτρο, τα ακόλουθα Θέματα έχουν απενεργοποιηθεί. Θα πρέπει να ελέγξετε για  αναβάθμιση Θεμάτων πριν από την επανενεργοποίηση τους:"
+
+msgid "In <i>%s</i>, before <b>?></b>, insert:"
+msgstr "Σε <i>%s</ i>, πριν <b>?></b>, εισάγετε:"
+
+msgid "Only administrator can run upgrade: please sign in below."
+msgstr "Μόνο ένας διαχειριστής μπορεί να τρέξει αναβάθμιση: Παρακαλώ συνδεθείτε παρακάτω. "
+
+msgid "Only thumbnails prefix and webmaster mail address have been saved from previous configuration"
+msgstr "Μόνο τα προθέματα μικρογραφιών και η διεύθυνση ηλεκτρονικού ταχυδρομείου του webmaster έχουν σωθεί από προηγούμενες διαμορφώσεις"
+
+msgid "Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem."
+msgstr "Εκτελέστε έναν έλεγχο συντήρησης [Διαχείριση>Εργαλεία>Συντήρηση] Αν αντιμετωπίζετε κάποιο πρόβλημα."
+
+msgid "SQL queries"
+msgstr "ερωτήματα SQL"
+
+msgid "Statistics"
+msgstr "Στατιστικά"
+
+msgid "This page proposes to upgrade your database corresponding to your old version of Piwigo to the current version. The upgrade assistant thinks you are currently running a <strong>release %s</strong> (or equivalent)."
+msgstr "Η σελίδα αυτή προτείνει την αναβάθμιση της βάσης δεδομένων από την παλιά έκδοση Piwigo σας στη νέα έκδοση. Ο βοηθός αναβάθμισης νομίζει ότι τρέχετε την <strong>έκδοση %s</strong> (ή κάτι τέτοιο)."
+
+msgid "Upgrade from version %s to %s"
+msgstr "Αναβάμηση απο έκδοση %s σε %s"
+
+msgid "Upgrade informations"
+msgstr "Πληροφορίες Αναβάθμησης"
+
+msgid "Upgrade"
+msgstr "Αναβάθμηση"
+
+msgid "User permissions and group permissions have been erased"
+msgstr "Τα δικαιώματα χρηστών και ομάδων έχουν διαγραφτεί"
+
+msgid "You do not have access rights to run upgrade"
+msgstr "Δεν έχετε δικαιώματα πρόσβασης για την εκτέλεση αναβάθμισης"
+
+msgid "total SQL time"
+msgstr "Συνολικός χρόνος SQL"
+
+msgid "total upgrade time"
+msgstr "Συνολικός χρόνος αναβάθμησης"
+
+msgid "Discover what's new in Piwigo %s"
+msgstr "Ανακαλύψτε τι νέο υπάρχει στο Piwigo %s"
+

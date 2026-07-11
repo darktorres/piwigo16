@@ -10,6 +10,9 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\tabsheet;
+use Piwigo\Core\AccessLevel;
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
@@ -29,13 +32,13 @@ global $conf, $page, $template;
 // | Basic checks                                                          |
 // +-----------------------------------------------------------------------+
 
-check_status(ACCESS_ADMINISTRATOR);
+check_status(AccessLevel::Administrator);
 
-check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
-check_input_parameter('image_id', $_GET, false, PATTERN_ID);
+check_input_parameter('cat_id', $_GET, false, ValidationPattern::ID);
+check_input_parameter('image_id', $_GET, false, ValidationPattern::ID);
 
 // check_input_parameter() above already validated $_GET['image_id'] against
-// PATTERN_ID (digits only) when present; $_GET values are always strings
+// ValidationPattern::ID (digits only) when present; $_GET values are always strings
 // (or arrays, for foo[]=... params) so is_string() is the real narrowing.
 $get_image_id = is_string($_GET['image_id'] ?? null) ? $_GET['image_id'] : '';
 
@@ -47,7 +50,7 @@ $page['image'] = get_image_infos($get_image_id, true);
 if (isset($_GET['cat_id']) && is_string($_GET['cat_id'])) {
     $query = '
 SELECT *
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE id = ' . $_GET['cat_id'] . '
 ;';
     $category = pwg_db_fetch_assoc(pwg_query($query));

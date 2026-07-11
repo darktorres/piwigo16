@@ -1,0 +1,194 @@
+# Piwigo translation — gu_IN
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: gu_IN\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Piwigo-Language-Name: ગુજરાતી\n"
+"X-Piwigo-Country: હિન્દુસ્તાન\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: gu\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "Date"
+msgstr "તારીખ"
+
+msgid "View"
+msgstr "જુઓ"
+
+msgid "Webmaster"
+msgstr "વેબમાસ્ટર"
+
+msgid "Website"
+msgstr "વેબસાઇટ"
+
+msgid "Welcome"
+msgstr "સ્વાગત"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "પીવીગો ફોટો ગૅલરી મા તમારૂ સ્વાગત છે"
+
+msgid "Yes"
+msgstr "હા"
+
+msgid "Your website URL is invalid"
+msgstr "તમારુ આપેલુ URL માન્ય નથી"
+
+msgid "add this photo to your favorites"
+msgstr "આ ફોટો ની તમારા ફૅવોરીત મા ઉમેરો"
+
+msgid "all"
+msgstr "બધા"
+
+msgid "ascending"
+msgstr "ચડતા"
+
+msgid "chronology_monthly_calendar"
+msgstr "માસિક કૅલેન્ડર"
+
+msgid "descending"
+msgstr "ઉતરતા"
+
+msgid "display most recent photos"
+msgstr "હાલ ના નાવા ફોટો બતાવો"
+
+msgid "display only recently posted photos"
+msgstr "હાલ મા પોસ્ટ કરેલા ફોટો બતાવો"
+
+msgid "display photos linked to this tag"
+msgstr "આ ટૅગ થી જોડાઈલા ફોટો બતાવો"
+
+msgid "display recently updated albums"
+msgstr "હાલ મા સુધારેલા આલ્બમ બતાવો"
+
+msgid "edit"
+msgstr "ફેરફાર કરો"
+
+msgid "guest"
+msgstr "મહેમાન"
+
+msgid "login mustn't end with a space character"
+msgstr "લોગિન સ્પેસ થી ચાલુ ના થઈ શકે"
+
+msgid "login mustn't start with a space character"
+msgstr "લોગિન સ્પેસ થી અંત ના થઈ શકે"
+
+msgid "mandatory"
+msgstr "ફરજિયાત"
+
+msgid "obligatory"
+msgstr "ફરજિયાત"
+
+msgid "photo"
+msgstr "ફોટો"
+
+msgid "search"
+msgstr "શોધો"
+
+msgid "square"
+msgstr "ચોરસ"
+
+msgid "the beginning"
+msgstr "શુરુઆત"
+
+msgid "this email address is already in use"
+msgstr "આ ઈમેલ અડ્રેસ પેહલા થી વપરાશ મા છે"
+
+msgid "this login is already used"
+msgstr "આ લોગિન પેહલા થી વપરાશ મા છે"
+
+msgid "today"
+msgstr "આજે"
+
+msgid "wrong date"
+msgstr "ખોટી તારીખ"
+
+msgid "set as album representative"
+msgstr "થંબનેલ ની જેમ મુકો "
+
+msgid "thumb"
+msgstr "થંબનેલ"
+
+msgid "slideshow"
+msgstr "સ્લાઇડ શો"
+
+msgid "small"
+msgstr "નાનું"
+
+msgid "stop the slideshow"
+msgstr "સ્લાઇડ શો બંધ કરો"
+
+msgid "xsmall"
+msgstr "વધારે નાનું"
+
+msgid "xxlarge"
+msgstr "વિશાળ"
+
+msgid "xlarge"
+msgstr "વધારે મોટું"
+
+msgid "useful when password forgotten"
+msgstr "કામ નુ અગર પાસવર્ડ ભૂલી ગયા હોઇ તો"
+
+msgid "the username must be given"
+msgstr "યૂજ઼ર નેમ નાખવુ જરૂરી છે"
+
+msgid "piwigo_day_0"
+msgstr "રવિવાર"
+
+msgid "piwigo_day_1"
+msgstr "સોમવાર"
+
+msgid "piwigo_day_2"
+msgstr "મંગળવાર"
+
+msgid "piwigo_day_3"
+msgstr "બુધવાર"
+
+msgid "piwigo_day_4"
+msgstr "ગુરુવાર"
+
+msgid "piwigo_day_5"
+msgstr "શુક્રવાર"
+
+msgid "piwigo_day_6"
+msgstr "શનિવાર"
+
+msgid "piwigo_month_10"
+msgstr "ઑક્ટ્બર"
+
+msgid "piwigo_month_11"
+msgstr "નવેમ્બર"
+
+msgid "piwigo_month_12"
+msgstr "ડિસેમ્બર"
+
+msgid "piwigo_month_1"
+msgstr "જાન્યુઆરી"
+
+msgid "piwigo_month_2"
+msgstr "ફેબ્રુઆરી"
+
+msgid "piwigo_month_3"
+msgstr "માર્ચ"
+
+msgid "piwigo_month_4"
+msgstr "એપ્રિલ"
+
+msgid "piwigo_month_5"
+msgstr "મે"
+
+msgid "piwigo_month_6"
+msgstr "જૂન"
+
+msgid "piwigo_month_7"
+msgstr "જુલાઈ"
+
+msgid "piwigo_month_8"
+msgstr "ઑગસ્ટ"
+
+msgid "piwigo_month_9"
+msgstr "સપ્ટેમ્બર"
+

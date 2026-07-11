@@ -9,6 +9,9 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\AccessLevel;
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
@@ -29,7 +32,7 @@ include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_ADMINISTRATOR);
+check_status(AccessLevel::Administrator);
 
 trigger_notify('loc_begin_cat_list');
 
@@ -64,8 +67,8 @@ function get_categories_ref_date(array $ids, string $field = 'date_available', s
 SELECT
     category_id,
     ' . $minmax . '(' . $field . ') as ref_date
-  FROM ' . IMAGE_CATEGORY_TABLE . '
-    JOIN ' . IMAGES_TABLE . ' ON image_id = id
+  FROM ' . Tables::imageCategory() . '
+    JOIN ' . Tables::images() . ' ON image_id = id
   WHERE category_id IN (' . implode(',', $category_ids) . ')
   GROUP BY category_id
 ;';
@@ -77,7 +80,7 @@ SELECT
 SELECT
     id,
     uppercats
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE id IN (' . implode(',', $category_ids) . ')
 ;';
     $uppercats_of = query2array($query, 'id', 'uppercats');
@@ -122,10 +125,10 @@ SELECT
 // |                            initialization                             |
 // +-----------------------------------------------------------------------+
 
-check_input_parameter('parent_id', $_GET, false, PATTERN_ID);
+check_input_parameter('parent_id', $_GET, false, ValidationPattern::ID);
 
 // check_input_parameter() already validated (or killed the request) that
-// $_GET['parent_id'], when present, matches PATTERN_ID (digits only) -- but
+// $_GET['parent_id'], when present, matches ValidationPattern::ID (digits only) -- but
 // it doesn't retype the superglobal, so we still narrow it once here and
 // reuse this variable everywhere below instead of the raw mixed value.
 $parent_id = null;
@@ -234,7 +237,7 @@ $categories = [];
 
 $query = '
 SELECT id, name, permalink, dir, `rank`, status
-  FROM ' . CATEGORIES_TABLE;
+  FROM ' . Tables::categories();
 if ($parent_id === null) {
     $query .= '
   WHERE id_uppercat IS NULL';
@@ -258,7 +261,7 @@ if ((bool) count($categories)) {
 SELECT
     category_id,
     COUNT(*) AS nb_photos
-  FROM ' . IMAGE_CATEGORY_TABLE . '
+  FROM ' . Tables::imageCategory() . '
   GROUP BY category_id
 ;';
     // WHERE category_id IN ('.implode(',', array_keys($categories)).')
@@ -269,7 +272,7 @@ SELECT
 SELECT
     id,
     uppercats
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
 ;';
     $all_categories = query2array($query, 'id', 'uppercats');
     $subcats_of = [];
@@ -307,7 +310,7 @@ if ($parent_id !== null) {
 }
 
 foreach ($categories as $category) {
-    // 'id' is the CATEGORIES_TABLE primary key (NOT NULL, auto-increment) --
+    // 'id' is the Tables::categories() primary key (NOT NULL, auto-increment) --
     // it is always a numeric string here; this is a real guard, not dead
     // code, since query2array()'s return type is generically string|null
     // for every column.

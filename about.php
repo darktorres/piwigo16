@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Config\Config;
+use Piwigo\Core\AccessLevel;
 use Piwigo\Template\Template;
 
 // Bootstrap globals, set by include/common.inc.php below.
@@ -25,7 +27,7 @@ include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_GUEST);
+check_status(AccessLevel::Guest);
 
 // ----------------------------------------------------- template initialization
 //
@@ -51,7 +53,7 @@ $template->assign('ABOUT_MESSAGE', load_language('about.html', '', [
 $user_theme = $user['theme'] ?? null;
 $user_theme = is_string($user_theme) ? $user_theme : '';
 
-$theme_about = load_language('about.html', PHPWG_THEMES_PATH . $user_theme . '/', [
+$theme_about = load_language('about.html', Config::themesPath() . $user_theme . '/', [
     'return' => true,
 ]);
 if ($theme_about !== false) {

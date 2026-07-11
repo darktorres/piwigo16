@@ -1,0 +1,2949 @@
+# Piwigo translation — th_TH
+# Source: admin.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: th_TH\n"
+"Plural-Forms: nplurals=1; plural=(0);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid " and %d virtual"
+msgstr " และ %d"
+
+msgid " and %d virtuals"
+msgstr " และ %d"
+
+msgid "%d album including"
+msgstr "%d อัลบั้มที่กำลังรวม"
+
+msgid "%d album moved"
+msgid_plural "%d albums moved"
+msgstr[0] "%d อัลบั้มที่ย้าย"
+msgstr[1] "%d อัลบั้มที่ย้าย"
+
+msgid "%d albums including"
+msgstr "%d อัลบั้มที่กำลังรวม"
+
+msgid "%d anomaly has been corrected."
+msgid_plural "%d anomalies have been detected corrected."
+msgstr[0] "%d ความผิดปกติที่ได้รับการแก้ไขแล้ว."
+msgstr[1] "%d ความผิดปกติที่ได้ตรวจพบและแก้ไขแล้ว."
+
+msgid "%d anomaly has been detected."
+msgid_plural "%d anomalies have been detected."
+msgstr[0] "%d ความผิดปกติที่ได้รับการตรวจแล้ว."
+msgstr[1] "%d ความผิดปกติที่ตรวจพบ."
+
+msgid "%d anomaly has been ignored."
+msgid_plural "%d anomalies have been ignored."
+msgstr[0] "%d ความผิดปกติที่ถูกปฏิเสธ."
+msgstr[1] "%d ความผิดปกติที่ได้รับการละเว้น."
+
+msgid "%d anomaly has not been corrected."
+msgid_plural "%d anomalies have not been corrected."
+msgstr[0] "%d ความผิดปกติไม่ได้รับการแก้ไข."
+msgstr[1] "%d ความผิดปกติที่ยังไม่ได้รับการแก้ไข."
+
+msgid "%d association"
+msgstr "%d กลุ่ม"
+
+msgid "%d associations"
+msgstr "%d กลุ่ม"
+
+msgid "%d group"
+msgstr "%d กลุ่ม"
+
+msgid "%d groups"
+msgstr "%d กลุ่ม"
+
+msgid "%d guest"
+msgid_plural "%d guests"
+msgstr[0] "%d ผู้เยี่ยมชม"
+msgstr[1] "%d ผู้เยี่ยมชม"
+
+msgid "%d line filtered"
+msgid_plural "%d lines filtered"
+msgstr[0] "%d บรรทัดที่กรองแล้ว"
+msgstr[1] "%d บรรทัดที่กรองแล้ว"
+
+msgid "%d mail was not sent."
+msgid_plural "%d mails were not sent."
+msgstr[0] "%d จดหมายที่ยังไม่ได้ส่ง."
+msgstr[1] "%d อีเมลที่ยังไม่ได้ส่ง."
+
+msgid "%d mail was sent."
+msgid_plural "%d mails were sent."
+msgstr[0] "%d จดหมายได้ส่งไปแล้ว."
+msgstr[1] "%d อีเมลที่ได้ส่งแล้ว."
+
+msgid "%d member"
+msgid_plural "%d members"
+msgstr[0] "%d สมาชิก"
+msgstr[1] "%d สมาชิก"
+
+msgid "%d of %d photos selected"
+msgstr "ได้เลือก %d รูปภาพ จากรูปภาพทั้งหมด %d รูปภาพ"
+
+msgid "%d parameter was updated."
+msgid_plural "%d parameters were updated."
+msgstr[0] "%d ตัวแปรที่ได้อัพเดต."
+msgstr[1] "%d ตัวแปรที่ได้อัพเดต."
+
+msgid "%d photo was deleted"
+msgid_plural "%d photos were deleted"
+msgstr[0] "%d รูป ได้ถูกลบแล้ว"
+msgstr[1] "%d รูป ได้ถูกลบแล้ว"
+
+msgid "%d photos uploaded"
+msgstr "%d รูป ได้ถูกอัพโหลดแล้ว"
+
+msgid "%d physical"
+msgstr " %d กายภาพ"
+
+msgid "%d physicals"
+msgstr " %d กายภาพ"
+
+msgid "%d tag"
+msgstr "%d แท็ก"
+
+msgid "%d tags"
+msgstr "%d แท็ก"
+
+msgid "%d user comment rejected"
+msgstr "%d ความคิดเห็นของผู้ใช้ที่ถูกปฏิเสธ"
+
+msgid "%d user comment validated"
+msgstr "%d ความคิดเห็นของผู้ใช้ที่ได้รับการตรวจสอบ"
+
+msgid "%d user comments rejected"
+msgstr "%d ความคิดเห็นของผู้ใช้ที่ถูกปฏิเสธ"
+
+msgid "%d user comments validated"
+msgstr "%d ความคิดเห็นของผู้ใช้ที่ได้รับการตรวจสอบ"
+
+msgid "%d user deleted"
+msgid_plural "%d users deleted"
+msgstr[0] "%d ผู้ใช้งานที่ถูกลบ"
+msgstr[1] "%d ผู้ใช้งานที่ถูกลบ"
+
+msgid "%d user was not updated."
+msgid_plural "%d users were not updated."
+msgstr[0] "%d ผู้ใช้งานที่ไม่ได้อัพเดตมูล."
+msgstr[1] "%d ผู้ใช้งานที่ไม่ได้อัพเดต."
+
+msgid "%d user was updated."
+msgid_plural "%d users were updated."
+msgstr[0] "%d ผู้ใช้งานที่ได้อัพเดตข้อมูล"
+msgstr[1] "%d ผู้ใช้งานที่ถูกลบ."
+
+msgid "%d user"
+msgid_plural "%d users"
+msgstr[0] "%d ผู้ใช้งาน"
+msgstr[1] "%d ผู้ใช้งาน"
+
+msgid "%d waiting for validation"
+msgstr "%d กำลังรอการตวจสอบ"
+
+msgid "%s must be to set to false in your local/config/config.inc.php file"
+msgstr "%s จะต้องเข้าไปตั้งค่าไฟล์ โฟลเดอร์ Piwigoของคุณ/config/config.inc.php ให้ถูกต้อง"
+
+msgid "%s value is not correct file because exif are not supported"
+msgstr "%s ค่าไม่ถูกต้องเพราะระบบ Exif จะไม่สนับสนุน"
+
+msgid "+ Add an upload box"
+msgstr "+ เพิ่มกล่องอัพโหลด"
+
+msgid ", click on"
+msgstr ", คลิกที่"
+
+msgid "A new version of Piwigo is available."
+msgstr "ตรวจพบเวอร์ชั่นใหม่ของ Piwigo."
+
+msgid "Access type"
+msgstr "ประเภทการเข้าถึง"
+
+msgid "ACCESS_0"
+msgstr "ไม่จำกัดการเข้าถึง"
+
+msgid "ACCESS_1"
+msgstr "สามารถเข้าถึงได้ทั้งหมด"
+
+msgid "ACCESS_2"
+msgstr "การเข้าถึงเฉพาะผู้ใช้ที่ลงทะเบียน"
+
+msgid "ACCESS_3"
+msgstr "การเข้าถึงเฉพาะผู้ดูแลระบบ"
+
+msgid "ACCESS_4"
+msgstr "การเข้าถึงเฉพาะเว็บมาสเตอร์"
+
+msgid "ACCESS_5"
+msgstr "จำกัดทั้งหมด"
+
+msgid "Action"
+msgstr "การกระทำ"
+
+msgid "Actions"
+msgstr "การกระทำ"
+
+msgid "Activate icon \"%s\""
+msgstr "เปิดใช้งานไอคอน \"%s\""
+
+msgid "Activate Navigation Bar"
+msgstr "เปิดใช้งานแถบเนวิเกเตอร์"
+
+msgid "Activate Navigation Thumbnails"
+msgstr "เปิดใช้งานเนวิเกเตอร์รูปภาพขนาดย่อ"
+
+msgid "Activate"
+msgstr "เปิดใช้งาน"
+
+msgid "Activate icon \"new\" next to albums and pictures"
+msgstr "เปิดใช้งานปุ่ม \"สร้าง\" ในอัลบั้มและรูปภาพต่อไป"
+
+msgid "Active Languages"
+msgstr "ภาษาที่ได้เปิดใช้งาน"
+
+msgid "Active Plugins"
+msgstr "ปลั๊กอินที่ได้เปิดใช้งาน"
+
+msgid "Active Themes"
+msgstr "ธีมที่ได้เปิดใช้งาน"
+
+msgid "Add a criteria"
+msgstr "เพิ่มเกณฑ์"
+
+msgid "Add a filter"
+msgstr "เพิ่มตัวกรอง"
+
+msgid "Add a tag"
+msgstr "เพิ่มแท็ก"
+
+msgid "Add a user"
+msgstr "เพิ่มผู้ใช้งาน"
+
+msgid "Add a virtual album"
+msgstr "เพิ่มอัลบั้ม"
+
+msgid "Add another set of photos"
+msgstr "เพิ่มรูปภาพอื่นอีก"
+
+msgid "Add detailed content"
+msgstr "เพิ่มรายละเอียดเนื้อหา"
+
+msgid "Add group"
+msgstr "เพิ่มกลุ่ม"
+
+msgid "Add New Language"
+msgstr "เพิ่มภาษาใหม่"
+
+msgid "add new photos to caddie"
+msgstr "เพิ่มรูปภาพไปยัง Caddie"
+
+msgid "Add New Theme"
+msgstr "เพิ่มธีมใหม่"
+
+msgid "Add Photos"
+msgstr "เพิ่มรูปภาพ"
+
+msgid "Add write access to the \"%s\" directory"
+msgstr "เพิ่มเขียนการกำหนดสิทธิ์การเข้าถึง \"%s\" ไดเรกทอรี"
+
+msgid "Add"
+msgstr "เพิ่ม"
+
+msgid "Add/delete a permalink"
+msgstr "เพิ่ม/ลบ การเชื่อมโยง"
+
+msgid "added"
+msgstr "ที่เพิ่มแล้ว"
+
+msgid "Administration Home"
+msgstr "หน้าการจัดการระบบ"
+
+msgid "Advanced features"
+msgstr "คุณสมบัติขั้นสูง"
+
+msgid "Album \"%s\" has been added"
+msgstr "อัลบั้ม \"%s\" ได้ถูกเพิ่มแล้ว"
+
+msgid "Album \"%s\" now contains %d photos"
+msgstr "อัลบั้ม \"%s\" ตอนนี้มีรูปทั้งหมด %d รูป"
+
+msgid "Album photos associated to the following albums: %s"
+msgstr "อัลบั้มรูปภาพนี้ได้เกี่ยวข้องกับอัลบั้ม: %s"
+
+msgid "Album list management"
+msgstr "การจัดการอัลบั้ม"
+
+msgid "Album manual order was saved"
+msgstr "อัลบั้มที่เลือกได้บันทึกแล้ว"
+
+msgid "Album name"
+msgstr "ชื่ออัลบั้ม"
+
+msgid "Album updated successfully"
+msgstr "อัลบั้มได้อัพเดตเรียบร้อยแล้ว"
+
+msgid "albums added in the database"
+msgstr "อัลบั้มที่ได้เพิ่มเข้าไปในฐานข้อมูล"
+
+msgid "Albums authorized thanks to group associations"
+msgstr "อัลบั้มที่ได้อนุญาตจากกลุ่มสมาคม"
+
+msgid "Albums automatically sorted"
+msgstr "อัลบั้มได้ถูกเรียงแบบอัติโนมัติ"
+
+msgid "albums deleted in the database"
+msgstr "อัลบั้มถูกลบออกจากฐานข้อมูลแล้ว"
+
+msgid "All %d photos are selected"
+msgstr "ทั้งหมด %d รูปที่ได้เลือก"
+
+msgid "All optimizations have been successfully completed."
+msgstr "การปรับแต่งให้เหมาะสมทั้งหมด ได้สำเร็จเรียบร้อยแล้ว."
+
+msgid "all"
+msgstr "ทั้งหมด"
+
+msgid "Allow rating"
+msgstr "อนุญาตให้มีการให้คะแนน"
+
+msgid "Allow user customization"
+msgstr "อนุญาตให้ผู้ใช้งานปรับแต่งการตั้งค่าส่วนตัว"
+
+msgid "Allow user registration"
+msgstr "อนุญาตให้มีการลงทะเบียนผู้ใช้งาน"
+
+msgid "Allow users to delete their own comments"
+msgstr "อนุญาตให้ผู้ใช้ลบความคิดเห็นของตัวเอง"
+
+msgid "Allow users to edit their own comments"
+msgstr "อนุญาตให้ผู้ใช้แก้ไขข้อคิดเห็นของตัวเอง"
+
+msgid "an error happened"
+msgstr "เกิดความผิดพลาด"
+
+msgid "An error occured during extraction (%s)."
+msgstr "เกิดความผิดพลาดไฟล์ (%s) ที่กำลังแตกไฟล์."
+
+msgid "An information email was sent to group \"%s\""
+msgstr "อีเมลรายละเอียดข้อมูลได้ส่งไปยังกลุ่ม \"%s\""
+
+msgid "and"
+msgstr "และ"
+
+msgid "Anomaly"
+msgstr "ความผิดปกติ"
+
+msgid "Anyway only webmasters can see this tab and never administrators."
+msgstr "เว็บมาสเตอร์เท่านั้น ที่สามารถมองเห็นแท็บนี้, แต่จำกัดการเข้าถึงสำหรับผู้ดูแลระบบ."
+
+msgid "Apply action"
+msgstr "นำไปใช้"
+
+msgid "Apply selected corrections"
+msgstr "ใช้การแก้ไขที่เลือก"
+
+msgid "Apply to sub-albums"
+msgstr "นำไปใช้ยัง อัลบั้ม-ย่อย"
+
+msgid "Are you sure to install this upgrade? You must verify if this version does not need uninstallation."
+msgstr "คุณแน่ใจหรือว่าต้องการติดตั้งการอัพเกรดนี้? หากไม่ต้องการเวอร์ชั่นนี้ คุณสามารถถอนการติดตั้งนี้ได้."
+
+msgid "Are you sure you want to delete this plugin?"
+msgstr "คุณแน่ใจหรือว่าต้องการลบปลั๊กอินนี้?"
+
+msgid "Are you sure you want to install this plugin?"
+msgstr "คุณแน่ใจหรือว่าต้องการติดตั้งปลั๊กอินนี้?"
+
+msgid "Associate to album"
+msgstr "เชื่อมโยงไปยังอัลบั้ม"
+
+msgid "associate to group"
+msgstr "เชื่อมโยงไปยังกลุ่ม"
+
+msgid "Associated"
+msgstr "เชื่อมโยง"
+
+msgid "Authorize users to add comments on selected albums"
+msgstr "อนุมัติให้ผู้ใช้เพิ่มความคิดเห็นเกี่ยวกับอัลบั้มที่เลือก"
+
+msgid "Authorized"
+msgstr "ได้รับอนุญาต"
+
+msgid "Automatic correction"
+msgstr "การแก้ไขอัตโนมัติ"
+
+msgid "automatic order"
+msgstr "คำสั่งอัตโนมัติ"
+
+msgid "Available only with HTML format"
+msgstr "ใช้ได้เฉพาะกับรูปแบบ HTML"
+
+msgid "Average rate"
+msgstr "คะแนนเฉลี่ย"
+
+msgid "average time"
+msgstr "เวลาเฉลี่ย"
+
+msgid "Batch Manager"
+msgstr "การจัดการระบบ"
+
+msgid "between"
+msgstr "ระหว่าง"
+
+msgid "Bound Theme"
+msgstr "ธีมที่เลือกไว้"
+
+msgid "By %s"
+msgstr "โดย %s"
+
+msgid "By rank"
+msgstr "โดยการจัดอันดับ"
+
+msgid "Caddie management"
+msgstr "การจัดการ Caddie"
+
+msgid "Caddie"
+msgstr "Caddie"
+
+msgid "Cannot delete the old permalink !"
+msgstr "ความคิดเห็นเก่าไม่สามารถลบได้!"
+
+msgid "Can't connect to server."
+msgstr "ไม่สามารถเชื่อมต่อไปยังเซิร์ฟเวอร์ได้."
+
+msgid "Can't create temporary file."
+msgstr "แฟ้มชั่วคราวไม่สามารถสร้างได้."
+
+msgid "Can't download archive."
+msgstr "แฟ้มที่ถูกบีบอัดไม่สามารถดาวน์โหลดได้."
+
+msgid "Can't read or extract archive."
+msgstr "แฟ้มที่ถูกบีบอัดไม่สามารถอ่านหรือแตกไฟล์ได้."
+
+msgid "Change Admin Colors"
+msgstr "สลับโหมดสี"
+
+msgid "Check all"
+msgstr "เลือกทั้งหมด"
+
+msgid "Check automatic corrections"
+msgstr "ตรวจสอบการแก้ไขอัตโนมัติ"
+
+msgid "Check for updates"
+msgstr "ตรวจสอบการอัพเดต"
+
+msgid "Check for upgrade failed for unknown reasons."
+msgstr "ไม่สามารถตรวจสอบการอัพเดตได้ เนื่องจากอาจไม่มีการเชื่อมต่ออินเตอร์เน็ต."
+
+msgid "Check for upgrade"
+msgstr "ตรวจสอบการอัพเกรด"
+
+msgid "Check integrity"
+msgstr "ตรวจสอบความสมบูรณ์"
+
+msgid "Choose an action"
+msgstr "เลือกการการดำเนินการ"
+
+msgid "Choose an option"
+msgstr "เลือกตัวเลือก"
+
+msgid "Classic display"
+msgstr "แสดงผลแบบธรรมดา"
+
+msgid "clean"
+msgstr "ล้าง"
+
+msgid "Comments for all"
+msgstr "สำหรับทุกความคิดเห็น"
+
+msgid "Complementary mail content"
+msgstr "เนื้อหาเมล"
+
+msgid "Configuration"
+msgstr "การปรับแต่ง"
+
+msgid "confirm"
+msgstr "ยืนยัน"
+
+msgid "Continue processing treatment"
+msgstr "ดำเนินกระบวนการแบบต่อเนื่อง"
+
+msgid "Correction applied with error"
+msgstr "การแก้ไขได้นำไปใช้กับข้อผิดพลาด"
+
+msgid "Correction applied with success"
+msgstr "การแก้ไขได้สำเร็จแล้ว"
+
+msgid "Correction the anomaly will cancel the fact that it's ignored"
+msgstr "การแก้ไขความผิดปกติจะใช้เวลานานและอาจไม่สำเร็จ"
+
+msgid "Correction"
+msgstr "การแก้ไข"
+
+msgid "create a new album"
+msgstr "สร้างอัลบั้มใหม่"
+
+msgid "Create the \"%s\" directory at the root of your Piwigo installation"
+msgstr "สร้าง \"%s\" ไว้ที่โฟลเดอร์ Piwigo ของคุณ หรือ Root ที่เดียวกับที่ Piwigo ได้ติดตั้งอยู่"
+
+msgid "Create this site"
+msgstr "สร้างที่อยู่นี้"
+
+msgid "created"
+msgstr "สร้าง"
+
+msgid "Current name"
+msgstr "ชื่อปัจจุบัน"
+
+msgid "Database synchronization with files"
+msgstr "การซิงโคไนซ์ฐานข้อมูลกับไฟล์"
+
+msgid "Database"
+msgstr "ฐานข้อมูลระบบ"
+
+msgid "Date"
+msgstr "วันที่"
+
+msgid "Day"
+msgstr "วัตถุ"
+
+msgid "Deactivate"
+msgstr "ยกเลิกการใช้งาน"
+
+msgid "Deactivate all"
+msgstr "ยกเลิกการใช้งานทั้งหมด"
+
+msgid "Default display"
+msgstr "แสดงผลค่าเริ่มต้น"
+
+msgid "Default photos order"
+msgstr "จัดระเบียบรูปภาพตามค่าปกติ"
+
+msgid "Default user cannot be deleted"
+msgstr "ผู้ใช้งานไม่สามารถลบได้"
+
+msgid "Default user does not exist"
+msgstr "ผู้ใช้งานไม่มีอยู่"
+
+msgid "default values"
+msgstr "ค่าเริ่มต้น"
+
+msgid "default"
+msgstr "ภาษาเริ่มต้น"
+
+msgid "delete album"
+msgstr "ลบอัลบั้ม"
+
+msgid "Delete orphan tags"
+msgstr "ลบแท็กที่ไม่ได้ถูกใช้"
+
+msgid "delete photo"
+msgstr "ลบรูปภาพ"
+
+msgid "Delete Representant"
+msgstr "ลบรูปภาพขนาดย่อของอัลบั้ม"
+
+msgid "Delete selected photos"
+msgstr "ลบรูปภาพที่เลือก"
+
+msgid "Delete selected tags"
+msgstr "ลบแท็กที่เลือก"
+
+msgid "Delete selected users"
+msgstr "ลบผู้ใช้งานที่เลือก"
+
+msgid "Delete this language"
+msgstr "ลบภาษานี้"
+
+msgid "delete this site and all its attached elements"
+msgstr "ลบที่อยู่นี้และข้อมูลทั้งหมดที่เกี่ยวข้อง"
+
+msgid "Delete this theme"
+msgstr "ลบธีมนี้"
+
+msgid "delete"
+msgstr "ลบ"
+
+msgid "Deleted on"
+msgstr "ถูกลบเมื่อ"
+
+msgid "deleted"
+msgstr "ถูกลบ"
+
+msgid "Deletions"
+msgstr "การลบ"
+
+msgid "Deny selected groups"
+msgstr "ปฏิเสธกลุ่มที่เลือก"
+
+msgid "Deny selected users"
+msgstr " ปฏิเสธผู้ใช้งานที่เลือก"
+
+msgid "Description"
+msgstr "บรรยายรายละเอียด"
+
+msgid "Detailed informations"
+msgstr "รายละเอียดข้อมูล"
+
+msgid "directories + files"
+msgstr "ไดเรกทอรี่ + ไฟล์"
+
+msgid "Directory does not exist"
+msgstr "ไม่มีไดเรกทอรี่อยู่"
+
+msgid "Directory"
+msgstr "ไดเรกทอรี่"
+
+msgid "Discover album:"
+msgstr "ดูอัลบั้ม:"
+
+msgid "display maximum informations (added albums and photos, deleted albums and photos)"
+msgstr "แสดงข้อมูลทั้งหมด (ที่ได้เพิ่มทั้งในอัลบั้มและภาพถ่าย, และในอัลบั้มและรูปภาพที่ได้ถูกลบไปแล้วด้วย)"
+
+msgid "Display options"
+msgstr "ตัวเลือกการแสดงผล"
+
+msgid "Dissociate from album"
+msgstr "แยกออกจากอัลบั้ม"
+
+msgid "dissociate from group"
+msgstr "แยกออกจากกลุ่ม"
+
+msgid "Dissociated"
+msgstr "ที่ได้แยก"
+
+msgid "Documentation"
+msgstr "เอกสารที่เกี่ยวข้อง"
+
+msgid "Does not represent"
+msgstr "ไม่แสดงภาพขนาดย่อสำหรับ"
+
+msgid "Download,"
+msgstr "ดาวน์โหลด"
+
+msgid "Downloads"
+msgstr "ดาวน์โหลด"
+
+msgid "Drag to re-order"
+msgstr "คลิก-และ-ลาก เพื่อกำหนด"
+
+msgid "Drop into album"
+msgstr "เลือกอัลบั้มรูป"
+
+msgid "Edit album permissions"
+msgstr "แก้ไขการเข้าถึงอัลบั้ม"
+
+msgid "Edit album"
+msgstr "แก้ไขอัลบั้ม"
+
+msgid "Edit ranks"
+msgstr "แก้ไขอันดับ"
+
+msgid "Edit selected tags"
+msgstr "แก้ไขแท็กที่เลือก"
+
+msgid "Edit tags"
+msgstr "ไก้ไขแท็ก"
+
+msgid "Element type"
+msgstr "ชนิดของวัตถุ"
+
+msgid "Element"
+msgstr "วัตถุ"
+
+msgid "photos informations synchronized with files metadata"
+msgstr "รายละเอียดภาพถ่ายตรงกับข้อมูลเมตาไฟล์"
+
+msgid "Email administrators when a comment is deleted"
+msgstr "รายงานผู้ดูแลระบบทางอีเมล เมื่อความคิดเห็นถูกลบ"
+
+msgid "Email administrators when a comment is modified"
+msgstr "รายงานผู้ดูแลระบบทางอีเมล เมื่อความคิดเห็นถูกแก้ไขเปลี่ยนแปลง"
+
+msgid "Email admins when a comment requires validation"
+msgstr "รายงานผู้ดูแลระบบทางอีเมลเมื่อความคิดเห็น ที่จำเป็นต้องมีการตรวจสอบก่อน"
+
+msgid "Email admins when a new user registers"
+msgstr "รายงานผู้ดูระบบทางอีเมล เมื่อมีผู้ใช้ใหม่ที่ลงทะเบียน"
+
+msgid "Email admins when a valid comment is entered"
+msgstr "รายงานผู้ดูแลระบบทางอีเมล เมื่อมีความคิดเห็นแสดงเข้ามา"
+
+msgid "Environment"
+msgstr "ข้อมูลระบบ"
+
+msgid "Error list"
+msgstr "รายการข้อผิดพลาด"
+
+msgid "Error on file \"%s\" : %s"
+msgstr "เกิดความผิดพลาดที่ไฟล์ \"%s\" : %s"
+
+msgid "Error when sending email to %s [%s]."
+msgstr "เกิดความผิดพลาดเมื่อตอนกำลังส่งเมลไปยัง %s [%s]."
+
+msgid "Errors caption"
+msgstr "Errors legends"
+
+msgid "errors during synchronization"
+msgstr "เกิดความผิดพลาดในขณะที่กำลังซิงโคไนซ์"
+
+msgid "even already synchronized photos"
+msgstr "even already synchronized photos"
+
+msgid "Everybody"
+msgstr "ทุกคน"
+
+msgid "Execution time is out, treatment must be continue [Estimated time: %d second]."
+msgid_plural "Execution time is out, treatment must be continue [Estimated time: %d seconds]."
+msgstr[0] "เวลาการดำเนิน, จะต้องดำเนินการอีก [เวลาโดยประมาณ: %d วินาที]."
+msgstr[1] "เวลาการดำเนิน, จะต้องดำเนินการอีก [เวลาโดยประมาณ: %d วินาที]."
+
+msgid "Exif extension not available, admin should disable exif use"
+msgstr "ระบบ Exif ไม่สามารถใช้งานได้, ผู้ดูแลระบบควรปิดการใช้งานระบบ Exif"
+
+msgid "existing album"
+msgstr "อัลบั้มที่มีอยู่"
+
+msgid "Extend for templates"
+msgstr "ส่วนขยายแม่แบบ"
+
+msgid "Failed to write file to disk"
+msgstr "ล้มเหลวในการเขียนแฟ้มไปยังดิสก์"
+
+msgid "File upload stopped by extension"
+msgstr "ประเภทไฟล์นี้ได้ถูกห้ามอัพโหลด"
+
+msgid "File"
+msgstr "ชื่อไฟล์"
+
+msgid "File/directory read error"
+msgstr "เกิดความผิดพลาดในการอ่าน ไฟล์/ไดเรกทอรี่"
+
+msgid "Find a new representant by random"
+msgstr "Find a new random album thumbnail"
+
+msgid "for the file format"
+msgstr "สำหรับรูปแบบไฟล์"
+
+msgid "for this file format"
+msgstr "สำหรับรูปแบบไฟล์"
+
+msgid "Forbid this language to users"
+msgstr "ยกเลิกการใช้งานภาษานี้สำหรับผู้ใช้งาน"
+
+msgid "Forbid this theme to users"
+msgstr "ยกเลิกการใช้งานธีมนี้สำหรับผู้ใช้งาน"
+
+msgid "Forbidden"
+msgstr "ไม่อนุญาต"
+
+msgid "Form"
+msgstr "จาก"
+
+msgid "FTP + Synchronization"
+msgstr "FTP + Synchronization"
+
+msgid "Gallery title"
+msgstr "ชื่อแกลลอรี่"
+
+msgid "GD library is missing"
+msgstr "ไม่พบ GD ไลบรารี่"
+
+msgid "GD version"
+msgstr "GD เวอร์ชั่น"
+
+msgid "General statistics"
+msgstr "สถิติทั่วไป"
+
+msgid "Get Support on Piwigo Forum"
+msgstr "ขอรับการสนับสนุนของ Piwigo จากฟอรั่ม Piwigo"
+
+msgid "Give write access (chmod 777) to \"%s\" directory at the root of your Piwigo installation"
+msgstr "Give write access (chmod 777) to \"%s\" directory at the root of your Piwigo installation"
+
+msgid "global mode"
+msgstr "โหมดทั่วไป"
+
+msgid "Go to %s or %s for more informations"
+msgstr "ไปที่ %s หรือ %s เพื่อดูข้อมูลเพิ่มเติม"
+
+msgid "Go to"
+msgstr "ไปที่"
+
+msgid "Grant selected groups"
+msgstr "อนุญาตกลุ่มที่ได้เลือกไว้"
+
+msgid "Grant selected users"
+msgstr "อนุญาตผู้ใช้งานที่ได้เลือกไว้"
+
+msgid "group \"%s\" added"
+msgstr "กลุ่ม \"%s\" ได้ถูกเพิ่มแล้ว"
+
+msgid "group \"%s\" deleted"
+msgstr "กลุ่ม \"%s\" ได้ถูกลบแล้ว"
+
+msgid "group \"%s\" updated"
+msgstr "กลุ่ม \"%s\" ได้ถูกอัพเดตแล้ว"
+
+msgid "Group management"
+msgstr "การจัดการกลุ่ม"
+
+msgid "Group name"
+msgstr "ชื่อกลุ่ม"
+
+msgid "Group"
+msgstr "กลุ่ม"
+
+msgid "Groups"
+msgstr "กลุ่ม"
+
+msgid "Guest cannot be deleted"
+msgstr "ผู้เยี่ยมชมไม่สามารถลบได้"
+
+msgid "Guest Settings"
+msgstr "ตั้งค่าผู้เยี่ยมชม"
+
+msgid "guest"
+msgstr "ผู้เยี่ยมชม"
+
+msgid "Guests"
+msgstr "ผู้เยี่ยมชม"
+
+msgid "height must be a number superior to"
+msgstr "ความสูงจะต้องเป็นค่าตัวเลขที่มากกว่า"
+
+msgid "Hello"
+msgstr "สวัสดี"
+
+msgid "Hello,"
+msgstr "สวัสดี,"
+
+msgid "Help Me"
+msgstr "ช่วยเหลือ"
+
+msgid "Hide"
+msgstr "ซ่อน"
+
+msgid "High definition enabled"
+msgstr "การแสดงผลความละเอียดสูงได้ถูกเปิดใช้งานแล้ว"
+
+msgid "High definition"
+msgstr "ความละเอียดสูง"
+
+msgid "high"
+msgstr "ความสูง"
+
+msgid "History"
+msgstr "ประวัติ"
+
+msgid "Hit"
+msgstr "เข้าชม"
+
+msgid "Hour"
+msgstr "ชั่วโมง"
+
+msgid "Hoverbox display"
+msgstr "แสดงแบบกล่อง"
+
+msgid "If you encounter problems or have any question, please send a message to"
+msgstr "ถ้าคุณเจอปัญหา หรือมีคำถามใดๆ, โปรดส่งข้อความไปยัง"
+
+msgid "Ignore selected anomalies"
+msgstr "ปฏิเสธความผิดปกติที่ได้เลือกไว้"
+
+msgid "Image id"
+msgstr "ไอดี รูปภาพ"
+
+msgid "Image Quality"
+msgstr "คุณภาพของรูป"
+
+msgid "Images manual order was saved"
+msgstr "ลำดับรูปภาพแบบกำหนดเองได้ถูกบันทึกแล้ว"
+
+msgid "Impossible automatic correction"
+msgstr "การตรวจแก้ไขโดยอัตโนมัตไม่สามารถทำได้"
+
+msgid "Impossible to activate this theme, the parent theme is missing: %s"
+msgstr "ธีมนี้ไม่สามารถเปิดใช้งานได้, เนื่องจากธีมหลักขาดหายไป: %s"
+
+msgid "Impossible to deactivate this language, first set another language as default."
+msgstr "การยกเลิกการใช้งานภาษานี้ไม่สามารถทำได้, เนื่องจากมีการใช้งานภาษานี้อยู่ โปรดกำหนดภาษาอื่นเพื่อใช้งานก่อน แล้วค่อยยกเลิกภาษาดังกล่าว."
+
+msgid "Impossible to deactivate this language, you need at least one language."
+msgstr "การยกเลิกการใช้งานภาษานี้ไม่สามารถทำได้, คุณต้องมีภาษาอย่างน้อยหนึ่งภาษาที่เปิดใช้งาน."
+
+msgid "Impossible to deactivate this theme, you need at least one theme."
+msgstr "การยกเลิกการใช้งานธีมนี้ไม่สามารถทำได้, คุณต้องมีธีมอย่างน้อยหนึ่งธีมที่เปิดใช้งาน."
+
+msgid "Impossible to delete this theme. Other themes depends on it: %s"
+msgstr "ธีมนี้ไม่สามารถลบได้, เพราะว่ามีธีมอื่นซึ่งได้ใช้งานอยู่กับมัน: %s"
+
+msgid "In your php.ini file, the upload_max_filesize (%sB) is bigger than post_max_size (%sB), you should change this setting"
+msgstr "ไฟล์การตั้งค่า php.ini ของคุณ, สามารถอัพโหลดไฟล์ได้ขนาดสูงสุด (%sB) ซึ่งมันขนาดใหญ่กว่าขนาดไฟล์สูงสุดที่อนุญาตให้โพส (%sB), คุณควจเปลี่ยนการตั้งค่านี้"
+
+msgid "Inactive Languages"
+msgstr "ภาษาที่ไม่ได้เปิดใช้งาน"
+
+msgid "Inactive Plugins"
+msgstr "ปลั๊กอินที่ไม่ได้เปิดใช้งาน"
+
+msgid "Inactive Themes"
+msgstr "ธีมที่ไม่ได้เปิดใช้งาน"
+
+msgid "include child albums"
+msgstr "รวมอัลบั้ม"
+
+msgid "Include display of recent photos grouped by dates"
+msgstr "รวมถึงการแสดงของภาพถ่ายเมื่อไม่นานตามวันที่"
+
+msgid "Information data registered in database"
+msgstr "ข้อมูลได้ถูกบันทึกลงฐานข้อมูลแล้ว"
+
+msgid "Informations"
+msgstr "ข้อมูลพื้นฐาน"
+
+msgid "Install on your computer,"
+msgstr "ติดตั้งลงบนเครื่องคอมพิวเตอร์ของคุณ"
+
+msgid "Install"
+msgstr "ติดตั้ง"
+
+msgid "Installed Languages"
+msgstr "ภาษาที่ถูกติดตั้ง"
+
+msgid "Installed Themes"
+msgstr "ธีมที่ถูกติดตั้ง"
+
+msgid "Instructions to use Piwigo"
+msgstr "คำแนะนำในการใช้งาน Piwigo แกลลอรี่"
+
+msgid "Invert"
+msgstr "สลับ"
+
+msgid "IP"
+msgstr "ไอพี"
+
+msgid "jump to album"
+msgstr "ไปยังอัลบั้ม"
+
+msgid "jump to photo"
+msgstr "ไปยังรูปภาพ"
+
+msgid "Keep in touch with Piwigo project, subscribe to Piwigo Announcement Newsletter. You will receive emails when a new release is available (sometimes including a security bug fix, it's important to know and upgrade) and when major events happen to the project. Only a few emails a year."
+msgstr "ติดต่อกับ Piwigo โปรเจค, บอกรับข่าวสารจาก Piwigo. คุณจะได้รับอีเมล เมื่อมี Piwigo เวอร์ชั่นใหม่ถูกปล่อยออกมา (บางที มีการปรับปรุงแก้ไขด้านความปลอดภัย และจุดบกพล่องต่างๆ ซึ่งมันสำคัญมากเพื่ออัพเกรดระบบ) รวมทั้งเมื่อ Piwigo โปรเจคได้ทำ เวอร์ชั่นหลัก หรือเมเจอร์เวอร์ชั่น. ซึ่งมีเมลถึงคุณต่อปีไม่กี่ฉบับเท่านั้น."
+
+msgid "Language has been successfully installed"
+msgstr "ภาษาได้ถูกติดตั้งสมบูรณ์"
+
+msgid "Languages"
+msgstr "ภาษา"
+
+msgid "Last hit"
+msgstr "เข้าชมครั้งล่าสุด"
+
+msgid "Last revisions"
+msgstr "การแก้ไขครั้งล่าสุด"
+
+msgid "Last send"
+msgstr "ส่งครั้งล่าสุด"
+
+msgid "leave"
+msgstr "ปล่อยว่าง"
+
+msgid "Level 0"
+msgstr "---"
+
+msgid "Level 1"
+msgstr "ผู้ติดต่อ"
+
+msgid "Level 2"
+msgstr "เพื่อน"
+
+msgid "Level 4"
+msgstr "ครอบครัว"
+
+msgid "Level 8"
+msgstr "ผู้ดูแลระบบ"
+
+msgid "Link all album photos to a new album"
+msgstr "เชื่อมโยงอัลบั้มรูปถ่ายทั้งหมดไปยังอัลบั้มใหม่"
+
+msgid "Link all album photos to some existing albums"
+msgstr "เชื่อมโยงอัลบั้มรูปถ่ายทั้งหมดไปยังอัลบั้มใหม่"
+
+msgid "Linked albums"
+msgstr "อยู่ในอัลบั้ม"
+
+msgid "Local"
+msgstr "ภายใน"
+
+msgid "Lock albums"
+msgstr "ล็อคอัลบั้ม"
+
+msgid "Lock gallery"
+msgstr "ล็อคแกลลอรี่"
+
+msgid "Lock"
+msgstr "ล็อค"
+
+msgid "Locked"
+msgstr "ล็อค"
+
+msgid "Mail content"
+msgstr "เนื้อหาเมล"
+
+msgid "Mail sent to %s [%s]."
+msgstr "เมลได้ถูกส่งไปยัง %s [%s]."
+
+msgid "Main \"guest\" user does not exist"
+msgstr "หลัก \"ผู้เยี่ยมชม\" ผู้ใช้งานไม่มีอยู่"
+
+msgid "Main \"guest\" user status is incorrect"
+msgstr "หลัก \"ผู้เยี่ยมชม\" ผู้ใช้งานสถานะไม่ถูกต้อง"
+
+msgid "Main \"webmaster\" user does not exist"
+msgstr "หลัก \"เว็บมาสเตอร์\" ผู้ใช้งานไม่มีอยู่"
+
+msgid "Main \"webmaster\" user status is incorrect"
+msgstr "หลัก \"เว็บมาสเตอร์\" ผู้ใช้งานสถานะไม่ถูกต้อง"
+
+msgid "Main Page"
+msgstr "หน้าหลัก"
+
+msgid "Maintenance"
+msgstr "การปรับปรุง"
+
+msgid "Make this language available to users"
+msgstr "กำหนดภาษานี้สำหรับผู้ใช้งาน"
+
+msgid "Make this theme available to users"
+msgstr "กำหนดธีมนี้สำหรับผู้ใช้งาน"
+
+msgid "manage album photos"
+msgstr "จัดการอัลบั้มรูป"
+
+msgid "Manage authorizations for selected albums"
+msgstr "จัดการการอนุญาตสำหรับอัลบั้มที่เลือก"
+
+msgid "Manage permissions for group \"%s\""
+msgstr "จัดการการอนุญาตสำหรับกลุ่ม \"%s\""
+
+msgid "Manage permissions for user \"%s\""
+msgstr "จัดการการอนุญาตสำหรับผู้ใช้งาน \"%s\""
+
+msgid "Manage photo ranks"
+msgstr "จัดการอันดับภาพถ่าย"
+
+msgid "manage sub-albums"
+msgstr "จัดการอัลบั้ม-ย่อย"
+
+msgid "Manage tags"
+msgstr "จัดการแท็ก"
+
+msgid "Manage this set of %d photos"
+msgstr "จัดการตั้งค่าเพิ่มเติมชุดของ %d รูปถ่ายนี้"
+
+msgid "Manage"
+msgstr "จัดการ"
+
+msgid "Manual order"
+msgstr "คำสั่งกำหนดเอง"
+
+msgid "manual order"
+msgstr "คำสั่งกำหนดเอง"
+
+msgid "Maximum height"
+msgstr "ความสูงสูงสุด"
+
+msgid "Maximum width"
+msgstr "ความกว้างสูงสุด"
+
+msgid "Members"
+msgstr "สมาชิก"
+
+msgid "Menu Management"
+msgstr "จัดการเมนู"
+
+msgid "Metadata synchronization results"
+msgstr "ผลลัพธ์การซิงโคไนซ์เมตาดาต้า"
+
+msgid "Metadata synchronized from file"
+msgstr "ได้ถูกซิงโคไนซ์เมตาดาต้าจากไฟล์"
+
+msgid "Minimum privacy level"
+msgstr "ระดับของความเป็นส่วนตัวน้อยที่สุด"
+
+msgid "Miscellaneous"
+msgstr "เบ็ดเตล็จ"
+
+msgid "Missing a temporary folder"
+msgstr "ไม่พบโฟลเดอร์ชั่วคราว"
+
+msgid "Missing Plugins"
+msgstr "ไม่พบปลั๊กอิน"
+
+msgid "Modify information"
+msgstr "แก้ไขข้อมูล"
+
+msgid "Month"
+msgstr "เดือน"
+
+msgid "Move albums"
+msgstr "ย้ายอัลบั้ม"
+
+msgid "Move"
+msgstr "ย้าย"
+
+msgid "Name"
+msgstr "ชื่อ"
+
+msgid "new"
+msgstr "ใหม่"
+
+msgid "New name"
+msgstr "ชื่อใหม่"
+
+msgid "New parent album"
+msgstr "อัลบั้มหลักใหม่"
+
+msgid "New photos added"
+msgstr "รูปภาพใหม่ที่ได้ถูกเพิ่ม"
+
+msgid "New photos were added"
+msgstr "รูปภาพใหม่ที่ได้ถูกเพิ่ม"
+
+msgid "New tag"
+msgstr "แท็กใหม่"
+
+msgid "No display"
+msgstr "ไม่มีการแสดงผล"
+
+msgid "No file was uploaded"
+msgstr "ไม่มีไฟล์ที่ถูกอัพโหลด"
+
+msgid "No mail to send."
+msgstr "ไม่มีเมลที่ถูกส่ง."
+
+msgid "No photo can be deleted"
+msgstr "ไม่มีรูปที่สามารถลบได้"
+
+msgid "No photo in the current set."
+msgstr "ไม่มีรูปภาพในชุดปัจจุบันนี้."
+
+msgid "No photo in this album"
+msgstr "ไม่มีรูปภาพในอัลบั้มนี้"
+
+msgid "No photo selected, %d photos in current set"
+msgstr "ไม่มีรูปที่ได้เลือกไว้,มีรูปทั้งหมด %d รูปในเซตนี้"
+
+msgid "No photos selected, no actions possible."
+msgstr "ไม่มีรูปภาพที่ได้เลือกไว้."
+
+msgid "No results"
+msgstr "ไม่มี ผลลัพธ์"
+
+msgid "No user to send notifications by mail."
+msgstr "ไม่มีผู้ใช้งานที่ได้ติดต่อทางเมล."
+
+msgid "no write access"
+msgstr "ไม่มีการเขียนการเข้าถึงข้อมูล"
+
+msgid "none"
+msgstr "ไม่มี"
+
+msgid "None"
+msgstr "ไม่มี"
+
+msgid "nothing"
+msgstr "ไม่มีสิ่งใด"
+
+msgid "Notification"
+msgstr "การแจ้งเตือน"
+
+msgid "Number of comments per page"
+msgstr "จำนวนของความเห็นที่แสดงต่อหนึ่งหน้า"
+
+msgid "Number of downloads"
+msgstr "จำนวนครั้งที่ดาวน์โหลด"
+
+msgid "Number of rates"
+msgstr "จำนวนของคะแนนนิยม"
+
+msgid "on the %d selected photos"
+msgstr "ของ %d รูปภาพที่ได้เลือกไว้"
+
+msgid "on"
+msgstr "ใน"
+
+msgid "only directories"
+msgstr "ไดเรกทอรี่อย่างเดียว"
+
+msgid "only perform a simulation (no change in database will be made)"
+msgstr "แค่การจำลองเสมือน (ไม่มีอะไรที่จะถูกเปลี่ยนในฐานข้อมูล)"
+
+msgid "Only private albums are listed"
+msgstr "อัลบั้มส่วนตัวเท่านั้น"
+
+msgid "Operating system"
+msgstr "ระบบปฏิบัติการ"
+
+msgid "Operation in progress"
+msgstr "การดำเนินการ."
+
+msgid "Optimizations have been completed with some errors."
+msgstr "การทำให้เหมาะสมได้เสร็จแล้ว พร้อมกับมีข้อผิดพลาดบางอย่าง."
+
+msgid "Optional URL keyword"
+msgstr "URL คีย์เวิร์ด"
+
+msgid "Options"
+msgstr "ตัวเลือก"
+
+msgid "Order of menubar items has been updated successfully."
+msgstr "เมนูบาร์ได้ถูกอัพเดตเรียบร้อยแล้ว."
+
+msgid "Original templates"
+msgstr "แม่แบบดั้งเดิม"
+
+msgid "Orphan tags deleted"
+msgstr "แท็กที่ไม่ได้ใช้งานที่ได้ถูกลบ"
+
+msgid "Other plugins"
+msgstr "ปลั๊กอินอื่นที่ใช้งานได้"
+
+msgid "Other private albums"
+msgstr "อัลบั้มส่วนตัวอื่นๆ"
+
+msgid "other"
+msgstr "อื่นๆ"
+
+msgid "Overall"
+msgstr "Overview"
+
+msgid "overrides existing values with empty ones"
+msgstr "ยกเลิกค่าที่มีอยู่โดยกำหนดให้มันว่างเปล่า"
+
+msgid "Page banner"
+msgstr "สโลแกน"
+
+msgid "Page end"
+msgstr "หน้าสุดท้าย"
+
+msgid "Pages seen"
+msgstr "จำนวนหน้าที่เปิด"
+
+msgid "Parameter"
+msgstr "ตั้งค่า"
+
+msgid "Parameters"
+msgstr "ตัวแปร"
+
+msgid "Parent album"
+msgstr "อัลบั้มหลัก"
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "คุณยังไม่ได้ยืนยันรหัสผ่าน. กรุณายืนยันรหัสผ่านเดิมอีกครั้ง."
+
+msgid "Password is missing. Please enter the password."
+msgstr "คุณยังไม่ได้กำหนดรหัสผ่าน. กรุณากรอรหัสผ่าน."
+
+msgid "Path"
+msgstr "ที่ตั้ง"
+
+msgid "Pending Comments"
+msgstr "ความเห็นกำลังรออนุมัติ"
+
+msgid "Permalink %s has been previously used by album %s. Delete from the permalink history first"
+msgstr "การเชื่อมโยง %s ได้มีอยู่ก่อนแล้ว และได้ถูกไใช้โดยอัลบั้ม %s. ลบมันออกจากประวัติการเชื่อมโยงในอัลบั้มก่อน"
+
+msgid "Permalink %s is already used by album %s"
+msgstr "การเชื่อมโยง %s มีอยู่แล้วและถูกใช้โดยอัลบั้ม %s"
+
+msgid "Permalink history"
+msgstr "ประวัติการเชื่อมโยง"
+
+msgid "Permalink"
+msgstr "การเชื่อมโยง"
+
+msgid "Permalinks"
+msgstr "การเชื่อมโยง"
+
+msgid "Permission denied"
+msgstr "ไม่อนุญาต"
+
+msgid "Permission granted thanks to a group"
+msgstr "การอนุญาตการเข้าถึงไปยังกลุ่ม"
+
+msgid "Permission granted"
+msgstr "ได้ยินยอมการอนุญาตแล้ว"
+
+msgid "Permissions"
+msgstr "การอนุญาต"
+
+msgid "Photo Page"
+msgstr "หน้าภาพถ่าย"
+
+msgid "Photo Properties"
+msgstr "คุณสมบัติรูปภาพ"
+
+msgid "photos added in the database"
+msgstr "รูปภาพได้ถูกเพิ่มในฐานข้อมูลแล้ว"
+
+msgid "photos candidates for metadata synchronization"
+msgstr "รูปภาพที่ถูกเลือกเข้ามา เพื่อการซิงโคไนซ์เมตาดาต้า"
+
+msgid "photos deleted from the database"
+msgstr "รูปภาพได้ถูกลบออจากฐานข้อมูลแล้ว"
+
+msgid "photos per page"
+msgstr "จำนวนรูปภาพต่อหน้า"
+
+msgid "photos updated in the database"
+msgstr "รูปภาพได้ถูกอัพเดตในฐานข้อมูลแล้ว"
+
+msgid "Photos"
+msgstr "รูป"
+
+msgid "Photo informations updated"
+msgstr "ข้อมูลรูปภาพได้ถูกบันทึกแล้ว"
+
+msgid "Photo unreachable or no support"
+msgstr "รูปภาพไม่สามารถเข้าถึงได้ หรือรูปแบบ ไม่สนับสนุน"
+
+msgid "Piwigo Administration"
+msgstr "การจัดการระบบ Piwigo"
+
+msgid "Piwigo Announcements Newsletter"
+msgstr "ข่าวสารและประกาศของ Piwigo"
+
+msgid "Piwigo configuration"
+msgstr "การตั้งค่าปรับแต่ง Piwigo"
+
+msgid "Piwigo Uploader"
+msgstr "ตัวช่วยอัพโหลด Piwigo"
+
+msgid "Piwigo version"
+msgstr "Piwigo เวอร์ชั่น"
+
+msgid "pixels"
+msgstr "พิกเซล"
+
+msgid "Please check \"plugins\" folder and sub-folders permissions (CHMOD)."
+msgstr "กรุณตรวจสอบโฟลเดอร์ \"plugins\" การกำหนดสิทธิ์การเข้าถึงทั้งโฟลเดอร์หลัก และโฟลเดอร์ย่อย (CHMOD)."
+
+msgid "Plugin list"
+msgstr "รายการปลั๊กอิน"
+
+msgid "Plugins which need upgrade"
+msgstr "ปลั๊กอินต้องการการอัพเกรด"
+
+msgid "Plugins"
+msgstr "ปลั๊กอิน"
+
+msgid "Position"
+msgstr "ตำแหน่ง"
+
+msgid "Preferences"
+msgstr "การปรับแต่ง"
+
+msgid "Prepared time for list of users to send mail is limited. Others users are not listed."
+msgstr "การเตรียมรายชื่อผู้ใช้งานเพื่อส่งเมลถึงผู้ใช้งานเหล่านั้น ซึ่งการส่งจะถูกจำกัดเฉพาะผู้ที่มีรายชื่อในรายการเท่า่นั้น. ซึ่งผู้ใช้งานที่ไม่มีชื่อในรายการจะไม่ถูกส่ง."
+
+msgid "Privacy level set to \"%s\""
+msgstr "ระดับความเป็นส่วนตัว \"%s\""
+
+msgid "Privacy level"
+msgstr "ระดับความเป็นส่วนตัว"
+
+msgid "Private"
+msgstr "ส่วนตัว"
+
+msgid "private"
+msgstr "ส่วนตัว"
+
+msgid "Properties"
+msgstr "คุณสมบัติพื้นฐาน"
+
+msgid "Public / Private"
+msgstr "สาธารณะ / ส่วนตัว"
+
+msgid "Public"
+msgstr "สาธารณะ"
+
+msgid "public"
+msgstr "สาธารณะ"
+
+msgid "Purge compiled templates"
+msgstr "ล้างการรวบรวมธีม"
+
+msgid "Purge history detail"
+msgstr "ล้างรายละเอียดประวัติของข้อมูล"
+
+msgid "Purge history summary"
+msgstr "ล้างประวัติ"
+
+msgid "Purge never used notification feeds"
+msgstr "ล้างการแจ้งเตือนที่ไม่ได้มีการถูกใช้"
+
+msgid "Purge search history"
+msgstr "ลางประวัติการค้นหา"
+
+msgid "Purge sessions"
+msgstr "ล้างระยะเวลาที่อยู่ในระบบ"
+
+msgid "Quick Local Synchronization"
+msgstr "เริ่มการซิงโคไนซ์อย่างรวดเร็ว"
+
+msgid "Random photo"
+msgstr "สุ่มรูปภาพ"
+
+msgid "randomly represented"
+msgstr "สุ่มรูปภาพปกอัลบั้ม"
+
+msgid "ranks"
+msgstr "อันดับ"
+
+msgid "Rate"
+msgstr "คะแนนนิยม"
+
+msgid "Rate date"
+msgstr "คะแนนตามวัน"
+
+msgid "Rating by guests"
+msgstr "ให้คะแนนโดยผู้เยี่ยมชม"
+
+msgid "Rating"
+msgstr "คะแนนนิยม"
+
+msgid "Read Piwigo Documentation"
+msgstr "อ่านเอกสารที่เกี่ยวข้องกับ Piwigo"
+
+msgid "reduce to single existing albums"
+msgstr "รวมเข้าเป็นอัลบั้มเดียวกันกับอัลบั้มที่มีอยู่"
+
+msgid "Refresh photo set"
+msgstr "รีเฟรชชุดรูปภาพ"
+
+msgid "Refresh"
+msgstr "รีเฟรช"
+
+msgid "registration date"
+msgstr "วันที่ลงทะเบียน"
+
+msgid "Reinitialize check integrity"
+msgstr "ตรวสอบความสมบูรณ์ของการเตรียมการเริ่มต้นใช้งานระบบใหม่"
+
+msgid "Reject"
+msgstr "ถอด"
+
+msgid "Released on"
+msgstr "ถูกปล่อย เมื่อ"
+
+msgid "Remote"
+msgstr "รีโมต"
+
+msgid "Remove all filters"
+msgstr "ลบตัวกรองทั้งหมด"
+
+msgid "remove author"
+msgstr "ลบเจ้าของรูปภาพ"
+
+msgid "remove creation date"
+msgstr "ลบวันที่สร้าง"
+
+msgid "Remove from caddie"
+msgstr "ลบจาก caddie"
+
+msgid "remove tags"
+msgstr "ลบแท็ก"
+
+msgid "remove this filter"
+msgstr "ลบตัวกรองนี้"
+
+msgid "remove title"
+msgstr "ลบชื่อ"
+
+msgid "Repair and optimize database"
+msgstr "ซ่อมแซม และทำให้ฐานข้อมูลเหมาะัสมที่สุด"
+
+msgid "Replacement of original templates by customized templates from template-extension subfolder"
+msgstr "แทนที่ธีมเก่า โดยการปรับแต่งธีมจาก ธีม-ส่วนขยาย ในโฟลเดอร์ย่อย"
+
+msgid "Replacers (customized templates)"
+msgstr "แทนที่ (ปรับแต่งแม่แบบ)"
+
+msgid "Representant"
+msgstr "รูปภาพขนาดย่อของอัลบั้ม"
+
+msgid "Representation of albums"
+msgstr "รูปภาพขนาดย่อของอัลบั้ม"
+
+msgid "Representative"
+msgstr "รูปภาพขนาดย่อของอัลบั้ม"
+
+msgid "Represents"
+msgstr "เป็นรูปภาพขนาดย่อสำหรับ"
+
+msgid "Resize"
+msgstr "ลดขนาด"
+
+msgid "Restore"
+msgstr "คืนค่า"
+
+msgid "Restore default configuration. You will lose your plugin settings!"
+msgstr "คืนค่าการตั้งค่าปกติ. คุณอาจจะสูญเสียการตั้งค่าต่างๆ ของปลั๊กอิน!"
+
+msgid "Save order"
+msgstr "บันทึกคำสั่ง"
+
+msgid "Save Settings"
+msgstr "บันทึกการตั้งค่า"
+
+msgid "Save to permalink history"
+msgstr "บันทึกไปยังประวัติการเชื่อมโยง"
+
+msgid "Searching..."
+msgstr "กำลังค้นหา..."
+
+msgid "Search for new images in the directories"
+msgstr "ค้นหารูปภาพใหม่ในไดเรกทอรี่"
+
+msgid "Section"
+msgstr "หมวดหมู่"
+
+msgid "See you soon,"
+msgstr "เจอคุณในไม่ช้า,"
+
+msgid "See you soon."
+msgstr "เจอคุณในไม่ช้า."
+
+msgid "Select at least one album"
+msgstr "อย่างอัลบั้มอย่างน้อยที่สุดหนึ่งอัลบั้ม"
+
+msgid "Select at least one comment"
+msgstr "เลือกความเห็นอย่างน้อยที่สุดหนึ่งความเห็น"
+
+msgid "Select at least one photo"
+msgstr "เลือกรูปภาพอย่างน้อยที่สุดหนึ่งรูป"
+
+msgid "Select at least one user"
+msgstr "เลือกผู้ใช้งานอย่างน้อยที่สุดหนึ่งคน"
+
+msgid "Select files"
+msgstr "เลือกไฟล์"
+
+msgid "Select recipients"
+msgstr "เลือกผู้รับ"
+
+msgid "Select:"
+msgstr "เลือก:"
+
+msgid "selection"
+msgstr "เลือก"
+
+msgid "Selection"
+msgstr "เลือก"
+
+msgid "Send an information email to group members"
+msgstr "ส่งเมลรายละเอียดข้อมูลไปยังกลุ่มสมาชิก"
+
+msgid "Send mail as"
+msgstr "Send mail as"
+
+msgid "Send mail on HTML format"
+msgstr "ส่งเมลในรูปแบบ HTML"
+
+msgid "Send mail to users"
+msgstr "ส่งเมลไปยังผู้ใช้งาน"
+
+msgid "Send"
+msgstr "ส่ง"
+
+msgid "Set as default language for unregistered and new users"
+msgstr "ใช้งานภาษานี้"
+
+msgid "Set as default theme for unregistered and new users"
+msgstr "ใช้งานธีมนี้"
+
+msgid "Set author"
+msgstr "ตั้งชื่อผู้เขียน"
+
+msgid "Set creation date"
+msgstr "กำหนดวันที่สร้าง"
+
+msgid "Set title"
+msgstr "ตั้งชื่อ"
+
+msgid "set to"
+msgstr "ตั้งค่าเป็น"
+
+msgid "Settings"
+msgstr "ตั้งค่า"
+
+msgid "Show info"
+msgstr "แสดงรายละเอียด"
+
+msgid "Show menubar"
+msgstr "แสดงแถบเมนู"
+
+msgid "Simulation"
+msgstr "การจำลอง"
+
+msgid "singly represented"
+msgstr "ถูกกำหนดเป็นรูปภาพขนาดย่อของอัลบั้ม"
+
+msgid "Site manager"
+msgstr "จัดการที่อยู่"
+
+msgid "Start pLoader and add your photos."
+msgstr "เริ่มการใช้งานโปรแกรม pLoader และเพิ่มรูปถ่ายของคุณ."
+
+msgid "Statistics"
+msgstr "สถิติ"
+
+msgid "Status of user \"%s\" updated"
+msgstr "ผู้ใช้งาน \"%s\" ได้อัพเดตสถานะ"
+
+msgid "Status"
+msgstr "สถานะ"
+
+msgid "status"
+msgstr "สถานะ"
+
+msgid "Storage album"
+msgstr "อัลบัมที่ใช้จัดเก็บ"
+
+msgid "sub-albums"
+msgstr "อัลบั้ม-ย่อย"
+
+msgid "Subscribe %s to Piwigo Announcements Newsletter"
+msgstr "บอกรับ %s to จดหมายข่าวสารและประกาศของ Piwigo"
+
+msgid "Subscribe %s"
+msgstr "บอกรับ %s"
+
+msgid "Subscribe to notification by mail"
+msgstr "บอกรับการแจ้งเตือนโดยเมล"
+
+msgid "Subscribe"
+msgstr "บอกรับ"
+
+msgid "Subscribe/unsubscribe users"
+msgstr "บอกรับ/ยกเลิกการบอกนับผู้ใช้งาน"
+
+msgid "Subscribed"
+msgstr "ได้ถูกบอกรับ"
+
+msgid "Subscribers could be listed (available) only if there is new elements to notify."
+msgstr "รายชื่อผู้บอกรับในรายการ (ที่สามารถใช้ได้) เท่านั้น ที่จะได้รับการแจ้งเตือน."
+
+msgid "Sum of rates"
+msgstr "ผลรวมของคะแนนนิยม"
+
+msgid "Summary"
+msgstr "สาระสำคัญ"
+
+msgid "Support"
+msgstr "ขอรับการสนับสนุน"
+
+msgid "Switch to clear or dark colors for administration"
+msgstr "สลับไปยังโหมดสีสว่าง หรือ มืด สำหรับส่วนของการจัดการระบบ"
+
+msgid "synchronize files metadata with database photos informations"
+msgstr "ซิงโคไนซ์ฐานข้อมูลรูปภาพกับไฟล์ด้วยเมตาดาต้า"
+
+msgid "synchronize files structure with database"
+msgstr "ซิงโคไนซ์ไฟล์กับฐานข้อมูล"
+
+msgid "Synchronize"
+msgstr "ซิงโคไนซ์"
+
+msgid "Tag \"%s\" already exists"
+msgstr "แท็ก \"%s\" ได้มีอยู่แล้ว"
+
+msgid "Tag \"%s\" was added"
+msgstr "แท็ก \"%s\" ได้ถูกเพิ่มแล้ว"
+
+msgid "Tag selection"
+msgstr "เลือกแท็ก"
+
+msgid "target"
+msgstr "เป้าหมาย"
+
+msgid "Templates configuration has been recorded."
+msgstr "การปรับแต่งการตั้งค่าแม่แบบได้ถูกบันทึกแล้ว."
+
+msgid "Templates"
+msgstr "แม่แบบ"
+
+msgid "test this remote site"
+msgstr "ทดสอบการเชื่อมโยงที่อยู่ระยะไกล"
+
+msgid "test"
+msgstr "ทดสอบ"
+
+msgid "The %d following tags were deleted"
+msgstr "การติดตามแท็ก %d แท็ก ได้ถูกลบแล้ว"
+
+msgid "The anomaly will be ignored until next application version"
+msgstr "ความผิดปกติจะถูกเพิกเฉยไปจนถึงเวอร์ชั่นถัดไปของแอพพลิเคชั่น"
+
+msgid "The file or directory cannot be accessed (either it does not exist or the access is denied)"
+msgstr "ไฟล์ หรือ ไดเรกทอรี่ ไม่สามารถที่จะเข้าถึงได้ (หรือไม่ก็ มันอาจจะไม่มีอยู่ หรือถูกปฏิเสธการเข้าถึง)"
+
+msgid "The following tag was deleted"
+msgstr "แท็กที่กำลังหาได้ถูกลบแล้ว"
+
+msgid "the forum"
+msgstr "ฟอรั่ม"
+
+msgid "The gallery URL is not valid."
+msgstr "URL แกลลอรี่ไม่ถูกต้อง."
+
+msgid "The name of a group must not contain \" or ' or be empty."
+msgstr "ชื่อกลุ่มจะต้องไม่ประกอบด้วยเครื่องหมาย \" หรือ ' หรือช่องเว้นว่าง."
+
+msgid "The name of an album must not be empty"
+msgstr "ชื่อของอัลบั้มจะต้องไม่ปล่อยว่าง"
+
+msgid "The name of directories and files must be composed of letters, numbers, \"-\", \"_\" or \".\""
+msgstr "ชื่อของไดเรกทอรี่และไฟล์ ต้องประกอบด้วยตัวอักษร, ตัวเลข, \"-\", \"_\" หรือ \".\"เท่านั้น"
+
+msgid "The number of comments a page must be between 5 and 50 included."
+msgstr "จำนวนความคิดเห็นต่อหนึ่งหน้า จะต้องเป็นจำนวนระหว่าง 5 แต่ไม่เกิน 50 ความคิดเห็น."
+
+msgid "The permalink name must be composed of a-z, A-Z, 0-9, \"-\", \"_\" or \"/\". It must not be numeric or start with number followed by \"-\""
+msgstr "ชื่อลิงค์จะต้องประกอบด้วย a-z, A-Z, 0-9, \"-\", \"_\" หรือ \"/\". แต่จะต้องไม่ใช่อักขระพิเศษ หรือเริ่มต้นด้วยตัวเลขแล้วตามด้วยเครื่องหมาย \"-\""
+
+msgid "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form"
+msgstr "ไฟล์ที่จะอัพโหลด มีขนาดใหญ่เกินไป โปรดใช้การอัพโหลดโดยตรงผ่านรูปแบบ HTML หรือการอัพโหลดแบบปกติ"
+
+msgid "The uploaded file exceeds the upload_max_filesize directive in php.ini: %sB"
+msgstr "ไฟล์ที่จะอัพโหลดมีขนาดใหญ่เกินที่กำหนดไว้ในไฟล์การตั้งค่า php.ini: %sB"
+
+msgid "The uploaded file was only partially uploaded"
+msgstr "ไฟล์ที่อัพโหลดได้ถูกอัพโหลดไปบางส่วน"
+
+msgid "The uploaded files exceed the post_max_size directive in php.ini: %sB"
+msgstr "ไฟล์ที่จะอัพโหลดมีขนาดใหญ่เกินที่กำหนดไว้ในไฟล์การตั้งค่า php.ini: %sB"
+
+msgid "The version of %s [%s] installed is not compatible with the version required [%s]"
+msgstr "เวอร์ชั่นของ %s [%s] ที่ได้ติดตั้งไปไม่สามารถรองรับการทำงาน กับเวอร์ชั่นที่ต้องการ [%s]"
+
+msgid "The webmaster has subscribed you to receiving notifications by mail."
+msgstr "เว็บมาสเตอร์ได้บอกรับคุณโดยการแจ้งผ่านเมล์."
+
+msgid "The webmaster has unsubscribed you from receiving notifications by mail."
+msgstr "เว็บมาสเตอร์ได้ยกเลิกบอกรับคุณโดยการแจ้งผ่านเมล์."
+
+msgid "The whole page"
+msgstr "หน้าทั้งหมด"
+
+msgid "The whole set"
+msgstr "ชุดการตั้งค่าทั้งหมด"
+
+msgid "the wiki"
+msgstr "วิกิ wiki"
+
+msgid "Theme has been successfully installed"
+msgstr "ธีมได้ถูกติดตั้งเรียบร้อยแล้ว"
+
+msgid "Themes"
+msgstr "ธีม"
+
+msgid "There is no available subscribers to mail."
+msgstr "ไม่มีการแจ้งเตือนการบอกรับโดยทางเมล."
+
+msgid "There is no other language available."
+msgstr "ไม่มีภาษาอื่นที่สามารถใช้ได้เพิ่มเติม."
+
+msgid "There is no other plugin available."
+msgstr "ไม่มีปละ๊กอินอื่นที่สามารถใช้ได้เพิ่มเติม."
+
+msgid "There is no other theme available."
+msgstr "ไม่มีธีมอื่นที่สามารถใช้ได้เพิ่มเติม."
+
+msgid "This name is already used by another group."
+msgstr "ชื่อนี้ได้ถูกใช้แล้ว."
+
+msgid "This site already exists"
+msgstr "ที่อยู่นี้ได้มีอยู่แล้ว"
+
+msgid "This theme was not designed to be directly activated"
+msgstr "ธีมนี้ไม่สามารถปรับแต่งได้ เนื่องจากมีการเปิดการใช้งานอยู่"
+
+msgid "Thumbnail"
+msgstr "รูปภาพขนาดย่อ"
+
+msgid "Time to send mail is limited. Others mails are skipped."
+msgstr "เวลาในการส่งเมลถูกจำกัด. เมลอื่นๆ อาจจะไม่ได้ถูกส่ง."
+
+msgid "Time"
+msgstr "เวลา"
+
+msgid "Title"
+msgstr "ชื่อ"
+
+msgid "To send ?"
+msgstr "ต้องการส่ง?"
+
+msgid "To subscribe"
+msgstr "บอกรับ"
+
+msgid "To unsubscribe"
+msgstr "ยกเลิกการบอกรับ"
+
+msgid "Toggle 'default group' property"
+msgstr "กลับไปยังคุณสมบัติ 'กลุ่มปกติ'"
+
+msgid "Tools"
+msgstr "เครื่องมือ"
+
+msgid "total time"
+msgstr "เวลาทั้งหมด"
+
+msgid "Type here the author name"
+msgstr "ชนิดของชื่อผู้เขียน"
+
+msgid "Type here the title"
+msgstr "ชนิดของชื่อ"
+
+msgid "Type in a search term"
+msgstr "ชนิดของการค้นหา"
+
+msgid "Unable to check for upgrade."
+msgstr "ไม่สามารถตรวจสำหรับอัพเกรดได้."
+
+msgid "Uncheck all"
+msgstr "ไม่เลือกทั้งหมด"
+
+msgid "Uninstall"
+msgstr "ถอนการติดตั้ง"
+
+msgid "Uninstalled Plugins"
+msgstr "ได้ถอนการติดตั้งปลั๊กอินแล้ว"
+
+msgid "unit mode"
+msgstr "โหมดเฉพาะ"
+
+msgid "Unknown upload error"
+msgstr "ไม่ทราบข้อผิดพลาดของการอัพโหลด"
+
+msgid "unknown"
+msgstr "ไม่ทราบ"
+
+msgid "Unlocked"
+msgstr "ปลดล็อค"
+
+msgid "unset"
+msgstr "ไม่มีการตั้งค่า"
+
+msgid "Unsubscribe from notification by mail"
+msgstr "ยกเลิกการบอกรับการแจ้งเตือนโดยเมล"
+
+msgid "Unsubscribed"
+msgstr "ได้ยกเลิกการบอกรับแล้ว"
+
+msgid "Update albums informations"
+msgstr "อัพเดตรายละเอียดอัลบั้ม"
+
+msgid "Update photos information"
+msgstr "อัพเดตรายละเอียดรูปภาพ"
+
+msgid "update the database from files"
+msgstr "อัพเดตฐานข้อมูลกับไฟล์"
+
+msgid "Upload Photos"
+msgstr "อัพโหลดรูปภาพ"
+
+msgid "Upload"
+msgstr "อัพโหลด"
+
+msgid "Uploaded Photos"
+msgstr "รูปภาพที่ได้ถูกอัพโหลดแล้ว"
+
+msgid "Use the default photo sort order"
+msgstr "ใช้การจัดเรียงภาพถ่ายคำสั่งพื้นฐาน"
+
+msgid "Used metadata"
+msgstr "ใช้งานเมตาดาต้า"
+
+msgid "user \"%s\" added"
+msgstr "ผู้ใช้งาน \"%s\" ได้ถูกเพิ่มแล้ว"
+
+msgid "User \"%s\" created with \"%s\" like password"
+msgstr "ผู้ใช้งาน \"%s\" สร้างด้วย \"%s\" รหัสผ่าน"
+
+msgid "User %s [%s] added."
+msgstr "ผู้ใช้งาน %s [%s] ได้ถูกเพิ่มแล้ว."
+
+msgid "User %s [%s] was added to the subscription list."
+msgstr "ผู้ใช้งาน %s [%s] ได้เพิ่มเข้ารายการการบอกรับการเป็นสมาชิก."
+
+msgid "User %s [%s] was not added to the subscription list."
+msgstr "ผู้ใช้งาน %s [%s] ไม่ได้เพิ่มเข้ารายการการบอกรับการเป็นสมาชิก."
+
+msgid "User %s [%s] was not removed from the subscription list."
+msgstr "ผู้ใช้งาน %s [%s] ที่ไม่ได้ถูกลบจากรายการการบอกรับเป็นสมาชิก."
+
+msgid "User %s [%s] was removed from the subscription list."
+msgstr "ผู้ใช้งาน %s [%s] ที่ได้ถูกลบจากรายการการบอกรับเป็นสมาชิก."
+
+msgid "User comments validation"
+msgstr "การตรวจสอบความคิดเห็นของผู้ใช้งาน"
+
+msgid "User list"
+msgstr "รายชื่อผู้ใช้งาน"
+
+msgid "User status"
+msgstr "สถานะของผู้ใช้งาน"
+
+msgid "User"
+msgstr "ผู้ใช้งาน"
+
+msgid "Users"
+msgstr "ผู้ใช้งาน"
+
+msgid "user_status_admin"
+msgstr "ผู้ดูแลระบบ"
+
+msgid "user_status_generic"
+msgstr "ผู้ใช้งานทั่วไป"
+
+msgid "user_status_guest"
+msgstr "ผู้เยี่ยมชม"
+
+msgid "user_status_webmaster"
+msgstr "เว็บมาสเตอร์"
+
+msgid "Validate"
+msgstr "ตรวจสอบ"
+
+msgid "Validation"
+msgstr "การตรวจสอบ"
+
+msgid "Version"
+msgstr "เวอร์ชั่น"
+
+msgid "Virtual album added"
+msgstr "อัลบั้มได้ถูกเพิ่มแล้ว"
+
+msgid "Virtual album deleted"
+msgstr "อัลบั้มได้ถูกลบแล้ว"
+
+msgid "Virtual album name"
+msgstr "อัลบั้มชื่อ"
+
+msgid "Virtual album"
+msgstr "อัลบั้ม"
+
+msgid "Virtual albums to move"
+msgstr "ย้ายอัลบั้ม"
+
+msgid "Virtual Links"
+msgstr "ลิงค์"
+
+msgid "Visit Gallery"
+msgstr "เยี่ยมชมแกลลอรี่"
+
+msgid "Visit Piwigo project website"
+msgstr "เยี่ยมชมเว็บไซต์อย่างเป็นทางการของ Piwigo"
+
+msgid "Visit plugin site"
+msgstr "เยี่ยมชมเว็บไซต์ปลั๊กอิน"
+
+msgid "Waiting"
+msgstr "รออนุมัติ"
+
+msgid "Warning: subscribing or unsubscribing will send mails to users"
+msgstr "คำเตือน: การบอกรับ หรือ ยกเลิกการบอกรับ จะถูกส่งไปยังผู้ใช้งานโดยเมล"
+
+msgid "Webmaster cannot be deleted"
+msgstr "เว็บมาสเตอร์ไม่สามารถลบได้"
+
+msgid "Webmaster status is required."
+msgstr "จำเป็นต้องมีสถานะเป็น เว็บมาสเตอร์."
+
+msgid "Week starts on"
+msgstr "เริ่มต้นสัปดาห์วัน"
+
+msgid "Who can see these photos?"
+msgstr "ใครบ้างที่สามารถเข้าชมรูปภาพเหล่านี้ได้?"
+
+msgid "Who can see this photo?"
+msgstr "ใครบ้างที่สามารถเข้าชมรูปภาพเหล่านี้ได้?"
+
+msgid "width must be a number superior to"
+msgstr "ความกว้างต้องเป็นตัวเลขจำนวนที่มากกว่า"
+
+msgid "With blank value, gallery title will be used"
+msgstr "ถ้าปล่อยว่าง, ชื่อแกลลอรี่ของคุณจะถูกใช้แสดงแทน"
+
+msgid "wrong filename"
+msgstr "ชื่อไฟล์ไม่ถูกต้อง"
+
+msgid "Year"
+msgstr "ปี"
+
+msgid "You are running on development sources, no check possible."
+msgstr "คุณกำลังใช้งาน Piwigo เวอร์ชั่นที่กำลังพัฒนาอยู่, ซึ่งไม่ใช่เวอร์ชั่นที่ถูกปล่อยอย่างเป็นทางการ."
+
+msgid "You are running the latest version of Piwigo."
+msgstr "คุณกำลังใช้งาน Piwigo เวอร์ชั่นล่าสุดอยู่."
+
+msgid "You cannot delete your account"
+msgstr "คุณไม่สามารถลบบัญชีผู้ใช้งานของคุณได้"
+
+msgid "You cannot move an album in its own sub album"
+msgstr "คุณไม่สามารถย้ายอัลบั้มหลักเข้าไปในอัลบั้มย่อยได้"
+
+msgid "You can't define a default photo order because you have a custom setting in your local configuration."
+msgstr "คุณไม่สามารถกำหนดค่ารูปภาพเป็นค่าปกติได้ เพราะว่าคุณได้ปรับแต่งการตั้งค่าด้วยตนเองในส่วนของ การปรับแต่งการตั้งค่าระบบ."
+
+msgid "You have %d orphan tags: %s."
+msgstr "คุณมี %d แท็กที่ไม่ได้ใช้งาน: %s. แท็ก"
+
+msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
+msgstr "ชื่อจะต้องเป็นชื่อเฉพาะ <i>$conf['order_by']</i> ในไฟล์การตั้งค่าของคุณ, มันคือตัวแปรที่ปิดกั้นการดำเนินการ, กรุณาลบมันออก หรือ เปลี่ยนชื่อมันเป็นอย่างอื่น <i>$conf['order_by_custom']</i> !"
+
+msgid "You have subscribed to receiving notifications by mail."
+msgstr "คุณได้มีการบอกรับข่าวสารและจะได้รับข่าวสารและการแจ้งเตือนผ่านทางเมล."
+
+msgid "You have unsubscribed from receiving notifications by mail."
+msgstr "คุณได้ยกเลิกการบอกรับข่าวสารและจะไม่ได้ได้รับข่าวสารและการแจ้งเตือนผ่านทางเมล."
+
+msgid "You need to confirm deletion"
+msgstr "คุณจะต้องยืนยันการลบ"
+
+msgid "You need to upgrade your system to take full advantage of the application else the application will not work correctly, or not at all"
+msgstr "คุณควรอัพเดตระบบของคุณ เพื่อประสิทธิภาพการทำงานของแอพพลิเคชั่น, ไม่เช่นนั้นแอพพลิเคชั่นของคุณอาจไม่สามารถทำงานได้อย่างถูกต้อง, หรือไม่สามารถทำงานได้อย่างสิ้นเชิง"
+
+msgid "Your configuration settings are saved"
+msgstr "การเปลี่ยนแปลงการตั้งค่าของคุณได้ถูกบันทึกแล้ว"
+
+msgid "[%s] Visit album %s"
+msgstr "[%s] เข้าชมอัลบั้ม %s"
+
+msgid "[NBM] Problems or questions"
+msgstr "[NBM] ปัญหาหรือคำถาม"
+
+msgid "Themes which need upgrade"
+msgstr "ธีมนี้ต้องการการอัพเกรด"
+
+msgid "Languages which need upgrade"
+msgstr "ภาษานี้ต้องการการอัพเกรด"
+
+msgid "All themes are up to date."
+msgstr "ธีมทั้งหมดถูกอัพเดตแล้ว."
+
+msgid "All plugins are up to date."
+msgstr "ปลั๊กอินทั้งหมดถูกอัพเดตแล้ว."
+
+msgid "All languages are up to date."
+msgstr "ภาษาทั้งหมดถูกอัพเดตแล้ว."
+
+msgid "Visit theme site"
+msgstr "เยี่ยมชมเว็บไซต์ธีม"
+
+msgid "Visit language site"
+msgstr "เยี่ยมชมเว็บไซต์ภาษา"
+
+msgid "New Version"
+msgstr "เวอร์ชั่นใหม่"
+
+msgid "Obsolete Plugins"
+msgstr "ปลั๊กอินเก่า"
+
+msgid "WARNING! This plugin does not seem to be compatible with this version of Piwigo."
+msgstr "คำเตือน! ปลั๊กนี้ไม่รองรับการใช้งาน(เข้ากันไม่ได้) Piwigo เวอร์ชั่นที่ใช้อยู่."
+
+msgid "Do you want to activate anyway?"
+msgstr "คุณต้องการเปิดการใช้งาน ไม่ว่าอย่างไรก็ตาม?"
+
+msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
+msgstr "ปลั๊กอินนี้ไม่ใช่ส่วนหนึ่งของ PIWIGO CORE! ถอนการติดตั้งตอนนี้!"
+
+msgid "ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW."
+msgstr "เกิดความผิดพลาด: ไม่พบปลั๊กอินนี้แต่มันได้ถูกติดตั้งแล้ว! ถอนการติดตั้งตอนนี้."
+
+msgid "display"
+msgstr "การแสดงผล"
+
+msgid "Thumbnails generation in progress..."
+msgstr "การสร้างรูปภาพขนาดย่อ กำลังประมวลผล..."
+
+msgid "Photos generation in progress..."
+msgstr "การสร้างรูปภาพ กำลังประมวลผล..."
+
+msgid "%s photos have been regenerated"
+msgstr "%s รูปภาพที่ได้สร้างใหม่"
+
+msgid "%s photos can not be regenerated"
+msgstr "%s รูปภาพที่ไม่สามารถสร้างได้"
+
+msgid "Updates"
+msgstr "อัพเดต"
+
+msgid "Update in progress... Please wait."
+msgstr "กำลังประมวลผลการอัพเดต... กรุณารอ."
+
+msgid "Ignore this update"
+msgstr "ปฏิเสธการอัพเดต"
+
+msgid "Reset ignored updates"
+msgstr "คืนค่าการอัพเดตที่ถูกปฏิเสธ"
+
+msgid "Update All"
+msgstr "อัพเดต ทั้งหมด"
+
+msgid "ERROR"
+msgstr "ผิดพลาด"
+
+msgid "Update Complete"
+msgstr "อัพเดต เรียบร้อยแล้ว"
+
+msgid "Piwigo Update"
+msgstr "อัพเดต Piwigo"
+
+msgid "Extensions Update"
+msgstr "อัพเดต ส่วนขยาย"
+
+msgid "All extensions are up to date."
+msgstr "ส่วนขยายทั้งหมดได้ถูกอัพเดตแล้ว."
+
+msgid "Following plugins may not be compatible with the new version of Piwigo:"
+msgstr "ปลั๊กอินนี้อาจจะไม่รองรับการทำงานบนเวอร์ชั่นใหม่ของ Piwigo:"
+
+msgid "Following themes may not be compatible with the new version of Piwigo:"
+msgstr "ธีมนี้อาจจะไม่รองรับการทำงานบนเวอร์ชั่นใหม่ของ Piwigo:"
+
+msgid "I decide to update anyway"
+msgstr "ฉันตัดสินใจที่จะอัพเดต"
+
+msgid "Update to Piwigo %s"
+msgstr "อัพเดตไปยัง Piwigo %s"
+
+msgid "Two updates are available"
+msgstr "การอัพที่สามารถทำได้"
+
+msgid "This is a minor update, with only bug corrections."
+msgstr "นี่คือไมเนอร์อัพเดต หรือ การอัพเดตเวอร์ชั่นรอง, ซึ่งมีการแก้ไขจุดบกพร่องบางประการ."
+
+msgid "This is a major update, with <a href=\"%s\">new exciting features</a>."
+msgstr "นี่คือเมเจอร์อัพเดต หรือ การอัพเดตเวอ์ชั่นหลัก, ซึ่งมาพร้อมกับ <a href=\"%s\">ความสามารถใหม่</a>. ที่น่าสนใจ."
+
+msgid "Some themes and plugins may be not available yet."
+msgstr "ธีมและปลั๊กอินบางตัวอาจไม่สามารถใช้งานได้."
+
+msgid "You can update to Piwigo %s directly, without upgrading to Piwigo %s (recommended)."
+msgstr "คุณสามารถอัพเดต Piwigo %s ได้โดยตรง, โดยไม่ต้องอัพเกรด Piwigo %s (แนะนำ)."
+
+msgid "Save Template Directory"
+msgstr "บันทึกไดเรกทอรี่แม่แบบ"
+
+msgid "Some upgrades are available for extensions."
+msgstr "มีส่วนขยายบางตัว ที่ต้องการการอัพเกรด."
+
+msgid "Please wait..."
+msgstr "กรุณารอ..."
+
+msgid "Ignore All"
+msgstr "ปฏิเสธทั้่งหมด"
+
+msgid "Crop"
+msgstr "ตัด"
+
+msgid "Width"
+msgstr "กว้าง"
+
+msgid "Height"
+msgstr "สูง"
+
+msgid "Follow Orientation"
+msgstr "การติดตามแนวโน้ม"
+
+msgid "Graphics Library"
+msgstr "กราฟฟิค ไลบราลี่"
+
+msgid "... or "
+msgstr "... หรือ "
+
+msgid "Create"
+msgstr "สร้าง"
+
+msgid "Start Upload"
+msgstr "เริ่มการอัพโหลด"
+
+msgid "You are using the Flash uploader. Problems? Try the <a href=\"%s\">Browser uploader</a> instead."
+msgstr "ตอนนี้คุณกำลังใช้การอัพโหลดแบบ แฟลชอัพโหลด. หากเจอปัญหา? ให้ลองใช้ <a href=\"%s\">การอัพโหลดแบปกติ</a> แทน."
+
+msgid "You are using the Browser uploader. Try the <a href=\"%s\">Flash uploader</a> instead."
+msgstr "คุณกำลังใช้การอัพโหลด แบบปกติ. ลองใช้การอัพโหลดแบบ <a href=\"%s\">แฟลชอัพโหลด</a> แทน."
+
+msgid "Maximum file size: %sB."
+msgstr "ขนาดไฟล์สูงสุด: %sB."
+
+msgid "Allowed file types: %s."
+msgstr "รูปแบบไฟล์ที่อนุญาต: %s."
+
+msgid "Approximate maximum resolution: %dM pixels (that's %dx%d pixels)."
+msgstr "ความละเอียดสูงสุดโดยประมาณ: %dM เมกะพิกเซล. (ไม่เกินขนาด %dx%d พิกเซล)."
+
+msgid "Manage Permissions"
+msgstr "จัดการการอนุญาตสิทธิ์"
+
+msgid "Photo %s of %s"
+msgstr "รูปภาพ %s จาก %s"
+
+msgid "show details"
+msgstr "แสดงรายละเอียด"
+
+msgid "hide details"
+msgstr "ซ่อนรายละเอียด"
+
+msgid "Merge tags"
+msgstr "รวมแท็ก"
+
+msgid "Select the destination tag"
+msgstr "เลือกแท็กปลายทาง"
+
+msgid "(this tag will be deleted)"
+msgstr "(แท็กนี้จะถูกลบ)"
+
+msgid "Confirm merge"
+msgstr "ยืนยันการรวม"
+
+msgid "Merge selected tags"
+msgstr "รวมแท็กที่เลือก"
+
+msgid "No destination tag selected"
+msgstr "ไม่มีแท็กปลายทางที่เลือก"
+
+msgid "Tags <em>%s</em> merged into tag <em>%s</em>"
+msgstr "แท็ก <em>%s</em> ได้ถูกรวมเข้าไปยังแท็ก <em>%s</em>"
+
+msgid "Select at least two tags for merging"
+msgstr "เลือกอย่างน้อยสองแท็กเพื่อรวม "
+
+msgid "Learn more"
+msgstr "เรียนรู้เพิ่มเติม"
+
+msgid "Select an album"
+msgstr "เลือกอัลบั้มรูป"
+
+msgid "By default, Piwigo will create a new websize from the HD (high definition) version of your photo."
+msgstr "โดยปกติ, จะสร้างรูปภาพขนาดใหม่ ซึ่งแยกต่างหากจากภาพคุณภาพความละเอียดสูง หรือแบบ HD (high definition) หรือขนาดปกติของรูปภาพของคุณ."
+
+msgid "If no HD is available and if the current websize is bigger than resize dimensions, Piwigo will move it as HD and create a downsized websize photo from it."
+msgstr "ถ้าไม่มีรูปภาพขนาดความละเอียดสูง หรือ HD และเถ้ารูปภาพของคุณขนาดใหญ่กว่าขนาดที่กำหนดเพื่อลดขนาดหรือ Resize, Piwigo จะย้ายรูปภาพเหล่านั้นไปยังขนาด HD และสร้างขนาดรูปภาพใหม่โดยการลดขนาดรูปภาพจากภาพดังกล่าวเป็นภาพขนาดที่กำหนดไว้สำหรับแสดงบนเว็บ."
+
+msgid "An error has occured during upgrade."
+msgstr "เกิดข้อผิดพลาดในระหว่างการอัพเกรด."
+
+msgid "An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href=\"%s\">Click here to show log error</a>."
+msgstr "เกิดข้อผิดพลาดในระหว่างการแตกไฟล์. กรุณาตรวจสอบสิทธิ์ในการเข้าถึงโฟลเดอร์การติดตั้งของ Piwigo.<br><a href=\"%s\">คลิกที่นี่เพื่อดูบันทึกรายการข้อผิดพลาด</a>."
+
+msgid "Piwigo cannot retrieve upgrade file from server"
+msgstr "Piwigo ไม่สามารถรัับไฟล์อัพเกรดจากเซิร์ฟเวอร์ได้"
+
+msgid "%d days"
+msgstr "%d วัน"
+
+msgid "%d day"
+msgstr "%d วัน"
+
+msgid "%d hours"
+msgstr "%d ชั่วโมง"
+
+msgid "%d hour"
+msgstr "%d ชั่วโมง"
+
+msgid "%d minutes"
+msgstr "%d นาที"
+
+msgid "%d minute"
+msgstr "%d นาที"
+
+msgid "%d months"
+msgstr "%d เดือน"
+
+msgid "%d month"
+msgstr "%d เดือน"
+
+msgid "%d seconds"
+msgstr "%d วินาที"
+
+msgid "%d second"
+msgstr "%d วินาที"
+
+msgid "%d weeks"
+msgstr "%d สัปดาห์"
+
+msgid "%d week"
+msgstr "%d สัปดาห์"
+
+msgid "%d years"
+msgstr "%d ปี"
+
+msgid "%d year"
+msgstr "%d ปี"
+
+msgid "%s ago"
+msgstr "%d ที่แล้ว"
+
+msgid "%s has been successfully updated."
+msgstr "%s ได้อัพเดตข้อมูลมูลเรียบร้อยแล้ว."
+
+msgid "%s in the future"
+msgstr "%s ในอนาคต"
+
+msgid "%u users have automatic permission because they belong to a granted group."
+msgstr "กำหนดให้ผู้ใช้ได้รับอนุญาตโดยอัตโนมัติ เนื่องจากพวกเขาอยู่ในกลุ่มที่ได้รับอนุญาตอยู่แล้ว"
+
+msgid "<em>Piwigo for Android</em> application empowers you to connect your Android phone or table to your Piwigo gallery, create some albums and upload several photos at once."
+msgstr "<em>Piwigo สำหรับ แอนดรอยด์</em> แอพพลิเคชั่นที่จะช่วยให้คุณสามารถเชื่อมต่อโทรศัพท์ แอนดรอยด์ หรือแท็บเลต ไปยังอัลบั้มรูป, เพื่อสร้างอัลบั้ม และอัพโหลดรูปของคุณ."
+
+msgid "<em>Piwigo for iOS</em> application empowers you to connect to your Piwigo gallery from your iPhone, iPad or iPod Touch, create some albums and upload several photos at once."
+msgstr "<em>Piwigo สำหรับ ไอโอเอส</em> แอพพลิเคชั่นที่จะช่วยให้คุณสามารถเชื่อมต่อโทรศัพท์ ไปยังอัลบั้มรูป จาก ไอโฟน หรือไอแพดทัช, เพื่อสร้างอัลบั้ม และอัพโหลดรูปของคุณ."
+
+msgid "A locked gallery is only visible to administrators"
+msgstr "แกลลอรี่ถูกล็อก สามารถใช้งานได้เฉพาะผู้ดูแลระบบ"
+
+msgid "Activate comments"
+msgstr "เปิดใช้งานคอมเม้นต์"
+
+msgid "Add tags"
+msgstr "เพิ่มป้ายชื่อ"
+
+msgid "Add to caddie"
+msgstr "เพิ่มไปยังแคดดี้"
+
+msgid "Added by %s"
+msgstr "ถูกเพิม่โดย%s"
+
+msgid "Adobe Photoshop Lightroom is a photography software designed to manage large quantities of digital images and doing post production work."
+msgstr "Adobe Photoshop Lightroom เป็นซอฟต์แวร์การถ่ายภาพที่ออกแบบมาเพื่อจัดการภาพดิจิตอลปริมาณมากและการดำเนินงานผลิตชิ้นงานต่างๆ"
+
+msgid "Applications"
+msgstr "แอพพลิเคชั่น"
+
+msgid "Apply watermark if height is bigger than"
+msgstr "ใช้ลายน้ำถ้าความสูงใหญ่กว่า"
+
+msgid "Apply watermark if width is bigger than"
+msgstr "ใช้ลายน้ำถ้าความกว้างใหญ่กว่า"
+
+msgid "Automatic sort order"
+msgstr "การเรียงลำดับอัตโนมัติ"
+
+msgid "Available on"
+msgstr "พร้อมใช้งาน"
+
+msgid "By default, the center of interest is placed in the middle of the photo."
+msgstr "โดยค่าเริ่มต้นซึ่งเป็นศูนย์กลางของความสนใจจะอยู่ตรงกลางของภาพ"
+
+msgid "Cancel"
+msgstr "ยกเลิก"
+
+msgid "Center of interest"
+msgstr "ศูนย์ที่น่าสนใจ"
+
+msgid "Default comments order"
+msgstr "เรียงลำดับคอมเม้นต์ตามค่าเริ่มต้น"
+
+msgid "Delete multiple size images"
+msgstr "ลบภาพที่มีขนาดหลาย"
+
+msgid "Duplicate selected tags"
+msgstr "ทำซ้ำป้ายชื่อที่เลือก"
+
+msgid "Duplicates"
+msgstr "คัดลอก"
+
+msgid "Edit photo"
+msgstr "แก้ไขรูปภาพ"
+
+msgid "Features include gallery browsing, album creation and photo upload."
+msgstr "รวมถึงการเรียกดูแกลเลอรี่, การสร้างอัลบั้มและอัพโหลดรูปภาพ"
+
+msgid "For photo sizes with crop, such as \"Square\", Piwigo will do its best to include the center of interest."
+msgstr "สำหรับขนาดภาพที่มีตัดเช่น \"สี่เหลี่ยม\", Piwigo จะทำอย่างดีที่สุดที่จะรวมศูนย์ที่น่าสนใจ"
+
+msgid "Gallery unlocked"
+msgstr "แกลลอรี่ปลดล็อค"
+
+msgid "Generate multiple size images"
+msgstr "\nสร้างภาพหลายขนาด"
+
+msgid "Groups and users"
+msgstr "กลุ่มและผู้ใช้งาน"
+
+msgid "Last import"
+msgstr "นำเข้าล่าสุด"
+
+msgid "List"
+msgstr "รายการ"
+
+msgid "Move to album"
+msgstr "ย้ายไปยังอัลบั้ม"
+
+msgid "Multiple Size"
+msgstr "หลายขนาด"
+
+msgid "Name of the duplicate"
+msgstr "ชื่อที่ซ้ำกัน"
+
+msgid "No group is permitted to see this private album"
+msgstr "ไม่มีกลุ่มที่ได้รับอนุญาตให้ดูอัลบั้มส่วนตัวนี้"
+
+msgid "Opacity"
+msgstr "ความโปร่งใส"
+
+msgid "Original Size"
+msgstr "ขนาดเเท่าต้นฉบับ"
+
+msgid "Original file : %s"
+msgstr "ไฟล์ต้นฉบับ : %s"
+
+msgid "Permission management"
+msgstr "การจัดการการอนุญาต"
+
+msgid "Photo name"
+msgstr "ชื่อรูปภาพ"
+
+msgid "Photo sizes with crop"
+msgstr "ขนาดรูปถ่ายที่มีตัด"
+
+msgid "Piwigo for Android"
+msgstr "Piwigo สำหรับ Android"
+
+msgid "Piwigo for iOS (iPhone, iPad, iPod Touch)"
+msgstr "Piwigo สำหรับ iOS (iPhone, iPad, iPod Touch)"
+
+msgid "Predefined filter"
+msgstr "ตัวกรองที่กำหนดไว้ล่วงหน้า"
+
+msgid "Source tag"
+msgstr "แหล่งที่มาของป้ายชื่อ"
+
+msgid "Synchronize metadata"
+msgstr "ประสานข้อมูลเมตาดาต้า"
+
+msgid "There is no group in this gallery."
+msgstr "ไม่มีกลุ่มในแกลเลอรี่นี้"
+
+msgid "This album contains no photo."
+msgstr "อัลบั้มนี้ยังไม่มีรูปภ่าย"
+
+msgid "Unlock gallery"
+msgstr "ปลดล็อกแกลเลอรี่"
+
+msgid "Visited %d times"
+msgstr "เข้าชม %d ครั้ง"
+
+msgid "Piwigo Publish plugin for Lightroom"
+msgstr "ปลั๊กอิน Piwigo สำหรับ Lightroom"
+
+msgid "Piwigo export plugin for iPhoto"
+msgstr "ปลั๊กอิน Piwigo สำหรับการส่งออก iPhoto"
+
+msgid "Piwigo publish plugin for Shotwell"
+msgstr "ปลั๊กอิน Piwigo สำหรับ Shotwell"
+
+msgid "Piwigo publish plugin for digiKam"
+msgstr "ปลั๊กอิน Piwigo สำหรับ digiKam"
+
+msgid "Plugin has been successfully copied"
+msgstr "ปลั๊กอินได้คัดลอกสำเร็จแล้ว"
+
+msgid "Posted %s on %s"
+msgstr "ถูกโพส %s เมื่อ %s"
+
+msgid "Rated %d times, score : %.2f"
+msgstr "เรต %d ครั้ง, คะแนน : %.2f"
+
+msgid "ReGalAndroid (RemoteGallery client for Android) is an open source (GPL v3) Piwigo client for the Android platform."
+msgstr "ReGalAndroid (รีโมตไคลเอนต์แกลลอรี่สำหรับ Android) คือโอเพนซอร์ส (GPL v3) ลูกค้า Piwigo สำหรับแพลตฟอร์ม Android"
+
+msgid "Resize after upload"
+msgstr "การปรับขนาดหลังจากที่อัปโหลด"
+
+msgid "Save manual order"
+msgstr "บันทึกคำสั่งด้วยตนเอง"
+
+msgid "Save visits in history for"
+msgstr "บันทึกการเข้าชมในประวัติสำหรับ"
+
+msgid "Select a file"
+msgstr "เลือกไฟล์"
+
+msgid "Select a zone with your mouse to define a new center of interest."
+msgstr "เลือกโซนด้วยเมาส์ของคุณเพื่อกำหนดศูนย์ใหม่ที่สนใจ"
+
+msgid "Select groups..."
+msgstr "เลือกกลุ่ม ..."
+
+msgid "Select users..."
+msgstr "เลือกผู้ใช้งาน ..."
+
+msgid "Send connection settings by email"
+msgstr "ส่งการตั้งค่าการเชื่อมต่อทางอีเมล"
+
+msgid "Sharpen"
+msgstr "ความคมชัด"
+
+msgid "No order field selected"
+msgstr "ไม่ได้เลือก ฟิลด์คำสั่ง"
+
+msgid "Not cropped correctly?"
+msgstr "ครอบตัดถูกต้องหรือไม่?"
+
+msgid "Notify administrators when a comment is"
+msgstr "แจ้งผู้ดูแลระบบเมื่อมีความเห็น"
+
+msgid "Numeric identifier : %d"
+msgstr "ระบุตัวเลข:%d"
+
+msgid "On your Linux, simply install Shotwell with your package manager and the activate Piwigo publishing option."
+msgstr "เกี่ยวกับลินุกซ์ คุณเพียงแค่ติดตั้ง Shotwell กับแพคเกจหารจัดการและเปิดใช้งานตัวเลือกการเผยแพร่ Piwigo ของคุณ"
+
+msgid "Permission granted for groups"
+msgstr "สิทธิ์นี้อนุญาตสำหรับกลุ่ม"
+
+msgid "Permission granted for users"
+msgstr "สิทธิ์นี้อนุญาตสำหรับผู้ใช้งาน"
+
+msgid "Tag \"%s\" is now a duplicate of \"%s\""
+msgstr "ป้ายชื่อ \"%s\" นี้ซ้ำกับ \"%s\""
+
+msgid "include photos with lower privacy level"
+msgstr "รวมถึงภาพถ่ายที่มีระดับความเป็นส่วนตัวต่ำ"
+
+msgid "visitors need to login and have the appropriate permissions to see this album"
+msgstr "ผู้เข้าชมต้องเข้าสู่ระบบถึงจะมีสิทธิเข้าชมอัลบั้มนี้"
+
+msgid "This album contains %d photos, added between %s and %s."
+msgstr "อัลบั้มนี้มี %d รูปถ่าย เข้ามาระหว่าง %s และ %s"
+
+msgid "pending validation"
+msgstr "รอการตรวจสอบ"
+
+msgid "registered users"
+msgstr "ผู้ใช้ที่ลงทะเบียน"
+
+msgid "simple visitors"
+msgstr "ผู้เข้าชมทั่วไป"
+
+msgid "top left corner"
+msgstr "มุมซ้ายด้านบน"
+
+msgid "top right corner"
+msgstr "มุมขวาด้านบน"
+
+msgid "The original image quality must be a number between %d and %d"
+msgstr "คุณภาพของภาพต้นฉบับจะต้องเป็นตัวเลขระหว่าง %d และ %d"
+
+msgid "The original maximum height must be a number between %d and %d"
+msgstr "ความสูงของภาพจะต้องเป็นตัวเลขระหว่าง %d และ %d"
+
+msgid "The original maximum width must be a number between %d and %d"
+msgstr "ความกว้างของภาพจะต้องเป็นตัวเลขระหว่าง %d และ %d"
+
+msgid "apply automatic sort order"
+msgstr "ใช้การเรียงลำดับอัตโนมัติ"
+
+msgid "custom"
+msgstr "กำหนดเอง"
+
+msgid "modified"
+msgstr "ได้ถูกเปลี่ยนแปลง"
+
+msgid "middle"
+msgstr "กึ่งกลาง"
+
+msgid "This album contains %d photos, added on %s."
+msgstr "อัลบั้มนี้มีรูปถ่าย %d รูป, อัพโหลดเมื่อ %s"
+
+msgid "any visitor can see this album"
+msgstr "ผู้เข้าชมทุกคนสามารถเห็นอัลบั้มนี้ได้"
+
+msgid "bottom left corner"
+msgstr "มุมซ้ายด้านล่าง"
+
+msgid "bottom right corner"
+msgstr "มุมขวาด้านล่าง"
+
+msgid "cancel manual order"
+msgstr "ยกเลิกคำสั่งด้วยตนเอง"
+
+msgid "create a new site"
+msgstr "สร้างที่อยู่ไหม่"
+
+msgid "X Repeat"
+msgstr "X ทำซ้ำ"
+
+msgid "Y Position"
+msgstr "ตำแหน่ง Y"
+
+msgid "You can activate only one mobile theme."
+msgstr "คุณสามารถเปิดใช้งานรูปแบบเพียงหนึ่งชุดสำหรับมือถือ"
+
+msgid "Zoom"
+msgstr "ขยาย"
+
+msgid "add a new watermark"
+msgstr "เพิ่มลายน้ำใหม่"
+
+msgid "administrators"
+msgstr "ผู้ดูแลระบบ"
+
+msgid "Watermark"
+msgstr "ภาพลายน้ำ"
+
+msgid "Web Form"
+msgstr "ฟอร์มทางเว็บ"
+
+msgid "With no album"
+msgstr "กับที่ไม่มีอัลบั้ม"
+
+msgid "With no tag"
+msgstr "กับที่ไม่มีป้ายชื่อ"
+
+msgid "With no virtual album"
+msgstr "กับที่ไม่มีอัลบั้ม"
+
+msgid "X Position"
+msgstr "ตำแหน่ง X"
+
+msgid "Aperture is a powerful tool to refine images and manage massive libraries on Mac."
+msgstr "เครื่องมือที่มีประสิทธิภาพเพื่อปรับแต่งภาพและการบริหารจัดการไลบรารีขนาดใหญ่บน Mac"
+
+msgid "Aperture is designed for professional photographers with iPhoto simplicity."
+msgstr "เครื่องมือถูกออกแบบมาสำหรับช่างภาพมืออาชีพด้วยความเรียบง่าย iPhoto"
+
+msgid "Piwigo export plugin for Aperture"
+msgstr "ปลั๊กอินส่งออกสำหรับ Aperture"
+
+msgid "Minimum height"
+msgstr "ความสูงต่ำสุด"
+
+msgid "Panorama"
+msgstr "พาโนรามา"
+
+msgid "Minimum width"
+msgstr "ความกว้างต่ำสุด"
+
+msgid "Portrait"
+msgstr "แนวตั้ง"
+
+msgid "Landscape"
+msgstr "แนวนอน"
+
+msgid "Manage photos"
+msgstr "จัดการรูปภาพ"
+
+msgid "View in gallery"
+msgstr "ดูในแกลอรี่"
+
+msgid "Number of albums per page"
+msgstr "จำนวนอัลบั้มที่แสดงในแต่ละหน้า"
+
+msgid "iPhoto is the default photo manager on MacOSX. The Piwigo export plugin let you create new albums and export your photos directly from iPhoto to your Piwigo photo gallery."
+msgstr "iPhoto คือซอฟต์แวร์จัดการรูปภาพบนระบบปฏิบัติการแมคโอเอสเอ็กซ์, โดยปลั๊กอิน Piwigo export จะช่วยให้คุณสร้างอัลบั้ม และส่งออกรูปภาพของคุณจาก iPhoto ไปยังแกลลอรี่ Piwigo ของคุณ"
+
+msgid "digiKam is designed for photographers who want to view, manage, edit, enhance, organize, tag, and share photographs."
+msgstr "digiKam ได้ถูกออกแบบมาเพื่อนักถ่ายภาพ สำหรับใครที่ต้องการดู, จัดการ, แก้ไข, ปรับแต่ง, และแชร์ภาพถ่าย"
+
+msgid "digiKam is an advanced digital photo management free software for Linux, Windows, and MacOSX."
+msgstr "digiKam คือซอฟต์แวร์ฟรีที่เกี่ยวกับการจัดการรูปภาพขั้นสูงสำหรับ ลีนุกซ์, วินโดว์ และ แมคโอเอสเอ็กซ์"
+
+msgid "The Piwigo publish Plug-in allows you to export and synchronize photos from Lightroom directly to your Piwigo photo gallery."
+msgstr "คือปลั๊กอินที่อนุญาตให้คุณส่งออก และ ซิงโคไนซ์ รูปภาพจาก Lightroom ไปยัง แกลอรี่ Piwigo ของคุณ ได้โดยตรง"
+
+msgid "The Piwigo export plugin allows you to create albums and export photos."
+msgstr "ปลั๊กอิน Piwigo export คือปลั๊กอินที่อนุญาตให้สร้างอัลบั้มและส่งออกรูปภาพเหล่านั้น"
+
+msgid "To export your photos from digiKam to Piwigo, simply install digiKam and the Kipi-plugins."
+msgstr "ส่งออกรูปภาพจาก digiKam ไปยัง แกลลอรี่ Piwigo, ง่ายในการติดตั้ง digiKam และ Kipi-plugin"
+
+msgid "The center of interest is the most meaningful zone in the photo."
+msgstr "ศูนย์กลางของความสนใจเป็นพื้นที่ที่มีความหมายมากที่สุดของภาพ"
+
+msgid "Shotwell is an open source digital photo organizer that runs on Linux. It is the default photo manager in Ubuntu and Fedora."
+msgstr "Shotwell คือซอฟต์แวร์เสรีเกี่ยวกับการจัดการรูปภาพที่รันบน ลีนุกซ์,โดยเริ่มต้นมันเป็นซอฟต์แวร์ที่จัดการรูปภาพบน Ubuntu และ Fedora"
+
+msgid "Ratio"
+msgstr "อัตราส่วน"
+
+msgid "between %.2f and %.2f"
+msgstr "ระหว่าง %.2f และ %.2f"
+
+msgid "between %d and %d pixels"
+msgstr "ระหว่าง %d และ %d พิกเซล"
+
+msgid "Duplicate"
+msgstr "สำเนา"
+
+msgid "Manage the members"
+msgstr "จัดการสมาชิก"
+
+msgid "Merge selected groups"
+msgstr "รวมกลุ่มที่เลือก"
+
+msgid "No groups selected, no actions possible."
+msgstr "ยังไม่ได้เลือกกลุ่ม, ไม่สามารถรวมกลุ่มได้"
+
+msgid "No members to manage"
+msgstr "ไม่มีสมาชิกที่จะจัดการ"
+
+msgid "Please select at least two groups"
+msgstr "โปรดเลือกกลุ่มอย่างน้อยสองกลุ่ม"
+
+msgid "Rename"
+msgstr "เปลี่ยนชื่อ"
+
+msgid "This group will be set to default"
+msgstr "กลุ่มนี้ถูกกำหนดให้เป็นกลุ่มปกติ"
+
+msgid "This group will be unset to default"
+msgstr "กลุ่มนี้ไม่ได้ถูกกำหนดให้เป็นกลุ่มปกติ"
+
+msgid "Type here the name of the new group"
+msgstr "พิมพ์ชื่อของกลุ่มใหม่"
+
+msgid "Purge user cache"
+msgstr "ล้างแคชผู้ใช้งาน"
+
+msgid "The picture dimensions will be reduced to %dx%d pixels."
+msgstr "ขนาดของภาพจะลดลงถึง %dx%d พิเซลส์."
+
+msgid "Resize after upload disabled due to the use of GD as graphic library"
+msgstr "การปรับขนาดหลังจากการอัพโหลด อาจถูกปิดโดย GD graphic library"
+
+msgid "close"
+msgstr "ปิด"
+
+msgid "Basic settings"
+msgstr "ตั้งค่าพื้นฐาน"
+
+msgid "Change password"
+msgstr "เปลี่ยนรหัสผ่าน"
+
+msgid "Change username"
+msgstr "เปลี่ยนชื่อผู้ใช้งาน"
+
+msgid "Close user details"
+msgstr "ปิดรายละเอียดผู้ใช้งาน"
+
+msgid "General"
+msgstr "ทั่วไป"
+
+msgid "Loading..."
+msgstr "กำลังโหลด"
+
+msgid "Open user details"
+msgstr "เปิดรายละเอียดผู้ใช้งาน"
+
+msgid "Password updated"
+msgstr "อัพเดตรหัสผ่าน"
+
+msgid "Update user"
+msgstr "อัพเดตผู้ใช้"
+
+msgid "Upload in progress"
+msgstr "การอัปโหลดอยู่ในระหว่างดำเนินการ"
+
+msgid "Activate it now"
+msgstr "เปิดใช้งานตอนนี้"
+
+msgid "Mail theme"
+msgstr "รูปแบบธีมอีเมล"
+
+msgid "file name"
+msgstr "ชื่อไฟล์"
+
+msgid "date & time"
+msgstr "วันที่ และ เวลา"
+
+msgid "based on"
+msgstr "พื้นฐานระบบรันบน"
+
+msgid "Impossible to deactivate the default theme."
+msgstr "เป็นไปไม่ได้ที่จะยกเลิกการใช้งานรูปแบบเริ่มต้น"
+
+msgid "Mail address is mandatory for registration"
+msgstr "อีเมลนี้มีผลบังคับใช้สำหรับการลงทะเบียน"
+
+msgid "No and unlock sub-albums"
+msgstr "ไม่มีและปลดล็อคอัลบั้มย่อย"
+
+msgid "No user selected of %d users"
+msgstr "ไม่มีผู้ใช้งานที่ถูกเลือก %d ผู้ใช้งาน"
+
+msgid "No users selected, no actions possible."
+msgstr "ไม่มีผู้ใช้งานที่ถูกเลือก, ไม่มีการดำเนินการใดที่เป็นไปได้"
+
+msgid "Registered on %s, %s."
+msgstr "ลงทะเบียนเมื่อ on %s, %s."
+
+msgid "Select at least one tag"
+msgstr "เลือกอย่างน้อ 1 แท็ก"
+
+msgid "The settings for the guest are from the %s user"
+msgstr "การตั้งค่าสำหรับผู้มาเยี่ยมชม %s ผู้ใช้งาน"
+
+msgid "between %s and %s MB"
+msgstr "ระหว่าง %s และ %s MB"
+
+msgid "on the %d selected users"
+msgstr "จำนวน %d ผู้ใช้งานที่ถูกเลือก"
+
+msgid "No matching user found"
+msgstr "ไม่ตรงกับผู้ใช้งานที่พบ"
+
+msgid "Empty caddie"
+msgstr "ล้างแคดดี้"
+
+msgid "width & height"
+msgstr "กว้าง & สูง"
+
+msgid "%d of %d users selected"
+msgstr "ผู้ใช้งานจำนวน %d จาก %d คน ที่ถูกเลือก"
+
+msgid "User %s added"
+msgstr "ผู้ใช้ %s ได้ถูกเพิ่ม"
+
+msgid "User %s updated"
+msgstr "ผู้ใช้ %s ได้ถูกอัพเดต"
+
+msgid "Users modified"
+msgstr "ผู้ใช้ได้รับการปรับปรุงแล้ว"
+
+msgid "Showing %s to %s of %s users"
+msgstr "กำลังแสดง %s ถึง %s จาก %s ผู้ใช้งาน"
+
+msgid "Show %s users"
+msgstr "แสดง %s ผู้ใช้งาน"
+
+msgid "Last visit on %s, %s."
+msgstr "เข้าเยี่ยมชมล่าสุดเมื่อ %s, %s."
+
+msgid "Allow users to add a link to their website"
+msgstr "อนุญาตให้ผู้ใช้งานเพิ่มลิ้งค์ที่เชื่อมโยงไปยังเว็บไซต์ของเขาเอง"
+
+msgid "All %d users are selected"
+msgstr "ทั้งหมด %d คนที่ถูกเลือก"
+
+msgid "(filtered from %s total users)"
+msgstr "(ได้ถูกกรองจาก %s ผู้ใช้งานทั้งหมด)"
+
+msgid "Edit user"
+msgstr "แก้ไขผู้ใช้งาน"
+
+msgid "No recipient selected"
+msgstr "ไม่มีผู้รับที่คุณเลือก"
+
+msgid "No user is permitted to see this private album"
+msgstr "ผู้ใช้ไม่ได้รับอนุญาตให้ดูอัลบั้มส่วนตัวนี้"
+
+msgid "Recipients"
+msgstr "ผู้รับ"
+
+msgid "Y Repeat"
+msgstr "ทำซ้ำในแนวตั้ง"
+
+msgid "Delete %d orphan photos"
+msgstr "ลบ %d รูปออร์แฟนส์"
+
+msgid "Each email sent will contain its own automatic authentication key on links, valid for %s."
+msgstr "แต่ละอีเมลที่ส่งจะมีการตรวจสอบที่สำคัญของตัวเองโดยอัตโนมัติในการเชื่อมโยงที่ถูกต้อง,สำหรับ %s."
+
+msgid "For security reason, authentication keys do not work for administrators."
+msgstr "ด้วยเหตุผลด้านความปลอดภัยปุ่มตรวจสอบไม่ทำงานสำหรับผู้ดูแลระบบ"
+
+msgid "Orphans"
+msgstr "ออร์แฟนส์"
+
+msgid "checksum"
+msgstr "ตรวจสอบความถูกต้อง"
+
+msgid "Storage used"
+msgstr "พื้นที่ถูกใช้งาน"
+
+msgid "Select tags"
+msgstr "เลือกแท็ก"
+
+msgid "Display form"
+msgstr "แสดงจาก"
+
+msgid "Delete album \"%s\"."
+msgstr "ลบอัลบั้ม \"%s\"."
+
+msgid "Confirm deletion"
+msgstr "ยืนยันการลบ"
+
+msgid "Dashboard"
+msgstr "แผงควบคุม"
+
+msgid "Running on an up-to-date Piwigo is important for security."
+msgstr "ใช้งาน Piwigo เวอร์ชั่นที่เป็นปัจจุบัน มันสำคัญมากสำหรับเรื่องความ"
+
+msgid "delete only album, not photos"
+msgstr "ลบเฉพาะอัลบั้มเท่านั้น, (ไม่ลบรูปภาพ)"
+
+msgid "Piwigo %s is available, please update"
+msgstr "Piwigo %s พร้อมใช้งานแล้ว, กรุณาอัปเดต"
+
+msgid "No tags selected, no actions possible."
+msgstr "ไม่มีแท็กที่ถูกเลือก, ไม่มีการดำเนินการใดๆ"
+
+msgid "It only takes a few clicks."
+msgstr "เพียงไม่กี่คลิก"
+
+msgid "No filter on album. Select one or type to search"
+msgstr "ไม่มีตัวกรองในอัลบั้ม. โปรดเลือกประเภทการค้นหา"
+
+msgid "Delete album \"%s\" and its %d sub-albums."
+msgstr "ลบอัลบั้ม \"%s\" และ อัลบั้มย่อย %d ."
+
+msgid "%d photos"
+msgstr "%d รูปภาพ"
+
+msgid " (copy)"
+msgstr "(คัดลอก)"
+
+msgid "%d group added"
+msgstr "%d กลุ่มที่ถูกเพิ่ม"
+
+msgid "%d group deleted"
+msgstr "%d กลุ่มที่ถูกลบ"
+
+msgid "%d group edited"
+msgstr "%d กลุ่มที่ถูกแก้ไข"
+
+msgid "%d group moved"
+msgstr "%d กลุ่มที่ถูกย้าย"
+
+msgid "%d groups added"
+msgstr "%d กลุ่มที่ถูกเพิ่ม"
+
+msgid "%d groups deleted"
+msgstr "%d กลุ่มที่ถูกแก้ไข"
+
+msgid "%d groups edited"
+msgstr "%d กลุ่มที่ถูกย้าย"
+
+msgid "%d Activities"
+msgstr "%d กิจกรรม"
+
+msgid "%d Activity"
+msgstr "%d กิจกรรม"
+
+msgid " (copy %s)"
+msgstr "(คัดลอก %s)"
+

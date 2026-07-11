@@ -9,6 +9,9 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\AccessLevel;
+use Piwigo\Db\Tables;
+
 define('PHPWG_ROOT_PATH', './');
 include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 include_once PHPWG_ROOT_PATH . 'include/functions_notification.inc.php';
@@ -118,7 +121,7 @@ check_input_parameter('feed', $_GET, false, '/^[0-9a-z]{50}$/i');
 
 $feed_id = $_GET['feed'] ?? '';
 $feed_id = is_string($feed_id) ? $feed_id : '';
-$user_feed_table = USER_FEED_TABLE;
+$user_feed_table = Tables::userFeed();
 $image_only = isset($_GET['image_only']);
 // Only read below when $image_only is false, which implies $feed_id was
 // non-empty and the branch below already populated it.
@@ -152,7 +155,7 @@ SELECT user_id,
 }
 
 // Check the status now after the user has been loaded
-check_status(ACCESS_GUEST);
+check_status(AccessLevel::Guest);
 
 $row = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
 assert($row !== null);

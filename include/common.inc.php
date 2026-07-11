@@ -10,7 +10,11 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Cache\PersistentFileCache;
+use Piwigo\Config\ConfigLoader;
+use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\Logger;
+use Piwigo\Db\Tables;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Template\Template;
 
@@ -81,6 +85,17 @@ pwg_load_env_file(PHPWG_ROOT_PATH);
 $prefixeTable = '';
 pwg_apply_env_to_conf($conf, $prefixeTable);
 
+// Piwigo\Db\Tables::*()/other Piwigo\Config\Config::* accessors used
+// further down in this file's own body (not just by code that runs
+// after full boot) read Config's static state -- CommonBootstrap::run()
+// (index.php, after this whole file has already executed) is normally
+// what seeds it via these same two calls, too late for callers here.
+// Both are idempotent (verified: re-running never overwrites an
+// already-set key), so calling them again from CommonBootstrap::run()
+// right after is safe.
+ConfigLoader::applyDefaults();
+ConfigLoader::applyEnvOverrides();
+
 if (! file_exists(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . pwg_test_mode_installed_stamp())) {
     header('Location: install.php');
     exit;
@@ -117,7 +132,6 @@ if ($conf['session_gc_probability'] > 0) {
     @ini_set('session.gc_probability', min($gc_probability, 100));
 }
 
-include PHPWG_ROOT_PATH . 'include/constants.php';
 include PHPWG_ROOT_PATH . 'include/functions.inc.php';
 include PHPWG_ROOT_PATH . 'include/template.class.php';
 
@@ -175,7 +189,7 @@ $logger = new Logger([
 ]);
 
 if (! (bool) $conf['check_upgrade_feed']) {
-    if (! isset($conf['piwigo_db_version']) or $conf['piwigo_db_version'] != get_branch_from_version(PHPWG_VERSION)) {
+    if (! isset($conf['piwigo_db_version']) or $conf['piwigo_db_version'] != get_branch_from_version(AppInfo::VERSION)) {
         redirect(get_root_url() . 'upgrade.php');
     }
 }
@@ -186,14 +200,14 @@ session_start();
 load_plugins();
 
 if (! isset($conf['piwigo_installed_version'])) {
-    conf_update_param('piwigo_installed_version', PHPWG_VERSION);
-} elseif ($conf['piwigo_installed_version'] != PHPWG_VERSION) {
+    conf_update_param('piwigo_installed_version', AppInfo::VERSION);
+} elseif ($conf['piwigo_installed_version'] != AppInfo::VERSION) {
     // Piwigo has been updated "from filesystem" and not "from the administration UI". We mark it as an autoupdate in the system activities log
-    pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'autoupdate', [
+    pwg_activity('system', ActivitySystem::Core, 'autoupdate', [
         'from_version' => $conf['piwigo_installed_version'],
-        'to_version' => PHPWG_VERSION,
+        'to_version' => AppInfo::VERSION,
     ]);
-    conf_update_param('piwigo_installed_version', PHPWG_VERSION);
+    conf_update_param('piwigo_installed_version', AppInfo::VERSION);
 }
 
 // Check if last major update conf is set if not set it
@@ -274,7 +288,7 @@ load_language('common.lang');
 if (is_admin() || (defined('IN_ADMIN') and IN_ADMIN)) {
     load_language('admin.lang');
     // Add language for temporary strings for new popup, from piwigo 15
-    load_language('whats_new_' . get_branch_from_version(PHPWG_VERSION) . '.lang');
+    load_language('whats_new_' . get_branch_from_version(AppInfo::VERSION) . '.lang');
 }
 trigger_notify('loading_lang');
 load_language('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, [
@@ -328,7 +342,7 @@ if (is_array($page['notify_api_key_expiration'])) {
 
     if ($is_mail_send) {
         single_update(
-            USER_AUTH_KEYS_TABLE,
+            Tables::userAuthKeys(),
             [
                 'last_notified_on' => $page['notify_api_key_expiration']['dbnow'],
             ],

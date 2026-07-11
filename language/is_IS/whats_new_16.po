@@ -1,0 +1,20 @@
+# Piwigo translation — is_IS
+# Source: whats_new_16.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: is_IS\n"
+"Plural-Forms: nplurals=2; plural=(n % 10 != 1 || n % 100 == 11);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Brand new login & preferences with Standard pages !"
+msgstr "Glæný innskráning og stillingar með stöðluðum síðum!"
+
+msgid "Two factor authentication is here"
+msgstr "Tvíþátta auðkenning er hér"
+
+msgid "UI redesigns that make a difference"
+msgstr "Endurhannað notendaviðmót sem skiptir máli"
+

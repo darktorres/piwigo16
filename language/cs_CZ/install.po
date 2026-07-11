@@ -1,0 +1,146 @@
+# Piwigo translation — cs_CZ
+# Source: install.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: cs_CZ\n"
+"Plural-Forms: nplurals=3; plural=(n == 1 ? 0 : n >= 2 && n <= 4 ? 1 : 2);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Installation"
+msgstr "Instalace"
+
+msgid "Basic configuration"
+msgstr "Základní konfigurace"
+
+msgid "Default gallery language"
+msgstr "Základní jazyk galerie"
+
+msgid "Database configuration"
+msgstr "Databázová konfigurace"
+
+msgid "Admin configuration"
+msgstr "Administrátorská konfigurace"
+
+msgid "Start Install"
+msgstr "Spustit instalaci"
+
+msgid "It will be shown to the visitors. It is necessary for website administration"
+msgstr "Bude zobrazen návštěvníkům. Je nutný pro administraci aplikace."
+
+msgid "Connection to server succeed, but it was impossible to connect to database"
+msgstr "Spojení na server se podařilo, ale nebylo možné připojit databázi"
+
+msgid "Can't connect to server"
+msgstr "Nebylo možné se připojit k serveru"
+
+msgid "Host"
+msgstr "MySQL server"
+
+msgid "User"
+msgstr "Uživatel"
+
+msgid "user login given by your host provider"
+msgstr "uživatelské jméno, které Vám přidělil provozovatel serveru"
+
+msgid "user password given by your host provider"
+msgstr "heslo na tomto serveru"
+
+msgid "Database name"
+msgstr "Jméno databáze"
+
+msgid "also given by your host provider"
+msgstr "které na tomto serveru"
+
+msgid "Database table prefix"
+msgstr "Předpona názvů databázových tabulek"
+
+msgid "database tables names will be prefixed with it (enables you to manage better your tables)"
+msgstr "názvy vytvořených databázových tabulek budou tuto předponu (pro jejich snadnější správu)"
+
+msgid "enter a login for webmaster"
+msgstr "vložte uživatelské jméno správce"
+
+msgid "webmaster login can't contain characters ' or \""
+msgstr "uživatelské jméno správce nemůže obsahovat znak ' nebo \""
+
+msgid "please enter your password again"
+msgstr "prosím zadejte znovu heslo"
+
+msgid "Keep it confidential, it enables you to access administration panel"
+msgstr "Heslo mějte utajeno, umožní Vám přístup do administrace aplikace"
+
+msgid "Password [confirm]"
+msgstr "Heslo [potvrzení]"
+
+msgid "verification"
+msgstr "kontrola"
+
+msgid "Need help ? Ask your question on <a href=\"%s\">Piwigo message board</a>."
+msgstr "Potřebujete pomoc ? Zeptejte se na <a href=\"%s\">Piwigo fóru</a>."
+
+msgid "Visitors will be able to contact site administrator with this mail"
+msgstr "Návštěvníci mohou pomocí tohoto e-mailu správce kontaktovat"
+
+msgid "PHP 5 is required"
+msgstr "Je nutný PHP 5.2"
+
+msgid "It appears your webhost is currently running PHP %s."
+msgstr "Na Vašem webhostingu je PHP %s."
+
+msgid "Piwigo may try to switch your configuration to PHP 5 by creating or modifying a .htaccess file."
+msgstr "Piwigo se může pokusit změnit Vaše nastavení na PHP 5.2 tím, že vytvoří nebo změní soubor .htaccess."
+
+msgid "Note you can change your configuration by yourself and restart Piwigo after that."
+msgstr "Případně můžete změnit Vaši konfirguraci sami a potom restartovat Piwigo ."
+
+msgid "Try to configure PHP 5"
+msgstr "Pokuste se změnit Vaše nastavení na PHP 5.2"
+
+msgid "Sorry!"
+msgstr "Bohužel!"
+
+msgid "Piwigo was not able to configure PHP 5."
+msgstr "Piwigo nebylo schopno změnit Vaše nastavení na PHP 5.2"
+
+msgid "You may referer to your hosting provider's support and see how you could switch to PHP 5 by yourself."
+msgstr "Obraťte se na poskytovatele Vašeho webhostingu, aby jste zjistili, jak můžete změnit Vaše nastavení na PHP 5.2"
+
+msgid "Hope to see you back soon."
+msgstr "Věříme, že se brzy uvidíme."
+
+msgid "Congratulations, Piwigo installation is completed"
+msgstr "Gratulujeme, Piwigo instalace je ukončena"
+
+msgid "An alternate solution is to copy the text in the box above and paste it into the file \"local/config/database.inc.php\" (Warning : database.inc.php must only contain what is in the textarea, no line return or space character)"
+msgstr "Náhradním řešením je zkopírovat text z boxu výše a vložit jej do souboru \"local/config/database.inc.php\" (Upozornění : soubor database.inc.php smí obsahovat jen to, co je v tomto boxu, žádné znaky odřádkování nebo mezery)"
+
+msgid "Creation of config file local/config/database.inc.php failed."
+msgstr "Vytvoření souboru local/config/database.inc.php se nepodařilo."
+
+msgid "Download the config file"
+msgstr "Stáhnout konfigurační soubor"
+
+msgid "You can download the config file and upload it to local/config directory of your installation."
+msgstr "Můžete stáhnout konfigurační soubor a nahrát jej do adrešáře local/config Vaší instalace."
+
+msgid "Just another Piwigo gallery"
+msgstr "Jen další galerie Piwigo"
+
+msgid "Welcome to my photo gallery"
+msgstr "Vítejte na mé fotogalerii"
+
+msgid "Welcome to your new installation of Piwigo!"
+msgstr "Vítejte v nové instalaci Piwigo!"
+
+msgid "Don't hesitate to consult our forums for any help : %s"
+msgstr "Neváhejte navštívit naše fórum v případě jakýchkoliv dotazů: %s"
+
+msgid "localhost or other, supplied by your host provider"
+msgstr "localhost, nebo jiný, dodaný poskytovatelem hostingu"
+
+msgid "PHP version %s required (you are running on PHP %s)"
+msgstr "Je vyžadováno PHP verze %s (nyní používáte PHP %s)"
+

@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Template;
 
+use Piwigo\Core\AppInfo;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
 use Smarty\Smarty;
@@ -600,7 +601,7 @@ class Template
         foreach ($css as $combi) {
             $href = embellish_url(get_root_url() . $combi->path);
             if ($combi->version !== false) {
-                $href .= '?v' . ((bool) $combi->version ? $combi->version : PHPWG_VERSION);
+                $href .= '?v' . ((bool) $combi->version ? $combi->version : AppInfo::VERSION);
             }
             // trigger the event for eventual use of a cdn
             $href = trigger_change('combined_css', $href, $combi);
@@ -1016,7 +1017,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
         } else {
             $ret = get_root_url() . $script->path;
             if ($script->version !== false) {
-                $ret .= '?v' . ((bool) $script->version ? $script->version : PHPWG_VERSION);
+                $ret .= '?v' . ((bool) $script->version ? $script->version : AppInfo::VERSION);
             }
         }
         // trigger the event for eventual use of a cdn — no in-tree listener

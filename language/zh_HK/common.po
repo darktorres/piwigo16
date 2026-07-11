@@ -1,0 +1,1193 @@
+# Piwigo translation — zh_HK
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: zh_HK\n"
+"Plural-Forms: nplurals=1; plural=(0);\n"
+"X-Piwigo-Language-Name: 中文 (香港)\n"
+"X-Piwigo-Country: 香港特別行政區\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: zh_HK\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d 個相簿已更新"
+msgstr[1] "%d 個相簿已更新"
+
+msgid "%d comment to validate"
+msgstr "%d 個留言須要審核"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d 個留言"
+msgstr[1] "%d 個留言"
+
+msgid "%d comments to validate"
+msgstr "%d 個留言須要審核"
+
+msgid "%d hit"
+msgid_plural "%d hits"
+msgstr[0] "%d 次點擊"
+msgstr[1] "%d 次點擊"
+
+msgid "%d Kb"
+msgstr "%d Kb"
+
+msgid "%d new comment"
+msgstr "%d 個新留言"
+
+msgid "%d new comments"
+msgstr "%d 個新留言"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "%d 張新相片"
+msgstr[1] "%d 張新相片"
+
+msgid "%d new user"
+msgstr "%d 個用戶"
+
+msgid "%d new users"
+msgstr "%d 個新用戶"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "當前的標籤連結到 %d 張相片"
+msgstr[1] "當前的標籤連結到 %d 張相片"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "%d 張相片"
+msgstr[1] "%d 張相片"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) 這個留言須要審核"
+
+msgid "... or browse your empty gallery"
+msgstr "... 或瀏覽你的未有相片的相館"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "...  或取消此信息，我會自己找到方法"
+
+msgid "A comment on your site"
+msgstr "你的網站有一個留言"
+
+msgid "About Piwigo"
+msgstr "關於 Piwigo"
+
+msgid "About"
+msgstr "關於"
+
+msgid "%d rate"
+msgid_plural "%d rates"
+msgstr[0] "%d 個評級"
+msgstr[1] "%d 個評級"
+
+msgid "2small"
+msgstr "XXS - 極小"
+
+msgid "Accelerate diaporama speed"
+msgstr "加快幻燈片播放"
+
+msgid "Add a comment"
+msgstr "加入留言"
+
+msgid "Admin: %s"
+msgstr "管理: %s"
+
+msgid "Administration"
+msgstr "管理"
+
+msgid "Album results for"
+msgstr "相簿之結果為"
+
+msgid "Album: %s"
+msgstr "相簿: %s"
+
+msgid "Albums"
+msgstr "相簿"
+
+msgid "Album"
+msgstr "相簿"
+
+msgid "All tags"
+msgstr "全部標籤"
+
+msgid "All"
+msgstr "全部"
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "你的留言須要管理員審核才可顯示."
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "防灌水系統: 請等候一會兒才貼上另一留言"
+
+msgid "Any tag"
+msgstr "任何標籤"
+
+msgid "Are you sure?"
+msgstr "確定?"
+
+msgid "At least one listed rule must be satisfied."
+msgstr "最少要滿足一項列出之標準"
+
+msgid "Author: %s"
+msgstr "作者: %s"
+
+msgid "Author"
+msgstr "作者"
+
+msgid "Auto login"
+msgstr "自動登入"
+
+msgid "Bad request"
+msgstr "錯誤請求"
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "用戶 \"訪客\" 的身份錯誤, 將使用預設身份.  請通知管理員."
+
+msgid "Best rated"
+msgstr "最佳評級"
+
+msgid "Browser: %s"
+msgstr "瀏覽器: %s"
+
+msgid "Calendar"
+msgstr "日曆"
+
+msgid "Change my password"
+msgstr "更改密碼"
+
+msgid "Check your email for the confirmation link"
+msgstr "請到你的電郵信箱檢查確認連結"
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "如果你的瀏覽器不能轉送, 請點擊這裏"
+
+msgid "Click on the photo to see it in high definition"
+msgstr "點擊相片以看高清晰度相片"
+
+msgid "Close this window"
+msgstr "關閉視窗"
+
+msgid "Comment by %s"
+msgstr "由 %s 留言"
+
+msgid "Comment: %s"
+msgstr "留言: %s"
+
+msgid "Comments"
+msgstr "留言"
+
+msgid "Comment"
+msgstr "留言"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "完整 RSS 訂閱(相片, 留言)"
+
+msgid "Confirm Password"
+msgstr "確認密碼"
+
+msgid "Connected user: %s"
+msgstr "連結之用戶: %s"
+
+msgid "Connection settings"
+msgstr "連接設定"
+
+msgid "Contact webmaster"
+msgstr "聯絡管理員"
+
+msgid "Contact"
+msgstr "聯絡"
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "你的瀏覽器不支援或封鎖 Cookies.  登入必須要允許 cookies. "
+
+msgid "Create a new account"
+msgstr "建立新用戶"
+
+msgid "Created on"
+msgstr "建立在"
+
+msgid "Creation date"
+msgstr "建立日期"
+
+msgid "Current password is wrong"
+msgstr "現在的密碼是錯誤"
+
+msgid "Date created, new &rarr; old"
+msgstr "建立日期, 新 &rarr; 舊"
+
+msgid "Date created, old &rarr; new"
+msgstr "建立日期, 舊 &rarr; 新"
+
+msgid "Date posted, new &rarr; old"
+msgstr "發佈日期, 新 &rarr; 舊"
+
+msgid "Date posted, old &rarr; new"
+msgstr "發佈日期, 舊 &rarr; 新"
+
+msgid "Date"
+msgstr "日期"
+
+msgid "Default"
+msgstr "預設"
+
+msgid "Delete"
+msgstr "刪除"
+
+msgid "Desktop"
+msgstr "桌面"
+
+msgid "Dimensions"
+msgstr "量度"
+
+msgid "Display"
+msgstr "顯示"
+
+msgid "Download this file"
+msgstr "下載這個檔案"
+
+msgid "Download"
+msgstr "下載"
+
+msgid "EXIF Metadata"
+msgstr "EXIF 資料"
+
+msgid "Each listed rule must be satisfied."
+msgstr "必須要滿足每一項列出之標準"
+
+msgid "Edit a comment"
+msgstr "編輯留言"
+
+msgid "Edit"
+msgstr "編輯"
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "沒有電郵地址. 請指定一個電郵地址. "
+
+msgid "Email address"
+msgstr "電郵地址"
+
+msgid "Email: %s"
+msgstr "電郵: %s"
+
+msgid "Empty query. No criteria has been entered."
+msgstr "空白查詢.  沒有輪入條件"
+
+msgid "End-Date"
+msgstr "終止日期"
+
+msgid "Enter your new password below."
+msgstr "在下面輸入你的新密碼."
+
+msgid "Enter your personnal informations"
+msgstr "輸入你的個人資料"
+
+msgid "Error sending email"
+msgstr "寄出郵件時發生錯誤"
+
+msgid "Expand all albums"
+msgstr "打開所有相簿"
+
+msgid "Favorites"
+msgstr "收藏夾"
+
+msgid "File name, A &rarr; Z"
+msgstr "檔案名稱, A &rarr; Z"
+
+msgid "File name, Z &rarr; A"
+msgstr "檔案名稱, Z &rarr; A"
+
+msgid "File name"
+msgstr "檔案名稱"
+
+msgid "Filesize"
+msgstr "檔案大小"
+
+msgid "File"
+msgstr "檔案"
+
+msgid "Filter and display"
+msgstr "過濾器與顯示"
+
+msgid "Filter"
+msgstr "過濾器"
+
+msgid "First"
+msgstr "首頁"
+
+msgid "Forbidden"
+msgstr "禁止"
+
+msgid "Forgot your password?"
+msgstr "忘記你的密碼?"
+
+msgid "Go through the gallery as a visitor"
+msgstr "以訪客身份瀏覽相館"
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "%s 你好, 你的 Piwigo 相館沒有相片!"
+
+msgid "Hello %s,"
+msgstr "%s 你好,"
+
+msgid "Hello"
+msgstr "你好"
+
+msgid "Help"
+msgstr "幫肋"
+
+msgid "Here are your connection settings"
+msgstr "這是你的連接設定"
+
+msgid "Home"
+msgstr "主頁"
+
+msgid "I want to add photos"
+msgstr "我想加入相片"
+
+msgid "IP: %s"
+msgstr "IP: %s"
+
+msgid "IPTC Metadata"
+msgstr "IPTC 資料"
+
+msgid "Identification"
+msgstr "身份"
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "如果這是一個錯誤, 不理會這電郵就不會發生任合事."
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "如果你認你不應該數到這電郵, 請到 %s 聯絡我們"
+
+msgid "Invalid key"
+msgstr "無效鑰匙"
+
+msgid "Invalid password!"
+msgstr "無效密碼!"
+
+msgid "Invalid username or email"
+msgstr "無效用戶名稱或電郵"
+
+msgid "Keyword"
+msgstr "關鍵字"
+
+msgid "Kind of date"
+msgstr "日期樣式"
+
+msgid "Language"
+msgstr "語言"
+
+msgid "Last"
+msgstr "尾頁"
+
+msgid "Links"
+msgstr "連結"
+
+msgid "Login"
+msgstr "登入"
+
+msgid "Logout"
+msgstr "登出"
+
+msgid "Manage this user comment: %s"
+msgstr "管理這個用戶留言: %s"
+
+msgid "Manual sort order"
+msgstr "手動排序"
+
+msgid "Menu"
+msgstr "選單"
+
+msgid "Mobile"
+msgstr "移動裝置"
+
+msgid "Most visited"
+msgstr "最多點閱"
+
+msgid "N/A"
+msgstr "不適用"
+
+msgid "New on %s"
+msgstr "新相片在 %s"
+
+msgid "New password"
+msgstr "新密碼"
+
+msgid "Next"
+msgstr "下一頁"
+
+msgid "Not repeat the slideshow"
+msgstr "不要重覆幻燈片播放"
+
+msgid "Notification"
+msgstr "通知"
+
+msgid "No"
+msgstr "不"
+
+msgid "Number of items"
+msgstr "項目數量"
+
+msgid "Number of photos per page"
+msgstr "每頁相片數量"
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "記錄編號, 1 &rarr; 9"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "記錄編號, 9 &rarr; 1"
+
+msgid "Original dimensions"
+msgstr "原版大小"
+
+msgid "Original"
+msgstr "原版"
+
+msgid "Page generated in"
+msgstr "頁面產生時間"
+
+msgid "Page not found"
+msgstr "找不到網頁"
+
+msgid "Password Reset"
+msgstr "重設密碼"
+
+msgid "Password forgotten"
+msgstr "密碼長度"
+
+msgid "Password reset is not allowed for this user"
+msgstr "這用戶不允許重設密碼"
+
+msgid "Password: %s"
+msgstr "密碼: %s"
+
+msgid "Password"
+msgstr "密碼"
+
+msgid "Pause of slideshow"
+msgstr "暫停幻燈片播放"
+
+msgid "Permalink for album not found"
+msgstr "找不到相簿的永久連結"
+
+msgid "Photo sizes"
+msgstr "相片大小"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "相片標題, A &rarr; Z"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "相片標題, Z &rarr; A"
+
+msgid "Photos only RSS feed"
+msgstr "相片 RSS 訂閱"
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "只顯示最近 %d 天發佈的相片."
+msgstr[1] "只顯示最近 %d 天發佈的相片."
+
+msgid "Piwigo Help"
+msgstr "Piwigo 幫助"
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "Piwigo 遇到一個不能回復的錯誤"
+
+msgid "Play of slideshow"
+msgstr "播放幻燈片"
+
+msgid "Please enter your username or email address."
+msgstr "請輸入你的用戶名稱或電郵地址."
+
+msgid "Please, enter a login"
+msgstr "請輸入用戶名稱"
+
+msgid "Post date"
+msgstr "發佈日期"
+
+msgid "Posted on"
+msgstr "發佈在"
+
+msgid "Powered by"
+msgstr "建基於"
+
+msgid "Preferences"
+msgstr "選項"
+
+msgid "Previous"
+msgstr "前頁"
+
+msgid "Profile"
+msgstr "用戶資料"
+
+msgid "Quick connect"
+msgstr "快速連接"
+
+msgid "Quick search"
+msgstr "快速搜尋"
+
+msgid "RSS feed"
+msgstr "RSS 訂閱"
+
+msgid "Random photos"
+msgstr "隨機相片"
+
+msgid "Rank"
+msgstr "排列"
+
+msgid "Rate this photo"
+msgstr "評級這張相片"
+
+msgid "Rating score, high &rarr; low"
+msgstr "評級分數, 高 &rarr; 低"
+
+msgid "Rating score, low &rarr; high"
+msgstr "評級分數, 低 &rarr; 高"
+
+msgid "Rating score"
+msgstr "評級分數"
+
+msgid "Recent albums"
+msgstr "最新相簿"
+
+msgid "Recent period must be a positive integer value"
+msgstr "最新期限必須是正數"
+
+msgid "Recent period"
+msgstr "最新期限"
+
+msgid "Recent photos"
+msgstr "最新相片"
+
+msgid "Redirection..."
+msgstr "轉向..."
+
+msgid "Reduce diaporama speed"
+msgstr "減慢幻燈片播放"
+
+msgid "Register"
+msgstr "註冊"
+
+msgid "Registration of %s"
+msgstr "註冊 %s"
+
+msgid "Registration"
+msgstr "註冊"
+
+msgid "Related tags"
+msgstr "相關標籤"
+
+msgid "Repeat the slideshow"
+msgstr "重覆幻燈片播放"
+
+msgid "Search tags"
+msgstr "搜尋標籤"
+
+msgid "Tags"
+msgstr "標籤"
+
+msgid "This login is already used by another user"
+msgstr "用戶名稱已經被使用"
+
+msgid "display available tags"
+msgstr "顯示現有標籤"
+
+msgid "html tags are not allowed in login"
+msgstr "用戶名稱不可有html標籤"
+
+msgid "login mustn't end with a space character"
+msgstr "用戶名稱不可以空白字元作完結"
+
+msgid "login mustn't start with a space character"
+msgstr "用戶名稱不可以空白字元作開始"
+
+msgid "show tag cloud"
+msgstr "顯示標籤雲"
+
+msgid "slideshow"
+msgstr "幻燈片"
+
+msgid "stop the slideshow"
+msgstr "停止幻燈片播放"
+
+msgid "this login is already used"
+msgstr "用戶名稱已經被使用"
+
+msgid "Requested album does not exist"
+msgstr "要求的相簿不存在"
+
+msgid "Requested tag does not exist"
+msgstr "要求的標籤不存在"
+
+msgid "Reset to default values"
+msgstr "重設到預設值"
+
+msgid "Reset"
+msgstr "重設"
+
+msgid "Retrieve password"
+msgstr "重新取得密碼"
+
+msgid "Return to home page"
+msgstr "回到主頁"
+
+msgid "SQL queries in"
+msgstr "SQL 查詢在"
+
+msgid "Search by date"
+msgstr "以日期搜尋"
+
+msgid "Search for Author"
+msgstr "以作者搜尋"
+
+msgid "Search for all terms"
+msgstr "搜尋所有項目"
+
+msgid "Search for any term"
+msgstr "搜尋任何項目"
+
+msgid "Search for words"
+msgstr "搜尋詞語"
+
+msgid "Search in albums"
+msgstr "在相簿中搜尋"
+
+msgid "Search in sub-albums"
+msgstr "在子相簿中搜尋"
+
+msgid "Search results"
+msgstr "搜尋結果"
+
+msgid "Search rules"
+msgstr "搜尋規則"
+
+msgid "Search"
+msgstr "搜尋"
+
+msgid "Send my connection settings by email"
+msgstr "以電郵寄出連接設定"
+
+msgid "Sent by"
+msgstr "發送人"
+
+msgid "Show file metadata"
+msgstr "顯示檔案資料"
+
+msgid "Show latest comments first"
+msgstr "顯示最新的留言在前"
+
+msgid "Show number of comments"
+msgstr "顯示留言總數"
+
+msgid "Show oldest comments first"
+msgstr "顯示最舊的留言在前"
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "有人曾經要求重設以下用戶的密碼:"
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "註冊成功, 你將會收到一封電郵裏有你的連接設定.\n歡迎!"
+
+msgid "Tag results for"
+msgstr "標籤結果為"
+
+msgid "Tag"
+msgstr "標籤"
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "RSS 訂閱提供在網站上的新動向: 新相片, 更新的相簿, 新留言. 須要使用 RSS 閱讀器."
+
+msgid "The passwords do not match"
+msgstr "密碼不符"
+
+msgid "This author modified following comment:"
+msgstr "這作者修改了以下的留言:"
+
+msgid "This author removed the comment with id %d"
+msgstr "這作者刪除了的留言 id 為 %d"
+
+msgid "To reset your password, visit the following address:"
+msgstr "請到以下網址重設你的密碼"
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "用戶 \"%s\" 沒有電郵地址, 不能重設密碼"
+
+msgid "User comments"
+msgstr "用戶留言"
+
+msgid "You will receive a link to create a new password via email."
+msgstr "你會收到的電郵裏會有一個網址來重設密碼"
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "你留言由於不符合規則, 不能記錄."
+
+msgid "Your comment has been registered"
+msgstr "你的留言已被記錄"
+
+msgid "Your password has been reset"
+msgstr "你的密碼已經重設"
+
+msgid "comment date"
+msgstr "留言日期"
+
+msgid "display all photos in all sub-albums"
+msgstr "顯示所有子相簿的相片"
+
+msgid "display last user comments"
+msgstr "顯示用戶的新留言"
+
+msgid "display photos linked to this tag"
+msgstr "顯示連結到這標籤的相片"
+
+msgid "display recently updated albums"
+msgstr "顯示最近更新的相簿"
+
+msgid "display this album"
+msgstr "顯示這相簿"
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] "在子相簿 %d 中"
+msgstr[1] "在子相簿 %d 中"
+
+msgid "in this album"
+msgstr "在這相簿中"
+
+msgid "password updated"
+msgstr "密碼已更新"
+
+msgid "remove this tag from the list"
+msgstr "在列表中刪除此標籤"
+
+msgid "representative"
+msgstr "相簿縮圖"
+
+msgid "searched words : %s"
+msgstr "搜尋詞語:  %s"
+
+msgid "search"
+msgstr "搜尋"
+
+msgid "set as album representative"
+msgstr "設定為相簿縮圖"
+
+msgid "useful when password forgotten"
+msgstr "忘記密碼時將會使用"
+
+msgid "Show number of hits"
+msgstr "顯示點擊次數"
+
+msgid "Since"
+msgstr "由"
+
+msgid "Sort by"
+msgstr "排序"
+
+msgid "Sort order"
+msgstr "排序規則"
+
+msgid "Specials"
+msgstr "特類"
+
+msgid "Submit"
+msgstr "提交"
+
+msgid "Thank you for registering at %s!"
+msgstr "多謝在 %s 註冊!"
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "系統在維護中，請稍候再來。"
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "每頁相片數必須為正數"
+
+msgid "Thumbnails"
+msgstr "縮圖"
+
+msgid "Unknown feed identifier"
+msgstr "未知的訂閱識別符"
+
+msgid "Unknown identifier"
+msgstr "未知的識別符"
+
+msgid "Update your rating"
+msgstr "更改評級"
+
+msgid "User: %s"
+msgstr "用戶: %s"
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "在相簿 %s 上的用戶名稱 &quot;%s&quot; "
+
+msgid "Username modification"
+msgstr "用戶名稱更改"
+
+msgid "Username or email"
+msgstr "用戶名稱或電郵"
+
+msgid "Username: %s"
+msgstr "用戶名稱: %s"
+
+msgid "Username"
+msgstr "用戶名稱"
+
+msgid "View in"
+msgstr "檢視在"
+
+msgid "View"
+msgstr "檢視"
+
+msgid "Visits, high &rarr; low"
+msgstr "點閱次數, 高 &rarr; 低"
+
+msgid "Visits, low &rarr; high"
+msgstr "點閱次數, 低 &rarr; 高"
+
+msgid "Visits"
+msgstr "點閱次數"
+
+msgid "Webmaster"
+msgstr "管理員"
+
+msgid "Week %d"
+msgstr "星期 %d"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "歡迎來到你的 Piwigo 相簿!"
+
+msgid "Welcome"
+msgstr "歡迎"
+
+msgid "Yes"
+msgstr "是"
+
+msgid "You are not authorized to access the requested page"
+msgstr "你沒有權限訪問這頁面"
+
+msgid "Your Gallery Customization"
+msgstr "相簿設定"
+
+msgid "Your favorites"
+msgstr "你的收藏夾"
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "你的用戶名稱已成功更改為: %s"
+
+msgid "add this photo to your favorites"
+msgstr "把這張相片加入到收藏夾中"
+
+msgid "all"
+msgstr "所有"
+
+msgid "ascending"
+msgstr "從小到大排序"
+
+msgid "author(s) : %s"
+msgstr "作者: %s"
+
+msgid "available for administrators only"
+msgstr "只限管理員"
+
+msgid "chronology_monthly_calendar"
+msgstr "月曆"
+
+msgid "chronology_monthly_list"
+msgstr "每月列表"
+
+msgid "chronology_weekly_list"
+msgstr "每週列表"
+
+msgid "cloud"
+msgstr "雲"
+
+msgid "created after %s (%s)"
+msgstr "建立於 %s (%s) 之後"
+
+msgid "created before %s (%s)"
+msgstr "建立於 %s (%s) 之前"
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "建立於 %s (%s) 和 %s (%s) 之間"
+
+msgid "created on %s"
+msgstr "建立於 %s"
+
+msgid "delete all photos from your favorites"
+msgstr "從收藏夾中刪除所有相片"
+
+msgid "delete this photo from your favorites"
+msgstr "從收藏夾中刪除這張相片"
+
+msgid "descending"
+msgstr "從大到小排序"
+
+msgid "display a calendar by creation date"
+msgstr "以建立日期來顯示日曆"
+
+msgid "display a calendar by posted date"
+msgstr "以發佈日期來顯示日曆"
+
+msgid "display a set of random photos"
+msgstr "顯示隨機相片"
+
+msgid "display best rated photos"
+msgstr "顯示最高評級相片"
+
+msgid "display each day with photos, month per month"
+msgstr "按月和日顯示相片"
+
+msgid "display most recent photos"
+msgstr "顯示最新相片"
+
+msgid "display most visited photos"
+msgstr "顯示點閱次數最多的相片"
+
+msgid "display only recently posted photos"
+msgstr "只顯示最近發佈的相片"
+
+msgid "display your favorites photos"
+msgstr "顯示收藏的相片"
+
+msgid "edit"
+msgstr "編輯"
+
+msgid "excluded"
+msgstr "不包括"
+
+msgid "from %s to %s"
+msgstr "由 %s 至 %s"
+
+msgid "group by letters"
+msgstr "按字母分類"
+
+msgid "guest"
+msgstr "訪客"
+
+msgid "included"
+msgstr "包括"
+
+msgid "large"
+msgstr "L - 大"
+
+msgid "last %d days"
+msgstr "最近 %d 天"
+
+msgid "letters"
+msgstr "字母"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "電郵地址必須類似 xxx@yyy.eee (例如: jack@altern.org)"
+
+msgid "medium"
+msgstr "M - 中"
+
+msgid "no rate"
+msgstr "沒有評級"
+
+msgid "obligatory"
+msgstr "必須"
+
+msgid "photos posted during the last %d days"
+msgstr "相片在最近 %d 天中發佈"
+
+msgid "photo"
+msgstr "相片"
+
+msgid "posted after %s (%s)"
+msgstr "在 %s (%s) 之後發佈"
+
+msgid "posted before %s (%s)"
+msgstr "在 %s (%s) 之前發佈"
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "在 %s (%s) 和 %s (%s) 之間發佈"
+
+msgid "posted on %s"
+msgstr "在 %s 發佈"
+
+msgid "return to normal view mode"
+msgstr "返回正常檢視模式"
+
+msgid "return to the display of all photos"
+msgstr "返回到顯示所有相片"
+
+msgid "small"
+msgstr "S - 小"
+
+msgid "square"
+msgstr "方形"
+
+msgid "the beginning"
+msgstr "開始"
+
+msgid "the username must be given"
+msgstr "必須要有用戶名稱"
+
+msgid "this email address is already in use"
+msgstr "電郵地址已被使用"
+
+msgid "thumb"
+msgstr "縮圖"
+
+msgid "today"
+msgstr "今天"
+
+msgid "wrong date"
+msgstr "日期錯誤"
+
+msgid "xlarge"
+msgstr "XL - 特大"
+
+msgid "xsmall"
+msgstr "XL - 特小"
+
+msgid "xxlarge"
+msgstr "XLL - 極大"
+
+msgid "Email address is mandatory"
+msgstr "必須填寫電郵地址"
+
+msgid "Username is mandatory"
+msgstr "必須填寫使用者名稱"
+
+msgid "Website"
+msgstr "網站"
+
+msgid "Your website URL is invalid"
+msgstr "你的網址無效"
+
+msgid "mandatory"
+msgstr "必填"
+
+msgid "Email"
+msgstr "電郵"
+
+msgid "First Page"
+msgstr "第一頁"
+
+msgid "Go back to the album"
+msgstr "回到相冊"
+
+msgid "Last Page"
+msgstr "最後一頁"
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "確認密碼未完成，請確認所選定的密碼。"
+
+msgid "Password is missing. Please enter the password."
+msgstr "缺少了密碼。請輸入密碼。"
+
+msgid "%d photos per page"
+msgstr "每頁%d張相片"
+
+msgid "Theme"
+msgstr "主題"
+
+msgid "Album name, A &rarr; Z"
+msgstr "相簿名稱，A->Z"
+
+msgid "Album name, Z &rarr; A"
+msgstr "相簿名稱，Z->A"
+
+msgid "Apply on properties"
+msgstr "套用於屬性"
+
+msgid "No results for"
+msgstr "沒有結果"
+
+msgid "Photo description"
+msgstr "相片描述"
+
+msgid "Photo title"
+msgstr "相片標題"
+
+msgid "Link: %s"
+msgstr "連結: %s"
+
+msgid "Your authentication key is no longer valid."
+msgstr "您的認證密鑰已失效。"
+
+msgid "generate random password"
+msgstr "產生隨機密碼"
+
+msgid "Invalid username or password!"
+msgstr "無效的用戶名或密碼！"
+
+msgid "Album name, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+msgstr "相簿名稱，1 &rarr; 5 &rarr; 10 &rarr; 100"
+
+msgid "Album name, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+msgstr "相簿名稱，100 &rarr; 10 &rarr; 5 &rarr; 1"
+
+msgid "Password: ********** (no copy by email)"
+msgstr "密碼：**********（不複製自電郵）"
+
+msgid "Start-Date"
+msgstr "開始日期"
+
+msgid "Related albums"
+msgstr "相關相簿"
+
+msgid "piwigo_day_0"
+msgstr "星期日"
+
+msgid "piwigo_day_1"
+msgstr "星期一"
+
+msgid "piwigo_day_2"
+msgstr "星期二"
+
+msgid "piwigo_day_3"
+msgstr "星期三"
+
+msgid "piwigo_day_4"
+msgstr "星期四"
+
+msgid "piwigo_day_5"
+msgstr "星期五"
+
+msgid "piwigo_day_6"
+msgstr "星期六"
+
+msgid "piwigo_month_10"
+msgstr "十月"
+
+msgid "piwigo_month_11"
+msgstr "十一月"
+
+msgid "piwigo_month_12"
+msgstr "十二月"
+
+msgid "piwigo_month_1"
+msgstr "一月"
+
+msgid "piwigo_month_2"
+msgstr "二月"
+
+msgid "piwigo_month_3"
+msgstr "三月"
+
+msgid "piwigo_month_4"
+msgstr "四月"
+
+msgid "piwigo_month_5"
+msgstr "五月"
+
+msgid "piwigo_month_6"
+msgstr "六月"
+
+msgid "piwigo_month_7"
+msgstr "七月"
+
+msgid "piwigo_month_8"
+msgstr "八月"
+
+msgid "piwigo_month_9"
+msgstr "九月"
+

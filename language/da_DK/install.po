@@ -1,0 +1,146 @@
+# Piwigo translation — da_DK
+# Source: install.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: da_DK\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Installation"
+msgstr "Installation"
+
+msgid "Basic configuration"
+msgstr "Grundlæggende opsætning"
+
+msgid "Default gallery language"
+msgstr "Galleriets standardsprog"
+
+msgid "Database configuration"
+msgstr "Databaseopsætning"
+
+msgid "Admin configuration"
+msgstr "Administrationsopsætning"
+
+msgid "Start Install"
+msgstr "Begynd installation"
+
+msgid "It will be shown to the visitors. It is necessary for website administration"
+msgstr "Det vil blive vist til de besøgende. Det er nødvendigt til administration af webstedet"
+
+msgid "Connection to server succeed, but it was impossible to connect to database"
+msgstr "Forbindelsen til server er oprettet, men det var ikke muligt at få forbindelse til databasen"
+
+msgid "Can't connect to server"
+msgstr "Kan ikke få forbindelse til serveren"
+
+msgid "Host"
+msgstr "Host"
+
+msgid "User"
+msgstr "Bruger"
+
+msgid "user login given by your host provider"
+msgstr "brugerlogin som du har fra din webhost"
+
+msgid "user password given by your host provider"
+msgstr "brugeradgangskode som du har fra din webhost"
+
+msgid "Database name"
+msgstr "Databasenavn"
+
+msgid "also given by your host provider"
+msgstr "som du også har fået af din webhost"
+
+msgid "Database table prefix"
+msgstr "Tabelpræfiks i databasen"
+
+msgid "database tables names will be prefixed with it (enables you to manage better your tables)"
+msgstr "tabelnavne i databasen vil være forsynet med et præfiks (giver dig bedre mulighed for at administrere tabellerne)"
+
+msgid "enter a login for webmaster"
+msgstr "indtast webmasters login"
+
+msgid "webmaster login can't contain characters ' or \""
+msgstr "webmasterlogin må ikke indeholde tegnene ' eller \""
+
+msgid "please enter your password again"
+msgstr "indtast din adgangskode igen"
+
+msgid "Keep it confidential, it enables you to access administration panel"
+msgstr "Hold det hemmeligt, det giver dig adgang til administrationspanelet."
+
+msgid "Password [confirm]"
+msgstr "Password [bekræft]"
+
+msgid "verification"
+msgstr "bekræftelse"
+
+msgid "Need help ? Ask your question on <a href=\"%s\">Piwigo message board</a>."
+msgstr "Brug for hjælp? Stil dine spørgsmål i <a href=\"%s\">Piwigos forum</a>."
+
+msgid "Visitors will be able to contact site administrator with this mail"
+msgstr "Besøgende vil ved hjælp af denne e-mail have mulighed for at kontakte administratoren"
+
+msgid "PHP 5 is required"
+msgstr "PHP 5.2 er nødvendig"
+
+msgid "It appears your webhost is currently running PHP %s."
+msgstr "Det lader til, at din webhost pt. kører PHP %s."
+
+msgid "Piwigo may try to switch your configuration to PHP 5 by creating or modifying a .htaccess file."
+msgstr "Piwigo kan prøve at skifte din opsætning til PHP 5.2 ved at oprette eller ændre en .htaccess-fil."
+
+msgid "Note you can change your configuration by yourself and restart Piwigo after that."
+msgstr "Bemærk, at du selv kan ændre din opsætning og derefter genstarte Piwigo."
+
+msgid "Try to configure PHP 5"
+msgstr "Prøv at opsætte PHP 5.2"
+
+msgid "Sorry!"
+msgstr "Hov!"
+
+msgid "Piwigo was not able to configure PHP 5."
+msgstr "Piwigo var ikke i stand til at opsætte PHP 5.2"
+
+msgid "You may referer to your hosting provider's support and see how you could switch to PHP 5 by yourself."
+msgstr "Du henvises til din webhosts support for at finde ud af, om du selv kan skifte til PHP 5.2"
+
+msgid "Hope to see you back soon."
+msgstr "Håber snart at se dig igen."
+
+msgid "Congratulations, Piwigo installation is completed"
+msgstr "Tillykke, installeringen af Piwigo er afsluttet"
+
+msgid "An alternate solution is to copy the text in the box above and paste it into the file \"local/config/database.inc.php\" (Warning : database.inc.php must only contain what is in the textarea, no line return or space character)"
+msgstr "En alternativ måde er at kopiere teksten i boksen oven over og sætte den ind i filen \"local/config/database.inc.php\" (Advarsel: database.inc.php må kun indeholde, hvad der er i tekstfeltet, ingen linjeskift eller mellemrum)"
+
+msgid "Creation of config file local/config/database.inc.php failed."
+msgstr "Oprettelsen af local/config/database.inc.php gik galt."
+
+msgid "Download the config file"
+msgstr "Download opsætningsfilen"
+
+msgid "You can download the config file and upload it to local/config directory of your installation."
+msgstr "Du kan downloade opsætningsfilen og uploade den til mappen local/config i din installation."
+
+msgid "Just another Piwigo gallery"
+msgstr "Bare endnu et Piwigo-galleri"
+
+msgid "Welcome to my photo gallery"
+msgstr "Velkommen til mit fotogalleri"
+
+msgid "Don't hesitate to consult our forums for any help : %s"
+msgstr "Tøv ikke med at besøges vores forum for at få hjælp: %s"
+
+msgid "Welcome to your new installation of Piwigo!"
+msgstr "Velkommen til din nye Piwigo-installation"
+
+msgid "localhost or other, supplied by your host provider"
+msgstr "localhost eller andet, oplyst af din hostingleverandør"
+
+msgid "PHP version %s required (you are running on PHP %s)"
+msgstr "PHP version %s krævet (du kører PHP %s)"
+

@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Db\Tables;
 use Piwigo\Session\PwgSession;
 
 // In PHP 8.4+ calling session_set_save_handler with
@@ -124,7 +125,7 @@ function pwg_session_read($session_id)
 {
     $query = '
 SELECT data
-  FROM ' . SESSIONS_TABLE . '
+  FROM ' . Tables::sessions() . '
   WHERE id = \'' . get_remote_addr_session_hash() . $session_id . '\'
 ;';
     $result = pwg_query($query);
@@ -149,7 +150,7 @@ function pwg_session_write($session_id, ?string $data): bool
         return true;
     }
     $query = '
-REPLACE INTO ' . SESSIONS_TABLE . '
+REPLACE INTO ' . Tables::sessions() . '
   (id,data,expiration)
   VALUES(\'' . get_remote_addr_session_hash() . $session_id . '\',\'' . pwg_db_real_escape_string($data) . '\',now())
 ;';
@@ -167,7 +168,7 @@ function pwg_session_destroy($session_id): bool
 {
     $query = '
 DELETE
-  FROM ' . SESSIONS_TABLE . '
+  FROM ' . Tables::sessions() . '
   WHERE id = \'' . get_remote_addr_session_hash() . $session_id . '\'
 ;';
     pwg_query($query);
@@ -189,7 +190,7 @@ function pwg_session_gc(): int
 
     $query = '
 DELETE
-  FROM ' . SESSIONS_TABLE . '
+  FROM ' . Tables::sessions() . '
   WHERE ' . pwg_db_date_to_ts('NOW()') . ' - ' . pwg_db_date_to_ts('expiration') . ' > '
     . $session_length . '
 ;';
@@ -248,7 +249,7 @@ function delete_user_sessions($user_id): void
 {
     $query = '
 DELETE
-  FROM ' . SESSIONS_TABLE . '
+  FROM ' . Tables::sessions() . '
   WHERE data LIKE \'%pwg_uid|i:' . $user_id . ';%\'
 ;';
     pwg_query($query);

@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 use Piwigo\Admin\Image\pwg_image;
 use Piwigo\Core\Logger;
+use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
@@ -139,7 +140,7 @@ function save_upload_form_config(array $data, array &$errors = [], array &$form_
 
     if (count($errors) == 0) {
         mass_updates(
-            CONFIG_TABLE,
+            Tables::config(),
             [
                 'primary' => ['param'],
                 'update' => ['value'],
@@ -185,7 +186,7 @@ function add_uploaded_file(string $source_filepath, ?string $original_filename =
         $query = '
 SELECT
     id
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE md5sum = \'' . $md5sum . '\'
 ;';
         $images_found = query2array($query);
@@ -219,7 +220,7 @@ SELECT
         $query = '
 SELECT
     path
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE id = ' . $image_id . '
 ;';
         $result = pwg_query($query);
@@ -404,7 +405,7 @@ SELECT
         }
 
         single_update(
-            IMAGES_TABLE,
+            Tables::images(),
             $update,
             [
                 'id' => $image_id,
@@ -438,7 +439,7 @@ SELECT
             $insert['representative_ext'] = $representative_ext;
         }
 
-        single_insert(IMAGES_TABLE, $insert);
+        single_insert(Tables::images(), $insert);
 
         $image_id = pwg_db_insert_id();
         pwg_activity('photo', $image_id, 'add');
@@ -458,7 +459,7 @@ SELECT
     id,
     path,
     representative_ext
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE id = ' . $image_id . '
 ;';
     $image_infos = pwg_db_fetch_assoc(pwg_query($query));
@@ -496,7 +497,7 @@ function add_uploaded_file_add_to_categories(int|string $image_id, ?array $categ
 
     if (! (bool) $conf['lounge_active']) {
         // check if we need to use the lounge from now
-        $row = pwg_db_fetch_row(pwg_query('SELECT COUNT(*) FROM ' . IMAGES_TABLE . ';'));
+        $row = pwg_db_fetch_row(pwg_query('SELECT COUNT(*) FROM ' . Tables::images() . ';'));
         assert($row !== null);
         [$nb_photos] = $row;
         if ($nb_photos >= $conf['lounge_activate_threshold']) {
@@ -545,7 +546,7 @@ function add_format(string $source_filepath, string $format_ext, int|string $for
     $query = '
 SELECT
     path
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE id = ' . $format_of . '
 ;';
     $images = query2array($query);
@@ -578,7 +579,7 @@ SELECT
     $query = '
 SELECT
   format_id
-  FROM ' . IMAGE_FORMAT_TABLE . '
+  FROM ' . Tables::imageFormat() . '
   WHERE image_id = ' . $format_of . '
   AND ext = "' . $format_ext . '"
 ;';
@@ -593,11 +594,11 @@ SELECT
             'image_id' => $format_of,
             'ext' => $format_ext,
         ];
-        single_update(IMAGE_FORMAT_TABLE, $set_fields, $where_fields);
+        single_update(Tables::imageFormat(), $set_fields, $where_fields);
         $format_id = $formats[0]['format_id'];
         $add_status = 'update';
     } else {
-        single_insert(IMAGE_FORMAT_TABLE, $insert);
+        single_insert(Tables::imageFormat(), $insert);
         $format_id = pwg_db_insert_id();
         $add_status = 'add';
     }

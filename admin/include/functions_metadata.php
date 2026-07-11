@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Db\Tables;
+
 include_once PHPWG_ROOT_PATH . '/include/functions_metadata.inc.php';
 
 /**
@@ -284,7 +286,7 @@ function sync_metadata($ids): void
 
     $query = '
 SELECT id, path, representative_ext
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE id IN (
 ' . wordwrap(implode(', ', $ids), 160, "\n") . '
 )
@@ -333,7 +335,7 @@ SELECT id, path, representative_ext
         );
 
         mass_updates(
-            IMAGES_TABLE,
+            Tables::images(),
             [
                 'primary' => ['id'],
                 'update' => $update_fields,
@@ -367,7 +369,7 @@ function get_filelist(
 
     $query = '
 SELECT id
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE site_id = ' . $site_id . '
     AND dir IS NOT NULL';
     if (is_numeric($category_id)) {
@@ -394,7 +396,7 @@ SELECT id
 
     $query = '
 SELECT id, path, representative_ext
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE storage_category_id IN (' . implode(',', $cat_ids) . ')';
     if ($only_new) {
         $query .= '

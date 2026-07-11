@@ -9,6 +9,10 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\AccessLevel;
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
+
 // --------------------------------------------------------------------- include
 define('PHPWG_ROOT_PATH', './');
 include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
@@ -24,7 +28,7 @@ global $conf, $user;
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_GUEST);
+check_status(AccessLevel::Guest);
 
 trigger_notify('loc_begin_search');
 
@@ -100,7 +104,7 @@ if (count($words) > 0 or in_array('allwords', $fields)) {
 
 $cat_ids = [];
 if (isset($_GET['cat_id'])) {
-    check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
+    check_input_parameter('cat_id', $_GET, false, ValidationPattern::ID);
 
     $cat_id_value = $_GET['cat_id'];
     if (! is_scalar($cat_id_value)) {
@@ -121,7 +125,7 @@ if (isset($_GET['cat_id'])) {
     $query = '
 SELECT
     *
-  FROM ' . USER_CACHE_CATEGORIES_TABLE . '
+  FROM ' . Tables::userCacheCategories() . '
   WHERE cat_id = ' . $cat_id . '
     AND user_id = ' . $user_id . '
 ;';
@@ -166,8 +170,8 @@ if (in_array('author', $fields)) {
     $query = '
 SELECT
     id
-  FROM ' . IMAGES_TABLE . ' AS i
-    JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON ic.image_id = i.id
+  FROM ' . Tables::images() . ' AS i
+    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
   ' . get_sql_condition_FandF(
         [
             'forbidden_categories' => 'category_id',

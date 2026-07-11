@@ -9,13 +9,15 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Db\Tables;
+
 /** returns a category id that corresponds to the given permalink (or null)
  * @param string $permalink
  */
 function get_cat_id_from_permalink($permalink): ?string
 {
     $query = '
-SELECT id FROM ' . CATEGORIES_TABLE . '
+SELECT id FROM ' . Tables::categories() . '
   WHERE permalink=\'' . $permalink . '\'';
     $ids = array_from_query($query, 'id');
     if (! empty($ids) && is_string($ids[0])) {
@@ -31,7 +33,7 @@ function get_cat_id_from_old_permalink($permalink): ?string
 {
     $query = '
 SELECT c.id
-  FROM ' . OLD_PERMALINKS_TABLE . ' op INNER JOIN ' . CATEGORIES_TABLE . ' c
+  FROM ' . Tables::oldPermalinks() . ' op INNER JOIN ' . Tables::categories() . ' c
     ON op.cat_id=c.id
   WHERE op.permalink=\'' . $permalink . '\'
   LIMIT 1';
@@ -66,7 +68,7 @@ function delete_cat_permalink($cat_id, $save): bool
 
     $query = '
 SELECT permalink
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE id=\'' . $cat_id . '\'
 ;';
     $result = pwg_query($query);
@@ -91,7 +93,7 @@ SELECT permalink
         }
     }
     $query = '
-UPDATE ' . CATEGORIES_TABLE . '
+UPDATE ' . Tables::categories() . '
   SET permalink=NULL
   WHERE id=' . $cat_id . '
   LIMIT 1';
@@ -101,12 +103,12 @@ UPDATE ' . CATEGORIES_TABLE . '
     if ($save) {
         if (isset($old_cat_id)) {
             $query = '
-UPDATE ' . OLD_PERMALINKS_TABLE . '
+UPDATE ' . Tables::oldPermalinks() . '
   SET date_deleted=NOW()
   WHERE cat_id=' . $cat_id . ' AND permalink=\'' . $permalink . '\'';
         } else {
             $query = '
-INSERT INTO ' . OLD_PERMALINKS_TABLE . '
+INSERT INTO ' . Tables::oldPermalinks() . '
   (permalink, cat_id, date_deleted)
 VALUES
   ( \'' . $permalink . '\',' . $cat_id . ',NOW() )';
@@ -180,13 +182,13 @@ function set_cat_permalink($cat_id, $permalink, $save): bool
     if (isset($old_cat_id)) {// the new permalink must not be active and old at the same time
         assert($old_cat_id == $cat_id);
         $query = '
-DELETE FROM ' . OLD_PERMALINKS_TABLE . '
+DELETE FROM ' . Tables::oldPermalinks() . '
   WHERE cat_id=' . $old_cat_id . ' AND permalink=\'' . $permalink . '\'';
         pwg_query($query);
     }
 
     $query = '
-UPDATE ' . CATEGORIES_TABLE . '
+UPDATE ' . Tables::categories() . '
   SET permalink=\'' . $permalink . '\'
   WHERE id=' . $cat_id;
     //  LIMIT 1';

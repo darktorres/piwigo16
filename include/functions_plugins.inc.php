@@ -10,6 +10,8 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\PluginMaintain;
+use Piwigo\Core\ActivitySystem;
+use Piwigo\Db\Tables;
 
 /** base directory of plugins */
 define('PHPWG_PLUGINS_PATH', PHPWG_ROOT_PATH . 'plugins/');
@@ -237,7 +239,7 @@ function &get_plugin_data($plugin_id)
 function get_db_plugins($state = '', $id = ''): array
 {
     $query = '
-SELECT * FROM ' . PLUGINS_TABLE;
+SELECT * FROM ' . Tables::plugins();
     $clauses = [];
     if (! empty($state)) {
         $clauses[] = 'state=\'' . $state . '\'';
@@ -370,13 +372,13 @@ function autoupdate_plugin(array &$plugin): void
         // which happens for each "version=auto" plugin on each page load.
         if ($new_version != $old_version) {
             $query = '
-UPDATE ' . PLUGINS_TABLE . '
+UPDATE ' . Tables::plugins() . '
   SET version = "' . $fs_version . '"
   WHERE id = "' . $plugin_id . '"
 ;';
             pwg_query($query);
 
-            pwg_activity('system', ACTIVITY_SYSTEM_PLUGIN, 'autoupdate', [
+            pwg_activity('system', ActivitySystem::Plugin, 'autoupdate', [
                 'plugin_id' => $plugin_id,
                 'from_version' => $old_version,
                 'to_version' => $new_version,

@@ -10,6 +10,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\tabsheet;
+use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 // Bootstrap globals, set by include/common.inc.php.
@@ -28,7 +29,7 @@ $tabsheet->assign();
 
 $query = '
 SELECT COUNT(*)
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
 ;';
 
 $row = pwg_db_fetch_row(pwg_query($query));

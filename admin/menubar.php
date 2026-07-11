@@ -10,6 +10,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\tabsheet;
+use Piwigo\Db\Tables;
 use Piwigo\Menu\BlockManager;
 use Piwigo\Template\Template;
 
@@ -152,7 +153,7 @@ if (isset($_POST['submit']) and is_webmaster()) {
     // END OPTIM
     */
     $query = '
-UPDATE ' . CONFIG_TABLE . '
+UPDATE ' . Tables::config() . '
   SET value=\'' . addslashes(serialize($mb_conf_db)) . '\'
   WHERE param=\'blk_' . addslashes($menu->get_id()) . '\'
   ';

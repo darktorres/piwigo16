@@ -15,6 +15,10 @@ const SCHEMA_INTEGRITY_ALLOW_LIST = [
     'all', 'dumpForLog',
     // Test helper
     'reset',
+    // P16: composed accessors replacing retired define() constants -- no
+    // SCHEMA key of their own, just composition over existing accessors
+    // (themesDir()/dataLocation()).
+    'themesPath', 'combinedDir', 'derivativeDir',
 ];
 
 test('every SCHEMA entry references an existing method', function (): void {

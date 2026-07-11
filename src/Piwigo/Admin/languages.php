@@ -11,7 +11,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\Logger;
+use Piwigo\Db\Tables;
 
 class languages
 {
@@ -77,7 +79,7 @@ class languages
                 $fs_name = is_scalar($fs_name) ? (string) $fs_name : '';
 
                 $query = '
-INSERT INTO ' . LANGUAGES_TABLE . '
+INSERT INTO ' . Tables::languages() . '
   (id, version, name)
   VALUES(\'' . $language_id . '\',
          \'' . $fs_version . '\',
@@ -99,7 +101,7 @@ INSERT INTO ' . LANGUAGES_TABLE . '
 
                 $query = '
 DELETE
-  FROM ' . LANGUAGES_TABLE . '
+  FROM ' . Tables::languages() . '
   WHERE id= \'' . $language_id . '\'
 ;';
                 pwg_query($query);
@@ -117,7 +119,7 @@ DELETE
 
                 // Set default language to user who are using this language
                 $query = '
-UPDATE ' . USER_INFOS_TABLE . '
+UPDATE ' . Tables::userInfos() . '
   SET language = \'' . get_default_language() . '\'
   WHERE language = \'' . $language_id . '\'
 ;';
@@ -133,7 +135,7 @@ UPDATE ' . USER_INFOS_TABLE . '
                 $default_user_id = is_numeric($conf['default_user_id']) ? (int) $conf['default_user_id'] : 0;
                 $guest_id = is_numeric($conf['guest_id']) ? (int) $conf['guest_id'] : 0;
                 $query = '
-UPDATE ' . USER_INFOS_TABLE . '
+UPDATE ' . Tables::userInfos() . '
   SET language = \'' . $language_id . '\'
   WHERE user_id IN (' . $default_user_id . ', ' . $guest_id . ')
 ;';
@@ -162,44 +164,63 @@ UPDATE ' . USER_INFOS_TABLE . '
                 $path = PHPWG_ROOT_PATH . 'language/' . $file;
                 if (is_dir($path) and ! is_link($path)
                     and (bool) preg_match('/^[a-zA-Z0-9-_]+$/', $file)
-                    and file_exists($path . '/common.lang.php')
+                    // This rewrite migrated every language/ locale from the
+                    // legacy common.lang.php marker to gettext common.po;
+                    // zero common.lang.php files exist anywhere on disk, so
+                    // the old check silently found no languages at all
+                    // (same marker-file mismatch already fixed in
+                    // ExtensionScanner::scanLanguage() for the new
+                    // service-layer admin pages -- this is the old
+                    // god-class's own copy of that scan, still used
+                    // directly by install.php).
+                    and file_exists($path . '/common.po')
                 ) {
                     $language = [
                         'name' => $file,
                         'code' => $file,
-                        'version' => '0',
+                        // Bundled core languages aren't independently-versioned
+                        // PEM packages the way plugins/themes are, and the PO
+                        // format carries no version/author/URI header at all
+                        // -- default to the current app version (matching
+                        // ExtensionScanner::scanLanguage()) rather than '0',
+                        // which would falsely flag every bundled language as
+                        // outdated against the PEM server.
+                        'version' => AppInfo::VERSION,
                         'uri' => '',
                         'author' => '',
                     ];
-                    $plg_data_lines = file($path . '/common.lang.php');
+                    $plg_data_lines = file($path . '/common.po');
                     if ($plg_data_lines === false) {
                         continue;
                     }
                     $plg_data = implode('', $plg_data_lines);
 
-                    if ((bool) preg_match('|Language Name:\\s*(.+)|', $plg_data, $val)) {
+                    if ((bool) preg_match('/"X-Piwigo-Language-Name:\\s*(.+?)\\\\n"/', $plg_data, $val)) {
                         $language['name'] = trim($val[1]);
                         $converted_name = convert_charset($language['name'], 'utf-8', $target_charset);
                         if ($converted_name !== false) {
                             $language['name'] = $converted_name;
                         }
                     }
-                    if ((bool) preg_match('|Version:\\s*([\\w.-]+)|', $plg_data, $val)) {
-                        $language['version'] = trim($val[1]);
-                    }
-                    if ((bool) preg_match('|Language URI:\\s*(https?:\\/\\/.+)|', $plg_data, $val)) {
-                        $language['uri'] = trim($val[1]);
-                    }
-                    if ((bool) preg_match('|Author:\\s*(.+)|', $plg_data, $val)) {
-                        $language['author'] = trim($val[1]);
-                    }
-                    if ((bool) preg_match('|Author URI:\\s*(https?:\\/\\/.+)|', $plg_data, $val)) {
-                        $language['author uri'] = trim($val[1]);
-                    }
-                    if (! empty($language['uri']) and (bool) strpos($language['uri'], 'extension_view.php?eid=')) {
-                        [, $extension] = explode('extension_view.php?eid=', $language['uri']);
-                        if (is_numeric($extension)) {
-                            $language['extension'] = $extension;
+                    // The old common.lang.php convention crammed regional
+                    // disambiguation directly into the name ("English [UK]",
+                    // "Français [FR]", "Brasil [BR]" -- inconsistent, since
+                    // that last one names the country twice instead of the
+                    // language). The .po migration correctly split this into
+                    // separate X-Piwigo-Language-Name/X-Piwigo-Country
+                    // headers, but nothing recombined them for display,
+                    // silently losing the regional disambiguation admins
+                    // need to tell e.g. en_UK from en_US apart in the
+                    // language list. Restore it, using the cleaner
+                    // structured data instead of a bracketed code.
+                    if ((bool) preg_match('/"X-Piwigo-Country:\\s*(.+?)\\\\n"/', $plg_data, $val)) {
+                        $country = trim($val[1]);
+                        $converted_country = convert_charset($country, 'utf-8', $target_charset);
+                        if ($converted_country !== false) {
+                            $country = $converted_country;
+                        }
+                        if ($country !== '') {
+                            $language['name'] .= ' (' . $country . ')';
                         }
                     }
 
@@ -217,13 +238,13 @@ UPDATE ' . USER_INFOS_TABLE . '
     {
         $query = '
   SELECT id, name
-    FROM ' . LANGUAGES_TABLE . '
+    FROM ' . Tables::languages() . '
     ORDER BY name ASC
   ;';
         $result = pwg_query($query);
 
         while ((bool) ($row = pwg_db_fetch_assoc($result))) {
-            // 'id' is the LANGUAGES_TABLE primary key (NOT NULL); guard it
+            // 'id' is the languages table's primary key (NOT NULL); guard it
             // anyway since pwg_db_fetch_assoc() types every column string|null.
             $id = $row['id'];
             if (! is_string($id)) {
@@ -256,7 +277,7 @@ UPDATE ' . USER_INFOS_TABLE . '
         ];
 
         // Retrieve PEM versions
-        $version = PHPWG_VERSION;
+        $version = AppInfo::VERSION;
         $versions_to_check = [];
         $url = $pem_base_url . '/api/get_version_list.php';
         // $result is never a resource here: no fopen() handle is passed to

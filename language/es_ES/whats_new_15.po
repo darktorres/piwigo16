@@ -1,0 +1,23 @@
+# Piwigo translation — es_ES
+# Source: whats_new_15.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: es_ES\n"
+"Plural-Forms: nplurals=3; plural=(n == 1 ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "A new interface for user management"
+msgstr "Una nueva interfaz de gestión de usuarios"
+
+msgid "Brand new features : Activities logs and PDF reader"
+msgstr "Características totalmente nuevas: registros de actividades y lector de PDF"
+
+msgid "Enhanced interface for batch manager and album selector"
+msgstr "Interfaz mejorada para el gestor por lotes y el selector de álbumes"
+
+msgid "Even more filters for the gallery search engine"
+msgstr "Aún más filtros para el motor de búsqueda de la galería"
+

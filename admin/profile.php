@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\ValidationPattern;
 use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
@@ -22,10 +23,10 @@ if (! defined('PHPWG_ROOT_PATH')) {
  */
 global $page, $template;
 
-check_input_parameter('user_id', $_GET, false, PATTERN_ID);
+check_input_parameter('user_id', $_GET, false, ValidationPattern::ID);
 
 // check_input_parameter() already guarantees that, when present, this
-// value matches PATTERN_ID (i.e. is a digits-only string); is_numeric()
+// value matches ValidationPattern::ID (i.e. is a digits-only string); is_numeric()
 // is the real runtime guard for the "absent/empty" case it lets through.
 $requested_user_id = $_GET['user_id'] ?? null;
 $requested_user_id = is_numeric($requested_user_id) ? (int) $requested_user_id : 0;

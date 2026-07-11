@@ -9,6 +9,9 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\AccessLevel;
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -37,7 +40,7 @@ include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
 
-check_status(ACCESS_ADMINISTRATOR);
+check_status(AccessLevel::Administrator);
 
 if (! empty($_POST)) {
     check_pwg_token();
@@ -45,10 +48,10 @@ if (! empty($_POST)) {
 
 trigger_notify('loc_begin_element_set_global');
 
-check_input_parameter('del_tags', $_POST, true, PATTERN_ID);
-check_input_parameter('associate', $_POST, true, PATTERN_ID);
-check_input_parameter('move', $_POST, false, PATTERN_ID);
-check_input_parameter('dissociate', $_POST, false, PATTERN_ID);
+check_input_parameter('del_tags', $_POST, true, ValidationPattern::ID);
+check_input_parameter('associate', $_POST, true, ValidationPattern::ID);
+check_input_parameter('move', $_POST, false, ValidationPattern::ID);
+check_input_parameter('dissociate', $_POST, false, ValidationPattern::ID);
 
 // +-----------------------------------------------------------------------+
 // |                            current selection                          |
@@ -139,7 +142,7 @@ if (isset($_POST['submit'])) {
         assert(is_numeric($user['id']));
         $query = '
 DELETE
-  FROM ' . CADDIE_TABLE . '
+  FROM ' . Tables::caddie() . '
   WHERE element_id IN (' . implode(',', $collection) . ')
     AND user_id = ' . $user['id'] . '
 ;';
@@ -172,7 +175,7 @@ DELETE
 
             $query = '
 DELETE
-  FROM ' . IMAGE_TAG_TABLE . '
+  FROM ' . Tables::imageTag() . '
   WHERE image_id IN (' . implode(',', $collection) . ')
     AND tag_id IN (' . implode(',', $del_tags) . ')
 ;';
@@ -280,7 +283,7 @@ DELETE
         }
 
         mass_updates(
-            IMAGES_TABLE,
+            Tables::images(),
             [
                 'primary' => ['id'],
                 'update' => ['author'],
@@ -308,7 +311,7 @@ DELETE
         }
 
         mass_updates(
-            IMAGES_TABLE,
+            Tables::images(),
             [
                 'primary' => ['id'],
                 'update' => ['name'],
@@ -338,7 +341,7 @@ DELETE
         }
 
         mass_updates(
-            IMAGES_TABLE,
+            Tables::images(),
             [
                 'primary' => ['id'],
                 'update' => ['date_creation'],
@@ -362,7 +365,7 @@ DELETE
         }
 
         mass_updates(
-            IMAGES_TABLE,
+            Tables::images(),
             [
                 'primary' => ['id'],
                 'update' => ['level'],
@@ -415,7 +418,7 @@ DELETE
     elseif ($action == 'metadata') {
         $page['infos'][] = l10n('Metadata synchronized from file') . ' <span class="badge">' . count($collection) . '</span>';
     } elseif ($action == 'delete_derivatives' && isset($_POST['del_derivatives_type']) && is_array($_POST['del_derivatives_type']) && ! empty($_POST['del_derivatives_type'])) {
-        $query = 'SELECT path,representative_ext FROM ' . IMAGES_TABLE . '
+        $query = 'SELECT path,representative_ext FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', $collection) . ')';
         $result = pwg_query($query);
         while ((bool) ($info = pwg_db_fetch_assoc($result))) {
@@ -582,7 +585,7 @@ if (count($cat_elements_id) > 0) {
 
     $query = '
 SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
-  FROM ' . IMAGES_TABLE;
+  FROM ' . Tables::images();
 
     if ($is_category) {
         $category_info = get_cat_info($filter_category_id);
@@ -593,7 +596,7 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
         }
 
         $query .= '
-    JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id = image_id';
+    JOIN ' . Tables::imageCategory() . ' ON id = image_id';
     }
 
     $query .= '

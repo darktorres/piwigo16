@@ -1,0 +1,1274 @@
+# Piwigo translation — ro_RO
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ro_RO\n"
+"Plural-Forms: nplurals=3; plural=(n == 1 ? 0 : n == 0 || n != 1 && n % 100 >= 1 && n % 100 <= 19 ? 1 : 2);\n"
+"X-Piwigo-Language-Name: Română\n"
+"X-Piwigo-Country: România\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: ro\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "%d Kb"
+msgstr "%d Kb"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d album actualizat"
+msgstr[1] "%d albume actualizate"
+
+msgid "%d comment to validate"
+msgstr "%d comentariu de validat"
+
+msgid "%d comments to validate"
+msgstr "%d comentarii de validat"
+
+msgid "%d new comment"
+msgstr "%d nou comentariu"
+
+msgid "%d new comments"
+msgstr "%d noi comentarii"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d comentariu"
+msgstr[1] "%d comentarii"
+
+msgid "%d hit"
+msgid_plural "%d hits"
+msgstr[0] "vazut %d dată"
+msgstr[1] "vazut %d ori"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "%d imagine nouă"
+msgstr[1] "%d imagini noi"
+
+msgid "%d new user"
+msgstr "%d utilizator nou"
+
+msgid "%d new users"
+msgstr "%d utilizatori noi"
+
+msgid "About"
+msgstr "Despre"
+
+msgid "All tags"
+msgstr "Toate etichetele"
+
+msgid "Any tag"
+msgstr "Orice eticheta"
+
+msgid "Author"
+msgstr "Autor"
+
+msgid "Albums"
+msgstr "Albume"
+
+msgid "Album"
+msgstr "Album"
+
+msgid "Close this window"
+msgstr "Inchide această fereastră"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "Flux RSS complet (imagini, comentarii)"
+
+msgid "Confirm Password"
+msgstr "Confirmare parolă"
+
+msgid "Connection settings"
+msgstr "Parametrii de conecţie"
+
+msgid "Login"
+msgstr "Conecţie"
+
+msgid "Contact webmaster"
+msgstr "Contactaţi webmasterul"
+
+msgid "Create a new account"
+msgstr "Creaţi un cont nou"
+
+msgid "Created on"
+msgstr "Creat pe"
+
+msgid "Creation date"
+msgstr "Data creaţiei"
+
+msgid "Current password is wrong"
+msgstr "Parola actuală nu este corectă"
+
+msgid "Dimensions"
+msgstr "Dimensiuni"
+
+msgid "Display"
+msgstr "Afişare"
+
+msgid "Email address"
+msgstr "Adresa de e-mail"
+
+msgid "Enter your personnal informations"
+msgstr "Introduceţi informaţiile dvs. personale"
+
+msgid "Error sending email"
+msgstr "Eroare la trimiterea de e-mail"
+
+msgid "File name"
+msgstr "Nume de fişier"
+
+msgid "File"
+msgstr "Fişier"
+
+msgid "Filesize"
+msgstr "Mărime fişier"
+
+msgid "Filter and display"
+msgstr "Filtrează şi afişează"
+
+msgid "Filter"
+msgstr "Filtrează"
+
+msgid "Forgot your password?"
+msgstr "Aţi uitat parola?"
+
+msgid "Go through the gallery as a visitor"
+msgstr "Navigaţi prin galerie ca un vizitator"
+
+msgid "Help"
+msgstr "Ajutor"
+
+msgid "Identification"
+msgstr "Identificare"
+
+msgid "Photos only RSS feed"
+msgstr "RSS feed numai cu imagini"
+
+msgid "Keyword"
+msgstr "Cuvânt cheie"
+
+msgid "Links"
+msgstr "Link-uri"
+
+msgid "N/A"
+msgstr "N/A"
+
+msgid "New on %s"
+msgstr "Nou pe %s"
+
+msgid "Notification"
+msgstr "Notificare"
+
+msgid "Number of items"
+msgstr "Numărul de articole"
+
+msgid "Original dimensions"
+msgstr "Dimensiuni originale"
+
+msgid "Password forgotten"
+msgstr "Parola uitată"
+
+msgid "Password"
+msgstr "Parola"
+
+msgid "Post date"
+msgstr "Dată post"
+
+msgid "Posted on"
+msgstr "Postat pe"
+
+msgid "Profile"
+msgstr "Profil"
+
+msgid "Quick connect"
+msgstr "Conectare rapidă"
+
+msgid "RSS feed"
+msgstr "RSS feed"
+
+msgid "Register"
+msgstr "Înscrie"
+
+msgid "Registration"
+msgstr "Înscriere"
+
+msgid "Related tags"
+msgstr "Etichete asociate"
+
+msgid "Reset"
+msgstr "Resetare"
+
+msgid "Retrieve password"
+msgstr "Recuperare parolă"
+
+msgid "Search tags"
+msgstr "Caută etichete"
+
+msgid "Search"
+msgstr "Caută"
+
+msgid "display available tags"
+msgstr "Vezi etichetele disponibile"
+
+msgid "Since"
+msgstr "De la"
+
+msgid "Sort by"
+msgstr "Sortare după"
+
+msgid "Sort order"
+msgstr "Ordine de sortare"
+
+msgid "Tag"
+msgstr "Etichetă"
+
+msgid "Tags"
+msgstr "Etichete"
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "Notificarea RSS feed prevede notificarea cu privire la noutăţile din acest sit: poze noi, albume actualizate, noi comentarii. Folosiţi un RSS feed reader."
+
+msgid "Unknown feed identifier"
+msgstr "Identificator RSS feed  necunoscut"
+
+msgid "User comments"
+msgstr "Comentarii utilizator "
+
+msgid "Username"
+msgstr "Nume de utilizator"
+
+msgid "Visits"
+msgstr "Vizite"
+
+msgid "Webmaster"
+msgstr "Webmaster"
+
+msgid "Week %d"
+msgstr "Săptămâna %d"
+
+msgid "About Piwigo"
+msgstr "Despre Piwigo"
+
+msgid "You are not authorized to access the requested page"
+msgstr "Nu sunteţi autorizat sa accesaţi pagina solicitată"
+
+msgid "add this photo to your favorites"
+msgstr "adăuga această imagine la favorite"
+
+msgid "Administration"
+msgstr "Administraţie"
+
+msgid "all"
+msgstr "tot"
+
+msgid "ascending"
+msgstr "ascendent"
+
+msgid "Expand all albums"
+msgstr "Extinde toate albumele"
+
+msgid "posted after %s (%s)"
+msgstr "postat după %s (%s)"
+
+msgid "posted before %s (%s)"
+msgstr "postat înainte de %s (%s)"
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "postat între %s (%s) şi %s (%s)"
+
+msgid "posted on %s"
+msgstr "postat pe %s"
+
+msgid "Best rated"
+msgstr "Cele mai bine notate"
+
+msgid "display best rated photos"
+msgstr "afişează cele mai bune imagini"
+
+msgid "Calendar"
+msgstr "Calendar"
+
+msgid "All"
+msgstr "Tot"
+
+msgid "display each day with photos, month per month"
+msgstr "Afişare an de an, lună de lună, zi de zi"
+
+msgid "View"
+msgstr "Vedere"
+
+msgid "chronology_monthly_calendar"
+msgstr "Calendar lunar"
+
+msgid "chronology_monthly_list"
+msgstr "Listă lunară"
+
+msgid "chronology_weekly_list"
+msgstr "Listă săptămânală "
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "Click aici dacă browser-ul nu va trimite în mod automat"
+
+msgid "comment date"
+msgstr "data comentariului"
+
+msgid "Comment"
+msgstr "Comentariu"
+
+msgid "Your comment has been registered"
+msgstr "Comentariul dvs. a fost înregistrat"
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "Sistem Anti-flood: vă rugăm aşteptaţi o clipă înainte de a încerca să postaţi un alt comentariu"
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "Comentariul dvs. nu a fost înregistrat deoarece nu a trecut regulile de validare"
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "Un administrator trebuie să autorizeze comentariul dvs. înainte de a deveni vizibil."
+
+msgid "This login is already used by another user"
+msgstr "Acest nume este deja folosit de un alt utilizator"
+
+msgid "Comments"
+msgstr "Comentarii"
+
+msgid "Add a comment"
+msgstr "Adaugă un comentariu"
+
+msgid "created after %s (%s)"
+msgstr "creat după %s (%s)"
+
+msgid "created before %s (%s)"
+msgstr "create înainte de %s (%s)"
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "creat între %s (%s) şi %s (%s)"
+
+msgid "created on %s"
+msgstr "creat pe %s"
+
+msgid "Your Gallery Customization"
+msgstr "Personalizarea Galeriei dvs."
+
+msgid "Default"
+msgstr "În mod implicit"
+
+msgid "delete this photo from your favorites"
+msgstr "şterge această poză din favorite"
+
+msgid "Delete"
+msgstr "Şterge"
+
+msgid "descending"
+msgstr "descendent"
+
+msgid "Download"
+msgstr "descărcare"
+
+msgid "Download this file"
+msgstr "descărcă acest fişier"
+
+msgid "edit"
+msgstr "editează"
+
+msgid "wrong date"
+msgstr "dată greşită"
+
+msgid "excluded"
+msgstr "exclus"
+
+msgid "Your favorites"
+msgstr "Favoritele dvs."
+
+msgid "display your favorites photos"
+msgstr "Afişează imaginile dvs. favorite"
+
+msgid "Favorites"
+msgstr "Favorite"
+
+msgid "First"
+msgstr "Prima(ul)"
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "Galeria este blocată pentru întreţinere. Vă mulţumim reveniţi mai târziu."
+
+msgid "Page generated in"
+msgstr "Pagina generată în"
+
+msgid "guest"
+msgstr "vizitator"
+
+msgid "Hello"
+msgstr "Bună ziua"
+
+msgid "available for administrators only"
+msgstr "disponibil numai pentru administratori"
+
+msgid "display this album"
+msgstr "afişează acest album"
+
+msgid "display last user comments"
+msgstr "Vezi cele mai recente comentarii ale utilizatorilor"
+
+msgid "search"
+msgstr "căutare"
+
+msgid "Home"
+msgstr "Prima pagină"
+
+msgid "in this album"
+msgstr "în aceat album"
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] "în %d sub-album"
+msgstr[1] "în %d sub-albume"
+
+msgid "included"
+msgstr "inclus"
+
+msgid "Invalid password!"
+msgstr "Parolă invalidă !"
+
+msgid "Language"
+msgstr "Limbă"
+
+msgid "last %d days"
+msgstr "ultimele %d zile"
+
+msgid "Last"
+msgstr "Ultima(ul)"
+
+msgid "Logout"
+msgstr "Deconectare"
+
+msgid "obligatory"
+msgstr "obligatoriu"
+
+msgid "display a calendar by creation date"
+msgstr "afişează un calendar în funcţie de data creării"
+
+msgid "display all photos in all sub-albums"
+msgstr "afişează toate elementele în toate sub-albumele"
+
+msgid "return to normal view mode"
+msgstr "Înapoi la vizualizarea normală"
+
+msgid "display a calendar by posted date"
+msgstr "afişează un calendar în funcţie de data adăugării"
+
+msgid "Most visited"
+msgstr "Cele mai vizionate"
+
+msgid "display most visited photos"
+msgstr "afişează imaginile cele mai vizionate"
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "Numărul de imagini pe pagină trebuie să fie un număr întreg nenul"
+
+msgid "Number of photos per page"
+msgstr "Numărul de miniaturi pe pagină"
+
+msgid "Unknown identifier"
+msgstr "Identificator necunoscut "
+
+msgid "New password"
+msgstr "Parolă nouă"
+
+msgid "Rate this photo"
+msgstr "Evaluează aceasta imagine"
+
+msgid "Next"
+msgstr "Înainte"
+
+msgid "no rate"
+msgstr "nici o evaluare"
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "Imagini postate în ultima %d zi."
+msgstr[1] "Imagini postate în ultimele %d zile."
+
+msgid "password updated"
+msgstr "parolă actualizată"
+
+msgid "Recent period must be a positive integer value"
+msgstr "perioada recentă trebuie să fie un număr întreg pozitiv"
+
+msgid "photo"
+msgstr "imagine"
+
+msgid "Click on the photo to see it in high definition"
+msgstr "Clicaţi pe imagine pentru a o vedea de înaltă definiţie"
+
+msgid "Show file metadata"
+msgstr "Arată metadatele fişierului"
+
+msgid "Powered by"
+msgstr "Realizat de"
+
+msgid "Preferences"
+msgstr "Preferinţe"
+
+msgid "Random photos"
+msgstr "Imagini aleatoare"
+
+msgid "display a set of random photos"
+msgstr "afişează un set de imagini aleatoare"
+
+msgid "Recent albums"
+msgstr "Albume recente"
+
+msgid "display recently updated albums"
+msgstr "afişează albumele create sau actualizate recent "
+
+msgid "Recent period"
+msgstr "Recent"
+
+msgid "Recent photos"
+msgstr "Imagini recente"
+
+msgid "display most recent photos"
+msgstr "afişează cele mai recente imagini"
+
+msgid "Redirection..."
+msgstr "Redirecţionare..."
+
+msgid "Please, enter a login"
+msgstr "Vă rugăm, introduceţi un nume de utilizator"
+
+msgid "login mustn't end with a space character"
+msgstr "numele de utilizator nu trebuie să se încheie cu un spaţiu"
+
+msgid "login mustn't start with a space character"
+msgstr "numele de utilizator nu trebuie sa înceapă cu un spaţiu"
+
+msgid "this login is already used"
+msgstr "acest nume este deja folosit"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "adresa de e-mail trebuie să fie de genul xxx@yyy.eee (de exemplu: jack@altern.org)"
+
+msgid "Auto login"
+msgstr "Conectare automatică"
+
+msgid "remove this tag from the list"
+msgstr "eliminaţi această etichetă de pe lista"
+
+msgid "representative"
+msgstr "reprezentant"
+
+msgid "Search for Author"
+msgstr "Caută autor"
+
+msgid "Search in albums"
+msgstr "Caută în albume"
+
+msgid "Previous"
+msgstr "Înapoi"
+
+msgid "Search by date"
+msgstr "Căutare după dată"
+
+msgid "Date"
+msgstr "Dată"
+
+msgid "End-Date"
+msgstr "Sfârșit"
+
+msgid "Kind of date"
+msgstr "Tip de dată"
+
+msgid "Search for words"
+msgstr "Caută cuvinte"
+
+msgid "Search for all terms"
+msgstr "Caută toţi termenii"
+
+msgid "Search for any term"
+msgstr "Caută oricare termen"
+
+msgid "Empty query. No criteria has been entered."
+msgstr "Interogare goală. Nici un criteriu nu a fost introdus."
+
+msgid "Search results"
+msgstr "Rezultatele căutării"
+
+msgid "Search in sub-albums"
+msgstr "Caută în sub-albume"
+
+msgid "Contact"
+msgstr "Contact"
+
+msgid "set as album representative"
+msgstr "Setaţi ca reprezentant al acestui album"
+
+msgid "Show number of comments"
+msgstr "Arată numărul de comentarii"
+
+msgid "Show number of hits"
+msgstr "Arată numărul de vizualizări"
+
+msgid "slideshow"
+msgstr "prezentare"
+
+msgid "stop the slideshow"
+msgstr "opreşte prezentarea"
+
+msgid "Specials"
+msgstr "Speciale"
+
+msgid "SQL queries in"
+msgstr "interogări SQL în"
+
+msgid "display only recently posted photos"
+msgstr "Arată numai elementele publicate recent"
+
+msgid "return to the display of all photos"
+msgstr "reveniţi la afişarea tuturor imaginilor"
+
+msgid "the beginning"
+msgstr "începutul"
+
+msgid "Thumbnails"
+msgstr "Miniaturi"
+
+msgid "Menu"
+msgstr "Meniu"
+
+msgid "A comment on your site"
+msgstr "Un comentariu pe site-ul dvs."
+
+msgid "today"
+msgstr "azi"
+
+msgid "Update your rating"
+msgstr "Actualizaţi evaluarea dvs."
+
+msgid "the username must be given"
+msgstr "numele de utilizator trebuie specificat"
+
+msgid "useful when password forgotten"
+msgstr "utilă în cazul în care uitaţi parola"
+
+msgid "Quick search"
+msgstr "Căutare rapidă"
+
+msgid "Connected user: %s"
+msgstr "Utilizator conectat : %s"
+
+msgid "IP: %s"
+msgstr "Adresa IP : %s"
+
+msgid "Browser: %s"
+msgstr "Navigator : %s"
+
+msgid "Author: %s"
+msgstr "Autor : %s"
+
+msgid "Comment: %s"
+msgstr "Comentariu : %s"
+
+msgid "Comment by %s"
+msgstr "Comentarii de %s"
+
+msgid "User: %s"
+msgstr "Utilizator: %s"
+
+msgid "Email: %s"
+msgstr "E-mail : %s"
+
+msgid "Admin: %s"
+msgstr "Administraţie : %s"
+
+msgid "Registration of %s"
+msgstr "Înregistrare de %s"
+
+msgid "Album: %s"
+msgstr "Album: %s"
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "Statutul utilizatorului \"invitat\" este eronat, se vor folosi  parametrii impliciţi. Va rugăm sa informaţi webmasterul."
+
+msgid "this email address is already in use"
+msgstr "un alt utilizator foloseşte deja acest e-mail"
+
+msgid "Album results for"
+msgstr "Albume pentru"
+
+msgid "Tag results for"
+msgstr "Rezultatele  etichetelor pentru"
+
+msgid "from %s to %s"
+msgstr "de la %s până la %s"
+
+msgid "Play of slideshow"
+msgstr "Startează prezentarea"
+
+msgid "Pause of slideshow"
+msgstr "Pune pe pauză prezentarea"
+
+msgid "Repeat the slideshow"
+msgstr "Repetă prezentarea"
+
+msgid "Not repeat the slideshow"
+msgstr "Nu repeta prezentarea"
+
+msgid "Reduce diaporama speed"
+msgstr "Încetineşte viteza prezentării"
+
+msgid "Accelerate diaporama speed"
+msgstr "Accelerează viteza prezentării"
+
+msgid "Submit"
+msgstr "Execută"
+
+msgid "Yes"
+msgstr "Da"
+
+msgid "No"
+msgstr "Nu"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "%d imagine"
+msgstr[1] "%d imagini"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "%d imagine este de asemenea legată de etichetele actuale"
+msgstr[1] "%d imagini sunt de asemenea legate de etichetele actuale"
+
+msgid "display photos linked to this tag"
+msgstr "Vezi numai imagini legate de această etichetă"
+
+msgid "photos posted during the last %d days"
+msgstr "Imagini adăugate în ultimele %d zile"
+
+msgid "Piwigo Help"
+msgstr "Ajutor pentru Piwigo"
+
+msgid "Rank"
+msgstr "Rang"
+
+msgid "group by letters"
+msgstr "regrupează pe litere"
+
+msgid "letters"
+msgstr "litere"
+
+msgid "show tag cloud"
+msgstr "arată norul de etichete"
+
+msgid "cloud"
+msgstr "nor"
+
+msgid "Reset to default values"
+msgstr "Reveniţi la setările implicite"
+
+msgid "delete all photos from your favorites"
+msgstr "scoate-ţi toate pozele din favoritele dvs."
+
+msgid "Sent by"
+msgstr "Trimis de"
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "Cookie-urile sunt blocate sau nu sunt suportate de browser-ul dumneavoastră. Trebuie să activaţi  cookie-urile pentru a vă conecta."
+
+msgid "Edit a comment"
+msgstr "modifică un comentariu"
+
+msgid "Are you sure?"
+msgstr "Sunteţi sigur(ă) ?"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) Acest comentariu trebuie să fie validat"
+
+msgid "Welcome"
+msgstr "Bine aţi venit"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "Bine aţi venit la galeria dvs. foto Piwigo !"
+
+msgid "... or browse your empty gallery"
+msgstr "... sau navigaţi prin galeria dvs. vidă"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "... sau vă rugăm să dezactivaţi acest mesaj, mă voi descurca singur"
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "Bună ziua %s, galeria dvs. foto Piwigo este vidă !"
+
+msgid "I want to add photos"
+msgstr "Vreau să adaug poze"
+
+msgid "Manage this user comment: %s"
+msgstr "Administrează acest comentariu de utilizator: %s"
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "Adresa de email lipseşte. Vă rugăm să specificaţi o adresă de e-mail."
+
+msgid "This author modified following comment:"
+msgstr "Acest autor a modificat următorul comentariu :"
+
+msgid "This author removed the comment with id %d"
+msgstr "Acest autor a şters comentariul cu id-ul %d"
+
+msgid "html tags are not allowed in login"
+msgstr "tag-urile HTML nu sunt permise în login"
+
+msgid "Change my password"
+msgstr "Schimba parola"
+
+msgid "Check your email for the confirmation link"
+msgstr "Verifica-ti emailul pentru link-ul de confirmare"
+
+msgid "Edit"
+msgstr "Editeaza"
+
+msgid "Enter your new password below."
+msgstr "Repeta noua parola aici"
+
+msgid "Hello %s,"
+msgstr "Hello%s,"
+
+msgid "Here are your connection settings"
+msgstr "Aici ai setarile de conectare"
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "Daca acesta e o greseala, doar ignora acest email si nimic nu se va intampla."
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "Daca crezi ca ai primit acest mail eronat, te rugam sa ne contactezi la%s"
+
+msgid "Invalid key"
+msgstr "Cheie invalida"
+
+msgid "Invalid username or email"
+msgstr "Nume de utilizator sau email incorect"
+
+msgid "large"
+msgstr "L - mare"
+
+msgid "medium"
+msgstr "M - Mediu"
+
+msgid "Mobile"
+msgstr "Mobil"
+
+msgid "Original"
+msgstr "Original"
+
+msgid "Password reset is not allowed for this user"
+msgstr "Resetarea parolei nu este permisa pentru acest user"
+
+msgid "Password Reset"
+msgstr "Resetare parola"
+
+msgid "Password: %s"
+msgstr "Parola:%s"
+
+msgid "Photo sizes"
+msgstr "Marime fotografie"
+
+msgid "Please enter your username or email address."
+msgstr "Introduceti numele de utilizator sau email"
+
+msgid "Return to home page"
+msgstr "Reveniti la pagina principala"
+
+msgid "Send my connection settings by email"
+msgstr "Trimiteti-mi setarile conexiunii pe email"
+
+msgid "Show latest comments first"
+msgstr "Arata-mi cele mai noi comentarii"
+
+msgid "Show oldest comments first"
+msgstr "Arata-mi cele mai vechi comentarii"
+
+msgid "small"
+msgstr "S - mic"
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "Cineva a cerut resetarea parolei pentru contul acestui user"
+
+msgid "square"
+msgstr "Pătrat"
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "Inregistrarea a fost cu succes, curand vei primi un email cu setarile conexiunii.Bine ai venit!!!"
+
+msgid "Thank you for registering at %s!"
+msgstr "Multumim pentru inregistrarea la%s!"
+
+msgid "The passwords do not match"
+msgstr "Parola nu se potriveste"
+
+msgid "To reset your password, visit the following address:"
+msgstr "Pentru a reseta parola, click pe urmatorul link"
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "Userul\"%s\" nu are o adresa de email, resetarea parolei nu va fi posibila"
+
+msgid "Username modification"
+msgstr "Modificare numelui de utilizator"
+
+msgid "Username or email"
+msgstr "Nume de utilizator sau email"
+
+msgid "Username: %s"
+msgstr "Nume de utilizator:%s"
+
+msgid "View in"
+msgstr "Vezi in"
+
+msgid "You will receive a link to create a new password via email."
+msgstr "Vei primi un link pe email pentru a creea o noua parola"
+
+msgid "Your password has been reset"
+msgstr "Parola ta a fost resetata"
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "Numele de utilizatora fost schimbat cu succes in:%s"
+
+msgid "Desktop"
+msgstr "Prima pagina"
+
+msgid "EXIF Metadata"
+msgstr "EXIF Metadata"
+
+msgid "IPTC Metadata"
+msgstr "IPTC Metadata"
+
+msgid "Rating score"
+msgstr "Scor mediu"
+
+msgid "thumb"
+msgstr "Thumb"
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "\"%s\" nume de utilizator(i) pe aceasta pagina %s"
+
+msgid "xlarge"
+msgstr "XL - foarte mare"
+
+msgid "xxlarge"
+msgstr "XXL - enorm"
+
+msgid "2small"
+msgstr "XXS - minuscul"
+
+msgid "xsmall"
+msgstr "XS - foarte mic"
+
+msgid "Date created, new &rarr; old"
+msgstr "Data creării, nou &rarr; vechi"
+
+msgid "Date created, old &rarr; new"
+msgstr "Data creării, vechi &rarr; nou"
+
+msgid "Date posted, new &rarr; old"
+msgstr "Data postării, nou &rarr; vechi"
+
+msgid "Date posted, old &rarr; new"
+msgstr "Data postări, vechi &rarr; nou"
+
+msgid "File name, A &rarr; Z"
+msgstr "Numele fişierului, A &rarr; Z"
+
+msgid "File name, Z &rarr; A"
+msgstr "Numele fişierului, Z &rarr; A"
+
+msgid "Manual sort order"
+msgstr "Ordonarea manuala"
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "Identificatorul numeric, 1 &rarr; 9"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "Identificatorul numeric, 9 &rarr; 1"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "Titlul pozei, A &rarr; Z"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "Titlul pozei, Z &rarr; A"
+
+msgid "Rating score, high &rarr; low"
+msgstr "Scorul de rating, ridicat &rarr; scazut"
+
+msgid "Rating score, low &rarr; high"
+msgstr "Scorul de rating, scazut &rarr; ridicat"
+
+msgid "Visits, high &rarr; low"
+msgstr "Vizite, ridicat &rarr; scazut"
+
+msgid "Visits, low &rarr; high"
+msgstr "Vizite, scazut &rarr; ridicat"
+
+msgid "%d rate"
+msgid_plural "%d rates"
+msgstr[0] "Evaluare %d"
+msgstr[1] "%d rating"
+
+msgid "Bad request"
+msgstr "Căutare greșită"
+
+msgid "Forbidden"
+msgstr "Interzis"
+
+msgid "Page not found"
+msgstr "Pagina nu a fost găsită"
+
+msgid "Permalink for album not found"
+msgstr "Permalinkul pentru album nu există"
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "Piwigo întâmpină o eroare nerecuperabilă"
+
+msgid "Requested album does not exist"
+msgstr "Albumul căutat nu există"
+
+msgid "Requested tag does not exist"
+msgstr "Eticheta căutată nu există"
+
+msgid "Email address is mandatory"
+msgstr "Adresa de email este obligatorie"
+
+msgid "Username is mandatory"
+msgstr "Numele de utilizator este obligatoriu"
+
+msgid "mandatory"
+msgstr "obligatoriu"
+
+msgid "Website"
+msgstr "Site"
+
+msgid "Your website URL is invalid"
+msgstr "URL-ul sitului tău este invalid"
+
+msgid "Email"
+msgstr "Email"
+
+msgid "First Page"
+msgstr "Prima pagină"
+
+msgid "Go back to the album"
+msgstr "Înapoi la album"
+
+msgid "Last Page"
+msgstr "Ultima pagină"
+
+msgid "Password is missing. Please enter the password."
+msgstr "Parola lipseşte. Te rog sa introduci parola-"
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Lipseşte confirmarea parolei. Te rog să confirmi parola aleasă."
+
+msgid "%d photos per page"
+msgstr "%d fotografii per pagină"
+
+msgid "Theme"
+msgstr "Temă"
+
+msgid "Album name, Z &rarr; A"
+msgstr "Nume album, Z &rarr; A"
+
+msgid "Photo title"
+msgstr "Titlu fotografie"
+
+msgid "Photo description"
+msgstr "Descriere fotografie"
+
+msgid "No results for"
+msgstr "Nici un rezultat pentru"
+
+msgid "Apply on properties"
+msgstr "Aplica la proprietati"
+
+msgid "Album name, A &rarr; Z"
+msgstr "Nume album, A & rarr; Z"
+
+msgid "Link: %s"
+msgstr "Legatura: %s"
+
+msgid "Your authentication key is no longer valid."
+msgstr "\nCheia dvs. de autentificare nu mai este valabilă."
+
+msgid "generate random password"
+msgstr "generează parolă aleatoare"
+
+msgid "Invalid username or password!"
+msgstr "Nume de utilizator sau parola incorecte!"
+
+msgid "Password: ********** (no copy by email)"
+msgstr "Parolă: ********** (fără copie prin e-mail)"
+
+msgid "Related albums"
+msgstr "Albume conexe"
+
+msgid "Album name, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+msgstr "Numele albumului, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+
+msgid "Album name, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+msgstr "Numele albumului, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+
+msgid "Start-Date"
+msgstr "Data de inceput"
+
+msgid "last 6 months"
+msgstr "Ultimele 6 luni"
+
+msgid "last 7 days"
+msgstr "Ultimele 7 zile"
+
+msgid "Validate"
+msgstr "Validează"
+
+msgid "year %d"
+msgstr "an %d"
+
+msgid "last 24 hours"
+msgstr "ultimele 24 de ore"
+
+msgid "last 3 months"
+msgstr "Ultimele 3 luni"
+
+msgid "last 30 days"
+msgstr "Ultimele 30 de zile"
+
+msgid "%d visits"
+msgstr "%d visite"
+
+msgid "Added by"
+msgstr "Adăugat de"
+
+msgid "Album title"
+msgstr "Titlul albumului"
+
+msgid "Filters"
+msgstr "Filtre"
+
+msgid "Search in :"
+msgstr "Caută în:"
+
+msgid "3xlarge"
+msgstr "3XL – extra mare"
+
+msgid "4xlarge"
+msgstr "4XL – gigantic"
+
+msgid "API Key has been successfully edited."
+msgstr "Cheia API a fost editată cu succes."
+
+msgid "API Key has been successfully revoked."
+msgstr "Cheia API a fost revocată cu succes."
+
+msgid "API Key name"
+msgstr "Numele cheii API"
+
+msgid "API Key not found"
+msgstr "Cheia API nu a fost găsită"
+
+msgid "API Keys"
+msgstr "Chei API"
+
+msgid "Account"
+msgstr "Cont"
+
+msgid "Album already selected"
+msgstr "Album deja selectat"
+
+msgid "Album description"
+msgstr "Descrierea albumului"
+
+msgid "Albums found"
+msgstr "Albume găsite"
+
+msgid "Albums listed here match your search by word. Click on one to browse by album."
+msgstr "Albumele listate aici corespund căutării tale după cuvinte. Fă clic pe unul pentru a naviga în album."
+
+msgid "Already have an account ?"
+msgstr "Ai deja un cont?"
+
+msgid "An email has been sent with a link to reset your password"
+msgstr "A fost trimis un e-mail cu un link pentru resetarea parolei."
+
+msgid "An email has been sent with a verification code"
+msgstr "A fost trimis un e-mail cu un cod de verificare."
+
+msgid "An error has occured please got back to <a href=\"identification.php\" title=\"Sign in\">Sign in</a> or <a href=\"register.php\">Register</a>"
+msgstr "A apărut o eroare. Te rugăm să revii la <a href=\"identification.php\" title=\"Autentificare\">Autentificare</a> sau <a href=\"register.php\">Înregistrare</a>."
+
+msgid "Cancel"
+msgstr "Anulează"
+
+msgid "Change your password"
+msgstr "Schimbă parola"
+
+msgid "Check your inbox"
+msgstr "Verifică-ți căsuța de e-mail"
+
+msgid "Choose filters"
+msgstr "Alege filtrele"
+
+msgid "piwigo_day_0"
+msgstr "Duminică"
+
+msgid "piwigo_day_1"
+msgstr "Luni"
+
+msgid "piwigo_day_2"
+msgstr "Marţi"
+
+msgid "piwigo_day_3"
+msgstr "Miercuri"
+
+msgid "piwigo_day_4"
+msgstr "Joi"
+
+msgid "piwigo_day_5"
+msgstr "Vineri"
+
+msgid "piwigo_day_6"
+msgstr "Sâmbătă"
+
+msgid "piwigo_month_10"
+msgstr "Octombrie"
+
+msgid "piwigo_month_11"
+msgstr "Noiembrie"
+
+msgid "piwigo_month_12"
+msgstr "Decembrie"
+
+msgid "piwigo_month_1"
+msgstr "Ianuarie"
+
+msgid "piwigo_month_2"
+msgstr "Februarie"
+
+msgid "piwigo_month_3"
+msgstr "Martie"
+
+msgid "piwigo_month_4"
+msgstr "Aprilie"
+
+msgid "piwigo_month_5"
+msgstr "Mai"
+
+msgid "piwigo_month_6"
+msgstr "Iunie"
+
+msgid "piwigo_month_7"
+msgstr "Iulie"
+
+msgid "piwigo_month_8"
+msgstr "August"
+
+msgid "piwigo_month_9"
+msgstr "Septembrie"
+

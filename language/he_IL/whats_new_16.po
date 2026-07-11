@@ -1,0 +1,20 @@
+# Piwigo translation — he_IL
+# Source: whats_new_16.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: he_IL\n"
+"Plural-Forms: nplurals=3; plural=(n == 1 ? 0 : n == 2 ? 1 : 2);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Brand new login & preferences with Standard pages !"
+msgstr "דפים חדשים לכניסה והעדפות עם עמודים סטנדרטיים!"
+
+msgid "Two factor authentication is here"
+msgstr "אימות דו-שלבי כאן"
+
+msgid "UI redesigns that make a difference"
+msgstr "עיצובי ממשק משתמש שעושים את ההבדל"
+

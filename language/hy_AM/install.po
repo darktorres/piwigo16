@@ -1,0 +1,143 @@
+# Piwigo translation — hy_AM
+# Source: install.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: hy_AM\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "please enter your password again"
+msgstr "խնդրում ենք կրկին մուտքագրել Ձեր գաղտնաբառը"
+
+msgid "user login given by your host provider"
+msgstr "օգտանուն՝ տրամադրված Ձեր հոստինգի մատակարարի կողմից"
+
+msgid "user password given by your host provider"
+msgstr "գաղտնաբառ՝ տրամադրված Ձեր հոստինգի մատակարարի կողմից"
+
+msgid "verification"
+msgstr "վավերացում"
+
+msgid "webmaster login can't contain characters ' or \""
+msgstr "օգտանունը չի կարող պարունակել ' կամ \" նիշ"
+
+msgid "Need help ? Ask your question on <a href=\"%s\">Piwigo message board</a>."
+msgstr "Օգնության կարիք ունե՞ք, տվեք ձեր հարցը <a href=\"%s\"> Piwigo հաղորդագրությունների տախտակին</a>:"
+
+msgid "Note you can change your configuration by yourself and restart Piwigo after that."
+msgstr "Նշում. Դուք կարող եք ինքնուրույն փոխել Ձեր կազմաձևը, այնուհետև վերագործարկել Piwigo-ն:"
+
+msgid "PHP 5 is required"
+msgstr "Պահանջվում է PHP 5.3"
+
+msgid "PHP version %s required (you are running on PHP %s)"
+msgstr "Պահանջվում է PHP %s (դուք օգտագործում եք PHP %s)"
+
+msgid "Piwigo may try to switch your configuration to PHP 5 by creating or modifying a .htaccess file."
+msgstr "Piwigo-ն կարող է փորձել փոխել ձեր կազմաձևը PHP 5.3-ին' ստեղծելով կամ փոփոխելով .htaccess ֆայլը:"
+
+msgid "Piwigo was not able to configure PHP 5."
+msgstr "Piwigo-ն չկարողացավ կարգավորել PHP 5.3-ը"
+
+msgid "Sorry!"
+msgstr "Կներեք"
+
+msgid "Start Install"
+msgstr "Սկսել տեղադրումը"
+
+msgid "Try to configure PHP 5"
+msgstr "Փորձել կարգավորել PHP 5.3-ը"
+
+msgid "User"
+msgstr "Օգտատեր"
+
+msgid "Visitors will be able to contact site administrator with this mail"
+msgstr "Այցելուները կկարողանան օգտագործել այս էլ. փոստը կայքի ադմինիստրատորի հետ կապ հաստատելու համար"
+
+msgid "Welcome to my photo gallery"
+msgstr "Բարի գալուստ իմ պատկերասրահ"
+
+msgid "Welcome to your new installation of Piwigo!"
+msgstr "Բարի գալուստ Ձեր նոր Piwigo:"
+
+msgid "You can download the config file and upload it to local/config directory of your installation."
+msgstr "Դուք կարող եք ներբեռնել կազմաձևման ֆայլը և վերբեռնել այն ձեր տեղադրման local/config գրացուցակում:"
+
+msgid "You may referer to your hosting provider's support and see how you could switch to PHP 5 by yourself."
+msgstr "Դուք պետք է կապվեք ձեր հոստինգի մատակարարի հաճախորդների սպասարկման կենտրոնի հետ և պարզեք, թե ինչպես կարող եք ինքնուրույն անցնել PHP 5.3:"
+
+msgid "also given by your host provider"
+msgstr "տրամադրվում է նաև ձեր հոստինգի մատակարարի կողմից"
+
+msgid "database tables names will be prefixed with it (enables you to manage better your tables)"
+msgstr "տվյալների բազայի աղյուսակների անունները կունենան այս նախածանցը (թույլ է տալիս ավելի լավ կառավարել Ձեր աղյուսակները):"
+
+msgid "enter a login for webmaster"
+msgstr "խնդրում ենք մուտքագրել տեխ. մասնագետի օգտանունը"
+
+msgid "localhost or other, supplied by your host provider"
+msgstr "localhost կամ այլ՝ տրամադրված ձեր հոստինգի մատակարարի կողմից"
+
+msgid "Admin configuration"
+msgstr "Ադմինիստրացիայի կազմաձևում"
+
+msgid "An alternate solution is to copy the text in the box above and paste it into the file \"local/config/database.inc.php\" (Warning : database.inc.php must only contain what is in the textarea, no line return or space character)"
+msgstr "Այլընտրանքային լուծումն այն է, որ վերևի վանդակում գտնվող տեքստը պատճենեք և այն \"local/config/database.inc.php\" ֆայլում տեղադրեք (Զգուշացում. database.inc.php ֆայլը պետք է պարունակի միայն այն, ինչ կա տեքստային տարածքում, առանց տողի վերադարձի կամ բացատի)"
+
+msgid "Basic configuration"
+msgstr "Հիմնական կազմաձևում"
+
+msgid "Can't connect to server"
+msgstr "Հնարավոր չէ միանալ սերվերին"
+
+msgid "Congratulations, Piwigo installation is completed"
+msgstr "Շնորհավորում ենք, Piwigo-ի տեղադրումն ավարտված է"
+
+msgid "Connection to server succeed, but it was impossible to connect to database"
+msgstr "Սերվերի միացումը հաջող էր, բայց տվյալների բազայի միացումը անհնար էր:"
+
+msgid "Creation of config file local/config/database.inc.php failed."
+msgstr "local/config/database.inc.php կազմաձևման ֆայլի ստեղծումը ձախողվեց:"
+
+msgid "Database configuration"
+msgstr "Տվյալների բազայի կազմաձևում"
+
+msgid "Database name"
+msgstr "Տվյալների բազայի անվանումը"
+
+msgid "Database table prefix"
+msgstr "Տվյալների բազայի աղյուսակների նախածանց"
+
+msgid "Default gallery language"
+msgstr "Պատկերասրահի default լեզուն"
+
+msgid "Don't hesitate to consult our forums for any help : %s"
+msgstr "Մի հապաղեք դիմել մեր ֆորումներին ցանկացած օգնության համար. %s"
+
+msgid "Download the config file"
+msgstr "Ներբեռնել կազմաձևման ֆայլը"
+
+msgid "Hope to see you back soon."
+msgstr "Հուսով եմ, շուտով կվերադառնանք:"
+
+msgid "Host"
+msgstr "Հոստինգ"
+
+msgid "Installation"
+msgstr "Տեղադրում"
+
+msgid "It appears your webhost is currently running PHP %s."
+msgstr "Կարծես թե Ձեր վեբ հոստինգը ներկայումս աշխատում է PHP %s-ով:"
+
+msgid "It will be shown to the visitors. It is necessary for website administration"
+msgstr "Այն կցուցադրվի այցելուներին: Դա անհրաժեշտ է կայքի ադմինիստրացիայի համար:"
+
+msgid "Just another Piwigo gallery"
+msgstr "Մեկ այլ Piwigo պատկերասրահ"
+
+msgid "Keep it confidential, it enables you to access administration panel"
+msgstr "Պահպանեք այն գաղտնի, սա թույլ է տալիս մուտք գործել admin panel:"
+

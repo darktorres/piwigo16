@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Image;
 
+use Piwigo\Config\Config;
+
 /**
  * Holds information (path, url, dimensions) about a derivative image.
  * A derivative image is constructed from a source image (SrcImage class)
@@ -209,7 +211,7 @@ final class DerivativeImage
         }
         $loc = substr_replace($loc, '-' . implode('_', $tokens), $dot, 0);
 
-        $rel_path = PWG_DERIVATIVE_DIR . $loc;
+        $rel_path = Config::derivativeDir() . $loc;
 
         /** @var array<string, mixed> $conf */
         global $conf;

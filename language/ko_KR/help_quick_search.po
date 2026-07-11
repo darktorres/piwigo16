@@ -1,0 +1,161 @@
+# Piwigo translation — ko_KR
+# Source: help_quick_search.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ko_KR\n"
+"Plural-Forms: nplurals=1; plural=(0);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "photos posted in 2003"
+msgstr "2003년에 게시된 사진"
+
+msgid "photos taken in 2003"
+msgstr "2003년에 촬영된 사진"
+
+msgid "return photos less than 700px high"
+msgstr "높이가 700px보다 작은 사진"
+
+msgid "return photos wider than 500px"
+msgstr "너비가 500px보다 큰 사진"
+
+msgid "return photos with at least 1,000 views"
+msgstr "조회수 1,000회 이상 사진 반환"
+
+msgid "returns photos of 12 megapixels or more"
+msgstr "1200만 화소 이상 사진 반환"
+
+msgid "returns photos of 5 megapixels"
+msgstr "500만 화소 사진 반환"
+
+msgid "up to 100 (inclusive)"
+msgstr "100 이하(포함)"
+
+msgid "will give you all photos with at least one note."
+msgstr "메모가 하나 이상 있는 모든 사진 찾기"
+
+msgid "will give you photos without notes."
+msgstr "메모가 없는 사진 찾기"
+
+msgid "Searches photos by taken date."
+msgstr "촬영 날짜별로 사진을 검색합니다."
+
+msgid "Searches photos by width/height ratio."
+msgstr "너비/높이 비율로 사진을 검색합니다."
+
+msgid "Searches photos with a given width or height."
+msgstr "지정된 너비 또는 높이의 사진을 검색합니다."
+
+msgid "Supported numeric operators"
+msgstr "지원되는 수치 연산자"
+
+msgid "The quick search engine allows you to use boolean operators to refine your search. By default, the search applies to all keywords. Searches are not case sensitive."
+msgstr "빠른 검색 엔진을 통해 부울 연산자를 사용하여 검색을 세분화할 수 있습니다. 기본적으로 검색은 모든 키워드에 적용됩니다. 검색은 대소문자를 구분하지 않습니다."
+
+msgid "These operators can be used with numeric fields such as"
+msgstr "이러한 연산자는 다음과 같은 수치 필드에 사용할 수 있습니다."
+
+msgid "Use quotes to search for an exact keyword or phrase."
+msgstr "따옴표를 사용하여 정확한 키워드나 문구를 검색합니다."
+
+msgid "With keywords"
+msgstr "키워드 사용"
+
+msgid "between 10 and 100 (inclusive)"
+msgstr "10과 100 사이 (포함)"
+
+msgid "equals 100"
+msgstr "100과 같음"
+
+msgid "finds files between 1MB and 10MB."
+msgstr "1MB에서 10MB 사이의 파일을 찾습니다."
+
+msgid "finds panoramas"
+msgstr "파노라마 사진을 찾습니다."
+
+msgid "finds photo 123 to 126 (it may find between 0 and 4 photos, because photos can be deleted)"
+msgstr "사진 123부터 126까지 찾습니다(사진이 삭제될 수 있으므로 0개에서 4개 사이의 사진을 찾을 수 있음)."
+
+msgid "finds photos from compact cameras in portrait or landscape modes"
+msgstr "세로 또는 가로 모드의 컴팩트 카메라 사진을 찾습니다."
+
+msgid "from 100 and above"
+msgstr "100 이상"
+
+msgid "greater than 100"
+msgstr "100보다 큼"
+
+msgid "less than 100"
+msgstr "100보다 작음"
+
+msgid "photos after Jan 1st 2008"
+msgstr "2008년 1월 1일 이후의 사진"
+
+msgid "photos from 2003 to 2008"
+msgstr "2003년부터 2008년까지의 사진"
+
+msgid "photos from may 2003"
+msgstr "2003년 5월의 사진"
+
+msgid "Add a dash (-) or NOT before a word to exclude from search. Note that NOT acts as a filtering operator so you cannot have a search containing only NOT operators. You cannot combine OR with NOT (john OR NOT bill is not valid)"
+msgstr "검색에서 제외할 단어 앞에 대시(-) 또는 NOT을 추가합니다. NOT은 필터링 연산자로 작동하므로 NOT 연산자만으로 구성된 검색은 불가능합니다. OR과 NOT을 함께 사용할 수 없습니다(예: john OR NOT bill은 유효하지 않음)"
+
+msgid "Add an OR between words."
+msgstr "단어 사이에 OR을 추가합니다."
+
+msgid "Exact search"
+msgstr "정확한 검색"
+
+msgid "Exclude"
+msgstr "제외"
+
+msgid "Grouping"
+msgstr "그룹화"
+
+msgid "Here is a list of actions you can perform:"
+msgstr "다음은 수행 가능한 작업 목록입니다:"
+
+msgid "OR inclusive"
+msgstr "OR 포함"
+
+msgid "Others"
+msgstr "기타"
+
+msgid "Same principle as for"
+msgstr "다음과 동일한 원리입니다:"
+
+msgid "Search using extended syntax"
+msgstr "확장 구문을 사용한 검색"
+
+msgid "Searches by author."
+msgstr "작성자로 검색합니다."
+
+msgid "Searches by file name."
+msgstr "파일명으로 검색합니다."
+
+msgid "Searches for photos by number of views."
+msgstr "조회수별 사진 검색."
+
+msgid "Searches only for photos with the given words in title or description."
+msgstr "제시된 단어가 제목이나 설명에 포함된 사진만 검색합니다."
+
+msgid "Searches only in tag names without looking at photo titles or descriptions."
+msgstr "사진 제목이나 설명을 확인하지 않고 태그 이름에서만 검색합니다."
+
+msgid "Searches photos by file size."
+msgstr "파일 크기로 사진을 검색합니다."
+
+msgid "Searches photos by its numeric identifier in Piwigo."
+msgstr "Piwigo 내 숫자 식별자로 사진을 검색합니다."
+
+msgid "Searches photos by posted date."
+msgstr "게시된 날짜별로 사진을 검색합니다."
+
+msgid "Searches photos by rating."
+msgstr "평점별 사진 검색."
+
+msgid "Searches photos by size in pixels."
+msgstr "픽셀 단위의 크기로 사진을 검색합니다."
+

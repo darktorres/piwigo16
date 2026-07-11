@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 // Bootstrap global, set by include/common.inc.php.
@@ -47,7 +48,7 @@ function find_available_check_key(): string
 select
   count(*)
 from
-  ' . USER_MAIL_NOTIFICATION_TABLE . '
+  ' . Tables::userMailNotification() . '
 where
   check_key = \'' . $key . '\';';
 
@@ -162,9 +163,9 @@ select
   N.enabled,
   N.last_send,
   UI.status
-from ' . USER_MAIL_NOTIFICATION_TABLE . ' as N
-  JOIN ' . USERS_TABLE . ' as U on N.user_id =  U.' . $id_field . '
-  JOIN ' . USER_INFOS_TABLE . ' as UI on UI.user_id = N.user_id
+from ' . Tables::userMailNotification() . ' as N
+  JOIN ' . Tables::users() . ' as U on N.user_id =  U.' . $id_field . '
+  JOIN ' . Tables::userInfos() . ' as UI on UI.user_id = N.user_id
 where 1=1';
 
         if ($action == 'send') {
@@ -304,7 +305,7 @@ function set_user_on_env_nbm(array &$nbm_user, bool $is_action_send): void
     /** @var array<string, mixed> $env_nbm */
     global $user, $lang, $lang_info, $env_nbm;
 
-    // user_id is USER_MAIL_NOTIFICATION_TABLE's primary key (NOT NULL per
+    // user_id is Tables::userMailNotification()'s primary key (NOT NULL per
     // install/piwigo_structure-mysql.sql), always a non-null numeric value.
     $nbm_user_id_raw = $nbm_user['user_id'];
     assert(is_string($nbm_user_id_raw) && is_numeric($nbm_user_id_raw));
@@ -617,7 +618,7 @@ function do_subscribe_unsubscribe_notification_by_mail($is_admin_request, $is_su
         display_counter_info();
 
         mass_updates(
-            USER_MAIL_NOTIFICATION_TABLE,
+            Tables::userMailNotification(),
             [
                 'primary' => ['check_key'],
                 'update' => ['enabled'],

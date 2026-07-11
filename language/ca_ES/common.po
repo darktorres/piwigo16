@@ -1,0 +1,1541 @@
+# Piwigo translation — ca_ES
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ca_ES\n"
+"Plural-Forms: nplurals=3; plural=(n == 1 ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2);\n"
+"X-Piwigo-Language-Name: Català\n"
+"X-Piwigo-Country: Catalunya/Spain\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: ca\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "%d Kb"
+msgstr "%d Kb"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d àlbum actualitzat"
+msgstr[1] "%d àlbums actualitzats"
+
+msgid "%d comment to validate"
+msgstr "%d comentari per validar"
+
+msgid "%d comments to validate"
+msgstr "%d comentaris per validar"
+
+msgid "%d new comment"
+msgstr "%d nou comentari"
+
+msgid "%d new comments"
+msgstr "%d nous comentaris"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d comentari"
+msgstr[1] "%d comentaris"
+
+msgid "%d hit"
+msgid_plural "%d hits"
+msgstr[0] "%d visualització"
+msgstr[1] "%d visualitzacions"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "%d nova foto"
+msgstr[1] "%d noves fotos"
+
+msgid "%d new user"
+msgstr "%d nou usuari"
+
+msgid "%d new users"
+msgstr "%d nous usuaris"
+
+msgid "About"
+msgstr "Quant a"
+
+msgid "All tags"
+msgstr "Totes les etiquetes"
+
+msgid "Any tag"
+msgstr "Qualsevol etiqueta"
+
+msgid "Albums"
+msgstr "Àlbums"
+
+msgid "Album"
+msgstr "Àlbum"
+
+msgid "Close this window"
+msgstr "Tanca aquesta finestra"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "Canal RSS complet (fotos, comentaris...)"
+
+msgid "Confirm Password"
+msgstr "Confirmeu la nova contrasenya"
+
+msgid "Connection settings"
+msgstr "Paràmetres de connexió"
+
+msgid "Login"
+msgstr "Identificar-se"
+
+msgid "Contact webmaster"
+msgstr "Contacteu amb l'administrador del web"
+
+msgid "Create a new account"
+msgstr "Crea un nou compte d'usuari"
+
+msgid "Created on"
+msgstr "Creada el"
+
+msgid "Creation date"
+msgstr "Data de creació"
+
+msgid "Current password is wrong"
+msgstr "La contrasenya actual és errònia"
+
+msgid "Dimensions"
+msgstr "Dimensions"
+
+msgid "Display"
+msgstr "Visualitza"
+
+msgid "Email address"
+msgstr "Adreça de correu electrònic"
+
+msgid "Enter your personnal informations"
+msgstr "Introdueix la teva informació personal"
+
+msgid "Error sending email"
+msgstr "S'ha produït un error en enviar el correu electrònic"
+
+msgid "File name"
+msgstr "Nom d'arxiu"
+
+msgid "File"
+msgstr "Arxiu"
+
+msgid "Filesize"
+msgstr "Mida"
+
+msgid "Filter and display"
+msgstr "Aplica el filtre i visualitza"
+
+msgid "Filter"
+msgstr "Filtra"
+
+msgid "Forgot your password?"
+msgstr "Heu oblidat la contrasenya?"
+
+msgid "Go through the gallery as a visitor"
+msgstr "Navegueu per la galeria com a visitant"
+
+msgid "Help"
+msgstr "Ajuda"
+
+msgid "Identification"
+msgstr "Autenticació"
+
+msgid "Photos only RSS feed"
+msgstr "Canal RSS només de fotos"
+
+msgid "Keyword"
+msgstr "Paraula clau"
+
+msgid "Links"
+msgstr "Enllaços"
+
+msgid "N/A"
+msgstr "N/A"
+
+msgid "New on %s"
+msgstr "Nou a %s"
+
+msgid "Notification"
+msgstr "Notificacions RSS"
+
+msgid "Number of items"
+msgstr "Nombre d'elements"
+
+msgid "Original dimensions"
+msgstr "Dimensions originals"
+
+msgid "Password forgotten"
+msgstr "He oblidat la contrasenya"
+
+msgid "Password"
+msgstr "Contrasenya"
+
+msgid "Post date"
+msgstr "Data de publicació"
+
+msgid "Posted on"
+msgstr "Publicada el"
+
+msgid "Profile"
+msgstr "Perfil"
+
+msgid "Quick connect"
+msgstr "Connexió ràpida"
+
+msgid "RSS feed"
+msgstr "Canal RSS"
+
+msgid "Register"
+msgstr "Inscriure's"
+
+msgid "Registration"
+msgstr "Registre"
+
+msgid "Related tags"
+msgstr "Etiquetes relacionades"
+
+msgid "Reset"
+msgstr "Restableix"
+
+msgid "Retrieve password"
+msgstr "Recupera la contrasenya"
+
+msgid "Search tags"
+msgstr "Cerca etiquetes"
+
+msgid "Search"
+msgstr "Cerca"
+
+msgid "display available tags"
+msgstr "visualitza les etiquetes disponibles"
+
+msgid "Since"
+msgstr "Des de"
+
+msgid "Sort by"
+msgstr "Ordena per"
+
+msgid "Sort order"
+msgstr "Ordre"
+
+msgid "Tag"
+msgstr "Etiqueta"
+
+msgid "Tags"
+msgstr "Etiquetes"
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "La font de redifusió amb format RSS proporciona notificacions automàtiques de les novetats d'aquest lloc web: noves fotos, actualitzacions en els àlbums, nous comentaris... Cal utilitzar un lector de canal RSS."
+
+msgid "Unknown feed identifier"
+msgstr "Identificador de canal desconegut"
+
+msgid "User comments"
+msgstr "Comentaris dels usuaris"
+
+msgid "Username"
+msgstr "Usuari"
+
+msgid "Visits"
+msgstr "Visites"
+
+msgid "Webmaster"
+msgstr "webmaster"
+
+msgid "Week %d"
+msgstr "Setmana %d"
+
+msgid "About Piwigo"
+msgstr "Quant al Piwigo"
+
+msgid "You are not authorized to access the requested page"
+msgstr "No esteu autoritzats a accedir en aquesta pàgina"
+
+msgid "add this photo to your favorites"
+msgstr "afegir a fotos favorites"
+
+msgid "Administration"
+msgstr "Administració"
+
+msgid "all"
+msgstr "Tot "
+
+msgid "ascending"
+msgstr "ascendent"
+
+msgid "Expand all albums"
+msgstr "Expandeix tots els àlbums"
+
+msgid "posted after %s (%s)"
+msgstr "publicades després %s (%s)"
+
+msgid "posted before %s (%s)"
+msgstr "publicades abans %s (%s)"
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "publicades entre %s (%s) i %s (%s)"
+
+msgid "posted on %s"
+msgstr "publicades el %s"
+
+msgid "Best rated"
+msgstr "Millor valorades"
+
+msgid "display best rated photos"
+msgstr "Visualitzar elements millor valorats"
+
+msgid "Calendar"
+msgstr "Calendari"
+
+msgid "All"
+msgstr "Tot "
+
+msgid "display each day with photos, month per month"
+msgstr "visualitza cada dia amb les fotos, mes a mes"
+
+msgid "View"
+msgstr "Visualitza"
+
+msgid "chronology_monthly_calendar"
+msgstr "Calendari mensual"
+
+msgid "chronology_monthly_list"
+msgstr "Llista mensual"
+
+msgid "chronology_weekly_list"
+msgstr "Llista setmanal"
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "Feu clic aquí si el navegador no us redirecciona automàticament"
+
+msgid "comment date"
+msgstr "Data del comentari"
+
+msgid "Comment"
+msgstr "Comentari"
+
+msgid "Your comment has been registered"
+msgstr "El comentari s'ha registrat correctament"
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "S'ha activat el sistema de prevenció anti col·lapse. Si us plau, espereu un moment abans d'afegir un altre comentari. En aquest moment el servidor està processant nombroses peticions d'altres usuaris."
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "Atenció, el comentari NO serà publicat perquè no ha ha estat validat correctament."
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "Un administrador ha d'autoritzar el vostre comentari per a què sigui visible."
+
+msgid "This login is already used by another user"
+msgstr "Aquest nom d'usuari ja està en ús per un altre usuari"
+
+msgid "Comments"
+msgstr "Comentaris"
+
+msgid "Add a comment"
+msgstr "Afegeix un comentari"
+
+msgid "created after %s (%s)"
+msgstr "creat després %s (%s)"
+
+msgid "created before %s (%s)"
+msgstr "creat abans %s (%s)"
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "creat entre %s (%s) i %s (%s)"
+
+msgid "created on %s"
+msgstr "creada el %s"
+
+msgid "Your Gallery Customization"
+msgstr "Personalització de la galeria"
+
+msgid "Default"
+msgstr "Per defecte"
+
+msgid "delete this photo from your favorites"
+msgstr "elimina aquesta foto de les fotos favorites"
+
+msgid "descending"
+msgstr "descendent"
+
+msgid "edit"
+msgstr "Edita"
+
+msgid "wrong date"
+msgstr "data errònia"
+
+msgid "excluded"
+msgstr "exclosa"
+
+msgid "Your favorites"
+msgstr "Fotos favorites"
+
+msgid "display your favorites photos"
+msgstr "visualitza les fotos favorites"
+
+msgid "Favorites"
+msgstr "Favorites"
+
+msgid "First"
+msgstr "Primera"
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "La galeria roman temporalment tancada per tasques de manteniment. Disculpi les molèsties. La galeria tornarà a estar operativa en uns minuts."
+
+msgid "Page generated in"
+msgstr "Pàgina generada en"
+
+msgid "guest"
+msgstr "visitant"
+
+msgid "Hello"
+msgstr "Hola"
+
+msgid "available for administrators only"
+msgstr "disponible només per a administradors"
+
+msgid "display this album"
+msgstr "Visualitza el contingut d'aquest àlbum"
+
+msgid "display last user comments"
+msgstr "visualitza els últims comentaris dels usuaris"
+
+msgid "search"
+msgstr "cerca"
+
+msgid "in this album"
+msgstr "en aquest àlbum"
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] "en %d sub-àlbum"
+msgstr[1] "en %d sub-àlbums"
+
+msgid "included"
+msgstr "inclòs"
+
+msgid "Invalid password!"
+msgstr "Contrasenya no vàlida!"
+
+msgid "Language"
+msgstr "Idioma"
+
+msgid "last %d days"
+msgstr "últims %d dies"
+
+msgid "Last"
+msgstr "Última"
+
+msgid "Logout"
+msgstr "Sortir"
+
+msgid "obligatory"
+msgstr "obligatori"
+
+msgid "display a calendar by creation date"
+msgstr "visualitza un calendari segons la data de creació"
+
+msgid "display all photos in all sub-albums"
+msgstr "visualitza les fotos de tots els sub-àlbums"
+
+msgid "return to normal view mode"
+msgstr "torna a la vista normal"
+
+msgid "display a calendar by posted date"
+msgstr "visualitza un calendari segons la data de publicació"
+
+msgid "Most visited"
+msgstr "Més visitades"
+
+msgid "display most visited photos"
+msgstr "visualitza les fotos més visitades"
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "El nombre de fotos per pàgina ha de ser una xifra entera diferent de zero"
+
+msgid "Number of photos per page"
+msgstr "Número de fotos per pàgina"
+
+msgid "Unknown identifier"
+msgstr "Identificador desconegut"
+
+msgid "New password"
+msgstr "Nova contrasenya"
+
+msgid "Rate this photo"
+msgstr "Valoreu aquesta foto"
+
+msgid "Next"
+msgstr "Següent"
+
+msgid "Home"
+msgstr "Inici"
+
+msgid "no rate"
+msgstr "sense valorar"
+
+msgid "photos posted during the last %d days"
+msgstr "fotos publicades durant els últims %d dies"
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "Fotos publicades únicament l'últim %d dia."
+msgstr[1] "Fotos publicades únicament els últims %d dies."
+
+msgid "password updated"
+msgstr "Clau d'accés actualitzada"
+
+msgid "Recent period must be a positive integer value"
+msgstr "El període ha de ser un valor enter positiu"
+
+msgid "photo"
+msgstr "foto"
+
+msgid "Click on the photo to see it in high definition"
+msgstr "Feu clic sobre la foto per a veure-la amb més qualitat"
+
+msgid "Show file metadata"
+msgstr "Mostra/Oculta informació addicional de la càmera fotogràfica (metadades Exif)"
+
+msgid "Powered by"
+msgstr "Desenvolupat per"
+
+msgid "Preferences"
+msgstr "Preferències"
+
+msgid "Previous"
+msgstr "Anterior"
+
+msgid "Random photos"
+msgstr "Fotos aleatòries"
+
+msgid "display a set of random photos"
+msgstr "visualitza un conjunt de fotos aleatòries"
+
+msgid "Recent albums"
+msgstr "Àlbums recents"
+
+msgid "display recently updated albums"
+msgstr "Visualitza els àlbums actualitzats recentment"
+
+msgid "Recent period"
+msgstr "Període recent (dies)"
+
+msgid "Recent photos"
+msgstr "Fotos recents"
+
+msgid "display most recent photos"
+msgstr "visualitza les fotos més recents"
+
+msgid "Redirection..."
+msgstr "Redirecció..."
+
+msgid "Please, enter a login"
+msgstr "Si us plau, introdueixi les seves credencials d'autenticació"
+
+msgid "login mustn't end with a space character"
+msgstr "el nom d'usuari no pot acabar amb el caràcter 'espai'"
+
+msgid "login mustn't start with a space character"
+msgstr "el nom d'usuari no pot començar amb el caràcter 'espai'"
+
+msgid "this login is already used"
+msgstr "aquest nom d'usuari ja s'està utilitzant"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "L'adreça de correu ha de ser com xxx@yyy.eee (exemple: jack@altern.org)"
+
+msgid "Auto login"
+msgstr "Recorda"
+
+msgid "remove this tag from the list"
+msgstr "elimineu aquesta etiqueta de la llista"
+
+msgid "representative"
+msgstr "miniatura de l'àlbum"
+
+msgid "Search for Author"
+msgstr "Cerca per autor"
+
+msgid "Search in albums"
+msgstr "Cerca en els àlbums"
+
+msgid "Date"
+msgstr "Data inicial"
+
+msgid "End-Date"
+msgstr "Data final"
+
+msgid "Kind of date"
+msgstr "Quina?"
+
+msgid "Search for words"
+msgstr "Cerca per paraules"
+
+msgid "Search for all terms"
+msgstr "Cerca per tots els termes"
+
+msgid "Empty query. No criteria has been entered."
+msgstr "No ha introduït cap criteri de cerca."
+
+msgid "Search results"
+msgstr "Resultats de la cerca"
+
+msgid "Search in sub-albums"
+msgstr "Cerca en els sub-àlbums"
+
+msgid "Contact"
+msgstr "Contacteu amb el"
+
+msgid "set as album representative"
+msgstr "estableix com a icona de l'àlbum"
+
+msgid "Show number of comments"
+msgstr "Mostra el nombre de comentaris"
+
+msgid "Show number of hits"
+msgstr "Mostra el nombre de visualitzacions"
+
+msgid "slideshow"
+msgstr "Presentació de diapositives"
+
+msgid "stop the slideshow"
+msgstr "aturar la presentació"
+
+msgid "Specials"
+msgstr "Especials"
+
+msgid "SQL queries in"
+msgstr "consultes SQL en"
+
+msgid "display only recently posted photos"
+msgstr "visualitza només les fotos publicades recentment"
+
+msgid "return to the display of all photos"
+msgstr "torna a la visualització de totes les fotos"
+
+msgid "the beginning"
+msgstr "principi"
+
+msgid "Thumbnails"
+msgstr "Miniatures"
+
+msgid "Menu"
+msgstr "Menú"
+
+msgid "A comment on your site"
+msgstr "Un comentari sobre el vostre lloc web"
+
+msgid "today"
+msgstr "avui"
+
+msgid "Update your rating"
+msgstr "Actualitzeu la vostra valoració"
+
+msgid "Author"
+msgstr "Autor"
+
+msgid "the username must be given"
+msgstr "cal indicar el nom d'usuari"
+
+msgid "useful when password forgotten"
+msgstr "útil en cas de pèrdua de la contrasenya"
+
+msgid "Quick search"
+msgstr "Cerca ràpida"
+
+msgid "Connected user: %s"
+msgstr "Usuari connectat: %s"
+
+msgid "IP: %s"
+msgstr "IP: %s"
+
+msgid "Browser: %s"
+msgstr "Navegador: %s"
+
+msgid "Author: %s"
+msgstr "Autor: %s"
+
+msgid "Comment: %s"
+msgstr "Comentari: %s"
+
+msgid "Comment by %s"
+msgstr "Comentat per %s"
+
+msgid "User: %s"
+msgstr "Usuari: %s"
+
+msgid "Email: %s"
+msgstr "Email: %s"
+
+msgid "Admin: %s"
+msgstr "Admin: %s"
+
+msgid "Registration of %s"
+msgstr "Registrat de %s"
+
+msgid "Album: %s"
+msgstr "Àlbum: %s"
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "Estat erroni de l'usuari \"convidat\". S'està utilitzant l'estat predeterminat. Si us plau, informeu-ho a l'administrador del web."
+
+msgid "this email address is already in use"
+msgstr "un usuari ja utilitza aquesta adreça de correu"
+
+msgid "Album results for"
+msgstr "Resultats dels àlbums per"
+
+msgid "Tag results for"
+msgstr "Resultats de l'etiqueta per"
+
+msgid "from %s to %s"
+msgstr "de %s a %s"
+
+msgid "Play of slideshow"
+msgstr "Reprodueix"
+
+msgid "Pause of slideshow"
+msgstr "Pausa"
+
+msgid "Repeat the slideshow"
+msgstr "Activa la repetició"
+
+msgid "Not repeat the slideshow"
+msgstr "Desactiva repetició"
+
+msgid "Reduce diaporama speed"
+msgstr "Disminueix la velocitat"
+
+msgid "Accelerate diaporama speed"
+msgstr "Incrementa la velocitat"
+
+msgid "Submit"
+msgstr "Tramet"
+
+msgid "Yes"
+msgstr "Sí"
+
+msgid "No"
+msgstr "No"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "%d foto"
+msgstr[1] "%d fotos"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "%d foto també ha estat enllaçada amb aquestes etiquetes"
+msgstr[1] "%d fotos també han estat enllaçades amb aquestes etiquetes"
+
+msgid "display photos linked to this tag"
+msgstr "visualitza només les fotos enllaçades amb aquesta etiqueta"
+
+msgid "Piwigo Help"
+msgstr "Ajuda"
+
+msgid "Rank"
+msgstr "Millor valorades"
+
+msgid "group by letters"
+msgstr "Agrupa per lletres"
+
+msgid "letters"
+msgstr "lletres"
+
+msgid "show tag cloud"
+msgstr "mostra núvol d'etiquetes"
+
+msgid "cloud"
+msgstr "núvol"
+
+msgid "Reset to default values"
+msgstr "Restaura els valors predeterminats"
+
+msgid "delete all photos from your favorites"
+msgstr "elimina tots els elements de les fotos favorites"
+
+msgid "Sent by"
+msgstr "Enviat per"
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "Les galetes (cookies) estan bloquejades o el navegador no en permet l'ús. Heu d'habilitar-les per poder-vos connectar."
+
+msgid "Edit a comment"
+msgstr "Edita un comentari"
+
+msgid "Are you sure?"
+msgstr "Confirmeu que desitgeu realitzar aquesta acció"
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "Falta l'adreça de correu electrònic. Si us plau, introduïu-la."
+
+msgid "Delete"
+msgstr "Elimina"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) Aquest comentari necessita ser validat"
+
+msgid "Welcome"
+msgstr "Benvingut"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "Benvingut a la galeria fotogràfica Piwigo!"
+
+msgid "... or browse your empty gallery"
+msgstr "...o navegueu per la galeria (actualment buida)"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "... o si us plau, desactiveu aquest missatge per trobar la manera de fer-ho pel vostre compte."
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "Hola %s, la galeria no conté elements per mostrar."
+
+msgid "I want to add photos"
+msgstr "Vull afegir fotos"
+
+msgid "Manage this user comment: %s"
+msgstr "Gestionar el comentari: %s"
+
+msgid "This author modified following comment:"
+msgstr "Aquest autor ha modificat el següent comentari:"
+
+msgid "This author removed the comment with id %d"
+msgstr "Aquest autor ha eliminat el comentari amb l'identificador numèric %d"
+
+msgid "html tags are not allowed in login"
+msgstr "No es permeten etiquetes html en les dades d'inici de sessió"
+
+msgid "Rating score"
+msgstr "Puntuació"
+
+msgid "Invalid username or email"
+msgstr "nom d'usuari o adreça de correu electrònica no vàlida"
+
+msgid "Password reset is not allowed for this user"
+msgstr "No està permès restablir la contrasenya per aquest usuari"
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "L'usuari \"%s\" no té registrada cap adreça de correu electrònic. El canvi de contrasenya no es possible"
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "Algú ha demanat que contrasenya d'accés sigui restablerta pels següents comptes d'usuari"
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "El nom d'usuari \"%s\" sobre la galeria %s"
+
+msgid "To reset your password, visit the following address:"
+msgstr "Per restablir la contrasenya visiteu l'adreça següent:"
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "Si es tracta d'un error, ignoreu aquest correu electrònic com si res hagués passat."
+
+msgid "Password Reset"
+msgstr "Estableixi una nova contrasenya"
+
+msgid "Check your email for the confirmation link"
+msgstr "Comproveu que heu rebut l'enllaç de confirmació al vostre compte de correu electrònic"
+
+msgid "Invalid key"
+msgstr "Clau invàlida"
+
+msgid "The passwords do not match"
+msgstr "Les contrasenyes no coincideixen"
+
+msgid "Your password has been reset"
+msgstr "S'ha restablert la seva contrasenya."
+
+msgid "Return to home page"
+msgstr "Torna a la pàgina d'inici"
+
+msgid "Please enter your username or email address."
+msgstr "Introduïu el nom d'usuari o l'adreça de correu electrònic que vau emprar per donar-vos d'alta."
+
+msgid "You will receive a link to create a new password via email."
+msgstr "Hauríeu de rebre un correu electrònic amb un enllaç per restablir la contrasenya"
+
+msgid "Username or email"
+msgstr "Nom d'usuari o adreça de correu electrònic"
+
+msgid "Change my password"
+msgstr "Restableix la meva contrasenya"
+
+msgid "Enter your new password below."
+msgstr "Introduïu la nova contrasenya."
+
+msgid "EXIF Metadata"
+msgstr "Metadades EXIF"
+
+msgid "IPTC Metadata"
+msgstr "Metadades IPTC"
+
+msgid "2small"
+msgstr "XXS - diminut"
+
+msgid "Desktop"
+msgstr "Escriptori"
+
+msgid "Edit"
+msgstr "Edita"
+
+msgid "File name, A &rarr; Z"
+msgstr "Nom d'arxiu, A &rarr; Z"
+
+msgid "File name, Z &rarr; A"
+msgstr "Nom d'arxiu, Z &rarr; A"
+
+msgid "Hello %s,"
+msgstr "Hola %s,"
+
+msgid "Here are your connection settings"
+msgstr "Aquestes son les teves dades de connexió"
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "Si us plau, contacta amb nosaltres a %s si creus que has rebut aquest correu electrònic per error."
+
+msgid "Manual sort order"
+msgstr "Ordre manual"
+
+msgid "Mobile"
+msgstr "Mòbil"
+
+msgid "Original"
+msgstr "Original"
+
+msgid "Password: %s"
+msgstr "Contrasenya: %s"
+
+msgid "Photo sizes"
+msgstr "Canviar mides"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "Nom de l'arxiu, A &rarr; Z"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "Nom de l'arxiu, Z &rarr; A"
+
+msgid "Send my connection settings by email"
+msgstr "Envia les dades de connexió al meu compte de correu electrònic"
+
+msgid "Show latest comments first"
+msgstr "Mostra els comentaris nous primer"
+
+msgid "Show oldest comments first"
+msgstr "Mostra primer els comentaris més antics "
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "Us heu inscrit correctament. En breu rebreu un correu electrònic amb les credencials de connexió. Benvingut!"
+
+msgid "Thank you for registering at %s!"
+msgstr "Gràcies per registrar-te a %s!"
+
+msgid "Username modification"
+msgstr "Modifica el nom d'usuari"
+
+msgid "Username: %s"
+msgstr "Usuari: %s"
+
+msgid "View in"
+msgstr "Veure en"
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "El nom d'usuari s'ha modificat correctament per: %s"
+
+msgid "large"
+msgstr "L - gran"
+
+msgid "medium"
+msgstr "M - mitjà"
+
+msgid "small"
+msgstr "S - petit"
+
+msgid "square"
+msgstr "Quadrat"
+
+msgid "thumb"
+msgstr "Miniatura"
+
+msgid "xlarge"
+msgstr "XL - extra gran"
+
+msgid "xsmall"
+msgstr "XS - extra petit"
+
+msgid "xxlarge"
+msgstr "XXL - enorme"
+
+msgid "Date created, new &rarr; old"
+msgstr "Data de creació, nou &rarr; antic"
+
+msgid "Date created, old &rarr; new"
+msgstr "Data de creació, antic &rarr; nou"
+
+msgid "Date posted, new &rarr; old"
+msgstr "Data de publicació, nou &rarr; antic"
+
+msgid "Date posted, old &rarr; new"
+msgstr "Data de publicació, antic &rarr; nou"
+
+msgid "Download this file"
+msgstr "Descarrega aquest fitxer"
+
+msgid "Download"
+msgstr "Descarrega"
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "Identificador numèric, 1 &rarr; 9"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "Identificador numèric, 9 &rarr; 1"
+
+msgid "Rating score, high &rarr; low"
+msgstr "Puntuació, alta &rarr; baixa"
+
+msgid "Rating score, low &rarr; high"
+msgstr "Puntuació, baixa &rarr; alta"
+
+msgid "Search by date"
+msgstr "Cerca per data"
+
+msgid "Search for any term"
+msgstr "Cerca per qualsevol terme"
+
+msgid "Visits, high &rarr; low"
+msgstr "Visites, alt &rarr; baix"
+
+msgid "Visits, low &rarr; high"
+msgstr "Visites, baix &rarr; alt"
+
+msgid "%d rate"
+msgid_plural "%d rates"
+msgstr[0] "%d valoració"
+msgstr[1] "%d valoracions"
+
+msgid "Bad request"
+msgstr "Sol·licitud incorrecta"
+
+msgid "Forbidden"
+msgstr "Prohibit"
+
+msgid "Page not found"
+msgstr "Pàgina no trobada"
+
+msgid "Permalink for album not found"
+msgstr "No es troba l'enllaç permanent per a l'àlbum"
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "Piwigo ha detectat un error no recuperable"
+
+msgid "Requested album does not exist"
+msgstr "No existeix l'àlbum sol·licitat"
+
+msgid "Requested tag does not exist"
+msgstr "No existeix l'etiqueta sol·licitada"
+
+msgid "Email address is mandatory"
+msgstr "L'adreça de correu és obligatòria"
+
+msgid "Username is mandatory"
+msgstr "El nom d'usuari és obligatori"
+
+msgid "mandatory"
+msgstr "obligatori"
+
+msgid "Website"
+msgstr "lloc web"
+
+msgid "Your website URL is invalid"
+msgstr "La URL del vostre lloc web és invàlida"
+
+msgid "Email"
+msgstr "Correu elecrònic"
+
+msgid "First Page"
+msgstr "Primera pàgina"
+
+msgid "Go back to the album"
+msgstr "Tornar a l'àlbum"
+
+msgid "Last Page"
+msgstr "Última pàgina"
+
+msgid "Password is missing. Please enter the password."
+msgstr "Falta la clau d'accès. Si us plau, introdueix-la."
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Falta confirmar la contrasenya. Si us plau, confirmeu la contrasenya escollida."
+
+msgid "%d photos per page"
+msgstr "%d fotos per pàgina"
+
+msgid "Theme"
+msgstr "Tema"
+
+msgid "No results for"
+msgstr "No s'ha trobat resultats per"
+
+msgid "Apply on properties"
+msgstr "Aplica a propietats"
+
+msgid "Photo description"
+msgstr "Descripció de la foto"
+
+msgid "Photo title"
+msgstr "Títol de la foto"
+
+msgid "Album name, A &rarr; Z"
+msgstr "Nom de l'àlbum, a &rarr; Z"
+
+msgid "Album name, Z &rarr; A"
+msgstr "Nom de l'àlbum, Z &rarr; A"
+
+msgid "Link: %s"
+msgstr "Enllaç: %s"
+
+msgid "Your authentication key is no longer valid."
+msgstr "D'aquí poc temps la teva clau autenticació no serà vàlida"
+
+msgid "Invalid username or password!"
+msgstr "Contrasenya no vàlida"
+
+msgid "generate random password"
+msgstr "Genera una contrasenya aleatòria"
+
+msgid "Password: ********** (no copy by email)"
+msgstr "Contrasenya: ********** (sense còpia per correu electrònic)"
+
+msgid "Related albums"
+msgstr "Àlbums relacionats"
+
+msgid "Album name, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+msgstr "Nom de l'àlbum, 1 &rarr; 5&rarr; 10 &rarr; 100"
+
+msgid "Album name, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+msgstr "Nom de l'àlbum, 100 &rarr; 10&rarr; 5 &rarr; 1"
+
+msgid "Start-Date"
+msgstr "Data d'inici"
+
+msgid "%d visits"
+msgstr "%d visites"
+
+msgid "Added by"
+msgstr "Afegit per"
+
+msgid "Album description"
+msgstr "Descripció de l'àlbum"
+
+msgid "Album title"
+msgstr "Títol de l'àlbum"
+
+msgid "Albums found"
+msgstr "Àlbums trobats"
+
+msgid "Albums listed here match your search by word. Click on one to browse by album."
+msgstr "Els àlbums llistats aquí coincideixen amb la vostra cerca per paraules. Feu clic en un per examinar per àlbums."
+
+msgid "Cancel"
+msgstr "Cancel·lar"
+
+msgid "Choose filters"
+msgstr "Escollir filtres"
+
+msgid "Clear"
+msgstr "Esborrar"
+
+msgid "Empty filters"
+msgstr "Filtres buits"
+
+msgid "File type"
+msgstr "Tipus de fitxer"
+
+msgid "Fill in the filters to start a search"
+msgstr "Ompliu els filtres per iniciar una cerca"
+
+msgid "Filters"
+msgstr "Filtres"
+
+msgid "No results are available."
+msgstr "No hi ha resultats disponibles."
+
+msgid "Pre-established filters are proposed, but you can add or remove them using the \"Choose filters\" button."
+msgstr "Es proposen filtres pre-establerts, però en podeu afegir o eliminar mitjançant el botó \"Escollir filtres\"."
+
+msgid "Search in :"
+msgstr "Cercar en:"
+
+msgid "Search in this set"
+msgstr "Cercar en aquest conjunt"
+
+msgid "Tags found"
+msgstr "Etiqutes trobades"
+
+msgid "Tags listed here match your search by word. Click on one to browse by tag."
+msgstr "Les etiquetes trobades aquí coincideixen amb la vostra cerca per paraules. Feu clic en una per examinar per etiquetes."
+
+msgid "Unknown time period"
+msgstr "Periode de temps desconegut."
+
+msgid "Validate"
+msgstr "Validar"
+
+msgid "You can try to edit your filters and perform a new search."
+msgstr "Podeu intentar editar els filtres i realitzar una nova cerca."
+
+msgid "last 24 hours"
+msgstr "darreres 24 hores"
+
+msgid "last 3 months"
+msgstr "Darrers 3 mesos"
+
+msgid "last 30 days"
+msgstr "Darrers 30 dies"
+
+msgid "last 6 months"
+msgstr "Darrers 6 mesos"
+
+msgid "last 7 days"
+msgstr "Darrers 7 dies"
+
+msgid "last year"
+msgstr "Darrer any"
+
+msgid "rating score %s"
+msgstr "puntuació %s"
+
+msgid "year %d"
+msgstr "any %d"
+
+msgid "Album already selected"
+msgstr "Àlbum ja seleccionat"
+
+msgid "Only the first %d albums are displayed, out of %d."
+msgstr "Només es mostren els primers %d àlbums, d'un total de %d."
+
+msgid "Pages"
+msgstr "Pàgines"
+
+msgid "The PDF you requested is too large to display on this page."
+msgstr "El PDF que heu sol·licitat és massa gran per mostrar-lo en aquesta pàgina."
+
+msgid "Click here to display it"
+msgstr "Feu clic aquí per mostrar-lo"
+
+msgid "Custom dates"
+msgstr "Dates personalitzades"
+
+msgid "last 12 months"
+msgstr "Els darrers 12 mesos"
+
+msgid "There are no authors available for the photos currently filtered"
+msgstr "No hi ha autors disponibles per a les fotos filtrades actualment"
+
+msgid "There are no creation dates available for the photos currently filtered"
+msgstr "No hi ha dates de creació disponibles per a les fotos filtrades actualment"
+
+msgid "There are no tags available for the photos currently filtered"
+msgstr "No hi ha etiquetes disponibles per a les fotos filtrades actualment"
+
+msgid "Set your password below."
+msgstr "Definiu la vostra contrasenya aquí sota."
+
+msgid "The api key has been successfully created."
+msgstr "La clau de l'API s'ha creat amb èxit."
+
+msgid "The email %s will be used to notify you when your API key is about to expire."
+msgstr "S'utilitzarà el correu electrònic %s per avisar-vos quan la vostra clau d'API estigui a punt de caducar."
+
+msgid "The secret key can no longer be displayed."
+msgstr "La clau secreta no es pot tornar a mostrar."
+
+msgid "This API key was manually revoked on %s"
+msgstr "Aquesta clau d'API es va revocar manualment el %s"
+
+msgid "To continue using the API, please renew your key before it expires."
+msgstr "Per continuar utilitzant l'API, renoveu la clau abans que caduqui."
+
+msgid "To manage your API keys, please log in with your username/password."
+msgstr "Per gestionar les vostres claus d'API, inicieu la sessió amb el vostre usuari i contrasenya."
+
+msgid "When enabled, a common template is used for the login and registration pages, regardless of the theme."
+msgstr "Quan estigui habilitada, s'utilitzarà una plantilla comuna per a les pàgines d'inici de sessió i registre, independentment del tema."
+
+msgid "You can manage your API keys in your <a href=\"%s\">account settings.</a>"
+msgstr "Podeu gestionar les vostres claus d'API als <a href=\"%s\">paràmetres del compte</a>."
+
+msgid "You have no email address, so you will not be notified when your API key is about to expire."
+msgstr "No teniu adreça de correu electrònic; per tant no us podrem avisar quan la vostra clau d'API estigui a punt de caducar."
+
+msgid "Your API key will expire in %d day."
+msgstr "La vostra clau d'API caducarà en %d dia."
+
+msgid "Your API key will expire in %d days."
+msgstr "La vostra clau d'API caducarà en %d dies."
+
+msgid "Your API key will expire soon"
+msgstr "La vostra clau d'API caducarà aviat"
+
+msgid "Your changes have been applied."
+msgstr "S'han aplicat els canvis."
+
+msgid "Your password was successfully reset"
+msgstr "S'ha restablert amb èxit la vostra contrasenya"
+
+msgid "Your password was successfully set"
+msgstr "S'ha establert amb èxit la vostra contrasenya"
+
+msgid "must not be empty"
+msgstr "no pot estar buida"
+
+msgid "you must choose a date"
+msgstr "heu de triar una data"
+
+msgid "3xlarge"
+msgstr "3XL - extra gegant"
+
+msgid "4xlarge"
+msgstr "4XL - gegantí"
+
+msgid "API Key has been successfully edited."
+msgstr "La clau d'API s'ha editat correctament."
+
+msgid "API Key has been successfully revoked."
+msgstr "La clau d'API s'ha revocat correctament."
+
+msgid "API Key name"
+msgstr "Nom de la clau d'API"
+
+msgid "API Key not found"
+msgstr "No s'ha trobat la clau d'API"
+
+msgid "API Keys"
+msgstr "Claus d'API"
+
+msgid "Account"
+msgstr "Compte"
+
+msgid "Already have an account ?"
+msgstr "Ja teniu un compte?"
+
+msgid "An email has been sent with a link to reset your password"
+msgstr "S'ha enviat un correu electrònic amb un enllaç per restablir la contrasenya."
+
+msgid "An error has occured please got back to <a href=\"identification.php\" title=\"Sign in\">Sign in</a> or <a href=\"register.php\">Register</a>"
+msgstr "S'ha produït un error. Si us plau, torneu a <a href=\"identification.php\" title=\"Iniciar sessió\">Iniciar sessió</a> o a <a href=\"register.php\">Registrar-vos</a>."
+
+msgid "Change your password"
+msgstr "Canvieu la contrasenya"
+
+msgid "Check your inbox"
+msgstr "Reviseu la safata d'entrada"
+
+msgid "Choose how you want to see your gallery"
+msgstr "Trieu com voleu veure la galeria"
+
+msgid "Confirm my new password"
+msgstr "Confirma la meva nova contrasenya"
+
+msgid "Confirm new password"
+msgstr "Confirmeu la nova contrasenya"
+
+msgid "Create API Keys to secure your acount"
+msgstr "Creeu claus d'API per protegir el vostre compte"
+
+msgid "Create a new API key to secure your account."
+msgstr "Creeu una nova clau d'API per protegir el vostre compte."
+
+msgid "Create an account"
+msgstr "Crea un compte"
+
+msgid "Created at"
+msgstr "Creat a"
+
+msgid "Custom date"
+msgstr "Data personalitzada"
+
+msgid "Do you really want to revoke the \"%s\" API key?"
+msgstr "Segur que voleu revocar la clau d'API \"%s\"?"
+
+msgid "Don't have an account yet ?"
+msgstr "Encara no teniu un compte?"
+
+msgid "Done"
+msgstr "Fet"
+
+msgid "Duration"
+msgstr "Durada"
+
+msgid "Edit API Key"
+msgstr "Edita la clau d'API"
+
+msgid "Expert mode"
+msgstr "Mode expert"
+
+msgid "Expired"
+msgstr "Caducada"
+
+msgid "Expired on"
+msgstr "Caducada el"
+
+msgid "Expires in"
+msgstr "Caduca el"
+
+msgid "Generate API Key"
+msgstr "Genera la clau d'API"
+
+msgid "Generate key"
+msgstr "Genera la clau"
+
+msgid "Hello <em>%s</em>, enter your new password below."
+msgstr "Hola, <em>%s</em>, introduïu la vostra nova contrasenya a continuació."
+
+msgid "Hide expired keys"
+msgstr "Amaga les claus caducades"
+
+msgid "Impossible to copy automatically. Please copy manually."
+msgstr "Impossible copiar automàticament. Si us plau, copieu manualment."
+
+msgid "Last use"
+msgstr "Darrer ús"
+
+msgid "Manage your account"
+msgstr "Gestioneu el vostre compte"
+
+msgid "Never"
+msgstr "Mai"
+
+msgid "New API Key"
+msgstr "Nova clau d'API"
+
+msgid "No expiration"
+msgstr "Sense caducitat"
+
+msgid "Options"
+msgstr "Opcions"
+
+msgid "Return to <a href=\"identification.php\" title=\"Sign in\">Sign in</a>"
+msgstr "Torneu a <a href=\"identification.php\" title=\"Iniciar sessió\">Iniciar sessió</a>"
+
+msgid "Return to the gallery"
+msgstr "Torna a la galeria"
+
+msgid "Revoke"
+msgstr "Revoca"
+
+msgid "Revoked"
+msgstr "Revocada"
+
+msgid "Set my password"
+msgstr "Estableix la meva contrasenya"
+
+msgid "Show expired keys"
+msgstr "Mostra les claus caducades"
+
+msgid "An email has been sent with a verification code"
+msgstr "S'ha enviat un missatge de correu electrònic amb un codi de verificació."
+
+msgid "ID copied."
+msgstr "ID copiat."
+
+msgid "If you do not receive the email, please contact your webmaster."
+msgstr "Si no rebeu el correu electrònic, poseu-vos en contacte amb el webmaster."
+
+msgid "Invalid verification code"
+msgstr "Codi de verificació no vàlid"
+
+msgid "Save your ID and secret"
+msgstr "Deseu el vostre ID i secret"
+
+msgid "Secret copied. Keep it in a safe place."
+msgstr "Secret copiat. Manteniu-lo en lloc segur."
+
+msgid "The secret will no longer be displayed. You must copy it to continue."
+msgstr "El secret ja no es mostrarà més. Heu de copiar-lo per continuar."
+
+msgid "Verification code"
+msgstr "Codi de verificació"
+
+msgid "Verify"
+msgstr "Verifica"
+
+msgid "Here is your verification code:"
+msgstr "Aquí teniu el vostre codi de verificació:"
+
+msgid "If this wasn't you, please change your password immediately or contact your webmaster."
+msgstr "Si no sou vós, canvieu immediatament la contrasenya o poseu-vos en contacte amb l'administrador."
+
+msgid "If you changed your password because you think it was stolen, we recommend revoking your %d API keys <a href=\"%s\">in your profile</a>."
+msgstr "Si heu canviat la contrasenya perquè creieu que us l'han robada, us recomanem revocar les vostres %d claus d'API <a href=\"%s\">al vostre perfil</a>."
+
+msgid "Too many attempts, please try later.."
+msgstr "Massa intents, proveu més tard"
+
+msgid "Verification successful! You can now choose a new password."
+msgstr "La verificació ha tingut èxit. Podeu escollir una nova contrasenya."
+
+msgid "Your verification code"
+msgstr "El vostre codi de verificació"
+
+msgid "edit user preferences"
+msgstr "Edita les preferències d'usuari"
+
+msgid "piwigo_day_0"
+msgstr "Diumenge"
+
+msgid "piwigo_day_1"
+msgstr "Dilluns"
+
+msgid "piwigo_day_2"
+msgstr "Dimarts"
+
+msgid "piwigo_day_3"
+msgstr "Dimecres"
+
+msgid "piwigo_day_4"
+msgstr "Dijous"
+
+msgid "piwigo_day_5"
+msgstr "Divendres"
+
+msgid "piwigo_day_6"
+msgstr "Dissabte"
+
+msgid "piwigo_month_10"
+msgstr "Octubre"
+
+msgid "piwigo_month_11"
+msgstr "Novembre"
+
+msgid "piwigo_month_12"
+msgstr "Desembre"
+
+msgid "piwigo_month_1"
+msgstr "Gener"
+
+msgid "piwigo_month_2"
+msgstr "Febrer"
+
+msgid "piwigo_month_3"
+msgstr "Març"
+
+msgid "piwigo_month_4"
+msgstr "Abril"
+
+msgid "piwigo_month_5"
+msgstr "Maig"
+
+msgid "piwigo_month_6"
+msgstr "Juny"
+
+msgid "piwigo_month_7"
+msgstr "Juliol"
+
+msgid "piwigo_month_8"
+msgstr "Agost"
+
+msgid "piwigo_month_9"
+msgstr "Setembre"
+

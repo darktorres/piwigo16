@@ -1,0 +1,23 @@
+# Piwigo translation — da_DK
+# Source: whats_new_15.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: da_DK\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "A new interface for user management"
+msgstr "En ny grænseflade til brugerhåndtering"
+
+msgid "Brand new features : Activities logs and PDF reader"
+msgstr "Helt nye funktioner: Aktivitetslogninger og PDF-viser"
+
+msgid "Enhanced interface for batch manager and album selector"
+msgstr "Forbedret grænseflade til batchhåndtering og albumudvælgelse"
+
+msgid "Even more filters for the gallery search engine"
+msgstr "Endnu flere filtre til galleriets søgemaskine"
+

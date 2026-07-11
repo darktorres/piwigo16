@@ -10,6 +10,8 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\tabsheet;
+use Piwigo\Core\AccessLevel;
+use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
@@ -39,7 +41,7 @@ $tabsheet->assign();
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_ADMINISTRATOR);
+check_status(AccessLevel::Administrator);
 
 if (! empty($_POST) or isset($_GET['delete']) or isset($_GET['toggle_is_default'])) {
     check_pwg_token();
@@ -68,7 +70,7 @@ $template->assign(
 
 $query = '
 SELECT id, name, is_default
-  FROM `' . GROUPS_TABLE . '`
+  FROM `' . Tables::groups() . '`
   ORDER BY name ASC
 ;';
 $result = pwg_query($query);
@@ -87,8 +89,8 @@ $user_fields = $conf['user_fields'];
 while ((bool) ($row = pwg_db_fetch_assoc($result))) {
     $query = '
 SELECT u.' . $user_fields['username'] . ' AS username
-  FROM ' . USERS_TABLE . ' AS u
-  INNER JOIN ' . USER_GROUP_TABLE . ' AS ug
+  FROM ' . Tables::users() . ' AS u
+  INNER JOIN ' . Tables::userGroup() . ' AS ug
     ON u.' . $user_fields['id'] . ' = ug.user_id
   WHERE ug.group_id = ' . $row['id'] . '
 ;';

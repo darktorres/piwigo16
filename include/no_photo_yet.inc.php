@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 // Bootstrap globals, set by include/common.inc.php.
@@ -33,7 +34,7 @@ if (
     $query = '
 SELECT
     COUNT(*)
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
 ;';
     $row = pwg_db_fetch_row(pwg_query($query));
     assert($row !== null);

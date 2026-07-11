@@ -1,0 +1,65 @@
+# Piwigo translation — ja_JP
+# Source: upgrade.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ja_JP\n"
+"Plural-Forms: nplurals=1; plural=(0);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Upgrade"
+msgstr "アップグレード"
+
+msgid "This page proposes to upgrade your database corresponding to your old version of Piwigo to the current version. The upgrade assistant thinks you are currently running a <strong>release %s</strong> (or equivalent)."
+msgstr "このページであなたのデータベースをアップグレードするように推薦しています（旧Piwigoのデータベースから、現在版）。\nアップグレード・アシスタントはあなたが現在<strong>release %s</strong> (またはそれと同等)を使っています。"
+
+msgid "Upgrade from version %s to %s"
+msgstr "バージョン %s から %s へのアップグレード"
+
+msgid "Statistics"
+msgstr "統計"
+
+msgid "total upgrade time"
+msgstr "合計アップグレード時間"
+
+msgid "total SQL time"
+msgstr "合計SQL時間"
+
+msgid "SQL queries"
+msgstr "SQLクエリー"
+
+msgid "Upgrade informations"
+msgstr "更新情報"
+
+msgid "Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem."
+msgstr "問題がある場合、[管理 > ツール > メンテナンス] でメンテナンスチェックを実行してください。"
+
+msgid "Only administrator can run upgrade: please sign in below."
+msgstr "管理者のみアップグレードを実行できます: 以下でログインしてください。"
+
+msgid "You do not have access rights to run upgrade"
+msgstr "あなたには、アップグレードを実行する権限がありません。"
+
+msgid "All sub-albums of private albums become private"
+msgstr "プライベートアルバムに含まれるすべてのサブアルバムがプライベートにされました。"
+
+msgid "User permissions and group permissions have been erased"
+msgstr "ユーザパーミッションおよびグループパーミッションが削除されました。"
+
+msgid "Only thumbnails prefix and webmaster mail address have been saved from previous configuration"
+msgstr "以前の設定より、サムネイル接頭辞およびウェブマスターのメールアドレスのみ保存されました。"
+
+msgid "As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:"
+msgstr "予防措置として、次のプラグインは無効になりました。プラグインを有効にする前に、プラグインのアップグレードを確認してください。:"
+
+msgid "In <i>%s</i>, before <b>?></b>, insert:"
+msgstr "<i>%s</i>に、 <b>?></b>の前に入力:"
+
+msgid "As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:"
+msgstr "予防措置として、次のテーマが無効になりました。テーマを有効にする前に、アップグレードを確認してください。："
+
+msgid "Discover what's new in Piwigo %s"
+msgstr "Piwigo %s の新しい点を見つける"
+

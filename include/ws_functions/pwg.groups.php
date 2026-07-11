@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
@@ -28,7 +30,7 @@ use Piwigo\Ws\PwgServer;
  */
 function ws_groups_getList(array $params, PwgServer &$service): PwgError|array
 {
-    if (! (bool) preg_match(PATTERN_ORDER, $params['order'])) {
+    if (! (bool) preg_match(ValidationPattern::ORDER, $params['order'])) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid input parameter order');
     }
 
@@ -45,8 +47,8 @@ function ws_groups_getList(array $params, PwgServer &$service): PwgError|array
     $query = '
 SELECT
     g.*, COUNT(user_id) AS nb_users
-  FROM `' . GROUPS_TABLE . '` AS g
-    LEFT JOIN ' . USER_GROUP_TABLE . ' AS ug
+  FROM `' . Tables::groups() . '` AS g
+    LEFT JOIN ' . Tables::userGroup() . ' AS ug
     ON ug.group_id = g.id
   WHERE ' . implode(' AND ', $where_clauses) . '
   GROUP BY id
@@ -86,7 +88,7 @@ function ws_groups_add(array $params, PwgServer &$service): mixed
     // is the name not already used ?
     $query = '
 SELECT COUNT(*)
-  FROM `' . GROUPS_TABLE . '`
+  FROM `' . Tables::groups() . '`
   WHERE name = \'' . $params['name'] . '\'
 ;';
     $row = pwg_db_fetch_row(pwg_query($query));
@@ -102,7 +104,7 @@ SELECT COUNT(*)
 
     // creating the group
     single_insert(
-        GROUPS_TABLE,
+        Tables::groups(),
         [
             'name' => $params['name'],
             'is_default' => boolean_to_string($params['is_default']),
@@ -168,7 +170,7 @@ function ws_groups_setInfo(array $params, PwgServer &$service): mixed
     // does the group exist ?
     $query = '
 SELECT COUNT(*)
-  FROM `' . GROUPS_TABLE . '`
+  FROM `' . Tables::groups() . '`
   WHERE id = ' . $params['group_id'] . '
 ;';
     $row = pwg_db_fetch_row(pwg_query($query));
@@ -187,7 +189,7 @@ SELECT COUNT(*)
         // is the name not already used ?
         $query = '
 SELECT COUNT(*)
-  FROM `' . GROUPS_TABLE . '`
+  FROM `' . Tables::groups() . '`
   WHERE name = \'' . $params['name'] . '\'
   AND id != ' . $params['group_id'] . '
 ;';
@@ -206,7 +208,7 @@ SELECT COUNT(*)
     }
 
     single_update(
-        GROUPS_TABLE,
+        Tables::groups(),
         $updates,
         [
             'id' => $params['group_id'],
@@ -239,7 +241,7 @@ function ws_groups_addUser(array $params, PwgServer &$service): mixed
     // does the group exist ?
     $query = '
 SELECT COUNT(*)
-  FROM `' . GROUPS_TABLE . '`
+  FROM `' . Tables::groups() . '`
   WHERE id = ' . $params['group_id'] . '
 ;';
     $row = pwg_db_fetch_row(pwg_query($query));
@@ -258,7 +260,7 @@ SELECT COUNT(*)
     }
 
     mass_inserts(
-        USER_GROUP_TABLE,
+        Tables::userGroup(),
         ['group_id', 'user_id'],
         $inserts,
         [
@@ -306,7 +308,7 @@ function ws_groups_merge(array $params, PwgServer &$service): PwgError|array
 
     $query = '
 SELECT COUNT(*)
-  FROM `' . GROUPS_TABLE . '`
+  FROM `' . Tables::groups() . '`
   WHERE id in (' . implode(',', $all_groups) . ')
 ;';
     $row = pwg_db_fetch_row(pwg_query($query));
@@ -322,7 +324,7 @@ SELECT COUNT(*)
 
     $query = '
 SELECT DISTINCT(user_id)
-  FROM `' . USER_GROUP_TABLE . '`
+  FROM `' . Tables::userGroup() . '`
   WHERE
     group_id IN (' . implode(',', $merge_group) . ')
 ;';
@@ -330,7 +332,7 @@ SELECT DISTINCT(user_id)
 
     $query = '
 SELECT user_id
-  FROM `' . USER_GROUP_TABLE . '`
+  FROM `' . Tables::userGroup() . '`
   WHERE group_id = ' . $params['destination_group_id'] . '
 ;';
 
@@ -347,7 +349,7 @@ SELECT user_id
     }
 
     mass_inserts(
-        USER_GROUP_TABLE,
+        Tables::userGroup(),
         ['group_id', 'user_id'],
         $inserts,
         [
@@ -400,7 +402,7 @@ function ws_groups_duplicate(array $params, PwgServer &$service): mixed
 
     $query = '
 SELECT COUNT(*)
-  FROM `' . GROUPS_TABLE . '`
+  FROM `' . Tables::groups() . '`
   WHERE name = \'' . pwg_db_real_escape_string($params['copy_name']) . '\'
 ;';
     $row = pwg_db_fetch_row(pwg_query($query));
@@ -412,7 +414,7 @@ SELECT COUNT(*)
 
     $query = '
 SELECT COUNT(*)
-  FROM `' . GROUPS_TABLE . '`
+  FROM `' . Tables::groups() . '`
   WHERE id = ' . $params['group_id'] . '
 ;';
     $row = pwg_db_fetch_row(pwg_query($query));
@@ -424,7 +426,7 @@ SELECT COUNT(*)
 
     $query = '
 SELECT is_default
-  FROM `' . GROUPS_TABLE . '`
+  FROM `' . Tables::groups() . '`
   WHERE id = ' . $params['group_id'] . '
 ;';
 
@@ -434,7 +436,7 @@ SELECT is_default
 
     // creating the group
     single_insert(
-        GROUPS_TABLE,
+        Tables::groups(),
         [
             'name' => $params['copy_name'],
             'is_default' => boolean_to_string($is_default),
@@ -446,7 +448,7 @@ SELECT is_default
 
     $query = '
   SELECT user_id
-    FROM `' . USER_GROUP_TABLE . '`
+    FROM `' . Tables::userGroup() . '`
     WHERE group_id = ' . $params['group_id'] . '
   ;';
 
@@ -461,7 +463,7 @@ SELECT is_default
     }
 
     mass_inserts(
-        USER_GROUP_TABLE,
+        Tables::userGroup(),
         ['group_id', 'user_id'],
         $inserts,
         [
@@ -507,7 +509,7 @@ function ws_groups_deleteUser(array $params, PwgServer &$service): mixed
     // does the group exist ?
     $query = '
 SELECT COUNT(*)
-  FROM `' . GROUPS_TABLE . '`
+  FROM `' . Tables::groups() . '`
   WHERE id = ' . $params['group_id'] . '
 ;';
     $row = pwg_db_fetch_row(pwg_query($query));
@@ -518,7 +520,7 @@ SELECT COUNT(*)
     }
 
     $query = '
-DELETE FROM ' . USER_GROUP_TABLE . '
+DELETE FROM ' . Tables::userGroup() . '
   WHERE
     group_id = ' . $params['group_id'] . '
     AND user_id IN(' . implode(',', $params['user_id']) . ')

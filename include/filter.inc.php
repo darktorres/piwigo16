@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Db\Tables;
+
 // $filter['enabled']: Filter is enabled
 // $filter['recent_period']: Recent period used to computed filter data
 // $filter['categories']: Computed data of filtered categories
@@ -110,7 +112,7 @@ if ((bool) $filter['enabled']) {
 SELECT
   distinct image_id
 FROM ' .
-  IMAGE_CATEGORY_TABLE . ' INNER JOIN ' . IMAGES_TABLE . ' ON image_id = id
+  Tables::imageCategory() . ' INNER JOIN ' . Tables::images() . ' ON image_id = id
 WHERE ';
         // $filter['visible_categories'] is always non-empty here: either a
         // non-empty string (from the implode() above) or the literal -1

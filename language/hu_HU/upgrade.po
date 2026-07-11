@@ -1,0 +1,65 @@
+# Piwigo translation — hu_HU
+# Source: upgrade.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: hu_HU\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Upgrade"
+msgstr "Frissítés"
+
+msgid "Upgrade from version %s to %s"
+msgstr "Verziófrissítés %s verzióról %s verzióra"
+
+msgid "Statistics"
+msgstr "Statisztikák"
+
+msgid "total upgrade time"
+msgstr "teljes frissítési idő"
+
+msgid "total SQL time"
+msgstr "teljes SQL idő"
+
+msgid "SQL queries"
+msgstr "SQL lekérdezés"
+
+msgid "Upgrade informations"
+msgstr "Frissítési információk"
+
+msgid "Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem."
+msgstr "Végezze el a karbantartás ellenőrzést [Adminisztráció>Eszközök>Karbantartás] ha bármilyen problémával találkozna."
+
+msgid "Only administrator can run upgrade: please sign in below."
+msgstr "A frissítés csak rendszergazda jogosultsággal futtatható, kérjük jelentkezzen be."
+
+msgid "You do not have access rights to run upgrade"
+msgstr "Önnek nincs jogosultsága a frissítés elvégzéséhez"
+
+msgid "All sub-albums of private albums become private"
+msgstr "Az összes belső album privát albummá válik"
+
+msgid "User permissions and group permissions have been erased"
+msgstr "A felhasználói és csoport jogosultságok törlésre kerültek"
+
+msgid "Only thumbnails prefix and webmaster mail address have been saved from previous configuration"
+msgstr "Csak a bélyegképek prefixe és a webmester email címe került mentésre az előző konfigurációból."
+
+msgid "This page proposes to upgrade your database corresponding to your old version of Piwigo to the current version. The upgrade assistant thinks you are currently running a <strong>release %s</strong> (or equivalent)."
+msgstr "Ez az oldal felajánlja az adatbázis frissítését, frissítse a Piwigot a régi verzióról az új verzióra. A frissítési asszisztens szerint jelenleg a <strong>%s verzió</strong> fut (vagy azzal egyenértékű)."
+
+msgid "As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:"
+msgstr "Elővigyázatosságból a bővítmények ki vannak kapcsolva. Újraaktiválás előtt a bővítmény frissítéseket ellenőrizni kell:"
+
+msgid "In <i>%s</i>, before <b>?></b>, insert:"
+msgstr "A(z) <i>%s</i>, elé <b>?></b>, beszúrni:"
+
+msgid "As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:"
+msgstr "Elővigyázatosságból az alábbi témák kikapcsolásra kerültek. Frissítés előtt a témákat ellenőrizni kell, majd aktiválásra kerülhetnek:"
+
+msgid "Discover what's new in Piwigo %s"
+msgstr "Fedezze fel az újdonságokat a Piwigo-ban %s"
+

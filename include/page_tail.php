@@ -10,6 +10,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\updates;
+use Piwigo\Core\AppInfo;
 use Piwigo\Template\Template;
 
 // Bootstrap globals, set by include/common.inc.php.
@@ -30,7 +31,7 @@ trigger_notify('loc_begin_page_tail');
 
 $template->assign(
     [
-        'VERSION' => (bool) $conf['show_version'] ? PHPWG_VERSION : '',
+        'VERSION' => (bool) $conf['show_version'] ? AppInfo::VERSION : '',
         'PHPWG_URL' => defined('PHPWG_URL') ? str_replace('http:', 'https:', PHPWG_URL) : '',
     ]
 );

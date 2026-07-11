@@ -1,0 +1,62 @@
+# Piwigo translation — af_ZA
+# Source: upgrade.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: af_ZA\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Upgrade"
+msgstr "Opgradering"
+
+msgid "This page proposes to upgrade your database corresponding to your old version of Piwigo to the current version. The upgrade assistant thinks you are currently running a <strong>release %s</strong> (or equivalent)."
+msgstr "Hierdie blad se doel is om die Piwigo databasis van 'n ou na nuwer weergawe te opgradeer. Die opgraderingassistent dink jy gebruik tans <strong>weergawe %s</strong> (of ekwivalent)."
+
+msgid "Upgrade from version %s to %s"
+msgstr "Opgradeer van weergawe %s na %s"
+
+msgid "Statistics"
+msgstr "Statistiek"
+
+msgid "total upgrade time"
+msgstr "totale opgraderingstyd"
+
+msgid "total SQL time"
+msgstr "totale SQL tyd"
+
+msgid "SQL queries"
+msgstr "SQL navrae"
+
+msgid "Upgrade informations"
+msgstr "Opgraderingsinligting"
+
+msgid "Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem."
+msgstr "Doen 'n instandhoudingsondersoek by [Administrasie>Werktuie>Instandhouding] indien jy enige probleme ondervind."
+
+msgid "As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:"
+msgstr "As voorsorg is die volgende invoegings gedeaktiveer. Voor heraktivering moet jy eers vir opgraderings soek:"
+
+msgid "Only administrator can run upgrade: please sign in below."
+msgstr "Net die administrateur kan opgraderings doen: teken hier onder aan."
+
+msgid "You do not have access rights to run upgrade"
+msgstr "Jy het nie toegangsregte op 'n opgradering te doen nie"
+
+msgid "All sub-albums of private albums become private"
+msgstr "Alle onderalbums van privaat albums word ook privaat"
+
+msgid "User permissions and group permissions have been erased"
+msgstr "Gebruiker en groepregte is uitgevee"
+
+msgid "Only thumbnails prefix and webmaster mail address have been saved from previous configuration"
+msgstr "Slegs duimnaels en webmeester se pos adres is uit die vorige opstelling behou"
+
+msgid "In <i>%s</i>, before <b>?></b>, insert:"
+msgstr "In <i>%s</i>, voor <b>?></b>, voeg in:"
+
+msgid "As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:"
+msgstr "As voorsorg is die volgende temas gedeaktiveer. Voor heraktivering moet jy eers vir opgraderings soek:"
+

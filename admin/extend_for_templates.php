@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\AccessLevel;
+use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 /**
@@ -47,7 +49,7 @@ global $conf, $page, $template;
 $page['infos'] = is_array($page['infos'] ?? null) ? $page['infos'] : [];
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-check_status(ACCESS_ADMINISTRATOR);
+check_status(AccessLevel::Administrator);
 
 $tpl_extension = [];
 if (isset($conf['extents_for_templates']) && is_string($conf['extents_for_templates'])) {
@@ -87,7 +89,7 @@ $relevant_parameters = [
 ];
 $query = '
 SELECT permalink
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE permalink IS NOT NULL
 ';
 
@@ -177,7 +179,7 @@ if (isset($_POST['submit'])) {
     $tpl_extension = $replacements;
     /* ecrire la nouvelle conf */
     $query = '
-UPDATE ' . CONFIG_TABLE . '
+UPDATE ' . Tables::config() . '
   SET value = \'' . $conf['extents_for_templates'] . '\'
 WHERE param = \'extents_for_templates\';';
     if ((bool) pwg_query($query)) {

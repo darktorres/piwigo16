@@ -9,19 +9,42 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+// vendor/autoload.php must be required directly here (not just reached
+// transitively via common.inc.php's own include/env.inc.php) -- Paths::
+// fromIndex() below needs the autoloader before common.inc.php has even
+// started running. Requiring it twice is safe (PHP's own realpath-keyed
+// include cache no-ops the second require).
+require __DIR__ . '/vendor/autoload.php';
+
 use Piwigo\Bootstrap\CommonBootstrap;
+use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Paths;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Template\Template;
 
 // --------------------------------------------------------------------- include
+// P16 mints a real Paths for src/Piwigo/ code (passed to CommonBootstrap::
+// run() below), but PHPWG_ROOT_PATH itself deliberately keeps its exact
+// legacy value ('./', CWD-relative) rather than switching to $paths->root
+// (absolute) -- found empirically that several legacy call sites
+// (get_root_url() in functions_url.inc.php, section_init.inc.php, i.php)
+// hard-assume PHPWG_ROOT_PATH's literal string shape to compute relative
+// URL prefixes for generated links (`str_starts_with($x, './')` etc.),
+// not just filesystem include paths. Switching to an absolute value broke
+// every generated href/src on the live site (confirmed via a real curl
+// request). Fixing those call sites is real legacy-logic surgery, not
+// bootstrap wiring -- out of scope here, matching this project's
+// established "typed source of truth for new code, legacy stays
+// unchanged until its own domain migrates" discipline (P17-23).
+$paths = Paths::fromIndex(__FILE__);
 define('PHPWG_ROOT_PATH', './');
 include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 
 // P7 boot skeleton: proves the new Kernel boots on every real request.
-// CommonBootstrap::run() is currently a no-op beyond that (see its
-// docblock) -- everything below this line is unchanged legacy behavior.
-CommonBootstrap::run();
+// P16 adds real Paths/CurrentUser wiring -- see CommonBootstrap::run()'s
+// own docblock. Everything below this line is unchanged legacy behavior.
+CommonBootstrap::run($paths);
 
 include PHPWG_ROOT_PATH . 'include/section_init.inc.php';
 
@@ -34,7 +57,7 @@ include PHPWG_ROOT_PATH . 'include/section_init.inc.php';
 global $conf, $page, $template;
 
 // Check Access and exit when user status is not ok
-check_status(ACCESS_GUEST);
+check_status(AccessLevel::Guest);
 
 // Real invariant: $page['items'] always holds a list of numeric image ids
 // (array_from_query()/query2array() single-column results in

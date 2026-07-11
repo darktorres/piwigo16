@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Db\Tables;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgServer;
@@ -43,7 +44,7 @@ function ws_permissions_getList(array $params, PwgServer &$service): PwgError|ar
     // direct users
     $query = '
 SELECT user_id, cat_id
-  FROM ' . USER_ACCESS_TABLE . '
+  FROM ' . Tables::userAccess() . '
   ' . $cat_filter . '
 ;';
     $result = pwg_query($query);
@@ -62,8 +63,8 @@ SELECT user_id, cat_id
     // indirect users
     $query = '
 SELECT ug.user_id, ga.cat_id
-  FROM ' . USER_GROUP_TABLE . ' AS ug
-    INNER JOIN ' . GROUP_ACCESS_TABLE . ' AS ga
+  FROM ' . Tables::userGroup() . ' AS ug
+    INNER JOIN ' . Tables::groupAccess() . ' AS ga
     ON ug.group_id = ga.group_id
   ' . $cat_filter . '
 ;';
@@ -83,7 +84,7 @@ SELECT ug.user_id, ga.cat_id
     // groups
     $query = '
 SELECT group_id, cat_id
-  FROM ' . GROUP_ACCESS_TABLE . '
+  FROM ' . Tables::groupAccess() . '
   ' . $cat_filter . '
 ;';
     $result = pwg_query($query);
@@ -161,7 +162,7 @@ function ws_permissions_add(array $params, PwgServer &$service): mixed
 
         $query = '
 SELECT id
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE id IN (' . implode(',', $cat_ids) . ')
     AND status = \'private\'
 ;';
@@ -178,7 +179,7 @@ SELECT id
         }
 
         mass_inserts(
-            GROUP_ACCESS_TABLE,
+            Tables::groupAccess(),
             ['group_id', 'cat_id'],
             $inserts,
             [
@@ -223,7 +224,7 @@ function ws_permissions_remove(array $params, PwgServer &$service): mixed
     if (! empty($params['group_id'])) {
         $query = '
 DELETE
-  FROM ' . GROUP_ACCESS_TABLE . '
+  FROM ' . Tables::groupAccess() . '
   WHERE group_id IN (' . implode(',', $params['group_id']) . ')
     AND cat_id IN (' . implode(',', $cat_ids) . ')
 ;';
@@ -233,7 +234,7 @@ DELETE
     if (! empty($params['user_id'])) {
         $query = '
 DELETE
-  FROM ' . USER_ACCESS_TABLE . '
+  FROM ' . Tables::userAccess() . '
   WHERE user_id IN (' . implode(',', $params['user_id']) . ')
     AND cat_id IN (' . implode(',', $cat_ids) . ')
 ;';

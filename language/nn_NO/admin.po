@@ -1,0 +1,2853 @@
+# Piwigo translation — nn_NO
+# Source: admin.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: nn_NO\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "... or "
+msgstr "... eller"
+
+msgid "ACCESS_0"
+msgstr "Fri tilgang"
+
+msgid "ACCESS_5"
+msgstr "Ingen tilgang"
+
+msgid "%d user comments rejected"
+msgstr "%d brukarkommentarar avvist"
+
+msgid "%d user comments validated"
+msgstr "%d brukarkommentarar godkjend"
+
+msgid "%d user deleted"
+msgid_plural "%d users deleted"
+msgstr[0] "%d brukar sletta"
+msgstr[1] "%d brukarar sletta"
+
+msgid "%d user was not updated."
+msgid_plural "%d users were not updated."
+msgstr[0] "%d brukar er ikkje oppdatera"
+msgstr[1] "%d brukarar er ikkje oppdatera"
+
+msgid "%d user was updated."
+msgid_plural "%d users were updated."
+msgstr[0] "%d brukar oppdatera"
+msgstr[1] "%d brukarar oppdatera"
+
+msgid "%d second"
+msgstr "%d sekund"
+
+msgid "%d seconds"
+msgstr "%d sekundar"
+
+msgid "%d tag"
+msgstr "%d stikkord"
+
+msgid "%d tags"
+msgstr "%d stikkord"
+
+msgid "%d user"
+msgid_plural "%d users"
+msgstr[0] "%d brukar"
+msgstr[1] "%d brukarar"
+
+msgid "%d user comment rejected"
+msgstr "%d brukarkommentar avvist"
+
+msgid "%d user comment validated"
+msgstr "%d brukarkommentarar godkjend"
+
+msgid "%d guest"
+msgid_plural "%d guests"
+msgstr[0] "%d gjest"
+msgstr[1] "%d gjester"
+
+msgid "%d hour"
+msgstr "%d time"
+
+msgid "%d hours"
+msgstr "%d timar"
+
+msgid "%d member"
+msgid_plural "%d members"
+msgstr[0] "%d medlem"
+msgstr[1] "%d medlemer"
+
+msgid "%d minute"
+msgstr "%d minutt"
+
+msgid "%d minutes"
+msgstr "%d minuttar"
+
+msgid "%d month"
+msgstr "%d månad"
+
+msgid "%d months"
+msgstr "%d månader"
+
+msgid "%d photo was deleted"
+msgid_plural "%d photos were deleted"
+msgstr[0] "%d bilete sletta"
+msgstr[1] "%d bilete sletta"
+
+msgid "wrong filename"
+msgstr "feil filnamn"
+
+msgid "Add detailed content"
+msgstr "Legg til detaljera innhald"
+
+msgid "Add group"
+msgstr "Legg til gruppe"
+
+msgid "Add tags"
+msgstr "Legg til stikkord"
+
+msgid "Add to caddie"
+msgstr "Legg til \"caddie\""
+
+msgid "Add/delete a permalink"
+msgstr "Legg til/fjern ei permalenke"
+
+msgid "Added by %s"
+msgstr "Lagt til av %s"
+
+msgid "Administration Home"
+msgstr "Startside for administrasjon"
+
+msgid "Advanced features"
+msgstr "Avansera funksjonar"
+
+msgid "Album \"%s\" has been added"
+msgstr "Albumet %s er oppdatera"
+
+msgid "Album \"%s\" now contains %d photos"
+msgstr "Albumet %s inneheld nå %d bilete"
+
+msgid "Album list management"
+msgstr "Albumliste handtering"
+
+msgid "Album manual order was saved"
+msgstr "Manuell sortering av albumet er lagra"
+
+msgid "Album name"
+msgstr "Albumnamn"
+
+msgid "Activate Navigation Bar"
+msgstr "Legg til navigeringsmeny"
+
+msgid "Activate Navigation Thumbnails"
+msgstr "Aktiver miniatyrbilete for navigering"
+
+msgid "Activate comments"
+msgstr "Aktiver kommentarar"
+
+msgid "Activate icon \"%s\""
+msgstr "Aktiver ikon \"%s\""
+
+msgid "Activate icon \"new\" next to albums and pictures"
+msgstr "Aktiver ikon \"ny\" ved sida av album og bilete"
+
+msgid "Active Languages"
+msgstr "Aktive språk"
+
+msgid "Active Plugins"
+msgstr "Aktive tilleggsprogram"
+
+msgid "Active Themes"
+msgstr "Aktive tema"
+
+msgid "Add"
+msgstr "Legg til"
+
+msgid "Add New Language"
+msgstr "Legg til nytt språk"
+
+msgid "Add New Theme"
+msgstr "Legg til nytt tema"
+
+msgid "Add Photos"
+msgstr "Legg til bilete"
+
+msgid "Add a criteria"
+msgstr "Legg til reglar"
+
+msgid "Add a filter"
+msgstr "Legg til filter"
+
+msgid "Add a tag"
+msgstr "Legg til stikkord"
+
+msgid "Add a user"
+msgstr "Legg til brukar"
+
+msgid "Add a virtual album"
+msgstr "Legg til eit virtuelt album"
+
+msgid "Add another set of photos"
+msgstr "Legg til eit anna set med bilete"
+
+msgid "%s must be to set to false in your local/config/config.inc.php file"
+msgstr "%s må bli sett til usann (false) i fila local/config/config.inc.php"
+
+msgid "%s photos can not be regenerated"
+msgstr "%d bilete kan ikkje bli bygd opp att"
+
+msgid "%s photos have been regenerated"
+msgstr "%d bilete kan ikkje bli bygd opp att"
+
+msgid "%s value is not correct file because exif are not supported"
+msgstr "%s er feil avdi exif ikkje er støtta"
+
+msgid "%u users have automatic permission because they belong to a granted group."
+msgstr "%d brukarar har automatisk tilgang avdi dei høyrer til ei gruppe med løyve."
+
+msgid "(this tag will be deleted)"
+msgstr "(dette stikkordet vil bli sletta)"
+
+msgid "+ Add an upload box"
+msgstr "+ Legg til ein opplastingsboks"
+
+msgid ", click on"
+msgstr ", klikk på"
+
+msgid "A locked gallery is only visible to administrators"
+msgstr "Eit låst galleri er bare synleg for administratorar"
+
+msgid "A new version of Piwigo is available."
+msgstr "Ein ny version av Piwigo er tilgjengeleg"
+
+msgid "ACCESS_1"
+msgstr "Tilgang til alt"
+
+msgid "ACCESS_2"
+msgstr "Tilgang til registrera brukarar"
+
+msgid "ACCESS_3"
+msgstr "Tilgang til administratorar"
+
+msgid "ACCESS_4"
+msgstr "Tilgang til webmaster"
+
+msgid "Access type"
+msgstr "Tilgangstype"
+
+msgid "Action"
+msgstr "Handling"
+
+msgid "Actions"
+msgstr "Handlingar"
+
+msgid "Activate"
+msgstr "Aktiver"
+
+msgid "%d line filtered"
+msgid_plural "%d lines filtered"
+msgstr[0] "%d line filtrera"
+msgstr[1] "%d liner filtrera"
+
+msgid "%d mail was not sent."
+msgid_plural "%d mails were not sent."
+msgstr[0] "%d e-post har ikkje blitt sendt."
+msgstr[1] "%d e-postar har ikkje blitt sendt."
+
+msgid "%d mail was sent."
+msgid_plural "%d mails were sent."
+msgstr[0] "%d e-post har blitt sendt."
+msgstr[1] "%d e-postar har blitt sendt."
+
+msgid "%d of %d photos selected"
+msgstr "%d av %d bilete er vald"
+
+msgid "%d parameter was updated."
+msgid_plural "%d parameters were updated."
+msgstr[0] "%d eigenskap er oppdatera."
+msgstr[1] "%d eigenskapar er oppdatera."
+
+msgid "%d photos uploaded"
+msgstr "%d bilete er lasta opp"
+
+msgid "%d physical"
+msgstr "%d fysisk"
+
+msgid "%d physicals"
+msgstr "%d fysisk"
+
+msgid "%d waiting for validation"
+msgstr "%d ventar på godkjenning"
+
+msgid "%d week"
+msgstr "%d veke"
+
+msgid "%d weeks"
+msgstr "%d veker"
+
+msgid "%d year"
+msgstr "%d år"
+
+msgid "%d years"
+msgstr "%d år"
+
+msgid "%s ago"
+msgstr "%s sidan"
+
+msgid "%s has been successfully updated."
+msgstr "%s har blitt vellykka oppdatera."
+
+msgid "%s in the future"
+msgstr "%s i framtida"
+
+msgid " and %d virtual"
+msgstr "og %d virtuell"
+
+msgid " and %d virtuals"
+msgstr "og %d virtuelle"
+
+msgid "%d album including"
+msgstr "%d album inkludera "
+
+msgid "%d album moved"
+msgid_plural "%d albums moved"
+msgstr[0] "%d album er flytta"
+msgstr[1] "%d album er flytta"
+
+msgid "%d albums including"
+msgstr "%d album inkludera"
+
+msgid "%d anomaly has been corrected."
+msgid_plural "%d anomalies have been detected corrected."
+msgstr[0] "%d feil har blitt retta opp."
+msgstr[1] "%d feil har blitt oppdaga og retta opp."
+
+msgid "%d anomaly has been detected."
+msgid_plural "%d anomalies have been detected."
+msgstr[0] "%d feil har blitt oppdaga."
+msgstr[1] "%d feil har blitt oppdaga."
+
+msgid "%d anomaly has been ignored."
+msgid_plural "%d anomalies have been ignored."
+msgstr[0] "%d feil har blitt ignorera."
+msgstr[1] "%d feil har blitt ignorera."
+
+msgid "%d anomaly has not been corrected."
+msgid_plural "%d anomalies have not been corrected."
+msgstr[0] "%d feil har ikkje blitt retta opp."
+msgstr[1] "%d feil har ikkje blitt retta opp."
+
+msgid "%d association"
+msgstr "%d tilknytning"
+
+msgid "%d associations"
+msgstr "%d tilknytningar"
+
+msgid "%d day"
+msgstr "%d dag"
+
+msgid "%d days"
+msgstr "%d dagar"
+
+msgid "%d group"
+msgstr "%d gruppe"
+
+msgid "%d groups"
+msgstr "%d grupper"
+
+msgid "albums deleted in the database"
+msgstr "album fjerna frå databasen"
+
+msgid "all"
+msgstr "alle "
+
+msgid "an error happened"
+msgstr "det oppstod ein feil"
+
+msgid "and"
+msgstr "og"
+
+msgid "automatic order"
+msgstr "automatisk sortering"
+
+msgid "average time"
+msgstr "gjennomsnittleg tid"
+
+msgid "between"
+msgstr "mellom"
+
+msgid "between %.2f and %.2f"
+msgstr "mellom %.2f og %.2f"
+
+msgid "between %d and %d pixels"
+msgstr "mellom %d og %d biletpunkt (pikslar)"
+
+msgid "bottom left corner"
+msgstr "nedre venstre hjørne"
+
+msgid "bottom right corner"
+msgstr "nedre høgre hjørne"
+
+msgid "cancel manual order"
+msgstr "nullstill manuell sortering"
+
+msgid "clean"
+msgstr "rydd opp"
+
+msgid "confirm"
+msgstr "stadfest"
+
+msgid "create a new album"
+msgstr "lag nytt album"
+
+msgid "create a new site"
+msgstr "lag ny nettside"
+
+msgid "created"
+msgstr "oppretta"
+
+msgid "default"
+msgstr "standard"
+
+msgid "default values"
+msgstr "standardverdiar"
+
+msgid "delete"
+msgstr "fjern"
+
+msgid "delete album"
+msgstr "fjern album"
+
+msgid "delete photo"
+msgstr "fjern bilete"
+
+msgid "delete this site and all its attached elements"
+msgstr "fjern denne nettsida og all informasjon knytt til denne"
+
+msgid "deleted"
+msgstr "fjerna"
+
+msgid "directories + files"
+msgstr "katalogar + filer"
+
+msgid "display"
+msgstr "vis"
+
+msgid "display maximum informations (added albums and photos, deleted albums and photos)"
+msgstr "vis maksimal informasjon (album og bilete lagt til eller sletta"
+
+msgid "errors during synchronization"
+msgstr "feil under synkronisering"
+
+msgid "existing album"
+msgstr "eksisterande album"
+
+msgid "first photo added on %s"
+msgstr "fyrste bilete lagt til %s"
+
+msgid "group \"%s\" added"
+msgstr "gruppe \"%s\" er lagt til"
+
+msgid "group \"%s\" deleted"
+msgstr "gruppe \"%s\" er fjerna"
+
+msgid "group \"%s\" updated"
+msgstr "gruppe \"%s\" er oppdatera"
+
+msgid "guest"
+msgstr "gjest"
+
+msgid "height must be a number superior to"
+msgstr "høgde må vera ei tal større enn"
+
+msgid "hide details"
+msgstr "gøym detaljar"
+
+msgid "high"
+msgstr "høg"
+
+msgid "include child albums"
+msgstr "inkluder underalbum"
+
+msgid "include photos with lower privacy level"
+msgstr "includer bilete med lågare personverninnstillingar"
+
+msgid "jump to album"
+msgstr "hopp til ablum"
+
+msgid "jump to photo"
+msgstr "hopp til bilete"
+
+msgid "manage album photos"
+msgstr "handter albumbilete"
+
+msgid "manage sub-albums"
+msgstr "handter underalbum"
+
+msgid "manual order"
+msgstr "manuell stortering"
+
+msgid "middle"
+msgstr "midten"
+
+msgid "modified"
+msgstr "endra"
+
+msgid "new"
+msgstr "ny"
+
+msgid "no write access"
+msgstr "ikkje rett til å skrive"
+
+msgid "none"
+msgstr "ingen"
+
+msgid "nothing"
+msgstr "ingenting"
+
+msgid "on"
+msgstr "på"
+
+msgid "only directories"
+msgstr "bare katalogar"
+
+msgid "other"
+msgstr "anna"
+
+msgid "photos added in the database"
+msgstr "bilete lagt til i databasen"
+
+msgid "photos deleted from the database"
+msgstr "bilete fjerna frå databasen"
+
+msgid "photos per page"
+msgstr "bilete pr. side"
+
+msgid "photos updated in the database"
+msgstr "bilete oppdatera i databasen"
+
+msgid "pixels"
+msgstr "bildepunkt (piksel)"
+
+msgid "private"
+msgstr "privat"
+
+msgid "public"
+msgstr "offentleg"
+
+msgid "randomly represented"
+msgstr "tilfeldig album-miniatyrbilete"
+
+msgid "registered users"
+msgstr "registrera brukarar"
+
+msgid "remove author"
+msgstr "fjern forfattar"
+
+msgid "remove tags"
+msgstr "fjern stikkord"
+
+msgid "remove this filter"
+msgstr "fjern dette filteret"
+
+msgid "remove title"
+msgstr "fjern tittel"
+
+msgid "selection"
+msgstr "utval"
+
+msgid "show details"
+msgstr "vis detaljar"
+
+msgid "status"
+msgstr "status"
+
+msgid "sub-albums"
+msgstr "underalbum"
+
+msgid "synchronize files structure with database"
+msgstr "synkroniser filstruktur med databasen"
+
+msgid "target"
+msgstr "mål"
+
+msgid "test"
+msgstr "test"
+
+msgid "the forum"
+msgstr "forumet"
+
+msgid "the wiki"
+msgstr "wiki"
+
+msgid "top left corner"
+msgstr "øvre venstre hjørne"
+
+msgid "top right corner"
+msgstr "øvre høgre hjørne"
+
+msgid "total time"
+msgstr "total tid"
+
+msgid "unit mode"
+msgstr "enkel-modus"
+
+msgid "unknown"
+msgstr "ukjend"
+
+msgid "user \"%s\" added"
+msgstr "brukar \"%s\" er lagt til"
+
+msgid "user_status_admin"
+msgstr "Administrator"
+
+msgid "user_status_generic"
+msgstr "Generell"
+
+msgid "user_status_guest"
+msgstr "Gjest"
+
+msgid "user_status_webmaster"
+msgstr "Webmaster"
+
+msgid "visitors need to login and have the appropriate permissions to see this album"
+msgstr "dei som vitjar galleriet må logge på og ha naudsynte rettar for å sjå dette albumet"
+
+msgid "width must be a number superior to"
+msgstr "breidde må vera eit tal større enn"
+
+msgid "Anomaly"
+msgstr "Feil"
+
+msgid "Are you sure you want to delete this plugin?"
+msgstr "Er du sikker på at du vil fjerne dette tilleggsprogrammet"
+
+msgid "Are you sure you want to install this plugin?"
+msgstr "Er du sikker på at du vil installere dette tilleggsprogrammet"
+
+msgid "<em>Piwigo for Android</em> application empowers you to connect your Android phone or table to your Piwigo gallery, create some albums and upload several photos at once."
+msgstr "<em>Piwigo for Android</em> appen gjer det mogleg å kople ein Android telefon eller nettbrett til ditt Piwigo galleri. Du kan lage album og laste opp fleire bilete på ein gong."
+
+msgid "<em>Piwigo for iOS</em> application empowers you to connect to your Piwigo gallery from your iPhone, iPad or iPod Touch, create some albums and upload several photos at once."
+msgstr "<em>Piwigo for iOS</em> appen gjer det mogleg å kople ein iPhone, iPad eller iPod Touch til ditt Piwigo galleri. Du kan lage album og laste opp fleire bilete på ein gong."
+
+msgid "Add write access to the \"%s\" directory"
+msgstr "Legg til skriverettar til \"%s\" katalogen"
+
+msgid "Adobe Photoshop Lightroom is a photography software designed to manage large quantities of digital images and doing post production work."
+msgstr "Adobe Photoshop Lightroom er programvare laga for å handtere store mengder digitale foto og gjera biletbehandling."
+
+msgid "Album photos associated to the following albums: %s"
+msgstr "Albumbilete er knytt til fylgjande album: %s"
+
+msgid "Album updated successfully"
+msgstr "Album er oppdatera"
+
+msgid "Albums automatically sorted"
+msgstr "Albuma er automatisk sortera"
+
+msgid "All %d photos are selected"
+msgstr "Alle %d bilete er vald"
+
+msgid "All extensions are up to date."
+msgstr "Alle tillegg er siste versjon"
+
+msgid "All languages are up to date."
+msgstr "Alle språk er siste versjon"
+
+msgid "All plugins are up to date."
+msgstr "Alle tilleggsprogram er siste versjon"
+
+msgid "All themes are up to date."
+msgstr "Alle tema er siste versjon"
+
+msgid "Allow rating"
+msgstr "Tillat rangering"
+
+msgid "Allow user customization"
+msgstr "Tillat brukartilpasning"
+
+msgid "Allow user registration"
+msgstr "Tillat brukarregistrering"
+
+msgid "Allow users to delete their own comments"
+msgstr "Tillat brukarar å slette sine eigne kommentarar"
+
+msgid "Allow users to edit their own comments"
+msgstr "Tillat brukarar å endre sine eigne kommentarar"
+
+msgid "Allowed file types: %s."
+msgstr "Tillatne filtyper: %s"
+
+msgid "Mail content"
+msgstr "Send innhald på e-post"
+
+msgid "Mail sent to %s [%s]."
+msgstr "E-post sendt til %s [%s]."
+
+msgid "Main Page"
+msgstr "Hovudside"
+
+msgid "Multiple Size"
+msgstr "Fleire størrelsar"
+
+msgid "Level 2"
+msgstr "Vener"
+
+msgid "Level 4"
+msgstr "Familie"
+
+msgid "Level 8"
+msgstr "Administratorar"
+
+msgid "Link all album photos to a new album"
+msgstr "Kople alle albumbilete til eit nytt album"
+
+msgid "Link all album photos to some existing albums"
+msgstr "Kople alle albumbilete til eit eksisterande album"
+
+msgid "Linked albums"
+msgstr "Tilkopla album"
+
+msgid "List"
+msgstr "Liste"
+
+msgid "Local"
+msgstr "Lokal"
+
+msgid "Lock"
+msgstr "Lås"
+
+msgid "Lock albums"
+msgstr "Lås album"
+
+msgid "Lock gallery"
+msgstr "Lås galleri"
+
+msgid "Locked"
+msgstr "Låst"
+
+msgid "Inactive Languages"
+msgstr "Inaktive språk"
+
+msgid "Inactive Plugins"
+msgstr "Inaktive tilleggsprogram"
+
+msgid "Inactive Themes"
+msgstr "Inaktive tema"
+
+msgid "Languages"
+msgstr "Språk"
+
+msgid "Languages which need upgrade"
+msgstr "Språk som treng oppgradering"
+
+msgid "Last hit"
+msgstr "Siste treff"
+
+msgid "Last import"
+msgstr "Siste importering"
+
+msgid "Last revisions"
+msgstr "Siste revisjonar"
+
+msgid "Last send"
+msgstr "Sist sendt"
+
+msgid "Learn more"
+msgstr "Lær meir"
+
+msgid "Level 0"
+msgstr "---"
+
+msgid "Level 1"
+msgstr "Kontaktar"
+
+msgid "Informations"
+msgstr "informasjon"
+
+msgid "Install"
+msgstr "Installer"
+
+msgid "Install on your computer,"
+msgstr "Installer på din datamaskin"
+
+msgid "Installed Languages"
+msgstr "Installera språk"
+
+msgid "Installed Themes"
+msgstr "Installera tema"
+
+msgid "Instructions to use Piwigo"
+msgstr "Instruksjonar for å bruke Piwigo"
+
+msgid "Invert"
+msgstr "Inverter"
+
+msgid "Landscape"
+msgstr "Landskap"
+
+msgid "Language has been successfully installed"
+msgstr "Språk er installera"
+
+msgid "Apply action"
+msgstr "Utfør handling"
+
+msgid "Apply selected corrections"
+msgstr "Utfør valde korrigeringar"
+
+msgid "Associate to album"
+msgstr "Kople til album"
+
+msgid "Associated"
+msgstr "Kopla til"
+
+msgid "Authorized"
+msgstr "Autorisera"
+
+msgid "Automatic correction"
+msgstr "Automatisk korrigering"
+
+msgid "Automatic sort order"
+msgstr "Automatisk sorteringsrekkefylgje"
+
+msgid "Available on"
+msgstr "Tilgjengeleg"
+
+msgid "Available only with HTML format"
+msgstr "Kun tilgjengeleg med HTML-format"
+
+msgid "associate to group"
+msgstr "kople til gruppe"
+
+msgid "Update to Piwigo %s"
+msgstr "Oppdatera til Piwigo %s"
+
+msgid "Updates"
+msgstr "Oppdateringar"
+
+msgid "Upload"
+msgstr "Last opp"
+
+msgid "Week starts on"
+msgstr "Veka startar på"
+
+msgid "Who can see these photos?"
+msgstr "Kven kan sjå desse bileta?"
+
+msgid "New parent album"
+msgstr "Nytt foreldrealbum"
+
+msgid "No display"
+msgstr "Ingen vising"
+
+msgid "No groups selected, no actions possible."
+msgstr "Ingen gruppe er vald, ingen handling mogleg."
+
+msgid "Not cropped correctly?"
+msgstr "Ikkje kutta rett?"
+
+msgid "Notification"
+msgstr "Melding"
+
+msgid "Notify administrators when a comment is"
+msgstr "Send melding til administratorar når ein kommentar er"
+
+msgid "Opacity"
+msgstr "Grad av gjennomsiktighet"
+
+msgid "Optional URL keyword"
+msgstr "Valfritt URL-nøkkelord"
+
+msgid "Order of menubar items has been updated successfully."
+msgstr "Rekkefylgje på menyelement på menylina er oppdatera"
+
+msgid "Merge selected tags"
+msgstr "Flett valde stikkord"
+
+msgid "Merge tags"
+msgstr "Flett stikkord"
+
+msgid "Metadata synchronization results"
+msgstr "Resultat for synkronisering av metadata"
+
+msgid "Metadata synchronized from file"
+msgstr "Metadata synkronisera frå fil"
+
+msgid "Minimum height"
+msgstr "Minste høgde"
+
+msgid "Minimum privacy level"
+msgstr "Lågaste personvern-nivå"
+
+msgid "Minimum width"
+msgstr "Minste breidde"
+
+msgid "Miscellaneous"
+msgstr "Diverse"
+
+msgid "Missing Plugins"
+msgstr "Manglande tilleggsprogram"
+
+msgid "Missing a temporary folder"
+msgstr "Kladdemappe manglar"
+
+msgid "Modify information"
+msgstr "Endre informasjon"
+
+msgid "Month"
+msgstr "Månad"
+
+msgid "Move"
+msgstr "Flytt"
+
+msgid "Move albums"
+msgstr "Flytt album"
+
+msgid "Move to album"
+msgstr "Flytt til album"
+
+msgid "Name"
+msgstr "Namn"
+
+msgid "Name of the duplicate"
+msgstr "Namn på duplikat"
+
+msgid "New Version"
+msgstr "Ny versjon"
+
+msgid "New name"
+msgstr "Nytt namn"
+
+msgid "Maintenance"
+msgstr "Vedlikehald"
+
+msgid "Make this language available to users"
+msgstr "Gjer dette språket tilgjengeleg for brukarar"
+
+msgid "Make this theme available to users"
+msgstr "Gjer dette temaet tilgjengeleg for brukarar"
+
+msgid "Manage"
+msgstr "Handter"
+
+msgid "Manage Permissions"
+msgstr "Handter løyve"
+
+msgid "Manage authorizations for selected albums"
+msgstr "Handter autorisering for valde album"
+
+msgid "Manage permissions for group \"%s\""
+msgstr "Handter løyve for gruppa \"%s\""
+
+msgid "Manage permissions for user \"%s\""
+msgstr "Handter løyve for brukaren \"%s\""
+
+msgid "Manage photo ranks"
+msgstr "Sorteringsrekkefylgje for bilete"
+
+msgid "Manage photos"
+msgstr "Handter bilete"
+
+msgid "Manage tags"
+msgstr "Handter stikkord"
+
+msgid "Manage the members"
+msgstr "Handter medlemer"
+
+msgid "Manage this set of %d photos"
+msgstr "Handter denne samlinga av %d bilete"
+
+msgid "Manual order"
+msgstr "Manuell rekkefylgje"
+
+msgid "Maximum file size: %sB."
+msgstr "Største filstørrelse: %sB."
+
+msgid "Maximum height"
+msgstr "Største høgde"
+
+msgid "Maximum width"
+msgstr "Største breidde"
+
+msgid "Members"
+msgstr "Medlemer"
+
+msgid "Menu Management"
+msgstr "Menyar"
+
+msgid "Merge selected groups"
+msgstr "Flett valde grupper"
+
+msgid "Average rate"
+msgstr "Gjennomsittleg vurdering"
+
+msgid "By %s"
+msgstr "Av %s"
+
+msgid "Caddie"
+msgstr "\"Caddie\""
+
+msgid "Caddie management"
+msgstr "\"Caddie\"-handtering"
+
+msgid "Can't connect to server."
+msgstr "Tilkopling til tenar er ikkje tilgjengeleg."
+
+msgid "Can't create temporary file."
+msgstr "Kan ikkje opprette kladdefil."
+
+msgid "Can't download archive."
+msgstr "Kan ikkje laste ned arkiv."
+
+msgid "Can't read or extract archive."
+msgstr "Kan ikkje lesa eller pakke ut arkiv."
+
+msgid "Cancel"
+msgstr "Avbryt"
+
+msgid "Cannot delete the old permalink !"
+msgstr "Den gamle permalenka kan ikkje slettast!"
+
+msgid "Change Admin Colors"
+msgstr "Endre fargar for administrasjon"
+
+msgid "Check all"
+msgstr "Sjekk alle"
+
+msgid "Check for updates"
+msgstr "Sjekk for oppdateringar"
+
+msgid "Check for upgrade"
+msgstr "Sjekk oppdateringar"
+
+msgid "Check for upgrade failed for unknown reasons."
+msgstr "Oppgraderingssjekk feila av ukjend årsak."
+
+msgid "Check integrity"
+msgstr "Integritetssjekk"
+
+msgid "Choose an action"
+msgstr "Vel ei handling"
+
+msgid "Choose an option"
+msgstr "Vel eit alternativ"
+
+msgid "Classic display"
+msgstr "Klassisk vising"
+
+msgid "Comments for all"
+msgstr "Kommentarar for alle"
+
+msgid "Configuration"
+msgstr "Konfigurasjon"
+
+msgid "Confirm merge"
+msgstr "Stadfest fletting"
+
+msgid "Correction"
+msgstr "Korreksjon"
+
+msgid "Correction applied with error"
+msgstr "Korreksjon vart gjort, men med feil"
+
+msgid "Correction applied with success"
+msgstr "Korreksjon vellukka"
+
+msgid "Create"
+msgstr "Opprett"
+
+msgid "Create the \"%s\" directory at the root of your Piwigo installation"
+msgstr "Opprett mappa \"%s\" i rotmappa for din Piwigo-installasjon"
+
+msgid "Create this site"
+msgstr "Opprett denne nettsida"
+
+msgid "Crop"
+msgstr "Kutt"
+
+msgid "Current name"
+msgstr "Noverande namn"
+
+msgid "Database"
+msgstr "Dataase"
+
+msgid "Database synchronization with files"
+msgstr "Synkroniser database med filer"
+
+msgid "Date"
+msgstr "Dato"
+
+msgid "Day"
+msgstr "Dag"
+
+msgid "Deactivate"
+msgstr "Deaktiver"
+
+msgid "Deactivate all"
+msgstr "Deaktiver alt"
+
+msgid "Default comments order"
+msgstr "Standard rekkefylgje for kommentarar"
+
+msgid "Default display"
+msgstr "Standard vising"
+
+msgid "Default photos order"
+msgstr "Standard bilet-rekkefylgje"
+
+msgid "Default user cannot be deleted"
+msgstr "Standardbrukar kan ikkje slettast"
+
+msgid "Default user does not exist"
+msgstr "Standarbrukar finst ikkje"
+
+msgid "Delete Representant"
+msgstr "Fjern miniatyrbilete for album"
+
+msgid "Delete orphan tags"
+msgstr "Slett stikkord som ikkje høyrer til noko bilete"
+
+msgid "Delete selected photos"
+msgstr "Slett valde bilete"
+
+msgid "Delete selected tags"
+msgstr "Slett valde stikkord"
+
+msgid "Delete selected users"
+msgstr "Slett valde brukarar"
+
+msgid "Delete this language"
+msgstr "Slette dett språket"
+
+msgid "Delete this theme"
+msgstr "Slett dette temaet"
+
+msgid "Deleted on"
+msgstr "Sletta"
+
+msgid "Deletions"
+msgstr "Slettingar"
+
+msgid "Deny selected groups"
+msgstr "Avvis valde grupper"
+
+msgid "Deny selected users"
+msgstr "Avvis valde brukarar"
+
+msgid "Description"
+msgstr "Skildring"
+
+msgid "Detailed informations"
+msgstr "Detaljera informasjon"
+
+msgid "Directory"
+msgstr "Mappe"
+
+msgid "Directory does not exist"
+msgstr "Mappe finst ikkje"
+
+msgid "Discover album:"
+msgstr "Oppdag album:"
+
+msgid "Display options"
+msgstr "Visingsinnstillingar"
+
+msgid "Dissociate from album"
+msgstr "Frikople frå album"
+
+msgid "Dissociated"
+msgstr "Frikobla"
+
+msgid "Do you want to activate anyway?"
+msgstr "Ynskjer du å aktivere likevel?"
+
+msgid "Documentation"
+msgstr "Dokumentasjon"
+
+msgid "Does not represent"
+msgstr "er ikkje miniatyrbilete for"
+
+msgid "Download,"
+msgstr "Last ned,"
+
+msgid "Downloads"
+msgstr "Nedlastingar"
+
+msgid "Drag to re-order"
+msgstr "Klikk-og-dra for å endre rekkefylgje"
+
+msgid "Drop into album"
+msgstr "Vel eit album"
+
+msgid "Dump Database"
+msgstr "Dump database"
+
+msgid "Duplicate"
+msgstr "Dupliser"
+
+msgid "IP"
+msgstr "IP"
+
+msgid "Ignore All"
+msgstr "Ignorer alt"
+
+msgid "Ignore this update"
+msgstr "Ignorer denne oppdateringa"
+
+msgid "Image Quality"
+msgstr "Biletkvalitet"
+
+msgid "Image id"
+msgstr "Bilde-ID"
+
+msgid "Hello"
+msgstr "Hei"
+
+msgid "Hello,"
+msgstr "Hei,"
+
+msgid "Help Me"
+msgstr "Hjelp meg"
+
+msgid "Hide"
+msgstr "Gøym"
+
+msgid "High definition"
+msgstr "Høg oppløysing"
+
+msgid "High definition enabled"
+msgstr "Høg oppløysing aktivera"
+
+msgid "History"
+msgstr "Historie"
+
+msgid "Hit"
+msgstr "Treff"
+
+msgid "Hour"
+msgstr "Time"
+
+msgid "Graphics Library"
+msgstr "Grafikk-bibliotek"
+
+msgid "Group"
+msgstr "Gruppe"
+
+msgid "Group management"
+msgstr "Gruppe-handtering"
+
+msgid "Group name"
+msgstr "Gruppenamn"
+
+msgid "Groups"
+msgstr "Grupper"
+
+msgid "Groups and users"
+msgstr "Grupper og brukarar"
+
+msgid "Guest Settings"
+msgstr "Innstillingar for gjester"
+
+msgid "Guest cannot be deleted"
+msgstr "Gjest kan ikkje slettast"
+
+msgid "Guests"
+msgstr "Gjester"
+
+msgid "Height"
+msgstr "Høgde"
+
+msgid "Forbid this language to users"
+msgstr "Gjer dette språket utilgjengeleg for brukarar"
+
+msgid "Forbid this theme to users"
+msgstr "Gjer dette temaet utilgjengeleg for brukarar"
+
+msgid "Forbidden"
+msgstr "Utilgjengeleg"
+
+msgid "Form"
+msgstr "Frå"
+
+msgid "GD library is missing"
+msgstr "GD-bibliotek manglar"
+
+msgid "GD version"
+msgstr "GD-versjon"
+
+msgid "Gallery title"
+msgstr "Galleritittel"
+
+msgid "Gallery unlocked"
+msgstr "Galleriet låst opp"
+
+msgid "General statistics"
+msgstr "Galleri-statistikk"
+
+msgid "Get Support on Piwigo Forum"
+msgstr "Få brukarstøtte på Piwigo-forum"
+
+msgid "Go to"
+msgstr "Gå til"
+
+msgid "Go to %s or %s for more informations"
+msgstr "Gå til %s eller %s for meir informasjon"
+
+msgid "Error on file \"%s\" : %s"
+msgstr "Feil i fil \"%s\": %s"
+
+msgid "Error when sending email to %s [%s]."
+msgstr "Feil ved sending av e-post til %s [%s]."
+
+msgid "Errors caption"
+msgstr "Feilforklaring"
+
+msgid "Everybody"
+msgstr "Alle"
+
+msgid "Extend for templates"
+msgstr "Utvid malar"
+
+msgid "Extensions Update"
+msgstr "Oppdatering av tilleggsmodular"
+
+msgid "FTP + Synchronization"
+msgstr "FTP + synkronisering"
+
+msgid "Failed to write file to disk"
+msgstr "Feil ved skriving av fil til disk"
+
+msgid "File"
+msgstr "Fil"
+
+msgid "File upload stopped by extension"
+msgstr "Opplasting av fil stoppa av utvidelse"
+
+msgid "File/directory read error"
+msgstr "Lesefeil for fil/mappe"
+
+msgid "Find a new representant by random"
+msgstr "Finn eit nytt tilfeldig miniatyrbilere for album"
+
+msgid "Following plugins may not be compatible with the new version of Piwigo:"
+msgstr "Fylgjande tilleggsprogram er kanskje ikkje kompatibl med den nye versjonen av Piwigo:"
+
+msgid "Following themes may not be compatible with the new version of Piwigo:"
+msgstr "Fylgjande tema er kanskje ikke kompatible med den nye versjonen av Piwigo:"
+
+msgid "Duplicate selected tags"
+msgstr "Dupliser valde stikkord"
+
+msgid "Duplicates"
+msgstr "Duplikat"
+
+msgid "ERROR"
+msgstr "FEIL"
+
+msgid "ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW."
+msgstr "FEIL: DETTE TILLEGGSPROGRAMMET MANGLAR, MEN ER INSTALLERA! AVINSTALLER NÅ."
+
+msgid "Edit album"
+msgstr "Endre album"
+
+msgid "Edit album permissions"
+msgstr "Endre ablumtilgang"
+
+msgid "Edit photo"
+msgstr "Endre bilete"
+
+msgid "Edit ranks"
+msgstr "Endre rangering"
+
+msgid "Edit selected tags"
+msgstr "Endre valde stikkord"
+
+msgid "Edit tags"
+msgstr "Endre stikkord"
+
+msgid "Element"
+msgstr "Element"
+
+msgid "Element type"
+msgstr "Element-type"
+
+msgid "Email administrators when a comment is deleted"
+msgstr "Send e-post til administratorar når ein kommentar er sletta"
+
+msgid "Email administrators when a comment is modified"
+msgstr "Send e-post til administratorar når ein kommentar er endra"
+
+msgid "Email admins when a comment requires validation"
+msgstr "Send e-post til adminstratorar når ein kommentar treng validering"
+
+msgid "Email admins when a new user registers"
+msgstr "Send e-post til administratorar når ein ny brukar er registrera"
+
+msgid "Email admins when a valid comment is entered"
+msgstr "Send e-post til administratorar når ein gyldig kommentar er lagt til"
+
+msgid "Environment"
+msgstr "Miljø"
+
+msgid "Error list"
+msgstr "Liste med feil"
+
+msgid "New photos added"
+msgstr "Nye bilete lagt til"
+
+msgid "New photos were added"
+msgstr "Nye bilete bilete er lagt til"
+
+msgid "New tag"
+msgstr "Nytt stikkord"
+
+msgid "No file was uploaded"
+msgstr "Ingen fil vart lasta opp"
+
+msgid "No group is permitted to see this private album"
+msgstr "Ingen gruppe har løyve til å sjå dette private albumet"
+
+msgid "No mail to send."
+msgstr "Ingen e-post å sende"
+
+msgid "No members to manage"
+msgstr "Ingen medlemer å handtere"
+
+msgid "No order field selected"
+msgstr "Ikkje noko sorteringsfelt er vald"
+
+msgid "No photo can be deleted"
+msgstr "Ingen bilete kan slettast"
+
+msgid "No photo in the current set."
+msgstr "Ingen bilete i gjeldande samling"
+
+msgid "No photo in this album"
+msgstr "Ingen bilete i dette albumet"
+
+msgid "No photo selected, %d photos in current set"
+msgstr "Ingen bilete vald, %d bilete i gjeldande samling"
+
+msgid "No photos selected, no actions possible."
+msgstr "Ingen bilete vald, ingen handling er mogleg."
+
+msgid "No results"
+msgstr "Ingen resultat"
+
+msgid "No user to send notifications by mail."
+msgstr "Ingen brukar som kan informerast via e-post."
+
+msgid "None"
+msgstr "Ingen"
+
+msgid "Number of albums per page"
+msgstr "Antal ablum pr. side"
+
+msgid "Number of comments per page"
+msgstr "Antal kommentarar pr. side"
+
+msgid "Number of downloads"
+msgstr "Antal nedlastingar"
+
+msgid "Number of rates"
+msgstr "Antal rangeringar"
+
+msgid "Only private albums are listed"
+msgstr "Bare private album er lista opp"
+
+msgid "Operating system"
+msgstr "Operativsystem"
+
+msgid "Options"
+msgstr "Innstillingar"
+
+msgid "Original Size"
+msgstr "Original størrelse"
+
+msgid "Original file : %s"
+msgstr "Original fil: %s"
+
+msgid "Original templates"
+msgstr "Originale malar"
+
+msgid "Orphan tags deleted"
+msgstr "Stikkord som ikkje høyrer til noko bilete er sletta"
+
+msgid "Other plugins"
+msgstr "Andre tilleggsprogram er tilgjengeleg"
+
+msgid "Other private albums"
+msgstr "Andre private album"
+
+msgid "Overall"
+msgstr "Oversikt"
+
+msgid "Page banner"
+msgstr "Side-banner"
+
+msgid "Page end"
+msgstr "Sideslutt"
+
+msgid "Pages seen"
+msgstr "Sider vist"
+
+msgid "Panorama"
+msgstr "Panorama"
+
+msgid "Parameter"
+msgstr "Innstillingar"
+
+msgid "Parameters"
+msgstr "Parametrar"
+
+msgid "Parent album"
+msgstr "Foreldrealbum"
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Stadfesting av passord manglar. Skriv inn stadfesting av passord."
+
+msgid "Password is missing. Please enter the password."
+msgstr "Passord manglar. Skriv inn eit passord."
+
+msgid "Path"
+msgstr "Sti"
+
+msgid "Pending Comments"
+msgstr "Ventande kommentarar"
+
+msgid "Permalink"
+msgstr "Permalenke"
+
+msgid "Permalink %s is already used by album %s"
+msgstr "Permalenke %s er allereie i bruk av album %s"
+
+msgid "Permalink history"
+msgstr "Permalenke-historikk"
+
+msgid "Piwigo for Android"
+msgstr "Piwigo for Android"
+
+msgid "Piwigo for iOS (iPhone, iPad, iPod Touch)"
+msgstr "Piwigo for iOS (iPhone, iPad, iPod Touch)"
+
+msgid "Posted %s on %s"
+msgstr "Lagt til %s %s"
+
+msgid "Permalinks"
+msgstr "Permalenker"
+
+msgid "Permission denied"
+msgstr "Du har ikkje løyve"
+
+msgid "Permission granted"
+msgstr "Løyve gjeve"
+
+msgid "Permission granted for groups"
+msgstr "Løyve gjeve for grupper"
+
+msgid "Permission granted for users"
+msgstr "Løyve gjeve for brukarar"
+
+msgid "Permission granted thanks to a group"
+msgstr "Løyve gjeve på grunn av gruppmedlemskap"
+
+msgid "Permission management"
+msgstr "Handtering av løyve"
+
+msgid "Permissions"
+msgstr "Løyve"
+
+msgid "Photo %s of %s"
+msgstr "Bilete %s av %s"
+
+msgid "Photo informations updated"
+msgstr "Biletinformasjon er oppdatera"
+
+msgid "Photo Page"
+msgstr "Biletside"
+
+msgid "Photo Properties"
+msgstr "Eigenskapar for bilete"
+
+msgid "Photo name"
+msgstr "Namn på bilete"
+
+msgid "Photos"
+msgstr "Bilete"
+
+msgid "Piwigo Administration"
+msgstr "Piwigo adminstrasjon"
+
+msgid "Piwigo Publish plugin for Lightroom"
+msgstr "Piwigo Publish-tilleggsprogram for Lightroom"
+
+msgid "Piwigo Update"
+msgstr "Oppdatering av Piwido"
+
+msgid "Piwigo configuration"
+msgstr "Konfigurering av Piwigo"
+
+msgid "Piwigo version"
+msgstr "Piwigo-versjon"
+
+msgid "Please check \"plugins\" folder and sub-folders permissions (CHMOD)."
+msgstr "Sjekk mappe for tilleggsprogram og undermapper for tilgangsløyve (CHMOD)"
+
+msgid "Please select at least two groups"
+msgstr "Vel minst to grupper"
+
+msgid "Please wait..."
+msgstr "Vent..."
+
+msgid "Plugin has been successfully copied"
+msgstr "Tilleggsprogrammet vart kopiera"
+
+msgid "Plugin list"
+msgstr "Liste med tilleggsprogram"
+
+msgid "Plugins"
+msgstr "Tilleggsprogram"
+
+msgid "Plugins which need upgrade"
+msgstr "Tilleggsprogram som skal oppgraderast"
+
+msgid "Portrait"
+msgstr "Portrett"
+
+msgid "Position"
+msgstr "Posisjon"
+
+msgid "Private"
+msgstr "Privat"
+
+msgid "Properties"
+msgstr "Eigenskapar"
+
+msgid "Public"
+msgstr "Offentleg"
+
+msgid "Public / Private"
+msgstr "Offentleg / Privat"
+
+msgid "Purge compiled templates"
+msgstr "Fjern kompilera malar"
+
+msgid "Purge history detail"
+msgstr "Fjern historikk-detaljar"
+
+msgid "Purge history summary"
+msgstr "Fjern historikk-summering"
+
+msgid "Purge never used notification feeds"
+msgstr "Fjern informasjons-matingar som ikkje har vore bruka"
+
+msgid "Purge search history"
+msgstr "Fjern søkehistorikk"
+
+msgid "Purge sessions"
+msgstr "Fjern sesjonar"
+
+msgid "Purge user cache"
+msgstr "Fjern mellomlagring for brukar"
+
+msgid "Quick Local Synchronization"
+msgstr "Rask lokal synkronisering"
+
+msgid "Random photo"
+msgstr "Tilfeldig bilete"
+
+msgid "Rate"
+msgstr "Ranger"
+
+msgid "Rating"
+msgstr "Rangering"
+
+msgid "Rating by guests"
+msgstr "Rangera av gjester"
+
+msgid "Read Piwigo Documentation"
+msgstr "Les dokumentasjon for Piwigo"
+
+msgid "Refresh"
+msgstr "Oppfrisk"
+
+msgid "Refresh photo set"
+msgstr "Oppfrisk biletsamling"
+
+msgid "Reject"
+msgstr "Avvis"
+
+msgid "Remove all filters"
+msgstr "Fjern alle filter"
+
+msgid "Remove from caddie"
+msgstr "Fjern frå \"caddie\""
+
+msgid "Rename"
+msgstr "Gje nytt namn"
+
+msgid "Repair and optimize database"
+msgstr "Reparer og optimaliser databasen"
+
+msgid "Representant"
+msgstr "Miniatyrbilete for album"
+
+msgid "Representation of albums"
+msgstr "Miniatyrbilete for album"
+
+msgid "Representative"
+msgstr "Miniatyrbilete for album"
+
+msgid "Represents"
+msgstr "Er miniatyrbilete for"
+
+msgid "Reset ignored updates"
+msgstr "Nullstill ignorera oppdateringar"
+
+msgid "Resize"
+msgstr "Skaler"
+
+msgid "Resize after upload"
+msgstr "Skaler etter opplasting"
+
+msgid "Restore"
+msgstr "Set tilbake"
+
+msgid "Restore default configuration. You will lose your plugin settings!"
+msgstr "Set tilbake til standardkonfigurasjon. Du vil miste innstillingar for tilleggsprogram"
+
+msgid "Save Settings"
+msgstr "Lagre innstillingar"
+
+msgid "Save Template Directory"
+msgstr "Lagre mal-mappe"
+
+msgid "Save manual order"
+msgstr "Lagre manuell sortering"
+
+msgid "Save order"
+msgstr "Lagre sortering"
+
+msgid "Save to permalink history"
+msgstr "Lagre til historikk for permalenker"
+
+msgid "Search for new images in the directories"
+msgstr "Søk etter nye bilete i mappene"
+
+msgid "Searching..."
+msgstr "Søker..."
+
+msgid "Section"
+msgstr "Seksjon"
+
+msgid "See you soon,"
+msgstr "Ser deg snart,"
+
+msgid "See you soon."
+msgstr "Ser deg snart."
+
+msgid "Select a file"
+msgstr "Vel ei fil"
+
+msgid "Select an album"
+msgstr "Vel eit ablum"
+
+msgid "Select at least one album"
+msgstr "Vel minst eitt album"
+
+msgid "Select at least one comment"
+msgstr "Vel minst ein kommentar"
+
+msgid "Select at least one photo"
+msgstr "Vel minst eitt bilete"
+
+msgid "Select at least one user"
+msgstr "Vel minst ein brukar"
+
+msgid "Select at least two tags for merging"
+msgstr "Vel minst to stikkord for fletting"
+
+msgid "Select files"
+msgstr "Vel filer"
+
+msgid "Select groups..."
+msgstr "Vel grupper..."
+
+msgid "Select recipients"
+msgstr "Vel mottakarar"
+
+msgid "Select the destination tag"
+msgstr "Vel mål-stikkord"
+
+msgid "Select users..."
+msgstr "vel brukarar..."
+
+msgid "Select:"
+msgstr "Vel:"
+
+msgid "Selection"
+msgstr "Utval"
+
+msgid "Send"
+msgstr "Send"
+
+msgid "Send an information email to group members"
+msgstr "Send informasjon på e-post til ei gruppe medlemer"
+
+msgid "Send connection settings by email"
+msgstr "Send innloggings-instillingar på e-post"
+
+msgid "Send mail as"
+msgstr "Send e-post som"
+
+msgid "Send mail on HTML format"
+msgstr "Send e-post i HTML-format"
+
+msgid "Send mail to users"
+msgstr "Send e-post til brukarar"
+
+msgid "Settings"
+msgstr "Instillingar"
+
+msgid "Sharpen"
+msgstr "Oppskarping"
+
+msgid "Show info"
+msgstr "Vis informasjon"
+
+msgid "Show menubar"
+msgstr "Vis menyline"
+
+msgid "Simulation"
+msgstr "Simulering"
+
+msgid "Site manager"
+msgstr "Nettstadsadministrator"
+
+msgid "Some themes and plugins may be not available yet."
+msgstr "Nokre tema og tilleggsprogram er kanskje ikkje tilgjengelege nå."
+
+msgid "Some upgrades are available for extensions."
+msgstr "Oppgraderingar er tilgjengelege for tilleggsmodular"
+
+msgid "Start Upload"
+msgstr "Start opplasting"
+
+msgid "Start pLoader and add your photos."
+msgstr "Start pLoader og legg til dine bilete."
+
+msgid "Statistics"
+msgstr "Statistikk"
+
+msgid "Status"
+msgstr "Status"
+
+msgid "Status of user \"%s\" updated"
+msgstr "Status for brukar \"%s\" er oppdatera"
+
+msgid "Subscribe"
+msgstr "Abonner"
+
+msgid "Subscribe %s"
+msgstr "Abonner %s"
+
+msgid "Subscribe %s to Piwigo Announcements Newsletter"
+msgstr "Abonner %s på Piwigo annonserings-nyheitsbrev"
+
+msgid "Summary"
+msgstr "Summering"
+
+msgid "Support"
+msgstr "Støtte"
+
+msgid "Synchronize"
+msgstr "Synkroniser"
+
+msgid "Synchronize metadata"
+msgstr "Synkroniser metadata"
+
+msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
+msgstr "DETTE TILLEGGSPROGRAMMET ER NÅ EIN DEL AV KJERNA I PIWIGO! AVINNSTALLER DET NÅ!"
+
+msgid "Tag \"%s\" already exists"
+msgstr "Stikkordet \"%s\" finst allereie"
+
+msgid "Tag \"%s\" is now a duplicate of \"%s\""
+msgstr "Stikkordet \"%s\" er nå duplikat av \"%s\""
+
+msgid "Tag \"%s\" was added"
+msgstr "Stikkordet \"%s\" er lagt til"
+
+msgid "Tag selection"
+msgstr "Val av stikkord"
+
+msgid "Tags <em>%s</em> merged into tag <em>%s</em>"
+msgstr "Stikkord <em>%s</em> fletta saman med stikkordet <em>%s</em>"
+
+msgid "Templates"
+msgstr "Malar"
+
+msgid "The following tag was deleted"
+msgstr "Desse stikkorda vart sletta"
+
+msgid "The gallery URL is not valid."
+msgstr "URL til galleriet er ikkje gyldig"
+
+msgid "The name of an album must not be empty"
+msgstr "Namnet til eit album kan ikkje vera tomt"
+
+msgid "Virtual album"
+msgstr "Virtuelt album"
+
+msgid "Virtual album added"
+msgstr "Virtuelt album er lagt til"
+
+msgid "Virtual album deleted"
+msgstr "Virtuelt album er sletta"
+
+msgid "Virtual album name"
+msgstr "Namn på virtuelt ablum"
+
+msgid "Virtual albums to move"
+msgstr "Virtuelle ablum som skal flyttast"
+
+msgid "Visit Gallery"
+msgstr "Besøk galleriet"
+
+msgid "Visit Piwigo project website"
+msgstr "Besøk nettstaden til Piwigo-prosjektet"
+
+msgid "Visit language site"
+msgstr "Gå til språksida"
+
+msgid "Visit plugin site"
+msgstr "Gå til sida for tilleggsprogram"
+
+msgid "Visit theme site"
+msgstr "Gå til sida for tema"
+
+msgid "Visited %d times"
+msgstr "Besøkt %d gonger"
+
+msgid "WARNING! This plugin does not seem to be compatible with this version of Piwigo."
+msgstr "VARSEL! Dette tilleggsprogrammet ser ikkje ut til å vera kompatibel med denne versjonen av Piwigo."
+
+msgid "Waiting"
+msgstr "Ventande"
+
+msgid "Warning: subscribing or unsubscribing will send mails to users"
+msgstr "Varsel: "
+
+msgid "Watermark"
+msgstr "Vassmerke"
+
+msgid "Web Form"
+msgstr "Web-skjema"
+
+msgid "Webmaster cannot be deleted"
+msgstr "Webmaster kan ikkje fjernast"
+
+msgid "Webmaster status is required."
+msgstr "Webmaster-status er påkrevd"
+
+msgid "Upload Photos"
+msgstr "Last opp bilete"
+
+msgid "Uploaded Photos"
+msgstr "Opplasta bilete"
+
+msgid "User"
+msgstr "Brukar"
+
+msgid "User \"%s\" created with \"%s\" like password"
+msgstr "Brukar \"%s\" oppretta med \"%s\" som passord"
+
+msgid "User %s [%s] added."
+msgstr "Brukar %s [%s] er lagt til"
+
+msgid "User %s [%s] was added to the subscription list."
+msgstr "Brukar %s [%s] lagt til som abonnent."
+
+msgid "User %s [%s] was not added to the subscription list."
+msgstr "Brukar %s [%s] er ikkje lagt til som abonnent."
+
+msgid "User %s [%s] was not removed from the subscription list."
+msgstr "Brukar %s [%s] er ikkje fjerna som abonnent."
+
+msgid "User %s [%s] was removed from the subscription list."
+msgstr "Brukar %s [%s] fjerna som abonnent."
+
+msgid "User comments validation"
+msgstr "Validering av kommentar frå brukar"
+
+msgid "User list"
+msgstr "Brukarliste"
+
+msgid "User status"
+msgstr "Brukarstatus"
+
+msgid "Users"
+msgstr "Brukarar"
+
+msgid "Validate"
+msgstr "Valider"
+
+msgid "Validation"
+msgstr "Validering"
+
+msgid "Version"
+msgstr "Versjon"
+
+msgid "View in gallery"
+msgstr "Vis i galleriet"
+
+msgid "Virtual Links"
+msgstr "Virutelle lenker"
+
+msgid "Who can see this photo?"
+msgstr "Kven kan sjå dette biletet?"
+
+msgid "Width"
+msgstr "Breidde"
+
+msgid "With blank value, gallery title will be used"
+msgstr "Om tomt, galleriets tittel vil bli bruka"
+
+msgid "With no album"
+msgstr "Utan ablum"
+
+msgid "With no tag"
+msgstr "Utan stikkord"
+
+msgid "With no virtual album"
+msgstr "Utan virutelt album"
+
+msgid "X Position"
+msgstr "X posisjon"
+
+msgid "X Repeat"
+msgstr "X repetering"
+
+msgid "Y Position"
+msgstr "Y posisjon"
+
+msgid "Year"
+msgstr "År"
+
+msgid "You are running the latest version of Piwigo."
+msgstr "Du køyrer siste versjon av Piwigo."
+
+msgid "You cannot delete your account"
+msgstr "Du kan ikkje slette din konto"
+
+msgid "You cannot move an album in its own sub album"
+msgstr "Du kan ikkje flytte eit album til sitt eige underalbum"
+
+msgid "You have %d orphan tags: %s."
+msgstr "Du har %d stikkord som ikkje høyrer til bilete: %s."
+
+msgid "Zoom"
+msgstr "Zoom"
+
+msgid "add a new watermark"
+msgstr "legg til nytt vassmerke"
+
+msgid "add new photos to caddie"
+msgstr "legg nye bilete til \"caddie\""
+
+msgid "added"
+msgstr "lagt til"
+
+msgid "administrators"
+msgstr "administratorar"
+
+msgid "albums added in the database"
+msgstr "album lagt til i databasen"
+
+msgid "any visitor can see this album"
+msgstr "all gjester kan sjå dette ablumet"
+
+msgid "digiKam is an advanced digital photo management free software for Linux, Windows, and MacOSX."
+msgstr "dikiKam er eit avansera fritt digital bilethandteringsprogram for Linux, Windows og Mac OSX"
+
+msgid "even already synchronized photos"
+msgstr "og allereie synkronisera bilete"
+
+msgid "for the file format"
+msgstr "for dette filformatet"
+
+msgid "for this file format"
+msgstr "for denne filas format"
+
+msgid "global mode"
+msgstr "globalmodus"
+
+msgid "iPhoto is the default photo manager on MacOSX. The Piwigo export plugin let you create new albums and export your photos directly from iPhoto to your Piwigo photo gallery."
+msgstr "iPhoto er standard bilethandsamar på Mac OSX. Piwigo eksport tilleggsprogram let deg oppretta nye album og eksportere dine bilete direkte frå iPhoto til ditt Piwigo biletgalleri"
+
+msgid "leave"
+msgstr "ingen endring"
+
+msgid "on the %d selected photos"
+msgstr "på desse %s valde bileta"
+
+msgid "ranks"
+msgstr "rangering"
+
+msgid "registration date"
+msgstr "registreringsdato"
+
+msgid "remove creation date"
+msgstr "fjern opprettingsdato"
+
+msgid "set to"
+msgstr "sett til"
+
+msgid "simple visitors"
+msgstr "enkle besøkande"
+
+msgid "singly represented"
+msgstr "fiksa miniatyrbilete"
+
+msgid "synchronize files metadata with database photos informations"
+msgstr "syknroniser bileta i databasen med metadata i filene"
+
+msgid "test this remote site"
+msgstr "test denne nettstaden"
+
+msgid "unset"
+msgstr "nullstill"
+
+msgid "update the database from files"
+msgstr "oppdater databasen med filene"
+
+msgid "An error has occured during upgrade."
+msgstr "Det oppstod ein feil under oppgraderinga."
+
+msgid "An error occured during extraction (%s)."
+msgstr "Det oppstod ein feil under utpakking av filene (%s)."
+
+msgid "An information email was sent to group \"%s\""
+msgstr "E-post med informasjon er sendt til gruppe \"%s\""
+
+msgid "Apply to sub-albums"
+msgstr "Gjer gjeldande for underalbum"
+
+msgid "Apply watermark if height is bigger than"
+msgstr "Legg til vassmerke om høgda er større enn"
+
+msgid "Apply watermark if width is bigger than"
+msgstr "Legg til vassmerke om breidda er større enn"
+
+msgid "The file or directory cannot be accessed (either it does not exist or the access is denied)"
+msgstr "Fila eller mappa kan ikkje nåast (den finst ikkje eller tilgang er nekta)"
+
+msgid "The number of comments a page must be between 5 and 50 included."
+msgstr "Talet på kommentarar på ei side må vera mellom 5 og 50."
+
+msgid "The original image quality must be a number between %d and %d"
+msgstr "Kvalitet på originalbilete må vera eit tal mellom %d og %d"
+
+msgid "Piwigo cannot retrieve upgrade file from server"
+msgstr "Piwigo greier ikkje hente oppgraderingsfile frå tenaren"
+
+msgid "Ratio"
+msgstr "Storleiksforhold"
+
+msgid "ReGalAndroid (RemoteGallery client for Android) is an open source (GPL v3) Piwigo client for the Android platform."
+msgstr "ReGalAndroid (RemoteGallery-klient for Android) er eit åpent kjeldekodeprogram (GPL v3) - ein Piwigo-klient for Android-plattforma."
+
+msgid "Bound Theme"
+msgstr "Bunden mal"
+
+msgid "Continue processing treatment"
+msgstr "Fortsett handsaming som er igang"
+
+msgid "Delete multiple size images"
+msgstr "Slett multistørrelse bilete"
+
+msgid "Hoverbox display"
+msgstr "Hoverbox-vising"
+
+msgid "If you encounter problems or have any question, please send a message to"
+msgstr "Dersom du opplever problem eller har spørsmål, kan du sende ei melding til"
+
+msgid "Impossible to activate this theme, the parent theme is missing: %s"
+msgstr "Dette temaet kan ikkje aktiverast avdi foreldretemaet manglar: %s"
+
+msgid "Impossible to deactivate this language, first set another language as default."
+msgstr "Kan ikkje deaktivere dette språket. Du må seta eit anna språk som standardspråk."
+
+msgid "Impossible to deactivate this language, you need at least one language."
+msgstr "Kan ikkje deaktivere dette språket. Minst eit språk må vera aktivera."
+
+msgid "Impossible to deactivate this theme, you need at least one theme."
+msgstr "Kan ikkje deaktivere dette temaet. Minst eit tema må vera aktivera."
+
+msgid "Impossible to delete this theme. Other themes depends on it: %s"
+msgstr "Dette temaet kan ikkje slettast avdi andre tema er avhengig av dette: %s"
+
+msgid "In your php.ini file, the upload_max_filesize (%sB) is bigger than post_max_size (%sB), you should change this setting"
+msgstr "I php.ini fila di er upload_max_filesize (%sB) større enn post_max_size (%sB). Du bør endre denne innstillinga."
+
+msgid "Include display of recent photos grouped by dates"
+msgstr "Inkluder vising av nye bilete gruppera etter dato"
+
+msgid "Include history data (Warning: server memory limit may be exceeded)"
+msgstr "Inkluder historikk (Varsel: serverminne-grense kan verta overskriden)"
+
+msgid "Information data registered in database"
+msgstr "Informasjonsdata lagra i databasen"
+
+msgid "Obsolete Plugins"
+msgstr "For gamle tilleggsprogram"
+
+msgid "Operation in progress"
+msgstr "Handsaming er igang."
+
+msgid "Preferences"
+msgstr "Innstillingar"
+
+msgid "Released on"
+msgstr "Utgeven"
+
+msgid "Remote"
+msgstr "Fjern"
+
+msgid "You have subscribed to receiving notifications by mail."
+msgstr "Du har starta abbonnement på varsling via e-post."
+
+msgid "You have unsubscribed from receiving notifications by mail."
+msgstr "Du har avlsutta abbonnement på varsling via e-post."
+
+msgid "You need to confirm deletion"
+msgstr "Du må stadfeste slettinga"
+
+msgid "You need to upgrade your system to take full advantage of the application else the application will not work correctly, or not at all"
+msgstr "Du bør oppgradere systemet ditt for å få full nytte av applikasjonen, elles vil applikasjonen ha feil eller ikkje virke i det heile."
+
+msgid "[%s] Visit album %s"
+msgstr "[%s] Gjest album %s"
+
+msgid "custom"
+msgstr "Tilpassa"
+
+msgid "Replacers (customized templates)"
+msgstr "Erstattar (tilpassa mal)"
+
+msgid "Select a zone with your mouse to define a new center of interest."
+msgstr "Vel eit område med musa for å definere interessesenter."
+
+msgid "Set as default language for unregistered and new users"
+msgstr "Set som standard språk for uregistrera og nye brukarar"
+
+msgid "Set as default theme for unregistered and new users"
+msgstr "Set som standard mal for uregistrera og nye brukarar"
+
+msgid "Set author"
+msgstr "Set fotograf"
+
+msgid "Set creation date"
+msgstr "Set opprettingsdato"
+
+msgid "Set title"
+msgstr "Set tittel"
+
+msgid "Shotwell is an open source digital photo organizer that runs on Linux. It is the default photo manager in Ubuntu and Fedora."
+msgstr "Shotwell er eit åpent kjeldekodeprograme for å handtere digitale bilete på Linux. Det er standard bilethandteringsprogram i Ubuntu og Fedora."
+
+msgid "Subscribe to notification by mail"
+msgstr "Abonner på varsling via e-post"
+
+msgid "Subscribe/unsubscribe users"
+msgstr "Start/avslutt abonnement for brukarar"
+
+msgid "Subscribed"
+msgstr "Abonnement starta"
+
+msgid "Subscribers could be listed (available) only if there is new elements to notify."
+msgstr "Abonnentar kan bli lista (tilgjengeleg) bare om der nye element å varsle om."
+
+msgid "The Piwigo export plugin allows you to create albums and export photos."
+msgstr "Piwigo eksport-tilleggsprogrammet gjev deg tilgang til å opprette album og eksportere bilete."
+
+msgid "The anomaly will be ignored until next application version"
+msgstr "Feilen vil bli ignorera til neste versjon av applikasjonen"
+
+msgid "The center of interest is the most meaningful zone in the photo."
+msgstr "Interessesenter er det viktigaste område på biletet."
+
+msgid "The permalink name must be composed of a-z, A-Z, 0-9, \"-\", \"_\" or \"/\". It must not be numeric or start with number followed by \"-\""
+msgstr "Namn på permalenke kan innehalde a-z, A-Z, 0-9, \"-\", \"_\" eller \"/\". Den kan ikkje innehalde bare tal eller byrje med tal fylgd av \"-\""
+
+msgid "The webmaster has subscribed you to receiving notifications by mail."
+msgstr "Webmaster har starta abonnement for deg på varsling via e-post."
+
+msgid "You are using the Browser uploader. Try the <a href=\"%s\">Flash uploader</a> instead."
+msgstr "Du brukar nettlesaropplasting. Prøv <a href=\"%s\">Flash-opplasting</a> istadenfor."
+
+msgid "You are using the Flash uploader. Problems? Try the <a href=\"%s\">Browser uploader</a> instead."
+msgstr "Du brukar Flash-opplasting. Problem? Prøv <a href=\"%s\">nettlesaropplasting</a> istadenfor."
+
+msgid "You can update to Piwigo %s directly, without upgrading to Piwigo %s (recommended)."
+msgstr "Du kan laste opp til Piwigo %s direkte utan å oppgradere til Piwigo %s (tilrådd)"
+
+msgid "photos informations synchronized with files metadata"
+msgstr "biletinformasjon er synkronisera med metadata for fila"
+
+msgid "The original maximum height must be a number between %d and %d"
+msgstr "Største høgde på original må vera ei tal mellom %d og %d"
+
+msgid "The original maximum width must be a number between %d and %d"
+msgstr "Største breidde på original må vera ei tal mellom %d og %d"
+
+msgid "The picture dimensions will be reduced to %dx%d pixels."
+msgstr "Biletstørrelse vil bli redusera til %dx%d bilepunkt."
+
+msgid "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form"
+msgstr "Den opplasta file er større enn innstillinga MAX_FILE_SIZE som er spesifisera i HTML-skjemaet"
+
+msgid "The uploaded file exceeds the upload_max_filesize directive in php.ini: %sB"
+msgstr "Den opplasta fila er større enn innstillinga upload_max_filesize i php.ini: %sB"
+
+msgid "The uploaded file was only partially uploaded"
+msgstr "Den opplasta file vart berre delvis opplasta"
+
+msgid "The uploaded files exceed the post_max_size directive in php.ini: %sB"
+msgstr "Den opplasta fila er større enn innstillinga post_max_size i php.ini: %sB"
+
+msgid "[NBM] Problems or questions"
+msgstr "[NMB] Problem eller spørsmål"
+
+msgid "apply automatic sort order"
+msgstr "bruk automatisk sorteringsrekkefylgje"
+
+msgid "dissociate from group"
+msgstr "koble frå gruppe"
+
+msgid "only perform a simulation (no change in database will be made)"
+msgstr "gjer bare ein simuletring (ingenting vil bli endra i databasen)"
+
+msgid "overrides existing values with empty ones"
+msgstr "overstyr gjeldande verdiar med tomme"
+
+msgid "pending validation"
+msgstr "ventande validering"
+
+msgid "reduce to single existing albums"
+msgstr "reduser til enkle eksiterande album"
+
+msgid "Your configuration settings are saved"
+msgstr "Dine konfigurasjonsinnstillingar er lagra"
+
+msgid "You can activate only one mobile theme."
+msgstr "Du kan bare aktivere eit mobil-tema."
+
+msgid "Update Complete"
+msgstr "Oppdatering ferdig"
+
+msgid "Update albums informations"
+msgstr "Oppdater informasjon om album"
+
+msgid "Update in progress... Please wait."
+msgstr "Oppdatering igang... Vent."
+
+msgid "Update photos information"
+msgstr "Oppdater informasjon om bilete"
+
+msgid "Use the default photo sort order"
+msgstr "Bruk standard sorteringsrekkefylgje for bilete"
+
+msgid "Used metadata"
+msgstr "Metadata i bruk"
+
+msgid "You are running on development sources, no check possible."
+msgstr "Du køyrer med utviklingskjeldekode, sjekk er ikkje mogleg."
+
+msgid "Unable to dump database."
+msgstr "Greier ikkje dumpe databasen"
+
+msgid "Uncheck all"
+msgstr "Velg bort alle"
+
+msgid "Uninstall"
+msgstr "Avinstaller"
+
+msgid "Uninstalled Plugins"
+msgstr "Avinstallera tilleggsprogram"
+
+msgid "Unknown upload error"
+msgstr "Ukjend opplastingsfeil"
+
+msgid "Unlock gallery"
+msgstr "Lås opp galleri"
+
+msgid "Unlocked"
+msgstr "Låst opp"
+
+msgid "Unsubscribe from notification by mail"
+msgstr "Avslutt abonnement på varsling via e-post"
+
+msgid "Unsubscribed"
+msgstr "Abonemment avslutta"
+
+msgid "Update All"
+msgstr "Oppdater alle"
+
+msgid "To subscribe"
+msgstr "Start abonnement"
+
+msgid "To unsubscribe"
+msgstr "Avslutt abonnement"
+
+msgid "Toggle 'default group' property"
+msgstr "Inverter 'standargruppe'-eigenskapen"
+
+msgid "Tools"
+msgstr "Verktøy"
+
+msgid "Two updates are available"
+msgstr "To oppdateringar er tilgjengelege"
+
+msgid "Type here the author name"
+msgstr "Skriv inn forfattarnamn"
+
+msgid "Type here the name of the new group"
+msgstr "Skriv inn namn på ny gruppe"
+
+msgid "Type here the title"
+msgstr "Skriv inn tittel"
+
+msgid "Type in a search term"
+msgstr "Skriv inn søkeord"
+
+msgid "Unable to check for upgrade."
+msgstr "Greier ikkje sjekke for oppgraderingar."
+
+msgid "This name is already used by another group."
+msgstr "Dette namnet er allereie i bruk av ei anna gruppe."
+
+msgid "This site already exists"
+msgstr "Denne nettsida finst allereie"
+
+msgid "This theme was not designed to be directly activated"
+msgstr "Dette temaet kan ikkje aktiverast direkte"
+
+msgid "Thumbnail"
+msgstr "Miniatyrbilete"
+
+msgid "Thumbnails generation in progress..."
+msgstr "Oppretting av miniatyrebilete er i gang..."
+
+msgid "Time"
+msgstr "Tid"
+
+msgid "Time to send mail is limited. Others mails are skipped."
+msgstr "Tida tilgjengeleg for å sende e-post er avgrensa. Andre e-postar er hoppa over."
+
+msgid "Title"
+msgstr "Tittel"
+
+msgid "To export your photos from digiKam to Piwigo, simply install digiKam and the Kipi-plugins."
+msgstr "For å eksportere bileta dine frå digiKam til Piwigo, installer dikiKam og Kipi-tilleggsprogrammet."
+
+msgid "To send ?"
+msgstr "Send?"
+
+msgid "The webmaster has unsubscribed you from receiving notifications by mail."
+msgstr "Webmaster har avslutta abonnementet ditt på e-postvarsling."
+
+msgid "There is no available subscribers to mail."
+msgstr "Det er ingen abonnentar å varsle på e-post."
+
+msgid "There is no other theme available."
+msgstr "Ingen andre tema er tilgjengelege."
+
+msgid "This album contains %d photos, added between %s and %s."
+msgstr "Dette albumet inneheld %d bilete lagt til mellom %s og %s."
+
+msgid "This album contains %d photos, added on %s."
+msgstr "Dette albumet inneheld %d bilete lagt til %s."
+
+msgid "This album contains no photo."
+msgstr "Dette albumet inneheld ingen bilete."
+
+msgid "This group will be set to default"
+msgstr "Denne gruppa vil bli bruka som standard"
+
+msgid "This group will be unset to default"
+msgstr "Denne gruppa vil ikkje lenger bli bruka som standard"
+
+msgid "This is a major update, with <a href=\"%s\">new exciting features</a>."
+msgstr "Dette er ei større oppgdatering med <a href=\"%s\">nye spennande mogleghetar</a>."
+
+msgid "This is a minor update, with only bug corrections."
+msgstr "Dette er ei mindre oppdatering med kun opprretting av feil."
+
+msgid "The whole page"
+msgstr "Heile sida"
+
+msgid "The whole set"
+msgstr "Heile samlinga"
+
+msgid "Theme has been successfully installed"
+msgstr "Tema har vorte installera"
+
+msgid "Themes"
+msgstr "Tema"
+
+msgid "Themes which need upgrade"
+msgstr "Tema som treng oppgradering"
+
+msgid "There is no group in this gallery."
+msgstr "Det finst ingen grupper i galleriet"
+
+msgid "There is no other language available."
+msgstr "Ingen andre språk er tilgjengelege."
+
+msgid "There is no other plugin available."
+msgstr "Ingen andre tillgeggsprogram er tilgjengelege."
+
+msgid "The name of a group must not contain \" or ' or be empty."
+msgstr "Gruppenamnet kan ikkje innehalde \" eller ' eller vera tomt."
+
+msgid "The name of directories and files must be composed of letters, numbers, \"-\", \"_\" or \".\""
+msgstr "Mappenamn og filnamn kan bare innehalde bokstavar, tal, \"-\", \"_\" eller \".\""
+
+msgid "Save visits in history for"
+msgstr "Lagre vitjingshistorikk for"
+
+msgid "Source tag"
+msgstr "Kjeldestikkord"
+
+msgid "Storage album"
+msgstr "Lagringsalbum"
+
+msgid "Sum of rates"
+msgstr "Sum av vurderingar"
+
+msgid "Switch to clear or dark colors for administration"
+msgstr "Byt til ljos eller mørk farge for administrasjon"
+
+msgid "Templates configuration has been recorded."
+msgstr "Mal-konfigurasjon har blitt lagra"
+
+msgid "The %d following tags were deleted"
+msgstr "Fylgjande %d stikkord har vorte sletta"
+
+msgid "Privacy level"
+msgstr "Personvernnivå"
+
+msgid "Privacy level set to \"%s\""
+msgstr "Personvernnivå sett til \"%s\""
+
+msgid "Rate date"
+msgstr "Vurderingsgsdato"
+
+msgid "Rated %d times, score : %.2f"
+msgstr "Vurdera %s gonger, skår: %.2f"
+
+msgid "Photos generation in progress..."
+msgstr "Biletgenerering i gang..."
+
+msgid "Piwigo Uploader"
+msgstr "Piwigo opplastar"
+
+msgid "Piwigo export plugin for Aperture"
+msgstr "Piwigo tilleggsprogram for eksport frå Aperture"
+
+msgid "Piwigo export plugin for iPhoto"
+msgstr "Piwigo tilleggsprogram for eksport frå iPhoto"
+
+msgid "Piwigo publish plugin for Shotwell"
+msgstr "Piwigo tilleggsprogram for eksport frå Shotwell"
+
+msgid "Piwigo publish plugin for digiKam"
+msgstr "Piwigo tilleggsprogram for eksport frå digiKam"
+
+msgid "Predefined filter"
+msgstr "Førehandsdefinera filter"
+
+msgid "Main \"guest\" user does not exist"
+msgstr "Hovudbrukaren \"gjest\" finst ikkje"
+
+msgid "Main \"guest\" user status is incorrect"
+msgstr "Hovudbrukaren \"gjest\" sin status er feil"
+
+msgid "Main \"webmaster\" user does not exist"
+msgstr "Hovudbrukaren \"webmaster\" finst ikkje"
+
+msgid "Main \"webmaster\" user status is incorrect"
+msgstr "Hovudbrukaren \"webmaster\" sin status er feil"
+
+msgid "No destination tag selected"
+msgstr "Målstikkord er ikkje vald"
+
+msgid "Optimizations have been completed with some errors."
+msgstr "Optimalisering er gjennomførd, men med nokre feil."
+
+msgid "Permalink %s has been previously used by album %s. Delete from the permalink history first"
+msgstr "Permalenke %s har tidlegare vore i bruk av album %s. Du må slette den frå permalenke-historikken fyrst."
+
+msgid "Photo unreachable or no support"
+msgstr "Får ikkje tak i biletet eller bilet-typa er ikkje støtta"
+
+msgid "I decide to update anyway"
+msgstr "Eg vil oppdatere likevel"
+
+msgid "Ignore selected anomalies"
+msgstr "Ignorer valde feil"
+
+msgid "Images manual order was saved"
+msgstr "Manuell sortering av bilete er lagra"
+
+msgid "Impossible automatic correction"
+msgstr "Automatisk korrigering er ikkje mogleg"
+
+msgid "Exif extension not available, admin should disable exif use"
+msgstr "EXIF-utvidelse er ikkje tilgjengeleg, administrator bør deaktivere bruk av EXIF"
+
+msgid "Features include gallery browsing, album creation and photo upload."
+msgstr "Mogleghetar inkluderar å bla i galleriet, lage album og laste opp bilete."
+
+msgid "Follow Orientation"
+msgstr "Fylg orientering/retning"
+
+msgid "Generate multiple size images"
+msgstr "Lag fleire størrelsar av bileta"
+
+msgid "Give write access (chmod 777) to \"%s\" directory at the root of your Piwigo installation"
+msgstr "Gje skriverettar (chmod 777) til \"%s\" mappa i rotmappa i din Piwigo installasjon"
+
+msgid "Grant selected groups"
+msgstr "Gje tilgang til valde grupper"
+
+msgid "Grant selected users"
+msgstr "Gje tilgang til valde brukarar"
+
+msgid "Aperture is a powerful tool to refine images and manage massive libraries on Mac."
+msgstr "Aperture er eit kraftig verktøy for å forbetre bilete og handtere store mengder bilete på ein Mac datamaskin."
+
+msgid "Aperture is designed for professional photographers with iPhoto simplicity."
+msgstr "Aperture er laga for profesjonelle fotografar, men liknar iPhoto."
+
+msgid "Applications"
+msgstr "Applikasjonar"
+
+msgid "Authorize users to add comments on selected albums"
+msgstr "Autoriser brukarar til å legge til kommentarar på valde album"
+
+msgid "Batch Manager"
+msgstr "Jobb handterar"
+
+msgid "By default, Piwigo will create a new websize from the HD (high definition) version of your photo."
+msgstr "Som standard vil Piwigo lage ein ny biletstørrelse ut frå HD-versjonen (high definition) av ditt bildete."
+
+msgid "By default, the center of interest is placed in the middle of the photo."
+msgstr "Som standard vil insteressesenter for biletet bli plassera i midten."
+
+msgid "By rank"
+msgstr "Etter rangering"
+
+msgid "Center of interest"
+msgstr "Interessesenter"
+
+msgid "Check automatic corrections"
+msgstr "Sjekk automatiske korrigeringar"
+
+msgid "Correction the anomaly will cancel the fact that it's ignored"
+msgstr "Feilen som er korrigera vil ikkje lenger bli ignorera"
+
+msgid "For photo sizes with crop, such as \"Square\", Piwigo will do its best to include the center of interest."
+msgstr "For biletstørrelsar med avskjering, slik som \"Firkant\", vil Piwigo gjera det som er mogleg for å inkludere interessesenter."
+
+msgid "If no HD is available and if the current websize is bigger than resize dimensions, Piwigo will move it as HD and create a downsized websize photo from it."
+msgstr "Om ingen HD er tilgjengeleg og om gjeldande web-størrelse er større enn skaleringsdimensjonar, vil Piwigo flytte den som HD og lage ein nedskalera bilete i web-størrelse av dette."
+
+msgid "Photo sizes with crop"
+msgstr "Biletstørrelse med avskjering"
+
+msgid "Piwigo Announcements Newsletter"
+msgstr "Piwigo nyheitsbrev"
+
+msgid "Albums authorized thanks to group associations"
+msgstr "Album er autorisera på grunn av gruppetilknyting"
+
+msgid "All optimizations have been successfully completed."
+msgstr "Alle optimaliseringar er gjennomført."
+
+msgid "An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href=\"%s\">Click here to show log error</a>."
+msgstr "Ein feil oppstod under utpakking. Sjekk tilgangsrettar til filer i din Piwigo-installasjon. <br /><a href=\"%s\">Klikk her for å vise feillogg</a>."
+
+msgid "Are you sure to install this upgrade? You must verify if this version does not need uninstallation."
+msgstr "Er du sikker på at du vil installere denne oppgraderinga? Du må sjekke om denne versjonen ikkje treng å avinstallere tidlegare versjonar."
+
+msgid "Prepared time for list of users to send mail is limited. Others users are not listed."
+msgstr "Tida for å tilrettelegge lista med brukara som skal få e-post er avgrensa. Andre brukarar er ikkje med i lista."
+
+msgid "Replacement of original templates by customized templates from template-extension subfolder"
+msgstr "Erstatning av original mal med tilpassa malar frå mappe med mal-utvidingar"
+
+msgid "The Piwigo publish Plug-in allows you to export and synchronize photos from Lightroom directly to your Piwigo photo gallery."
+msgstr "Piwigo publiserings-tillegg gjev deg mogleghet til å eksportere og synkronisere bilete frå Lightroom direkte til ditt Piwigo biletgalleri."
+
+msgid "Keep in touch with Piwigo project, subscribe to Piwigo Announcement Newsletter. You will receive emails when a new release is available (sometimes including a security bug fix, it's important to know and upgrade) and when major events happen to the project. Only a few emails a year."
+msgstr "Hald kontakt med Piwigo-prosjektet, abonner på Piwigo nyheitsbrev. Du vil motta e-postar når nye versjonar er tilgjengelege (kan innehalde oppretting av sikkerheitsproblem slik at det er viktig å kjenne til oppgraderinga) og når større hendingar i prosjektet skjer. Det er bare nokre få meldingar i året."
+
+msgid "Complementary mail content"
+msgstr "Komplementært meldingsinnhald"
+
+msgid "Execution time is out, treatment must be continue [Estimated time: %d second]."
+msgid_plural "Execution time is out, treatment must be continue [Estimated time: %d seconds]."
+msgstr[0] "Eksekveringstida er ute, handsaming må halde fram [Estimera tid: %d sekundar]."
+msgstr[1] "Eksekveringstida er overskriden, handsaminga må fortseta [Estimera tid: %d sekundar]"
+
+msgid "Anyway only webmasters can see this tab and never administrators."
+msgstr "Bare webmaster kan sjå denne fana, ikkje administratorar."
+
+msgid "Approximate maximum resolution: %dM pixels (that's %dx%d pixels)."
+msgstr "Omtrentleg største oppløysing: %dM piksel (det er %dx%d biletpunkt)"
+
+msgid "Numeric identifier : %d"
+msgstr "Numerisk identifikator: %d"
+
+msgid "On your Linux, simply install Shotwell with your package manager and the activate Piwigo publishing option."
+msgstr "I Linux-installsjonen din kan du installere Shotwell og aktivere Piwigo publserings-opsjon."
+
+msgid "Reinitialize check integrity"
+msgstr "Start integritetssjekk på nytt"
+
+msgid "You can't define a default photo order because you have a custom setting in your local configuration."
+msgstr "Du kan ikkje definere standard biletrekkefylgje fordi du har ei tilpassa instilling i din lokal konfigurasjon."
+
+msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
+msgstr "Du har spesifisera <i>$conf['order_by']</i> i di lokal konfigurasjonfil, denne parameteren er utdatera. Du må fjerne den eller endre namn til <i>$conf['order_by_custom']</i> !"
+
+msgid "digiKam is designed for photographers who want to view, manage, edit, enhance, organize, tag, and share photographs."
+msgstr "digiKam er laga for fotografar som vil sjå, handtere, endre, forbetre, organisere, merke og dele bilete."
+
+msgid "photos candidates for metadata synchronization"
+msgstr "bilete som er kanditatar for synkronisering av metadata"
+
+msgid "Resize after upload disabled due to the use of GD as graphic library"
+msgstr "Endring av storleik etter opplasting er ikkje tilgjengeleg avdi GD vert bruka som grafikkbibliotek"
+
+msgid "Select at least one tag"
+msgstr "Vel minst eitt nøkkelord"
+
+msgid "Basic settings"
+msgstr "Grunnleggjande innstillingar"
+
+msgid "General"
+msgstr "Generelt"
+
+msgid "Mail theme"
+msgstr "E-posttema"
+
+msgid "User %s added"
+msgstr "Brukar %s lagt til"
+
+msgid "User %s updated"
+msgstr "Brukar %s er oppdatera"
+
+msgid "Users modified"
+msgstr "Brukarar er endra"
+
+msgid "%d of %d users selected"
+msgstr "%d av %d brukarar er valde"
+
+msgid "(filtered from %s total users)"
+msgstr "(filtrera frå %s brukarar totalt)"
+
+msgid "All %d users are selected"
+msgstr "Alle %d brukarar er valde"
+
+msgid "Change password"
+msgstr "Endre passord"
+
+msgid "Change username"
+msgstr "Endre brukarnamn"
+
+msgid "Last visit on %s, %s."
+msgstr "Sist vitja %s, %s."
+
+msgid "Loading..."
+msgstr "Lastar..."
+
+msgid "No matching user found"
+msgstr "Ingen brukarar vart funne"
+
+msgid "Password updated"
+msgstr "Passordet er endra"
+
+msgid "Show %s users"
+msgstr "Vis %s brukarar"
+
+msgid "No user selected of %d users"
+msgstr "Ingen brukarar valde (totalt %d brukarar)"
+
+msgid "No users selected, no actions possible."
+msgstr "Ingen brukarar valde - ingen aksjon mogleg"
+
+msgid "Registered on %s, %s."
+msgstr "Registrera %s, %s."
+
+msgid "Showing %s to %s of %s users"
+msgstr "Viser %s til %s av %s brukarar"
+
+msgid "Update user"
+msgstr "Endre brukar"
+
+msgid "on the %d selected users"
+msgstr "med dei %d valde brukarane"
+
+msgid "Close user details"
+msgstr "Lukk brukardetaljar"
+
+msgid "Open user details"
+msgstr "Opne brukardetaljar"
+
+msgid "close"
+msgstr "lukk"
+
+msgid "Activate it now"
+msgstr "Aktiver nå"
+
+msgid "Allow users to add a link to their website"
+msgstr "Gje brukarar mogleghet til å legge inn lenke til si nettside"
+
+msgid "Empty caddie"
+msgstr "Tøm caddie"
+
+msgid "Impossible to deactivate the default theme."
+msgstr "Ikkje mogleg å deaktivere standard utsjånad"
+
+msgid "Mail address is mandatory for registration"
+msgstr "E-post adresse er påkrevd for å registrere"
+
+msgid "No and unlock sub-albums"
+msgstr "Nei og lås opp del-album"
+
+msgid "The settings for the guest are from the %s user"
+msgstr "Instillingar for gjest er frå brukar %s"
+
+msgid "Upload in progress"
+msgstr "Opplasting i gang"
+
+msgid "based on"
+msgstr "med utgangspunkt i"
+
+msgid "between %s and %s MB"
+msgstr "mellom %s og %s MB"
+
+msgid "date & time"
+msgstr "dato og tid"
+
+msgid "file name"
+msgstr "filnamn"
+
+msgid "width & height"
+msgstr "breidde og høgde"
+

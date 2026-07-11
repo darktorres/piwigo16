@@ -1,0 +1,161 @@
+# Piwigo translation — sr_RS
+# Source: help_quick_search.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: sr_RS\n"
+"Plural-Forms: nplurals=3; plural=(n % 10 == 1 && n % 100 != 11 ? 0 : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 1 : 2);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "photos after Jan 1st 2008"
+msgstr "фотографије након 1. јануара 2008. године"
+
+msgid "photos from 2003 to 2008"
+msgstr "фотографије од 2003. до 2008. године"
+
+msgid "photos from may 2003"
+msgstr "фотографије из маја 2008. године"
+
+msgid "photos posted in 2003"
+msgstr "фотографије додате 2003. године"
+
+msgid "photos taken in 2003"
+msgstr "фотографије снимљене 2003. године"
+
+msgid "return photos less than 700px high"
+msgstr "фотографије ниже од 700 пиксела"
+
+msgid "return photos wider than 500px"
+msgstr "фотографије шире од 500 пиксела"
+
+msgid "return photos with at least 1,000 views"
+msgstr "фотографије које имају бар 1000 прегледа"
+
+msgid "returns photos of 12 megapixels or more"
+msgstr "фотографије које су бар 12 мегапиксела или веће"
+
+msgid "returns photos of 5 megapixels"
+msgstr "фотографије од 5 мегапиксела"
+
+msgid "up to 100 (inclusive)"
+msgstr "до 100 (укључујуће)"
+
+msgid "will give you all photos with at least one note."
+msgstr "даће вам све фотографије са бар једном белешком."
+
+msgid "will give you photos without notes."
+msgstr "даће вам све фотографије без белешки."
+
+msgid "Searches photos by taken date."
+msgstr "Претрага фотографија снимљених одређеног датума."
+
+msgid "Searches photos by width/height ratio."
+msgstr "Претрага фотографија по односу ширине/висине."
+
+msgid "Searches photos with a given width or height."
+msgstr "Претрага фотографија на основу ширине или висине."
+
+msgid "Supported numeric operators"
+msgstr "Подржане нумеричке операције"
+
+msgid "The quick search engine allows you to use boolean operators to refine your search. By default, the search applies to all keywords. Searches are not case sensitive."
+msgstr "Брза претрага вам дозвољава да користите логичке операције како би побољшали претрагу. Претрага се подразумевано примењује на све кључне речи. Претрага не разликује велика и мала слова."
+
+msgid "These operators can be used with numeric fields such as"
+msgstr "Ове операције се могу користити са нумеричким пољима као што су"
+
+msgid "Use quotes to search for an exact keyword or phrase."
+msgstr "Користите наводнике да потражите тачну кључну реч или израз."
+
+msgid "With keywords"
+msgstr "Са кључним речима"
+
+msgid "between 10 and 100 (inclusive)"
+msgstr "између 10 и 100 (укључиво)"
+
+msgid "equals 100"
+msgstr "једнако 100"
+
+msgid "finds files between 1MB and 10MB."
+msgstr "налази датотеке између 1MB и 10MB."
+
+msgid "finds panoramas"
+msgstr "налази панораме"
+
+msgid "finds photo 123 to 126 (it may find between 0 and 4 photos, because photos can be deleted)"
+msgstr "налази фотографије од 123 до 126 (може да нађе од 0 до 4 фотографија, зато што неке фотографије могу бити обрисане)"
+
+msgid "finds photos from compact cameras in portrait or landscape modes"
+msgstr "налази фотографије из компактних фото апарата које су усправне или положене"
+
+msgid "from 100 and above"
+msgstr "од 100 навише"
+
+msgid "greater than 100"
+msgstr "више од 100"
+
+msgid "less than 100"
+msgstr "мање од 100"
+
+msgid "Add a dash (-) or NOT before a word to exclude from search. Note that NOT acts as a filtering operator so you cannot have a search containing only NOT operators. You cannot combine OR with NOT (john OR NOT bill is not valid)"
+msgstr "Додајте цртицу „-“ или „NOT“ пре речи да је искључите из претраге. NOT служи као филтер приликом претраге, тако да претрага не може да садржи само речи за искључивање из претраге. Не можете да комбинујете OR и NOT (Иван OR NOT Марко није исправно)"
+
+msgid "Add an OR between words."
+msgstr "Додајте „OR“ између речи."
+
+msgid "Exact search"
+msgstr "Тачна претрага"
+
+msgid "Exclude"
+msgstr "Искључи"
+
+msgid "Grouping"
+msgstr "Груписање"
+
+msgid "Here is a list of actions you can perform:"
+msgstr "Ево списка радњи које можете извршити:"
+
+msgid "OR inclusive"
+msgstr "OR за укључивање"
+
+msgid "Others"
+msgstr "Остало"
+
+msgid "Same principle as for"
+msgstr "Исти принцип као за"
+
+msgid "Search using extended syntax"
+msgstr "Претрага проширеном синтаксом"
+
+msgid "Searches by author."
+msgstr "Претрага по аутору."
+
+msgid "Searches by file name."
+msgstr "Претрага по имену датотеке."
+
+msgid "Searches for photos by number of views."
+msgstr "Претрага фотографија по броју прегледа."
+
+msgid "Searches only for photos with the given words in title or description."
+msgstr "Претрага фотографија по наслову или опису."
+
+msgid "Searches only in tag names without looking at photo titles or descriptions."
+msgstr "Претрага имена ознака без наслова или описа слика."
+
+msgid "Searches photos by file size."
+msgstr "Претрага фотографија по величини датотеке."
+
+msgid "Searches photos by its numeric identifier in Piwigo."
+msgstr "Претрага фотографија по нумеричкој идентификацији у Пивигу."
+
+msgid "Searches photos by posted date."
+msgstr "Претрага фотографија по датуму додавања."
+
+msgid "Searches photos by rating."
+msgstr "Претрага фотографија по оцени"
+
+msgid "Searches photos by size in pixels."
+msgstr "Претрага фотографија по величини у пикселима."
+

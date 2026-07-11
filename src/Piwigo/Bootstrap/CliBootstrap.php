@@ -6,7 +6,9 @@ namespace Piwigo\Bootstrap;
 
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\Paths;
 use Piwigo\Core\ShutdownHandler;
+use Piwigo\Users\CurrentUser;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\ArgvInput;
@@ -38,11 +40,11 @@ final class CliBootstrap
     /**
      * @param list<string> $argv
      */
-    public static function run(array $argv): int
+    public static function run(array $argv, ?Paths $paths = null): int
     {
         ShutdownHandler::install();
 
-        return self::buildApplication()->run(new ArgvInput($argv));
+        return self::buildApplication($paths)->run(new ArgvInput($argv));
     }
 
     /**
@@ -50,12 +52,18 @@ final class CliBootstrap
      * (tests/Unit/Bootstrap/CliBootstrapTest.php) without actually running
      * one -- ContainerDefinitionsTest.php's "every entry resolves" shape,
      * applied to config/commands.php instead of config/container.php.
+     *
+     * `$paths` defaults to null (unlike `CommonBootstrap::run()`, which
+     * requires it) so existing tests calling `buildApplication()` with no
+     * arguments keep working -- passing a null Paths to the container
+     * builder simply skips registering `Paths::class`.
      */
-    public static function buildApplication(): Application
+    public static function buildApplication(?Paths $paths = null): Application
     {
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
-        Kernel::boot();
+        Kernel::boot($paths);
+        CurrentUser::attachGlobals();
         $container = Kernel::container();
 
         $commandClasses = require dirname(__DIR__, 3) . '/config/commands.php';

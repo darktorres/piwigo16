@@ -1,0 +1,20 @@
+# Piwigo translation — zh_TW
+# Source: whats_new_16.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: zh_TW\n"
+"Plural-Forms: nplurals=1; plural=(0);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Brand new login & preferences with Standard pages !"
+msgstr "全新使用標準頁面的登入及喜好設定頁面！"
+
+msgid "Two factor authentication is here"
+msgstr "兩階段認證來了"
+
+msgid "UI redesigns that make a difference"
+msgstr "UI 重新設計，全新感受"
+

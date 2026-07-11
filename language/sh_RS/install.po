@@ -1,0 +1,143 @@
+# Piwigo translation — sh_RS
+# Source: install.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: sh_RS\n"
+"Plural-Forms: nplurals=3; plural=(n % 10 == 1 && n % 100 != 11 ? 0 : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 1 : 2);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Installation"
+msgstr "Instalacija"
+
+msgid "Basic configuration"
+msgstr "Osnovna podešenja"
+
+msgid "Default gallery language"
+msgstr "Podrazumevani jezik galerije"
+
+msgid "Database configuration"
+msgstr "Podešavanje baze"
+
+msgid "Admin configuration"
+msgstr "Administratorska podešenja"
+
+msgid "Start Install"
+msgstr "Pokreni instalaciju"
+
+msgid "It will be shown to the visitors. It is necessary for website administration"
+msgstr "Bice prikazano posetiocima. Neophodno je za administraciju stranice"
+
+msgid "Connection to server succeed, but it was impossible to connect to database"
+msgstr "Konekcija na server uspešna, ali konecija na bazu je nemoguca"
+
+msgid "Can't connect to server"
+msgstr "Nemoguce povezivanje na server"
+
+msgid "Host"
+msgstr "Host"
+
+msgid "User"
+msgstr "Korisnik"
+
+msgid "user login given by your host provider"
+msgstr "korisnicko ime dat od strane Vašeg host distributera"
+
+msgid "user password given by your host provider"
+msgstr "korisnicka lozinka data od strane Vašeg host distributera "
+
+msgid "Database name"
+msgstr "Ime baze"
+
+msgid "also given by your host provider"
+msgstr "takode dato od Vašeg Host distributera"
+
+msgid "Database table prefix"
+msgstr "Prefix tabele baze"
+
+msgid "database tables names will be prefixed with it (enables you to manage better your tables)"
+msgstr "ime tabele baze will bice prefix sa njim (omogucava da upravljate bolje Vašuim tabelama)"
+
+msgid "enter a login for webmaster"
+msgstr "Unesi pristupne podatke za webmaster"
+
+msgid "webmaster login can't contain characters ' or \""
+msgstr "pristupni podaci za webmastera ne mogu sadržati znake ' ili \""
+
+msgid "please enter your password again"
+msgstr "molim unesite Vašu lozinku ponovo"
+
+msgid "Keep it confidential, it enables you to access administration panel"
+msgstr "Sacuvajte u tajnosti, omogucava pristup administratorskom delu"
+
+msgid "Password [confirm]"
+msgstr "Lozinka[potvrdi]"
+
+msgid "verification"
+msgstr "Provera"
+
+msgid "Need help ? Ask your question on <a href=\"%s\">Piwigo message board</a>."
+msgstr "Potrebna Vam je pomoc? Pitajte na  <a href=\"%s\">Piwigo tabli za poruke</a>."
+
+msgid "Visitors will be able to contact site administrator with this mail"
+msgstr "Posetioci ce biti u mogucnosti da koriste ovaj mail da kontaktiraju administratora stranice"
+
+msgid "PHP 5 is required"
+msgstr "PHP 5.2 je neophodan"
+
+msgid "It appears your webhost is currently running PHP %s."
+msgstr "Izgleda da Vaš webhost trenutno koristi PHP %s."
+
+msgid "Piwigo may try to switch your configuration to PHP 5 by creating or modifying a .htaccess file."
+msgstr "Piwigo može pokušati da promeni Vašu konfiguraciju na PHP 5.2 kreiranjem ili menjanjem .htaccess datoteke."
+
+msgid "Note you can change your configuration by yourself and restart Piwigo after that."
+msgstr "Imajte u vidu da možete sami izmeniti Vašu konfiguraciju restartovati Piwigo posle toga."
+
+msgid "Try to configure PHP 5"
+msgstr "Pokušajte da podestite PHP 5.2"
+
+msgid "Sorry!"
+msgstr "Žao nam je!"
+
+msgid "Piwigo was not able to configure PHP 5."
+msgstr "Piwigo wnije uspeo da podesi PHP 5.2"
+
+msgid "You may referer to your hosting provider's support and see how you could switch to PHP 5 by yourself."
+msgstr "Trebalo bi da se obartite podršci Vašeg hosting provajdera za uputstvo kako da promenite na PHP 5.2 sami."
+
+msgid "Hope to see you back soon."
+msgstr "Nadamo se da se uskoro vidimo."
+
+msgid "Congratulations, Piwigo installation is completed"
+msgstr "Cestitamo, Piwigo instalacija je završena"
+
+msgid "An alternate solution is to copy the text in the box above and paste it into the file \"local/config/database.inc.php\" (Warning : database.inc.php must only contain what is in the textarea, no line return or space character)"
+msgstr "Alternativno rešenje je da kopirate tekst iz kutije iznad i nalepite u datoteku \"local/config/database.inc.php\" (Upozorenje : database.inc.php mora sadržati samo tekst iz kutije, bez linije ili praznih karaktera)"
+
+msgid "Creation of config file local/config/database.inc.php failed."
+msgstr "Kreiranje konfiguracione datoteke local/config/database.inc.php neuspešno."
+
+msgid "Download the config file"
+msgstr "Snimi na racunar konfiguracionu datoteku"
+
+msgid "You can download the config file and upload it to local/config directory of your installation."
+msgstr "Možete snimiti na racunar konfiguracionu datoteku i poslati je na local/config direktorijum Vaše instalacije."
+
+msgid "Don't hesitate to consult our forums for any help : %s"
+msgstr "Ne oklevajte da zatražite pomoć na našem forumu oko bilo čega: %s"
+
+msgid "Just another Piwigo gallery"
+msgstr "Još jedna Piwigo galerija"
+
+msgid "Welcome to my photo gallery"
+msgstr "Dobrodošli u moju foto galeriju"
+
+msgid "Welcome to your new installation of Piwigo!"
+msgstr "Dobrodošli na Vašu novu instalaciju Piwigo-a!"
+
+msgid "localhost or other, supplied by your host provider"
+msgstr "localhost ili drugi naziv koji ste dobili od provajdera"
+

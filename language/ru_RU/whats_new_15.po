@@ -1,0 +1,23 @@
+# Piwigo translation — ru_RU
+# Source: whats_new_15.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ru_RU\n"
+"Plural-Forms: nplurals=3; plural=(n % 10 == 1 && n % 100 != 11 ? 0 : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 1 : 2);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "A new interface for user management"
+msgstr "Новый интерфейс для управления пользователями"
+
+msgid "Brand new features : Activities logs and PDF reader"
+msgstr "Совершенно новые функции: журналы действий и PDF-ридер"
+
+msgid "Enhanced interface for batch manager and album selector"
+msgstr "Улучшенный интерфейс для пакетного менеджера и селектора альбомов"
+
+msgid "Even more filters for the gallery search engine"
+msgstr "Еще больше фильтров для поисковой системы галереи"
+

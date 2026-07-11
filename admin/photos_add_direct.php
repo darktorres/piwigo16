@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\SrcImage;
 use Piwigo\Template\Template;
@@ -41,7 +43,7 @@ if (isset($_GET['batch'])) {
     check_input_parameter('batch', $_GET, false, '/^\d+(,\d+)*$/');
 
     $query = '
-DELETE FROM ' . CADDIE_TABLE . '
+DELETE FROM ' . Tables::caddie() . '
   WHERE user_id = ' . $user_id . '
 ;';
     pwg_query($query);
@@ -55,7 +57,7 @@ DELETE FROM ' . CADDIE_TABLE . '
         ];
     }
     mass_inserts(
-        CADDIE_TABLE,
+        Tables::caddie(),
         array_keys($inserts[0]),
         $inserts
     );
@@ -66,7 +68,7 @@ DELETE FROM ' . CADDIE_TABLE . '
 if ((bool) userprefs_get_param('promote-mobile-apps', true)) {
     $query = '
 SELECT registration_date
-  FROM ' . USER_INFOS_TABLE . '
+  FROM ' . Tables::userInfos() . '
   WHERE registration_date IS NOT NULL
   ORDER BY user_id ASC
   LIMIT 1
@@ -76,7 +78,7 @@ SELECT registration_date
 
     $query = '
 SELECT COUNT(*)
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
 ;';
     $row = pwg_db_fetch_row(pwg_query($query));
     assert($row !== null);
@@ -84,7 +86,7 @@ SELECT COUNT(*)
 
     $query = '
 SELECT COUNT(*)
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
 ;';
     $row = pwg_db_fetch_row(pwg_query($query));
     assert($row !== null);
@@ -110,7 +112,7 @@ $formats_ext_info = null;
 
 // If URL parameter isn't empty
 if ($display_formats && (bool) $_GET['formats']) {
-    check_input_parameter('formats', $_GET, false, PATTERN_ID, false);
+    check_input_parameter('formats', $_GET, false, ValidationPattern::ID, false);
 
     $formats_id_param = $_GET['formats'];
     $formats_original_info = get_image_infos(is_int($formats_id_param) || is_string($formats_id_param) ? $formats_id_param : '');
@@ -119,7 +121,7 @@ if ($display_formats && (bool) $_GET['formats']) {
 
         $formats_original_info['src'] = DerivativeImage::url(IMG_SQUARE, $src_image);
 
-        // The 'id' column is the IMAGES_TABLE primary key: always a numeric
+        // The 'id' column is the Tables::images() primary key: always a numeric
         // value on a row fetched by get_image_infos(), just typed mixed
         // because that function's return signature is array<string, mixed>.
         $formats_image_id = is_numeric($formats_original_info['id']) ? (string) $formats_original_info['id'] : '0';
@@ -127,7 +129,7 @@ if ($display_formats && (bool) $_GET['formats']) {
         // Fetch actual formats
         $query = '
 SELECT *
-  FROM ' . IMAGE_FORMAT_TABLE . '
+  FROM ' . Tables::imageFormat() . '
   WHERE image_id = ' . $formats_image_id . '
 ;';
         $formats = query2array($query);

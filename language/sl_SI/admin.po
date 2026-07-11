@@ -1,0 +1,3723 @@
+# Piwigo translation — sl_SI
+# Source: admin.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: sl_SI\n"
+"Plural-Forms: nplurals=4; plural=(n % 100 == 1 ? 0 : n % 100 == 2 ? 1 : (n % 100 == 3 || n % 100 == 4) ? 2 : 3);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "%d album including"
+msgstr "%d album vsebuje"
+
+msgid "%d album moved"
+msgid_plural "%d albums moved"
+msgstr[0] "%d album je bil premaknjen"
+msgstr[1] "%d albumov je bilo premaknjenih"
+
+msgid "%d albums including"
+msgstr "%d albumov vsebuje"
+
+msgid "%d anomaly has been corrected."
+msgid_plural "%d anomalies have been detected corrected."
+msgstr[0] "%d anomalija je bila odpravljena."
+msgstr[1] "%d anomalij je bilo zaznanih in odpravljenih."
+
+msgid "%d anomaly has been detected."
+msgid_plural "%d anomalies have been detected."
+msgstr[0] "%d anomalija je bila zaznana."
+msgstr[1] "%d anomalij je bilo zaznanih."
+
+msgid "%d anomaly has been ignored."
+msgid_plural "%d anomalies have been ignored."
+msgstr[0] "%d anomalija je bila ignorirana."
+msgstr[1] "%d anomalij je bilo ignoriranih."
+
+msgid "%d anomaly has not been corrected."
+msgid_plural "%d anomalies have not been corrected."
+msgstr[0] "%d anomalija ni bila odpravljena."
+msgstr[1] "%d anomalij ni bilo odpravljenih."
+
+msgid "%d association"
+msgstr "%d asocijacija"
+
+msgid "%d associations"
+msgstr "%d asocijacij"
+
+msgid "%d group"
+msgstr "%d skupina"
+
+msgid "%d groups"
+msgstr "%d skupine"
+
+msgid "%d guest"
+msgid_plural "%d guests"
+msgstr[0] "%d gost"
+msgstr[1] "%d gostov"
+
+msgid "%d line filtered"
+msgid_plural "%d lines filtered"
+msgstr[0] "%d vrstica filtrirana"
+msgstr[1] "%d vrstic filtriranih"
+
+msgid "ACCESS_0"
+msgstr "Prosti dostop"
+
+msgid "ACCESS_1"
+msgstr "Polni dostop"
+
+msgid "ACCESS_2"
+msgstr "Dostop za registrirane uporabnike"
+
+msgid "ACCESS_3"
+msgstr "Dostop za administratorje"
+
+msgid "ACCESS_4"
+msgstr "Dostop za spletne skrbnike"
+
+msgid "ACCESS_5"
+msgstr "Brez dostopa"
+
+msgid "Action"
+msgstr "Dejanje"
+
+msgid "Actions"
+msgstr "Dejanja"
+
+msgid "Activate icon \"%s\""
+msgstr "Omogoči ikono \"%s\""
+
+msgid "Activate Navigation Bar"
+msgstr "Omogoči navigacijsko vrstico"
+
+msgid "Activate Navigation Thumbnails"
+msgstr "Omogoči navigacijo za predoglede"
+
+msgid "Activate"
+msgstr "Omogoči"
+
+msgid "Activate icon \"new\" next to albums and pictures"
+msgstr "Omogoči ikono \"novo\" poleg albumov in slik"
+
+msgid "Active Languages"
+msgstr "Omogočeni jeziki"
+
+msgid "Active Plugins"
+msgstr "Omogočeni vtičniki"
+
+msgid "Active Themes"
+msgstr "Omogočene teme"
+
+msgid "Add a criteria"
+msgstr "Dodaj kriterij"
+
+msgid "Add a filter"
+msgstr "Dodaj filter"
+
+msgid "Add a tag"
+msgstr "Dodaj znacko"
+
+msgid "clean"
+msgstr "pobriši"
+
+msgid "Comments for all"
+msgstr "Komentarji za vse"
+
+msgid "Complementary mail content"
+msgstr "Komplementarna vsebina pošte"
+
+msgid "Configuration"
+msgstr "Konfiguracija"
+
+msgid "confirm"
+msgstr "potrdi"
+
+msgid "Continue processing treatment"
+msgstr "Nadaljuj z obdelavo"
+
+msgid "Correction applied with error"
+msgstr "Popravek namešcen z napako"
+
+msgid "Correction applied with success"
+msgstr "Popravek uspešno namešcen"
+
+msgid "Correction the anomaly will cancel the fact that it's ignored"
+msgstr "Odpravljene anomalije ne bodo več ignorirane."
+
+msgid "Correction"
+msgstr "Popravek"
+
+msgid "create a new album"
+msgstr "ustvari nov album"
+
+msgid "Create the \"%s\" directory at the root of your Piwigo installation"
+msgstr "Ustvari imenik \"%s\" v korenu Piwigo namestitve."
+
+msgid "Create this site"
+msgstr "Ustvari stran"
+
+msgid "delete album"
+msgstr "odstrani album"
+
+msgid "Delete orphan tags"
+msgstr "Odstrani neuporabljene oznake"
+
+msgid "delete photo"
+msgstr "odstrani sliko"
+
+msgid "Delete Representant"
+msgstr "Odstrani Predstavnika"
+
+msgid "Delete selected photos"
+msgstr "Odstrani izbrane slike"
+
+msgid "Delete selected tags"
+msgstr "Odstrani izbrane oznake"
+
+msgid "Delete selected users"
+msgstr "Odstrani izbrane uporabnike"
+
+msgid "Delete this language"
+msgstr "Odstrani jezik"
+
+msgid "delete this site and all its attached elements"
+msgstr "odstrani stran in pripadajoče podatke"
+
+msgid "Delete this theme"
+msgstr "Odstrani temo"
+
+msgid "delete"
+msgstr "odstrani"
+
+msgid "Deleted on"
+msgstr "Odstranjeno"
+
+msgid "deleted"
+msgstr "odstranjeno"
+
+msgid "Deletions"
+msgstr "Odstrani"
+
+msgid "Deny selected groups"
+msgstr "Prepreči dostop izbranim skupinam"
+
+msgid "Deny selected users"
+msgstr "Prepreči dostop izbranim uporabnikom"
+
+msgid "Description"
+msgstr "Opis"
+
+msgid "Average rate"
+msgstr "Povprečje"
+
+msgid "Rate"
+msgstr "Glasuj"
+
+msgid "Album \"%s\" has been added"
+msgstr "Album \"%s\" je bil dodan"
+
+msgid "Album \"%s\" now contains %d photos"
+msgstr "Album \"%s\" vsebuje %d slik"
+
+msgid "Album photos associated to the following albums: %s"
+msgstr "Slike albuma pripadajo naslednjim albumom: %s"
+
+msgid "Album list management"
+msgstr "Upravljanje seznama albuma"
+
+msgid "Album manual order was saved"
+msgstr "Ročna nastavitev razvrščanja albuma je bila uspešno shranjena"
+
+msgid "Album name"
+msgstr "Ime albuma"
+
+msgid "Album updated successfully"
+msgstr "Album uspešno popravljen"
+
+msgid "albums added in the database"
+msgstr "albumi dodani v bazo"
+
+msgid "Albums automatically sorted"
+msgstr "Albumi so bili samodejno razvrščeni"
+
+msgid "albums deleted in the database"
+msgstr "albumi odstranjeni iz baze"
+
+msgid "Access type"
+msgstr "Vrsta dostopa"
+
+msgid "Add a user"
+msgstr "Dodaj uporabnika"
+
+msgid "Add a virtual album"
+msgstr "Dodaj navidezni (virtualni) album"
+
+msgid "Add another set of photos"
+msgstr "Dodaj nov nabor slik"
+
+msgid "Add detailed content"
+msgstr "Dodaj vsebino"
+
+msgid "Add group"
+msgstr "Dodaj skupino"
+
+msgid "Add New Language"
+msgstr "Dodaj nov jezik"
+
+msgid "add new photos to caddie"
+msgstr "dodaj nove slike v košarico"
+
+msgid "Add New Theme"
+msgstr "Dodaj novo temo"
+
+msgid "Add Photos"
+msgstr "Dodaj slike"
+
+msgid "Add write access to the \"%s\" directory"
+msgstr "Dodaj pravico pisanja \"%s\" imeniku"
+
+msgid "Add"
+msgstr "Dodaj"
+
+msgid "Add/delete a permalink"
+msgstr "Dodaj/odstrani stalno povezavo"
+
+msgid "added"
+msgstr "dodano"
+
+msgid "%d tag"
+msgstr "%d oznaka"
+
+msgid "%d tags"
+msgstr "%d oznake"
+
+msgid "%d user comment rejected"
+msgstr "%d komentar zavrnjen"
+
+msgid "%d user comment validated"
+msgstr "%d komentar preverjen"
+
+msgid "%d user comments rejected"
+msgstr "%d komentarjev zavrnjenih"
+
+msgid "%d user comments validated"
+msgstr "%d komentarjev preverjenih"
+
+msgid "%d user deleted"
+msgid_plural "%d users deleted"
+msgstr[0] "%d uporabnik odstranjen"
+msgstr[1] "%d uporabnikov odstranjenih"
+
+msgid "%d user was not updated."
+msgid_plural "%d users were not updated."
+msgstr[0] "%d uporabnik ni bil posodobljen."
+msgstr[1] "%d uporabnikov ni bilo posodobljenih."
+
+msgid "%d user was updated."
+msgid_plural "%d users were updated."
+msgstr[0] "%d uporabnik posodobljen."
+msgstr[1] "%d uporabnikov posodobljenih."
+
+msgid "%d user"
+msgid_plural "%d users"
+msgstr[0] "%d uporabnik"
+msgstr[1] "%d uporabnikov"
+
+msgid "%d waiting for validation"
+msgstr "%d čaka preverjanje"
+
+msgid "%s must be to set to false in your local/config/config.inc.php file"
+msgstr "%s mora biti nastavljeno na false v datoteki: local/config/config.inc.php"
+
+msgid "%s value is not correct file because exif are not supported"
+msgstr "%s vrednost je neveljavna, exif ni podprt"
+
+msgid "+ Add an upload box"
+msgstr "+ Dodaj polje nalaganja"
+
+msgid ", click on"
+msgstr ", klikni na"
+
+msgid " and %d virtual"
+msgstr " in %d navidezen"
+
+msgid "%d mail was not sent."
+msgid_plural "%d mails were not sent."
+msgstr[0] "%d e-mail ni bil poslan."
+msgstr[1] "%d e-mailov ni bilo poslanih."
+
+msgid "%d mail was sent."
+msgid_plural "%d mails were sent."
+msgstr[0] "%d e-mail uspešno poslan."
+msgstr[1] "%d e-mailov poslanih."
+
+msgid "%d member"
+msgid_plural "%d members"
+msgstr[0] "%d član"
+msgstr[1] "%d članov"
+
+msgid "%d of %d photos selected"
+msgstr "%d od %d slik izbranih"
+
+msgid "%d parameter was updated."
+msgid_plural "%d parameters were updated."
+msgstr[0] "%d parameter popravljen."
+msgstr[1] "%d parametrov popravljenih."
+
+msgid "%d photo was deleted"
+msgid_plural "%d photos were deleted"
+msgstr[0] "%d slika odstranjena"
+msgstr[1] "%d slik odstranjenih"
+
+msgid "%d photos uploaded"
+msgstr "%d slik naloženih"
+
+msgid "%d physical"
+msgstr " %d fizičen"
+
+msgid "A new version of Piwigo is available."
+msgstr "Na voljo je nova različica Piwigo."
+
+msgid "Administration Home"
+msgstr "Administracija"
+
+msgid "Advanced features"
+msgstr "Napredne možnosti"
+
+msgid "Albums authorized thanks to group associations"
+msgstr "Albumi omogočeni zahvaljujoč skupini ki ji pripadajo"
+
+msgid "All %d photos are selected"
+msgstr "Vseh %d slik je izbranih"
+
+msgid "All optimizations have been successfully completed."
+msgstr "Vsi optimizacijski postopki uspešno zaključeni."
+
+msgid "all"
+msgstr "vsi"
+
+msgid "Allow rating"
+msgstr "Dovoli glasovanje"
+
+msgid "Allow user customization"
+msgstr "Dovoli uporabniku spreminjanje prilagoditev"
+
+msgid "Allow user registration"
+msgstr "Dovoli registracijo uporabnika"
+
+msgid "Allow users to delete their own comments"
+msgstr "Dovoli uporabnikom brisanje lastnih komentarjev"
+
+msgid "Allow users to edit their own comments"
+msgstr "Dovoli uporabnikom popravljanje lastnih komentarjev"
+
+msgid "an error happened"
+msgstr "prišlo je do napake"
+
+msgid "An error occured during extraction (%s)."
+msgstr "Med razširjanjem datotek (%s) je prišlo do napake."
+
+msgid "An information email was sent to group \"%s\""
+msgstr "Informativni e-mail je bil poslan skupini \"%s\""
+
+msgid "and"
+msgstr "in"
+
+msgid "Anomaly"
+msgstr "Nepravilnost"
+
+msgid "General statistics"
+msgstr "Splošna statistika"
+
+msgid "Get Support on Piwigo Forum"
+msgstr "Za več pomoči obišči Piwigo forum"
+
+msgid "global mode"
+msgstr "globalni način"
+
+msgid "Go to %s or %s for more informations"
+msgstr "Pojdi na %s ali %s za več informacij"
+
+msgid "Go to"
+msgstr "Pojdi na"
+
+msgid "Grant selected groups"
+msgstr "Odobri izbrane skupine"
+
+msgid "Grant selected users"
+msgstr "Odobri izbrane uporabnike"
+
+msgid "group \"%s\" added"
+msgstr "skupina \"%s\" dodana"
+
+msgid "group \"%s\" deleted"
+msgstr "skupina \"%s\" odstranjena"
+
+msgid "group \"%s\" updated"
+msgstr "skupina \"%s\" popravljena"
+
+msgid "Group management"
+msgstr "Upravljanje skupin"
+
+msgid "Group name"
+msgstr "Ime skupine"
+
+msgid "Group"
+msgstr "Skupina"
+
+msgid "Groups"
+msgstr "Skupine"
+
+msgid "Guest cannot be deleted"
+msgstr "Gost ne more biti odstranjen"
+
+msgid "Guest Settings"
+msgstr "Nastavitve gosta"
+
+msgid "guest"
+msgstr "gost"
+
+msgid "Guests"
+msgstr "Gosti"
+
+msgid "height must be a number superior to"
+msgstr "višina mora biti številka, večja od "
+
+msgid "Hello"
+msgstr "Pozdravljen"
+
+msgid "Hello,"
+msgstr "Pozdravljen,"
+
+msgid "Help Me"
+msgstr "Pomagaj mi"
+
+msgid "Hide"
+msgstr "Skrij"
+
+msgid "Anyway only webmasters can see this tab and never administrators."
+msgstr "Kakorkoli, ta zavihek je viden le skrbnikom, administratorjem pa ne."
+
+msgid "Apply action"
+msgstr "Uporabi dejanje"
+
+msgid "Apply selected corrections"
+msgstr "Uporabi izbrane popravke"
+
+msgid "Apply to sub-albums"
+msgstr "Uporabi na vseh pod-albumih"
+
+msgid "Are you sure to install this upgrade? You must verify if this version does not need uninstallation."
+msgstr "Ali res želite namestiti posodobitev ? Potrebno je preveriti, če nova različica ne zahteva odstranitev trenutno namešcene."
+
+msgid "Are you sure you want to delete this plugin?"
+msgstr "Ali res želite odstraniti ta vtičnik?"
+
+msgid "Are you sure you want to install this plugin?"
+msgstr "Ali res želite namestiti ta vtičnik?"
+
+msgid "Associate to album"
+msgstr "Poveži z albumom"
+
+msgid "associate to group"
+msgstr "poveži s skupino"
+
+msgid "Associated"
+msgstr "Povezano"
+
+msgid "Authorize users to add comments on selected albums"
+msgstr "Avtoriziraj uporabnike za dodajanje komentarjev na izbranih albumih"
+
+msgid "Authorized"
+msgstr "Avtoriziran"
+
+msgid "Automatic correction"
+msgstr "Avtomatski popravki"
+
+msgid "automatic order"
+msgstr "avtomatsko razvrščanje"
+
+msgid "Available only with HTML format"
+msgstr "Na voljo le v HTML obliki"
+
+msgid "average time"
+msgstr "povprečen čas"
+
+msgid "Batch Manager"
+msgstr "Paketni upravljalnik"
+
+msgid "between"
+msgstr "med"
+
+msgid "Bound Theme"
+msgstr "Povezana tema"
+
+msgid "By %s"
+msgstr "Po %s"
+
+msgid "By rank"
+msgstr "Po oceni"
+
+msgid "%s has been successfully updated."
+msgstr "%s je bil uspešno posodobljen."
+
+msgid "%s photos can not be regenerated"
+msgstr "%s slik se ne da regenerirat"
+
+msgid "%s photos have been regenerated"
+msgstr "%s slike so bile regenerirane"
+
+msgid "(this tag will be deleted)"
+msgstr "(ta oznaka bo odstranjena)"
+
+msgid "... or "
+msgstr "... ali "
+
+msgid "Add tags"
+msgstr "Dodaj oznake"
+
+msgid "Add to caddie"
+msgstr "Dodaj v košarico"
+
+msgid "All extensions are up to date."
+msgstr "Vse razširitve so posodobljene."
+
+msgid "All languages are up to date."
+msgstr "Vsi jeziki so posodobljeni."
+
+msgid "All plugins are up to date."
+msgstr "Vsi vtičniki so posodobljeni."
+
+msgid "All themes are up to date."
+msgstr "Vse teme so posodobljene."
+
+msgid "Allowed file types: %s."
+msgstr "Dovoljene vrste datotek so: %s."
+
+msgid "An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href=\"%s\">Click here to show log error</a>."
+msgstr "Med razširjanjem je prišlo do napake. Prosimo preverite pravice datotek vaše piwigo namestitve.<br>Prikaži <a href=\"%s\"> dnevnik napak</a>."
+
+msgid "An error has occured during upgrade."
+msgstr "Med nadgradnjo je prišlo do napake ."
+
+msgid "Approximate maximum resolution: %dM pixels (that's %dx%d pixels)."
+msgstr "Približna maksimalna resolucija: %dM pik (to je %dx%d pik)."
+
+msgid "By default, Piwigo will create a new websize from the HD (high definition) version of your photo."
+msgstr " Privzeto bo Piwigo ustvaril nove spletne slike iz vaših slik visoke ločljivosti."
+
+msgid "Can't connect to server."
+msgstr "Ne morem vzpostaviti povezave s strežnikom."
+
+msgid "Can't create temporary file."
+msgstr "Ne morem ustvariti začasne datoteke."
+
+msgid "Check all"
+msgstr "Preveri vse"
+
+msgid "Choose an action"
+msgstr "Izberi dejanje"
+
+msgid "Create"
+msgstr "Ustvari"
+
+msgid "created"
+msgstr "ustvarjeno"
+
+msgid "%d days"
+msgstr "%d dnevi"
+
+msgid "%d hour"
+msgstr "%d ura"
+
+msgid "%d hours"
+msgstr "%d ure"
+
+msgid "%d minute"
+msgstr "%d minuta"
+
+msgid "%d minutes"
+msgstr "%d minute"
+
+msgid "%d second"
+msgstr "%d sekunda"
+
+msgid "%d seconds"
+msgstr "%d sekunde"
+
+msgid "Database"
+msgstr "Podatkovna baza"
+
+msgid "Date"
+msgstr "Datum"
+
+msgid "Day"
+msgstr "Dan"
+
+msgid "Deactivate all"
+msgstr "Deaktiviraj vse"
+
+msgid "Deactivate"
+msgstr "Deaktiviraj"
+
+msgid "Detailed informations"
+msgstr "Podrobne informacije"
+
+msgid "Directory does not exist"
+msgstr "Imenik ne obstaja"
+
+msgid "Directory"
+msgstr "Imenik"
+
+msgid "Documentation"
+msgstr "Dokumentacija"
+
+msgid "Drop into album"
+msgstr "Izberi album"
+
+msgid "Edit album"
+msgstr "Uredi album"
+
+msgid "default values"
+msgstr "privzete vrednosti"
+
+msgid "default"
+msgstr "privzeto"
+
+msgid "directories + files"
+msgstr "imeniki + datoteke"
+
+msgid "display"
+msgstr "prikaz"
+
+msgid "Added by %s"
+msgstr "Dodal"
+
+msgid "Adobe Photoshop Lightroom is a photography software designed to manage large quantities of digital images and doing post production work."
+msgstr "Adobe Photoshop Lightroom je program, ki je namenjen upravljanju velikega števila digitalnih fotografij ter za kasnejše urejanje."
+
+msgid "Aperture is a powerful tool to refine images and manage massive libraries on Mac."
+msgstr "Aperture je zmogljivo orodje za izboljšavo fotografij in za upravljanje velikih knjižnic na Mac sistemih"
+
+msgid "Aperture is designed for professional photographers with iPhoto simplicity."
+msgstr "Aperture je namenjen profesionalnim fotografom hkrati pa vsebuje iPhoto preprostost"
+
+msgid "Applications"
+msgstr "Aplikacije"
+
+msgid "Activate comments"
+msgstr "Omogoči komentarje"
+
+msgid "%d week"
+msgstr "%d teden"
+
+msgid "%d weeks"
+msgstr "%d tednov"
+
+msgid "%d year"
+msgstr "%d leto"
+
+msgid "%d years"
+msgstr "%d let"
+
+msgid "%s ago"
+msgstr "%d nazaj"
+
+msgid "%s in the future"
+msgstr "%s naprej"
+
+msgid "%u users have automatic permission because they belong to a granted group."
+msgstr "%u uporabniki imajo samodejno dovoljenje ker pripadajo odobreni skupini"
+
+msgid "A locked gallery is only visible to administrators"
+msgstr "Zaklenjeno galerijo lahko vidijo le Administratorji"
+
+msgid "<em>Piwigo for iOS</em> application empowers you to connect to your Piwigo gallery from your iPhone, iPad or iPod Touch, create some albums and upload several photos at once."
+msgstr "<em>Piwigo za iOS</em> je aplikacija, ki vam omogoči povezavo z vašo Piwigo galerijo preko iOS naprave (iPhone, iPad ali iPod Touch) . Ustvarite nove albume in naložite več fotografij hkrati."
+
+msgid "<em>Piwigo for Android</em> application empowers you to connect your Android phone or table to your Piwigo gallery, create some albums and upload several photos at once."
+msgstr "<em>Piwigo za Android</em> je aplikacija, ki vam omogoči povezavo z vašo Piwigo galerijo preko Andriod naprave. Ustvarite nove albume in naložite več fotografij hkrati."
+
+msgid "%d physicals"
+msgstr " %d fizičen"
+
+msgid "%d month"
+msgstr "%d mesec"
+
+msgid "%d months"
+msgstr "%d mesecev"
+
+msgid "%d day"
+msgstr "%d dni"
+
+msgid " and %d virtuals"
+msgstr " in %d navidezen"
+
+msgid "ERROR"
+msgstr "NAPAKA"
+
+msgid "Discover album:"
+msgstr "Razišči album:"
+
+msgid "Drag to re-order"
+msgstr "Klikni in spusti za spreminjanje vrstnega reda"
+
+msgid "Downloads"
+msgstr "Prenosi"
+
+msgid "Download,"
+msgstr "Prenesi"
+
+msgid "Crop"
+msgstr "Izreži"
+
+msgid "Current name"
+msgstr "Trenutno ime"
+
+msgid "Database synchronization with files"
+msgstr "Sinhroniziranje podatkovne baze z datotekami"
+
+msgid "Confirm merge"
+msgstr "Potrdi spajanje"
+
+msgid "Classic display"
+msgstr "Klasičen prikaz"
+
+msgid "Apply watermark if height is bigger than"
+msgstr "Vstavi vodni žig, če je višina večja kot"
+
+msgid "Apply watermark if width is bigger than"
+msgstr "Vstavi vodni žig, če je širina večja kot"
+
+msgid "By default, the center of interest is placed in the middle of the photo."
+msgstr "Privzeto je središče pozornosti umeščena na sredino fotografije."
+
+msgid "Choose an option"
+msgstr "Izberi možnost."
+
+msgid "Check integrity"
+msgstr "Preverjanje integritete."
+
+msgid "Check for upgrade failed for unknown reasons."
+msgstr "Preverjanje nadgradnje neuspešno zaradi neznanega razloga."
+
+msgid "Check for upgrade"
+msgstr "Preveri za nadgradnjo"
+
+msgid "Check for updates"
+msgstr "Preveri za posodobitve"
+
+msgid "Check automatic corrections"
+msgstr "Preveri avtomatske popravke"
+
+msgid "Change Admin Colors"
+msgstr "Spremeni administratorsko barvno paleto"
+
+msgid "Center of interest"
+msgstr "Središče pozornosti"
+
+msgid "Cannot delete the old permalink !"
+msgstr "Stari permalink ni mogoče izbrisati."
+
+msgid "Cancel"
+msgstr "Razveljavi"
+
+msgid "Can't read or extract archive."
+msgstr "Arhiva ni bilo mogoče prebrati ali razširiti."
+
+msgid "Can't download archive."
+msgstr "Arhiva ni bilo mogoče naložiti."
+
+msgid "Caddie management"
+msgstr "Upravljanje košarice"
+
+msgid "Caddie"
+msgstr "Košarica"
+
+msgid "Available on"
+msgstr "Na voljo na"
+
+msgid "Automatic sort order"
+msgstr "Avtomatsko razvrščanje"
+
+msgid "Languages which need upgrade"
+msgstr "Jeziki, ki potrebujejo posodobitev"
+
+msgid "Impossible to delete this theme. Other themes depends on it: %s"
+msgstr "Teme ni mogoče izbrisati ker se navezuje na drugo temo."
+
+msgid "Impossible to deactivate this language, you need at least one language."
+msgstr "Ni mogoče deaktivirati jezika, potrebuješ vsaj en jezik."
+
+msgid "Impossible to deactivate this language, first set another language as default."
+msgstr "Ni mogoče deaktivirati jezika, označiti moraš nadomestni jezik"
+
+msgid "Invert"
+msgstr "Obrni"
+
+msgid "Last import"
+msgstr "Zadnji uvoz"
+
+msgid "Last revisions"
+msgstr "Zadnja revizija"
+
+msgid "Level 1"
+msgstr "Kontakti"
+
+msgid "Level 0"
+msgstr "---"
+
+msgid "Learn more"
+msgstr "Več o tem..."
+
+msgid "Last send"
+msgstr "Nazadnje poslano"
+
+msgid "Last hit"
+msgstr "Zadnji zadetek"
+
+msgid "Languages"
+msgstr "Jeziki"
+
+msgid "Language has been successfully installed"
+msgstr "Jezik je bil uspešno posodobljen"
+
+msgid "Landscape"
+msgstr "Pokrajina"
+
+msgid "Instructions to use Piwigo"
+msgstr "Navodila za uporabo Piwigo"
+
+msgid "Installed Themes"
+msgstr "Nameščene teme"
+
+msgid "Inactive Languages"
+msgstr "Neaktivni jeziki."
+
+msgid "Inactive Plugins"
+msgstr "Neaktivni vtičniki."
+
+msgid "Inactive Themes"
+msgstr "Neaktivne teme"
+
+msgid "Install on your computer,"
+msgstr "Namesti na svoj računalnik"
+
+msgid "Installed Languages"
+msgstr "Nameščeni jeziki"
+
+msgid "Impossible to deactivate this theme, you need at least one theme."
+msgstr "Ni mogoče deaktivirati teme, potrebna je vsaj še ena tema."
+
+msgid "Information data registered in database"
+msgstr "Nastavitve uspešno shranjene v podatkovno bazo"
+
+msgid "Informations"
+msgstr "Informacije"
+
+msgid "Install"
+msgstr "Namesti"
+
+msgid "Image Quality"
+msgstr "kakovost slike"
+
+msgid "Impossible automatic correction"
+msgstr "Samodejni popravek ni mogoč"
+
+msgid "Images manual order was saved"
+msgstr "Ročna razvrstitev slik shranjena"
+
+msgid "Impossible to activate this theme, the parent theme is missing: %s"
+msgstr "Teme ni mogoče aktivirati, manjka nadrejena tema"
+
+msgid "Image id"
+msgstr "id slike"
+
+msgid "If no HD is available and if the current websize is bigger than resize dimensions, Piwigo will move it as HD and create a downsized websize photo from it."
+msgstr "Če HD ni na voljo in je trenutna spletna velikost večja kot pomanjšana dimenzija bo Piwigo umaknil sliko kot HD in kreiral pomanjšano spletno sliko iz nje."
+
+msgid "Height"
+msgstr "Višina"
+
+msgid "Features include gallery browsing, album creation and photo upload."
+msgstr "Dodatki vsebujejo možnosti za brskanje po galeriji, kreiranje albumov in nalaganje fotografij."
+
+msgid "For photo sizes with crop, such as \"Square\", Piwigo will do its best to include the center of interest."
+msgstr "Za velikosti slik z izrezom, kot npr.  \"Kvadrat\", bo Piwigo poskušal kar najbolje vključiti središče pozornosti"
+
+msgid "Execution time is out, treatment must be continue [Estimated time: %d second]."
+msgid_plural "Execution time is out, treatment must be continue [Estimated time: %d seconds]."
+msgstr[0] "Čas izvajanja je potekel, postopek se mora nadaljevati (Preostali čas: %sekund)"
+msgstr[1] "Čas izvajanja je prekoračen, postopek se mora nadaljevati (Preostali čas: %sekund)"
+
+msgid "Graphics Library"
+msgstr "Grafična knjižnica"
+
+msgid "Groups and users"
+msgstr "Skupine in uporabniki"
+
+msgid "High definition"
+msgstr "Visoka ločljivost (HD)"
+
+msgid "High definition enabled"
+msgstr "Dovoli prenos"
+
+msgid "History"
+msgstr "Zgodovina"
+
+msgid "Hit"
+msgstr "Zadetek"
+
+msgid "Hour"
+msgstr "Ura"
+
+msgid "Hoverbox display"
+msgstr "Hoverbox prikaz"
+
+msgid "I decide to update anyway"
+msgstr "Vseeno nadaljuj s posodobitvijo"
+
+msgid "IP"
+msgstr "IP"
+
+msgid "If you encounter problems or have any question, please send a message to"
+msgstr "Če naletiš na težavo ali imaš kakršnokoli vprašanje, prosim pošlji sporočilo na"
+
+msgid "Ignore All"
+msgstr "Prezri vse"
+
+msgid "Ignore selected anomalies"
+msgstr "Prezri označene nepravilnosti"
+
+msgid "Ignore this update"
+msgstr "Prezri to posodobitev"
+
+msgid "File upload stopped by extension"
+msgstr "Nalaganje datoteke ustavljeno zaradi končnice"
+
+msgid "File/directory read error"
+msgstr "Napaka pri branju Datoteke/Mape"
+
+msgid "Find a new representant by random"
+msgstr "Poišči naključno sličico za album"
+
+msgid "Follow Orientation"
+msgstr "Sledi orientaciji"
+
+msgid "Following plugins may not be compatible with the new version of Piwigo:"
+msgstr "Sledeči vtičniki morda niso združljivi z novo verzijo Piwigo:"
+
+msgid "Following themes may not be compatible with the new version of Piwigo:"
+msgstr "Sledeče preobleke morda niso združljive z novo verzijo Piwigo:"
+
+msgid "Forbid this language to users"
+msgstr "Uporabnikom prepreči uporabo tega jezika"
+
+msgid "Forbid this theme to users"
+msgstr "Uporabnikom prepreči uporabo te preobleke"
+
+msgid "Forbidden"
+msgstr "Prepovedano"
+
+msgid "Form"
+msgstr "Obrazec"
+
+msgid "GD library is missing"
+msgstr "GD knjižnica ni nameščena"
+
+msgid "GD version"
+msgstr "GD različica"
+
+msgid "Gallery title"
+msgstr "Ime galerije"
+
+msgid "Gallery unlocked"
+msgstr "Galerija je odklenjena"
+
+msgid "Generate multiple size images"
+msgstr "Ustvari slike različnih velikosti"
+
+msgid "Give write access (chmod 777) to \"%s\" directory at the root of your Piwigo installation"
+msgstr "Omogoči dovoljenje za pisanje (chmod 777) na \"%s\" mapi v korenu vaše Piwigo namestitve"
+
+msgid "File"
+msgstr "Datoteka"
+
+msgid "Extensions Update"
+msgstr "Posodobitev razširitev"
+
+msgid "FTP + Synchronization"
+msgstr "FTP + Sinhronizacija"
+
+msgid "Failed to write file to disk"
+msgstr "Napaka pri zapisu datoteke na disk"
+
+msgid "Edit ranks"
+msgstr "Urejanje uvrstitvenih nivojev"
+
+msgid "Edit selected tags"
+msgstr "Uredi izbrane oznake"
+
+msgid "Edit tags"
+msgstr "Uredi oznake"
+
+msgid "Element"
+msgstr "Predmet"
+
+msgid "Element type"
+msgstr "Tip predmeta"
+
+msgid "Email administrators when a comment is deleted"
+msgstr "E-mail skrbnikom, ko je komentar izbrisan"
+
+msgid "Email administrators when a comment is modified"
+msgstr "E-mail skrbnikom, ko je komentar spremenjen"
+
+msgid "Email admins when a comment requires validation"
+msgstr "E-mail skrbnikom, ko komentar potrebuje potrditev"
+
+msgid "Email admins when a new user registers"
+msgstr "E-mail skrbnikom, ob registraciji novega uporabnika"
+
+msgid "Email admins when a valid comment is entered"
+msgstr "E-mail skrbnikom, ko je objavljen veljaven komentar"
+
+msgid "Environment"
+msgstr "Okolje"
+
+msgid "Error list"
+msgstr "Seznam napak"
+
+msgid "Error on file \"%s\" : %s"
+msgstr "Napaka v datoteki \"%s\" : %s "
+
+msgid "Error when sending email to %s [%s]."
+msgstr "Napaka pri pošiljanju e-pošte za: %s [%s]."
+
+msgid "Errors caption"
+msgstr "Legende napak"
+
+msgid "Everybody"
+msgstr "Vsi"
+
+msgid "Exif extension not available, admin should disable exif use"
+msgstr "Exif dodatek ni na voljo, skrbnik naj ga onemogoči"
+
+msgid "Extend for templates"
+msgstr "Razširi predloge"
+
+msgid "Delete multiple size images"
+msgstr "Izbriši slike večih velikosti"
+
+msgid "Display options"
+msgstr "Možnosti prikaza"
+
+msgid "Dissociate from album"
+msgstr "Loči od albuma"
+
+msgid "Dissociated"
+msgstr "Loči"
+
+msgid "Do you want to activate anyway?"
+msgstr "Želite vseeno aktivirati?"
+
+msgid "Does not represent"
+msgstr "Ni sličica za"
+
+msgid "Duplicate"
+msgstr "Podvoji"
+
+msgid "Duplicate selected tags"
+msgstr "Podvoji izbrane oznake"
+
+msgid "Duplicates"
+msgstr "Podvojeni"
+
+msgid "ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW."
+msgstr "NAPAKA: TA VTIČNIK MANJKA VENDAR JE NAMEĹ ČEN! ODSTRANITE GA ZDAJ."
+
+msgid "Edit album permissions"
+msgstr "Uredi dovoljenja albuma"
+
+msgid "Edit photo"
+msgstr "Uredi sliko"
+
+msgid "Default comments order"
+msgstr "Privzeti vrstni red komentarjev"
+
+msgid "Default display"
+msgstr "Privzeti prikaz"
+
+msgid "Default photos order"
+msgstr "Privzeti vrstni red slik"
+
+msgid "Default user cannot be deleted"
+msgstr "Privzetega uporabnika se ne da izbrisati"
+
+msgid "Default user does not exist"
+msgstr "Privzeti uporabnik ne obstaja"
+
+msgid "No photo selected, %d photos in current set"
+msgstr "Označene ni nobene fotografije, %d fotografije v trenutnem nizu"
+
+msgid "No photo can be deleted"
+msgstr "Ni fotografij, ki bi jih bilo mogoče izbrisati"
+
+msgid "No photo in the current set."
+msgstr "V tem nizu ni fotografij"
+
+msgid "No mail to send."
+msgstr "Ni maila, ki bi ga lahko poslali"
+
+msgid "No groups selected, no actions possible."
+msgstr "Označena ni nobena skupina, izvesti ni mogoče nobenega ukaza"
+
+msgid "No group is permitted to see this private album"
+msgstr "Nobena skupina nima dovoljenja za ogled tega privatnega albuma"
+
+msgid "No members to manage"
+msgstr "Ni članov za upravljanje"
+
+msgid "No order field selected"
+msgstr "Ni označenega vrstnega reda polj"
+
+msgid "No photo in this album"
+msgstr "V tem albumu ni fotografij"
+
+msgid "New tag"
+msgstr "Nova oznaka"
+
+msgid "No destination tag selected"
+msgstr "Označena ni bila ustrezna oznaka"
+
+msgid "No file was uploaded"
+msgstr "Nobena datoteka ni bila naložena"
+
+msgid "No display"
+msgstr "Ni prikaza"
+
+msgid "New photos were added"
+msgstr "Nove fotografije bodo dodane"
+
+msgid "New parent album"
+msgstr "Nov starševski album"
+
+msgid "New photos added"
+msgstr "Dodane so bile nove fotografije"
+
+msgid "New Version"
+msgstr "Nova verzija"
+
+msgid "New name"
+msgstr "Novo ime"
+
+msgid "Name of the duplicate"
+msgstr "Ime duplikata"
+
+msgid "Name"
+msgstr "Ime"
+
+msgid "Miscellaneous"
+msgstr "Različno"
+
+msgid "Missing Plugins"
+msgstr "Manjka vtičnik"
+
+msgid "Modify information"
+msgstr "Spremeni informacije"
+
+msgid "Missing a temporary folder"
+msgstr "Manjka začasna mapa"
+
+msgid "Month"
+msgstr "Mesec"
+
+msgid "Move"
+msgstr "Premakni"
+
+msgid "Move albums"
+msgstr "Premakni albume"
+
+msgid "Move to album"
+msgstr "Premakni v album"
+
+msgid "Multiple Size"
+msgstr "Več strani"
+
+msgid "Minimum privacy level"
+msgstr "Minimalni nivo zasebnosti"
+
+msgid "Minimum width"
+msgstr "Minimalna širina"
+
+msgid "Minimum height"
+msgstr "Minimalna višina"
+
+msgid "Metadata synchronized from file"
+msgstr "Metapodatki so bili sinhronizirani z datoteko"
+
+msgid "Merge tags"
+msgstr "Združi oznake"
+
+msgid "Metadata synchronization results"
+msgstr "Rezultati sinhronizacije metapodatkov"
+
+msgid "Merge selected tags"
+msgstr "Združi označene oznake"
+
+msgid "Merge selected groups"
+msgstr "Združi označene skupine"
+
+msgid "Menu Management"
+msgstr "Meni"
+
+msgid "Members"
+msgstr "Člani"
+
+msgid "Maximum width"
+msgstr "Maksimalna širina"
+
+msgid "Main \"guest\" user status is incorrect"
+msgstr "Status osnovnega uporabnika \"Gost\" je napačen"
+
+msgid "Main \"webmaster\" user does not exist"
+msgstr "Osnoven \"webmaster\" uporabnik ne obstaja"
+
+msgid "Main \"webmaster\" user status is incorrect"
+msgstr "Osnoven \"webmaster\" uporabniški status je napačen"
+
+msgid "Make this theme available to users"
+msgstr "Potrdi dostopnost te teme uporabnikom"
+
+msgid "Make this language available to users"
+msgstr "Potrdi dostopnost tega jezika vsem uporabnikom"
+
+msgid "Maintenance"
+msgstr "Vzdrževanje"
+
+msgid "Main Page"
+msgstr "Glavna stran"
+
+msgid "Manage"
+msgstr "Upravljaj"
+
+msgid "Manage authorizations for selected albums"
+msgstr "Upravljaj avtorizacije za izbrane albume"
+
+msgid "Manage Permissions"
+msgstr "Upravljaj dovoljenja"
+
+msgid "Manage permissions for user \"%s\""
+msgstr "Upravljaj dovoljenja za uporabnika \"%s\""
+
+msgid "Manage permissions for group \"%s\""
+msgstr "Upravljaj dovoljenja za skupino \"%s\""
+
+msgid "Manage photo ranks"
+msgstr "Upravljanje razvrstitve fotografij"
+
+msgid "Manage photos"
+msgstr "Upravljaj fotografije"
+
+msgid "Manage tags"
+msgstr "Urejanje oznak"
+
+msgid "Manage the members"
+msgstr "Urejanje članov"
+
+msgid "Manage this set of %d photos"
+msgstr "Upravljaj ta sklop %d fotografij."
+
+msgid "Maximum height"
+msgstr "Maksimalna višina"
+
+msgid "Manual order"
+msgstr "Ročni vrstni red"
+
+msgid "Maximum file size: %sB."
+msgstr "Maksimalna velikost datoteke: %sB."
+
+msgid "Mail sent to %s [%s]."
+msgstr "e-mail poslan za  %s [%s]."
+
+msgid "Link all album photos to some existing albums"
+msgstr "Poveži vse fotografije albuma v nek že obstoječi album"
+
+msgid "Link all album photos to a new album"
+msgstr "Poveži vse fotografije tega albuma v nov album"
+
+msgid "Level 8"
+msgstr "Administratorji"
+
+msgid "Level 2"
+msgstr "Prijatelji"
+
+msgid "Level 4"
+msgstr "Družina"
+
+msgid "In your php.ini file, the upload_max_filesize (%sB) is bigger than post_max_size (%sB), you should change this setting"
+msgstr "V vaši php.ini datoteki, je dodeljen upload_max_filsezie (%B) večji kot post_max_size(%B), spremeniti morate nastavitve!"
+
+msgid "Keep in touch with Piwigo project, subscribe to Piwigo Announcement Newsletter. You will receive emails when a new release is available (sometimes including a security bug fix, it's important to know and upgrade) and when major events happen to the project. Only a few emails a year."
+msgstr "Ostanite v stiku s projektom Piwigo, naročite se na obvestila o spremembah in novostih. Poslali vam bomo obvestilo z informacijami o novih verzijah programa Piwigo, ki lahko vključujejo tudi pomembne varnostne popravke in ostale pomembnejše posodobitve. Obvestila pošiljamo samo takrat, ko je to nujno potrebno."
+
+msgid "Include display of recent photos grouped by dates"
+msgstr "Vključi pogled novejših fotografij združenih po datumu"
+
+msgid "Linked albums"
+msgstr "Povezani albumi"
+
+msgid "Main \"guest\" user does not exist"
+msgstr "Osnoven uporabnik \"gost\" ne obstaja"
+
+msgid "Mail content"
+msgstr "Vsebina e-pošte"
+
+msgid "Locked"
+msgstr "Zaklenjeno"
+
+msgid "Lock gallery"
+msgstr "Zakleni galerijo"
+
+msgid "Lock albums"
+msgstr "Zakleni albume"
+
+msgid "Lock"
+msgstr "Zakleni"
+
+msgid "Local"
+msgstr "Lokalno"
+
+msgid "List"
+msgstr "Seznam"
+
+msgid "test"
+msgstr "test"
+
+msgid "test this remote site"
+msgstr "preveri to oddaljeno stran"
+
+msgid "the forum"
+msgstr "forum"
+
+msgid "the wiki"
+msgstr "wiki"
+
+msgid "top left corner"
+msgstr "zgornji levi kot"
+
+msgid "top right corner"
+msgstr "zgornji desni kot"
+
+msgid "total time"
+msgstr "skupen čas"
+
+msgid "unit mode"
+msgstr "enojen način"
+
+msgid "unknown"
+msgstr "nepoznan"
+
+msgid "unset"
+msgstr "razveljavi nastavitev"
+
+msgid "update the database from files"
+msgstr "posodobi podatkovno datoteko z datotekami"
+
+msgid "user \"%s\" added"
+msgstr "uporabnik \"%s\" dodan"
+
+msgid "user_status_admin"
+msgstr "Administrator"
+
+msgid "user_status_generic"
+msgstr "Splošen"
+
+msgid "user_status_guest"
+msgstr "Gost"
+
+msgid "user_status_webmaster"
+msgstr "Skrbnik"
+
+msgid "visitors need to login and have the appropriate permissions to see this album"
+msgstr "obiskovalci se morajo vpisati in imeti ustrezna dovoljenja za ogled tega albuma"
+
+msgid "width must be a number superior to"
+msgstr "širina mora biti število večje od"
+
+msgid "wrong filename"
+msgstr "napačno ime datoteke"
+
+msgid "randomly represented"
+msgstr "naključna sličica albuma"
+
+msgid "ranks"
+msgstr "uvrstitve"
+
+msgid "reduce to single existing albums"
+msgstr "zmanjšaj na en sam obstoječ album"
+
+msgid "registered users"
+msgstr "registrirani uporabniki"
+
+msgid "registration date"
+msgstr "datum registracije"
+
+msgid "remove author"
+msgstr "odstrani avtorja"
+
+msgid "remove creation date"
+msgstr "odstrani datum nastanka"
+
+msgid "remove tags"
+msgstr "odstrani oznake"
+
+msgid "remove this filter"
+msgstr "odstrani ta filter"
+
+msgid "remove title"
+msgstr "odstrani ime"
+
+msgid "selection"
+msgstr "izbor"
+
+msgid "set to"
+msgstr "nastavi na"
+
+msgid "show details"
+msgstr "prikaži podrobnosti"
+
+msgid "simple visitors"
+msgstr "preprosti obiskovalci"
+
+msgid "singly represented"
+msgstr "stalna sličica albuma"
+
+msgid "status"
+msgstr "stanje"
+
+msgid "sub-albums"
+msgstr "pod-albumi"
+
+msgid "synchronize files metadata with database photos informations"
+msgstr "sinhroniziraj podatkovno bazo slik z metapodatki datotek"
+
+msgid "synchronize files structure with database"
+msgstr "sinhroniziraj strukturo datotek s podatkovno bazo"
+
+msgid "target"
+msgstr "cilj"
+
+msgid "none"
+msgstr "noben"
+
+msgid "nothing"
+msgstr "nič"
+
+msgid "on"
+msgstr "na"
+
+msgid "on the %d selected photos"
+msgstr "na %d izbranih slikah"
+
+msgid "only directories"
+msgstr "samo direktoriji"
+
+msgid "only perform a simulation (no change in database will be made)"
+msgstr "izvedi le simulacijo (v podatkovni bazi ne bo prišlo do sprememb)"
+
+msgid "other"
+msgstr "ostalo"
+
+msgid "overrides existing values with empty ones"
+msgstr "prepiše obstoječe vrednosti s praznimi"
+
+msgid "pending validation"
+msgstr "na čakanju odobritve"
+
+msgid "photos added in the database"
+msgstr "slike dodate v podatkovno bazo"
+
+msgid "photos candidates for metadata synchronization"
+msgstr "možne slike za sinhronizacijo metapodatkov"
+
+msgid "photos deleted from the database"
+msgstr "slike izbrisane iz podatkovne baze"
+
+msgid "photos informations synchronized with files metadata"
+msgstr "informacije slik sinhronizirane z metapodatki datotek"
+
+msgid "photos per page"
+msgstr "slik na stran"
+
+msgid "photos updated in the database"
+msgstr "slike posodobljene v podatkovni bazi"
+
+msgid "pixels"
+msgstr "piksli"
+
+msgid "private"
+msgstr "zasebno"
+
+msgid "public"
+msgstr "javno"
+
+msgid "even already synchronized photos"
+msgstr "tudi že sinhronizirane slike"
+
+msgid "existing album"
+msgstr "obstoječ album"
+
+msgid "for the file format"
+msgstr "za obliko datoteke"
+
+msgid "for this file format"
+msgstr "za to obliko datoteke"
+
+msgid "hide details"
+msgstr "skrij podrobnosti"
+
+msgid "high"
+msgstr "visoko"
+
+msgid "iPhoto is the default photo manager on MacOSX. The Piwigo export plugin let you create new albums and export your photos directly from iPhoto to your Piwigo photo gallery."
+msgstr "iPhoto je privzet upravljalec slik na MacOSX. Piwigo izvozni vtičnik vam omogoča da ustvarite nove albume in jih izvozite neposredno iz iPhoto v vašo Piwigo foto galerijo."
+
+msgid "include child albums"
+msgstr "vključi podrejene albume"
+
+msgid "include photos with lower privacy level"
+msgstr "vključi slike z nižjim nivojem zasebnosti"
+
+msgid "jump to album"
+msgstr "pojdi v album"
+
+msgid "jump to photo"
+msgstr "pojdi na sliko"
+
+msgid "leave"
+msgstr "pusti"
+
+msgid "manage album photos"
+msgstr "upravljaj slike albuma"
+
+msgid "manage sub-albums"
+msgstr "upravljaj pod-albume"
+
+msgid "manual order"
+msgstr "ročna razvrstitev"
+
+msgid "middle"
+msgstr "sredina"
+
+msgid "modified"
+msgstr "spremenjeno"
+
+msgid "new"
+msgstr "novo"
+
+msgid "no write access"
+msgstr "ni dostopa za pisanje"
+
+msgid "Your configuration settings are saved"
+msgstr "Vaše nastavitve so shranjene"
+
+msgid "Zoom"
+msgstr "Povečava"
+
+msgid "[%s] Visit album %s"
+msgstr "[%s] Obišči album %s"
+
+msgid "[NBM] Problems or questions"
+msgstr "[NBM] Težave ali vprašanja"
+
+msgid "add a new watermark"
+msgstr "dodaj nov vodni žig"
+
+msgid "administrators"
+msgstr "skrbniki"
+
+msgid "any visitor can see this album"
+msgstr "vsak obiskovalec lahko vidi ta album"
+
+msgid "apply automatic sort order"
+msgstr "uveljavi samodejno razvrščanje"
+
+msgid "between %.2f and %.2f"
+msgstr "med %.2f in %.2f"
+
+msgid "between %d and %d pixels"
+msgstr "med %d in %d pikslov"
+
+msgid "bottom left corner"
+msgstr "spodnji levi kot"
+
+msgid "bottom right corner"
+msgstr "spodnji desni kot"
+
+msgid "cancel manual order"
+msgstr "prekliči ročno razvrščanje"
+
+msgid "create a new site"
+msgstr "Ustvari novo stran"
+
+msgid "custom"
+msgstr "Po meri"
+
+msgid "digiKam is an advanced digital photo management free software for Linux, Windows, and MacOSX."
+msgstr "digiKam je napreden, brezplačen program za delo z digitalnimi fotografijami na sistemih Linux, Windows in MacOSX."
+
+msgid "digiKam is designed for photographers who want to view, manage, edit, enhance, organize, tag, and share photographs."
+msgstr "digiKam je namenjen fotografom, ki želijo pregledovati, upravljati, urejati, izboljšati, organizirati, označevati in dati svoje fotografije v skupno rabo."
+
+msgid "dissociate from group"
+msgstr "loči od skupine"
+
+msgid "errors during synchronization"
+msgstr "napake med sinhronizacijo"
+
+msgid "With no virtual album"
+msgstr "Brez navideznega albuma"
+
+msgid "X Position"
+msgstr "X Pozicija"
+
+msgid "X Repeat"
+msgstr "X ponavljanje"
+
+msgid "Y Position"
+msgstr "Y pozicija"
+
+msgid "Year"
+msgstr "Leto"
+
+msgid "You are running on development sources, no check possible."
+msgstr "Uporabljate razvojno kodo, preverjanje ni na voljo."
+
+msgid "You are running the latest version of Piwigo."
+msgstr "Uporabljate zadnjo različico Piwigo"
+
+msgid "You are using the Browser uploader. Try the <a href=\"%s\">Flash uploader</a> instead."
+msgstr "Uporabljate prenašalnik brskalnika. Preizkusite <a href=\"%s\">Flash prenašalnik</a> če želite."
+
+msgid "You are using the Flash uploader. Problems? Try the <a href=\"%s\">Browser uploader</a> instead."
+msgstr "Uporabljate Flash prenašalnik. Če imate težave poizkusite z <a href=\"%s\">Brskalnikovim prenašalnikom</a>. "
+
+msgid "You can activate only one mobile theme."
+msgstr "Aktivirate lahko le eno mobilno temo."
+
+msgid "You can update to Piwigo %s directly, without upgrading to Piwigo %s (recommended)."
+msgstr "Posodobitev na Piwigo %s je možna brez nadgradnje na Piwigo %s (priporočeno)."
+
+msgid "You can't define a default photo order because you have a custom setting in your local configuration."
+msgstr "Ne morete določiti privzetega razvrščanja slik ker imate v vaši lokalni nastavitveni datoteki nastavljeno razvrščanje po vaši meri."
+
+msgid "You cannot delete your account"
+msgstr "Vašega računa ne morete izbrisati."
+
+msgid "You cannot move an album in its own sub album"
+msgstr "Albuma ne morete premakniti v njegov pod-album"
+
+msgid "You have %d orphan tags: %s."
+msgstr "Imate %d osirotelih oznak: %s."
+
+msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
+msgstr "Določili ste <i>$conf['order_by']</i> v vaši lokalni nastavitveni datoteki. Ta parameter je opuščen zato ga prosimo odstranite ali spremenite v: <i>$conf['order_by_custom']</i> !"
+
+msgid "You have subscribed to receiving notifications by mail."
+msgstr "Naročili ste se na prejemanje obvestil na e-pošto."
+
+msgid "You have unsubscribed from receiving notifications by mail."
+msgstr "Odjavili ste obveščanje po e-pošti."
+
+msgid "You need to confirm deletion"
+msgstr "Izbris morate potrditi"
+
+msgid "You need to upgrade your system to take full advantage of the application else the application will not work correctly, or not at all"
+msgstr "Razmislite o nadgradnji vašega sistema! Le tako boste lahko uporabljali vse možnosti aplikacije. V nasprotnem primeru aplikacija morda ne bo delovala ali ne bo delovala pravilno."
+
+msgid "Visit Gallery"
+msgstr "Obišči galerijo"
+
+msgid "Visit Piwigo project website"
+msgstr "Obiščite spletno stan projekta Piwigo"
+
+msgid "Visit language site"
+msgstr "Obiščite stran z jeziki"
+
+msgid "Visit plugin site"
+msgstr "Obiščite stran z vtičniki"
+
+msgid "Visit theme site"
+msgstr "Obiščite stran z temami"
+
+msgid "Visited %d times"
+msgstr "Obiskano %d "
+
+msgid "WARNING! This plugin does not seem to be compatible with this version of Piwigo."
+msgstr "OPOZORILO! Kot kaže, ta vtičnik ni v skladu z vašo verzijo Piwigo."
+
+msgid "Waiting"
+msgstr "Čakanje"
+
+msgid "Warning: subscribing or unsubscribing will send mails to users"
+msgstr "Opozorilo: naročanje ali odjavljanje bo poslalo obvestilo na e-pošto uporabnikov"
+
+msgid "Watermark"
+msgstr "Vodni žig"
+
+msgid "Web Form"
+msgstr "Spletni obrazec"
+
+msgid "Webmaster cannot be deleted"
+msgstr "Skrbnika ne morete izbrisati"
+
+msgid "Webmaster status is required."
+msgstr "Status skrbnika je obvezen."
+
+msgid "Week starts on"
+msgstr "Teden se začne z"
+
+msgid "Who can see these photos?"
+msgstr "Kdo lahko vidi te slike?"
+
+msgid "Who can see this photo?"
+msgstr "Kdo lahko vidi to sliko?"
+
+msgid "Width"
+msgstr "Širina"
+
+msgid "With blank value, gallery title will be used"
+msgstr "Če je prazno bo uporabljeno ime galerije"
+
+msgid "With no album"
+msgstr "Brez albuma"
+
+msgid "With no tag"
+msgstr "Brez oznake"
+
+msgid "User \"%s\" created with \"%s\" like password"
+msgstr "Uporabnik \"%s\" ustvarjen z geslom \"%s\""
+
+msgid "User %s [%s] added."
+msgstr "Uporabnik %s [%s] dodan."
+
+msgid "User %s [%s] was added to the subscription list."
+msgstr "Uporabnik %s [%s] dodan na seznam naročnikov."
+
+msgid "User %s [%s] was not added to the subscription list."
+msgstr "Uporabnik %s [%s] ni dodan na seznam naročnikov."
+
+msgid "User %s [%s] was not removed from the subscription list."
+msgstr "Uporabnik %s [%s] ni bil odstranjen s seznama naročnikov."
+
+msgid "User %s [%s] was removed from the subscription list."
+msgstr "Uporabnik %s [%s] je bil odstranjen s seznama naročnikov."
+
+msgid "User comments validation"
+msgstr "Potrditev komentarjev uporabnikov"
+
+msgid "User list"
+msgstr "Seznam uporabnikov"
+
+msgid "User status"
+msgstr "Stanje uporabnika"
+
+msgid "Users"
+msgstr "Uporabniki"
+
+msgid "Validate"
+msgstr "Potrdi"
+
+msgid "Validation"
+msgstr "Potrditev"
+
+msgid "Version"
+msgstr "Različica"
+
+msgid "View in gallery"
+msgstr "Poglej v galeriji"
+
+msgid "Virtual Links"
+msgstr "Navidezne povezave"
+
+msgid "Virtual album"
+msgstr "Navidezni album"
+
+msgid "Virtual album added"
+msgstr "Navidezni album dodan"
+
+msgid "Virtual album deleted"
+msgstr "Navidezni album izbrisan"
+
+msgid "Virtual album name"
+msgstr "Ime navideznega albuma"
+
+msgid "Virtual albums to move"
+msgstr "Navidezni album za premikanje"
+
+msgid "Uncheck all"
+msgstr "Odznači vse"
+
+msgid "Unknown upload error"
+msgstr "Nepoznana napaka pri nalaganju"
+
+msgid "Unlock gallery"
+msgstr "Odkleni galerijo"
+
+msgid "Unlocked"
+msgstr "Odklenjeno"
+
+msgid "Unsubscribe from notification by mail"
+msgstr "Odjavi obvestila na e-pošto"
+
+msgid "Unsubscribed"
+msgstr "Odjavljen"
+
+msgid "Update All"
+msgstr "Posodobi vse"
+
+msgid "Update Complete"
+msgstr "Posodobitev končana"
+
+msgid "Update albums informations"
+msgstr "Posodobi informacije albumov"
+
+msgid "Update in progress... Please wait."
+msgstr "Posodabljanje je v teku... Prosimo počakajte."
+
+msgid "Update photos information"
+msgstr "Posodobi informacije slik"
+
+msgid "Update to Piwigo %s"
+msgstr "Posodobi na Piwigo %s"
+
+msgid "Updates"
+msgstr "Posodobitve"
+
+msgid "Upload"
+msgstr "Naloži"
+
+msgid "Upload Photos"
+msgstr "Naloži slike"
+
+msgid "Uploaded Photos"
+msgstr "Naložene slike"
+
+msgid "Use the default photo sort order"
+msgstr "Uporabi privzeto razvrščanje slik"
+
+msgid "Used metadata"
+msgstr "Metadata uporabljen"
+
+msgid "User"
+msgstr "Uporabnik"
+
+msgid "This site already exists"
+msgstr "Ta stran že obstaja"
+
+msgid "This theme was not designed to be directly activated"
+msgstr "Ta tema ni bila narejena tako da bi jo neposredno aktivirali."
+
+msgid "Thumbnail"
+msgstr "Sličica"
+
+msgid "Thumbnails generation in progress..."
+msgstr "Ustvarjanje sličic je v teku....."
+
+msgid "Time"
+msgstr "Čas"
+
+msgid "Time to send mail is limited. Others mails are skipped."
+msgstr "Čas za pošiljanje pošte je omejen. Ostala pošta je bila prezrta."
+
+msgid "Title"
+msgstr "Ime"
+
+msgid "To send ?"
+msgstr "Poslati?"
+
+msgid "To subscribe"
+msgstr "Naročiti se"
+
+msgid "To unsubscribe"
+msgstr "Odjaviti se"
+
+msgid "Toggle 'default group' property"
+msgstr "Preobrni lastnosti \"privzete skupine\""
+
+msgid "Tools"
+msgstr "Orodja"
+
+msgid "Two updates are available"
+msgstr "Na voljo stad ve posodobitvi"
+
+msgid "Type here the author name"
+msgstr "Tu vpišite ime avtorja"
+
+msgid "Type here the name of the new group"
+msgstr "Tu vpišite ime nove skupine"
+
+msgid "Type here the title"
+msgstr "Tu vpišite ime galerije"
+
+msgid "Type in a search term"
+msgstr "Vpišite iskalni niz"
+
+msgid "Unable to check for upgrade."
+msgstr "Ne morem preveriti za nadgradnjo"
+
+msgid "This name is already used by another group."
+msgstr "To ime že uporablja druga skupina"
+
+msgid "This is a minor update, with only bug corrections."
+msgstr "To je le manjša posodobitev s popravki hroščev"
+
+msgid "The uploaded file exceeds the upload_max_filesize directive in php.ini: %sB"
+msgstr "Naložena datoteka presega upload_max_filesize direktivo v php.ini , ki je: %sB"
+
+msgid "The uploaded file was only partially uploaded"
+msgstr "Naložena datoteka je bila prenešena le delno"
+
+msgid "The uploaded files exceed the post_max_size directive in php.ini: %sB"
+msgstr "Naložena datoteka presega post_max_size direktivo v php.ini , ki je: %sB"
+
+msgid "The webmaster has subscribed you to receiving notifications by mail."
+msgstr "Skrbnik vas je dodal med naročnike prejemnikov obvestil na e-pošto"
+
+msgid "The webmaster has unsubscribed you from receiving notifications by mail."
+msgstr "Skrbnik vas je odjavil s seznama prejemnikov obvestil na e-pošto"
+
+msgid "The whole page"
+msgstr "Cela stran"
+
+msgid "The whole set"
+msgstr "Cel nabor"
+
+msgid "Themes"
+msgstr "Teme"
+
+msgid "Themes which need upgrade"
+msgstr "Teme ki potrebujejo nadgradnjo"
+
+msgid "There is no available subscribers to mail."
+msgstr "Ni naročnikov ki bi jih obveščali na e-mail."
+
+msgid "There is no group in this gallery."
+msgstr "V tej galeriji ni skupine"
+
+msgid "There is no other language available."
+msgstr "Na voljo ni drugega jezika."
+
+msgid "There is no other plugin available."
+msgstr "Na voljo ni drugih vtičnikov."
+
+msgid "There is no other theme available."
+msgstr "Na voljo ni drugih tem."
+
+msgid "This album contains %d photos, added between %s and %s."
+msgstr "Ta album vsebuje %d slik, dodanih med %s in %s."
+
+msgid "This album contains %d photos, added on %s."
+msgstr "Ta album vsebuje %d slik, dodanih na dan %s."
+
+msgid "This album contains no photo."
+msgstr "Ta album ne vsebuje slik."
+
+msgid "This group will be set to default"
+msgstr "Ta skupina bo uporabljena kot privzeta."
+
+msgid "This group will be unset to default"
+msgstr "Ta skupina ne bo več uporabljena kot privzeta."
+
+msgid "This is a major update, with <a href=\"%s\">new exciting features</a>."
+msgstr "To je pomembna posodobitev z <a href=\"%s\">novimi, zanimivimi funkcijami</a>."
+
+msgid "Storage album"
+msgstr "Album za shranjevanje"
+
+msgid "Templates configuration has been recorded."
+msgstr "Nastavitev predloge je bila zabeležena"
+
+msgid "The %d following tags were deleted"
+msgstr "Sledeče  %d oznake so bile izbrisane"
+
+msgid "The Piwigo export plugin allows you to create albums and export photos."
+msgstr "Piwigo vtičnik za izvoz vam omogoča da ustvarite albume in izvozite slike."
+
+msgid "The Piwigo publish Plug-in allows you to export and synchronize photos from Lightroom directly to your Piwigo photo gallery."
+msgstr "Piwigo Objavni vtičnik vam omogoča da izvozite in sinhronizirate slike iz programa Lightroom neposredno v Piwigo foto galerijo."
+
+msgid "The anomaly will be ignored until next application version"
+msgstr "Nepravilnost bo spregledana do naslednje različice programa."
+
+msgid "The center of interest is the most meaningful zone in the photo."
+msgstr "Središče pozornosti je najbolj pomembno območje na fotografiji"
+
+msgid "The file or directory cannot be accessed (either it does not exist or the access is denied)"
+msgstr "Ne morem dostopati do datoteke ali direktorija (ali ne obstaja ali pa ni pravic za dostop)"
+
+msgid "The following tag was deleted"
+msgstr "Sledeča oznaka je bila izbrisana"
+
+msgid "The gallery URL is not valid."
+msgstr "URL galerije ni pravilen"
+
+msgid "The name of a group must not contain \" or ' or be empty."
+msgstr "Ime skupine ne sme vsebovati \"or\" in ne sme biti prazno."
+
+msgid "The name of an album must not be empty"
+msgstr "Ime albuma ne sme biti prazno"
+
+msgid "The name of directories and files must be composed of letters, numbers, \"-\", \"_\" or \".\""
+msgstr "Imena direktorijev in datotek morajo vsebovati le črke, številke, \"-\", \"_\" ali \".\""
+
+msgid "The number of comments a page must be between 5 and 50 included."
+msgstr "Število komentarjev na stran mora biti med 5 in 50."
+
+msgid "The original image quality must be a number between %d and %d"
+msgstr "Izvirna kakovost slike mora biti število med %d in %d"
+
+msgid "The original maximum height must be a number between %d and %d"
+msgstr "Izvirna maksimalna višina mora biti število med %d in %d"
+
+msgid "The original maximum width must be a number between %d and %d"
+msgstr "Izvirna maksimalna širina mora biti število med %d in %d"
+
+msgid "The permalink name must be composed of a-z, A-Z, 0-9, \"-\", \"_\" or \"/\". It must not be numeric or start with number followed by \"-\""
+msgstr "Ime stalne povezave (permalink) mora biti sestavljeno iz: a-z, A-Z, 0-9, \"-\", \"_\" ali \"/\". Ne sme biti numerična in ne sme se začeti s številko ki ji sledi \"-\""
+
+msgid "The picture dimensions will be reduced to %dx%d pixels."
+msgstr "Dimenzija slike bo pomanjšana na  %dx%d pikslov"
+
+msgid "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form"
+msgstr "Naložena datoteka presega direktivo MAX_FILE_SIZE , ki je bila določena v HTML obrazcu"
+
+msgid "Subscribe"
+msgstr "Naroči se"
+
+msgid "Subscribe %s"
+msgstr "Naroči %s"
+
+msgid "Subscribe %s to Piwigo Announcements Newsletter"
+msgstr "Ta poštni naslov: %s naroči na obveščanje o Piwigo novicah"
+
+msgid "Subscribe to notification by mail"
+msgstr "Naroči se na obvestila na e-pošto"
+
+msgid "Subscribe/unsubscribe users"
+msgstr "Naroči/odjavi uporabnike"
+
+msgid "Subscribed"
+msgstr "Naročen"
+
+msgid "Subscribers could be listed (available) only if there is new elements to notify."
+msgstr "Prikaz seznama naročnikov je možen le če obstajajo nove vsebine za obvestila."
+
+msgid "Sum of rates"
+msgstr "Vsota ocen"
+
+msgid "Summary"
+msgstr "Povzetek"
+
+msgid "Support"
+msgstr "Podpora"
+
+msgid "Switch to clear or dark colors for administration"
+msgstr "S klikom preklopi med čisto ali temnejšo preobleko za admin panel"
+
+msgid "Synchronize"
+msgstr "Sinhroniziraj"
+
+msgid "Synchronize metadata"
+msgstr "Sinhroniziraj metadata"
+
+msgid "Tag \"%s\" already exists"
+msgstr "Oznaka \"%s\" že obstaja"
+
+msgid "Tag \"%s\" is now a duplicate of \"%s\""
+msgstr "Oznaka \"%s\" je sedaj dvojnik od  \"%s\""
+
+msgid "Tag \"%s\" was added"
+msgstr "Oznaka \"%s\" je bila dodana"
+
+msgid "Tag selection"
+msgstr "Izbira oznak"
+
+msgid "Tags <em>%s</em> merged into tag <em>%s</em>"
+msgstr "Oznake <em>%s</em> združene v oznako <em>%s</em>"
+
+msgid "Templates"
+msgstr "Predloge"
+
+msgid "Send connection settings by email"
+msgstr "Pošlji mi prijavne informacije na e-pošto"
+
+msgid "Remove from caddie"
+msgstr "Odstrani iz košarice"
+
+msgid "Status of user \"%s\" updated"
+msgstr "Status uporabnika \"%s\" posodobljen"
+
+msgid "Send mail to users"
+msgstr "Pošlji pošto uporabnikom"
+
+msgid "Set as default language for unregistered and new users"
+msgstr "Nastavi za privzet jezik za neregistrirane in nove uporabnike"
+
+msgid "Set as default theme for unregistered and new users"
+msgstr "Nastavi kot privzeto temo za neregistrirane in nove uporabnike"
+
+msgid "Set author"
+msgstr "Nastavi avtorja"
+
+msgid "Set creation date"
+msgstr "Nastavi datum nastanka"
+
+msgid "Set title"
+msgstr "Nastavi ime"
+
+msgid "Settings"
+msgstr "Nastavitve"
+
+msgid "Sharpen"
+msgstr "OStrenje"
+
+msgid "Shotwell is an open source digital photo organizer that runs on Linux. It is the default photo manager in Ubuntu and Fedora."
+msgstr "Shotwell je odprtokodni program za delo z digitalnimi fotografijami in je privzeti program za organiziranje fotografij v Linux distribuciji Ubuntu in Fedora."
+
+msgid "Show info"
+msgstr "Prikaži info"
+
+msgid "Show menubar"
+msgstr "Prikaži menijsko vrstico"
+
+msgid "Simulation"
+msgstr "Simulacija"
+
+msgid "Site manager"
+msgstr "Upravljalec strani"
+
+msgid "Some themes and plugins may be not available yet."
+msgstr "Nekatere teme in vtičniki morda še niso na voljo."
+
+msgid "Some upgrades are available for extensions."
+msgstr "Na voljo je nekaj posodobitev za razširitve."
+
+msgid "Source tag"
+msgstr "Izvorna oznaka"
+
+msgid "Start Upload"
+msgstr "Začni prenos"
+
+msgid "Start pLoader and add your photos."
+msgstr "Zaženi pLoader in dodaj svoje fotografije."
+
+msgid "Statistics"
+msgstr "Statistika"
+
+msgid "Status"
+msgstr "Stanje"
+
+msgid "Select a file"
+msgstr "Izberi datoteko"
+
+msgid "Select a zone with your mouse to define a new center of interest."
+msgstr "Z miško izberite področje, da določite novo polje zanimivosti slike"
+
+msgid "Select an album"
+msgstr "Izberite album"
+
+msgid "Select at least one album"
+msgstr "Izberite vsaj en album"
+
+msgid "Select at least one comment"
+msgstr "Izberite vsaj en komentar"
+
+msgid "Select at least one photo"
+msgstr "Izberite vsaj eno sliko"
+
+msgid "Select at least one user"
+msgstr "Izberite vsaj enega uporabnika"
+
+msgid "Select at least two tags for merging"
+msgstr "Izberite vsaj dve oznaki za združitev"
+
+msgid "Select files"
+msgstr "Izberite datoteke"
+
+msgid "Select groups..."
+msgstr "Izberite skupine"
+
+msgid "Select recipients"
+msgstr "Izberite prejemnike"
+
+msgid "Select the destination tag"
+msgstr "Izberite ciljno oznako"
+
+msgid "Select users..."
+msgstr "Izberite uporabnike"
+
+msgid "Select:"
+msgstr "Izberite:"
+
+msgid "Selection"
+msgstr "Izbor"
+
+msgid "Send"
+msgstr "Pošlji"
+
+msgid "Send an information email to group members"
+msgstr "Pošlji obvestilni email članom skupine"
+
+msgid "Send mail as"
+msgstr "Pošlji pošto kot"
+
+msgid "Send mail on HTML format"
+msgstr "Pošlji pošto v HTML obliki"
+
+msgid "Theme has been successfully installed"
+msgstr "Predloga je bila uspešno nameščena."
+
+msgid "The version of %s [%s] installed is not compatible with the version required [%s]"
+msgstr "Različica %s [%s] ki je nameščena ni v skladu z zahtevano različico [%s]"
+
+msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
+msgstr "TA VTIČNIK JE SEDAJ ŽE DEL PIVIGO PROGRAMA. ODSTRANITE VTIČNIK!"
+
+msgid "To export your photos from digiKam to Piwigo, simply install digiKam and the Kipi-plugins."
+msgstr "Da bi vaše slike prenesli iz digiKam v Piwigo preprosto namestite digiKam in Kipi-vtičnike."
+
+msgid "Uninstall"
+msgstr "Odstrani"
+
+msgid "Uninstalled Plugins"
+msgstr "Nenameščeni vtičniki"
+
+msgid "Representant"
+msgstr "Sličica albuma"
+
+msgid "Representation of albums"
+msgstr "Sličica albuma"
+
+msgid "Representative"
+msgstr "Sličica albuma"
+
+msgid "Represents"
+msgstr "je sličica za"
+
+msgid "Reset ignored updates"
+msgstr "Ponastaviti prezrte posodobitve"
+
+msgid "Resize"
+msgstr "Spremeni velikost"
+
+msgid "Resize after upload"
+msgstr "Spremeni velikost po nalaganju"
+
+msgid "Restore"
+msgstr "Obnovi"
+
+msgid "Restore default configuration. You will lose your plugin settings!"
+msgstr "Obnovi privzete nastavitve. Nastavitve vtičnikov bodo izgubljene."
+
+msgid "Save Settings"
+msgstr "Shrani nastavitve"
+
+msgid "Save Template Directory"
+msgstr "Shrani imenik predlog"
+
+msgid "Save manual order"
+msgstr "Shrani ročno razvrstitev"
+
+msgid "Save order"
+msgstr "Shrani razvrstitev"
+
+msgid "Save to permalink history"
+msgstr "Shrani v zgodovino stalnih povezav (permalinks-ov)"
+
+msgid "Save visits in history for"
+msgstr "Shrani obiske v zgodovino za"
+
+msgid "Search for new images in the directories"
+msgstr "Išči nove slike v direktorijih"
+
+msgid "Searching..."
+msgstr "Iskanje poteka..."
+
+msgid "Section"
+msgstr "Razdelek"
+
+msgid "See you soon,"
+msgstr "Se vidimo kmalu,"
+
+msgid "See you soon."
+msgstr "Se vidimo kmalu."
+
+msgid "Random photo"
+msgstr "Naključna slika"
+
+msgid "Rate date"
+msgstr "Datum ocene"
+
+msgid "Rated %d times, score : %.2f"
+msgstr "Število ocen: %d , skupna ocena : %.2f"
+
+msgid "Rating"
+msgstr "Ocena"
+
+msgid "Rating by guests"
+msgstr "Ocene gostov"
+
+msgid "Ratio"
+msgstr "Razmerje"
+
+msgid "ReGalAndroid (RemoteGallery client for Android) is an open source (GPL v3) Piwigo client for the Android platform."
+msgstr "ReGalAndroid (RemoteGallery client for Android) je odprtokodni (GPL v3) Piwigo odjemalec za Android platformo"
+
+msgid "Read Piwigo Documentation"
+msgstr "Preberi Piwigo dokumentacijo"
+
+msgid "Refresh"
+msgstr "Osveži"
+
+msgid "Refresh photo set"
+msgstr "Osveži komplet slik"
+
+msgid "Reinitialize check integrity"
+msgstr "Ponovi preverjanje celovitosti"
+
+msgid "Reject"
+msgstr "Zavrni"
+
+msgid "Released on"
+msgstr "Datum izdaje"
+
+msgid "Remote"
+msgstr "Oddaljeno"
+
+msgid "Remove all filters"
+msgstr "Odstrani vse filtre"
+
+msgid "Rename"
+msgstr "Preimenuj"
+
+msgid "Repair and optimize database"
+msgstr "Popravi in optimiziraj podatkovno bazo"
+
+msgid "Replacement of original templates by customized templates from template-extension subfolder"
+msgstr "Zamenjava izvirne predloge s prirejeno predlogo iz direktorija template-extension"
+
+msgid "Replacers (customized templates)"
+msgstr "Nadomestki (prirejene predloge)"
+
+msgid "Portrait"
+msgstr "Pokončno"
+
+msgid "Position"
+msgstr "Položaj"
+
+msgid "Posted %s on %s"
+msgstr "Objavljeno %s na %s"
+
+msgid "Predefined filter"
+msgstr "Prednastavljeni filter"
+
+msgid "Preferences"
+msgstr "Izbire"
+
+msgid "Prepared time for list of users to send mail is limited. Others users are not listed."
+msgstr "Čas za pripravo seznama uporabnikov katerim bo poslan e-mail je omejen. OStalih uporabnikov ni na seznamu."
+
+msgid "Privacy level"
+msgstr "Nivo zasebnosti"
+
+msgid "Privacy level set to \"%s\""
+msgstr "Nivo zasebnosti nastavljen na \"%s\""
+
+msgid "Private"
+msgstr "Zasebno"
+
+msgid "Properties"
+msgstr "Lastnosti"
+
+msgid "Public"
+msgstr "Javno"
+
+msgid "Public / Private"
+msgstr "Javno / Zasebno"
+
+msgid "Purge compiled templates"
+msgstr "Izbriši sestavljene predloge"
+
+msgid "Purge history detail"
+msgstr "Izbriši podrobnosti zgodovine"
+
+msgid "Purge history summary"
+msgstr "Izbriši povzetek zgodovine"
+
+msgid "Purge never used notification feeds"
+msgstr "Izbriši nikoli uporabljene vire obvestil"
+
+msgid "Purge search history"
+msgstr "Izbriši zgodovino iskanja"
+
+msgid "Purge sessions"
+msgstr "Izbriši seje"
+
+msgid "Purge user cache"
+msgstr "Izbriši predpomnilnik (cache) uporabnika"
+
+msgid "Quick Local Synchronization"
+msgstr "Hitra lokalna sinhronizacija"
+
+msgid "Piwigo Announcements Newsletter"
+msgstr "Piwigo obvestila"
+
+msgid "Piwigo Publish plugin for Lightroom"
+msgstr "Piwigo Objavni vtičnik za Lightroom"
+
+msgid "Piwigo Update"
+msgstr "Piwigo posodobitev"
+
+msgid "Piwigo Uploader"
+msgstr "Piwigo prenašalnik"
+
+msgid "Piwigo cannot retrieve upgrade file from server"
+msgstr "Piwigo ne more prenesti nadgradnje s strežnika"
+
+msgid "Piwigo configuration"
+msgstr "Piwigo nastavitve"
+
+msgid "Piwigo export plugin for Aperture"
+msgstr "Piwigo izvoz vtičnika za Aperture"
+
+msgid "Piwigo export plugin for iPhoto"
+msgstr "Piwigo izvoz vtičnika za iPhoto"
+
+msgid "Piwigo for Android"
+msgstr "Piwigo za Android"
+
+msgid "Piwigo for iOS (iPhone, iPad, iPod Touch)"
+msgstr "Pivigo za iOS (iPhone, iPad, iPod Touch)"
+
+msgid "Piwigo publish plugin for Shotwell"
+msgstr "Piwigo objavni vtičnik za Shotwell"
+
+msgid "Piwigo publish plugin for digiKam"
+msgstr "Piwigo objavni vtičnik za digiKam"
+
+msgid "Piwigo version"
+msgstr "Piwigo različica"
+
+msgid "Please check \"plugins\" folder and sub-folders permissions (CHMOD)."
+msgstr "Prosimo preverite doveljenja za \"plugins\" direktorij in poddirektorije (chmod)"
+
+msgid "Please select at least two groups"
+msgstr "Prosimo iberite vsaj dve skupini"
+
+msgid "Please wait..."
+msgstr "Prosimo počakajte..."
+
+msgid "Plugin has been successfully copied"
+msgstr "Ta vtičnik je bil uspešno nameščen."
+
+msgid "Plugin list"
+msgstr "Seznam Vtičnikov"
+
+msgid "Plugins"
+msgstr "Vtičniki"
+
+msgid "Plugins which need upgrade"
+msgstr "Vtičniki, ki jih je potrebno nadgraditi"
+
+msgid "Permalink %s is already used by album %s"
+msgstr "Permalink %s je že uporabljen za album %s."
+
+msgid "Permalink history"
+msgstr "Zgodovina stalnih povezav (Permalinks-ov)"
+
+msgid "Permalinks"
+msgstr "Stalne povezave"
+
+msgid "Permission denied"
+msgstr "Dostop zavrnjen"
+
+msgid "Permission granted"
+msgstr "Dostop omogočen"
+
+msgid "Permission granted for groups"
+msgstr "Dostop omogočen za skupino"
+
+msgid "Permission granted for users"
+msgstr "Dostop omogočen za uporabnike"
+
+msgid "Permission granted thanks to a group"
+msgstr "Dostop omogočen na račun (zaradi) skupine"
+
+msgid "Permission management"
+msgstr "Upravljanje dovoljenj"
+
+msgid "Permissions"
+msgstr "Dovoljenja"
+
+msgid "Photo %s of %s"
+msgstr "Slika %s od %s"
+
+msgid "Photo Page"
+msgstr "Stran slik"
+
+msgid "Photo Properties"
+msgstr "Lastnosti slike"
+
+msgid "Photo informations updated"
+msgstr "Informacije o sliki posodobljene"
+
+msgid "Photo name"
+msgstr "Ime slike"
+
+msgid "Photo sizes with crop"
+msgstr "Velikosti slik z obrezovanjem"
+
+msgid "Photo unreachable or no support"
+msgstr "Slika ni dosegljiva ali pa je v nepodprti obliki"
+
+msgid "Photos"
+msgstr "Slike"
+
+msgid "Photos generation in progress..."
+msgstr "Izdelava slik v teku..."
+
+msgid "Piwigo Administration"
+msgstr "Piwigo Administracija"
+
+msgid "display maximum informations (added albums and photos, deleted albums and photos)"
+msgstr "prikaži največ informacij (dodani albumi in slike, izbrisani albumi in slike)"
+
+msgid "Original Size"
+msgstr "Originalna velikost"
+
+msgid "Original file : %s"
+msgstr "Izvirna datoteka : %s"
+
+msgid "Original templates"
+msgstr "Izvirna preobleka"
+
+msgid "Orphan tags deleted"
+msgstr "OSirotele oznake izbrisane"
+
+msgid "Other plugins"
+msgstr "Na voljo so drugi vtičniki"
+
+msgid "Other private albums"
+msgstr "Drugi zasebni albumi"
+
+msgid "Overall"
+msgstr "Pregled"
+
+msgid "Page banner"
+msgstr "Naslovni napis strani"
+
+msgid "Page end"
+msgstr "Konec strani"
+
+msgid "Pages seen"
+msgstr "Ogledanih strani"
+
+msgid "Panorama"
+msgstr "Panorama"
+
+msgid "Parameter"
+msgstr "Nastavitve"
+
+msgid "Parameters"
+msgstr "Parametri"
+
+msgid "Parent album"
+msgstr "Nadrejeni album"
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Manjka potrditev gesla. Prosimo potrdite izbrano geslo."
+
+msgid "Password is missing. Please enter the password."
+msgstr "Manjka geslo. Prosimo vpišite geslo."
+
+msgid "Path"
+msgstr "Pot"
+
+msgid "Pending Comments"
+msgstr "Komentarji na čakanju"
+
+msgid "Permalink"
+msgstr "Permalink (stalna povezava)"
+
+msgid "Permalink %s has been previously used by album %s. Delete from the permalink history first"
+msgstr "Permalink %s je bil prej uporabljen za album %s. Najprej ga izbrišite iz zgodovine stalnih povezav "
+
+msgid "None"
+msgstr "Noben"
+
+msgid "Not cropped correctly?"
+msgstr "Ni pravilno obrezano?"
+
+msgid "Notification"
+msgstr "Obveščanje"
+
+msgid "Notify administrators when a comment is"
+msgstr "Obvestilo administratorju ko je komentar"
+
+msgid "Number of albums per page"
+msgstr "Število albumov na stran"
+
+msgid "Number of comments per page"
+msgstr "Število komentarjev na stran"
+
+msgid "Number of downloads"
+msgstr "Število prenosov"
+
+msgid "Number of rates"
+msgstr "Število ocen"
+
+msgid "Numeric identifier : %d"
+msgstr "Številčna oznaka: %d"
+
+msgid "Obsolete Plugins"
+msgstr "Zastareli vtičniki"
+
+msgid "On your Linux, simply install Shotwell with your package manager and the activate Piwigo publishing option."
+msgstr "V Linuxu namestite Shotwell in nato aktivirajte možnost Piwigo objavljanje."
+
+msgid "Only private albums are listed"
+msgstr "Navedeni so le zasebni albumi"
+
+msgid "Opacity"
+msgstr "Prosojnost"
+
+msgid "Operating system"
+msgstr "Operacijski sistem"
+
+msgid "Operation in progress"
+msgstr "Obdelava v teku"
+
+msgid "Optimizations have been completed with some errors."
+msgstr "Optimizacija se je zaključila z nekaj napakami"
+
+msgid "Optional URL keyword"
+msgstr "Opcijska URL ključna beseda"
+
+msgid "Options"
+msgstr "Možnosti"
+
+msgid "Order of menubar items has been updated successfully."
+msgstr "Razvrstitev elementov menijske vrstice je bila uspešno posodobljena"
+
+msgid "No photos selected, no actions possible."
+msgstr "Ker ni izbrana nobena slika, ni možno nobeno dejanje."
+
+msgid "No results"
+msgstr "Ni rezultatov"
+
+msgid "No user to send notifications by mail."
+msgstr "Noben uporabnik ne bo obveščen preko e-pošte."
+
+msgid "Resize after upload disabled due to the use of GD as graphic library"
+msgstr "Stiskanje fotografij pred nalaganjem je onemogočeno zaradi uporabe GD grafične knjižnice."
+
+msgid "Select at least one tag"
+msgstr "Izberite vsaj eno oznako"
+
+msgid "Basic settings"
+msgstr "Osnovne nastavitve"
+
+msgid "General"
+msgstr "Splošno"
+
+msgid "Mail theme"
+msgstr "Videz e-pošte"
+
+msgid "%d of %d users selected"
+msgstr "Izbranih %d od %d uporabnikov"
+
+msgid "(filtered from %s total users)"
+msgstr "(filtrirano od %s vseh uporabnikov)"
+
+msgid "All %d users are selected"
+msgstr "Izbranih vseh %d uporabnikov"
+
+msgid "Change password"
+msgstr "Spremeni geslo"
+
+msgid "Change username"
+msgstr "Spremeni uporabniško ime"
+
+msgid "Last visit on %s, %s."
+msgstr "Zadnji obisk  %s, %s."
+
+msgid "Loading..."
+msgstr "Nalaganje..."
+
+msgid "No matching user found"
+msgstr "Ne najdem ustreznih uporabnikov"
+
+msgid "No user selected of %d users"
+msgstr "Izbran ni noben uporabnik od %d uporabnikov"
+
+msgid "No users selected, no actions possible."
+msgstr "Izbran ni noben uporabnik, nobeno dejanje ni mogoče"
+
+msgid "Password updated"
+msgstr "Geslo posodobljeno"
+
+msgid "Registered on %s, %s."
+msgstr "Registrirani  %s, %s."
+
+msgid "Show %s users"
+msgstr "Prikaži %s uporabnikov"
+
+msgid "Showing %s to %s of %s users"
+msgstr "Prikazanih  %s do %s od %s uporabnikov"
+
+msgid "Update user"
+msgstr "Posodobi uporabnika"
+
+msgid "User %s added"
+msgstr "Uporabnik %s dodan"
+
+msgid "User %s updated"
+msgstr "Uporabnik %s posodobljen"
+
+msgid "Users modified"
+msgstr "Uporabnik spremenjen"
+
+msgid "on the %d selected users"
+msgstr " na %d izbranih uporabnikih"
+
+msgid "Close user details"
+msgstr "Zapri uporabniške podate"
+
+msgid "Open user details"
+msgstr "Odpri uporabniška navodila"
+
+msgid "close"
+msgstr "zapri"
+
+msgid "Activate it now"
+msgstr "Aktivirajte zdaj"
+
+msgid "Allow users to add a link to their website"
+msgstr "Dovoli uporabnikom da dodajo povezavo na njihovo spletno stran"
+
+msgid "Empty caddie"
+msgstr "Izprazni košarico"
+
+msgid "Impossible to deactivate the default theme."
+msgstr "Privzete teme ni možno izključiti"
+
+msgid "Mail address is mandatory for registration"
+msgstr "e-poštni naslov je obvezen ob registraciji"
+
+msgid "No and unlock sub-albums"
+msgstr "Ne in odkleni pod-albume"
+
+msgid "The settings for the guest are from the %s user"
+msgstr "Nastavitve za gosta so od uporabnika  %s"
+
+msgid "based on"
+msgstr "temlji na"
+
+msgid "between %s and %s MB"
+msgstr "med  %s in %s MB"
+
+msgid "date & time"
+msgstr "Datum in ura"
+
+msgid "file name"
+msgstr "ime datoteke"
+
+msgid "width & height"
+msgstr "širina in višina"
+
+msgid "Upload in progress"
+msgstr "Prenos v teku"
+
+msgid "Delete %d orphan photos"
+msgstr "Izbriši  %d osirotele slike"
+
+msgid "Each email sent will contain its own automatic authentication key on links, valid for %s."
+msgstr "Vsako poslano e-poštno sporočilo bo vsebovalo lastni, samodejni ključ za preverjanje pristnosti povezave, v trajanju do %s."
+
+msgid "Edit user"
+msgstr "Uredi uporabnika"
+
+msgid "For security reason, authentication keys do not work for administrators."
+msgstr "Zaradi varnostnih razlogov ključ za preverjanje pristnosti ne deluje za administratorje"
+
+msgid "No recipient selected"
+msgstr "Ni izbranih prejemnikov"
+
+msgid "No user is permitted to see this private album"
+msgstr "Noben uporabnik nima dovoljenja za ogled tega zasebnega albuma"
+
+msgid "Orphans"
+msgstr "Sirote"
+
+msgid "Recipients"
+msgstr "Prejemniki"
+
+msgid "Y Repeat"
+msgstr "Y ponavljanje"
+
+msgid "delete only album, not photos"
+msgstr "izbriši le album, ne tudi slik"
+
+msgid "orphans to delete"
+msgstr "osirotele slike za izbris"
+
+msgid "(determined from photos)"
+msgstr "(določeno na podlagi fotografij)"
+
+msgid "Confirm deletion"
+msgstr "Potrdi izbris"
+
+msgid "Dashboard"
+msgstr "Nadzorna plošča"
+
+msgid "Delete album \"%s\" and its %d sub-albums."
+msgstr "Izbriši album \"%s\" in %d pod-albume"
+
+msgid "Delete album \"%s\"."
+msgstr "Izbriši album  \"%s\"."
+
+msgid "Display form"
+msgstr "Prikazna oblika"
+
+msgid "It only takes a few clicks."
+msgstr "Potrebno je le nekaj klikov"
+
+msgid "No filter on album. Select one or type to search"
+msgstr "Ni filtra za album. Izberite enega ali tipkajte za izbiro"
+
+msgid "No tags selected, no actions possible."
+msgstr "Ni izbranih oznak, nobena akcija ni možna."
+
+msgid "Piwigo %s is available, please update"
+msgstr "Piwigo %s je na voljo, prosimo posodobite namestitev"
+
+msgid "Piwigo Remote Sync is able to upload a whole folder hierarchy. If you run it again, only new photos will be uploaded."
+msgstr "Piwigo Oddaljena Sinhronizacija je sposobna prenesti celotno hirearhijo folderjev. Če jo izvedete ponovno se prenesejo le nove fotografije."
+
+msgid "Running on an up-to-date Piwigo is important for security."
+msgstr "Uporaba posodobljene Piwigo namestitve je pomembna zaradi varnosti."
+
+msgid "Select tags"
+msgstr "Izberi oznake"
+
+msgid "Share / Send your photos directly from your Mac Os X (10.10 and following) to Piwigo"
+msgstr "Deli / Pošlji svoje fotografije neposredno iz Mac Os X (10.10 in novejši) v Piwigo"
+
+msgid "Storage used"
+msgstr "Uporabljen prostor"
+
+msgid "Time has come to update your Piwigo with version %s, go to %s"
+msgstr "Čas je da posodobite vaš Piwigo na različico %s, pojdite na %s "
+
+msgid "checksum"
+msgstr "Kontrolna vsota (checksum)"
+
+msgid "delete album and all %d photos, even the %d associated to other albums"
+msgstr "izbriši album in vse %d slike, čeprav so %d povezane z drugimi albumi"
+
+msgid "delete album and the %d orphan photos"
+msgstr "izbriši album in %d osirotele slike"
+
+msgid "%d checksums were added"
+msgstr "%d kontrolnih vst je bilo dodanih"
+
+msgid "... or hide this link"
+msgstr "... ali skrij to povezavo"
+
+msgid "Compute %d missing checksums"
+msgstr "Iračunavanje %d mankajočih kontrolnih vsot"
+
+msgid "Create a first album"
+msgstr "Ustvari prvi abum"
+
+msgid "Deletion in progress"
+msgstr "Poteka izbris"
+
+msgid "Display album date period"
+msgstr "Prikaži časovno obdobje povezano z vsakim albumom npr. \"od 12. do 18. Julija 2018\""
+
+msgid "Display category date"
+msgstr "Prikaži datum kategorije"
+
+msgid "Piwigo requires an album to add photos."
+msgstr "Piwigo potrebuje album za dodajanje fotografij"
+
+msgid "Some checksums are missing."
+msgstr "Manjkajo nekatere kontrolne vsote"
+
+msgid "Synchronization in progress"
+msgstr "Poteka sinhronizacija"
+
+msgid "Visit"
+msgstr "Obišči"
+
+msgid "Welcome!"
+msgstr "Dobrodošli"
+
+msgid "With no checksum"
+msgstr "Brez kontrolne vsote"
+
+msgid "checksums to add"
+msgstr "kontrolne vsote za dodati"
+
+msgid "or"
+msgstr "ali"
+
+msgid "Tags \\{%s\\} succesfully deleted"
+msgstr "Oznake \\{%s\\} uspešno izbrisane"
+
+msgid "Tag \"%s\" succesfully deleted"
+msgstr "OZnaka \\\"%s\\\" uspešno izbrisana"
+
+msgid "Set as default"
+msgstr "Nastavi kot privzeto"
+
+msgid "Are you sure you want to restore the plugin \"%s\"?"
+msgstr "Ali ste prepričani, da želite obnoviti vtičnik \"%s\"?"
+
+msgid "Delete tag \"%s\"?"
+msgstr "Izbriši oznako \"%s\"?"
+
+msgid "Delete tags \\{%s\\}?"
+msgstr "Izbriši oznake \\{%s\\}?"
+
+msgid "Display"
+msgstr "Prikaži"
+
+msgid "Are you sure you want to restore this plugin?"
+msgstr "Ali ste prepričani, da želite obnoviti ta vtičnik?"
+
+msgid "Are you sure you want to restore to default settings?"
+msgstr "Ali ste prepričani, da želite obnoviti privzete nastavitve?"
+
+msgid "Are you sure you want to update all extensions?"
+msgstr "Ali ste prepričani, da želite posodobiti vse razširitve?"
+
+msgid "Choose which tag to merge these tags into"
+msgstr "Izberite, v katero oznako želite združiti te oznake"
+
+msgid "Displays a banner to install or open the official Piwigo app"
+msgstr "Prikaže pasico za namestitev ali odpiranje uradne aplikacije Piwigo"
+
+msgid "The other tags will be removed"
+msgstr "Ostale oznake bodo odstranjene"
+
+msgid "This is already the default theme"
+msgstr "To je že privzeta tema"
+
+msgid "Videos"
+msgstr "Video posnetki"
+
+msgid "Tag Manager"
+msgstr "Upravitelj oznak"
+
+msgid "Merge"
+msgstr "Združi"
+
+msgid "Other"
+msgstr "Drugo"
+
+msgid "Storage"
+msgstr "Shramba"
+
+msgid "Tag \"%s\" created"
+msgstr "Oznaka \"%s\" ustvarjena"
+
+msgid "Edited on %s"
+msgstr "Urejeno na %s"
+
+msgid "File type: %s"
+msgstr "Tip datoteke: %s"
+
+msgid "Formats"
+msgstr "Formati"
+
+msgid "Group \"%s\" succesfully deleted"
+msgstr "Skupina \"%s\" uspešno izbrisana"
+
+msgid "Keep them"
+msgstr "Obdrži jih"
+
+msgid "%s file type"
+msgstr "vrsta datoteke %s"
+
+msgid "%s other tags available.."
+msgstr "Na voljo je še %s oznak .."
+
+msgid "Are you sure you want to install the plugin \"%s\"?"
+msgstr "Ali ste prepričani, da želite namestiti vtičnik \"%s\"?"
+
+msgid "Created on %s"
+msgstr "Ustvarjeno %s"
+
+msgid "Are you sure you want to delete group \"%s\"?"
+msgstr "Ali ste prepričani, da želite izbrisati skupino \"%s\"?"
+
+msgid "Are you sure you want to delete the language \"%s\"?"
+msgstr "Ali ste prepričani, da želite izbrisati jezik \"%s\"?"
+
+msgid "Are you sure you want to delete the plugin \"%s\"?"
+msgstr "Ali ste prepričani, da želite izbrisati vtičnik \"%s\"?"
+
+msgid "Are you sure you want to delete the theme \"%s\"?"
+msgstr "Ali ste prepričani, da želite izbrisati temo \"%s\"?"
+
+msgid "Yes, I am sure"
+msgstr "Da, prepričan sem"
+
+msgid "Yes, delete"
+msgstr "Da, izbriši"
+
+msgid "You don't have access to this photo"
+msgstr "Nimate dostopa do te fotografije"
+
+msgid "in gallery"
+msgstr "v galeriji"
+
+msgid "no photo"
+msgstr "ni fotografije"
+
+msgid "Name is already taken"
+msgstr "Ime je že zasedeno"
+
+msgid "No albums found"
+msgstr "Najti ni bilo mogoče nobenega albuma"
+
+msgid "No tag found"
+msgstr "Najdena ni nobena oznaka"
+
+msgid "No, I have changed my mind"
+msgstr "Ne, premislil sem se"
+
+msgid "Open in gallery"
+msgstr "Odpri v galeriji"
+
+msgid "Page Visited"
+msgstr "Stran obiskana"
+
+msgid "Page Visited in %s"
+msgstr "Stran obiskana v %s"
+
+msgid "Please upgrade your PHP version before any update."
+msgstr "Pred kakršno koli posodobitvijo nadgradite različico PHP."
+
+msgid "Portraits"
+msgstr "Portreti"
+
+msgid "Posted %s"
+msgstr "Objavljeno %s"
+
+msgid "Promote mobile app on mobile devices"
+msgstr "Promovirajte mobilno aplikacijo v mobilnih napravah"
+
+msgid "Requires PHP %s"
+msgstr "Zahteva PHP %s"
+
+msgid "Search tips"
+msgstr "Nasveti za iskanje"
+
+msgid "Select"
+msgstr "Izberi"
+
+msgid "Average last 12 months"
+msgstr "Povprečje zadnjih 12 mesecev"
+
+msgid "Clear Selection"
+msgstr "Počisti izbor"
+
+msgid "Compare mode"
+msgstr "Primerjalni način"
+
+msgid "Delete album"
+msgstr "Izbriši album"
+
+msgid "Delete them"
+msgstr "Izbriši jih"
+
+msgid "Group added"
+msgstr "Skupina dodana"
+
+msgid "Group renamed"
+msgstr "Skupina preimenovana"
+
+msgid "Activity peak in the last weeks"
+msgstr "Vrhunec aktivnosti v zadnjih tednih"
+
+msgid "Are you sure you want to delete all sizes?"
+msgstr "Ali ste prepričani, da želite izbrisati vse velikosti?"
+
+msgid "Are you sure you want to lock the gallery?"
+msgstr "Ali ste prepričani, da želite zakleniti galerijo?"
+
+msgid "Are you sure you want to delete the user \"%s\"?"
+msgstr "Ali ste prepričani, da želite izbrisati uporabnika \"%s\"?"
+
+msgid "Are you sure you want to delete this site?"
+msgstr "Ali ste prepričani, da želite izbrisati to spletno mesto?"
+
+msgid "Are you sure you want to delete this theme?"
+msgstr "Ali ste prepričani, da želite izbrisati to temo?"
+
+msgid "Are you sure you want to delete this?"
+msgstr "Ali ste prepričani, da želite to izbrisati?"
+
+msgid "%d Activities"
+msgstr "%d Aktivnosti"
+
+msgid " (copy %s)"
+msgstr "(kopiraj %s)"
+
+msgid " (copy)"
+msgstr "(kopiraj)"
+
+msgid "%d Activity"
+msgstr "%d Dejavnosti"
+
+msgid "%d photos"
+msgstr "%d Slike"
+
+msgid "%d sub-albums"
+msgstr "%d pod albumi"
+
+msgid "%s GB used"
+msgstr "%s GB porabljenih"
+
+msgid "%s MB used"
+msgstr "%s MB porabljenih"
+
+msgid "Delete orphan tags ?"
+msgstr "Izbriši pod oznake ?"
+
+msgid "You have %d orphan tags %s"
+msgstr "Imate %d pod oznak %s"
+
+msgid "You have %s1 orphan : %s2"
+msgstr "Imate %s1 pod oznako : %s2"
+
+msgid "Tag(s) \\{%s1\\} succesfully merged into \"%s2\""
+msgstr "Oznake (\\{%s1\\} so bile uspešno združene v \"%s2\""
+
+msgid "User \"%s\" dissociated from this group"
+msgstr "Uporabnik \"%s\" je bil odstranjen iz te skupine"
+
+msgid "The %d tags on this page are selected"
+msgstr "Izbrane so oznake %d na tej strani"
+
+msgid "Set as group for new users"
+msgstr "Nastavitev kot skupino za nove uporabnike"
+
+msgid "Tag \"%s1\" renamed in \"%s2\""
+msgstr "Oznaka \\\"%s1\\\" preimenovana v \\\"%s2\\\""
+
+msgid "Showing %s users out of %s"
+msgstr "Prikaz %s uporabnikov od %s"
+
+msgid "Group(s) \\{%s1\\} succesfully merged into \"%s2\""
+msgstr "Skupine  \\{%s1\\} so bile uspešno združene v \"%s2\""
+
+msgid "Groups \\{%s\\} succesfully deleted"
+msgstr "Skupine  \\{%s\\, so bile uspešno izbrisane"
+
+msgid "Are you sure you want to delete the ratings of the user \"%s\"?"
+msgstr "Ali ste prepričani, da želite izbrisati ocene uporabnika \"%s\"?"
+
+msgid "Unset as group for new users"
+msgstr "Odstavi kot skupino za nove uporabnike"
+
+msgid "User associated"
+msgstr "Pridruženi uporabnik"
+
+msgid "Manage users with user manager"
+msgstr "Upravljanje uporabnikov z upraviteljem uporabnikov"
+
+msgid "Search albums"
+msgstr "Iskanje albumov"
+
+msgid "Select all %d tags"
+msgstr "Izberite vse oznake %d"
+
+msgid "Album search tool"
+msgstr "Orodje za iskanje albumov"
+
+msgid "Associate User"
+msgstr "Pridruženi uporabnik"
+
+msgid "Dissociate user from this group"
+msgstr "Izvleci uporabnika iz te skupine"
+
+msgid "Manage album photos"
+msgstr "Upravljanje fotografij albuma"
+
+msgid "Manage sub-albums"
+msgstr "Upravljanje pod albumov"
+
+msgid "No plugins found"
+msgstr "Vtičniki niso najdeni"
+
+msgid "Refresh thumbnail"
+msgstr "Osveži sličice"
+
+msgid "Selection mode"
+msgstr "Način izbire"
+
+msgid "You have %s inactive plugins"
+msgstr "Imate %s neaktivnih vtičnikov"
+
+msgid "and %s others"
+msgstr "in %s drugih"
+
+msgid "At least 2 selected tags are needed to merge"
+msgstr "Za združitev sta potrebni vsaj 2 izbrani oznaki"
+
+msgid "Cache"
+msgstr "Predpomnilnik"
+
+msgid "in administration"
+msgstr "v administraciji"
+
+msgid "Review"
+msgstr "Pregled"
+
+msgid "Show inactive plugins"
+msgstr "Pokaži neaktivne vtičnike"
+
+msgid "<b>1</b> album found"
+msgstr "<b>1</b> najden album"
+
+msgid "<b>%d</b> albums found"
+msgstr "<b>%d</b> najdenih albumov"
+
+msgid "<b>%d</b> tag found"
+msgstr "<b>%d</b> najdena oznaka"
+
+msgid "<b>%d</b> tag selected"
+msgstr "<b>%d</b> oznaka izbrana"
+
+msgid "<b>%d</b> tags found"
+msgstr "<b>%d</b> najdenih oznak"
+
+msgid "Add Album"
+msgstr "Dodaj album"
+
+msgid "Update"
+msgstr "Posodobi"
+
+msgid "right now"
+msgstr "prav zdaj"
+
+msgid "never calculated"
+msgstr "nikoli izračunano"
+
+msgid "move"
+msgstr "premakniti"
+
+msgid "months ago"
+msgstr "pred meseci"
+
+msgid "login"
+msgstr "prijava"
+
+msgid "logout"
+msgstr "odjava"
+
+msgid "edit"
+msgstr "uredi"
+
+msgid "deletion"
+msgstr "izbris"
+
+msgid "calculated"
+msgstr "izračunano"
+
+msgid "between %s and %s"
+msgstr "med %s in %s"
+
+msgid "add"
+msgstr "dodaj"
+
+msgid "action successfully performed."
+msgstr "dejanje uspešno izvedeno."
+
+msgid "Your selection"
+msgstr "Tvoja izbira"
+
+msgid "Webmaster status required"
+msgstr "Zahtevan status skrbnika"
+
+msgid "User updated"
+msgstr "Uporabnik posodobljen"
+
+msgid "Theme"
+msgstr "Tema"
+
+msgid "Show sub-albums"
+msgstr "Prikaži pod-albume"
+
+msgid "Show"
+msgstr "Prikaži"
+
+msgid "Selected user"
+msgstr "Izbrani uporabnik"
+
+msgid "Root"
+msgstr "Koren (Root)"
+
+msgid "Restored"
+msgstr "Obnovljeno"
+
+msgid "Plugin \"%s\" has been activated!"
+msgstr "Vtičnik \"%s\" je bil aktiviran! "
+
+msgid "Plugin \"%s\" deleted!"
+msgstr "Vtičnik \"%s\" je izbrisan!"
+
+msgid "Photos per page"
+msgstr "Slik na strani"
+
+msgid "No access to administration, can see private content with appropriate permissions."
+msgstr "Brez dostopa do administracije, lahko si ogledate zasebno vsebino z ustreznimi dovoljenji."
+
+msgid "New user added"
+msgstr "Novi uporabnik je dodan"
+
+msgid "Name field must not be empty"
+msgstr "Polje z imenom ne sme biti prazno"
+
+msgid "Locked albums are disabled for maintenance. Only administrators can view them in the gallery. Lock this album will also lock his Sub-albums"
+msgstr "Zaklenjeni albumi so onemogočeni zaradi vzdrževanja. V galeriji si jih lahko ogledajo samo skrbniki. Zaklepanje tega albuma bo zaklenilo tudi njegove pod-albume"
+
+msgid "Last visit"
+msgstr "Zadnji obisk"
+
+msgid "Hide sub-albums"
+msgstr "Skrij pod-albume"
+
+msgid "Has access to all administration functionnalities. Can manage both configuration and content."
+msgstr "Ima dostop do vseh administrativnih funkcij. Lahko upravlja tako konfiguracijo kot vsebino."
+
+msgid "Has access to administration. Can only manage content: photos/albums/users/tags/groups."
+msgstr "Ima dostop do administracije. Lahko upravlja samo vsebino: fotografije/albumi/uporabniki/oznake/skupine."
+
+msgid "Equivalent to deactivation. The user is still in the list, but can no longer log in."
+msgstr "Enakovredno deaktivaciji. Uporabnik je še vedno na seznamu, vendar se ne more več prijaviti."
+
+msgid "Email Adress"
+msgstr "E-mail naslov"
+
+msgid "Email"
+msgstr "E-mail"
+
+msgid "Edit photo #%s"
+msgstr "Uredi sliko #%s"
+
+msgid "Edit"
+msgstr "Uredi"
+
+msgid "Drag and drop to reorder albums"
+msgstr "Povlecite in spustite, da preuredite albume"
+
+msgid "Download all activities"
+msgstr "Prenesite vse dejavnosti"
+
+msgid "Change Password"
+msgstr "Spremeni Geslo"
+
+msgid "Apply to direct sub-albums"
+msgstr "Uporabite za neposredne pod-albume"
+
+msgid "%d users logged in"
+msgstr "%d uporabnikov prijavljenih"
+
+msgid "%d users logged out"
+msgstr "%d uporabnikov odjavljenih"
+
+msgid "%d users edited"
+msgstr "%d uporabnikov urejenih"
+
+msgid "%s lines"
+msgstr "%s vrstice"
+
+msgid "%s line"
+msgstr "%s vrstica"
+
+msgid "%d users added"
+msgstr "%d uporabniki dodani"
+
+msgid "%d user logged out"
+msgstr "%d uporabnik odjavljen"
+
+msgid "%d user logged in"
+msgstr "%d uporabnik prijavljen"
+
+msgid "%d user edited"
+msgstr "%d uporabnik urejen"
+
+msgid "%d user added"
+msgstr "%d uporabnik dodan"
+
+msgid "%d tags moved"
+msgstr "%d oznake premaknjene"
+
+msgid "%d tags edited"
+msgstr "%d oznake urejene"
+
+msgid "%d tag moved"
+msgstr "%d oznaka premaknjena"
+
+msgid "%d tags added"
+msgstr "%d oznake dodane"
+
+msgid "%d tags deleted"
+msgstr "%d oznake izbrisane"
+
+msgid "%d tag edited"
+msgstr "%d oznaka urejena"
+
+msgid "%d tag deleted"
+msgstr "%d oznaka izbrisana"
+
+msgid "%d tag added"
+msgstr "%d oznaka dodana"
+
+msgid "%d photos moved"
+msgstr "%d slike premaknjene"
+
+msgid "%d photos edited"
+msgstr "%d slike urejene"
+
+msgid "%d photos deleted"
+msgstr "%d slike izbrisane"
+
+msgid "%d photos added"
+msgstr "%d slike so dodane"
+
+msgid "%d photo moved"
+msgstr "%d slika premaknjena"
+
+msgid "%d photo edited"
+msgstr "%d slika urejena"
+
+msgid "%d photo deleted"
+msgstr "%d slika izbrisana"
+
+msgid "%d photo added"
+msgstr "%d slika dodana"
+
+msgid "Tile View"
+msgstr "Pogled na ploščice"
+
+msgid "Select groups or type them"
+msgstr "Izberite skupine ali jih vnesite"
+
+msgid "Select an album... or type it!"
+msgstr "Izberite album ... ali ga vnesite!"
+
+msgid "Line View"
+msgstr "Pogled vrstice"
+
+msgid "Filters"
+msgstr "Filtri"
+
+msgid "Registered"
+msgstr "Registriran"
+
+msgid "Manage users"
+msgstr "Upravljajte uporabnike"
+
+msgid "Generate random password"
+msgstr "Ustvari naključno geslo"
+
+msgid "Delete user"
+msgstr "Izbriši uporabnika"
+
+msgid "to"
+msgstr "za"
+
+msgid "Sep"
+msgstr "Sep"
+
+msgid "Oct"
+msgstr "Okt"
+
+msgid "Mar"
+msgstr "Mar"
+
+msgid "May"
+msgstr "Maj"
+
+msgid "Nov"
+msgstr "Nov"
+
+msgid "Edit guest user"
+msgstr "Uredi gostujočega uporabnika"
+
+msgid "Feb"
+msgstr "Feb"
+
+msgid "Jun"
+msgstr "Jun"
+
+msgid "Jul"
+msgstr "Jul"
+
+msgid "Jan"
+msgstr "Jan"
+
+msgid "Language"
+msgstr "Jezik"
+
+msgid "Compact View"
+msgstr "Kompakten pogled"
+
+msgid "Close"
+msgstr "Zapri"
+
+msgid "Apply to the whole hierarchy"
+msgstr "Uporabite za celotno hierarhijo"
+
+msgid "Apply an automatic order to root albums"
+msgstr "Uporabite avtomatsko naročilo za korenske(root) albume"
+
+msgid "<b>%d+</b> albums found, try to refine the search"
+msgstr "<b>%d+</b> najdenih albumov, poskusite izboljšati iskanje"
+
+msgid "%s status is required to edit parameters."
+msgstr "%s status je potreben za urejanje parametrov."
+
+msgid "%s plugin found"
+msgstr "<b>%s</b> vtičnik najden"
+
+msgid "%s plugins found"
+msgstr "<b>%s</b> vtičniki najdeni"
+
+msgid "Advanced filters"
+msgstr "Napredni filtri"
+
+msgid "Activity"
+msgstr "Aktivnost"
+
+msgid "Activated plugin list"
+msgstr "Seznam aktiviranih vtičnikov"
+
+msgid "Delete these sizes"
+msgstr "Izbrišite te velikosti"
+
+msgid "Dec"
+msgstr "Dec"
+
+msgid "Can be shared by several individuals without conflict (they cannot change the password)."
+msgstr "Lahko ga deli več posameznikov brez konflikta (ne morejo spremeniti gesla). "
+
+msgid "Aug"
+msgstr "Avg"
+
+msgid "Apr"
+msgstr "Apr"
+
+msgid "Cache size"
+msgstr "Velikost predpomnilnika"
+
+msgid "Deactivated"
+msgstr "Deaktivirano"
+
+msgid "Activated"
+msgstr "Aktivirano"
+
+msgid "%s MB"
+msgstr "%s MB"
+
+msgid "Add a new user"
+msgstr "Dodajte novega uporabnika"
+
+msgid "Add User"
+msgstr "Dodaj uporabnika"
+
+msgid "Activity time from"
+msgstr "Čas aktivnosti od"
+
+msgid "No plugin activated"
+msgstr "Noben vtičnik ni aktiviran "
+
+msgid "Synchronization"
+msgstr "Sinhronizacija "
+
+msgid "Users not logged in will have these settings applied, these settings are used by default for new users"
+msgstr "Za uporabnike, ki niso prijavljeni, bodo te nastavitve uporabljene, te nastavitve se privzeto uporabljajo za nove uporabnike"
+
+msgid "%d groups moved"
+msgstr "%d skupine premaknjene"
+
+msgid "%d groups edited"
+msgstr "%d skupine urejene"
+
+msgid "%d groups deleted"
+msgstr "%d skupine izbrisane"
+
+msgid "%d groups added"
+msgstr "%d dodane skupine"
+
+msgid "%d group moved"
+msgstr "%d skupina premaknjena"
+
+msgid "%d group edited"
+msgstr "%d skupina urejena"
+
+msgid "%d group deleted"
+msgstr "%d skupina izbrisana"
+
+msgid "%d group added"
+msgstr "%d skupina dodana"
+
+msgid "%d albums deleted"
+msgstr "%d albumi izbrisani"
+
+msgid "%d albums edited"
+msgstr "%d urejeni albumi"
+
+msgid "%d albums added"
+msgstr "%d dodani albumi"
+
+msgid "%d album edited"
+msgstr "%d album urejen"
+
+msgid "%d album deleted"
+msgstr "%d album izbrisan"
+
+msgid "%d album added"
+msgstr "%d album dodan"
+
+msgid "System Activities"
+msgstr "Sistemske dejavnosti"
+
+msgid "%sGB"
+msgstr "%s GB"
+
+msgid "%sMB"
+msgstr "%s MB"
+
+msgid "Piwigo is also on mobile."
+msgstr "Piwigo je tudi na mobilnem telefonu."
+
+msgid "Piwigo core"
+msgstr "Piwigo jedro"
+
+msgid "Place first"
+msgstr "Prvo mesto"
+
+msgid "Place last"
+msgstr "Zadnje mesto"
+

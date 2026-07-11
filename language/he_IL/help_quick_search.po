@@ -1,0 +1,161 @@
+# Piwigo translation — he_IL
+# Source: help_quick_search.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: he_IL\n"
+"Plural-Forms: nplurals=3; plural=(n == 1 ? 0 : n == 2 ? 1 : 2);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "photos posted in 2003"
+msgstr "תמונות שפורסמו ב-2003"
+
+msgid "photos taken in 2003"
+msgstr "תמונות שצולמו ב-2003"
+
+msgid "return photos less than 700px high"
+msgstr "תמונות שגובהן פחות מ-700px"
+
+msgid "return photos wider than 500px"
+msgstr "תמונות שרוחבן יותר מ-500px"
+
+msgid "return photos with at least 1,000 views"
+msgstr "החזר תמונות עם לפחות 1,000 צפיות"
+
+msgid "returns photos of 12 megapixels or more"
+msgstr "מחזיר תמונות ברזולוציה של 12 מגה-פיקסלים או יותר"
+
+msgid "returns photos of 5 megapixels"
+msgstr "מחזיר תמונות ברזולוציה של 5 מגה-פיקסלים"
+
+msgid "up to 100 (inclusive)"
+msgstr "עד 100 (כולל)"
+
+msgid "will give you all photos with at least one note."
+msgstr "יחזיר לך את כל התמונות עם לפחות הערה אחת."
+
+msgid "will give you photos without notes."
+msgstr "יחזיר לך תמונות ללא הערות."
+
+msgid "Searches photos by taken date."
+msgstr "חיפוש תמונות לפי תאריך צילום."
+
+msgid "Searches photos by width/height ratio."
+msgstr "חיפוש תמונות לפי יחס רוחב/גובה."
+
+msgid "Searches photos with a given width or height."
+msgstr "חיפוש תמונות עם רוחב או גובה נתון."
+
+msgid "Supported numeric operators"
+msgstr "אופרטורים מספריים נתמכים"
+
+msgid "The quick search engine allows you to use boolean operators to refine your search. By default, the search applies to all keywords. Searches are not case sensitive."
+msgstr "מנוע החיפוש המהיר מאפשר לך להשתמש באופרטורים בוליאניים כדי לשפר את החיפוש שלך. כברירת מחדל, החיפוש חל על כל המילות מפתח. החיפושים אינם תלויים ברישיות."
+
+msgid "These operators can be used with numeric fields such as"
+msgstr "אופרטורים אלו יכולים לשמש עם שדות מספריים כגון"
+
+msgid "Use quotes to search for an exact keyword or phrase."
+msgstr "השתמש במרכאות כדי לחפש מילת מפתח או ביטוי מדויק."
+
+msgid "With keywords"
+msgstr "עם מילות מפתח"
+
+msgid "between 10 and 100 (inclusive)"
+msgstr "בין 10 ל-100 (כולל)"
+
+msgid "equals 100"
+msgstr "שווה ל-100"
+
+msgid "finds files between 1MB and 10MB."
+msgstr "מוצא קבצים בין 1MB ל-10MB."
+
+msgid "finds panoramas"
+msgstr "מוצא פנורמות"
+
+msgid "finds photo 123 to 126 (it may find between 0 and 4 photos, because photos can be deleted)"
+msgstr "מוצא תמונה 123 עד 126 (ייתכן שימצא בין 0 ל-4 תמונות, מכיוון שתמונות יכולות להימחק)"
+
+msgid "finds photos from compact cameras in portrait or landscape modes"
+msgstr "מוצא תמונות ממצלמות קומפקטיות במצבי דיוקן או נוף"
+
+msgid "from 100 and above"
+msgstr "מ-100 ומעלה"
+
+msgid "greater than 100"
+msgstr "גדול מ-100"
+
+msgid "less than 100"
+msgstr "פחות מ-100"
+
+msgid "photos after Jan 1st 2008"
+msgstr "תמונות לאחר ה-1 בינואר 2008"
+
+msgid "photos from 2003 to 2008"
+msgstr "תמונות משנת 2003 עד 2008"
+
+msgid "photos from may 2003"
+msgstr "תמונות ממאי 2003"
+
+msgid "Add a dash (-) or NOT before a word to exclude from search. Note that NOT acts as a filtering operator so you cannot have a search containing only NOT operators. You cannot combine OR with NOT (john OR NOT bill is not valid)"
+msgstr "הוסף מקף (-) או NOT לפני מילה כדי להוציא אותה מהחיפוש. שים לב ש-NOT פועל כאופרטור סינון ולכן לא ניתן לבצע חיפוש שמכיל רק אופרטורים מסוג NOT. אין אפשרות לשלב OR עם NOT (john OR NOT bill אינו חוקי)"
+
+msgid "Add an OR between words."
+msgstr "הוסף OR בין מילים."
+
+msgid "Exact search"
+msgstr "חיפוש מדויק"
+
+msgid "Exclude"
+msgstr "להחריג"
+
+msgid "Grouping"
+msgstr "קיבוץ"
+
+msgid "Here is a list of actions you can perform:"
+msgstr "הנה רשימת פעולות שניתן לבצע:"
+
+msgid "OR inclusive"
+msgstr "OR כולל"
+
+msgid "Others"
+msgstr "אחרים"
+
+msgid "Same principle as for"
+msgstr "אותו עקרון כמו עבור"
+
+msgid "Search using extended syntax"
+msgstr "חפש באמצעות תחביר מתקדם"
+
+msgid "Searches by author."
+msgstr "חיפושים לפי מחבר."
+
+msgid "Searches by file name."
+msgstr "חיפושים לפי שם קובץ."
+
+msgid "Searches for photos by number of views."
+msgstr "חיפושים לפי מספר צפיות בתמונות."
+
+msgid "Searches only for photos with the given words in title or description."
+msgstr "חיפושים רק בתמונות עם המילים הנתונות בכותרת או בתיאור."
+
+msgid "Searches only in tag names without looking at photo titles or descriptions."
+msgstr "חיפושים רק בשמות תגיות מבלי להתייחס לכותרות או לתיאורים של תמונות."
+
+msgid "Searches photos by file size."
+msgstr "חיפושים בתמונות לפי גודל קובץ."
+
+msgid "Searches photos by its numeric identifier in Piwigo."
+msgstr "חיפושים בתמונות לפי מזהה מספרי ב-Piwigo."
+
+msgid "Searches photos by posted date."
+msgstr "חיפושים בתמונות לפי תאריך פרסום."
+
+msgid "Searches photos by rating."
+msgstr "חיפושים בתמונות לפי דירוג."
+
+msgid "Searches photos by size in pixels."
+msgstr "חיפושים בתמונות לפי גודל בפיקסלים."
+

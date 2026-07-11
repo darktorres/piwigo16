@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\AccessLevel;
+use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
@@ -60,7 +62,7 @@ function get_local_dir(int|string $category_id): string
         $uppercats = $structure_uppercats;
     } else {
         $query = 'SELECT uppercats';
-        $query .= ' FROM ' . CATEGORIES_TABLE . ' WHERE id = ' . $category_id;
+        $query .= ' FROM ' . Tables::categories() . ' WHERE id = ' . $category_id;
         $query .= ';';
         $row = pwg_db_fetch_assoc(pwg_query($query));
         if (! is_array($row)) {
@@ -73,7 +75,7 @@ function get_local_dir(int|string $category_id): string
 
     $database_dirs = [];
     $query = 'SELECT id,dir';
-    $query .= ' FROM ' . CATEGORIES_TABLE . ' WHERE id IN (' . $uppercats . ')';
+    $query .= ' FROM ' . Tables::categories() . ' WHERE id IN (' . $uppercats . ')';
     $query .= ';';
     $result = pwg_query($query);
     while ((bool) ($row = pwg_db_fetch_assoc($result))) {
@@ -97,7 +99,7 @@ function get_site_url(int|string $category_id): string
 
     $query = '
 SELECT galleries_url
-  FROM ' . SITES_TABLE . ' AS s,' . CATEGORIES_TABLE . ' AS c
+  FROM ' . Tables::sites() . ' AS s,' . Tables::categories() . ' AS c
   WHERE s.id = c.site_id
     AND c.id = ' . $category_id . '
 ;';
@@ -125,7 +127,7 @@ function get_min_local_dir(?string $local_dir): ?string
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_ADMINISTRATOR);
+check_status(AccessLevel::Administrator);
 
 trigger_notify('loc_begin_cat_modify');
 
@@ -152,7 +154,7 @@ foreach (['comment', 'dir', 'site_id', 'id_uppercat'] as $nullable) {
 $category['is_virtual'] = empty($category['dir']) ? true : false;
 
 $query = 'SELECT DISTINCT category_id
-  FROM ' . IMAGE_CATEGORY_TABLE . '
+  FROM ' . Tables::imageCategory() . '
   WHERE category_id = ' . $_GET['cat_id'] . '
   LIMIT 1';
 $result = pwg_query($query);
@@ -253,8 +255,8 @@ SELECT
     COUNT(image_id),
     MIN(DATE(date_available)),
     MAX(DATE(date_available))
-  FROM ' . IMAGES_TABLE . '
-    JOIN ' . IMAGE_CATEGORY_TABLE . ' ON image_id = id
+  FROM ' . Tables::images() . '
+    JOIN ' . Tables::imageCategory() . ' ON image_id = id
   WHERE category_id = ' . $category_id . '
 ;';
     $row = pwg_db_fetch_row(pwg_query($query));
@@ -299,7 +301,7 @@ $query = '
 SELECT DISTINCT
     (image_id)
   FROM
-    ' . IMAGE_CATEGORY_TABLE . '
+    ' . Tables::imageCategory() . '
   WHERE
     category_id IN (' . implode(',', $subcat_ids) . ')
   ;';
@@ -310,7 +312,7 @@ $category['nb_images_recursive'] = count($image_ids_recursive);
 // date creation
 $query = '
 SELECT occured_on
-  FROM `' . ACTIVITY_TABLE . '`
+  FROM `' . Tables::activity() . '`
   WHERE object_id = ' . $category_id . '
     AND object = "album"
     AND action = "add"
@@ -333,7 +335,7 @@ if (count($result) > 0) {
 // Sub Albums
 $query = '
 SELECT COUNT(*)
-  FROM `' . CATEGORIES_TABLE . '`
+  FROM `' . Tables::categories() . '`
   WHERE id_uppercat = ' . $category_id . '
 ';
 $result = query2array($query);

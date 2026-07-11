@@ -17,7 +17,10 @@ require __DIR__ . '/../vendor/autoload.php';
 require __DIR__ . '/../include/env.inc.php';
 
 use Piwigo\Bootstrap\CliBootstrap;
+use Piwigo\Core\Paths;
 
 pwg_load_env_file(dirname(__DIR__));
 
-exit(CliBootstrap::run($argv));
+$paths = Paths::fromRoot(dirname(__DIR__));
+
+exit(CliBootstrap::run($argv, $paths));

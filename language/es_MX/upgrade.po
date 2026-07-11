@@ -1,0 +1,65 @@
+# Piwigo translation — es_MX
+# Source: upgrade.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: es_MX\n"
+"Plural-Forms: nplurals=3; plural=(n == 1 ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "All sub-albums of private albums become private"
+msgstr "Todos los subálbumes de álbumes privados se vuelven privados"
+
+msgid "As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:"
+msgstr "Como precaución, se han desactivado los siguientes plugins. Debe buscar plugins actualizables antes de reactivarlos:"
+
+msgid "As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:"
+msgstr "Como precaución, se han desactivado los siguientes temas. Debe verificar los temas actualizables antes de reactivarlos:"
+
+msgid "Discover what's new in Piwigo %s"
+msgstr "Descubre las novedades de Piwigo %s"
+
+msgid "In <i>%s</i>, before <b>?></b>, insert:"
+msgstr "En <i>%s</i>, antes de <b>?></b>, inserte:"
+
+msgid "Only administrator can run upgrade: please sign in below."
+msgstr "Solo un administrador puede ejecutar una actualización: inicie sesión a continuación."
+
+msgid "Only thumbnails prefix and webmaster mail address have been saved from previous configuration"
+msgstr "Solo se han guardado el prefijo de miniaturas y la dirección de correo del webmaster de la configuración anterior"
+
+msgid "Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem."
+msgstr "Realice una verificación de mantenimiento en [Administración>Herramientas>Mantenimiento] si encuentra algún problema."
+
+msgid "SQL queries"
+msgstr "consultas SQL"
+
+msgid "Statistics"
+msgstr "Estadísticas"
+
+msgid "This page proposes to upgrade your database corresponding to your old version of Piwigo to the current version. The upgrade assistant thinks you are currently running a <strong>release %s</strong> (or equivalent)."
+msgstr "Esta página propone actualizar la base de datos de su versión anterior de Piwigo a la nueva versión. El asistente de actualización cree que actualmente está ejecutando la <strong>versión %s</strong> (o equivalente)."
+
+msgid "Upgrade"
+msgstr "Actualización"
+
+msgid "Upgrade from version %s to %s"
+msgstr "Actualizar de la versión %s a %s"
+
+msgid "Upgrade informations"
+msgstr "Información de actualización"
+
+msgid "User permissions and group permissions have been erased"
+msgstr "Se han borrado los permisos de usuarios y grupos"
+
+msgid "You do not have access rights to run upgrade"
+msgstr "No tiene derechos de acceso para ejecutar la actualización"
+
+msgid "total SQL time"
+msgstr "tiempo total de SQL"
+
+msgid "total upgrade time"
+msgstr "tiempo total de actualización"
+

@@ -1,0 +1,20 @@
+# Piwigo translation — zh_CN
+# Source: whats_new_16.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: zh_CN\n"
+"Plural-Forms: nplurals=1; plural=(0);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Brand new login & preferences with Standard pages !"
+msgstr "全新登录界面与标准页面设置选项！"
+
+msgid "Two factor authentication is here"
+msgstr "两步验证功能现已上线"
+
+msgid "UI redesigns that make a difference"
+msgstr "用户界面（UI）的重新设计，使其焕然一新"
+

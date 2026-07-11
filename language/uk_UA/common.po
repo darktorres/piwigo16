@@ -1,0 +1,1270 @@
+# Piwigo translation — uk_UA
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: uk_UA\n"
+"Plural-Forms: nplurals=3; plural=(n % 10 == 1 && n % 100 != 11 ? 0 : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 1 : 2);\n"
+"X-Piwigo-Language-Name: Українська\n"
+"X-Piwigo-Country: Україна\n"
+"X-Piwigo-Jquery-Code: uk\n"
+"X-Piwigo-Plupload-Code: uk_UA\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: ua\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d альбом оновлено"
+msgstr[1] "альбомів оновлено: %d"
+
+msgid "%d comment to validate"
+msgstr "%d коментар на перевірці"
+
+msgid "%d comments to validate"
+msgstr "коментарів на перевірці: %d"
+
+msgid "%d new comment"
+msgstr "%d новий коментар"
+
+msgid "%d new comments"
+msgstr "нових коментарів: %d"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d коментар"
+msgstr[1] "коментарів: %d"
+
+msgid "%d hit"
+msgid_plural "%d hits"
+msgstr[0] "%d перегляд"
+msgstr[1] "переглядів: %d"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "%d нова фотографія"
+msgstr[1] "нових зображень: %d"
+
+msgid "%d new user"
+msgstr "%d новий користувач"
+
+msgid "%d new users"
+msgstr "нових користувачів: %d"
+
+msgid "About"
+msgstr "Про рушій"
+
+msgid "All tags"
+msgstr "Всі теґи"
+
+msgid "Any tag"
+msgstr "Будь-який теґ"
+
+msgid "Author"
+msgstr "Автор"
+
+msgid "Albums"
+msgstr "Альбоми"
+
+msgid "Album"
+msgstr "Альбом"
+
+msgid "Close this window"
+msgstr "Закрити це вікно"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "Повний RSS канал (фотографії, коментарі)"
+
+msgid "Confirm Password"
+msgstr "Підтвердіть пароль"
+
+msgid "Connection settings"
+msgstr "Налаштування з'єднання"
+
+msgid "Login"
+msgstr "Авторизація"
+
+msgid "Contact webmaster"
+msgstr "Техпідтримка"
+
+msgid "Create a new account"
+msgstr "Створити новий обліковий запис"
+
+msgid "Created on"
+msgstr "Дата зйомки"
+
+msgid "Creation date"
+msgstr "Дата зйомки"
+
+msgid "Current password is wrong"
+msgstr "Введений невірний пароль"
+
+msgid "Dimensions"
+msgstr "Розміри"
+
+msgid "Display"
+msgstr "Порядок"
+
+msgid "Email address"
+msgstr "Адреса електронної пошти"
+
+msgid "Enter your personnal informations"
+msgstr "Вкажіть вашу персональну інформацію"
+
+msgid "Error sending email"
+msgstr "Помилка відправки електронної пошти"
+
+msgid "File name"
+msgstr "Ім'я файлу"
+
+msgid "File"
+msgstr "Файл"
+
+msgid "Filesize"
+msgstr "Розмір файлу"
+
+msgid "Filter and display"
+msgstr "Відфільтрувати і показати"
+
+msgid "Filter"
+msgstr "Фільтр"
+
+msgid "Forgot your password?"
+msgstr "Забули пароль?"
+
+msgid "Go through the gallery as a visitor"
+msgstr "Увійти в галерею як відвідувач"
+
+msgid "Help"
+msgstr "Допомога"
+
+msgid "Identification"
+msgstr "Ідентифікація"
+
+msgid "Photos only RSS feed"
+msgstr "RSS канал тільки з фотографіями"
+
+msgid "Keyword"
+msgstr "Ключеве слово"
+
+msgid "Notification"
+msgstr "Повідомлення"
+
+msgid "Number of items"
+msgstr "Кількість елементів"
+
+msgid "Original dimensions"
+msgstr "Оригінальні розміри"
+
+msgid "Password forgotten"
+msgstr "Забули пароль"
+
+msgid "Password"
+msgstr "Пароль"
+
+msgid "Post date"
+msgstr "Дата розміщення"
+
+msgid "Posted on"
+msgstr "Опубліковано"
+
+msgid "Profile"
+msgstr "Профіль"
+
+msgid "Quick connect"
+msgstr "Швидке з'єднання"
+
+msgid "RSS feed"
+msgstr "RSS канал"
+
+msgid "Register"
+msgstr "Реєстрація"
+
+msgid "Registration"
+msgstr "Реєстрація"
+
+msgid "Related tags"
+msgstr "Пов'язані теґи"
+
+msgid "Reset"
+msgstr "Скинути"
+
+msgid "Retrieve password"
+msgstr "Відновити пароль"
+
+msgid "Search tags"
+msgstr "Теґи пошуку"
+
+msgid "Search"
+msgstr "Пошук"
+
+msgid "display available tags"
+msgstr "відображати доступні теґи"
+
+msgid "Since"
+msgstr "З"
+
+msgid "Sort by"
+msgstr "Сортувати за"
+
+msgid "Sort order"
+msgstr "Порядок сортування"
+
+msgid "Tag"
+msgstr "Теґ"
+
+msgid "Tags"
+msgstr "Теґи"
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "RSS канал надсилає повідомлення про нові події з цього сайту: нові фотографії, оновлені альбоми, нові коментарі. Використовуйте читання RSS каналів."
+
+msgid "Unknown feed identifier"
+msgstr "Невідомий ідентифікатор каналу"
+
+msgid "User comments"
+msgstr "Коментарі користувача"
+
+msgid "Username"
+msgstr "Ім'я користувача"
+
+msgid "Visits"
+msgstr "Відвідувань"
+
+msgid "Webmaster"
+msgstr "Вебмайстер"
+
+msgid "Week %d"
+msgstr "Тиждень %d"
+
+msgid "About Piwigo"
+msgstr "Про Piwigo"
+
+msgid "You are not authorized to access the requested page"
+msgstr "Ви не авторизовані для доступу до запитуваної сторінки"
+
+msgid "add this photo to your favorites"
+msgstr "Додати це зображення в обране"
+
+msgid "Administration"
+msgstr "Адміністрування"
+
+msgid "all"
+msgstr "всі"
+
+msgid "ascending"
+msgstr "в порядку зростання"
+
+msgid "useful when password forgotten"
+msgstr "корисно, коли забули пароль"
+
+msgid "Quick search"
+msgstr "Швидкий пошук"
+
+msgid "Connected user: %s"
+msgstr "Підключений користувач: %s"
+
+msgid "Browser: %s"
+msgstr "Браузер: %s"
+
+msgid "Author: %s"
+msgstr "Автор: %s"
+
+msgid "Comment: %s"
+msgstr "Коментар: %s"
+
+msgid "Comment by %s"
+msgstr "Коментар %s"
+
+msgid "User: %s"
+msgstr "Користувач: %s"
+
+msgid "Email: %s"
+msgstr "Електронна пошта: %s"
+
+msgid "Admin: %s"
+msgstr "Адміністратор: %s"
+
+msgid "Registration of %s"
+msgstr "Зареєстровано %s"
+
+msgid "Tag results for"
+msgstr "Результати для"
+
+msgid "from %s to %s"
+msgstr "від %s до %s"
+
+msgid "Play of slideshow"
+msgstr "Показувати слайдшоу"
+
+msgid "Pause of slideshow"
+msgstr "Пауза слайдшоу"
+
+msgid "Repeat the slideshow"
+msgstr "Повторити слайдшоу"
+
+msgid "Not repeat the slideshow"
+msgstr "Не повторювати слайдшоу"
+
+msgid "Reduce diaporama speed"
+msgstr "Зменшити швидкість слайдшоу"
+
+msgid "Accelerate diaporama speed"
+msgstr "Збільшити швидкість слайдшоу"
+
+msgid "Submit"
+msgstr "Відправити"
+
+msgid "Yes"
+msgstr "Так"
+
+msgid "No"
+msgstr "Ні"
+
+msgid "Piwigo Help"
+msgstr "Допомога Piwigo"
+
+msgid "Rank"
+msgstr "Ранг"
+
+msgid "group by letters"
+msgstr "групувати по буквах"
+
+msgid "letters"
+msgstr "букви"
+
+msgid "show tag cloud"
+msgstr "показувати хмару теґів"
+
+msgid "cloud"
+msgstr "хмара"
+
+msgid "Reset to default values"
+msgstr "Скинути на значення за замовчуванням"
+
+msgid "Sent by"
+msgstr "Надіслано"
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "Куки заблоковані або не підтримуються вашим браузером. Ви повинні увімкнути куки, щоб увійти."
+
+msgid "Expand all albums"
+msgstr "Розгорнути всі альбоми"
+
+msgid "posted after %s (%s)"
+msgstr "додано після %s (%s)"
+
+msgid "posted before %s (%s)"
+msgstr "додано до %s (%s)"
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "додано між %s (%s) і %s (%s)"
+
+msgid "posted on %s"
+msgstr "додано в %s"
+
+msgid "Best rated"
+msgstr "Найбільший рейтинг"
+
+msgid "display best rated photos"
+msgstr "показати фотографії з найбільшим рейтингом"
+
+msgid "Calendar"
+msgstr "Календар"
+
+msgid "All"
+msgstr "Всі"
+
+msgid "display each day with photos, month per month"
+msgstr "показувати кожен день з фотографіями, місяць за місяцем"
+
+msgid "View"
+msgstr "Перегляд"
+
+msgid "chronology_monthly_calendar"
+msgstr "Місячний календар"
+
+msgid "chronology_monthly_list"
+msgstr "Список місяців"
+
+msgid "chronology_weekly_list"
+msgstr "Список тижнів"
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "Натисніть тут, якщо ваш браузер не перенаправив вас автоматично"
+
+msgid "comment date"
+msgstr "дата коментаря"
+
+msgid "Comment"
+msgstr "Коментар"
+
+msgid "Your comment has been registered"
+msgstr "Ваш коментар був зареєстрований"
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "Анти-флуд система : будь ласка, зачекайте кілька секунд перед тим, як додати новий коментар"
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "Ваш коментар НЕ був зареєстрований, оскільки він не відповідає вимогам"
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "Адміністратор повинен авторизувати ваш коментар перед тим, як він стане видимим."
+
+msgid "This login is already used by another user"
+msgstr "Цей лоґін вже використовується іншим користувачем"
+
+msgid "Comments"
+msgstr "Коментарі"
+
+msgid "Add a comment"
+msgstr "Додати коментар"
+
+msgid "created after %s (%s)"
+msgstr "створено після %s (%s)"
+
+msgid "created before %s (%s)"
+msgstr "створено до %s (%s)"
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "створено між %s (%s) і %s (%s)"
+
+msgid "created on %s"
+msgstr "створено в %s"
+
+msgid "Your Gallery Customization"
+msgstr "Налаштування вашої галереї"
+
+msgid "Default"
+msgstr "За замовчуванням"
+
+msgid "delete this photo from your favorites"
+msgstr "видалити це зображення з обраних"
+
+msgid "Delete"
+msgstr "Видалити"
+
+msgid "descending"
+msgstr "в порядку спадання"
+
+msgid "Download"
+msgstr "Завантажити"
+
+msgid "Download this file"
+msgstr "завантажити цей файл"
+
+msgid "edit"
+msgstr "редагувати"
+
+msgid "wrong date"
+msgstr "невірна дата"
+
+msgid "excluded"
+msgstr "вилучено"
+
+msgid "Your favorites"
+msgstr "Ваше обране"
+
+msgid "display your favorites photos"
+msgstr "показати ваші обрані зображення"
+
+msgid "Favorites"
+msgstr "Обрані"
+
+msgid "First"
+msgstr "Початок"
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "Галерея закрита для обслуговування. Будь ласка, зайдіть пізніше."
+
+msgid "Page generated in"
+msgstr "Сторінка згенерована за"
+
+msgid "guest"
+msgstr "гість"
+
+msgid "Hello"
+msgstr "Привіт"
+
+msgid "available for administrators only"
+msgstr "доступно тільки для адміністраторів"
+
+msgid "display this album"
+msgstr "показати цей альбом"
+
+msgid "display last user comments"
+msgstr "показати останні коментарі користувачів"
+
+msgid "search"
+msgstr "пошук"
+
+msgid "Home"
+msgstr "Домашня сторінка"
+
+msgid "in this album"
+msgstr "в цьому альбомі"
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] "в %d під-альбомі"
+msgstr[1] "в %d під-альбомах"
+
+msgid "included"
+msgstr "включено"
+
+msgid "Invalid password!"
+msgstr "Невірний пароль!"
+
+msgid "Language"
+msgstr "Мова"
+
+msgid "last %d days"
+msgstr "останні %d днів"
+
+msgid "Last"
+msgstr "Кінець"
+
+msgid "Logout"
+msgstr "Вийти"
+
+msgid "Links"
+msgstr "Посилання"
+
+msgid "New on %s"
+msgstr "Нове на %s"
+
+msgid "obligatory"
+msgstr "обов'язкове"
+
+msgid "display a calendar by creation date"
+msgstr "показувати календар за датою створення"
+
+msgid "display all photos in all sub-albums"
+msgstr "показувати всі фотографії в усіх під-альбомах"
+
+msgid "return to normal view mode"
+msgstr "повернутися до звичайного режиму перегляду"
+
+msgid "display a calendar by posted date"
+msgstr "показувати календар за датою відправлення"
+
+msgid "Most visited"
+msgstr "Найбільш відвідувані"
+
+msgid "display most visited photos"
+msgstr "показувати найбільш відвідувані фотографії"
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "Кількість зображень на сторінці повинно бути цілим ненульовим числом"
+
+msgid "Number of photos per page"
+msgstr "Кількість зображень на сторінці"
+
+msgid "Unknown identifier"
+msgstr "Невідомий ідентифікатор"
+
+msgid "New password"
+msgstr "Новий пароль"
+
+msgid "Rate this photo"
+msgstr "Оцінити цю фотографію"
+
+msgid "Next"
+msgstr "Наступне"
+
+msgid "no rate"
+msgstr "не оцінено"
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "Фотографії, розміщені лише протягом останнього %d дня."
+msgstr[1] "Фотографії, розміщені лише протягом останніх %d днів."
+
+msgid "password updated"
+msgstr "пароль оновлено"
+
+msgid "Recent period must be a positive integer value"
+msgstr "Останній період повинен бути невід'ємним цілим значенням"
+
+msgid "photo"
+msgstr "фото"
+
+msgid "Click on the photo to see it in high definition"
+msgstr "Натисніть на фото, щоб побачити його у високій якості"
+
+msgid "Show file metadata"
+msgstr "Показати метадані"
+
+msgid "Powered by"
+msgstr "Підтримка"
+
+msgid "Preferences"
+msgstr "Налаштування"
+
+msgid "Previous"
+msgstr "Попереднє"
+
+msgid "Random photos"
+msgstr "Випадкові фотографії"
+
+msgid "display a set of random photos"
+msgstr "показувати випадкові фотографії"
+
+msgid "Recent albums"
+msgstr "Останні альбоми"
+
+msgid "display recently updated albums"
+msgstr "показувати нещодавно оновлені альбоми"
+
+msgid "Recent period"
+msgstr "Останній період"
+
+msgid "Recent photos"
+msgstr "Останні фотографії"
+
+msgid "display most recent photos"
+msgstr "показувати останні фотографії"
+
+msgid "Redirection..."
+msgstr "Перенаправлення..."
+
+msgid "Please, enter a login"
+msgstr "Будь ласка, введіть лоґін"
+
+msgid "login mustn't end with a space character"
+msgstr "лоґін не повинен закінчуватися на пробіл"
+
+msgid "login mustn't start with a space character"
+msgstr "лоґін не повинен починатися з пробілу"
+
+msgid "this login is already used"
+msgstr "цей лоґін вже використовується"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "адреса електронної пошти повинна бути у вигляді xxx@yyy.eee (наприклад : jack@altern.org)"
+
+msgid "Auto login"
+msgstr "Автолоґін"
+
+msgid "remove this tag from the list"
+msgstr "видалити цей теґ зі списку"
+
+msgid "representative"
+msgstr "зразок"
+
+msgid "Search for Author"
+msgstr "Пошук по автору"
+
+msgid "Search in albums"
+msgstr "Пошук в альбомах"
+
+msgid "Search by date"
+msgstr "Пошук по даті"
+
+msgid "Date"
+msgstr "Дата"
+
+msgid "End-Date"
+msgstr "Кінцева дата"
+
+msgid "Kind of date"
+msgstr "Вид дати"
+
+msgid "Search for words"
+msgstr "Пошук по словам"
+
+msgid "Search for all terms"
+msgstr "Пошук по всім словам"
+
+msgid "Search for any term"
+msgstr "Пошук по будь-якому слову"
+
+msgid "Empty query. No criteria has been entered."
+msgstr "Порожній запит. Не був введений жоден критерій."
+
+msgid "%d Kb"
+msgstr "%d Кб"
+
+msgid "Search results"
+msgstr "Результати пошуку"
+
+msgid "Search in sub-albums"
+msgstr "Пошук в під-альбомах"
+
+msgid "Contact"
+msgstr "Контакт"
+
+msgid "set as album representative"
+msgstr "встановити як обкладинку альбому"
+
+msgid "Show number of comments"
+msgstr "Показувати число коментарів"
+
+msgid "Show number of hits"
+msgstr "Показувати число посилань"
+
+msgid "slideshow"
+msgstr "слайдшоу"
+
+msgid "stop the slideshow"
+msgstr "зупинити слайдшоу"
+
+msgid "Specials"
+msgstr "Спеціальні"
+
+msgid "SQL queries in"
+msgstr "SQL запитів за"
+
+msgid "display only recently posted photos"
+msgstr "показувати тільки нещодавно завантажені фотографії"
+
+msgid "return to the display of all photos"
+msgstr "повернутися до всіх зображень"
+
+msgid "the beginning"
+msgstr "початок"
+
+msgid "Thumbnails"
+msgstr "Ескізи"
+
+msgid "Menu"
+msgstr "Меню"
+
+msgid "A comment on your site"
+msgstr "Коментар на вашому сайті"
+
+msgid "today"
+msgstr "сьогодні"
+
+msgid "Update your rating"
+msgstr "Оновити ваш рейтинг"
+
+msgid "the username must be given"
+msgstr "необхідно ім'я користувача"
+
+msgid "Album: %s"
+msgstr "Альбом: %s"
+
+msgid "this email address is already in use"
+msgstr "ця адреса електронної пошти вже використовується"
+
+msgid "Album results for"
+msgstr "Результати для"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "%d фотографія"
+msgstr[1] "%d зображень"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "%d фотографія також пов'язана з поточними мітками"
+msgstr[1] "%d фотографій також пов'язані з поточними мітками"
+
+msgid "display photos linked to this tag"
+msgstr "показувати фотографії, пов'язані з поточними теґами"
+
+msgid "photos posted during the last %d days"
+msgstr "фотографії, завантажені протягом останніх %d днів"
+
+msgid "delete all photos from your favorites"
+msgstr "видалити всі зображення з обраних"
+
+msgid "Edit a comment"
+msgstr "Редагувати коментар"
+
+msgid "Are you sure?"
+msgstr "Ви впевнені?"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) Цей коментар вимагає валідації"
+
+msgid "Welcome"
+msgstr "Ласкаво просимо"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "Ласкаво просимо до вашої фото-галереї Piwigo!"
+
+msgid "... or browse your empty gallery"
+msgstr "... або відкрити вашу порожню галерею"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "... або, будь ласка, деактивуйте це повідомлення, я знайду рішення сам"
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "Привіт %s, ваша Piwigo фото-галерея порожня!"
+
+msgid "I want to add photos"
+msgstr "Я хочу додати фотографії"
+
+msgid "Manage this user comment: %s"
+msgstr "Виправити цей коментар користувача: %s"
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "Відсутня адреса електронної пошти. Будь ласка, вкажіть адресу електронної пошти."
+
+msgid "This author modified following comment:"
+msgstr "Цей автор змінив наступний коментар:"
+
+msgid "This author removed the comment with id %d"
+msgstr "Цей автор видалив коментар з ідентифікатором %d"
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "Невірний статус для користувача \"гість\", буде використовуватись статус за замовчуванням. Будь ласка, повідомте веб-майстра."
+
+msgid "N/A"
+msgstr "невідомий"
+
+msgid "IP: %s"
+msgstr "IP: %s"
+
+msgid "html tags are not allowed in login"
+msgstr "лоґін не повинен містити html тегів"
+
+msgid "Rating score"
+msgstr "Рейтинговий бал"
+
+msgid "Invalid username or email"
+msgstr "Невірне ім'я користувача або адреса електронної пошти"
+
+msgid "Password reset is not allowed for this user"
+msgstr "Оновлення паролю не дозволено для цього користувача"
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "Користувач \"%s\" не має адреси електронної пошти, оновлення паролю неможливе"
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "Хтось запросив оновлення паролю для наступного облікового запису користувача:"
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "Ім'я \"%s\" в галереї %s"
+
+msgid "To reset your password, visit the following address:"
+msgstr "Щоб оновити пароль, відвідайте наступну адресу:"
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "Якщо це було помилкою, просто проігноруйте це повідомлення і нічого не трапиться."
+
+msgid "Password Reset"
+msgstr "Оновлення паролю"
+
+msgid "Check your email for the confirmation link"
+msgstr "Перевірте вашу пошту на наявність лінку підтвердження"
+
+msgid "Invalid key"
+msgstr "Невірний ключ"
+
+msgid "The passwords do not match"
+msgstr "Паролі не співпадають"
+
+msgid "Your password has been reset"
+msgstr "Ваш пароль був оновлений"
+
+msgid "Return to home page"
+msgstr "Повернутися на домашню сторінку"
+
+msgid "Please enter your username or email address."
+msgstr "Будь ласка введіть ваше ім'я користувача або адресу електронної пошти."
+
+msgid "You will receive a link to create a new password via email."
+msgstr "Ви отримаєте посилання, щоб створити новий пароль по електронній пошті."
+
+msgid "Username or email"
+msgstr "Ім'я користувача або адреса електронної пошти"
+
+msgid "Change my password"
+msgstr "Змінити мій пароль"
+
+msgid "Enter your new password below."
+msgstr "Введіть ваш новий пароль нижче."
+
+msgid "EXIF Metadata"
+msgstr "EXIF метадані"
+
+msgid "IPTC Metadata"
+msgstr "IPTC метадані"
+
+msgid "Edit"
+msgstr "Редагувати"
+
+msgid "Hello %s,"
+msgstr "Привіт %s,"
+
+msgid "Send my connection settings by email"
+msgstr "Надіслати мої дані для входу по електронній пошті"
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "Реєстрація успішна. Скоро ви отримаєте лист з вашими даними. Ласкаво просимо!"
+
+msgid "Username modification"
+msgstr "Зміна імені користувача"
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "Ваше ім'я користувача було успішно змінене на  : %s"
+
+msgid "square"
+msgstr "Квадрат"
+
+msgid "thumb"
+msgstr "Іконка"
+
+msgid "small"
+msgstr "Малий"
+
+msgid "medium"
+msgstr "Середній"
+
+msgid "large"
+msgstr "Великий"
+
+msgid "xlarge"
+msgstr "XВеликий"
+
+msgid "xxlarge"
+msgstr "XXВеликий"
+
+msgid "Original"
+msgstr "Оригінальний"
+
+msgid "Thank you for registering at %s!"
+msgstr "Дякуємо вам за реєстрацію на сайті %s!"
+
+msgid "Here are your connection settings"
+msgstr "Ось Ваші дані для входу"
+
+msgid "Password: %s"
+msgstr "Пароль: %s"
+
+msgid "Username: %s"
+msgstr "Ім'я користувача: %s"
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "Якщо Ви думаєте, що Ви отримали цей лист помилково, будь ласка, зв'яжіться з нами за адресою %s"
+
+msgid "Photo sizes"
+msgstr "Розміри зображення"
+
+msgid "Desktop"
+msgstr "Комп’ютер"
+
+msgid "Mobile"
+msgstr "Мобільний пристрій"
+
+msgid "View in"
+msgstr "Подивитися в"
+
+msgid "Show latest comments first"
+msgstr "Покажіть найновіші коментарі спочатку"
+
+msgid "Show oldest comments first"
+msgstr "Покажіть найстаріші коментарі спочатку"
+
+msgid "2small"
+msgstr "XXS - крихітний"
+
+msgid "xsmall"
+msgstr "XS - особливо малий"
+
+msgid "Date created, new &rarr; old"
+msgstr "Дата створення, новіше &rarr; старіше"
+
+msgid "Date created, old &rarr; new"
+msgstr "Дата створення, старіше &rarr; новіше"
+
+msgid "Date posted, new &rarr; old"
+msgstr "Дата публікації, новіше &rarr; старіше"
+
+msgid "Date posted, old &rarr; new"
+msgstr "Дата публікації, старіше &rarr; новіше"
+
+msgid "File name, A &rarr; Z"
+msgstr "Ім'я файлу, А &rarr; Я"
+
+msgid "File name, Z &rarr; A"
+msgstr "Ім'я файлу, Я &rarr; А"
+
+msgid "Manual sort order"
+msgstr "Ручне сортування"
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "Числовий ідентифікатор, 1 &rarr; 9"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "Числовий ідентифікатор, 9 &rarr; 1"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "Назва зображення, А &rarr; Я"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "Назва зображення,, Я &rarr; А"
+
+msgid "Rating score, high &rarr; low"
+msgstr "Рейтинговий бал, від найвищий &rarr; найнижчий"
+
+msgid "Rating score, low &rarr; high"
+msgstr "Рейтинговий бал, від найнижчий &rarr; найвищий"
+
+msgid "Visits, high &rarr; low"
+msgstr "Переглядів, більше &rarr; менше"
+
+msgid "Visits, low &rarr; high"
+msgstr "Перегляди, менше &rarr; більше"
+
+msgid "%d rate"
+msgid_plural "%d rates"
+msgstr[0] "%d рейтингу"
+msgstr[1] "%d голосів"
+
+msgid "Bad request"
+msgstr "Неправильний запит"
+
+msgid "Forbidden"
+msgstr "Заборонено"
+
+msgid "Page not found"
+msgstr "Сторінку не знайдено"
+
+msgid "Permalink for album not found"
+msgstr "Постійне посилання для альбом не знайдено"
+
+msgid "Requested album does not exist"
+msgstr "Запитуваний альбом не існує"
+
+msgid "Requested tag does not exist"
+msgstr "Запитуваний теґ не існує"
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "Piwigo зіткнувся з невиправною помилкою"
+
+msgid "Email address is mandatory"
+msgstr "Адреса електронної пошти обов'язкова"
+
+msgid "Username is mandatory"
+msgstr "Ім'я користувача є обов'язковим"
+
+msgid "mandatory"
+msgstr "обов’язковий"
+
+msgid "Website"
+msgstr "Веб-сайт"
+
+msgid "Your website URL is invalid"
+msgstr "Адрес вашого сайту є недійсним"
+
+msgid "Email"
+msgstr "Електронна пошта"
+
+msgid "First Page"
+msgstr "Перша сторінка"
+
+msgid "Go back to the album"
+msgstr "Повернутися до альбому"
+
+msgid "Last Page"
+msgstr "Остання сторінка"
+
+msgid "Password is missing. Please enter the password."
+msgstr "Пароль відсутній. Будь ласка введіть пароль."
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Відсутнє підтвердження пароля. Будь ласка, підтвердіть вибраний пароль."
+
+msgid "%d photos per page"
+msgstr "%d зображень на сторінці"
+
+msgid "Theme"
+msgstr "Тема"
+
+msgid "No results for"
+msgstr "Нічого не знайдено для"
+
+msgid "Apply on properties"
+msgstr "Застосувати на властивості"
+
+msgid "Photo description"
+msgstr "Опис фотографії"
+
+msgid "Photo title"
+msgstr "Назва фотографії"
+
+msgid "Album name, A &rarr; Z"
+msgstr "Назва альбому, А &rarr; Я"
+
+msgid "Album name, Z &rarr; A"
+msgstr "Назва альбому, Я &rarr; А"
+
+msgid "Link: %s"
+msgstr "Посилання: %s"
+
+msgid "Your authentication key is no longer valid."
+msgstr "Ваш ключ аутентифікації більше не дійсний."
+
+msgid "Invalid username or password!"
+msgstr "Недійсне ім'я користувача чи пароль"
+
+msgid "generate random password"
+msgstr "Генерувати випадковий пароль"
+
+msgid "Password: ********** (no copy by email)"
+msgstr "Пароль: ********** (без копії електронною поштою)"
+
+msgid "Related albums"
+msgstr "Схожі альбоми"
+
+msgid "Album name, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+msgstr "Назва альбому, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+
+msgid "Album name, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+msgstr "Назва альбому, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+
+msgid "Start-Date"
+msgstr "Початкова дата"
+
+msgid "Validate"
+msgstr "Перевірити"
+
+msgid "You can try to edit your filters and perform a new search."
+msgstr "Ви можете відредагувати фільтр та пошукати знову."
+
+msgid "last 24 hours"
+msgstr "Останні 2 години"
+
+msgid "last 3 months"
+msgstr "Останні 3 місяці"
+
+msgid "last 30 days"
+msgstr "Останні 30 діб"
+
+msgid "last 6 months"
+msgstr "Останні 6 місяців"
+
+msgid "last 7 days"
+msgstr "Останні 7 днів"
+
+msgid "last year"
+msgstr "Минулий рік"
+
+msgid "rating score %s"
+msgstr "Рейтинг %s"
+
+msgid "year %d"
+msgstr "Рік %d"
+
+msgid "%d visits"
+msgstr "%d відвідувань"
+
+msgid "Added by"
+msgstr "Додано"
+
+msgid "Album description"
+msgstr "Опис альбому"
+
+msgid "Album title"
+msgstr "Назва альбому"
+
+msgid "Albums found"
+msgstr "Альбомів знайдено"
+
+msgid "Albums listed here match your search by word. Click on one to browse by album."
+msgstr "Перелічені тут альбоми відповідають вашому пошуку. Оберіть один, щоб переглянути."
+
+msgid "Cancel"
+msgstr "Відмінити"
+
+msgid "Choose filters"
+msgstr "Оберіть фільтри"
+
+msgid "Clear"
+msgstr "Очистити"
+
+msgid "Empty filters"
+msgstr "Порожні фільтри"
+
+msgid "File type"
+msgstr "Тип файлу"
+
+msgid "Fill in the filters to start a search"
+msgstr "Заповнить фільтр для початку пошуку"
+
+msgid "Filters"
+msgstr "Фільтри"
+
+msgid "No results are available."
+msgstr "Немає результатів"
+
+msgid "Pre-established filters are proposed, but you can add or remove them using the \"Choose filters\" button."
+msgstr "Пропонуються попередньо встановлені фільтри, але ви можете додати або видалити їх за допомогою кнопки «Вибрати фільтри»."
+
+msgid "Search in :"
+msgstr "Пошук в:"
+
+msgid "Search in this set"
+msgstr "Пошук в цьому"
+
+msgid "Tags found"
+msgstr "Теги знайдено"
+
+msgid "Tags listed here match your search by word. Click on one to browse by tag."
+msgstr "Перелічені теги відповідають вашому пошуку. Оберіть один, щоб переглянути. "
+
+msgid "Unknown time period"
+msgstr "Невідомий проміжок часу"
+
+msgid "piwigo_day_0"
+msgstr "Неділя"
+
+msgid "piwigo_day_1"
+msgstr "Понеділок"
+
+msgid "piwigo_day_2"
+msgstr "Вівторок"
+
+msgid "piwigo_day_3"
+msgstr "Середа"
+
+msgid "piwigo_day_4"
+msgstr "Четвер"
+
+msgid "piwigo_day_5"
+msgstr "П'ятниця"
+
+msgid "piwigo_day_6"
+msgstr "Субота"
+
+msgid "piwigo_month_10"
+msgstr "Жовтень"
+
+msgid "piwigo_month_11"
+msgstr "Листопад"
+
+msgid "piwigo_month_12"
+msgstr "Грудень"
+
+msgid "piwigo_month_1"
+msgstr "Січень"
+
+msgid "piwigo_month_2"
+msgstr "Лютий"
+
+msgid "piwigo_month_3"
+msgstr "Березень"
+
+msgid "piwigo_month_4"
+msgstr "Квітень"
+
+msgid "piwigo_month_5"
+msgstr "Травень"
+
+msgid "piwigo_month_6"
+msgstr "Червень"
+
+msgid "piwigo_month_7"
+msgstr "Липень"
+
+msgid "piwigo_month_8"
+msgstr "Серпень"
+
+msgid "piwigo_month_9"
+msgstr "Вересень"
+

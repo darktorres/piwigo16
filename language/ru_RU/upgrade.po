@@ -1,0 +1,65 @@
+# Piwigo translation — ru_RU
+# Source: upgrade.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ru_RU\n"
+"Plural-Forms: nplurals=3; plural=(n % 10 == 1 && n % 100 != 11 ? 0 : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 1 : 2);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Upgrade"
+msgstr "Обновление"
+
+msgid "Upgrade from version %s to %s"
+msgstr "Обновление с версии %s до %s"
+
+msgid "Statistics"
+msgstr "Статистика"
+
+msgid "total upgrade time"
+msgstr "общее время обновления"
+
+msgid "total SQL time"
+msgstr "общее время SQL"
+
+msgid "SQL queries"
+msgstr "SQL запросы"
+
+msgid "Upgrade informations"
+msgstr "Информация об обновлениях"
+
+msgid "Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem."
+msgstr "Выполните обслуживание [Администрирование> Инструменты > Обслуживание], если Вы столкнулись с какими-либо проблемами."
+
+msgid "Only administrator can run upgrade: please sign in below."
+msgstr "Только администратор может запустить обновление: проверьте ниже."
+
+msgid "You do not have access rights to run upgrade"
+msgstr "У вас нет прав на запуск обновлений"
+
+msgid "All sub-albums of private albums become private"
+msgstr "Все альбомы, вложенные в приватный альбом, тоже становятся приватными"
+
+msgid "User permissions and group permissions have been erased"
+msgstr "Разрешения пользователей и групп были стерты"
+
+msgid "Only thumbnails prefix and webmaster mail address have been saved from previous configuration"
+msgstr "Только префикс эскизов и адрес почты вебмастера были сохранены от предыдущей конфигурации"
+
+msgid "This page proposes to upgrade your database corresponding to your old version of Piwigo to the current version. The upgrade assistant thinks you are currently running a <strong>release %s</strong> (or equivalent)."
+msgstr "Эта страница предлагает модернизировать базу данных от Вашей старой версии Piwigo до новой версии. Помощник обновления думает, что Вы используете в настоящее время <b> выпуск %s </b> (или эквивалентный)."
+
+msgid "As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:"
+msgstr "Желательно, чтобы следующие плагины были дезактивированы. Вы должны проверить обновления плагинов прежде, чем активировать их снова:"
+
+msgid "In <i>%s</i>, before <b>?></b>, insert:"
+msgstr "В %s, до ?>, вставить:"
+
+msgid "As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:"
+msgstr "Предварительно эти темы были деактивированы. Вы должны проверить актуальность их версии, прежде чем реактивировать их:"
+
+msgid "Discover what's new in Piwigo %s"
+msgstr "Узнайте, что нового в Piwigo %s"
+

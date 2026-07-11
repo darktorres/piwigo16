@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\ActivitySystem;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SizingParams;
@@ -275,7 +276,7 @@ if (count($errors) == 0 && count($derivative_errors) == 0) {
         ]
     );
 
-    pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'config', [
+    pwg_activity('system', ActivitySystem::Core, 'config', [
         'config_section' => 'sizes',
     ]);
 } else {

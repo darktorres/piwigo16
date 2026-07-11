@@ -10,6 +10,8 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Core\Logger;
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
@@ -52,7 +54,7 @@ function ws_users_getList(array $params, PwgServer &$service): PwgError|array
     $available_permission_levels = $conf['available_permission_levels'];
     $available_permission_levels = is_array($available_permission_levels) ? $available_permission_levels : [];
 
-    if (! (bool) preg_match(PATTERN_ORDER, $params['order'])) {
+    if (! (bool) preg_match(ValidationPattern::ORDER, $params['order'])) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid input parameter order');
     }
 
@@ -73,7 +75,7 @@ function ws_users_getList(array $params, PwgServer &$service): PwgError|array
 
     $filtered_groups = [];
     if (! empty($params['filter'])) {
-        $filter_query = 'SELECT id FROM `' . GROUPS_TABLE . '` WHERE name LIKE \'%' . pwg_db_real_escape_string($params['filter']) . '%\';';
+        $filter_query = 'SELECT id FROM `' . Tables::groups() . '` WHERE name LIKE \'%' . pwg_db_real_escape_string($params['filter']) . '%\';';
         $filtered_groups_res = pwg_query($filter_query);
         while ((bool) ($row = pwg_db_fetch_assoc($filtered_groups_res))) {
             $filtered_groups[] = $row['id'];
@@ -125,7 +127,7 @@ function ws_users_getList(array $params, PwgServer &$service): PwgError|array
     }
 
     if (! empty($params['status'])) {
-        $params['status'] = array_intersect($params['status'], get_enums(USER_INFOS_TABLE, 'status'));
+        $params['status'] = array_intersect($params['status'], get_enums(Tables::userInfos(), 'status'));
         if (count($params['status']) > 0) {
             $where_clauses[] = 'ui.status IN("' . implode('","', $params['status']) . '")';
         }
@@ -244,10 +246,10 @@ SELECT DISTINCT ';
         $query .= ', ui.last_visit_from_history AS last_visit_from_history';
     }
     $query .= '
-  FROM ' . USERS_TABLE . ' AS u
-    INNER JOIN ' . USER_INFOS_TABLE . ' AS ui
+  FROM ' . Tables::users() . ' AS u
+    INNER JOIN ' . Tables::userInfos() . ' AS ui
       ON u.' . $user_field_id . ' = ui.user_id
-    LEFT JOIN ' . USER_GROUP_TABLE . ' AS ug
+    LEFT JOIN ' . Tables::userGroup() . ' AS ug
       ON u.' . $user_field_id . ' = ug.user_id
   WHERE
     ' . implode(' AND ', $where_clauses) . '
@@ -288,7 +290,7 @@ SELECT DISTINCT ';
         if ($want_groups) {
             $query = '
   SELECT user_id, group_id
-  FROM ' . USER_GROUP_TABLE . '
+  FROM ' . Tables::userGroup() . '
   WHERE user_id IN (' . implode(',', array_keys($users)) . ')
 ;';
             $result = pwg_query($query);
@@ -522,7 +524,7 @@ function ws_users_delete(array $params, PwgServer &$service): PwgError|string
         $query = '
 SELECT
     user_id
-  FROM ' . USER_INFOS_TABLE . '
+  FROM ' . Tables::userInfos() . '
   WHERE status IN (\'webmaster\', \'admin\')
 ;';
         $protected_users = array_merge($protected_users, query2array($query, null, 'user_id'));
@@ -664,7 +666,7 @@ function ws_users_setMyInfo(array $params, PwgServer &$service): PwgError|string
 
         $query = '
 SELECT ' . $user_field_password . ' AS password
-  FROM ' . USERS_TABLE . '
+  FROM ' . Tables::users() . '
   WHERE ' . $user_field_id . ' = \'' . $current_user_id . '\'
 ;';
         $row = pwg_db_fetch_row(pwg_query($query));
@@ -762,7 +764,7 @@ function ws_users_favorites_add(array $params, PwgServer &$service): PwgError|tr
     // does the image really exist?
     $query = '
 SELECT COUNT(*)
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE id = ' . $params['image_id'] . '
 ;';
     $row = pwg_db_fetch_row(pwg_query($query));
@@ -773,7 +775,7 @@ SELECT COUNT(*)
     }
 
     single_insert(
-        FAVORITES_TABLE,
+        Tables::favorites(),
         [
             'image_id' => $params['image_id'],
             'user_id' => $user['id'],
@@ -805,7 +807,7 @@ function ws_users_favorites_remove(array $params, PwgServer &$service): PwgError
     // does the image really exist?
     $query = '
 SELECT COUNT(*)
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE id = ' . $params['image_id'] . '
 ;';
     $row = pwg_db_fetch_row(pwg_query($query));
@@ -818,7 +820,7 @@ SELECT COUNT(*)
     $current_user_id = is_scalar($user['id']) ? (string) $user['id'] : '';
     $query = '
 DELETE
-  FROM ' . FAVORITES_TABLE . '
+  FROM ' . Tables::favorites() . '
   WHERE user_id = ' . $current_user_id . '
     AND image_id = ' . $params['image_id'] . '
 ;';
@@ -860,8 +862,8 @@ function ws_users_favorites_getList(array $params, PwgServer &$service): false|a
     $query = '
 SELECT
     i.*
-  FROM ' . FAVORITES_TABLE . '
-    INNER JOIN ' . IMAGES_TABLE . ' i ON image_id = i.id
+  FROM ' . Tables::favorites() . '
+    INNER JOIN ' . Tables::images() . ' i ON image_id = i.id
   WHERE user_id = ' . $current_user_id . '
 ' . get_sql_condition_FandF(
         [

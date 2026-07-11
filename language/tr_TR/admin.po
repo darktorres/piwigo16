@@ -1,0 +1,4245 @@
+# Piwigo translation — tr_TR
+# Source: admin.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: tr_TR\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "... or "
+msgstr "...veya "
+
+msgid " and %d virtual"
+msgstr "ve %d sanal"
+
+msgid "%d album including"
+msgstr "%d albüm dahil"
+
+msgid "%d album moved"
+msgid_plural "%d albums moved"
+msgstr[0] "%d albüm taşındı"
+msgstr[1] "%d albüm taşındı"
+
+msgid "%d albums including"
+msgstr "%d albüm dahil"
+
+msgid "%d anomaly has been corrected."
+msgid_plural "%d anomalies have been detected corrected."
+msgstr[0] "%d anormallik düzeltildi."
+msgstr[1] "%d anormallikler tespit edildi ve düzeltildi."
+
+msgid "%d anomaly has been detected."
+msgid_plural "%d anomalies have been detected."
+msgstr[0] "%d anormallik tespit edildi."
+msgstr[1] "%d anormallikler tespit edildi."
+
+msgid "%d anomaly has been ignored."
+msgid_plural "%d anomalies have been ignored."
+msgstr[0] "%d anormallik yok sayıldı."
+msgstr[1] "%d anormallikler yok sayıldı."
+
+msgid "%d anomaly has not been corrected."
+msgid_plural "%d anomalies have not been corrected."
+msgstr[0] "%d anormallik düzeltilemedi."
+msgstr[1] "%d anormallik düzeltilemedi."
+
+msgid "%d association"
+msgstr "%d bağlantı"
+
+msgid "%d associations"
+msgstr "%d bağlantı"
+
+msgid "%d group"
+msgstr "%d grup"
+
+msgid "%d groups"
+msgstr "%d grup"
+
+msgid "%d guest"
+msgid_plural "%d guests"
+msgstr[0] "%d misafir"
+msgstr[1] "%d misafir"
+
+msgid "%d line filtered"
+msgid_plural "%d lines filtered"
+msgstr[0] "%d satır filtre edildi"
+msgstr[1] "%d satır filtre edildi"
+
+msgid "%d mail was not sent."
+msgid_plural "%d mails were not sent."
+msgstr[0] "%d posta gönderilemedi."
+msgstr[1] "%d posta gönderilemedi."
+
+msgid "%d mail was sent."
+msgid_plural "%d mails were sent."
+msgstr[0] "%d posta gönderildi."
+msgstr[1] "%d posta gönderildi."
+
+msgid "%d member"
+msgid_plural "%d members"
+msgstr[0] "%d üye"
+msgstr[1] "%d üye"
+
+msgid "%d of %d photos selected"
+msgstr "%d/%d fotoğraf seçildi"
+
+msgid "%d parameter was updated."
+msgid_plural "%d parameters were updated."
+msgstr[0] "%d parametre güncellendi."
+msgstr[1] "%d parametre güncellendi."
+
+msgid "%d photo was deleted"
+msgid_plural "%d photos were deleted"
+msgstr[0] "%d fotoğraf silindi"
+msgstr[1] "%d fotoğraf silindi"
+
+msgid "%d photos uploaded"
+msgstr "%d fotoğraf yüklendi"
+
+msgid "%d physical"
+msgstr "%d fiziksel"
+
+msgid "%d tag"
+msgstr "%d etiket"
+
+msgid "%d tags"
+msgstr "%d etiket"
+
+msgid "%d user comment rejected"
+msgstr "%d kullanıcı yorumu reddedildi"
+
+msgid "%d user comment validated"
+msgstr "%d kullanıcı yorumu onaylandı"
+
+msgid "%d user comments rejected"
+msgstr "%d kullanıcı yorumu reddedildi"
+
+msgid "%d user comments validated"
+msgstr "%d kullanıcı yorumu onaylandı"
+
+msgid "%d user deleted"
+msgid_plural "%d users deleted"
+msgstr[0] "%d kullanıcı silindi"
+msgstr[1] "%d kullanıcı silindi"
+
+msgid "%d user was not updated."
+msgid_plural "%d users were not updated."
+msgstr[0] "%d kullanıcı güncellenemedi."
+msgstr[1] "%d kullanıcı güncellenemedi."
+
+msgid "%d user was updated."
+msgid_plural "%d users were updated."
+msgstr[0] "%d kullanıcı güncellendi."
+msgstr[1] "%d kullanıcı güncellendi."
+
+msgid "%d user"
+msgid_plural "%d users"
+msgstr[0] "%d kullanıcı"
+msgstr[1] "%d kullanıcı"
+
+msgid "%d waiting for validation"
+msgstr "%d onay için bekliyor"
+
+msgid "%s has been successfully updated."
+msgstr "%s başarıyla güncellendi."
+
+msgid "%s must be to set to false in your local/config/config.inc.php file"
+msgstr "/config/config.inc.php dosyası içindeki %s false olarak ayarlanmalı"
+
+msgid "%s photos can not be regenerated"
+msgstr "%s fotoğraf tekrar oluşturulamadı"
+
+msgid "%s photos have been regenerated"
+msgstr "%s fotoğraf tekrar oluşturuldu"
+
+msgid "%s value is not correct file because exif are not supported"
+msgstr "%s değeri yanlış çünkü exif desteklenmiyor"
+
+msgid "(this tag will be deleted)"
+msgstr "(bu etiket silinecek)"
+
+msgid "+ Add an upload box"
+msgstr "+ Bir yükleme kutusu ekleyin"
+
+msgid ", click on"
+msgstr ", üzerine tıkla"
+
+msgid "[%s] Visit album %s"
+msgstr "[%s] albümü gez%s"
+
+msgid "[NBM] Problems or questions"
+msgstr "Sorunlar veya sorular"
+
+msgid "A new version of Piwigo is available."
+msgstr "Piwigo'nun yeni bir sürümü mevcut."
+
+msgid "Access type"
+msgstr "Erişim türü"
+
+msgid "ACCESS_0"
+msgstr "Serbest erişim"
+
+msgid "ACCESS_1"
+msgstr "Tümüne erişim"
+
+msgid "ACCESS_2"
+msgstr "Kayıtlı kullanıcılar erişebilir"
+
+msgid "ACCESS_3"
+msgstr "Yöneticilere erişim"
+
+msgid "ACCESS_4"
+msgstr "Site töneticilerine erişim"
+
+msgid "ACCESS_5"
+msgstr "Erişim yok"
+
+msgid "Action"
+msgstr "İşlem"
+
+msgid "Actions"
+msgstr "İşlemler"
+
+msgid "Activate icon \"%s\""
+msgstr "\"%s\" simgesini aktifleştir"
+
+msgid "Activate icon \"new\" next to albums and pictures"
+msgstr "Resimlerin yanındaki \"yeni\" simgesini etkinleştir"
+
+msgid "Activate Navigation Bar"
+msgstr "Gezinti çubuğunu etkinleştir"
+
+msgid "Activate Navigation Thumbnails"
+msgstr "Gezinti çubuğu küçük resimlerini etkinleştir"
+
+msgid "Activate"
+msgstr "Etkinleştir"
+
+msgid "Active Languages"
+msgstr "Etkin Diller"
+
+msgid "Active Plugins"
+msgstr "Etkin Eklentiler"
+
+msgid "Active Themes"
+msgstr "Etkin Temalar"
+
+msgid "Add a criteria"
+msgstr "Kriter ekle"
+
+msgid "Add a filter"
+msgstr "Filtre ekle"
+
+msgid "Add a tag"
+msgstr "Etiket ekle"
+
+msgid "Add a user"
+msgstr "Kullanıcı ekle"
+
+msgid "Add a virtual album"
+msgstr "Sanal albüm ekle"
+
+msgid "Add another set of photos"
+msgstr "Başka bir fotoğraf yığını ekle"
+
+msgid "Add detailed content"
+msgstr "Biraz daha ayrıntılı içerik ekle"
+
+msgid "Add group"
+msgstr "Grup ekle"
+
+msgid "Add New Language"
+msgstr "Yeni bir dil ekle"
+
+msgid "add new photos to caddie"
+msgstr "Sepete işlem görecek fotolar ekle"
+
+msgid "Add New Theme"
+msgstr "Yeni bir tema ekle"
+
+msgid "Add Photos"
+msgstr "Resim ekle"
+
+msgid "Add tags"
+msgstr "Etiket ekle"
+
+msgid "Add to caddie"
+msgstr "Sepete ekle"
+
+msgid "Add write access to the \"%s\" directory"
+msgstr "\"%s\" dizinine yazma erişimi ekle"
+
+msgid "Add"
+msgstr "Ekle"
+
+msgid "Add/delete a permalink"
+msgstr "Kalıcı Bağlantı ekle / sil"
+
+msgid "added"
+msgstr "eklendi"
+
+msgid "Administration Home"
+msgstr "Yönetim Ana Sayfa"
+
+msgid "Advanced features"
+msgstr "Gelişmiş özellikler"
+
+msgid "Album \"%s\" has been added"
+msgstr "\"%s\" albümü eklendi"
+
+msgid "Album \"%s\" now contains %d photos"
+msgstr "Albüm \"%s\" şimdi %d fotoğraf içeriyor"
+
+msgid "Album list management"
+msgstr "Albüm listesi yönetimi"
+
+msgid "Album manual order was saved"
+msgstr "Albümlerin elle sıralaması kaydedildi"
+
+msgid "Album name"
+msgstr "Albüm ismi"
+
+msgid "Album photos associated to the following albums: %s"
+msgstr "Albüm fotoğrafları takip eden albümlerle ilişkilendirildi: %s"
+
+msgid "Album updated successfully"
+msgstr "Albüm bilgileri güncellendi"
+
+msgid "albums added in the database"
+msgstr "veri tabanına eklenen albümler"
+
+msgid "Albums authorized thanks to group associations"
+msgstr "Albümler grup ilişkilendirmeleriyle yetkilendirildi"
+
+msgid "Albums automatically sorted"
+msgstr "Albümler otomatik olarak sıralandı"
+
+msgid "albums deleted in the database"
+msgstr "veri tabanından silinen albümler"
+
+msgid "All %d photos are selected"
+msgstr "Bütün %d fotoğraf seçildi"
+
+msgid "All extensions are up to date."
+msgstr "Tüm eklentiler güncel."
+
+msgid "All languages are up to date."
+msgstr "Bütün diller güncel."
+
+msgid "All optimizations have been successfully completed."
+msgstr "Tüm iyileştirmeler başarıyla tamamlandı."
+
+msgid "All plugins are up to date."
+msgstr "Bütün eklentiler güncel."
+
+msgid "All themes are up to date."
+msgstr "Bütün temalar güncel."
+
+msgid "all"
+msgstr "tüm"
+
+msgid "Allow rating"
+msgstr "Puanlamaya izin ver"
+
+msgid "Allow user customization"
+msgstr "Kullanıcı özelleştirmesine izin ver"
+
+msgid "Allow user registration"
+msgstr "Kullanıcı kaydına izin ver"
+
+msgid "Allow users to delete their own comments"
+msgstr "Kullanıcıların kendi yorumlarını silmesine izin ver"
+
+msgid "Allow users to edit their own comments"
+msgstr "Kullanıcıların kendi yorumlarını düzenlemesine izin ver"
+
+msgid "Allowed file types: %s."
+msgstr "İzin verilen dosya türleri: %s."
+
+msgid "an error happened"
+msgstr "Bir hata olustu"
+
+msgid "An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href=\"%s\">Click here to show log error</a>."
+msgstr "Çıkarma sırasında bir hata oluştu. Lütfen Piwigo kurulum dosya izinlerini kontrol ediniz.<br><a href=\"%s\">Hataları göstermek için buraya tıklayın</a>."
+
+msgid "An error has occured during upgrade."
+msgstr "Yükseltme sırasında bir hata oluştu."
+
+msgid "An error occured during extraction (%s)."
+msgstr "(%s) dosyası çıkarılırken hata oluştu."
+
+msgid "An information email was sent to group \"%s\""
+msgstr "Bilgi e-postası \"%s\" grubuna gönderildi"
+
+msgid "and"
+msgstr "ve"
+
+msgid "Anomaly"
+msgstr "Anormallik"
+
+msgid "Anyway only webmasters can see this tab and never administrators."
+msgstr "Bu sekmeyi sadece site yöneticisi görebilir, diğer yöneticiler göremez."
+
+msgid "Apply action"
+msgstr "İşlem uygula"
+
+msgid "Apply selected corrections"
+msgstr "Seçilen düzeltmeleri uygula"
+
+msgid "Apply to sub-albums"
+msgstr "Alt albümlere uygula"
+
+msgid "Approximate maximum resolution: %dM pixels (that's %dx%d pixels)."
+msgstr "Yaklaşık maksimum çözünürlük: %dM pixel (%dx%d pixel)."
+
+msgid "Are you sure to install this upgrade? You must verify if this version does not need uninstallation."
+msgstr "Bu yükseltmeyi yüklemek istediğinizden emin misiniz? Bu sürüm öncesinde kaldırma ihtiyacı olup olmadığını doğrulamalısınız."
+
+msgid "Are you sure you want to delete this plugin?"
+msgstr "Bu eklentiyi silmek istediğinize emin misiniz?"
+
+msgid "Are you sure you want to install this plugin?"
+msgstr "Bu eklentiyi kurmak istediğinize emin misiniz?"
+
+msgid "Associate to album"
+msgstr "Albüme bağla"
+
+msgid "associate to group"
+msgstr "Gruba iliskilendirmek"
+
+msgid "Associated"
+msgstr "Bağlantılı"
+
+msgid "Authorize users to add comments on selected albums"
+msgstr "Kullanıcıları seçilen albümler için yorum yapmaya yetkilendir"
+
+msgid "Authorized"
+msgstr "Yetkili"
+
+msgid "Automatic correction"
+msgstr "Otomatik düzeltme"
+
+msgid "automatic order"
+msgstr "otomatik sıralama"
+
+msgid "Available only with HTML format"
+msgstr "Sadece HTML biçiminde mevcuttur"
+
+msgid "Average rate"
+msgstr "Ortalama derecelendirme"
+
+msgid "average time"
+msgstr "ortalama süre"
+
+msgid "Batch Manager"
+msgstr "Küme Yöneticisi"
+
+msgid "between"
+msgstr "arasinda"
+
+msgid "Bound Theme"
+msgstr "Yükümlü tema"
+
+msgid "By %s"
+msgstr "Tarafından %s"
+
+msgid "By default, Piwigo will create a new websize from the HD (high definition) version of your photo."
+msgstr "Varsayılan olarak, Piwigo HD (yüksek çözünürlüklü) fotoğraflarınızdan yeni bir web boyutu oluşturacak."
+
+msgid "By rank"
+msgstr "Rütbece"
+
+msgid "Caddie management"
+msgstr "Sepet yönetimi"
+
+msgid "Caddie"
+msgstr "Sepet"
+
+msgid "Can't connect to server."
+msgstr "Sunucuya bağlantı kurulamıyor."
+
+msgid "Can't create temporary file."
+msgstr "Geçici dosya oluşturulamadı."
+
+msgid "Can't download archive."
+msgstr "Arşiv indirilemedi."
+
+msgid "Can't read or extract archive."
+msgstr "Arşiv okunamadı veya açılamadı."
+
+msgid "Cannot delete the old permalink !"
+msgstr "Eski kalıcı bağlantı silinemez!"
+
+msgid "Change Admin Colors"
+msgstr "Yönetim sayfası renk değişimi"
+
+msgid "Check all"
+msgstr "Hepsini işaretle"
+
+msgid "Check automatic corrections"
+msgstr "Otomatik düzeltmeleri kontrol et"
+
+msgid "Check for updates"
+msgstr "Güncellemeleri kontrol et"
+
+msgid "Check for upgrade failed for unknown reasons."
+msgstr "Yükseltme kontrolü bilinmeyen bir sebepten dolayı başarısız oldu"
+
+msgid "Check for upgrade"
+msgstr "Yükseltmeleri kontrol et"
+
+msgid "Check integrity"
+msgstr "Bütünlük kontrolü"
+
+msgid "Choose an action"
+msgstr "İşlem seçiniz"
+
+msgid "Choose an option"
+msgstr "Bir seçenek seçiniz"
+
+msgid "Classic display"
+msgstr "Klasik ekran"
+
+msgid "clean"
+msgstr "Temizle"
+
+msgid "Comments for all"
+msgstr "Hepsine yorum yap"
+
+msgid "Complementary mail content"
+msgstr "Tamamlayıcı posta içeriği"
+
+msgid "Configuration"
+msgstr "Yapılandırma"
+
+msgid "Confirm merge"
+msgstr "Birleştirmeyi onaylayın"
+
+msgid "confirm"
+msgstr "Onayla"
+
+msgid "Continue processing treatment"
+msgstr "Sürmekte olan işleme devam"
+
+msgid "Correction applied with error"
+msgstr "Düzeltme hata ile uygulandı"
+
+msgid "Correction applied with success"
+msgstr "Düzeltme başarıyla uygulandı"
+
+msgid "Correction the anomaly will cancel the fact that it's ignored"
+msgstr "Düzeltilmiş anomali artık göz ardı edilecektir"
+
+msgid "Correction"
+msgstr "Düzeltme"
+
+msgid "create a new album"
+msgstr "yeni bir albüm oluştur"
+
+msgid "Create the \"%s\" directory at the root of your Piwigo installation"
+msgstr "Piwigo'nun kurulduğu kök dizin altında \"%s\" dizinini oluşturun"
+
+msgid "Create this site"
+msgstr "Bu siteyi oluştur"
+
+msgid "Create"
+msgstr "Oluştur"
+
+msgid "created"
+msgstr "yaratildi"
+
+msgid "Crop"
+msgstr "Kes"
+
+msgid "Current name"
+msgstr "Geçerli isim"
+
+msgid "Database synchronization with files"
+msgstr "Dosyalar ile veritabanı senkronizasyonu"
+
+msgid "Database"
+msgstr "Veritabanı"
+
+msgid "Date"
+msgstr "Tarih"
+
+msgid "Day"
+msgstr "Gün"
+
+msgid "Deactivate all"
+msgstr "Tümünü etkinsizleştir"
+
+msgid "Deactivate"
+msgstr "Etkisizleştir"
+
+msgid "Default display"
+msgstr "Varsayılan görüntü"
+
+msgid "Default photos order"
+msgstr "Varsayılan fotoğraf sıralaması"
+
+msgid "Default user cannot be deleted"
+msgstr "Varsayılan kullanıcı silinemez"
+
+msgid "Default user does not exist"
+msgstr "Varsayılan kullanıcı yok"
+
+msgid "default values"
+msgstr "varsayılan değerler"
+
+msgid "default"
+msgstr "Varsayılan"
+
+msgid "delete album"
+msgstr "albümüsil"
+
+msgid "Delete orphan tags"
+msgstr "Sahipsiz etiketleri sil"
+
+msgid "delete photo"
+msgstr "resimi sil"
+
+msgid "Delete Representant"
+msgstr "Albüm pul resmini sil"
+
+msgid "Delete selected photos"
+msgstr "Seçili fotoğrafları sil"
+
+msgid "Delete selected tags"
+msgstr "Seçilen etiketleri sil"
+
+msgid "Delete selected users"
+msgstr "Seçilen kullanıcılari sil"
+
+msgid "Delete this language"
+msgstr "Bu dili sil"
+
+msgid "delete this site and all its attached elements"
+msgstr "bu siteyi ve eklenen tüm içerigi sil"
+
+msgid "Delete this theme"
+msgstr "Bu temayı sil"
+
+msgid "delete"
+msgstr "sil"
+
+msgid "Deleted on"
+msgstr "Silindi"
+
+msgid "deleted"
+msgstr "silindi"
+
+msgid "Deletions"
+msgstr "Silinenler"
+
+msgid "Deny selected groups"
+msgstr "Seçilen grubu reddet"
+
+msgid "Deny selected users"
+msgstr "Seçilen kullanıcıları reddet"
+
+msgid "Description"
+msgstr "Tanım/Açıklama"
+
+msgid "Detailed informations"
+msgstr "Detaylı bilgi"
+
+msgid "directories + files"
+msgstr "dizinler + resimler"
+
+msgid "Directory does not exist"
+msgstr "Dizin mevcut değil"
+
+msgid "Directory"
+msgstr "Dizin"
+
+msgid "Discover album:"
+msgstr "Albümü keşfet:"
+
+msgid "display maximum informations (added albums and photos, deleted albums and photos)"
+msgstr "En fazla bilgileri göster (eklenen albümler resimler, silinen albümler resimler)"
+
+msgid "Display options"
+msgstr "Görünüm seçenekleri"
+
+msgid "display"
+msgstr "göster"
+
+msgid "Dissociate from album"
+msgstr "Albümden ayır"
+
+msgid "dissociate from group"
+msgstr "Gruptan ayirmak"
+
+msgid "Dissociated"
+msgstr "Ayrılmış"
+
+msgid "Do you want to activate anyway?"
+msgstr "Yine de etkinleştirmek istiyor musunuz?"
+
+msgid "Documentation"
+msgstr "Belgeler"
+
+msgid "Does not represent"
+msgstr "Temsil edilmiyor / Karsiligi yok"
+
+msgid "Download,"
+msgstr "İndir,"
+
+msgid "Downloads"
+msgstr "İndirmeler"
+
+msgid "Drag to re-order"
+msgstr "Yeniden sıralamak için tıkla ve sürükle"
+
+msgid "Drop into album"
+msgstr "Bir albüm seç"
+
+msgid "Duplicates"
+msgstr "Kopyalar"
+
+msgid "Edit album permissions"
+msgstr "Albüm yetkilerini düzenle"
+
+msgid "Edit album"
+msgstr "Albüm düzenle"
+
+msgid "Edit ranks"
+msgstr "Rütbeleri yönet"
+
+msgid "Edit selected tags"
+msgstr "Seçilen etiketleri düzenle"
+
+msgid "Edit tags"
+msgstr "Etiketleri düzenle"
+
+msgid "Element type"
+msgstr "Eleman türü"
+
+msgid "Element"
+msgstr "Eleman"
+
+msgid "Email administrators when a comment is deleted"
+msgstr "Yorum silindiğinde yöneticilere e-posta gönder"
+
+msgid "Email administrators when a comment is modified"
+msgstr "Yorum değiştirildiğinde yöneticilere e-posta gönder"
+
+msgid "Email admins when a comment requires validation"
+msgstr "Yorum onayı gerektiğinde yöneticilere e-posta gönder"
+
+msgid "Email admins when a new user registers"
+msgstr "Yeni kullanıcı kayıt olduğunda yöneticilere e-posta gönder"
+
+msgid "Email admins when a valid comment is entered"
+msgstr "Geçerli bir yorum girildiğinde yöneticilere e-posta gönder"
+
+msgid "Environment"
+msgstr "Sistem Bileşenleri"
+
+msgid "Error list"
+msgstr "Hata listesi"
+
+msgid "Error on file \"%s\" : %s"
+msgstr "Hata dosyada \"%s\" : %s"
+
+msgid "Error when sending email to %s [%s]."
+msgstr "E-Posta gönderirken hata %s [%s]."
+
+msgid "ERROR"
+msgstr "HATA"
+
+msgid "ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW."
+msgstr "HATA: BU EKLENTİ EKSİK ANCAK YÜKLENMİŞ. ŞİMDİ KALDIRIN."
+
+msgid "Errors caption"
+msgstr "Hata başlıkları"
+
+msgid "errors during synchronization"
+msgstr "Senkronizasyon sırasında hatalar"
+
+msgid "even already synchronized photos"
+msgstr "hatta elemanlar senkronize edildi"
+
+msgid "Everybody"
+msgstr "Herkes"
+
+msgid "Execution time is out, treatment must be continue [Estimated time: %d second]."
+msgid_plural "Execution time is out, treatment must be continue [Estimated time: %d seconds]."
+msgstr[0] "Yürütme zaman asimi, islem devam etmeli [Tahmini zaman: %d saniye]."
+msgstr[1] "Yürütme zaman asimi, islem devam etmeli [Tahmini zaman: %d saniye]."
+
+msgid "Exif extension not available, admin should disable exif use"
+msgstr "Exif eklentisi hazır değil, yönetici exif hizmet dışı bırakmalı"
+
+msgid "existing album"
+msgstr "olan albüm"
+
+msgid "Extend for templates"
+msgstr "Şablonları genişlet"
+
+msgid "Extensions Update"
+msgstr "Eklentilerin Güncellenmesi"
+
+msgid "Failed to write file to disk"
+msgstr "Dosya diske yazılamadı"
+
+msgid "File upload stopped by extension"
+msgstr "Dosya yükleme uzantı tarafından durduruldu"
+
+msgid "File"
+msgstr "Dosya"
+
+msgid "File/directory read error"
+msgstr "Dosya/dizin okuma hatası"
+
+msgid "Find a new representant by random"
+msgstr "Rastgele yeni bir pul resmi bul"
+
+msgid "Follow Orientation"
+msgstr "Yönlendirmeyi İzleyin"
+
+msgid "Following plugins may not be compatible with the new version of Piwigo:"
+msgstr "Aşağıdaki eklentiler Piwigo'nun yeni sürümü ile uyumlu olmayabilir:"
+
+msgid "Following themes may not be compatible with the new version of Piwigo:"
+msgstr "Aşağıdaki temalar Piwigo'nun yeni sürümü ile uyumlu olmayabilir:"
+
+msgid "for the file format"
+msgstr "dosya biçimi için"
+
+msgid "for this file format"
+msgstr "Bu dosya biçimi için"
+
+msgid "Forbid this language to users"
+msgstr "Kullanıcılara bu dili yasakla"
+
+msgid "Forbid this theme to users"
+msgstr "Kullanıcılara bu temayı yasakla"
+
+msgid "Forbidden"
+msgstr "Yasaklanmış"
+
+msgid "Form"
+msgstr "Kalıp"
+
+msgid "FTP + Synchronization"
+msgstr "FTP + Eşitleme"
+
+msgid "Gallery title"
+msgstr "Galeri Başlığı"
+
+msgid "GD library is missing"
+msgstr "GD kütüphanesi eksik"
+
+msgid "GD version"
+msgstr "GD sürümü"
+
+msgid "General statistics"
+msgstr "Genel istatistikler"
+
+msgid "Get Support on Piwigo Forum"
+msgstr "Piwigo forumundan destek alın"
+
+msgid "Give write access (chmod 777) to \"%s\" directory at the root of your Piwigo installation"
+msgstr "Piwigo'nun kurulduğu kök dizindeki \"%s\" dizinine yazma yetkisi verin (chmod 777)"
+
+msgid "global mode"
+msgstr "Tırnak resimli mod"
+
+msgid "Go to %s or %s for more informations"
+msgstr "Daha fazla bilgi için %s veya %s 'ye gidin"
+
+msgid "Go to"
+msgstr "Git"
+
+msgid "Grant selected groups"
+msgstr "Seçilen gruplara izin ver"
+
+msgid "Grant selected users"
+msgstr "Seçilen kullanıcılara izin ver"
+
+msgid "Graphics Library"
+msgstr "Grafik Kütüphanesi"
+
+msgid "group \"%s\" added"
+msgstr "Grup \"%s\" eklendi"
+
+msgid "group \"%s\" deleted"
+msgstr "Grup \"%s\" silindi"
+
+msgid "group \"%s\" updated"
+msgstr "Grup \"%s\" güncellendi"
+
+msgid "Group management"
+msgstr "Grup yönetimi"
+
+msgid "Group name"
+msgstr "Grup Adı"
+
+msgid "Group"
+msgstr "Grup"
+
+msgid "Groups"
+msgstr "Gruplar"
+
+msgid "Guest cannot be deleted"
+msgstr "Misafir silinemez"
+
+msgid "Guest Settings"
+msgstr "Misafir ayarları"
+
+msgid "guest"
+msgstr "Misafir"
+
+msgid "Guests"
+msgstr "Misafirler"
+
+msgid "height must be a number superior to"
+msgstr "yüksekligi bir sayi olmali"
+
+msgid "Height"
+msgstr "Yükseklik"
+
+msgid "Hello"
+msgstr "Merhaba"
+
+msgid "Hello,"
+msgstr "Merhaba,"
+
+msgid "Help Me"
+msgstr "Bana yardım edin"
+
+msgid "hide details"
+msgstr "ayrıntıları gizle"
+
+msgid "Hide"
+msgstr "Gizle"
+
+msgid "High definition enabled"
+msgstr "Yüksek çözünürlük etkin"
+
+msgid "High definition"
+msgstr "Yüksek çözünürlüklü"
+
+msgid "high"
+msgstr "Yüksek"
+
+msgid "History"
+msgstr "Geçmis"
+
+msgid "Hit"
+msgstr "Tıklanma"
+
+msgid "Hour"
+msgstr "Saat"
+
+msgid "Hoverbox display"
+msgstr "Hoverbox görüntüle"
+
+msgid "I decide to update anyway"
+msgstr "Her şekilde güncellemeye karar verdim"
+
+msgid "If no HD is available and if the current websize is bigger than resize dimensions, Piwigo will move it as HD and create a downsized websize photo from it."
+msgstr "Eğer HD yoksa ve geçerli web boyutu yeniden boyutlandırma ölçülerinden büyük ise, Piwigo bu resmi HD olarak algılayacak ve yeni bir web boyutu oluşturacaktır."
+
+msgid "If you encounter problems or have any question, please send a message to"
+msgstr "Eger sorun yaşarsanız yada herhangi bir sorunuz varsa, lütfen buraya bir mesaj gönderin:"
+
+msgid "Ignore All"
+msgstr "Tümünü Yoksay"
+
+msgid "Ignore selected anomalies"
+msgstr "Seçilen anormallikleri yoksay"
+
+msgid "Ignore this update"
+msgstr "Bu güncellemeyi yoksay"
+
+msgid "Image id"
+msgstr "Resim kimliği"
+
+msgid "Image Quality"
+msgstr "Resim kalitesi"
+
+msgid "Images manual order was saved"
+msgstr "Resimlerin elle sıralandırılması kaydedildi"
+
+msgid "Impossible automatic correction"
+msgstr "Otomatik düzeltme imkansız"
+
+msgid "Impossible to activate this theme, the parent theme is missing: %s"
+msgstr "Ana tema eksik olduğundan bu tema aktifleştirilemiyor: %s"
+
+msgid "Impossible to deactivate this language, first set another language as default."
+msgstr "Bu dili devre dışı bırakmak imkansız, önce varsayılan olarak başka bir dil ayarla."
+
+msgid "Impossible to deactivate this language, you need at least one language."
+msgstr "Bu dili devre dışı bırakmak imkansız, en az bir dil olması gerekir."
+
+msgid "Impossible to deactivate this theme, you need at least one theme."
+msgstr "Bu temayı devreden çıkarmak imkansız, en az bir tema olması gerekir."
+
+msgid "Impossible to delete this theme. Other themes depends on it: %s"
+msgstr "Bu tema silinemez çünkü diğer temalar buna bağımlı: %s"
+
+msgid "In your php.ini file, the upload_max_filesize (%sB) is bigger than post_max_size (%sB), you should change this setting"
+msgstr "php.ini dosyasındaki upload_max_filesize (%sB),  post_max_size (%sB) den daha büyük, bu ayarı değiştirmelisiniz"
+
+msgid "Inactive Languages"
+msgstr "Aktif olmayan Diller"
+
+msgid "Inactive Plugins"
+msgstr "Aktif olmayan Eklentiler"
+
+msgid "Inactive Themes"
+msgstr "Aktif olmayan Temalar"
+
+msgid "include child albums"
+msgstr "alt albümler dahil"
+
+msgid "Include display of recent photos grouped by dates"
+msgstr "Tarihe göre gruplandırılmış son fotoğrafları dahil et"
+
+msgid "Information data registered in database"
+msgstr "Bilgiler veritabanında kaydedildi"
+
+msgid "Informations"
+msgstr "Bilgiler"
+
+msgid "Install on your computer,"
+msgstr "Bilgisayarınızda yükleyin,"
+
+msgid "Install"
+msgstr "Kur"
+
+msgid "Installed Languages"
+msgstr "Yüklü Diller"
+
+msgid "Installed Themes"
+msgstr "Yüklü Temalar"
+
+msgid "Instructions to use Piwigo"
+msgstr "Piwigo kullanma talimatları"
+
+msgid "Invert"
+msgstr "Ters çevir"
+
+msgid "IP"
+msgstr "IP"
+
+msgid "jump to album"
+msgstr "albüme geç"
+
+msgid "jump to photo"
+msgstr "Resime geç"
+
+msgid "Keep in touch with Piwigo project, subscribe to Piwigo Announcement Newsletter. You will receive emails when a new release is available (sometimes including a security bug fix, it's important to know and upgrade) and when major events happen to the project. Only a few emails a year."
+msgstr "Piwigo projesi ile bağlantınızı sürdürmek için Piwigo Duyuru Bültenine üye olun. Yeni bir sürüm mevcut olduğunda ve projede oluşan önemli olaylar hakkında (bazen bilinmesi önemli olan bir güvenlik açığı düzeltmesi ve terfileri içerebilir) e-Posta alacaksınız. Sadece yılda bir kaç e-Posta."
+
+msgid "Language has been successfully installed"
+msgstr "Dil başarıyla yüklendi"
+
+msgid "Languages which need upgrade"
+msgstr "Güncellenmesi gereken diller"
+
+msgid "Languages"
+msgstr "Diller"
+
+msgid "Last hit"
+msgstr "En son ziyaret"
+
+msgid "Last import"
+msgstr "Son içe aktarma"
+
+msgid "Last revisions"
+msgstr "Son revizyonlar"
+
+msgid "Last send"
+msgstr "Son gönderilen"
+
+msgid "Learn more"
+msgstr "Daha fazla bilgi edinin"
+
+msgid "leave"
+msgstr "Ayril"
+
+msgid "Level 0"
+msgstr "---"
+
+msgid "Level 1"
+msgstr "Tanıdıklar"
+
+msgid "Level 2"
+msgstr "Arkadaşlar"
+
+msgid "Level 4"
+msgstr "Aile"
+
+msgid "Level 8"
+msgstr "Yöneticiler"
+
+msgid "Link all album photos to a new album"
+msgstr "Bütün albüm fotoğraflarını yeni bir albüme bağla"
+
+msgid "Link all album photos to some existing albums"
+msgstr "Bütün albüm fotoğraflarını bulunan albümlere bağla"
+
+msgid "Linked albums"
+msgstr "Bağlanan albümler"
+
+msgid "Local"
+msgstr "Yerel"
+
+msgid "Lock albums"
+msgstr "Albümleri kilitle"
+
+msgid "Lock gallery"
+msgstr "Galeriyi kilitle"
+
+msgid "Lock"
+msgstr "Kilitle"
+
+msgid "Locked"
+msgstr "Kilitlendi"
+
+msgid "Mail content"
+msgstr "Posta içeriği"
+
+msgid "Mail sent to %s [%s]."
+msgstr "%s [%s] 'a e-Posta gönderildi."
+
+msgid "Main \"guest\" user does not exist"
+msgstr "Ana \"Misafir\" kullanıcısı yok"
+
+msgid "Main \"guest\" user status is incorrect"
+msgstr "Ana \"Misafir\" kullanıcısının durumu yanlış"
+
+msgid "Main \"webmaster\" user does not exist"
+msgstr "Ana \"Site Yöneticisi\" kullanıcısı yok"
+
+msgid "Main \"webmaster\" user status is incorrect"
+msgstr "Ana \"Site Yöneticisi\" kullanıcısının durumu yanlış"
+
+msgid "Main Page"
+msgstr "Ana Sayfa"
+
+msgid "Maintenance"
+msgstr "Bakım"
+
+msgid "Make this language available to users"
+msgstr "Bu dili kullanıcılara aç"
+
+msgid "Make this theme available to users"
+msgstr "Bu temayı kullanıcılara aç"
+
+msgid "manage album photos"
+msgstr "albüm resimlerini yönet"
+
+msgid "Manage authorizations for selected albums"
+msgstr "Seçilen albüm yetkilerinin yönetimi"
+
+msgid "Manage permissions for group \"%s\""
+msgstr "\"%s\" gubu izinlerini yönet"
+
+msgid "Manage permissions for user \"%s\""
+msgstr "\"%s% kullanıcısı izinlerini yönet"
+
+msgid "Manage Permissions"
+msgstr "İzinleri Yönet"
+
+msgid "Manage photo ranks"
+msgstr "Fotoğrafların sıralaması"
+
+msgid "manage sub-albums"
+msgstr "yönet alt-albümler"
+
+msgid "Manage tags"
+msgstr "Etiketleri yönet"
+
+msgid "Manage this set of %d photos"
+msgstr "Bu %d fotoğraf yığını yönet"
+
+msgid "Manage"
+msgstr "Yönet"
+
+msgid "manual order"
+msgstr "el ile düzen"
+
+msgid "Manual order"
+msgstr "Elle sıralama"
+
+msgid "Maximum file size: %sB."
+msgstr "Azami dosya boyutu: %sB."
+
+msgid "Maximum height"
+msgstr "Azami yükseklik"
+
+msgid "Maximum width"
+msgstr "Azami genişlik"
+
+msgid "Members"
+msgstr "Üyeler"
+
+msgid "Menu Management"
+msgstr "Menüler"
+
+msgid "Merge selected tags"
+msgstr "Seçilen etiketleri birleştir"
+
+msgid "Merge tags"
+msgstr "Etiketleri birleştir"
+
+msgid "Metadata synchronization results"
+msgstr "Metadata eşitleme sonuçları"
+
+msgid "Metadata synchronized from file"
+msgstr "Metadata dosyadan eşitlendi"
+
+msgid "Minimum privacy level"
+msgstr "Minimum kişisel etkileşim seviyesi"
+
+msgid "Miscellaneous"
+msgstr "Çeşitli"
+
+msgid "Missing a temporary folder"
+msgstr "Geçici dizin eksik"
+
+msgid "Missing Plugins"
+msgstr "Eksik Eklentiler"
+
+msgid "Modify information"
+msgstr "Bilgiyi değiştir"
+
+msgid "Month"
+msgstr "Ay"
+
+msgid "Move albums"
+msgstr "Albümleri taşı"
+
+msgid "Move"
+msgstr "Taşı"
+
+msgid "Name"
+msgstr "İsim"
+
+msgid "New name"
+msgstr "Yeni isim"
+
+msgid "New parent album"
+msgstr "Yeni ana albüm"
+
+msgid "New photos added"
+msgstr "Yeni fotoğraflar eklendi"
+
+msgid "New photos were added"
+msgstr "Yeni fotoğraflar eklendi"
+
+msgid "New tag"
+msgstr "Yeni etiket"
+
+msgid "New Version"
+msgstr "Yeni Sürüm"
+
+msgid "new"
+msgstr "yeni"
+
+msgid "No destination tag selected"
+msgstr "Hedef etiket seçilmedi"
+
+msgid "No display"
+msgstr "Görüntü yok"
+
+msgid "No file was uploaded"
+msgstr "Dosya yüklenmedi"
+
+msgid "No mail to send."
+msgstr "Gönderilecek posta yok"
+
+msgid "No photo can be deleted"
+msgstr "Fotoğraf silinemez"
+
+msgid "No photo in the current set."
+msgstr "Bu yığınde fotoğraf bulunmuyor"
+
+msgid "No photo in this album"
+msgstr "Bu albümde fotoğraf yok"
+
+msgid "No photo selected, %d photos in current set"
+msgstr "Yığındeki %d fotoğraftan hiçbiri seçilmedi"
+
+msgid "No photos selected, no actions possible."
+msgstr "Fotoğraf seçilmedi, işlem yapılamaz."
+
+msgid "No results"
+msgstr "Sonuç yok"
+
+msgid "No user to send notifications by mail."
+msgstr "e-Posta yoluyla bilgilendirilecek hiç kullanıcı bulunmuyor."
+
+msgid "no write access"
+msgstr "Yazma yetkisi yok"
+
+msgid "none"
+msgstr "Hiç"
+
+msgid "None"
+msgstr "Hiçbiri"
+
+msgid "nothing"
+msgstr "hiçbir şey"
+
+msgid "Notification"
+msgstr "Bilgilendirme"
+
+msgid "Number of comments per page"
+msgstr "Her sayfadaki yorum sayısı"
+
+msgid "Number of downloads"
+msgstr "İndirme sayısı"
+
+msgid "Number of rates"
+msgstr "Derecelendirme sayısı"
+
+msgid "Obsolete Plugins"
+msgstr "Eski Eklentiler"
+
+msgid "on the %d selected photos"
+msgstr "%d resimler seçildi"
+
+msgid "on"
+msgstr "üzerinde"
+
+msgid "only directories"
+msgstr "sadece dizinler"
+
+msgid "only perform a simulation (no change in database will be made)"
+msgstr "sadece veritabanında değişecektir) bir simülasyon (hiçbir şey yapılmayacak)"
+
+msgid "Only private albums are listed"
+msgstr "Sadecee özel albümler listelendi"
+
+msgid "Operating system"
+msgstr "İşletim sistemi"
+
+msgid "Operation in progress"
+msgstr "İşlem devam ediyor."
+
+msgid "Optimizations have been completed with some errors."
+msgstr "Optimizasyonlar bazı hatalar ile tamamlanmıştır."
+
+msgid "Optional URL keyword"
+msgstr "İsteğe bağlı URL anahtar kelimesi"
+
+msgid "Options"
+msgstr "Seçenekler"
+
+msgid "Order of menubar items has been updated successfully."
+msgstr "Menü çubuğu öğe sıralaması başarıyla güncellendi."
+
+msgid "Original templates"
+msgstr "Orjinal şablonlar"
+
+msgid "Orphan tags deleted"
+msgstr "Etkisiz etiketler silindi"
+
+msgid "Other plugins"
+msgstr "Mevcut diğer eklentiler"
+
+msgid "Other private albums"
+msgstr "Diğer özel albümler"
+
+msgid "other"
+msgstr "Diğer"
+
+msgid "Overall"
+msgstr "Genel bakış"
+
+msgid "overrides existing values with empty ones"
+msgstr "boş olan değerleri geçersiz kılar"
+
+msgid "Page banner"
+msgstr "Sayfa afişi"
+
+msgid "Page end"
+msgstr "Sayfa sonu"
+
+msgid "Pages seen"
+msgstr "Görülen sayfalar"
+
+msgid "Parameter"
+msgstr "Ayarlar"
+
+msgid "Parameters"
+msgstr "Parametreler"
+
+msgid "Parent album"
+msgstr "Ana albüm"
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Şifre doğrulama eksik. Lütfen seçtiğiniz şifreyi doğrulayın."
+
+msgid "Password is missing. Please enter the password."
+msgstr "Şifre eksik. Lütfen şifrenizi girin."
+
+msgid "Path"
+msgstr "Yol"
+
+msgid "Pending Comments"
+msgstr "Bekleyen Yorumlar"
+
+msgid "Permalink %s has been previously used by album %s. Delete from the permalink history first"
+msgstr "%s kalıcı bağlantısı %s albümü tarafından kullanıldı. Kalıcı bağlantı geçmişinden önce onu silin."
+
+msgid "Permalink %s is already used by album %s"
+msgstr "%s kalıcı bağlantısı zaten %s albümü tarafından kullanıldı"
+
+msgid "Permalink history"
+msgstr "Kalıcı bağlantı geçmisi"
+
+msgid "Permalink"
+msgstr "Kalıcı bağlantı"
+
+msgid "Permalinks"
+msgstr "Kalıcı bağlantılar"
+
+msgid "Permission denied"
+msgstr "İzin verilmedi"
+
+msgid "Permission granted thanks to a group"
+msgstr "Gruba izin verilmiştir"
+
+msgid "Permission granted"
+msgstr "İzin verildi"
+
+msgid "Permissions"
+msgstr "İzinler"
+
+msgid "Photo %s of %s"
+msgstr "Fotoğraf %s / %s"
+
+msgid "Photo informations updated"
+msgstr "Fotoğraf bilgileri güncellendi"
+
+msgid "Photo Page"
+msgstr "Fotoğraf sayfası"
+
+msgid "Photo Properties"
+msgstr "Fotoğraf özellikleri"
+
+msgid "Photo name"
+msgstr "Fotoğraf adı"
+
+msgid "Photo unreachable or no support"
+msgstr "Fotoğrafa erişilemiyor yada desteklenmeyen biçimde"
+
+msgid "photos added in the database"
+msgstr "elemanlar veritabanında ekledi"
+
+msgid "photos candidates for metadata synchronization"
+msgstr "metadata senkronizasyon için görüntüleri adayları"
+
+msgid "photos deleted from the database"
+msgstr "elemanlar veritabanında silindi"
+
+msgid "Photos generation in progress..."
+msgstr "Fotoğrafların oluşturulmasına devam ediliyor..."
+
+msgid "photos informations synchronized with files metadata"
+msgstr "elemanları bilgiler dosyaları ile metadata senkronize edildi"
+
+msgid "photos per page"
+msgstr "Safya basina içerikler"
+
+msgid "photos updated in the database"
+msgstr "elemanlar veritabanında güncellendi"
+
+msgid "Photos"
+msgstr "Fotoğraflar"
+
+msgid "Piwigo Administration"
+msgstr "Piwigo Yönetimi"
+
+msgid "Piwigo Announcements Newsletter"
+msgstr "Piwigo Duyuru Bülteni"
+
+msgid "Piwigo cannot retrieve upgrade file from server"
+msgstr "Piwigo sunucudan yükseltme dosyasını alamıyor"
+
+msgid "Piwigo configuration"
+msgstr "Piwigo yapılandırma"
+
+msgid "Piwigo Update"
+msgstr "Piwigo Güncellemesi"
+
+msgid "Piwigo Uploader"
+msgstr "Piwigo Yükleyici"
+
+msgid "Piwigo version"
+msgstr "Piwigo Sürümü"
+
+msgid "pixels"
+msgstr "pikseller"
+
+msgid "Please check \"plugins\" folder and sub-folders permissions (CHMOD)."
+msgstr "Lütfen \"plugins\" klasörünü ve alt klasörler izinleri (CHMOD) kontrol edin."
+
+msgid "Please wait..."
+msgstr "Lütfen bekleyiniz..."
+
+msgid "Plugin has been successfully copied"
+msgstr "Eklenti başarıyla kopyalandı"
+
+msgid "Plugin list"
+msgstr "Eklenti listesi"
+
+msgid "Plugins which need upgrade"
+msgstr "Yükseltilecek eklentiler"
+
+msgid "Plugins"
+msgstr "Eklentiler"
+
+msgid "Position"
+msgstr "Pozisyon"
+
+msgid "Predefined filter"
+msgstr "Önceden tanımlanmış filtre"
+
+msgid "Preferences"
+msgstr "Tercihler"
+
+msgid "Prepared time for list of users to send mail is limited. Others users are not listed."
+msgstr "e-Posta gönderecek kullanıcılar listesinin hazırlığı için süre sınırlıdır. Diğer kullanıcılar listelenmez."
+
+msgid "Privacy level set to \"%s\""
+msgstr "Kişisel etkileşim seviyesini \"%s\" 'ye ayarla"
+
+msgid "Privacy level"
+msgstr "Kişisel etkileşim seviyesi"
+
+msgid "Private"
+msgstr "Özel"
+
+msgid "private"
+msgstr "Özel"
+
+msgid "Properties"
+msgstr "Özellikler"
+
+msgid "Public / Private"
+msgstr "Herkese açık / Özel"
+
+msgid "Public"
+msgstr "Herkese açık"
+
+msgid "public"
+msgstr "Genel"
+
+msgid "Purge compiled templates"
+msgstr "Derlenmiş şablonları temizle"
+
+msgid "Purge history detail"
+msgstr "Tarih detaylarını temizle"
+
+msgid "Purge history summary"
+msgstr "Tarih özetini temizle"
+
+msgid "Purge never used notification feeds"
+msgstr "Hiç kullanılmamış beslemeleri temizle"
+
+msgid "Purge search history"
+msgstr "Arama geçmişini temizle"
+
+msgid "Purge sessions"
+msgstr "Temizleme oturumlari"
+
+msgid "Quick Local Synchronization"
+msgstr "Hızlı Yerel Eşitleme"
+
+msgid "Random photo"
+msgstr "Rastgele fotoğraf"
+
+msgid "randomly represented"
+msgstr "Karisik temsici"
+
+msgid "ranks"
+msgstr "rütbeler"
+
+msgid "Rate date"
+msgstr "Oylama tarihi"
+
+msgid "Rate"
+msgstr "Oyla"
+
+msgid "Rating by guests"
+msgstr "Misafir oyları"
+
+msgid "Rating"
+msgstr "Oylama"
+
+msgid "Read Piwigo Documentation"
+msgstr "Piwigo Belgelerini Oku"
+
+msgid "reduce to single existing albums"
+msgstr "mevcut albümleri küçült"
+
+msgid "Refresh photo set"
+msgstr "Fotoğraf yığını yenile"
+
+msgid "Refresh"
+msgstr "Yenile"
+
+msgid "registration date"
+msgstr "Kayit tarihi"
+
+msgid "Reinitialize check integrity"
+msgstr "Bütünlük kontrolünü yeniden başlat"
+
+msgid "Reject"
+msgstr "Reddet"
+
+msgid "Released on"
+msgstr "Yayınlama"
+
+msgid "Remote"
+msgstr "Uzak"
+
+msgid "Remove all filters"
+msgstr "Tüm filtreleri sil"
+
+msgid "remove author"
+msgstr "yazarı sil"
+
+msgid "remove creation date"
+msgstr "oluşturulma tarihini sil"
+
+msgid "Remove from caddie"
+msgstr "Sepetten sil"
+
+msgid "remove tags"
+msgstr "etiketleri sil"
+
+msgid "remove this filter"
+msgstr "Bu filtreyi sil"
+
+msgid "remove title"
+msgstr "başlığı sil"
+
+msgid "Repair and optimize database"
+msgstr "Veritabanini onar ve en uygun hale getir"
+
+msgid "Replacement of original templates by customized templates from template-extension subfolder"
+msgstr "Orjinal şablon temsilcisi özelleştirilmiş şablonlar template-extension yedek dosyasından"
+
+msgid "Replacers (customized templates)"
+msgstr "Yedekler (Özelleştirilmiş şablonlar)"
+
+msgid "Representant"
+msgstr "Temsilen"
+
+msgid "Representation of albums"
+msgstr "Albüm gösterimi"
+
+msgid "Representative"
+msgstr "Temsilci"
+
+msgid "Represents"
+msgstr "Temsilciler"
+
+msgid "Reset ignored updates"
+msgstr "Görmezden gelinen güncellemeleri tekrar ayarla"
+
+msgid "Resize"
+msgstr "Tekrar boyutlandır"
+
+msgid "Restore default configuration. You will lose your plugin settings!"
+msgstr "Varsayılan yapılandırmalarınızı onarın. Eklenti ayarlrınız kaybolacaktır!"
+
+msgid "Restore"
+msgstr "Onarım"
+
+msgid "Save order"
+msgstr "Düzeni kaydet"
+
+msgid "Save Settings"
+msgstr "Ayarları kaydet"
+
+msgid "Save Template Directory"
+msgstr "Tema dizinini kaydet"
+
+msgid "Save to permalink history"
+msgstr "Kalıcı Bağlantı geçmisini kaydet"
+
+msgid "Search for new images in the directories"
+msgstr "Dizinlerde yeni resimler ara"
+
+msgid "Searching..."
+msgstr "Arıyor..."
+
+msgid "Section"
+msgstr "Bölüm"
+
+msgid "See you soon."
+msgstr "Sonra görüşürüz."
+
+msgid "See you soon,"
+msgstr "Yakinda görüsürüz,"
+
+msgid "Select an album"
+msgstr "Albüm seçiniz"
+
+msgid "Select at least one album"
+msgstr "en az bir albüm seçiniz"
+
+msgid "Select at least one comment"
+msgstr "En az bir yorum seç"
+
+msgid "Select at least one photo"
+msgstr "En az bir resim seçiniz"
+
+msgid "Select at least one user"
+msgstr "En az bir kullanıcı seçiniz"
+
+msgid "Select at least two tags for merging"
+msgstr "Birleştirmek için en az iki etiketleri seçin"
+
+msgid "Select files"
+msgstr "Dosyaları seçin"
+
+msgid "Select recipients"
+msgstr "Alicilari seç"
+
+msgid "Select the destination tag"
+msgstr "Hedef etiketi seçin"
+
+msgid "Select:"
+msgstr "Seç:"
+
+msgid "Selection"
+msgstr "Seçim"
+
+msgid "selection"
+msgstr "Seçim"
+
+msgid "Send an information email to group members"
+msgstr "Grup üyelerine bilgi e-postası gönder"
+
+msgid "Send mail as"
+msgstr "Posta gönderim sekli"
+
+msgid "Send mail on HTML format"
+msgstr "Postayi HTML formatinda yolla"
+
+msgid "Send mail to users"
+msgstr "Kullanıcılara posta gönder"
+
+msgid "Send"
+msgstr "Gönder"
+
+msgid "Set as default language for unregistered and new users"
+msgstr "Kayıtsız ve yeni kullanıcılar için varsayılan dil olarak ayarlamak"
+
+msgid "Set as default theme for unregistered and new users"
+msgstr "Kayıtsız ve yeni kullanıcılar için varsayılan tema olarak ayarla"
+
+msgid "Set author"
+msgstr "Yazar ayarla"
+
+msgid "Set creation date"
+msgstr "oluşturma tarihi ayarla"
+
+msgid "Set title"
+msgstr "Başlığı ayarla"
+
+msgid "set to"
+msgstr "Ayarla"
+
+msgid "Settings"
+msgstr "Ayarlar"
+
+msgid "show details"
+msgstr "ayrıntıları göster"
+
+msgid "Show info"
+msgstr "Bilgi Göster"
+
+msgid "Show menubar"
+msgstr "menü çubuğunu göster"
+
+msgid "Simulation"
+msgstr "Simülasyon"
+
+msgid "singly represented"
+msgstr "tek basina temsil"
+
+msgid "Site manager"
+msgstr "Site yöneticisi"
+
+msgid "Some themes and plugins may be not available yet."
+msgstr "Bazı tema ve eklentiler henüz hazır olamayabilir."
+
+msgid "Some upgrades are available for extensions."
+msgstr "Eklentiler için bazı güncellemeler mevcut."
+
+msgid "Start pLoader and add your photos."
+msgstr "pLoader başlat ve resimler yükle."
+
+msgid "Start Upload"
+msgstr "Yüklemeye başla"
+
+msgid "Statistics"
+msgstr "Istatistikler"
+
+msgid "Status of user \"%s\" updated"
+msgstr "Kullanıcı \"%s\" durumu güncellendi"
+
+msgid "Status"
+msgstr "Durum"
+
+msgid "status"
+msgstr "Durum"
+
+msgid "Storage album"
+msgstr "Depola albümü"
+
+msgid "sub-albums"
+msgstr "alt-albümler"
+
+msgid "Subscribe %s to Piwigo Announcements Newsletter"
+msgstr "%s adresi ile Piwigo bülten duyurularına abone ol"
+
+msgid "Subscribe %s"
+msgstr "Abone %s"
+
+msgid "Subscribe to notification by mail"
+msgstr "Posta ile abone bildirimi"
+
+msgid "Subscribe"
+msgstr "Abone"
+
+msgid "Subscribe/unsubscribe users"
+msgstr "Kullanıcıları abone et/aboneliği iptal et"
+
+msgid "Subscribed"
+msgstr "Abone olundu"
+
+msgid "Subscribers could be listed (available) only if there is new elements to notify."
+msgstr "Aboneler sadece yeni içerikler"
+
+msgid "Sum of rates"
+msgstr "Toplam reytingler"
+
+msgid "Summary"
+msgstr "Özet"
+
+msgid "Support"
+msgstr "Destek"
+
+msgid "Switch to clear or dark colors for administration"
+msgstr "Açık veya koyu renk yönetim sayfasına geç"
+
+msgid "synchronize files metadata with database photos informations"
+msgstr "veri tabanı fotoğrafları ile dosya metadatasını eşleştir"
+
+msgid "synchronize files structure with database"
+msgstr "dosya yapısını veritabanı ile eşleştir"
+
+msgid "Synchronize metadata"
+msgstr "Senkronize metadata"
+
+msgid "Synchronize"
+msgstr "Senkronize"
+
+msgid "Tag \"%s\" already exists"
+msgstr "Etiket \"%s\" zaten var"
+
+msgid "Tag \"%s\" was added"
+msgstr "Etiket \"%s\" eklendi"
+
+msgid "Tag selection"
+msgstr "Etiket seçme"
+
+msgid "Tags <em>%s</em> merged into tag <em>%s</em>"
+msgstr "Etiketler <em>%s</em> ile <em>%s</em> etiketleri birleştirildi"
+
+msgid "target"
+msgstr "hedef"
+
+msgid "Templates configuration has been recorded."
+msgstr "Şablonları yapılandırma kaydedildi."
+
+msgid "Templates"
+msgstr "Şablonlar"
+
+msgid "test this remote site"
+msgstr "uzak siteyi dene"
+
+msgid "test"
+msgstr "deneme"
+
+msgid "The %d following tags were deleted"
+msgstr "Asagidaki %d etiketler silindi"
+
+msgid "The anomaly will be ignored until next application version"
+msgstr "Bu anormallik sonraki uygulama sürümüne kadar dikkate alınmayacaktır"
+
+msgid "The file or directory cannot be accessed (either it does not exist or the access is denied)"
+msgstr "Dosya veya dizin erişemez (ya yok yada erişim reddedildi)"
+
+msgid "The following tag was deleted"
+msgstr "Aşağıdaki etiketi silindi"
+
+msgid "the forum"
+msgstr "Forum"
+
+msgid "The gallery URL is not valid."
+msgstr "Galeri URL geçerli degil."
+
+msgid "The name of a group must not contain \" or ' or be empty."
+msgstr "Bir grubun ismi \" veya \\ içermemelidir yada bos olmamalidir."
+
+msgid "The name of an album must not be empty"
+msgstr "Albüm ismi boş olamaz"
+
+msgid "The name of directories and files must be composed of letters, numbers, \"-\", \"_\" or \".\""
+msgstr "Dizin ve dosya ismi sadece harfler, rakamlardan olmalı, \"-\", \"_\" veya \".\""
+
+msgid "The number of comments a page must be between 5 and 50 included."
+msgstr "Bir sayfadaki yorumlarin sayisini 5 ile 50 arasinda olmalidir."
+
+msgid "The permalink name must be composed of a-z, A-Z, 0-9, \"-\", \"_\" or \"/\". It must not be numeric or start with number followed by \"-\""
+msgstr "Kalıcı Bağlantı ismi a-z, A-Z, 0-9, \"-\", \"_\" yada \"/\" karekterlerinden olusmalidir. Sayisal olmamali veya sayi ile baslamamalidir"
+
+msgid "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form"
+msgstr "Yüklenen dosya HTML biçiminde belirtilmiş MAX_FILE_SIZE aşıyor"
+
+msgid "The uploaded file exceeds the upload_max_filesize directive in php.ini: %sB"
+msgstr "Yüklenen dosyanın php.ini upload_max_filesize aşıyor: %sB"
+
+msgid "The uploaded file was only partially uploaded"
+msgstr "Yüklenen dosya sadece kısmen yüklendi"
+
+msgid "The uploaded files exceed the post_max_size directive in php.ini: %sB"
+msgstr "Yüklenen dosyalar php.ini post_max_size aşıyor: %sB"
+
+msgid "The version of %s [%s] installed is not compatible with the version required [%s]"
+msgstr "Bu %s versiyonu yüklenen [%s] versiyonu ile uyumlu değildir."
+
+msgid "The webmaster has subscribed you to receiving notifications by mail."
+msgstr "Site yöneticisi posta ile haberdar olmaniz için sizi abone etti."
+
+msgid "The webmaster has unsubscribed you from receiving notifications by mail."
+msgstr "Site yöneticisi posta ile haberdar edilme aboneliginizi kaldirdi."
+
+msgid "The whole page"
+msgstr "Bütün sayfa"
+
+msgid "The whole set"
+msgstr "Bütün yığın"
+
+msgid "the wiki"
+msgstr "Wiki"
+
+msgid "Theme has been successfully installed"
+msgstr "Tema başarıyla yüklendi"
+
+msgid "Themes which need upgrade"
+msgstr "Güncellenmesi gereken temalar"
+
+msgid "Themes"
+msgstr "Temalar"
+
+msgid "There is no available subscribers to mail."
+msgstr "Hiç posta abonesi yok."
+
+msgid "There is no other language available."
+msgstr "Kullanılabilir başka bir dil yok."
+
+msgid "There is no other plugin available."
+msgstr "Kullanılabilir başka bir eklenti yok."
+
+msgid "There is no other theme available."
+msgstr "Kullanılabilir başka bir teama yok"
+
+msgid "This is a major update, with <a href=\"%s\">new exciting features</a>."
+msgstr "Bu yeni büyük bir güncelleme <a href=\"%s\">yeni heyecan verici özellikler</a> içerir."
+
+msgid "This is a minor update, with only bug corrections."
+msgstr "Bu sadece hata düzeltmeleri ile, küçük bir güncelleştirme."
+
+msgid "This name is already used by another group."
+msgstr "Bu isim baska bir grup tarafindan kullanilmaktadir"
+
+msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
+msgstr "BU EKLENTİ PIWIGO ÇEKİRDEĞİNDE BULUNMAKTADIR! ŞİMDİ KALDIRIN!"
+
+msgid "This site already exists"
+msgstr "Bu site zaten var"
+
+msgid "This theme was not designed to be directly activated"
+msgstr "Bu tema doğrudan harekete geçmek için tasarlanmış değildir"
+
+msgid "Thumbnail"
+msgstr "Küçük resim"
+
+msgid "Thumbnails generation in progress..."
+msgstr "Küçük resimler oluşturuluyor..."
+
+msgid "Time to send mail is limited. Others mails are skipped."
+msgstr "Posta gönderme zamani sinirlidir.Diger postalar atlandi."
+
+msgid "Time"
+msgstr "Zaman"
+
+msgid "Title"
+msgstr "Baslik"
+
+msgid "To send ?"
+msgstr "Göndermek için?"
+
+msgid "To subscribe"
+msgstr "Abone olmak için"
+
+msgid "To unsubscribe"
+msgstr "Abonelikten çikarmak için"
+
+msgid "Toggle 'default group' property"
+msgstr "Ters 'varsayılan' özellik"
+
+msgid "Tools"
+msgstr "Araçlar"
+
+msgid "total time"
+msgstr "toplam zaman"
+
+msgid "Two updates are available"
+msgstr "İki güncelleştirme mevcut"
+
+msgid "Type here the author name"
+msgstr "Yazar adını buraya yazın"
+
+msgid "Type here the title"
+msgstr "Başlığı buraya yazın"
+
+msgid "Type in a search term"
+msgstr "Aramak için bir kelime yazınız"
+
+msgid "Unable to check for upgrade."
+msgstr "Yükseltme kontrolü yapilamiyor."
+
+msgid "Uncheck all"
+msgstr "Tüm işaretleri kaldır"
+
+msgid "Uninstall"
+msgstr "Kaldir"
+
+msgid "Uninstalled Plugins"
+msgstr "Kaldırılan eklentiler"
+
+msgid "unit mode"
+msgstr "Ayrıntılı mod"
+
+msgid "Unknown upload error"
+msgstr "Bilinmeyen yükleme hata"
+
+msgid "unknown"
+msgstr "bilinmeyen"
+
+msgid "Unlocked"
+msgstr "Kilitsiz"
+
+msgid "unset"
+msgstr "Kaldır"
+
+msgid "Unsubscribe from notification by mail"
+msgstr "Bildiri aboneliginden çik"
+
+msgid "Unsubscribed"
+msgstr "Abonelikten çıkarıldı"
+
+msgid "Update albums informations"
+msgstr "Albümlerin bilgilerini güncelle"
+
+msgid "Update All"
+msgstr "Hepsini Güncelle"
+
+msgid "Update Complete"
+msgstr "Güncelleme Tamamlandı"
+
+msgid "Update in progress... Please wait."
+msgstr "Güncelleniyor.. Lütfen bekleyiniz."
+
+msgid "Update photos information"
+msgstr "Resimlerin bilgilerini güncelle"
+
+msgid "update the database from files"
+msgstr "Dosyalar ile veritabani güncelleme"
+
+msgid "Update to Piwigo %s"
+msgstr "Piwigoyu %s'e güncelle"
+
+msgid "Updates"
+msgstr "Güncellemeler"
+
+msgid "Upload Photos"
+msgstr "Resim Yükle"
+
+msgid "Upload"
+msgstr "Yükle"
+
+msgid "Uploaded Photos"
+msgstr "Yüklenen resimler"
+
+msgid "Use the default photo sort order"
+msgstr "Fotoğrafların sıralaması için varsayılan düzenini kullan"
+
+msgid "Used metadata"
+msgstr "Metadata kullanıldı"
+
+msgid "user \"%s\" added"
+msgstr "Kullanıcı \"%s\" eklendi"
+
+msgid "User \"%s\" created with \"%s\" like password"
+msgstr "Kullanıcı \"%s\" şifre \"%s\" ile yaratıldı"
+
+msgid "User %s [%s] added."
+msgstr "kullanıcı %s [%s] eklendi."
+
+msgid "User %s [%s] was added to the subscription list."
+msgstr "kullanıcı %s [%s] abone listesine eklendi."
+
+msgid "User %s [%s] was not added to the subscription list."
+msgstr "kullanıcı %s [%s] abone listesine eklenemedi."
+
+msgid "User %s [%s] was not removed from the subscription list."
+msgstr "kullanıcı %s [%s] abone listesinden silinemedi.."
+
+msgid "User %s [%s] was removed from the subscription list."
+msgstr "kullanıcı %s [%s] abone listesinden silindi."
+
+msgid "User comments validation"
+msgstr "kullanıcı yorumlari dogrulama"
+
+msgid "User list"
+msgstr "Kullanıcılar listesi"
+
+msgid "User status"
+msgstr "Kullanıcı durumu"
+
+msgid "User"
+msgstr "kullanıcı"
+
+msgid "user_status_admin"
+msgstr "Yönetici"
+
+msgid "user_status_generic"
+msgstr "Genel"
+
+msgid "user_status_guest"
+msgstr "Misafir"
+
+msgid "user_status_webmaster"
+msgstr "Site Yöneticisi"
+
+msgid "Users"
+msgstr "Kullanıcılar"
+
+msgid "Validate"
+msgstr "Onayla"
+
+msgid "Validation"
+msgstr "Onaylama"
+
+msgid "Version"
+msgstr "Sürüm"
+
+msgid "Virtual album added"
+msgstr "sanal albüm eklendi"
+
+msgid "Virtual album deleted"
+msgstr "sanal albüm silindi"
+
+msgid "Virtual album name"
+msgstr "Sanal albüm ismi"
+
+msgid "Virtual album"
+msgstr "Sanal albüm"
+
+msgid "Virtual albums to move"
+msgstr "Taşınacak sanal albümler"
+
+msgid "Virtual Links"
+msgstr "Sanal Linkler"
+
+msgid "Visit Gallery"
+msgstr "Galeriyi ziyaret et"
+
+msgid "Visit language site"
+msgstr "Dil sitesine git"
+
+msgid "Visit Piwigo project website"
+msgstr "Piwigo proje sitesini ziyaret et"
+
+msgid "Visit plugin site"
+msgstr "Eklenti sitesini ziyaret et"
+
+msgid "Visit theme site"
+msgstr "Tema sitesine git"
+
+msgid "Waiting"
+msgstr "Bekleyen"
+
+msgid "WARNING! This plugin does not seem to be compatible with this version of Piwigo."
+msgstr "UYARI! Bu eklenti Piwigo galerinizin bu sürümü ile uyumlu değildir."
+
+msgid "Warning: subscribing or unsubscribing will send mails to users"
+msgstr "Uyarı: abone olurken veya çıkarken kullanıcılara mail gönderilecektir"
+
+msgid "Webmaster cannot be deleted"
+msgstr "Site yöneticisi silinemez"
+
+msgid "Webmaster status is required."
+msgstr "Site yöneticisi durumu gereklidir."
+
+msgid "Week starts on"
+msgstr "Hafta başlangıcı"
+
+msgid "Who can see these photos?"
+msgstr "Kim bu resimleri görebilir?"
+
+msgid "Who can see this photo?"
+msgstr "Kim bu resimi görebilir?"
+
+msgid "width must be a number superior to"
+msgstr "genişlik bundan daha büyük bir sayı olmalı"
+
+msgid "Width"
+msgstr "Genişlik"
+
+msgid "With blank value, gallery title will be used"
+msgstr "Bos olursa, galeri baslik kullanilir"
+
+msgid "With no album"
+msgstr "sıfır albüm ile"
+
+msgid "With no tag"
+msgstr "sıfır etiket ile"
+
+msgid "With no virtual album"
+msgstr "sıfır sanal albüm ile"
+
+msgid "wrong filename"
+msgstr "yanlış dosya ismi"
+
+msgid "Year"
+msgstr "Yıl"
+
+msgid "You are running on development sources, no check possible."
+msgstr "Gelistirme kaynaklarini kullaniyorsunuz incelemek mümkün degil"
+
+msgid "You are running the latest version of Piwigo."
+msgstr "Piwigo'nun son sürümü çalıştırılmaktadır."
+
+msgid "You are using the Browser uploader. Try the <a href=\"%s\">Flash uploader</a> instead."
+msgstr "Tarayıcı yükleyiciyi kullanıyorsunuz. <a href=\"%s\">Flash Yükleyiciyi</a> deneyiniz."
+
+msgid "You are using the Flash uploader. Problems? Try the <a href=\"%s\">Browser uploader</a> instead."
+msgstr "Flash Yükleyiciyi kullanıyorsunuz. Sorun mu var? <a href=\"%s\">Tarayıcı Yükleyiciyi</a> deneyiniz."
+
+msgid "You can update to Piwigo %s directly, without upgrading to Piwigo %s (recommended)."
+msgstr "Piwigoyu direkt olarak %s'e güncelleyebilirsiniz, Piwigo %s'e güncellemeden (önerilir)."
+
+msgid "You cannot delete your account"
+msgstr "Kendi hesabinizi silemezsiniz"
+
+msgid "You cannot move an album in its own sub album"
+msgstr "Bir albümü kendi alt bölümü içindeki albüme taşıyamazsınız"
+
+msgid "You can't define a default photo order because you have a custom setting in your local configuration."
+msgstr "Varsayılan resim sırasını tanımlayamazsınız, çünkü yerel yapılandırmada özel bir ayar var"
+
+msgid "You have %d orphan tags: %s."
+msgstr "%d etkisiz etiketleriniz: %s."
+
+msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
+msgstr "Yerel yapılandırma dosyasında <i>$conf['order_by']</i> belirttiniz, bu parametre olarak önerilmemektedir, lütfen bu parametreyi siliniz veya <i>$conf['order_by_custom']</i> olarak yeniden adlandırınız!"
+
+msgid "You have subscribed to receiving notifications by mail."
+msgstr "Posta yoluyla bildirimleri almak için abone oldunuz."
+
+msgid "You have unsubscribed from receiving notifications by mail."
+msgstr "Posta yoluyla bildirimleri almak için olan aboneliginizi iptal ettiniz."
+
+msgid "You need to confirm deletion"
+msgstr "Silme islemini onaylayiniz"
+
+msgid "You need to upgrade your system to take full advantage of the application else the application will not work correctly, or not at all"
+msgstr "Sisteminizi yükseltmelisiniz aksi taktirde uygulama yanlış veya hiç çalışmayabilir."
+
+msgid "Your configuration settings are saved"
+msgstr "Yapılandırma ayarları kaydedildi"
+
+msgid "Zoom"
+msgstr "Yakınlaştırma"
+
+msgid "%u users have automatic permission because they belong to a granted group."
+msgstr "izin verilmiş bir gruba ait oldukları için %u kullanıcı otomatik izine sahip."
+
+msgid "<em>Piwigo for Android</em> application empowers you to connect your Android phone or table to your Piwigo gallery, create some albums and upload several photos at once."
+msgstr "<em>Android için Piwigo</em> uygulaması ile Android telefon veya tablet'inizden Piwigo galerinize bağlanmaya, albümler yaratmanıza ve birden fazla fotoğraf birden aktarmanıza izin verir."
+
+msgid "<em>Piwigo for iOS</em> application empowers you to connect to your Piwigo gallery from your iPhone, iPad or iPod Touch, create some albums and upload several photos at once."
+msgstr "<em>Piwigo for iOS</em> uygulaması ile iPhone, iPad veya iPod Touch'ınızdan Piwigo galerinize bağlanmaya, albümler yaratmanıza ve birden fazla fotoğraf birden aktarmanıza izin verir. "
+
+msgid "A locked gallery is only visible to administrators"
+msgstr "Kilitli bir galeri sadece yöneticiler tarafından görülebilir"
+
+msgid "Activate comments"
+msgstr "Yorumları etkinleştir"
+
+msgid "Adobe Photoshop Lightroom is a photography software designed to manage large quantities of digital images and doing post production work."
+msgstr "Adobe Photoshop Lightroom büyük sayıda dijital görüntü yönetmek ve yapım sonrasındaki işleri gerçekleştirmek için tasarlanmış bir yazılımdır."
+
+msgid "Aperture is a powerful tool to refine images and manage massive libraries on Mac."
+msgstr "Aperture, görüntüleri tasfiye etmeye ve büyük resim kütüphaneleri yönetmek için Mac de kullanılır."
+
+msgid "Aperture is designed for professional photographers with iPhoto simplicity."
+msgstr "Aperture iPhoto basitliği ile profesyonel fotoğrafcılar için tasarlanmış."
+
+msgid "Applications"
+msgstr "Uygulamalar"
+
+msgid "Apply watermark if height is bigger than"
+msgstr "Filigran uygulama koşulu: Yükseklik bundan daha büyük ise:"
+
+msgid "Apply watermark if width is bigger than"
+msgstr "Filigran uygulama koşulu: Genişlik bundan daha büyük ise:"
+
+msgid "Automatic sort order"
+msgstr "Otomatik sıralama"
+
+msgid "Available on"
+msgstr "Mevcut platform"
+
+msgid "By default, the center of interest is placed in the middle of the photo."
+msgstr "Genelde ilgi odak noktası, fotoğrafın ortasında yer almaktadır."
+
+msgid "Cancel"
+msgstr "İptal"
+
+msgid "Center of interest"
+msgstr "İlgi odağı"
+
+msgid "Default comments order"
+msgstr "Varsayılan yorum sıralaması"
+
+msgid "Delete multiple size images"
+msgstr "Çoklu boyut görüntüleri sil"
+
+msgid "Features include gallery browsing, album creation and photo upload."
+msgstr "Galeride gezinme, albüm yaratma ve fotoğraf yükleme gibi özellikleri içerir."
+
+msgid "For photo sizes with crop, such as \"Square\", Piwigo will do its best to include the center of interest."
+msgstr "Fotoğraf kırpmayla boyutlandırılır seçeneği için, örneğin \"Kare\", Piwigo ilgi odağını içerebilmek için elinden geleni yapmaya çalışacaktır."
+
+msgid "Gallery unlocked"
+msgstr "Galeri kilidi açık"
+
+msgid "Generate multiple size images"
+msgstr "Çoklu ebat görüntüleri üret"
+
+msgid "Groups and users"
+msgstr "Gruplar ve Kullanıcılar"
+
+msgid "List"
+msgstr "Listele"
+
+msgid "Move to album"
+msgstr "Albüme taşı"
+
+msgid "No group is permitted to see this private album"
+msgstr "Bu özel albüme görebilmek için hiçbir gruba izin verilmedi"
+
+msgid "Not cropped correctly?"
+msgstr "Doğru kırpılmadı mı?"
+
+msgid "Notify administrators when a comment is"
+msgstr "Bu yorum olduğunda yöneticileri bilgilendir:"
+
+msgid "On your Linux, simply install Shotwell with your package manager and the activate Piwigo publishing option."
+msgstr "Linux sürümünüzde kullanmış olduğunuz paket yöneticisi ile sadece Shotwell'i kurun ve Piwigo publish eklentisini aktif hale getirin."
+
+msgid "Opacity"
+msgstr "Opaklık"
+
+msgid "Original Size"
+msgstr "Orjinal Boyut"
+
+msgid "Permission granted for groups"
+msgstr "Gruplara izin verilmiştir"
+
+msgid "Permission granted for users"
+msgstr "Kullanıcılara izin verilmiştir"
+
+msgid "Permission management"
+msgstr "İzin yönetimi"
+
+msgid "Photo sizes with crop"
+msgstr "Kırparak fotoğrafı boyutlandır"
+
+msgid "Piwigo Publish plugin for Lightroom"
+msgstr "Lightroom için Piwigo Publish eklentisi "
+
+msgid "Piwigo export plugin for Aperture"
+msgstr "Aperture için Piwigo aktarım eklentisi"
+
+msgid "Piwigo export plugin for iPhoto"
+msgstr "iPhoto için Piwigo aktarım eklentisi"
+
+msgid "Piwigo for Android"
+msgstr "Android için Piwigo"
+
+msgid "Piwigo for iOS (iPhone, iPad, iPod Touch)"
+msgstr "iOS (iPhone, iPad, iPod Touch) için Piwigo"
+
+msgid "Piwigo publish plugin for Shotwell"
+msgstr "Shotwell için Piwigo publish eklentisi"
+
+msgid "Piwigo publish plugin for digiKam"
+msgstr "digiKam için Piwigo publish eklentisi"
+
+msgid "ReGalAndroid (RemoteGallery client for Android) is an open source (GPL v3) Piwigo client for the Android platform."
+msgstr "ReGalAndroid (Android için RemoteGallery istemcisi) Android platformu için yazılmış açık kaynak kodlu (GPL v3) bir Piwigo istemcisidir."
+
+msgid "Resize after upload"
+msgstr "Karşıya gönderdikten sonra yeniden boyutlandır"
+
+msgid "Save manual order"
+msgstr "Manüel sıralamayı kayıt et"
+
+msgid "Save visits in history for"
+msgstr "Geçmişte şu ziyaretleri kayıt et"
+
+msgid "Select a file"
+msgstr "Bir dosya seçin"
+
+msgid "Select a zone with your mouse to define a new center of interest."
+msgstr "Yeni bir odak noktası belirlemek için farenizle bir bölge seçiniz."
+
+msgid "Select groups..."
+msgstr "Grupları seçin..."
+
+msgid "Select users..."
+msgstr "Kullanıcıları seçin..."
+
+msgid "Send connection settings by email"
+msgstr "Bağlantı ayarları eposta ile gönder"
+
+msgid "Shotwell is an open source digital photo organizer that runs on Linux. It is the default photo manager in Ubuntu and Fedora."
+msgstr "Shotwell linux altında çalışan açık kaynaklı bir dijital fotoğraf yönticisidir. Ubuntu ve Fedora için varsayılan fotoğraf yöneticisidir."
+
+msgid "The Piwigo export plugin allows you to create albums and export photos."
+msgstr "Piwigo aktarım eklentisi albümler yaratmanıza ve fotoğrafları aktarmanıza olanak tanır."
+
+msgid "The Piwigo publish Plug-in allows you to export and synchronize photos from Lightroom directly to your Piwigo photo gallery."
+msgstr "Piwigo publish eklentisi Lightroom yazılımından görüntülerinizi Piwigo fotoğraf galerisine aktarmak ve senkronize etmeye izin verir. "
+
+msgid "The center of interest is the most meaningful zone in the photo."
+msgstr "Odak noktası, bir fotoğrafın en çok anlam taşıdığı bölgedir."
+
+msgid "The original image quality must be a number between %d and %d"
+msgstr "Orjinal görüntü kalitesi %d ile &d arasında bir sayı olmalı"
+
+msgid "The original maximum height must be a number between %d and %d"
+msgstr "Orjinal yüksekliği %d ile %d arasında bir sayı olmalı"
+
+msgid "The original maximum width must be a number between %d and %d"
+msgstr "Orjinal genişliği %d ile %d arasında bir sayı olmalı"
+
+msgid "There is no group in this gallery."
+msgstr "Bu galeride herhangi bir grup yer almamaktadır."
+
+msgid "This album contains %d photos, added between %s and %s."
+msgstr "Bu albüm %d fotoğraf içeriyor, %s ile %s arasında eklendi."
+
+msgid "This album contains %d photos, added on %s."
+msgstr "Bu albüm %d resim içeriyor, %d de eklendi."
+
+msgid "This album contains no photo."
+msgstr "Bu albüm herhangi bir fotoğraf içermiyor."
+
+msgid "To export your photos from digiKam to Piwigo, simply install digiKam and the Kipi-plugins."
+msgstr "digiKam dan Piwigo'ya fotoğraflarınızı aktarmak için, sadece digiKam ve Kipi-eklentileri kurunuz."
+
+msgid "Unlock gallery"
+msgstr "Galeri kilidini aç"
+
+msgid "Web Form"
+msgstr "Web Form"
+
+msgid "X Position"
+msgstr "X Pozisyonu"
+
+msgid "X Repeat"
+msgstr "X Tekrarlama"
+
+msgid "Y Position"
+msgstr "Y Pozisyonu"
+
+msgid "You can activate only one mobile theme."
+msgstr "Sadece bir mobil thema etkinleştirebilirsiniz."
+
+msgid "add a new watermark"
+msgstr "yeni bir filigran ekle"
+
+msgid "administrators"
+msgstr "yöneticileri"
+
+msgid "any visitor can see this album"
+msgstr "herhangi bir ziyaretci bu albümü görebilir"
+
+msgid "apply automatic sort order"
+msgstr "otomatik sıralamayı uygula"
+
+msgid "bottom left corner"
+msgstr "alt sol köşe"
+
+msgid "bottom right corner"
+msgstr "alt sağ köşe"
+
+msgid "cancel manual order"
+msgstr "manuel sıralamayı iptal et"
+
+msgid "custom"
+msgstr "Özel"
+
+msgid "digiKam is an advanced digital photo management free software for Linux, Windows, and MacOSX."
+msgstr "digiKam Linux, Windows ve MacOSX platformlar için geliştirilmiş açık ve gelişmiş bir dijital fotoğraf yönetim yazılımıdır. "
+
+msgid "digiKam is designed for photographers who want to view, manage, edit, enhance, organize, tag, and share photographs."
+msgstr "digiKam, fotoğraflarını görüntülemek, yönetmek, düzenlemek, geliştirmek, orgamize etmek, etiketletirmek ve paylaşmak isteyen fotoğrafcılar için tasarlanmıştır."
+
+msgid "iPhoto is the default photo manager on MacOSX. The Piwigo export plugin let you create new albums and export your photos directly from iPhoto to your Piwigo photo gallery."
+msgstr "iPhoto MacOSX'in varsayılan fotoğraf yöneticisidir. Piwigo aktarım eklentisi, yeni albümler yaratmanıza ve fotoğraflarınızı direkt iPhoto'dan Piwigo fotğraf galerisine aktarmanıza olanak tanır."
+
+msgid "include photos with lower privacy level"
+msgstr "daha düşük olan bir özel seviyesine ait olan fotoğrafları içerin "
+
+msgid "middle"
+msgstr "orta"
+
+msgid "modified"
+msgstr "değiştiğinde"
+
+msgid "pending validation"
+msgstr "doğrulama beklemede"
+
+msgid "registered users"
+msgstr "kayıtlı kullanıcılar"
+
+msgid "simple visitors"
+msgstr "normal ziyaretcileri"
+
+msgid "top left corner"
+msgstr "üst sol köşe"
+
+msgid "top right corner"
+msgstr "üst sağ köşe"
+
+msgid "visitors need to login and have the appropriate permissions to see this album"
+msgstr "ziyaretçilerin bu albümü görebilmeleri için oturum açmaları ve uygun izinlere sahip olmaları gereklidir"
+
+msgid "Multiple Size"
+msgstr "Çoklu Boyut"
+
+msgid "%d days"
+msgstr "%d gün"
+
+msgid "%d day"
+msgstr "%d gün"
+
+msgid "%d hours"
+msgstr "%d saat"
+
+msgid "%d hour"
+msgstr "%d saat"
+
+msgid "%d minutes"
+msgstr "%d dakika"
+
+msgid "%d minute"
+msgstr "%d dakika"
+
+msgid "%d months"
+msgstr "%d ay"
+
+msgid "%d month"
+msgstr "%d ay"
+
+msgid "%d seconds"
+msgstr "%d saniye"
+
+msgid "%d second"
+msgstr "%d saniye"
+
+msgid "%d weeks"
+msgstr "%d hafta"
+
+msgid "%d week"
+msgstr "%d hafta"
+
+msgid "%d years"
+msgstr "%d yıl"
+
+msgid "%d year"
+msgstr "%d yıl"
+
+msgid "%s ago"
+msgstr "%s önce"
+
+msgid "Edit photo"
+msgstr "Fotoğraf düzenle"
+
+msgid " and %d virtuals"
+msgstr "ve %d sanal"
+
+msgid "%d physicals"
+msgstr "%d fiziksel"
+
+msgid "Added by %s"
+msgstr "%s tarafından eklendi"
+
+msgid "Numeric identifier : %d"
+msgstr "Sayısal tanımlayıcı: %d"
+
+msgid "Original file : %s"
+msgstr "Orjinal dosya: %s"
+
+msgid "Rated %d times, score : %.2f"
+msgstr "%d kez oylandı, skor: %.2f"
+
+msgid "Sharpen"
+msgstr "Keskinleştirmek"
+
+msgid "Visited %d times"
+msgstr "%d kez görüntülendi"
+
+msgid "Watermark"
+msgstr "watermark"
+
+msgid "%s in the future"
+msgstr "%s gelecekte"
+
+msgid "Posted %s on %s"
+msgstr "%s gönderildi %s tarihinde"
+
+msgid "create a new site"
+msgstr "yeni bir site oluştur"
+
+msgid "No order field selected"
+msgstr "Sıralandırma alanı seçilmedi"
+
+msgid "Duplicate selected tags"
+msgstr "Seçili etiketleri kopyala"
+
+msgid "Name of the duplicate"
+msgstr "Kopya ismi"
+
+msgid "Source tag"
+msgstr "Kaynak etiket"
+
+msgid "Tag \"%s\" is now a duplicate of \"%s\""
+msgstr "\"%s\" etiketi şimdi \"%s\" 'nin kopyasıdır"
+
+msgid "Landscape"
+msgstr "Manzara"
+
+msgid "Minimum height"
+msgstr "Asgari yükseklik"
+
+msgid "Minimum width"
+msgstr "Asgari genişlik"
+
+msgid "Panorama"
+msgstr "Panorama"
+
+msgid "Portrait"
+msgstr "Portre"
+
+msgid "Manage photos"
+msgstr "Fotoğrafları yönet"
+
+msgid "Number of albums per page"
+msgstr "Her sayfadaki albüm sayısı"
+
+msgid "View in gallery"
+msgstr "Galeride göster"
+
+msgid "Ratio"
+msgstr "Oran"
+
+msgid "between %.2f and %.2f"
+msgstr "%.2f ve %.2f arasında"
+
+msgid "between %d and %d pixels"
+msgstr "%d ve %d piksel arasında"
+
+msgid "This group will be set to default"
+msgstr "Bu grup varsayılan olarak seçilecek"
+
+msgid "This group will be unset to default"
+msgstr "Bu grup varsayılan olmaktan çıkartılacak"
+
+msgid "Type here the name of the new group"
+msgstr "Buraya yeni grubun ismini yazın"
+
+msgid "Duplicate"
+msgstr "Kopyasını al"
+
+msgid "Manage the members"
+msgstr "Üyeleri yönet"
+
+msgid "Merge selected groups"
+msgstr "Seçilen grupları birleştir"
+
+msgid "No groups selected, no actions possible."
+msgstr "Hiç bir grup seçili değil, herhangi bir işlem yapılamaz"
+
+msgid "No members to manage"
+msgstr "Yönetecek üye yok"
+
+msgid "Please select at least two groups"
+msgstr "En azından iki grup seçin"
+
+msgid "Rename"
+msgstr "Yeniden adlandır"
+
+msgid "Purge user cache"
+msgstr "Kullaıcı önbelleğini temizle"
+
+msgid "The picture dimensions will be reduced to %dx%d pixels."
+msgstr "Resim boyutları %dx%d piksele düşürülecektir."
+
+msgid "Resize after upload disabled due to the use of GD as graphic library"
+msgstr "GD 'nin grafik kütüphanesi olarak kullanımından dolayı yükleme sonrası yeniden boyutlandırma devredışı"
+
+msgid "Select at least one tag"
+msgstr "En azından bir etiket seçin"
+
+msgid "Mail theme"
+msgstr "Posta Teması"
+
+msgid "General"
+msgstr "Genel"
+
+msgid "Basic settings"
+msgstr "Temel ayarlar"
+
+msgid "Registered on %s, %s."
+msgstr "%s 'ye kayıt yapıldı, %s."
+
+msgid "Showing %s to %s of %s users"
+msgstr "%s 'den %s'ye olan kullanıcılar görüntüleniyor (toplam %s)"
+
+msgid "No user selected of %d users"
+msgstr "%d kullanıcıdan hiçbiri seçilmedi"
+
+msgid "User %s added"
+msgstr "Kullanıcı %s eklendi"
+
+msgid "Update user"
+msgstr "Kullanıcıyı güncelle"
+
+msgid "Show %s users"
+msgstr "%s kullanıcıyı göster"
+
+msgid "No users selected, no actions possible."
+msgstr "Hiç bir kullanıcı seçilmedi, işlem yapılamaz."
+
+msgid "Last visit on %s, %s."
+msgstr "%s 'ye son ziyaretiniz, %s."
+
+msgid "on the %d selected users"
+msgstr "seçilen %d kullanıcıda"
+
+msgid "Users modified"
+msgstr "Kullanıcılarda değişiklik yapıldı"
+
+msgid "User %s updated"
+msgstr "%s kullanıcı güncellendi"
+
+msgid "Password updated"
+msgstr "Şifre güncellendi"
+
+msgid "No matching user found"
+msgstr "Uyan hiç bir kullanıcı bulunamadı"
+
+msgid "Loading..."
+msgstr "Yükleniyor..."
+
+msgid "Change password"
+msgstr "Şifre değiştir"
+
+msgid "Change username"
+msgstr "Kullanıcı adı değiştir"
+
+msgid "All %d users are selected"
+msgstr "Tüm %d kullanıcı seçildi"
+
+msgid "(filtered from %s total users)"
+msgstr "(toplam %s kullanıcıdan filtrelendi)"
+
+msgid "%d of %d users selected"
+msgstr "%d/%d kullanıcı seçildi"
+
+msgid "Close user details"
+msgstr "Kullanıcı detaylarını kapat"
+
+msgid "Open user details"
+msgstr "Kullanıcı detaylarını aç"
+
+msgid "close"
+msgstr "kapat"
+
+msgid "Activate it now"
+msgstr "Şimdi etkinleştir"
+
+msgid "Allow users to add a link to their website"
+msgstr "Kullanıcılara, kendi sitelerine bağlantı eklemelerine olanak sağlar."
+
+msgid "Impossible to deactivate the default theme."
+msgstr "Varsayılan temayı devre dışı bırakılamaz"
+
+msgid "Mail address is mandatory for registration"
+msgstr "Kayıt için e-posta adresi zorunludur"
+
+msgid "Empty caddie"
+msgstr "Sepetı boşalt"
+
+msgid "No and unlock sub-albums"
+msgstr "Alt albümlerin kilidini aç"
+
+msgid "The settings for the guest are from the %s user"
+msgstr "%s kullanıcısı için ziyaretçi ayarları"
+
+msgid "based on"
+msgstr "buna dayanarak"
+
+msgid "between %s and %s MB"
+msgstr "%s ve %s MB arasında"
+
+msgid "date & time"
+msgstr "tarih ve saat"
+
+msgid "file name"
+msgstr "dosya adı"
+
+msgid "width & height"
+msgstr "genişlik ve yükseklik"
+
+msgid "Upload in progress"
+msgstr "Yükleme devam ediyor"
+
+msgid "Delete %d orphan photos"
+msgstr "%d adet sahipsiz fotoğrafı silin"
+
+msgid "Each email sent will contain its own automatic authentication key on links, valid for %s."
+msgstr "Gönderilen her e-postada bulunan bağlantılarda otomatik kimlik doğrulama anahtarı bulunur, %s için geçerli."
+
+msgid "Edit user"
+msgstr "Kullanıcıyı düzenle"
+
+msgid "For security reason, authentication keys do not work for administrators."
+msgstr "Güvenlik sebeplerinden dolayı, kimlik doğrulama anahtarları yöneticiler için işe yaramaz."
+
+msgid "No recipient selected"
+msgstr "Alıcı seçilmedi"
+
+msgid "No user is permitted to see this private album"
+msgstr "Hç bir kullanıcıya bu özel albümün görüntülenmesine izin verilmez"
+
+msgid "Orphans"
+msgstr "Sahipsizler"
+
+msgid "Recipients"
+msgstr "Alıcılar"
+
+msgid "Y Repeat"
+msgstr "Y Tekrarla"
+
+msgid "It only takes a few clicks."
+msgstr "sadece bir kaç tıklama yeterli."
+
+msgid "No tags selected, no actions possible."
+msgstr "Etiket seçilmedi"
+
+msgid "Piwigo %s is available, please update"
+msgstr "Piwigo %s mevcut, lütfen güncelleyiniz"
+
+msgid "delete only album, not photos"
+msgstr "resimler hariç, sadece albümü sil"
+
+msgid "Confirm deletion"
+msgstr "Silmeyi onayla"
+
+msgid "Delete album \"%s\"."
+msgstr "\"%s\" albümünü sil."
+
+msgid "Select tags"
+msgstr "Etiketleri seç"
+
+msgid "Storage used"
+msgstr "Kullanılan alan"
+
+msgid "(determined from photos)"
+msgstr "(fotoğraflardan tespit edildi)"
+
+msgid "Dashboard"
+msgstr "Kontrol paneli"
+
+msgid "Delete album \"%s\" and its %d sub-albums."
+msgstr "Albümleri \"%s\" ile %d alt albümleri sil."
+
+msgid "Display form"
+msgstr "Formu görüntüle"
+
+msgid "No filter on album. Select one or type to search"
+msgstr "Albümün filtresi yok. Bir filtre seç veya aramak için yaz"
+
+msgid "Piwigo Remote Sync is able to upload a whole folder hierarchy. If you run it again, only new photos will be uploaded."
+msgstr "Piwigo Uzaktan Eşitleme, tüm klasör hiyerarşisini yükleyebilir. Eğer tekrar çalıştırırsanız, sadece yeni fotoğraflar yüklenecektir."
+
+msgid "Running on an up-to-date Piwigo is important for security."
+msgstr "Güncel bir Piwigo'sunda çalışmak güvenlik için önemlidir."
+
+msgid "Share / Send your photos directly from your Mac Os X (10.10 and following) to Piwigo"
+msgstr "Fotoğraflarınızı doğrudan MacOS (10.10 ve sonrası)'dan sisteme paylaşın veya gönderin."
+
+msgid "Time has come to update your Piwigo with version %s, go to %s"
+msgstr "Sisteminizi %s sürümü ile güncelleme zamanı geldi, %s adresine git"
+
+msgid "checksum"
+msgstr "sağlama toplamı"
+
+msgid "delete album and all %d photos, even the %d associated to other albums"
+msgstr "albüm ve tüm %d fotoğraf, hatta %d diğer albümlerinde ilişkili olanları silin"
+
+msgid "delete album and the %d orphan photos"
+msgstr "albüm ve %d yetim fotoğraf sil"
+
+msgid "orphans to delete"
+msgstr "silinecek yetimler"
+
+msgid "Create a first album"
+msgstr "İlk albümü oluştur"
+
+msgid "Deletion in progress"
+msgstr "Silme işlemi devam ediyor"
+
+msgid "Visit"
+msgstr "Ziyaret et"
+
+msgid "Welcome!"
+msgstr "Hoş Geldiniz!"
+
+msgid "or"
+msgstr "yada"
+
+msgid "Display album date period"
+msgstr "Her albümle ilişkili tarih dönemini gösterin, örn. «12-15 Temmuz 2018 tarihleri arasında»"
+
+msgid "Piwigo requires an album to add photos."
+msgstr "Piwigo, fotoğrafların ekleneceği bir albüme ihtiyaç duyar"
+
+msgid "checksums to add"
+msgstr "eklenecek kontrol toplamı"
+
+msgid "With no checksum"
+msgstr "Kontrol toplamı olmadan"
+
+msgid "Synchronization in progress"
+msgstr "Senkronizasyon yapılıyor"
+
+msgid "Some checksums are missing."
+msgstr "Bazı kontrol toplamları eksik."
+
+msgid "Display category date"
+msgstr "Kategori tarihini görüntüle"
+
+msgid "Compute %d missing checksums"
+msgstr "%d eksik kontrol toplamı hesapla"
+
+msgid "... or hide this link"
+msgstr "... yada bu bağlantıyı gizle"
+
+msgid "%d checksums were added"
+msgstr "%d kontrol toplamları ilave edildi"
+
+msgid "Delete orphan tags ?"
+msgstr "Artık etiketler silinsin mi?"
+
+msgid "Delete album"
+msgstr "Albümü sil"
+
+msgid "Created on %s"
+msgstr "%s 'de yaratıldı"
+
+msgid "Compare mode"
+msgstr "Karşılaştırma modu"
+
+msgid "Cache"
+msgstr "Önbellek"
+
+msgid "Activity peak in the last weeks"
+msgstr "Son haftalardaki etkinlik zirvesi"
+
+msgid "Are you sure you want to delete group \"%s\"?"
+msgstr "\"%s\" grubunu silmek istediğinize emin misiniz?"
+
+msgid "Are you sure you want to delete all sizes?"
+msgstr "Tüm boyutları silmek istediğinize emin misiniz?"
+
+msgid "Album search tool"
+msgstr "Albüm arama yardımcısı"
+
+msgid "<b>1</b> album found"
+msgstr "<b>1</b> albüm bulundu"
+
+msgid "<b>%d</b> tags found"
+msgstr "<b>%d</b> etiket bulundu"
+
+msgid "<b>%d</b> tag selected"
+msgstr "<b>%d</b> etiket seçildi"
+
+msgid "<b>%d</b> tag found"
+msgstr "<b>%d</b> etiket bulundu"
+
+msgid "<b>%d</b> albums found"
+msgstr "<b>%d</b> albüm bulundu"
+
+msgid " (copy %s)"
+msgstr "(%s'yi kopyala)"
+
+msgid " (copy)"
+msgstr "(kopyala)"
+
+msgid "%d Activities"
+msgstr "%d Etkinlik"
+
+msgid "%d Activity"
+msgstr "%d Etkinlik"
+
+msgid "%d photos"
+msgstr "%d fotoğraf"
+
+msgid "%d sub-albums"
+msgstr "%d alt-albüm"
+
+msgid "%s GB used"
+msgstr "%s GB kullanılmış"
+
+msgid "%s MB used"
+msgstr "%s MB kullanılmış"
+
+msgid "%s file type"
+msgstr "%s dosya tipi"
+
+msgid "Group(s) \\{%s1\\} succesfully merged into \"%s2\""
+msgstr "Guruplar \\{%s1\\} başarıyla \"%s2\" ile birleştirildi"
+
+msgid "Displays a banner to install or open the official Piwigo app"
+msgstr "Resmi Piwigo uygulamasını yüklemek veya açmak için bir başlık görüntüler"
+
+msgid "At least 2 selected tags are needed to merge"
+msgstr "Birleştirmek için en az seçili 2 etiket gereklidir"
+
+msgid "Are you sure you want to lock the gallery?"
+msgstr "Galeriyi kilitlemek istediğinize emin misiniz?"
+
+msgid "Are you sure you want to install the plugin \"%s\"?"
+msgstr "\"%s\" eklentisini yüklemek istediğinize emin misiniz?"
+
+msgid "Are you sure you want to delete the plugin \"%s\"?"
+msgstr "\"%s\" eklentisini silmek istediğinizden emin misiniz?"
+
+msgid "Are you sure you want to delete the ratings of the user \"%s\"?"
+msgstr "\"%s\" kullanıcısı derecelendirmesini silmek istediğinizden emin misiniz?"
+
+msgid "Are you sure you want to delete the theme \"%s\"?"
+msgstr "\"%s\" temasını silmek istediğinizden emin misiniz?"
+
+msgid "Are you sure you want to delete the user \"%s\"?"
+msgstr "\"%s\" kullanıcısını silmek istediğinizden emin misiniz?"
+
+msgid "Are you sure you want to delete this?"
+msgstr "Bunu silmek istediğinizden emin misiniz?"
+
+msgid "Are you sure you want to delete this theme?"
+msgstr "Bu temayı silmek istediğinizden emin misiniz?"
+
+msgid "Are you sure you want to delete this site?"
+msgstr "Bu siteyi silmek istediğinizden emin misiniz?"
+
+msgid "%s other tags available.."
+msgstr "diğer %s etiket mevcut.."
+
+msgid "Are you sure you want to delete the language \"%s\"?"
+msgstr "\"%s\" dilini silmek istediğinizden emin misiniz?"
+
+msgid "Choose which tag to merge these tags into"
+msgstr "Bu etiketleri hangi etiketle birleştireceğinizi seçin"
+
+msgid "Average last 12 months"
+msgstr "Son 12 aylık ortalama"
+
+msgid "Groups \\{%s\\} succesfully deleted"
+msgstr "\\{%s\\} gurubu başarıyla silindi"
+
+msgid "Showing %s users out of %s"
+msgstr "Kullanıcı %s/%s bölümü gösteriliyor"
+
+msgid "Select all %d tags"
+msgstr "Tüm %d etiketi seç"
+
+msgid "Set as group for new users"
+msgstr "Yeni kullanıcılar için gurup olarak ayarlandı"
+
+msgid "Unset as group for new users"
+msgstr "Yeni kullanıcılar için gurup olarak ayarlanmadı"
+
+msgid "User \"%s\" dissociated from this group"
+msgstr "Kullanıcı \"%s\" ilişkisi bu guruptan çıkartıldı"
+
+msgid "You have %d orphan tags %s"
+msgstr "%d artık etiketiniz var %s"
+
+msgid "You have %s1 orphan : %s2"
+msgstr "%s1 artığınız var: %s2"
+
+msgid "and %s others"
+msgstr "ve diğer %s"
+
+msgid "Tag \"%s\" succesfully deleted"
+msgstr "\\\"%s\\\" etiketi başarıyla silindi"
+
+msgid "Tag \"%s\" created"
+msgstr "\"%s\" etiketi oluşturuldu"
+
+msgid "Manage users with user manager"
+msgstr "Kullanıcıları yönetim aracıyla yönet"
+
+msgid "Requires PHP %s"
+msgstr "PHP %s gerektirir"
+
+msgid "Refresh thumbnail"
+msgstr "Küçük resmi yenile"
+
+msgid "The other tags will be removed"
+msgstr "Diğer etiketler kaldırılacaktır"
+
+msgid "This is already the default theme"
+msgstr "Bu zaten varsayılan tema"
+
+msgid "Storage"
+msgstr "Saklama"
+
+msgid "Show inactive plugins"
+msgstr "Aktif olmayan eklentileri göster"
+
+msgid "Set as default"
+msgstr "Varsayılan yap"
+
+msgid "Selection mode"
+msgstr "Seçme modu"
+
+msgid "Select"
+msgstr "Seç"
+
+msgid "Search tips"
+msgstr "Arama kolaylıkları"
+
+msgid "Review"
+msgstr "İncele"
+
+msgid "Promote mobile app on mobile devices"
+msgstr "Mobil uygulamayı mobil cihazlarda tanıtın"
+
+msgid "Portraits"
+msgstr "Portreler"
+
+msgid "Are you sure you want to restore this plugin?"
+msgstr "Bu eklentiyi geri yüklemek istediğinizden emin misiniz?"
+
+msgid "Are you sure you want to restore the plugin \"%s\"?"
+msgstr "\"%s\" Bu eklentisini geri yüklemek istediğinizden emin misiniz?"
+
+msgid "Are you sure you want to restore to default settings?"
+msgstr "Varsayılan ayarları geri yüklemek istediğinizden emin misiniz?"
+
+msgid "Are you sure you want to update all extensions?"
+msgstr "Tüm uzantıları güncellemek istediğinizden emin misiniz?"
+
+msgid "Associate User"
+msgstr "Kullanıcıyı İlişkilendir"
+
+msgid "Clear Selection"
+msgstr "Seçimleri Temizle"
+
+msgid "The %d tags on this page are selected"
+msgstr "Bu sayfadaki %d etiket seçildi"
+
+msgid "Tags \\{%s\\} succesfully deleted"
+msgstr "\\{%s\\} etiketleri başarıyla silindi"
+
+msgid "Tag(s) \\{%s1\\} succesfully merged into \"%s2\""
+msgstr "\\{%s1\\} etiketleri \"%s2\" içerisine başarıyla birleştirildi"
+
+msgid "Tag \"%s1\" renamed in \"%s2\""
+msgstr "\\\"%s1\\\" etiketi \\\"%s2\\\" olarak yeniden adlandırıldı"
+
+msgid "Tag Manager"
+msgstr "Etiket Yöneticisi"
+
+msgid "You have %s inactive plugins"
+msgstr "%s aktif olmayan eklentiniz var"
+
+msgid "You don't have access to this photo"
+msgstr "Bu fotoğrafa erişiminiz bulunmuyor"
+
+msgid "User associated"
+msgstr "Kullanıcı ilişkilendirildi"
+
+msgid "Videos"
+msgstr "Videolar"
+
+msgid "Yes, I am sure"
+msgstr "Evet, eminim"
+
+msgid "Yes, delete"
+msgstr "Evet, sil"
+
+msgid "in administration"
+msgstr "yönetimde"
+
+msgid "in gallery"
+msgstr "galeride"
+
+msgid "no photo"
+msgstr "fotoğraf yok"
+
+msgid "Search albums"
+msgstr "Albümleri ara"
+
+msgid "Posted %s"
+msgstr "%s 'de gönderildi"
+
+msgid "Please upgrade your PHP version before any update."
+msgstr "Herhangi bir güncelleme yapmadan önce lütfen mevcut PHP uyarlamanızı yükseltin."
+
+msgid "Page Visited in %s"
+msgstr "%s 'de Ziyaret Edilen Sayfa"
+
+msgid "Page Visited"
+msgstr "Ziyaret Edilen Sayfa"
+
+msgid "Manage sub-albums"
+msgstr "alt-albümleri yönet"
+
+msgid "Manage album photos"
+msgstr "Albüm fotoğraflarını birleştir"
+
+msgid "Keep them"
+msgstr "Bunları koru"
+
+msgid "Merge"
+msgstr "Birleştir"
+
+msgid "Open in gallery"
+msgstr "Galeride aç"
+
+msgid "Other"
+msgstr "Diğer"
+
+msgid "Group renamed"
+msgstr "Gurup yeniden adlandırıldı"
+
+msgid "Group added"
+msgstr "Gurup eklendi"
+
+msgid "Group \"%s\" succesfully deleted"
+msgstr "\"%s\" gurubu başarıyla silindi"
+
+msgid "Formats"
+msgstr "Biçimler"
+
+msgid "File type: %s"
+msgstr "Dosya tipi: %s"
+
+msgid "Edited on %s"
+msgstr "%s 'de düzenlendi"
+
+msgid "Dissociate user from this group"
+msgstr "Kullanıcıyı bu gruptan ayır"
+
+msgid "No, I have changed my mind"
+msgstr "Hayır, fikrimi değiştirdim"
+
+msgid "No tag found"
+msgstr "Hiçbir etiket bulunamadı"
+
+msgid "No plugins found"
+msgstr "Hiçbir eklenti bulunamadı"
+
+msgid "No albums found"
+msgstr "Hiçbir albüm bulunamadı"
+
+msgid "Name is already taken"
+msgstr "Bu isim zaten alınmış"
+
+msgid "Display"
+msgstr "Görüntüle"
+
+msgid "Delete them"
+msgstr "Onları sil"
+
+msgid "Delete tags \\{%s\\}?"
+msgstr "\\{%s\\} etiketleri silinsin mi?"
+
+msgid "Delete tag \"%s\"?"
+msgstr "\"%s\" etiketi silinsin mi?"
+
+msgid "<b>%d+</b> albums found, try to refine the search"
+msgstr "<b>%d+</b> adet albüm bulundu, aramayı daraltmaya çalışın"
+
+msgid "Tile View"
+msgstr "Döşeme Görünümü"
+
+msgid "Line View"
+msgstr "Hat Görünümü"
+
+msgid "Hide sub-albums"
+msgstr "Alt albümleri gizle"
+
+msgid "Apply to the whole hierarchy"
+msgstr "Tüm hiyerarşiye uygula"
+
+msgid "Apply to direct sub-albums"
+msgstr "Doğrudan alt albümlere uygula"
+
+msgid "Apply an automatic order to root albums"
+msgstr "Kök albümlere otomatik sıralama uygula"
+
+msgid "Select an album... or type it!"
+msgstr "Bir albüm seç...veya adını yaz!"
+
+msgid "Root"
+msgstr "Kök"
+
+msgid "Show sub-albums"
+msgstr "Alt albümleri göster"
+
+msgid "Name field must not be empty"
+msgstr "İsim alanı boş bırakılamaz"
+
+msgid "Drag and drop to reorder albums"
+msgstr "Albümleri yeniden sıralamak için sürükle ve bırak"
+
+msgid "Compact View"
+msgstr "Kompakt Görünüm"
+
+msgid "Add Album"
+msgstr "Albüm Ekle"
+
+msgid "Select groups or type them"
+msgstr "Grupları seçin veya yazın"
+
+msgid "Can be shared by several individuals without conflict (they cannot change the password)."
+msgstr "Çakışma olmadan birkaç kişi tarafından paylaşılabilir (şifreyi değiştiremezler)."
+
+msgid "Equivalent to deactivation. The user is still in the list, but can no longer log in."
+msgstr "Devre dışı bırakmaya eşdeğerdir. Kullanıcı hala listededir, ancak artık oturum açamaz. "
+
+msgid "Has access to administration. Can only manage content: photos/albums/users/tags/groups."
+msgstr "Yönetime erişimi vardır. Yalnızca içeriği yönetebilir: fotoğraflar/albümler/kullanıcılar/etiketler/gruplar. "
+
+msgid "Has access to all administration functionnalities. Can manage both configuration and content."
+msgstr "Tüm yönetim işlevlerine erişimi vardır. Hem yapılandırmayı hem de içeriği yönetebilir. "
+
+msgid "No access to administration, can see private content with appropriate permissions."
+msgstr "Yönetim izni bulunmuyor, uygun izinlerle özel içeriği görebilir."
+
+msgid "Users not logged in will have these settings applied, these settings are used by default for new users"
+msgstr "Oturum açmamış veya yeni kullanıcılar için bu ayarlar uygulanır"
+
+msgid "between %s and %s"
+msgstr "%s ile %s arasında"
+
+msgid "Photos per page"
+msgstr "Sayfa başına fotoğraf"
+
+msgid "Plugin \"%s\" deleted!"
+msgstr "\"%s\" eklentisi silindi!"
+
+msgid "Plugin \"%s\" has been activated!"
+msgstr "\"%s\" eklentisi etkinleştirildi!"
+
+msgid "Restored"
+msgstr "Geri alındı"
+
+msgid "Registered"
+msgstr "Kaydedilen"
+
+msgid "never calculated"
+msgstr "asla hesaplanmayan"
+
+msgid "right now"
+msgstr "şu anda"
+
+msgid "to"
+msgstr "à"
+
+msgid "calculated"
+msgstr "hesaplanan"
+
+msgid "deletion"
+msgstr "silme"
+
+msgid "edit"
+msgstr "düzenle"
+
+msgid "login"
+msgstr "giriş yap"
+
+msgid "logout"
+msgstr "çıkış yap"
+
+msgid "months ago"
+msgstr "ay önce"
+
+msgid "move"
+msgstr "taşı"
+
+msgid "Sep"
+msgstr "Eyl"
+
+msgid "Show"
+msgstr "Göster"
+
+msgid "Synchronization"
+msgstr "Eşitle"
+
+msgid "Theme"
+msgstr "Tema"
+
+msgid "Update"
+msgstr "Güncelle"
+
+msgid "User updated"
+msgstr "Kullanıcı güncellendi"
+
+msgid "add"
+msgstr "ekle"
+
+msgid "%d user logged in"
+msgstr "%d kullanıcı çevrim içi"
+
+msgid "%d user logged out"
+msgstr "%d kullanıcı çevrim dışı"
+
+msgid "%d users added"
+msgstr "%d kullanıcı eklendi"
+
+msgid "%d users edited"
+msgstr "%d kullanıcı düzenlendi"
+
+msgid "%d users logged in"
+msgstr "%d kullanıcı çevrim içi"
+
+msgid "%d users logged out"
+msgstr "%d kullanıcı çevrim dışı"
+
+msgid "%s MB"
+msgstr "%s MB"
+
+msgid "Activated plugin list"
+msgstr "Etkinleştirilmiş eklenti listesi"
+
+msgid "Selected user"
+msgstr "Seçilen kullanıcı"
+
+msgid "Deactivated"
+msgstr "Etkinsizleştirildi"
+
+msgid "Edit guest user"
+msgstr "Misafir kullanıcıyı düzenle"
+
+msgid "Generate random password"
+msgstr "Rastgele şifre oluştur"
+
+msgid "Filters"
+msgstr "Filtreler"
+
+msgid "No plugin activated"
+msgstr "Eklenti etkinleştirilmedi"
+
+msgid "Nov"
+msgstr "Kas"
+
+msgid "Oct"
+msgstr "Eki"
+
+msgid "Last visit"
+msgstr "Son ziyaret"
+
+msgid "Manage users"
+msgstr "Kullanıcıları yönet"
+
+msgid "New user added"
+msgstr "Yeni kullanıcı eklendi"
+
+msgid "Mar"
+msgstr "Mar"
+
+msgid "May"
+msgstr "May"
+
+msgid "Jan"
+msgstr "Oca"
+
+msgid "Jul"
+msgstr "Tem"
+
+msgid "Jun"
+msgstr "Haz"
+
+msgid "Language"
+msgstr "Dil"
+
+msgid "Dec"
+msgstr "Ara"
+
+msgid "Delete these sizes"
+msgstr "Bu büyüklükleri sil"
+
+msgid "Delete user"
+msgstr "Kullanıcıyı sil"
+
+msgid "Download all activities"
+msgstr "Tüm aktiviteleri indir"
+
+msgid "Edit"
+msgstr "Düzenle"
+
+msgid "Email"
+msgstr "e-Posta"
+
+msgid "Email Adress"
+msgstr "e-Posta Adresi"
+
+msgid "Feb"
+msgstr "Şub"
+
+msgid "Activated"
+msgstr "Etkinleştirildi"
+
+msgid "Activity"
+msgstr "Etkinlik"
+
+msgid "Activity time from"
+msgstr "Etkin süre"
+
+msgid "Add User"
+msgstr "Kullanıcı Ekle"
+
+msgid "Add a new user"
+msgstr "Yeni bir kullanıcı ekle"
+
+msgid "Advanced filters"
+msgstr "Gelişmiş filtreler"
+
+msgid "Apr"
+msgstr "Nis"
+
+msgid "Aug"
+msgstr "Ağu"
+
+msgid "Cache size"
+msgstr "Tampon büyüklüğü"
+
+msgid "Change Password"
+msgstr "Şifre Değiştir"
+
+msgid "Close"
+msgstr "Kapat"
+
+msgid "%d tag added"
+msgstr "%d etiket eklendi"
+
+msgid "%d tag deleted"
+msgstr "%d etiket silindi"
+
+msgid "%d tag edited"
+msgstr "%d etiket düzenlendi"
+
+msgid "%d tag moved"
+msgstr "%d etiket taşındı"
+
+msgid "%d tags added"
+msgstr "%d etiket eklendi"
+
+msgid "%d tags deleted"
+msgstr "%d etiket silindi"
+
+msgid "%d tags edited"
+msgstr "%d etiket düzenlendi"
+
+msgid "%d tags moved"
+msgstr "%d etiket taşındı"
+
+msgid "%d user added"
+msgstr "%d kullanıcı eklendi"
+
+msgid "%d user edited"
+msgstr "%d kullanıcı düzenlendi"
+
+msgid "%d photo added"
+msgstr "%d fotoğraf eklendi"
+
+msgid "%d photo deleted"
+msgstr "%d fotoğraf silindi"
+
+msgid "%d photo edited"
+msgstr "%d fotoğraf düzenlendi"
+
+msgid "%d photo moved"
+msgstr "%d fotoğraf taşındı"
+
+msgid "%d photos added"
+msgstr "%d fotoğraf eklendi"
+
+msgid "%d photos deleted"
+msgstr "%d fotoğraf silindi"
+
+msgid "%d photos edited"
+msgstr "%d fotoğraf düzenlendi"
+
+msgid "%d photos moved"
+msgstr "%d fotoğraf taşındı"
+
+msgid "%d album deleted"
+msgstr "%d albüm silindi"
+
+msgid "%d album edited"
+msgstr "%d albüm düzenlendi"
+
+msgid "%d albums added"
+msgstr "%d albüm eklendi"
+
+msgid "%d albums deleted"
+msgstr "%d albüm silindi"
+
+msgid "%d albums edited"
+msgstr "%d albüm düzenlendi"
+
+msgid "%d group added"
+msgstr "%d grup eklendi"
+
+msgid "%d group deleted"
+msgstr "%d grup silindi"
+
+msgid "%d group edited"
+msgstr "%d grup düzenlendi"
+
+msgid "%d group moved"
+msgstr "%d grup taşındı"
+
+msgid "%d groups added"
+msgstr "%d grup eklendi"
+
+msgid "%d groups deleted"
+msgstr "%d grup silindi"
+
+msgid "%d groups edited"
+msgstr "%d grup düzenlendi"
+
+msgid "%d groups moved"
+msgstr "%d grup taşındı"
+
+msgid "%d album added"
+msgstr "%d albüm eklendi"
+
+msgid "action successfully performed."
+msgstr "eylem başarıyla gerçekleştirildi."
+
+msgid "Locked albums are disabled for maintenance. Only administrators can view them in the gallery. Lock this album will also lock his Sub-albums"
+msgstr "Kilitli albümler bakım için devre dışı bırakılır. Bunları galeride yalnızca yöneticiler görebilir. Bu albümü kilitlemek, alt albümlerini de kilitler"
+
+msgid "%s status is required to edit parameters."
+msgstr "parametreleri düzenlemek için %s durumu gereklidir."
+
+msgid "Webmaster status required"
+msgstr "Site yöneticisi durumu gerekli"
+
+msgid "Edit photo #%s"
+msgstr "Fotoğraf düzenle #%s"
+
+msgid "Your selection"
+msgstr "Seçiminiz"
+
+msgid "%s plugins found"
+msgstr "<b>%s</b> eklentiler bulundu"
+
+msgid "%s plugin found"
+msgstr "<b>%s</b> eklenti bulundu"
+
+msgid "%s lines"
+msgstr "%s satırlar"
+
+msgid "%s line"
+msgstr "%s satır"
+
+msgid "Visited"
+msgstr "Ziyaret edindi"
+
+msgid "Yes, rename"
+msgstr "Evet, yeni adlandır"
+
+msgid "and %d more"
+msgstr "ve %d daha fazla"
+
+msgid "since the beginning"
+msgstr "başlangiçtan beri"
+
+msgid "No picture found with the following name : %s."
+msgstr "Aşağıdaki adla resim bulunamadı: %s."
+
+msgid "Purge Cache"
+msgstr "Önbelleğini temizle"
+
+msgid "Rating greater than"
+msgstr "Rating şeyden büyük"
+
+msgid "Rename \"%s\""
+msgstr "\"%s\" yeniden adlandır"
+
+msgid "Show beta test plugins"
+msgstr "Beta test eklentiler göster"
+
+msgid "Show plugins compatible with previous version of Piwigo"
+msgstr "Piwigo'nun önceki sürümüyle uyumlu eklentileri göster"
+
+msgid "Tag name"
+msgstr "Etiket adı"
+
+msgid "The original picture will be detected with the filename (without extension)."
+msgstr "Orijinal resim dosya adı ile tespit edilecektir (uzantı olmadan)."
+
+msgid "There is multiple image in the database with the following names : %s."
+msgstr "Veritabanında aşağıdaki adlarla birden fazla resim vardır: %s."
+
+msgid "This albums is already in related categories list"
+msgstr "Bu albüm zaten ilgili albümler listesinde"
+
+msgid "This photo is an orphan"
+msgstr "Bu fotoğraf bir yetim"
+
+msgid "This plugin has no recent update"
+msgstr "Bu eklentinin daha güncel bir sürüm yok"
+
+msgid "This plugin have been updated recently"
+msgstr "Bu eklenti geçenlerde güncellendi"
+
+msgid "This plugin have no update since 3 years ! It may be outdated"
+msgstr "Bu eklenti 3 yıldır güncellenmedi! Modası geçmiş olabilir"
+
+msgid "This plugin is incompatible with your version"
+msgstr "Bu eklenti sürümünüzle uyumsuz"
+
+msgid "This plugin was updated less than 6 months ago"
+msgstr "Bu eklenti 6 aydan daha kısa bir süre önce güncellendi"
+
+msgid "Try now !"
+msgstr "Şimdi dene!"
+
+msgid "Understood, do not show again"
+msgstr "Anlaşıldı, bir daha gösterme"
+
+msgid "Upload Formats"
+msgstr "Biçimler yükle"
+
+msgid "Version %s"
+msgstr "Sürüm %s"
+
+msgid "Extensions"
+msgstr "Eklentiler"
+
+msgid "Global Gallery Actions"
+msgstr "Global Galeri Eylemleri"
+
+msgid "Install Piwigo on mobile"
+msgstr "Piwigo mobilde kur"
+
+msgid "Last revision date is newer than"
+msgstr "Son revizyon tarihi daha yeni"
+
+msgid "Latest Piwigo news"
+msgstr "Son Piwigo haber"
+
+msgid "Memories"
+msgstr "Suvenir"
+
+msgid "More information"
+msgstr "Daha fazla bilgi"
+
+msgid "No format for this picture"
+msgstr "Resimin biçim yok"
+
+msgid "No research in progress"
+msgstr "Devam eden araştırma yok"
+
+msgid "No search in progress"
+msgstr "Devam eden arama yok"
+
+msgid "Object"
+msgstr "Nesne"
+
+msgid "On %d rating(s)"
+msgstr " %d ratingde"
+
+msgid "Picture to associate formats with"
+msgstr "Biçimleri ilişkilendirmek için resim"
+
+msgid "Piwigo core"
+msgstr "Piwigo çekirdek"
+
+msgid "Piwigo is also on mobile."
+msgstr "Mobil cihazlarda Piwigo da var."
+
+msgid "Properties of abums"
+msgstr "Albümlerin özellikleri"
+
+msgid "Purge Actions"
+msgstr "Eylemleri temizle"
+
+msgid "%d formats uploaded for %d photos"
+msgstr "%d foto için %d biçim yüklendi"
+
+msgid "%s pixels, %.2f MB"
+msgstr "%s piksel, %.2f MB"
+
+msgid "%sGB"
+msgstr "%s GB"
+
+msgid "%sMB"
+msgstr "%s MB"
+
+msgid "Add New Plugin"
+msgstr "Yeni bir eklenti ekleyin"
+
+msgid "Add another set of formats"
+msgstr "Başka bir biçim seti ekleyin"
+
+msgid "Add as filter"
+msgstr "Filtre olarak ekle"
+
+msgid "Add formats"
+msgstr "biçimler ekle"
+
+msgid "Additional filters"
+msgstr "Ek filtreler"
+
+msgid "Are you sure you want to uninstall the plugin \"%s\"?"
+msgstr "Eklentiyi \"%s\" kaldırmak istediğinizden emin misiniz?"
+
+msgid "Are you sure you want to unlock the gallery?"
+msgstr "Galerinin kilidini açmak istediğinizden emin misiniz?"
+
+msgid "Certification higher or equal to"
+msgstr "Sertifika eşit veya daha yüksek"
+
+msgid "Create a new album at root"
+msgstr "Zeminde yeni bir albüm oluştur"
+
+msgid "Create a sub-album of \"%s\""
+msgstr "\"%s\" altında bir alt albüm oluştur"
+
+msgid "Current Version"
+msgstr "Geçerli Sürüm"
+
+msgid "Currently running version %s"
+msgstr "Şu anda çalışan sürüm %s"
+
+msgid "Delete %s format ?"
+msgstr "%s format silinsin mi ?"
+
+msgid "Discover"
+msgstr "Keşfet"
+
+msgid "Downloaded"
+msgstr "İndirildi"
+
+msgid "Error when trying to detect formats"
+msgstr "Biçimleri algılamaya çalışırken hata oluştu"
+
+msgid "Place first"
+msgstr "Birinci"
+
+msgid "Place last"
+msgstr "Sonuncu"
+
+msgid "Installed on %s, %s"
+msgstr "Yükleme %s, %s"
+
+msgid "While restoring this plugin, it will be reset to its original parameters and associated data is going to be reset"
+msgstr "Bu eklenti geri yüklenirken orijinal parametrelerine döndürülecek ve ilgili veriler sıfırlanacak."
+
+msgid "This picture is physically linked to this album, you can't dissociate them"
+msgstr "Bu resim fiziksel olarak bu albümle bağlantılıdır, ayıramazsınız."
+
+msgid "Always have a backup of your database and files."
+msgstr "Her zaman veritabanının ve dosyalarının bir yedeğini ayarlayın."
+
+msgid "Details"
+msgstr "Ayrıntılar"
+
+msgid "If anything bad happens during the update, you would be able to restore a backup."
+msgstr "Güncelleme sırasında bir sorun çıkıyorsa, bir yedek geri yükleyebilirsiniz."
+
+msgid "The best is to have them made automatically on a regular basis."
+msgstr "En iyisi, düzenli olarak otomatik olarak yapılmasıdır."
+
+msgid "This photo no longer exists"
+msgstr "Bu fotoğraf artık mevcut değil"
+
+msgid "Apply to root albums"
+msgstr "Kök albümlere uygula"
+
+msgid "Visit history"
+msgstr "Ziyaret geçmişi"
+
+msgid "Album name must not be empty"
+msgstr "Albüm adı boş bırakılamaz"
+
+msgid "Some photos are missing from your file system. Details provided by plugin Check Uploads"
+msgstr "Dosya sisteminizdeki bazı fotoğraflar kayıp. Detaylar Check Uploads eklentisi tarafından sağlandı."
+
+msgid "%d pictures in sub-albums"
+msgstr "alt albümlerde %d resim"
+
+msgid "<b>%d</b> filtered user"
+msgstr "<b>%d</b> filtrelenmiş kullanıcı"
+
+msgid "<b>%d</b> filtered users"
+msgstr "<b>%d</b> filtrelenmiş kullanıcılar"
+
+msgid "%d in whole branch"
+msgstr "Tüm dalda %d"
+
+msgid "Activate button \"%s\""
+msgstr "\"%s\" düğmesini etkinleştir"
+
+msgid "Detect and avoid duplicates during upload"
+msgstr "Yükleme sırasında kopyaları tespit edin ve önleyin"
+
+msgid "Disallow comments for sub-albums"
+msgstr "Alt albümler için yorumlara izin verme"
+
+msgid "During upload, if Piwigo detects the photo already exists, associate the existing photo to the destination album, without duplicating file"
+msgstr "Yükleme sırasında Piwigo fotoğrafın zaten mevcut olduğunu tespit ederse, dosyayı kopyalamadan mevcut fotoğrafı hedef albümle ilişkilendirir"
+
+msgid "Only admins in a specific group"
+msgstr "Yalnızca belirli bir gruptaki yöneticiler"
+
+msgid "Put at the root"
+msgstr "Kök dizine yerleştir"
+
+msgid "Remove thumbnail"
+msgstr "Küçük resmi kaldır"
+
+msgid "This album is currently locked, visible only to administrators."
+msgstr "Bu albüm şu anda kilitli ve yalnızca yöneticiler tarafından görülebilir."
+
+msgid "Unlocked album"
+msgstr "Kilidi açılmış albüm"
+
+msgid "Locked album"
+msgstr "Kilitli albüm"
+
+msgid "Unlock it"
+msgstr "Kilidi aç"
+
+msgid "Modified"
+msgstr "Değiştirildi"
+
+msgid "Created"
+msgstr "Oluşturuldu"
+
+msgid "Comments disallowed for sub-albums"
+msgstr "Alt albümler için yorumları yasakla"
+
+msgid "Comments allowed for sub-albums"
+msgstr "Alt albümler için yorumlara izin ver"
+
+msgid "Authorize comments"
+msgstr "Yorumları yetkilendir"
+
+msgid "Allow comments for sub-albums"
+msgstr "Alt albümler için yorumlara izin ver"
+
+msgid "All admins"
+msgstr "Tüm yöneticiler"
+
+msgid "%d including sub-albums"
+msgstr "%d alt albümler dahil"
+
+msgid "%d files"
+msgstr "%d dosya"
+
+msgid "Shrink"
+msgstr "Daralt"
+
+msgid "Expand"
+msgstr "Genişlet"
+
+msgid "Add a sub-album to “%s”"
+msgstr "Alt albümleri %s'ye ekle"
+
+msgid "Activate create mode to create and select an album"
+msgstr "Bir albüm oluşturmak ve seçmek için oluşturma kipini etkinleştirin"
+
+msgid "Core"
+msgstr "Çekirdek"
+
+msgid "Pagination has changed and needs to be reloaded !"
+msgstr "Sayfa düzeni değişti ve yeniden yüklenmesi gerekiyor!"
+
+msgid "was succesfully deleted"
+msgstr "başarılı biçimde silindi"
+
+msgid "level of confidentiality"
+msgstr "gizlilik seviyesi"
+
+msgid "image(s) contains unsaved changes"
+msgstr "imaj(lar) kaydedilmemiş değişiklikler içeriyor"
+
+msgid "between %d and %d"
+msgstr "%d ve %d arasında"
+
+msgid "System Activities"
+msgstr "Sistem Aktiviteleri"
+
+msgid "Select or create an album"
+msgstr "Bir albüm seçin veya oluşturun"
+
+msgid "You have unsaved changes"
+msgstr "Kaydedilmemiş değişiklikleriniz var"
+
+msgid "Who can see ?"
+msgstr "Kimler görebilir?"
+
+msgid "Save"
+msgstr "Kaydet"
+
+msgid "Metadata sync complete"
+msgstr "Metadata senkronu tamamlandı"
+
+msgid "First choose an album, then add your files"
+msgstr "Önce bir albümü ve sonra dosyaları seçin"
+
+msgid "Image"
+msgstr "Imaj"
+
+msgid "Creation mode"
+msgstr "Oluşturma kipi"
+
+msgid "Create your first album"
+msgstr "İlk albümünüzü oluşturun"
+
+msgid "Create and select"
+msgstr "Oluştur ve seç"
+
+msgid "Create a root album"
+msgstr "Bir kök albüm oluştur"
+
+msgid "Changes saved"
+msgstr "Değişiklikler kaydedildi"
+
+msgid "Auto-update"
+msgstr "Otomatik güncelleme"
+
+msgid "An error has occured"
+msgstr "Bir hata oluştu"
+
+msgid "Added on %s"
+msgstr "%s'ye eklendi"
+
+msgid "You are not authorised to change the main user, please ask your webmaster"
+msgstr "Ana kullanıcıyı değiştirme yetkiniz yok, lütfen web yöneticinize danışın"
+
+msgid "You can now change the main user from %s to %s."
+msgstr "Artık ana kullanıcıyı %s'den %s'ye değiştirebilirsiniz."
+
+msgid "You cannot copy the password if the connection to this site is not secure."
+msgstr "Bu siteye bağlantı güvenli değilse şifreyi kopyalayamazsınız."
+
+msgid "%s is the new main user"
+msgstr "%s yeni ana kullanıcıdır"
+
+msgid "Cannot send an email to this user because he doesn't have an email address"
+msgstr "E-posta adresi olmadığı için bu kullanıcıya e-posta gönderilemiyor"
+
+msgid "Changing the main user"
+msgstr "Ana kullanıcıyı değiştirme"
+
+msgid "Copied link"
+msgstr "Kopyalandı bağlantı"
+
+msgid "Copy password"
+msgstr "Şifreyi kopyala"
+
+msgid "Copy the link below and send it to the user so the password can be set."
+msgstr "Aşağıdaki bağlantıyı kopyalayın ve parolanın ayarlanabilmesi için kullanıcıya gönderin."
+
+msgid "Copy the password link"
+msgstr "Parola bağlantısını kopyalayın"
+
+msgid "Main user"
+msgstr "Ana kullanıcı"
+
+msgid "Password copied"
+msgstr "Parola kopyalandı"
+
+msgid "Please complete all fields"
+msgstr "Lütfen tüm alanları doldurun"
+
+msgid "Resend password link"
+msgstr "Şifre bağlantısını yeniden gönder"
+
+msgid "Set as main user"
+msgstr "Ana kullanıcı olarak ayarla"
+
+msgid "The passwords do not match"
+msgstr "Şifreler eşleşmiyor"
+
+msgid "This user must first be defined as the webmaster before it can be upgraded to the main user"
+msgstr "Bu kullanıcının, ana kullanıcı olarak yeni sürüme geçirilebilmesi için öncelikle web yöneticisi olarak tanımlanması gerekir"
+
+msgid "To be sure, please rewrite the word “%s” below"
+msgstr "Emin olmak için lütfen aşağıdaki \"%s\" kelimesini yeniden yazın"
+
+msgid "Username successfully modified"
+msgstr "Kullanıcı adı başarıyla değiştirildi"
+
+msgid "Yes, let's proceed"
+msgstr "Evet, devam edelim"
+
+msgid "You are about to set %s as main user instead of %s, do you wish to continue ?"
+msgstr "%s yerine %s'yi ana kullanıcı olarak ayarlamak üzeresiniz, devam etmek istiyor musunuz?"
+
+msgid "Read the release note"
+msgstr "Sürüm notunu okuyun"
+
+msgid "What's new in version %s"
+msgstr "Versiyon %s'de neler yeni?"
+
+msgid "Ok, got it!"
+msgstr "Tamamdır, anlaşıldı!"
+
+msgid "A photo library administrator has created the following account for you:"
+msgstr "Bir fotoğraf kütüphanesi yöneticisi sizin için aşağıdaki hesabı oluşturdu:"
+
+msgid "An activation link valid for %s has been sent to \"%s\". If the user doesn't receive the link, you can generate and copy a new one by editing the user and managing her password."
+msgstr "%s için geçerli bir etkinleştirme bağlantısı \"%s\" adresine gönderildi. Kullanıcı bağlantıyı almazsa, kullanıcıyı düzenleyerek ve parolasını yöneterek yeni bir tane oluşturabilir ve kopyalayabilirsiniz."
+
+msgid "This link is valid for %s. After this time, you will need to request a new link."
+msgstr "Bu bağlantı %s için geçerlidir. Bu süreden sonra yeni bir bağlantı talep etmeniz gerekecektir."
+
+msgid "An activation link valid for %s was created but could not be sent. You can now copy the link below and send it to the user."
+msgstr "%s için geçerli bir aktivasyon bağlantısı oluşturuldu ancak gönderilemedi. Şimdi aşağıdaki bağlantıyı kopyalayıp kullanıcıya gönderebilirsiniz."
+
+msgid "To set your password, visit the following address:"
+msgstr "Şifrenizi belirlemek için şu adresi ziyaret edin:"
+
+msgid "Welcome to %s"
+msgstr "%s'ye Hoş Geldiniz"
+
+msgid "The comment has been validated."
+msgstr "Yorum doğrulandı."
+
+msgid "The comments have been validated."
+msgstr "Yorumlar doğrulandı."
+
+msgid "There is currently %d photos in the lounge (upload buffer)"
+msgstr "Şu anda salonda %d fotoğraf var (yükleme arabelleği)"
+
+msgid "Use standard Piwigo template for common pages."
+msgstr "Yaygın sayfalar için standart Piwigo şablonunu kullanın."
+
+msgid "We have found %d duplicate paths. Details provided by plugin Check Uploads"
+msgstr "%d adet yinelenen yol bulduk. Ayrıntılar Check Uploads eklentisi tarafından sağlandı."
+
+msgid "When enabled, a common template is used for the login, registration and forgotten password pages, regardless of the theme. Some themes might use these templates even if you uncheck this option"
+msgstr "Etkinleştirildiğinde, temadan bağımsız olarak oturum açma, kayıt ve unutulan parola sayfaları için ortak bir şablon kullanılır. Bazı temalar, bu seçeneğin işaretini kaldırsanız bile bu şablonları kullanabilir."
+
+msgid "Save all photos"
+msgstr "Tüm fotoğrafları kaydet"
+
+msgid "No comments selected, no actions possible."
+msgstr "Hiçbir yorum seçilmedi, hiçbir eylem mümkün değil."
+
+msgid "If a photo in this album has the same filename, update the file without changing the photo's properties"
+msgstr "Bu albümdeki bir fotoğrafın dosya adı aynıysa, fotoğrafın özelliklerini değiştirmeden dosyayı güncelleyin"
+
+msgid "Empty lounge"
+msgstr "Alanı boşalt"
+
+msgid "Are you sure you want to delete comment #%s?"
+msgstr "#%s yorumunu silmek istediğinizden emin misiniz?"
+
+msgid "%d photos were moved from the upload lounge to their albums"
+msgstr "%d fotoğraf yükleme alanından albümlerine taşındı"
+
+msgid "Are you sure you want to delete \"%d\" comments?"
+msgstr "\"%d\" yorumu silmek istediğinizden emin misiniz?"
+
+msgid "Admins only"
+msgstr "Yalnızca yöneticiler"
+
+msgid "user_status_normal"
+msgstr "Temel"
+
+msgid "Use custom logo (png, jpeg or svg)"
+msgstr "Özel logo kullanın (png, jpeg veya svg)"
+
+msgid "Use Piwigo logo"
+msgstr "Piwigo logosunu kullan"
+
+msgid "Standard pages header"
+msgstr "Standart sayfa başlığı"
+
+msgid "Standard pages aren't activated, however you have %d active themes that will still use them. These themes are:"
+msgstr "Standart sayfalar etkinleştirilmedi, ancak bunları kullanmaya devam edecek %d adet aktif temanız var. Bu temalar şunlardır:"
+
+msgid "Standard pages"
+msgstr "Standart sayfalar"
+
+msgid "Change logo"
+msgstr "Logo değiştir"
+
+msgid "Display Gallery title"
+msgstr "Galeri başlığını görüntüle"
+
+msgid "Personalization settings"
+msgstr "Kişiselleştirme ayarları"
+
+msgid "Select a color theme for standard pages"
+msgstr "Standart sayfalar için bir renk teması seçin"
+
+msgid "Light mode"
+msgstr "Aydınlık kip"
+
+msgid "Dark mode"
+msgstr "Karanlık kip"
+

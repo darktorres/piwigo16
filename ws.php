@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\AccessLevel;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Ws\PwgServer;
 
@@ -21,7 +22,7 @@ include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 /** @var array<string, mixed> $conf */
 global $conf;
 
-check_status(ACCESS_FREE);
+check_status(AccessLevel::Free);
 
 if (! (bool) $conf['allow_web_services']) {
     page_forbidden('Web services are disabled');

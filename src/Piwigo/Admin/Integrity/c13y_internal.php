@@ -11,6 +11,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Integrity;
 
+use Piwigo\Core\AppInfo;
+use Piwigo\Db\Tables;
+
 class c13y_internal
 {
     public function __construct()
@@ -34,7 +37,7 @@ class c13y_internal
         $check_list[] = [
             'type' => 'PHP',
             'current' => PHP_VERSION,
-            'required' => REQUIRED_PHP_VERSION,
+            'required' => AppInfo::REQUIRED_PHP_VERSION,
         ];
 
         $check_list[] = [
@@ -131,8 +134,8 @@ class c13y_internal
 
         $query = '
   select u.' . $user_id_field . ' as id, ui.status
-  from ' . USERS_TABLE . ' as u
-    left join ' . USER_INFOS_TABLE . ' as ui
+  from ' . Tables::users() . ' as u
+    left join ' . Tables::userInfos() . ' as ui
         on u.' . $user_id_field . ' = ui.user_id
   where
     u.' . $user_id_field . ' in (' . implode(',', array_keys($c13y_users)) . ')
@@ -236,7 +239,7 @@ class c13y_internal
                                 'password' => $password,
                             ],
                         ];
-                        mass_inserts(USERS_TABLE, array_keys($inserts[0]), $inserts);
+                        mass_inserts(Tables::users(), array_keys($inserts[0]), $inserts);
 
                         create_user_infos($id);
 
@@ -262,7 +265,7 @@ class c13y_internal
                             ],
                         ];
                         mass_updates(
-                            USER_INFOS_TABLE,
+                            Tables::userInfos(),
                             [
                                 'primary' => ['user_id'],
                                 'update' => ['status'],

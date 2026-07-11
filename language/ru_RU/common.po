@@ -1,0 +1,1541 @@
+# Piwigo translation — ru_RU
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ru_RU\n"
+"Plural-Forms: nplurals=3; plural=(n % 10 == 1 && n % 100 != 11 ? 0 : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 1 : 2);\n"
+"X-Piwigo-Language-Name: Russian\n"
+"X-Piwigo-Country: Russia\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: ru\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "%d Kb"
+msgstr "%d Кб"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d альбом изменен"
+msgstr[1] "%d альбомы изменены"
+
+msgid "%d comment to validate"
+msgstr "%d комментарий на проверке"
+
+msgid "%d comments to validate"
+msgstr "комментариев на проверке: %d"
+
+msgid "%d new comment"
+msgstr "%d новый комментарий"
+
+msgid "%d new comments"
+msgstr "новых комментариев: %d"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d комментарий"
+msgstr[1] "комментариев: %d"
+
+msgid "%d hit"
+msgid_plural "%d hits"
+msgstr[0] "%d просмотр"
+msgstr[1] "просмотров: %d"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "%d новое изображение"
+msgstr[1] "новых изображений: %d"
+
+msgid "%d new user"
+msgstr "%d новый посетитель"
+
+msgid "%d new users"
+msgstr "%d новых посетителей"
+
+msgid "About"
+msgstr "О фото галерее"
+
+msgid "All tags"
+msgstr "Все теги"
+
+msgid "Any tag"
+msgstr "Любой тег"
+
+msgid "Author"
+msgstr "Автор"
+
+msgid "Albums"
+msgstr "Альбомы"
+
+msgid "Album"
+msgstr "Альбом"
+
+msgid "Close this window"
+msgstr "Закрыть это окно"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "Полная RSS лента (изображения, комментарии)"
+
+msgid "Confirm Password"
+msgstr "Повторите пароль"
+
+msgid "Connection settings"
+msgstr "Настройки соединения"
+
+msgid "Login"
+msgstr "Авторизация"
+
+msgid "Contact webmaster"
+msgstr "Техподдержка"
+
+msgid "Create a new account"
+msgstr "Создать новый аккаунт"
+
+msgid "Created on"
+msgstr "Дата съемки"
+
+msgid "Creation date"
+msgstr "Дата съёмки"
+
+msgid "Current password is wrong"
+msgstr "Введен неправильный пароль"
+
+msgid "Dimensions"
+msgstr "Размеры"
+
+msgid "Display"
+msgstr "Порядок"
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "Не указан адрес электронной почты"
+
+msgid "Email address"
+msgstr "Адрес электронной почты"
+
+msgid "Enter your personnal informations"
+msgstr "Укажите персональную информацию"
+
+msgid "Error sending email"
+msgstr "Ошибка при отправке электронной почты"
+
+msgid "File name"
+msgstr "Имя файла"
+
+msgid "File"
+msgstr "Файл"
+
+msgid "Filesize"
+msgstr "Размер файла"
+
+msgid "Filter and display"
+msgstr "Отфильтровать и показать"
+
+msgid "Filter"
+msgstr "Фильтр"
+
+msgid "Forgot your password?"
+msgstr "Забыли пароль?"
+
+msgid "Go through the gallery as a visitor"
+msgstr "Смотреть галерею как посетитель"
+
+msgid "Help"
+msgstr "Помощь"
+
+msgid "Identification"
+msgstr "Вход"
+
+msgid "Photos only RSS feed"
+msgstr "RSS лента. Только изображения."
+
+msgid "Keyword"
+msgstr "Ключевые слова"
+
+msgid "Links"
+msgstr "Ссылки"
+
+msgid "N/A"
+msgstr "не определён"
+
+msgid "New on %s"
+msgstr "Новое в %s"
+
+msgid "Notification"
+msgstr "RSS-ленты"
+
+msgid "Number of items"
+msgstr "Кол-во на странице"
+
+msgid "Original dimensions"
+msgstr "Исходный размер"
+
+msgid "Password forgotten"
+msgstr "Пароль утерян"
+
+msgid "Password"
+msgstr "Пароль"
+
+msgid "Post date"
+msgstr "Дата публикации"
+
+msgid "Posted on"
+msgstr "Дата публикации"
+
+msgid "Profile"
+msgstr "Профиль"
+
+msgid "Quick connect"
+msgstr "Быстрый вход"
+
+msgid "RSS feed"
+msgstr "RSS ленты"
+
+msgid "Register"
+msgstr "Регистрация"
+
+msgid "Registration"
+msgstr "Регистрация"
+
+msgid "Related tags"
+msgstr "Связанные слова"
+
+msgid "Reset"
+msgstr "Отмена"
+
+msgid "Retrieve password"
+msgstr "Напомнить пароль"
+
+msgid "Search tags"
+msgstr "Теги для поиска"
+
+msgid "Search"
+msgstr "Поиск"
+
+msgid "display available tags"
+msgstr "Просмотр доступных тегов"
+
+msgid "Since"
+msgstr "За период"
+
+msgid "Sort by"
+msgstr "Сортировать по"
+
+msgid "Sort order"
+msgstr "Порядок сортировки"
+
+msgid "Tag"
+msgstr "Тег"
+
+msgid "Tags"
+msgstr "Теги"
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "RSS лента позволяет Вам быть в курсе новостей этого веб-сайта: новые изображения, обновленные альбомы, новые комментарии. Используйте любой удобный для Вас RSS-ридер."
+
+msgid "Unknown feed identifier"
+msgstr "Неизвестный идентификатор ленты"
+
+msgid "User comments"
+msgstr "Комментарии посетителей"
+
+msgid "Username"
+msgstr "Имя пользователя"
+
+msgid "Visits"
+msgstr "Посещения"
+
+msgid "Webmaster"
+msgstr "Техподдержка"
+
+msgid "Week %d"
+msgstr "Неделя %d"
+
+msgid "About Piwigo"
+msgstr "О Piwigo"
+
+msgid "You are not authorized to access the requested page"
+msgstr "Вы не можете получить доступ к запрашиваемой странице без авторизации"
+
+msgid "add this photo to your favorites"
+msgstr "добавить это изображение в избранные"
+
+msgid "Administration"
+msgstr "Администрирование"
+
+msgid "all"
+msgstr "все"
+
+msgid "ascending"
+msgstr "по возрастанию"
+
+msgid "Expand all albums"
+msgstr "Раскрыть все альбомы"
+
+msgid "posted after %s (%s)"
+msgstr "опубликовано после %s (%s)"
+
+msgid "posted before %s (%s)"
+msgstr "опубликовано до %s (%s)"
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "опубликовано между %s (%s) и %s (%s)"
+
+msgid "posted on %s"
+msgstr "опубликовано %s"
+
+msgid "Best rated"
+msgstr "По оценкам"
+
+msgid "display best rated photos"
+msgstr "показать высоко оцененные"
+
+msgid "Calendar"
+msgstr "Календарь"
+
+msgid "All"
+msgstr "Все"
+
+msgid "display each day with photos, month per month"
+msgstr "показать календарь с  изображениями, день за днем, месяц за месяцем"
+
+msgid "View"
+msgstr "Просмотр"
+
+msgid "chronology_monthly_calendar"
+msgstr "Календарь по месяцам"
+
+msgid "chronology_monthly_list"
+msgstr "Месяцы"
+
+msgid "chronology_weekly_list"
+msgstr "Недели"
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "Пройдите по этой ссылке, если браузер не перенаправляет Вас автоматически"
+
+msgid "comment date"
+msgstr "дата комментария"
+
+msgid "Comment"
+msgstr "Комментарий"
+
+msgid "Your comment has been registered"
+msgstr "Ваш комментарий отправлен"
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "Антифлуд: пожалуйста, подождите немного, прежде чем отправить следующий комментарий"
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "Ваш комментарий НЕ отправлен, так как не соответствует правилам"
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "Администратор должен проверить ваш комментарий, прежде чем он будет показан."
+
+msgid "This login is already used by another user"
+msgstr "Этот логин уже используется другим посетителем"
+
+msgid "Comments"
+msgstr "Комментарии"
+
+msgid "Add a comment"
+msgstr "Добавить комментарий"
+
+msgid "created after %s (%s)"
+msgstr "созданы после %s (%s)"
+
+msgid "created before %s (%s)"
+msgstr "созданы до %s (%s)"
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "созданы между %s (%s) и %s (%s)"
+
+msgid "created on %s"
+msgstr "созданы %s"
+
+msgid "Your Gallery Customization"
+msgstr "Настройка галереи "
+
+msgid "Default"
+msgstr "По умолчанию"
+
+msgid "delete this photo from your favorites"
+msgstr "удалить это изображение из избранных"
+
+msgid "Delete"
+msgstr "Удалить"
+
+msgid "descending"
+msgstr "по убыванию"
+
+msgid "Download"
+msgstr "Загрузить"
+
+msgid "Download this file"
+msgstr "загрузить этот файл"
+
+msgid "edit"
+msgstr "редактировать"
+
+msgid "wrong date"
+msgstr "ошибка в дате"
+
+msgid "excluded"
+msgstr "исключённый"
+
+msgid "Your favorites"
+msgstr "Избранное"
+
+msgid "display your favorites photos"
+msgstr "показать ваши избранные изображения"
+
+msgid "Favorites"
+msgstr "Избранное"
+
+msgid "First"
+msgstr "Первая"
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "Галерея закрыта для обслуживания. Пожалуйста, заходите позже."
+
+msgid "Page generated in"
+msgstr "Страница сгенерирована за"
+
+msgid "guest"
+msgstr "гость"
+
+msgid "Hello"
+msgstr "Привет"
+
+msgid "available for administrators only"
+msgstr "доступно только для администратора"
+
+msgid "display this album"
+msgstr "показать этот альбом"
+
+msgid "display last user comments"
+msgstr "Просмотр последних комментариев"
+
+msgid "search"
+msgstr "поиск"
+
+msgid "Home"
+msgstr "Начало"
+
+msgid "in this album"
+msgstr "в этом альбоме"
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] "в %d вложенном альбоме"
+msgstr[1] "в %d вложенных альбомах"
+
+msgid "included"
+msgstr "включено"
+
+msgid "Invalid password!"
+msgstr "Неверный пароль!"
+
+msgid "Language"
+msgstr "Язык"
+
+msgid "last %d days"
+msgstr "последние %d дней"
+
+msgid "Last"
+msgstr "Последняя"
+
+msgid "Logout"
+msgstr "Выход"
+
+msgid "obligatory"
+msgstr "обязательный"
+
+msgid "display a calendar by creation date"
+msgstr "показывает календарь по дате съёмки"
+
+msgid "display all photos in all sub-albums"
+msgstr "показать все изображения во всех вложенных альбомах"
+
+msgid "return to normal view mode"
+msgstr "возвращение к нормальному режиму"
+
+msgid "display a calendar by posted date"
+msgstr "показывает календарь по дате загрузки"
+
+msgid "Most visited"
+msgstr "По популярности"
+
+msgid "display most visited photos"
+msgstr "показать наиболее популярные изображения"
+
+msgid "Unknown identifier"
+msgstr "Неизвестный идентификатор"
+
+msgid "New password"
+msgstr "Новый пароль"
+
+msgid "Rate this photo"
+msgstr "Оценить это изображение"
+
+msgid "Next"
+msgstr "Следующая"
+
+msgid "no rate"
+msgstr "оценок изображений нет"
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "Фотографии, загруженные в течении последнего %d дня."
+msgstr[1] "Фотографии, загруженные в течении последних %d дней."
+
+msgid "password updated"
+msgstr "пароль изменен"
+
+msgid "Recent period must be a positive integer value"
+msgstr "Последний период должен быть положительным целым числом"
+
+msgid "photo"
+msgstr "изображение"
+
+msgid "Click on the photo to see it in high definition"
+msgstr "Нажмите для просмотра изображения в большом разрешении"
+
+msgid "Show file metadata"
+msgstr "Показать метаданные"
+
+msgid "Powered by"
+msgstr "Скрипт"
+
+msgid "Preferences"
+msgstr "Предпочтение"
+
+msgid "Previous"
+msgstr "Предыдущая"
+
+msgid "Random photos"
+msgstr "Случайные изображения"
+
+msgid "display a set of random photos"
+msgstr "показать ряд случайных изображений"
+
+msgid "Recent albums"
+msgstr "Последние альбомы"
+
+msgid "display recently updated albums"
+msgstr "показать недавно обновленные альбомы"
+
+msgid "Recent period"
+msgstr "Срок \"новых\""
+
+msgid "Recent photos"
+msgstr "Недавние изображения"
+
+msgid "display most recent photos"
+msgstr "показать больше свежих изображений"
+
+msgid "Redirection..."
+msgstr "Перенаправляем..."
+
+msgid "Please, enter a login"
+msgstr "Пожалуйста, введите логин"
+
+msgid "login mustn't end with a space character"
+msgstr "логин не должен оканчиваться пробелом"
+
+msgid "login mustn't start with a space character"
+msgstr "логин не должен начинаться с пробела"
+
+msgid "this login is already used"
+msgstr "такой логин уже есть"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "адрес электронной почты должен выглядеть как-то типа xxx@yyy.eee (например: jack@altern.org)"
+
+msgid "Auto login"
+msgstr "Запомнить меня"
+
+msgid "remove this tag from the list"
+msgstr "удалить этот тег из списка"
+
+msgid "representative"
+msgstr "миниатюра альбома"
+
+msgid "Search for Author"
+msgstr "Поиск по автору"
+
+msgid "Search in albums"
+msgstr "Поиск в альбомах"
+
+msgid "Search by date"
+msgstr "Поиск по дате"
+
+msgid "Date"
+msgstr "Начальная дата"
+
+msgid "End-Date"
+msgstr "Конечная дата"
+
+msgid "Kind of date"
+msgstr "Тип даты"
+
+msgid "Search for words"
+msgstr "Поиск по словам"
+
+msgid "Search for all terms"
+msgstr "Поиск по всем критериям "
+
+msgid "Search for any term"
+msgstr "Поиск по любому критерию"
+
+msgid "Empty query. No criteria has been entered."
+msgstr "Пустой запрос. Нет критериев для поиска."
+
+msgid "Search results"
+msgstr "Результаты поиска"
+
+msgid "Search in sub-albums"
+msgstr "Поиск во вложенных альбомах"
+
+msgid "Contact"
+msgstr "Контакты"
+
+msgid "set as album representative"
+msgstr "установить как миниатюру альбома"
+
+msgid "Show number of comments"
+msgstr "Показывать количество комментариев"
+
+msgid "Show number of hits"
+msgstr "Показывать количество просмотров"
+
+msgid "slideshow"
+msgstr "слайдшоу"
+
+msgid "stop the slideshow"
+msgstr "остановить слайдшоу"
+
+msgid "Specials"
+msgstr "Избранное"
+
+msgid "SQL queries in"
+msgstr "SQL-запрос в"
+
+msgid "display only recently posted photos"
+msgstr "показать только недавно загруженные изображения"
+
+msgid "return to the display of all photos"
+msgstr "вернуться к полному списку изображений"
+
+msgid "the beginning"
+msgstr "сначала"
+
+msgid "Thumbnails"
+msgstr "Миниатюры"
+
+msgid "Menu"
+msgstr "Меню"
+
+msgid "A comment on your site"
+msgstr "Комментарий с вашего сайта"
+
+msgid "today"
+msgstr "сегодня"
+
+msgid "Update your rating"
+msgstr "Обновить оценку"
+
+msgid "the username must be given"
+msgstr "должно присутствовать имя пользователя"
+
+msgid "useful when password forgotten"
+msgstr "для восстановления потерянного пароля"
+
+msgid "Quick search"
+msgstr "Быстрый поиск"
+
+msgid "Connected user: %s"
+msgstr "Подключены пользователи: %s"
+
+msgid "IP: %s"
+msgstr "IP: %s"
+
+msgid "Browser: %s"
+msgstr "Браузер: %s"
+
+msgid "Author: %s"
+msgstr "Автор: %s"
+
+msgid "Comment: %s"
+msgstr "Комментарий: %s"
+
+msgid "Comment by %s"
+msgstr "Комментарий от %s"
+
+msgid "User: %s"
+msgstr "Посетитель: %s"
+
+msgid "Email: %s"
+msgstr "Электронная почта: %s"
+
+msgid "Admin: %s"
+msgstr "Администратор: %s"
+
+msgid "Registration of %s"
+msgstr "Регистрация %s"
+
+msgid "Album: %s"
+msgstr "Альбом: %s"
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "Неверный статус пользователя \"гость\", поэтому будет использован статус по умолчанию. Пожалуйста, сообщите вебмастеру."
+
+msgid "this email address is already in use"
+msgstr "пользователь с таким адресом уже есть"
+
+msgid "Album results for"
+msgstr "Альбом определен для"
+
+msgid "Tag results for"
+msgstr "Теги результаты для"
+
+msgid "from %s to %s"
+msgstr "от %s до %s"
+
+msgid "Play of slideshow"
+msgstr "Показать слайдшоу"
+
+msgid "Pause of slideshow"
+msgstr "Остановить слайдшоу"
+
+msgid "Repeat the slideshow"
+msgstr "Повторять слайдшоу"
+
+msgid "Not repeat the slideshow"
+msgstr "Не повторять слайдшоу"
+
+msgid "Reduce diaporama speed"
+msgstr "Уменьшить скорость панорамы"
+
+msgid "Accelerate diaporama speed"
+msgstr "Увеличить скорость панорамы"
+
+msgid "Submit"
+msgstr "Отправить"
+
+msgid "Yes"
+msgstr "Да"
+
+msgid "No"
+msgstr "Нет"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "%d изображение"
+msgstr[1] "изображений: %d"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "%d изображение также связана с этими тегами"
+msgstr[1] "изображений, связаных с этими тегами: %d"
+
+msgid "display photos linked to this tag"
+msgstr "показать изображения, связанные с этим тегом"
+
+msgid "photos posted during the last %d days"
+msgstr "изображения, опубликованные за последние %d дней"
+
+msgid "Piwigo Help"
+msgstr "Помощь"
+
+msgid "Rank"
+msgstr "Ряд"
+
+msgid "group by letters"
+msgstr "сгруппировать по буквам"
+
+msgid "letters"
+msgstr "буквы"
+
+msgid "show tag cloud"
+msgstr "показать облако тегов"
+
+msgid "cloud"
+msgstr "облако"
+
+msgid "Are you sure?"
+msgstr "Уверены?"
+
+msgid "Reset to default values"
+msgstr "Восстановить значения по умолчанию"
+
+msgid "delete all photos from your favorites"
+msgstr "удалить все изображения из избранных"
+
+msgid "Sent by"
+msgstr "Отправить"
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "Ваш браузер не поддерживает или блокирует куки. Разрешите ему использовать куки в настройках."
+
+msgid "Edit a comment"
+msgstr "Редактировать комментарий"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) Этот комментарий ждет проверки"
+
+msgid "Welcome"
+msgstr "Добро пожаловать"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "Добро пожаловать в фотогалерею Piwigo!"
+
+msgid "... or browse your empty gallery"
+msgstr "... или просмотрите Вашу пустую галерею"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "... или не показывать это сообщение, Я самостоятельно решу, что предпринять"
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "Привет %s, Ваша галерея Piwigo пуста!"
+
+msgid "I want to add photos"
+msgstr "Я хочу добавить фото"
+
+msgid "Manage this user comment: %s"
+msgstr "Управление этим комментарием пользователя: %s"
+
+msgid "This author modified following comment:"
+msgstr "Этот автор изменил следующий комментарий:"
+
+msgid "This author removed the comment with id %d"
+msgstr "Этот автор удалил комментарий номер %d"
+
+msgid "html tags are not allowed in login"
+msgstr "html тэги не допустимы в логине"
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "Число изображений на странице должно быть ненулевым целым числом"
+
+msgid "Number of photos per page"
+msgstr "Число изображений на странице"
+
+msgid "Rating score"
+msgstr "Средний балл"
+
+msgid "Invalid username or email"
+msgstr "Неверное имя пользователя или адрес электронной почты"
+
+msgid "Password reset is not allowed for this user"
+msgstr "Для этого пользователя сброс пароля невозможен"
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "У пользователя \"%s\" нет адреса электронной почты, сброс пароля невозможен"
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "Поступил запрос на изменение пароля для следуюшей учетной записи:"
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "Пользователь \"%s\" в галерее %s"
+
+msgid "To reset your password, visit the following address:"
+msgstr "Чтобы сбросить пароль пройдите по ссылке:"
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "Если Вы получили это сообщение по ошибке, просто не предпринимайте никаких действий, и ничего не произойдет."
+
+msgid "Password Reset"
+msgstr "Сброс пароля"
+
+msgid "Check your email for the confirmation link"
+msgstr "Проверьте Ваш адрес электронной почты, на который выслано сообщение с подтверждающей ссылкой"
+
+msgid "Invalid key"
+msgstr "Неверный ключ"
+
+msgid "The passwords do not match"
+msgstr "Пароли не совпадают"
+
+msgid "Your password has been reset"
+msgstr "Ваш пароль был сброшен"
+
+msgid "Return to home page"
+msgstr "Возврат на домашнюю страницу"
+
+msgid "Please enter your username or email address."
+msgstr "Пожалуйста, введите имя пользователя или адрес Вашей электронной почты."
+
+msgid "You will receive a link to create a new password via email."
+msgstr "Вы получите ссылку для ввода нового пароля по электронной почте."
+
+msgid "Username or email"
+msgstr "Имя пользователя или адрес электронной почты"
+
+msgid "Change my password"
+msgstr "Изменить пароль"
+
+msgid "Enter your new password below."
+msgstr "Введите новый пароль."
+
+msgid "EXIF Metadata"
+msgstr "Метаданные EXIF"
+
+msgid "IPTC Metadata"
+msgstr "Метаданные IPTC"
+
+msgid "Edit"
+msgstr "Изменить"
+
+msgid "Hello %s,"
+msgstr "Здравствуйте, %s,"
+
+msgid "Send my connection settings by email"
+msgstr "Отправить настройки моего соединения по почте"
+
+msgid "Show oldest comments first"
+msgstr "Показывать комментарии, начиная со старых"
+
+msgid "Show latest comments first"
+msgstr "Показывать комментарии, начиная с новых"
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "Регистрация прошла успешно. Скоро вы получите письмо с настройками Вашего соединения. Добро пожаловать!"
+
+msgid "Username modification"
+msgstr "Изменить имя пользователя"
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "Имя пользователя было успешно изменено на %s"
+
+msgid "square"
+msgstr "Квадрат"
+
+msgid "thumb"
+msgstr "Миниатюра"
+
+msgid "2small"
+msgstr "XXS - крошечный"
+
+msgid "xsmall"
+msgstr "XS - очень мелкий"
+
+msgid "small"
+msgstr "S - мелкий"
+
+msgid "medium"
+msgstr "M - средний"
+
+msgid "large"
+msgstr "L - крупный"
+
+msgid "xlarge"
+msgstr "XL - очень крупный"
+
+msgid "xxlarge"
+msgstr "XXL - огромный"
+
+msgid "Original"
+msgstr "Исходный"
+
+msgid "Thank you for registering at %s!"
+msgstr "Благодарим за регистрацию на %s!"
+
+msgid "Here are your connection settings"
+msgstr "Ваши настройки соединения"
+
+msgid "Password: %s"
+msgstr "Пароль: %s"
+
+msgid "Username: %s"
+msgstr "Имя пользователя: %s"
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "Если Вы получили это сообщение по ошибке, пожалуйста, напишите нам по адресу %s"
+
+msgid "Photo sizes"
+msgstr "Размер изображения"
+
+msgid "View in"
+msgstr "Вид"
+
+msgid "Mobile"
+msgstr "Мобильное устройство"
+
+msgid "Desktop"
+msgstr "Компьютер"
+
+msgid "Date created, new &rarr; old"
+msgstr "Дата создания, новые &rarr; старые"
+
+msgid "Date created, old &rarr; new"
+msgstr "Дата создания, старые &rarr; новые"
+
+msgid "Date posted, new &rarr; old"
+msgstr "Дата публикации, новые &rarr; старые"
+
+msgid "Date posted, old &rarr; new"
+msgstr "Дата публикации, старые &rarr; новые"
+
+msgid "File name, A &rarr; Z"
+msgstr "Имя файла, А &rarr; Я"
+
+msgid "File name, Z &rarr; A"
+msgstr "Имя файла, Я &rarr; А"
+
+msgid "Manual sort order"
+msgstr "Сортировка вручную"
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "Порядок номеров, 1 &rarr; 9"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "Порядок номеров, 9 &rarr; 1"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "Название изображения, А &rarr; Я"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "Название изображения, Я &rarr; А"
+
+msgid "Rating score, high &rarr; low"
+msgstr "Рейтинг, высокий &rarr; низкий"
+
+msgid "Rating score, low &rarr; high"
+msgstr "Рейтинг, низкий &rarr; высокий"
+
+msgid "Visits, high &rarr; low"
+msgstr "Посещения, много &rarr; мало"
+
+msgid "Visits, low &rarr; high"
+msgstr "Посещения, мало &rarr; много"
+
+msgid "%d rate"
+msgid_plural "%d rates"
+msgstr[0] "Оценка: %d"
+msgstr[1] "Оценок: %d"
+
+msgid "Bad request"
+msgstr "Некорректный запрос"
+
+msgid "Forbidden"
+msgstr "Доступ запрещен"
+
+msgid "Page not found"
+msgstr "Страница не найдена"
+
+msgid "Permalink for album not found"
+msgstr "Постоянная ссылка на альбом не найдена"
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "Возникла непредвиденная ошибка"
+
+msgid "Requested album does not exist"
+msgstr "Запрашиваемый альбом не существует"
+
+msgid "Requested tag does not exist"
+msgstr "Запрошенный тег не существует"
+
+msgid "Email address is mandatory"
+msgstr "Адрес электронной почты является обязательным"
+
+msgid "Username is mandatory"
+msgstr "Имя пользователя является обязательным"
+
+msgid "mandatory"
+msgstr "обязательно"
+
+msgid "Website"
+msgstr "Вэб-сайт"
+
+msgid "Your website URL is invalid"
+msgstr "URL-адрес Вашего сайта неверен"
+
+msgid "Email"
+msgstr "Электронная почта"
+
+msgid "First Page"
+msgstr "Первая страница"
+
+msgid "Go back to the album"
+msgstr "Вернуться в альбом"
+
+msgid "Last Page"
+msgstr "Последняя страница"
+
+msgid "Password is missing. Please enter the password."
+msgstr "Пароль не верен. Пожалуйста, повторите попытку."
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Подтверждение пароля отсутствует. Пожалуйста, подтвердите выбранный пароль."
+
+msgid "%d photos per page"
+msgstr "изображений на странице: %d"
+
+msgid "Theme"
+msgstr "Тема"
+
+msgid "No results for"
+msgstr "Нет результатов для"
+
+msgid "Apply on properties"
+msgstr "Применить к свойствам"
+
+msgid "Photo description"
+msgstr "Описание изображения"
+
+msgid "Photo title"
+msgstr "Заголовок изображения"
+
+msgid "Album name, A &rarr; Z"
+msgstr "По названиям альбомов, от A &rarr; Z"
+
+msgid "Album name, Z &rarr; A"
+msgstr "По названиям альбомов, от Z &rarr; A"
+
+msgid "Link: %s"
+msgstr "Ссылка: %s"
+
+msgid "Your authentication key is no longer valid."
+msgstr "Увы, Ваш ключ идентификации больше не действителен."
+
+msgid "Invalid username or password!"
+msgstr "Неверное имя пользователя или пароль!"
+
+msgid "generate random password"
+msgstr "генерирование случайного пароля"
+
+msgid "Password: ********** (no copy by email)"
+msgstr "Пароль: **********  (без копии по электронной почте)"
+
+msgid "Related albums"
+msgstr "Похожие альбомы"
+
+msgid "Start-Date"
+msgstr "Дата начала"
+
+msgid "Album name, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+msgstr "Имя альбома, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+
+msgid "Album name, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+msgstr "Имя альбома, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+
+msgid "Tags found"
+msgstr "Теги найдены"
+
+msgid "Tags listed here match your search by word. Click on one to browse by tag."
+msgstr "Приведенные здесь теги соответствуют вашему поиску по слову. Нажмите на один из них, чтобы просмотреть по тегам."
+
+msgid "Validate"
+msgstr "Проверить"
+
+msgid "You can try to edit your filters and perform a new search."
+msgstr "Вы можете попробовать отредактировать фильтры и выполнить новый поиск."
+
+msgid "last 24 hours"
+msgstr "Последние сутки"
+
+msgid "last 3 months"
+msgstr "Последние 3 месяца"
+
+msgid "last 30 days"
+msgstr "Последние 30 дней"
+
+msgid "last 6 months"
+msgstr "Последние полгода"
+
+msgid "last 7 days"
+msgstr "Последняя неделя"
+
+msgid "last year"
+msgstr "Последний год"
+
+msgid "rating score %s"
+msgstr "рейтинг %s"
+
+msgid "year %d"
+msgstr "год %d"
+
+msgid "Fill in the filters to start a search"
+msgstr "Заполните фильтры, чтобы начать поиск"
+
+msgid "Filters"
+msgstr "Фильтры"
+
+msgid "No results are available."
+msgstr "Нет результата"
+
+msgid "Pre-established filters are proposed, but you can add or remove them using the \"Choose filters\" button."
+msgstr "Предлагаются заранее установленные фильтры, но вы можете добавить или удалить их с помощью кнопки \"Выбрать фильтры\"."
+
+msgid "Search in :"
+msgstr "Искать здесь:"
+
+msgid "Search in this set"
+msgstr "Искать в этом наборе"
+
+msgid "Unknown time period"
+msgstr "Неизвестный период времени"
+
+msgid "%d visits"
+msgstr "просмотров: %d"
+
+msgid "Added by"
+msgstr "Добавлено: "
+
+msgid "Album description"
+msgstr "Описание альбома"
+
+msgid "Album title"
+msgstr "Заголовок альбома"
+
+msgid "Albums found"
+msgstr "Найдено альбомов"
+
+msgid "Albums listed here match your search by word. Click on one to browse by album."
+msgstr "Альбомы, перечисленные здесь, соответствуют вашему поиску по слову. Нажмите на один из них, чтобы просмотреть альбом."
+
+msgid "Cancel"
+msgstr "Отмена"
+
+msgid "Choose filters"
+msgstr "Выберите фильтры"
+
+msgid "Clear"
+msgstr "Очистить"
+
+msgid "Empty filters"
+msgstr "Убрать фильтры"
+
+msgid "File type"
+msgstr "Тип файла"
+
+msgid "Album already selected"
+msgstr "Альбом уже выбран"
+
+msgid "Click here to display it"
+msgstr "Нажмите здесь, чтобы отобразить его"
+
+msgid "Custom dates"
+msgstr "Пользовательские даты"
+
+msgid "Only the first %d albums are displayed, out of %d."
+msgstr "Отображаются только первые %d альбомов из %d."
+
+msgid "Pages"
+msgstr "Страниц(ы)"
+
+msgid "The PDF you requested is too large to display on this page."
+msgstr "Запрошенный вами PDF-файл слишком большой для отображения на этой странице."
+
+msgid "There are no authors available for the photos currently filtered"
+msgstr "Для отфильтрованных в данный момент фотографий нет авторов"
+
+msgid "There are no creation dates available for the photos currently filtered"
+msgstr "Для отфильтрованных в данный момент фотографий даты создания отсутствуют"
+
+msgid "There are no tags available for the photos currently filtered"
+msgstr "Для отфильтрованных в данный момент фотографий нет доступных тегов"
+
+msgid "last 12 months"
+msgstr "Последние 12 месяцев"
+
+msgid "If you changed your password because you think it was stolen, we recommend revoking your %d API keys <a href=\"%s\">in your profile</a>."
+msgstr "Если Вы изменили свой пароль, потому что думаете, что он был украден, мы рекомендуем отозвать Ваши %d ключи API <a href=\"%s\">в Вашем профиле</a>."
+
+msgid "you must choose a date"
+msgstr "Вы должны выбрать дату"
+
+msgid "No expiration"
+msgstr "Нет срока годности"
+
+msgid "Return to <a href=\"identification.php\" title=\"Sign in\">Sign in</a>"
+msgstr "Вернуться на <a href=\"identification.php\" title=\"Войти\">страницу Входа</a>"
+
+msgid "Options"
+msgstr "Параметры"
+
+msgid "Revoked"
+msgstr "Отозван"
+
+msgid "Revoke"
+msgstr "Отозвать"
+
+msgid "Return to the gallery"
+msgstr "Вернуться в галерею"
+
+msgid "New API Key"
+msgstr "Новый Ключ API"
+
+msgid "Never"
+msgstr "Никогда"
+
+msgid "Manage your account"
+msgstr "Управляйте своей учетной записью"
+
+msgid "Last use"
+msgstr "Последнее использование"
+
+msgid "Invalid verification code"
+msgstr "Неправильный проверочный код"
+
+msgid "Impossible to copy automatically. Please copy manually."
+msgstr "Невозможно скопировать автоматически. Пожалуйста, скопируйте вручную."
+
+msgid "If you do not receive the email, please contact your webmaster."
+msgstr "Если Вы не получиди письмо, пожалуйста, свяжитесь со своим вебмастером."
+
+msgid "If this wasn't you, please change your password immediately or contact your webmaster."
+msgstr "Если это были не Вы, пожалуйста, измените свой пароль немедленно или свяжитесь с Вашим вебмастером."
+
+msgid "ID copied."
+msgstr "ID скопирован"
+
+msgid "Hide expired keys"
+msgstr "Скрыть ключи с истёкшим сроком действия"
+
+msgid "Here is your verification code:"
+msgstr "Это Ваш проверочный код:"
+
+msgid "Hello <em>%s</em>, enter your new password below."
+msgstr "Привет <em>%s</em>, введите Ваш пароль ниже."
+
+msgid "must not be empty"
+msgstr "не должно быть пустым"
+
+msgid "edit user preferences"
+msgstr "редактировать пользовательские настройки"
+
+msgid "Your verification code"
+msgstr "Ваш проверочный код"
+
+msgid "Your password was successfully set"
+msgstr "Ваш пароль был успешно установлен"
+
+msgid "Your password was successfully reset"
+msgstr "Ваш пароль был успешно обновлен"
+
+msgid "Your changes have been applied."
+msgstr "Ваши изменения были сохранены."
+
+msgid "Your API key will expire soon"
+msgstr "Срок действия Вашего ключа API скоро истечёт"
+
+msgid "Your API key will expire in %d days."
+msgstr "Срок действия Вашего ключа API истечёт через %d дней."
+
+msgid "Your API key will expire in %d day."
+msgstr "Срок действия Вашего ключа API истечёт через %d день."
+
+msgid "You have no email address, so you will not be notified when your API key is about to expire."
+msgstr "У Вас не указан почтовый адрес, поэтому Вы не будете уведомлены о том, что срок действия Вашего ключа API скоро истечет."
+
+msgid "You can manage your API keys in your <a href=\"%s\">account settings.</a>"
+msgstr "Вы можете управлять Вашими ключами API в <a href=\"%s\">настройках Вашей учетной записи.</a>"
+
+msgid "When enabled, a common template is used for the login and registration pages, regardless of the theme."
+msgstr "Когда разрешено, общий шаблон будет использован для страниц входа и регистрации, вне зависимости от используемой темы."
+
+msgid "Verify"
+msgstr "Проверьте"
+
+msgid "Verification successful! You can now choose a new password."
+msgstr "Проверка выполнена успешно! Теперь Вы можете выбрать новый пароль."
+
+msgid "Verification code"
+msgstr "Проверочный код"
+
+msgid "Secret copied. Keep it in a safe place."
+msgstr "Секретный ключ скопирован. Сохраните его в надежном месте."
+
+msgid "Save your ID and secret"
+msgstr "Сохраните Ваш ID и секретный ключ"
+
+msgid "Too many attempts, please try later.."
+msgstr "Слишком много попыток, пожалуйста, попробуйте позже..."
+
+msgid "To manage your API keys, please log in with your username/password."
+msgstr "Чтобы управлять Вашими ключами API, пожалуйста, войдите с Вашими именем пользователя/паролем."
+
+msgid "To continue using the API, please renew your key before it expires."
+msgstr "Чтобы продолжить использовать API, пожалуйста, обновите Ваш ключ до того, как его действие истечёт."
+
+msgid "This API key was manually revoked on %s"
+msgstr "Этот ключ API был вручную отозван %s"
+
+msgid "The secret will no longer be displayed. You must copy it to continue."
+msgstr "Секретный ключ не будет далее отображаться. Вы должны скопировать его, чтобы продолжить."
+
+msgid "The secret key can no longer be displayed."
+msgstr "Секретный ключ не может быть более показан."
+
+msgid "The email %s will be used to notify you when your API key is about to expire."
+msgstr "Почтовый адрес %s будет использован, чтобы известить Вас, что Ваш ключ API скоро истечёт"
+
+msgid "The api key has been successfully created."
+msgstr "Ключ API был создан успешно"
+
+msgid "Show expired keys"
+msgstr "Показать истекшие ключи"
+
+msgid "Set your password below."
+msgstr "Задайте Ваш пароль ниже"
+
+msgid "Set my password"
+msgstr "Задать мой пароль"
+
+msgid "Generate key"
+msgstr "Сгенерировать ключ"
+
+msgid "Generate API Key"
+msgstr "Сгенерировать Ключ API"
+
+msgid "Expires in"
+msgstr "Истечёт через"
+
+msgid "Expired on"
+msgstr "Истёк"
+
+msgid "Expired"
+msgstr "Истёк"
+
+msgid "Expert mode"
+msgstr "Экспертный режим"
+
+msgid "Edit API Key"
+msgstr "Редактировать Ключ API"
+
+msgid "Duration"
+msgstr "Продолжительность"
+
+msgid "Done"
+msgstr "Сделано"
+
+msgid "Don't have an account yet ?"
+msgstr "У Вас еще нет учетной записи?"
+
+msgid "Do you really want to revoke the \"%s\" API key?"
+msgstr "Вы действительно хотите отозвать \"%s\" ключ API?"
+
+msgid "Custom date"
+msgstr "Пользовательская дата"
+
+msgid "Created at"
+msgstr "Создано в"
+
+msgid "Create an account"
+msgstr "Создать учетную запись"
+
+msgid "Create a new API key to secure your account."
+msgstr "Создать новый ключ API, чтобы обезопасить Вашу учетную запись"
+
+msgid "Create API Keys to secure your acount"
+msgstr "Создать Ключи API, чтобы обезопасить Вашу учетную запись"
+
+msgid "Confirm new password"
+msgstr "Подтвердить новый пароль"
+
+msgid "Confirm my new password"
+msgstr "Подтвердить мой новый пароль"
+
+msgid "Choose how you want to see your gallery"
+msgstr "Выберите, как Вы хотите видеть Вашу галерею"
+
+msgid "Change your password"
+msgstr "Изменить Ваш пароль"
+
+msgid "Check your inbox"
+msgstr "Проверьте Вашу входящую почту"
+
+msgid "An error has occured please got back to <a href=\"identification.php\" title=\"Sign in\">Sign in</a> or <a href=\"register.php\">Register</a>"
+msgstr "Произошла ошибка, пожалуйста, вернитесь к <a href=\"identification.php\" title=\"Войти\">Войти</a> или <a href=\"register.php\">Зарегистрироваться</a>"
+
+msgid "An email has been sent with a verification code"
+msgstr "Письмо было отправлено с проверочным кодом"
+
+msgid "An email has been sent with a link to reset your password"
+msgstr "Письмо было отправлено со ссылкой для переустановки пароля"
+
+msgid "Already have an account ?"
+msgstr "Уже есть учетная запись?"
+
+msgid "Account"
+msgstr "Учетная запись"
+
+msgid "API Key has been successfully revoked."
+msgstr "Ключ API успешно отозван"
+
+msgid "API Keys"
+msgstr "Ключи API"
+
+msgid "API Key not found"
+msgstr "Ключ API не найден"
+
+msgid "API Key name"
+msgstr "Имя ключа API"
+
+msgid "API Key has been successfully edited."
+msgstr "Ключ API был успешно отредактирован"
+
+msgid "4xlarge"
+msgstr "4XL - гигантский"
+
+msgid "3xlarge"
+msgstr "3XL - громадный"
+
+msgid "piwigo_day_0"
+msgstr "Вс"
+
+msgid "piwigo_day_1"
+msgstr "Пн"
+
+msgid "piwigo_day_2"
+msgstr "Вт"
+
+msgid "piwigo_day_3"
+msgstr "Ср"
+
+msgid "piwigo_day_4"
+msgstr "Чт"
+
+msgid "piwigo_day_5"
+msgstr "Пт"
+
+msgid "piwigo_day_6"
+msgstr "Сб"
+
+msgid "piwigo_month_10"
+msgstr "Октябрь"
+
+msgid "piwigo_month_11"
+msgstr "Ноябрь"
+
+msgid "piwigo_month_12"
+msgstr "Декабрь"
+
+msgid "piwigo_month_1"
+msgstr "Январь"
+
+msgid "piwigo_month_2"
+msgstr "Февраль"
+
+msgid "piwigo_month_3"
+msgstr "Март"
+
+msgid "piwigo_month_4"
+msgstr "Апрель"
+
+msgid "piwigo_month_5"
+msgstr "Май"
+
+msgid "piwigo_month_6"
+msgstr "Июнь"
+
+msgid "piwigo_month_7"
+msgstr "Июль"
+
+msgid "piwigo_month_8"
+msgstr "Август"
+
+msgid "piwigo_month_9"
+msgstr "Сентябрь"
+

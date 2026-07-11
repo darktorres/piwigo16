@@ -1,0 +1,1178 @@
+# Piwigo translation — lb_LU
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: lb_LU\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Language-Name: Lëtzebuergesch \n"
+"X-Piwigo-Country: Luxembourg\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: lb\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d Album aktualiséiert"
+msgstr[1] "%d D'Albumen aktualiséiert"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d Kommentar"
+msgstr[1] "%d Kommentaren"
+
+msgid "%d comment to validate"
+msgstr "%d Kommentar fräigin"
+
+msgid "%d comments to validate"
+msgstr "%d Kommentaren fräigin"
+
+msgid "%d hit"
+msgid_plural "%d hits"
+msgstr[0] "%d Opruff"
+msgstr[1] "Opriff"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "Foto"
+msgstr[1] "Fotoen"
+
+msgid "%d new user"
+msgstr "neien Benotzer"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "nei Foto"
+msgstr[1] "nei Fotoen"
+
+msgid "%d new comments"
+msgstr "nei Kommentaren"
+
+msgid "%d new comment"
+msgstr "neien Kommentar"
+
+msgid "(!) This comment requires validation"
+msgstr "Dëse Kommentar muss iwwerpréift ginn"
+
+msgid "2small"
+msgstr "klinzeg"
+
+msgid "A comment on your site"
+msgstr "Ee Kommentar op hirer Homepage"
+
+msgid "About"
+msgstr "Iwwert eis"
+
+msgid "About Piwigo"
+msgstr "Iwert Piwingo"
+
+msgid "%d new users"
+msgstr "nei Benotzer"
+
+msgid "%d rate"
+msgid_plural "%d rates"
+msgstr[0] "Bewäertung"
+msgstr[1] "Bewäertungen"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "RSS-Feed"
+
+msgid "Comment"
+msgstr "Kommentar"
+
+msgid "Are you sure?"
+msgstr "Si dir sécher"
+
+msgid "At least one listed rule must be satisfied."
+msgstr "Et muss opmanst eng Regel erfellt sin."
+
+msgid "Author"
+msgstr "Auteur"
+
+msgid "Auto login"
+msgstr "Auto-Login"
+
+msgid "Calendar"
+msgstr "Kalenner"
+
+msgid "Change my password"
+msgstr "Mäi Passwuert änneren"
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "Een Administrateur muss äre Beitrag fräischalten éier en sichtbar ass."
+
+msgid "Accelerate diaporama speed"
+msgstr "Diashow méi séier"
+
+msgid "Administration"
+msgstr "Administratioun"
+
+msgid "Album"
+msgstr "Album"
+
+msgid "Album results for"
+msgstr "Albumresultater fir"
+
+msgid "Albums"
+msgstr "Albumen"
+
+msgid "All"
+msgstr "Alles"
+
+msgid "All tags"
+msgstr "All d'Schlagwierder"
+
+msgid "... or browse your empty gallery"
+msgstr "oder duerchwullt är eidel Gallerie"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "oder iwwergéi dës Meldung. Ech gin eleng eens."
+
+msgid "Rate this photo"
+msgstr "Foto bewäerten"
+
+msgid "Recent albums"
+msgstr "Neisten Albumen"
+
+msgid "Recent photos"
+msgstr "Neisten Fotoen"
+
+msgid "Redirection..."
+msgstr "Ëmleedung"
+
+msgid "Reduce diaporama speed"
+msgstr "Diashow méi lues"
+
+msgid "Profile"
+msgstr "Profil"
+
+msgid "RSS feed"
+msgstr "RSS-Feed"
+
+msgid "Related tags"
+msgstr "Matt de Schlagwierder"
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "Piwigo ass op een net novollzéibare Feeler gestouss "
+
+msgid "Pause of slideshow"
+msgstr "Diashow unhalen"
+
+msgid "Photos only RSS feed"
+msgstr "RSS-Feed (nëmmen Fotoen)"
+
+msgid "Piwigo Help"
+msgstr "Piwigo-Hëllef"
+
+msgid "Play of slideshow"
+msgstr "Diashow virufueren"
+
+msgid "Posted on"
+msgstr "Agedroen den"
+
+msgid "Preferences"
+msgstr "Astellungen"
+
+msgid "New password"
+msgstr "Neit Passwuert"
+
+msgid "Next"
+msgstr "Virun"
+
+msgid "No"
+msgstr "Nee"
+
+msgid "Not repeat the slideshow"
+msgstr "Diashow net widderhuelen"
+
+msgid "Notification"
+msgstr "RSS-Feed"
+
+msgid "Original"
+msgstr "Original"
+
+msgid "Page not found"
+msgstr "D'Säit net fond"
+
+msgid "Password"
+msgstr "Passwuert"
+
+msgid "Password Reset"
+msgstr "Passwuert zerécksetzen"
+
+msgid "Password forgotten"
+msgstr "Passwuert vergiess"
+
+msgid "IPTC Metadata"
+msgstr "IPTC-Metadaten"
+
+msgid "Keyword"
+msgstr "Schlagwuert"
+
+msgid "Language"
+msgstr "Sprooch"
+
+msgid "Links"
+msgstr "Linken"
+
+msgid "Login"
+msgstr "Umeldung"
+
+msgid "Logout"
+msgstr "ofmellen"
+
+msgid "Menu"
+msgstr "Menu"
+
+msgid "File"
+msgstr "Datei"
+
+msgid "File name"
+msgstr "Numm vun der Datei"
+
+msgid "Filter"
+msgstr "Filter"
+
+msgid "Filter and display"
+msgstr "filteren an uweisen"
+
+msgid "Forbidden"
+msgstr "Verbueden"
+
+msgid "Hello"
+msgstr "Moien"
+
+msgid "Help"
+msgstr "Hëllef"
+
+msgid "Email"
+msgstr "E-Mail"
+
+msgid "Email address"
+msgstr "E-Mail-Adress"
+
+msgid "Email address is mandatory"
+msgstr "E-Mail-Adress ass néideg"
+
+msgid "Favorites"
+msgstr "Favoriten"
+
+msgid "Download this file"
+msgstr "Datei eroflueden"
+
+msgid "Download"
+msgstr "eroflueden"
+
+msgid "Connection settings"
+msgstr "Umeldung"
+
+msgid "Contact"
+msgstr "Kontakt"
+
+msgid "Contact webmaster"
+msgstr "E-mail un de Webmaster"
+
+msgid "Date"
+msgstr "Datum"
+
+msgid "Delete"
+msgstr "läschen"
+
+msgid "Desktop"
+msgstr "Desktop"
+
+msgid "Comments"
+msgstr "Kommentaren"
+
+msgid "Username or email"
+msgstr "Benotzernumm oder E-mail-Adress"
+
+msgid "Username"
+msgstr "Benotzernumm"
+
+msgid "Sent by"
+msgstr "Gescheckt vun"
+
+msgid "Show file metadata"
+msgstr "Metadaten weisen"
+
+msgid "Sort by"
+msgstr "Zortéieren no"
+
+msgid "Tag"
+msgstr "Schlagwuert"
+
+msgid "Tags"
+msgstr "Schlagwierder"
+
+msgid "Repeat the slideshow"
+msgstr "Diashow widderhuelen"
+
+msgid "Reset"
+msgstr "zerécksetzen"
+
+msgid "Retrieve password"
+msgstr "Passwuert ofruffen"
+
+msgid "Search"
+msgstr "sichen"
+
+msgid "Search by date"
+msgstr "no engem Datum sichen"
+
+msgid "Search for Author"
+msgstr "Sich nom Auteur"
+
+msgid "Search for words"
+msgstr "No Wierder sichen"
+
+msgid "Search in albums"
+msgstr "Sich an den Albumen"
+
+msgid "xsmall"
+msgstr "zimlech kleng"
+
+msgid "xxlarge"
+msgstr "ganz grouss"
+
+msgid "search"
+msgstr "sichen"
+
+msgid "slideshow"
+msgstr "Diashow"
+
+msgid "small"
+msgstr "kleng"
+
+msgid "square"
+msgstr "quadratesch"
+
+msgid "the beginning"
+msgstr "Ufank"
+
+msgid "the username must be given"
+msgstr "Benotzernumm feelt"
+
+msgid "today"
+msgstr "haut"
+
+msgid "wrong date"
+msgstr "Datum ass falsch"
+
+msgid "xlarge"
+msgstr "besonnesch grouss"
+
+msgid "no rate"
+msgstr "nach keng Bewäertung"
+
+msgid "obligatory"
+msgstr "obligatoresch"
+
+msgid "password updated"
+msgstr "Passwuert aktualiséieren"
+
+msgid "photo"
+msgstr "Foto"
+
+msgid "edit"
+msgstr "beaarbechten"
+
+msgid "excluded"
+msgstr "ausgeschloss"
+
+msgid "guest"
+msgstr "Gaascht"
+
+msgid "in this album"
+msgstr "an dësem Album"
+
+msgid "included"
+msgstr "enthalen"
+
+msgid "large"
+msgstr "grouss"
+
+msgid "letters"
+msgstr "Buschtawen"
+
+msgid "medium"
+msgstr "mëttel"
+
+msgid "display most visited photos"
+msgstr "Weis déi "
+
+msgid "display this album"
+msgstr "Weis dësen Album"
+
+msgid "all"
+msgstr "all"
+
+msgid "cloud"
+msgstr "Wollek"
+
+msgid "Welcome"
+msgstr "Wëllkomm"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "Wëllkomm!"
+
+msgid "Your favorites"
+msgstr "Meng Favoriten"
+
+msgid "Your password has been reset"
+msgstr "Äert Passwuert ass zeréckgesat gin"
+
+msgid "View"
+msgstr "Usiicht"
+
+msgid "View in"
+msgstr "Uweisen am"
+
+msgid "Webmaster"
+msgstr "Webmaster"
+
+msgid "Website"
+msgstr "Homepage"
+
+msgid "Yes"
+msgstr "Jo"
+
+msgid "Your website URL is invalid"
+msgstr "Des Homepage URL ass falsch"
+
+msgid "Confirm Password"
+msgstr "Neit Passwuert bestätegen"
+
+msgid "Unknown feed identifier"
+msgstr "Feed-ID onbekannt"
+
+msgid "Register"
+msgstr "Registréieren"
+
+msgid "Registration"
+msgstr "Registréierung"
+
+msgid "Search for all terms"
+msgstr "all d'Wierder"
+
+msgid "Go through the gallery as a visitor"
+msgstr "Besicht d'Gallerie als Gaascht"
+
+msgid "%d Kb"
+msgstr "%d kb"
+
+msgid "%d photos per page"
+msgstr "%d Biller pro Säit"
+
+msgid "return to the display of all photos"
+msgstr "Zeréck bei all d'Fotoen"
+
+msgid "mandatory"
+msgstr "néide"
+
+msgid "descending"
+msgstr "ofsteigend"
+
+msgid "display all photos in all sub-albums"
+msgstr "Weis all d'Fotoen aus den Ënneralbumen"
+
+msgid "chronology_monthly_calendar"
+msgstr "Kalenner vum Mount"
+
+msgid "comment date"
+msgstr "Datum vum Kommentar"
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "Äre Kommentar ass refuséiert ginn, well en de Validéierungsregelen net entsprécht"
+
+msgid "ascending"
+msgstr "opsteigend"
+
+msgid "chronology_monthly_list"
+msgstr "Lescht vum Mount"
+
+msgid "chronology_weekly_list"
+msgstr "Lescht vun der Woch"
+
+msgid "Visits"
+msgstr "Visitten"
+
+msgid "Visits, high &rarr; low"
+msgstr "Visitten,héich&rarr;niddreg"
+
+msgid "Visits, low &rarr; high"
+msgstr "Visitten,niddreg&rarr;héich"
+
+msgid "Theme"
+msgstr "Thema"
+
+msgid "Unknown identifier"
+msgstr "ID onbekannt"
+
+msgid "Update your rating"
+msgstr "Aktualiséiert är Bewäertung"
+
+msgid "Username modification"
+msgstr "Benotzernumm änneren"
+
+msgid "Submit"
+msgstr "bestätegen"
+
+msgid "Search tags"
+msgstr "Schlagwierder sichen"
+
+msgid "Since"
+msgstr "Säit"
+
+msgid "Specials"
+msgstr "erweidert"
+
+msgid "Requested tag does not exist"
+msgstr "D'Schlagwuert, dat Dir gewielt hutt, existéiert net"
+
+msgid "Return to home page"
+msgstr "Zeréck op Staartsäit"
+
+msgid "Search in sub-albums"
+msgstr "Sich an den Ënneralbumen"
+
+msgid "Search rules"
+msgstr "Sichkriterien"
+
+msgid "Previous"
+msgstr "Zeréck"
+
+msgid "Quick connect"
+msgstr "Schnell Umeldung"
+
+msgid "Permalink for album not found"
+msgstr "Permalink fir den Album net fond"
+
+msgid "Photo sizes"
+msgstr "Bildgréisst"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "Numm vum Bild,A&rarr;Z"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "Numm vum Bild,Z&rarr;A"
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "Den numeresche Bezeechner,1&rarr;9"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "Den numeresche Bezeechner, 9&rarr;1"
+
+msgid "Kind of date"
+msgstr "Datumstyp"
+
+msgid "Last"
+msgstr "Lescht Säit"
+
+msgid "Last Page"
+msgstr "Lescht Säit"
+
+msgid "First"
+msgstr "Eischt Säit"
+
+msgid "First Page"
+msgstr "Eischt Säit"
+
+msgid "Forgot your password?"
+msgstr "Passwuert vergiess"
+
+msgid "Go back to the album"
+msgstr "Zeréck bei den Album"
+
+msgid "Home"
+msgstr "Staartsäit"
+
+msgid "EXIF Metadata"
+msgstr "Exif-Metadaten"
+
+msgid "Edit"
+msgstr "Beaarbechten"
+
+msgid "Edit a comment"
+msgstr "beaarbecht ee Kommentar"
+
+msgid "Enter your new password below."
+msgstr "Neit Passwuert ënnen agin"
+
+msgid "Expand all albums"
+msgstr "Den Albumsbam komplett erausklappen"
+
+msgid "Current password is wrong"
+msgstr "Aktuellt Passwuerd ass falsch"
+
+msgid "Date created, new &rarr; old"
+msgstr "Datum erstallt,nei&rarr;al"
+
+msgid "Date created, old &rarr; new"
+msgstr "Datum erstallt,al&rarr;nei"
+
+msgid "Default"
+msgstr "Standard"
+
+msgid "Created on"
+msgstr "Erstallt den"
+
+msgid "Creation date"
+msgstr "Erstellungsdatum"
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "Anti-Flot Spär: kuerz warden bis dir e neien Kommentar schéckt"
+
+msgid "Any tag"
+msgstr "x-belibegt Schlagwuert"
+
+msgid "Bad request"
+msgstr "Falsch Ufro"
+
+msgid "Close this window"
+msgstr "Dës Fenster zoumaachen"
+
+msgid "Add a comment"
+msgstr "Kommentar dobäisetzen"
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "Ongëltege Status fir de Benotzer \"Gaascht\". Amplaz dovunner gëtt de Standard-Status geholl. Kontaktéiert w.e.g. de Webmaster."
+
+msgid "Best rated"
+msgstr "Am beschte bewäert"
+
+msgid "Check your email for the confirmation link"
+msgstr "Kuckt an Ärer Mailbox no enger Mail mat engem Confirmatiouns-Link"
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "Klickt hei, wann Dir net vun Ärem Browser automatesch weidergeleet gitt"
+
+msgid "Click on the photo to see it in high definition"
+msgstr "Klickt op d'Fotto, fir se an enger héijer Opléisung ze gesinn"
+
+msgid "Create a new account"
+msgstr "Neie Benotzer-Account creéieren"
+
+msgid "Manual sort order"
+msgstr "Manuell sortéieren"
+
+msgid "New on %s"
+msgstr "Nei am%s"
+
+msgid "Identification"
+msgstr "Identifikatioun"
+
+msgid "Password: %s"
+msgstr "Passwuert%s"
+
+msgid "Invalid key"
+msgstr "Ongëltege Schlëssel"
+
+msgid "Invalid password!"
+msgstr "Passwuerd ongëlteg!"
+
+msgid "Hello %s,"
+msgstr "Moien%s,"
+
+msgid "Album: %s"
+msgstr "Album:%s"
+
+msgid "Author: %s"
+msgstr "Autor:%s"
+
+msgid "Browser: %s"
+msgstr "Browser:%s"
+
+msgid "Comment by %s"
+msgstr "Kommentar vun:%s"
+
+msgid "Comment: %s"
+msgstr "Kommentar:%s"
+
+msgid "Admin: %s"
+msgstr "Verwaltung:%s"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "%d Fotto ass och mat dëse Mot-clée verbonnen"
+msgstr[1] "%d Fottoe sinn och mat dëse Mot-clée verbonnen"
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] "am %d  Enneralbumm"
+msgstr[1] "an den %d  Enneralbummen"
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "Ären Benotzernumm ass elo:"
+
+msgid "author(s) : %s"
+msgstr "Autor(en)%s"
+
+msgid "created on %s"
+msgstr "erstallt den %s"
+
+msgid "Week %d"
+msgstr "Woch%d"
+
+msgid "User comments"
+msgstr "Benotzerkommentaren"
+
+msgid "User: %s"
+msgstr "Benotzer: %s"
+
+msgid "Username: %s"
+msgstr "Benotzernumm: %s"
+
+msgid "Page generated in"
+msgstr "Säit erstallt an"
+
+msgid "Connected user: %s"
+msgstr "Verbonne Benotzer:%s"
+
+msgid "IP: %s"
+msgstr "IP:%s"
+
+msgid "Each listed rule must be satisfied."
+msgstr "All opgelëscht Regel muss erfëllt sinn."
+
+msgid "Number of items"
+msgstr "Unzuel vun den Elementer"
+
+msgid "Registration of %s"
+msgstr "Registréierung vun %s"
+
+msgid "Requested album does not exist"
+msgstr "Dat ausgewieltent Album existéiert net"
+
+msgid "Reset to default values"
+msgstr "Reinitialiséieren op d'Standardwäerter"
+
+msgid "SQL queries in"
+msgstr "SQL-Ufroen an"
+
+msgid "Search for any term"
+msgstr "iergendee Wuert"
+
+msgid "Search results"
+msgstr "Sichresultater"
+
+msgid "Send my connection settings by email"
+msgstr "Connexiouns-Astellunge per Mail verschécken"
+
+msgid "Show latest comments first"
+msgstr "Den neieste Commentaire fir d'éischt weisen"
+
+msgid "Show number of comments"
+msgstr "Weis, wéi vill Commentairë gemaach goufen"
+
+msgid "Show number of hits"
+msgstr "Weis, wéi dacks op d'Bild geklickt gouf"
+
+msgid "Show oldest comments first"
+msgstr "Den eelste Commentaire fir d'éischt weisen"
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "Et gouf eng Ufro gemaach, fir deem heite Benotzer säi Passwuert ze reinitialiséieren:"
+
+msgid "Sort order"
+msgstr "D'Reiefolleg, an där zortéiert gëtt"
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "Erfollegräich registréiert! Dir kritt geschwënn eng Mail mat Ären Zougangs-Donnéeën. Sidd häerzlech wëllkomm!"
+
+msgid "Tag results for"
+msgstr "Sichresultater fir"
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "Am RSS-Feed sinn Nouvellë vun dëser Websäit: nei Fottoen, aktualiséiert Albumen, nei Commentairen. Benotzt en RSS-Feed-Reader."
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "Den aktiven Zougrëff op d'Datebank ass wéinst Maintenance blockéiert. Besicht eis w.e.g. e bësse méi spéit nach eng Kéier."
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "D'Kontroll-Passwuert feelt. Gitt w.e.g. Äert ausgewielt Passwuert nach eng Kéier an"
+
+msgid "Password is missing. Please enter the password."
+msgstr "D'Passwuert feelt. Gitt w.e.g Äert Passwuert an."
+
+msgid "Password reset is not allowed for this user"
+msgstr "Dëse Benotzer däerf d'Passwuert net reinitialiséieren"
+
+msgid "Please, enter a login"
+msgstr "Gitt w.e.g. Äre Benotzernumm an"
+
+msgid "Quick search"
+msgstr "Séier Sich"
+
+msgid "Random photos"
+msgstr "Zoufälleg Fottoen"
+
+msgid "Rank"
+msgstr "Rang"
+
+msgid "Rating score"
+msgstr "Bewäertungs-Stand"
+
+msgid "Recent period"
+msgstr "Wéi vill Deeg sollen d'Biller als nei markéiert ginn?"
+
+msgid "Recent period must be a positive integer value"
+msgstr "Den Zäitintervall muss eng positiv, ganz Zuel sinn"
+
+msgid "Invalid username or email"
+msgstr "Ongëltegen Benotzernumm oder ongëlteg E-Mail-Adress"
+
+msgid "Email: %s"
+msgstr "E-Mail-Adress:%s"
+
+msgid "Error sending email"
+msgstr "Feeler beim Verschécke vun der Mail."
+
+msgid "Here are your connection settings"
+msgstr "Dat sinn Är Connexiouns-Donnéeën"
+
+msgid "I want to add photos"
+msgstr "Ech géif gär Fottoe bäisetzen."
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "Wann et sech ëm en Iertum handelt, dann ignoréiert dës Mail"
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "Wann Dir dës Mail iertemlecherweis krut, da kontaktéiert eis w.e.g.%s."
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "D'Mailadress feelt. Gitt w.e.g. eng Mailadress un"
+
+msgid "Empty query. No criteria has been entered."
+msgstr "D'Ufro as eidel. Kee Critère aginn"
+
+msgid "Username is mandatory"
+msgstr "Benotzernumm ass néideg"
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "Fotoen agesat um leschten %d Daag"
+msgstr[1] "Fotoen agesat an de leschten %d  Deeg."
+
+msgid "Thank you for registering at %s!"
+msgstr "Merci fir är Registréierung bei %s!"
+
+msgid "N/A"
+msgstr "existéiert net"
+
+msgid "Most visited"
+msgstr "Am heefegsten ugekuckt"
+
+msgid "Manage this user comment: %s"
+msgstr "Administréiert dësen Benotzernumm:%s"
+
+msgid "Mobile"
+msgstr "Handy"
+
+msgid "File name, A &rarr; Z"
+msgstr "Dateinumm, A &rarr; Z"
+
+msgid "File name, Z &rarr; A"
+msgstr "Dateinumm, Z &rarr; A"
+
+msgid "Enter your personnal informations"
+msgstr "Gitt är perséinlech Daten an"
+
+msgid "Date posted, new &rarr; old"
+msgstr "Datum verëffentlechen, nei &rarr; al"
+
+msgid "Date posted, old &rarr; new"
+msgstr "Datum verëffentlechen, al &rarr; nei"
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "Moien %s,är Piwigo-Fotogalerie ass eidel!"
+
+msgid "Rating score, high &rarr; low"
+msgstr "Bewäertung, héich &rarr;niddereg"
+
+msgid "Rating score, low &rarr; high"
+msgstr "Bewäertung, niddereg &rarr;héich"
+
+msgid "Powered by"
+msgstr "Ennerstetzt vun"
+
+msgid "Filesize"
+msgstr "Dateigréisst"
+
+msgid "No results for"
+msgstr "Keng Resultater fir"
+
+msgid "Number of photos per page"
+msgstr "Unzuel vu Fotoen pro Säit"
+
+msgid "Please enter your username or email address."
+msgstr "Gitt w.e.g. Ären Benotzernumm an är E-Mail-Adress an."
+
+msgid "Display"
+msgstr "Unzuel"
+
+msgid "last %d days"
+msgstr "%d leschten Deeg"
+
+msgid "display best rated photos"
+msgstr "Weist déi beschte bewäerten Fotoen"
+
+msgid "display last user comments"
+msgstr "Weist déi leschten Benotzerkommentaren"
+
+msgid "display most recent photos"
+msgstr "Weist déi neisten Fotoen"
+
+msgid "from %s to %s"
+msgstr "vun %s bis %s"
+
+msgid "posted after %s (%s)"
+msgstr "agesat nom %s (%s)"
+
+msgid "posted before %s (%s)"
+msgstr "agesat virum  %s (%s)"
+
+msgid "posted on %s"
+msgstr "agesat den %s"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "E-Mail-Adresse muss dem Muster xxx@yyy.eee (Beispiel: jack@altern.org) entspriechen"
+
+msgid "delete this photo from your favorites"
+msgstr "Dës Foto aus de Favoritten läschen"
+
+msgid "delete all photos from your favorites"
+msgstr "All Fotoen aus de Favoritten läschen"
+
+msgid "created before %s (%s)"
+msgstr "erstallt virum %s (%s)"
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "erstallt tëschent dem %s (%s) an dem %s (%s)"
+
+msgid "You will receive a link to create a new password via email."
+msgstr "Dir kritt e Link per E-mail fir e neit Passwuert ze erstellen"
+
+msgid "Your comment has been registered"
+msgstr "Äre Kommentar ass gespäichert"
+
+msgid "created after %s (%s)"
+msgstr "erstallt nom %s (%s)"
+
+msgid "Photo title"
+msgstr "Bildtitel"
+
+msgid "Photo description"
+msgstr "Bildbeschreiwung"
+
+msgid "Link: %s"
+msgstr "Adress: %s"
+
+msgid "End-Date"
+msgstr "Enddatum"
+
+msgid "Apply on properties"
+msgstr "Eegenschaften iwerhuelen"
+
+msgid "Album name, Z &rarr; A"
+msgstr "Albumnumm, Z &rarr; A"
+
+msgid "Album name, A &rarr; Z"
+msgstr "Albumnumm, A &rarr; Z"
+
+msgid "Your Gallery Customization"
+msgstr "Upasse vun der Galerie"
+
+msgid "add this photo to your favorites"
+msgstr "Eng Fotto bei d'Favoritte bäisetzen"
+
+msgid "display a calendar by posted date"
+msgstr "Fottoe no Publikatiounsdatum uweisen"
+
+msgid "display only recently posted photos"
+msgstr "Nëmmen déi Fottoe weisen, déi viru kuerzem presentéiert goufen"
+
+msgid "display photos linked to this tag"
+msgstr "Fottoe mat dësem Mot-clé weisen"
+
+msgid "display recently updated albums"
+msgstr "Déi Albume weisen, déi viru kuerzem aktualiséiert goufen"
+
+msgid "login mustn't start with a space character"
+msgstr "De Benotzernumm däerf net mat engem Leerschrëtt ophalen"
+
+msgid "searched words : %s"
+msgstr "Sichbegrëffer %s"
+
+msgid "set as album representative"
+msgstr "Als Virschäibild vum Album definéieren"
+
+msgid "show tag cloud"
+msgstr "Wollek mat Mot-clée weisen"
+
+msgid "stop the slideshow"
+msgstr "D'Diashow verloossen"
+
+msgid "this email address is already in use"
+msgstr "Dës Mailadress ass schonns am Gebrauch"
+
+msgid "this login is already used"
+msgstr "Dee Benotzernumm ass schonns verginn"
+
+msgid "thumb"
+msgstr "Virschäibild"
+
+msgid "useful when password forgotten"
+msgstr "Hëlleft Iech, wann Dir Äert Passwuert vergiess hutt"
+
+msgid "available for administrators only"
+msgstr "Nëmmen disponibel fir d'Administrateuren"
+
+msgid "display your favorites photos"
+msgstr "Liiblingsbiller weisen"
+
+msgid "group by letters"
+msgstr "No Ufanksbuschtaf gruppéieren"
+
+msgid "html tags are not allowed in login"
+msgstr "HTML-Tagge sinn am Benotzernumm net erlaabt"
+
+msgid "login mustn't end with a space character"
+msgstr "De Benotzernumm däerf net mat engem Leerschrëtt ophalen"
+
+msgid "photos posted during the last %d days"
+msgstr "Fottoen, déi an deene leschten %d Deeg presentéiert goufen"
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "presentéiert tëschent %s (%s) an %s (%s)"
+
+msgid "remove this tag from the list"
+msgstr "Dëse Mot-clé aus der Lëscht eraushuelen"
+
+msgid "representative"
+msgstr "Virschäibild vum Album"
+
+msgid "return to normal view mode"
+msgstr "Zréck bei den normalen Affichage"
+
+msgid "display a set of random photos"
+msgstr "Fotoe am Zoufallsmodus uweisen"
+
+msgid "display available tags"
+msgstr "All déi disponibel Mot-clée weisen"
+
+msgid "display each day with photos, month per month"
+msgstr "All Dag mat de Fottoe weisen, opgelëscht no Mount"
+
+msgid "This author removed the comment with id %d"
+msgstr "Dësen Auteur huet de Commentaire geläscht mat der ID %d"
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "Benotzernumm \"%s\" bei der Galerie %s"
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "Cookië gi geblockt oder vun Ärem Browser net ënnerstëtzt. Dir musst d'Cookien acceptéieren, fir Iech unzemellen."
+
+msgid "Dimensions"
+msgstr "Ofmiessung"
+
+msgid "Original dimensions"
+msgstr "Ursprongdatum"
+
+msgid "Post date"
+msgstr "Publikatiounsdatum"
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "D'Unzuel vun de Fottoe pro Säit muss eng ganz Zuel sinn, déi méi grouss wéi Null ass"
+
+msgid "The passwords do not match"
+msgstr "D'Passwierder stëmmen net iwwerteneen"
+
+msgid "This author modified following comment:"
+msgstr "Dësen Auteur huet deen heite Commentaire verännert"
+
+msgid "This login is already used by another user"
+msgstr "Dee Benotzernumm ass schonns verginn"
+
+msgid "Thumbnails"
+msgstr "Virschäibiller"
+
+msgid "To reset your password, visit the following address:"
+msgstr "Fir d'Passwuert ze reinitialiséieren, klickt w.e.g. op deen heite Link"
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "De Benotzer »%s« huet keng Mailadress uginn. D'Reinitialiséierung vum Passwuert ass net méiglech"
+
+msgid "Your authentication key is no longer valid."
+msgstr "Den Identifizéierungsschlëssel ass net méi gülteg"
+
+msgid "You are not authorized to access the requested page"
+msgstr "Dir sidd net berechtëgt déi gewënschte Säit opzeruffen"
+
+msgid "display a calendar by creation date"
+msgstr "Fotoen no Opnahmsdatum weisen"
+
+msgid "Invalid username or password!"
+msgstr "Benotzernumm oder Passwuert si falsch"
+
+msgid "generate random password"
+msgstr "Random-Passwuert generéieren"
+
+msgid "piwigo_day_0"
+msgstr "Sonden"
+
+msgid "piwigo_day_1"
+msgstr "Méinden"
+
+msgid "piwigo_day_2"
+msgstr "Denschten"
+
+msgid "piwigo_day_3"
+msgstr "Mettwoch"
+
+msgid "piwigo_day_4"
+msgstr "Donneschten"
+
+msgid "piwigo_day_5"
+msgstr "Freiden"
+
+msgid "piwigo_day_6"
+msgstr "Samschten"
+
+msgid "piwigo_month_12"
+msgstr "Dezember"
+
+msgid "piwigo_month_1"
+msgstr "Januar"
+
+msgid "piwigo_month_2"
+msgstr "Februar"
+
+msgid "piwigo_month_3"
+msgstr "Mäerz"
+
+msgid "piwigo_month_4"
+msgstr "Abrëll"
+
+msgid "piwigo_month_5"
+msgstr "Mee"
+
+msgid "piwigo_month_6"
+msgstr "Juni"
+
+msgid "piwigo_month_7"
+msgstr "Juli"
+
+msgid "piwigo_month_8"
+msgstr "August"
+
+msgid "piwigo_month_9"
+msgstr "September"
+
+msgid "piwigo_month_10"
+msgstr "Oktober"
+
+msgid "piwigo_month_11"
+msgstr "November"
+

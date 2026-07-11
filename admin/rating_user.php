@@ -10,6 +10,8 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\tabsheet;
+use Piwigo\Core\AccessLevel;
+use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Template\Template;
@@ -44,7 +46,7 @@ $query = 'SELECT DISTINCT
   u.' . $user_fields['id'] . ' AS id,
   u.' . $user_fields['username'] . ' AS name,
   ui.status
-  FROM ' . USERS_TABLE . ' AS u INNER JOIN ' . USER_INFOS_TABLE . ' AS ui
+  FROM ' . Tables::users() . ' AS u INNER JOIN ' . Tables::userInfos() . ' AS ui
     ON u.' . $user_fields['id'] . ' = ui.user_id';
 
 $users_by_id = [];
@@ -53,7 +55,7 @@ while ((bool) ($row = pwg_db_fetch_assoc($result))) {
     $status = $row['status'];
     $users_by_id[(int) $row['id']] = [
         'name' => is_string($row['name']) ? $row['name'] : '',
-        'anon' => is_autorize_status(ACCESS_CLASSIC, is_string($status) ? $status : '') ? false : true,
+        'anon' => is_autorize_status(AccessLevel::Classic, is_string($status) ? $status : '') ? false : true,
     ];
 }
 
@@ -72,7 +74,7 @@ foreach ($rate_items as $rate) {
 $image_ids = [];
 $by_user_ratings = [];
 $query = '
-SELECT * FROM ' . RATE_TABLE . ' ORDER by date DESC';
+SELECT * FROM ' . Tables::rate() . ' ORDER by date DESC';
 $result = pwg_query($query);
 while ((bool) ($row = pwg_db_fetch_assoc($result))) {
     $user_id = (int) $row['user_id'];
@@ -111,7 +113,7 @@ while ((bool) ($row = pwg_db_fetch_assoc($result))) {
 $image_urls = [];
 if (count($image_ids) > 0) {
     $query = 'SELECT id, name, file, path, representative_ext, level
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', array_keys($image_ids)) . ')';
     $result = pwg_query($query);
     $params = ImageStdParams::get_by_type(IMG_SQUARE);
@@ -129,7 +131,7 @@ if (count($image_ids) > 0) {
 // all image averages
 $query = 'SELECT element_id,
     AVG(rate) AS avg
-  FROM ' . RATE_TABLE . '
+  FROM ' . Tables::rate() . '
   GROUP BY element_id';
 $all_img_sum = [];
 $result = pwg_query($query);
@@ -140,7 +142,7 @@ while ((bool) ($row = pwg_db_fetch_assoc($result))) {
 }
 
 $query = 'SELECT id
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   ORDER by rating_score DESC
   LIMIT ' . $consensus_top_number;
 // array_from_query()'s declared return type is array<int|string, mixed>
@@ -282,7 +284,7 @@ $x = uasort($by_user_ratings, $available_order_by[$order_by_index][1]);
 $query = '
 SELECT
     COUNT(*)
-  FROM ' . RATE_TABLE .
+  FROM ' . Tables::rate() .
 ';';
 $row = pwg_db_fetch_row(pwg_query($query));
 assert($row !== null);

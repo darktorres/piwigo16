@@ -1,0 +1,1172 @@
+# Piwigo translation — gl_ES
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: gl_ES\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Language-Name: Galego\n"
+"X-Piwigo-Country: Galiza\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: gl\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "%d hit"
+msgid_plural "%d hits"
+msgstr[0] "%d Acceso"
+msgstr[1] "%d Accesos"
+
+msgid "%d Kb"
+msgstr "%d Kb"
+
+msgid "%d new comment"
+msgstr "%d novo comentario"
+
+msgid "%d new comments"
+msgstr "%d novos comentarios"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "%d nova foto"
+msgstr[1] "%d novas fotos"
+
+msgid "%d new user"
+msgstr "%d novo usuario"
+
+msgid "%d new users"
+msgstr "%d novos usuarios"
+
+msgid "Date"
+msgstr "Data"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d álbum actualizado"
+msgstr[1] "%d álbums actualizados"
+
+msgid "%d comment to validate"
+msgstr "%d comentario para validar"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d comentario"
+msgstr[1] "%d comentarios"
+
+msgid "%d comments to validate"
+msgstr "%d comentarios para validar"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "%d foto"
+msgstr[1] "%d fotos"
+
+msgid "%d rate"
+msgid_plural "%d rates"
+msgstr[0] "%d valoración"
+msgstr[1] "%d valoracións"
+
+msgid "A comment on your site"
+msgstr "Un comentario no teu sitio"
+
+msgid "About Piwigo"
+msgstr "Sobre o Piwigo"
+
+msgid "About"
+msgstr "Sobre"
+
+msgid "Accelerate diaporama speed"
+msgstr "Incrementar a velocidade da presentación"
+
+msgid "Add a comment"
+msgstr "Engadir un comentario"
+
+msgid "add this photo to your favorites"
+msgstr "engadir esta foto ós teus favoritos"
+
+msgid "Admin: %s"
+msgstr "Admin: %s"
+
+msgid "Administration"
+msgstr "Administración"
+
+msgid "Album results for"
+msgstr "Resultados do álbum para"
+
+msgid "Album"
+msgstr "Album"
+
+msgid "Album: %s"
+msgstr "Álbum: %s"
+
+msgid "Albums"
+msgstr "Álbums"
+
+msgid "All tags"
+msgstr "Todas etiquetas"
+
+msgid "all"
+msgstr "todo"
+
+msgid "All"
+msgstr "Todo"
+
+msgid "Any tag"
+msgstr "Algunha etiqueta"
+
+msgid "Are you sure?"
+msgstr "Estás seguro?"
+
+msgid "ascending"
+msgstr "ascendente"
+
+msgid "Author"
+msgstr "Autor"
+
+msgid "author(s) : %s"
+msgstr "autor(es): %s"
+
+msgid "Author: %s"
+msgstr "Autor: %s"
+
+msgid "Auto login"
+msgstr "Auto identificación"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "%d foi ligada as etiquetas actuais"
+msgstr[1] "%d foron ligadas as etiquetas actuais"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) Este comentario require validación"
+
+msgid "... or browse your empty gallery"
+msgstr "... ou examina a  túa galería baleira"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "... ou desactiva esta mensaxe, atoparei o camiño eu mesmo"
+
+msgid "2small"
+msgstr "XXS - tini"
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "O comentario ha de ser autorizado por un administrador antes de ser visible."
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "Sistema anti-inundación: agarda un intre antes de enviar outro comentario"
+
+msgid "At least one listed rule must be satisfied."
+msgstr "Hase de satisfacer polo menos un criterio"
+
+msgid "Bad request"
+msgstr "Resposta incorrecta"
+
+msgid "Best rated"
+msgstr "Mellor valorado"
+
+msgid "Change my password"
+msgstr "Mudar miña clave"
+
+msgid "Check your email for the confirmation link"
+msgstr "Comprobar o correo electrónico a traveso de ligazón de confirmación "
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "Preme aquí se teu navegador non te reencamiña automaticamente"
+
+msgid "Click on the photo to see it in high definition"
+msgstr "Preme na foto para vela en alta definición"
+
+msgid "Close this window"
+msgstr "Pecha esta xanela"
+
+msgid "Comment"
+msgstr "Comentario"
+
+msgid "Comment by %s"
+msgstr "Comentario de %s"
+
+msgid "Comment: %s"
+msgstr "Comentario: %s"
+
+msgid "Comments"
+msgstr "Comentarios"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "Semente RSS completa (fotos e comentarios)"
+
+msgid "Confirm Password"
+msgstr "Confirmar clave"
+
+msgid "Connected user: %s"
+msgstr "Usuario conectado: %s"
+
+msgid "Connection settings"
+msgstr "Opcións da conexión"
+
+msgid "Contact"
+msgstr "Contactar"
+
+msgid "Visits, high &rarr; low"
+msgstr "Visitas, altas &rarr; baixas"
+
+msgid "Visits, low &rarr; high"
+msgstr "Visitas, baixas &rarr; altas"
+
+msgid "Webmaster"
+msgstr "Administrador web"
+
+msgid "View in"
+msgstr "Ver en"
+
+msgid "Visits"
+msgstr "Visitas"
+
+msgid "View"
+msgstr "Ver"
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "O usuario \"%s\" non ten enderezo de correo electrónico, non é posible o restablecemento da clave."
+
+msgid "User: %s"
+msgstr "Usuario: %s"
+
+msgid "Username"
+msgstr "Nome de usuario"
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "Nome de usuario \"%s\" na galería %s"
+
+msgid "Username is mandatory"
+msgstr "O nome de usuario é obrigatorio"
+
+msgid "Username modification"
+msgstr "Modificación do nome de usuario"
+
+msgid "Username or email"
+msgstr "Nome de usuario ou correo electrónico"
+
+msgid "Username: %s"
+msgstr "Nome de usuario: %s"
+
+msgid "To reset your password, visit the following address:"
+msgstr "Para reiniciar a clave, visita o seguinte enderezo:"
+
+msgid "Unknown feed identifier"
+msgstr "Identificador da semente descoñecido"
+
+msgid "Unknown identifier"
+msgstr "Identificador descoñecido"
+
+msgid "Update your rating"
+msgstr "Actualizar a valoración"
+
+msgid "User comments"
+msgstr "Comentarios de usuario"
+
+msgid "Thumbnails"
+msgstr "Miniaturas"
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "A semente RSS fornece notificacións de nova actividade neste sitio web: novas fotos, álbums actualizados, novos comentarios. Para empregar cun lector de sementes RSS."
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "A galería está bloqueada por mantemento. Volve máis tarde."
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "O número de fotos por páxina ten que ser un enteiro distinto de cero"
+
+msgid "The passwords do not match"
+msgstr "As claves non coinciden"
+
+msgid "This author modified following comment:"
+msgstr "Este autor modificou o seguinte comentario:"
+
+msgid "This author removed the comment with id %d"
+msgstr "Este autor borrou o comentario co id %d"
+
+msgid "This login is already used by another user"
+msgstr "Este nome de usuario xa está ocupado por outro usuario"
+
+msgid "Specials"
+msgstr "Especiais"
+
+msgid "Submit"
+msgstr "Enviar"
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "O rexistro foi satisfactorio, en breves recibirás un correo cos teus parámetros de conexión. Benvido!"
+
+msgid "Tag"
+msgstr "Etiqueta"
+
+msgid "Tag results for"
+msgstr "Resultados da etiqueta para"
+
+msgid "Tags"
+msgstr "Etiquetas"
+
+msgid "Thank you for registering at %s!"
+msgstr "Grazas por te rexistrares en %s!"
+
+msgid "Sort order"
+msgstr "Ordenación"
+
+msgid "Show number of hits"
+msgstr "Amosar o número de accesos"
+
+msgid "Show oldest comments first"
+msgstr "Amosar primeiro os comentarios máis vellos"
+
+msgid "Since"
+msgstr "Desde"
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "Alguén solicitou o restablecemento da clave para a seguinte conta de usuario:"
+
+msgid "Sort by"
+msgstr "Ordenar por"
+
+msgid "Show latest comments first"
+msgstr "Amosar primeiro os comentarios máis recentes"
+
+msgid "Search for all terms"
+msgstr "Buscar todos os termos"
+
+msgid "Search for any term"
+msgstr "Buscar calquera dos termos"
+
+msgid "Search for words"
+msgstr "Buscar por palabras"
+
+msgid "Search in albums"
+msgstr "Buscar nos álbums"
+
+msgid "Search in sub-albums"
+msgstr "Buscar en sub-álbums"
+
+msgid "Search results"
+msgstr "Resultados da busca"
+
+msgid "Search rules"
+msgstr "Criterios da busca"
+
+msgid "Search tags"
+msgstr "Etiquetas da busca"
+
+msgid "Send my connection settings by email"
+msgstr "Enviarme os parámetros de conexión por correo electrónico"
+
+msgid "Sent by"
+msgstr "Enviado por"
+
+msgid "Show file metadata"
+msgstr "Amosarme os metadatos"
+
+msgid "Show number of comments"
+msgstr "Amosar o número de comentarios"
+
+msgid "Reset to default values"
+msgstr "Restablecer os valores predeterminados"
+
+msgid "Retrieve password"
+msgstr "Recuperar a clave"
+
+msgid "Return to home page"
+msgstr "Volver á páxina de inicio"
+
+msgid "SQL queries in"
+msgstr "Consultas SQL en"
+
+msgid "Search"
+msgstr "Buscar"
+
+msgid "Search by date"
+msgstr "Buscar por data"
+
+msgid "Search for Author"
+msgstr "Buscar por autor"
+
+msgid "Recent albums"
+msgstr "Álbums recentes"
+
+msgid "Recent period"
+msgstr "Período recente "
+
+msgid "Recent period must be a positive integer value"
+msgstr "O período de tempo debe ser un número enteiro positivo"
+
+msgid "Recent photos"
+msgstr "Fotos recentes"
+
+msgid "Redirection..."
+msgstr "Reencamiñar..."
+
+msgid "Reduce diaporama speed"
+msgstr "Diminuír a velocidade da presentación "
+
+msgid "Register"
+msgstr "Rexistrar"
+
+msgid "Registration"
+msgstr "Rexistro"
+
+msgid "Registration of %s"
+msgstr "Rexistro de %s"
+
+msgid "Related tags"
+msgstr "Etiquetas relacionadas"
+
+msgid "Repeat the slideshow"
+msgstr "Repetir a presentación"
+
+msgid "Requested album does not exist"
+msgstr "O álbum seleccionado non existe"
+
+msgid "Requested tag does not exist"
+msgstr "A etiqueta seleccionada non existe"
+
+msgid "Reset"
+msgstr "Restablecer"
+
+msgid "Rating score"
+msgstr "Valoración"
+
+msgid "Rating score, high &rarr; low"
+msgstr "Valoración, alta &rarr; baixa"
+
+msgid "Rating score, low &rarr; high"
+msgstr "Valoración, baixa &rarr; alta"
+
+msgid "Random photos"
+msgstr "Fotos ó chou"
+
+msgid "Rank"
+msgstr "Valoración"
+
+msgid "Rate this photo"
+msgstr "Valora esta foto"
+
+msgid "Post date"
+msgstr "Data do envío"
+
+msgid "Previous"
+msgstr "Anterior"
+
+msgid "Profile"
+msgstr "Perfil"
+
+msgid "Quick connect"
+msgstr "Conexión rápida"
+
+msgid "Quick search"
+msgstr "Busca rápida"
+
+msgid "RSS feed"
+msgstr "Semente RSS"
+
+msgid "Please, enter a login"
+msgstr "Insire o nome de usuario"
+
+msgid "Posted on"
+msgstr "Enviado o"
+
+msgid "Powered by"
+msgstr "Desenvolvido por"
+
+msgid "Preferences"
+msgstr "Preferencias"
+
+msgid "Photos only RSS feed"
+msgstr "Só fotos na Semente RSS"
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "Só fotos enviadas no último %d día."
+msgstr[1] "Só fotos enviadas nos últimos %d días."
+
+msgid "Piwigo Help"
+msgstr "Axuda de Piwigo"
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "Piwigo atopou un erro irrecuperable"
+
+msgid "Play of slideshow"
+msgstr "Comezar a presentación"
+
+msgid "Please enter your username or email address."
+msgstr "Insire o teu nome de usuario ou enderezo de correo electrónico. "
+
+msgid "Photo sizes"
+msgstr "Tamaños da foto"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "Título da foto, A &rarr; Z"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "Título da foto, Z &rarr; A"
+
+msgid "Pause of slideshow"
+msgstr "Pausa"
+
+msgid "Permalink for album not found"
+msgstr "Non se atopa a ligazón permanente para o álbum"
+
+msgid "Number of items"
+msgstr "Número de elementos"
+
+msgid "Number of photos per page"
+msgstr "Número de fotos por páxina"
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "Identificador numérico, 1 &rarr; 9"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "Identificador numérico, 9 &rarr; 1"
+
+msgid "Original"
+msgstr "Orixinal"
+
+msgid "Original dimensions"
+msgstr "Dimensións orixinais"
+
+msgid "Page generated in"
+msgstr "Páxina xerada en"
+
+msgid "Page not found"
+msgstr "Non se atopou a páxina"
+
+msgid "Password"
+msgstr "Clave"
+
+msgid "Password Reset"
+msgstr "Restablecer a clave"
+
+msgid "Password forgotten"
+msgstr "Clave esquecida"
+
+msgid "Password reset is not allowed for this user"
+msgstr "Non lle está permitido restablecer a clave a este usuario"
+
+msgid "Password: %s"
+msgstr "Clave: %s"
+
+msgid "New password"
+msgstr "Nova clave"
+
+msgid "Next"
+msgstr "Páxina seguinte"
+
+msgid "No"
+msgstr "Non"
+
+msgid "Not repeat the slideshow"
+msgstr "Non repetir a presentación"
+
+msgid "Notification"
+msgstr "Notificación"
+
+msgid "N/A"
+msgstr "Non dispoñible"
+
+msgid "New on %s"
+msgstr "Novo en %s"
+
+msgid "Last"
+msgstr "Última"
+
+msgid "Manage this user comment: %s"
+msgstr "Administrar o comentario: %s"
+
+msgid "Manual sort order"
+msgstr "Orde manual"
+
+msgid "Menu"
+msgstr "Menú"
+
+msgid "Mobile"
+msgstr "dispositivos móbiles"
+
+msgid "Most visited"
+msgstr "Máis visitadas"
+
+msgid "Invalid key"
+msgstr "Chave non válida"
+
+msgid "Invalid password!"
+msgstr "Clave non válida!"
+
+msgid "Invalid username or email"
+msgstr "O nome de usuario ou correo non é valido "
+
+msgid "Keyword"
+msgstr "Palabra clave"
+
+msgid "Kind of date"
+msgstr "Tipo de dato"
+
+msgid "Language"
+msgstr "Idioma"
+
+msgid "Links"
+msgstr "Ligazóns"
+
+msgid "Login"
+msgstr "Identificación"
+
+msgid "Logout"
+msgstr "Saír ó anonimato"
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "Se isto foi un erro, esquece este correo e non pasará nada."
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "Se pensas que estás a recibir este correo por un erro, contacta connosco en %s "
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "Ola %s, túa galería de fotos Piwigo está baleira!"
+
+msgid "Help"
+msgstr "Axuda"
+
+msgid "Here are your connection settings"
+msgstr "Aquí están as túas opcións da conexión"
+
+msgid "Home"
+msgstr "Inicio"
+
+msgid "I want to add photos"
+msgstr "Eu quero engadir fotos"
+
+msgid "IP: %s"
+msgstr "IP: %s"
+
+msgid "IPTC Metadata"
+msgstr "Metadatos IPTC"
+
+msgid "Identification"
+msgstr "Identificación"
+
+msgid "Hello"
+msgstr "Ola"
+
+msgid "Hello %s,"
+msgstr "Ola &s,"
+
+msgid "Filter and display"
+msgstr "Amosar filtro"
+
+msgid "First"
+msgstr "Primeira páxina"
+
+msgid "Forbidden"
+msgstr "Prohibido"
+
+msgid "Forgot your password?"
+msgstr "Esqueciches a clave?"
+
+msgid "Go through the gallery as a visitor"
+msgstr "Percorrer a galería como visitante"
+
+msgid "File name"
+msgstr "Nome do ficheiro"
+
+msgid "File name, A &rarr; Z"
+msgstr "Nome do ficheiro, A &rarr; Z"
+
+msgid "File name, Z &rarr; A"
+msgstr "Nome do ficheiro, Z &rarr; A"
+
+msgid "Filesize"
+msgstr "Tamaño do ficheiro"
+
+msgid "Filter"
+msgstr "Filtro"
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "Falta o enderezo de correo electrónico. Indique un."
+
+msgid "Email: %s"
+msgstr "Correo electrónico: %s"
+
+msgid "Empty query. No criteria has been entered."
+msgstr "Consulta baleira. Non se inseriu criterio algún."
+
+msgid "End-Date"
+msgstr "Data final"
+
+msgid "Enter your new password below."
+msgstr "Insira súa nova clave embaixo."
+
+msgid "Enter your personnal informations"
+msgstr "Insira seus datos persoais"
+
+msgid "Error sending email"
+msgstr "Produciuse un erro ó enviar o correo electrónico"
+
+msgid "Expand all albums"
+msgstr "Expandir todos os álbums"
+
+msgid "Favorites"
+msgstr "Favoritos"
+
+msgid "File"
+msgstr "Ficheiro"
+
+msgid "Each listed rule must be satisfied."
+msgstr "Hanse de satisfacer todos os criterios da lista"
+
+msgid "Email address is mandatory"
+msgstr "O enderezo de correo é obrigatorio"
+
+msgid "Dimensions"
+msgstr "Dimensións"
+
+msgid "Display"
+msgstr "Pantalla"
+
+msgid "Download"
+msgstr "descargar"
+
+msgid "Download this file"
+msgstr "Descargar este ficheiro"
+
+msgid "EXIF Metadata"
+msgstr "Metadatos EXIF"
+
+msgid "Edit"
+msgstr "Modificar"
+
+msgid "Edit a comment"
+msgstr "Modificar un comentario"
+
+msgid "Email address"
+msgstr "Enderezo de correo"
+
+msgid "Delete"
+msgstr "Eliminar"
+
+msgid "Desktop"
+msgstr "Escritorio"
+
+msgid "Date created, new &rarr; old"
+msgstr "Data de creación, nova &rarr; antiga"
+
+msgid "Date created, old &rarr; new"
+msgstr "Data de creación, antiga &rarr; nova"
+
+msgid "Date posted, new &rarr; old"
+msgstr "Data de publicación, nova &rarr; antiga"
+
+msgid "Date posted, old &rarr; new"
+msgstr "Data de publicación, antiga &rarr; nova"
+
+msgid "Default"
+msgstr "Predeterminado"
+
+msgid "Current password is wrong"
+msgstr "A clave actual é incorrecta"
+
+msgid "Created on"
+msgstr "Creado en"
+
+msgid "Creation date"
+msgstr "Data de creación"
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "Cuquis bloqueadas ou non compatibles co teu navegador. Tes que activar as cuquis para identificarte. "
+
+msgid "Create a new account"
+msgstr "Crea unha nova conta"
+
+msgid "Contact webmaster"
+msgstr "Contactar co administrador da web"
+
+msgid "Browser: %s"
+msgstr "Navegador: %s"
+
+msgid "Calendar"
+msgstr "Calendario"
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "Estado incorrecto do usuario \"invitado\". Estase a empregar o estado predeterminado. Informa ó adminitrador da web."
+
+msgid "small"
+msgstr "S - pequena"
+
+msgid "large"
+msgstr "L - grande"
+
+msgid "show tag cloud"
+msgstr "amosar nube de etiquetas"
+
+msgid "slideshow"
+msgstr "presentación"
+
+msgid "square"
+msgstr "Cadrado"
+
+msgid "stop the slideshow"
+msgstr "deter presentación"
+
+msgid "the beginning"
+msgstr "o comezo"
+
+msgid "the username must be given"
+msgstr "requírese o nome de usuario"
+
+msgid "this email address is already in use"
+msgstr "este enderezo de correo electrónico xa está en uso"
+
+msgid "this login is already used"
+msgstr "este nome de usuario xa está en uso"
+
+msgid "thumb"
+msgstr "Miniatura"
+
+msgid "today"
+msgstr "hoxe"
+
+msgid "useful when password forgotten"
+msgstr "útil no caso de esquecemento da clave"
+
+msgid "wrong date"
+msgstr "data incorrecta"
+
+msgid "xlarge"
+msgstr "XS - extra grande"
+
+msgid "xsmall"
+msgstr "XL - extra pequena"
+
+msgid "xxlarge"
+msgstr "XXL - enorme"
+
+msgid "set as album representative"
+msgstr "establecer como miniatura do álbum"
+
+msgid "return to the display of all photos"
+msgstr "volver a amosar todas as fotos"
+
+msgid "search"
+msgstr "buscar"
+
+msgid "searched words : %s"
+msgstr "palabras buscadas: %s"
+
+msgid "representative"
+msgstr "miniaturas"
+
+msgid "return to normal view mode"
+msgstr "vista por álbums"
+
+msgid "obligatory"
+msgstr "obrigatorio"
+
+msgid "password updated"
+msgstr "clave actualizada"
+
+msgid "photo"
+msgstr "foto"
+
+msgid "photos posted during the last %d days"
+msgstr "fotos enviadas durante os últimos %d días"
+
+msgid "posted after %s (%s)"
+msgstr "enviada despois de %s (%s)"
+
+msgid "posted before %s (%s)"
+msgstr "enviada antes de %s (%s)"
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "enviada entre %s (%s) e %s (%s)"
+
+msgid "posted on %s"
+msgstr "enviada o %s"
+
+msgid "remove this tag from the list"
+msgstr "borra esta etiqueta da lista"
+
+msgid "no rate"
+msgstr "non valorada"
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] "en %d sub-álbum"
+msgstr[1] "en %d sub-álbums"
+
+msgid "in this album"
+msgstr "neste sub-album"
+
+msgid "included"
+msgstr "incluído"
+
+msgid "last %d days"
+msgstr "últimos %d días"
+
+msgid "letters"
+msgstr "letras"
+
+msgid "login mustn't end with a space character"
+msgstr "o nome de usuario non pode rematar co carácter de espazo"
+
+msgid "login mustn't start with a space character"
+msgstr "o nome de usuario non pode comezar co carácter de espazo"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "o enderezo de correo ten que ser algo como xxx@yyy.eee(exemplo: proxecto@trasno.net)"
+
+msgid "mandatory"
+msgstr "obrigatorio"
+
+msgid "medium"
+msgstr "M - mediana"
+
+msgid "from %s to %s"
+msgstr "de %s a %s"
+
+msgid "group by letters"
+msgstr "agrupar por letras"
+
+msgid "guest"
+msgstr "visitante"
+
+msgid "html tags are not allowed in login"
+msgstr "non se permiten etiquetas HTML na identificación"
+
+msgid "excluded"
+msgstr "excluídos"
+
+msgid "display most recent photos"
+msgstr "amosar as fotos máis recentes"
+
+msgid "display most visited photos"
+msgstr "amosar as fotos máis visitadas"
+
+msgid "display only recently posted photos"
+msgstr "amosar só as fotos enviadas recentemente"
+
+msgid "display photos linked to this tag"
+msgstr "amosar as fotos ligadas a esta etiqueta"
+
+msgid "display recently updated albums"
+msgstr "amosar os álbums actualizados recentemente"
+
+msgid "display this album"
+msgstr "amosar este álbum"
+
+msgid "display your favorites photos"
+msgstr "amosar as túas fotos favoritas"
+
+msgid "edit"
+msgstr "Modificar"
+
+msgid "display last user comments"
+msgstr "amosar os últimos comentarios do usuario"
+
+msgid "display each day with photos, month per month"
+msgstr "amosar cada día con fotos, mes a mes"
+
+msgid "display a calendar by posted date"
+msgstr "amosar un calendario por data de envío"
+
+msgid "display a set of random photos"
+msgstr "amosar un conxunto de fotos ó chou"
+
+msgid "display all photos in all sub-albums"
+msgstr "amosar todas as fotos en todos sub-álbums"
+
+msgid "display available tags"
+msgstr "amosar as etiquetas dispoñibles"
+
+msgid "display best rated photos"
+msgstr "amosar as fotos mellor valoradas"
+
+msgid "delete all photos from your favorites"
+msgstr "eliminar todas as fotos de favoritas"
+
+msgid "delete this photo from your favorites"
+msgstr "eliminar esta foto de favoritas"
+
+msgid "descending"
+msgstr "descendente"
+
+msgid "display a calendar by creation date"
+msgstr "amosar un calendario por data de creación"
+
+msgid "created after %s (%s)"
+msgstr "creado despois do %s (%s)"
+
+msgid "created before %s (%s)"
+msgstr "creado antes do %s (%s)"
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "creado entre o %s (%s) e o %s (%s)"
+
+msgid "created on %s"
+msgstr "creado o"
+
+msgid "chronology_weekly_list"
+msgstr "Lista semanal"
+
+msgid "cloud"
+msgstr "nube"
+
+msgid "comment date"
+msgstr "data do comentario"
+
+msgid "chronology_monthly_list"
+msgstr "Lista mensual"
+
+msgid "You are not authorized to access the requested page"
+msgstr "Non estás autorizado a acceder á páxina solicitada"
+
+msgid "You will receive a link to create a new password via email."
+msgstr "Recibirás unha ligazón para crear unha nova clave vía correo electrónico."
+
+msgid "Your Gallery Customization"
+msgstr "Personalización da túa galería"
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "Teu comentario NON foi rexistrado porque non pasaron as regras de validación."
+
+msgid "Your comment has been registered"
+msgstr "Teu comentario foi rexistrado"
+
+msgid "Your favorites"
+msgstr "Teus favoritos"
+
+msgid "Your password has been reset"
+msgstr "Túa clave foi reiniciada"
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "Teu nome de usuario foi trocado correctamente por: %s"
+
+msgid "Your website URL is invalid"
+msgstr "O URL do sitio web non é válido"
+
+msgid "available for administrators only"
+msgstr "dispoñible só para administradores"
+
+msgid "chronology_monthly_calendar"
+msgstr "Calendario mensual"
+
+msgid "Website"
+msgstr "Sitio web"
+
+msgid "Week %d"
+msgstr "Semana %d"
+
+msgid "Welcome"
+msgstr "Benvido"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "Benvido a túa galería de fotos Piwigo!"
+
+msgid "Yes"
+msgstr "Si"
+
+msgid "Password is missing. Please enter the password."
+msgstr "Falta a clave. Insire unha clave."
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Falta a confirmación da clave. Confirma a clave escollida."
+
+msgid "%d photos per page"
+msgstr "%d fotos por páxina"
+
+msgid "Email"
+msgstr "Correo electrónico"
+
+msgid "First Page"
+msgstr "Primeira páxina"
+
+msgid "Go back to the album"
+msgstr "Volver ó álbum"
+
+msgid "Last Page"
+msgstr "Última páxina "
+
+msgid "Theme"
+msgstr "Tema"
+
+msgid "No results for"
+msgstr "Non hai resultados para"
+
+msgid "Apply on properties"
+msgstr "Aplicar propiedades"
+
+msgid "Link: %s"
+msgstr "Ligazón: %s"
+
+msgid "Photo description"
+msgstr "Descrición da foto"
+
+msgid "Photo title"
+msgstr "Título da foto"
+
+msgid "Album name, A &rarr; Z"
+msgstr "Nome do álbum, A &rarr; Z"
+
+msgid "Album name, Z &rarr; A"
+msgstr "Nome do álbum, A &rarr; Z"
+
+msgid "Your authentication key is no longer valid."
+msgstr "A túa chave de autenticación xa non é válida."
+
+msgid "piwigo_day_0"
+msgstr "Domingo"
+
+msgid "piwigo_day_1"
+msgstr "Luns"
+
+msgid "piwigo_day_2"
+msgstr "Martes"
+
+msgid "piwigo_day_3"
+msgstr "Mércores"
+
+msgid "piwigo_day_4"
+msgstr "Xoves"
+
+msgid "piwigo_day_5"
+msgstr "Venres"
+
+msgid "piwigo_day_6"
+msgstr "Sábado"
+
+msgid "piwigo_month_10"
+msgstr "Outubro"
+
+msgid "piwigo_month_11"
+msgstr "Novembro"
+
+msgid "piwigo_month_12"
+msgstr "Decembro"
+
+msgid "piwigo_month_1"
+msgstr "Xaneiro"
+
+msgid "piwigo_month_2"
+msgstr "Febreiro"
+
+msgid "piwigo_month_3"
+msgstr "Marzo"
+
+msgid "piwigo_month_4"
+msgstr "Abril"
+
+msgid "piwigo_month_5"
+msgstr "Maio"
+
+msgid "piwigo_month_6"
+msgstr "Xuño"
+
+msgid "piwigo_month_7"
+msgstr "Xullo"
+
+msgid "piwigo_month_8"
+msgstr "Agosto"
+
+msgid "piwigo_month_9"
+msgstr "Setembro"
+

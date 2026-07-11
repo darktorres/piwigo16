@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Db\Tables;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
@@ -135,7 +136,7 @@ function ws_tags_getImages(array $params, PwgServer &$service): array
     if (! empty($image_ids) and ! $params['tag_mode_and']) {
         $query = '
 SELECT image_id, GROUP_CONCAT(tag_id) AS tag_ids
-  FROM ' . IMAGE_TAG_TABLE . '
+  FROM ' . Tables::imageTag() . '
   WHERE tag_id IN (' . implode(',', $tag_ids) . ')
     AND image_id IN (' . implode(',', $image_ids) . ')
   GROUP BY image_id
@@ -155,7 +156,7 @@ SELECT image_id, GROUP_CONCAT(tag_id) AS tag_ids
 
         $query = '
 SELECT *
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', $image_ids) . ')
 ;';
         $result = pwg_query($query);
@@ -256,7 +257,7 @@ function ws_tags_add(array $params, PwgServer &$service): PwgError|array
 
     $query = '
 SELECT name, url_name
-FROM `' . TAGS_TABLE . '`
+FROM `' . Tables::tags() . '`
 WHERE id = ' . $creation_output['id'] . ';';
 
     $new_tag = query2array($query);
@@ -290,7 +291,7 @@ function ws_tags_delete(array $params, PwgServer &$service): PwgError|array
 
     $query = '
 SELECT COUNT(*)
-  FROM `' . TAGS_TABLE . '`
+  FROM `' . Tables::tags() . '`
   WHERE id in (' . implode(',', $params['tag_id']) . ')
 ;';
     $row = pwg_db_fetch_row(pwg_query($query));
@@ -337,7 +338,7 @@ function ws_tags_rename(array $params, PwgServer &$service): PwgError|array
     // does the tag exist ?
     $query = '
 SELECT COUNT(*)
-  FROM `' . TAGS_TABLE . '`
+  FROM `' . Tables::tags() . '`
   WHERE id = ' . $tag_id . '
 ;';
     $row = pwg_db_fetch_row(pwg_query($query));
@@ -349,7 +350,7 @@ SELECT COUNT(*)
 
     $query = '
 SELECT name
-  FROM ' . TAGS_TABLE . '
+  FROM ' . Tables::tags() . '
   WHERE id != ' . $tag_id . '
 ;';
     $existing_names = array_from_query($query, 'name');
@@ -370,7 +371,7 @@ SELECT name
     pwg_activity('tag', $tag_id, 'edit');
 
     single_update(
-        TAGS_TABLE,
+        Tables::tags(),
         $update,
         [
             'id' => $tag_id,
@@ -382,7 +383,7 @@ SELECT
     id,
     name,
     url_name
-  FROM ' . TAGS_TABLE . '
+  FROM ' . Tables::tags() . '
   WHERE id = ' . $tag_id . '
 ;';
 
@@ -417,7 +418,7 @@ function ws_tags_duplicate(array $params, PwgServer &$service): PwgError|array
     // does the tag exist ?
     $query = '
 SELECT COUNT(*)
-  FROM `' . TAGS_TABLE . '`
+  FROM `' . Tables::tags() . '`
   WHERE id = ' . $tag_id . '
 ;';
     $row = pwg_db_fetch_row(pwg_query($query));
@@ -429,7 +430,7 @@ SELECT COUNT(*)
 
     $query = '
 SELECT COUNT(*)
-  FROM `' . TAGS_TABLE . '`
+  FROM `' . Tables::tags() . '`
   WHERE name = "' . $copy_name . '"
 ;';
     $row = pwg_db_fetch_row(pwg_query($query));
@@ -440,7 +441,7 @@ SELECT COUNT(*)
     }
 
     single_insert(
-        TAGS_TABLE,
+        Tables::tags(),
         [
             'name' => $copy_name,
             'url_name' => trigger_change('render_tag_url', $copy_name),
@@ -455,7 +456,7 @@ SELECT COUNT(*)
 
     $query = '
 SELECT image_id
-  FROM ' . IMAGE_TAG_TABLE . '
+  FROM ' . Tables::imageTag() . '
   WHERE tag_id = ' . $tag_id . '
 ;';
     $destination_tag_image_ids = array_from_query($query, 'image_id');
@@ -475,7 +476,7 @@ SELECT image_id
 
     if (count($inserts) > 0) {
         mass_inserts(
-            IMAGE_TAG_TABLE,
+            Tables::imageTag(),
             array_keys($inserts[0]),
             $inserts
         );
@@ -514,7 +515,7 @@ function ws_tags_merge(array $params, PwgServer &$service): PwgError|array
 
     $query = '
 SELECT COUNT(*)
-  FROM `' . TAGS_TABLE . '`
+  FROM `' . Tables::tags() . '`
   WHERE id in (' . implode(',', $all_tags) . ')
 ;';
     $row = pwg_db_fetch_row(pwg_query($query));
@@ -530,7 +531,7 @@ SELECT COUNT(*)
 
     $query = '
 SELECT DISTINCT(image_id)
-  FROM `' . IMAGE_TAG_TABLE . '`
+  FROM `' . Tables::imageTag() . '`
   WHERE
     tag_id IN (' . implode(',', $merge_tag) . ')
 ;';
@@ -538,7 +539,7 @@ SELECT DISTINCT(image_id)
 
     $query = '
 SELECT image_id
-  FROM `' . IMAGE_TAG_TABLE . '`
+  FROM `' . Tables::imageTag() . '`
   WHERE tag_id = ' . $params['destination_tag_id'] . '
 ;';
 
@@ -556,7 +557,7 @@ SELECT image_id
     }
 
     mass_inserts(
-        IMAGE_TAG_TABLE,
+        Tables::imageTag(),
         ['tag_id', 'image_id'],
         $inserts,
         [

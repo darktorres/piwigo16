@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
@@ -177,7 +178,7 @@ if (! empty($bulk_manager_filter['tags']) && is_array($bulk_manager_filter['tags
 SELECT
     id,
     name
-  FROM ' . TAGS_TABLE . '
+  FROM ' . Tables::tags() . '
   WHERE id IN (' . implode(',', $filter_tags_ids) . ')
 ;';
 
@@ -207,8 +208,8 @@ if (count($cat_elements_id) > 0) {
     $query = '
 SELECT
     DISTINCT(category_id) AS id
-  FROM ' . IMAGE_CATEGORY_TABLE . ' AS ic
-    JOIN ' . IMAGES_TABLE . ' AS i ON i.id = ic.image_id
+  FROM ' . Tables::imageCategory() . ' AS ic
+    JOIN ' . Tables::images() . ' AS i ON i.id = ic.image_id
   WHERE ic.image_id IN (' . implode(',', $cat_elements_id) . ')
     AND (
       ic.category_id != i.storage_category_id

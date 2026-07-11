@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\AccessLevel;
+use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\SrcImage;
 use Piwigo\Template\Template;
@@ -36,7 +38,7 @@ include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_ADMINISTRATOR);
+check_status(AccessLevel::Administrator);
 
 trigger_notify('loc_begin_element_set_unit');
 
@@ -63,13 +65,13 @@ if (isset($_POST['submit'])) {
 
     $query = '
 SELECT id, date_creation
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', $collection) . ')
 ;';
     $result = pwg_query($query);
 
     while ((bool) ($row = pwg_db_fetch_assoc($result))) {
-        // IMAGES_TABLE.id is a NOT NULL auto_increment primary key; this
+        // Tables::images().id is a NOT NULL auto_increment primary key; this
         // guard only defends against the generic string|null element type
         // pwg_db_fetch_assoc() carries for every column.
         if ($row['id'] === null) {
@@ -113,7 +115,7 @@ SELECT id, date_creation
     }
 
     mass_updates(
-        IMAGES_TABLE,
+        Tables::images(),
         [
             'primary' => ['id'],
             'update' => ['name', 'author', 'level', 'comment', 'date_creation'],
@@ -239,7 +241,7 @@ if (count($cat_elements_id) > 0) {
 
     $query = '
 SELECT *
-  FROM ' . IMAGES_TABLE;
+  FROM ' . Tables::images();
 
     if ($is_category) {
         $category_info = get_cat_info($filter_category_id);
@@ -250,7 +252,7 @@ SELECT *
         }
 
         $query .= '
-    JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id = image_id';
+    JOIN ' . Tables::imageCategory() . ' ON id = image_id';
     }
 
     $query .= '
@@ -285,7 +287,7 @@ SELECT *
 SELECT
     ' . $user_fields['username'] . ' AS username,
     ' . $user_fields['id'] . ' AS id
-  FROM ' . USERS_TABLE . '
+  FROM ' . Tables::users() . '
   WHERE ' . $user_fields['id'] . ' IN ( ' . implode(',', $added_by_ids) . ' )
 ;';
         $added_by_username_of = query2array($query, 'id', 'username');
@@ -305,7 +307,7 @@ SELECT
     }
 
     foreach ($images as $row) {
-        // IMAGES_TABLE.id is a NOT NULL auto_increment primary key; this
+        // Tables::images().id is a NOT NULL auto_increment primary key; this
         // guard only defends against the generic string|null element type
         // query2array() carries for every column.
         if ($row['id'] === null) {
@@ -322,8 +324,8 @@ SELECT
 SELECT
     id,
     name
-  FROM ' . IMAGE_TAG_TABLE . ' AS it
-    JOIN ' . TAGS_TABLE . ' AS t ON t.id = it.tag_id
+  FROM ' . Tables::imageTag() . ' AS it
+    JOIN ' . Tables::tags() . ' AS t ON t.id = it.tag_id
   WHERE image_id = ' . $row['id'] . '
 ;';
 
@@ -342,8 +344,8 @@ SELECT
 
         $query = '
     SELECT category_id, uppercats, dir
-      FROM ' . IMAGE_CATEGORY_TABLE . ' AS ic
-        INNER JOIN ' . CATEGORIES_TABLE . ' AS c
+      FROM ' . Tables::imageCategory() . ' AS ic
+        INNER JOIN ' . Tables::categories() . ' AS c
           ON c.id = ic.category_id
       WHERE image_id = ' . $row['id'] . '
     ;';
@@ -359,7 +361,7 @@ SELECT
         assert($media['image'] !== null);
 
         while ((bool) ($item = pwg_db_fetch_assoc($sub_result))) {
-            // IMAGE_CATEGORY_TABLE/CATEGORIES_TABLE.category_id/uppercats are
+            // Tables::imageCategory()/Tables::categories().category_id/uppercats are
             // NOT NULL; this guard only defends against the generic
             // string|null element type pwg_db_fetch_assoc() carries for
             // every column.
@@ -389,7 +391,7 @@ SELECT
 
         $query = '
     SELECT category_id
-    FROM ' . IMAGE_CATEGORY_TABLE . '
+    FROM ' . Tables::imageCategory() . '
     WHERE image_id = ' . $row['id'] . '
     ;';
         // $user['id']/$user['status'] are always numeric/string
@@ -397,7 +399,7 @@ SELECT
         // include/common.inc.php bootstrap that always runs before this
         // file) populates $user via build_user(), whose 'id' is always the
         // int passed to it and whose 'status' always comes from the
-        // USER_INFOS_TABLE.status column (a NOT NULL string column) --
+        // Tables::userInfos().status column (a NOT NULL string column) --
         // matches the same established pattern in
         // admin/batch_manager_global.php.
         assert(is_numeric($user['id']));

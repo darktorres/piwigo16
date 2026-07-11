@@ -1,0 +1,65 @@
+# Piwigo translation — fr_FR
+# Source: upgrade.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: fr_FR\n"
+"Plural-Forms: nplurals=3; plural=((n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Upgrade"
+msgstr "Mise à jour"
+
+msgid "This page proposes to upgrade your database corresponding to your old version of Piwigo to the current version. The upgrade assistant thinks you are currently running a <strong>release %s</strong> (or equivalent)."
+msgstr "Cette page vous propose de mettre à jour la base de données de votre ancienne version de piwigo vers la nouvelle version.\nL'assistant de mise à jour pense que vous disposez actuellement de la <strong>version %s</strong> (ou équivalente)."
+
+msgid "Upgrade from version %s to %s"
+msgstr "Mise à jour de la version %s à %s"
+
+msgid "Statistics"
+msgstr "Statistiques"
+
+msgid "total upgrade time"
+msgstr "temps total de la mise à jour"
+
+msgid "total SQL time"
+msgstr "temps total des requêtes SQL"
+
+msgid "SQL queries"
+msgstr "nombre de requêtes SQL"
+
+msgid "Upgrade informations"
+msgstr "Informations sur la mise à jour"
+
+msgid "Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem."
+msgstr "Veuillez effectuer une maintenance dans [Administration>Outils>Maintenance] si vous rencontrez des problèmes."
+
+msgid "As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:"
+msgstr "Par précaution, les plugins suivants ont été désactivés. Vérifiez s'il existe des mises à jour avant de les réactiver:"
+
+msgid "Only administrator can run upgrade: please sign in below."
+msgstr "Seul un administrateur peut lancer la mise à jour: veuillez vous identifier ci-dessous."
+
+msgid "You do not have access rights to run upgrade"
+msgstr "Vous n'avez pas les droits nécessaires pour lancer la mise à jour."
+
+msgid "All sub-albums of private albums become private"
+msgstr "Tous les sous-albums des albums privés deviennent privés"
+
+msgid "User permissions and group permissions have been erased"
+msgstr "Les permissions des utilisateurs et des groupes ont été effacées"
+
+msgid "Only thumbnails prefix and webmaster mail address have been saved from previous configuration"
+msgstr "Seuls le préfixe des miniatures et l'adresse email du webmestre ont étés conservés de la précédente configuration"
+
+msgid "In <i>%s</i>, before <b>?></b>, insert:"
+msgstr "Dans le fichier <i>%s</i>, avant <b>?></b>, insérez:"
+
+msgid "As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:"
+msgstr "Par précaution, les thèmes suivants ont été désactivés. Vérifiez s'il existe des mises à jour avant de les réactiver:"
+
+msgid "Discover what's new in Piwigo %s"
+msgstr "Quoi de neuf dans cette version %s ?"
+

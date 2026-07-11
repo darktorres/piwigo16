@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\AccessLevel;
 use Piwigo\Template\Template;
 
 // --------------------------------------------------------------------- include
@@ -32,7 +33,7 @@ $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_FREE);
+check_status(AccessLevel::Free);
 
 // but if the user is already identified, we redirect to gallery home
 // instead of displaying the log in form

@@ -11,7 +11,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\Logger;
+use Piwigo\Db\Tables;
 
 class plugins
 {
@@ -156,7 +159,7 @@ class plugins
 
                 if (empty($errors)) {
                     $query = '
-INSERT INTO ' . PLUGINS_TABLE . ' (id,version)
+INSERT INTO ' . Tables::plugins() . ' (id,version)
   VALUES (\'' . $plugin_id . '\', \'' . $fs_version . '\')
 ;';
                     pwg_query($query);
@@ -185,7 +188,7 @@ INSERT INTO ' . PLUGINS_TABLE . ' (id,version)
 
                     if ($new_version != 'auto') {
                         $query = '
-UPDATE ' . PLUGINS_TABLE . '
+UPDATE ' . Tables::plugins() . '
   SET version=\'' . $new_version . '\'
   WHERE id=\'' . $plugin_id . '\'
 ;';
@@ -221,7 +224,7 @@ UPDATE ' . PLUGINS_TABLE . '
 
                 if (empty($errors)) {
                     $query = '
-UPDATE ' . PLUGINS_TABLE . '
+UPDATE ' . Tables::plugins() . '
   SET state=\'active\'
   WHERE id=\'' . $plugin_id . '\'
 ;';
@@ -238,7 +241,7 @@ UPDATE ' . PLUGINS_TABLE . '
                 }
 
                 $query = '
-UPDATE ' . PLUGINS_TABLE . '
+UPDATE ' . Tables::plugins() . '
   SET state=\'inactive\'
   WHERE id=\'' . $plugin_id . '\'
 ;';
@@ -269,7 +272,7 @@ UPDATE ' . PLUGINS_TABLE . '
                 }
 
                 $query = '
-DELETE FROM ' . PLUGINS_TABLE . '
+DELETE FROM ' . Tables::plugins() . '
   WHERE id=\'' . $plugin_id . '\'
 ;';
                 pwg_query($query);
@@ -303,7 +306,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
                 break;
         }
 
-        pwg_activity('system', ACTIVITY_SYSTEM_PLUGIN, $action, $activity_details);
+        pwg_activity('system', ActivitySystem::Plugin, $action, $activity_details);
 
         return $errors;
     }
@@ -436,7 +439,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
     /**
      * @return mixed[]
      */
-    public function get_versions_to_check(bool $beta_test = false, string $version = PHPWG_VERSION): array
+    public function get_versions_to_check(bool $beta_test = false, string $version = AppInfo::VERSION): array
     {
         /** @var array<string, mixed> $conf */
         global $conf;
@@ -872,7 +875,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
     /**
      * @return string[]
      */
-    public function get_merged_extensions(string $version = PHPWG_VERSION): array
+    public function get_merged_extensions(string $version = AppInfo::VERSION): array
     {
         $file = PHPWG_ROOT_PATH . 'install/obsolete_extensions.list';
         $merged_extensions = [];

@@ -1,0 +1,17 @@
+# Piwigo translation — fr_CA
+# Source: help_quick_search.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: fr_CA\n"
+"Plural-Forms: nplurals=3; plural=((n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Searches photos with a given width or height."
+msgstr "Recherche des photos avec une largeur ou une hauteur donnée."
+
+msgid "The quick search engine allows you to use boolean operators to refine your search. By default, the search applies to all keywords. Searches are not case sensitive."
+msgstr "Le moteur de recherche rapide permet d’utiliser les opérateurs booléens pour affiner votre recherche. Par défaut, la recherche s’applique à l’ensemble des mots-clés. Les recherches ne sont pas sensibles à la casse."
+

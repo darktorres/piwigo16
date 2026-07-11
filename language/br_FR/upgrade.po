@@ -1,0 +1,65 @@
+# Piwigo translation — br_FR
+# Source: upgrade.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: br_FR\n"
+"Plural-Forms: nplurals=5; plural=(n % 10 == 1 && n % 100 != 11 && n % 100 != 71 && n % 100 != 91 ? 0 : n % 10 == 2 && n % 100 != 12 && n % 100 != 72 && n % 100 != 92 ? 1 : ((n % 10 == 3 || n % 10 == 4) || n % 10 == 9) && (n % 100 < 10 || n % 100 > 19) && (n % 100 < 70 || n % 100 > 79) && (n % 100 < 90 || n % 100 > 99) ? 2 : n != 0 && n % 1000000 == 0 ? 3 : 4);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "This page proposes to upgrade your database corresponding to your old version of Piwigo to the current version. The upgrade assistant thinks you are currently running a <strong>release %s</strong> (or equivalent)."
+msgstr "Ar bajenn-mañ a ginnig hizivadur an diaz roadennoù eus ho stumm Piwigo kozh d'ar stumm nevez. An ameiler hizivaat a soñj emañ <strong>stumm %s</strong> o labourat (pe gevatal)."
+
+msgid "User permissions and group permissions have been erased"
+msgstr "Implijerien ha strolladoù a zo bet dilemet"
+
+msgid "You do not have access rights to run upgrade"
+msgstr "Difennet eo deoc'h hizivaat"
+
+msgid "Statistics"
+msgstr "Stadegoù"
+
+msgid "total upgrade time"
+msgstr "Hollad amzer an hizivadur"
+
+msgid "Upgrade"
+msgstr "Hizivadur"
+
+msgid "Upgrade from version %s to %s"
+msgstr "Hizivaat eus stumm %s betek %s"
+
+msgid "Upgrade informations"
+msgstr "Titouroù hizivadur"
+
+msgid "total SQL time"
+msgstr "Hollad an amzer SQL "
+
+msgid "SQL queries"
+msgstr "Rekedoù SQL"
+
+msgid "Only administrator can run upgrade: please sign in below."
+msgstr "Ar verourien hepken a c'hall hizivaat: kevreit amañ dindan, mar plij."
+
+msgid "Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem."
+msgstr "Gwiriit an trezalc'h e [Mererezh>Ostilhoù>Trezalc'h] m'ho peus kudennoù."
+
+msgid "Only thumbnails prefix and webmaster mail address have been saved from previous configuration"
+msgstr "N'eus nemet rakger ar skeudennoùigoù ha postel ar mestr-gwiad hag a zo bet saveteet eus ar c'hefluniadur kozh"
+
+msgid "In <i>%s</i>, before <b>?></b>, insert:"
+msgstr "E <i>%s</i>, a-raok <b>?></b>, lakaat:"
+
+msgid "As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:"
+msgstr "An temoù-se a zo bet diweredekaet e kenkaz. Ret e vo deoc'h sellout hag-eñ ez eus temoù da hizivaat a-raok gweredekaat anezho en-dro."
+
+msgid "All sub-albums of private albums become private"
+msgstr "Hollad iz-albomoù an albomoù prevez a zeuio da vezañ prevez"
+
+msgid "As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:"
+msgstr "Al lugantoù-se a zo bet diweredekaet e kenkaz. Ret e vo deoc'h sellout hag-eñ ez eus lugantoù da hizivaat a-raok gweredekaat anezho en-dro."
+
+msgid "Discover what's new in Piwigo %s"
+msgstr "Dizoleiñ petra 'zo nevez e Piwigo %s"
+

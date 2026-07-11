@@ -1,0 +1,3933 @@
+# Piwigo translation — ro_RO
+# Source: admin.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ro_RO\n"
+"Plural-Forms: nplurals=3; plural=(n == 1 ? 0 : n == 0 || n != 1 && n % 100 >= 1 && n % 100 <= 19 ? 1 : 2);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "%d association"
+msgstr "%d asociatie"
+
+msgid "%d associations"
+msgstr "%d asociatii"
+
+msgid "%d album including"
+msgstr "%d album includ"
+
+msgid "%d albums including"
+msgstr "%d albume includ"
+
+msgid "%d physical"
+msgstr " %d fizic"
+
+msgid " and %d virtual"
+msgstr "şi %d virtual"
+
+msgid "%d album moved"
+msgid_plural "%d albums moved"
+msgstr[0] "%d album mutat"
+msgstr[1] "%d albume mutate"
+
+msgid "%d group"
+msgstr "%d grup"
+
+msgid "%d groups"
+msgstr "%d grupuri"
+
+msgid "%d member"
+msgid_plural "%d members"
+msgstr[0] "%d membru"
+msgstr[1] "%d membrii"
+
+msgid "%d tag"
+msgstr "%d eticheta"
+
+msgid "%d tags"
+msgstr "%d etichete"
+
+msgid "%d user comment rejected"
+msgstr "%d comentariu utilizator respins"
+
+msgid "%d user comments rejected"
+msgstr "%d comentarii utilizator respinse"
+
+msgid "%d user comment validated"
+msgstr "%d comentariu utilizator validat"
+
+msgid "%d user comments validated"
+msgstr "%d comentarii utilizator validate"
+
+msgid "%d user deleted"
+msgid_plural "%d users deleted"
+msgstr[0] "%d utilizator sters"
+msgstr[1] "%d utilizatori stersi"
+
+msgid "%d user"
+msgid_plural "%d users"
+msgstr[0] "%d utilizator"
+msgstr[1] "%d utilizatori"
+
+msgid "%d waiting for validation"
+msgstr "%d în asteptare pentru validare"
+
+msgid "Actions"
+msgstr "Actiuni"
+
+msgid "Activate"
+msgstr "Activa"
+
+msgid "Add/delete a permalink"
+msgstr "Adaugati / stergeti un link permanent"
+
+msgid "Add a tag"
+msgstr "Adaugati o eticheta"
+
+msgid "Add a user"
+msgstr "Adaugati un utilizator"
+
+msgid "Add group"
+msgstr "Adaugati un grup"
+
+msgid "Add"
+msgstr "Adauga"
+
+msgid "Allow user registration"
+msgstr "Permite înregistrarea utilizatorilor"
+
+msgid "Associated"
+msgstr "Asociat"
+
+msgid "Caddie management"
+msgstr "Gestiunea caruciorului"
+
+msgid "Caddie"
+msgstr "Cărucior"
+
+msgid "Albums authorized thanks to group associations"
+msgstr "albums autorizate datorita asociatiilor la grupuri"
+
+msgid "Album photos associated to the following albums: %s"
+msgstr "Fotografii asociate următoarelor albume: %s"
+
+msgid "Check for upgrade failed for unknown reasons."
+msgstr "Verificarea pentru ultima versiune a aplicatiei a esuat din motive necunoscute."
+
+msgid "Check for upgrade"
+msgstr "Ultima versiune?"
+
+msgid "Comments for all"
+msgstr "Comentarii pentru toti"
+
+msgid "Current name"
+msgstr "Numele actual"
+
+msgid "Database"
+msgstr "Baza de date"
+
+msgid "Deactivate"
+msgstr "Dezactivare"
+
+msgid "Delete Representant"
+msgstr "Ștergeți reprezentantul"
+
+msgid "Delete selected tags"
+msgstr "Ștergeți etichetele selectate"
+
+msgid "Delete selected users"
+msgstr "Ștergeți utilizatorii selectați"
+
+msgid "Deletions"
+msgstr "Ștergeri"
+
+msgid "Deny selected groups"
+msgstr "Restricționați accesul la grupurile selecționate"
+
+msgid "Deny selected users"
+msgstr "Restricționați accesul la utilizatorii selecționați"
+
+msgid "Description"
+msgstr "Descriere"
+
+msgid "Display options"
+msgstr "Opțiuni de afişare"
+
+msgid "Dissociated"
+msgstr "Disociat de"
+
+msgid "Does not represent"
+msgstr "Nu reprezintă"
+
+msgid "Edit selected tags"
+msgstr "Modifică etichetele selecționate"
+
+msgid "Edit tags"
+msgstr "Modifică etichetele"
+
+msgid "Email admins when a new user registers"
+msgstr "Anunță administratorii atunci cînd un nou utilizator se înregistrează"
+
+msgid "Email admins when a valid comment is entered"
+msgstr "Anunță administratorii atunci cînd un comentariu valabil este înscris"
+
+msgid "Email admins when a comment requires validation"
+msgstr "Anunță administratorii atunci cînd un comentariu necesită validare"
+
+msgid "Environment"
+msgstr "Mediul"
+
+msgid "Form"
+msgstr "Formular"
+
+msgid "Gallery title"
+msgstr "Titlul galeriei"
+
+msgid "Grant selected groups"
+msgstr "Asigură accesul la grupurile selectate"
+
+msgid "Grant selected users"
+msgstr "Asigură accesul la utilizatorii selectați"
+
+msgid "Group name"
+msgstr "Numele grupului"
+
+msgid "Groups"
+msgstr "Grupuri"
+
+msgid "Guests"
+msgstr "Invitați"
+
+msgid "History"
+msgstr "Istoric"
+
+msgid "Informations"
+msgstr "Informații"
+
+msgid "Install"
+msgstr "Instalează"
+
+msgid "Link all album photos to a new album"
+msgstr "Corelează toate photoele albumi la o nouă album"
+
+msgid "Link all album photos to some existing albums"
+msgstr "Corelează toate photoele albumi la unele albums existente"
+
+msgid "Linked albums"
+msgstr "albums corelate"
+
+msgid "Lock gallery"
+msgstr "Blochează galeria"
+
+msgid "Maintenance"
+msgstr "Întreţinere"
+
+msgid "Manage permissions for group \"%s\""
+msgstr "Gestionează permisiunile pentru grupul \"%s\""
+
+msgid "Manage permissions for user \"%s\""
+msgstr "Gestionează permisiunile pentru utilizatorul \"%s\""
+
+msgid "Manage tags"
+msgstr "Gestionează etichetele"
+
+msgid "Members"
+msgstr "Membrii"
+
+msgid "Metadata synchronized from file"
+msgstr "Metadata sincronizate din fișier"
+
+msgid "Move albums"
+msgstr "Deplasează albumsle"
+
+msgid "Move"
+msgstr "Deplasează"
+
+msgid "Name"
+msgstr "Nume"
+
+msgid "New name"
+msgstr "Nume nou"
+
+msgid "New parent album"
+msgstr "album mamă nouă"
+
+msgid "New tag"
+msgstr "Etichetă nouă"
+
+msgid "Number of comments per page"
+msgstr "Număr de comentarii pe pagină"
+
+msgid "Number of rates"
+msgstr "Numărul evaluărilor"
+
+msgid "Only private albums are listed"
+msgstr "Doar albumsle private sunt enumerate"
+
+msgid "Operating system"
+msgstr "Sistemul de operare"
+
+msgid "Options"
+msgstr "Opțiuni"
+
+msgid "Other private albums"
+msgstr "Alte albums private"
+
+msgid "Page banner"
+msgstr "Panglica paginii"
+
+msgid "Parent album"
+msgstr "album mamă"
+
+msgid "Path"
+msgstr "Cale"
+
+msgid "Permalink"
+msgstr "Permalink"
+
+msgid "Permalink %s has been previously used by album %s. Delete from the permalink history first"
+msgstr "Permalink-ul %s a fost folosit în prealabil de album %s. Ștergeți permalink-ul din istoric mai întîi"
+
+msgid "The permalink name must be composed of a-z, A-Z, 0-9, \"-\", \"_\" or \"/\". It must not be numeric or start with number followed by \"-\""
+msgstr "Permalink-ul trebuie să conțină doar caractere alfanumerice de la a-z, A-Z, 0-9, \"-\", \"_\" sau \"/\". Nu trebuie să fie doar numeric sau să înceapă cu un număr urmat de \"-\""
+
+msgid "Permalink %s is already used by album %s"
+msgstr "Permalink-ul %s este deja folosit de album %s"
+
+msgid "Permalink history"
+msgstr "Istoricul permalink-ului"
+
+msgid "Permalinks"
+msgstr "Permalink-uri"
+
+msgid "Permission denied"
+msgstr "Acces interzis"
+
+msgid "Permission granted thanks to a group"
+msgstr "Accesul autorizat datorită apartenenței la un grup"
+
+msgid "Permission granted"
+msgstr "Acces autorizat"
+
+msgid "Plugins"
+msgstr "Plugin-uri"
+
+msgid "Position"
+msgstr "Poziție"
+
+msgid "Preferences"
+msgstr "Preferințe"
+
+msgid "Properties"
+msgstr "Proprietăți"
+
+msgid "Random photo"
+msgstr "Fotografie la nimereală"
+
+msgid "Rate date"
+msgstr "Data evaluării"
+
+msgid "Rating by guests"
+msgstr "Evaluat de invitați"
+
+msgid "Rating"
+msgstr "Apreciere"
+
+msgid "Reject"
+msgstr "Respinge"
+
+msgid "Representant"
+msgstr "Reprezentant"
+
+msgid "Representation of albums"
+msgstr "Reprezentarea albumslor"
+
+msgid "Representative"
+msgstr "Reprezentativă"
+
+msgid "Represents"
+msgstr "Reprezintă"
+
+msgid "Save order"
+msgstr "Salvează ordinea"
+
+msgid "Save to permalink history"
+msgstr "Salvare în istorie la permalinks"
+
+msgid "Select at least one album"
+msgstr "Selectați cel puțin o album"
+
+msgid "Select at least one photo"
+msgstr "Selectați cel puțin o fotografie"
+
+msgid "Select at least one user"
+msgstr "Selectați cel puțin un utilizator"
+
+msgid "Show info"
+msgstr "Afișare info"
+
+msgid "Site manager"
+msgstr "Managerul site-ului"
+
+msgid "Status"
+msgstr "Statut"
+
+msgid "Statistics"
+msgstr "Statistici"
+
+msgid "Storage album"
+msgstr "album depozitului"
+
+msgid "Sum of rates"
+msgstr "Suma evaluarilor"
+
+msgid "Tag \"%s\" already exists"
+msgstr "Eticheta \"%s\" există deja"
+
+msgid "Tag \"%s\" was added"
+msgstr "Eticheta \"%s\" a fost adăugată"
+
+msgid "Tag selection"
+msgstr "Selecționarea etichetei"
+
+msgid "The %d following tags were deleted"
+msgstr "Următoarele %d etichete au fost șterse"
+
+msgid "Unable to check for upgrade."
+msgstr "Imposibil de verificat pentru upgrade."
+
+msgid "Uninstall"
+msgstr "Dezinstalează"
+
+msgid "User comments validation"
+msgstr "Validarea comentariilor utilizatorilor"
+
+msgid "Users"
+msgstr "Utilizatori"
+
+msgid "Validate"
+msgstr "Validează"
+
+msgid "Validation"
+msgstr "Validare"
+
+msgid "Version"
+msgstr "Versiune"
+
+msgid "Virtual albums to move"
+msgstr "albums virtuale de mutat"
+
+msgid "Virtual album name"
+msgstr "Numele albumslor virtuale"
+
+msgid "Webmaster cannot be deleted"
+msgstr "Utilizatorul Webmaster nu poate fi șters"
+
+msgid "You are running on development sources, no check possible."
+msgstr "Folosiți sursele de dezvoltare, nu e posibil de verificat."
+
+msgid "You cannot delete your account"
+msgstr "Nu puteți șterge contul dumneavoastră"
+
+msgid "You need to confirm deletion"
+msgstr "Trebuie să confirmați ștergerea"
+
+msgid "associate to group"
+msgstr "asociază grupului"
+
+msgid "Authorized"
+msgstr "Autorizat"
+
+msgid "Add a virtual album"
+msgstr "Adaugă un album virtual"
+
+msgid "Authorize users to add comments on selected albums"
+msgstr "Autorizați utilizatorii să adauge comentarii pe albumsle selectate"
+
+msgid "Lock albums"
+msgstr "Blochează albumsle"
+
+msgid "Private"
+msgstr "Privată"
+
+msgid "private"
+msgstr "privată"
+
+msgid "Public"
+msgstr "Publică"
+
+msgid "public"
+msgstr "publică"
+
+msgid "Find a new representant by random"
+msgstr "Găsiți un reprezentant aleatoriu nou"
+
+msgid "Public / Private"
+msgstr "Public / Privat"
+
+msgid "Manage authorizations for selected albums"
+msgstr "Administrează autorizațiile pentru albumsle selectate"
+
+msgid "Virtual album added"
+msgstr "album virtuală adăugată"
+
+msgid "Virtual album deleted"
+msgstr "album virtuală ștearsă"
+
+msgid "Access type"
+msgstr "Metodă de acces"
+
+msgid "%d anomaly has been corrected."
+msgid_plural "%d anomalies have been detected corrected."
+msgstr[0] "%d anomalie a fost corectată."
+msgstr[1] "%d anomalii au fost detectate şi corectate."
+
+msgid "%d anomaly has been detected."
+msgid_plural "%d anomalies have been detected."
+msgstr[0] "%d anomalie a fost detectată."
+msgstr[1] "%d anomalii au fost detectate."
+
+msgid "%d anomaly has been ignored."
+msgid_plural "%d anomalies have been ignored."
+msgstr[0] "%d anomalie a fost ignorată."
+msgstr[1] "%d anomalii au fost ignorate."
+
+msgid "%d anomaly has not been corrected."
+msgid_plural "%d anomalies have not been corrected."
+msgstr[0] "%d anomalie nu a fost corectată."
+msgstr[1] "%d anomalii nu au fost corectate."
+
+msgid "%d guest"
+msgid_plural "%d guests"
+msgstr[0] "%d invitat"
+msgstr[1] "%d invitaţi"
+
+msgid "%d line filtered"
+msgid_plural "%d lines filtered"
+msgstr[0] "%d linie filtrată"
+msgstr[1] "%d linii filtrate"
+
+msgid "%d mail was not sent."
+msgid_plural "%d mails were not sent."
+msgstr[0] "%d mesaj nu a fost trimis."
+msgstr[1] "%d mesaje nu au fost trimise."
+
+msgid "%d mail was sent."
+msgid_plural "%d mails were sent."
+msgstr[0] "%d mesaj a fost trimis."
+msgstr[1] "%d mesaje au fost trimise."
+
+msgid "%d of %d photos selected"
+msgstr "%d din %d fotografii selectate"
+
+msgid "%d parameter was updated."
+msgid_plural "%d parameters were updated."
+msgstr[0] "%d parametru adus la zi."
+msgstr[1] "%d parametri aduşi la zi."
+
+msgid "%d photo was deleted"
+msgid_plural "%d photos were deleted"
+msgstr[0] "%d fotografie ştearsă"
+msgstr[1] "%d fotografii şterse"
+
+msgid "%d photos uploaded"
+msgstr "%d fotografii încărcate"
+
+msgid "ACCESS_0"
+msgstr "Acces liber"
+
+msgid "ACCESS_1"
+msgstr "Acces pentru toţi"
+
+msgid "ACCESS_2"
+msgstr "Acces pentru utilizatorii înregistraţi"
+
+msgid "ACCESS_3"
+msgstr "Acces pentru administratori"
+
+msgid "ACCESS_4"
+msgstr "Acces pentru administratorii de site"
+
+msgid "ACCESS_5"
+msgstr "Fără acces"
+
+msgid "Action"
+msgstr "Acţiune"
+
+msgid "Activate icon \"%s\""
+msgstr "Activează pictograma \"%s\""
+
+msgid "Activate Navigation Bar"
+msgstr "Activează bara de navigaţie"
+
+msgid "Activate Navigation Thumbnails"
+msgstr "Activează miniaturile de navigare"
+
+msgid "Activate icon \"new\" next to albums and pictures"
+msgstr "Activează pctograma \"nou\" lângă albume şi fotografii"
+
+msgid "Active Languages"
+msgstr "Limbi active"
+
+msgid "Active Plugins"
+msgstr "Conectori activi"
+
+msgid "Active Themes"
+msgstr "Teme active"
+
+msgid "Add a criteria"
+msgstr "Adaugă un criteriu"
+
+msgid "Add a filter"
+msgstr "Adaugă un filtru"
+
+msgid "Add another set of photos"
+msgstr "Adaugă un nou set de fotografii"
+
+msgid "Add detailed content"
+msgstr "Adaugă conţinut detaliat"
+
+msgid "Add New Language"
+msgstr "Adaugă o limbă nouă"
+
+msgid "add new photos to caddie"
+msgstr "adauga fotografii noi în coş"
+
+msgid "Add New Theme"
+msgstr "Adaugă o temă nouă"
+
+msgid "Add Photos"
+msgstr "Adaugă fotografii"
+
+msgid "Add write access to the \"%s\" directory"
+msgstr "Adaugă drept de scriere în directorul \"%s\""
+
+msgid "added"
+msgstr "adăugat"
+
+msgid "Administration Home"
+msgstr "Centrul de administrare"
+
+msgid "Advanced features"
+msgstr "Opţiuni avansate"
+
+msgid "Album \"%s\" has been added"
+msgstr "Albumul \"%s\" a fost adăugat"
+
+msgid "Album \"%s\" now contains %d photos"
+msgstr "Albumul \"%s\" conţine acum %d fotografii"
+
+msgid "Album list management"
+msgstr "Administrarea listei de albume"
+
+msgid "Album manual order was saved"
+msgstr "Ordinea manuală a albumelor a fost salvată"
+
+msgid "Album name"
+msgstr "Nume album"
+
+msgid "Album updated successfully"
+msgstr "Album adus la zi cu succes"
+
+msgid "albums added in the database"
+msgstr "albume adăugate în baza de date"
+
+msgid "Level 0"
+msgstr "---"
+
+msgid "Level 1"
+msgstr "Contacte"
+
+msgid "Level 2"
+msgstr "Prieteni"
+
+msgid "Level 4"
+msgstr "Familie"
+
+msgid "Level 8"
+msgstr "Administratori"
+
+msgid "%d user was not updated."
+msgid_plural "%d users were not updated."
+msgstr[0] "%d utilizator nu a fost adus la zi."
+msgstr[1] "%d utilizatori nu au fost aduşi la zi."
+
+msgid "%d user was updated."
+msgid_plural "%d users were updated."
+msgstr[0] "%d utilizator a fost adus la zi."
+msgstr[1] "%d utilizatori au fost aduşi la zi."
+
+msgid "%s must be to set to false in your local/config/config.inc.php file"
+msgstr "%s trebuie modificat în fals în fişierul local/config/config.inc.php"
+
+msgid "%s value is not correct file because exif are not supported"
+msgstr "%s valoare este incorectă, deoarece exif-urile nu sunt suportate"
+
+msgid "+ Add an upload box"
+msgstr "+ Adauga o cutie de încărcare"
+
+msgid ", click on"
+msgstr ", apasă pe"
+
+msgid "A new version of Piwigo is available."
+msgstr "O nouă versiune a lui Piwigo este disponibilă."
+
+msgid "Albums automatically sorted"
+msgstr "Albume sortate automat"
+
+msgid "albums deleted in the database"
+msgstr "albume şterse în baza de date"
+
+msgid "All %d photos are selected"
+msgstr "Toate cele %d fotografii sunt selectate"
+
+msgid "All optimizations have been successfully completed."
+msgstr "Toate optimizările au fost terminate cu succes."
+
+msgid "all"
+msgstr "toate"
+
+msgid "Allow rating"
+msgstr "Permite aprecierea"
+
+msgid "Allow user customization"
+msgstr "Permite adaptarea utilizatorilor"
+
+msgid "Allow users to delete their own comments"
+msgstr "Permite utilizatorilor să-şi şteargă propriile comentarii"
+
+msgid "Allow users to edit their own comments"
+msgstr "Permite utilizatorilor să-şi modifice propriile comentarii"
+
+msgid "an error happened"
+msgstr "s-a produs o eroare"
+
+msgid "An error occured during extraction (%s)."
+msgstr "S-a produs o eroare în timpul extragerii fişierelor (%s)."
+
+msgid "An information email was sent to group \"%s\""
+msgstr "Un mesaj de informare a fost trimis către grupul \"%s\""
+
+msgid "and"
+msgstr "şi"
+
+msgid "Anomaly"
+msgstr "Anomalie"
+
+msgid "Rate"
+msgstr "Evaluare"
+
+msgid "Add to caddie"
+msgstr "adaugă în cărucior"
+
+msgid "%s has been successfully updated."
+msgstr "%s a fost actualizat cu succes."
+
+msgid "%s photos can not be regenerated"
+msgstr "%s fotografii nu pot fi regenerate"
+
+msgid "%s photos have been regenerated"
+msgstr "%s fotografii au fost regenerate"
+
+msgid "(this tag will be deleted)"
+msgstr "(această etichetă va fi ștearsă)"
+
+msgid "... or "
+msgstr "...sau"
+
+msgid "Activate comments"
+msgstr "Activează comentarii"
+
+msgid "Add tags"
+msgstr "Adaugă etichete"
+
+msgid "All extensions are up to date."
+msgstr "Toate extensiile sunt la zi."
+
+msgid "All languages are up to date."
+msgstr "Toate limbile sunt la zi."
+
+msgid "All plugins are up to date."
+msgstr "Toate pluginurile sunt la zi."
+
+msgid "All themes are up to date."
+msgstr "Toate temele sunt la zi."
+
+msgid "Allowed file types: %s."
+msgstr "Tipuri de fişiere permise: %s"
+
+msgid "An error has occured during upgrade."
+msgstr "O eroare a apărut în timpul actualizării."
+
+msgid "Anyway only webmasters can see this tab and never administrators."
+msgstr "Oricum numai webmasterii pot vedea acest document, nu administratorii."
+
+msgid "Apply action"
+msgstr "Aplicați acțiunea"
+
+msgid "Apply selected corrections"
+msgstr "Aplicați corecţiile selectate"
+
+msgid "Apply to sub-albums"
+msgstr "Aplicați la sub-albume"
+
+msgid "Approximate maximum resolution: %dM pixels (that's %dx%d pixels)."
+msgstr "Rezoluţie maximă aproximativă: %dM pixeli (aceasta înseamnă %dx%d pixeli)."
+
+msgid "Are you sure to install this upgrade? You must verify if this version does not need uninstallation."
+msgstr "Sunteţi sigur că doriţi să instalaţi această actualizare? Trebuie să verificați dacă această versiune nu trebuie dezinstalată mai întâi."
+
+msgid "Are you sure you want to delete this plugin?"
+msgstr "Sunteți sigur că doriți sa ștergeți pluginul acesta?"
+
+msgid "Are you sure you want to install this plugin?"
+msgstr "Sunteți sigur că doriți să instalați pluginul acesta?"
+
+msgid "Associate to album"
+msgstr "Asociază la album"
+
+msgid "Automatic correction"
+msgstr "Corectare automată"
+
+msgid "An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href=\"%s\">Click here to show log error</a>."
+msgstr "O eroare a apărut în timpul extracției. Vă rugăm să verificaţi permisiunile fişierelor de instalare ale galeriei piwigo.<br><a href=\"%s\">Dați click aici pentru a vedea jurnalul de erori </ a>."
+
+msgid "Available only with HTML format"
+msgstr "Disponibil doar în format HTML"
+
+msgid "Average rate"
+msgstr "Rata medie "
+
+msgid "Batch Manager"
+msgstr "Manager de lot"
+
+msgid "Bound Theme"
+msgstr "Consolidează tema"
+
+msgid "By %s"
+msgstr "Câte %s"
+
+msgid "By default, Piwigo will create a new websize from the HD (high definition) version of your photo."
+msgstr "În mod implicit, Piwigo va crea o nouă dimensiune din  versiunea HD (înaltă definiţie) a fotografiei."
+
+msgid "By rank"
+msgstr "Pe rang"
+
+msgid "Can't connect to server."
+msgstr "Conexiunea la server este imposibilă."
+
+msgid "Can't create temporary file."
+msgstr "Fişierul temporar nu poate fi creat."
+
+msgid "Can't download archive."
+msgstr "Arhiva nu poate fi descărcată."
+
+msgid "Can't read or extract archive."
+msgstr "Arhiva nu poate fi citită sau extrasă."
+
+msgid "Cannot delete the old permalink !"
+msgstr "Permalink-urile vechi nu pot fi şterse!"
+
+msgid "Change Admin Colors"
+msgstr "Schimbă culorile de la modulul de administrare"
+
+msgid "Check all"
+msgstr "Verificaţi tot"
+
+msgid "Check automatic corrections"
+msgstr "Verificaţi corecţiile automate"
+
+msgid "Check for updates"
+msgstr "Verificaţi pentru actualizări"
+
+msgid "Check integrity"
+msgstr "Verificare de integritate"
+
+msgid "Choose an action"
+msgstr "Alege o acțiune"
+
+msgid "Choose an option"
+msgstr "Alege o opțiune"
+
+msgid "Classic display"
+msgstr "Afișare clasică"
+
+msgid "Complementary mail content"
+msgstr "Conţinut suplementar al mailului"
+
+msgid "Configuration"
+msgstr "Configuraţie"
+
+msgid "Confirm merge"
+msgstr "Confirmaţi îmbinare"
+
+msgid "Continue processing treatment"
+msgstr "Continuă tratamentul în curs de desfăşurare"
+
+msgid "Correction applied with error"
+msgstr "Corecţie aplicată cu eroare"
+
+msgid "Correction applied with success"
+msgstr "Corecţie aplicată cu succes"
+
+msgid "Correction the anomaly will cancel the fact that it's ignored"
+msgstr "Anomalia rectificată nu va mai fi ignorată"
+
+msgid "Correction"
+msgstr "Corectare"
+
+msgid "Create the \"%s\" directory at the root of your Piwigo installation"
+msgstr "Creați dosarul \"%s\" la rădăcina de instalare Piwigo"
+
+msgid "Create this site"
+msgstr "Creați siteul acesta"
+
+msgid "Create"
+msgstr "Creare"
+
+msgid "automatic order"
+msgstr "ordonare automată"
+
+msgid "average time"
+msgstr "timpul mediu"
+
+msgid "between"
+msgstr "între"
+
+msgid "clean"
+msgstr "curățare"
+
+msgid "confirm"
+msgstr "confirmă"
+
+msgid "create a new album"
+msgstr "creați un nou album"
+
+msgid "created"
+msgstr "creat(ă)"
+
+msgid " and %d virtuals"
+msgstr "și %d virtual"
+
+msgid "%d physicals"
+msgstr "%d fizic"
+
+msgid "Crop"
+msgstr "Editează"
+
+msgid "Database synchronization with files"
+msgstr "Sincronizarea bazei de date cu fișierele"
+
+msgid "Date"
+msgstr "Data"
+
+msgid "Day"
+msgstr "Zi"
+
+msgid "Deactivate all"
+msgstr "Dezactivează tot"
+
+msgid "Default comments order"
+msgstr "Ordinea implicită a comentariilor"
+
+msgid "Default display"
+msgstr "Vizualizare implicită"
+
+msgid "Default photos order"
+msgstr "Ordinea implicită a imaginilor"
+
+msgid "Default user cannot be deleted"
+msgstr "Utilizatorul implicit nu poate fi șters"
+
+msgid "Default user does not exist"
+msgstr "Utilizatorul implicit nu există"
+
+msgid "Delete orphan tags"
+msgstr "Șterge tagurile orfane"
+
+msgid "Delete selected photos"
+msgstr "Șterge imaginile selectate"
+
+msgid "Delete this language"
+msgstr "Șterge această limbă"
+
+msgid "Delete this theme"
+msgstr "Șterge această temă"
+
+msgid "Deleted on"
+msgstr "Șters la data de"
+
+msgid "Detailed informations"
+msgstr "Informație detaliată"
+
+msgid "Directory does not exist"
+msgstr "Directorul nu există"
+
+msgid "Directory"
+msgstr "Director"
+
+msgid "Documentation"
+msgstr "Documentație"
+
+msgid "Download,"
+msgstr "Descarcă"
+
+msgid "Downloads"
+msgstr "Descărcări"
+
+msgid "Drop into album"
+msgstr "Selectează un album"
+
+msgid "Duplicates"
+msgstr "Duplicate"
+
+msgid "ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW."
+msgstr "EROARE: ACEST PLUGIN LIPSEȘTE DAR ESTE INSTALAT! DEZINSTALEAZĂ-L ACUM."
+
+msgid "ERROR"
+msgstr "EROARE"
+
+msgid "Edit album"
+msgstr "Editează album"
+
+msgid "Element"
+msgstr "Element"
+
+msgid "Error list"
+msgstr "Listă erori"
+
+msgid "Error on file \"%s\" : %s"
+msgstr "Eroare in fișierul \"%s\" : %s"
+
+msgid "FTP + Synchronization"
+msgstr "FTP + Sincronizare"
+
+msgid "File"
+msgstr "Fișier"
+
+msgid "Group"
+msgstr "Grup"
+
+msgid "Hide"
+msgstr "Ascunde"
+
+msgid "Hour"
+msgstr "Ora"
+
+msgid "default values"
+msgstr "valori implicite"
+
+msgid "default"
+msgstr "implicit"
+
+msgid "delete album"
+msgstr "șterge album"
+
+msgid "delete photo"
+msgstr "șterge imagine"
+
+msgid "delete this site and all its attached elements"
+msgstr "Șterge acest sit și toată informația asociată"
+
+msgid "deleted"
+msgstr "șters"
+
+msgid "delete"
+msgstr "șterge"
+
+msgid "directories + files"
+msgstr "directoare + fișiere"
+
+msgid "display"
+msgstr "vizualizează"
+
+msgid "errors during synchronization"
+msgstr "erori în timpul sincronizării"
+
+msgid "even already synchronized photos"
+msgstr "chiar și imaginile deja sincronizate"
+
+msgid "existing album"
+msgstr "album existent"
+
+msgid "hide details"
+msgstr "ascunde detaliile"
+
+msgid "Discover album:"
+msgstr "Descoperă albumul:"
+
+msgid "Dissociate from album"
+msgstr "Disociază de album"
+
+msgid "Do you want to activate anyway?"
+msgstr "Doriți să activați oricum?"
+
+msgid "Drag to re-order"
+msgstr "Faceţi clic-şi-trageţi pentru a rearanja"
+
+msgid "Edit album permissions"
+msgstr "Editează permisiunile la album"
+
+msgid "Edit ranks"
+msgstr "Editează clasamentul"
+
+msgid "Element type"
+msgstr "Tip de element"
+
+msgid "Email administrators when a comment is deleted"
+msgstr "Trimiteți un mail la administratori atunci când un comentariu este eliminat"
+
+msgid "Email administrators when a comment is modified"
+msgstr "Trimiteți un mail la administratori atunci când un comentariu este modificat"
+
+msgid "Error when sending email to %s [%s]."
+msgstr "Eroare la transmiterea e-mailului la %s[%s]."
+
+msgid "Errors caption"
+msgstr "Legenda erorilor"
+
+msgid "Everybody"
+msgstr "Toată lumea"
+
+msgid "Execution time is out, treatment must be continue [Estimated time: %d second]."
+msgid_plural "Execution time is out, treatment must be continue [Estimated time: %d seconds]."
+msgstr[0] "Timpul de execuție fiind terminat, tratamentul trebuie să continue [Estimare: %d secunde]."
+msgstr[1] "Timpul de execuție fiind depăşit, tratamentul trebuie să continue [Estimare: %d secunde]."
+
+msgid "Exif extension not available, admin should disable exif use"
+msgstr "Extinderile Exif nu sunt disponibile, administratorul ar trebui să dezactiveze utilizarea exif"
+
+msgid "Extend for templates"
+msgstr "Extindeţi şabloanele"
+
+msgid "Extensions Update"
+msgstr "Actualizarea extensiilor"
+
+msgid "Failed to write file to disk"
+msgstr "Scrierea unui fişier pe disc nu a funcționat"
+
+msgid "File upload stopped by extension"
+msgstr "Trimiterea fişierului e blocată din cauza extensiei"
+
+msgid "File/directory read error"
+msgstr "Eroare de citire a dosarului/fișierului"
+
+msgid "Follow Orientation"
+msgstr "Urmaţi Orientare"
+
+msgid "Following plugins may not be compatible with the new version of Piwigo:"
+msgstr "Plugin-urile următoare ar putea fi incompatibile cu noua versiune a Piwigo:"
+
+msgid "Following themes may not be compatible with the new version of Piwigo:"
+msgstr "Temele următoare ar putea fi incompatibile cu noua versiune a Piwigo:"
+
+msgid "Forbid this language to users"
+msgstr "Interziceți acest limbaj utilizatorilor"
+
+msgid "Forbid this theme to users"
+msgstr "Interziceți această temă utilizatorilor"
+
+msgid "Forbidden"
+msgstr "Interzis"
+
+msgid "GD library is missing"
+msgstr "Biblioteca GD lipseşte"
+
+msgid "GD version"
+msgstr "Versiunea GD"
+
+msgid "General statistics"
+msgstr "Statistici generale"
+
+msgid "Get Support on Piwigo Forum"
+msgstr "Primiți sprijin pe forumul Piwigo"
+
+msgid "Give write access (chmod 777) to \"%s\" directory at the root of your Piwigo installation"
+msgstr "Dați acces de scriere (chmod 777) la dosarul \"%s\" în dosarul rădăcină de instalare Piwigo"
+
+msgid "Go to %s or %s for more informations"
+msgstr "Mergeți la %s sau %s pentru mai multe informații"
+
+msgid "Go to"
+msgstr "Mergeți la"
+
+msgid "Graphics Library"
+msgstr "Biblioteca de grafice"
+
+msgid "display maximum informations (added albums and photos, deleted albums and photos)"
+msgstr "afișează maximul de informaţii (albume şi fotografii adăugate, albume şi fotografii şterse)"
+
+msgid "dissociate from group"
+msgstr "disociază de grup"
+
+msgid "for the file format"
+msgstr "pentru formatul de fişier"
+
+msgid "for this file format"
+msgstr "pentru acest format de fişier"
+
+msgid "global mode"
+msgstr "Mod global"
+
+msgid "%d day"
+msgstr "%d zi"
+
+msgid "%d days"
+msgstr "%d zile"
+
+msgid "%d hour"
+msgstr "%d oră"
+
+msgid "%d hours"
+msgstr "%d ore"
+
+msgid "%d minute"
+msgstr "%d minut"
+
+msgid "%d minutes"
+msgstr "%d minute"
+
+msgid "%d month"
+msgstr "%d lună"
+
+msgid "%d months"
+msgstr "%d luni"
+
+msgid "%d second"
+msgstr "%d secundă"
+
+msgid "%d seconds"
+msgstr "%d secunde"
+
+msgid "%d week"
+msgstr "%d săptămână"
+
+msgid "%d weeks"
+msgstr "%d săptămâni"
+
+msgid "%d year"
+msgstr "%d an"
+
+msgid "%d years"
+msgstr "%d ani"
+
+msgid "%s ago"
+msgstr "%s în urmă"
+
+msgid "Apply watermark if height is bigger than"
+msgstr "Aplică filigran dacă lungimea este mai mare de"
+
+msgid "Apply watermark if width is bigger than"
+msgstr "Aplică filigran dacă lațimea este mai mare de"
+
+msgid "Edit photo"
+msgstr "Editează imagine"
+
+msgid "IP"
+msgstr "IP"
+
+msgid "Ignore selected anomalies"
+msgstr "Ignoră anomaliile selectate"
+
+msgid "Ignore this update"
+msgstr "Ignoră această actualizare"
+
+msgid "Image Quality"
+msgstr "Calitatea imaginii"
+
+msgid "Image id"
+msgstr "ID-ul imaginii"
+
+msgid "Inactive Languages"
+msgstr "Limbi inactive"
+
+msgid "Inactive Plugins"
+msgstr "Pluginuri inactive"
+
+msgid "Inactive Themes"
+msgstr "Teme inactive"
+
+msgid "Include display of recent photos grouped by dates"
+msgstr "Include afișarea imaginilor recente grupate in funcție de dată"
+
+msgid "Installed Languages"
+msgstr "Limbi instalate"
+
+msgid "Installed Themes"
+msgstr "Teme instalate"
+
+msgid "Invert"
+msgstr "Inversează"
+
+msgid "Language has been successfully installed"
+msgstr "Această limbă a fost instalată cu succes"
+
+msgid "Languages which need upgrade"
+msgstr "Limbi ce au nevoie de actualizare"
+
+msgid "Languages"
+msgstr "Limbi"
+
+msgid "Last import"
+msgstr "Importul precedent"
+
+msgid "Last revisions"
+msgstr "Revizuirea perecdentă"
+
+msgid "Maximum height"
+msgstr "Lungimea maximă"
+
+msgid "Maximum width"
+msgstr "Lățimea maximă"
+
+msgid "Multiple Size"
+msgstr "Mărimi multiple"
+
+msgid "New Version"
+msgstr "Versiune Nouă"
+
+msgid "No photo in this album"
+msgstr "Acest album nu conține nici o imagine"
+
+msgid "No results"
+msgstr "Nu există rezultate"
+
+msgid "Number of downloads"
+msgstr "Număr descărcări"
+
+msgid "Numeric identifier : %d"
+msgstr "Identificator numeric: %d"
+
+msgid "Opacity"
+msgstr "Opacitate"
+
+msgid "Overall"
+msgstr "Privire de ansamblu"
+
+msgid "Pages seen"
+msgstr "Pagini vizionate"
+
+msgid "Parameter"
+msgstr "Setări"
+
+msgid "Parameters"
+msgstr "Parametri"
+
+msgid "Permissions"
+msgstr "Permisiuni"
+
+msgid "Photo %s of %s"
+msgstr "Imaginea %s din %s"
+
+msgid "Photo informations updated"
+msgstr "Datele imaginii au fost actualizate"
+
+msgid "Photo name"
+msgstr "Titlul imaginii"
+
+msgid "Rated %d times, score : %.2f"
+msgstr "Rating %d ori, scor: %.2f"
+
+msgid "This album contains %d photos, added on %s."
+msgstr "Acest album conține %d imagini, adăgate la %s"
+
+msgid "Watermark"
+msgstr "Fligran"
+
+msgid "add a new watermark"
+msgstr "adaugă filigran nou"
+
+msgid "administrators"
+msgstr "adminstratori"
+
+msgid "bottom left corner"
+msgstr "Colțul stânga jos"
+
+msgid "bottom right corner"
+msgstr "Colțul dreapta jos"
+
+msgid "guest"
+msgstr "oaspete"
+
+msgid "include child albums"
+msgstr "Include albumele descendente"
+
+msgid "leave"
+msgstr "părăsește"
+
+msgid "middle"
+msgstr "mijloc"
+
+msgid "nothing"
+msgstr "nimic"
+
+msgid "only directories"
+msgstr "doar directoare"
+
+msgid "photos added in the database"
+msgstr "imagini adăgate in baza de date"
+
+msgid "top left corner"
+msgstr "Colțul stânga sus"
+
+msgid "top right corner"
+msgstr "Colțul dreapta sus"
+
+msgid "Group management"
+msgstr "Administrarea grupurilor"
+
+msgid "Height"
+msgstr "Lungime"
+
+msgid "Hello,"
+msgstr "Bună,"
+
+msgid "Hello"
+msgstr "Bună"
+
+msgid "Help Me"
+msgstr "Ajută-mă"
+
+msgid "Ignore All"
+msgstr "Ignoră tot"
+
+msgid "Impossible automatic correction"
+msgstr "Corecția automată nu este posibilă"
+
+msgid "Impossible to deactivate this language, you need at least one language."
+msgstr "Această limbă nu poate fi dezactivată, ai nevoie de cel puțin o limbă"
+
+msgid "Impossible to deactivate this theme, you need at least one theme."
+msgstr "Această temă nu poate fi dezactivată, ai nevoie de cel puțin o temă"
+
+msgid "Impossible to delete this theme. Other themes depends on it: %s"
+msgstr "Această temă nu poate fi ștearsă, pentru că alte teme depind de ea: %s"
+
+msgid "Main Page"
+msgstr "Pagina principală"
+
+msgid "Manage Permissions"
+msgstr "Administrează permisiunile"
+
+msgid "Manage this set of %d photos"
+msgstr "Administrează acest set de %d imagini"
+
+msgid "Manage"
+msgstr "Administrează"
+
+msgid "Miscellaneous"
+msgstr "Diverse"
+
+msgid "Month"
+msgstr "Lună"
+
+msgid "New photos added"
+msgstr "Imagini noi adăugate"
+
+msgid "New photos were added"
+msgstr "Imagini noi au fost adăguate"
+
+msgid "No photo in the current set."
+msgstr "Nu există imagini în setul curent"
+
+msgid "Obsolete Plugins"
+msgstr "Plugin-uri învechite"
+
+msgid "Photos"
+msgstr "Imagini"
+
+msgid "Please wait..."
+msgstr "Așteaptă te rog..."
+
+msgid "Plugin has been successfully copied"
+msgstr "Plugin-ul a fost copiat cu succes"
+
+msgid "Predefined filter"
+msgstr "Filtre predefinite"
+
+msgid "Save Settings"
+msgstr "Salvează setările"
+
+msgid "Section"
+msgstr "Secțiune"
+
+msgid "Select an album"
+msgstr "Selectează un album"
+
+msgid "Select at least one comment"
+msgstr "Selectează cel puțin un comentariu"
+
+msgid "group \"%s\" added"
+msgstr "grupul \"%s\" a fost adăugat"
+
+msgid "group \"%s\" deleted"
+msgstr "grupul \"%s\" a fost șters"
+
+msgid "group \"%s\" updated"
+msgstr "grupul \"%s\" a fost actualizat"
+
+msgid "height must be a number superior to"
+msgstr "lungimea trebuie să fie un număr mai mare decât"
+
+msgid "new"
+msgstr "nou"
+
+msgid "photos deleted from the database"
+msgstr "imagini șterse din baza de date"
+
+msgid "photos per page"
+msgstr "imagini pe pagină"
+
+msgid "pixels"
+msgstr "pixeli"
+
+msgid "registration date"
+msgstr "data registrării"
+
+msgid "A locked gallery is only visible to administrators"
+msgstr "O galerie blocata este vizibila doar administratorilor"
+
+msgid "Added by %s"
+msgstr "Adaugat de %s"
+
+msgid "Applications"
+msgstr "Aplicatii"
+
+msgid "Automatic sort order"
+msgstr "Sortare ordine automata"
+
+msgid "Available on"
+msgstr "Disponibil in"
+
+msgid "Cancel"
+msgstr "Anulare"
+
+msgid "Hit"
+msgstr "Accesari"
+
+msgid "If you encounter problems or have any question, please send a message to"
+msgstr "Daca intampini probleme sau au intrebari, trimite un mesaj la"
+
+msgid "Instructions to use Piwigo"
+msgstr "Instructiuni pentru a folosi Piwigo"
+
+msgid "Last hit"
+msgstr "Ultima accesare"
+
+msgid "Last send"
+msgstr "Ultima trimitere"
+
+msgid "Learn more"
+msgstr "Afla mai multe"
+
+msgid "List"
+msgstr "Lista"
+
+msgid "Lock"
+msgstr "Blocat"
+
+msgid "[NBM] Problems or questions"
+msgstr "[NBM] Probleme sau întrebări"
+
+msgid "any visitor can see this album"
+msgstr "orice vizitator poate viziona acest album"
+
+msgid "create a new site"
+msgstr "creează un site nou"
+
+msgid "jump to album"
+msgstr "sari la album"
+
+msgid "jump to photo"
+msgstr "sari la imagine"
+
+msgid "registered users"
+msgstr "utilizatori înregistrați"
+
+msgid "remove author"
+msgstr "șterge autor"
+
+msgid "remove tags"
+msgstr "șterge taguri"
+
+msgid "remove this filter"
+msgstr "șterge acest filtru"
+
+msgid "remove title"
+msgstr "șterge titlu"
+
+msgid "selection"
+msgstr "selecție"
+
+msgid "show details"
+msgstr "arată detalii"
+
+msgid "simple visitors"
+msgstr "vizitatori simpli"
+
+msgid "synchronize files structure with database"
+msgstr "sincronizează structura fișierelor cu baza de date"
+
+msgid "test"
+msgstr "test"
+
+msgid "the forum"
+msgstr "forumul"
+
+msgid "total time"
+msgstr "timp total"
+
+msgid "unknown"
+msgstr "necunoscut"
+
+msgid "user \"%s\" added"
+msgstr "utilizatorul \"%s\" a fost adăgat"
+
+msgid "user_status_admin"
+msgstr "Administrator"
+
+msgid "user_status_guest"
+msgstr "Oaspete"
+
+msgid "user_status_webmaster"
+msgstr "Webmaster"
+
+msgid "width must be a number superior to"
+msgstr "lățimea trebuie să fie mai mare de"
+
+msgid "wrong filename"
+msgstr "nume de fișier greșit"
+
+msgid "Mail sent to %s [%s]."
+msgstr "Mail trimis la %s [%s]."
+
+msgid "%s in the future"
+msgstr "%s în viitor"
+
+msgid "Manage the members"
+msgstr "Gestionați membrii"
+
+msgid "photos informations synchronized with files metadata"
+msgstr "Informațiile fotografiilor sincronizate cu metadatele fișierelor"
+
+msgid "singly represented"
+msgstr "miniatura fixă pentru album"
+
+msgid "synchronize files metadata with database photos informations"
+msgstr "sincronizați fotografiile din baza de date cu metadatele fișierelor"
+
+msgid "unit mode"
+msgstr "mono-mod"
+
+msgid "unset"
+msgstr "nesetat"
+
+msgid "update the database from files"
+msgstr "actualizarea bazei de date cu fișiere"
+
+msgid "pending validation"
+msgstr "în așteptarea validării"
+
+msgid "photos candidates for metadata synchronization"
+msgstr "fotografii posibile pentru sincronizarea metadatelor"
+
+msgid "photos updated in the database"
+msgstr "fotografii actualizate în baza de date"
+
+msgid "randomly represented"
+msgstr "miniatura aleatorie a albumului "
+
+msgid "ranks"
+msgstr "locuri"
+
+msgid "remove creation date"
+msgstr "eliminați data creării"
+
+msgid "set to"
+msgstr "setat la"
+
+msgid "status"
+msgstr "statut"
+
+msgid "sub-albums"
+msgstr "sub-albume"
+
+msgid "target"
+msgstr "țintă"
+
+msgid "test this remote site"
+msgstr "testează acest site îndepărtat"
+
+msgid "the wiki"
+msgstr "wiki-ul"
+
+msgid "user_status_generic"
+msgstr "Generic"
+
+msgid "visitors need to login and have the appropriate permissions to see this album"
+msgstr "vizitatorii trebuie să se autentifice și să aibă permisiunile corespunzătoare pentru a vedea acest album"
+
+msgid "Local"
+msgstr "Local"
+
+msgid "Locked"
+msgstr "Blocat"
+
+msgid "Mail content"
+msgstr "Conținutul mailului"
+
+msgid "Main \"guest\" user does not exist"
+msgstr "Utilizatorul principal \"oaspete\" nu există"
+
+msgid "Main \"guest\" user status is incorrect"
+msgstr "Statutul utilizatorului principal \"oaspete\" nu este corect"
+
+msgid "Main \"webmaster\" user does not exist"
+msgstr "Utilizatorul principal \"webmaster\" nu există"
+
+msgid "Main \"webmaster\" user status is incorrect"
+msgstr "Statutul utilizatorului principal \"webmaster\" nu este corect"
+
+msgid "Make this language available to users"
+msgstr "Puneți această limbă la dispoziția utilizatorilor"
+
+msgid "Make this theme available to users"
+msgstr "Puneți această temă la dispoziția utilizatorilor"
+
+msgid "Manage photos"
+msgstr "Gestionați fotografiile"
+
+msgid "Landscape"
+msgstr "Peisaj"
+
+msgid "Install on your computer,"
+msgstr "Instalați pe calculatorul dvs.,"
+
+msgid "Information data registered in database"
+msgstr "Datele sunt înregistrate în baza de date "
+
+msgid "Images manual order was saved"
+msgstr "Ordinea manuala a imaginilor salvată"
+
+msgid "I decide to update anyway"
+msgstr "Decid să actualizez oricum"
+
+msgid "High definition enabled"
+msgstr "Înaltă definiție activată"
+
+msgid "High definition"
+msgstr "De înaltă definiție"
+
+msgid "Guest cannot be deleted"
+msgstr "Oaspeții nu pot fi șterși"
+
+msgid "Guest Settings"
+msgstr "Setările oaspeților"
+
+msgid "Groups and users"
+msgstr "Grupuri și utilizatori"
+
+msgid "Generate multiple size images"
+msgstr "Generați imagini de diferite dimensiuni "
+
+msgid "Gallery unlocked"
+msgstr "Galerie deblocată"
+
+msgid "Features include gallery browsing, album creation and photo upload."
+msgstr "Funcționalitățile sale includ navigarea prin galerie, crearea de albume foto și transferul de poze."
+
+msgid "Duplicate selected tags"
+msgstr "Duplică etichetele selecționate"
+
+msgid "Center of interest"
+msgstr "Centrul de interes"
+
+msgid "Duplicate"
+msgstr "Duplică"
+
+msgid "Delete multiple size images"
+msgstr "Șterge imagini de dimensiuni diferite"
+
+msgid "By default, the center of interest is placed in the middle of the photo."
+msgstr "În mod implicit, centrul de interes este plasat în mijlocul fotografiei."
+
+msgid "Aperture is designed for professional photographers with iPhoto simplicity."
+msgstr "Aperture este proiectat pentru fotografi profesioniști cu simplitatea iPhoto-ului."
+
+msgid "Aperture is a powerful tool to refine images and manage massive libraries on Mac."
+msgstr "Aperture este un instrument puternic proiectat pentru redefinirea imaginilor și pentru gestiunea de biblioteci mari pe un sistem Mac."
+
+msgid "Adobe Photoshop Lightroom is a photography software designed to manage large quantities of digital images and doing post production work."
+msgstr "Adobe Photoshop Lightroom este un program pentru fotografii proiectat pentru a gestiona și a prelucra mari cantități de imagini digitale."
+
+msgid "<em>Piwigo for iOS</em> application empowers you to connect to your Piwigo gallery from your iPhone, iPad or iPod Touch, create some albums and upload several photos at once."
+msgstr "<em>Piwigo pentru iOS</em> programul vă permite să vă conectați iPhone-ul, iPad-ul sau iPad-ul Touch la galeria dvs. Piwigo, să creați unele albume și să transmiteți mai multe fotografii în același timp."
+
+msgid "<em>Piwigo for Android</em> application empowers you to connect your Android phone or table to your Piwigo gallery, create some albums and upload several photos at once."
+msgstr "<em>Piwigo pentru Android</em> programul vă permite să vă conectați telefonul sau tableta dvs. Android  la galeria dvs. Piwigo, să creați unele albume și să transmiteți mai multe fotografii în același timp."
+
+msgid "%u users have automatic permission because they belong to a granted group."
+msgstr "u% de utilizatori  au permisiunea automată, deoarece aceștia aparțin unui grup cu permisii."
+
+msgid "View in gallery"
+msgstr "Vezi în galerie"
+
+msgid "Used metadata"
+msgstr "Metadate utilizate"
+
+msgid "User"
+msgstr "Utilizator"
+
+msgid "User \"%s\" created with \"%s\" like password"
+msgstr "Utilizator \"%s\" creat cu parola \"%s\" "
+
+msgid "User %s [%s] added."
+msgstr "Utilizator %s [%s] adăugat."
+
+msgid "User list"
+msgstr "Listă de utilizatori"
+
+msgid "There is no other language available."
+msgstr "Nicio altă limbă nu este disponibilă."
+
+msgid "There is no other theme available."
+msgstr "Nicio altă temă nu este disponibilă."
+
+msgid "This album contains %d photos, added between %s and %s."
+msgstr "Acest album conţine %d imagini, adăugate între %s şi %s."
+
+msgid "Uncheck all"
+msgstr "Debifează tot"
+
+msgid "Tag \"%s\" is now a duplicate of \"%s\""
+msgstr "Eticheta \"%s\" este acum un duplicat al lui \"%s\""
+
+msgid "Source tag"
+msgstr "Etichetă sursă"
+
+msgid "Piwigo Administration"
+msgstr "Administrare Piwigo"
+
+msgid "Portrait"
+msgstr "Portret"
+
+msgid "Impossible to activate this theme, the parent theme is missing: %s"
+msgstr "Această temă nu a putut fi activată, deoarece tema părinte lipseşte: %s."
+
+msgid "Impossible to deactivate this language, first set another language as default."
+msgstr "Imposibil de dezactivat această limbă, alege întâi altă limbă ca implicit."
+
+msgid "No file was uploaded"
+msgstr "Niciun fişier nu a fost încărcat"
+
+msgid "No group is permitted to see this private album"
+msgstr "Niciunui grup nu îi este permis să vadă acest album"
+
+msgid "No photo can be deleted"
+msgstr "Nicio imagine nu poate fi ştearsă"
+
+msgid "The uploaded files exceed the post_max_size directive in php.ini: %sB"
+msgstr "Fişierele încărcate depăşesc directiva post_max_size directive din php.ini: %sB"
+
+msgid "Resize after upload"
+msgstr "Redimensionează după încărcare"
+
+msgid "See you soon,"
+msgstr "Ne vedem în curând,"
+
+msgid "See you soon."
+msgstr "ne vedem în curând."
+
+msgid "Select a file"
+msgstr "Alege un fişier"
+
+msgid "Select at least two tags for merging"
+msgstr "Alege cel puţin două etichete pentru îmbinare"
+
+msgid "Select files"
+msgstr "Alege fişiere"
+
+msgid "Toggle 'default group' property"
+msgstr "Inversează proprietatea 'grup implicit'"
+
+msgid "Tools"
+msgstr "Unelte"
+
+msgid "Type here the author name"
+msgstr "Scrie aici numele autorului"
+
+msgid "Type here the name of the new group"
+msgstr "Scrie aici numele noului grup"
+
+msgid "Type here the title"
+msgstr "Scrie aici titlul"
+
+msgid "Type in a search term"
+msgstr "Scrie un termen de căutare"
+
+msgid "Synchronize"
+msgstr "Sincronizează"
+
+msgid "Tags <em>%s</em> merged into tag <em>%s</em>"
+msgstr "Etichetele <em>%s</em> îmbinate în eticheta <em>%s</em:"
+
+msgid "The file or directory cannot be accessed (either it does not exist or the access is denied)"
+msgstr "Fişierul sau dosarul nu pot fi accesate (nu există sau accesul nu este permis)"
+
+msgid "The following tag was deleted"
+msgstr "Următoarele etichete au fost şterse"
+
+msgid "The gallery URL is not valid."
+msgstr "URL-ul galeriei nu este valid."
+
+msgid "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form"
+msgstr "Fişierul încărcat depăşeşte directiva MAX_FILE_SIZE care a fost specificată în formularul HTML"
+
+msgid "The uploaded file exceeds the upload_max_filesize directive in php.ini: %sB"
+msgstr "Fişierul încărcat depăşeşte directiva upload_max_filesize din php.ini: %sB"
+
+msgid "The uploaded file was only partially uploaded"
+msgstr "Fişierul încărcat a fost încărcat doar paţial"
+
+msgid "Select groups..."
+msgstr "Alege grupuri..."
+
+msgid "Select the destination tag"
+msgstr "Alege eticheta de destinaţie"
+
+msgid "Select users..."
+msgstr "Alege utilizatori..."
+
+msgid "Select:"
+msgstr "Alege:"
+
+msgid "Send"
+msgstr "Trimite"
+
+msgid "Send an information email to group members"
+msgstr "Trimite mesaj electronic de informare la toţi membrii grupului"
+
+msgid "Send mail on HTML format"
+msgstr "Trimite mesaj electronic în format HTML"
+
+msgid "Privacy level"
+msgstr "Nivel de confidenţialitate"
+
+msgid "Privacy level set to \"%s\""
+msgstr "Nivelul de confidenţialitate a fost setat la \"%s\""
+
+msgid "Purge history detail"
+msgstr "Epurează detaliile istoricului"
+
+msgid "Purge history summary"
+msgstr "Epurează sumarul istoricului"
+
+msgid "Purge search history"
+msgstr "Epurează istoricul de căutări"
+
+msgid "Purge sessions"
+msgstr "Epurează sesiunile"
+
+msgid "Quick Local Synchronization"
+msgstr "Sincronizare Locală Rapidă"
+
+msgid "Ratio"
+msgstr "Raţie"
+
+msgid "Read Piwigo Documentation"
+msgstr "Citeşte Documentaţia Piwigo"
+
+msgid "Remove all filters"
+msgstr "Înlătură toate filtrele"
+
+msgid "Piwigo configuration"
+msgstr "Configurare Piwigo"
+
+msgid "Piwigo version"
+msgstr "Versiune Piwigo"
+
+msgid "Please select at least two groups"
+msgstr "Te rog alege cel puţin două grupuri"
+
+msgid "Permission granted for users"
+msgstr "Permisiuni acordate pentru utilizator"
+
+msgid "Permission management"
+msgstr "Management de permisiuni"
+
+msgid "Piwigo for Android"
+msgstr "Piwigo pentru Android"
+
+msgid "Piwigo for iOS (iPhone, iPad, iPod Touch)"
+msgstr "Piwigo pentru iOS (iPhone, iPad, iPod Touch="
+
+msgid "The name of a group must not contain \" or ' or be empty."
+msgstr "Numele unui grup trebuie să nu conţină \" sau ' sau sa fie gol."
+
+msgid "The name of an album must not be empty"
+msgstr "Numele unui album trebuie să nu fie gol"
+
+msgid "The name of directories and files must be composed of letters, numbers, \"-\", \"_\" or \".\""
+msgstr "Numele dosarelor şi fişierelor trebuie să conţină numai litere, cifre, \"-\", \"_\" sau \".\"."
+
+msgid "The number of comments a page must be between 5 and 50 included."
+msgstr "Numărul comentariilor de pe o pagină trebuie să fie între 5 şi 50, inclusiv."
+
+msgid "The original image quality must be a number between %d and %d"
+msgstr "Calitatea imaginii originale trebuie să fie un număr între %d si %d"
+
+msgid "The original maximum height must be a number between %d and %d"
+msgstr "Înălţimea maximă a originalului trebuie să fie un număr între %d şi %d"
+
+msgid "The original maximum width must be a number between %d and %d"
+msgstr "Lăţimea maximă a originalului trebuie să fie un număr între %d şi %d"
+
+msgid "The whole page"
+msgstr "Întreaga pagină"
+
+msgid "The whole set"
+msgstr "Întregul set"
+
+msgid "Theme has been successfully installed"
+msgstr "Tema a fost instalată cu succes"
+
+msgid "Themes"
+msgstr "Teme"
+
+msgid "This album contains no photo."
+msgstr "Acest album nu conţine nicio imagine."
+
+msgid "This group will be set to default"
+msgstr "Acest grup va fi folosit implicit"
+
+msgid "This group will be unset to default"
+msgstr "Acest grup nu va mai fi folosit implicit"
+
+msgid "This name is already used by another group."
+msgstr "Acest nume este deja folosit de un alt grup."
+
+msgid "This site already exists"
+msgstr "Această pagină există deja."
+
+msgid "This theme was not designed to be directly activated"
+msgstr "Această temă nu a fost proiectată pentru a fi activată direct"
+
+msgid "Time"
+msgstr "Timp"
+
+msgid "Title"
+msgstr "Titlu"
+
+msgid "Virtual Links"
+msgstr "Legături virtuale"
+
+msgid "Virtual album"
+msgstr "Album virtual"
+
+msgid "Visit Gallery"
+msgstr "Vizitează galeria"
+
+msgid "Visit Piwigo project website"
+msgstr "Vizitează pagina proiectului Piwigo"
+
+msgid "Visit language site"
+msgstr "Vizitează pagina de traduceri"
+
+msgid "Visit theme site"
+msgstr "Vizitează pagina de teme"
+
+msgid "Visited %d times"
+msgstr "Vizitat de % ori"
+
+msgid "Week starts on"
+msgstr "Săptămâna incepe"
+
+msgid "Who can see these photos?"
+msgstr "Cine poate vedea aceste imagini?"
+
+msgid "Who can see this photo?"
+msgstr "Cine poate vedea această imagine?"
+
+msgid "Width"
+msgstr "Lăţime"
+
+msgid "With blank value, gallery title will be used"
+msgstr "Dacă este gol, va fi fi folosit titlul galeriei"
+
+msgid "With no album"
+msgstr "Fără niciun album"
+
+msgid "With no tag"
+msgstr "Fără nicio etichetă"
+
+msgid "apply automatic sort order"
+msgstr "aplică ordinea automata de sortare"
+
+msgid "between %d and %d pixels"
+msgstr "între %d şi %d pixeli"
+
+msgid "cancel manual order"
+msgstr "anulează ordinea manuală"
+
+msgid "include photos with lower privacy level"
+msgstr "include imagini cu nivel de confidenţialitate mic"
+
+msgid "manual order"
+msgstr "ordine manuală"
+
+msgid "modified"
+msgstr "modificat"
+
+msgid "no write access"
+msgstr "fără drept de scriere"
+
+msgid "on"
+msgstr "pe"
+
+msgid "on the %d selected photos"
+msgstr "pe cele %d imagini alese"
+
+msgid "other"
+msgstr "alte"
+
+msgid "overrides existing values with empty ones"
+msgstr "suprascrie valorile existente cu unele goale"
+
+msgid "Summary"
+msgstr "Sumar"
+
+msgid "Synchronize metadata"
+msgstr "Sincronizează metadate"
+
+msgid "The anomaly will be ignored until next application version"
+msgstr "Anomalia aceasta va fi ignorată până la versiunea următoare a aplicaţiei"
+
+msgid "Selection"
+msgstr "Selecţie"
+
+msgid "Send mail as"
+msgstr "Trimite mesaj electronic ca"
+
+msgid "Send mail to users"
+msgstr "Trimite mesaj electronic la utilizatorii"
+
+msgid "Show menubar"
+msgstr "Arată bara de meniu"
+
+msgid "Simulation"
+msgstr "Simulare"
+
+msgid "Refresh"
+msgstr "Reîmprospătează"
+
+msgid "Refresh photo set"
+msgstr "Reîmprospătează setul de imagini"
+
+msgid "Reinitialize check integrity"
+msgstr "Reiniţializează verificarea de integritate"
+
+msgid "Rename"
+msgstr "Renumeşte"
+
+msgid "Repair and optimize database"
+msgstr "Repară şi optimizează baza de date"
+
+msgid "Resize"
+msgstr "Redimensionează"
+
+msgid "Restore"
+msgstr "Restaurează"
+
+msgid "Save manual order"
+msgstr "Salvează ordinea manuală"
+
+msgid "Save visits in history for"
+msgstr "Salvează vizitele în istoric pentru"
+
+msgid "Search for new images in the directories"
+msgstr "Caută imagini noi în dosarele"
+
+msgid "No groups selected, no actions possible."
+msgstr "Niciun grup ales, nicio acţiune posibilă."
+
+msgid "No mail to send."
+msgstr "Niciun mesaj electronic de trimis."
+
+msgid "No members to manage"
+msgstr "Niciun membru de administrat"
+
+msgid "Merge selected groups"
+msgstr "Îmbină grupurile alese"
+
+msgid "Merge selected tags"
+msgstr "Îmbină etichetele alese"
+
+msgid "Merge tags"
+msgstr "Îmbină etichete"
+
+msgid "Missing a temporary folder"
+msgstr "Lipseşte un dosar temporar"
+
+msgid "Modify information"
+msgstr "Modifică informaţie"
+
+msgid "Move to album"
+msgstr "Mută în album"
+
+msgid "Name of the duplicate"
+msgstr "Numele duplicatului"
+
+msgid "Manual order"
+msgstr "Ordine manuală"
+
+msgid "Maximum file size: %sB."
+msgstr "Dimensiunea maximă a fişierului: %sB."
+
+msgid "Menu Management"
+msgstr "Meniuri"
+
+msgid "Metadata synchronization results"
+msgstr "Rezultatele sincronizării metadatelor"
+
+msgid "Minimum height"
+msgstr "Înălţime minimă"
+
+msgid "Minimum privacy level"
+msgstr "Nivel minim de confidenţialitate"
+
+msgid "Minimum width"
+msgstr "Lăţime minimă"
+
+msgid "Operation in progress"
+msgstr "Tratament în progres."
+
+msgid "Optimizations have been completed with some errors."
+msgstr "Optimizările au fost terminate cu unele erori."
+
+msgid "Optional URL keyword"
+msgstr "Cuvinte cheie optionale pentru URL"
+
+msgid "Order of menubar items has been updated successfully."
+msgstr "Ordinea elemenetelor din bara de meniu a fost adusă la zi cu succes."
+
+msgid "Original Size"
+msgstr "Mărime Originală"
+
+msgid "Original file : %s"
+msgstr "Fişier original: %s."
+
+msgid "Orphan tags deleted"
+msgstr "Etichete orfane şterse."
+
+msgid "Page end"
+msgstr "Sfărşitul paginii"
+
+msgid "Panorama"
+msgstr "Panoramă"
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Lipseşte confirmarea parolei. Te rog să confirmi parola aleasă."
+
+msgid "Password is missing. Please enter the password."
+msgstr "Parola lipseşte. Te rog sa introduci parola-"
+
+msgid "Select a zone with your mouse to define a new center of interest."
+msgstr "Alege o zonă cu mouseul pentru a defini un nou centru de interes."
+
+msgid "There is no group in this gallery."
+msgstr "Nu există niciun grup în această galerie."
+
+msgid "Use the default photo sort order"
+msgstr "Foloseşte ordinea implicită de sortare a imaginilor"
+
+msgid "You are running the latest version of Piwigo."
+msgstr "Rulezi ultima versiune a Piwigo."
+
+msgid "You can activate only one mobile theme."
+msgstr "Poţi activa numai o temă pentru mobile odată."
+
+msgid "You cannot move an album in its own sub album"
+msgstr "Nu poţi muta un album în popriul său sub-album"
+
+msgid "You have %d orphan tags: %s."
+msgstr "Ai %d etichete orfane:%s."
+
+msgid "between %.2f and %.2f"
+msgstr "între %.2f şi %.2f"
+
+msgid "With no virtual album"
+msgstr "Fără album virtual"
+
+msgid "Year"
+msgstr "An"
+
+msgid "Zoom"
+msgstr "Marește"
+
+msgid "Thumbnails generation in progress..."
+msgstr "Creația miniaturilor este în curs..."
+
+msgid "Thumbnail"
+msgstr "Miniatură"
+
+msgid "There is no other plugin available."
+msgstr "Nu există alt plugin disponibil."
+
+msgid "Themes which need upgrade"
+msgstr "Teme care au nevoie de actualizare"
+
+msgid "Templates"
+msgstr "Modele"
+
+msgid "Unlocked"
+msgstr "Deblocat"
+
+msgid "Updates"
+msgstr "Actualizări"
+
+msgid "Update in progress... Please wait."
+msgstr "Actualizare în curs...Vă rugăm să așteptați."
+
+msgid "Update albums informations"
+msgstr "Actualizați informațiile despre albume"
+
+msgid "Update Complete"
+msgstr "Actualizare terminată"
+
+msgid "Update All"
+msgstr "Actualizați totul"
+
+msgid "Unsubscribed"
+msgstr "Dezabonat"
+
+msgid "Unsubscribe from notification by mail"
+msgstr "Dezabonați-vă de la notificare prin e-mail"
+
+msgid "Uninstalled Plugins"
+msgstr "Pluginuri dezinstalate"
+
+msgid "Unlock gallery"
+msgstr "Deblocați galeria foto"
+
+msgid "Two updates are available"
+msgstr "Două actualizări sunt disponibile"
+
+msgid "You have unsubscribed from receiving notifications by mail."
+msgstr "V-ați dezabonat de la primirea notificărilor prin e-mail."
+
+msgid "You have subscribed to receiving notifications by mail."
+msgstr "V-ați abonat pentru a primi notificări prin e-mail."
+
+msgid "Y Position"
+msgstr "Y Poziție"
+
+msgid "X Repeat"
+msgstr "X Repetare"
+
+msgid "X Position"
+msgstr "X Poziție"
+
+msgid "Web Form"
+msgstr "Formular web"
+
+msgid "Waiting"
+msgstr "În așteptare"
+
+msgid "Visit plugin site"
+msgstr "Vizitați site-ul pluginului"
+
+msgid "User status"
+msgstr "Statutul utilizatorului"
+
+msgid "only perform a simulation (no change in database will be made)"
+msgstr "efectuează numai o simulare (nimic nu va fi schimbat în baza de date)"
+
+msgid "none"
+msgstr "nici unul"
+
+msgid "manage sub-albums"
+msgstr "gestionează sub-albume"
+
+msgid "manage album photos"
+msgstr "gestionează fotografiile albumului"
+
+msgid "high"
+msgstr "înalt"
+
+msgid "custom"
+msgstr "Pe măsură"
+
+msgid "[%s] Visit album %s"
+msgstr "[%s] Vizitează albumul %s"
+
+msgid "Your configuration settings are saved"
+msgstr "Setările d-voastră de configurare sunt salvate"
+
+msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
+msgstr "Ai specificat <i>$conf['order_by']</i> în fișierul tău local de configurație, acest parametru este perimat, șterge-l sau renumește-l în <i>$conf['order_by_custom']</i> !"
+
+msgid "digiKam is an advanced digital photo management free software for Linux, Windows, and MacOSX."
+msgstr "digiKam este un administrator avansat sursă libera de fotografii digitale pentru Linux, Windows și MacOSX."
+
+msgid "digiKam is designed for photographers who want to view, manage, edit, enhance, organize, tag, and share photographs."
+msgstr "digiKam este proiectat pentru fotografi care vor să vizualizeze, administreze, editeze, îmbunătățească, organizeze, eticheteze și partajeze fotografii."
+
+msgid "iPhoto is the default photo manager on MacOSX. The Piwigo export plugin let you create new albums and export your photos directly from iPhoto to your Piwigo photo gallery."
+msgstr "iPhoto este administratorul implicit de fotografii digitale din MacOSX. Plugin-ul Piwigo de export iți permite să creezi albume noi și să exporți fotografiile tale din iPhoto direct în galeria ta Piwigo."
+
+msgid "User %s [%s] was added to the subscription list."
+msgstr "Utilizatorul %s [%s] a fost adăugat la lista de abonați."
+
+msgid "User %s [%s] was not added to the subscription list."
+msgstr "Utilizatorul %s [%s] nu a fost adăugat la lista de abonați."
+
+msgid "User %s [%s] was not removed from the subscription list."
+msgstr "Utilizatorul %s [%s] nu a fost șters din lista de abonați."
+
+msgid "User %s [%s] was removed from the subscription list."
+msgstr "Utilizatorul %s [%s] a fost șters din lista de abonați."
+
+msgid "WARNING! This plugin does not seem to be compatible with this version of Piwigo."
+msgstr "ATENȚIE! Aces plugin nu pare să fie compatibil cu această versiune de Piwigo."
+
+msgid "Warning: subscribing or unsubscribing will send mails to users"
+msgstr "Atenție: abonarea sau dezabonarea vor trimite mesaje la utilizatori"
+
+msgid "To export your photos from digiKam to Piwigo, simply install digiKam and the Kipi-plugins."
+msgstr "Pentru a exporta fotografiile tale din digiKam în Piwigo, instalează digiKam si plugin-urile Kipi."
+
+msgid "Shotwell is an open source digital photo organizer that runs on Linux. It is the default photo manager in Ubuntu and Fedora."
+msgstr "Shotwell este un organizator sursă liberă de fotografii digitale care ruleaza pe Linux. Este organizatorul de fotografii implicit în Ubuntu și Fedora."
+
+msgid "Some themes and plugins may be not available yet."
+msgstr "Unele teme și plugin-uri s-ar putea să nu fie încă disponibile."
+
+msgid "Start pLoader and add your photos."
+msgstr "Pornește pLoader și adaugă fotografiile tale."
+
+msgid "Please check \"plugins\" folder and sub-folders permissions (CHMOD)."
+msgstr "Verifică permisiunile dosarului \"plugins\" și ale sub-dosarelor (CHMOD)."
+
+msgid "In your php.ini file, the upload_max_filesize (%sB) is bigger than post_max_size (%sB), you should change this setting"
+msgstr "În fișierul tău php.ini, upload_max_filesize (%sB) este mai mare decât post_max_size (%sB), ar trebui să modifici această setare"
+
+msgid "Manage photo ranks"
+msgstr "Ordine de sortare pentru fotografii"
+
+msgid "Not cropped correctly?"
+msgstr "Nu a fost decupat corect?"
+
+msgid "On your Linux, simply install Shotwell with your package manager and the activate Piwigo publishing option."
+msgstr "Pe Linux-ul tău, instalează Shotwell cu ajutorul administratorului de pachete și activează opțiunea Piwigo de publicare."
+
+msgid "ReGalAndroid (RemoteGallery client for Android) is an open source (GPL v3) Piwigo client for the Android platform."
+msgstr "ReGalAndroid (RemoteGallery client for Android) este un client Piwigo sursă deschisă (GPL v3) pentru platforma Android."
+
+msgid "Replacers (customized templates)"
+msgstr "Substitute (șabloane personalizate)"
+
+msgid "Restore default configuration. You will lose your plugin settings!"
+msgstr "Restaurează configurația implicită. Îți vei pierde setările plugin-urilor!"
+
+msgid "Save Template Directory"
+msgstr "Salvează dosarul de șabloane"
+
+msgid "Other plugins"
+msgstr "Alte plugin-uri disponibile"
+
+msgid "Missing Plugins"
+msgstr "Plugin-uri lipsă"
+
+msgid "No destination tag selected"
+msgstr "Nicio etichetă destinație aleasă"
+
+msgid "Notify administrators when a comment is"
+msgstr "Informează administratorii când un comentariu este"
+
+msgid "Number of albums per page"
+msgstr "Numărul de albume pe pagină"
+
+msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
+msgstr "ACEST PLUGIN ESTE ACUM PARTE DIN NUCLEUL PIWIGO! DEZINSTEALEAZĂ-L ACUM!"
+
+msgid "Templates configuration has been recorded."
+msgstr "Configurația șabloanelor a fost înregistrată."
+
+msgid "The Piwigo export plugin allows you to create albums and export photos."
+msgstr "Plugin-ul Piwigo de export îți permite să creezi albume și să exporți fotografii."
+
+msgid "The Piwigo publish Plug-in allows you to export and synchronize photos from Lightroom directly to your Piwigo photo gallery."
+msgstr "Plugin-ul Piwigo de publicare îți permite să exporți și să sincronizezi fotografii din Lightroom direct în galeria ta Piwigo."
+
+msgid "The picture dimensions will be reduced to %dx%d pixels."
+msgstr "Dimensiunile fotografiei vor fi reduse la %dx%d pixeli."
+
+msgid "Pending Comments"
+msgstr "Comentarii în așteptare"
+
+msgid "Permission granted for groups"
+msgstr "Permisiune acordată pentru grupuri"
+
+msgid "Photo Properties"
+msgstr "Proprietățile fotografiei"
+
+msgid "Piwigo Publish plugin for Lightroom"
+msgstr "Plugin Piwigo pentru publicare pentru Ligtroom"
+
+msgid "Piwigo export plugin for Aperture"
+msgstr "Plugin Piwigo pentru export pentru Aperture"
+
+msgid "Piwigo export plugin for iPhoto"
+msgstr "Plugin Piwigo pentru export pentru iPhoto"
+
+msgid "Piwigo publish plugin for Shotwell"
+msgstr "Plugin Piwigo pentru publicare pentru Shotwell"
+
+msgid "Piwigo publish plugin for digiKam"
+msgstr "Plugin Piwigo pentru publicare pentru digiKam"
+
+msgid "Plugin list"
+msgstr "Lista de plugin-uri"
+
+msgid "Original templates"
+msgstr "Șabloane originale"
+
+msgid "Photo unreachable or no support"
+msgstr "Fotografie nedisponibilă sau în format nesuportat"
+
+msgid "Support"
+msgstr "Suport"
+
+msgid "If no HD is available and if the current websize is bigger than resize dimensions, Piwigo will move it as HD and create a downsized websize photo from it."
+msgstr "Dacă HD nu este disponibil și dacă dimensiunea curentă pentru web este mai mare decât dimensiunile noi, Piwigo o va muta ca HD și va crea din ea o fotografie cu dimensiuni mai mici pentru web."
+
+msgid "None"
+msgstr "Nimic"
+
+msgid "Posted %s on %s"
+msgstr "A publicat %s pe %s"
+
+msgid "Photo Page"
+msgstr "Pagina fotografii"
+
+msgid "Purge never used notification feeds"
+msgstr "Curăță feed-urile de înștiințări neutilizate"
+
+msgid "Keep in touch with Piwigo project, subscribe to Piwigo Announcement Newsletter. You will receive emails when a new release is available (sometimes including a security bug fix, it's important to know and upgrade) and when major events happen to the project. Only a few emails a year."
+msgstr "Fii în contact cu proiectul Piwigo, abonează-te la Scrisoarea de știri Piwigo. Vei primi e-mail-uri când vor fi disponibile noi versiuni (câteodată incluzând reparări de bug-uri de securirate, este important să știi și să actualizezi) și când se vor întâmpla evenimente majore cu proiectul. Numai cateva e-mail-uri pe an."
+
+msgid "Piwigo Announcements Newsletter"
+msgstr "Scrisoarea de știri Piwigo"
+
+msgid "Subscribe %s to Piwigo Announcements Newsletter"
+msgstr "Abonează %s la Scrisoarea de știri Piwigo"
+
+msgid "Sharpen"
+msgstr "Ascute"
+
+msgid "Remote"
+msgstr "Distant"
+
+msgid "reduce to single existing albums"
+msgstr "redu la albume unice existente"
+
+msgid "Remove from caddie"
+msgstr "Șterge din coș"
+
+msgid "There is no available subscribers to mail."
+msgstr "Nu există niciun abonat pentru a fi înștiințat prin e-mail."
+
+msgid "Unknown upload error"
+msgstr "Eroare necuonscută de încărcare"
+
+msgid "For photo sizes with crop, such as \"Square\", Piwigo will do its best to include the center of interest."
+msgstr "Pentru dimensiunile de fotografii cu decupare, cum ar fi \"Pătrat\", Piwigo va încerca să includa centrul de interes."
+
+msgid "Notification"
+msgstr "Înștiințare"
+
+msgid "This is a major update, with <a href=\"%s\">new exciting features</a>."
+msgstr "Aceasta este o actualizare majoră, cu <a href=\"%s\">îmbunătățiri interesante</a>."
+
+msgid "This is a minor update, with only bug corrections."
+msgstr "Aceasta este o actualizare minoră, numai cu corecții de bug-uri."
+
+msgid "To send ?"
+msgstr "Se trimite?"
+
+msgid "To subscribe"
+msgstr "Pentru a abona"
+
+msgid "To unsubscribe"
+msgstr "pentru a dezabona"
+
+msgid "Photo sizes with crop"
+msgstr "Dimensiunile fotografiei cu decupare"
+
+msgid "Photos generation in progress..."
+msgstr "Generarea fotografiilor în curs..."
+
+msgid "Prepared time for list of users to send mail is limited. Others users are not listed."
+msgstr "Timpul de pregătire a liste utilizatorilor la care va fi trimis e-mail este limitat. Alți utilizatori nu vor fi afișați."
+
+msgid "Searching..."
+msgstr "Căutare..."
+
+msgid "Settings"
+msgstr "Setări"
+
+msgid "Status of user \"%s\" updated"
+msgstr "Utilizatorul \"%s\" statut actualizat"
+
+msgid "Subscribers could be listed (available) only if there is new elements to notify."
+msgstr "Abonații pot fi listați (disponibili) numai dacă există elemente noi pentru înștiințări."
+
+msgid "Send connection settings by email"
+msgstr "Trimite setările de conexiune prin e-mail"
+
+msgid "Some upgrades are available for extensions."
+msgstr "Sunt disponibile unele actualizări pentru extensii."
+
+msgid "Start Upload"
+msgstr "Începe încărcarea"
+
+msgid "Reset ignored updates"
+msgstr "Resetează actualizările ignorate"
+
+msgid "Resize after upload disabled due to the use of GD as graphic library"
+msgstr "Redimensionarea după încărcare a fost dezactivată datorită folosirii GD ca librărie grafică"
+
+msgid "Set creation date"
+msgstr "Alege data creării"
+
+msgid "Piwigo Update"
+msgstr "Actualizare Piwigo"
+
+msgid "Piwigo Uploader"
+msgstr "Utilitar de încărcare Piwigo"
+
+msgid "Plugins which need upgrade"
+msgstr "Plugin-uri de actualizat"
+
+msgid "Purge compiled templates"
+msgstr "Curăță șabloanele compilate"
+
+msgid "Purge user cache"
+msgstr "Curăță cache-ul utilizatorului"
+
+msgid "Released on"
+msgstr "Lansat pe"
+
+msgid "You are using the Browser uploader. Try the <a href=\"%s\">Flash uploader</a> instead."
+msgstr "Foloesești utilitarul de încărcare prin navigator. Încearcă <a href=\"%s\">utilitarul de încărcare prin Flash</a> în locul lui."
+
+msgid "You are using the Flash uploader. Problems? Try the <a href=\"%s\">Browser uploader</a> instead."
+msgstr "Folosești utilitarul de încărcare prin Flash. Ai probleme?  Încearcă <a href=\"%s\">utilitarul de încărcare prin navigator</a> în locul lui."
+
+msgid "You can update to Piwigo %s directly, without upgrading to Piwigo %s (recommended)."
+msgstr "Poți actualiza direct la Piwigo %s, fără a actualiza la Piwigo %s (recomandat)."
+
+msgid "You need to upgrade your system to take full advantage of the application else the application will not work correctly, or not at all"
+msgstr "Ar trebui să-ți actualizezi sistemul pentru a beneficia de toate avantajele aplicației, altfel aplicația ar putea funcționa necorespunzător sau deloc"
+
+msgid "Update photos information"
+msgstr "Actualizează informațiile fotografiiloe"
+
+msgid "Update to Piwigo %s"
+msgstr "Actualizează la Piwigo $s"
+
+msgid "Upload"
+msgstr "Încarcă"
+
+msgid "Upload Photos"
+msgstr "Încarcă fotografii"
+
+msgid "Uploaded Photos"
+msgstr "Fotografii încărcate"
+
+msgid "Replacement of original templates by customized templates from template-extension subfolder"
+msgstr "Înlocuirea șabloanelor originale cu șabloane personalizate din sub-dosarul șabloane-extensii"
+
+msgid "Select recipients"
+msgstr "Alege destinatari"
+
+msgid "Set as default language for unregistered and new users"
+msgstr "Alege ca limbă implicită pentru utilizatorii noi si neînregistrați"
+
+msgid "Set as default theme for unregistered and new users"
+msgstr "Alege ca temă implicită pentru utilizatorii noi si neînregistrați"
+
+msgid "Set author"
+msgstr "Alege autor"
+
+msgid "Set title"
+msgstr "Alege titlu"
+
+msgid "Subscribe"
+msgstr "Abonează"
+
+msgid "Subscribe %s"
+msgstr "Abonează %s"
+
+msgid "Subscribe to notification by mail"
+msgstr "Abonează-te la înștiințări prin e-mail"
+
+msgid "Subscribed"
+msgstr "Abonat"
+
+msgid "Switch to clear or dark colors for administration"
+msgstr "Schimbă la clar sau la culori întunecate pentru administrare."
+
+msgid "Time to send mail is limited. Others mails are skipped."
+msgstr "Timpul pentru a trimite e-mail-uril este limitat. Alte e-mail-luri au fost sărite."
+
+msgid "You can't define a default photo order because you have a custom setting in your local configuration."
+msgstr "Nu poți defini o ordine implicită a fotografiilor, pentru că ai deja o setare personalizată în configurația locală."
+
+msgid "Hoverbox display"
+msgstr "Afișaj în fereastră flotantă"
+
+msgid "No display"
+msgstr "Niciu"
+
+msgid "No order field selected"
+msgstr "Nicio ordine a cămpurilor aleasă"
+
+msgid "No photo selected, %d photos in current set"
+msgstr "Nicio fotografie aleasă, %d fotografii în setul curent"
+
+msgid "No photos selected, no actions possible."
+msgstr "Nicio fotografie aleasă, nicio acțiune posibilă."
+
+msgid "No user to send notifications by mail."
+msgstr "Niciun utilizator petnru a fi înștiințat prin e-mail."
+
+msgid "Piwigo cannot retrieve upgrade file from server"
+msgstr "Pwigo nu poate aduce fotografiile de pe server"
+
+msgid "Webmaster status is required."
+msgstr "Este necesar statutul de webmaster."
+
+msgid "Subscribe/unsubscribe users"
+msgstr "Abonează/dezabonează utilizatori"
+
+msgid "The center of interest is the most meaningful zone in the photo."
+msgstr "Centrul de interes este partea cu cel mai mult înțeles dintr-o fotografie."
+
+msgid "The webmaster has subscribed you to receiving notifications by mail."
+msgstr "Webmaster-ul te-a abonat pentru a fi înștiințat prin e-mail."
+
+msgid "The webmaster has unsubscribed you from receiving notifications by mail."
+msgstr "Webmaster-ul te-a dezabonat de la înștiințările prin e-mail."
+
+msgid "Basic settings"
+msgstr "Setări de bază"
+
+msgid "No matching user found"
+msgstr "Niciun utilizator nu corespunde"
+
+msgid "No user selected of %d users"
+msgstr "Niciun utilizator selectat din %d utilizatori"
+
+msgid "No users selected, no actions possible."
+msgstr "Niciun utilizator selectat, nicio acțiune posibilă"
+
+msgid "Password updated"
+msgstr "Parolă adusă la zi"
+
+msgid "Showing %s to %s of %s users"
+msgstr "Arăt de la %s la %s din %s utilizatori"
+
+msgid "Update user"
+msgstr "Adu la zi utilizator"
+
+msgid "User %s updated"
+msgstr "Utilizatorul %s adus la zi"
+
+msgid "Users modified"
+msgstr "Utilizatori modificați"
+
+msgid "on the %d selected users"
+msgstr "pe cei %d utilizatori selectați"
+
+msgid "%d of %d users selected"
+msgstr "%d din %d utilizatori selectați"
+
+msgid "(filtered from %s total users)"
+msgstr "(filtrat din %s utilizatori în total)"
+
+msgid "All %d users are selected"
+msgstr "Toți %d utilizatorii sunt selectați"
+
+msgid "Change password"
+msgstr "Schimbă parola"
+
+msgid "Change username"
+msgstr "Schimbă numele de utilizator"
+
+msgid "General"
+msgstr "General"
+
+msgid "Last visit on %s, %s."
+msgstr "Ultima vizită pe %s, %s"
+
+msgid "Loading..."
+msgstr "Se încarcă"
+
+msgid "Mail theme"
+msgstr "Temă e-mail"
+
+msgid "Registered on %s, %s."
+msgstr "Înregistrat pe %s, %s"
+
+msgid "Select at least one tag"
+msgstr "Alege cel puțin o etichetă"
+
+msgid "Show %s users"
+msgstr "Arată %s utilizatori"
+
+msgid "User %s added"
+msgstr "Utilizatorul %s adăugat"
+
+msgid "Close user details"
+msgstr "Închide detalii utilizator"
+
+msgid "Open user details"
+msgstr "Deschide detalii utilizator"
+
+msgid "close"
+msgstr "închide"
+
+msgid "Activate it now"
+msgstr "Aciveaza acum"
+
+msgid "Allow users to add a link to their website"
+msgstr "Permite utilizatorilor sa adauge o legatura catre site-ul personal."
+
+msgid "Mail address is mandatory for registration"
+msgstr "Adresa de email este e obligatorie pentru inregistrare"
+
+msgid "Impossible to deactivate the default theme."
+msgstr "Imposibila dezactivarea temei implicite"
+
+msgid "The settings for the guest are from the %s user"
+msgstr "Setarile pentru vizitator sunt setarile utilizatorului  %s "
+
+msgid "between %s and %s MB"
+msgstr "intre %s si %s MB"
+
+msgid "No and unlock sub-albums"
+msgstr "Nu si deblocheaza sub-albumele"
+
+msgid "Empty caddie"
+msgstr "Goleste caddie"
+
+msgid "based on"
+msgstr "bazat pe"
+
+msgid "width & height"
+msgstr "latime & inaltime"
+
+msgid "file name"
+msgstr "numele fisierului"
+
+msgid "date & time"
+msgstr "data & ora"
+
+msgid "Upload in progress"
+msgstr "Incarcare in desfasurare"
+
+msgid "Each email sent will contain its own automatic authentication key on links, valid for %s."
+msgstr "Fiecare email trimis va conține cheia de autentificare automată în link, valabilă pentru %s "
+
+msgid "No user is permitted to see this private album"
+msgstr "Niciunui utilizator nu îi este permis să vadă acest album"
+
+msgid "No recipient selected"
+msgstr "Nu a fost selectat nici un destinatar"
+
+msgid "For security reason, authentication keys do not work for administrators."
+msgstr "Din motive de securitate, cheile de autentificare nu funcţionează pentru administratori"
+
+msgid "Recipients"
+msgstr "Destinatari"
+
+msgid "Edit user"
+msgstr "Editează utilizatorul"
+
+msgid "Y Repeat"
+msgstr "Y Repetare"
+
+msgid "Delete %d orphan photos"
+msgstr "Sterge %d fotografii orfane"
+
+msgid "Orphans"
+msgstr "Orfane"
+
+msgid "Display form"
+msgstr "Format de afișare"
+
+msgid "Storage used"
+msgstr "Spațiu de stocare utilizat"
+
+msgid "(determined from photos)"
+msgstr "(determinat din fotografii)"
+
+msgid "It only takes a few clicks."
+msgstr "Sunt necesare doar câteva click-uri."
+
+msgid "Time has come to update your Piwigo with version %s, go to %s"
+msgstr "A venit vremea sa actualizezi Piwigo la versiunea %s, mergi la %s"
+
+msgid "orphans to delete"
+msgstr "orfane de șters "
+
+msgid "delete album and the %d orphan photos"
+msgstr "șterge albumul și cele %d fotografii orfane"
+
+msgid "Running on an up-to-date Piwigo is important for security."
+msgstr "Folosirea unei versiuni actualizate a Piwigo este importantă pentru securitate. "
+
+msgid "Select tags"
+msgstr "Selectează toate etichetele"
+
+msgid "Piwigo Remote Sync is able to upload a whole folder hierarchy. If you run it again, only new photos will be uploaded."
+msgstr "Piwigo Remote Sync poate sa încarce o întreaga ierarhie de directoare. Dacă îl vei rula din nou, doar fotografiile noi vor fi încărcate."
+
+msgid "delete album and all %d photos, even the %d associated to other albums"
+msgstr "Șterge albumul și toate cele %d fotografii, chiar și cele %d asociate altor albume "
+
+msgid "Share / Send your photos directly from your Mac Os X (10.10 and following) to Piwigo"
+msgstr "Distribuie/Trimite fotografiile tale direct din macOS (10.10 sau ulterior) către Piwigo "
+
+msgid "checksum"
+msgstr "sumă de control"
+
+msgid "delete only album, not photos"
+msgstr "sterge doar albumul, nu si fotografiile"
+
+msgid "Piwigo %s is available, please update"
+msgstr "Piwigo %s este disponibil, te rugăm să actualizezi"
+
+msgid "No filter on album. Select one or type to search"
+msgstr "Niciun filtru pe album. Selectează unul sau tastează pentru a căuta"
+
+msgid "No tags selected, no actions possible."
+msgstr "Nicio eticheta selectată, nicio acţiune posibilă"
+
+msgid "Confirm deletion"
+msgstr "Confirma stergerea"
+
+msgid "Dashboard"
+msgstr "Panou de control"
+
+msgid "Delete album \"%s\" and its %d sub-albums."
+msgstr "Şterge albumul \"%s\" şi  %d subalbumele ale sale"
+
+msgid "Delete album \"%s\"."
+msgstr "Şterge albumul \"%s\"."
+
+msgid "Display album date period"
+msgstr "Arata perioada de tomp asociata cu fiecare album, de ex. <<din 12 pana in 15 iulie, 2018>>"
+
+msgid "%d checksums were added"
+msgstr "%d sume de control au fost adaugate"
+
+msgid "... or hide this link"
+msgstr "... sau ascunde acest link"
+
+msgid "Compute %d missing checksums"
+msgstr "Calculeaza %d sume de control lipsa"
+
+msgid "Create a first album"
+msgstr "Creaza primul album"
+
+msgid "Deletion in progress"
+msgstr "Stergere in desfasurare"
+
+msgid "Display category date"
+msgstr "Afiseaza data categoriei"
+
+msgid "Piwigo requires an album to add photos."
+msgstr "Piwigo are nevoie de un album pentru a adauga fotografii"
+
+msgid "Some checksums are missing."
+msgstr "Unele sume de control lipsesc"
+
+msgid "Synchronization in progress"
+msgstr "Sincronizare in desfasurare"
+
+msgid "Visit"
+msgstr "Vizita"
+
+msgid "Welcome!"
+msgstr "Bine ai venit!"
+
+msgid "With no checksum"
+msgstr "Fara suma de control"
+
+msgid "checksums to add"
+msgstr "Sume de control de adaugat"
+
+msgid "or"
+msgstr "sau"
+
+msgid "never calculated"
+msgstr "niciodata calculat"
+
+msgid "no photo"
+msgstr "nici o fotografie"
+
+msgid "right now"
+msgstr "in acest moment"
+
+msgid "since the beginning"
+msgstr "de la inceput"
+
+msgid "to"
+msgstr "la"
+
+msgid "deletion"
+msgstr "stergere"
+
+msgid "edit"
+msgstr "editeaza"
+
+msgid "in administration"
+msgstr "in administrare"
+
+msgid "in gallery"
+msgstr "in galerie"
+
+msgid "login"
+msgstr "logare"
+
+msgid "logout"
+msgstr "delogare"
+
+msgid "months ago"
+msgstr "acum cateva luni"
+
+msgid "move"
+msgstr "muta"
+
+msgid "Users not logged in will have these settings applied, these settings are used by default for new users"
+msgstr "Utilizatorii delogati vor avea aceste setari aplicate, aceste setari sunt utilizate implicit pentru utilizatorii noi"
+
+msgid "Version %s"
+msgstr "Versiunea %s"
+
+msgid "Videos"
+msgstr "Videoclipuri"
+
+msgid "Visited"
+msgstr "Vizitat"
+
+msgid "Webmaster status required"
+msgstr "Starea Webmasterului este necesara"
+
+msgid "While restoring this plugin, it will be reset to its original parameters and associated data is going to be reset"
+msgstr "Dupa ce acest modul va fi restaurat va fi resetat la parametrii originali si date asociate lui vor fi resetate."
+
+msgid "Yes, I am sure"
+msgstr "Da, sunt sigur"
+
+msgid "Yes, delete"
+msgstr "Da, sterge"
+
+msgid "Yes, rename"
+msgstr "Da, redenumeste"
+
+msgid "You don't have access to this photo"
+msgstr "Nu ai acces la aceasta fotografie"
+
+msgid "You have %d orphan tags %s"
+msgstr "Ai %d etichete fara parinti %s"
+
+msgid "You have %s inactive plugins"
+msgstr "Ai %s module inactive"
+
+msgid "You have %s1 orphan : %s2"
+msgstr "Ai %s1 fara parinti: %s2"
+
+msgid "Your selection"
+msgstr "Selectia ta"
+
+msgid "action successfully performed."
+msgstr "actiune realizata cu succes"
+
+msgid "add"
+msgstr "adauga"
+
+msgid "and %d more"
+msgstr "si inca %d "
+
+msgid "and %s others"
+msgstr "si altele %s "
+
+msgid "between %s and %s"
+msgstr "intre %s si %s"
+
+msgid "calculated"
+msgstr "calculat"
+
+msgid "There is multiple image in the database with the following names : %s."
+msgstr "Sunt mai multe imagini in baza de date cu urmatoarele nume: %s."
+
+msgid "This albums is already in related categories list"
+msgstr "Acest album este deja in lista de albume relevante."
+
+msgid "This is already the default theme"
+msgstr "Aceasta este deja tema implicita."
+
+msgid "This photo is an orphan"
+msgstr "Acest album nu are parinti."
+
+msgid "This photo no longer exists"
+msgstr "Aceasta fotografie nu mai exista."
+
+msgid "This picture is physically linked to this album, you can't dissociate them"
+msgstr "Aceasta imagine este asociata fizic la acest album, nu le poti disocia."
+
+msgid "This plugin has no recent update"
+msgstr "Acest module nu are o actualizare recenta."
+
+msgid "This plugin have been updated recently"
+msgstr "Acest modul a fost actualizat recent"
+
+msgid "This plugin have no update since 3 years ! It may be outdated"
+msgstr "Acest modul nu a fost actualizat de 3 ani! S-ar putea sa depasit."
+
+msgid "This plugin is incompatible with your version"
+msgstr "Acest modul nu este compatibil cu versiunea ta"
+
+msgid "This plugin was updated less than 6 months ago"
+msgstr "Acst modul a fost actualizat in ultimele 6 luni"
+
+msgid "Tile View"
+msgstr "Vizualizare Mozaic"
+
+msgid "Try now !"
+msgstr "Incearca Acum!"
+
+msgid "Understood, do not show again"
+msgstr "Am inteles, nu mai afisa"
+
+msgid "Unset as group for new users"
+msgstr "Nu mai este setat ca grupul pentru utilizatori noi"
+
+msgid "Update"
+msgstr "Actualizeaza"
+
+msgid "Upload Formats"
+msgstr "Incarca Formate"
+
+msgid "User \"%s\" dissociated from this group"
+msgstr "Utilizaatorul \"%s\" a fost disociat din acest grup"
+
+msgid "User associated"
+msgstr "Utilizator asociat"
+
+msgid "User updated"
+msgstr "Utilizator actualizat"
+
+msgid "Show"
+msgstr "Afiseaza"
+
+msgid "Show beta test plugins"
+msgstr "Afiseaza modulele aflate in teste beta"
+
+msgid "Show inactive plugins"
+msgstr "Afiseaza modulele inactive"
+
+msgid "Show plugins compatible with previous version of Piwigo"
+msgstr "Afiseaza modulele compatibile cu o versiune anterioara de Piwigo"
+
+msgid "Show sub-albums"
+msgstr "Afiseaza sub-albumele"
+
+msgid "Showing %s users out of %s"
+msgstr "Se afiseaza %s utilizator din %s"
+
+msgid "Storage"
+msgstr "Stocare"
+
+msgid "Synchronization"
+msgstr "Sincronizare "
+
+msgid "Tag \"%s\" created"
+msgstr "Eticheta \"%s\" a fost creata."
+
+msgid "Tag \"%s\" succesfully deleted"
+msgstr "Eticheta \\\"%s\\\" a fost stearsa cu succes."
+
+msgid "Tag \"%s1\" renamed in \"%s2\""
+msgstr "Eticheta \\\"%s1\\\" a fost redenumita in \\\"%s2\\\""
+
+msgid "Tag Manager"
+msgstr "Manager de etichete"
+
+msgid "Tag name"
+msgstr "Numele etichetei"
+
+msgid "Tag(s) \\{%s1\\} succesfully merged into \"%s2\""
+msgstr "Eticheta(ele) \\{%s1\\} au fost fuzionate cu succes in \"%s2\""
+
+msgid "Tags \\{%s\\} succesfully deleted"
+msgstr "Eticheta \\{%s\\} a fost stearsa cu success"
+
+msgid "The %d tags on this page are selected"
+msgstr "%d etichete din aceasta pagina sunt selectate"
+
+msgid "The best is to have them made automatically on a regular basis."
+msgstr "Cel mai bine este sa fie generate automat la un interval regulat."
+
+msgid "The original picture will be detected with the filename (without extension)."
+msgstr "Imaginea originala va fi detectata cu denumirea fisierului(fara extensie)."
+
+msgid "The other tags will be removed"
+msgstr "Celelalte etichete vor fi sterse"
+
+msgid "Theme"
+msgstr "Tema"
+
+msgid "Purge Cache"
+msgstr "Stergere cache"
+
+msgid "Rating greater than"
+msgstr "Ratinguri mai mari decat"
+
+msgid "Refresh thumbnail"
+msgstr "Reimprospateaza imaginea miniatura"
+
+msgid "Registered"
+msgstr "Inregistrat"
+
+msgid "Rename \"%s\""
+msgstr "Redenumeste \"%s\""
+
+msgid "Requires PHP %s"
+msgstr "Necesita PHP %s"
+
+msgid "Restored"
+msgstr "Restaurat"
+
+msgid "Review"
+msgstr "Recenzie"
+
+msgid "Root"
+msgstr "Baza"
+
+msgid "Search albums"
+msgstr "Cautare albume"
+
+msgid "Search tips"
+msgstr "Cautare sfaturi"
+
+msgid "Select"
+msgstr "Selecteaza"
+
+msgid "Select all %d tags"
+msgstr "Selecteaza toate cele %d etichetele "
+
+msgid "Select an album... or type it!"
+msgstr "Selecteaza un album... sau introduce-l"
+
+msgid "Select groups or type them"
+msgstr "Selecteaza grupuri sau introducele"
+
+msgid "Selected user"
+msgstr "Utilizatorul selectat"
+
+msgid "Selection mode"
+msgstr "Module de selectie"
+
+msgid "Sep"
+msgstr "Sep"
+
+msgid "Set as default"
+msgstr "Seteaza ca implicit"
+
+msgid "Set as group for new users"
+msgstr "Seteaza ca grup pentru utilzatori noi"
+
+msgid "Oct"
+msgstr "Oct"
+
+msgid "On %d rating(s)"
+msgstr "Din %d rating(uri)"
+
+msgid "Open in gallery"
+msgstr "Deschide in galerie"
+
+msgid "Other"
+msgstr "Altele"
+
+msgid "Page Visited"
+msgstr "Pagina vizitata"
+
+msgid "Page Visited in %s"
+msgstr "Pagina vizitata pe  %s"
+
+msgid "Photos per page"
+msgstr "Fotografii pe pagina"
+
+msgid "Picture to associate formats with"
+msgstr "Imagine cu care sa asociezi formatele"
+
+msgid "Piwigo core"
+msgstr "Nucleul Piwigo"
+
+msgid "Piwigo is also on mobile."
+msgstr "Piwigo este si pe telefon."
+
+msgid "Place first"
+msgstr "Plaseaza primul"
+
+msgid "Place last"
+msgstr "Plaseaza ultimul"
+
+msgid "Please upgrade your PHP version before any update."
+msgstr "Va rugam sa actualizati versiunea de PHP inainte de actualizare"
+
+msgid "Plugin \"%s\" deleted!"
+msgstr "Modulul \"%s\" sters!"
+
+msgid "Plugin \"%s\" has been activated!"
+msgstr "Modulul \"%s\" a fost activat!"
+
+msgid "Portraits"
+msgstr "Portrete"
+
+msgid "Posted %s"
+msgstr "Postat %s"
+
+msgid "Promote mobile app on mobile devices"
+msgstr "Promoveaza aplicatia mobila pe dispozitivele mobile"
+
+msgid "Properties of abums"
+msgstr "Proprietatile albumului"
+
+msgid "Purge Actions"
+msgstr "Stergere actiuni."
+
+msgid "Mar"
+msgstr "Mar"
+
+msgid "May"
+msgstr "Mai"
+
+msgid "Memories"
+msgstr "Suveniruri"
+
+msgid "Merge"
+msgstr "Fuzioneaza"
+
+msgid "More information"
+msgstr "Mai multa informatie"
+
+msgid "Name field must not be empty"
+msgstr "Numele campului nu trebuie sa fie gol"
+
+msgid "Name is already taken"
+msgstr "Numele este deja utilizat"
+
+msgid "New user added"
+msgstr "Utilizator nou adaugat"
+
+msgid "No access to administration, can see private content with appropriate permissions."
+msgstr "Fara acces la administrare, poate vedea continutul priviat cu permisiile corespunzatoare."
+
+msgid "No albums found"
+msgstr "Nu au fost gasite albume"
+
+msgid "No format for this picture"
+msgstr "Nici un format pentru aceasta fotografie"
+
+msgid "No picture found with the following name : %s."
+msgstr "Nu au fost gasite fotografii cu urmatorul nume: %s."
+
+msgid "No plugin activated"
+msgstr "Nici un modul activat"
+
+msgid "No plugins found"
+msgstr "Nici un modul gasit"
+
+msgid "No research in progress"
+msgstr "Nici o re-cautare in derulare"
+
+msgid "No search in progress"
+msgstr "Nici o cautare in derulare"
+
+msgid "No tag found"
+msgstr "Nici o eticheta gasita"
+
+msgid "No, I have changed my mind"
+msgstr "Nu, m-am razgandit"
+
+msgid "Nov"
+msgstr "Noi"
+
+msgid "Object"
+msgstr "Obiect"
+
+msgid "Has access to administration. Can only manage content: photos/albums/users/tags/groups."
+msgstr "Are acces la administrare. Poate gestiona continutul: fotografii/albume/utilizatori/etichete/grupuri."
+
+msgid "Has access to all administration functionnalities. Can manage both configuration and content."
+msgstr "Are access la toate functiile de administrare. Poate gestiona si configuratia si continutul."
+
+msgid "Hide sub-albums"
+msgstr "Ascunde sub-albume"
+
+msgid "If anything bad happens during the update, you would be able to restore a backup."
+msgstr "Daca ceva se va intampla in timpul actualizarii vei putea restaura un backup."
+
+msgid "Install Piwigo on mobile"
+msgstr "Instaleaza Piwigo pe telefon"
+
+msgid "Installed on %s, %s"
+msgstr "Instalat pe %s, %s"
+
+msgid "Jan"
+msgstr "Ian"
+
+msgid "Jul"
+msgstr "Iul"
+
+msgid "Jun"
+msgstr "Iun"
+
+msgid "Keep them"
+msgstr "Pastreaza-le"
+
+msgid "Language"
+msgstr "Limba"
+
+msgid "Last revision date is newer than"
+msgstr "Data ultimei revizuiri este mai noua decat"
+
+msgid "Last visit"
+msgstr "Ultima vizita"
+
+msgid "Latest Piwigo news"
+msgstr "Cele mai recente stiri Piwigo"
+
+msgid "Line View"
+msgstr "Vedere in linie"
+
+msgid "Locked albums are disabled for maintenance. Only administrators can view them in the gallery. Lock this album will also lock his Sub-albums"
+msgstr "Albumele blocate sunt dezactivate pentru mentenanta. Doar administratorii le pot vedea in galerie. Blocarea acestui album va bloca si sub-albumele lui."
+
+msgid "Manage album photos"
+msgstr "Gestioneaza fotografiile albumului"
+
+msgid "Manage sub-albums"
+msgstr "Gestioneaza sub-album"
+
+msgid "Manage users"
+msgstr "Gestioneaza utilizator"
+
+msgid "Manage users with user manager"
+msgstr "Gestioneaza utilizator cu gestiunea de utilizatori"
+
+msgid "Edit"
+msgstr "Editeaza"
+
+msgid "Edit guest user"
+msgstr "Editeaza utilizatorul oaspete"
+
+msgid "Edit photo #%s"
+msgstr "Editeaza fotografia #%s"
+
+msgid "Edited on %s"
+msgstr "Editat pe %s"
+
+msgid "Email"
+msgstr "Email"
+
+msgid "Email Adress"
+msgstr "Adresa Email"
+
+msgid "Equivalent to deactivation. The user is still in the list, but can no longer log in."
+msgstr "Echivalent cu deactivarea. Utilizatorul inca este pe lista dar nu se mai poate loga."
+
+msgid "Error when trying to detect formats"
+msgstr "Eroare la detectarea formatelor."
+
+msgid "Extensions"
+msgstr "Extensii"
+
+msgid "Feb"
+msgstr "Feb"
+
+msgid "File type: %s"
+msgstr "Tipul fisierului: %s"
+
+msgid "Filters"
+msgstr "Filtre"
+
+msgid "Formats"
+msgstr "Formate"
+
+msgid "Generate random password"
+msgstr "Generaza parola aleatoriu"
+
+msgid "Global Gallery Actions"
+msgstr "Actiunile Galeriei Globale"
+
+msgid "Group \"%s\" succesfully deleted"
+msgstr "Grupul \"%s\" sters cu succes"
+
+msgid "Group added"
+msgstr "Grup adaugat"
+
+msgid "Group renamed"
+msgstr "Grup redenumit"
+
+msgid "Group(s) \\{%s1\\} succesfully merged into \"%s2\""
+msgstr "Grup(urile) \\{%s1\\} fuzionate cu success in \"%s2\""
+
+msgid "Groups \\{%s\\} succesfully deleted"
+msgstr "Groups \\{%s\\} sterse cu success"
+
+msgid "Current Version"
+msgstr "Versiunea Curenta"
+
+msgid "Currently running version %s"
+msgstr "Versiunea curenta care ruleaza este %s"
+
+msgid "Deactivated"
+msgstr "Deactivat"
+
+msgid "Dec"
+msgstr "Dec"
+
+msgid "Delete %s format ?"
+msgstr "Sterge  %s formatul?"
+
+msgid "Delete album"
+msgstr "Sterge album"
+
+msgid "Delete orphan tags ?"
+msgstr "Sterge etichetele fara parinti ?"
+
+msgid "Delete tag \"%s\"?"
+msgstr "Sterge eticheta %s?"
+
+msgid "Delete tags \\{%s\\}?"
+msgstr "Sterge etichetele \\{%s\\}?"
+
+msgid "Delete them"
+msgstr "Sterge-le"
+
+msgid "Delete these sizes"
+msgstr "Sterge aceste dimensiuni"
+
+msgid "Delete user"
+msgstr "Sterge utilizator"
+
+msgid "Details"
+msgstr "Detalii"
+
+msgid "Discover"
+msgstr "Descopera"
+
+msgid "Display"
+msgstr "Afiseaza"
+
+msgid "Displays a banner to install or open the official Piwigo app"
+msgstr "Afiseaza un baner  pentru a instala aplicatia oficiala Piwigo"
+
+msgid "Dissociate user from this group"
+msgstr "Disociaza utilizatorul din acest grup"
+
+msgid "Download all activities"
+msgstr "Descarca toate activitatile"
+
+msgid "Downloaded"
+msgstr "Descarca"
+
+msgid "Drag and drop to reorder albums"
+msgstr "Trage si plaseaza pentru a reordona albumele"
+
+msgid "Are you sure you want to uninstall the plugin \"%s\"?"
+msgstr "Esti sigur ca vrei sa dezinstalezi modulul \"%s\"?"
+
+msgid "Are you sure you want to unlock the gallery?"
+msgstr "Esti sigur ca vrei sa deblochezi galeria?"
+
+msgid "Are you sure you want to update all extensions?"
+msgstr "Esti sigur ca vrei sa actualizezi toate extensiile?"
+
+msgid "Associate User"
+msgstr "Asociaza Utilizator"
+
+msgid "At least 2 selected tags are needed to merge"
+msgstr "Cel putine 2 etichete selectate sunt necesare pentru a fuziona"
+
+msgid "Aug"
+msgstr "Aug"
+
+msgid "Average last 12 months"
+msgstr "Media ultimelor 12 luni"
+
+msgid "Cache"
+msgstr "Cache"
+
+msgid "Cache size"
+msgstr "Dimensiunea cache-ului"
+
+msgid "Can be shared by several individuals without conflict (they cannot change the password)."
+msgstr "Poate fi partajata de mai multe persoane fara conflict(nu pot schimba parola)"
+
+msgid "Certification higher or equal to"
+msgstr "Certificare mai mare sau egala cu"
+
+msgid "Change Password"
+msgstr "Schimba Parola"
+
+msgid "Choose which tag to merge these tags into"
+msgstr "Alege in ce eticheta sa fie fuzionate aceste etichete"
+
+msgid "Clear Selection"
+msgstr "Golire Selectie"
+
+msgid "Close"
+msgstr "Inchide"
+
+msgid "Compact View"
+msgstr "Vedere Compacta"
+
+msgid "Compare mode"
+msgstr "Modul comparare"
+
+msgid "Create a new album at root"
+msgstr "Creaza un album nou la baza"
+
+msgid "Create a sub-album of \"%s\""
+msgstr "Create un sub-album al lui\"%s\""
+
+msgid "Created on %s"
+msgstr "Create pe \"%s\""
+
+msgid "Apply an automatic order to root albums"
+msgstr "Aplica o ordine automata albumelor de baza"
+
+msgid "Apply to direct sub-albums"
+msgstr "Aplica sub-albumelor directe"
+
+msgid "Apply to root albums"
+msgstr "Aplica albumelor de baza"
+
+msgid "Apply to the whole hierarchy"
+msgstr "Aplica pe toata ierarhia"
+
+msgid "Apr"
+msgstr "Apr"
+
+msgid "Are you sure you want to delete all sizes?"
+msgstr "Esti sigur ca vrei sa stergi toate dimensiunile?"
+
+msgid "Are you sure you want to delete group \"%s\"?"
+msgstr "Esti sigur ca vrei sa stergi grupul \"%s\"?"
+
+msgid "Are you sure you want to delete the language \"%s\"?"
+msgstr "Esti sigur ca vrei sa stergi limba \"%s\"?"
+
+msgid "Are you sure you want to delete the plugin \"%s\"?"
+msgstr "Esti sigur ca vrei sa stergi modulul \"%s\"?"
+
+msgid "Are you sure you want to delete the ratings of the user \"%s\"?"
+msgstr "Esti sigur ca vrei sa ratingurile utilizatorului \"%s\"?"
+
+msgid "Are you sure you want to delete the theme \"%s\"?"
+msgstr "Esti sigur ca vrei sa stergi tema \"%s\"?"
+
+msgid "Are you sure you want to delete the user \"%s\"?"
+msgstr "Esti sigur ca vrei sa stergi utilizatorul \"%s\"?"
+
+msgid "Are you sure you want to delete this site?"
+msgstr "Esti sigur ca vrei sa stergi acest site?"
+
+msgid "Are you sure you want to delete this theme?"
+msgstr "Esti sigur ca vrei sa stergi aceasta tema?"
+
+msgid "Are you sure you want to delete this?"
+msgstr "Esti sigur ca vrei sa stergi asta?"
+
+msgid "Are you sure you want to install the plugin \"%s\"?"
+msgstr "Esti sigur ca vrei sa instalezi modulul \"%s\"?"
+
+msgid "Are you sure you want to lock the gallery?"
+msgstr "Esti sigur ca vrei sa blochezi galeria?"
+
+msgid "Are you sure you want to restore the plugin \"%s\"?"
+msgstr "Esti sigur ca vrei sa restaurezi modulul \"%s\"?"
+
+msgid "Are you sure you want to restore this plugin?"
+msgstr "Esti sigur ca vrei sa restaurezi acest modulul?"
+
+msgid "Are you sure you want to restore to default settings?"
+msgstr "Esti sigur ca vrei sa restaurezi setarile implicite?"
+
+msgid "<b>%d</b> tag found"
+msgstr "<b>%d</b> eticheta gasita"
+
+msgid "<b>%d</b> tag selected"
+msgstr "<b>%d</b> eticheta selectata"
+
+msgid "<b>%d</b> tags found"
+msgstr "<b>%d</b> etichete gasite"
+
+msgid "<b>1</b> album found"
+msgstr "<b>1</b> album gasit"
+
+msgid "Activated"
+msgstr "Activat"
+
+msgid "Activated plugin list"
+msgstr "Lista module activata"
+
+msgid "Activity"
+msgstr "Activitate"
+
+msgid "Activity peak in the last weeks"
+msgstr "Activitatea maxima in ultimele saptamani"
+
+msgid "Activity time from"
+msgstr "Timpul activitatii de la"
+
+msgid "Add Album"
+msgstr "Adaugare album"
+
+msgid "Add New Plugin"
+msgstr "Adaugare modul nou"
+
+msgid "Add User"
+msgstr "Adauga utilizator"
+
+msgid "Add a new user"
+msgstr "Adauga un utilizator nou"
+
+msgid "Add another set of formats"
+msgstr "Adauga un alt set de formate"
+
+msgid "Add as filter"
+msgstr "Adauga ca filtru"
+
+msgid "Add formats"
+msgstr "Adauga formate"
+
+msgid "Additional filters"
+msgstr "Filtre aditionale"
+
+msgid "Advanced filters"
+msgstr "Filtre avansate"
+
+msgid "Album search tool"
+msgstr "Unealta cautare album"
+
+msgid "Always have a backup of your database and files."
+msgstr "Intodeauna sa ai un back-up al bazei tale de date si a fisierelor."
+
+msgid "%d user logged out"
+msgstr "%d user delogat"
+
+msgid "%d users added"
+msgstr "%d useri adaugati"
+
+msgid "%d users edited"
+msgstr "%d useri editati"
+
+msgid "%d users logged in"
+msgstr "%d useri logati"
+
+msgid "%d users logged out"
+msgstr "%d useri delogati"
+
+msgid "%s GB used"
+msgstr "%s GB utilizati"
+
+msgid "%s MB"
+msgstr "%s MB"
+
+msgid "%s MB used"
+msgstr "%s MB utilizati"
+
+msgid "%s file type"
+msgstr "%s tipul fisierului"
+
+msgid "%s line"
+msgstr "%s linie"
+
+msgid "%s lines"
+msgstr "%s linii"
+
+msgid "%s other tags available.."
+msgstr "%s alte etichete disponibile..."
+
+msgid "%s pixels, %.2f MB"
+msgstr "%s pixeli, %.2f MB"
+
+msgid "%s plugin found"
+msgstr "<b>%s</b> modul gasit"
+
+msgid "%s plugins found"
+msgstr "<b>%s</b> module gasite"
+
+msgid "%s status is required to edit parameters."
+msgstr "%s starea este necesara pentru editarea parametrilor."
+
+msgid "%sGB"
+msgstr "%s GB"
+
+msgid "%sMB"
+msgstr "%s MB"
+
+msgid "<b>%d+</b> albums found, try to refine the search"
+msgstr "<b>%d+</b> albume gasite, incearca sa imbunatatesti cautarea"
+
+msgid "<b>%d</b> albums found"
+msgstr "<b>%d</b> albume gasite"
+
+msgid "%d photo deleted"
+msgstr "%d fotografie stearsa"
+
+msgid "%d photo edited"
+msgstr "%d fotografie editata"
+
+msgid "%d photo moved"
+msgstr "%d fotografie mutata"
+
+msgid "%d photos"
+msgstr "%d fotografii"
+
+msgid "%d photos added"
+msgstr "%d fotografii adaugate"
+
+msgid "%d photos deleted"
+msgstr "%d fotografii sterse"
+
+msgid "%d photos edited"
+msgstr "%d fotografii editate"
+
+msgid "%d photos moved"
+msgstr "%d fotografii mutate"
+
+msgid "%d sub-albums"
+msgstr "%d sub-albume"
+
+msgid "%d tag added"
+msgstr "%d eticheta adaugata"
+
+msgid "%d tag deleted"
+msgstr "%d eticheta stearsa"
+
+msgid "%d tag edited"
+msgstr "%d eticheta editata"
+
+msgid "%d tag moved"
+msgstr "%d eticheta mutata"
+
+msgid "%d tags added"
+msgstr "%d etichete adaugate"
+
+msgid "%d tags deleted"
+msgstr "%d etichete sterse"
+
+msgid "%d tags edited"
+msgstr "%d etichete editate"
+
+msgid "%d tags moved"
+msgstr "%d etichete mutate"
+
+msgid "%d user added"
+msgstr "%d user adaugat"
+
+msgid "%d user edited"
+msgstr "%d user editat"
+
+msgid "%d user logged in"
+msgstr "%d user logat"
+
+msgid " (copy %s)"
+msgstr "(copiaza %s)"
+
+msgid " (copy)"
+msgstr "(copiaza)"
+
+msgid "%d Activities"
+msgstr "%d Activitati"
+
+msgid "%d Activity"
+msgstr "%d Activitate"
+
+msgid "%d album added"
+msgstr "%d album adaugat"
+
+msgid "%d album deleted"
+msgstr "%d album sters"
+
+msgid "%d album edited"
+msgstr "%d album editat"
+
+msgid "%d albums added"
+msgstr "%d albume adaugate"
+
+msgid "%d albums deleted"
+msgstr "%d albume sterse"
+
+msgid "%d albums edited"
+msgstr "%d albume editate"
+
+msgid "%d formats uploaded for %d photos"
+msgstr "%d  formate incarcate pentru %d fotografii"
+
+msgid "%d group added"
+msgstr "%d grup adaugat"
+
+msgid "%d group deleted"
+msgstr "%d grup sters"
+
+msgid "%d group edited"
+msgstr "%d grup editat"
+
+msgid "%d group moved"
+msgstr "%d grup mutat"
+
+msgid "%d groups added"
+msgstr "%d grupuri adaugate"
+
+msgid "%d groups deleted"
+msgstr "%d grupuri sterse"
+
+msgid "%d groups edited"
+msgstr "%d grupuri editate"
+
+msgid "%d groups moved"
+msgstr "%d grupuri mutate"
+
+msgid "%d photo added"
+msgstr "%d fotografie adaugata"
+
+msgid "%d pictures in sub-albums"
+msgstr "%d fotografii in sub-albume"
+
+msgid "<b>%d</b> filtered user"
+msgstr "<b>%d</b> utilizator selectat"
+
+msgid "<b>%d</b> filtered users"
+msgstr "<b>%d</b> utilizatori selectati"
+
+msgid "Album name must not be empty"
+msgstr "Numele albumului nu poate fi gol."
+
+msgid "Some photos are missing from your file system. Details provided by plugin Check Uploads"
+msgstr "Unele fotografii lipsesc din sistemul dumneavoastra de fisiere."
+
+msgid "Visit history"
+msgstr "Vezi istoric"
+

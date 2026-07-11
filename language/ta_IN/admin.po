@@ -1,0 +1,487 @@
+# Piwigo translation — ta_IN
+# Source: admin.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ta_IN\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "%d associations"
+msgstr "\n"
+
+msgid "%d hour"
+msgstr "% d மணிநேரம்"
+
+msgid "%d hours"
+msgstr "% d மணிநேரம்"
+
+msgid "%d guest"
+msgid_plural "%d guests"
+msgstr[0] "% d விருந்தினர்"
+msgstr[1] "% d விருந்தினர்"
+
+msgid "%d groups"
+msgstr "%d குழுக்கள்"
+
+msgid "%d group"
+msgstr "%d குழு"
+
+msgid "%d days"
+msgstr "%d நாட்கள்"
+
+msgid "%d day"
+msgstr "% d நாள்"
+
+msgid "%d albums including"
+msgstr "இதில்% d ஆல்பங்கள்"
+
+msgid "%d album moved"
+msgid_plural "%d albums moved"
+msgstr[0] "% D ஆல்பம் நகர்த்தப்பட்டது"
+msgstr[1] "%d ஆல்பங்கள் நகர்த்தப்பட்டது"
+
+msgid "%d album including"
+msgstr "% d ஆல்பம் அடங்கும்"
+
+msgid " and %d virtual"
+msgstr "மற்றும் %d நிஜமான"
+
+msgid " and %d virtuals"
+msgstr "மற்றும் %d நிஜமான"
+
+msgid "%d anomaly has been corrected."
+msgid_plural "%d anomalies have been detected corrected."
+msgstr[0] "% d ஒழுங்கின்மை சரி செய்யப்பட்டது."
+msgstr[1] "% d முரண்பாடுகள் கண்டறியப்பட்டு மேலும் சரிசெய்யப்பட்டது"
+
+msgid "%d association"
+msgstr "%d தொடர்பு"
+
+msgid "%d minute"
+msgstr "%d நிமிடம்"
+
+msgid "%d minutes"
+msgstr "%d நிமிடங்கள்"
+
+msgid "%d month"
+msgstr "%d மாதம்"
+
+msgid "%d months"
+msgstr "%d மாதங்கள்"
+
+msgid "%d of %d photos selected"
+msgstr "%d இன் % d புகைப்படங்கள் தேர்ந்தெடுக்கப்பட்டது"
+
+msgid "%d parameter was updated."
+msgid_plural "%d parameters were updated."
+msgstr[0] "%d அளவுரு மேம்படுத்தப்பட்டது."
+msgstr[1] "% d அளவுருக்கள் மேம்படுத்தப்பட்டது."
+
+msgid "%d photos uploaded"
+msgstr "%d புகைப்படங்கள் பதிவேற்றப்பட்டது"
+
+msgid "%d member"
+msgid_plural "%d members"
+msgstr[0] "%d உறுப்பினர்"
+msgstr[1] "%d உறுப்பினர்கள்"
+
+msgid "%d mail was sent."
+msgid_plural "%d mails were sent."
+msgstr[0] "%d மின்னஞ்சல் அனுப்பப்பட்டது"
+msgstr[1] "%d அஞ்சல்கள் அனுப்பப்பட்டுள்ளன."
+
+msgid "%d mail was not sent."
+msgid_plural "%d mails were not sent."
+msgstr[0] "%d மின்னஞ்சல் அனுப்பப்படவில்லை"
+msgstr[1] "% d அஞ்சல் அனுப்பப்படவில்லை."
+
+msgid "%d line filtered"
+msgid_plural "%d lines filtered"
+msgstr[0] "% d கோடு வடிகட்டப்பட்டது"
+msgstr[1] "% d வரிசைகள் வடிகட்டப்பட்டது"
+
+msgid "%d photo was deleted"
+msgid_plural "%d photos were deleted"
+msgstr[0] "% d படம் நீக்கப்பட்டது"
+msgstr[1] "%d படங்கள் நீக்கப்பட்டன"
+
+msgid "%d tag"
+msgstr "% d குறிச்சொல்"
+
+msgid "%d tags"
+msgstr "% d குறிச்சொற்கள்"
+
+msgid "%d user"
+msgid_plural "%d users"
+msgstr[0] "% d பயனர்"
+msgstr[1] "% d பயனர்களுக்கு"
+
+msgid "%d user comment rejected"
+msgstr "% d பயனர் கருத்துரை நிராகரிக்கப்பட்டது"
+
+msgid "%d user comment validated"
+msgstr "% d பயனர் கருத்துரை சரிபார்க்கப்பட்டது"
+
+msgid "%d user comments rejected"
+msgstr "% d பயனர் கருத்துரைகள் நிராகரிக்கப்பட்டது"
+
+msgid "%d user comments validated"
+msgstr "% d பயனர் கருத்துரைகள் சரிபார்க்கப்பட்டது"
+
+msgid "%d user deleted"
+msgid_plural "%d users deleted"
+msgstr[0] "% d பயனாளர் அழிக்கப்பட"
+msgstr[1] "% d பயனர்கள் நீக்கப்பட்டன"
+
+msgid "%d user was not updated."
+msgid_plural "%d users were not updated."
+msgstr[0] "% d பயனாளர் மேம்படுத்தப்பட்டு இல்லை\n"
+msgstr[1] "% d பயனர்கள் மேம்படுத்தப்பட்டு இல்லை."
+
+msgid "%d user was updated."
+msgid_plural "%d users were updated."
+msgstr[0] "% d பயனாளர் மேம்படுத்தப்பட்டு."
+msgstr[1] "% d பயனர்கள் மேம்படுத்தப்பட்டது."
+
+msgid "%d seconds"
+msgstr "% d விநாடிகளில்"
+
+msgid "%d second"
+msgstr "% d விநாடி"
+
+msgid "%d physicals"
+msgstr "% d பருநிலை"
+
+msgid "%d physical"
+msgstr "% d பருநிலை"
+
+msgid "%d anomaly has not been corrected."
+msgid_plural "%d anomalies have not been corrected."
+msgstr[0] "% d ஒழுங்கின்மை சரி செய்யப்படவில்லை."
+msgstr[1] "% d முரண்பாடுகள் சரி, இல்ல"
+
+msgid "%d anomaly has been ignored."
+msgid_plural "%d anomalies have been ignored."
+msgstr[0] "% d ஒழுங்கின்மை புறக்கணிக்கப்பட்டது"
+msgstr[1] "%d நேரின்மைகளுடன் புறக்கணிக்கப்பட்டது."
+
+msgid "%d anomaly has been detected."
+msgid_plural "%d anomalies have been detected."
+msgstr[0] "% d ஒழுங்கின்மை கண்டறியப்பட்டது."
+msgstr[1] "% d முரண்பாடுகள் கண்டறியப்பட்டது"
+
+msgid "%d waiting for validation"
+msgstr "% d காத்திருக்கிறது சரிபார்த்தல்"
+
+msgid "%d week"
+msgstr "% d வாரம்"
+
+msgid "%d weeks"
+msgstr "% d வாரங்கள்"
+
+msgid "%d year"
+msgstr "% d வருடம்"
+
+msgid "%d years"
+msgstr "% d வருடங்கள்"
+
+msgid "%s ago"
+msgstr "% கள் முன்பு "
+
+msgid "%s has been successfully updated."
+msgstr "% கள் வெற்றிகரமாக மேம்படுத்தப்பட்டது."
+
+msgid "%s in the future"
+msgstr "%கள் எதிர்காலத்தில்"
+
+msgid "%s must be to set to false in your local/config/config.inc.php file"
+msgstr "% கள் உங்கள்  local/config/config.inc.php கோப்பில் தவறான என்று அமைக்கப்பட்டிருக்க வேண்டும்"
+
+msgid "%s photos can not be regenerated"
+msgstr "% கள் புகைப்படங்கள் மறு உருவாக்கம் செய்ய முடியாது"
+
+msgid "%s photos have been regenerated"
+msgstr "% கள் புகைப்படங்கள் மீண்டும் உருவாக்கப்படுகிறது"
+
+msgid "%s value is not correct file because exif are not supported"
+msgstr "% s மதிப்பு தவறானது ஏனெனில் எக்ஸிப் ஆதரிக்கப்படவில்லை"
+
+msgid "%u users have automatic permission because they belong to a granted group."
+msgstr "% u பயனர்களுக்கு தானியங்கு அனுமதி\nஅவர்கள் ஒரு வழங்கப்பட்ட குழுவை சேர்ந்தவை என்பதால்."
+
+msgid "(this tag will be deleted)"
+msgstr "(இந்த குறி நீக்கப்படும்)"
+
+msgid "+ Add an upload box"
+msgstr "+ ஒரு பதிவேற்ற பெட்டியை சேர்க்கவும்"
+
+msgid ", click on"
+msgstr "சொடுக்கவும் மீது"
+
+msgid "... or "
+msgstr "... அல்லது"
+
+msgid "<em>Piwigo for Android</em> application empowers you to connect your Android phone or table to your Piwigo gallery, create some albums and upload several photos at once."
+msgstr "<em> Android க்கான Piwigo </ em>  பயன்பாட்டு உங்கள் Piwigo கேலரியில் உங்கள் Android தொலைபேசி அல்லது வரைபட்டிகை இணைக்க அனுமதிக்கும், சில ஆல்பங்களை உருவாக்க மற்றும் ஒரே நேரத்தில் பல புகைப்படங்களை பதிவேற்றலாம்."
+
+msgid "<em>Piwigo for iOS</em> application empowers you to connect to your Piwigo gallery from your iPhone, iPad or iPod Touch, create some albums and upload several photos at once."
+msgstr "<em> Piwigo iOS க்கு </ em> பயன்பாட்டு சில ஆல்பங்களை உருவாக்கி ஒரே நேரத்தில் பல புகைப்படங்களை பதிவேற்ற, உங்கள் ஐபோன், ஐபாட் அல்லது ஐபாட் டச் உங்கள் Piwigo கேலரி இணைக்க நீங்கள் அதிகாரமளிக்கிகிறது."
+
+msgid "ACCESS_3"
+msgstr "நிர்வாகிகள் அணுகல்"
+
+msgid "ACCESS_4"
+msgstr "வலை மேலாளர்கள் அணுகல்"
+
+msgid "ACCESS_5"
+msgstr "அணுகுவதற்கு இல்லை\n"
+
+msgid "Access type"
+msgstr "அணுகல் வகையான"
+
+msgid "Action"
+msgstr "செயல்"
+
+msgid "Actions"
+msgstr "செயல்கள்"
+
+msgid "Activate"
+msgstr "செயலாக்க"
+
+msgid "ACCESS_2"
+msgstr "பதிவு செய்த பயனர் அணுகல்"
+
+msgid "ACCESS_1"
+msgstr "அனைத்து அணுகல்\n"
+
+msgid "ACCESS_0"
+msgstr "இலவச அணுகல்"
+
+msgid "A new version of Piwigo is available."
+msgstr "ஒரு புதிய Piwigo பதிப்பு உள்ளது."
+
+msgid "A locked gallery is only visible to administrators"
+msgstr "ஒரு பூட்டிய கேலரி நிர்வாகிகளால் மட்டுமே காண முடியும்"
+
+msgid "Activate Navigation Bar"
+msgstr "செயல்படுத்தவும் திசை பட்டையில்"
+
+msgid "Activate Navigation Thumbnails"
+msgstr "திசையமைப்பு சிறுபடவுருக்களையும் செயல்படுத்தவும்"
+
+msgid "Add"
+msgstr "சேர்க்க"
+
+msgid "Add New Language"
+msgstr "புதிய மொழியை சேர்க்க"
+
+msgid "Add New Theme"
+msgstr "ஒரு புதிய கருப்பொருளை சேர்க்க"
+
+msgid "Add Photos"
+msgstr "ஒரு புகைப்படத்தை சேர்க்க"
+
+msgid "Add a criteria"
+msgstr "ஒரு நிர்ணய அளவை சேர்க்க"
+
+msgid "Add a filter"
+msgstr "ஒரு வடிப்பான் சேர்க்க"
+
+msgid "Add a tag"
+msgstr "ஒரு குறியை சேர்க்க"
+
+msgid "Add a user"
+msgstr "ஒரு பயனர் சேர்க்க"
+
+msgid "Add a virtual album"
+msgstr "ஒரு மெய்நிகர் ஆல்பம் சேர்க்க"
+
+msgid "Add another set of photos"
+msgstr "மற்றொரு புகைப்படங்கள் தொகுப்பைஅமைக்க"
+
+msgid "Add detailed content"
+msgstr "சில விவரமான உள்ளடக்கத்தை சேர்க்க"
+
+msgid "Add group"
+msgstr "குழுவாக சேர்க்க"
+
+msgid "Activate comments"
+msgstr "கருத்துரைகளை செயல்படுத்த"
+
+msgid "Activate icon \"%s\""
+msgstr "படவுருவை செயல்படுத்த   \"% s\""
+
+msgid "Activate icon \"new\" next to albums and pictures"
+msgstr "படவுருவை செயல்படுத்த \"புதிய\" அடுத்ததாக ஆல்பங்கள் மற்றும் படங்களின்"
+
+msgid "Active Languages"
+msgstr "செயல்மிகு மொழிகள்"
+
+msgid "Active Plugins"
+msgstr "செயல்மிகு செருகுநிரல்கள்"
+
+msgid "Active Themes"
+msgstr "செயல்மிகு கருப்பொருள்கள்"
+
+msgid "Add tags"
+msgstr "குறிச்சொற்களை சேர்க்க"
+
+msgid "Add to caddie"
+msgstr "Caddies சேர்க்கவும்"
+
+msgid "Add write access to the \"%s\" directory"
+msgstr "சேர்க்க எழுதுவதற்கு அணுகல் \"%s\" அடைவில்"
+
+msgid "Add/delete a permalink"
+msgstr "ஒரு பெர்மாலின்க் சேர்க்க / நீக்க"
+
+msgid "Added by %s"
+msgstr "சேர்க்கப்பட்டது மூலமாக % s"
+
+msgid "Administration Home"
+msgstr "நிர்வாகத்தின் முகப்பு"
+
+msgid "Adobe Photoshop Lightroom is a photography software designed to manage large quantities of digital images and doing post production work."
+msgstr "அடோப் ஃபோட்டோஷா Lightroom வடிவமைக்கப்பட்ட புகைப்படக்கலை மென்பொருள் டிஜிட்டல் படங்கள் அதிக அளவில் நிர்வகிப்பதற்கான மற்றும் பிந்தைய தயாரிப்பு பணி செய்வதற்கு."
+
+msgid "Advanced features"
+msgstr "முன்னேறிய அம்சங்கள்"
+
+msgid "Album \"%s\" has been added"
+msgstr "ஆல்பம் \"%கள்\" சேர்க்கப்பட்டுள்ளது"
+
+msgid "Album \"%s\" now contains %d photos"
+msgstr "ஆல்பம் \"% கள்\" இப்பொழுது% d புகைப்படங்களை கொண்டிருக்கிறது"
+
+msgid "Album list management"
+msgstr "ஆல்பம் பட்டியல் மேலாண்மை"
+
+msgid "Album manual order was saved"
+msgstr "ஆல்பம் கைமுறையாக வரிசையில் சேமிக்கப்படும்"
+
+msgid "Album name"
+msgstr "ஆல்பம் பெயர்"
+
+msgid "Album photos associated to the following albums: %s"
+msgstr "ஆல்பம் புகைப்படங்கள் தொடர்புடையதாக பின்வரும் ஆல்பங்கள்:% கள்"
+
+msgid "Album updated successfully"
+msgstr "ஆல்பம் வெற்றிகரமாக புதுப்பிக்கப்பட்டன"
+
+msgid "Albums authorized thanks to group associations"
+msgstr "ஆல்பங்கள் அங்கீகரிக்கப்பட்ட நன்றி  குழு சங்கத்தை"
+
+msgid "Albums automatically sorted"
+msgstr "தன்னிச்சையாக வரிசைப்படுத்தப்பட்ட ஆல்பங்கள்"
+
+msgid "All %d photos are selected"
+msgstr "அனைத்து% d புகைப்படங்கள் தேர்ந்தெடுக்கப்பட்டன"
+
+msgid "All extensions are up to date."
+msgstr "அனைத்து நீட்சிகள் இருக்கின்றன இன்றுவரை."
+
+msgid "All languages are up to date."
+msgstr "அனைத்து மொழிகளும் இருக்கின்றன இன்றுவரை."
+
+msgid "All plugins are up to date."
+msgstr "அனைத்து செருகுநிரல்கள் இன்றுவரை புதுப்பிக்கப்பட்ட நிலையில் உள்ளன"
+
+msgid "All themes are up to date."
+msgstr "அனைத்து கருப்பொருள்கள் இன்றுவரை புதுப்பிக்கப்பட்ட நிலையில் உள்ளன"
+
+msgid "Allow rating"
+msgstr "அனுமதிக்க மதிப்பீடு"
+
+msgid "Allow user customization"
+msgstr "பயனர் தனிபயனாக்கத்திற்கு அனுமதிக்கிறது"
+
+msgid "Allow user registration"
+msgstr "பயனர் பதிவுசெய்தல் அனுமதிக்கிறது"
+
+msgid "Allow users to delete their own comments"
+msgstr "பயனர்கள் தங்கள் சொந்த கருத்துக்களையும் நீக்க அனுமதிக்கிறது"
+
+msgid "All optimizations have been successfully completed."
+msgstr "அனைத்து உகந்ததாக்கல்களை  வெற்றிகரமாக முடிக்கப்பட்டது."
+
+msgid "Allow users to edit their own comments"
+msgstr "பயனர்கள் தங்கள் சொந்த கருத்துரைகளை திருத்த அனுமதிக்கின்றன"
+
+msgid "Allowed file types: %s."
+msgstr "அனுமதிக்கப்பட்ட கோப்பு வகைகள்:% கள்."
+
+msgid "An information email was sent to group \"%s\""
+msgstr "தகவல் மின்னஞ்சல் அனுப்பப்பட்டது குழுக்களுக்கு \"% s\""
+
+msgid "Anomaly"
+msgstr "நெறி பிறழ்வு"
+
+msgid "Anyway only webmasters can see this tab and never administrators."
+msgstr "வலைத்தலைமைகள் மட்டும் இந்த தாவலை பார்க்க முடியும்,\n நிர்வாகிகள் இல்லை."
+
+msgid "Aperture is a powerful tool to refine images and manage massive libraries on Mac."
+msgstr "துவாரம் ஒரு சக்திவாய்ந்த கருவியாக உள்ளது படங்களை துல்லியமாக்க மற்றும் மேக் மீது பாரிய நூலகங்கள் நிர்வகிக்க."
+
+msgid "Aperture is designed for professional photographers with iPhoto simplicity."
+msgstr "இடைவெளியில் தனித்தெடுத்த நிறம் நிபுணத்துவ புகைப்படக்காரர்கள் வடிவமைக்கப்பட்டுள்ளது\niPhoto எளிமையாக."
+
+msgid "Applications"
+msgstr "பயன்பாடுகள்"
+
+msgid "Apply action"
+msgstr "செயலை பயன்படுத்து"
+
+msgid "Apply selected corrections"
+msgstr "தெரிவுசெய்யப்பட்ட திருத்தங்களை பயன்படுத்து"
+
+msgid "Apply to sub-albums"
+msgstr "துணை ஆல்பங்களை பயன்படுத்து"
+
+msgid "An error has occured during upgrade."
+msgstr "ஒரு பிழை ஏற்பட்டுள்ளது மேம்படுத்தும் போது ."
+
+msgid "An error occured during extraction (%s)."
+msgstr "ஒரு பிழை நிகழ்ந்தது கோப்புகள் (% கள் ) பிரித்தெடுக்கும்\nபொழுது."
+
+msgid "An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href=\"%s\">Click here to show log error</a>."
+msgstr "பிரித்தெடுக்கும் பொழுது ஒரு பிழை ஏற்பட்டுள்ளது.உங்கள் piwigo நிறுவல் கோப்பு அனுமதிகளை சரிபார்க்கவும்.<br>\n <a href=\"%s\">பதிகை காட்ட இங்கே கிளிக் செய்யவும்</a>."
+
+msgid "Average rate"
+msgstr "சராசரி விகிதம்"
+
+msgid "Basic settings"
+msgstr "அடிப்படை அமைப்புகள்"
+
+msgid "Batch Manager"
+msgstr "தொகுதி மேலாளர்"
+
+msgid "Bound Theme"
+msgstr "பிணைக்கப்பட்ட\nகருப்பொருள்கள்"
+
+msgid "Are you sure to install this upgrade? You must verify if this version does not need uninstallation."
+msgstr "நீங்கள் இந்த மேம்படுத்தலை நிறுவ வேண்டுமா? நீங்கள், சரிபார்க்க வேண்டும்\nஇந்த பதிப்பு முன்னதாக நிறுவல் நீக்கம் வேண்டும் எனில்."
+
+msgid "Are you sure you want to delete this plugin?"
+msgstr "நீங்கள் இந்த செருகுநிரலை நீக்க வேண்டுமா?"
+
+msgid "Are you sure you want to install this plugin?"
+msgstr "நீங்கள் இந்த செருகுநிரலை நிறுவ வேண்டுமா?"
+
+msgid "Associate to album"
+msgstr "ஆல்பத்திற்கு இணைக்கவும்"
+
+msgid "Associated"
+msgstr "\nதொடர்புடையதாக"
+
+msgid "Authorized"
+msgstr "அங்கீகரிக்கப்பட்ட"
+
+msgid "Automatic correction"
+msgstr "தானியக்க திருத்தம்"
+
+msgid "Automatic sort order"
+msgstr "தானியக்க வரிசை ஒழுங்கை"
+

@@ -10,6 +10,9 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\tabsheet;
+use Piwigo\Core\AccessLevel;
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Template\Template;
 
@@ -29,9 +32,9 @@ include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_ADMINISTRATOR);
+check_status(AccessLevel::Administrator);
 
-check_input_parameter('display', $_GET, false, PATTERN_ID);
+check_input_parameter('display', $_GET, false, ValidationPattern::ID);
 
 $tabsheet = new tabsheet();
 $tabsheet->set_id('rating');
@@ -85,7 +88,7 @@ $users = [];
 $user_fields = $conf['user_fields'];
 $query = '
 SELECT ' . $user_fields['username'] . ' as username, ' . $user_fields['id'] . ' as id
-  FROM ' . USERS_TABLE . '
+  FROM ' . Tables::users() . '
 ;';
 $result = pwg_query($query);
 while ((bool) ($row = pwg_db_fetch_assoc($result))) {
@@ -97,12 +100,12 @@ while ((bool) ($row = pwg_db_fetch_assoc($result))) {
 $query = '
 SELECT
     COUNT(DISTINCT(r.element_id))
-  FROM ' . RATE_TABLE . ' AS r';
+  FROM ' . Tables::rate() . ' AS r';
 
 if (! empty($cat_filter)) {
     $query .= '
-    JOIN ' . IMAGES_TABLE . ' AS i ON r.element_id = i.id
-    JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON ic.image_id = i.id';
+    JOIN ' . Tables::images() . ' AS i ON r.element_id = i.id
+    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id';
 }
 
 $query .= '
@@ -115,7 +118,7 @@ $nb_images = is_numeric($nb_images) ? (int) $nb_images : 0;
 $query = '
 SELECT
     COUNT(*)
-  FROM ' . RATE_TABLE .
+  FROM ' . Tables::rate() .
 ';';
 $count_row = pwg_db_fetch_row(pwg_query($query));
 assert($count_row !== null);
@@ -182,12 +185,12 @@ SELECT i.id,
     ROUND(AVG(r.rate),2) AS avg_rates,
     COUNT(r.rate)        AS nb_rates,
     SUM(r.rate)          AS sum_rates
-  FROM ' . RATE_TABLE . ' AS r
-    LEFT JOIN ' . IMAGES_TABLE . ' AS i ON r.element_id = i.id';
+  FROM ' . Tables::rate() . ' AS r
+    LEFT JOIN ' . Tables::images() . ' AS i ON r.element_id = i.id';
 
 if (! empty($cat_filter)) {
     $query .= '
-    JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON ic.image_id = i.id';
+    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id';
 }
 
 $query .= '
@@ -215,7 +218,7 @@ foreach ($images as $image) {
     $image_url = get_root_url() . 'admin.php?page=photo-' . $image['id'];
 
     $query = 'SELECT *
-FROM ' . RATE_TABLE . ' AS r
+FROM ' . Tables::rate() . ' AS r
 WHERE r.element_id=' . $image['id'] . '
 ORDER BY date DESC;';
     $result = pwg_query($query);

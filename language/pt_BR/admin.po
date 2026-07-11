@@ -1,0 +1,4245 @@
+# Piwigo translation — pt_BR
+# Source: admin.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: pt_BR\n"
+"Plural-Forms: nplurals=3; plural=((n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "%d association"
+msgstr "%d associação"
+
+msgid "%d associations"
+msgstr "%d associações"
+
+msgid "%d album including"
+msgstr "%d álbum incluído"
+
+msgid "%d albums including"
+msgstr "%d álbuns incluídos "
+
+msgid "%d physical"
+msgstr "%d físico"
+
+msgid " and %d virtual"
+msgstr " e %d virtual"
+
+msgid "%d album moved"
+msgid_plural "%d albums moved"
+msgstr[0] "%d álbum movido"
+msgstr[1] "%d álbuns movidos"
+
+msgid "%d group"
+msgstr "%d grupo"
+
+msgid "%d groups"
+msgstr "%d grupos"
+
+msgid "%d member"
+msgid_plural "%d members"
+msgstr[0] "%d membro"
+msgstr[1] "%d membros"
+
+msgid "%d tag"
+msgstr "%d tag"
+
+msgid "%d tags"
+msgstr "%d tags"
+
+msgid "%d user comment rejected"
+msgstr "%d comentário de usuário rejeitado"
+
+msgid "%d user comments rejected"
+msgstr "%d comentários de usuário rejeitados"
+
+msgid "%d user comment validated"
+msgstr "%d comentário de usuário aprovado"
+
+msgid "%d user comments validated"
+msgstr "%d comentários de usuário aprovados"
+
+msgid "%d user deleted"
+msgid_plural "%d users deleted"
+msgstr[0] "%d usuário apagado"
+msgstr[1] "%d usuários apagados"
+
+msgid "%d user"
+msgid_plural "%d users"
+msgstr[0] "%d usuário"
+msgstr[1] "%d usuários"
+
+msgid "%d waiting for validation"
+msgstr "%d aguardando aprovação"
+
+msgid "Actions"
+msgstr "Acões"
+
+msgid "Activate"
+msgstr "Ativar"
+
+msgid "Add/delete a permalink"
+msgstr "Adicionar/apagar um link"
+
+msgid "Add a tag"
+msgstr "Adicionar uma tag"
+
+msgid "Add a user"
+msgstr "Adicionar um usuário"
+
+msgid "Add group"
+msgstr "Adicionar um grupo"
+
+msgid "Add"
+msgstr "Adicionar"
+
+msgid "Allow user registration"
+msgstr "Permitir o registro de usuário"
+
+msgid "Apply to sub-albums"
+msgstr "Aplicar aos sub-álbuns"
+
+msgid "Associated"
+msgstr "Associados(as)"
+
+msgid "Caddie management"
+msgstr "Gerenciamento da cesta"
+
+msgid "Caddie"
+msgstr "Cesta"
+
+msgid "Albums authorized thanks to group associations"
+msgstr "Álbuns autorizados graças às associações de grupo"
+
+msgid "Album manual order was saved"
+msgstr "A ordem manual dos álbuns foi salva"
+
+msgid "Check for upgrade failed for unknown reasons."
+msgstr "A checagem por atualização falhou por razões desconhecidas."
+
+msgid "Check for upgrade"
+msgstr "Checar por atualização"
+
+msgid "Comments for all"
+msgstr "Comentários para todos"
+
+msgid "Current name"
+msgstr "Nome atual"
+
+msgid "Database"
+msgstr "Base de dados"
+
+msgid "Deactivate"
+msgstr "Desativar"
+
+msgid "Delete Representant"
+msgstr "Apagar representante"
+
+msgid "Delete selected tags"
+msgstr "Excluir tags selecionadas"
+
+msgid "Delete selected users"
+msgstr "Apagar usuários selecionados"
+
+msgid "Deletions"
+msgstr "Itens apagados"
+
+msgid "Deny selected groups"
+msgstr "Negar os grupos selecionados"
+
+msgid "Deny selected users"
+msgstr "Negar usuários selecionados"
+
+msgid "Description"
+msgstr "Descrição"
+
+msgid "Display options"
+msgstr "Mostrar opções"
+
+msgid "Dissociated"
+msgstr "Desassociados"
+
+msgid "Does not represent"
+msgstr "Não representa"
+
+msgid "Edit selected tags"
+msgstr "Editar tags selecionadas"
+
+msgid "Edit tags"
+msgstr "Editar tags"
+
+msgid "Email admins when a new user registers"
+msgstr "Notificar os administradores quando um novo usuário se registrar"
+
+msgid "Email admins when a valid comment is entered"
+msgstr "Notificar os administradores quando um comentário aprovado for incluído"
+
+msgid "Email admins when a comment requires validation"
+msgstr "Notificar os administradores quando um comentário necessitar de aprovação"
+
+msgid "Environment"
+msgstr "Ambiente"
+
+msgid "Form"
+msgstr "Formulário"
+
+msgid "Gallery title"
+msgstr "Título da galeria"
+
+msgid "Grant selected groups"
+msgstr "Permitir os grupos selecionados"
+
+msgid "Grant selected users"
+msgstr "Permitir os usuários selecionados"
+
+msgid "Group name"
+msgstr "Nome do grupo"
+
+msgid "Groups"
+msgstr "Grupos"
+
+msgid "Guests"
+msgstr "Visitantes"
+
+msgid "History"
+msgstr "Histórico"
+
+msgid "Informations"
+msgstr "Informações"
+
+msgid "Install"
+msgstr "Instalar"
+
+msgid "Link all album photos to a new album"
+msgstr "Vincular (lincar) todos os itens do álbum em um novo álbum"
+
+msgid "Link all album photos to some existing albums"
+msgstr "Vincular (lincar) todos os itens do álbum a algum(s) álbum existente"
+
+msgid "Linked albums"
+msgstr "Álbuns vinculados (Linked)"
+
+msgid "Lock gallery"
+msgstr "Trancar a  galeria"
+
+msgid "Maintenance"
+msgstr "Manutenção"
+
+msgid "Edit album permissions"
+msgstr "Gerenciar permissões do álbum"
+
+msgid "Manage permissions for group \"%s\""
+msgstr "Gerenciar permissões do grupo \"%s\""
+
+msgid "Manage permissions for user \"%s\""
+msgstr "Gerenciar permissões do usuário \"%s\""
+
+msgid "Manage tags"
+msgstr "Gerenciar tags"
+
+msgid "Members"
+msgstr "Membros"
+
+msgid "Metadata synchronized from file"
+msgstr "Metadados sincronizados do arquivo"
+
+msgid "Move albums"
+msgstr "Mover álbuns"
+
+msgid "Move"
+msgstr "Mover"
+
+msgid "Name"
+msgstr "Nome"
+
+msgid "New name"
+msgstr "Nome novo"
+
+msgid "New parent album"
+msgstr "Novo álbum pai (parent album)"
+
+msgid "New tag"
+msgstr "Tag nova"
+
+msgid "Number of comments per page"
+msgstr "Número de comentários por página"
+
+msgid "Number of rates"
+msgstr "Número de votos"
+
+msgid "Only private albums are listed"
+msgstr "Apenas os álbuns privados estão listados"
+
+msgid "Operating system"
+msgstr "Sistema operacional"
+
+msgid "Options"
+msgstr "Opções"
+
+msgid "Other private albums"
+msgstr "Outros álbuns privados"
+
+msgid "Page banner"
+msgstr "Banner da página (imagem que fica no cabeçalho)"
+
+msgid "Parent album"
+msgstr "Álbum pai"
+
+msgid "Path"
+msgstr "Caminho (path)"
+
+msgid "Permalink"
+msgstr "Permalink (endereço permanente)"
+
+msgid "Permalink %s has been previously used by album %s. Delete from the permalink history first"
+msgstr "Permalink %s já está sendo usado pelo álbum %s. Apague do histórico do permalink primeiro"
+
+msgid "The permalink name must be composed of a-z, A-Z, 0-9, \"-\", \"_\" or \"/\". It must not be numeric or start with number followed by \"-\""
+msgstr "O permalink deve ser composto de a-z, A-Z, 0-9, \"-\", \"_\" ou \"/\". Não deve ser numérico ou começar com número seguido de \"-\""
+
+msgid "Permalink %s is already used by album %s"
+msgstr "Permalink %s já está sendo usado pelo álbum %s"
+
+msgid "Permalink history"
+msgstr "Histórico de permalinks"
+
+msgid "Permalinks"
+msgstr "Permalinks"
+
+msgid "Permission denied"
+msgstr "Permissão negada"
+
+msgid "Permission granted thanks to a group"
+msgstr "Permissão garantida graças ao grupo"
+
+msgid "Permission granted"
+msgstr "Permissão garantida"
+
+msgid "Photo informations updated"
+msgstr "Informações da imagem atualizada"
+
+msgid "Plugins"
+msgstr "Plugins"
+
+msgid "Position"
+msgstr "Posição"
+
+msgid "Preferences"
+msgstr "Preferências"
+
+msgid "Properties"
+msgstr "Propriedades"
+
+msgid "Random photo"
+msgstr "Imagem randômica"
+
+msgid "Rate date"
+msgstr "Data da votação"
+
+msgid "Rating by guests"
+msgstr "Votado(a) pelos visitantes"
+
+msgid "Rating"
+msgstr "Avaliação"
+
+msgid "Reject"
+msgstr "Rejeitar"
+
+msgid "Representant"
+msgstr "Representante"
+
+msgid "Representation of albums"
+msgstr "Representante dos álbuns"
+
+msgid "Representative"
+msgstr "Representativo"
+
+msgid "Represents"
+msgstr "Representa"
+
+msgid "Save order"
+msgstr "Salvar ordem"
+
+msgid "Save to permalink history"
+msgstr "Salvar no histórico de permalinks"
+
+msgid "Select at least one album"
+msgstr "Selecione ao menos um álbum"
+
+msgid "Select at least one photo"
+msgstr "Selecionar ao menos uma foto"
+
+msgid "Select at least one user"
+msgstr "Selecionar ao menos um usuário"
+
+msgid "Show info"
+msgstr "Mostrar info"
+
+msgid "Site manager"
+msgstr "Gerenciador do site"
+
+msgid "Status"
+msgstr "Status"
+
+msgid "Statistics"
+msgstr "Estatísticas"
+
+msgid "Storage album"
+msgstr "Álbum de armazenagem"
+
+msgid "Sum of rates"
+msgstr "Soma dos valores"
+
+msgid "Tag \"%s\" already exists"
+msgstr "A tag \"%s\" já existe"
+
+msgid "Tag \"%s\" was added"
+msgstr "A tag \"%s\" foi adicionada"
+
+msgid "Tag selection"
+msgstr "Seleção de tag"
+
+msgid "The %d following tags were deleted"
+msgstr "As %d tags seguintes foram apagadas"
+
+msgid "Unable to check for upgrade."
+msgstr "Não foi possível checar as atualizações."
+
+msgid "Uninstall"
+msgstr "Desinstalar"
+
+msgid "Use the default photo sort order"
+msgstr "Usar a ordem de exibição padrão"
+
+msgid "User comments validation"
+msgstr "Validação dos comentários de usuário"
+
+msgid "Users"
+msgstr "Usuários"
+
+msgid "Validate"
+msgstr "Aprovar"
+
+msgid "Validation"
+msgstr "Aprovação"
+
+msgid "Version"
+msgstr "Versão"
+
+msgid "Virtual albums to move"
+msgstr "Álbuns virtuais a serem movidos"
+
+msgid "Virtual album name"
+msgstr "Nome do álbum virtual"
+
+msgid "Webmaster cannot be deleted"
+msgstr "Webmaster não pode ser apagado"
+
+msgid "You are running on development sources, no check possible."
+msgstr "Você está navegando em fontes de desenvolvimento, nenhuma checagem é possível."
+
+msgid "You cannot delete your account"
+msgstr "Você não pode apagar sua conta"
+
+msgid "You cannot move an album in its own sub album"
+msgstr "Você não pode mover um álbum em seu próprio sub-álbum."
+
+msgid "You need to confirm deletion"
+msgstr "Você precisa confirmar a remoção"
+
+msgid "Associate to album"
+msgstr "Associar ao álbum"
+
+msgid "associate to group"
+msgstr "associar ao grupo"
+
+msgid "Authorized"
+msgstr "Autorizado"
+
+msgid "Add a virtual album"
+msgstr "Adicionar um álbum virtual"
+
+msgid "Authorize users to add comments on selected albums"
+msgstr "Autorizar os usuários a adicionar comentários nos álbuns selecionados"
+
+msgid "The name of an album must not be empty"
+msgstr "O nome de um álbum não pode ser vazio"
+
+msgid "Lock albums"
+msgstr "Trancar álbuns"
+
+msgid "Private"
+msgstr "Álbuns privados"
+
+msgid "Public"
+msgstr "Álbuns públicos"
+
+msgid "Find a new representant by random"
+msgstr "Escolha aleatoriamente um novo representante para este álbum"
+
+msgid "Public / Private"
+msgstr "Público / Privado"
+
+msgid "Manage authorizations for selected albums"
+msgstr "Gerenciar as autorizações para álbuns selecionados"
+
+msgid "Virtual album added"
+msgstr "Álbum virtual adicionado"
+
+msgid "Virtual album deleted"
+msgstr "Álbum virtual apagado"
+
+msgid "Access type"
+msgstr "Tipo de acesso"
+
+msgid "Information data registered in database"
+msgstr "Dado de informação registrado na base de dados"
+
+msgid "Default display"
+msgstr "Exibição padrão (Default display)"
+
+msgid "The gallery URL is not valid."
+msgstr "O URL (endereço) da galeria não é valido."
+
+msgid "The number of comments a page must be between 5 and 50 included."
+msgstr "O número de comentários por página deve ser entre 5 e 50 ."
+
+msgid "Configuration"
+msgstr "Configuração"
+
+msgid "confirm"
+msgstr "confirmar"
+
+msgid "Date"
+msgstr "Data"
+
+msgid "delete album"
+msgstr "apagar o álbum"
+
+msgid "Dissociate from album"
+msgstr "Desassociar do álbum"
+
+msgid "dissociate from group"
+msgstr "desassociar do grupo"
+
+msgid "Album updated successfully"
+msgstr "As informações do álbum foram atualizadas com sucesso"
+
+msgid "photos per page"
+msgstr "itens por página"
+
+msgid "High definition enabled"
+msgstr "Alta definição ativada"
+
+msgid "File"
+msgstr "Arquivo"
+
+msgid "Forbidden"
+msgstr "Proibido"
+
+msgid "global mode"
+msgstr "modo global"
+
+msgid "group \"%s\" added"
+msgstr "grupo \"%s\" adicionado"
+
+msgid "group \"%s\" deleted"
+msgstr "grupo \"%s\" apagado"
+
+msgid "group \"%s\" updated"
+msgstr "grupo \"%s\" atualizado"
+
+msgid "The name of a group must not contain \" or ' or be empty."
+msgstr "O nome de um grupo não deve conter \" ou ' ou ser vazio."
+
+msgid "This name is already used by another group."
+msgstr "Este nome já está sendo usado por outro grupo."
+
+msgid "High definition"
+msgstr "Alta definição"
+
+msgid "jump to album"
+msgstr "ir para o álbum"
+
+msgid "jump to photo"
+msgstr "ir para imagem"
+
+msgid "leave"
+msgstr "deixar (leave)"
+
+msgid "Lock"
+msgstr "Trancar (Lock)"
+
+msgid "Locked"
+msgstr "Trancado(a) (Locked)"
+
+msgid "manage album photos"
+msgstr "gerenciar as fotos do álbum"
+
+msgid "manage sub-albums"
+msgstr "gerenciar sub-álbuns"
+
+msgid "Manage"
+msgstr "Gerenciar"
+
+msgid "Execution time is out, treatment must be continue [Estimated time: %d second]."
+msgid_plural "Execution time is out, treatment must be continue [Estimated time: %d seconds]."
+msgstr[0] "O tempo de execução acabou, tratamento deve ser contínuo [Tempo estimado: %d segundo]."
+msgstr[1] "O tempo de execução acabou, tratamento deve ser contínuo [Tempo estimado: %d segundos]."
+
+msgid "Prepared time for list of users to send mail is limited. Others users are not listed."
+msgstr "O tempo disponível para a criação da lista de usuários para enviar email é limitado. Outros usuários não estão listados."
+
+msgid "Time to send mail is limited. Others mails are skipped."
+msgstr "O tempo para enviar email é limitado. Outros emails estão desconsiderados."
+
+msgid "To send ?"
+msgstr "Enviar ?"
+
+msgid "Last send"
+msgstr "Enviado pela última vez"
+
+msgid "User"
+msgstr "Usuário"
+
+msgid "See you soon,"
+msgstr "Até breve,"
+
+msgid "Go to"
+msgstr "Ir à(ao) "
+
+msgid "Hello"
+msgstr "Olá "
+
+msgid "New photos were added"
+msgstr "Novos itens foram adicionados "
+
+msgid "on"
+msgstr " em "
+
+msgid "between"
+msgstr "entre "
+
+msgid "and"
+msgstr " e "
+
+msgid "The webmaster has subscribed you to receiving notifications by mail."
+msgstr "O webmaster inscreveu você para receber notificações por email."
+
+msgid "You have subscribed to receiving notifications by mail."
+msgstr "Você está na assinatura para receber notificações por email."
+
+msgid "To subscribe"
+msgstr "Para assinar"
+
+msgid "If you encounter problems or have any question, please send a message to"
+msgstr "Se encontrar problemas ou tiver qualquer pergunta, por favor envie uma mensagem para "
+
+msgid "[NBM] Problems or questions"
+msgstr "[Notificação] Problemas ou perguntas"
+
+msgid "The webmaster has unsubscribed you from receiving notifications by mail."
+msgstr "O webmaster cancelou sua inscrição para você não receber notificações por email."
+
+msgid "You have unsubscribed from receiving notifications by mail."
+msgstr "Você saiu da assinatura para receber notificações por email."
+
+msgid ", click on"
+msgstr ", clique em "
+
+msgid "To unsubscribe"
+msgstr "Para cancelar a assinatura"
+
+msgid "With blank value, gallery title will be used"
+msgstr "Com valor em branco, o título da galeria será usado"
+
+msgid "Notification"
+msgstr "Notificação"
+
+msgid "Error when sending email to %s [%s]."
+msgstr "Erro ao enviar email para %s [%s]."
+
+msgid "Mail sent to %s [%s]."
+msgstr "Email enviado para %s [%s]."
+
+msgid "%d mail was sent."
+msgid_plural "%d mails were sent."
+msgstr[0] "%d email foi enviado."
+msgstr[1] "%d emails foram enviados."
+
+msgid "%d mail was not sent."
+msgid_plural "%d mails were not sent."
+msgstr[0] "%d email não foi enviado."
+msgstr[1] "%d emails não foram enviados."
+
+msgid "No mail to send."
+msgstr "Nenhum email para enviar."
+
+msgid "There is no available subscribers to mail."
+msgstr "Não há assinante algum para enviar email."
+
+msgid "Subscribers could be listed (available) only if there is new elements to notify."
+msgstr "Assinantes poderiam ser listados (disponíveis) apenas se houver novos itens para notificar."
+
+msgid "Anyway only webmasters can see this tab and never administrators."
+msgstr "Em todo caso, apenas webmasters podem ver esta tab e nunca administradores."
+
+msgid "No user to send notifications by mail."
+msgstr "Nenhum usuário para enviar notificações por email."
+
+msgid "New photos added"
+msgstr "Novos itens adicionados"
+
+msgid "Subscribe to notification by mail"
+msgstr "Assinar as notificações por email"
+
+msgid "Unsubscribe from notification by mail"
+msgstr "Cancelar a assinatura das notificações por email"
+
+msgid "Parameter"
+msgstr "Parâmetro"
+
+msgid "Continue processing treatment"
+msgstr "Continuar processando tratamento"
+
+msgid "Complementary mail content"
+msgstr "Conteúdo complementar da correspondência"
+
+msgid "Add detailed content"
+msgstr "Adicionar conteúdo detalhado"
+
+msgid "Send mail as"
+msgstr "Enviar email como"
+
+msgid "Send mail to users"
+msgstr "Enviar email aos usuários"
+
+msgid "Send"
+msgstr "Enviar"
+
+msgid "Subscribed"
+msgstr "Assinados"
+
+msgid "Subscribe"
+msgstr "Assinar"
+
+msgid "Parameters"
+msgstr "Parâmetros"
+
+msgid "Select recipients"
+msgstr "Selecionar os destinatários"
+
+msgid "Subscribe/unsubscribe users"
+msgstr "Assinar/Cancelar Assinatura de usuários"
+
+msgid "Unsubscribed"
+msgstr "Assinatura Cancelada"
+
+msgid "%d parameter was updated."
+msgid_plural "%d parameters were updated."
+msgstr[0] "%d parâmetro foi atualizado."
+msgstr[1] "%d parâmetros foram atualizados."
+
+msgid "%d user was not updated."
+msgid_plural "%d users were not updated."
+msgstr[0] "%d usuário não foi atualizado."
+msgstr[1] "%d usuários não foram atualizados."
+
+msgid "User %s [%s] was removed from the subscription list."
+msgstr "Usuário %s [%s] foi removido da lista de assinantes."
+
+msgid "User %s [%s] was added to the subscription list."
+msgstr "Usuário %s [%s] foi adicionado na lista de assinantes."
+
+msgid "%d user was updated."
+msgid_plural "%d users were updated."
+msgstr[0] "%d usuário foi atualizado."
+msgstr[1] "%d usuários foram atualizados."
+
+msgid "User %s [%s] was not removed from the subscription list."
+msgstr "Usuário %s [%s] não foi removido da lista de assinantes."
+
+msgid "User %s [%s] was not added to the subscription list."
+msgstr "Usuário %s [%s] não foi adicionado na lista de assinantes."
+
+msgid "User %s [%s] added."
+msgstr "Usuário %s [%s] adicionado."
+
+msgid "Warning: subscribing or unsubscribing will send mails to users"
+msgstr "Aviso: assinando ou cancelando a assinatura enviará correspondência aos usuários"
+
+msgid "Send mail on HTML format"
+msgstr "Enviar a correspondência no formato HTML"
+
+msgid "Include display of recent photos grouped by dates"
+msgstr "Incluir a exibição do grupo das imagens recentes por datas"
+
+msgid "Available only with HTML format"
+msgstr "Disponível apenas com o formato HTML"
+
+msgid "no write access"
+msgstr "sem acesso de escrita"
+
+msgid "Permissions"
+msgstr "Permissões"
+
+msgid "private"
+msgstr "privado"
+
+msgid "public"
+msgstr "público"
+
+msgid "Purge never used notification feeds"
+msgstr "Limpar os feeds de notificação que nunca foram usados"
+
+msgid "Purge sessions"
+msgstr "Limpar as sessões"
+
+msgid "randomly represented"
+msgstr "radomicamente representado"
+
+msgid "registration date"
+msgstr "dato de registro"
+
+msgid "clean"
+msgstr "limpar"
+
+msgid "Create this site"
+msgstr "Criar este site"
+
+msgid "test"
+msgstr "testar"
+
+msgid "test this remote site"
+msgstr "testar ste site remoto"
+
+msgid "remove tags"
+msgstr "Remover tags"
+
+msgid "Repair and optimize database"
+msgstr "Reparar e otimizar base de dados"
+
+msgid "selection"
+msgstr "seleção"
+
+msgid "set to"
+msgstr "iniciar"
+
+msgid "singly represented"
+msgstr "unicamente representado"
+
+msgid "This site already exists"
+msgstr "Este site já existe"
+
+msgid "created"
+msgstr "criado"
+
+msgid "delete this site and all its attached elements"
+msgstr "apagar este site e todos os itens associados a ele"
+
+msgid "deleted"
+msgstr "apagado(a)"
+
+msgid "an error happened"
+msgstr "um erro aconteceu"
+
+msgid "Local"
+msgstr "Local"
+
+msgid "Remote"
+msgstr "Remoto"
+
+msgid "update the database from files"
+msgstr "usar os arquivos para atualizar a base de dados"
+
+msgid "status"
+msgstr "status"
+
+msgid "Directory"
+msgstr "Diretório"
+
+msgid "sub-albums"
+msgstr "sub-álbuns"
+
+msgid "Synchronize metadata"
+msgstr "Sincronizar metadado"
+
+msgid "target"
+msgstr "alvo"
+
+msgid "Thumbnail"
+msgstr "Miniatura"
+
+msgid "Title"
+msgstr "Título"
+
+msgid "Album list management"
+msgstr "Gerenciamento de álbuns"
+
+msgid "Piwigo configuration"
+msgstr "Configuração Piwigo"
+
+msgid "Edit album"
+msgstr "Editar álbum"
+
+msgid "Group management"
+msgstr "Gerenciamento de grupo"
+
+msgid "User list"
+msgstr "Lista de usuários"
+
+msgid "Database synchronization with files"
+msgstr "Sincronização da base de dados com os arquivos"
+
+msgid "all"
+msgstr "tudo"
+
+msgid "height must be a number superior to"
+msgstr "altura deve ser um número superior a"
+
+msgid "width must be a number superior to"
+msgstr "largura deve ser um número superior a"
+
+msgid "for the file format"
+msgstr "para o formato de arquivo"
+
+msgid "Photo unreachable or no support"
+msgstr "Imagem não alcançável ou nenhum suporte"
+
+msgid "GD version"
+msgstr "versão GD"
+
+msgid "General statistics"
+msgstr "Estatísticas gerais"
+
+msgid "average time"
+msgstr "tempo médio"
+
+msgid "total time"
+msgstr "tempo total"
+
+msgid "for this file format"
+msgstr "para este formato de arquivo"
+
+msgid "unit mode"
+msgstr "modo unitário"
+
+msgid "Unlocked"
+msgstr "Destrancado (Unlocked)"
+
+msgid "unset"
+msgstr "sem valor (não ajustado)"
+
+msgid "Update albums informations"
+msgstr "Atualizar as informações dos álbuns"
+
+msgid "Update photos information"
+msgstr "Atualizar as informações das fotos"
+
+msgid "Synchronize"
+msgstr "Sincronizar"
+
+msgid "reduce to single existing albums"
+msgstr "reduzir os álbuns existentes em apenas um"
+
+msgid "Choose an option"
+msgstr "Escolher uma opção"
+
+msgid "display maximum informations (added albums and photos, deleted albums and photos)"
+msgstr "exibir o máximo de informações (álbuns e fotos adicionados, álbuns e fotos apagados)"
+
+msgid "Error list"
+msgstr "Lista de erros"
+
+msgid "Errors caption"
+msgstr "Captura de erros"
+
+msgid "Detailed informations"
+msgstr "Informações detalhadas"
+
+msgid "File/directory read error"
+msgstr "Erro de leitura em arquivo/diretório"
+
+msgid "The file or directory cannot be accessed (either it does not exist or the access is denied)"
+msgstr "O arquivo ou diretório não pode ser acessado (ou ele não existe ou o acesso está negado)"
+
+msgid "albums deleted in the database"
+msgstr "álbuns apagados da base de dados"
+
+msgid "photos deleted from the database"
+msgstr "itens apagados da base de dados"
+
+msgid "photos candidates for metadata synchronization"
+msgstr "imagens candidatas para a sincronização com o metadado"
+
+msgid "photos informations synchronized with files metadata"
+msgstr "as informações dos itens foram sincronizados com o metadado dos arquivos"
+
+msgid "errors during synchronization"
+msgstr "erros durante a sincronização"
+
+msgid "albums added in the database"
+msgstr "álbuns adicionados à base de dados"
+
+msgid "photos added in the database"
+msgstr "itens adicionados à base de dados"
+
+msgid "photos updated in the database"
+msgstr "itens atualizados na base de dados"
+
+msgid "Search for new images in the directories"
+msgstr "Pesquisar novas imagens nos diretórios"
+
+msgid "added"
+msgstr "adicionado(a)"
+
+msgid "Metadata synchronization results"
+msgstr "Resultados da sincronização do metadado"
+
+msgid "only perform a simulation (no change in database will be made)"
+msgstr "apenas executa uma simulação (não será feita alteração alguma na base de dados)"
+
+msgid "Simulation"
+msgstr "Simulação"
+
+msgid "directories + files"
+msgstr "diretórios + arquivos"
+
+msgid "only directories"
+msgstr "apenas diretórios"
+
+msgid "synchronize files structure with database"
+msgstr "sincronizar a estrutura dos arquivos com a base de dados"
+
+msgid "synchronize files metadata with database photos informations"
+msgstr "sincronizar o metadado dos arquivos com as informações dos itens da base de dados"
+
+msgid "even already synchronized photos"
+msgstr "itens já sincronizados"
+
+msgid "Used metadata"
+msgstr "Metadados usados"
+
+msgid "The name of directories and files must be composed of letters, numbers, \"-\", \"_\" or \".\""
+msgstr "O nome dos diretórios e dos arquivos devem conter somente letras, números, \"-\", \"_\" ou \".\""
+
+msgid "wrong filename"
+msgstr "nome de arquivo errado"
+
+msgid "Upload"
+msgstr "Enviar (Upload)"
+
+msgid "user \"%s\" added"
+msgstr "adicionado usuário \"%s\" "
+
+msgid "User status"
+msgstr "Status de usuário"
+
+msgid "user_status_admin"
+msgstr "Administrador"
+
+msgid "user_status_generic"
+msgstr "Genérico"
+
+msgid "user_status_guest"
+msgstr "Visitante"
+
+msgid "user_status_webmaster"
+msgstr "Webmaster"
+
+msgid "Virtual album"
+msgstr "Álbum virtual"
+
+msgid "Waiting"
+msgstr "Aguardando"
+
+msgid "default"
+msgstr "padrão"
+
+msgid "Toggle 'default group' property"
+msgstr "Ligar/Desligar 'gruppo padrão' propriedade"
+
+msgid "Advanced features"
+msgstr "Características principais"
+
+msgid "Overall"
+msgstr "Completo(amente)"
+
+msgid "Year"
+msgstr "Ano"
+
+msgid "Month"
+msgstr "Mês"
+
+msgid "Day"
+msgstr "Dia"
+
+msgid "Pages seen"
+msgstr "Páginas vistas"
+
+msgid "Time"
+msgstr "Tempo"
+
+msgid "IP"
+msgstr "IP"
+
+msgid "Element"
+msgstr "Item"
+
+msgid "Section"
+msgstr "Seção"
+
+msgid "An information email was sent to group \"%s\""
+msgstr "Um email informativo foi foi enviado para o grupo \"%s"
+
+msgid "Send an information email to group members"
+msgstr "Enviar um email informativo aos membros do grupo"
+
+msgid "Group"
+msgstr "Grupo"
+
+msgid "[%s] Visit album %s"
+msgstr "[%s] Venha visitar o álbum %s"
+
+msgid "Hello,"
+msgstr "Olá,"
+
+msgid "See you soon."
+msgstr "Até breve."
+
+msgid "Discover album:"
+msgstr "Venha descobrir o álbum:"
+
+msgid "Mail content"
+msgstr "conteúdo da correspondência"
+
+msgid "none"
+msgstr "nenhum"
+
+msgid "high"
+msgstr "alto"
+
+msgid "other"
+msgstr "outro"
+
+msgid "Element type"
+msgstr "Tipo de item"
+
+msgid "Image id"
+msgstr "ID da imagem"
+
+msgid "Summary"
+msgstr "Sumário"
+
+msgid "%d line filtered"
+msgid_plural "%d lines filtered"
+msgstr[0] "%d linha filtrada"
+msgstr[1] "%d linhas filtradas"
+
+msgid "%d guest"
+msgid_plural "%d guests"
+msgstr[0] "%d visitante"
+msgstr[1] "%d visitantes"
+
+msgid "Hour"
+msgstr "Hora"
+
+msgid "guest"
+msgstr "visitante"
+
+msgid "default values"
+msgstr "valores padrão"
+
+msgid "Guest cannot be deleted"
+msgstr "Visitante não pode ser apagado"
+
+msgid "Default user cannot be deleted"
+msgstr "Usuário padrão não pode ser apagado"
+
+msgid "Purge history detail"
+msgstr "Limpar o detalhe histórico"
+
+msgid "Purge history summary"
+msgstr "Limpar o sumário do histórico"
+
+msgid "Check integrity"
+msgstr "Checar integridade"
+
+msgid "Anomaly"
+msgstr "Anomalia"
+
+msgid "Correction"
+msgstr "Correção"
+
+msgid "Automatic correction"
+msgstr "Correção automática"
+
+msgid "Impossible automatic correction"
+msgstr "Impossível a correção automática"
+
+msgid "Correction applied with success"
+msgstr "A correção foi aplicada com sucesso"
+
+msgid "Correction applied with error"
+msgstr "A correção foi aplicada com erro"
+
+msgid "%d anomaly has been detected."
+msgid_plural "%d anomalies have been detected."
+msgstr[0] "%d anomalia foi detectada."
+msgstr[1] "%d anomalias foram detectadas."
+
+msgid "%d anomaly has been corrected."
+msgid_plural "%d anomalies have been detected corrected."
+msgstr[0] "%d anomalia foi corrigida."
+msgstr[1] "%d anomalias foram corrigidas."
+
+msgid "%d anomaly has not been corrected."
+msgid_plural "%d anomalies have not been corrected."
+msgstr[0] "%d anomalia não foi corrigida."
+msgstr[1] "%d anomalias não foram corrigidas."
+
+msgid "Go to %s or %s for more informations"
+msgstr "Vá ao %s ou %s para mais informações"
+
+msgid "the forum"
+msgstr "forum"
+
+msgid "the wiki"
+msgstr "wiki"
+
+msgid "%s value is not correct file because exif are not supported"
+msgstr "valor %s não está correto porque exif não é suportado"
+
+msgid "%s must be to set to false in your local/config/config.inc.php file"
+msgstr "%s deve ser atualizado para falso no seu arquivo config_local.inc.php"
+
+msgid "Main \"guest\" user does not exist"
+msgstr "O usuário \"visitante\" principal não existe"
+
+msgid "Main \"guest\" user status is incorrect"
+msgstr "O status de usuário do \"visitante\" principal está incorreto"
+
+msgid "Default user does not exist"
+msgstr "usuário padrão (default) não existe"
+
+msgid "Main \"webmaster\" user does not exist"
+msgstr "O usuário principal \"webmaster\" não existe"
+
+msgid "Main \"webmaster\" user status is incorrect"
+msgstr "O status do usuário principal \"webmaster\" está incorreto"
+
+msgid "User \"%s\" created with \"%s\" like password"
+msgstr "O usuário \"%s\" foi criado com \"%s\" como senha"
+
+msgid "Status of user \"%s\" updated"
+msgstr "Status do usuário \"%s\" foi atualizado"
+
+msgid "add new photos to caddie"
+msgstr "adicionar novos itens à cesta"
+
+msgid "No display"
+msgstr "Nenhuma exibição"
+
+msgid "Classic display"
+msgstr "Exibição clássica"
+
+msgid "Hoverbox display"
+msgstr "Exibição hoverbox"
+
+msgid "Minimum privacy level"
+msgstr "Nível de privacidade mínima"
+
+msgid "Privacy level"
+msgstr "Nível de privacidade"
+
+msgid "Level 0"
+msgstr "---"
+
+msgid "Level 1"
+msgstr "Contatos"
+
+msgid "Level 2"
+msgstr "Amigos"
+
+msgid "Level 4"
+msgstr "Família"
+
+msgid "Level 8"
+msgstr "Administradores"
+
+msgid "Reinitialize check integrity"
+msgstr "Reiniciar checar integridade"
+
+msgid "Check all"
+msgstr "marcar tudo"
+
+msgid "Uncheck all"
+msgstr "desmarcar tudo"
+
+msgid "Check automatic corrections"
+msgstr "Checar correções automáticas"
+
+msgid "Apply selected corrections"
+msgstr "Aplicar as correções selecionadas"
+
+msgid "Ignore selected anomalies"
+msgstr "Ignorar as anomalias selecionadas"
+
+msgid "Refresh"
+msgstr "Substituir"
+
+msgid "The anomaly will be ignored until next application version"
+msgstr "A anomalia será ignorada até a próxima versão da aplicação"
+
+msgid "Correction the anomaly will cancel the fact that it's ignored"
+msgstr "A correção da anomalia irá cancelar o fato de que está ignorada"
+
+msgid "%d anomaly has been ignored."
+msgid_plural "%d anomalies have been ignored."
+msgstr[0] "%d anomalia foi ignorada."
+msgstr[1] "%d anomalias foram ignoradas."
+
+msgid "Plugins which need upgrade"
+msgstr "Plugins que necessitam atualização (upgrade)"
+
+msgid "Plugin list"
+msgstr "Lista de plugins"
+
+msgid "Check for updates"
+msgstr "Checar por atualizações"
+
+msgid "Other plugins"
+msgstr "Outros plugins"
+
+msgid "Last revisions"
+msgstr "Últimas revisões"
+
+msgid "Are you sure you want to delete this plugin?"
+msgstr "Você tem certeza de que quer apagar este plugin?"
+
+msgid "Are you sure you want to install this plugin?"
+msgstr "Você tem certeza de que quer instalar este plugin?"
+
+msgid "Are you sure to install this upgrade? You must verify if this version does not need uninstallation."
+msgstr "Você tem certeza de que quer instalar esta atualização? Você deve verificar se esta versão não necessita de uma desinstalação."
+
+msgid "Plugin has been successfully copied"
+msgstr "Plugin foi copiado com sucesso"
+
+msgid "Can't create temporary file."
+msgstr "Não é possível criar arquivo temporário."
+
+msgid "Can't download archive."
+msgstr "Não é possível baixar arquivo."
+
+msgid "Can't read or extract archive."
+msgstr "Não é possível ler ou extrair arquivo."
+
+msgid "An error occured during extraction (%s)."
+msgstr "Houve um erro durante a extração (%s)."
+
+msgid "Please check \"plugins\" folder and sub-folders permissions (CHMOD)."
+msgstr "Por favor, checar as permissões das pastas e subpastas de plugins (CHMOD)."
+
+msgid "Can't connect to server."
+msgstr "Não foi possível a conexão com o servidor."
+
+msgid "Purge compiled templates"
+msgstr "Limpar os modelos compilados"
+
+msgid "ACCESS_0"
+msgstr "Acesso livre"
+
+msgid "ACCESS_1"
+msgstr "Acesso a todos"
+
+msgid "ACCESS_2"
+msgstr "Acesso a assinantes"
+
+msgid "ACCESS_3"
+msgstr "Acesso a administradores"
+
+msgid "ACCESS_4"
+msgstr "Acesso a webmasters"
+
+msgid "ACCESS_5"
+msgstr "Nenhum acesso"
+
+msgid "Support"
+msgstr "Suporte"
+
+msgid "Documentation"
+msgstr "Documentação"
+
+msgid "A new version of Piwigo is available."
+msgstr "Uma nova versão de Piwigo está disponível."
+
+msgid "Piwigo Administration"
+msgstr "Administração Piwigo"
+
+msgid "Piwigo version"
+msgstr "Versão Piwigo"
+
+msgid "You are running the latest version of Piwigo."
+msgstr "Você está usando a última versão de Piwigo."
+
+msgid "The version of %s [%s] installed is not compatible with the version required [%s]"
+msgstr "A versão instalada de %s [%s] não é compatível com a versão requerida [%s]"
+
+msgid "You need to upgrade your system to take full advantage of the application else the application will not work correctly, or not at all"
+msgstr "Você precisa atualizar seu sistema para aproveitar ao máximo esta aplicação, caso contrário, a aplicação pode não funcionar completa ou corretamente."
+
+msgid "Deleted on"
+msgstr "Apagada em"
+
+msgid "Last hit"
+msgstr "Último acesso (Last hit)"
+
+msgid "GD library is missing"
+msgstr "está faltanto a GD library"
+
+msgid "Templates"
+msgstr "Modelos (Templates)"
+
+msgid "Extend for templates"
+msgstr "Extensões para modelos (templates)"
+
+msgid "Replacement of original templates by customized templates from template-extension subfolder"
+msgstr "Substituição dos modelos originais pelos modelos customizados do subdiretório template-extension"
+
+msgid "Replacers (customized templates)"
+msgstr "Substitutos (modelos customizados)"
+
+msgid "Original templates"
+msgstr "Modelos(templates) originais"
+
+msgid "Optional URL keyword"
+msgstr "palavra chave URL opcional"
+
+msgid "Templates configuration has been recorded."
+msgstr "A configuração dos modelos (templates) foram gravadas."
+
+msgid "All optimizations have been successfully completed."
+msgstr "Todas as otimizações foram finalizadas com sucesso."
+
+msgid "Optimizations have been completed with some errors."
+msgstr "As otimizações foram finalizadas com alguns erros."
+
+msgid "Modify information"
+msgstr "Modificar informação"
+
+msgid "nothing"
+msgstr "nada"
+
+msgid "overrides existing values with empty ones"
+msgstr "sobrepor os valores existentes com valores vazios"
+
+msgid "Manage photo ranks"
+msgstr "Ordenação das fotos"
+
+msgid "Edit ranks"
+msgstr "Editar posições (ranks)"
+
+msgid "No photo in this album"
+msgstr "Nenhum item nesse álbum"
+
+msgid "Images manual order was saved"
+msgstr "A ordem manual das imagens foi salva"
+
+msgid "ranks"
+msgstr "posições (ranks)"
+
+msgid "Drag to re-order"
+msgstr "Arraste para reordenar"
+
+msgid "Quick Local Synchronization"
+msgstr "Sincronização Local Rápida"
+
+msgid "No photo can be deleted"
+msgstr "Nenhuma foto pode ser apagada"
+
+msgid "Delete selected photos"
+msgstr "Apagar as fotos selecionadas"
+
+msgid "%d photo was deleted"
+msgid_plural "%d photos were deleted"
+msgstr[0] "%d foto foi apagada"
+msgstr[1] "%d fotos foram apagadas"
+
+msgid "Downloads"
+msgstr "Downloads"
+
+msgid "Released on"
+msgstr "Lançado em"
+
+msgid "Number of downloads"
+msgstr "Número de downloads"
+
+msgid "Piwigo Announcements Newsletter"
+msgstr "Boletim (newsletter) sobre anúncios do Piwigo"
+
+msgid "Keep in touch with Piwigo project, subscribe to Piwigo Announcement Newsletter. You will receive emails when a new release is available (sometimes including a security bug fix, it's important to know and upgrade) and when major events happen to the project. Only a few emails a year."
+msgstr "Fique atualizado com o projeto Piwigo, assine o boletim (newsletter) dos anúncios do Piwigo. Você receberá emails quando uma nova versão for disponibilizada (às vezes incluindo a correção de um bug, é importante estar por dentro para atualizar) e quando eventos importantes acontecerem no projeto. Apenas uns poucos emails ao longo do ano."
+
+msgid "Subscribe %s"
+msgstr "Assinar %s"
+
+msgid "Subscribe %s to Piwigo Announcements Newsletter"
+msgstr "Fazer %s assinar o boletim (newsletter) sobre anúncios do Piwigo"
+
+msgid "Purge search history"
+msgstr "Limpar o histórico da pesquisa"
+
+msgid "Hide"
+msgstr "Esconder"
+
+msgid "Miscellaneous"
+msgstr "Outras informações"
+
+msgid "Virtual Links"
+msgstr "Links virtuais"
+
+msgid "Menu Management"
+msgstr "Menu"
+
+msgid "Rate"
+msgstr "Nota"
+
+msgid "Average rate"
+msgstr "Nota média"
+
+msgid "Add to caddie"
+msgstr "Acrescentar à cesta"
+
+msgid "%d of %d photos selected"
+msgstr "%d de %d fotos selecionadas"
+
+msgid "%d photos uploaded"
+msgstr "%d fotos enviadas"
+
+msgid "%s has been successfully updated."
+msgstr "%s foi atualizado com sucesso."
+
+msgid "%s photos can not be regenerated"
+msgstr "%s fotos não puderam ser recriadas"
+
+msgid "%s photos have been regenerated"
+msgstr "%s fotos foram ser recriadas"
+
+msgid "(this tag will be deleted)"
+msgstr "(esta tag será excluída)"
+
+msgid "+ Add an upload box"
+msgstr "+ Inserir uma caixa de envio"
+
+msgid "... or "
+msgstr "... ou "
+
+msgid "Action"
+msgstr "Ação"
+
+msgid "Activate icon \"%s\""
+msgstr "Ativar ícone \"%s\""
+
+msgid "Activate icon \"new\" next to albums and pictures"
+msgstr "Ativar ícone \"novo\" próximo a àlbuns e imagens"
+
+msgid "Activate Navigation Bar"
+msgstr "Ativar barra de navegação"
+
+msgid "Activate Navigation Thumbnails"
+msgstr "Ativar miniaturas de navegação"
+
+msgid "Activate comments"
+msgstr "Ativar comentários"
+
+msgid "Active Languages"
+msgstr "Idiomas ativos"
+
+msgid "Active Plugins"
+msgstr "Plugins ativos"
+
+msgid "Active Themes"
+msgstr "Temas ativos"
+
+msgid "Add a criteria"
+msgstr "Adicionar um critério"
+
+msgid "Add a filter"
+msgstr "Adicionar um filtro"
+
+msgid "Add another set of photos"
+msgstr "Inserir outro conjunto de fotos"
+
+msgid "Add New Language"
+msgstr "Inserir novo idioma"
+
+msgid "Add New Theme"
+msgstr "Inserir um novo tema"
+
+msgid "Add Photos"
+msgstr "Inserir fotos"
+
+msgid "Add tags"
+msgstr "Inserir tags"
+
+msgid "Add write access to the \"%s\" directory"
+msgstr "Adicionar acesso de gravação ao diretório \"%s\""
+
+msgid "Administration Home"
+msgstr "Administração"
+
+msgid "Album \"%s\" has been added"
+msgstr "Álbum \"%s\" foi inserido"
+
+msgid "Album \"%s\" now contains %d photos"
+msgstr "Álbum \"%s\" contém agora %d fotos"
+
+msgid "Album name"
+msgstr "Nome do álbum"
+
+msgid "Album photos associated to the following albums: %s"
+msgstr "Álbum associado aos seguintes álbuns: %s"
+
+msgid "Albums automatically sorted"
+msgstr "Albuns classificados automaticamente"
+
+msgid "All %d photos are selected"
+msgstr "Todas as %d fotos foram selecionadas"
+
+msgid "All extensions are up to date."
+msgstr "Todas as extensões estão atualizadas."
+
+msgid "All languages are up to date."
+msgstr "Todos os idiomas estão atualizados."
+
+msgid "All plugins are up to date."
+msgstr "Todos os plugins estão atualizados."
+
+msgid "All themes are up to date."
+msgstr "Todos os temas estão atualizados."
+
+msgid "Allow rating"
+msgstr "Permitir avaliação"
+
+msgid "Allow user customization"
+msgstr "Permitir personalização de usuário"
+
+msgid "Allow users to delete their own comments"
+msgstr "Permitir aos usuários excluir seus próprios comentários"
+
+msgid "Allow users to edit their own comments"
+msgstr "Permitir aos usuários editar seus próprios comentários"
+
+msgid "Allowed file types: %s."
+msgstr "Tipos de arquivos permitidos: %s."
+
+msgid "An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href=\"%s\">Click here to show log error</a>."
+msgstr "Um erro ocorreu durante a extração. Por favor, verifique as permissões de arquivo da sua instalação do Piwigo.<br><a href=\"%s\">Clique aqui para mostrar o registro de erros</a>."
+
+msgid "An error has occured during upgrade."
+msgstr "Um erro ocorreu durante a atualização."
+
+msgid "Apply action"
+msgstr "Aplicar ação"
+
+msgid "Approximate maximum resolution: %dM pixels (that's %dx%d pixels)."
+msgstr "Resolução máxima aproximada: %dM pixels (que é %dx%d pixels)."
+
+msgid "automatic order"
+msgstr "Ordem automática"
+
+msgid "Batch Manager"
+msgstr "Gerenciador de lotes"
+
+msgid "Bound Theme"
+msgstr "Tema vinculado"
+
+msgid "By %s"
+msgstr "Por %s"
+
+msgid "By default, Piwigo will create a new websize from the HD (high definition) version of your photo."
+msgstr "Por padrão, Piwigo criará um novo tamanho web a partir da versão HD (alta definição) da sua foto."
+
+msgid "By rank"
+msgstr "Por classificação"
+
+msgid "Cannot delete the old permalink !"
+msgstr "O antigo link permanente não pode ser deletado!"
+
+msgid "Change Admin Colors"
+msgstr "Trocar cores da administração"
+
+msgid "Choose an action"
+msgstr "Escolha uma ação"
+
+msgid "Confirm merge"
+msgstr "Confirme a fusão"
+
+msgid "create a new album"
+msgstr "criar um novo álbum"
+
+msgid "Create the \"%s\" directory at the root of your Piwigo installation"
+msgstr "Criar o diretório \"%s\" no diretório raiz de instalação do seu Piwigo"
+
+msgid "Create"
+msgstr "Criar"
+
+msgid "Crop"
+msgstr "Cortar"
+
+msgid "Deactivate all"
+msgstr "Desativar todos"
+
+msgid "Default comments order"
+msgstr "Ordem de comentários padrão"
+
+msgid "Default photos order"
+msgstr "Ordem de fotos padrão"
+
+msgid "Delete orphan tags"
+msgstr "Excluir tags orfãos"
+
+msgid "Delete this language"
+msgstr "Excluir essa linguagem."
+
+msgid "Delete this theme"
+msgstr "Excluir esse tema."
+
+msgid "Directory does not exist"
+msgstr "Essa pasta não existe."
+
+msgid "Do you want to activate anyway?"
+msgstr "Você deseja mesmo ativar?"
+
+msgid "Download,"
+msgstr "Baixar,"
+
+msgid "Drop into album"
+msgstr "Selecione um álbum"
+
+msgid "Duplicates"
+msgstr "Duplicados"
+
+msgid "ERROR"
+msgstr "ERRO"
+
+msgid "Error on file \"%s\" : %s"
+msgstr "Erro no arquivo \"%s\" : %s"
+
+msgid "Everybody"
+msgstr "Todos"
+
+msgid "Exif extension not available, admin should disable exif use"
+msgstr "A extensão Exif não está disponível, o administrador deve desabilitar o uso do Exif"
+
+msgid "Extensions Update"
+msgstr "Atualizar Extensões"
+
+msgid "FTP + Synchronization"
+msgstr "FTP + Sincronização"
+
+msgid "Failed to write file to disk"
+msgstr "Falha ao gravar arquivo no disco"
+
+msgid "Follow Orientation"
+msgstr "Siga a orientação"
+
+msgid "Forbid this language to users"
+msgstr "Proibir essa linguagem para usuários"
+
+msgid "Forbid this theme to users"
+msgstr "Proibir esse tema para usuários"
+
+msgid "Get Support on Piwigo Forum"
+msgstr "Obter suporte no Piwigo Fórum "
+
+msgid "Guest Settings"
+msgstr "Configuração de Convidados"
+
+msgid "Height"
+msgstr "Altura"
+
+msgid "Help Me"
+msgstr "Ajuda"
+
+msgid "I decide to update anyway"
+msgstr "Eu decido atualizar"
+
+msgid "Ignore All"
+msgstr "Ignorar tudo"
+
+msgid "Ignore this update"
+msgstr "Ignorar essa atualização"
+
+msgid "Image Quality"
+msgstr "Qualidade da imagem"
+
+msgid "Impossible to activate this theme, the parent theme is missing: %s"
+msgstr "Este tema não pode ser ativado, está faltando o tema principal: %s"
+
+msgid "Impossible to deactivate this language, first set another language as default."
+msgstr "Impossível desativar essa linguagem, primeiro defina outra linguagem como padrão."
+
+msgid "Impossible to deactivate this language, you need at least one language."
+msgstr "Impossível desativar essa linguagem, você precisa de pelo menos uma linguagem."
+
+msgid "Impossible to deactivate this theme, you need at least one theme."
+msgstr "Impossível desativar esse tema, você precida de pelo menos um tema."
+
+msgid "Impossible to delete this theme. Other themes depends on it: %s"
+msgstr "Este tema não pode ser excluido, porque outros temas dependem dele: %s"
+
+msgid "Inactive Languages"
+msgstr "Linguagens inativas"
+
+msgid "Inactive Plugins"
+msgstr "Plugins inativos"
+
+msgid "Inactive Themes"
+msgstr "Temas inativos"
+
+msgid "Install on your computer,"
+msgstr "Instalar em seu computador, "
+
+msgid "Installed Languages"
+msgstr "Idiomas instalados"
+
+msgid "Installed Themes"
+msgstr "Temas Instalados"
+
+msgid "Instructions to use Piwigo"
+msgstr "Introdução para usar o Piwigo"
+
+msgid "Invert"
+msgstr "Inverter"
+
+msgid "Language has been successfully installed"
+msgstr "Idioma instalado com sucesso"
+
+msgid "Languages which need upgrade"
+msgstr "Línguas que precisam atualizar"
+
+msgid "Languages"
+msgstr "Idiomas"
+
+msgid "Last import"
+msgstr "Última importação"
+
+msgid "Learn more"
+msgstr "Saiba mais"
+
+msgid "Main Page"
+msgstr "Página Principal"
+
+msgid "delete photo"
+msgstr "Excluir foto"
+
+msgid "delete"
+msgstr "Excluir."
+
+msgid "display"
+msgstr "Exibir"
+
+msgid "existing album"
+msgstr "Cagtegoria já existe"
+
+msgid "hide details"
+msgstr "Esconder detalhes"
+
+msgid "include child albums"
+msgstr "Incluir sub-álbuns"
+
+msgid " and %d virtuals"
+msgstr " e %d virtuais"
+
+msgid "%d day"
+msgstr "%d dia"
+
+msgid "%d days"
+msgstr "%d dias"
+
+msgid "%d hour"
+msgstr "%d hora"
+
+msgid "%d hours"
+msgstr "%d horas"
+
+msgid "%d minute"
+msgstr "%d minuto"
+
+msgid "%d minutes"
+msgstr "%d minutos"
+
+msgid "%d month"
+msgstr "%d mês"
+
+msgid "%d months"
+msgstr "%d meses"
+
+msgid "%d physicals"
+msgstr "%d físico"
+
+msgid "%d second"
+msgstr "%d segundo"
+
+msgid "%d seconds"
+msgstr "%d segundos"
+
+msgid "%d week"
+msgstr "%d semana"
+
+msgid "%d weeks"
+msgstr "%d semanas"
+
+msgid "%d year"
+msgstr "%d ano"
+
+msgid "%d years"
+msgstr "%d anos"
+
+msgid "%s ago"
+msgstr "%s atrás"
+
+msgid "%s in the future"
+msgstr "%s no futuro"
+
+msgid "%u users have automatic permission because they belong to a granted group."
+msgstr "usuários %u tem permissão automática porque pertencem a um grupo que possui essa permissão"
+
+msgid "<em>Piwigo for Android</em> application empowers you to connect your Android phone or table to your Piwigo gallery, create some albums and upload several photos at once."
+msgstr "O aplicativo <em>Piwigo para Android</em> capacita você a conectar o seu celular ou tablet Android à sua galeria Piwigo, criando álbuns e colocando várias fotos ao mesmo tempo."
+
+msgid "A locked gallery is only visible to administrators"
+msgstr "Uma galeria trancada é somente visível pelos administradores"
+
+msgid "Added by %s"
+msgstr "Adicionado por %s"
+
+msgid "Adobe Photoshop Lightroom is a photography software designed to manage large quantities of digital images and doing post production work."
+msgstr "O Adobe Photoshop Lightroom é um software de fotografia feito para gerenciar grandes quantidades de imagens digitais e fazer o trabalho de pós-produção"
+
+msgid "Aperture is a powerful tool to refine images and manage massive libraries on Mac."
+msgstr "Aperture é uma poderosa ferramenta para refinar imagens e gerenciar grandes bibliotecas no Mac."
+
+msgid "Applications"
+msgstr "Aplicações"
+
+msgid "Apply watermark if height is bigger than"
+msgstr "Aplica marca d'água se a altura for maior do que"
+
+msgid "Apply watermark if width is bigger than"
+msgstr "Aplica marca d'água se a largura for maior do que"
+
+msgid "Automatic sort order"
+msgstr "Ordena automaticamente"
+
+msgid "Available on"
+msgstr "Disponível em"
+
+msgid "By default, the center of interest is placed in the middle of the photo."
+msgstr "Por padrão, o centro de interesse é colocado no meio da foto."
+
+msgid "Cancel"
+msgstr "Cancelar"
+
+msgid "Center of interest"
+msgstr "Centro de interesse"
+
+msgid "Delete multiple size images"
+msgstr "Apagar múltiplos tamanhos de imagens"
+
+msgid "Duplicate selected tags"
+msgstr "Duplicar as tags selecionadas"
+
+msgid "ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW."
+msgstr "ERRO: ESTE PLUGIN ESTÁ FALTANDO, MAS O MESMO ESTÁ INSTALADO! DESINSTALE O MESMO AGORA."
+
+msgid "Edit photo"
+msgstr "Editar Foto"
+
+msgid "Email administrators when a comment is deleted"
+msgstr "Envia um email aos administradores quando um comentário é deletado"
+
+msgid "Email administrators when a comment is modified"
+msgstr "Envia um email aos administradores quando um comentário é modificado"
+
+msgid "File upload stopped by extension"
+msgstr "A transferência de arquivos foi interrompida por uma extensão"
+
+msgid "Following plugins may not be compatible with the new version of Piwigo:"
+msgstr "Os seguintes plugins podem não ser compatíveis com a nova versão do Piwigo:"
+
+msgid "Following themes may not be compatible with the new version of Piwigo:"
+msgstr "Os seguintes temas podem não ser compatíveis com a nova versão do Piwigo:"
+
+msgid "Gallery unlocked"
+msgstr "Galeria destravada"
+
+msgid "Generate multiple size images"
+msgstr "Gerar múltiplos tamanhos de imagem"
+
+msgid "Graphics Library"
+msgstr "Biblioteca gráfica"
+
+msgid "Groups and users"
+msgstr "Grupos e usuários"
+
+msgid "List"
+msgstr "Lista"
+
+msgid "Make this language available to users"
+msgstr "Faz essa linguagem disponível aos usuários"
+
+msgid "<em>Piwigo for iOS</em> application empowers you to connect to your Piwigo gallery from your iPhone, iPad or iPod Touch, create some albums and upload several photos at once."
+msgstr "A aplicação <em>Piwigo para iOS</em>  permite conectar a sua galeria Piwigo direto do seu iPhone, iPad ou iPod Touch para criar álbuns e enviar fotos imediatamente."
+
+msgid "Aperture is designed for professional photographers with iPhoto simplicity."
+msgstr "Aperture foi desenvolvido para fotógrafos profissionais com a simplicidade do iPhoto."
+
+msgid "Features include gallery browsing, album creation and photo upload."
+msgstr "As características incluem navegação em galerias, criação de álbuns e envio de fotos."
+
+msgid "For photo sizes with crop, such as \"Square\", Piwigo will do its best to include the center of interest."
+msgstr "Para fotos recortadas no formato \"quadrado\", Piwigo fará o melhor para incluir o centro de interesse."
+
+msgid "Give write access (chmod 777) to \"%s\" directory at the root of your Piwigo installation"
+msgstr "Dê permissão de escrita (chmod 777) para o diretório \"%s\" na raiz da usa instalação Piwigo"
+
+msgid "Hit"
+msgstr "Acesso"
+
+msgid "If no HD is available and if the current websize is bigger than resize dimensions, Piwigo will move it as HD and create a downsized websize photo from it."
+msgstr "Se nenhuma foto de Alta Definição estiver disponível e se o tamanho atual for maior do que as dimensões de redimensionamento, Piwigo moverá a foto como Alta Definição e criará uma foto de menor resolução para ser baixada."
+
+msgid "In your php.ini file, the upload_max_filesize (%sB) is bigger than post_max_size (%sB), you should change this setting"
+msgstr "No seu arquivo php.ini, o upload_max_filesize (%sB) é maior do que post_max_size (%sB), você deve mudar essa configuração."
+
+msgid "Make this theme available to users"
+msgstr "Faça esse tema disponível para os usuários"
+
+msgid "Manage Permissions"
+msgstr "Gerencie Permissões"
+
+msgid "Manage this set of %d photos"
+msgstr "Gerencie esse conjunto de %d fotos"
+
+msgid "Manual order"
+msgstr "Ordem Manual"
+
+msgid "Maximum height"
+msgstr "Comprimento Máximo"
+
+msgid "Maximum width"
+msgstr "Largura Máxima"
+
+msgid "Maximum file size: %sB."
+msgstr "Tamanho máximo do arquivo %sB."
+
+msgid "Merge selected tags"
+msgstr "Juntar as tags selecionadas"
+
+msgid "Merge tags"
+msgstr "Juntar tags"
+
+msgid "Missing Plugins"
+msgstr "Plugins perdidos"
+
+msgid "Missing a temporary folder"
+msgstr "Pasta temporária perdida"
+
+msgid "Move to album"
+msgstr "Mover para o álbum"
+
+msgid "Multiple Size"
+msgstr "Múltiplos tamanhos"
+
+msgid "Name of the duplicate"
+msgstr "Nome do duplicado"
+
+msgid "New Version"
+msgstr "Nova Versão"
+
+msgid "No destination tag selected"
+msgstr "Nenhuma tag de destino selecionada"
+
+msgid "No file was uploaded"
+msgstr "Nenhum arquivo foi enviado"
+
+msgid "No group is permitted to see this private album"
+msgstr "Nenhum grupo tem permissão para ver esse álbum"
+
+msgid "No order field selected"
+msgstr "Nenhum campo de ordenação selecionado"
+
+msgid "No photo in the current set."
+msgstr "Nenhuma foto no set atual"
+
+msgid "No photo selected, %d photos in current set"
+msgstr "Nenhuma foto selecionada, %d fotos no set atual"
+
+msgid "No photos selected, no actions possible."
+msgstr "Nenhuma fotos selecionada, nenhuma ação possível."
+
+msgid "No results"
+msgstr "Sem Resultados"
+
+msgid "None"
+msgstr "Nenhum"
+
+msgid "Not cropped correctly?"
+msgstr "Não recortado corretamente?"
+
+msgid "Notify administrators when a comment is"
+msgstr "Notifique os administradores quando comentado"
+
+msgid "Numeric identifier : %d"
+msgstr "Identificador numérico: %d"
+
+msgid "Obsolete Plugins"
+msgstr "Plugins Obsoletos"
+
+msgid "On your Linux, simply install Shotwell with your package manager and the activate Piwigo publishing option."
+msgstr "No seu Linux,simplesmente instale Shotwell com seu gerenciador de pacotes e ative a opção de publicação Piwigo."
+
+msgid "Opacity"
+msgstr "Opacidade"
+
+msgid "Operation in progress"
+msgstr "Tratamento em progresso"
+
+msgid "Order of menubar items has been updated successfully."
+msgstr "Ordenamento do menu foi atualizado com sucesso."
+
+msgid "Original Size"
+msgstr "Tamanho Original"
+
+msgid "Original file : %s"
+msgstr "Arquivo original: %s"
+
+msgid "Orphan tags deleted"
+msgstr "Tags órfãs excluídas"
+
+msgid "Page end"
+msgstr "Página final"
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Confirmação de senhas perdida. Por favor confirme a senha escolhida."
+
+msgid "Password is missing. Please enter the password."
+msgstr "Senha perdida. Por favor entre com a senha."
+
+msgid "Pending Comments"
+msgstr "Comentários pendentes"
+
+msgid "Permission granted for groups"
+msgstr "Permissão garantida para grupos"
+
+msgid "Permission granted for users"
+msgstr "Permissão garantida para usuários"
+
+msgid "Permission management"
+msgstr "Gerenciamento de permissões"
+
+msgid "Photo %s of %s"
+msgstr "Foto %s de %s"
+
+msgid "Photo Page"
+msgstr "Página da Foto"
+
+msgid "Photo Properties"
+msgstr "Propriedade da Foto"
+
+msgid "Photo name"
+msgstr "Nome da Foto"
+
+msgid "Photo sizes with crop"
+msgstr "Tamanho da foto recortada"
+
+msgid "Photos generation in progress..."
+msgstr "Geração de Fotos em progresso..."
+
+msgid "Photos"
+msgstr "Fotos"
+
+msgid "Piwigo Publish plugin for Lightroom"
+msgstr "Plugin de Publicação Piwigo para Lightroom"
+
+msgid "Piwigo Update"
+msgstr "Atualização Piwigo"
+
+msgid "Piwigo Uploader"
+msgstr "Envio de Fotos do Piwigo"
+
+msgid "Piwigo cannot retrieve upgrade file from server"
+msgstr "Piwigo não pode receber arquivos de atualização do servidor"
+
+msgid "Piwigo export plugin for Aperture"
+msgstr "Plugin de Exportação do Piwigo para Aperture"
+
+msgid "Piwigo export plugin for iPhoto"
+msgstr "Plugin de Exportação do Piwigo para iPhoto"
+
+msgid "Piwigo for Android"
+msgstr "Piwigo para Android"
+
+msgid "Piwigo for iOS (iPhone, iPad, iPod Touch)"
+msgstr "Piwigo para iOS (iPhone, iPad, iPod Touch)"
+
+msgid "Piwigo publish plugin for Shotwell"
+msgstr "Plugin de publicação do Piwigo para Shortwell"
+
+msgid "Piwigo publish plugin for digiKam"
+msgstr "Plugin de publicação do Piwigo para digiKam"
+
+msgid "Please wait..."
+msgstr "Por favor espere..."
+
+msgid "Posted %s on %s"
+msgstr "Publicado %s em %s"
+
+msgid "Predefined filter"
+msgstr "Filtro pré-definido"
+
+msgid "Privacy level set to \"%s\""
+msgstr "Nível de privacidade definido para \"%s\""
+
+msgid "Rated %d times, score : %.2f"
+msgstr "Avaliado %d vezes, Nota: %2f"
+
+msgid "ReGalAndroid (RemoteGallery client for Android) is an open source (GPL v3) Piwigo client for the Android platform."
+msgstr "ReGalAndroid (Galeria Remota cliente para Android) é um cliente Piwigo de código aberto (GPL v3) para a plataforma Android."
+
+msgid "Read Piwigo Documentation"
+msgstr "Leia da Documentação do Piwigo"
+
+msgid "Refresh photo set"
+msgstr "Recarregue as fotos"
+
+msgid "Remove all filters"
+msgstr "Remova todos os filtros"
+
+msgid "Remove from caddie"
+msgstr "Remova da cesta"
+
+msgid "Reset ignored updates"
+msgstr "Reset atualizações ignoradas"
+
+msgid "Resize after upload"
+msgstr "Redimensione depois de enviar"
+
+msgid "Resize"
+msgstr "Redimensione"
+
+msgid "Restore default configuration. You will lose your plugin settings!"
+msgstr "Restaure a configuração padrão. Você perderá suas configurações de plugins!"
+
+msgid "Restore"
+msgstr "Restaure"
+
+msgid "Save Settings"
+msgstr "Salve as configurações"
+
+msgid "Save Template Directory"
+msgstr "Salve o diretório de templates"
+
+msgid "Save manual order"
+msgstr "Salve a ordem manual"
+
+msgid "Save visits in history for"
+msgstr "Salve o histórico de visitantes"
+
+msgid "Searching..."
+msgstr "Pesquisando..."
+
+msgid "Select a file"
+msgstr "Selecione um arquivo"
+
+msgid "Select a zone with your mouse to define a new center of interest."
+msgstr "Selecione uma região com o mouse para definir um novo centro de interesse."
+
+msgid "Select an album"
+msgstr "Selecione um álbum"
+
+msgid "Select at least one comment"
+msgstr "Selecione ao menos um comentário"
+
+msgid "Select at least two tags for merging"
+msgstr "Selecione ao menos duas tags para juntar"
+
+msgid "Select files"
+msgstr "Selecione arquivos"
+
+msgid "Select groups..."
+msgstr "Selecione grupos..."
+
+msgid "Select the destination tag"
+msgstr "Selecione a tag de destino"
+
+msgid "Select users..."
+msgstr "Selecione usuários..."
+
+msgid "Select:"
+msgstr "Selecione:"
+
+msgid "Selection"
+msgstr "Seleção"
+
+msgid "Send connection settings by email"
+msgstr "Envie configuração de conexão por email"
+
+msgid "Set as default language for unregistered and new users"
+msgstr "Escolha o idioma padrão para os novos usuários e usuários não registrados."
+
+msgid "Set as default theme for unregistered and new users"
+msgstr "Escolha o tema padrão para os novos usuários e usuários não registrados."
+
+msgid "Set author"
+msgstr "Escolha o autor"
+
+msgid "Set creation date"
+msgstr "Escolha a data de criação"
+
+msgid "Set title"
+msgstr "Escolha o título"
+
+msgid "Settings"
+msgstr "Configurações"
+
+msgid "Sharpen"
+msgstr "Destacar"
+
+msgid "Shotwell is an open source digital photo organizer that runs on Linux. It is the default photo manager in Ubuntu and Fedora."
+msgstr "Shotwell é um organizador de fotos de código aberto que roda em Linux e é o gerenciador padrão de fotos no Ubuntu e Fedora."
+
+msgid "Show menubar"
+msgstr "Mostre menu"
+
+msgid "Some themes and plugins may be not available yet."
+msgstr "Alguns temas e plugins podem não estar disponíveis ainda."
+
+msgid "Some upgrades are available for extensions."
+msgstr "Algumas atualizações estão disponíveis para as extensões."
+
+msgid "Source tag"
+msgstr "Tag fonte"
+
+msgid "Start Upload"
+msgstr "Inicia o envio"
+
+msgid "Start pLoader and add your photos."
+msgstr "Inicie o pLoader e adicione suas fotos."
+
+msgid "Switch to clear or dark colors for administration"
+msgstr "Troque para cores claras ou escuras na Adminstração."
+
+msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
+msgstr "ESSE PLUGIN AGORA FAZ PARTE DO NÙCLEO DO PIWIGO! DESINSTALE-O AGORA!"
+
+msgid "Tag \"%s\" is now a duplicate of \"%s\""
+msgstr "A tag \"%s\" agora está duplicada de \"%s\""
+
+msgid "Tags <em>%s</em> merged into tag <em>%s</em>"
+msgstr "Tag <em>%s</em> juntada na tag<em>%s</em>"
+
+msgid "The Piwigo export plugin allows you to create albums and export photos."
+msgstr "O plugin de exportação do Piwigo permite que você crie álbuns e exporte fotos."
+
+msgid "The Piwigo publish Plug-in allows you to export and synchronize photos from Lightroom directly to your Piwigo photo gallery."
+msgstr "O plugin de publicação Piwigo permite que você exporte e sincronize fotos diretamente do Lightroom para sua galeria Piwigo."
+
+msgid "The center of interest is the most meaningful zone in the photo."
+msgstr "O centro de interesse é a área mais significativa da foto."
+
+msgid "The following tag was deleted"
+msgstr "A tag seguinte foi apagada"
+
+msgid "The original image quality must be a number between %d and %d"
+msgstr "A qualidade de imagem original deve ser um número entre %d e %d"
+
+msgid "The original maximum height must be a number between %d and %d"
+msgstr "A altura máxima original deve ser um número entre %d e %d"
+
+msgid "The original maximum width must be a number between %d and %d"
+msgstr "A largura máxima original deve ser um número entre %d e %d"
+
+msgid "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form"
+msgstr "Os arquivos enviados excederam a diretiva MAX_FILE_SIZE especificada no formulário HTML"
+
+msgid "The uploaded file exceeds the upload_max_filesize directive in php.ini: %sB"
+msgstr "Os arquivos enviados excederam a diretiva upload_max_filesize no php.ini: %sB"
+
+msgid "The uploaded file was only partially uploaded"
+msgstr "O arquivo enviado foi somente parcialmente enviado"
+
+msgid "The uploaded files exceed the post_max_size directive in php.ini: %sB"
+msgstr "Os arquivos enviados excederam a diretiva post_max_size no php.ini: %sB"
+
+msgid "The whole page"
+msgstr "Toda a página"
+
+msgid "The whole set"
+msgstr "Todo o set"
+
+msgid "Theme has been successfully installed"
+msgstr "Temas forma instalados com sucesso."
+
+msgid "Themes which need upgrade"
+msgstr "Temas que necessitam ser atualizados."
+
+msgid "Themes"
+msgstr "Temas"
+
+msgid "There is no group in this gallery."
+msgstr "Não existe nenhum grupo nessa galeria."
+
+msgid "There is no other language available."
+msgstr "Nâo existe nenhum outro idioma disponível."
+
+msgid "There is no other plugin available."
+msgstr "Não existe nenhum outro plugin disponível."
+
+msgid "There is no other theme available."
+msgstr "Não existe nenhum outro tema disponível."
+
+msgid "This album contains %d photos, added between %s and %s."
+msgstr "Esse álbum contém %d fotos, adicionadas entre %s e %s."
+
+msgid "This album contains %d photos, added on %s."
+msgstr "Esse álbum contém %d fotos, adicionadas em %s"
+
+msgid "This album contains no photo."
+msgstr "Esse álbum não contém foto."
+
+msgid "This is a major update, with <a href=\"%s\">new exciting features</a>."
+msgstr "Essa é uma grande atualização, com <a href=\"%s\">novas características excitantes</a>."
+
+msgid "This is a minor update, with only bug corrections."
+msgstr "Essa é uma pequena atualização, somente com correção de bugs."
+
+msgid "This theme was not designed to be directly activated"
+msgstr "Esse tema não foi desenvolvido para ser ativado diretamente."
+
+msgid "Thumbnails generation in progress..."
+msgstr "Geração de Thumbnails em progresso..."
+
+msgid "To export your photos from digiKam to Piwigo, simply install digiKam and the Kipi-plugins."
+msgstr "Para exportar suas fotos do digiKam para Piwigo, simplesmente instale os plugins digiKam e Kipi."
+
+msgid "Tools"
+msgstr "Ferramentas"
+
+msgid "Two updates are available"
+msgstr "Duas atualizações estão disponíveis"
+
+msgid "Type here the author name"
+msgstr "Digite aqui o nome do autor"
+
+msgid "Type here the title"
+msgstr "Digite aqui o título"
+
+msgid "Type in a search term"
+msgstr "Digite um termo para pesquisar"
+
+msgid "Uninstalled Plugins"
+msgstr "Plugins desinstalados"
+
+msgid "Unknown upload error"
+msgstr "Erro de envio desconhecido"
+
+msgid "Unlock gallery"
+msgstr "Galeria destrancada"
+
+msgid "Update All"
+msgstr "Atualize tudo"
+
+msgid "Update Complete"
+msgstr "Atualização Completa"
+
+msgid "Update in progress... Please wait."
+msgstr "Atualização em progresso... por favor espere."
+
+msgid "Update to Piwigo %s"
+msgstr "Atualize para Piwigo %s"
+
+msgid "Updates"
+msgstr "Atualizações"
+
+msgid "Upload Photos"
+msgstr "Envio de fotos"
+
+msgid "Uploaded Photos"
+msgstr "Fotos Enviadas"
+
+msgid "Visit Gallery"
+msgstr "Visite a Galeria"
+
+msgid "Visit Piwigo project website"
+msgstr "Visite o site do Projeto Piwigo"
+
+msgid "Visit language site"
+msgstr "Visite o site de Idiomas"
+
+msgid "Visit plugin site"
+msgstr "Visite o site de Plugins"
+
+msgid "Visit theme site"
+msgstr "Visite o site de temas"
+
+msgid "Visited %d times"
+msgstr "Visitado %d vezes"
+
+msgid "WARNING! This plugin does not seem to be compatible with this version of Piwigo."
+msgstr "Cuidado: Esse plugin parece não ser compatível com essa versão do Piwigo."
+
+msgid "Watermark"
+msgstr "Marca Dágua"
+
+msgid "Web Form"
+msgstr "Formulário Web"
+
+msgid "Webmaster status is required."
+msgstr "status de webmaster é necessário"
+
+msgid "Week starts on"
+msgstr "Semana inicia em"
+
+msgid "Who can see these photos?"
+msgstr "Quem pode ver essas fotos?"
+
+msgid "Who can see this photo?"
+msgstr "Quem pode ver essa foto?"
+
+msgid "Width"
+msgstr "Largura"
+
+msgid "With no album"
+msgstr "Com nenhum álbum"
+
+msgid "With no tag"
+msgstr "Com nenhuma tag"
+
+msgid "With no virtual album"
+msgstr "Com nenhum álbum virtual"
+
+msgid "X Position"
+msgstr "Posição X"
+
+msgid "X Repeat"
+msgstr "Repita X"
+
+msgid "Y Position"
+msgstr "Posição Y"
+
+msgid "You are using the Browser uploader. Try the <a href=\"%s\">Flash uploader</a> instead."
+msgstr "Você está usando o envio de fotos do navegador. Tente em vez disso o <a href=\"%s\">envio de fotos em Flash</a>."
+
+msgid "You are using the Flash uploader. Problems? Try the <a href=\"%s\">Browser uploader</a> instead."
+msgstr "Você está usando o envio de fotos em Flash. Problemas? Tente em vez disso o <a href=\"%s\">envio de fotos do navegador</a>."
+
+msgid "You can activate only one mobile theme."
+msgstr "Você pode ativar somente um tema móbile."
+
+msgid "You can update to Piwigo %s directly, without upgrading to Piwigo %s (recommended)."
+msgstr "Você pode atualizar para o Piwigo %s diretamente, sem atualizar para o Piwigo %s (recomendado)."
+
+msgid "You can't define a default photo order because you have a custom setting in your local configuration."
+msgstr "Você não pode definir uma ordenação padrão das fotos porque você tem uma configuração personalizada na sua configuração local."
+
+msgid "You have %d orphan tags: %s."
+msgstr "Você tem %d tags órfãs: %s."
+
+msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
+msgstr "Você especificou <i>$conf['order_by']</i> no seu arquivo de configuração local, esse parâmetro está em desuso, por favor remova-o ou renomei-o dentro <i>$conf['order_by_custom']</i>!"
+
+msgid "Your configuration settings are saved"
+msgstr "Sua configuração foi salva"
+
+msgid "Zoom"
+msgstr "Zoom"
+
+msgid "add a new watermark"
+msgstr "adicione uma nova marca dágua"
+
+msgid "administrators"
+msgstr "administradores"
+
+msgid "any visitor can see this album"
+msgstr "qualquer visitante pode ver esse álbum"
+
+msgid "apply automatic sort order"
+msgstr "aplique ordenamento automático"
+
+msgid "bottom left corner"
+msgstr "botão canto esquerdo"
+
+msgid "bottom right corner"
+msgstr "botão canto direito"
+
+msgid "cancel manual order"
+msgstr "Cancela ordenamento manual"
+
+msgid "create a new site"
+msgstr "Cria novo site"
+
+msgid "custom"
+msgstr "Personalize"
+
+msgid "digiKam is an advanced digital photo management free software for Linux, Windows, and MacOSX."
+msgstr "digiKam é um software livre gerenciador avançado de fotos digitais para Linux, Windows e MacOSX."
+
+msgid "digiKam is designed for photographers who want to view, manage, edit, enhance, organize, tag, and share photographs."
+msgstr "digiKam é desenvolvido para fotógrafos que querem ver, gerenciar, editar, melhorar, organizar, colocar tags e compartilhar fotografias."
+
+msgid "iPhoto is the default photo manager on MacOSX. The Piwigo export plugin let you create new albums and export your photos directly from iPhoto to your Piwigo photo gallery."
+msgstr "iPhoto é o gerenciador padrão no MacOSX. O Plugin de exportação do Piwigo deixa você criar novos álbuns e exportar fotos diretamente do iPhoto para sua galeria de fotos Piwigo."
+
+msgid "include photos with lower privacy level"
+msgstr "inclua fotos com menor nível de privacidade"
+
+msgid "manual order"
+msgstr "Ordem Manual"
+
+msgid "middle"
+msgstr "médio"
+
+msgid "modified"
+msgstr "modificadon"
+
+msgid "new"
+msgstr "novo"
+
+msgid "on the %d selected photos"
+msgstr "nas %d fotos selecionadas"
+
+msgid "pending validation"
+msgstr "Validação pendente"
+
+msgid "pixels"
+msgstr "pixels"
+
+msgid "registered users"
+msgstr "Usuários Registrados"
+
+msgid "remove author"
+msgstr "remove autor"
+
+msgid "remove creation date"
+msgstr "remove data de criação"
+
+msgid "remove this filter"
+msgstr "remove esse filtro"
+
+msgid "remove title"
+msgstr "remove título"
+
+msgid "show details"
+msgstr "mostra detalhes"
+
+msgid "simple visitors"
+msgstr "visitante simples"
+
+msgid "top left corner"
+msgstr "canto superior esquerdo"
+
+msgid "top right corner"
+msgstr "Canto superior direito"
+
+msgid "unknown"
+msgstr "desconhecido"
+
+msgid "visitors need to login and have the appropriate permissions to see this album"
+msgstr "os visitantes precisam autenticar e ter as permissões apropriadas para ver esse álbum"
+
+msgid "Landscape"
+msgstr "Landscape"
+
+msgid "Manage photos"
+msgstr "Gerencie Fotos"
+
+msgid "Minimum height"
+msgstr "Altura Mínima"
+
+msgid "Minimum width"
+msgstr "Largura Mínima"
+
+msgid "Number of albums per page"
+msgstr "Número de álbuns por página"
+
+msgid "Panorama"
+msgstr "Paisagem"
+
+msgid "Portrait"
+msgstr "Retrato"
+
+msgid "View in gallery"
+msgstr "Ver na Galeria"
+
+msgid "Ratio"
+msgstr "Relação"
+
+msgid "between %.2f and %.2f"
+msgstr "Entre %.2f e %.2f"
+
+msgid "between %d and %d pixels"
+msgstr "Entre %d e %d pixels"
+
+msgid "Duplicate"
+msgstr "Duplicado"
+
+msgid "Manage the members"
+msgstr "Gerencie os membros"
+
+msgid "Merge selected groups"
+msgstr "Junte os grupos selecionados"
+
+msgid "No groups selected, no actions possible."
+msgstr "Nenhum grupo selecionado. Nenhuma açao é possível."
+
+msgid "No members to manage"
+msgstr "Sem membros para gerenciar"
+
+msgid "Please select at least two groups"
+msgstr "Por favor, selecione ao menos dois grupos"
+
+msgid "Rename"
+msgstr "Renomear"
+
+msgid "This group will be set to default"
+msgstr "Esse grupo será usado por padrão"
+
+msgid "This group will be unset to default"
+msgstr "Esse grupo nao será mais usado por padrao"
+
+msgid "Type here the name of the new group"
+msgstr "Digite aqui o nome do novo grupo"
+
+msgid "Purge user cache"
+msgstr "limpa o cache do usuário"
+
+msgid "The picture dimensions will be reduced to %dx%d pixels."
+msgstr "As dimensões da imagem serão reduzida para %dx%d pixels."
+
+msgid "Resize after upload disabled due to the use of GD as graphic library"
+msgstr "Redimensionamento após envio foi desativado devido ao uso de GD como biblioteca gráfica"
+
+msgid "Select at least one tag"
+msgstr "Selecione pelo menos uma tag"
+
+msgid "Basic settings"
+msgstr "Configurações básicas"
+
+msgid "General"
+msgstr "Geral"
+
+msgid "Mail theme"
+msgstr "Tema correio"
+
+msgid "(filtered from %s total users)"
+msgstr "(filtrado do total de %s usuários)"
+
+msgid "All %d users are selected"
+msgstr "Todos os %d usuários estão selecionados"
+
+msgid "Change password"
+msgstr "Alterar senha"
+
+msgid "Change username"
+msgstr "Muda o nome de usuário"
+
+msgid "Last visit on %s, %s."
+msgstr "Última visita em %s, %s."
+
+msgid "Loading..."
+msgstr "Carregando..."
+
+msgid "No matching user found"
+msgstr "Nenhum usuário encontrado"
+
+msgid "No user selected of %d users"
+msgstr "Nenhum usuário selecionado do total de %d usuários"
+
+msgid "No users selected, no actions possible."
+msgstr "Nenhum usuário selecionado, nenhuma ação possível."
+
+msgid "Password updated"
+msgstr "Senha atualizada"
+
+msgid "Registered on %s, %s."
+msgstr "Registrado em %s, %s."
+
+msgid "Show %s users"
+msgstr "Mostra %s usuários"
+
+msgid "Showing %s to %s of %s users"
+msgstr "Exibindo de %s a %s do total de %s usuários"
+
+msgid "Update user"
+msgstr "Atualiza usuário"
+
+msgid "User %s added"
+msgstr "Usuário %s adicionado"
+
+msgid "User %s updated"
+msgstr "Usuário %s atualizado"
+
+msgid "Users modified"
+msgstr "Usuários modificados"
+
+msgid "on the %d selected users"
+msgstr "em %d usuários selecionados"
+
+msgid "%d of %d users selected"
+msgstr "%d de %d usuários selecionados"
+
+msgid "Close user details"
+msgstr "Fechar detalhes de usuário"
+
+msgid "Open user details"
+msgstr "Abrir detalhes de usuário"
+
+msgid "close"
+msgstr "fechar"
+
+msgid "Activate it now"
+msgstr "Ativar agora"
+
+msgid "Allow users to add a link to their website"
+msgstr "Permitir usuários adicionar um link em seus websites"
+
+msgid "Impossible to deactivate the default theme."
+msgstr "Imposível desativar o tema padrão"
+
+msgid "Mail address is mandatory for registration"
+msgstr "Para registro o email é obrigatório"
+
+msgid "Empty caddie"
+msgstr "Esvaziar carrinho"
+
+msgid "No and unlock sub-albums"
+msgstr "Não e desbloquear sub-álbuns"
+
+msgid "The settings for the guest are from the %s user"
+msgstr "As configurações para o convidado são definidas pelo usuário %s"
+
+msgid "based on"
+msgstr "baseado em"
+
+msgid "between %s and %s MB"
+msgstr "entre %s e %s MB"
+
+msgid "date & time"
+msgstr "dia & hora"
+
+msgid "file name"
+msgstr "nome do arquivo"
+
+msgid "width & height"
+msgstr "largura & comprimento"
+
+msgid "Upload in progress"
+msgstr "Upload em progresso"
+
+msgid "Delete %d orphan photos"
+msgstr "Apagar %d fotos órfãs"
+
+msgid "Each email sent will contain its own automatic authentication key on links, valid for %s."
+msgstr "Cada e-mail enviado conterá sua própria chave de autenticação automática em links, válido para %s."
+
+msgid "Edit user"
+msgstr "Editar usuário"
+
+msgid "For security reason, authentication keys do not work for administrators."
+msgstr "\nPor razões de segurança, chaves de autenticação não funcionam para os administradores."
+
+msgid "No recipient selected"
+msgstr "Nenhum recipiente selecionado"
+
+msgid "No user is permitted to see this private album"
+msgstr "Nenhum usuário tem permissão para ver este álbum privado"
+
+msgid "Orphans"
+msgstr "Órfãos"
+
+msgid "Recipients"
+msgstr "Recipiente"
+
+msgid "Y Repeat"
+msgstr "Repetir Y"
+
+msgid "delete only album, not photos"
+msgstr "excluir apenas álbum, não fotos"
+
+msgid "orphans to delete"
+msgstr "órfãos para apagar"
+
+msgid "delete album and the %d orphan photos"
+msgstr "excluir álbum e as fotos %d órfãs"
+
+msgid "delete album and all %d photos, even the %d associated to other albums"
+msgstr "excluir álbum e todas as fotos %d, mesmo o %d associado a outros álbuns"
+
+msgid "checksum"
+msgstr "verificação"
+
+msgid "Time has come to update your Piwigo with version %s, go to %s"
+msgstr "Chegou a hora de atualizar o seu Piwigo para a versão %s, vá para %s"
+
+msgid "Storage used"
+msgstr "Armazenamento usado"
+
+msgid "Share / Send your photos directly from your Mac Os X (10.10 and following) to Piwigo"
+msgstr "Compartilhar / Enviar suas fotos diretamente do seu macOS (10.10 e posterior) para Piwigo"
+
+msgid "Select tags"
+msgstr "Selecionar etiquetas"
+
+msgid "Running on an up-to-date Piwigo is important for security."
+msgstr "Executar um Piwigo atualizado é importante para a segurança."
+
+msgid "Piwigo Remote Sync is able to upload a whole folder hierarchy. If you run it again, only new photos will be uploaded."
+msgstr "Piwigo Remote Sync é capaz de enviar uma seleção inteira de pastas. Se você executá-lo novamente, apenas novas fotos serão enviadas."
+
+msgid "Piwigo %s is available, please update"
+msgstr "Piwigo %s está disponível, atualize"
+
+msgid "No tags selected, no actions possible."
+msgstr "Nenhuma etiqueta selecionada, nenhuma ação possível."
+
+msgid "No filter on album. Select one or type to search"
+msgstr "Nenhum filtro no álbum. Selecione um ou digite para pesquisar"
+
+msgid "It only takes a few clicks."
+msgstr "Demora apenas alguns cliques."
+
+msgid "Display form"
+msgstr "Formulário de exibição"
+
+msgid "Delete album \"%s\"."
+msgstr "Excluir o álbum \"%s\"."
+
+msgid "Delete album \"%s\" and its %d sub-albums."
+msgstr "Exclua o álbum \"%s\" e seus sub-álbuns %d."
+
+msgid "Dashboard"
+msgstr "Painel de controle"
+
+msgid "Confirm deletion"
+msgstr "Confirmar eliminação"
+
+msgid "(determined from photos)"
+msgstr "(determinado a partir de fotos)"
+
+msgid "%d checksums were added"
+msgstr "%d somas de verificação foram adicionadas"
+
+msgid "... or hide this link"
+msgstr "... ou ocultar este link"
+
+msgid "Compute %d missing checksums"
+msgstr "Computar %d somas de verificação ausentes"
+
+msgid "Create a first album"
+msgstr "Crie um primeiro álbum"
+
+msgid "Deletion in progress"
+msgstr "Exclusão em andamento"
+
+msgid "Display album date period"
+msgstr "Mostrar o período de datas associado a cada álbum, por exemplo, «de 12 a 15 de julho de 2018»"
+
+msgid "Display category date"
+msgstr "Exibir a data da categoria"
+
+msgid "Piwigo requires an album to add photos."
+msgstr "Piwigo requer um álbum para adicionar fotos."
+
+msgid "Some checksums are missing."
+msgstr "Algumas somas de verificação estão faltando."
+
+msgid "Synchronization in progress"
+msgstr "Sincronização em andamento"
+
+msgid "Visit"
+msgstr "Visita"
+
+msgid "Welcome!"
+msgstr "Bem vindo!"
+
+msgid "With no checksum"
+msgstr "Sem soma de verificação"
+
+msgid "checksums to add"
+msgstr "somas de verificação para adicionar"
+
+msgid "or"
+msgstr "ou"
+
+msgid "<b>%d</b> tag found"
+msgstr "<b>%d</b> etiquetas encontradas"
+
+msgid "<b>%d</b> tag selected"
+msgstr "<b>%d</b> etiquetas selecionadas"
+
+msgid "<b>%d</b> tags found"
+msgstr "<b>%d</b> etiquetas encontradas"
+
+msgid "Are you sure you want to delete all sizes?"
+msgstr "Tem certeza de que deseja excluir todos os tamanhos?"
+
+msgid "Are you sure you want to delete the language \"%s\"?"
+msgstr "Tem certeza de que deseja excluir o idioma \"%s\"?"
+
+msgid "Are you sure you want to delete the plugin \"%s\"?"
+msgstr "Tem certeza de que deseja excluir o plugin \"%s\"?"
+
+msgid "Are you sure you want to delete the ratings of the user \"%s\"?"
+msgstr "Tem certeza de que deseja excluir as avaliações do usuário \"%s\"?"
+
+msgid "Are you sure you want to delete the theme \"%s\"?"
+msgstr "Tem certeza de que deseja excluir o tema \"%s\"?"
+
+msgid "Are you sure you want to delete the user \"%s\"?"
+msgstr "Tem certeza de que deseja excluir o usuário \"%s\"?"
+
+msgid "Are you sure you want to delete this site?"
+msgstr "Tem certeza de que deseja excluir este site?"
+
+msgid "Are you sure you want to delete this theme?"
+msgstr "Tem certeza que deseja excluir este tema?"
+
+msgid "Are you sure you want to delete this?"
+msgstr "Tem certeza de que deseja excluir?"
+
+msgid "Are you sure you want to install the plugin \"%s\"?"
+msgstr "Tem certeza de que deseja instalar o plugin \"%s\"?"
+
+msgid "Are you sure you want to lock the gallery?"
+msgstr "Tem certeza que deseja bloquear a galeria?"
+
+msgid "Are you sure you want to restore the plugin \"%s\"?"
+msgstr "Tem certeza de que deseja restaurar o plugin \"%s\"?"
+
+msgid "Are you sure you want to restore this plugin?"
+msgstr "Tem certeza que deseja restaurar este plugin?"
+
+msgid "Are you sure you want to restore to default settings?"
+msgstr "Tem certeza de que deseja restaurar as configurações padrão?"
+
+msgid "Are you sure you want to update all extensions?"
+msgstr "Tem certeza de que deseja atualizar todas as extensões?"
+
+msgid "At least 2 selected tags are needed to merge"
+msgstr "São necessárias pelo menos 2 etiquetas selecionadas para mesclar"
+
+msgid "Choose which tag to merge these tags into"
+msgstr "Escolha em qual tag mesclar essas etiquetas"
+
+msgid " (copy %s)"
+msgstr "(copiar %s)"
+
+msgid " (copy)"
+msgstr "(copiar)"
+
+msgid "%d photos"
+msgstr "%d fotos"
+
+msgid "%s GB used"
+msgstr "%s GB usados"
+
+msgid "%s MB used"
+msgstr "%s MB usados"
+
+msgid "%s other tags available.."
+msgstr "%s otasr etiquetass disponíveis.."
+
+msgid "in administration"
+msgstr "na administração"
+
+msgid "in gallery"
+msgstr "na galeria"
+
+msgid "no photo"
+msgstr "nenhuma foto"
+
+msgid "Requires PHP %s"
+msgstr "Requer PHP %s"
+
+msgid "Review"
+msgstr "Reveja"
+
+msgid "Search albums"
+msgstr "Pesquisar álbuns"
+
+msgid "Search tips"
+msgstr "Pesquisar dicas"
+
+msgid "Select"
+msgstr "Selecionar"
+
+msgid "Select all %d tags"
+msgstr "Selecionar todas as etiquetas %d"
+
+msgid "Selection mode"
+msgstr "Modo de seleção"
+
+msgid "Tag \"%s\" created"
+msgstr "Etiqueta \"%s\" criada "
+
+msgid "Tag \"%s\" succesfully deleted"
+msgstr "Etiqueta \\\"%s\\\" excluída com sucesso"
+
+msgid "Tag \"%s1\" renamed in \"%s2\""
+msgstr "Etiqueta \\\"%s\\\" renomeada para \\\"%s2\\\""
+
+msgid "Tag Manager"
+msgstr "Gerenciar Etiquetas"
+
+msgid "Tag(s) \\{%s1\\} succesfully merged into \"%s2\""
+msgstr "Etiqueta(s) \\{%s1\\} mescladas com sucesso em \"%s2\""
+
+msgid "Tags \\{%s\\} succesfully deleted"
+msgstr "Etiquetas \\{%s\\} excluídas com sucesso"
+
+msgid "The %d tags on this page are selected"
+msgstr "As etiquetas %d nesta página foram selecionadas"
+
+msgid "The other tags will be removed"
+msgstr "As outras etiquetas serão removidas"
+
+msgid "Yes, I am sure"
+msgstr "Sim, eu tenho certeza"
+
+msgid "Yes, delete"
+msgstr "Sim, exclua"
+
+msgid "You have %d orphan tags %s"
+msgstr "Você tem %d etiquetas órfãs %s"
+
+msgid "You have %s1 orphan : %s2"
+msgstr "Você tem %s1 órfão: %s2"
+
+msgid "and %s others"
+msgstr "e %s outras"
+
+msgid "Clear Selection"
+msgstr "Limpar Seleção"
+
+msgid "Delete album"
+msgstr "Excluir Álbum"
+
+msgid "Delete orphan tags ?"
+msgstr "Excluir etiquetas órfãs?"
+
+msgid "Delete tag \"%s\"?"
+msgstr "Excluir etiquetas \"%s\"?"
+
+msgid "Delete tags \\{%s\\}?"
+msgstr "Excluir etiquetas\\{%s\\}?"
+
+msgid "Delete them"
+msgstr "Exclua-os"
+
+msgid "Display"
+msgstr "Mostrar"
+
+msgid "Displays a banner to install or open the official Piwigo app"
+msgstr "Exibe um banner para instalar ou abrir o aplicativo oficial do Piwigo"
+
+msgid "File type: %s"
+msgstr "Tipos de arquivo: %s"
+
+msgid "Keep them"
+msgstr "Mantenha-os"
+
+msgid "Manage album photos"
+msgstr "Gerenciar fotos do álbum"
+
+msgid "Manage sub-albums"
+msgstr "Gerenciar sub-álbuns"
+
+msgid "Merge"
+msgstr "Unir"
+
+msgid "No tag found"
+msgstr "Nenhuma etiqueta encontrada"
+
+msgid "No, I have changed my mind"
+msgstr "Não, eu mudei de ideia"
+
+msgid "Open in gallery"
+msgstr "Abrir na galeria"
+
+msgid "Please upgrade your PHP version before any update."
+msgstr "Atualize sua versão do PHP antes de qualquer atualização."
+
+msgid "Portraits"
+msgstr "Retratos"
+
+msgid "Posted %s"
+msgstr "Postado %s"
+
+msgid "Promote mobile app on mobile devices"
+msgstr "Promova o aplicativo móvel em dispositivos móveis"
+
+msgid "You don't have access to this photo"
+msgstr "Você não tem acesso a esta foto"
+
+msgid "You have %s inactive plugins"
+msgstr "Você tem %s plugins inativos"
+
+msgid "Group(s) \\{%s1\\} succesfully merged into \"%s2\""
+msgstr "Grupo(s)\\{%s1\\}fundidos com sucesso em \"%s2\""
+
+msgid "Groups \\{%s\\} succesfully deleted"
+msgstr "Grupos\\{%s\\}excluídos com sucesso"
+
+msgid "Manage users with user manager"
+msgstr "Gerenciar usuários com o gerenciador de usuários"
+
+msgid "Name is already taken"
+msgstr "Nome já escolhido"
+
+msgid "No albums found"
+msgstr "Nenhum álbum encontrado"
+
+msgid "No plugins found"
+msgstr "Nenhum plug-in encontrado"
+
+msgid "Other"
+msgstr "Outros"
+
+msgid "Page Visited"
+msgstr "Página visitada"
+
+msgid "Page Visited in %s"
+msgstr "Página visitada em %s"
+
+msgid "Refresh thumbnail"
+msgstr "Atualizar miniatura"
+
+msgid "Set as default"
+msgstr "Definir como padrão"
+
+msgid "Set as group for new users"
+msgstr "Definir como grupo para novos usuários"
+
+msgid "Show inactive plugins"
+msgstr "Mostrar plugins inativos"
+
+msgid "Showing %s users out of %s"
+msgstr "Mostrando %s usuários de %s"
+
+msgid "Storage"
+msgstr "Armazenamento"
+
+msgid "This is already the default theme"
+msgstr "Este já é o tema padrão"
+
+msgid "Unset as group for new users"
+msgstr "Desativar como grupo para novos usuários"
+
+msgid "User \"%s\" dissociated from this group"
+msgstr "Usuário \"%s\" dissociado deste grupo"
+
+msgid "User associated"
+msgstr "Associado ao usuário"
+
+msgid "Videos"
+msgstr "Vídeos"
+
+msgid "%d Activities"
+msgstr "%d Atividades"
+
+msgid "%d Activity"
+msgstr "%d Atividade"
+
+msgid "%d sub-albums"
+msgstr "%d sub-álbuns"
+
+msgid "%s file type"
+msgstr "%s tipo de arquivo"
+
+msgid "<b>%d</b> albums found"
+msgstr "<b>%d</b> álbuns encontrados"
+
+msgid "<b>1</b> album found"
+msgstr "<b>1</b> album encontrado"
+
+msgid "Activity peak in the last weeks"
+msgstr "Pico de atividade nas últimas semanas"
+
+msgid "Album search tool"
+msgstr "Ferramenta de busca de álbum"
+
+msgid "Are you sure you want to delete group \"%s\"?"
+msgstr "Tem certeza de que deseja excluir o grupo \"%s\"?"
+
+msgid "Associate User"
+msgstr "Usuário Associado"
+
+msgid "Average last 12 months"
+msgstr "Média dos últimos 12 meses"
+
+msgid "Cache"
+msgstr "Cache"
+
+msgid "Compare mode"
+msgstr "Modo de comparação"
+
+msgid "Created on %s"
+msgstr "Criado em %s"
+
+msgid "Dissociate user from this group"
+msgstr "Dissociar o usuário deste grupo"
+
+msgid "Edited on %s"
+msgstr "Editado em %s"
+
+msgid "Formats"
+msgstr "Formatos"
+
+msgid "Group \"%s\" succesfully deleted"
+msgstr "Grupo \"%s\" excluído com sucesso"
+
+msgid "Group added"
+msgstr "Grupo adicionado"
+
+msgid "Group renamed"
+msgstr "Grupo renomeado"
+
+msgid "Tile View"
+msgstr "Vista lado a lado "
+
+msgid "Show sub-albums"
+msgstr "Mostrar sub-álbuns "
+
+msgid "Select an album... or type it!"
+msgstr "Selecione um álbum ... ou digite! "
+
+msgid "Root"
+msgstr "Raiz"
+
+msgid "Name field must not be empty"
+msgstr "O campo nome não deve estar vazio "
+
+msgid "Line View"
+msgstr "Vista em Linha "
+
+msgid "Hide sub-albums"
+msgstr "Ocultar sub-álbuns "
+
+msgid "Drag and drop to reorder albums"
+msgstr "Arraste e solte para reordenar os álbuns "
+
+msgid "Compact View"
+msgstr "Visualização Compacta \n"
+
+msgid "Apply to the whole hierarchy"
+msgstr "Aplicar a toda a hierarquia "
+
+msgid "Apply to direct sub-albums"
+msgstr "Aplicar direto a sub-álbuns"
+
+msgid "Apply an automatic order to root albums"
+msgstr "Aplicar uma ordenação automática aos álbuns raiz "
+
+msgid "Add Album"
+msgstr "Adicionar Álbum "
+
+msgid "<b>%d+</b> albums found, try to refine the search"
+msgstr "<b>%d+</b> álbuns encontrados, tente refinar a pesquisa "
+
+msgid "between %s and %s"
+msgstr "entre %s e %s"
+
+msgid "logout"
+msgstr "sair"
+
+msgid "months ago"
+msgstr "há meses"
+
+msgid "move"
+msgstr "mover"
+
+msgid "never calculated"
+msgstr "nunca calculado"
+
+msgid "right now"
+msgstr "agora"
+
+msgid "to"
+msgstr "à"
+
+msgid "Photos per page"
+msgstr "Fotos por página"
+
+msgid "Plugin \"%s\" deleted!"
+msgstr "Plugin \"%s\" excluído!"
+
+msgid "Plugin \"%s\" has been activated!"
+msgstr "O plugin \"%s\" foi ativado!"
+
+msgid "Registered"
+msgstr "Registrado"
+
+msgid "Restored"
+msgstr "Restaurado"
+
+msgid "Select groups or type them"
+msgstr "Selecione grupos ou digite-os"
+
+msgid "Selected user"
+msgstr "Usuário selecionado"
+
+msgid "Sep"
+msgstr "Set"
+
+msgid "Show"
+msgstr "Mostrar"
+
+msgid "Synchronization"
+msgstr "Sincronização"
+
+msgid "Theme"
+msgstr "Tema"
+
+msgid "Update"
+msgstr "Atualização"
+
+msgid "User updated"
+msgstr "Atualização do usuário"
+
+msgid "Users not logged in will have these settings applied, these settings are used by default for new users"
+msgstr "Os usuários não conectados terão essas configurações aplicadas, essas configurações são usadas por padrão para novos usuários"
+
+msgid "add"
+msgstr "adicionar"
+
+msgid "calculated"
+msgstr "calculado"
+
+msgid "deletion"
+msgstr "deleção"
+
+msgid "edit"
+msgstr "editar"
+
+msgid "login"
+msgstr "entrar"
+
+msgid "Email Adress"
+msgstr "Endereço de E-mail"
+
+msgid "Equivalent to deactivation. The user is still in the list, but can no longer log in."
+msgstr "Equivalente à desativação. O usuário ainda está na lista, mas não pode mais fazer login."
+
+msgid "Feb"
+msgstr "Fev"
+
+msgid "Filters"
+msgstr "Filtros"
+
+msgid "Generate random password"
+msgstr "Gerar senha aleatória"
+
+msgid "Has access to administration. Can only manage content: photos/albums/users/tags/groups."
+msgstr "Tem acesso à administração. Só é possível gerenciar conteúdo: fotos/álbuns/usuários/tags/grupos."
+
+msgid "Has access to all administration functionnalities. Can manage both configuration and content."
+msgstr "Tem acesso a todas as funções administrativas. Pode gerenciar tanto a configuração quanto o conteúdo."
+
+msgid "Jan"
+msgstr "Jan"
+
+msgid "Jul"
+msgstr "Jul"
+
+msgid "Jun"
+msgstr "Jun"
+
+msgid "Language"
+msgstr "Idioma"
+
+msgid "Last visit"
+msgstr "Última visita"
+
+msgid "Manage users"
+msgstr "Gerenciar usuários"
+
+msgid "Mar"
+msgstr "Mar"
+
+msgid "May"
+msgstr "Mai"
+
+msgid "New user added"
+msgstr "Novo usuário adicionado"
+
+msgid "No access to administration, can see private content with appropriate permissions."
+msgstr "Sem acesso à administração, pode ver conteúdo privado com permissões apropriadas."
+
+msgid "No plugin activated"
+msgstr "Nenhum plugin ativado"
+
+msgid "Nov"
+msgstr "Nov"
+
+msgid "Oct"
+msgstr "Out"
+
+msgid "Activated plugin list"
+msgstr "Lista de plugins ativados"
+
+msgid "Activity"
+msgstr "Atividade"
+
+msgid "Activity time from"
+msgstr "Tempo de atividade a partir de"
+
+msgid "Add User"
+msgstr "Adicionar Usuário"
+
+msgid "Add a new user"
+msgstr "Adicionar um novo usuário"
+
+msgid "Advanced filters"
+msgstr "Filtroa avançados"
+
+msgid "Apr"
+msgstr "Abr"
+
+msgid "Aug"
+msgstr "Ago"
+
+msgid "Cache size"
+msgstr "Tamaho do cache"
+
+msgid "Can be shared by several individuals without conflict (they cannot change the password)."
+msgstr "Pode ser compartilhado por vários indivíduos sem conflitos (eles não podem alterar a senha)."
+
+msgid "Change Password"
+msgstr "Alterar Senha"
+
+msgid "Close"
+msgstr "Fehar"
+
+msgid "Deactivated"
+msgstr "Desativado"
+
+msgid "Dec"
+msgstr "Dez"
+
+msgid "Delete these sizes"
+msgstr "Exclua esses tamanhos"
+
+msgid "Delete user"
+msgstr "Excluir usuário"
+
+msgid "Download all activities"
+msgstr "Baixar todas as atividades"
+
+msgid "Edit"
+msgstr "Editar"
+
+msgid "Edit guest user"
+msgstr "Editar usuário convidado"
+
+msgid "Email"
+msgstr "E-mail"
+
+msgid "%d photos edited"
+msgstr "%d fotos editadas"
+
+msgid "%d photos moved"
+msgstr "%d fotos movidas"
+
+msgid "%d tag added"
+msgstr "%d etiqueta adicionada"
+
+msgid "%d tag deleted"
+msgstr "%d etiqueta excluída"
+
+msgid "%d tag edited"
+msgstr "%d etiqueta editada"
+
+msgid "%d tag moved"
+msgstr "%d etiqueta movida"
+
+msgid "%d tags added"
+msgstr "%d etiquetas adicionadas"
+
+msgid "%d tags deleted"
+msgstr "%d etiquetas excluídas"
+
+msgid "%d tags edited"
+msgstr "%d etiquetas editadas"
+
+msgid "%d tags moved"
+msgstr "%d etiquetas movidas"
+
+msgid "%d user added"
+msgstr "%d usuário adicionado"
+
+msgid "%d user edited"
+msgstr "%d usuário editado"
+
+msgid "%d user logged in"
+msgstr "%d usuário entrou"
+
+msgid "%d user logged out"
+msgstr "%d usuário saiu"
+
+msgid "%d users added"
+msgstr "%d usuários adicionados"
+
+msgid "%d users edited"
+msgstr "%d usuários editados"
+
+msgid "%d users logged in"
+msgstr "%d usuários entraram"
+
+msgid "%d users logged out"
+msgstr "%d usuários saíram"
+
+msgid "%s MB"
+msgstr "%s MB"
+
+msgid "Activated"
+msgstr "Ativado"
+
+msgid "%d album added"
+msgstr "%d álbum adicionado"
+
+msgid "%d album deleted"
+msgstr "%d álbum excluído"
+
+msgid "%d album edited"
+msgstr "%d álbum editado"
+
+msgid "%d albums added"
+msgstr "%d álbuns adicionados"
+
+msgid "%d albums deleted"
+msgstr "%d álbuns excluídos"
+
+msgid "%d albums edited"
+msgstr "%d álbuns editados"
+
+msgid "%d group added"
+msgstr "%d grupo adicionado"
+
+msgid "%d group deleted"
+msgstr "%d grupo excluído"
+
+msgid "%d group edited"
+msgstr "%d grupo editado"
+
+msgid "%d group moved"
+msgstr "%d grupo movido"
+
+msgid "%d groups added"
+msgstr "%d grupos adicionados"
+
+msgid "%d groups deleted"
+msgstr "%d grupos excluídos"
+
+msgid "%d groups edited"
+msgstr "%d grupos editados"
+
+msgid "%d groups moved"
+msgstr "%d grupos movidos"
+
+msgid "%d photo added"
+msgstr "%d foto adicinada"
+
+msgid "%d photo deleted"
+msgstr "%d foto excluída"
+
+msgid "%d photo edited"
+msgstr "%d foto editada"
+
+msgid "%d photo moved"
+msgstr "%d foto movida"
+
+msgid "%d photos added"
+msgstr "%d fotos adicionadas"
+
+msgid "%d photos deleted"
+msgstr "%d fotos excluídas"
+
+msgid "%s line"
+msgstr "%s linha"
+
+msgid "%s lines"
+msgstr "%s linhas"
+
+msgid "%s plugin found"
+msgstr "<b>%s</b> plugin encontrado"
+
+msgid "%s plugins found"
+msgstr "<b>%s</b> plugins encontrados"
+
+msgid "%s status is required to edit parameters."
+msgstr "O status %s é necessário para editar os parâmetros."
+
+msgid "Edit photo #%s"
+msgstr "Editar foto #%s"
+
+msgid "Locked albums are disabled for maintenance. Only administrators can view them in the gallery. Lock this album will also lock his Sub-albums"
+msgstr "Álbuns bloqueados são desativados para manutenção. Apenas os administradores podem visualizá-los na galeria. Bloquear este álbum também bloqueará seus sub-álbuns"
+
+msgid "Webmaster status required"
+msgstr "Status de webmaster obrigatório"
+
+msgid "Your selection"
+msgstr "Sua seleção"
+
+msgid "action successfully performed."
+msgstr "ação executada com sucesso."
+
+msgid "Version %s"
+msgstr "Versão %s"
+
+msgid "Visited"
+msgstr "Visitou"
+
+msgid "While restoring this plugin, it will be reset to its original parameters and associated data is going to be reset"
+msgstr "Ao restaurar este plugin, ele será redefinido para seus parâmetros originais e os dados associados serão redefinidos"
+
+msgid "Yes, rename"
+msgstr "Sim, renomear"
+
+msgid "and %d more"
+msgstr "e %d mais"
+
+msgid "since the beginning"
+msgstr "desde o começo"
+
+msgid "Purge Actions"
+msgstr "Ações de limpeza"
+
+msgid "Purge Cache"
+msgstr "Limpar cache"
+
+msgid "Rating greater than"
+msgstr "Classificação maior que"
+
+msgid "Rename \"%s\""
+msgstr "Renomeie \"%s\""
+
+msgid "Show beta test plugins"
+msgstr "Mostrar plug-ins de teste beta"
+
+msgid "Show plugins compatible with previous version of Piwigo"
+msgstr "Mostrar plugins compatíveis com a versão anterior do Piwigo"
+
+msgid "Tag name"
+msgstr "Nome da etiqueta"
+
+msgid "The original picture will be detected with the filename (without extension)."
+msgstr "A imagem original será detectada com o nome do arquivo (sem extensão)."
+
+msgid "There is multiple image in the database with the following names : %s."
+msgstr "Há várias imagens no banco de dados com os seguintes nomes: %s."
+
+msgid "This albums is already in related categories list"
+msgstr "Este álbum já está na lista de álbuns relacionados"
+
+msgid "This photo is an orphan"
+msgstr "Esta foto é órfã"
+
+msgid "This picture is physically linked to this album, you can't dissociate them"
+msgstr "Esta foto está fisicamente ligada a este álbum, você não pode dissociá-los."
+
+msgid "This plugin has no recent update"
+msgstr "Este plugin não tem atualização recente"
+
+msgid "This plugin have been updated recently"
+msgstr "Este plugin foi atualizado recentemente"
+
+msgid "This plugin have no update since 3 years ! It may be outdated"
+msgstr "Este plugin não tem atualização desde 3 anos! Pode estar desatualizado"
+
+msgid "This plugin is incompatible with your version"
+msgstr "Este plugin é incompatível com sua versão"
+
+msgid "This plugin was updated less than 6 months ago"
+msgstr "Este plugin foi atualizado há menos de 6 meses"
+
+msgid "Try now !"
+msgstr "Tente agora!"
+
+msgid "Understood, do not show again"
+msgstr "Entendido, não mostre novamente"
+
+msgid "Upload Formats"
+msgstr "Formatos de Envios"
+
+msgid "Extensions"
+msgstr "Extensões"
+
+msgid "Global Gallery Actions"
+msgstr "Ações Globais da Galeria"
+
+msgid "Install Piwigo on mobile"
+msgstr "Instale o Piwigo no celular"
+
+msgid "Installed on %s, %s"
+msgstr "Instalado em %s, %s"
+
+msgid "Last revision date is newer than"
+msgstr "A data da última revisão é mais recente que"
+
+msgid "Latest Piwigo news"
+msgstr "Últimas notícias de Piwigo"
+
+msgid "Memories"
+msgstr "Recordações"
+
+msgid "More information"
+msgstr "Mais Informações"
+
+msgid "No format for this picture"
+msgstr "Sem formato para esta imagem"
+
+msgid "No picture found with the following name : %s."
+msgstr "Nenhuma imagem encontrada com o seguinte nome: %s."
+
+msgid "No research in progress"
+msgstr "Nenhuma pesquisa em andamento"
+
+msgid "No search in progress"
+msgstr "Nenhuma pesquisa em andamento"
+
+msgid "Object"
+msgstr "Objeto"
+
+msgid "On %d rating(s)"
+msgstr "Em %d classificação(ões)"
+
+msgid "Picture to associate formats with"
+msgstr "Imagem para associar formatos"
+
+msgid "Piwigo core"
+msgstr "Núcleo Piwigo"
+
+msgid "Piwigo is also on mobile."
+msgstr "Piwigo também está no celular."
+
+msgid "Place first"
+msgstr "Coloque primeiro"
+
+msgid "Place last"
+msgstr "Coloque por último"
+
+msgid "Properties of abums"
+msgstr "Propriedades dos Albos"
+
+msgid "Certification higher or equal to"
+msgstr "Certificação superior ou igual a"
+
+msgid "Create a new album at root"
+msgstr "Criar um novo álbum na raiz"
+
+msgid "Create a sub-album of \"%s\""
+msgstr "Crie um sub-álbum de \"%s\""
+
+msgid "Current Version"
+msgstr "Versão Atual"
+
+msgid "Currently running version %s"
+msgstr "Versão atualmente em execução %s"
+
+msgid "Delete %s format ?"
+msgstr "Excluir formato %s?"
+
+msgid "Discover"
+msgstr "Descobrir"
+
+msgid "Downloaded"
+msgstr "Baixado"
+
+msgid "Error when trying to detect formats"
+msgstr "Erro ao tentar detectar formatos"
+
+msgid "Are you sure you want to unlock the gallery?"
+msgstr "Tem certeza de que deseja desbloquear a galeria?"
+
+msgid "Are you sure you want to uninstall the plugin \"%s\"?"
+msgstr "Tem certeza de que deseja desinstalar o plug-in \"%s\"?"
+
+msgid "Additional filters"
+msgstr "Adicionar filtros"
+
+msgid "Add formats"
+msgstr "Adicionar formatos"
+
+msgid "Add as filter"
+msgstr "Adicionar como filtro"
+
+msgid "Add another set of formats"
+msgstr "Adicionar outro conjunto de formatos"
+
+msgid "Add New Plugin"
+msgstr "Adicionar um novo plug-in"
+
+msgid "%sMB"
+msgstr "%s MB"
+
+msgid "%sGB"
+msgstr "%s GB"
+
+msgid "%s pixels, %.2f MB"
+msgstr "%s pixels, %.2f MB"
+
+msgid "%d formats uploaded for %d photos"
+msgstr "%d formatos enviados para %d fotos"
+
+msgid "Details"
+msgstr "Detalhes"
+
+msgid "If anything bad happens during the update, you would be able to restore a backup."
+msgstr "Se algo de ruim acontecer durante a atualização, você poderá restaurar um backup."
+
+msgid "The best is to have them made automatically on a regular basis."
+msgstr "O melhor é tê-los feitos automaticamente em uma base regular."
+
+msgid "This photo no longer exists"
+msgstr "Esta foto não existe mais"
+
+msgid "Always have a backup of your database and files."
+msgstr "Sempre tenha um backup de seu banco de dados e arquivos."
+
+msgid "Apply to root albums"
+msgstr "Aplicar a álbuns raiz"
+
+msgid "Album name must not be empty"
+msgstr "O nome do álbum não deve estar vazio"
+
+msgid "Visit history"
+msgstr "Visite o histórico"
+
+msgid "Some photos are missing from your file system. Details provided by plugin Check Uploads"
+msgstr "Algumas fotos estão faltando no seu sistema de arquivos. Detalhes fornecidos pelo plugin Check Uploads"
+
+msgid "%d pictures in sub-albums"
+msgstr "%d fotos em sub-álbuns"
+
+msgid "<b>%d</b> filtered user"
+msgstr "<b>%d</b> usuário filtrado"
+
+msgid "<b>%d</b> filtered users"
+msgstr "<b>%d</b> usuários filtrados"
+
+msgid "Unlocked album"
+msgstr "Álbum desbloqueado"
+
+msgid "%d files"
+msgstr "%d arquivos"
+
+msgid "%d in whole branch"
+msgstr "%d em todo o ramo"
+
+msgid "%d including sub-albums"
+msgstr "%d incluindo sub-álbuns"
+
+msgid "Activate button \"%s\""
+msgstr "Ativar botão \"%s\""
+
+msgid "All admins"
+msgstr "Todos os administradores"
+
+msgid "Allow comments for sub-albums"
+msgstr "Permitir comentários para subálbuns"
+
+msgid "Authorize comments"
+msgstr "Autorizar comentários"
+
+msgid "Comments allowed for sub-albums"
+msgstr "Comentários permitidos para sub-álbuns"
+
+msgid "Comments disallowed for sub-albums"
+msgstr "Comentários não permitidos para sub-álbuns"
+
+msgid "Created"
+msgstr "Criada"
+
+msgid "Detect and avoid duplicates during upload"
+msgstr "Detecte e evite duplicatas durante o upload"
+
+msgid "Disallow comments for sub-albums"
+msgstr "Proibir comentários para subálbuns"
+
+msgid "During upload, if Piwigo detects the photo already exists, associate the existing photo to the destination album, without duplicating file"
+msgstr "Durante o upload, se o Piwigo detectar que a foto já existe, associe a foto existente ao álbum de destino, sem duplicar o arquivo"
+
+msgid "Locked album"
+msgstr "Álbum bloqueado"
+
+msgid "Modified"
+msgstr "Modificado"
+
+msgid "Only admins in a specific group"
+msgstr "Somente administradores em um grupo específico"
+
+msgid "Put at the root"
+msgstr "Coloque na raiz"
+
+msgid "Remove thumbnail"
+msgstr "Remover miniatura"
+
+msgid "This album is currently locked, visible only to administrators."
+msgstr "Este álbum está atualmente bloqueado e visível apenas para administradores."
+
+msgid "Unlock it"
+msgstr "Desbloqueie"
+
+msgid "Expand"
+msgstr "Espandir"
+
+msgid "Shrink"
+msgstr "Encolher"
+
+msgid "between %d and %d"
+msgstr "entre %d e %d"
+
+msgid "image(s) contains unsaved changes"
+msgstr "imagens contêm alterações não salvas"
+
+msgid "level of confidentiality"
+msgstr "nível de confidencialidade"
+
+msgid "was succesfully deleted"
+msgstr "foi excluído com sucesso"
+
+msgid "Activate create mode to create and select an album"
+msgstr "Ative o modo de criação para criar e selecionar um álbum"
+
+msgid "Add a sub-album to “%s”"
+msgstr "Adicione um sub-álbum a “%s”"
+
+msgid "Added on %s"
+msgstr "Adicionado em %s"
+
+msgid "An error has occured"
+msgstr "Ocorreu um erro"
+
+msgid "Auto-update"
+msgstr "Atualização automática"
+
+msgid "Changes saved"
+msgstr "Alterações salvas"
+
+msgid "Core"
+msgstr "Núcleo"
+
+msgid "Create a root album"
+msgstr "Crie um álbum raiz"
+
+msgid "Create and select"
+msgstr "Crie e selecione"
+
+msgid "Create your first album"
+msgstr "Crie seu primeiro álbum"
+
+msgid "Creation mode"
+msgstr "Modo de criação"
+
+msgid "First choose an album, then add your files"
+msgstr "Primeiro escolha um álbum e depois adicione seus arquivos"
+
+msgid "Image"
+msgstr "Imagem"
+
+msgid "Metadata sync complete"
+msgstr "Sincronização de metadados concluída"
+
+msgid "Pagination has changed and needs to be reloaded !"
+msgstr "A paginação mudou e precisa ser recarregada!"
+
+msgid "Save"
+msgstr "Salvar"
+
+msgid "Select or create an album"
+msgstr "Selecione ou crie um álbum"
+
+msgid "System Activities"
+msgstr "Atividades do sistema"
+
+msgid "Who can see ?"
+msgstr "Quem pode ver?"
+
+msgid "You have unsaved changes"
+msgstr "Você tem alterações não salvas"
+
+msgid "To be sure, please rewrite the word “%s” below"
+msgstr "Para ter certeza, reescreva a palavra “%s” abaixo"
+
+msgid "To set your password, visit the following address:"
+msgstr "Para definir sua senha, visite o seguinte endereço:"
+
+msgid "Username successfully modified"
+msgstr "Nome de usuário modificado com sucesso"
+
+msgid "Welcome to %s"
+msgstr "Bem-vindo ao %s"
+
+msgid "What's new in version %s"
+msgstr "O que há de novo na versão %s?"
+
+msgid "Yes, let's proceed"
+msgstr "Sim, vamos prosseguir"
+
+msgid "You are about to set %s as main user instead of %s, do you wish to continue ?"
+msgstr "Você está prestes a definir %s como usuário principal em vez de %s, deseja continuar?"
+
+msgid "You are not authorised to change the main user, please ask your webmaster"
+msgstr "Você não está autorizado a alterar o usuário principal, pergunte ao seu webmaster"
+
+msgid "You can now change the main user from %s to %s."
+msgstr "Agora você pode alterar o usuário principal de %s para %s."
+
+msgid "You cannot copy the password if the connection to this site is not secure."
+msgstr "Você não pode copiar a senha se a conexão com este site não for segura."
+
+msgid "%s is the new main user"
+msgstr "%s é o novo usuário principal"
+
+msgid "A photo library administrator has created the following account for you:"
+msgstr "Um administrador de biblioteca de fotos criou a seguinte conta para você:"
+
+msgid "An activation link valid for %s has been sent to \"%s\". If the user doesn't receive the link, you can generate and copy a new one by editing the user and managing her password."
+msgstr "Um link de ativação válido para %s foi enviado para \"%s\". Se o link não for recebido, um novo pode ser gerado e copiado editando o usuário e gerenciando sua senha."
+
+msgid "An activation link valid for %s was created but could not be sent. You can now copy the link below and send it to the user."
+msgstr "Um link de ativação válido para %s foi criado, mas não pôde ser enviado. Agora você pode copiar o link abaixo e enviá-lo ao usuário."
+
+msgid "Cannot send an email to this user because he doesn't have an email address"
+msgstr "Não é possível enviar um e-mail para este usuário porque ele não tem um endereço de e-mail"
+
+msgid "Changing the main user"
+msgstr "Alterando o usuário principal"
+
+msgid "Copied link"
+msgstr "Link copiado"
+
+msgid "Copy password"
+msgstr "Copiar senha"
+
+msgid "Copy the link below and send it to the user so the password can be set."
+msgstr "Copie o link abaixo e envie ao usuário para que a senha possa ser definida."
+
+msgid "Copy the password link"
+msgstr "Copie o link da senha"
+
+msgid "Main user"
+msgstr "Usuário principal"
+
+msgid "Ok, got it!"
+msgstr "Ok, entendi!"
+
+msgid "Password copied"
+msgstr "Senha copiada"
+
+msgid "Please complete all fields"
+msgstr "Por favor, preencha todos os campos"
+
+msgid "Read the release note"
+msgstr "Leia a nota de lançamento"
+
+msgid "Resend password link"
+msgstr "Reenviar link de senha"
+
+msgid "Set as main user"
+msgstr "Definir como usuário principal"
+
+msgid "The passwords do not match"
+msgstr "As senhas não correspondem"
+
+msgid "This link is valid for %s. After this time, you will need to request a new link."
+msgstr "Este link é válido por %s. Após esse tempo, você precisará solicitar um novo link."
+
+msgid "This user must first be defined as the webmaster before it can be upgraded to the main user"
+msgstr "Este usuário deve primeiro ser definido como webmaster antes de poder ser atualizado para o usuário principal"
+
+msgid "When enabled, a common template is used for the login, registration and forgotten password pages, regardless of the theme. Some themes might use these templates even if you uncheck this option"
+msgstr "Quando ativado, um modelo comum (padrão) é usado para as páginas de login, registro e senha esquecida, independentemente do tema em uso. Alguns temas podem usar esses modelos mesmo se você desmarcar esta opção."
+
+msgid "Use standard Piwigo template for common pages."
+msgstr "Use o padrão (template) do Piwigo para páginas comuns."
+
+msgid "The comments have been validated."
+msgstr "Os comentários foram validados."
+
+msgid "The comment has been validated."
+msgstr "O comentário foi validado."
+
+msgid "Save all photos"
+msgstr "Salvar todas as fotos"
+
+msgid "No comments selected, no actions possible."
+msgstr "Nenhum comentário selecionado, nenhuma ação é possível."
+
+msgid "Are you sure you want to delete comment #%s?"
+msgstr "Tem certeza de que deseja excluir o comentário #%s?"
+
+msgid "Are you sure you want to delete \"%d\" comments?"
+msgstr "Tem certeza de que deseja excluir \"%d\" comentários?"
+
+msgid "We have found %d duplicate paths. Details provided by plugin Check Uploads"
+msgstr "Encontramos %d caminhos duplicados. Detalhes fornecidos pelo plugin \"Checkup Uploads\"."
+
+msgid "There is currently %d photos in the lounge (upload buffer)"
+msgstr "Faltam %d fotos para carregar (relação de upload)"
+
+msgid "If a photo in this album has the same filename, update the file without changing the photo's properties"
+msgstr "Se uma foto neste álbum tiver o mesmo nome-de-arquivo, atualize o arquivo sem alterar as propriedades da foto"
+
+msgid "Empty lounge"
+msgstr "Relação de upload vazia"
+
+msgid "%d photos were moved from the upload lounge to their albums"
+msgstr "%d fotos da relação de upload para seus álbuns"
+
+msgid "Admins only"
+msgstr "Apenas para administradores"
+
+msgid "user_status_normal"
+msgstr "Básico"
+
+msgid "Use custom logo (png, jpeg or svg)"
+msgstr "Use um logotipo personalizado (png, jpeg ou svg)"
+
+msgid "Use Piwigo logo"
+msgstr "Use Piwigo logo"
+
+msgid "Standard pages header"
+msgstr "Cabeçalho de páginas padrão"
+
+msgid "Standard pages aren't activated, however you have %d active themes that will still use them. These themes are:"
+msgstr "As páginas padrão não estão ativadas, porém você tem %d temas ativos que ainda as utilizarão. Esses temas são:"
+
+msgid "Standard pages"
+msgstr "Páginas padrão"
+
+msgid "Select a color theme for standard pages"
+msgstr "Selecione um tema de cores para as páginas padrão."
+
+msgid "Personalization settings"
+msgstr "Configurações de personalização"
+
+msgid "Light mode"
+msgstr "Modo claro"
+
+msgid "Display Gallery title"
+msgstr "Exibir Título da Galeria"
+
+msgid "Dark mode"
+msgstr "Modo escuro"
+
+msgid "Change logo"
+msgstr "Change logo"
+

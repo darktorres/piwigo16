@@ -10,6 +10,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\themes;
+use Piwigo\Core\ActivitySystem;
 use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
@@ -109,7 +110,7 @@ if (isset($_GET['installstatus'])) {
             if (is_string($installed_theme_id) && isset($themes->fs_themes[$installed_theme_id])) {
                 pwg_activity(
                     'system',
-                    ACTIVITY_SYSTEM_THEME,
+                    ActivitySystem::Theme,
                     'install',
                     [
                         'theme_id' => $installed_theme_id,

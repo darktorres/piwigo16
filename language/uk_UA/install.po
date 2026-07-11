@@ -1,0 +1,146 @@
+# Piwigo translation — uk_UA
+# Source: install.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: uk_UA\n"
+"Plural-Forms: nplurals=3; plural=(n % 10 == 1 && n % 100 != 11 ? 0 : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 1 : 2);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Admin configuration"
+msgstr "Конфігурація адміністратора"
+
+msgid "also given by your host provider"
+msgstr "також дізнайтесь у Вашого хостинг-провайдера"
+
+msgid "An alternate solution is to copy the text in the box above and paste it into the file \"local/config/database.inc.php\" (Warning : database.inc.php must only contain what is in the textarea, no line return or space character)"
+msgstr "Альтернативним рішенням є копіювання тексту в поле вище і вставте його в файл \"local/config/database.inc.php\" (Попередження: database.inc.php повинен містити тільки те, що в текстовому полі, без зворотної лінії або пропусків)"
+
+msgid "Basic configuration"
+msgstr "Базова конфігурація"
+
+msgid "Can't connect to server"
+msgstr "Не вдається підключитися до сервера"
+
+msgid "Congratulations, Piwigo installation is completed"
+msgstr "Вітаємо, Piwigo завершив встановлення"
+
+msgid "Connection to server succeed, but it was impossible to connect to database"
+msgstr "З'єднання з сервером успішно, але з'єднання з базою даних неможлива"
+
+msgid "Creation of config file local/config/database.inc.php failed."
+msgstr "Створення файлу конфігурації local/config/database.inc.php не вдалося."
+
+msgid "Database configuration"
+msgstr "Конфігурація бази даних"
+
+msgid "Database name"
+msgstr "Ім'я бази даних"
+
+msgid "Database table prefix"
+msgstr "Префікс таблиць бази даних"
+
+msgid "database tables names will be prefixed with it (enables you to manage better your tables)"
+msgstr "таблиці бази даних імена, яких будуть починатися з префіксами (дозволяє управляти таблицями краще)"
+
+msgid "Default gallery language"
+msgstr "Типова мова галереї"
+
+msgid "Don't hesitate to consult our forums for any help : %s"
+msgstr "Не соромтеся проконсультуватися на форумі першим з будь-яким питанням: %s"
+
+msgid "Download the config file"
+msgstr "Завантажити файл конфігурації"
+
+msgid "enter a login for webmaster"
+msgstr "введіть лоґін веб-майстра"
+
+msgid "Hope to see you back soon."
+msgstr "Сподіваюся побачити вас найближчим часом."
+
+msgid "Host"
+msgstr "Хост"
+
+msgid "Installation"
+msgstr "Встановлення"
+
+msgid "It appears your webhost is currently running PHP %s."
+msgstr "Схоже, ваш хостинг в даний час працює з PHP %s."
+
+msgid "It will be shown to the visitors. It is necessary for website administration"
+msgstr "Він буде показаний відвідувачам. Це необхідно для адміністрації сайту"
+
+msgid "Just another Piwigo gallery"
+msgstr "Ще одна галерея Piwigo"
+
+msgid "Keep it confidential, it enables you to access administration panel"
+msgstr "Тримайте його конфіденційність, він дозволяє отримати доступ до адміністративної панелі"
+
+msgid "Need help ? Ask your question on <a href=\"%s\">Piwigo message board</a>."
+msgstr "Потрібна допомога? Задайте питання на <a href=\"%s\">форумі Piwigo</a>."
+
+msgid "Note you can change your configuration by yourself and restart Piwigo after that."
+msgstr "Зверніть увагу, ви можете змінити свою конфігурацію і перезавантажити собі Piwigo після цього."
+
+msgid "Password [confirm]"
+msgstr "Пароль [підтвердження]"
+
+msgid "PHP 5 is required"
+msgstr "Потрібен PHP 5.2"
+
+msgid "Piwigo may try to switch your configuration to PHP 5 by creating or modifying a .htaccess file."
+msgstr "Piwigo можуть спробувати перемкнути конфігурацію PHP 5.2 шляхом створення або зміни .htaccess файлу."
+
+msgid "Piwigo was not able to configure PHP 5."
+msgstr "Piwigo не зміг налаштувати PHP 5.2"
+
+msgid "please enter your password again"
+msgstr "введіть пароль ще раз"
+
+msgid "Sorry!"
+msgstr "Вибачте!"
+
+msgid "Start Install"
+msgstr "Початок встановлення"
+
+msgid "Try to configure PHP 5"
+msgstr "Спробуйте налаштувати PHP 5.2"
+
+msgid "user login given by your host provider"
+msgstr "лоґін користувача дізнайтесь у вашого хостинг-провайдера"
+
+msgid "user password given by your host provider"
+msgstr "лоґін користувача дізнайтесь у Вашого хостинг-провайдера"
+
+msgid "verification"
+msgstr "перевірка"
+
+msgid "Visitors will be able to contact site administrator with this mail"
+msgstr "Відвідувачі зможуть використовувати цю пошту, щоб зв'язатися з адміністратором сайту"
+
+msgid "webmaster login can't contain characters ' or \""
+msgstr "лоґін веб-майстера не може містити символів ' або \""
+
+msgid "Welcome to my photo gallery"
+msgstr "Ласкаво просимо в фотогалерею"
+
+msgid "Welcome to your new installation of Piwigo!"
+msgstr "Ласкаво просимо у ваш новий встановлений Piwigo!"
+
+msgid "You can download the config file and upload it to local/config directory of your installation."
+msgstr "Ви можете завантажити конфігураційний файл і завантажити його до local/config каталогу встановлення."
+
+msgid "You may referer to your hosting provider's support and see how you could switch to PHP 5 by yourself."
+msgstr "Ви повинні звернутися в службу підтримки вашого хостинг-провайдера і подивитися, як ви можете переключитися на PHP 5.2 самостійно."
+
+msgid "User"
+msgstr "Користувач"
+
+msgid "localhost or other, supplied by your host provider"
+msgstr "локальний хост або будь-який інший, наданий вашим провайдером"
+
+msgid "PHP version %s required (you are running on PHP %s)"
+msgstr "потрібно мати PHP версії %s (ви використовуєте PHP %s)"
+

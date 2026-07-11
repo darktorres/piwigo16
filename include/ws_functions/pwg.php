@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\AppInfo;
+use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -43,7 +45,7 @@ function ws_getMissingDerivatives(array $params, PwgServer &$service): PwgError|
     }
 
     $max_urls = $params['max_urls'];
-    $query = 'SELECT MAX(id)+1, COUNT(*) FROM ' . IMAGES_TABLE . ';';
+    $query = 'SELECT MAX(id)+1, COUNT(*) FROM ' . Tables::images() . ';';
     $row = pwg_db_fetch_row(pwg_query($query));
     assert($row !== null);
     [$max_id, $image_count] = $row;
@@ -77,7 +79,7 @@ function ws_getMissingDerivatives(array $params, PwgServer &$service): PwgError|
 
     $query_model = '
 SELECT id, path, representative_ext, width, height, rotation
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE ' . implode(' AND ', $where_clauses) . '
   ORDER BY id DESC
   LIMIT ' . $qlimit . '
@@ -129,7 +131,7 @@ SELECT id, path, representative_ext, width, height, rotation
  */
 function ws_getVersion($params, PwgServer &$service): string
 {
-    return PHPWG_VERSION;
+    return AppInfo::VERSION;
 }
 
 /**
@@ -141,61 +143,61 @@ function ws_getVersion($params, PwgServer &$service): string
 function ws_getInfos($params, PwgServer &$service): array
 {
     $infos = [];
-    $infos['version'] = PHPWG_VERSION;
+    $infos['version'] = AppInfo::VERSION;
 
-    $query = 'SELECT COUNT(*) FROM ' . IMAGES_TABLE . ';';
+    $query = 'SELECT COUNT(*) FROM ' . Tables::images() . ';';
     $row = pwg_db_fetch_row(pwg_query($query));
     assert($row !== null);
     [$infos['nb_elements']] = $row;
 
-    $query = 'SELECT COUNT(*) FROM ' . CATEGORIES_TABLE . ';';
+    $query = 'SELECT COUNT(*) FROM ' . Tables::categories() . ';';
     $row = pwg_db_fetch_row(pwg_query($query));
     assert($row !== null);
     [$infos['nb_categories']] = $row;
 
-    $query = 'SELECT COUNT(*) FROM ' . CATEGORIES_TABLE . ' WHERE dir IS NULL;';
+    $query = 'SELECT COUNT(*) FROM ' . Tables::categories() . ' WHERE dir IS NULL;';
     $row = pwg_db_fetch_row(pwg_query($query));
     assert($row !== null);
     [$infos['nb_virtual']] = $row;
 
-    $query = 'SELECT COUNT(*) FROM ' . CATEGORIES_TABLE . ' WHERE dir IS NOT NULL;';
+    $query = 'SELECT COUNT(*) FROM ' . Tables::categories() . ' WHERE dir IS NOT NULL;';
     $row = pwg_db_fetch_row(pwg_query($query));
     assert($row !== null);
     [$infos['nb_physical']] = $row;
 
-    $query = 'SELECT COUNT(*) FROM ' . IMAGE_CATEGORY_TABLE . ';';
+    $query = 'SELECT COUNT(*) FROM ' . Tables::imageCategory() . ';';
     $row = pwg_db_fetch_row(pwg_query($query));
     assert($row !== null);
     [$infos['nb_image_category']] = $row;
 
-    $query = 'SELECT COUNT(*) FROM ' . TAGS_TABLE . ';';
+    $query = 'SELECT COUNT(*) FROM ' . Tables::tags() . ';';
     $row = pwg_db_fetch_row(pwg_query($query));
     assert($row !== null);
     [$infos['nb_tags']] = $row;
 
-    $query = 'SELECT COUNT(*) FROM ' . IMAGE_TAG_TABLE . ';';
+    $query = 'SELECT COUNT(*) FROM ' . Tables::imageTag() . ';';
     $row = pwg_db_fetch_row(pwg_query($query));
     assert($row !== null);
     [$infos['nb_image_tag']] = $row;
 
-    $query = 'SELECT COUNT(*) FROM ' . USERS_TABLE . ';';
+    $query = 'SELECT COUNT(*) FROM ' . Tables::users() . ';';
     $row = pwg_db_fetch_row(pwg_query($query));
     assert($row !== null);
     [$infos['nb_users']] = $row;
 
-    $query = 'SELECT COUNT(*) FROM `' . GROUPS_TABLE . '`;';
+    $query = 'SELECT COUNT(*) FROM `' . Tables::groups() . '`;';
     $row = pwg_db_fetch_row(pwg_query($query));
     assert($row !== null);
     [$infos['nb_groups']] = $row;
 
-    $query = 'SELECT COUNT(*) FROM ' . COMMENTS_TABLE . ';';
+    $query = 'SELECT COUNT(*) FROM ' . Tables::comments() . ';';
     $row = pwg_db_fetch_row(pwg_query($query));
     assert($row !== null);
     [$infos['nb_comments']] = $row;
 
     // first element
     if ($infos['nb_elements'] > 0) {
-        $query = 'SELECT MIN(date_available) FROM ' . IMAGES_TABLE . ';';
+        $query = 'SELECT MIN(date_available) FROM ' . Tables::images() . ';';
         $row = pwg_db_fetch_row(pwg_query($query));
         assert($row !== null);
         [$infos['first_date']] = $row;
@@ -203,7 +205,7 @@ function ws_getInfos($params, PwgServer &$service): array
 
     // unvalidated comments
     if ($infos['nb_comments'] > 0) {
-        $query = 'SELECT COUNT(*) FROM ' . COMMENTS_TABLE . ' WHERE validated=\'false\';';
+        $query = 'SELECT COUNT(*) FROM ' . Tables::comments() . ' WHERE validated=\'false\';';
         $row = pwg_db_fetch_row(pwg_query($query));
         assert($row !== null);
         [$infos['nb_unvalidated_comments']] = $row;
@@ -333,8 +335,8 @@ function ws_caddie_add(array $params, PwgServer &$service): int
 
     $query = '
 SELECT id
-  FROM ' . IMAGES_TABLE . '
-      LEFT JOIN ' . CADDIE_TABLE . '
+  FROM ' . Tables::images() . '
+      LEFT JOIN ' . Tables::caddie() . '
       ON id=element_id AND user_id=' . $user_id . '
   WHERE id IN (' . implode(',', $params['image_id']) . ')
     AND element_id IS NULL
@@ -350,7 +352,7 @@ SELECT id
     }
     if ((bool) count($datas)) {
         mass_inserts(
-            CADDIE_TABLE,
+            Tables::caddie(),
             ['element_id', 'user_id'],
             $datas
         );
@@ -369,7 +371,7 @@ SELECT id
 function ws_rates_delete(array $params, PwgServer &$service): int|string
 {
     $query = '
-DELETE FROM ' . RATE_TABLE . '
+DELETE FROM ' . Tables::rate() . '
   WHERE user_id=' . $params['user_id'];
 
     if (! empty($params['anonymous_id'])) {
@@ -459,7 +461,7 @@ function ws_session_getStatus($params, PwgServer &$service): array
     assert($row !== null);
     [$dbnow] = $row;
     $res['current_datetime'] = $dbnow;
-    $res['version'] = PHPWG_VERSION;
+    $res['version'] = AppInfo::VERSION;
     $res['save_visits'] = do_log();
     $res['connected_with'] = $_SESSION['connected_with'] ?? null;
 
@@ -611,7 +613,7 @@ SELECT
     occured_on,
     details,
     user_agent
-  FROM ' . ACTIVITY_TABLE . '
+  FROM ' . Tables::activity() . '
   ' . $where . '
   ORDER BY activity_id DESC
   LIMIT ' . $nb_rows_to_fetch . ' OFFSET ' . $page_offset . '
@@ -705,7 +707,7 @@ SELECT
 SELECT
     `' . $user_field_id . '` AS user_id,
     `' . $user_field_username . '` AS username
-  FROM ' . USERS_TABLE . '
+  FROM ' . Tables::users() . '
   WHERE `' . $user_field_id . '` IN (' . implode(',', array_keys($user_ids)) . ')
 ;';
         $username_of = query2array($query, 'user_id', 'username');
@@ -768,7 +770,7 @@ function ws_history_log(array $params, PwgServer &$service): void
     /** @var array<string, mixed> $page */
     global $logger, $page;
 
-    if (! empty($params['section']) and in_array($params['section'], get_enums(HISTORY_TABLE, 'section'))) {
+    if (! empty($params['section']) and in_array($params['section'], get_enums(Tables::history(), 'section'))) {
         $page['section'] = $params['section'];
     }
 
@@ -829,7 +831,7 @@ function ws_history_search(array $param, PwgServer &$service): array
         $page['start'] = 0;
     }
 
-    $types = array_merge(['none'], get_enums(HISTORY_TABLE, 'image_type'));
+    $types = array_merge(['none'], get_enums(Tables::history(), 'image_type'));
 
     $display_thumbnails = [
         'no_display_thumbnail' => l10n('No display'),
@@ -910,7 +912,7 @@ function ws_history_search(array $param, PwgServer &$service): array
     // register search rules in database, then they will be available on
     // thumbnails page and picture page.
     $query = '
-  INSERT INTO ' . SEARCH_TABLE . '
+  INSERT INTO ' . Tables::search() . '
   (rules)
   VALUES
   (\'' . pwg_db_real_escape_string(serialize($search)) . '\')
@@ -928,7 +930,7 @@ function ws_history_search(array $param, PwgServer &$service): array
     // what are the lines to display in reality ?
     $query = '
 SELECT rules
-  FROM ' . SEARCH_TABLE . '
+  FROM ' . Tables::search() . '
   WHERE id = ' . $search_id . '
 ;';
     $rules_row = pwg_db_fetch_row(pwg_query($query));
@@ -1005,7 +1007,7 @@ SELECT rules
 SELECT
     id,
     rules
-  FROM ' . SEARCH_TABLE . '
+  FROM ' . Tables::search() . '
   WHERE id IN (' . implode(',', $search_ids) . ')
 ;';
         $search_details_raw = query2array($query, 'id', 'rules');
@@ -1061,7 +1063,7 @@ SELECT
         $query = '
 SELECT ' . $user_field_id . ' AS id
      , ' . $user_field_username . ' AS username
-  FROM ' . USERS_TABLE . '
+  FROM ' . Tables::users() . '
   WHERE id IN (' . implode(',', array_keys($user_ids)) . ')
 ;';
         $result = pwg_query($query);
@@ -1085,7 +1087,7 @@ SELECT ' . $user_field_id . ' AS id
     if (count($category_ids) > 0) {
         $query = '
 SELECT id, uppercats
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE id IN (' . implode(',', $category_ids) . ')
 ;';
         $uppercats_of = query2array($query, 'id', 'uppercats');
@@ -1118,7 +1120,7 @@ SELECT
     file,
     path,
     representative_ext
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', array_keys($image_ids)) . ')
 ;';
         $image_infos = query2array($query, 'id');
@@ -1131,7 +1133,7 @@ SELECT
 SELECT
     id,
     name, url_name
-  FROM ' . TAGS_TABLE;
+  FROM ' . Tables::tags();
 
         $result = pwg_query($query);
         while ((bool) ($row = pwg_db_fetch_assoc($result))) {

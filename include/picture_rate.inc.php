@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\AccessLevel;
+use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 /**
@@ -46,7 +48,7 @@ if ((bool) $conf['rate']) {
         $query = '
 SELECT COUNT(rate) AS count
      , ROUND(AVG(rate),2) AS average
-  FROM ' . RATE_TABLE . '
+  FROM ' . Tables::rate() . '
   WHERE element_id = ' . $picture_current_id . '
 ;';
         $row = pwg_db_fetch_row(pwg_query($query));
@@ -56,7 +58,7 @@ SELECT COUNT(rate) AS count
     $template->assign('rate_summary', $rate_summary);
 
     $user_rate = null;
-    if ((bool) $conf['rate_anonymous'] or is_autorize_status(ACCESS_CLASSIC)) {
+    if ((bool) $conf['rate_anonymous'] or is_autorize_status(AccessLevel::Classic)) {
         if ($rate_summary['count'] > 0) {
             // $page['image_id'] / $user['id'] are always numeric (int or
             // numeric string) -- see the identical narrowing in picture.php.
@@ -66,11 +68,11 @@ SELECT COUNT(rate) AS count
             $rate_user_id = is_numeric($rate_user_id) ? (int) $rate_user_id : 0;
 
             $query = 'SELECT rate
-      FROM ' . RATE_TABLE . '
+      FROM ' . Tables::rate() . '
       WHERE element_id = ' . $rate_image_id . '
       AND user_id = ' . $rate_user_id;
 
-            if (! is_autorize_status(ACCESS_CLASSIC)) {
+            if (! is_autorize_status(AccessLevel::Classic)) {
                 $remote_addr = $_SERVER['REMOTE_ADDR'] ?? '';
                 $remote_addr = is_string($remote_addr) ? $remote_addr : '';
                 $ip_components = explode('.', $remote_addr);

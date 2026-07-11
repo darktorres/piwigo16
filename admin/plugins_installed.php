@@ -10,6 +10,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\plugins;
+use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
@@ -178,7 +179,7 @@ foreach ($plugins->fs_plugins as $plugin_id => $fs_plugin) {
     $fs_plugin_extension = $fs_plugin['extension'] ?? null;
     if (is_string($fs_plugin_extension) and isset($merged_extensions[$fs_plugin_extension])) {
         // Deactivate manually plugin from database
-        $query = 'UPDATE ' . PLUGINS_TABLE . ' SET state=\'inactive\' WHERE id=\'' . $plugin_id . '\'';
+        $query = 'UPDATE ' . Tables::plugins() . ' SET state=\'inactive\' WHERE id=\'' . $plugin_id . '\'';
         pwg_query($query);
 
         $plugin_state = 'merged';

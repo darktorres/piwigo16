@@ -1,0 +1,1541 @@
+# Piwigo translation — hu_HU
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: hu_HU\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Language-Name: Magyar\n"
+"X-Piwigo-Country: Hungary\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: hu\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "%d Kb"
+msgstr "%d Kbájt"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d album frissítés"
+msgstr[1] "%d album frissítve"
+
+msgid "%d comment to validate"
+msgstr "%d hozzászólás engedélyezve"
+
+msgid "%d comments to validate"
+msgstr "%d hozzászólás vár engedélyezésre"
+
+msgid "%d new comment"
+msgstr "%d új hozzászólás"
+
+msgid "%d new comments"
+msgstr "%d új hozzászólás"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d hozzászólás"
+msgstr[1] "%d hozzászólás"
+
+msgid "%d hit"
+msgid_plural "%d hits"
+msgstr[0] "%d találat"
+msgstr[1] "%d találat"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "%d új elem"
+msgstr[1] "%d új elem"
+
+msgid "%d new user"
+msgstr "%d új felhasználó"
+
+msgid "%d new users"
+msgstr "%d új felhasználó"
+
+msgid "About"
+msgstr "Impresszum"
+
+msgid "All tags"
+msgstr "Összes címke"
+
+msgid "Any tag"
+msgstr "Bármely címke"
+
+msgid "Author"
+msgstr "Szerző"
+
+msgid "Albums"
+msgstr "Albumok"
+
+msgid "Album"
+msgstr "Album"
+
+msgid "Close this window"
+msgstr "Ablak bezárása"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "Teljes RSS (képek, hozzászólások)"
+
+msgid "Confirm Password"
+msgstr "Jelszó megerősítése"
+
+msgid "Connection settings"
+msgstr "Kapcsolat beállításai"
+
+msgid "Login"
+msgstr "Bejelentkezés"
+
+msgid "Contact webmaster"
+msgstr "Levél a Webmesternek!"
+
+msgid "Create a new account"
+msgstr "Új regisztráció"
+
+msgid "Created on"
+msgstr "Létrehozva"
+
+msgid "Creation date"
+msgstr "Létrehozás dátuma"
+
+msgid "Current password is wrong"
+msgstr "Hibás jelszó"
+
+msgid "Dimensions"
+msgstr "Képméret"
+
+msgid "Display"
+msgstr "Megjelenítés"
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "E-mail cím hiányzik. Kérem írja be az e-mail címet."
+
+msgid "Email address"
+msgstr "E-mail cím"
+
+msgid "Enter your personnal informations"
+msgstr "Saját adatok megadása"
+
+msgid "Error sending email"
+msgstr "E-mail küldése sikertelen"
+
+msgid "File name"
+msgstr "Fájlnév"
+
+msgid "File"
+msgstr "Fájl"
+
+msgid "Filesize"
+msgstr "Fájlméret"
+
+msgid "Filter and display"
+msgstr "Szűrés és megjelenítés"
+
+msgid "Filter"
+msgstr "Szűrő"
+
+msgid "Forgot your password?"
+msgstr "Elfelejtette a jelszavát?"
+
+msgid "Go through the gallery as a visitor"
+msgstr "Megtekintés látogatóként"
+
+msgid "Help"
+msgstr "Segítség"
+
+msgid "Identification"
+msgstr "Azonosító"
+
+msgid "Photos only RSS feed"
+msgstr "Képek RSS"
+
+msgid "Keyword"
+msgstr "Kulcsszó"
+
+msgid "Links"
+msgstr "Kapcsolódó linkek"
+
+msgid "N/A"
+msgstr "Nincs adat"
+
+msgid "New on %s"
+msgstr "Új %s"
+
+msgid "Notification"
+msgstr "Értesítés"
+
+msgid "Number of items"
+msgstr "Tételek száma"
+
+msgid "Original dimensions"
+msgstr "Eredeti méret"
+
+msgid "Password forgotten"
+msgstr "Elfelejtett jelszó"
+
+msgid "Password"
+msgstr "Jelszó"
+
+msgid "Post date"
+msgstr "Feltöltés dátuma"
+
+msgid "Posted on"
+msgstr "Feltöltve"
+
+msgid "Profile"
+msgstr "Profil"
+
+msgid "Quick connect"
+msgstr "Gyors kapcsolódás"
+
+msgid "RSS feed"
+msgstr "RSS-Feed"
+
+msgid "Register"
+msgstr "Regisztráció"
+
+msgid "Registration"
+msgstr "Regisztráció"
+
+msgid "Related tags"
+msgstr "Kapcsolódó címkék"
+
+msgid "Reset"
+msgstr "Visszaállítás"
+
+msgid "Retrieve password"
+msgstr "Jelszó visszaállítása"
+
+msgid "Search tags"
+msgstr "Címke keresése"
+
+msgid "Search"
+msgstr "Keresés"
+
+msgid "display available tags"
+msgstr "Lehetséges címkék"
+
+msgid "Since"
+msgstr "óta"
+
+msgid "Sort by"
+msgstr "Rendezés"
+
+msgid "Sort order"
+msgstr "Rendezési sorrend"
+
+msgid "Tag"
+msgstr "Címke"
+
+msgid "Tags"
+msgstr "Címkék"
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "Az RSS értesítő a következő -az oldallal kapcsolatos- információkat tartalmazza: új fotók, új albumok, új kommentek."
+
+msgid "Unknown feed identifier"
+msgstr "Ismeretlen RSS azonosító"
+
+msgid "User comments"
+msgstr "Felhasználói hozzászólások"
+
+msgid "Username"
+msgstr "Felhasználónév"
+
+msgid "Visits"
+msgstr "Látogatás"
+
+msgid "Webmaster"
+msgstr "Webmester"
+
+msgid "Week %d"
+msgstr "%d. hét"
+
+msgid "About Piwigo"
+msgstr "Impresszum"
+
+msgid "You are not authorized to access the requested page"
+msgstr "Önnek nincs jogosultsága a kívánt oldal megtekintéséhez"
+
+msgid "add this photo to your favorites"
+msgstr "Kedvencekhez ad"
+
+msgid "Administration"
+msgstr "Adminisztráció"
+
+msgid "all"
+msgstr "összes"
+
+msgid "ascending"
+msgstr "növekvő"
+
+msgid "Expand all albums"
+msgstr "Összes album kibontása"
+
+msgid "posted after %s (%s)"
+msgstr "feltöltve %s (%s) után"
+
+msgid "posted before %s (%s)"
+msgstr "feltöltve %s (%s) előtt"
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "feltöltve %s (%s) és %s (%s) között"
+
+msgid "posted on %s"
+msgstr "elérhető %s"
+
+msgid "Best rated"
+msgstr "Legjobbra  értékelt"
+
+msgid "display best rated photos"
+msgstr "A legjobbra értékelt képek megjelenítése"
+
+msgid "Calendar"
+msgstr "Naptár"
+
+msgid "All"
+msgstr "Összes"
+
+msgid "display each day with photos, month per month"
+msgstr "Napi képek megjelenítése hónapról-hónapra"
+
+msgid "View"
+msgstr "Nézet"
+
+msgid "chronology_monthly_calendar"
+msgstr "Havi naptár"
+
+msgid "chronology_monthly_list"
+msgstr "Havi lista"
+
+msgid "chronology_weekly_list"
+msgstr "Heti lista"
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "Kattintson ide, ha a böngészője nem továbbítja automatikusan."
+
+msgid "comment date"
+msgstr "Hozzászólás időpontja"
+
+msgid "Comment"
+msgstr "Hozzászólás"
+
+msgid "Your comment has been registered"
+msgstr "Hozzászólás rögzítve"
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "Anti-flood rendszer : várjon egy kicsit a következő hozzászólás előtt"
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "A hozzászólás még nincs rögzítve. (érvényességi szabályok)"
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "Az adminisztrátornak még el kell fogadni a hozzászólást, hogy láthatóvá váljon."
+
+msgid "This login is already used by another user"
+msgstr "Ezt a nevet már valaki használja"
+
+msgid "Comments"
+msgstr "Hozzászólások"
+
+msgid "Add a comment"
+msgstr "Hozzászólás"
+
+msgid "created after %s (%s)"
+msgstr "létrehozva %s (%s) után"
+
+msgid "created before %s (%s)"
+msgstr "létrehozva %s (%s) előtt"
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "létrehozva %s (%s) és %s (%s) között"
+
+msgid "created on %s"
+msgstr "létrehozva %s"
+
+msgid "Your Gallery Customization"
+msgstr "A Galéria testreszabása "
+
+msgid "Default"
+msgstr "Alapértelmezett"
+
+msgid "delete this photo from your favorites"
+msgstr "Törlés a kedvencek közül"
+
+msgid "Delete"
+msgstr "Törlés"
+
+msgid "descending"
+msgstr "csökkenő"
+
+msgid "Download"
+msgstr "letöltés"
+
+msgid "Download this file"
+msgstr "Képfájl letöltése"
+
+msgid "edit"
+msgstr "Javítás"
+
+msgid "wrong date"
+msgstr "hibás dátum"
+
+msgid "excluded"
+msgstr "kivétel"
+
+msgid "Your favorites"
+msgstr "Kedvenceim"
+
+msgid "display your favorites photos"
+msgstr "kedvenc képeimet jeleníti meg"
+
+msgid "Favorites"
+msgstr "Kedvencek"
+
+msgid "First"
+msgstr "Első"
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "Az oldal karbantartás miatt átmenetileg nem látható, kérjük látogasson vissza néhány perc múlva."
+
+msgid "Page generated in"
+msgstr "Oldal generálva"
+
+msgid "guest"
+msgstr "Vendég"
+
+msgid "Hello"
+msgstr "Üdvözlet"
+
+msgid "available for administrators only"
+msgstr "csak adminisztrátoroknak"
+
+msgid "display this album"
+msgstr "album képeinek, belső albumainak megjelenítése"
+
+msgid "display last user comments"
+msgstr "Utolsó hozzászólások megjelenítése"
+
+msgid "search"
+msgstr "Keresés"
+
+msgid "Home"
+msgstr "Főoldal"
+
+msgid "in this album"
+msgstr "ebben az albumban"
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] "%d belső albumban"
+msgstr[1] "%d belső albumban"
+
+msgid "included"
+msgstr "beleértve"
+
+msgid "Invalid password!"
+msgstr "Hibás jelszó!"
+
+msgid "Language"
+msgstr "Nyelv"
+
+msgid "last %d days"
+msgstr "utolsó %d nap"
+
+msgid "Last"
+msgstr "Utolsó"
+
+msgid "Logout"
+msgstr "Kijelentkezés"
+
+msgid "obligatory"
+msgstr "szükséges"
+
+msgid "display a calendar by creation date"
+msgstr "Naptár megjelenítése a készítés dátuma szerint"
+
+msgid "display all photos in all sub-albums"
+msgstr "Megjelenik az összes elem (belső albumok is)"
+
+msgid "return to normal view mode"
+msgstr "Visszatérés a normál kinézethez"
+
+msgid "display a calendar by posted date"
+msgstr "Naptár megjelenítése a feltöltés dátuma szerint"
+
+msgid "Most visited"
+msgstr "Legtöbbször nézett"
+
+msgid "display most visited photos"
+msgstr "A leglátogatottabb képek megjelenítése"
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "Az oldalankénti képek száma nem lehet 0, és pozitív egész szám kell legyen."
+
+msgid "Number of photos per page"
+msgstr "Képek száma oldalanként"
+
+msgid "Unknown identifier"
+msgstr "Ismeretlen azonosító"
+
+msgid "New password"
+msgstr "Új jelszó"
+
+msgid "Rate this photo"
+msgstr "Értékelje a képet"
+
+msgid "Next"
+msgstr "Következő"
+
+msgid "no rate"
+msgstr "még nincs értékelve"
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "Az alábbi elemek kerültek fel az elmúlt %d napban."
+msgstr[1] "Az alábbi elemek kerültek fel az elmúlt %d napban."
+
+msgid "password updated"
+msgstr "Jelszó frissítve"
+
+msgid "Recent period must be a positive integer value"
+msgstr "Kell egy pozitív egész érték"
+
+msgid "photo"
+msgstr "kép"
+
+msgid "Click on the photo to see it in high definition"
+msgstr "Az eredeti méret megnyitásához kattintson a képre!"
+
+msgid "Show file metadata"
+msgstr "Meta adatok megjelenítése"
+
+msgid "Powered by"
+msgstr "Az oldal motorja:"
+
+msgid "Preferences"
+msgstr "Beállítások"
+
+msgid "Previous"
+msgstr "Előző"
+
+msgid "Random photos"
+msgstr "Véletlenszerű képek"
+
+msgid "display a set of random photos"
+msgstr "Véletlenszerű képek megjelenítése"
+
+msgid "Recent albums"
+msgstr "Legfrissebb album"
+
+msgid "display recently updated albums"
+msgstr "Utoljára feltöltött albumok megjelenítése"
+
+msgid "Recent period"
+msgstr "Elmúlt időszak"
+
+msgid "Recent photos"
+msgstr "Legfrissebb képek"
+
+msgid "display most recent photos"
+msgstr "Legfrissebb képek megjelenítése"
+
+msgid "Redirection..."
+msgstr "Átirányítás..."
+
+msgid "Please, enter a login"
+msgstr "Kérem, adja meg felhasználói nevét"
+
+msgid "login mustn't end with a space character"
+msgstr "A felhasználói név nem végződhet SPACE karakterrel"
+
+msgid "login mustn't start with a space character"
+msgstr "A felhasználói név nem kezdődhet SPACE karakterrel"
+
+msgid "this login is already used"
+msgstr "Ilyen felhasználónk már van!"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "E-mail formátuma: xxx@yyy.eee (pl.: kedvenc@nyuszi.hu)"
+
+msgid "Auto login"
+msgstr "Jegyezz meg"
+
+msgid "remove this tag from the list"
+msgstr "Ezt a címkét távolítsa el a listáról"
+
+msgid "representative"
+msgstr "album bélyegkép"
+
+msgid "Search for Author"
+msgstr "Szerző keresése"
+
+msgid "Search in albums"
+msgstr "Keresés albumokban"
+
+msgid "Search by date"
+msgstr "Keresés dátum alapján"
+
+msgid "Date"
+msgstr "Dátum"
+
+msgid "End-Date"
+msgstr "Befejező dátum"
+
+msgid "Kind of date"
+msgstr "Dátum típusa"
+
+msgid "Search for words"
+msgstr "Keresés szavakra"
+
+msgid "Search for all terms"
+msgstr "Keresés az összes kifejezésre"
+
+msgid "Search for any term"
+msgstr "Keresés bármely kifejezésre"
+
+msgid "Empty query. No criteria has been entered."
+msgstr "Üres keresés. Nem lett megadva semmilyen keresési szempont."
+
+msgid "Search results"
+msgstr "Keresés eredménye"
+
+msgid "Search in sub-albums"
+msgstr "Keresés a belső albumokban is"
+
+msgid "Contact"
+msgstr "Kapcsolat:"
+
+msgid "set as album representative"
+msgstr "Beállítás album-képviselőként"
+
+msgid "Show number of comments"
+msgstr "Hozzászólások számának megjelenítése"
+
+msgid "Show number of hits"
+msgstr "Találatok száma"
+
+msgid "slideshow"
+msgstr "Diavetítés"
+
+msgid "stop the slideshow"
+msgstr "Vetítés megállítása"
+
+msgid "Specials"
+msgstr "Speciális"
+
+msgid "SQL queries in"
+msgstr "adatbázis-lekérdezés"
+
+msgid "display only recently posted photos"
+msgstr "Csak nemrégiben küldött képek"
+
+msgid "return to the display of all photos"
+msgstr "Vissza (összes kép megjelenítése)"
+
+msgid "the beginning"
+msgstr "Kezdet"
+
+msgid "Thumbnails"
+msgstr "Bélyegképek"
+
+msgid "Menu"
+msgstr "Menü"
+
+msgid "A comment on your site"
+msgstr "Komment az oldalon"
+
+msgid "today"
+msgstr "Mai"
+
+msgid "Update your rating"
+msgstr "Értékeléseinek frissítése"
+
+msgid "the username must be given"
+msgstr "Felhasználói nevet meg kell adni"
+
+msgid "useful when password forgotten"
+msgstr "hasznos, ha elfelejti a jelszavát"
+
+msgid "Quick search"
+msgstr "Gyors-keresés"
+
+msgid "Connected user: %s"
+msgstr "Kapcsolódott felhasználó: %s"
+
+msgid "IP: %s"
+msgstr "IP cím: %s"
+
+msgid "Browser: %s"
+msgstr "Böngésző: %s"
+
+msgid "Author: %s"
+msgstr "Szerző: %s"
+
+msgid "Comment: %s"
+msgstr "Hozzászólás: %s"
+
+msgid "Comment by %s"
+msgstr "%s hozzászólása"
+
+msgid "User: %s"
+msgstr "Felhasználó: %s"
+
+msgid "Email: %s"
+msgstr "E-Mail: %s"
+
+msgid "Admin: %s"
+msgstr "Adminisztrátor: %s"
+
+msgid "Registration of %s"
+msgstr "Bejegyezte: %s"
+
+msgid "Album: %s"
+msgstr "Album: %s"
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "Rossz felhasználói állapot \"vendég\", az alapértelmezett állapot. Kérjük, küldjön értesítést a webmesternek."
+
+msgid "this email address is already in use"
+msgstr "Ezt az e-mail címet már egy másik felhasználó használja."
+
+msgid "Album results for"
+msgstr "Album eredményei"
+
+msgid "Tag results for"
+msgstr "Címke eredményei"
+
+msgid "from %s to %s"
+msgstr "%s-tól %s-ig"
+
+msgid "Play of slideshow"
+msgstr "Diavetítés indítása"
+
+msgid "Pause of slideshow"
+msgstr "Diavetítés szüneteltetése"
+
+msgid "Repeat the slideshow"
+msgstr "Diavetítés újra indítása"
+
+msgid "Not repeat the slideshow"
+msgstr "Ne ismételjük meg a diavetítést"
+
+msgid "Reduce diaporama speed"
+msgstr "Képváltás lassítása"
+
+msgid "Accelerate diaporama speed"
+msgstr "Képváltás gyorsítása"
+
+msgid "Submit"
+msgstr "Küldés"
+
+msgid "Yes"
+msgstr "Igen"
+
+msgid "No"
+msgstr "Nem"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "%d kép"
+msgstr[1] "%d kép"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "%d kép kapcsolódik a címkéhez"
+msgstr[1] "%d kép kapcsolódik a címkéhez"
+
+msgid "display photos linked to this tag"
+msgstr "A címkéhez kapcsolódó képek"
+
+msgid "photos posted during the last %d days"
+msgstr "Képek az elmúlt %d napban"
+
+msgid "Piwigo Help"
+msgstr "Piwigo segítség"
+
+msgid "Rank"
+msgstr "Rang"
+
+msgid "group by letters"
+msgstr "Betűrendben"
+
+msgid "letters"
+msgstr "Betűrendben"
+
+msgid "show tag cloud"
+msgstr "Címkefelhő megjelenítése"
+
+msgid "cloud"
+msgstr "felhő"
+
+msgid "Reset to default values"
+msgstr "Alapértékek visszaállítása"
+
+msgid "delete all photos from your favorites"
+msgstr "Minden kép törlése a kedvencekből"
+
+msgid "Sent by"
+msgstr "Küldte"
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "A cookie-k le vannak tiltva vagy a böngésző nem támogatja. Engedélyezni kell a cookie-kat a csatlakozáshoz."
+
+msgid "Are you sure?"
+msgstr "Biztos benne?"
+
+msgid "Edit a comment"
+msgstr "A hozzászólás módosítása"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) Ezt a hozzászólást engedélyezni kell"
+
+msgid "Welcome"
+msgstr "Üdvözlöm"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "Üdvözlöm a Piwigo képgalériában!"
+
+msgid "... or browse your empty gallery"
+msgstr "... vagy tekintse meg az üres galériát"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "... vagy kérem kikapcsolni ezt az üzenetet, eligazodom magam is"
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "Üdv %s, a Piwigo képgalériád üres!"
+
+msgid "I want to add photos"
+msgstr "Szeretnék képeket feltölteni"
+
+msgid "Manage this user comment: %s"
+msgstr "Itt kezelheti a felhasználó hozzászólását: %s"
+
+msgid "This author modified following comment:"
+msgstr "A szerző a következő hozzászólást módosította:"
+
+msgid "This author removed the comment with id %d"
+msgstr "A szerző a következő hozzászólást törölte id %d"
+
+msgid "html tags are not allowed in login"
+msgstr "Belépéskor a html tag-ek nem engedélyezettek"
+
+msgid "Rating score"
+msgstr "Értékelési pontszám"
+
+msgid "Invalid username or email"
+msgstr "Érvénytelen felhasználónév vagy e-mail cím"
+
+msgid "Password reset is not allowed for this user"
+msgstr "A felhasználói jelszó törlése nem engedélyezett"
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "\"%s\" felhasználó nem rendelkezik érvényes e-mail címmel, jelszó alaphelyzetbe állítása nem lehetséges"
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "Valaki a jelszó alaphelyzetbe állítását kérte a következő felhasználói fiókhoz:"
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "Felhasználónév: \"%s\" Galéria: %s"
+
+msgid "To reset your password, visit the following address:"
+msgstr "Az új jelszó megadásához kattintson a következő linkre:"
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "Amennyiben nem Ön kérte, vagy időközben meggondolta magát, kérjük hagyja figyelmen kívül ezt a levelet és nem történik semmi."
+
+msgid "Password Reset"
+msgstr "Jelszó törlése (Új jelszó)"
+
+msgid "Check your email for the confirmation link"
+msgstr "Elküldtük levélben a megerősítő linket. Kérjük ellenőrizze postafiókját."
+
+msgid "Invalid key"
+msgstr "Érvénytelen kulcs"
+
+msgid "The passwords do not match"
+msgstr "A jelszavak nem egyeznek"
+
+msgid "Your password has been reset"
+msgstr "A jelszó módosítása megtörtént"
+
+msgid "Return to home page"
+msgstr "Vissza a kezdőlapra"
+
+msgid "Please enter your username or email address."
+msgstr "Kérjük adja meg felhasználónevét, vagy e-mail címét."
+
+msgid "You will receive a link to create a new password via email."
+msgstr "E-mailben kap egy linket, hogy létre tudja hozni új jelszavát."
+
+msgid "Username or email"
+msgstr "Felhasználónév vagy e-mail cím"
+
+msgid "Change my password"
+msgstr "Jelszó módosítása"
+
+msgid "Enter your new password below."
+msgstr "Írja be az új jelszót."
+
+msgid "EXIF Metadata"
+msgstr "EXIF metaadatok"
+
+msgid "IPTC Metadata"
+msgstr "IPTC metaadatok"
+
+msgid "Edit"
+msgstr "Szerkesztés"
+
+msgid "large"
+msgstr "L - nagy"
+
+msgid "medium"
+msgstr "M - közepes"
+
+msgid "Original"
+msgstr "Eredeti"
+
+msgid "small"
+msgstr "S - kicsi"
+
+msgid "square"
+msgstr "Négyzetes"
+
+msgid "thumb"
+msgstr "Bélyegkép"
+
+msgid "xlarge"
+msgstr "XL - nagyobb"
+
+msgid "xxlarge"
+msgstr "XXL - legnagyobb"
+
+msgid "Hello %s,"
+msgstr "Üdv %s,"
+
+msgid "Here are your connection settings"
+msgstr "Kapcsolat adatai"
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "Amennyiben hibát észlel az e-mail továbbítása során, kérjük lépjen kapcsolatba velünk %s"
+
+msgid "Password: %s"
+msgstr "Jelszó: %s"
+
+msgid "Send my connection settings by email"
+msgstr "Kapcsolat beállításainak küldése e-mailben"
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "Sikeresen regisztrált, hamarosan kap egy e-mailt a kapcsolat adataival. Üdvözöljük!"
+
+msgid "Thank you for registering at %s!"
+msgstr "Köszöni Önnek a regisztrációt a(z) %s!"
+
+msgid "Username modification"
+msgstr "Felhasználónév módosítása"
+
+msgid "Username: %s"
+msgstr "Felhasználónév: %s"
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "Sikeres felhasználónév módosítás: %s"
+
+msgid "Photo sizes"
+msgstr "Kép méretek"
+
+msgid "Desktop"
+msgstr "Asztali"
+
+msgid "Mobile"
+msgstr "Mobil"
+
+msgid "Show latest comments first"
+msgstr "Új hozzászólások előre"
+
+msgid "Show oldest comments first"
+msgstr "Régi hozzászólások előre"
+
+msgid "View in"
+msgstr "Megjelenítés"
+
+msgid "Date created, new &rarr; old"
+msgstr "Kép készült, újabb &rarr; korábbi"
+
+msgid "Date created, old &rarr; new"
+msgstr "Kép készült, korábbi &rarr; újabb"
+
+msgid "Date posted, new &rarr; old"
+msgstr "Feltöltve, újabb &rarr; korábbi"
+
+msgid "Date posted, old &rarr; new"
+msgstr "Feltöltve, korábbi &rarr; újabb"
+
+msgid "File name, A &rarr; Z"
+msgstr "Fájlnév, A &rarr; Z"
+
+msgid "File name, Z &rarr; A"
+msgstr "Fájlnév, Z &rarr; A"
+
+msgid "Manual sort order"
+msgstr "Kézi rendezés"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "Kép címe, A &rarr; Z"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "Kép címe, Z &rarr; A"
+
+msgid "Rating score, high &rarr; low"
+msgstr "Értékelési pontszám, magas &rarr; alacsony"
+
+msgid "Rating score, low &rarr; high"
+msgstr "Értékelési pontszám, alacsony &rarr; magas"
+
+msgid "Visits, high &rarr; low"
+msgstr "Megtekintések, több &rarr; kevesebb"
+
+msgid "Visits, low &rarr; high"
+msgstr "Megtekintések, kevesebb &rarr; több"
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "Azonosító (ID), növekvő"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "Azonosító (ID), csökkenő"
+
+msgid "2small"
+msgstr "XXS - legkisebb"
+
+msgid "xsmall"
+msgstr "XS - kissebb"
+
+msgid "%d rate"
+msgid_plural "%d rates"
+msgstr[0] "%d értékelé"
+msgstr[1] "%d értékelés"
+
+msgid "Bad request"
+msgstr "Hibás kérés"
+
+msgid "Forbidden"
+msgstr "Tiltott"
+
+msgid "Page not found"
+msgstr "Az oldal nem található"
+
+msgid "Permalink for album not found"
+msgstr "A permalink album nem létezik"
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "A Piwigo nem javítható hibát észlelt"
+
+msgid "Requested album does not exist"
+msgstr "A kért album nem létezik"
+
+msgid "Requested tag does not exist"
+msgstr "A kért címke nem létezik"
+
+msgid "Email address is mandatory"
+msgstr "E-mail cím szükséges"
+
+msgid "Username is mandatory"
+msgstr "Felhasználónév szükséges"
+
+msgid "mandatory"
+msgstr "szükséges"
+
+msgid "Website"
+msgstr "Weboldal"
+
+msgid "Your website URL is invalid"
+msgstr "A weboldal URL érvénytelen"
+
+msgid "Email"
+msgstr "E-mail"
+
+msgid "First Page"
+msgstr "Első oldal"
+
+msgid "Go back to the album"
+msgstr "Vissza az albumhoz"
+
+msgid "Last Page"
+msgstr "Utolsó oldal"
+
+msgid "Password is missing. Please enter the password."
+msgstr "Jelszó hiányzik. Kérem írja be a jelszót."
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Jelszó megerősítése hiányzik. Kérem erősítse meg a választott jelszót."
+
+msgid "%d photos per page"
+msgstr "%d kép/oldal"
+
+msgid "Theme"
+msgstr "Téma"
+
+msgid "Apply on properties"
+msgstr "Tulajdonságok alkalmazása"
+
+msgid "Photo description"
+msgstr "Kép leírása"
+
+msgid "Photo title"
+msgstr "Kép címe"
+
+msgid "Album name, A &rarr; Z"
+msgstr "Album név, A &rarr; Z"
+
+msgid "Album name, Z &rarr; A"
+msgstr "Album név, Z &rarr; A"
+
+msgid "No results for"
+msgstr "Nincs találat"
+
+msgid "Link: %s"
+msgstr "Hivatkozás: %s"
+
+msgid "Your authentication key is no longer valid."
+msgstr "A hitelesítési kulcsa már nem érvényes."
+
+msgid "Invalid username or password!"
+msgstr "A felhasználó-azonosító vagy a jelszó érvénytelen "
+
+msgid "generate random password"
+msgstr "Véletlenszerű jelszó generálása"
+
+msgid "Password: ********** (no copy by email)"
+msgstr "Jelszó: ********** (nincs email másolat)"
+
+msgid "Related albums"
+msgstr "Kapcsolódó albumok"
+
+msgid "Album name, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+msgstr "Album neve, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+
+msgid "Album name, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+msgstr "Album neve, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+
+msgid "Start-Date"
+msgstr "Kezdő dátum"
+
+msgid "Album description"
+msgstr "Album leírás"
+
+msgid "You can try to edit your filters and perform a new search."
+msgstr "Módosítsa a szűrőket, majd keressen újra."
+
+msgid "Verify"
+msgstr "Hitelesítés"
+
+msgid "Verification successful! You can now choose a new password."
+msgstr "A hitelesítés sikerült! Most már megadhat egy új jelszót."
+
+msgid "There are no tags available for the photos currently filtered"
+msgstr "A jelenlegi szűrők alapján nincs elérhető címke a fotókhoz"
+
+msgid "There are no creation dates available for the photos currently filtered"
+msgstr "A szűrés eredményeként nincs megjeleníthető létrehozási dátum"
+
+msgid "There are no authors available for the photos currently filtered"
+msgstr "A jelenlegi szűrők alapján nincs elérhető szerző a fotókhoz"
+
+msgid "The secret will no longer be displayed. You must copy it to continue."
+msgstr "A titok többé nem jeleníthető meg. A folytatáshoz másolja ki."
+
+msgid "The secret key can no longer be displayed."
+msgstr "A titkos kulcs már nem tekinthető meg."
+
+msgid "The PDF you requested is too large to display on this page."
+msgstr "A kért PDF túl nagy ahhoz, hogy ezen az oldalon megjelenjen."
+
+msgid "Tags listed here match your search by word. Click on one to browse by tag."
+msgstr "Az itt megjelenő címkék megfelelnek a keresett szónak. Kattintson egyre a címke szerinti böngészéshez."
+
+msgid "Search in this set"
+msgstr "Keresés ebben a készletben"
+
+msgid "Return to <a href=\"identification.php\" title=\"Sign in\">Sign in</a>"
+msgstr "Vissza a <a href=\"identification.php\" title=\"Bejelentkezés\">Bejelentkezés</a> oldalra"
+
+msgid "Custom dates"
+msgstr "Egyéni dátum"
+
+msgid "Custom date"
+msgstr "Egyéni dátum"
+
+msgid "Create an account"
+msgstr "Fiók létrehozása"
+
+msgid "Click here to display it"
+msgstr "Kattintson ide a megjelenítéséhez"
+
+msgid "Choose how you want to see your gallery"
+msgstr "Válassza ki a galéria megjelenítési módját "
+
+msgid "Choose filters"
+msgstr "Szűrők kiválasztása"
+
+msgid "you must choose a date"
+msgstr "Választania kell egy dátumot"
+
+msgid "year %d"
+msgstr "év %d"
+
+msgid "rating score %s"
+msgstr "értékelés pontszáma %s"
+
+msgid "last 24 hours"
+msgstr "elmúlt 24 óra"
+
+msgid "You have no email address, so you will not be notified when your API key is about to expire."
+msgstr "Nincs e-mail címe, ezért nem kap értesítést, amikor az API kulcsa lejár."
+
+msgid "Your verification code"
+msgstr "Ellenőrző kódja"
+
+msgid "Your password was successfully set"
+msgstr "A jelszava sikeresen beállítva"
+
+msgid "Your password was successfully reset"
+msgstr "A jelszava sikeresen visszaállítva"
+
+msgid "Your API key will expire soon"
+msgstr "API kulcsa nemsokára lejár"
+
+msgid "Your API key will expire in %d days."
+msgstr "API kulcsa %d napon belül le fog járni."
+
+msgid "Your API key will expire in %d day."
+msgstr "API kulcsa %d napon belül le fog járni."
+
+msgid "You can manage your API keys in your <a href=\"%s\">account settings.</a>"
+msgstr "Az API kulcsokat a <a href=\"%s\">fiókbeállításokban</a> kezelheti."
+
+msgid "Unknown time period"
+msgstr "Ismeretlen időszak"
+
+msgid "To continue using the API, please renew your key before it expires."
+msgstr "Az API további használatához kérjük, újítsa meg a kulcsát a lejárat előtt."
+
+msgid "This API key was manually revoked on %s"
+msgstr "Ez az API kulcs %s-kor manuálisan visszavonásra került."
+
+msgid "The email %s will be used to notify you when your API key is about to expire."
+msgstr "A %s e-mail címre értesítést küldünk, amikor az API kulcsának érvényessége lejár."
+
+msgid "Set your password below."
+msgstr "Jelszó beállítása net"
+
+msgid "Set my password"
+msgstr "Jelszó beállítása"
+
+msgid "Secret copied. Keep it in a safe place."
+msgstr "A titkos kulcs kimásolva. Őrizze biztonságos helyen."
+
+msgid "Search in :"
+msgstr "Keresés ebben:"
+
+msgid "Save your ID and secret"
+msgstr "ID és titkos kulcs mentése"
+
+msgid "Revoked"
+msgstr "Visszavonva"
+
+msgid "Revoke"
+msgstr "Visszavonás"
+
+msgid "Return to the gallery"
+msgstr "Vissza a galériához"
+
+msgid "Pre-established filters are proposed, but you can add or remove them using the \"Choose filters\" button."
+msgstr "Előre beállított szűrők állnak rendelkezésre, de a „Szűrők kiválasztása” gombbal hozzáadhat vagy eltávolíthat szűrőket."
+
+msgid "Only the first %d albums are displayed, out of %d."
+msgstr "%d album közül csak az első %d jelenik meg."
+
+msgid "Manage your account"
+msgstr "Fiók beállításai"
+
+msgid "No results are available."
+msgstr "Nincs találat."
+
+msgid "No expiration"
+msgstr "Nincs lejárati idő"
+
+msgid "Impossible to copy automatically. Please copy manually."
+msgstr "Automatikusan nem másolható. Kérjük, másolja át manuálisan."
+
+msgid "If you do not receive the email, please contact your webmaster."
+msgstr "Ha nem kapja meg az e-mailt, kérjük, vegye fel a kapcsolatot a webmesterével."
+
+msgid "If you changed your password because you think it was stolen, we recommend revoking your %d API keys <a href=\"%s\">in your profile</a>."
+msgstr "Ha jelszavát azért módosította, mert úgy gondolja, hogy ellopták, javasoljuk, hogy <a href=\"%s\">profiljában</a> vonja vissza %d API-kulcsát."
+
+msgid "If this wasn't you, please change your password immediately or contact your webmaster."
+msgstr "Ha nem Ön volt, kérjük, azonnal változtassa meg jelszavát, vagy vegye fel a kapcsolatot webmesterével."
+
+msgid "Here is your verification code:"
+msgstr "Itt van az ellenőrző kódja:"
+
+msgid "Fill in the filters to start a search"
+msgstr "Töltse ki a szűrőket a keresés elindításához"
+
+msgid "Expired on"
+msgstr "Lejárt ekkor"
+
+msgid "Duration"
+msgstr "Időtartam"
+
+msgid "Do you really want to revoke the \"%s\" API key?"
+msgstr "Tényleg vissza szeretné vonni a „%s” API-kulcsot?"
+
+msgid "Create API Keys to secure your acount"
+msgstr "Hozzon létre API-kulcsokat a fiókja biztonsága érdekében"
+
+msgid "Created at"
+msgstr "Létrehozva:"
+
+msgid "Create a new API key to secure your account."
+msgstr "Hozzon létre egy új API-kulcsot a fiókja biztonsága érdekében."
+
+msgid "Confirm new password"
+msgstr "Új jelszó megerősítése"
+
+msgid "Check your inbox"
+msgstr "Ellenőrizze a beérkező leveleit"
+
+msgid "An error has occured please got back to <a href=\"identification.php\" title=\"Sign in\">Sign in</a> or <a href=\"register.php\">Register</a>"
+msgstr "Hiba történt, kérjük, térjen vissza a <a href=\"identification.php\" title=\"Bejelentkezés\">Bejelentkezés</a> vagy a <a href=\"register.php\">Regisztráció</a> oldalra"
+
+msgid "Albums listed here match your search by word. Click on one to browse by album."
+msgstr "Az itt felsorolt albumok megfelelnek a keresési feltételeknek. Kattintson az egyikre az album böngészéséhez."
+
+msgid "Already have an account ?"
+msgstr "Már van fiókja?"
+
+msgid "Change your password"
+msgstr "Változtassa meg a jelszavát"
+
+msgid "Albums found"
+msgstr "Talált albumok"
+
+msgid "Confirm my new password"
+msgstr "Új jelszavam megerősítése"
+
+msgid "An email has been sent with a verification code"
+msgstr "E-mailben elküldtük az ellenőrző kódot"
+
+msgid "An email has been sent with a link to reset your password"
+msgstr "Küldtünk egy e-mailt a jelszó visszaállításához szükséges linkkel"
+
+msgid "Album already selected"
+msgstr "Album már kiválasztva"
+
+msgid "Added by"
+msgstr "Hozzáadta:"
+
+msgid "Account"
+msgstr "Fiók"
+
+msgid "API Key has been successfully revoked."
+msgstr "API kulcs visszavonása sikeresen megtörtént."
+
+msgid "API Key has been successfully edited."
+msgstr "API kulcs sikeresen szerkesztve."
+
+msgid "edit user preferences"
+msgstr "felhasználói beállítások szerkesztése"
+
+msgid "Your changes have been applied."
+msgstr "A változások át lettek véve."
+
+msgid "When enabled, a common template is used for the login and registration pages, regardless of the theme."
+msgstr "Ha engedélyezve van, akkor a bejelentkezési és regisztrációs oldalakhoz egy közös sablon kerül felhasználásra, függetlenül a témától."
+
+msgid "must not be empty"
+msgstr "nem lehet üres"
+
+msgid "last year"
+msgstr "Múlt év"
+
+msgid "last 7 days"
+msgstr "Elmúlt 7 nap"
+
+msgid "last 6 months"
+msgstr "Utolsó 6 hónap"
+
+msgid "last 30 days"
+msgstr "Elmúlt 30 nap"
+
+msgid "last 3 months"
+msgstr "Utolsó 3 hónap"
+
+msgid "last 12 months"
+msgstr "Utolsó 12 hónap"
+
+msgid "Validate"
+msgstr "Érvényesítés"
+
+msgid "Verification code"
+msgstr "Ellenőrző kód"
+
+msgid "Too many attempts, please try later.."
+msgstr "Túl sok kisérlet, kérjük ismételd meg később..."
+
+msgid "To manage your API keys, please log in with your username/password."
+msgstr "Az API kulcsok kezeléséhez lépj be a felhasználói neveddel/jelszavaddal."
+
+msgid "The api key has been successfully created."
+msgstr "Az API kulcs sikeresen létrehozva."
+
+msgid "Tags found"
+msgstr "Címke megtalálva"
+
+msgid "Show expired keys"
+msgstr "Lejárt kulcsok megjelenítése"
+
+msgid "New API Key"
+msgstr "Új API kulcs"
+
+msgid "Options"
+msgstr "Opciók"
+
+msgid "Pages"
+msgstr "Oldalak"
+
+msgid "Never"
+msgstr "Soha"
+
+msgid "Don't have an account yet ?"
+msgstr "Még nincs fiókod?"
+
+msgid "Invalid verification code"
+msgstr "Érvénytelen ellenőrző kód"
+
+msgid "Last use"
+msgstr "Utolsó használat"
+
+msgid "ID copied."
+msgstr "ID másolva."
+
+msgid "Hide expired keys"
+msgstr "Lejárt kulcsok elrejtése"
+
+msgid "Empty filters"
+msgstr "Üres szűrők"
+
+msgid "Hello <em>%s</em>, enter your new password below."
+msgstr "Helló <em>%s</em>, lent írd be az új jelszavadat."
+
+msgid "Generate key"
+msgstr "Kulcs generálása"
+
+msgid "Generate API Key"
+msgstr "API kulcs generálása"
+
+msgid "Filters"
+msgstr "Szűrők"
+
+msgid "File type"
+msgstr "Fájltípus"
+
+msgid "Expires in"
+msgstr "Lejár"
+
+msgid "Expired"
+msgstr "Lejárt"
+
+msgid "Expert mode"
+msgstr "Szakértő mód"
+
+msgid "Edit API Key"
+msgstr "API kulcs szerkesztése"
+
+msgid "Done"
+msgstr "Kész"
+
+msgid "Clear"
+msgstr "Törlés"
+
+msgid "Album title"
+msgstr "Album cím"
+
+msgid "Cancel"
+msgstr "Mégsem"
+
+msgid "4xlarge"
+msgstr "4XL - gigantikus"
+
+msgid "3xlarge"
+msgstr "3XL - extra nagy"
+
+msgid "%d visits"
+msgstr "%d látogatás"
+
+msgid "API Key name"
+msgstr "API kulcs név"
+
+msgid "API Key not found"
+msgstr "API kulcs nem található"
+
+msgid "API Keys"
+msgstr "API kulcs"
+
+msgid "piwigo_day_0"
+msgstr "Vasárnap"
+
+msgid "piwigo_day_1"
+msgstr "Hétfő"
+
+msgid "piwigo_day_2"
+msgstr "Kedd"
+
+msgid "piwigo_day_3"
+msgstr "Szerda"
+
+msgid "piwigo_day_4"
+msgstr "Csütörtök"
+
+msgid "piwigo_day_5"
+msgstr "Péntek"
+
+msgid "piwigo_day_6"
+msgstr "Szombat"
+
+msgid "piwigo_month_10"
+msgstr "Október"
+
+msgid "piwigo_month_11"
+msgstr "November"
+
+msgid "piwigo_month_12"
+msgstr "December"
+
+msgid "piwigo_month_1"
+msgstr "Január"
+
+msgid "piwigo_month_2"
+msgstr "Február"
+
+msgid "piwigo_month_3"
+msgstr "Március"
+
+msgid "piwigo_month_4"
+msgstr "Április"
+
+msgid "piwigo_month_5"
+msgstr "Május"
+
+msgid "piwigo_month_6"
+msgstr "Június"
+
+msgid "piwigo_month_7"
+msgstr "Július"
+
+msgid "piwigo_month_8"
+msgstr "Augusztus"
+
+msgid "piwigo_month_9"
+msgstr "Szeptember"
+

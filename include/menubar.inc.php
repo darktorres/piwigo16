@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\AccessLevel;
 use Piwigo\Menu\BlockManager;
 use Piwigo\Template\Template;
 
@@ -325,7 +326,7 @@ function initialize_menu(): void
         $username = $user['username'] ?? null;
         $username = is_string($username) ? $username : '';
         $template->assign('USERNAME', stripslashes($username));
-        if (is_autorize_status(ACCESS_CLASSIC)) {
+        if (is_autorize_status(AccessLevel::Classic)) {
             $template->assign('U_PROFILE', get_root_url() . 'profile.php');
         }
 

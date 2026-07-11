@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\AccessLevel;
+use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
@@ -33,7 +35,7 @@ include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_ADMINISTRATOR);
+check_status(AccessLevel::Administrator);
 
 // +-----------------------------------------------------------------------+
 // |                       variable initialization                         |
@@ -67,7 +69,7 @@ if (! empty($_POST)) {
         //
         $query = '
 SELECT group_id
-  FROM ' . GROUP_ACCESS_TABLE . '
+  FROM ' . Tables::groupAccess() . '
   WHERE cat_id = ' . $page['cat'] . '
 ;';
         // array_from_query()'s own return type is declared array<int|string,
@@ -98,7 +100,7 @@ SELECT group_id
             // automatically forbidden
             $query = '
 DELETE
-  FROM ' . GROUP_ACCESS_TABLE . '
+  FROM ' . Tables::groupAccess() . '
   WHERE group_id IN (' . implode(',', $deny_groups) . ')
     AND cat_id IN (' . implode(',', get_subcat_ids([$page['cat']])) . ')
 ;';
@@ -117,7 +119,7 @@ DELETE
 
             $query = '
 SELECT id
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE id IN (' . implode(',', $cat_ids) . ')
     AND status = \'private\'
 ;';
@@ -134,7 +136,7 @@ SELECT id
             }
 
             mass_inserts(
-                GROUP_ACCESS_TABLE,
+                Tables::groupAccess(),
                 ['group_id', 'cat_id'],
                 $inserts,
                 [
@@ -148,7 +150,7 @@ SELECT id
         //
         $query = '
 SELECT user_id
-  FROM ' . USER_ACCESS_TABLE . '
+  FROM ' . Tables::userAccess() . '
   WHERE cat_id = ' . $page['cat'] . '
 ;';
         // array_from_query()'s own return type is declared array<int|string,
@@ -179,7 +181,7 @@ SELECT user_id
             // forbidden
             $query = '
 DELETE
-  FROM ' . USER_ACCESS_TABLE . '
+  FROM ' . Tables::userAccess() . '
   WHERE user_id IN (' . implode(',', $deny_users) . ')
     AND cat_id IN (' . implode(',', get_subcat_ids([$page['cat']])) . ')
 ;';
@@ -232,7 +234,7 @@ $groups = [];
 
 $query = '
 SELECT id, name
-  FROM `' . GROUPS_TABLE . '`
+  FROM `' . Tables::groups() . '`
   ORDER BY name ASC
 ;';
 $groups = simple_hash_from_query($query, 'id', 'name');
@@ -241,7 +243,7 @@ $template->assign('groups', $groups);
 // groups granted to access the category
 $query = '
 SELECT group_id
-  FROM ' . GROUP_ACCESS_TABLE . '
+  FROM ' . Tables::groupAccess() . '
   WHERE cat_id = ' . $page['cat'] . '
 ;';
 // array_from_query()'s own return type is declared array<int|string, mixed>;
@@ -276,14 +278,14 @@ $user_field_username = $user_fields['username'] ?? 'username';
 $query = '
 SELECT ' . $user_field_id . ' AS id,
        ' . $user_field_username . ' AS username
-  FROM ' . USERS_TABLE . '
+  FROM ' . Tables::users() . '
 ;';
 $users = simple_hash_from_query($query, 'id', 'username');
 $template->assign('users', $users);
 
 $query = '
 SELECT user_id
-  FROM ' . USER_ACCESS_TABLE . '
+  FROM ' . Tables::userAccess() . '
   WHERE cat_id = ' . $page['cat'] . '
 ;';
 // array_from_query()'s own return type is declared array<int|string, mixed>;
@@ -303,7 +305,7 @@ if (count($group_granted_ids) > 0) {
 
     $query = '
 SELECT user_id, group_id
-  FROM ' . USER_GROUP_TABLE . '
+  FROM ' . Tables::userGroup() . '
   WHERE group_id IN (' . implode(',', $group_granted_ids) . ')
 ';
     $result = pwg_query($query);

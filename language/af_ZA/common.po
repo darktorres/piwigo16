@@ -1,0 +1,1172 @@
+# Piwigo translation — af_ZA
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: af_ZA\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Language-Name: Afrikaans\n"
+"X-Piwigo-Country: Suid-Afrika\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: af\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "%d Kb"
+msgstr "%d Kb"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d album opdateer"
+msgstr[1] "%d albums opdateer"
+
+msgid "%d comment to validate"
+msgstr "%d kommentaar om te verifieer"
+
+msgid "%d comments to validate"
+msgstr "%d kommentaar om te verifieer"
+
+msgid "%d new comment"
+msgstr "%d nuwe kommentaar"
+
+msgid "%d new comments"
+msgstr "%d nuwe kommentaar"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d kommentaar"
+msgstr[1] "%d kommentaar"
+
+msgid "%d hit"
+msgid_plural "%d hits"
+msgstr[0] "%d besoeke"
+msgstr[1] "%d besoeke"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "%d nuwe foto"
+msgstr[1] "%d nuwe fotos"
+
+msgid "%d new user"
+msgstr "%d nuwe gebruiker"
+
+msgid "%d new users"
+msgstr "%d nuwe gebruikers"
+
+msgid "About"
+msgstr "Waaroor"
+
+msgid "All tags"
+msgstr "Alle sleutelwoorde"
+
+msgid "Any tag"
+msgstr "Enige sleutelwoorde"
+
+msgid "At least one listed rule must be satisfied."
+msgstr "Ten minste een kriteria moet aan voldoen word."
+
+msgid "Author"
+msgstr "Outeur"
+
+msgid "Albums"
+msgstr "Albums"
+
+msgid "Album"
+msgstr "Album"
+
+msgid "Close this window"
+msgstr "Maak die skerm toe"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "Volledige RSS string (Fotos, kommentaar)"
+
+msgid "Confirm Password"
+msgstr "Bevestig wagwoord"
+
+msgid "Connection settings"
+msgstr "Verbinding stelling"
+
+msgid "Login"
+msgstr "Teken aan"
+
+msgid "Contact webmaster"
+msgstr "Kontak Webwerf Admin"
+
+msgid "Create a new account"
+msgstr "Skep nuwe rekening"
+
+msgid "Created on"
+msgstr "Geskep op"
+
+msgid "Creation date"
+msgstr "Skep datum"
+
+msgid "Current password is wrong"
+msgstr "Huidige wagwoord is verkeerd"
+
+msgid "Dimensions"
+msgstr "Afmetings"
+
+msgid "Display"
+msgstr "Vertoon"
+
+msgid "Each listed rule must be satisfied."
+msgstr "Elke gelyste kriteria moet aan voldoen word."
+
+msgid "Email address"
+msgstr "Epos adres"
+
+msgid "Enter your personnal informations"
+msgstr "Sleutel persoonlike data in"
+
+msgid "Error sending email"
+msgstr "Fout wanneer epos gestuur word"
+
+msgid "File name"
+msgstr "Lêernaam"
+
+msgid "File"
+msgstr "Lêer"
+
+msgid "Filesize"
+msgstr "Lêer grootte"
+
+msgid "Filter and display"
+msgstr "Filtreer en vertoon"
+
+msgid "Filter"
+msgstr "Filtreer"
+
+msgid "Forgot your password?"
+msgstr "Wagwoord vergeet?"
+
+msgid "Go through the gallery as a visitor"
+msgstr "Navigeer deur die gallery as 'n besoeker"
+
+msgid "Help"
+msgstr "Hulp"
+
+msgid "Identification"
+msgstr "Identifikasie"
+
+msgid "Photos only RSS feed"
+msgstr "Foto RSS string"
+
+msgid "Keyword"
+msgstr "Sleutelwoord"
+
+msgid "Links"
+msgstr "Skakels"
+
+msgid "N/A"
+msgstr "Nvt"
+
+msgid "New on %s"
+msgstr "Nuut op %s"
+
+msgid "Notification"
+msgstr "Kennisgewing"
+
+msgid "Number of items"
+msgstr "Getal items"
+
+msgid "Original dimensions"
+msgstr "Oorspronklike afmetings"
+
+msgid "Password forgotten"
+msgstr "Wagwoord vergeet"
+
+msgid "Password"
+msgstr "Wagwoord"
+
+msgid "Post date"
+msgstr "Datum bygevoeg"
+
+msgid "Posted on"
+msgstr "Bygevoeg op"
+
+msgid "Profile"
+msgstr "Profiel"
+
+msgid "Quick connect"
+msgstr "Vinnig verbind"
+
+msgid "RSS feed"
+msgstr "RSS string"
+
+msgid "Register"
+msgstr "Registreer"
+
+msgid "Registration"
+msgstr "Registrasie"
+
+msgid "Related tags"
+msgstr "Verbandhoudende sleutelwoorde"
+
+msgid "Reset"
+msgstr "Herstel"
+
+msgid "Retrieve password"
+msgstr "Herwin wagwoord"
+
+msgid "Search rules"
+msgstr "Soek kriteria"
+
+msgid "Search tags"
+msgstr "Soek sleutelwoorde"
+
+msgid "Search"
+msgstr "Soek"
+
+msgid "display available tags"
+msgstr "Vertoon beskikbare sleutelwoorde"
+
+msgid "Since"
+msgstr "Sedert"
+
+msgid "Sort by"
+msgstr "Sorteer volgens"
+
+msgid "Sort order"
+msgstr "Sorteer orde"
+
+msgid "Tag"
+msgstr "Sleutelwoord"
+
+msgid "Tags"
+msgstr "Sleutelwoorde"
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "Die RSS string gee kennis van nuwe gebeure op die webwerf: nuwe fotos, opdatering van albums en nuwe kommentaar. Gebruik saam met RSS stringleser."
+
+msgid "Unknown feed identifier"
+msgstr "Onbekende string identifiseerder"
+
+msgid "User comments"
+msgstr "Gebruikerskommentaar"
+
+msgid "Username"
+msgstr "Gebruikersnaam"
+
+msgid "Visits"
+msgstr "Besoeke"
+
+msgid "Webmaster"
+msgstr "Webwerf admin"
+
+msgid "Week %d"
+msgstr "Week %d"
+
+msgid "remove this tag from the list"
+msgstr "haal die sleutelwoord uit die lys uit"
+
+msgid "representative"
+msgstr "verteenwoordiger"
+
+msgid "Search for Author"
+msgstr "Soek vir 'n outeur"
+
+msgid "Search in albums"
+msgstr "Soek in albums"
+
+msgid "Search by date"
+msgstr "Soek volgens datum"
+
+msgid "Date"
+msgstr "Datum"
+
+msgid "End-Date"
+msgstr "Eind datum"
+
+msgid "Kind of date"
+msgstr "Tipe datum"
+
+msgid "Search for words"
+msgstr "Soek vir woorde"
+
+msgid "Search for all terms"
+msgstr "Soek vir alle terme"
+
+msgid "Search for any term"
+msgstr "Soek vir enige term"
+
+msgid "Empty query. No criteria has been entered."
+msgstr "Soektog leeg. Geen kriteria is ingevul nie."
+
+msgid "Search results"
+msgstr "Soektog resultate"
+
+msgid "Search in sub-albums"
+msgstr "Soek in sub-albums"
+
+msgid "searched words : %s"
+msgstr "soek woorde : %s"
+
+msgid "Welcome"
+msgstr "Welkom"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "Welkom by u Piwigo foto gallery!"
+
+msgid "... or browse your empty gallery"
+msgstr "... of kyk deur die spook gallery"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "... of haal die boodskap af, ek sal my eie pad vind"
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "Hallo %s, jou Piwigo foto gallery is leeg!"
+
+msgid "I want to add photos"
+msgstr "Ek wil fotos byvoeg"
+
+msgid "Manage this user comment: %s"
+msgstr "Bestuur die gebruiker se kommentaar: %s"
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "Epos adres word vermis. Spesifiseer asb. epos adres."
+
+msgid "This author modified following comment:"
+msgstr "Die outeur het die volgende kommentaar verander:"
+
+msgid "This author removed the comment with id %d"
+msgstr "Die outeur het die kommentaar met id %d verwyder"
+
+msgid "html tags are not allowed in login"
+msgstr "html mag nie in aantekening gebruik word nie"
+
+msgid "Rating score"
+msgstr "Gradering telling"
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "Die aantal fotos per bladsy mag nie nul wees nie"
+
+msgid "Number of photos per page"
+msgstr "Aantal fotos per bladsy"
+
+msgid "Invalid username or email"
+msgstr "Ongeldige gebruikersnaam of epos adres"
+
+msgid "Password reset is not allowed for this user"
+msgstr "Wagwoord herstel word nie vir hierdie gebruiker toegelaat nie"
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "Gebruiker \"%s\" het nie 'n epos adres nie, wagwoord herstel is nie moontlik nie"
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "Iemand het gevra dat die wagwoord vir die volgende gebruiker herstel moet word:"
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "Gebruikersnaam \"%s\" op gallery %s"
+
+msgid "To reset your password, visit the following address:"
+msgstr "Om jou wagwoord te herstel, besoek die volgende adres:"
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "As dit 'n fout was, ignoreer hierdie epos en niks sal gebeur nie."
+
+msgid "Password Reset"
+msgstr "Wagwoord Herstel"
+
+msgid "Check your email for the confirmation link"
+msgstr "'n Bevestigingskakel word per epos aan jou gestuur"
+
+msgid "Invalid key"
+msgstr "Ongeldige sleutel"
+
+msgid "The passwords do not match"
+msgstr "Die wagwoorde pas nie"
+
+msgid "Your password has been reset"
+msgstr "Jou wagwoord is herstel"
+
+msgid "Return to home page"
+msgstr "Gaan terug na die tuisblad"
+
+msgid "Please enter your username or email address."
+msgstr "Vul asseblief jou gebruikersnaam of epos adres in."
+
+msgid "You will receive a link to create a new password via email."
+msgstr "Jy sal met epos 'n skakel ontvang om 'n nuwe wagwoord te skep."
+
+msgid "Username or email"
+msgstr "Gebruikersnaam of epos adres"
+
+msgid "Change my password"
+msgstr "Verander my wagwoord"
+
+msgid "Enter your new password below."
+msgstr "Vul jou wagwoord hier onder in"
+
+msgid "EXIF Metadata"
+msgstr "EXIF Metadata"
+
+msgid "IPTC Metadata"
+msgstr "IPTC Metadata"
+
+msgid "About Piwigo"
+msgstr "Oor Piwigo"
+
+msgid "You are not authorized to access the requested page"
+msgstr "U is nie gemagtig om die blad te besoek nie"
+
+msgid "add this photo to your favorites"
+msgstr "plaas die foto by u gunstelinge"
+
+msgid "Administration"
+msgstr "Administrasie"
+
+msgid "all"
+msgstr "alles"
+
+msgid "ascending"
+msgstr "toenemend"
+
+msgid "author(s) : %s"
+msgstr "outeur(s) : %s"
+
+msgid "Expand all albums"
+msgstr "Vergroot alle albums"
+
+msgid "posted after %s (%s)"
+msgstr "bygevoeg na %s (%s)"
+
+msgid "posted before %s (%s)"
+msgstr "bygevoeg voor %s (%s)"
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "bygevoeg tussen %s (%s) en %s (%s)"
+
+msgid "posted on %s"
+msgstr "bygevoeg op %s"
+
+msgid "Best rated"
+msgstr "Hoogste gradering"
+
+msgid "display best rated photos"
+msgstr "Vertoon gewildste fotos"
+
+msgid "Calendar"
+msgstr "Kalender"
+
+msgid "All"
+msgstr "Almal"
+
+msgid "display each day with photos, month per month"
+msgstr "Vertoon elke dag met nuwe fotos, maand per maand"
+
+msgid "View"
+msgstr "Besigtig"
+
+msgid "chronology_monthly_calendar"
+msgstr "Maandelikse kalender"
+
+msgid "chronology_monthly_list"
+msgstr "Maandelikse lys"
+
+msgid "chronology_weekly_list"
+msgstr "Weeklikse lys"
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "Kliek hier as die leser u nie automaties neem nie"
+
+msgid "comment date"
+msgstr "kommentaar datum"
+
+msgid "Comment"
+msgstr "Kommentaar"
+
+msgid "Your comment has been registered"
+msgstr "U kommentaar is geregistreer"
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "Gemorspos voorkoming : Was asb 'n oomblik voor u weer probeer"
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "U kommentaar is in die asblik, dit het nie die verifikasie toets deurstaan nie"
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "Die Administrateur moet u kommentaar goedkeur VOOR dit sal vertoon."
+
+msgid "This login is already used by another user"
+msgstr "Die aanteken naam is ongelukkig reeds in gebruik"
+
+msgid "Comments"
+msgstr "Kommentaar"
+
+msgid "Add a comment"
+msgstr "Los kommentaar"
+
+msgid "created after %s (%s)"
+msgstr "geskep na %s (%s)"
+
+msgid "created before %s (%s)"
+msgstr "geskep voor %s (%s)"
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "geskep tussen %s (%s) en %s (%s)"
+
+msgid "created on %s"
+msgstr "geskep op %s"
+
+msgid "Your Gallery Customization"
+msgstr "Verander U gallery na smaak"
+
+msgid "Default"
+msgstr "Verstek"
+
+msgid "delete this photo from your favorites"
+msgstr "Verwyder die foto onder u gunstelinge"
+
+msgid "Delete"
+msgstr "Verwyder"
+
+msgid "descending"
+msgstr "afnemend"
+
+msgid "Download"
+msgstr "Laai af"
+
+msgid "Download this file"
+msgstr "Laai die lêer af"
+
+msgid "edit"
+msgstr "verander"
+
+msgid "wrong date"
+msgstr "verkeerde datum"
+
+msgid "excluded"
+msgstr "uitgesluit"
+
+msgid "Your favorites"
+msgstr "U gunstelinge"
+
+msgid "display your favorites photos"
+msgstr "vertoon u gunsteling fotos"
+
+msgid "Favorites"
+msgstr "Gunstelinge"
+
+msgid "First"
+msgstr "Eerste"
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "Die gallery is toe vir instandhouding. Kom besoek ons asb. later weer."
+
+msgid "Page generated in"
+msgstr "Bladsy gegenereer in"
+
+msgid "guest"
+msgstr "gas"
+
+msgid "Hello"
+msgstr "Hallo"
+
+msgid "available for administrators only"
+msgstr "slegs vir administrateur beskikbaar"
+
+msgid "display this album"
+msgstr "vertoon hierdie album"
+
+msgid "display last user comments"
+msgstr "vertoon die laaste gebruiker se kommentaar"
+
+msgid "search"
+msgstr "soek"
+
+msgid "Home"
+msgstr "Tuis"
+
+msgid "in this album"
+msgstr "in hierdie album"
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] "in %d sub-album"
+msgstr[1] "in %d sub-albums"
+
+msgid "included"
+msgstr "ingesluit"
+
+msgid "Invalid password!"
+msgstr "Ongeldige wagwoord!"
+
+msgid "Language"
+msgstr "Taal"
+
+msgid "last %d days"
+msgstr "laaste %d dae"
+
+msgid "Last"
+msgstr "Laaste"
+
+msgid "Logout"
+msgstr "Teken uit"
+
+msgid "obligatory"
+msgstr "verplig"
+
+msgid "display a calendar by creation date"
+msgstr "vertoon 'n kalender volgens datum geskep"
+
+msgid "display all photos in all sub-albums"
+msgstr "vertoon alle fotos in alle sub-albums"
+
+msgid "return to normal view mode"
+msgstr "gaan terug na normale voorkoms"
+
+msgid "display a calendar by posted date"
+msgstr "vertoon die kalender volgens publikasie datum"
+
+msgid "Most visited"
+msgstr "Meeste besoek"
+
+msgid "display most visited photos"
+msgstr "vertoon gewildste fotos"
+
+msgid "Unknown identifier"
+msgstr "Onbekende identifiseerder"
+
+msgid "New password"
+msgstr "Nuwe wagwoord"
+
+msgid "Rate this photo"
+msgstr "Gradeer die foto"
+
+msgid "Next"
+msgstr "Volgende"
+
+msgid "no rate"
+msgstr "geen gradering"
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "Slegs fotos wat binne die laaste %d dae gepos is."
+msgstr[1] "Slegs fotos wat die laaste %d dae gepos is."
+
+msgid "password updated"
+msgstr "wagwoord opgedateer"
+
+msgid "Recent period must be a positive integer value"
+msgstr "Onlangse periode moet 'n positiewe waarde wees"
+
+msgid "photo"
+msgstr "foto"
+
+msgid "Click on the photo to see it in high definition"
+msgstr "Kliek om die foto in hoë definisie te sien"
+
+msgid "Show file metadata"
+msgstr "Wys lêer metadata"
+
+msgid "Powered by"
+msgstr "Aangedryf deur"
+
+msgid "Preferences"
+msgstr "Voorkeure"
+
+msgid "Previous"
+msgstr "Vorige"
+
+msgid "Random photos"
+msgstr "Lukraak fotos"
+
+msgid "display a set of random photos"
+msgstr "vertoon 'n stel lukraak fotos"
+
+msgid "Recent albums"
+msgstr "Onlangse albums"
+
+msgid "display recently updated albums"
+msgstr "Vertoon albums wat onlangs opgedateer is"
+
+msgid "Recent period"
+msgstr "Onlangs periode"
+
+msgid "Recent photos"
+msgstr "Onlangse fotos"
+
+msgid "display most recent photos"
+msgstr "Vertoon mees onlangse fotos"
+
+msgid "Redirection..."
+msgstr "Verwysing..."
+
+msgid "Please, enter a login"
+msgstr "Vul 'n aanteken naam in"
+
+msgid "login mustn't end with a space character"
+msgstr "Aanteken naam mag nie op 'n spasie eindig nie"
+
+msgid "login mustn't start with a space character"
+msgstr "Aanteken naam kan nie met 'n spasie begin nie"
+
+msgid "this login is already used"
+msgstr "die aanteken naam is reeds in gebruik"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "epos adres moet wees soos xxx@yyy.ee.ee (voorbeeld : koos@vlooi.co.za)"
+
+msgid "Auto login"
+msgstr "Automatiese aanteken"
+
+msgid "Contact"
+msgstr "Kontak"
+
+msgid "set as album representative"
+msgstr "Stel as album verteenwoordiger"
+
+msgid "Show number of comments"
+msgstr "Toon aantal kommentare"
+
+msgid "Show number of hits"
+msgstr "Wys aantal besoeke"
+
+msgid "slideshow"
+msgstr "skyfiereeks"
+
+msgid "stop the slideshow"
+msgstr "stop die skyfiereeks"
+
+msgid "Specials"
+msgstr "Treffers"
+
+msgid "SQL queries in"
+msgstr "SQL navrae in"
+
+msgid "display only recently posted photos"
+msgstr "Vertoon slegs fotos wat onlangs gepos is"
+
+msgid "return to the display of all photos"
+msgstr "gaan terug na vertoning van alle fotos"
+
+msgid "the beginning"
+msgstr "die begin"
+
+msgid "Thumbnails"
+msgstr "Duimnale"
+
+msgid "Menu"
+msgstr "Keusepaneel"
+
+msgid "A comment on your site"
+msgstr "Kommentaar op u werf"
+
+msgid "today"
+msgstr "vandag"
+
+msgid "Update your rating"
+msgstr "Dateer u gradering op"
+
+msgid "the username must be given"
+msgstr "die gebruikersnaam word vereis"
+
+msgid "useful when password forgotten"
+msgstr "handig indien wagwoord vergeet is"
+
+msgid "Quick search"
+msgstr "Vinnige soek"
+
+msgid "Connected user: %s"
+msgstr "Gebruikers aanlyn: %s"
+
+msgid "IP: %s"
+msgstr "IP: %s"
+
+msgid "Browser: %s"
+msgstr "Leser: %s"
+
+msgid "Author: %s"
+msgstr "Outeur: %s"
+
+msgid "Comment: %s"
+msgstr "Kommentaar: %s"
+
+msgid "Comment by %s"
+msgstr "Kommentaar deur %s"
+
+msgid "User: %s"
+msgstr "Gebruiker: %s"
+
+msgid "Email: %s"
+msgstr "Epos: %s"
+
+msgid "Admin: %s"
+msgstr "Admin: %s"
+
+msgid "Registration of %s"
+msgstr "Registrasie van %s"
+
+msgid "Album: %s"
+msgstr "Album: %s"
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "Swak status vir gebruiker \"gas\", verstek status sal gebruik word. Kontak die webwerf adminisrateur."
+
+msgid "this email address is already in use"
+msgstr "die epos is reeds in gebruik"
+
+msgid "Album results for"
+msgstr "Album resultate vir"
+
+msgid "Tag results for"
+msgstr "Sleutelwoord resultate vir"
+
+msgid "from %s to %s"
+msgstr "van %s na %s"
+
+msgid "Play of slideshow"
+msgstr "Speel skyfiereeks"
+
+msgid "Pause of slideshow"
+msgstr "Halt skyfiereeks"
+
+msgid "Repeat the slideshow"
+msgstr "Herhaal skyfiereeks"
+
+msgid "Not repeat the slideshow"
+msgstr "Moenie skyfiereeks herhaal nie"
+
+msgid "Reduce diaporama speed"
+msgstr "Verminder skyfiereeks spoed"
+
+msgid "Accelerate diaporama speed"
+msgstr "Verhoog skyfiereeks spoed"
+
+msgid "Submit"
+msgstr "Stuur"
+
+msgid "Yes"
+msgstr "Ja"
+
+msgid "No"
+msgstr "Nee"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "%d foto"
+msgstr[1] "%d fotos"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "%d foto is gekoppel aan huidige sleutelwoorde"
+msgstr[1] "%d fotos is gekoppel aan huidige sleutelwoorde"
+
+msgid "display photos linked to this tag"
+msgstr "vertoon fotos gekoppel aan die sleutelwoorde"
+
+msgid "photos posted during the last %d days"
+msgstr "fotos gepos die laaste %d dae"
+
+msgid "Piwigo Help"
+msgstr "Piwigo hulp"
+
+msgid "Rank"
+msgstr "Orde"
+
+msgid "group by letters"
+msgstr "groepeer volgens letters"
+
+msgid "letters"
+msgstr "letters"
+
+msgid "show tag cloud"
+msgstr "wys sleutelwoorde in sleutelwolk"
+
+msgid "cloud"
+msgstr "wolk"
+
+msgid "Reset to default values"
+msgstr "Herstel na verstek waardes"
+
+msgid "delete all photos from your favorites"
+msgstr "verwyder alle fotos vanuit gunstelinge"
+
+msgid "Sent by"
+msgstr "Gestuur deur"
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "Koekblik is toe, of word nie deur u leser ondersteun nie. U moet koekies ontvang om te kan aanteken."
+
+msgid "Edit a comment"
+msgstr "Wysig kommentaar"
+
+msgid "Are you sure?"
+msgstr "Is jy seker?"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) Die kommentaar vereis validasie"
+
+msgid "Edit"
+msgstr "Redigeer"
+
+msgid "Hello %s,"
+msgstr "Hallo %s,"
+
+msgid "Send my connection settings by email"
+msgstr "Stuur my verbindingopstelling met epos"
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "Sukselvolle registrasie, jy sal binnekort 'n epos ontvan met jou verbinding opstellings. Welkom!"
+
+msgid "Username modification"
+msgstr "Gebruikersnaam verandering"
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "Jou gebruikersnaam is suksesvol verander na: %s"
+
+msgid "square"
+msgstr "Vierkantig"
+
+msgid "thumb"
+msgstr "Duim"
+
+msgid "small"
+msgstr "Klein"
+
+msgid "medium"
+msgstr "Medium"
+
+msgid "large"
+msgstr "Groot"
+
+msgid "xlarge"
+msgstr "Groter"
+
+msgid "xxlarge"
+msgstr "Baie groot"
+
+msgid "Original"
+msgstr "Oorspronklike"
+
+msgid "Thank you for registering at %s!"
+msgstr "Dankie vir registrasie by %s!"
+
+msgid "Here are your connection settings"
+msgstr "Hier is jou verbindingopstellings"
+
+msgid "Password: %s"
+msgstr "Wagwoord: %s"
+
+msgid "Username: %s"
+msgstr "Gebruikersnaam: %s"
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "As jy dink jy het foutiewelik hierdie epos ontvang, kontak ons by %s"
+
+msgid "Photo sizes"
+msgstr "Foto groottes"
+
+msgid "2small"
+msgstr "XXS - piepklein"
+
+msgid "Date created, new &rarr; old"
+msgstr "Datum geskep, nuut &rarr; oud"
+
+msgid "Date created, old &rarr; new"
+msgstr "Datum geskep, oud &rarr; nuut"
+
+msgid "Date posted, new &rarr; old"
+msgstr "Datum gepos, nuut &rarr; oud"
+
+msgid "Date posted, old &rarr; new"
+msgstr "Datum gepos, oud &rarr; nuut"
+
+msgid "Desktop"
+msgstr "Tafelblad"
+
+msgid "File name, A &rarr; Z"
+msgstr "Lêernaam, A &rarr; Z"
+
+msgid "File name, Z &rarr; A"
+msgstr "Lêernaam, Z &rarr; A"
+
+msgid "Manual sort order"
+msgstr "Handroliese sorteer volgorde"
+
+msgid "Mobile"
+msgstr "Mobiel"
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "Numeriese identifiseerder, 1 &rarr; 9"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "Numeriese identifiseerder, 9 &rarr; 1"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "Foto titel, Z &rarr; A"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "Foto titel, Z &rarr; A"
+
+msgid "Rating score, high &rarr; low"
+msgstr "Graderingspunt, hoog &rarr; laag"
+
+msgid "Rating score, low &rarr; high"
+msgstr "Graderingspunt, laag &rarr; hoog"
+
+msgid "Show latest comments first"
+msgstr "Wys nuutste opmerkings eerste"
+
+msgid "Show oldest comments first"
+msgstr "Wys oudste opmerkings eerste"
+
+msgid "View in"
+msgstr "Bekyk in"
+
+msgid "Visits, high &rarr; low"
+msgstr "Besoeke, hoog &rarr; laag"
+
+msgid "Visits, low &rarr; high"
+msgstr "Besoeke, laag &rarr; hoog"
+
+msgid "xsmall"
+msgstr "XS - baie klein"
+
+msgid "%d rate"
+msgid_plural "%d rates"
+msgstr[0] "%d gradering"
+msgstr[1] "%d graderings"
+
+msgid "Bad request"
+msgstr "Ongeldige versoek"
+
+msgid "Forbidden"
+msgstr "Verbode"
+
+msgid "Page not found"
+msgstr "Die bladsy kan nie gevind word nie"
+
+msgid "Permalink for album not found"
+msgstr "Permaskakel vir album kan nie gevind word nie"
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "Piwigo het 'n onherstelbare fout teëgekom"
+
+msgid "Requested album does not exist"
+msgstr "Aangevraagde album bestaan nie"
+
+msgid "Requested tag does not exist"
+msgstr "Aangevraagde etiket bestaan nie"
+
+msgid "Email address is mandatory"
+msgstr "Epos adres is verpligtend"
+
+msgid "Username is mandatory"
+msgstr "Gebruikersnaam is nie opsioneel nie"
+
+msgid "mandatory"
+msgstr "verpligtend"
+
+msgid "Website"
+msgstr "Webblad"
+
+msgid "Your website URL is invalid"
+msgstr "Jou webblad URL is ongeldig"
+
+msgid "Email"
+msgstr "Epos"
+
+msgid "First Page"
+msgstr "Eerste blad"
+
+msgid "Go back to the album"
+msgstr "Gaan terug na die album"
+
+msgid "Last Page"
+msgstr "Laaste blad"
+
+msgid "Password is missing. Please enter the password."
+msgstr "Wagwoord nie ingevul nie. Vul asseblief die wagwoord in."
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Wagwoord bevestiging nie gedoen. Bevestig asseblief die gekose wagwoord."
+
+msgid "Your authentication key is no longer valid."
+msgstr "Jou herkenningskode is nie meer geldig nie."
+
+msgid "Apply on properties"
+msgstr "Pas toe op eienskappe"
+
+msgid "No results for"
+msgstr "Geen resultate vir"
+
+msgid "Photo description"
+msgstr "Foto beskrywing"
+
+msgid "Photo title"
+msgstr "Foto titel"
+
+msgid "Theme"
+msgstr "Tema"
+
+msgid "Album name, Z &rarr; A"
+msgstr "Album naam, Z &rarr; A"
+
+msgid "Link: %s"
+msgstr "Skakels: %s"
+
+msgid "%d photos per page"
+msgstr "%d fotos per blad"
+
+msgid "Album name, A &rarr; Z"
+msgstr "Album naam, A &rarr; Z"
+
+msgid "piwigo_day_0"
+msgstr "Sondag"
+
+msgid "piwigo_day_1"
+msgstr "Maandag"
+
+msgid "piwigo_day_2"
+msgstr "Dinsdag"
+
+msgid "piwigo_day_3"
+msgstr "Woensdag"
+
+msgid "piwigo_day_4"
+msgstr "Donderdag"
+
+msgid "piwigo_day_5"
+msgstr "Vrydag"
+
+msgid "piwigo_day_6"
+msgstr "Saterdag"
+
+msgid "piwigo_month_10"
+msgstr "Oktober"
+
+msgid "piwigo_month_11"
+msgstr "November"
+
+msgid "piwigo_month_12"
+msgstr "Desember"
+
+msgid "piwigo_month_1"
+msgstr "Januarie"
+
+msgid "piwigo_month_2"
+msgstr "Februarie"
+
+msgid "piwigo_month_3"
+msgstr "Maart"
+
+msgid "piwigo_month_4"
+msgstr "April"
+
+msgid "piwigo_month_5"
+msgstr "Mei"
+
+msgid "piwigo_month_6"
+msgstr "Junie"
+
+msgid "piwigo_month_7"
+msgstr "Julie"
+
+msgid "piwigo_month_8"
+msgstr "Augustus"
+
+msgid "piwigo_month_9"
+msgstr "September"
+

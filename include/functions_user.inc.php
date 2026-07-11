@@ -10,7 +10,10 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Auth\PwgTOTP;
+use Piwigo\Core\AccessLevel;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\Logger;
+use Piwigo\Db\Tables;
 use Piwigo\Ws\PwgError;
 
 /**
@@ -44,7 +47,7 @@ function validate_mail_address($user_id, ?string $mail_address)
         $user_fields = $conf['user_fields'];
         $query = '
 SELECT count(*)
-FROM ' . USERS_TABLE . '
+FROM ' . Tables::users() . '
 WHERE upper(' . $user_fields['email'] . ') = upper(\'' . $mail_address . '\')
 ' . (is_numeric($user_id) ? 'AND ' . $user_fields['id'] . ' != \'' . $user_id . '\'' : '') . '
 ;';
@@ -75,7 +78,7 @@ function validate_login_case($login)
         $user_fields = $conf['user_fields'];
         $query = '
 SELECT ' . $user_fields['username'] . '
-FROM ' . USERS_TABLE . '
+FROM ' . Tables::users() . '
 WHERE LOWER(' . stripslashes($user_fields['username']) . ") = '" . strtolower($login) . "'
 ;";
 
@@ -106,7 +109,7 @@ function search_case_username($username)
     $user_fields = $conf['user_fields'];
     $q = pwg_query('
     SELECT ' . $user_fields['username'] . ' AS username
-    FROM `' . USERS_TABLE . '`;
+    FROM `' . Tables::users() . '`;
   ');
     while ((bool) ($r = pwg_db_fetch_assoc($q))) {
         $username_value = $r['username'];
@@ -205,7 +208,7 @@ function register_user($login, #[\SensitiveParameter] $password, ?string $mail_a
             $user_fields['email'] => $mail_address,
         ];
 
-        single_insert(USERS_TABLE, $insert);
+        single_insert(Tables::users(), $insert);
         $user_id = (int) pwg_db_insert_id();
 
         // Assign by default groups
@@ -217,7 +220,7 @@ function register_user($login, #[\SensitiveParameter] $password, ?string $mail_a
         assert(is_string($is_default_true));
         $query = '
 SELECT id
-  FROM `' . GROUPS_TABLE . '`
+  FROM `' . Tables::groups() . '`
   WHERE is_default = \'' . $is_default_true . '\'
   ORDER BY id ASC
 ;';
@@ -232,7 +235,7 @@ SELECT id
         }
 
         if (count($inserts) != 0) {
-            mass_inserts(USER_GROUP_TABLE, ['user_id', 'group_id'], $inserts);
+            mass_inserts(Tables::userGroup(), ['user_id', 'group_id'], $inserts);
         }
 
         $override = [];
@@ -389,7 +392,7 @@ SELECT ';
         $query .= $dbfield . ' AS ' . $pwgfield;
     }
     $query .= '
-  FROM ' . USERS_TABLE . '
+  FROM ' . Tables::users() . '
   WHERE ' . $user_fields['id'] . ' = \'' . $user_id . '\'';
 
     $row = pwg_db_fetch_assoc(pwg_query($query));
@@ -402,9 +405,9 @@ SELECT ';
         $query = '
 SELECT
     COUNT(1) AS counter
-  FROM ' . USER_INFOS_TABLE . ' AS ui
-    LEFT JOIN ' . USER_CACHE_TABLE . ' AS uc ON ui.user_id = uc.user_id
-    LEFT JOIN ' . THEMES_TABLE . ' AS t ON t.id = ui.theme
+  FROM ' . Tables::userInfos() . ' AS ui
+    LEFT JOIN ' . Tables::userCache() . ' AS uc ON ui.user_id = uc.user_id
+    LEFT JOIN ' . Tables::themes() . ' AS t ON t.id = ui.theme
   WHERE ui.user_id = ' . $user_id . '
   GROUP BY ui.user_id
 ;';
@@ -421,9 +424,9 @@ SELECT
     ui.*,
     uc.*,
     t.name AS theme_name
-  FROM ' . USER_INFOS_TABLE . ' AS ui
-    LEFT JOIN ' . USER_CACHE_TABLE . ' AS uc ON ui.user_id = uc.user_id
-    LEFT JOIN ' . THEMES_TABLE . ' AS t ON t.id = ui.theme
+  FROM ' . Tables::userInfos() . ' AS ui
+    LEFT JOIN ' . Tables::userCache() . ' AS uc ON ui.user_id = uc.user_id
+    LEFT JOIN ' . Tables::themes() . ' AS t ON t.id = ui.theme
   WHERE ui.user_id = ' . $user_id . '
 ;';
 
@@ -476,7 +479,7 @@ SELECT
                     $query = '
 SELECT
    COUNT(*)
-  FROM ' . USER_CACHE_TABLE . '
+  FROM ' . Tables::userCache() . '
   WHERE user_id=' . $user_id . '
 ;';
                     $row = pwg_db_fetch_row(pwg_query($query));
@@ -532,7 +535,7 @@ SELECT
             images that are not in at least an authorized category)*/
             $query = '
 SELECT DISTINCT(id)
-  FROM ' . IMAGES_TABLE . ' INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id=image_id
+  FROM ' . Tables::images() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id=image_id
   WHERE category_id NOT IN (' . $forbidden_categories . ')
     AND level>' . $level;
             $forbidden_ids = query2array($query, null, 'id');
@@ -547,7 +550,7 @@ SELECT DISTINCT(id)
 
             $query = '
 SELECT COUNT(DISTINCT(image_id)) as total
-  FROM ' . IMAGE_CATEGORY_TABLE . '
+  FROM ' . Tables::imageCategory() . '
   WHERE category_id NOT IN (' . $forbidden_categories . ')
     AND image_id ' . $image_access_type . ' (' . $image_access_list . ')';
             $row = pwg_db_fetch_row(pwg_query($query));
@@ -589,7 +592,7 @@ SELECT COUNT(DISTINCT(image_id)) as total
 
             // delete user cache
             $query = '
-DELETE FROM ' . USER_CACHE_CATEGORIES_TABLE . '
+DELETE FROM ' . Tables::userCacheCategories() . '
   WHERE user_id = ' . $user_id;
             pwg_query($query);
 
@@ -597,7 +600,7 @@ DELETE FROM ' . USER_CACHE_CATEGORIES_TABLE . '
             // insert. This may happen when cache needs refresh and that Piwigo is
             // called "very simultaneously".
             mass_inserts(
-                USER_CACHE_CATEGORIES_TABLE,
+                Tables::userCacheCategories(),
                 [
                     'user_id', 'cat_id',
                     'date_last', 'max_date_last', 'nb_images', 'count_images', 'nb_categories', 'count_categories',
@@ -614,7 +617,7 @@ DELETE FROM ' . USER_CACHE_CATEGORIES_TABLE . '
 
             // update user cache
             $query = '
-DELETE FROM ' . USER_CACHE_TABLE . '
+DELETE FROM ' . Tables::userCache() . '
   WHERE user_id = ' . $user_id;
             pwg_query($query);
 
@@ -628,7 +631,7 @@ DELETE FROM ' . USER_CACHE_TABLE . '
             // for the same reason as user_cache_categories, we ignore error on
             // this insert
             $query = '
-INSERT IGNORE INTO ' . USER_CACHE_TABLE . '
+INSERT IGNORE INTO ' . Tables::userCache() . '
   (user_id, need_update, cache_update_time, forbidden_categories, nb_total_images,
     last_photo_date,
     image_access_type, image_access_list)
@@ -674,7 +677,7 @@ function check_user_favorites(): void
     // category
     $query = '
 SELECT DISTINCT f.image_id
-  FROM ' . FAVORITES_TABLE . ' AS f INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic
+  FROM ' . Tables::favorites() . ' AS f INNER JOIN ' . Tables::imageCategory() . ' AS ic
     ON f.image_id = ic.image_id
   WHERE f.user_id = ' . $user_id_str . '
   ' . get_sql_condition_FandF(
@@ -688,7 +691,7 @@ SELECT DISTINCT f.image_id
 
     $query = '
 SELECT image_id
-  FROM ' . FAVORITES_TABLE . '
+  FROM ' . Tables::favorites() . '
   WHERE user_id = ' . $user_id_str . '
 ;';
     $favorites = query2array($query, null, 'image_id');
@@ -696,7 +699,7 @@ SELECT image_id
     $to_deletes = array_diff($favorites, $authorizeds);
     if (count($to_deletes) > 0) {
         $query = '
-DELETE FROM ' . FAVORITES_TABLE . '
+DELETE FROM ' . Tables::favorites() . '
   WHERE image_id IN (' . implode(',', $to_deletes) . ')
     AND user_id = ' . $user_id_str . '
 ;';
@@ -720,7 +723,7 @@ function calculate_permissions($user_id, $user_status): string
 {
     $query = '
 SELECT id
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE status = \'private\'
 ;';
     $private_array = query2array($query, null, 'id');
@@ -728,7 +731,7 @@ SELECT id
     // retrieve category ids directly authorized to the user
     $query = '
 SELECT cat_id
-  FROM ' . USER_ACCESS_TABLE . '
+  FROM ' . Tables::userAccess() . '
   WHERE user_id = ' . $user_id . '
 ;';
     $authorized_array = query2array($query, null, 'cat_id');
@@ -736,7 +739,7 @@ SELECT cat_id
     // retrieve category ids authorized to the groups the user belongs to
     $query = '
 SELECT cat_id
-  FROM ' . USER_GROUP_TABLE . ' AS ug INNER JOIN ' . GROUP_ACCESS_TABLE . ' AS ga
+  FROM ' . Tables::userGroup() . ' AS ug INNER JOIN ' . Tables::groupAccess() . ' AS ga
     ON ug.group_id = ga.group_id
   WHERE ug.user_id = ' . $user_id . '
 ;';
@@ -757,7 +760,7 @@ SELECT cat_id
     if (! is_admin($user_status)) {
         $query = '
 SELECT id
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE visible = \'false\'
 ;';
         $forbidden_array = array_merge($forbidden_array, query2array($query, null, 'id'));
@@ -791,7 +794,7 @@ function get_userid($username): false|int
 
     $query = '
 SELECT ' . $user_fields['id'] . '
-  FROM ' . USERS_TABLE . '
+  FROM ' . Tables::users() . '
   WHERE ' . $user_fields['username'] . ' = \'' . $username . '\'
 ;';
     $result = pwg_query($query);
@@ -828,7 +831,7 @@ function get_userid_by_email($email): false|int
     $query = '
 SELECT
     ' . $user_fields['id'] . '
-  FROM ' . USERS_TABLE . '
+  FROM ' . Tables::users() . '
   WHERE UPPER(' . $user_fields['email'] . ') = UPPER(\'' . $email . '\')
 ;';
     $result = pwg_query($query);
@@ -869,7 +872,7 @@ function get_default_user_info(bool $convert_str = true)
 
         $query = '
 SELECT *
-  FROM ' . USER_INFOS_TABLE . '
+  FROM ' . Tables::userInfos() . '
   WHERE user_id = ' . $default_user_id . '
 ;';
 
@@ -943,9 +946,9 @@ function get_default_user_value($value_name, $default)
  */
 function get_default_theme(): string
 {
-    $theme = get_default_user_value('theme', PHPWG_DEFAULT_TEMPLATE);
+    $theme = get_default_user_value('theme', AppInfo::DEFAULT_TEMPLATE);
     if (! is_string($theme)) {
-        $theme = PHPWG_DEFAULT_TEMPLATE;
+        $theme = AppInfo::DEFAULT_TEMPLATE;
     }
     if (check_theme_installed($theme)) {
         return $theme;
@@ -961,8 +964,8 @@ function get_default_theme(): string
  */
 function get_default_language(): string
 {
-    $language = get_default_user_value('language', PHPWG_DEFAULT_LANGUAGE);
-    return is_string($language) ? $language : PHPWG_DEFAULT_LANGUAGE;
+    $language = get_default_user_value('language', AppInfo::DEFAULT_LANGUAGE);
+    return is_string($language) ? $language : AppInfo::DEFAULT_LANGUAGE;
 }
 
 /**
@@ -1107,7 +1110,7 @@ function create_user_infos($user_ids, $override_values = null): void
             $inserts[] = $insert;
         }
 
-        mass_inserts(USER_INFOS_TABLE, array_keys($inserts[0]), $inserts);
+        mass_inserts(Tables::userInfos(), array_keys($inserts[0]), $inserts);
     }
 }
 
@@ -1132,7 +1135,7 @@ function calculate_auto_login_key($user_id, $time, &$username): string|false
     $query = '
 SELECT ' . $user_fields['username'] . ' AS username
   , ' . $user_fields['password'] . ' AS password
-FROM ' . USERS_TABLE . '
+FROM ' . Tables::users() . '
 WHERE ' . $user_fields['id'] . ' = ' . $user_id;
     $result = pwg_query($query);
     if (pwg_db_num_rows($result) > 0) {
@@ -1194,7 +1197,7 @@ function log_user($user_id, $remember_me): void
         }
 
         single_update(
-            USER_INFOS_TABLE,
+            Tables::userInfos(),
             [
                 'language' => $lang_cookie,
             ],
@@ -1432,7 +1435,7 @@ function pwg_password_verify(
         $new_hash = pwg_password_hash($password);
 
         single_update(
-            USERS_TABLE,
+            Tables::users(),
             [
                 'password' => $new_hash,
             ],
@@ -1602,8 +1605,8 @@ SELECT
   ' . $user_fields['email'] . ' AS email,
   ' . $user_fields['password'] . ' AS password,
   status
-FROM ' . USERS_TABLE . ' AS u
-  LEFT JOIN ' . USER_INFOS_TABLE . ' AS i
+FROM ' . Tables::users() . ' AS u
+  LEFT JOIN ' . Tables::userInfos() . ' AS i
     ON u.' . $user_fields['id'] . ' = i.user_id
   WHERE ';
 
@@ -1739,12 +1742,12 @@ function get_access_type_status($user_status = ''): int
     global $conf;
 
     $access_type_status = match (get_user_status($user_status)) {
-        'guest' => (bool) $conf['guest_access'] ? ACCESS_GUEST : ACCESS_FREE,
-        'generic' => ACCESS_GUEST,
-        'normal' => ACCESS_CLASSIC,
-        'admin' => ACCESS_ADMINISTRATOR,
-        'webmaster' => ACCESS_WEBMASTER,
-        default => ACCESS_FREE,
+        'guest' => (bool) $conf['guest_access'] ? AccessLevel::Guest : AccessLevel::Free,
+        'generic' => AccessLevel::Guest,
+        'normal' => AccessLevel::Classic,
+        'admin' => AccessLevel::Administrator,
+        'webmaster' => AccessLevel::Webmaster,
+        default => AccessLevel::Free,
     };
 
     return $access_type_status;
@@ -1799,7 +1802,7 @@ function is_a_guest($user_status = ''): bool
  */
 function is_classic_user($user_status = ''): bool
 {
-    return is_autorize_status(ACCESS_CLASSIC, $user_status);
+    return is_autorize_status(AccessLevel::Classic, $user_status);
 }
 
 /**
@@ -1809,7 +1812,7 @@ function is_classic_user($user_status = ''): bool
  */
 function is_admin($user_status = ''): bool
 {
-    return is_autorize_status(ACCESS_ADMINISTRATOR, $user_status);
+    return is_autorize_status(AccessLevel::Administrator, $user_status);
 }
 
 /**
@@ -1819,7 +1822,7 @@ function is_admin($user_status = ''): bool
  */
 function is_webmaster($user_status = ''): bool
 {
-    return is_autorize_status(ACCESS_WEBMASTER, $user_status);
+    return is_autorize_status(AccessLevel::Webmaster, $user_status);
 }
 
 /**
@@ -2041,9 +2044,9 @@ SELECT
     NOW() AS dbnow,
     DATEDIFF(uak.expired_on, NOW()) AS days_left,
     SUBDATE(NOW(), INTERVAL 48 HOUR) AS 48h_ago
-  FROM ' . USER_AUTH_KEYS_TABLE . ' AS uak
-    JOIN ' . USER_INFOS_TABLE . ' AS ui ON uak.user_id = ui.user_id
-    JOIN ' . USERS_TABLE . ' AS u ON u.' . $user_fields['id'] . ' = ui.user_id
+  FROM ' . Tables::userAuthKeys() . ' AS uak
+    JOIN ' . Tables::userInfos() . ' AS ui ON uak.user_id = ui.user_id
+    JOIN ' . Tables::users() . ' AS u ON u.' . $user_fields['id'] . ' = ui.user_id
   WHERE auth_key = \'' . $auth_key . '\'
 ;';
     $keys = query2array($query);
@@ -2102,7 +2105,7 @@ SELECT
 
     // update last used key
     single_update(
-        USER_AUTH_KEYS_TABLE,
+        Tables::userAuthKeys(),
         [
             'last_used_on' => $key['dbnow'],
         ],
@@ -2158,7 +2161,7 @@ function create_user_auth_key($user_id, ?string $user_status = null)
         $query = '
 SELECT
     status
-  FROM ' . USER_INFOS_TABLE . '
+  FROM ' . Tables::userInfos() . '
   WHERE user_id = ' . $user_id . '
 ;';
         $user_infos = query2array($query);
@@ -2181,7 +2184,7 @@ SELECT
     COUNT(*),
     NOW(),
     ADDDATE(NOW(), INTERVAL ' . $auth_key_duration . ' SECOND)
-  FROM ' . USER_AUTH_KEYS_TABLE . '
+  FROM ' . Tables::userAuthKeys() . '
   WHERE auth_key = \'' . $candidate . '\'
 ;';
     $row = pwg_db_fetch_row(pwg_query($query));
@@ -2197,7 +2200,7 @@ SELECT
             'key_type' => 'auth_key',
         ];
 
-        single_insert(USER_AUTH_KEYS_TABLE, $key);
+        single_insert(Tables::userAuthKeys(), $key);
 
         $key['auth_key_id'] = pwg_db_insert_id();
 
@@ -2216,7 +2219,7 @@ SELECT
 function deactivate_user_auth_keys($user_id): void
 {
     $query = '
-UPDATE ' . USER_AUTH_KEYS_TABLE . '
+UPDATE ' . Tables::userAuthKeys() . '
   SET expired_on = NOW()
   WHERE user_id = ' . $user_id . '
     AND expired_on > NOW()
@@ -2234,7 +2237,7 @@ UPDATE ' . USER_AUTH_KEYS_TABLE . '
 function deactivate_password_reset_key($user_id): void
 {
     single_update(
-        USER_INFOS_TABLE,
+        Tables::userInfos(),
         [
             'activation_key' => null,
             'activation_key_expire' => null,
@@ -2272,7 +2275,7 @@ function generate_password_link($user_id, $first_login = false): array
     [$expire] = $row;
 
     single_update(
-        USER_INFOS_TABLE,
+        Tables::userInfos(),
         [
             'activation_key' => pwg_password_hash($activation_key),
             'activation_key_expire' => $expire,
@@ -2321,7 +2324,7 @@ function get_user_last_visit_from_history($user_id, $save_in_user_infos = false)
 SELECT
     date,
     time
-FROM ' . HISTORY_TABLE . '
+FROM ' . Tables::history() . '
   WHERE user_id = ' . $user_id . '
   ORDER BY id DESC
   LIMIT 1
@@ -2333,7 +2336,7 @@ FROM ' . HISTORY_TABLE . '
 
     if ($save_in_user_infos) {
         $query = '
-UPDATE ' . USER_INFOS_TABLE . '
+UPDATE ' . Tables::userInfos() . '
   SET last_visit = ' . ($last_visit === null ? 'NULL' : "'" . $last_visit . "'") . ',
       last_visit_from_history = \'true\',
       lastmodified = lastmodified
@@ -2363,7 +2366,7 @@ function userprefs_save(): void
     $user_id_str = is_scalar($user_id_val) ? (string) $user_id_val : '0';
 
     $query = '
-UPDATE ' . USER_INFOS_TABLE . '
+UPDATE ' . Tables::userInfos() . '
   SET preferences = \'' . $dbValue . '\'
   WHERE user_id = ' . $user_id_str . '
 ;';
@@ -2464,7 +2467,7 @@ function has_already_logged_in($user_id): bool
 {
     $query = '
 SELECT COUNT(*)
-  FROM ' . ACTIVITY_TABLE . '
+  FROM ' . Tables::activity() . '
   WHERE action = \'login\' and performed_by = ' . $user_id . '';
 
     $row = pwg_db_fetch_row(pwg_query($query));
@@ -2597,7 +2600,7 @@ function check_and_save_user_infos(array $params): array
                 $query = '
 SELECT
     user_id
-  FROM ' . USER_INFOS_TABLE . '
+  FROM ' . Tables::userInfos() . '
   WHERE status IN (\'webmaster\', \'admin\')
 ;';
                 $admin_ids = query2array($query, null, 'user_id');
@@ -2665,7 +2668,7 @@ SELECT
             $query = '
 SELECT
     user_id
-  FROM ' . USER_INFOS_TABLE . '
+  FROM ' . Tables::userInfos() . '
   WHERE status IN (\'webmaster\', \'admin\')
 ;';
             $protected_users = array_merge($protected_users, query2array($query, null, 'user_id'));
@@ -2749,7 +2752,7 @@ SELECT
 
     // perform updates
     single_update(
-        USERS_TABLE,
+        Tables::users(),
         $updates,
         [
             $user_fields['id'] => $user_ids[0],
@@ -2766,7 +2769,7 @@ SELECT
 
     if (isset($update_status) and count($user_ids_for_status) > 0) {
         $query = '
-UPDATE ' . USER_INFOS_TABLE . ' SET
+UPDATE ' . Tables::userInfos() . ' SET
     status = "' . $update_status . '"
   WHERE user_id IN(' . implode(',', array_map(strval(...), $user_ids_for_status)) . ')
 ;';
@@ -2783,7 +2786,7 @@ UPDATE ' . USER_INFOS_TABLE . ' SET
 
     if (count($updates_infos) > 0) {
         $query = '
-UPDATE ' . USER_INFOS_TABLE . ' SET ';
+UPDATE ' . Tables::userInfos() . ' SET ';
 
         $first = true;
         foreach ($updates_infos as $field => $value) {
@@ -2814,7 +2817,7 @@ UPDATE ' . USER_INFOS_TABLE . ' SET ';
 
         $query = '
 DELETE
-  FROM ' . USER_GROUP_TABLE . '
+  FROM ' . Tables::userGroup() . '
   WHERE user_id IN (' . implode(',', array_map(strval(...), $user_ids)) . ')
 ;';
         pwg_query($query);
@@ -2823,7 +2826,7 @@ DELETE
         $query = '
 SELECT
     id
-  FROM `' . GROUPS_TABLE . '`
+  FROM `' . Tables::groups() . '`
   WHERE id IN (' . implode(',', array_map(strval(...), $group_ids_param)) . ')
 ;';
         $group_ids = array_from_query($query, 'id');
@@ -2843,7 +2846,7 @@ SELECT
                 }
             }
 
-            mass_inserts(USER_GROUP_TABLE, array_keys($inserts[0]), $inserts);
+            mass_inserts(Tables::userGroup(), array_keys($inserts[0]), $inserts);
         }
     }
 
@@ -2899,7 +2902,7 @@ SELECT
     }
     $key['expired_on'] = $expiration;
 
-    single_insert(USER_AUTH_KEYS_TABLE, $key);
+    single_insert(Tables::userAuthKeys(), $key);
 
     $key['apikey_secret'] = $key_secret;
     return $key;
@@ -2919,7 +2922,7 @@ function revoke_api_key($user_id, $pkid)
 SELECT
   COUNT(*),
   NOW()
-  FROM `' . USER_AUTH_KEYS_TABLE . '`
+  FROM `' . Tables::userAuthKeys() . '`
   WHERE auth_key = "' . $pkid . '"
   AND user_id = ' . $user_id . '
 ;';
@@ -2932,7 +2935,7 @@ SELECT
     }
 
     single_update(
-        USER_AUTH_KEYS_TABLE,
+        Tables::userAuthKeys(),
         [
             'revoked_on' => $now,
         ],
@@ -2958,7 +2961,7 @@ function edit_api_key($user_id, $pkid, ?string $api_name)
     $query = '
 SELECT
   COUNT(*)
-  FROM `' . USER_AUTH_KEYS_TABLE . '`
+  FROM `' . Tables::userAuthKeys() . '`
   WHERE auth_key = "' . $pkid . '"
   AND user_id = ' . $user_id . '
 ;';
@@ -2971,7 +2974,7 @@ SELECT
     }
 
     single_update(
-        USER_AUTH_KEYS_TABLE,
+        Tables::userAuthKeys(),
         [
             'apikey_name' => $api_name,
         ],
@@ -2995,7 +2998,7 @@ function get_api_key($user_id): false|array
 {
     $query = '
 SELECT *
-  FROM `' . USER_AUTH_KEYS_TABLE . '`
+  FROM `' . Tables::userAuthKeys() . '`
   WHERE user_id = ' . $user_id . '
   AND key_type = "api_key"
 ;';

@@ -1,0 +1,146 @@
+# Piwigo translation — tr_TR
+# Source: install.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: tr_TR\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Installation"
+msgstr "Yükleme"
+
+msgid "Basic configuration"
+msgstr "Temel yapılandırma"
+
+msgid "Default gallery language"
+msgstr "Varsayılan galeri dili"
+
+msgid "Database configuration"
+msgstr "Veritabanı yapılandırması"
+
+msgid "Admin configuration"
+msgstr "Yönetici yapılandırması"
+
+msgid "Start Install"
+msgstr "Yüklemeyi başlat"
+
+msgid "It will be shown to the visitors. It is necessary for website administration"
+msgstr "Bu ziyaretçilere gösterilecek. Bu web sitesi yönetimi için gereklidir"
+
+msgid "Connection to server succeed, but it was impossible to connect to database"
+msgstr "Sunucuya bağlantı başarılı ancak veritabanı bağlantısı kurulamadı."
+
+msgid "Can't connect to server"
+msgstr "Sunucuya bağlanamadı"
+
+msgid "Host"
+msgstr "Sunucu"
+
+msgid "User"
+msgstr "Kullanıcı"
+
+msgid "user login given by your host provider"
+msgstr "barındırma sağlağıcı tarafından size verilen kullanıcı adı"
+
+msgid "user password given by your host provider"
+msgstr "barındırma sağlağıcı tarafından size verilen şifre"
+
+msgid "Database name"
+msgstr "Veritabanı adı"
+
+msgid "also given by your host provider"
+msgstr "ayrıca barındırma sağlayıcınız tarafından verilen"
+
+msgid "Database table prefix"
+msgstr "Veritabanı tabloları öneki"
+
+msgid "database tables names will be prefixed with it (enables you to manage better your tables)"
+msgstr "veritabanı tablo isimlerinin önüne bu öntakı eklenecektir (tablolarınızı daha iyi yönetmenizi sağlar)"
+
+msgid "enter a login for webmaster"
+msgstr "Site yöneticisi için bir kullanıcı adı girin"
+
+msgid "webmaster login can't contain characters ' or \""
+msgstr "Site yöneticisi adı ' veya \" karakterlerini içeremez"
+
+msgid "please enter your password again"
+msgstr "lütfen şifrenizi tekrar giriniz"
+
+msgid "Keep it confidential, it enables you to access administration panel"
+msgstr "Gizli tutun, yönetim paneline ulaşmanızı sağlar"
+
+msgid "Password [confirm]"
+msgstr "Şifre [kabul]"
+
+msgid "verification"
+msgstr "doğrulama"
+
+msgid "Need help ? Ask your question on <a href=\"%s\">Piwigo message board</a>."
+msgstr "Yardım ihtiyacınız var? Sorularınızı <a href=\"%s\">Piwigo forumda sorabilirsiniz</a>."
+
+msgid "Visitors will be able to contact site administrator with this mail"
+msgstr "Ziyaretçilerin site yöneticisi ile bağlantıya geçmesi için bu e-posta adresini kullanabileceklerdir."
+
+msgid "PHP 5 is required"
+msgstr "PHP 5.2 gereklidir"
+
+msgid "It appears your webhost is currently running PHP %s."
+msgstr "Web sunucunuz şu anda PHP %s çalıştırıyor görünüyor."
+
+msgid "Piwigo may try to switch your configuration to PHP 5 by creating or modifying a .htaccess file."
+msgstr "Piwigo .htaccess dosyası oluşturarak veya değiştirerek ayarlarınızı PHP 5.2 'e geçirmeyi deneyebilir."
+
+msgid "Note you can change your configuration by yourself and restart Piwigo after that."
+msgstr "Not: Yapılandırmayı kendiniz değiştirip sonrasında Piwigo'yu tekrar başlatabilirsiniz."
+
+msgid "Try to configure PHP 5"
+msgstr "PHP 5.2 yapılandırmasını dene"
+
+msgid "Sorry!"
+msgstr "Üzgünüm!"
+
+msgid "Piwigo was not able to configure PHP 5."
+msgstr "Piwigo, PHP 5.2 yapılandırmasını başaramadı."
+
+msgid "You may referer to your hosting provider's support and see how you could switch to PHP 5 by yourself."
+msgstr "Barındırma sağlayıcınızın desteğini alarak, kendinizin PHP 5.2'e nasıl geçebileceğinizi öğrenin."
+
+msgid "Hope to see you back soon."
+msgstr "Yakında tekrar görüşmek dileğiyle."
+
+msgid "Congratulations, Piwigo installation is completed"
+msgstr "Tebrikler, Piwigo kurulumu tamamlandı."
+
+msgid "An alternate solution is to copy the text in the box above and paste it into the file \"local/config/database.inc.php\" (Warning : database.inc.php must only contain what is in the textarea, no line return or space character)"
+msgstr "Diğer çözüm aşağıdaki kutudaki yazıyı kopyalayın ve \"local/config/database.inc.php\" dosyası içine pasteleyin.(Uyarı : database.inc.php sadece yazı içermeli hiçbir ifade veya boşluk karakteri içermemelidir)"
+
+msgid "Creation of config file local/config/database.inc.php failed."
+msgstr "ocal/config/database.inc.php konfigürasyon dosyasının oluşturulması başarısız oldu."
+
+msgid "Download the config file"
+msgstr "Yapılandırma dosyasını indir"
+
+msgid "You can download the config file and upload it to local/config directory of your installation."
+msgstr "Yapılandırma dosyasını indirip kurulum dizininde local/config bölümüne yükleyebilirsiniz."
+
+msgid "Just another Piwigo gallery"
+msgstr "Bir başka Piwigo galerisi"
+
+msgid "Welcome to my photo gallery"
+msgstr "Fotoğraf galerime hoş geldiniz"
+
+msgid "Don't hesitate to consult our forums for any help : %s"
+msgstr "Herhangi bir sebeple yardım gerektiğinde, forumlarımıza danışmakta tereddüt etmeyin: %s"
+
+msgid "Welcome to your new installation of Piwigo!"
+msgstr "Piwigo'nunuzun yeni kurulumuna hoşgeldiniz!"
+
+msgid "localhost or other, supplied by your host provider"
+msgstr "localhost veya diğer, bulundurma hizmeti sağlayıcınız tarafından verilen"
+
+msgid "PHP version %s required (you are running on PHP %s)"
+msgstr "PHP %s sürümü gerekli (PHP %s üzerinde çalışıyorsunuz)"
+

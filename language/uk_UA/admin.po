@@ -1,0 +1,4005 @@
+# Piwigo translation — uk_UA
+# Source: admin.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: uk_UA\n"
+"Plural-Forms: nplurals=3; plural=(n % 10 == 1 && n % 100 != 11 ? 0 : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 1 : 2);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid " and %d virtual"
+msgstr " і %d віртуальних"
+
+msgid "%d album including"
+msgstr "включає %d альбом"
+
+msgid "%d album moved"
+msgid_plural "%d albums moved"
+msgstr[0] "%d альбом перенесено"
+msgstr[1] "%d альбомів перенесено"
+
+msgid "%d albums including"
+msgstr "включає %d альбомів"
+
+msgid "%d anomaly has been corrected."
+msgid_plural "%d anomalies have been detected corrected."
+msgstr[0] "%d аномалія була виправлена."
+msgstr[1] "%d аномалій було виявлено і виправлено."
+
+msgid "%d anomaly has been detected."
+msgid_plural "%d anomalies have been detected."
+msgstr[0] "%d аномалія була виявлена."
+msgstr[1] "%d аномалій було виявлено."
+
+msgid "%d anomaly has been ignored."
+msgid_plural "%d anomalies have been ignored."
+msgstr[0] "%d аномалія була проігнорована."
+msgstr[1] "%d аномалій було проігноровано."
+
+msgid "%d anomaly has not been corrected."
+msgid_plural "%d anomalies have not been corrected."
+msgstr[0] "%d аномалія не була виправлена."
+msgstr[1] "%d аномалій не було виправлено."
+
+msgid "%d association"
+msgstr "%d асоціація"
+
+msgid "%d associations"
+msgstr "%d асоціацій"
+
+msgid "%d group"
+msgstr "%d група"
+
+msgid "%d groups"
+msgstr "%d груп"
+
+msgid "%d guest"
+msgid_plural "%d guests"
+msgstr[0] "%d гість"
+msgstr[1] "%d гостей"
+
+msgid "%d line filtered"
+msgid_plural "%d lines filtered"
+msgstr[0] "%d лінія відфільтрована"
+msgstr[1] "%d ліній відфільтровано"
+
+msgid "%d mail was not sent."
+msgid_plural "%d mails were not sent."
+msgstr[0] "%d лист не був відправлений."
+msgstr[1] "%d листів не було відправлено."
+
+msgid "%d mail was sent."
+msgid_plural "%d mails were sent."
+msgstr[0] "%d лист був відправлений."
+msgstr[1] "%d листів було відправлено."
+
+msgid "%d member"
+msgid_plural "%d members"
+msgstr[0] "%d учасник"
+msgstr[1] "%d учасники"
+
+msgid "%d of %d photos selected"
+msgstr "виділено %d з %d фотографій"
+
+msgid "%d parameter was updated."
+msgid_plural "%d parameters were updated."
+msgstr[0] "%d параметр оновлено."
+msgstr[1] "%d параметрів оновлено."
+
+msgid "%d photo was deleted"
+msgid_plural "%d photos were deleted"
+msgstr[0] "%d фотографія видалена"
+msgstr[1] "%d фотографій видалено"
+
+msgid "%d photos uploaded"
+msgstr "%d фотографій завантажено"
+
+msgid "%d physical"
+msgstr " %d фізичні"
+
+msgid "%d tag"
+msgstr "%d теґ"
+
+msgid "%d tags"
+msgstr "%d теґів"
+
+msgid "%d user comment rejected"
+msgstr "%d коментар користувача відхилено"
+
+msgid "%d user comment validated"
+msgstr "%d коментар користувача перевірено"
+
+msgid "%d user comments rejected"
+msgstr "%d коментарів користувачів відхилено"
+
+msgid "%d user comments validated"
+msgstr "%d коментарів користувачів перевірено"
+
+msgid "%d user deleted"
+msgid_plural "%d users deleted"
+msgstr[0] "%d користувач видалений"
+msgstr[1] "%d користувачів видалено"
+
+msgid "%d user was not updated."
+msgid_plural "%d users were not updated."
+msgstr[0] "%d користувач не оновлений."
+msgstr[1] "%d користувачів не оновлено."
+
+msgid "%d user was updated."
+msgid_plural "%d users were updated."
+msgstr[0] "%d користувач оновлений."
+msgstr[1] "%d користувачів оновлено."
+
+msgid "%d user"
+msgid_plural "%d users"
+msgstr[0] "%d користувач"
+msgstr[1] "%d користувачів"
+
+msgid "Cannot delete the old permalink !"
+msgstr "Старе посилання не може бути видалено!"
+
+msgid "Can't connect to server."
+msgstr "З'єднання з сервером неможливе."
+
+msgid "Can't create temporary file."
+msgstr "Не можна створити тимчасовий файл."
+
+msgid "Can't download archive."
+msgstr "Не можна завантажити архів."
+
+msgid "Can't read or extract archive."
+msgstr "Не можна прочитати чи розпакувати архів."
+
+msgid "Change Admin Colors"
+msgstr "Змінити кольори адміністрування"
+
+msgid "Check all"
+msgstr "Перевірити все"
+
+msgid "Check automatic corrections"
+msgstr "Перевірити автоматичне з'єднання"
+
+msgid "Check for updates"
+msgstr "Перевірити оновлення"
+
+msgid "Check for upgrade failed for unknown reasons."
+msgstr "Перевірити оновлення не вдалося з невідомих причин."
+
+msgid "Check for upgrade"
+msgstr "Перевірити оновлення"
+
+msgid "Check integrity"
+msgstr "Перевірка цілісності"
+
+msgid "Choose an action"
+msgstr "Виберіть дію"
+
+msgid "Choose an option"
+msgstr "Виберіть опцію"
+
+msgid "Classic display"
+msgstr "Показувати класично"
+
+msgid "clean"
+msgstr "прибрати"
+
+msgid "Comments for all"
+msgstr "Коментарі для всіх"
+
+msgid "%d waiting for validation"
+msgstr "%d очікують перевірки"
+
+msgid "%s must be to set to false in your local/config/config.inc.php file"
+msgstr "%s повинно бути встановлено в false в файлі local/config/config.inc.php"
+
+msgid "%s value is not correct file because exif are not supported"
+msgstr "%s значення некоректне, оскільки EXIF не підтримуються"
+
+msgid "+ Add an upload box"
+msgstr "+ Додати вікно завантаження"
+
+msgid ", click on"
+msgstr ", натисніть на"
+
+msgid "A new version of Piwigo is available."
+msgstr "Доступна нова версія Piwigo."
+
+msgid "Access type"
+msgstr "Тип доступу"
+
+msgid "ACCESS_0"
+msgstr "Вільний доступ"
+
+msgid "ACCESS_1"
+msgstr "Доступ для всіх"
+
+msgid "ACCESS_2"
+msgstr "Доступ для зареєстрованих користувачів"
+
+msgid "ACCESS_3"
+msgstr "Доступ для адміністраторів"
+
+msgid "ACCESS_4"
+msgstr "Доступ для вебмайстрів"
+
+msgid "ACCESS_5"
+msgstr "Немає доступу"
+
+msgid "Action"
+msgstr "Дія"
+
+msgid "Actions"
+msgstr "Дії"
+
+msgid "Activate icon \"%s\""
+msgstr "Активувати значок \"%s\""
+
+msgid "Activate Navigation Bar"
+msgstr "Активувати панель навігації"
+
+msgid "Activate Navigation Thumbnails"
+msgstr "Активувати навігаційні мініатюри"
+
+msgid "Activate"
+msgstr "Активувати"
+
+msgid "Active Languages"
+msgstr "Активні мови"
+
+msgid "Active Plugins"
+msgstr "Активні плаґіни"
+
+msgid "Active Themes"
+msgstr "Активні теми"
+
+msgid "Add a filter"
+msgstr "Додати фільтр"
+
+msgid "Add a tag"
+msgstr "Додати теґ"
+
+msgid "Add a user"
+msgstr "Додати користувача"
+
+msgid "Add a virtual album"
+msgstr "Додати віртуальний альбом"
+
+msgid "Add another set of photos"
+msgstr "Додати ще один набір фотографій"
+
+msgid "Add detailed content"
+msgstr "Додати детальний зміст"
+
+msgid "Add group"
+msgstr "Додати групу"
+
+msgid "Add New Language"
+msgstr "Додати нову мову"
+
+msgid "add new photos to caddie"
+msgstr "додати нові зображення в кошик"
+
+msgid "Add New Theme"
+msgstr "Додати нову тему"
+
+msgid "Add Photos"
+msgstr "Додати зображення"
+
+msgid "Add tags"
+msgstr "Додати теґи"
+
+msgid "Add write access to the \"%s\" directory"
+msgstr "Додати право запису в директорію \"%s\""
+
+msgid "Add"
+msgstr "Додати"
+
+msgid "Add/delete a permalink"
+msgstr "Додати/видалити посилання"
+
+msgid "added"
+msgstr "додано"
+
+msgid "Administration Home"
+msgstr "Адміністрування"
+
+msgid "Advanced features"
+msgstr "Розширені функції"
+
+msgid "Album \"%s\" has been added"
+msgstr "Доданий альбом \"%s\""
+
+msgid "Album \"%s\" now contains %d photos"
+msgstr "Альбом \"%s\" зараз вміщає %d фотографій"
+
+msgid "Album photos associated to the following albums: %s"
+msgstr "Фотографії альбому пов'язані з наступними альбомами: %s"
+
+msgid "Album list management"
+msgstr "Список управління альбомом"
+
+msgid "Album manual order was saved"
+msgstr "Альбом був збережений в ручному режимі"
+
+msgid "Album name"
+msgstr "Назва альбому"
+
+msgid "Album updated successfully"
+msgstr "Альбом оновлено успішно"
+
+msgid "albums added in the database"
+msgstr "альбоми додано в базу даних"
+
+msgid "Albums authorized thanks to group associations"
+msgstr "Альбоми авторизовані завдяки групі асоціацій"
+
+msgid "Albums automatically sorted"
+msgstr "Альбоми відсортовані автоматично"
+
+msgid "albums deleted in the database"
+msgstr "альбоми видалені з бази даних"
+
+msgid "All %d photos are selected"
+msgstr "Виділено всі %d фотографій"
+
+msgid "All optimizations have been successfully completed."
+msgstr "Вся оптимізація була успішно завершена."
+
+msgid "all"
+msgstr "всі"
+
+msgid "Allow rating"
+msgstr "Дозволити рейтинг"
+
+msgid "Allow user customization"
+msgstr "Дозволити налаштування користувача"
+
+msgid "Allow user registration"
+msgstr "Дозволити реєстрацію користувачів"
+
+msgid "Allow users to delete their own comments"
+msgstr "Дозволити користувачам видаляти свої коментарі"
+
+msgid "Allow users to edit their own comments"
+msgstr "Дозволити користувачам редагувати свої власні коментарі"
+
+msgid "an error happened"
+msgstr "помилка"
+
+msgid "An error occured during extraction (%s)."
+msgstr "Помилка при отриманні файлу (%s)."
+
+msgid "An information email was sent to group \"%s\""
+msgstr "Електронний лист з інформацією відправлений до групи \"%s\""
+
+msgid "and"
+msgstr "і"
+
+msgid "Anomaly"
+msgstr "Аномалія"
+
+msgid "Anyway only webmasters can see this tab and never administrators."
+msgstr "В усякому разі тільки веб-майстри можуть бачити цю вкладку, не адміністратори."
+
+msgid "Apply action"
+msgstr "Застосувати дії"
+
+msgid "Apply selected corrections"
+msgstr "Застосувати виділені виправлення"
+
+msgid "Apply to sub-albums"
+msgstr "Застосувати до під-альбомів"
+
+msgid "Are you sure to install this upgrade? You must verify if this version does not need uninstallation."
+msgstr "Ви впевнені, що хочете встановити це оновлення? Ви повинні перевірити, чи ця версія не вимагає попереднього видалення."
+
+msgid "Are you sure you want to delete this plugin?"
+msgstr "Ви впевнені, що хочете видалити цей плаґін?"
+
+msgid "Are you sure you want to install this plugin?"
+msgstr "Ви впевнені, що хочете встановити цей плаґін?"
+
+msgid "Associate to album"
+msgstr "Асоціювати до альбому"
+
+msgid "associate to group"
+msgstr "Асоціювати до групи"
+
+msgid "Associated"
+msgstr "Асоційований"
+
+msgid "Authorize users to add comments on selected albums"
+msgstr "Авторизувати користувачів для додавання коментарів у вибрані альбоми"
+
+msgid "Authorized"
+msgstr "Авторизовані"
+
+msgid "Automatic correction"
+msgstr "Автоматична корекція"
+
+msgid "automatic order"
+msgstr "автоматичне замовлення"
+
+msgid "Available only with HTML format"
+msgstr "Доступно тільки з HTML-форматом"
+
+msgid "average time"
+msgstr "середній час"
+
+msgid "Batch Manager"
+msgstr "Пакетний менеджер"
+
+msgid "between"
+msgstr "між"
+
+msgid "Bound Theme"
+msgstr "Пов'язані теми"
+
+msgid "By %s"
+msgstr "Автор %s"
+
+msgid "By rank"
+msgstr "За рангом"
+
+msgid "Caddie management"
+msgstr "Керування кошиком"
+
+msgid "Caddie"
+msgstr "Кошик"
+
+msgid "Complementary mail content"
+msgstr "Додатковий зміст пошти"
+
+msgid "Configuration"
+msgstr "Конфігурація"
+
+msgid "confirm"
+msgstr "підтвердити"
+
+msgid "Continue processing treatment"
+msgstr "Продовжити лікування"
+
+msgid "Correction applied with error"
+msgstr "Виправлення застосувались з помилкою"
+
+msgid "Correction applied with success"
+msgstr "Виправлення успішно застосувались"
+
+msgid "Correction the anomaly will cancel the fact that it's ignored"
+msgstr "Виправлена ​​аномалія більше не ігноруватиметься"
+
+msgid "Correction"
+msgstr "Виправлення"
+
+msgid "create a new album"
+msgstr "створити новий альбом"
+
+msgid "Create the \"%s\" directory at the root of your Piwigo installation"
+msgstr "Створити директорію \"%s\" в кореневій директорії інсталяції Piwigo"
+
+msgid "Create this site"
+msgstr "Створити цей сайт"
+
+msgid "created"
+msgstr "створено"
+
+msgid "Current name"
+msgstr "Поточне ім'я"
+
+msgid "Database synchronization with files"
+msgstr "Синхронізація бази даних з файлами"
+
+msgid "Database"
+msgstr "База даних"
+
+msgid "Date"
+msgstr "Дата"
+
+msgid "Day"
+msgstr "День"
+
+msgid "Deactivate"
+msgstr "Деактивувати"
+
+msgid "Default display"
+msgstr "Показувати за замовчуванням"
+
+msgid "Default user cannot be deleted"
+msgstr "Користувач за замовчуванням не може бути видалений"
+
+msgid "Default user does not exist"
+msgstr "Користувач за замовчуванням не існує"
+
+msgid "default values"
+msgstr "значення за замовчуванням"
+
+msgid "default"
+msgstr "за замовчуванням"
+
+msgid "delete album"
+msgstr "видалити альбом"
+
+msgid "Delete orphan tags"
+msgstr "Видалити пусті теґи"
+
+msgid "delete photo"
+msgstr "видалити фотографію"
+
+msgid "Delete Representant"
+msgstr "Видалити представника"
+
+msgid "Delete selected photos"
+msgstr "Видалити виділені зображення"
+
+msgid "Delete selected tags"
+msgstr "Видалити виділені теґи"
+
+msgid "Delete selected users"
+msgstr "Видалити виділених користувачів"
+
+msgid "Delete this language"
+msgstr "Видалити цю мову"
+
+msgid "delete this site and all its attached elements"
+msgstr "Видалити цей сайт і всю пов'язану з ним інформацію"
+
+msgid "Delete this theme"
+msgstr "Видалити цю тему"
+
+msgid "delete"
+msgstr "видалити"
+
+msgid "Deleted on"
+msgstr "Видалено на"
+
+msgid "deleted"
+msgstr "видалено"
+
+msgid "Deletions"
+msgstr "Видалення"
+
+msgid "Deny selected groups"
+msgstr "Заблокувати виділені групи"
+
+msgid "Deny selected users"
+msgstr "Заблокувати виділених користувачів"
+
+msgid "Description"
+msgstr "Опис"
+
+msgid "Detailed informations"
+msgstr "Детальна інформація"
+
+msgid "directories + files"
+msgstr "каталоги + файли"
+
+msgid "Directory does not exist"
+msgstr "Каталог не існує"
+
+msgid "Directory"
+msgstr "Каталог"
+
+msgid "Discover album:"
+msgstr "Розкрити альбом:"
+
+msgid "display maximum informations (added albums and photos, deleted albums and photos)"
+msgstr "відобразити максимум інформації (додані альбоми і зображення, видалені альбоми і зображення)"
+
+msgid "Display options"
+msgstr "Показати опції"
+
+msgid "Dissociate from album"
+msgstr "Відокремити від альбому"
+
+msgid "dissociate from group"
+msgstr "відокремити від групи"
+
+msgid "Dissociated"
+msgstr "Відокремлено"
+
+msgid "Documentation"
+msgstr "Документація"
+
+msgid "Does not represent"
+msgstr "Не відображати"
+
+msgid "Download,"
+msgstr "Завантажити,"
+
+msgid "Downloads"
+msgstr "Завантаження"
+
+msgid "Drag to re-order"
+msgstr "Натисніть та перетягніть, щоб змінити порядок"
+
+msgid "Drop into album"
+msgstr "Вибрати альбом"
+
+msgid "Duplicates"
+msgstr "дублікати"
+
+msgid "Edit album permissions"
+msgstr "Редагувати права альбому"
+
+msgid "Edit album"
+msgstr "Редагувати альбом"
+
+msgid "Edit ranks"
+msgstr "Редагувати ряди"
+
+msgid "Edit selected tags"
+msgstr "Редагувати виділені теґи"
+
+msgid "Edit tags"
+msgstr "Редагувати теґи"
+
+msgid "Element type"
+msgstr "Тип елемента"
+
+msgid "Element"
+msgstr "Елемент"
+
+msgid "photos informations synchronized with files metadata"
+msgstr "інформація про зображення синхронізована з файлами метаданих"
+
+msgid "Email administrators when a comment is deleted"
+msgstr "Надіслати лист адміністраторам, коли коментар видалено"
+
+msgid "Email administrators when a comment is modified"
+msgstr "Надіслати лист адміністраторам, коли коментар змінено"
+
+msgid "Email admins when a comment requires validation"
+msgstr "Надіслати лист адміністраторам, коли коментар вимагає валідації"
+
+msgid "Email admins when a new user registers"
+msgstr "Надіслати лист адміністраторам, коли реєструється новий користувач"
+
+msgid "Email admins when a valid comment is entered"
+msgstr "Надіслати лист адміністраторам, коли коментар введений валідний коментар"
+
+msgid "Environment"
+msgstr "Середовище"
+
+msgid "Error list"
+msgstr "Список помилок"
+
+msgid "Error on file \"%s\" : %s"
+msgstr "Помилка файлу \"%s\" : %s"
+
+msgid "Error when sending email to %s [%s]."
+msgstr "Помилка при відправці листа користувачу %s [%s]."
+
+msgid "Errors caption"
+msgstr "Легенда помилок"
+
+msgid "errors during synchronization"
+msgstr "помилки при синхронізації"
+
+msgid "even already synchronized photos"
+msgstr "навіть вже синхронізовані зображення"
+
+msgid "Everybody"
+msgstr "Всі"
+
+msgid "Execution time is out, treatment must be continue [Estimated time: %d second]."
+msgid_plural "Execution time is out, treatment must be continue [Estimated time: %d seconds]."
+msgstr[0] "Час виконання вичерпався, лікування потрібно продовжити [Приблизний час: %d секунда]."
+msgstr[1] "Час виконання вичерпався, лікування потрібно продовжити [Приблизний час: %d секунд]."
+
+msgid "Exif extension not available, admin should disable exif use"
+msgstr "Exif розширення не доступні, адміністратор повинен відключити використання exif"
+
+msgid "existing album"
+msgstr "існуючий альбом"
+
+msgid "Extend for templates"
+msgstr "Розширення шаблонів"
+
+msgid "Failed to write file to disk"
+msgstr "Не вдалося записати файл на диск"
+
+msgid "File upload stopped by extension"
+msgstr "Завантаження файлу зупинене за допомогою розширення"
+
+msgid "File"
+msgstr "Файл"
+
+msgid "File/directory read error"
+msgstr "Помилка читання файлу/директорії"
+
+msgid "Find a new representant by random"
+msgstr "Знайти нові випадкові представлення"
+
+msgid "for the file format"
+msgstr "для форматів файлів"
+
+msgid "for this file format"
+msgstr "для цього формату файлу"
+
+msgid "Forbid this language to users"
+msgstr "Заборонити цю мову для користувачів"
+
+msgid "Forbid this theme to users"
+msgstr "Заборонити цю тему для користувачів"
+
+msgid "Forbidden"
+msgstr "Заборонено"
+
+msgid "Form"
+msgstr "Форма"
+
+msgid "FTP + Synchronization"
+msgstr "FTP + Синхронізація"
+
+msgid "Gallery title"
+msgstr "Заголовок галереї"
+
+msgid "GD library is missing"
+msgstr "GD бібліотека відсутня"
+
+msgid "GD version"
+msgstr "GD версія"
+
+msgid "General statistics"
+msgstr "Загальна статистика"
+
+msgid "Get Support on Piwigo Forum"
+msgstr "Отримати підтримку на форумі Piwigo"
+
+msgid "Give write access (chmod 777) to \"%s\" directory at the root of your Piwigo installation"
+msgstr "Надайте право запису (chmod 777) директорії \"%s\" в кореневому каталозі установки Piwigo"
+
+msgid "global mode"
+msgstr "глобальний режим"
+
+msgid "Go to %s or %s for more informations"
+msgstr "Перейдіть до %s або %s для детальнішої інформації"
+
+msgid "Go to"
+msgstr "До"
+
+msgid "Grant selected groups"
+msgstr "Грант виділених груп"
+
+msgid "Grant selected users"
+msgstr "Грант виділених користувачів"
+
+msgid "group \"%s\" added"
+msgstr "група \"%s\" додана"
+
+msgid "group \"%s\" deleted"
+msgstr "група \"%s\" видалена"
+
+msgid "group \"%s\" updated"
+msgstr "група \"%s\" оновлена"
+
+msgid "Group management"
+msgstr "Управління групами"
+
+msgid "Group name"
+msgstr "Назва групи"
+
+msgid "Group"
+msgstr "Група"
+
+msgid "Groups"
+msgstr "Групи"
+
+msgid "Guest cannot be deleted"
+msgstr "Гість не може бути видалений"
+
+msgid "Guest Settings"
+msgstr "Налаштування гостя"
+
+msgid "guest"
+msgstr "гість"
+
+msgid "Guests"
+msgstr "Гості"
+
+msgid "height must be a number superior to"
+msgstr "висота повинна бути числом, більшим ніж"
+
+msgid "Hello"
+msgstr "Привіт"
+
+msgid "Hello,"
+msgstr "Привіт,"
+
+msgid "Help Me"
+msgstr "Допоможіть мені"
+
+msgid "Hide"
+msgstr "Приховати"
+
+msgid "High definition enabled"
+msgstr "Висока чіткість включена"
+
+msgid "High definition"
+msgstr "Висока чіткість"
+
+msgid "high"
+msgstr "високий"
+
+msgid "History"
+msgstr "Історія"
+
+msgid "Hit"
+msgstr "Хіт"
+
+msgid "Hour"
+msgstr "Година"
+
+msgid "Move"
+msgstr "Переміщення"
+
+msgid "Name"
+msgstr "Ім'я"
+
+msgid "New name"
+msgstr "Нове ім'я"
+
+msgid "New parent album"
+msgstr "Новий батьківский альбом"
+
+msgid "New photos added"
+msgstr "Нові світлини додано"
+
+msgid "New photos were added"
+msgstr "Нові світлини було додано"
+
+msgid "New tag"
+msgstr "Новий теґ"
+
+msgid "No display"
+msgstr "Не показувати"
+
+msgid "No photo can be deleted"
+msgstr "Світлини не можуть бути видалені"
+
+msgid "No photo in the current set."
+msgstr "Нема світлин в поточному наборі."
+
+msgid "No photo in this album"
+msgstr "Нема світлин в цьому альбомі"
+
+msgid "no write access"
+msgstr "нема доступу на запис"
+
+msgid "none"
+msgstr "жодного"
+
+msgid "None"
+msgstr "Жодного"
+
+msgid "nothing"
+msgstr "нічого"
+
+msgid "on"
+msgstr "увімкнено"
+
+msgid "Make this language available to users"
+msgstr "Зробити цю мову доступною для користувачів"
+
+msgid "Make this theme available to users"
+msgstr "Зробити цю тему доступною для користувачів"
+
+msgid "manage album photos"
+msgstr "керувати світлинами альбому"
+
+msgid "Manage authorizations for selected albums"
+msgstr "Керувати дозволами для обраного альбому"
+
+msgid "Manage permissions for group \"%s\""
+msgstr "Керувати дозволами групи \"%s\""
+
+msgid "Manage permissions for user \"%s\""
+msgstr "Керувати дозволами користувача \"%s\""
+
+msgid "Manage photo ranks"
+msgstr "Керувати рейтингами світлин"
+
+msgid "manage sub-albums"
+msgstr "керувати суб-альбомами"
+
+msgid "Manage tags"
+msgstr "Керувати теґами"
+
+msgid "Manage this set of %d photos"
+msgstr "Керувати цьою серією з %d світлин"
+
+msgid "Manage"
+msgstr "Керувати"
+
+msgid "Manual order"
+msgstr "власноруч встановлений порядок"
+
+msgid "manual order"
+msgstr "саморуч встановлений порядок"
+
+msgid "Deactivate all"
+msgstr "Деактивувати все"
+
+msgid "No file was uploaded"
+msgstr "Файл не був завантажений"
+
+msgid "No mail to send."
+msgstr "Немає пошти для відправки."
+
+msgid "No photo selected, %d photos in current set"
+msgstr "Немає виділених зображень, %d зображення в поточному наборі"
+
+msgid "No photos selected, no actions possible."
+msgstr "Немає виділених фотографій, немає можливих дій."
+
+msgid "No results"
+msgstr "Немає результату"
+
+msgid "No user to send notifications by mail."
+msgstr "Немає користувачів для оповіщення поштою."
+
+msgid "Notification"
+msgstr "Оповіщення"
+
+msgid "Number of comments per page"
+msgstr "Кількість коментарів на сторінку"
+
+msgid "Number of downloads"
+msgstr "Кількість завантажень"
+
+msgid "Number of rates"
+msgstr "Кількість голосів"
+
+msgid "on the %d selected photos"
+msgstr "на %d вибраних зображеннях"
+
+msgid "only directories"
+msgstr "лише директорії"
+
+msgid "only perform a simulation (no change in database will be made)"
+msgstr "виконати лише симуляцію (нічого не буде змінено в базі даних)"
+
+msgid "Only private albums are listed"
+msgstr "Тільки приватні альбоми перераховані"
+
+msgid "Operating system"
+msgstr "Операційна система"
+
+msgid "Operation in progress"
+msgstr "Лікування в процесі."
+
+msgid "Optimizations have been completed with some errors."
+msgstr "Оптимізації були завершені з деякими помилками."
+
+msgid "Optional URL keyword"
+msgstr "Необов'язкове ключове слово URL"
+
+msgid "Maximum height"
+msgstr "Максимальна висота"
+
+msgid "Maximum width"
+msgstr "Максимальна ширина"
+
+msgid "Members"
+msgstr "Члени"
+
+msgid "Menu Management"
+msgstr "Меню"
+
+msgid "Metadata synchronization results"
+msgstr "Результати синхронізації метаданих"
+
+msgid "Metadata synchronized from file"
+msgstr "Метадані синхронізовані з файлу"
+
+msgid "Minimum privacy level"
+msgstr "Мінімальний рівень приватності"
+
+msgid "Miscellaneous"
+msgstr "Різне"
+
+msgid "Missing a temporary folder"
+msgstr "Відсутня тимчасова папка"
+
+msgid "Missing Plugins"
+msgstr "Відсутні модулі"
+
+msgid "Modify information"
+msgstr "Змінити інформацію"
+
+msgid "Month"
+msgstr "Місяць"
+
+msgid "Move albums"
+msgstr "Перемістити альбоми"
+
+msgid "new"
+msgstr "новий"
+
+msgid "Activate icon \"new\" next to albums and pictures"
+msgstr "Активувати значок \"нове\" поруч з альбомами і фотографіями"
+
+msgid "Default photos order"
+msgstr "Порядок фотографій за замовчуванням"
+
+msgid "Options"
+msgstr "Опції"
+
+msgid "Order of menubar items has been updated successfully."
+msgstr "Порядок пунктів меню був успішно оновлений."
+
+msgid "Original templates"
+msgstr "Оригінальні шаблони"
+
+msgid "Orphan tags deleted"
+msgstr "Порожні теґи видалені"
+
+msgid "Other plugins"
+msgstr "Інші плаґіни"
+
+msgid "Other private albums"
+msgstr "Інші приватні альбоми"
+
+msgid "other"
+msgstr "інший"
+
+msgid "Overall"
+msgstr "Огляд"
+
+msgid "overrides existing values with empty ones"
+msgstr "скасовує існуючі порожні значення"
+
+msgid "Page banner"
+msgstr "Банер сторінки"
+
+msgid "Page end"
+msgstr "Кінець сторінки"
+
+msgid "Pages seen"
+msgstr "Переглянуті сторінки"
+
+msgid "Parameter"
+msgstr "Налаштування"
+
+msgid "Parameters"
+msgstr "Параметри"
+
+msgid "Parent album"
+msgstr "Батьківський альбом"
+
+msgid "Piwigo configuration"
+msgstr "Конфігурація Piwigo"
+
+msgid "Piwigo Uploader"
+msgstr "Piwigo Завантажувач"
+
+msgid "Piwigo version"
+msgstr "Версія Piwigo"
+
+msgid "pixels"
+msgstr "пікселі"
+
+msgid "Please check \"plugins\" folder and sub-folders permissions (CHMOD)."
+msgstr "Будь ласка перевірте дозволи для теки \"plugins\" та вкладених тек (CHMOD)."
+
+msgid "Plugin has been successfully copied"
+msgstr "Плаґін було успішно скопійовано"
+
+msgid "Plugin list"
+msgstr "Список плаґінів"
+
+msgid "Plugins which need upgrade"
+msgstr "Плаґіни які потребують модернізації"
+
+msgid "Plugins"
+msgstr "Плаґіни"
+
+msgid "Position"
+msgstr "Позиція"
+
+msgid "Predefined filter"
+msgstr "Попередньо встановленний фільтер"
+
+msgid "Preferences"
+msgstr "Уподобання"
+
+msgid "Prepared time for list of users to send mail is limited. Others users are not listed."
+msgstr "Час для підготовки списку користувачів яким буде відправлено листи обмежений. Інші користувачі не перераховані."
+
+msgid "Privacy level set to \"%s\""
+msgstr "Рівень конфідеційності встановлено в \"%s\""
+
+msgid "Privacy level"
+msgstr "Рівень конфідеційності"
+
+msgid "Private"
+msgstr "Приватно"
+
+msgid "private"
+msgstr "конфідеційно"
+
+msgid "Properties"
+msgstr "Властивості"
+
+msgid "Public / Private"
+msgstr "Публічно/Приватно"
+
+msgid "Public"
+msgstr "Публічно"
+
+msgid "public"
+msgstr "публічно"
+
+msgid "Purge compiled templates"
+msgstr "Очистити скомпільовані шаблони"
+
+msgid "Purge history detail"
+msgstr "Очистити історію переглядів"
+
+msgid "Purge history summary"
+msgstr "Очистити загальну історію"
+
+msgid "Purge never used notification feeds"
+msgstr "Очистити невикористані канали повідомлень"
+
+msgid "Purge search history"
+msgstr "Очистити історію пошуку"
+
+msgid "Add a criteria"
+msgstr "Додати критерії"
+
+msgid "Photo informations updated"
+msgstr "Інформацію про світлину оновлено"
+
+msgid "Photo unreachable or no support"
+msgstr "Світлина недоступна або непідтримуваний формат"
+
+msgid "Piwigo Administration"
+msgstr "Керування Piwigo"
+
+msgid "Piwigo Announcements Newsletter"
+msgstr "Розсилка оголошень Piwigo"
+
+msgid "Purge sessions"
+msgstr "Чистка сесій"
+
+msgid "Quick Local Synchronization"
+msgstr "Швидка локальна синхронізація"
+
+msgid "Random photo"
+msgstr "Випадклва світлина"
+
+msgid "randomly represented"
+msgstr "випадково представлений"
+
+msgid "ranks"
+msgstr "оцінки"
+
+msgid "Rate date"
+msgstr "дата оцінювання"
+
+msgid "Rating by guests"
+msgstr "оцінювання відвідувачами"
+
+msgid "Rating"
+msgstr "Оцінка"
+
+msgid "Read Piwigo Documentation"
+msgstr "Читати документацію Piwigo"
+
+msgid "reduce to single existing albums"
+msgstr "зменшити до одного існуючи альбоми"
+
+msgid "Refresh photo set"
+msgstr "Оновити серію світлин"
+
+msgid "Refresh"
+msgstr "Оновити"
+
+msgid "registration date"
+msgstr "дата реєстрації"
+
+msgid "Reinitialize check integrity"
+msgstr "Повторно ініціалізувати перевірку цілісності"
+
+msgid "Reject"
+msgstr "Забракувати"
+
+msgid "Released on"
+msgstr "Випущено"
+
+msgid "Remote"
+msgstr "Віддалено"
+
+msgid "Remove all filters"
+msgstr "Видалити всі фільтри"
+
+msgid "remove author"
+msgstr "видалити автора"
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Відсутнє підтвердження пароля. Будь ласка, підтвердіть вибраний пароль."
+
+msgid "Password is missing. Please enter the password."
+msgstr "Пароль відсутній. Будь ласка введіть пароль."
+
+msgid "Path"
+msgstr "Шлях"
+
+msgid "Pending Comments"
+msgstr "Коментарі в очікуванні"
+
+msgid "Permalink %s has been previously used by album %s. Delete from the permalink history first"
+msgstr "Постійне посилання %s раніше використовувалося для альбому %s. Спочатку видаліть його з історії постійних посилань"
+
+msgid "Permalink %s is already used by album %s"
+msgstr "Постійне посилання %s вже використовується для альбому %s"
+
+msgid "Permalink history"
+msgstr "Історія постійних посилань"
+
+msgid "Permalink"
+msgstr "Постійне посилання"
+
+msgid "Permalinks"
+msgstr "Постійні посилання"
+
+msgid "Permission denied"
+msgstr "Доступ заборонений"
+
+msgid "Permission granted thanks to a group"
+msgstr "Доступ наданий завдяки групі"
+
+msgid "Permission granted"
+msgstr "Доступ наданий"
+
+msgid "Permissions"
+msgstr "Дозволи"
+
+msgid "Photo Page"
+msgstr "Сторінка зображення"
+
+msgid "Photo Properties"
+msgstr "Властивості зображення"
+
+msgid "photos added in the database"
+msgstr "зображення додані в базу даних"
+
+msgid "photos candidates for metadata synchronization"
+msgstr "кандидати зображень для синхронізації метаданих"
+
+msgid "photos deleted from the database"
+msgstr "зображення видалені з бази даних"
+
+msgid "photos per page"
+msgstr "зображень на сторінку"
+
+msgid "photos updated in the database"
+msgstr "зображення оновлені в базі даних"
+
+msgid "Photos"
+msgstr "Фотографії"
+
+msgid "Themes"
+msgstr "Теми"
+
+msgid "There is no available subscribers to mail."
+msgstr "Немає абонентів для одержування повідомлень поштою."
+
+msgid "There is no other language available."
+msgstr "Немає іншої доступної мови."
+
+msgid "There is no other plugin available."
+msgstr "Немає іншого доступного плагіну."
+
+msgid "There is no other theme available."
+msgstr "Немає іншої доступної теми."
+
+msgid "This name is already used by another group."
+msgstr "Це ім'я вже використовується іншою групою."
+
+msgid "This site already exists"
+msgstr "Цей сайт вже існує"
+
+msgid "This theme was not designed to be directly activated"
+msgstr "Ця тема не була призначена для безпосереднього активування"
+
+msgid "Thumbnail"
+msgstr "Мініатюра"
+
+msgid "Time to send mail is limited. Others mails are skipped."
+msgstr "Час для відправки пошти обмежений. Інші листи були пропущені."
+
+msgid "Time"
+msgstr "Час"
+
+msgid "Title"
+msgstr "назва"
+
+msgid "To send ?"
+msgstr "Відправити?"
+
+msgid "To subscribe"
+msgstr "Підписатися"
+
+msgid "To unsubscribe"
+msgstr "Відписатися"
+
+msgid "Toggle 'default group' property"
+msgstr "Змінити властивість 'групи за замовчуванням' на протилежну"
+
+msgid "Tools"
+msgstr "Інструменти"
+
+msgid "total time"
+msgstr "загальний час"
+
+msgid "Type here the author name"
+msgstr "Введіть тут ім'я автора"
+
+msgid "Type here the title"
+msgstr "Введіть тут назву"
+
+msgid "Type in a search term"
+msgstr "Введіть слово для пошуку"
+
+msgid "Save order"
+msgstr "Порядок збереження"
+
+msgid "Save Settings"
+msgstr "Зберегти налаштування"
+
+msgid "Save to permalink history"
+msgstr "Зберегти в історію постіних посилань"
+
+msgid "Searching..."
+msgstr "Пошук..."
+
+msgid "Search for new images in the directories"
+msgstr "Шукати нові зображення в папках"
+
+msgid "Section"
+msgstr "Розділ"
+
+msgid "See you soon,"
+msgstr "До побачення,"
+
+msgid "See you soon."
+msgstr "До побачення."
+
+msgid "Select at least one album"
+msgstr "Виберіть принаймі один альбом"
+
+msgid "Select at least one comment"
+msgstr "Віберіть принаймі один коментарій"
+
+msgid "Select at least one photo"
+msgstr "Виберіть принаймі одну світлину"
+
+msgid "Select at least one user"
+msgstr "Виберіть принаймі одного користувача"
+
+msgid "Select files"
+msgstr "Виберіть файли"
+
+msgid "Select recipients"
+msgstr "Виберіть одержувачів"
+
+msgid "Select:"
+msgstr "Вибрати:"
+
+msgid "selection"
+msgstr "вибір"
+
+msgid "Selection"
+msgstr "Вибір"
+
+msgid "Restore default configuration. You will lose your plugin settings!"
+msgstr "Відновлення конфігурації за замовчуванням. Ви втратите налаштування плаґіна!"
+
+msgid "Send an information email to group members"
+msgstr "Надіслати інформаційний лист членам групи"
+
+msgid "Send mail as"
+msgstr "Надіслати лист як"
+
+msgid "Send mail on HTML format"
+msgstr "Надіслати лист в HTML форматі"
+
+msgid "Send mail to users"
+msgstr "Надіслати лист користувачам"
+
+msgid "Send"
+msgstr "Надіслати"
+
+msgid "Set as default language for unregistered and new users"
+msgstr "Встановити як мова за замовчуванням для незареєстрованих і нових користувачів"
+
+msgid "Set as default theme for unregistered and new users"
+msgstr "Встановити як тема за замовчуванням для незареєстрованих і нових користувачів"
+
+msgid "Set author"
+msgstr "Встановити автора"
+
+msgid "Set creation date"
+msgstr "Встановити дату створення"
+
+msgid "Set title"
+msgstr "Встановити назву"
+
+msgid "set to"
+msgstr "встановити в"
+
+msgid "Settings"
+msgstr "Налаштування"
+
+msgid "Show info"
+msgstr "Показати інформацію"
+
+msgid "Show menubar"
+msgstr "Показати меню"
+
+msgid "Simulation"
+msgstr "Моделювання"
+
+msgid "singly represented"
+msgstr "фіксоване представлення"
+
+msgid "Site manager"
+msgstr "Менеджер сайту"
+
+msgid "Average rate"
+msgstr "Середній бал"
+
+msgid "Rate"
+msgstr "Оцінка"
+
+msgid "Start pLoader and add your photos."
+msgstr "Запустіть pLoader і додайте ваші зображення."
+
+msgid "Statistics"
+msgstr "Статистика"
+
+msgid "Status of user \"%s\" updated"
+msgstr "Для користувача \"%s\" оновлений статус"
+
+msgid "Status"
+msgstr "Статус"
+
+msgid "status"
+msgstr "статус"
+
+msgid "Storage album"
+msgstr "Зберегти альбом"
+
+msgid "sub-albums"
+msgstr "під-альбоми"
+
+msgid "Subscribe %s to Piwigo Announcements Newsletter"
+msgstr "Підписати %s на розсилання новин Piwigo"
+
+msgid "Subscribe %s"
+msgstr "Підписати %s"
+
+msgid "Subscribe to notification by mail"
+msgstr "Підписатися на повідомлення поштою"
+
+msgid "Subscribe"
+msgstr "Підписатися"
+
+msgid "Subscribe/unsubscribe users"
+msgstr "Підписати/відписати користувачів"
+
+msgid "Subscribed"
+msgstr "Підписані"
+
+msgid "Subscribers could be listed (available) only if there is new elements to notify."
+msgstr "Підписані користувачі можуть бути вказані (доступні) тільки при наявності нових елементів для повідомлення."
+
+msgid "Sum of rates"
+msgstr "Сума голосів"
+
+msgid "Summary"
+msgstr "Резюме"
+
+msgid "Support"
+msgstr "Підтримка"
+
+msgid "The following tag was deleted"
+msgstr "Наступний теґ був видалений"
+
+msgid "the forum"
+msgstr "форум"
+
+msgid "The gallery URL is not valid."
+msgstr "URL на галерею не валідний."
+
+msgid "The name of a group must not contain \" or ' or be empty."
+msgstr "Назва групи не повинна вміщувати \" чи ' чи бути порожньою."
+
+msgid "The name of an album must not be empty"
+msgstr "Назва альбому не повинна бути порожньою"
+
+msgid "The name of directories and files must be composed of letters, numbers, \"-\", \"_\" or \".\""
+msgstr "Назви директорій і файлів повинні включати тільки букви, цифри, \"-\", \"_\" або \".\""
+
+msgid "The number of comments a page must be between 5 and 50 included."
+msgstr "Число коментарів на сторінці повинно бути між 5 і 50 включно."
+
+msgid "The permalink name must be composed of a-z, A-Z, 0-9, \"-\", \"_\" or \"/\". It must not be numeric or start with number followed by \"-\""
+msgstr "Посилання повинне складатися з a-z, A-Z, 0-9, \"-\", \"_\" або \"/\". Воно не повинно бути числовим або починатися з цифри, що слідують за \"-\""
+
+msgid "Switch to clear or dark colors for administration"
+msgstr "Переключити на світлі або темні кольори для адміністрації"
+
+msgid "synchronize files metadata with database photos informations"
+msgstr "синхронізувати базу даних зображень з метаданими файлів"
+
+msgid "synchronize files structure with database"
+msgstr "синхронізувати структуру файлів з базою данних"
+
+msgid "Synchronize metadata"
+msgstr "синхронізувати метаданні"
+
+msgid "Synchronize"
+msgstr "Синхронізувати"
+
+msgid "Tag \"%s\" already exists"
+msgstr "Теґ \"%s\" вже існує"
+
+msgid "Tag \"%s\" was added"
+msgstr "Теґ \"%s\" додано"
+
+msgid "Tag selection"
+msgstr "Вибір теґів"
+
+msgid "target"
+msgstr "мета"
+
+msgid "Templates configuration has been recorded."
+msgstr "Конфігурацію шаблонів збережено."
+
+msgid "Templates"
+msgstr "Шаблони"
+
+msgid "test this remote site"
+msgstr "перевірити цев віддалений вузол"
+
+msgid "test"
+msgstr "тест"
+
+msgid "The %d following tags were deleted"
+msgstr "Наступні %d теґи видалено"
+
+msgid "The anomaly will be ignored until next application version"
+msgstr "Аномалію буде проігноровано до виходу наступної версії програми"
+
+msgid "The file or directory cannot be accessed (either it does not exist or the access is denied)"
+msgstr "Файл або тека недоступні (або вони не існують або доступ заборонено)"
+
+msgid "%s has been successfully updated."
+msgstr "%s було успішно оновлено."
+
+msgid "%s photos can not be regenerated"
+msgstr "%s зображення не можуть бути відновлені"
+
+msgid "%s photos have been regenerated"
+msgstr "%s зображення були відновлені"
+
+msgid "(this tag will be deleted)"
+msgstr "(цей теґ буде видалений)"
+
+msgid "... or "
+msgstr "... або "
+
+msgid "Add to caddie"
+msgstr "Додати в кошик"
+
+msgid "All extensions are up to date."
+msgstr "Всі розширення останніх версій."
+
+msgid "All languages are up to date."
+msgstr "Всі мови останніх версій."
+
+msgid "All plugins are up to date."
+msgstr "Всі плаґінни останніх версій."
+
+msgid "All themes are up to date."
+msgstr "Всі теми останніх версій."
+
+msgid "Allowed file types: %s."
+msgstr "Дозволені типи файлів: %s."
+
+msgid "An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href=\"%s\">Click here to show log error</a>."
+msgstr "Сталася помилка під час вилучення. Будь ласка, перевірте права доступу до файлів установки Piwigo.<br><a href=\"%s\">Натисніть тут, щоб показати журнал помилок</a>."
+
+msgid "An error has occured during upgrade."
+msgstr "Сталася помилка під час оновлення."
+
+msgid "Approximate maximum resolution: %dM pixels (that's %dx%d pixels)."
+msgstr "Приблизний максимальний дозвіл: %dM пікселів (це %dx%d пікселів)."
+
+msgid "By default, Piwigo will create a new websize from the HD (high definition) version of your photo."
+msgstr "За замовчуванням, Piwigo створить новий розмір від HD (високої чіткості) версії вашого фото."
+
+msgid "Confirm merge"
+msgstr "Підтвердіть злиття"
+
+msgid "Create"
+msgstr "Створити"
+
+msgid "Crop"
+msgstr "Результат"
+
+msgid "display"
+msgstr "показати"
+
+msgid "Do you want to activate anyway?"
+msgstr "Чи Ви таки бажаєте активувати?"
+
+msgid "ERROR"
+msgstr "ПОМИЛКА"
+
+msgid "ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW."
+msgstr "ПОМИЛКА: ЦЕЙ ДОДАТОК ВІДСУТНІЙ, АЛЕ ВІН ВСТАНОВЛЕНИЙ! ВИДАЛИТИ ЙОГО ЗАРАЗ."
+
+msgid "Extensions Update"
+msgstr "Оновлення розширень"
+
+msgid "Follow Orientation"
+msgstr "Дотримуватись орієнтації"
+
+msgid "Following plugins may not be compatible with the new version of Piwigo:"
+msgstr "Наступні додатки можуть бути несумісні з новою версією Piwigo:"
+
+msgid "Following themes may not be compatible with the new version of Piwigo:"
+msgstr "Наступні теми можуть бути несумісні з новою версією Piwigo:"
+
+msgid "Graphics Library"
+msgstr "Графічна бібліотека"
+
+msgid "Height"
+msgstr "Висота"
+
+msgid "hide details"
+msgstr "приховати деталі"
+
+msgid "Hoverbox display"
+msgstr "Відображати маркерну рамку"
+
+msgid "I decide to update anyway"
+msgstr "Я таки вирішив оновити"
+
+msgid "If no HD is available and if the current websize is bigger than resize dimensions, Piwigo will move it as HD and create a downsized websize photo from it."
+msgstr "Якшо нема HD-зображення і поточний веб-розмір більший за нові розміри, Piwigo перемістить його як HD і створить зменьшене до веб-розміру зображення."
+
+msgid "If you encounter problems or have any question, please send a message to"
+msgstr "Якшо у Вас виникли проблеми або запитання, надішлить повідомлення до"
+
+msgid "Ignore All"
+msgstr "Ігнорувати Всі"
+
+msgid "Ignore selected anomalies"
+msgstr "Ігнорувати обрані аномалії"
+
+msgid "Ignore this update"
+msgstr "Ігнорувати це оновлення"
+
+msgid "Image id"
+msgstr "Ідентифікатор зображення"
+
+msgid "Image Quality"
+msgstr "Якість зображення"
+
+msgid "jump to album"
+msgstr "перейти до альбому"
+
+msgid "jump to photo"
+msgstr "перейти до фото"
+
+msgid "Keep in touch with Piwigo project, subscribe to Piwigo Announcement Newsletter. You will receive emails when a new release is available (sometimes including a security bug fix, it's important to know and upgrade) and when major events happen to the project. Only a few emails a year."
+msgstr "Залишайтесь з пректом Piwigo, підпишіться на інформаційний бюлетень Piwigo Announcement. Ви будуте одержувати повідомлення коли новий реліз буде доступний (час від часу з виправленням помилок в системі безпеки, це важливо знати і оновлювати) і коли значні події відбуваються з проектом. Лише кілька повідомлень на рік."
+
+msgid "Language has been successfully installed"
+msgstr "Мову було успішно встановлено"
+
+msgid "Languages which need upgrade"
+msgstr "Мови що потребують оновлення"
+
+msgid "Languages"
+msgstr "Мови"
+
+msgid "Last hit"
+msgstr "Останне влучення"
+
+msgid "Last import"
+msgstr "Останній імпорт"
+
+msgid "Last revisions"
+msgstr "Останні зміни"
+
+msgid "Last send"
+msgstr "Останне відіслане"
+
+msgid "Learn more"
+msgstr "Дізнатися більше"
+
+msgid "leave"
+msgstr "покинути"
+
+msgid "Level 0"
+msgstr "---"
+
+msgid "Level 1"
+msgstr "Контакти"
+
+msgid "Level 2"
+msgstr "Друзі"
+
+msgid "Level 4"
+msgstr "Родина"
+
+msgid "Level 8"
+msgstr "Адміністратори"
+
+msgid "Activate comments"
+msgstr "Активувати коментарі"
+
+msgid "Default comments order"
+msgstr "Порядок коментарів за замовчуванням"
+
+msgid "Images manual order was saved"
+msgstr "Ручний порядок зображень збережено"
+
+msgid "Impossible automatic correction"
+msgstr "Автоматичне виправлення неможливо"
+
+msgid "Impossible to activate this theme, the parent theme is missing: %s"
+msgstr "Ця тема не може бути активована, остільки батьківська тема відсутня: %s"
+
+msgid "Impossible to deactivate this language, first set another language as default."
+msgstr "Неможливо відключити цю мову, спочатку потрібно встановити іншу мову за замовчуванням."
+
+msgid "Impossible to deactivate this language, you need at least one language."
+msgstr "Неможливо відключити цю мову, потрібна хоча б одна мова."
+
+msgid "Impossible to deactivate this theme, you need at least one theme."
+msgstr "Неможливо відключити цю тему, потрібна хоча б одна тема."
+
+msgid "Impossible to delete this theme. Other themes depends on it: %s"
+msgstr "Неможливо видалити цю тему, тому що інші теми залежать від неї: %s"
+
+msgid "In your php.ini file, the upload_max_filesize (%sB) is bigger than post_max_size (%sB), you should change this setting"
+msgstr "В вашому файлі php.ini, параметр upload_max_filesize (%sB) більший за параметр post_max_size (%sB), вам необхідно змінити ці налаштування"
+
+msgid "Inactive Languages"
+msgstr "Неактивні мови"
+
+msgid "Inactive Plugins"
+msgstr "Неактивні плаґіни"
+
+msgid "Inactive Themes"
+msgstr "Неактивні теми"
+
+msgid "include child albums"
+msgstr "включити дочірні альбоми"
+
+msgid "Include display of recent photos grouped by dates"
+msgstr "Включити відображення недавніх фотографій, згрупованих по датам"
+
+msgid "Information data registered in database"
+msgstr "Інформація даних, зареєстрованих в базі даних"
+
+msgid "Informations"
+msgstr "Інформація"
+
+msgid "Install on your computer,"
+msgstr "Встановити на Ваш компьютер,"
+
+msgid "Install"
+msgstr "Встановити"
+
+msgid "Installed Languages"
+msgstr "Встановлені мови"
+
+msgid "Installed Themes"
+msgstr "Встановлені теми"
+
+msgid "Instructions to use Piwigo"
+msgstr "Інсрукції по використанню Piwigo"
+
+msgid "Invert"
+msgstr "Інвертувати"
+
+msgid "IP"
+msgstr "IP"
+
+msgid "Link all album photos to a new album"
+msgstr "Зв`язати всі світлини альбому з новим альбомом"
+
+msgid "Link all album photos to some existing albums"
+msgstr "Зв`язати всі світлини альбому з існуючим альбомом"
+
+msgid "Linked albums"
+msgstr "Пов`язані альбоми"
+
+msgid "Local"
+msgstr "Локальний"
+
+msgid "Lock albums"
+msgstr "Зачинити альбоми"
+
+msgid "Lock gallery"
+msgstr "Зачинити галерею"
+
+msgid "Lock"
+msgstr "Замок"
+
+msgid "Locked"
+msgstr "Зачинено"
+
+msgid "Mail content"
+msgstr "Зміст листа"
+
+msgid "Mail sent to %s [%s]."
+msgstr "Поштові повідомлення на %s [%s]."
+
+msgid "Main \"guest\" user does not exist"
+msgstr "Основний \"гість\" користувача не існує"
+
+msgid "Main \"guest\" user status is incorrect"
+msgstr "Основний \"гість\" статус користувача невірно"
+
+msgid "Main \"webmaster\" user does not exist"
+msgstr "Основний \"веб-майстер\" користувача не існує"
+
+msgid "Main \"webmaster\" user status is incorrect"
+msgstr "Основний \"веб-майстер\" статус користувача невірно"
+
+msgid "Main Page"
+msgstr "Головна сторінка"
+
+msgid "Maintenance"
+msgstr "Обслуговування"
+
+msgid "Manage Permissions"
+msgstr "Управління дозволами"
+
+msgid "Maximum file size: %sB."
+msgstr "Максимальний розмір файлу: %sB."
+
+msgid "Merge selected tags"
+msgstr "Злиття обраних теґів"
+
+msgid "Merge tags"
+msgstr "Злиття теґів"
+
+msgid "New Version"
+msgstr "Нова версія"
+
+msgid "No destination tag selected"
+msgstr "Немає призначення обраний теґ"
+
+msgid "Obsolete Plugins"
+msgstr "Застарілі плаґіни"
+
+msgid "Photo %s of %s"
+msgstr "Фотографія %s з %s"
+
+msgid "Photo name"
+msgstr "Ім'я зображення"
+
+msgid "Photos generation in progress..."
+msgstr "Процес генерації зображень..."
+
+msgid "Piwigo cannot retrieve upgrade file from server"
+msgstr "Piwigo не може отримати файл оновлення з сервера"
+
+msgid "Piwigo Update"
+msgstr "Piwigo оновлення"
+
+msgid "Please wait..."
+msgstr "Будь ласка, зачекайте..."
+
+msgid "remove creation date"
+msgstr "видалити дату створення"
+
+msgid "Remove from caddie"
+msgstr "Видалити з кошику"
+
+msgid "remove tags"
+msgstr "видалити теґи"
+
+msgid "remove this filter"
+msgstr "видалити цей фільтр"
+
+msgid "remove title"
+msgstr "видалити назву"
+
+msgid "Repair and optimize database"
+msgstr "Ремонт та оптимізація бази даних"
+
+msgid "Replacement of original templates by customized templates from template-extension subfolder"
+msgstr "Заміна оригінальних шаблонів, налаштованих шаблонів від шаблонів розширення підтеки"
+
+msgid "Replacers (customized templates)"
+msgstr "Substitutes (customized templates)"
+
+msgid "Representant"
+msgstr "Ескіз альбому"
+
+msgid "Representation of albums"
+msgstr "Ескіз альбомів"
+
+msgid "Representative"
+msgstr "Ескіз альбому"
+
+msgid "Represents"
+msgstr "Мініатюра для"
+
+msgid "Reset ignored updates"
+msgstr "Скидання ігнорування оновлення"
+
+msgid "Resize"
+msgstr "Зміна розміру"
+
+msgid "Restore"
+msgstr "Відновлення"
+
+msgid "Save Template Directory"
+msgstr "Зберегти шаблон каталогу"
+
+msgid "Select an album"
+msgstr "Виберіть альбом"
+
+msgid "Select at least two tags for merging"
+msgstr "Виберіть принаймні два теґа для об'єднання"
+
+msgid "Select the destination tag"
+msgstr "Виберіть призначення теґу"
+
+msgid "Send connection settings by email"
+msgstr "Надіслати налаштування з'єднання по електронній пошті"
+
+msgid "show details"
+msgstr "показати деталі"
+
+msgid "Some themes and plugins may be not available yet."
+msgstr "Деякі теми і плаґіни можуть бути не доступні."
+
+msgid "Some upgrades are available for extensions."
+msgstr "Доступні деякі оновлення для розширень."
+
+msgid "Start Upload"
+msgstr "Початок завантаження"
+
+msgid "Tags <em>%s</em> merged into tag <em>%s</em>"
+msgstr "Теґи <em>%s</em> об'єднані в теґ <em>%s</em>"
+
+msgid "The original image quality must be a number between %d and %d"
+msgstr "Вихідна якість зображення повинна бути число від %d та %d"
+
+msgid "The original maximum height must be a number between %d and %d"
+msgstr "Оригінальна максимальна висота повинна бути поряд з %d та %d"
+
+msgid "The original maximum width must be a number between %d and %d"
+msgstr "Оригінальна Максимальна ширина повинна бути поряд з %d та %d"
+
+msgid "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form"
+msgstr "Розмір завантаження перевищує MAX_FILE_SIZE директиву, яка була вказана в HTML-формі"
+
+msgid "The uploaded file exceeds the upload_max_filesize directive in php.ini: %sB"
+msgstr "Розмір завантаження перевищує upload_max_filesize директиви php.ini: %sB"
+
+msgid "The uploaded file was only partially uploaded"
+msgstr "Завантажений файл був завантажений лише частково"
+
+msgid "The uploaded files exceed the post_max_size directive in php.ini: %sB"
+msgstr "Завантажених файлів перевищує post_max_size директиви php.ini: %sB"
+
+msgid "The version of %s [%s] installed is not compatible with the version required [%s]"
+msgstr "Встановлена версія %s [%s] ​​не сумісна з версією, потрібно [%s]"
+
+msgid "The webmaster has subscribed you to receiving notifications by mail."
+msgstr "Вебмастер підписався на Вас поштою."
+
+msgid "The webmaster has unsubscribed you from receiving notifications by mail."
+msgstr "Вебмастер відписався від Вас поштою."
+
+msgid "The whole page"
+msgstr "Вся сторінка"
+
+msgid "The whole set"
+msgstr "Всі сторінки"
+
+msgid "the wiki"
+msgstr "вікі"
+
+msgid "Theme has been successfully installed"
+msgstr "Тему було успішно встановлено"
+
+msgid "Themes which need upgrade"
+msgstr "Теми, які необхідно оновити"
+
+msgid "This is a major update, with <a href=\"%s\">new exciting features</a>."
+msgstr "Це велике оновлення з <a href=\"%s\">нововведеннями</a>."
+
+msgid "This is a minor update, with only bug corrections."
+msgstr "Це невелике оновлення, тільки з виправленнями помилок."
+
+msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
+msgstr "ЦЕЙ ПЛАҐІН Є ЧАСТИНОЮ CORE Piwigo! ВИДАЛІТЬ ЙОГО НЕГАЙНО!"
+
+msgid "Thumbnails generation in progress..."
+msgstr "Процес генерації мініатюр..."
+
+msgid "Two updates are available"
+msgstr "Два доступних оновлень"
+
+msgid "Unable to check for upgrade."
+msgstr "Неможливо перевірити наявність оновлень."
+
+msgid "Uncheck all"
+msgstr "Зняти все"
+
+msgid "Uninstall"
+msgstr "Видалити"
+
+msgid "Uninstalled Plugins"
+msgstr "Видалити плаґіни"
+
+msgid "unit mode"
+msgstr "однокористувацький режим"
+
+msgid "unknown"
+msgstr "невідомий"
+
+msgid "Unknown upload error"
+msgstr "Невідома помилка при завантаженні"
+
+msgid "Unlocked"
+msgstr "Розблоковано"
+
+msgid "unset"
+msgstr "встановлено"
+
+msgid "Unsubscribe from notification by mail"
+msgstr "Відмовитися від повідомлень по електронній пошті"
+
+msgid "Unsubscribed"
+msgstr "Відписався"
+
+msgid "Update albums informations"
+msgstr "Оновлення інформації альбомів"
+
+msgid "Update All"
+msgstr "Оновити все"
+
+msgid "Update Complete"
+msgstr "Оновлення завершено"
+
+msgid "Update in progress... Please wait."
+msgstr "Триває оновлення... Будь ласка, почекайте."
+
+msgid "Update photos information"
+msgstr "Оновлення інформації зображень"
+
+msgid "update the database from files"
+msgstr "оновлення бази даних з файлами"
+
+msgid "Update to Piwigo %s"
+msgstr "Оновлення Piwigo %s"
+
+msgid "Updates"
+msgstr "Оновлення"
+
+msgid "Upload"
+msgstr "Завантажити"
+
+msgid "Upload Photos"
+msgstr "Завантажити зображення"
+
+msgid "Uploaded Photos"
+msgstr "Завантажено світлини"
+
+msgid "Use the default photo sort order"
+msgstr "За допомогою сортування за замовчуванням порядку зображення"
+
+msgid "Used metadata"
+msgstr "метадані, що використовуються"
+
+msgid "User"
+msgstr "Користувач"
+
+msgid "user \"%s\" added"
+msgstr "користувача \"%s\" додано"
+
+msgid "User \"%s\" created with \"%s\" like password"
+msgstr "Користувачу \"%s\" створено \"%s\" в якості пароля"
+
+msgid "User %s [%s] added."
+msgstr "Користувача %s [%s] додано."
+
+msgid "User %s [%s] was added to the subscription list."
+msgstr "Користувача %s [%s] додано до списку підписників."
+
+msgid "User %s [%s] was not added to the subscription list."
+msgstr "Користувача %s [%s] не додано до списку підписників."
+
+msgid "User %s [%s] was not removed from the subscription list."
+msgstr "Користувач %s [%s] не видаляється зі списку розсилки."
+
+msgid "User %s [%s] was removed from the subscription list."
+msgstr "Користувач %s [%s] видалений зі списку розсилки."
+
+msgid "User comments validation"
+msgstr "Перевірка коментарів користувачів"
+
+msgid "User list"
+msgstr "Список користувачів"
+
+msgid "User status"
+msgstr "Статус користувача"
+
+msgid "Users"
+msgstr "Користувачі"
+
+msgid "user_status_admin"
+msgstr "Адміністратор"
+
+msgid "user_status_generic"
+msgstr "Загальний"
+
+msgid "user_status_guest"
+msgstr "Гість"
+
+msgid "user_status_webmaster"
+msgstr "Веб-майстер"
+
+msgid "Validate"
+msgstr "Підтвердження"
+
+msgid "Validation"
+msgstr "Перевірка"
+
+msgid "Version"
+msgstr "Версія"
+
+msgid "Virtual album"
+msgstr "Віртуальний альбом"
+
+msgid "Virtual album added"
+msgstr "Віртуальний альбом додано"
+
+msgid "Virtual album deleted"
+msgstr "Віртуальний альбом видалено"
+
+msgid "Virtual album name"
+msgstr "Назва віртуального альбому"
+
+msgid "Virtual albums to move"
+msgstr "Віртуальні альбоми для переміщення"
+
+msgid "Virtual Links"
+msgstr "Віртуальні посилання"
+
+msgid "Visit Gallery"
+msgstr "Відвідайте галерею"
+
+msgid "Visit language site"
+msgstr "Відвідайте сайт мови"
+
+msgid "Visit Piwigo project website"
+msgstr "Відвідайте веб-сайт проекту Piwigo"
+
+msgid "Visit plugin site"
+msgstr "Відвідайте сторінку плаґіну"
+
+msgid "Visit theme site"
+msgstr "Відвідайте сайт теми"
+
+msgid "Waiting"
+msgstr "В очікуванні"
+
+msgid "WARNING! This plugin does not seem to be compatible with this version of Piwigo."
+msgstr "УВАГА! Цей плаґін, здається, не сумісні з цією версією Piwigo."
+
+msgid "Warning: subscribing or unsubscribing will send mails to users"
+msgstr "Попередження: передплата і відписка буде надсилати електронну пошту користувачів"
+
+msgid "Webmaster cannot be deleted"
+msgstr "Для веб-майстрів не може бути видалений"
+
+msgid "Webmaster status is required."
+msgstr "Веб-майстеру статус не потрібен."
+
+msgid "Week starts on"
+msgstr "Початок тижня"
+
+msgid "Who can see these photos?"
+msgstr "Хто може бачити ці зображення?"
+
+msgid "Who can see this photo?"
+msgstr "Хто може бачити цю фотографію?"
+
+msgid "Width"
+msgstr "Ширина"
+
+msgid "width must be a number superior to"
+msgstr "ширина повинна бути трохи більше, ніж"
+
+msgid "With blank value, gallery title will be used"
+msgstr "Якщо це поле порожнє, галерея буде використовувати назву"
+
+msgid "With no album"
+msgstr "При відсутності альбому"
+
+msgid "With no tag"
+msgstr "При відсутності теґів"
+
+msgid "With no virtual album"
+msgstr "При відсутності віртуального альбому"
+
+msgid "wrong filename"
+msgstr "неправильне ім'я файлу"
+
+msgid "A locked gallery is only visible to administrators"
+msgstr "Заблоковано, галерею видно тільки адміністратору"
+
+msgid "administrators"
+msgstr "адміністратори"
+
+msgid "Center of interest"
+msgstr "Центр інтересів"
+
+msgid "Gallery unlocked"
+msgstr "Галерея розблокована"
+
+msgid "modified"
+msgstr "модифікований"
+
+msgid "Move to album"
+msgstr "Перемістити до альбому"
+
+msgid "Not cropped correctly?"
+msgstr "Не обрізати правильно?"
+
+msgid "Notify administrators when a comment is"
+msgstr "Повідомити адміністратора, якщо коментар є"
+
+msgid "Original Size"
+msgstr "Оригінальний розмір"
+
+msgid "pending validation"
+msgstr "готовий до перевірки"
+
+msgid "registered users"
+msgstr "зареєстровані користувачі"
+
+msgid "Resize after upload"
+msgstr "Зміна розмірів після завантаження"
+
+msgid "Save visits in history for"
+msgstr "Зберегти відвідування в історії"
+
+msgid "simple visitors"
+msgstr "прості відвідувачі"
+
+msgid "This album contains %d photos, added between %s and %s."
+msgstr "Цей альбом містить %d зображень, додано ​​між %s і %s"
+
+msgid "This album contains %d photos, added on %s."
+msgstr "Цей альбом містить %d зображень, додано %s."
+
+msgid "This album contains no photo."
+msgstr "Цей альбом не містить зображень."
+
+msgid "Unlock gallery"
+msgstr "Розблокувати галерею"
+
+msgid "Year"
+msgstr "Рік"
+
+msgid "You are running on development sources, no check possible."
+msgstr "Ви працюєте на розвиток джерела, не перевірити це можливо."
+
+msgid "You are running the latest version of Piwigo."
+msgstr "Ви працюєте з Piwigo останньої версії."
+
+msgid "You are using the Browser uploader. Try the <a href=\"%s\">Flash uploader</a> instead."
+msgstr "Ви використовуєте браузерний завантажувач. Спробуйте <a href=\"%s\">Флеш завантажувач</a>."
+
+msgid "You are using the Flash uploader. Problems? Try the <a href=\"%s\">Browser uploader</a> instead."
+msgstr "Ви використовуєте Флеш завантажувач. Проблеми? Спробуйте браузерний <a href=\"%s\">завантажувач</a>."
+
+msgid "You can activate only one mobile theme."
+msgstr "Ви можете активувати тільки одну мобільну тему."
+
+msgid "You can update to Piwigo %s directly, without upgrading to Piwigo %s (recommended)."
+msgstr "Ви можете оновити Piwigo %s напряму, без переходу на Piwigo %s (рекомендовано)."
+
+msgid "You can't define a default photo order because you have a custom setting in your local configuration."
+msgstr "Ви не можете визначити порядок за замовчуванням фотографії, тому що у Вас є налаштування користувача у вашій локальній конфігурації."
+
+msgid "You cannot delete your account"
+msgstr "Ви не можете видалити свій аккаунт"
+
+msgid "You cannot move an album in its own sub album"
+msgstr "Ви не можете переміщати альбом в свій під-альбом"
+
+msgid "You have %d orphan tags: %s."
+msgstr "У вас є %d теґи-пустишки: %s."
+
+msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
+msgstr "Ви вказали <i>$conf['order_by']</i> в локальному файлі конфігурації, цей параметр в застарів, будь ласка, видаліть його або перейменувати його в <i>$conf['order_by_custom']</i> !"
+
+msgid "You have subscribed to receiving notifications by mail."
+msgstr "Ви підписалися на отримання повідомлень електронною поштою."
+
+msgid "You have unsubscribed from receiving notifications by mail."
+msgstr "Ви відписалися від отримання повідомлення поштою."
+
+msgid "You need to confirm deletion"
+msgstr "Ви повинні підтвердити видалення"
+
+msgid "You need to upgrade your system to take full advantage of the application else the application will not work correctly, or not at all"
+msgstr "Ви повинні оновити систему в повній мірі скористатися додатком, в іншому випадку програма може працювати неправильно, або взагалі не працювати"
+
+msgid "Your configuration settings are saved"
+msgstr "Параметри конфігурації зберігаються"
+
+msgid "Zoom"
+msgstr "Збільшити"
+
+msgid "[%s] Visit album %s"
+msgstr "[%s] Відвідайте альбом %s"
+
+msgid "[NBM] Problems or questions"
+msgstr "[НБМ] Проблеми та питання"
+
+msgid "apply automatic sort order"
+msgstr "застосовувати автоматичне сортування"
+
+msgid "Automatic sort order"
+msgstr "Автоматичне сортування"
+
+msgid "Cancel"
+msgstr "Скасувати"
+
+msgid "cancel manual order"
+msgstr "відмінити ручне сортування"
+
+msgid "List"
+msgstr "Список"
+
+msgid "Save manual order"
+msgstr "Зберегти ручне сортування"
+
+msgid "Applications"
+msgstr "Додатки"
+
+msgid "Web Form"
+msgstr "Веб-форми"
+
+msgid "Available on"
+msgstr "Доступні на"
+
+msgid "Delete multiple size images"
+msgstr "Видалення декількох зображень розміром"
+
+msgid "Generate multiple size images"
+msgstr "Створення декількох зображень розміром"
+
+msgid "Piwigo for Android"
+msgstr "Piwigo для Android"
+
+msgid "Piwigo for iOS (iPhone, iPad, iPod Touch)"
+msgstr "Piwigo для iOS(iPhone, iPad, iPod Touch)"
+
+msgid "%u users have automatic permission because they belong to a granted group."
+msgstr "%u користувачі мають автоматичний дозвіл, тому що вони належать до наданої групи."
+
+msgid "<em>Piwigo for Android</em> application empowers you to connect your Android phone or table to your Piwigo gallery, create some albums and upload several photos at once."
+msgstr "<em>Piwigo для Android</em> додаток дозволяє вам підключити ваш телефон або планшет в галерею Piwigo, створити кілька альбомів і завантажити декілька зображень одночасно."
+
+msgid "<em>Piwigo for iOS</em> application empowers you to connect to your Piwigo gallery from your iPhone, iPad or iPod Touch, create some albums and upload several photos at once."
+msgstr "<em>Piwigo для iOS</em> додаток дає можливість підключатись до вашої галереї Piwigo з вашого сенсорного iPhone, iPad та iPod, створити кілька альбомів і завантажити декілька зображень одночасно."
+
+msgid "Adobe Photoshop Lightroom is a photography software designed to manage large quantities of digital images and doing post production work."
+msgstr "Adobe Photoshop Lightroom являє собою програмне забезпечення фотографа, призначене для управління великою кількістю цифрових зображень і робить роботу постпродакшн."
+
+msgid "any visitor can see this album"
+msgstr "будь-який відвідувач може бачити цей альбом"
+
+msgid "Aperture is a powerful tool to refine images and manage massive libraries on Mac."
+msgstr "Aperture є потужним інструментом для уточнення зображення і керувати великими бібліотеками на Mac."
+
+msgid "Aperture is designed for professional photographers with iPhoto simplicity."
+msgstr "Aperture призначена для професійних фотографів з iPhoto."
+
+msgid "digiKam is an advanced digital photo management free software for Linux, Windows, and MacOSX."
+msgstr "digiKam - передове цифрове безкоштовне програмне забезпечення управління зображень для Linux, Windows, і MacOSX."
+
+msgid "digiKam is designed for photographers who want to view, manage, edit, enhance, organize, tag, and share photographs."
+msgstr "DigiKam призначений для фотографів, які хочуть переглядати, управляти, редагувати, покращувати організацію, теґи та обміну фотографіями."
+
+msgid "Features include gallery browsing, album creation and photo upload."
+msgstr "Особливості включають перегляд галереї, створення альбому і завантаження зображень."
+
+msgid "Groups and users"
+msgstr "Групи та користувачі"
+
+msgid "iPhoto is the default photo manager on MacOSX. The Piwigo export plugin let you create new albums and export your photos directly from iPhoto to your Piwigo photo gallery."
+msgstr "iPhoto - менеджер зображень за замовченням на MacOSX. Доповнення Piwigo експортує до програми створені нові альбоми і ваші фото безпосередньо від iPhoto до вашої фотогалереї Piwigo."
+
+msgid "On your Linux, simply install Shotwell with your package manager and the activate Piwigo publishing option."
+msgstr "На вашому Linux , просто встановіть Shotwell з вашим менеджером пакетів та активувати Piwigo параметр публікації."
+
+msgid "Permission granted for groups"
+msgstr "Дозвіл, наданий для груп"
+
+msgid "Permission granted for users"
+msgstr "Дозвіл, наданий для користувачів"
+
+msgid "Piwigo export plugin for Aperture"
+msgstr "Piwigo export плаґін для Aperture"
+
+msgid "Piwigo export plugin for iPhoto"
+msgstr "Piwigo export плаґін для iPhoto"
+
+msgid "Piwigo publish plugin for digiKam"
+msgstr "Piwigo publish плаґін для digiKam"
+
+msgid "Piwigo Publish plugin for Lightroom"
+msgstr "Piwigo Видають доповнення до програми для Lightroom"
+
+msgid "Piwigo publish plugin for Shotwell"
+msgstr "Piwigo publish плаґін для Shotwell"
+
+msgid "ReGalAndroid (RemoteGallery client for Android) is an open source (GPL v3) Piwigo client for the Android platform."
+msgstr "ReGalAndroid (RemoteGallery клієнт для Android) це клієнт з відкритим вихідним кодом (GPL версії 3) Piwigo для платформи Android."
+
+msgid "Select groups..."
+msgstr "Виберіть групи..."
+
+msgid "Select users..."
+msgstr "Виберіть користувачів..."
+
+msgid "Shotwell is an open source digital photo organizer that runs on Linux. It is the default photo manager in Ubuntu and Fedora."
+msgstr "Shotwell є відкритим початковим цифровим організатором зображень, який працює на Linux. Він - менеджер заданий за замовчуванню зображень в Ubuntu і Fedora."
+
+msgid "The Piwigo export plugin allows you to create albums and export photos."
+msgstr "Плаґін Piwigo експорту дозволяє створювати альбоми та експортовані зображення."
+
+msgid "The Piwigo publish Plug-in allows you to export and synchronize photos from Lightroom directly to your Piwigo photo gallery."
+msgstr "Piwigo publish плаґін на дозволяє експортувати та синхронізувати зображення з Lightroom безпосередньо до вашої галереї Piwigo."
+
+msgid "There is no group in this gallery."
+msgstr "Немає ніякої групи в цій галереї."
+
+msgid "To export your photos from digiKam to Piwigo, simply install digiKam and the Kipi-plugins."
+msgstr "Щоб експортувати ваші зображення з digiKam до Piwigo, просто встановіть digiKam і Kipi-plugins."
+
+msgid "visitors need to login and have the appropriate permissions to see this album"
+msgstr "відвідувачі повинні увійти і мати відповідні дозволи, щоб побачити цей альбом"
+
+msgid "custom"
+msgstr "Користувацький"
+
+msgid "include photos with lower privacy level"
+msgstr "включати в себе зображення з більш низьким рівнем конфіденційності"
+
+msgid "No group is permitted to see this private album"
+msgstr "Ніякій групі не дозволяється бачити цей приватний альбом"
+
+msgid "Permission management"
+msgstr "Управління дозволу"
+
+msgid "add a new watermark"
+msgstr "додати новий водяний знак"
+
+msgid "Apply watermark if height is bigger than"
+msgstr "Накладення водяних знаків, якщо висота більше, ніж"
+
+msgid "Apply watermark if width is bigger than"
+msgstr "Накладення водяних знаків, якщо ширина більше, ніж"
+
+msgid "Select a file"
+msgstr "Виберіть файл"
+
+msgid "The center of interest is the most meaningful zone in the photo."
+msgstr "Центр інтересу - найзначиміша зона у зображенні."
+
+msgid "bottom left corner"
+msgstr "нижній лівий кут"
+
+msgid "bottom right corner"
+msgstr "нижній правий кут"
+
+msgid "By default, the center of interest is placed in the middle of the photo."
+msgstr "За замовчуванням центр уваги знаходиться в центральній частині зображення."
+
+msgid "For photo sizes with crop, such as \"Square\", Piwigo will do its best to include the center of interest."
+msgstr "Для зображень розміром з горошину, такі як \"Площа\", Piwigo зробить все можливе, щоб включити в центрі уваги."
+
+msgid "middle"
+msgstr "середина"
+
+msgid "Opacity"
+msgstr "Непрозорість"
+
+msgid "Photo sizes with crop"
+msgstr "Зображення розміром з горошину"
+
+msgid "Select a zone with your mouse to define a new center of interest."
+msgstr "Виберіть зону за допомогою миші, щоб визначити новий центр уваги."
+
+msgid "top left corner"
+msgstr "верхній лівий кут"
+
+msgid "top right corner"
+msgstr "верхній правий кут"
+
+msgid "X Position"
+msgstr "Позиція X"
+
+msgid "X Repeat"
+msgstr "Повторення X"
+
+msgid "Y Position"
+msgstr "Позиція Y"
+
+msgid "Multiple Size"
+msgstr "Кілька розмірів"
+
+msgid "%d days"
+msgstr "%d днів"
+
+msgid "%d day"
+msgstr "%d день"
+
+msgid "%d hours"
+msgstr "%d годин"
+
+msgid "%d hour"
+msgstr "%d година"
+
+msgid "%d minutes"
+msgstr "%d хвилин"
+
+msgid "%d minute"
+msgstr "%d хвилина"
+
+msgid "%d months"
+msgstr "%d місяців"
+
+msgid "%d month"
+msgstr "%d місяць"
+
+msgid "%d seconds"
+msgstr "%d секунд"
+
+msgid "%d second"
+msgstr "%d секунда"
+
+msgid "%d years"
+msgstr "%d років"
+
+msgid "%d year"
+msgstr "%d рік"
+
+msgid "%s ago"
+msgstr "%s тому"
+
+msgid "%s in the future"
+msgstr "%s в майбутньому"
+
+msgid "Added by %s"
+msgstr "Додано користувачем %s"
+
+msgid "Numeric identifier : %d"
+msgstr "Числовий ідентифікатор: %d"
+
+msgid "Original file : %s"
+msgstr "Оригінальний файл: %s"
+
+msgid "Posted %s on %s"
+msgstr "Опубліковано %s на %s"
+
+msgid "Rated %d times, score : %.2f"
+msgstr "Оцінений %d разів, рахунок: %.2f"
+
+msgid "Sharpen"
+msgstr "Загострити"
+
+msgid "Visited %d times"
+msgstr "Відвідали %d разів"
+
+msgid "Watermark"
+msgstr "Водяний знак"
+
+msgid " and %d virtuals"
+msgstr "та %d віртуальні"
+
+msgid "%d physicals"
+msgstr "%d фізичні"
+
+msgid "%d weeks"
+msgstr "%d тижнів"
+
+msgid "%d week"
+msgstr "%d тиждень"
+
+msgid "Edit photo"
+msgstr "Редагувати фото"
+
+msgid "create a new site"
+msgstr "створити новий сайт"
+
+msgid "No order field selected"
+msgstr "Немає порядкового вибраного поля"
+
+msgid "Duplicate selected tags"
+msgstr "Дублювати виділені теґи"
+
+msgid "Name of the duplicate"
+msgstr "Назва дубліката"
+
+msgid "Source tag"
+msgstr "Джерело теґа"
+
+msgid "Tag \"%s\" is now a duplicate of \"%s\""
+msgstr "Теґ \"%s\" зараз є дублікатом \"%s\""
+
+msgid "Landscape"
+msgstr "Ландшафт"
+
+msgid "Minimum height"
+msgstr "Мінімальна висота"
+
+msgid "Minimum width"
+msgstr "Мінімальна ширина"
+
+msgid "Panorama"
+msgstr "Панорама"
+
+msgid "Portrait"
+msgstr "Портрет"
+
+msgid "Manage photos"
+msgstr "Управління зображеннями"
+
+msgid "View in gallery"
+msgstr "Переглянути у галереї"
+
+msgid "Number of albums per page"
+msgstr "Кількість альбомів на сторінці"
+
+msgid "Ratio"
+msgstr "Співвідношення"
+
+msgid "between %.2f and %.2f"
+msgstr "між %.2f і %.2f"
+
+msgid "between %d and %d pixels"
+msgstr "між %d і %d пікселями"
+
+msgid "Duplicate"
+msgstr "Дублювати"
+
+msgid "Manage the members"
+msgstr "Керування учасниками"
+
+msgid "Merge selected groups"
+msgstr "Злиття вибраних груп"
+
+msgid "No groups selected, no actions possible."
+msgstr "Жодна група не вибрана, не можливі ніякі дії."
+
+msgid "No members to manage"
+msgstr "Немає учасників для управління"
+
+msgid "Please select at least two groups"
+msgstr "Виберіть щонайменше дві групи"
+
+msgid "Rename"
+msgstr "Перейменувати"
+
+msgid "This group will be set to default"
+msgstr "Ця група буде встановлена за замовчуванням"
+
+msgid "This group will be unset to default"
+msgstr "Ця група буде знята з замовчування"
+
+msgid "Type here the name of the new group"
+msgstr "Введіть назву нової групи"
+
+msgid "Purge user cache"
+msgstr "Очистити кеш користувача"
+
+msgid "The picture dimensions will be reduced to %dx%d pixels."
+msgstr "Розміри зображення будє зменьшено до %dx%d пікселів"
+
+msgid "Resize after upload disabled due to the use of GD as graphic library"
+msgstr "Зміну розміру після вивантаження вимкнено через використання бібліотеки GD"
+
+msgid "Select at least one tag"
+msgstr "Виберіть принаймні один теґ"
+
+msgid "Basic settings"
+msgstr "Основні параметри"
+
+msgid "General"
+msgstr "Загальні"
+
+msgid "Mail theme"
+msgstr "Поштова тема"
+
+msgid "Showing %s to %s of %s users"
+msgstr "Показано %s від %s до %s користувачів"
+
+msgid "%d of %d users selected"
+msgstr "%d з %d користувачів вибрані"
+
+msgid "(filtered from %s total users)"
+msgstr "(фільтруються від загального числа користувачів %s)"
+
+msgid "All %d users are selected"
+msgstr "Усі %d користувачі вибрані"
+
+msgid "Change password"
+msgstr "Змінити пароль"
+
+msgid "Change username"
+msgstr "Змінити ім’я користувача"
+
+msgid "Last visit on %s, %s."
+msgstr "Був на сайті %s, %s."
+
+msgid "Loading..."
+msgstr "Завантаження..."
+
+msgid "No matching user found"
+msgstr "Відповідних користувачі не знайдено"
+
+msgid "No user selected of %d users"
+msgstr "Не вибраний жоден з %d користувачів "
+
+msgid "No users selected, no actions possible."
+msgstr "Жоден користувач не обраний, ніякі дії можливі."
+
+msgid "Password updated"
+msgstr "Пароль оновлений"
+
+msgid "Registered on %s, %s."
+msgstr "Зареєстрований %s, %s."
+
+msgid "Show %s users"
+msgstr "Відображати %s користувачів"
+
+msgid "Update user"
+msgstr "Оновлення користувача"
+
+msgid "User %s added"
+msgstr "Користувач %s доданий"
+
+msgid "User %s updated"
+msgstr "Користувач %s оновленний"
+
+msgid "Users modified"
+msgstr "Змінений користувач"
+
+msgid "on the %d selected users"
+msgstr "на %d вибраних користувачів"
+
+msgid "close"
+msgstr "Закрити"
+
+msgid "Close user details"
+msgstr "Закрити деталі користувача"
+
+msgid "Open user details"
+msgstr "Відкрити деталі користувача"
+
+msgid "Activate it now"
+msgstr "Активувати його зараз"
+
+msgid "Allow users to add a link to their website"
+msgstr "Дозволити користувачам додати посилання на свій сайт"
+
+msgid "Impossible to deactivate the default theme."
+msgstr "Неможливо відключити тему за замовчуванням."
+
+msgid "Mail address is mandatory for registration"
+msgstr "Поштова адреса є обов’язковим для реєстрації"
+
+msgid "Empty caddie"
+msgstr "Кошик порожній"
+
+msgid "The settings for the guest are from the %s user"
+msgstr "Налаштування для \"Гостя\" від користувача %s"
+
+msgid "No and unlock sub-albums"
+msgstr "Ні і розблокувати суб-альбоми"
+
+msgid "based on"
+msgstr "на основі"
+
+msgid "between %s and %s MB"
+msgstr "між %s і %s МБ"
+
+msgid "date & time"
+msgstr "дата і час"
+
+msgid "file name"
+msgstr "ім’я файлу"
+
+msgid "width & height"
+msgstr "ширина і висота"
+
+msgid "Upload in progress"
+msgstr "Завантаження триває"
+
+msgid "Delete %d orphan photos"
+msgstr "Видалення %d одиночних фото"
+
+msgid "Each email sent will contain its own automatic authentication key on links, valid for %s."
+msgstr "Кожен е-mail містить свій власний ключ ідентифікації по посиланню, дійсний для %s."
+
+msgid "Edit user"
+msgstr "Редагування користувача"
+
+msgid "For security reason, authentication keys do not work for administrators."
+msgstr "З причини безпеки, ключі ідентифікації не працюють для адміністраторів."
+
+msgid "No recipient selected"
+msgstr "Отримувач не вибраний"
+
+msgid "No user is permitted to see this private album"
+msgstr "Жодному користувачу не дозволено бачити цей приватний альбом"
+
+msgid "Orphans"
+msgstr "Одиночні"
+
+msgid "Recipients"
+msgstr "Одержувачі"
+
+msgid "Y Repeat"
+msgstr "Повторення Y"
+
+msgid "Piwigo Remote Sync is able to upload a whole folder hierarchy. If you run it again, only new photos will be uploaded."
+msgstr "Piwigo Remote Sync може завантажувати всю ієрархію папок. Якщо ви запустите його знову, будуть завантажені лише нові фотографії."
+
+msgid "Share / Send your photos directly from your Mac Os X (10.10 and following) to Piwigo"
+msgstr "Поділіться/надсилайте свої фотографії безпосередньо з вашої MacOS (10.10 і пізніша) до Piwigo"
+
+msgid "Time has come to update your Piwigo with version %s, go to %s"
+msgstr "Настав час оновлювати свій Piwigo з версії %s, перейти до %s"
+
+msgid "delete album and all %d photos, even the %d associated to other albums"
+msgstr "видалити альбом і всі %d фотографії, навіть, %d пов'язані з іншими альбомами"
+
+msgid "Piwigo %s is available, please update"
+msgstr "Piwigo  %s доступний до оновлення, будь ласка, оновіться"
+
+msgid "No filter on album. Select one or type to search"
+msgstr "Немає фільтрів на альбомі. Виберіть один або введіть для пошуку"
+
+msgid "No tags selected, no actions possible."
+msgstr "Теґи не вибрано, ніякі дії неможливі."
+
+msgid "Running on an up-to-date Piwigo is important for security."
+msgstr "Робота на сучасній Piwigo важлива для безпеки."
+
+msgid "Select tags"
+msgstr "Виберіть теги"
+
+msgid "Storage used"
+msgstr "Використано пам'яті"
+
+msgid "checksum"
+msgstr "контрольна сума"
+
+msgid "delete album and the %d orphan photos"
+msgstr "видалити альбом та %d поодинокі фотографії"
+
+msgid "delete only album, not photos"
+msgstr "видалити лише альбом, а не фотографії"
+
+msgid "orphans to delete"
+msgstr "поодинокі до видалення"
+
+msgid "(determined from photos)"
+msgstr "(визначається з фотографій)"
+
+msgid "Confirm deletion"
+msgstr "Підтвердьте видалення"
+
+msgid "Dashboard"
+msgstr "Дошка"
+
+msgid "Delete album \"%s\" and its %d sub-albums."
+msgstr "Видалити альбом \"%s\" та його %d суб-альбоми."
+
+msgid "Delete album \"%s\"."
+msgstr "Видалити альбом \"%s\"."
+
+msgid "Display form"
+msgstr "Форма відображення"
+
+msgid "It only takes a few clicks."
+msgstr "Це займає лише кілька кліків."
+
+msgid "Display category date"
+msgstr "Показати дату категорії"
+
+msgid "Display album date period"
+msgstr "Показувати період, пов'язаний з кожним альбомом, наприклад, «з 12 до 15 липня 2018 року»"
+
+msgid "Compute %d missing checksums"
+msgstr "Вичислити %d відсутні контрольні суми"
+
+msgid "%d checksums were added"
+msgstr "%d контрольних сум було додано"
+
+msgid "... or hide this link"
+msgstr "... або приховати це посилання"
+
+msgid "Piwigo requires an album to add photos."
+msgstr "Piwigo потребує альбом для додавання фотографій."
+
+msgid "Some checksums are missing."
+msgstr "Деякі контрольні суми відсутні."
+
+msgid "Synchronization in progress"
+msgstr "Виконується синхронізація"
+
+msgid "Visit"
+msgstr "Відвідати"
+
+msgid "Welcome!"
+msgstr "Ласкаво просимо!"
+
+msgid "With no checksum"
+msgstr "Без контрольної суми"
+
+msgid "checksums to add"
+msgstr "контрольні суми для додавання"
+
+msgid "or"
+msgstr "чи"
+
+msgid "Deletion in progress"
+msgstr "Виконується видалення"
+
+msgid "Create a first album"
+msgstr "Створіть перший альбом"
+
+msgid "Clear Selection"
+msgstr "Очистити вибране"
+
+msgid "Compact View"
+msgstr "Компактний перегляд"
+
+msgid "Compare mode"
+msgstr "Режим порівняння"
+
+msgid "Delete album"
+msgstr "Видалити альбом"
+
+msgid "Cache"
+msgstr "Кеш"
+
+msgid "Requires PHP %s"
+msgstr "Вимагається PHP %s"
+
+msgid "No albums found"
+msgstr "Не знайдено альбомів"
+
+msgid "No plugins found"
+msgstr "Не знайдено плагінів"
+
+msgid "No tag found"
+msgstr "Не знайдено теґів"
+
+msgid "Open in gallery"
+msgstr "Відкрити в галереї"
+
+msgid "Other"
+msgstr "Ініші"
+
+msgid "Page Visited"
+msgstr "Сторінка відвідана"
+
+msgid "Page Visited in %s"
+msgstr "Сторінка відвідана в %s"
+
+msgid "Please upgrade your PHP version before any update."
+msgstr "Будь ласка оновіть свою версію PHP до оновлення."
+
+msgid "Posted %s"
+msgstr "Опубліковано %s"
+
+msgid "Refresh thumbnail"
+msgstr "Оновити мініатюри"
+
+msgid "Tile View"
+msgstr "Заголовок перегляду"
+
+msgid "Videos"
+msgstr "Відео"
+
+msgid "Yes, I am sure"
+msgstr "Так, я впевнений"
+
+msgid "Yes, delete"
+msgstr "Так, видалити"
+
+msgid "You don't have access to this photo"
+msgstr "Ви не маєте доступу до цього фото"
+
+msgid "in gallery"
+msgstr "в галереї"
+
+msgid "no photo"
+msgstr "немає фото"
+
+msgid "%d photos"
+msgstr "%d фотографій"
+
+msgid "%d sub-albums"
+msgstr "%d під-альбомів"
+
+msgid "Add Album"
+msgstr "Додати Альбом"
+
+msgid " (copy %s)"
+msgstr "(скопійовано %s)"
+
+msgid " (copy)"
+msgstr "(копія)"
+
+msgid "%s GB used"
+msgstr "%s GB використано"
+
+msgid "%s MB used"
+msgstr "%s MB використано"
+
+msgid "%s file type"
+msgstr "%s файли типу"
+
+msgid "%s other tags available.."
+msgstr "%s, інші теги доступні.."
+
+msgid "%d user added"
+msgstr "%d користувача додано"
+
+msgid "%d user edited"
+msgstr "%d користувача відредаговано"
+
+msgid "%d user logged in"
+msgstr "%d користувач увійшов"
+
+msgid "%d user logged out"
+msgstr "%d користувач вийшов"
+
+msgid "%d users added"
+msgstr "%d користувачів додано"
+
+msgid "%d users edited"
+msgstr "%d користувачів відредаговано"
+
+msgid "%d users logged in"
+msgstr "%d користувачів увійшло"
+
+msgid "%d users logged out"
+msgstr "%d користувачів вийшло"
+
+msgid "%s MB"
+msgstr "%s MB"
+
+msgid "%d photos moved"
+msgstr "%d фотографій переміщено"
+
+msgid "%d photos edited"
+msgstr "%d фотографій відредаговано"
+
+msgid "%d photos deleted"
+msgstr "%d фотографій видалено"
+
+msgid "%d photos added"
+msgstr "%d фотографій додано"
+
+msgid "%d photo moved"
+msgstr "%d фото переміщено"
+
+msgid "%d photo edited"
+msgstr "%d фото відредаговано"
+
+msgid "%d photo deleted"
+msgstr "%d фото видалено"
+
+msgid "%d photo added"
+msgstr "%d фото додано"
+
+msgid "%d groups moved"
+msgstr "%d груп переміщено"
+
+msgid "%d groups edited"
+msgstr "%d груп відредаговано"
+
+msgid "%d groups deleted"
+msgstr "%d груп видалено"
+
+msgid "%d groups added"
+msgstr "%d груп додано"
+
+msgid "%d group moved"
+msgstr "%d група переміщена"
+
+msgid "%d group edited"
+msgstr "%d група відредагована"
+
+msgid "%d group deleted"
+msgstr "%d група видалена"
+
+msgid "%d group added"
+msgstr "%d група додана"
+
+msgid "%d album added"
+msgstr "%d альбом додано"
+
+msgid "%d album deleted"
+msgstr "%d альбом видалено"
+
+msgid "%d album edited"
+msgstr "%d альбом відредаговано"
+
+msgid "%d albums added"
+msgstr "%d альбомів додано"
+
+msgid "%d albums deleted"
+msgstr "%d альбомів видалено"
+
+msgid "%d albums edited"
+msgstr "%d альбомів відредаговано"
+
+msgid "You have %s1 orphan : %s2"
+msgstr "Ви маєте %s1 відв'язано: %s2"
+
+msgid "Your selection"
+msgstr "Ваш вибір"
+
+msgid "action successfully performed."
+msgstr "дія успішно виконана."
+
+msgid "add"
+msgstr "додати"
+
+msgid "and %d more"
+msgstr "і ще %d"
+
+msgid "and %s others"
+msgstr "і %s інших"
+
+msgid "between %s and %s"
+msgstr "між %s та %s"
+
+msgid "calculated"
+msgstr "підраховано"
+
+msgid "deletion"
+msgstr "видалення"
+
+msgid "edit"
+msgstr "редагування"
+
+msgid "in administration"
+msgstr "на адмініструванні"
+
+msgid "login"
+msgstr "вхід"
+
+msgid "logout"
+msgstr "вихід"
+
+msgid "months ago"
+msgstr "місяців тому"
+
+msgid "move"
+msgstr "переместити"
+
+msgid "never calculated"
+msgstr "ніколи не розраховано"
+
+msgid "right now"
+msgstr "зараз"
+
+msgid "since the beginning"
+msgstr "з початку"
+
+msgid "to"
+msgstr "к"
+
+msgid "This plugin was updated less than 6 months ago"
+msgstr "Цей плагін був оновлений менш ніж 6 місяців по тому."
+
+msgid "Try now !"
+msgstr "Спробуй зараз!"
+
+msgid "Understood, do not show again"
+msgstr "Розумію, не показуй мені це знову"
+
+msgid "Unlock it"
+msgstr "Розблокувати це"
+
+msgid "Unlocked album"
+msgstr "Розблокований альбом"
+
+msgid "Unset as group for new users"
+msgstr "Скасувати як групу для нових користувачів"
+
+msgid "Update"
+msgstr "Оновити"
+
+msgid "Upload Formats"
+msgstr "Формати завантаження"
+
+msgid "User \"%s\" dissociated from this group"
+msgstr "Користувача \"%s\" від'єднано від цієї групи"
+
+msgid "User associated"
+msgstr "Користувача додано"
+
+msgid "User updated"
+msgstr "Користувача оновлено"
+
+msgid "Users not logged in will have these settings applied, these settings are used by default for new users"
+msgstr "До користувачів, які не ввійшли в систему, будуть застосовані ці налаштування. Також ці налаштування використовуються за замовчуванням для нових користувачів"
+
+msgid "Version %s"
+msgstr "Версія %s"
+
+msgid "Visit history"
+msgstr "Історія відвыдувань"
+
+msgid "Visited"
+msgstr "Відвідано"
+
+msgid "Webmaster status required"
+msgstr "Потрібен статус веб-мастера"
+
+msgid "While restoring this plugin, it will be reset to its original parameters and associated data is going to be reset"
+msgstr "Під час відновлення цього плагіна його початкові параметри та пов’язані дані буде скинуто"
+
+msgid "Yes, rename"
+msgstr "Так, перейменуй"
+
+msgid "You have %d orphan tags %s"
+msgstr "Ви маєте %d відв'язаних тегів %s"
+
+msgid "You have %s inactive plugins"
+msgstr "Ви маєте %s неактивних плагінів"
+
+msgid "Tag Manager"
+msgstr "Тег Менеджер"
+
+msgid "Tag name"
+msgstr "Назва тегу"
+
+msgid "Tag(s) \\{%s1\\} succesfully merged into \"%s2\""
+msgstr "Тег(и) \\{%s1\\} успішно об'єднано в \"%s2\""
+
+msgid "Tags \\{%s\\} succesfully deleted"
+msgstr "Теги \\{%s\\} успішно видалено"
+
+msgid "The %d tags on this page are selected"
+msgstr "Теги %d на цій сторінці вибрано"
+
+msgid "The best is to have them made automatically on a regular basis."
+msgstr "Найкраще, щоб вони регулярно створювалися автоматично."
+
+msgid "The original picture will be detected with the filename (without extension)."
+msgstr "Вихідне зображення буде виявлено за назвою файлу (без розширення)."
+
+msgid "The other tags will be removed"
+msgstr "Інші теги буде видалено"
+
+msgid "Theme"
+msgstr "Тема"
+
+msgid "There is multiple image in the database with the following names : %s."
+msgstr "У базі даних є декілька зображень із такими назвами: %s."
+
+msgid "This album is currently locked, visible only to administrators."
+msgstr "Цей альбом зараз заблоковано, його бачать лише адміністратори."
+
+msgid "This albums is already in related categories list"
+msgstr "Ці альбоми вже є в списку пов’язаних альбомів"
+
+msgid "This is already the default theme"
+msgstr "Це вже тема за замовчуванням"
+
+msgid "This photo is an orphan"
+msgstr "Це фото не зв'язано"
+
+msgid "This photo no longer exists"
+msgstr "Це фото більш не існує"
+
+msgid "This picture is physically linked to this album, you can't dissociate them"
+msgstr "Це фото фізично зв'язано з цим альбомом, ви не можете відв'язати його. "
+
+msgid "This plugin has no recent update"
+msgstr "Цей плагін немає оновлень."
+
+msgid "This plugin have been updated recently"
+msgstr "Цей плагін був оновлений нещодавно"
+
+msgid "This plugin have no update since 3 years ! It may be outdated"
+msgstr "Цей плагін не має оновлень вже 3 рокі. Мабуть він застарілий."
+
+msgid "This plugin is incompatible with your version"
+msgstr "Цей плагін несумісний з вашою версією."
+
+msgid "Select an album... or type it!"
+msgstr "Оберіть альбом ... чи набери назву."
+
+msgid "Select groups or type them"
+msgstr "Оберіть групу чи набери назву."
+
+msgid "Selected user"
+msgstr "Обраний користувач"
+
+msgid "Selection mode"
+msgstr "Обраний режім"
+
+msgid "Sep"
+msgstr "Вер"
+
+msgid "Set as default"
+msgstr "Встановити по замовчанню"
+
+msgid "Set as group for new users"
+msgstr "Встановити як групу для нових користувачей"
+
+msgid "Show"
+msgstr "Показати"
+
+msgid "Show beta test plugins"
+msgstr "Показати бета-версії плагінів"
+
+msgid "Show inactive plugins"
+msgstr "Показати неактивні плагіни"
+
+msgid "Show plugins compatible with previous version of Piwigo"
+msgstr "Показати плагіни від попередніх версії Piwigo"
+
+msgid "Show sub-albums"
+msgstr "Показати під-альбоми"
+
+msgid "Showing %s users out of %s"
+msgstr "Показано %s користувачів із %s"
+
+msgid "Shrink"
+msgstr "Скоротити"
+
+msgid "Some photos are missing from your file system. Details provided by plugin Check Uploads"
+msgstr "Деякі фотографії відсутні у вашій файловій системі. Деталі надає плагін \"Перевірити завантаження\""
+
+msgid "Storage"
+msgstr "Зберігання"
+
+msgid "Synchronization"
+msgstr "Сінхронізація"
+
+msgid "Tag \"%s\" created"
+msgstr "Тег \"%s\" створено"
+
+msgid "Tag \"%s\" succesfully deleted"
+msgstr "Тег \\\"%s\\\" успішно видалено"
+
+msgid "Tag \"%s1\" renamed in \"%s2\""
+msgstr "Тег \\\"%s1\\\" перейменовано на \\\"%s2\\\""
+
+msgid "Place last"
+msgstr "Місце останнє"
+
+msgid "Plugin \"%s\" deleted!"
+msgstr "Плагін \"%s\" видалено!"
+
+msgid "Plugin \"%s\" has been activated!"
+msgstr "Плагін \"%s\" активовано!"
+
+msgid "Portraits"
+msgstr "Портрети"
+
+msgid "Promote mobile app on mobile devices"
+msgstr "Рекламуйте мобільний додаток на мобільних пристроях"
+
+msgid "Properties of abums"
+msgstr "Налаштування альбому"
+
+msgid "Purge Actions"
+msgstr "Очистити дії"
+
+msgid "Purge Cache"
+msgstr "Очистити кеш"
+
+msgid "Put at the root"
+msgstr "Помістити в корень"
+
+msgid "Rating greater than"
+msgstr "Рейтинг більш ніж"
+
+msgid "Registered"
+msgstr "Зареєстровано"
+
+msgid "Remove thumbnail"
+msgstr "Видалити мініатюру"
+
+msgid "Rename \"%s\""
+msgstr "Перейменувати \"%s\""
+
+msgid "Restored"
+msgstr "Відновлено"
+
+msgid "Review"
+msgstr "Передивитись"
+
+msgid "Root"
+msgstr "Корень"
+
+msgid "Search albums"
+msgstr "Пошук альбомів"
+
+msgid "Search tips"
+msgstr "Пошук підказок"
+
+msgid "Select"
+msgstr "Виберіть"
+
+msgid "Select all %d tags"
+msgstr "Виберіть усі теги %d"
+
+msgid "Name field must not be empty"
+msgstr "Назва повинна бути не порожньою"
+
+msgid "Name is already taken"
+msgstr "Назва вже зайнята"
+
+msgid "New user added"
+msgstr "Новий користувач доданий"
+
+msgid "No access to administration, can see private content with appropriate permissions."
+msgstr "Немає доступу до адміністрування, може переглядати приватний вміст з відповідними дозволами."
+
+msgid "No format for this picture"
+msgstr "Немає формату для цього фото"
+
+msgid "No picture found with the following name : %s."
+msgstr "Фото з іменем %s не знайдено"
+
+msgid "No plugin activated"
+msgstr "Додаток не актівоввано"
+
+msgid "No research in progress"
+msgstr "Дослідження не проводяться"
+
+msgid "No search in progress"
+msgstr "Пошук не проводиться"
+
+msgid "No, I have changed my mind"
+msgstr "Ні, я змінив свою думку"
+
+msgid "Nov"
+msgstr "Лис"
+
+msgid "Object"
+msgstr "Об'єкт"
+
+msgid "Oct"
+msgstr "Жов"
+
+msgid "On %d rating(s)"
+msgstr "На %d рейтінгу"
+
+msgid "Only admins in a specific group"
+msgstr "Тільки для адміну групи"
+
+msgid "Photos per page"
+msgstr "Фото на сторінку"
+
+msgid "Picture to associate formats with"
+msgstr "Зображення для пов’язування форматів"
+
+msgid "Piwigo core"
+msgstr "Ядро Piwigo"
+
+msgid "Piwigo is also on mobile."
+msgstr "Piwigo також працює на мобільному"
+
+msgid "Place first"
+msgstr "Спершу розмести "
+
+msgid "Jul"
+msgstr "Лип"
+
+msgid "Jun"
+msgstr "Чер"
+
+msgid "Keep them"
+msgstr "Зберегти це"
+
+msgid "Language"
+msgstr "Мова"
+
+msgid "Last revision date is newer than"
+msgstr "Остання ревізія новіша ніж"
+
+msgid "Last visit"
+msgstr "Останній візит "
+
+msgid "Latest Piwigo news"
+msgstr "Останні новини Piwigo"
+
+msgid "Line View"
+msgstr "Вид рядків"
+
+msgid "Locked album"
+msgstr "Закритий альбом"
+
+msgid "Locked albums are disabled for maintenance. Only administrators can view them in the gallery. Lock this album will also lock his Sub-albums"
+msgstr "Заблоковані альбоми вимкнено для обслуговування. Лише адміністратори можуть переглядати їх у галереї. Блокування цього альбому також заблокує його під-альбоми."
+
+msgid "Manage album photos"
+msgstr "Керувати фото в альбомі"
+
+msgid "Manage sub-albums"
+msgstr "Керувати під-альбомами"
+
+msgid "Manage users"
+msgstr "Керувати користувачами"
+
+msgid "Manage users with user manager"
+msgstr "Керувати користувачами за допомогою менеджера користувачей"
+
+msgid "Mar"
+msgstr "Бер"
+
+msgid "May"
+msgstr "Тра"
+
+msgid "Memories"
+msgstr "Сувеніри"
+
+msgid "Merge"
+msgstr "Зліти"
+
+msgid "Modified"
+msgstr "Модіфіковано"
+
+msgid "More information"
+msgstr "Більш інформації"
+
+msgid "Expand"
+msgstr "Розширити"
+
+msgid "Extensions"
+msgstr "Розширення"
+
+msgid "Feb"
+msgstr "Лют"
+
+msgid "File type: %s"
+msgstr "Тип файлу: %s"
+
+msgid "Filters"
+msgstr "Фільтри"
+
+msgid "Formats"
+msgstr "Формати"
+
+msgid "Generate random password"
+msgstr "Згенерувати випадковий пароль"
+
+msgid "Global Gallery Actions"
+msgstr "Глобальні дії над галереєю"
+
+msgid "Group \"%s\" succesfully deleted"
+msgstr "Група \"%s\" успішно видалена"
+
+msgid "Group added"
+msgstr "Група додана"
+
+msgid "Group renamed"
+msgstr "Група перейменована"
+
+msgid "Group(s) \\{%s1\\} succesfully merged into \"%s2\""
+msgstr "Група \\{%s1\\} успішно додана до \"%s2\""
+
+msgid "Groups \\{%s\\} succesfully deleted"
+msgstr "Групи \\{%s\\} успішно видалено"
+
+msgid "Has access to administration. Can only manage content: photos/albums/users/tags/groups."
+msgstr "Має доступ до адміністрування. Можете керувати вмістом: фото/альбоми/користувачі/теги/групи"
+
+msgid "Has access to all administration functionnalities. Can manage both configuration and content."
+msgstr "Має доступ до всіх функцій адміністрування. Може керувати як конфігурацією, так і вмістом."
+
+msgid "Hide sub-albums"
+msgstr "Сховати під-альбоми"
+
+msgid "If anything bad happens during the update, you would be able to restore a backup."
+msgstr "Якщо під час оновлення трапиться щось погане, ви зможете відновити з резервної копії."
+
+msgid "Install Piwigo on mobile"
+msgstr "Встановити Piwigo на мобільний"
+
+msgid "Installed on %s, %s"
+msgstr "Встановлено %s, %s"
+
+msgid "Jan"
+msgstr "Січ"
+
+msgid "Delete user"
+msgstr "Видалити користувача"
+
+msgid "Details"
+msgstr "Деталі"
+
+msgid "Detect and avoid duplicates during upload"
+msgstr "Виявляти та уникати дублікатів під час завантаження"
+
+msgid "Disallow comments for sub-albums"
+msgstr "Заборонити коменті для під-альбомів"
+
+msgid "Discover"
+msgstr "Відкрити"
+
+msgid "Display"
+msgstr "Показати"
+
+msgid "Displays a banner to install or open the official Piwigo app"
+msgstr "Відображає банер для встановлення або відкриття офіційної програми Piwigo"
+
+msgid "Dissociate user from this group"
+msgstr "Видалити користувача з групи"
+
+msgid "Download all activities"
+msgstr "Завантажити усі активності"
+
+msgid "Downloaded"
+msgstr "Завантажено"
+
+msgid "Drag and drop to reorder albums"
+msgstr "Перетягніть, щоб змінити порядок альбомів"
+
+msgid "During upload, if Piwigo detects the photo already exists, associate the existing photo to the destination album, without duplicating file"
+msgstr "Під час завантаження, якщо Piwigo виявить, що фотографія вже існує, пов’яжіть наявну фотографію з цільовим альбомом без дублювання файлу"
+
+msgid "Edit"
+msgstr "Редагування"
+
+msgid "Edit guest user"
+msgstr "Редагувати гостя"
+
+msgid "Edit photo #%s"
+msgstr "Редагувати фото #%s"
+
+msgid "Edited on %s"
+msgstr "Редагувати %s"
+
+msgid "Email"
+msgstr "Електронна пошта"
+
+msgid "Email Adress"
+msgstr "Адреса електронної пошти"
+
+msgid "Equivalent to deactivation. The user is still in the list, but can no longer log in."
+msgstr "Аналог деактивації. Користувач залишається у списку але не може залогінитись. "
+
+msgid "Error when trying to detect formats"
+msgstr "Помилка під час виявлення форматів"
+
+msgid "Certification higher or equal to"
+msgstr "Сертифікація не нижче"
+
+msgid "Change Password"
+msgstr "Змінити пароль"
+
+msgid "Choose which tag to merge these tags into"
+msgstr "Виберіть, у який тег об’єднати ці теги"
+
+msgid "Close"
+msgstr "Закрити"
+
+msgid "Comments allowed for sub-albums"
+msgstr "Коменти дозволено для під-альбомів"
+
+msgid "Comments disallowed for sub-albums"
+msgstr "Коменти заборонені для під-альбомів"
+
+msgid "Create a new album at root"
+msgstr "Створити новий альбом у корені"
+
+msgid "Create a sub-album of \"%s\""
+msgstr "Створити під-альбом для \"%s\""
+
+msgid "Created"
+msgstr "Створено"
+
+msgid "Created on %s"
+msgstr "Створено на \"%s\""
+
+msgid "Current Version"
+msgstr "Поточна версія"
+
+msgid "Currently running version %s"
+msgstr "Зараз використовується версия \"%s\""
+
+msgid "Deactivated"
+msgstr "Деактівовано"
+
+msgid "Dec"
+msgstr "Гру"
+
+msgid "Delete %s format ?"
+msgstr "Видалити %s формат?"
+
+msgid "Delete orphan tags ?"
+msgstr "Видалити незв'язані теги?"
+
+msgid "Delete tag \"%s\"?"
+msgstr "Видалити тег \"%s\"?"
+
+msgid "Delete tags \\{%s\\}?"
+msgstr "Видалити теги  \\{%s\\}?"
+
+msgid "Delete them"
+msgstr "Видалити це"
+
+msgid "Delete these sizes"
+msgstr "Видалити ці розміри"
+
+msgid "Are you sure you want to delete the theme \"%s\"?"
+msgstr "Ви впевнені що бажаєте видалити тему \"%s\"?"
+
+msgid "Are you sure you want to delete the user \"%s\"?"
+msgstr "Ви впевнені що бажаєте видалити користувача \"%s\"?"
+
+msgid "Are you sure you want to delete this site?"
+msgstr "Ви впевнені що бажаєте видалити цей сайт?"
+
+msgid "Are you sure you want to delete this theme?"
+msgstr "Ви впевнені що бажаєте видалити цю тему?"
+
+msgid "Are you sure you want to delete this?"
+msgstr "Ви впевнені що бажаєте видалити це?"
+
+msgid "Are you sure you want to install the plugin \"%s\"?"
+msgstr "Ви впевнені що бажаєте встановити додаток \"%s\"?"
+
+msgid "Are you sure you want to lock the gallery?"
+msgstr "Ви впевнені що бажаєте зачинити галерею?"
+
+msgid "Are you sure you want to restore the plugin \"%s\"?"
+msgstr "Ви впевнені що бажаєте відновити додаток \"%s\"?"
+
+msgid "Are you sure you want to restore this plugin?"
+msgstr "Ви впевнені що бажаєте відновити цей додаток?"
+
+msgid "Are you sure you want to restore to default settings?"
+msgstr "Ви впевнені що бажаєте відновити налаштування по замовчуванню?"
+
+msgid "Are you sure you want to uninstall the plugin \"%s\"?"
+msgstr "Ви впевнені що бажаєте видалити додаток \"%s\"?"
+
+msgid "Are you sure you want to unlock the gallery?"
+msgstr "Ви впевнені що бажаєте відкрити галерею?"
+
+msgid "Are you sure you want to update all extensions?"
+msgstr "Ви впевнені що бажаєте обновити усі розширення?"
+
+msgid "Associate User"
+msgstr "Підв'язати користувача"
+
+msgid "At least 2 selected tags are needed to merge"
+msgstr "Для об’єднання потрібні принаймні 2 вибрані теги"
+
+msgid "Aug"
+msgstr "Сер"
+
+msgid "Authorize comments"
+msgstr "Дозволити коменті"
+
+msgid "Average last 12 months"
+msgstr "У середньому за останні 12 місяців"
+
+msgid "Cache size"
+msgstr "Розмір кешу"
+
+msgid "Can be shared by several individuals without conflict (they cannot change the password)."
+msgstr "Може використовуватися кількома особами без конфлікту (вони не можуть змінити пароль)."
+
+msgid "Add another set of formats"
+msgstr "Додати інший набір форматів"
+
+msgid "Add as filter"
+msgstr "Додати як фільтр"
+
+msgid "Add formats"
+msgstr "Додати формати"
+
+msgid "Additional filters"
+msgstr "Додаткові фільтри"
+
+msgid "Advanced filters"
+msgstr "Просунуті фільтри"
+
+msgid "Album name must not be empty"
+msgstr "Назва альбому не повинно бути порожнім "
+
+msgid "Album search tool"
+msgstr "Засіб пошуку альбомів"
+
+msgid "All admins"
+msgstr "Усі альбоми"
+
+msgid "Allow comments for sub-albums"
+msgstr "Дозволяти коменти для під-альбомів"
+
+msgid "Always have a backup of your database and files."
+msgstr "Завжди майте резервну копію вашої бази даних та файлів."
+
+msgid "Apply an automatic order to root albums"
+msgstr "Застосуйте автоматичний порядок до кореневих альбомів"
+
+msgid "Apply to direct sub-albums"
+msgstr "Застосуйте безпосередньо до під-альбомів"
+
+msgid "Apply to root albums"
+msgstr "Застосуйте до кореневого альбому"
+
+msgid "Apply to the whole hierarchy"
+msgstr "Застосуйте до всієї ієрархії "
+
+msgid "Apr"
+msgstr "Апр"
+
+msgid "Are you sure you want to delete all sizes?"
+msgstr "Ви впевнені що бажаєте видалити усі розміри?"
+
+msgid "Are you sure you want to delete group \"%s\"?"
+msgstr "Ви впевнені що бажаєте видалити групу \"%s\"?"
+
+msgid "Are you sure you want to delete the language \"%s\"?"
+msgstr "Ви впевнені що бажаєте видалити мову \"%s\"?"
+
+msgid "Are you sure you want to delete the plugin \"%s\"?"
+msgstr "Ви впевнені що бажаєте видалити додаток \"%s\"?"
+
+msgid "Are you sure you want to delete the ratings of the user \"%s\"?"
+msgstr "Ви впевнені що бажаєте видалити рейтинг для користувача \"%s\"?"
+
+msgid "%s status is required to edit parameters."
+msgstr "%s статус потрібен для редагування параметрів"
+
+msgid "%sGB"
+msgstr "%s ГБ"
+
+msgid "%sMB"
+msgstr "%s Мб"
+
+msgid "<b>%d+</b> albums found, try to refine the search"
+msgstr "<b>%d+</b> альбомів знайдено, спробуйте іншій пошук"
+
+msgid "<b>%d</b> albums found"
+msgstr "<b>%d</b> альбомів знайдено"
+
+msgid "<b>%d</b> filtered user"
+msgstr "<b>%d</b> відфільтровано користувачів"
+
+msgid "<b>%d</b> filtered users"
+msgstr "<b>%d</b> відфільтровано користувачів"
+
+msgid "<b>%d</b> tag found"
+msgstr "<b>%d</b> тегів знайдено"
+
+msgid "<b>%d</b> tag selected"
+msgstr "<b>%d</b> тегів обрано"
+
+msgid "<b>%d</b> tags found"
+msgstr "<b>%d</b> тегів знайдено"
+
+msgid "<b>1</b> album found"
+msgstr "<b>1</b> альбом знайдено"
+
+msgid "Activate button \"%s\""
+msgstr "Активувати кнопку \"%s\""
+
+msgid "Activated"
+msgstr "Активовано"
+
+msgid "Activated plugin list"
+msgstr "Лист активованих додатків"
+
+msgid "Activity"
+msgstr "Активність"
+
+msgid "Activity peak in the last weeks"
+msgstr "Найбільша активність минулого тижня"
+
+msgid "Activity time from"
+msgstr "Час активности з"
+
+msgid "Add New Plugin"
+msgstr "Додати новий додаток"
+
+msgid "Add User"
+msgstr "Додати користувача"
+
+msgid "Add a new user"
+msgstr "Додати нового користувача"
+
+msgid "%d Activities"
+msgstr "%d Активностей"
+
+msgid "%d Activity"
+msgstr "%d Активності"
+
+msgid "%d files"
+msgstr "%d файлів"
+
+msgid "%d formats uploaded for %d photos"
+msgstr "%d форматів завантажено для %d фото"
+
+msgid "%d in whole branch"
+msgstr "%d в гілці"
+
+msgid "%d including sub-albums"
+msgstr "%d враховуючи під-альбоми"
+
+msgid "%d pictures in sub-albums"
+msgstr "%d фото в під-альбомах"
+
+msgid "%d tag added"
+msgstr "%d тегів додано"
+
+msgid "%d tag deleted"
+msgstr "%d тегів видалено"
+
+msgid "%d tag edited"
+msgstr "%d тегів відредаговано"
+
+msgid "%d tag moved"
+msgstr "%d тегу переміщено"
+
+msgid "%d tags added"
+msgstr "%d тегів додано"
+
+msgid "%d tags deleted"
+msgstr "%d тегів видалено"
+
+msgid "%d tags edited"
+msgstr "%d тегів редаговано"
+
+msgid "%d tags moved"
+msgstr "%d тегів переміщено"
+
+msgid "%s line"
+msgstr "%s рядку"
+
+msgid "%s lines"
+msgstr "%s рядків"
+
+msgid "%s pixels, %.2f MB"
+msgstr "%s пікселів, %.2f Мб"
+
+msgid "%s plugin found"
+msgstr "<b>%s</b> додатків знайдено"
+
+msgid "%s plugins found"
+msgstr "<b>%s</b> додатків знайдено"
+

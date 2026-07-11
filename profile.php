@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\AccessLevel;
+use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 // customize appearance of the site for a user
@@ -31,7 +33,7 @@ if (! defined('PHPWG_ROOT_PATH')) {// direct script access
     // +-----------------------------------------------------------------------+
     // | Check Access and exit when user status is not ok                      |
     // +-----------------------------------------------------------------------+
-    check_status(ACCESS_CLASSIC);
+    check_status(AccessLevel::Classic);
 
     if (! empty($_POST)) {
         check_pwg_token();
@@ -52,7 +54,7 @@ if (! defined('PHPWG_ROOT_PATH')) {// direct script access
     $default_user_id = is_numeric($conf['default_user_id']) ? (int) $conf['default_user_id'] : 0;
     $query = '
 SELECT ' . implode(',', $fields) . '
-  FROM ' . USER_INFOS_TABLE . '
+  FROM ' . Tables::userInfos() . '
   WHERE user_id = ' . $default_user_id . '
 ;';
     $result = pwg_query($query);
@@ -110,7 +112,7 @@ SELECT ' . implode(',', $fields) . '
 
         $user['language'] = $lang_cookie;
         single_update(
-            USER_INFOS_TABLE,
+            Tables::userInfos(),
             [
                 'language' => $lang_cookie,
             ],
@@ -250,7 +252,7 @@ function save_profile_from_post(array $userdata, &$errors): bool
         if (! defined('IN_ADMIN')) {// changing password requires old password
             $query = '
   SELECT ' . $user_fields['password'] . ' AS password
-    FROM ' . USERS_TABLE . '
+    FROM ' . Tables::users() . '
     WHERE ' . $user_fields['id'] . ' = \'' . $user_id . '\'
   ;';
             $row = pwg_db_fetch_row(pwg_query($query));
@@ -332,7 +334,7 @@ function save_profile_from_post(array $userdata, &$errors): bool
             }
 
             mass_updates(
-                USERS_TABLE,
+                Tables::users(),
                 [
                     'primary' => [$user_fields['id']],
                     'update' => $fields,
@@ -367,7 +369,7 @@ function save_profile_from_post(array $userdata, &$errors): bool
                 }
             }
             mass_updates(
-                USER_INFOS_TABLE,
+                Tables::userInfos(),
                 [
                     'primary' => ['user_id'],
                     'update' => $fields,

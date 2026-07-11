@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
@@ -91,7 +92,7 @@ SELECT
   count(*) as all_comments,
   sum(validated = \'true\') as validated,
   sum(validated = \'false\') as pending
-FROM ' . COMMENTS_TABLE . '
+FROM ' . Tables::comments() . '
 WHERE ' . implode(' AND ', $where_clauses) . '
 ;';
 
@@ -135,12 +136,12 @@ SELECT
     i.date_available,
     validated,
     c.anonymous_id
-  FROM ' . COMMENTS_TABLE . ' AS c
-    INNER JOIN ' . IMAGES_TABLE . ' AS i
+  FROM ' . Tables::comments() . ' AS c
+    INNER JOIN ' . Tables::images() . ' AS i
       ON i.id = c.image_id
-    LEFT JOIN ' . USERS_TABLE . ' AS u
+    LEFT JOIN ' . Tables::users() . ' AS u
       ON u.' . $user_fields['id'] . ' = c.author_id
-    LEFT JOIN ' . USER_INFOS_TABLE . ' AS ui
+    LEFT JOIN ' . Tables::userInfos() . ' AS ui
       ON ui.user_id = c.author_id
   WHERE ' . implode(' AND ', $where_clauses) . '
   ORDER BY c.date DESC
@@ -197,7 +198,7 @@ SELECT
 SELECT
   MIN(date) AS started_at,
   MAX(date) AS ended_at
-FROM ' . COMMENTS_TABLE . '
+FROM ' . Tables::comments() . '
 WHERE ' . implode(' AND ', $where_clauses) . '
 ;';
 
@@ -212,7 +213,7 @@ SELECT
   author,
   author_id,
   count(*) as nb_authors
-FROM ' . COMMENTS_TABLE . '
+FROM ' . Tables::comments() . '
 WHERE ' . implode(' AND ', $where_clauses) . '
 GROUP BY author_id
 ;';

@@ -1,0 +1,65 @@
+# Piwigo translation — ko_KR
+# Source: upgrade.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ko_KR\n"
+"Plural-Forms: nplurals=1; plural=(0);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Only administrator can run upgrade: please sign in below."
+msgstr "관리자만 업그레이드를 수행 할 수 있습니다: 로그인하십시오."
+
+msgid "SQL queries"
+msgstr "SQL 쿼리"
+
+msgid "Statistics"
+msgstr "통계"
+
+msgid "Upgrade"
+msgstr "업그레이드"
+
+msgid "Upgrade from version %s to %s"
+msgstr "버전 %s에서 %s로 업그레이드"
+
+msgid "Upgrade informations"
+msgstr "업그레이드 정보"
+
+msgid "You do not have access rights to run upgrade"
+msgstr "업그레이드를 수행 할 권한이 없습니다"
+
+msgid "total SQL time"
+msgstr "총 SQL 수행시간"
+
+msgid "total upgrade time"
+msgstr "총 업그레이드 수행시간"
+
+msgid "This page proposes to upgrade your database corresponding to your old version of Piwigo to the current version. The upgrade assistant thinks you are currently running a <strong>release %s</strong> (or equivalent)."
+msgstr "이 페이지는 이전 버전의 Piwigo에서 새 버전으로 데이터베이스로 업그레이드할 것을 제안합니다. 업그레이드 도우미가 <strong>정식 버전 %s</strong> (또는 유사한 버전)이 동작 중인 것으로 확인됩니다."
+
+msgid "Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem."
+msgstr "문제가 발생하었다면 [관리>도구>유지보수]에서 유지보수 점검을 실행하십시오."
+
+msgid "User permissions and group permissions have been erased"
+msgstr "사용자와 그룹의 권한이 제거됨"
+
+msgid "Only thumbnails prefix and webmaster mail address have been saved from previous configuration"
+msgstr "이전 환경설정에서 썸네일의 접두어와 웹마스터의 메일 주소만 저장되었습니다"
+
+msgid "As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:"
+msgstr "예방을 위해서 다음의 플러그인들이 비활성화되었습니다. 플러그인들을 재활성화하기 전에 업그레이드할 수 있는지 확인해야 합니다:"
+
+msgid "As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:"
+msgstr "예방을 위해서 다음의 테마들이 비활성화되었습니다. 테마들을 재활성화하기 전에 업그레이드할 수 있는지 확인해야 합니다:"
+
+msgid "All sub-albums of private albums become private"
+msgstr "비공개 앨범의 모든 하위 앨범들은 비공개가 됩니다"
+
+msgid "In <i>%s</i>, before <b>?></b>, insert:"
+msgstr "<i>%s</i>에서 <b>?></b>전에 입력:"
+
+msgid "Discover what's new in Piwigo %s"
+msgstr "Piwigo %s의 새로운 기능을 확인하세요"
+

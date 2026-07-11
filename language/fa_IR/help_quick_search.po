@@ -1,0 +1,71 @@
+# Piwigo translation — fa_IR
+# Source: help_quick_search.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: fa_IR\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Searches photos by size in pixels."
+msgstr "جستجوی عکس  بر اساس اندازه پیکسل"
+
+msgid "Searches photos by rating."
+msgstr "جستجو عکس بر اساس رتبه"
+
+msgid "Searches photos by posted date."
+msgstr "جستجوی  عکس بر اساس  زمان ارسال"
+
+msgid "Searches only in tag names without looking at photo titles or descriptions."
+msgstr ".فقط در نام برچسب‌ها جستجو می‌کند و به عناوین یا توضیحات عکس‌ها نگاه نمی‌کند"
+
+msgid "Searches photos by its numeric identifier in Piwigo."
+msgstr "جستجو می‌کند  Piwigoعکس را بر اساس شناسه عددی در  "
+
+msgid "Searches photos by file size."
+msgstr " جستجو بر اساس اندازه فایل"
+
+msgid "Searches only for photos with the given words in title or description."
+msgstr ".فقط عکس‌هایی را جستجو می‌کند  که کلمات داده شده در عنوان یا توضیحات آنها ذکر شده باشد"
+
+msgid "Searches for photos by number of views."
+msgstr "جستجو برای  عکس  بر اساس تعداد نمایش"
+
+msgid "Searches by file name."
+msgstr "بر اساس نام فایل جستجو‌کن"
+
+msgid "Searches by author."
+msgstr "جستجو‌ بر اساس نویسنده "
+
+msgid "Search using extended syntax"
+msgstr "استفاده جستجوی پیشرفته"
+
+msgid "Others"
+msgstr "دیگران"
+
+msgid "Same principle as for"
+msgstr "همان قاعده ای برای "
+
+msgid "OR inclusive"
+msgstr "یا شامل"
+
+msgid "Here is a list of actions you can perform:"
+msgstr "اینجا یه لیست از کارهایی که می‌تونی انجام بدی"
+
+msgid "Grouping"
+msgstr "دسته بندی"
+
+msgid "Exclude"
+msgstr " مستثنی کردن"
+
+msgid "Exact search"
+msgstr " جستجوی دقیق"
+
+msgid "Add an OR between words."
+msgstr " بین کلمه ها اضافه کنOR"
+
+msgid "Add a dash (-) or NOT before a word to exclude from search. Note that NOT acts as a filtering operator so you cannot have a search containing only NOT operators. You cannot combine OR with NOT (john OR NOT bill is not valid)"
+msgstr "برای حذف یک کلمه از جستجو، قبل از آن یک خط تیره (-) یا NOT اضافه کنید. توجه داشته باشید که NOT به عنوان یک عملگر فیلتر عمل می‌کند، بنابراین نمی‌توانید جستجویی داشته باشید که فقط شامل عملگرهای NOT باشد. نمی‌توانید OR را با NOT ترکیب کنید (john OR NOT bill معتبر نیست)."
+

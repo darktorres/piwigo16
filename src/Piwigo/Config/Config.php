@@ -3142,6 +3142,28 @@ final class Config
     }
 
     /**
+     * Composed accessors replacing 3 of the 52 retired `define()` constants
+     * (PHPWG_THEMES_PATH/PWG_COMBINED_DIR/PWG_DERIVATIVE_DIR) -- not new
+     * SCHEMA keys, just the same composition `include/constants.php` used
+     * to do at boot time (`$themesDir . '/'`, `$dataLocation . 'combined/'`,
+     * `$dataLocation . 'i/'`).
+     */
+    public static function themesPath(): string
+    {
+        return self::themesDir() . '/';
+    }
+
+    public static function combinedDir(): string
+    {
+        return self::dataLocation() . 'combined/';
+    }
+
+    public static function derivativeDir(): string
+    {
+        return self::dataLocation() . 'i/';
+    }
+
+    /**
      * @return array<string>
      */
     public static function apiKeyDuration(): array

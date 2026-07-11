@@ -10,6 +10,8 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Core\Logger;
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Ws\PwgError;
@@ -44,7 +46,7 @@ function ws_add_image_category_relations($image_id, $categories_string, $replace
         if ($replace_mode) {
             $query = '
 DELETE
-  FROM ' . IMAGE_CATEGORY_TABLE . '
+  FROM ' . Tables::imageCategory() . '
   WHERE image_id = ' . $image_id . '
 ;';
             pwg_query($query);
@@ -76,7 +78,7 @@ DELETE
         if ($replace_mode) {
             $query = '
 DELETE
-  FROM ' . IMAGE_CATEGORY_TABLE . '
+  FROM ' . Tables::imageCategory() . '
   WHERE image_id = ' . $image_id . '
 ;';
             pwg_query($query);
@@ -87,7 +89,7 @@ DELETE
 
     $query = '
 SELECT id
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE id IN (' . implode(',', $cat_ids) . ')
 ;';
     // $value_name is given, so every element is a single 'id' column value
@@ -107,7 +109,7 @@ SELECT id
     // in case of replace mode, we first check the existing associations
     $query = '
 SELECT category_id
-  FROM ' . IMAGE_CATEGORY_TABLE . '
+  FROM ' . Tables::imageCategory() . '
   WHERE image_id = ' . $image_id . '
 ;';
     // $value_name is given, so every element is a single 'category_id'
@@ -119,7 +121,7 @@ SELECT category_id
         if (count($to_remove_cat_ids) > 0) {
             $query = '
 DELETE
-  FROM ' . IMAGE_CATEGORY_TABLE . '
+  FROM ' . Tables::imageCategory() . '
   WHERE image_id = ' . $image_id . '
     AND category_id IN (' . implode(', ', $to_remove_cat_ids) . ')
 ;';
@@ -136,7 +138,7 @@ DELETE
     if ($search_current_ranks) {
         $query = '
 SELECT category_id, MAX(`rank`) AS max_rank
-  FROM ' . IMAGE_CATEGORY_TABLE . '
+  FROM ' . Tables::imageCategory() . '
   WHERE `rank` IS NOT NULL
     AND category_id IN (' . implode(',', $new_cat_ids) . ')
   GROUP BY category_id
@@ -170,7 +172,7 @@ SELECT category_id, MAX(`rank`) AS max_rank
     }
 
     mass_inserts(
-        IMAGE_CATEGORY_TABLE,
+        Tables::imageCategory(),
         array_keys($inserts[0]),
         $inserts
     );
@@ -309,8 +311,8 @@ function ws_images_addComment(array $params, PwgServer $service): PwgError|array
 
     $query = '
 SELECT DISTINCT image_id
-  FROM ' . IMAGE_CATEGORY_TABLE . '
-      INNER JOIN ' . CATEGORIES_TABLE . ' ON category_id=id
+  FROM ' . Tables::imageCategory() . '
+      INNER JOIN ' . Tables::categories() . ' ON category_id=id
   WHERE commentable="true"
     AND image_id=' . $params['image_id'] .
       get_sql_condition_FandF(
@@ -377,7 +379,7 @@ function ws_images_getInfo(array $params, PwgServer $service): PwgError|array
 
     $query = '
 SELECT *
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE id=' . $params['image_id'] .
       get_sql_condition_FandF(
           [
@@ -397,7 +399,7 @@ LIMIT 1
     if ($image_row === false || $image_row === null) {
         throw new Exception('ws_images_getInfo(): fetch failed after a non-zero pwg_db_num_rows()');
     }
-    // id is the IMAGES_TABLE primary key, guaranteed numeric; captured
+    // id is the Tables::images() primary key, guaranteed numeric; captured
     // before array_merge() below widens every value of $image_row to mixed.
     assert(is_numeric($image_row['id']));
     $image_id = (int) $image_row['id'];
@@ -405,7 +407,7 @@ LIMIT 1
     // array_merge() with ws_std_get_urls()'s mixed-valued return widens
     // PHPStan's tracked shape for every other key of the original
     // pwg_db_fetch_assoc() row -- restate the columns this function reads
-    // below (id/file: IMAGES_TABLE NOT NULL; name/comment/rating_score:
+    // below (id/file: Tables::images() NOT NULL; name/comment/rating_score:
     // nullable) plus an open tail for the rest of the row and the
     // page_url/element_url/download_url/derivatives keys ws_std_get_urls()
     // injects.
@@ -430,8 +432,8 @@ LIMIT 1
     // -------------------------------------------------------- related categories
     $query = '
 SELECT id, name, permalink, uppercats, global_rank, commentable
-  FROM ' . IMAGE_CATEGORY_TABLE . '
-    INNER JOIN ' . CATEGORIES_TABLE . ' ON category_id = id
+  FROM ' . Tables::imageCategory() . '
+    INNER JOIN ' . Tables::categories() . ' ON category_id = id
   WHERE image_id = ' . $image_id .
       get_sql_condition_FandF(
           [
@@ -515,7 +517,7 @@ SELECT id, name, permalink, uppercats, global_rank, commentable
     if (isset($rating['score'])) {
         $query = '
 SELECT COUNT(rate) AS count, ROUND(AVG(rate),2) AS average
-  FROM ' . RATE_TABLE . '
+  FROM ' . Tables::rate() . '
   WHERE element_id = ' . $image_id . '
 ;';
         $row = pwg_db_fetch_assoc(pwg_query($query));
@@ -539,7 +541,7 @@ SELECT COUNT(rate) AS count, ROUND(AVG(rate),2) AS average
 
     $query = '
 SELECT COUNT(id) AS nb_comments
-  FROM ' . COMMENTS_TABLE . '
+  FROM ' . Tables::comments() . '
   WHERE ' . $where_comments . '
 ;';
     [$nb_comments] = query2array($query, null, 'nb_comments');
@@ -548,7 +550,7 @@ SELECT COUNT(id) AS nb_comments
     if ($nb_comments > 0 and $params['comments_per_page'] > 0) {
         $query = '
 SELECT id, date, author, content
-  FROM ' . COMMENTS_TABLE . '
+  FROM ' . Tables::comments() . '
   WHERE ' . $where_comments . '
   ORDER BY date
   LIMIT ' . $params['comments_per_page'] . '
@@ -637,8 +639,8 @@ function ws_images_rate(array $params, PwgServer $service): mixed
 {
     $query = '
 SELECT DISTINCT id
-  FROM ' . IMAGES_TABLE . '
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id=image_id
+  FROM ' . Tables::images() . '
+    INNER JOIN ' . Tables::imageCategory() . ' ON id=image_id
   WHERE id=' . $params['image_id']
       . get_sql_condition_FandF(
           [
@@ -720,7 +722,7 @@ function ws_images_search(array $params, PwgServer $service): array
     if ((bool) count($image_ids)) {
         $query = '
 SELECT *
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', $image_ids) . ')
 ;';
         $result = pwg_query($query);
@@ -1082,7 +1084,7 @@ function ws_images_setPrivacyLevel(array $params, PwgServer $service): PwgError|
     }
 
     $query = '
-UPDATE ' . IMAGES_TABLE . '
+UPDATE ' . Tables::images() . '
   SET level=' . $params['level'] . '
   WHERE id IN (' . implode(',', $params['image_id']) . ')
 ;';
@@ -1121,7 +1123,7 @@ function ws_images_setRank(array $params, PwgServer $service): array|PwgError
         $query = '
 SELECT
     image_id
-  FROM ' . IMAGE_CATEGORY_TABLE . '
+  FROM ' . Tables::imageCategory() . '
   WHERE category_id = ' . $params['category_id'] . '
   ORDER BY `rank` ASC
 ;';
@@ -1144,7 +1146,7 @@ SELECT
     // does the image really exist?
     $query = '
 SELECT COUNT(*)
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE id = ' . $params['image_id'] . '
 ;';
     $row = pwg_db_fetch_row(pwg_query($query));
@@ -1157,7 +1159,7 @@ SELECT COUNT(*)
     // is the image associated to this category?
     $query = '
 SELECT COUNT(*)
-  FROM ' . IMAGE_CATEGORY_TABLE . '
+  FROM ' . Tables::imageCategory() . '
   WHERE image_id = ' . $params['image_id'] . '
     AND category_id = ' . $params['category_id'] . '
 ;';
@@ -1171,7 +1173,7 @@ SELECT COUNT(*)
     // what is the current higher rank for this category?
     $query = '
 SELECT MAX(`rank`) AS max_rank
-  FROM ' . IMAGE_CATEGORY_TABLE . '
+  FROM ' . Tables::imageCategory() . '
   WHERE category_id = ' . $params['category_id'] . '
 ;';
     $row = pwg_db_fetch_assoc(pwg_query($query));
@@ -1189,7 +1191,7 @@ SELECT MAX(`rank`) AS max_rank
 
     // update rank for all other photos in the same category
     $query = '
-UPDATE ' . IMAGE_CATEGORY_TABLE . '
+UPDATE ' . Tables::imageCategory() . '
   SET `rank` = `rank` + 1
   WHERE category_id = ' . $params['category_id'] . '
     AND `rank` IS NOT NULL
@@ -1199,7 +1201,7 @@ UPDATE ' . IMAGE_CATEGORY_TABLE . '
 
     // set the new rank for the photo
     $query = '
-UPDATE ' . IMAGE_CATEGORY_TABLE . '
+UPDATE ' . Tables::imageCategory() . '
   SET `rank` = ' . $params['rank'] . '
   WHERE image_id = ' . $params['image_id'] . '
     AND category_id = ' . $params['category_id'] . '
@@ -1297,7 +1299,7 @@ function ws_images_addFile(array $params, PwgServer $service): PwgError|bool|nul
 SELECT
     path, file, md5sum,
     width, height, filesize
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE id = ' . $params['image_id'] . '
 ;';
     $result = pwg_query($query);
@@ -1402,7 +1404,7 @@ function ws_images_add(array $params, PwgServer $service): PwgError|array
     if ($params['image_id'] > 0) {
         $query = '
 SELECT COUNT(*)
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE id = ' . $params['image_id'] . '
 ;';
         $row = pwg_db_fetch_row(pwg_query($query));
@@ -1425,7 +1427,7 @@ SELECT COUNT(*)
 
         $query = '
 SELECT COUNT(*)
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE ' . $where_clause . '
 ;';
         $row = pwg_db_fetch_row(pwg_query($query));
@@ -1483,7 +1485,7 @@ SELECT COUNT(*)
 
     if (count(array_keys($update)) > 0) {
         single_update(
-            IMAGES_TABLE,
+            Tables::images(),
             $update,
             [
                 'id' => $image_id,
@@ -1504,7 +1506,7 @@ SELECT COUNT(*)
 
             $query = '
 SELECT id, name, permalink
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE id = ' . $category_id . '
 ;';
             $result = pwg_query($query);
@@ -1580,7 +1582,7 @@ function ws_images_addSimple(array $params, PwgServer $service): PwgError|array
     if ($params['image_id'] > 0) {
         $query = '
 SELECT COUNT(*)
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE id = ' . $params['image_id'] . '
 ;';
         $row = pwg_db_fetch_row(pwg_query($query));
@@ -1623,7 +1625,7 @@ SELECT COUNT(*)
     }
 
     single_update(
-        IMAGES_TABLE,
+        Tables::images(),
         $update,
         [
             'id' => $image_id,
@@ -1660,7 +1662,7 @@ SELECT COUNT(*)
     if (! empty($params['category'])) {
         $query = '
 SELECT id, name, permalink
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE id = ' . $params['category'][0] . '
 ;';
         $result = pwg_query($query);
@@ -1810,7 +1812,7 @@ function ws_images_upload(array $params, PwgServer $service): PwgError|array|nul
         if (isset($params['format_of'])) {
             $query = '
 SELECT *
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE id = ' . $params['format_of'] . '
 ;';
             $images = query2array($query);
@@ -1842,8 +1844,8 @@ SELECT *
             $query = '
 SELECT
   id
-  FROM ' . IMAGES_TABLE . ' AS i
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' as ic ON ic.image_id = i.id
+  FROM ' . Tables::images() . ' AS i
+    INNER JOIN ' . Tables::imageCategory() . ' as ic ON ic.image_id = i.id
   WHERE i.file = \'' . $name . '\'
   AND ic.category_id = ' . $params['category'][0] . '
 ;';
@@ -1869,7 +1871,7 @@ SELECT
     name,
     representative_ext,
     path
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE id = ' . $image_id . '
 ;';
         $image_infos = pwg_db_fetch_assoc(pwg_query($query));
@@ -1880,7 +1882,7 @@ SELECT
         $query = '
 SELECT
     COUNT(*) AS nb_photos
-  FROM ' . IMAGE_CATEGORY_TABLE . '
+  FROM ' . Tables::imageCategory() . '
   WHERE category_id = ' . $params['category'][0] . '
 ;';
         $category_infos = pwg_db_fetch_assoc(pwg_query($query));
@@ -1891,9 +1893,9 @@ SELECT
         $query = '
 SELECT
     COUNT(*)
-  FROM ' . LOUNGE_TABLE . '
+  FROM ' . Tables::lounge() . '
   WHERE category_id = ' . $params['category'][0] . '
-  AND image_id NOT IN (Select image_id from ' . IMAGE_CATEGORY_TABLE . ')
+  AND image_id NOT IN (Select image_id from ' . Tables::imageCategory() . ')
 ;';
         $row = pwg_db_fetch_row(pwg_query($query));
         assert($row !== null);
@@ -1956,7 +1958,7 @@ function ws_images_uploadAsync(array $params, PwgServer &$service): mixed
     if ($params['image_id'] > 0) {
         $query = '
 SELECT COUNT(*)
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE id = ' . $params['image_id'] . '
 ;';
         $row = pwg_db_fetch_row(pwg_query($query));
@@ -2142,7 +2144,7 @@ SELECT COUNT(*)
 
     if (count(array_keys($update)) > 0) {
         single_update(
-            IMAGES_TABLE,
+            Tables::images(),
             $update,
             [
                 'id' => $image_id,
@@ -2233,7 +2235,7 @@ function ws_images_exist(array $params, PwgServer $service): array
 
         $query = '
 SELECT id, md5sum
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE md5sum IN (\'' . implode("','", $md5sums) . '\')
 ;';
         $id_of_md5 = query2array($query, 'md5sum', 'id');
@@ -2259,7 +2261,7 @@ SELECT id, md5sum
 
         $query = '
 SELECT id, file
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE file IN (\'' . implode("','", $filenames) . '\')
 ;';
         $id_of_filename = query2array($query, 'file', 'id');
@@ -2305,7 +2307,7 @@ function ws_images_formats_searchImage(array $params, PwgServer $service): array
 SELECT
     id,
     file
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
 ;';
     $result = pwg_query($query);
     while ((bool) ($row = pwg_db_fetch_assoc($result))) {
@@ -2327,7 +2329,7 @@ SELECT
 SELECT
     image_id,
     ext
-  FROM ' . IMAGE_FORMAT_TABLE . '
+  FROM ' . Tables::imageFormat() . '
 ;';
     $result = pwg_query($query);
     $format_db = [];
@@ -2441,7 +2443,7 @@ function ws_images_formats_delete(array $params, PwgServer $service): PwgError|b
 SELECT
     image_id,
     ext
-  FROM ' . IMAGE_FORMAT_TABLE . '
+  FROM ' . Tables::imageFormat() . '
   WHERE format_id IN (' . implode(',', $format_ids) . ')
 ;';
     $result = pwg_query($query);
@@ -2466,7 +2468,7 @@ SELECT
     id,
     path,
     representative_ext
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', $image_ids) . ')
 ;';
     $result = pwg_query($query);
@@ -2497,7 +2499,7 @@ SELECT
 
     // Delete format in the database
     $query = '
-DELETE FROM ' . IMAGE_FORMAT_TABLE . '
+DELETE FROM ' . Tables::imageFormat() . '
   WHERE format_id IN (' . implode(',', $format_ids) . ')
 ;';
     pwg_query($query);
@@ -2524,7 +2526,7 @@ function ws_images_checkFiles(array $params, PwgServer $service): PwgError|array
 
     $query = '
 SELECT path
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE id = ' . $params['image_id'] . '
 ;';
     $result = pwg_query($query);
@@ -2592,7 +2594,7 @@ function ws_images_setInfo(array $params, PwgServer $service): ?PwgError
 
     $query = '
 SELECT *
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE id = ' . $params['image_id'] . '
 ;';
     $result = pwg_query($query);
@@ -2656,7 +2658,7 @@ SELECT *
         $update['id'] = $params['image_id'];
 
         single_update(
-            IMAGES_TABLE,
+            Tables::images(),
             $update,
             [
                 'id' => $update['id'],
@@ -2681,7 +2683,7 @@ SELECT *
         foreach (explode(',', $params['tag_ids']) as $candidate) {
             $candidate = trim($candidate);
 
-            if ((bool) preg_match(PATTERN_ID, $candidate)) {
+            if ((bool) preg_match(ValidationPattern::ID, $candidate)) {
                 $tag_ids[] = $candidate;
             }
         }
@@ -2863,7 +2865,7 @@ function ws_images_uploadCompleted(array $params, PwgServer $service): PwgError|
     $query = '
 SELECT
     COUNT(*) AS nb_photos
-  FROM ' . IMAGE_CATEGORY_TABLE . '
+  FROM ' . Tables::imageCategory() . '
   WHERE category_id = ' . $params['category_id'] . '
 ;';
     $category_infos = pwg_db_fetch_assoc(pwg_query($query));
@@ -2952,7 +2954,7 @@ function ws_images_syncMetadata(array $params, PwgServer $service): PwgError|arr
     foreach ($params['image_id'] as $image_id) {
         $image_id = trim($image_id);
 
-        if (! (bool) preg_match(PATTERN_ID, $image_id)) {
+        if (! (bool) preg_match(ValidationPattern::ID, $image_id)) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid image_id "' . $image_id . '"');
         }
 
@@ -2965,7 +2967,7 @@ function ws_images_syncMetadata(array $params, PwgServer $service): PwgError|arr
 
     $query = '
 SELECT id
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE id IN (' . implode(', ', $image_ids) . ')
 ;';
     $image_ids = query2array($query, null, 'id');
@@ -3032,7 +3034,7 @@ function ws_images_setCategory(array $params, PwgServer $service): ?PwgError
     $query = '
 SELECT
     id
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE id = ' . $params['category_id'] . '
 ;';
     $categories = query2array($query);

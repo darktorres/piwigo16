@@ -1,0 +1,304 @@
+# Piwigo translation — dv_MV
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: dv_MV\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Language-Name: Dhivehi\n"
+"X-Piwigo-Country: Maldives\n"
+"X-Piwigo-Direction: rtl\n"
+"X-Piwigo-Code: dv\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d އަލްބަމް އާކުރެވިފަ"
+msgstr[1] "%d އަލްބަމްތައް އާކުރެވިފަ"
+
+msgid "%d comment to validate"
+msgstr "%d ޞައްހަކުރެއްވުމަށް ޙިޔާލެއް އެބައިން"
+
+msgid "%d comments to validate"
+msgstr "%d ޞައްހަކުރެއްވުމަށް ހުރި ޙިޔާލުތައް"
+
+msgid "%d new comment"
+msgstr "%d އާ ޙިޔާލު"
+
+msgid "%d new comments"
+msgstr "%d އާ ޙިޔާލުތައް"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d ޙިޔާލު"
+msgstr[1] "%d ޙިޔާލުތައް"
+
+msgid "%d hit"
+msgid_plural "%d hits"
+msgstr[0] "%d ހިޓް"
+msgstr[1] "%d ހިޓްތައް"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "%d އާ ފޮޓޯ"
+msgstr[1] "%d އާ ފޮޓޯތައް"
+
+msgid "%d new user"
+msgstr "%d އާ ޔޫޒާ"
+
+msgid "%d new users"
+msgstr "%d އާ ޔޫޒާތައް"
+
+msgid "About"
+msgstr "އާއި ބެހޭ"
+
+msgid "All tags"
+msgstr "ހުރިހާ ޓެގުތައް"
+
+msgid "Any tag"
+msgstr "އެއްވެސް ޓެގެއް"
+
+msgid "At least one listed rule must be satisfied."
+msgstr ".އެންމެ މަދުވެގެން ބަޔާންކުރެވިފައިވާ އެއް ގަވާއިދާ އެއްގޮތްވާންވާނެ"
+
+msgid "Author"
+msgstr "ޝާއިރު"
+
+msgid "Average rate"
+msgstr "އެވެރެޖް ރޭޓް"
+
+msgid "Albums"
+msgstr "އަލްބަމްތައް"
+
+msgid "Album"
+msgstr "އަލްބަމް"
+
+msgid "Close this window"
+msgstr "މި ވިންޑޯ ލައްޕާލާ"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "(މުޅި އާރު.އެސް.އެސް. ފީޑް (ފޮޓޯތައް, ޙިޔާލުތައް"
+
+msgid "Confirm Password"
+msgstr "ސިއްރުބަހުގެ ޞައްހަކަން ޔަގީންކުރައްވާ"
+
+msgid "Connection settings"
+msgstr "ކަނެކްޝަން ސެޓިންގްސް"
+
+msgid "Login"
+msgstr "ވަންނަވާ"
+
+msgid "Contact webmaster"
+msgstr "ވެރިޔާ އާ ގުޅުއްވާ"
+
+msgid "Create a new account"
+msgstr "އާ އެކައުންޓެއް ހައްދަވާ"
+
+msgid "Created on"
+msgstr "އުފެދިފައިވަނީ"
+
+msgid "Creation date"
+msgstr "އުފެދުނު ތާރިޚު"
+
+msgid "Current password is wrong"
+msgstr "ތި ސިއްރުބަސް ރަންގަޅެއް ނޫން"
+
+msgid "Dimensions"
+msgstr "ޑައިމެންޝަންތައް"
+
+msgid "Display"
+msgstr "ދައްކަވާ"
+
+msgid "Each listed rule must be satisfied."
+msgstr "ހުރިހާ ޝަރުތުތައް ހުރިހަމަ ވާންވާނެ."
+
+msgid "Email address"
+msgstr "އީ-މެއިލް އެޑްރެސް"
+
+msgid "Enter your personnal informations"
+msgstr "އަމިއްލަ މައުލޫމާތުތައް ފުރުއްވާ"
+
+msgid "Error sending email"
+msgstr "އީ-މެއިލް ފޮނުވުމުގައި މައްސަލައެއް ޖެހިއްޖެ"
+
+msgid "File name"
+msgstr "ފައިލްގެ ނަން"
+
+msgid "File"
+msgstr "ފައިލް"
+
+msgid "Filesize"
+msgstr "ފައިލްގެ ބޮޑުމިން"
+
+msgid "Filter and display"
+msgstr "ބައިތަކަށް ބެހުމަށް ފަހު ދައްކަވާ"
+
+msgid "Filter"
+msgstr "ބައިތަކަށް ބައްސަވާ"
+
+msgid "Forgot your password?"
+msgstr "ސިއްރު ބަސް ހަންދާން ނެތުނީތޯ؟"
+
+msgid "Go through the gallery as a visitor"
+msgstr "މެހެމާނެއްގެ ގޮތުގައި މައުރަޒު ބައްލަވާ ލައްވާ"
+
+msgid "Help"
+msgstr "އެހީ"
+
+msgid "Identification"
+msgstr "ކާކުކަން ވަކިކުރުން"
+
+msgid "Photos only RSS feed"
+msgstr "ހަމައެކަނި ފޮޓޯ ހިމެނޭ އާރު.އެސް.އެސް. ފީޑް"
+
+msgid "Keyword"
+msgstr "ކީވޯޑް"
+
+msgid "Notification"
+msgstr "އެންގުންތައް"
+
+msgid "Number of items"
+msgstr "ތަކެތީގެ އަދަދު"
+
+msgid "Original dimensions"
+msgstr "އޮރިޖިނަލް ޑައިމެންޝަންސް"
+
+msgid "Password forgotten"
+msgstr "ސިއްރުބަސް ހަނދާންނެތިއްޖެ"
+
+msgid "Password"
+msgstr "ސިއްރުބަސް"
+
+msgid "Post date"
+msgstr "ތާރީޙު ޕޯސްޓްކުރޭ"
+
+msgid "Posted on"
+msgstr "ޕޯސްޓްކުރި ތާރީޙު"
+
+msgid "Profile"
+msgstr "ޕްރޮފައިލް"
+
+msgid "Quick connect"
+msgstr "އަވަހަށް ގުޅާލުން"
+
+msgid "RSS feed"
+msgstr "އާރު.އެސް.އެސް. ފީޑު"
+
+msgid "Rate"
+msgstr "ރޭޓްކުރައްވާ"
+
+msgid "Register"
+msgstr "ރެޖިސްޓާކުރައްވާ"
+
+msgid "Registration"
+msgstr "ރެޖިސްޓާކުރުން"
+
+msgid "Related tags"
+msgstr "ގުޅުންހުރި ޓެގުތައް"
+
+msgid "Reset"
+msgstr "ރިސެޓް"
+
+msgid "Retrieve password"
+msgstr "ސިއްރުބަސް ލިބިވަޑައިގަންނަވާ"
+
+msgid "Search rules"
+msgstr "ހޯދުމުގެ ގަވާއިދުތައް"
+
+msgid "Search tags"
+msgstr "ހޯދުމުގެ ޓެގްތައް"
+
+msgid "Search"
+msgstr "ހޯދާ"
+
+msgid "display available tags"
+msgstr "ހުރި ޓެގުތައް ދައްކަވާ"
+
+msgid "Since"
+msgstr "އިން ފެށިގެން"
+
+msgid "Sort by"
+msgstr "ގޮތަކަށް އަތުރާ"
+
+msgid "Sort order"
+msgstr "އެތުރުމުގެ އޯޑަރު"
+
+msgid "Tag"
+msgstr "ޓެގް"
+
+msgid "Tags"
+msgstr "ޓެގުތައް"
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "އާރް.އެސް.އެސް. ނޯޓިފިކޭޝަން ފީޑަކުން މިވެބްސައިޓުގެ: އާފޮޓޯ، އަލްބަމް އަޕްޑޭޓްތައް، އާޙިޔާލުތަކާބެހޭ އެންގުންތައް ލިބިވަޑައިގަންނަވާނެއެވެ. އެހެންކަމުން އާރް.އެސް.އެސް. ފީޑް ރީޑަރ އެއް ބޭނުން ކުރައްވާ."
+
+msgid "Unknown feed identifier"
+msgstr "އިނގިގެންނުވާ، ފީޑް އައިޑެންޓިފަޔާއެއް"
+
+msgid "User comments"
+msgstr "ޔޫސާގެ ޙިޔާލު"
+
+msgid "Username"
+msgstr "ޔޫސާނަން"
+
+msgid "Visits"
+msgstr "ވަޑައިގެންނެވި ފަހަރު"
+
+msgid "piwigo_day_0"
+msgstr "އާދީއްތަ"
+
+msgid "piwigo_day_1"
+msgstr "ހޯމަ"
+
+msgid "piwigo_day_2"
+msgstr "އަންގާރަ"
+
+msgid "piwigo_day_3"
+msgstr "ބުދަ"
+
+msgid "piwigo_day_4"
+msgstr "ބުރާސްފަތި"
+
+msgid "piwigo_day_5"
+msgstr "ހުކުރު"
+
+msgid "piwigo_day_6"
+msgstr "ހޮނިހިރު"
+
+msgid "piwigo_month_10"
+msgstr "އޮކްޓޯބަރ"
+
+msgid "piwigo_month_11"
+msgstr "ނޮވެމްބަރ"
+
+msgid "piwigo_month_12"
+msgstr "ޑިސެންބަރ"
+
+msgid "piwigo_month_1"
+msgstr "ޖެނުއަރީ"
+
+msgid "piwigo_month_2"
+msgstr "ފެބްރުއަރީ"
+
+msgid "piwigo_month_3"
+msgstr "މާރޗް"
+
+msgid "piwigo_month_4"
+msgstr "އޭޕްރީލް"
+
+msgid "piwigo_month_5"
+msgstr "މޭ"
+
+msgid "piwigo_month_6"
+msgstr "ޖޫން"
+
+msgid "piwigo_month_7"
+msgstr "ޖުލައި"
+
+msgid "piwigo_month_8"
+msgstr "އޮގަސްޓް"
+
+msgid "piwigo_month_9"
+msgstr "ސެޕްޓެމްބަރ"
+

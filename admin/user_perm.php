@@ -9,6 +9,9 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\AccessLevel;
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 if (! defined('IN_ADMIN')) {
@@ -27,12 +30,12 @@ include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_ADMINISTRATOR);
+check_status(AccessLevel::Administrator);
 
 if (! empty($_POST)) {
     check_pwg_token();
-    check_input_parameter('cat_true', $_POST, true, PATTERN_ID);
-    check_input_parameter('cat_false', $_POST, true, PATTERN_ID);
+    check_input_parameter('cat_true', $_POST, true, ValidationPattern::ID);
+    check_input_parameter('cat_false', $_POST, true, ValidationPattern::ID);
 }
 
 // check_input_parameter() above already fatal_error()s out unless these
@@ -65,7 +68,7 @@ if (isset($_POST['falsify'])
     // automatically forbidden
     $subcats = get_subcat_ids($cat_true);
     $query = '
-DELETE FROM ' . USER_ACCESS_TABLE . '
+DELETE FROM ' . Tables::userAccess() . '
   WHERE user_id = ' . $page['user'] . '
     AND cat_id IN (' . implode(',', $subcats) . ')
 ;';
@@ -106,10 +109,10 @@ $group_authorized = [];
 
 $query = '
 SELECT DISTINCT cat_id, c.uppercats, c.global_rank
-  FROM ' . USER_GROUP_TABLE . ' AS ug
-    INNER JOIN ' . GROUP_ACCESS_TABLE . ' AS ga
+  FROM ' . Tables::userGroup() . ' AS ug
+    INNER JOIN ' . Tables::groupAccess() . ' AS ga
       ON ug.group_id = ga.group_id
-    INNER JOIN ' . CATEGORIES_TABLE . ' AS c
+    INNER JOIN ' . Tables::categories() . ' AS c
       ON c.id = ga.cat_id
   WHERE ug.user_id = ' . $page['user'] . '
 ;';
@@ -138,7 +141,7 @@ if (pwg_db_num_rows($result) > 0) {
 // only private categories are listed
 $query_true = '
 SELECT id,name,uppercats,global_rank
-  FROM ' . CATEGORIES_TABLE . ' INNER JOIN ' . USER_ACCESS_TABLE . ' ON cat_id = id
+  FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::userAccess() . ' ON cat_id = id
   WHERE status = \'private\'
     AND user_id = ' . $page['user'];
 if (count($group_authorized) > 0) {
@@ -157,7 +160,7 @@ while ((bool) ($row = pwg_db_fetch_assoc($result))) {
 
 $query_false = '
 SELECT id,name,uppercats,global_rank
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE status = \'private\'';
 if (count($authorized_ids) > 0) {
     $query_false .= '

@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 /**
@@ -89,7 +91,7 @@ global $page, $template;
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions_permalinks.php';
 
-check_input_parameter('cat_id', $_POST, false, PATTERN_ID);
+check_input_parameter('cat_id', $_POST, false, ValidationPattern::ID);
 
 $selected_cat = [];
 // check_input_parameter() above only validates the format when 'cat_id' is
@@ -110,7 +112,7 @@ if (isset($_POST['set_permalink']) and $post_cat_id > 0) {
     check_pwg_token();
     $delete_permanent = is_string($_GET['delete_permanent']) ? $_GET['delete_permanent'] : null;
     $query = '
-DELETE FROM ' . OLD_PERMALINKS_TABLE . '
+DELETE FROM ' . Tables::oldPermalinks() . '
   WHERE permalink=\'' . pwg_db_real_escape_string($delete_permanent) . '\'
   LIMIT 1';
     $result = pwg_query($query);
@@ -136,7 +138,7 @@ SELECT
   id, permalink,
   CONCAT(id, " - ", name, IF(permalink IS NULL, "", " &radic;") ) AS name,
   uppercats, global_rank
-FROM ' . CATEGORIES_TABLE;
+FROM ' . Tables::categories();
 
 display_select_cat_wrapper($query, $selected_cat, 'categories', false);
 
@@ -153,7 +155,7 @@ $sort_by = parse_sort_variables(
 
 $query = '
 SELECT id, permalink, uppercats, global_rank
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE permalink IS NOT NULL
 ';
 if ($sort_by[0] == 'id' or $sort_by[0] == 'permalink') {
@@ -187,7 +189,7 @@ $sort_by = parse_sort_variables(
 );
 
 $url_del_base = get_root_url() . 'admin.php?page=permalinks';
-$query = 'SELECT * FROM ' . OLD_PERMALINKS_TABLE;
+$query = 'SELECT * FROM ' . Tables::oldPermalinks();
 if ((bool) count($sort_by)) {
     $query .= ' ORDER BY ' . $sort_by[0];
 }

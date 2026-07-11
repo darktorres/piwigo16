@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 /**
@@ -24,8 +26,8 @@ use Piwigo\Template\Template;
  */
 global $conf, $page, $template, $user;
 
-check_input_parameter('group', $_GET, false, PATTERN_ID);
-check_input_parameter('user_id', $_GET, false, PATTERN_ID);
+check_input_parameter('group', $_GET, false, ValidationPattern::ID);
+check_input_parameter('user_id', $_GET, false, ValidationPattern::ID);
 
 // +-----------------------------------------------------------------------+
 // | tabs                                                                  |
@@ -43,8 +45,8 @@ $groups_for_filter = [];
 
 $query = '
 SELECT id, name, COUNT(ug.user_id) as nb_users_of
-  FROM `' . GROUPS_TABLE . '`
-    LEFT JOIN `' . USER_GROUP_TABLE . '` ug ON id = ug.group_id
+  FROM `' . Tables::groups() . '`
+    LEFT JOIN `' . Tables::userGroup() . '` ug ON id = ug.group_id
   GROUP BY name
   ORDER BY name ASC
 ;';
@@ -73,7 +75,7 @@ $query = '
 SELECT DISTINCT
       month(registration_date) as registration_month,
       year(registration_date) as registration_year
-FROM ' . USER_INFOS_TABLE . '
+FROM ' . Tables::userInfos() . '
 ORDER BY registration_date
 ;';
 $result = pwg_query($query);
@@ -129,7 +131,7 @@ if ($user['status'] == 'admin') {
     $query = '
 SELECT
     user_id
-  FROM ' . USER_INFOS_TABLE . '
+  FROM ' . Tables::userInfos() . '
   WHERE status IN (\'webmaster\', \'admin\')
 ;';
     $admin_ids = query2array($query, null, 'user_id');
@@ -156,7 +158,7 @@ $user_fields = $conf['user_fields'];
 $query = '
 SELECT
     ' . $user_fields['username'] . ' AS username
-    FROM ' . USERS_TABLE . '
+    FROM ' . Tables::users() . '
     WHERE ' . $user_fields['id'] . ' = ' . $webmaster_id . '
 ;';
 
@@ -198,7 +200,7 @@ if (isset($_GET['show_add_user'])) {
 
 // Status options
 $label_of_status = [];
-foreach (get_enums(USER_INFOS_TABLE, 'status') as $status) {
+foreach (get_enums(Tables::userInfos(), 'status') as $status) {
     $label_of_status[$status] = l10n('user_status_' . $status);
 }
 
@@ -206,7 +208,7 @@ $query = '
 SELECT
     status,
     COUNT(*) AS nb_users_of
-  FROM ' . USER_INFOS_TABLE . '
+  FROM ' . Tables::userInfos() . '
   WHERE user_id != ' . $guest_id . '
   GROUP BY status
 ';
@@ -258,7 +260,7 @@ $query = '
 SELECT
     level,
     COUNT(*) AS nb_users_of
-  FROM ' . USER_INFOS_TABLE . '
+  FROM ' . Tables::userInfos() . '
   WHERE user_id != ' . $guest_id . '
   GROUP BY level
 ';
@@ -283,7 +285,7 @@ $template->assign('nb_users_by_level', $nb_users_by_level);
 
 $query = '
 SELECT id, name, is_default
-  FROM `' . GROUPS_TABLE . '`
+  FROM `' . Tables::groups() . '`
   ORDER BY name ASC
 ;';
 $result = pwg_query($query);

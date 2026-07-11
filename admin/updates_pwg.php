@@ -10,6 +10,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\updates;
+use Piwigo\Core\AppInfo;
 use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
@@ -136,7 +137,7 @@ if (! is_webmaster()) {
 $template->assign(
     [
         'STEP' => $step,
-        'PIWIGO_CURRENT_VERSION' => $page['updated_version'] ?? PHPWG_VERSION,
+        'PIWIGO_CURRENT_VERSION' => $page['updated_version'] ?? AppInfo::VERSION,
         'UPGRADE_TO' => $upgrade_to,
     ]
 );

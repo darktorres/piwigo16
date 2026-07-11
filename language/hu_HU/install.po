@@ -1,0 +1,146 @@
+# Piwigo translation — hu_HU
+# Source: install.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: hu_HU\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Installation"
+msgstr "Telepítés"
+
+msgid "Basic configuration"
+msgstr "Alap konfiguráció"
+
+msgid "Default gallery language"
+msgstr "Galéria alapértelmezett nyelve"
+
+msgid "Database configuration"
+msgstr "Adatbázis konfiguráció"
+
+msgid "Admin configuration"
+msgstr "Rendszergazda fiókjának beállítása"
+
+msgid "Start Install"
+msgstr "Telepítés indítása"
+
+msgid "It will be shown to the visitors. It is necessary for website administration"
+msgstr "A látogatók látni fogják. Szükséges a weboldal adminisztrációjához"
+
+msgid "Connection to server succeed, but it was impossible to connect to database"
+msgstr "A kapcsolat a kiszolgálóval rendben, de nem sikerült csatlakozni az adatbázishoz"
+
+msgid "Can't connect to server"
+msgstr "Nem sikerült kapcsolódni a szerverhez"
+
+msgid "Host"
+msgstr "MySQL host"
+
+msgid "User"
+msgstr "Felhasználó név"
+
+msgid "user login given by your host provider"
+msgstr "a tárhelyszolgáltató által adott felhasználónév"
+
+msgid "user password given by your host provider"
+msgstr "a tárhelyen használt jelszó"
+
+msgid "Database name"
+msgstr "Adatbázis neve"
+
+msgid "also given by your host provider"
+msgstr "a szolgáltatótól kapott adatbázis név"
+
+msgid "Database table prefix"
+msgstr "Adatbázis tábla előtag"
+
+msgid "database tables names will be prefixed with it (enables you to manage better your tables)"
+msgstr "az adatbázis táblák ezzel az előtaggal fognak kezdődni (lehetővé teszi a táblák jobb áttekinthetőségét)"
+
+msgid "enter a login for webmaster"
+msgstr "írja be a webmester bejelentkezési adatokat"
+
+msgid "webmaster login can't contain characters ' or \""
+msgstr "A webmester nevében nem használhatók a ' és \" karakterek"
+
+msgid "please enter your password again"
+msgstr "kérjük, adja meg újra a jelszót"
+
+msgid "Keep it confidential, it enables you to access administration panel"
+msgstr "Kezelje bizalmasan az adatokat, ezek lehetővé teszik a hozzáférést az adminisztrációs felülethez"
+
+msgid "Password [confirm]"
+msgstr "Jelszó [megerősítés]"
+
+msgid "verification"
+msgstr "jelszó egyezőségének ellenőrzése"
+
+msgid "Need help ? Ask your question on <a href=\"%s\">Piwigo message board</a>."
+msgstr "Segítségre van szüksége ? Kérdéseit itt teheti fel: <a href=\"%s\">Piwigo üzenőfal</a>."
+
+msgid "Visitors will be able to contact site administrator with this mail"
+msgstr "A látogatók ezen az e-mail címen tudják felvenni a kapcsolatot az adminisztrátorral"
+
+msgid "PHP 5 is required"
+msgstr "PHP 5.2 szükséges"
+
+msgid "It appears your webhost is currently running PHP %s."
+msgstr "Úgy tűnik, a tárhelyszolgáltatójánál jelenleg futó PHP %s."
+
+msgid "Piwigo may try to switch your configuration to PHP 5 by creating or modifying a .htaccess file."
+msgstr "Piwigo megpróbálhatja bekapcsolni a PHP 5.2-öt azáltal, hogy létrehoz vagy módosít egy .htaccess fájlt."
+
+msgid "Note you can change your configuration by yourself and restart Piwigo after that."
+msgstr "Figyelem: Ha meg tudja változtatni a PHP konfigurációt, indítsa újra a Piwigot."
+
+msgid "Try to configure PHP 5"
+msgstr "Próbálja meg beállítani a PHP 5.2-öt"
+
+msgid "Sorry!"
+msgstr "Elnézést!"
+
+msgid "Piwigo was not able to configure PHP 5."
+msgstr "Piwigo nem tudta beállítani a PHP 5.2-öt."
+
+msgid "You may referer to your hosting provider's support and see how you could switch to PHP 5 by yourself."
+msgstr "Lehet, hogy a tárhely szolgáltató támogatja a PHP 5.2-öt. A bekapcsoláshoz keresse meg őket."
+
+msgid "Hope to see you back soon."
+msgstr "Remélem később viszontlátjuk."
+
+msgid "Congratulations, Piwigo installation is completed"
+msgstr "Gratulálunk, a Piwigo telepítése sikeresen befejeződött"
+
+msgid "An alternate solution is to copy the text in the box above and paste it into the file \"local/config/database.inc.php\" (Warning : database.inc.php must only contain what is in the textarea, no line return or space character)"
+msgstr "Egy lehetséges megoldás a szöveget az alul lévő dobozba másolni, és beilleszteni a \"local/config/database.inc.php\" fájlba. (Figyelem: database.inc.php csak azt tartalmazhatja amit a szövegterület, soremelés vagy üres karakterhely nélkül)"
+
+msgid "Creation of config file local/config/database.inc.php failed."
+msgstr "A local/config/database.inc.php konfigurációs fájl létrehozása sikertelen."
+
+msgid "Download the config file"
+msgstr "Konfigurációs fájl letöltése"
+
+msgid "You can download the config file and upload it to local/config directory of your installation."
+msgstr "Letöltheti a konfigurációs fájlt és töltse fel a telepítésének local/config könyvtárába."
+
+msgid "Just another Piwigo gallery"
+msgstr "Csak egy újabb Piwigo galéria"
+
+msgid "Welcome to my photo gallery"
+msgstr "Üdvözöljük a képgalériában"
+
+msgid "Don't hesitate to consult our forums for any help : %s"
+msgstr "Kérdése van? Keresse fel fórumunkat: %s"
+
+msgid "Welcome to your new installation of Piwigo!"
+msgstr "Köszönt a frissen telepített Piwigo galéria!"
+
+msgid "localhost or other, supplied by your host provider"
+msgstr "localhost vagy egyéb, a fogadó szolgáltató által megadott"
+
+msgid "PHP version %s required (you are running on PHP %s)"
+msgstr "%s PHP verzió szükséges (a tiéd: %s)"
+

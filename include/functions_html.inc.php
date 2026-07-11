@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Db\Tables;
 use Piwigo\Image\SrcImage;
 use Piwigo\Menu\BlockManager;
 use Piwigo\Menu\RegisteredBlock;
@@ -105,7 +106,7 @@ function get_cat_display_name_cache(
     if (! isset($cache['cat_names'])) {
         $query = '
 SELECT id, name, permalink
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
 ;';
         $cache['cat_names'] = query2array($query, 'id');
     }

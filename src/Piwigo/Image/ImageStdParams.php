@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Image;
 
+use Piwigo\Db\Tables;
+
 /**
  * Container for standard derivatives parameters.
  */
@@ -278,7 +280,7 @@ final class ImageStdParams
             $disabled = addslashes(serialize(self::$disabled_type_map));
             conf_update_param('disabled_derivatives', $disabled);
         } else {
-            $query = 'DELETE FROM ' . CONFIG_TABLE . ' WHERE param = \'disabled_derivatives\'';
+            $query = 'DELETE FROM ' . Tables::config() . ' WHERE param = \'disabled_derivatives\'';
             pwg_query($query);
         }
     }

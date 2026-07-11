@@ -9,6 +9,9 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\AccessLevel;
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Template\Template;
@@ -27,18 +30,18 @@ global $lang;
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_ADMINISTRATOR);
+check_status(AccessLevel::Administrator);
 
-check_input_parameter('image_id', $_GET, false, PATTERN_ID);
+check_input_parameter('image_id', $_GET, false, ValidationPattern::ID);
 
-// $_GET['image_id'], when present, matches PATTERN_ID (digits only), but
+// $_GET['image_id'], when present, matches ValidationPattern::ID (digits only), but
 // that guarantee isn't visible to static analysis, hence the explicit
 // narrowing before it's used in SQL/URL concatenation below.
 $image_id = is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0;
 
 $query = '
 SELECT *
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE id = ' . $image_id . '
 ;';
 $images = query2array($query);
@@ -47,7 +50,7 @@ $image = $images[0];
 $query = '
 SELECT
     *
-  FROM ' . IMAGE_FORMAT_TABLE . '
+  FROM ' . Tables::imageFormat() . '
   WHERE image_id = ' . $image_id . '
 ;';
 

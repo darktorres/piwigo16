@@ -12,6 +12,9 @@ declare(strict_types=1);
 use Piwigo\Admin\Image\pwg_image;
 use Piwigo\Admin\Integrity\check_integrity;
 use Piwigo\Cache\PersistentFileCache;
+use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\AppInfo;
+use Piwigo\Db\Tables;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Template\FileCombiner;
 use Piwigo\Template\Template;
@@ -54,7 +57,7 @@ switch ($action) {
     case 'lock_gallery':
 
         conf_update_param('gallery_locked', 'true');
-        pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'maintenance', [
+        pwg_activity('system', ActivitySystem::Core, 'maintenance', [
             'maintenance_action' => $action,
         ]);
         redirect(get_root_url() . 'admin.php?page=maintenance');
@@ -64,7 +67,7 @@ switch ($action) {
 
         conf_update_param('gallery_locked', 'false');
         $_SESSION['page_infos'] = [l10n('Gallery unlocked')];
-        pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'maintenance', [
+        pwg_activity('system', ActivitySystem::Core, 'maintenance', [
             'maintenance_action' => $action,
         ]);
         redirect(get_root_url() . 'admin.php?page=maintenance');
@@ -107,7 +110,7 @@ switch ($action) {
 
         $query = '
 DELETE
-  FROM ' . HISTORY_TABLE . '
+  FROM ' . Tables::history() . '
 ;';
         pwg_query($query);
         $page['infos'][] = sprintf('%s : %s', l10n('Purge history detail'), l10n('action successfully performed.'));
@@ -117,7 +120,7 @@ DELETE
 
         $query = '
 DELETE
-  FROM ' . HISTORY_SUMMARY_TABLE . '
+  FROM ' . Tables::historySummary() . '
 ;';
         pwg_query($query);
         $page['infos'][] = sprintf('%s : %s', l10n('Purge history summary'), l10n('action successfully performed.'));
@@ -132,7 +135,7 @@ DELETE
 SELECT
     id,
     data
-  FROM ' . SESSIONS_TABLE . '
+  FROM ' . Tables::sessions() . '
 ;';
         $sessions = query2array($query);
 
@@ -146,7 +149,7 @@ SELECT
         $query = '
 SELECT
     ' . $id_field . ' AS id
-  FROM ' . USERS_TABLE . '
+  FROM ' . Tables::users() . '
 ;';
         $all_user_ids = query2array($query, 'id', null);
 
@@ -163,7 +166,7 @@ SELECT
         if (count($sessions_to_delete) > 0) {
             $query = '
 DELETE
-  FROM ' . SESSIONS_TABLE . '
+  FROM ' . Tables::sessions() . '
   WHERE id IN (\'' . implode("','", $sessions_to_delete) . '\')
 ;';
             pwg_query($query);
@@ -175,7 +178,7 @@ DELETE
 
         $query = '
 DELETE
-  FROM ' . USER_FEED_TABLE . '
+  FROM ' . Tables::userFeed() . '
   WHERE last_check IS NULL
 ;';
         pwg_query($query);
@@ -204,7 +207,7 @@ DELETE
 
         $query = '
 DELETE
-  FROM ' . SEARCH_TABLE . '
+  FROM ' . Tables::search() . '
 ;';
         pwg_query($query);
         sprintf('%s : %s', l10n('Reinitialize check integrity'), l10n('action successfully performed.'));
@@ -240,7 +243,7 @@ DELETE
             $page['errors'][] = l10n('Unable to check for upgrade.');
         } else {
             $versions = [
-                'current' => PHPWG_VERSION,
+                'current' => AppInfo::VERSION,
             ];
             $lines = @explode("\r\n", (string) $result);
 
@@ -279,7 +282,7 @@ DELETE
 }
 
 if ($register_activity) {
-    pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'maintenance', [
+    pwg_activity('system', ActivitySystem::Core, 'maintenance', [
         'maintenance_action' => $action,
     ]);
 }
@@ -351,7 +354,7 @@ $template->assign(
         'U_HELP' => get_root_url() . 'admin/popuphelp.php?page=maintenance',
 
         'PHPWG_URL' => PHPWG_URL,
-        'PWG_VERSION' => PHPWG_VERSION,
+        'PWG_VERSION' => AppInfo::VERSION,
         'U_CHECK_UPGRADE' => sprintf($url_format, 'check_upgrade'),
         'OS' => PHP_OS,
         'PHP_VERSION' => PHP_VERSION,
@@ -413,7 +416,7 @@ if ((bool) $conf['gallery_locked']) {
 $query = '
 SELECT
     COUNT(*)
-  FROM ' . LOUNGE_TABLE . '
+  FROM ' . Tables::lounge() . '
 ;';
 $row = pwg_db_fetch_row(pwg_query($query));
 assert($row !== null);

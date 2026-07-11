@@ -1,0 +1,2895 @@
+# Piwigo translation — zh_HK
+# Source: admin.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: zh_HK\n"
+"Plural-Forms: nplurals=1; plural=(0);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "%d photos uploaded"
+msgstr "%d 相片已被上傳"
+
+msgid "%d physical"
+msgstr "%d 實體"
+
+msgid "%d physicals"
+msgstr "%d 實體"
+
+msgid "%d second"
+msgstr "%d 秒"
+
+msgid "%d seconds"
+msgstr "%d 秒"
+
+msgid "%d tag"
+msgstr "%d 標籤"
+
+msgid "%d tags"
+msgstr "%d 標籤"
+
+msgid "%d user"
+msgid_plural "%d users"
+msgstr[0] "%d 用戶"
+msgstr[1] "%d 用戶"
+
+msgid "%d user comment rejected"
+msgstr "%d 用戶意見已被拒絕"
+
+msgid "%d user comment validated"
+msgstr "%d 用戶意見已被接納"
+
+msgid "%d user comments rejected"
+msgstr "%d 用戶意見已被拒絕"
+
+msgid "%d user comments validated"
+msgstr "%d 用戶意見已被接納"
+
+msgid "%d user deleted"
+msgid_plural "%d users deleted"
+msgstr[0] "%d 用戶已被刪除"
+msgstr[1] "%d 用戶已被刪除"
+
+msgid "%d user was not updated."
+msgid_plural "%d users were not updated."
+msgstr[0] "%d 用戶沒有更新"
+msgstr[1] "%d 用戶沒有更新"
+
+msgid "%d user was updated."
+msgid_plural "%d users were updated."
+msgstr[0] "%d 用戶已被更新"
+msgstr[1] "%d 用戶已被更新"
+
+msgid "%d mail was not sent."
+msgid_plural "%d mails were not sent."
+msgstr[0] "%s 郵件未被發送"
+msgstr[1] "%s 郵件未被發送"
+
+msgid "%d mail was sent."
+msgid_plural "%d mails were sent."
+msgstr[0] "%s 郵件已被發送"
+msgstr[1] "%s 郵件已被發送"
+
+msgid "%d of %d photos selected"
+msgstr "%d / %d 相片被選取"
+
+msgid "%d parameter was updated."
+msgid_plural "%d parameters were updated."
+msgstr[0] "%d 參數已更新"
+msgstr[1] "%d 參數已更新"
+
+msgid "%d photo was deleted"
+msgid_plural "%d photos were deleted"
+msgstr[0] "%d 圖片已被刪除"
+msgstr[1] "%d 相片已被上傳"
+
+msgid "%d guest"
+msgid_plural "%d guests"
+msgstr[0] "%d 訪客"
+msgstr[1] "%d 訪客"
+
+msgid "%d hour"
+msgstr "%d 小時"
+
+msgid "%d hours"
+msgstr "%d 小時"
+
+msgid "%d line filtered"
+msgid_plural "%d lines filtered"
+msgstr[0] "%d 行被過濾"
+msgstr[1] "%d 行被過濾"
+
+msgid "%d member"
+msgid_plural "%d members"
+msgstr[0] "%d 會員"
+msgstr[1] "%d 會員"
+
+msgid "%d minute"
+msgstr "%d 分鐘"
+
+msgid "%d minutes"
+msgstr "%d 分鐘"
+
+msgid "%d month"
+msgstr "%d 月"
+
+msgid "%d months"
+msgstr "%d 月"
+
+msgid " and %d virtual"
+msgstr "和 %d 虛擬"
+
+msgid " and %d virtuals"
+msgstr "和 %d 虛擬"
+
+msgid "%d album including"
+msgstr "包含 %d 相簿"
+
+msgid "%d album moved"
+msgid_plural "%d albums moved"
+msgstr[0] "%d 相簿已移走"
+msgstr[1] "%d 相簿已移走"
+
+msgid "%d albums including"
+msgstr "包含 %d 相簿"
+
+msgid "%d anomaly has been corrected."
+msgid_plural "%d anomalies have been detected corrected."
+msgstr[0] "修正了 %d 異常"
+msgstr[1] "揁察及修正了 %d 個異常"
+
+msgid "%d anomaly has been detected."
+msgid_plural "%d anomalies have been detected."
+msgstr[0] "揁察到 %d 異常"
+msgstr[1] "揁察到 %d 個異常"
+
+msgid "%d anomaly has not been corrected."
+msgid_plural "%d anomalies have not been corrected."
+msgstr[0] "不能修正 %d 異常"
+msgstr[1] "不能修正 %d 個異常"
+
+msgid "%d association"
+msgstr "%d 聯繫"
+
+msgid "%d associations"
+msgstr "%d 聯繫"
+
+msgid "%d anomaly has been ignored."
+msgid_plural "%d anomalies have been ignored."
+msgstr[0] "%d 異常被忽略"
+msgstr[1] "%d 異常被忽略"
+
+msgid "%d day"
+msgstr "%d 天"
+
+msgid "%d days"
+msgstr "%d 天"
+
+msgid "%d group"
+msgstr "%d 群組"
+
+msgid "%d groups"
+msgstr "%d 群組"
+
+msgid "ranks"
+msgstr "等級"
+
+msgid "registered users"
+msgstr "已註冊用戶"
+
+msgid "registration date"
+msgstr "註冊日期"
+
+msgid "selection"
+msgstr "選擇"
+
+msgid "simple visitors"
+msgstr "簡單訪客"
+
+msgid "private"
+msgstr "私人"
+
+msgid "public"
+msgstr "公開"
+
+msgid "randomly represented"
+msgstr "隨機相簿縮圖"
+
+msgid "sub-albums"
+msgstr "相簿子　"
+
+msgid "synchronize files structure with database"
+msgstr "檔案結構跟數據庫同步"
+
+msgid "target"
+msgstr "目標"
+
+msgid "test"
+msgstr "測試"
+
+msgid "test this remote site"
+msgstr "測試這個遠程地址"
+
+msgid "the forum"
+msgstr "討論區"
+
+msgid "the wiki"
+msgstr "維基百科"
+
+msgid "top left corner"
+msgstr "左上角"
+
+msgid "top right corner"
+msgstr "右上角　　"
+
+msgid "total time"
+msgstr "總算時間"
+
+msgid "unit mode"
+msgstr "個人模式　"
+
+msgid "unknown"
+msgstr "不知名的　"
+
+msgid "unset"
+msgstr "去設定除　"
+
+msgid "update the database from files"
+msgstr "以檔案來更新數據庫"
+
+msgid "user \"%s\" added"
+msgstr "用戶\"%s\"已增加"
+
+msgid "user_status_admin"
+msgstr "管理員"
+
+msgid "user_status_generic"
+msgstr "基本"
+
+msgid "user_status_guest"
+msgstr "嘉賓"
+
+msgid "user_status_webmaster"
+msgstr "網主"
+
+msgid "visitors need to login and have the appropriate permissions to see this album"
+msgstr "訪客需要登入及指定權限才看到相簿"
+
+msgid "width must be a number superior to"
+msgstr "闊度一定要大過"
+
+msgid "wrong filename"
+msgstr "錯誤檔案名稱"
+
+msgid "A new version of Piwigo is available."
+msgstr "新版本的Piwigo已經可用"
+
+msgid "Add"
+msgstr "新增"
+
+msgid "Active Languages"
+msgstr "現行的插件"
+
+msgid "Active Plugins"
+msgstr "現行的插件"
+
+msgid "%d waiting for validation"
+msgstr "%d 等候審批"
+
+msgid "%d week"
+msgstr "%d 星期"
+
+msgid "%d weeks"
+msgstr "%d 星期"
+
+msgid "%d year"
+msgstr "%d 年"
+
+msgid "%d years"
+msgstr "%d 年"
+
+msgid "%s ago"
+msgstr "%s 之前"
+
+msgid "%s has been successfully updated."
+msgstr "%s 已成功更新"
+
+msgid "%s in the future"
+msgstr "%s 在將來"
+
+msgid "%s must be to set to false in your local/config/config.inc.php file"
+msgstr "%s 在local/config/config.inc.php檔案內必需設定為錯誤."
+
+msgid "%s photos can not be regenerated"
+msgstr "%s 相片不能重新製作"
+
+msgid "%s photos have been regenerated"
+msgstr "%s 相片已成功製作"
+
+msgid "%s value is not correct file because exif are not supported"
+msgstr "%s 數目錯誤因為不支援exif"
+
+msgid "%u users have automatic permission because they belong to a granted group."
+msgstr "%u 用戶已經自動取得許可, 因為他們屬於一個已審批的組群."
+
+msgid "(this tag will be deleted)"
+msgstr "(這個標籤將會被刪除)"
+
+msgid "+ Add an upload box"
+msgstr "+加一個上傳框架"
+
+msgid ", click on"
+msgstr ", 按在"
+
+msgid "... or "
+msgstr "...或"
+
+msgid "A locked gallery is only visible to administrators"
+msgstr "已封鎖的相簿祗會被管理員看到"
+
+msgid "albums added in the database"
+msgstr "相簿已在數量庫增加"
+
+msgid "albums deleted in the database"
+msgstr "相簿已在數量庫刪除"
+
+msgid "all"
+msgstr "全部"
+
+msgid "an error happened"
+msgstr "一個錯誤出現"
+
+msgid "and"
+msgstr "及"
+
+msgid "any visitor can see this album"
+msgstr "所有訪客都可看到這個相簿"
+
+msgid "apply automatic sort order"
+msgstr "行使自動依次序排序"
+
+msgid "automatic order"
+msgstr "自動排序"
+
+msgid "average time"
+msgstr "平均時間"
+
+msgid "between"
+msgstr "之間"
+
+msgid "between %.2f and %.2f"
+msgstr "%.2f 及 %.2f 之間"
+
+msgid "between %d and %d pixels"
+msgstr "%d 及 %d 像點之間"
+
+msgid "bottom left corner"
+msgstr "左下角"
+
+msgid "bottom right corner"
+msgstr "右下角　"
+
+msgid "cancel manual order"
+msgstr "取消手動排序"
+
+msgid "clean"
+msgstr "清空"
+
+msgid "confirm"
+msgstr "確定"
+
+msgid "Anomaly"
+msgstr "異常"
+
+msgid "Album name"
+msgstr "相簿名稱"
+
+msgid "Album updated successfully"
+msgstr "相簿更新成功"
+
+msgid "Albums automatically sorted"
+msgstr "相簿自動排列"
+
+msgid "All %d photos are selected"
+msgstr "所有%d相片已選"
+
+msgid "All languages are up to date."
+msgstr "所有語言已是最新版本"
+
+msgid "All optimizations have been successfully completed."
+msgstr "所有優化已已經完成"
+
+msgid "All plugins are up to date."
+msgstr "所有插件已是最新版本"
+
+msgid "All themes are up to date."
+msgstr "所有主題佈置已是最新版本"
+
+msgid "An error has occured during upgrade."
+msgstr "升級時發生錯誤"
+
+msgid "An error occured during extraction (%s)."
+msgstr "檔案(%s)解壓時發生錯誤"
+
+msgid "Allow rating"
+msgstr "允許評分"
+
+msgid "Allow user customization"
+msgstr "允許用戶更改設定"
+
+msgid "Allow user registration"
+msgstr "允許用戶登記"
+
+msgid "Allow users to delete their own comments"
+msgstr "允許用戶刪除自己的評語"
+
+msgid "Allow users to edit their own comments"
+msgstr "允許用戶修改自己的評語"
+
+msgid "Allowed file types: %s."
+msgstr "允許檔案種類: %s."
+
+msgid "Add Photos"
+msgstr "新增相片"
+
+msgid "Add a user"
+msgstr "新增用戶"
+
+msgid "Add group"
+msgstr "新增用戶群"
+
+msgid "Add New Language"
+msgstr "新增新語言"
+
+msgid "Add New Theme"
+msgstr "新增新主題佈置"
+
+msgid "ACCESS_0"
+msgstr "隨意使用"
+
+msgid "ACCESS_1"
+msgstr "使用所有"
+
+msgid "ACCESS_2"
+msgstr "進入註冊用戶"
+
+msgid "ACCESS_3"
+msgstr "進入管理員"
+
+msgid "ACCESS_4"
+msgstr "進入網頁管理員"
+
+msgid "ACCESS_5"
+msgstr "沒有使用權"
+
+msgid "Access type"
+msgstr "使用權種類"
+
+msgid "Action"
+msgstr "行動"
+
+msgid "Actions"
+msgstr "行動"
+
+msgid "Activate"
+msgstr "啟動　　"
+
+msgid "Activate Navigation Bar"
+msgstr "啟動導航橫槓"
+
+msgid "Activate Navigation Thumbnails"
+msgstr "啟動導航縮圖"
+
+msgid "Activate comments"
+msgstr "啟動意見"
+
+msgid "Activate icon \"%s\""
+msgstr "啟動圖標\"%s\""
+
+msgid "Activate icon \"new\" next to albums and pictures"
+msgstr "啟動圖標\"new\"在相簿及相片旁"
+
+msgid "Active Themes"
+msgstr "啟動主題佈置"
+
+msgid "Hello"
+msgstr "你好 "
+
+msgid "Hello,"
+msgstr "你好,"
+
+msgid "Help Me"
+msgstr "幫助我"
+
+msgid "Hide"
+msgstr "隱藏"
+
+msgid "High definition"
+msgstr "高畫質"
+
+msgid "High definition enabled"
+msgstr "高畫質已啟用"
+
+msgid "History"
+msgstr "歷史"
+
+msgid "Hit"
+msgstr "點擊"
+
+msgid "Hour"
+msgstr "小時"
+
+msgid "Hoverbox display"
+msgstr "懸停框顯示"
+
+msgid "I decide to update anyway"
+msgstr "我決定要更新"
+
+msgid "IP"
+msgstr "IP"
+
+msgid "If no HD is available and if the current websize is bigger than resize dimensions, Piwigo will move it as HD and create a downsized websize photo from it."
+msgstr "假如圖片非高畫質，但在網頁上圖片尺寸大於調整後尺寸，Piwigo仍會將圖片標為高畫質，並另存一張縮圖"
+
+msgid "If you encounter problems or have any question, please send a message to"
+msgstr "如有遇到故障或問題,請發郵件至 "
+
+msgid "Ignore All"
+msgstr "忽略全部"
+
+msgid "Ignore selected anomalies"
+msgstr "忽視選擇異常"
+
+msgid "Ignore this update"
+msgstr "忽略此更新"
+
+msgid "Image Quality"
+msgstr "圖片質量"
+
+msgid "Image id"
+msgstr "圖片ID"
+
+msgid "Images manual order was saved"
+msgstr "圖片手動排序已保存"
+
+msgid "Gallery unlocked"
+msgstr "畫廊已解鎖"
+
+msgid "General"
+msgstr "普通"
+
+msgid "General statistics"
+msgstr "普通統計"
+
+msgid "Generate multiple size images"
+msgstr "產生多種大小的圖像"
+
+msgid "Get Support on Piwigo Forum"
+msgstr "在 Piwigo 論壇上獲取幫助"
+
+msgid "Give write access (chmod 777) to \"%s\" directory at the root of your Piwigo installation"
+msgstr "給予根目錄下的 \"%s\" 目錄寫權限 (chmod 777) 以完成 Piwigo 的安裝"
+
+msgid "Go to"
+msgstr "轉至 "
+
+msgid "Go to %s or %s for more informations"
+msgstr "獲取更多信息，請到 %s 或者 %s "
+
+msgid "Grant selected groups"
+msgstr "對所選群組授權"
+
+msgid "Grant selected users"
+msgstr "對所選用戶授權"
+
+msgid "Graphics Library"
+msgstr "圖庫"
+
+msgid "Group"
+msgstr "群組"
+
+msgid "Group management"
+msgstr "群組管理"
+
+msgid "Group name"
+msgstr "群組名稱"
+
+msgid "Groups"
+msgstr "群組"
+
+msgid "Groups and users"
+msgstr "群組別和用戶"
+
+msgid "Guest Settings"
+msgstr "訪客設定"
+
+msgid "Guest cannot be deleted"
+msgstr "不能刪除訪客"
+
+msgid "Guests"
+msgstr "訪客"
+
+msgid "Height"
+msgstr "高度"
+
+msgid "Extend for templates"
+msgstr "擴充模板"
+
+msgid "Extensions Update"
+msgstr "擴充更新"
+
+msgid "FTP + Synchronization"
+msgstr "FTP + 同步"
+
+msgid "Failed to write file to disk"
+msgstr "檔案寫入失敗"
+
+msgid "Features include gallery browsing, album creation and photo upload."
+msgstr "功能包括：畫廊瀏覽、建立相冊和照片上傳"
+
+msgid "File"
+msgstr "檔案"
+
+msgid "File upload stopped by extension"
+msgstr "擴展使文件上傳停止"
+
+msgid "File/directory read error"
+msgstr "檔案/目錄的讀取錯誤"
+
+msgid "Find a new representant by random"
+msgstr "搜尋一個新的隨機相冊縮略圖"
+
+msgid "Follow Orientation"
+msgstr "定位"
+
+msgid "Following plugins may not be compatible with the new version of Piwigo:"
+msgstr "以下插件可能無法兼容新Piwigo的版本:"
+
+msgid "Following themes may not be compatible with the new version of Piwigo:"
+msgstr "以下主題可能無法兼容新版本Piwigo:"
+
+msgid "For photo sizes with crop, such as \"Square\", Piwigo will do its best to include the center of interest."
+msgstr "如選擇相片剪裁（如「正方形」），Piwigo會盡可能保留相片的焦點"
+
+msgid "Forbid this language to users"
+msgstr "禁止用戶使用此語言"
+
+msgid "Forbid this theme to users"
+msgstr "禁用此主題"
+
+msgid "Forbidden"
+msgstr "禁止"
+
+msgid "Form"
+msgstr "表格"
+
+msgid "GD library is missing"
+msgstr "缺少GD庫"
+
+msgid "GD version"
+msgstr "GD版本"
+
+msgid "Gallery title"
+msgstr "圖庫標題"
+
+msgid "Edit ranks"
+msgstr "編輯排名"
+
+msgid "Edit selected tags"
+msgstr "編輯所選標籤"
+
+msgid "Edit tags"
+msgstr "編輯標籤"
+
+msgid "Element"
+msgstr "單元"
+
+msgid "Element type"
+msgstr "單元類型"
+
+msgid "Email administrators when a comment is deleted"
+msgstr "當評論被刪除後，發郵件通知管理員"
+
+msgid "Email administrators when a comment is modified"
+msgstr "當評論被修改後，發郵件通知管理員"
+
+msgid "Email admins when a comment requires validation"
+msgstr "當用戶要求確認他的評論時通知管理員"
+
+msgid "Email admins when a new user registers"
+msgstr "當有新的使用者註冊就通知管理員"
+
+msgid "Email admins when a valid comment is entered"
+msgstr "當用戶發表評論時就通知管理員"
+
+msgid "Environment"
+msgstr "環境"
+
+msgid "Error list"
+msgstr "錯誤清單"
+
+msgid "Error on file \"%s\" : %s"
+msgstr "文件上的錯誤 \"%s\" : %s"
+
+msgid "Error when sending email to %s [%s]."
+msgstr "發送郵件 給 %s [%s]發生了錯誤."
+
+msgid "Errors caption"
+msgstr "錯誤說明"
+
+msgid "Everybody"
+msgstr "所有人"
+
+msgid "Execution time is out, treatment must be continue [Estimated time: %d second]."
+msgid_plural "Execution time is out, treatment must be continue [Estimated time: %d seconds]."
+msgstr[0] "已超過執行時間, 處理還需時間[估計時間: %d 秒]."
+msgstr[1] "已超過執行時間, 處理還需時間[估計時間: %d 秒]."
+
+msgid "Exif extension not available, admin should disable exif use"
+msgstr "Exif 擴展不能使用，管理員應該禁用 exif 功能。"
+
+msgid "Discover album:"
+msgstr "探索相冊:"
+
+msgid "Display options"
+msgstr "顯示選項"
+
+msgid "Dissociate from album"
+msgstr "從相冊裡分離"
+
+msgid "Dissociated"
+msgstr "取消聯繫"
+
+msgid "Do you want to activate anyway?"
+msgstr "無論如何都要啟動嗎?"
+
+msgid "Documentation"
+msgstr "檔案"
+
+msgid "Does not represent"
+msgstr "不是縮略圖"
+
+msgid "Download,"
+msgstr "下載,"
+
+msgid "Downloads"
+msgstr "下載"
+
+msgid "Drag to re-order"
+msgstr "點擊並拖動以重新排序"
+
+msgid "Drop into album"
+msgstr "選擇相冊"
+
+msgid "Dump Database"
+msgstr "轉儲資料庫"
+
+msgid "Duplicate"
+msgstr "重複"
+
+msgid "Duplicate selected tags"
+msgstr "重複選取標籤"
+
+msgid "Duplicates"
+msgstr "重複"
+
+msgid "ERROR"
+msgstr "錯誤"
+
+msgid "ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW."
+msgstr "錯誤：這個插件雖已安裝但並不存在! 請立即移除它!"
+
+msgid "Edit album"
+msgstr "修改相冊"
+
+msgid "Edit album permissions"
+msgstr "管理相冊權限"
+
+msgid "Edit photo"
+msgstr "編輯相片"
+
+msgid "Default display"
+msgstr "預設顯示資訊"
+
+msgid "Default photos order"
+msgstr "預設的相片順序"
+
+msgid "Default user cannot be deleted"
+msgstr "不能刪除預設用戶"
+
+msgid "Default user does not exist"
+msgstr "預設用戶不存在"
+
+msgid "Delete Representant"
+msgstr "刪除相冊縮略圖"
+
+msgid "Delete multiple size images"
+msgstr "刪除多種大小的圖像"
+
+msgid "Delete orphan tags"
+msgstr "刪除沒被關聯的標籤"
+
+msgid "Delete selected photos"
+msgstr "刪除圖片"
+
+msgid "Delete selected tags"
+msgstr "刪除所選標籤"
+
+msgid "Delete selected users"
+msgstr "刪除所選用戶"
+
+msgid "Delete this language"
+msgstr "刪除此語言"
+
+msgid "Delete this theme"
+msgstr "刪除此主題"
+
+msgid "Deleted on"
+msgstr "刪除於"
+
+msgid "Deletions"
+msgstr "刪除"
+
+msgid "Deny selected groups"
+msgstr "拒絕所選群組"
+
+msgid "Deny selected users"
+msgstr "拒絕所選的用戶"
+
+msgid "Description"
+msgstr "描述"
+
+msgid "Detailed informations"
+msgstr "詳細信息"
+
+msgid "Directory"
+msgstr "目錄"
+
+msgid "Directory does not exist"
+msgstr "目錄不存在"
+
+msgid "Create the \"%s\" directory at the root of your Piwigo installation"
+msgstr "建立\"%s\"在安裝Piwigo的根目錄下"
+
+msgid "Complementary mail content"
+msgstr "郵件附加內容"
+
+msgid "Configuration"
+msgstr "設定"
+
+msgid "Confirm merge"
+msgstr "確認合併"
+
+msgid "Continue processing treatment"
+msgstr "正在繼續處理中..."
+
+msgid "Correction"
+msgstr "修正"
+
+msgid "Correction applied with error"
+msgstr "修正適用的錯誤"
+
+msgid "Correction applied with success"
+msgstr "成功修正"
+
+msgid "Correction the anomaly will cancel the fact that it's ignored"
+msgstr "的不再被忽視異的修正"
+
+msgid "Create"
+msgstr "建立"
+
+msgid "Create this site"
+msgstr "建立網站"
+
+msgid "Crop"
+msgstr "剪裁"
+
+msgid "Current name"
+msgstr "現用名"
+
+msgid "Database"
+msgstr "現用名"
+
+msgid "Database synchronization with files"
+msgstr "根據文件來同步資料庫"
+
+msgid "Date"
+msgstr "日期"
+
+msgid "Day"
+msgstr "日"
+
+msgid "Deactivate"
+msgstr "停用"
+
+msgid "Deactivate all"
+msgstr "停用所有"
+
+msgid "Default comments order"
+msgstr "預設評論順序"
+
+msgid "Can't connect to server."
+msgstr "無法連接到服務器。"
+
+msgid "Can't create temporary file."
+msgstr "無法建立臨時文件。"
+
+msgid "Can't download archive."
+msgstr "無法下載歸檔文件。"
+
+msgid "Can't read or extract archive."
+msgstr "無法讀取或解壓歸檔文件."
+
+msgid "Cancel"
+msgstr "取消"
+
+msgid "Cannot delete the old permalink !"
+msgstr "舊的固定連結不能被刪除!"
+
+msgid "Center of interest"
+msgstr "中心愛好"
+
+msgid "Change Admin Colors"
+msgstr "更改管理員後台顏色"
+
+msgid "Change password"
+msgstr "更改密碼"
+
+msgid "Change username"
+msgstr "更改用戶名"
+
+msgid "Check all"
+msgstr "檢查全部"
+
+msgid "Check automatic corrections"
+msgstr "檢查自動修正"
+
+msgid "Check for updates"
+msgstr "檢查是否有更新"
+
+msgid "Check for upgrade"
+msgstr "檢查是否有升級"
+
+msgid "Check for upgrade failed for unknown reasons."
+msgstr "檢查是否有升級失敗由於未知原因。"
+
+msgid "Check integrity"
+msgstr "完整性檢查"
+
+msgid "Choose an action"
+msgstr "選擇一個動作"
+
+msgid "Choose an option"
+msgstr "選擇一個選項"
+
+msgid "Classic display"
+msgstr "經典顯示"
+
+msgid "Comments for all"
+msgstr "評論所有的"
+
+msgid "Are you sure you want to install this plugin?"
+msgstr "確定安裝此插件嗎?"
+
+msgid "Associate to album"
+msgstr "關聯到相冊"
+
+msgid "Associated"
+msgstr "已關聯"
+
+msgid "Authorize users to add comments on selected albums"
+msgstr "讓用戶可在所選相冊裡發表評論"
+
+msgid "Authorized"
+msgstr "已授權"
+
+msgid "Automatic correction"
+msgstr "自動修改"
+
+msgid "Automatic sort order"
+msgstr "自動排序"
+
+msgid "Available on"
+msgstr "可用的"
+
+msgid "Available only with HTML format"
+msgstr "僅適用於HTML格式"
+
+msgid "Average rate"
+msgstr "平均分"
+
+msgid "Basic settings"
+msgstr "基本設置"
+
+msgid "Batch Manager"
+msgstr "批量管理"
+
+msgid "Bound Theme"
+msgstr "綁定主題"
+
+msgid "By %s"
+msgstr "按 %s"
+
+msgid "By default, Piwigo will create a new websize from the HD (high definition) version of your photo."
+msgstr "在預設狀況下，Piwigo 將從原照片的高清晰度版本，建立另一個適用於網頁的尺寸版本。"
+
+msgid "By default, the center of interest is placed in the middle of the photo."
+msgstr "在預設情況下，焦點是擺在相片的中間"
+
+msgid "By rank"
+msgstr "按等級"
+
+msgid "Caddie"
+msgstr "購物籃"
+
+msgid "Caddie management"
+msgstr "購物籃管理"
+
+msgid "Album list management"
+msgstr "相冊清單管理"
+
+msgid "Album manual order was saved"
+msgstr "相冊手動排序已保存"
+
+msgid "Album photos associated to the following albums: %s"
+msgstr "相片已關聯到相冊:%s"
+
+msgid "Albums authorized thanks to group associations"
+msgstr "相冊群組織授權感謝協會"
+
+msgid "All %d users are selected"
+msgstr "所有%d的用戶都被選中"
+
+msgid "All extensions are up to date."
+msgstr "所有的擴展已是最新的"
+
+msgid "An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href=\"%s\">Click here to show log error</a>."
+msgstr "在提取過程中發生錯誤。請檢查您piwigo安裝時的檔案權限.<br><a href=\"%s\">點擊這裡顯示日誌中的錯誤</a>."
+
+msgid "An information email was sent to group \"%s\""
+msgstr "已向群組\"%s\"的所有成員發送了信息郵件"
+
+msgid "Anyway only webmasters can see this tab and never administrators."
+msgstr "任何人都不能使用此標籤(網管除外)."
+
+msgid "Aperture is a powerful tool to refine images and manage massive libraries on Mac."
+msgstr "Aperture是Mac的一項強大工具，可微調讓圖像更精緻，並管理超大照片庫."
+
+msgid "Aperture is designed for professional photographers with iPhoto simplicity."
+msgstr "Aperture是為專業攝影師設計的軟體，但使用起來又與iPhoto一樣簡單."
+
+msgid "Applications"
+msgstr "申請"
+
+msgid "Apply action"
+msgstr "套用"
+
+msgid "Apply selected corrections"
+msgstr "套用所選的修正"
+
+msgid "Apply to sub-albums"
+msgstr "套用到子相冊"
+
+msgid "Apply watermark if height is bigger than"
+msgstr "使用浮水印當高度大於"
+
+msgid "Apply watermark if width is bigger than"
+msgstr "使用浮水印當寬度大於"
+
+msgid "Approximate maximum resolution: %dM pixels (that's %dx%d pixels)."
+msgstr "大約最高解像度: %dM像素 (即 %dx%d像素)."
+
+msgid "Are you sure to install this upgrade? You must verify if this version does not need uninstallation."
+msgstr "確定安裝此更新嗎? 你必須核實無需卸載操作再進行安裝此更新."
+
+msgid "Are you sure you want to delete this plugin?"
+msgstr "確定要刪除此插件嗎?"
+
+msgid "%d of %d users selected"
+msgstr "%d到%d位用戶選擇"
+
+msgid "(filtered from %s total users)"
+msgstr "(共%s用戶被過濾）"
+
+msgid "<em>Piwigo for Android</em> application empowers you to connect your Android phone or table to your Piwigo gallery, create some albums and upload several photos at once."
+msgstr "<em>Android 版的Piwigo</em>允許從 Android 手機或平版連接到您的Piwigo畫廊，建立多個相冊並一次上傳多張相片。"
+
+msgid "<em>Piwigo for iOS</em> application empowers you to connect to your Piwigo gallery from your iPhone, iPad or iPod Touch, create some albums and upload several photos at once."
+msgstr "<em>iOS 版的Piwigo</em>允許您從iPhone, iPad 或 iPod Touch 連接到您的Piwigo畫廊，建立多個相冊並一次上傳多張相片。"
+
+msgid "Add a criteria"
+msgstr "增加准則"
+
+msgid "Add a filter"
+msgstr "增加篩選"
+
+msgid "Add a tag"
+msgstr "增加標籤"
+
+msgid "Add a virtual album"
+msgstr "增加虛擬相冊"
+
+msgid "Add another set of photos"
+msgstr "增加另一組相片"
+
+msgid "Add detailed content"
+msgstr "增加內容細節"
+
+msgid "Add tags"
+msgstr "增加標籤"
+
+msgid "Add to caddie"
+msgstr "放入購物籃"
+
+msgid "Add write access to the \"%s\" directory"
+msgstr "為\"%s\"目錄增加寫入權限"
+
+msgid "Add/delete a permalink"
+msgstr "增加/刪除一個固定連結"
+
+msgid "Added by %s"
+msgstr "由 %s 加入"
+
+msgid "Administration Home"
+msgstr "管理員首頁"
+
+msgid "Adobe Photoshop Lightroom is a photography software designed to manage large quantities of digital images and doing post production work."
+msgstr "Adobe Photoshop Lightroom 是一套攝影軟件，可管理大量數位影像和進行後製工作。"
+
+msgid "Advanced features"
+msgstr "進階功能"
+
+msgid "Album \"%s\" has been added"
+msgstr "已增加相冊 \"%s\" "
+
+msgid "Album \"%s\" now contains %d photos"
+msgstr "相冊\"%s\"現已包含了%d張相片"
+
+msgid "pending validation"
+msgstr "待審定"
+
+msgid "photos added in the database"
+msgstr "增加圖片到資料庫"
+
+msgid "photos candidates for metadata synchronization"
+msgstr "對應同步元數據的候選圖片"
+
+msgid "photos deleted from the database"
+msgstr "圖片已從資料庫中刪除"
+
+msgid "photos informations synchronized with files metadata"
+msgstr "相片信息已和檔案metadata同步"
+
+msgid "photos per page"
+msgstr "每頁圖片"
+
+msgid "photos updated in the database"
+msgstr "更新資料庫中的圖片"
+
+msgid "pixels"
+msgstr "像素"
+
+msgid "reduce to single existing albums"
+msgstr "減少現有的單獨相冊"
+
+msgid "remove author"
+msgstr "刪除作者"
+
+msgid "remove creation date"
+msgstr "刪除建立日期"
+
+msgid "remove tags"
+msgstr "刪除所有標籤"
+
+msgid "remove this filter"
+msgstr "刪除此篩選"
+
+msgid "remove title"
+msgstr "刪除標題"
+
+msgid "set to"
+msgstr "設定為"
+
+msgid "show details"
+msgstr "顯示細節"
+
+msgid "singly represented"
+msgstr "固定相冊縮略圖"
+
+msgid "status"
+msgstr "狀態"
+
+msgid "synchronize files metadata with database photos informations"
+msgstr "根據文件metadata同步資料庫中的相片信息"
+
+msgid "jump to photo"
+msgstr "跳到圖"
+
+msgid "leave"
+msgstr "離開"
+
+msgid "manage album photos"
+msgstr "管理相冊裡的相片"
+
+msgid "manage sub-albums"
+msgstr "管理子相冊"
+
+msgid "manual order"
+msgstr "手工排序"
+
+msgid "middle"
+msgstr "中間"
+
+msgid "modified"
+msgstr "已修改"
+
+msgid "new"
+msgstr "新增"
+
+msgid "no write access"
+msgstr "沒有寫入權限"
+
+msgid "none"
+msgstr "沒有寫入權限"
+
+msgid "nothing"
+msgstr "沒有寫入權限"
+
+msgid "on"
+msgstr "在"
+
+msgid "on the %d selected photos"
+msgstr "在%d張已選相片上"
+
+msgid "on the %d selected users"
+msgstr "%d的選定用戶"
+
+msgid "only directories"
+msgstr "僅目錄"
+
+msgid "only perform a simulation (no change in database will be made)"
+msgstr "只進行模擬操作(不會改變資料庫中的任何內容)"
+
+msgid "other"
+msgstr "另外"
+
+msgid "overrides existing values with empty ones"
+msgstr "用空數據來刪除已存在的數據"
+
+msgid "display maximum informations (added albums and photos, deleted albums and photos)"
+msgstr "顯示最大量的信息(增加相冊和相片,刪除的相冊和照片)"
+
+msgid "dissociate from group"
+msgstr "取消群組關聯"
+
+msgid "errors during synchronization"
+msgstr "同步期間發生錯誤"
+
+msgid "even already synchronized photos"
+msgstr "包括已經同步的圖片"
+
+msgid "existing album"
+msgstr "現有的相冊"
+
+msgid "first photo added on %s"
+msgstr "於%s上傳了第一幅圖"
+
+msgid "for the file format"
+msgstr "對於檔案格式"
+
+msgid "for this file format"
+msgstr "對於此檔案格式"
+
+msgid "global mode"
+msgstr "全局模式"
+
+msgid "group \"%s\" added"
+msgstr "增加 \"%s\" 群組"
+
+msgid "group \"%s\" deleted"
+msgstr "刪除 \"%s\" 群組"
+
+msgid "group \"%s\" updated"
+msgstr "更新 \"%s\" 群組"
+
+msgid "guest"
+msgstr "訪客"
+
+msgid "height must be a number superior to"
+msgstr "圖片高度必須超過(整數)"
+
+msgid "hide details"
+msgstr "隱藏細節"
+
+msgid "high"
+msgstr "高"
+
+msgid "iPhoto is the default photo manager on MacOSX. The Piwigo export plugin let you create new albums and export your photos directly from iPhoto to your Piwigo photo gallery."
+msgstr "iPhoto是MacOSX預設的相片管理軟體。此Piwigo匯出插件，可讓你直接從iPhoto匯出相片至Piwigo圖庫，並建立新相冊"
+
+msgid "include child albums"
+msgstr "包含子相冊"
+
+msgid "include photos with lower privacy level"
+msgstr "包含隱私級別較低的相片"
+
+msgid "jump to album"
+msgstr "跳到相冊"
+
+msgid "You can update to Piwigo %s directly, without upgrading to Piwigo %s (recommended)."
+msgstr "您可直接升級到Piwigo的%s，而不需升級到Piwigo的%s（建議版本）"
+
+msgid "add new photos to caddie"
+msgstr "把所有新圖片放到購物籃"
+
+msgid "added"
+msgstr "已加入"
+
+msgid "administrators"
+msgstr "管理員"
+
+msgid "associate to group"
+msgstr "關聯到群組"
+
+msgid "create a new album"
+msgstr "建立一個新相冊"
+
+msgid "create a new site"
+msgstr "建立新的網站"
+
+msgid "created"
+msgstr "已建立"
+
+msgid "custom"
+msgstr "自定義"
+
+msgid "default"
+msgstr "預設"
+
+msgid "default values"
+msgstr "預設值"
+
+msgid "delete"
+msgstr "刪除"
+
+msgid "delete album"
+msgstr "刪除相冊"
+
+msgid "delete photo"
+msgstr "刪除相冊"
+
+msgid "delete this site and all its attached elements"
+msgstr "刪除此站點和與其相關聯的所有信息"
+
+msgid "deleted"
+msgstr "已刪除"
+
+msgid "digiKam is an advanced digital photo management free software for Linux, Windows, and MacOSX."
+msgstr "digiKam是一套先進的數位相片管理軟體，它是自由軟體，適用於LINUX，WINDOWS和MacOSX。"
+
+msgid "digiKam is designed for photographers who want to view, manage, edit, enhance, organize, tag, and share photographs."
+msgstr "digiKam是專為攝影師瀏覽、管理、編輯、加工、整理、標記及分享照片等用途而設計。"
+
+msgid "directories + files"
+msgstr "目錄+文件"
+
+msgid "display"
+msgstr "顯示"
+
+msgid "You are running the latest version of Piwigo."
+msgstr "你正在執行的是Piwigo最新版。"
+
+msgid "You are using the Browser uploader. Try the <a href=\"%s\">Flash uploader</a> instead."
+msgstr "您正在使用瀏覽器上傳，您也可改用<a href=\"%s\">Flash上傳器上傳。"
+
+msgid "You are using the Flash uploader. Problems? Try the <a href=\"%s\">Browser uploader</a> instead."
+msgstr "您正在使用Flash上傳器上傳；若有問題，您也可改用<a href=\"%s\">瀏覽器上傳。"
+
+msgid "You can activate only one mobile theme."
+msgstr "您最多只能啟用一個手機主題。"
+
+msgid "You can't define a default photo order because you have a custom setting in your local configuration."
+msgstr "無法使用預設相片順序，因你在本機配置另有自訂設定。"
+
+msgid "You cannot delete your account"
+msgstr "你不能刪除自己本身帳號"
+
+msgid "You cannot move an album in its own sub album"
+msgstr "您不能將一個相冊移動到其子相冊裡"
+
+msgid "You have %d orphan tags: %s."
+msgstr "您已 %d 無關聯標籤: %s。"
+
+msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
+msgstr "你已在本地設定檔選用 <i>$conf['order_by']</i>，造成參數矛盾，請將它移除或重新命名為 <i>$conf['order_by_custom']</i>！"
+
+msgid "You have subscribed to receiving notifications by mail."
+msgstr "你開通了郵件通知功能。"
+
+msgid "You have unsubscribed from receiving notifications by mail."
+msgstr "你取消了你的郵件通知功能。"
+
+msgid "You need to confirm deletion"
+msgstr "您必須確認刪除。"
+
+msgid "You need to upgrade your system to take full advantage of the application else the application will not work correctly, or not at all"
+msgstr "你應該升級你的系統，以充分利用該應用程序，否則應用程序可能無法正常工作，或者不是。"
+
+msgid "Your configuration settings are saved"
+msgstr "你的設定已儲存"
+
+msgid "Zoom"
+msgstr "放大"
+
+msgid "[%s] Visit album %s"
+msgstr "[%s] 參觀相冊 %s"
+
+msgid "[NBM] Problems or questions"
+msgstr "[NBM] 故障或者疑問"
+
+msgid "add a new watermark"
+msgstr "增加新浮水印"
+
+msgid "WARNING! This plugin does not seem to be compatible with this version of Piwigo."
+msgstr "警告! 這個插件與此Piwigo版本不相容!"
+
+msgid "Waiting"
+msgstr "等待"
+
+msgid "Warning: subscribing or unsubscribing will send mails to users"
+msgstr "注意, 訂閱或退訂都會給相關用戶發送郵件"
+
+msgid "Watermark"
+msgstr "浮水印"
+
+msgid "Web Form"
+msgstr "網頁表格"
+
+msgid "Webmaster cannot be deleted"
+msgstr "不能刪除網管帳戶"
+
+msgid "Webmaster status is required."
+msgstr "必須設置網站管理員。"
+
+msgid "Week starts on"
+msgstr "星期起始於"
+
+msgid "Who can see these photos?"
+msgstr "哪些人可以看到這些相片?"
+
+msgid "Who can see this photo?"
+msgstr "有哪些人能看這些相片?"
+
+msgid "Width"
+msgstr "寬度"
+
+msgid "With blank value, gallery title will be used"
+msgstr "圖庫標題允許為空"
+
+msgid "With no album"
+msgstr "沒有相冊"
+
+msgid "With no tag"
+msgstr "沒有標籤"
+
+msgid "With no virtual album"
+msgstr "沒有虛擬相冊"
+
+msgid "X Position"
+msgstr "X 位置"
+
+msgid "X Repeat"
+msgstr "X 重複"
+
+msgid "Y Position"
+msgstr "Y 重複"
+
+msgid "Year"
+msgstr "年"
+
+msgid "You are running on development sources, no check possible."
+msgstr "你運行的是源碼開發版本, 不能檢測最新版。"
+
+msgid "User list"
+msgstr "用戶名單"
+
+msgid "User status"
+msgstr "用戶狀態"
+
+msgid "Users"
+msgstr "用戶"
+
+msgid "Users modified"
+msgstr "用戶修改"
+
+msgid "Validate"
+msgstr "確認"
+
+msgid "Validation"
+msgstr "確認"
+
+msgid "Version"
+msgstr "版本"
+
+msgid "View in gallery"
+msgstr "以畫廊模式瀏覽"
+
+msgid "Virtual Links"
+msgstr "虛擬連結"
+
+msgid "Virtual album"
+msgstr "虛擬相冊"
+
+msgid "Virtual album added"
+msgstr "虛擬相冊已添加"
+
+msgid "Virtual album deleted"
+msgstr "虛擬相冊已刪除"
+
+msgid "Virtual album name"
+msgstr "虛擬相冊名稱"
+
+msgid "Virtual albums to move"
+msgstr "移動虛擬相冊"
+
+msgid "Visit Gallery"
+msgstr "瀏覽畫廊"
+
+msgid "Visit Piwigo project website"
+msgstr "瀏覽 Piwigo 項目網站"
+
+msgid "Visit language site"
+msgstr "瀏覽語言頁面"
+
+msgid "Visit plugin site"
+msgstr "瀏覽插件網站"
+
+msgid "Visit theme site"
+msgstr "瀏覽主題頁面"
+
+msgid "Visited %d times"
+msgstr "訪問了 %d 次"
+
+msgid "Update in progress... Please wait."
+msgstr "更新進行中，請稍候。"
+
+msgid "Update photos information"
+msgstr "更新相片信息"
+
+msgid "Update to Piwigo %s"
+msgstr "更新到Piwigo %s"
+
+msgid "Update user"
+msgstr "更新用戶"
+
+msgid "Updates"
+msgstr "更新"
+
+msgid "Upload"
+msgstr "上傳"
+
+msgid "Upload Photos"
+msgstr "上傳相片"
+
+msgid "Uploaded Photos"
+msgstr "相片已上傳"
+
+msgid "Use the default photo sort order"
+msgstr "使用預設的的照片排序順序"
+
+msgid "Used metadata"
+msgstr "metadata已使用"
+
+msgid "User"
+msgstr "用戶"
+
+msgid "User \"%s\" created with \"%s\" like password"
+msgstr "用戶 \"%s\" 已建立，密碼是\"%s\""
+
+msgid "User %s [%s] added."
+msgstr "用戶 %s [%s] 已加入。"
+
+msgid "User %s [%s] was added to the subscription list."
+msgstr "用戶 %s [%s] 加入到註冊名單中。"
+
+msgid "User %s [%s] was not added to the subscription list."
+msgstr "用戶 %s [%s] 沒有加到註冊名當中。"
+
+msgid "User %s [%s] was not removed from the subscription list."
+msgstr "用戶 %s [%s] 沒有從註冊名單中刪除。"
+
+msgid "User %s [%s] was removed from the subscription list."
+msgstr "用戶 %s [%s] 從註冊名單中刪除。"
+
+msgid "User %s added"
+msgstr "用戶 %s 已添加"
+
+msgid "User %s updated"
+msgstr "用戶 %s 已更新"
+
+msgid "User comments validation"
+msgstr "確認用戶評論"
+
+msgid "Toggle 'default group' property"
+msgstr "賦予'預設的群組'屬性"
+
+msgid "Tools"
+msgstr "工具"
+
+msgid "Two updates are available"
+msgstr "兩個更新可使用"
+
+msgid "Type here the author name"
+msgstr "在此輸入作者名稱"
+
+msgid "Type here the name of the new group"
+msgstr "在這輸入新的群組別名稱"
+
+msgid "Type here the title"
+msgstr "在此輸入標題"
+
+msgid "Type in a search term"
+msgstr "輸入一個搜索詞"
+
+msgid "Unable to check for upgrade."
+msgstr "無法檢查是否有升級。"
+
+msgid "Unable to dump database."
+msgstr "無法轉儲資料庫。"
+
+msgid "Uncheck all"
+msgstr "取消全選"
+
+msgid "Uninstall"
+msgstr "解除安裝"
+
+msgid "Uninstalled Plugins"
+msgstr "未安裝的插件"
+
+msgid "Unknown upload error"
+msgstr "未知上傳錯誤"
+
+msgid "Unlock gallery"
+msgstr "將畫廊解鎖"
+
+msgid "Unlocked"
+msgstr "解除鎖定"
+
+msgid "Unsubscribe from notification by mail"
+msgstr "取消訂閱郵件通知功能"
+
+msgid "Unsubscribed"
+msgstr "已取消訂閱"
+
+msgid "Update All"
+msgstr "已取消訂閱"
+
+msgid "Update Complete"
+msgstr "已完成更新"
+
+msgid "Update albums informations"
+msgstr "上傳相冊信息"
+
+msgid "There is no other theme available."
+msgstr "沒有其他可用的主題。"
+
+msgid "This album contains %d photos, added between %s and %s."
+msgstr "這本相冊包含 %d 張照片，在 %s 和 %s 之間增加。"
+
+msgid "This album contains %d photos, added on %s."
+msgstr "這本相冊包含 %d 張照片，在 %s 上增加。"
+
+msgid "This album contains no photo."
+msgstr "這本相冊沒有照片"
+
+msgid "This group will be set to default"
+msgstr "這本相冊沒有照片"
+
+msgid "This group will be unset to default"
+msgstr "該群組別不再被使用為預設"
+
+msgid "This is a major update, with <a href=\"%s\">new exciting features</a>."
+msgstr "這是一個重大更新，包括<a href=\"%s\">這個令人興奮的新功能</a>。"
+
+msgid "This is a minor update, with only bug corrections."
+msgstr "這是一個次要更新，只有bug修正"
+
+msgid "This name is already used by another group."
+msgstr "群組名已存在。"
+
+msgid "This site already exists"
+msgstr "此站點已存在"
+
+msgid "This theme was not designed to be directly activated"
+msgstr "此主題並未設計為直接啟動"
+
+msgid "Thumbnail"
+msgstr "縮略圖"
+
+msgid "Thumbnails generation in progress..."
+msgstr "縮略圖製作中..."
+
+msgid "Time"
+msgstr "時間"
+
+msgid "Time to send mail is limited. Others mails are skipped."
+msgstr "發送郵件時間有限,其餘郵件被忽略。"
+
+msgid "Title"
+msgstr "標題"
+
+msgid "To export your photos from digiKam to Piwigo, simply install digiKam and the Kipi-plugins."
+msgstr "從digiKam要匯出相片到Piwigo，只需安裝digiKam和Kipi-plugins插件。"
+
+msgid "To send ?"
+msgstr "發送?"
+
+msgid "To subscribe"
+msgstr "如要訂閱"
+
+msgid "To unsubscribe"
+msgstr "要取消訂閱"
+
+msgid "The original maximum height must be a number between %d and %d"
+msgstr "原始高度上限必須在 %d 和 %d 之間"
+
+msgid "The original maximum width must be a number between %d and %d"
+msgstr "原始寬度上限必須在 %d 和 %d 之間 "
+
+msgid "The permalink name must be composed of a-z, A-Z, 0-9, \"-\", \"_\" or \"/\". It must not be numeric or start with number followed by \"-\""
+msgstr "固定連結中包含了非法字符（\"a-zA-Z0-9\", \"-\", \"_\" ou \"/\"）. 禁止使用數字和以\"-\"開頭後面緊跟數字"
+
+msgid "The picture dimensions will be reduced to %dx%d pixels."
+msgstr "圖片的尺寸將減少到 %dx%d 像素。"
+
+msgid "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form"
+msgstr "上傳文件超過了在 HTML 表單指定的 MAX_FILE_SIZE 的限制"
+
+msgid "The uploaded file exceeds the upload_max_filesize directive in php.ini: %sB"
+msgstr "上傳文件超過了在 php.ini 文件裡的 upload_max_filesize 限制: %sB"
+
+msgid "The uploaded file was only partially uploaded"
+msgstr "上傳文件只上傳了一部分"
+
+msgid "The uploaded files exceed the post_max_size directive in php.ini: %sB"
+msgstr "上傳文件超過了在 php.ini 文件裡的 post_max_size 限制: %sB"
+
+msgid "The webmaster has subscribed you to receiving notifications by mail."
+msgstr "網管開通了你的郵件通知功能。"
+
+msgid "The webmaster has unsubscribed you from receiving notifications by mail."
+msgstr "網管取消了你的郵件通知功能。"
+
+msgid "The whole page"
+msgstr "整張相片"
+
+msgid "The whole set"
+msgstr "整個集合"
+
+msgid "Theme has been successfully installed"
+msgstr "主題已成功安裝"
+
+msgid "Themes"
+msgstr "主題"
+
+msgid "Themes which need upgrade"
+msgstr "需更新的主題"
+
+msgid "There is no available subscribers to mail."
+msgstr "沒有用戶需要郵件通知。"
+
+msgid "There is no group in this gallery."
+msgstr "此畫廊內沒有群組。"
+
+msgid "There is no other language available."
+msgstr "沒有其他可用的語言。"
+
+msgid "There is no other plugin available."
+msgstr "沒有其他可用的插件。"
+
+msgid "Tag \"%s\" already exists"
+msgstr "標籤 \"%s\" 已存在"
+
+msgid "Tag \"%s\" is now a duplicate of \"%s\""
+msgstr "\"%s\" 標籤與 \"%s\" 標籤重複"
+
+msgid "Tag \"%s\" was added"
+msgstr "標籤 \"%s\" 已加入"
+
+msgid "Tag selection"
+msgstr "標籤選擇"
+
+msgid "Tags <em>%s</em> merged into tag <em>%s</em>"
+msgstr "標籤 <em>%s</em> 已合併成標籤 <em>%s</em>"
+
+msgid "Templates"
+msgstr "模板"
+
+msgid "Templates configuration has been recorded."
+msgstr "模板設定已經被記錄。"
+
+msgid "The %d following tags were deleted"
+msgstr "下面標籤 %d 已刪除"
+
+msgid "The Piwigo export plugin allows you to create albums and export photos."
+msgstr "Piwigo的匯出插件，允許你建立相冊和匯出照片"
+
+msgid "The Piwigo publish Plug-in allows you to export and synchronize photos from Lightroom directly to your Piwigo photo gallery."
+msgstr "Piwigo的發布插件允許你 從Lightroom匯出照片，使你的Lightroom照片與您的Piwigo相冊同步。"
+
+msgid "The anomaly will be ignored until next application version"
+msgstr "此異常將被忽略，待下次版本中解決"
+
+msgid "The center of interest is the most meaningful zone in the photo."
+msgstr "焦點是相片中最有意思的部份"
+
+msgid "The file or directory cannot be accessed (either it does not exist or the access is denied)"
+msgstr "檔案或目錄無法訪問(無論是它不存在或訪問被拒絕)"
+
+msgid "The following tag was deleted"
+msgstr "以下標籤已刪除"
+
+msgid "The gallery URL is not valid."
+msgstr "以下標籤已刪除"
+
+msgid "The name of a group must not contain \" or ' or be empty."
+msgstr "以下標籤已刪除"
+
+msgid "The name of an album must not be empty"
+msgstr "相冊名稱不能為空白"
+
+msgid "The name of directories and files must be composed of letters, numbers, \"-\", \"_\" or \".\""
+msgstr "目錄和檔案的名稱必須包括字母，數字,\"-\", \"_\" 或 \".\""
+
+msgid "The number of comments a page must be between 5 and 50 included."
+msgstr "每頁用戶評論數必須在5和50之間。"
+
+msgid "The original image quality must be a number between %d and %d"
+msgstr "原始圖品質必須在 %d 和 %d 之間"
+
+msgid "Start Upload"
+msgstr "開始上傳"
+
+msgid "Start pLoader and add your photos."
+msgstr "開始使用pLoader的並新增你的照片。"
+
+msgid "Statistics"
+msgstr "統計"
+
+msgid "Status"
+msgstr "狀態"
+
+msgid "Status of user \"%s\" updated"
+msgstr "用戶 \"%s\" 狀態已更新"
+
+msgid "Storage album"
+msgstr "存儲相冊"
+
+msgid "Subscribe"
+msgstr "訂閱"
+
+msgid "Subscribe %s"
+msgstr "訂閱 %s"
+
+msgid "Subscribe %s to Piwigo Announcements Newsletter"
+msgstr "訂閱 %s Piwigo中國最新消息公告"
+
+msgid "Subscribe to notification by mail"
+msgstr "訂閱郵件通知功能"
+
+msgid "Subscribe/unsubscribe users"
+msgstr "訂閱/取消訂閱用戶"
+
+msgid "Subscribed"
+msgstr "已訂閱"
+
+msgid "Subscribers could be listed (available) only if there is new elements to notify."
+msgstr "當有新圖片時,才能使用用戶郵件通知功能."
+
+msgid "Sum of rates"
+msgstr "總投票分"
+
+msgid "Summary"
+msgstr "概述"
+
+msgid "Support"
+msgstr "支持"
+
+msgid "Switch to clear or dark colors for administration"
+msgstr "切換管理員後台為清晰或黑暗的顏色"
+
+msgid "Synchronize"
+msgstr "同步"
+
+msgid "Synchronize metadata"
+msgstr "metadata 同步"
+
+msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
+msgstr "這個插件已是Piwigo核心一部份! 請立即移除它!"
+
+msgid "Send mail as"
+msgstr "發送郵件為"
+
+msgid "Send mail on HTML format"
+msgstr "以HTML格式發送郵件"
+
+msgid "Send mail to users"
+msgstr "給用戶發送郵件"
+
+msgid "Set as default language for unregistered and new users"
+msgstr "未註冊和新用戶的語言設定為預設的語言"
+
+msgid "Set as default theme for unregistered and new users"
+msgstr "未註冊者和新用戶的主題設定為預設的主題"
+
+msgid "Set author"
+msgstr "設定作者"
+
+msgid "Set creation date"
+msgstr "設定建立日期"
+
+msgid "Set title"
+msgstr "設定標題"
+
+msgid "Settings"
+msgstr "設定"
+
+msgid "Sharpen"
+msgstr "銳化"
+
+msgid "Shotwell is an open source digital photo organizer that runs on Linux. It is the default photo manager in Ubuntu and Fedora."
+msgstr "Shotwell是一套Linux作業系統下的數位相片管理工具，它是自由軟體，也是 Ubuntu 和 Fedora 中 預設的相片管理軟體。"
+
+msgid "Show %s users"
+msgstr "顯示%s用戶"
+
+msgid "Show info"
+msgstr "顯示所有信息"
+
+msgid "Show menubar"
+msgstr "顯示選單列"
+
+msgid "Showing %s to %s of %s users"
+msgstr "顯示%s的用戶從%s到%s"
+
+msgid "Simulation"
+msgstr "模擬"
+
+msgid "Site manager"
+msgstr "網管"
+
+msgid "Some themes and plugins may be not available yet."
+msgstr "一些主題和插件可能尚無法使用"
+
+msgid "Some upgrades are available for extensions."
+msgstr "一些可升級用於擴展。"
+
+msgid "Source tag"
+msgstr "來源標籤"
+
+msgid "See you soon."
+msgstr "很快再見。"
+
+msgid "Select a file"
+msgstr "選擇檔案"
+
+msgid "Select a zone with your mouse to define a new center of interest."
+msgstr "用鼠標選擇新的焦點"
+
+msgid "Select an album"
+msgstr "選擇一個相冊"
+
+msgid "Select at least one album"
+msgstr "選擇最後一個相冊"
+
+msgid "Select at least one comment"
+msgstr "至少選擇一個評論"
+
+msgid "Select at least one photo"
+msgstr "至少選中一張圖片"
+
+msgid "Select at least one tag"
+msgstr "選擇至少一個標籤"
+
+msgid "Select at least one user"
+msgstr "至少選中一個用戶"
+
+msgid "Select at least two tags for merging"
+msgstr "至少選擇兩個需合併的標籤"
+
+msgid "Select files"
+msgstr "選擇檔案"
+
+msgid "Select groups..."
+msgstr "選擇群組別..."
+
+msgid "Select recipients"
+msgstr "選擇接受郵件用戶"
+
+msgid "Select the destination tag"
+msgstr "選擇目的標籤"
+
+msgid "Select users..."
+msgstr "選擇用戶..."
+
+msgid "Select:"
+msgstr "選擇:"
+
+msgid "Selection"
+msgstr "選擇:"
+
+msgid "Send"
+msgstr "發送"
+
+msgid "Send an information email to group members"
+msgstr "發送一份信息郵件給群組成員"
+
+msgid "Send connection settings by email"
+msgstr "通過電子郵件發送連接的設定"
+
+msgid "Representant"
+msgstr "相冊縮略圖"
+
+msgid "Representation of albums"
+msgstr "相冊縮略圖"
+
+msgid "Representative"
+msgstr "相冊縮略圖"
+
+msgid "Represents"
+msgstr "縮略圖是給"
+
+msgid "Reset ignored updates"
+msgstr "重設忽略更新"
+
+msgid "Resize"
+msgstr "調整大小"
+
+msgid "Resize after upload"
+msgstr "上傳後調整大小"
+
+msgid "Resize after upload disabled due to the use of GD as graphic library"
+msgstr "由於使用了GD圖形程式，上傳後調整尺寸的功能已關閉。"
+
+msgid "Restore"
+msgstr "還原"
+
+msgid "Restore default configuration. You will lose your plugin settings!"
+msgstr "還原至預設設定。你會失去你的插件的設定！"
+
+msgid "Save Settings"
+msgstr "儲存設定"
+
+msgid "Save Template Directory"
+msgstr "儲存模板目錄"
+
+msgid "Save manual order"
+msgstr "儲存手動排序"
+
+msgid "Save order"
+msgstr "儲存排序"
+
+msgid "Save to permalink history"
+msgstr "儲存到固定連結的歷史記錄中"
+
+msgid "Save visits in history for"
+msgstr "保存訪問的歷史"
+
+msgid "Search for new images in the directories"
+msgstr "在目錄中搜尋新圖片"
+
+msgid "Searching..."
+msgstr "搜尋中..."
+
+msgid "Section"
+msgstr "區域"
+
+msgid "See you soon,"
+msgstr "很快再見，"
+
+msgid "Rate date"
+msgstr "投票日期"
+
+msgid "Rated %d times, score : %.2f"
+msgstr "被評價 %d 次,分數為 %.2f"
+
+msgid "Rating"
+msgstr "投票"
+
+msgid "Rating by guests"
+msgstr "訪客投票數"
+
+msgid "Ratio"
+msgstr "比例"
+
+msgid "ReGalAndroid (RemoteGallery client for Android) is an open source (GPL v3) Piwigo client for the Android platform."
+msgstr "ReGalAndroid（Android行動相冊）是一個開放原始碼軟體（GPL V3），是Android平台上的Piwigo"
+
+msgid "Read Piwigo Documentation"
+msgstr "閱讀 Piwigo 檔案"
+
+msgid "Refresh"
+msgstr "刷新"
+
+msgid "Refresh photo set"
+msgstr "刷新相片集"
+
+msgid "Registered on %s, %s."
+msgstr "註冊在%s, %s。"
+
+msgid "Reinitialize check integrity"
+msgstr "重新完整性檢測"
+
+msgid "Reject"
+msgstr "拒絕"
+
+msgid "Released on"
+msgstr "發佈於"
+
+msgid "Remote"
+msgstr "遠端"
+
+msgid "Remove all filters"
+msgstr "刪除所有篩選"
+
+msgid "Remove from caddie"
+msgstr "從購物藍裡移除"
+
+msgid "Rename"
+msgstr "重新命名"
+
+msgid "Repair and optimize database"
+msgstr "修復和優化資料庫"
+
+msgid "Replacement of original templates by customized templates from template-extension subfolder"
+msgstr "用位於template-extension文件夾下的用戶自定義模板更換原模板"
+
+msgid "Replacers (customized templates)"
+msgstr "替代(自訂的模板)"
+
+msgid "Posted %s on %s"
+msgstr "在 %s 貼上 %s"
+
+msgid "Predefined filter"
+msgstr "預先定義的篩選"
+
+msgid "Preferences"
+msgstr "偏好設定"
+
+msgid "Prepared time for list of users to send mail is limited. Others users are not listed."
+msgstr "由於發送用戶列表的準備時間受限制,其餘用戶將不被列出."
+
+msgid "Privacy level"
+msgstr "隱私等級"
+
+msgid "Privacy level set to \"%s\""
+msgstr "私有級別設定為 \"%s\""
+
+msgid "Private"
+msgstr "私人"
+
+msgid "Properties"
+msgstr "屬性"
+
+msgid "Public"
+msgstr "公開"
+
+msgid "Public / Private"
+msgstr "私人/公開"
+
+msgid "Purge compiled templates"
+msgstr "清除編譯模板"
+
+msgid "Purge history detail"
+msgstr "清除歷史記錄"
+
+msgid "Purge history summary"
+msgstr "清除歷史摘要"
+
+msgid "Purge never used notification feeds"
+msgstr "清除從沒使用過的通知回饋"
+
+msgid "Purge search history"
+msgstr "清除查尋歷史記錄"
+
+msgid "Purge sessions"
+msgstr "清除Sessions"
+
+msgid "Purge user cache"
+msgstr "清除用戶快取"
+
+msgid "Quick Local Synchronization"
+msgstr "快速同步"
+
+msgid "Random photo"
+msgstr "隨機相片"
+
+msgid "Rate"
+msgstr "評分"
+
+msgid "Piwigo Update"
+msgstr "Piwigo 更新"
+
+msgid "Piwigo Uploader"
+msgstr "Piwigo 上傳者"
+
+msgid "Piwigo cannot retrieve upgrade file from server"
+msgstr "Piwigo 無法從伺服器中取得升級檔 "
+
+msgid "Piwigo configuration"
+msgstr "Piwigo的設定"
+
+msgid "Piwigo export plugin for Aperture"
+msgstr "Aperture的Piwigo匯出插件"
+
+msgid "Piwigo export plugin for iPhoto"
+msgstr "iPhoto的Piwigo匯出插件"
+
+msgid "Piwigo for Android"
+msgstr "Android 版的Piwigo"
+
+msgid "Piwigo for iOS (iPhone, iPad, iPod Touch)"
+msgstr "iOS (iPhone, iPad, iPod Touch) 版的 Piwigo "
+
+msgid "Piwigo publish plugin for Shotwell"
+msgstr "Piwigo 的 Shotwell 照片發布插件 "
+
+msgid "Piwigo publish plugin for digiKam"
+msgstr "Piwigo 的 ddgiKam 照片發布插件"
+
+msgid "Piwigo version"
+msgstr "Piwigo版本"
+
+msgid "Please check \"plugins\" folder and sub-folders permissions (CHMOD)."
+msgstr "請核實\"plugins\"文件夾及其子文件夾的權限(CHMOD)."
+
+msgid "Please select at least two groups"
+msgstr "請最少選擇二個群組別"
+
+msgid "Please wait..."
+msgstr "請稍後..."
+
+msgid "Plugin has been successfully copied"
+msgstr "插件複製成功."
+
+msgid "Plugin list"
+msgstr "插件列表"
+
+msgid "Plugins"
+msgstr "插件"
+
+msgid "Plugins which need upgrade"
+msgstr "插件待升級"
+
+msgid "Portrait"
+msgstr "人像"
+
+msgid "Position"
+msgstr "位置"
+
+msgid "Permalinks"
+msgstr "固定連結"
+
+msgid "Permission denied"
+msgstr "禁止訪問"
+
+msgid "Permission granted"
+msgstr "允許訪問"
+
+msgid "Permission granted for groups"
+msgstr "群組別擁有的權限"
+
+msgid "Permission granted for users"
+msgstr "用戶擁有的權限"
+
+msgid "Permission granted thanks to a group"
+msgstr "同群組成員可以訪問授權類"
+
+msgid "Permission management"
+msgstr "權限管理"
+
+msgid "Permissions"
+msgstr "權限"
+
+msgid "Photo %s of %s"
+msgstr "圖片 %s 中的圖片 %s"
+
+msgid "Photo Page"
+msgstr "相片頁"
+
+msgid "Photo Properties"
+msgstr "相片屬性"
+
+msgid "Photo informations updated"
+msgstr "相片更新信息"
+
+msgid "Photo name"
+msgstr "相片名稱"
+
+msgid "Photo sizes with crop"
+msgstr "相片剪裁"
+
+msgid "Photo unreachable or no support"
+msgstr "不支持圖片格式或無法顯示"
+
+msgid "Photos"
+msgstr "相片"
+
+msgid "Photos generation in progress..."
+msgstr "相片製作中..."
+
+msgid "Piwigo Administration"
+msgstr "Piwigo管理"
+
+msgid "Piwigo Announcements Newsletter"
+msgstr "Piwigo最新消息公告"
+
+msgid "Piwigo Publish plugin for Lightroom"
+msgstr "Piwigo 的 Lightroom 照片發布插件"
+
+msgid "Orphan tags deleted"
+msgstr "無關聯標籤已被刪除"
+
+msgid "Other plugins"
+msgstr "其他可用的插件"
+
+msgid "Other private albums"
+msgstr "其他私人相冊"
+
+msgid "Overall"
+msgstr "概覽"
+
+msgid "Page banner"
+msgstr "網頁標語"
+
+msgid "Page end"
+msgstr "頁尾"
+
+msgid "Pages seen"
+msgstr "已訪問過的頁面"
+
+msgid "Panorama"
+msgstr "全景"
+
+msgid "Parameter"
+msgstr "設定"
+
+msgid "Parameters"
+msgstr "參數"
+
+msgid "Parent album"
+msgstr "主相冊"
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "密碼確認未完成，請確認所選定的密碼。"
+
+msgid "Password is missing. Please enter the password."
+msgstr "密碼沒有輸入，請輸入密碼。"
+
+msgid "Password updated"
+msgstr "密碼已更新"
+
+msgid "Path"
+msgstr "路徑"
+
+msgid "Pending Comments"
+msgstr "待批的評論"
+
+msgid "Permalink"
+msgstr "固定連結"
+
+msgid "Permalink %s has been previously used by album %s. Delete from the permalink history first"
+msgstr "固定連結 %s 已被 %s 相冊使用了。請先從固定鏈接歷史記錄刪除。"
+
+msgid "Permalink %s is already used by album %s"
+msgstr "固定連結 %s 已被 %s 相冊使用了"
+
+msgid "Permalink history"
+msgstr "固定連結歷史記錄"
+
+msgid "Notify administrators when a comment is"
+msgstr "通知管理員當評論是"
+
+msgid "Number of albums per page"
+msgstr "每頁相本數量"
+
+msgid "Number of comments per page"
+msgstr "每頁評論數量"
+
+msgid "Number of downloads"
+msgstr "下載次數"
+
+msgid "Number of rates"
+msgstr "投票數"
+
+msgid "Numeric identifier : %d"
+msgstr "數字識別碼: %d"
+
+msgid "Obsolete Plugins"
+msgstr "廢棄的插件"
+
+msgid "On your Linux, simply install Shotwell with your package manager and the activate Piwigo publishing option."
+msgstr "在Linux下，只需安裝Shotwell套件和啟用 Piwigo發佈選項。"
+
+msgid "Only private albums are listed"
+msgstr "只列出私人相冊"
+
+msgid "Opacity"
+msgstr "不透明度"
+
+msgid "Operating system"
+msgstr "操作系統"
+
+msgid "Operation in progress"
+msgstr "正在處理中。"
+
+msgid "Optimizations have been completed with some errors."
+msgstr "優化已完成,但出現一些錯誤。"
+
+msgid "Optional URL keyword"
+msgstr "可選URL關鍵字"
+
+msgid "Options"
+msgstr "選項"
+
+msgid "Order of menubar items has been updated successfully."
+msgstr "已成功更新的選單欄項目的順序。"
+
+msgid "Original Size"
+msgstr "原始大小"
+
+msgid "Original file : %s"
+msgstr "原始檔案 : %s"
+
+msgid "Original templates"
+msgstr "原模板"
+
+msgid "No display"
+msgstr "不顯示"
+
+msgid "No file was uploaded"
+msgstr "沒有文件被上傳"
+
+msgid "No group is permitted to see this private album"
+msgstr "沒有群組別有權限觀看此私人相冊"
+
+msgid "No groups selected, no actions possible."
+msgstr "尚未選取群組別，無法動作"
+
+msgid "No mail to send."
+msgstr "沒有郵件要發送."
+
+msgid "No matching user found"
+msgstr "沒有發現匹配的用戶"
+
+msgid "No members to manage"
+msgstr "沒有會員可以管理"
+
+msgid "No order field selected"
+msgstr "未選取排序欄位"
+
+msgid "No photo can be deleted"
+msgstr "沒有圖片可以刪除"
+
+msgid "No photo in the current set."
+msgstr "當前集合沒有相片."
+
+msgid "No photo in this album"
+msgstr "沒有相片在此相冊裡"
+
+msgid "No photo selected, %d photos in current set"
+msgstr "沒有選擇相片, 當前集合有%d張相片"
+
+msgid "No photos selected, no actions possible."
+msgstr "沒有選擇相片，不會有動作執行"
+
+msgid "No results"
+msgstr "沒有結果"
+
+msgid "No user selected of %d users"
+msgstr "%d個用戶沒有用戶選擇"
+
+msgid "No users selected, no actions possible."
+msgstr "沒有用戶選擇，沒有行動的可能。"
+
+msgid "No user to send notifications by mail."
+msgstr "沒有郵件通知用戶."
+
+msgid "None"
+msgstr "沒有"
+
+msgid "Not cropped correctly?"
+msgstr "不正確的裁剪?"
+
+msgid "Notification"
+msgstr "通知"
+
+msgid "Minimum privacy level"
+msgstr "最小隱私等級"
+
+msgid "Minimum width"
+msgstr "最小寬度"
+
+msgid "Miscellaneous"
+msgstr "雜項"
+
+msgid "Missing Plugins"
+msgstr "丟失的插件"
+
+msgid "Missing a temporary folder"
+msgstr "缺少臨時文件目錄"
+
+msgid "Modify information"
+msgstr "修改信息"
+
+msgid "Month"
+msgstr "月"
+
+msgid "Move"
+msgstr "移動"
+
+msgid "Move albums"
+msgstr "移動相冊"
+
+msgid "Move to album"
+msgstr "移動到相冊"
+
+msgid "Multiple Size"
+msgstr "多種大小"
+
+msgid "Name"
+msgstr "名字"
+
+msgid "Name of the duplicate"
+msgstr "名稱重複"
+
+msgid "New Version"
+msgstr "新版本"
+
+msgid "New name"
+msgstr "新名"
+
+msgid "New parent album"
+msgstr "新的父相冊"
+
+msgid "New photos added"
+msgstr "已加入新相片"
+
+msgid "New photos were added"
+msgstr "已加入新相片"
+
+msgid "New tag"
+msgstr "新標籤"
+
+msgid "No destination tag selected"
+msgstr "未選擇目標標籤"
+
+msgid "Manage authorizations for selected albums"
+msgstr "管理所選相冊的授權"
+
+msgid "Manage permissions for group \"%s\""
+msgstr "對群組 \"%s\" 進行權限管理"
+
+msgid "Manage permissions for user \"%s\""
+msgstr "對用戶 \"%s\" 進行權限管理"
+
+msgid "Manage photo ranks"
+msgstr "管理圖片排序"
+
+msgid "Manage photos"
+msgstr "管理照片"
+
+msgid "Manage tags"
+msgstr "管理標籤"
+
+msgid "Manage the members"
+msgstr "管理會員"
+
+msgid "Manage this set of %d photos"
+msgstr "管理此設置的%d張照片 "
+
+msgid "Manual order"
+msgstr "手工排序"
+
+msgid "Maximum file size: %sB."
+msgstr "最大尺寸: %sB"
+
+msgid "Maximum height"
+msgstr "最大高度"
+
+msgid "Maximum width"
+msgstr "最大寬度"
+
+msgid "Members"
+msgstr "會員"
+
+msgid "Menu Management"
+msgstr "功能表"
+
+msgid "Merge selected groups"
+msgstr "合併選擇群組"
+
+msgid "Merge selected tags"
+msgstr "合併選定的標籤"
+
+msgid "Merge tags"
+msgstr "合併標籤"
+
+msgid "Metadata synchronization results"
+msgstr "Metadata更新結果"
+
+msgid "Metadata synchronized from file"
+msgstr "對文件進行Metadata同步"
+
+msgid "Minimum height"
+msgstr "最小高度"
+
+msgid "Loading..."
+msgstr "加載中..."
+
+msgid "Local"
+msgstr "本地"
+
+msgid "Lock"
+msgstr "上鎖"
+
+msgid "Lock albums"
+msgstr "鎖定相冊"
+
+msgid "Lock gallery"
+msgstr "鎖定圖庫"
+
+msgid "Locked"
+msgstr "鎖定"
+
+msgid "Mail content"
+msgstr "郵件內容"
+
+msgid "Mail sent to %s [%s]."
+msgstr "已發送至 %s [%s]."
+
+msgid "Mail theme"
+msgstr "郵件主題"
+
+msgid "Main \"guest\" user does not exist"
+msgstr "主\"訪客\"用戶不存在"
+
+msgid "Main \"guest\" user status is incorrect"
+msgstr "主\"訪客\"用戶狀態異常"
+
+msgid "Main \"webmaster\" user does not exist"
+msgstr "主網管帳戶不再存在"
+
+msgid "Main \"webmaster\" user status is incorrect"
+msgstr "主網管用戶狀態異常"
+
+msgid "Main Page"
+msgstr "主頁"
+
+msgid "Maintenance"
+msgstr "維護"
+
+msgid "Make this language available to users"
+msgstr "讓用戶可使用此語言"
+
+msgid "Make this theme available to users"
+msgstr "讓用戶可使用此主題"
+
+msgid "Manage"
+msgstr "管理"
+
+msgid "Manage Permissions"
+msgstr "管理權限"
+
+msgid "Keep in touch with Piwigo project, subscribe to Piwigo Announcement Newsletter. You will receive emails when a new release is available (sometimes including a security bug fix, it's important to know and upgrade) and when major events happen to the project. Only a few emails a year."
+msgstr "訂閱 Piwigo 最新消息，與 Piwigo 項目保持聯繫。當有新版本發佈時，您將會收到郵件通知（有時也包括安全漏洞的修復，這對於升級是很重要的）和項目裡一些重要事情的發生。一年裡也只有幾封郵件。"
+
+msgid "Landscape"
+msgstr "橫向"
+
+msgid "Language has been successfully installed"
+msgstr "語言已成功安裝"
+
+msgid "Languages"
+msgstr "語言"
+
+msgid "Languages which need upgrade"
+msgstr "需更新的語言"
+
+msgid "Last hit"
+msgstr "最後一次查看"
+
+msgid "Last import"
+msgstr "最後匯入"
+
+msgid "Last revisions"
+msgstr "最新修訂版"
+
+msgid "Last send"
+msgstr "最後一次發送"
+
+msgid "Last visit on %s, %s."
+msgstr "最後的訪問在%s, %s。"
+
+msgid "Learn more"
+msgstr "瞭解更多"
+
+msgid "Level 0"
+msgstr "---"
+
+msgid "Level 1"
+msgstr "聯繫"
+
+msgid "Level 2"
+msgstr "朋友"
+
+msgid "Level 4"
+msgstr "家庭"
+
+msgid "Level 8"
+msgstr "管理者"
+
+msgid "Link all album photos to a new album"
+msgstr "鏈接所有相冊的相片到新的相冊"
+
+msgid "Link all album photos to some existing albums"
+msgstr "連結所有相冊的相片到現有的相冊"
+
+msgid "Linked albums"
+msgstr "已鏈接相冊"
+
+msgid "List"
+msgstr "清單"
+
+msgid "Impossible automatic correction"
+msgstr "無法自動修復"
+
+msgid "Impossible to activate this theme, the parent theme is missing: %s"
+msgstr "這個主題不能啟動，因為缺少主頁主題：%s"
+
+msgid "Impossible to deactivate this language, first set another language as default."
+msgstr "無法停用這個語言，首先設定另一種語言為預設值。"
+
+msgid "Impossible to deactivate this language, you need at least one language."
+msgstr "無法停用這個語言，你需要至少一種語言。"
+
+msgid "Impossible to deactivate this theme, you need at least one theme."
+msgstr "無法停用這個語言，你需要至少一種語言。"
+
+msgid "Impossible to delete this theme. Other themes depends on it: %s"
+msgstr "此主題不能刪除，因為其他主題還有依賴與它: %s"
+
+msgid "In your php.ini file, the upload_max_filesize (%sB) is bigger than post_max_size (%sB), you should change this setting"
+msgstr "在你的 php.ini 文件, 如果 upload_max_filesize (%sB) 大於 post_max_size (%sB), 那麼你需要修改此設定"
+
+msgid "Inactive Languages"
+msgstr "停用語言"
+
+msgid "Inactive Plugins"
+msgstr "停用語言"
+
+msgid "Inactive Themes"
+msgstr "停用主題"
+
+msgid "Include display of recent photos grouped by dates"
+msgstr "包括顯示最近按日期分群組的圖片"
+
+msgid "Include history data (Warning: server memory limit may be exceeded)"
+msgstr "包含歷史數據（警告：可能會超過伺服器儲存限制)"
+
+msgid "Information data registered in database"
+msgstr "信息已保存到資料庫中"
+
+msgid "Informations"
+msgstr "信息"
+
+msgid "Install"
+msgstr "安裝"
+
+msgid "Install on your computer,"
+msgstr "安裝到您的電腦,"
+
+msgid "Installed Languages"
+msgstr "安裝語言"
+
+msgid "Installed Themes"
+msgstr "安裝主題"
+
+msgid "Instructions to use Piwigo"
+msgstr "Piwigo 使用指南"
+
+msgid "Invert"
+msgstr "反轉"
+
+msgid "Close user details"
+msgstr "關閉用戶詳細信息"
+
+msgid "Open user details"
+msgstr "打開用戶詳細信息"
+
+msgid "close"
+msgstr "關閉"
+
+msgid "Activate it now"
+msgstr "立即激活"
+
+msgid "Allow users to add a link to their website"
+msgstr "允許用戶添加一個鏈接到他們的網站"
+
+msgid "Empty caddie"
+msgstr "清空盒子"
+
+msgid "Impossible to deactivate the default theme."
+msgstr "無法停用默認主題。"
+
+msgid "Mail address is mandatory for registration"
+msgstr "登記必須要有郵件地址"
+
+msgid "No and unlock sub-albums"
+msgstr "否及解開子相冊"
+
+msgid "The settings for the guest are from the %s user"
+msgstr "訪客的設定是跟從用戶%s "
+
+msgid "Upload in progress"
+msgstr "正在上傳"
+
+msgid "based on"
+msgstr "基於"
+
+msgid "between %s and %s MB"
+msgstr "\n%s 和 %s MB之間"
+
+msgid "date & time"
+msgstr "日期和時間"
+
+msgid "file name"
+msgstr "檔案名稱"
+
+msgid "width & height"
+msgstr "寬度和高度"
+
+msgid "Delete %d orphan photos"
+msgstr "刪除%d個孤兒照片"
+
+msgid "Each email sent will contain its own automatic authentication key on links, valid for %s."
+msgstr "每封電子郵件將包含自動認證密鑰的鏈接，有效%s。"
+
+msgid "Edit user"
+msgstr "編輯用戶"
+
+msgid "For security reason, authentication keys do not work for administrators."
+msgstr "出於安全原因，認證密鑰對管理員工作不起作用。"
+
+msgid "No recipient selected"
+msgstr "\n沒有選擇收件人"
+
+msgid "No user is permitted to see this private album"
+msgstr "沒有用戶被允許看到這個私人相冊"
+
+msgid "Orphans"
+msgstr "孤兒"
+
+msgid "Recipients"
+msgstr "收件人"
+
+msgid "Y Repeat"
+msgstr "Y 重複"
+
+msgid "Confirm deletion"
+msgstr "確定刪除"
+
+msgid "First photo added"
+msgstr "已加入第一張相片"
+
+msgid "It only takes a few clicks."
+msgstr "只需簡單幾個步驟。"
+
+msgid "Dashboard"
+msgstr "儀表板"
+
+msgid "checksum"
+msgstr "驗證碼"
+

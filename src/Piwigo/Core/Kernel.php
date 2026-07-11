@@ -7,10 +7,19 @@ namespace Piwigo\Core;
 use Psr\Container\ContainerInterface;
 
 /**
- * P7 boot skeleton, growing via P8's Container. Still no
- * Config/PageState/Lang/CurrentUser wiring (P16). This class is
- * retrofitted incrementally by those later phases rather than written once
- * complete now.
+ * P7 boot skeleton, growing via P8's Container. P16 adds Paths threading.
+ * `CurrentUser::attachGlobals()` (guest-user init) is deliberately NOT
+ * called from here -- `Piwigo\Users\` is L2aCoreDomain, and deptrac's
+ * ruleset only lets L1Infrastructure (this class's own layer) depend on
+ * L0Data, not upward on L2a. `CommonBootstrap`/`CliBootstrap` (both
+ * L4Integration, already allowed to depend on L2aCoreDomain) call it
+ * immediately after `Kernel::boot()` instead. `PageState::attachGlobals()`
+ * is ALSO not called from here, despite `Piwigo\Core\` being this class's
+ * own layer -- it reference-bridges $GLOBALS['page'] (an HTTP-only
+ * concept populated by include/common.inc.php before Kernel::boot() ever
+ * runs), which has no meaning on the CLI path that also calls
+ * `Kernel::boot()`. `CommonBootstrap::run()` calls it instead, right
+ * after `CurrentUser::attachGlobals()`.
  *
  * Deliberately does NOT run the P9 middleware pipeline -- that's
  * Piwigo\Bootstrap\RequestPipeline's job. Kernel must stay
@@ -29,14 +38,14 @@ final class Kernel
 
     private static ?ContainerInterface $container = null;
 
-    public static function boot(): void
+    public static function boot(?Paths $paths = null): void
     {
         if (self::$booted) {
             return;
         }
         self::$booted = true;
 
-        self::$container = Container::build();
+        self::$container = Container::build(paths: $paths);
     }
 
     /**

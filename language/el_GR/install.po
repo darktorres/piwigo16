@@ -1,0 +1,146 @@
+# Piwigo translation — el_GR
+# Source: install.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: el_GR\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "database tables names will be prefixed with it (enables you to manage better your tables)"
+msgstr "τα ονόματα των πινάκων της βάσης δεδομένων θα πάρουν αυτό το πρόθεμα (σας επιτρέπει να διαχειρίζεστε τους πίνακες σας καλύτερα)"
+
+msgid "enter a login for webmaster"
+msgstr "Εισάγετε ένα όνομα χρήστη για τον webmaster"
+
+msgid "webmaster login can't contain characters ' or \""
+msgstr "Το όνομα χρήστη δεν μπορεί να περιέχει τους χαρακτήρες ' ή \""
+
+msgid "please enter your password again"
+msgstr "Παρακαλώ εισάγετε τον κωδικό πάλι"
+
+msgid "Keep it confidential, it enables you to access administration panel"
+msgstr "Κρατήστε το εμπιστευτικό, επιτρέπει να έχετε πρόσβαση σε πίνακα διαχείρισης"
+
+msgid "Password [confirm]"
+msgstr "Κωδικός [επιβεβαίωση]"
+
+msgid "verification"
+msgstr "Επιβεβαίωση"
+
+msgid "Need help ? Ask your question on <a href=\"%s\">Piwigo message board</a>."
+msgstr "Χρειάζεστε βοήθεια; Ρωτήστε στο <a href=\"%s\">Πίνακα μηνυμάτων του Piwigo</a>."
+
+msgid "Visitors will be able to contact site administrator with this mail"
+msgstr "Οι επισκέπτες θα μπορούν να χρησιμοποιήσουν αυτό το email για να επικοινωνήσουν με τον διαχειριστή του site"
+
+msgid "PHP 5 is required"
+msgstr "Aπαιτείτε PHP 5.2"
+
+msgid "It appears your webhost is currently running PHP %s."
+msgstr "Φαίνετται ότι ο webhost τώρα τρέχει PHP %s."
+
+msgid "Piwigo may try to switch your configuration to PHP 5 by creating or modifying a .htaccess file."
+msgstr "Το Piwigo θα προσπαθήσει να αλλάξει την διαμόρφωση της PHP 5.2 δημιουργώντας ή τροποποιώντας ένα .htaccess αρχείο."
+
+msgid "Note you can change your configuration by yourself and restart Piwigo after that."
+msgstr "Λάβε υπ' όψη ότι μπορείς να αλλάξεις την διαμόρφωση και να επανεκκινήσεις το Piwigo μετά από αυτό."
+
+msgid "Try to configure PHP 5"
+msgstr "Προσπάθησε να διαμορφώσεις την PHP 5.2"
+
+msgid "Sorry!"
+msgstr "Συγγνώμη!"
+
+msgid "Piwigo was not able to configure PHP 5."
+msgstr "Το Piwigo δεν είναι σε θέση να διαμορφώσει την PHP 5.2"
+
+msgid "You may referer to your hosting provider's support and see how you could switch to PHP 5 by yourself."
+msgstr "Πρέπει να αναφέρετε στην υποστήριξη του παροχέα ςσας για να διαπιστώσετε πως μπορείτε να αλλάξετε σε PHP 5.2 μόνοι σας."
+
+msgid "Hope to see you back soon."
+msgstr "Ελπίζουμε να σας δούμε πάλι σύντομα."
+
+msgid "Congratulations, Piwigo installation is completed"
+msgstr "Συγχαρητήρια, η εγκατάσταση του Piwigo ολοκληρώθηκε"
+
+msgid "An alternate solution is to copy the text in the box above and paste it into the file \"local/config/database.inc.php\" (Warning : database.inc.php must only contain what is in the textarea, no line return or space character)"
+msgstr "Μια εναλλακτική λύση είναι να αντιγράψετε το κείμενο σε στο πλαίσιο παρακάτω και να το επικολλήστε στο αρχείο \"local/config/database.inc.php\" (Προειδοποίηση : το database.inc.php πρέπει να περιέχει ότι είναι στην περιοχή κειμένου, χωρίς enter ή κενό)"
+
+msgid "Creation of config file local/config/database.inc.php failed."
+msgstr "Η δημιουργία του αρχείου local/config/database.inc.php απέτυχε."
+
+msgid "Download the config file"
+msgstr "Κατέβασμα του αρχείου διαμόρωσης"
+
+msgid "You can download the config file and upload it to local/config directory of your installation."
+msgstr "Μπορείς να κατεβάσεις το αρχείο διαμόρφωσης και να το ανεβάσεις στο local/config κατάλογο της εγκατάστασης σου."
+
+msgid "Just another Piwigo gallery"
+msgstr "Ακόμα μια γκαλερί Piwigo"
+
+msgid "Welcome to my photo gallery"
+msgstr "Καλώς ήλθατε στη φωτογραφική μου γκαλερί"
+
+msgid "Admin configuration"
+msgstr "Ρυθμίσεις Διαχειριστή της ιστοσελίδας"
+
+msgid "Basic configuration"
+msgstr "Βασικές διαμόρφωση"
+
+msgid "Can't connect to server"
+msgstr "Δεν είναι δυνατή η σύνδεση με τον διακομιστή"
+
+msgid "Connection to server succeed, but it was impossible to connect to database"
+msgstr "Σύνδεση με διακομιστή επιτυχής, αλλά η σύνδεση με τη βάση δεδομένων είναι αδύνατη"
+
+msgid "Database configuration"
+msgstr "Διαμόρφωση Βάσης Δεδομένων"
+
+msgid "Database name"
+msgstr "Όνομα Βάσης Δεδομένων"
+
+msgid "Database table prefix"
+msgstr "πρόθεμα πίνακα της βάσης δεδομένων "
+
+msgid "Default gallery language"
+msgstr "Γλώσσας προεπιλεγμένης γκαλερί"
+
+msgid "Don't hesitate to consult our forums for any help : %s"
+msgstr "Μην διστάσετε να συμβουλευτείτε το φόρουμ μας για οποιαδήποτε βοήθεια:%s"
+
+msgid "Host"
+msgstr "διακομιστήw υποδοχής"
+
+msgid "Installation"
+msgstr "Εγκατάσταση"
+
+msgid "It will be shown to the visitors. It is necessary for website administration"
+msgstr "Έτσι Θα δείχνει στους επισκέπτες. Είναι απαραίτητο για την διαχείριση της ιστοσελίδας"
+
+msgid "Start Install"
+msgstr "Ξεκινήστε την εγκατάσταση"
+
+msgid "User"
+msgstr "Χρήστης"
+
+msgid "Welcome to your new installation of Piwigo!"
+msgstr "Καλώς ήρθατε στην νέα σας εγκατάσταση του Piwigo!"
+
+msgid "also given by your host provider"
+msgstr "Επίσης, δίνεται από την εταιρία φιλοξενίας σας"
+
+msgid "user login given by your host provider"
+msgstr "Όνομα χρήστη που έχει λάβει από το φορέα υποδοχής σας"
+
+msgid "user password given by your host provider"
+msgstr "Κωδικός προσβασης χρήστη που έχει λάβει από το φορέα υποδοχής σας"
+
+msgid "localhost or other, supplied by your host provider"
+msgstr "localhost ή άλλο, που σας παρέχεται από τον πάροχο φιλοξενίας σας"
+
+msgid "PHP version %s required (you are running on PHP %s)"
+msgstr "Απαιτείται έκδοση %s PHP (εκτελείτε έκδοση %s σε PHP)"
+

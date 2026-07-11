@@ -1,0 +1,1181 @@
+# Piwigo translation — nn_NO
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: nn_NO\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Language-Name: Norwegian nynorsk\n"
+"X-Piwigo-Country: Norway\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: nn\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "%d hit"
+msgid_plural "%d hits"
+msgstr[0] "%d treff"
+msgstr[1] "%d treff"
+
+msgid "%d Kb"
+msgstr "%d Kb"
+
+msgid "%d new comment"
+msgstr "%d ny kommentar"
+
+msgid "%d new comments"
+msgstr "%d nye kommentarar"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "%d nytt bilete"
+msgstr[1] "%d nye bilete"
+
+msgid "%d new user"
+msgstr "%d ny brukar"
+
+msgid "%d new users"
+msgstr "%d nye brukarar"
+
+msgid "Date"
+msgstr "Dato"
+
+msgid "I want to add photos"
+msgstr "Eg ynskjer å legge til bilete"
+
+msgid "IP: %s"
+msgstr "IP: %s"
+
+msgid "IPTC Metadata"
+msgstr "IPTC Medadata"
+
+msgid "Keyword"
+msgstr "Nøkkelord"
+
+msgid "Expand all albums"
+msgstr "Utvid album"
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "Hei %s, ditt Piwigo biletgalleri er tomt!"
+
+msgid "Connection settings"
+msgstr "Innstillingar for pålogging"
+
+msgid "Contact"
+msgstr "Kontakt"
+
+msgid "Contact webmaster"
+msgstr "Kontakt webmaster"
+
+msgid "Create a new account"
+msgstr "Lag ny brukar"
+
+msgid "Created on"
+msgstr "Oppretta"
+
+msgid "Creation date"
+msgstr "Oppretta dato"
+
+msgid "Current password is wrong"
+msgstr "Passordet er feil"
+
+msgid "Registration"
+msgstr "Registrering"
+
+msgid "Registration of %s"
+msgstr "Registrering av %s"
+
+msgid "Rating score"
+msgstr "Rangering"
+
+msgid "Rating score, high &rarr; low"
+msgstr "Rangering, høg &rarr; låg"
+
+msgid "Rating score, low &rarr; high"
+msgstr "Rangering, låg &rarr; høg"
+
+msgid "Update your rating"
+msgstr "Oppdater din rangering"
+
+msgid "%d rate"
+msgid_plural "%d rates"
+msgstr[0] "%d rangering"
+msgstr[1] "%d rangeringar"
+
+msgid "Best rated"
+msgstr "Best rangering"
+
+msgid "Page generated in"
+msgstr "Sida bygd på"
+
+msgid "Rate this photo"
+msgstr "Ranger dette bilete"
+
+msgid "no rate"
+msgstr "ingen rangering"
+
+msgid "Sort by"
+msgstr "Sorter etter"
+
+msgid "Submit"
+msgstr "Send"
+
+msgid "Sent by"
+msgstr "Sendt av"
+
+msgid "Show latest comments first"
+msgstr "Vis siste kommentarar fyrst"
+
+msgid "Show number of comments"
+msgstr "Vis antal kommentarar"
+
+msgid "Show number of hits"
+msgstr "Vis antal treff"
+
+msgid "Show oldest comments first"
+msgstr "Vis eldste kommentarar fyrst"
+
+msgid "Since"
+msgstr "Sidan"
+
+msgid "Tag"
+msgstr "Stikkord"
+
+msgid "Tag results for"
+msgstr "Stikkord for"
+
+msgid "Tags"
+msgstr "Stikkord"
+
+msgid "Thank you for registering at %s!"
+msgstr "Takk for at du registrera deg på %s!"
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "Galleriet er stengd for vedlikehald. Prøv litt seinare."
+
+msgid "The passwords do not match"
+msgstr "Passorda er ikkje like"
+
+msgid "Thumbnails"
+msgstr "Miniatyrbilete"
+
+msgid "User comments"
+msgstr "Brukarkommentarar"
+
+msgid "User: %s"
+msgstr "Brukar: %s"
+
+msgid "Username"
+msgstr "Brukarnamn"
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "Brukarnamn \"%s\" i galleri %s"
+
+msgid "Username is mandatory"
+msgstr "Brukarnamn er påkrevd"
+
+msgid "Username modification"
+msgstr "Endre brukarnamn"
+
+msgid "Username or email"
+msgstr "Brukarnamn eller e-post"
+
+msgid "Username: %s"
+msgstr "Brukarnamn: %s"
+
+msgid "View"
+msgstr "Vis"
+
+msgid "View in"
+msgstr "Vis i"
+
+msgid "Visits"
+msgstr "Visingar"
+
+msgid "Visits, high &rarr; low"
+msgstr "Visingar, mange &rarr; få"
+
+msgid "Visits, low &rarr; high"
+msgstr "Visingar, få &rarr; mange"
+
+msgid "Webmaster"
+msgstr "Webmaster"
+
+msgid "Website"
+msgstr "Nettstad"
+
+msgid "Week %d"
+msgstr "Veke %d"
+
+msgid "Welcome"
+msgstr "Velkomen"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "Velkomen til ditt Piwigo biletgalleri!"
+
+msgid "Yes"
+msgstr "Ja"
+
+msgid "You are not authorized to access the requested page"
+msgstr "Du har ikkje tilgang til å sjå denne sida"
+
+msgid "Your comment has been registered"
+msgstr "Kommentaren din er registrera"
+
+msgid "Your favorites"
+msgstr "Mine favorittar"
+
+msgid "Your password has been reset"
+msgstr "Passordet er nullstilt"
+
+msgid "add this photo to your favorites"
+msgstr "legg dette bilete til favorittliste"
+
+msgid "delete all photos from your favorites"
+msgstr "fjern alle bilete frå favorittliste"
+
+msgid "delete this photo from your favorites"
+msgstr "fjern dette biletet frå favorittliste"
+
+msgid "all"
+msgstr "alle"
+
+msgid "ascending"
+msgstr "stigande"
+
+msgid "available for administrators only"
+msgstr "kun tilgjengeleg for administrator"
+
+msgid "chronology_monthly_calendar"
+msgstr "Månadskalender"
+
+msgid "chronology_monthly_list"
+msgstr "Månadsliste"
+
+msgid "chronology_weekly_list"
+msgstr "Vekeliste"
+
+msgid "cloud"
+msgstr "sky"
+
+msgid "comment date"
+msgstr "kommentardato"
+
+msgid "created after %s (%s)"
+msgstr "oppretta etter %s (%s)"
+
+msgid "created before %s (%s)"
+msgstr "oppretta før %s (%s)"
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "oppretta mellom %s (%s) og %s (%s)"
+
+msgid "created on %s"
+msgstr "oppretta %s"
+
+msgid "descending"
+msgstr "synkande"
+
+msgid "display a set of random photos"
+msgstr "vis tilfeldige bilete"
+
+msgid "display all photos in all sub-albums"
+msgstr "vis alle bilete i underalbum"
+
+msgid "display available tags"
+msgstr "vis tilgjengelege stikkord"
+
+msgid "display best rated photos"
+msgstr "vis best rangera bilete"
+
+msgid "display last user comments"
+msgstr "vis siste brukarkommentarar"
+
+msgid "display most recent photos"
+msgstr "vis nye bilete"
+
+msgid "display most visited photos"
+msgstr "vis mest viste bilete"
+
+msgid "display only recently posted photos"
+msgstr "vis bare bilete nyleg lagt til"
+
+msgid "display photos linked to this tag"
+msgstr "vis bilete knytt til dette stikkordet"
+
+msgid "display recently updated albums"
+msgstr "vis nyleg oppdatera album"
+
+msgid "display this album"
+msgstr "vis dette albumet"
+
+msgid "display your favorites photos"
+msgstr "vis dine favorittbilete"
+
+msgid "edit"
+msgstr "endre"
+
+msgid "excluded"
+msgstr "ekskludera"
+
+msgid "from %s to %s"
+msgstr "frå %s til %s"
+
+msgid "group by letters"
+msgstr "grupper på bokstav"
+
+msgid "guest"
+msgstr "gjest"
+
+msgid "html tags are not allowed in login"
+msgstr "html-taggar er ikkje lov i brukarnavn"
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] "i %d underalbum"
+msgstr[1] "i %d underalbum"
+
+msgid "this login is already used"
+msgstr "dette brukarnamnet er allereie i bruk"
+
+msgid "in this album"
+msgstr "i dette albumet"
+
+msgid "included"
+msgstr "inkludera"
+
+msgid "large"
+msgstr "L - stort"
+
+msgid "last %d days"
+msgstr "siste %d dagar"
+
+msgid "letters"
+msgstr "bokstavar"
+
+msgid "login mustn't end with a space character"
+msgstr "brukarnamn kan ikke avsluttast med mellomrom"
+
+msgid "login mustn't start with a space character"
+msgstr "brukarnamn kan ikkje starte med mellomrom"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "e-postadresse må vera på formen xxx@yyy.eee (døme: user@example.org)"
+
+msgid "mandatory"
+msgstr "påkrevd"
+
+msgid "medium"
+msgstr "M - middels stor"
+
+msgid "obligatory"
+msgstr "påkrevd"
+
+msgid "password updated"
+msgstr "passordet er oppdatera"
+
+msgid "photo"
+msgstr "bilete"
+
+msgid "photos posted during the last %d days"
+msgstr "bilete lagt inn dei siste %d dagane"
+
+msgid "posted after %s (%s)"
+msgstr "lagt til etter %s (%s)"
+
+msgid "posted before %s (%s)"
+msgstr "lagt til før %s (%s)"
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "lagt til mellom %s (%s) og %s (%s)"
+
+msgid "posted on %s"
+msgstr "lagt til %s"
+
+msgid "remove this tag from the list"
+msgstr "slett dette stikkordet frå lista"
+
+msgid "representative"
+msgstr "miniatyrbilete for album"
+
+msgid "return to normal view mode"
+msgstr "attende til normalvisning"
+
+msgid "return to the display of all photos"
+msgstr "attende til å vise alle bilete"
+
+msgid "set as album representative"
+msgstr "set som miniatyrbilete for album"
+
+msgid "show tag cloud"
+msgstr "vis stikkordsky"
+
+msgid "the username must be given"
+msgstr "brukarnamn er påkrevd"
+
+msgid "this email address is already in use"
+msgstr "denne e-postadressa er allereie i bruk"
+
+msgid "thumb"
+msgstr "Miniatyrbilete"
+
+msgid "useful when password forgotten"
+msgstr "nyttig om du gløymer passorder"
+
+msgid "search"
+msgstr "søk"
+
+msgid "slideshow"
+msgstr "biletvisning"
+
+msgid "small"
+msgstr "S - lite"
+
+msgid "square"
+msgstr "Firkant"
+
+msgid "stop the slideshow"
+msgstr "stopp biletvisning"
+
+msgid "the beginning"
+msgstr "starten"
+
+msgid "today"
+msgstr "idag"
+
+msgid "wrong date"
+msgstr "feil dato"
+
+msgid "xlarge"
+msgstr "XL - ekstra stor"
+
+msgid "xsmall"
+msgstr "XS - ekstra lite"
+
+msgid "xxlarge"
+msgstr "XXL - kjempestort"
+
+msgid "Play of slideshow"
+msgstr "Start bildevisning"
+
+msgid "Please enter your username or email address."
+msgstr "Skriv inn navnet eller e-postadressa di."
+
+msgid "Please, enter a login"
+msgstr "Skriv inn brukarnavn"
+
+msgid "Photo sizes"
+msgstr "Biletstørrelsar"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "Bilettittel, A &rarr; Å"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "Bilettittel, Å &rarr; A"
+
+msgid "Piwigo Help"
+msgstr "Hjelp for Piwigo"
+
+msgid "Number of photos per page"
+msgstr "Antal bilete pr side"
+
+msgid "Original"
+msgstr "Original"
+
+msgid "Original dimensions"
+msgstr "Original størrelse"
+
+msgid "Password"
+msgstr "Passord"
+
+msgid "Password Reset"
+msgstr "Nullstill passord"
+
+msgid "Password forgotten"
+msgstr "Gløymt passord"
+
+msgid "Password reset is not allowed for this user"
+msgstr "Nullstilling av passord er ikkje lov for denne brukaren"
+
+msgid "Password: %s"
+msgstr "Passord: %s"
+
+msgid "Language"
+msgstr "Språk"
+
+msgid "Last"
+msgstr "Siste"
+
+msgid "Links"
+msgstr "Lenker"
+
+msgid "Login"
+msgstr "Logg inn"
+
+msgid "Logout"
+msgstr "Logg ut"
+
+msgid "Menu"
+msgstr "Meny"
+
+msgid "Mobile"
+msgstr "Mobil"
+
+msgid "Most visited"
+msgstr "Mest vist"
+
+msgid "N/A"
+msgstr "N/A"
+
+msgid "New password"
+msgstr "Nytt passord"
+
+msgid "Next"
+msgstr "Neste"
+
+msgid "No"
+msgstr "Nei"
+
+msgid "Notification"
+msgstr "RSS-kanalar"
+
+msgid "Number of items"
+msgstr "Antal"
+
+msgid "Hello %s,"
+msgstr "Hei %s,"
+
+msgid "Hello"
+msgstr "Hallo"
+
+msgid "Forgot your password?"
+msgstr "Gløymt passordet?"
+
+msgid "Filter and display"
+msgstr "Filtrer og vis"
+
+msgid "First"
+msgstr "Fyrste"
+
+msgid "Filter"
+msgstr "Filter"
+
+msgid "Filesize"
+msgstr "Filstørrelse"
+
+msgid "File name, A &rarr; Z"
+msgstr "Filnavn, A &rarr; Å"
+
+msgid "File name, Z &rarr; A"
+msgstr "Filnavn, Å &rarr; A"
+
+msgid "File name"
+msgstr "Filnavn"
+
+msgid "File"
+msgstr "Fil"
+
+msgid "Favorites"
+msgstr "Favorittar"
+
+msgid "Desktop"
+msgstr "Skrivebord"
+
+msgid "Default"
+msgstr "Standard"
+
+msgid "Delete"
+msgstr "Slett"
+
+msgid "Dimensions"
+msgstr "Størrelse"
+
+msgid "Display"
+msgstr "Vis"
+
+msgid "Download"
+msgstr "last ned"
+
+msgid "Download this file"
+msgstr "Last ned denne fila"
+
+msgid "EXIF Metadata"
+msgstr "EXIF Metadata"
+
+msgid "Edit"
+msgstr "Endre"
+
+msgid "Edit a comment"
+msgstr "Endre ein kommentar"
+
+msgid "Email address"
+msgstr "E-postadresse"
+
+msgid "Email address is mandatory"
+msgstr "E-postadresse er obligatorisk"
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "E-postadresse manglar. Skriv inn ei e-postadresse."
+
+msgid "Email: %s"
+msgstr "E-post: %s"
+
+msgid "Empty query. No criteria has been entered."
+msgstr "Tom spørring. Kriterie er ikkje lagt inn."
+
+msgid "End-Date"
+msgstr "Sluttdato"
+
+msgid "Enter your new password below."
+msgstr "Skriv inn nytt passord."
+
+msgid "Enter your personnal informations"
+msgstr "Legg inn personleg informasjon"
+
+msgid "Accelerate diaporama speed"
+msgstr "Raskare framvising"
+
+msgid "Browser: %s"
+msgstr "Nettlesar: %s"
+
+msgid "Close this window"
+msgstr "Let att dette vindauget"
+
+msgid "Comment"
+msgstr "Kommentar"
+
+msgid "Comment by %s"
+msgstr "Kommentera av %s"
+
+msgid "Comment: %s"
+msgstr "Kommentar: %s"
+
+msgid "Comments"
+msgstr "Kommentarar"
+
+msgid "Connected user: %s"
+msgstr "Pålogga brukar: %s"
+
+msgid "Are you sure?"
+msgstr "Er du sikker?"
+
+msgid "Author"
+msgstr "Fotograf"
+
+msgid "Author: %s"
+msgstr "Fotograf: %s"
+
+msgid "Auto login"
+msgstr "Automatisk innlogging"
+
+msgid "Calendar"
+msgstr "Kalender"
+
+msgid "Change my password"
+msgstr "Endre passord"
+
+msgid "Check your email for the confirmation link"
+msgstr "Ein e-post med lenke for å godkjenne og stadfeste er sendt."
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "Klikk her dersom nettlesaren ikkje automatisk sender deg vidare"
+
+msgid "Click on the photo to see it in high definition"
+msgstr "Klikk på biletet for å sjå det i høg oppløysing"
+
+msgid "2small"
+msgstr "XXS - bitte lite"
+
+msgid "A comment on your site"
+msgstr "Ein kommentar på nettsida"
+
+msgid "About"
+msgstr "Om"
+
+msgid "About Piwigo"
+msgstr "Om Piwigo"
+
+msgid "Add a comment"
+msgstr "Legg til ein kommentar"
+
+msgid "Admin: %s"
+msgstr "Administrer %s"
+
+msgid "Administration"
+msgstr "Administrasjon"
+
+msgid "Album"
+msgstr "Album"
+
+msgid "Album results for"
+msgstr "Albumresultat for"
+
+msgid "Album: %s"
+msgstr "Album %s"
+
+msgid "Albums"
+msgstr "Album"
+
+msgid "All"
+msgstr "Alle"
+
+msgid "All tags"
+msgstr "Alle stikkord"
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "Ein administrator må godkjenne kommentaren din før den blir vist."
+
+msgid "... or browse your empty gallery"
+msgstr "... eller bla i ditt nye galleri"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) Denne kommentaren krev godkjenning"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "%d bilete er og knytt til desse stikkorda"
+msgstr[1] "%d bilete er og knytt til desse stikkorda"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "%d bilete"
+msgstr[1] "%d bilete"
+
+msgid "%d comments to validate"
+msgstr "%d kommentarar for godkjenning"
+
+msgid "%d comment to validate"
+msgstr "%d kommentar for godkjenning"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d kommentar"
+msgstr[1] "%d kommentarar"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d album er oppdatert"
+msgstr[1] "%d album er oppdatert"
+
+msgid "Search by date"
+msgstr "databasekall på"
+
+msgid "Search for Author"
+msgstr "Søk"
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "Søk i stikkord"
+
+msgid "Search tags"
+msgstr "Søk i stikkord"
+
+msgid "SQL queries in"
+msgstr "databasekall på"
+
+msgid "Search"
+msgstr "Søk"
+
+msgid "Specials"
+msgstr "Biletvisingar"
+
+msgid "Quick connect"
+msgstr "Pålogging"
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "RSS-kanalen gjev informasjon om nye hendingar på nettstaden: nye bilete, oppdatera album og nye kommentarar. Kan visast i ein RSS-lesar."
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "Antal bilete pr side må vera eit tal større enn null"
+
+msgid "This author modified following comment:"
+msgstr "Forfattaren endra fylgjande kommentar:"
+
+msgid "This author removed the comment with id %d"
+msgstr "Forfattaren fjerna kommentar med id %d"
+
+msgid "This login is already used by another user"
+msgstr "Brukarnamnet er allereie i bruk av ein annan brukar"
+
+msgid "To reset your password, visit the following address:"
+msgstr "For å nullstille passordet ditt, kan du gå til denne adressa:"
+
+msgid "Unknown feed identifier"
+msgstr "Ukjend RSS-kanal"
+
+msgid "Here are your connection settings"
+msgstr "Her er innstillingar for pålogging"
+
+msgid "Send my connection settings by email"
+msgstr "Send informasjon om pålogging på e-post"
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "Registreringa var vellukka. Du vil straks motta ein e-post med informasjon om pålogging.\nVelkommen! "
+
+msgid "Unknown identifier"
+msgstr "Ukjent biletnummer"
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "Brukaren \"%s\" har ikkje e-postadresse - nullstilling av passord er ikkje mogleg"
+
+msgid "You will receive a link to create a new password via email."
+msgstr "Du vil motta ei lenke der du kan opprette nytt passord på e-post."
+
+msgid "Your Gallery Customization"
+msgstr "Tilpass galleriet ditt"
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "Kommentaren din vart IKKJE registrera fordi den ikkje vart godkjend av godkjenningsreglane"
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "Brukarnamnet ditt vart endra til: %s"
+
+msgid "Your website URL is invalid"
+msgstr "URL til nettstaden er feil"
+
+msgid "display a calendar by creation date"
+msgstr "vis kalender etter dato oppretta"
+
+msgid "display a calendar by posted date"
+msgstr "vis kalender etter dato lagt inn"
+
+msgid "display each day with photos, month per month"
+msgstr "vis kvar dag med bilete, månad for månad"
+
+msgid "Repeat the slideshow"
+msgstr "Vis bilete ommatt"
+
+msgid "Requested album does not exist"
+msgstr "Albumet du ynskjer å visa finst ikkje"
+
+msgid "Requested tag does not exist"
+msgstr "Stikkordet finst ikkje"
+
+msgid "Reset"
+msgstr "Nullstill"
+
+msgid "Reset to default values"
+msgstr "Set tilbake til standardinnstillingar"
+
+msgid "Retrieve password"
+msgstr "Hent passord"
+
+msgid "Return to home page"
+msgstr "Attende til startside"
+
+msgid "Search for all terms"
+msgstr "Søk etter alle orda"
+
+msgid "Search for any term"
+msgstr "Søk etter eitt av orda"
+
+msgid "Search for words"
+msgstr "Søk etter ord"
+
+msgid "Search in albums"
+msgstr "Søk i album"
+
+msgid "Search in sub-albums"
+msgstr "Søk i underalbum"
+
+msgid "Search results"
+msgstr "Søkeresultat"
+
+msgid "Show file metadata"
+msgstr "Vis metadata for fila"
+
+msgid "Sort order"
+msgstr "Sorteringsrekkefylgje"
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "Piwigo oppdaga ein feil som ikkje kan rettast opp"
+
+msgid "Post date"
+msgstr "Dato lagt inn"
+
+msgid "Posted on"
+msgstr "Lagt inn"
+
+msgid "Powered by"
+msgstr "Driven av"
+
+msgid "Preferences"
+msgstr "Føretrekte innstillingar"
+
+msgid "Previous"
+msgstr "Førre"
+
+msgid "Profile"
+msgstr "Profil"
+
+msgid "Quick search"
+msgstr "Søk"
+
+msgid "RSS feed"
+msgstr "RSS-kanal"
+
+msgid "Random photos"
+msgstr "Tilfeldige bilete"
+
+msgid "Rank"
+msgstr "Rangesring"
+
+msgid "Recent albums"
+msgstr "Nye album"
+
+msgid "Recent period"
+msgstr "Siste periode"
+
+msgid "Recent period must be a positive integer value"
+msgstr "Siste periode må vera eit positivt heiltal"
+
+msgid "Recent photos"
+msgstr "Siste bilete"
+
+msgid "Redirection..."
+msgstr "Vidaresending..."
+
+msgid "Reduce diaporama speed"
+msgstr "Reduser hastighet for biletvising"
+
+msgid "Register"
+msgstr "Registrering"
+
+msgid "Related tags"
+msgstr "Liknande stikkord"
+
+msgid "Identification"
+msgstr "Brukarmeny"
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "Dersom dette var ein feil, kan du ignorere denne e-posten og ingen ting vil skje vidare."
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "Dersom du mottok denne e-posten ved ein feil, ta kontakt med oss på %s"
+
+msgid "Invalid key"
+msgstr "Ugyldig nøkkel"
+
+msgid "Invalid password!"
+msgstr "Ugyldig passord1"
+
+msgid "Invalid username or email"
+msgstr "Ugyldig brukarnamn eller e-post"
+
+msgid "Kind of date"
+msgstr "Datotype"
+
+msgid "Manage this user comment: %s"
+msgstr "Handter kommentarane til denne brukaren: %s"
+
+msgid "Manual sort order"
+msgstr "Manuell sortering"
+
+msgid "New on %s"
+msgstr "Ny %s"
+
+msgid "Not repeat the slideshow"
+msgstr "Ikkje repeter biletframvisinga"
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "Biletnummer, 1 &rarr; 9"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "Biletnummer, 9 &rarr; 1"
+
+msgid "Page not found"
+msgstr "Sida vart ikkje funnen"
+
+msgid "Pause of slideshow"
+msgstr "Pause biletframvisninga"
+
+msgid "Permalink for album not found"
+msgstr "Permalenke for dette albument vart ikkje funnen"
+
+msgid "Photos only RSS feed"
+msgstr "RSS-kanal med bare bilette"
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "Bilete lagt inn den siste dagen (%s dag)."
+msgstr[1] "Bilete lagt inn dei siste %d dagane."
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "... eller deaktiver denne meldinga, eg finn ut av dette sjølv"
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "Overbufringsvern: Vent litt før du prøver å legge inn ein kommentar til"
+
+msgid "Any tag"
+msgstr "Eit av stikkorda"
+
+msgid "Bad request"
+msgstr "Feil førespurnad"
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "Feil status for gjestebrukar, standard status vil bli bruka. Meld frå til webmaster."
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "Komplett RSS-kanal (bilete og kommentarar)"
+
+msgid "Confirm Password"
+msgstr "Stadfest passord"
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "Cookies er blokkera eller ikkje støtta av nettlesaren din. Du må aktivere cookies for å logge inn."
+
+msgid "Date created, new &rarr; old"
+msgstr "Dato oppretta, ny &rarr; gamal"
+
+msgid "Date created, old &rarr; new"
+msgstr "Dato oppretta, gamal &rarr; ny"
+
+msgid "Date posted, new &rarr; old"
+msgstr "Dato lagt inn, ny &rarr; gamal"
+
+msgid "Date posted, old &rarr; new"
+msgstr "Dato lagt inn, gamal &rarr; ny"
+
+msgid "Error sending email"
+msgstr "Feil ved utsending av e-post"
+
+msgid "Forbidden"
+msgstr "Ikkje tillaten"
+
+msgid "Go through the gallery as a visitor"
+msgstr "Naviger i galleriet som ein gjest"
+
+msgid "Help"
+msgstr "Hjelp"
+
+msgid "Home"
+msgstr "Heim"
+
+msgid "Email"
+msgstr "E-post"
+
+msgid "First Page"
+msgstr "Fyrste side"
+
+msgid "Go back to the album"
+msgstr "Attende til album"
+
+msgid "Last Page"
+msgstr "Siste side"
+
+msgid "Password is missing. Please enter the password."
+msgstr "Passord manglar. Skriv inn eit passord."
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Stadfesting av passord manglar. Skriv inn stadfesting av passord."
+
+msgid "%d photos per page"
+msgstr "%d bilete på kvar side"
+
+msgid "Theme"
+msgstr "Utsjånadsmal"
+
+msgid "No results for"
+msgstr "Ikkje noko resultat for"
+
+msgid "Apply on properties"
+msgstr "Gjer aktiv for eigneskapar"
+
+msgid "Photo description"
+msgstr "Biletskildring"
+
+msgid "Photo title"
+msgstr "Bilettittel"
+
+msgid "Album name, A &rarr; Z"
+msgstr "Albumnamn, A &rarr; &Aring;"
+
+msgid "Album name, Z &rarr; A"
+msgstr "Albumnamn, &Aring; &rarr; A"
+
+msgid "Link: %s"
+msgstr "Lenke: %s"
+
+msgid "Related albums"
+msgstr "Liknande album"
+
+msgid "generate random password"
+msgstr "generer tilfeldig passord"
+
+msgid "Your authentication key is no longer valid."
+msgstr "Din autentiserings nykel er ikkje lenger gyldig "
+
+msgid "Password: ********** (no copy by email)"
+msgstr "Passord: ********** (ingen kopi per e-post)"
+
+msgid "Invalid username or password!"
+msgstr "Ugyldig brukernamn og passord"
+
+msgid "Album name, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+msgstr "Albumnavn, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+
+msgid "Album name, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+msgstr "Albumnavn, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+
+msgid "Start-Date"
+msgstr "Startdate"
+
+msgid "%d visits"
+msgstr "%d visingar"
+
+msgid "piwigo_day_0"
+msgstr "Sundag"
+
+msgid "piwigo_day_1"
+msgstr "Måndag"
+
+msgid "piwigo_day_2"
+msgstr "Tysdag"
+
+msgid "piwigo_day_3"
+msgstr "Onsdag"
+
+msgid "piwigo_day_4"
+msgstr "Torsdag"
+
+msgid "piwigo_day_5"
+msgstr "Fredag"
+
+msgid "piwigo_day_6"
+msgstr "Laurdag"
+
+msgid "piwigo_month_10"
+msgstr "Oktober"
+
+msgid "piwigo_month_11"
+msgstr "November"
+
+msgid "piwigo_month_12"
+msgstr "Desember"
+
+msgid "piwigo_month_1"
+msgstr "Januar"
+
+msgid "piwigo_month_2"
+msgstr "Februar"
+
+msgid "piwigo_month_3"
+msgstr "Mars"
+
+msgid "piwigo_month_4"
+msgstr "April"
+
+msgid "piwigo_month_5"
+msgstr "Mai"
+
+msgid "piwigo_month_6"
+msgstr "June"
+
+msgid "piwigo_month_7"
+msgstr "Juli"
+
+msgid "piwigo_month_8"
+msgstr "August"
+
+msgid "piwigo_month_9"
+msgstr "September"
+

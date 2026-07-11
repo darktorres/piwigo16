@@ -1,0 +1,23 @@
+# Piwigo translation — fa_IR
+# Source: whats_new_15.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: fa_IR\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "A new interface for user management"
+msgstr "یک رابط کاربری جدید برای مدیریت کاربران"
+
+msgid "Brand new features : Activities logs and PDF reader"
+msgstr "قابلیت‌های جدید: تاریخچه‌ی فعالیت‌ها و پی‌دی‌اف خوان"
+
+msgid "Enhanced interface for batch manager and album selector"
+msgstr "بهبود رابط کاربری بخش مدیریت دسته‌ای و انتخاب‌کننده‌ی آلبوم"
+
+msgid "Even more filters for the gallery search engine"
+msgstr "فیلترهای بیشتر برای موتور جستجوی گالری"
+

@@ -1,0 +1,140 @@
+# Piwigo translation — nn_NO
+# Source: install.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: nn_NO\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Database name"
+msgstr "Databasenamn"
+
+msgid "Note you can change your configuration by yourself and restart Piwigo after that."
+msgstr "Du kan endre konfigurasjonen sjølv og ta omstart på Piwigo etterpå."
+
+msgid "You may referer to your hosting provider's support and see how you could switch to PHP 5 by yourself."
+msgstr "Du bør sjekke med dei som leverar nett-tenaren om korleis du kan byte til PHP5.2"
+
+msgid "also given by your host provider"
+msgstr "er og levera av den som leverar nett-tenaren"
+
+msgid "database tables names will be prefixed with it (enables you to manage better your tables)"
+msgstr "namna på databasetabellane vil verta prefiksa med dette (gjev deg mogleghet til å handtere databasetabellane betre)"
+
+msgid "enter a login for webmaster"
+msgstr "skriv inn brukarnamn for webmaster"
+
+msgid "please enter your password again"
+msgstr "skriv inn passord ei gong til"
+
+msgid "user login given by your host provider"
+msgstr "brukarnamn du har fått av den som har nett-tenaren"
+
+msgid "user password given by your host provider"
+msgstr "passord du har fått av den som har nett-tenaren"
+
+msgid "verification"
+msgstr "sjekk"
+
+msgid "webmaster login can't contain characters ' or \""
+msgstr "brukarnamn for webmaster kan ikkje innehalde tegna ' eller \""
+
+msgid "Don't hesitate to consult our forums for any help : %s"
+msgstr "Ikkje vent med å sjå på foruma våre for hjelp: %s"
+
+msgid "PHP 5 is required"
+msgstr "PHP5.2 er påkrevd"
+
+msgid "Piwigo may try to switch your configuration to PHP 5 by creating or modifying a .htaccess file."
+msgstr "Piwigo kan prøve å byte din konfigurasjon til PHP5.2 ved å lage eller endre fila .htaccess."
+
+msgid "Piwigo was not able to configure PHP 5."
+msgstr "Piwigo greidde ikkje å konfigurere PHP5.2"
+
+msgid "Sorry!"
+msgstr "Orsak!"
+
+msgid "Start Install"
+msgstr "Start installasjon"
+
+msgid "Try to configure PHP 5"
+msgstr "Prøv å konfigurere PHP5.2"
+
+msgid "User"
+msgstr "Brukar"
+
+msgid "Visitors will be able to contact site administrator with this mail"
+msgstr "Dei som vitjar nettsida kan bruke denne e-postadressa for å kontakte administrator for nettsida"
+
+msgid "Welcome to my photo gallery"
+msgstr "Velkomen til mitt biletgalleri"
+
+msgid "Welcome to your new installation of Piwigo!"
+msgstr "Velkomen til din nye installasjon av Piwigo!"
+
+msgid "You can download the config file and upload it to local/config directory of your installation."
+msgstr "Du kan laste ned konfigurasjonsfila og laste den opp til \"local/config\" katalogen i din installasjon."
+
+msgid "Admin configuration"
+msgstr "Administratorkonfigurasjone"
+
+msgid "An alternate solution is to copy the text in the box above and paste it into the file \"local/config/database.inc.php\" (Warning : database.inc.php must only contain what is in the textarea, no line return or space character)"
+msgstr "Ein alternativ løysing er å kopiere teksten i boksen over og lime den inn i fila \"local/config/database.inc.php\" (Åtvaring: \"database.inc.php\" kan bare innehalde det som er i tekstfeltet, ikkje lineskift eller mellomrom)"
+
+msgid "Basic configuration"
+msgstr "Grunnleggande konfigurasjon"
+
+msgid "Can't connect to server"
+msgstr "Kan ikkje kople til tenar"
+
+msgid "Congratulations, Piwigo installation is completed"
+msgstr "Gratulere, installasjon av Piwigo er ferdig"
+
+msgid "Connection to server succeed, but it was impossible to connect to database"
+msgstr "Kopling til tenar er vellukka, men tilkopling til databasen var ikkje mogleg."
+
+msgid "Creation of config file local/config/database.inc.php failed."
+msgstr "Oppretting av konfigurasjonsfila \"local/config/database.inc.php\" feila."
+
+msgid "Database configuration"
+msgstr "Databasekonfigurasjon"
+
+msgid "Database table prefix"
+msgstr "Prefiks for databasetabellar"
+
+msgid "Default gallery language"
+msgstr "Standard språk for galleriet"
+
+msgid "Download the config file"
+msgstr "Last ned konfigurasjonsfil"
+
+msgid "Hope to see you back soon."
+msgstr "Håpar å sjå deg att snart."
+
+msgid "Host"
+msgstr "Tenar"
+
+msgid "Installation"
+msgstr "Installasjon"
+
+msgid "It appears your webhost is currently running PHP %s."
+msgstr "Det verkar som nettenaren køyrer PHP %s."
+
+msgid "It will be shown to the visitors. It is necessary for website administration"
+msgstr "Den vil bli vist til dei som vitjar galleriet. Den er naudsynt for administrasjon av nettsida"
+
+msgid "Just another Piwigo gallery"
+msgstr "Enda eit Piwigo galleri"
+
+msgid "Keep it confidential, it enables you to access administration panel"
+msgstr "Hald dette hemmeleg, det gjev deg tilgang til administrasjonspanelet"
+
+msgid "Need help ? Ask your question on <a href=\"%s\">Piwigo message board</a>."
+msgstr "Treng du hjelp? Still spørsmålet ditt på <a href=\"%s\"> Piwigo sitt forum</a>."
+
+msgid "localhost or other, supplied by your host provider"
+msgstr "localhost eller servernamn gjeve av administrator for server"
+

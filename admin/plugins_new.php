@@ -10,6 +10,8 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\plugins;
+use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\AppInfo;
 use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
@@ -100,7 +102,7 @@ if (isset($_GET['installstatus'])) {
             if (is_string($installed_plugin_id) && isset($plugins->fs_plugins[$installed_plugin_id])) {
                 pwg_activity(
                     'system',
-                    ACTIVITY_SYSTEM_PLUGIN,
+                    ActivitySystem::Plugin,
                     'install',
                     [
                         'plugin_id' => $installed_plugin_id,
@@ -214,7 +216,7 @@ if ($plugins->get_server_plugins(true, $beta_test)) {
             $compatible_with_versions = $plugin['compatible_with_versions'] ?? null;
             if (is_array($compatible_with_versions)) {
                 foreach ($compatible_with_versions as $vers) {
-                    if (is_string($vers) and get_branch_from_version($vers) == get_branch_from_version(PHPWG_VERSION)) {
+                    if (is_string($vers) and get_branch_from_version($vers) == get_branch_from_version(AppInfo::VERSION)) {
                         $has_compatible_version = true;
                     }
                 }
@@ -258,7 +260,7 @@ if ($plugins->get_server_plugins(true, $beta_test)) {
     push_plugins_new_page_message('errors', l10n('Can\'t connect to server.'), $page);
 }
 
-if (! $beta_test and (bool) preg_match('/(beta|RC)/', PHPWG_VERSION)) {
+if (! $beta_test and (bool) preg_match('/(beta|RC)/', AppInfo::VERSION)) {
     $template->assign('BETA_URL', $base_url . '&amp;beta-test=true');
 }
 $template->assign('ADMIN_PAGE_TITLE', l10n('Plugins'));

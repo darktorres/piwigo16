@@ -10,6 +10,8 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\Image\pwg_image;
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 // Bootstrap globals, set by include/common.inc.php.
@@ -99,10 +101,10 @@ $selected_category = [];
 
 if (isset($_GET['album'])) {
     // set the category from get url or ...
-    check_input_parameter('album', $_GET, false, PATTERN_ID);
+    check_input_parameter('album', $_GET, false, ValidationPattern::ID);
 
     // check_input_parameter() above validated (or killed the request via
-    // fatal_error()) that a non-empty $_GET['album'] matches PATTERN_ID
+    // fatal_error()) that a non-empty $_GET['album'] matches ValidationPattern::ID
     // (digits only) -- it doesn't retype the superglobal though, so we
     // narrow once here and reuse this variable below.
     $album_id = is_numeric($_GET['album']) ? (int) $_GET['album'] : null;
@@ -110,7 +112,7 @@ if (isset($_GET['album'])) {
     // test if album really exists
     $query = '
 SELECT id, uppercats
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE id = ' . ($album_id ?? 0) . '
 ;';
     $result = pwg_query($query);
@@ -131,9 +133,9 @@ SELECT id, uppercats
     // we need to know the category in which the last photo was added
     $query = '
 SELECT category_id, c.uppercats
-  FROM ' . IMAGES_TABLE . ' AS i
-    JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON image_id = i.id
-    JOIN ' . CATEGORIES_TABLE . ' AS c ON category_id = c.id
+  FROM ' . Tables::images() . ' AS i
+    JOIN ' . Tables::imageCategory() . ' AS ic ON image_id = i.id
+    JOIN ' . Tables::categories() . ' AS c ON category_id = c.id
   ORDER BY i.id DESC
   LIMIT 1
 ;
@@ -159,7 +161,7 @@ $template->assign('selected_category', $selected_category);
 $query = '
 SELECT
     COUNT(*)
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
 ;';
 $row = pwg_db_fetch_row(pwg_query($query));
 assert($row !== null);

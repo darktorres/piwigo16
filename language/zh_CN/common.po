@@ -1,0 +1,1542 @@
+# Piwigo translation — zh_CN
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: zh_CN\n"
+"Plural-Forms: nplurals=1; plural=(0);\n"
+"X-Piwigo-Language-Name: 简体中文\n"
+"X-Piwigo-Country: 中国\n"
+"X-Piwigo-Jquery-Code: zh-CN\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: cn\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "%d Kb"
+msgstr "%d KB"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "已更新 %d 个相册"
+msgstr[1] "已更新 %d 个相册"
+
+msgid "%d comment to validate"
+msgstr "有 %d 条评论等待审核"
+
+msgid "%d comments to validate"
+msgstr "有 %d 条评论等待审核"
+
+msgid "%d new comment"
+msgstr "%d 条新评论"
+
+msgid "%d new comments"
+msgstr "%d 条新评论"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d 条评论"
+msgstr[1] "%d 条评论"
+
+msgid "%d hit"
+msgid_plural "%d hits"
+msgstr[0] "%d 次点击"
+msgstr[1] "%d 次点击"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "%d 张新图片"
+msgstr[1] "%d 张新图片"
+
+msgid "%d new user"
+msgstr "%d 位新用户"
+
+msgid "%d new users"
+msgstr "%d 位新用户"
+
+msgid "About"
+msgstr "关于"
+
+msgid "All tags"
+msgstr "符合所有标签"
+
+msgid "Any tag"
+msgstr "符合任一标签"
+
+msgid "Author"
+msgstr "作者"
+
+msgid "Albums"
+msgstr "相册"
+
+msgid "Album"
+msgstr "相册"
+
+msgid "Close this window"
+msgstr "关闭此窗口"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "完整的 RSS 订阅（图片，评论）"
+
+msgid "Confirm Password"
+msgstr "确认密码"
+
+msgid "Connection settings"
+msgstr "注册信息"
+
+msgid "Login"
+msgstr "登录"
+
+msgid "Contact webmaster"
+msgstr "联系站长"
+
+msgid "Create a new account"
+msgstr "新建帐号"
+
+msgid "Created on"
+msgstr "创建于"
+
+msgid "Creation date"
+msgstr "创建日期"
+
+msgid "Current password is wrong"
+msgstr "当前密码错误"
+
+msgid "Dimensions"
+msgstr "尺寸"
+
+msgid "Display"
+msgstr "显示"
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "邮箱地址为空。请填写您的邮箱地址。"
+
+msgid "Email address"
+msgstr "邮箱地址"
+
+msgid "Enter your personnal informations"
+msgstr "输入您的个人信息"
+
+msgid "Error sending email"
+msgstr "发送邮件出错"
+
+msgid "File name"
+msgstr "文件名"
+
+msgid "File"
+msgstr "文件名"
+
+msgid "Filesize"
+msgstr "文件大小"
+
+msgid "Filter and display"
+msgstr "筛选并显示"
+
+msgid "Filter"
+msgstr "筛选"
+
+msgid "Forgot your password?"
+msgstr "忘记密码？"
+
+msgid "Go through the gallery as a visitor"
+msgstr "以访客身份浏览图库"
+
+msgid "Help"
+msgstr "帮助"
+
+msgid "Identification"
+msgstr "用户信息"
+
+msgid "Photos only RSS feed"
+msgstr "仅订阅图片"
+
+msgid "Keyword"
+msgstr "关键字"
+
+msgid "Links"
+msgstr "链接"
+
+msgid "N/A"
+msgstr "不适用"
+
+msgid "New on %s"
+msgstr "创建于 %s"
+
+msgid "Notification"
+msgstr "RSS订阅"
+
+msgid "Number of items"
+msgstr "总数"
+
+msgid "Original dimensions"
+msgstr "原始尺寸"
+
+msgid "Password forgotten"
+msgstr "忘记密码"
+
+msgid "Password"
+msgstr "密码"
+
+msgid "Post date"
+msgstr "上传日期"
+
+msgid "Posted on"
+msgstr "上传于"
+
+msgid "Profile"
+msgstr "用户信息"
+
+msgid "Quick connect"
+msgstr "快捷登录"
+
+msgid "RSS feed"
+msgstr "RSS 订阅"
+
+msgid "Register"
+msgstr "注册"
+
+msgid "Registration"
+msgstr "注册"
+
+msgid "Related tags"
+msgstr "相关标签"
+
+msgid "Reset"
+msgstr "重置"
+
+msgid "Retrieve password"
+msgstr "取回密码"
+
+msgid "Search tags"
+msgstr "搜索标签"
+
+msgid "Search"
+msgstr "搜索"
+
+msgid "display available tags"
+msgstr "显示现有标签"
+
+msgid "Since"
+msgstr "时间"
+
+msgid "Sort by"
+msgstr "排序字段"
+
+msgid "Sort order"
+msgstr "排序方式"
+
+msgid "Tag"
+msgstr "标签"
+
+msgid "Tags"
+msgstr "标签"
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "通过 RSS 订阅，您可以从本网站及时获取新图片、相册的更新与新评论的通知。您可以通过 RSS 阅读器来订阅。"
+
+msgid "Unknown feed identifier"
+msgstr "未知 RSS 标识"
+
+msgid "User comments"
+msgstr "用户评论"
+
+msgid "Username"
+msgstr "用户名"
+
+msgid "Visits"
+msgstr "访问量"
+
+msgid "Webmaster"
+msgstr "站长"
+
+msgid "Week %d"
+msgstr "第%d周"
+
+msgid "About Piwigo"
+msgstr "关于 Piwigo"
+
+msgid "You are not authorized to access the requested page"
+msgstr "您无权访问此页"
+
+msgid "add this photo to your favorites"
+msgstr "将图片添加到收藏"
+
+msgid "Administration"
+msgstr "后台管理"
+
+msgid "all"
+msgstr "所有"
+
+msgid "ascending"
+msgstr "升序"
+
+msgid "Expand all albums"
+msgstr "展开所有相册"
+
+msgid "posted after %s (%s)"
+msgstr "发布于 %s (%s) 之后"
+
+msgid "posted before %s (%s)"
+msgstr "发布于 %s (%s) 之前"
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "发布于 %s (%s) 和 %s (%s) 之间"
+
+msgid "posted on %s"
+msgstr "发布于 %s"
+
+msgid "Best rated"
+msgstr "评分最高"
+
+msgid "display best rated photos"
+msgstr "显示评分最高的图片"
+
+msgid "Calendar"
+msgstr "图片日历"
+
+msgid "All"
+msgstr "所有"
+
+msgid "display each day with photos, month per month"
+msgstr "逐年逐月逐日显示"
+
+msgid "View"
+msgstr "视图"
+
+msgid "chronology_monthly_calendar"
+msgstr "月历"
+
+msgid "chronology_monthly_list"
+msgstr "月列表"
+
+msgid "chronology_weekly_list"
+msgstr "周列表"
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "如果您的浏览器不支持自动跳转，请点击这里"
+
+msgid "comment date"
+msgstr "评论日期"
+
+msgid "Comment"
+msgstr "评论"
+
+msgid "Your comment has been registered"
+msgstr "评论已保存"
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "反灌水系统：请稍后再发表下一条评论"
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "因不符合规则，您的评论未能保存"
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "评论经管理员审核后才能显示。"
+
+msgid "This login is already used by another user"
+msgstr "此用户名已被注册"
+
+msgid "Comments"
+msgstr "评论"
+
+msgid "Add a comment"
+msgstr "发表评论"
+
+msgid "created after %s (%s)"
+msgstr "创建于 %s (%s) 之后"
+
+msgid "created before %s (%s)"
+msgstr "创建于 %s (%s) 之前"
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "创建于 %s (%s) 和 le %s (%s) 之间"
+
+msgid "created on %s"
+msgstr "创建于 %s"
+
+msgid "Your Gallery Customization"
+msgstr "图库个性化设置"
+
+msgid "Default"
+msgstr "默认"
+
+msgid "delete this photo from your favorites"
+msgstr "从收藏夹中删除此图片"
+
+msgid "Delete"
+msgstr "删除"
+
+msgid "descending"
+msgstr "降序"
+
+msgid "Download"
+msgstr "下载"
+
+msgid "Download this file"
+msgstr "下载此文件"
+
+msgid "edit"
+msgstr "编辑"
+
+msgid "wrong date"
+msgstr "日期错误"
+
+msgid "excluded"
+msgstr "不包括"
+
+msgid "Your favorites"
+msgstr "收藏夹"
+
+msgid "display your favorites photos"
+msgstr "显示加入收藏的图片"
+
+msgid "Favorites"
+msgstr "收藏"
+
+msgid "First"
+msgstr "首页"
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "系统维护中，请稍后再试。"
+
+msgid "Page generated in"
+msgstr "页面创建时间"
+
+msgid "guest"
+msgstr "游客"
+
+msgid "Hello"
+msgstr "您好"
+
+msgid "available for administrators only"
+msgstr "需要管理员权限"
+
+msgid "display this album"
+msgstr "显示此相册根目录下的图片"
+
+msgid "display last user comments"
+msgstr "显示最新用户评论"
+
+msgid "search"
+msgstr "搜索"
+
+msgid "Home"
+msgstr "主页"
+
+msgid "in this album"
+msgstr "在此相册里"
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] "在 %d 个子相册中"
+msgstr[1] "在 %d 个子相册中"
+
+msgid "included"
+msgstr "包括"
+
+msgid "Invalid password!"
+msgstr "密码不正确！"
+
+msgid "Language"
+msgstr "语言"
+
+msgid "last %d days"
+msgstr "最近 %d 天"
+
+msgid "Last"
+msgstr "最后"
+
+msgid "Logout"
+msgstr "退出登录"
+
+msgid "obligatory"
+msgstr "必填"
+
+msgid "display a calendar by creation date"
+msgstr "按创建日期显示日历"
+
+msgid "display all photos in all sub-albums"
+msgstr "显示所有相册和子相册的图片"
+
+msgid "return to normal view mode"
+msgstr "返回到普通视图"
+
+msgid "display a calendar by posted date"
+msgstr "按发布日期显示日历"
+
+msgid "Most visited"
+msgstr "最受关注"
+
+msgid "display most visited photos"
+msgstr "显示查看次数最多的图片"
+
+msgid "Unknown identifier"
+msgstr "帐号不存在"
+
+msgid "New password"
+msgstr "新密码"
+
+msgid "Rate this photo"
+msgstr "评分"
+
+msgid "Next"
+msgstr "下一页"
+
+msgid "no rate"
+msgstr "没有评分"
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "只显示最近 %d 天的图片。"
+msgstr[1] "只显示最近 %d 天的图片。"
+
+msgid "password updated"
+msgstr "密码已更新"
+
+msgid "Recent period must be a positive integer value"
+msgstr "再次发表的间隔时间必须是正整数"
+
+msgid "photo"
+msgstr "图片"
+
+msgid "Click on the photo to see it in high definition"
+msgstr "点击查看高清图片"
+
+msgid "Show file metadata"
+msgstr "显示文件元数据"
+
+msgid "Powered by"
+msgstr "技术支持"
+
+msgid "Preferences"
+msgstr "使用偏好"
+
+msgid "Previous"
+msgstr "上一页"
+
+msgid "Random photos"
+msgstr "随机图片"
+
+msgid "display a set of random photos"
+msgstr "显示一组随机图片"
+
+msgid "Recent albums"
+msgstr "最新相册"
+
+msgid "display recently updated albums"
+msgstr "显示最近更新的相册"
+
+msgid "Recent period"
+msgstr "再次发表的间隔时间"
+
+msgid "Recent photos"
+msgstr "最新图片"
+
+msgid "display most recent photos"
+msgstr "显示最新图片"
+
+msgid "Redirection..."
+msgstr "跳转至..."
+
+msgid "Please, enter a login"
+msgstr "请输入用户名"
+
+msgid "login mustn't end with a space character"
+msgstr "用户名不能以空格结尾"
+
+msgid "login mustn't start with a space character"
+msgstr "用户名不能以空格开头"
+
+msgid "this login is already used"
+msgstr "此用户名已被注册"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "邮箱地址格式必须符合标准的 xxx@yyy.eee（例如：jack@altern.org）"
+
+msgid "Auto login"
+msgstr "自动登录"
+
+msgid "remove this tag from the list"
+msgstr "从列表中删除此标签"
+
+msgid "representative"
+msgstr "相册缩略图"
+
+msgid "Search for Author"
+msgstr "作者"
+
+msgid "Search in albums"
+msgstr "在相册中搜索"
+
+msgid "Search by date"
+msgstr "按日期搜索"
+
+msgid "Date"
+msgstr "开始日期"
+
+msgid "End-Date"
+msgstr "截止日期"
+
+msgid "Kind of date"
+msgstr "日期类型"
+
+msgid "Search for words"
+msgstr "搜索关键词"
+
+msgid "Search for all terms"
+msgstr "符合全部关键词"
+
+msgid "Search for any term"
+msgstr "符合任一关键词"
+
+msgid "Empty query. No criteria has been entered."
+msgstr "空查询。未输入任何条件。"
+
+msgid "Search results"
+msgstr "搜索结果"
+
+msgid "Search in sub-albums"
+msgstr "也在子相册中搜索"
+
+msgid "Contact"
+msgstr "联系"
+
+msgid "set as album representative"
+msgstr "设为相册缩略图"
+
+msgid "Show number of comments"
+msgstr "显示评论数"
+
+msgid "Show number of hits"
+msgstr "显示点击量"
+
+msgid "slideshow"
+msgstr "幻灯片放映"
+
+msgid "stop the slideshow"
+msgstr "停止幻灯片放映"
+
+msgid "Specials"
+msgstr "特色浏览"
+
+msgid "SQL queries in"
+msgstr "SQL搜索语句"
+
+msgid "display only recently posted photos"
+msgstr "只显示最近发布的图片"
+
+msgid "return to the display of all photos"
+msgstr "返回到显示所有图片"
+
+msgid "the beginning"
+msgstr "起始"
+
+msgid "Thumbnails"
+msgstr "缩略图"
+
+msgid "Menu"
+msgstr "菜单"
+
+msgid "A comment on your site"
+msgstr "网站反馈"
+
+msgid "today"
+msgstr "今天"
+
+msgid "Rating score"
+msgstr "评价得分"
+
+msgid "Update your rating"
+msgstr "更改评分"
+
+msgid "the username must be given"
+msgstr "用户名必填"
+
+msgid "useful when password forgotten"
+msgstr "忘记密码时可用其找回"
+
+msgid "Quick search"
+msgstr "快捷搜索"
+
+msgid "Connected user: %s"
+msgstr "在线用户：%s"
+
+msgid "IP: %s"
+msgstr "IP 地址：%s"
+
+msgid "Browser: %s"
+msgstr "浏览器：%s"
+
+msgid "Author: %s"
+msgstr "作者：%s"
+
+msgid "Comment: %s"
+msgstr "评论：%s"
+
+msgid "Comment by %s"
+msgstr "由 %s 评论"
+
+msgid "User: %s"
+msgstr "用户：%s"
+
+msgid "Email: %s"
+msgstr "Email：%s"
+
+msgid "Admin: %s"
+msgstr "管理员：%s"
+
+msgid "Registration of %s"
+msgstr "%s 的注册"
+
+msgid "Album: %s"
+msgstr "相册：%s"
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "游客用户的状态出现问题，将使用默认状态。请告知站长。"
+
+msgid "this email address is already in use"
+msgstr "此邮箱地址已被注册"
+
+msgid "Album results for"
+msgstr "相册的结果"
+
+msgid "Tag results for"
+msgstr "符合标签搜索的结果"
+
+msgid "from %s to %s"
+msgstr "从 %s 到 %s"
+
+msgid "Play of slideshow"
+msgstr "播放"
+
+msgid "Pause of slideshow"
+msgstr "暂停"
+
+msgid "Repeat the slideshow"
+msgstr "重复播放"
+
+msgid "Not repeat the slideshow"
+msgstr "停止重复播放"
+
+msgid "Reduce diaporama speed"
+msgstr "减慢播放速度"
+
+msgid "Accelerate diaporama speed"
+msgstr "加快播放速度"
+
+msgid "Submit"
+msgstr "提交"
+
+msgid "Yes"
+msgstr "是"
+
+msgid "No"
+msgstr "否"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "%d 张图片"
+msgstr[1] "%d 张图片"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "当前标签还有 %d 张关联的图片"
+msgstr[1] "当前标签还有 %d 张关联的图片"
+
+msgid "display photos linked to this tag"
+msgstr "在此标签上显示相片链接"
+
+msgid "photos posted during the last %d days"
+msgstr "在最近 %d 天里发布的图片"
+
+msgid "Piwigo Help"
+msgstr "Piwigo 帮助"
+
+msgid "Rank"
+msgstr "分类"
+
+msgid "group by letters"
+msgstr "按字母分组"
+
+msgid "letters"
+msgstr "字母"
+
+msgid "show tag cloud"
+msgstr "显示标签云"
+
+msgid "cloud"
+msgstr "云"
+
+msgid "Are you sure?"
+msgstr "确定？"
+
+msgid "Reset to default values"
+msgstr "重置为默认值"
+
+msgid "delete all photos from your favorites"
+msgstr "删除收藏夹里的所有图片"
+
+msgid "Sent by"
+msgstr "发送人"
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "您的浏览器不支持或禁用了 Cookies。您必须开启 Cookies 才能登录。"
+
+msgid "Edit a comment"
+msgstr "编辑一个评论"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) 此评论需要审核"
+
+msgid "Welcome"
+msgstr "欢迎"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "欢迎来到您的 Piwigo 图库！"
+
+msgid "... or browse your empty gallery"
+msgstr "或浏览您的空图库"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "…我明白了，不再提示"
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "您好 %s，您的 Piwigo 图库暂无内容！！"
+
+msgid "I want to add photos"
+msgstr "我想添加图片"
+
+msgid "Manage this user comment: %s"
+msgstr "管理此用户评论：%s"
+
+msgid "This author modified following comment:"
+msgstr "此作者修改了以下的评论："
+
+msgid "This author removed the comment with id %d"
+msgstr "此作者删除了 ID 为 %d 的评论"
+
+msgid "html tags are not allowed in login"
+msgstr "登录名中不允许使用 HTML 标签"
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "每页图片数量必须大于 0"
+
+msgid "Number of photos per page"
+msgstr "每页图片数"
+
+msgid "Invalid username or email"
+msgstr "用户名或邮箱地址无效"
+
+msgid "Password reset is not allowed for this user"
+msgstr "此用户无法进行密码重置"
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "用户 \"%s\" 没有email地址，无法进行密码重置"
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "有人申请了重置该帐户的密码："
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "用户名 \"%s\" 于 图库 %s"
+
+msgid "To reset your password, visit the following address:"
+msgstr "请访问以下地址以对密码进行重置："
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "如果这是个错误，请忽略本邮件，不会有任何影响。"
+
+msgid "Password Reset"
+msgstr "密码已重置"
+
+msgid "Check your email for the confirmation link"
+msgstr "请查看您邮件中的确认链接"
+
+msgid "Invalid key"
+msgstr "无效的KEY"
+
+msgid "The passwords do not match"
+msgstr "密码不符"
+
+msgid "Your password has been reset"
+msgstr "您的密码已经重置"
+
+msgid "Return to home page"
+msgstr "返回主页"
+
+msgid "Please enter your username or email address."
+msgstr "请输入您的用户名或邮箱地址。"
+
+msgid "You will receive a link to create a new password via email."
+msgstr "您将通过邮件收到一个创建新密码的链接。"
+
+msgid "Username or email"
+msgstr "用户名或email地址"
+
+msgid "Change my password"
+msgstr "更改密码"
+
+msgid "Enter your new password below."
+msgstr "在下面输入您的新密码。"
+
+msgid "EXIF Metadata"
+msgstr "EXIF 元数据"
+
+msgid "IPTC Metadata"
+msgstr "IPTC 元数据"
+
+msgid "Edit"
+msgstr "编辑"
+
+msgid "Hello %s,"
+msgstr "您好 %s，"
+
+msgid "Here are your connection settings"
+msgstr "您的注册信息"
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "如果您认为您收到的本邮件有误，请联系我们：%s"
+
+msgid "large"
+msgstr "L - 大"
+
+msgid "medium"
+msgstr "M - 中"
+
+msgid "Original"
+msgstr "原始尺寸"
+
+msgid "Password: %s"
+msgstr "密码：%s"
+
+msgid "Send my connection settings by email"
+msgstr "发送注册信息到我的email"
+
+msgid "small"
+msgstr "S - 小"
+
+msgid "square"
+msgstr "小方块"
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "注册成功，您稍后将收到注册信息邮件。欢迎您的加入！"
+
+msgid "Thank you for registering at %s!"
+msgstr "感谢您注册%s！"
+
+msgid "thumb"
+msgstr "缩略图"
+
+msgid "Username modification"
+msgstr "修改用户名"
+
+msgid "Username: %s"
+msgstr "用户名：%s"
+
+msgid "xlarge"
+msgstr "XL - 特大"
+
+msgid "xxlarge"
+msgstr "XXL - 超特大"
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "您的用户名已成功修改为：%s"
+
+msgid "Photo sizes"
+msgstr "缩放图片"
+
+msgid "Desktop"
+msgstr "桌面版"
+
+msgid "Mobile"
+msgstr "手机版"
+
+msgid "Show latest comments first"
+msgstr "新评论在先"
+
+msgid "Show oldest comments first"
+msgstr "旧评论在先"
+
+msgid "View in"
+msgstr "查看"
+
+msgid "2small"
+msgstr "XXS - 超特小"
+
+msgid "xsmall"
+msgstr "XS - 特小"
+
+msgid "Date created, new &rarr; old"
+msgstr "创建日期，新 &rarr; 旧"
+
+msgid "Date created, old &rarr; new"
+msgstr "创建日期，旧 &rarr; 新"
+
+msgid "Date posted, new &rarr; old"
+msgstr "发布日期，新 &rarr; 旧"
+
+msgid "Date posted, old &rarr; new"
+msgstr "发布日期，旧 &rarr; 新"
+
+msgid "File name, A &rarr; Z"
+msgstr "文件名，A &rarr; Z"
+
+msgid "File name, Z &rarr; A"
+msgstr "文件名，Z &rarr; A"
+
+msgid "Manual sort order"
+msgstr "手动排序"
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "数字ID，1 &rarr; 9"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "数字ID，9 &rarr; 1"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "图片标题，A &rarr; Z"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "图片标题，Z &rarr; A"
+
+msgid "Rating score, high &rarr; low"
+msgstr "评分，高 &rarr; 低"
+
+msgid "Rating score, low &rarr; high"
+msgstr "评分，低 &rarr; 高"
+
+msgid "Visits, high &rarr; low"
+msgstr "访问量，高 &rarr; 低"
+
+msgid "Visits, low &rarr; high"
+msgstr "访问量，低 &rarr; 高"
+
+msgid "%d rate"
+msgid_plural "%d rates"
+msgstr[0] "%d 次评分"
+msgstr[1] "%d 次评分"
+
+msgid "Bad request"
+msgstr "请求错误"
+
+msgid "Forbidden"
+msgstr "禁止"
+
+msgid "Page not found"
+msgstr "页面未找到"
+
+msgid "Permalink for album not found"
+msgstr "未找到相册对应的永久链接"
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "Piwigo 遇到了一个不可恢复的错误"
+
+msgid "Requested album does not exist"
+msgstr "相册不存在"
+
+msgid "Requested tag does not exist"
+msgstr "标签不存在"
+
+msgid "Email address is mandatory"
+msgstr "必须输入邮箱地址"
+
+msgid "Username is mandatory"
+msgstr "必须输入用户名"
+
+msgid "mandatory"
+msgstr "必填"
+
+msgid "Website"
+msgstr "网站"
+
+msgid "Your website URL is invalid"
+msgstr "您的网站地址无效"
+
+msgid "Email"
+msgstr "电子邮件"
+
+msgid "First Page"
+msgstr "第一页"
+
+msgid "Go back to the album"
+msgstr "返回相册"
+
+msgid "Last Page"
+msgstr "最后一页"
+
+msgid "Password is missing. Please enter the password."
+msgstr "密码未填写，请输入密码。"
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "密码确认未完成，请再次输入所选定的密码。"
+
+msgid "%d photos per page"
+msgstr "每页 %d 张相片 "
+
+msgid "Theme"
+msgstr "主题"
+
+msgid "No results for"
+msgstr "没有结果"
+
+msgid "Apply on properties"
+msgstr "应用到属性"
+
+msgid "Photo description"
+msgstr "相片描述"
+
+msgid "Photo title"
+msgstr "相片标题"
+
+msgid "Album name, A &rarr; Z"
+msgstr "相册名称， A &rarr; Z"
+
+msgid "Album name, Z &rarr; A"
+msgstr "相册名称， Z &rarr; A"
+
+msgid "Link: %s"
+msgstr "链接：%s"
+
+msgid "Your authentication key is no longer valid."
+msgstr "您的认证密钥已失效。"
+
+msgid "Invalid username or password!"
+msgstr "用户名或密码无效！"
+
+msgid "generate random password"
+msgstr "生成随机密码"
+
+msgid "Password: ********** (no copy by email)"
+msgstr "密码：********** (不要直接从邮件拷贝)"
+
+msgid "Related albums"
+msgstr "相关相册"
+
+msgid "Album name, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+msgstr "相册名称， 1 &rarr; 5 &rarr; 10 &rarr; 100"
+
+msgid "Album name, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+msgstr "相册名称， 100 &rarr; 10 &rarr; 5 &rarr; 1"
+
+msgid "Start-Date"
+msgstr "起始日期"
+
+msgid "Validate"
+msgstr "确定"
+
+msgid "You can try to edit your filters and perform a new search."
+msgstr "你可尝试编辑筛选条件并执行新的搜索"
+
+msgid "last 24 hours"
+msgstr "最近24小时"
+
+msgid "last 3 months"
+msgstr "最近3个月"
+
+msgid "last 30 days"
+msgstr "最近30天"
+
+msgid "last 6 months"
+msgstr "最近6个月"
+
+msgid "last 7 days"
+msgstr "最近7天"
+
+msgid "last year"
+msgstr "去年"
+
+msgid "rating score %s"
+msgstr "评分 %s"
+
+msgid "year %d"
+msgstr "%d年"
+
+msgid "Added by"
+msgstr "添加者"
+
+msgid "Album description"
+msgstr "相册描述"
+
+msgid "Album title"
+msgstr "相册标题"
+
+msgid "Albums found"
+msgstr "找到相关相册"
+
+msgid "Albums listed here match your search by word. Click on one to browse by album."
+msgstr "以下相册为文字搜索匹配结果，点击即可进入相册浏览。"
+
+msgid "Cancel"
+msgstr "取消"
+
+msgid "Choose filters"
+msgstr "选择筛选器"
+
+msgid "Clear"
+msgstr "清除"
+
+msgid "Empty filters"
+msgstr "清空筛选器"
+
+msgid "File type"
+msgstr "文件类型"
+
+msgid "Fill in the filters to start a search"
+msgstr "填写筛选条件以开始搜索"
+
+msgid "Filters"
+msgstr "筛选"
+
+msgid "No results are available."
+msgstr "没有可用的结果。"
+
+msgid "Pre-established filters are proposed, but you can add or remove them using the \"Choose filters\" button."
+msgstr "系统提供预设筛选器，你可通过「选择筛选器」按钮添加或移除筛选条件。"
+
+msgid "Search in :"
+msgstr "搜索范围："
+
+msgid "Search in this set"
+msgstr "在此集合中搜索"
+
+msgid "Tags found"
+msgstr "找到标签"
+
+msgid "Tags listed here match your search by word. Click on one to browse by tag."
+msgstr "此处列出的标签与您的搜索匹配。单击其中一个可按标记浏览。"
+
+msgid "Unknown time period"
+msgstr "未知时间段"
+
+msgid "%d visits"
+msgstr "%d访问量"
+
+msgid "Click here to display it"
+msgstr "点击此处显示"
+
+msgid "Album already selected"
+msgstr "相册已选定"
+
+msgid "Only the first %d albums are displayed, out of %d."
+msgstr "仅显示前%d个相册（共%d个）。"
+
+msgid "The PDF you requested is too large to display on this page."
+msgstr "您请求的PDF文件太大，无法在此页面上显示。"
+
+msgid "Pages"
+msgstr "页面"
+
+msgid "last 12 months"
+msgstr "最近12个月"
+
+msgid "Custom dates"
+msgstr "自定义日期"
+
+msgid "There are no authors available for the photos currently filtered"
+msgstr "当前筛选的照片没有可用的作者信息"
+
+msgid "There are no creation dates available for the photos currently filtered"
+msgstr "当前筛选的照片没有可用的创建日期"
+
+msgid "There are no tags available for the photos currently filtered"
+msgstr "当前筛选的照片没有可用的标签"
+
+msgid "Set your password below."
+msgstr "请在下方的输入框中设置密码。"
+
+msgid "Your API key will expire in %d day."
+msgstr "您的API密钥将在%d天后过期。"
+
+msgid "Your API key will expire in %d days."
+msgstr "您的API密钥将在%d天后过期。"
+
+msgid "Your API key will expire soon"
+msgstr "您的API密钥即将过期"
+
+msgid "Your changes have been applied."
+msgstr "您的更改已应用。"
+
+msgid "Your password was successfully reset"
+msgstr "您的密码已重置成功"
+
+msgid "Your password was successfully set"
+msgstr "您的密码已设置成功"
+
+msgid "must not be empty"
+msgstr "不能为空"
+
+msgid "you must choose a date"
+msgstr "您必须选择一个日期"
+
+msgid "Options"
+msgstr "选项"
+
+msgid "Return to <a href=\"identification.php\" title=\"Sign in\">Sign in</a>"
+msgstr "返回 <a href=\"identification.php\" title=\"Sign in\">登录</a>页面"
+
+msgid "Return to the gallery"
+msgstr "返回图库"
+
+msgid "Revoke"
+msgstr "撤销"
+
+msgid "Revoked"
+msgstr "已撤销"
+
+msgid "Set my password"
+msgstr "设置我的密码"
+
+msgid "Show expired keys"
+msgstr "显示已过期密钥"
+
+msgid "The api key has been successfully created."
+msgstr "API密钥已成功创建。"
+
+msgid "The email %s will be used to notify you when your API key is about to expire."
+msgstr "当您的API密钥即将过期时，系统将通过邮箱%s通知您。"
+
+msgid "The secret key can no longer be displayed."
+msgstr "私钥将无法再次显示。"
+
+msgid "This API key was manually revoked on %s"
+msgstr "此API密钥已于%s被手动撤销"
+
+msgid "To continue using the API, please renew your key before it expires."
+msgstr "如需继续使用API，请在密钥过期前进行续期。"
+
+msgid "To manage your API keys, please log in with your username/password."
+msgstr "如需管理您的API密钥，请使用用户名/密码登录。"
+
+msgid "When enabled, a common template is used for the login and registration pages, regardless of the theme."
+msgstr "启用后，无论使用何种主题，登录和注册页面都将使用通用模板。"
+
+msgid "You can manage your API keys in your <a href=\"%s\">account settings.</a>"
+msgstr "您可以在 <a href=\"%s\">账户设置</a>中管理您的API密钥。"
+
+msgid "You have no email address, so you will not be notified when your API key is about to expire."
+msgstr "您未设置邮箱地址，因此当您的API密钥即将过期时，系统将无法通知您。"
+
+msgid "Custom date"
+msgstr "自定义日期"
+
+msgid "Do you really want to revoke the \"%s\" API key?"
+msgstr "您确定要撤销\"%s\" 这个API密钥吗？"
+
+msgid "Don't have an account yet ?"
+msgstr "还没有账户？"
+
+msgid "Done"
+msgstr "完成"
+
+msgid "Duration"
+msgstr "持续时间"
+
+msgid "Edit API Key"
+msgstr "编辑API密钥"
+
+msgid "Expert mode"
+msgstr "专家模式"
+
+msgid "Expired"
+msgstr "已过期"
+
+msgid "Expired on"
+msgstr "过期于"
+
+msgid "Expires in"
+msgstr "过期时间"
+
+msgid "Generate API Key"
+msgstr "生成API密钥"
+
+msgid "Generate key"
+msgstr "生成密钥"
+
+msgid "Hello <em>%s</em>, enter your new password below."
+msgstr "您好 <em>%s</em>, 请在下方输入您的新密码。"
+
+msgid "Hide expired keys"
+msgstr "隐藏已过期的密钥"
+
+msgid "Impossible to copy automatically. Please copy manually."
+msgstr "无法自动复制，请手动复制。"
+
+msgid "Last use"
+msgstr "最后使用时间"
+
+msgid "Manage your account"
+msgstr "最后使用时间"
+
+msgid "Never"
+msgstr "永不"
+
+msgid "New API Key"
+msgstr "新API密钥"
+
+msgid "No expiration"
+msgstr "永不过期"
+
+msgid "3xlarge"
+msgstr "3XL - 3倍特大"
+
+msgid "4xlarge"
+msgstr "4XL - 4倍特大"
+
+msgid "API Key has been successfully edited."
+msgstr "API密钥已成功编辑。"
+
+msgid "API Key has been successfully revoked."
+msgstr "API密钥已成功撤销。"
+
+msgid "API Key name"
+msgstr "API密钥名称"
+
+msgid "API Key not found"
+msgstr "未找到API密钥"
+
+msgid "API Keys"
+msgstr "API密钥"
+
+msgid "Account"
+msgstr "账户"
+
+msgid "Already have an account ?"
+msgstr "已有账户？"
+
+msgid "An email has been sent with a link to reset your password"
+msgstr "已发送一封包含重置密码链接的电子邮件"
+
+msgid "An error has occured please got back to <a href=\"identification.php\" title=\"Sign in\">Sign in</a> or <a href=\"register.php\">Register</a>"
+msgstr "发生错误，请返回 <a href=\"identification.php\" title=\"Sign in\">登录</a> or <a href=\"register.php\">注册</a>"
+
+msgid "Change your password"
+msgstr "更改密码"
+
+msgid "Check your inbox"
+msgstr "查看您的收件箱"
+
+msgid "Choose how you want to see your gallery"
+msgstr "选择图库的展示方式"
+
+msgid "Confirm my new password"
+msgstr "确认我的新密码"
+
+msgid "Confirm new password"
+msgstr "确认新密码"
+
+msgid "Create API Keys to secure your acount"
+msgstr "创建API密钥以保护您的账户安全"
+
+msgid "Create a new API key to secure your account."
+msgstr "创建一个新的API密钥以保护您的账户安全。"
+
+msgid "Create an account"
+msgstr "创建账户"
+
+msgid "Created at"
+msgstr "创建时间"
+
+msgid "An email has been sent with a verification code"
+msgstr "已发送一封包含验证码的电子邮件"
+
+msgid "ID copied."
+msgstr "ID已复制。"
+
+msgid "If you do not receive the email, please contact your webmaster."
+msgstr "如果您未收到电子邮件，请联系您的网站管理员。"
+
+msgid "Invalid verification code"
+msgstr "验证码无效"
+
+msgid "Save your ID and secret"
+msgstr "保存您的ID和密钥"
+
+msgid "Secret copied. Keep it in a safe place."
+msgstr "密钥已复制。请将其妥善保管。"
+
+msgid "The secret will no longer be displayed. You must copy it to continue."
+msgstr "密钥将不再显示。您必须复制它才能继续操作。"
+
+msgid "Verification code"
+msgstr "验证码"
+
+msgid "Verify"
+msgstr "验证"
+
+msgid "If you changed your password because you think it was stolen, we recommend revoking your %d API keys <a href=\"%s\">in your profile</a>."
+msgstr "如果您因认为密码被盗而更改了密码，我们建议您在<a href=\"%s\">个人资料</a> 中撤销您的%d个API 密钥。"
+
+msgid "Here is your verification code:"
+msgstr "这是您的验证码："
+
+msgid "If this wasn't you, please change your password immediately or contact your webmaster."
+msgstr "如果不是您本人操作，请立即更改密码或联系网站管理员。"
+
+msgid "Too many attempts, please try later.."
+msgstr "尝试次数过多，请稍后再试。"
+
+msgid "Verification successful! You can now choose a new password."
+msgstr "验证成功！您现在可以选择一个新密码。"
+
+msgid "Your verification code"
+msgstr "您的验证码"
+
+msgid "edit user preferences"
+msgstr "编辑用户偏好设置"
+
+msgid "piwigo_day_0"
+msgstr "星期日"
+
+msgid "piwigo_day_1"
+msgstr "星期一"
+
+msgid "piwigo_day_2"
+msgstr "星期二"
+
+msgid "piwigo_day_3"
+msgstr "星期三"
+
+msgid "piwigo_day_4"
+msgstr "星期四"
+
+msgid "piwigo_day_5"
+msgstr "星期五"
+
+msgid "piwigo_day_6"
+msgstr "星期六"
+
+msgid "piwigo_month_10"
+msgstr "十月"
+
+msgid "piwigo_month_11"
+msgstr "十一月"
+
+msgid "piwigo_month_12"
+msgstr "十二月"
+
+msgid "piwigo_month_1"
+msgstr "一月"
+
+msgid "piwigo_month_2"
+msgstr "二月"
+
+msgid "piwigo_month_3"
+msgstr "三月"
+
+msgid "piwigo_month_4"
+msgstr "四月"
+
+msgid "piwigo_month_5"
+msgstr "五月"
+
+msgid "piwigo_month_6"
+msgstr "六月"
+
+msgid "piwigo_month_7"
+msgstr "七月"
+
+msgid "piwigo_month_8"
+msgstr "八月"
+
+msgid "piwigo_month_9"
+msgstr "九月"
+

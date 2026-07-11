@@ -1,0 +1,65 @@
+# Piwigo translation — uk_UA
+# Source: upgrade.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: uk_UA\n"
+"Plural-Forms: nplurals=3; plural=(n % 10 == 1 && n % 100 != 11 ? 0 : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 1 : 2);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "All sub-albums of private albums become private"
+msgstr "Всі вкладені альбоми приватних альбомів стали приватними"
+
+msgid "As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:"
+msgstr "В якості запобіжного заходу, наступні плаґіни були відключені. Ви повинні перевіряти оновлення плагінів до їх відновлення:"
+
+msgid "As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:"
+msgstr "В якості запобіжного заходу, теми вони були відключені. Ви повинні перевірити оновлення перед тим як активуєте їх:"
+
+msgid "In <i>%s</i>, before <b>?></b>, insert:"
+msgstr "В <i>%s</i>, до <b>?></b>, вставити:"
+
+msgid "Only administrator can run upgrade: please sign in below."
+msgstr "Тільки адміністратор може запустити оновлення: увійдіть у систему нижче."
+
+msgid "Only thumbnails prefix and webmaster mail address have been saved from previous configuration"
+msgstr "Тільки префікс мініатюр та адресу електронної пошти веб-майстра збережено збережено від попередньої конфігурації"
+
+msgid "Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem."
+msgstr "Їх виконає автоматична перевірка в [Адміністрування> Сервіс> Обслуговування], якщо у вас виникнуть якісь проблеми."
+
+msgid "SQL queries"
+msgstr "SQL запитів"
+
+msgid "Statistics"
+msgstr "Статистика"
+
+msgid "This page proposes to upgrade your database corresponding to your old version of Piwigo to the current version. The upgrade assistant thinks you are currently running a <strong>release %s</strong> (or equivalent)."
+msgstr "Ця сторінка пропонує оновлення базу даних, що оновлює вашу стару версію Piwigo до поточної версії. Помічник оновлення думає, що ви в даний час працюєте з <strong>релізом %s</strong>(або подібним)."
+
+msgid "total SQL time"
+msgstr "загальний час SQL"
+
+msgid "total upgrade time"
+msgstr "загальний час оновлення"
+
+msgid "Upgrade"
+msgstr "Оновлення"
+
+msgid "Upgrade from version %s to %s"
+msgstr "Оновлення з версії %s на %s"
+
+msgid "Upgrade informations"
+msgstr "Інформація оновлення"
+
+msgid "User permissions and group permissions have been erased"
+msgstr "Користувачі та групи дозволів було видалено"
+
+msgid "You do not have access rights to run upgrade"
+msgstr "У вас немає прав доступу для запуску оновлення"
+
+msgid "Discover what's new in Piwigo %s"
+msgstr "Дізнайтеся, що нового в Piwigo %s"
+

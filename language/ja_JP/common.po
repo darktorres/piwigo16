@@ -1,0 +1,1229 @@
+# Piwigo translation — ja_JP
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ja_JP\n"
+"Plural-Forms: nplurals=1; plural=(0);\n"
+"X-Piwigo-Language-Name: Japanese\n"
+"X-Piwigo-Country: Japan\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: ja\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "%d Kb"
+msgstr "%d KB"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d 件のアルバムが更新されました。"
+msgstr[1] "%d 件のアルバムが更新されました。"
+
+msgid "%d comment to validate"
+msgstr "%d件のコメントが承認されました。"
+
+msgid "%d comments to validate"
+msgstr "%d件のコメントが承認されました。"
+
+msgid "%d new comment"
+msgstr "新しいコメント: %d"
+
+msgid "%d new comments"
+msgstr "新しいコメント: %d"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d件のコメント"
+msgstr[1] "%d件のコメント"
+
+msgid "%d hit"
+msgid_plural "%d hits"
+msgstr[0] "ヒット: %d"
+msgstr[1] "ヒット: %d"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "新しいイメージ: %d"
+msgstr[1] "新しいイメージ: %d"
+
+msgid "%d new user"
+msgstr "新しいユーザ: %d"
+
+msgid "%d new users"
+msgstr "新しいユーザ: %d"
+
+msgid "About"
+msgstr "Piwigoについて"
+
+msgid "All tags"
+msgstr "すべてのタグ"
+
+msgid "Any tag"
+msgstr "いずれかのタグ"
+
+msgid "Author"
+msgstr "作成者"
+
+msgid "Albums"
+msgstr "アルバム"
+
+msgid "Album"
+msgstr "アルバム"
+
+msgid "Close this window"
+msgstr "このウィンドウを閉じる"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "完全なRSSフィード (イメージ、コメント)"
+
+msgid "Confirm Password"
+msgstr "パスワードを再度入力"
+
+msgid "Connection settings"
+msgstr "接続設定"
+
+msgid "Login"
+msgstr "ログイン"
+
+msgid "Contact webmaster"
+msgstr "ウェブマスタに連絡する"
+
+msgid "Create a new account"
+msgstr "新しいアカウントを作成する"
+
+msgid "Created on"
+msgstr "作成日時"
+
+msgid "Creation date"
+msgstr "作成日"
+
+msgid "Current password is wrong"
+msgstr "現在のパスワードが正しくありません。"
+
+msgid "Dimensions"
+msgstr "サイズ"
+
+msgid "Display"
+msgstr "表示"
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "メールアドレスがありません。"
+
+msgid "Email address"
+msgstr "メールアドレス"
+
+msgid "Enter your personnal informations"
+msgstr "あなたの個人情報を入力してください。"
+
+msgid "Error sending email"
+msgstr "メールの送信にエラーが発生しました。"
+
+msgid "File name"
+msgstr "ファイル名"
+
+msgid "File"
+msgstr "ファイル"
+
+msgid "Filesize"
+msgstr "ファイルサイズ"
+
+msgid "Filter and display"
+msgstr "フィルタおよび表示"
+
+msgid "Filter"
+msgstr "フィルタ"
+
+msgid "Forgot your password?"
+msgstr "パスワードを忘れましたか?"
+
+msgid "Go through the gallery as a visitor"
+msgstr "ビジターとしてギャラリーにアクセスする"
+
+msgid "Help"
+msgstr "ヘルプ"
+
+msgid "Identification"
+msgstr "個人設定"
+
+msgid "Photos only RSS feed"
+msgstr "イメージ限定RSSフィード"
+
+msgid "Keyword"
+msgstr "キーワード"
+
+msgid "Links"
+msgstr "リンク"
+
+msgid "N/A"
+msgstr "なし"
+
+msgid "New on %s"
+msgstr "最新投稿 - %s"
+
+msgid "Notification"
+msgstr "通知"
+
+msgid "Number of items"
+msgstr "アイテム数"
+
+msgid "Original dimensions"
+msgstr "オリジナルサイズ"
+
+msgid "Password forgotten"
+msgstr "パスワードを忘れました。"
+
+msgid "Password"
+msgstr "パスワード"
+
+msgid "Post date"
+msgstr "投稿日"
+
+msgid "Posted on"
+msgstr "投稿日時"
+
+msgid "Profile"
+msgstr "プロファイル"
+
+msgid "Quick connect"
+msgstr "クイック接続"
+
+msgid "RSS feed"
+msgstr "RSSフィード"
+
+msgid "Register"
+msgstr "登録"
+
+msgid "Registration"
+msgstr "登録"
+
+msgid "Related tags"
+msgstr "関連タグ"
+
+msgid "Reset"
+msgstr "リセット"
+
+msgid "Retrieve password"
+msgstr "パスワード取得"
+
+msgid "Search tags"
+msgstr "検索タグ"
+
+msgid "Search"
+msgstr "検索"
+
+msgid "display available tags"
+msgstr "利用可能なタグを表示する"
+
+msgid "Since"
+msgstr "ある維持以降"
+
+msgid "Sort by"
+msgstr "並び替え"
+
+msgid "Sort order"
+msgstr "並び順"
+
+msgid "Tag"
+msgstr "タグ"
+
+msgid "Tags"
+msgstr "タグ"
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "RSS通知フィードでは、このウェブサイトからニュースを通知します : 新しい写真、更新されたアルバム、新しいコメント。RSSフィードリーダーをお使いください。"
+
+msgid "Unknown feed identifier"
+msgstr "不明なフィードIDです。"
+
+msgid "User comments"
+msgstr "ユーザコメント"
+
+msgid "Username"
+msgstr "ユーザ名"
+
+msgid "Visits"
+msgstr "訪問"
+
+msgid "Webmaster"
+msgstr "ウェブマスタ"
+
+msgid "Week %d"
+msgstr "週 %d"
+
+msgid "About Piwigo"
+msgstr "Piwigoについて"
+
+msgid "You are not authorized to access the requested page"
+msgstr "あなたは、リクエストしたページへのアクセスを許可されていません。"
+
+msgid "add this photo to your favorites"
+msgstr "このイメージをあなたのお気に入りに追加する"
+
+msgid "Administration"
+msgstr "管理"
+
+msgid "all"
+msgstr "すべて"
+
+msgid "ascending"
+msgstr "昇順"
+
+msgid "Expand all albums"
+msgstr "すべてのアルバムを展開する"
+
+msgid "posted after %s (%s)"
+msgstr "%s (%s) 以降に投稿"
+
+msgid "posted before %s (%s)"
+msgstr "%s (%s) 以前に投稿"
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "%s (%s) から %s (%s) の間に投稿"
+
+msgid "posted on %s"
+msgstr "%s に投稿"
+
+msgid "Best rated"
+msgstr "最高評価"
+
+msgid "display best rated photos"
+msgstr "最高評価アイテムを表示する"
+
+msgid "Calendar"
+msgstr "カレンダー"
+
+msgid "All"
+msgstr "すべて"
+
+msgid "display each day with photos, month per month"
+msgstr "月ごとに写真の投稿日を表示します。"
+
+msgid "View"
+msgstr "表示"
+
+msgid "chronology_monthly_calendar"
+msgstr "月カレンダー"
+
+msgid "chronology_monthly_list"
+msgstr "月リスト"
+
+msgid "chronology_weekly_list"
+msgstr "週リスト"
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "自動的にリダイレクトされない場合、ここをクリックしてください。"
+
+msgid "comment date"
+msgstr "コメント投稿日"
+
+msgid "Comment"
+msgstr "コメント"
+
+msgid "Your comment has been registered"
+msgstr "あなたのコメントが登録されました。"
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "アンチフラッドシステム : 新たに投稿するまで、しばらくお待ちください。"
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "承認ルールにパスしなかったため、あなたのコメントは登録されませんでした。"
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "表示される前に管理者があなたのコメントを承認する必要があります。"
+
+msgid "This login is already used by another user"
+msgstr "このユーザIDは、すでに別のユーザに使用されています。"
+
+msgid "Comments"
+msgstr "コメント"
+
+msgid "Add a comment"
+msgstr "コメントを追加する"
+
+msgid "created after %s (%s)"
+msgstr "%s (%s) 以降に作成"
+
+msgid "created before %s (%s)"
+msgstr "%s (%s) 以前に作成"
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "%s (%s) から %s (%s) の間に作成"
+
+msgid "created on %s"
+msgstr "%s に作成"
+
+msgid "Your Gallery Customization"
+msgstr "あなたのギャラリーのカスタマイズ "
+
+msgid "Default"
+msgstr "デフォルト"
+
+msgid "delete this photo from your favorites"
+msgstr "あなたのお気に入りから、このイメージを削除する"
+
+msgid "Delete"
+msgstr "削除"
+
+msgid "descending"
+msgstr "降順"
+
+msgid "Download"
+msgstr "ダウンロード"
+
+msgid "Download this file"
+msgstr "このファイルをダウンロードする"
+
+msgid "edit"
+msgstr "編集"
+
+msgid "wrong date"
+msgstr "日付が正しくありません。"
+
+msgid "excluded"
+msgstr "除外"
+
+msgid "Your favorites"
+msgstr "お気に入り"
+
+msgid "display your favorites photos"
+msgstr "私のお気に入りの写真を表示する"
+
+msgid "Favorites"
+msgstr "お気に入り"
+
+msgid "First"
+msgstr "最初へ"
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "このアルバムは、メンテナンスのためロックされています。後ほどアクセスしてください。"
+
+msgid "Page generated in"
+msgstr "ページ作成:"
+
+msgid "guest"
+msgstr "ゲスト"
+
+msgid "Hello"
+msgstr "こんにちは"
+
+msgid "available for administrators only"
+msgstr "管理者のみ利用可能"
+
+msgid "display this album"
+msgstr "このアルバムのルートのイメージを表示する"
+
+msgid "display last user comments"
+msgstr "最新のユーザコメントを表示する"
+
+msgid "search"
+msgstr "検索"
+
+msgid "Home"
+msgstr "ホーム"
+
+msgid "in this album"
+msgstr "- このアルバム"
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] "- %d サブアルバム"
+msgstr[1] "- %d サブアルバム"
+
+msgid "included"
+msgstr "含む"
+
+msgid "Invalid password!"
+msgstr "パスワードが正しくありません!"
+
+msgid "Language"
+msgstr "言語"
+
+msgid "last %d days"
+msgstr "最近 %d 日間"
+
+msgid "Last"
+msgstr "最後へ"
+
+msgid "Logout"
+msgstr "ログアウト"
+
+msgid "obligatory"
+msgstr "必須"
+
+msgid "display a calendar by creation date"
+msgstr "作成日のカレンダーを表示する"
+
+msgid "display all photos in all sub-albums"
+msgstr "すべてのサブアルバムのエレメント表示する"
+
+msgid "return to normal view mode"
+msgstr "ノーマルビューモードに戻る"
+
+msgid "display a calendar by posted date"
+msgstr "投稿日のカレンダーを表示する"
+
+msgid "Most visited"
+msgstr "最多アクセス"
+
+msgid "display most visited photos"
+msgstr "最もアクセスされた写真を表示する"
+
+msgid "Unknown identifier"
+msgstr "不明なID"
+
+msgid "New password"
+msgstr "新しいパスワード"
+
+msgid "Rate this photo"
+msgstr "この写真を評する"
+
+msgid "Next"
+msgstr "次へ"
+
+msgid "no rate"
+msgstr "評価なし"
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "最近 %d 日間に投稿された写真のみ表示します。"
+msgstr[1] "最近 %d 日間に投稿された写真のみ表示します。"
+
+msgid "password updated"
+msgstr "パスワードが更新されました。"
+
+msgid "Recent period must be a positive integer value"
+msgstr "最近の期間には正の整数を設定してください。"
+
+msgid "photo"
+msgstr "写真"
+
+msgid "Click on the photo to see it in high definition"
+msgstr "高解像度の写真を表示するには、写真をクリックしてください。"
+
+msgid "Show file metadata"
+msgstr "ファイルメタデータを表示する"
+
+msgid "Powered by"
+msgstr "Powered by"
+
+msgid "Preferences"
+msgstr "プリファレンス"
+
+msgid "Previous"
+msgstr "前へ"
+
+msgid "Random photos"
+msgstr "ランダム写真"
+
+msgid "display a set of random photos"
+msgstr "一連のランダム写真を表示します。"
+
+msgid "Recent albums"
+msgstr "最近のアルバム"
+
+msgid "display recently updated albums"
+msgstr "最近更新されたアルバムを表示する"
+
+msgid "Recent period"
+msgstr "最近の期間"
+
+msgid "Recent photos"
+msgstr "最近の写真"
+
+msgid "display most recent photos"
+msgstr "最近の写真を表示する"
+
+msgid "Redirection..."
+msgstr "リダイレクト ..."
+
+msgid "Please, enter a login"
+msgstr "ユーザIDを入力してください。"
+
+msgid "login mustn't end with a space character"
+msgstr "ユーザIDの末尾にスペースを使用しないでください。"
+
+msgid "login mustn't start with a space character"
+msgstr "ユーザIDの最初にスペースを使用しないでください。"
+
+msgid "this login is already used"
+msgstr "このユーザIDは、すでに使用されています。"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "メールアドレスは、xxx@yyy.eee のようなフォーマットを使用してください (例 : jack@altern.org)。"
+
+msgid "Auto login"
+msgstr "自動ログイン"
+
+msgid "remove this tag from the list"
+msgstr "このタグをリストから削除する"
+
+msgid "representative"
+msgstr "見本"
+
+msgid "Search for Author"
+msgstr "作者で探す"
+
+msgid "Search in albums"
+msgstr "アルバムを探す"
+
+msgid "Search by date"
+msgstr "日付で探す"
+
+msgid "Date"
+msgstr "日付"
+
+msgid "End-Date"
+msgstr "終了日"
+
+msgid "Kind of date"
+msgstr "日付タイプ"
+
+msgid "Search for words"
+msgstr "言葉で探す"
+
+msgid "Search for all terms"
+msgstr "すべてを含む"
+
+msgid "Search for any term"
+msgstr "少なくとも一つを含む"
+
+msgid "Empty query. No criteria has been entered."
+msgstr "空のクエリーです。検索キーワードが入力されていません。"
+
+msgid "Search results"
+msgstr "検索結果"
+
+msgid "Search in sub-albums"
+msgstr "サブアルバムを探す"
+
+msgid "Contact"
+msgstr "連絡:"
+
+msgid "set as album representative"
+msgstr "アルバム表示写真を設定する"
+
+msgid "Show number of comments"
+msgstr "コメント数を表示する"
+
+msgid "Show number of hits"
+msgstr "ヒット数を表示する"
+
+msgid "slideshow"
+msgstr "スライドショー"
+
+msgid "stop the slideshow"
+msgstr "スライドショーを停止する"
+
+msgid "Specials"
+msgstr "特別"
+
+msgid "SQL queries in"
+msgstr "SQLクエリー:"
+
+msgid "display only recently posted photos"
+msgstr "最近投稿された写真のみ表示する"
+
+msgid "return to the display of all photos"
+msgstr "すべてのイメージ表示に戻る"
+
+msgid "the beginning"
+msgstr "最初"
+
+msgid "Thumbnails"
+msgstr "サムネイル"
+
+msgid "Menu"
+msgstr "メニュー"
+
+msgid "A comment on your site"
+msgstr "あなたのサイトのコメント"
+
+msgid "today"
+msgstr "今日"
+
+msgid "Update your rating"
+msgstr "あなたの評価を更新する"
+
+msgid "the username must be given"
+msgstr "ユーザ名を入力してください。"
+
+msgid "useful when password forgotten"
+msgstr "パスワードを忘れたときに便利です。"
+
+msgid "Quick search"
+msgstr "クイックサーチ"
+
+msgid "Connected user: %s"
+msgstr "接続ユーザ: %s"
+
+msgid "IP: %s"
+msgstr "IP: %s"
+
+msgid "Browser: %s"
+msgstr "ブラウザ: %s"
+
+msgid "Author: %s"
+msgstr "撮影者: %s"
+
+msgid "Comment: %s"
+msgstr "コメント: %s"
+
+msgid "Comment by %s"
+msgstr "コメント by %s"
+
+msgid "User: %s"
+msgstr "ユーザ: %s"
+
+msgid "Email: %s"
+msgstr "メールアドレス: %s"
+
+msgid "Admin: %s"
+msgstr "管理者: %s"
+
+msgid "Registration of %s"
+msgstr "%s の登録"
+
+msgid "Album: %s"
+msgstr "アルバム: %s"
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "デフォルトステータスの使用に関して、ユーザ「ゲスト」は正しくないステータスです。ウェブマスタにご連絡ください。"
+
+msgid "this email address is already in use"
+msgstr "このメールアドレスは、すでに他のユーザに使用されています。"
+
+msgid "Album results for"
+msgstr "アルバム検索結果:"
+
+msgid "Tag results for"
+msgstr "タグ検索結果:"
+
+msgid "from %s to %s"
+msgstr "%s - %s"
+
+msgid "Play of slideshow"
+msgstr "スライドショーを実行する"
+
+msgid "Pause of slideshow"
+msgstr "スライドショーを一時停止する"
+
+msgid "Repeat the slideshow"
+msgstr "スライドショーを繰り返す"
+
+msgid "Not repeat the slideshow"
+msgstr "スライドショーを繰り返さない"
+
+msgid "Reduce diaporama speed"
+msgstr "スライドショーのスピードを減らす"
+
+msgid "Accelerate diaporama speed"
+msgstr "スライドショーのスピードを増やす"
+
+msgid "Submit"
+msgstr "送信"
+
+msgid "Yes"
+msgstr "はい"
+
+msgid "No"
+msgstr "いいえ"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "イメージ: %d"
+msgstr[1] "イメージ: %d"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "%d イメージも現在のタグにリンクされました。"
+msgstr[1] "%d イメージも現在のタグにリンクされました。"
+
+msgid "display photos linked to this tag"
+msgstr "このタグのみにリンクされているイメージを表示する"
+
+msgid "photos posted during the last %d days"
+msgstr "最近 %d 日間に投稿された写真"
+
+msgid "Piwigo Help"
+msgstr "Piwigoヘルプ"
+
+msgid "Rank"
+msgstr "ランク"
+
+msgid "group by letters"
+msgstr "文字でグループ化する"
+
+msgid "letters"
+msgstr "文字"
+
+msgid "show tag cloud"
+msgstr "タグクラウドを表示する"
+
+msgid "cloud"
+msgstr "クラウド"
+
+msgid "Are you sure?"
+msgstr "本当によろしいですか?"
+
+msgid "Reset to default values"
+msgstr "デフォルトに戻す"
+
+msgid "delete all photos from your favorites"
+msgstr "お気に入りから画像を全て削除する。"
+
+msgid "Sent by"
+msgstr "Sent by"
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "あなたのブラウザーでは、クッキーの設定が有効にされていません。ブラウザのクッキーが有効になっていることも確認しておいてください。"
+
+msgid "Edit a comment"
+msgstr "コメントを編集"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) このコメントは有効が必要"
+
+msgid "Welcome"
+msgstr "ようこそ"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "Piwigoフォト・ギャラリーにようこそ!"
+
+msgid "... or browse your empty gallery"
+msgstr "... または、空のギャラリーを閲覧する"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "... または、このメッセージを無効にして下さい。自分で解決してみます。"
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "こんにちは %sさん, あなたのPiwigoフォト・ギャラリーには何も入っていません!"
+
+msgid "I want to add photos"
+msgstr "写真を追加したい"
+
+msgid "Manage this user comment: %s"
+msgstr "このユーザーのコメントを管理: %s"
+
+msgid "This author modified following comment:"
+msgstr "このユーザーが次のコメントを書き直しました:"
+
+msgid "This author removed the comment with id %d"
+msgstr "このユーザーがコメントID %d を削除しました。"
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "ページごとの写真数はゼロではありません"
+
+msgid "Number of photos per page"
+msgstr "ページごとの写真数"
+
+msgid "html tags are not allowed in login"
+msgstr "ログインの際にはHTMLタグは使用できません。"
+
+msgid "Rating score"
+msgstr "評価点"
+
+msgid "Invalid username or email"
+msgstr "無効なユーザー名又はメールアドレス"
+
+msgid "Password reset is not allowed for this user"
+msgstr "このユーザーのパスワードはリセットできません。"
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "ユーザー： \"%s\" はメールアドレスがありません。パスワード・リセットができません。"
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "次のユーザーのアカウントのために、誰かがパスワード・リセットを要求しました。"
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "ユーザー： \"%s\" は現在： %s'のギャラリー"
+
+msgid "To reset your password, visit the following address:"
+msgstr "パスワードをリセットするためには、このアドレスへ："
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "もしこれが手違いの場合、このメールを無視して下さい。そうすれば何も起こりません。"
+
+msgid "Password Reset"
+msgstr "パスワード・リセット"
+
+msgid "Check your email for the confirmation link"
+msgstr "認証リンクのために、あなたのメールを確認してください。"
+
+msgid "Invalid key"
+msgstr "無効なキー"
+
+msgid "The passwords do not match"
+msgstr "パスワードが一致しません"
+
+msgid "Your password has been reset"
+msgstr "あなたのパスワードはリセットされました。"
+
+msgid "Return to home page"
+msgstr "ホームページに戻る"
+
+msgid "Please enter your username or email address."
+msgstr "あなたのユーザー名又はメールアドレスを入力してください。"
+
+msgid "You will receive a link to create a new password via email."
+msgstr "新たなパスワードを作成するためのリンクをメールで送信しました。"
+
+msgid "Username or email"
+msgstr "ユーザー名又はメール"
+
+msgid "Change my password"
+msgstr "パスワード変更"
+
+msgid "Enter your new password below."
+msgstr "新たなパスワードを以下の空欄に入力して下さい。"
+
+msgid "Edit"
+msgstr "編集"
+
+msgid "EXIF Metadata"
+msgstr "EXIF メタデータ"
+
+msgid "Hello %s,"
+msgstr "%sさん、こんにちは,"
+
+msgid "IPTC Metadata"
+msgstr "IPTC メタデータ"
+
+msgid "Send my connection settings by email"
+msgstr "接続設定をメールで送信してください。"
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "ようこそ！登録完了。まもなくあなたの接続設定がメールで届く予定です。"
+
+msgid "Username modification"
+msgstr "ユーザー名の変更"
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "新規のユーザー名は: %s"
+
+msgid "square"
+msgstr "四角"
+
+msgid "thumb"
+msgstr "サムネール"
+
+msgid "small"
+msgstr "S - 小"
+
+msgid "medium"
+msgstr "M - 中"
+
+msgid "large"
+msgstr "L - 大"
+
+msgid "xlarge"
+msgstr "XL - より大きい"
+
+msgid "xxlarge"
+msgstr "XXL - 最も大きい"
+
+msgid "Original"
+msgstr "オリジナル"
+
+msgid "Thank you for registering at %s!"
+msgstr "%sへのご登録ありがとうございました!"
+
+msgid "Here are your connection settings"
+msgstr "あなたの接続設定です。"
+
+msgid "Password: %s"
+msgstr "パスワード: %s"
+
+msgid "Username: %s"
+msgstr "ユーザー名: %s"
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "もしも、このメールの受信が誤りだと思った場合、 %sに連絡して下さい。"
+
+msgid "2small"
+msgstr "XXS - 最も小さい"
+
+msgid "Desktop"
+msgstr "デスクトップ"
+
+msgid "Mobile"
+msgstr "モバイル"
+
+msgid "Photo sizes"
+msgstr "画像のサイズ"
+
+msgid "Show latest comments first"
+msgstr "最新のコメントを先に表示"
+
+msgid "Show oldest comments first"
+msgstr "以前のコメントを先に表示"
+
+msgid "View in"
+msgstr "表示"
+
+msgid "xsmall"
+msgstr "XS - より小さい"
+
+msgid "Date created, new &rarr; old"
+msgstr "作成日, 新 &rarr; 旧"
+
+msgid "Date created, old &rarr; new"
+msgstr "作成日, 旧 &rarr; 新"
+
+msgid "Date posted, new &rarr; old"
+msgstr "掲載日, 新 &rarr; 旧"
+
+msgid "Date posted, old &rarr; new"
+msgstr "掲載日, 旧 &rarr; 新"
+
+msgid "File name, A &rarr; Z"
+msgstr "ファイル名, A &rarr; Z"
+
+msgid "File name, Z &rarr; A"
+msgstr "ファイル名, Z &rarr; A"
+
+msgid "Manual sort order"
+msgstr "マニュアル・ソート順"
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "数字識別子, 1 &rarr; 9"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "数字識別子, 9 &rarr; 1"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "写真題名, A &rarr; Z"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "写真題名, Z &rarr; A"
+
+msgid "Rating score, high &rarr; low"
+msgstr "スコア, 高 &rarr; 低"
+
+msgid "Rating score, low &rarr; high"
+msgstr "スコア, 低 &rarr; 高"
+
+msgid "Visits, high &rarr; low"
+msgstr "訪問, 高 &rarr; 低"
+
+msgid "Visits, low &rarr; high"
+msgstr "訪問, 低 &rarr; 高"
+
+msgid "%d rate"
+msgid_plural "%d rates"
+msgstr[0] "%dレート"
+msgstr[1] "%d 程度"
+
+msgid "Bad request"
+msgstr "不正な要求"
+
+msgid "Forbidden"
+msgstr "禁断"
+
+msgid "Page not found"
+msgstr "ページが見つかりません"
+
+msgid "Permalink for album not found"
+msgstr "このエントリーのアルバムが見つかりません"
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "Piwigoに回復不能エラーが発生しました"
+
+msgid "Requested album does not exist"
+msgstr "要求されたアルバムは存在しません。"
+
+msgid "Requested tag does not exist"
+msgstr "要求されたタグは存在しません。"
+
+msgid "Email address is mandatory"
+msgstr "電子メールアドレスを必須にする"
+
+msgid "Username is mandatory"
+msgstr "ユーザー名を必須にする"
+
+msgid "Website"
+msgstr "ウェブサイト"
+
+msgid "Your website URL is invalid"
+msgstr "あなたのウェブサイトのURLが無効です"
+
+msgid "mandatory"
+msgstr "必須"
+
+msgid "Email"
+msgstr "メールアドレス"
+
+msgid "First Page"
+msgstr "初めのページ"
+
+msgid "Go back to the album"
+msgstr "アルバムに戻る"
+
+msgid "Last Page"
+msgstr "最後のページ"
+
+msgid "Password is missing. Please enter the password."
+msgstr "パスワードがありません。パスワードを入力して下さい。"
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "パスワードの再確認がありません。パスワードの再確認を確認して下さい。"
+
+msgid "%d photos per page"
+msgstr "%d ページ当りの写真の数"
+
+msgid "Theme"
+msgstr "テーマ"
+
+msgid "Album name, A &rarr; Z"
+msgstr "アルバム名順(A &rarr;Z)"
+
+msgid "Album name, Z &rarr; A"
+msgstr "アルバム名順(Z &rarr;A)"
+
+msgid "Apply on properties"
+msgstr "プロパティの適用"
+
+msgid "Link: %s"
+msgstr "リンク: %s"
+
+msgid "No results for"
+msgstr "みつかりませんでした。"
+
+msgid "Photo description"
+msgstr "写真の説明"
+
+msgid "Photo title"
+msgstr "写真のタイトル"
+
+msgid "Your authentication key is no longer valid."
+msgstr "あなたの認証キーは既に無効になっています。"
+
+msgid "generate random password"
+msgstr "ランダムなパスワードを生成します"
+
+msgid "Invalid username or password!"
+msgstr "ユーザ名かパスワードが違います!"
+
+msgid "Password: ********** (no copy by email)"
+msgstr "パスワード: ********** (電子メールにはコピーされません)"
+
+msgid "Related albums"
+msgstr "関連するアルバム"
+
+msgid "Search in this set"
+msgstr "この範囲内で検索する"
+
+msgid "Choose filters"
+msgstr "フィルターを選択する"
+
+msgid "Pre-established filters are proposed, but you can add or remove them using the \"Choose filters\" button."
+msgstr "あらかじめ作成されたフィルターが選ばれていますが、「フィルターを選択する」ボタンを使ってフィルターの作成と削除をすることができます。"
+
+msgid "Fill in the filters to start a search"
+msgstr "検索を始めるにはフィルターに入力してください"
+
+msgid "File type"
+msgstr "ファイル形式"
+
+msgid "Added by"
+msgstr "追加したユーザー"
+
+msgid "last 24 hours"
+msgstr "24時間以内"
+
+msgid "last 3 months"
+msgstr "3カ月以内"
+
+msgid "last 30 days"
+msgstr "30日以内"
+
+msgid "last 6 months"
+msgstr "6カ月以内"
+
+msgid "last 7 days"
+msgstr "7日以内"
+
+msgid "last year"
+msgstr "昨年"
+
+msgid "Tags found"
+msgstr "見つかったタグ"
+
+msgid "Album description"
+msgstr "アルバムの説明"
+
+msgid "Album title"
+msgstr "アルバムのタイトル"
+
+msgid "Clear"
+msgstr "条件を初期化"
+
+msgid "Search in :"
+msgstr "以下から検索する"
+
+msgid "Empty filters"
+msgstr "フィルターをクリア"
+
+msgid "You can try to edit your filters and perform a new search."
+msgstr "フィルターを変更して新たに検索を行うことができます。"
+
+msgid "No results are available."
+msgstr "見つかりませんでした。"
+
+msgid "piwigo_day_0"
+msgstr "日曜日"
+
+msgid "piwigo_day_1"
+msgstr "月曜日"
+
+msgid "piwigo_day_2"
+msgstr "火曜日"
+
+msgid "piwigo_day_3"
+msgstr "水曜日"
+
+msgid "piwigo_day_4"
+msgstr "木曜日"
+
+msgid "piwigo_day_5"
+msgstr "金曜日"
+
+msgid "piwigo_day_6"
+msgstr "土曜日"
+
+msgid "piwigo_month_10"
+msgstr "10月"
+
+msgid "piwigo_month_11"
+msgstr "11月"
+
+msgid "piwigo_month_12"
+msgstr "12月"
+
+msgid "piwigo_month_1"
+msgstr "1月"
+
+msgid "piwigo_month_2"
+msgstr "2月"
+
+msgid "piwigo_month_3"
+msgstr "3月"
+
+msgid "piwigo_month_4"
+msgstr "4月"
+
+msgid "piwigo_month_5"
+msgstr "5月"
+
+msgid "piwigo_month_6"
+msgstr "6月"
+
+msgid "piwigo_month_7"
+msgstr "7月"
+
+msgid "piwigo_month_8"
+msgstr "8月"
+
+msgid "piwigo_month_9"
+msgstr "9月"
+

@@ -9,6 +9,9 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\AccessLevel;
+use Piwigo\Core\AppInfo;
+use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 // Bootstrap globals, set by include/common.inc.php below.
@@ -37,7 +40,7 @@ trigger_notify('loc_begin_admin');
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
 
-check_status(ACCESS_ADMINISTRATOR);
+check_status(AccessLevel::Administrator);
 
 check_input_parameter('page', $_GET, false, '/^[a-zA-Z\d_-]+$/');
 check_input_parameter('section', $_GET, false, '/^[a-z]+[a-z_\/-]*(\.php)?$/i');
@@ -252,7 +255,7 @@ if ((bool) $conf['activate_comments']) {
     // pending comments
     $query = '
 SELECT COUNT(*)
-  FROM ' . COMMENTS_TABLE . '
+  FROM ' . Tables::comments() . '
   WHERE validated=\'false\'
 ;';
     $row = pwg_db_fetch_row(pwg_query($query));
@@ -271,7 +274,7 @@ SELECT COUNT(*)
 $user_id = is_numeric($user['id']) ? (int) $user['id'] : 0;
 $query = '
 SELECT COUNT(*)
-  FROM ' . CADDIE_TABLE . '
+  FROM ' . Tables::caddie() . '
   WHERE user_id = ' . $user_id . '
 ;';
 $row = pwg_db_fetch_row(pwg_query($query));
@@ -306,7 +309,7 @@ if (in_array($page['page'], ['site_update', 'batch_manager'])) {
 // only calculate number of orphans on all pages if the number of images is "not huge"
 $page['nb_orphans'] = 0;
 
-$row = pwg_db_fetch_row(pwg_query('SELECT COUNT(*) FROM ' . IMAGES_TABLE));
+$row = pwg_db_fetch_row(pwg_query('SELECT COUNT(*) FROM ' . Tables::images()));
 assert($row !== null);
 [$page['nb_photos_total']] = $row;
 if ($page['nb_photos_total'] < 100000) { // 100k is already a big gallery
@@ -350,7 +353,7 @@ if (
 
 $show_whats_new = false;
 
-$whats_new_major_version = get_branch_from_version(PHPWG_VERSION);
+$whats_new_major_version = get_branch_from_version(AppInfo::VERSION);
 
 if ((bool) userprefs_get_param('show_whats_new_' . $whats_new_major_version, true) and pwg_is_dbconf_writeable()) {
     if ($user['registration_date'] > $conf['last_major_update']) {

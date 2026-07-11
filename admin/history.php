@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\AccessLevel;
+use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 /**
@@ -39,7 +41,7 @@ global $conf, $template, $page;
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 include_once PHPWG_ROOT_PATH . 'admin/include/functions_history.inc.php';
 
-$types = array_merge(['none'], get_enums(HISTORY_TABLE, 'image_type'));
+$types = array_merge(['none'], get_enums(Tables::history(), 'image_type'));
 
 $display_thumbnails = [
     'no_display_thumbnail' => l10n('No display'),
@@ -51,7 +53,7 @@ $display_thumbnails = [
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
 
-check_status(ACCESS_ADMINISTRATOR);
+check_status(AccessLevel::Administrator);
 
 check_input_parameter('filter_ip', $_GET, false, '/^[0-9.]+$/');
 check_input_parameter('filter_image_id', $_GET, false, '/^\d+$/');
@@ -151,7 +153,7 @@ if ($form_param['user_id'] !== -1) {
     $query = '
   SELECT
       username
-    FROM ' . USERS_TABLE . '
+    FROM ' . Tables::users() . '
     WHERE id = ' . $form_param['user_id'] . '
   ;';
 

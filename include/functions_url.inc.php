@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Db\Tables;
+
 /**
  * returns a prefix for each url link on displayed page
  * and return an empty string for current path
@@ -872,7 +874,7 @@ function get_user_favorites(): array
 SELECT
     image_id,
     1 as fake_value
-  FROM ' . FAVORITES_TABLE . '
+  FROM ' . Tables::favorites() . '
   WHERE user_id = ' . $user_id . '
 ';
 

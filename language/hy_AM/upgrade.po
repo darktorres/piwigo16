@@ -1,0 +1,65 @@
+# Piwigo translation — hy_AM
+# Source: upgrade.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: hy_AM\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "All sub-albums of private albums become private"
+msgstr "Գաղտնի ալբոմների բոլոր ենթալբոմները դառնում են գաղտնի"
+
+msgid "As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:"
+msgstr "Նախազգուշացում՝ հետևյալ հավելումներն ապաակտիվացվել են։ Նախքան դրանք նորից ակտիվացնելը, դուք պետք է ստուգեք թարմացվող հավելումների առկայությունը."
+
+msgid "As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:"
+msgstr "Նախազգուշացում՝ հետևյալ թեմաները ապաակտիվացվել են։ Նախքան դրանք նորից ակտիվացնելը, դուք պետք է ստուգեք թարմացվող թեմաների առկայությունը."
+
+msgid "Discover what's new in Piwigo %s"
+msgstr "Տեսնել, թե ինչն է նոր Piwigo %s-ում"
+
+msgid "In <i>%s</i>, before <b>?></b>, insert:"
+msgstr "Տեղադրել <i>%s</i>-ում, <b>?></b>-ից առաջ"
+
+msgid "Only administrator can run upgrade: please sign in below."
+msgstr "Միայն ադմինիստրատորը կարող է կատարել թարմացում. խնդրում ենք մուտք գործել ստորև:"
+
+msgid "Only thumbnails prefix and webmaster mail address have been saved from previous configuration"
+msgstr "Նախորդ կազմաձևից պահպանվել են միայն մանրապատկերների նախածանցը և տեխ. մասնագետի էլ. փոստի հասցեն"
+
+msgid "Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem."
+msgstr "Կատարեք սպասարկման ստուգում [Administration>Tools>Maintenance]-ում, եթե որևէ խնդրի եք հանդիպել:"
+
+msgid "SQL queries"
+msgstr "SQL հարցումներ"
+
+msgid "Statistics"
+msgstr "Վիճակագրություն"
+
+msgid "This page proposes to upgrade your database corresponding to your old version of Piwigo to the current version. The upgrade assistant thinks you are currently running a <strong>release %s</strong> (or equivalent)."
+msgstr "Այս էջն առաջարկում է թարմացնել տվյալների բազան ձեր հին Piwigo տարբերակից նորի: Թարմացման օգնականը կարծում է, որ դուք ներկայումս գործարկում եք <strong>release %s</strong> (կամ դրան համարժեքը):"
+
+msgid "Upgrade"
+msgstr "Թարմացնել"
+
+msgid "Upgrade from version %s to %s"
+msgstr "Թարմացրեք %s տարբերակից %s-ի"
+
+msgid "Upgrade informations"
+msgstr "Թարմացման տեղեկատվություն"
+
+msgid "User permissions and group permissions have been erased"
+msgstr "Օգտատերերի և խմբերի լիազորությունները ջնջվել են"
+
+msgid "You do not have access rights to run upgrade"
+msgstr "Դուք չունեք մուտքի իրավունք՝ թարմացում կատարելու համար"
+
+msgid "total SQL time"
+msgstr "ընդհանուր SQL ժամանակը"
+
+msgid "total upgrade time"
+msgstr "ընդհանուր թարմացման ժամանակը"
+

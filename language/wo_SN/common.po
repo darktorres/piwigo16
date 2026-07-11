@@ -1,0 +1,74 @@
+# Piwigo translation — wo_SN
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: wo_SN\n"
+"Plural-Forms: nplurals=1; plural=(0);\n"
+"X-Piwigo-Language-Name: Wolof\n"
+"X-Piwigo-Country: Sénégal\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: wo\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "All"
+msgstr "toute 2"
+
+msgid "piwigo_day_0"
+msgstr "Dibeer ji "
+
+msgid "piwigo_day_1"
+msgstr "Altine"
+
+msgid "piwigo_day_2"
+msgstr "Talaata"
+
+msgid "piwigo_day_3"
+msgstr "àllarba"
+
+msgid "piwigo_day_4"
+msgstr "Alxames"
+
+msgid "piwigo_day_5"
+msgstr "àjjuma "
+
+msgid "piwigo_day_6"
+msgstr "Gaawu-aset"
+
+msgid "piwigo_month_10"
+msgstr "Tabaski"
+
+msgid "piwigo_month_11"
+msgstr "Tamkharit"
+
+msgid "piwigo_month_12"
+msgstr "Digui Gamou"
+
+msgid "piwigo_month_1"
+msgstr "Gamou"
+
+msgid "piwigo_month_2"
+msgstr "Raki Gamou"
+
+msgid "piwigo_month_3"
+msgstr "Rakâti Gamou"
+
+msgid "piwigo_month_4"
+msgstr "Mâmou Kôr"
+
+msgid "piwigo_month_5"
+msgstr "Ndèyou Kôr"
+
+msgid "piwigo_month_6"
+msgstr "Baraxlou"
+
+msgid "piwigo_month_7"
+msgstr "Kôr"
+
+msgid "piwigo_month_8"
+msgstr "Kori"
+
+msgid "piwigo_month_9"
+msgstr "Digui Tabaski"
+

@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\ActivitySystem;
+use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
@@ -52,8 +54,8 @@ if (is_webmaster()) {
       occured_on,
       details,
   IF(performed_by = 0, \'System\', ' . $username_field . ') AS username
-  FROM ' . ACTIVITY_TABLE . '
-  LEFT JOIN ' . USERS_TABLE . ' ON performed_by = ' . $id_field . '
+  FROM ' . Tables::activity() . '
+  LEFT JOIN ' . Tables::users() . ' ON performed_by = ' . $id_field . '
   WHERE object = \'system\'
   ORDER BY activity_id DESC';
 
@@ -76,7 +78,7 @@ if (is_webmaster()) {
 
             // For each categories (Core, Plugin and Theme) we need to format theirs actions
             switch ($rows['object_id']) {
-                case ACTIVITY_SYSTEM_CORE:
+                case ActivitySystem::Core:
                     $object_icon = 'icon-piwigo';
                     $object = l10n('Core');
 
@@ -184,7 +186,7 @@ if (is_webmaster()) {
                     }
                     break;
 
-                case ACTIVITY_SYSTEM_PLUGIN:
+                case ActivitySystem::Plugin:
                     $object_icon = 'icon-puzzle';
                     $object = 'plugin';
                     if (isset($details['plugin_id']) && is_string($details['plugin_id'])) {
@@ -261,7 +263,7 @@ if (is_webmaster()) {
                     }
                     break;
 
-                case ACTIVITY_SYSTEM_THEME:
+                case ActivitySystem::Theme:
                     $object_icon = 'icon-brush';
                     $object = 'theme';
                     if (isset($details['theme_id']) && is_string($details['theme_id'])) {

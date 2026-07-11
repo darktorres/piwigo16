@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\AccessLevel;
 use Piwigo\Template\Template;
 
 // --------------------------------------------------------------------- include
@@ -27,7 +28,7 @@ global $page, $template;
 // so the top-level $page['errors'][...] = ... write below type-checks.
 $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
 
-check_status(ACCESS_FREE);
+check_status(AccessLevel::Free);
 include_once PHPWG_ROOT_PATH . 'include/functions_notification.inc.php';
 include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php';
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';

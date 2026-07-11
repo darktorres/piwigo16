@@ -1,0 +1,4242 @@
+# Piwigo translation — is_IS
+# Source: admin.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: is_IS\n"
+"Plural-Forms: nplurals=2; plural=(n % 10 != 1 || n % 100 == 11);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "%d user added"
+msgstr "%d notanda bætt við"
+
+msgid "%d user"
+msgid_plural "%d users"
+msgstr[0] "%d notandi"
+msgstr[1] "%d notendur"
+
+msgid "%d tags moved"
+msgstr "%d merki færð"
+
+msgid "%d tags edited"
+msgstr "%d merkjum breytt"
+
+msgid "%d tags deleted"
+msgstr "%d merkjum eytt"
+
+msgid "%d tags added"
+msgstr "%d merkjum bætt við"
+
+msgid "%d tags"
+msgstr "%d merki"
+
+msgid "%d tag moved"
+msgstr "%d merki fært"
+
+msgid "%d tag edited"
+msgstr "%d merki breytt"
+
+msgid "%d tag deleted"
+msgstr "%d merki eytt"
+
+msgid "%d tag added"
+msgstr "%d merki bætt við"
+
+msgid "%d tag"
+msgstr "%d merki"
+
+msgid "%d sub-albums"
+msgstr "%d undiralbúm"
+
+msgid "%d seconds"
+msgstr "%d sekúndur"
+
+msgid "%d second"
+msgstr "%d sekúnda"
+
+msgid "%d photos uploaded"
+msgstr "%d myndir innfluttar"
+
+msgid "%d photos moved"
+msgstr "%d myndir færðar"
+
+msgid "%d photos edited"
+msgstr "%d myndum breytt"
+
+msgid "%d photos deleted"
+msgstr "%d myndum eytt"
+
+msgid "%d photos added"
+msgstr "%d myndum bætt við"
+
+msgid "%d photos"
+msgstr "%d myndir"
+
+msgid "%d photo was deleted"
+msgid_plural "%d photos were deleted"
+msgstr[0] "%d mynd eytt"
+msgstr[1] "%d myndum eytt"
+
+msgid "%d photo moved"
+msgstr "%d mynd færð"
+
+msgid "%d photo edited"
+msgstr "%d mynd breytt"
+
+msgid "%d photo deleted"
+msgstr "%d mynd eytt"
+
+msgid "%d photo added"
+msgstr "%d mynd bætt við"
+
+msgid "%d parameter was updated."
+msgid_plural "%d parameters were updated."
+msgstr[0] "%d notandabreyta uppfærð."
+msgstr[1] "%d notandabreytur uppfærðar."
+
+msgid "%d of %d users selected"
+msgstr "%d af %d notendum valdir"
+
+msgid "%d of %d photos selected"
+msgstr "%d af %d myndum valdar"
+
+msgid "%d months"
+msgstr "%d mánuðir"
+
+msgid "%d month"
+msgstr "%d mánuður"
+
+msgid "%d minutes"
+msgstr "%d mínútur"
+
+msgid "%d minute"
+msgstr "%d mínúta"
+
+msgid "%d member"
+msgid_plural "%d members"
+msgstr[0] "%d meðlimur"
+msgstr[1] "%d meðlimir"
+
+msgid "%d mail was sent."
+msgid_plural "%d mails were sent."
+msgstr[0] "%d póstur hefur verið sendur."
+msgstr[1] "%d póstar hafa verið sendir."
+
+msgid "%d mail was not sent."
+msgid_plural "%d mails were not sent."
+msgstr[0] "%d póstur hefur ekki verið sendur."
+msgstr[1] "%d póstar hafa ekki verið sendir."
+
+msgid "%d line filtered"
+msgid_plural "%d lines filtered"
+msgstr[0] "%d lína síuð"
+msgstr[1] "%d línur síaðar"
+
+msgid "%d hours"
+msgstr "%d klukkustundir"
+
+msgid "%d hour"
+msgstr "%d klukkustund"
+
+msgid "%d guest"
+msgid_plural "%d guests"
+msgstr[0] "%d gestur"
+msgstr[1] "%d gestir"
+
+msgid "%d groups moved"
+msgstr "%d hópar færðir"
+
+msgid "%d groups edited"
+msgstr "%d hópum breytt"
+
+msgid "%d groups deleted"
+msgstr "%d hópum eytt"
+
+msgid "%d groups added"
+msgstr "%d hópum bætt við"
+
+msgid "%d groups"
+msgstr "%d hópar"
+
+msgid "%d group moved"
+msgstr "%d hópur færður"
+
+msgid "%d group edited"
+msgstr "%d hópi breytt"
+
+msgid "%d group added"
+msgstr "%d hópi bætt við"
+
+msgid "%d group deleted"
+msgstr "%d hópi eytt"
+
+msgid "%d group"
+msgstr "%d hópur"
+
+msgid "%d days"
+msgstr "%d dagar"
+
+msgid "%d day"
+msgstr "%d dagur"
+
+msgid "%d checksums were added"
+msgstr "%d gátsummum var bætt við"
+
+msgid "%d anomaly has not been corrected."
+msgid_plural "%d anomalies have not been corrected."
+msgstr[0] "%d frávik hafa ekki verið lagfærð."
+msgstr[1] "%d frávik hafa ekki verið lagfærð."
+
+msgid "%d anomaly has been ignored."
+msgid_plural "%d anomalies have been ignored."
+msgstr[0] "%d frávik hafa verið hunsuð."
+msgstr[1] "%d frávik hafa verið hunsuð."
+
+msgid "%d anomaly has been detected."
+msgid_plural "%d anomalies have been detected."
+msgstr[0] "%d frávik hafa verið uppgötvuð."
+msgstr[1] "%d frávik hafa fundist."
+
+msgid "%d anomaly has been corrected."
+msgid_plural "%d anomalies have been detected corrected."
+msgstr[0] "%d frávik hafa verið lagfærð."
+msgstr[1] "%d frávik hafa fundist og leiðrétt."
+
+msgid "%d albums including"
+msgstr "%d albúmum þar á meðal"
+
+msgid "%d albums edited"
+msgstr "%d albúmum breytt"
+
+msgid "%d albums deleted"
+msgstr "%d albúmum eytt"
+
+msgid "%d album moved"
+msgid_plural "%d albums moved"
+msgstr[0] "%d albúm færð"
+msgstr[1] "%d albúm færð"
+
+msgid "%d albums added"
+msgstr "%d albúmum bætt við"
+
+msgid "%d album including"
+msgstr "%d albúm þar á meðal"
+
+msgid "%d album edited"
+msgstr "%d albúmi breytt"
+
+msgid "%d album deleted"
+msgstr "%d albúmi eytt"
+
+msgid "%d album added"
+msgstr "%d albúmi bætt við"
+
+msgid "%d Activity"
+msgstr "%d heimsókn"
+
+msgid "%d Activities"
+msgstr "%d heimsóknir"
+
+msgid " and %d virtuals"
+msgstr "og %d sýndarmynd"
+
+msgid " and %d virtual"
+msgstr "og %d sýndarmynd"
+
+msgid " (copy)"
+msgstr "(afrit)"
+
+msgid " (copy %s)"
+msgstr "(afrit %s)"
+
+msgid "Cache size"
+msgstr "Stærð skyndiminnis"
+
+msgid "Cache"
+msgstr "Skyndiminni"
+
+msgid "By rank"
+msgstr "Eftir stöðu"
+
+msgid "By default, the center of interest is placed in the middle of the photo."
+msgstr "Sjálfgefið er að miðja athyglinnar er sett á miðju myndarinnar."
+
+msgid "By default, Piwigo will create a new websize from the HD (high definition) version of your photo."
+msgstr "Piwigo mun sjálfgefið stofna nýja vefsíðu út frá HD (há upplausn) útgáfunni af myndinni þinni."
+
+msgid "By %s"
+msgstr "Eftir %s"
+
+msgid "Bound Theme"
+msgstr "Bundið þema"
+
+msgid "Batch Manager"
+msgstr "Magnvinnslustjóri"
+
+msgid "Basic settings"
+msgstr "Grunnstillingar"
+
+msgid "Average rate"
+msgstr "Meðaleinkunn"
+
+msgid "Average last 12 months"
+msgstr "Meðaltal síðustu 12 mánuði"
+
+msgid "Available only with HTML format"
+msgstr "Aðeins í boði með HTML-sniði"
+
+msgid "Available on"
+msgstr "Í boði á"
+
+msgid "Automatic sort order"
+msgstr "Sjálfvirk röðun"
+
+msgid "Automatic correction"
+msgstr "Sjálfvirk leiðrétting"
+
+msgid "Authorized"
+msgstr "Heimilt"
+
+msgid "Authorize users to add comments on selected albums"
+msgstr "Leyfa notendum að bæta við umsögnum á völdum albúmum"
+
+msgid "Aug"
+msgstr "ágú"
+
+msgid "Apr"
+msgstr "apr"
+
+msgid "At least 2 selected tags are needed to merge"
+msgstr "Að minnsta kosti 2 valin merki þarf til að sameina"
+
+msgid "Associated"
+msgstr "Tengd"
+
+msgid "Associate to album"
+msgstr "Tengdur við albúm"
+
+msgid "Associate User"
+msgstr "Tengdur notandi"
+
+msgid "Are you sure you want to update all extensions?"
+msgstr "Ertu viss um að þú viljir uppfæra alla viðauka?"
+
+msgid "Are you sure you want to restore to default settings?"
+msgstr "Ertu viss um að þú viljir endurheimta sjálfgefna stillingar?"
+
+msgid "Are you sure you want to restore this plugin?"
+msgstr "Ertu viss um að þú viljir endurheimta þessa viðbót?"
+
+msgid "Are you sure you want to restore the plugin \"%s\"?"
+msgstr "Ertu viss um að þú viljir endurheimta viðbótina \"%s\"?"
+
+msgid "Are you sure you want to lock the gallery?"
+msgstr "Ertu viss um að þú viljir læsa myndasafninu?"
+
+msgid "Are you sure you want to install this plugin?"
+msgstr "Ertu viss um að þú viljir setja upp þessa viðbót?"
+
+msgid "Are you sure you want to install the plugin \"%s\"?"
+msgstr "Ertu viss um að þú viljir setja upp viðbótina \"%s\"?"
+
+msgid "Are you sure you want to delete this?"
+msgstr "Ertu viss um að þú viljir eyða þessu?"
+
+msgid "Are you sure you want to delete this theme?"
+msgstr "Ertu viss um að þú viljir eyða þessu þema?"
+
+msgid "Are you sure you want to delete this site?"
+msgstr "Ertu viss um að þú viljir eyða þessari vefsíðu?"
+
+msgid "Are you sure you want to delete this plugin?"
+msgstr "Ertu viss um að þú viljir eyða þessari viðbót?"
+
+msgid "Are you sure you want to delete the user \"%s\"?"
+msgstr "Ertu viss um að þú viljir eyða notandanum \"%s\"?"
+
+msgid "Are you sure you want to delete the theme \"%s\"?"
+msgstr "Ertu viss um að þú viljir eyða þemanu \"%s\"?"
+
+msgid "Are you sure you want to delete the ratings of the user \"%s\"?"
+msgstr "Ertu viss um að þú viljir eyða einkunnum notandans \"%s\"?"
+
+msgid "Are you sure you want to delete the plugin \"%s\"?"
+msgstr "Ertu viss um að þú viljir eyða viðbótinni \"%s\"?"
+
+msgid "Are you sure you want to delete the language \"%s\"?"
+msgstr "Ertu viss um að þú viljir eyða tungumálinu \"%s\"?"
+
+msgid "Are you sure you want to delete group \"%s\"?"
+msgstr "Ertu viss um að þú viljir eyða hópnum \"%s\"?"
+
+msgid "Are you sure you want to delete all sizes?"
+msgstr "Ertu viss um að þú viljir eyða öllum stærðum?"
+
+msgid "Are you sure to install this upgrade? You must verify if this version does not need uninstallation."
+msgstr "Ertu viss um að þú viljir setja inn þessa uppfærslu? Þú verður að staðfesta að þessa útgáfa þarf ekki að fjarlægja áður."
+
+msgid "Approximate maximum resolution: %dM pixels (that's %dx%d pixels)."
+msgstr "Áætluð hámarksupplausn: %dM pixlar (það er %dx%d pixlar)."
+
+msgid "Apply watermark if width is bigger than"
+msgstr "Settu vatnsmerki á ef breidd er stærri en"
+
+msgid "Apply watermark if height is bigger than"
+msgstr "Settu vatnsmerki á ef hæð er stærri en"
+
+msgid "Apply to the whole hierarchy"
+msgstr "Beita á allt stigveldið"
+
+msgid "Apply to sub-albums"
+msgstr "Beita á undiralbúm"
+
+msgid "Apply to direct sub-albums"
+msgstr "Beita á bein undiralbúm"
+
+msgid "Apply selected corrections"
+msgstr "Beita völdum leiðréttingum"
+
+msgid "Apply an automatic order to root albums"
+msgstr "Beita sjálfvirkri röðun á rótaralbúm"
+
+msgid "Apply action"
+msgstr "Beita aðgerð"
+
+msgid "Applications"
+msgstr "Hugbúnaður"
+
+msgid "Aperture is designed for professional photographers with iPhoto simplicity."
+msgstr "Aperture er hannað fyrir atvinnuljósmyndara með iPhoto einfaldleika"
+
+msgid "Aperture is a powerful tool to refine images and manage massive libraries on Mac."
+msgstr "Aperture er öflugt tól til að betrumbæta myndir og stjórna stórum myndasöfnum á Mac."
+
+msgid "Anyway only webmasters can see this tab and never administrators."
+msgstr "Aðeins vefstjórar geta séð þennan flipa, ekki stjórnendur."
+
+msgid "Anomaly"
+msgstr "Frávik"
+
+msgid "An information email was sent to group \"%s\""
+msgstr "Upplýsingapóstur sendur til hóps \"%s\""
+
+msgid "An error occured during extraction (%s)."
+msgstr "Villa kom upp við afþjöppun (%s) skráa."
+
+msgid "An error has occured during upgrade."
+msgstr "Villa kom upp við uppfærslu."
+
+msgid "An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href=\"%s\">Click here to show log error</a>."
+msgstr "Villa kom upp við afþjöppun. Athugaðu skráarheimildir á Piwigo-uppsetningunni þinni. <br><a href=\"%s\">Smelltu hér til að birta villuskrá</a>."
+
+msgid "Allowed file types: %s."
+msgstr "Leyfa skráartegundir: %s"
+
+msgid "Allow users to edit their own comments"
+msgstr "Leyfa notendum að breyta eigin umsögnum"
+
+msgid "Allow users to delete their own comments"
+msgstr "Leyfa notendum að eyða eigin umsögnum"
+
+msgid "Allow users to add a link to their website"
+msgstr "Leyfa notendum að bæta við hlekk á vefsíðu sína"
+
+msgid "Allow user registration"
+msgstr "Leyfa nýskráningu notanda"
+
+msgid "Allow user customization"
+msgstr "Leyfa aðlögun notanda"
+
+msgid "Allow rating"
+msgstr "Leyfa einkunn"
+
+msgid "All themes are up to date."
+msgstr "Öll þemu eru uppfærð."
+
+msgid "All plugins are up to date."
+msgstr "Allar viðbætur eru uppfærðar."
+
+msgid "All extensions are up to date."
+msgstr "Allir viðaukar eru uppfærðir"
+
+msgid "All optimizations have been successfully completed."
+msgstr "Allri bestun lokið með góðum árangri."
+
+msgid "All languages are up to date."
+msgstr "Öll tungumál eru uppfærð"
+
+msgid "All %d users are selected"
+msgstr "Allir %d notendur eru valdir"
+
+msgid "All %d photos are selected"
+msgstr "Allar %d myndir eru valdar"
+
+msgid "Albums automatically sorted"
+msgstr "Albúmum sjálfvirkt raðað"
+
+msgid "Albums authorized thanks to group associations"
+msgstr "Albúm heimiluð þökk sé tengingu við hóp"
+
+msgid "Album updated successfully"
+msgstr "Uppfærsla á albúmi tókst"
+
+msgid "Album search tool"
+msgstr "Leitartól albúms"
+
+msgid "Album photos associated to the following albums: %s"
+msgstr "Albúmmyndir tengdar eftirfarandi albúmum: %s"
+
+msgid "Album name"
+msgstr "Albúmheiti"
+
+msgid "Album manual order was saved"
+msgstr "Handvirk röðun albúms var vistuð"
+
+msgid "Album list management"
+msgstr "Stjórnun albúmlista"
+
+msgid "Album \"%s\" now contains %d photos"
+msgstr "Albúm \"%s\" inniheldur núna %d myndir"
+
+msgid "Album \"%s\" has been added"
+msgstr "Albúmi \"%s\" hefur verið bætt við"
+
+msgid "Advanced filters"
+msgstr "Háþróaðar síur"
+
+msgid "Advanced features"
+msgstr "Háþróaðir eiginleikar"
+
+msgid "Adobe Photoshop Lightroom is a photography software designed to manage large quantities of digital images and doing post production work."
+msgstr "Adobe Photoshop Lightroom er ljósmyndahugbúnaður hannaður til að stjórna miklu magni af stafrænum myndum og framkvæma eftirvinnslu."
+
+msgid "Administration Home"
+msgstr "Heimasíða stjórnunar"
+
+msgid "Added by %s"
+msgstr "Bætt við af %s"
+
+msgid "Add/delete a permalink"
+msgstr "Bæta við/eyða föstum hlekki"
+
+msgid "Add write access to the \"%s\" directory"
+msgstr "Bættu skrifaðgangi við \"%s\" möppu"
+
+msgid "Add User"
+msgstr "Bættu við notanda"
+
+msgid "Add a user"
+msgstr "Bættu við notanda"
+
+msgid "Add a virtual album"
+msgstr "Bættu við sýndaralbúmi"
+
+msgid "Add another set of photos"
+msgstr "Bættu við öðru setti af myndum"
+
+msgid "Add detailed content"
+msgstr "Bættu við ítarlegu efni"
+
+msgid "Add group"
+msgstr "Bættu við hópi"
+
+msgid "Add tags"
+msgstr "Bættu við merkjum"
+
+msgid "Add to caddie"
+msgstr "Bæta við körfu"
+
+msgid "Add a tag"
+msgstr "Bættu við merki"
+
+msgid "Add a new user"
+msgstr "Bættu við nýjum notanda"
+
+msgid "Add New Language"
+msgstr "Bættu við nýju tungumáli"
+
+msgid "Add a filter"
+msgstr "Bættu við síu"
+
+msgid "Add Photos"
+msgstr "Bættu við myndum"
+
+msgid "Add New Theme"
+msgstr "Bættu við nýju þema"
+
+msgid "Add Album"
+msgstr "Bættu við albúmi"
+
+msgid "Add a criteria"
+msgstr "Bættu við viðmiðum"
+
+msgid "Activity peak in the last weeks"
+msgstr "Hámarksvirkni síðustu vikur"
+
+msgid "Activity time from"
+msgstr "Virknitími frá"
+
+msgid "Add"
+msgstr "Bæta við"
+
+msgid "Activity"
+msgstr "Virkni"
+
+msgid "Active Themes"
+msgstr "Virk þemu"
+
+msgid "Active Plugins"
+msgstr "Virkar viðbætur"
+
+msgid "Active Languages"
+msgstr "Virk tungumál"
+
+msgid "Activated plugin list"
+msgstr "Listi yfir virkjaðar viðbætur"
+
+msgid "Activated"
+msgstr "Virkjað"
+
+msgid "Activate it now"
+msgstr "Virkjaðu það núna"
+
+msgid "Activate icon \"new\" next to albums and pictures"
+msgstr "Virkjaðu tánkmyndina \"nýtt\" við hliðina á albúmum og myndum"
+
+msgid "Activate icon \"%s\""
+msgstr "Virkjaðu táknmynd \"%s\""
+
+msgid "Activate comments"
+msgstr "Virkjaðu umsagnir"
+
+msgid "Activate Navigation Thumbnails"
+msgstr "Virkjaðu leiðsagnasmámyndir"
+
+msgid "Activate Navigation Bar"
+msgstr "Virkjaðu leiðsögustikuna"
+
+msgid "Activate"
+msgstr "Virkjaðu"
+
+msgid "Actions"
+msgstr "Aðgerðir"
+
+msgid "Action"
+msgstr "Aðgerð"
+
+msgid "Access type"
+msgstr "Aðgangstegund"
+
+msgid "ACCESS_0"
+msgstr "Opinn aðgangur"
+
+msgid "ACCESS_5"
+msgstr "Enginn aðgangur"
+
+msgid "ACCESS_4"
+msgstr "Aðgangur fyrir vefstjóra"
+
+msgid "ACCESS_3"
+msgstr "Aðgangur fyrir stjórnendur"
+
+msgid "ACCESS_2"
+msgstr "Aðgangur fyrir skráða notendur"
+
+msgid "ACCESS_1"
+msgstr "Aðgangur fyrir alla"
+
+msgid "A new version of Piwigo is available."
+msgstr "Ný útgáfa af Piwigo er í boði."
+
+msgid "A locked gallery is only visible to administrators"
+msgstr "Læst myndasafn er aðeins sýnilegt stjórnendum"
+
+msgid "<em>Piwigo for iOS</em> application empowers you to connect to your Piwigo gallery from your iPhone, iPad or iPod Touch, create some albums and upload several photos at once."
+msgstr "<em>Piwigo fyrir iOS</em> forritið gerir þér kleift að tengjast Piwigo-myndasafninu þínu úr iPhone, iPad eða iPod Touch, búa til nokkur albúm og hlaða upp nokkrum myndum í einu."
+
+msgid "<em>Piwigo for Android</em> application empowers you to connect your Android phone or table to your Piwigo gallery, create some albums and upload several photos at once."
+msgstr "<em>Piwigo fyrir Android</em> forritið gerir þér kleift að tengja Android símann þinn eða spjaldtölvu við Piwigo-myndasafnið þitt, búa til nokkur albúm og hlaða upp nokkrum myndum í einu."
+
+msgid "<b>1</b> album found"
+msgstr "<b>1</b> albúm fannst"
+
+msgid "<b>%d</b> tags found"
+msgstr "<b>%d</b> merki valin"
+
+msgid "<b>%d</b> tag selected"
+msgstr "<b>%d</b> merki valið"
+
+msgid "<b>%d</b> tag found"
+msgstr "<b>%d</b> merki fundið"
+
+msgid "<b>%d</b> albums found"
+msgstr "<b>%d</b> albúm fundust"
+
+msgid "<b>%d+</b> albums found, try to refine the search"
+msgstr "<b>%d+</b> albúm fundust, reyndu að þrengja leitina"
+
+msgid "... or hide this link"
+msgstr "... eða feldu þennan hlekk"
+
+msgid "... or "
+msgstr "... eða "
+
+msgid ", click on"
+msgstr ", smelltu á"
+
+msgid "+ Add an upload box"
+msgstr "+ Bættu við innsendingareit"
+
+msgid "(this tag will be deleted)"
+msgstr "(þessu merki verður eytt)"
+
+msgid "(filtered from %s total users)"
+msgstr "(síað frá %s notendum samtals)"
+
+msgid "(determined from photos)"
+msgstr "(ákvarðað út frá myndum)"
+
+msgid "%u users have automatic permission because they belong to a granted group."
+msgstr "%u notendur hafa sjálfvirka heimild vegna þess að þeir tilheyra hópi með heimild."
+
+msgid "%s value is not correct file because exif are not supported"
+msgstr "%s gildi er rangt vegna þess að exif-merki eru ekki studd"
+
+msgid "%s status is required to edit parameters."
+msgstr "%s staða er nauðsynleg til að breyta notandabreytum."
+
+msgid "%s plugins found"
+msgstr "<b>%s</b> viðbætur fundust"
+
+msgid "%s plugin found"
+msgstr "<b>%s</b> viðbót fannst"
+
+msgid "%s photos have been regenerated"
+msgstr "%s myndir sem hafa verið endurskapaðar"
+
+msgid "%s photos can not be regenerated"
+msgstr "%s myndir sem ekki var hægt að endurskapa"
+
+msgid "%s other tags available.."
+msgstr "%s önnur merki í boði.."
+
+msgid "%s must be to set to false in your local/config/config.inc.php file"
+msgstr "%s verður að vera stillt á \"false\" í local/config/config.inc.php skránni þinni"
+
+msgid "%s lines"
+msgstr "%s línur"
+
+msgid "%s line"
+msgstr "%s lína"
+
+msgid "%s in the future"
+msgstr "%s í framtíðinni"
+
+msgid "%s has been successfully updated."
+msgstr "%s hefur verið uppfært með ágætum."
+
+msgid "%s file type"
+msgstr "%s skráargerð"
+
+msgid "%s ago"
+msgstr "%s síðan"
+
+msgid "%s MB used"
+msgstr "%s MB notuð"
+
+msgid "%s MB"
+msgstr "%s MB"
+
+msgid "%s GB used"
+msgstr "%s GB notuð"
+
+msgid "%d years"
+msgstr "%d ár"
+
+msgid "%d year"
+msgstr "%d ár"
+
+msgid "%d weeks"
+msgstr "%d vikur"
+
+msgid "%d week"
+msgstr "%d vika"
+
+msgid "%d waiting for validation"
+msgstr "%d bíða eftir staðfestingu"
+
+msgid "%d users logged out"
+msgstr "%d notendur útskráðir"
+
+msgid "%d users logged in"
+msgstr "%d notendur innskráðir"
+
+msgid "%d users edited"
+msgstr "%d notendum breytt"
+
+msgid "%d users added"
+msgstr "%d notendum bætt við"
+
+msgid "%d user was updated."
+msgid_plural "%d users were updated."
+msgstr[0] "%d notandi uppfærður"
+msgstr[1] "%d notendur uppfærðir."
+
+msgid "%d user was not updated."
+msgid_plural "%d users were not updated."
+msgstr[0] "%d notandi ekki uppfærður"
+msgstr[1] "%d notendur ekki uppfærðir."
+
+msgid "%d user logged out"
+msgstr "%d notandi útskráður"
+
+msgid "%d user logged in"
+msgstr "%d notandi innskráður"
+
+msgid "%d user edited"
+msgstr "%d notanda breytt"
+
+msgid "%d user deleted"
+msgid_plural "%d users deleted"
+msgstr[0] "%d notanda eytt"
+msgstr[1] "%d notendum eytt"
+
+msgid "%d user comments validated"
+msgstr "%d umsagnir notanda staðfestar"
+
+msgid "%d user comments rejected"
+msgstr "%d umsögnum notanda hafnað"
+
+msgid "%d user comment validated"
+msgstr "%d umsögn notanda staðfest"
+
+msgid "%d user comment rejected"
+msgstr "%d umsögn notanda hafnað"
+
+msgid "Options"
+msgstr "Möguleikar"
+
+msgid "Optional URL keyword"
+msgstr "Valfrjálst leitarorð vefslóðar"
+
+msgid "Optimizations have been completed with some errors."
+msgstr "Bestun er lokið með nokkrum villum."
+
+msgid "Operation in progress"
+msgstr "Meðferð í vinnslu."
+
+msgid "Operating system"
+msgstr "Stýrikerfi"
+
+msgid "Open user details"
+msgstr "Opna notandaupplýsingar"
+
+msgid "Open in gallery"
+msgstr "Opna í myndasafn"
+
+msgid "Opacity"
+msgstr "Gagnsæi"
+
+msgid "Only private albums are listed"
+msgstr "Aðeins einkaalbúm eru listuð"
+
+msgid "Sum of rates"
+msgstr "Samtala einkunna"
+
+msgid "Rated %d times, score : %.2f"
+msgstr "Einkunn gefin %d sinnum, stig: %.2f"
+
+msgid "Rate date"
+msgstr "Einkunnardagsetning"
+
+msgid "Rate"
+msgstr "Einkunn"
+
+msgid "On your Linux, simply install Shotwell with your package manager and the activate Piwigo publishing option."
+msgstr "Á Linux-kerfinu þínu skaltu einfaldlega setja upp Shotwell með pakkastjóranum þínum og virkja síðan Piwigo útgáfumöguleika."
+
+msgid "Oct"
+msgstr "okt"
+
+msgid "Obsolete Plugins"
+msgstr "Úreltar viðbætur"
+
+msgid "Numeric identifier : %d"
+msgstr "Tölulegt auðkenni : %d"
+
+msgid "Number of rates"
+msgstr "Fjöldi einkunna"
+
+msgid "Number of downloads"
+msgstr "Fjöldi niðurhala"
+
+msgid "Number of comments per page"
+msgstr "Fjöldi umsagna á síðu"
+
+msgid "Number of albums per page"
+msgstr "Fjöldi albúma á síðu"
+
+msgid "Nov"
+msgstr "nóv"
+
+msgid "Notify administrators when a comment is"
+msgstr "Tilkynna stjórnendum þegar umsögn er"
+
+msgid "Notification"
+msgstr "Tilkynning"
+
+msgid "Not cropped correctly?"
+msgstr "Ekki kroppað rétt?"
+
+msgid "None"
+msgstr "Ekkert"
+
+msgid "No, I have changed my mind"
+msgstr "Nei, ég hef skipt um skoðun"
+
+msgid "No users selected, no actions possible."
+msgstr "Engir notendur valdir, engar aðgerðir mögulegar."
+
+msgid "No user to send notifications by mail."
+msgstr "Enginn notandi til að láta vita með tölvupósti."
+
+msgid "No user selected of %d users"
+msgstr "Enginn notandi valin af %d notendum"
+
+msgid "No user is permitted to see this private album"
+msgstr "Engum notanda er heimilt að skoða þetta einkaalbúm."
+
+msgid "No tags selected, no actions possible."
+msgstr "Ekkert merki valið, engar aðgerðir mögulegar."
+
+msgid "No tag found"
+msgstr "Ekkert merki fannst"
+
+msgid "No results"
+msgstr "Engar niðurstöður"
+
+msgid "No recipient selected"
+msgstr "Engin móttakandi valin"
+
+msgid "No plugins found"
+msgstr "Engar viðbætur fundust"
+
+msgid "No plugin activated"
+msgstr "Engin viðbót virkjuð"
+
+msgid "No photos selected, no actions possible."
+msgstr "Engar myndir valdar, engar aðgerðir mögulegar."
+
+msgid "No photo selected, %d photos in current set"
+msgstr "Engar myndir valdar, %d myndir í núverandi setti"
+
+msgid "No photo in this album"
+msgstr "Engar myndir í þessu albúmi"
+
+msgid "No photo in the current set."
+msgstr "Engar myndir í núverandi setti."
+
+msgid "No photo can be deleted"
+msgstr "Engri mynd er hægt að eyða"
+
+msgid "No order field selected"
+msgstr "Enginn röðunarreitur valinn"
+
+msgid "No members to manage"
+msgstr "Engir meðlimir til að stjórna"
+
+msgid "No matching user found"
+msgstr "Enginn samsvarandi notandi fannst"
+
+msgid "No mail to send."
+msgstr "Enginn tölvupóstur að senda."
+
+msgid "No groups selected, no actions possible."
+msgstr "Engir hópar valdir, engar aðgerðir mögulegar."
+
+msgid "No group is permitted to see this private album"
+msgstr "Engum hópi er heimilt að sjá þetta einkaalbúm"
+
+msgid "No filter on album. Select one or type to search"
+msgstr "Engin sía á albúmi. Veldu eina eða sláðu inn til að leita"
+
+msgid "No file was uploaded"
+msgstr "Engri skrá var hlaðið upp"
+
+msgid "No display"
+msgstr "Engin sýn"
+
+msgid "No destination tag selected"
+msgstr "Ekkert áfangamerki valið"
+
+msgid "No and unlock sub-albums"
+msgstr "Nei og opnaðu undiralbúm"
+
+msgid "No albums found"
+msgstr "Engin albúm fundust"
+
+msgid "No access to administration, can see private content with appropriate permissions."
+msgstr "Enginn aðgangur að stjórnun, getur séð einkaefni með viðeigandi heimildum."
+
+msgid "New user added"
+msgstr "Nýjum notanda bætt við"
+
+msgid "New tag"
+msgstr "Nýtt merki"
+
+msgid "New photos were added"
+msgstr "Nýjum myndum hefur verið bætt við"
+
+msgid "New photos added"
+msgstr "Nýjum myndum bætt við"
+
+msgid "New parent album"
+msgstr "Nýtt foreldraalbúm"
+
+msgid "New name"
+msgstr "Nýtt nafn"
+
+msgid "New Version"
+msgstr "Ný útgáfa"
+
+msgid "Name of the duplicate"
+msgstr "Nafn afritsins"
+
+msgid "Name is already taken"
+msgstr "Nafn þegar frátekið"
+
+msgid "Name field must not be empty"
+msgstr "Nafnareitur má ekki vera auður"
+
+msgid "Name"
+msgstr "Nafn"
+
+msgid "Multiple Size"
+msgstr "Margar stærðir"
+
+msgid "Move to album"
+msgstr "Færa í albúm"
+
+msgid "Move albums"
+msgstr "Færa albúm"
+
+msgid "Move"
+msgstr "Færa"
+
+msgid "Month"
+msgstr "Mánuður"
+
+msgid "Modify information"
+msgstr "Breyta upplýsingum"
+
+msgid "Missing a temporary folder"
+msgstr "Vantar bráðabirgðamöppu"
+
+msgid "Missing Plugins"
+msgstr "Viðbætur vantar"
+
+msgid "Miscellaneous"
+msgstr "Ýmislegt"
+
+msgid "Minimum width"
+msgstr "Lágmarks breidd"
+
+msgid "Minimum height"
+msgstr "Lágmarks hæð"
+
+msgid "Minimum privacy level"
+msgstr "Lágmarks friðhelgisréttindi"
+
+msgid "Metadata synchronized from file"
+msgstr "Lýsigögn samstillt úr skrá"
+
+msgid "Metadata synchronization results"
+msgstr "Niðurstöður samstillingar lýsigagna"
+
+msgid "Merge tags"
+msgstr "Sameina merki"
+
+msgid "Merge selected tags"
+msgstr "Sameina valin merki"
+
+msgid "Merge selected groups"
+msgstr "Sameina valda hópa"
+
+msgid "Merge"
+msgstr "Sameina"
+
+msgid "Menu Management"
+msgstr "Valmyndir"
+
+msgid "Members"
+msgstr "Meðlimir"
+
+msgid "May"
+msgstr "maí"
+
+msgid "Maximum width"
+msgstr "Hámarks breidd"
+
+msgid "Maximum height"
+msgstr "Hámarks hæð"
+
+msgid "Maximum file size: %sB."
+msgstr "Hámarks skráarstærð: %sB."
+
+msgid "Mar"
+msgstr "mar"
+
+msgid "Manual order"
+msgstr "Handvirk röðun"
+
+msgid "Manage users with user manager"
+msgstr "Stjórnaðu notendum með notendastjóra"
+
+msgid "Manage users"
+msgstr "Umsjón notenda"
+
+msgid "Manage this set of %d photos"
+msgstr "Umsjón með þessu setti af %d myndum"
+
+msgid "Manage album photos"
+msgstr "Umsjón mynda í albúmum"
+
+msgid "Manage Permissions"
+msgstr "Umsjón heimilda"
+
+msgid "Manage"
+msgstr "Umsýsla"
+
+msgid "Manage the members"
+msgstr "Umsjón meðlima"
+
+msgid "Manage tags"
+msgstr "Umsjón merkja"
+
+msgid "Manage sub-albums"
+msgstr "Umsjón undiralbúma"
+
+msgid "Manage photos"
+msgstr "Umsjón mynda"
+
+msgid "Manage photo ranks"
+msgstr "Röðun mynda"
+
+msgid "Manage permissions for user \"%s\""
+msgstr "Hafa umsjón með heimildum fyrir notandann \"%s\""
+
+msgid "Manage permissions for group \"%s\""
+msgstr "Hafa umsjón með heimildum fyrir hópinn \"%s\""
+
+msgid "Manage authorizations for selected albums"
+msgstr "Hafa umsjón með heimildum fyrir valin albúm"
+
+msgid "Make this theme available to users"
+msgstr "Gerðu þetta þema aðgengilegt notendum"
+
+msgid "Make this language available to users"
+msgstr "Gerðu þetta tungumál aðgengilegt notendum"
+
+msgid "Maintenance"
+msgstr "Viðhald"
+
+msgid "Main Page"
+msgstr "Aðalsíða"
+
+msgid "Main \"webmaster\" user status is incorrect"
+msgstr "Aðal „vefstjóra“ notandastaðan er röng"
+
+msgid "Main \"webmaster\" user does not exist"
+msgstr "Aðal „vefstjóra“ notandinn er ekki til"
+
+msgid "Main \"guest\" user status is incorrect"
+msgstr "Aðal „gesta“ notandastaðan er röng"
+
+msgid "Main \"guest\" user does not exist"
+msgstr "Aðal „gesta“ notandinn er ekki til"
+
+msgid "Mail theme"
+msgstr "Tölvupóstþema"
+
+msgid "Mail sent to %s [%s]."
+msgstr "Tölvupóstur sendur á %s [%s]."
+
+msgid "Mail content"
+msgstr "Innihald pósts"
+
+msgid "Mail address is mandatory for registration"
+msgstr "Netfang er skilyrt fyrir skráningu"
+
+msgid "Locked albums are disabled for maintenance. Only administrators can view them in the gallery. Lock this album will also lock his Sub-albums"
+msgstr "Læst albúm eru óvirk vegna viðhalds. Aðeins stjórnendur geta skoðað þær í myndasafninu. Með því að læsa þessu albúmi læsast undiralbúm þess einnig"
+
+msgid "Locked"
+msgstr "Læst"
+
+msgid "Lock gallery"
+msgstr "Læsa myndasafni"
+
+msgid "Lock albums"
+msgstr "Læsa albúmum"
+
+msgid "Lock"
+msgstr "Læsa"
+
+msgid "Local"
+msgstr "Staðbundið"
+
+msgid "Loading..."
+msgstr "Hleður..."
+
+msgid "List"
+msgstr "Listi"
+
+msgid "Linked albums"
+msgstr "Tengd albúm"
+
+msgid "Link all album photos to some existing albums"
+msgstr "Tengdu allar albúmmyndir við nokkur albúm sem fyrir eru"
+
+msgid "Link all album photos to a new album"
+msgstr "Tengdu allar albúmmyndir við nýtt albúm"
+
+msgid "Line View"
+msgstr "Línusýn"
+
+msgid "Level 8"
+msgstr "Stjórnendur"
+
+msgid "Level 4"
+msgstr "Fjölskylda"
+
+msgid "Level 2"
+msgstr "Vinir"
+
+msgid "Level 1"
+msgstr "Tengiliðir"
+
+msgid "Level 0"
+msgstr "---"
+
+msgid "Landscape"
+msgstr "Lárétt"
+
+msgid "Learn more"
+msgstr "Læra meira"
+
+msgid "Last visit on %s, %s."
+msgstr "Síðast heimsókn þann %s, %s."
+
+msgid "Last visit"
+msgstr "Síðast heimsótt"
+
+msgid "Last send"
+msgstr "Síðast sent"
+
+msgid "Last revisions"
+msgstr "Síðustu endurskoðun"
+
+msgid "Last import"
+msgstr "Síðasti innflutningur"
+
+msgid "Last hit"
+msgstr "Síðasta smell"
+
+msgid "Languages which need upgrade"
+msgstr "Tungumál sem þarfnast uppfærslu"
+
+msgid "Languages"
+msgstr "Tungumál"
+
+msgid "Language has been successfully installed"
+msgstr "Tungumálið hefur verið sett upp"
+
+msgid "Language"
+msgstr "Tungumál"
+
+msgid "Keep them"
+msgstr "Halda þeim"
+
+msgid "Keep in touch with Piwigo project, subscribe to Piwigo Announcement Newsletter. You will receive emails when a new release is available (sometimes including a security bug fix, it's important to know and upgrade) and when major events happen to the project. Only a few emails a year."
+msgstr "Vertu í sambandi við Piwigo verkefnið, vertu áskrifandi að Piwigo tilkynningafréttabréfi. Þér verður sendur tölvupóstur þegar ný útgáfa er tiltæk (stundum með leiðréttingu á öryggisvillum, það er mikilvægt að vita af þeim og að uppfæra) og þegar stórir atburðir gerast í verkefninu. Aðeins fáir tölvupóstar á ári."
+
+msgid "Jun"
+msgstr "jun"
+
+msgid "Jul"
+msgstr "jul"
+
+msgid "Jan"
+msgstr "jan"
+
+msgid "It only takes a few clicks."
+msgstr "Það tekur aðeins nokkra smelli."
+
+msgid "Invert"
+msgstr "Snúa við"
+
+msgid "Instructions to use Piwigo"
+msgstr "Leiðbeiningar um notkun á Piwigo"
+
+msgid "Installed Themes"
+msgstr "Uppsett þemu"
+
+msgid "Installed Languages"
+msgstr "Uppsett tungumál"
+
+msgid "Install on your computer,"
+msgstr "Settu upp á tölvunni þinni,"
+
+msgid "Install"
+msgstr "Settu upp"
+
+msgid "Informations"
+msgstr "Upplýsingar"
+
+msgid "Information data registered in database"
+msgstr "Upplýsingagögn skráð í gagnagrunn"
+
+msgid "Include display of recent photos grouped by dates"
+msgstr "Láttu birta nýlegar myndir flokkaðar eftir dagsetningum"
+
+msgid "Inactive Themes"
+msgstr "Óvirk þemu"
+
+msgid "Inactive Plugins"
+msgstr "Óvirkar viðbætur"
+
+msgid "Inactive Languages"
+msgstr "Óvirk tungumál"
+
+msgid "In your php.ini file, the upload_max_filesize (%sB) is bigger than post_max_size (%sB), you should change this setting"
+msgstr "Í php.ini skránni þinni, þá er upload_max_filesize (%sB) stærri en post_max_size (%sB), þú ættir að breyta þessari stillingu"
+
+msgid "Impossible to delete this theme. Other themes depends on it: %s"
+msgstr "Ekki er hægt að eyða þessu þema vegna þess að önnur þemu eru háð því: %s"
+
+msgid "Impossible to deactivate this theme, you need at least one theme."
+msgstr "Ómögulegt að slökkva á þessu þema, þú þarft að minnsta kosti eitt þema."
+
+msgid "Impossible to deactivate this language, you need at least one language."
+msgstr "Ómögulegt að slökkva á þessu tungumáli, þú þarft að minnsta kosti eitt tungumál."
+
+msgid "Impossible to deactivate this language, first set another language as default."
+msgstr "Ómögulegt að slökkva á þessu tungumáli, stilltu fyrst á annað tungumál sem sjálfgefið."
+
+msgid "Impossible to deactivate the default theme."
+msgstr "Ómögulegt að slökkva á sjálfgefnu þema."
+
+msgid "Impossible to activate this theme, the parent theme is missing: %s"
+msgstr "Ekki var hægt að virkja þetta þema, þar sem foreldraþema vantar: %s"
+
+msgid "Impossible automatic correction"
+msgstr "Sjálfvirk leiðrétting ómöguleg"
+
+msgid "Images manual order was saved"
+msgstr "Handvirk röðun mynda vistuð"
+
+msgid "Image id"
+msgstr "Mynd auðkenni"
+
+msgid "Image Quality"
+msgstr "Myndgæði"
+
+msgid "Ignore selected anomalies"
+msgstr "Hunsa valin frávik"
+
+msgid "Ignore this update"
+msgstr "Hunsa þessa endurnýjun"
+
+msgid "Ignore All"
+msgstr "Hunsa allt"
+
+msgid "If you encounter problems or have any question, please send a message to"
+msgstr "Ef þú lendir í vandræðum eða hefur einhverjar spurningar, þá ættirðu að senda skilaboð á"
+
+msgid "If no HD is available and if the current websize is bigger than resize dimensions, Piwigo will move it as HD and create a downsized websize photo from it."
+msgstr "Ef engin HD er tiltæk og ef núverandi vefstærð er stærri en stærðarbreytingar, þá mun Piwigo færa það sem HD og búa til minni vefstærðarmynd úr því."
+
+msgid "IP"
+msgstr "IP"
+
+msgid "I decide to update anyway"
+msgstr "Ég ákveð engu að síður að uppfæra"
+
+msgid "Hoverbox display"
+msgstr "Svifbox sýn"
+
+msgid "Hour"
+msgstr "Klukkustund"
+
+msgid "Hit"
+msgstr "Smell"
+
+msgid "History"
+msgstr "Saga"
+
+msgid "High definition enabled"
+msgstr "Heimila niðurhal"
+
+msgid "High definition"
+msgstr "Há upplausn"
+
+msgid "Hide sub-albums"
+msgstr "Fela undiralbúm"
+
+msgid "Hide"
+msgstr "Fela"
+
+msgid "Help Me"
+msgstr "Hjálpaðu mér"
+
+msgid "Hello,"
+msgstr "Halló,"
+
+msgid "Hello"
+msgstr "Hæ"
+
+msgid "Height"
+msgstr "Hæð"
+
+msgid "Has access to all administration functionnalities. Can manage both configuration and content."
+msgstr "Hefur aðgang að öllum stjórnunaraðgerðum. Getur stjórnað bæði stillingum og innihaldi."
+
+msgid "Has access to administration. Can only manage content: photos/albums/users/tags/groups."
+msgstr "Hefur aðgang að stjórnun. Getur aðeins stjórnað efni: myndir/albúm/notendur/merki/hópar."
+
+msgid "Guests"
+msgstr "Gestir"
+
+msgid "Guest cannot be deleted"
+msgstr "Gesti er ekki hægt að eyða"
+
+msgid "Guest Settings"
+msgstr "Gestastillingar"
+
+msgid "Groups and users"
+msgstr "Hópar og notendur"
+
+msgid "Groups \\{%s\\} succesfully deleted"
+msgstr "Hópum \\{%s\\} tókst að eyða"
+
+msgid "Groups"
+msgstr "Hópar"
+
+msgid "Group(s) \\{%s1\\} succesfully merged into \"%s2\""
+msgstr "Hópi/-um \\{%s1\\} tókst að sameina í \"%s2\""
+
+msgid "Group renamed"
+msgstr "Hópur endurnefndur"
+
+msgid "Group name"
+msgstr "Hópaheiti"
+
+msgid "Group management"
+msgstr "Hópastjórnun"
+
+msgid "Group added"
+msgstr "Hópi bætt við"
+
+msgid "Group \"%s\" succesfully deleted"
+msgstr "Hópi \"%s\" tókst að eyða"
+
+msgid "Group"
+msgstr "Hópur"
+
+msgid "Graphics Library"
+msgstr "Grafískt forritasafn"
+
+msgid "Grant selected users"
+msgstr "Veittu völdum notendum"
+
+msgid "Grant selected groups"
+msgstr "Veittu völdum hópum"
+
+msgid "Go to %s or %s for more informations"
+msgstr "Fara til %s eða %s fyrir frekari upplýsingar"
+
+msgid "Go to"
+msgstr "Fara til"
+
+msgid "Give write access (chmod 777) to \"%s\" directory at the root of your Piwigo installation"
+msgstr "Veittu skrifaðgang (chmod 777) á \"%s\" möppuna í rótinni á Piwigo-uppsetningunni þinni"
+
+msgid "Get Support on Piwigo Forum"
+msgstr "Fáðu aðstoð á Piwigo spjallborði"
+
+msgid "Generate random password"
+msgstr "Búðu til handahófskennt lykilorð"
+
+msgid "Generate multiple size images"
+msgstr "Búðu til myndir í mörgum stærðum"
+
+msgid "General statistics"
+msgstr "Almenn tölfræði"
+
+msgid "General"
+msgstr "Almennt"
+
+msgid "Gallery unlocked"
+msgstr "Myndasafn er ólæst"
+
+msgid "Gallery title"
+msgstr "Titill myndasafns"
+
+msgid "GD version"
+msgstr "GD útgáfa"
+
+msgid "GD library is missing"
+msgstr "GD forritasafn vantar"
+
+msgid "Formats"
+msgstr "Snið"
+
+msgid "Form"
+msgstr "Lögun"
+
+msgid "Forbidden"
+msgstr "Bannað"
+
+msgid "Forbid this theme to users"
+msgstr "Banna þetta þema fyrir notendur"
+
+msgid "Forbid this language to users"
+msgstr "Banna þetta tungumál fyrir notendur"
+
+msgid "For security reason, authentication keys do not work for administrators."
+msgstr "Af öryggisástæðum virka auðkenningarlyklar ekki fyrir stjórnendur."
+
+msgid "For photo sizes with crop, such as \"Square\", Piwigo will do its best to include the center of interest."
+msgstr "Fyrir myndastærðir með kroppun, eins og \"Ferningur\", þá mun Piwigo reyna sitt best í að innifela miðju athyglinnar."
+
+msgid "Following themes may not be compatible with the new version of Piwigo:"
+msgstr "Eftirfarandi þemu eru hugsanlega ósamhæfð við nýju útgáfuna af Piwigo:"
+
+msgid "Following plugins may not be compatible with the new version of Piwigo:"
+msgstr "Eftirfarandi viðbætur gætu verið ósamhæfðar við nýju útgáfuna af Piwigo:"
+
+msgid "Follow Orientation"
+msgstr "Fylgdu stefnumörkun"
+
+msgid "Find a new representant by random"
+msgstr "Finndu nýja handahófskennda smámynd af albúmi"
+
+msgid "Filters"
+msgstr "Síur"
+
+msgid "File/directory read error"
+msgstr "Skrá/möppu lesvilla"
+
+msgid "File upload stopped by extension"
+msgstr "Upphleðsla skráa stöðvuð af viðauka"
+
+msgid "File type: %s"
+msgstr "Skráargerð: %s"
+
+msgid "File"
+msgstr "Skrá"
+
+msgid "Feb"
+msgstr "feb"
+
+msgid "Features include gallery browsing, album creation and photo upload."
+msgstr "Eiginleikar fela í sér að skoða myndasafn, búa til albúm og hlaða upp myndum."
+
+msgid "Failed to write file to disk"
+msgstr "Mistókst að skrifa skrá á disk"
+
+msgid "FTP + Synchronization"
+msgstr "FTP + Samstilling"
+
+msgid "Extensions Update"
+msgstr "Viðaukar Endurnýjun"
+
+msgid "Extend for templates"
+msgstr "Framlengdu sniðmát"
+
+msgid "Exif extension not available, admin should disable exif use"
+msgstr "Exif viðbót ekki tiltæk, stjórnandi ætti að slökkva á exif notkun"
+
+msgid "Execution time is out, treatment must be continue [Estimated time: %d second]."
+msgid_plural "Execution time is out, treatment must be continue [Estimated time: %d seconds]."
+msgstr[0] "Framkvæmdartími er liðinn, meðferð verður að halda áfram [Áætlaður tími: %d sekúndur]."
+msgstr[1] "Framkvæmdartími er liðinn, meðferð verður að halda áfram [Áætlaður tími: %d sekúndur]."
+
+msgid "Everybody"
+msgstr "Allir"
+
+msgid "Errors caption"
+msgstr "Villusögur"
+
+msgid "Element type"
+msgstr "Atriðagerð"
+
+msgid "Element"
+msgstr "Atriði"
+
+msgid "Error when sending email to %s [%s]."
+msgstr "Villa þegar tölvupóstur er sendur á %s [%s]."
+
+msgid "Error on file \"%s\" : %s"
+msgstr "Villa í skrá \"%s\" : %s"
+
+msgid "Error list"
+msgstr "Listi yfir villur"
+
+msgid "Equivalent to deactivation. The user is still in the list, but can no longer log in."
+msgstr "Jafngildir óvirkjun. Notandinn er enn á listanum en getur ekki lengur skráð sig inn."
+
+msgid "Environment"
+msgstr "Umhverfi"
+
+msgid "Email admins when a valid comment is entered"
+msgstr "Sendu stjórnendum tölvupóst þegar gild umsögn er slegin inn"
+
+msgid "Email admins when a new user registers"
+msgstr "Sendu stjórnendum tölvupóst þegar nýr notandi skráir sig"
+
+msgid "Email admins when a comment requires validation"
+msgstr "Sendu stjórnendum tölvupóst þegar umsögn þarfnast staðfestingar"
+
+msgid "Email administrators when a comment is modified"
+msgstr "Sendu stjórnendum tölvupóst þegar umsögn er breytt"
+
+msgid "Email administrators when a comment is deleted"
+msgstr "Sendu stjórnendum tölvupóst þegar umsögn er eytt"
+
+msgid "Email Adress"
+msgstr "Netfang"
+
+msgid "Email"
+msgstr "Tölvupóstur"
+
+msgid "Edited on %s"
+msgstr "Breytt %s"
+
+msgid "Edit user"
+msgstr "Breyta notanda"
+
+msgid "Edit tags"
+msgstr "Breyta merkjum"
+
+msgid "Edit selected tags"
+msgstr "Breyta völdum merkjum"
+
+msgid "Edit ranks"
+msgstr "Breyta röðum"
+
+msgid "Edit photo #%s"
+msgstr "Breyta mynd #%s"
+
+msgid "Edit photo"
+msgstr "Breyta mynd"
+
+msgid "Edit guest user"
+msgstr "Breyta gestanotanda"
+
+msgid "Edit album permissions"
+msgstr "Breyta heimildum á albúmi"
+
+msgid "Edit album"
+msgstr "Breyta albúmi"
+
+msgid "Edit"
+msgstr "Breyta"
+
+msgid "Each email sent will contain its own automatic authentication key on links, valid for %s."
+msgstr "Hver sendur tölvupóstur mun innihalda sinn eigin sjálfvirka auðkenningarlykil á tenglum, sem gildir fyrir %s."
+
+msgid "ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW."
+msgstr "VILLA: ÞESSA VIÐBÓT VANTAR EN HÚN ER UPPSETT! FJARLÆGÐU HANA NÚNA."
+
+msgid "ERROR"
+msgstr "VILLA"
+
+msgid "Duplicates"
+msgstr "Tvöfaldað"
+
+msgid "Duplicate selected tags"
+msgstr "Tvöfalda valin merki"
+
+msgid "Duplicate"
+msgstr "Tvöfalda"
+
+msgid "Drop into album"
+msgstr "Veldu albúm"
+
+msgid "Drag to re-order"
+msgstr "Smelltu og dragðu til að endurraða"
+
+msgid "Drag and drop to reorder albums"
+msgstr "Dragðu og slepptu til að endurraða albúmum"
+
+msgid "Downloads"
+msgstr "Sótt"
+
+msgid "Download,"
+msgstr "Sækja,"
+
+msgid "Download all activities"
+msgstr "Sækja alla virkni"
+
+msgid "Does not represent"
+msgstr "Er ekki smámynd fyrir"
+
+msgid "Documentation"
+msgstr "Skjöl"
+
+msgid "Do you want to activate anyway?"
+msgstr "Viltu samt virkja?"
+
+msgid "Dissociated"
+msgstr "Tenging fjarlægð"
+
+msgid "Dissociate user from this group"
+msgstr "Fjarlægja tengingu notanda við þennan hóp"
+
+msgid "Dissociate from album"
+msgstr "Fjarlægja tengingu við albúm"
+
+msgid "Displays a banner to install or open the official Piwigo app"
+msgstr "Sýnir borða til að setja upp eða opna opinbert Piwigo forrit"
+
+msgid "Display options"
+msgstr "Sýna valkosti"
+
+msgid "Display form"
+msgstr "Sýna eyðublað"
+
+msgid "Display category date"
+msgstr "Sýna dagsetningu flokks"
+
+msgid "Display"
+msgstr "Sýna"
+
+msgid "Display album date period"
+msgstr "Sýna dagsetningartímabilið sem tengist hverju albúmi, td « frá 12. til 15. júlí 2018 »"
+
+msgid "Discover album:"
+msgstr "Skoða albúm:"
+
+msgid "Directory does not exist"
+msgstr "Mappa er ekki til"
+
+msgid "Directory"
+msgstr "Mappa"
+
+msgid "Detailed informations"
+msgstr "Ítarlegar upplýsingar"
+
+msgid "Description"
+msgstr "Lýsing"
+
+msgid "Deny selected users"
+msgstr "Hafna völdum notendum"
+
+msgid "Deny selected groups"
+msgstr "Hafna völdum hópum"
+
+msgid "Deletions"
+msgstr "Eyðingar"
+
+msgid "Deletion in progress"
+msgstr "Eyðing í gangi"
+
+msgid "Deleted on"
+msgstr "Eytt þann"
+
+msgid "Delete user"
+msgstr "Eyða notanda"
+
+msgid "Delete this theme"
+msgstr "Eyða þessu þema"
+
+msgid "Delete this language"
+msgstr "Eyða þessu tungumáli"
+
+msgid "Delete these sizes"
+msgstr "Eyða þessum stærðum"
+
+msgid "Delete them"
+msgstr "Eyða þeim"
+
+msgid "Delete tags \\{%s\\}?"
+msgstr "Eyða merkjum \\{%s\\}?"
+
+msgid "Delete tag \"%s\"?"
+msgstr "Eyða merki \"%s\"?"
+
+msgid "Delete selected users"
+msgstr "Eyða völdum notendum"
+
+msgid "Delete selected tags"
+msgstr "Eyða völdum merkjum"
+
+msgid "Delete selected photos"
+msgstr "Eyða völdum myndum"
+
+msgid "Delete orphan tags ?"
+msgstr "Eyða munaðarlausum merkjum ?"
+
+msgid "Delete orphan tags"
+msgstr "Eyða munaðarlausum merkjum"
+
+msgid "Delete multiple size images"
+msgstr "Eyða mörgum stærðum mynda"
+
+msgid "Delete album \"%s\"."
+msgstr "Eyða albúmi \"%s\"."
+
+msgid "Delete album \"%s\" and its %d sub-albums."
+msgstr "Eyða albúmi \"%s\" og %d undiralbúmum þess."
+
+msgid "Delete album"
+msgstr "Eyða albúmi"
+
+msgid "Delete Representant"
+msgstr "Eyða smámyndum albúms"
+
+msgid "Delete %d orphan photos"
+msgstr "Eyða %d munaðarlausum myndum"
+
+msgid "Default user does not exist"
+msgstr "Sjálfgefinn notandi er ekki til"
+
+msgid "Default photos order"
+msgstr "Sjálfgefinn röðun mynda"
+
+msgid "Default user cannot be deleted"
+msgstr "Sjálfgefnum notanda er ekki hægt að eyða"
+
+msgid "Default comments order"
+msgstr "Sjálfgefin röð umsagna"
+
+msgid "Default display"
+msgstr "Sjálfgefin birting"
+
+msgid "Dec"
+msgstr "des"
+
+msgid "Deactivated"
+msgstr "Afvirkjað"
+
+msgid "Deactivate all"
+msgstr "Afvirkja allt"
+
+msgid "Deactivate"
+msgstr "Afvirkja"
+
+msgid "Day"
+msgstr "Dagur"
+
+msgid "Date"
+msgstr "Dagsetning"
+
+msgid "Database synchronization with files"
+msgstr "Samstilling gagnagrunns við skrár"
+
+msgid "Database"
+msgstr "Gagnagrunnur"
+
+msgid "Dashboard"
+msgstr "Stjórnborð"
+
+msgid "Current name"
+msgstr "Núverandi heiti"
+
+msgid "Crop"
+msgstr "Kroppa"
+
+msgid "Created on %s"
+msgstr "Stofnað %s"
+
+msgid "Create this site"
+msgstr "Stofnaðu þessa vefsíðu"
+
+msgid "Create the \"%s\" directory at the root of your Piwigo installation"
+msgstr "Útbúðu \"%s\" möppuna í rótinni á Piwigo-uppsetningunni þinni"
+
+msgid "Create a first album"
+msgstr "Stofna fyrsta albúm"
+
+msgid "Create"
+msgstr "Stofna"
+
+msgid "Correction the anomaly will cancel the fact that it's ignored"
+msgstr "Leiðrétt frávik verður ekki lengur hunsað"
+
+msgid "Correction applied with success"
+msgstr "Leiðrétting tókst"
+
+msgid "Correction applied with error"
+msgstr "Leiðrétting framkvæmd með villu "
+
+msgid "Correction"
+msgstr "Leiðrétting"
+
+msgid "Continue processing treatment"
+msgstr "Haltu áfram meðferð sem er í gangi"
+
+msgid "Confirm merge"
+msgstr "Staðfestu sameiningu"
+
+msgid "Confirm deletion"
+msgstr "Staðfestu eyðingu"
+
+msgid "Configuration"
+msgstr "Stillingar"
+
+msgid "Compute %d missing checksums"
+msgstr "Reiknaðu %d gátsummur sem vantar"
+
+msgid "Complementary mail content"
+msgstr "Viðbótarefni tölvupósts"
+
+msgid "Compare mode"
+msgstr "Samanburðarhamur"
+
+msgid "Compact View"
+msgstr "Samþjöppuð Notandasýn"
+
+msgid "Comments for all"
+msgstr "Umsagnir fyrir alla"
+
+msgid "Close user details"
+msgstr "Lokaðu notendaupplýsingum"
+
+msgid "Close"
+msgstr "Loka"
+
+msgid "Clear Selection"
+msgstr "Hreinsa val"
+
+msgid "Classic display"
+msgstr "Hefðbundinn skjár"
+
+msgid "Choose which tag to merge these tags into"
+msgstr "Veldu hvaða merki á að sameina þessi merki í"
+
+msgid "Choose an option"
+msgstr "Veldu valkost"
+
+msgid "Choose an action"
+msgstr "Veldu aðgerð"
+
+msgid "Check integrity"
+msgstr "Áreiðanleikaprófun"
+
+msgid "Check for upgrade failed for unknown reasons."
+msgstr "Athugun á uppfærslu mistókst af óþekktum ástæðum."
+
+msgid "%d physicals"
+msgstr "%d raunlægar"
+
+msgid "%d physical"
+msgstr "%d raunlæg"
+
+msgid "%d associations"
+msgstr "%d tengingar"
+
+msgid "%d association"
+msgstr "%d tenging"
+
+msgid "Check for upgrade"
+msgstr "Athugaðu með uppfærslu"
+
+msgid "Check for updates"
+msgstr "Athugaðu með uppfærslur"
+
+msgid "Check automatic corrections"
+msgstr "Athugaðu sjálfvirkar leiðréttingar"
+
+msgid "Check all"
+msgstr "Athugaðu allt"
+
+msgid "Change username"
+msgstr "Breyttu notandanafni"
+
+msgid "Change password"
+msgstr "Breyttu lykilorði"
+
+msgid "Change Password"
+msgstr "Breyttu lykilorði"
+
+msgid "Change Admin Colors"
+msgstr "Breyttu litum stjórnunar"
+
+msgid "Center of interest"
+msgstr "Miðja athyglinnar"
+
+msgid "Cannot delete the old permalink !"
+msgstr "Ekki er hægt að eyða gömlu fasttenglunum!"
+
+msgid "Cancel"
+msgstr "Hætta við"
+
+msgid "Can't read or extract archive."
+msgstr "Ekki er hægt að lesa safnskrá eða afþjappa henni."
+
+msgid "Can't download archive."
+msgstr "Ekki er hægt að hlaða niður safnskrá."
+
+msgid "Can't create temporary file."
+msgstr "Ekki er hægt að búa til bráðabirgðaskrá."
+
+msgid "Can't connect to server."
+msgstr "Tenging við netþjón ekki tiltæk."
+
+msgid "Can be shared by several individuals without conflict (they cannot change the password)."
+msgstr "Hægt að deila með nokkrum einstaklingum án árekstra (þeir geta ekki breytt lykilorðinu)."
+
+msgid "add new photos to caddie"
+msgstr "bæta við myndum í körfu"
+
+msgid "Remove from caddie"
+msgstr "Fjarlægja frá körfu"
+
+msgid "Empty caddie"
+msgstr "Tæma körfu"
+
+msgid "Caddie management"
+msgstr "Körfustjórnun"
+
+msgid "Caddie"
+msgstr "Karfa"
+
+msgid "Preferences"
+msgstr "Kjörstilling"
+
+msgid "Predefined filter"
+msgstr "Forskilgreind sía"
+
+msgid "Posted %s on %s"
+msgstr "Sent %s á %s"
+
+msgid "Posted %s"
+msgstr "Sent %s"
+
+msgid "Position"
+msgstr "Lega"
+
+msgid "Portraits"
+msgstr "Lóðréttar"
+
+msgid "Portrait"
+msgstr "Lóðrétt"
+
+msgid "Plugins which need upgrade"
+msgstr "Viðbætur til að uppfæra"
+
+msgid "Plugins"
+msgstr "Viðbætur"
+
+msgid "Plugin list"
+msgstr "Listi yfir viðbætur"
+
+msgid "Plugin has been successfully copied"
+msgstr "Það tókst að afrita viðbótina"
+
+msgid "Plugin \"%s\" has been activated!"
+msgstr "Viðbót “%s” hefur verið virkjuð!"
+
+msgid "Plugin \"%s\" deleted!"
+msgstr "Viðbót “%s” eytt!"
+
+msgid "Please wait..."
+msgstr "Bíddu aðeins..."
+
+msgid "Please upgrade your PHP version before any update."
+msgstr "Uppfærðu PHP-útgáfu þína áður en aðrar uppfærslur eru framkvæmdar."
+
+msgid "Please select at least two groups"
+msgstr "Veldu að minnsta kosti tvo hópa"
+
+msgid "Please check \"plugins\" folder and sub-folders permissions (CHMOD)."
+msgstr "Athugaðu heimildir (CHMOD) fyrir \"viðbætur\"-möppuna og undirmöppur hennar."
+
+msgid "Piwigo version"
+msgstr "Piwigo útgáfa"
+
+msgid "Piwigo requires an album to add photos."
+msgstr "Piwigo þarf albúm til að bæta við myndum."
+
+msgid "Piwigo publish plugin for digiKam"
+msgstr "Piwigo útgáfuviðbót fyrir digiKam"
+
+msgid "Piwigo publish plugin for Shotwell"
+msgstr "Piwigo útgáfuviðbót fyrir Shotwell"
+
+msgid "Piwigo for iOS (iPhone, iPad, iPod Touch)"
+msgstr "Piwigo fyrir iOS (iPhone, iPad, iPod Touch)"
+
+msgid "Piwigo for Android"
+msgstr "Piwigo fyrir Android"
+
+msgid "Piwigo export plugin for iPhoto"
+msgstr "Piwigo útflutningsviðbót fyrir iPhoto"
+
+msgid "Piwigo export plugin for Aperture"
+msgstr "Piwigo útflutningsviðbót fyrir Aperture"
+
+msgid "Piwigo configuration"
+msgstr "Piwigo uppsetning"
+
+msgid "Piwigo cannot retrieve upgrade file from server"
+msgstr "Piwigo getur ekki sótt uppfærsluskrá frá vefþjóninum"
+
+msgid "Piwigo Uploader"
+msgstr "Piwigo Upphlaðari"
+
+msgid "Piwigo Update"
+msgstr "Piwigo Uppfærsla"
+
+msgid "Piwigo Remote Sync is able to upload a whole folder hierarchy. If you run it again, only new photos will be uploaded."
+msgstr "Piwigo Remote Sync er fært um að hlaða upp heildar möppustigveldi. Ef þú keyrir það aftur verður aðeins nýjum myndum hlaðið upp."
+
+msgid "Piwigo Publish plugin for Lightroom"
+msgstr "Piwigo Útgáfuviðbót fyrir Lightroom"
+
+msgid "Piwigo Announcements Newsletter"
+msgstr "Piwigo Tilkynningafréttabréf"
+
+msgid "Piwigo Administration"
+msgstr "Piwigo Umsýsla"
+
+msgid "Piwigo %s is available, please update"
+msgstr "Piwigo %s er í boði, þú ættir endilega að uppfæra"
+
+msgid "Photos per page"
+msgstr "Myndir á síðu"
+
+msgid "Photos generation in progress..."
+msgstr "Myndagerð í gangi..."
+
+msgid "Photos"
+msgstr "Myndir"
+
+msgid "Photo unreachable or no support"
+msgstr "Ekki hægt að ná í mynd eða stuðningur ekki við myndasnið"
+
+msgid "Photo sizes with crop"
+msgstr "Myndastærðir með kroppi"
+
+msgid "Photo name"
+msgstr "Myndaheiti"
+
+msgid "Photo informations updated"
+msgstr "Myndaupplýsingar uppfærðar"
+
+msgid "Photo Properties"
+msgstr "Myndaeiginleikar"
+
+msgid "Photo Page"
+msgstr "Myndasíða"
+
+msgid "Photo %s of %s"
+msgstr "Mynd %s af %s"
+
+msgid "Permissions"
+msgstr "Heimildir"
+
+msgid "Permission management"
+msgstr "Heimildastjórnun"
+
+msgid "Permission granted thanks to a group"
+msgstr "Heimild veitt þökk sé hóp"
+
+msgid "Permission granted for users"
+msgstr "Heimild veitt fyrir notendur"
+
+msgid "Permission granted for groups"
+msgstr "Heimild veitt fyrir hópa"
+
+msgid "Permission granted"
+msgstr "Heimild veitt"
+
+msgid "Permission denied"
+msgstr "Heimild hafnað"
+
+msgid "Permalinks"
+msgstr "Fasttenglar"
+
+msgid "Permalink history"
+msgstr "Saga fasttengla"
+
+msgid "Permalink %s is already used by album %s"
+msgstr "Fasttengill %s er nú þegar notaður af albúmi %s"
+
+msgid "Permalink %s has been previously used by album %s. Delete from the permalink history first"
+msgstr "Fasttengill %s hefur áður verið notaður af albúmi %s. Eyddu því fyrst úr fasttenglasögunni"
+
+msgid "Permalink"
+msgstr "Fasttengill"
+
+msgid "Pending Comments"
+msgstr "Umsagnir í bið"
+
+msgid "Path"
+msgstr "Slóði"
+
+msgid "Password updated"
+msgstr "Lykilorð uppfært"
+
+msgid "Password is missing. Please enter the password."
+msgstr "Lykilorð vantar. Settu inn lykilorðið."
+
+msgid "Page Visited"
+msgstr "Síða heimsótt"
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Staðfestingu lykilorðs vantar. Staðfestu valið lykilorð."
+
+msgid "Parent album"
+msgstr "Foreldraalbúm"
+
+msgid "Parameters"
+msgstr "Notandabreytur"
+
+msgid "Parameter"
+msgstr "Stillingar"
+
+msgid "Panorama"
+msgstr "Víðmynd"
+
+msgid "Pages seen"
+msgstr "Síður skoðaðar"
+
+msgid "Page end"
+msgstr "Síðulok"
+
+msgid "Page banner"
+msgstr "Síðuborði"
+
+msgid "Page Visited in %s"
+msgstr "Síða heimsótt í %s"
+
+msgid "Overall"
+msgstr "Yfirlit"
+
+msgid "Other private albums"
+msgstr "Önnur einkaalbúm"
+
+msgid "Other plugins"
+msgstr "Aðrar viðbætur aðgengilegar"
+
+msgid "Other"
+msgstr "Annað"
+
+msgid "Orphans"
+msgstr "Munaðarlaus"
+
+msgid "Orphan tags deleted"
+msgstr "Munaðarlausum merkjum eytt"
+
+msgid "Original templates"
+msgstr "Upprunaleg sniðmát"
+
+msgid "Original file : %s"
+msgstr "Upprunaleg skrá : %s"
+
+msgid "Original Size"
+msgstr "Upprunaleg stærð"
+
+msgid "Order of menubar items has been updated successfully."
+msgstr "Röð atriða í valmyndastiku hafa verið uppfærð með góðum árangri."
+
+msgid "cancel manual order"
+msgstr "hætta við handvirka röðun"
+
+msgid "checksum"
+msgstr "gátsumma"
+
+msgid "checksums to add"
+msgstr "gátsummum á að bæta við"
+
+msgid "clean"
+msgstr "hreinsa upp"
+
+msgid "close"
+msgstr "loka"
+
+msgid "confirm"
+msgstr "staðfesta"
+
+msgid "create a new album"
+msgstr "stofna nýtt albúm"
+
+msgid "create a new site"
+msgstr "stofna nýja vefsíðu"
+
+msgid "created"
+msgstr "stofnað"
+
+msgid "custom"
+msgstr "Sérsniðið"
+
+msgid "date & time"
+msgstr "dagsetning og tími"
+
+msgid "default"
+msgstr "sjálfgefið"
+
+msgid "default values"
+msgstr "sjálfgefin gildi"
+
+msgid "delete"
+msgstr "eyða"
+
+msgid "delete album"
+msgstr "eyða albúmi"
+
+msgid "delete album and all %d photos, even the %d associated to other albums"
+msgstr "eyða albúmi og öllum %d myndum, jafnvel þeim %d sem tengjast öðrum albúmum"
+
+msgid "delete album and the %d orphan photos"
+msgstr "eyða albúmi og %d munaðarlausum myndum"
+
+msgid "delete only album, not photos"
+msgstr "eyða eingöngu albúmi, ekki myndum"
+
+msgid "delete photo"
+msgstr "eyða mynd"
+
+msgid "delete this site and all its attached elements"
+msgstr "eyða þessari vefsíðu og öllum tengdum upplýsingum"
+
+msgid "albums deleted in the database"
+msgstr "albúmum eytt í gagnagrunninum"
+
+msgid "all"
+msgstr "allt"
+
+msgid "an error happened"
+msgstr "villa koma upp"
+
+msgid "and"
+msgstr "og"
+
+msgid "and %s others"
+msgstr "og %s aðrir"
+
+msgid "any visitor can see this album"
+msgstr "allir gestir geta séð þetta albúm"
+
+msgid "apply automatic sort order"
+msgstr "beita sjálfvirkri röðunarröð"
+
+msgid "associate to group"
+msgstr "tengja við hóp"
+
+msgid "automatic order"
+msgstr "sjálfvirk röðun"
+
+msgid "average time"
+msgstr "meðaltími"
+
+msgid "based on"
+msgstr "byggt á"
+
+msgid "between"
+msgstr "á milli"
+
+msgid "between %.2f and %.2f"
+msgstr "á milli %.2f og %.2f"
+
+msgid "between %d and %d pixels"
+msgstr "á milli %d og %d pixlar"
+
+msgid "between %s and %s"
+msgstr "á milli %s og %s"
+
+msgid "between %s and %s MB"
+msgstr "á milli %s og %s MB"
+
+msgid "bottom left corner"
+msgstr "neðst í vinstra horninu"
+
+msgid "bottom right corner"
+msgstr "neðst í hægra horninu"
+
+msgid "calculated"
+msgstr "útreiknað"
+
+msgid "You can update to Piwigo %s directly, without upgrading to Piwigo %s (recommended)."
+msgstr "Þú getur endurnýjað í Piwigo %s beint, án þess að uppfæra í Piwigo %s (ráðlagt)."
+
+msgid "You have %d orphan tags: %s."
+msgstr "Þú ert með %d munaðarlaus merki: %s."
+
+msgid "You have %s inactive plugins"
+msgstr "Þú ert með %s óvirkar viðbætur"
+
+msgid "You have %s1 orphan : %s2"
+msgstr "Þú ert með %s1 munaðarlaus : %s2"
+
+msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
+msgstr "Þú hefur tilgreint <i>$conf['order_by']</i> í staðbundnu uppsetningaskránni þinni, þessi færibreyta er úrelt, fjarlægðu hana eða endurnefndu hana í <i>$conf['order_by_custom']</i> !"
+
+msgid "You have subscribed to receiving notifications by mail."
+msgstr "Þú hefur gerst áskrifandi að tilkynningum með tölvupósti."
+
+msgid "You have unsubscribed from receiving notifications by mail."
+msgstr "Þú hefur hætt áskrift að tilkynningu með tölvupósti."
+
+msgid "You need to confirm deletion"
+msgstr "Þú verður að staðfesta eyðingu"
+
+msgid "You need to upgrade your system to take full advantage of the application else the application will not work correctly, or not at all"
+msgstr "Þú ættir að uppfæra kerfið þitt til að nýta forritið til fulls, annars gæti forritið virkað rangt eða alls ekki"
+
+msgid "Your configuration settings are saved"
+msgstr "Þínar uppsetningastillingar eru vistaðar"
+
+msgid "Your selection"
+msgstr "Þitt val"
+
+msgid "Zoom"
+msgstr "Þysja"
+
+msgid "[%s] Visit album %s"
+msgstr "[%s] Heimsækja albúm %s"
+
+msgid "[NBM] Problems or questions"
+msgstr "[NBM] Vandamál eða spurningar"
+
+msgid "action successfully performed."
+msgstr "aðgerð framkvæmd með góðum árangri."
+
+msgid "add"
+msgstr "bæta við"
+
+msgid "add a new watermark"
+msgstr "bæta við vatnsmerki"
+
+msgid "added"
+msgstr "bætt við"
+
+msgid "administrators"
+msgstr "stjórnendur"
+
+msgid "albums added in the database"
+msgstr "albúmum bætt við gagnagrunninn"
+
+msgid "With no tag"
+msgstr "Með engu merki"
+
+msgid "With no virtual album"
+msgstr "Með engu sýndaralbúmi"
+
+msgid "X Position"
+msgstr "X Staða"
+
+msgid "X Repeat"
+msgstr "X Endurtekið"
+
+msgid "Y Position"
+msgstr "Y Staða"
+
+msgid "Y Repeat"
+msgstr "Y Endurtekið"
+
+msgid "Year"
+msgstr "Ár"
+
+msgid "Yes, I am sure"
+msgstr "Já, ég er viss"
+
+msgid "Yes, delete"
+msgstr "Já, eyða"
+
+msgid "You are running on development sources, no check possible."
+msgstr "Þú ert að keyra á þróunargrunni, engin athugun möguleg."
+
+msgid "You are running the latest version of Piwigo."
+msgstr "Þú ert að keyra nýjustu útgáfu af Piwigo."
+
+msgid "You are using the Browser uploader. Try the <a href=\"%s\">Flash uploader</a> instead."
+msgstr "Þú ert að nota vafrainnflytjanda. Prófaðu <a href=\"%s\">Flash innflytjanda</a> í staðinn."
+
+msgid "You are using the Flash uploader. Problems? Try the <a href=\"%s\">Browser uploader</a> instead."
+msgstr "Þú ert að nota Flash innflytjanda. Vandamál? Prófaðu <a href=\"%s\">Vafrainnflytjanda</a> í staðinn."
+
+msgid "You can activate only one mobile theme."
+msgstr "Þú getur aðeins virkjað eitt farsímaþema"
+
+msgid "You can't define a default photo order because you have a custom setting in your local configuration."
+msgstr "Þú getur ekki skilgreint sjálfgefna myndaröðun vegna þess að þú ert með sérsniðna stillingu í staðbundnu uppsetningunni þinni."
+
+msgid "You cannot delete your account"
+msgstr "Þú getur ekki eytt reikningnum þínum"
+
+msgid "You cannot move an album in its own sub album"
+msgstr "Þú getur ekki fært albúm í eigin undiralbúmi"
+
+msgid "You don't have access to this photo"
+msgstr "Þú hefur ekki aðgang að þessari mynd"
+
+msgid "You have %d orphan tags %s"
+msgstr "Þú ert með %d munaðarlaus merki %s"
+
+msgid "Visit language site"
+msgstr "Heimsækja tungumála vefsíðu"
+
+msgid "Visit plugin site"
+msgstr "Heimsækja viðbótar vefsíðu"
+
+msgid "Visit theme site"
+msgstr "Heimsækja þemu vefsíðu"
+
+msgid "Visited %d times"
+msgstr "Heimsótt %d sinnum"
+
+msgid "WARNING! This plugin does not seem to be compatible with this version of Piwigo."
+msgstr "VIÐVÖRUN! Þessi viðbót virðist ekki vera samhæfð við þessa útgáfu af Piwigo."
+
+msgid "Waiting"
+msgstr "Í bið"
+
+msgid "Warning: subscribing or unsubscribing will send mails to users"
+msgstr "Viðvörun: Með því að gerast áskrifandi eða hætta við áskrift þá verður tölvupóstur til notenda"
+
+msgid "Watermark"
+msgstr "Vatnsmerki"
+
+msgid "Web Form"
+msgstr "Vefeyðublað"
+
+msgid "Webmaster cannot be deleted"
+msgstr "Vefstjóra er ekki hægt að eyða"
+
+msgid "Webmaster status is required."
+msgstr "Vefstjórastöðu er krafist"
+
+msgid "Webmaster status required"
+msgstr "Vefstjórastöðu krafist"
+
+msgid "Week starts on"
+msgstr "Vika byrjar á"
+
+msgid "Welcome!"
+msgstr "Velkominn!"
+
+msgid "Who can see these photos?"
+msgstr "Hver getur séð þessar myndir?"
+
+msgid "Who can see this photo?"
+msgstr "Hver getur séð þessa mynd?"
+
+msgid "Width"
+msgstr "Breidd"
+
+msgid "With blank value, gallery title will be used"
+msgstr "Ef autt, þá verður titill myndasafns notaður"
+
+msgid "With no album"
+msgstr "Með engu albúmi"
+
+msgid "With no checksum"
+msgstr "Með engri gátsummu"
+
+msgid "User list"
+msgstr "Notandalisti"
+
+msgid "User status"
+msgstr "Notandastaða"
+
+msgid "User updated"
+msgstr "Notandi uppfærður"
+
+msgid "Users"
+msgstr "Notendur"
+
+msgid "Users modified"
+msgstr "Notendur breyttir"
+
+msgid "Users not logged in will have these settings applied, these settings are used by default for new users"
+msgstr "Notendur sem ekki eru skráðir inn munu fá þessar stillingar, þessar stillingar eru sjálfgefið notaðar fyrir nýja notendur"
+
+msgid "Validate"
+msgstr "Staðfesta"
+
+msgid "Validation"
+msgstr "Staðfesting"
+
+msgid "Version"
+msgstr "Útgáfa"
+
+msgid "Videos"
+msgstr "Myndbönd"
+
+msgid "View in gallery"
+msgstr "Skoða í myndasafni"
+
+msgid "Virtual Links"
+msgstr "Sýndarhlekkir"
+
+msgid "Virtual album"
+msgstr "Sýndaralbúm"
+
+msgid "Virtual album added"
+msgstr "Sýndaralbúmi bætt við"
+
+msgid "Virtual album deleted"
+msgstr "Sýndaralbúmi eytt"
+
+msgid "Virtual album name"
+msgstr "Heiti sýndaralbúms"
+
+msgid "Virtual albums to move"
+msgstr "Sýndaralbúm til að færa"
+
+msgid "Visit"
+msgstr "Heimsækja"
+
+msgid "Visit Gallery"
+msgstr "Heimsækja myndasafnið"
+
+msgid "Visit Piwigo project website"
+msgstr "Heimsækja Piwigo verkefnavef"
+
+msgid "Updates"
+msgstr "Uppfærslur"
+
+msgid "Upload"
+msgstr "Flytja inn"
+
+msgid "Upload Photos"
+msgstr "Flytja inn myndir"
+
+msgid "Upload in progress"
+msgstr "Innflutningur í gangi"
+
+msgid "Uploaded Photos"
+msgstr "Innfluttar myndir"
+
+msgid "Use the default photo sort order"
+msgstr "Nota sjálfgefna röðun mynda"
+
+msgid "Used metadata"
+msgstr "Lýsigögn notuð"
+
+msgid "User"
+msgstr "Notandi"
+
+msgid "User \"%s\" created with \"%s\" like password"
+msgstr "Notandi \"%s\" stofnaður með \"%s\" sem lykilorð"
+
+msgid "User \"%s\" dissociated from this group"
+msgstr "Notandi \"%s\" aftengdur þessum hópi"
+
+msgid "User %s [%s] added."
+msgstr "Notanda %s [%s] bætt við."
+
+msgid "User %s [%s] was added to the subscription list."
+msgstr "Notanda %s [%s] bætt við áskrifendalista."
+
+msgid "User %s [%s] was not added to the subscription list."
+msgstr "Notanda %s [%s] ekki bætt við áskrifendalista."
+
+msgid "User %s [%s] was not removed from the subscription list."
+msgstr "Notandi %s [%s] ekki fjarlægður af áskrifendalista."
+
+msgid "User %s [%s] was removed from the subscription list."
+msgstr "Notandi %s [%s] fjarlægður af áskrifendalista."
+
+msgid "User %s added"
+msgstr "Notanda %s bætt við"
+
+msgid "User %s updated"
+msgstr "Notandi %s uppfærður"
+
+msgid "User associated"
+msgstr "Notandi tengdur"
+
+msgid "User comments validation"
+msgstr "Staðfesting umsagna notenda"
+
+msgid "Update user"
+msgstr "Uppfæra notanda"
+
+msgid "Update to Piwigo %s"
+msgstr "Uppfæra í Piwigo %s"
+
+msgid "Update photos information"
+msgstr "Uppfæra upplýsingar myndar"
+
+msgid "Update in progress... Please wait."
+msgstr "Uppfærsla í gangi... Hinkraðu aðeins."
+
+msgid "Update albums informations"
+msgstr "Uppfæra upplýsingar albúms"
+
+msgid "Update Complete"
+msgstr "Uppfærslu Lokið"
+
+msgid "Update All"
+msgstr "Uppfæra Allt"
+
+msgid "Update"
+msgstr "Uppfæra"
+
+msgid "Unsubscribed"
+msgstr "Áskrift hætt"
+
+msgid "Unsubscribe from notification by mail"
+msgstr "Hætta áskrift að tilkynningum með tölvupósti"
+
+msgid "Unset as group for new users"
+msgstr "Óvirkt sem hópur fyrir nýja notendur"
+
+msgid "Unlocked"
+msgstr "Aflæst"
+
+msgid "Unlock gallery"
+msgstr "Aflæsa myndasafni"
+
+msgid "Unknown upload error"
+msgstr "Óþekkt innflutningsvilla"
+
+msgid "Uninstalled Plugins"
+msgstr "Fjarlægðar Viðbætur"
+
+msgid "Uninstall"
+msgstr "Fjarlægja"
+
+msgid "Uncheck all"
+msgstr "Afhaka allt"
+
+msgid "Unable to check for upgrade."
+msgstr "Ekki er hægt að haka við uppfærslu."
+
+msgid "Type in a search term"
+msgstr "Sláðu inn leitarorð"
+
+msgid "Type here the title"
+msgstr "Sláðu inn titilinn hér"
+
+msgid "Type here the name of the new group"
+msgstr "Sláðu inn heitið á nýja hópnum hér"
+
+msgid "Tile View"
+msgstr "Flísayfirlit"
+
+msgid "Type here the author name"
+msgstr "Sláðu inn höfundarnafn hér"
+
+msgid "Two updates are available"
+msgstr "Tvær uppfærslur eru aðgengilegar"
+
+msgid "Tools"
+msgstr "Verkfæri"
+
+msgid "Toggle 'default group' property"
+msgstr "Snúa við eiginleikum 'sjálfgefins hóps'"
+
+msgid "To unsubscribe"
+msgstr "Að hætta áskrift"
+
+msgid "To subscribe"
+msgstr "Að gerast áskrifandi"
+
+msgid "To send ?"
+msgstr "Að senda?"
+
+msgid "To export your photos from digiKam to Piwigo, simply install digiKam and the Kipi-plugins."
+msgstr "Til að flytja út myndirnar þínar úr digiKam inn í Piwigo, settu þá einfaldlega upp digiKam og Kipi-viðbæturnar."
+
+msgid "Title"
+msgstr "Titill"
+
+msgid "Time to send mail is limited. Others mails are skipped."
+msgstr "Tíminn til að senda tölvupóst er takmarkaður. Öðrum tölvupóstum hefur verið sleppt."
+
+msgid "Time has come to update your Piwigo with version %s, go to %s"
+msgstr "Tíminn er kominn á að uppfæra þitt Piwigo í útgáfu %s, farðu í %s"
+
+msgid "Time"
+msgstr "Tími"
+
+msgid "Thumbnails generation in progress..."
+msgstr "Smámyndagerð í vinnslu..."
+
+msgid "Thumbnail"
+msgstr "Smámynd"
+
+msgid "This theme was not designed to be directly activated"
+msgstr "Þetta þema var ekki hannað fyrir að vera virkjað beint"
+
+msgid "This site already exists"
+msgstr "Þessi vefsíða er þegar til"
+
+msgid "This name is already used by another group."
+msgstr "Þetta heiti er þegar í notkun hjá öðrum hópi."
+
+msgid "This is already the default theme"
+msgstr "Þetta er þegar sjálfgefna þemað"
+
+msgid "This is a minor update, with only bug corrections."
+msgstr "Þetta er minniháttar uppfærsla, með aðeins villuleiðréttingum."
+
+msgid "This is a major update, with <a href=\"%s\">new exciting features</a>."
+msgstr "Þetta er meiriháttar uppfærsla, með <a href=\"%s\">nýjum spennandi möguleikum</a>."
+
+msgid "This group will be unset to default"
+msgstr "Þessi hópur verður framvegis ekki sjálfgefið notaður."
+
+msgid "This group will be set to default"
+msgstr "Þessi hópur verður sjálfgefið notaður."
+
+msgid "This album contains no photo."
+msgstr "Þetta albúm inniheldur enga mynd."
+
+msgid "This album contains %d photos, added on %s."
+msgstr "Þetta albúm inniheldur %d myndir, bætt við þann %s."
+
+msgid "This album contains %d photos, added between %s and %s."
+msgstr "Þetta albúm inniheldur %d myndir, bætt við á milli %s og %s."
+
+msgid "There is no other theme available."
+msgstr "Það er ekkert annað þema aðgengilegt."
+
+msgid "There is no other plugin available."
+msgstr "Það er engin önnur viðbót aðgengileg."
+
+msgid "There is no other language available."
+msgstr "Það er ekkert annað tungumál aðgengilegt."
+
+msgid "There is no group in this gallery."
+msgstr "Það eru engir hópar í þessu myndasafni."
+
+msgid "There is no available subscribers to mail."
+msgstr "Það eru engir áskrifendur að tilkynningu með tölvupósti."
+
+msgid "Themes which need upgrade"
+msgstr "Þemu sem þarfnast uppfærslu"
+
+msgid "Themes"
+msgstr "Þemu"
+
+msgid "Theme has been successfully installed"
+msgstr "Tókst að setja upp þema"
+
+msgid "Theme"
+msgstr "Þema"
+
+msgid "The whole set"
+msgstr "Allt settið"
+
+msgid "The whole page"
+msgstr "Öll síðan"
+
+msgid "The webmaster has unsubscribed you from receiving notifications by mail."
+msgstr "Vefstjórinn hefur afskráð þig sem áskrifanda að tilkynningum með tölvupósti."
+
+msgid "The webmaster has subscribed you to receiving notifications by mail."
+msgstr "Vefstjórinn hefur gert þig að áskrifanda að tilkynningum með tölvupósti."
+
+msgid "The uploaded file exceeds the upload_max_filesize directive in php.ini: %sB"
+msgstr "Innflutta skráin fer yfir upload_max_filesize tilskipunina í php.ini: %sB"
+
+msgid "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form"
+msgstr "Innflutta skráin fer yfir MAX_FILE_SIZE tilskipunina sem tilgreind var í HTML eyðublaðinu"
+
+msgid "The uploaded files exceed the post_max_size directive in php.ini: %sB"
+msgstr "Innflutta skráin fer yfir post_max_size tilskipunina í php.ini: %sB"
+
+msgid "The uploaded file was only partially uploaded"
+msgstr "Innflutta skráin var aðeins flutt inn að hluta"
+
+msgid "The settings for the guest are from the %s user"
+msgstr "Stillingar gestsins eru frá notandanum %s"
+
+msgid "The picture dimensions will be reduced to %dx%d pixels."
+msgstr "Myndastærðir verða minnkaðar í %dx%d pixlar."
+
+msgid "The permalink name must be composed of a-z, A-Z, 0-9, \"-\", \"_\" or \"/\". It must not be numeric or start with number followed by \"-\""
+msgstr "Heiti fasttengils verður að vera samsett úr a-ö, A-Ö, 0-9, \"-\", \"_\" eða \"/\". Það má ekki vera tölulegt eða byrja á tölu og þar á eftir \"-\""
+
+msgid "The other tags will be removed"
+msgstr "Hin merkin verða fjarlægð"
+
+msgid "The original maximum width must be a number between %d and %d"
+msgstr "Upprunaleg hámarksbreidd verður að vera tala á milli %d og %d"
+
+msgid "The original maximum height must be a number between %d and %d"
+msgstr "Upprunaleg hámarkshæð verður að vera tala á milli %d og %d"
+
+msgid "The original image quality must be a number between %d and %d"
+msgstr "Upprunaleg myndgæði verða að vera tala á milli %d og %d"
+
+msgid "The number of comments a page must be between 5 and 50 included."
+msgstr "Fjöldi umsagna á síðu verður að vera á milli 5 og 50 meðtalið."
+
+msgid "The name of directories and files must be composed of letters, numbers, \"-\", \"_\" or \".\""
+msgstr "Heiti á möppum og skrám má aðeins innihalda bókstafi, tölustafi, \"-\", \"_\" eða \".\""
+
+msgid "The name of an album must not be empty"
+msgstr "Heiti albúms má ekki vera autt"
+
+msgid "The name of a group must not contain \" or ' or be empty."
+msgstr "Heiti hóps má ekki innihalda \" eða ' eða vera tómt."
+
+msgid "The gallery URL is not valid."
+msgstr "Vefslóð myndasafnsins er ekki gild."
+
+msgid "The following tag was deleted"
+msgstr "Eftirfarandi merki var eytt"
+
+msgid "The file or directory cannot be accessed (either it does not exist or the access is denied)"
+msgstr "Ekki er hægt að nálgast skrána eða möppuna (annaðhvort er hún ekki til eða aðgangi er hafnað)"
+
+msgid "The center of interest is the most meaningful zone in the photo."
+msgstr "Miðja athyglinnar er mikilvægasta svæðið á myndinni."
+
+msgid "The anomaly will be ignored until next application version"
+msgstr "Frávikið verður hunsað þar til í næstu útgáfu forritsins"
+
+msgid "The Piwigo publish Plug-in allows you to export and synchronize photos from Lightroom directly to your Piwigo photo gallery."
+msgstr "Piwigo-útgáfuviðbótin gerir þér kleift að flytja út og samstilla myndir úr Lightroom beint í Piwigo-myndasafníð þitt."
+
+msgid "The Piwigo export plugin allows you to create albums and export photos."
+msgstr "Piwigo útflutningsviðbótin gerir þér kleift að búa til albúm og flytja út myndir."
+
+msgid "The %d tags on this page are selected"
+msgstr "Merkin %d á þessari síðu hafa verið valin"
+
+msgid "The %d following tags were deleted"
+msgstr "Eftirfarandi %d merkjum hefur verið eytt"
+
+msgid "Templates configuration has been recorded."
+msgstr "Sniðmátsstillingar hafa verið skráðar."
+
+msgid "Templates"
+msgstr "Sniðmát"
+
+msgid "Tags \\{%s\\} succesfully deleted"
+msgstr "Merkjunum \\{%s\\} tókst að eyða"
+
+msgid "Tags <em>%s</em> merged into tag <em>%s</em>"
+msgstr "Merkin <em>%s</em> sameinuð í merkið <em>%s</em>"
+
+msgid "Tag(s) \\{%s1\\} succesfully merged into \"%s2\""
+msgstr "Merkið \\{%s1\\} tókst að sameina í \"%s2\""
+
+msgid "Tag selection"
+msgstr "Merkjaval"
+
+msgid "Tag Manager"
+msgstr "Merkjastjórnandi"
+
+msgid "Tag \"%s1\" renamed in \"%s2\""
+msgstr "Merki \\\"%s1\\\" endurnefnt í \\\"%s2\\\""
+
+msgid "Tag \"%s\" was added"
+msgstr "Merki \"%s\" hefur verið bætt við"
+
+msgid "Tag \"%s\" succesfully deleted"
+msgstr "Merki \\\"%s\\\" tókst að eyða"
+
+msgid "Tag \"%s\" is now a duplicate of \"%s\""
+msgstr "Merki \"%s\" er núna tvírit af \"%s\""
+
+msgid "Tag \"%s\" created"
+msgstr "Merki \"%s\" stofnað"
+
+msgid "Tag \"%s\" already exists"
+msgstr "Merki \"%s\" er þegar til"
+
+msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
+msgstr "ÞESSI VIÐBÓT ER NÚNA HLUTI AF PIWIGO! FJARLÆGÐU HANA NÚNA!"
+
+msgid "Synchronize metadata"
+msgstr "Samstilla lýsigögn"
+
+msgid "Synchronize"
+msgstr "Samstilla"
+
+msgid "Switch to clear or dark colors for administration"
+msgstr "Skiptu yfir í bjarta eða dökka liti fyrir stjórnborð"
+
+msgid "Synchronization in progress"
+msgstr "Samstilling í gangi"
+
+msgid "Synchronization"
+msgstr "Samstilling"
+
+msgid "Support"
+msgstr "Stuðningur"
+
+msgid "Summary"
+msgstr "Samantekt"
+
+msgid "Subscribers could be listed (available) only if there is new elements to notify."
+msgstr "Áskrifendur gætu verið skráðir (í boði) aðeins ef það eru nýir þættir til að tilkynna."
+
+msgid "Subscribed"
+msgstr "Áskrifandi"
+
+msgid "Subscribe/unsubscribe users"
+msgstr "Skrá/afskrá notendur að áskrift"
+
+msgid "Subscribe to notification by mail"
+msgstr "Gerast áskrifandi að tilkynningu með tölvuósti"
+
+msgid "Subscribe %s to Piwigo Announcements Newsletter"
+msgstr "Gera %s að áskrifanda að Piwigo Tilkynningafréttabréfi"
+
+msgid "Subscribe %s"
+msgstr "Gera %s að áskrifanda"
+
+msgid "Subscribe"
+msgstr "Gerast áskrifandi"
+
+msgid "Storage used"
+msgstr "Geymslurými notað"
+
+msgid "Storage album"
+msgstr "Geymslualbúm"
+
+msgid "Storage"
+msgstr "Geymsla"
+
+msgid "Status of user \"%s\" updated"
+msgstr "Notandastaða \"%s\" uppfærð"
+
+msgid "Status"
+msgstr "Staða"
+
+msgid "Statistics"
+msgstr "Tölfræði"
+
+msgid "Start pLoader and add your photos."
+msgstr "Settu pLoader í gang og bættu myndunum þínum við."
+
+msgid "Start Upload"
+msgstr "Hefja innflutning"
+
+msgid "Source tag"
+msgstr "Heimildarmerki"
+
+msgid "Some upgrades are available for extensions."
+msgstr "Sumar uppfærslur eru fáanlegar fyrir viðauka."
+
+msgid "Some themes and plugins may be not available yet."
+msgstr "Nokkrar þemur og viðbætur kunna að vera óaðgengilegar ennþá."
+
+msgid "Some checksums are missing."
+msgstr "Nokkrar gátsummur vantar."
+
+msgid "Site manager"
+msgstr "Vefstjóri"
+
+msgid "Simulation"
+msgstr "Hermun"
+
+msgid "Showing %s users out of %s"
+msgstr "Sýnir %s notendur af %s"
+
+msgid "Showing %s to %s of %s users"
+msgstr "Sýnir %s til %s af %s notendum"
+
+msgid "Show sub-albums"
+msgstr "Sýna undiralbúm"
+
+msgid "Show info"
+msgstr "Sýna upplýsingar"
+
+msgid "Show menubar"
+msgstr "Sýna valmyndaborða"
+
+msgid "Show inactive plugins"
+msgstr "Sýna óvirkar viðbætur"
+
+msgid "Show %s users"
+msgstr "Sýna %s notendur"
+
+msgid "Show"
+msgstr "Sýna"
+
+msgid "Shotwell is an open source digital photo organizer that runs on Linux. It is the default photo manager in Ubuntu and Fedora."
+msgstr "Shotwell er opinn stafrænn ljósmyndaskipuleggjari sem keyrir á Linux. Hann er sjálfgefinn ljósmyndastjóri í Ubuntu og Fedora."
+
+msgid "Sharpen"
+msgstr "Skerpa"
+
+msgid "Share / Send your photos directly from your Mac Os X (10.10 and following) to Piwigo"
+msgstr "Deildu / Sendu myndirnar þínar beint úr macOS-kerfinu þínu (10.10 og seinna) til Piwigo"
+
+msgid "Settings"
+msgstr "Stillingar"
+
+msgid "Set title"
+msgstr "Stilltu titil"
+
+msgid "Set creation date"
+msgstr "Stilltu stofnunardag"
+
+msgid "Set author"
+msgstr "Setja höfund"
+
+msgid "Set as group for new users"
+msgstr "Stillt sem hópur fyrir nýja notendur"
+
+msgid "Set as default theme for unregistered and new users"
+msgstr "Stillt sem sjálfgefið þema fyrir óskráða og nýja notendur"
+
+msgid "Set as default language for unregistered and new users"
+msgstr "Stillt sem sjálfgefið tungumál fyrir óskráða og nýja notendur"
+
+msgid "Set as default"
+msgstr "Setja sem sjálfgefið"
+
+msgid "Sep"
+msgstr "sep"
+
+msgid "Send mail to users"
+msgstr "Sendur tölvupóst til notenda"
+
+msgid "Send mail on HTML format"
+msgstr "Sendur tölvupóst í HTML sniði"
+
+msgid "Send mail as"
+msgstr "Sendu tölvupóst sem"
+
+msgid "Send connection settings by email"
+msgstr "Sendu tengistillingar með tölvupósti"
+
+msgid "Send an information email to group members"
+msgstr "Sendu upplýsingapóst til hópmeðlima"
+
+msgid "Send"
+msgstr "Senda"
+
+msgid "Selection mode"
+msgstr "Valhamur"
+
+msgid "Selection"
+msgstr "Val"
+
+msgid "Selected user"
+msgstr "Valin notandi"
+
+msgid "Select:"
+msgstr "Velja:"
+
+msgid "Select users..."
+msgstr "Velja notendur..."
+
+msgid "Select the destination tag"
+msgstr "Velja áfangamerkið"
+
+msgid "Select tags"
+msgstr "Velja merki"
+
+msgid "Select recipients"
+msgstr "Velja viðtakendur"
+
+msgid "Select groups..."
+msgstr "Velja hópa..."
+
+msgid "Select groups or type them"
+msgstr "Veljið hópa eða sláið þá inn"
+
+msgid "Select files"
+msgstr "Velja skrár"
+
+msgid "Select at least two tags for merging"
+msgstr "Veljið að minnsta kosti tvö merki fyrir sameiningu"
+
+msgid "Select at least one user"
+msgstr "Veljið að minnsta kosti einn notanda"
+
+msgid "Select at least one tag"
+msgstr "Veljið að minnsta kosti eitt merki"
+
+msgid "Select at least one photo"
+msgstr "Veljið að minnsta kosti eina mynd"
+
+msgid "Select at least one comment"
+msgstr "Veljið að minnsta kosti eina umsögn"
+
+msgid "Select at least one album"
+msgstr "Veljið að minnsta kosti eitt albúm"
+
+msgid "Select an album... or type it!"
+msgstr "Veljið albúm... eða sláið það inn!"
+
+msgid "Select an album"
+msgstr "Velja albúm"
+
+msgid "Select all %d tags"
+msgstr "Velja öll %d merkin"
+
+msgid "Select a zone with your mouse to define a new center of interest."
+msgstr "Veldu svæði með músinni til að skilgreina nýja miðju athyglis."
+
+msgid "Select a file"
+msgstr "Velja skrá"
+
+msgid "Select"
+msgstr "Velja"
+
+msgid "See you soon."
+msgstr "Sjáumst fljótt aftur."
+
+msgid "See you soon,"
+msgstr "Sjáumst fljótt aftur,"
+
+msgid "Search tips"
+msgstr "Leitarráð"
+
+msgid "Section"
+msgstr "Hluti"
+
+msgid "Searching..."
+msgstr "Leitar..."
+
+msgid "Search for new images in the directories"
+msgstr "Leita að nýjum myndum í möppunum"
+
+msgid "Search albums"
+msgstr "Leita í albúmum"
+
+msgid "Save visits in history for"
+msgstr "Vista heimsóknarsögu fyrir"
+
+msgid "Save to permalink history"
+msgstr "Vista í fasttenglasögu"
+
+msgid "Save order"
+msgstr "Vista röðun"
+
+msgid "Save manual order"
+msgstr "Vista handvirka röðun"
+
+msgid "Save Template Directory"
+msgstr "Vista sniðmátamöppu"
+
+msgid "Save Settings"
+msgstr "Vista Stillingar"
+
+msgid "Running on an up-to-date Piwigo is important for security."
+msgstr "Að keyra á uppfærðu Piwigo er mikilvægt fyrir öryggi."
+
+msgid "Root"
+msgstr "Rót"
+
+msgid "Review"
+msgstr "Endurskoða"
+
+msgid "Restored"
+msgstr "Endurheimt"
+
+msgid "Restore default configuration. You will lose your plugin settings!"
+msgstr "Endurheimta sjálfgefna stillingu. Þú munt tapa stillingum viðbótarinnar!"
+
+msgid "Restore"
+msgstr "Endurheimta"
+
+msgid "Resize after upload disabled due to the use of GD as graphic library"
+msgstr "Breyta stærð eftir innflutning er óvirkjað vegna notkunar á GD sem grafísku forritasafni"
+
+msgid "Resize after upload"
+msgstr "Breyta stærð eftir innflutning"
+
+msgid "Resize"
+msgstr "Breyta stærð"
+
+msgid "Reset ignored updates"
+msgstr "Endurstilla hunsaðar uppfærslur"
+
+msgid "Requires PHP %s"
+msgstr "Krefst PHP %s"
+
+msgid "Represents"
+msgstr "Er smámynd fyrir"
+
+msgid "Representative"
+msgstr "Albúm smámynd"
+
+msgid "Representant"
+msgstr "Albúm Smámynd"
+
+msgid "Representation of albums"
+msgstr "Albúm smámynd"
+
+msgid "Replacers (customized templates)"
+msgstr "Staðgengill (sérsniðin sniðmát)"
+
+msgid "Replacement of original templates by customized templates from template-extension subfolder"
+msgstr "Skipti um upprunalegu sniðmát fyrir sérsniðin sniðmát úr undirmöppu sniðmátsviðbótar"
+
+msgid "Repair and optimize database"
+msgstr "Gera við og fínstilla gagnagrunn"
+
+msgid "Rename"
+msgstr "Endurnefna"
+
+msgid "Remove all filters"
+msgstr "Fjarlægja allar síur"
+
+msgid "Remote"
+msgstr "Fjarlægur"
+
+msgid "Released on"
+msgstr "Útgefin þann"
+
+msgid "Reject"
+msgstr "Hafna"
+
+msgid "Reinitialize check integrity"
+msgstr "Endurræstu heilleikapróf"
+
+msgid "Registered on %s, %s."
+msgstr "Skráður þann %s, %s."
+
+msgid "Registered"
+msgstr "Skráður"
+
+msgid "Refresh thumbnail"
+msgstr "Endurnýja smámyndir"
+
+msgid "Refresh photo set"
+msgstr "Endurnýja myndasett"
+
+msgid "Refresh"
+msgstr "Endurnýja"
+
+msgid "Recipients"
+msgstr "Viðtakendur"
+
+msgid "Read Piwigo Documentation"
+msgstr "Lestu Piwigo upplýsingaskjöl"
+
+msgid "ReGalAndroid (RemoteGallery client for Android) is an open source (GPL v3) Piwigo client for the Android platform."
+msgstr "ReGalAndroid (RemoteGallery biðlari fyrir Android) er opin húgbúnaður (GPL v3) Piwigo biðlari fyrir Android tölvuumhverfi."
+
+msgid "Ratio"
+msgstr "Hlutfall"
+
+msgid "Rating by guests"
+msgstr "Einkunn frá gestum"
+
+msgid "Rating"
+msgstr "Einkunn"
+
+msgid "Random photo"
+msgstr "Tilviljunarkennd mynd"
+
+msgid "Quick Local Synchronization"
+msgstr "Fljótleg staðbundin samstilling"
+
+msgid "Purge user cache"
+msgstr "Hreinsa skyndiminni notanda"
+
+msgid "Purge sessions"
+msgstr "Hreinsa setur"
+
+msgid "Purge search history"
+msgstr "Hreinsa leitarsögu"
+
+msgid "Purge never used notification feeds"
+msgstr "Hreinsaðu aldrei notaða tilkynningastrauma"
+
+msgid "Purge history summary"
+msgstr "Hreinsa söguyfirlit"
+
+msgid "Purge history detail"
+msgstr "Hreinsa söguupplýsingar"
+
+msgid "Purge compiled templates"
+msgstr "Hreinsaðu samansett sniðmát"
+
+msgid "Public"
+msgstr "Opinbert"
+
+msgid "Public / Private"
+msgstr "Opinbert / Einkamál"
+
+msgid "Properties"
+msgstr "Eiginleikar"
+
+msgid "Promote mobile app on mobile devices"
+msgstr "Kynntu farsímaforrit í farsímum"
+
+msgid "Private"
+msgstr "Einkamál"
+
+msgid "Privacy level set to \"%s\""
+msgstr "Friðhelgisréttindi stillt á \"%s\""
+
+msgid "Privacy level"
+msgstr "Friðhelgisréttindi"
+
+msgid "Prepared time for list of users to send mail is limited. Others users are not listed."
+msgstr "Tíminn til að útbúa listann yfir notendur sem verða sendur póstur er takmarkaður. Aðrir notendur eru ekki skráðir."
+
+msgid "user_status_admin"
+msgstr "Stjórnandi"
+
+msgid "user_status_generic"
+msgstr "Almennt"
+
+msgid "user_status_guest"
+msgstr "Gestur"
+
+msgid "user_status_webmaster"
+msgstr "Vefstjóri"
+
+msgid "visitors need to login and have the appropriate permissions to see this album"
+msgstr "gestir þurfa að skrá sig inn og hafa viðeigandi heimildir til að sjá þetta albúm"
+
+msgid "width & height"
+msgstr "breidd og hæð"
+
+msgid "width must be a number superior to"
+msgstr "breidd verður að vera tala hærri en"
+
+msgid "wrong filename"
+msgstr "rangt skráarheiti"
+
+msgid "simple visitors"
+msgstr "einfaldir gestir"
+
+msgid "singly represented"
+msgstr "lagfærð smámynd albúms"
+
+msgid "status"
+msgstr "staða"
+
+msgid "sub-albums"
+msgstr "undiralbúm"
+
+msgid "synchronize files metadata with database photos informations"
+msgstr "samstilla myndir gagnagrunns við lýsigögn skráa"
+
+msgid "synchronize files structure with database"
+msgstr "samstilla skráarskipulag við gagnagrunn"
+
+msgid "target"
+msgstr "takmark"
+
+msgid "test"
+msgstr "prófun"
+
+msgid "test this remote site"
+msgstr "prófa þessa fjarlægu vefsíðu"
+
+msgid "the forum"
+msgstr "spjallborðið"
+
+msgid "the wiki"
+msgstr "wikinn"
+
+msgid "to"
+msgstr "til"
+
+msgid "top left corner"
+msgstr "efst í vinstra horninu"
+
+msgid "top right corner"
+msgstr "efst í hægra horninu"
+
+msgid "total time"
+msgstr "samtals tími"
+
+msgid "unit mode"
+msgstr "einn háttur"
+
+msgid "unknown"
+msgstr "óþekkt"
+
+msgid "unset"
+msgstr "óstillt"
+
+msgid "update the database from files"
+msgstr "uppfæra gagnagrunninn með skrám"
+
+msgid "user \"%s\" added"
+msgstr "notanda \"%s\" bætt við"
+
+msgid "photos informations synchronized with files metadata"
+msgstr "myndaupplýsingar samstilltar við lýsigögn skráa"
+
+msgid "photos per page"
+msgstr "myndir á síðu"
+
+msgid "photos updated in the database"
+msgstr "myndir uppfærðar í gagnagrunninum"
+
+msgid "pixels"
+msgstr "pixlar"
+
+msgid "private"
+msgstr "einkamál"
+
+msgid "public"
+msgstr "opinbert"
+
+msgid "randomly represented"
+msgstr "smámynd af handahófi í albúmi"
+
+msgid "ranks"
+msgstr "röðun"
+
+msgid "reduce to single existing albums"
+msgstr "minnka í stök albúm sem fyrir eru"
+
+msgid "registered users"
+msgstr "skráðir notendur"
+
+msgid "registration date"
+msgstr "skráningardagsetning"
+
+msgid "remove author"
+msgstr "fjarlægja höfund"
+
+msgid "remove creation date"
+msgstr "fjarlægja skráningardag"
+
+msgid "remove tags"
+msgstr "Fjarlægja merki"
+
+msgid "remove this filter"
+msgstr "fjarlægja þessa síu"
+
+msgid "remove title"
+msgstr "fjarlægja titil"
+
+msgid "right now"
+msgstr "nú þegar"
+
+msgid "selection"
+msgstr "val"
+
+msgid "set to"
+msgstr "stilla á"
+
+msgid "show details"
+msgstr "sýna ítarupplýsingar"
+
+msgid "move"
+msgstr "færa"
+
+msgid "never calculated"
+msgstr "aldrei útreiknað"
+
+msgid "new"
+msgstr "nýtt"
+
+msgid "no photo"
+msgstr "engin mynd"
+
+msgid "no write access"
+msgstr "engin skrifaðgangur"
+
+msgid "none"
+msgstr "engin"
+
+msgid "nothing"
+msgstr "ekkert"
+
+msgid "on"
+msgstr "á"
+
+msgid "on the %d selected photos"
+msgstr "á %d völdum myndum"
+
+msgid "on the %d selected users"
+msgstr "á %d völdum notendum"
+
+msgid "only directories"
+msgstr "eingöngu möppur"
+
+msgid "only perform a simulation (no change in database will be made)"
+msgstr "framkvæma aðeins sem hermun (engu verður breytt í gagnagrunninum)"
+
+msgid "or"
+msgstr "eða"
+
+msgid "orphans to delete"
+msgstr "munaðarlaus til að eyða"
+
+msgid "other"
+msgstr "annað"
+
+msgid "overrides existing values with empty ones"
+msgstr "hnekkir núverandi gildum með tómum"
+
+msgid "pending validation"
+msgstr "bíður staðfestingar"
+
+msgid "photos added in the database"
+msgstr "myndum bætt við gagnagrunninn"
+
+msgid "photos candidates for metadata synchronization"
+msgstr "myndir hentugar fyrir samstillingu lýsigagna"
+
+msgid "photos deleted from the database"
+msgstr "myndrum eytt í gagnagrunninum"
+
+msgid "guest"
+msgstr "gestur"
+
+msgid "height must be a number superior to"
+msgstr "hæð verður að vera tala stærri en"
+
+msgid "hide details"
+msgstr "fela ítarupplýsingar"
+
+msgid "high"
+msgstr "hátt"
+
+msgid "iPhoto is the default photo manager on MacOSX. The Piwigo export plugin let you create new albums and export your photos directly from iPhoto to your Piwigo photo gallery."
+msgstr "iPhoto er sjálfgefin myndastjóri á macOS. Piwigo-útflutningsviðbótin gerir þér kleift að útbúaa ný albúm og flytja út myndirnar þínar úr iPhoto í Piwigo-myndasafnið þitt."
+
+msgid "in administration"
+msgstr "í umsýslu"
+
+msgid "in gallery"
+msgstr "í myndasafni"
+
+msgid "include child albums"
+msgstr "innihalda undiralbúm"
+
+msgid "include photos with lower privacy level"
+msgstr "innihalda myndir með lægri friðhelgisréttindi"
+
+msgid "jump to album"
+msgstr "hoppa í albúm"
+
+msgid "jump to photo"
+msgstr "hoppa í mynd"
+
+msgid "leave"
+msgstr "fara"
+
+msgid "login"
+msgstr "innskráning"
+
+msgid "logout"
+msgstr "útskráning"
+
+msgid "manage album photos"
+msgstr "stjórna myndum í albúmi"
+
+msgid "manage sub-albums"
+msgstr "stjórna undiralbúmum"
+
+msgid "manual order"
+msgstr "handvirk röðun"
+
+msgid "middle"
+msgstr "miðja"
+
+msgid "modified"
+msgstr "breytt"
+
+msgid "months ago"
+msgstr "mánuðum síðan"
+
+msgid "deleted"
+msgstr "eytt"
+
+msgid "deletion"
+msgstr "eyðing"
+
+msgid "digiKam is an advanced digital photo management free software for Linux, Windows, and MacOSX."
+msgstr "digiKam er háþróaður ókeypis hugbúnaður fyrir stafræna ljósmyndastjórnun fyrir Linux, Windows og macOS."
+
+msgid "digiKam is designed for photographers who want to view, manage, edit, enhance, organize, tag, and share photographs."
+msgstr "digiKam er hannað fyrir ljósmyndara sem vilja skoða, stjórna, breyta, bæta, skipuleggja, merkja og deila myndum."
+
+msgid "directories + files"
+msgstr "möppur + skrár"
+
+msgid "display"
+msgstr "sýna"
+
+msgid "display maximum informations (added albums and photos, deleted albums and photos)"
+msgstr "birta hámarksupplýsingar (albúmum og myndum bætt við, albúmum og myndum eytt)"
+
+msgid "dissociate from group"
+msgstr "aftengja frá hópi"
+
+msgid "edit"
+msgstr "breyta"
+
+msgid "errors during synchronization"
+msgstr "villur við samstillingu"
+
+msgid "even already synchronized photos"
+msgstr "jafnvel þegar samstilltar myndir"
+
+msgid "existing album"
+msgstr "albúm til staðar"
+
+msgid "file name"
+msgstr "skráarheiti"
+
+msgid "for the file format"
+msgstr "fyrir skráarsniðið"
+
+msgid "for this file format"
+msgstr "fyrir þetta skráarsnið"
+
+msgid "global mode"
+msgstr "altækur hamur"
+
+msgid "group \"%s\" added"
+msgstr "hópi \"%s\" bætt við"
+
+msgid "group \"%s\" deleted"
+msgstr "hópi \"%s\" eytt"
+
+msgid "group \"%s\" updated"
+msgstr "hópur \"%s\" uppfærður"
+
+msgid "Yes, rename"
+msgstr "Já, endurnefna"
+
+msgid "and %d more"
+msgstr "og %d meira"
+
+msgid "since the beginning"
+msgstr "frá upphafi"
+
+msgid "Purge Cache"
+msgstr "Hreinsa flýtiminni"
+
+msgid "Rating greater than"
+msgstr "Einkunn hærri en"
+
+msgid "Rename \"%s\""
+msgstr "Endurnefna \"%s\""
+
+msgid "Show beta test plugins"
+msgstr "Sýna viðbætur í beta prófun"
+
+msgid "Show plugins compatible with previous version of Piwigo"
+msgstr "Sýna viðbætur sem eru samhæf við fyrri útgáfu af Piwigo"
+
+msgid "Tag name"
+msgstr "Merkjaheiti"
+
+msgid "The original picture will be detected with the filename (without extension)."
+msgstr "Upprunalega myndin verður greind með skráarheitinu (án viðauka)."
+
+msgid "There is multiple image in the database with the following names : %s."
+msgstr "Það eru margar myndir í gagnagrunninum með eftirfarandi heitum: %s."
+
+msgid "This albums is already in related categories list"
+msgstr "Þetta albúm eru nú þegar á lista yfir tengd albúm"
+
+msgid "This photo is an orphan"
+msgstr "Þessi mynd er munaðarlaus"
+
+msgid "This plugin has no recent update"
+msgstr "Þessi viðbót er ekki með nýlega uppfærslu"
+
+msgid "This plugin have been updated recently"
+msgstr "Þessi viðbót hefur verið uppfærð nýlega"
+
+msgid "This plugin have no update since 3 years ! It may be outdated"
+msgstr "Þessi viðbót hefur ekki verið uppfærð í 3 ár! Hún kann að vera úreld"
+
+msgid "This plugin is incompatible with your version"
+msgstr "Þessi viðbót er ósamhæfð útgáfunni þinni"
+
+msgid "This plugin was updated less than 6 months ago"
+msgstr "Þessi viðbót var uppfærð fyrir minna en 6 mánuðum síðan"
+
+msgid "Try now !"
+msgstr "Reyndu núna !"
+
+msgid "Understood, do not show again"
+msgstr "Skil, ekki sýna aftur"
+
+msgid "Upload Formats"
+msgstr "Hlaða upp skráarsniðum"
+
+msgid "Version %s"
+msgstr "Útgáfa %s"
+
+msgid "Visited"
+msgstr "Heimsótt"
+
+msgid "Extensions"
+msgstr "Viðaukar"
+
+msgid "Global Gallery Actions"
+msgstr "Almennar aðgerðir myndasafns"
+
+msgid "Install Piwigo on mobile"
+msgstr "Setja Piwigo upp á farsíma"
+
+msgid "Last revision date is newer than"
+msgstr "Síðasta endurskoðunardagur er nýrri en"
+
+msgid "Latest Piwigo news"
+msgstr "Nýjustu Piwigo fréttir"
+
+msgid "Memories"
+msgstr "Minjagripir"
+
+msgid "More information"
+msgstr "Meiri upplýsingar"
+
+msgid "No format for this picture"
+msgstr "Ekkert skráarsnið fyrir þessa mynd"
+
+msgid "No picture found with the following name : %s."
+msgstr "Engin mynd fannst með eftirfarandi nafni: %s."
+
+msgid "No research in progress"
+msgstr "Engin rannsókn í gangi"
+
+msgid "No search in progress"
+msgstr "Engin leit í gangi"
+
+msgid "Object"
+msgstr "Hlutur"
+
+msgid "On %d rating(s)"
+msgstr "Á %d einkunn(um)"
+
+msgid "Picture to associate formats with"
+msgstr "Mynd til að tengja skráarsnið við"
+
+msgid "Piwigo core"
+msgstr "Piwigo kjarni"
+
+msgid "Piwigo is also on mobile."
+msgstr "Piwigo er einnig á farsíma."
+
+msgid "Properties of abums"
+msgstr "Eiginleikar albúma"
+
+msgid "Purge Actions"
+msgstr "Hreinsa aðgerðir"
+
+msgid "%d formats uploaded for %d photos"
+msgstr "%d skráarsnið send inn fyrir %d myndir"
+
+msgid "%s pixels, %.2f MB"
+msgstr "%s pixlar, %.2f MB"
+
+msgid "%sGB"
+msgstr "%s GB"
+
+msgid "%sMB"
+msgstr "%s MB"
+
+msgid "Add New Plugin"
+msgstr "Bættu við nýrri viðbót"
+
+msgid "Add another set of formats"
+msgstr "Bættu við öðru setti af skráasniðum"
+
+msgid "Add as filter"
+msgstr "Bæta við sem síu"
+
+msgid "Add formats"
+msgstr "Bæta við skráarsniðum"
+
+msgid "Additional filters"
+msgstr "Viðbótar síur"
+
+msgid "Are you sure you want to uninstall the plugin \"%s\"?"
+msgstr "Ertu viss um að þú viljir fjarlægja viðbótina \"%s\"?"
+
+msgid "Are you sure you want to unlock the gallery?"
+msgstr "Ertu viss um að þú viljir opna myndasafnið?"
+
+msgid "Certification higher or equal to"
+msgstr "Vottun hærri eða jöfn"
+
+msgid "Create a new album at root"
+msgstr "Búðu til nýtt albúm í rótinni"
+
+msgid "Create a sub-album of \"%s\""
+msgstr "Búðu til undiralbúm af \"%s\""
+
+msgid "Current Version"
+msgstr "Núverandi útgáfa"
+
+msgid "Currently running version %s"
+msgstr "Núna keyrt á útgáfu %s"
+
+msgid "Delete %s format ?"
+msgstr "Eyða %s skráarsniði?"
+
+msgid "Discover"
+msgstr "Skoða"
+
+msgid "Downloaded"
+msgstr "Hlaðið niður"
+
+msgid "Error when trying to detect formats"
+msgstr "Villa þegar reynt var að finna skráarsnið"
+
+msgid "Installed on %s, %s"
+msgstr "Uppsett á %s, %s"
+
+msgid "Place first"
+msgstr "Settu fyrst"
+
+msgid "Place last"
+msgstr "Settu síðast"
+
+msgid "This picture is physically linked to this album, you can't dissociate them"
+msgstr "Þessi mynd er raunlægt tengd þessu albúmi, þú getur ekki aðgreint þær."
+
+msgid "While restoring this plugin, it will be reset to its original parameters and associated data is going to be reset"
+msgstr "Þegar þessi viðbót er endurheimt verður hún endurstillt á upprunalegu stillibreyturnar og tengd gögn verða endurstillt"
+
+msgid "Always have a backup of your database and files."
+msgstr "Vertu alltaf með öryggisafrit af gagnagrunninum og skránum þínum."
+
+msgid "Details"
+msgstr "Smáatriði"
+
+msgid "If anything bad happens during the update, you would be able to restore a backup."
+msgstr "Ef eitthvað slæmt gerist meðan á uppfærslu stendur gætirðu endurheimt öryggisafrit."
+
+msgid "The best is to have them made automatically on a regular basis."
+msgstr "Best er að láta útbúa þær sjálfkrafa með reglubundnum hætti."
+
+msgid "This photo no longer exists"
+msgstr "Þessi mynd er ekki lengur til"
+
+msgid "Apply to root albums"
+msgstr "Virkja á rótaralbúmum"
+
+msgid "Album name must not be empty"
+msgstr "Heiti albúms má ekki vera autt"
+
+msgid "Visit history"
+msgstr "Heimsóknarsaga"
+
+msgid "Some photos are missing from your file system. Details provided by plugin Check Uploads"
+msgstr "Sumar myndir vantar í skráarkerfið þitt. Upplýsingar veittar af viðbótinni Athugaðu upphleðslur"
+
+msgid "%d pictures in sub-albums"
+msgstr "%d myndir í undiralbúmum"
+
+msgid "<b>%d</b> filtered user"
+msgstr "<b>%d</b> síaður notandi"
+
+msgid "<b>%d</b> filtered users"
+msgstr "<b>%d</b> síaðir notendur"
+
+msgid "%d in whole branch"
+msgstr "%d í öllum greinum"
+
+msgid "%d including sub-albums"
+msgstr "%d að meðtöldum undiralbúmum"
+
+msgid "Activate button \"%s\""
+msgstr "Virkjaðu hnappinn „%s“"
+
+msgid "All admins"
+msgstr "Allir stjórnendur"
+
+msgid "Allow comments for sub-albums"
+msgstr "Leyfa umsagnir fyrir undiralbúm"
+
+msgid "Authorize comments"
+msgstr "Heimila umsagnir"
+
+msgid "Comments allowed for sub-albums"
+msgstr "Umsagnir leyfðar fyrir undiralbúm"
+
+msgid "Comments disallowed for sub-albums"
+msgstr "Umsagnir ekki leyfð fyrir undiralbúm"
+
+msgid "Created"
+msgstr "Búið til"
+
+msgid "Detect and avoid duplicates during upload"
+msgstr "Finndu og forðastu afrit meðan á upphleðslu stendur"
+
+msgid "Disallow comments for sub-albums"
+msgstr "Ekki leyfa umsagnir fyrir undiralbúm"
+
+msgid "During upload, if Piwigo detects the photo already exists, associate the existing photo to the destination album, without duplicating file"
+msgstr "Við upphleðslu, ef Piwigo finnur að myndin er þegar til, tengdu núverandi mynd við áfangastaðalbúmið, án þess að afrita skrá"
+
+msgid "Locked album"
+msgstr "Læst albúm"
+
+msgid "Modified"
+msgstr "Breytt"
+
+msgid "Only admins in a specific group"
+msgstr "Aðeins stjórnendur í tilteknum hópi"
+
+msgid "Put at the root"
+msgstr "Settu í rótina"
+
+msgid "Remove thumbnail"
+msgstr "Fjarlægðu smámynd"
+
+msgid "This album is currently locked, visible only to administrators."
+msgstr "Þetta albúm er læst eins og er, aðeins sýnilegt stjórnendum."
+
+msgid "Unlock it"
+msgstr "Aflæsa því"
+
+msgid "Unlocked album"
+msgstr "Ólæst albúm"
+
+msgid "%d files"
+msgstr "%d skrár"
+
+msgid "Expand"
+msgstr "Stækka"
+
+msgid "Shrink"
+msgstr "Minnka"
+
+msgid "between %d and %d"
+msgstr "milli %d og %d"
+
+msgid "image(s) contains unsaved changes"
+msgstr "mynd(ir) innihalda óvistaðar breytingar"
+
+msgid "level of confidentiality"
+msgstr "stig trúnaðar"
+
+msgid "was succesfully deleted"
+msgstr "tókst að eyða"
+
+msgid "Activate create mode to create and select an album"
+msgstr "Virkjaðu stofnunarham til að búa til og velja albúm"
+
+msgid "Add a sub-album to “%s”"
+msgstr "Bættu undiralbúmi við \"%s“"
+
+msgid "Added on %s"
+msgstr "Bætt við þann %s"
+
+msgid "An error has occured"
+msgstr "Villa hefur komið upp"
+
+msgid "Auto-update"
+msgstr "Sjálfvirk uppfærsla"
+
+msgid "Changes saved"
+msgstr "Breytingar vistaðar"
+
+msgid "Core"
+msgstr "Kjarni"
+
+msgid "Create a root album"
+msgstr "Búðu til rótaralbúm"
+
+msgid "Create and select"
+msgstr "Stofnaðu og veldu"
+
+msgid "Create your first album"
+msgstr "Stofnaðu þitt fyrsta albúm"
+
+msgid "Creation mode"
+msgstr "Stofnunarhamur"
+
+msgid "First choose an album, then add your files"
+msgstr "Veldu fyrst albúm og bættu síðan skránum þínum við"
+
+msgid "Image"
+msgstr "Mynd"
+
+msgid "Metadata sync complete"
+msgstr "Samstillingu lýsigagna lokið"
+
+msgid "Pagination has changed and needs to be reloaded !"
+msgstr "Síðuskipting hefur breyst og þarf að endurhlaðast !"
+
+msgid "Save"
+msgstr "Vista"
+
+msgid "Select or create an album"
+msgstr "Velja eða stofna albúm"
+
+msgid "System Activities"
+msgstr "Kerfisvirkni"
+
+msgid "Who can see ?"
+msgstr "Hverja getum við séð ?"
+
+msgid "You have unsaved changes"
+msgstr "Þú ert með óvistaðar breytingar"
+
+msgid "Set as main user"
+msgstr "Setja sem aðalnotanda"
+
+msgid "The passwords do not match"
+msgstr "Lykilorðin passa ekki saman"
+
+msgid "This user must first be defined as the webmaster before it can be upgraded to the main user"
+msgstr "Þessi notandi verður fyrst að vera skilgreindur sem vefstjóri áður en hægt er að uppfæra hann í aðalnotanda"
+
+msgid "To be sure, please rewrite the word “%s” below"
+msgstr "Til að vera viss skaltu endurskrifa orðið “%s” hér að neðan"
+
+msgid "Username successfully modified"
+msgstr "Notandanafni breytt"
+
+msgid "Yes, let's proceed"
+msgstr "Já, höldum áfram"
+
+msgid "You are about to set %s as main user instead of %s, do you wish to continue ?"
+msgstr "Þú ert að fara að setja %s sem aðalnotanda í stað %s, viltu halda áfram?"
+
+msgid "You are not authorised to change the main user, please ask your webmaster"
+msgstr "Þú hefur ekki heimild til að breyta aðalnotandanum, spurðu vefstjórann þinn um þetta"
+
+msgid "You can now change the main user from %s to %s."
+msgstr "Þú getur núna breytt aðalnotandanum úr %s í %s."
+
+msgid "You cannot copy the password if the connection to this site is not secure."
+msgstr "Þú getur ekki afritað lykilorðið ef tengingin við þessa síðu er ekki örugg."
+
+msgid "Cannot send an email to this user because he doesn't have an email address"
+msgstr "Get ekki sent tölvupóst til þessa notanda vegna þess að hann er ekki með netfang"
+
+msgid "Changing the main user"
+msgstr "Skipta um aðalnotanda"
+
+msgid "Copied link"
+msgstr "Afritaður tengill"
+
+msgid "Copy password"
+msgstr "Afritaðu lykilorð"
+
+msgid "Copy the link below and send it to the user so the password can be set."
+msgstr "Afritaðu hlekkinn hér að neðan og sendu til notandans svo hægt sé að stilla lykilorðið."
+
+msgid "Copy the password link"
+msgstr "Afritaðu lykilorðstengilinn"
+
+msgid "Main user"
+msgstr "Aðalnotandi"
+
+msgid "Password copied"
+msgstr "Lykilorð afritað"
+
+msgid "Please complete all fields"
+msgstr "Fylltu út alla reiti"
+
+msgid "Resend password link"
+msgstr "Senda lykilorðstengil aftur"
+
+msgid "%s is the new main user"
+msgstr "%s er nýi aðalnotandinn"
+
+msgid "Ok, got it!"
+msgstr "Í lagi, náði því!"
+
+msgid "Read the release note"
+msgstr "Lestu útgáfuskýrsluna"
+
+msgid "What's new in version %s"
+msgstr "Hvað er nýtt í útgáfu %s?"
+
+msgid "A photo library administrator has created the following account for you:"
+msgstr "Stjórnandi myndasafns hefur útbúið eftirfarandi notandareikning fyrir þig:"
+
+msgid "An activation link valid for %s has been sent to \"%s\". If the user doesn't receive the link, you can generate and copy a new one by editing the user and managing her password."
+msgstr "Virkjunarhlekkur sem gildir fyrir %s hefur verið sendur á \"%s\". Ef notandinn fær ekki hlekkinn geturðu útbúið og afritað nýjan með því að breyta notandanum og stjórna lykilorðinu hans."
+
+msgid "An activation link valid for %s was created but could not be sent. You can now copy the link below and send it to the user."
+msgstr "Virkjunarhlekkur sem gildir fyrir %s var útbúinn en ekki var hægt að senda hann. Þú getur núna afritað hlekkinn hér að neðan og sent til notandans."
+
+msgid "This link is valid for %s. After this time, you will need to request a new link."
+msgstr "Þessi hlekkur gildir fyrir %s. Eftir þennan tíma þarftu að biðja um nýjan hlekk."
+
+msgid "To set your password, visit the following address:"
+msgstr "Til að stilla lykilorðið þitt skaltu fara á eftirfarandi veffang:"
+
+msgid "Welcome to %s"
+msgstr "Velkomin í %s"
+
+msgid "We have found %d duplicate paths. Details provided by plugin Check Uploads"
+msgstr "Við fundum %d tvíteknar slóðir. Upplýsingar frá viðbótinni Check Uploads"
+
+msgid "%d photos were moved from the upload lounge to their albums"
+msgstr "%d myndir voru færðar úr biðminni innsendinga í viðeigandi albúm"
+
+msgid "Are you sure you want to delete \"%d\" comments?"
+msgstr "Ertu viss um að þú viljir eyða \"%d\" athugasemdum?"
+
+msgid "Are you sure you want to delete comment #%s?"
+msgstr "Ertu viss um að þú viljir eyða athugasemd #%s?"
+
+msgid "Empty lounge"
+msgstr "Tæma biðsvæði"
+
+msgid "If a photo in this album has the same filename, update the file without changing the photo's properties"
+msgstr "Ef mynd í þessu albúmi hefur sama skráarnafn, uppfærðu skrána án þess að breyta eiginleikum myndarinnar."
+
+msgid "No comments selected, no actions possible."
+msgstr "Engar athugasemdir valdar, engar aðgerðir mögulegar."
+
+msgid "Save all photos"
+msgstr "Vista allar myndir"
+
+msgid "The comment has been validated."
+msgstr "Athugasemdin hefur verið staðfest."
+
+msgid "The comments have been validated."
+msgstr "Athugasemdirnar hafa verið staðfestar."
+
+msgid "There is currently %d photos in the lounge (upload buffer)"
+msgstr "Núna eru %d myndir á biðsvæðinu (biðminni innsendinga)"
+
+msgid "Use standard Piwigo template for common pages."
+msgstr "Notið staðlað Piwigo sniðmát fyrir algengar síður."
+
+msgid "When enabled, a common template is used for the login, registration and forgotten password pages, regardless of the theme. Some themes might use these templates even if you uncheck this option"
+msgstr "Þegar þetta er virkjað er sameiginlegt sniðmát notað fyrir síðurnar innskráning, skráning og gleymd lykilorð óháð þema. Sum þemu gætu notað þessi sniðmát jafnvel þótt þú hakir ekki við þennan valkost."
+
+msgid "Admins only"
+msgstr "Aðeins stjórnendur"
+
+msgid "user_status_normal"
+msgstr "Grunnatriði"
+
+msgid "Change logo"
+msgstr "Breyta lógói"
+
+msgid "Dark mode"
+msgstr "Dökk stilling"
+
+msgid "Display Gallery title"
+msgstr "Sýna titil gallerísins"
+
+msgid "Light mode"
+msgstr "Ljós stilling"
+
+msgid "Personalization settings"
+msgstr "Sérstillingar"
+
+msgid "Select a color theme for standard pages"
+msgstr "Veldu litaþema fyrir staðlaðar síður"
+
+msgid "Standard pages"
+msgstr "Staðlaðar síður"
+
+msgid "Standard pages aren't activated, however you have %d active themes that will still use them. These themes are:"
+msgstr "Staðlaðar síður eru ekki virkjaðar, en þú ert með %d virk þema/-u sem munu samt nota þær. Þessi þemu eru:"
+
+msgid "Standard pages header"
+msgstr "Haus fyrir staðlaðar síður"
+
+msgid "Use Piwigo logo"
+msgstr "Nota Piwigo lógóið"
+
+msgid "Use custom logo (png, jpeg or svg)"
+msgstr "Notið sérsniðið lógó (png, jpeg eða svg)"
+

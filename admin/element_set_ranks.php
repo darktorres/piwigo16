@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\AccessLevel;
+use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -53,7 +55,7 @@ $sort_fields = [
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_ADMINISTRATOR);
+check_status(AccessLevel::Administrator);
 
 if (! isset($_GET['cat_id']) or ! is_numeric($_GET['cat_id'])) {
     trigger_error('missing cat_id param', E_USER_ERROR);
@@ -104,7 +106,7 @@ if (isset($_POST['submit'])) {
         $message = l10n('Images manual order was saved');
     }
     $query = '
-UPDATE ' . CATEGORIES_TABLE . '
+UPDATE ' . Tables::categories() . '
   SET image_order = ' . (isset($image_order) ? '\'' . $image_order . '\'' : 'NULL') . '
   WHERE id=' . $page['category_id'];
     pwg_query($query);
@@ -116,7 +118,7 @@ UPDATE ' . CATEGORIES_TABLE . '
         }
 
         $query = '
-UPDATE ' . CATEGORIES_TABLE . '
+UPDATE ' . Tables::categories() . '
   SET image_order = ' . (isset($image_order) ? '\'' . $image_order . '\'' : 'NULL') . '
   WHERE uppercats LIKE \'' . $cat_info['uppercats'] . ',%\'';
         pwg_query($query);
@@ -142,7 +144,7 @@ $base_url = get_root_url() . 'admin.php';
 
 $query = '
 SELECT *
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE id = ' . $page['category_id'] . '
 ;';
 $category = pwg_db_fetch_assoc(pwg_query($query));
@@ -182,8 +184,8 @@ SELECT
     width, height, rotation,
     name,
     `rank`
-  FROM ' . IMAGES_TABLE . '
-    JOIN ' . IMAGE_CATEGORY_TABLE . ' ON image_id = id
+  FROM ' . Tables::images() . '
+    JOIN ' . Tables::imageCategory() . ' ON image_id = id
   WHERE category_id = ' . $page['category_id'] . '
   ORDER BY `rank`
 ;';

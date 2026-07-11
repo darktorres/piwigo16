@@ -1,0 +1,140 @@
+# Piwigo translation — en_GB
+# Source: install.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: en_GB\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Congratulations, Piwigo installation is completed"
+msgstr "Congratulations.  Piwigo installation is completed"
+
+msgid "Welcome to your new installation of Piwigo!"
+msgstr "Welcome to your new installation of Piwigo!"
+
+msgid "Welcome to my photo gallery"
+msgstr "Welcome to my photo gallery"
+
+msgid "Can't connect to server"
+msgstr "Cannot connect to server"
+
+msgid "Piwigo was not able to configure PHP 5."
+msgstr "Piwigo was not able to configure PHP 5.2"
+
+msgid "Sorry!"
+msgstr "Sorry!"
+
+msgid "Start Install"
+msgstr "Start installation"
+
+msgid "Try to configure PHP 5"
+msgstr "Try to configure PHP 5.2"
+
+msgid "also given by your host provider"
+msgstr "also supplied by your hosting provider"
+
+msgid "enter a login for webmaster"
+msgstr "please enter the webmaster username"
+
+msgid "localhost or other, supplied by your host provider"
+msgstr "localhost or other, supplied by your host provider"
+
+msgid "please enter your password again"
+msgstr "please enter your password again"
+
+msgid "user login given by your host provider"
+msgstr "user login supplied by your host provider"
+
+msgid "user password given by your host provider"
+msgstr "user password supplied by your host provider"
+
+msgid "verification"
+msgstr "verification"
+
+msgid "Keep it confidential, it enables you to access administration panel"
+msgstr "Keep it confidential, it enables you to access the administration panel"
+
+msgid "Just another Piwigo gallery"
+msgstr "Just another Piwigo gallery"
+
+msgid "It will be shown to the visitors. It is necessary for website administration"
+msgstr "It will be shown to visitors. It is necessary for website administration"
+
+msgid "Installation"
+msgstr "Installation"
+
+msgid "Host"
+msgstr "Host"
+
+msgid "Hope to see you back soon."
+msgstr "Hope to see you back soon."
+
+msgid "Download the config file"
+msgstr "Download the config file"
+
+msgid "Database name"
+msgstr "Database name"
+
+msgid "Database table prefix"
+msgstr "Database tables prefix"
+
+msgid "Default gallery language"
+msgstr "Default gallery language"
+
+msgid "Database configuration"
+msgstr "Database configuration"
+
+msgid "Admin configuration"
+msgstr "Administration configuration"
+
+msgid "Basic configuration"
+msgstr "Basic configuration"
+
+msgid "An alternate solution is to copy the text in the box above and paste it into the file \"local/config/database.inc.php\" (Warning : database.inc.php must only contain what is in the textarea, no line return or space character)"
+msgstr "An alternate solution is to copy the text in the box above and paste it into the file \"local/config/database.inc.php\" (Warning: database.inc.php must only contain what is in the textarea, no line return or space character)"
+
+msgid "Connection to server succeed, but it was impossible to connect to database"
+msgstr "Connection to server successful, but the connection to the database was not possible."
+
+msgid "Creation of config file local/config/database.inc.php failed."
+msgstr "Creation of config file local/config/database.inc.php failed."
+
+msgid "Don't hesitate to consult our forums for any help : %s"
+msgstr "Don't hesitate to consult our forums for any help: %s"
+
+msgid "It appears your webhost is currently running PHP %s."
+msgstr "It appears your webhost is currently running PHP %s."
+
+msgid "Need help ? Ask your question on <a href=\"%s\">Piwigo message board</a>."
+msgstr "Need help? Ask your question on the <a href=\"%s\">Piwigo message board</a>."
+
+msgid "Note you can change your configuration by yourself and restart Piwigo after that."
+msgstr "Note you can change your configuration by yourself and then restart Piwigo."
+
+msgid "PHP 5 is required"
+msgstr "PHP 5.2 is required"
+
+msgid "Piwigo may try to switch your configuration to PHP 5 by creating or modifying a .htaccess file."
+msgstr "Piwigo may try to switch your configuration to PHP 5.2 by creating or modifying a .htaccess file."
+
+msgid "User"
+msgstr "User"
+
+msgid "Visitors will be able to contact site administrator with this mail"
+msgstr "Visitors will be able to use this email to contact the site administrator"
+
+msgid "You can download the config file and upload it to local/config directory of your installation."
+msgstr "You can download the config file and upload it to the local/config directory in your installation."
+
+msgid "You may referer to your hosting provider's support and see how you could switch to PHP 5 by yourself."
+msgstr "You should refer to your hosting provider's support and see how you can switch to PHP 5.2 by yourself."
+
+msgid "database tables names will be prefixed with it (enables you to manage better your tables)"
+msgstr "database table names will be prefixed with it (enables you to manage your tables better)"
+
+msgid "webmaster login can't contain characters ' or \""
+msgstr "the webmaster login may not contain the characters ' or \""
+

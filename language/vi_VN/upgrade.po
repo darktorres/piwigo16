@@ -1,0 +1,65 @@
+# Piwigo translation — vi_VN
+# Source: upgrade.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: vi_VN\n"
+"Plural-Forms: nplurals=1; plural=(0);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Upgrade"
+msgstr "Nâng cấp"
+
+msgid "Upgrade from version %s to %s"
+msgstr "Nâng cấp từ phiên bản %s lên phiên bản %s"
+
+msgid "Statistics"
+msgstr "Thống kê"
+
+msgid "total upgrade time"
+msgstr "tổng thời gian nâng cấp"
+
+msgid "total SQL time"
+msgstr "tổng thời gian truy vấn SQL"
+
+msgid "SQL queries"
+msgstr "Truy vấn SQL"
+
+msgid "Upgrade informations"
+msgstr "Thông tin bản nâng cấp"
+
+msgid "Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem."
+msgstr "Chạy chế độ kiểm tra bảo trì trong mục [Administration>Tools>Maintenance] trong trường hợp bạn gặp lỗi."
+
+msgid "Only administrator can run upgrade: please sign in below."
+msgstr "Chỉ có Quản trị mới có thể nâng cấp: vui lòng đăng nhập trước."
+
+msgid "You do not have access rights to run upgrade"
+msgstr "Bạn không có đủ quyền hạn để có thể nâng cấp hệ thống"
+
+msgid "All sub-albums of private albums become private"
+msgstr "Tất cả các đề mục con của những đề mục riêng đều được gán thuộc tính riêng tư."
+
+msgid "User permissions and group permissions have been erased"
+msgstr "Sự cho phép người dùng và nhóm người dùng đã được xóa bỏ."
+
+msgid "Only thumbnails prefix and webmaster mail address have been saved from previous configuration"
+msgstr "Chỉ có hình thu nhỏ đứng trước và địa chỉ email của webmaster mới được lưu lại từ cấu hình của phiên bản cũ."
+
+msgid "This page proposes to upgrade your database corresponding to your old version of Piwigo to the current version. The upgrade assistant thinks you are currently running a <strong>release %s</strong> (or equivalent)."
+msgstr "Trang này này nhằm mục đích nâng cấp cơ sở dữ liệu từ phiên bản Piwigo cũ của bạn lên phiên bản mới. Phần hỗ trợ nâng cấp hiểu rằng bạn đang sử dụng <strong>phiên bản %s</strong> (hoặc tương đương)."
+
+msgid "As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:"
+msgstr "Nhằm đề phòng, những plugins sau đây đã bị vô hiệu hóa. Bạn phải kiểm tra bản nâng cấp của plugin trước khi kích hoạt lại chúng:"
+
+msgid "In <i>%s</i>, before <b>?></b>, insert:"
+msgstr "Trong <i>%s</i>, trước <b>?></b>, chèn vào:"
+
+msgid "As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:"
+msgstr "Như một biện pháp dự phòng lỗi, giao diện sau đây đã bị vô hiệu hóa. Bạn phải kiểm tra bản nâng cấp giao diện trước khi kích hoạt lại:"
+
+msgid "Discover what's new in Piwigo %s"
+msgstr "Khám phá những tính năng mới trong Piwigo %s"
+

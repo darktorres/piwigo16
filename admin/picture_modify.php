@@ -9,6 +9,9 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\AccessLevel;
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\SrcImage;
 use Piwigo\Template\Template;
@@ -33,14 +36,14 @@ include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_ADMINISTRATOR);
+check_status(AccessLevel::Administrator);
 
-check_input_parameter('image_id', $_GET, false, PATTERN_ID);
+check_input_parameter('image_id', $_GET, false, ValidationPattern::ID);
 check_input_parameter('level', $_POST, false, '/^\d+$/');
 check_input_parameter('date_creation', $_POST, false, '/^\d\d\d\d-\d\d-\d\d( \d\d:\d\d:\d\d)?$/');
 
 // check_input_parameter() only validates the raw $_GET value against
-// PATTERN_ID (or dies); it does not narrow $_GET's type for PHPStan, so
+// ValidationPattern::ID (or dies); it does not narrow $_GET's type for PHPStan, so
 // re-derive a real int here for every later use.
 $image_id = 0;
 if (isset($_GET['image_id']) && is_numeric($_GET['image_id'])) {
@@ -57,7 +60,7 @@ if (! isset($page['image'])) {
 // represent
 $query = '
 SELECT id
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE representative_picture_id = ' . $image_id . '
 ;';
 $represented_albums_raw = query2array($query, null, 'id');
@@ -143,7 +146,7 @@ if (isset($_POST['submit'])) {
 
     /** @var array<string, mixed> $data */
     single_update(
-        IMAGES_TABLE,
+        Tables::images(),
         $data,
         [
             'id' => $image_id,
@@ -166,7 +169,7 @@ if (isset($_POST['submit'])) {
     if (! isset($_POST['associate'])) {
         $_POST['associate'] = [];
     }
-    check_input_parameter('associate', $_POST, true, PATTERN_ID);
+    check_input_parameter('associate', $_POST, true, ValidationPattern::ID);
 
     $associate_categories = [];
     if (is_array($_POST['associate'])) {
@@ -184,7 +187,7 @@ if (isset($_POST['submit'])) {
     if (! isset($_POST['represent'])) {
         $_POST['represent'] = [];
     }
-    check_input_parameter('represent', $_POST, true, PATTERN_ID);
+    check_input_parameter('represent', $_POST, true, ValidationPattern::ID);
 
     $represent_categories = [];
     if (is_array($_POST['represent'])) {
@@ -203,7 +206,7 @@ if (isset($_POST['submit'])) {
     $new_thumbnail_for = array_diff($represent_categories, $represented_albums);
     if (count($new_thumbnail_for) > 0) {
         $query = '
-UPDATE ' . CATEGORIES_TABLE . '
+UPDATE ' . Tables::categories() . '
   SET representative_picture_id = ' . $image_id . '
   WHERE id IN (' . implode(',', $new_thumbnail_for) . ')
 ;';
@@ -229,8 +232,8 @@ $query = '
 SELECT
     id,
     name
-  FROM ' . IMAGE_TAG_TABLE . ' AS it
-    JOIN ' . TAGS_TABLE . ' AS t ON t.id = it.tag_id
+  FROM ' . Tables::imageTag() . ' AS it
+    JOIN ' . Tables::tags() . ' AS t ON t.id = it.tag_id
   WHERE image_id = ' . $image_id . '
 ;';
 $tag_selection = get_taglist($query);
@@ -327,7 +330,7 @@ $uf_id = is_string($user_fields['id'] ?? null) ? $user_fields['id'] : '';
 $row_added_by_str = is_numeric($row['added_by']) ? (string) (int) $row['added_by'] : '0';
 $query = '
 SELECT ' . $uf_username . ' AS username
-  FROM ' . USERS_TABLE . '
+  FROM ' . Tables::users() . '
   WHERE ' . $uf_id . ' = ' . $row_added_by_str . '
 ;';
 $result = pwg_query($query);
@@ -354,7 +357,7 @@ if ((bool) $conf['rate'] and ! empty($row['rating_score'])) {
     $query = '
 SELECT
     COUNT(*)
-  FROM ' . RATE_TABLE . '
+  FROM ' . Tables::rate() . '
   WHERE element_id = ' . $image_id . '
 ;';
     $rate_row = pwg_db_fetch_row(pwg_query($query));
@@ -373,7 +376,7 @@ SELECT
 $row_id_str = is_numeric($row['id']) ? (string) (int) $row['id'] : '0';
 $query = '
 SELECT *
-  FROM ' . IMAGE_FORMAT_TABLE . '
+  FROM ' . Tables::imageFormat() . '
   WHERE image_id = ' . $row_id_str . '
 ;';
 $formats = query2array($query);
@@ -409,8 +412,8 @@ $template->assign(
 // categories
 $query = '
 SELECT category_id, uppercats, dir
-  FROM ' . IMAGE_CATEGORY_TABLE . ' AS ic
-    INNER JOIN ' . CATEGORIES_TABLE . ' AS c
+  FROM ' . Tables::imageCategory() . ' AS ic
+    INNER JOIN ' . Tables::categories() . ' AS c
       ON c.id = ic.category_id
   WHERE image_id = ' . $image_id . '
 ;';
@@ -464,7 +467,7 @@ if ((bool) ($custom_context = get_edit_context($image_id))) {
 } elseif ((is_numeric($user['level']) ? (int) $user['level'] : 0) >= $image_level) {
     $query = '
 SELECT category_id
-  FROM ' . IMAGE_CATEGORY_TABLE . '
+  FROM ' . Tables::imageCategory() . '
   WHERE image_id = ' . $image_id . '
 ;';
 
@@ -501,8 +504,8 @@ SELECT category_id
 // associate to albums
 $query = '
 SELECT id
-  FROM ' . CATEGORIES_TABLE . '
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id = category_id
+  FROM ' . Tables::categories() . '
+    INNER JOIN ' . Tables::imageCategory() . ' ON id = category_id
   WHERE image_id = ' . $image_id . '
 ;';
 $associated_albums = query2array($query, null, 'id');

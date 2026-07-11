@@ -10,6 +10,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\languages;
+use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
@@ -124,7 +125,7 @@ $missing_language_ids = array_diff(
 
 foreach ($missing_language_ids as $language_id) {
     $query = '
-UPDATE ' . USER_INFOS_TABLE . '
+UPDATE ' . Tables::userInfos() . '
   SET language = \'' . get_default_language() . '\'
   WHERE language = \'' . $language_id . '\'
 ;';
@@ -132,7 +133,7 @@ UPDATE ' . USER_INFOS_TABLE . '
 
     $query = '
 DELETE
-  FROM ' . LANGUAGES_TABLE . '
+  FROM ' . Tables::languages() . '
   WHERE id= \'' . $language_id . '\'
 ;';
     pwg_query($query);

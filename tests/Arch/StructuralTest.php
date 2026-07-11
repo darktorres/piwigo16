@@ -298,6 +298,76 @@ test('Config::loadArray() is only called from tests/', function (): void {
     expect(describeCallSites($hits))->toBe([]);
 });
 
+// P16: src/Piwigo/ is the typed source of truth for the 52 retired
+// include/constants.php constants (AppInfo/AccessLevel/ActivitySystem/
+// ValidationPattern/Tables/Config accessors) -- a regression guard, not a
+// migration (this specific claim -- zero define() calls -- was already
+// true before this phase; the 52-constant sweep confirmed it, this locks
+// it in). Legacy include//admin/ root entry points are explicitly NOT
+// scanned: PHPWG_ROOT_PATH keeps being define()'d there (its own literal
+// './' value, deliberately unchanged -- see index.php's own docblock) for
+// the not-yet-migrated call sites.
+//
+// A sibling "no PHPWG_ROOT_PATH read in src/Piwigo/" test was deliberately
+// NOT added here despite the plan doc's "already true today" claim for it
+// too -- that claim was verified WRONG: PHPWG_ROOT_PATH is read directly
+// in ~50 real (non-comment) call sites across 12 src/Piwigo/ files
+// (Admin/updates.php, Admin/plugins.php, Admin/languages.php,
+// Admin/themes.php, Image/SrcImage.php, Image/DerivativeImage.php,
+// Template/Template.php, Template/FileCombiner.php, Cache/
+// PersistentFileCache.php), all pre-existing (P6-era), not introduced by
+// P16. This is exactly the "885-usage bulk Paths migration across
+// include//admin/" work already scoped to P17-23 by this phase's own
+// plan -- adding an enforcement test for a claim that isn't true yet would
+// need a ~50-entry exclusion list that only grows, defeating the point of
+// a regression guard. Revisit once that migration actually lands.
+//
+// Comment-aware (unlike findCallSites() above, plain substring match):
+// "define()" is common in explanatory prose (e.g. "the N define()
+// constants this class replaces"), and demanding every present and future
+// comment avoid that literal substring is far more fragile than just not
+// scanning comment lines for this one check.
+
+/**
+ * @return list<array{path: string, line: int}>
+ */
+function findCallSitesOutsideComments(string $dir, string $needle): array
+{
+    $hits = [];
+    if (! is_dir($dir)) {
+        return $hits;
+    }
+    $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS));
+
+    foreach ($iterator as $file) {
+        /** @var SplFileInfo $file RecursiveIteratorIterator loses this over RecursiveDirectoryIterator */
+        if (! $file->isFile() || $file->getExtension() !== 'php') {
+            continue;
+        }
+
+        $lines = file($file->getPathname());
+        foreach ($lines !== false ? $lines : [] as $lineNumber => $line) {
+            $trimmed = ltrim($line);
+            if (str_starts_with($trimmed, '//') || str_starts_with($trimmed, '*') || str_starts_with($trimmed, '/*')) {
+                continue;
+            }
+            if (str_contains($line, $needle)) {
+                $hits[] = ['path' => $file->getPathname(), 'line' => $lineNumber + 1];
+            }
+        }
+    }
+
+    return $hits;
+}
+
+test('src/Piwigo/ contains no define() calls', function (): void {
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'define(');
+
+    expect(describeCallSites($hits))->toBe([]);
+});
+
 test('RequestFactory, ResponseEmitter, CommonBootstrap, and the P9 middleware/pipeline/routing classes declare only readonly state', function (): void {
     // SEC-60 (worker-isolation, partial verification): these classes must stay
     // free of MUTABLE state so a future FrankenPHP worker loop can reuse them

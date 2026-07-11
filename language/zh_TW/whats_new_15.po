@@ -1,0 +1,23 @@
+# Piwigo translation — zh_TW
+# Source: whats_new_15.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: zh_TW\n"
+"Plural-Forms: nplurals=1; plural=(0);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "A new interface for user management"
+msgstr "新的使用者管理界面"
+
+msgid "Brand new features : Activities logs and PDF reader"
+msgstr "全新功能：活動記錄以及 PDF 閱讀器"
+
+msgid "Enhanced interface for batch manager and album selector"
+msgstr "更新批次動作管理員和相簿選擇器的使用介面"
+
+msgid "Even more filters for the gallery search engine"
+msgstr "增加更多藝廊搜尋引擎的篩選條件"
+

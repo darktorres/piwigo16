@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Db\Tables;
+
 /**
  * Returns slideshow default params.
  * - period
@@ -126,7 +128,7 @@ function increase_image_visit_counter($image_id): void
     // avoiding auto update of "lastmodified" field
     $query = '
 UPDATE
-  ' . IMAGES_TABLE . '
+  ' . Tables::images() . '
   SET hit = hit+1, lastmodified = lastmodified
   WHERE id = ' . $image_id . '
 ;';

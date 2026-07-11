@@ -12,6 +12,9 @@ declare(strict_types=1);
 use Piwigo\Admin\languages;
 use Piwigo\Admin\updates;
 use Piwigo\Cache\PersistentFileCache;
+use Piwigo\Config\Config;
+use Piwigo\Core\AppInfo;
+use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 // right after the overwrite of previous version files by the unzip in the administration,
@@ -47,9 +50,15 @@ if ($php_end_tag === false) {
 
 include $config_file;
 
-// $conf is not used for users tables - define cannot be re-defined
-define('USERS_TABLE', $prefixeTable . 'users');
-include_once PHPWG_ROOT_PATH . 'include/constants.php';
+// Piwigo\Db\Tables::*() (used below and by admin/include/functions.php's
+// own procedural functions once included) reads Config::dbPrefix() --
+// this script never goes through Kernel::boot()/ConfigLoader (the DB
+// isn't necessarily configured yet), so $prefixeTable (resolved above
+// from database.inc.php, independent of $conf) must be seeded into
+// Config's static state directly, or every Tables::*() call downstream
+// silently falls back to the 'piwigo_' SCHEMA default instead of the
+// real prefix.
+Config::override('db_prefix', $prefixeTable);
 define('PREFIX_TABLE', $prefixeTable);
 define('UPGRADES_PATH', PHPWG_ROOT_PATH . 'install/db');
 
@@ -158,7 +167,7 @@ if (isset($_GET['language'])) {
     $language = is_string($_GET['language']) ? strip_tags($_GET['language']) : '';
 
     if (! in_array($language, array_keys($languages->fs_languages))) {
-        $language = PHPWG_DEFAULT_LANGUAGE;
+        $language = AppInfo::DEFAULT_LANGUAGE;
     }
 } else {
     $language = 'en_UK';
@@ -227,7 +236,7 @@ $template->set_filenames([
 ]);
 $template->assign(
     [
-        'RELEASE' => PHPWG_VERSION,
+        'RELEASE' => AppInfo::VERSION,
         'L_UPGRADE_HELP' => l10n('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.', PHPWG_URL . '/forum'),
     ]
 );
@@ -238,7 +247,7 @@ $template->assign(
 
 $has_remote_site = false;
 
-$query = 'SELECT galleries_url FROM ' . SITES_TABLE . ';';
+$query = 'SELECT galleries_url FROM ' . Tables::sites() . ';';
 $result = pwg_query($query);
 while ((bool) ($row = pwg_db_fetch_assoc($result))) {
     $galleries_url = $row['galleries_url'] ?? null;
@@ -337,7 +346,7 @@ SELECT id
         $current_release = '15.0.0';
     } else {
         // confirm that the database is in the same version as source code files
-        conf_update_param('piwigo_db_version', get_branch_from_version(PHPWG_VERSION));
+        conf_update_param('piwigo_db_version', get_branch_from_version(AppInfo::VERSION));
 
         header('Content-Type: text/html; charset=' . get_pwg_charset());
         echo 'No upgrade required, the database structure is up to date';
@@ -359,8 +368,8 @@ $page['errors'] = [];
 $mysql_changes = [];
 
 // check php version
-if (version_compare(PHP_VERSION, REQUIRED_PHP_VERSION, '<')) {
-    $page['errors'][] = l10n('PHP version %s required (you are running on PHP %s)', REQUIRED_PHP_VERSION, PHP_VERSION);
+if (version_compare(PHP_VERSION, AppInfo::REQUIRED_PHP_VERSION, '<')) {
+    $page['errors'][] = l10n('PHP version %s required (you are running on PHP %s)', AppInfo::REQUIRED_PHP_VERSION, PHP_VERSION);
 }
 
 check_upgrade_access_rights();
@@ -388,7 +397,7 @@ if ((isset($_POST['submit']) or isset($_GET['now']))
         $mysql_changes_raw = $included_vars['mysql_changes'] ?? null;
         $mysql_changes = is_array($mysql_changes_raw) ? array_filter($mysql_changes_raw, is_string(...)) : [];
 
-        conf_update_param('piwigo_db_version', get_branch_from_version(PHPWG_VERSION));
+        conf_update_param('piwigo_db_version', get_branch_from_version(AppInfo::VERSION));
 
         // Conf delete param on last major update for whats new popin to be displayed when changing major version
         conf_delete_param('last_major_update');
@@ -468,11 +477,11 @@ if ((isset($_POST['submit']) or isset($_GET['now']))
 
         // if the webmaster has a session, let's give a link to discover new features
         if (! empty($_SESSION['pwg_uid'])) {
-            $version_ = str_replace('.', '_', get_branch_from_version(PHPWG_VERSION) . '.0');
+            $version_ = str_replace('.', '_', get_branch_from_version(AppInfo::VERSION) . '.0');
 
             if (file_exists(PHPWG_PLUGINS_PATH . 'TakeATour/tours/' . $version_ . '/config.inc.php')) {
                 $query = '
-REPLACE INTO ' . PLUGINS_TABLE . '
+REPLACE INTO ' . Tables::plugins() . '
   (id, state)
   VALUES (\'TakeATour\', \'active\')
 ;';
@@ -483,7 +492,7 @@ REPLACE INTO ' . PLUGINS_TABLE . '
 
                 $template->assign(
                     [
-                        'button_label' => l10n('Discover what\'s new in Piwigo %s', get_branch_from_version(PHPWG_VERSION)),
+                        'button_label' => l10n('Discover what\'s new in Piwigo %s', get_branch_from_version(AppInfo::VERSION)),
                         'button_link' => 'admin.php?submited_tour_path=tours/' . $version_ . '&amp;pwg_token=' . get_pwg_token(),
                     ]
                 );

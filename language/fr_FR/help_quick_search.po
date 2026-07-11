@@ -1,0 +1,161 @@
+# Piwigo translation — fr_FR
+# Source: help_quick_search.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: fr_FR\n"
+"Plural-Forms: nplurals=3; plural=((n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Search using extended syntax"
+msgstr "Rechercher avec la syntaxe étendue"
+
+msgid "The quick search engine allows you to use boolean operators to refine your search. By default, the search applies to all keywords. Searches are not case sensitive."
+msgstr "Le moteur de recherche rapide permet d’utiliser les opérateurs booléens pour affiner votre recherche. Par défaut, la recherche s’applique à l’ensemble des mots clés. Les recherches ne sont pas sensibles à la casse."
+
+msgid "Here is a list of actions you can perform:"
+msgstr "Voici la liste des actions que vous pouvez effectuer :"
+
+msgid "Exact search"
+msgstr "Recherche exacte"
+
+msgid "Use quotes to search for an exact keyword or phrase."
+msgstr "Utilisez des guillemets pour rechercher un mot-clé ou une phrase exacte."
+
+msgid "OR inclusive"
+msgstr "OU inclusif"
+
+msgid "Add an OR between words."
+msgstr "Ajoutez un OR entre les mots."
+
+msgid "Exclude"
+msgstr "Exclure"
+
+msgid "Add a dash (-) or NOT before a word to exclude from search. Note that NOT acts as a filtering operator so you cannot have a search containing only NOT operators. You cannot combine OR with NOT (john OR NOT bill is not valid)"
+msgstr "Ajoutez un tiret (-) ou NOT devant un mot pour l’exclure de la recherche. Notez que NOT agit comme un opérateur de filtrage, vous ne pouvez donc pas effectuer une recherche contenant uniquement des opérateurs NOT. Vous ne pouvez pas combiner OR avec NOT (john OR NOT bill n’est pas valide)."
+
+msgid "Grouping"
+msgstr "Groupement"
+
+msgid "Searches only in tag names without looking at photo titles or descriptions."
+msgstr "Recherche uniquement dans les noms de tags sans tenir compte des titres ou descriptions des photos."
+
+msgid "Searches only for photos with the given words in title or description."
+msgstr "Recherche uniquement les photos contenant les mots donnés dans le titre ou la description."
+
+msgid "Searches by file name."
+msgstr "Recherche par nom de fichier."
+
+msgid "Searches by author."
+msgstr "Recherche par auteur."
+
+msgid "photos taken in 2003"
+msgstr "photos prises en 2003"
+
+msgid "photos from may 2003"
+msgstr "photos de mai 2003"
+
+msgid "photos from 2003 to 2008"
+msgstr "photos de 2003 à 2008"
+
+msgid "photos after Jan 1st 2008"
+msgstr "photos après le 1er janvier 2008"
+
+msgid "Searches photos by taken date."
+msgstr "Recherche des photos par date de prise de vue."
+
+msgid "Searches photos by posted date."
+msgstr "Recherche des photos par date de publication."
+
+msgid "Searches photos with a given width or height."
+msgstr "Recherche des photos avec une largeur ou hauteur donnée."
+
+msgid "returns photos of 5 megapixels"
+msgstr "renvoie des photos de 5 mégapixels"
+
+msgid "returns photos of 12 megapixels or more"
+msgstr "renvoie des photos de 12 mégapixels ou plus"
+
+msgid "Searches photos by size in pixels."
+msgstr "Recherche des photos par taille en pixels."
+
+msgid "finds photos from compact cameras in portrait or landscape modes"
+msgstr "trouve des photos d’appareils compacts en mode portrait ou paysage"
+
+msgid "finds panoramas"
+msgstr "trouve des panoramas"
+
+msgid "Searches photos by width/height ratio."
+msgstr "Recherche des photos par ratio largeur/hauteur."
+
+msgid "will give you all photos with at least one note."
+msgstr "renverra toutes les photos avec au moins une note."
+
+msgid "will give you photos without notes."
+msgstr "renverra les photos sans notes."
+
+msgid "finds files between 1MB and 10MB."
+msgstr "trouve des fichiers entre 1 Mo et 10 Mo."
+
+msgid "Searches photos by file size."
+msgstr "Recherche des photos par taille de fichier."
+
+msgid "finds photo 123 to 126 (it may find between 0 and 4 photos, because photos can be deleted)"
+msgstr "trouve les photos 123 à 126 (il peut en trouver entre 0 et 4, car des photos peuvent avoir été supprimées)"
+
+msgid "Searches photos by its numeric identifier in Piwigo."
+msgstr "Recherche des photos par leur identifiant numérique dans Piwigo."
+
+msgid "Same principle as for"
+msgstr "Même principe que pour"
+
+msgid "photos posted in 2003"
+msgstr "photos publiées en 2003"
+
+msgid "return photos wider than 500px"
+msgstr "renvoie des photos dont la largeur dépasse 500px"
+
+msgid "return photos less than 700px high"
+msgstr "renvoie des photos dont la hauteur est inférieure à 700px"
+
+msgid "return photos with at least 1,000 views"
+msgstr "renvoie des photos ayant été vues au moins 1 000 fois"
+
+msgid "Searches photos by rating."
+msgstr "Recherches de photos par note."
+
+msgid "Searches for photos by number of views."
+msgstr "Recherches de photos par nombre de vues."
+
+msgid "With keywords"
+msgstr "Avec mots-clés"
+
+msgid "Supported numeric operators"
+msgstr "Opérateurs numériques pris en charge"
+
+msgid "equals 100"
+msgstr "égal à 100"
+
+msgid "greater than 100"
+msgstr "supérieur à 100"
+
+msgid "less than 100"
+msgstr "inférieur à 100"
+
+msgid "between 10 and 100 (inclusive)"
+msgstr "entre 10 et 100 (inclus)"
+
+msgid "up to 100 (inclusive)"
+msgstr "jusqu'à 100 (inclus)"
+
+msgid "from 100 and above"
+msgstr "à partir de 100 et plus"
+
+msgid "These operators can be used with numeric fields such as"
+msgstr "Ces opérateurs peuvent être utilisés avec des champs numériques tels que"
+
+msgid "Others"
+msgstr "Autres"
+

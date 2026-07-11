@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\AccessLevel;
+use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 // +-----------------------------------------------------------------------+
@@ -37,7 +39,7 @@ function find_available_feed_id(): string
         $key = generate_key(50);
         $query = '
 SELECT COUNT(*)
-  FROM ' . USER_FEED_TABLE . '
+  FROM ' . Tables::userFeed() . '
   WHERE id = \'' . $key . '\'
 ;';
         $row = pwg_db_fetch_row(pwg_query($query));
@@ -52,7 +54,7 @@ SELECT COUNT(*)
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_GUEST);
+check_status(AccessLevel::Guest);
 
 trigger_notify('loc_begin_notification');
 
@@ -70,7 +72,7 @@ $page['feed'] = $feed_id;
 $user_id = is_numeric($user['id']) ? (int) $user['id'] : 0;
 
 $query = '
-INSERT INTO ' . USER_FEED_TABLE . '
+INSERT INTO ' . Tables::userFeed() . '
   (id, user_id, last_check)
   VALUES
   (\'' . $feed_id . '\', ' . $user_id . ', NULL)

@@ -1,0 +1,143 @@
+# Piwigo translation — eu_ES
+# Source: install.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: eu_ES\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Piwigo may try to switch your configuration to PHP 5 by creating or modifying a .htaccess file."
+msgstr "Piwigo saia daiteke konfigurazioa PHP 5.2 bertsiora aldatzen  .htacces fitxategi bat sortuz edo aldatuz."
+
+msgid "You may referer to your hosting provider's support and see how you could switch to PHP 5 by yourself."
+msgstr "Zure ostalariaren laguntza-zerbitzura jo beharko zenuke eta PHP 5.2ra aldatzeko proposatzen diren pausuak jarraitu."
+
+msgid "please enter your password again"
+msgstr "idatzi pasahitza eta saiatu berriro"
+
+msgid "localhost or other, supplied by your host provider"
+msgstr "localhost edo besterik, zure ostalariak emana"
+
+msgid "also given by your host provider"
+msgstr "zure ostalariak emana baita ere"
+
+msgid "enter a login for webmaster"
+msgstr "idatzi web-arduradunaren erabiltzaile-izena"
+
+msgid "database tables names will be prefixed with it (enables you to manage better your tables)"
+msgstr "datu-basearen taula-izenek eramango duten aurrizkia (taulak kudeatzeko lagungarria)"
+
+msgid "You can download the config file and upload it to local/config directory of your installation."
+msgstr "Konfigurazio-fitxategia deskargatu eta zure instalazioaren local/config direktorioan kargatu dezakezu."
+
+msgid "Welcome to your new installation of Piwigo!"
+msgstr "Ongietorri zure Piwigo instalazio berrira"
+
+msgid "Welcome to my photo gallery"
+msgstr "Ongietorri nire argazki-galeriara"
+
+msgid "Visitors will be able to contact site administrator with this mail"
+msgstr "Bisitariek helbide elektroniko hau erabiltzeko aukera izango dute guneko administrariarekin kontaktatzeko"
+
+msgid "User"
+msgstr "Erabiltzailea"
+
+msgid "Try to configure PHP 5"
+msgstr "Saiatu PHP 5.2ra konfiguratzen"
+
+msgid "Piwigo was not able to configure PHP 5."
+msgstr "Piwigok ezin izan du PHP 5.2ra konfiguratu"
+
+msgid "Start Install"
+msgstr "Hasi instalazioa"
+
+msgid "Sorry!"
+msgstr "Barkatu!"
+
+msgid "PHP 5 is required"
+msgstr "PHP 5.2 behar da"
+
+msgid "Note you can change your configuration by yourself and restart Piwigo after that."
+msgstr "Kontuan izan zure konfigurazioa aldatu eta Piwigo berrabiarazteko aukera duzula."
+
+msgid "Need help ? Ask your question on <a href=\"%s\">Piwigo message board</a>."
+msgstr "Laguntzarik behar? Galdetu <a href=\"%s\">Piwigo foroan</a>."
+
+msgid "user login given by your host provider"
+msgstr "zure ostalariak emandako erabiltzaile-izena"
+
+msgid "user password given by your host provider"
+msgstr "zure ostalariak emandako erabiltzaile-pasahitza"
+
+msgid "verification"
+msgstr "egiaztapena"
+
+msgid "webmaster login can't contain characters ' or \""
+msgstr "web-arduradunaren izenak ezin ditu izan ' edo \" karaktererik"
+
+msgid "An alternate solution is to copy the text in the box above and paste it into the file \"local/config/database.inc.php\" (Warning : database.inc.php must only contain what is in the textarea, no line return or space character)"
+msgstr "Ordezko konponbide modura kopiatu goiko koadroko testua eta itsatsi \"local/config/database.inc.php\" fitxategian (Oharra: database.inc.php fitxategiak testu-eremuan dagoena baino ez du eduki behar, ez lerro-saltorik ez hutsunerik)"
+
+msgid "Keep it confidential, it enables you to access administration panel"
+msgstr "Mantendu ezkutuan, administrazio-panelera sartzen gaitzen dizu"
+
+msgid "Just another Piwigo gallery"
+msgstr "Beste Piwigo galeria bat"
+
+msgid "It will be shown to the visitors. It is necessary for website administration"
+msgstr "Bisitariei erakutsiko zaie. Beharrezkoa da webguneen administraziorako"
+
+msgid "It appears your webhost is currently running PHP %s."
+msgstr "Antza denez, zure web ostalariak PHP %s exekutatzen ari da. "
+
+msgid "Installation"
+msgstr "Instalazioa"
+
+msgid "Host"
+msgstr "Ostalaria"
+
+msgid "Hope to see you back soon."
+msgstr "Ea laster ikusten dugun elkar berriro."
+
+msgid "Download the config file"
+msgstr "Deskargatu konfigurazio-fitxategia"
+
+msgid "Creation of config file local/config/database.inc.php failed."
+msgstr "Huts egin du local/config/database.inc.php konfigurazio-fitxategiaren sortzeak."
+
+msgid "Don't hesitate to consult our forums for any help : %s"
+msgstr "Kontsultatu gure foroak edozein zalantzatarako: %s"
+
+msgid "Default gallery language"
+msgstr "Galeriaren lehenetsitako hizkuntza"
+
+msgid "Database table prefix"
+msgstr "Datu-basearen taulen aurrizkia"
+
+msgid "Database name"
+msgstr "Datu-basearen izena"
+
+msgid "Database configuration"
+msgstr "Datu-basearen konfigurazioa"
+
+msgid "Connection to server succeed, but it was impossible to connect to database"
+msgstr "Ondo konektatu da zerbitzariarekin baina ezin izan da datu-basearekin konektatu"
+
+msgid "Congratulations, Piwigo installation is completed"
+msgstr "Zorionak, Piwigo instalazioa osorik burutu da"
+
+msgid "Can't connect to server"
+msgstr "Ezin izan da zerbitzariarekin konektatu"
+
+msgid "Basic configuration"
+msgstr "Oinarrizko konfigurazioa"
+
+msgid "Admin configuration"
+msgstr "Administrazio konfigurazioa"
+
+msgid "PHP version %s required (you are running on PHP %s)"
+msgstr "PHP %s bertsioa behar da (PHP %s bertsioa erabiltzen zaude"
+

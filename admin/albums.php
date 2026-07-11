@@ -9,6 +9,9 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\AccessLevel;
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
@@ -30,7 +33,7 @@ include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 $query = '
 SELECT
     COUNT(*)
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
 ;';
 $row = pwg_db_fetch_row(pwg_query($query));
 assert($row !== null);
@@ -39,9 +42,9 @@ assert($row !== null);
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_ADMINISTRATOR);
+check_status(AccessLevel::Administrator);
 
-check_input_parameter('parent_id', $_GET, false, PATTERN_ID);
+check_input_parameter('parent_id', $_GET, false, ValidationPattern::ID);
 
 // +-----------------------------------------------------------------------+
 // | tabs                                                                  |
@@ -83,12 +86,12 @@ if (isset($_POST['simpleAutoOrder']) || isset($_POST['recursiveAutoOrder'])) {
 
     $query = '
 SELECT id
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE id_uppercat ' .
       (($post_id === '-1') ? 'IS NULL' : '= ' . $post_id) . '
 ;';
     $category_ids = array_from_query($query, 'id');
-    // 'id' is CATEGORIES_TABLE's primary key column, always a numeric
+    // 'id' is Tables::categories()'s primary key column, always a numeric
     // string per this driver's string|null fetch convention -- filter out
     // the (never-actually-occurring) null case so downstream implode()/
     // get_subcat_ids() calls get values castable to string.
@@ -116,7 +119,7 @@ SELECT id
 
     $query = '
 SELECT id, name, id_uppercat
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE id IN (' . implode(',', $category_ids) . ')
 ;';
     $result = pwg_query($query);
@@ -126,7 +129,7 @@ SELECT id, name, id_uppercat
         $row['name'] = is_string($rendered_name) ? $rendered_name : $row['name'];
 
         if ($order_by_date) {
-            // id is CATEGORIES_TABLE's NOT NULL primary key.
+            // id is Tables::categories()'s NOT NULL primary key.
             assert($row['id'] !== null);
             $sort[] = $ref_dates[$row['id']];
         } else {
@@ -175,7 +178,7 @@ $template->assign('POS_PREF', $conf['newcat_default_position']); // TODO use use
 // Get all albums
 $query = '
 SELECT id,name,`rank`,status, visible, uppercats, lastmodified
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
 ;';
 
 $allAlbum = query2array($query);
@@ -297,7 +300,7 @@ $query = '
 SELECT
     category_id,
     COUNT(*) AS nb_photos
-  FROM ' . IMAGE_CATEGORY_TABLE . '
+  FROM ' . Tables::imageCategory() . '
   GROUP BY category_id
 ;';
 
@@ -307,7 +310,7 @@ $query = '
 SELECT
     id,
     uppercats
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
 ;';
 $all_categories = query2array($query, 'id', 'uppercats');
 
@@ -379,8 +382,8 @@ function get_categories_ref_date(array $ids, string $field = 'date_available', s
 SELECT
     category_id,
     ' . $minmax . '(' . $field . ') as ref_date
-  FROM ' . IMAGE_CATEGORY_TABLE . '
-    JOIN ' . IMAGES_TABLE . ' ON image_id = id
+  FROM ' . Tables::imageCategory() . '
+    JOIN ' . Tables::images() . ' ON image_id = id
   WHERE category_id IN (' . implode(',', $category_ids) . ')
   GROUP BY category_id
 ;';
@@ -392,7 +395,7 @@ SELECT
 SELECT
     id,
     uppercats
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE id IN (' . implode(',', $category_ids) . ')
 ;';
     $uppercats_of = query2array($query, 'id', 'uppercats');

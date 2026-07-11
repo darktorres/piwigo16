@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 /**
@@ -124,7 +125,7 @@ if ($page['show_comments']) {
     $query = '
 SELECT
     COUNT(*) AS nb_comments
-  FROM ' . COMMENTS_TABLE . '
+  FROM ' . Tables::comments() . '
   WHERE image_id = ' . $image_id
     . $validated_clause . '
 ;';
@@ -196,8 +197,8 @@ SELECT
     com.email,
     com.content,
     com.validated
-  FROM ' . COMMENTS_TABLE . ' AS com
-  LEFT JOIN ' . USERS_TABLE . ' AS u
+  FROM ' . Tables::comments() . ' AS com
+  LEFT JOIN ' . Tables::users() . ' AS u
     ON u.' . $user_field_id . ' = author_id
   WHERE com.image_id = ' . $image_id . '
     ' . $validated_clause . '

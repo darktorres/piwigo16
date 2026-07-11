@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Cache;
 
+use Piwigo\Core\AppInfo;
+
 /**
  * Provides a persistent cache mechanism across multiple page loads/sessions etc...
  */
@@ -18,7 +20,7 @@ abstract class PersistentCache
 {
     public int $default_lifetime = 86400;
 
-    protected string $instance_key = PHPWG_VERSION;
+    protected string $instance_key = AppInfo::VERSION;
 
     /**
      * @param array<int|string, mixed>|string $key

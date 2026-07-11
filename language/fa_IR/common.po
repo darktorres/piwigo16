@@ -1,0 +1,1283 @@
+# Piwigo translation — fa_IR
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: fa_IR\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Piwigo-Language-Name: پارسی\n"
+"X-Piwigo-Country: ایران\n"
+"X-Piwigo-Direction: rtl\n"
+"X-Piwigo-Code: fa\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "%d Kb"
+msgstr "%d کیلوبایت"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d آلبوم به‌روزرسانی شد"
+msgstr[1] "%d آلبوم به‌روزرسانی شدند"
+
+msgid "%d comment to validate"
+msgstr "%d دیدگاه در انتظار پذیرش"
+
+msgid "%d comments to validate"
+msgstr "%d دیدگاه در انتظار پذیرش"
+
+msgid "%d new comment"
+msgstr "%d دیدگاه تازه"
+
+msgid "%d new comments"
+msgstr "%d دیدگاه تازه"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d دیدگاه"
+msgstr[1] "%d دیدگاه"
+
+msgid "%d hit"
+msgid_plural "%d hits"
+msgstr[0] "%d بازدید"
+msgstr[1] "%d بازدید"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "%d عکس تازه"
+msgstr[1] "%d عکس تازه"
+
+msgid "%d new user"
+msgstr "%d کاربر تازه"
+
+msgid "%d new users"
+msgstr "%d کاربر تازه"
+
+msgid "About"
+msgstr "درباره"
+
+msgid "All tags"
+msgstr "همه ی برچسب ها"
+
+msgid "Any tag"
+msgstr "هر برچسبی"
+
+msgid "Author"
+msgstr "نویسنده"
+
+msgid "Albums"
+msgstr "آلبوم‌ها"
+
+msgid "Album"
+msgstr "آلبوم"
+
+msgid "Close this window"
+msgstr "بستن این پنجره"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "خوراک RSS کامل (عکس ها و دیدگاه ها)"
+
+msgid "Confirm Password"
+msgstr "تایید رمز عبور"
+
+msgid "Connection settings"
+msgstr "تنظیمات اتصال"
+
+msgid "Login"
+msgstr "ورود"
+
+msgid "Contact webmaster"
+msgstr "ارتباط مدیرکل"
+
+msgid "Create a new account"
+msgstr "ایجاد حساب تازه"
+
+msgid "Created on"
+msgstr "ایجاد شده در"
+
+msgid "Creation date"
+msgstr "تاریخ ایجاد"
+
+msgid "Current password is wrong"
+msgstr "!!رمز وارد شده اشتباه است."
+
+msgid "Dimensions"
+msgstr "ابعاد"
+
+msgid "Display"
+msgstr "نمایش"
+
+msgid "Email address"
+msgstr "آدرس های ایمیل"
+
+msgid "Enter your personnal informations"
+msgstr "داده های خصوصی خود را وارد نمایید"
+
+msgid "Error sending email"
+msgstr "خطا در فرستادن ایمیل :("
+
+msgid "File name"
+msgstr "نام فایل"
+
+msgid "File"
+msgstr "فایل"
+
+msgid "Filesize"
+msgstr "اندازه ی فایل"
+
+msgid "Filter and display"
+msgstr "فیلتر کن و نمایش بده"
+
+msgid "Filter"
+msgstr "فیلتر"
+
+msgid "Forgot your password?"
+msgstr "رمز ورود خود را فراموش کرده اید ؟"
+
+msgid "Go through the gallery as a visitor"
+msgstr "بازدید از گالری به عنوان مهمان"
+
+msgid "Help"
+msgstr "کمک"
+
+msgid "Identification"
+msgstr "شناسایی"
+
+msgid "Photos only RSS feed"
+msgstr "خوراک RSS عکس ها"
+
+msgid "Keyword"
+msgstr "کلیدواژه"
+
+msgid "Links"
+msgstr "لینک ها"
+
+msgid "N/A"
+msgstr "N/A"
+
+msgid "New on %s"
+msgstr "تازه در %s"
+
+msgid "Notification"
+msgstr "خبرنامه"
+
+msgid "Number of items"
+msgstr "تعداد آیتم ها"
+
+msgid "Original dimensions"
+msgstr "ابعاد اصلی"
+
+msgid "Password forgotten"
+msgstr "گذرواژه فراموش شده"
+
+msgid "Password"
+msgstr "رمز عبور"
+
+msgid "Post date"
+msgstr "تاریخ فرستاده شدن"
+
+msgid "Posted on"
+msgstr "فرستاده شده در"
+
+msgid "Profile"
+msgstr "پروفایل"
+
+msgid "Quick connect"
+msgstr "اتصال سریع"
+
+msgid "RSS feed"
+msgstr "خوراک RSS"
+
+msgid "Register"
+msgstr "نام نویسی"
+
+msgid "Registration"
+msgstr "نام نویسی"
+
+msgid "Related tags"
+msgstr "برچسب های مربوط"
+
+msgid "Reset"
+msgstr "بازنشانی"
+
+msgid "Retrieve password"
+msgstr "بازیابی رمز عبور"
+
+msgid "Search tags"
+msgstr "جستجوی برچسب ها"
+
+msgid "Search"
+msgstr "جستجو"
+
+msgid "display available tags"
+msgstr "نمایش برچسب های موجود"
+
+msgid "Since"
+msgstr "از"
+
+msgid "Sort by"
+msgstr "مرتب سازی بر اساس"
+
+msgid "Sort order"
+msgstr "مرتب سازی بر اساس"
+
+msgid "Tag"
+msgstr "برچسب"
+
+msgid "Tags"
+msgstr "برچسب ها"
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "سرویس دهنده RSS، تازه های سایت از جمله: عکس‌های جدید، آلبوم های بروزشده ‌و دیدگاه های تازه را به کمک یک RSS خوان اطلاع رسانی می کند."
+
+msgid "Unknown feed identifier"
+msgstr "RSS خوان شناسایی نشد"
+
+msgid "User comments"
+msgstr "دیدگاه های کاربر"
+
+msgid "Username"
+msgstr "نام کاربری"
+
+msgid "Visits"
+msgstr "بازدید ها"
+
+msgid "Webmaster"
+msgstr "مدیرکل"
+
+msgid "Week %d"
+msgstr "هفته ی %d"
+
+msgid "About Piwigo"
+msgstr "درباره‌ی Piwigo"
+
+msgid "You are not authorized to access the requested page"
+msgstr "شما مجاز به مشاهده این صفحه نیستید"
+
+msgid "add this photo to your favorites"
+msgstr "افزودن این عکس به علاقه مندی های من"
+
+msgid "Administration"
+msgstr "مدیریت"
+
+msgid "all"
+msgstr "همه"
+
+msgid "ascending"
+msgstr "بالا رونده"
+
+msgid "Expand all albums"
+msgstr "بازکردن تمام آلبوم ها"
+
+msgid "posted after %s (%s)"
+msgstr "فرستاده شده بعد از %s (%s)"
+
+msgid "posted before %s (%s)"
+msgstr "فرستاده شده قبل از %s (%s)"
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "فرستاده شده بین %s (%s) و %s (%s)"
+
+msgid "posted on %s"
+msgstr "فرستاده شده در %s"
+
+msgid "Best rated"
+msgstr "بهترین امتیاز داده شده"
+
+msgid "display best rated photos"
+msgstr "نمایش عکس هایی که بیشترین امتیاز را داشته اند"
+
+msgid "Calendar"
+msgstr "تقویم"
+
+msgid "All"
+msgstr "همه"
+
+msgid "display each day with photos, month per month"
+msgstr "نمایش هر روز با عکس های تازه، ماه به ماه"
+
+msgid "View"
+msgstr "نمایش"
+
+msgid "chronology_monthly_calendar"
+msgstr "تقویم ماهانه"
+
+msgid "chronology_monthly_list"
+msgstr "لیست ماهانه"
+
+msgid "chronology_weekly_list"
+msgstr "لیست هفتگی"
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "اگر مرورگر شما به صورت اتوماتیک هدایت نشد، اینجا کلیک کنید."
+
+msgid "comment date"
+msgstr "تاریخ دیدگاه"
+
+msgid "Comment"
+msgstr "دیدگاه"
+
+msgid "Your comment has been registered"
+msgstr "دیدگاه شما در سیستم ثبت شد"
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "سیستم ضد هرزنامه: خواهشمندم قبل از فرستادن دوباره ی دیدگاه چند لحظه شکیبا باشید"
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "دیدگاه شما در سیستم ثبت نشد زیرا با قوانین پذیرش سازگار نیست"
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "باتشکر , یک مدیر باید دیدگاه شما را بپذیرد تا قابل نمایش شود"
+
+msgid "This login is already used by another user"
+msgstr "این نام کاربری برای کاربر دیگری ثبت شده است"
+
+msgid "Comments"
+msgstr "دیدگاه ها"
+
+msgid "Add a comment"
+msgstr "دیدگاهی بگذارید"
+
+msgid "created after %s (%s)"
+msgstr "ایجاد شده بعد از %s (%s)"
+
+msgid "created before %s (%s)"
+msgstr "ایجاد شده قبل از %s (%s)"
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "ایجاد شده بین %s (%s) و %s (%s)"
+
+msgid "created on %s"
+msgstr "ایجاد شده در %s"
+
+msgid "Your Gallery Customization"
+msgstr "سفارشی کردن گالری"
+
+msgid "Default"
+msgstr "پیشفرض"
+
+msgid "delete this photo from your favorites"
+msgstr "پاک کردن این عکس از علاقه مندی های شما"
+
+msgid "Delete"
+msgstr "پاک کردن"
+
+msgid "descending"
+msgstr "پایین رونده"
+
+msgid "edit"
+msgstr "ویرایش"
+
+msgid "wrong date"
+msgstr "تاریخ اشتباه است"
+
+msgid "excluded"
+msgstr "محروم"
+
+msgid "Your favorites"
+msgstr "علاقه مندی های شما"
+
+msgid "display your favorites photos"
+msgstr "نمایش عکس های مورد علاقه‌ شما"
+
+msgid "Favorites"
+msgstr "علاقه مندی ها"
+
+msgid "First"
+msgstr "نخستین"
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "این گالری برای بروز رسانی قفل شده‌ است؛ زمان دیگری بازدید کنید."
+
+msgid "Page generated in"
+msgstr "صفحه ایجاد شده در"
+
+msgid "guest"
+msgstr "مهمان"
+
+msgid "Hello"
+msgstr "درود"
+
+msgid "available for administrators only"
+msgstr "فقط در دسترس مدیران"
+
+msgid "display this album"
+msgstr "نمایش این آلبوم"
+
+msgid "display last user comments"
+msgstr "نمایش آخرین دیدگاه های کاربر"
+
+msgid "search"
+msgstr "جستجو"
+
+msgid "Home"
+msgstr "صفحه اصلی"
+
+msgid "in this album"
+msgstr "در این آلبوم"
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] "در %d زیرآلبوم"
+msgstr[1] "در %d زیرآلبوم "
+
+msgid "included"
+msgstr "شامل می شود"
+
+msgid "Invalid password!"
+msgstr "گذرواژه نامعتبر است!"
+
+msgid "Language"
+msgstr "زبان"
+
+msgid "last %d days"
+msgstr "%d روز گذشته"
+
+msgid "Last"
+msgstr "آخرین"
+
+msgid "Logout"
+msgstr "بیرون رفتن"
+
+msgid "obligatory"
+msgstr "اجباری"
+
+msgid "display a calendar by creation date"
+msgstr "نمایش یک تقویم بر اساس تاریخ ایجاد"
+
+msgid "display all photos in all sub-albums"
+msgstr "نمایش همه ی عکس ها در همه ی زیرآلبوم ها"
+
+msgid "return to normal view mode"
+msgstr "بازگشت به حالت عادی"
+
+msgid "display a calendar by posted date"
+msgstr "نمایش یک تقویم براساس تاریخ فرستاده شدن"
+
+msgid "Most visited"
+msgstr "بیشترین بازدید شده"
+
+msgid "display most visited photos"
+msgstr "نمایش عکس هایی که بیشترین بازدید را داشته اند"
+
+msgid "Unknown identifier"
+msgstr "ناشناخته"
+
+msgid "New password"
+msgstr "رمز ورود تازه"
+
+msgid "Rate this photo"
+msgstr "امتیاز دادن به این عکس"
+
+msgid "Next"
+msgstr "بعدی"
+
+msgid "no rate"
+msgstr "بدون امتیاز"
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "فقط عکس هایی که در %d روز قبل فرستاده شده."
+msgstr[1] "فقط عکس هایی که در %d روز قبل فرستاده شده اند."
+
+msgid "password updated"
+msgstr "گذرواژه بروزرسانی شد"
+
+msgid "Recent period must be a positive integer value"
+msgstr "مدت های اخیر باید مقداری عدد صحیح مثبت شود"
+
+msgid "photo"
+msgstr "عکس"
+
+msgid "Click on the photo to see it in high definition"
+msgstr "برای مشاهده هر عکس در اندازه ی اصلی روی آن کلیک کنید."
+
+msgid "Show file metadata"
+msgstr "نمایش فایل ابرداده (Metadata)"
+
+msgid "Powered by"
+msgstr "قدرت گرفته از"
+
+msgid "Preferences"
+msgstr "تنظیمات"
+
+msgid "Previous"
+msgstr "قبلی"
+
+msgid "Random photos"
+msgstr "عکس های تصادفی"
+
+msgid "display a set of random photos"
+msgstr "نمایش تعدادی عکس تصادفی"
+
+msgid "Recent albums"
+msgstr "آلبوم های تازه"
+
+msgid "display recently updated albums"
+msgstr "نمایش آلبوم های تازه بروز رسانی شده"
+
+msgid "Recent period"
+msgstr "مدت های اخیر"
+
+msgid "Recent photos"
+msgstr "عکس های تازه"
+
+msgid "display most recent photos"
+msgstr "نمایش تازه ترین عکس ها"
+
+msgid "Redirection..."
+msgstr "در حال هدایت ..."
+
+msgid "Please, enter a login"
+msgstr "یک نام کاربری وارد کنید."
+
+msgid "login mustn't end with a space character"
+msgstr "اطلاعات ورود نباید دارای فاصله در آخرشان باشند"
+
+msgid "login mustn't start with a space character"
+msgstr "اطلاعات ورود نباید با فاصله آغاز شوند"
+
+msgid "this login is already used"
+msgstr "این اطلاعات ورود از قبل وجود دارد"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "آدرس ایمیل باید چیزی شبیه به xxx@yyy.eee باشد. (مانند: jack@altern.org)"
+
+msgid "Auto login"
+msgstr "ورود اتوماتیک"
+
+msgid "remove this tag from the list"
+msgstr "پاک کردن این برچسب از لیست"
+
+msgid "representative"
+msgstr "عکس بندانگشتی آلبوم"
+
+msgid "Search for Author"
+msgstr "جستجوی نویسنده"
+
+msgid "Search in albums"
+msgstr "جستجو در آلبوم ها"
+
+msgid "Date"
+msgstr "تاریخ"
+
+msgid "End-Date"
+msgstr "تاریخ پایان"
+
+msgid "Kind of date"
+msgstr "نوع تاریخ"
+
+msgid "Search for words"
+msgstr "جستجوی واژه ها"
+
+msgid "Search for all terms"
+msgstr "جستجوی همه ی واژه ها"
+
+msgid "Empty query. No criteria has been entered."
+msgstr "شما هیچ معیاری برای جستجو تعیین نکرده اید."
+
+msgid "Search results"
+msgstr "نتایج جستجو"
+
+msgid "Search in sub-albums"
+msgstr "جستجو در زیرآلبوم ها"
+
+msgid "Contact"
+msgstr "تماس"
+
+msgid "set as album representative"
+msgstr "تنظیم بعنوان عکس بندانگشتی آلبوم"
+
+msgid "Show number of comments"
+msgstr "نمایش تعداد دیدگاه ها"
+
+msgid "Show number of hits"
+msgstr "نمایش تعداد بازدید ها"
+
+msgid "slideshow"
+msgstr "نمایش به صورت اسلاید"
+
+msgid "stop the slideshow"
+msgstr "توقف اسلاید"
+
+msgid "Specials"
+msgstr "پنل ویژه"
+
+msgid "SQL queries in"
+msgstr "معیار های SQL در"
+
+msgid "display only recently posted photos"
+msgstr "فقط آخرین عکس های فرستاده شده را نمایش بده"
+
+msgid "return to the display of all photos"
+msgstr "بازگشت به نمایش همه ی عکس ها"
+
+msgid "the beginning"
+msgstr "آغاز"
+
+msgid "Thumbnails"
+msgstr "عکس بندانگشتی"
+
+msgid "Menu"
+msgstr "منو"
+
+msgid "A comment on your site"
+msgstr "دیدگاهی در سایت شما"
+
+msgid "today"
+msgstr "امروز"
+
+msgid "Update your rating"
+msgstr "بروزرسانی امتیاز"
+
+msgid "the username must be given"
+msgstr "نام کاربری ضروری است"
+
+msgid "useful when password forgotten"
+msgstr "قابل استفاده برای زمانی که گذرواژه فراموش می شود"
+
+msgid "Quick search"
+msgstr "جستجوی سریع"
+
+msgid "Connected user: %s"
+msgstr "کاربر متصل شده : %s"
+
+msgid "IP: %s"
+msgstr "آی پی: %s"
+
+msgid "Browser: %s"
+msgstr "مرورگر: %s"
+
+msgid "Author: %s"
+msgstr "نویسنده: %s"
+
+msgid "Comment: %s"
+msgstr "دیدگاه: %s"
+
+msgid "Comment by %s"
+msgstr "دیدگاهی از %s"
+
+msgid "User: %s"
+msgstr "کاربر: %s"
+
+msgid "Email: %s"
+msgstr "ایمیل: %s"
+
+msgid "Admin: %s"
+msgstr "مدیرکل: %s"
+
+msgid "Registration of %s"
+msgstr "نام نویسیِ %s"
+
+msgid "Album: %s"
+msgstr "آلبوم: %s"
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "وضعیت بد برای کاربر \"مهمان\"، وضعیت پیشفرض استفاده خواهد شد . خواهشمند است این موضوع را با مدیر‌کل در میان بگذارید."
+
+msgid "this email address is already in use"
+msgstr "این ایمیل در سیستم ثبت بوده شما نمی توانید  از ان استفاده کنیدیک کاربر دیگر این آدرس ایمیل را در سیستم ثبت کرده است "
+
+msgid "Album results for"
+msgstr "نتایج آلبوم برای"
+
+msgid "Tag results for"
+msgstr "نتایج برچسب برای"
+
+msgid "from %s to %s"
+msgstr "از %s تا %s"
+
+msgid "Play of slideshow"
+msgstr "آغاز نمایش اسلاید"
+
+msgid "Pause of slideshow"
+msgstr "توقف اسلاید"
+
+msgid "Repeat the slideshow"
+msgstr "بازپخش اسلاید"
+
+msgid "Not repeat the slideshow"
+msgstr "اسلاید را بازپخش نکن"
+
+msgid "Reduce diaporama speed"
+msgstr "کاهش سرعت اسلاید"
+
+msgid "Accelerate diaporama speed"
+msgstr "افزایش سرعت اسلاید"
+
+msgid "Submit"
+msgstr "ثبت"
+
+msgid "Yes"
+msgstr "بله"
+
+msgid "No"
+msgstr "خیر"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "%d عکس"
+msgstr[1] "%d عکس"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "%d عکس هم به این برچسب مربوط است"
+msgstr[1] "%d عکس هم به این برچسب مربوط هستند"
+
+msgid "display photos linked to this tag"
+msgstr "نمایش عکس هایی که مربوط به این برچسب هستند"
+
+msgid "photos posted during the last %d days"
+msgstr "عکس هایی که در %d روز گذشته فرستاده شده اند"
+
+msgid "Piwigo Help"
+msgstr "راهنمای Piwigo"
+
+msgid "Rank"
+msgstr "مقام"
+
+msgid "group by letters"
+msgstr "گروه بندی براساس حرف"
+
+msgid "letters"
+msgstr "حروف"
+
+msgid "show tag cloud"
+msgstr "نمایش ابر برچسب ها (Tags cloud)"
+
+msgid "cloud"
+msgstr "ابر (Cloud)"
+
+msgid "Reset to default values"
+msgstr "بازگرداندن به مقدارهای پیشفرض"
+
+msgid "delete all photos from your favorites"
+msgstr "پاک کردن همه ی عکس ها از علاقه مندی های شما"
+
+msgid "Sent by"
+msgstr "فرستاده شده به وسیله"
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "شما در تنظیمات مرورگر خود کوکی ها را مسدود کرده اید و یا مرورگر شما از کوکی پشتیبانی نمی‌کند. برای ورود به محیط کاربری باید کوکی‌ها فعال باشند."
+
+msgid "Edit a comment"
+msgstr "ویرایش یک دیدگاه"
+
+msgid "Are you sure?"
+msgstr "مطمئن هستید ؟"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) این دیدگاه نیاز به پذیرفته شدن دارد"
+
+msgid "Welcome"
+msgstr "خوش آمدید"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "به گالری عکس Piwigo خود خوش آمدید!"
+
+msgid "... or browse your empty gallery"
+msgstr "... یا گالری خالی خود را مشاهده کنید"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "... یا لطفا این پیام را غیرفعال کنید، من راهم را پیدا خواهم کرد"
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "درود %s، گالری عکس شما خالی است!"
+
+msgid "I want to add photos"
+msgstr "می‌خواهم عکس تازه اضافه کنم"
+
+msgid "Manage this user comment: %s"
+msgstr "مدیریت دیدگاه های %s"
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "کاربر آدرس ایمیل ندارد. لطفا یک آدرس ایمیل مشخص کنید."
+
+msgid "This author modified following comment:"
+msgstr "این نویسنده دیدگاه زیر را تغییر داده است:"
+
+msgid "This author removed the comment with id %d"
+msgstr "این نویسنده، دیدگاهی با شناسه ی %d را پاک کرده است"
+
+msgid "html tags are not allowed in login"
+msgstr "شما در فرم ورود مجاز به استفاده از كدهای HTML نیستید"
+
+msgid "Change my password"
+msgstr "ویرایش رمز ورود"
+
+msgid "Check your email for the confirmation link"
+msgstr "برای مشاهده ی لینک پذیرش ایمیل خود را چک کنید"
+
+msgid "Download this file"
+msgstr "دانلود این فایل"
+
+msgid "Download"
+msgstr "دانلود"
+
+msgid "Edit"
+msgstr "ویرایش"
+
+msgid "Enter your new password below."
+msgstr "رمز ورود تازه ی خود را در زیر وارد کنید."
+
+msgid "EXIF Metadata"
+msgstr "EXIFابرداده"
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "اگر اشتباهی رخ داده است، این ایمیل را نادیده بگیرید و به آن پاسخ ندهید."
+
+msgid "Invalid key"
+msgstr "!!کلید اشتباه است"
+
+msgid "Invalid username or email"
+msgstr "نام کاربری یا ایمیل نامعتبر است"
+
+msgid "IPTC Metadata"
+msgstr "IPTC ابرداده"
+
+msgid "Number of photos per page"
+msgstr "تعداد عکس ها در هر صفحه"
+
+msgid "Password reset is not allowed for this user"
+msgstr "بازنشانی گذرواژه برای این کاربر ممکن نیست"
+
+msgid "Password Reset"
+msgstr "بازنشانی رمز عبور"
+
+msgid "Please enter your username or email address."
+msgstr "نام کاربری یا ایمیل خود را وارد کنید."
+
+msgid "Rating score"
+msgstr "مقدار امتیاز"
+
+msgid "Return to home page"
+msgstr "بازگشت به صفحه اصلی"
+
+msgid "Search by date"
+msgstr "جستجو با تاریخ"
+
+msgid "Search for any term"
+msgstr "جستجوی هر واژه ای"
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "یک نفر برای این حساب کاربری درخواست بازنشانی گذرواژه کرده است:"
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "تعداد عکس ها در هر صفحه باید یک عدد صحیح بجز 0 باشد"
+
+msgid "The passwords do not match"
+msgstr "گذرواژه ها یکسان نمی باشند"
+
+msgid "To reset your password, visit the following address:"
+msgstr "برای بازنشانی گذرواژتان، به آدرس زیر بروید:"
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "حساب کاربری \"%s\" دارای ایمیل نمی باشد، بازنشانی گذرواژه امکان پذیر نیست"
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "نام کاربری \"%s\" در گالری %s"
+
+msgid "Username or email"
+msgstr "نام کاربری یا ایمیل"
+
+msgid "You will receive a link to create a new password via email."
+msgstr "بزودی یک لینک برای ایجاد گذرواژه ی تازه در ایمیلتان دریافت خواهید کرد."
+
+msgid "Your password has been reset"
+msgstr "گذرواژه ی شما با موفقیت بازنشانی شد"
+
+msgid "Hello %s,"
+msgstr "درود %s،"
+
+msgid "2small"
+msgstr "XXS - ریز"
+
+msgid "Date created, new &rarr; old"
+msgstr "تاریخ ایجاد، تازه &rarr; قدیمی"
+
+msgid "Date created, old &rarr; new"
+msgstr "تاریخ ایجاد، قدیمی &rarr; تازه"
+
+msgid "Date posted, new &rarr; old"
+msgstr "تاریخ انتشار، تازه &rarr; قدیمی"
+
+msgid "Date posted, old &rarr; new"
+msgstr "تاریخ انتشار، قدیمی &rarr; تازه"
+
+msgid "Desktop"
+msgstr "کامپیوتر خانگی"
+
+msgid "File name, A &rarr; Z"
+msgstr "نام فایل، A &rarr; Z"
+
+msgid "File name, Z &rarr; A"
+msgstr "نام فایل، Z &rarr; A"
+
+msgid "Here are your connection settings"
+msgstr "اطلاعات ورود شما"
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "اگر گمان می کنید که این ایمیل به اشتباه فرستاده شده، خواهشاً با ما در میان بگذارید: %s"
+
+msgid "Manual sort order"
+msgstr "مرتب سازی دستی"
+
+msgid "Mobile"
+msgstr "موبایل"
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "شناسه ی عددی، یک &rarr; نُه"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "شناسه ی عددی، نُه &rarr; یک"
+
+msgid "Original"
+msgstr "اصلی"
+
+msgid "Password: %s"
+msgstr "رمز عبور: %s"
+
+msgid "Photo sizes"
+msgstr "اندازه ی عکس ها"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "عنوان عکس، A &rarr; Z"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "عنوان عکس، Z &rarr; A"
+
+msgid "Rating score, high &rarr; low"
+msgstr "امتیاز عکس، زیاد &rarr; کم"
+
+msgid "Rating score, low &rarr; high"
+msgstr "امتیاز عکس، کم &rarr; زیاد"
+
+msgid "Send my connection settings by email"
+msgstr "اطلاعات ورود من را با ایمیل برایم بفرست"
+
+msgid "Show latest comments first"
+msgstr "ابتدا تازه ترین دیدگاه ها را نشان بده"
+
+msgid "Show oldest comments first"
+msgstr "ابتدا قدیمی ترین دیدگاه ها را نشان بده"
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "خوش آمدید\nثبت نام شما با موفقیت انجام شد ، به زودی ایمیلی حاوی اطلاعات ورود برای شما فرستاده می شود.\n"
+
+msgid "Thank you for registering at %s!"
+msgstr "با سپاس از نام نویسی شما در %s !"
+
+msgid "Username modification"
+msgstr "ویرایش نام کاربری"
+
+msgid "Username: %s"
+msgstr "نام کاربری: %s"
+
+msgid "View in"
+msgstr "نمایش در"
+
+msgid "Visits, high &rarr; low"
+msgstr "بازدید ها، زیاد &rarr; کم"
+
+msgid "Visits, low &rarr; high"
+msgstr "بازدید ها، کم &rarr; زیاد"
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "نام کاربری شما با موفقیت تغییر کرد به : %s "
+
+msgid "large"
+msgstr "L - بزرگ"
+
+msgid "medium"
+msgstr "M - متوسط"
+
+msgid "small"
+msgstr "S - کوچک"
+
+msgid "square"
+msgstr "مربع"
+
+msgid "thumb"
+msgstr "عکس بندانگشتی"
+
+msgid "xlarge"
+msgstr " بسیار بزرگ"
+
+msgid "xsmall"
+msgstr " بسیار کوچک"
+
+msgid "xxlarge"
+msgstr " بزرگترین"
+
+msgid "%d rate"
+msgid_plural "%d rates"
+msgstr[0] "%d امتیاز"
+msgstr[1] "%d امتیاز"
+
+msgid "Bad request"
+msgstr "درخواست اشتباه"
+
+msgid "Forbidden"
+msgstr "اجازه ی دسترسی ندارید{گم شدید؟؟}"
+
+msgid "Page not found"
+msgstr "برگه پیدا نشد !"
+
+msgid "Permalink for album not found"
+msgstr "لینک ثابتی برای این آلبوم پیدا نشد"
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "Piwigo با یک خطای غیر قابل بازیابی مواجه گردید"
+
+msgid "Requested album does not exist"
+msgstr "آلبوم مورد نظر شما وجود ندارد"
+
+msgid "Requested tag does not exist"
+msgstr "برچسب مورد نظر شما وجود ندارد"
+
+msgid "Email address is mandatory"
+msgstr "آدرس ایمیل الزامی است"
+
+msgid "Username is mandatory"
+msgstr "نام کاربری الزامی است"
+
+msgid "mandatory"
+msgstr "الزامی"
+
+msgid "Your website URL is invalid"
+msgstr "آدرس وب سایت شما نامعتبر است\n"
+
+msgid "Website"
+msgstr "سایت اینترنتی\n"
+
+msgid "Email"
+msgstr "ایمیل"
+
+msgid "First Page"
+msgstr "نخستین برگه"
+
+msgid "Go back to the album"
+msgstr "برگشتن به آلبوم"
+
+msgid "Last Page"
+msgstr "آخرین برگه"
+
+msgid "Password is missing. Please enter the password."
+msgstr "گذرواژه ای نوشته نشده است. خواهشمندیم گذرواژه‌ای بنویسید."
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "پذیرش گذرواژه با گذرواژه‌ی اصلی همخوانی ندارد. خواهشمندیم گذرواژه‌ی اصلی را در بخش پذیرش گذرواژه نیز بنویسید."
+
+msgid "Theme"
+msgstr "زمینه"
+
+msgid "%d photos per page"
+msgstr "%d عکس در هر صفحه"
+
+msgid "No results for"
+msgstr "نتیجه‌ای پیدا نشد برای"
+
+msgid "Photo description"
+msgstr "توضیحاتِ عکس"
+
+msgid "Photo title"
+msgstr "عنوانِ عکس"
+
+msgid "Album name, A &rarr; Z"
+msgstr "نام آلبوم، به ترتیب حروف الفبا"
+
+msgid "Album name, Z &rarr; A"
+msgstr "نام آلبوم، برعکسِ حروف الفبا"
+
+msgid "Apply on properties"
+msgstr "تایید مشخصات"
+
+msgid "Link: %s"
+msgstr "لینک: %s"
+
+msgid "Your authentication key is no longer valid."
+msgstr "کلید احراز هویت شما نامعتبر بوده و باید دوباره ارسال شود."
+
+msgid "Invalid username or password!"
+msgstr "رمز یا نام کاربری ناموجود است"
+
+msgid "generate random password"
+msgstr "ساخت رمز اتفاقی"
+
+msgid "Related albums"
+msgstr "آلبوم‌های مرتبط"
+
+msgid "Start-Date"
+msgstr "تاریخ شروع"
+
+msgid "Album name, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+msgstr "نام آلبوم, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+
+msgid "Album name, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+msgstr "نام آلبوم, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+
+msgid "Password: ********** (no copy by email)"
+msgstr "گذرواژه: ********** )نباید محتوی ایمیل شما باشد("
+
+msgid "Search in :"
+msgstr "جستجو در:"
+
+msgid "Search in this set"
+msgstr "جستجو در این ست"
+
+msgid "Tags found"
+msgstr "تگ یافت شده"
+
+msgid "Tags listed here match your search by word. Click on one to browse by tag."
+msgstr "تگ هایی که در این قسمت مشاهده میکنید با جستجو شما همخوانی داشته برای شروع یکی را انتخاب کنید."
+
+msgid "The PDF you requested is too large to display on this page."
+msgstr "فایل PDF که انتخاب کرده اید برای نمایش بسیار حجیم است"
+
+msgid "Unknown time period"
+msgstr "دوره زمانی ناشناخته!"
+
+msgid "You can try to edit your filters and perform a new search."
+msgstr "شما میتوانید فیلترها را ویرایش کنید تا جستجوی جدیدی انجام دهید."
+
+msgid "last 12 months"
+msgstr "یک سال اخیر"
+
+msgid "last 24 hours"
+msgstr "24 ساعت اخیر"
+
+msgid "last 3 months"
+msgstr "3 ماهه اخیر"
+
+msgid "last 30 days"
+msgstr "30 روز اخیر"
+
+msgid "last 6 months"
+msgstr "6 ماه اخیر"
+
+msgid "last 7 days"
+msgstr "7 روز اخیر"
+
+msgid "last year"
+msgstr "سال اخیر"
+
+msgid "rating score %s"
+msgstr "امتیاز %s"
+
+msgid "year %d"
+msgstr "سال %d"
+
+msgid "Only the first %d albums are displayed, out of %d."
+msgstr "فقط %d آلبوم اول نمایش داده شدند از %d آلبوم"
+
+msgid "Pages"
+msgstr "صفحه"
+
+msgid "No results are available."
+msgstr "نتیجه ای نداشت!"
+
+msgid "Filters"
+msgstr "فیلترها"
+
+msgid "Fill in the filters to start a search"
+msgstr "فیلتر ها را انتخاب کنید تا جستجو آغاز شود"
+
+msgid "File type"
+msgstr "فرمت فایل"
+
+msgid "Empty filters"
+msgstr "حذف فیلتر"
+
+msgid "Custom dates"
+msgstr "انتخاب تاریخ"
+
+msgid "Click here to display it"
+msgstr "اینجا کلیک کن تا ببینی"
+
+msgid "Clear"
+msgstr "پاک کن"
+
+msgid "Cancel"
+msgstr "لغو"
+
+msgid "Choose filters"
+msgstr "انتخاب فیلتر"
+
+msgid "Albums found"
+msgstr "آلبوم یافت شده"
+
+msgid "Albums listed here match your search by word. Click on one to browse by album."
+msgstr "آلبوم هایی که مشاهده میکنید با عبارتی که جستجو کردید همخوانی داشته است. هر کدام را مایل هستید انتخاب کنید."
+
+msgid "Album title"
+msgstr "عنوان آلبوم"
+
+msgid "Album description"
+msgstr "توضیحات آلبوم"
+
+msgid "Album already selected"
+msgstr "آلبوم انتخاب شده"
+
+msgid "Added by"
+msgstr "افزوده شده توسط"
+
+msgid "%d visits"
+msgstr "%d بازدید"
+
+msgid "piwigo_day_0"
+msgstr "یک شنبه"
+
+msgid "piwigo_day_1"
+msgstr "دوشنبه"
+
+msgid "piwigo_day_2"
+msgstr "سه شنبه"
+
+msgid "piwigo_day_3"
+msgstr "چهارشنبه"
+
+msgid "piwigo_day_4"
+msgstr "پنج شنبه"
+
+msgid "piwigo_day_5"
+msgstr "جمعه"
+
+msgid "piwigo_day_6"
+msgstr "شنبه"
+
+msgid "piwigo_month_10"
+msgstr "اکتبر"
+
+msgid "piwigo_month_11"
+msgstr "نوامبر"
+
+msgid "piwigo_month_12"
+msgstr "دسامبر"
+
+msgid "piwigo_month_1"
+msgstr "ژانویه"
+
+msgid "piwigo_month_2"
+msgstr "فبریه"
+
+msgid "piwigo_month_3"
+msgstr "مارس"
+
+msgid "piwigo_month_4"
+msgstr "آوریل"
+
+msgid "piwigo_month_5"
+msgstr "مِی"
+
+msgid "piwigo_month_6"
+msgstr "ژوئن"
+
+msgid "piwigo_month_7"
+msgstr "جولای"
+
+msgid "piwigo_month_8"
+msgstr "آگوست"
+
+msgid "piwigo_month_9"
+msgstr "سپتامبر"
+

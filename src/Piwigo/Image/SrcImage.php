@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Image;
 
+use Piwigo\Db\Tables;
+
 /**
  * A source image is used to get a derivative image. It is either
  * the original file for a jpg/png/... or a 'representative' image
@@ -163,7 +165,7 @@ final class SrcImage
             // probably not metadata synced
             if (($size = getimagesize($this->get_path())) !== false) {
                 $this->size = [$size[0], $size[1]];
-                pwg_query('UPDATE ' . IMAGES_TABLE . ' SET width=' . $size[0] . ', height=' . $size[1] . ' WHERE id=' . $this->id);
+                pwg_query('UPDATE ' . Tables::images() . ' SET width=' . $size[0] . ', height=' . $size[1] . ' WHERE id=' . $this->id);
             }
         }
         return $this->size;

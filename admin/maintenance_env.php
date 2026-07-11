@@ -11,6 +11,9 @@ declare(strict_types=1);
 
 use Piwigo\Admin\Integrity\check_integrity;
 use Piwigo\Cache\PersistentFileCache;
+use Piwigo\Core\AccessLevel;
+use Piwigo\Core\AppInfo;
+use Piwigo\Db\Tables;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Template\FileCombiner;
 use Piwigo\Template\Template;
@@ -35,7 +38,7 @@ include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
 
-check_status(ACCESS_ADMINISTRATOR);
+check_status(AccessLevel::Administrator);
 
 if (isset($_GET['action'])) {
     check_pwg_token();
@@ -99,7 +102,7 @@ switch ($action) {
 
         $query = '
 DELETE
-  FROM ' . HISTORY_TABLE . '
+  FROM ' . Tables::history() . '
 ;';
         pwg_query($query);
         break;
@@ -108,7 +111,7 @@ DELETE
 
         $query = '
 DELETE
-  FROM ' . HISTORY_SUMMARY_TABLE . '
+  FROM ' . Tables::historySummary() . '
 ;';
         pwg_query($query);
         break;
@@ -122,7 +125,7 @@ DELETE
 SELECT
     id,
     data
-  FROM ' . SESSIONS_TABLE . '
+  FROM ' . Tables::sessions() . '
 ;';
         $sessions = query2array($query);
 
@@ -134,7 +137,7 @@ SELECT
         $query = '
 SELECT
     ' . $user_fields['id'] . ' AS id
-  FROM ' . USERS_TABLE . '
+  FROM ' . Tables::users() . '
 ;';
         $all_user_ids = query2array($query, 'id', null);
 
@@ -151,7 +154,7 @@ SELECT
         if (count($sessions_to_delete) > 0) {
             $query = '
 DELETE
-  FROM ' . SESSIONS_TABLE . '
+  FROM ' . Tables::sessions() . '
   WHERE id IN (\'' . implode("','", $sessions_to_delete) . '\')
 ;';
             pwg_query($query);
@@ -163,7 +166,7 @@ DELETE
 
         $query = '
 DELETE
-  FROM ' . USER_FEED_TABLE . '
+  FROM ' . Tables::userFeed() . '
   WHERE last_check IS NULL
 ;';
         pwg_query($query);
@@ -184,7 +187,7 @@ DELETE
 
         $query = '
 DELETE
-  FROM ' . SEARCH_TABLE . '
+  FROM ' . Tables::search() . '
 ;';
         pwg_query($query);
         break;
@@ -224,7 +227,7 @@ DELETE
             $page['errors'][] = l10n('Unable to check for upgrade.');
         } else {
             $versions = [
-                'current' => PHPWG_VERSION,
+                'current' => AppInfo::VERSION,
             ];
             $lines = @explode("\r\n", (string) $result);
 
@@ -332,7 +335,7 @@ $template->assign(
         'U_HELP' => get_root_url() . 'admin/popuphelp.php?page=maintenance',
 
         'PHPWG_URL' => PHPWG_URL,
-        'PWG_VERSION' => PHPWG_VERSION,
+        'PWG_VERSION' => AppInfo::VERSION,
         'U_CHECK_UPGRADE' => sprintf($url_format, 'check_upgrade'),
         'OS' => PHP_OS,
         'CONTAINER_INFO' => $container_name . (! empty($container_version) ? ' ' . $container_version : ''),

@@ -9,6 +9,9 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\AccessLevel;
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Template\Template;
 
@@ -36,7 +39,7 @@ include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
 
-check_status(ACCESS_ADMINISTRATOR);
+check_status(AccessLevel::Administrator);
 
 // +-----------------------------------------------------------------------+
 // |                       variable initialization                         |
@@ -76,7 +79,7 @@ if (isset($_POST['submitEmail'])) {
     if (! empty($category['representative_picture_id'])) {
         $query = '
 SELECT id, file, path, representative_ext
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE id = ' . $category['representative_picture_id'] . '
 ;';
 
@@ -127,7 +130,7 @@ SELECT id, file, path, representative_ext
     ];
 
     if ($_POST['who'] == 'users' and isset($_POST['users']) and is_array($_POST['users']) and count($_POST['users']) > 0) {
-        check_input_parameter('users', $_POST, true, PATTERN_ID);
+        check_input_parameter('users', $_POST, true, ValidationPattern::ID);
 
         // TODO code very similar to function pwg_mail_group. We'd better create
         // a function pwg_mail_users that could be called from here and from
@@ -138,7 +141,7 @@ SELECT id, file, path, representative_ext
         // send the email to a user without permission.
 
         // check_input_parameter() above already validated that every item
-        // matches PATTERN_ID (digits only), so this filter only exists to
+        // matches ValidationPattern::ID (digits only), so this filter only exists to
         // give implode() a provably string-castable array.
         $post_user_ids = array_filter($_POST['users'], is_string(...));
 
@@ -149,8 +152,8 @@ SELECT
     ui.language,
     u.' . $user_field_email . ' AS email,
     u.' . $user_field_username . ' AS username
-  FROM ' . USER_INFOS_TABLE . ' AS ui
-    JOIN ' . USERS_TABLE . ' AS u ON u.' . $user_field_id . ' = ui.user_id
+  FROM ' . Tables::userInfos() . ' AS ui
+    JOIN ' . Tables::users() . ' AS u ON u.' . $user_field_id . ' = ui.user_id
   WHERE ui.user_id IN (' . implode(',', $post_user_ids) . ')
 ;';
         $users = query2array($query);
@@ -207,10 +210,10 @@ SELECT
             ]
         );
     } elseif ($_POST['who'] == 'group' and ! empty($_POST['group'])) {
-        check_input_parameter('group', $_POST, false, PATTERN_ID);
+        check_input_parameter('group', $_POST, false, ValidationPattern::ID);
 
         // check_input_parameter() above fatal_errors (never returns) unless
-        // $_POST['group'] matches PATTERN_ID (digits only); the is_numeric()
+        // $_POST['group'] matches ValidationPattern::ID (digits only); the is_numeric()
         // check here only narrows the type for what follows.
         $group_id = is_numeric($_POST['group']) ? (int) $_POST['group'] : 0;
 
@@ -219,7 +222,7 @@ SELECT
         $query = '
 SELECT
     name
-  FROM `' . GROUPS_TABLE . '`
+  FROM `' . Tables::groups() . '`
   WHERE id = ' . $group_id . '
 ;';
         $row = pwg_db_fetch_row(pwg_query($query));
@@ -285,7 +288,7 @@ if ($auth_key_duration_num > 0) {
 $query = '
 SELECT
     id AS group_id
-  FROM `' . GROUPS_TABLE . '`
+  FROM `' . Tables::groups() . '`
 ;';
 $all_group_ids = array_from_query($query, 'group_id');
 // group_ids stays [] (rather than undefined) when the gallery has no
@@ -302,7 +305,7 @@ if (count($all_group_ids) == 0) {
         $query = '
 SELECT
     group_id
-  FROM ' . GROUP_ACCESS_TABLE . '
+  FROM ' . Tables::groupAccess() . '
   WHERE cat_id = ' . $category['id'] . '
 ;';
         $group_ids = array_from_query($query, 'group_id');
@@ -315,7 +318,7 @@ SELECT
 SELECT
     id,
     name
-  FROM `' . GROUPS_TABLE . '`
+  FROM `' . Tables::groups() . '`
   WHERE id IN (' . implode(',', array_filter($group_ids, is_string(...))) . ')
   ORDER BY name ASC
 ;';
@@ -332,7 +335,7 @@ SELECT
 $query = '
 SELECT
     user_id
-  FROM ' . USER_INFOS_TABLE . '
+  FROM ' . Tables::userInfos() . '
   WHERE status != \'guest\'
 ;';
 $all_user_ids = query2array($query, null, 'user_id');
@@ -344,7 +347,7 @@ if ($category['status'] == 'private') {
         $query = '
 SELECT
     user_id
-  FROM ' . USER_GROUP_TABLE . '
+  FROM ' . Tables::userGroup() . '
   WHERE group_id IN (' . implode(',', array_filter($group_ids, is_string(...))) . ')
 ';
         $user_ids_access_indirect = query2array($query, null, 'user_id');
@@ -353,7 +356,7 @@ SELECT
     $query = '
 SELECT
     user_id
-  FROM ' . USER_ACCESS_TABLE . '
+  FROM ' . Tables::userAccess() . '
   WHERE cat_id = ' . $category['id'] . '
 ;';
     $user_ids_access_direct = query2array($query, null, 'user_id');
@@ -370,7 +373,7 @@ if (count($user_ids) > 0) {
 SELECT
     ' . $user_field_id . ' AS id,
     ' . $user_field_username . ' AS username
-  FROM ' . USERS_TABLE . '
+  FROM ' . Tables::users() . '
   WHERE id IN (' . implode(',', $user_ids) . ')
 ;';
 

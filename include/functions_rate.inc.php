@@ -9,6 +9,9 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\AccessLevel;
+use Piwigo\Db\Tables;
+
 /**
  * Rate a picture by the current user.
  *
@@ -38,7 +41,7 @@ function rate_picture($image_id, int|string|null $rate): false|array
         return false;
     }
 
-    $user_anonymous = is_autorize_status(ACCESS_CLASSIC) ? false : true;
+    $user_anonymous = is_autorize_status(AccessLevel::Classic) ? false : true;
 
     if ($user_anonymous and ! (bool) $conf['rate_anonymous']) {
         return false;
@@ -68,7 +71,7 @@ function rate_picture($image_id, int|string|null $rate): false|array
         if ($anonymous_id != $save_anonymous_id) { // client has changed his IP adress or he's trying to fool us
             $query = '
 SELECT element_id
-  FROM ' . RATE_TABLE . '
+  FROM ' . Tables::rate() . '
   WHERE user_id = ' . $user_id . '
     AND anonymous_id = \'' . $anonymous_id . '\'
 ;';
@@ -81,7 +84,7 @@ SELECT element_id
             if (count($already_there) > 0) {
                 $query = '
 DELETE
-  FROM ' . RATE_TABLE . '
+  FROM ' . Tables::rate() . '
   WHERE user_id = ' . $user_id . '
     AND anonymous_id = \'' . $save_anonymous_id . '\'
     AND element_id IN (' . implode(',', $already_there) . ')
@@ -90,7 +93,7 @@ DELETE
             }
 
             $query = '
-UPDATE ' . RATE_TABLE . '
+UPDATE ' . Tables::rate() . '
   SET anonymous_id = \'' . $anonymous_id . '\'
   WHERE user_id = ' . $user_id . '
     AND anonymous_id = \'' . $save_anonymous_id . '\'
@@ -103,7 +106,7 @@ UPDATE ' . RATE_TABLE . '
 
     $query = '
 DELETE
-  FROM ' . RATE_TABLE . '
+  FROM ' . Tables::rate() . '
   WHERE element_id = ' . $image_id . '
     AND user_id = ' . $user_id . '
 ';
@@ -113,7 +116,7 @@ DELETE
     pwg_query($query);
     $query = '
 INSERT
-  INTO ' . RATE_TABLE . '
+  INTO ' . Tables::rate() . '
   (user_id,anonymous_id,element_id,rate,date)
   VALUES
   ('
@@ -154,7 +157,7 @@ function update_rating_score($element_id = false): array
 SELECT element_id,
     COUNT(rate) AS rcount,
     SUM(rate) AS rsum
-  FROM ' . RATE_TABLE . '
+  FROM ' . Tables::rate() . '
   GROUP by element_id';
 
     $all_rates_count = 0;
@@ -206,7 +209,7 @@ SELECT element_id,
         ];
     }
     mass_updates(
-        IMAGES_TABLE,
+        Tables::images(),
         [
             'primary' => ['id'],
             'update' => ['rating_score'],
@@ -220,8 +223,8 @@ SELECT element_id,
     $element_id_key = $element_id === false ? 0 : $element_id;
     if (! isset($by_item[$element_id_key])) {
         $query = '
-SELECT id FROM ' . IMAGES_TABLE . '
-  LEFT JOIN ' . RATE_TABLE . ' ON id=element_id
+SELECT id FROM ' . Tables::images() . '
+  LEFT JOIN ' . Tables::rate() . ' ON id=element_id
   WHERE element_id IS NULL AND rating_score IS NOT NULL';
 
         $to_update = array_from_query($query, 'id');
@@ -232,7 +235,7 @@ SELECT id FROM ' . IMAGES_TABLE . '
 
         if (! empty($to_update)) {
             $query = '
-UPDATE ' . IMAGES_TABLE . '
+UPDATE ' . Tables::images() . '
   SET rating_score=NULL
   WHERE id IN (' . implode(',', $to_update) . ')';
             pwg_query($query);

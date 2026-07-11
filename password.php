@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\AccessLevel;
+use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 // +-----------------------------------------------------------------------+
@@ -36,7 +38,7 @@ $page['infos'] = is_array($page['infos'] ?? null) ? $page['infos'] : [];
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
 
-check_status(ACCESS_FREE);
+check_status(AccessLevel::Free);
 
 trigger_notify('loc_begin_password');
 
@@ -280,7 +282,7 @@ SELECT
     user_id,
     status,
     activation_key
-  FROM ' . USER_INFOS_TABLE . '
+  FROM ' . Tables::userInfos() . '
   WHERE activation_key IS NOT NULL
     AND activation_key_expire > NOW()
 ;';
@@ -351,7 +353,7 @@ function reset_password(): bool
     $user_fields = $conf['user_fields'];
 
     single_update(
-        USERS_TABLE,
+        Tables::users(),
         [
             $user_fields['password'] => pwg_password_hash($new_password),
         ],

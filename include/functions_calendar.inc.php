@@ -12,6 +12,7 @@ declare(strict_types=1);
 use Piwigo\Cache\PersistentCache;
 use Piwigo\Calendar\CalendarMonthly;
 use Piwigo\Calendar\CalendarWeekly;
+use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 /** URL keyword for list view */
@@ -36,12 +37,12 @@ function initialize_calendar(): void
     }
 
     // ------------------ initialize the condition on items to take into account ---
-    $inner_sql = ' FROM ' . IMAGES_TABLE;
+    $inner_sql = ' FROM ' . Tables::images();
 
     if ($page['section'] == 'categories') { // we will regenerate the items by including subcats elements
         $page['items'] = [];
         $inner_sql .= '
-INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id = image_id';
+INNER JOIN ' . Tables::imageCategory() . ' ON id = image_id';
 
         if (isset($page['category'])) {
             $page_category = $page['category'];

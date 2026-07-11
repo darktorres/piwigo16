@@ -9,6 +9,9 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\AccessLevel;
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -31,7 +34,7 @@ global $conf, $page, $template, $user;
 save_edit_context();
 
 // Check Access and exit when user status is not ok
-check_status(ACCESS_GUEST);
+check_status(AccessLevel::Guest);
 
 // $page['category'] (see include/section_init.inc.php / get_cat_info())
 // is set at most once, before this script runs, and is never reassigned
@@ -73,7 +76,7 @@ $user_id = is_numeric($user_id) ? (int) $user_id : 0;
 if (! isset($rank_of[$image_id])) {
     $query = '
 SELECT id, file, level
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE ';
     if ($image_id > 0) {
         $query .= 'id = ' . $image_id;
@@ -118,7 +121,7 @@ SELECT id, file, level
         } else {// try to see if we can access it differently
             $query = '
 SELECT id
-  FROM ' . IMAGES_TABLE . ' INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id=image_id
+  FROM ' . Tables::images() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id=image_id
   WHERE id=' . $image_id
               . get_sql_condition_FandF(
                   [
@@ -328,7 +331,7 @@ if (isset($_GET['action'])) {
         case 'add_to_favorites':
 
             $query = '
-INSERT INTO ' . FAVORITES_TABLE . '
+INSERT INTO ' . Tables::favorites() . '
   (image_id,user_id)
   VALUES
   (' . $image_id . ',' . $user_id . ')
@@ -341,7 +344,7 @@ INSERT INTO ' . FAVORITES_TABLE . '
         case 'remove_from_favorites':
 
             $query = '
-DELETE FROM ' . FAVORITES_TABLE . '
+DELETE FROM ' . Tables::favorites() . '
   WHERE user_id = ' . $user_id . '
     AND image_id = ' . $image_id . '
 ;';
@@ -360,7 +363,7 @@ DELETE FROM ' . FAVORITES_TABLE . '
                 $representative_category_id = $page_category['id'] ?? null;
                 $representative_category_id = is_numeric($representative_category_id) ? (int) $representative_category_id : 0;
                 $query = '
-UPDATE ' . CATEGORIES_TABLE . '
+UPDATE ' . Tables::categories() . '
   SET representative_picture_id = ' . $image_id . '
   WHERE id = ' . $representative_category_id . '
 ;';
@@ -397,8 +400,8 @@ UPDATE ' . CATEGORIES_TABLE . '
         case 'edit_comment':
 
             include_once PHPWG_ROOT_PATH . 'include/functions_comment.inc.php';
-            check_input_parameter('comment_to_edit', $_GET, false, PATTERN_ID);
-            // check_input_parameter() validated this against PATTERN_ID
+            check_input_parameter('comment_to_edit', $_GET, false, ValidationPattern::ID);
+            // check_input_parameter() validated this against ValidationPattern::ID
             // (/^\d+$/) above -- it would have called fatal_error() otherwise.
             assert(is_numeric($_GET['comment_to_edit']));
             // false is unreachable here: $die_on_error defaults to true,
@@ -465,8 +468,8 @@ UPDATE ' . CATEGORIES_TABLE . '
 
             include_once PHPWG_ROOT_PATH . 'include/functions_comment.inc.php';
 
-            check_input_parameter('comment_to_delete', $_GET, false, PATTERN_ID);
-            // check_input_parameter() validated this against PATTERN_ID
+            check_input_parameter('comment_to_delete', $_GET, false, ValidationPattern::ID);
+            // check_input_parameter() validated this against ValidationPattern::ID
             // (/^\d+$/) above -- it would have called fatal_error() otherwise.
             assert(is_numeric($_GET['comment_to_delete']));
 
@@ -487,8 +490,8 @@ UPDATE ' . CATEGORIES_TABLE . '
 
             include_once PHPWG_ROOT_PATH . 'include/functions_comment.inc.php';
 
-            check_input_parameter('comment_to_validate', $_GET, false, PATTERN_ID);
-            // check_input_parameter() validated this against PATTERN_ID
+            check_input_parameter('comment_to_validate', $_GET, false, ValidationPattern::ID);
+            // check_input_parameter() validated this against ValidationPattern::ID
             // (/^\d+$/) above -- it would have called fatal_error() otherwise.
             assert(is_numeric($_GET['comment_to_validate']));
 
@@ -526,8 +529,8 @@ if ((bool) trigger_change('allow_increment_element_hit_count', $inc_hit_count, $
 // ---------------------------------------------------------- related categories
 $query = '
 SELECT id,uppercats,commentable,visible,status,global_rank
-  FROM ' . IMAGE_CATEGORY_TABLE . '
-    INNER JOIN ' . CATEGORIES_TABLE . ' ON category_id = id
+  FROM ' . Tables::imageCategory() . '
+    INNER JOIN ' . Tables::categories() . ' ON category_id = id
   WHERE image_id = ' . $image_id . '
 ' . get_sql_condition_FandF(
     [
@@ -558,7 +561,7 @@ if ($next_item !== null) {
 
 $query = '
 SELECT *
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', $ids) . ')
 ;';
 
@@ -770,7 +773,7 @@ if ((bool) $conf['picture_download_icon'] and ! empty($picture['current']['downl
     if ((bool) $conf['enable_formats']) {
         $query = '
 SELECT *
-  FROM ' . IMAGE_FORMAT_TABLE . '
+  FROM ' . Tables::imageFormat() . '
   WHERE image_id = ' . $picture['current']['id'] . '
 ;';
         $formats = query2array($query);
@@ -946,7 +949,7 @@ if (! is_a_guest() and (bool) $conf['picture_favorite_icon']) {
     // verify if the picture is already in the favorite of the user
     $query = '
 SELECT COUNT(*) AS nb_fav
-  FROM ' . FAVORITES_TABLE . '
+  FROM ' . Tables::favorites() . '
   WHERE image_id = ' . $image_id . '
     AND user_id = ' . $user_id . '
 ;';
@@ -1092,7 +1095,7 @@ if (count($related_categories) == 1 and
     $ids = array_unique($ids);
     $query = '
 SELECT id, name, permalink
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE id IN (' . implode(',', $ids) . ')';
     // hash_from_query()'s own @return docblock (array<int|string, mixed>) is
     // looser than query2array()'s precise conditional return type, which it

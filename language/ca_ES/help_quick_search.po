@@ -1,0 +1,161 @@
+# Piwigo translation — ca_ES
+# Source: help_quick_search.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ca_ES\n"
+"Plural-Forms: nplurals=3; plural=(n == 1 ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Add a dash (-) or NOT before a word to exclude from search. Note that NOT acts as a filtering operator so you cannot have a search containing only NOT operators. You cannot combine OR with NOT (john OR NOT bill is not valid)"
+msgstr "Afegiu un guió (-) o NOT abans d'una paraula per excloure-la de la cerca. Tingueu en compte que NOT actua com a operador de filtre, de manera que no podeu fer una cerca que contingui només operadors NOT. No podeu combinar OR amb NOT (és a dir, John OR NOT Bill no és vàlid)"
+
+msgid "Add an OR between words."
+msgstr "Afegeix un OR entre paraules."
+
+msgid "Exact search"
+msgstr "Cerca exacta"
+
+msgid "Exclude"
+msgstr "Excloure"
+
+msgid "Grouping"
+msgstr "Agrupació"
+
+msgid "Here is a list of actions you can perform:"
+msgstr "Aquí teniu una llista de les accions disponibles:"
+
+msgid "OR inclusive"
+msgstr "OR inclusiu"
+
+msgid "Others"
+msgstr "Altres"
+
+msgid "Same principle as for"
+msgstr "Mateix principi que per a"
+
+msgid "Search using extended syntax"
+msgstr "Cerca mitjançant la sintaxi estesa"
+
+msgid "Searches by author."
+msgstr "Cerca per autor."
+
+msgid "Searches by file name."
+msgstr "Cerca per nom de fitxer."
+
+msgid "Searches for photos by number of views."
+msgstr "Cerca fotos per nombre de visualitzacions."
+
+msgid "Searches only for photos with the given words in title or description."
+msgstr "Cerca només fotos amb les paraules donades al títol o descripció."
+
+msgid "Searches only in tag names without looking at photo titles or descriptions."
+msgstr "Cerca només a les etiquetes sense mirar els títols ni les descripcions de les fotos."
+
+msgid "Searches photos by file size."
+msgstr "Cerca fotos per mida del fitxer."
+
+msgid "Searches photos by its numeric identifier in Piwigo."
+msgstr "Cerca fotos pel seu identificador numèric a Piwigo."
+
+msgid "Searches photos by posted date."
+msgstr "Cerca fotos per data de publicació."
+
+msgid "Searches photos by rating."
+msgstr "Cerca fotos per puntuació."
+
+msgid "Searches photos by size in pixels."
+msgstr "Cerca fotos per mida en píxels."
+
+msgid "Searches photos by taken date."
+msgstr "Cerca fotos per la data en què es van fer."
+
+msgid "Searches photos by width/height ratio."
+msgstr "Cerca fotos per ràtio amplada/alçada."
+
+msgid "Searches photos with a given width or height."
+msgstr "Busca fotos amb una amplada o alçada determinades."
+
+msgid "Supported numeric operators"
+msgstr "Operadors numèrics suportats"
+
+msgid "The quick search engine allows you to use boolean operators to refine your search. By default, the search applies to all keywords. Searches are not case sensitive."
+msgstr "El motor de cerca ràpida us permet utilitzar operadors booleans per refinar la cerca. Per defecte, la cerca s'aplica a totes les paraules clau. Les cerques no distingeixen entre majúscules i minúscules."
+
+msgid "These operators can be used with numeric fields such as"
+msgstr "Aquests operadors es poden utilitzar amb camps numèrics com ara"
+
+msgid "Use quotes to search for an exact keyword or phrase."
+msgstr "Utilitzeu cometes per cercar una paraula clau o frase exacta."
+
+msgid "With keywords"
+msgstr "Amb paraules clau"
+
+msgid "between 10 and 100 (inclusive)"
+msgstr "entre 10 i 100 (inclusivament)"
+
+msgid "equals 100"
+msgstr "igual a 100"
+
+msgid "finds files between 1MB and 10MB."
+msgstr "troba fitxers entre 1MB i 10MB."
+
+msgid "finds panoramas"
+msgstr "cerca panorames"
+
+msgid "finds photo 123 to 126 (it may find between 0 and 4 photos, because photos can be deleted)"
+msgstr "cerca les fotos de la número 123 a la 126 (pot trobar entre 0 i 4 fotos, perquè les fotos es poden suprimir)"
+
+msgid "finds photos from compact cameras in portrait or landscape modes"
+msgstr "cerca fotos de càmeres compactes en mode retrat o paisatge"
+
+msgid "from 100 and above"
+msgstr "a partir de 100"
+
+msgid "greater than 100"
+msgstr "més gran que 100"
+
+msgid "less than 100"
+msgstr "menor que 100"
+
+msgid "photos after Jan 1st 2008"
+msgstr "fotos posteriors a l'1 de gener de 2008"
+
+msgid "photos from 2003 to 2008"
+msgstr "fotos del 2003 al 2008"
+
+msgid "photos from may 2003"
+msgstr "fotos de maig de 2003"
+
+msgid "photos posted in 2003"
+msgstr "fotos publicades el 2003"
+
+msgid "photos taken in 2003"
+msgstr "fotos fetes el 2003"
+
+msgid "return photos less than 700px high"
+msgstr "fotos de menys de 700px d'alçada"
+
+msgid "return photos wider than 500px"
+msgstr "fotos més amples de 500px"
+
+msgid "return photos with at least 1,000 views"
+msgstr "retorna fotos amb almenys 1000 visites"
+
+msgid "returns photos of 12 megapixels or more"
+msgstr "retorna fotos de 12 megapíxels o més"
+
+msgid "returns photos of 5 megapixels"
+msgstr "retorna fotos de 5 megapíxels"
+
+msgid "up to 100 (inclusive)"
+msgstr "fins a 100 (inclòs)"
+
+msgid "will give you all photos with at least one note."
+msgstr "us donarà totes les fotos amb almenys una nota."
+
+msgid "will give you photos without notes."
+msgstr "us donarà les fotos sense notes."
+

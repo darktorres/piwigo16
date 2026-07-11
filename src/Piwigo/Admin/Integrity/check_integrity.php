@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Integrity;
 
+use Piwigo\Core\AppInfo;
+use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 class check_integrity
@@ -55,7 +57,7 @@ class check_integrity
         if (
             is_array($conf_c13y_ignore) and
             isset($conf_c13y_ignore['version']) and
-            ($conf_c13y_ignore['version'] == PHPWG_VERSION) and
+            ($conf_c13y_ignore['version'] == AppInfo::VERSION) and
             is_array($conf_c13y_ignore['list'])
         ) {
             $ignore_list_changed = false;
@@ -284,9 +286,9 @@ class check_integrity
     public function update_conf($conf_ignore_list = []): void
     {
         $conf_c13y_ignore = [];
-        $conf_c13y_ignore['version'] = PHPWG_VERSION;
+        $conf_c13y_ignore['version'] = AppInfo::VERSION;
         $conf_c13y_ignore['list'] = $conf_ignore_list;
-        $query = 'update ' . CONFIG_TABLE . ' set value =\'' . serialize($conf_c13y_ignore) . '\'where param = \'c13y_ignore\';';
+        $query = 'update ' . Tables::config() . ' set value =\'' . serialize($conf_c13y_ignore) . '\'where param = \'c13y_ignore\';';
         pwg_query($query);
     }
 

@@ -1,0 +1,1302 @@
+# Piwigo translation — sr_RS
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: sr_RS\n"
+"Plural-Forms: nplurals=3; plural=(n % 10 == 1 && n % 100 != 11 ? 0 : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 1 : 2);\n"
+"X-Piwigo-Language-Name: Српски\n"
+"X-Piwigo-Country: Србија\n"
+"X-Piwigo-Plupload-Code: sr_RS\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: sr\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "%d Kb"
+msgstr "%d Kb"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d категорија обновљена"
+msgstr[1] "%d категорије обновљене"
+
+msgid "%d comment to validate"
+msgstr "%d коментар за оверу"
+
+msgid "%d comments to validate"
+msgstr "%d коментари за оверу"
+
+msgid "%d new comment"
+msgstr "%d нови коментар"
+
+msgid "%d new comments"
+msgstr "%d нови коментари"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d коментар"
+msgstr[1] "%d коментари"
+
+msgid "%d hit"
+msgid_plural "%d hits"
+msgstr[0] "%d посета"
+msgstr[1] "%d посета"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "број нових слика: %d"
+msgstr[1] "нове слике - %d"
+
+msgid "%d new user"
+msgstr "%d нови корисник"
+
+msgid "%d new users"
+msgstr "%d нови корисници"
+
+msgid "About"
+msgstr "O..."
+
+msgid "All tags"
+msgstr "Све ознаке"
+
+msgid "Any tag"
+msgstr "Било која ознака"
+
+msgid "Author"
+msgstr "Аутор"
+
+msgid "Albums"
+msgstr "Категорије"
+
+msgid "Album"
+msgstr "Категорија"
+
+msgid "Close this window"
+msgstr "Затвори прозор"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "Потпуни RSS извори (слике, коментари)"
+
+msgid "Confirm Password"
+msgstr "Потврди лозинку"
+
+msgid "Connection settings"
+msgstr "Подешавања повезивања"
+
+msgid "Login"
+msgstr "Пријава"
+
+msgid "Contact webmaster"
+msgstr "Пишите wебмастер-у"
+
+msgid "Create a new account"
+msgstr "Направи нови налог"
+
+msgid "Created on"
+msgstr "Датум израде:"
+
+msgid "Creation date"
+msgstr "Датум израде"
+
+msgid "Current password is wrong"
+msgstr "Тренутна лозинка је неисправна"
+
+msgid "Dimensions"
+msgstr "Величине"
+
+msgid "Display"
+msgstr "Приказ"
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "Недостаје адреса електронске поште"
+
+msgid "Email address"
+msgstr "Адреса електронске поште"
+
+msgid "Enter your personnal informations"
+msgstr "Упишите своје личне податке"
+
+msgid "Error sending email"
+msgstr "Грешка приликом слања електронске поште"
+
+msgid "File name"
+msgstr "Назив датотеке"
+
+msgid "File"
+msgstr "Датотека"
+
+msgid "Filesize"
+msgstr "Величина датотеке"
+
+msgid "Filter and display"
+msgstr "Филтер и приказ"
+
+msgid "Filter"
+msgstr "Филтер"
+
+msgid "Forgot your password?"
+msgstr "Заборавили сте лозинку?"
+
+msgid "Go through the gallery as a visitor"
+msgstr "Прегледајте галерију као посетилац"
+
+msgid "Help"
+msgstr "Помоћ"
+
+msgid "Identification"
+msgstr "Пријава"
+
+msgid "Photos only RSS feed"
+msgstr "RSS извор само за слике"
+
+msgid "Keyword"
+msgstr "Кључна реч"
+
+msgid "Links"
+msgstr "Интернет везе"
+
+msgid "N/A"
+msgstr "Н/Д"
+
+msgid "New on %s"
+msgstr "Нови на %s"
+
+msgid "Notification"
+msgstr "Обавештење"
+
+msgid "Number of items"
+msgstr "Број ставки"
+
+msgid "Original dimensions"
+msgstr "Изворне величине"
+
+msgid "Password forgotten"
+msgstr "Заборављена лозинка"
+
+msgid "Password"
+msgstr "Лозинка"
+
+msgid "Post date"
+msgstr "Датум објаве:"
+
+msgid "Posted on"
+msgstr "Датум објављивања"
+
+msgid "Profile"
+msgstr "Профил"
+
+msgid "Quick connect"
+msgstr "Брза веза"
+
+msgid "RSS feed"
+msgstr "RSS извор"
+
+msgid "Register"
+msgstr "Упишите се"
+
+msgid "Registration"
+msgstr "Регистрација"
+
+msgid "Related tags"
+msgstr "Повезане ознаке"
+
+msgid "Reset"
+msgstr "Поништи"
+
+msgid "Retrieve password"
+msgstr "Врати лозинку"
+
+msgid "Search tags"
+msgstr "Ознаке претраге"
+
+msgid "Search"
+msgstr "Претраживање"
+
+msgid "display available tags"
+msgstr "Погледај доступне ознаке"
+
+msgid "Since"
+msgstr "Од"
+
+msgid "Sort by"
+msgstr "Сложено по"
+
+msgid "Sort order"
+msgstr "Редослед слагања"
+
+msgid "Tag"
+msgstr "Ознака"
+
+msgid "Tags"
+msgstr "Ознаке"
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "RSS обавијесни извор омогућава обавештавање о новостима са овог wеб места : нове слике, обновљене категорије, нове коментаре. Користите читач RSS iзвора."
+
+msgid "Unknown feed identifier"
+msgstr "Непозната ознака извора"
+
+msgid "User comments"
+msgstr "Кориснички коментари"
+
+msgid "Username"
+msgstr "Корисничко име"
+
+msgid "Visits"
+msgstr "Посета"
+
+msgid "Webmaster"
+msgstr "Мајстор за интернет странице"
+
+msgid "Week %d"
+msgstr "Недеља %d"
+
+msgid "About Piwigo"
+msgstr "О Piwigo-u"
+
+msgid "You are not authorized to access the requested page"
+msgstr "Нисте овлаштени за приступ затраженој страници"
+
+msgid "add this photo to your favorites"
+msgstr "додај ову слику у омиљене"
+
+msgid "Administration"
+msgstr "Администрација"
+
+msgid "all"
+msgstr "све"
+
+msgid "ascending"
+msgstr "узлазно"
+
+msgid "Expand all albums"
+msgstr "Прошири све категорије"
+
+msgid "posted after %s (%s)"
+msgstr "објављено после %s (%s)"
+
+msgid "posted before %s (%s)"
+msgstr "објављено пре %s (%s)"
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "објављено између %s (%s) и %s (%s)"
+
+msgid "posted on %s"
+msgstr "објављено на %s"
+
+msgid "Best rated"
+msgstr "Најбоље оцењено"
+
+msgid "display best rated photos"
+msgstr "приказ најбоље оцењених ставки"
+
+msgid "Calendar"
+msgstr "Календар"
+
+msgid "All"
+msgstr "Све"
+
+msgid "display each day with photos, month per month"
+msgstr "приказ сваког дана са сликама, месец по месец"
+
+msgid "View"
+msgstr "Погледај"
+
+msgid "chronology_monthly_calendar"
+msgstr "Месечни календар"
+
+msgid "chronology_monthly_list"
+msgstr "Месечни попис"
+
+msgid "chronology_weekly_list"
+msgstr "Недељни попис"
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "Кликните овде ако нисте аутоматски пребачени"
+
+msgid "comment date"
+msgstr "датум коментара"
+
+msgid "Comment"
+msgstr "Коментар"
+
+msgid "Your comment has been registered"
+msgstr "Ваш је коментар уписан"
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "Anti-flood систем : молимо сачекајте мало пре објаве новог коментара"
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "Ваш коментар НИЈЕ уписан јер није прошао правила овере"
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "Администратор мора одобрити ваш коментар пре објаве."
+
+msgid "This login is already used by another user"
+msgstr "Ово корисничко име се већ користи"
+
+msgid "Comments"
+msgstr "Коментари"
+
+msgid "Add a comment"
+msgstr "Додај коментар"
+
+msgid "created after %s (%s)"
+msgstr "направљен након %s (%s)"
+
+msgid "created before %s (%s)"
+msgstr "направљен прије %s (%s)"
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "направљен између %s (%s) и %s (%s)"
+
+msgid "created on %s"
+msgstr "направљен на %s"
+
+msgid "Your Gallery Customization"
+msgstr "Подешавање Ваше Галерије "
+
+msgid "Default"
+msgstr "Подразумевано"
+
+msgid "delete this photo from your favorites"
+msgstr "уклоните ову слику из омиљених"
+
+msgid "Delete"
+msgstr "Уклони"
+
+msgid "descending"
+msgstr "силазно"
+
+msgid "Download"
+msgstr "преузми"
+
+msgid "Download this file"
+msgstr "преузми ову слику"
+
+msgid "edit"
+msgstr "уреди"
+
+msgid "wrong date"
+msgstr "погрешан датум"
+
+msgid "excluded"
+msgstr "искључено"
+
+msgid "Your favorites"
+msgstr "Моји омиљени"
+
+msgid "display your favorites photos"
+msgstr "приказ мојих омиљених слика"
+
+msgid "Favorites"
+msgstr "Омиљени"
+
+msgid "First"
+msgstr "Први"
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "Галерија је закључана због одржавања. Молимо, навратите касније."
+
+msgid "Page generated in"
+msgstr "Страница израђена у "
+
+msgid "guest"
+msgstr "гост"
+
+msgid "Hello"
+msgstr "Поздрав"
+
+msgid "available for administrators only"
+msgstr "доступно само администраторима"
+
+msgid "display this album"
+msgstr "приказује слике у главној категорији"
+
+msgid "display last user comments"
+msgstr "Преглед задњих корисничких коментара"
+
+msgid "search"
+msgstr "претражи"
+
+msgid "Home"
+msgstr "Почетна"
+
+msgid "in this album"
+msgstr "у овој категорији"
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] "у %d подкатегорији"
+msgstr[1] "у %d подкатегорија"
+
+msgid "included"
+msgstr "укључено"
+
+msgid "Invalid password!"
+msgstr "Погрешна лозинка!"
+
+msgid "Language"
+msgstr "Језик"
+
+msgid "last %d days"
+msgstr "задњих %d дана"
+
+msgid "Last"
+msgstr "Задњи"
+
+msgid "Logout"
+msgstr "Одјава"
+
+msgid "obligatory"
+msgstr "обвезно"
+
+msgid "display a calendar by creation date"
+msgstr "приказ календара по датуму израде"
+
+msgid "display all photos in all sub-albums"
+msgstr "приказ свих ставки у свим подкатегоријама"
+
+msgid "return to normal view mode"
+msgstr "повратак у уобичајени начин прегледа"
+
+msgid "display a calendar by posted date"
+msgstr "приказ календара по датуму објаве"
+
+msgid "Most visited"
+msgstr "Најпосјећеније"
+
+msgid "display most visited photos"
+msgstr "приказ најпосјећенијих слика"
+
+msgid "Unknown identifier"
+msgstr "Непозната ознака"
+
+msgid "New password"
+msgstr "Нова лозинка"
+
+msgid "Rate this photo"
+msgstr "Оцени ову слику"
+
+msgid "Next"
+msgstr "Следећи"
+
+msgid "no rate"
+msgstr "без оцене"
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "Ставке објављене у задњем %d дану."
+msgstr[1] "Ставке објављене у задњих %d дана."
+
+msgid "password updated"
+msgstr "лозинка обновљена"
+
+msgid "Recent period must be a positive integer value"
+msgstr "Раздобље мора бити позитивна целобројна вредност"
+
+msgid "photo"
+msgstr "слика"
+
+msgid "Click on the photo to see it in high definition"
+msgstr "Кликни на слику за преглед у високој резолуцији"
+
+msgid "Show file metadata"
+msgstr "Прикажи мета податке записа"
+
+msgid "Powered by"
+msgstr "Урађено у"
+
+msgid "Preferences"
+msgstr "Подешења"
+
+msgid "Previous"
+msgstr "Претходни"
+
+msgid "Random photos"
+msgstr "Слике по случајном избору"
+
+msgid "display a set of random photos"
+msgstr "приказ слика по случајном избору"
+
+msgid "Recent albums"
+msgstr "Недавне категорије"
+
+msgid "display recently updated albums"
+msgstr "приказ недавно обновљених категорија"
+
+msgid "Recent period"
+msgstr "Недавно раздобље"
+
+msgid "Recent photos"
+msgstr "Недавне слике"
+
+msgid "display most recent photos"
+msgstr "приказ најновијих слика"
+
+msgid "Redirection..."
+msgstr "Преусмеравање..."
+
+msgid "Please, enter a login"
+msgstr "Молимо, пријавите се"
+
+msgid "login mustn't end with a space character"
+msgstr "пријава не сме завршавати размаком"
+
+msgid "login mustn't start with a space character"
+msgstr "пријава не сме почињати размаком"
+
+msgid "this login is already used"
+msgstr "ово корисничко име се већ користи"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "адреса електронске поште мора бити облика xxx@yyy.eee (нпр. : korisnik@stranica.org)"
+
+msgid "Auto login"
+msgstr "Упамти ме"
+
+msgid "remove this tag from the list"
+msgstr "уклони  ову ознаку из пописа"
+
+msgid "representative"
+msgstr "представник"
+
+msgid "Search for Author"
+msgstr "Претраживање по аутору"
+
+msgid "Search in albums"
+msgstr "Претраживање у категоријама"
+
+msgid "Search by date"
+msgstr "Претраживање по датуму"
+
+msgid "Date"
+msgstr "Датум"
+
+msgid "End-Date"
+msgstr "Крајњи датум"
+
+msgid "Kind of date"
+msgstr "Врста датума"
+
+msgid "Search for words"
+msgstr "Претраживање по речима"
+
+msgid "Search for all terms"
+msgstr "Претраживање по свим критеријумима "
+
+msgid "Search for any term"
+msgstr "Претраживање по било којем критеријуму"
+
+msgid "Empty query. No criteria has been entered."
+msgstr "Празна претрага. Није унешено ни једно поље."
+
+msgid "Search results"
+msgstr "Резултати претраживања"
+
+msgid "Search in sub-albums"
+msgstr "Претраживање у подкатегоријама"
+
+msgid "Contact"
+msgstr "Контакт"
+
+msgid "set as album representative"
+msgstr "постави за представника категорије"
+
+msgid "Show number of comments"
+msgstr "Pрикажи број коментара"
+
+msgid "Show number of hits"
+msgstr "Прикажи број посета"
+
+msgid "slideshow"
+msgstr "приказ у виду слајдова"
+
+msgid "stop the slideshow"
+msgstr "заустави приказ слајдова"
+
+msgid "Specials"
+msgstr "Посебне категорије"
+
+msgid "SQL queries in"
+msgstr "SQL упит у "
+
+msgid "display only recently posted photos"
+msgstr "приказ само недавно објављених слика"
+
+msgid "return to the display of all photos"
+msgstr "повратак у приказ свих слика"
+
+msgid "the beginning"
+msgstr "почетак"
+
+msgid "Thumbnails"
+msgstr "Сличице"
+
+msgid "Menu"
+msgstr "Избор"
+
+msgid "A comment on your site"
+msgstr "Коментар на Вашој интернет страници"
+
+msgid "today"
+msgstr "данас"
+
+msgid "Update your rating"
+msgstr "Обновите своју оцену"
+
+msgid "the username must be given"
+msgstr "мора се уписати корисничко име"
+
+msgid "useful when password forgotten"
+msgstr "корисно када се заборави лозинка"
+
+msgid "Quick search"
+msgstr "Брзо претраживање"
+
+msgid "Connected user: %s"
+msgstr "Повезани корисник: %s"
+
+msgid "IP: %s"
+msgstr "IP: %s"
+
+msgid "Browser: %s"
+msgstr "Претраживач: %s"
+
+msgid "Author: %s"
+msgstr "Аутор: %s"
+
+msgid "Comment: %s"
+msgstr "Коментар: %s"
+
+msgid "Comment by %s"
+msgstr "Коментарисао-ла %s"
+
+msgid "User: %s"
+msgstr "Корисник: %s"
+
+msgid "Email: %s"
+msgstr "Електронска адреса: %s"
+
+msgid "Admin: %s"
+msgstr "Администратор: %s"
+
+msgid "Registration of %s"
+msgstr "Пријава од %s"
+
+msgid "Album: %s"
+msgstr "Категорија: %s"
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "Лош статус за корисника „гост“, користи се подразумевани статус. Молимо обавестите мајстора интернет страница."
+
+msgid "this email address is already in use"
+msgstr "корисник већ користи ову адресу електронске поште"
+
+msgid "Album results for"
+msgstr "Резултати категорије за "
+
+msgid "Tag results for"
+msgstr "Резултати ознака за"
+
+msgid "from %s to %s"
+msgstr "од %s до %s"
+
+msgid "Play of slideshow"
+msgstr "Покрени приказ слајдова"
+
+msgid "Pause of slideshow"
+msgstr "Заустави приказ слајдова"
+
+msgid "Repeat the slideshow"
+msgstr "Понови приказ слајдова"
+
+msgid "Not repeat the slideshow"
+msgstr "Не понављај приказ слајдова"
+
+msgid "Reduce diaporama speed"
+msgstr "Смањи брзину "
+
+msgid "Accelerate diaporama speed"
+msgstr "Повећај брзину "
+
+msgid "Submit"
+msgstr "Пошаљи"
+
+msgid "Yes"
+msgstr "Да"
+
+msgid "No"
+msgstr "Не"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "слика %d"
+msgstr[1] "%d слике"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "%d слика такође повезана са тренутним ознакама"
+msgstr[1] "%d слике такође повезана са тренутним ознакама"
+
+msgid "display photos linked to this tag"
+msgstr "Прегледај слике повезане само са овом ознаком"
+
+msgid "photos posted during the last %d days"
+msgstr "слике објављене током задњих %d дана"
+
+msgid "Piwigo Help"
+msgstr "Piwigo Помоћ"
+
+msgid "Rank"
+msgstr "Редослед"
+
+msgid "group by letters"
+msgstr "сложено по словима"
+
+msgid "letters"
+msgstr "слова"
+
+msgid "show tag cloud"
+msgstr "прикажи означен облак"
+
+msgid "cloud"
+msgstr "облак"
+
+msgid "Reset to default values"
+msgstr "Врати на подразумеване вредности"
+
+msgid "delete all photos from your favorites"
+msgstr "обриши све слике из Омиљени"
+
+msgid "Sent by"
+msgstr "Послао"
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "Cookies су блокирани или нису подржани од Вашег претраживача. Морате омогућити цоокиес да би се логовали."
+
+msgid "Edit a comment"
+msgstr "Уреди коментар"
+
+msgid "Are you sure?"
+msgstr "Јесте ли сигурни?"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) Овај коментар захтева оверу"
+
+msgid "Welcome"
+msgstr "Добродошли"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "Добродошли у Вашу Piwigo фото галерију!"
+
+msgid "... or browse your empty gallery"
+msgstr "... или претражи Вашу празну галерију"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "... или искључите ову поруку, урадићу то на свој начин"
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "Здраво %s, Ваша Piwigo фото галерија је празна!"
+
+msgid "I want to add photos"
+msgstr "Желим да додам фотографије"
+
+msgid "Manage this user comment: %s"
+msgstr "Уреди коментаре овог корисника: %s"
+
+msgid "This author modified following comment:"
+msgstr "Овај аутор је мењао текући коментар:"
+
+msgid "This author removed the comment with id %d"
+msgstr "Овај аутор је уклонио коментар са идентификацијом %d"
+
+msgid "html tags are not allowed in login"
+msgstr "html ознаке нису дозвољене овде"
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "Број фотографија по страни мора бити већи од нуле"
+
+msgid "Number of photos per page"
+msgstr "Број фотографија по страници"
+
+msgid "Rating score"
+msgstr "Оцена резултата"
+
+msgid "Invalid username or email"
+msgstr "Неправилно корисничко име или адреса е-поште"
+
+msgid "Password reset is not allowed for this user"
+msgstr "Поништавање лозинке није дозвољено за овог корисника"
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "Корисник \"%s\" нема адресу е-поште, поништавање лозинке није могуће"
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "Неко је захтевао да се лозинка поништи за корисничко налог:"
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "Корисничко име \"%s\" у галерији %s"
+
+msgid "To reset your password, visit the following address:"
+msgstr "Да бисте поништили Вашу лозинку прочитајте пошту са следеће е-адресе:"
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "Ако је ово грешка, занемарите ову поруку и ништа се неће десити."
+
+msgid "Password Reset"
+msgstr "Поништавање лозинке"
+
+msgid "Check your email for the confirmation link"
+msgstr "Проверите вашу е-пошту за везу потврде"
+
+msgid "Invalid key"
+msgstr "Лош кључ"
+
+msgid "The passwords do not match"
+msgstr "Лозинке нису једнаке"
+
+msgid "Your password has been reset"
+msgstr "Ваша лозинка је поништена"
+
+msgid "Return to home page"
+msgstr "Повратак на почетну страницу"
+
+msgid "Please enter your username or email address."
+msgstr "Молимо Вас да унесете корисничко име или е-адресу."
+
+msgid "You will receive a link to create a new password via email."
+msgstr "Добићете везу  преко е-поште да бисте променили лозинку."
+
+msgid "Username or email"
+msgstr "Корисничко име или е-адреса"
+
+msgid "Change my password"
+msgstr "Промени моју лозинку"
+
+msgid "Enter your new password below."
+msgstr "Унесите Вашу нову лозинку испод."
+
+msgid "Edit"
+msgstr "Промени"
+
+msgid "EXIF Metadata"
+msgstr "EXIF подаци"
+
+msgid "Hello %s,"
+msgstr "Здраво %s,"
+
+msgid "IPTC Metadata"
+msgstr "IPTC подаци"
+
+msgid "Send my connection settings by email"
+msgstr "Пошаљи податке о подешавању везе електронском поштом"
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "Успешна регистрација, добићете ускоро е-пошту са подацима о подешавању везе. Добродошли!"
+
+msgid "Username modification"
+msgstr "Промена корисничког имена"
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "Ваше корисничко име је успешно промењено у : %s"
+
+msgid "square"
+msgstr "квадрат"
+
+msgid "thumb"
+msgstr "сличица"
+
+msgid "small"
+msgstr "мала"
+
+msgid "medium"
+msgstr "средња"
+
+msgid "large"
+msgstr "Велика"
+
+msgid "xlarge"
+msgstr "XL велика"
+
+msgid "xxlarge"
+msgstr "XXL велика"
+
+msgid "Original"
+msgstr "оригинална"
+
+msgid "Thank you for registering at %s!"
+msgstr "Хвала за регистрацију на %s!"
+
+msgid "Here are your connection settings"
+msgstr "Овде су ваша подешавања за везу"
+
+msgid "Password: %s"
+msgstr "Лозинка: %s"
+
+msgid "Username: %s"
+msgstr "Корисничко име: %s"
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "Ако мислите да сте добили ову е-пошту грешком, контактирајте нас на следећу адресу: %s"
+
+msgid "Show oldest comments first"
+msgstr "Прикажи најстарије коментаре прво"
+
+msgid "Show latest comments first"
+msgstr "Прикажи последње коментаре прво"
+
+msgid "2small"
+msgstr "XXS - мали"
+
+msgid "xsmall"
+msgstr "XS - врло мали"
+
+msgid "Photo sizes"
+msgstr "Величине фотографија"
+
+msgid "View in"
+msgstr "Погледај у"
+
+msgid "Mobile"
+msgstr "Мобилни"
+
+msgid "Desktop"
+msgstr "Стони"
+
+msgid "File name, A &rarr; Z"
+msgstr "Назив датотеке, A &rarr; Z"
+
+msgid "File name, Z &rarr; A"
+msgstr "Назив датотеке, Z &rarr; A"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "Наслов фотографије, A &rarr; Z"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "Наслов фотографије, Z &rarr; A"
+
+msgid "Date created, new &rarr; old"
+msgstr "Датум сликања, најсновији &rarr; најстарији"
+
+msgid "Date created, old &rarr; new"
+msgstr "Датум сликања, најстарији &rarr; најновији"
+
+msgid "Date posted, new &rarr; old"
+msgstr "Датум објављивања, најновији &rarr; најстарији"
+
+msgid "Date posted, old &rarr; new"
+msgstr "Датум објављивања, најстарији &rarr; најновији"
+
+msgid "Rating score, high &rarr; low"
+msgstr "Према оцењивању, највећа &rarr; најмања"
+
+msgid "Rating score, low &rarr; high"
+msgstr "Према оцењивању, најмања &rarr; највећа"
+
+msgid "Visits, high &rarr; low"
+msgstr "Посете, најбројније &rarr; најмање"
+
+msgid "Visits, low &rarr; high"
+msgstr "Посете, најмање &rarr; најбројније"
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "Бројчана променљива, 1 &rarr; 9"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "Бројчана променљива, 9 &rarr; 1"
+
+msgid "Manual sort order"
+msgstr "Ручно уређени редослед"
+
+msgid "%d rate"
+msgid_plural "%d rates"
+msgstr[0] "%d однос"
+msgstr[1] "%d оцена"
+
+msgid "Bad request"
+msgstr "Лош захтев"
+
+msgid "Forbidden"
+msgstr "Забрањено"
+
+msgid "Page not found"
+msgstr "Страница није нађена"
+
+msgid "Permalink for album not found"
+msgstr "Стална веза за галерију није нађена"
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "Пивиго је наишао на непоправљиву грешку."
+
+msgid "Requested album does not exist"
+msgstr "Захтевана галерија не постоји"
+
+msgid "Requested tag does not exist"
+msgstr "Захтевана ознака не постоји"
+
+msgid "Email address is mandatory"
+msgstr "Електронска адреса је обавезна"
+
+msgid "Username is mandatory"
+msgstr "Корисничко име је обавезно"
+
+msgid "mandatory"
+msgstr "обавезан"
+
+msgid "Website"
+msgstr "Међумрежно место"
+
+msgid "Your website URL is invalid"
+msgstr "Ваша адреса на глобалној мрежи (URL) је неисправна"
+
+msgid "Password is missing. Please enter the password."
+msgstr "Лозинка недостаје. Молим унесите лозинку."
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Потврда лозинке недостаје. Молим потврдите изабрану лозинку."
+
+msgid "%d photos per page"
+msgstr "%d слика по страници"
+
+msgid "Email"
+msgstr "Електронска адреса"
+
+msgid "First Page"
+msgstr "Прва страна"
+
+msgid "Go back to the album"
+msgstr "Повратак на албум"
+
+msgid "Last Page"
+msgstr "Последња страна"
+
+msgid "Theme"
+msgstr "Тема"
+
+msgid "No results for"
+msgstr "Нема резултата за"
+
+msgid "Photo description"
+msgstr "Опис фотографије"
+
+msgid "Photo title"
+msgstr "Наслов фотографије"
+
+msgid "Apply on properties"
+msgstr "Примени на особине"
+
+msgid "Album name, A &rarr; Z"
+msgstr "Назив албума, А &rarr; Ш"
+
+msgid "Album name, Z &rarr; A"
+msgstr "Назив албума, Ш &rarr; А"
+
+msgid "Link: %s"
+msgstr "Веза: %s"
+
+msgid "Your authentication key is no longer valid."
+msgstr "Ваш кључ за проверу идентитета није више важећи."
+
+msgid "Invalid username or password!"
+msgstr "Погрешно корисничко име или лозинка!"
+
+msgid "generate random password"
+msgstr "направи насумичну лозинку"
+
+msgid "Password: ********** (no copy by email)"
+msgstr "Лозинка: ********** (без копирања из е-поште)"
+
+msgid "Related albums"
+msgstr "Повезани албуми"
+
+msgid "Album name, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+msgstr "Име албума, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+
+msgid "Album name, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+msgstr "Име албума, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+
+msgid "Start-Date"
+msgstr "Датум почетка"
+
+msgid "Search in this set"
+msgstr "Претражи у овом скупу"
+
+msgid "Tags found"
+msgstr "Пронађено ознака"
+
+msgid "Tags listed here match your search by word. Click on one to browse by tag."
+msgstr "Ознаке које су овде исписане се поклапају са речима претраге. Кликните на неку да прегледате ознаку."
+
+msgid "The PDF you requested is too large to display on this page."
+msgstr "ПДФ који сте захтевали је превелики за приказ на овој страници."
+
+msgid "Unknown time period"
+msgstr "Непознат временски период"
+
+msgid "Validate"
+msgstr "Провери исправност"
+
+msgid "You can try to edit your filters and perform a new search."
+msgstr "Можете пробати да измените филтере и започнете нову претрагу."
+
+msgid "last 24 hours"
+msgstr "Последњих 24 сата"
+
+msgid "last 3 months"
+msgstr "Последња 3 месеца"
+
+msgid "last 30 days"
+msgstr "Последњих 30 дана"
+
+msgid "last 6 months"
+msgstr "Последњих 6 месеци"
+
+msgid "last 7 days"
+msgstr "Последњих 7 дана"
+
+msgid "last year"
+msgstr "Последње године"
+
+msgid "rating score %s"
+msgstr "оцена %s"
+
+msgid "year %d"
+msgstr "година %d"
+
+msgid "%d visits"
+msgstr "%d посета"
+
+msgid "Added by"
+msgstr "Додао корисник"
+
+msgid "Album already selected"
+msgstr "Албум је већ изабран"
+
+msgid "Album description"
+msgstr "Опис албума"
+
+msgid "Album title"
+msgstr "Наслов албума"
+
+msgid "Albums found"
+msgstr "Пронађени албуми"
+
+msgid "Albums listed here match your search by word. Click on one to browse by album."
+msgstr "Албуми који су овде исписану се поклапају са речима претраге. Кликните на неки да га прегледате."
+
+msgid "Cancel"
+msgstr "Откажи"
+
+msgid "Choose filters"
+msgstr "Изабери филтере"
+
+msgid "Clear"
+msgstr "Очисти"
+
+msgid "Click here to display it"
+msgstr "Кликните овде да га прикажете"
+
+msgid "Empty filters"
+msgstr "Празни филтери"
+
+msgid "File type"
+msgstr "Врста датотеке"
+
+msgid "Fill in the filters to start a search"
+msgstr "Попуните филтере да започнете претрагу"
+
+msgid "Filters"
+msgstr "Филтери"
+
+msgid "No results are available."
+msgstr "Нису пронађени резултати."
+
+msgid "Only the first %d albums are displayed, out of %d."
+msgstr "Приказано је само првих %d албума од %d."
+
+msgid "Pages"
+msgstr "Странице"
+
+msgid "Pre-established filters are proposed, but you can add or remove them using the \"Choose filters\" button."
+msgstr "Предложени су предодређени филтери, али их можете додати или уклонити преко дугмета „Изабери филтере“."
+
+msgid "Search in :"
+msgstr "Претражи у:"
+
+msgid "Custom dates"
+msgstr "Произвољни датуми"
+
+msgid "last 12 months"
+msgstr "Последњих 12 месеци"
+
+msgid "There are no authors available for the photos currently filtered"
+msgstr "Нема аутора за фотографије које су тренутно изфилтриране"
+
+msgid "There are no creation dates available for the photos currently filtered"
+msgstr "Нема датума настанка за фотографије које су тренутно изфилтриране"
+
+msgid "There are no tags available for the photos currently filtered"
+msgstr "Нема ознака за фотографије које су тренутно изфилтриране"
+
+msgid "Set your password below."
+msgstr "Поставите вашу лозинку испод."
+
+msgid "piwigo_day_0"
+msgstr "Недеља"
+
+msgid "piwigo_day_1"
+msgstr "Понедељак"
+
+msgid "piwigo_day_2"
+msgstr "Уторак"
+
+msgid "piwigo_day_3"
+msgstr "Среда"
+
+msgid "piwigo_day_4"
+msgstr "Четвртак"
+
+msgid "piwigo_day_5"
+msgstr "Петак"
+
+msgid "piwigo_day_6"
+msgstr "Субота"
+
+msgid "piwigo_month_10"
+msgstr "Октобар"
+
+msgid "piwigo_month_11"
+msgstr "Новембар"
+
+msgid "piwigo_month_12"
+msgstr "Децембар"
+
+msgid "piwigo_month_1"
+msgstr "Јануар"
+
+msgid "piwigo_month_2"
+msgstr "Фебруар"
+
+msgid "piwigo_month_3"
+msgstr "Март"
+
+msgid "piwigo_month_4"
+msgstr "Април"
+
+msgid "piwigo_month_5"
+msgstr "Мај"
+
+msgid "piwigo_month_6"
+msgstr "Јун"
+
+msgid "piwigo_month_7"
+msgstr "Јул"
+
+msgid "piwigo_month_8"
+msgstr "Август"
+
+msgid "piwigo_month_9"
+msgstr "Септембар"
+

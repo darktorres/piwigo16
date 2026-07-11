@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\AppInfo;
+use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\Mailer;
@@ -506,13 +508,13 @@ SELECT
     i.user_id,
     u.' . $username_field . ' AS name,
     u.' . $email_field . ' AS email
-  FROM ' . USERS_TABLE . ' AS u
-    JOIN ' . USER_INFOS_TABLE . ' AS i
+  FROM ' . Tables::users() . ' AS u
+    JOIN ' . Tables::userInfos() . ' AS i
     ON i.user_id =  u.' . $id_field;
 
     if ($group_id !== null) {
         $query .= '
-    JOIN ' . USER_GROUP_TABLE . ' AS ug
+    JOIN ' . Tables::userGroup() . ' AS ug
       ON ug.user_id = i.user_id';
     }
 
@@ -584,10 +586,10 @@ function pwg_mail_group($group_id, array $args = [], array $tpl = []): bool|int
     // get distinct languages of targeted users
     $query = '
 SELECT DISTINCT language
-  FROM ' . USER_GROUP_TABLE . ' AS ug
-    INNER JOIN ' . USERS_TABLE . ' AS u
+  FROM ' . Tables::userGroup() . ' AS ug
+    INNER JOIN ' . Tables::users() . ' AS u
     ON ' . $id_field . ' = ug.user_id
-    INNER JOIN ' . USER_INFOS_TABLE . ' AS ui
+    INNER JOIN ' . Tables::userInfos() . ' AS ui
     ON ui.user_id = ug.user_id
   WHERE group_id = ' . $group_id . '
     AND ' . $email_field . ' <> ""';
@@ -620,10 +622,10 @@ SELECT
     ui.status,
     u.' . $username_field . ' AS name,
     u.' . $email_field . ' AS email
-  FROM ' . USER_GROUP_TABLE . ' AS ug
-    INNER JOIN ' . USERS_TABLE . ' AS u
+  FROM ' . Tables::userGroup() . ' AS ug
+    INNER JOIN ' . Tables::users() . ' AS u
     ON ' . $id_field . ' = ug.user_id
-    INNER JOIN ' . USER_INFOS_TABLE . ' AS ui
+    INNER JOIN ' . Tables::userInfos() . ' AS ui
     ON ui.user_id = ug.user_id
   WHERE group_id = ' . $group_id . '
     AND ' . $email_field . ' <> ""
@@ -892,7 +894,7 @@ function pwg_mail($to, array $args = [], array $tpl = [])
                 [
                     'GALLERY_URL' => add_url_params($gallery_home_url, $add_url_params),
                     'GALLERY_TITLE' => $page['gallery_title'] ?? $conf['gallery_title'],
-                    'VERSION' => ((bool) $conf['show_version']) ? PHPWG_VERSION : '',
+                    'VERSION' => ((bool) $conf['show_version']) ? AppInfo::VERSION : '',
                     'PHPWG_URL' => defined('PHPWG_URL') ? PHPWG_URL : '',
                     'CONTENT_ENCODING' => get_pwg_charset(),
                     'CONTACT_MAIL' => $email_webmaster,

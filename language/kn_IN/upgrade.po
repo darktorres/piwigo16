@@ -1,0 +1,65 @@
+# Piwigo translation — kn_IN
+# Source: upgrade.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: kn_IN\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Upgrade from version %s to %s"
+msgstr "%s ದಿಂದ %s ಕ್ಕೆ ಉನ್ನತೀಕರಿಸಿ"
+
+msgid "total SQL time"
+msgstr "SQL ಸಮಯದ ಒಟ್ಟು ಮೊತ್ತ"
+
+msgid "total upgrade time"
+msgstr "ಉನ್ನತೀಕರಣದ ಸಮಯದ ಒಟ್ಟು ಮೊತ್ತ"
+
+msgid "You do not have access rights to run upgrade"
+msgstr "ಉನ್ನತೀಕರಣವನ್ನು ಕೈಗೊಳ್ಳಲು ನಿಮಗೆ ಹಕ್ಕುಗಳಿಲ್ಲ."
+
+msgid "This page proposes to upgrade your database corresponding to your old version of Piwigo to the current version. The upgrade assistant thinks you are currently running a <strong>release %s</strong> (or equivalent)."
+msgstr "ಈ ಪುಟವು ನಿಮ್ಮ ಹಳೆಯ ಪಿವಿಗೋ ಆವೃತ್ತಿಯಿಂದ ಹೊಸ ಆವೃತ್ತಿಯ ಡೇಟಾಬೇಸ್ ಗೆ ಉನ್ನತೀಕರಿಸಲು ಸೂಚಿಸುತ್ತಿದೆ. ಉನ್ನತೀಕರಣದ ಸಹಾಯಕವು ನೀವು ಸಧ್ಯಕ್ಕೆ  <strong>release %s</strong> ಅಥವಾ ಅದರ ಸಮಾನವಾದುದನ್ನು ಉಪಯೋಗಿಸುತ್ತಿದ್ದೀರೆಂದು ಅಂದುಕೊಂಡಿದೆ."
+
+msgid "User permissions and group permissions have been erased"
+msgstr "ಬಳಕೆದಾರರ ಮತ್ತು ಗುಂಪುಗಳ ಅನುಮತಿಗಳನ್ನು ಅಳಿಸಲಾಗಿದೆ."
+
+msgid "Upgrade"
+msgstr "ಉನ್ನತೀಕರಿಸಿ"
+
+msgid "Upgrade informations"
+msgstr "ಉನ್ನತೀಕರಣದ ವಿವರಗಳು"
+
+msgid "Statistics"
+msgstr "ಅಂಕಿಅಂಶಗಳು"
+
+msgid "SQL queries"
+msgstr "SQL ಕ್ವೆರಿಗಳು"
+
+msgid "Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem."
+msgstr "ಏನಾದಾರೂ ತೊಂದರೆ ಉಂಟಾಗಿದ್ದಲ್ಲಿ, ನಿರ್ವಹಣೆ ಚೆಕ್ ಇನ್ ಅನ್ನು ಮಾಡಿ [Administration>Tools>Maintenance] "
+
+msgid "Only thumbnails prefix and webmaster mail address have been saved from previous configuration"
+msgstr "ಕಿರುಚಿತ್ರದ ಪ್ರತ್ಯಯ ಮತ್ತು ವೆಬ್ ಮಾಸ್ಟರ್ ರ ಮಿಂಚೆ ವಿಳಾಸಗಳನ್ನು ಮಾತ್ರ ಈ ಹಿಂದಿನ ಕಾರ್ಯಸಿದ್ಧತಾ ಪಟ್ಟಿಯಲ್ಲಿ ಉಳಿಸಲಾಗಿದೆ."
+
+msgid "Only administrator can run upgrade: please sign in below."
+msgstr "ಕೇವಲ ನಿರ್ವಹಣೆಗಾರರು ಮಾತ್ರ ಉನ್ನತೀಕರಣ ಮಾಡಬಹುದು. ದಯವಿಟ್ಟು ಈ ಕೆಳಗೆ ಸೈನ್ ಇನ್ ಆಗಿರಿ."
+
+msgid "In <i>%s</i>, before <b>?></b>, insert:"
+msgstr "<i>%s</i> ನಲ್ಲಿ, ಮುಂದೆ <b>?></b>, ಸೇರಿಸಿ:"
+
+msgid "As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:"
+msgstr "ಮುನ್ನೆಚ್ಚರಿಕೆಯಾಗಿ, ಈ ಕೆಳಕಂಡ ಥೀಮ್ ಗಳನ್ನು ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಲಾಗಿದೆ. ಇವುಗಳನ್ನು ಮರುಸಕ್ರಿಯಗೊಳಿಸುವ ಮುನ್ನ ಉನ್ನತೀಕರಿಸಬಹುದಾದ ಥೀಮ್ ಗಳಿಗಾಗಿ ಪರೀಕ್ಷಿಸಿ."
+
+msgid "As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:"
+msgstr "ಮುನ್ನೆಚ್ಚರಿಕೆಯಾಗಿ, ಈ ಕೆಳಕಂಡ ಪ್ಲಗ್ ಇನ್ ಗಳನ್ನು ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಲಾಗಿದೆ. ಇವುಗಳನ್ನು ಮರುಸಕ್ರಿಯಗೊಳಿಸುವ ಮುನ್ನ ಉನ್ನತೀಕರಿಸಬಹುದಾದ ಪ್ಲಗ್ ಇನ್ ಗಳಿಗಾಗಿ ಪರೀಕ್ಷಿಸಿ."
+
+msgid "All sub-albums of private albums become private"
+msgstr "ಎಲ್ಲಾ ಖಾಸಗಿ ಸಂಪುಟಗಳ ಉಪ-ಸಂಪುಟಗಳು ಖಾಸಗಿಯಾಗುತ್ತವೆ"
+
+msgid "Discover what's new in Piwigo %s"
+msgstr "Piwigo %s ರಲ್ಲಿ ಹೊಸತೇನಿದೆ ಅನ್ವೇಷಿಸಿ"
+

@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\AccessLevel;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\SrcImage;
 use Piwigo\Ws\PwgError;
@@ -29,7 +30,7 @@ function ws_isInvokeAllowed(mixed $res, string $methodName, array $params): mixe
         return $res;
     }
 
-    if (! is_autorize_status(ACCESS_GUEST) and
+    if (! is_autorize_status(AccessLevel::Guest) and
         ! str_starts_with($methodName, 'pwg.session.')) {
         return new PwgError(401, 'Access denied');
     }

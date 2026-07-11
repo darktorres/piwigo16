@@ -10,7 +10,11 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\tabsheet;
+use Piwigo\Config\Config;
+use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Logger;
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
 use Piwigo\Site\LocalSiteReader;
 use Piwigo\Template\Template;
 
@@ -37,7 +41,7 @@ if (! (bool) $conf['enable_synchronization']) {
     die('synchronization is disabled');
 }
 
-check_status(ACCESS_ADMINISTRATOR);
+check_status(AccessLevel::Administrator);
 
 if (! is_numeric($_GET['site'])) {
     die('site param missing or invalid');
@@ -46,7 +50,7 @@ $site_id = (int) $_GET['site'];
 
 $query = '
 SELECT galleries_url
-  FROM ' . SITES_TABLE . '
+  FROM ' . Tables::sites() . '
   WHERE id = ' . $site_id;
 $row = pwg_db_fetch_row(pwg_query($query));
 $site_url = $row !== null ? $row[0] : null;
@@ -160,7 +164,7 @@ if (isset($_POST['submit'])
     // which categories to update ?
     $query = '
 SELECT id, uppercats, global_rank, status, visible
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE dir IS NOT NULL
     AND site_id = ' . $site_id;
     if (isset($_POST['cat']) and is_numeric($_POST['cat'])) {
@@ -210,7 +214,7 @@ SELECT id, uppercats, global_rank, status, visible
 
     $query = '
 SELECT id
-  FROM ' . CATEGORIES_TABLE;
+  FROM ' . Tables::categories();
     $result = pwg_query($query);
     while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         // id is a NOT NULL primary key; skip defensively rather than use a
@@ -224,7 +228,7 @@ SELECT id
     // let's see if some categories already have some sub-categories...
     $query = '
 SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   GROUP BY id_uppercat';
     $result = pwg_query($query);
     while ((bool) ($row = pwg_db_fetch_assoc($result))) {
@@ -240,7 +244,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
     }
 
     // next category id available
-    $next_id = pwg_db_nextval('id', CATEGORIES_TABLE);
+    $next_id = pwg_db_nextval('id', Tables::categories());
 
     // retrieve sub-directories fulldirs from the site reader
     // get_full_directories() is declared to return mixed[], but in practice
@@ -343,7 +347,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                 'id', 'dir', 'name', 'site_id', 'id_uppercat', 'uppercats', 'commentable',
                 'visible', 'status', 'rank', 'global_rank',
             ];
-            mass_inserts(CATEGORIES_TABLE, $dbfields, $inserts);
+            mass_inserts(Tables::categories(), $dbfields, $inserts);
 
             // add default permissions to categories
             $category_ids = [];
@@ -367,7 +371,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                 $granted_users = [];
                 $query = '
           SELECT *
-          FROM ' . GROUP_ACCESS_TABLE . '
+          FROM ' . Tables::groupAccess() . '
           WHERE cat_id IN (' . $category_up . ')
         ;';
                 $result = pwg_query($query);
@@ -396,7 +400,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                 }
                 $query = '
           SELECT *
-          FROM ' . USER_ACCESS_TABLE . '
+          FROM ' . Tables::userAccess() . '
           WHERE cat_id IN (' . $category_up . ')
         ;';
                 $result = pwg_query($query);
@@ -454,9 +458,9 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                         }
                     }
                 }
-                mass_inserts(GROUP_ACCESS_TABLE, ['group_id', 'cat_id'], $insert_granted_grps);
+                mass_inserts(Tables::groupAccess(), ['group_id', 'cat_id'], $insert_granted_grps);
                 $insert_granted_users = array_unique($insert_granted_users, SORT_REGULAR);
-                mass_inserts(USER_ACCESS_TABLE, ['user_id', 'cat_id'], $insert_granted_users);
+                mass_inserts(Tables::userAccess(), ['user_id', 'cat_id'], $insert_granted_users);
             } else {
                 add_permission_on_category($category_ids, get_admins());
             }
@@ -481,7 +485,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
         if (substr_compare($fulldir, '../', 0, 3) == 0) {
             $fulldir = substr($fulldir, 3);
         }
-        $to_delete_derivative_dirs[] = PHPWG_ROOT_PATH . PWG_DERIVATIVE_DIR . $fulldir;
+        $to_delete_derivative_dirs[] = PHPWG_ROOT_PATH . Config::derivativeDir() . $fulldir;
     }
 
     if (count($to_delete) > 0) {
@@ -521,7 +525,7 @@ if (isset($_POST['submit']) and $_POST['sync'] == 'files'
     if (count($cat_ids) > 0) {
         $query = '
 SELECT id, path
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE storage_category_id IN ('
           . wordwrap(
               implode(', ', $cat_ids),
@@ -535,7 +539,7 @@ SELECT id, path
     }
 
     // next element id available
-    $next_element_id = pwg_db_nextval('id', IMAGES_TABLE);
+    $next_element_id = pwg_db_nextval('id', Tables::images());
 
     $start = get_moment();
 
@@ -634,7 +638,7 @@ SELECT id, path
             // find formats for existing photos (already in database)
             $query = '
 SELECT *
-  FROM ' . IMAGE_FORMAT_TABLE . '
+  FROM ' . Tables::imageFormat() . '
   WHERE image_id IN (' . implode(',', $existing_ids) . ')
 ;';
             $result = pwg_query($query);
@@ -705,14 +709,14 @@ SELECT *
         // inserts all new elements
         if (count($inserts) > 0) {
             mass_inserts(
-                IMAGES_TABLE,
+                Tables::images(),
                 array_keys($inserts[0]),
                 $inserts
             );
 
             // inserts all links between new elements and their storage category
             mass_inserts(
-                IMAGE_CATEGORY_TABLE,
+                Tables::imageCategory(),
                 array_keys($insert_links[0]),
                 $insert_links
             );
@@ -730,7 +734,7 @@ SELECT *
         // inserts all formats
         if (count($insert_formats) > 0) {
             mass_inserts(
-                IMAGE_FORMAT_TABLE,
+                Tables::imageFormat(),
                 array_keys($insert_formats[0]),
                 $insert_formats
             );
@@ -739,7 +743,7 @@ SELECT *
         if (count($formats_to_delete) > 0) {
             $query = '
 DELETE
-  FROM ' . IMAGE_FORMAT_TABLE . '
+  FROM ' . Tables::imageFormat() . '
   WHERE format_id IN (' . implode(',', $formats_to_delete) . ')
 ;';
             pwg_query($query);
@@ -833,7 +837,7 @@ if (isset($_POST['submit'])
         $counts['upd_elements'] = count($datas);
         if (! $simulate and count($datas) > 0) {
             mass_updates(
-                IMAGES_TABLE,
+                Tables::images(),
                 // fields
                 [
                     'primary' => ['id'],
@@ -938,7 +942,7 @@ if (isset($_POST['submit']) and isset($_POST['sync_meta'])
     if (! $simulate) {
         if (count($datas) > 0) {
             mass_updates(
-                IMAGES_TABLE,
+                Tables::images(),
                 // fields
                 [
                     'primary' => ['id'],
@@ -1041,7 +1045,7 @@ if (isset($_POST['submit'])) {
     $cat_selected = [];
 
     if (isset($_GET['cat_id'])) {
-        check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
+        check_input_parameter('cat_id', $_GET, false, ValidationPattern::ID);
 
         $cat_selected = [$_GET['cat_id']];
         $tpl_introduction['sync'] = 'files';
@@ -1054,7 +1058,7 @@ $template->assign('introduction', $tpl_introduction);
 
 $query = '
 SELECT id,name,uppercats,global_rank
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE site_id = ' . $site_id;
 display_select_cat_wrapper(
     $query,

@@ -9,6 +9,9 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\AccessLevel;
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
@@ -29,11 +32,11 @@ include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
 
-check_status(ACCESS_ADMINISTRATOR);
+check_status(AccessLevel::Administrator);
 
-check_input_parameter('photo', $_GET, false, PATTERN_ID);
-check_input_parameter('album', $_GET, false, PATTERN_ID);
-check_input_parameter('group', $_GET, false, PATTERN_ID);
+check_input_parameter('photo', $_GET, false, ValidationPattern::ID);
+check_input_parameter('album', $_GET, false, ValidationPattern::ID);
+check_input_parameter('group', $_GET, false, ValidationPattern::ID);
 
 // +-----------------------------------------------------------------------+
 // | tabs                                                                  |
@@ -61,8 +64,8 @@ SELECT
     occured_on,
     details,
     ' . $user_fields['username'] . ' AS username
-  FROM ' . ACTIVITY_TABLE . '
-    JOIN ' . USERS_TABLE . ' AS u ON performed_by = u.' . $user_fields['id'] . '
+  FROM ' . Tables::activity() . '
+    JOIN ' . Tables::users() . ' AS u ON performed_by = u.' . $user_fields['id'] . '
     WHERE object = \'user\'
   ORDER BY activity_id DESC
 ;';
@@ -122,7 +125,7 @@ $query = '
 SELECT
     performed_by,
     COUNT(*) as counter
-  FROM ' . ACTIVITY_TABLE . '
+  FROM ' . Tables::activity() . '
   WHERE object != \'system\'
   GROUP BY performed_by
 ;';
@@ -134,7 +137,7 @@ if (count($nb_lines_for_user) > 0) {
   SELECT
       ' . $user_fields['id'] . ' AS id,
       ' . $user_fields['username'] . ' AS username
-    FROM ' . USERS_TABLE . '
+    FROM ' . Tables::users() . '
     WHERE ' . $user_fields['id'] . ' IN (' . implode(',', array_keys($nb_lines_for_user)) . ');';
     $username_of = query2array($query, 'id', 'username');
 } else {
@@ -161,7 +164,7 @@ $template->assign('ulist', $filterable_users);
 
 $query = '
 SELECT COUNT(*)
-  FROM ' . USERS_TABLE . '
+  FROM ' . Tables::users() . '
 ;';
 
 $row = pwg_db_fetch_row(pwg_query($query));
@@ -172,7 +175,7 @@ $template->assign('nb_users', $nb_users);
 $query = '
 SELECT
     occured_on
-  FROM ' . ACTIVITY_TABLE . '
+  FROM ' . Tables::activity() . '
   ORDER BY activity_id ASC
   LIMIT 1
 ;';
@@ -182,7 +185,7 @@ $min_date = $row !== null ? $row[0] : null;
 $query = '
 SELECT
     occured_on
-  FROM ' . ACTIVITY_TABLE . '
+  FROM ' . Tables::activity() . '
   ORDER BY activity_id DESC
   LIMIT 1
 ;';
@@ -202,9 +205,9 @@ $additional_filt_name = null;
 $additional_filt_value = null;
 
 $additional_filters = [
-    'photo' => IMAGES_TABLE,
-    'album' => CATEGORIES_TABLE,
-    'group' => GROUPS_TABLE,
+    'photo' => Tables::images(),
+    'album' => Tables::categories(),
+    'group' => Tables::groups(),
 ];
 
 foreach ($additional_filters as $filter_key => $filter_table) {
@@ -246,7 +249,7 @@ SELECT
     object,
     action,
     count(*) AS counter
-  FROM ' . ACTIVITY_TABLE . '
+  FROM ' . Tables::activity() . '
   WHERE object != \'system\'';
 
 if ((bool) $additional_filt_type) {

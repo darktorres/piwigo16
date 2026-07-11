@@ -1,0 +1,20 @@
+# Piwigo translation — nb_NO
+# Source: whats_new_16.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: nb_NO\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Brand new login & preferences with Standard pages !"
+msgstr "Helt ny innlogging og preferanser med standardsider!"
+
+msgid "Two factor authentication is here"
+msgstr "Tofaktorautentisering er her"
+
+msgid "UI redesigns that make a difference"
+msgstr "Redesign av brukergrensesnittet som utgjør en forskjell"
+

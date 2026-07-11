@@ -1,0 +1,1541 @@
+# Piwigo translation — el_GR
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: el_GR\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Language-Name: Ελληνικά\n"
+"X-Piwigo-Country: Ελλάδα\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: el\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "useful when password forgotten"
+msgstr "χρήσιμο σε περίπτωση απώλειας του κωδικού"
+
+msgid "Quick search"
+msgstr "Γρήγορη αναζήτηση"
+
+msgid "Connected user: %s"
+msgstr "Συνδεδεμένος χρήστης: %s"
+
+msgid "IP: %s"
+msgstr "IP: %s"
+
+msgid "Browser: %s"
+msgstr "Φυλλομετρητής: %s"
+
+msgid "Author: %s"
+msgstr "Συντάκτης: %s"
+
+msgid "Comment: %s"
+msgstr "Σχόλιο: %s"
+
+msgid "Comment by %s"
+msgstr "Σχόλιο από %s"
+
+msgid "User: %s"
+msgstr "Χρήστης: %s"
+
+msgid "Email: %s"
+msgstr "Email: %s"
+
+msgid "Admin: %s"
+msgstr "Διαχειριστής: %s"
+
+msgid "Registration of %s"
+msgstr "Εγγραφή του %s"
+
+msgid "Album: %s"
+msgstr "Λεύκωμα: %s"
+
+msgid "Creation date"
+msgstr "Ημερομηνία δημιουργίας"
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "Σφάλμα για το χρήστη \"επισκέπτης\", θα χρησιμοποιηθεί η προεπιλεγμένη ρύθμιση. Παρακαλώ ενημερώστε τον διαχειριστή."
+
+msgid "Album results for"
+msgstr "Αποτελέσματα λευκωμάτων για "
+
+msgid "Tag results for"
+msgstr "Αποτελέσματα ετικετών για"
+
+msgid "from %s to %s"
+msgstr "από %s σε %s"
+
+msgid "Play of slideshow"
+msgstr "Συνέχιση προβολής"
+
+msgid "Pause of slideshow"
+msgstr "Παύση προβολής"
+
+msgid "Repeat the slideshow"
+msgstr "Επανάληψη προβολής"
+
+msgid "Not repeat the slideshow"
+msgstr "Να μην επαναληφθεί η προβολή σλάιντ"
+
+msgid "Reduce diaporama speed"
+msgstr "Μείωση ταχύτητας προβολής (μεγαλύτερη παύση σε κάθε φωτογραφία)"
+
+msgid "Accelerate diaporama speed"
+msgstr "Αύξηση ταχύτητας προβολής (μικρότερη παύση σε κάθε φωτογραφία)"
+
+msgid "Submit"
+msgstr "Αποθήκευση"
+
+msgid "Yes"
+msgstr "Ναι"
+
+msgid "No"
+msgstr "Όχι"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "%d φωτογραφία"
+msgstr[1] "%d φωτογραφίες"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "%d η φωτογραφία είναι επίσης συνδεδεμένη με τις τρέχουσες ετικέτες"
+msgstr[1] "%d οι φωτογραφίες είναι είναι επίσης συνδεδεμένες με τις υπάρχουσες ετικέτες"
+
+msgid "display photos linked to this tag"
+msgstr "εμφάνιση μόνο των φωτογραφιών που είναι συνδεδεμένες με αυτή την ετικέτα"
+
+msgid "photos posted during the last %d days"
+msgstr "φωτογραφίες που αναρτήθηκαν κατά την διάρκεια των τελευταίων %d ημερών"
+
+msgid "Piwigo Help"
+msgstr "Βοήθεια για το Piwigo"
+
+msgid "Rank"
+msgstr "Βαθμός"
+
+msgid "group by letters"
+msgstr "ομαδοποίηση κατά γράμμα"
+
+msgid "letters"
+msgstr "γράμματα"
+
+msgid "show tag cloud"
+msgstr "σύννεφο ετικετών"
+
+msgid "cloud"
+msgstr "σύννεφο"
+
+msgid "Reset to default values"
+msgstr "Επαναφορά αρχικών ρυθμίσεων"
+
+msgid "delete all photos from your favorites"
+msgstr "διαγραφή όλων των φωτογραφιών από τα αγαπημένα"
+
+msgid "Sent by"
+msgstr "Αποστολή με"
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "Τα cookies έχουν  μπλοκαριστεί ή δεν υποστηρίζονται από το φυλλομετρητή σας. Πρέπει να ενεργοποιήσετε τα cookies ώστε να συνδεθείτε."
+
+msgid "password updated"
+msgstr "ο κωδικός ενημερώθηκε"
+
+msgid "Recent period must be a positive integer value"
+msgstr "Οι μέρες που μια νέα φωτογραφία θεωρείται πρόσφατη πρέπει να είναι θετικός ακέραιος αριθμός"
+
+msgid "photo"
+msgstr "φωτογραφία"
+
+msgid "Click on the photo to see it in high definition"
+msgstr "Κάντε κλικ στη φωτογραφία για να τη δείτε σε υψηλή ανάλυση"
+
+msgid "Show file metadata"
+msgstr "Εμφάνιση μεταδεδομένων εικόνας"
+
+msgid "Powered by"
+msgstr "Powered by"
+
+msgid "Preferences"
+msgstr "Προτιμήσεις"
+
+msgid "Previous"
+msgstr "Προηγούμενο"
+
+msgid "Random photos"
+msgstr "Τυχαίες φωτογραφίες"
+
+msgid "display a set of random photos"
+msgstr "προβολή μιας ομάδας τυχαίων φωτογραφιών"
+
+msgid "Recent albums"
+msgstr "Πρόσφατα λευκώματα"
+
+msgid "display recently updated albums"
+msgstr "εμφάνιση πρόσφατα ανανεωμένων λευκωμάτων"
+
+msgid "Recent period"
+msgstr "Οι νέες φωτογραφίες θεωρούνται πρόσφατες για"
+
+msgid "Recent photos"
+msgstr "Πρόσφατες φωτογραφίες"
+
+msgid "display most recent photos"
+msgstr "προβολή των πιο πρόσφατων φωτογραφιών"
+
+msgid "Redirection..."
+msgstr "Ανακατεύθυνση..."
+
+msgid "Please, enter a login"
+msgstr "Παρακαλώ εισάγετε όνομα χρήστη"
+
+msgid "login mustn't end with a space character"
+msgstr "το όνομα χρήστη δεν πρέπει να τελειώνει με κενό"
+
+msgid "login mustn't start with a space character"
+msgstr "το όνομα χρήστη δεν πρέπει να ξεκινάει με κενό"
+
+msgid "this login is already used"
+msgstr "αυτό το όνομα χρήστη χρησιμοποιείται ήδη"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "η διεύθυνση ηλεκτρονικού ταχυδρομείου πρέπει να είναι της μορφής xxx@yyy.eee (παράδειγμα: jack@altern.org)"
+
+msgid "Auto login"
+msgstr "Αυτόματη σύνδεση"
+
+msgid "remove this tag from the list"
+msgstr "αφαίρεση ετικέτας από τη λίστα"
+
+msgid "representative"
+msgstr "μικρογραφία λευκώματος"
+
+msgid "Search for Author"
+msgstr "Αναζήτηση συντάκτη"
+
+msgid "Search in albums"
+msgstr "Αναζήτηση στα λευκώματα"
+
+msgid "Search by date"
+msgstr "Αναζήτηση με ημερομηνία"
+
+msgid "Date"
+msgstr "Ημερομηνία"
+
+msgid "End-Date"
+msgstr "Έως"
+
+msgid "Kind of date"
+msgstr "Είδος ημερομηνίας"
+
+msgid "Search for words"
+msgstr "Αναζήτηση λέξεων"
+
+msgid "Search for all terms"
+msgstr "Αναζήτηση για όλους τους όρους"
+
+msgid "Search for any term"
+msgstr "Αναζήτηση για οποιοδήποτε όρο"
+
+msgid "Empty query. No criteria has been entered."
+msgstr "Κενή ερώτηση. Δεν έχει εισαχθεί κανένα κριτήριο."
+
+msgid "Search results"
+msgstr "Αποτελέσματα αναζήτησης"
+
+msgid "Search in sub-albums"
+msgstr "Αναζήτηση στα υπο-λευκώματα"
+
+msgid "Contact"
+msgstr "Επικοινωνία"
+
+msgid "set as album representative"
+msgstr "Ορισμός ως αντιπροσωπευτικής φωτογραφίας για το λεύκωμα"
+
+msgid "Show number of comments"
+msgstr "Προβολή αριθμού σχολίων"
+
+msgid "Show number of hits"
+msgstr "Προβολή αριθμού εμφανίσεων"
+
+msgid "slideshow"
+msgstr "προβολή σλάιντ"
+
+msgid "stop the slideshow"
+msgstr "παύση προβολής"
+
+msgid "Specials"
+msgstr "Ξεχωρίζουν"
+
+msgid "SQL queries in"
+msgstr "Ερωτήματα SQL στη"
+
+msgid "display only recently posted photos"
+msgstr "προβολή μόνο πρόσφατα αναρτηθέντων φωτογραφιών"
+
+msgid "return to the display of all photos"
+msgstr "επιστροφή στην προβολή όλων των φωτογραφιών"
+
+msgid "the beginning"
+msgstr "αρχή"
+
+msgid "Thumbnails"
+msgstr "Μικρογραφίες"
+
+msgid "Menu"
+msgstr "Μενού"
+
+msgid "display a calendar by creation date"
+msgstr "προβολή ημερολογίου κατά ημέρα λήψης"
+
+msgid "display all photos in all sub-albums"
+msgstr "προβολή φωτογραφιών από όλα τα λευκώματα και υπο-λευκώματα"
+
+msgid "return to normal view mode"
+msgstr "επιστροφή σε κανονική προβολή"
+
+msgid "display a calendar by posted date"
+msgstr "προβολή ημερολογίου κατά ημέρα ανάρτησης"
+
+msgid "Most visited"
+msgstr "Περισσότερες προβολές"
+
+msgid "display most visited photos"
+msgstr "οι φωτογραφίες με τις περισσότερες επισκέψεις"
+
+msgid "Unknown identifier"
+msgstr "Άγνωστο αναγνωριστικό"
+
+msgid "New password"
+msgstr "Νέος κωδικός"
+
+msgid "Rate this photo"
+msgstr "Βαθμολογήστε τη φωτογραφία"
+
+msgid "Next"
+msgstr "Επόμενο"
+
+msgid "no rate"
+msgstr "χωρίς βαθμό"
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "Αρχεία που έχουν αναρτηθεί τις τελευταίες %d ημέρες."
+msgstr[1] "Φωτογραφίες που αναρτήθηκαν τις τελευταίες %d μέρες."
+
+msgid "A comment on your site"
+msgstr "Ένα σχόλιο στη σελίδα σας"
+
+msgid "today"
+msgstr "σήμερα"
+
+msgid "Update your rating"
+msgstr "Αλλάξτε τη βαθμολογία σας"
+
+msgid "the username must be given"
+msgstr "το όνομα χρήστη είναι απαραίτητο"
+
+msgid "Edit a comment"
+msgstr "Επεξεργασία σχολίου"
+
+msgid "Are you sure?"
+msgstr "Είστε σίγουρος;"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) Αυτό το σχόλιο απαιτεί επικύρωση"
+
+msgid "Welcome"
+msgstr "Καλώς ήρθατε"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "Καλώς ήρθατε στο Piwigo και την γκαλερί σας!"
+
+msgid "... or browse your empty gallery"
+msgstr "... ή να περιηγηθείτε στην κενή σας γκαλερί"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "... ή, παρακαλώ απενεργοποιήστε αυτό το μήνυμα, θα βρω τον τρόπο μόνος μου"
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "Γεια %s, η γκαλερί σας είναι κενή!"
+
+msgid "I want to add photos"
+msgstr "Θέλω να προσθέσω φωτογραφίες"
+
+msgid "Manage this user comment: %s"
+msgstr "Διαχειριστείτε αυτό το σχόλιο: %s"
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "Η διεύθυνση ηλεκτρονικού ταχυδρομείου είναι κενή. Παρακαλώ εισάγετε μία διεύθυνση ηλεκτρονικού ταχυδρομείου."
+
+msgid "This author modified following comment:"
+msgstr "Αυτός ο συγγραφέας τροποποίησε το ακόλουθο σχόλιο:"
+
+msgid "This author removed the comment with id %d"
+msgstr "Αυτός ο συγγραφέας αφαίρεσε το σχόλιο με id %d"
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "Ένας διαχειριστής πρέπει να εγκρίνει το σχόλιό σας πριν γίνει ορατό."
+
+msgid "This login is already used by another user"
+msgstr "Αυτό το όνομα χρήστη χρησιμοποιείται ήδη από κάποιον άλλον χρήστη"
+
+msgid "Comments"
+msgstr "Σχόλια"
+
+msgid "Add a comment"
+msgstr "Αφήστε ένα σχόλιο"
+
+msgid "created after %s (%s)"
+msgstr "δημιουργήθηκε μετά τις %s (%s)"
+
+msgid "created before %s (%s)"
+msgstr "δημιουργήθηκε πριν τις %s (%s)"
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "δημιουργήθηκε μεταξύ %s (%s) και %s (%s)"
+
+msgid "created on %s"
+msgstr "δημιουργήθηκε στις %s"
+
+msgid "Your Gallery Customization"
+msgstr "Η προσαρμογή της γκαλερί σας"
+
+msgid "Default"
+msgstr "Προεπιλεγμένη"
+
+msgid "delete this photo from your favorites"
+msgstr "διαγράψτε αυτή τη φωτογραφία από τα αγαπημένα σας"
+
+msgid "Delete"
+msgstr "Διαγραφή"
+
+msgid "descending"
+msgstr "φθίνουσα"
+
+msgid "Download"
+msgstr "μεταφόρτωση"
+
+msgid "Download this file"
+msgstr "μεταφόρτωση αυτού του αρχείου"
+
+msgid "edit"
+msgstr "επεξεργασία"
+
+msgid "wrong date"
+msgstr "λάθος ημερομηνία"
+
+msgid "excluded"
+msgstr "εξαιρέθηκαν"
+
+msgid "display your favorites photos"
+msgstr "προβολή των αγαπημένων σας φωτογραφιών"
+
+msgid "Favorites"
+msgstr "Αγαπημένα"
+
+msgid "First"
+msgstr "Πρώτη"
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "Η γκαλερί είναι κλειστή για συντήρηση. Παρακαλώ επισκεφθείτε τη πάλι αργότερα."
+
+msgid "Page generated in"
+msgstr "Η σελίδα δημιουργήθηκε σε"
+
+msgid "guest"
+msgstr "επισκέπτης"
+
+msgid "Hello"
+msgstr "Γεια"
+
+msgid "available for administrators only"
+msgstr "διαθέσιμο μόνο στους διαχειριστές"
+
+msgid "search"
+msgstr "αναζήτηση"
+
+msgid "Home"
+msgstr "Αρχική"
+
+msgid "in this album"
+msgstr "σε αυτό λεύκωμα"
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] "σε %d υπο-λεύκωμα"
+msgstr[1] "σε %d υπο-λευκώματα"
+
+msgid "included"
+msgstr "συμπεριλήφθηκαν"
+
+msgid "Invalid password!"
+msgstr "Λάθος κωδικός!"
+
+msgid "Language"
+msgstr "Γλώσσα"
+
+msgid "last %d days"
+msgstr "τις τελευταίες %d ημέρες"
+
+msgid "Last"
+msgstr "Τελευταία"
+
+msgid "Logout"
+msgstr "Αποσύνδεση"
+
+msgid "obligatory"
+msgstr "απαραίτητο"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d λεύκωμα ενημερώθηκε"
+msgstr[1] "%d λευκώματα ενημερώθηκαν"
+
+msgid "%d comment to validate"
+msgstr "%d σχόλιο για επικύρωση"
+
+msgid "%d comments to validate"
+msgstr "%d σχόλια για επικύρωση"
+
+msgid "%d new comment"
+msgstr "%d νέο σχόλιο"
+
+msgid "%d new comments"
+msgstr "%d νέα σχόλια"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d σχόλιο"
+msgstr[1] "%d σχόλια"
+
+msgid "%d hit"
+msgid_plural "%d hits"
+msgstr[0] "%d εμφάνιση"
+msgstr[1] "%d εμφανίσεις"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "%d νέα φωτογραφία"
+msgstr[1] "%d νέες φωτογραφίες"
+
+msgid "%d new user"
+msgstr "%d νέος χρήστης"
+
+msgid "%d new users"
+msgstr "%d νέοι χρήστες"
+
+msgid "About"
+msgstr "Σχετικά"
+
+msgid "All tags"
+msgstr "Όλες οι ετικέτες"
+
+msgid "Any tag"
+msgstr "Οποιαδήποτε ετικέτα"
+
+msgid "Author"
+msgstr "Συντάκτης"
+
+msgid "Albums"
+msgstr "Λευκώματα"
+
+msgid "Album"
+msgstr "Λεύκωμα"
+
+msgid "Close this window"
+msgstr "Κλείσιμο παραθύρου"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "RSS feed για φωτογραφίες και σχόλια"
+
+msgid "Confirm Password"
+msgstr "Επιβεβαίωση κωδικού"
+
+msgid "Connection settings"
+msgstr "Ρυθμίσεις σύνδεσης"
+
+msgid "Login"
+msgstr "Σύνδεση"
+
+msgid "Contact webmaster"
+msgstr "Επικοινωνία με το διαχειριστή"
+
+msgid "Create a new account"
+msgstr "Δημιουργία νέου λογαριασμού"
+
+msgid "Created on"
+msgstr "Δημιουργήθηκε στις"
+
+msgid "Current password is wrong"
+msgstr "Εισάγατε λάθος κωδικό"
+
+msgid "Dimensions"
+msgstr "Διαστάσεις"
+
+msgid "Display"
+msgstr "Εμφάνιση"
+
+msgid "Email address"
+msgstr "Διεύθυνση ηλεκτρονικού ταχυδρομείου"
+
+msgid "Enter your personnal informations"
+msgstr "Συμπληρώστε τα στοιχεία σας"
+
+msgid "Error sending email"
+msgstr "Σφάλμα κατά την αποστολή μηνύματος ηλεκτρονικού ταχυδρομείου"
+
+msgid "File name"
+msgstr "Όνομα αρχείου"
+
+msgid "File"
+msgstr "Αρχείο"
+
+msgid "Filesize"
+msgstr "Μέγεθος αρχείου"
+
+msgid "Filter and display"
+msgstr "Φιλτράρισμα & Αναζήτηση"
+
+msgid "Filter"
+msgstr "Φίλτρο"
+
+msgid "Forgot your password?"
+msgstr "Ξεχάσατε τον κωδικό σας;"
+
+msgid "Go through the gallery as a visitor"
+msgstr "Περιήγηση ως επισκέπτης"
+
+msgid "Help"
+msgstr "Βοήθεια"
+
+msgid "Identification"
+msgstr "Λογαριασμός"
+
+msgid "Photos only RSS feed"
+msgstr "RSS feed μόνο για φωτογραφίες"
+
+msgid "Keyword"
+msgstr "Λέξη κλειδί"
+
+msgid "Links"
+msgstr "Σύνδεσμοι"
+
+msgid "N/A"
+msgstr "Δ/Υ"
+
+msgid "New on %s"
+msgstr "Καινούργιο στις %s"
+
+msgid "Notification"
+msgstr "Ειδοποίηση"
+
+msgid "Number of items"
+msgstr "Αριθμός αντικειμένων"
+
+msgid "Original dimensions"
+msgstr "Αρχικές διαστάσεις"
+
+msgid "Password forgotten"
+msgstr "Χαμένος κωδικός"
+
+msgid "Password"
+msgstr "Κωδικός"
+
+msgid "Profile"
+msgstr "Προφίλ"
+
+msgid "Quick connect"
+msgstr "Γρήγορη σύνδεση"
+
+msgid "RSS feed"
+msgstr "Τροφοδοσία RSS"
+
+msgid "Register"
+msgstr "Εγγραφείτε"
+
+msgid "Registration"
+msgstr "Εγγραφή"
+
+msgid "Related tags"
+msgstr "Σχετικές ετικέτες"
+
+msgid "Reset"
+msgstr "Επαναφορά"
+
+msgid "Retrieve password"
+msgstr "Ανάκτηση κωδικού"
+
+msgid "Search tags"
+msgstr "Αναζήτηση στις ετικέτες"
+
+msgid "Search"
+msgstr "Αναζήτηση"
+
+msgid "display available tags"
+msgstr "εμφάνιση διαθέσιμων ετικετών"
+
+msgid "Since"
+msgstr "Από"
+
+msgid "Sort by"
+msgstr "Ταξινόμηση βάσει"
+
+msgid "Sort order"
+msgstr "Ταξινόμηση"
+
+msgid "Tag"
+msgstr "Ετικέτα"
+
+msgid "Tags"
+msgstr "Ετικέτες"
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "Το RSS βοηθά να είστε πάντα ενήμεροι για τα νέα της σελίδας: ανάρτηση νέων φωτογραφιών, ανανεώσεις των λευκωμάτων, νέα σχόλια. Χρειάζεται ένα λογισμικό ανάγνωσης RSS feeds (RSS reader)."
+
+msgid "Unknown feed identifier"
+msgstr "Άγνωστο αναγνωριστικό RSS feed"
+
+msgid "User comments"
+msgstr "Σχόλια χρηστών"
+
+msgid "Username"
+msgstr "Όνομα χρήστη"
+
+msgid "Visits"
+msgstr "Επισκέψεις"
+
+msgid "Webmaster"
+msgstr "Υπεύθυνος σελίδας"
+
+msgid "Week %d"
+msgstr "Εβδομάδα %d"
+
+msgid "About Piwigo"
+msgstr "Σχετικά με το Piwigo"
+
+msgid "You are not authorized to access the requested page"
+msgstr "Δεν έχετε δικαίωμα να δείτε αυτή τη σελίδα"
+
+msgid "add this photo to your favorites"
+msgstr "προσθέστε αυτή τη φωτογραφία στις αγαπημένες"
+
+msgid "Administration"
+msgstr "Διαχείριση"
+
+msgid "all"
+msgstr "όλα"
+
+msgid "ascending"
+msgstr "αύξουσα"
+
+msgid "Expand all albums"
+msgstr "Να φαίνονται πάντα και τα υπο-λευκώματα"
+
+msgid "posted after %s (%s)"
+msgstr "αναρτήθηκε μετά τις %s (%s)"
+
+msgid "posted before %s (%s)"
+msgstr "αναρτήθηκε πριν τις %s (%s)"
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "αναρτήθηκε ανάμεσα στις %s (%s) και %s (%s)"
+
+msgid "posted on %s"
+msgstr "αναρτήθηκε στις %s"
+
+msgid "Best rated"
+msgstr "Υψηλότερες βαθμολογίες"
+
+msgid "display best rated photos"
+msgstr "προβολή φωτογραφιών με την υψηλότερη βαθμολογία"
+
+msgid "Calendar"
+msgstr "Ημερολόγιο"
+
+msgid "All"
+msgstr "Όλα"
+
+msgid "display each day with photos, month per month"
+msgstr "εμφάνιση φωτογραφιών σε μορφή ημερολογίου"
+
+msgid "View"
+msgstr "Εμφάνιση"
+
+msgid "chronology_monthly_calendar"
+msgstr "Ημερολόγιο"
+
+msgid "chronology_monthly_list"
+msgstr "Μηνιαία λίστα"
+
+msgid "chronology_weekly_list"
+msgstr "Εβδομαδιαία λίστα"
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "Κάντε κλικ εδώ αν δεν μεταφερθείτε αυτόματα"
+
+msgid "comment date"
+msgstr "ημερομηνία σχολίου"
+
+msgid "Comment"
+msgstr "Σχόλιο"
+
+msgid "Your comment has been registered"
+msgstr "Το σχόλιό σας καταχωρήθηκε"
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "Παρακαλώ περιμένετε λίγο πριν προσπαθήσετε να στείλετε ένα ακόμη σχόλιο"
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "Το σχόλιο σας δεν καταχωρήθηκε επειδή δεν πέρασε τα κριτήρια επικύρωσης"
+
+msgid "Your favorites"
+msgstr "Αγαπημένες"
+
+msgid "display this album"
+msgstr "εμφάνιση λευκώματος"
+
+msgid "display last user comments"
+msgstr "εμφάνιση πρόσφατων σχολίων"
+
+msgid "this email address is already in use"
+msgstr "αυτή η διεύθυνση ηλεκτρονικού ταχυδρομείου χρησιμοποιείται ήδη"
+
+msgid "html tags are not allowed in login"
+msgstr "δεν επιτρέπεται κώδικας html στο όνομα χρήστη"
+
+msgid "%d Kb"
+msgstr "%d Kb"
+
+msgid "Post date"
+msgstr "Ημερομηνία ανάρτησης"
+
+msgid "Posted on"
+msgstr "Αναρτήθηκε στις"
+
+msgid "Rating score"
+msgstr "Βαθμολογία κατάταξης"
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "Ο αριθμός των φωτογραφιών ανά σελίδα πρέπει να είναι ακέραιος και διάφορος του μηδενός"
+
+msgid "Number of photos per page"
+msgstr "Αριθμός φωτογραφιών ανά σελίδα"
+
+msgid "Invalid username or email"
+msgstr "Μη έγκυρο όνομα χρήστη ή email"
+
+msgid "Password reset is not allowed for this user"
+msgstr "Η επαναφορά του κωδικού δεν επιτρέπεται για αυτόν τον χρήστη"
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "Ο χρήστης \"%s\" δεν έχει email, η επαναφορά του κωδικού δεν είναι δυνατή"
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "Κάποιος ζήτησε την επαναφορά του κωδικού για τον παρακάτω λογαριασμό χρήστη:"
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "Όνομα χρήστη \"%s\" στην γκαλερί %s"
+
+msgid "To reset your password, visit the following address:"
+msgstr "Για την επαναφορά του κωδικού επισκέψου την παρακάτω διεύθυνση:"
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "Αν αυτό ήταν ένα λάθος, απλά αγνοείστε αυτό το email και τίποτα δεν θα συμβεί."
+
+msgid "Password Reset"
+msgstr "Ο κωδικός επανήλθε"
+
+msgid "Check your email for the confirmation link"
+msgstr "Έλεγξε το email σου για το link επιβεβαιώσης"
+
+msgid "Invalid key"
+msgstr "Λάθος κλειδί"
+
+msgid "The passwords do not match"
+msgstr "Ο κωδικός δεν ταιριάζει"
+
+msgid "Your password has been reset"
+msgstr "Ο κωδικός έχει επαναφερθεί"
+
+msgid "Return to home page"
+msgstr "Επιστροφή στην αρχική σελίδα"
+
+msgid "Please enter your username or email address."
+msgstr "Παρακαλώ εισάγετε το όνομα χρήστη ή το email σας."
+
+msgid "You will receive a link to create a new password via email."
+msgstr "Θα λάβεις ένα link για να δημιουργήσεις ένα κωδικό μέσω email."
+
+msgid "Username or email"
+msgstr "Όνομα χρήστη ή email"
+
+msgid "Change my password"
+msgstr "Αλλαγή του κωδικού"
+
+msgid "Enter your new password below."
+msgstr "Πληκτρολόγησε τον νέο κωδικό παρακάτω."
+
+msgid "EXIF Metadata"
+msgstr "EXIF μεταδεδομένα"
+
+msgid "IPTC Metadata"
+msgstr "IPTC μεταδεδομένα"
+
+msgid "Edit"
+msgstr "Επεξεργασία"
+
+msgid "Hello %s,"
+msgstr "Γεια σου %s,"
+
+msgid "Send my connection settings by email"
+msgstr "Αποστολή ρυθμίσεων σύνδεσης μέσω ηλεκτρονικού ταχυδρομείου"
+
+msgid "Show oldest comments first"
+msgstr "Εμφάνιση των παλιών σχολίων πρώτα"
+
+msgid "Show latest comments first"
+msgstr "Εμφάνιση των νεώτερων σχολίων πρώτα"
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "Επιτυχημένη εγγραφή, σύντομα θα λάβεις ένα email με τις ρυθμίσεις σύνδεσης. Καλώς ήλθες!"
+
+msgid "Username modification"
+msgstr "Μετατροπή του ονόματος χρήστη"
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "Το όνομα χρήστη έχει αλλάξει σε: %s"
+
+msgid "square"
+msgstr "Τετράγωνο"
+
+msgid "thumb"
+msgstr "Μικρογραφία"
+
+msgid "small"
+msgstr "Μικρό"
+
+msgid "medium"
+msgstr "Ενδιάμεσο"
+
+msgid "large"
+msgstr "Μεγάλο"
+
+msgid "xlarge"
+msgstr "XL - Πολύ μεγάλο"
+
+msgid "xxlarge"
+msgstr "XXL - Εξαιρετικά μεγάλο"
+
+msgid "Original"
+msgstr "Γνήσιο"
+
+msgid "Thank you for registering at %s!"
+msgstr "Ευχαριστούμε για την εγγραφή στο %s!"
+
+msgid "Here are your connection settings"
+msgstr "Οι ρυθυμίσεις σύνδεσής σας"
+
+msgid "Password: %s"
+msgstr "Κωδικός: %s"
+
+msgid "Username: %s"
+msgstr "Όνομα χρήστη: %s"
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "Αν νομίζεις ότι έχεις λάβει αυτό το ηλεκτρονικό μήνυμα κατά λάθος, επικοινώνησε μαζί μας στο %s"
+
+msgid "Photo sizes"
+msgstr "Μέγεθος φωτογραφιών"
+
+msgid "View in"
+msgstr "Εμφάνιση στο"
+
+msgid "Mobile"
+msgstr "Κινητό"
+
+msgid "Desktop"
+msgstr "Επιφάνεια εργασίας"
+
+msgid "2small"
+msgstr "XXS - εξαιρετικά μικρό"
+
+msgid "xsmall"
+msgstr "XS - πολύ μικρό"
+
+msgid "File name, A &rarr; Z"
+msgstr "Όνομα αρχείου, A &rarr; Z"
+
+msgid "File name, Z &rarr; A"
+msgstr "Όνομα αρχείου, Z &rarr; A"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "Όνομα φωτογραφίας, A &rarr; Z"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "Όνομα φωτογραφίας, Z &rarr; A"
+
+msgid "Date created, new &rarr; old"
+msgstr "Ημέρα δημιουργίας, νεότερη &rarr; παλαιότερη"
+
+msgid "Date created, old &rarr; new"
+msgstr "Ημέρα δημιουργίας, παλαιότερη &rarr; νεότερη"
+
+msgid "Date posted, new &rarr; old"
+msgstr "Ημέρα καταχώρησης, πρόσφατη &rarr; παλαιότερη"
+
+msgid "Date posted, old &rarr; new"
+msgstr "Ημέρα καταχώρησης, παλαιότερη &rarr; πρόσφατη"
+
+msgid "Rating score, high &rarr; low"
+msgstr "Βαθμολογία κατάταξης, υψηλή &rarr; χαμηλή"
+
+msgid "Rating score, low &rarr; high"
+msgstr "Βαθμολογία κατάταξης, χαμηλή &rarr; υψηλή"
+
+msgid "Visits, high &rarr; low"
+msgstr "Επισκέψεις, περισσότερες &rarr; λιγότερες"
+
+msgid "Visits, low &rarr; high"
+msgstr "Επισκέψεις, λιγότερες &rarr; περισσότερες"
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "Αριθμητικό αναγνωριστικό, 1 &rarr; 9"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "Αριθμητικό αναγνωριστικό, 9 &rarr; 1"
+
+msgid "Manual sort order"
+msgstr "Χειροκίνητη ταξινόμηση"
+
+msgid "%d rate"
+msgid_plural "%d rates"
+msgstr[0] "%d βαθμολόγηση"
+msgstr[1] "%d Κατατάξεις"
+
+msgid "Bad request"
+msgstr "Ατυχές αίτημα"
+
+msgid "Forbidden"
+msgstr "Απαγορευμένη"
+
+msgid "Page not found"
+msgstr "Η σελίδα δεν βρέθηκε"
+
+msgid "Permalink for album not found"
+msgstr "Ο Μόνιμος Σύνδεσμος για το λέυκωμα δεν υπάρχει"
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "Το Piwigo αντιμετώπισε ένα μη ανακτήσιμο σφάλμα"
+
+msgid "Requested album does not exist"
+msgstr "Το Ζητούμενο Λεύκωμα δεν υπάρχει"
+
+msgid "Requested tag does not exist"
+msgstr "Η ζητούμενη ετικετα δεν υπάρχει"
+
+msgid "mandatory"
+msgstr "υποχρεωτικό"
+
+msgid "Username is mandatory"
+msgstr "Το όνομα χρήστη είναι υποχρεωτικό"
+
+msgid "Email address is mandatory"
+msgstr "Η διεύθυνση ηλεκτρονικού ταχυδρομείου είναι υποχρεωτική"
+
+msgid "Your website URL is invalid"
+msgstr "Το URL της ιστοσελίδας δεν είναι έγκυρο"
+
+msgid "Website"
+msgstr "Ιστοσελίδα"
+
+msgid "Email"
+msgstr "Email"
+
+msgid "Last Page"
+msgstr "Τελευταία Σελίδα"
+
+msgid "Go back to the album"
+msgstr "Επιστροφή Στο Λεύκωμα"
+
+msgid "First Page"
+msgstr "Αρχική Σελίδα"
+
+msgid "Password is missing. Please enter the password."
+msgstr "Ο κωδικός λείπει. Παρακαλώ εισάγετε τον κωδικό πρόσβασης."
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Η επιβεβαίωση κωδικού λείπει. Επιβεβαιώστε τον επιλεγμένο κωδικό πρόσβασης"
+
+msgid "Theme"
+msgstr "Θέμα"
+
+msgid "%d photos per page"
+msgstr "%d φωτογραφίες ανά σελίδα"
+
+msgid "No results for"
+msgstr "Κανένα αποτέλεσμα για"
+
+msgid "Photo title"
+msgstr "Τίτλος Φωτογραφίας"
+
+msgid "Photo description"
+msgstr "Περιγραφή Φωτογραφίας"
+
+msgid "Apply on properties"
+msgstr "Εφαρμόστε σε ιδιότητες"
+
+msgid "Album name, Z &rarr; A"
+msgstr "Όνομα Λευκώματος, Ω &rarr; Α"
+
+msgid "Album name, A &rarr; Z"
+msgstr "Όνομα Λευκώματος, Α &rarr; Ω"
+
+msgid "Link: %s"
+msgstr "Σύνδεσμος: %s"
+
+msgid "Your authentication key is no longer valid."
+msgstr "Το κλειδί ταυτοποίησης σας δεν είναι πλέον έγκυρο."
+
+msgid "generate random password"
+msgstr "δημιουργήστε τυχαίο κωδικό πρόσβασης"
+
+msgid "Invalid username or password!"
+msgstr "Μη έγκυρο όνομα ή κωδικός!"
+
+msgid "Related albums"
+msgstr "Σχετικά Λευκώματα"
+
+msgid "Password: ********** (no copy by email)"
+msgstr "Κωδικός πρόσβασης: ********** (χωρίς αντίγραφο μέσω email)"
+
+msgid "Album name, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+msgstr "Όνομα λευκώματος, 1 &rarr; 5 &​​rarr; 10 &rarr; 100"
+
+msgid "Album name, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+msgstr "Όνομα άλμπουμ, , 100 &rarr; 10 &rarr; 5 &rarr; 1"
+
+msgid "Start-Date"
+msgstr "Ημερομηνία Έναρξης"
+
+msgid "Pre-established filters are proposed, but you can add or remove them using the \"Choose filters\" button."
+msgstr "Προτείνονται προκαθορισμένα φίλτρα, αλλά μπορείτε να τα προσθέσετε ή να τα αφαιρέσετε χρησιμοποιώντας το κουμπί \"Επιλογή φίλτρων\"."
+
+msgid "Search in :"
+msgstr "Αναζήτηση σε:"
+
+msgid "Search in this set"
+msgstr "Αναζήτηση σε αυτό το σύνολο"
+
+msgid "Tags found"
+msgstr "Βρέθηκαν ετικέτες"
+
+msgid "Tags listed here match your search by word. Click on one to browse by tag."
+msgstr "Οι ετικέτες που παρατίθενται εδώ αντιστοιχούν στην αναζήτησή σας κατά λέξη. Κάντε κλικ σε μια για περιήγηση ανά ετικέτα."
+
+msgid "Unknown time period"
+msgstr "Άγνωστη χρονική περίοδος"
+
+msgid "Validate"
+msgstr "Επικυρώνω"
+
+msgid "You can try to edit your filters and perform a new search."
+msgstr "Μπορείτε να δοκιμάσετε να επεξεργαστείτε τα φίλτρα σας και να πραγματοποιήσετε μια νέα αναζήτηση."
+
+msgid "last 24 hours"
+msgstr "τις τελευταίες 24 ώρες"
+
+msgid "last 3 months"
+msgstr "Τελευταίοι 3 μήνες"
+
+msgid "last 30 days"
+msgstr "Τελευταίες 30 ημέρες"
+
+msgid "last 6 months"
+msgstr "Τελευταίοι 6 μήνες"
+
+msgid "last 7 days"
+msgstr "Τελευταίες 7 μέρες"
+
+msgid "last year"
+msgstr "Πέρυσι"
+
+msgid "rating score %s"
+msgstr "βαθμολογία %s"
+
+msgid "year %d"
+msgstr "έτος %d"
+
+msgid "%d visits"
+msgstr "%d επισκέψεις"
+
+msgid "Added by"
+msgstr "Προστέθηκε από"
+
+msgid "Album description"
+msgstr "Περιγραφή λευκώματος"
+
+msgid "Album title"
+msgstr "Τίτλος λευκώματος"
+
+msgid "Albums found"
+msgstr "Τα λευκώματα που βρέθηκαν"
+
+msgid "Cancel"
+msgstr "Ακύρωση"
+
+msgid "Choose filters"
+msgstr "Επιλέξτε φίλτρα"
+
+msgid "Clear"
+msgstr "Καθαρά"
+
+msgid "Empty filters"
+msgstr "Άδεια φίλτρα"
+
+msgid "File type"
+msgstr "Τύπος αρχείου"
+
+msgid "Fill in the filters to start a search"
+msgstr "Συμπληρώστε τα φίλτρα για να ξεκινήσετε μια αναζήτηση"
+
+msgid "Filters"
+msgstr "Φίλτρα"
+
+msgid "No results are available."
+msgstr "Δεν υπάρχουν διαθέσιμα αποτελέσματα."
+
+msgid "Albums listed here match your search by word. Click on one to browse by album."
+msgstr "Τα λευκώματα που παρατίθενται εδώ αντιστοιχούν στην αναζήτησή σας κατά λέξη. Κάντε κλικ σε ένα για περιήγηση ανά λεύκωμα."
+
+msgid "last 12 months"
+msgstr "Τους τελευταίους 12 μήνες"
+
+msgid "The PDF you requested is too large to display on this page."
+msgstr "Το PDF που ζητήσατε είναι πολύ μεγάλο για να απεικονιστεί σε αυτή τη σελίδα"
+
+msgid "Pages"
+msgstr "Σελίδες"
+
+msgid "Only the first %d albums are displayed, out of %d."
+msgstr "Απεικονίζονται μόνο τα %d από %d άλμπουμ"
+
+msgid "Custom dates"
+msgstr "Προσαρμοσμένες ημερομηνίες"
+
+msgid "Click here to display it"
+msgstr "Κάντε κλίκ εδώ για να το δείτε"
+
+msgid "Album already selected"
+msgstr "Το άλμπουμ έχει επιλεχθεί ήδη"
+
+msgid "There are no authors available for the photos currently filtered"
+msgstr "Δεν υπάρχουν πρόσωπα που έχουν αναρτήσει τις φωτογραφίες με το φίλτρο που έχει επιλεγεί"
+
+msgid "There are no creation dates available for the photos currently filtered"
+msgstr "Δεν υπάρχουν ημερομηνίες δημιουργίας με το φίλτρο των φωτογραφιών που έχει επιλεγεί"
+
+msgid "There are no tags available for the photos currently filtered"
+msgstr "Δεν υπάρχουν ετικέτες με το φίλτρο των φωτογραφιών που έχει επιλεγεί"
+
+msgid "Set your password below."
+msgstr "Αλλάξτε τον κωδικό σας παρακάτω"
+
+msgid "Your API key will expire in %d day."
+msgstr "Το κλειδί σας ΑΡΙ θα λήξει σε %d ημέρα."
+
+msgid "Your API key will expire in %d days."
+msgstr "Το κλειδί σας ΑΡΙ θα λήξει σε %d ημέρες."
+
+msgid "Your API key will expire soon"
+msgstr "Το κλειδί σας ΑΡΙ θα λήξει σύντομα"
+
+msgid "Your changes have been applied."
+msgstr "Οι αλλαγές σας εφαρμόστηκαν."
+
+msgid "Your password was successfully reset"
+msgstr "Ο κωδικός σας ανανεώθηκε με επιτυχία"
+
+msgid "Your password was successfully set"
+msgstr "Ο κωδικός σας ορίστηκε με επιτυχία"
+
+msgid "must not be empty"
+msgstr "δεν πρέπει να είναι κενό"
+
+msgid "you must choose a date"
+msgstr "πρέπει να επιλέξετε μια ημερομηνία"
+
+msgid "This API key was manually revoked on %s"
+msgstr "Αυτό το κλειδί ΑΡΙ αποσύρθηκε χειροκίνητα την %s"
+
+msgid "Options"
+msgstr "Επιλογές"
+
+msgid "Return to <a href=\"identification.php\" title=\"Sign in\">Sign in</a>"
+msgstr "Επέστρεψε στο <a href=\"identification.php\" title=\"Σύνδεση\">Σύνδεση</a>"
+
+msgid "Return to the gallery"
+msgstr "Επέστρεψε στην πινακοθήκη"
+
+msgid "Revoke"
+msgstr "Απέσυρε"
+
+msgid "Revoked"
+msgstr "Αποσύρθηκε"
+
+msgid "Set my password"
+msgstr "Όρισε τον κωδικό μου"
+
+msgid "Show expired keys"
+msgstr "Δείξε τα ληγμένα κλειδιά"
+
+msgid "The api key has been successfully created."
+msgstr "Το κλειδί ΑΡΙ δημιουργήθηκε με επιτυχία."
+
+msgid "The email %s will be used to notify you when your API key is about to expire."
+msgstr "Η δ/νση E-Mail %s θα χρησιμοποιηθεί για ειδοποιηθείτε όταν το κλειδί ΑΡΙ σας θα πλησιάζει στη λήξη του."
+
+msgid "The secret key can no longer be displayed."
+msgstr "Το κρυφό κλειδί δεν μπορεί να απεικονιστεί πλέον."
+
+msgid "To continue using the API, please renew your key before it expires."
+msgstr "Για να συνεχίσετε να χρησιμοποιείτε το ΑΡΙ, παρακαλώ ανανεώστε το κλειδί σας πριν λήξει."
+
+msgid "To manage your API keys, please log in with your username/password."
+msgstr "Για να επεξεργαστείτε τα κλειδιά ΑΡΙ σας, παρακαλώ συνδεθείτε με το όνομα χρήστη/κωδικό σας."
+
+msgid "When enabled, a common template is used for the login and registration pages, regardless of the theme."
+msgstr "Όταν είναι ενεργοποιημένο, χρησιμοποιείται ένα κοινό σχέδιο για τις σελίδες σύνδεσης και καταχώρησης, ανεξάρτητα από το θέμα που έχει ρυθμιστεί."
+
+msgid "You can manage your API keys in your <a href=\"%s\">account settings.</a>"
+msgstr "Μπορείτε να επεξεργαστείτε τα κλειδιά σας ΑΡΙ στις <a href=\"%s\">Ρυθμίσεις Λογαριασμού</a> σας."
+
+msgid "You have no email address, so you will not be notified when your API key is about to expire."
+msgstr "Δεν έχετε διεύθυνση E-Mail, δεν θα ειδοποιηθείτε όταν το κλειδί σας ΑΡΙ πλησιάζει στη λήξη του."
+
+msgid "Custom date"
+msgstr "Επιλεγόμενη ημερομηνία"
+
+msgid "Do you really want to revoke the \"%s\" API key?"
+msgstr "Θέλετε πράγματι να ανακαλέσετε το κλειδί ΑΡΙ \"%s\";"
+
+msgid "Don't have an account yet ?"
+msgstr "Δεν έχετε ακόμη λογαριασμό;"
+
+msgid "Done"
+msgstr "Έγινε"
+
+msgid "Duration"
+msgstr "Διάρκεια"
+
+msgid "Edit API Key"
+msgstr "Επεξεργαστείτε το κλειδί ΑΡΙ"
+
+msgid "Expert mode"
+msgstr "Λειτουργία Ειδικού"
+
+msgid "Expired"
+msgstr "Έληξε"
+
+msgid "Expired on"
+msgstr "Έληξε την"
+
+msgid "Expires in"
+msgstr "Λήγει σε"
+
+msgid "Generate API Key"
+msgstr "Δημιούργησε το κλειδί ΑΡΙ"
+
+msgid "Generate key"
+msgstr "Δημιούργησε το κλειδί"
+
+msgid "Hello <em>%s</em>, enter your new password below."
+msgstr "Γειά σου <em>%s</em>, δώσε τον κωδικό σου παρακάτω."
+
+msgid "Hide expired keys"
+msgstr "Απέκρυψε τα ληγμένα κλειδιά"
+
+msgid "Impossible to copy automatically. Please copy manually."
+msgstr "Αδύνατη η αυτόματη αντιγραφή. Παρακαλώ αντιγράψτε χειροκίνητα."
+
+msgid "Last use"
+msgstr "Τελευταία χρήση"
+
+msgid "Manage your account"
+msgstr "Επεξεργαστείτε τον λογαριασμό σας"
+
+msgid "Never"
+msgstr "Ποτέ"
+
+msgid "New API Key"
+msgstr "Νέο κλειδί ΑΡΙ"
+
+msgid "No expiration"
+msgstr "Χωρίς λήξη"
+
+msgid "3xlarge"
+msgstr "3XL - Πολύ μεγάλες"
+
+msgid "4xlarge"
+msgstr "4ΧΛ - Γιγαντιαίες"
+
+msgid "API Key has been successfully edited."
+msgstr "Το κλειδί ΑΡΙ επεξεργάστηκε με επιτυχία."
+
+msgid "API Key has been successfully revoked."
+msgstr "Το κλειδί ΑΡΙ αποσύρθηκε με επιτυχία."
+
+msgid "API Key name"
+msgstr "Όνομα κλειδιού ΑΡΙ"
+
+msgid "API Key not found"
+msgstr "Το κλειδί ΑΡΙ δεν βρέθηκε"
+
+msgid "API Keys"
+msgstr "Κλειδιά ΑΡΙ"
+
+msgid "Account"
+msgstr "Λογαριασμός"
+
+msgid "Already have an account ?"
+msgstr "Έχετε ήδη λογαριασμό;"
+
+msgid "An email has been sent with a link to reset your password"
+msgstr "Έχει αποσταλεί ένα E-Mail με ένα σύνδεσμο για να επαναφέρετε τον κωδικό σας"
+
+msgid "An error has occured please got back to <a href=\"identification.php\" title=\"Sign in\">Sign in</a> or <a href=\"register.php\">Register</a>"
+msgstr "Συνέβη κάποιο σφάλμα, παρακαλώ επιστρέψτε στο  <a href=\"identification.php\" title=\"Σύνδεση\">Σύνδεση</a> ή <a href=\"register.php\">Καταχώρηση</a>"
+
+msgid "Change your password"
+msgstr "Αλλάξτε τον κωδικό σας"
+
+msgid "Check your inbox"
+msgstr "Ελέγξτε το φάκελο εισερχομένων"
+
+msgid "Choose how you want to see your gallery"
+msgstr "Επιλέξτε πώς θέλετε να δείτε την πινακοθήκη σας"
+
+msgid "Confirm my new password"
+msgstr "Επιβεβαιωση του νέου μου κωδικού"
+
+msgid "Confirm new password"
+msgstr "Επιβεβαίωσε τον νέο κωδικό"
+
+msgid "Create API Keys to secure your acount"
+msgstr "Δημιουργήστε κλειδιά ΑΡΙ για να ασφαλίσετε τον λογαριασμό σας"
+
+msgid "Create a new API key to secure your account."
+msgstr "Δημιουργήστε ένα νέο κλειδί ΑΡΙ για να ασφαλίσετε τον λογαριασμό σας."
+
+msgid "Create an account"
+msgstr "Δημιουργήστε ένα λογαριασμό"
+
+msgid "Created at"
+msgstr "Δημιουργήθηκε "
+
+msgid "An email has been sent with a verification code"
+msgstr "Έχει αποσταλεί ένα e-mail με ένα κωδικό επαλήθευσης"
+
+msgid "ID copied."
+msgstr "Το ID αντιγράφτηκε."
+
+msgid "If you do not receive the email, please contact your webmaster."
+msgstr "Αν δεν λάβετε το e-mail, παρακαλώ επικοινωνήστε με τον διαχειριστή της σελίδας."
+
+msgid "Invalid verification code"
+msgstr "Άκυρος κωδικός επαλήθευσης"
+
+msgid "Save your ID and secret"
+msgstr "Σώστε το ID και την μυστική σας λέξη"
+
+msgid "Secret copied. Keep it in a safe place."
+msgstr "Η μυστική σας λέξη αντιγράφτηκε. Φυλάξτε την σε ένα σίγουρο μέρος."
+
+msgid "The secret will no longer be displayed. You must copy it to continue."
+msgstr "Η μυστική σας λέξη δεν θα είναι πλέον ορατή. Πρέπει να την αντιγράψετε για να συνεχίσετε."
+
+msgid "Verification code"
+msgstr "Κωδικός επαλήθευσης"
+
+msgid "Verify"
+msgstr "Επαλήθευσε"
+
+msgid "Here is your verification code:"
+msgstr "Ορίστε ο κωδικός σας επαλήθευσης:"
+
+msgid "If this wasn't you, please change your password immediately or contact your webmaster."
+msgstr "Αν δεν είσασταν εσείς, παρακαλώ αλλάξτε αμέσως τον κωδικό σας ή επικοινωνήστε με τον Διαχειριστή της Σελίδας."
+
+msgid "If you changed your password because you think it was stolen, we recommend revoking your %d API keys <a href=\"%s\">in your profile</a>."
+msgstr "Εαν αλλάξατε τον κωδικό σας επειδή πιστεύετε ότι κλάπηκε, σας συνιστούμε να αναιρέσετε τα %d κλειδιά ΑΡΙ <a href=\"%s\">στο προφίλ σας</a>."
+
+msgid "Too many attempts, please try later.."
+msgstr "Υπερβολικά πολλές προσπάθειες, παρακαλώ προσπαθείστε αργότερα..."
+
+msgid "Verification successful! You can now choose a new password."
+msgstr "Η επαλήθευση ήταν επιτυχής! Μπορείτε τώρα να επιλέξετε ένα καινούριο κωδικό."
+
+msgid "Your verification code"
+msgstr "Ο κωδικός σας επαλήθευσης"
+
+msgid "edit user preferences"
+msgstr "επεξεργασία προτιμήσεων χρήστη"
+
+msgid "piwigo_day_0"
+msgstr "Κυριακή"
+
+msgid "piwigo_day_1"
+msgstr "Δευτέρα"
+
+msgid "piwigo_day_2"
+msgstr "Τρίτη"
+
+msgid "piwigo_day_3"
+msgstr "Τετάρτη"
+
+msgid "piwigo_day_4"
+msgstr "Πέμπτη"
+
+msgid "piwigo_day_5"
+msgstr "Παρασκευή"
+
+msgid "piwigo_day_6"
+msgstr "Σάββατο"
+
+msgid "piwigo_month_10"
+msgstr "Οκτώβριος"
+
+msgid "piwigo_month_11"
+msgstr "Νοέμβριος"
+
+msgid "piwigo_month_12"
+msgstr "Δεκέμβριος"
+
+msgid "piwigo_month_1"
+msgstr "Ιανουάριος"
+
+msgid "piwigo_month_2"
+msgstr "Φεβρουάριος"
+
+msgid "piwigo_month_3"
+msgstr "Μάρτιος"
+
+msgid "piwigo_month_4"
+msgstr "Απρίλιος"
+
+msgid "piwigo_month_5"
+msgstr "Μάϊος"
+
+msgid "piwigo_month_6"
+msgstr "Ιούνιος"
+
+msgid "piwigo_month_7"
+msgstr "Ιούλιος"
+
+msgid "piwigo_month_8"
+msgstr "Αύγουστος"
+
+msgid "piwigo_month_9"
+msgstr "Σεπτέμβριος"
+

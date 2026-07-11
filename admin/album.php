@@ -10,6 +10,9 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\tabsheet;
+use Piwigo\Core\AccessLevel;
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
@@ -28,9 +31,9 @@ global $page, $template;
 // | Basic checks                                                          |
 // +-----------------------------------------------------------------------+
 
-check_status(ACCESS_ADMINISTRATOR);
+check_status(AccessLevel::Administrator);
 
-check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
+check_input_parameter('cat_id', $_GET, false, ValidationPattern::ID);
 
 // check_input_parameter() only validates the format when 'cat_id' is
 // present (mandatory=false above); fall back to 0 (no matching album,
@@ -42,7 +45,7 @@ $admin_album_base_url = get_root_url() . 'admin.php?page=album-' . $cat_id;
 
 $query = '
 SELECT *
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE id = ' . $cat_id . '
 ;';
 $category = pwg_db_fetch_assoc(pwg_query($query));

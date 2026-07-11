@@ -1,0 +1,1193 @@
+# Piwigo translation — vi_VN
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: vi_VN\n"
+"Plural-Forms: nplurals=1; plural=(0);\n"
+"X-Piwigo-Language-Name: Tiếng Việt\n"
+"X-Piwigo-Country: Việt Nam\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: vn\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "%d Kb"
+msgstr "%d KB"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d đề mục đã được cập nhật"
+msgstr[1] "%d đề mục đã được cập nhật"
+
+msgid "%d comment to validate"
+msgstr "%d lời bình cần xác nhận"
+
+msgid "%d comments to validate"
+msgstr "%d lời bình cần xác nhận"
+
+msgid "%d new comment"
+msgstr "%d lời bình mới"
+
+msgid "%d new comments"
+msgstr "%d lời bình mới"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d lời bình"
+msgstr[1] "%d lời bình"
+
+msgid "%d hit"
+msgid_plural "%d hits"
+msgstr[0] "%d lần xem"
+msgstr[1] "%d lần xem"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "%d hình mới"
+msgstr[1] "%d hình mới"
+
+msgid "%d new user"
+msgstr "%d người dùng mới"
+
+msgid "%d new users"
+msgstr "%d người dùng mới"
+
+msgid "About"
+msgstr "Giới thiệu"
+
+msgid "All tags"
+msgstr "Tất cả các tags"
+
+msgid "Any tag"
+msgstr "Bát kỳ tag nào"
+
+msgid "At least one listed rule must be satisfied."
+msgstr "Ít nhất một điều khoản nêu trên phải được đáp ứng."
+
+msgid "Author"
+msgstr "Tác giả"
+
+msgid "Albums"
+msgstr "Đề mục"
+
+msgid "Album"
+msgstr "Đề mục"
+
+msgid "Close this window"
+msgstr "Đóng cửa sổ này"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "Hoàn tất tin RSS (hình ảnh, bình luận)"
+
+msgid "Confirm Password"
+msgstr "Xác nhận lại mật khẩu"
+
+msgid "Connection settings"
+msgstr "Thiết lập cài đặt"
+
+msgid "Login"
+msgstr "Đăng nhập"
+
+msgid "Contact webmaster"
+msgstr "Liên hệ với Quản trị"
+
+msgid "Create a new account"
+msgstr "Tạo tài khoản mới"
+
+msgid "Created on"
+msgstr "Khởi tạo vào"
+
+msgid "Creation date"
+msgstr "Ngày khởi tạo"
+
+msgid "Current password is wrong"
+msgstr "Mật khởi hiện tại bị sai"
+
+msgid "Dimensions"
+msgstr "Kích thước"
+
+msgid "Display"
+msgstr "Hiển thị"
+
+msgid "Each listed rule must be satisfied."
+msgstr "Mỗi điều khoản nêu trên phải được đáp ứng."
+
+msgid "Email address"
+msgstr "Địa chỉ email"
+
+msgid "Enter your personnal informations"
+msgstr "Nhập thông tin cá nhân"
+
+msgid "Error sending email"
+msgstr "Lỗi gởi email"
+
+msgid "File name"
+msgstr "Tên file"
+
+msgid "File"
+msgstr "File"
+
+msgid "Filesize"
+msgstr "Kích thước file"
+
+msgid "Filter and display"
+msgstr "Bộ lọc và hiển thị"
+
+msgid "Filter"
+msgstr "Bộ lọc"
+
+msgid "Forgot your password?"
+msgstr "Bạn quên mật khẩu?"
+
+msgid "Go through the gallery as a visitor"
+msgstr "Xem gallery với vai trò khách"
+
+msgid "Help"
+msgstr "Trợ giúp"
+
+msgid "Identification"
+msgstr "Định danh"
+
+msgid "Photos only RSS feed"
+msgstr "Chỉ cung cấp hình ảnh trên bản tin RSS"
+
+msgid "Keyword"
+msgstr "Từ khoá"
+
+msgid "Links"
+msgstr "Liên kết"
+
+msgid "N/A"
+msgstr "Không có"
+
+msgid "New on %s"
+msgstr "Hình mới ở %s"
+
+msgid "Notification"
+msgstr "Thông báo"
+
+msgid "Number of items"
+msgstr "Số lượng hình"
+
+msgid "Original dimensions"
+msgstr "Độ phân giải gốc"
+
+msgid "Password forgotten"
+msgstr "Quên mật khẩu"
+
+msgid "Password"
+msgstr "Mật khẩu"
+
+msgid "Post date"
+msgstr "Ngày gởi hình"
+
+msgid "Posted on"
+msgstr "Gởi vào"
+
+msgid "Profile"
+msgstr "Hồ sơ"
+
+msgid "Quick connect"
+msgstr "Kết nối nhanh"
+
+msgid "RSS feed"
+msgstr "Bản tin RSS"
+
+msgid "Register"
+msgstr "Đăng ký"
+
+msgid "Registration"
+msgstr "Mục đăng ký"
+
+msgid "Related tags"
+msgstr "Tag liên quan"
+
+msgid "Reset"
+msgstr "Làm lại"
+
+msgid "Retrieve password"
+msgstr "Nhận lại mật khẩu"
+
+msgid "Search rules"
+msgstr "Điều khoản tìm kiếm"
+
+msgid "Search tags"
+msgstr "Tag tìm kiếm"
+
+msgid "Search"
+msgstr "Tìm kiếm"
+
+msgid "display available tags"
+msgstr "Xem các tag được dùng"
+
+msgid "Since"
+msgstr "Từ"
+
+msgid "Sort by"
+msgstr "Sắp xếp theo"
+
+msgid "Sort order"
+msgstr "Vị trí sắp xếp"
+
+msgid "Tag"
+msgstr "Thẻ"
+
+msgid "Tags"
+msgstr "Thẻ"
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "Bản thông báo bản tin RSS cung cấp thông báo về tin tức và cập nhật trên trang này bao gồm: hình ảnh mới, đề mục được cập nhật và lời bình mới. Hãy sử dụng trình đọc tin RSS."
+
+msgid "Unknown feed identifier"
+msgstr "Nguồn cung cấp tin không xác nhận"
+
+msgid "User comments"
+msgstr "Bình luận của thành viên"
+
+msgid "Username"
+msgstr "Tên đăng nhập"
+
+msgid "Visits"
+msgstr "Thăm quan"
+
+msgid "Webmaster"
+msgstr "Quản trị"
+
+msgid "Week %d"
+msgstr "Tuần %d"
+
+msgid "About Piwigo"
+msgstr "Giới thiệu Piwigo"
+
+msgid "You are not authorized to access the requested page"
+msgstr "Bạn không được phép truy cập vào trang này"
+
+msgid "add this photo to your favorites"
+msgstr "thêm hình này vào danh sách ưa thích của mình"
+
+msgid "Administration"
+msgstr "Điều hành viên"
+
+msgid "all"
+msgstr "tất cả"
+
+msgid "ascending"
+msgstr "từ dưới lên"
+
+msgid "author(s) : %s"
+msgstr "tác giả: %s"
+
+msgid "Expand all albums"
+msgstr "Mở rộng các đề mục"
+
+msgid "posted after %s (%s)"
+msgstr "gởi sau %s (%s)"
+
+msgid "posted before %s (%s)"
+msgstr "gởi trước %s (%s)"
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "gởi vào giữa %s (%s) và %s (%s)"
+
+msgid "posted on %s"
+msgstr "gởi vào %s"
+
+msgid "Best rated"
+msgstr "Hình được đánh giá tốt nhất"
+
+msgid "display best rated photos"
+msgstr "hiển thị các hình được đánh giá tốt nhất"
+
+msgid "Calendar"
+msgstr "Xem hình theo lịch"
+
+msgid "All"
+msgstr "Tất cả"
+
+msgid "display each day with photos, month per month"
+msgstr "hiển thị mỗi ngày kèm hình ảnh, tháng trên tháng"
+
+msgid "View"
+msgstr "Xem"
+
+msgid "chronology_monthly_calendar"
+msgstr "Lịch hằng tháng"
+
+msgid "chronology_monthly_list"
+msgstr "Danh sách hằng tháng"
+
+msgid "chronology_weekly_list"
+msgstr "Danh sách hằng tuần"
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "Nhắp chuột vào đây nếu trình duyệt không tự động chuyển trang"
+
+msgid "comment date"
+msgstr "ngày bình luận"
+
+msgid "Comment"
+msgstr "Bình luận"
+
+msgid "Your comment has been registered"
+msgstr "Lời bình của bạn đã được đăng ký"
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "Hệ thống bảo mật: vui lòng đợi trong giây lát trước khi gởi lời bình khác"
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "Lời bình của bạn KHÔNG thể gửi được vì nó không đáp ứng được các điều khoản"
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "Lời bình của bạn phải được quản trị viên xác nhận trước khi nó hiển thị trên gallery."
+
+msgid "This login is already used by another user"
+msgstr "Tài khoản đã được đăng ký trước đây"
+
+msgid "Comments"
+msgstr "Bình luận"
+
+msgid "Add a comment"
+msgstr "Thêm lời bình"
+
+msgid "created after %s (%s)"
+msgstr "đã tạo sau %s (%s)"
+
+msgid "created before %s (%s)"
+msgstr "đã tạo trước %s (%s)"
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "đã tạo giữa %s (%s) và %s (%s)"
+
+msgid "created on %s"
+msgstr "đã tạo vào %s"
+
+msgid "Your Gallery Customization"
+msgstr "Tuỳ chọn cho Gallery của bạn "
+
+msgid "Default"
+msgstr "Mặc định"
+
+msgid "delete this photo from your favorites"
+msgstr "xoá hình này từ danh sách ưa thích của bạn"
+
+msgid "Delete"
+msgstr "Xóa"
+
+msgid "descending"
+msgstr "từ trên xuống"
+
+msgid "Download"
+msgstr "tải về"
+
+msgid "Download this file"
+msgstr "tải về file này"
+
+msgid "edit"
+msgstr "biên tập"
+
+msgid "wrong date"
+msgstr "sai ngày tháng"
+
+msgid "excluded"
+msgstr "bao gồm"
+
+msgid "Your favorites"
+msgstr "Mục ưa thích của tôi"
+
+msgid "display your favorites photos"
+msgstr "hiển thị những hình ưa thích của tôi"
+
+msgid "Favorites"
+msgstr "Danh sách ưa thích"
+
+msgid "First"
+msgstr "Đầu tiên"
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "Gallery đã tạm khoá để bảo trì định kỳ. Mời bạn ghé lại sau."
+
+msgid "Page generated in"
+msgstr "Trang được tạo trong vòng"
+
+msgid "guest"
+msgstr "khách"
+
+msgid "Hello"
+msgstr "Xin chào"
+
+msgid "available for administrators only"
+msgstr "chỉ dành cho Quản trị"
+
+msgid "display this album"
+msgstr "hiện hình này ở phía trên của đề mục"
+
+msgid "display last user comments"
+msgstr "Xem bình luận gần nhất"
+
+msgid "search"
+msgstr "tìm kiếm"
+
+msgid "Home"
+msgstr "Trang chủ"
+
+msgid "in this album"
+msgstr "trong mục này"
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] "trong %d mục nhỏ"
+msgstr[1] "trong %d các mục nhỏ"
+
+msgid "included"
+msgstr "bao gồm"
+
+msgid "Invalid password!"
+msgstr "Sai mật khẩu!"
+
+msgid "Language"
+msgstr "Ngôn ngữ"
+
+msgid "last %d days"
+msgstr "%d ngày cuối"
+
+msgid "Last"
+msgstr "Cuối"
+
+msgid "Logout"
+msgstr "Thoát"
+
+msgid "obligatory"
+msgstr "Phần bắt buộc"
+
+msgid "display a calendar by creation date"
+msgstr "hiển thị lịch theo ngày gởi hình"
+
+msgid "display all photos in all sub-albums"
+msgstr "hiển thị mọi thành phần có trong tất cả mục nhỏ"
+
+msgid "return to normal view mode"
+msgstr "chuyện lại chế độ xem hình bình thường"
+
+msgid "display a calendar by posted date"
+msgstr "hiển thị lịch theo ngày gởi hình"
+
+msgid "Most visited"
+msgstr "Được xem nhiều nhất"
+
+msgid "display most visited photos"
+msgstr "hiển thị những hình được xem nhiều nhất"
+
+msgid "Unknown identifier"
+msgstr "Định danh không xác định"
+
+msgid "New password"
+msgstr "Mật khẩu mới"
+
+msgid "Rate this photo"
+msgstr "Đánh giá hình này"
+
+msgid "Next"
+msgstr "Tiếp theo"
+
+msgid "no rate"
+msgstr "không có đánh giá"
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "Thành phần được gởi trong vòng %d ngày cuối."
+msgstr[1] "Các thành phần được gởi trong %d ngày cuối."
+
+msgid "password updated"
+msgstr "mật khẩu đã được cập nhật"
+
+msgid "Recent period must be a positive integer value"
+msgstr "Chu kỳ gần đây phải có giá trị là số nguyên dương"
+
+msgid "photo"
+msgstr "hình ảnh"
+
+msgid "Click on the photo to see it in high definition"
+msgstr "Click lên hình để xem ở độ phân giải cao"
+
+msgid "Show file metadata"
+msgstr "Hiển thị metadata của hình"
+
+msgid "Powered by"
+msgstr "Sản phẩm của"
+
+msgid "Preferences"
+msgstr "Tuỳ chọn thêm"
+
+msgid "Previous"
+msgstr "Trước"
+
+msgid "Random photos"
+msgstr "Hình ngẫu nhiên"
+
+msgid "display a set of random photos"
+msgstr "hiển thị một bộ các hình ngẫu nhiên"
+
+msgid "Recent albums"
+msgstr "Các đề mục gần đây"
+
+msgid "display recently updated albums"
+msgstr "hiển thị các đề mục gần đây"
+
+msgid "Recent period"
+msgstr "Chu kỳ gần đây"
+
+msgid "Recent photos"
+msgstr "Các hình gần đây"
+
+msgid "display most recent photos"
+msgstr "hiển thị các hình gần đây nhất"
+
+msgid "Redirection..."
+msgstr "Chuyển trang..."
+
+msgid "Please, enter a login"
+msgstr "Vui lòng nhập tên tài khoản"
+
+msgid "login mustn't end with a space character"
+msgstr "tên tài khoản không được có ký tự trắng sau cùng"
+
+msgid "login mustn't start with a space character"
+msgstr "tên tài khoản không được có ký tự trắng đầu tiên"
+
+msgid "this login is already used"
+msgstr "tài khoản này đã được đăng ký trước đó"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "địa chỉ email phải có dạng xxx@yyy.eee (ví dụ : jack@altern.org)"
+
+msgid "Auto login"
+msgstr "Tự động đăng nhập"
+
+msgid "remove this tag from the list"
+msgstr "bỏ tag này khỏi danh sách"
+
+msgid "representative"
+msgstr "đại diện"
+
+msgid "Search for Author"
+msgstr "Tìm kiếm theo tác giả"
+
+msgid "Search in albums"
+msgstr "Tìm kiếm trong các đề mục"
+
+msgid "Search by date"
+msgstr "Tìm kiếm theo ngày tháng"
+
+msgid "Date"
+msgstr "Ngày"
+
+msgid "End-Date"
+msgstr "Ngày kết thúc"
+
+msgid "Kind of date"
+msgstr "Kiểu ngày tháng"
+
+msgid "Search for words"
+msgstr "Tìm kiếm theo từ"
+
+msgid "Search for all terms"
+msgstr "Tìm kiếm tất cả các mục "
+
+msgid "Search for any term"
+msgstr "Tìm kiếm mọi mục"
+
+msgid "Empty query. No criteria has been entered."
+msgstr "Truy vấn rỗng. Không có từ khoá nào được nhập."
+
+msgid "Search results"
+msgstr "Kết quả tìm kiếm"
+
+msgid "Search in sub-albums"
+msgstr "Tìm kiếm trong các mục nhỏ"
+
+msgid "searched words : %s"
+msgstr "những từ khoá được tìm kiếm : %s"
+
+msgid "Contact"
+msgstr "Liên hệ"
+
+msgid "set as album representative"
+msgstr "đặt như là một đề mục đại diện"
+
+msgid "Show number of comments"
+msgstr "Hiện số lần hình luận"
+
+msgid "Show number of hits"
+msgstr "Hiện số lần xem"
+
+msgid "slideshow"
+msgstr "trình chiéu"
+
+msgid "stop the slideshow"
+msgstr "dừng trình chiếu"
+
+msgid "Specials"
+msgstr "Đặc biệt"
+
+msgid "SQL queries in"
+msgstr "Truy vấn SQL trong"
+
+msgid "display only recently posted photos"
+msgstr "chỉ hiển thị những hình vừa được gởi"
+
+msgid "return to the display of all photos"
+msgstr "trở lại hiển thị tất cả các hình"
+
+msgid "the beginning"
+msgstr "bắt đầu"
+
+msgid "Thumbnails"
+msgstr "Hình nhỏ"
+
+msgid "Menu"
+msgstr "Menu"
+
+msgid "A comment on your site"
+msgstr "Một lời bình trên trang của bạn"
+
+msgid "today"
+msgstr "hôm nay"
+
+msgid "Update your rating"
+msgstr "Cập nhật xếp hạng của bạn"
+
+msgid "the username must be given"
+msgstr "Phải có tên của thành viên"
+
+msgid "useful when password forgotten"
+msgstr "có ích khi bị mất mật khẩu"
+
+msgid "Quick search"
+msgstr "Tìm kiếm nhanh"
+
+msgid "Connected user: %s"
+msgstr "người dùng đã kết nối: %s"
+
+msgid "IP: %s"
+msgstr "IP: %s"
+
+msgid "Browser: %s"
+msgstr "Trình duyệt: %s"
+
+msgid "Author: %s"
+msgstr "Tác giả: %s"
+
+msgid "Comment: %s"
+msgstr "Bình luận: %s"
+
+msgid "Comment by %s"
+msgstr "Bình luận bởi %s"
+
+msgid "User: %s"
+msgstr "Tài khoản: %s"
+
+msgid "Email: %s"
+msgstr "Email: %s"
+
+msgid "Admin: %s"
+msgstr "Quản trị: %s"
+
+msgid "Registration of %s"
+msgstr "Mục đăng ký của %s"
+
+msgid "Album: %s"
+msgstr "Đề mục: %s"
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "Status xấu đối với thành viên đăng thuộc nhóm \"khách\", sử dụng status mặc định. Thông báo ngay cho Quản trị"
+
+msgid "this email address is already in use"
+msgstr "đã có thành viên sử dụng địa chỉ email này"
+
+msgid "Album results for"
+msgstr "Kết quả đề mục cho"
+
+msgid "Tag results for"
+msgstr "Kết quả tag cho"
+
+msgid "from %s to %s"
+msgstr "từ %s đến %s"
+
+msgid "Play of slideshow"
+msgstr "Trình chiếu"
+
+msgid "Pause of slideshow"
+msgstr "Tạm dừng trình chiếu"
+
+msgid "Repeat the slideshow"
+msgstr "Lặp lại trình chiếu"
+
+msgid "Not repeat the slideshow"
+msgstr "Không lặp lại trình chiếu"
+
+msgid "Reduce diaporama speed"
+msgstr "Giảm tốc độ xem hình tự động"
+
+msgid "Accelerate diaporama speed"
+msgstr "Tăng tốc độ trình chiếu"
+
+msgid "Submit"
+msgstr "Chấp nhận"
+
+msgid "Yes"
+msgstr "Có"
+
+msgid "No"
+msgstr "Không"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "%d hình"
+msgstr[1] "%d hình"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "%d hình được liên kết với tag hiện tại"
+msgstr[1] "%d hình được liên kết với tag hiện tại"
+
+msgid "display photos linked to this tag"
+msgstr "Chỉ xem những hình liên kết với tag này"
+
+msgid "photos posted during the last %d days"
+msgstr "hình được gởi trong vòng %d ngày cuối"
+
+msgid "Piwigo Help"
+msgstr "Trợ giúp của Piwigo"
+
+msgid "Rank"
+msgstr "Hạng"
+
+msgid "group by letters"
+msgstr "phân nhóm theo ký tự"
+
+msgid "letters"
+msgstr "ký tự"
+
+msgid "cloud"
+msgstr "mây"
+
+msgid "Reset to default values"
+msgstr "Thiết lập lại giá trị mặc định"
+
+msgid "delete all photos from your favorites"
+msgstr "xoá tất cả hình từ danh sách ưa thích"
+
+msgid "Sent by"
+msgstr "Được gởi bởi"
+
+msgid "Are you sure?"
+msgstr "Bạn có chắc không?"
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "Cookies đã bị chặn lại hoặc không được trình duyệt web trên  máy bạn hỗ trợ. Bạn phải mở cookie để tiếp tục."
+
+msgid "Edit a comment"
+msgstr "Sửa lời bình"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) Lời bình này cần phải xác nhận"
+
+msgid "Welcome"
+msgstr "Xin chào"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "Chào mừng bạn đến gallery Piwigo trực tuyến của mình!"
+
+msgid "... or browse your empty gallery"
+msgstr "... hoặc duyệt gallery chưa có hình của bạn"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "... hoặc vui lòng vô hiệu hóa thông báo này, tôi sẽ tự giải quyết"
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "Xin chào %s, gallery của bạn hiện chưa có hình ảnh nào!"
+
+msgid "I want to add photos"
+msgstr "Tôi muốn thêm ảnh"
+
+msgid "Manage this user comment: %s"
+msgstr "Quản lý lời bình của người dùng này: %s"
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "Còn thiếu địa chỉ email. Vui lòng cho biết một địa chỉ email."
+
+msgid "This author modified following comment:"
+msgstr "Tác giả này đã soạn lại lời bình sau:"
+
+msgid "This author removed the comment with id %d"
+msgstr "Tác giả này đã xóa bỏ lời bình có ID là %d"
+
+msgid "show tag cloud"
+msgstr "hiển thị thẻ mây"
+
+msgid "html tags are not allowed in login"
+msgstr "thẻ html không được phép dùng để đăng nhập"
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "Số hình trên mỗi trang phải là số nguyên khác 0"
+
+msgid "Number of photos per page"
+msgstr "Số hình trên mỗi trang"
+
+msgid "Rating score"
+msgstr "Bảng xếp hạng"
+
+msgid "Invalid username or email"
+msgstr "Tên người dùng hoặc địa chỉ email không hợp lệ"
+
+msgid "Password reset is not allowed for this user"
+msgstr "Không được phép đặt lại mật khẩu cho người dùng này"
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "Người dùng \"%s\" không có địa chỉ email, nên việc đặt lại mật khẩu là không thể được"
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "Có người yêu cầu đặt lại mật khẩu cho những người dùng sau:"
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "Người dùng \"%s\" trên thư viện hình %s"
+
+msgid "To reset your password, visit the following address:"
+msgstr "Để đặt lại mật khẩu, hãy vào những địa chỉ sau:"
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "Nếu có nhầm lẫn, hãy bỏ qua bỏ qua email này."
+
+msgid "Password Reset"
+msgstr "Cài đặt lại mật khẩu"
+
+msgid "Check your email for the confirmation link"
+msgstr "Kiểm tra email để nhận xác nhận liên kết"
+
+msgid "Invalid key"
+msgstr "Khóa không hợp lệ"
+
+msgid "The passwords do not match"
+msgstr "Mật khẩu không trùng"
+
+msgid "Your password has been reset"
+msgstr "Mật khẩu của bạn đã được đặt lại"
+
+msgid "Return to home page"
+msgstr "Trở lại trang chủ"
+
+msgid "Please enter your username or email address."
+msgstr "Vui lòng nhập tên người dùng và địa chỉ email."
+
+msgid "You will receive a link to create a new password via email."
+msgstr "Bạn sẽ nhận được một liên kết để tạo mật khẩu mới qua email."
+
+msgid "Username or email"
+msgstr "Người dùng hoặc email"
+
+msgid "Change my password"
+msgstr "Đổi mật khẩu"
+
+msgid "Enter your new password below."
+msgstr "Nhập mật khẩu mới của bạn ở dưới."
+
+msgid "EXIF Metadata"
+msgstr "Dữ liệu EXIF"
+
+msgid "IPTC Metadata"
+msgstr "Dữ liệu IPTC"
+
+msgid "Edit"
+msgstr "Sửa"
+
+msgid "Hello %s,"
+msgstr "Xin chào %s,"
+
+msgid "Send my connection settings by email"
+msgstr "Gởi thiết lập kết nối của tôi qua email"
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "Đã đăng ký thành công, bạn sẽ nhận được ngay email kèm theo thiết lập kết nối. Xin chào mừng!"
+
+msgid "Username modification"
+msgstr "Điều chỉnh tên đăng nhập"
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "Tên đăng nhập của bạn đã được đổi sang : %s thành công"
+
+msgid "square"
+msgstr "Hình vuông"
+
+msgid "thumb"
+msgstr "Hình thu nhỏ"
+
+msgid "small"
+msgstr "Nhỏ"
+
+msgid "medium"
+msgstr "Vừa"
+
+msgid "large"
+msgstr "Lớn"
+
+msgid "xlarge"
+msgstr "Rất lớn"
+
+msgid "xxlarge"
+msgstr "Cực lớn"
+
+msgid "Original"
+msgstr "Bản gốc"
+
+msgid "Thank you for registering at %s!"
+msgstr "Cảm ơn bạn đã đăng ký tại %s!"
+
+msgid "Here are your connection settings"
+msgstr "Đây là thiết lập kết nối của bạn"
+
+msgid "Password: %s"
+msgstr "Mật khẩu: %s"
+
+msgid "Username: %s"
+msgstr "Tên đăng nhập: %s"
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "Nếu bạn nghĩ bạn đã nhận nhầm email, vui lòng liên hệ với chúng tôi qua %s"
+
+msgid "Show oldest comments first"
+msgstr "Hiển thị những lời bình trước nhất đầu tiên"
+
+msgid "Show latest comments first"
+msgstr "Hiển thị những lời bình mới nhất đầu tiên"
+
+msgid "Photo sizes"
+msgstr "Kích thước ảnh"
+
+msgid "View in"
+msgstr "Xem ảnh ở"
+
+msgid "Mobile"
+msgstr "Di động"
+
+msgid "2small"
+msgstr "XXS - nhỏ"
+
+msgid "xsmall"
+msgstr "XS - cực nhỏ"
+
+msgid "Desktop"
+msgstr "Màn hình"
+
+msgid "File name, A &rarr; Z"
+msgstr "Tên file, A &rarr; Z"
+
+msgid "File name, Z &rarr; A"
+msgstr "Tên file, Z &rarr; A"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "Tiêu đề ảnh, A &rarr; Z"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "Tiêu đề ảnh, Z &rarr; A"
+
+msgid "Date created, new &rarr; old"
+msgstr "Ngày khởi tạo, mới &rarr; cũ"
+
+msgid "Date created, old &rarr; new"
+msgstr "Ngày khởi tạo, cũ &rarr; mới"
+
+msgid "Date posted, new &rarr; old"
+msgstr "Ngày gởi ảnh, mới&rarr; cũ"
+
+msgid "Date posted, old &rarr; new"
+msgstr "Ngày gởi ảnh, cũ &rarr; mới"
+
+msgid "Rating score, high &rarr; low"
+msgstr "Tỉ lệ xếp hạng, cao &rarr; thấp"
+
+msgid "Rating score, low &rarr; high"
+msgstr "Tỉ lệ xếp hạng, thấp &rarr; cao"
+
+msgid "Visits, high &rarr; low"
+msgstr "Số lần xem, cao &rarr; thấp"
+
+msgid "Visits, low &rarr; high"
+msgstr "Số lần xem, thấp &rarr; cao"
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "Ký hiệu nhận dạng số học, 1 &rarr; 9"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "Ký hiệu nhận dạng số học, 9 &rarr; 1"
+
+msgid "Manual sort order"
+msgstr "Sắp xếp thủ công"
+
+msgid "%d rate"
+msgid_plural "%d rates"
+msgstr[0] "%d đánh giá"
+msgstr[1] "%d đánh giá"
+
+msgid "Bad request"
+msgstr "Yêu cầu không hợp lệ"
+
+msgid "Forbidden"
+msgstr "Cấm"
+
+msgid "Page not found"
+msgstr "Không tìm thấy trang"
+
+msgid "Permalink for album not found"
+msgstr "Không tìm thấy liên kết cho album"
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "Piwigo gặp lỗi ngoài tầm kiểm soát"
+
+msgid "Requested album does not exist"
+msgstr "Không có album như bạn yêu cầu"
+
+msgid "Requested tag does not exist"
+msgstr "Không có tag như bạn yêu cầu"
+
+msgid "Email address is mandatory"
+msgstr "Phải có địa chỉ email"
+
+msgid "Username is mandatory"
+msgstr "Phải có tên người dùng"
+
+msgid "Website"
+msgstr "Trang web"
+
+msgid "Your website URL is invalid"
+msgstr "Địa chỉ trang web không bình thường"
+
+msgid "mandatory"
+msgstr "bắt buộc"
+
+msgid "Email"
+msgstr "Email"
+
+msgid "First Page"
+msgstr "Trang đầu"
+
+msgid "Go back to the album"
+msgstr "Quay trở lại đề mục"
+
+msgid "Last Page"
+msgstr "Trang cuối"
+
+msgid "Password is missing. Please enter the password."
+msgstr "Thiếu mật khẩu. Vui lòng nhập mật khẩu."
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Xác nhận mật khẩu bị thiếu. Vui lòng xác nhận lại mật khẩu đã chọn."
+
+msgid "%d photos per page"
+msgstr "%d ảnh mỗi trang"
+
+msgid "Theme"
+msgstr "Chủ đề"
+
+msgid "Apply on properties"
+msgstr "Áp dụng cho thuộc tính"
+
+msgid "No results for"
+msgstr "Không tìm thấy kết quả cho"
+
+msgid "Photo description"
+msgstr "Mô tả hình ảnh"
+
+msgid "Photo title"
+msgstr "Tiêu đề ảnh"
+
+msgid "Album name, A &rarr; Z"
+msgstr "Tên album, A &rarr; Z"
+
+msgid "Album name, Z &rarr; A"
+msgstr "Tên album, Z &rarr; A"
+
+msgid "Link: %s"
+msgstr "Liên kết: %s"
+
+msgid "Your authentication key is no longer valid."
+msgstr "Khóa xác thực của bạn không còn hợp lệ nữa."
+
+msgid "generate random password"
+msgstr "phát sinh mật khẩu ngẫu nhiên"
+
+msgid "Invalid username or password!"
+msgstr "Sai tên người dùng hoặc mật khẩu"
+
+msgid "Album name, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+msgstr "Tên album, 1&rarr; 5 &rarr; 10 &rarr; 100"
+
+msgid "Album name, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+msgstr "Tên album, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+
+msgid "Password: ********** (no copy by email)"
+msgstr "Mật khẩu: ********** (không sao chép vào email)"
+
+msgid "Related albums"
+msgstr "Album có liên quan"
+
+msgid "Start-Date"
+msgstr "Ngày bắt đầu"
+
+msgid "piwigo_day_0"
+msgstr "Chủ Nhật"
+
+msgid "piwigo_day_1"
+msgstr "Thứ Hai"
+
+msgid "piwigo_day_2"
+msgstr "Thứ Ba"
+
+msgid "piwigo_day_3"
+msgstr "Thứ Tư"
+
+msgid "piwigo_day_4"
+msgstr "Thứ Năm"
+
+msgid "piwigo_day_5"
+msgstr "Thứ Sáu"
+
+msgid "piwigo_day_6"
+msgstr "Thứ Bảy"
+
+msgid "piwigo_month_10"
+msgstr "Tháng Mười"
+
+msgid "piwigo_month_11"
+msgstr "Tháng Mười Một"
+
+msgid "piwigo_month_12"
+msgstr "Tháng Mười Hai"
+
+msgid "piwigo_month_1"
+msgstr "Tháng Giêng"
+
+msgid "piwigo_month_2"
+msgstr "Tháng Hai"
+
+msgid "piwigo_month_3"
+msgstr "Tháng Ba"
+
+msgid "piwigo_month_4"
+msgstr "Tháng Tư"
+
+msgid "piwigo_month_5"
+msgstr "Tháng Năm"
+
+msgid "piwigo_month_6"
+msgstr "Tháng Sáu"
+
+msgid "piwigo_month_7"
+msgstr "Tháng Bảy"
+
+msgid "piwigo_month_8"
+msgstr "Tháng Tám"
+
+msgid "piwigo_month_9"
+msgstr "Tháng Chín"
+

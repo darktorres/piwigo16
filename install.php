@@ -10,6 +10,10 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\languages;
+use Piwigo\Config\Config;
+use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\AppInfo;
+use Piwigo\Db\Tables;
 use Piwigo\Session\PwgSession;
 use Piwigo\Template\Template;
 
@@ -53,6 +57,15 @@ if (isset($_POST['install'])) {
 } else {
     $prefixeTable = DEFAULT_PREFIX_TABLE;
 }
+
+// Piwigo\Db\Tables::*() (used below and by admin/include/functions.php's
+// own procedural functions once included) reads Config::dbPrefix() --
+// this script never goes through Kernel::boot()/ConfigLoader (there's no
+// database.inc.php to read from until this wizard writes one), so the
+// user-chosen $prefixeTable must be seeded into Config's static state
+// directly, or every Tables::*() call downstream silently falls back to
+// the 'piwigo_' SCHEMA default instead of the real chosen prefix.
+Config::override('db_prefix', $prefixeTable);
 
 include PHPWG_ROOT_PATH . 'include/config_default.inc.php';
 @include PHPWG_ROOT_PATH . 'local/config/config.inc.php';
@@ -121,7 +134,6 @@ if (file_exists(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . pwg_test_mode_installed_stamp(
     die('Piwigo is already installed');
 }
 
-include PHPWG_ROOT_PATH . 'include/constants.php';
 include PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
 $languages = new languages('utf-8');
@@ -130,7 +142,7 @@ if (isset($_GET['language']) && is_string($_GET['language'])) {
     $language = strip_tags($_GET['language']);
 
     if (! in_array($language, array_keys($languages->fs_languages))) {
-        $language = PHPWG_DEFAULT_LANGUAGE;
+        $language = AppInfo::DEFAULT_LANGUAGE;
     }
 } else {
     $language = 'en_UK';
@@ -162,8 +174,8 @@ load_language('install.lang', '', [
 
 header('Content-Type: text/html; charset=UTF-8');
 // ------------------------------------------------- check php version
-if (version_compare(PHP_VERSION, REQUIRED_PHP_VERSION, '<')) {
-    $errors[] = l10n('PHP version %s required (you are running on PHP %s)', REQUIRED_PHP_VERSION, PHP_VERSION);
+if (version_compare(PHP_VERSION, AppInfo::REQUIRED_PHP_VERSION, '<')) {
+    $errors[] = l10n('PHP version %s required (you are running on PHP %s)', AppInfo::REQUIRED_PHP_VERSION, PHP_VERSION);
 }
 
 // ----------------------------------------------------- template initialization
@@ -337,7 +349,7 @@ INSERT INTO ' . $prefixeTable . 'config (param,value,comment)
    \'a secret key specific to the gallery for internal use\');';
         pwg_query($query);
 
-        conf_update_param('piwigo_db_version', get_branch_from_version(PHPWG_VERSION));
+        conf_update_param('piwigo_db_version', get_branch_from_version(AppInfo::VERSION));
         conf_update_param('gallery_title', pwg_db_real_escape_string(l10n('Just another Piwigo gallery')));
 
         conf_update_param(
@@ -363,7 +375,7 @@ INSERT INTO ' . $prefixeTable . 'config (param,value,comment)
             'id' => 1,
             'galleries_url' => PHPWG_ROOT_PATH . 'galleries/',
         ];
-        mass_inserts(SITES_TABLE, array_keys($insert), [$insert]);
+        mass_inserts(Tables::sites(), array_keys($insert), [$insert]);
 
         // webmaster admin user
         $inserts = [
@@ -378,7 +390,7 @@ INSERT INTO ' . $prefixeTable . 'config (param,value,comment)
                 'username' => 'guest',
             ],
         ];
-        mass_inserts(USERS_TABLE, array_keys($inserts[0]), $inserts);
+        mass_inserts(Tables::users(), array_keys($inserts[0]), $inserts);
 
         create_user_infos([1, 2], [
             'language' => $language,
@@ -400,7 +412,7 @@ INSERT INTO ' . $prefixeTable . 'config (param,value,comment)
             ];
         }
         mass_inserts(
-            UPGRADE_TABLE,
+            Tables::upgrade(),
             array_keys($datas[0]),
             $datas
         );
@@ -420,7 +432,7 @@ $template->assign('language_options', $languages_options);
 $template->assign(
     [
         'T_CONTENT_ENCODING' => 'utf-8',
-        'RELEASE' => PHPWG_VERSION,
+        'RELEASE' => AppInfo::VERSION,
         'F_ACTION' => 'install.php?language=' . $language,
         'F_DB_HOST' => $dbhost,
         'F_DB_USER' => $dbuser,
@@ -438,8 +450,8 @@ $template->assign(
 if ($step == 1) {
     $template->assign('install', true);
 } else {
-    pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'install', [
-        'version' => PHPWG_VERSION,
+    pwg_activity('system', ActivitySystem::Core, 'install', [
+        'version' => AppInfo::VERSION,
     ]);
     $infos[] = l10n('Congratulations, Piwigo installation is completed');
 
@@ -483,7 +495,7 @@ if ($step == 1) {
         // whatever getuserdata() already populated it with.
         $preferences = $user['preferences'] ?? null;
         $preferences = is_array($preferences) ? $preferences : [];
-        $preferences['show_whats_new_' . get_branch_from_version(PHPWG_VERSION)] = false;
+        $preferences['show_whats_new_' . get_branch_from_version(AppInfo::VERSION)] = false;
         $user['preferences'] = $preferences;
 
         // newsletter subscription

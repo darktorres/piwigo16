@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\AccessLevel;
+use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
@@ -43,7 +45,7 @@ SELECT
     day,
     hour,
     nb_pages
-  FROM ' . HISTORY_SUMMARY_TABLE;
+  FROM ' . Tables::historySummary();
 
     if ($type === 'hour') {
         $query .= '
@@ -114,7 +116,7 @@ SELECT
   day,
   hour,
   nb_pages
-FROM ' . HISTORY_SUMMARY_TABLE . '
+FROM ' . Tables::historySummary() . '
 WHERE month IS NOT NULL
   AND day IS NULL
 ORDER BY
@@ -164,7 +166,7 @@ SELECT
   day,
   hour,
   nb_pages
-FROM ' . HISTORY_SUMMARY_TABLE . '
+FROM ' . Tables::historySummary() . '
 WHERE
   (
     (year = ' . $date->format('Y') . ' AND month = ' . $date->format('n') . ')
@@ -207,7 +209,7 @@ ORDER BY
     $query = '
 SELECT
   AVG(nb_pages)
-FROM ' . HISTORY_SUMMARY_TABLE . '
+FROM ' . Tables::historySummary() . '
 WHERE
   (
   year = ' . $date->format('Y') . ' OR
@@ -231,7 +233,7 @@ ORDER BY
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
 
-check_status(ACCESS_ADMINISTRATOR);
+check_status(AccessLevel::Administrator);
 
 // +-----------------------------------------------------------------------+
 // | Refresh summary from details                                          |

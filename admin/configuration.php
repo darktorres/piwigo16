@@ -11,6 +11,9 @@ declare(strict_types=1);
 
 use Piwigo\Admin\Image\pwg_image;
 use Piwigo\Admin\tabsheet;
+use Piwigo\Core\AccessLevel;
+use Piwigo\Core\ActivitySystem;
+use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Template\Template;
@@ -51,7 +54,7 @@ include_once PHPWG_ROOT_PATH . 'admin/include/functions_upload.inc.php';
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_ADMINISTRATOR);
+check_status(AccessLevel::Administrator);
 
 // -------------------------------------------------------- sections definitions
 
@@ -328,7 +331,7 @@ if (isset($_POST['submit'])) {
     $page_errors_for_count = $page['errors'];
     if (! in_array($page_section, ['sizes', 'watermark']) and count($page_errors_for_count) == 0 and is_webmaster()) {
         // echo '<pre>'; print_r($_POST); echo '</pre>';
-        $result = pwg_query('SELECT param FROM ' . CONFIG_TABLE);
+        $result = pwg_query('SELECT param FROM ' . Tables::config());
         while ((bool) ($row = pwg_db_fetch_assoc($result))) {
             if (! is_string($row['param'])) {
                 // `param` is the config table's NOT NULL primary key; a
@@ -348,7 +351,7 @@ if (isset($_POST['submit'])) {
                 }
 
                 $query = '
-UPDATE ' . CONFIG_TABLE . '
+UPDATE ' . Tables::config() . '
 SET value = \'' . str_replace("\'", "''", $value) . '\'
 WHERE param = \'' . $row['param'] . '\'
 ;';
@@ -361,7 +364,7 @@ WHERE param = \'' . $row['param'] . '\'
             ]
         );
 
-        pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'config', [
+        pwg_activity('system', ActivitySystem::Core, 'config', [
             'config_section' => $page['section'],
         ]);
     }
@@ -384,7 +387,7 @@ if ($page['section'] == 'sizes' and isset($_GET['action']) and $_GET['action'] =
         ]
     );
 
-    pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'config', [
+    pwg_activity('system', ActivitySystem::Core, 'config', [
         'config_section' => $page['section'],
         'config_action' => $_GET['action'],
     ]);
@@ -490,7 +493,7 @@ switch ($page['section']) {
     SELECT
         id,
         name
-      FROM `' . GROUPS_TABLE . '`
+      FROM `' . Tables::groups() . '`
     ;';
         $groups = query2array($query, 'id', 'name');
         natcasesort($groups);

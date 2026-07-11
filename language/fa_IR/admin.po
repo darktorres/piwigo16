@@ -1,0 +1,3258 @@
+# Piwigo translation — fa_IR
+# Source: admin.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: fa_IR\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "%d association"
+msgstr "%d پیوند"
+
+msgid "%d associations"
+msgstr "%d پیوند"
+
+msgid "%d album including"
+msgstr "شامل %d آلبوم"
+
+msgid "%d albums including"
+msgstr "شامل %d آلبوم"
+
+msgid "%d physical"
+msgstr " %d فیزیکی"
+
+msgid " and %d virtual"
+msgstr " و %d مجازی"
+
+msgid "%d album moved"
+msgid_plural "%d albums moved"
+msgstr[0] "%d آلبوم جابجا شد"
+msgstr[1] "%d تا آلبوم جابجا شدند"
+
+msgid "%d group"
+msgstr "%d گروه"
+
+msgid "%d groups"
+msgstr "%d گروه"
+
+msgid "%d member"
+msgid_plural "%d members"
+msgstr[0] "%d کاربر"
+msgstr[1] "%d کاربر"
+
+msgid "%d tag"
+msgstr "%d برچسب"
+
+msgid "%d tags"
+msgstr "%d برچسب"
+
+msgid "%d user comment rejected"
+msgstr "%d دیدگاه کاربر رد شد"
+
+msgid "%d user comments rejected"
+msgstr "%d دیدگاه کاربر رد شدند"
+
+msgid "%d user comment validated"
+msgstr "%d دیدگاه کاربر پذیرفته شد"
+
+msgid "%d user comments validated"
+msgstr "%d دیدگاه کاربر پذیرفته شد"
+
+msgid "%d user deleted"
+msgid_plural "%d users deleted"
+msgstr[0] "%d کاربر پاک شد"
+msgstr[1] "%d تا کاربر پاک شدند"
+
+msgid "%d user"
+msgid_plural "%d users"
+msgstr[0] "%d کاربر"
+msgstr[1] "%d کاربر"
+
+msgid "%d waiting for validation"
+msgstr "%d تا در انتظار پذیرش"
+
+msgid "Actions"
+msgstr "کارها"
+
+msgid "Activate"
+msgstr "فعال کردن"
+
+msgid "Add/delete a permalink"
+msgstr "افزودن/پاک کردن لینک ثابت"
+
+msgid "Add a tag"
+msgstr "افزودن برچسب"
+
+msgid "Add a user"
+msgstr "افزودن کاربر"
+
+msgid "Add group"
+msgstr "افزودن گروه"
+
+msgid "Add"
+msgstr "افزودن"
+
+msgid "Allow user registration"
+msgstr "فعال بودن نام‌نویسی کاربر"
+
+msgid "Apply to sub-albums"
+msgstr "بر روی زیرآلبوم‌ها انجام شود"
+
+msgid "Associated"
+msgstr "پیوسته"
+
+msgid "Caddie management"
+msgstr "مدیریت سبد"
+
+msgid "Caddie"
+msgstr "سبد"
+
+msgid "Albums authorized thanks to group associations"
+msgstr "آلبوم‌ها به صورت خودکار چیده شدند"
+
+msgid "Album manual order was saved"
+msgstr "چیدمان دستی آلبوم‌ها با موفقیت ذخیره شد"
+
+msgid "Check for upgrade failed for unknown reasons."
+msgstr "بررسی برای بروزرسانی به دلایل نامعلومی با مشکل مواجه شد."
+
+msgid "Check for upgrade"
+msgstr "بررسی برای آپگرید"
+
+msgid "Comments for all"
+msgstr "یادداشت برای همه"
+
+msgid "Current name"
+msgstr "نام کنونی"
+
+msgid "Database"
+msgstr "پایگاه داده"
+
+msgid "Deactivate"
+msgstr "از کار انداختن"
+
+msgid "Delete Representant"
+msgstr "پاک کردن عکس ریزه‌ی آلبوم"
+
+msgid "Delete selected tags"
+msgstr "پاک کردن برچسب‌های انتخاب شده"
+
+msgid "Delete selected users"
+msgstr "پاک کردن کاربران انتخاب شده"
+
+msgid "Deletions"
+msgstr "پاک کردن"
+
+msgid "Deny selected groups"
+msgstr "رد کردن گروه‌های انتخاب شده"
+
+msgid "Deny selected users"
+msgstr "رد کردن کاربران انتخاب شده"
+
+msgid "Description"
+msgstr "توضیحات"
+
+msgid "Display options"
+msgstr "نمایش گزینه‌ها"
+
+msgid "Dissociated"
+msgstr "جدا شده"
+
+msgid "Does not represent"
+msgstr "عکس ریزه نیست برای"
+
+msgid "Edit selected tags"
+msgstr "ویرایش برچسب‌های انتخاب شده"
+
+msgid "Edit tags"
+msgstr "ویرایش برچسب‌ها"
+
+msgid "Email admins when a new user registers"
+msgstr "فرستادن ایمیل به مدیران هنگامی که کاربری تازه نام نویسی می‌کند"
+
+msgid "Email admins when a valid comment is entered"
+msgstr "فرستادن ایمیل به مدیران هنگامی که دیدگاه درستی نوشته می‌شود"
+
+msgid "Email admins when a comment requires validation"
+msgstr "فرستادن ایمیل به مدیران هنگامی که دیدگاهی نیاز به پذیرش دارد"
+
+msgid "Environment"
+msgstr "محیط"
+
+msgid "Form"
+msgstr "فرم"
+
+msgid "Gallery title"
+msgstr "عنوان گالری"
+
+msgid "Grant selected groups"
+msgstr "اجازه دادن به گروه‌های انتخاب شده"
+
+msgid "Grant selected users"
+msgstr "اجازه دادن به کاربران انتخاب شده"
+
+msgid "Group name"
+msgstr "نام گروه"
+
+msgid "Groups"
+msgstr "گروه‌ها"
+
+msgid "Guests"
+msgstr "مهمانان"
+
+msgid "History"
+msgstr "تاریخچه"
+
+msgid "Informations"
+msgstr "اطلاعات"
+
+msgid "Install"
+msgstr "نصب"
+
+msgid "Link all album photos to a new album"
+msgstr "پیوند دادن همه‌‎ی عکس‌های آلبوم به یک آلبوم تازه"
+
+msgid "Link all album photos to some existing albums"
+msgstr "پیوند دادن همه‌ی عکس‌های آلبوم به چند آلبوم موجود"
+
+msgid "Linked albums"
+msgstr "آلبوم‌های پیوند داده شده"
+
+msgid "Lock gallery"
+msgstr "قفل کردن گالری"
+
+msgid "Maintenance"
+msgstr "بازسازی"
+
+msgid "Edit album permissions"
+msgstr "مدیریت مجوزهای آلبوم"
+
+msgid "Manage permissions for group \"%s\""
+msgstr "مدیریت مجوزهای گروه \"%s\""
+
+msgid "Manage permissions for user \"%s\""
+msgstr "مدیریت مجوزهای کاربر \"%s\""
+
+msgid "Manage tags"
+msgstr "مدیریت برچسب‌ها"
+
+msgid "Members"
+msgstr "کاربران"
+
+msgid "Metadata synchronized from file"
+msgstr "همگام‌ سازی ابر داده (Metadata) از فایل"
+
+msgid "Move albums"
+msgstr "جابجا کردن آلبوم‌ها"
+
+msgid "Move"
+msgstr "جابجا کردن"
+
+msgid "Name"
+msgstr "نام"
+
+msgid "New name"
+msgstr "نام تازه"
+
+msgid "New parent album"
+msgstr "آلبوم مادر تازه"
+
+msgid "New tag"
+msgstr "برچسب تاره"
+
+msgid "Number of comments per page"
+msgstr "شمار دیدگاه‌ها در هر برگه"
+
+msgid "Number of rates"
+msgstr "امتیاز‌ها"
+
+msgid "Only private albums are listed"
+msgstr "تنها آلبوم‌های شخصی را نشان بده"
+
+msgid "Operating system"
+msgstr "سیستم عامل"
+
+msgid "Options"
+msgstr "گزینه‌ها"
+
+msgid "Other private albums"
+msgstr "دیگر آلبوم‌های شخصی"
+
+msgid "Page banner"
+msgstr "بنر برگه"
+
+msgid "Parent album"
+msgstr "آلبوم مادر"
+
+msgid "Path"
+msgstr "مسیر"
+
+msgid "Permalink"
+msgstr "لینک ثابت"
+
+msgid "Permalink %s has been previously used by album %s. Delete from the permalink history first"
+msgstr "لینک ثابت %s پیش از این در آلبوم %s استفاده شده بود. نخست این لینک ثابت را از تاریخچه پاک کنید"
+
+msgid "The permalink name must be composed of a-z, A-Z, 0-9, \"-\", \"_\" or \"/\". It must not be numeric or start with number followed by \"-\""
+msgstr "نام لینک ثابت باید فقط ترکیبی از a-z، A-Z، 0-9، \"-\"، \"_\" یا \"/\" باشد. همچنین نباید فقط دارای عدد باشد یا با عدد و \"-\" آغاز شود"
+
+msgid "Permalink %s is already used by album %s"
+msgstr "لینک ثابت  %s هم اکنون در آلبوم %s استفاده می‌شود."
+
+msgid "Permalink history"
+msgstr "تاریخچه‌ی لینک‌های ثابت "
+
+msgid "Permalinks"
+msgstr "لینک‌های ثابت "
+
+msgid "Permission denied"
+msgstr "مجوز دسترسی ندارید"
+
+msgid "Permission granted thanks to a group"
+msgstr "دسترسی داده شد"
+
+msgid "Permission granted"
+msgstr "دسترسی داده شد"
+
+msgid "Photo informations updated"
+msgstr "اطلاعات عکس به روز رسانی شد"
+
+msgid "Plugins"
+msgstr "افزونه ها"
+
+msgid "Position"
+msgstr "موقعیت"
+
+msgid "Preferences"
+msgstr "تنظیمات"
+
+msgid "Properties"
+msgstr "ویژگی ها"
+
+msgid "Random photo"
+msgstr "عکس تصادفی"
+
+msgid "Rate date"
+msgstr "تاریخ امتیازدهی"
+
+msgid "Rating by guests"
+msgstr "دادن امتیاز بوسیله ی مهمان"
+
+msgid "Rating"
+msgstr "امتیازدهی"
+
+msgid "Reject"
+msgstr "رد کردن"
+
+msgid "Representant"
+msgstr "عکس ریزه ی آلبوم"
+
+msgid "Representation of albums"
+msgstr "عکس ریزه ی آلبوم"
+
+msgid "Representative"
+msgstr "عکس ریزه ی آلبوم"
+
+msgid "Represents"
+msgstr "عکس ریزه ی آلبوم مقابل است :"
+
+msgid "Save order"
+msgstr "ذخیره ی ترتیب"
+
+msgid "Save to permalink history"
+msgstr "ذخیره در تاریخچه ی لینک های ثابت"
+
+msgid "Select at least one album"
+msgstr "حداقل یک آلبوم را انتخاب کنید"
+
+msgid "Select at least one photo"
+msgstr "حداقل یک عکس را انتخاب کنید"
+
+msgid "Select at least one user"
+msgstr "حداقل یک کاربر را انتخاب کنید"
+
+msgid "Show info"
+msgstr "نمایش اطلاعات"
+
+msgid "Site manager"
+msgstr "مدیریت سایت"
+
+msgid "Status"
+msgstr "وضعیت"
+
+msgid "Statistics"
+msgstr "آمار"
+
+msgid "Storage album"
+msgstr "آلبوم ذخیره سازی"
+
+msgid "Sum of rates"
+msgstr "مجموع امتیاز ها"
+
+msgid "Tag \"%s\" already exists"
+msgstr "برچسب \"%s\" در سیستم موجود است"
+
+msgid "Tag \"%s\" was added"
+msgstr "برچسب \"%s\" افزوده شد"
+
+msgid "Tag selection"
+msgstr "انتخاب برچسب ها"
+
+msgid "The %d following tags were deleted"
+msgstr "برچسب های %d پاک شدند"
+
+msgid "Unable to check for upgrade."
+msgstr "سیستم قادر به بروز رسانی نیست."
+
+msgid "Uninstall"
+msgstr "پاک کردن"
+
+msgid "Use the default photo sort order"
+msgstr "استفاده از مرتب سازی پیشفرض برای عکس"
+
+msgid "User comments validation"
+msgstr "پذیرفتن دیدگاه های کاربر"
+
+msgid "Users"
+msgstr "کاربران"
+
+msgid "Validate"
+msgstr "تایید"
+
+msgid "Validation"
+msgstr "تایید"
+
+msgid "Version"
+msgstr "نگارش"
+
+msgid "Virtual albums to move"
+msgstr "آلبوم های مجازی نیازمند جابجایی"
+
+msgid "Virtual album name"
+msgstr "نام آلبوم مجازی"
+
+msgid "Webmaster cannot be deleted"
+msgstr "مدیرکل قابل پاک شدن نیست"
+
+msgid "You are running on development sources, no check possible."
+msgstr "شما از نگارش توسعه (Development) استفاده می کنید، امکان بررسی وجود ندارد."
+
+msgid "You cannot delete your account"
+msgstr "شما نمی توانید حساب خود را پاک کنید"
+
+msgid "You cannot move an album in its own sub album"
+msgstr "شما نمی توانید آلبوم مادر را به زیر آلبوم خودش جابجا کنید"
+
+msgid "You need to confirm deletion"
+msgstr "شما باید پاک کردن را بپذیرید"
+
+msgid "Associate to album"
+msgstr "پیوستن به آلبوم"
+
+msgid "associate to group"
+msgstr "پیوستن به گروه"
+
+msgid "Authorized"
+msgstr "مجاز"
+
+msgid "Add a virtual album"
+msgstr "افزودن آلبوم مجازی"
+
+msgid "Authorize users to add comments on selected albums"
+msgstr "اجازه دادن به کاربران برای افزودن دیدگاه به آلبوم‌های انتخاب شده"
+
+msgid "The name of an album must not be empty"
+msgstr "نام آلبوم نباید خالی باشد"
+
+msgid "Lock albums"
+msgstr "قفل‌ کردن آلبوم‌ها"
+
+msgid "Private"
+msgstr "شخصی"
+
+msgid "Public"
+msgstr "همگانی"
+
+msgid "Find a new representant by random"
+msgstr "پیداکردن تصادفی یک عکس ریزه‌ی تازه برای آلبوم"
+
+msgid "Public / Private"
+msgstr "همگانی / خصوصی"
+
+msgid "Manage authorizations for selected albums"
+msgstr "مدیریت مجوزهای آلبوم‌های انتخاب شده"
+
+msgid "Virtual album added"
+msgstr "آلبوم مجازی افزوده شد"
+
+msgid "Virtual album deleted"
+msgstr "آلبوم مجازی پاک شد"
+
+msgid "Access type"
+msgstr "نوع دسترسی"
+
+msgid "Information data registered in database"
+msgstr "داده‌ی اطلاعات در پایگاه داده ثبت شد"
+
+msgid "Default display"
+msgstr "نمایش پیشفرض"
+
+msgid "The gallery URL is not valid."
+msgstr "آدرس URL معتبر نیست."
+
+msgid "The number of comments a page must be between 5 and 50 included."
+msgstr "تعداد دیدگاه ها در هر صفحه باید عددی بین 5 تا 50 باشد."
+
+msgid "Configuration"
+msgstr "پیکربندی"
+
+msgid "confirm"
+msgstr "پذیرفتن"
+
+msgid "Date"
+msgstr "تاریخ"
+
+msgid "delete album"
+msgstr "پاک کردن آلبوم"
+
+msgid "Dissociate from album"
+msgstr "جدا کردن از آلبوم"
+
+msgid "dissociate from group"
+msgstr "جدا کردن از گروه"
+
+msgid "Album updated successfully"
+msgstr "آلبوم با موفقیت به روز رسانی شد"
+
+msgid "photos per page"
+msgstr "عکس در هر صفحه"
+
+msgid "High definition enabled"
+msgstr "حالت HD فعال شده است"
+
+msgid "File"
+msgstr "فایل"
+
+msgid "Forbidden"
+msgstr "غیر مجاز"
+
+msgid "global mode"
+msgstr "حالت کلی"
+
+msgid "group \"%s\" added"
+msgstr "گروه \"%s\" افزوده شد"
+
+msgid "group \"%s\" deleted"
+msgstr "گروه \"%s\" پاک شد"
+
+msgid "group \"%s\" updated"
+msgstr "گروه \"%s\" بروز رسانی شد"
+
+msgid "The name of a group must not contain \" or ' or be empty."
+msgstr "نام گروه نباید دارای علامت \" یا  ' باشد و نمی‌تواند خالی باشد"
+
+msgid "This name is already used by another group."
+msgstr "این نام پیش از این برای گروهی دیگر انتخاب شده‌ است."
+
+msgid "High definition"
+msgstr "High definition"
+
+msgid "jump to album"
+msgstr "رفتن به آلبوم"
+
+msgid "jump to photo"
+msgstr "رفتن به عکس"
+
+msgid "leave"
+msgstr "ترک کردن"
+
+msgid "Lock"
+msgstr "قفل کردن"
+
+msgid "Locked"
+msgstr "قفل شده"
+
+msgid "manage album photos"
+msgstr "مدیریت عکس های آلبوم"
+
+msgid "manage sub-albums"
+msgstr "مدیریت زیرآلبوم ها"
+
+msgid "Manage"
+msgstr "مدیریت"
+
+msgid "Execution time is out, treatment must be continue [Estimated time: %d second]."
+msgid_plural "Execution time is out, treatment must be continue [Estimated time: %d seconds]."
+msgstr[0] "زمان اجرا بدلیل کندی به پایان رسید، کار باید ادامه پیدا کند [برآورد زمان: %d ثانیه]."
+msgstr[1] "زمان اجرا بیشتر از حالت همیشگی است، کار باید ادامه پیدا کند [برآورد زمان: %d ثانیه]."
+
+msgid "Prepared time for list of users to send mail is limited. Others users are not listed."
+msgstr "زمان آماده ساختن فهرست کاربرانی که به آنها ایمیل فرستاده می شود محدود است. کاربران دیگر جز فهرست قرار نخواهند گرفت."
+
+msgid "Time to send mail is limited. Others mails are skipped."
+msgstr "زمان برای فرستادن ایمیل محدود است. بقیه ی ایمیل ها نادیده گرفته می شوند."
+
+msgid "To send ?"
+msgstr "فرستادن به؟"
+
+msgid "Last send"
+msgstr "آخرین فرستاده"
+
+msgid "User"
+msgstr "کاربر"
+
+msgid "See you soon,"
+msgstr "به امید دیدار،"
+
+msgid "Go to"
+msgstr "برو به"
+
+msgid "Hello"
+msgstr "درود"
+
+msgid "New photos were added"
+msgstr "عکس‌های تازه افروده شده‌اند"
+
+msgid "on"
+msgstr "در"
+
+msgid "between"
+msgstr "بین"
+
+msgid "and"
+msgstr "و"
+
+msgid "The webmaster has subscribed you to receiving notifications by mail."
+msgstr "مدیر کل شما را برای دریافت آخرین اطلاعات بوسیله ی ایمیل در خبرنامه مشترک کرده است."
+
+msgid "You have subscribed to receiving notifications by mail."
+msgstr "شما در خبرنامه Piwigo مشترک شدید و آخرین تغییرات بوسیله ی ایمیل به اطلاع شما خواهد رسید."
+
+msgid "To subscribe"
+msgstr "مشترک شدن"
+
+msgid "If you encounter problems or have any question, please send a message to"
+msgstr "اگر به مشکلی برخوردید یا پرسشی داشتید، پیامی به این نشانی بفرستید:"
+
+msgid "[NBM] Problems or questions"
+msgstr "مشکل یا پرسش"
+
+msgid "The webmaster has unsubscribed you from receiving notifications by mail."
+msgstr "اشتراک شما در خبرنامه بوسیله ی ایمیل از طرف مدیر کل لغو گردید."
+
+msgid "You have unsubscribed from receiving notifications by mail."
+msgstr "شما از خبرنامه لغو اشتراک  کردید."
+
+msgid ", click on"
+msgstr "، کلیک کنید بر روی"
+
+msgid "To unsubscribe"
+msgstr "لغو کردن اشتراک"
+
+msgid "With blank value, gallery title will be used"
+msgstr "اگر خالی بگذارید، عنوان گالری جای آن می نشیند"
+
+msgid "Notification"
+msgstr "خبرنامه"
+
+msgid "Error when sending email to %s [%s]."
+msgstr "خطا در فرستادن ایمیل به %s [%s]."
+
+msgid "Mail sent to %s [%s]."
+msgstr "ایمیل به %s [%s] فرستاده شد."
+
+msgid "%d mail was sent."
+msgid_plural "%d mails were sent."
+msgstr[0] "%d ایمیل فرستاده شد."
+msgstr[1] "%d ایمیل فرستاده شد."
+
+msgid "%d mail was not sent."
+msgid_plural "%d mails were not sent."
+msgstr[0] "%d ایمیل فرستاده نشد."
+msgstr[1] "%d تا ایمیل فرستاده نشدند."
+
+msgid "No mail to send."
+msgstr "هیچ ایمیلی فرستاده نمی‌شود."
+
+msgid "There is no available subscribers to mail."
+msgstr "هیچ مشترکی برای اشتراک با ایمیل موجود نیست."
+
+msgid "Subscribers could be listed (available) only if there is new elements to notify."
+msgstr "مشترک شده ها تنها زمانی می توانند لیست بشوند (در دسترس قرار گیرند) که چیزهای تازه ای برای اعلام کردن وجود داشته باشد."
+
+msgid "Anyway only webmasters can see this tab and never administrators."
+msgstr "در هر صورت تنها مدیر کل می‌تواند این برگه را ببیند، نه مدیران."
+
+msgid "No user to send notifications by mail."
+msgstr "کاربری برای خبرنامه با ایمیل وجود ندارد."
+
+msgid "New photos added"
+msgstr "عکس‌های تازه افروده شدند"
+
+msgid "Subscribe to notification by mail"
+msgstr "اشتراک بوسیله ی ایمیل"
+
+msgid "Unsubscribe from notification by mail"
+msgstr "لغو اشتراک بوسیله ی ایمیل"
+
+msgid "Parameter"
+msgstr "تنظیمات"
+
+msgid "Operation in progress"
+msgstr "کار در حال پردازش است."
+
+msgid "Continue processing treatment"
+msgstr "ادامه‌ی کار در حال انجام"
+
+msgid "Complementary mail content"
+msgstr "مکمل محتوای ایمیل"
+
+msgid "Add detailed content"
+msgstr "افزودن کمی محتوا همراه با جزئیات"
+
+msgid "Send mail as"
+msgstr "فرستادن ایمیل بعنوان"
+
+msgid "Send mail to users"
+msgstr "فرستادن ایمیل به کاربران"
+
+msgid "Send"
+msgstr "فرستادن"
+
+msgid "Subscribed"
+msgstr "مشترک شده"
+
+msgid "Subscribe"
+msgstr "اشتراک"
+
+msgid "Parameters"
+msgstr "پارامترها"
+
+msgid "Select recipients"
+msgstr "انتخاب گیرنده ها"
+
+msgid "Subscribe/unsubscribe users"
+msgstr "مشترک/لغو اشتراک کاربران"
+
+msgid "Unsubscribed"
+msgstr "لغو اشتراک"
+
+msgid "%d parameter was updated."
+msgid_plural "%d parameters were updated."
+msgstr[0] "%d پارامتر به روز رسانی شد."
+msgstr[1] "%d تا پارامتر به روز رسانی شدند."
+
+msgid "%d user was not updated."
+msgid_plural "%d users were not updated."
+msgstr[0] "%d کاربر به روز رسانی نشد."
+msgstr[1] "%d تا کاربر به روز رسانی نشدند."
+
+msgid "User %s [%s] was removed from the subscription list."
+msgstr "کاربر %s [%s] از لیست مشترکان خبرنامه پاک شد."
+
+msgid "User %s [%s] was added to the subscription list."
+msgstr "کاربر %s [%s] به لیست مشترکان خبرنامه افزوده شد."
+
+msgid "%d user was updated."
+msgid_plural "%d users were updated."
+msgstr[0] "%d کاربر به روز رسانی شد."
+msgstr[1] "%d تا کاربر به روز رسانی شدند."
+
+msgid "User %s [%s] was not removed from the subscription list."
+msgstr "کاربر %s [%s] از لیست مشترکان خبرنامه پاک نشد."
+
+msgid "User %s [%s] was not added to the subscription list."
+msgstr "کاربر %s [%s] به لیست مشترکان خبرنامه افزوده نشد."
+
+msgid "User %s [%s] added."
+msgstr "کاربر %s [%s] اضافه شد."
+
+msgid "Warning: subscribing or unsubscribing will send mails to users"
+msgstr "اخطار: اشتراک یا لغو اشتراک با فرستادن ایمیل به کاربران صورت می گیرد"
+
+msgid "Send mail on HTML format"
+msgstr "فرستادن ایمیل در فرمت HTML"
+
+msgid "Include display of recent photos grouped by dates"
+msgstr "نمایش آخرین عکس‌ها را با چیدمان بر پایه‌ی تاریخ شامل شود"
+
+msgid "Available only with HTML format"
+msgstr "فقط با فرمت HTML موجود است"
+
+msgid "no write access"
+msgstr "دسترسی نوشتن را ندارید"
+
+msgid "Permissions"
+msgstr "مجوز‌ها"
+
+msgid "private"
+msgstr "شخصی"
+
+msgid "public"
+msgstr "همگانی"
+
+msgid "Purge never used notification feeds"
+msgstr "پاکسازی خبرنامه هایی که هیچ وقت مورد استفاده قرار نگرفته اند"
+
+msgid "Purge sessions"
+msgstr "پاکسازی جلسه ها (Sessions)"
+
+msgid "randomly represented"
+msgstr "عکس ریزه ی آلبومِ تصادفی"
+
+msgid "registration date"
+msgstr "تاریخ نام نویسی"
+
+msgid "clean"
+msgstr "پاکسازی"
+
+msgid "Create this site"
+msgstr "ایجاد این سایت"
+
+msgid "test"
+msgstr "امتحان کردن"
+
+msgid "test this remote site"
+msgstr "امتحان کردن این سایتِ ریموت "
+
+msgid "remove tags"
+msgstr "پاک کردن برچسب ها"
+
+msgid "Repair and optimize database"
+msgstr "بازسازی و بهینه سازی پایگاه داده"
+
+msgid "selection"
+msgstr "انتخاب"
+
+msgid "set to"
+msgstr "تنظیم به"
+
+msgid "singly represented"
+msgstr "عکس ریزه ی ثابتِ آلبوم"
+
+msgid "This site already exists"
+msgstr "این سایت موجود می باشد"
+
+msgid "created"
+msgstr "ایجاد شد"
+
+msgid "delete"
+msgstr "پاک کردن"
+
+msgid "delete this site and all its attached elements"
+msgstr "پاک کردن این سایت با تمام اطلاعات مربوط به آن"
+
+msgid "deleted"
+msgstr "حذف شد"
+
+msgid "an error happened"
+msgstr "یک خطا رخ داده است"
+
+msgid "Local"
+msgstr "محلی"
+
+msgid "Remote"
+msgstr "ریموت"
+
+msgid "update the database from files"
+msgstr "بروز رسانی پایگاه داده با فایل ها"
+
+msgid "status"
+msgstr "وضعیت"
+
+msgid "Directory"
+msgstr "مسیر"
+
+msgid "sub-albums"
+msgstr "زیر آلبوم ها"
+
+msgid "Synchronize metadata"
+msgstr "همگام سازی ابرداده (Metadata)"
+
+msgid "target"
+msgstr "هدف"
+
+msgid "Title"
+msgstr "عنوان"
+
+msgid "Album list management"
+msgstr "مدیریت فهرست آلبوم‌ها"
+
+msgid "Piwigo configuration"
+msgstr "پیکربندی Piwigo"
+
+msgid "Edit album"
+msgstr "ویرایش آلبوم"
+
+msgid "Group management"
+msgstr "مدیریت گروه‌ها"
+
+msgid "User list"
+msgstr "لیست کاربران"
+
+msgid "Database synchronization with files"
+msgstr "همگام‌ سازی پایگاه‌ داده با فایل‌ها"
+
+msgid "all"
+msgstr "همه"
+
+msgid "height must be a number superior to"
+msgstr "طول باید بزرگتر باشد از"
+
+msgid "width must be a number superior to"
+msgstr "پهنا باید عددی باشد بزرگتر از"
+
+msgid "for the file format"
+msgstr "برای فرمت فایل"
+
+msgid "Photo unreachable or no support"
+msgstr "عکس غیر قابل دسترسی یا با فرمت ناشناخته است"
+
+msgid "GD version"
+msgstr "نگارش GD"
+
+msgid "General statistics"
+msgstr "آمار کلی"
+
+msgid "average time"
+msgstr "زمان متوسط"
+
+msgid "total time"
+msgstr "مجموع زمان"
+
+msgid "for this file format"
+msgstr "برای این فرمت فایل"
+
+msgid "unit mode"
+msgstr "حالت تکی"
+
+msgid "Unlocked"
+msgstr "قفل نشده"
+
+msgid "unset"
+msgstr "تنظیم نشده"
+
+msgid "Update albums informations"
+msgstr "بروز رسانی اطلاعات آلبوم ها"
+
+msgid "Update photos information"
+msgstr "بروز رسانی اطلاعات عکس ها"
+
+msgid "Synchronize"
+msgstr "همگام سازی"
+
+msgid "reduce to single existing albums"
+msgstr "کاهش دادن به تک آلبوم های موجود"
+
+msgid "Choose an option"
+msgstr "یک گزینه را انتخاب کنید"
+
+msgid "display maximum informations (added albums and photos, deleted albums and photos)"
+msgstr "نمایش حداکثر اطلاعات (آلبوم ها و عکس های افزوده شده، آلبوم ها و عکس های پاک شده)"
+
+msgid "Error list"
+msgstr "فهرست خطاها"
+
+msgid "Errors caption"
+msgstr "شرح خطاها"
+
+msgid "Detailed informations"
+msgstr "اطلاعات همراه با جزئیات"
+
+msgid "File/directory read error"
+msgstr "خطا در خواندن فایل/مسیر"
+
+msgid "The file or directory cannot be accessed (either it does not exist or the access is denied)"
+msgstr "این فایل یا مسیر قابل دسترسی نمی باشد (یا موجود نیست و یا دسترسی به آن ممنوع است)"
+
+msgid "albums deleted in the database"
+msgstr "آلبوم از پایگاه داده پاک شدند"
+
+msgid "photos deleted from the database"
+msgstr "عکس از پایگاه داده پاک شدند"
+
+msgid "photos candidates for metadata synchronization"
+msgstr "عکس می‌خواهند ابرداده(Metadata) خود را همگام‌ سازی کنند"
+
+msgid "photos informations synchronized with files metadata"
+msgstr "عکس اطلاعاتشان با فایل های ابرداده(Metadata) همگام‌ سازی شد"
+
+msgid "errors during synchronization"
+msgstr "خطا در همگام‌ سازی"
+
+msgid "albums added in the database"
+msgstr "آلبوم در پایگاه‌ داده اضافه شدند"
+
+msgid "photos added in the database"
+msgstr "عکس در پایگاه‌ داده اضافه شدند"
+
+msgid "photos updated in the database"
+msgstr "عکس در پایگاه‌ داده بروز شدند"
+
+msgid "Search for new images in the directories"
+msgstr "جستجو برای عکس های تازه در مسیر ها"
+
+msgid "added"
+msgstr "افزوده شد"
+
+msgid "Metadata synchronization results"
+msgstr "نتایج همگام‌ سازی ابر داده (Metadata)"
+
+msgid "only perform a simulation (no change in database will be made)"
+msgstr "فقط انجام یک شبیه‌ سازی (هیچ چیز در پایگاه داده تغییر نمی‌ کند)"
+
+msgid "Simulation"
+msgstr "شبیه سازی"
+
+msgid "directories + files"
+msgstr "مسیر + فایل ها"
+
+msgid "only directories"
+msgstr "فقط مسیر ها"
+
+msgid "synchronize files structure with database"
+msgstr "همگام سازی ساختار فایل ها با پایگاه داده"
+
+msgid "synchronize files metadata with database photos informations"
+msgstr "همگام سازی عکس های پایگاه داده با استفاده از فایل ابرداده (Metadata)"
+
+msgid "even already synchronized photos"
+msgstr "حتی عکس های همگام شده"
+
+msgid "Used metadata"
+msgstr "ابرداده (Metadata) استفاده شد"
+
+msgid "The name of directories and files must be composed of letters, numbers, \"-\", \"_\" or \".\""
+msgstr "نام دایرکتوری‌ها و فایل‌ها فقط می تواند شامل اعداد ، حروف و \"-\" ، \"_\" یا \".\" باشد."
+
+msgid "wrong filename"
+msgstr "نام فایل نادرست است"
+
+msgid "Upload"
+msgstr "آپلود"
+
+msgid "user \"%s\" added"
+msgstr "کاربر \"%s\" افزوده شد"
+
+msgid "User status"
+msgstr "وضعیت کاربر"
+
+msgid "user_status_admin"
+msgstr "مدیر"
+
+msgid "user_status_generic"
+msgstr "عمومی"
+
+msgid "user_status_guest"
+msgstr "مهمان"
+
+msgid "user_status_webmaster"
+msgstr "مدیرکل"
+
+msgid "Virtual album"
+msgstr "آلبوم مجازی"
+
+msgid "Waiting"
+msgstr "در انتظار"
+
+msgid "default"
+msgstr "پیشفرض"
+
+msgid "Toggle 'default group' property"
+msgstr "معکوش کردن ویژگی های 'گروه پیشفرض'"
+
+msgid "Advanced features"
+msgstr "ویژگی‌های پیشرفته"
+
+msgid "Overall"
+msgstr "دید کلی"
+
+msgid "Year"
+msgstr "سال"
+
+msgid "Month"
+msgstr "ماه"
+
+msgid "Day"
+msgstr "روز"
+
+msgid "Pages seen"
+msgstr "برگه‌های دیده شده"
+
+msgid "Time"
+msgstr "زمان"
+
+msgid "IP"
+msgstr "IP"
+
+msgid "Element"
+msgstr "المنت"
+
+msgid "Section"
+msgstr "بخش"
+
+msgid "An information email was sent to group \"%s\""
+msgstr "ایمیل اطلاعات به گروه \"%s\" فرستاده شد"
+
+msgid "Send an information email to group members"
+msgstr "فرستادن یک ایمیل اطلاعات به اعضای گروه"
+
+msgid "Group"
+msgstr "گروه"
+
+msgid "[%s] Visit album %s"
+msgstr "[%s] درحال مشاهده ی آلبوم %s می باشد"
+
+msgid "Hello,"
+msgstr "درود،"
+
+msgid "See you soon."
+msgstr "به امید دیدار."
+
+msgid "Discover album:"
+msgstr "آشکارسازی آلبوم:"
+
+msgid "Mail content"
+msgstr "محتویات ایمیل"
+
+msgid "none"
+msgstr "هیچکدام"
+
+msgid "high"
+msgstr "زیاد"
+
+msgid "other"
+msgstr "دیگر"
+
+msgid "Element type"
+msgstr "نوع المنت"
+
+msgid "Image id"
+msgstr "شناسه‌ی عکس"
+
+msgid "Summary"
+msgstr "خلاصه"
+
+msgid "%d line filtered"
+msgid_plural "%d lines filtered"
+msgstr[0] "%d خط فیلتر شد"
+msgstr[1] "%d تا خط فیلتر شدند"
+
+msgid "%d guest"
+msgid_plural "%d guests"
+msgstr[0] "%d مهمان"
+msgstr[1] "%d مهمان"
+
+msgid "Hour"
+msgstr "ساعت"
+
+msgid "guest"
+msgstr "مهمان"
+
+msgid "default values"
+msgstr "مقدار های پیشفرض"
+
+msgid "Guest cannot be deleted"
+msgstr "مهمان پاک شدنی نیست"
+
+msgid "Default user cannot be deleted"
+msgstr "کاربر پیشفرض قابل پاک شدن نیست"
+
+msgid "Purge history detail"
+msgstr "پاکسازی جزئیات تاریخچه"
+
+msgid "Purge history summary"
+msgstr "پاکسازی خلاصه ی تاریخچه"
+
+msgid "Check integrity"
+msgstr "بررسی درست بودن سیستم"
+
+msgid "Anomaly"
+msgstr "ناهنجاری"
+
+msgid "Correction"
+msgstr "ساماندهی"
+
+msgid "Automatic correction"
+msgstr "ساماندهی خودکار"
+
+msgid "Impossible automatic correction"
+msgstr "ساماندهی خودکار انجام نشدنی است"
+
+msgid "Correction applied with success"
+msgstr "ساماندهی با موفقیت انجام شد"
+
+msgid "Correction applied with error"
+msgstr "ساماندهی با خطا انجام شد"
+
+msgid "%d anomaly has been detected."
+msgid_plural "%d anomalies have been detected."
+msgstr[0] "%d ناهنجاری شناسایی شد."
+msgstr[1] "%d تا ناهنجاری شناسایی شدند."
+
+msgid "%d anomaly has been corrected."
+msgid_plural "%d anomalies have been detected corrected."
+msgstr[0] "%d ناهنجاری ساماندهی شد."
+msgstr[1] "%d تا ناهنجاری شناسایی و ساماندهی شدند."
+
+msgid "%d anomaly has not been corrected."
+msgid_plural "%d anomalies have not been corrected."
+msgstr[0] "%d ناهنجاری ساماندهی نشد."
+msgstr[1] "%d ناهنجاری ساماندهی نشد."
+
+msgid "Go to %s or %s for more informations"
+msgstr "برای اطلاعات بیشتر به %s یا %s بروید"
+
+msgid "the forum"
+msgstr "تالار گفتگو"
+
+msgid "the wiki"
+msgstr "ویکی"
+
+msgid "%s value is not correct file because exif are not supported"
+msgstr "مقدار %s درست نیست زیرا exif را پشتیبانی نمی‌کند"
+
+msgid "%s must be to set to false in your local/config/config.inc.php file"
+msgstr "%s در پرونده‌ی local/config/config.inc.php باید مقدار 'false' داشته باشد."
+
+msgid "Main \"guest\" user does not exist"
+msgstr "در سیستم کاربر \"مهمان\" وجود ندارد"
+
+msgid "Main \"guest\" user status is incorrect"
+msgstr "وضعیت کاربر \"مهمان\" درست نیست"
+
+msgid "Default user does not exist"
+msgstr "کاربر پیشفرض وجود ندارد"
+
+msgid "Main \"webmaster\" user does not exist"
+msgstr "\"مدیر کل\" اصلی موجود نیست"
+
+msgid "Main \"webmaster\" user status is incorrect"
+msgstr "وضعیت \"مدیر کل\" درست نیست"
+
+msgid "User \"%s\" created with \"%s\" like password"
+msgstr "کاربر \"%s\" با گذرواژه \"%s\" ایجاد شد"
+
+msgid "Status of user \"%s\" updated"
+msgstr "وضعیت کاربر \"%s\" به روز شد"
+
+msgid "add new photos to caddie"
+msgstr "افزودن عکس‌های تازه به سبد"
+
+msgid "No display"
+msgstr "بدون نمایش"
+
+msgid "Classic display"
+msgstr "نمایش کلاسیک"
+
+msgid "Hoverbox display"
+msgstr "نمایش جعبه‌ی شناور"
+
+msgid "Minimum privacy level"
+msgstr "پایین‌ترین سطح ‌خصوصی"
+
+msgid "Privacy level"
+msgstr "سطح خصوصی"
+
+msgid "Level 0"
+msgstr "---"
+
+msgid "Level 1"
+msgstr "ارتباط‌ها"
+
+msgid "Level 2"
+msgstr "دوستان"
+
+msgid "Level 4"
+msgstr "خانواده"
+
+msgid "Level 8"
+msgstr "مدیران"
+
+msgid "Reinitialize check integrity"
+msgstr "مقداردهی دوباره برای بررسی کامل"
+
+msgid "Check all"
+msgstr "علامت‌زدن همه"
+
+msgid "Uncheck all"
+msgstr "برداشتن علامت همه"
+
+msgid "Check automatic corrections"
+msgstr "بررسی ساماندهی‌های خودکار"
+
+msgid "Apply selected corrections"
+msgstr "پذیرش ساماندهی‌های انتخاب شده"
+
+msgid "Ignore selected anomalies"
+msgstr "چشم پوشی از ناهنجاری‌های انتخاب شده"
+
+msgid "Refresh"
+msgstr "تازه کردن (Refresh)"
+
+msgid "The anomaly will be ignored until next application version"
+msgstr "از ناهنجاری تا نگارش بعدی چشم پوشی خواهد شد"
+
+msgid "Correction the anomaly will cancel the fact that it's ignored"
+msgstr "از ناهنجاری ساماندهی شده دیگر چشم پوشی نمی‌شود"
+
+msgid "%d anomaly has been ignored."
+msgid_plural "%d anomalies have been ignored."
+msgstr[0] "از %d ناهنجاری چشم‌پوشی شد."
+msgstr[1] "از %d تا ناهنجاری چشم‌پوشی شد."
+
+msgid "Plugins which need upgrade"
+msgstr "افزونه های نیازمند آپگرید"
+
+msgid "Plugin list"
+msgstr "فهرست افزونه ها"
+
+msgid "Check for updates"
+msgstr "بررسی برای به روز رسانی"
+
+msgid "Other plugins"
+msgstr "دیگر افزونه‌های موجود"
+
+msgid "Last revisions"
+msgstr "آخرین بازبینى"
+
+msgid "Are you sure you want to delete this plugin?"
+msgstr "آیا می‌خواهید این افزونه را پاک کنید؟"
+
+msgid "Are you sure you want to install this plugin?"
+msgstr "آیا می‌خواهید این افزونه را نصب کنید؟"
+
+msgid "Are you sure to install this upgrade? You must verify if this version does not need uninstallation."
+msgstr "آیا می‌خواهید این آپگرید را نصب کنید؟ باید این را بپذیرید زیرا ممکن است نیاز به پاک کردن افزونه‌ای باشد."
+
+msgid "Plugin has been successfully copied"
+msgstr "افزونه با موفقیت کپی شد"
+
+msgid "Can't create temporary file."
+msgstr "امکان ایجاد فایل موقت وجود ندارد."
+
+msgid "Can't download archive."
+msgstr "بایگانی را نمی‌توان دانلود کرد."
+
+msgid "Can't read or extract archive."
+msgstr "بایگانی را نمی‌توان خواند یا باز کرد."
+
+msgid "An error occured during extraction (%s)."
+msgstr "یک خطا هنگام بازکردن فایل‌های (%s) رخ داده است."
+
+msgid "Please check \"plugins\" folder and sub-folders permissions (CHMOD)."
+msgstr "لطفا سطح دسترسی پوشه \"plugins\" و پوشه‌های زیر مجموعه آن را چک کنید (CHMOD)."
+
+msgid "Can't connect to server."
+msgstr "ارتباط با سرور ممکن نیست."
+
+msgid "Purge compiled templates"
+msgstr "پاکسازی قالب های مرتب شده"
+
+msgid "ACCESS_0"
+msgstr "دسترسی آزاد"
+
+msgid "ACCESS_1"
+msgstr "دسترسی برای همه"
+
+msgid "ACCESS_2"
+msgstr "دسترسی برای کاربران عضو"
+
+msgid "ACCESS_3"
+msgstr "دسترسی برای مدیران"
+
+msgid "ACCESS_4"
+msgstr "دسترسی برای مدیر کل‌ها"
+
+msgid "ACCESS_5"
+msgstr "بدون مجوز دسترسی"
+
+msgid "Support"
+msgstr "پشتیبانی"
+
+msgid "Documentation"
+msgstr "مستندات"
+
+msgid "A new version of Piwigo is available."
+msgstr "یک نگارش تازه از Piwigo موجود است."
+
+msgid "Piwigo Administration"
+msgstr "مدیریت Piwigo"
+
+msgid "Piwigo version"
+msgstr "نگارش Piwigo"
+
+msgid "You are running the latest version of Piwigo."
+msgstr "شما آخرین نگارش Piwigo را دارید."
+
+msgid "The version of %s [%s] installed is not compatible with the version required [%s]"
+msgstr "نسخه %s [%s] نصب شده با نسخه نصب شده سازگار نیست، نسخه مورد نیاز [%s] می‌باشد."
+
+msgid "You need to upgrade your system to take full advantage of the application else the application will not work correctly, or not at all"
+msgstr "شما برای استفاده از تمام مزیت های سیستم باید گالری خود را آپگرید کنید. در غیر این‌ صورت ممکن است که سیستم بدرستی اجرا نشود و یا اصلا اجرا نشود."
+
+msgid "Deleted on"
+msgstr "پاک شده در"
+
+msgid "Last hit"
+msgstr "آخرین بازدید"
+
+msgid "GD library is missing"
+msgstr "کتابخانه‌ی GD یافت نشد"
+
+msgid "Templates"
+msgstr "قالب ها"
+
+msgid "Extend for templates"
+msgstr "گسترش قالب‌ها"
+
+msgid "Replacement of original templates by customized templates from template-extension subfolder"
+msgstr "جایگزین کردن قالب های اصلی با قالب های سفارشی شده ، به کمک پوشه ی گشترش دهندگان قالب"
+
+msgid "Replacers (customized templates)"
+msgstr "جایگزینی (قالب های سفارشی شده)"
+
+msgid "Original templates"
+msgstr "قالب‌های اصلی"
+
+msgid "Optional URL keyword"
+msgstr "کلیدواژه‌ی URL اختیاری"
+
+msgid "Templates configuration has been recorded."
+msgstr "تنظیمات قالب ثبت شد."
+
+msgid "All optimizations have been successfully completed."
+msgstr "همه‌ی بهینه‌سازی‌ها با موفقیت پایان یافتند."
+
+msgid "Optimizations have been completed with some errors."
+msgstr "بهینه سازی با وجود چند خطا به پایان رسید."
+
+msgid "Modify information"
+msgstr "ویرایش اطلاعات"
+
+msgid "nothing"
+msgstr "هیچ چیز"
+
+msgid "overrides existing values with empty ones"
+msgstr "مقدار های موجود را به مقدار های خالی تبدیل می کند"
+
+msgid "Manage photo ranks"
+msgstr "مدیریت امتیاز عکس‌ها"
+
+msgid "Edit ranks"
+msgstr "ویرایش مقام‌ها"
+
+msgid "No photo in this album"
+msgstr "هیچ عکسی در این آلبوم موجود نیست"
+
+msgid "Images manual order was saved"
+msgstr "چیدمان دستی عکس‌ها ذخیره شد"
+
+msgid "ranks"
+msgstr "امتیاز ها"
+
+msgid "By rank"
+msgstr "بوسیله‌ی امتیاز"
+
+msgid "Manual order"
+msgstr "چیدمان دستی"
+
+msgid "Drag to re-order"
+msgstr "برای چیدن دوباره با موس بکشید"
+
+msgid "Quick Local Synchronization"
+msgstr "همگام سازی سریع محلی"
+
+msgid "No photo can be deleted"
+msgstr "هیچ عکسی را نمی‌توان پاک کرد"
+
+msgid "Delete selected photos"
+msgstr "پاک کردن عکس‌های انتخاب شده"
+
+msgid "%d photo was deleted"
+msgid_plural "%d photos were deleted"
+msgstr[0] "%d عکس پاک شد"
+msgstr[1] "%d تا عکس پاک شدند"
+
+msgid "Downloads"
+msgstr "دانلودها"
+
+msgid "Released on"
+msgstr "منتشر شده در"
+
+msgid "Number of downloads"
+msgstr "دانلودها"
+
+msgid "Piwigo Announcements Newsletter"
+msgstr "اعلان خبرنامه ی Piwigo"
+
+msgid "Keep in touch with Piwigo project, subscribe to Piwigo Announcement Newsletter. You will receive emails when a new release is available (sometimes including a security bug fix, it's important to know and upgrade) and when major events happen to the project. Only a few emails a year."
+msgstr "با پروژه‌ی Piwigo در تماس باشید و در خبرنامه‌ی آگهی‌های Piwigo مشترک شوید. زمانی که نگارش‌های تازه آماده شود به شما ایمیل فرستاده می‌شود (برخی مواقع شامل روش حل یک مشکل امنیتی نیز می‌شود که دانستن و رفع آن مهم است) و یا زمانی که رویدادهای بزرگی برای پروژه رخ می‌دهد. تنها تعداد کمی ایمیل در سال فرستاده خواهد شد."
+
+msgid "Subscribe %s"
+msgstr "اشتراک %s"
+
+msgid "Subscribe %s to Piwigo Announcements Newsletter"
+msgstr "اشتراک %s برای خبرنامه ی Piwigo"
+
+msgid "Purge search history"
+msgstr "پاکسازی تاریخچه ی جستجو"
+
+msgid "Hide"
+msgstr "پنهان کردن"
+
+msgid "Password is missing. Please enter the password."
+msgstr "گذرواژه ای نوشته نشده است. خواهشمندیم گذرواژه‌ای بنویسید."
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "پذیرش گذرواژه با گذرواژه‌ی اصلی همخوانی ندارد. خواهشمندیم گذرواژه‌ی اصلی را در بخش پذیرش گذرواژه نیز بنویسید."
+
+msgid "Allow users to edit their own comments"
+msgstr "کاربران بتوانند دیدگاه‌های خود را ویرایش کنند"
+
+msgid "Allow users to delete their own comments"
+msgstr "کاربران بتوانند دیدگاه‌های خود را پاک کنند"
+
+msgid "Email administrators when a comment is modified"
+msgstr "فرستادن ایمیل به مدیران هنگامی که دیدگاهی ویرایش می‌شود"
+
+msgid "Email administrators when a comment is deleted"
+msgstr "فرستادن ایمیل به مدیران هنگامی که دیدگاهی پاک می‌شود"
+
+msgid "Cannot delete the old permalink !"
+msgstr "لینک ثابت قدیمی نمی‌تواند پاک شود."
+
+msgid "Hit"
+msgstr "نمایش"
+
+msgid "Tools"
+msgstr "ابزار ها"
+
+msgid "Photos"
+msgstr "عکس ها"
+
+msgid "Themes"
+msgstr "قالب ها"
+
+msgid "Instructions to use Piwigo"
+msgstr "راهنمای بکارگیری Piwigo"
+
+msgid "Installed Themes"
+msgstr "زمینه‌های نصب شده"
+
+msgid "Add New Theme"
+msgstr "افزودن زمینه‌ی تازه"
+
+msgid "Forbid this theme to users"
+msgstr "اجازه‌ی انتخاب این زمینه به کاربران داده نشود"
+
+msgid "Set as default theme for unregistered and new users"
+msgstr "انتخاب بعنوان قالب پیشفرض برای مهمانان"
+
+msgid "unknown"
+msgstr "نا معلوم"
+
+msgid "Upload Photos"
+msgstr "آپلود عکس"
+
+msgid "Drop into album"
+msgstr "انتخاب یک آلبوم"
+
+msgid "+ Add an upload box"
+msgstr "+ افزودن یک جعبه‌ی آپلود"
+
+msgid "Create the \"%s\" directory at the root of your Piwigo installation"
+msgstr "مسیر \"%s\" را در جایی که Piwigo را نصب کرده‌اید ایجاد کنید"
+
+msgid "Give write access (chmod 777) to \"%s\" directory at the root of your Piwigo installation"
+msgstr "مجوز نوشتن (chmod 777) برای مسیر \"%s\" در جایی که Piwigo نصب شده را بدهید"
+
+msgid "existing album"
+msgstr "آلبومِ موجود"
+
+msgid "create a new album"
+msgstr "افزودن یک آلبوم تازه"
+
+msgid "Album name"
+msgstr "نام آلبوم"
+
+msgid "Album \"%s\" has been added"
+msgstr "آلبوم \"%s\" با موفقیت افزوده شد"
+
+msgid "Uploaded Photos"
+msgstr "عکس های آپلود شده"
+
+msgid "%d photos uploaded"
+msgstr "%d تا عکس آپلود شدند"
+
+msgid "Privacy level set to \"%s\""
+msgstr "سطح خصوصی بر روی \"%s\" تنظیم شده است"
+
+msgid "Album \"%s\" now contains %d photos"
+msgstr "آلبوم \"%s\" اکنون دارای %d عکس است"
+
+msgid "Manage this set of %d photos"
+msgstr "مدیریت این ستِ %d عکسی"
+
+msgid "Select files"
+msgstr "انتخاب فایل ها"
+
+msgid "Everybody"
+msgstr "همه"
+
+msgid "Who can see these photos?"
+msgstr "چه کسی قادر به مشاهده ی این عکس ها باشد؟"
+
+msgid "Who can see this photo?"
+msgstr "چه کسی قادر به مشاهده ی این عکس باشد؟"
+
+msgid "Settings"
+msgstr "تنظیمات"
+
+msgid "Resize"
+msgstr "تغییر اندازه"
+
+msgid "Maximum width"
+msgstr "حداکثر عرض"
+
+msgid "pixels"
+msgstr "پیکسل"
+
+msgid "Maximum height"
+msgstr "حداکثر طول"
+
+msgid "Image Quality"
+msgstr "کیفیت عکس"
+
+msgid "Thumbnail"
+msgstr "عکس ریزه (Thumbnail)"
+
+msgid "Save Settings"
+msgstr "ذخیره ی تنظیمات"
+
+msgid "Your configuration settings are saved"
+msgstr "تنظیمات شما ذخیره شد"
+
+msgid "Active Themes"
+msgstr "فعال کردن قالب‌ها"
+
+msgid "Add write access to the \"%s\" directory"
+msgstr "برای نوشتن در مسیر \"%s\" دسترسی بدهید"
+
+msgid "Administration Home"
+msgstr "صفحه‌ی مدیریت"
+
+msgid "Change Admin Colors"
+msgstr "تغییر رنگ‌های صفحه‌ی مدیریت"
+
+msgid "Delete this theme"
+msgstr "پاک کردن این زمینه"
+
+msgid "Directory does not exist"
+msgstr "مسیر وجود ندارد"
+
+msgid "Download,"
+msgstr "دانلود،"
+
+msgid "FTP + Synchronization"
+msgstr "FTP + همگام‌ سازی"
+
+msgid "Get Support on Piwigo Forum"
+msgstr "گرفتن پشتیبانی از انجمن Piwigo"
+
+msgid "Help Me"
+msgstr "مرا راهنمایی کن"
+
+msgid "Impossible to activate this theme, the parent theme is missing: %s"
+msgstr "امکان فعال شدن این زمینه وجود ندارد، زیرا زمینه‌ی مادر آن گم شده است: %s"
+
+msgid "Impossible to delete this theme. Other themes depends on it: %s"
+msgstr "امکان پاک کردن این زمینه وجود ندارد، زیرا زمینه‌های دیگری به این زمینه نیاز دارند: %s"
+
+msgid "Inactive Themes"
+msgstr "زمینه‌های از کار انداخته شده"
+
+msgid "Install on your computer,"
+msgstr "نصب بر روی کامپیوتر خود،"
+
+msgid "Make this theme available to users"
+msgstr "در دسترس قرار دادن این زمینه برای کاربران"
+
+msgid "Page end"
+msgstr "پایان برگه"
+
+msgid "Piwigo Uploader"
+msgstr "آپلودر Piwigo"
+
+msgid "Please wait..."
+msgstr "شکیبا باشید ..."
+
+msgid "Read Piwigo Documentation"
+msgstr "خواندن مستندات Piwigo"
+
+msgid "Start pLoader and add your photos."
+msgstr "اکنون pLoader را باز کرده و عکس های خود را آپلود کنید."
+
+msgid "Switch to clear or dark colors for administration"
+msgstr "تعویض سپید یا سیاه کردن قالب مدیریت"
+
+msgid "Theme has been successfully installed"
+msgstr "قالب با موفقیت نصب شد"
+
+msgid "Visit Gallery"
+msgstr "نمایش گالری"
+
+msgid "Visit Piwigo project website"
+msgstr "نمایش وبسایت پروژه ی Piwigo"
+
+msgid "Guest Settings"
+msgstr "تنظیمات مهمان"
+
+msgid "Main Page"
+msgstr "صفحه اصلی"
+
+msgid "Photo Page"
+msgstr "برگه‌ی عکس"
+
+msgid "Activate Navigation Bar"
+msgstr "فعال کردن نوار هدایتگر"
+
+msgid "Activate Navigation Thumbnails"
+msgstr "فعال کردن هدایتگر عکس ریزه‌ها"
+
+msgid "Activate icon \"%s\""
+msgstr "فعال کردن آیکن \"%s\""
+
+msgid "Photo Properties"
+msgstr "ویژگی‌های عکس"
+
+msgid "Allow user customization"
+msgstr "فعال بودن سفارشی کردن برای کاربر"
+
+msgid "Languages"
+msgstr "زبان‌ها"
+
+msgid "Installed Languages"
+msgstr "زبان‌های نصب شده"
+
+msgid "Add New Language"
+msgstr "افزودن زبان تازه"
+
+msgid "Language has been successfully installed"
+msgstr "زبان با موفقیت نصب شد"
+
+msgid "Select:"
+msgstr "انتخاب:"
+
+msgid "None"
+msgstr "هیچکدام"
+
+msgid "Invert"
+msgstr "معکوس کردن"
+
+msgid "Impossible to deactivate this theme, you need at least one theme."
+msgstr "امکان از کار انداختن این زمینه وجود ندارد، شما باید دست کم یک زمینه برای گالری خود داشته باشید."
+
+msgid "Webmaster status is required."
+msgstr "وضعیت مدیرکل ضروری است."
+
+msgid "Bound Theme"
+msgstr "محدود کردن زمینه"
+
+msgid "Allow rating"
+msgstr "فعال بودن امتیازدهی"
+
+msgid "Select at least one comment"
+msgstr "حداقل یک دیدگاه را انتخاب کنید"
+
+msgid "Active Plugins"
+msgstr "فعال کردن افزونه‌ها"
+
+msgid "Inactive Plugins"
+msgstr "افزونه‌های از کار انداخته شده"
+
+msgid "Missing Plugins"
+msgstr "افزونه‌های گم شده"
+
+msgid "Uninstalled Plugins"
+msgstr "افزونه های پاک شده"
+
+msgid "By %s"
+msgstr "بوسیله‌ی %s"
+
+msgid "Visit plugin site"
+msgstr "نمایش سایت سازنده ی افزونه"
+
+msgid "Active Languages"
+msgstr "زبان‌های فعال"
+
+msgid "Delete this language"
+msgstr "پاک کردن این زبان"
+
+msgid "Forbid this language to users"
+msgstr "اجازه‌ی انتخاب این زبان به کاربران داده نشود"
+
+msgid "Impossible to deactivate this language, first set another language as default."
+msgstr "امکان از کار انداختن این زبان وجود ندارد، نخست یک زبان دیگر را به عنوان پیشفرض انتخاب نمایید."
+
+msgid "Impossible to deactivate this language, you need at least one language."
+msgstr "امکان از کار انداختن این زبان وجود ندارد، شما باید دست کم یک زبان برای گالری خود داشته باشید."
+
+msgid "Inactive Languages"
+msgstr "زبان‌های از کار انداخته شده"
+
+msgid "Make this language available to users"
+msgstr "در دسترس قرار دادن این زبان برای کاربران"
+
+msgid "Set as default language for unregistered and new users"
+msgstr "انتخاب بعنوان زبان پیشفرض برای مهمانان"
+
+msgid "Add Photos"
+msgstr "افزودن عکس"
+
+msgid "The following tag was deleted"
+msgstr "برچسب پاک شد"
+
+msgid "Miscellaneous"
+msgstr "گوناگون"
+
+msgid "Virtual Links"
+msgstr "پیوند مجازی"
+
+msgid "There is no other language available."
+msgstr "هیچ زبان دیگری موجود نیست."
+
+msgid "There is no other plugin available."
+msgstr "هیچ افزونه ی دیگری موجود نیست."
+
+msgid "There is no other theme available."
+msgstr "هیچ قالب دیگری موجود نیست."
+
+msgid "Add another set of photos"
+msgstr "افزودن یک ستِ عکس تازه"
+
+msgid "Order of menubar items has been updated successfully."
+msgstr "چیدمان آیتم‌های منو با موفقیت به روز شد."
+
+msgid "This theme was not designed to be directly activated"
+msgstr "این قالب برای فعال کردن مستقیم طراحی نشده است"
+
+msgid "Pending Comments"
+msgstr "دیدگاه‌های در انتظار پذیرفته شدن"
+
+msgid "In your php.ini file, the upload_max_filesize (%sB) is bigger than post_max_size (%sB), you should change this setting"
+msgstr "در فایل php.ini شما،  مقدار upload_max_filesize (%sB) از post_max_size (%sB) بیشتر است، شما باید این تنظیمات را تغییر دهید."
+
+msgid "Exif extension not available, admin should disable exif use"
+msgstr "گسترش دهنده‌ی exif در دسترس نیست، مدیر کل باید exif را از کار بیندازد"
+
+msgid "The uploaded file exceeds the upload_max_filesize directive in php.ini: %sB"
+msgstr "مقدار فایل قابل آپلود که در فایل php.ini تنظیم شده با نام upload_max_filesize برابر %sB است"
+
+msgid "The uploaded files exceed the post_max_size directive in php.ini: %sB"
+msgstr "میزان فایل قابل آپلود بوسیله ی فرم که در فایل php.ini تنظیم شده با نام post_max_size برابر %sB است"
+
+msgid "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form"
+msgstr "بیشترین میزان آپلود فایل بوسیله ی فرم HTML که در یک فیلد پنهان در فرم با نام MAX_FILE_SIZE است"
+
+msgid "The uploaded file was only partially uploaded"
+msgstr "فقط اندکی از فایل آپلود شد"
+
+msgid "No file was uploaded"
+msgstr "هیچ فایلی آپلود نشد"
+
+msgid "Missing a temporary folder"
+msgstr "یک مسیر موقت گم شده است"
+
+msgid "Failed to write file to disk"
+msgstr "نمی‌توان روی دیسک فایلی نوشت"
+
+msgid "File upload stopped by extension"
+msgstr "آپلود فایل بوسیله‌ی یک گسترش دهنده متوقف شد."
+
+msgid "Unknown upload error"
+msgstr "خطای نا معلوم در آپلود"
+
+msgid "Error on file \"%s\" : %s"
+msgstr "خطا در فایل \"%s\": %s"
+
+msgid "Menu Management"
+msgstr "منوها"
+
+msgid "automatic order"
+msgstr "مرتب کردن به صورت خودکار"
+
+msgid "manual order"
+msgstr "مرتب کردن دستی"
+
+msgid "Albums automatically sorted"
+msgstr "آلبوم‌ها به صورت خودکار چیده شدند"
+
+msgid "Batch Manager"
+msgstr "مدیریت دسته‌ای"
+
+msgid "include child albums"
+msgstr "آلبوم ‌های زیرمجموع را نیز ضمیمه کن"
+
+msgid "Selection"
+msgstr "انتخاب"
+
+msgid "Action"
+msgstr "کار"
+
+msgid "Set author"
+msgstr "تنظیم نویسنده"
+
+msgid "Set title"
+msgstr "تنظیم عنوان"
+
+msgid "Set creation date"
+msgstr "تنظیم تاریخ ساخت"
+
+msgid "Apply action"
+msgstr "انجام کار"
+
+msgid "on the %d selected photos"
+msgstr "بر روی %d تعداد عکس انتخاب شده"
+
+msgid "%d of %d photos selected"
+msgstr "%d عکس از %d عکس انتخاب شد"
+
+msgid "No photo selected, %d photos in current set"
+msgstr "هیچ عکسی انتخاب نشده است، %d عکس در این سِت وجود دارد."
+
+msgid "All %d photos are selected"
+msgstr "همه‌ی %d عکس انتخاب شد"
+
+msgid "remove this filter"
+msgstr "پاک کردن این فیلتر"
+
+msgid "Duplicates"
+msgstr "دوتایی‌ها"
+
+msgid "Add a filter"
+msgstr "افزودن فیلتر"
+
+msgid "Remove all filters"
+msgstr "پاک کردن همه‌ی فیلترها"
+
+msgid "Refresh photo set"
+msgstr "تازه کردن (Refresh) سِت عکس ها"
+
+msgid "The whole page"
+msgstr "تمام صفحه"
+
+msgid "The whole set"
+msgstr "تمامی عکس ها (کل سِت)"
+
+msgid "No photo in the current set."
+msgstr "هیچ عکسی در این سِت نیست."
+
+msgid "No photos selected, no actions possible."
+msgstr "هیچ عکسی انتخاب نشده است، هیچ کاری ممکن نیست."
+
+msgid "Choose an action"
+msgstr "یک کار را انتخاب کنید"
+
+msgid "remove author"
+msgstr "پاک کردن نویسنده"
+
+msgid "Type here the author name"
+msgstr "نام نویسنده را اینجا تایپ نمایید"
+
+msgid "remove title"
+msgstr "پاک کردن عنوان"
+
+msgid "Type here the title"
+msgstr "عنوان را اینجا تایپ نمایید"
+
+msgid "remove creation date"
+msgstr "پاک کردن تاریخ ساخت"
+
+msgid "Album photos associated to the following albums: %s"
+msgstr "عکس‌های این آلبوم به آلبوم‌های زیر پیوستند: %s"
+
+msgid "Delete orphan tags"
+msgstr "پاک کردن برچسب‌های بی‌ریشه"
+
+msgid "delete photo"
+msgstr "پاک کردن عکس"
+
+msgid "Orphan tags deleted"
+msgstr "برچسب‌های بی‌ریشه پاک شدند"
+
+msgid "Remove from caddie"
+msgstr "پاک کردن از سبد"
+
+msgid "Week starts on"
+msgstr "روز آغازین هفته"
+
+msgid "You have %d orphan tags: %s."
+msgstr "شما %d برچسب بی ریشه دارید: %s."
+
+msgid "Themes which need upgrade"
+msgstr "قالب های نیازمند آپگرید"
+
+msgid "Languages which need upgrade"
+msgstr "زبان‌های نیازمند آپگرید"
+
+msgid "All themes are up to date."
+msgstr "همه‌ی زمینه‌ها به روز می‌باشند."
+
+msgid "All plugins are up to date."
+msgstr "همه‌ی افزونه‌ها به روز می‌باشند."
+
+msgid "All languages are up to date."
+msgstr "تمام زبان‌ها به روز می‌باشند."
+
+msgid "Visit theme site"
+msgstr "نمایش سایت سازنده ی قالب"
+
+msgid "Visit language site"
+msgstr "نمایش سایت سازنده ی زبان"
+
+msgid "New Version"
+msgstr "نگارش تازه"
+
+msgid "new"
+msgstr "تازه"
+
+msgid "No results"
+msgstr "نتیجه‌ای پیدا نشد"
+
+msgid "Searching..."
+msgstr "در حال جستجو ..."
+
+msgid "Type in a search term"
+msgstr "عبارت مورد جستجو را اینجا تایپ نمایید"
+
+msgid "Obsolete Plugins"
+msgstr "افزونه‌های از کار افتاده"
+
+msgid "WARNING! This plugin does not seem to be compatible with this version of Piwigo."
+msgstr "<b>هشدار!</b> این افزونه به نظر نمی رسد با این نگارش از Piwigo سازگار باشد."
+
+msgid "Do you want to activate anyway?"
+msgstr "در هر صورت می‌خواهید فعال کنید؟"
+
+msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
+msgstr "<b>این افزونه در حال حاضر بخشی از هسته ی PIWIGO می باشد! هرچه سریع تر آن را پاک کنید!<b/>"
+
+msgid "ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW."
+msgstr "<b>خطا: این افزونه گم شده است ولی در حالت نصب شده می‌باشد! هرچه زودتر آنرا پاک کنید.</b>"
+
+msgid "display"
+msgstr "نمایش"
+
+msgid "Learn more"
+msgstr "بیشتر یاد بگیرید"
+
+msgid "Rate"
+msgstr "امتیاز"
+
+msgid "Average rate"
+msgstr "میانگین امتیاز"
+
+msgid "... or "
+msgstr "... یا "
+
+msgid "Add a criteria"
+msgstr "افزودن روش"
+
+msgid "Add tags"
+msgstr "افزودن برچسب"
+
+msgid "Add to caddie"
+msgstr "افزودن به سبد"
+
+msgid "All extensions are up to date."
+msgstr "تمام گسترش دهندگان به روز می‌باشند."
+
+msgid "Create"
+msgstr "ایجاد"
+
+msgid "Crop"
+msgstr "بریدن"
+
+msgid "Deactivate all"
+msgstr "از کار انداختن همه"
+
+msgid "ERROR"
+msgstr "<b>خطا</b>"
+
+msgid "Extensions Update"
+msgstr "گسترش به روز رسانی‌ها"
+
+msgid "Height"
+msgstr "طول"
+
+msgid "Ignore All"
+msgstr "چشم پوشی از همه"
+
+msgid "Ignore this update"
+msgstr "چشم پوشی از این به روز رسانی "
+
+msgid "Manage Permissions"
+msgstr "مدیریت مجوزها"
+
+msgid "Merge selected tags"
+msgstr "ترکیب برچسب‌های انتخاب شده"
+
+msgid "Merge tags"
+msgstr "ترکیب برچسب‌ها"
+
+msgid "Photo name"
+msgstr "نام عکس"
+
+msgid "Piwigo Update"
+msgstr "بروز رسانی Piwigo"
+
+msgid "hide details"
+msgstr "پنهان کردن جزئیات"
+
+msgid "Select an album"
+msgstr "یک آلبوم را انتخاب کنید"
+
+msgid "Select at least two tags for merging"
+msgstr "حداقل دو برچسب را برای ادغام انتخاب کنید"
+
+msgid "Select the destination tag"
+msgstr "انتخاب برچسب مقصد"
+
+msgid "Show menubar"
+msgstr "نمایش عضو"
+
+msgid "Start Upload"
+msgstr "آغاز آپلود"
+
+msgid "Tags <em>%s</em> merged into tag <em>%s</em>"
+msgstr "برچسب <em>%s</em> با برچسب <em>%s</em> ادغام شد"
+
+msgid "Two updates are available"
+msgstr "دو عدد بروز رسانی آماده می باشند"
+
+msgid "Update All"
+msgstr "بروز رسانی همه"
+
+msgid "Update in progress... Please wait."
+msgstr "بروز رسانی در حال انجام است... شکیبا باشید."
+
+msgid "Update to Piwigo %s"
+msgstr "بروز رسانی به نگارش %s از Piwigo"
+
+msgid "Updates"
+msgstr "بروز رسانی ها"
+
+msgid "Width"
+msgstr "عرض"
+
+msgid "With no album"
+msgstr "بدون آلبوم"
+
+msgid "With no tag"
+msgstr "بدون برچسب"
+
+msgid "With no virtual album"
+msgstr "بدون آلبوم مجازی"
+
+msgid "show details"
+msgstr "نمایش جزئیات"
+
+msgid "%s has been successfully updated."
+msgstr "%s به درستی به روز رسانی شد."
+
+msgid "%s photos can not be regenerated"
+msgstr "%s تا عکس قابلیت دوباره تولید شدن را ندارند"
+
+msgid "%s photos have been regenerated"
+msgstr "%s تا عکس دوباره تولید شدند"
+
+msgid "(this tag will be deleted)"
+msgstr "(این برچسب پاک خواهد شد)"
+
+msgid "A locked gallery is only visible to administrators"
+msgstr "گالریِ قفل شده تنها برای مدیران قابل نمایش است"
+
+msgid "Activate comments"
+msgstr "فعال کردن دیدگاه‌ها"
+
+msgid "Allowed file types: %s."
+msgstr "فرمت‌های مجاز: %s."
+
+msgid "An error has occured during upgrade."
+msgstr "یک خطا هنگام آپگرید رخ داده است."
+
+msgid "Approximate maximum resolution: %dM pixels (that's %dx%d pixels)."
+msgstr "بالاترین رزولوشن تقریبی: %dM پیکسل، برابر %dx%d پیکسل."
+
+msgid "Available on"
+msgstr "موجود برای"
+
+msgid "By default, Piwigo will create a new websize from the HD (high definition) version of your photo."
+msgstr "بطور پیشفرض، Piwigo یک وب سایز تازه از حالت HD عکس شما ایجاد می‌کند."
+
+msgid "Cancel"
+msgstr "لغو"
+
+msgid "Confirm merge"
+msgstr "پذیرش ترکیب"
+
+msgid "Default comments order"
+msgstr "چیدمان پیشفرض برای دیدگاه‌ها"
+
+msgid "Default photos order"
+msgstr "چیدمان پیشفرض برای عکس‌ها"
+
+msgid "Follow Orientation"
+msgstr "دنبال کردن سودار"
+
+msgid "Following plugins may not be compatible with the new version of Piwigo:"
+msgstr "افزونه‌های زیر شاید با نگارش تازه‌ی Piwigo سازگار نباشند:"
+
+msgid "Following themes may not be compatible with the new version of Piwigo:"
+msgstr "زمینه‌های زیر شاید با نگارش تازه‌ی Piwigo سازگار نباشند:"
+
+msgid "Gallery unlocked"
+msgstr "گالری باز شد"
+
+msgid "Graphics Library"
+msgstr "کتابخانه‌ی گرافیک"
+
+msgid "Groups and users"
+msgstr "گروه‌ها و کاربران"
+
+msgid "I decide to update anyway"
+msgstr "هر طور شده به روز رسانی را انجام بده"
+
+msgid "Last import"
+msgstr "آخرین واردات"
+
+msgid "List"
+msgstr "فهرست"
+
+msgid "Maximum file size: %sB."
+msgstr "بیشترین حجم فایل: %sB."
+
+msgid "Move to album"
+msgstr "جابجایی به آلبوم"
+
+msgid "No destination tag selected"
+msgstr "هیچ برچسب مقصدی انتخاب نشده است"
+
+msgid "Notify administrators when a comment is"
+msgstr "مدیران را با خبر کن وقتی یک دیدگاه"
+
+msgid "Opacity"
+msgstr "وضوح"
+
+msgid "Original Size"
+msgstr "اندازه‌ی اصلی"
+
+msgid "Photo %s of %s"
+msgstr "عکس %s از %s"
+
+msgid "Photos generation in progress..."
+msgstr "عکس ها در حال تولید می باشند..."
+
+msgid "Piwigo cannot retrieve upgrade file from server"
+msgstr "Piwigo نمی تواند آپگرید های مورد نیاز را از سرور دریافت کند"
+
+msgid "Predefined filter"
+msgstr "فیلتر از پیش تعریف شده"
+
+msgid "Reset ignored updates"
+msgstr "بازنشانی بروز رسانی های چشم پوشی شده"
+
+msgid "Resize after upload"
+msgstr "تغییر اندازه بعد از آپلود"
+
+msgid "Restore default configuration. You will lose your plugin settings!"
+msgstr "بازنشانی تنظیمات پیشفرض. تنظیمات افزونه های شما پاک خواهد شد!"
+
+msgid "Restore"
+msgstr "بازیابی"
+
+msgid "Save Template Directory"
+msgstr "ذخیره ی مسیر قالب"
+
+msgid "Select a file"
+msgstr "انتخاب یک فایل"
+
+msgid "Select groups..."
+msgstr "انتخاب گروه ها..."
+
+msgid "Select users..."
+msgstr "انتخاب کاربران..."
+
+msgid "Send connection settings by email"
+msgstr "فرستادن تنظیمات اتصال با ایمیل"
+
+msgid "Some themes and plugins may be not available yet."
+msgstr "در حال حاضر بعضی از قالب ها و افزونه ها ممکن است در دسترس نباشند."
+
+msgid "Some upgrades are available for extensions."
+msgstr "تعدادی آپگرید برای توسعه دهنده ها (Extensions) موجود می باشد."
+
+msgid "The original image quality must be a number between %d and %d"
+msgstr "کیفیت اصلی عکس باید عددی بین %d و %d باشد"
+
+msgid "The original maximum height must be a number between %d and %d"
+msgstr "حداکثر طول اصلی عکس باید عددی بین %d و %d باشد"
+
+msgid "The original maximum width must be a number between %d and %d"
+msgstr "حداکثر عرض اصلی عکس باید عددی بین %d و %d باشد"
+
+msgid "This is a minor update, with only bug corrections."
+msgstr "این یک بروز رسانی کوچک است که در آن چند مشکل امنیتی اصلاح شده است."
+
+msgid "Thumbnails generation in progress..."
+msgstr "در حال تولید عکس ریزه..."
+
+msgid "Unlock gallery"
+msgstr "باز کردن گالری"
+
+msgid "Update Complete"
+msgstr "بروز رسانی انجام شد"
+
+msgid "Zoom"
+msgstr "بزرگنمایی"
+
+msgid "administrators"
+msgstr "مدیرکل"
+
+msgid "custom"
+msgstr "سفارشی"
+
+msgid "modified"
+msgstr "ویرایش شد"
+
+msgid "pending validation"
+msgstr "در انتظار پذیرش است"
+
+msgid "registered users"
+msgstr "کاربران"
+
+msgid "simple visitors"
+msgstr "مهمان"
+
+msgid "Added by %s"
+msgstr "افزوده شده بوسیله‌ی %s"
+
+msgid "Original file : %s"
+msgstr "فایل اصلی : %s"
+
+msgid "Posted %s on %s"
+msgstr "فرستاده شده توسط %s در %s"
+
+msgid "Visited %d times"
+msgstr "%s مرتبه نمایش داده شده"
+
+msgid "Activate icon \"new\" next to albums and pictures"
+msgstr "فعال کردن آیکن \"تازه\" در کنار آلبوم‌ها و عکس‌ها"
+
+msgid "An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href=\"%s\">Click here to show log error</a>."
+msgstr "یک خطا هنگام باز کردن فایل رخ داده است. خواهشمندیم تنظیمات دسترسی نصب خود را بررسی کنید.<br>\nبرای مشاهده‌ی جزئیات خطا <a href=\"%s\">اینجا کلیک کنید</a>."
+
+msgid "If no HD is available and if the current websize is bigger than resize dimensions, Piwigo will move it as HD and create a downsized websize photo from it."
+msgstr "اگر سایز عکس HD نباشد و اگر وب سایز کنونی بزرگتر از اندازه‌ی پس از تغییر سایز عکس باشد، Piwigo عکس را بعنوان HD جابجا کرده و یک سایز کوچکتر برای آن می‌سازد."
+
+msgid "Piwigo for iOS (iPhone, iPad, iPod Touch)"
+msgstr "دریافت Piwigo برای iOS (iPhone, iPad, iPod Touch)"
+
+msgid "Save visits in history for"
+msgstr "ذخیره کردن بازدید ها برای"
+
+msgid "This album contains %d photos, added between %s and %s."
+msgstr "این آلبوم شامل %d عکس می باشد که بین %s و %s اضافه شده اند."
+
+msgid "This album contains %d photos, added on %s."
+msgstr "این آلبوم شامل %d عکس می باشد که در %s اضافه شده اند."
+
+msgid "This album contains no photo."
+msgstr "هیچ عکسی در این آلبوم وجود ندارد."
+
+msgid "This is a major update, with <a href=\"%s\">new exciting features</a>."
+msgstr "این یک بروز رسانی مهم است و دارای <a href=\"%s\">ویژگی های جالب و تازه</a> می باشد."
+
+msgid "You are using the Browser uploader. Try the <a href=\"%s\">Flash uploader</a> instead."
+msgstr "در حال حاضر شما از آپلود کننده ی مرورگر خود استفاده می کنید. می توانید <a href=\"%s\">آپلود کننده ی فلش</a> را برای سرعت بیشتر امتحان کنید."
+
+msgid "You are using the Flash uploader. Problems? Try the <a href=\"%s\">Browser uploader</a> instead."
+msgstr "در حال حاضر شما از آپلود کننده ی فلش استفاده می کنید. اگر مشکلی دارید، می توانید از <a href=\"%s\">آپلود کننده ی مرورگر</a> خود استفاده کنید."
+
+msgid "You can update to Piwigo %s directly, without upgrading to Piwigo %s (recommended)."
+msgstr "شما میتوانید مستقیم نگارش خود را به %s تغییر دهید، بدون آنکه %s را نصب کنید. (این روش پیشنهاد می شود)"
+
+msgid "You can't define a default photo order because you have a custom setting in your local configuration."
+msgstr "شما می توانید ترتیب چیده شدن عکس های خود را به پیشفرض تغییر بدهید، در حال حاضر شما از تنظیمات سفارشی استفاده می کنید."
+
+msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
+msgstr "شما <i>$conf['order_by']</i> را برای تنظیمات محلی (Local) خود تعیین کرده اید و این پارامتر در حال حاضر به مشکل برخورده است. خواهشمند است آن را پاک کرده یا نام آنرا به <i>$conf['order_by_custom']</i> تغییر دهید !"
+
+msgid "%d day"
+msgstr "%d روز"
+
+msgid "%d days"
+msgstr "%d روز"
+
+msgid "%d hour"
+msgstr "%d ساعت"
+
+msgid "%d hours"
+msgstr "%d ساعت"
+
+msgid "%d minute"
+msgstr "%d دقیقه"
+
+msgid "%d minutes"
+msgstr "%d دقیقه"
+
+msgid "%d month"
+msgstr "%d ماه"
+
+msgid "%d months"
+msgstr "%d ماه"
+
+msgid "%d second"
+msgstr "%d ثانیه"
+
+msgid "%d seconds"
+msgstr "%d ثانیه"
+
+msgid "%d week"
+msgstr "%d هفته"
+
+msgid "%d weeks"
+msgstr "%d هفته"
+
+msgid "%d year"
+msgstr "%d سال"
+
+msgid "%d years"
+msgstr "%d سال"
+
+msgid "%s ago"
+msgstr "%d پیش"
+
+msgid "%s in the future"
+msgstr "%s آینده"
+
+msgid "Applications"
+msgstr "برنامه‌های کاربردی"
+
+msgid "Apply watermark if height is bigger than"
+msgstr "عکس را فقط زمانی واترمارک کن که طولش بیشتر باشد از"
+
+msgid "Apply watermark if width is bigger than"
+msgstr "عکس را فقط زمانی واترمارک کن که عرضش بیشتر باشد از"
+
+msgid "Automatic sort order"
+msgstr "چیدمان خودکار"
+
+msgid "Edit photo"
+msgstr "ویرایش عکس"
+
+msgid "Multiple Size"
+msgstr "چند سایزه"
+
+msgid "Not cropped correctly?"
+msgstr "درست بریده نشد؟"
+
+msgid "Numeric identifier : %d"
+msgstr "شناسه‌ی عددی: %d"
+
+msgid "Permission management"
+msgstr "مدیریت دسترسی‌ها"
+
+msgid "Piwigo for Android"
+msgstr "دریافت Piwigo برای Android"
+
+msgid "Rated %d times, score : %.2f"
+msgstr "به تعداد %d بار رأی داده شده، امتیاز : %.2f"
+
+msgid "Save manual order"
+msgstr "ذخیره ی ترتیب دستی"
+
+msgid "Sharpen"
+msgstr "حالت تیز (Sharpen)"
+
+msgid "Watermark"
+msgstr "واترمارک (Watermark)"
+
+msgid "Web Form"
+msgstr "حالت وب"
+
+msgid "X Position"
+msgstr "مکان در محور X"
+
+msgid "X Repeat"
+msgstr "تعداد تکرار  در محور X"
+
+msgid "Y Position"
+msgstr "مکان در محور Y"
+
+msgid "You can activate only one mobile theme."
+msgstr "شما فقط می توانید یک قالب برای موبایل فعال کنید."
+
+msgid "add a new watermark"
+msgstr "اضافه کردن واترمارک تازه"
+
+msgid "apply automatic sort order"
+msgstr "استفاده از ترتیب خودکار"
+
+msgid "bottom left corner"
+msgstr "گوشه ی پایین سمت چپ"
+
+msgid "bottom right corner"
+msgstr "گوشه ی پایین سمت راست"
+
+msgid "cancel manual order"
+msgstr "لغو تغییرات ترتیب دستی"
+
+msgid "middle"
+msgstr "وسط"
+
+msgid "top left corner"
+msgstr "گوشه ی بالا سمت چپ"
+
+msgid "top right corner"
+msgstr "گوشه ی بالا سمت راست"
+
+msgid "<em>Piwigo for Android</em> application empowers you to connect your Android phone or table to your Piwigo gallery, create some albums and upload several photos at once."
+msgstr "نرم‌افزار <em>Piwigo برای Android</em> به شما قدرت وصل شدن به گالری، ساخت آلبوم و آپلود عکس به کمک موبایل یا تبلت آندرویدتان را می‌دهد."
+
+msgid "<em>Piwigo for iOS</em> application empowers you to connect to your Piwigo gallery from your iPhone, iPad or iPod Touch, create some albums and upload several photos at once."
+msgstr "نرم‌افزار <em>Piwigo برای iOS</em> به شما قدرت وصل شدن به گالری، ساخت آلبوم و آپلود عکس به کمک iPhone، iPad یا iPod Touch ـتان را می‌دهد."
+
+msgid "Adobe Photoshop Lightroom is a photography software designed to manage large quantities of digital images and doing post production work."
+msgstr "Adobe Photoshop Lightroom یک نرم‌افزار عکاسی می‌باشد که برای مدیریت عکس‌های دیجیتالی بزرگ طراحی شده است."
+
+msgid "Center of interest"
+msgstr "نقطه‌ی طلایی (Center of Interest)"
+
+msgid "On your Linux, simply install Shotwell with your package manager and the activate Piwigo publishing option."
+msgstr "نرم افزار Shotwell را بر روی لینوکس خود نصب کرده و افزونه‌ی انتشار Piwigo را فعال کنید."
+
+msgid "Piwigo Publish plugin for Lightroom"
+msgstr "افزونه ی انتشار Piwigo برای Photoshop Lightroom"
+
+msgid "Piwigo export plugin for Aperture"
+msgstr "افزونه ی فرستنده ی Piwigo برای Aperture"
+
+msgid "Piwigo export plugin for iPhoto"
+msgstr "افزونه ی فرستنده ی Piwigo برای iPhoto"
+
+msgid "Piwigo publish plugin for Shotwell"
+msgstr "افزونه ی انتشار Piwigo برای Shotwell"
+
+msgid "Piwigo publish plugin for digiKam"
+msgstr "افزونه ی انتشار Piwigo برای digiKam"
+
+msgid "Shotwell is an open source digital photo organizer that runs on Linux. It is the default photo manager in Ubuntu and Fedora."
+msgstr "Shotwell یک نرم افزار متن باز (Open Source) برای سازمان دهی عکس های دیجیتالی می باشد که بر روی سیستم عامل لینوکس قابل اجرا است. همچنین نرم افزار پیشفرض برای مدیریت عکس ها در Ubuntu و Fedora نیر می باشد."
+
+msgid "The Piwigo publish Plug-in allows you to export and synchronize photos from Lightroom directly to your Piwigo photo gallery."
+msgstr "افزونه ی انتشار Piwigo به شما این امکان را می دهد تا عکس های خود را از Photoshop Lightroom بطور مستقیم همگام سازی کرده و وارد گالری Piwigo خود کنید."
+
+msgid "There is no group in this gallery."
+msgstr "هیچ گروهی در این گالری وجود ندارد."
+
+msgid "%u users have automatic permission because they belong to a granted group."
+msgstr "%u تا کاربر دسترسی خودکار پیدا کردند زیرا وابسته به گروهی که دسترسی دارد هستند."
+
+msgid "Aperture is a powerful tool to refine images and manage massive libraries on Mac."
+msgstr "Aperture یک ابزار نیرومند برای بازسازی عکس‌ها و مدیریت کتابخانه‌های فشرده در سیستم عامل Mac می‌باشد."
+
+msgid "Aperture is designed for professional photographers with iPhoto simplicity."
+msgstr "Aperture برای عکاس‌های حرفه‌ای که از iPhoto استفاده می‌کنند طراحی شده است."
+
+msgid "By default, the center of interest is placed in the middle of the photo."
+msgstr "نقطه‌ی طلایی بطور پیشفرض، در وسط عکس قرار می‌گیرد."
+
+msgid "Delete multiple size images"
+msgstr "پاک کردن عکس‌های چند سایزه"
+
+msgid "Features include gallery browsing, album creation and photo upload."
+msgstr "ویژگی‌هایی ازجمله باز کردن گالری، ساخت آلبوم و آپلود عکس."
+
+msgid "For photo sizes with crop, such as \"Square\", Piwigo will do its best to include the center of interest."
+msgstr "برای عکس‌هایی که بریده شده‌اند، برای نمونه \"مربعی\"، Piwigo به بهترین حالت ممکن نقطه‌ی طلایی عکس را شناسایی می‌کند."
+
+msgid "Generate multiple size images"
+msgstr "درست کردن عکس‌های چند سایزه"
+
+msgid "No group is permitted to see this private album"
+msgstr "هیچ گروهی اجازه‌ی دیدن این آلبوم خصوصی را ندارد"
+
+msgid "Permission granted for groups"
+msgstr "اجازه‌ی دسترسی به گروه‌ها داده شد"
+
+msgid "Permission granted for users"
+msgstr "اجازه‌ی دسترسی به کاربران داده شد"
+
+msgid "Photo sizes with crop"
+msgstr "سایز عکس برش داده شده"
+
+msgid "ReGalAndroid (RemoteGallery client for Android) is an open source (GPL v3) Piwigo client for the Android platform."
+msgstr "ReGalAndroid (سیستم مدیریت گالری از راه دور برای Android) یک سیستم متن باز (Open Source) برای Piwigo می باشد (GPL v3) که بر روی Android قابل اجراست."
+
+msgid "Select a zone with your mouse to define a new center of interest."
+msgstr "برای انتخاب یک نقطه ی طلایی (Center of Interest) تازه، با موس خود روی منطقه ی دلخواهی از عکس کلیک کنید."
+
+msgid "The Piwigo export plugin allows you to create albums and export photos."
+msgstr "افزونه ی فرستنده ی Piwigo به شما اجازه ی ساخت آلبوم و فرستادن عکس بر روی گالری را می دهد."
+
+msgid "The center of interest is the most meaningful zone in the photo."
+msgstr "نقطه ی طلایی (Center of Interest) مهم ترین محدوده ی عکس می باشد."
+
+msgid "To export your photos from digiKam to Piwigo, simply install digiKam and the Kipi-plugins."
+msgstr "برای فرستادن عکس های خود از digiKam به Piwigo، کافیست نرم افزار digiKam و افزونه های Kipi را نصب کنید."
+
+msgid "any visitor can see this album"
+msgstr "هر بازدید کننده ای می تواند این آلبوم را ببیند"
+
+msgid "digiKam is an advanced digital photo management free software for Linux, Windows, and MacOSX."
+msgstr "digiKam یک نرم افزار رایگان پیشرفته برای مدیریت عکس های دیجیتالی بر روی سیستم عامل های لینوکس، ویندوز و MacOSX می باشد."
+
+msgid "digiKam is designed for photographers who want to view, manage, edit, enhance, organize, tag, and share photographs."
+msgstr "digiKam برای عکاس هایی که می خواهند عکس ها را مشاهده، مدیریت، ویرایش و سازمان دهی کنند یا به آنها برچسب بزنند و آنها را به اشتراک بگذارند طراحی شده است."
+
+msgid "iPhoto is the default photo manager on MacOSX. The Piwigo export plugin let you create new albums and export your photos directly from iPhoto to your Piwigo photo gallery."
+msgstr "iPhoto نرم افزار مدیریت عکس پیشفرض در سیستم عامل MacOSX می باشد. افزونه ی فرستنده ی Piwigo به شما اجازه ی ساخت آلبوم های تازه و فرستادن عکس ها از iPhone به Piwigo بطور مستقیم را می دهد."
+
+msgid "include photos with lower privacy level"
+msgstr "شامل عکس هایی که سطح خصوصی پایینی دارند نیز بشود"
+
+msgid "visitors need to login and have the appropriate permissions to see this album"
+msgstr "بازدید کننده ها باید وارد شوند و دسترسی مناسب را داشته باشند تا این آلبوم را ببینند"
+
+msgid " and %d virtuals"
+msgstr " و %d مجازی"
+
+msgid "%d physicals"
+msgstr " %d فیزیکی"
+
+msgid "create a new site"
+msgstr "ایجاد یک سایت تازه"
+
+msgid "No order field selected"
+msgstr "هیچ فیلدی برای چیدمان انتخاب نشده است"
+
+msgid "Duplicate selected tags"
+msgstr "دوتایی کردن برچسب‌های انتخاب شده"
+
+msgid "Name of the duplicate"
+msgstr "نام پس از دوتایی شدن"
+
+msgid "Source tag"
+msgstr "برچسب اصلی"
+
+msgid "Tag \"%s\" is now a duplicate of \"%s\""
+msgstr "برچسب \"%s\" از روی برچسب \"%s\" دوتایی شد"
+
+msgid "Landscape"
+msgstr "چشم انداز"
+
+msgid "Manage photos"
+msgstr "مدیریت عکس‌ها"
+
+msgid "Minimum height"
+msgstr "حداقل طول"
+
+msgid "Minimum width"
+msgstr "حداقل عرض"
+
+msgid "Number of albums per page"
+msgstr "شمار آلبوم‌ها در هر برگه"
+
+msgid "Panorama"
+msgstr "پانوراما"
+
+msgid "Portrait"
+msgstr "پرتره"
+
+msgid "View in gallery"
+msgstr "نمایش در گالری"
+
+msgid "Duplicate"
+msgstr "دوتایی کردن"
+
+msgid "Manage the members"
+msgstr "مدیریت کاربران"
+
+msgid "Merge selected groups"
+msgstr "ترکیب گروه‌های انتخاب شده"
+
+msgid "No groups selected, no actions possible."
+msgstr "گروهی انتخاب نشده است، هیچ کاری انجام نخواهد شد."
+
+msgid "No members to manage"
+msgstr "کاربری برای ترکیب وجود ندارد"
+
+msgid "Please select at least two groups"
+msgstr "دست کم باید دو گروه را انتخاب کنید"
+
+msgid "Ratio"
+msgstr "نسبت"
+
+msgid "Rename"
+msgstr "تغییر نام"
+
+msgid "This group will be set to default"
+msgstr "این گروه در حالت پیشفرض استفاده خواهد شد"
+
+msgid "This group will be unset to default"
+msgstr "این گروه دیگر در حالت پیشفرض استفاده نخواهد شد"
+
+msgid "Type here the name of the new group"
+msgstr "نام گروه تازه را اینجا بنویسید"
+
+msgid "between %.2f and %.2f"
+msgstr "میان %.2f و %.2f"
+
+msgid "between %d and %d pixels"
+msgstr "میان %d و %d پیکسل"
+
+msgid "Purge user cache"
+msgstr "پاک کردن مخزن کاربر (کش)"
+
+msgid "The picture dimensions will be reduced to %dx%d pixels."
+msgstr "اندازه‌ی این عکس به %dx%d پیکسل کاهش خواهد یافت."
+
+msgid "Resize after upload disabled due to the use of GD as graphic library"
+msgstr "بدلیل استفاده از کتابخانه‌ی گرافیکیِ GD، امکان ویرایش سایز عکس پس از آپلود وجود ندارد."
+
+msgid "Select at least one tag"
+msgstr "دست کم باید یک برچسب انتخاب کنید"
+
+msgid "Basic settings"
+msgstr "تنظیمات پایه"
+
+msgid "General"
+msgstr "همگانی"
+
+msgid "Mail theme"
+msgstr "زمینه‌ی ایمیل"
+
+msgid "Loading..."
+msgstr "در حال بارگذاری..."
+
+msgid "No matching user found"
+msgstr "هیچ کاربر مشابهی پیدا نشد"
+
+msgid "Password updated"
+msgstr "گذرواژه به روز شد"
+
+msgid "Update user"
+msgstr "به روز رسانیِ کاربر"
+
+msgid "Users modified"
+msgstr "کاربر ویرایش شد"
+
+msgid "on the %d selected users"
+msgstr "تعداد %d كاربر انتخاب شده"
+
+msgid "close"
+msgstr "بستن"
+
+msgid "User %s updated"
+msgstr "كاربر %s بروز رساني شد."
+
+msgid "User %s added"
+msgstr "كاربر %s اضافه شد."
+
+msgid "Showing %s to %s of %s users"
+msgstr "نمايش از %s تا %s از بين %s كاربر"
+
+msgid "Show %s users"
+msgstr "نمايش %s كاربر"
+
+msgid "Registered on %s, %s."
+msgstr "ثبت شده در %s, %s."
+
+msgid "Open user details"
+msgstr "باز كردن مشخصات كاربر"
+
+msgid "No users selected, no actions possible."
+msgstr "هيچ كاربري انتخاب نشده است، هيچ كاري ممكن نيست."
+
+msgid "No user selected of %d users"
+msgstr "هيچ كاربري از بين %d كاربر انتخاب نشده است."
+
+msgid "Last visit on %s, %s."
+msgstr "آخرين بازديد در %s, %s."
+
+msgid "Close user details"
+msgstr "بستن مشخصات كاربر"
+
+msgid "Change username"
+msgstr "تغيير نام كاربر"
+
+msgid "Change password"
+msgstr "تغيير رمز"
+
+msgid "All %d users are selected"
+msgstr "تمام %d كاربر انتخاب شده اند."
+
+msgid "(filtered from %s total users)"
+msgstr "(فيلتر شده از بين %s كاربر)"
+
+msgid "%d of %d users selected"
+msgstr "تعداد %d كاربر از %d كاربران انتخاب شده‌اند."
+
+msgid "Activate it now"
+msgstr "فعال درحال حاضر"
+
+msgid "Allow users to add a link to their website"
+msgstr "به کاربران اجازه‌ی افزودنِ لینکِ وبسایتشان داده شود"
+
+msgid "Impossible to deactivate the default theme."
+msgstr "پوسته‌ی اصلی را نمی‌توان غیرفعال کرد."
+
+msgid "Mail address is mandatory for registration"
+msgstr "آدرس ایمیل برای نام نویسی مورد نیاز است"
+
+msgid "Upload in progress"
+msgstr "در حالِ آپلود"
+
+msgid "based on"
+msgstr "بر پایه‌ی"
+
+msgid "between %s and %s MB"
+msgstr "حجمِ بینِ %s و %s مگابایت"
+
+msgid "date & time"
+msgstr "تاریخ و زمان"
+
+msgid "file name"
+msgstr "نامِ فایل"
+
+msgid "width & height"
+msgstr "بلندا و پهنا"
+
+msgid "Empty caddie"
+msgstr "خالی کردنِ سبد"
+
+msgid "No and unlock sub-albums"
+msgstr "خیر و زیرآلبوم‌ها را باز کن"
+
+msgid "The settings for the guest are from the %s user"
+msgstr "تنظیماتِ مهمان‌ها از کاربر %s گرفته می‌شود"
+
+msgid "Each email sent will contain its own automatic authentication key on links, valid for %s."
+msgstr "هر ایمیلی که فرستاده می‌شود، به طور خودکار دارای یک کلید احراز هویت مخصوص بوده که برای %s معتبر است."
+
+msgid "Edit user"
+msgstr "ویرایش کاربر"
+
+msgid "For security reason, authentication keys do not work for administrators."
+msgstr "به دلایل امنیتی، کلیدهای احراز هویت برای مدیران فعال نیست."
+
+msgid "No recipient selected"
+msgstr "دریافت کننده‌ای انتخاب نشده است"
+
+msgid "No user is permitted to see this private album"
+msgstr "هیچ کاربری اجازه‌ی دیدن این آلبوم شخصی را ندارد"
+
+msgid "Recipients"
+msgstr "دریافت کنندگان"
+
+msgid "Y Repeat"
+msgstr "تکرار در محور Y"
+
+msgid "Delete %d orphan photos"
+msgstr "پاک کردنِ %d عکس بی‌ریشه"
+
+msgid "Orphans"
+msgstr "بی‌ریشه‌ها"
+
+msgid "Delete album \"%s\"."
+msgstr "حذف البوم\"%s\"."
+
+msgid "Display form"
+msgstr "فرم نمایش "
+
+msgid "It only takes a few clicks."
+msgstr "فقط با چند کلید "
+
+msgid "Dashboard"
+msgstr "میزکار"
+
+msgid "Select tags"
+msgstr "انتخاب تگ ها"
+
+msgid "Storage used"
+msgstr "فضای ذخیره سازی استفاده شده"
+
+msgid "checksum"
+msgstr "چک سام"
+
+msgid "delete only album, not photos"
+msgstr "فقط آلبوم بدون عکس پاک شود "
+
+msgid "Running on an up-to-date Piwigo is important for security."
+msgstr "استفاده از Piwigo آپدیت شده برای امنیت گالری توصیه می‌شود."
+
+msgid "Time has come to update your Piwigo with version %s, go to %s"
+msgstr "وقتشه Piwigo را از ورژن %s به %s آپدیت کنید"
+
+msgid "Share / Send your photos directly from your Mac Os X (10.10 and following) to Piwigo"
+msgstr "عکس‌های خود را از macOS (ورژن 10.10 به بالا) به طور مستقیم در Piwigo به اشتراک بذارید / بفرستید"
+
+msgid "delete album and the %d orphan photos"
+msgstr "آلبوم و همه‌ی %d عکس بی‌ریشه پاک شوند"
+
+msgid "orphans to delete"
+msgstr "عکس‌های بی‌ریشه آماده‌ی پاک شدن"
+
+msgid "delete album and all %d photos, even the %d associated to other albums"
+msgstr "آلبوم و همه‌ی %d عکس آن پاک شوند، حتی %d عکسی که مربوط به آلبوم‌های دیگر هستند"
+
+msgid "(determined from photos)"
+msgstr "(تعیین شده از روی عکس‌ها)"
+
+msgid "Confirm deletion"
+msgstr "تایید پاک کردن"
+
+msgid "Delete album \"%s\" and its %d sub-albums."
+msgstr "آلبوم \"%s\" و همه‌ی %d زیرآلبوم آن پاک شوند."
+
+msgid "No filter on album. Select one or type to search"
+msgstr "فیلتری روی آلبوم اعمال نشده است. یک فیلتر انتخاب کرده و یا واژه‌ی مورد نظر خود را تایپ کنید"
+
+msgid "No tags selected, no actions possible."
+msgstr "هیچ برچسبی انتخاب نشده، کاری قابل انجام نیست"
+
+msgid "Piwigo %s is available, please update"
+msgstr "ورژن %s از Piwigo آماده‌ی آپدیت کردن است\n"
+
+msgid "Piwigo Remote Sync is able to upload a whole folder hierarchy. If you run it again, only new photos will be uploaded."
+msgstr "Piwigo Remote Sync قابلیت این را دارد که یک پوشه(فولدر) را با تمام زیر مجموعه هایش آپلود کند. اگر مجدد این عملیات را انجام دهید فقط موارد جدید آپلود میشود."
+
+msgid " (copy %s)"
+msgstr "(کپی %s)"
+
+msgid " (copy)"
+msgstr "(کپی)"
+
+msgid "%d Activities"
+msgstr "%d فعالیت"
+
+msgid "%d Activity"
+msgstr "%d فعالیت"
+
+msgid "%d album added"
+msgstr "%d آلبوم افزوده شد"
+
+msgid "%d album deleted"
+msgstr "%d آلبوم حذف شد"
+
+msgid "%d album edited"
+msgstr "%d آلبوم ویرایش شد"
+
+msgid "%d albums added"
+msgstr "%d آلبوم افزوده شدند"
+
+msgid "%d albums deleted"
+msgstr "%d آلبوم حذف شدند"
+
+msgid "%d albums edited"
+msgstr "%d آلبوم ویرایش شدند"
+
+msgid "%d checksums were added"
+msgstr "%d چک‌سام افزوده شدند"
+
+msgid "%d formats uploaded for %d photos"
+msgstr "%d فرمت برای %d عکس آپلود شدند"
+
+msgid "%d group added"
+msgstr "%d گروه افزوده شد"
+
+msgid "%d group deleted"
+msgstr "%d گروه حذف شد"
+
+msgid "%d group edited"
+msgstr "%d گروه ویرایش شد"
+
+msgid "%d group moved"
+msgstr "%d گروه جابجا شد"
+
+msgid "%d groups added"
+msgstr "%d گروه افزوده شدند"
+
+msgid "%d groups deleted"
+msgstr "%d گروه حذف شدند"
+
+msgid "%d groups edited"
+msgstr "%d گروه ویرایش شدند"
+
+msgid "%d groups moved"
+msgstr "%d گروه جابجا شدند"
+
+msgid "%d photo added"
+msgstr "%d عکس افزوده شد"
+
+msgid "%d photo deleted"
+msgstr "%d عکس حذف شد"
+
+msgid "%d photo edited"
+msgstr "%d عکس ویرایش شد"
+
+msgid "%d photo moved"
+msgstr "%d عکس جابجا شد"
+
+msgid "%d photos"
+msgstr "%d عکس"
+
+msgid "%d photos added"
+msgstr "%d عکس افزوده شدند"
+
+msgid "%d photos deleted"
+msgstr "%d عکس حذف شدند"
+
+msgid "%d photos edited"
+msgstr "%d عکس ویرایش شدند"
+
+msgid "%d photos moved"
+msgstr "%d عکس جابجا شدند"
+
+msgid "%d pictures in sub-albums"
+msgstr "%d عکس در زیرآلبوم"
+
+msgid "%d sub-albums"
+msgstr "%d زیرآلبوم"
+
+msgid "%d tag added"
+msgstr "%d برچسب افزوده شد"
+
+msgid "%d tag deleted"
+msgstr "%d برچسب حذف شد"
+
+msgid "%d tag edited"
+msgstr "%d برچسب ویرایش شد"
+
+msgid "%d tag moved"
+msgstr "%d برچسب جابجا شد"
+
+msgid "%d tags added"
+msgstr "%d برچسب افزوده شدند"
+
+msgid "%d tags deleted"
+msgstr "%d برچسب حذف شدند"
+
+msgid "%d tags edited"
+msgstr "%d برچسب ویرایش شدند"
+
+msgid "%d tags moved"
+msgstr "%d برچسب جابجا شدند"
+
+msgid "%d user added"
+msgstr "%d کاربر افزوده شد"
+
+msgid "%d user edited"
+msgstr "%d کاربر ویرایش شد"
+
+msgid "%d user logged in"
+msgstr "%d کاربر وارد شد"
+
+msgid "%d user logged out"
+msgstr "%d کاربر خارج شد"
+
+msgid "%d users added"
+msgstr "%d کاربر افزوده شدند"
+
+msgid "%d users edited"
+msgstr "%d کاربر ویرایش شدند"
+
+msgid "%d users logged in"
+msgstr "%d کاربر وارد شدند"
+
+msgid "%d users logged out"
+msgstr "%d کاربر خارج شدند"
+
+msgid "%s GB used"
+msgstr "%s گیگابایت استفاده شده"
+
+msgid "%s MB"
+msgstr "%s مگابایت"
+
+msgid "%s MB used"
+msgstr "%s مگابایت استفاده شده"
+
+msgid "%s file type"
+msgstr "%s نوع فایل"
+
+msgid "%s line"
+msgstr "%s خط"
+
+msgid "%s lines"
+msgstr "%s خط"
+
+msgid "%sGB"
+msgstr "%s گیگابایت"
+
+msgid "%sMB"
+msgstr "%s مگابایت"
+
+msgid "Activated"
+msgstr "فعال شد"
+
+msgid "Activity"
+msgstr "فعالیت"
+
+msgid "Add Album"
+msgstr "افزودن آلبوم"
+
+msgid "Add New Plugin"
+msgstr "افزودن افزونه‌ی جدید"
+
+msgid "Add User"
+msgstr "افزودن کاربر"
+
+msgid "Add a new user"
+msgstr "افزودن کاربر جدید"
+
+msgid "Apr"
+msgstr "آپریل"
+
+msgid "Aug"
+msgstr "آگوست"
+
+msgid "Cache"
+msgstr "حافظه‌ی پنهان"
+
+msgid "Close"
+msgstr "بستن"
+
+msgid "<b>%d</b> filtered user"
+msgstr "<b>%d</b> کاربر فیلتر شده"
+
+msgid "<b>%d</b> filtered users"
+msgstr "<b>%d</b> کاربر فیلتر شده"
+
+msgid "Add as filter"
+msgstr "افزودن به عنوان فیلتر"
+
+msgid "Additional filters"
+msgstr "فیلترهای اضافی"
+
+msgid "Advanced filters"
+msgstr "فیلترهای پیشرفته"
+
+msgid "Filters"
+msgstr "فیلترها"
+
+msgid "<b>1</b> album found"
+msgstr "<b>1</b> آلبوم پیدا شد"
+
+msgid "%s plugin found"
+msgstr "<b>%s</b> افزونه پیدا شد"
+
+msgid "%s plugins found"
+msgstr "<b>%s</b> افزونه پیدا شد"
+
+msgid "<b>%d+</b> albums found, try to refine the search"
+msgstr "<b>%d+</b> آلبوم پیدا شد، لطفا جستجوی دقیق‌تری انجام دهید"
+
+msgid "<b>%d</b> albums found"
+msgstr "<b>%d</b> آلبوم پیدا شد"
+
+msgid "<b>%d</b> tag found"
+msgstr "<b>%d</b> برچسب پیدا شد"
+
+msgid "<b>%d</b> tags found"
+msgstr "<b>%d</b> برچسب پیدا شد"
+
+msgid "No albums found"
+msgstr "هیچ آلبومی پیدا نشد"
+
+msgid "No picture found with the following name : %s."
+msgstr "هیچ عکسی با این نام پیدا نشد: %s."
+
+msgid "No plugins found"
+msgstr "هیچ افزونه‌ای پیدا نشد"
+
+msgid "No tag found"
+msgstr "هیچ برچسبی پیدا نشد"
+
+msgid "to"
+msgstr "تا"
+
+msgid "right now"
+msgstr "همین الان"
+
+msgid "or"
+msgstr "یا"
+
+msgid "logout"
+msgstr "خروج"
+
+msgid "months ago"
+msgstr "ماه پیش"
+
+msgid "edit"
+msgstr "ویرایش"
+
+msgid "login"
+msgstr "ورود"
+
+msgid "%s pixels, %.2f MB"
+msgstr "%s پیکسل، %.2f مگابایت"
+
+msgid "%d files"
+msgstr "%d فایل"
+
+msgid "<b>%d</b> tag selected"
+msgstr "<b>%d</b> برچسب انتخاب شده"
+
+msgid "All admins"
+msgstr "تمامی مدیران"
+
+msgid "Created"
+msgstr "ساخته شده"
+
+msgid "Created on %s"
+msgstr "ساخته شده در %s"
+
+msgid "Details"
+msgstr "جزییات"
+
+msgid "Display"
+msgstr "نمایش"
+
+msgid "Edit"
+msgstr "ویرایش"
+
+msgid "Edit guest user"
+msgstr "ویرایش کاربر مهمان"
+
+msgid "Email"
+msgstr "ایمیل"
+
+msgid "Feb"
+msgstr "فوریه"
+
+msgid "Jan"
+msgstr "ژانویه"
+
+msgid "Jul"
+msgstr "جولای"
+
+msgid "Jun"
+msgstr "ژوئن"
+
+msgid "Mar"
+msgstr "مارس"
+
+msgid "May"
+msgstr "می"
+
+msgid "Nov"
+msgstr "نوامبر"
+
+msgid "Oct"
+msgstr "اکتبر"
+

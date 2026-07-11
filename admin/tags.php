@@ -10,6 +10,8 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\tabsheet;
+use Piwigo\Core\AccessLevel;
+use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
@@ -21,7 +23,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
 global $template;
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-check_status(ACCESS_ADMINISTRATOR);
+check_status(AccessLevel::Administrator);
 
 // +-----------------------------------------------------------------------+
 // | tabs                                                                  |
@@ -120,14 +122,14 @@ $per_page = 100;
 // tag counters
 $query = '
 SELECT tag_id, COUNT(image_id) AS counter
-  FROM ' . IMAGE_TAG_TABLE . '
+  FROM ' . Tables::imageTag() . '
   GROUP BY tag_id';
 $tag_counters = simple_hash_from_query($query, 'tag_id', 'counter');
 
 // all tags
 $query = '
 SELECT name, id, url_name
-  FROM ' . TAGS_TABLE . '
+  FROM ' . Tables::tags() . '
 ;';
 $result = pwg_query($query);
 $all_tags = [];

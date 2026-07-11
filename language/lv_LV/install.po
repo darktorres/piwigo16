@@ -1,0 +1,146 @@
+# Piwigo translation — lv_LV
+# Source: install.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: lv_LV\n"
+"Plural-Forms: nplurals=3; plural=(n % 10 == 0 || n % 100 >= 11 && n % 100 <= 19 ? 0 : n % 10 == 1 && n % 100 != 11 ? 1 : 2);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Installation"
+msgstr "Instalacija"
+
+msgid "Basic configuration"
+msgstr "Pamatkonfiguracija"
+
+msgid "Default gallery language"
+msgstr "Galerijas valoda pec noklusešanas"
+
+msgid "Database configuration"
+msgstr "Datubazes konfiguracija"
+
+msgid "Admin configuration"
+msgstr "Administratora konfiguracija"
+
+msgid "Start Install"
+msgstr "Sakt instalaciju"
+
+msgid "It will be shown to the visitors. It is necessary for website administration"
+msgstr "Tas tiks radits apmekletajiem. Tas nepieciešams web lapas administrešanai"
+
+msgid "Connection to server succeed, but it was impossible to connect to database"
+msgstr "Savienojums ar serveri sekmigs, bet savienojums ar datu bazi nav iespejams"
+
+msgid "Can't connect to server"
+msgstr "Nevar savienoties ar serveri"
+
+msgid "Host"
+msgstr "Hosts"
+
+msgid "User"
+msgstr "Lietotajs"
+
+msgid "user login given by your host provider"
+msgstr "lietotaja logins, ko pieškir Jusu hosta pakalpojuma sniedzejs"
+
+msgid "user password given by your host provider"
+msgstr " lietotaja parole, ko pieškir Jusu hosta pakalpojuma sniedzejs"
+
+msgid "Database name"
+msgstr "Datu bazes nosaukums"
+
+msgid "also given by your host provider"
+msgstr "ari pieškir Jusu hosta pakalpojuma sniedzejs"
+
+msgid "Database table prefix"
+msgstr "Datu bazes tabulas prefikss"
+
+msgid "database tables names will be prefixed with it (enables you to manage better your tables)"
+msgstr "datu bazes tabulu nosaukumi bus ar šo prefiksu (lauj labak parvaldit Jusu tabulas)"
+
+msgid "enter a login for webmaster"
+msgstr "ievadit webmastera loginu"
+
+msgid "webmaster login can't contain characters ' or \""
+msgstr "webmastera logins nedrikst saturet ' vai \""
+
+msgid "please enter your password again"
+msgstr "ludzu ievadiet Jusu paroli no jauna"
+
+msgid "Keep it confidential, it enables you to access administration panel"
+msgstr "Esiet konfidenciali, tas lauj pieklut administratora panelim"
+
+msgid "Password [confirm]"
+msgstr "Parole [apstiprinat]"
+
+msgid "verification"
+msgstr "parbaude"
+
+msgid "Need help ? Ask your question on <a href=\"%s\">Piwigo message board</a>."
+msgstr "Vajag palidzibu? Uzdodiet savu jautajumu <a href=\"%s\">Piwigo sludinajumos</a>."
+
+msgid "Visitors will be able to contact site administrator with this mail"
+msgstr "Apmekletaji vares izmantot šo e-pastu, lai sazinatos ar lapas administratoru"
+
+msgid "PHP 5 is required"
+msgstr "nepieciešams PHP 5.2 "
+
+msgid "It appears your webhost is currently running PHP %s."
+msgstr "Jusu webhosts patlaban izmanto PHP %s."
+
+msgid "Piwigo may try to switch your configuration to PHP 5 by creating or modifying a .htaccess file."
+msgstr "Piwigo var meginat parslegt Jusu konfiguraciju uz  PHP 5.2 izveidojot vai modificejot  a .htaccess failu."
+
+msgid "Note you can change your configuration by yourself and restart Piwigo after that."
+msgstr "Jus varat izmanit savu konfiguraciju pats un pec tam parstartet Piwigo."
+
+msgid "Try to configure PHP 5"
+msgstr "Meginiet nokonfiguret PHP 5.2"
+
+msgid "Sorry!"
+msgstr "Atvainojiet!"
+
+msgid "Piwigo was not able to configure PHP 5."
+msgstr "Piwigo nevar nokonfiguret PHP 5.2"
+
+msgid "You may referer to your hosting provider's support and see how you could switch to PHP 5 by yourself."
+msgstr "Jums javeršas pie Jusu hostinga pakalpojuma sniedzeja pec palidzibas un pašam jamegina parslegties uz PHP 5.2 atbalstu."
+
+msgid "Hope to see you back soon."
+msgstr "Ceram Jus redzet atkal."
+
+msgid "Congratulations, Piwigo installation is completed"
+msgstr "Apsveicam, Piwigo instalacija ir pabeigta"
+
+msgid "An alternate solution is to copy the text in the box above and paste it into the file \"local/config/database.inc.php\" (Warning : database.inc.php must only contain what is in the textarea, no line return or space character)"
+msgstr " Alternativa ir iekopet tekstu lodzina augšpuse un ielimet to faila \"local/config/database.inc.php\" (Uzmanibu : database.inc.php drikst saturet tikai to kas ir teksta lodzina, ne enter ne tukšumus)"
+
+msgid "Creation of config file local/config/database.inc.php failed."
+msgstr "Konfigurācijas faila local/config/database.inc.php izveide ir nesekmīga."
+
+msgid "Download the config file"
+msgstr "Lejupladet config failu"
+
+msgid "You can download the config file and upload it to local/config directory of your installation."
+msgstr "Jums jalejupielade configuracijas fails un jaielade tas Jusu instalacijas local/config mape."
+
+msgid "Just another Piwigo gallery"
+msgstr "Vēl viena Piwigo galerija"
+
+msgid "Welcome to my photo gallery"
+msgstr "Laipni lūgti manā foto galerijā"
+
+msgid "Welcome to your new installation of Piwigo!"
+msgstr "Laipni lūgti Jūsu Piwigo jaunajā instalācijā!"
+
+msgid "Don't hesitate to consult our forums for any help : %s"
+msgstr "Nevilcinieties izmantot mūsu forumu palīdzību: %s"
+
+msgid "localhost or other, supplied by your host provider"
+msgstr "vietējais pakalpojuma sniedzējs vai cits, tas ko atbalsta vietējais pakalpojuma sniedzējs"
+
+msgid "PHP version %s required (you are running on PHP %s)"
+msgstr "Vajadzīga PHP %s versija (jūs izmantojat PHP %s)"
+

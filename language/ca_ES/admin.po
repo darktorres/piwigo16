@@ -1,0 +1,4245 @@
+# Piwigo translation — ca_ES
+# Source: admin.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ca_ES\n"
+"Plural-Forms: nplurals=3; plural=(n == 1 ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "%d association"
+msgstr "%d associació"
+
+msgid "%d associations"
+msgstr "%d associacions"
+
+msgid "%d album including"
+msgstr "Inclou %d àlbums "
+
+msgid "%d albums including"
+msgstr "Inclou %d àlbums"
+
+msgid "%d physical"
+msgstr "%d física"
+
+msgid "%d physicals"
+msgstr "%d físics"
+
+msgid " and %d virtual"
+msgstr " i %d virtual"
+
+msgid " and %d virtuals"
+msgstr " i %d virtuals"
+
+msgid "%d album moved"
+msgid_plural "%d albums moved"
+msgstr[0] "S'ha mogut %d àlbum"
+msgstr[1] "S'han mogut %d àlbums"
+
+msgid "%d member"
+msgid_plural "%d members"
+msgstr[0] "%d membre"
+msgstr[1] "%d membres"
+
+msgid "%d tag"
+msgstr "%d etiqueta"
+
+msgid "%d tags"
+msgstr "%d etiquetes"
+
+msgid "%d user comment rejected"
+msgstr "S'ha rebutjat %d comentari d'usuari"
+
+msgid "%d user comments rejected"
+msgstr "S'han rebutjat %d comentaris d'usuari"
+
+msgid "%d user comment validated"
+msgstr "S'ha validat %d comentari d'usuari"
+
+msgid "%d user comments validated"
+msgstr "S'han validat %d comentaris d'usuari"
+
+msgid "%d user deleted"
+msgid_plural "%d users deleted"
+msgstr[0] "S'ha eliminat %d usuari"
+msgstr[1] "%d usuaris eliminats"
+
+msgid "%d user"
+msgid_plural "%d users"
+msgstr[0] "%d usuari"
+msgstr[1] "%d usuaris"
+
+msgid "%d waiting for validation"
+msgstr "%d pendents de validar"
+
+msgid "Actions"
+msgstr "Accions"
+
+msgid "Activate"
+msgstr "Activa"
+
+msgid "Add/delete a permalink"
+msgstr "Afegeix/Elimina un enllaç permanent"
+
+msgid "Add a tag"
+msgstr "Afegeix una etiqueta"
+
+msgid "Add a user"
+msgstr "Afegeix un usuari"
+
+msgid "Add"
+msgstr "Afegeix"
+
+msgid "Allow user registration"
+msgstr "Permet el registre d'usuaris"
+
+msgid "Apply to sub-albums"
+msgstr "Aplica als sub-àlbums"
+
+msgid "Associated"
+msgstr "S'ha associat"
+
+msgid "Caddie management"
+msgstr "Gestiona el carret"
+
+msgid "Caddie"
+msgstr "Carret"
+
+msgid "Album manual order was saved"
+msgstr "S'ha desat l'orde manual de l'àlbum."
+
+msgid "Check for upgrade failed for unknown reasons."
+msgstr "Per causes desconegudes no s'ha pogut comprovar si existeix una nova versió."
+
+msgid "Check for upgrade"
+msgstr "Comprova si hi ha una nova versió disponible"
+
+msgid "Current name"
+msgstr "Nom actual"
+
+msgid "Database"
+msgstr "Base de dades"
+
+msgid "Deactivate"
+msgstr "Desactiva"
+
+msgid "Deletions"
+msgstr "Eliminacions"
+
+msgid "Deny selected users"
+msgstr "Denega els ususaris seleccionats"
+
+msgid "Description"
+msgstr "Descripció"
+
+msgid "Display options"
+msgstr "Visualitza les opcions"
+
+msgid "Dissociated"
+msgstr "Dissociats"
+
+msgid "Does not represent"
+msgstr "No és miniatura per"
+
+msgid "Edit selected tags"
+msgstr "Edita les etiquetes seleccionades"
+
+msgid "Edit tags"
+msgstr "Edita etiquetes"
+
+msgid "Email admins when a new user registers"
+msgstr "Envia un correu electrònic als administradors quan s'inscrigui un nou usuari"
+
+msgid "Email admins when a valid comment is entered"
+msgstr "Envia un missatge de correu electrònic als usuaris administradors quan s'afegeixi un comentari vàlid"
+
+msgid "Email admins when a comment requires validation"
+msgstr "Envia un correu electrònic als administradors quan un comentari requereixi validació"
+
+msgid "Environment"
+msgstr "Entorn"
+
+msgid "Form"
+msgstr "Formulari"
+
+msgid "Gallery title"
+msgstr "Títol de la galeria"
+
+msgid "Grant selected users"
+msgstr "Atorgar els usuaris seleccionats"
+
+msgid "Group name"
+msgstr "Nom del grup"
+
+msgid "Groups"
+msgstr "Grups"
+
+msgid "Guests"
+msgstr "Visitants"
+
+msgid "History"
+msgstr "Historial"
+
+msgid "Informations"
+msgstr "Informació"
+
+msgid "Install"
+msgstr "Instal·la"
+
+msgid "Link all album photos to a new album"
+msgstr "Enllaça tots els àlbums de fotos al nou àlbum"
+
+msgid "Link all album photos to some existing albums"
+msgstr "Enllaça tots els àlbums de fotos a alguns àlbums existents"
+
+msgid "Linked albums"
+msgstr "Àlbums enllaçats"
+
+msgid "Lock gallery"
+msgstr "Bloqueja la galeria"
+
+msgid "Maintenance"
+msgstr "Manteniment"
+
+msgid "Edit album permissions"
+msgstr "Edita els permisos de l'àlbum"
+
+msgid "Manage permissions for user \"%s\""
+msgstr "Gestionar els permisos de l'usuari \"%s\""
+
+msgid "Manage tags"
+msgstr "Gestiona les etiquetes"
+
+msgid "Members"
+msgstr "Membres"
+
+msgid "Move albums"
+msgstr "Mou àlbums"
+
+msgid "Move"
+msgstr "Mou"
+
+msgid "Name"
+msgstr "Nom"
+
+msgid "New name"
+msgstr "Nou nom"
+
+msgid "New parent album"
+msgstr "Nou àlbum pare"
+
+msgid "New tag"
+msgstr "Nova etiqueta"
+
+msgid "Number of comments per page"
+msgstr "Nombre de comentaris per pàgina"
+
+msgid "Number of rates"
+msgstr "Nombre de valoracions "
+
+msgid "Only private albums are listed"
+msgstr "Només es llisten els àlbums privats"
+
+msgid "Operating system"
+msgstr "Sistema operatiu"
+
+msgid "Options"
+msgstr "Opcions"
+
+msgid "Other private albums"
+msgstr "Altres àlbums privats"
+
+msgid "Page banner"
+msgstr "Banner de la pàgina"
+
+msgid "Parent album"
+msgstr "Àlbum pare"
+
+msgid "Path"
+msgstr "Camí"
+
+msgid "Permalink"
+msgstr "Enllaç permanent"
+
+msgid "The permalink name must be composed of a-z, A-Z, 0-9, \"-\", \"_\" or \"/\". It must not be numeric or start with number followed by \"-\""
+msgstr "El nom de l'enllaç permanent s'ha de composar per els caràcters a-z, A-Z, 0-9, \"-\", \"_\" o \"/\". No ha de ser numèric o començar amb un número seguit per \"-\""
+
+msgid "Permalink %s is already used by album %s"
+msgstr "L'enllaç permanent %s ja s'utilitza per l'àlbum %s"
+
+msgid "Permalink history"
+msgstr "Historial d'enllaços permanents"
+
+msgid "Permalinks"
+msgstr "Enllaços permanents"
+
+msgid "Permission denied"
+msgstr "Permís denegat"
+
+msgid "Permission granted"
+msgstr "Permís atorgat"
+
+msgid "Photo informations updated"
+msgstr "Informació de la foto actualitzada"
+
+msgid "Plugins"
+msgstr "Connectors"
+
+msgid "Position"
+msgstr "Posició"
+
+msgid "Preferences"
+msgstr "Preferències"
+
+msgid "Properties"
+msgstr "Propietats"
+
+msgid "Random photo"
+msgstr "Foto aleatòria"
+
+msgid "Rate date"
+msgstr "Data de la valoració"
+
+msgid "Rating by guests"
+msgstr "Valoració dels visitants"
+
+msgid "Rating"
+msgstr "Valoracions"
+
+msgid "Reject"
+msgstr "Rebutja"
+
+msgid "Representant"
+msgstr "Miniatura de l'àlbum"
+
+msgid "Representation of albums"
+msgstr "Miniatura de l'àlbum"
+
+msgid "Representative"
+msgstr "Miniatura de l'àlbum"
+
+msgid "Represents"
+msgstr "Miniatura per a"
+
+msgid "Save order"
+msgstr "Desa l'ordre"
+
+msgid "Save to permalink history"
+msgstr "Desa a l'historial d'enllaços permanents"
+
+msgid "Select at least one album"
+msgstr "Seleccioneu almenys un àlbum"
+
+msgid "Select at least one photo"
+msgstr "Seleccioneu almenys una foto"
+
+msgid "Select at least one user"
+msgstr "Seleccioneu almenys un usuari"
+
+msgid "Show info"
+msgstr "Visualitza la informació"
+
+msgid "Site manager"
+msgstr "Gestió del lloc"
+
+msgid "Status"
+msgstr "Estat"
+
+msgid "Statistics"
+msgstr "Estadístiques"
+
+msgid "Storage album"
+msgstr "Àlbum d'emmagatzemament"
+
+msgid "Sum of rates"
+msgstr "Suma de valoracions"
+
+msgid "Tag \"%s\" already exists"
+msgstr "L'etiqueta \"%s\" ja existeix"
+
+msgid "Tag \"%s\" was added"
+msgstr "S'ha afegit l'etiqueta \"%s\"."
+
+msgid "Tag selection"
+msgstr "Selecció d'etiquetes"
+
+msgid "The %d following tags were deleted"
+msgstr "S'han eliminat les següents %d etiquetes "
+
+msgid "Unable to check for upgrade."
+msgstr "No ha estat possible comprovar si existeixen actualitzacions."
+
+msgid "Uninstall"
+msgstr "Desinstal·la"
+
+msgid "Use the default photo sort order"
+msgstr "Aplicar l'ordre predeterminat"
+
+msgid "User comments validation"
+msgstr "Validació dels comentaris d'usuari"
+
+msgid "Users"
+msgstr "Usuaris"
+
+msgid "Validate"
+msgstr "Valida"
+
+msgid "Validation"
+msgstr "Validació"
+
+msgid "Version"
+msgstr "Versió"
+
+msgid "Virtual albums to move"
+msgstr "Àlbums virtuals per a moure"
+
+msgid "Virtual album name"
+msgstr "Nom de l'àlbum virtual"
+
+msgid "Webmaster cannot be deleted"
+msgstr "L'usuari Webmaster no es pot eliminar"
+
+msgid "You are running on development sources, no check possible."
+msgstr "Esteu treballant sobre un codi en desenvolupament. No hi ha comprovacions possible.\n"
+
+msgid "You cannot delete your account"
+msgstr "No podeu eliminar el vostre compte."
+
+msgid "You cannot move an album in its own sub album"
+msgstr "No podeu moure un àlbum dins del seu propi sub-àlbum"
+
+msgid "You need to confirm deletion"
+msgstr "Cal confirmar l'eliminació"
+
+msgid "Associate to album"
+msgstr "Assòcia a l'àlbum"
+
+msgid "Authorized"
+msgstr "S'ha autoritzat"
+
+msgid "Add a virtual album"
+msgstr "Afegeix un àlbum virtual"
+
+msgid "Authorize users to add comments on selected albums"
+msgstr "Autoritza usuaris a afegir comentaris en els àlbums seleccionats"
+
+msgid "The name of an album must not be empty"
+msgstr "El nom d'un àlbum no pot estar buit"
+
+msgid "Lock albums"
+msgstr "Bloqueja d'àlbums"
+
+msgid "Private"
+msgstr "Privat"
+
+msgid "Public"
+msgstr "Públic"
+
+msgid "Find a new representant by random"
+msgstr "Estableix de forma aleatòria una nova miniatura de l'àlbum"
+
+msgid "Public / Private"
+msgstr "Nivell de visibilitat"
+
+msgid "Manage authorizations for selected albums"
+msgstr "Gestiona el nivell de visibilitat dels àlbums"
+
+msgid "Virtual album added"
+msgstr "S'ha afegit l'àlbum virtual"
+
+msgid "Virtual album deleted"
+msgstr "S'ha eliminat l'àlbum virtual"
+
+msgid "Access type"
+msgstr "Tipus d'accès"
+
+msgid "Information data registered in database"
+msgstr "S'ha registrat la informació de les dades a la base de dades"
+
+msgid "Default display"
+msgstr "Visualització predeterminada"
+
+msgid "The gallery URL is not valid."
+msgstr "La URL de la galeria no es vàlida."
+
+msgid "The number of comments a page must be between 5 and 50 included."
+msgstr "El nombre de comentaris d'una pàgina ha d'estar entre 5 i 50 inclosos."
+
+msgid "Configuration"
+msgstr "Configuració"
+
+msgid "confirm"
+msgstr "confirma"
+
+msgid "Date"
+msgstr "Data"
+
+msgid "delete album"
+msgstr "Elimina l'àlbum"
+
+msgid "Dissociate from album"
+msgstr "Dissocia de l'àlbum"
+
+msgid "Album updated successfully"
+msgstr "Àlbum s'ha actualitzat correctament"
+
+msgid "photos per page"
+msgstr "fotos per pàgina"
+
+msgid "High definition enabled"
+msgstr "Alta definició habilitada"
+
+msgid "File"
+msgstr "Arxiu"
+
+msgid "Forbidden"
+msgstr "Prohibit"
+
+msgid "global mode"
+msgstr "mode global"
+
+msgid "group \"%s\" updated"
+msgstr "S'ha actualitzat el grup \"%s\""
+
+msgid "The name of a group must not contain \" or ' or be empty."
+msgstr "El nom d'un grup no pot contenir \" o ' o estar buit."
+
+msgid "This name is already used by another group."
+msgstr "Aquest nom ja està en us per un altre grup."
+
+msgid "High definition"
+msgstr "Alta definició"
+
+msgid "jump to album"
+msgstr "Salta a l'àlbum"
+
+msgid "jump to photo"
+msgstr "Salta a la foto"
+
+msgid "leave"
+msgstr "Deixa"
+
+msgid "Lock"
+msgstr "Bloquejos"
+
+msgid "Locked"
+msgstr "Bloquejada"
+
+msgid "manage album photos"
+msgstr "gestiona les fotos de l'àlbum"
+
+msgid "manage sub-albums"
+msgstr "gestiona els sub-àlbums"
+
+msgid "Manage"
+msgstr "Gestiona"
+
+msgid "Execution time is out, treatment must be continue [Estimated time: %d second]."
+msgid_plural "Execution time is out, treatment must be continue [Estimated time: %d seconds]."
+msgstr[0] "El temps d'execució s'ha acabat. El tractament ha de continuar [Temps estimat: %d segons]."
+msgstr[1] "Sobrepasado el tiempo de ejecución, el procesamiento debe continuar [Tiempo estimado: %d secundas]."
+
+msgid "Prepared time for list of users to send mail is limited. Others users are not listed."
+msgstr "El temps requerit per a processar la llista d'usuaris a enviar-los correus és limitat. No s'han pogut processar tots els usuaris."
+
+msgid "Time to send mail is limited. Others mails are skipped."
+msgstr "El temps d'enviament del correu és limitat. No tots els missatges han pogut ser enviats. S'han omès alguns missatges de correu electrònic."
+
+msgid "To send ?"
+msgstr "Enviar-ho?"
+
+msgid "User"
+msgstr "Usuari"
+
+msgid "Complementary mail content"
+msgstr "Contingut de correu complementari"
+
+msgid "See you soon,"
+msgstr "Fins aviat,"
+
+msgid "Go to"
+msgstr "Ves a"
+
+msgid "Hello"
+msgstr "Hola"
+
+msgid "New photos were added"
+msgstr "S'han afegit fotos noves"
+
+msgid "on"
+msgstr "sobre"
+
+msgid "between"
+msgstr "entre"
+
+msgid "and"
+msgstr "i"
+
+msgid "The webmaster has subscribed you to receiving notifications by mail."
+msgstr "L'administrador del web t'ha subscrit per rebre notificacions mitjançant el correu electrònic."
+
+msgid "You have subscribed to receiving notifications by mail."
+msgstr "Esteu subscrits per a rebre notificacions mitjançant el correu electrònic."
+
+msgid "To subscribe"
+msgstr "Subscriure's"
+
+msgid "If you encounter problems or have any question, please send a message to"
+msgstr "Si trobeu problemes o teniu qüalsevol qüestió, si us plau envieu un missatge a"
+
+msgid "[NBM] Problems or questions"
+msgstr "[NBM] Problemes o preguntes"
+
+msgid "The webmaster has unsubscribed you from receiving notifications by mail."
+msgstr "L'administrador de la web us ha donat de baixa de rebre notificacions per correu."
+
+msgid "You have unsubscribed from receiving notifications by mail."
+msgstr "Us heu donat de baixa de rebre notificacions per correu."
+
+msgid ", click on"
+msgstr ", cliqueu a sobre"
+
+msgid "To unsubscribe"
+msgstr "Dona de baixa"
+
+msgid "With blank value, gallery title will be used"
+msgstr "Si es deixa en blanc, s'utilitzarà el títol de la galeria"
+
+msgid "Notification"
+msgstr "Notificacions"
+
+msgid "Error when sending email to %s [%s]."
+msgstr "Error en enviar un correu electrònic a %s [%s]."
+
+msgid "Mail sent to %s [%s]."
+msgstr "Correu electrònic enviat a %s [%s]."
+
+msgid "%d mail was sent."
+msgid_plural "%d mails were sent."
+msgstr[0] "S'ha pogut enviar %d missatge de correu electrònic."
+msgstr[1] "s'han enviat %d missatges de correu electrònic."
+
+msgid "%d mail was not sent."
+msgid_plural "%d mails were not sent."
+msgstr[0] "No s'ha pogut enviar %d missatge de correu electrònic."
+msgstr[1] "No s'han pogut enviar %d missatges de correu electrònic."
+
+msgid "No mail to send."
+msgstr "No hi ha missatges de correu electrònic per enviar."
+
+msgid "There is no available subscribers to mail."
+msgstr "No hi ha usuaris subscrits per enviar notificacions mitjançant el correu electrònic."
+
+msgid "Subscribers could be listed (available) only if there is new elements to notify."
+msgstr "Els usuaris inscrits només es llistaran (si la opció està habilitada) sempre que hi hagi nous elements a notificar."
+
+msgid "Anyway only webmasters can see this tab and never administrators."
+msgstr "De totes formes només els webmasters poden veure aquesta pestanya, no els administradors."
+
+msgid "No user to send notifications by mail."
+msgstr "No hi ha usuaris a qui enviar notificacions per correu electrònic"
+
+msgid "New photos added"
+msgstr "Fotos noves afegides"
+
+msgid "Subscribe to notification by mail"
+msgstr "Subscriviu-vos si voleu rebre notificacions mitjançant el correu electrònic"
+
+msgid "Unsubscribe from notification by mail"
+msgstr "Donar-se de baixa de les notificacions per correu"
+
+msgid "Parameter"
+msgstr "Configuració"
+
+msgid "Continue processing treatment"
+msgstr "Continua el tractament en curs"
+
+msgid "Add detailed content"
+msgstr "Afegeix algun contingut detallat"
+
+msgid "Send mail as"
+msgstr "Envia els missatges de correu electrònic com a (nom de la persona que ho envia)"
+
+msgid "Send mail to users"
+msgstr "Envia un correu electrònic als usuaris"
+
+msgid "Send"
+msgstr "Envia"
+
+msgid "Subscribed"
+msgstr "Subscrit"
+
+msgid "Subscribe"
+msgstr "Subscriviu-vos"
+
+msgid "Parameters"
+msgstr "Paràmetres"
+
+msgid "Select recipients"
+msgstr "Seleccioneu els destinataris"
+
+msgid "Subscribe/unsubscribe users"
+msgstr "Subscriu/Dona de baixa usuaris"
+
+msgid "Unsubscribed"
+msgstr "Dóna de baixa"
+
+msgid "%d parameter was updated."
+msgid_plural "%d parameters were updated."
+msgstr[0] "S'ha actualitzat %d paràmetre."
+msgstr[1] "S'han actualitzat %d paràmetres."
+
+msgid "%d user was not updated."
+msgid_plural "%d users were not updated."
+msgstr[0] "%d usuari no actualitzat."
+msgstr[1] "%d usuaris no actualitzats."
+
+msgid "User %s [%s] was removed from the subscription list."
+msgstr "L'usuari %s [%s] ha estat eliminat de la llista de subscripció."
+
+msgid "User %s [%s] was added to the subscription list."
+msgstr "L'usuari %s [%s] ha estat afegit a la llista de subscripció."
+
+msgid "%d user was updated."
+msgid_plural "%d users were updated."
+msgstr[0] "%d usuari actualitzat."
+msgstr[1] "%d usuaris actualitzats."
+
+msgid "User %s [%s] was not removed from the subscription list."
+msgstr "L'usuari %s [%s] no ha estat eliminat de la llista de subscripció."
+
+msgid "User %s [%s] was not added to the subscription list."
+msgstr "L'usuari %s [%s] no ha estat afegit a la llista de subscripció"
+
+msgid "User %s [%s] added."
+msgstr "S'ha afegit l'usuari %s [%s]."
+
+msgid "Warning: subscribing or unsubscribing will send mails to users"
+msgstr "Avís: Tant en subscripcions com en baixes s'enviarà un coreu electrònic als usuaris."
+
+msgid "Send mail on HTML format"
+msgstr "Envia els missatges de correu electrònic en format HTML"
+
+msgid "Include display of recent photos grouped by dates"
+msgstr "Inclou una visualització de les fotos recents agrupades per dates"
+
+msgid "Available only with HTML format"
+msgstr "Només disponible en format HTML"
+
+msgid "no write access"
+msgstr "accés d'escriptura no permès"
+
+msgid "Permissions"
+msgstr "Permisos"
+
+msgid "private"
+msgstr "privat"
+
+msgid "public"
+msgstr "públic"
+
+msgid "Purge never used notification feeds"
+msgstr "Elimina els feeds de notificació que no s'han utilitzat mai"
+
+msgid "Purge sessions"
+msgstr "Elimina les sessions"
+
+msgid "randomly represented"
+msgstr "miniatura de l'àlbum aleatòria"
+
+msgid "registration date"
+msgstr "data de registre"
+
+msgid "clean"
+msgstr "neteja"
+
+msgid "Create this site"
+msgstr "Crea aquest lloc"
+
+msgid "test"
+msgstr "test"
+
+msgid "test this remote site"
+msgstr "testeja aquest lloc remot"
+
+msgid "remove tags"
+msgstr "elimina les etiquetes"
+
+msgid "Repair and optimize database"
+msgstr "Repara i optimitza la base de dades"
+
+msgid "selection"
+msgstr "selecció"
+
+msgid "set to"
+msgstr "estableix a"
+
+msgid "singly represented"
+msgstr "miniatura de l'àlbum fixa"
+
+msgid "This site already exists"
+msgstr "Aquest lloc ja existeix"
+
+msgid "created"
+msgstr "creat"
+
+msgid "delete"
+msgstr "elimina"
+
+msgid "delete this site and all its attached elements"
+msgstr "Elimina aquest lloc i tota la informació relacionada"
+
+msgid "deleted"
+msgstr "eliminades"
+
+msgid "an error happened"
+msgstr "hi ha hagut algun error"
+
+msgid "Local"
+msgstr "Local"
+
+msgid "Remote"
+msgstr "Remot"
+
+msgid "update the database from files"
+msgstr "Actualitza la base de dades amb els arxius."
+
+msgid "status"
+msgstr "estat"
+
+msgid "Directory"
+msgstr "Directori"
+
+msgid "sub-albums"
+msgstr "sub-àlbums"
+
+msgid "target"
+msgstr "aplicar a"
+
+msgid "Thumbnail"
+msgstr "Miniatura"
+
+msgid "Title"
+msgstr "Títol"
+
+msgid "Album list management"
+msgstr "Gestió de la llista d'àlbums"
+
+msgid "Piwigo configuration"
+msgstr "Configuració del Piwigo"
+
+msgid "Edit album"
+msgstr "Edita l'àlbum"
+
+msgid "Group management"
+msgstr "Gestió de grups"
+
+msgid "User list"
+msgstr "Llista d'usuaris"
+
+msgid "Database synchronization with files"
+msgstr "Sincronització d'arxius amb la la base de dades"
+
+msgid "all"
+msgstr "Totes"
+
+msgid "height must be a number superior to"
+msgstr "l'alçada ha de ser un número superior a"
+
+msgid "width must be a number superior to"
+msgstr "l'amplada ha de ser un número superior a"
+
+msgid "for the file format"
+msgstr "per al format de fitxer"
+
+msgid "Photo unreachable or no support"
+msgstr "Foto inaccessible o format no suportat"
+
+msgid "GD version"
+msgstr "versió de GD"
+
+msgid "General statistics"
+msgstr "Estadístiques generals"
+
+msgid "average time"
+msgstr "Temps mitjà"
+
+msgid "total time"
+msgstr "temps total"
+
+msgid "for this file format"
+msgstr "per aquest format de fitxer"
+
+msgid "unit mode"
+msgstr "mode unitari"
+
+msgid "Unlocked"
+msgstr "Desbloquejada"
+
+msgid "unset"
+msgstr "no configurar"
+
+msgid "Update albums informations"
+msgstr "Actualitza la informació dels àlbums"
+
+msgid "Update photos information"
+msgstr "Actualitza la informació de les fotos"
+
+msgid "Synchronize"
+msgstr "Sincronitza"
+
+msgid "reduce to single existing albums"
+msgstr "redueix solament als àlbums existents"
+
+msgid "Choose an option"
+msgstr "Escolliu una opció"
+
+msgid "display maximum informations (added albums and photos, deleted albums and photos)"
+msgstr "Visualitza la màxima informació (àlbums i fotos afegides i eliminades)"
+
+msgid "Error list"
+msgstr "Llista d'errors"
+
+msgid "Errors caption"
+msgstr "Llegenda dels errors"
+
+msgid "Detailed informations"
+msgstr "Informacions detallades"
+
+msgid "File/directory read error"
+msgstr "Error de lectura de l'arxiu/directori"
+
+msgid "The file or directory cannot be accessed (either it does not exist or the access is denied)"
+msgstr "No es pot accedir a l'arxiu o al directori (potser no existeix o l'accés està denegat)"
+
+msgid "albums deleted in the database"
+msgstr "àlbums eliminats de la base de dades"
+
+msgid "photos deleted from the database"
+msgstr "fotos eliminades de la base de dades"
+
+msgid "photos candidates for metadata synchronization"
+msgstr "fotos candidates per la sincronització de metadades"
+
+msgid "photos informations synchronized with files metadata"
+msgstr "informació de les fotos sincronitzades amb els arxius de metadades"
+
+msgid "errors during synchronization"
+msgstr "errors durant la sincronització"
+
+msgid "albums added in the database"
+msgstr "àlbums afegits a la base de dades"
+
+msgid "photos added in the database"
+msgstr "fotos afegides a la base de dades"
+
+msgid "photos updated in the database"
+msgstr "fotos actualitzades a la base de dades"
+
+msgid "Search for new images in the directories"
+msgstr "Cerca noves fotos en els directoris"
+
+msgid "added"
+msgstr "afegit"
+
+msgid "Metadata synchronization results"
+msgstr "Resultats de la sincronització de les metadades"
+
+msgid "only perform a simulation (no change in database will be made)"
+msgstr "realitzar només una simulació (no es farà cap canvi a la base de dades)"
+
+msgid "Simulation"
+msgstr "Simulació"
+
+msgid "directories + files"
+msgstr "Directoris i arxius"
+
+msgid "only directories"
+msgstr "només directoris"
+
+msgid "synchronize files structure with database"
+msgstr "Sincronitza l'estructura d'arxius amb la base de dades"
+
+msgid "synchronize files metadata with database photos informations"
+msgstr "sincronitza les fotos de la base de dades amb els arxius de metadades"
+
+msgid "even already synchronized photos"
+msgstr "també les fotos ja sincronitzades"
+
+msgid "Used metadata"
+msgstr "Metadades utilitzades"
+
+msgid "The name of directories and files must be composed of letters, numbers, \"-\", \"_\" or \".\""
+msgstr "El nom dels directoris i fitxers ha de estar composat per lletres, números, \"-\", \"_\" o \".\""
+
+msgid "wrong filename"
+msgstr "nom de fitxer erroni"
+
+msgid "Upload"
+msgstr "Penja"
+
+msgid "user \"%s\" added"
+msgstr "s'ha afegit l'usuari \"%s\""
+
+msgid "User status"
+msgstr "Estat de l'usuari"
+
+msgid "user_status_admin"
+msgstr "Administrador"
+
+msgid "user_status_generic"
+msgstr "Genèric"
+
+msgid "user_status_guest"
+msgstr "Visitant"
+
+msgid "user_status_webmaster"
+msgstr "Webmaster"
+
+msgid "Virtual album"
+msgstr "Àlbum virtual"
+
+msgid "Waiting"
+msgstr "Pendent"
+
+msgid "default"
+msgstr "Per defecte"
+
+msgid "Toggle 'default group' property"
+msgstr "Revertir la propietat 'grup per defecte'"
+
+msgid "Advanced features"
+msgstr "Funcions avançades"
+
+msgid "Overall"
+msgstr "Informació general"
+
+msgid "Year"
+msgstr "Any"
+
+msgid "Month"
+msgstr "Mes"
+
+msgid "Day"
+msgstr "Dia"
+
+msgid "Pages seen"
+msgstr "Pàgines vistes"
+
+msgid "Time"
+msgstr "Hora"
+
+msgid "IP"
+msgstr "IP"
+
+msgid "Element"
+msgstr "Element"
+
+msgid "Section"
+msgstr "Secció"
+
+msgid "An information email was sent to group \"%s\""
+msgstr "S'ha enviat un missatge de correu electrònic informatiu al grup \"%s\" "
+
+msgid "Send an information email to group members"
+msgstr "Envia una notificació mitjançant el correu electrònic als membres del grup"
+
+msgid "Group"
+msgstr "Grup"
+
+msgid "[%s] Visit album %s"
+msgstr "[%s] Visiteu l'àlbum %s"
+
+msgid "Hello,"
+msgstr "Hola,"
+
+msgid "See you soon."
+msgstr "Fins aviat."
+
+msgid "Discover album:"
+msgstr "Descobrir l'àlbum:"
+
+msgid "Mail content"
+msgstr "Contingut del correu"
+
+msgid "none"
+msgstr "cap"
+
+msgid "high"
+msgstr "alt"
+
+msgid "other"
+msgstr "altres"
+
+msgid "Element type"
+msgstr "Tipus d'element"
+
+msgid "Image id"
+msgstr "Identificador de la imatge"
+
+msgid "Summary"
+msgstr "Resum"
+
+msgid "%d line filtered"
+msgid_plural "%d lines filtered"
+msgstr[0] "%d línia filtrada"
+msgstr[1] "%d línies filtrades"
+
+msgid "%d guest"
+msgid_plural "%d guests"
+msgstr[0] "%d visitant"
+msgstr[1] "%d visitants"
+
+msgid "Hour"
+msgstr "Hora"
+
+msgid "guest"
+msgstr "visitant"
+
+msgid "default values"
+msgstr "valors per defecte"
+
+msgid "Guest cannot be deleted"
+msgstr "L'usuari visitant no es pot eliminar"
+
+msgid "Default user cannot be deleted"
+msgstr "L'usuari predeterminat no es pot eliminar"
+
+msgid "Purge history detail"
+msgstr "Elimina l'historial dels detalls"
+
+msgid "Purge history summary"
+msgstr "Elimina l'historial del resum"
+
+msgid "Check integrity"
+msgstr "Comprova la integritat"
+
+msgid "Anomaly"
+msgstr "Anomalia"
+
+msgid "Correction"
+msgstr "Correcció"
+
+msgid "Automatic correction"
+msgstr "Correció automàtica"
+
+msgid "Impossible automatic correction"
+msgstr "No es possible aplicar la correcció automàtica"
+
+msgid "Correction applied with success"
+msgstr "Correcció aplicada amb èxit"
+
+msgid "Correction applied with error"
+msgstr "Correcció aplicada amb errors"
+
+msgid "%d anomaly has been detected."
+msgid_plural "%d anomalies have been detected."
+msgstr[0] "S'ha detectat %d anomalia."
+msgstr[1] "S'han detectat %d anomalies."
+
+msgid "%d anomaly has been corrected."
+msgid_plural "%d anomalies have been detected corrected."
+msgstr[0] "S'ha corregit %d anomalia."
+msgstr[1] "S'han detectat i corregit %d anomalies."
+
+msgid "%d anomaly has not been corrected."
+msgid_plural "%d anomalies have not been corrected."
+msgstr[0] "%d anomalia no s'ha pogut corregit."
+msgstr[1] "No s'han pogut corregit %d anomalies."
+
+msgid "Go to %s or %s for more informations"
+msgstr "Aneu a %s o %s per a més informació"
+
+msgid "the forum"
+msgstr "el fòrum"
+
+msgid "the wiki"
+msgstr "la wiki"
+
+msgid "%s value is not correct file because exif are not supported"
+msgstr "%s valor de l'arxiu incorrecte perquè Exif no és suportat"
+
+msgid "%s must be to set to false in your local/config/config.inc.php file"
+msgstr "%s s'ha d'establir a fals en el fitxer local/config/config.inc.php"
+
+msgid "Main \"guest\" user does not exist"
+msgstr "No existeix l'usuari principal \"guest\" "
+
+msgid "Main \"guest\" user status is incorrect"
+msgstr "L'estat de l'usuari principal \"guest\" és incorrecte"
+
+msgid "Default user does not exist"
+msgstr "L'usuari predeterminat no existeix"
+
+msgid "Main \"webmaster\" user does not exist"
+msgstr "El principal usuari \"webmaster\" no existeix"
+
+msgid "Main \"webmaster\" user status is incorrect"
+msgstr "L'estat de l'usuari principal \"webmaster\" és incorrecte"
+
+msgid "User \"%s\" created with \"%s\" like password"
+msgstr "S'ha creat l'usuari \"%s\" amb contrasenya \"%s\""
+
+msgid "Status of user \"%s\" updated"
+msgstr "S'ha actualitzat l'estat de l'usuari \"%s\""
+
+msgid "add new photos to caddie"
+msgstr "Afegeix noves fotos al carret"
+
+msgid "No display"
+msgstr "Sense visualització"
+
+msgid "Classic display"
+msgstr "Visualització clàssica"
+
+msgid "Hoverbox display"
+msgstr "Visualització Hoverbox"
+
+msgid "Minimum privacy level"
+msgstr "Nivell mínim de privacitat"
+
+msgid "Privacy level"
+msgstr "Nivell de privacitat"
+
+msgid "Level 0"
+msgstr "---"
+
+msgid "Level 1"
+msgstr "Contactes"
+
+msgid "Level 2"
+msgstr "Amics"
+
+msgid "Level 4"
+msgstr "Família"
+
+msgid "Level 8"
+msgstr "Administradors"
+
+msgid "Reinitialize check integrity"
+msgstr "Reinicia la comprovació de la integritat"
+
+msgid "Check all"
+msgstr "Marcar-ho tot"
+
+msgid "Uncheck all"
+msgstr "Desmarca-ho tot"
+
+msgid "Check automatic corrections"
+msgstr "Comprova les correccions automàtiques"
+
+msgid "Apply selected corrections"
+msgstr "Aplica les correccions seleccionades"
+
+msgid "Ignore selected anomalies"
+msgstr "Ignora les anomalies seleccionades"
+
+msgid "Refresh"
+msgstr "Actualitza"
+
+msgid "The anomaly will be ignored until next application version"
+msgstr "L'anomalia serà ignorada fins a la següent versió de l'aplicació"
+
+msgid "Correction the anomaly will cancel the fact that it's ignored"
+msgstr "L'anomalia no pot ser ignorada per a la seva correcció"
+
+msgid "%d anomaly has been ignored."
+msgid_plural "%d anomalies have been ignored."
+msgstr[0] "S'ha ignorat  %d anomalia."
+msgstr[1] "S'han ignorat %d anomalies."
+
+msgid "Plugins which need upgrade"
+msgstr "Connectors que necessiten actualitzar-se"
+
+msgid "Plugin list"
+msgstr "Llista de connectors"
+
+msgid "Check for updates"
+msgstr "Comprova si hi ha actualitzacions"
+
+msgid "Other plugins"
+msgstr "Altres connectors disponibles"
+
+msgid "Last revisions"
+msgstr "Últimes modificacions"
+
+msgid "Are you sure you want to delete this plugin?"
+msgstr "Esteu segurs que vol eliminar aquest connector?"
+
+msgid "Are you sure you want to install this plugin?"
+msgstr "Esteu segurs que voleu instal·lar aquest connector?"
+
+msgid "Are you sure to install this upgrade? You must verify if this version does not need uninstallation."
+msgstr "Està segur que vol instal·lar aquesta actualització? És important verificar abans d'actualitzar si aquesta versió no necessita una desinstal·lació prèvia."
+
+msgid "Plugin has been successfully copied"
+msgstr "El connector s'ha copiat correctament"
+
+msgid "Can't create temporary file."
+msgstr "No s'ha pogut crear el fitxer temporal."
+
+msgid "Can't download archive."
+msgstr "No s'ha pogut descarregar l'arxiu."
+
+msgid "Can't read or extract archive."
+msgstr "No s'ha pogut llegir o extreure l'arxiu."
+
+msgid "An error occured during extraction (%s)."
+msgstr "S'ha produït un error durant l'extracció dels fitxers (%s)."
+
+msgid "Please check \"plugins\" folder and sub-folders permissions (CHMOD)."
+msgstr "Si us plau, reviseu els permisos de la carpeta dels connectors \"plugins\", així com les seves subcarpetes (CHMOD)."
+
+msgid "Can't connect to server."
+msgstr "No s'ha pogut establir la connexió al servidor "
+
+msgid "Purge compiled templates"
+msgstr "Elimina les plantilles compilades"
+
+msgid "ACCESS_0"
+msgstr "Accés lliure"
+
+msgid "ACCESS_1"
+msgstr "Accés a tothom"
+
+msgid "ACCESS_2"
+msgstr "Accés als usuaris registrats"
+
+msgid "ACCESS_3"
+msgstr "Accés als administradors"
+
+msgid "ACCESS_4"
+msgstr "Accés als webmasters"
+
+msgid "ACCESS_5"
+msgstr "Sense accés"
+
+msgid "Support"
+msgstr "Suport"
+
+msgid "Documentation"
+msgstr "Documentació"
+
+msgid "A new version of Piwigo is available."
+msgstr "Hi ha una nova versió disponible."
+
+msgid "Piwigo Administration"
+msgstr "Administració de Piwigo"
+
+msgid "Piwigo version"
+msgstr "Versió de Piwigo"
+
+msgid "You are running the latest version of Piwigo."
+msgstr "Ja esteu executant l'última versió de Piwigo."
+
+msgid "The version of %s [%s] installed is not compatible with the version required [%s]"
+msgstr "La versió instal·lada de %s [%s] no és compatible amb la versió requerida [%s]"
+
+msgid "You need to upgrade your system to take full advantage of the application else the application will not work correctly, or not at all"
+msgstr "Cal actualitzar el sistema per treure profit de totes les funcionalitats de l'aplicació. Fins que no s'actualitzi, és possible que l'aplicació no funcioni correctament."
+
+msgid "Deleted on"
+msgstr "Eliminada el"
+
+msgid "Last hit"
+msgstr "Última visita"
+
+msgid "GD library is missing"
+msgstr "No es troba la llibreria GD"
+
+msgid "Templates"
+msgstr "Plantilles"
+
+msgid "Extend for templates"
+msgstr "Extensió de plantilles"
+
+msgid "Replacement of original templates by customized templates from template-extension subfolder"
+msgstr "Substitueix les plantilles originals per plantilles fetes a mida des de la subcarpeta template-extension"
+
+msgid "Replacers (customized templates)"
+msgstr "Substitueix (plantilles fetes a mida)"
+
+msgid "Original templates"
+msgstr "Plantilla original"
+
+msgid "Optional URL keyword"
+msgstr "Paraula clau opcional a la URL"
+
+msgid "Templates configuration has been recorded."
+msgstr "S'ha registrat la configuració de les plantilles"
+
+msgid "All optimizations have been successfully completed."
+msgstr "Totes les optimitzacions s'han realizat correctament."
+
+msgid "Optimizations have been completed with some errors."
+msgstr "Les optimitzacions s'han realitzat amb errors."
+
+msgid "Modify information"
+msgstr "Modifica la informació"
+
+msgid "nothing"
+msgstr "res"
+
+msgid "overrides existing values with empty ones"
+msgstr "buida els valors existents"
+
+msgid "Manage photo ranks"
+msgstr "Administra les classificacions de les fotos"
+
+msgid "Edit ranks"
+msgstr "Edita les valoracions"
+
+msgid "No photo in this album"
+msgstr "Aquest àlbum no conté fotos"
+
+msgid "Images manual order was saved"
+msgstr "S'ha desat l'ordre manual de les imatges"
+
+msgid "ranks"
+msgstr "valoracions"
+
+msgid "Drag to re-order"
+msgstr "Clicar i arrossegar per a reordenar"
+
+msgid "Quick Local Synchronization"
+msgstr "Sincronització local ràpida"
+
+msgid "No photo can be deleted"
+msgstr "No es pot seleccionar cap foto"
+
+msgid "Delete selected photos"
+msgstr "Elimina les fotos seleccionades"
+
+msgid "%d photo was deleted"
+msgid_plural "%d photos were deleted"
+msgstr[0] "S'ha eliminat %d foto"
+msgstr[1] "S'han eliminat %d fotos"
+
+msgid "Released on"
+msgstr "Llançat el"
+
+msgid "Number of downloads"
+msgstr "Nombre de descàrregues"
+
+msgid "Piwigo Announcements Newsletter"
+msgstr "Butlletí informatiu de Piwigo"
+
+msgid "Keep in touch with Piwigo project, subscribe to Piwigo Announcement Newsletter. You will receive emails when a new release is available (sometimes including a security bug fix, it's important to know and upgrade) and when major events happen to the project. Only a few emails a year."
+msgstr "Mantingueu-vos informats quant al projecte Piwigo. Subscriviu-vos al butlletí de notícies. Rebreu un correu electrònic quan hi hagi una nova versió (de vegades quan un error de seguretat és corregeix..., és important estar alerta) o quan hi hagi un esdeveniment important sobre el projecte. Únicament seran alguns missatges durant l'any."
+
+msgid "Subscribe %s"
+msgstr "Subscriviu-vos %s"
+
+msgid "Subscribe %s to Piwigo Announcements Newsletter"
+msgstr "Subscriviu-vos %s al butlletí de notícies <i>Piwigo Newsletter</i>"
+
+msgid "Purge search history"
+msgstr "Elimina l'historial de cerques"
+
+msgid "Hide"
+msgstr "Oculta"
+
+msgid "Operation in progress"
+msgstr "Tractament en progrés."
+
+msgid "Please wait..."
+msgstr "Si us plau, esperi..."
+
+msgid "Password is missing. Please enter the password."
+msgstr "Falta la clau d'accès. Si us plau, introdueix-la."
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Falta confirmar la contrasenya. Si us plau, confirmeu la contrasenya escollida."
+
+msgid "Allow users to edit their own comments"
+msgstr "Permet que els usuaris puguin editar els seus propis comentaris"
+
+msgid "Allow users to delete their own comments"
+msgstr "Permet que els usuaris puguin eliminar els seus propis comentaris"
+
+msgid "Email administrators when a comment is modified"
+msgstr "Envia un correu electrònic als usuaris administradors quan es modifiqui algun comentari"
+
+msgid "Email administrators when a comment is deleted"
+msgstr "Envia un correu electrònic als usuaris administradors quan s'elimini algun comentari"
+
+msgid "Cannot delete the old permalink !"
+msgstr "No s'ha pogut eliminar l'antic enllaç permanent!"
+
+msgid "Hit"
+msgstr "Accés"
+
+msgid "Tools"
+msgstr "Eines"
+
+msgid "Photos"
+msgstr "Fotos"
+
+msgid "Themes"
+msgstr "Temes"
+
+msgid "Instructions to use Piwigo"
+msgstr "Instruccions d'ús de Piwigo"
+
+msgid "Installed Themes"
+msgstr "Temes instal·lats"
+
+msgid "Add New Theme"
+msgstr "Afegeix un nou tema"
+
+msgid "Forbid this theme to users"
+msgstr "Prohibeix aquest tema als usuaris"
+
+msgid "Set as default theme for unregistered and new users"
+msgstr "Estableix com a tema predeterminat per als nous usuaris i usuaris no registrats"
+
+msgid "unknown"
+msgstr "desconegut"
+
+msgid "Upload Photos"
+msgstr "Penja fotos"
+
+msgid "Drop into album"
+msgstr "Seleccioneu un àlbum"
+
+msgid "+ Add an upload box"
+msgstr "<i>Afegir</i>"
+
+msgid "Create the \"%s\" directory at the root of your Piwigo installation"
+msgstr "Crea el directori \"%s\" a l'arrel de la instal·lació Piwigo"
+
+msgid "Give write access (chmod 777) to \"%s\" directory at the root of your Piwigo installation"
+msgstr "Cal concedir permisos d'escriptura (chmod 777) al directori \"%s\" a l'arrel de la instal·lació de Piwigo"
+
+msgid "existing album"
+msgstr "àlbum existent"
+
+msgid "create a new album"
+msgstr "creeu un nou àlbum"
+
+msgid "Album name"
+msgstr "Nom de l'àlbum"
+
+msgid "Album \"%s\" has been added"
+msgstr "S'ha afegit l'àlbum \"%s\""
+
+msgid "Uploaded Photos"
+msgstr "Fotos penjades"
+
+msgid "%d photos uploaded"
+msgstr "S'han penjat %d fotos"
+
+msgid "Privacy level set to \"%s\""
+msgstr "Nivell de confidencialitat \"%s\""
+
+msgid "Album \"%s\" now contains %d photos"
+msgstr "En aquests moments l'àlbum \"%s\" conté %d fotos"
+
+msgid "Manage this set of %d photos"
+msgstr "Administra aquest conjunt de %d fotos"
+
+msgid "Select files"
+msgstr "Seleccioneu els arxius"
+
+msgid "Everybody"
+msgstr "Tothom"
+
+msgid "Who can see these photos?"
+msgstr "Qui podrà veure aquestes fotos?"
+
+msgid "Settings"
+msgstr "Configuració"
+
+msgid "Resize"
+msgstr "Redimensionar"
+
+msgid "Maximum width"
+msgstr "Amplada màxima"
+
+msgid "pixels"
+msgstr "píxels"
+
+msgid "Maximum height"
+msgstr "Altura máxima"
+
+msgid "Image Quality"
+msgstr "Qualitat d'imatge"
+
+msgid "Save Settings"
+msgstr "Desa els ajustos"
+
+msgid "Your configuration settings are saved"
+msgstr "Les modificacions s'han desat correctament"
+
+msgid "Active Themes"
+msgstr "Temes actius"
+
+msgid "Add write access to the \"%s\" directory"
+msgstr "Afegeix l'accés l'escriptura al directori \"%s\""
+
+msgid "Administration Home"
+msgstr "Taulell de control"
+
+msgid "Change Admin Colors"
+msgstr "Intercanvia els colors d'administració"
+
+msgid "Delete this theme"
+msgstr "Elimina aquest tema"
+
+msgid "Directory does not exist"
+msgstr "Aquest directori no existeix"
+
+msgid "FTP + Synchronization"
+msgstr "FTP + Sincronització"
+
+msgid "Get Support on Piwigo Forum"
+msgstr "Obteniu suport al fòrum de Piwigo"
+
+msgid "Help Me"
+msgstr "Ajuda'm"
+
+msgid "Impossible to activate this theme, the parent theme is missing: %s"
+msgstr "Aquest tema no s'ha pogut activar, degut a que falta el tema pare: %s"
+
+msgid "Impossible to delete this theme. Other themes depends on it: %s"
+msgstr "Aquest tema no pot ser eliminat perquè n'hi ha d'altres que en depenen d'ell: %s"
+
+msgid "Inactive Themes"
+msgstr "Temes inactius"
+
+msgid "Install on your computer,"
+msgstr "Instal·la al vostre ordinador,"
+
+msgid "Make this theme available to users"
+msgstr "Permet aquest tema als usuaris"
+
+msgid "Page end"
+msgstr "Final de pàgina"
+
+msgid "Piwigo Uploader"
+msgstr "Piwigo Uploader"
+
+msgid "Read Piwigo Documentation"
+msgstr "Llegiu la documentació de Piwigo"
+
+msgid "Start pLoader and add your photos."
+msgstr "Inicia pLoader i afegiu les vostres fotos."
+
+msgid "Switch to clear or dark colors for administration"
+msgstr "Canvi de colors clars a foscos per als administradors"
+
+msgid "Theme has been successfully installed"
+msgstr "El tema s'ha instal·lat amb èxit."
+
+msgid "Visit Gallery"
+msgstr "Visiteu la galeria"
+
+msgid "Visit Piwigo project website"
+msgstr "Visiteu el web del projecte Piwigo"
+
+msgid "Guest Settings"
+msgstr "Ajustos de l'usuari visitant"
+
+msgid "Main Page"
+msgstr "Pàgina principal"
+
+msgid "Photo Page"
+msgstr "Pàgina de la foto"
+
+msgid "Activate Navigation Bar"
+msgstr "Activa la barra de navegació"
+
+msgid "Activate Navigation Thumbnails"
+msgstr "Activa les miniatures de navegació"
+
+msgid "Activate icon \"%s\""
+msgstr "Activa la icona \"%s\""
+
+msgid "Photo Properties"
+msgstr "Propietats de la foto"
+
+msgid "Allow user customization"
+msgstr "Permet la personalització de l'usuari"
+
+msgid "Languages"
+msgstr "Idiomes"
+
+msgid "Installed Languages"
+msgstr "Idiomes instal·lats"
+
+msgid "Add New Language"
+msgstr "Afegeix un nou idioma"
+
+msgid "Language has been successfully installed"
+msgstr "L'idioma s'ha instal·lat correctament"
+
+msgid "Select:"
+msgstr "Selecciona:"
+
+msgid "None"
+msgstr "Cap"
+
+msgid "Invert"
+msgstr "Inverteix"
+
+msgid "Impossible to deactivate this theme, you need at least one theme."
+msgstr "Aquest és l'únic tema disponible de la galeria. Per a poder-lo desactivar cal tenir-ne un altre."
+
+msgid "Webmaster status is required."
+msgstr "Aquesta acció només la pot dur a terme un webmaster"
+
+msgid "Bound Theme"
+msgstr "Tema limitat"
+
+msgid "Allow rating"
+msgstr "Permet valoracions"
+
+msgid "Select at least one comment"
+msgstr "Seleccioneu al menys un comentari"
+
+msgid "Active Plugins"
+msgstr "Connectors actius"
+
+msgid "Inactive Plugins"
+msgstr "Connectors inactius"
+
+msgid "Missing Plugins"
+msgstr "Connectors que falten"
+
+msgid "Uninstalled Plugins"
+msgstr "Connectors desinstal·lats"
+
+msgid "By %s"
+msgstr "Per %s"
+
+msgid "Visit plugin site"
+msgstr "Visiteu el lloc web del connector"
+
+msgid "Active Languages"
+msgstr "Idiomes actius"
+
+msgid "Delete this language"
+msgstr "Elimina aquest idioma"
+
+msgid "Forbid this language to users"
+msgstr "Prohibeix aquest idioma als usuaris"
+
+msgid "Impossible to deactivate this language, first set another language as default."
+msgstr "No es pot desactivar aquest idioma, primer definiu un altre idioma per defecte."
+
+msgid "Impossible to deactivate this language, you need at least one language."
+msgstr "Aquest és l'únic idioma disponible de la galeria. Per a poder-lo desactivar cal que tenir-ne un altre."
+
+msgid "Inactive Languages"
+msgstr "Idiomes inactius"
+
+msgid "Make this language available to users"
+msgstr "Permet aquest idioma als usuaris"
+
+msgid "Set as default language for unregistered and new users"
+msgstr "Estableix com a idioma predeterminat per als nous usuaris i usuaris no registrats"
+
+msgid "Miscellaneous"
+msgstr "Miscel·lània "
+
+msgid "Virtual Links"
+msgstr "Enllaços virtuals"
+
+msgid "Add Photos"
+msgstr "Afegeix fotos"
+
+msgid "The following tag was deleted"
+msgstr "S'ha eliminat la següent etiqueta"
+
+msgid "There is no other language available."
+msgstr "No hi ha més idiomes disponibles"
+
+msgid "There is no other plugin available."
+msgstr "No hi ha cap connector disponible."
+
+msgid "There is no other theme available."
+msgstr "No hi ha un altre tema disponible"
+
+msgid "By rank"
+msgstr "Per valoració"
+
+msgid "Manual order"
+msgstr "Ordre manual"
+
+msgid "Add another set of photos"
+msgstr "Afegeix un altre conjunt de fotos"
+
+msgid "Order of menubar items has been updated successfully."
+msgstr "L'ordre de la barra de menú s'ha actualitzat correctament."
+
+msgid "This theme was not designed to be directly activated"
+msgstr "Aquest tema no va ser dissenyat per ser directament activat"
+
+msgid "Who can see this photo?"
+msgstr "Qui pot veure aquesta foto?"
+
+msgid "Pending Comments"
+msgstr "Comentaris pendents de validar"
+
+msgid "Menu Management"
+msgstr "Gestiona els menús"
+
+msgid "In your php.ini file, the upload_max_filesize (%sB) is bigger than post_max_size (%sB), you should change this setting"
+msgstr "En el vostre arxiu php.ini, la variable upload_max_filesize (%sB) es major que post_max_size (%sB), Hauríeu de canviar aquesta configuració."
+
+msgid "Exif extension not available, admin should disable exif use"
+msgstr "L'extensió Exif no està disponible. L'administrador hauria de deshabilitar l'ús de metadades Exif."
+
+msgid "The uploaded file exceeds the upload_max_filesize directive in php.ini: %sB"
+msgstr "La mida de l'arxiu penjat excedeix el valor upload_max_filesize de l'arxiu php.ini: %sB"
+
+msgid "The uploaded files exceed the post_max_size directive in php.ini: %sB"
+msgstr "La mida total dels arxius que esteu penjant excedeix el valor post_max_size de l'arxiu php.ini: %sB"
+
+msgid "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form"
+msgstr "La mida de l'arxiu penjat excedeix el MAX_FILE_SIZE definit en el formulari HTML"
+
+msgid "The uploaded file was only partially uploaded"
+msgstr "L'arxiu s'ha pujat només parcialment."
+
+msgid "No file was uploaded"
+msgstr "No s'ha penjat cap arxiu"
+
+msgid "Missing a temporary folder"
+msgstr "No es troba el directori temporal"
+
+msgid "Failed to write file to disk"
+msgstr "No s'ha pogut escriure el fitxer al disc"
+
+msgid "File upload stopped by extension"
+msgstr "La càrrega d'arxius s'ha aturat per extensió"
+
+msgid "Unknown upload error"
+msgstr "Hi ha hagut un error desconegut en penjar les fotos"
+
+msgid "Error on file \"%s\" : %s"
+msgstr "Error a l'arxiu \"%s\": %s"
+
+msgid "automatic order"
+msgstr "Ordre automàtic"
+
+msgid "manual order"
+msgstr "ordre manual"
+
+msgid "Albums automatically sorted"
+msgstr "Àlbums ordenats automàticament"
+
+msgid "Batch Manager"
+msgstr "Gestor de processament per lots"
+
+msgid "include child albums"
+msgstr "incloure els sub-àlbums"
+
+msgid "Selection"
+msgstr "Selecció"
+
+msgid "Action"
+msgstr "Acció"
+
+msgid "Set author"
+msgstr "Estableix autor"
+
+msgid "Set title"
+msgstr "Estableix el títol"
+
+msgid "Set creation date"
+msgstr "Estableix la data de creació"
+
+msgid "Apply action"
+msgstr "Aplica acció"
+
+msgid "on the %d selected photos"
+msgstr "en les %d fotos seleccionades"
+
+msgid "%d of %d photos selected"
+msgstr "%d de %d fotos seleccionades"
+
+msgid "No photo selected, %d photos in current set"
+msgstr "No hi ha cap foto seleccionada entre les %d fotos l'actual conjunt"
+
+msgid "All %d photos are selected"
+msgstr "S'han seleccionat totes les %d fotos"
+
+msgid "remove this filter"
+msgstr "elimina aquest filtre"
+
+msgid "Add a filter"
+msgstr "Afegeix filtre"
+
+msgid "Remove all filters"
+msgstr "Elimina tots els filtres"
+
+msgid "Refresh photo set"
+msgstr "Actualitza les fotos del conjunt"
+
+msgid "The whole page"
+msgstr "La pàgina sencera"
+
+msgid "The whole set"
+msgstr "Tot el conjunt"
+
+msgid "No photo in the current set."
+msgstr "No hi ha fotos en aquest conjunt."
+
+msgid "No photos selected, no actions possible."
+msgstr "No es pot realitzar cap acció ja que no hi ha cap foto seleccionada."
+
+msgid "Choose an action"
+msgstr "Seleccioneu una acció"
+
+msgid "remove author"
+msgstr "elimina l'autor"
+
+msgid "Type here the author name"
+msgstr "Escriviu aquí el nom de l'autor"
+
+msgid "remove title"
+msgstr "eliminar el títol"
+
+msgid "Type here the title"
+msgstr "Escriviu aquí el títol"
+
+msgid "remove creation date"
+msgstr "elimina la data de creació"
+
+msgid "Album photos associated to the following albums: %s"
+msgstr "Àlbums de fotos associats als següents àlbums: %s"
+
+msgid "Delete orphan tags"
+msgstr "Elimina les etiquetes orfes"
+
+msgid "delete photo"
+msgstr "Elimina la foto"
+
+msgid "Orphan tags deleted"
+msgstr "S'han eliminat les etiquetes orfes"
+
+msgid "Week starts on"
+msgstr "La setmana comença en"
+
+msgid "You have %d orphan tags: %s."
+msgstr "Teniu %d etiquetes orfes: %s."
+
+msgid "Remove from caddie"
+msgstr "Treu del carret"
+
+msgid "Themes which need upgrade"
+msgstr "Temes per actualitzar"
+
+msgid "Languages which need upgrade"
+msgstr "Idiomes per actualitzar"
+
+msgid "All themes are up to date."
+msgstr "Tots els temes estan actualitzats."
+
+msgid "All plugins are up to date."
+msgstr "Tots els connectors estan actualizats."
+
+msgid "All languages are up to date."
+msgstr "Tots els idiomes estan actualitzats."
+
+msgid "Visit theme site"
+msgstr "Visiteu el web del tema"
+
+msgid "Visit language site"
+msgstr "Visiteu el web de l'idioma"
+
+msgid "New Version"
+msgstr "Nova versió"
+
+msgid "Obsolete Plugins"
+msgstr "Connectors obsolets"
+
+msgid "WARNING! This plugin does not seem to be compatible with this version of Piwigo."
+msgstr "ADVERTÈNCIA! Aquest connector sembla no ser compatible amb la vostra versió de Piwigo."
+
+msgid "Do you want to activate anyway?"
+msgstr "Voleu activar-ho de totes maneres?"
+
+msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
+msgstr "AQUEST CONNECTOR ARA ÉS PART DEL NUCLI DE PIWIGO! DESINSTAL·LA'L! "
+
+msgid "ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW."
+msgstr "ERROR: FALTA AQUEST CONNECTOR TOT I QUE ESTÀ INSTAL·LAT. DESINSTAL·LA'L ARA!"
+
+msgid "Thumbnails generation in progress..."
+msgstr "Generació de miniatures en curs..."
+
+msgid "Photos generation in progress..."
+msgstr "Generació de fotos en curs..."
+
+msgid "%s photos have been regenerated"
+msgstr "s'han regenerat %s fotos"
+
+msgid "%s photos can not be regenerated"
+msgstr "%s fotos no es poden regenerar"
+
+msgid "display"
+msgstr "Visualitza"
+
+msgid "Type in a search term"
+msgstr "Escriviu un terme de cerca"
+
+msgid "new"
+msgstr "nou"
+
+msgid "No results"
+msgstr "Sense resultats."
+
+msgid "Searching..."
+msgstr "Buscant..."
+
+msgid "Activate icon \"new\" next to albums and pictures"
+msgstr "Activa la icona \"nou\" al costat dels àlbums i de les imatges"
+
+msgid "Add a criteria"
+msgstr "Afegeix criteris"
+
+msgid "Deactivate all"
+msgstr "Desactiva-ho tot"
+
+msgid "Default photos order"
+msgstr "Ordre per defecte de les fotos"
+
+msgid "Restore"
+msgstr "Restaura"
+
+msgid "Restore default configuration. You will lose your plugin settings!"
+msgstr "Restableix els valors de configuració predeterminats. Es perdran tots els ajustos personalitzats."
+
+msgid "Show menubar"
+msgstr "Visualitza la barra de menú"
+
+msgid "You can't define a default photo order because you have a custom setting in your local configuration."
+msgstr "No es pot definir un ordre predeterminat de les fotos perquè hi ha establerta una configuració fet a mida a la configuració local de l'aplicació."
+
+msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
+msgstr "Heu especificat <i>$conf['order_by']</ i> en l'arxiu de configuració local. Aquest paràmetre està obsolet. Elimineu-lo o canvieu-li el nom a <i>$conf['order_by_custom']</ i>!"
+
+msgid "Updates"
+msgstr "Actualitzacions"
+
+msgid "Update in progress... Please wait."
+msgstr "Actualització en curs... Si us plau, espereu."
+
+msgid "Ignore this update"
+msgstr "Ignora aquesta actualització"
+
+msgid "Reset ignored updates"
+msgstr "Restableix les actualitzacions que han estat omeses"
+
+msgid "Update All"
+msgstr "Actualitza-ho tot"
+
+msgid "ERROR"
+msgstr "ERROR"
+
+msgid "Update Complete"
+msgstr "Actualització realitzada"
+
+msgid "Piwigo Update"
+msgstr "Piwigo Update"
+
+msgid "Extensions Update"
+msgstr "Actualitza les extensions"
+
+msgid "All extensions are up to date."
+msgstr "Totes les extensions estàn actualitzades."
+
+msgid "Following plugins may not be compatible with the new version of Piwigo:"
+msgstr "Els següents connectors poden no ser compatibles amb la nova versió de Piwigo:"
+
+msgid "Following themes may not be compatible with the new version of Piwigo:"
+msgstr "Els següents temes poden no ser compatibles amb la nova versió de Piwigo:"
+
+msgid "I decide to update anyway"
+msgstr "Vull actualitzar de totes maneres"
+
+msgid "Update to Piwigo %s"
+msgstr "Actualitza a Piwigo %s"
+
+msgid "Two updates are available"
+msgstr "Hi ha dues actualitzacions disponibles"
+
+msgid "This is a minor update, with only bug corrections."
+msgstr "Aquesta actualització és menor. Només conté correccions d'errors."
+
+msgid "This is a major update, with <a href=\"%s\">new exciting features</a>."
+msgstr "Aquesta es una actualització major, amb <a href=\"%s\"> noves i entusiasmadores funcions</a>."
+
+msgid "Some themes and plugins may be not available yet."
+msgstr "Alguns temes i connectors poden no estar disponibles."
+
+msgid "You can update to Piwigo %s directly, without upgrading to Piwigo %s (recommended)."
+msgstr "Podeu actualitzar a Piwigo %s directament, sense necessitat d'actualitzar a Piwigo %s (recomanat)."
+
+msgid "Save Template Directory"
+msgstr "Desa el directori de plantilles"
+
+msgid "Some upgrades are available for extensions."
+msgstr "Hi ha actualitzacions disponibles per a algunes extensions"
+
+msgid "Ignore All"
+msgstr "Ignora tot"
+
+msgid "Crop"
+msgstr "Retalla"
+
+msgid "Width"
+msgstr "Amplada"
+
+msgid "Height"
+msgstr "Altura"
+
+msgid "Follow Orientation"
+msgstr "Segueix la orientació"
+
+msgid "Graphics Library"
+msgstr "Llibreria gràfica"
+
+msgid "Learn more"
+msgstr "Més informació"
+
+msgid "Rate"
+msgstr "Valoració"
+
+msgid "Average rate"
+msgstr "Valoració mitjana"
+
+msgid "... or "
+msgstr "... o "
+
+msgid "Create"
+msgstr "Crea"
+
+msgid "Start Upload"
+msgstr "Inicia la càrrega"
+
+msgid "You are using the Flash uploader. Problems? Try the <a href=\"%s\">Browser uploader</a> instead."
+msgstr "Esteu utilitzant el carregador Flash. Problemes? Proveu el <a href=\"%s\"> carregador del navegador."
+
+msgid "You are using the Browser uploader. Try the <a href=\"%s\">Flash uploader</a> instead."
+msgstr "Esteu utilitzant el carregador del navegador. Podeu provar el <a href=\"%s\">Carregador Flash</a> "
+
+msgid "Maximum file size: %sB."
+msgstr "Mida màxima dels arxius: %sB."
+
+msgid "Allowed file types: %s."
+msgstr "Tipus de fitxers permesos: %s."
+
+msgid "Approximate maximum resolution: %dM pixels (that's %dx%d pixels)."
+msgstr "Ressolució màxima aproximada: %dM píxels (és a dir %dx%d píxels)."
+
+msgid "Manage Permissions"
+msgstr "Gestiona els permisos"
+
+msgid "Photo %s of %s"
+msgstr "Foto %s de %s"
+
+msgid "show details"
+msgstr "mostrar detalls"
+
+msgid "hide details"
+msgstr "Oculta detalls"
+
+msgid "Merge tags"
+msgstr "Fusiona les etiquetes"
+
+msgid "Select the destination tag"
+msgstr "Seleccioneu l'etiqueta de destí"
+
+msgid "(this tag will be deleted)"
+msgstr "(aquesta etiqueta serà eliminada)"
+
+msgid "Confirm merge"
+msgstr "Confirmeu la fusió"
+
+msgid "Merge selected tags"
+msgstr "Fusiona"
+
+msgid "No destination tag selected"
+msgstr "No ha seleccionat cap etiqueta de destí"
+
+msgid "Tags <em>%s</em> merged into tag <em>%s</em>"
+msgstr "Les etiquetes <em>%s</em> s'han fusionat creant l'etiqueta <em>%s</em>"
+
+msgid "Select at least two tags for merging"
+msgstr "Seleccioneu al menys dues etiquetes per a la fusió"
+
+msgid "Select an album"
+msgstr "Seleccioneu un àlbum"
+
+msgid "By default, Piwigo will create a new websize from the HD (high definition) version of your photo."
+msgstr "Per defecte, Piwigo crearà una nova mida per a la web a partir de les vostres fotos en versió HD (high definition) "
+
+msgid "If no HD is available and if the current websize is bigger than resize dimensions, Piwigo will move it as HD and create a downsized websize photo from it."
+msgstr "Si no està disponible en alta definició i la mida actual es més gran que les dimensions del canvi de mida, es considerarà 'alta definició' (HD) tot i què finalment caldrà reduir la mida de la imatge."
+
+msgid "An error has occured during upgrade."
+msgstr "S'ha produït un error durant el procés d'actualització."
+
+msgid "An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href=\"%s\">Click here to show log error</a>."
+msgstr "S'ha produït un error durant l'extracció. Reviseu els permisos dels fitxers de l'instal·lació de piwigo. <br><a href=\"%s\"> Cliqueu aquí per mostrar el registre de l'error</a>."
+
+msgid "Piwigo cannot retrieve upgrade file from server"
+msgstr "Piwigo no pot recuperar l'arxiu d'actualització del servidor"
+
+msgid "%s has been successfully updated."
+msgstr "%s s'ha actualitzat correctament."
+
+msgid "A locked gallery is only visible to administrators"
+msgstr "Una galeria bloquejada només és visible als administradors"
+
+msgid "Activate comments"
+msgstr "Activa els comentaris"
+
+msgid "Add tags"
+msgstr "Afegeix etiquetes"
+
+msgid "Add to caddie"
+msgstr "Afegeix al carret"
+
+msgid "Applications"
+msgstr "Aplicacions"
+
+msgid "Automatic sort order"
+msgstr "Ordena de forma automàtica"
+
+msgid "Available on"
+msgstr "Disponible en"
+
+msgid "Cancel"
+msgstr "Cancel·la"
+
+msgid "Center of interest"
+msgstr "Punt d'interès"
+
+msgid "Default comments order"
+msgstr "Ordre dels comentaris per defecte"
+
+msgid "Delete multiple size images"
+msgstr "Elimina les imatges de múltiples mides"
+
+msgid "Duplicates"
+msgstr "Duplicades"
+
+msgid "Gallery unlocked"
+msgstr "Galeria desbloquejada"
+
+msgid "Generate multiple size images"
+msgstr "Genera múltiples mides d'imatge"
+
+msgid "Groups and users"
+msgstr "Grups i usuaris"
+
+msgid "Last import"
+msgstr "Última importació"
+
+msgid "List"
+msgstr "Llista"
+
+msgid "Move to album"
+msgstr "Mou a l'àlbum"
+
+msgid "Multiple Size"
+msgstr "Mida múltiple"
+
+msgid "Notify administrators when a comment is"
+msgstr "Notifica als administradors quan un comentari sigui"
+
+msgid "Original Size"
+msgstr "Mida original"
+
+msgid "Permission granted for groups"
+msgstr "Permisos atorgats a grups"
+
+msgid "Permission granted for users"
+msgstr "Permís atorgat a usuaris"
+
+msgid "Photo name"
+msgstr "Nom de la foto"
+
+msgid "Piwigo for Android"
+msgstr "Piwigo per Android"
+
+msgid "Piwigo for iOS (iPhone, iPad, iPod Touch)"
+msgstr "Piwigo per iOS (iPhone, iPad, iPod Touch)"
+
+msgid "Predefined filter"
+msgstr "Filtre predeterminat"
+
+msgid "Resize after upload"
+msgstr "Redimensionar després de penjar la foto al servidor"
+
+msgid "Save manual order"
+msgstr "Desa l'ordre manual"
+
+msgid "Save visits in history for"
+msgstr "Desa les visites a l'historial pels"
+
+msgid "Select a file"
+msgstr "Seleccioneu un arxiu"
+
+msgid "Select groups..."
+msgstr "Seleccioneu els grups..."
+
+msgid "Select users..."
+msgstr "Seleccioneu els usuaris..."
+
+msgid "Send connection settings by email"
+msgstr "Envia la configuració de la connexió per correu electrònic"
+
+msgid "Synchronize metadata"
+msgstr "Sincronitza les metadades"
+
+msgid "The original image quality must be a number between %d and %d"
+msgstr "La qualitat de la foto original ha de ser un número comprès entre %d i %d."
+
+msgid "There is no group in this gallery."
+msgstr "No hi ha cap grup en aquesta galeria."
+
+msgid "This album contains %d photos, added between %s and %s."
+msgstr "Aquest àlbum conté %d fotos, afegides entre %s i %s."
+
+msgid "This album contains %d photos, added on %s."
+msgstr "Aquest àlbum conté %d fotos, afegides el %s."
+
+msgid "This album contains no photo."
+msgstr "Aquest àlbum no conté fotos."
+
+msgid "Unlock gallery"
+msgstr "Desbloqueja la galeria"
+
+msgid "With no album"
+msgstr "Sense àlbums"
+
+msgid "With no tag"
+msgstr "Sense etiquetes"
+
+msgid "With no virtual album"
+msgstr "Sense àlbum virtual"
+
+msgid "You can activate only one mobile theme."
+msgstr "Nomes podeu activar un tema mòbil. "
+
+msgid "Zoom"
+msgstr "Zoom"
+
+msgid "add a new watermark"
+msgstr "afegeix una nova marca d'aigua"
+
+msgid "administrators"
+msgstr "administradors"
+
+msgid "apply automatic sort order"
+msgstr "Aplica l'ordenació automàtica"
+
+msgid "cancel manual order"
+msgstr "Cancel·la l'ordre manual"
+
+msgid "custom"
+msgstr "Fet a mida"
+
+msgid "modified"
+msgstr "modificat"
+
+msgid "pending validation"
+msgstr "pendent de validar"
+
+msgid "registered users"
+msgstr "usuaris registrats"
+
+msgid "%d group"
+msgstr "%d grup"
+
+msgid "%d groups"
+msgstr "%d grups"
+
+msgid "%u users have automatic permission because they belong to a granted group."
+msgstr "%u usuaris han obtingut permisos automàticament perquè pertanyen a un grup que li han atorgat el permís."
+
+msgid "<em>Piwigo for Android</em> application empowers you to connect your Android phone or table to your Piwigo gallery, create some albums and upload several photos at once."
+msgstr "<em>Piwigo per Android</em> Aquesta aplicació us permet connectar a la vostra galeria Piwigo des d'un dispositiu Android, crear nous àlbums i penjar vàries fotos a la vegada."
+
+msgid "<em>Piwigo for iOS</em> application empowers you to connect to your Piwigo gallery from your iPhone, iPad or iPod Touch, create some albums and upload several photos at once."
+msgstr "<em>Piwigo per iOS</em> Aquesta aplicació us permet connectar a la vostra galeria Piwigo des d'un iPhone, iPad o iPod Touch, crear àlbums i penjar vàries fotos a la vegada."
+
+msgid "Add group"
+msgstr "Afegeix grup"
+
+msgid "Adobe Photoshop Lightroom is a photography software designed to manage large quantities of digital images and doing post production work."
+msgstr "Adobe Photoshop Lightroom és un programari de fotografia dissenyat per a gestionar grans quantitats d'imatges digitals i realitzar tasques de postproducció."
+
+msgid "Albums authorized thanks to group associations"
+msgstr "Àlbums autoritzats gràcies a les associacions de grups"
+
+msgid "Aperture is a powerful tool to refine images and manage massive libraries on Mac."
+msgstr "Aperture és una poderosa eina per perfeccionar les imatges i gestionar grans biblioteques per a Mac"
+
+msgid "Aperture is designed for professional photographers with iPhoto simplicity."
+msgstr "Aperture s'ha dissenyat per als fotògrafs professionals amb la senzillesa de iPhoto."
+
+msgid "Apply watermark if height is bigger than"
+msgstr "Aplica la marca d'aigua si l'altura és major de"
+
+msgid "Apply watermark if width is bigger than"
+msgstr "Aplica la marca d'aigua si l'ample és més gran de"
+
+msgid "By default, the center of interest is placed in the middle of the photo."
+msgstr "Per defecte, el punt d'interès es col·loca al centre de la foto."
+
+msgid "Comments for all"
+msgstr "Comentaris per a tots"
+
+msgid "Delete Representant"
+msgstr "Elimina la miniatura de l'àlbum"
+
+msgid "Delete selected tags"
+msgstr "Elimina"
+
+msgid "Delete selected users"
+msgstr "Elimina els usuaris seleccionats"
+
+msgid "Deny selected groups"
+msgstr "Denega els grups seleccionats"
+
+msgid "Download,"
+msgstr "Descarregar,"
+
+msgid "Downloads"
+msgstr "Descàrregues"
+
+msgid "Features include gallery browsing, album creation and photo upload."
+msgstr "Les funcions inclouen la navegació per la galeria, la creació d'àlbums i la càrrega de fotos."
+
+msgid "For photo sizes with crop, such as \"Square\", Piwigo will do its best to include the center of interest."
+msgstr "Per a les fotos amb mides retallades, per exemple les quadrades, Piwigo farà tot el possible per a ressaltar-ne el seu punt d'interès."
+
+msgid "Grant selected groups"
+msgstr "Atorgar els grups seleccionats"
+
+msgid "Manage permissions for group \"%s\""
+msgstr "Gestiona els permisos del grup \"%s\""
+
+msgid "Metadata synchronized from file"
+msgstr "S'ha sincronitzat les metadades de l'arxiu"
+
+msgid "No group is permitted to see this private album"
+msgstr "Aquest àlbum és privat, per tant, cap grup el pot visualitzar."
+
+msgid "Not cropped correctly?"
+msgstr "No s'ha retallat correctament?"
+
+msgid "On your Linux, simply install Shotwell with your package manager and the activate Piwigo publishing option."
+msgstr "Per a Linux, només cal instal·lar Shotwell amb el seu gestor de paquets i permetre la publicació de Piwigo."
+
+msgid "Opacity"
+msgstr "Opacitat"
+
+msgid "Permalink %s has been previously used by album %s. Delete from the permalink history first"
+msgstr "L'enllaç permanent %s s'ha utilitzat anteriorment per l'àlbum %s. Esborra'l primer de l'historial d'enllaços permanents"
+
+msgid "Permission granted thanks to a group"
+msgstr "Permís atorgat gràcies a un grup"
+
+msgid "Permission management"
+msgstr "Gestió de permisos"
+
+msgid "Photo sizes with crop"
+msgstr "Fotos amb mides retallades"
+
+msgid "Piwigo Publish plugin for Lightroom"
+msgstr "Connector de publicació Piwigo per a Lightroom"
+
+msgid "Piwigo export plugin for Aperture"
+msgstr "Connector d'exportació Piwigo per a Aperture"
+
+msgid "Piwigo export plugin for iPhoto"
+msgstr "Connector d'exportació Piwigo per a iPhoto"
+
+msgid "Piwigo publish plugin for Shotwell"
+msgstr "Connector de publicació Piwigo per a Shotwell"
+
+msgid "Piwigo publish plugin for digiKam"
+msgstr "Connector de publicació Piwigo per digiKam"
+
+msgid "ReGalAndroid (RemoteGallery client for Android) is an open source (GPL v3) Piwigo client for the Android platform."
+msgstr "ReGalAndroid (client RemoteGallery per Android) és un client de Piwigo per a la plataforma Android de codi lliure (GPL v3)"
+
+msgid "Select a zone with your mouse to define a new center of interest."
+msgstr "Seleccioneu una zona amb el ratolí per definir un nou punt d'interès."
+
+msgid "Shotwell is an open source digital photo organizer that runs on Linux. It is the default photo manager in Ubuntu and Fedora."
+msgstr "Shotwell és un organitzador de codi obert digital que s'executa a Linux. És el gestor de fotos per defecte en Ubuntu i Fedora."
+
+msgid "The Piwigo export plugin allows you to create albums and export photos."
+msgstr "El connector Piwigo Export li permet crear àlbums i exportar fotos."
+
+msgid "The Piwigo publish Plug-in allows you to export and synchronize photos from Lightroom directly to your Piwigo photo gallery."
+msgstr "El connector Piwigo Publish us permet exportar i sincronitzar fotos des de Lightroom directament a la vostra galeria de fotos Piwigo."
+
+msgid "The center of interest is the most meaningful zone in the photo."
+msgstr "El punt d'interès és la zona més significativa d'una foto."
+
+msgid "The original maximum height must be a number between %d and %d"
+msgstr "L'alçada màxima original ha de ser un número entre %d i %d"
+
+msgid "The original maximum width must be a number between %d and %d"
+msgstr "L'amplada màxima original ha de ser un número entre %d i %d"
+
+msgid "To export your photos from digiKam to Piwigo, simply install digiKam and the Kipi-plugins."
+msgstr "Per a exportar les teves fotos des de digiKam a Piwigo, hauràs d'instal·lar els connectors digiKam i Kipi."
+
+msgid "Web Form"
+msgstr "Formulari web"
+
+msgid "X Position"
+msgstr "Posició X"
+
+msgid "X Repeat"
+msgstr "Repeteix X"
+
+msgid "Y Position"
+msgstr "Posició Y"
+
+msgid "any visitor can see this album"
+msgstr "tots els visitants poden veure aquest àlbum"
+
+msgid "associate to group"
+msgstr "Associa-ho al grup"
+
+msgid "bottom left corner"
+msgstr "Costat inferior esquerre"
+
+msgid "bottom right corner"
+msgstr "Costat inferior dret"
+
+msgid "digiKam is an advanced digital photo management free software for Linux, Windows, and MacOSX."
+msgstr "digiKam és un avançat software de gestió de fotografies digitals lliure per a Linux, Windows i MacOSX."
+
+msgid "digiKam is designed for photographers who want to view, manage, edit, enhance, organize, tag, and share photographs."
+msgstr "digiKam està dissenyat per als fotògrafs que volen veure, administrar, editar, millorar, organitzar, etiquetar i compartir fotografies."
+
+msgid "dissociate from group"
+msgstr "Dissociar del grup"
+
+msgid "iPhoto is the default photo manager on MacOSX. The Piwigo export plugin let you create new albums and export your photos directly from iPhoto to your Piwigo photo gallery."
+msgstr "iPhoto és el gestor de fotos per defecte en MacOSX. El connector d'exportació Piwigo li permet crear nous àlbums i exportar les seves fotos directament des de iPhoto a la seva galeria Piwigo."
+
+msgid "include photos with lower privacy level"
+msgstr "incloure fotos amb el mínim nivell de privacitat"
+
+msgid "middle"
+msgstr "al centre"
+
+msgid "simple visitors"
+msgstr "visitants únics"
+
+msgid "top left corner"
+msgstr "costat superior esquerre"
+
+msgid "top right corner"
+msgstr "costat superior dret"
+
+msgid "visitors need to login and have the appropriate permissions to see this album"
+msgstr "els visitants han d'autenticar-se i disposar dels permisos adequats per veure aquest àlbum"
+
+msgid "Last send"
+msgstr "Últim enviament"
+
+msgid "group \"%s\" added"
+msgstr "S'ha afegit el grup \"%s\""
+
+msgid "group \"%s\" deleted"
+msgstr "S'ha eliminat el grup \"%s\""
+
+msgid "%d day"
+msgstr "%d dia"
+
+msgid "%d days"
+msgstr "%d dies"
+
+msgid "%d hour"
+msgstr "%d hora"
+
+msgid "%d hours"
+msgstr "%d hores"
+
+msgid "%d minute"
+msgstr "%d minut"
+
+msgid "%d minutes"
+msgstr "%d minuts"
+
+msgid "%d month"
+msgstr "%d mes"
+
+msgid "%d months"
+msgstr "%d mesos"
+
+msgid "%d second"
+msgstr "%d segon"
+
+msgid "%d seconds"
+msgstr "%d segons"
+
+msgid "%d year"
+msgstr "%d any"
+
+msgid "%d years"
+msgstr "%d anys"
+
+msgid "%s ago"
+msgstr "fa %s"
+
+msgid "%s in the future"
+msgstr "%s en el futur"
+
+msgid "Added by %s"
+msgstr "Afegida per %s"
+
+msgid "Numeric identifier : %d"
+msgstr "Identificador numèric: %d"
+
+msgid "Original file : %s"
+msgstr "Arxiu original: %s"
+
+msgid "Posted %s on %s"
+msgstr "Publicada %s, el %s"
+
+msgid "Rated %d times, score : %.2f"
+msgstr "Valorada %d vegades. Resultat: %.2f"
+
+msgid "Sharpen"
+msgstr "Sharpen (aguditzar)"
+
+msgid "Visited %d times"
+msgstr "Visitada %d vegades"
+
+msgid "Watermark"
+msgstr "Marca d'aigua"
+
+msgid "%d week"
+msgstr "%d setmana"
+
+msgid "%d weeks"
+msgstr "%d setmanes"
+
+msgid "Edit photo"
+msgstr "Edita la foto"
+
+msgid "create a new site"
+msgstr "Crea un lloc nou"
+
+msgid "No order field selected"
+msgstr "No s'ha seleccionat cap camp per a ordenar"
+
+msgid "Duplicate selected tags"
+msgstr "Duplica les etiquetes seleccionades"
+
+msgid "Name of the duplicate"
+msgstr "Nom del duplicat"
+
+msgid "Source tag"
+msgstr "Etiqueta font"
+
+msgid "Tag \"%s\" is now a duplicate of \"%s\""
+msgstr "L'etiqueta \"%s\" és ara un duplicat de \"%s\""
+
+msgid "Landscape"
+msgstr "Paisatge"
+
+msgid "Manage photos"
+msgstr "Administra les fotos"
+
+msgid "Minimum height"
+msgstr "Alçada mínima"
+
+msgid "Minimum width"
+msgstr "Amplada mínima"
+
+msgid "Panorama"
+msgstr "Panorama"
+
+msgid "Portrait"
+msgstr "Retrat"
+
+msgid "View in gallery"
+msgstr "Veure en la galeria"
+
+msgid "Number of albums per page"
+msgstr "Nombre d'àlbums per pàgina"
+
+msgid "Ratio"
+msgstr "Ràtio"
+
+msgid "between %.2f and %.2f"
+msgstr "entre %.2f i %.2f"
+
+msgid "between %d and %d pixels"
+msgstr "entre %d i %d píxels"
+
+msgid "Duplicate"
+msgstr "Duplica"
+
+msgid "Merge selected groups"
+msgstr "Fusiona els grups seleccionats"
+
+msgid "No groups selected, no actions possible."
+msgstr "No hi ha cap grup seleccionat, l'acció no s'ha pogut dur a terme."
+
+msgid "No members to manage"
+msgstr "No existeixen membres per a gestionar"
+
+msgid "Please select at least two groups"
+msgstr "Heu de selecciona almenys dos grups"
+
+msgid "Rename"
+msgstr "Canvia de nom"
+
+msgid "This group will be set to default"
+msgstr "Estableix aquest grup com a predeterminat"
+
+msgid "This group will be unset to default"
+msgstr "Aquest grup deixarà de ser el predeterminat"
+
+msgid "Type here the name of the new group"
+msgstr "Escriviu aquí el nom del nou grup"
+
+msgid "Manage the members"
+msgstr "Gestiona els membres"
+
+msgid "Purge user cache"
+msgstr "Elimina la memòria cau de l'usuari"
+
+msgid "The picture dimensions will be reduced to %dx%d pixels."
+msgstr "Es reduiran les mides de les fotos a %dx%d píxels."
+
+msgid "Resize after upload disabled due to the use of GD as graphic library"
+msgstr "Redimensionar després de penjar la foto al servidor deshabilitat degut a l'ús de la llibreria gràfica GD"
+
+msgid "Select at least one tag"
+msgstr "Seleccioneu almenys una etiqueta"
+
+msgid "Last visit on %s, %s."
+msgstr "L'última visita el %s, %s."
+
+msgid "No users selected, no actions possible."
+msgstr "No hi ha usuaris seleccionats, l'acció no ha estat possible"
+
+msgid "Registered on %s, %s."
+msgstr "Registrat el %s, %s"
+
+msgid "Show %s users"
+msgstr "Mostra %s usuaris"
+
+msgid "Users modified"
+msgstr "Usuaris que s'han modificat"
+
+msgid "Basic settings"
+msgstr "Configuració bàsica"
+
+msgid "Change password"
+msgstr "Canvia la contrasenya"
+
+msgid "Change username"
+msgstr "Canvia el nom d'usuari"
+
+msgid "General"
+msgstr "General"
+
+msgid "Loading..."
+msgstr "S'està carregant..."
+
+msgid "Mail theme"
+msgstr "Tema del correu electrònic"
+
+msgid "Password updated"
+msgstr "La contrasenya s'ha actualitzat"
+
+msgid "Update user"
+msgstr "Actualitza l'usuari"
+
+msgid "User %s added"
+msgstr "S'ha afegit l'usuari %s"
+
+msgid "User %s updated"
+msgstr "S'ha actualitzat l'usuari %s"
+
+msgid "close"
+msgstr "tancar"
+
+msgid "%d of %d users selected"
+msgstr "%d de %d usuaris seleccionats"
+
+msgid "(filtered from %s total users)"
+msgstr "(filtrat d'un total de %s usuaris)"
+
+msgid "All %d users are selected"
+msgstr "Tots els %d usuaris estan seleccionats"
+
+msgid "Close user details"
+msgstr "Tanca detals de l'usuari"
+
+msgid "No matching user found"
+msgstr "No s'ha trobat cap usuari coincident"
+
+msgid "No user selected of %d users"
+msgstr "Cap usuari seleccionat de %d usuaris"
+
+msgid "Open user details"
+msgstr "Obre detalls de l'usuari"
+
+msgid "Showing %s to %s of %s users"
+msgstr "Mostrant %s de %s de %s usuaris"
+
+msgid "on the %d selected users"
+msgstr "sobre els %d usuaris seleccionats"
+
+msgid "Activate it now"
+msgstr "Activa-ho ara"
+
+msgid "Allow users to add a link to their website"
+msgstr "Permetre als usuaris afegir un enllaç al seu lloc web"
+
+msgid "Empty caddie"
+msgstr "Carret buit"
+
+msgid "Impossible to deactivate the default theme."
+msgstr "No és possible desactivar el tema per defecte."
+
+msgid "Mail address is mandatory for registration"
+msgstr "L'adreça de correu electrònic és obligatoria per al registre"
+
+msgid "No and unlock sub-albums"
+msgstr "No i no desbloquejar els subàlbums"
+
+msgid "The settings for the guest are from the %s user"
+msgstr "La configuració de l'usuari visitant es realitza des de l'usuari %s "
+
+msgid "Upload in progress"
+msgstr "La càrrega està en progrés"
+
+msgid "based on"
+msgstr "basat en"
+
+msgid "between %s and %s MB"
+msgstr "entre %s i %s MB"
+
+msgid "date & time"
+msgstr "data i hora"
+
+msgid "file name"
+msgstr "nom del fitxer"
+
+msgid "width & height"
+msgstr "amplada i alçada"
+
+msgid "Delete %d orphan photos"
+msgstr "Eliminar %d fotos òrfenes"
+
+msgid "Each email sent will contain its own automatic authentication key on links, valid for %s."
+msgstr "Cada correu electrònic enviat contindrà la seva pròpia clau d'autenticació en els enllaços, vàlida per %s"
+
+msgid "Edit user"
+msgstr "Edita l'usuari"
+
+msgid "For security reason, authentication keys do not work for administrators."
+msgstr "Per raons de seguretat, les claus d'autenticació no funcionen amb els administradors"
+
+msgid "No recipient selected"
+msgstr "No s'ha indicat cap destinatari"
+
+msgid "No user is permitted to see this private album"
+msgstr "No s'ha indicat cap usuari per veure aquest àlbum privat"
+
+msgid "Orphans"
+msgstr "Òrfenes"
+
+msgid "Recipients"
+msgstr "Destinataris"
+
+msgid "Y Repeat"
+msgstr "Repetició Y"
+
+msgid "Confirm deletion"
+msgstr "Confirmeu que voleu eliminar"
+
+msgid "Piwigo %s is available, please update"
+msgstr "Està disponible La versió %s de Piwigo. Si us plau actualitzeu"
+
+msgid "(determined from photos)"
+msgstr "(determinat a partir de les fotos)"
+
+msgid "Delete album \"%s\"."
+msgstr "Elimina l'àlbum \"%s\"."
+
+msgid "delete album and the %d orphan photos"
+msgstr "elimina l'àlbum i les %d fotos orfes"
+
+msgid "It only takes a few clicks."
+msgstr "Només comporta uns quants clics"
+
+msgid "Select tags"
+msgstr "Etiquetes seleccionades"
+
+msgid "delete only album, not photos"
+msgstr "elimina només l'àlbum, no les fotos"
+
+msgid "orphans to delete"
+msgstr "orfes per eliminar"
+
+msgid "Piwigo Remote Sync is able to upload a whole folder hierarchy. If you run it again, only new photos will be uploaded."
+msgstr "El Piwigo Remote Sync és capaç de pujar una jerarquia de carpetes sencera. Si el torneu a executar, només es pujaran les noves fotos."
+
+msgid "Time has come to update your Piwigo with version %s, go to %s"
+msgstr "Es hora que actualitzeu Piwigo amb la versió %s, aneu a %s"
+
+msgid "Share / Send your photos directly from your Mac Os X (10.10 and following) to Piwigo"
+msgstr "Compartiu / Envieu les vostres fotos directament des del vostre Mac Os X (10.10 i següents) a Piwigo"
+
+msgid "Running on an up-to-date Piwigo is important for security."
+msgstr "Executar-ho en una versió de Piwigo actualitzada és important per la seguretat. "
+
+msgid "Display form"
+msgstr "Visualitza a"
+
+msgid "delete album and all %d photos, even the %d associated to other albums"
+msgstr "elimina l'àlbum i totes les %d fotos, incloent les %d fotos associades a altres àlbums"
+
+msgid "Dashboard"
+msgstr "Consola"
+
+msgid "Delete album \"%s\" and its %d sub-albums."
+msgstr "Elimina l'àlbum \"%s\" i els seus %d sub-àlbums"
+
+msgid "No filter on album. Select one or type to search"
+msgstr "No hi ha cap filtre a l'àlbum, Seleccioneu-ne un o escriviu per cercar-ne"
+
+msgid "No tags selected, no actions possible."
+msgstr "No s'ha seleccionat cap etiqueta i no es pot realitzar cap acció"
+
+msgid "Storage used"
+msgstr "Emmagatzemament utilitzat"
+
+msgid "checksum"
+msgstr "suma de verificació"
+
+msgid "%d checksums were added"
+msgstr "s'han afegit %d checksums"
+
+msgid "... or hide this link"
+msgstr "...o amagueu aquest enllaç"
+
+msgid "Compute %d missing checksums"
+msgstr "Calcula %d checksums que manquen"
+
+msgid "Create a first album"
+msgstr "Creeu un primer àlbum"
+
+msgid "Deletion in progress"
+msgstr "Supressió en curs"
+
+msgid "Display album date period"
+msgstr "Mostra el periode de dates associat amb cada àlbum, p.ex. «del 12 de al 15 de juliol de 2018»"
+
+msgid "Display category date"
+msgstr "Mostra la data de la categoria"
+
+msgid "Piwigo requires an album to add photos."
+msgstr "Piwigo necessita un àlbum per afegir-hi fotos."
+
+msgid "Some checksums are missing."
+msgstr "Manquen alguns checksums."
+
+msgid "Synchronization in progress"
+msgstr "Sincronització en curs"
+
+msgid "Visit"
+msgstr "Visiteu"
+
+msgid "Welcome!"
+msgstr "Benvinguts!"
+
+msgid "With no checksum"
+msgstr "Sense checksum"
+
+msgid "checksums to add"
+msgstr "Checksums per afegir"
+
+msgid "or"
+msgstr "o"
+
+msgid "Search tips"
+msgstr "Consells de cerca"
+
+msgid "Are you sure you want to delete all sizes?"
+msgstr "Segur que voleu eliminar totes les mides?"
+
+msgid "Are you sure you want to delete the language \"%s\"?"
+msgstr "Segur que voleu eliminar l'idioma \"%s\"?"
+
+msgid "Are you sure you want to delete the plugin \"%s\"?"
+msgstr "Segur que voleu eliminar el connector \"%s\"? "
+
+msgid "Are you sure you want to delete the ratings of the user \"%s\"?"
+msgstr "Segur que voleu eliminar les valoracions de l'usuari \"%s\"?"
+
+msgid "Are you sure you want to delete the theme \"%s\"?"
+msgstr "Segur que voleu eliminar el tema \"%s\"? "
+
+msgid "Are you sure you want to delete the user \"%s\"?"
+msgstr "Segur que voleu eliminar l'usuari \"%s\"? "
+
+msgid "Are you sure you want to delete this site?"
+msgstr "Segur que voleu eliminar aquest lloc?"
+
+msgid "Are you sure you want to delete this theme?"
+msgstr "Segur que voleu eliminar aquest tema?"
+
+msgid "Are you sure you want to delete this?"
+msgstr "Segur que voleu eliminar això?"
+
+msgid "Are you sure you want to install the plugin \"%s\"?"
+msgstr "Segur que voleu instal·lar el connector \"%s\"?"
+
+msgid "Are you sure you want to lock the gallery?"
+msgstr "Segur que voleu bloquejar la galeria?"
+
+msgid "Are you sure you want to restore the plugin \"%s\"?"
+msgstr "Segur que voleu restaurar el connector \"%s\"?"
+
+msgid "Are you sure you want to restore this plugin?"
+msgstr "Segur que voleu restaurar aquest connector?"
+
+msgid "Are you sure you want to restore to default settings?"
+msgstr "Segur que voleu revertir a la configuració per defecte?"
+
+msgid "Are you sure you want to update all extensions?"
+msgstr "Segur que voleu actualitzar totes les extensions?"
+
+msgid "At least 2 selected tags are needed to merge"
+msgstr "Es necessiten almenys 2 etiquetes seleccionades per fusionar-les"
+
+msgid "Choose which tag to merge these tags into"
+msgstr "Escolliu en quina etiqueta voleu fusionar aquestes etiquetes"
+
+msgid "Clear Selection"
+msgstr "Neteja la selecció"
+
+msgid "Delete album"
+msgstr "Elimina l'àlbum"
+
+msgid "Delete orphan tags ?"
+msgstr "Elimino les etiquetes òrfenes?"
+
+msgid "Delete tag \"%s\"?"
+msgstr "Elimino l'etiqueta \"%s\"?"
+
+msgid "Delete tags \\{%s\\}?"
+msgstr "Elimino les etiquetes \\{%s\\}?"
+
+msgid "Delete them"
+msgstr "Elimina-les"
+
+msgid "Display"
+msgstr "Mostra"
+
+msgid "Displays a banner to install or open the official Piwigo app"
+msgstr "Mostra un bàner per instal·lar o obrir l'aplicació oficial de Piwigo"
+
+msgid "File type: %s"
+msgstr "Tipus de fitxer: %s"
+
+msgid "Keep them"
+msgstr "Manten-les"
+
+msgid "Manage album photos"
+msgstr "Gestiona les fotos de l'àlbum"
+
+msgid "Manage sub-albums"
+msgstr "Gestiona sub-àlbums"
+
+msgid "Merge"
+msgstr "Fusiona"
+
+msgid "No tag found"
+msgstr "No s'ha trobat cap etiqueta"
+
+msgid "No, I have changed my mind"
+msgstr "No, he canviat d'opinió"
+
+msgid "Open in gallery"
+msgstr "Obre a la galeria"
+
+msgid "Please upgrade your PHP version before any update."
+msgstr "Actualitzeu la vostra versió de PHP abans de fer cap actualització."
+
+msgid "Portraits"
+msgstr "Retrats"
+
+msgid "Posted %s"
+msgstr "Publicada %s"
+
+msgid "Promote mobile app on mobile devices"
+msgstr "Promou l'app mòbil en dispositius mòbils"
+
+msgid "Requires PHP %s"
+msgstr "Requereix PHP %s"
+
+msgid "Review"
+msgstr "Revisa"
+
+msgid "Search albums"
+msgstr "Cerca àlbums"
+
+msgid "Select"
+msgstr "Selecciona"
+
+msgid "Select all %d tags"
+msgstr "Selecciona totes les etiquetes (%d)"
+
+msgid "Selection mode"
+msgstr "Mode de selecció"
+
+msgid "Tag \"%s\" created"
+msgstr "S'ha creat l'etiqueta \"%s\""
+
+msgid "Tag \"%s\" succesfully deleted"
+msgstr "S'ha suprimit amb èxit l'etiqueta \\\"%s\\\""
+
+msgid "Tag \"%s1\" renamed in \"%s2\""
+msgstr "S'ha reanomenat l'etiqueta \\\"%s1\\\" com a \\\"%s2\\\""
+
+msgid "Tag Manager"
+msgstr "Gestor d'etiquetes"
+
+msgid "Tag(s) \\{%s1\\} succesfully merged into \"%s2\""
+msgstr "S'ha fusionat amb èxit l'etiqueta \\\"%s1\\\" a \\\"%s2\\\""
+
+msgid "Tags \\{%s\\} succesfully deleted"
+msgstr "Les etiquetes \\{%s\\} s'han eliminat amb èxit"
+
+msgid "The %d tags on this page are selected"
+msgstr "S'han seleccionat les %d etiquetes d'aquesta pàgina"
+
+msgid "The other tags will be removed"
+msgstr "La resta d'etiquetes s'eliminaran"
+
+msgid "Yes, I am sure"
+msgstr "Si, segur"
+
+msgid "Yes, delete"
+msgstr "Si, elimina"
+
+msgid "You have %d orphan tags %s"
+msgstr "Teniu %d etiquetes orfes %s"
+
+msgid "You have %s1 orphan : %s2"
+msgstr "Teniu %s1 orfe: %s2"
+
+msgid "and %s others"
+msgstr "i %s d'altres"
+
+msgid "in administration"
+msgstr "a l'administració"
+
+msgid "in gallery"
+msgstr "a la galeria"
+
+msgid "no photo"
+msgstr "No hi ha cap foto"
+
+msgid " (copy %s)"
+msgstr "(còpia %s)"
+
+msgid " (copy)"
+msgstr "(còpia)"
+
+msgid "%d photos"
+msgstr "%d fotos"
+
+msgid "%s GB used"
+msgstr "%s GB utilitzats"
+
+msgid "%s MB used"
+msgstr "%s MB utilitzats"
+
+msgid "%s other tags available.."
+msgstr "%s etiquetes més disponibles."
+
+msgid "<b>%d</b> tag found"
+msgstr "<b>%d</b> etiqueta trobada"
+
+msgid "<b>%d</b> tag selected"
+msgstr "<b>%d</b> etiqueta seleccionada"
+
+msgid "<b>%d</b> tags found"
+msgstr "<b>%d</b> etiquetes trobades"
+
+msgid "Group(s) \\{%s1\\} succesfully merged into \"%s2\""
+msgstr "Grup o grups \\{%s1\\} fusionats amb èxit a \"%s2\""
+
+msgid "Groups \\{%s\\} succesfully deleted"
+msgstr "Grups \\{%s\\} suprimits amb èxit"
+
+msgid "Manage users with user manager"
+msgstr "Gestionar usuaris amb el gestor d'usuaris"
+
+msgid "Name is already taken"
+msgstr "El nom ja s'està utilitzant"
+
+msgid "No albums found"
+msgstr "No s'ha trobat cap àlbum"
+
+msgid "No plugins found"
+msgstr "No s'ha trobat cap connector"
+
+msgid "Other"
+msgstr "Altre"
+
+msgid "Page Visited"
+msgstr "Pàgina visitada"
+
+msgid "Page Visited in %s"
+msgstr "Pàgina visitada el %s"
+
+msgid "Refresh thumbnail"
+msgstr "Actualitza miniatura"
+
+msgid "Set as default"
+msgstr "Defineix per defecte"
+
+msgid "Set as group for new users"
+msgstr "Defineix com a grup per als nous usuaris"
+
+msgid "Show inactive plugins"
+msgstr "Mostra els connectors inactius"
+
+msgid "Showing %s users out of %s"
+msgstr "Mostrant %s usuaris d'un total de %s"
+
+msgid "Storage"
+msgstr "Emmagatzenament"
+
+msgid "This is already the default theme"
+msgstr "Aquest ja és el tema per defecte"
+
+msgid "Unset as group for new users"
+msgstr "Treu la definició com a grup per als nous usuaris"
+
+msgid "User \"%s\" dissociated from this group"
+msgstr "L'usuari \"%s\" s'ha dissociat d'aquest grup"
+
+msgid "User associated"
+msgstr "Usuari associat"
+
+msgid "Videos"
+msgstr "Vídeos"
+
+msgid "You don't have access to this photo"
+msgstr "No teniu accés a aquesta foto"
+
+msgid "You have %s inactive plugins"
+msgstr "Teniu %s connectors inactius"
+
+msgid "%d Activities"
+msgstr "%d activitats"
+
+msgid "%d Activity"
+msgstr "%d activitat"
+
+msgid "%d sub-albums"
+msgstr "%d sub-àlbums"
+
+msgid "%s file type"
+msgstr "%s tipus de fitxer"
+
+msgid "<b>%d</b> albums found"
+msgstr "S'han trobat <b>%d</b> àlbums"
+
+msgid "<b>1</b> album found"
+msgstr "S'ha trobat <b>1</b> àlbum"
+
+msgid "Activity peak in the last weeks"
+msgstr "Pic d'activitat en les darreres setmanes"
+
+msgid "Album search tool"
+msgstr "Eina de cerca en àlbums"
+
+msgid "Are you sure you want to delete group \"%s\"?"
+msgstr "Segur que voleu suprimir el grup \"%s\"?"
+
+msgid "Associate User"
+msgstr "Associa l'usuari"
+
+msgid "Average last 12 months"
+msgstr "Mitjana dels darrers 12 mesos"
+
+msgid "Cache"
+msgstr "Cau"
+
+msgid "Compare mode"
+msgstr "Mode de comparació"
+
+msgid "Created on %s"
+msgstr "Creat el %s"
+
+msgid "Dissociate user from this group"
+msgstr "Dissocia l'usuari d'aquest grup"
+
+msgid "Edited on %s"
+msgstr "Editat el %s"
+
+msgid "Formats"
+msgstr "Formats"
+
+msgid "Group \"%s\" succesfully deleted"
+msgstr "S'ha esborrat amb èxit el grup \"%s\""
+
+msgid "Group added"
+msgstr "Grup afegit"
+
+msgid "Group renamed"
+msgstr "Grup reanomenat"
+
+msgid "<b>%d+</b> albums found, try to refine the search"
+msgstr "S'han trobat <b>%d+</b> àlbums; proveu a afinar la cerca"
+
+msgid "Add Album"
+msgstr "Afegeix un àlbum"
+
+msgid "Apply an automatic order to root albums"
+msgstr "Aplica un ordre automàtic als àlbums arrel"
+
+msgid "Apply to direct sub-albums"
+msgstr "Aplica als sub-àlbums directes"
+
+msgid "Apply to the whole hierarchy"
+msgstr "Aplica a la jerarquia sencera"
+
+msgid "Compact View"
+msgstr "Vista compacta"
+
+msgid "Drag and drop to reorder albums"
+msgstr "Arrossegueu i deixeu anar per reordenar els àlbums"
+
+msgid "Hide sub-albums"
+msgstr "Amaga els sub-àlbums"
+
+msgid "Line View"
+msgstr "Vista en línies"
+
+msgid "Name field must not be empty"
+msgstr "El camp del nom no pot quedar buit"
+
+msgid "Root"
+msgstr "Arrel"
+
+msgid "Select an album... or type it!"
+msgstr "Seleccioneu un àlbum... o escriviu-lo!"
+
+msgid "Show sub-albums"
+msgstr "Mostra els sub-àlbums"
+
+msgid "Tile View"
+msgstr "Vista en rajoles"
+
+msgid "logout"
+msgstr "final de sessió"
+
+msgid "months ago"
+msgstr "mesos enrere"
+
+msgid "move"
+msgstr "mou"
+
+msgid "never calculated"
+msgstr "no calculat mai"
+
+msgid "right now"
+msgstr "ara mateix"
+
+msgid "to"
+msgstr "a"
+
+msgid "Change Password"
+msgstr "Canvia la contrasenya"
+
+msgid "Close"
+msgstr "Tanca"
+
+msgid "Deactivated"
+msgstr "Desactivat"
+
+msgid "Dec"
+msgstr "Des"
+
+msgid "Delete these sizes"
+msgstr "Suprimeix aquestes mides"
+
+msgid "Delete user"
+msgstr "Suprimeix l'usuari"
+
+msgid "Download all activities"
+msgstr "Descarrega totes les activitats"
+
+msgid "Edit"
+msgstr "Edita"
+
+msgid "Edit guest user"
+msgstr "Edita l'usuari convidat"
+
+msgid "Email"
+msgstr "Correu electrònic"
+
+msgid "Email Adress"
+msgstr "Adreça de correu electrònic"
+
+msgid "Equivalent to deactivation. The user is still in the list, but can no longer log in."
+msgstr "Equival a la desactivació. L'usuari encara és a la llista però ja no pot iniciar sessió."
+
+msgid "Feb"
+msgstr "Feb"
+
+msgid "Filters"
+msgstr "Filtres"
+
+msgid "Generate random password"
+msgstr "Genera contrasenya aleatòria"
+
+msgid "Has access to administration. Can only manage content: photos/albums/users/tags/groups."
+msgstr "Té accés a l'administració. Només pot gestionar contingut: fotos/àlbums/usuaris/etiquetes/grups."
+
+msgid "Has access to all administration functionnalities. Can manage both configuration and content."
+msgstr "Té accés a totes les funcions d'administració. Pot gestionar tant la configuració com el contingut."
+
+msgid "Jan"
+msgstr "Gen"
+
+msgid "Jul"
+msgstr "Jul"
+
+msgid "Jun"
+msgstr "Jun"
+
+msgid "Language"
+msgstr "Idioma"
+
+msgid "Last visit"
+msgstr "Darrera visita"
+
+msgid "Manage users"
+msgstr "Gestiona usuaris"
+
+msgid "Mar"
+msgstr "Mar"
+
+msgid "May"
+msgstr "Mai"
+
+msgid "New user added"
+msgstr "Afegit nou usuari"
+
+msgid "No access to administration, can see private content with appropriate permissions."
+msgstr "Sense accés a l'administració, pot veure contingut privat amb els permisos adequats"
+
+msgid "No plugin activated"
+msgstr "No hi ha cap connector activat"
+
+msgid "Nov"
+msgstr "Nov"
+
+msgid "Oct"
+msgstr "Oct"
+
+msgid "Photos per page"
+msgstr "Fotos per pàgina"
+
+msgid "Plugin \"%s\" deleted!"
+msgstr "El connector \"%s\" s'ha suprimit"
+
+msgid "Plugin \"%s\" has been activated!"
+msgstr "El connector \"%s\" s'ha activat"
+
+msgid "Registered"
+msgstr "Registrat"
+
+msgid "Restored"
+msgstr "Restaurat"
+
+msgid "Select groups or type them"
+msgstr "Seleccioneu o escriviu grups"
+
+msgid "Selected user"
+msgstr "Usuari seleccionat"
+
+msgid "Sep"
+msgstr "Set"
+
+msgid "Show"
+msgstr "Mostra"
+
+msgid "Synchronization"
+msgstr "Sincronització"
+
+msgid "Theme"
+msgstr "Tema"
+
+msgid "Update"
+msgstr "Actualització"
+
+msgid "User updated"
+msgstr "Usuari actualitzat"
+
+msgid "Users not logged in will have these settings applied, these settings are used by default for new users"
+msgstr "S'aplicaran aquests valors als usuaris que no hagin iniciat sessió; aquests són els valors per defecte per als nous usuaris"
+
+msgid "add"
+msgstr "afegeix"
+
+msgid "between %s and %s"
+msgstr "entre %s i %s"
+
+msgid "calculated"
+msgstr "calculat"
+
+msgid "deletion"
+msgstr "supressió"
+
+msgid "edit"
+msgstr "edita"
+
+msgid "login"
+msgstr "Inicia sessió"
+
+msgid "%d album added"
+msgstr "%d àlbum afegit"
+
+msgid "%d album deleted"
+msgstr "%d àlbum suprimit"
+
+msgid "%d album edited"
+msgstr "%d àlbum editat"
+
+msgid "%d albums added"
+msgstr "%d àlbums afegits"
+
+msgid "%d albums deleted"
+msgstr "%d àlbums suprimits"
+
+msgid "%d albums edited"
+msgstr "%d àlbums editats"
+
+msgid "%d group added"
+msgstr "%d grup afegit"
+
+msgid "%d group deleted"
+msgstr "%d grup suprimit"
+
+msgid "%d group edited"
+msgstr "%d grup editat"
+
+msgid "%d group moved"
+msgstr "%d grup mogut"
+
+msgid "%d groups added"
+msgstr "%d grups afegits"
+
+msgid "%d groups deleted"
+msgstr "%d grups suprimits"
+
+msgid "%d groups edited"
+msgstr "%d grups editats"
+
+msgid "%d groups moved"
+msgstr "%d grups moguts"
+
+msgid "%d photo added"
+msgstr "%d foto afegida"
+
+msgid "%d photo deleted"
+msgstr "%d foto suprimida"
+
+msgid "%d photo edited"
+msgstr "%d foto editada"
+
+msgid "%d photo moved"
+msgstr "%d foto moguda"
+
+msgid "%d photos added"
+msgstr "%d fotos afegides"
+
+msgid "%d photos deleted"
+msgstr "%d fotos suprimides"
+
+msgid "%d photos edited"
+msgstr "%d fotos editades"
+
+msgid "%d photos moved"
+msgstr "%d fotos mogudes"
+
+msgid "%d tag added"
+msgstr "%d etiqueta afegida"
+
+msgid "%d tag deleted"
+msgstr "%d etiqueta suprimida"
+
+msgid "%d tag edited"
+msgstr "%d etiqueta editada"
+
+msgid "%d tag moved"
+msgstr "%d etiqueta moguda"
+
+msgid "%d tags added"
+msgstr "%d etiquetes afegides"
+
+msgid "%d tags deleted"
+msgstr "%d etiquetes suprimides"
+
+msgid "%d tags edited"
+msgstr "%d etiquetes editades"
+
+msgid "%d tags moved"
+msgstr "%d etiquetes mogudes"
+
+msgid "%d user added"
+msgstr "%d usuari afegit"
+
+msgid "%d user edited"
+msgstr "%d usuari editat"
+
+msgid "%d user logged in"
+msgstr "%d usuari connectat"
+
+msgid "%d user logged out"
+msgstr "%d usuari desconnectat"
+
+msgid "%d users added"
+msgstr "%d usuaris afegits"
+
+msgid "%d users edited"
+msgstr "%d usuaris editats"
+
+msgid "%d users logged in"
+msgstr "%d usuaris connectats"
+
+msgid "%d users logged out"
+msgstr "%d usuaris desconnectats"
+
+msgid "%s MB"
+msgstr "%s MB"
+
+msgid "Activated"
+msgstr "Activat"
+
+msgid "Activated plugin list"
+msgstr "Llista de connectors activats"
+
+msgid "Activity"
+msgstr "Activitat"
+
+msgid "Activity time from"
+msgstr "Temps d'activitat des de"
+
+msgid "Add User"
+msgstr "Afegeix usuari"
+
+msgid "Add a new user"
+msgstr "Afegeix un nou usuari"
+
+msgid "Advanced filters"
+msgstr "Filtres avançats"
+
+msgid "Apr"
+msgstr "Abr"
+
+msgid "Aug"
+msgstr "Ago"
+
+msgid "Cache size"
+msgstr "Mida de la memòria cau"
+
+msgid "Can be shared by several individuals without conflict (they cannot change the password)."
+msgstr "Es pot compartir entre diversos individus sense conflicte (no poden canviar la contrasenya)"
+
+msgid "%s line"
+msgstr "%s línia"
+
+msgid "%s lines"
+msgstr "%s línies"
+
+msgid "%s plugin found"
+msgstr "<b>%s</b> connector trobat"
+
+msgid "%s plugins found"
+msgstr "<b>%s</b> connectors trobats"
+
+msgid "%s status is required to edit parameters."
+msgstr "Es requereix l'estat %s per editar paràmetres"
+
+msgid "Edit photo #%s"
+msgstr "Edita la foto número %s"
+
+msgid "Locked albums are disabled for maintenance. Only administrators can view them in the gallery. Lock this album will also lock his Sub-albums"
+msgstr "Els àlbums bloquejats estan inhabilitats per manteniment. Només els administradors els poden veure a la galeria. Bloquejar aquest àlbum també bloquejarà els seus sub-àlbums"
+
+msgid "Webmaster status required"
+msgstr "Cal categoria de Webmaster"
+
+msgid "Your selection"
+msgstr "La vostra selecció"
+
+msgid "action successfully performed."
+msgstr "acció realitzada amb èxit."
+
+msgid "This plugin has no recent update"
+msgstr "Aquest connector no té actualitzacions recents"
+
+msgid "This plugin have been updated recently"
+msgstr "Aquest connector s'ha actualitzat recentment"
+
+msgid "This plugin have no update since 3 years ! It may be outdated"
+msgstr "Aquest connector no s'ha actualitzat en tres anys! És possible que estigui desactualitzat"
+
+msgid "This plugin is incompatible with your version"
+msgstr "Aquest connector no és compatible amb la vostra versió"
+
+msgid "This plugin was updated less than 6 months ago"
+msgstr "Aquest connector s'ha actualitzat fa menys de sis mesos"
+
+msgid "Try now !"
+msgstr "Provem-ho ara!"
+
+msgid "Understood, do not show again"
+msgstr "Entesos, no tornis a mostrar-ho"
+
+msgid "Upload Formats"
+msgstr "Carrega formats"
+
+msgid "Version %s"
+msgstr "Versió %s"
+
+msgid "Visited"
+msgstr "Visitada"
+
+msgid "Yes, rename"
+msgstr "Sí, reanomenar"
+
+msgid "and %d more"
+msgstr "i %d més"
+
+msgid "since the beginning"
+msgstr "des del principi"
+
+msgid "%d formats uploaded for %d photos"
+msgstr "%d formats carregats per a %d fotos"
+
+msgid "%s pixels, %.2f MB"
+msgstr "%s píxels, %.2f MB"
+
+msgid "%sGB"
+msgstr "%s GB"
+
+msgid "%sMB"
+msgstr "%s MB"
+
+msgid "Add New Plugin"
+msgstr "Afegeix un connector nou"
+
+msgid "Add another set of formats"
+msgstr "Afegeix un altre conjunt de formats"
+
+msgid "Add as filter"
+msgstr "Afegeix com a filtre"
+
+msgid "Add formats"
+msgstr "Afegeix formats"
+
+msgid "Additional filters"
+msgstr "Filtres addicionals"
+
+msgid "Are you sure you want to uninstall the plugin \"%s\"?"
+msgstr "Segur que voleu desinstal·lar el connector \"%s\"?"
+
+msgid "Are you sure you want to unlock the gallery?"
+msgstr "Segur que voleu desbloquejar la galeria?"
+
+msgid "Certification higher or equal to"
+msgstr "Certificació igual o superior que"
+
+msgid "Create a new album at root"
+msgstr "Crea un nou àlbum a l'arrel"
+
+msgid "Create a sub-album of \"%s\""
+msgstr "Crea un sub-àlbum de \"%s\""
+
+msgid "Current Version"
+msgstr "Versió actual"
+
+msgid "Currently running version %s"
+msgstr "Actualment s'està executant la versió %s"
+
+msgid "Delete %s format ?"
+msgstr "Suprimeixo el format %s?"
+
+msgid "Discover"
+msgstr "Descobrir"
+
+msgid "Downloaded"
+msgstr "descarregat"
+
+msgid "Error when trying to detect formats"
+msgstr "Error en intentar detectar formats"
+
+msgid "Extensions"
+msgstr "Extensions"
+
+msgid "Global Gallery Actions"
+msgstr "Accions globals de galeria"
+
+msgid "Install Piwigo on mobile"
+msgstr "Instal·la Piwigo en el mòbil"
+
+msgid "Last revision date is newer than"
+msgstr "La data de la darrera revisió és posterior a"
+
+msgid "Latest Piwigo news"
+msgstr "Darreres notícies de Piwigo"
+
+msgid "Memories"
+msgstr "Records"
+
+msgid "More information"
+msgstr "Més informació"
+
+msgid "No format for this picture"
+msgstr "No hi ha format per a aquesta imatge"
+
+msgid "No picture found with the following name : %s."
+msgstr "No s'ha trobat cap imatge amb el nom següent: %s."
+
+msgid "No research in progress"
+msgstr "No hi ha cap recerca en curs"
+
+msgid "No search in progress"
+msgstr "No hi ha cap cerca en curs"
+
+msgid "Object"
+msgstr "Objecte"
+
+msgid "On %d rating(s)"
+msgstr "en %d qualificació(ns)"
+
+msgid "Picture to associate formats with"
+msgstr "Imatge amb què associar els formats"
+
+msgid "Piwigo core"
+msgstr "Nucli de Piwigo"
+
+msgid "Piwigo is also on mobile."
+msgstr "Piwigo també hi és als mòbils"
+
+msgid "Properties of abums"
+msgstr "Propietats dels àlbums"
+
+msgid "Purge Actions"
+msgstr "Accions de purga"
+
+msgid "Purge Cache"
+msgstr "Purga la memòria cau"
+
+msgid "Rating greater than"
+msgstr "Qualificació més gran que"
+
+msgid "Rename \"%s\""
+msgstr "Reanomena \"%s\""
+
+msgid "Show beta test plugins"
+msgstr "Mostra els connectors en proves beta"
+
+msgid "Show plugins compatible with previous version of Piwigo"
+msgstr "Mostra els connectors compatibles amb versions anteriors de Piwigo"
+
+msgid "Tag name"
+msgstr "Nom de l'etiqueta"
+
+msgid "The original picture will be detected with the filename (without extension)."
+msgstr "La imatge original es detectarà amb el fitxer (sense extensió)."
+
+msgid "There is multiple image in the database with the following names : %s."
+msgstr "Hi ha diverses imatges a la base de dades amb els noms següents: %s."
+
+msgid "This albums is already in related categories list"
+msgstr "Aquest àlbum ja està a la llista d'àlbums relacionats"
+
+msgid "This photo is an orphan"
+msgstr "Aquesta foto és orfe"
+
+msgid "Place first"
+msgstr "Col·loca primer"
+
+msgid "Place last"
+msgstr "Col·loca últim"
+
+msgid "Installed on %s, %s"
+msgstr "Instal·lat el %s, %s"
+
+msgid "This picture is physically linked to this album, you can't dissociate them"
+msgstr "Aquesta foto està enllaçada físicament a aquest àlbum, no els podeu dissociar."
+
+msgid "While restoring this plugin, it will be reset to its original parameters and associated data is going to be reset"
+msgstr "En restaurar aquest connector, es restablirà als seus paràmetres originals i també es restabliran les dades associades."
+
+msgid "Always have a backup of your database and files."
+msgstr "Tingueu sempre una còpia de seguretat de la base de dades i dels fitxers."
+
+msgid "Apply to root albums"
+msgstr "Aplica als àlbums arrel"
+
+msgid "Details"
+msgstr "Detalls"
+
+msgid "If anything bad happens during the update, you would be able to restore a backup."
+msgstr "Si passa qualsevol cosa indesitjable durant l'actualització, podríeu restaurar una còpia de seguretat."
+
+msgid "The best is to have them made automatically on a regular basis."
+msgstr "El millor és que es facin automàticament de manera regular."
+
+msgid "This photo no longer exists"
+msgstr "Aquesta foto ja no existeix"
+
+msgid "Album name must not be empty"
+msgstr "El nom de l'àlbum no pot estar buit"
+
+msgid "Visit history"
+msgstr "Historial de visites"
+
+msgid "Some photos are missing from your file system. Details provided by plugin Check Uploads"
+msgstr "Manquen algunes fotos del vostre sistema de fitxers. El connector Check Uploads us en donarà detalls."
+
+msgid "%d pictures in sub-albums"
+msgstr "%d fotos en sub-àlbums"
+
+msgid "<b>%d</b> filtered user"
+msgstr "<b>%d</b> usuari filtrat"
+
+msgid "<b>%d</b> filtered users"
+msgstr "<b>%d</b> usuaris filtrats"
+
+msgid "%d in whole branch"
+msgstr "%d a la branca sencera"
+
+msgid "%d including sub-albums"
+msgstr "%d incloent-hi els sub-àlbums"
+
+msgid "Activate button \"%s\""
+msgstr "Activa el botó \"%s\""
+
+msgid "All admins"
+msgstr "Tots els administradors"
+
+msgid "Allow comments for sub-albums"
+msgstr "Permet comentaris per als sub-àlbums"
+
+msgid "Authorize comments"
+msgstr "Autoritza comentaris"
+
+msgid "Comments allowed for sub-albums"
+msgstr "Comentaris permesos per als sub-àlbums"
+
+msgid "Comments disallowed for sub-albums"
+msgstr "Comentaris no permesos per als sub-àlbums"
+
+msgid "Created"
+msgstr "Creat"
+
+msgid "Detect and avoid duplicates during upload"
+msgstr "Detecta i evita els duplicats durant la càrrega"
+
+msgid "Disallow comments for sub-albums"
+msgstr "No permetis comentaris per als sub-àlbums"
+
+msgid "During upload, if Piwigo detects the photo already exists, associate the existing photo to the destination album, without duplicating file"
+msgstr "Durant la càrrega, si Piwigo detecta que la foto ja existeix, associarà la foto existen a l'àlbum de destinació sense duplicar el fitxer."
+
+msgid "Locked album"
+msgstr "Àlbum bloquejat"
+
+msgid "Modified"
+msgstr "Modificat"
+
+msgid "Only admins in a specific group"
+msgstr "Només els administradors que pertanyin a un grup específic"
+
+msgid "Put at the root"
+msgstr "Posa a l'arrel"
+
+msgid "Remove thumbnail"
+msgstr "Elimina miniatura"
+
+msgid "This album is currently locked, visible only to administrators."
+msgstr "Aquest àlbum està bloquejat actualment, i és visible només per als administradors."
+
+msgid "Unlock it"
+msgstr "Desbloqueja'l"
+
+msgid "Unlocked album"
+msgstr "Àlbum desbloquejat"
+
+msgid "%d files"
+msgstr "%d fitxers"
+
+msgid "Expand"
+msgstr "Expandeix"
+
+msgid "Shrink"
+msgstr "Contreu"
+
+msgid "Activate create mode to create and select an album"
+msgstr "Activeu el mode de creació per crear i seleccionar un àlbum"
+
+msgid "Add a sub-album to “%s”"
+msgstr "Afegeix un àlbum a \"%s\""
+
+msgid "Added on %s"
+msgstr "Afegit en %s"
+
+msgid "An error has occured"
+msgstr "S'ha produït un error"
+
+msgid "Auto-update"
+msgstr "Actualització automàtica"
+
+msgid "Changes saved"
+msgstr "Canvis desats"
+
+msgid "Core"
+msgstr "Nucli"
+
+msgid "Create a root album"
+msgstr "Crea un àlbum arrel"
+
+msgid "Create and select"
+msgstr "Crea i selecciona"
+
+msgid "Create your first album"
+msgstr "Creeu el vostre primer àlbum"
+
+msgid "Creation mode"
+msgstr "Mode de creació"
+
+msgid "First choose an album, then add your files"
+msgstr "Primer escolliu un àlbum i a continuació afegiu-hi els vostres fitxers"
+
+msgid "Image"
+msgstr "Imatge"
+
+msgid "Metadata sync complete"
+msgstr "Sincronització de metadades completa"
+
+msgid "Pagination has changed and needs to be reloaded !"
+msgstr "La paginació ha canviat i s'ha de recarregar!"
+
+msgid "Save"
+msgstr "Desa"
+
+msgid "Select or create an album"
+msgstr "Seleccioneu o creeu un àlbum"
+
+msgid "System Activities"
+msgstr "Activitats del sistema"
+
+msgid "Who can see ?"
+msgstr "Qui ho pot veure?"
+
+msgid "You have unsaved changes"
+msgstr "Teniu canvis sense desar"
+
+msgid "between %d and %d"
+msgstr "entre %d i %d"
+
+msgid "image(s) contains unsaved changes"
+msgstr "Una o més imatges contenen canvis sense desar"
+
+msgid "level of confidentiality"
+msgstr "nivell de confidencialitat"
+
+msgid "was succesfully deleted"
+msgstr "s'ha suprimit amb èxit"
+
+msgid "%s is the new main user"
+msgstr "%s és el nou usuari principal"
+
+msgid "Cannot send an email to this user because he doesn't have an email address"
+msgstr "No es pot enviar un correu electrònic a aquest usuari perquè no té cap adreça electrònica"
+
+msgid "Changing the main user"
+msgstr "Canvi d'usuari principal"
+
+msgid "Copied link"
+msgstr "Enllaç copiat"
+
+msgid "Copy password"
+msgstr "Copia la contrasenya"
+
+msgid "Copy the link below and send it to the user so the password can be set."
+msgstr "Copieu l'enllaç següent i envieu-lo a l'usuari perquè pugui establir-se la contrasenya."
+
+msgid "Copy the password link"
+msgstr "Copia l'enllaç de la contrasenya"
+
+msgid "Main user"
+msgstr "Usuari principal"
+
+msgid "Password copied"
+msgstr "Contrasenya copiada"
+
+msgid "Please complete all fields"
+msgstr "Si us plau, ompliu tots els camps"
+
+msgid "Resend password link"
+msgstr "Torna a enviar l'enllaç de la contrasenya"
+
+msgid "Set as main user"
+msgstr "Estableix com a usuari principal"
+
+msgid "The passwords do not match"
+msgstr "Les contrasenyes no coincideixen"
+
+msgid "This user must first be defined as the webmaster before it can be upgraded to the main user"
+msgstr "Aquest usuari s'ha de definir com a administrador web abans que es pugui actualitzar a l'usuari principal"
+
+msgid "To be sure, please rewrite the word “%s” below"
+msgstr "Per confirmar, torneu a escriure la paraula \"%s\" a continuació"
+
+msgid "Username successfully modified"
+msgstr "El nom d'usuari s'ha modificat correctament"
+
+msgid "Yes, let's proceed"
+msgstr "Sí, endavant"
+
+msgid "You are about to set %s as main user instead of %s, do you wish to continue ?"
+msgstr "Esteu a punt d'establir %s com a usuari principal en lloc de %s. Voleu continuar?"
+
+msgid "You are not authorised to change the main user, please ask your webmaster"
+msgstr "No teniu autorització per canviar l'usuari principal, demaneu-ho al vostre administrador web"
+
+msgid "You can now change the main user from %s to %s."
+msgstr "Ja podeu canviar l'usuari principal de %s a %s."
+
+msgid "You cannot copy the password if the connection to this site is not secure."
+msgstr "No podeu copiar la contrasenya si la connexió a aquest lloc no és segura."
+
+msgid "Ok, got it!"
+msgstr "D'acord, entesos!"
+
+msgid "Read the release note"
+msgstr "Llegiu les notes de la versió"
+
+msgid "What's new in version %s"
+msgstr "Quines novetats hi ha a la versió %s?"
+
+msgid "A photo library administrator has created the following account for you:"
+msgstr "Un administrador de la biblioteca fotogràfica us ha creat el següent compte:"
+
+msgid "An activation link valid for %s has been sent to \"%s\". If the user doesn't receive the link, you can generate and copy a new one by editing the user and managing her password."
+msgstr "S'ha enviat un enllaç d'activació vàlid per %s a \"%s\". Si l'usuari no rep l'enllaç, podeu generar i copiar-ne un de nou editant l'usuari i gestionant la seva contrasenya."
+
+msgid "An activation link valid for %s was created but could not be sent. You can now copy the link below and send it to the user."
+msgstr "S'ha creat un enllaç d'activació vàlid per a %s però no s'ha pogut enviar. Podeu copiar l'enllaç següent i enviar-lo a l'usuari."
+
+msgid "This link is valid for %s. After this time, you will need to request a new link."
+msgstr "L'enllaç és vàlid per %s. Passat aquest temps, haureu de sol·licitar-ne un de nou."
+
+msgid "To set your password, visit the following address:"
+msgstr "Per definir la vostra contrasenya, visiteu l'adreça següent:"
+
+msgid "Welcome to %s"
+msgstr "Benvinguts a %s"
+
+msgid "We have found %d duplicate paths. Details provided by plugin Check Uploads"
+msgstr "Hem trobat %d camins d'accés duplicats. Els detalls els proporciona el connector Check Uploads (Comprovar Pujades)"
+
+msgid "%d photos were moved from the upload lounge to their albums"
+msgstr "S'han mogut %d fotos del vestíbul de pujada als seus àlbums."
+
+msgid "Are you sure you want to delete \"%d\" comments?"
+msgstr "Segur que voleu suprimir \"%d\" comentaris?"
+
+msgid "Are you sure you want to delete comment #%s?"
+msgstr "Segur que voleu suprimir el comentari número %s?"
+
+msgid "Empty lounge"
+msgstr "El vestíbul és buit"
+
+msgid "If a photo in this album has the same filename, update the file without changing the photo's properties"
+msgstr "Si una foto d'aquest àlbum té el mateix nom de fitxer, actualitza el fitxer sense canviar les propietats de la foto"
+
+msgid "No comments selected, no actions possible."
+msgstr "No s'ha seleccionat cap comentari, no hi ha accions possibles"
+
+msgid "Save all photos"
+msgstr "Desa totes les fotos"
+
+msgid "The comment has been validated."
+msgstr "El comentari s'ha validat."
+
+msgid "The comments have been validated."
+msgstr "Els comentaris s'han validat."
+
+msgid "There is currently %d photos in the lounge (upload buffer)"
+msgstr "Actualment hi ha %d fotos al vestíbul (memòria temporal de pujada)"
+
+msgid "Use standard Piwigo template for common pages."
+msgstr "Utilitza la plantilla estàndard de Piwigo per a les pàgines comunes."
+
+msgid "When enabled, a common template is used for the login, registration and forgotten password pages, regardless of the theme. Some themes might use these templates even if you uncheck this option"
+msgstr "Quan s'habilita, s'utilitza una plantilla comú per a les pàgines d'inici de sessió, de registre i de contrasenya oblidada, independentment del tema. És possible que alguns temes utilitzin aquestes plantilles fins i tot si es desactiva aquesta opció."
+
+msgid "Admins only"
+msgstr "Només administradors"
+
+msgid "Change logo"
+msgstr "Canvia el logotip"
+
+msgid "Dark mode"
+msgstr "Mode fosc"
+
+msgid "Display Gallery title"
+msgstr "Mostra el títol de la galeria"
+
+msgid "Light mode"
+msgstr "Mode clar"
+
+msgid "Personalization settings"
+msgstr "Valors de personalització"
+
+msgid "Select a color theme for standard pages"
+msgstr "Seleccioneu un tema de color per a les pàgines estàndard"
+
+msgid "Standard pages"
+msgstr "Pàgines estàndard"
+
+msgid "Standard pages aren't activated, however you have %d active themes that will still use them. These themes are:"
+msgstr "Les pàgines estàndard no estan activades, però teniu %d temes actius que les faran servir. Aquests temes són:"
+
+msgid "Standard pages header"
+msgstr "Capçalera de pàgines estàndard"
+
+msgid "Use Piwigo logo"
+msgstr "Utilitza el logotip de Piwigo"
+
+msgid "Use custom logo (png, jpeg or svg)"
+msgstr "Utilitza un logotip personalitzat (png, jpeg o svg)"
+
+msgid "user_status_normal"
+msgstr "Bàsic"
+

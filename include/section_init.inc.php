@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 use Piwigo\Cache\PersistentCache;
 use Piwigo\Core\Logger;
+use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 /**
@@ -309,7 +310,7 @@ if ($page['section'] == 'categories') {
                 $uppercats = is_string($uppercats) ? $uppercats : '';
                 $query = '
 SELECT id
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE
     uppercats LIKE \'' . $uppercats . ',%\' '
     . get_sql_condition_FandF(
@@ -362,8 +363,8 @@ SELECT id
             // main query
             $query = '
 SELECT DISTINCT(image_id)
-  FROM ' . IMAGE_CATEGORY_TABLE . '
-    INNER JOIN ' . IMAGES_TABLE . ' ON id = image_id
+  FROM ' . Tables::imageCategory() . '
+    INNER JOIN ' . Tables::images() . ' ON id = image_id
   WHERE
     ' . $where_sql . '
 ' . $forbidden . '
@@ -483,7 +484,7 @@ else {
         $user_id_sql = is_scalar($user_id_sql) ? $user_id_sql : 0;
         if (! empty($_GET['action']) && ($_GET['action'] == 'remove_all_from_favorites')) {
             $query = '
-DELETE FROM ' . FAVORITES_TABLE . '
+DELETE FROM ' . Tables::favorites() . '
   WHERE user_id = ' . $user_id_sql . '
 ;';
             pwg_query($query);
@@ -493,8 +494,8 @@ DELETE FROM ' . FAVORITES_TABLE . '
         } else {
             $query = '
 SELECT image_id
-  FROM ' . FAVORITES_TABLE . '
-    INNER JOIN ' . IMAGES_TABLE . ' ON image_id = id
+  FROM ' . Tables::favorites() . '
+    INNER JOIN ' . Tables::images() . ' ON image_id = id
   WHERE user_id = ' . $user_id_sql . '
 ' . get_sql_condition_FandF(
                 [
@@ -542,8 +543,8 @@ SELECT image_id
 
         $query = '
 SELECT DISTINCT(id)
-  FROM ' . IMAGES_TABLE . '
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id
+  FROM ' . Tables::images() . '
+    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
   WHERE '
   . get_recent_photos_sql('date_available') . '
   ' . $forbidden
@@ -586,8 +587,8 @@ SELECT DISTINCT(id)
 
         $query = '
 SELECT DISTINCT(id)
-  FROM ' . IMAGES_TABLE . '
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id
+  FROM ' . Tables::images() . '
+    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
   WHERE hit > 0
     ' . $forbidden . '
     ' . $conf['order_by'] . '
@@ -616,8 +617,8 @@ SELECT DISTINCT(id)
 
         $query = '
 SELECT DISTINCT(id)
-  FROM ' . IMAGES_TABLE . '
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id
+  FROM ' . Tables::images() . '
+    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
   WHERE rating_score IS NOT NULL
     ' . $forbidden . '
     ' . $conf['order_by'] . '
@@ -645,8 +646,8 @@ SELECT DISTINCT(id)
         $list_ids = array_map(strval(...), $list_ids_raw);
         $query = '
 SELECT DISTINCT(id)
-  FROM ' . IMAGES_TABLE . '
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id
+  FROM ' . Tables::images() . '
+    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
   WHERE image_id IN (' . implode(',', $list_ids) . ')
     ' . $forbidden . '
   ' . (is_string($conf['order_by']) ? $conf['order_by'] : '') . '

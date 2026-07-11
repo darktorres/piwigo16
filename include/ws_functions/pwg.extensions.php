@@ -13,6 +13,8 @@ use Piwigo\Admin\languages;
 use Piwigo\Admin\plugins;
 use Piwigo\Admin\themes;
 use Piwigo\Admin\updates;
+use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\AppInfo;
 use Piwigo\Template\Template;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
@@ -220,7 +222,7 @@ function ws_extensions_update(array $params, PwgServer &$service): PwgError|stri
             $activity_details['result'] = 'error';
         }
 
-        pwg_activity('system', ACTIVITY_SYSTEM_THEME, 'update', $activity_details);
+        pwg_activity('system', ActivitySystem::Theme, 'update', $activity_details);
     } elseif ($extension instanceof languages) {
         $upgrade_status = $extension->extract_language_files('upgrade', $revision, $extension_id);
         $extension_name = $extension->fs_languages[$extension_id]['name'];
@@ -342,11 +344,11 @@ function ws_extensions_checkupdates(array $params, PwgServer &$service): array
     $update = new updates();
     $result = [];
 
-    if (! isset($_SESSION['need_update' . PHPWG_VERSION])) {
+    if (! isset($_SESSION['need_update' . AppInfo::VERSION])) {
         updates::check_piwigo_upgrade();
     }
 
-    $result['piwigo_need_update'] = $_SESSION['need_update' . PHPWG_VERSION];
+    $result['piwigo_need_update'] = $_SESSION['need_update' . AppInfo::VERSION];
 
     // $conf['updates_ignored'] is a serialized string written by
     // conf_update_param() (see ws_extensions_ignoreupdate() above); guard

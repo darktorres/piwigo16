@@ -9,12 +9,14 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\AccessLevel;
+
 if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-check_status(ACCESS_ADMINISTRATOR);
+check_status(AccessLevel::Administrator);
 
 $section_param = $_GET['section'] ?? '';
 $sections = explode('/', is_string($section_param) ? $section_param : '');

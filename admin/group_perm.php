@@ -9,6 +9,9 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\AccessLevel;
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
@@ -28,12 +31,12 @@ include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_ADMINISTRATOR);
+check_status(AccessLevel::Administrator);
 
 if (! empty($_POST)) {
     check_pwg_token();
-    check_input_parameter('cat_true', $_POST, true, PATTERN_ID);
-    check_input_parameter('cat_false', $_POST, true, PATTERN_ID);
+    check_input_parameter('cat_true', $_POST, true, ValidationPattern::ID);
+    check_input_parameter('cat_false', $_POST, true, ValidationPattern::ID);
 }
 
 // check_input_parameter() above already fatal_error()s out unless these
@@ -54,10 +57,10 @@ if (! isset($_GET['group_id'])) {
     fatal_error('group_id URL parameter is missing');
 }
 
-check_input_parameter('group_id', $_GET, false, PATTERN_ID);
+check_input_parameter('group_id', $_GET, false, ValidationPattern::ID);
 
 // check_input_parameter() above already fatal_error()s out unless
-// group_id matches PATTERN_ID (digits only), but that guarantee isn't
+// group_id matches ValidationPattern::ID (digits only), but that guarantee isn't
 // visible to static analysis across the call; re-check here for a real
 // int narrowing.
 if (! is_numeric($_GET['group_id'])) {
@@ -77,7 +80,7 @@ if (isset($_POST['falsify'])
     $subcats = get_subcat_ids($cat_true);
     $query = '
 DELETE
-  FROM ' . GROUP_ACCESS_TABLE . '
+  FROM ' . Tables::groupAccess() . '
   WHERE group_id = ' . $page['group'] . '
   AND cat_id IN (' . implode(',', $subcats) . ')
 ;';
@@ -89,7 +92,7 @@ DELETE
 
     $query = '
 SELECT id
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE id IN (' . implode(',', $uppercats) . ')
   AND status = \'private\'
 ;';
@@ -105,7 +108,7 @@ SELECT id
 
     $query = '
 SELECT cat_id
-  FROM ' . GROUP_ACCESS_TABLE . '
+  FROM ' . Tables::groupAccess() . '
   WHERE group_id = ' . $page['group'] . '
 ;';
     $result = pwg_query($query);
@@ -123,7 +126,7 @@ SELECT cat_id
         ];
     }
 
-    mass_inserts(GROUP_ACCESS_TABLE, ['group_id', 'cat_id'], $inserts);
+    mass_inserts(Tables::groupAccess(), ['group_id', 'cat_id'], $inserts);
     invalidate_user_cache();
 }
 
@@ -156,7 +159,7 @@ $template->assign(
 // only private categories are listed
 $query_true = '
 SELECT id,name,uppercats,global_rank
-  FROM ' . CATEGORIES_TABLE . ' INNER JOIN ' . GROUP_ACCESS_TABLE . ' ON cat_id = id
+  FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::groupAccess() . ' ON cat_id = id
   WHERE status = \'private\'
     AND group_id = ' . $page['group'] . '
 ;';
@@ -170,7 +173,7 @@ while ((bool) ($row = pwg_db_fetch_assoc($result))) {
 
 $query_false = '
 SELECT id,name,uppercats,global_rank
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE status = \'private\'';
 if (count($authorized_ids) > 0) {
     $query_false .= '

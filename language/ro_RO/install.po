@@ -1,0 +1,146 @@
+# Piwigo translation — ro_RO
+# Source: install.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ro_RO\n"
+"Plural-Forms: nplurals=3; plural=(n == 1 ? 0 : n == 0 || n != 1 && n % 100 >= 1 && n % 100 <= 19 ? 1 : 2);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Admin configuration"
+msgstr "Configurarea Adminului"
+
+msgid "also given by your host provider"
+msgstr "De asemenea oferita de host"
+
+msgid "An alternate solution is to copy the text in the box above and paste it into the file \"local/config/database.inc.php\" (Warning : database.inc.php must only contain what is in the textarea, no line return or space character)"
+msgstr "O solutie alternativa ar fi sa copiezi textul din casuta de deasupra si sa il scrii in fila \"local/config/database.inc.php\" (Atentie database.inc.php trebuie sa contina doar caracterele din text, fara linie sau space)"
+
+msgid "Basic configuration"
+msgstr "Configurarea de baza"
+
+msgid "Can't connect to server"
+msgstr "Nu se poate conecta la server"
+
+msgid "Congratulations, Piwigo installation is completed"
+msgstr "Felicitari, Piwigo s-a instalat cu succes."
+
+msgid "Connection to server succeed, but it was impossible to connect to database"
+msgstr "Conectarea la server reusita, dar conexiunea cu baza de data este imposibila"
+
+msgid "Creation of config file local/config/database.inc.php failed."
+msgstr "Creearea filei local/config/database.inc.php a esuat"
+
+msgid "Database configuration"
+msgstr "Configurarea datezi de baze"
+
+msgid "Database name"
+msgstr "Numele bazei de date"
+
+msgid "Database table prefix"
+msgstr "Prefixele tabelelor bazei de date"
+
+msgid "database tables names will be prefixed with it (enables you to manage better your tables)"
+msgstr "Tabelele bazei de date vor avea prefix ( permitandu-ti o mai usoara administrare)"
+
+msgid "Default gallery language"
+msgstr "Limba default a galeriei"
+
+msgid "Don't hesitate to consult our forums for any help : %s"
+msgstr "Nu ezita sa vizitezi forumul pentru ajutor %s"
+
+msgid "Download the config file"
+msgstr "Descarca fila de configurare"
+
+msgid "enter a login for webmaster"
+msgstr "Introduceti userul pentru webmaster"
+
+msgid "Hope to see you back soon."
+msgstr "Speram sa te revedem curand! Pa."
+
+msgid "Host"
+msgstr "Host"
+
+msgid "Installation"
+msgstr "Instalare"
+
+msgid "It appears your webhost is currently running PHP %s."
+msgstr "Se pare ca webhostul tau ruleaza PHP %s."
+
+msgid "It will be shown to the visitors. It is necessary for website administration"
+msgstr "Va fi afisata vizitatorilor. Este necesara pentru administrarea site-ului."
+
+msgid "Just another Piwigo gallery"
+msgstr "Doar o alta galerie Piwigo"
+
+msgid "Keep it confidential, it enables you to access administration panel"
+msgstr "Tine-o secreta, iti permite accesul la panoul de administrare"
+
+msgid "Need help ? Ask your question on <a href=\"%s\">Piwigo message board</a>."
+msgstr "Ai nevoie de ajutor? Intreaba pe <a href=\"%s\">Forumul Piwigo</a>."
+
+msgid "Note you can change your configuration by yourself and restart Piwigo after that."
+msgstr "Poti sa schimbi configuratia manual si sa restartezi Piwigo dupa aceea."
+
+msgid "Password [confirm]"
+msgstr "Parola [confirma]"
+
+msgid "PHP 5 is required"
+msgstr "PHP5.2 este necesar"
+
+msgid "Piwigo may try to switch your configuration to PHP 5 by creating or modifying a .htaccess file."
+msgstr "Piwigo va incerca sa treaca configuratia ta la PHP5.2 folosind o fila  .htaccess"
+
+msgid "Piwigo was not able to configure PHP 5."
+msgstr "Piwigo nu a putut sa configureze PHP5.2"
+
+msgid "please enter your password again"
+msgstr "Introduce parola inca o data"
+
+msgid "Sorry!"
+msgstr "Imi pare rau!"
+
+msgid "Start Install"
+msgstr "Incepe instalarea"
+
+msgid "Try to configure PHP 5"
+msgstr "Incearca sa configurezi PHP5.2"
+
+msgid "user login given by your host provider"
+msgstr "Userul oferit de providerul de host."
+
+msgid "user password given by your host provider"
+msgstr "Parola oferita de providerul de host"
+
+msgid "User"
+msgstr "User"
+
+msgid "verification"
+msgstr "verificarea"
+
+msgid "Visitors will be able to contact site administrator with this mail"
+msgstr "Vizitatorii vor folosii aceasta adresa pentru a contacta administratorul"
+
+msgid "webmaster login can't contain characters ' or \""
+msgstr "Userul nu poate sa contina caracterele ' sau \""
+
+msgid "Welcome to my photo gallery"
+msgstr "Bine ati venit la galeria mea foto"
+
+msgid "Welcome to your new installation of Piwigo!"
+msgstr "Bine ai venit la noua instalare Piwigo!"
+
+msgid "You can download the config file and upload it to local/config directory of your installation."
+msgstr "Poti sa descarci fila de configurare si sa o uploadezi in folderul local/config al instalarii."
+
+msgid "You may referer to your hosting provider's support and see how you could switch to PHP 5 by yourself."
+msgstr "Ar trebui sa te adresezi hostului si sa intrebi cum poti sa treci la PHP5.2"
+
+msgid "localhost or other, supplied by your host provider"
+msgstr "localhost sau alta, furnizat de furnizorul de găzduire"
+
+msgid "PHP version %s required (you are running on PHP %s)"
+msgstr "Este necesară versiunea PHP %s (acum utilizați PHP %s)"
+

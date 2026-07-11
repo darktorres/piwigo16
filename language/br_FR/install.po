@@ -1,0 +1,140 @@
+# Piwigo translation — br_FR
+# Source: install.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: br_FR\n"
+"Plural-Forms: nplurals=5; plural=(n % 10 == 1 && n % 100 != 11 && n % 100 != 71 && n % 100 != 91 ? 0 : n % 10 == 2 && n % 100 != 12 && n % 100 != 72 && n % 100 != 92 ? 1 : ((n % 10 == 3 || n % 10 == 4) || n % 10 == 9) && (n % 100 < 10 || n % 100 > 19) && (n % 100 < 70 || n % 100 > 79) && (n % 100 < 90 || n % 100 > 99) ? 2 : n != 0 && n % 1000000 == 0 ? 3 : 4);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Note you can change your configuration by yourself and restart Piwigo after that."
+msgstr "Posubl eo deoc'h cheñch ho-unan kefluniadur PHP, ha adloc'hañ Piwigo da c'houde."
+
+msgid "Download the config file"
+msgstr "Pellgargañ ar restr gefluniañ"
+
+msgid "Try to configure PHP 5"
+msgstr "Esaeit kefluniañ PHP 5.2"
+
+msgid "Basic configuration"
+msgstr "Kefluniadur diazez"
+
+msgid "Database configuration"
+msgstr "Kefluniadur an diaz roadennoù"
+
+msgid "An alternate solution is to copy the text in the box above and paste it into the file \"local/config/database.inc.php\" (Warning : database.inc.php must only contain what is in the textarea, no line return or space character)"
+msgstr "Un diskoulm all a zo eilañ an destenn eus boest a-us ha pegañ anezhañ da restr \"local/config/database.inc.php\" (Diwallit: ret eo lakaat e-barzh database.inc.php ar pezh a zo er framm-testenn, distro d'al linenn ebet, hag arouezenn esaouiñ ebet)"
+
+msgid "It will be shown to the visitors. It is necessary for website administration"
+msgstr "An anavezer-mañ a vo gwellet gant an implijerien. Ret eo evit merañ al lec'hienn."
+
+msgid "Keep it confidential, it enables you to access administration panel"
+msgstr "Ret eo dezhañ chom kuzhut, gantañ e vez digoret skramm ar mererezh."
+
+msgid "Visitors will be able to contact site administrator with this mail"
+msgstr "An implijerien a c'hello dont e darempred gant merour al lec'hienn gant ar bostel-mañ"
+
+msgid "Admin configuration"
+msgstr "Kefluniadur ar mererezh"
+
+msgid "User"
+msgstr "Implijer"
+
+msgid "please enter your password again"
+msgstr "Lakait ho ger-tremen adarre"
+
+msgid "user password given by your host provider"
+msgstr "ger-tremen roet gant ho pourvezer ostiz"
+
+msgid "Piwigo was not able to configure PHP 5."
+msgstr "Piwigo n'eo ket deuet a-benn da gefluniañ PHP 5.2"
+
+msgid "Piwigo may try to switch your configuration to PHP 5 by creating or modifying a .htaccess file."
+msgstr "Piwigo a c'hell cheñch ho kefluniadur da PHP 5.2 en ur grouiñ pe kemmañ ur restr .htaccess."
+
+msgid "Creation of config file local/config/database.inc.php failed."
+msgstr "C'hwitet eo krouadur ar restr gefluniañ local/config/database.inc.php."
+
+msgid "You can download the config file and upload it to local/config directory of your installation."
+msgstr "Posubl eo deoc'h pellgargañ ar restr gefluniañ, hag ezkargañ anezhañ da kavlec'h local/config ho staliadur."
+
+msgid "Congratulations, Piwigo installation is completed"
+msgstr "Gourc'hemennoù, echu eo staliadur Piwigo"
+
+msgid "Installation"
+msgstr "Staliadur"
+
+msgid "Start Install"
+msgstr "Kregiñ gant ar staliadur"
+
+msgid "Welcome to your new installation of Piwigo!"
+msgstr "Degemer mat en ho staliadur nevez Piwigo !"
+
+msgid "You may referer to your hosting provider's support and see how you could switch to PHP 5 by yourself."
+msgstr "Goulennit da skor ho pourvezer ostiz penaos e c'hellit implij PHP 5.2"
+
+msgid "It appears your webhost is currently running PHP %s."
+msgstr "PHP %s a zo o labourat war hoc'h ostiz."
+
+msgid "localhost or other, supplied by your host provider"
+msgstr "localhost pe anv all, roet gant ho pourvezer ostiz"
+
+msgid "also given by your host provider"
+msgstr "roet gant ho pourvezer ostiz ivez"
+
+msgid "user login given by your host provider"
+msgstr "anv-implijer roet gant ho pourvezer ostiz"
+
+msgid "Host"
+msgstr "Ostiz"
+
+msgid "Can't connect to server"
+msgstr "Ne oa ket posubl kevreañ ouzh ar servijer"
+
+msgid "Need help ? Ask your question on <a href=\"%s\">Piwigo message board</a>."
+msgstr "Sikour ho peus ezhom? Savit ho goulennoù war <a href=\"%s\">Forom Piwigo</a>."
+
+msgid "verification"
+msgstr "gwiriadur"
+
+msgid "Sorry!"
+msgstr "Digarezit !"
+
+msgid "PHP 5 is required"
+msgstr "Ret eo kaout PHP 5.2"
+
+msgid "Just another Piwigo gallery"
+msgstr "Ur palier-luc'hskeudennoù Piwigo all"
+
+msgid "Hope to see you back soon."
+msgstr "Ken ar wech all !"
+
+msgid "Don't hesitate to consult our forums for any help : %s"
+msgstr "Lennit hor foromoù evit kaout sikour: %s"
+
+msgid "enter a login for webmaster"
+msgstr "Lakait anv implijer ar mestr-gwiad"
+
+msgid "webmaster login can't contain characters ' or \""
+msgstr "Arabat eo lakaat lizherennoù ' pe \" e-barzh anv implijer ar mestr-gwiad"
+
+msgid "Default gallery language"
+msgstr "Yezh dre ziouer ar palier"
+
+msgid "Welcome to my photo gallery"
+msgstr "Degemer mat war ma palier-luc'hskeudennoù"
+
+msgid "Database table prefix"
+msgstr "Rakger taolennoù an diaz roadennoù"
+
+msgid "database tables names will be prefixed with it (enables you to manage better your tables)"
+msgstr "Ar rakger-mañ a vo ouzhpennet da anvioù taolennoù an diaz roadennoù (Gwelloc'h e vo mererezh ho taolennoù)"
+
+msgid "Database name"
+msgstr "Anv an diaz roadennoù"
+
+msgid "Connection to server succeed, but it was impossible to connect to database"
+msgstr "Kevreet mat ouzh ar servijer omp, met ne oa ket posubl kevreañ ouzh an diaz roadennoù."
+

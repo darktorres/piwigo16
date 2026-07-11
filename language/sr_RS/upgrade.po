@@ -1,0 +1,65 @@
+# Piwigo translation — sr_RS
+# Source: upgrade.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: sr_RS\n"
+"Plural-Forms: nplurals=3; plural=(n % 10 == 1 && n % 100 != 11 ? 0 : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 1 : 2);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Upgrade"
+msgstr "Надоградња"
+
+msgid "This page proposes to upgrade your database corresponding to your old version of Piwigo to the current version. The upgrade assistant thinks you are currently running a <strong>release %s</strong> (or equivalent)."
+msgstr "Ова страница предлаже надоградњу базе са Piwigo старе верзије на нову.\nАсистент надоградње процењује да тренутно користите <strong>издање %s</strong> (или еквивалентну)."
+
+msgid "Upgrade from version %s to %s"
+msgstr "Надоградња са верзије %s на %s"
+
+msgid "Statistics"
+msgstr "Статистика"
+
+msgid "total upgrade time"
+msgstr "укупно време надоградње"
+
+msgid "total SQL time"
+msgstr "укупно SQL време"
+
+msgid "SQL queries"
+msgstr "SQL упити"
+
+msgid "Upgrade informations"
+msgstr "Информације о надоградњи"
+
+msgid "Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem."
+msgstr "Извршити проверу одржавања у [Администрација>Алати>Одржавање] ако наиђете на неки проблем."
+
+msgid "As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:"
+msgstr "Као меру предострожност, дати додаци су деактивирани. Морате проверити за надоградњу додатака пре него их поново активирате: "
+
+msgid "Only administrator can run upgrade: please sign in below."
+msgstr "Само администратор може да покрене надоградњу: пријавите се испод."
+
+msgid "You do not have access rights to run upgrade"
+msgstr "Немате приступна права да покренете надоградњу"
+
+msgid "All sub-albums of private albums become private"
+msgstr "Све подкатегорије приватних категорија постају приватне"
+
+msgid "User permissions and group permissions have been erased"
+msgstr "Корисничке и групне дозволе су обрисане"
+
+msgid "Only thumbnails prefix and webmaster mail address have been saved from previous configuration"
+msgstr "Само префиx за повезне сличице и адреса електронске поште уредника интернет страница су сачуване из претходне конфигурације"
+
+msgid "In <i>%s</i>, before <b>?></b>, insert:"
+msgstr "У <i>%s</i>, испред <b>?></b>, уметни:"
+
+msgid "As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:"
+msgstr "Као мера предострожности, следеће теме су деактивиране. Ви треба да проверите да ли теме имају унапређење пре него што их поново активирате:"
+
+msgid "Discover what's new in Piwigo %s"
+msgstr "Откријте шта је ново у Пивигу %s"
+

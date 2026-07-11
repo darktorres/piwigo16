@@ -13,6 +13,9 @@ declare(strict_types=1);
 // |                          define and include                           |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\AccessLevel;
+use Piwigo\Db\Tables;
+
 define('PHPWG_ROOT_PATH', './');
 include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 
@@ -26,7 +29,7 @@ global $conf, $user;
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_GUEST);
+check_status(AccessLevel::Guest);
 
 // +-----------------------------------------------------------------------+
 // |                     generate random element list                      |
@@ -39,8 +42,8 @@ $nb_image_page = is_numeric($user['nb_image_page'] ?? null) ? (int) $user['nb_im
 
 $query = '
 SELECT id
-  FROM ' . IMAGES_TABLE . '
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id
+  FROM ' . Tables::images() . '
+    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
 ' . get_sql_condition_FandF(
     [
         'forbidden_categories' => 'category_id',

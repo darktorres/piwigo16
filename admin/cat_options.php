@@ -10,6 +10,9 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\tabsheet;
+use Piwigo\Core\AccessLevel;
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
@@ -27,12 +30,12 @@ include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(ACCESS_ADMINISTRATOR);
+check_status(AccessLevel::Administrator);
 
 if (! empty($_POST)) {
     check_pwg_token();
-    check_input_parameter('cat_true', $_POST, true, PATTERN_ID);
-    check_input_parameter('cat_false', $_POST, true, PATTERN_ID);
+    check_input_parameter('cat_true', $_POST, true, ValidationPattern::ID);
+    check_input_parameter('cat_false', $_POST, true, ValidationPattern::ID);
     check_input_parameter('section', $_GET, false, '/^[a-z0-9_-]+$/i');
 }
 
@@ -55,7 +58,7 @@ if (isset($_POST['falsify'])
         case 'comments':
 
             $query = '
-UPDATE ' . CATEGORIES_TABLE . '
+UPDATE ' . Tables::categories() . '
   SET commentable = \'false\'
   WHERE id IN (' . implode(',', $cat_true) . ')
 ;';
@@ -75,7 +78,7 @@ UPDATE ' . CATEGORIES_TABLE . '
         case 'representative':
 
             $query = '
-UPDATE ' . CATEGORIES_TABLE . '
+UPDATE ' . Tables::categories() . '
   SET representative_picture_id = NULL
   WHERE id IN (' . implode(',', $cat_true) . ')
 ;';
@@ -103,7 +106,7 @@ UPDATE ' . CATEGORIES_TABLE . '
         case 'comments':
 
             $query = '
-UPDATE ' . CATEGORIES_TABLE . '
+UPDATE ' . Tables::categories() . '
   SET commentable = \'true\'
   WHERE id IN (' . implode(',', $cat_false) . ')
 ;';
@@ -185,12 +188,12 @@ $cats_false = [];
     'comments' => [
         '
 SELECT id,name,uppercats,global_rank
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE commentable = \'true\'
 ;',
         '
 SELECT id,name,uppercats,global_rank
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE commentable = \'false\'
 ;',
         l10n('Authorize users to add comments on selected albums'),
@@ -200,12 +203,12 @@ SELECT id,name,uppercats,global_rank
     'visible' => [
         '
 SELECT id,name,uppercats,global_rank
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE visible = \'true\'
 ;',
         '
 SELECT id,name,uppercats,global_rank
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE visible = \'false\'
 ;',
         l10n('Lock albums'),
@@ -215,12 +218,12 @@ SELECT id,name,uppercats,global_rank
     'status' => [
         '
 SELECT id,name,uppercats,global_rank
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE status = \'public\'
 ;',
         '
 SELECT id,name,uppercats,global_rank
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE status = \'private\'
 ;',
         l10n('Manage authorizations for selected albums'),
@@ -233,12 +236,12 @@ SELECT id,name,uppercats,global_rank
     default => [
         '
 SELECT id,name,uppercats,global_rank
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE representative_picture_id IS NOT NULL
 ;',
         '
 SELECT DISTINCT id,name,uppercats,global_rank
-  FROM ' . CATEGORIES_TABLE . ' INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id=category_id
+  FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id=category_id
   WHERE representative_picture_id IS NULL
 ;',
         l10n('Representative'),

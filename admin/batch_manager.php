@@ -10,6 +10,9 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\tabsheet;
+use Piwigo\Core\AccessLevel;
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 // Bootstrap globals, set by include/common.inc.php.
@@ -35,9 +38,9 @@ include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
 
-check_status(ACCESS_ADMINISTRATOR);
+check_status(AccessLevel::Administrator);
 
-check_input_parameter('selection', $_POST, true, PATTERN_ID);
+check_input_parameter('selection', $_POST, true, ValidationPattern::ID);
 check_input_parameter('display', $_REQUEST, false, '/^(\d+|all)$/');
 
 // $user['id'] (the logged in / guest user id) is always numeric here (DB
@@ -62,7 +65,7 @@ $get_page = is_string($_GET['page'] ?? null) ? $_GET['page'] : '';
 if (isset($_GET['action'])) {
     if ($_GET['action'] == 'empty_caddie') {
         $query = '
-DELETE FROM ' . CADDIE_TABLE . '
+DELETE FROM ' . Tables::caddie() . '
   WHERE user_id = ' . $user_id . '
 ;';
         pwg_query($query);
@@ -148,7 +151,7 @@ if (isset($_POST['submitFilter'])) {
     }
 
     if (isset($_POST['filter_category_use'])) {
-        check_input_parameter('filter_category', $_POST, false, PATTERN_ID);
+        check_input_parameter('filter_category', $_POST, false, ValidationPattern::ID);
 
         $_SESSION['bulk_manager_filter']['category'] = $_POST['filter_category'];
 
@@ -372,7 +375,7 @@ if (isset($bulk_filter['prefilter'])) {
         case 'caddie':
             $query = '
 SELECT element_id
-  FROM ' . CADDIE_TABLE . '
+  FROM ' . Tables::caddie() . '
   WHERE user_id = ' . $user_id . '
 ;';
             $filter_sets[] = query2array($query, null, 'element_id');
@@ -382,7 +385,7 @@ SELECT element_id
         case 'favorites':
             $query = '
 SELECT image_id
-  FROM ' . FAVORITES_TABLE . '
+  FROM ' . Tables::favorites() . '
   WHERE user_id = ' . $user_id . '
 ;';
             $filter_sets[] = query2array($query, null, 'image_id');
@@ -392,13 +395,13 @@ SELECT image_id
         case 'last_import':
             $query = '
 SELECT MAX(date_available) AS date
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
 ;';
             $row = pwg_db_fetch_assoc(pwg_query($query));
             if (! empty($row['date'])) {
                 $query = '
 SELECT id
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE date_available BETWEEN ' . pwg_db_get_recent_period_expression(1, $row['date']) . ' AND \'' . $row['date'] . '\'
 ;';
                 $filter_sets[] = query2array($query, null, 'id');
@@ -410,7 +413,7 @@ SELECT id
             // we are searching elements not linked to any virtual category
             $query = '
  SELECT id
-   FROM ' . IMAGES_TABLE . '
+   FROM ' . Tables::images() . '
  ;';
             $all_elements = query2array($query, null, 'id');
 
@@ -418,14 +421,14 @@ SELECT id
 
             $query = '
  SELECT id
-   FROM ' . CATEGORIES_TABLE . '
+   FROM ' . Tables::categories() . '
    WHERE dir IS NULL
  ;';
             $virtual_categories = query2array($query, null, 'id');
             if (! empty($virtual_categories)) {
                 $query = '
  SELECT DISTINCT(image_id)
-   FROM ' . IMAGE_CATEGORY_TABLE . '
+   FROM ' . Tables::imageCategory() . '
    WHERE category_id IN (' . implode(',', $virtual_categories) . ')
  ;';
                 $linked_to_virtual = query2array($query, null, 'image_id');
@@ -446,8 +449,8 @@ SELECT id
             $query = '
 SELECT
     id
-  FROM ' . IMAGES_TABLE . '
-    LEFT JOIN ' . IMAGE_TAG_TABLE . ' ON id = image_id
+  FROM ' . Tables::images() . '
+    LEFT JOIN ' . Tables::imageTag() . ' ON id = image_id
   WHERE tag_id is null
 ;';
             $filter_sets[] = query2array($query, null, 'id');
@@ -482,7 +485,7 @@ SELECT
             $query = '
 SELECT
     GROUP_CONCAT(id) AS ids
-  FROM ' . IMAGES_TABLE;
+  FROM ' . Tables::images();
 
             if (in_array('md5sum', $duplicates_on_fields)) {
                 $query .= '
@@ -511,7 +514,7 @@ SELECT
             if (count($bulk_filter) == 1) {// make the query only if this is the only filter
                 $query = '
 SELECT id
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   ' . $conf_order_by;
 
                 $filter_sets[] = query2array($query, null, 'id');
@@ -538,7 +541,7 @@ if (isset($bulk_filter['category']) && is_numeric($bulk_filter['category'])) {
     // we need to check the category still exists (it may have been deleted since it was added in the session)
     $query = '
 SELECT COUNT(*)
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE id = ' . $category_id . '
 ;';
     $row = pwg_db_fetch_row(pwg_query($query));
@@ -557,7 +560,7 @@ SELECT COUNT(*)
 
     $query = '
  SELECT DISTINCT(image_id)
-   FROM ' . IMAGE_CATEGORY_TABLE . '
+   FROM ' . Tables::imageCategory() . '
    WHERE category_id IN (' . implode(',', array_map(strval(...), $categories)) . ')
  ;';
     $filter_sets[] = query2array($query, null, 'image_id');
@@ -573,7 +576,7 @@ if (isset($bulk_filter['level']) && is_numeric($bulk_filter['level'])) {
 
     $query = '
 SELECT id
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE level ' . $operator . ' ' . $level . '
   ' . $conf_order_by;
 
@@ -624,7 +627,7 @@ if (isset($bulk_filter['dimension']) && is_array($bulk_filter['dimension'])) {
 
     $query = '
 SELECT id
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE ' . implode(' AND ', $where_clause) . '
   ' . $conf_order_by;
 
@@ -647,7 +650,7 @@ if (isset($bulk_filter['filesize']) && is_array($bulk_filter['filesize'])) {
 
     $query = '
 SELECT id
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE ' . implode(' AND ', $where_clause) . '
   ' . $conf_order_by;
 
@@ -736,7 +739,7 @@ $dimensions = [];
 $query = '
 SELECT
   DISTINCT width, height
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE width IS NOT NULL
     AND height IS NOT NULL
 ;';
@@ -827,7 +830,7 @@ $filesize = [];
 $query = '
 SELECT
   filesize
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE filesize IS NOT NULL
   GROUP BY filesize
 ;';

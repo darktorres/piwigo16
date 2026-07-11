@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 use Piwigo\Admin\tabsheet;
 use Piwigo\Core\Logger;
+use Piwigo\Db\Tables;
 
 /**
  * Init tabsheet for history pages
@@ -74,7 +75,7 @@ function get_history($data, array $search, $types): array
         $query = '
 SELECT
     id
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE file LIKE \'' . $filename . '\'
 ;';
         $image_ids = array_filter(array_from_query($query, 'id'), is_string(...));
@@ -155,7 +156,7 @@ SELECT
     tag_ids,
     image_id,
     image_type
-  FROM ' . HISTORY_TABLE . '
+  FROM ' . Tables::history() . '
   WHERE ' . $where_separator . '
 ;';
 
@@ -181,7 +182,7 @@ function history_summarize(?int $max_lines = null): void
     $query = '
 SELECT
     *
-  FROM ' . HISTORY_SUMMARY_TABLE . '
+  FROM ' . Tables::historySummary() . '
   WHERE history_id_to IS NOT NULL
   ORDER BY history_id_to DESC
   LIMIT 1
@@ -200,7 +201,7 @@ SELECT
         $query = '
 SELECT
     MIN(id) AS min_id
-  FROM ' . HISTORY_TABLE . '
+  FROM ' . Tables::history() . '
 ;';
         $history_lines = query2array($query);
         if (count($history_lines) > 0) {
@@ -219,7 +220,7 @@ SELECT
     MIN(id) AS min_id,
     MAX(id) AS max_id,
     COUNT(*) AS nb_pages
-  FROM ' . HISTORY_TABLE . '
+  FROM ' . Tables::history() . '
   WHERE id > ' . $history_min_id;
 
     if (isset($max_lines)) {
@@ -307,7 +308,7 @@ SELECT
 
         $query = '
 SELECT *
-  FROM ' . HISTORY_SUMMARY_TABLE . '
+  FROM ' . Tables::historySummary() . '
   WHERE year=' . $year . '
     AND ( month IS NULL
       OR ( month=' . $month . '
@@ -358,7 +359,7 @@ SELECT *
 
     if (count($updates) > 0) {
         mass_updates(
-            HISTORY_SUMMARY_TABLE,
+            Tables::historySummary(),
             [
                 'primary' => ['year', 'month', 'day', 'hour'],
                 'update' => ['nb_pages', 'history_id_to'],
@@ -369,7 +370,7 @@ SELECT *
 
     if (count($inserts) > 0) {
         mass_inserts(
-            HISTORY_SUMMARY_TABLE,
+            Tables::historySummary(),
             array_keys($inserts[0]),
             $inserts
         );
@@ -400,7 +401,7 @@ function history_autopurge(): void
     $query = '
 SELECT
     COUNT(*)
-  FROM ' . HISTORY_TABLE . '
+  FROM ' . Tables::history() . '
 ;';
     $row = pwg_db_fetch_row(pwg_query($query));
     assert($row !== null);
@@ -415,7 +416,7 @@ SELECT
     $query = '
 SELECT
     *
-  FROM ' . HISTORY_SUMMARY_TABLE . '
+  FROM ' . Tables::historySummary() . '
   WHERE history_id_to IS NOT NULL
   ORDER BY history_id_to DESC
   LIMIT 1
@@ -432,7 +433,7 @@ SELECT
     $query = '
 SELECT
     id
-  FROM ' . HISTORY_TABLE . '
+  FROM ' . Tables::history() . '
   ORDER BY id DESC
   LIMIT 1
 ;';
@@ -448,7 +449,7 @@ SELECT
     $query = '
 SELECT
     id
-  FROM ' . HISTORY_TABLE . '
+  FROM ' . Tables::history() . '
   ORDER BY id ASC
   LIMIT 1
 ;';
@@ -470,7 +471,7 @@ SELECT
 
     $query = '
 DELETE
-  FROM ' . HISTORY_TABLE . '
+  FROM ' . Tables::history() . '
   WHERE id < ' . $history_id_delete_before . '
 ;';
     pwg_query($query);
@@ -490,7 +491,7 @@ function history_remove_summarized_column(): void
     $query = '
 SELECT
     COUNT(*)
-  FROM ' . HISTORY_TABLE . '
+  FROM ' . Tables::history() . '
 ;';
     $row = pwg_db_fetch_row(pwg_query($query));
     assert($row !== null);
@@ -504,9 +505,9 @@ SELECT
         return;
     }
 
-    $result = pwg_query('SHOW COLUMNS FROM `' . HISTORY_TABLE . '` LIKE "summarized";');
+    $result = pwg_query('SHOW COLUMNS FROM `' . Tables::history() . '` LIKE "summarized";');
     if ((bool) pwg_db_num_rows($result)) {
-        pwg_query('ALTER TABLE `' . HISTORY_TABLE . '` DROP COLUMN `summarized`;');
+        pwg_query('ALTER TABLE `' . Tables::history() . '` DROP COLUMN `summarized`;');
     }
 
     conf_update_param('history_summarized_dropped', true);

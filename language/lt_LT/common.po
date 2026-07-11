@@ -1,0 +1,1178 @@
+# Piwigo translation — lt_LT
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: lt_LT\n"
+"Plural-Forms: nplurals=3; plural=(n % 10 == 1 && (n % 100 < 11 || n % 100 > 19) ? 0 : n % 10 >= 2 && n % 10 <= 9 && (n % 100 < 11 || n % 100 > 19) ? 1 : 2);\n"
+"X-Piwigo-Language-Name: Lietuvių\n"
+"X-Piwigo-Country: Lietuva\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: lt\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d albumas atnaujintas"
+msgstr[1] "%d albumai atnaujinti"
+
+msgid "%d comment to validate"
+msgstr "%d patvirtinti komentarą"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d koment."
+msgstr[1] "%d komentarai(-ų)"
+
+msgid "%d comments to validate"
+msgstr "%d patvirtinti komentarus"
+
+msgid "%d hit"
+msgid_plural "%d hits"
+msgstr[0] "%d paspaudimas"
+msgstr[1] "%d paspaudimai"
+
+msgid "%d Kb"
+msgstr "%d Kb"
+
+msgid "%d new comment"
+msgstr "%d naujas komentaras"
+
+msgid "%d new comments"
+msgstr "%d nauji komentarai"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "%d nauja nuotrauka"
+msgstr[1] "%d naujos nuotraukos"
+
+msgid "%d new user"
+msgstr "%d naujas narys"
+
+msgid "%d new users"
+msgstr "%d nauji nariai"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "%d nuotrauka taip pat yra susijusi su dabartinėmis žymomis"
+msgstr[1] "%d nuotraukos taip pat siejamos su dabartinėmis žymomis"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "%d nuotrauka"
+msgstr[1] "%d nuotraukos(-ų)"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) &#352;iam komentarui reikia patvirtinimo"
+
+msgid "... or browse your empty gallery"
+msgstr "... arba ie&#352;koti tu&#352;&#269;ios galerijos"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "... arba pra&#353;ome i&#353;jungti š&#353;&#303; prane&#353;im&#261;, a&#353; rasiu pats"
+
+msgid "A comment on your site"
+msgstr "Komenentaras svetain&#279;je"
+
+msgid "About Piwigo"
+msgstr "Apie Piwigo"
+
+msgid "About"
+msgstr "Apie"
+
+msgid "All tags"
+msgstr "Visos žymos"
+
+msgid "Any tag"
+msgstr "Betkokia žyma"
+
+msgid "At least one listed rule must be satisfied."
+msgstr "Bent vienas iš išvardytų kriterijų, turi būti patenkintas."
+
+msgid "Author"
+msgstr "Autorius"
+
+msgid "Close this window"
+msgstr "Uždaryti šitą langą"
+
+msgid "Confirm Password"
+msgstr "Pakartokite slaptažodį"
+
+msgid "Connection settings"
+msgstr "Prisijungimo nustatymai"
+
+msgid "Login"
+msgstr "Prisijungti"
+
+msgid "Contact webmaster"
+msgstr "Susisiekti su administratoriumi"
+
+msgid "Create a new account"
+msgstr "Sukurti naują paskyrą"
+
+msgid "Created on"
+msgstr "Sukurta"
+
+msgid "Creation date"
+msgstr "Sukūrimo data"
+
+msgid "Current password is wrong"
+msgstr "Blogas slaptažodis"
+
+msgid "Dimensions"
+msgstr "Matmenys"
+
+msgid "Display"
+msgstr "Parodyti"
+
+msgid "Each listed rule must be satisfied."
+msgstr "Kiekvienas pateiktas kriterijus turi būti patenkintas."
+
+msgid "Email address"
+msgstr "Elektroninio pašto adresas"
+
+msgid "Enter your personnal informations"
+msgstr "Įveskite savo asmeninius duomenis"
+
+msgid "Error sending email"
+msgstr "Klaida siunčiant laišką nurodytu elektroninio pašto adresu"
+
+msgid "File name"
+msgstr "Failo vardas"
+
+msgid "File"
+msgstr "Failas"
+
+msgid "Filesize"
+msgstr "Failo dydis"
+
+msgid "Filter and display"
+msgstr "Filtruoti ir rodyti"
+
+msgid "Filter"
+msgstr "Filtras"
+
+msgid "Forgot your password?"
+msgstr "Pamiršote slaptažodį ?"
+
+msgid "Go through the gallery as a visitor"
+msgstr "Naršyti galerijoje kaip svečias"
+
+msgid "Help"
+msgstr "Pagalba"
+
+msgid "Identification"
+msgstr "Identifikacija"
+
+msgid "Keyword"
+msgstr "Raktažodis"
+
+msgid "Links"
+msgstr "Nuorodos"
+
+msgid "N/A"
+msgstr "N/A"
+
+msgid "New on %s"
+msgstr "Naujas %s"
+
+msgid "Notification"
+msgstr "Pranešimas"
+
+msgid "Number of items"
+msgstr "Vienetų skaičius"
+
+msgid "Original dimensions"
+msgstr "Orginalūs matmenys"
+
+msgid "Password forgotten"
+msgstr "Pamiršote slaptažodį"
+
+msgid "Password"
+msgstr "Slaptažodis"
+
+msgid "Post date"
+msgstr "Publikavimo data"
+
+msgid "Posted on"
+msgstr "Paskelbta"
+
+msgid "Profile"
+msgstr "Profilis"
+
+msgid "Quick connect"
+msgstr "Greitas prisijungimas"
+
+msgid "RSS feed"
+msgstr "RSS srautas"
+
+msgid "Register"
+msgstr "Registruotis"
+
+msgid "Registration"
+msgstr "Registracija"
+
+msgid "Related tags"
+msgstr "Susijusios žymos"
+
+msgid "Reset"
+msgstr "Atstatyti"
+
+msgid "Retrieve password"
+msgstr "Atkurti slaptažodį"
+
+msgid "Search rules"
+msgstr "Ieškoti kriterijų"
+
+msgid "Search tags"
+msgstr "Ieškoti žymų"
+
+msgid "Search"
+msgstr "Ieškoti"
+
+msgid "Since"
+msgstr "Nuo"
+
+msgid "Sort by"
+msgstr "Rūšiavimas pagal"
+
+msgid "Sort order"
+msgstr "Rūšiavimo tvarka"
+
+msgid "Tag"
+msgstr "Žyma"
+
+msgid "Tags"
+msgstr "Žymos"
+
+msgid "Unknown feed identifier"
+msgstr "Nežinomas identifikatorius"
+
+msgid "User comments"
+msgstr "Nario komentarai"
+
+msgid "Username"
+msgstr "Prisijungimo vardas"
+
+msgid "Visits"
+msgstr "Apsilankymų"
+
+msgid "Webmaster"
+msgstr "Moderatorius"
+
+msgid "Week %d"
+msgstr "Savaičių %d"
+
+msgid "You are not authorized to access the requested page"
+msgstr "Jūs neturite leidomo pasiekti norimą puslapį"
+
+msgid "Administration"
+msgstr "Administracija"
+
+msgid "all"
+msgstr "visi"
+
+msgid "ascending"
+msgstr "didėjimo tvarka"
+
+msgid "author(s) : %s"
+msgstr "autorius : %s"
+
+msgid "posted after %s (%s)"
+msgstr "paskelbta po %s (%s)"
+
+msgid "posted before %s (%s)"
+msgstr "paskelbta prieš %s (%s)"
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "paskelbta tarp %s (%s) ir %s (%s)"
+
+msgid "posted on %s"
+msgstr "paskelbta %s"
+
+msgid "Best rated"
+msgstr "Geriausiai vertinamos"
+
+msgid "Calendar"
+msgstr "Kalendorius"
+
+msgid "All"
+msgstr "Visos"
+
+msgid "View"
+msgstr "Rodyti"
+
+msgid "chronology_monthly_calendar"
+msgstr "Menesio kalendorius"
+
+msgid "chronology_monthly_list"
+msgstr "Mėnesio sąrašas"
+
+msgid "chronology_weekly_list"
+msgstr "Savaitės sąrašas"
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "Spauskite čia, jei jūsų naršyklė neužkrovė automatiškai"
+
+msgid "comment date"
+msgstr "pakomentavo"
+
+msgid "Comment"
+msgstr "Komentuoti"
+
+msgid "Your comment has been registered"
+msgstr "Tavo komentaras užregistruotas"
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "Anti-flood sistema: prašome šiek tiek palaukti prieš bandant rašyti kitą komentarą"
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "Jūsų komentaras nebuvo užregistruotas, nes neatitiko komentavimo taisyklių"
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "Administratorius turi patvirtinti tavo komentarą, kad jis taptu matomau."
+
+msgid "This login is already used by another user"
+msgstr "Šis prisijungimo vardas jau naudojamas"
+
+msgid "Comments"
+msgstr "Komentarai"
+
+msgid "Add a comment"
+msgstr "Rašyti komentarą"
+
+msgid "created after %s (%s)"
+msgstr "sukurtas po %s (%s)"
+
+msgid "created before %s (%s)"
+msgstr "sukurtas prieš %s (%s)"
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "sukurta tarp %s (%s) ir %s (%s)"
+
+msgid "created on %s"
+msgstr "sukurta %s"
+
+msgid "Your Gallery Customization"
+msgstr "Jūsų galerijos nustatymai"
+
+msgid "Default"
+msgstr "Numatyta"
+
+msgid "Delete"
+msgstr "Ištrinti"
+
+msgid "descending"
+msgstr "mažėjančia"
+
+msgid "edit"
+msgstr "redaguoti"
+
+msgid "wrong date"
+msgstr "bloga data"
+
+msgid "excluded"
+msgstr "atmesti"
+
+msgid "Favorites"
+msgstr "Mėgstamiausios"
+
+msgid "First"
+msgstr "Pirmas"
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "Galerija yra uždaryta profilaktikai. Prašome pabandyti vėliau."
+
+msgid "Page generated in"
+msgstr "Puslapis atidarytas per"
+
+msgid "guest"
+msgstr "svečias"
+
+msgid "Hello"
+msgstr "Sveiki"
+
+msgid "available for administrators only"
+msgstr "tik administracijai"
+
+msgid "search"
+msgstr "ieškoti"
+
+msgid "Home"
+msgstr "Pradžia"
+
+msgid "included"
+msgstr "įskaitant"
+
+msgid "Invalid password!"
+msgstr "Blogas slaptažodis!"
+
+msgid "Language"
+msgstr "Kalba"
+
+msgid "last %d days"
+msgstr "paskutines %d dienas"
+
+msgid "Last"
+msgstr "Paskutinis"
+
+msgid "Logout"
+msgstr "Atsijungti"
+
+msgid "obligatory"
+msgstr "privalomas"
+
+msgid "display a calendar by creation date"
+msgstr "rodyti kalendorių pagal sukūrimo datą"
+
+msgid "return to normal view mode"
+msgstr "grįžti į normalų peržiūros režimą"
+
+msgid "display a calendar by posted date"
+msgstr "rodyti kalendorių pagal patalpinimo datą"
+
+msgid "Most visited"
+msgstr "Žiūrimiausios"
+
+msgid "Unknown identifier"
+msgstr "Nežinomas ifentifikatorius"
+
+msgid "New password"
+msgstr "Naujas slaptažodis"
+
+msgid "Next"
+msgstr "Kita"
+
+msgid "no rate"
+msgstr "nėra įvertinimų"
+
+msgid "password updated"
+msgstr "slaptažodis atnaujintas"
+
+msgid "Recent period must be a positive integer value"
+msgstr "Naujausias laikotarpis turi buti teigiamas sveikasis skaicius"
+
+msgid "Show file metadata"
+msgstr "Rodyti failo duomenis"
+
+msgid "Powered by"
+msgstr "Sukurta"
+
+msgid "Preferences"
+msgstr "Nustatymai"
+
+msgid "Previous"
+msgstr "Atgal"
+
+msgid "Recent period"
+msgstr "Paskutinis laikotarpis"
+
+msgid "Redirection..."
+msgstr "Nukreipiama..."
+
+msgid "Please, enter a login"
+msgstr "įrašykite prisijungimo vardą"
+
+msgid "login mustn't end with a space character"
+msgstr "Prisijungimo vardas negali baigtis tarpu"
+
+msgid "login mustn't start with a space character"
+msgstr "Prisijungimo vardas negali prasideti tarpu"
+
+msgid "this login is already used"
+msgstr "Šis prisijungimo vardas jau naudojamas"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "Elektroninio pašto adresas turi būti toks: xxx@yyy.eee (pavyzdys : jack@altern.org)"
+
+msgid "Auto login"
+msgstr "Automatinis prisijungimas"
+
+msgid "remove this tag from the list"
+msgstr "ištrinti šią žymą iš šio sąrašo"
+
+msgid "representative"
+msgstr "atstovauti"
+
+msgid "Search for Author"
+msgstr "Ieškoti pagal autorių"
+
+msgid "Date"
+msgstr "Data"
+
+msgid "End-Date"
+msgstr "Pabaigos data"
+
+msgid "Kind of date"
+msgstr "Rušies data"
+
+msgid "Search for words"
+msgstr "Ieškoti žodžių"
+
+msgid "Search for all terms"
+msgstr "Ieškoti visu žodžių"
+
+msgid "Empty query. No criteria has been entered."
+msgstr "Tušcia užklausa. Nėra kriterijų"
+
+msgid "Search results"
+msgstr "Paieškos rezultatai"
+
+msgid "searched words : %s"
+msgstr "ieškoti žodžiai : %s"
+
+msgid "Contact"
+msgstr "Kontaktai"
+
+msgid "Show number of comments"
+msgstr "Rodyti kiek yra komentarų"
+
+msgid "Show number of hits"
+msgstr "Rodyti paspaudimus"
+
+msgid "slideshow"
+msgstr "skaidrių žiūrėjimas"
+
+msgid "stop the slideshow"
+msgstr "stabdyti skaidrių peržiūrą"
+
+msgid "Specials"
+msgstr "Specials"
+
+msgid "SQL queries in"
+msgstr "SQL queries in"
+
+msgid "the beginning"
+msgstr "pradžia"
+
+msgid "Thumbnails"
+msgstr "Piktogramos"
+
+msgid "Menu"
+msgstr "Meniu"
+
+msgid "today"
+msgstr "Šiandien"
+
+msgid "Update your rating"
+msgstr "Atnaujinti savo ivertinimus"
+
+msgid "the username must be given"
+msgstr "reikalingas slapyvardis"
+
+msgid "useful when password forgotten"
+msgstr "naudinga tuo atveju, jei slaptažodi pamiršote"
+
+msgid "Quick search"
+msgstr "Greita paieska"
+
+msgid "Connected user: %s"
+msgstr "Prisijungę vartotojai: %s"
+
+msgid "IP: %s"
+msgstr "IP: %s"
+
+msgid "Browser: %s"
+msgstr "Naršyklė: %s"
+
+msgid "Author: %s"
+msgstr "Autorius: %s"
+
+msgid "Comment: %s"
+msgstr "Komentaras: %s"
+
+msgid "Comment by %s"
+msgstr "Komentavo %s"
+
+msgid "User: %s"
+msgstr "Slapyvardis: %s"
+
+msgid "Email: %s"
+msgstr "Email: %s"
+
+msgid "Admin: %s"
+msgstr "Administratorius: %s"
+
+msgid "Registration of %s"
+msgstr "Registracija %s"
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "Blogas vartotojo \"guest \"statusas, bus naudojama numatytoji busena. Prašome apie tai pranešti administratoriui."
+
+msgid "Tag results for"
+msgstr "žymų rezultatai"
+
+msgid "from %s to %s"
+msgstr "nuo %s iki %s"
+
+msgid "Play of slideshow"
+msgstr "Rodyti skaidres"
+
+msgid "Pause of slideshow"
+msgstr "Sustabdyti"
+
+msgid "Repeat the slideshow"
+msgstr "Kartoti skaidres"
+
+msgid "Not repeat the slideshow"
+msgstr "Nekartoti nuotraukų"
+
+msgid "Reduce diaporama speed"
+msgstr "Sulėtinti perjungimą"
+
+msgid "Accelerate diaporama speed"
+msgstr "Pagreitinti perjungimą"
+
+msgid "Submit"
+msgstr "Patvirtinti"
+
+msgid "Yes"
+msgstr "Taip"
+
+msgid "No"
+msgstr "Ne"
+
+msgid "Piwigo Help"
+msgstr "Piwigo pagalba"
+
+msgid "Rank"
+msgstr "įvertinimas"
+
+msgid "group by letters"
+msgstr "grupuoti pagal abėcėlę"
+
+msgid "letters"
+msgstr "raidės"
+
+msgid "show tag cloud"
+msgstr "rodyti žymų debesį"
+
+msgid "cloud"
+msgstr "debesis"
+
+msgid "Reset to default values"
+msgstr "Nustatyti numatytuosius nustatymus"
+
+msgid "Sent by"
+msgstr "Išsiųsta"
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "Slapukai yra blokuojami arba nepalaikomi jūsų naršyklėje. Jūs turite įgalinti slapukus prisijungdami"
+
+msgid "Edit a comment"
+msgstr "Redaguoti komentarą"
+
+msgid "Are you sure?"
+msgstr "Ar esi tikras?"
+
+msgid "Welcome"
+msgstr "Sveiki"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "Sveiki atvykę į Piwigo nuotraukų galeriją!"
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "Sveika(-as) %s, Tavo Piwigo galerija yra tuščia!"
+
+msgid "I want to add photos"
+msgstr "Patalpinti nuotraukas"
+
+msgid "Manage this user comment: %s"
+msgstr "Redaguoti šio žmogaus komentarą: %s"
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "Neįrašytas elekroninio pašto adresas. Prašome jį nurodyti."
+
+msgid "This author modified following comment:"
+msgstr "Autorius pakeitė šį komentarą:"
+
+msgid "This author removed the comment with id %d"
+msgstr "Šis autorius ištrynė komentarą, kurio id yra %d"
+
+msgid "set as album representative"
+msgstr "nustatyti kaip albumo viršelį"
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] "%d subalbume"
+msgstr[1] "%d subalbumuose"
+
+msgid "in this album"
+msgstr "šiame albume"
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "RSS srautas informuoja apie naujus įvykius šiame puslapyje: naujas nuotraukas, atnaujintus albumus, naujus komentarus. Naudojama su RSS srauto skaitykle."
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "Tik nuotrukos, paskelbtos per paskutinę %d dieną."
+msgstr[1] "Tik nuotrukos, paskelbtos per paskutines %d dienas."
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "Piwigo susidūrė su didele klaida."
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "Skaitine tvarka, 1 &rarr; 9"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "Skaitine tvarka, 9 &rarr; 1"
+
+msgid "IPTC Metadata"
+msgstr "IPTC Metaduomenys"
+
+msgid "Forbidden"
+msgstr "Priėjimas draudžiamas"
+
+msgid "return to the display of all photos"
+msgstr "grįžti į visų nuotraukų peržiūrą"
+
+msgid "photos posted during the last %d days"
+msgstr "nuotraukos, paskelbtos per paskutines %d dienas(-ų)"
+
+msgid "mandatory"
+msgstr "privalomas"
+
+msgid "display available tags"
+msgstr "rodyti galimas žymas"
+
+msgid "display best rated photos"
+msgstr "rodyti geriausiai vertinamas nuotraukas"
+
+msgid "display last user comments"
+msgstr "rodyti paskutinius lankytojų komentarus"
+
+msgid "display most recent photos"
+msgstr "rodyti naujausias nuotraukas"
+
+msgid "display most visited photos"
+msgstr "rodyti žiūrimiausias nuotraukas"
+
+msgid "display only recently posted photos"
+msgstr "rodyti tik nesenai patalpintas nuotraukas"
+
+msgid "display photos linked to this tag"
+msgstr "rodyti nuotraukas, susijusias su šia žyma"
+
+msgid "display recently updated albums"
+msgstr "rodyti nesenai atnaujintus albumus"
+
+msgid "display this album"
+msgstr "rodyti šį albumą"
+
+msgid "display your favorites photos"
+msgstr "rodyti jūsų mėgstamiausias nuotraukas"
+
+msgid "html tags are not allowed in login"
+msgstr "prisijungimo varde HTML žymos neleidžiamos"
+
+msgid "Invalid key"
+msgstr "Neteisingas raktas"
+
+msgid "Manual sort order"
+msgstr "Rankinė rūšiavimo tvarka"
+
+msgid "EXIF Metadata"
+msgstr "EXIF Metaduomenys"
+
+msgid "2small"
+msgstr "XXS - Miniatiūrinė"
+
+msgid "Here are your connection settings"
+msgstr "Jūsų prisijungimo duomenys"
+
+msgid "Password Reset"
+msgstr "Slaptažodžio keitimas"
+
+msgid "Password reset is not allowed for this user"
+msgstr "Šiam vartotojui slaptažodžio keitimas negalimas"
+
+msgid "Password: %s"
+msgstr "Slaptažodis: %s"
+
+msgid "Photos only RSS feed"
+msgstr "Tik nuotrakų RSS srautas"
+
+msgid "Please enter your username or email address."
+msgstr "Prašome įvesti vartotojo vardą arba el-pašto adresą."
+
+msgid "Rating score"
+msgstr "Įvertinimo rezultatas"
+
+msgid "large"
+msgstr "L - Didelė"
+
+msgid "medium"
+msgstr "M - Vidutinė"
+
+msgid "photo"
+msgstr "nuotrauka"
+
+msgid "small"
+msgstr "S - Maža"
+
+msgid "square"
+msgstr "Kvadratas"
+
+msgid "this email address is already in use"
+msgstr "šis el-pašto adresas užimtas"
+
+msgid "thumb"
+msgstr "Piktograma"
+
+msgid "xlarge"
+msgstr "XL - Labai didelė"
+
+msgid "xsmall"
+msgstr "XS - Labai maža"
+
+msgid "xxlarge"
+msgstr "XXL - milžiniška"
+
+msgid "Search for any term"
+msgstr "Ieškoti betkokio termino"
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "Vartotojas \"%s\" galerijoje %s"
+
+msgid "Username is mandatory"
+msgstr "Vartotojo vardas privalomas"
+
+msgid "Username modification"
+msgstr "Vartotojo vardo keitimas"
+
+msgid "Username or email"
+msgstr "Vartotojo vardas arba el-paštas"
+
+msgid "Username: %s"
+msgstr "Vartotojo vardas: %s"
+
+msgid "Visits, high &rarr; low"
+msgstr "Peržiūros, daugiausia &rarr; mažiausia"
+
+msgid "Visits, low &rarr; high"
+msgstr "Peržiūros, mažiausia &rarr; daugiausia"
+
+msgid "Website"
+msgstr "Puslapis"
+
+msgid "You will receive a link to create a new password via email."
+msgstr "Jūs gausite nuorodą, kurioje galėsite pasikeisti slaptažodį, el-paštu."
+
+msgid "Your favorites"
+msgstr "Jūsų mėgstamiausios"
+
+msgid "Your password has been reset"
+msgstr "Jūsų slaptažodis pakeistas"
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "Jūsų vartotojo vardas sėkmingai pakeistas į: %s"
+
+msgid "Your website URL is invalid"
+msgstr "Jūsų web puslapio adresas neteisingas"
+
+msgid "add this photo to your favorites"
+msgstr "pridėti šią nuotrauką prie jūsų mėgstamiausių"
+
+msgid "delete all photos from your favorites"
+msgstr "pašalinti visas nuotraukas iš jūsų mėgstamiausių"
+
+msgid "delete this photo from your favorites"
+msgstr "pašalinti šią nuotrauką iš jūsų mėgstamiausių"
+
+msgid "display a set of random photos"
+msgstr "rodyti atsitiktinių nuotraukų rinkinį"
+
+msgid "display all photos in all sub-albums"
+msgstr "rodyti visas nuotraukas iš visų subalbumų"
+
+msgid "Recent albums"
+msgstr "Naujausi albumai"
+
+msgid "Recent photos"
+msgstr "Naujausios nuotraukos"
+
+msgid "Requested album does not exist"
+msgstr "Toks albumas neegzistuoja"
+
+msgid "Requested tag does not exist"
+msgstr "Tokia žyma neegzistuoja"
+
+msgid "Search in albums"
+msgstr "Ieškoti albumuose"
+
+msgid "Search in sub-albums"
+msgstr "Ieškoti subalbumuose"
+
+msgid "Send my connection settings by email"
+msgstr "Atsiųsti mano prisijungimo duomenis el-paštu"
+
+msgid "Show latest comments first"
+msgstr "Pirma naujausi komentarai"
+
+msgid "Show oldest comments first"
+msgstr "Pirma seniausi komentarai"
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "Kažkas paprašė pakeisti slaptažodį šiam vartotojui:"
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "Sėkmingai užregistruota. Prisijungimo duomenis jums greitu metu atsiųsime el-paštu."
+
+msgid "Thank you for registering at %s!"
+msgstr "Ačiū, kad prisiregistravote %s"
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "Nuotraukų skaičius puslapiui turi būti sveikas teigiamas skaičius"
+
+msgid "The passwords do not match"
+msgstr "Slaptažodžiai nesutampa"
+
+msgid "To reset your password, visit the following address:"
+msgstr "Norėdami pasikeisti slaptažodi apsilankykite šiuo adresu:"
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "Vartotojas \"%s\" neįvedęs elektroninio pašto adreso - neįmanoma pakeisti slaptažodžio"
+
+msgid "Rating score, low &rarr; high"
+msgstr "Įvertinimas, žemas &rarr; aukštas"
+
+msgid "Rating score, high &rarr; low"
+msgstr "Įvertinimas, aukštas &rarr; žemas"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "Nuotraukos pavadinimas, Z &rarr; A"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "Nuotraukos pavadinimas, A &rarr; Z"
+
+msgid "Number of photos per page"
+msgstr "Nuotraukų skaičius puslapiui"
+
+msgid "File name, Z &rarr; A"
+msgstr "Failo vardas, Z &rarr; A"
+
+msgid "File name, A &rarr; Z"
+msgstr "Failo vardas, A &rarr; Z"
+
+msgid "Date posted, old &rarr; new"
+msgstr "Paskelbimo data, seniausi &rarr; naujausi"
+
+msgid "Date posted, new &rarr; old"
+msgstr "Paskelbimo data, naujausi &rarr; seniausi"
+
+msgid "Date created, old &rarr; new"
+msgstr "Sukūrimo data, seniausi &rarr; naujausi"
+
+msgid "Date created, new &rarr; old"
+msgstr "Sukūrimo data, naujausi &rarr; seniausi"
+
+msgid "Photo sizes"
+msgstr "Nuotraukų dydžai"
+
+msgid "Random photos"
+msgstr "Atsitiktinės nuotraukos"
+
+msgid "Rate this photo"
+msgstr "Įvertinti šią nuotrauką"
+
+msgid "Return to home page"
+msgstr "Grįžti į pagrindinį puslapį"
+
+msgid "Search by date"
+msgstr "Ieškoti pagal datą"
+
+msgid "Page not found"
+msgstr "Puslapis nerastas"
+
+msgid "Original"
+msgstr "Originalas"
+
+msgid "Album: %s"
+msgstr "Albumas: %s"
+
+msgid "Invalid username or email"
+msgstr "Neteisingas vartotojo vardas arba el-paštas"
+
+msgid "Mobile"
+msgstr "Mobilus"
+
+msgid "Desktop"
+msgstr "Darbastalis"
+
+msgid "Email address is mandatory"
+msgstr "Elektroninio pašto adresas būtinas"
+
+msgid "Enter your new password below."
+msgstr "Įveskite savo naują slaptažodį."
+
+msgid "Expand all albums"
+msgstr "Išskleisti visus albumus"
+
+msgid "Hello %s,"
+msgstr "Sveiki, %s,"
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "Jei manote, kad gavote šį laišką per klaidą - tiesiog ignoruokite jį"
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "Jei manote, kad gavote šį laišką per klaida - susisiekite su mumis adresu %s"
+
+msgid "Album"
+msgstr "Albumas"
+
+msgid "Album results for"
+msgstr "Paieškos rezultatai"
+
+msgid "Albums"
+msgstr "Albumai"
+
+msgid "Bad request"
+msgstr "Bloga užklausa"
+
+msgid "Change my password"
+msgstr "Keisti mano slaptažodį"
+
+msgid "Check your email for the confirmation link"
+msgstr "Jums į elektroninį paštą išsiųsta patvirtinimo nuoroda"
+
+msgid "Click on the photo to see it in high definition"
+msgstr "Paspauskite ant nuotraukos, jei norite pamatyti ją didelės raiškos"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "Pilnas RSS srautas (nuotraukos, komentarai)"
+
+msgid "Download"
+msgstr "atsisiųsti"
+
+msgid "Download this file"
+msgstr "Atsisiųsti šį failą"
+
+msgid "Edit"
+msgstr "Redaguoti"
+
+msgid "View in"
+msgstr "Žiūrėti kaip"
+
+msgid "display each day with photos, month per month"
+msgstr "rodyti kalendorių su fotografijomis, diena po dienos, menėsis po mėnesio"
+
+msgid "Permalink for album not found"
+msgstr "Fiksuota nuoroda į albumą nerasta"
+
+msgid "%d rate"
+msgid_plural "%d rates"
+msgstr[0] "Įvertinimas: %d"
+msgstr[1] "%d reitingai"
+
+msgid "Email"
+msgstr "Elektroninis paštas"
+
+msgid "First Page"
+msgstr "Pirmas puslapis"
+
+msgid "Go back to the album"
+msgstr "Grįžti į albumą"
+
+msgid "Last Page"
+msgstr "Paskutinis puslapis"
+
+msgid "Password is missing. Please enter the password."
+msgstr "Nėra slaptažodžio. Prašome įvesti slaptažodį"
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Nav paroles apstiprinājuma. Lūdzu apstipriniet paroli."
+
+msgid "%d photos per page"
+msgstr "%d nuotr. puslapyje"
+
+msgid "Theme"
+msgstr "Tema"
+
+msgid "No results for"
+msgstr "Nėra rezultatų"
+
+msgid "Album name, A &rarr; Z"
+msgstr "Albumo pavadinimas, A &rarr; Ž"
+
+msgid "Album name, Z &rarr; A"
+msgstr "Albumo pavadinimas, Ž &rarr; A"
+
+msgid "Apply on properties"
+msgstr "Taikyti pakeitimus"
+
+msgid "Link: %s"
+msgstr "Nuoroda: %s"
+
+msgid "Photo description"
+msgstr "Nuotraukos aprašymas"
+
+msgid "Photo title"
+msgstr "Nuotraukos pavadinimas"
+
+msgid "Invalid username or password!"
+msgstr "Neteisingas vartotojo vardas arba slaptažodis!"
+
+msgid "Your authentication key is no longer valid."
+msgstr "Jūsų prisijungimo raktas nebegalioja."
+
+msgid "generate random password"
+msgstr "generuoti slaptažodį"
+
+msgid "piwigo_day_0"
+msgstr "Sekmadienis"
+
+msgid "piwigo_day_1"
+msgstr "Pirmadienis"
+
+msgid "piwigo_day_2"
+msgstr "Antradienis"
+
+msgid "piwigo_day_3"
+msgstr "Trečiadienis"
+
+msgid "piwigo_day_4"
+msgstr "Ketvirtadienis"
+
+msgid "piwigo_day_5"
+msgstr "Penktadienis"
+
+msgid "piwigo_day_6"
+msgstr "Šeštadienis"
+
+msgid "piwigo_month_10"
+msgstr "Spalis"
+
+msgid "piwigo_month_11"
+msgstr "Lapkritis"
+
+msgid "piwigo_month_12"
+msgstr "Gruodis"
+
+msgid "piwigo_month_1"
+msgstr "Sausis"
+
+msgid "piwigo_month_2"
+msgstr "Vasaris"
+
+msgid "piwigo_month_3"
+msgstr "Kovas"
+
+msgid "piwigo_month_4"
+msgstr "Balandis"
+
+msgid "piwigo_month_5"
+msgstr "Gegužė"
+
+msgid "piwigo_month_6"
+msgstr "Birželis"
+
+msgid "piwigo_month_7"
+msgstr "Liepa"
+
+msgid "piwigo_month_8"
+msgstr "Rugpjūtis"
+
+msgid "piwigo_month_9"
+msgstr "Rugsėjis"
+

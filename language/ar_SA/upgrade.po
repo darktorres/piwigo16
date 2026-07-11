@@ -1,0 +1,62 @@
+# Piwigo translation — ar_SA
+# Source: upgrade.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ar_SA\n"
+"Plural-Forms: nplurals=6; plural=(n == 0 ? 0 : n == 1 ? 1 : n == 2 ? 2 : n % 100 >= 3 && n % 100 <= 10 ? 3 : n % 100 >= 11 && n % 100 <= 99 ? 4 : 5);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Upgrade"
+msgstr "تحديث"
+
+msgid "This page proposes to upgrade your database corresponding to your old version of Piwigo to the current version. The upgrade assistant thinks you are currently running a <strong>release %s</strong> (or equivalent)."
+msgstr "معالجة التحديث يقترح تحديث قاعدة البيانات القديمة الخاصة بـ Piwigo من الاصدار القديم إلى الاصدار الجديد . مساعد الترقية يتعقد انك جاليا ً تشغل<strong> %s الأصدار </strong> ( أو ما يعادلها )."
+
+msgid "Upgrade from version %s to %s"
+msgstr "%s إلى %s التحديث من الأصدار"
+
+msgid "Statistics"
+msgstr "إحصاءات"
+
+msgid "total upgrade time"
+msgstr "الوقت الذي يحتاجه التحديث"
+
+msgid "total SQL time"
+msgstr "الوقت الذي يجتاجه المزو SQL"
+
+msgid "SQL queries"
+msgstr " SQLمزود الاستعلامات"
+
+msgid "Upgrade informations"
+msgstr "ترقية المعلومات "
+
+msgid "Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem."
+msgstr "للفحص والتدقيق والصيانى  [الإدارة>أدوات>الصيانة] إذا واجهتك أي مشكلة  "
+
+msgid "As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:"
+msgstr "كأجراء وقائي يجب تعطيل الاضافات ، كما ينبغي التأكد من وجود تحديثات جديدة لهذه الاضافات"
+
+msgid "Only administrator can run upgrade: please sign in below."
+msgstr "فقط يمكن للمسؤول تشغيل الترقية : الرجاء تسجيل الدخول أدناه."
+
+msgid "You do not have access rights to run upgrade"
+msgstr "ليس لديك حقق الوصول  في تشغيل الترقية"
+
+msgid "All sub-albums of private albums become private"
+msgstr "جميع البومات الفرعية من الألبومات الخاصة أصبحت خاصة"
+
+msgid "User permissions and group permissions have been erased"
+msgstr "تم مسح للمستخدمين وأذونات المجموعات"
+
+msgid "Only thumbnails prefix and webmaster mail address have been saved from previous configuration"
+msgstr "تم حفظ بدائة الصور المصغرة ، و عنواين مدير الموقع حفظت من التكوين السابق"
+
+msgid "In <i>%s</i>, before <b>?></b>, insert:"
+msgstr "في <i>%s</i>, قبل <b>?></b>, إدراج:"
+
+msgid "As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:"
+msgstr "للاحتياط,الثيمات التالية تم الغاء تفعيلها.يجب ان تقوم بعملية تحديث للثيمات قبل تفعيلها"
+

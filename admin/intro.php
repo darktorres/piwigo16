@@ -12,7 +12,9 @@ declare(strict_types=1);
 use Piwigo\Admin\Integrity\c13y_internal;
 use Piwigo\Admin\Integrity\check_integrity;
 use Piwigo\Admin\tabsheet;
+use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Logger;
+use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
@@ -46,7 +48,7 @@ include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
 
-check_status(ACCESS_ADMINISTRATOR);
+check_status(AccessLevel::Administrator);
 
 // +-----------------------------------------------------------------------+
 // | tabs                                                                  |
@@ -99,7 +101,7 @@ if ($nb_orphans > 0) {
 // locked album ?
 $query = '
 SELECT COUNT(*)
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE visible =\'false\'
 ;';
 $row = pwg_db_fetch_row(pwg_query($query));
@@ -128,7 +130,7 @@ $template->set_filenames([
 if ((bool) $conf['show_newsletter_subscription'] and (bool) userprefs_get_param('show_newsletter_subscription', true)) {
     $query = '
   SELECT registration_date
-    FROM ' . USER_INFOS_TABLE . '
+    FROM ' . Tables::userInfos() . '
     WHERE registration_date IS NOT NULL
     ORDER BY user_id ASC
     LIMIT 1
@@ -138,7 +140,7 @@ if ((bool) $conf['show_newsletter_subscription'] and (bool) userprefs_get_param(
 
     $query = '
   SELECT COUNT(*)
-    FROM ' . CATEGORIES_TABLE . '
+    FROM ' . Tables::categories() . '
   ;';
     $row = pwg_db_fetch_row(pwg_query($query));
     assert($row !== null);
@@ -146,7 +148,7 @@ if ((bool) $conf['show_newsletter_subscription'] and (bool) userprefs_get_param(
 
     $query = '
   SELECT COUNT(*)
-    FROM ' . IMAGES_TABLE . '
+    FROM ' . Tables::images() . '
   ;';
     $row = pwg_db_fetch_row(pwg_query($query));
     assert($row !== null);
@@ -206,7 +208,7 @@ $template->assign(
 if ((bool) $conf['activate_comments']) {
     $query = '
 SELECT COUNT(*)
-  FROM ' . COMMENTS_TABLE . '
+  FROM ' . Tables::comments() . '
 ;';
     $row = pwg_db_fetch_row(pwg_query($query));
     assert($row !== null);
@@ -293,7 +295,7 @@ if ($session_cache_calculated_on === null or $session_cache_calculated_on < pwg_
       object,
       action,
       COUNT(*) AS activity_counter
-    FROM `' . ACTIVITY_TABLE . '`
+    FROM `' . Tables::activity() . '`
     WHERE occured_on >= \'' . $date_string . '\'
     GROUP BY activity_day, object, action
   ;';
@@ -470,7 +472,7 @@ SELECT
   COUNT(*) AS ext_counter,
    SUBSTRING_INDEX(path,".",-1) AS ext,
    SUM(filesize) AS filesize
-  FROM `' . IMAGES_TABLE . '`
+  FROM `' . Tables::images() . '`
   GROUP BY ext
 ;';
 
@@ -514,7 +516,7 @@ SELECT
     COUNT(*) AS ext_counter,
     ext,
     SUM(filesize) AS filesize
-  FROM `' . IMAGE_FORMAT_TABLE . '`
+  FROM `' . Tables::imageFormat() . '`
   GROUP BY ext
 ;';
 

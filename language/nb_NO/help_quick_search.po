@@ -1,0 +1,161 @@
+# Piwigo translation — nb_NO
+# Source: help_quick_search.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: nb_NO\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "greater than 100"
+msgstr "større enn 100"
+
+msgid "less than 100"
+msgstr "mindre enn 100"
+
+msgid "photos after Jan 1st 2008"
+msgstr "bilder etter 1. januar 2008"
+
+msgid "photos from 2003 to 2008"
+msgstr "bilder fra 2003 til 2008"
+
+msgid "photos from may 2003"
+msgstr "bilder fra mai 2003"
+
+msgid "photos posted in 2003"
+msgstr "bilder lagt ut i 2003"
+
+msgid "photos taken in 2003"
+msgstr "bilder tatt i 2003"
+
+msgid "return photos less than 700px high"
+msgstr "bilder som er mindre enn 700 piksler høye"
+
+msgid "return photos wider than 500px"
+msgstr "bilder bredere enn 500 piksler"
+
+msgid "return photos with at least 1,000 views"
+msgstr "returner bilder med minst 1000 visninger"
+
+msgid "returns photos of 12 megapixels or more"
+msgstr "returnerer bilder på 12 megapiksler eller mer"
+
+msgid "returns photos of 5 megapixels"
+msgstr "returnerer bilder på 5 megapiksler"
+
+msgid "up to 100 (inclusive)"
+msgstr "opptil 100 (inkludert)"
+
+msgid "will give you all photos with at least one note."
+msgstr "vil gi deg alle bildene med minst én merknad."
+
+msgid "will give you photos without notes."
+msgstr "vil gi deg bilder uten notater."
+
+msgid "Searches photos by file size."
+msgstr "Søker etter bilder etter filstørrelse."
+
+msgid "Searches photos by its numeric identifier in Piwigo."
+msgstr "Søker etter bilder etter numerisk identifikator i Piwigo."
+
+msgid "Searches photos by posted date."
+msgstr "Søker etter bilder etter publiseringsdato."
+
+msgid "Searches photos by rating."
+msgstr "Søker etter bilder etter vurdering."
+
+msgid "Searches photos by size in pixels."
+msgstr "Søker etter bilder etter størrelse i piksler."
+
+msgid "Searches photos by taken date."
+msgstr "Søker etter bilder etter dato tatt."
+
+msgid "Searches photos by width/height ratio."
+msgstr "Søker etter bilder etter bredde/høyde-forhold."
+
+msgid "Searches photos with a given width or height."
+msgstr "Søker etter bilder med en gitt bredde eller høyde."
+
+msgid "Supported numeric operators"
+msgstr "Støttede numeriske operatører"
+
+msgid "The quick search engine allows you to use boolean operators to refine your search. By default, the search applies to all keywords. Searches are not case sensitive."
+msgstr "Hurtigsøkemotoren lar deg bruke boolske operatører for å avgrense søket. Som standard gjelder søket for alle nøkkelord. Søkene skiller ikke mellom store og små bokstaver."
+
+msgid "These operators can be used with numeric fields such as"
+msgstr "Disse operatørene kan brukes med numeriske felt som"
+
+msgid "Use quotes to search for an exact keyword or phrase."
+msgstr "Bruk anførselstegn for å søke etter et eksakt nøkkelord eller en frase."
+
+msgid "With keywords"
+msgstr "Med nøkkelord"
+
+msgid "between 10 and 100 (inclusive)"
+msgstr "mellom 10 og 100 (inkludert)"
+
+msgid "equals 100"
+msgstr "tilsvarer 100"
+
+msgid "finds files between 1MB and 10MB."
+msgstr "finner filer mellom 1 MB og 10 MB."
+
+msgid "finds panoramas"
+msgstr "finner panoramaer"
+
+msgid "finds photo 123 to 126 (it may find between 0 and 4 photos, because photos can be deleted)"
+msgstr "finner bilde 123 til 126 (den kan finne mellom 0 og 4 bilder, fordi bilder kan slettes)"
+
+msgid "finds photos from compact cameras in portrait or landscape modes"
+msgstr "finner bilder fra kompaktkameraer i portrett- eller landskapsmodus"
+
+msgid "from 100 and above"
+msgstr "fra 100 og oppover"
+
+msgid "Add a dash (-) or NOT before a word to exclude from search. Note that NOT acts as a filtering operator so you cannot have a search containing only NOT operators. You cannot combine OR with NOT (john OR NOT bill is not valid)"
+msgstr "Legg til en bindestrek (-) eller IKKE foran et ord som skal ekskluderes fra søket. Merk at IKKE fungerer som en filtreringsoperator, så du kan ikke ha et søk som bare inneholder IKKE-operatorer. Du kan ikke kombinere ELLER med IKKE (john ELLER IKKE bill er ikke gyldig)"
+
+msgid "Add an OR between words."
+msgstr "Legg til et ELLER mellom ord."
+
+msgid "Exact search"
+msgstr "Nøyaktig søk"
+
+msgid "Exclude"
+msgstr "Utelukke"
+
+msgid "Grouping"
+msgstr "Gruppering"
+
+msgid "Here is a list of actions you can perform:"
+msgstr "Her er en liste over handlinger du kan utføre:"
+
+msgid "OR inclusive"
+msgstr "ELLER inkludert"
+
+msgid "Others"
+msgstr "Andre"
+
+msgid "Same principle as for"
+msgstr "Samme prinsipp som for"
+
+msgid "Search using extended syntax"
+msgstr "Søk med utvidet syntaks"
+
+msgid "Searches by author."
+msgstr "Søk etter forfatter."
+
+msgid "Searches by file name."
+msgstr "Søker etter filnavn."
+
+msgid "Searches for photos by number of views."
+msgstr "Søker etter bilder etter antall visninger."
+
+msgid "Searches only for photos with the given words in title or description."
+msgstr "Søker bare etter bilder med de oppgitte ordene i tittel eller beskrivelse."
+
+msgid "Searches only in tag names without looking at photo titles or descriptions."
+msgstr "Søker bare i tagnavn uten å se på bildetitler eller beskrivelser."
+

@@ -1,0 +1,161 @@
+# Piwigo translation — sk_SK
+# Source: help_quick_search.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: sk_SK\n"
+"Plural-Forms: nplurals=3; plural=(n == 1 ? 0 : n >= 2 && n <= 4 ? 1 : 2);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Add a dash (-) or NOT before a word to exclude from search. Note that NOT acts as a filtering operator so you cannot have a search containing only NOT operators. You cannot combine OR with NOT (john OR NOT bill is not valid)"
+msgstr "Pred slovo, ktoré chcete vylúčiť z vyhľadávania, pridajte pomlčku (-) alebo NOT. Upozorňujeme, že NOT funguje ako filtračný operátor, takže nemôžete mať vyhľadávanie obsahujúce iba operátory NOT. Nemôžete kombinovať OR s NOT (john OR NOT bill nie je platné)."
+
+msgid "The quick search engine allows you to use boolean operators to refine your search. By default, the search applies to all keywords. Searches are not case sensitive."
+msgstr "Rýchly vyhľadávač vám umožňuje používať boolovské operátory na spresnenie vyhľadávania. Predvolene sa vyhľadávanie vzťahuje na všetky kľúčové slová. Vyhľadávanie nerozlišuje veľké a malé písmená."
+
+msgid "will give you all photos with at least one note."
+msgstr "vám poskytne všetky fotografie s aspoň jednou poznámkou."
+
+msgid "will give you photos without notes."
+msgstr "vám poskytne fotografie bez poznámok."
+
+msgid "finds files between 1MB and 10MB."
+msgstr "nájde súbory s veľkosťou medzi 1 MB a 10 MB."
+
+msgid "finds panoramas"
+msgstr "nájde panorámy"
+
+msgid "finds photo 123 to 126 (it may find between 0 and 4 photos, because photos can be deleted)"
+msgstr "nájde fotografie 123 až 126 (môže nájsť 0 až 4 fotografie, pretože fotografie sa dajú vymazať)"
+
+msgid "finds photos from compact cameras in portrait or landscape modes"
+msgstr "vyhľadáva fotografie z kompaktných fotoaparátov v režime na výšku alebo na šírku"
+
+msgid "from 100 and above"
+msgstr "od 100 a viac"
+
+msgid "greater than 100"
+msgstr "viac ako 100"
+
+msgid "less than 100"
+msgstr "menej ako 100"
+
+msgid "photos after Jan 1st 2008"
+msgstr "fotografie po 1. januári 2008"
+
+msgid "photos from 2003 to 2008"
+msgstr "fotografie z rokov 2003 až 2008"
+
+msgid "photos from may 2003"
+msgstr "fotografie z mája 2003"
+
+msgid "photos posted in 2003"
+msgstr "fotografie uverejnené v roku 2003"
+
+msgid "photos taken in 2003"
+msgstr "fotografie z roku 2003"
+
+msgid "return photos less than 700px high"
+msgstr "fotografie s výškou menšou ako 700 pixelov"
+
+msgid "return photos wider than 500px"
+msgstr "fotografie širšie ako 500px"
+
+msgid "return photos with at least 1,000 views"
+msgstr "vrátiť fotografie s aspoň 1 000 zobrazeniami"
+
+msgid "returns photos of 12 megapixels or more"
+msgstr "vráti fotografie s rozlíšením 12 megapixelov alebo viac"
+
+msgid "returns photos of 5 megapixels"
+msgstr "vráti fotografie s rozlíšením 5 megapixelov"
+
+msgid "up to 100 (inclusive)"
+msgstr "do 100 (vrátane)"
+
+msgid "Searches by file name."
+msgstr "Vyhľadáva podľa názvu súboru."
+
+msgid "Searches for photos by number of views."
+msgstr "Vyhľadáva fotografie podľa počtu zobrazení."
+
+msgid "Searches only for photos with the given words in title or description."
+msgstr "Vyhľadáva iba fotografie so zadanými slovami v názve alebo popise."
+
+msgid "Searches only in tag names without looking at photo titles or descriptions."
+msgstr "Vyhľadáva iba v názvoch značiek bez prezerania názvov alebo popisov fotografií."
+
+msgid "Searches photos by file size."
+msgstr "Vyhľadáva fotografie podľa veľkosti súboru."
+
+msgid "Searches photos by its numeric identifier in Piwigo."
+msgstr "Vyhľadáva fotografie podľa ich číselného identifikátora v Piwigo."
+
+msgid "Searches photos by posted date."
+msgstr "Vyhľadáva fotografie podľa dátumu zverejnenia."
+
+msgid "Searches photos by rating."
+msgstr "Vyhľadáva fotografie podľa hodnotenia."
+
+msgid "Searches photos by size in pixels."
+msgstr "Vyhľadáva fotografie podľa veľkosti v pixeloch."
+
+msgid "Searches photos by taken date."
+msgstr "Vyhľadáva fotografie podľa dátumu nasnímania."
+
+msgid "Searches photos by width/height ratio."
+msgstr "Vyhľadáva fotografie podľa pomeru šírky a výšky."
+
+msgid "Searches photos with a given width or height."
+msgstr "Vyhľadáva fotografie s danou šírkou alebo výškou."
+
+msgid "Supported numeric operators"
+msgstr "Podporované číselné operátory"
+
+msgid "These operators can be used with numeric fields such as"
+msgstr "Tieto operátory je možné použiť s číselnými poľami, ako napríklad"
+
+msgid "Use quotes to search for an exact keyword or phrase."
+msgstr "Na vyhľadanie presného kľúčového slova alebo frázy použite úvodzovky."
+
+msgid "With keywords"
+msgstr "S kľúčovými slovami"
+
+msgid "between 10 and 100 (inclusive)"
+msgstr "medzi 10 a 100 (vrátane)"
+
+msgid "equals 100"
+msgstr "rovná sa 100"
+
+msgid "Add an OR between words."
+msgstr "Medzi slová vložte operátor OR."
+
+msgid "Exact search"
+msgstr "Presné vyhľadávanie"
+
+msgid "Exclude"
+msgstr "Vylúčiť"
+
+msgid "Grouping"
+msgstr "Zoskupovanie"
+
+msgid "Here is a list of actions you can perform:"
+msgstr "Tu je zoznam akcií, ktoré môžete vykonať:"
+
+msgid "OR inclusive"
+msgstr "ALEBO vrátane"
+
+msgid "Others"
+msgstr "Ostatné"
+
+msgid "Same principle as for"
+msgstr "Rovnaký princíp ako pri"
+
+msgid "Search using extended syntax"
+msgstr "Vyhľadávanie pomocou rozšírenej syntaxe"
+
+msgid "Searches by author."
+msgstr "Vyhľadávanie podľa autora."
+

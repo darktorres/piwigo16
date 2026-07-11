@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\AccessLevel;
 use Piwigo\Template\Template;
 
 // +-----------------------------------------------------------------------+
@@ -26,7 +27,7 @@ include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
  */
 global $conf, $page, $template;
 
-check_status(ACCESS_GUEST);
+check_status(AccessLevel::Guest);
 
 trigger_notify('loc_begin_tags');
 

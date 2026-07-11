@@ -1,0 +1,56 @@
+# Piwigo translation — hu_HU
+# Source: help_quick_search.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: hu_HU\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Add a dash (-) or NOT before a word to exclude from search. Note that NOT acts as a filtering operator so you cannot have a search containing only NOT operators. You cannot combine OR with NOT (john OR NOT bill is not valid)"
+msgstr "Adjon egy kötőjelet (-) vagy a NOT szót egy szó elé, hogy kizárja a keresésből. Fontos: a NOT szűrő operátorként működik, ezért nem lehet olyan keresése, ami csak NOT operátorokat tartalmaz. Az OR nem kombinálható a NOT-tal (például: john OR NOT bill nem érvényes)"
+
+msgid "up to 100 (inclusive)"
+msgstr "100-ig (beleértve)"
+
+msgid "photos from may 2003"
+msgstr "2003. májusi fotók"
+
+msgid "photos from 2003 to 2008"
+msgstr "2003 és 2008 közötti képek"
+
+msgid "photos after Jan 1st 2008"
+msgstr "2008. január 1. utáni képek"
+
+msgid "less than 100"
+msgstr "kisebb, mint 100"
+
+msgid "greater than 100"
+msgstr "nagyobb, mint 100"
+
+msgid "between 10 and 100 (inclusive)"
+msgstr "10 és 100 között (beleértve)"
+
+msgid "With keywords"
+msgstr "Kulcsszavakkal"
+
+msgid "Searches by file name."
+msgstr "Fájlnév szerinti keresések."
+
+msgid "Searches by author."
+msgstr "Szerző szerinti keresések."
+
+msgid "Add an OR between words."
+msgstr "Adjon egy OR-t a szavak közé."
+
+msgid "Grouping"
+msgstr "Csoportosítás"
+
+msgid "Exclude"
+msgstr "Kizárás"
+
+msgid "Exact search"
+msgstr "Pontos keresés"
+

@@ -1,0 +1,65 @@
+# Piwigo translation — eo_EO
+# Source: upgrade.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: eo_EO\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "SQL queries"
+msgstr "SQL petoj"
+
+msgid "Upgrade informations"
+msgstr "Informoj pri la ĝisdatigo"
+
+msgid "User permissions and group permissions have been erased"
+msgstr "La permesoj de uzantoj kaj de grupoj viŝiĝis"
+
+msgid "You do not have access rights to run upgrade"
+msgstr "Vi ne havas akcesrajtojn por lanĉi ĝisdatigon"
+
+msgid "This page proposes to upgrade your database corresponding to your old version of Piwigo to the current version. The upgrade assistant thinks you are currently running a <strong>release %s</strong> (or equivalent)."
+msgstr "Tiu-ĉi paĝo proponas ĝisdatigi la datenbazon de via eksa Piwigo-versio al la nova. La ĝisdatiga asistanto pensas ke vi nun funkciigas <strong>versio %s</strong> (aŭ simila)."
+
+msgid "Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem."
+msgstr "Plenumu funkcitenan kontrolon en [Administrado>Iloj>Funkciteno] se vi alfrontas problemon."
+
+msgid "Only thumbnails prefix and webmaster mail address have been saved from previous configuration"
+msgstr "Nur la miniatura prefikso kaj la retestra retadreso konserviĝis el la antaŭa agordo"
+
+msgid "As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:"
+msgstr "Kiel singardo, la jenaj temoj malaktiviĝis. Kontrolserĉu ĝisdatigojn antaŭ ol reaktivigi ilin:"
+
+msgid "As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:"
+msgstr "Kiel singardo, la jenaj krom-programoj malaktiviĝis. Kontrolserĉu ĝisdatigojn antaŭ ol reaktivigi ilin:"
+
+msgid "total upgrade time"
+msgstr "kompleta ĝisdatigotempo"
+
+msgid "total SQL time"
+msgstr "kompleta SQL-tempo"
+
+msgid "Upgrade from version %s to %s"
+msgstr "Ĝisdatigu de versio %s al %s"
+
+msgid "Upgrade"
+msgstr "Ĝisdatigi"
+
+msgid "Statistics"
+msgstr "Statistikoj"
+
+msgid "Only administrator can run upgrade: please sign in below."
+msgstr "Nur administranto povas lanĉi ĝisdatigadon: bonvolu ensaluti ĉisube."
+
+msgid "In <i>%s</i>, before <b>?></b>, insert:"
+msgstr "En <i>%s</i>, antaŭ <b>?></b>, enmetu:"
+
+msgid "All sub-albums of private albums become private"
+msgstr "Ĉiuj sub-fotaroj el privataj fotaroj iĝas privataj"
+
+msgid "Discover what's new in Piwigo %s"
+msgstr "Malkovru kion novas en Piwigo %s"
+

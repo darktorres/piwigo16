@@ -8,10 +8,16 @@ use Psr\Container\ContainerInterface;
 
 /**
  * P7 boot skeleton, growing via P8's Container. Still no
- * Config/PageState/Lang/CurrentUser wiring (P16), no middleware pipeline
- * (P9), and config/container.php itself is still empty (real entries land
- * P9 onward). This class is retrofitted incrementally by those later phases
- * rather than written once complete now.
+ * Config/PageState/Lang/CurrentUser wiring (P16). This class is
+ * retrofitted incrementally by those later phases rather than written once
+ * complete now.
+ *
+ * Deliberately does NOT run the P9 middleware pipeline -- that's
+ * Piwigo\Bootstrap\RequestPipeline's job. Kernel must stay
+ * infrastructure-only (L1Infrastructure in deptrac.yaml, which only allows
+ * depending on L0Data); orchestrating Http/Routing/Container together is
+ * genuinely an integration concern, the same reasoning that makes
+ * CommonBootstrap itself L4Integration rather than living here.
  *
  * The `self::$booted` guard makes boot() idempotent — CommonBootstrap::run()
  * calling it more than once per request (e.g. from a nested include) must

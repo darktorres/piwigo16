@@ -29,6 +29,10 @@ function findMissingOverrideAttributes(string $fqcn): array
             continue; // constructors are exempt by PHP's own #[\Override] convention
         }
 
+        if ($reflection->isEnum() && in_array($method->getName(), ['cases', 'from', 'tryFrom'], true)) {
+            continue; // compiler-synthesized from the implicit UnitEnum/BackedEnum interface -- cannot bear attributes
+        }
+
         $overridesSomething = false;
 
         $parent = $reflection->getParentClass();
@@ -222,17 +226,42 @@ test('Kernel::reset() is only called from tests/', function (): void {
     expect(describeCallSites($hits))->toBe([]);
 });
 
-test('RequestFactory, ResponseEmitter, and CommonBootstrap declare no mutable state', function (): void {
+test('RequestFactory, ResponseEmitter, CommonBootstrap, and the P9 middleware/pipeline/routing classes declare only readonly state', function (): void {
     // SEC-60 (worker-isolation, partial verification): these classes must stay
-    // pure so a future FrankenPHP worker loop can reuse them across requests
-    // without cross-request state bleed. Kernel's own static state is the
-    // sanctioned exception -- it's request-isolated via Kernel::reset(), which
-    // a worker loop will call between requests once that mode exists.
+    // free of MUTABLE state so a future FrankenPHP worker loop can reuse them
+    // across requests without cross-request state bleed. readonly properties
+    // set once at construction and never mutated are not a bleed risk --
+    // refined from P7's "zero properties allowed" rule, which was too strict
+    // for P9's middleware (SecurityHeadersMiddleware/RoutingMiddleware/
+    // ControllerInvokerMiddleware/MiddlewarePipeline legitimately need
+    // constructor-injected readonly properties to function). Kernel's own
+    // static state is the sanctioned exception -- it's request-isolated via
+    // Kernel::reset(), which a worker loop will call between requests once
+    // that mode exists.
     foreach ([
         Piwigo\Http\RequestFactory::class,
         Piwigo\Http\ResponseEmitter::class,
+        Piwigo\Http\ResponseFactory::class,
+        Piwigo\Http\MiddlewarePipeline::class,
+        Piwigo\Http\BaselineSecurityHeaders::class,
+        Piwigo\Http\Middleware\ExceptionHandlerMiddleware::class,
+        Piwigo\Http\Middleware\SecurityHeadersMiddleware::class,
+        Piwigo\Http\Middleware\RoutingMiddleware::class,
+        Piwigo\Http\Middleware\ControllerInvokerMiddleware::class,
+        Piwigo\Routing\Router::class,
+        Piwigo\Routing\RouteResult::class,
         Piwigo\Bootstrap\CommonBootstrap::class,
+        Piwigo\Bootstrap\RequestPipeline::class,
     ] as $fqcn) {
-        expect((new ReflectionClass($fqcn))->getProperties())->toBe([]);
+        $mutableProperties = array_filter(
+            (new ReflectionClass($fqcn))->getProperties(),
+            static fn (ReflectionProperty $property): bool => ! $property->isReadOnly()
+        );
+        $violations = array_map(
+            static fn (ReflectionProperty $property): string => "{$fqcn}::\${$property->getName()}",
+            $mutableProperties
+        );
+
+        expect(array_values($violations))->toBe([]);
     }
 });

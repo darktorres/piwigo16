@@ -29,11 +29,14 @@
     "php-di/php-di": "^7.0",
     "psr/http-client": "^1.0",
     "psr/http-message": "^2.0",
+    "psr/http-server-handler": "^1.0",
+    "psr/http-server-middleware": "^1.0",
     "smarty/smarty": "^5",
     "symfony/dotenv": "^8.1",
     "symfony/http-client": "^8.0",
     "symfony/mailer": "^8",
-    "symfony/mime": "^8"
+    "symfony/mime": "^8",
+    "symfony/routing": "^8.0"
   },
   "suggest": {
     "ext-exif": "Read EXIF metadata from JPEGs. All call sites guard with function_exists(); features that need EXIF degrade gracefully when the extension is absent.",

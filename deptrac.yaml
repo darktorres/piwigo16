@@ -29,12 +29,16 @@ deptrac:
       collectors:
         - type: classLike
           value: ^Piwigo\\(Search|Calendar|Site)\\.*
-    # L3 Presentation — Menu/Template land here in P6; Html/Http/Page/Asset/
-    # Listener are later-phase additions.
+    # L3 Presentation — Menu/Template land here in P6; Http (incl.
+    # Http\Middleware) and Routing land here in P9 -- Routing wasn't
+    # pre-anticipated in P6's list, but Http\RoutingMiddleware depends on
+    # Routing\Router, and L3 may only depend on layers at or below itself,
+    # so Routing has to live at L3 too (same-layer, always allowed).
+    # Html/Page/Asset/Listener are later-phase additions.
     - name: L3Presentation
       collectors:
         - type: classLike
-          value: ^Piwigo\\(Html|Http|Menu|Page|Template|Asset|Listener)\\.*
+          value: ^Piwigo\\(Html|Http|Menu|Page|Template|Asset|Listener|Routing)\\.*
     # L4 Integration — Admin (incl. Admin\Image, Admin\Integrity) and Ws
     # (incl. Ws\Encoder, Ws\Protocol) land here in P6; Bootstrap/Controller/
     # Job are later-phase additions.

@@ -1095,6 +1095,15 @@ function redirect_html($url, $msg = '', $refresh_time = 0): never
 {
     /** @var array<string, mixed> $conf */
     global $user, $template, $lang_info, $conf, $lang, $t2, $page, $debug;
+    // $title/$refresh/$url_link below must reach $GLOBALS (not stay
+    // function-local) -- include/page_header.php reads them via `global`,
+    // and PHP's include-inside-a-function only shares the enclosing
+    // function's LOCAL scope, never $GLOBALS, unless explicitly declared
+    // here. A real, pre-existing bug (title stayed null for every real
+    // redirect_html() caller), only surfaced live once PageHeaderRenderer
+    // started requiring a real string instead of silently letting
+    // strip_tags(null) fatal deeper inside the original code.
+    global $title, $refresh, $url_link;
 
     // $template/$lang_info are genuinely not always set here: this function
     // can be called very early (e.g. a fatal before common.inc.php finishes

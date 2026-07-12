@@ -444,7 +444,7 @@ SELECT SQL_CALC_FOUND_ROWS com.id AS comment_id,
   WHERE ' . implode('
     AND ', $where_clauses) . '
   GROUP BY comment_id
-  ORDER BY ' . $sort_by_value . ' ' . $sort_order_value;
+  ORDER BY ' . $sort_by_value . ' ' . $sort_order_value . ', comment_id ' . $sort_order_value;
 if ($selected_items_number !== 'all') {
     $query .= '
   LIMIT ' . $selected_items_number . ' OFFSET ' . $start;

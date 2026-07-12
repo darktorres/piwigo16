@@ -144,7 +144,7 @@ SELECT
     LEFT JOIN ' . Tables::userInfos() . ' AS ui
       ON ui.user_id = c.author_id
   WHERE ' . implode(' AND ', $where_clauses) . '
-  ORDER BY c.date DESC
+  ORDER BY c.date DESC, c.id DESC
   LIMIT ' . $params['per_page'] * $params['page'] . ', ' . $params['per_page'] . '
 ;';
     $result = pwg_query($query);

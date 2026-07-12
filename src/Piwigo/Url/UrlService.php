@@ -603,7 +603,12 @@ final class UrlService
 
                     if ((bool) count($maybe_permalinks)) {
                         $cat_id = get_cat_id_from_permalinks($maybe_permalinks, $perma_index);
-                        if (isset($cat_id)) {
+                        // get_cat_id_from_permalinks() always sets $perma_index
+                        // whenever it returns non-null (see its own docblock) --
+                        // PHPStan can't correlate a by-ref out-param with the
+                        // return value, so this is a real invariant, not a
+                        // reachable branch.
+                        if (isset($cat_id) && is_int($perma_index)) {
                             $nextToken += $perma_index + 1;
 
                             if ($category === null) {

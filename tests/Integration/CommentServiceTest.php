@@ -86,15 +86,28 @@ namespace {
     }
 
     if (! function_exists('is_a_guest')) {
-        function is_a_guest(): bool
+        // Signature must match the real is_a_guest($user_status = '') --
+        // a 0-param stub here previously made PHPStan misresolve real
+        // 1-argument call sites elsewhere (e.g. ws_functions/pwg.users.php,
+        // password.php) as "too many arguments", since it scans this
+        // global declaration project-wide alongside the real one.
+        function is_a_guest(string $user_status = ''): bool
         {
+            if ($user_status !== '') {
+                return $user_status === 'guest';
+            }
+
             return (bool) ($GLOBALS['test_is_guest'] ?? false);
         }
     }
 
     if (! function_exists('is_classic_user')) {
-        function is_classic_user(): bool
+        function is_classic_user(string $user_status = ''): bool
         {
+            if ($user_status !== '') {
+                return $user_status !== 'guest';
+            }
+
             return (bool) ($GLOBALS['test_is_classic'] ?? true);
         }
     }

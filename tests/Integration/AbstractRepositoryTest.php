@@ -12,11 +12,27 @@ use Piwigo\Db\DbConnection;
 
 final class AbstractRepositoryTest extends IntegrationTestCase
 {
+    private static bool $fixtureReady = false;
+
     #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
         $this->setUpConnectionFromEnv();
+
+        // Real pre-existing gap this surfaced: unlike every other
+        // Integration test class, this one never called resetDatabase()/
+        // loadFixture() itself, silently relying on some earlier test
+        // class (alphabetically) having already created the database --
+        // real, reproducible failure ("Unknown database 'piwigo_test'")
+        // when this class happens to run first against a fresh DB
+        // (confirmed via a full, unfiltered `composer test:integration`
+        // run).
+        if (! self::$fixtureReady) {
+            $this->resetDatabase();
+            $this->loadFixture(dirname(__DIR__, 2) . '/tests/Fixtures/piwigo-17.0.sql');
+            self::$fixtureReady = true;
+        }
 
         Config::reset();
         ConfigLoader::applyDefaults();

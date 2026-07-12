@@ -80,6 +80,12 @@ final class CookieService
     /**
      * Persistently stores a variable in pwg cookie.
      * Set $value to null to delete the cookie.
+     *
+     * [SEC-13/14] secure/httponly added -- confirmed missing entirely in
+     * the original (the separate remember-me cookie, set directly by
+     * functions_user.inc.php's log_user()/auto_login()/logout_user(), was
+     * already setting both correctly; this is the same, already-proven
+     * ini_get()-based pattern, applied here for consistency).
      */
     public function setCookieVar(string $var, mixed $value, ?int $expire = null): bool
     {
@@ -90,6 +96,8 @@ final class CookieService
                 'expires' => 0,
                 'path' => $this->cookiePath(),
                 'samesite' => 'Strict',
+                'secure' => (bool) ini_get('session.cookie_secure'),
+                'httponly' => (bool) ini_get('session.cookie_httponly'),
             ]);
         }
 
@@ -101,6 +109,8 @@ final class CookieService
             'expires' => $expire,
             'path' => $this->cookiePath(),
             'samesite' => 'Strict',
+            'secure' => (bool) ini_get('session.cookie_secure'),
+            'httponly' => (bool) ini_get('session.cookie_httponly'),
         ]);
     }
 

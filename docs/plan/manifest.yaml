@@ -32,7 +32,7 @@ phases:
   - {id: P17, tier: T1,    depends_on: [P16],   status: done,    epoch: E}
   - {id: P18, tier: T1,    depends_on: [P17],   status: done,    epoch: E}
   - {id: P19, tier: T1,    depends_on: [P18],   status: done,    epoch: E}
-  - {id: P20, tier: T1,    depends_on: [P19],   status: planned, epoch: E}
+  - {id: P20, tier: T1,    depends_on: [P19],   status: done,    epoch: E}
   - {id: P21, tier: T1,    depends_on: [P20],   status: planned, epoch: E}
   - {id: P22, tier: T1,    depends_on: [P21],   status: planned, epoch: E}
   - {id: P23, tier: T1,    depends_on: [P22],   status: planned, epoch: E}
@@ -69,7 +69,24 @@ sec:
   - {id: SEC-12, phase: P9,  threat: "CSRF on state-changing actions", verified_by: "CSRF middleware integration tests (P9/P28)", status: planned}
   - {id: SEC-13, phase: P9,  threat: "Session hijacking / fixation", verified_by: "CookieService::setCookieVar() was missing secure/httponly entirely (confirmed via direct read); fixed (f90d0fc84) to set both via the same ini_get()-based pattern the remember-me cookie already used (P18)", status: done}
   - {id: SEC-14, phase: P9,  threat: "Session hijacking / fixation", verified_by: "CookieService::setCookieVar() was missing secure/httponly entirely (confirmed via direct read); fixed (f90d0fc84) to set both via the same ini_get()-based pattern the remember-me cookie already used (P18)", status: done}
-  - {id: SEC-15, phase: P20, threat: "Command / code injection", verified_by: "no-eval/exec grep gate + unit tests (P20/P31)", status: planned}
+  # SEC-15 is only PARTIALLY closed by P20, matching the doc's own "2 of 3"
+  # framing. Fixed: SectionInitializer's eval($random_url_condition) (the
+  # random_index_redirect RCE vector) replaced with RandomIndexRedirectResolver,
+  # a declarative evaluator matching only the config's 2 real documented
+  # condition shapes ('' / 'return true;' always-match, 'return
+  # is_a_guest();' guest-only) -- anything else now safely matches nothing
+  # instead of executing; covered by unit tests. Correctly deferred:
+  # MenubarRenderer's eval($url_data['eval_visible']) is SEC-49, explicitly
+  # P31 scope per the doc's own text (plugin eval_visible -> Closure-based
+  # visibility API alongside PluginInterface, which doesn't exist yet).
+  # NOT resolved: the doc's second target, "PiwigoExtension line 496, math
+  # expression eval with identifier allowlist", has no matching class in
+  # this codebase -- grepped project-wide, only match is
+  # Template.php::get_php_str_val()'s 2 eval() calls, which eval a compiled
+  # Smarty template string literal (quote-delimited, already character-
+  # gated), a different and lower-risk mechanism than the reference's
+  # described math evaluator. Investigated, not fixed, not claimed closed.
+  - {id: SEC-15, phase: P20, threat: "Command / code injection", verified_by: "SectionInitializer eval() removed via RandomIndexRedirectResolverTest; eval_visible correctly deferred to SEC-49/P31; PiwigoExtension-equivalent target not found in this codebase (P20/P31)", status: planned}
   - {id: SEC-16, phase: P19, threat: "Command / code injection", verified_by: "escapeshellarg() on all 4 real exec() call sites (Admin/Image pwg_image.php + image_ext_imagick.php); verified against a real shell-injection payload in the dir prefix (P19)", status: done}
   # SEC-17's own fix ("URL validation in RedirectResponder::redirect()")
   # targets a class that doesn't exist in this repo yet -- RedirectResponder

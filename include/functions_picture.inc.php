@@ -9,7 +9,9 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-use Piwigo\Db\Tables;
+use Piwigo\Db\DbConnection;
+use Piwigo\Image\ImageRepository;
+use Piwigo\Image\ImageService;
 
 /**
  * Returns slideshow default params.
@@ -20,14 +22,8 @@ use Piwigo\Db\Tables;
  */
 function get_default_slideshow_params(): array
 {
-    /** @var array<string, mixed> $conf */
-    global $conf;
-
-    return [
-        'period' => $conf['slideshow_period'],
-        'repeat' => $conf['slideshow_repeat'],
-        'play' => true,
-    ];
+    return new ImageService()
+        ->getDefaultSlideshowParams();
 }
 
 /**
@@ -37,16 +33,8 @@ function get_default_slideshow_params(): array
  */
 function correct_slideshow_params(array $params = []): array
 {
-    /** @var array<string, mixed> $conf */
-    global $conf;
-
-    if ($params['period'] < $conf['slideshow_period_min']) {
-        $params['period'] = $conf['slideshow_period_min'];
-    } elseif ($params['period'] > $conf['slideshow_period_max']) {
-        $params['period'] = $conf['slideshow_period_max'];
-    }
-
-    return $params;
+    return new ImageService()
+        ->correctSlideshowParams($params);
 }
 
 /**
@@ -57,30 +45,8 @@ function correct_slideshow_params(array $params = []): array
  */
 function decode_slideshow_params($encode_params = null): array
 {
-    global $conf;
-
-    $result = get_default_slideshow_params();
-
-    if (is_numeric($encode_params)) {
-        $result['period'] = $encode_params;
-    } else {
-        $matches = [];
-        if ((bool) preg_match_all('/([a-z]+)-(\d+)/', (string) $encode_params, $matches)) {
-            $matchcount = count($matches[1]);
-            for ($i = 0; $i < $matchcount; $i++) {
-                $result[$matches[1][$i]] = $matches[2][$i];
-            }
-        }
-
-        if ((bool) preg_match_all('/([a-z]+)-(true|false)/', (string) $encode_params, $matches)) {
-            $matchcount = count($matches[1]);
-            for ($i = 0; $i < $matchcount; $i++) {
-                $result[$matches[1][$i]] = get_boolean($matches[2][$i]);
-            }
-        }
-    }
-
-    return correct_slideshow_params($result);
+    return new ImageService()
+        ->decodeSlideshowParams(is_string($encode_params) ? $encode_params : null);
 }
 
 /**
@@ -89,30 +55,8 @@ function decode_slideshow_params($encode_params = null): array
  */
 function encode_slideshow_params(array $decode_params = []): string
 {
-    global $conf;
-
-    // decode_slideshow_params()/correct_slideshow_params() only ever populate
-    // scalar values (period/repeat as int|numeric-string, play and the
-    // regex-matched flags as bool|string); filter defensively so
-    // array_diff_assoc() only ever compares string-castable values.
-    $corrected = array_filter(correct_slideshow_params($decode_params), is_scalar(...));
-    $defaults = array_filter(get_default_slideshow_params(), is_scalar(...));
-    $params = array_diff_assoc($corrected, $defaults);
-    $result = '';
-
-    // $params' keys are always string: correct_slideshow_params() and
-    // get_default_slideshow_params() both declare array<string, mixed>.
-    foreach ($params as $name => $value) {
-        // boolean_to_string return $value, if it's not a bool
-        $value = boolean_to_string($value);
-        if (! is_scalar($value)) {
-            continue;
-        }
-
-        $result .= '+' . $name . '-' . $value;
-    }
-
-    return $result;
+    return new ImageService()
+        ->encodeSlideshowParams($decode_params);
 }
 
 /**
@@ -125,14 +69,7 @@ function encode_slideshow_params(array $decode_params = []): string
  */
 function increase_image_visit_counter($image_id): void
 {
-    // avoiding auto update of "lastmodified" field
-    $query = '
-UPDATE
-  ' . Tables::images() . '
-  SET hit = hit+1, lastmodified = lastmodified
-  WHERE id = ' . $image_id . '
-;';
-    pwg_query($query);
+    new ImageRepository(DbConnection::build())->incrementVisitCounter($image_id);
 }
 
 /**
@@ -143,11 +80,6 @@ UPDATE
  */
 function count_pdf_pages($pdfPath): int|false
 {
-    $pdftext = file_get_contents($pdfPath);
-    if ($pdftext === false) {
-        return false;
-    }
-    $num = preg_match_all("/\/Page\W/", $pdftext, $dummy);
-
-    return $num;
+    return new ImageService()
+        ->countPdfPages($pdfPath);
 }

@@ -10,8 +10,13 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Cache\PersistentCache;
-use Piwigo\Db\Tables;
+use Piwigo\Db\DbConnection;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Notification\NotificationRepository;
+use Piwigo\Notification\NotificationService;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
 
 /**
  * Get standard sql where in order to restrict and filter categories and images.
@@ -26,15 +31,18 @@ function get_std_sql_where_restrict_filter(
     $img_field = 'ic.image_id',
     $force_one_condition = false
 ): string {
-    return get_sql_condition_FandF(
-        [
-            'forbidden_categories' => 'ic.category_id',
-            'visible_categories' => 'ic.category_id',
-            'visible_images' => $img_field,
-        ],
-        $prefix_condition,
-        $force_one_condition
-    );
+    global $persistent_cache;
+    if (! $persistent_cache instanceof PersistentCache) {
+        fatal_error('persistent cache not initialized');
+    }
+
+    $conn = DbConnection::build();
+
+    return new NotificationService(
+        new NotificationRepository($conn),
+        new PermissionService(new PermissionRepository($conn), new GroupRepository($conn)),
+        $persistent_cache
+    )->getSqlWhereRestrictFilter($prefix_condition, $img_field, $force_one_condition);
 }
 
 /**
@@ -50,152 +58,18 @@ function get_std_sql_where_restrict_filter(
  */
 function custom_notification_query($action, $type, $start = null, $end = null): null|int|array
 {
-    global $user;
-
-    switch ($type) {
-        case 'new_comments':
-
-            $query = '
-  FROM ' . Tables::comments() . ' AS c
-    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON c.image_id = ic.image_id
-  WHERE 1=1';
-            if (! empty($start)) {
-                $query .= '
-    AND c.validation_date > \'' . $start . '\'';
-            }
-            if (! empty($end)) {
-                $query .= '
-    AND c.validation_date <= \'' . $end . '\'';
-            }
-            $query .= get_std_sql_where_restrict_filter('AND');
-            break;
-
-        case 'unvalidated_comments':
-
-            $query = '
-  FROM ' . Tables::comments() . '
-  WHERE 1=1';
-            if (! empty($start)) {
-                $query .= '
-    AND date > \'' . $start . '\'';
-            }
-            if (! empty($end)) {
-                $query .= '
-    AND date <= \'' . $end . '\'';
-            }
-            $query .= '
-    AND validated = \'false\'';
-            break;
-
-        case 'new_elements':
-
-            $query = '
-  FROM ' . Tables::images() . '
-    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON image_id = id
-  WHERE 1=1';
-            if (! empty($start)) {
-                $query .= '
-    AND date_available > \'' . $start . '\'';
-            }
-            if (! empty($end)) {
-                $query .= '
-    AND date_available <= \'' . $end . '\'';
-            }
-            $query .= get_std_sql_where_restrict_filter('AND', 'id');
-            break;
-
-        case 'updated_categories':
-
-            $query = '
-  FROM ' . Tables::images() . '
-    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON image_id = id
-  WHERE 1=1';
-            if (! empty($start)) {
-                $query .= '
-    AND date_available > \'' . $start . '\'';
-            }
-            if (! empty($end)) {
-                $query .= '
-    AND date_available <= \'' . $end . '\'';
-            }
-            $query .= get_std_sql_where_restrict_filter('AND', 'id');
-            break;
-
-        case 'new_users':
-
-            $query = '
-  FROM ' . Tables::userInfos() . '
-  WHERE 1=1';
-            if (! empty($start)) {
-                $query .= '
-    AND registration_date > \'' . $start . '\'';
-            }
-            if (! empty($end)) {
-                $query .= '
-    AND registration_date <= \'' . $end . '\'';
-            }
-            break;
-
-        default:
-            return null; // stop and return nothing
+    global $persistent_cache;
+    if (! $persistent_cache instanceof PersistentCache) {
+        fatal_error('persistent cache not initialized');
     }
 
-    switch ($action) {
-        case 'count':
+    $conn = DbConnection::build();
 
-            switch ($type) {
-                case 'new_comments':
-                    $field_id = 'c.id';
-                    break;
-                case 'unvalidated_comments':
-                    $field_id = 'id';
-                    break;
-                case 'new_elements':
-                    $field_id = 'image_id';
-                    break;
-                case 'updated_categories':
-                    $field_id = 'category_id';
-                    break;
-                case 'new_users':
-                    $field_id = 'user_id';
-                    break;
-            }
-            $query = 'SELECT COUNT(DISTINCT ' . $field_id . ') ' . $query . ';';
-            $row = pwg_db_fetch_row(pwg_query($query));
-            assert($row !== null);
-            [$count] = $row;
-            return (int) $count;
-
-        case 'info':
-
-            switch ($type) {
-                case 'new_comments':
-                    $field_id = 'c.id';
-                    break;
-                case 'unvalidated_comments':
-                    $field_id = 'id';
-                    break;
-                case 'new_elements':
-                    $field_id = 'image_id';
-                    break;
-                case 'updated_categories':
-                    $field_id = 'category_id';
-                    break;
-                case 'new_users':
-                    $field_id = 'user_id';
-                    break;
-            }
-            $query = 'SELECT DISTINCT ' . $field_id . ' ' . $query . ';';
-            // the result column is aliased by mysqli to the unqualified
-            // name (e.g. 'c.id' comes back as 'id'), so strip any
-            // table prefix before using it as query2array()'s value_name
-            $result_field = str_contains($field_id, '.') ? substr($field_id, strpos($field_id, '.') + 1) : $field_id;
-            $infos = query2array($query, null, $result_field);
-            return array_map(intval(...), $infos);
-
-        default:
-            return null; // stop and return nothing
-    }
+    return new NotificationService(
+        new NotificationRepository($conn),
+        new PermissionService(new PermissionRepository($conn), new GroupRepository($conn)),
+        $persistent_cache
+    )->customNotificationQuery($action, $type, $start, $end);
 }
 
 /**
@@ -442,77 +316,18 @@ function news($start = null, $end = null, $exclude_img_cats = false, $add_url = 
  */
 function get_recent_post_dates($max_dates, $max_elements, $max_cats): array
 {
-    /** @var array<string, mixed> $user */
-    global $conf, $user, $persistent_cache;
+    global $persistent_cache;
     if (! $persistent_cache instanceof PersistentCache) {
         fatal_error('persistent cache not initialized');
     }
 
-    $user_id = $user['id'] ?? null;
-    $user_id = is_scalar($user_id) ? (string) $user_id : '';
-    $user_cache_update_time = $user['cache_update_time'] ?? null;
-    $user_cache_update_time = is_scalar($user_cache_update_time) ? (string) $user_cache_update_time : '';
-    $cache_key = $persistent_cache->make_key('recent_posts' . $user_id . $user_cache_update_time . $max_dates . $max_elements . $max_cats);
-    if ($persistent_cache->get($cache_key, $cached)) {
-        return is_array($cached) ? $cached : [];
-    }
-    $where_sql = get_std_sql_where_restrict_filter('WHERE', 'i.id', true);
+    $conn = DbConnection::build();
 
-    $query = '
-SELECT
-    date_available,
-    COUNT(DISTINCT id) AS nb_elements,
-    COUNT(DISTINCT category_id) AS nb_cats
-  FROM ' . Tables::images() . ' i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id=image_id
-  ' . $where_sql . '
-  GROUP BY date_available
-  ORDER BY date_available DESC
-  LIMIT ' . $max_dates . '
-;';
-    $dates = query2array($query);
-
-    for ($i = 0; $i < count($dates); $i++) {
-        // captured once per row, before the 'elements'/'categories' keys
-        // below are added to $dates[$i]: mutating a dynamically-indexed
-        // array element widens PHPStan's inferred value type for the
-        // whole row, so re-reading date_available from $dates[$i] after
-        // that point would no longer be known to be a plain string.
-        $date_available = $dates[$i]['date_available'] ?? null;
-        $date_available = is_string($date_available) ? $date_available : '';
-
-        if ($max_elements > 0) { // get some thumbnails ...
-            $query = '
-SELECT DISTINCT i.*
-  FROM ' . Tables::images() . ' i
-    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id=image_id
-  ' . $where_sql . '
-    AND date_available=\'' . $date_available . '\'
-  ORDER BY ' . DB_RANDOM_FUNCTION . '()
-  LIMIT ' . $max_elements . '
-;';
-            $dates[$i]['elements'] = query2array($query);
-        }
-
-        if ($max_cats > 0) {// get some categories ...
-            $query = '
-SELECT
-    DISTINCT c.uppercats,
-    COUNT(DISTINCT i.id) AS img_count
-  FROM ' . Tables::images() . ' i
-    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON i.id=image_id
-    INNER JOIN ' . Tables::categories() . ' c ON c.id=category_id
-  ' . $where_sql . '
-    AND date_available=\'' . $date_available . '\'
-  GROUP BY category_id, c.uppercats
-  ORDER BY img_count DESC
-  LIMIT ' . $max_cats . '
-;';
-            $dates[$i]['categories'] = query2array($query);
-        }
-    }
-
-    $persistent_cache->set($cache_key, $dates);
-    return $dates;
+    return new NotificationService(
+        new NotificationRepository($conn),
+        new PermissionService(new PermissionRepository($conn), new GroupRepository($conn)),
+        $persistent_cache
+    )->getRecentPostDates($max_dates, $max_elements, $max_cats);
 }
 
 /**

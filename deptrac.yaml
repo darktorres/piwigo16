@@ -31,10 +31,15 @@ deptrac:
     # Storage/Mail(-shaped), no domain-layer dependency of its own;
     # injected INTO L2a/L2b domain services (Users/Group), never the
     # reverse, matching every other L1 infrastructure class here.
+    # Validation lands in P19 (Piwigo\Validation\InputValidator) -- per the
+    # reference doc's own explicit layer table; only depends on
+    # Piwigo\Core\ValidationPattern (same-layer), calls the free function
+    # fatal_error() (not a class dependency deptrac tracks) rather than
+    # HtmlService directly.
     - name: L1Infrastructure
       collectors:
         - type: classLike
-          value: ^Piwigo\\(Config|Core|Db|Cache|Session|Backup|Migrations|Lang|Storage|Audit)\\.*
+          value: ^Piwigo\\(Config|Core|Db|Cache|Session|Backup|Migrations|Lang|Storage|Audit|Validation)\\.*
     # L2a Core Domain — Auth/Image land here in P6; Users/Permission/Category/
     # Tag are later-phase additions. Group lands in P18 (Piwigo\Group\
     # GroupRepository/GroupService) -- must sit at this layer, not the more
@@ -82,10 +87,24 @@ deptrac:
     # Service) -- injects nothing; record() (pwg_activity()'s business
     # logic) reads `global $user`/superglobals directly, same shape as
     # every other P18 service.
+    # Notification lands in P19 (Piwigo\Notification\NotificationRepository/
+    # Service, and NotificationByMailRepository/Service) -- constructor-
+    # injects Piwigo\Permission\PermissionService (getSqlConditionFandF()),
+    # a real L2b -> L2a dependency, always allowed; does NOT inject
+    # MailService (pwg_mail() stays a free-function call, same "L2b may not
+    # depend on L3Presentation" shape as Comment/Users in P18).
+    # Metadata lands in P19 too (Piwigo\Metadata\MetadataRepository/
+    # Service) -- injects nothing beyond Db/Core (L1), no domain-namespace
+    # dependency of its own.
+    # Telemetry lands in P19 too (Piwigo\Telemetry\TelemetryService + 5
+    # DTOs) -- constructor-injects Doctrine\DBAL\Connection and
+    # Piwigo\Config\ConfigRepository directly (both L1), no Repository of
+    # its own and no other domain-namespace dependency; genuinely
+    # greenfield, no procedural predecessor.
     - name: L2bExtendedDomain
       collectors:
         - type: classLike
-          value: ^Piwigo\\(Search|Calendar|Site|Url|Csrf|Permalink|Feed|Filter|Comment|Rate|Caddie|History|Activity)\\.*
+          value: ^Piwigo\\(Search|Calendar|Site|Url|Csrf|Permalink|Feed|Filter|Comment|Rate|Caddie|History|Activity|Notification|Metadata|Telemetry)\\.*
     # L3 Presentation — Menu/Template land here in P6; Http (incl.
     # Http\Middleware) and Routing land here in P9 -- Routing wasn't
     # pre-anticipated in P6's list, but Http\RoutingMiddleware depends on

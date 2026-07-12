@@ -27,9 +27,13 @@ class QResults
     public array $tag_ids = [];
 
     /**
-     * Populated exclusively from query2array($query, null, ...) calls (id lists).
+     * Populated from SearchRepository::findIdsByClause() calls (id lists,
+     * always real int -- SearchRepository casts every fetched id
+     * explicitly, matching this project's DBAL/mysqli driver, which
+     * returns native int for numeric columns unlike the legacy
+     * query2array() layer's all-string rows).
      *
-     * @var array<int, list<string|null>>
+     * @var array<int, list<int>>
      */
     public array $tag_iids = [];
 
@@ -44,16 +48,12 @@ class QResults
     public array $cat_ids = [];
 
     /**
-     * Populated exclusively from query2array($query, null, ...) calls (id lists).
-     *
-     * @var array<int, list<string|null>>
+     * @var array<int, list<int>>
      */
     public array $cat_iids = [];
 
     /**
-     * Populated exclusively from query2array($query, null, ...) calls (id lists).
-     *
-     * @var array<int, list<string|null>>
+     * @var array<int, list<int>>
      */
     public array $images_iids = [];
 
@@ -62,7 +62,7 @@ class QResults
      * element type as those three, but array_unique() doesn't renumber keys
      * so this is a plain (possibly sparse) array, not a list.
      *
-     * @var array<int, array<int, string|null>>
+     * @var array<int, array<int, int>>
      */
     public array $iids = [];
 }

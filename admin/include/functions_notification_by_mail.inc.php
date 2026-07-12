@@ -9,7 +9,10 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Notification\NotificationByMailRepository;
+use Piwigo\Notification\NotificationByMailService;
 use Piwigo\Template\Template;
 
 // Bootstrap global, set by include/common.inc.php.
@@ -42,23 +45,7 @@ if ($env_nbm['sendmail_timeout'] <= 0) {
  */
 function find_available_check_key(): string
 {
-    while (true) {
-        $key = generate_key(16);
-        $query = '
-select
-  count(*)
-from
-  ' . Tables::userMailNotification() . '
-where
-  check_key = \'' . $key . '\';';
-
-        $row = pwg_db_fetch_row(pwg_query($query));
-        assert($row !== null);
-        [$count] = $row;
-        if ($count == 0) {
-            return $key;
-        }
-    }
+    return new NotificationByMailService(new NotificationByMailRepository(DbConnection::build()))->findAvailableCheckKey();
 }
 
 /**
@@ -122,92 +109,12 @@ function push_page_message(array &$page, string $key, string $message): void
  * @param string $action
  * @param array<int, mixed> $check_key_list
  * @param bool|string $enabled_filter_value
- * @return array<int, array<string, string|null>> nbm user rows, as fetched
- *         by pwg_db_fetch_assoc() (every column comes back as string|null)
+ * @return list<array<string, string|null>> nbm user rows
  */
 function get_user_notifications($action, $check_key_list = [], $enabled_filter_value = ''): array
 {
-    /** @var array<string, mixed> $conf */
-    global $conf;
-
-    $data_users = [];
-
-    if (in_array($action, ['subscribe', 'send'])) {
-        $quoted_check_key_list = quote_check_key_list($check_key_list);
-        if (count($quoted_check_key_list) != 0) {
-            $query_and_check_key = ' and
-    check_key in (' . implode(',', $quoted_check_key_list) . ') ';
-        } else {
-            $query_and_check_key = '';
-        }
-
-        // $conf['user_fields'] maps generic field names to table-specific
-        // column names (see include/config_default.inc.php); its own value
-        // type is only known as mixed, so each column name is narrowed to a
-        // string before being concatenated into the query.
-        $user_fields = $conf['user_fields'] ?? [];
-        $user_fields = is_array($user_fields) ? $user_fields : [];
-        $username_field = $user_fields['username'] ?? 'username';
-        $username_field = is_string($username_field) ? $username_field : 'username';
-        $email_field = $user_fields['email'] ?? 'email';
-        $email_field = is_string($email_field) ? $email_field : 'email';
-        $id_field = $user_fields['id'] ?? 'id';
-        $id_field = is_string($id_field) ? $id_field : 'id';
-
-        $query = '
-select
-  N.user_id,
-  N.check_key,
-  U.' . $username_field . ' as username,
-  U.' . $email_field . ' as mail_address,
-  N.enabled,
-  N.last_send,
-  UI.status
-from ' . Tables::userMailNotification() . ' as N
-  JOIN ' . Tables::users() . ' as U on N.user_id =  U.' . $id_field . '
-  JOIN ' . Tables::userInfos() . ' as UI on UI.user_id = N.user_id
-where 1=1';
-
-        if ($action == 'send') {
-            // No mail empty and all users enabled
-            $query .= ' and
-  N.enabled = \'true\' and
-  U.' . $email_field . ' is not null';
-        }
-
-        $query .= $query_and_check_key;
-
-        if ($enabled_filter_value != '') {
-            // boolean_to_string() is declared to return mixed (it echoes
-            // back non-bool input unchanged); $enabled_filter_value is
-            // bool|string here, so the result is always a string, but that
-            // isn't visible through the helper's own signature.
-            $enabled_filter_string = boolean_to_string($enabled_filter_value);
-            $query .= ' and
-        N.enabled = \'' . (is_string($enabled_filter_string) ? $enabled_filter_string : '') . '\'';
-        }
-
-        $query .= '
-order by';
-
-        if ($action == 'send') {
-            $query .= '
-  last_send, username;';
-        } else {
-            $query .= '
-  username';
-        }
-
-        $query .= ';';
-
-        $result = pwg_query($query);
-        if (! empty($result)) {
-            while ((bool) ($nbm_user = pwg_db_fetch_assoc($result))) {
-                $data_users[] = $nbm_user;
-            }
-        }
-    }
-    return $data_users;
+    return new NotificationByMailService(new NotificationByMailRepository(DbConnection::build()))
+        ->getUserNotifications($action, $check_key_list, $enabled_filter_value);
 }
 
 /*

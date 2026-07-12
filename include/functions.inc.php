@@ -20,12 +20,12 @@ use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Logger;
-use Piwigo\Core\ValidationPattern;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Lang\Translator;
 use Piwigo\Template\Template;
+use Piwigo\Validation\InputValidator;
 
 include_once PHPWG_ROOT_PATH . 'include/functions_plugins.inc.php';
 include_once PHPWG_ROOT_PATH . 'include/functions_user.inc.php';
@@ -2302,47 +2302,8 @@ function get_pwg_token(): string
  */
 function check_input_parameter($param_name, array $param_array, $is_array, $pattern, $mandatory = false): ?true
 {
-    $param_value = null;
-    if (isset($param_array[$param_name])) {
-        $param_value = $param_array[$param_name];
-    }
-
-    // it's ok if the input parameter is null
-    if (empty($param_value)) {
-        if ($mandatory) {
-            fatal_error('[Hacking attempt] the input parameter "' . $param_name . '" is not valid');
-        }
-        return true;
-    }
-
-    if ($is_array) {
-        if (! is_array($param_value)) {
-            fatal_error('[Hacking attempt] the input parameter "' . $param_name . '" should be an array');
-        }
-
-        foreach ($param_value as $key => $item_to_check) {
-            // a non-scalar item (e.g. an unexpected nested array) has no
-            // sane string form to validate against $pattern — that's a
-            // malformed/hacking-attempt input in its own right.
-            if (! is_scalar($item_to_check)) {
-                fatal_error('[Hacking attempt] an item is not valid in input parameter "' . $param_name . '"');
-            }
-
-            if (! (bool) preg_match(ValidationPattern::ID, (string) $key) or ! (bool) preg_match($pattern, (string) $item_to_check)) {
-                fatal_error('[Hacking attempt] an item is not valid in input parameter "' . $param_name . '"');
-            }
-        }
-    } else {
-        if (! is_scalar($param_value)) {
-            fatal_error('[Hacking attempt] the input parameter "' . $param_name . '" is not valid');
-        }
-
-        if (! (bool) preg_match($pattern, (string) $param_value)) {
-            fatal_error('[Hacking attempt] the input parameter "' . $param_name . '" is not valid');
-        }
-    }
-
-    return null;
+    return new InputValidator()
+        ->validate($param_name, $param_array, $is_array, $pattern, $mandatory);
 }
 
 /**

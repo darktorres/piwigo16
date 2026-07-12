@@ -11,14 +11,37 @@ declare(strict_types=1);
 
 use Piwigo\Cache\PersistentCache;
 use Piwigo\Calendar\CalendarMonthly;
+use Piwigo\Calendar\CalendarRepository;
+use Piwigo\Calendar\CalendarService;
 use Piwigo\Calendar\CalendarWeekly;
-use Piwigo\Db\Tables;
+use Piwigo\Db\DbConnection;
+use Piwigo\Group\GroupRepository;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
 use Piwigo\Template\Template;
 
 /** URL keyword for list view */
 define('CAL_VIEW_LIST', 'list');
 /** URL keyword for calendar view */
 define('CAL_VIEW_CALENDAR', 'calendar');
+
+// Chronology-date array indexes used throughout CalendarMonthly/
+// CalendarWeekly -- only ever previously defined in the dead legacy
+// include/calendar_base.class.php (never required anywhere; deleted),
+// which left these genuinely undefined in the live app (a real,
+// pre-existing "Undefined constant" fatal on any monthly/weekly calendar
+// render, found via live verification of this exact domain). CWEEK and
+// CMONTH intentionally share index 1 -- CalendarMonthly only ever uses
+// CYEAR/CMONTH/CDAY and CalendarWeekly only ever uses CYEAR/CWEEK/CDAY,
+// never both in the same $chronology_date array.
+/** level of year view */
+define('CYEAR', 0);
+/** level of week view in weekly view */
+define('CWEEK', 1);
+/** level of month view in monthly view */
+define('CMONTH', 1);
+/** level of day view */
+define('CDAY', 2);
 
 /**
  * Initialize _$page_ and _$template_ vars for calendar view.
@@ -37,58 +60,34 @@ function initialize_calendar(): void
     }
 
     // ------------------ initialize the condition on items to take into account ---
-    $inner_sql = ' FROM ' . Tables::images();
+    $conn = DbConnection::build();
+    $calendarService = new CalendarService(new PermissionService(new PermissionRepository($conn), new GroupRepository($conn)));
 
-    if ($page['section'] == 'categories') { // we will regenerate the items by including subcats elements
+    $section = is_string($page['section'] ?? null) ? $page['section'] : '';
+
+    if ($section === 'categories') { // we will regenerate the items by including subcats elements
         $page['items'] = [];
-        $inner_sql .= '
-INNER JOIN ' . Tables::imageCategory() . ' ON id = image_id';
 
-        if (isset($page['category'])) {
-            $page_category = $page['category'];
-            $category_id = is_array($page_category) && isset($page_category['id'])
-                && (is_int($page_category['id']) || is_string($page_category['id']))
-                ? $page_category['id']
-                : null;
-            $forbidden_categories = $user['forbidden_categories'] ?? null;
-            $forbidden_categories = is_scalar($forbidden_categories) ? (string) $forbidden_categories : '';
+        $page_category = $page['category'] ?? null;
+        $category_id = is_array($page_category) && isset($page_category['id'])
+            && (is_int($page_category['id']) || is_string($page_category['id']))
+            ? $page_category['id']
+            : null;
+        $forbidden_categories = $user['forbidden_categories'] ?? null;
+        $forbidden_categories = is_scalar($forbidden_categories) ? (string) $forbidden_categories : '';
 
-            $sub_ids = $category_id === null ? [] : array_diff(
-                get_subcat_ids([$category_id]),
-                explode(',', $forbidden_categories)
-            );
+        $inner_sql = $calendarService->buildInnerSql('categories', isset($page['category']), $category_id, $forbidden_categories, []);
 
-            if (empty($sub_ids)) {
-                return; // nothing to do
-            }
-            $inner_sql .= '
-WHERE category_id IN (' . implode(',', $sub_ids) . ')';
-            $inner_sql .= '
-    ' . get_sql_condition_FandF(
-                [
-                    'visible_images' => 'id',
-                ],
-                'AND',
-                false
-            );
-        } else {
-            $inner_sql .= '
-    ' . get_sql_condition_FandF(
-                [
-                    'forbidden_categories' => 'category_id',
-                    'visible_categories' => 'category_id',
-                    'visible_images' => 'id',
-                ],
-                'WHERE',
-                true
-            );
-        }
-    } else {
-        if (empty($page['items']) || ! is_array($page['items'])) {
+        if ($inner_sql === null) {
             return; // nothing to do
         }
-        $inner_sql .= '
-WHERE id IN (' . implode(',', array_filter($page['items'], is_scalar(...))) . ')';
+    } else {
+        $items = is_array($page['items'] ?? null) ? array_values(array_filter($page['items'], is_scalar(...))) : [];
+        $inner_sql = $calendarService->buildInnerSql('items', false, null, '', $items);
+
+        if ($inner_sql === null) {
+            return; // nothing to do
+        }
     }
 
     // -------------------------------------- initialize the calendar parameters ---
@@ -283,11 +282,11 @@ WHERE id IN (' . implode(',', array_filter($page['items'], is_scalar(...))) . ')
         $cache_key_str = $cache_key ?? null;
 
         if ($cache_key_str === null || ! $persistent_cache->get($cache_key_str, $page['items'])) {
-            $query = 'SELECT DISTINCT id '
-              . $calendar->inner_sql . '
-  ' . $calendar->get_date_where() . '
-  ' . $order_by;
-            $page['items'] = array_from_query($query, 'id');
+            $page['items'] = new CalendarRepository($conn)->findImageIds(
+                $calendar->inner_sql,
+                $calendar->get_date_where(),
+                $order_by
+            );
             if ($cache_key_str !== null) {
                 $persistent_cache->set($cache_key_str, $page['items']);
             }

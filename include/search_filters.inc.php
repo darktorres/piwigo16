@@ -1050,9 +1050,16 @@ SELECT
     if ($page['start'] == 0 and ! isset($page['chronology_field'])) {
         $matching_cat_ids = $page['search_details']['matching_cat_ids'] ?? null;
         if (is_array($matching_cat_ids)) {
-            // shape from get_search_info(): list<string|null>; keep only real ids.
-            /** @var list<string> $cat_ids */
-            $cat_ids = array_values(array_filter($matching_cat_ids, is_string(...)));
+            // shape from SearchService::getRegularSearchResults(): list<int>
+            // (ids come back as native int under this project's mysqli
+            // driver config, not the string ids the pre-port procedural
+            // code returned) -- is_int()||is_string(), not is_string()
+            // alone, or every id gets silently filtered out here.
+            /** @var list<int|string> $cat_ids */
+            $cat_ids = array_values(array_filter(
+                $matching_cat_ids,
+                static fn (mixed $v): bool => is_int($v) || is_string($v)
+            ));
             if (count($cat_ids) > 0) {
                 $query = '
 SELECT
@@ -1084,9 +1091,14 @@ SELECT
         }
         $matching_tag_ids = $page['search_details']['matching_tag_ids'] ?? null;
         if (is_array($matching_tag_ids)) {
-            // shape from get_search_info(): list<string|null>; keep only real ids.
-            /** @var list<string> $tag_ids */
-            $tag_ids = array_values(array_filter($matching_tag_ids, is_string(...)));
+            // shape from SearchService::getRegularSearchResults(): list<int>
+            // -- see the matching_cat_ids comment above for why this can't
+            // be is_string() alone.
+            /** @var list<int|string> $tag_ids */
+            $tag_ids = array_values(array_filter(
+                $matching_tag_ids,
+                static fn (mixed $v): bool => is_int($v) || is_string($v)
+            ));
 
             if (count($tag_ids) > 0) {
                 $tags = get_available_tags($tag_ids);

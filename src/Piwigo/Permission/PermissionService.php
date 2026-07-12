@@ -61,4 +61,108 @@ final class PermissionService
 
         return implode(',', $forbiddenIds);
     }
+
+    /**
+     * Returns a SQL condition string filtering by forbidden/visible
+     * categories and images, from the request-scoped $user/$filter globals
+     * -- same "reads session/request globals directly" shape as
+     * AuditService's $_SERVER['REMOTE_ADDR'] read; a pure string builder
+     * with no DB access of its own.
+     *
+     * @param array<string, string> $conditionFields condition name
+     *   (forbidden_categories|visible_categories|visible_images|
+     *   forbidden_images) => SQL field/table.column to filter on
+     * @param string|null $prefixCondition e.g. "\n  AND" -- only prepended
+     *   when the built condition is non-empty
+     */
+    public function getSqlConditionFandF(
+        array $conditionFields,
+        ?string $prefixCondition = null,
+        bool $forceOneCondition = false,
+    ): string {
+        /**
+         * @var array<string, mixed> $user
+         * @var array<string, mixed> $filter
+         */
+        global $user, $filter;
+
+        // forbidden_categories/image_access_list are comma-separated id
+        // lists built with implode(',', ...) in getuserdata(), level is a
+        // raw DB fetch value (string|null); image_access_type is the
+        // literal string 'NOT IN' (see getuserdata()) -- all always
+        // scalar/string-castable.
+        $userForbiddenCategories = $user['forbidden_categories'] ?? null;
+        $userForbiddenCategories = is_scalar($userForbiddenCategories) ? (string) $userForbiddenCategories : '';
+        $filterVisibleCategories = $filter['visible_categories'] ?? null;
+        $filterVisibleCategories = is_scalar($filterVisibleCategories) ? (string) $filterVisibleCategories : '';
+        $filterVisibleImages = $filter['visible_images'] ?? null;
+        $filterVisibleImages = is_scalar($filterVisibleImages) ? (string) $filterVisibleImages : '';
+        $userLevel = $user['level'] ?? null;
+        $userLevel = is_scalar($userLevel) ? (string) $userLevel : '';
+        $userImageAccessType = $user['image_access_type'] ?? null;
+        $userImageAccessType = is_scalar($userImageAccessType) ? (string) $userImageAccessType : '';
+        $userImageAccessList = $user['image_access_list'] ?? null;
+        $userImageAccessList = is_scalar($userImageAccessList) ? (string) $userImageAccessList : '';
+
+        $sqlList = [];
+
+        foreach ($conditionFields as $condition => $fieldName) {
+            switch ($condition) {
+                case 'forbidden_categories':
+                    if ($userForbiddenCategories !== '') {
+                        $sqlList[] = $fieldName . ' NOT IN (' . $userForbiddenCategories . ')';
+                    }
+
+                    break;
+
+                case 'visible_categories':
+                    if ($filterVisibleCategories !== '') {
+                        $sqlList[] = $fieldName . ' IN (' . $filterVisibleCategories . ')';
+                    }
+
+                    break;
+
+                case 'visible_images':
+                    if ($filterVisibleImages !== '') {
+                        $sqlList[] = $fieldName . ' IN (' . $filterVisibleImages . ')';
+                    }
+
+                    // note there is no break - visible include forbidden
+                    // no break
+                case 'forbidden_images':
+                    if ($userImageAccessList !== '' || $userImageAccessType !== 'NOT IN') {
+                        $tablePrefix = null;
+                        if ($fieldName === 'id') {
+                            $tablePrefix = '';
+                        } elseif ($fieldName === 'i.id') {
+                            $tablePrefix = 'i.';
+                        }
+
+                        if ($tablePrefix !== null) {
+                            $sqlList[] = $tablePrefix . 'level<=' . $userLevel;
+                        } elseif ($userImageAccessList !== '' && $userImageAccessType !== '') {
+                            $sqlList[] = $fieldName . ' ' . $userImageAccessType
+                                . ' (' . $userImageAccessList . ')';
+                        }
+                    }
+
+                    break;
+
+                default:
+                    throw new \InvalidArgumentException('Unknown condition: ' . $condition);
+            }
+        }
+
+        if ($sqlList !== []) {
+            $sql = '(' . implode(' AND ', $sqlList) . ')';
+        } else {
+            $sql = $forceOneCondition ? '1 = 1' : '';
+        }
+
+        if ($prefixCondition !== null && $sql !== '') {
+            $sql = $prefixCondition . ' ' . $sql;
+        }
+
+        return $sql;
+    }
 }

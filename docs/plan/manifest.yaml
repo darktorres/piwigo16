@@ -30,7 +30,7 @@ phases:
   - {id: P15, tier: T1-T2, depends_on: [P14],   status: done,    epoch: D}
   - {id: P16, tier: T1-T2, depends_on: [P15],   status: done,    epoch: D}
   - {id: P17, tier: T1,    depends_on: [P16],   status: done,    epoch: E}
-  - {id: P18, tier: T1,    depends_on: [P17],   status: planned, epoch: E}
+  - {id: P18, tier: T1,    depends_on: [P17],   status: done,    epoch: E}
   - {id: P19, tier: T1,    depends_on: [P18],   status: planned, epoch: E}
   - {id: P20, tier: T1,    depends_on: [P19],   status: planned, epoch: E}
   - {id: P21, tier: T1,    depends_on: [P20],   status: planned, epoch: E}
@@ -67,8 +67,8 @@ sec:
   - {id: SEC-10, phase: P9,  threat: "Missing input validation (mass assignment, type confusion)", verified_by: "Request-DTO validation tests (P27)", status: planned}
   - {id: SEC-11, phase: P9,  threat: "CSRF on state-changing actions", verified_by: "CSRF middleware integration tests (P9/P28)", status: planned}
   - {id: SEC-12, phase: P9,  threat: "CSRF on state-changing actions", verified_by: "CSRF middleware integration tests (P9/P28)", status: planned}
-  - {id: SEC-13, phase: P9,  threat: "Session hijacking / fixation", verified_by: "cookie-attribute + session-regen tests (P18/P28)", status: planned}
-  - {id: SEC-14, phase: P9,  threat: "Session hijacking / fixation", verified_by: "cookie-attribute + session-regen tests (P18/P28)", status: planned}
+  - {id: SEC-13, phase: P9,  threat: "Session hijacking / fixation", verified_by: "CookieService::setCookieVar() was missing secure/httponly entirely (confirmed via direct read); fixed (f90d0fc84) to set both via the same ini_get()-based pattern the remember-me cookie already used (P18)", status: done}
+  - {id: SEC-14, phase: P9,  threat: "Session hijacking / fixation", verified_by: "CookieService::setCookieVar() was missing secure/httponly entirely (confirmed via direct read); fixed (f90d0fc84) to set both via the same ini_get()-based pattern the remember-me cookie already used (P18)", status: done}
   - {id: SEC-15, phase: P20, threat: "Command / code injection", verified_by: "no-eval/exec grep gate + unit tests (P20/P31)", status: planned}
   - {id: SEC-16, phase: P19, threat: "Command / code injection", verified_by: "no-eval/exec grep gate + unit tests (P20/P31)", status: planned}
   # SEC-17's own fix ("URL validation in RedirectResponder::redirect()")
@@ -87,10 +87,10 @@ sec:
   - {id: SEC-22, phase: P21, threat: "Information disclosure (errors / debug output)", verified_by: "error-path integration tests (P21/P26)", status: planned}
   - {id: SEC-23, phase: P17, threat: "SSRF via remote fetch", verified_by: "HttpClientServiceTest unit tests: private/reserved-IP + non-https rejection, redirect-target re-validation (P17)", status: done}
   - {id: SEC-24, phase: P17, threat: "SSRF via remote fetch", verified_by: "fetchRemote() local-file-read fallback deleted; HttpClientServiceTest covers the guarded replacement path (P17)", status: done}
-  - {id: SEC-25, phase: P18, threat: "Session hijacking / fixation", verified_by: "cookie-attribute + session-regen tests (P18/P28)", status: planned}
+  - {id: SEC-25, phase: P18, threat: "Session hijacking / fixation", verified_by: "was already largely covered pre-migration (auto_login()/auth_key_login() both funneled through log_user()'s unconditional session_regenerate_id(true)); re-confirmed the same call survives intact in the new AuthService::logUser(), reached from both tryLogUser() and autoLogin(); live-verified via a real login/auto-login/logout round trip (P18)", status: done}
   - {id: SEC-26, phase: P16, threat: "Local file inclusion via locale", verified_by: "LangService unit test (P16)", status: planned}
-  - {id: SEC-27, phase: P18, threat: "Session hijacking / fixation", verified_by: "cookie-attribute + session-regen tests (P18/P28)", status: planned}
-  - {id: SEC-28, phase: P18, threat: "Session hijacking / fixation", verified_by: "cookie-attribute + session-regen tests (P18/P28)", status: planned}
+  - {id: SEC-27, phase: P18, threat: "Session hijacking / fixation", verified_by: "AuthService::calculateAutoLoginKey() built as sha256+hash_equals() from the start (was hash_hmac('sha1')+=== in the original); live-verified via a real auto-login cookie round trip (P18)", status: done}
+  - {id: SEC-28, phase: P18, threat: "Session hijacking / fixation", verified_by: "EphemeralKeyService built as sha256+hash_equals() from the start (was hash_hmac('md5')+!== in the original); covered by EphemeralKeyServiceTest unit tests (P18)", status: done}
   - {id: SEC-29, phase: P17, threat: "Open redirect / host-header poisoning", verified_by: "UrlServiceTest unit tests: gallery_url-configured host takes priority over Host header; allowed_hosts rejects an unrecognized Host/X-Forwarded-Host. Fixed (406cd15ad, P18 follow-up) to read global $conf instead of the unsynced Piwigo\\Config\\Config accessors the original fix used; live-verified via a real DB-persisted gallery_url reflected correctly in an outbound email despite a forged Host header (P17/P18)", status: done}
   # SEC-30's own fix ("add a userMessage() method to PiwigoException") targets
   # a class that doesn't exist in this repo -- investigated during P17.
@@ -100,7 +100,7 @@ sec:
   # prose elsewhere scopes this as a "P17-P22" range, not P17-only, so
   # nothing here was actually expected to fully close in P17 alone.
   - {id: SEC-30, phase: P17, threat: "Information disclosure (errors / debug output)", verified_by: "error-path integration tests (P21/P26)", status: planned}
-  - {id: SEC-31, phase: P18, threat: "Account enumeration via registration", verified_by: "registration integration test (P18)", status: planned}
+  - {id: SEC-31, phase: P18, threat: "Account enumeration via registration", verified_by: "UserService::registerUser() returns a generic success message + userId: null on a duplicate username instead of the original's 'this login is already used' (the existing account is emailed instead); covered by UserServiceTest ('register user sets duplicate username without revealing it in errors'); register.php's own auto-login/audit-log gates on userId !== null so a duplicate is never treated as a real success (P18)", status: done}
   - {id: SEC-32, phase: P20, threat: "DoS (zip bomb, unbounded API/queries)", verified_by: "zip-bomb unit test + rate-limit + idempotency-replay tests (P20/P26/P28)", status: planned}
   - {id: SEC-33, phase: P19, threat: "Anonymous reads a private album's originals/derivatives", verified_by: "derivative/permission integration tests (P19/P28); isolation gate (P32)", status: planned}
   - {id: SEC-34, phase: P22, threat: "Re-install / setup abuse", verified_by: "install E2E (P22)", status: planned}
@@ -125,8 +125,15 @@ sec:
   - {id: SEC-53, phase: P3,  threat: "Tampered build / unsigned release artifact", verified_by: "CI provenance + cosign-verify gates (P3)", status: done}
   - {id: SEC-54, phase: P4,  threat: "Tampered build / unsigned release artifact", verified_by: "cosign keyless sign + verify gate (P4)", status: done}
   - {id: SEC-55, phase: P28, threat: "Federated-identity attack (token replay, IdP spoof, code interception)", verified_by: "OIDC tests: PKCE, state/nonce, ID-token signature (P28)", status: planned}
+  # SEC-56 (PrivacyService, GDPR data-subject export/erasure) stays planned:
+  # its own doc scope spans domains that don't exist as typed services yet
+  # (favourites/uploaded-image metadata are Image/Category domain, P19) and
+  # it's explicitly "Exposed as REST endpoints (P26) + a user/admin UI
+  # (P29)" -- no surface to expose even a partial User+Comment+Rate-only
+  # export through yet. Same resolution pattern as P17's SEC-17/SEC-30.
+  # Revisit once P19/P26/P29 exist.
   - {id: SEC-56, phase: P18, threat: "Privacy / data-subject abuse (mass export, erasure griefing)", verified_by: "data-subject endpoint tests: re-auth + rate limit (P18/P28)", status: planned}
-  - {id: SEC-57, phase: P15, threat: "Audit-log tampering / repudiation", verified_by: "append-only + hash-chain verification test (P15/P18)", status: planned}
+  - {id: SEC-57, phase: P15, threat: "Audit-log tampering / repudiation", verified_by: "AuditService: append-only audit_log table, per-row sha256 hash chain, verifyChain() walks and recomputes every hash; caught+fixed a real bug where MySQL's JSON column re-serialization made verifyChain() always report tampering (canonicalJson() fix); wired into 4 real admin actions (user registration, group create/delete, permission grant/revoke); live-verified via real WS/admin calls with verifyChain() == true against the resulting chain (P18)", status: done}
   - {id: SEC-58, phase: P11, threat: "Unauthorized feature-flag change", verified_by: "flag-service authz + audit tests (P11)", status: planned}
   - {id: SEC-59, phase: T3-AI, threat: "AI-surface abuse (MCP leaks private data / unbounded calls)", verified_by: "MCP auth-scope + permission tests + rate limit (T3-AI)", status: planned}
   - {id: SEC-60, phase: P7,  threat: "Cross-request state bleed (worker mode serves user A's data to B)", verified_by: "worker-isolation arch test + integration (P7)", status: planned}

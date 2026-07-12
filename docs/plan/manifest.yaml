@@ -31,7 +31,7 @@ phases:
   - {id: P16, tier: T1-T2, depends_on: [P15],   status: done,    epoch: D}
   - {id: P17, tier: T1,    depends_on: [P16],   status: done,    epoch: E}
   - {id: P18, tier: T1,    depends_on: [P17],   status: done,    epoch: E}
-  - {id: P19, tier: T1,    depends_on: [P18],   status: planned, epoch: E}
+  - {id: P19, tier: T1,    depends_on: [P18],   status: done,    epoch: E}
   - {id: P20, tier: T1,    depends_on: [P19],   status: planned, epoch: E}
   - {id: P21, tier: T1,    depends_on: [P20],   status: planned, epoch: E}
   - {id: P22, tier: T1,    depends_on: [P21],   status: planned, epoch: E}
@@ -70,7 +70,7 @@ sec:
   - {id: SEC-13, phase: P9,  threat: "Session hijacking / fixation", verified_by: "CookieService::setCookieVar() was missing secure/httponly entirely (confirmed via direct read); fixed (f90d0fc84) to set both via the same ini_get()-based pattern the remember-me cookie already used (P18)", status: done}
   - {id: SEC-14, phase: P9,  threat: "Session hijacking / fixation", verified_by: "CookieService::setCookieVar() was missing secure/httponly entirely (confirmed via direct read); fixed (f90d0fc84) to set both via the same ini_get()-based pattern the remember-me cookie already used (P18)", status: done}
   - {id: SEC-15, phase: P20, threat: "Command / code injection", verified_by: "no-eval/exec grep gate + unit tests (P20/P31)", status: planned}
-  - {id: SEC-16, phase: P19, threat: "Command / code injection", verified_by: "no-eval/exec grep gate + unit tests (P20/P31)", status: planned}
+  - {id: SEC-16, phase: P19, threat: "Command / code injection", verified_by: "escapeshellarg() on all 4 real exec() call sites (Admin/Image pwg_image.php + image_ext_imagick.php); verified against a real shell-injection payload in the dir prefix (P19)", status: done}
   # SEC-17's own fix ("URL validation in RedirectResponder::redirect()")
   # targets a class that doesn't exist in this repo yet -- RedirectResponder
   # is P21-23 controller-era infrastructure. Investigated during P17: the
@@ -80,10 +80,16 @@ sec:
   # note stays attached to where it was investigated; the RedirectResponder
   # half genuinely belongs to whichever of P21-23 builds that class.
   - {id: SEC-17, phase: P17, threat: "Open redirect / host-header poisoning", verified_by: "redirect + host-header integration tests (P17)", status: planned}
-  - {id: SEC-18, phase: P19, threat: "SQL injection", verified_by: "SearchService unit + REST contract tests (P19/P26)", status: planned}
+  - {id: SEC-18, phase: P19, threat: "SQL injection", verified_by: "SearchRepository/SearchService bound-parameter query construction replacing addslashes(); SearchRepositoryTest/SearchServiceTest + live-verified quote-character search (P19)", status: done}
   - {id: SEC-19, phase: P21, threat: "Missing input validation (mass assignment, type confusion)", verified_by: "Request-DTO validation tests (P27)", status: planned}
-  - {id: SEC-20, phase: P19, threat: "Stored XSS via uploaded SVG or HTML descriptions", verified_by: "upload-sanitization tests (P19/P29)", status: planned}
+  - {id: SEC-20, phase: P19, threat: "XXE protection on SVG/XML parsing", verified_by: "MetadataService::parseSvgDimensions() strips <!DOCTYPE> + LIBXML_NONET (never LIBXML_NOENT/DTDLOAD); verified fail-safe against a real secret-file-read payload via a temp SVG with an internal DTD subset (P19)", status: done}
   - {id: SEC-21, phase: P19, threat: "Stored XSS via uploaded SVG or HTML descriptions", verified_by: "upload-sanitization tests (P19/P29)", status: planned}
+  # SEC-21 is only PARTIALLY closed by P19: the XXE-safe parsing half
+  # (shared mechanism with SEC-20) is done, but the upload-time
+  # <script>-stripping + Content-Disposition:attachment half targets
+  # admin/include/functions_upload.inc.php -> Piwigo\Admin\Upload\
+  # UploadService, which doesn't exist until P21 (admin controller
+  # migration). Stays planned until that lands.
   - {id: SEC-22, phase: P21, threat: "Information disclosure (errors / debug output)", verified_by: "error-path integration tests (P21/P26)", status: planned}
   - {id: SEC-23, phase: P17, threat: "SSRF via remote fetch", verified_by: "HttpClientServiceTest unit tests: private/reserved-IP + non-https rejection, redirect-target re-validation (P17)", status: done}
   - {id: SEC-24, phase: P17, threat: "SSRF via remote fetch", verified_by: "fetchRemote() local-file-read fallback deleted; HttpClientServiceTest covers the guarded replacement path (P17)", status: done}
@@ -103,8 +109,18 @@ sec:
   - {id: SEC-31, phase: P18, threat: "Account enumeration via registration", verified_by: "UserService::registerUser() returns a generic success message + userId: null on a duplicate username instead of the original's 'this login is already used' (the existing account is emailed instead); covered by UserServiceTest ('register user sets duplicate username without revealing it in errors'); register.php's own auto-login/audit-log gates on userId !== null so a duplicate is never treated as a real success (P18)", status: done}
   - {id: SEC-32, phase: P20, threat: "DoS (zip bomb, unbounded API/queries)", verified_by: "zip-bomb unit test + rate-limit + idempotency-replay tests (P20/P26/P28)", status: planned}
   - {id: SEC-33, phase: P19, threat: "Anonymous reads a private album's originals/derivatives", verified_by: "derivative/permission integration tests (P19/P28); isolation gate (P32)", status: planned}
+  # SEC-33 is only PARTIALLY closed by P19: i.php's own PHP-level
+  # permission check is fixed (check_derivative_permission() now runs
+  # BEFORE the disk-cache fast-exit, closing the cache-hit gap; live-
+  # verified all 4 auth scenarios). NOT fixed: once a derivative exists on
+  # disk, the web server serves it as a plain static file with zero PHP
+  # involvement, bypassing i.php entirely (verified live via direct curl
+  # to _data/i/...). This is exactly the scenario ADR-0007/0008 chose
+  # "X-Sendfile + lightweight auth" for -- Kernel/bootMinimal()-era
+  # architecture that doesn't exist in this still-procedural i.php.
+  # Genuinely needs the isolation gate (P32). Stays planned.
   - {id: SEC-34, phase: P22, threat: "Re-install / setup abuse", verified_by: "install E2E (P22)", status: planned}
-  - {id: SEC-35, phase: P19, threat: "Anonymous reads a private album's originals/derivatives", verified_by: "derivative/permission integration tests (P19/P28); isolation gate (P32)", status: planned}
+  - {id: SEC-35, phase: P19, threat: "Anonymous reads a private album's originals/derivatives", verified_by: "i.php's ierror() no longer sends Request-URI/Content-Location headers alongside Location, keeping it only for real redirects; trivial, self-contained, fully closed (P19)", status: done}
   - {id: SEC-36, phase: P26, threat: "Information disclosure (errors / debug output)", verified_by: "error-path integration tests (P21/P26)", status: planned}
   - {id: SEC-37, phase: P26, threat: "Information disclosure (errors / debug output)", verified_by: "error-path integration tests (P21/P26)", status: planned}
   - {id: SEC-38, phase: P26, threat: "Anonymous reads a private album's originals/derivatives", verified_by: "derivative/permission integration tests (P19/P28); isolation gate (P32)", status: planned}

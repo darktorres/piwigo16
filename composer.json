@@ -45,9 +45,11 @@
     "smarty/smarty": "^5",
     "symfony/cache": "^8.0",
     "symfony/console": "^8.0",
+    "symfony/doctrine-messenger": "^8.1",
     "symfony/dotenv": "^8.1",
     "symfony/http-client": "^8.0",
     "symfony/mailer": "^8",
+    "symfony/messenger": "^8.1",
     "symfony/mime": "^8",
     "symfony/process": "^8.0",
     "symfony/routing": "^8.0"

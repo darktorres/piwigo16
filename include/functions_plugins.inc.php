@@ -11,7 +11,9 @@ declare(strict_types=1);
 
 use Piwigo\Admin\PluginMaintain;
 use Piwigo\Core\ActivitySystem;
-use Piwigo\Db\Tables;
+use Piwigo\Db\DbConnection;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\PluginConfig\PluginRepository;
 
 /** base directory of plugins */
 define('PHPWG_PLUGINS_PATH', PHPWG_ROOT_PATH . 'plugins/');
@@ -22,7 +24,10 @@ define('EVENT_HANDLER_PRIORITY_NEUTRAL', 50);
  * Register an event handler.
  *
  * @param string $event the name of the event to listen to
- * @param callable $func the callback function
+ * @param array<int, mixed>|object|string $func the callback function --
+ *   deliberately not `callable`: PHP's native `callable` type validates
+ *   callability eagerly at registration time, which the original never did
+ *   (see Piwigo\PluginConfig\EventDispatcher::$handlers)
  * @param int $priority greater priority will be executed at last
  * @param string $include_path file to include before executing the callback
  * @return bool false is handler already exists
@@ -33,24 +38,12 @@ function add_event_handler(
     $priority = EVENT_HANDLER_PRIORITY_NEUTRAL,
     $include_path = null
 ): bool {
-    /** @var array<string, array<int, list<array{function: callable, include_path: string|null}>>> $pwg_event_handlers */
-    global $pwg_event_handlers;
-
-    if (isset($pwg_event_handlers[$event][$priority])) {
-        foreach ($pwg_event_handlers[$event][$priority] as $handler) {
-            if ($handler['function'] == $func) {
-                return false;
-            }
-        }
-    }
-
-    $pwg_event_handlers[$event][$priority][] = [
-        'function' => $func,
-        'include_path' => is_string($include_path) ? $include_path : null,
-    ];
-
-    ksort($pwg_event_handlers[$event]);
-    return true;
+    return EventDispatcher::get()->addEventHandler(
+        $event,
+        $func,
+        $priority,
+        is_string($include_path) ? $include_path : null,
+    );
 }
 
 /**
@@ -58,7 +51,7 @@ function add_event_handler(
  * @see add_event_handler()
  *
  * @param string $event
- * @param callable $func
+ * @param array<int, mixed>|object|string $func
  * @param int $priority
  */
 function remove_event_handler(
@@ -66,28 +59,7 @@ function remove_event_handler(
     $func,
     $priority = EVENT_HANDLER_PRIORITY_NEUTRAL
 ): bool {
-    /** @var array<string, array<int, list<array{function: callable, include_path: string|null}>>> $pwg_event_handlers */
-    global $pwg_event_handlers;
-
-    if (! isset($pwg_event_handlers[$event][$priority])) {
-        return false;
-    }
-    for ($i = 0; $i < count($pwg_event_handlers[$event][$priority]); $i++) {
-        if ($pwg_event_handlers[$event][$priority][$i]['function'] == $func) {
-            unset($pwg_event_handlers[$event][$priority][$i]);
-            $pwg_event_handlers[$event][$priority] =
-              array_values($pwg_event_handlers[$event][$priority]);
-
-            if (empty($pwg_event_handlers[$event][$priority])) {
-                unset($pwg_event_handlers[$event][$priority]);
-                if (empty($pwg_event_handlers[$event])) {
-                    unset($pwg_event_handlers[$event]);
-                }
-            }
-            return true;
-        }
-    }
-    return false;
+    return EventDispatcher::get()->removeEventHandler($event, $func, $priority);
 }
 
 /**
@@ -104,50 +76,11 @@ function remove_event_handler(
  */
 function trigger_change($event, $data = null)
 {
-    /** @var array<string, array<int, list<array{function: callable, include_path: string|null}>>> $pwg_event_handlers */
-    global $pwg_event_handlers;
-
-    if (isset($pwg_event_handlers['trigger'])) {// debugging
-        trigger_notify(
-            'trigger',
-            [
-                'type' => 'event',
-                'event' => $event,
-                'data' => $data,
-            ]
-        );
-    }
-
-    if (! isset($pwg_event_handlers[$event])) {
-        return $data;
-    }
     $args = func_get_args();
     array_shift($args);
+    array_shift($args);
 
-    foreach ($pwg_event_handlers[$event] as $priority => $handlers) {
-        foreach ($handlers as $handler) {
-            $args[0] = $data;
-
-            if (! empty($handler['include_path'])) {
-                include_once $handler['include_path'];
-            }
-
-            $data = call_user_func_array($handler['function'], $args);
-        }
-    }
-
-    if (isset($pwg_event_handlers['trigger'])) {// debugging
-        trigger_notify(
-            'trigger',
-            [
-                'type' => 'post_event',
-                'event' => $event,
-                'data' => $data,
-            ]
-        );
-    }
-
-    return $data;
+    return EventDispatcher::get()->triggerChange($event, $data, ...$args);
 }
 
 /**
@@ -161,33 +94,7 @@ function trigger_change($event, $data = null)
  */
 function trigger_notify($event, ...$args): void
 {
-    /** @var array<string, array<int, list<array{function: callable, include_path: string|null}>>> $pwg_event_handlers */
-    global $pwg_event_handlers;
-
-    if (isset($pwg_event_handlers['trigger']) and $event != 'trigger') {// debugging - avoid recursive calls
-        trigger_notify(
-            'trigger',
-            [
-                'type' => 'action',
-                'event' => $event,
-                'data' => null,
-            ]
-        );
-    }
-
-    if (! isset($pwg_event_handlers[$event])) {
-        return;
-    }
-
-    foreach ($pwg_event_handlers[$event] as $priority => $handlers) {
-        foreach ($handlers as $handler) {
-            if (! empty($handler['include_path'])) {
-                include_once $handler['include_path'];
-            }
-
-            call_user_func_array($handler['function'], $args);
-        }
-    }
+    EventDispatcher::get()->triggerNotify($event, ...$args);
 }
 
 /**
@@ -238,21 +145,10 @@ function &get_plugin_data($plugin_id)
  */
 function get_db_plugins($state = '', $id = ''): array
 {
-    $query = '
-SELECT * FROM ' . Tables::plugins();
-    $clauses = [];
-    if (! empty($state)) {
-        $clauses[] = 'state=\'' . $state . '\'';
-    }
-    if (! empty($id)) {
-        $clauses[] = 'id="' . $id . '"';
-    }
-    if ((bool) count($clauses)) {
-        $query .= '
-  WHERE ' . implode(' AND ', $clauses);
-    }
-
-    return query2array($query);
+    return new PluginRepository(DbConnection::build())->getDbPlugins(
+        is_string($state) ? $state : '',
+        $id,
+    );
 }
 
 /**
@@ -371,12 +267,7 @@ function autoupdate_plugin(array &$plugin): void
         // update database (only on production). We want to avoid registering an "auto" to "auto" update,
         // which happens for each "version=auto" plugin on each page load.
         if ($new_version != $old_version) {
-            $query = '
-UPDATE ' . Tables::plugins() . '
-  SET version = "' . $fs_version . '"
-  WHERE id = "' . $plugin_id . '"
-;';
-            pwg_query($query);
+            new PluginRepository(DbConnection::build())->updateVersion($plugin_id, $fs_version);
 
             pwg_activity('system', ActivitySystem::Plugin, 'autoupdate', [
                 'plugin_id' => $plugin_id,

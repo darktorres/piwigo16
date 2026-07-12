@@ -10,8 +10,9 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\tabsheet;
-use Piwigo\Db\Tables;
+use Piwigo\Db\DbConnection;
 use Piwigo\Menu\BlockManager;
+use Piwigo\Menu\MenubarLayoutRepository;
 use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
@@ -152,12 +153,7 @@ if (isset($_POST['submit']) and is_webmaster()) {
     //var_export( $best_slice ); var_export($mb_conf);  var_export($mb_conf_db);
     // END OPTIM
     */
-    $query = '
-UPDATE ' . Tables::config() . '
-  SET value=\'' . addslashes(serialize($mb_conf_db)) . '\'
-  WHERE param=\'blk_' . addslashes($menu->get_id()) . '\'
-  ';
-    pwg_query($query);
+    new MenubarLayoutRepository(DbConnection::build())->saveLayout($menu->get_id(), $mb_conf_db);
 
     $template->assign(
         [

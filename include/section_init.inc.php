@@ -12,6 +12,9 @@ declare(strict_types=1);
 use Piwigo\Cache\PersistentCache;
 use Piwigo\Core\Logger;
 use Piwigo\Db\Tables;
+use Piwigo\Section\RandomIndexRedirectResolver;
+use Piwigo\Section\SectionContextRegistry;
+use Piwigo\Section\SectionInitializer;
 use Piwigo\Template\Template;
 
 /**
@@ -50,82 +53,25 @@ if (! $persistent_cache instanceof PersistentCache) {
 $page['items'] = [];
 $page['start'] = $page['startcat'] = 0;
 
-// some ISPs set PATH_INFO to empty string or to SCRIPT_FILENAME while in the
-// default apache implementation it is not set
-if ($conf['question_mark_in_urls'] == false and
-     isset($_SERVER['PATH_INFO']) and ! empty($_SERVER['PATH_INFO'])) {
-    $rewritten = $_SERVER['PATH_INFO'];
-    // $_SERVER values are typed mixed by PHPStan (PATH_INFO is a string in
-    // practice, but the superglobal's declared value type doesn't say so)
-    $rewritten = is_string($rewritten) ? $rewritten : '';
-    $rewritten = str_replace('//', '/', $rewritten);
-    $path_count = count(explode('/', $rewritten));
-    $page['root_path'] = PHPWG_ROOT_PATH . str_repeat('../', $path_count - 1);
-} else {
-    $rewritten = '';
-    foreach (array_keys($_GET) as $keynum => $key) {
-        $rewritten = $key;
-        break;
-    }
+// URL-token parsing (root_path/section_url computation, tokenization, the
+// picture-page image-id parsing, and the parse_section_url() call/merge)
+// is Piwigo\Section\SectionInitializer's job -- see its own docblock for
+// why the much larger DB-query-building pipeline below stays procedural.
+$section_context = new SectionInitializer()
+    ->parse();
+SectionContextRegistry::set($section_context);
 
-    // the $_GET keys are not protected in include/common.inc.php, only the values
-    $rewritten = pwg_db_real_escape_string($rewritten);
-    $page['root_path'] = PHPWG_ROOT_PATH;
+$page['root_path'] = $section_context->rootPath;
+$page['section_url'] = $section_context->sectionUrl;
+if ($section_context->imageId !== null) {
+    $page['image_id'] = $section_context->imageId;
 }
-
-if (str_starts_with($page['root_path'], './')) {
-    $page['root_path'] = substr($page['root_path'], 2);
+if ($section_context->imageFile !== null) {
+    $page['image_file'] = $section_context->imageFile;
 }
-
-// $_SERVER['PATH_INFO']/$_GET keys are usually strings, but PHP allows
-// array-valued query-string keys (e.g. ?foo[]=1) — not a valid section
-// URL, degrade to an empty path rather than crash
-if (! is_string($rewritten)) {
-    $rewritten = '';
-}
-$page['section_url'] = $rewritten;
-
-// deleting first "/" if displayed
-$tokens = explode('/', ltrim($rewritten, '/'));
-// $tokens = array(
-//   0 => category,
-//   1 => 12-foo,
-//   2 => start-24
-//   );
-
-$next_token = 0;
-
-// +-----------------------------------------------------------------------+
-// |                             picture page                              |
-// +-----------------------------------------------------------------------+
-// the first token must be the identifier for the picture
-if (script_basename() == 'picture') {
-    $token = $tokens[$next_token];
-    $next_token++;
-    if (is_numeric($token)) {
-        $page['image_id'] = $token;
-        if ($page['image_id'] == 0) {
-            bad_request('invalid picture identifier');
-        }
-    } else {
-        preg_match('/^(\d+-)?(.*)?$/', $token, $matches);
-        if (isset($matches[1]) and is_numeric($matches[1] = rtrim($matches[1], '-'))) {
-            $page['image_id'] = $matches[1];
-            if (! empty($matches[2])) {
-                $page['image_file'] = $matches[2];
-            }
-        } else {
-            $page['image_id'] = 0; // more work in picture.php
-            if (! empty($matches[2])) {
-                $page['image_file'] = $matches[2];
-            } else {
-                bad_request('picture identifier is missing');
-            }
-        }
-    }
-}
-
-$page = array_merge($page, parse_section_url($tokens, $next_token));
+$tokens = $section_context->tokens;
+$next_token = $section_context->nextToken;
+$page = array_merge($page, $section_context->parsed);
 
 if (! isset($page['section'])) {
     $page['section'] = 'categories';
@@ -137,20 +83,17 @@ if (! isset($page['section'])) {
 
             // No section defined, go to random url
             if (! empty($conf['random_index_redirect']) and empty($tokens[$next_token])) {
-                $random_index_redirect = [];
-                // $conf['random_index_redirect'] is a map of URL => PHP
+                // $conf['random_index_redirect'] is a map of URL => named
                 // condition string (see include/config_default.inc.php); a
                 // malformed local override shouldn't crash this page.
+                // [SEC-15] RandomIndexRedirectResolver replaces the
+                // original's eval($random_url_condition) -- a config value
+                // with DB write access previously got arbitrary PHP
+                // execution.
                 $redirect_candidates = is_array($conf['random_index_redirect']) ? $conf['random_index_redirect'] : [];
-                foreach ($redirect_candidates as $random_url => $random_url_condition) {
-                    if (! is_string($random_url)) {
-                        continue;
-                    }
-                    if (empty($random_url_condition) or (is_string($random_url_condition) and eval($random_url_condition))) {
-                        $random_index_redirect[] = $random_url;
-                    }
-                }
-                if (! empty($random_index_redirect)) {
+                $random_index_redirect = new RandomIndexRedirectResolver()
+                    ->resolveCandidates($redirect_candidates);
+                if ($random_index_redirect !== []) {
                     redirect($random_index_redirect[random_int(0, count($random_index_redirect) - 1)]);
                 }
             }

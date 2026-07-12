@@ -1,0 +1,53 @@
+<?php
+
+declare(strict_types=1);
+
+use Piwigo\Db\DbConnection;
+use Piwigo\Image\DerivativeCacheService;
+use Piwigo\Job\BatchUploadJob;
+use Piwigo\Job\GenerateDerivativeJob;
+use Piwigo\Job\Handler\BatchUploadHandler;
+use Piwigo\Job\Handler\GenerateDerivativeHandler;
+use Piwigo\Job\Handler\RegenerateAllDerivativesHandler;
+use Piwigo\Job\Handler\ReindexImagesHandler;
+use Piwigo\Job\Handler\SendNotificationEmailHandler;
+use Piwigo\Job\RegenerateAllDerivativesJob;
+use Piwigo\Job\ReindexImagesJob;
+use Piwigo\Job\SendNotificationEmailJob;
+use Piwigo\Mail\MailService;
+use Piwigo\Metadata\MetadataRepository;
+use Piwigo\Metadata\MetadataService;
+
+/**
+ * Transport + routing + handler-factory configuration for
+ * Piwigo\Job\MessengerFactory. Each handler entry is a lazy closure,
+ * matching config/storage.php's own shape -- no DI container involvement
+ * (this project's real container, PHP-DI, is arch-test-restricted to
+ * Bootstrap/ and index.php). Doctrine (DB-polling, FOR UPDATE SKIP
+ * LOCKED) transport only this phase, matching this project's existing
+ * DB-first infrastructure preference -- Redis transport switch
+ * (PIWIGO_REDIS_DSN) deferred, no such config exists yet.
+ */
+return [
+    'transport_table' => 'messenger_messages',
+    'transport_queue' => 'async',
+
+    // message class => sender alias (all 5 route to the single 'async'
+    // transport this phase; no fan-out/priority routing needed yet)
+    'routing' => [
+        BatchUploadJob::class => 'async',
+        GenerateDerivativeJob::class => 'async',
+        RegenerateAllDerivativesJob::class => 'async',
+        ReindexImagesJob::class => 'async',
+        SendNotificationEmailJob::class => 'async',
+    ],
+
+    // message class => handler factory
+    'handlers' => [
+        BatchUploadJob::class => static fn (): callable => new BatchUploadHandler(),
+        GenerateDerivativeJob::class => static fn (): callable => new GenerateDerivativeHandler(new DerivativeCacheService()),
+        RegenerateAllDerivativesJob::class => static fn (): callable => new RegenerateAllDerivativesHandler(new DerivativeCacheService()),
+        ReindexImagesJob::class => static fn (): callable => new ReindexImagesHandler(new MetadataService(new MetadataRepository(DbConnection::build()))),
+        SendNotificationEmailJob::class => static fn (): callable => new SendNotificationEmailHandler(new MailService()),
+    ],
+];

@@ -24,6 +24,7 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Lang\Translator;
+use Piwigo\Page\PaginationService;
 use Piwigo\Template\Template;
 use Piwigo\Validation\InputValidator;
 
@@ -2161,57 +2162,8 @@ function verify_ephemeral_key($key, $aditionnal_data_to_hash = ''): bool
  */
 function create_navigation_bar($url, int|string $nb_element, $start, $nb_element_page, $clean_url = false, $param_name = 'start'): array
 {
-    /** @var array<string, mixed> $conf */
-    global $conf;
-
-    // real callers pass numeric strings here (see docblock); all downstream
-    // logic is pure arithmetic/comparison, so normalize once at the entry
-    $nb_element = (int) $nb_element;
-    $start = (int) $start;
-
-    $navbar = [];
-    $pages_around = $conf['paginate_pages_around'];
-    $pages_around = is_numeric($pages_around) ? (int) $pages_around : 0;
-    $start_str = $clean_url ? '/' . $param_name . '-' : (! str_contains($url, '?') ? '?' : '&amp;') . $param_name . '=';
-
-    if ($start < 0) {
-        $start = 0;
-    }
-
-    // navigation bar useful only if more than one page to display !
-    if ($nb_element > $nb_element_page) {
-        $url_start = $url . $start_str;
-
-        $cur_page = $navbar['CURRENT_PAGE'] = $start / $nb_element_page + 1;
-        $maximum = (int) ceil($nb_element / $nb_element_page);
-
-        $start = $nb_element_page * round($start / $nb_element_page);
-        $previous = $start - $nb_element_page;
-        $next = $start + $nb_element_page;
-        $last = ($maximum - 1) * $nb_element_page;
-
-        // link to first page and previous page?
-        if ($cur_page != 1) {
-            $navbar['URL_FIRST'] = $url;
-            $navbar['URL_PREV'] = $previous > 0 ? $url_start . $previous : $url;
-        }
-        // link on next page and last page?
-        if ($cur_page != $maximum) {
-            $navbar['URL_NEXT'] = $url_start . ($next < $last ? $next : $last);
-            $navbar['URL_LAST'] = $url_start . $last;
-        }
-
-        // pages to display
-        $navbar['pages'] = [];
-        $navbar['pages'][1] = $url;
-        for ($i = (int) max(floor($cur_page) - $pages_around, 2), $stop = min(ceil($cur_page) + $pages_around + 1, $maximum);
-            $i < $stop; $i++) {
-            $navbar['pages'][$i] = $url . $start_str . (($i - 1) * $nb_element_page);
-        }
-        $navbar['pages'][$maximum] = $url_start . $last;
-        $navbar['NB_PAGE'] = $maximum;
-    }
-    return $navbar;
+    return new PaginationService()
+        ->createNavigationBar($url, $nb_element, $start, $nb_element_page, $clean_url, $param_name);
 }
 
 /**

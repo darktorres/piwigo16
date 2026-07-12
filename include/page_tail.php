@@ -10,42 +10,19 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\updates;
-use Piwigo\Core\AppInfo;
-use Piwigo\Template\Template;
+use Piwigo\Page\PageTailRenderer;
 
 // Bootstrap globals, set by include/common.inc.php.
-/**
- * @var array<string, mixed> $conf
- * @var string $debug
- * @var float $t2
- * @var Template $template
- * @var array<string, mixed> $page
- */
-global $conf, $debug, $t2, $template, $page;
-
-$template->set_filenames([
-    'tail' => 'footer.tpl',
-]);
-
-trigger_notify('loc_begin_page_tail');
-
-$template->assign(
-    [
-        'VERSION' => (bool) $conf['show_version'] ? AppInfo::VERSION : '',
-        'PHPWG_URL' => defined('PHPWG_URL') ? str_replace('http:', 'https:', PHPWG_URL) : '',
-    ]
-);
-
-// --------------------------------------------------------------------- contact
-
-if (! is_a_guest()) {
-    $template->assign(
-        'CONTACT_MAIL',
-        get_webmaster_mail_address()
-    );
-}
+/** @var array<string, mixed> $conf */
+global $conf;
+/** @var float $t2 */
+global $t2;
 
 // --------------------------------------------------------- update notification
+//
+// Stays here rather than in PageTailRenderer: constructs Piwigo\Admin\
+// updates, and L3Presentation (Page) may not depend on L4Integration
+// (Admin) -- confirmed via a real deptrac violation when tried.
 $update_notify_check_period = $conf['update_notify_check_period'];
 if (is_int($update_notify_check_period) && $update_notify_check_period > 0) {
     $check_for_updates = false;
@@ -73,59 +50,5 @@ if (is_int($update_notify_check_period) && $update_notify_check_period > 0) {
     }
 }
 
-send_piwigo_infos();
-
-// ------------------------------------------------------------- generation time
-$debug_vars = [];
-
-if ((bool) $conf['show_queries']) {
-    $debug_vars = array_merge($debug_vars, [
-        'QUERIES_LIST' => $debug,
-    ]);
-}
-
-if ((bool) $conf['show_gt']) {
-    $count_queries = $page['count_queries'] ?? null;
-    if (! is_int($count_queries)) {
-        $count_queries = 0;
-        $page['count_queries'] = 0;
-        $page['queries_time'] = 0;
-    }
-
-    $queries_time = $page['queries_time'] ?? 0;
-    $queries_time = is_numeric($queries_time) ? (float) $queries_time : 0.0;
-
-    $time = get_elapsed_time($t2, get_moment());
-
-    $debug_vars = array_merge(
-        $debug_vars,
-        [
-            'TIME' => $time,
-            'NB_QUERIES' => $count_queries,
-            'SQL_TIME' => number_format($queries_time, 3, '.', ' ') . ' s',
-        ]
-    );
-}
-
-$template->assign('debug', $debug_vars);
-
-// ------------------------------------------------------------- mobile version
-if (! empty($conf['mobile_theme']) && (get_device() != 'desktop' || mobile_theme())) {
-    $request_uri = $_SERVER['REQUEST_URI'] ?? '';
-    $template->assign(
-        'TOGGLE_MOBILE_THEME_URL',
-        add_url_params(
-            htmlspecialchars(is_string($request_uri) ? $request_uri : ''),
-            [
-                'mobile' => mobile_theme() ? 'false' : 'true',
-            ]
-        )
-    );
-}
-
-trigger_notify('loc_end_page_tail');
-//
-// Generate the page
-//
-$template->parse('tail');
-$template->p();
+new PageTailRenderer()
+    ->render($t2);

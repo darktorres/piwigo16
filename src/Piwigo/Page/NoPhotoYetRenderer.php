@@ -1,0 +1,112 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Piwigo\Page;
+
+use Doctrine\DBAL\Connection;
+use Piwigo\Db\Tables;
+use Piwigo\Template\Template;
+
+/**
+ * The "No Photo Yet" feature: if the gallery has no photo yet, replace
+ * the whole page with a big box guiding the visitor/admin to add their
+ * first photos. Contains real redirect()/exit() calls, same as
+ * Html\HtmlService's own established precedent (see its
+ * pageNotFound()-adjacent methods) -- not routed around, since this is
+ * the original's real terminal behavior. Tests only exercise the
+ * guard-condition-false and nb_photos>0 branches (never reach exit()),
+ * same "don't stub what would kill the test process" reasoning as
+ * fatal_error().
+ */
+final class NoPhotoYetRenderer
+{
+    public function __construct(
+        private readonly Connection $conn,
+    ) {}
+
+    public function render(): void
+    {
+        /**
+         * @var array<string, mixed> $conf
+         * @var array<string, mixed> $user
+         */
+        global $conf, $user;
+
+        if (
+            ! (defined('IN_ADMIN') and IN_ADMIN)   // no message inside administration
+            and script_basename() !== 'identification' // keep the ability to login
+            and script_basename() !== 'password'       // keep the ability to reset password
+            and script_basename() !== 'ws'             // keep the ability to discuss with web API
+            and script_basename() !== 'popuphelp'      // keep the ability to display help popups
+            and (is_a_guest() or is_admin())          // normal users are not concerned by no_photo_yet
+            and ! isset($_SESSION['no_photo_yet'])     // temporary hide
+        ) {
+            $nb_photos = $this->conn->executeQuery('SELECT COUNT(*) FROM ' . Tables::images())
+                ->fetchOne();
+            $nb_photos = is_numeric($nb_photos) ? (int) $nb_photos : 0;
+
+            if ($nb_photos === 0) {
+                // make sure we don't use the mobile theme, which is not compatible with
+                // the "no photo yet" feature
+                $user_theme = $user['theme'] ?? null;
+                $user_theme = is_string($user_theme) ? $user_theme : get_default_theme();
+                /** @var Template $template */
+                global $template;
+                $template = new Template(PHPWG_ROOT_PATH . 'themes', $user_theme);
+
+                if (isset($_GET['no_photo_yet'])) {
+                    if ($_GET['no_photo_yet'] === 'browse') {
+                        $_SESSION['no_photo_yet'] = 'browse';
+                        redirect(make_index_url());
+                    }
+
+                    if ($_GET['no_photo_yet'] === 'deactivate') {
+                        conf_update_param('no_photo_yet', 'false');
+                        redirect(make_index_url());
+                    }
+                }
+
+                header('Content-Type: text/html; charset=' . get_pwg_charset());
+                $template->set_filenames([
+                    'no_photo_yet' => 'no_photo_yet.tpl',
+                ]);
+
+                if (is_admin()) {
+                    $url = $conf['no_photo_yet_url'];
+                    $url = is_string($url) ? $url : '';
+                    if (! str_starts_with($url, 'http')) {
+                        $url = get_root_url() . $url;
+                    }
+
+                    $template->assign(
+                        [
+                            'step' => 2,
+                            'intro' => l10n(
+                                'Hello %s, your Piwigo photo gallery is empty!',
+                                $user['username']
+                            ),
+                            'next_step_url' => $url,
+                            'deactivate_url' => get_root_url() . '?no_photo_yet=deactivate',
+                        ]
+                    );
+                } else {
+                    $template->assign(
+                        [
+                            'step' => 1,
+                            'U_LOGIN' => 'identification.php',
+                            'deactivate_url' => get_root_url() . '?no_photo_yet=browse',
+                        ]
+                    );
+                }
+
+                trigger_notify('loc_end_no_photo_yet');
+
+                $template->pparse('no_photo_yet');
+                exit();
+            } else {
+                conf_update_param('no_photo_yet', 'false');
+            }
+        }
+    }
+}

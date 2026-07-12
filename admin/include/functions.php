@@ -13,7 +13,6 @@ use Piwigo\Admin\Image\pwg_image;
 use Piwigo\Audit\AuditRepository;
 use Piwigo\Audit\AuditService;
 use Piwigo\Cache\PersistentCache;
-use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Logger;
 use Piwigo\Db\DbConnection;
@@ -21,8 +20,8 @@ use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Group\GroupService;
 use Piwigo\Http\HttpClientService;
+use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\DerivativeImage;
-use Piwigo\Image\ImageStdParams;
 use Piwigo\Template\Template;
 use Psr\Http\Client\ClientExceptionInterface;
 
@@ -2941,92 +2940,17 @@ SELECT
  */
 function clear_derivative_cache($types = 'all'): void
 {
-    if ($types === 'all') {
-        $types = ImageStdParams::get_all_types();
-        $types[] = IMG_CUSTOM;
-    } elseif (! is_array($types)) {
-        $types = [$types];
-    }
-
-    for ($i = 0; $i < count($types); $i++) {
-        $type = $types[$i];
-        if ($type == IMG_CUSTOM) {
-            $type = derivative_to_url($type) . '_[a-zA-Z0-9]+';
-        } elseif (in_array($type, ImageStdParams::get_all_types())) {
-            $type = derivative_to_url($type);
-        } else {// assume a custom type
-            $type = derivative_to_url(IMG_CUSTOM) . '_' . $type;
-        }
-        $types[$i] = $type;
-    }
-
-    $pattern = '#.*-';
-    if (count($types) > 1) {
-        $pattern .= '(' . implode('|', $types) . ')';
-    } else {
-        $pattern .= $types[0];
-    }
-    $pattern .= '\.[a-zA-Z0-9]{3,4}$#';
-
-    if ((bool) ($contents = @opendir(PHPWG_ROOT_PATH . Config::derivativeDir()))) {
-        while (($node = readdir($contents)) !== false) {
-            if ($node != '.'
-                and $node != '..'
-                and is_dir(PHPWG_ROOT_PATH . Config::derivativeDir() . $node)) {
-                clear_derivative_cache_rec(PHPWG_ROOT_PATH . Config::derivativeDir() . $node, $pattern);
-            }
-        }
-        closedir($contents);
-    }
+    new DerivativeCacheService()
+        ->clearDerivativeCache($types);
 }
 
 /**
- * Used by clear_derivative_cache()
- * @ignore
+ * Used directly by admin/site_update.php for its own recursive-delete need.
  */
 function clear_derivative_cache_rec(string $path, string $pattern): bool
 {
-    $rmdir = true;
-    $rm_index = false;
-
-    if ((bool) ($contents = opendir($path))) {
-        while (($node = readdir($contents)) !== false) {
-            if ($node == '.' or $node == '..') {
-                continue;
-            }
-            if (is_dir($path . '/' . $node)) {
-                // Always recurse, even once $rmdir is already false: every
-                // subdirectory must still get its matching derivative files
-                // deleted. Combine with a plain logical AND (not `&=`, which
-                // silently promotes $rmdir from bool to int on bool|null
-                // operands and corrupts the return type across recursive
-                // calls) computed from an already-evaluated variable, so the
-                // recursive call itself is never short-circuited away.
-                $sub_rmdir = clear_derivative_cache_rec($path . '/' . $node, $pattern);
-                $rmdir = $rmdir && $sub_rmdir;
-            } else {
-                if ((bool) preg_match($pattern, $node)) {
-                    unlink($path . '/' . $node);
-                } elseif ($node == 'index.htm') {
-                    $rm_index = true;
-                } else {
-                    $rmdir = false;
-                }
-            }
-        }
-        closedir($contents);
-
-        if ($rmdir) {
-            if ($rm_index) {
-                unlink($path . '/index.htm');
-            }
-            clearstatcache();
-            @rmdir($path);
-        }
-        return $rmdir;
-    }
-
-    return false;
+    return new DerivativeCacheService()
+        ->clearDerivativeCacheRecursive($path, $pattern);
 }
 
 /**
@@ -3040,28 +2964,8 @@ function clear_derivative_cache_rec(string $path, string $pattern): bool
  */
 function delete_element_derivatives(array $infos, $type = 'all'): void
 {
-    $path = $infos['path'];
-    if (! empty($infos['representative_ext'])) {
-        $path = original_to_representative($path, $infos['representative_ext']);
-    }
-    if (substr_compare($path, '../', 0, 3) == 0) {
-        $path = substr($path, 3);
-    }
-    $dot = strrpos($path, '.');
-    if ($dot === false) {
-        throw new Exception("delete_element_derivatives(): path '{$path}' has no extension");
-    }
-    if ($type == 'all') {
-        $pattern = '-*';
-    } else {
-        $pattern = '-' . derivative_to_url($type) . '*';
-    }
-    $path = substr_replace($path, $pattern, $dot, 0);
-    if (($glob = glob(PHPWG_ROOT_PATH . Config::derivativeDir() . $path)) !== false) {
-        foreach ($glob as $file) {
-            @unlink($file);
-        }
-    }
+    new DerivativeCacheService()
+        ->deleteElementDerivatives($infos, $type);
 }
 
 /**

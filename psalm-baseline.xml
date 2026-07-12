@@ -1449,9 +1449,6 @@
     </UndefinedFunction>
   </file>
   <file src="admin/include/functions.php">
-    <ArgumentTypeCoercion>
-      <code><![CDATA[$pattern]]></code>
-    </ArgumentTypeCoercion>
     <DeprecatedFunction>
       <code><![CDATA[get_fs($path . '/' . $subdir)]]></code>
     </DeprecatedFunction>
@@ -1492,9 +1489,6 @@
       <code><![CDATA[$library]]></code>
       <code><![CDATA[$library]]></code>
     </PossiblyFalseOperand>
-    <PossiblyInvalidOperand>
-      <code><![CDATA[$path]]></code>
-    </PossiblyInvalidOperand>
     <PossiblyUndefinedArrayOffset>
       <code><![CDATA[$page['infos']]]></code>
     </PossiblyUndefinedArrayOffset>
@@ -1509,7 +1503,6 @@
     <RiskyTruthyFalsyComparison>
       <code><![CDATA[empty($candidate)]]></code>
       <code><![CDATA[empty($candidate)]]></code>
-      <code><![CDATA[empty($infos['representative_ext'])]]></code>
       <code><![CDATA[empty($insert['id_uppercat'])]]></code>
       <code><![CDATA[empty($parent_id)]]></code>
       <code><![CDATA[empty($parent_id)]]></code>
@@ -1520,16 +1513,9 @@
     </UndefinedClass>
     <UndefinedConstant>
       <code><![CDATA[DB_RANDOM_FUNCTION]]></code>
-      <code><![CDATA[IMG_CUSTOM]]></code>
-      <code><![CDATA[IMG_CUSTOM]]></code>
-      <code><![CDATA[IMG_CUSTOM]]></code>
       <code><![CDATA[MKGETDIR_DIE_ON_ERROR]]></code>
       <code><![CDATA[MKGETDIR_PROTECT_HTACCESS]]></code>
       <code><![CDATA[MKGETDIR_RECURSIVE]]></code>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
@@ -1552,8 +1538,6 @@
       <code><![CDATA[associate_images_to_categories($images, [$row_category_id])]]></code>
       <code><![CDATA[boolean_to_string($insert['commentable'])]]></code>
       <code><![CDATA[boolean_to_string($insert['visible'])]]></code>
-      <code><![CDATA[clear_derivative_cache_rec($path . '/' . $node, $pattern)]]></code>
-      <code><![CDATA[clear_derivative_cache_rec(PHPWG_ROOT_PATH . Config::derivativeDir() . $node, $pattern)]]></code>
       <code><![CDATA[compare_image_tag_lists($taglist_before, $taglist_after)]]></code>
       <code><![CDATA[compare_image_tag_lists($taglist_before, $taglist_after)]]></code>
       <code><![CDATA[conf_delete_param('count_orphans')]]></code>
@@ -1575,10 +1559,6 @@
       <code><![CDATA[delete_tags($orphan_tag_ids)]]></code>
       <code><![CDATA[delete_user_sessions($user_id)]]></code>
       <code><![CDATA[deltree($pathfile, $trash_path)]]></code>
-      <code><![CDATA[derivative_to_url($type)]]></code>
-      <code><![CDATA[derivative_to_url($type)]]></code>
-      <code><![CDATA[derivative_to_url($type)]]></code>
-      <code><![CDATA[derivative_to_url(IMG_CUSTOM)]]></code>
       <code><![CDATA[fatal_error('[' . __FUNCTION__ . '] invalid image identifier ' . htmlentities($image_id))]]></code>
       <code><![CDATA[fatal_error('photo ' . $image_id . ' does not exist')]]></code>
       <code><![CDATA[fetchRemote($url, $content)]]></code>
@@ -1703,7 +1683,6 @@
       <code><![CDATA[mkgetdir(dirname($cache_path))]]></code>
       <code><![CDATA[original_to_format($files[0], $format_ext)]]></code>
       <code><![CDATA[original_to_representative($files[0], $row['representative_ext'])]]></code>
-      <code><![CDATA[original_to_representative($path, $infos['representative_ext'])]]></code>
       <code><![CDATA[pwg_activity('album', $category_ids, 'move', [
         'parent' => $new_parent,
     ])]]></code>
@@ -2782,7 +2761,6 @@
       <code><![CDATA[l10n('Menu Management')]]></code>
       <code><![CDATA[l10n('Order of menubar items has been updated successfully.')]]></code>
       <code><![CDATA[l10n('user_status_webmaster')]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
     </UndefinedFunction>
   </file>
   <file src="admin/notification_by_mail.php">
@@ -4713,14 +4691,6 @@
       <code><![CDATA[$dbValue]]></code>
       <code><![CDATA[$dbValue]]></code>
       <code><![CDATA[$disk_usage_kb / 1024]]></code>
-      <code><![CDATA[$nb_element_page * round($start / $nb_element_page)]]></code>
-      <code><![CDATA[$next < $last ? $next : $last]]></code>
-      <code><![CDATA[$previous]]></code>
-      <code><![CDATA[$start + $nb_element_page]]></code>
-      <code><![CDATA[$start - $nb_element_page]]></code>
-      <code><![CDATA[$start / $nb_element_page + 1]]></code>
-      <code><![CDATA[ceil($cur_page) + $pages_around]]></code>
-      <code><![CDATA[floor($cur_page) - $pages_around]]></code>
     </InvalidOperand>
     <InvalidReturnStatement>
       <code><![CDATA[$res]]></code>
@@ -5270,11 +5240,6 @@
     <InvalidStringClass>
       <code><![CDATA[new $classname($plugin_id)]]></code>
     </InvalidStringClass>
-    <RiskyTruthyFalsyComparison>
-      <code><![CDATA[empty($handler['include_path'])]]></code>
-      <code><![CDATA[empty($handler['include_path'])]]></code>
-      <code><![CDATA[empty($state)]]></code>
-    </RiskyTruthyFalsyComparison>
     <UndefinedConstant>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
     </UndefinedConstant>
@@ -5287,39 +5252,9 @@
                 'from_version' => $old_version,
                 'to_version' => $new_version,
             ])]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[query2array($query)]]></code>
       <code><![CDATA[safe_version_compare($plugin_version, $fs_version, '<')]]></code>
-      <code><![CDATA[trigger_notify(
-            'trigger',
-            [
-                'type' => 'action',
-                'event' => $event,
-                'data' => null,
-            ]
-        )]]></code>
-      <code><![CDATA[trigger_notify(
-            'trigger',
-            [
-                'type' => 'event',
-                'event' => $event,
-                'data' => $data,
-            ]
-        )]]></code>
-      <code><![CDATA[trigger_notify(
-            'trigger',
-            [
-                'type' => 'post_event',
-                'event' => $event,
-                'data' => $data,
-            ]
-        )]]></code>
       <code><![CDATA[trigger_notify('plugins_loaded')]]></code>
     </UndefinedFunction>
-    <UnresolvableInclude>
-      <code><![CDATA[include_once $handler['include_path']]]></code>
-      <code><![CDATA[include_once $handler['include_path']]]></code>
-    </UnresolvableInclude>
   </file>
   <file src="include/functions_search.inc.php">
     <PossiblyNullArrayOffset>
@@ -5722,202 +5657,22 @@
       <code><![CDATA[include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php']]></code>
     </UnresolvableInclude>
   </file>
-  <file src="include/menubar.inc.php">
-    <UndefinedFunction>
-      <code><![CDATA[add_url_params(make_index_url([]), [
-                    'filter' => 'start-recent-' . $recent_period,
-                ])]]></code>
-      <code><![CDATA[add_url_params(make_index_url([]), [
-                    'filter' => 'stop',
-                ])]]></code>
-      <code><![CDATA[get_available_tags()]]></code>
-      <code><![CDATA[get_categories_menu()]]></code>
-      <code><![CDATA[get_filter_page_value('used')]]></code>
-      <code><![CDATA[get_nb_available_comments()]]></code>
-      <code><![CDATA[get_nb_available_tags()]]></code>
-      <code><![CDATA[get_related_categories_menu($related_items, $exclude_cat_ids)]]></code>
-      <code><![CDATA[get_root_url()]]></code>
-      <code><![CDATA[get_root_url()]]></code>
-      <code><![CDATA[get_root_url()]]></code>
-      <code><![CDATA[get_root_url()]]></code>
-      <code><![CDATA[get_root_url()]]></code>
-      <code><![CDATA[get_root_url()]]></code>
-      <code><![CDATA[get_root_url()]]></code>
-      <code><![CDATA[get_root_url()]]></code>
-      <code><![CDATA[get_root_url()]]></code>
-      <code><![CDATA[get_root_url()]]></code>
-      <code><![CDATA[get_root_url()]]></code>
-      <code><![CDATA[get_root_url()]]></code>
-      <code><![CDATA[is_a_guest()]]></code>
-      <code><![CDATA[is_a_guest()]]></code>
-      <code><![CDATA[is_a_guest()]]></code>
-      <code><![CDATA[is_admin()]]></code>
-      <code><![CDATA[is_autorize_status(AccessLevel::Classic)]]></code>
-      <code><![CDATA[l10n('About Piwigo')]]></code>
-      <code><![CDATA[l10n('About')]]></code>
-      <code><![CDATA[l10n('Best rated')]]></code>
-      <code><![CDATA[l10n('Calendar')]]></code>
-      <code><![CDATA[l10n('Comments')]]></code>
-      <code><![CDATA[l10n('Most visited')]]></code>
-      <code><![CDATA[l10n('Notification')]]></code>
-      <code><![CDATA[l10n('RSS feed')]]></code>
-      <code><![CDATA[l10n('Random photos')]]></code>
-      <code><![CDATA[l10n('Recent albums')]]></code>
-      <code><![CDATA[l10n('Recent photos')]]></code>
-      <code><![CDATA[l10n('Search')]]></code>
-      <code><![CDATA[l10n('Tags')]]></code>
-      <code><![CDATA[l10n('Your favorites')]]></code>
-      <code><![CDATA[l10n('display a set of random photos')]]></code>
-      <code><![CDATA[l10n('display available tags')]]></code>
-      <code><![CDATA[l10n('display best rated photos')]]></code>
-      <code><![CDATA[l10n('display each day with photos, month per month')]]></code>
-      <code><![CDATA[l10n('display last user comments')]]></code>
-      <code><![CDATA[l10n('display most recent photos')]]></code>
-      <code><![CDATA[l10n('display most visited photos')]]></code>
-      <code><![CDATA[l10n('display recently updated albums')]]></code>
-      <code><![CDATA[l10n('display your favorites photos')]]></code>
-      <code><![CDATA[l10n('search')]]></code>
-      <code><![CDATA[make_index_url(
-                  [
-                      'chronology_field' => ($conf['calendar_datefield'] == 'date_available'
-                                              ? 'posted' : 'created'),
-                      'chronology_style' => 'monthly',
-                      'chronology_view' => 'calendar',
-                  ]
-              )]]></code>
-      <code><![CDATA[make_index_url([
-                        'tags' => [$tag],
-                    ])]]></code>
-      <code><![CDATA[make_index_url([
-                      'section' => 'favorites',
-                  ])]]></code>
-      <code><![CDATA[make_index_url([
-                     'section' => 'best_rated',
-                 ])]]></code>
-      <code><![CDATA[make_index_url([
-                  'section' => 'most_visited',
-              ])]]></code>
-      <code><![CDATA[make_index_url([
-                  'section' => 'recent_cats',
-              ])]]></code>
-      <code><![CDATA[make_index_url([
-                  'section' => 'recent_pics',
-              ])]]></code>
-      <code><![CDATA[make_index_url([
-                'section' => 'categories',
-            ])]]></code>
-      <code><![CDATA[make_index_url([])]]></code>
-      <code><![CDATA[make_index_url([])]]></code>
-      <code><![CDATA[script_basename()]]></code>
-      <code><![CDATA[tags_counter_compare(...)]]></code>
-    </UndefinedFunction>
-  </file>
-  <file src="include/no_photo_yet.inc.php">
-    <InvalidGlobal>
-      <code><![CDATA[global $conf, $user;]]></code>
-    </InvalidGlobal>
-    <RedundantCondition>
-      <code><![CDATA[IN_ADMIN]]></code>
-    </RedundantCondition>
-    <UndefinedFunction>
-      <code><![CDATA[conf_update_param('no_photo_yet', 'false')]]></code>
-      <code><![CDATA[conf_update_param('no_photo_yet', 'false')]]></code>
-      <code><![CDATA[get_default_theme()]]></code>
-      <code><![CDATA[get_pwg_charset()]]></code>
-      <code><![CDATA[get_root_url()]]></code>
-      <code><![CDATA[get_root_url()]]></code>
-      <code><![CDATA[get_root_url()]]></code>
-      <code><![CDATA[is_a_guest()]]></code>
-      <code><![CDATA[is_admin()]]></code>
-      <code><![CDATA[is_admin()]]></code>
-      <code><![CDATA[l10n(
-                        'Hello %s, your Piwigo photo gallery is empty!',
-                        $user['username']
-                    )]]></code>
-      <code><![CDATA[make_index_url()]]></code>
-      <code><![CDATA[make_index_url()]]></code>
-      <code><![CDATA[pwg_db_fetch_row(pwg_query($query))]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[redirect(make_index_url())]]></code>
-      <code><![CDATA[redirect(make_index_url())]]></code>
-      <code><![CDATA[script_basename()]]></code>
-      <code><![CDATA[script_basename()]]></code>
-      <code><![CDATA[script_basename()]]></code>
-      <code><![CDATA[script_basename()]]></code>
-      <code><![CDATA[trigger_notify('loc_end_no_photo_yet')]]></code>
-    </UndefinedFunction>
-  </file>
   <file src="include/page_header.php">
-    <DocblockTypeContradiction>
-      <code><![CDATA[null]]></code>
-      <code><![CDATA[null]]></code>
-    </DocblockTypeContradiction>
     <InvalidGlobal>
-      <code><![CDATA[global $conf, $page, $template;]]></code>
-      <code><![CDATA[global $title;]]></code>
+      <code><![CDATA[global $title, $refresh, $url_link;]]></code>
     </InvalidGlobal>
-    <RedundantCondition>
-      <code><![CDATA[IN_ADMIN]]></code>
-    </RedundantCondition>
-    <RedundantConditionGivenDocblockType>
-      <code><![CDATA[$refresh_numeric !== null and intval($refresh_numeric) >= 0
-    and isset($url_link)]]></code>
-      <code><![CDATA[is_numeric($refresh)]]></code>
-      <code><![CDATA[isset($refresh)]]></code>
-      <code><![CDATA[isset($refresh) && is_numeric($refresh)]]></code>
-    </RedundantConditionGivenDocblockType>
-    <TypeDoesNotContainType>
-      <code><![CDATA[! is_array($page['meta_robots'])]]></code>
-      <code><![CDATA[! isset($page['meta_robots']) || ! is_array($page['meta_robots'])]]></code>
-    </TypeDoesNotContainType>
-    <UndefinedFunction>
-      <code><![CDATA[conf_get_param('show_mobile_app_banner_in_admin', true)]]></code>
-      <code><![CDATA[conf_get_param('show_mobile_app_banner_in_gallery', false)]]></code>
-      <code><![CDATA[get_gallery_home_url()]]></code>
-      <code><![CDATA[get_pwg_charset()]]></code>
-      <code><![CDATA[get_pwg_charset()]]></code>
-      <code><![CDATA[trigger_change(
-            'render_page_banner',
-            str_replace(
-                '%gallery_title%',
-                $conf_gallery_title,
-                $page_banner
-            )
-        )]]></code>
-      <code><![CDATA[trigger_notify('loc_after_page_header')]]></code>
-      <code><![CDATA[trigger_notify('loc_begin_page_header')]]></code>
-      <code><![CDATA[trigger_notify('loc_end_page_header')]]></code>
-    </UndefinedFunction>
   </file>
   <file src="include/page_tail.php">
     <InvalidGlobal>
-      <code><![CDATA[global $conf, $debug, $t2, $template, $page;]]></code>
+      <code><![CDATA[global $conf;]]></code>
+      <code><![CDATA[global $t2;]]></code>
     </InvalidGlobal>
-    <RedundantCondition>
-      <code><![CDATA[is_string($request_uri)]]></code>
-    </RedundantCondition>
-    <TypeDoesNotContainType>
-      <code><![CDATA['']]></code>
-    </TypeDoesNotContainType>
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
     <UndefinedFunction>
-      <code><![CDATA[add_url_params(
-            htmlspecialchars(is_string($request_uri) ? $request_uri : ''),
-            [
-                'mobile' => mobile_theme() ? 'false' : 'true',
-            ]
-        )]]></code>
-      <code><![CDATA[get_device()]]></code>
-      <code><![CDATA[get_elapsed_time($t2, get_moment())]]></code>
-      <code><![CDATA[get_moment()]]></code>
-      <code><![CDATA[get_webmaster_mail_address()]]></code>
-      <code><![CDATA[is_a_guest()]]></code>
-      <code><![CDATA[mobile_theme()]]></code>
-      <code><![CDATA[mobile_theme()]]></code>
       <code><![CDATA[pwg_unique_exec_begins('check_for_updates')]]></code>
       <code><![CDATA[pwg_unique_exec_ends('check_for_updates')]]></code>
-      <code><![CDATA[send_piwigo_infos()]]></code>
-      <code><![CDATA[trigger_notify('loc_begin_page_tail')]]></code>
-      <code><![CDATA[trigger_notify('loc_end_page_tail')]]></code>
     </UndefinedFunction>
     <UnresolvableInclude>
       <code><![CDATA[include_once PHPWG_ROOT_PATH . 'admin/include/functions.php']]></code>
@@ -6239,11 +5994,7 @@
       <code><![CDATA[$page['section']]]></code>
       <code><![CDATA[$page['section']]]></code>
     </PossiblyUndefinedArrayOffset>
-    <RedundantCondition>
-      <code><![CDATA[is_string($rewritten)]]></code>
-    </RedundantCondition>
     <ReferenceConstraintViolation>
-      <code><![CDATA[$page]]></code>
       <code><![CDATA[$page]]></code>
       <code><![CDATA[$page]]></code>
       <code><![CDATA[$page]]></code>
@@ -6261,16 +6012,9 @@
       <code><![CDATA[empty($_GET['action'])]]></code>
       <code><![CDATA[empty($_GET['action'])]]></code>
       <code><![CDATA[empty($category_permalink)]]></code>
-      <code><![CDATA[empty($matches[2])]]></code>
-      <code><![CDATA[empty($matches[2])]]></code>
       <code><![CDATA[empty($tokens[$next_token])]]></code>
     </RiskyTruthyFalsyComparison>
-    <TypeDoesNotContainType>
-      <code><![CDATA['']]></code>
-    </TypeDoesNotContainType>
     <UndefinedConstant>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
     </UndefinedConstant>
@@ -6284,8 +6028,6 @@
                                 'action' => 'remove_all_from_favorites',
                             ]
                         )]]></code>
-      <code><![CDATA[bad_request('invalid picture identifier')]]></code>
-      <code><![CDATA[bad_request('picture identifier is missing')]]></code>
       <code><![CDATA[check_restrictions(is_numeric($redirect_category_id) ? (int) $redirect_category_id : 0)]]></code>
       <code><![CDATA[check_user_favorites()]]></code>
       <code><![CDATA[duplicate_index_url()]]></code>
@@ -6363,9 +6105,7 @@
       <code><![CDATA[make_index_url([
                 'section' => 'favorites',
             ])]]></code>
-      <code><![CDATA[parse_section_url($tokens, $next_token)]]></code>
       <code><![CDATA[parse_well_known_params_url($tokens, $next_token)]]></code>
-      <code><![CDATA[pwg_db_real_escape_string($rewritten)]]></code>
       <code><![CDATA[pwg_get_session_var('image_order')]]></code>
       <code><![CDATA[pwg_get_session_var('image_order', 0)]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
@@ -6383,7 +6123,6 @@
                 'section' => 'favorites',
             ]))]]></code>
       <code><![CDATA[redirect_http($redirect_url)]]></code>
-      <code><![CDATA[script_basename()]]></code>
       <code><![CDATA[script_basename()]]></code>
       <code><![CDATA[script_basename()]]></code>
       <code><![CDATA[script_basename()]]></code>
@@ -10147,6 +9886,24 @@
       <code><![CDATA[pwg_http_client()]]></code>
     </UndefinedFunction>
   </file>
+  <file src="src/Piwigo/Image/DerivativeCacheService.php">
+    <ArgumentTypeCoercion>
+      <code><![CDATA[$pattern]]></code>
+    </ArgumentTypeCoercion>
+    <PossiblyInvalidOperand>
+      <code><![CDATA[$path]]></code>
+    </PossiblyInvalidOperand>
+    <UndefinedConstant>
+      <code><![CDATA[IMG_CUSTOM]]></code>
+      <code><![CDATA[IMG_CUSTOM]]></code>
+      <code><![CDATA[IMG_CUSTOM]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UndefinedFunction>
+      <code><![CDATA[original_to_representative($path, $representativeExt)]]></code>
+    </UndefinedFunction>
+  </file>
   <file src="src/Piwigo/Image/DerivativeImage.php">
     <InvalidNullableReturnType>
       <code><![CDATA[string]]></code>
@@ -10332,6 +10089,48 @@
       <code><![CDATA[trigger_change('get_src_image_url', $url, $this)]]></code>
     </UndefinedFunction>
   </file>
+  <file src="src/Piwigo/Job/Handler/BatchUploadHandler.php">
+    <UndefinedFunction>
+      <code><![CDATA[add_uploaded_file(
+            $job->sourceFilepath,
+            $job->originalFilename,
+            $job->categories,
+            $job->level,
+            $job->imageId,
+            $job->originalMd5sum,
+        )]]></code>
+    </UndefinedFunction>
+  </file>
+  <file src="src/Piwigo/Job/MessengerFactory.php">
+    <InvalidReturnStatement>
+      <code><![CDATA[new DoctrineTransportFactory($registry)
+            ->createTransport(
+                'doctrine://default',
+                [
+                    'table_name' => $config['transport_table'],
+                    'queue_name' => $config['transport_queue'],
+                ],
+                new PhpSerializer(),
+            )]]></code>
+    </InvalidReturnStatement>
+    <InvalidReturnType>
+      <code><![CDATA[TransportInterface&MessageCountAwareInterface]]></code>
+    </InvalidReturnType>
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function get(string $id): mixed]]></code>
+      <code><![CDATA[public function getConnection(?string $name = null): object]]></code>
+      <code><![CDATA[public function getConnectionNames(): array]]></code>
+      <code><![CDATA[public function getConnections(): array]]></code>
+      <code><![CDATA[public function getDefaultConnectionName(): string]]></code>
+      <code><![CDATA[public function has(string $id): bool]]></code>
+    </MissingOverrideAttribute>
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UnresolvableInclude>
+      <code><![CDATA[require PHPWG_ROOT_PATH . 'config/messenger.php']]></code>
+    </UnresolvableInclude>
+  </file>
   <file src="src/Piwigo/Mail/MailService.php">
     <UndefinedConstant>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
@@ -10448,6 +10247,96 @@
       <code><![CDATA[$template]]></code>
     </PropertyNotSetInConstructor>
   </file>
+  <file src="src/Piwigo/Menu/MenubarRenderer.php">
+    <UndefinedFunction>
+      <code><![CDATA[add_url_params(make_index_url([]), [
+                        'filter' => 'start-recent-' . $recent_period,
+                    ])]]></code>
+      <code><![CDATA[add_url_params(make_index_url([]), [
+                        'filter' => 'stop',
+                    ])]]></code>
+      <code><![CDATA[get_available_tags()]]></code>
+      <code><![CDATA[get_categories_menu()]]></code>
+      <code><![CDATA[get_filter_page_value('used')]]></code>
+      <code><![CDATA[get_nb_available_comments()]]></code>
+      <code><![CDATA[get_nb_available_tags()]]></code>
+      <code><![CDATA[get_related_categories_menu($related_items, $exclude_cat_ids)]]></code>
+      <code><![CDATA[get_root_url()]]></code>
+      <code><![CDATA[get_root_url()]]></code>
+      <code><![CDATA[get_root_url()]]></code>
+      <code><![CDATA[get_root_url()]]></code>
+      <code><![CDATA[get_root_url()]]></code>
+      <code><![CDATA[get_root_url()]]></code>
+      <code><![CDATA[get_root_url()]]></code>
+      <code><![CDATA[get_root_url()]]></code>
+      <code><![CDATA[get_root_url()]]></code>
+      <code><![CDATA[get_root_url()]]></code>
+      <code><![CDATA[get_root_url()]]></code>
+      <code><![CDATA[get_root_url()]]></code>
+      <code><![CDATA[is_a_guest()]]></code>
+      <code><![CDATA[is_a_guest()]]></code>
+      <code><![CDATA[is_a_guest()]]></code>
+      <code><![CDATA[is_admin()]]></code>
+      <code><![CDATA[is_autorize_status(AccessLevel::Classic)]]></code>
+      <code><![CDATA[l10n('About Piwigo')]]></code>
+      <code><![CDATA[l10n('About')]]></code>
+      <code><![CDATA[l10n('Best rated')]]></code>
+      <code><![CDATA[l10n('Calendar')]]></code>
+      <code><![CDATA[l10n('Comments')]]></code>
+      <code><![CDATA[l10n('Most visited')]]></code>
+      <code><![CDATA[l10n('Notification')]]></code>
+      <code><![CDATA[l10n('RSS feed')]]></code>
+      <code><![CDATA[l10n('Random photos')]]></code>
+      <code><![CDATA[l10n('Recent albums')]]></code>
+      <code><![CDATA[l10n('Recent photos')]]></code>
+      <code><![CDATA[l10n('Search')]]></code>
+      <code><![CDATA[l10n('Tags')]]></code>
+      <code><![CDATA[l10n('Your favorites')]]></code>
+      <code><![CDATA[l10n('display a set of random photos')]]></code>
+      <code><![CDATA[l10n('display available tags')]]></code>
+      <code><![CDATA[l10n('display best rated photos')]]></code>
+      <code><![CDATA[l10n('display each day with photos, month per month')]]></code>
+      <code><![CDATA[l10n('display last user comments')]]></code>
+      <code><![CDATA[l10n('display most recent photos')]]></code>
+      <code><![CDATA[l10n('display most visited photos')]]></code>
+      <code><![CDATA[l10n('display recently updated albums')]]></code>
+      <code><![CDATA[l10n('display your favorites photos')]]></code>
+      <code><![CDATA[l10n('search')]]></code>
+      <code><![CDATA[make_index_url(
+                      [
+                          'chronology_field' => ($conf['calendar_datefield'] === 'date_available'
+                                                  ? 'posted' : 'created'),
+                          'chronology_style' => 'monthly',
+                          'chronology_view' => 'calendar',
+                      ]
+                  )]]></code>
+      <code><![CDATA[make_index_url([
+                            'tags' => [$tag],
+                        ])]]></code>
+      <code><![CDATA[make_index_url([
+                          'section' => 'favorites',
+                      ])]]></code>
+      <code><![CDATA[make_index_url([
+                         'section' => 'best_rated',
+                     ])]]></code>
+      <code><![CDATA[make_index_url([
+                      'section' => 'most_visited',
+                  ])]]></code>
+      <code><![CDATA[make_index_url([
+                      'section' => 'recent_cats',
+                  ])]]></code>
+      <code><![CDATA[make_index_url([
+                      'section' => 'recent_pics',
+                  ])]]></code>
+      <code><![CDATA[make_index_url([
+                    'section' => 'categories',
+                ])]]></code>
+      <code><![CDATA[make_index_url([])]]></code>
+      <code><![CDATA[make_index_url([])]]></code>
+      <code><![CDATA[script_basename()]]></code>
+      <code><![CDATA[tags_counter_compare(...)]]></code>
+    </UndefinedFunction>
+  </file>
   <file src="src/Piwigo/Menu/RegisteredBlock.php">
     <ClassMustBeFinal>
       <code><![CDATA[RegisteredBlock]]></code>
@@ -10563,6 +10452,94 @@
       <code><![CDATA[is_admin()]]></code>
     </UndefinedFunction>
   </file>
+  <file src="src/Piwigo/Page/NoPhotoYetRenderer.php">
+    <InvalidGlobal>
+      <code><![CDATA[global $template;]]></code>
+    </InvalidGlobal>
+    <UndefinedFunction>
+      <code><![CDATA[conf_update_param('no_photo_yet', 'false')]]></code>
+      <code><![CDATA[conf_update_param('no_photo_yet', 'false')]]></code>
+      <code><![CDATA[get_default_theme()]]></code>
+      <code><![CDATA[get_pwg_charset()]]></code>
+      <code><![CDATA[get_root_url()]]></code>
+      <code><![CDATA[get_root_url()]]></code>
+      <code><![CDATA[get_root_url()]]></code>
+      <code><![CDATA[is_a_guest()]]></code>
+      <code><![CDATA[is_admin()]]></code>
+      <code><![CDATA[is_admin()]]></code>
+      <code><![CDATA[l10n(
+                                'Hello %s, your Piwigo photo gallery is empty!',
+                                $user['username']
+                            )]]></code>
+      <code><![CDATA[make_index_url()]]></code>
+      <code><![CDATA[make_index_url()]]></code>
+      <code><![CDATA[redirect(make_index_url())]]></code>
+      <code><![CDATA[redirect(make_index_url())]]></code>
+      <code><![CDATA[script_basename()]]></code>
+      <code><![CDATA[script_basename()]]></code>
+      <code><![CDATA[script_basename()]]></code>
+      <code><![CDATA[script_basename()]]></code>
+      <code><![CDATA[trigger_notify('loc_end_no_photo_yet')]]></code>
+    </UndefinedFunction>
+  </file>
+  <file src="src/Piwigo/Page/PageHeaderRenderer.php">
+    <UndefinedFunction>
+      <code><![CDATA[conf_get_param('show_mobile_app_banner_in_admin', true)]]></code>
+      <code><![CDATA[conf_get_param('show_mobile_app_banner_in_gallery', false)]]></code>
+      <code><![CDATA[get_gallery_home_url()]]></code>
+      <code><![CDATA[get_pwg_charset()]]></code>
+      <code><![CDATA[get_pwg_charset()]]></code>
+      <code><![CDATA[trigger_change(
+                    'render_page_banner',
+                    str_replace(
+                        '%gallery_title%',
+                        $conf_gallery_title,
+                        $page_banner
+                    )
+                )]]></code>
+      <code><![CDATA[trigger_notify('loc_after_page_header')]]></code>
+      <code><![CDATA[trigger_notify('loc_begin_page_header')]]></code>
+      <code><![CDATA[trigger_notify('loc_end_page_header')]]></code>
+    </UndefinedFunction>
+  </file>
+  <file src="src/Piwigo/Page/PageTailRenderer.php">
+    <RedundantCondition>
+      <code><![CDATA[is_string($request_uri)]]></code>
+    </RedundantCondition>
+    <TypeDoesNotContainType>
+      <code><![CDATA['']]></code>
+    </TypeDoesNotContainType>
+    <UndefinedFunction>
+      <code><![CDATA[add_url_params(
+                    htmlspecialchars(is_string($request_uri) ? $request_uri : ''),
+                    [
+                        'mobile' => mobile_theme() ? 'false' : 'true',
+                    ]
+                )]]></code>
+      <code><![CDATA[get_device()]]></code>
+      <code><![CDATA[get_elapsed_time($startTime, get_moment())]]></code>
+      <code><![CDATA[get_moment()]]></code>
+      <code><![CDATA[get_webmaster_mail_address()]]></code>
+      <code><![CDATA[is_a_guest()]]></code>
+      <code><![CDATA[mobile_theme()]]></code>
+      <code><![CDATA[mobile_theme()]]></code>
+      <code><![CDATA[send_piwigo_infos()]]></code>
+      <code><![CDATA[trigger_notify('loc_begin_page_tail')]]></code>
+      <code><![CDATA[trigger_notify('loc_end_page_tail')]]></code>
+    </UndefinedFunction>
+  </file>
+  <file src="src/Piwigo/Page/PaginationService.php">
+    <InvalidOperand>
+      <code><![CDATA[$nbElementPage * round($start / $nbElementPage)]]></code>
+      <code><![CDATA[$next < $last ? $next : $last]]></code>
+      <code><![CDATA[$previous]]></code>
+      <code><![CDATA[$start + $nbElementPage]]></code>
+      <code><![CDATA[$start - $nbElementPage]]></code>
+      <code><![CDATA[$start / $nbElementPage + 1]]></code>
+      <code><![CDATA[ceil($cur_page) + $pages_around]]></code>
+      <code><![CDATA[floor($cur_page) - $pages_around]]></code>
+    </InvalidOperand>
+  </file>
   <file src="src/Piwigo/Permalink/PermalinkService.php">
     <UndefinedFunction>
       <code><![CDATA[l10n('Permalink %s has been previously used by album %s. Delete from the permalink history first')]]></code>
@@ -10575,6 +10552,12 @@
     <UndefinedFunction>
       <code><![CDATA[is_admin($userStatus)]]></code>
     </UndefinedFunction>
+  </file>
+  <file src="src/Piwigo/PluginConfig/EventDispatcher.php">
+    <UnresolvableInclude>
+      <code><![CDATA[include_once $handler['include_path']]]></code>
+      <code><![CDATA[include_once $handler['include_path']]]></code>
+    </UnresolvableInclude>
   </file>
   <file src="src/Piwigo/Rate/RateService.php">
     <InvalidOperand>
@@ -10788,6 +10771,31 @@
       <code><![CDATA[trigger_notify('qsearch_before_eval', $expression, $qsr)]]></code>
       <code><![CDATA[trigger_notify('qsearch_expression_parsed', $expression)]]></code>
       <code><![CDATA[userprefs_update_param('gallery_search_filters', array_keys(is_array($rulesFields) ? $rulesFields : []))]]></code>
+    </UndefinedFunction>
+  </file>
+  <file src="src/Piwigo/Section/RandomIndexRedirectResolver.php">
+    <UndefinedFunction>
+      <code><![CDATA[is_a_guest()]]></code>
+    </UndefinedFunction>
+  </file>
+  <file src="src/Piwigo/Section/SectionInitializer.php">
+    <RedundantCondition>
+      <code><![CDATA[$_SERVER['PATH_INFO'] !== '']]></code>
+      <code><![CDATA[is_string($rewritten)]]></code>
+    </RedundantCondition>
+    <TypeDoesNotContainType>
+      <code><![CDATA['']]></code>
+    </TypeDoesNotContainType>
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UndefinedFunction>
+      <code><![CDATA[bad_request('invalid picture identifier')]]></code>
+      <code><![CDATA[bad_request('picture identifier is missing')]]></code>
+      <code><![CDATA[parse_section_url($tokens, $next_token)]]></code>
+      <code><![CDATA[pwg_db_real_escape_string($rewritten)]]></code>
+      <code><![CDATA[script_basename()]]></code>
     </UndefinedFunction>
   </file>
   <file src="src/Piwigo/Session/PwgSession.php">
@@ -11835,6 +11843,22 @@
       <code><![CDATA[$stderr]]></code>
     </PossiblyFalseOperand>
   </file>
+  <file src="tests/Integration/MenubarLayoutRepositoryTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$repo]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/MessengerRoundTripTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$conn]]></code>
+    </PropertyNotSetInConstructor>
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+  </file>
   <file src="tests/Integration/MetadataRepositoryTest.php">
     <PropertyNotSetInConstructor>
       <code><![CDATA[$conn]]></code>
@@ -11846,6 +11870,15 @@
       <code><![CDATA[$conn]]></code>
       <code><![CDATA[$scratchDir]]></code>
       <code><![CDATA[$service]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/NoPhotoYetRendererTest.php">
+    <InvalidGlobal>
+      <code><![CDATA[global $conf;]]></code>
+    </InvalidGlobal>
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$renderer]]></code>
     </PropertyNotSetInConstructor>
   </file>
   <file src="tests/Integration/NotificationByMailRepositoryTest.php">
@@ -11902,6 +11935,12 @@
       <code><![CDATA[$service]]></code>
     </PropertyNotSetInConstructor>
   </file>
+  <file src="tests/Integration/PluginRepositoryTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$repo]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
   <file src="tests/Integration/PreferencesServiceTest.php">
     <PropertyNotSetInConstructor>
       <code><![CDATA[$conn]]></code>
@@ -11918,6 +11957,11 @@
     <PropertyNotSetInConstructor>
       <code><![CDATA[$conn]]></code>
       <code><![CDATA[$service]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/ReindexImagesHandlerTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$conn]]></code>
     </PropertyNotSetInConstructor>
   </file>
   <file src="tests/Integration/SchemaParityTest.php">
@@ -12557,6 +12601,24 @@
       <code><![CDATA[toBe]]></code>
     </InternalMethod>
   </file>
+  <file src="tests/Unit/Image/DerivativeCacheServiceTest.php">
+    <InternalMethod>
+      <code><![CDATA[throws]]></code>
+      <code><![CDATA[toBeFalse]]></code>
+      <code><![CDATA[toBeFalse]]></code>
+      <code><![CDATA[toBeFalse]]></code>
+      <code><![CDATA[toBeFalse]]></code>
+      <code><![CDATA[toBeFalse]]></code>
+      <code><![CDATA[toBeFalse]]></code>
+      <code><![CDATA[toBeFalse]]></code>
+      <code><![CDATA[toBeTrue]]></code>
+      <code><![CDATA[toBeTrue]]></code>
+      <code><![CDATA[toBeTrue]]></code>
+      <code><![CDATA[toBeTrue]]></code>
+      <code><![CDATA[toBeTrue]]></code>
+      <code><![CDATA[toBeTrue]]></code>
+    </InternalMethod>
+  </file>
   <file src="tests/Unit/Image/ImageServiceTest.php">
     <InternalMethod>
       <code><![CDATA[toBe]]></code>
@@ -12585,6 +12647,23 @@
       <code><![CDATA[$tmp]]></code>
       <code><![CDATA[$tmp]]></code>
     </PossiblyFalseArgument>
+  </file>
+  <file src="tests/Unit/Job/BatchUploadHandlerTest.php">
+    <InternalMethod>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+    </InternalMethod>
+  </file>
+  <file src="tests/Unit/Job/RegenerateAllDerivativesHandlerTest.php">
+    <InternalMethod>
+      <code><![CDATA[toBeFalse]]></code>
+      <code><![CDATA[toBeTrue]]></code>
+    </InternalMethod>
+  </file>
+  <file src="tests/Unit/Job/SendNotificationEmailHandlerTest.php">
+    <InternalMethod>
+      <code><![CDATA[throwsNoExceptions]]></code>
+    </InternalMethod>
   </file>
   <file src="tests/Unit/Lang/LangServiceTest.php">
     <InternalMethod>
@@ -12672,6 +12751,50 @@
       <code><![CDATA[toThrow]]></code>
     </InternalMethod>
   </file>
+  <file src="tests/Unit/Page/PaginationServiceTest.php">
+    <InternalMethod>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toHaveKey]]></code>
+      <code><![CDATA[toHaveKey]]></code>
+      <code><![CDATA[toHaveKey]]></code>
+      <code><![CDATA[toHaveKey]]></code>
+    </InternalMethod>
+    <UndefinedMagicMethod>
+      <code><![CDATA[toHaveKey]]></code>
+      <code><![CDATA[toHaveKey]]></code>
+      <code><![CDATA[toHaveKey]]></code>
+      <code><![CDATA[toHaveKey]]></code>
+    </UndefinedMagicMethod>
+  </file>
+  <file src="tests/Unit/PluginConfig/EventDispatcherTest.php">
+    <InternalMethod>
+      <code><![CDATA[throws]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBeFalse]]></code>
+      <code><![CDATA[toBeFalse]]></code>
+      <code><![CDATA[toBeFalse]]></code>
+      <code><![CDATA[toBeTrue]]></code>
+      <code><![CDATA[toBeTrue]]></code>
+      <code><![CDATA[toBeTrue]]></code>
+      <code><![CDATA[toBeTrue]]></code>
+      <code><![CDATA[toBeTrue]]></code>
+      <code><![CDATA[toBeTrue]]></code>
+    </InternalMethod>
+  </file>
   <file src="tests/Unit/Routing/RouteDefinitionsTest.php">
     <InternalMethod>
       <code><![CDATA[toBe]]></code>
@@ -12698,6 +12821,37 @@
       <code><![CDATA[toBe]]></code>
       <code><![CDATA[toBe]]></code>
       <code><![CDATA[toBe]]></code>
+    </InternalMethod>
+  </file>
+  <file src="tests/Unit/Section/RandomIndexRedirectResolverTest.php">
+    <InternalMethod>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+    </InternalMethod>
+  </file>
+  <file src="tests/Unit/Section/SectionContextRegistryTest.php">
+    <InternalMethod>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBeNull]]></code>
+      <code><![CDATA[toBeNull]]></code>
+    </InternalMethod>
+  </file>
+  <file src="tests/Unit/Section/SectionContextTest.php">
+    <InternalMethod>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBeNull]]></code>
+      <code><![CDATA[toBeNull]]></code>
     </InternalMethod>
   </file>
   <file src="tests/Unit/Session/SessionServiceTest.php">

@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-use Piwigo\Config\Config;
-use Piwigo\Config\ConfigLoader;
 use Piwigo\Csrf\CsrfService;
 
 beforeEach(function (): void {
-    Config::reset();
-    ConfigLoader::applyDefaults();
-    Config::override('secret_key', 'test-secret-key');
+    // CsrfService reads global $conf directly, not Piwigo\Config\Config::
+    // secretKey() -- see the class's own docblock for why (Config::$data is
+    // never synced with the real, admin-configurable DB-persisted config
+    // table during a live request).
+    $GLOBALS['conf'] = ['secret_key' => 'test-secret-key'];
     unset($_REQUEST['pwg_token']);
 });
 
@@ -31,7 +31,7 @@ test('getToken changes when the secret key changes', function (): void {
     $service = new CsrfService();
     $first = $service->getToken();
 
-    Config::override('secret_key', 'a-different-secret');
+    $GLOBALS['conf'] = ['secret_key' => 'a-different-secret'];
 
     expect($service->getToken())->not->toBe($first);
 });

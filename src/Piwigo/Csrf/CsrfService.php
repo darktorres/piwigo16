@@ -4,12 +4,23 @@ declare(strict_types=1);
 
 namespace Piwigo\Csrf;
 
-use Piwigo\Config\Config;
-
 /**
  * CSRF token issuance and verification. Tokens are an HMAC of the current
- * session id keyed by the secret-key config (Config::secretKey()), so
- * they're stable for the lifetime of a session and invalidated on logout.
+ * session id keyed by the secret-key config, so they're stable for the
+ * lifetime of a session and invalidated on logout.
+ *
+ * Reads `global $conf['secret_key']` directly, NOT
+ * Piwigo\Config\Config::secretKey() -- confirmed empirically (recomputed a
+ * real live pwg_token for a real session and it matched the empty-secret
+ * hash, not the real DB-persisted secret_key) that Config::secretKey() was
+ * silently inert on a live request: secret_key is inserted into the
+ * piwigo_config DB table at install time (install/upgrade_1.6.2.php),
+ * loaded into $conf by the legacy load_conf_from_db(), with no sync back
+ * into Config::$data. This means every CSRF token issued before this fix
+ * was signed with an empty string, not a real secret -- forgeable by
+ * anyone who could observe or guess a session id. Fixed as a P18 follow-up
+ * (found while building EphemeralKeyService, which copied this same
+ * Config::secretKey() pattern before shipping and was caught first).
  *
  * check() returns bool rather than acting on failure itself (unlike the
  * reference implementation's later, Util-retirement-era CsrfService, which
@@ -28,12 +39,18 @@ final class CsrfService
      */
     public function getToken(): string
     {
+        /** @var array<string, mixed> $conf */
+        global $conf;
+
         $session_id = session_id();
         if ($session_id === false) {
             throw new \Exception('CsrfService::getToken(): no active session');
         }
 
-        return hash_hmac('md5', $session_id, Config::secretKey());
+        $secret_key = $conf['secret_key'] ?? '';
+        $secret_key = is_scalar($secret_key) ? (string) $secret_key : '';
+
+        return hash_hmac('md5', $session_id, $secret_key);
     }
 
     /**

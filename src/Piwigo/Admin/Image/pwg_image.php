@@ -415,7 +415,10 @@ class pwg_image
             $cmd_out = null;
             $imagick_dir = is_string($conf['ext_imagick_dir']) ? $conf['ext_imagick_dir'] : '';
             // check if magick is in path
-            exec('command -v ' . $imagick_dir . 'magick', $cmd_out, $retval);
+            // [SEC-16] escapeshellarg() quotes the dir prefix; the adjacent
+            // quoted+unquoted shell tokens still concatenate into one word
+            // (e.g. '/usr/bin/'magick), so this stays functionally identical.
+            exec('command -v ' . escapeshellarg($imagick_dir) . 'magick', $cmd_out, $retval);
             $command = ($retval == 0) ? 'magick' : 'convert';
             $page['ext_imagick_command'] = $command;
         }
@@ -433,7 +436,8 @@ class pwg_image
         }
 
         $imagick_dir = is_string($conf['ext_imagick_dir']) ? $conf['ext_imagick_dir'] : '';
-        @exec($imagick_dir . self::get_ext_imagick_command() . ' -version', $returnarray);
+        // [SEC-16] see the escapeshellarg() note above.
+        @exec(escapeshellarg($imagick_dir) . self::get_ext_imagick_command() . ' -version', $returnarray);
         if (! empty($returnarray[0]) and (bool) preg_match('/ImageMagick/i', $returnarray[0])) {
             if ((bool) preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
                 self::$ext_imagick_version = $match[1];

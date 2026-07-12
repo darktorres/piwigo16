@@ -69,7 +69,11 @@ class image_ext_imagick implements imageInterface
             }
         }
 
-        $command = $this->imagickdir . 'identify -format "%wx%h" "' . realpath($this->source_filepath) . '"';
+        // [SEC-16] escapeshellarg() on both the dir prefix and the real
+        // file path -- the naive '"' . ... . '"' quoting this replaces
+        // never escaped an embedded '"' or shell metacharacter in the path.
+        $command = escapeshellarg($this->imagickdir) . 'identify -format "%wx%h" '
+            . escapeshellarg((string) realpath($this->source_filepath));
         @exec($command, $returnarray);
         if (empty($returnarray[0]) or ! (bool) preg_match('/^(\d+)x(\d+)$/', $returnarray[0], $match)) {
             die("[External ImageMagick] Corrupt image\n" . var_export($returnarray, true));
@@ -219,8 +223,10 @@ class image_ext_imagick implements imageInterface
             $this->add_command('sampling-factor', '4:2:2');
         }
 
-        $exec = $this->imagickdir . pwg_image::get_ext_imagick_command();
-        $exec .= ' "' . realpath($this->source_filepath) . '"';
+        // [SEC-16] escapeshellarg() on the dir prefix and both real paths
+        // below -- see the constructor's own note above.
+        $exec = escapeshellarg($this->imagickdir) . pwg_image::get_ext_imagick_command();
+        $exec .= ' ' . escapeshellarg((string) realpath($this->source_filepath));
 
         // If the image is animated webp add a filter to avoid breaking the animation
         if ($this->is_animated_webp) {
@@ -237,7 +243,7 @@ class image_ext_imagick implements imageInterface
         if (! isset($dest['dirname'])) {
             throw new \Exception("write(): unable to determine directory for {$destination_filepath}");
         }
-        $exec .= ' "' . realpath($dest['dirname']) . '/' . $dest['basename'] . '" 2>&1';
+        $exec .= ' ' . escapeshellarg(realpath($dest['dirname']) . '/' . $dest['basename']) . ' 2>&1';
         $logger->debug($exec, 'i.php');
         @exec($exec, $returnarray);
 

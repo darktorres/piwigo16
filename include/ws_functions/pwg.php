@@ -9,7 +9,9 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Core\AppInfo;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
@@ -333,31 +335,8 @@ function ws_caddie_add(array $params, PwgServer &$service): int
     $user_id = $user['id'];
     $user_id = is_numeric($user_id) ? (int) $user_id : 0;
 
-    $query = '
-SELECT id
-  FROM ' . Tables::images() . '
-      LEFT JOIN ' . Tables::caddie() . '
-      ON id=element_id AND user_id=' . $user_id . '
-  WHERE id IN (' . implode(',', $params['image_id']) . ')
-    AND element_id IS NULL
-;';
-    $result = array_from_query($query, 'id');
-
-    $datas = [];
-    foreach ($result as $id) {
-        $datas[] = [
-            'element_id' => $id,
-            'user_id' => $user_id,
-        ];
-    }
-    if ((bool) count($datas)) {
-        mass_inserts(
-            Tables::caddie(),
-            ['element_id', 'user_id'],
-            $datas
-        );
-    }
-    return count($datas);
+    return new CaddieRepository(DbConnection::build())
+        ->addElements($user_id, $params['image_id']);
 }
 
 /**

@@ -9,9 +9,14 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Audit\AuditRepository;
+use Piwigo\Audit\AuditService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
+use Piwigo\Group\GroupService;
 use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
@@ -23,8 +28,9 @@ if (! defined('PHPWG_ROOT_PATH')) {
 /**
  * @var array<string, mixed> $page
  * @var Template $template
+ * @var array<string, mixed> $user
  */
-global $page, $template;
+global $page, $template, $user;
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
@@ -73,18 +79,24 @@ $page['group'] = (int) $_GET['group_id'];
 // |                                updates                                |
 // +-----------------------------------------------------------------------+
 
+$group_service = new GroupService(new GroupRepository(DbConnection::build()));
+
+// [SEC-57] actor for either branch below
+$actor_id = $user['id'] ?? null;
+$actor_id = is_numeric($actor_id) ? (int) $actor_id : null;
+
 if (isset($_POST['falsify'])
     and count($cat_true) > 0) {
     // if you forbid access to a category, all sub-categories become
     // automatically forbidden
     $subcats = get_subcat_ids($cat_true);
-    $query = '
-DELETE
-  FROM ' . Tables::groupAccess() . '
-  WHERE group_id = ' . $page['group'] . '
-  AND cat_id IN (' . implode(',', $subcats) . ')
-;';
-    pwg_query($query);
+    $subcat_ids = array_map(intval(...), $subcats);
+    $group_service->removeAccess($page['group'], $subcat_ids);
+
+    new AuditService(new AuditRepository(DbConnection::build()))
+        ->record($actor_id, 'permission_revoke', 'group', $page['group'], [
+            'category_ids' => $subcat_ids,
+        ], null);
 } elseif (isset($_POST['trueify'])
          and count($cat_false) > 0) {
     $uppercats = get_uppercat_ids($cat_false);
@@ -101,33 +113,16 @@ SELECT id
         $private_uppercats[] = $row['id'];
     }
 
-    // retrying to authorize a category which is already authorized may cause
-    // an error (in SQL statement), so we need to know which categories are
-    // accesible
-    $authorized_ids = [];
+    // GroupService::addAccess() itself skips categories the group is
+    // already authorized for (retrying to authorize an already-authorized
+    // category may cause a duplicate-key SQL error otherwise).
+    $private_uppercat_ids = array_map(intval(...), $private_uppercats);
+    $group_service->addAccess($page['group'], $private_uppercat_ids);
 
-    $query = '
-SELECT cat_id
-  FROM ' . Tables::groupAccess() . '
-  WHERE group_id = ' . $page['group'] . '
-;';
-    $result = pwg_query($query);
-
-    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
-        $authorized_ids[] = $row['cat_id'];
-    }
-
-    $inserts = [];
-    $to_autorize_ids = array_diff($private_uppercats, $authorized_ids);
-    foreach ($to_autorize_ids as $to_autorize_id) {
-        $inserts[] = [
-            'group_id' => $page['group'],
-            'cat_id' => $to_autorize_id,
-        ];
-    }
-
-    mass_inserts(Tables::groupAccess(), ['group_id', 'cat_id'], $inserts);
-    invalidate_user_cache();
+    new AuditService(new AuditRepository(DbConnection::build()))
+        ->record($actor_id, 'permission_grant', 'group', $page['group'], null, [
+            'category_ids' => $private_uppercat_ids,
+        ]);
 }
 
 // +-----------------------------------------------------------------------+

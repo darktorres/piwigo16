@@ -1,0 +1,307 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Piwigo\Group;
+
+/**
+ * Group domain business logic: creation/rename/deletion, membership
+ * management, merge/duplicate. Constructor-injects GroupRepository (plain
+ * constructor injection, same shape as PermalinkService), and calls the
+ * still-procedural activity/cache-invalidation free functions directly
+ * (pwg_activity(), invalidate_user_cache()) -- those aren't class
+ * dependencies, so no deptrac layer concern, same as how MailService/
+ * HtmlService already call trigger_notify()/trigger_change() directly.
+ *
+ * invalidate_user_cache() specifically lives in admin/include/functions.php,
+ * which common.inc.php's bootstrap does NOT load unconditionally (unlike
+ * pwg_activity()/trigger_notify(), both in the always-loaded
+ * include/functions.inc.php) -- confirmed empirically: a real ws.php
+ * request path never happens to load it either. The original ws_groups_*
+ * functions each did their own `include_once
+ * PHPWG_ROOT_PATH . 'admin/include/functions.php';` immediately before
+ * calling invalidate_user_cache(); ensureLegacyFunctionsLoaded() centralizes
+ * that same guard here instead of repeating it at every call site.
+ */
+final class GroupService
+{
+    public function __construct(
+        private readonly GroupRepository $repo,
+    ) {}
+
+    private static function ensureLegacyFunctionsLoaded(): void
+    {
+        include_once \PHPWG_ROOT_PATH . 'admin/include/functions.php';
+    }
+
+    /**
+     * @return list<array{id: int, name: string, is_default: bool}>
+     */
+    public function getAllBasic(): array
+    {
+        return $this->repo->findAllBasic();
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function getMemberUsernames(int $groupId, string $usernameColumn, string $idColumn): array
+    {
+        return $this->repo->findMemberUsernames($groupId, $usernameColumn, $idColumn);
+    }
+
+    /**
+     * @param array<int, int> $groupIds
+     * @return list<array<string, mixed>>
+     */
+    public function getListWithMemberCounts(
+        array $groupIds = [],
+        ?string $nameLike = null,
+        string $order = 'name ASC',
+        int $perPage = 9999999,
+        int $page = 0
+    ): array {
+        return $this->repo->findWithMemberCounts($groupIds, $nameLike, $order, $perPage, $page);
+    }
+
+    /**
+     * Creates a group. Throws InvalidArgumentException, message matching
+     * one of ws_groups_add()'s two distinct validation failures in the
+     * same order (name-already-used checked before empty-name) -- callers
+     * translate the message into their own error shape (e.g. PwgError).
+     */
+    public function create(string $name, bool $isDefault): int
+    {
+        if ($this->repo->nameExists($name)) {
+            throw new \InvalidArgumentException('This name is already used by another group.');
+        }
+
+        if (str_replace(' ', '', $name) === '') {
+            throw new \InvalidArgumentException('Name field must not be empty');
+        }
+
+        $id = $this->repo->insert($name, $isDefault);
+        pwg_activity('group', $id, 'add');
+
+        return $id;
+    }
+
+    /**
+     * Creates a copy of an existing group (same is_default, same members),
+     * under a new name. Throws InvalidArgumentException matching
+     * ws_groups_duplicate()'s two validation failures -- note: unlike
+     * create(), there is no separate empty-name check here, matching the
+     * original.
+     */
+    public function duplicate(int $groupId, string $copyName): int
+    {
+        if ($this->repo->nameExists($copyName)) {
+            throw new \InvalidArgumentException('This name is already used by another group.');
+        }
+
+        if (! $this->repo->exists($groupId)) {
+            throw new \InvalidArgumentException('This group does not exist.');
+        }
+
+        $newId = $this->repo->insert($copyName, $this->repo->isDefault($groupId));
+        pwg_activity('group', $newId, 'add');
+
+        $memberIds = $this->repo->findMemberUserIds($groupId);
+        $this->repo->addMembers($newId, $memberIds);
+        self::ensureLegacyFunctionsLoaded();
+        invalidate_user_cache();
+
+        // Matches the original ws_groups_duplicate()'s own (likely
+        // accidental, but faithfully preserved) choice of 'associated' id:
+        // the *source* group being copied from, not the newly created copy.
+        foreach ($memberIds as $userId) {
+            pwg_activity('user', $userId, 'edit', [
+                'associated' => $groupId,
+            ]);
+        }
+
+        return $newId;
+    }
+
+    /**
+     * Renames and/or flips is_default for a group. Throws
+     * InvalidArgumentException matching ws_groups_setInfo()'s three
+     * validation failures, in the same order: empty name, group missing,
+     * name already used.
+     *
+     * @param array{name?: string, is_default?: bool} $updates
+     */
+    public function update(int $groupId, array $updates): void
+    {
+        if (isset($updates['name']) && str_replace(' ', '', $updates['name']) === '') {
+            throw new \InvalidArgumentException('Name field must not be empty');
+        }
+
+        if (! $this->repo->exists($groupId)) {
+            throw new \InvalidArgumentException('This group does not exist.');
+        }
+
+        // Matches the original ws_groups_setInfo()'s own `! empty(...)`
+        // guard exactly: a "0" name is treated as absent too, not just "".
+        $hasName = isset($updates['name']) && $updates['name'] !== '' && $updates['name'] !== '0';
+        if ($hasName && $this->repo->nameExists($updates['name'], $groupId)) {
+            throw new \InvalidArgumentException('This name is already used by another group.');
+        }
+
+        $this->repo->update($groupId, $updates);
+        pwg_activity('group', $groupId, 'edit');
+    }
+
+    /**
+     * Adds users to a group. Returns false when the group doesn't exist.
+     *
+     * @param array<int, int> $userIds
+     */
+    public function addMembers(int $groupId, array $userIds): bool
+    {
+        if (! $this->repo->exists($groupId)) {
+            return false;
+        }
+
+        $this->repo->addMembers($groupId, $userIds);
+        self::ensureLegacyFunctionsLoaded();
+        invalidate_user_cache();
+
+        pwg_activity('group', $groupId, 'edit');
+        pwg_activity('user', $userIds, 'edit');
+
+        return true;
+    }
+
+    /**
+     * Removes users from a group. Returns false when the group doesn't exist.
+     *
+     * @param array<int, int> $userIds
+     */
+    public function removeMembers(int $groupId, array $userIds): bool
+    {
+        if (! $this->repo->exists($groupId)) {
+            return false;
+        }
+
+        $this->repo->removeMembers($groupId, $userIds);
+        self::ensureLegacyFunctionsLoaded();
+        invalidate_user_cache();
+
+        pwg_activity('group', $groupId, 'edit');
+        pwg_activity('user', $userIds, 'edit');
+
+        return true;
+    }
+
+    /**
+     * Merges $mergeGroupIds into $destinationGroupId: every member of a
+     * merged group who isn't already in the destination gets added to it,
+     * then the merged groups are deleted. Returns false when any of the
+     * involved groups (destination + merge sources) don't exist.
+     *
+     * @param array<int, int> $mergeGroupIds
+     */
+    public function merge(int $destinationGroupId, array $mergeGroupIds): bool
+    {
+        $allGroupIds = array_unique([...$mergeGroupIds, $destinationGroupId]);
+        if (count($this->repo->findExistingIds($allGroupIds)) !== count($allGroupIds)) {
+            return false;
+        }
+
+        $mergeSourceIds = array_values(array_diff($mergeGroupIds, [$destinationGroupId]));
+
+        $membersInMergeGroups = [];
+        foreach ($mergeSourceIds as $mergeGroupId) {
+            $membersInMergeGroups = array_merge($membersInMergeGroups, $this->repo->findMemberUserIds($mergeGroupId));
+        }
+        $membersInMergeGroups = array_unique($membersInMergeGroups);
+
+        $membersInDestination = $this->repo->findMemberUserIds($destinationGroupId);
+        $membersToAdd = array_values(array_diff($membersInMergeGroups, $membersInDestination));
+
+        $this->repo->addMembers($destinationGroupId, $membersToAdd);
+        // Unconditional, matching the original ws_groups_merge(): the
+        // cache invalidation and the destination group's own 'edit'
+        // activity fire even when no members actually moved.
+        self::ensureLegacyFunctionsLoaded();
+        invalidate_user_cache();
+        pwg_activity('group', $destinationGroupId, 'edit');
+
+        foreach ($membersToAdd as $userId) {
+            pwg_activity('user', $userId, 'edit', [
+                'associated' => $destinationGroupId,
+            ]);
+        }
+
+        $this->delete($mergeSourceIds);
+
+        return true;
+    }
+
+    /**
+     * Deletes the given groups. Returns id => name of every group actually
+     * deleted (empty array when none of the ids existed). Does not itself
+     * invalidate the user cache -- matches the original delete_groups()
+     * free function's own scope; callers that need it (ws_groups_delete())
+     * call invalidate_user_cache() themselves afterward, same as before.
+     *
+     * @param array<int, int> $groupIds
+     * @return array<int, string>
+     */
+    public function delete(array $groupIds): array
+    {
+        $deleted = $this->repo->delete($groupIds);
+        if ($deleted === []) {
+            return [];
+        }
+
+        $ids = array_keys($deleted);
+        trigger_notify('delete_group', $ids);
+        pwg_activity('group', $ids, 'delete');
+
+        return $deleted;
+    }
+
+    public function getName(int $groupId): ?string
+    {
+        return $this->repo->findName($groupId);
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function getAuthorizedCategoryIds(int $groupId): array
+    {
+        return $this->repo->getAuthorizedCategoryIds($groupId);
+    }
+
+    /**
+     * Forbids access to the given categories for a group.
+     *
+     * @param array<int, int> $catIds
+     */
+    public function removeAccess(int $groupId, array $catIds): void
+    {
+        $this->repo->removeAccess($groupId, $catIds);
+    }
+
+    /**
+     * Authorizes access to the given categories for a group, skipping ones
+     * already authorized.
+     *
+     * @param array<int, int> $catIds
+     */
+    public function addAccess(int $groupId, array $catIds): void
+    {
+        $alreadyAuthorized = $this->repo->getAuthorizedCategoryIds($groupId);
+        $toAuthorize = array_values(array_diff($catIds, $alreadyAuthorized));
+        if ($toAuthorize === []) {
+            return;
+        }
+
+        $this->repo->addAccess($groupId, $toAuthorize);
+        self::ensureLegacyFunctionsLoaded();
+        invalidate_user_cache();
+    }
+}

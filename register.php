@@ -9,8 +9,14 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Audit\AuditRepository;
+use Piwigo\Audit\AuditService;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Db\DbConnection;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Template\Template;
+use Piwigo\Users\UserRepository;
+use Piwigo\Users\UserService;
 
 // ----------------------------------------------------------- include
 define('PHPWG_ROOT_PATH', './');
@@ -65,26 +71,44 @@ if (isset($_POST['submit'])) {
     $post_password = is_string($_POST['password'] ?? null) ? $_POST['password'] : '';
     $post_mail_address = is_string($_POST['mail_address'] ?? null) ? $_POST['mail_address'] : null;
 
-    // register_user()'s by-ref $errors is a plain array<int, string> list of
-    // validation messages -- it reindexes it internally via
-    // array_values(array_filter(...)) before returning (see
-    // include/functions_user.inc.php). That is a different shape than
-    // $page['errors'], which register.tpl reads by the specific keys
-    // 'register_page_error'/'register_form_error' set above. Passing
-    // $page['errors'] directly as the by-ref argument used to let
-    // register_user() silently overwrite it with its own reindexed list,
-    // erasing those keys so the form-key/password error messages stopped
-    // rendering whenever register_user() also ran. Use a separate list and
-    // fold it into 'register_form_error' instead.
-    $registration_errors = [];
-    register_user(
-        $post_login,
-        $post_password,
-        $post_mail_address,
-        true,
-        $registration_errors,
-        isset($_POST['send_password_by_mail'])
-    );
+    // UserService::registerUser()'s $errors is a plain list<string> of
+    // validation messages, a different shape than $page['errors'], which
+    // register.tpl reads by the specific keys 'register_page_error'/
+    // 'register_form_error' set above. Fold it into 'register_form_error'
+    // instead of overwriting those keys.
+    //
+    // [SEC-31] registerUser() never puts a "this login is already used"
+    // message in $errors -- a duplicate username comes back as
+    // duplicateUsername: true with userId: null instead, and is handled
+    // identically to a real success below (same redirect, same flash
+    // message), so a requester probing for taken usernames can't tell the
+    // two apart from the response. See UserService::registerUser()'s own
+    // docblock for the full rationale (this is also why an existing
+    // account gets a "someone tried to register your username" email
+    // instead of the requester ever seeing an error here).
+    $registration_result = new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()))
+        ->registerUser(
+            $post_login,
+            $post_password,
+            $post_mail_address,
+            true,
+            isset($_POST['send_password_by_mail'])
+        );
+    $registration_errors = $registration_result['errors'];
+    $new_user_id = $registration_result['userId'];
+
+    // [SEC-57] Only a real new account is audit-logged -- a duplicate
+    // username (userId: null) never reaches here, same "don't reveal/
+    // don't act on a duplicate as if it were real" discipline as the
+    // auto-login gate below. Actor is the new user themselves
+    // (self-registration has no separate acting admin); only the
+    // username is recorded, never the password.
+    if ($new_user_id !== null) {
+        new AuditService(new AuditRepository(DbConnection::build()))
+            ->record($new_user_id, 'create', 'user', $new_user_id, null, [
+                'username' => $post_login,
+            ]);
+    }
 
     if ($registration_errors !== []) {
         $existing_form_error = $page['errors']['register_form_error'] ?? null;
@@ -103,9 +127,14 @@ if (isset($_POST['submit'])) {
             $_SESSION['page_infos'][] = l10n('Successfully registered, you will soon receive an email with your connection settings. Welcome!');
         }
 
-        // log user and redirect
-        $user_id = get_userid($post_login);
-        log_user($user_id, false);
+        // [SEC-31] Only a real new account gets logged in -- a duplicate
+        // username (userId: null) must never look up and log into the
+        // *existing* account by name here, which would be a full
+        // account-takeover, not just an information leak. Both cases
+        // redirect identically.
+        if ($new_user_id !== null) {
+            log_user($new_user_id, false);
+        }
         redirect(make_index_url());
     }
     $registration_post_key = get_ephemeral_key(2);

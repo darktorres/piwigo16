@@ -10,7 +10,10 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Cache\PersistentFileCache;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Tag\TagRepository;
+use Piwigo\Tag\TagService;
 
 /**
  * Returns the number of available tags for the connected user.
@@ -137,21 +140,8 @@ SELECT *
  */
 function get_all_tags(): array
 {
-    $query = '
-SELECT *
-  FROM ' . Tables::tags() . '
-;';
-    $result = pwg_query($query);
-    $tags = [];
-    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
-        $row['name_raw'] = $row['name'];
-        $row['name'] = trigger_change('render_tag_name', $row['name'], $row);
-        $tags[] = $row;
-    }
-
-    usort($tags, tag_alpha_compare(...));
-
-    return $tags;
+    return new TagService(new TagRepository(DbConnection::build()))
+        ->getAllTags();
 }
 
 /**
@@ -167,50 +157,8 @@ SELECT *
  */
 function add_level_to_tags($tags): array
 {
-    /** @var array<string, mixed> $conf */
-    global $conf;
-
-    if (count($tags) == 0) {
-        return $tags;
-    }
-
-    $total_count = 0;
-
-    foreach ($tags as $tag) {
-        $total_count += is_numeric($tag['counter']) ? (int) $tag['counter'] : 0;
-    }
-
-    // average count of available tags will determine the level of each tag
-    $tag_average_count = $total_count / count($tags);
-
-    // tag levels threshold calculation: a tag with an average rate must have
-    // the middle level.
-    // conf_default.inc.php sets this to 5; narrow once here and reuse the
-    // local variable everywhere below instead of re-reading the mixed-typed
-    // $conf offset (which would re-widen back to mixed at each site).
-    $tags_levels = is_numeric($conf['tags_levels']) ? (int) $conf['tags_levels'] : 5;
-
-    $threshold_of_level = [];
-    for ($i = 1; $i < $tags_levels; $i++) {
-        $threshold_of_level[$i] =
-          2 * $i * $tag_average_count / $tags_levels;
-    }
-
-    // display sorted tags
-    foreach ($tags as &$tag) {
-        $tag['level'] = 1;
-
-        // based on threshold, determine current tag level
-        for ($i = $tags_levels - 1; $i >= 1; $i--) {
-            if ($tag['counter'] > $threshold_of_level[$i]) {
-                $tag['level'] = $i + 1;
-                break;
-            }
-        }
-    }
-    unset($tag);
-
-    return $tags;
+    return new TagService(new TagRepository(DbConnection::build()))
+        ->addLevelToTags($tags);
 }
 
 /**
@@ -324,29 +272,8 @@ SELECT t.*, count(*) AS counter
  */
 function find_tags($ids = [], $url_names = [], $names = []): array
 {
-    $where_clauses = [];
-    if (! empty($ids)) {
-        $where_clauses[] = 'id IN (' . implode(',', $ids) . ')';
-    }
-    if (! empty($url_names)) {
-        $where_clauses[] =
-          'url_name IN (\'' . implode('\', \'', $url_names) . '\')';
-    }
-    if (! empty($names)) {
-        $where_clauses[] =
-          'name IN (\'' . implode('\', \'', $names) . '\')';
-    }
-    if (empty($where_clauses)) {
-        return [];
-    }
-
-    $query = '
-SELECT *
-  FROM ' . Tables::tags() . '
-  WHERE ' . implode('
-    OR ', $where_clauses);
-
-    return query2array($query);
+    return new TagService(new TagRepository(DbConnection::build()))
+        ->findTags($ids, $url_names, $names);
 }
 
 /**
@@ -355,7 +282,8 @@ SELECT *
  */
 function tags_id_compare(array $a, array $b): int
 {
-    return ($a['id'] < $b['id']) ? -1 : 1;
+    return new TagService(new TagRepository(DbConnection::build()))
+        ->tagsIdCompare($a, $b);
 }
 
 /**
@@ -364,9 +292,6 @@ function tags_id_compare(array $a, array $b): int
  */
 function tags_counter_compare(array $a, array $b): int
 {
-    if ($a['counter'] == $b['counter']) {
-        return tags_id_compare($a, $b);
-    }
-
-    return ($a['counter'] < $b['counter']) ? +1 : -1;
+    return new TagService(new TagRepository(DbConnection::build()))
+        ->tagsCounterCompare($a, $b);
 }

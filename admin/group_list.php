@@ -11,7 +11,8 @@ declare(strict_types=1);
 
 use Piwigo\Admin\tabsheet;
 use Piwigo\Core\AccessLevel;
-use Piwigo\Db\Tables;
+use Piwigo\Db\DbConnection;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
@@ -68,12 +69,8 @@ $template->assign(
 // |                              group list                               |
 // +-----------------------------------------------------------------------+
 
-$query = '
-SELECT id, name, is_default
-  FROM `' . Tables::groups() . '`
-  ORDER BY name ASC
-;';
-$result = pwg_query($query);
+$group_repo = new GroupRepository(DbConnection::build());
+$groups = $group_repo->findAllBasic();
 
 $admin_url = get_root_url() . 'admin.php?page=';
 $perm_url = $admin_url . 'group_perm&amp;group_id=';
@@ -86,25 +83,15 @@ $group_counter = 0;
 /** @var array<string, string> $user_fields */
 $user_fields = $conf['user_fields'];
 
-while ((bool) ($row = pwg_db_fetch_assoc($result))) {
-    $query = '
-SELECT u.' . $user_fields['username'] . ' AS username
-  FROM ' . Tables::users() . ' AS u
-  INNER JOIN ' . Tables::userGroup() . ' AS ug
-    ON u.' . $user_fields['id'] . ' = ug.user_id
-  WHERE ug.group_id = ' . $row['id'] . '
-;';
-    $members = [];
-    $res = pwg_query($query);
-    while ((bool) ($us = pwg_db_fetch_assoc($res))) {
-        $members[] = $us['username'];
-    }
+foreach ($groups as $row) {
+    $members = $group_repo->findMemberUsernames($row['id'], $user_fields['username'], $user_fields['id']);
+
     $template->append(
         'groups',
         [
             'NAME' => $row['name'],
             'ID' => $row['id'],
-            'IS_DEFAULT' => (get_boolean($row['is_default']) ? ' [' . l10n('default') . ']' : ''),
+            'IS_DEFAULT' => ($row['is_default'] ? ' [' . l10n('default') . ']' : ''),
             'NB_MEMBERS' => count($members),
             'L_MEMBERS' => implode(' <span class="userSeparator">&middot;</span> ', $members),
             'MEMBERS' => l10n_dec('%d member', '%d members', count($members)),

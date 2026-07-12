@@ -9,27 +9,16 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-use Piwigo\Core\AppInfo;
-use Piwigo\Db\Tables;
+use Piwigo\Mail\MailService;
 use Piwigo\Template\Template;
-use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
-use Symfony\Component\Mailer\Mailer;
-use Symfony\Component\Mailer\Transport;
-use Symfony\Component\Mime\Address;
-use Symfony\Component\Mime\Email;
 
 /**
  * Returns the name of the mail sender
  */
 function get_mail_sender_name(): string
 {
-    /** @var array<string, mixed> $conf */
-    global $conf;
-
-    $sender_name = $conf['mail_sender_name'] ?? null;
-    $result = empty($sender_name) ? ($conf['gallery_title'] ?? null) : $sender_name;
-
-    return is_string($result) ? $result : '';
+    return new MailService()
+        ->getMailSenderName();
 }
 
 /**
@@ -39,13 +28,8 @@ function get_mail_sender_name(): string
  */
 function get_mail_sender_email(): string
 {
-    /** @var array<string, mixed> $conf */
-    global $conf;
-
-    $sender_email = $conf['mail_sender_email'] ?? null;
-    $result = empty($sender_email) ? get_webmaster_mail_address() : $sender_email;
-
-    return is_string($result) ? $result : '';
+    return new MailService()
+        ->getMailSenderEmail();
 }
 
 /**
@@ -64,23 +48,8 @@ function get_mail_sender_email(): string
  */
 function get_mail_configuration(): array
 {
-    /** @var array<string, mixed> $conf */
-    global $conf;
-
-    $conf_mail = [
-        'send_bcc_mail_webmaster' => $conf['send_bcc_mail_webmaster'],
-        'mail_allow_html' => $conf['mail_allow_html'],
-        'mail_theme' => $conf['mail_theme'],
-        'use_smtp' => ! empty($conf['smtp_host']),
-        'smtp_host' => $conf['smtp_host'],
-        'smtp_user' => $conf['smtp_user'],
-        'smtp_password' => $conf['smtp_password'],
-        'smtp_secure' => $conf['smtp_secure'],
-        'email_webmaster' => get_mail_sender_email(),
-        'name_webmaster' => get_mail_sender_name(),
-    ];
-
-    return $conf_mail;
+    return new MailService()
+        ->getMailConfiguration();
 }
 
 /**
@@ -94,18 +63,8 @@ function get_mail_configuration(): array
  */
 function format_email($name, $email): string
 {
-    $cvt_email = trim((string) preg_replace('#[\n\r]+#s', '', $email));
-    $cvt_name = trim((string) preg_replace('#[\n\r]+#s', '', $name));
-
-    if ($cvt_name != '') {
-        $cvt_name = '"' . addcslashes($cvt_name, '"') . '" ';
-    }
-
-    if (! str_contains($cvt_email, '<')) {
-        return $cvt_name . '<' . $cvt_email . '>';
-    } else {
-        return $cvt_name . $cvt_email;
-    }
+    return new MailService()
+        ->formatEmail($name, $email);
 }
 
 /**
@@ -117,28 +76,8 @@ function format_email($name, $email): string
  */
 function unformat_email($input): array
 {
-    if (is_array($input)) {
-        if (! isset($input['email']) || ! is_string($input['email'])) {
-            throw new InvalidArgumentException(__FUNCTION__ . '(): array input must contain a string "email" key');
-        }
-
-        return [
-            'email' => $input['email'],
-            'name' => isset($input['name']) && is_string($input['name']) ? $input['name'] : '',
-        ];
-    }
-
-    if ((bool) preg_match('/(.*)<(.*)>.*/', $input, $matches)) {
-        return [
-            'email' => trim($matches[2]),
-            'name' => trim($matches[1]),
-        ];
-    } else {
-        return [
-            'email' => trim($input),
-            'name' => '',
-        ];
-    }
+    return new MailService()
+        ->unformatEmail($input);
 }
 
 /**
@@ -155,60 +94,8 @@ function unformat_email($input): array
  */
 function get_clean_recipients_list($data): array
 {
-    if (empty($data)) {
-        return [];
-    }
-
-    // Every branch below funnels into $entries rather than reusing/mutating
-    // $data in place: $data starts as mixed, and PHPStan cannot follow a
-    // by-reference foreach mutation or an array_map() over still-mixed
-    // elements back into a precise array{email,name} shape.
-    $entries = [];
-
-    if (is_array($data)) {
-        $values = array_values($data);
-        if (! is_array($values[0])) {
-            $keys = array_keys($data);
-            if (is_int($keys[0])) { // simple array of emails
-                foreach ($data as $item) {
-                    $entries[] = [
-                        'email' => trim(is_scalar($item) ? (string) $item : ''),
-                        'name' => '',
-                    ];
-                }
-            } else { // hashmap of one recipient
-                $entries[] = unformat_email($data);
-            }
-        } else { // array of hashmaps
-            foreach ($data as $item) {
-                if (is_array($item) || is_string($item)) {
-                    $entries[] = unformat_email($item);
-                } else {
-                    $entries[] = [
-                        'email' => is_scalar($item) ? trim((string) $item) : '',
-                        'name' => '',
-                    ];
-                }
-            }
-        }
-    } else {
-        $list = explode(',', is_scalar($data) ? (string) $data : '');
-        foreach ($list as $item) {
-            $entries[] = unformat_email($item);
-        }
-    }
-
-    $existing = [];
-    $result = [];
-    foreach ($entries as $entry) {
-        if (isset($existing[$entry['email']])) {
-            continue;
-        }
-        $existing[$entry['email']] = true;
-        $result[] = $entry;
-    }
-
-    return $result;
+    return new MailService()
+        ->getCleanRecipientsList($data);
 }
 
 /**
@@ -219,28 +106,19 @@ function get_clean_recipients_list($data): array
 #[\Deprecated(message: '2.6')]
 function get_strict_email_list($email_list): string
 {
-    $result = [];
-    $list = explode(',', $email_list);
-
-    foreach ($list as $email) {
-        if (str_contains($email, '<')) {
-            $email = preg_replace('/.*<(.*)>.*/i', '$1', $email);
-        }
-        $result[] = trim((string) $email);
-    }
-
-    return implode(',', array_unique($result));
+    return new MailService()
+        ->getStrictEmailList($email_list);
 }
 
 /**
- * Return an new mail template.
+ * Return a new mail template.
  *
  * @param string $email_format - text/html or text/plain
  */
-function &get_mail_template($email_format): Template
+function get_mail_template($email_format): Template
 {
-    $template = new Template(PHPWG_ROOT_PATH . 'themes', 'default', 'template/mail/' . $email_format);
-    return $template;
+    return new MailService()
+        ->getMailTemplate($email_format);
 }
 
 /**
@@ -250,7 +128,8 @@ function &get_mail_template($email_format): Template
  */
 function get_str_email_format($is_html): string
 {
-    return $is_html ? 'text/html' : 'text/plain';
+    return new MailService()
+        ->getStrEmailFormat($is_html);
 }
 
 /**
@@ -261,98 +140,8 @@ function get_str_email_format($is_html): string
  */
 function switch_lang_to($language): void
 {
-    /**
-     * @var array<string, mixed> $switch_lang
-     * @var array<string, mixed> $user
-     * @var array<string, mixed> $lang
-     * @var array<string, mixed> $lang_info
-     * @var array<string, array<string, array{language?: string, return?: bool, no_fallback?: bool, force_fallback?: bool|string, local?: bool}>> $language_files
-     */
-    global $switch_lang, $user, $lang, $lang_info, $language_files;
-
-    // explanation of switch_lang
-    // $switch_lang['language'] contains data of language
-    // $switch_lang['stack'] contains stack LIFO
-    // $switch_lang['initialisation'] allow to know if it's first call
-
-    // $switch_lang is only ever built up by this file's own logic (never
-    // initialized by common.inc.php, unlike $conf/$user/etc.), so its
-    // nested shape is tracked here through local mirrors rather than
-    // repeated two-level offset chains on the still-mixed-valued globals.
-    $current_user_language = $user['language'] ?? null;
-    $current_user_language = is_string($current_user_language) ? $current_user_language : '';
-
-    $switch_lang_languages = $switch_lang['language'] ?? null;
-    $switch_lang_languages = is_array($switch_lang_languages) ? $switch_lang_languages : [];
-
-    // Treatment with current user
-    // Language of current user is saved (it's considered OK on firt call)
-    if (! isset($switch_lang['initialisation']) and ! isset($switch_lang_languages[$current_user_language])) {
-        $switch_lang['initialisation'] = true;
-        $switch_lang_languages[$current_user_language] = [
-            'lang_info' => $lang_info,
-            'lang' => $lang,
-        ];
-        $switch_lang['language'] = $switch_lang_languages;
-    }
-
-    // Change current infos
-    $switch_lang_stack = $switch_lang['stack'] ?? null;
-    $switch_lang_stack = is_array($switch_lang_stack) ? $switch_lang_stack : [];
-    $switch_lang_stack[] = $current_user_language;
-    $switch_lang['stack'] = $switch_lang_stack;
-    $user['language'] = $language;
-
-    // Load new data if necessary
-    if (! isset($switch_lang_languages[$language])) {
-        // Re-Init language arrays
-        $lang_info = [];
-        $lang = [];
-
-        // language files
-        load_language('common.lang', '', [
-            'language' => $language,
-        ]);
-        // No test admin because script is checked admin (user selected no)
-        // Translations are in admin file too
-        load_language('admin.lang', '', [
-            'language' => $language,
-        ]);
-
-        // Reload all plugins files (see load_language declaration)
-        if (! empty($language_files)) {
-            foreach ($language_files as $dirname => $files) {
-                foreach ($files as $filename => $options) {
-                    $options['language'] = $language;
-                    load_language($filename, $dirname, $options);
-                }
-            }
-        }
-
-        trigger_notify('loading_lang');
-        load_language(
-            'lang',
-            PHPWG_ROOT_PATH . PWG_LOCAL_DIR,
-            [
-                'language' => $language,
-                'no_fallback' => true,
-                'local' => true,
-            ]
-        );
-
-        $switch_lang_languages[$language] = [
-            'lang_info' => $lang_info,
-            'lang' => $lang,
-        ];
-        $switch_lang['language'] = $switch_lang_languages;
-    } else {
-        $entry = $switch_lang_languages[$language];
-        $entry = is_array($entry) ? $entry : [];
-        $entry_lang_info = $entry['lang_info'] ?? null;
-        $lang_info = is_array($entry_lang_info) ? $entry_lang_info : [];
-        $entry_lang = $entry['lang'] ?? null;
-        $lang = is_array($entry_lang) ? $entry_lang : [];
-    }
+    new MailService()
+        ->switchLangTo($language);
 }
 
 /**
@@ -362,37 +151,8 @@ function switch_lang_to($language): void
  */
 function switch_lang_back(): void
 {
-    /**
-     * @var array<string, mixed> $switch_lang
-     * @var array<string, mixed> $user
-     * @var array<string, mixed> $lang
-     * @var array<string, mixed> $lang_info
-     */
-    global $switch_lang, $user, $lang, $lang_info;
-
-    $switch_lang_stack = $switch_lang['stack'] ?? null;
-    $switch_lang_stack = is_array($switch_lang_stack) ? $switch_lang_stack : [];
-
-    if (count($switch_lang_stack) > 0) {
-        // Get last value
-        $language = array_pop($switch_lang_stack);
-        $switch_lang['stack'] = $switch_lang_stack;
-        $language = is_string($language) ? $language : '';
-
-        // Change current infos
-        $switch_lang_languages = $switch_lang['language'] ?? null;
-        $switch_lang_languages = is_array($switch_lang_languages) ? $switch_lang_languages : [];
-
-        if (isset($switch_lang_languages[$language])) {
-            $entry = $switch_lang_languages[$language];
-            $entry = is_array($entry) ? $entry : [];
-            $entry_lang_info = $entry['lang_info'] ?? null;
-            $lang_info = is_array($entry_lang_info) ? $entry_lang_info : [];
-            $entry_lang = $entry['lang'] ?? null;
-            $lang = is_array($entry_lang) ? $entry_lang : [];
-        }
-        $user['language'] = $language;
-    }
+    new MailService()
+        ->switchLangBack();
 }
 
 /**
@@ -403,63 +163,11 @@ function switch_lang_back(): void
  * @param string|array<int|string, mixed> $content
  * @param bool $send_technical_details - send user IP and browser
  * @param int|string|null $group_id
- * @return bool
  */
-function pwg_mail_notification_admins($subject, $content, $send_technical_details = true, $group_id = null)
+function pwg_mail_notification_admins($subject, $content, $send_technical_details = true, $group_id = null): bool
 {
-    if (empty($subject) or empty($content)) {
-        return false;
-    }
-
-    /**
-     * @var array<string, mixed> $conf
-     * @var array<string, mixed> $user
-     */
-    global $conf, $user;
-
-    if (is_array($subject) or is_array($content)) {
-        switch_lang_to(get_default_language());
-
-        if (is_array($subject)) {
-            $subject = l10n_args($subject);
-        }
-        if (is_array($content)) {
-            $content = l10n_args($content);
-        }
-
-        switch_lang_back();
-    }
-
-    $tpl_vars = [];
-    if ($send_technical_details) {
-        $username = $user['username'] ?? null;
-        $username = is_string($username) ? $username : '';
-        $tpl_vars['TECHNICAL'] = [
-            'username' => stripslashes($username),
-            'ip' => $_SERVER['REMOTE_ADDR'],
-            'user_agent' => $_SERVER['HTTP_USER_AGENT'],
-        ];
-    }
-
-    $gallery_title = $conf['gallery_title'] ?? null;
-    $gallery_title = is_string($gallery_title) ? $gallery_title : '';
-
-    return pwg_mail_admins(
-        [
-            'subject' => '[' . $gallery_title . '] ' . $subject,
-            'mail_title' => $gallery_title,
-            'mail_subtitle' => $subject,
-            'content' => $content,
-            'content_format' => 'text/plain',
-        ],
-        [
-            'filename' => 'notification_admin',
-            'assign' => $tpl_vars,
-        ],
-        true, // exclude_current_user
-        false, // only_webmasters
-        $group_id
-    );
+    return new MailService()
+        ->mailNotificationAdmins($subject, $content, $send_technical_details, $group_id);
 }
 
 /**
@@ -471,85 +179,11 @@ function pwg_mail_notification_admins($subject, $content, $send_technical_detail
  * @param array{from?: mixed, reply_to_mail_address?: string, reply_to_name?: string, Cc?: mixed, Bcc?: mixed, subject?: mixed, content?: mixed, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args - as in pwg_mail()
  * @param array{filename?: string, dirname?: string, assign?: array<string, mixed>} $tpl - as in pwg_mail()
  * @param int|string|null $group_id
- * @return bool
  */
-function pwg_mail_admins(array $args = [], array $tpl = [], bool $exclude_current_user = true, bool $only_webmasters = false, $group_id = null)
+function pwg_mail_admins(array $args = [], array $tpl = [], bool $exclude_current_user = true, bool $only_webmasters = false, $group_id = null): bool
 {
-    if (empty($args['content']) and empty($tpl)) {
-        return false;
-    }
-
-    /**
-     * @var array<string, mixed> $conf
-     * @var array<string, mixed> $user
-     */
-    global $conf, $user;
-    $return = true;
-
-    $user_statuses = ['webmaster'];
-    if (! $only_webmasters) {
-        $user_statuses[] = 'admin';
-    }
-
-    // $conf['user_fields'] maps generic field names to actual DB column
-    // names (see include/config_default.inc.php, always a string=>string
-    // map); $conf itself is only known as array<string, mixed>, so narrow
-    // with fallbacks matching the shipped defaults rather than trust the
-    // shape blindly.
-    $user_fields = $conf['user_fields'] ?? null;
-    $user_fields = is_array($user_fields) ? $user_fields : [];
-    $username_field = is_string($user_fields['username'] ?? null) ? $user_fields['username'] : 'username';
-    $email_field = is_string($user_fields['email'] ?? null) ? $user_fields['email'] : 'email';
-    $id_field = is_string($user_fields['id'] ?? null) ? $user_fields['id'] : 'id';
-
-    // get admins (except ourself)
-    $query = '
-SELECT
-    i.user_id,
-    u.' . $username_field . ' AS name,
-    u.' . $email_field . ' AS email
-  FROM ' . Tables::users() . ' AS u
-    JOIN ' . Tables::userInfos() . ' AS i
-    ON i.user_id =  u.' . $id_field;
-
-    if ($group_id !== null) {
-        $query .= '
-    JOIN ' . Tables::userGroup() . ' AS ug
-      ON ug.user_id = i.user_id';
-    }
-
-    $query .= '
-  WHERE i.status in (\'' . implode("','", $user_statuses) . '\')
-    AND u.' . $email_field . ' IS NOT NULL';
-
-    if ($group_id !== null) {
-        $query .= '
-    AND group_id = ' . intval($group_id);
-    }
-
-    if ($exclude_current_user) {
-        $current_user_id = $user['id'] ?? null;
-        $current_user_id = is_numeric($current_user_id) ? (int) $current_user_id : 0;
-        $query .= '
-    AND i.user_id <> ' . $current_user_id;
-    }
-
-    $query .= '
-  ORDER BY name
-;';
-    $admins = array_from_query($query);
-
-    if (empty($admins)) {
-        return $return;
-    }
-
-    switch_lang_to(get_default_language());
-
-    $return = pwg_mail($admins, $args, $tpl);
-
-    switch_lang_back();
-
-    return $return;
+    return new MailService()
+        ->mailAdmins($args, $tpl, $exclude_current_user, $only_webmasters, $group_id);
 }
 
 /**
@@ -560,143 +194,11 @@ SELECT
  * @param array{language_selected?: string, from?: mixed, reply_to_mail_address?: string, reply_to_name?: string, Cc?: mixed, Bcc?: mixed, subject?: mixed, content?: mixed, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args - as in pwg_mail()
  *       o language_selected: filters users of the group by language [default value empty]
  * @param array{filename?: string, dirname?: string, assign?: array<string, mixed>} $tpl - as in pwg_mail()
- * @return bool
  */
-function pwg_mail_group($group_id, array $args = [], array $tpl = []): bool|int
+function pwg_mail_group($group_id, array $args = [], array $tpl = []): bool
 {
-    if (empty($group_id) or (empty($args['content']) and empty($tpl))) {
-        return false;
-    }
-
-    /** @var array<string, mixed> $conf */
-    global $conf;
-    $return = true;
-
-    // $conf['user_fields'] maps generic field names to actual DB column
-    // names (see include/config_default.inc.php, always a string=>string
-    // map); $conf itself is only known as array<string, mixed>, so narrow
-    // with fallbacks matching the shipped defaults rather than trust the
-    // shape blindly.
-    $user_fields = $conf['user_fields'] ?? null;
-    $user_fields = is_array($user_fields) ? $user_fields : [];
-    $id_field = is_string($user_fields['id'] ?? null) ? $user_fields['id'] : 'id';
-    $username_field = is_string($user_fields['username'] ?? null) ? $user_fields['username'] : 'username';
-    $email_field = is_string($user_fields['email'] ?? null) ? $user_fields['email'] : 'email';
-
-    // get distinct languages of targeted users
-    $query = '
-SELECT DISTINCT language
-  FROM ' . Tables::userGroup() . ' AS ug
-    INNER JOIN ' . Tables::users() . ' AS u
-    ON ' . $id_field . ' = ug.user_id
-    INNER JOIN ' . Tables::userInfos() . ' AS ui
-    ON ui.user_id = ug.user_id
-  WHERE group_id = ' . $group_id . '
-    AND ' . $email_field . ' <> ""';
-    if (! empty($args['language_selected'])) {
-        $query .= '
-    AND language = \'' . $args['language_selected'] . '\'';
-    }
-
-    $query .= '
-;';
-    $languages = array_from_query($query, 'language');
-
-    if (empty($languages)) {
-        return $return;
-    }
-
-    foreach ($languages as $language) {
-        // array_from_query()'s own docblock (include/functions.inc.php) only
-        // declares array<int|string, mixed> regardless of $fieldname, so
-        // each $language here is mixed even though the 'language' column is
-        // never NULL in practice; guard defensively rather than trust it.
-        if (! is_string($language) || $language === '') {
-            continue;
-        }
-
-        // get subset of users in this group for a specific language
-        $query = '
-SELECT
-    ui.user_id,
-    ui.status,
-    u.' . $username_field . ' AS name,
-    u.' . $email_field . ' AS email
-  FROM ' . Tables::userGroup() . ' AS ug
-    INNER JOIN ' . Tables::users() . ' AS u
-    ON ' . $id_field . ' = ug.user_id
-    INNER JOIN ' . Tables::userInfos() . ' AS ui
-    ON ui.user_id = ug.user_id
-  WHERE group_id = ' . $group_id . '
-    AND ' . $email_field . ' <> ""
-    AND language = \'' . $language . '\'
-;';
-        $users = array_from_query($query);
-
-        if (empty($users)) {
-            continue;
-        }
-
-        switch_lang_to($language);
-
-        foreach ($users as $u) {
-            // Same array_from_query() under-typing as $languages above: each
-            // row is declared mixed, so every field access below needs a
-            // real runtime guard.
-            if (! is_array($u)) {
-                continue;
-            }
-
-            $u_user_id = $u['user_id'] ?? null;
-            if (! is_numeric($u_user_id)) {
-                continue;
-            }
-            $u_status = $u['status'] ?? null;
-            $u_status = is_string($u_status) ? $u_status : null;
-            $u_email = $u['email'] ?? null;
-            $u_email = is_string($u_email) ? $u_email : '';
-
-            $authkey = create_user_auth_key((int) $u_user_id, $u_status);
-
-            $user_tpl = $tpl;
-
-            if ($authkey !== false) {
-                $link = $tpl['assign']['LINK'] ?? null;
-                $user_tpl['assign']['LINK'] = add_url_params(is_string($link) ? $link : '', [
-                    'auth' => $authkey['auth_key'] ?? null,
-                ]);
-
-                $img = $user_tpl['assign']['IMG'] ?? null;
-                if (is_array($img) && isset($img['link']) && is_string($img['link'])) {
-                    $img['link'] = add_url_params(
-                        $img['link'],
-                        [
-                            'auth' => $authkey['auth_key'] ?? null,
-                        ]
-                    );
-                    $user_tpl['assign']['IMG'] = $img;
-                }
-            }
-
-            $user_args = $args;
-            // language_selected is this function's own filtering option
-            // (already consumed above to build the SQL query); pwg_mail()
-            // doesn't accept it.
-            unset($user_args['language_selected']);
-            if ($authkey !== false) {
-                $auth_key = $authkey['auth_key'] ?? null;
-                if (is_string($auth_key)) {
-                    $user_args['auth_key'] = $auth_key;
-                }
-            }
-
-            $return &= pwg_mail($u_email, $user_args, $user_tpl);
-        }
-
-        switch_lang_back();
-    }
-
-    return $return;
+    return new MailService()
+        ->mailGroup($group_id, $args, $tpl);
 }
 
 /**
@@ -721,333 +223,11 @@ SELECT
  *       o filename
  *       o dirname (optional)
  *       o assign (optional)
- *
- * @return bool
  */
-function pwg_mail($to, array $args = [], array $tpl = [])
+function pwg_mail($to, array $args = [], array $tpl = []): bool
 {
-    /**
-     * @var array<string, mixed> $conf
-     * @var array<string, mixed> $lang_info
-     * @var array<string, mixed> $page
-     */
-    global $conf, $conf_mail, $lang_info, $page;
-
-    if (empty($to) and empty($args['Cc']) and empty($args['Bcc'])) {
-        return true;
-    }
-
-    // $conf_mail is lazily set on first call (never pre-initialized by
-    // common.inc.php, unlike $conf/$page/$lang_info) -- narrow with a real
-    // is_array() check rather than an @var declaration, since a previous
-    // call within the same request could genuinely have already set it.
-    if (! is_array($conf_mail)) {
-        $conf_mail = get_mail_configuration();
-    }
-
-    $email = new Email();
-
-    foreach (get_clean_recipients_list($to) as $recipient) {
-        $email->addTo(new Address($recipient['email'], $recipient['name']));
-    }
-
-    // Compute root_path in order have complete path
-    set_make_full_url();
-
-    if (empty($args['from'])) {
-        $email_webmaster = $conf_mail['email_webmaster'] ?? null;
-        $email_webmaster = is_string($email_webmaster) ? $email_webmaster : '';
-        $name_webmaster = $conf_mail['name_webmaster'] ?? null;
-        $name_webmaster = is_string($name_webmaster) ? $name_webmaster : '';
-        $from = [
-            'email' => $email_webmaster,
-            'name' => $name_webmaster,
-        ];
-    } else {
-        // $args['from'] is declared `mixed` in the shape above since callers
-        // may pass either a string or an array{email[, name]}; anything
-        // else (e.g. an int/bool/object) falls back to an empty string,
-        // which unformat_email() turns into an empty email/name pair.
-        $from_input = $args['from'];
-        if (! is_array($from_input) && ! is_string($from_input)) {
-            $from_input = is_scalar($from_input) ? (string) $from_input : '';
-        }
-        $from = unformat_email($from_input);
-    }
-    $email->from(new Address($from['email'], $from['name']));
-    $email->replyTo(new Address($args['reply_to_mail_address'] ?? $from['email'], $args['reply_to_name'] ?? $from['name']));
-
-    // Subject
-    if (empty($args['subject'])) {
-        $args['subject'] = 'Piwigo';
-    }
-    $subject_input = is_scalar($args['subject']) ? (string) $args['subject'] : '';
-    $args['subject'] = trim((string) preg_replace('#[\n\r]+#s', '', $subject_input));
-    $email->subject($args['subject']);
-
-    // Cc
-    if (! empty($args['Cc'])) {
-        foreach (get_clean_recipients_list($args['Cc']) as $recipient) {
-            $email->addCc(new Address($recipient['email'], $recipient['name']));
-        }
-    }
-
-    // Bcc
-    $Bcc = get_clean_recipients_list($args['Bcc'] ?? null);
-    if ((bool) $conf_mail['send_bcc_mail_webmaster']) {
-        $Bcc[] = [
-            'email' => get_webmaster_mail_address(),
-            'name' => '',
-        ];
-    }
-    if (! empty($Bcc)) {
-        foreach ($Bcc as $recipient) {
-            $email->addBcc(new Address($recipient['email'], $recipient['name']));
-        }
-    }
-
-    // theme
-    if (empty($args['theme']) or ! in_array($args['theme'], ['clear', 'dark'])) {
-        $mail_theme = $conf_mail['mail_theme'] ?? null;
-        $args['theme'] = is_string($mail_theme) ? $mail_theme : 'clear';
-    }
-
-    // content
-    if (! isset($args['content'])) {
-        $args['content'] = '';
-    }
-
-    // try to decompose subject like "[....] ...."
-    if (! isset($args['mail_title']) and ! isset($args['mail_subtitle'])) {
-        if ((bool) preg_match('#^\[(.*)\](.*)$#', $args['subject'], $matches)) {
-            $args['mail_title'] = $matches[1];
-            $args['mail_subtitle'] = $matches[2];
-        }
-    }
-    if (! isset($args['mail_title'])) {
-        $args['mail_title'] = $conf['gallery_title'];
-    }
-    if (! isset($args['mail_subtitle'])) {
-        $args['mail_subtitle'] = $args['subject'];
-    }
-
-    // content type
-    if (empty($args['content_format'])) {
-        $args['content_format'] = 'text/plain';
-    }
-
-    $content_type_list = [];
-    if ((bool) $conf_mail['mail_allow_html'] and ($args['email_format'] ?? null) != 'text/plain') {
-        $content_type_list[] = 'text/html';
-    }
-    $content_type_list[] = 'text/plain';
-
-    $lang_code = $lang_info['code'] ?? null;
-    $lang_code = is_string($lang_code) ? $lang_code : '';
-
-    $contents = [];
-    foreach ($content_type_list as $content_type) {
-        // key compose of indexes witch allow to cache mail data
-        $cache_key = $content_type . '-' . $lang_code;
-        if (! empty($args['auth_key'])) {
-            $cache_key .= '-' . $args['auth_key'];
-        }
-
-        if (! isset($conf_mail[$cache_key])) {
-            // instanciate a new Template
-            //
-            // $conf_mail[$cache_key] persists parsed \Template instances
-            // across pwg_mail() calls within the same request (via the
-            // global), keyed per content-type/language/auth_key. $conf_mail
-            // itself is only known as array<string, mixed>, so a fresh
-            // local mirror is built and written back rather than chaining
-            // offset access two levels deep on a still-mixed value.
-            $cache_entry = $conf_mail[$cache_key] ?? null;
-            $cache_entry = is_array($cache_entry) ? $cache_entry : [];
-            if (! isset($cache_entry['theme'])) {
-                $cache_entry['theme'] = get_mail_template($content_type);
-                $conf_mail[$cache_key] = $cache_entry;
-                trigger_notify('before_parse_mail_template', $cache_key, $content_type);
-            }
-            $cached_template = $cache_entry['theme'];
-            $template = $cached_template instanceof Template ? $cached_template : get_mail_template($content_type);
-
-            $template->set_filename('mail_header', 'header.tpl');
-            $template->set_filename('mail_footer', 'footer.tpl');
-
-            $add_url_params = [];
-            if (! empty($args['auth_key'])) {
-                $add_url_params['auth'] = $args['auth_key'];
-            }
-
-            // get_gallery_home_url() is declared to return `mixed`
-            // (include/functions_url.inc.php); every real branch of its
-            // body actually returns a string, so this narrows locally
-            // rather than widening add_url_params()'s $url parameter.
-            $gallery_home_url = get_gallery_home_url();
-            $gallery_home_url = is_string($gallery_home_url) ? $gallery_home_url : '';
-
-            $email_webmaster = $conf_mail['email_webmaster'] ?? null;
-            $email_webmaster = is_string($email_webmaster) ? $email_webmaster : '';
-
-            $template->assign(
-                [
-                    'GALLERY_URL' => add_url_params($gallery_home_url, $add_url_params),
-                    'GALLERY_TITLE' => $page['gallery_title'] ?? $conf['gallery_title'],
-                    'VERSION' => ((bool) $conf['show_version']) ? AppInfo::VERSION : '',
-                    'PHPWG_URL' => defined('PHPWG_URL') ? PHPWG_URL : '',
-                    'CONTENT_ENCODING' => get_pwg_charset(),
-                    'CONTACT_MAIL' => $email_webmaster,
-                ]
-            );
-
-            if ($content_type == 'text/html') {
-                if ($template->smarty->templateExists('global-mail-css.tpl')) {
-                    $template->set_filename('global-css', 'global-mail-css.tpl');
-                    $template->assign_var_from_handle('GLOBAL_MAIL_CSS', 'global-css');
-                }
-
-                if ($template->smarty->templateExists('mail-css-' . $args['theme'] . '.tpl')) {
-                    $template->set_filename('css', 'mail-css-' . $args['theme'] . '.tpl');
-                    $template->assign_var_from_handle('MAIL_CSS', 'css');
-                }
-            }
-        }
-
-        $cache_entry = $conf_mail[$cache_key] ?? null;
-        $cached_template = is_array($cache_entry) ? ($cache_entry['theme'] ?? null) : null;
-        $template = $cached_template instanceof Template ? $cached_template : get_mail_template($content_type);
-        $template->assign(
-            [
-                'MAIL_TITLE' => $args['mail_title'],
-                'MAIL_SUBTITLE' => $args['mail_subtitle'],
-            ]
-        );
-
-        // Header
-        $contents[$content_type] = $template->parse('mail_header', true);
-
-        // Content
-        // Stored in a temp variable, if a content template is used it will be assigned
-        // to the $CONTENT template variable, otherwise it will be appened to the mail
-        // $args['content'] is declared `mixed` in the shape above (the
-        // caller-supplied value is not otherwise constrained); every real
-        // caller passes a string, but fall back to '' rather than cast a
-        // non-scalar value (array/object) straight to string.
-        $content_input = is_scalar($args['content']) ? (string) $args['content'] : '';
-
-        if ($args['content_format'] == 'text/plain' and $content_type == 'text/html') {
-            // convert plain text to html
-            $mail_content =
-              '<p>' .
-              nl2br(
-                  (string) preg_replace(
-                      '/(https?:\/\/([-\w\.]+[-\w])+(:\d+)?(\/([\w\/_\.\#-]*(\?\S+)?[^\.\s])?)?)/i',
-                      '<a href="$1">$1</a>',
-                      htmlspecialchars($content_input)
-                  )
-              ) .
-              '</p>';
-        } elseif ($args['content_format'] == 'text/html' and $content_type == 'text/plain') {
-            // convert html text to plain text
-            $mail_content = strip_tags($content_input);
-        } else {
-            // Reuses the already-narrowed $content_input (see comment
-            // above) instead of the still-mixed $args['content'], so
-            // $mail_content is uniformly `string` across all three
-            // branches for the `.=` accumulation below.
-            $mail_content = $content_input;
-        }
-
-        // Runtime template
-        if (isset($tpl['filename'])) {
-            if (isset($tpl['dirname'])) {
-                $template->set_template_dir($tpl['dirname'] . '/' . $content_type);
-            }
-            if ($template->smarty->templateExists($tpl['filename'] . '.tpl')) {
-                $template->set_filename($tpl['filename'], $tpl['filename'] . '.tpl');
-                if (! empty($tpl['assign'])) {
-                    $template->assign($tpl['assign']);
-                }
-                $template->assign('CONTENT', $mail_content);
-                $contents[$content_type] .= $template->parse($tpl['filename'], true);
-            } else {
-                $contents[$content_type] .= $mail_content;
-            }
-        } else {
-            $contents[$content_type] .= $mail_content;
-        }
-
-        // Footer
-        $contents[$content_type] .= $template->parse('mail_footer', true);
-    }
-
-    // Undo Compute root_path in order have complete path
-    unset_make_full_url();
-
-    // Send content
-    // 'text/plain' is always present in $contents — $content_type_list
-    // (above) unconditionally includes it; 'text/html' is conditional.
-    if (isset($contents['text/html'])) {
-        $email->html(move_css_to_body($contents['text/html']));
-    }
-    $email->text($contents['text/plain']);
-
-    if ((bool) $conf_mail['use_smtp']) {
-        $smtp_host_raw = $conf_mail['smtp_host'] ?? null;
-        $smtp_host_raw = is_string($smtp_host_raw) ? $smtp_host_raw : '';
-
-        // now we need to split port number
-        if (str_contains($smtp_host_raw, ':')) {
-            [$smtp_host, $smtp_port] = explode(':', $smtp_host_raw);
-        } else {
-            $smtp_host = $smtp_host_raw;
-            $smtp_port = 25;
-        }
-
-        $dsn_auth = '';
-        if (! empty($conf_mail['smtp_user'])) {
-            $smtp_user = $conf_mail['smtp_user'];
-            $smtp_user = is_string($smtp_user) ? $smtp_user : '';
-            $smtp_password = $conf_mail['smtp_password'] ?? null;
-            $smtp_password = is_string($smtp_password) ? $smtp_password : '';
-            $dsn_auth = rawurlencode($smtp_user) . ':' . rawurlencode($smtp_password) . '@';
-        }
-
-        $dsn = 'smtp://' . $dsn_auth . $smtp_host . ':' . $smtp_port;
-
-        $smtp_secure = $conf_mail['smtp_secure'] ?? null;
-        if (is_string($smtp_secure) && in_array($smtp_secure, ['ssl', 'tls'])) {
-            $dsn .= '?encryption=' . $smtp_secure;
-        }
-    } else {
-        // matches PHPMailer's default (non-SMTP) behavior, which sends via PHP's native mail()
-        $dsn = 'native://default';
-    }
-
-    $mailer = new Mailer(Transport::fromDsn($dsn));
-
-    $ret = true;
-    $error_message = null;
-    $pre_result = trigger_change('before_send_mail', true, $to, $args, $email);
-
-    if ((bool) $pre_result) {
-        try {
-            $mailer->send($email);
-        } catch (TransportExceptionInterface $e) {
-            $ret = false;
-            $error_message = $e->getMessage();
-        }
-
-        if (! $ret and (! (bool) ini_get('display_errors') or is_admin())) {
-            trigger_error('Mailer Error: ' . $error_message, E_USER_WARNING);
-        }
-        if ((bool) $conf['debug_mail']) {
-            pwg_send_mail_test($ret, $email, $args, $error_message);
-        }
-    }
-
-    return $ret;
+    return new MailService()
+        ->mail($to, $args, $tpl);
 }
 
 /**
@@ -1078,66 +258,25 @@ function pwg_send_mail($result, $to, $subject, $content, $headers): mixed
  * Moves CSS rules contained in the <style> tag to inline CSS.
  * Used for compatibility with Gmail and such clients
  * @since 2.6
- *
- * @return string
  */
-function move_css_to_body(string $content)
+function move_css_to_body(string $content): string
 {
-    if ($content === '') {
-        return $content;
-    }
-
-    try {
-        return \Pelago\Emogrifier\CssInliner::fromHtml($content)->inlineCss()->render();
-    } catch (\Exception) {
-        return $content;
-    }
+    return new MailService()
+        ->moveCssToBody($content);
 }
 
 /**
  * Saves a copy of the mail if _data/tmp.
  *
  * @param bool $success
- * @param Email $mail
+ * @param \Symfony\Component\Mime\Email $mail
  * @param string|null $error_message
  * @param array<string, mixed> $args
  */
 function pwg_send_mail_test($success, $mail, array $args, $error_message = null): void
 {
-    /**
-     * @var array<string, mixed> $conf
-     * @var array<string, mixed> $user
-     * @var array<string, mixed> $lang_info
-     */
-    global $conf, $user, $lang_info;
-
-    $data_location = $conf['data_location'] ?? null;
-    $data_location = is_string($data_location) ? $data_location : '';
-
-    $dir = PHPWG_ROOT_PATH . $data_location . 'tmp';
-    if (mkgetdir($dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
-        $username = $user['username'] ?? null;
-        $username = is_string($username) ? $username : '';
-        $lang_code = $lang_info['code'] ?? null;
-        $lang_code = is_string($lang_code) ? $lang_code : '';
-
-        $filename = $dir . '/mail.' . stripslashes($username) . '.' . $lang_code . '-' . date('YmdHis') . ($success ? '' : '.ERROR');
-        if ($args['content_format'] == 'text/plain') {
-            $filename .= '.txt';
-        } else {
-            $filename .= '.html';
-        }
-
-        $file = fopen($filename, 'w+');
-        if ($file === false) {
-            return;
-        }
-        if (! $success) {
-            fwrite($file, 'ERROR: ' . $error_message . "\n\n");
-        }
-        fwrite($file, $mail->toString());
-        fclose($file);
-    }
+    new MailService()
+        ->sendMailTest($success, $mail, $args, $error_message);
 }
 
 /**
@@ -1153,30 +292,8 @@ function pwg_send_mail_test($success, $mail, array $args, $error_message = null)
  */
 function pwg_generate_reset_password_mail($username, $password_link, $gallery_title, $remaining_time): array
 {
-    set_make_full_url();
-
-    $message = '<p style="margin: 20px 0">';
-    $message = l10n('Someone requested that the password be reset for the following user account:') . ' ' . $username . '</p>';
-    $message .= '<p style="margin: 20px 0">' . l10n('To reset your password, visit the following address:');
-    $message .= ' <a href="' . $password_link . '">' . l10n('Change my password') . '</a></p>';
-    $message .= '<p style="text-align: center; font-size: 70%;">' . $password_link . '</p>';
-    $message .= '<p style="margin: 20px 0;">';
-    $message .= l10n('This link is valid for %s. After this time, you will need to request a new link.', $remaining_time);
-    $message .= ' ';
-    $message .= l10n('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
-
-    unset_make_full_url();
-
-    // trigger_change()'s own return type is mixed; fall back to the
-    // pre-trigger $message rather than trust a misbehaving handler.
-    $message_after_trigger = trigger_change('render_lost_password_mail_content', $message);
-    $message = is_string($message_after_trigger) ? $message_after_trigger : $message;
-
-    return [
-        'subject' => '[' . $gallery_title . '] ' . l10n('Password Reset'),
-        'content' => $message,
-        'content_format' => 'text/html',
-    ];
+    return new MailService()
+        ->generateResetPasswordMail($username, $password_link, $gallery_title, $remaining_time);
 }
 
 /**
@@ -1192,31 +309,8 @@ function pwg_generate_reset_password_mail($username, $password_link, $gallery_ti
  */
 function pwg_generate_set_password_mail($username, $set_password_link, $gallery_title, $remaining_time): array
 {
-    set_make_full_url();
-
-    $message = '<p style="margin: 20px 0">';
-    $message .= l10n('A photo library administrator has created the following account for you:') . ' ' . $username . '</p>';
-    $message .= '<p style="margin: 20px 0">' . l10n('To set your password, visit the following address:');
-    $message .= ' <a href="' . $set_password_link . '">' . l10n('Activate') . '</a></p>';
-    $message .= '<p style="text-align: center; font-size: 70%; margin: 20px 0;">' . $set_password_link . '</p>';
-    $message .= '<p style="margin: 20px 0;">';
-    $message .= l10n('This link is valid for %s. After this time, you will need to request a new link.', $remaining_time);
-    $message .= ' ';
-    $message .= l10n('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
-
-    unset_make_full_url();
-
-    // trigger_change()'s own return type is mixed; fall back to the
-    // pre-trigger $message rather than trust a misbehaving handler.
-    $message_after_trigger = trigger_change('render_lost_password_mail_content', $message);
-    $message = is_string($message_after_trigger) ? $message_after_trigger : $message;
-    $subject = l10n('Welcome to %s', $gallery_title);
-
-    return [
-        'subject' => $subject,
-        'content' => $message,
-        'content_format' => 'text/html',
-    ];
+    return new MailService()
+        ->generateSetPasswordMail($username, $set_password_link, $gallery_title, $remaining_time);
 }
 
 /**
@@ -1229,25 +323,8 @@ function pwg_generate_set_password_mail($username, $set_password_link, $gallery_
  */
 function pwg_generate_code_verification_mail($code): array
 {
-    /** @var array<string, mixed> $conf */
-    global $conf;
-    set_make_full_url();
-    $message = '<p style="margin: 20px 0">';
-    $message .= l10n('Here is your verification code:') . ' <br />';
-    $message .= '<span style="font-size: 16px">' . $code . '</span></p>';
-    $message .= '<p style="margin: 20px 0;">';
-    $message .= l10n('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
-    unset_make_full_url();
-
-    $gallery_title = $conf['gallery_title'] ?? null;
-    $gallery_title = is_string($gallery_title) ? $gallery_title : '';
-
-    $subject = '[' . $gallery_title . '] ' . l10n('Your verification code');
-    return [
-        'subject' => $subject,
-        'content' => $message,
-        'content_format' => 'text/html',
-    ];
+    return new MailService()
+        ->generateCodeVerificationMail($code);
 }
 
 /**
@@ -1261,37 +338,8 @@ function pwg_generate_code_verification_mail($code): array
  */
 function pwg_generate_success_reset_password_mail($username, $nb_of_apikeys): array
 {
-    /** @var array<string, mixed> $conf */
-    global $conf;
-    set_make_full_url();
-    $profile_url = get_root_url() . 'profile.php';
-
-    $message = '<p style="margin-top: 20px;">' . l10n('Hello %s,', $username) . '</p>';
-    $message .= '<p style="margin-bottom: 20px;">' . l10n('Your password was successfully reset') . '.</p>';
-    $message .= '<p>';
-    $message .= l10n('If this wasn\'t you, please change your password immediately or contact your webmaster.');
-    $message .= '</p>';
-
-    if ($nb_of_apikeys > 0) {
-        $message .= '<p style="margin: 20px 0;">';
-        $message .= l10n(
-            'If you changed your password because you think it was stolen, we recommend revoking your %d API keys <a href="%s">in your profile</a>.',
-            $nb_of_apikeys,
-            $profile_url
-        );
-        $message .= '</p>';
-    }
-    unset_make_full_url();
-
-    $gallery_title = $conf['gallery_title'] ?? null;
-    $gallery_title = is_string($gallery_title) ? $gallery_title : '';
-
-    $subject = '[' . $gallery_title . '] ' . l10n('Your password has been reset');
-    return [
-        'subject' => $subject,
-        'content' => $message,
-        'content_format' => 'text/html',
-    ];
+    return new MailService()
+        ->generateSuccessResetPasswordMail($username, $nb_of_apikeys);
 }
 
 trigger_notify('functions_mail_included');

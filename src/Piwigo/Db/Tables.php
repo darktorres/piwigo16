@@ -27,6 +27,11 @@ final class Tables
         return Config::dbPrefix() . 'activity';
     }
 
+    public static function auditLog(): string
+    {
+        return Config::dbPrefix() . 'audit_log';
+    }
+
     public static function caddie(): string
     {
         return Config::dbPrefix() . 'caddie';

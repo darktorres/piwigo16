@@ -1,0 +1,151 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Piwigo\Tests\Integration;
+
+use Doctrine\DBAL\Connection;
+use Piwigo\Audit\AuditRepository;
+use Piwigo\Config\Config;
+use Piwigo\Config\ConfigLoader;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\Tables;
+
+/**
+ * `audit_log` is empty in the fixture, so every test cleans up its own
+ * rows via tearDown() -- same isolation discipline as
+ * CaddieRepositoryTest/ActivityServiceTest.
+ */
+final class AuditRepositoryTest extends IntegrationTestCase
+{
+    private static bool $fixtureReady = false;
+
+    private AuditRepository $repo;
+
+    private Connection $conn;
+
+    #[\Override]
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->setUpConnectionFromEnv();
+
+        if (! self::$fixtureReady) {
+            $this->resetDatabase();
+            $this->loadFixture(dirname(__DIR__, 2) . '/tests/Fixtures/piwigo-17.0.sql');
+            self::$fixtureReady = true;
+        }
+
+        Config::reset();
+        ConfigLoader::applyDefaults();
+        ConfigLoader::applyEnvOverrides();
+
+        $this->conn = DbConnection::build();
+        $this->repo = new AuditRepository($this->conn);
+    }
+
+    #[\Override]
+    protected function tearDown(): void
+    {
+        $this->conn->executeStatement('DELETE FROM ' . Tables::auditLog());
+        parent::tearDown();
+    }
+
+    public function test_find_latest_row_hash_returns_null_when_empty(): void
+    {
+        self::assertNull($this->repo->findLatestRowHash());
+    }
+
+    public function test_insert_returns_the_new_row_id_and_persists_every_column(): void
+    {
+        $id = $this->repo->insert(
+            1,
+            'create',
+            'user',
+            42,
+            null,
+            '{"username":"alice"}',
+            '10.0.0.1',
+            '2026-07-12 10:00:00',
+            null,
+            str_repeat('a', 64),
+        );
+
+        self::assertGreaterThan(0, $id);
+
+        $row = $this->conn->createQueryBuilder()
+            ->select('*')
+            ->from(Tables::auditLog())
+            ->where('id = :id')
+            ->setParameter('id', $id)
+            ->executeQuery()
+            ->fetchAssociative();
+
+        self::assertIsArray($row);
+        self::assertSame(1, $row['actor_id']);
+        self::assertSame('create', $row['action']);
+        self::assertSame('user', $row['entity_type']);
+        self::assertSame(42, $row['entity_id']);
+        self::assertNull($row['before_json']);
+        // MySQL's native JSON column type re-serializes on write (e.g.
+        // adds a space after ':'), so compare decoded values, not raw
+        // bytes -- same reasoning as AuditService::canonicalJson()'s own
+        // docblock.
+        self::assertIsString($row['after_json']);
+        self::assertSame(['username' => 'alice'], json_decode($row['after_json'], true));
+        self::assertSame('10.0.0.1', $row['ip_address']);
+        self::assertNull($row['prev_hash']);
+        self::assertSame(str_repeat('a', 64), $row['row_hash']);
+    }
+
+    public function test_insert_allows_a_null_actor_id(): void
+    {
+        $id = $this->repo->insert(
+            null,
+            'autoupdate',
+            'system',
+            null,
+            null,
+            null,
+            null,
+            '2026-07-12 10:00:00',
+            null,
+            str_repeat('b', 64),
+        );
+
+        $actorId = $this->conn->createQueryBuilder()
+            ->select('actor_id')
+            ->from(Tables::auditLog())
+            ->where('id = :id')
+            ->setParameter('id', $id)
+            ->executeQuery()
+            ->fetchOne();
+
+        self::assertNull($actorId);
+    }
+
+    public function test_find_latest_row_hash_returns_the_most_recently_inserted(): void
+    {
+        $this->repo->insert(1, 'create', 'user', 1, null, null, null, '2026-07-12 10:00:00', null, str_repeat('a', 64));
+        $this->repo->insert(1, 'create', 'user', 2, null, null, null, '2026-07-12 10:00:01', str_repeat('a', 64), str_repeat('b', 64));
+
+        self::assertSame(str_repeat('b', 64), $this->repo->findLatestRowHash());
+    }
+
+    public function test_find_all_in_order_returns_rows_oldest_first_with_the_chain_linked(): void
+    {
+        $this->repo->insert(1, 'create', 'user', 1, null, null, null, '2026-07-12 10:00:00', null, str_repeat('a', 64));
+        $this->repo->insert(1, 'delete', 'group', 2, '{"name":"x"}', null, null, '2026-07-12 10:00:01', str_repeat('a', 64), str_repeat('b', 64));
+
+        $rows = $this->repo->findAllInOrder();
+
+        self::assertCount(2, $rows);
+        self::assertSame('create', $rows[0]['action']);
+        self::assertNull($rows[0]['prevHash']);
+        self::assertSame(str_repeat('a', 64), $rows[0]['rowHash']);
+        self::assertSame('delete', $rows[1]['action']);
+        self::assertSame(str_repeat('a', 64), $rows[1]['prevHash']);
+        self::assertIsString($rows[1]['beforeJson']);
+        self::assertSame(['name' => 'x'], json_decode($rows[1]['beforeJson'], true));
+    }
+}

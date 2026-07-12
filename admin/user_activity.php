@@ -9,8 +9,11 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Activity\ActivityRepository;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
@@ -50,40 +53,25 @@ include PHPWG_ROOT_PATH . 'admin/include/user_tabs.inc.php';
 /** @var array<string, string> $user_fields */
 $user_fields = $conf['user_fields'];
 
+$activity_service = new ActivityService(new ActivityRepository(DbConnection::build()));
+
 if (isset($_GET['type']) && $_GET['type'] == 'download_logs') {
     $output_lines = [];
 
-    $query = '
-SELECT
-    activity_id,
-    performed_by,
-    object,
-    object_id,
-    action,
-    ip_address,
-    occured_on,
-    details,
-    ' . $user_fields['username'] . ' AS username
-  FROM ' . Tables::activity() . '
-    JOIN ' . Tables::users() . ' AS u ON performed_by = u.' . $user_fields['id'] . '
-    WHERE object = \'user\'
-  ORDER BY activity_id DESC
-;';
-
-    $result = pwg_query($query);
+    $rows = $activity_service->getUserObjectLogWithUsernames($user_fields['username'], $user_fields['id']);
     array_push($output_lines, ['User', 'ID_User', 'Object', 'Object_ID', 'Action', 'Date', 'Hour', 'IP_Address', 'Details']);
-    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+    foreach ($rows as $row) {
         $row['details'] = str_replace('`groups`', 'groups', (string) $row['details']);
         $row['details'] = str_replace('`rank`', 'rank', $row['details']);
 
-        [$date, $hour] = explode(' ', (string) $row['occured_on']);
+        [$date, $hour] = explode(' ', $row['occured_on']);
 
         $output_lines[] = [
-            'username' => (string) $row['username'],
+            'username' => $row['username'],
             'user_id' => (string) $row['performed_by'],
-            'object' => (string) $row['object'],
+            'object' => $row['object'],
             'object_id' => (string) $row['object_id'],
-            'action' => (string) $row['action'],
+            'action' => $row['action'],
             'date' => $date,
             'hour' => $hour,
             'ip_address' => (string) $row['ip_address'],
@@ -121,16 +109,7 @@ $template->assign([
     'CACHE_KEYS' => get_admin_client_cache_keys(['users']),
 ]);
 
-$query = '
-SELECT
-    performed_by,
-    COUNT(*) as counter
-  FROM ' . Tables::activity() . '
-  WHERE object != \'system\'
-  GROUP BY performed_by
-;';
-
-$nb_lines_for_user = query2array($query, 'performed_by', 'counter');
+$nb_lines_for_user = $activity_service->getCountByUser();
 
 if (count($nb_lines_for_user) > 0) {
     $query = '
@@ -172,25 +151,8 @@ assert($row !== null);
 [$nb_users] = $row;
 $template->assign('nb_users', $nb_users);
 
-$query = '
-SELECT
-    occured_on
-  FROM ' . Tables::activity() . '
-  ORDER BY activity_id ASC
-  LIMIT 1
-;';
-$row = pwg_db_fetch_row(pwg_query($query));
-$min_date = $row !== null ? $row[0] : null;
-
-$query = '
-SELECT
-    occured_on
-  FROM ' . Tables::activity() . '
-  ORDER BY activity_id DESC
-  LIMIT 1
-;';
-$row = pwg_db_fetch_row(pwg_query($query));
-$max_date = $row !== null ? $row[0] : null;
+$min_date = $activity_service->getMinOccuredOn();
+$max_date = $activity_service->getMaxOccuredOn();
 
 $template->assign(
     'ACTIVITY_DATES',
@@ -244,27 +206,7 @@ $template->assign('ADDITIONAL_FILT', [
     'value' => $additional_filt_value,
 ]);
 
-$query = '
-SELECT
-    object,
-    action,
-    count(*) AS counter
-  FROM ' . Tables::activity() . '
-  WHERE object != \'system\'';
-
-if ((bool) $additional_filt_type) {
-    $query .= '
-    AND object = "' . $additional_filt_type . '"';
-}
-
-$query .= '
-  GROUP BY
-    action,
-    object
-  ORDER BY object ASC
-  ;';
-
-$actions = query2array($query);
+$actions = $activity_service->getActionCounts($additional_filt_type !== false ? $additional_filt_type : null);
 foreach ($actions as &$action) {
     $action['value'] = $action['object'] . '/' . $action['action'];
 }

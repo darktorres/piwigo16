@@ -11,13 +11,18 @@ declare(strict_types=1);
 
 use Gettext\Headers;
 use Gettext\Loader\PoLoader;
+use Piwigo\Activity\ActivityRepository;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\plugins;
 use Piwigo\Admin\themes;
+use Piwigo\Auth\EphemeralKeyService;
+use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Logger;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Csrf\CsrfService;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Lang\Translator;
 use Piwigo\Template\Template;
@@ -708,109 +713,8 @@ INSERT INTO ' . Tables::history() . '
  */
 function pwg_activity(string $object, $object_id, string $action, array $details = []): void
 {
-    /** @var array<string, mixed> $user */
-    global $user;
-
-    // in case of uploadAsync, do not log the automatic login as an independant activity
-    if (isset($_REQUEST['method']) and $_REQUEST['method'] == 'pwg.images.uploadAsync' and $action == 'login') {
-        return;
-    }
-
-    if (isset($_REQUEST['method']) and $_REQUEST['method'] == 'pwg.plugins.performAction' and $_REQUEST['action'] != $action) {
-        // for example, if you "restore" a plugin, the internal sequence will perform deactivate/uninstall/install/activate.
-        // We only want to keep the last call to pwg_activity with the "restore" action.
-        return;
-    }
-
-    $object_ids = is_array($object_id) ? $object_id : [$object_id];
-
-    if (isset($_REQUEST['method'])) {
-        $details['method'] = $_REQUEST['method'];
-    } else {
-        $details['script'] = script_basename();
-
-        if ($details['script'] == 'admin' and isset($_GET['page']) and is_string($_GET['page'])) {
-            $details['script'] .= '/' . $_GET['page'];
-        }
-    }
-
-    if ($action == 'autoupdate') {
-        // autoupdate on a plugin can happen anywhere, the "script/method" is not meaningfull
-        unset($details['method']);
-        unset($details['script']);
-    }
-
-    $user_agent = null;
-    if ($object == 'user' and $action == 'login' and isset($_SERVER['HTTP_USER_AGENT']) and is_string($_SERVER['HTTP_USER_AGENT'])) {
-        $user_agent = strip_tags($_SERVER['HTTP_USER_AGENT']);
-    }
-
-    if (isset($_SESSION['connected_with']) and $_SESSION['connected_with'] === 'api_key' and isset($_SERVER['HTTP_USER_AGENT']) and is_string($_SERVER['HTTP_USER_AGENT'])) {
-        $details['connected_with'] = 'api_key';
-        $user_agent = strip_tags($_SERVER['HTTP_USER_AGENT']);
-    }
-
-    // we want to know if the login is automatic with remember_me (auto_login)
-    // or with an authentication key provided in the URL (auth_key_login)
-    if ($object == 'user' and $action == 'login') {
-        if (function_exists('debug_backtrace')) {
-            $called_functions = array_flip(array_column(debug_backtrace(), 'function'));
-            foreach (['auto_login', 'auth_key_login'] as $auth_function) {
-                if (isset($called_functions[$auth_function])) {
-                    $details['auth_function'] = $auth_function;
-                }
-            }
-        }
-    }
-
-    if ($object == 'photo' and $action == 'add' and ! isset($details['sync'])) {
-        $details['added_with'] = 'app';
-        if (isset($_SERVER['HTTP_REFERER']) and is_string($_SERVER['HTTP_REFERER']) and (bool) preg_match('/page=photos_add/', $_SERVER['HTTP_REFERER'])) {
-            $details['added_with'] = 'browser';
-        }
-    }
-
-    if (in_array($object, ['album', 'photo']) and $action == 'delete' and isset($_GET['page']) and $_GET['page'] == 'site_update') {
-        $details['sync'] = true;
-    }
-
-    if ($object == 'tag' and $action == 'delete' and isset($_POST['destination_tag'])) {
-        $details['action'] = 'merge';
-        $details['destination_tag'] = $_POST['destination_tag'];
-    }
-
-    $inserts = [];
-    $details_insert = pwg_db_real_escape_string(serialize($details));
-    $ip_address = $_SERVER['REMOTE_ADDR'] ?? null;
-    $session_id = ! empty(session_id()) ? session_id() : 'none';
-    // Explicit, not left to the column's DEFAULT CURRENT_TIMESTAMP, so
-    // this respects the frozen test-mode clock the same way time_since()
-    // already does — real behavior outside test mode is unaffected,
-    // pwg_now() returns the real current time there.
-    $occured_on = pwg_now()
-        ->format('Y-m-d H:i:s');
-
-    foreach ($object_ids as $loop_object_id) {
-        $performed_by = $user['id'] ?? 0; // on a plugin autoupdate, $user is not yet loaded
-
-        if ($action == 'logout') {
-            $performed_by = $loop_object_id;
-        }
-
-        $inserts[] = [
-            'object' => $object,
-            'object_id' => $loop_object_id,
-            'action' => $action,
-            'performed_by' => $performed_by,
-            'session_idx' => $session_id,
-            'ip_address' => $ip_address,
-            'occured_on' => $occured_on,
-            'details' => $details_insert,
-            'user_agent' => pwg_db_real_escape_string($user_agent),
-        ];
-    }
-
-    mass_inserts(Tables::activity(), array_keys($inserts[0]), $inserts);
+    new ActivityService(new ActivityRepository(DbConnection::build()))
+        ->record($object, $object_id, $action, $details);
 }
 
 /**
@@ -1387,7 +1291,7 @@ function get_element_path(array $element_info): string
 /**
  * fill the current user caddie with given elements, if not already in caddie
  *
- * @param int[] $elements_id
+ * @param array<int, int> $elements_id
  */
 function fill_caddie($elements_id): void
 {
@@ -1396,27 +1300,8 @@ function fill_caddie($elements_id): void
 
     $user_id = is_numeric($user['id']) ? (int) $user['id'] : 0;
 
-    $query = '
-SELECT element_id
-  FROM ' . Tables::caddie() . '
-  WHERE user_id = ' . $user_id . '
-;';
-    $in_caddie = query2array($query, null, 'element_id');
-
-    $caddiables = array_diff($elements_id, $in_caddie);
-
-    $datas = [];
-
-    foreach ($caddiables as $caddiable) {
-        $datas[] = [
-            'element_id' => $caddiable,
-            'user_id' => $user_id,
-        ];
-    }
-
-    if (count($caddiables) > 0) {
-        mass_inserts(Tables::caddie(), ['element_id', 'user_id'], $datas);
-    }
+    new CaddieRepository(DbConnection::build())
+        ->addElements($user_id, $elements_id);
 }
 
 /**
@@ -2241,19 +2126,8 @@ function secure_directory($dir): void
  */
 function get_ephemeral_key($valid_after_seconds, $aditionnal_data_to_hash = ''): string
 {
-    /** @var array<string, mixed> $conf */
-    global $conf;
-    $time = round(microtime(true), 1);
-    $remote_addr = $_SERVER['REMOTE_ADDR'];
-    $remote_addr = is_string($remote_addr) ? $remote_addr : '';
-    $secret_key = $conf['secret_key'];
-    $secret_key = is_scalar($secret_key) ? (string) $secret_key : '';
-    return $time . ':' . $valid_after_seconds . ':'
-        . hash_hmac(
-            'md5',
-            $time . substr($remote_addr, 0, 5) . $valid_after_seconds . $aditionnal_data_to_hash,
-            $secret_key
-        );
+    return new EphemeralKeyService()
+        ->generate($valid_after_seconds, $aditionnal_data_to_hash);
 }
 
 /**
@@ -2264,26 +2138,8 @@ function get_ephemeral_key($valid_after_seconds, $aditionnal_data_to_hash = ''):
  */
 function verify_ephemeral_key($key, $aditionnal_data_to_hash = ''): bool
 {
-    /** @var array<string, mixed> $conf */
-    global $conf;
-    $time = microtime(true);
-    $key_parts = explode(':', $key);
-    $remote_addr = $_SERVER['REMOTE_ADDR'];
-    $remote_addr = is_string($remote_addr) ? $remote_addr : '';
-    $secret_key = $conf['secret_key'];
-    $secret_key = is_scalar($secret_key) ? (string) $secret_key : '';
-    if (count($key_parts) != 3
-        or $key_parts[0] > $time - (float) $key_parts[1] // page must have been retrieved more than X sec ago
-        or $key_parts[0] < $time - 3600 // 60 minutes expiration
-        or hash_hmac(
-            'md5',
-            $key_parts[0] . substr($remote_addr, 0, 5) . $key_parts[1] . $aditionnal_data_to_hash,
-            $secret_key
-        ) != $key_parts[2]
-    ) {
-        return false;
-    }
-    return true;
+    return new EphemeralKeyService()
+        ->verify($key, $aditionnal_data_to_hash);
 }
 
 /**

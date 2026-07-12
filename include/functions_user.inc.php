@@ -9,11 +9,22 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Auth\AuthRepository;
+use Piwigo\Auth\AuthService;
+use Piwigo\Auth\PasswordRepository;
+use Piwigo\Auth\PasswordService;
 use Piwigo\Auth\PwgTOTP;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Logger;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
+use Piwigo\Users\PreferencesService;
+use Piwigo\Users\UserRepository;
+use Piwigo\Users\UserService;
 use Piwigo\Ws\PwgError;
 
 /**
@@ -22,42 +33,13 @@ use Piwigo\Ws\PwgError;
  * @param int|null $user_id null when checking an address with no user yet
  *   (e.g. install.php's admin account, function_user.inc.php's own
  *   register_user())
- * @return string|void error message or nothing
+ * @return string error message, or '' when the address is fine / not
+ *   required
  */
 function validate_mail_address($user_id, ?string $mail_address)
 {
-    /** @var array<string, mixed> $conf */
-    global $conf;
-
-    if (empty($mail_address) and
-        ! ((bool) $conf['obligatory_user_mail_address'] and
-        in_array(script_basename(), ['register', 'profile']))) {
-        return '';
-    }
-
-    if (! email_check_format($mail_address)) {
-        return l10n('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
-    }
-
-    if (defined('PHPWG_INSTALLED') and ! empty($mail_address)) {
-        // $conf['user_fields'] maps generic field names to table-specific DB
-        // column names (see include/config_default.inc.php); always a
-        // string=>string map at runtime.
-        /** @var array<string, string> $user_fields */
-        $user_fields = $conf['user_fields'];
-        $query = '
-SELECT count(*)
-FROM ' . Tables::users() . '
-WHERE upper(' . $user_fields['email'] . ') = upper(\'' . $mail_address . '\')
-' . (is_numeric($user_id) ? 'AND ' . $user_fields['id'] . ' != \'' . $user_id . '\'' : '') . '
-;';
-        $row = pwg_db_fetch_row(pwg_query($query));
-        assert($row !== null);
-        [$count] = $row;
-        if ($count != 0) {
-            return l10n('this email address is already in use');
-        }
-    }
+    return new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()))
+        ->validateMailAddress($user_id, $mail_address);
 }
 
 /**
@@ -65,29 +47,12 @@ WHERE upper(' . $user_fields['email'] . ') = upper(\'' . $mail_address . '\')
  * Comparision is case insensitive.
  *
  * @param string $login
- * @return string|void error message or nothing
+ * @return string error message, or '' when it's free
  */
 function validate_login_case($login)
 {
-    /** @var array<string, mixed> $conf */
-    global $conf;
-
-    if (defined('PHPWG_INSTALLED')) {
-        // see validate_mail_address() for why this is string=>string
-        /** @var array<string, string> $user_fields */
-        $user_fields = $conf['user_fields'];
-        $query = '
-SELECT ' . $user_fields['username'] . '
-FROM ' . Tables::users() . '
-WHERE LOWER(' . stripslashes($user_fields['username']) . ") = '" . strtolower($login) . "'
-;";
-
-        $count = pwg_db_num_rows(pwg_query($query));
-
-        if ($count > 0) {
-            return l10n('this login is already used');
-        }
-    }
+    return new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()))
+        ->validateLoginCase($login);
 }
 /**
  * Searches for user with the same username in different case.
@@ -97,41 +62,8 @@ WHERE LOWER(' . stripslashes($user_fields['username']) . ") = '" . strtolower($l
  */
 function search_case_username($username)
 {
-    /** @var array<string, mixed> $conf */
-    global $conf;
-
-    $username_lo = strtolower($username);
-
-    $SCU_users = [];
-
-    // see validate_mail_address() for why this is string=>string
-    /** @var array<string, string> $user_fields */
-    $user_fields = $conf['user_fields'];
-    $q = pwg_query('
-    SELECT ' . $user_fields['username'] . ' AS username
-    FROM `' . Tables::users() . '`;
-  ');
-    while ((bool) ($r = pwg_db_fetch_assoc($q))) {
-        $username_value = $r['username'];
-        if ($username_value === null) {
-            // username is NOT NULL in schema; skip defensively rather than
-            // let null silently coerce to the '' array key
-            continue;
-        }
-        $SCU_users[$username_value] = strtolower($username_value);
-    }
-    // $SCU_users is now an associative table where the key is the account as
-    // registered in the DB, and the value is this same account, in lower case
-
-    $users_found = array_keys($SCU_users, $username_lo);
-    // $users_found is now a table of which the values are all the accounts
-    // which can be written in lowercase the same way as $username
-    if (count($users_found) != 1) { // If ambiguous, don't allow lowercase writing
-        return $username;
-    } // but normal writing will work
-    else {
-        return $users_found[0];
-    }
+    return new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()))
+        ->searchCaseUsername($username);
 }
 
 /**
@@ -148,177 +80,23 @@ function search_case_username($username)
  */
 function register_user($login, #[\SensitiveParameter] $password, ?string $mail_address, $notify_admin = true, &$errors = [], $notify_user = false): int|false
 {
-    /** @var array<string, mixed> $conf */
-    global $conf;
+    // Preserves the pre-SEC-31 behavior for this free function's own
+    // callers (e.g. the admin-authenticated ws.users.add, which legitimately
+    // needs the real "already used" message to let an operator pick a
+    // different username) -- UserService::registerUser() itself never puts
+    // that message in $errors (it would let an attacker enumerate accounts
+    // through the public self-registration form); the caller-facing
+    // distinction lives here, in the shape of the two return channels, not
+    // in the service.
+    $result = new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()))
+        ->registerUser($login, $password, $mail_address, $notify_admin, $notify_user);
 
-    if ($login == '') {
-        $errors[] = l10n('Please, enter a login');
-    }
-    if ((bool) preg_match('/^.* $/', $login)) {
-        $errors[] = l10n('login mustn\'t end with a space character');
-    }
-    if ((bool) preg_match('/^ .*$/', $login)) {
-        $errors[] = l10n('login mustn\'t start with a space character');
-    }
-    if ((bool) get_userid($login)) {
-        $errors[] = l10n('this login is already used');
-    }
-    if ($login != strip_tags($login)) {
-        $errors[] = l10n('html tags are not allowed in login');
-    }
-    $mail_error = validate_mail_address(null, $mail_address);
-    if ($mail_error != '') {
-        $errors[] = $mail_error;
+    $errors = $result['errors'];
+    if ($result['duplicateUsername']) {
+        array_unshift($errors, l10n('this login is already used'));
     }
 
-    if ($conf['insensitive_case_logon'] == true) {
-        $login_error = validate_login_case($login);
-        if ($login_error != '') {
-            $errors[] = $login_error;
-        }
-    }
-
-    $errors_after_trigger = trigger_change(
-        'register_user_check',
-        $errors,
-        [
-            'username' => $login,
-            'password' => $password,
-            'email' => $mail_address,
-        ]
-    );
-    // 'register_user_check' handlers are documented to filter/append to the
-    // array<int, string> $errors they receive and return the same shape,
-    // but $errors itself may still be null here (register_user()'s
-    // &$errors = [] default only applies when the caller omits the
-    // argument entirely -- callers that pass a reference to an
-    // uninitialized variable, like ws_users_add(), get null instead), so
-    // this can't be a real invariant to assert() -- filter defensively
-    // instead of trusting trigger_change()'s generic mixed return.
-    $errors = is_array($errors_after_trigger) ? array_values(array_filter($errors_after_trigger, is_string(...))) : [];
-
-    // if no error until here, registration of the user
-    if (empty($errors)) {
-        // see validate_mail_address() for why this is string=>string
-        /** @var array<string, string> $user_fields */
-        $user_fields = $conf['user_fields'];
-        $insert = [
-            $user_fields['username'] => $login,
-            $user_fields['password'] => pwg_password_hash($password),
-            $user_fields['email'] => $mail_address,
-        ];
-
-        single_insert(Tables::users(), $insert);
-        $user_id = (int) pwg_db_insert_id();
-
-        // Assign by default groups
-        // boolean_to_string() only returns non-string when its input isn't
-        // a bool (@return mixed in dblayer/functions_mysqli.inc.php); we
-        // always call it with the literal `true`, so the result is
-        // guaranteed to be the string 'true'.
-        $is_default_true = boolean_to_string(true);
-        assert(is_string($is_default_true));
-        $query = '
-SELECT id
-  FROM `' . Tables::groups() . '`
-  WHERE is_default = \'' . $is_default_true . '\'
-  ORDER BY id ASC
-;';
-        $result = pwg_query($query);
-
-        $inserts = [];
-        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
-            $inserts[] = [
-                'user_id' => $user_id,
-                'group_id' => $row['id'],
-            ];
-        }
-
-        if (count($inserts) != 0) {
-            mass_inserts(Tables::userGroup(), ['user_id', 'group_id'], $inserts);
-        }
-
-        $override = [];
-        if ((bool) $conf['browser_language'] and (bool) ($language = get_browser_language())) {
-            $override['language'] = $language;
-        }
-
-        create_user_infos($user_id, $override);
-
-        if ($notify_admin and $conf['email_admin_on_new_user'] != 'none') {
-            include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php';
-            $admin_url = get_absolute_root_url() . 'admin.php?page=user_list&user_id=' . $user_id;
-
-            $keyargs_content = [
-                get_l10n_args('User: %s', stripslashes($login)),
-                get_l10n_args('Email: %s', $mail_address),
-                get_l10n_args(''),
-                get_l10n_args('Admin: %s', $admin_url),
-            ];
-
-            $group_id = null;
-            $email_admin_on_new_user = $conf['email_admin_on_new_user'];
-            $email_admin_on_new_user = is_scalar($email_admin_on_new_user) ? (string) $email_admin_on_new_user : '';
-            if ((bool) preg_match('/^group:(\d+)$/', $email_admin_on_new_user, $matches)) {
-                $group_id = $matches[1];
-            }
-
-            pwg_mail_notification_admins(
-                get_l10n_args('Registration of %s', stripslashes($login)),
-                $keyargs_content,
-                true, // $send_technical_details
-                $group_id
-            );
-        }
-
-        if ($notify_user and email_check_format($mail_address)) {
-            // email_check_format() returning true proves $mail_address is a
-            // well-formed, non-empty string (filter_var() rejects null).
-            assert($mail_address !== null);
-            include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php';
-
-            $length = mt_rand(10, 15);
-            $keyargs_content = [
-                get_l10n_args('Hello %s,', stripslashes($login)),
-                get_l10n_args('Thank you for registering at %s!', $conf['gallery_title']),
-                get_l10n_args('', ''),
-                get_l10n_args('Here are your connection settings', ''),
-                get_l10n_args('', ''),
-                get_l10n_args('Link: %s', get_absolute_root_url()),
-                get_l10n_args('Username: %s', stripslashes($login)),
-                get_l10n_args('Password: %s', str_repeat('*', $length)),
-                get_l10n_args('Email: %s', $mail_address),
-                get_l10n_args('', ''),
-                get_l10n_args('If you think you\'ve received this email in error, please contact us at %s', get_webmaster_mail_address()),
-            ];
-
-            $gallery_title = $conf['gallery_title'];
-            $gallery_title = is_string($gallery_title) ? $gallery_title : '';
-            pwg_mail(
-                $mail_address,
-                [
-                    'subject' => '[' . $gallery_title . '] ' . l10n('Registration'),
-                    'content' => l10n_args($keyargs_content),
-                    'content_format' => 'text/plain',
-                ]
-            );
-        }
-
-        trigger_notify(
-            'register_user',
-            [
-                'id' => $user_id,
-                'username' => $login,
-                'email' => $mail_address,
-            ]
-        );
-
-        pwg_activity('user', $user_id, 'add');
-
-        return $user_id;
-    } else {
-        return false;
-    }
+    return $result['userId'] ?? false;
 }
 
 /**
@@ -721,59 +499,10 @@ DELETE FROM ' . Tables::favorites() . '
  */
 function calculate_permissions($user_id, $user_status): string
 {
-    $query = '
-SELECT id
-  FROM ' . Tables::categories() . '
-  WHERE status = \'private\'
-;';
-    $private_array = query2array($query, null, 'id');
-
-    // retrieve category ids directly authorized to the user
-    $query = '
-SELECT cat_id
-  FROM ' . Tables::userAccess() . '
-  WHERE user_id = ' . $user_id . '
-;';
-    $authorized_array = query2array($query, null, 'cat_id');
-
-    // retrieve category ids authorized to the groups the user belongs to
-    $query = '
-SELECT cat_id
-  FROM ' . Tables::userGroup() . ' AS ug INNER JOIN ' . Tables::groupAccess() . ' AS ga
-    ON ug.group_id = ga.group_id
-  WHERE ug.user_id = ' . $user_id . '
-;';
-    $authorized_array =
-      array_merge(
-          $authorized_array,
-          query2array($query, null, 'cat_id')
-      );
-
-    // uniquify ids : some private categories might be authorized for the
-    // groups and for the user
-    $authorized_array = array_unique($authorized_array);
-
-    // only unauthorized private categories are forbidden
-    $forbidden_array = array_diff($private_array, $authorized_array);
-
-    // if user is not an admin, locked categories are forbidden
-    if (! is_admin($user_status)) {
-        $query = '
-SELECT id
-  FROM ' . Tables::categories() . '
-  WHERE visible = \'false\'
-;';
-        $forbidden_array = array_merge($forbidden_array, query2array($query, null, 'id'));
-        $forbidden_array = array_unique($forbidden_array);
-    }
-
-    if (empty($forbidden_array)) {// at least, the list contains 0 value. This category does not exists so
-        // where clauses such as "WHERE category_id NOT IN(0)" will always be
-        // true.
-        $forbidden_array[] = 0;
-    }
-
-    return implode(',', $forbidden_array);
+    return new PermissionService(
+        new PermissionRepository(DbConnection::build()),
+        new GroupRepository(DbConnection::build())
+    )->getForbiddenCategories($user_id, $user_status);
 }
 
 /**
@@ -783,33 +512,8 @@ SELECT id
  */
 function get_userid($username): false|int
 {
-    /** @var array<string, mixed> $conf */
-    global $conf;
-
-    // see validate_mail_address() for why this is string=>string
-    /** @var array<string, string> $user_fields */
-    $user_fields = $conf['user_fields'];
-
-    $username = pwg_db_real_escape_string($username);
-
-    $query = '
-SELECT ' . $user_fields['id'] . '
-  FROM ' . Tables::users() . '
-  WHERE ' . $user_fields['username'] . ' = \'' . $username . '\'
-;';
-    $result = pwg_query($query);
-
-    if (pwg_db_num_rows($result) == 0) {
-        return false;
-    } else {
-        $row = pwg_db_fetch_row($result);
-        assert($row !== null);
-        [$user_id] = $row;
-        // the id column is the primary key: never null/non-numeric for an
-        // existing row
-        assert($user_id !== null && is_numeric($user_id));
-        return (int) $user_id;
-    }
+    return new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()))
+        ->getUserId($username);
 }
 
 /**
@@ -819,34 +523,8 @@ SELECT ' . $user_fields['id'] . '
  */
 function get_userid_by_email($email): false|int
 {
-    /** @var array<string, mixed> $conf */
-    global $conf;
-
-    // see validate_mail_address() for why this is string=>string
-    /** @var array<string, string> $user_fields */
-    $user_fields = $conf['user_fields'];
-
-    $email = pwg_db_real_escape_string($email);
-
-    $query = '
-SELECT
-    ' . $user_fields['id'] . '
-  FROM ' . Tables::users() . '
-  WHERE UPPER(' . $user_fields['email'] . ') = UPPER(\'' . $email . '\')
-;';
-    $result = pwg_query($query);
-
-    if (pwg_db_num_rows($result) == 0) {
-        return false;
-    } else {
-        $row = pwg_db_fetch_row($result);
-        assert($row !== null);
-        [$user_id] = $row;
-        // the id column is the primary key: never null/non-numeric for an
-        // existing row
-        assert($user_id !== null && is_numeric($user_id));
-        return (int) $user_id;
-    }
+    return new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()))
+        ->getUserIdByEmail($email);
 }
 
 /**
@@ -857,70 +535,8 @@ SELECT
  */
 function get_default_user_info(bool $convert_str = true)
 {
-    /**
-     * @var array<string, mixed> $cache
-     * @var array<string, mixed> $conf
-     */
-    global $cache, $conf;
-
-    if (! isset($cache['default_user'])) {
-        // default_user_id defaults to $conf['guest_id'] (int) in
-        // include/config_default.inc.php, but once persisted to the config
-        // DB table it comes back as a raw string (see load_conf_from_db())
-        $default_user_id = $conf['default_user_id'];
-        $default_user_id = is_numeric($default_user_id) ? (int) $default_user_id : 0;
-
-        $query = '
-SELECT *
-  FROM ' . Tables::userInfos() . '
-  WHERE user_id = ' . $default_user_id . '
-;';
-
-        $result = pwg_query($query);
-
-        if (pwg_db_num_rows($result) > 0) {
-            $default_user_row = pwg_db_fetch_assoc($result);
-
-            if (is_array($default_user_row)) {
-                // user_infos columns are always string keys
-                /** @var array<string, string|null> $default_user_row */
-                unset($default_user_row['user_id']);
-                unset($default_user_row['status']);
-                unset($default_user_row['registration_date']);
-                unset($default_user_row['last_visit']);
-                unset($default_user_row['last_visit_from_history']);
-            }
-
-            $cache['default_user'] = $default_user_row;
-        } else {
-            $cache['default_user'] = false;
-        }
-    }
-
-    $default_user_cached = $cache['default_user'];
-
-    if (is_array($default_user_cached) and $convert_str) {
-        // user_infos columns are always string keys
-        /** @var array<string, mixed> $default_user */
-        $default_user = $default_user_cached;
-        foreach ($default_user as &$value) {
-            // If the field is true or false, the variable is transformed into a boolean value.
-            if ($value == 'true') {
-                $value = true;
-            } elseif ($value == 'false') {
-                $value = false;
-            }
-        }
-        unset($value);
-        return $default_user;
-    }
-    if (is_array($default_user_cached)) {
-        // user_infos columns are always string keys
-        /** @var array<string, mixed> $default_user_cached */
-        return $default_user_cached;
-    } else {
-        return false;
-    }
+    return new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()))
+        ->getDefaultUserInfo($convert_str);
 }
 
 /**
@@ -932,12 +548,8 @@ SELECT *
  */
 function get_default_user_value($value_name, $default)
 {
-    $default_user = get_default_user_info(true);
-    if ($default_user === false or empty($default_user[$value_name])) {
-        return $default;
-    } else {
-        return $default_user[$value_name];
-    }
+    return new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()))
+        ->getDefaultUserValue($value_name, $default);
 }
 
 /**
@@ -1048,70 +660,10 @@ function get_browser_language(): false|int|string
  */
 function create_user_infos($user_ids, $override_values = null): void
 {
-    /** @var array<string, mixed> $conf */
-    global $conf;
+    $userIdList = is_array($user_ids) ? $user_ids : [$user_ids];
 
-    if (! is_array($user_ids)) {
-        $user_ids = [$user_ids];
-    }
-
-    if (! empty($user_ids)) {
-        $inserts = [];
-        $row = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
-        assert($row !== null);
-        [$dbnow] = $row;
-
-        $default_user = get_default_user_info(false);
-        if ($default_user === false) {
-            // Default on structure are used
-            $default_user = [];
-        }
-
-        if ($override_values !== null) {
-            $default_user = array_merge($default_user, $override_values);
-        }
-
-        foreach ($user_ids as $user_id) {
-            $level = $default_user['level'] ?? 0;
-            if ($user_id == $conf['webmaster_id']) {
-                $status = 'webmaster';
-                // $conf['available_permission_levels'] defaults to [0, 1, 2,
-                // 4, 8] (see include/config_default.inc.php), always a
-                // non-empty array
-                $available_permission_levels = $conf['available_permission_levels'];
-                $level = is_array($available_permission_levels) && $available_permission_levels !== []
-                    ? max($available_permission_levels)
-                    : 0;
-            } elseif (($user_id == $conf['guest_id']) or
-                     ($user_id == $conf['default_user_id'])) {
-                $status = 'guest';
-            } else {
-                $status = 'normal';
-            }
-
-            $insert = array_merge(
-                // $default_user's real values are always string|null (raw
-                // DB fetch or an override_values caller passing a string);
-                // guard with is_string() rather than assume, so a
-                // hypothetical non-string override can't TypeError on
-                // pwg_db_real_escape_string()'s ?string param.
-                array_map(
-                    static fn (mixed $value): mixed => is_string($value) ? pwg_db_real_escape_string($value) : $value,
-                    $default_user
-                ),
-                [
-                    'user_id' => $user_id,
-                    'status' => $status,
-                    'registration_date' => $dbnow,
-                    'level' => $level,
-                ]
-            );
-
-            $inserts[] = $insert;
-        }
-
-        mass_inserts(Tables::userInfos(), array_keys($inserts[0]), $inserts);
-    }
+    new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()))
+        ->createUserInfos($userIdList, $override_values);
 }
 
 /**
@@ -1125,34 +677,11 @@ function create_user_infos($user_ids, $override_values = null): void
  */
 function calculate_auto_login_key($user_id, $time, &$username): string|false
 {
-    /** @var array<string, mixed> $conf */
-    global $conf;
+    $result = new AuthService(new AuthRepository(DbConnection::build()))
+        ->calculateAutoLoginKey($user_id, $time);
+    $username = $result['username'];
 
-    // see validate_mail_address() for why this is string=>string
-    /** @var array<string, string> $user_fields */
-    $user_fields = $conf['user_fields'];
-
-    $query = '
-SELECT ' . $user_fields['username'] . ' AS username
-  , ' . $user_fields['password'] . ' AS password
-FROM ' . Tables::users() . '
-WHERE ' . $user_fields['id'] . ' = ' . $user_id;
-    $result = pwg_query($query);
-    if (pwg_db_num_rows($result) > 0) {
-        $row = pwg_db_fetch_assoc($result);
-        if ($row === false || $row === null) {
-            throw new Exception('calculate_auto_login_key(): fetch failed after a non-zero pwg_db_num_rows()');
-        }
-        $username = stripslashes((string) $row['username']);
-        $data = $time . $user_id . $username;
-        // secret_key is a random string generated at install time (see
-        // install/index.php), always a string in a working install
-        $secret_key = $conf['secret_key'];
-        $secret_key = is_string($secret_key) ? $secret_key : '';
-        $key = base64_encode(hash_hmac('sha1', $data, $secret_key . $row['password'], true));
-        return $key;
-    }
-    return false;
+    return $result['key'];
 }
 
 /**
@@ -1167,90 +696,8 @@ WHERE ' . $user_fields['id'] . ' = ' . $user_id;
  */
 function log_user($user_id, $remember_me): void
 {
-    /**
-     * @var array<string, mixed> $conf
-     * @var array<string, mixed> $user
-     */
-    global $conf, $user;
-
-    // remember_me_name defaults to 'pwg_remember' (string), remember_me_length
-    // to 5184000 (int) in include/config_default.inc.php, but once persisted
-    // to the config DB table both come back as raw strings (see
-    // load_conf_from_db()) -- accept either.
-    $remember_me_name = $conf['remember_me_name'];
-    $remember_me_name = is_string($remember_me_name) ? $remember_me_name : 'pwg_remember';
-    $remember_me_length = $conf['remember_me_length'];
-    $remember_me_length = is_numeric($remember_me_length) ? (int) $remember_me_length : 5184000;
-
-    // New default login and register pages, if users changes languages and succesfully logs in
-    // we want to update the userpref language stored in a cookie
-
-    // TODO check value of cookie
-
-    if (isset($_COOKIE['lang']) and $user['language'] != $_COOKIE['lang']) {
-        $lang_cookie = $_COOKIE['lang'];
-        if (! is_string($lang_cookie)) {
-            fatal_error('[Hacking attempt] the input parameter "lang" is not valid');
-        }
-        if (! array_key_exists($lang_cookie, get_languages())) {
-            fatal_error('[Hacking attempt] the input parameter "' . $lang_cookie . '" is not valid');
-        }
-
-        single_update(
-            Tables::userInfos(),
-            [
-                'language' => $lang_cookie,
-            ],
-            [
-                'user_id' => $user_id,
-            ]
-        );
-
-        // We unset the lang cookie, if user has changed their language using interface we don't want to keep setting it back
-        // to what was chosen using standard pages lang switch
-        setcookie('lang', '', [
-            'expires' => time() - 3600,
-        ]);
-    }
-
-    if ($remember_me and (bool) $conf['authorize_remembering']) {
-        $now = time();
-        // false is not reachable in practice here — see this function's
-        // own docblock on $user_id
-        assert($user_id !== false);
-        $key = calculate_auto_login_key($user_id, $now, $username);
-        if ($key !== false) {
-            $cookie = $user_id . '-' . $now . '-' . $key;
-            setcookie(
-                $remember_me_name,
-                $cookie,
-                [
-                    'expires' => time() + $remember_me_length,
-                    'path' => cookie_path(),
-                    'domain' => (string) ini_get('session.cookie_domain'),
-                    'secure' => (bool) ini_get('session.cookie_secure'),
-                    'httponly' => (bool) ini_get('session.cookie_httponly'),
-                ]
-            );
-        }
-    } else { // make sure we clean any remember me ...
-        setcookie($remember_me_name, '', [
-            'expires' => 0,
-            'path' => cookie_path(),
-            'domain' => (string) ini_get('session.cookie_domain'),
-        ]);
-    }
-    if (session_id() != '') { // we regenerate the session for security reasons
-        // see http://www.acros.si/papers/session_fixation.pdf
-        session_regenerate_id(true);
-    } else {
-        session_start();
-    }
-    $_SESSION['pwg_uid'] = (int) $user_id;
-
-    $user['id'] = $_SESSION['pwg_uid'];
-    trigger_notify('user_login', $user['id']);
-    pwg_activity('user', $user['id'], 'login');
+    new AuthService(new AuthRepository(DbConnection::build()))
+        ->logUser($user_id, $remember_me);
 }
 
 /**
@@ -1258,45 +705,8 @@ function log_user($user_id, $remember_me): void
  */
 function auto_login(): bool
 {
-    /** @var array<string, mixed> $conf */
-    global $conf;
-
-    // see log_user() for why these accept both the config-default scalar
-    // type and the DB-persisted string form
-    $remember_me_name = $conf['remember_me_name'];
-    $remember_me_name = is_string($remember_me_name) ? $remember_me_name : 'pwg_remember';
-    $remember_me_length = $conf['remember_me_length'];
-    $remember_me_length = is_numeric($remember_me_length) ? (int) $remember_me_length : 5184000;
-
-    if (isset($_COOKIE[$remember_me_name])) {
-        $remember_me_cookie = $_COOKIE[$remember_me_name];
-        if (is_string($remember_me_cookie)) {
-            $cookie = explode('-', stripslashes($remember_me_cookie));
-            if (count($cookie) === 3
-                and is_numeric($cookie[0]) /* user id */
-                and is_numeric($cookie[1]) /* time */
-                and time() - $remember_me_length <= $cookie[1]
-                and time() >= $cookie[1] /* cookie generated in the past */) {
-                $key = calculate_auto_login_key($cookie[0], $cookie[1], $username);
-                if ($key !== false and $key === $cookie[2]) {
-                    // Since Piwigo 16, 'connected_with' in the session defines the authentication context (UI, API, etc).
-                    // Auto-login via remember-me may miss this, so we set it to 'pwg_ui' for UI logins (not API).
-                    if (script_basename() != 'ws') {
-                        $_SESSION['connected_with'] = 'pwg_ui';
-                    }
-                    log_user($cookie[0], true);
-                    trigger_notify('login_success', stripslashes($username));
-                    return true;
-                }
-            }
-        }
-        setcookie($remember_me_name, '', [
-            'expires' => 0,
-            'path' => cookie_path(),
-            'domain' => (string) ini_get('session.cookie_domain'),
-        ]);
-    }
-    return false;
+    return new AuthService(new AuthRepository(DbConnection::build()))
+        ->autoLogin();
 }
 
 /**
@@ -1317,65 +727,8 @@ function pwg_phpass_verify_legacy(
     #[\SensitiveParameter]
     $hash
 ) {
-    /** @var string */
-    static $itoa64 = './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
-
-    if (strlen($password) > 4096 or strlen($hash) != 34) {
-        return false;
-    }
-
-    $id = substr($hash, 0, 3);
-    if ($id !== '$P$' and $id !== '$H$') {
-        return false;
-    }
-
-    $count_log2 = strpos($itoa64, $hash[3]);
-    if ($count_log2 === false or $count_log2 < 7 or $count_log2 > 30) {
-        return false;
-    }
-    $count = 1 << $count_log2;
-
-    $salt = substr($hash, 4, 8);
-    if (strlen($salt) != 8) {
-        return false;
-    }
-
-    $computed = md5($salt . $password, true);
-    do {
-        $computed = md5($computed . $password, true);
-    } while ((bool) --$count);
-
-    // phpass's custom base64-like encoding (not RFC 4648)
-    $output = substr($hash, 0, 12);
-    $i = 0;
-    do {
-        $value = ord($computed[$i++]);
-        $output .= $itoa64[$value & 0x3F];
-        if ($i < 16) {
-            $value |= ord($computed[$i]) << 8;
-        }
-        $output .= $itoa64[($value >> 6) & 0x3F];
-        if ($i++ >= 16) {
-            break;
-        }
-        if ($i < 16) {
-            $value |= ord($computed[$i]) << 16;
-        }
-        $output .= $itoa64[($value >> 12) & 0x3F];
-        // Byte-for-byte port of the canonical phpass encoding loop
-        // (openwall.com/phpass) — this bounds check is provably redundant
-        // for our always-exactly-16-byte $computed (the loop's first
-        // `$i++ >= 16` check above always catches that boundary first), but
-        // is kept to match the reference algorithm exactly rather than
-        // hand-trim security-sensitive, publicly-audited crypto code.
-        // @phpstan-ignore greaterOrEqual.alwaysFalse
-        if ($i++ >= 16) {
-            break;
-        }
-        $output .= $itoa64[($value >> 18) & 0x3F];
-    } while ($i < 16);
-
-    return hash_equals($hash, $output);
+    return new PasswordService(new PasswordRepository(DbConnection::build()))
+        ->verifyLegacyPhpass($password, $hash);
 }
 
 /**
@@ -1388,10 +741,8 @@ function pwg_password_hash(
     #[\SensitiveParameter]
     $password
 ): string {
-    $cost = pwg_test_mode_is_active() ? 4 : 13;
-    return password_hash($password, PASSWORD_BCRYPT, [
-        'cost' => $cost,
-    ]);
+    return new PasswordService(new PasswordRepository(DbConnection::build()))
+        ->hash($password);
 }
 
 /**
@@ -1419,35 +770,8 @@ function pwg_password_verify(
     $hash,
     $user_id = null
 ) {
-    /** @var array<string, mixed> $conf */
-    global $conf;
-
-    if (str_starts_with($hash, '$P$') or str_starts_with($hash, '$H$')) {
-        if (! pwg_phpass_verify_legacy($password, $hash)) {
-            return false;
-        }
-
-        if (! isset($user_id) or (bool) $conf['external_authentification']) {
-            return true;
-        }
-
-        // Rehash using new hash.
-        $new_hash = pwg_password_hash($password);
-
-        single_update(
-            Tables::users(),
-            [
-                'password' => $new_hash,
-            ],
-            [
-                'id' => $user_id,
-            ]
-        );
-
-        return true;
-    }
-
-    return password_verify($password, $hash);
+    return new PasswordService(new PasswordRepository(DbConnection::build()))
+        ->verify($password, $hash, $user_id);
 }
 
 /**
@@ -1461,11 +785,8 @@ function pwg_password_verify(
  */
 function try_log_user($username, $password, $remember_me): bool
 {
-    $result = trigger_change('try_log_user', false, $username, $password, $remember_me);
-    // trigger_change()'s own return type is mixed; the only registered
-    // handler (pwg_login()) returns bool, but fail closed (deny login)
-    // rather than trust a misbehaving third-party handler.
-    return is_bool($result) ? $result : false;
+    return new AuthService(new AuthRepository(DbConnection::build()))
+        ->tryLogUser($username, $password, $remember_me);
 }
 
 add_event_handler('try_log_user', 'pwg_login');
@@ -1673,39 +994,8 @@ function clear_fake_user_cache(): void
  */
 function logout_user(): void
 {
-    /** @var array<string, mixed> $conf */
-    global $conf;
-
-    $pwg_uid = $_SESSION['pwg_uid'] ?? null;
-    trigger_notify('user_logout', $pwg_uid);
-    if (is_int($pwg_uid) || is_string($pwg_uid)) {
-        pwg_activity('user', $pwg_uid, 'logout');
-    }
-
-    $_SESSION = [];
-    session_unset();
-    session_destroy();
-    $current_session_name = session_name();
-    if ($current_session_name !== false) {
-        setcookie(
-            $current_session_name,
-            '',
-            [
-                'expires' => 0,
-                'path' => (string) ini_get('session.cookie_path'),
-                'domain' => (string) ini_get('session.cookie_domain'),
-            ]
-        );
-    }
-    // see log_user() for why this accepts both the config-default scalar
-    // type and the DB-persisted string form
-    $remember_me_name = $conf['remember_me_name'];
-    $remember_me_name = is_string($remember_me_name) ? $remember_me_name : 'pwg_remember';
-    setcookie($remember_me_name, '', [
-        'expires' => 0,
-        'path' => cookie_path(),
-        'domain' => (string) ini_get('session.cookie_domain'),
-    ]);
+    new AuthService(new AuthRepository(DbConnection::build()))
+        ->logoutUser();
 }
 
 /**
@@ -2354,23 +1644,8 @@ UPDATE ' . Tables::userInfos() . '
  */
 function userprefs_save(): void
 {
-    /** @var array<string, mixed> $user */
-    global $user;
-
-    $dbValue = pwg_db_real_escape_string(serialize($user['preferences']));
-
-    // user_infos.id (primary key, NOT NULL): a raw DB fetch value is a
-    // numeric string, build_user() may also set it as int -- either way
-    // it's always scalar and safe to interpolate into SQL below.
-    $user_id_val = $user['id'];
-    $user_id_str = is_scalar($user_id_val) ? (string) $user_id_val : '0';
-
-    $query = '
-UPDATE ' . Tables::userInfos() . '
-  SET preferences = \'' . $dbValue . '\'
-  WHERE user_id = ' . $user_id_str . '
-;';
-    pwg_query($query);
+    new PreferencesService(new UserRepository(DbConnection::build()))
+        ->save();
 }
 
 /**
@@ -2385,24 +1660,8 @@ UPDATE ' . Tables::userInfos() . '
  */
 function userprefs_update_param($param, $value): void
 {
-    /** @var array<string, mixed> $user */
-    global $user;
-
-    // If the field is true or false, the variable is transformed into a boolean value.
-    if ($value == 'true') {
-        $value = true;
-    } elseif ($value == 'false') {
-        $value = false;
-    }
-
-    $preferences = $user['preferences'] ?? [];
-    if (! is_array($preferences)) {
-        $preferences = [];
-    }
-    $preferences[$param] = $value;
-    $user['preferences'] = $preferences;
-
-    userprefs_save();
+    new PreferencesService(new UserRepository(DbConnection::build()))
+        ->updateParam($param, $value);
 }
 
 /**
@@ -2413,28 +1672,8 @@ function userprefs_update_param($param, $value): void
  */
 function userprefs_delete_param($params): void
 {
-    /** @var array<string, mixed> $user */
-    global $user;
-
-    if (! is_array($params)) {
-        $params = [$params];
-    }
-    if (empty($params)) {
-        return;
-    }
-
-    $preferences = $user['preferences'] ?? [];
-    if (! is_array($preferences)) {
-        $preferences = [];
-    }
-    foreach ($params as $param) {
-        if (isset($preferences[$param])) {
-            unset($preferences[$param]);
-        }
-    }
-    $user['preferences'] = $preferences;
-
-    userprefs_save();
+    new PreferencesService(new UserRepository(DbConnection::build()))
+        ->deleteParam($params);
 }
 
 /**
@@ -2448,12 +1687,8 @@ function userprefs_delete_param($params): void
  */
 function userprefs_get_param($param, $default_value = null)
 {
-    /** @var array<string, mixed> $user */
-    global $user;
-
-    $preferences = $user['preferences'] ?? null;
-
-    return is_array($preferences) ? ($preferences[$param] ?? $default_value) : $default_value;
+    return new PreferencesService(new UserRepository(DbConnection::build()))
+        ->getParam($param, $default_value);
 }
 
 /**

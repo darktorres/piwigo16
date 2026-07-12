@@ -1,0 +1,148 @@
+<?php
+
+declare(strict_types=1);
+
+// getAllTags() calls the real trigger_change() (unqualified, resolves to
+// the global namespace) -- lives in include/functions_plugins.inc.php,
+// which needs PHPWG_ROOT_PATH defined and pulls in the whole plugin-system
+// stack this isolated integration test doesn't want to depend on. Same
+// "minimal stub to load standalone" pattern as
+// tests/Integration/AuthServiceTest.php.
+namespace {
+    if (! function_exists('trigger_change')) {
+        function trigger_change(string $event, mixed $data = null, mixed ...$args): mixed
+        {
+            return $data;
+        }
+    }
+
+    // Also stubbed: the real tag_alpha_compare() (functions_html.inc.php)
+    // delegates to Piwigo\Html\HtmlService::tagAlphaCompare(), which needs
+    // pwg_transliterate() (Lang domain) -- plain alphabetical comparison
+    // is a faithful-enough stand-in for these tests, which only assert on
+    // ordering between plain ASCII fixture tag names.
+    if (! function_exists('tag_alpha_compare')) {
+        /**
+         * @param array<string, mixed> $a
+         * @param array<string, mixed> $b
+         */
+        function tag_alpha_compare(array $a, array $b): int
+        {
+            $name_a = is_string($a['name'] ?? null) ? $a['name'] : '';
+            $name_b = is_string($b['name'] ?? null) ? $b['name'] : '';
+
+            return strcmp($name_a, $name_b);
+        }
+    }
+}
+
+namespace Piwigo\Tests\Integration {
+
+    use Piwigo\Config\Config;
+    use Piwigo\Config\ConfigLoader;
+    use Piwigo\Db\DbConnection;
+    use Piwigo\Tag\TagRepository;
+    use Piwigo\Tag\TagService;
+
+    final class TagServiceTest extends IntegrationTestCase
+    {
+        private static bool $fixtureReady = false;
+
+        private TagService $service;
+
+        #[\Override]
+        protected function setUp(): void
+        {
+            parent::setUp();
+            $this->setUpConnectionFromEnv();
+
+            if (! self::$fixtureReady) {
+                $this->resetDatabase();
+                $this->loadFixture(dirname(__DIR__, 2) . '/tests/Fixtures/piwigo-17.0.sql');
+                self::$fixtureReady = true;
+            }
+
+            Config::reset();
+            ConfigLoader::applyDefaults();
+            ConfigLoader::applyEnvOverrides();
+
+            $GLOBALS['conf'] = ['tags_levels' => 5];
+
+            $this->service = new TagService(new TagRepository(DbConnection::build()));
+        }
+
+        public function test_get_all_tags_returns_every_fixture_tag_alphabetically(): void
+        {
+            $names = array_column($this->service->getAllTags(), 'name');
+
+            self::assertSame(['family', 'nature', 'travel'], $names);
+        }
+
+        public function test_get_all_tags_sets_name_raw(): void
+        {
+            $tags = $this->service->getAllTags();
+
+            self::assertSame($tags[0]['name'], $tags[0]['name_raw']);
+        }
+
+        public function test_find_tags_delegates_to_the_repository(): void
+        {
+            $tags = $this->service->findTags([1]);
+
+            self::assertCount(1, $tags);
+            self::assertSame('nature', $tags[0]['name']);
+        }
+
+        public function test_add_level_to_tags_returns_empty_for_empty_input(): void
+        {
+            self::assertSame([], $this->service->addLevelToTags([]));
+        }
+
+        public function test_add_level_to_tags_assigns_higher_level_to_higher_counter(): void
+        {
+            $tags = [
+                ['id' => 1, 'counter' => 1],
+                ['id' => 2, 'counter' => 100],
+            ];
+
+            $withLevels = $this->service->addLevelToTags($tags);
+
+            self::assertGreaterThan($withLevels[0]['level'], $withLevels[1]['level']);
+        }
+
+        public function test_add_level_to_tags_gives_the_middle_level_to_the_average(): void
+        {
+            $tags = [
+                ['id' => 1, 'counter' => 10],
+                ['id' => 2, 'counter' => 10],
+                ['id' => 3, 'counter' => 10],
+            ];
+
+            $withLevels = $this->service->addLevelToTags($tags);
+
+            foreach ($withLevels as $tag) {
+                self::assertSame(3, $tag['level']);
+            }
+        }
+
+        public function test_tags_id_compare_orders_by_id_ascending(): void
+        {
+            self::assertSame(-1, $this->service->tagsIdCompare(['id' => 1], ['id' => 2]));
+            self::assertSame(1, $this->service->tagsIdCompare(['id' => 2], ['id' => 1]));
+        }
+
+        public function test_tags_counter_compare_orders_by_counter_descending(): void
+        {
+            self::assertSame(1, $this->service->tagsCounterCompare(['id' => 1, 'counter' => 1], ['id' => 2, 'counter' => 5]));
+            self::assertSame(-1, $this->service->tagsCounterCompare(['id' => 1, 'counter' => 5], ['id' => 2, 'counter' => 1]));
+        }
+
+        public function test_tags_counter_compare_breaks_ties_by_id(): void
+        {
+            self::assertSame(
+                -1,
+                $this->service->tagsCounterCompare(['id' => 1, 'counter' => 5], ['id' => 2, 'counter' => 5])
+            );
+        }
+    }
+}

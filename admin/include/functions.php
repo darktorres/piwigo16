@@ -10,11 +10,16 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\Image\pwg_image;
+use Piwigo\Audit\AuditRepository;
+use Piwigo\Audit\AuditService;
 use Piwigo\Cache\PersistentCache;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Logger;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
+use Piwigo\Group\GroupService;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
@@ -2581,23 +2586,10 @@ function fetchRemote($src, &$dest, $get_data = [], $post_data = [], $user_agent 
  */
 function get_groupname($group_id): false|string
 {
-    $query = '
-SELECT name
-  FROM `' . Tables::groups() . '`
-  WHERE id = ' . intval($group_id) . '
-;';
-    $result = pwg_query($query);
-    if (pwg_db_num_rows($result) > 0) {
-        $row = pwg_db_fetch_row($result);
-        assert($row !== null);
-        [$groupname] = $row;
-        // groups.name is a NOT NULL column.
-        assert(is_string($groupname));
-    } else {
-        return false;
-    }
+    $name = new GroupRepository(DbConnection::build())
+        ->findName($group_id);
 
-    return $groupname;
+    return $name ?? false;
 }
 
 /**
@@ -2606,6 +2598,8 @@ SELECT name
  */
 function delete_groups($group_ids): false|array
 {
+    /** @var array<string, mixed> $user */
+    global $user;
 
     if (count($group_ids) == 0) {
         trigger_error('There is no group to delete', E_USER_WARNING);
@@ -2622,47 +2616,24 @@ function delete_groups($group_ids): false|array
         }
     }
 
-    $group_id_string = implode(',', $group_ids);
+    $ids = array_map(intval(...), $group_ids);
 
-    // destruction of the access linked to the group
-    $query = '
-DELETE
-  FROM ' . Tables::groupAccess() . '
-  WHERE group_id IN (' . $group_id_string . ')
-;';
-    pwg_query($query);
+    $deleted = new GroupService(new GroupRepository(DbConnection::build()))
+        ->delete($ids);
 
-    // destruction of the users links for this group
-    $query = '
-DELETE
-  FROM ' . Tables::userGroup() . '
-  WHERE group_id IN (' . $group_id_string . ')
-;';
-    pwg_query($query);
+    // [SEC-57] one row per group actually deleted
+    if ($deleted !== []) {
+        $actor_id = $user['id'] ?? null;
+        $actor_id = is_numeric($actor_id) ? (int) $actor_id : null;
+        $audit = new AuditService(new AuditRepository(DbConnection::build()));
+        foreach ($deleted as $deleted_id => $deleted_name) {
+            $audit->record($actor_id, 'delete', 'group', $deleted_id, [
+                'name' => $deleted_name,
+            ], null);
+        }
+    }
 
-    $query = '
-SELECT id, name
-  FROM `' . Tables::groups() . '`
-  WHERE id IN (' . $group_id_string . ')
-;';
-
-    // id and name are NOT NULL columns; filter defensively so the value type
-    // matches this function's own return type.
-    $group_list = array_filter(query2array($query, 'id', 'name'), is_string(...));
-    $groupids = array_keys($group_list);
-
-    // destruction of the group
-    $query = '
-DELETE
-  FROM `' . Tables::groups() . '`
-  WHERE id IN (' . $group_id_string . ')
-;';
-    pwg_query($query);
-
-    trigger_notify('delete_group', $groupids);
-    pwg_activity('group', $groupids, 'delete');
-
-    return $group_list;
+    return $deleted;
 }
 
 /**

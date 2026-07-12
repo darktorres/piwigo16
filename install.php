@@ -108,6 +108,20 @@ $dbuser = (! empty($_POST['dbuser']) && is_string($_POST['dbuser'])) ? $_POST['d
 $dbpasswd = (! empty($_POST['dbpasswd']) && is_string($_POST['dbpasswd'])) ? $_POST['dbpasswd'] : '';
 $dbname = (! empty($_POST['dbname']) && is_string($_POST['dbname'])) ? $_POST['dbname'] : '';
 
+// Same reasoning as the db_prefix seeding above: this script never goes
+// through Kernel::boot()/ConfigLoader, so any code reached later in this
+// same request that resolves a DB connection via Piwigo\Db\DbConnection::
+// build() (which reads Config::dbHost()/dbUser()/dbPassword()/dbName())
+// would otherwise silently see SCHEMA defaults instead of the real
+// submitted credentials. Found live: get_default_user_value() ->
+// UserService -> UserRepository -> DbConnection::build(), reached from
+// activate_core_themes() during step-2 theme activation, fatals with
+// "Access denied for user ''@'localhost'" without this.
+Config::override('db_host', $dbhost);
+Config::override('db_user', $dbuser);
+Config::override('db_password', $dbpasswd);
+Config::override('db_base', $dbname);
+
 // dblayer
 if (! extension_loaded('mysqli')) {
     fatal_error('PHP extension "mysqli" is not loaded');

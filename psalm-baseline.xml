@@ -1131,7 +1131,6 @@
       <code><![CDATA[check_pwg_token()]]></code>
       <code><![CDATA[check_status(AccessLevel::Administrator)]]></code>
       <code><![CDATA[get_admin_client_cache_keys(['groups', 'users'])]]></code>
-      <code><![CDATA[get_boolean($row['is_default'])]]></code>
       <code><![CDATA[get_pwg_token()]]></code>
       <code><![CDATA[get_pwg_token()]]></code>
       <code><![CDATA[get_pwg_token()]]></code>
@@ -1141,10 +1140,6 @@
       <code><![CDATA[l10n('Groups')]]></code>
       <code><![CDATA[l10n('default')]]></code>
       <code><![CDATA[l10n_dec('%d member', '%d members', count($members))]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($res)]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
     </UndefinedFunction>
     <UnresolvableInclude>
       <code><![CDATA[include_once PHPWG_ROOT_PATH . 'admin/include/functions.php']]></code>
@@ -1152,7 +1147,7 @@
   </file>
   <file src="admin/group_perm.php">
     <InvalidGlobal>
-      <code><![CDATA[global $page, $template;]]></code>
+      <code><![CDATA[global $page, $template, $user;]]></code>
     </InvalidGlobal>
     <RiskyCast>
       <code><![CDATA[$_GET['group_id']]]></code>
@@ -1172,19 +1167,14 @@
       <code><![CDATA[get_root_url()]]></code>
       <code><![CDATA[get_subcat_ids($cat_true)]]></code>
       <code><![CDATA[get_uppercat_ids($cat_false)]]></code>
-      <code><![CDATA[invalidate_user_cache()]]></code>
       <code><![CDATA[l10n(
             'Manage permissions for group "%s"',
             get_groupname($page['group'])
         )]]></code>
       <code><![CDATA[l10n('Authorized')]]></code>
       <code><![CDATA[l10n('Forbidden')]]></code>
-      <code><![CDATA[mass_inserts(Tables::groupAccess(), ['group_id', 'cat_id'], $inserts)]]></code>
       <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
       <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[pwg_query($query_true)]]></code>
     </UndefinedFunction>
@@ -1512,6 +1502,10 @@
       <code><![CDATA[$content]]></code>
       <code><![CDATA[$image_ids_to_delete]]></code>
     </PossiblyUndefinedVariable>
+    <RedundantCondition>
+      <code><![CDATA[$is_self_request && is_string($current_host)]]></code>
+      <code><![CDATA[is_string($current_host)]]></code>
+    </RedundantCondition>
     <RiskyTruthyFalsyComparison>
       <code><![CDATA[empty($candidate)]]></code>
       <code><![CDATA[empty($candidate)]]></code>
@@ -1717,7 +1711,6 @@
         'photo_deletion_mode' => $photo_deletion_mode,
     ])]]></code>
       <code><![CDATA[pwg_activity('album', $inserted_id, 'add')]]></code>
-      <code><![CDATA[pwg_activity('group', $groupids, 'delete')]]></code>
       <code><![CDATA[pwg_activity('photo', $ids, 'delete')]]></code>
       <code><![CDATA[pwg_activity('tag', $tag_ids, 'delete')]]></code>
       <code><![CDATA[pwg_activity('user', $user_id, 'delete')]]></code>
@@ -1733,7 +1726,6 @@
       <code><![CDATA[pwg_db_fetch_assoc(pwg_query($query))]]></code>
       <code><![CDATA[pwg_db_fetch_assoc(pwg_query($query))]]></code>
       <code><![CDATA[pwg_db_fetch_assoc(pwg_query($query))]]></code>
-      <code><![CDATA[pwg_db_fetch_row($result)]]></code>
       <code><![CDATA[pwg_db_fetch_row($result)]]></code>
       <code><![CDATA[pwg_db_fetch_row(pwg_query($query))]]></code>
       <code><![CDATA[pwg_db_fetch_row(pwg_query($query))]]></code>
@@ -1757,12 +1749,6 @@
       <code><![CDATA[pwg_db_insert_id()]]></code>
       <code><![CDATA[pwg_db_insert_id()]]></code>
       <code><![CDATA[pwg_db_num_rows($result)]]></code>
-      <code><![CDATA[pwg_db_num_rows($result)]]></code>
-      <code><![CDATA[pwg_http_client()]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
@@ -1854,7 +1840,6 @@
       <code><![CDATA[query2array($query, 'id')]]></code>
       <code><![CDATA[query2array($query, 'id', 'dir')]]></code>
       <code><![CDATA[query2array($query, 'id', 'galleries_url')]]></code>
-      <code><![CDATA[query2array($query, 'id', 'name')]]></code>
       <code><![CDATA[query2array($query, 'id', 'path')]]></code>
       <code><![CDATA[query2array($query, 'id', 'path')]]></code>
       <code><![CDATA[query2array($query, null, $column)]]></code>
@@ -1922,7 +1907,6 @@
     ], $insert))]]></code>
       <code><![CDATA[trigger_notify('delete_categories', $ids)]]></code>
       <code><![CDATA[trigger_notify('delete_elements', $ids)]]></code>
-      <code><![CDATA[trigger_notify('delete_group', $groupids)]]></code>
       <code><![CDATA[trigger_notify('delete_tags', $tag_ids)]]></code>
       <code><![CDATA[trigger_notify('delete_user', $user_id)]]></code>
       <code><![CDATA[trigger_notify('empty_lounge', $rows)]]></code>
@@ -1937,7 +1921,6 @@
       <code><![CDATA[update_images_lastmodified($images_to_update)]]></code>
       <code><![CDATA[update_uppercats()]]></code>
       <code><![CDATA[url_is_remote($row_path)]]></code>
-      <code><![CDATA[url_is_remote($src)]]></code>
     </UndefinedFunction>
     <UnresolvableInclude>
       <code><![CDATA[include_once PHPWG_ROOT_PATH . 'admin/include/functions_metadata.php']]></code>
@@ -1946,45 +1929,6 @@
   <file src="admin/include/functions_history.inc.php">
     <UndefinedFunction>
       <code><![CDATA[add_event_handler('get_history', 'get_history')]]></code>
-      <code><![CDATA[array_from_query($query, 'id')]]></code>
-      <code><![CDATA[conf_update_param('history_summarized_dropped', true)]]></code>
-      <code><![CDATA[history_remove_summarized_column()]]></code>
-      <code><![CDATA[history_remove_summarized_column()]]></code>
-      <code><![CDATA[mass_inserts(
-            Tables::historySummary(),
-            array_keys($inserts[0]),
-            $inserts
-        )]]></code>
-      <code><![CDATA[mass_updates(
-            Tables::historySummary(),
-            [
-                'primary' => ['year', 'month', 'day', 'hour'],
-                'update' => ['nb_pages', 'history_id_to'],
-            ],
-            $updates
-        )]]></code>
-      <code><![CDATA[prepend_append_array_items($clauses, '(', ')')]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_db_fetch_row(pwg_query($query))]]></code>
-      <code><![CDATA[pwg_db_fetch_row(pwg_query($query))]]></code>
-      <code><![CDATA[pwg_db_get_hour('time')]]></code>
-      <code><![CDATA[pwg_db_num_rows($result)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query('ALTER TABLE `' . Tables::history() . '` DROP COLUMN `summarized`;')]]></code>
-      <code><![CDATA[pwg_query('SHOW COLUMNS FROM `' . Tables::history() . '` LIKE "summarized";')]]></code>
-      <code><![CDATA[query2array($query)]]></code>
-      <code><![CDATA[query2array($query)]]></code>
-      <code><![CDATA[query2array($query)]]></code>
-      <code><![CDATA[query2array($query)]]></code>
-      <code><![CDATA[query2array($query)]]></code>
-      <code><![CDATA[trigger_notify('functions_history_included')]]></code>
     </UndefinedFunction>
   </file>
   <file src="admin/include/functions_install.inc.php">
@@ -2004,52 +1948,9 @@
     </UndefinedFunction>
   </file>
   <file src="admin/include/functions_metadata.php">
-    <ArgumentTypeCoercion>
-      <code><![CDATA[$separator_regex]]></code>
-    </ArgumentTypeCoercion>
-    <PossibleRawObjectIteration>
-      <code><![CDATA[$iptc]]></code>
-    </PossibleRawObjectIteration>
-    <PossiblyNullPropertyFetch>
-      <code><![CDATA[$xmlattributes->height]]></code>
-      <code><![CDATA[$xmlattributes->viewBox]]></code>
-      <code><![CDATA[$xmlattributes->width]]></code>
-    </PossiblyNullPropertyFetch>
-    <RiskyTruthyFalsyComparison>
-      <code><![CDATA[empty($exif[$pwg_key])]]></code>
-      <code><![CDATA[empty($exif[$pwg_key])]]></code>
-    </RiskyTruthyFalsyComparison>
     <UndefinedConstant>
-      <code><![CDATA[DB_REGEX_OPERATOR]]></code>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
     </UndefinedConstant>
-    <UndefinedFunction>
-      <code><![CDATA[get_exif_data($file, $map)]]></code>
-      <code><![CDATA[get_iptc_data($file, $map)]]></code>
-      <code><![CDATA[get_sync_metadata($data)]]></code>
-      <code><![CDATA[get_sync_metadata_attributes()]]></code>
-      <code><![CDATA[hash_from_query($query, 'id')]]></code>
-      <code><![CDATA[mass_updates(
-            Tables::images(),
-            [
-                'primary' => ['id'],
-                'update' => $update_fields,
-            ],
-            $datas,
-            MASS_UPDATES_SKIP_EMPTY
-        )]]></code>
-      <code><![CDATA[metadata_normalize_keywords_string($iptc['keywords'])]]></code>
-      <code><![CDATA[metadata_normalize_keywords_string($value_str)]]></code>
-      <code><![CDATA[original_to_representative($file, $representative_ext)]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[set_tags_of($tags_of)]]></code>
-      <code><![CDATA[tag_id_from_tag_name($tag_name)]]></code>
-    </UndefinedFunction>
     <UnresolvableInclude>
       <code><![CDATA[include_once PHPWG_ROOT_PATH . '/include/functions_metadata.inc.php']]></code>
     </UnresolvableInclude>
@@ -2076,7 +1977,6 @@
             ])]]></code>
       <code><![CDATA[assign_vars_nbm_mail_content($nbm_user)]]></code>
       <code><![CDATA[begin_users_env_nbm(true)]]></code>
-      <code><![CDATA[boolean_to_string($enabled_filter_value)]]></code>
       <code><![CDATA[boolean_to_string($is_subscribe)]]></code>
       <code><![CDATA[build_user((int) $nbm_user_id_raw, true)]]></code>
       <code><![CDATA[check_sendmail_timeout()]]></code>
@@ -2085,7 +1985,6 @@
       <code><![CDATA[do_subscribe_unsubscribe_notification_by_mail($is_admin_request, true, $check_key_list)]]></code>
       <code><![CDATA[end_users_env_nbm()]]></code>
       <code><![CDATA[format_email($send_as_name, $send_as_mail_address)]]></code>
-      <code><![CDATA[generate_key(16)]]></code>
       <code><![CDATA[get_boolean($conf['nbm_send_html_mail'] ?? false)]]></code>
       <code><![CDATA[get_default_language()]]></code>
       <code><![CDATA[get_default_language()]]></code>
@@ -2179,8 +2078,6 @@
     ))]]></code>
       <code><![CDATA[push_page_message($page, 'infos', sprintf($msg_info, stripslashes((string) $nbm_user['username']), $nbm_user['mail_address']))]]></code>
       <code><![CDATA[push_page_message($page, 'infos', sprintf($msg_info, stripslashes((string) $nbm_user['username']), $nbm_user['mail_address']))]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_db_fetch_row(pwg_query($query))]]></code>
       <code><![CDATA[pwg_mail(
                     [
                         'name' => stripslashes((string) $nbm_user['username']),
@@ -2194,9 +2091,6 @@
                         'content_format' => $email_format,
                     ]
                 )]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[quote_check_key_list($check_key_list)]]></code>
       <code><![CDATA[set_make_full_url()]]></code>
       <code><![CDATA[set_make_full_url()]]></code>
       <code><![CDATA[set_user_on_env_nbm($nbm_user, true)]]></code>
@@ -2207,25 +2101,6 @@
       <code><![CDATA[unset_make_full_url()]]></code>
       <code><![CDATA[unset_make_full_url()]]></code>
       <code><![CDATA[unset_user_on_env_nbm()]]></code>
-    </UndefinedFunction>
-  </file>
-  <file src="admin/include/functions_permalinks.php">
-    <UndefinedFunction>
-      <code><![CDATA[array_from_query($query, 'id')]]></code>
-      <code><![CDATA[l10n('Permalink %s has been previously used by album %s. Delete from the permalink history first')]]></code>
-      <code><![CDATA[l10n('Permalink %s has been previously used by album %s. Delete from the permalink history first')]]></code>
-      <code><![CDATA[l10n('Permalink %s is already used by album %s')]]></code>
-      <code><![CDATA[l10n('The permalink name must be composed of a-z, A-Z, 0-9, "-", "_" or "/". It must not be numeric or start with number followed by "-"')]]></code>
-      <code><![CDATA[pwg_db_fetch_row($result)]]></code>
-      <code><![CDATA[pwg_db_fetch_row($result)]]></code>
-      <code><![CDATA[pwg_db_num_rows($result)]]></code>
-      <code><![CDATA[pwg_db_num_rows($result)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
     </UndefinedFunction>
   </file>
   <file src="admin/include/functions_plugins.inc.php">
@@ -2333,6 +2208,9 @@
     </PossiblyUndefinedVariable>
     <UndefinedConstant>
       <code><![CDATA[IMG_MEDIUM]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
@@ -3634,21 +3512,14 @@
       <code><![CDATA[l10n('This site already exists')]]></code>
       <code><![CDATA[l10n('created')]]></code>
       <code><![CDATA[l10n('deleted')]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc(pwg_query($query))]]></code>
-      <code><![CDATA[pwg_db_fetch_row(pwg_query($query))]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[trigger_change(
           'get_admins_site_links',
           $plugin_links,
-          $row['id'],
+          $id,
           $is_remote
       )]]></code>
+      <code><![CDATA[url_is_remote($galleries_url)]]></code>
       <code><![CDATA[url_is_remote($galleries_url_input)]]></code>
-      <code><![CDATA[url_is_remote($row['galleries_url'])]]></code>
     </UndefinedFunction>
     <UnresolvableInclude>
       <code><![CDATA[include_once PHPWG_ROOT_PATH . 'admin/include/functions.php']]></code>
@@ -4126,18 +3997,10 @@
       <code><![CDATA[get_admin_client_cache_keys(['users'])]]></code>
       <code><![CDATA[get_pwg_token()]]></code>
       <code><![CDATA[l10n('Users')]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_db_fetch_row(pwg_query($query))]]></code>
-      <code><![CDATA[pwg_db_fetch_row(pwg_query($query))]]></code>
       <code><![CDATA[pwg_db_fetch_row(pwg_query($query))]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[query2array($query)]]></code>
       <code><![CDATA[query2array($query)]]></code>
       <code><![CDATA[query2array($query, 'id', 'username')]]></code>
-      <code><![CDATA[query2array($query, 'performed_by', 'counter')]]></code>
     </UndefinedFunction>
     <UnresolvableInclude>
       <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/include/user_tabs.inc.php']]></code>
@@ -4268,30 +4131,32 @@
       <code><![CDATA[is_string($key)]]></code>
     </TypeDoesNotContainType>
   </file>
+  <file src="config/storage.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PWG_LOCAL_DIR]]></code>
+      <code><![CDATA[PWG_LOCAL_DIR]]></code>
+    </UndefinedConstant>
+  </file>
   <file src="ecs.php">
     <DeprecatedClass>
       <code><![CDATA[ParamReturnAndVarTagMalformsFixer::class]]></code>
     </DeprecatedClass>
   </file>
   <file src="feed.php">
-    <FalsableReturnStatement>
-      <code><![CDATA[strtotime($datetime)]]></code>
-    </FalsableReturnStatement>
-    <InvalidFalsableReturnType>
-      <code><![CDATA[int]]></code>
-    </InvalidFalsableReturnType>
     <InvalidGlobal>
       <code><![CDATA[global $conf, $user;]]></code>
     </InvalidGlobal>
-    <RedundantCondition>
-      <code><![CDATA[$date_ts !== false]]></code>
-      <code><![CDATA[$dbnow_ts !== false]]></code>
-      <code><![CDATA[assert($date_ts !== false)]]></code>
-      <code><![CDATA[assert($dbnow_ts !== false)]]></code>
-    </RedundantCondition>
-    <RiskyTruthyFalsyComparison>
-      <code><![CDATA[empty($news)]]></code>
-    </RiskyTruthyFalsyComparison>
+    <PossiblyNullArrayAccess>
+      <code><![CDATA[$feed_row['lastCheck']]]></code>
+      <code><![CDATA[$feed_row['userId']]]></code>
+    </PossiblyNullArrayAccess>
   </file>
   <file src="i.php">
     <ArgumentTypeCoercion>
@@ -4393,18 +4258,22 @@
     )]]></code>
       <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
       <code><![CDATA[pwg_db_fetch_assoc(pwg_query($query))]]></code>
+      <code><![CDATA[pwg_db_fetch_assoc(pwg_query($query))]]></code>
+      <code><![CDATA[pwg_db_fetch_assoc(pwg_query($query))]]></code>
       <code><![CDATA[pwg_load_env_file(PHPWG_ROOT_PATH)]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
+      <code><![CDATA[pwg_query($query)]]></code>
+      <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[single_update(
-                    $prefixeTable . 'images',
-                    [
-                        'rotation' => pwg_image::get_rotation_code_from_angle($page['rotation_angle']),
-                    ],
-                    [
-                        'id' => $row['id'],
-                    ]
-                )]]></code>
+                $prefixeTable . 'images',
+                [
+                    'rotation' => pwg_image::get_rotation_code_from_angle($page['rotation_angle']),
+                ],
+                [
+                    'id' => $row['id'],
+                ]
+            )]]></code>
     </UndefinedFunction>
     <UnresolvableInclude>
       <code><![CDATA[include_once PHPWG_ROOT_PATH . 'include/dblayer/functions_' . $dblayer . '.inc.php']]></code>
@@ -4818,8 +4687,6 @@
   <file src="include/functions.inc.php">
     <ArgumentTypeCoercion>
       <code><![CDATA[$op]]></code>
-      <code><![CDATA[$pattern]]></code>
-      <code><![CDATA[$pattern]]></code>
     </ArgumentTypeCoercion>
     <DocblockTypeContradiction>
       <code><![CDATA[! isset($template)]]></code>
@@ -4852,9 +4719,6 @@
       <code><![CDATA[$start + $nb_element_page]]></code>
       <code><![CDATA[$start - $nb_element_page]]></code>
       <code><![CDATA[$start / $nb_element_page + 1]]></code>
-      <code><![CDATA[$time]]></code>
-      <code><![CDATA[$time]]></code>
-      <code><![CDATA[$time - 3600]]></code>
       <code><![CDATA[ceil($cur_page) + $pages_around]]></code>
       <code><![CDATA[floor($cur_page) - $pages_around]]></code>
     </InvalidOperand>
@@ -4890,8 +4754,6 @@
     </PossiblyInvalidCast>
     <PossiblyUndefinedArrayOffset>
       <code><![CDATA[$_SERVER['REMOTE_ADDR']]]></code>
-      <code><![CDATA[$_SERVER['REMOTE_ADDR']]]></code>
-      <code><![CDATA[$_SERVER['REMOTE_ADDR']]]></code>
       <code><![CDATA[$conf[$feature]]]></code>
       <code><![CDATA[$conf['history_sections_cache']]]></code>
       <code><![CDATA[$conf['send_piwigo_infos_origin_hash']]]></code>
@@ -4903,19 +4765,12 @@
       <code><![CDATA[(int) $current_counter]]></code>
     </RedundantCast>
     <RedundantCondition>
-      <code><![CDATA[$object == 'user' and $action == 'login' and isset($_SERVER['HTTP_USER_AGENT']) and is_string($_SERVER['HTTP_USER_AGENT'])]]></code>
       <code><![CDATA[IN_ADMIN]]></code>
       <code><![CDATA[fetchRemote($url, $result) and is_string($result)]]></code>
       <code><![CDATA[is_numeric($current_counter)]]></code>
-      <code><![CDATA[is_string($_SERVER['HTTP_REFERER'])]]></code>
-      <code><![CDATA[is_string($_SERVER['HTTP_USER_AGENT'])]]></code>
-      <code><![CDATA[is_string($_SERVER['HTTP_USER_AGENT'])]]></code>
       <code><![CDATA[is_string($result)]]></code>
-      <code><![CDATA[isset($_SERVER['HTTP_REFERER']) and is_string($_SERVER['HTTP_REFERER'])]]></code>
-      <code><![CDATA[isset($_SESSION['connected_with']) and $_SESSION['connected_with'] === 'api_key' and isset($_SERVER['HTTP_USER_AGENT']) and is_string($_SERVER['HTTP_USER_AGENT'])]]></code>
     </RedundantCondition>
     <RiskyTruthyFalsyComparison>
-      <code><![CDATA[empty($_REQUEST['pwg_token'])]]></code>
       <code><![CDATA[empty($archive_root_dir)]]></code>
       <code><![CDATA[empty($eid)]]></code>
       <code><![CDATA[empty($eid)]]></code>
@@ -4927,13 +4782,11 @@
       <code><![CDATA[empty($op)]]></code>
       <code><![CDATA[empty($options['language'])]]></code>
       <code><![CDATA[empty($original)]]></code>
-      <code><![CDATA[empty($param_value)]]></code>
       <code><![CDATA[empty($parent_language)]]></code>
       <code><![CDATA[empty($parent_language)]]></code>
       <code><![CDATA[empty($parent_language)]]></code>
       <code><![CDATA[empty($print)]]></code>
       <code><![CDATA[empty(ini_get('open_basedir'))]]></code>
-      <code><![CDATA[empty(session_id())]]></code>
     </RiskyTruthyFalsyComparison>
     <TypeDoesNotContainType>
       <code><![CDATA[$get_icon_cache[$date]]]></code>
@@ -4993,12 +4846,6 @@
       <code><![CDATA[fatal_error("{$dir} " . l10n('no write access'))]]></code>
       <code><![CDATA[fatal_error("{$dir} " . l10n('no write access'))]]></code>
       <code><![CDATA[fatal_error('No configuration data')]]></code>
-      <code><![CDATA[fatal_error('[Hacking attempt] an item is not valid in input parameter "' . $param_name . '"')]]></code>
-      <code><![CDATA[fatal_error('[Hacking attempt] an item is not valid in input parameter "' . $param_name . '"')]]></code>
-      <code><![CDATA[fatal_error('[Hacking attempt] the input parameter "' . $param_name . '" is not valid')]]></code>
-      <code><![CDATA[fatal_error('[Hacking attempt] the input parameter "' . $param_name . '" is not valid')]]></code>
-      <code><![CDATA[fatal_error('[Hacking attempt] the input parameter "' . $param_name . '" is not valid')]]></code>
-      <code><![CDATA[fatal_error('[Hacking attempt] the input parameter "' . $param_name . '" should be an array')]]></code>
       <code><![CDATA[fatal_error('l10n_args: Invalid arguments')]]></code>
       <code><![CDATA[fetchRemote($url, $result)]]></code>
       <code><![CDATA[fetchRemote($url, $result, $get_data, $post_data)]]></code>
@@ -5035,7 +4882,6 @@
       <code><![CDATA[get_moment()]]></code>
       <code><![CDATA[get_parent_language()]]></code>
       <code><![CDATA[get_pwg_general_statitics()]]></code>
-      <code><![CDATA[get_pwg_token()]]></code>
       <code><![CDATA[get_sql_condition_FandF(
             [
                 'forbidden_categories' => 'category_id',
@@ -5076,8 +4922,6 @@
             'no_fallback' => true,
             'local' => true,
         ])]]></code>
-      <code><![CDATA[mass_inserts(Tables::activity(), array_keys($inserts[0]), $inserts)]]></code>
-      <code><![CDATA[mass_inserts(Tables::caddie(), ['element_id', 'user_id'], $datas)]]></code>
       <code><![CDATA[po_headers_to_lang_info($translations->getHeaders())]]></code>
       <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
       <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
@@ -5091,13 +4935,10 @@
       <code><![CDATA[pwg_db_get_recent_period($recent_period)]]></code>
       <code><![CDATA[pwg_db_insert_id()]]></code>
       <code><![CDATA[pwg_db_num_rows($result)]]></code>
-      <code><![CDATA[pwg_db_real_escape_string($user_agent)]]></code>
-      <code><![CDATA[pwg_db_real_escape_string(serialize($details))]]></code>
       <code><![CDATA[pwg_get_db_version()]]></code>
       <code><![CDATA[pwg_get_session_var('device')]]></code>
       <code><![CDATA[pwg_get_session_var('mobile_theme')]]></code>
       <code><![CDATA[pwg_is_dbconf_writeable()]]></code>
-      <code><![CDATA[pwg_now()]]></code>
       <code><![CDATA[pwg_now()]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
@@ -5138,14 +4979,12 @@
       <code><![CDATA[query2array($query, 'theme', 'theme_counter')]]></code>
       <code><![CDATA[query2array($query, null, $fieldname)]]></code>
       <code><![CDATA[query2array($query, null, 'counter')]]></code>
-      <code><![CDATA[query2array($query, null, 'element_id')]]></code>
       <code><![CDATA[redirect_html($url, $msg, $refresh_time)]]></code>
       <code><![CDATA[redirect_http($url)]]></code>
       <code><![CDATA[remove_accents(mb_strtolower($term, PWG_CHARSET))]]></code>
       <code><![CDATA[remove_accents(strtolower($term))]]></code>
       <code><![CDATA[safe_unserialize($cached_sections)]]></code>
       <code><![CDATA[safe_unserialize($update_details)]]></code>
-      <code><![CDATA[script_basename()]]></code>
       <code><![CDATA[script_basename()]]></code>
       <code><![CDATA[send_piwigo_infos_retry_later(1 * 60 * 60)]]></code>
       <code><![CDATA[send_piwigo_infos_retry_later(24 * 60 * 60)]]></code>
@@ -5195,18 +5034,13 @@
     </UnresolvableInclude>
   </file>
   <file src="include/functions_calendar.inc.php">
-    <NoValue>
-      <code><![CDATA[$sub_ids]]></code>
-    </NoValue>
-    <RedundantConditionGivenDocblockType>
-      <code><![CDATA[empty($sub_ids)]]></code>
-      <code><![CDATA[empty($sub_ids)]]></code>
-    </RedundantConditionGivenDocblockType>
+    <PossiblyUndefinedArrayOffset>
+      <code><![CDATA[$page['items']]]></code>
+    </PossiblyUndefinedArrayOffset>
     <RiskyTruthyFalsyComparison>
       <code><![CDATA[! $persistent_cache->get($cache_key_str, $page['items'])]]></code>
     </RiskyTruthyFalsyComparison>
     <UndefinedFunction>
-      <code><![CDATA[array_from_query($query, 'id')]]></code>
       <code><![CDATA[duplicate_index_url(
                         [
                             'chronology_style' => $style,
@@ -5220,23 +5054,6 @@
         )]]></code>
       <code><![CDATA[fatal_error('bad chronology field')]]></code>
       <code><![CDATA[fatal_error('persistent cache not initialized')]]></code>
-      <code><![CDATA[get_sql_condition_FandF(
-                [
-                    'forbidden_categories' => 'category_id',
-                    'visible_categories' => 'category_id',
-                    'visible_images' => 'id',
-                ],
-                'WHERE',
-                true
-            )]]></code>
-      <code><![CDATA[get_sql_condition_FandF(
-                [
-                    'visible_images' => 'id',
-                ],
-                'AND',
-                false
-            )]]></code>
-      <code><![CDATA[get_subcat_ids([$category_id])]]></code>
       <code><![CDATA[l10n('Creation date')]]></code>
       <code><![CDATA[l10n('Post date')]]></code>
       <code><![CDATA[l10n('chronology_' . $style . '_' . $view)]]></code>
@@ -5246,59 +5063,14 @@
     </UndefinedFunction>
   </file>
   <file src="include/functions_category.inc.php">
-    <RedundantCast>
-      <code><![CDATA[(int) $count_categories]]></code>
-      <code><![CDATA[(int) $count_images]]></code>
-    </RedundantCast>
-    <UndefinedConstant>
-      <code><![CDATA[DB_RANDOM_FUNCTION]]></code>
-      <code><![CDATA[DB_REGEX_OPERATOR]]></code>
-    </UndefinedConstant>
     <UndefinedFunction>
       <code><![CDATA[access_denied()]]></code>
       <code><![CDATA[display_select_categories($categories, $selecteds, $blockname, $fullname)]]></code>
-      <code><![CDATA[get_boolean($cat[$k])]]></code>
       <code><![CDATA[get_cat_display_name_cache(
                     is_string($uppercats) ? $uppercats : '',
                     null
                 )]]></code>
-      <code><![CDATA[get_common_categories(
-        array_map(intval(...), $items),
-        $related_albums_display_limit_int,
-        array_map(intval(...), $excluded_cat_ids)
-    )]]></code>
-      <code><![CDATA[get_display_images_count(
-                    is_numeric($row['nb_images']) ? (int) $row['nb_images'] : 0,
-                    is_numeric($row['count_images']) ? (int) $row['count_images'] : 0,
-                    is_numeric($row['count_categories']) ? (int) $row['count_categories'] : 0,
-                    false,
-                    ' / '
-                )]]></code>
-      <code><![CDATA[get_display_images_count($cat_nb_images, $cat_nb_images, 0, $short_message, $separator)]]></code>
       <code><![CDATA[get_icon(is_string($max_date_last) ? $max_date_last : '', $child_date_last)]]></code>
-      <code><![CDATA[get_sql_condition_FandF(
-            [
-                'forbidden_categories' => 'c.id',
-                'visible_categories' => 'c.id',
-                'visible_images' => 'image_id',
-            ],
-            "\n  AND"
-        )]]></code>
-      <code><![CDATA[get_sql_condition_FandF(
-            [
-                'forbidden_categories' => 'category_id',
-                'visible_categories' => 'category_id',
-                'visible_images' => 'id',
-            ],
-            "\n  AND"
-        )]]></code>
-      <code><![CDATA[get_sql_condition_FandF(
-            [
-                'forbidden_categories' => 'category_id',
-                'visible_categories' => 'category_id',
-            ],
-            "\n    AND"
-        )]]></code>
       <code><![CDATA[get_sql_condition_FandF(
             [
                 'visible_categories' => 'id',
@@ -5308,48 +5080,11 @@
         )]]></code>
       <code><![CDATA[global_rank_compare(...)]]></code>
       <code><![CDATA[global_rank_compare(...)]]></code>
-      <code><![CDATA[global_rank_compare(...)]]></code>
-      <code><![CDATA[global_rank_compare(...)]]></code>
-      <code><![CDATA[is_admin()]]></code>
-      <code><![CDATA[l10n('Date created, new &rarr; old')]]></code>
-      <code><![CDATA[l10n('Date created, old &rarr; new')]]></code>
-      <code><![CDATA[l10n('Date posted, new &rarr; old')]]></code>
-      <code><![CDATA[l10n('Date posted, old &rarr; new')]]></code>
-      <code><![CDATA[l10n('Default')]]></code>
-      <code><![CDATA[l10n('Permissions')]]></code>
-      <code><![CDATA[l10n('Photo title, A &rarr; Z')]]></code>
-      <code><![CDATA[l10n('Photo title, Z &rarr; A')]]></code>
-      <code><![CDATA[l10n('Rating score, high &rarr; low')]]></code>
-      <code><![CDATA[l10n('Rating score, low &rarr; high')]]></code>
-      <code><![CDATA[l10n('Visits, high &rarr; low')]]></code>
-      <code><![CDATA[l10n('Visits, low &rarr; high')]]></code>
-      <code><![CDATA[l10n('in this album')]]></code>
-      <code><![CDATA[l10n_dec('%d photo', '%d photos', $cat_count_images)]]></code>
-      <code><![CDATA[l10n_dec('in %d sub-album', 'in %d sub-albums', $cat_count_categories)]]></code>
       <code><![CDATA[make_index_url($url_params)]]></code>
       <code><![CDATA[make_index_url([
                     'category' => $row,
                 ])]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc(pwg_query($query))]]></code>
-      <code><![CDATA[pwg_db_fetch_row($result)]]></code>
-      <code><![CDATA[pwg_db_get_recent_period_expression($filter_days)]]></code>
-      <code><![CDATA[pwg_db_num_rows($result)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[query2array($query)]]></code>
-      <code><![CDATA[query2array($query)]]></code>
-      <code><![CDATA[query2array($query, 'id')]]></code>
-      <code><![CDATA[query2array($query, 'permalink')]]></code>
-      <code><![CDATA[query2array($query, null, 'id')]]></code>
-      <code><![CDATA[query2array($query, null, 'id')]]></code>
-      <code><![CDATA[remove_computed_category($cats, $category)]]></code>
       <code><![CDATA[trigger_change(
                     'render_category_name',
                     $row['name'],
@@ -5366,544 +5101,37 @@
         $user['expand'],
         $filter['enabled']
     )]]></code>
-      <code><![CDATA[trigger_change('get_category_preferred_image_orders', [
-        [l10n('Default'),                        '',                     true],
-        [l10n('Photo title, A &rarr; Z'),        'name ASC',             true],
-        [l10n('Photo title, Z &rarr; A'),        'name DESC',            true],
-        [l10n('Date created, new &rarr; old'),   'date_creation DESC',   true],
-        [l10n('Date created, old &rarr; new'),   'date_creation ASC',    true],
-        [l10n('Date posted, new &rarr; old'),    'date_available DESC',  true],
-        [l10n('Date posted, old &rarr; new'),    'date_available ASC',   true],
-        [l10n('Rating score, high &rarr; low'),  'rating_score DESC',    $conf['rate']],
-        [l10n('Rating score, low &rarr; high'),  'rating_score ASC',     $conf['rate']],
-        [l10n('Visits, high &rarr; low'),        'hit DESC',             true],
-        [l10n('Visits, low &rarr; high'),        'hit ASC',              true],
-        [l10n('Permissions'),                    'level DESC',           is_admin()],
-    ])]]></code>
-      <code><![CDATA[trigger_change('render_category_name', $cat['name'], $cat)]]></code>
     </UndefinedFunction>
   </file>
   <file src="include/functions_comment.inc.php">
-    <PossiblyNullArgument>
-      <code><![CDATA[$comment_email]]></code>
-    </PossiblyNullArgument>
-    <PossiblyUndefinedArrayOffset>
-      <code><![CDATA[$_SERVER['HTTP_USER_AGENT']]]></code>
-      <code><![CDATA[$_SERVER['REMOTE_ADDR']]]></code>
-      <code><![CDATA[$comm['content']]]></code>
-      <code><![CDATA[$comm['email']]]></code>
-      <code><![CDATA[$comm['image_id']]]></code>
-      <code><![CDATA[$comm['website_url']]]></code>
-    </PossiblyUndefinedArrayOffset>
-    <ReferenceConstraintViolation>
-      <code><![CDATA[return $comment_action;]]></code>
-    </ReferenceConstraintViolation>
-    <RiskyTruthyFalsyComparison>
-      <code><![CDATA[empty($comment_email)]]></code>
-      <code><![CDATA[empty($comment_website_url)]]></code>
-      <code><![CDATA[empty($comment_website_url)]]></code>
-    </RiskyTruthyFalsyComparison>
-    <UndefinedConstant>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-    </UndefinedConstant>
     <UndefinedFunction>
       <code><![CDATA[add_event_handler('user_comment_check', 'user_comment_check')]]></code>
-      <code><![CDATA[email_admin(
-            'delete',
-            [
-                'author' => $user['username'],
-                'comment_id' => $comment_id,
-            ]
-        )]]></code>
-      <code><![CDATA[email_admin('edit', [
-                'author' => $user['username'],
-                'content' => stripslashes($comment_content),
-            ])]]></code>
-      <code><![CDATA[email_check_format($comm_email)]]></code>
-      <code><![CDATA[fatal_error('Unknown comment identifier')]]></code>
-      <code><![CDATA[get_absolute_root_url()]]></code>
-      <code><![CDATA[get_absolute_root_url()]]></code>
-      <code><![CDATA[get_l10n_args('')]]></code>
-      <code><![CDATA[get_l10n_args('')]]></code>
-      <code><![CDATA[get_l10n_args('(!) This comment requires validation')]]></code>
-      <code><![CDATA[get_l10n_args('(!) This comment requires validation')]]></code>
-      <code><![CDATA[get_l10n_args('Author: %s', $comment['author'])]]></code>
-      <code><![CDATA[get_l10n_args('Author: %s', stripslashes($comment_author))]]></code>
-      <code><![CDATA[get_l10n_args('Author: %s', stripslashes($user_username))]]></code>
-      <code><![CDATA[get_l10n_args('Comment by %s', $comment['author'])]]></code>
-      <code><![CDATA[get_l10n_args('Comment by %s', stripslashes($comment_author))]]></code>
-      <code><![CDATA[get_l10n_args('Comment by %s', stripslashes($user_username))]]></code>
-      <code><![CDATA[get_l10n_args('Comment: %s', $comment['content'])]]></code>
-      <code><![CDATA[get_l10n_args('Comment: %s', stripslashes($comment_content))]]></code>
-      <code><![CDATA[get_l10n_args('Comment: %s', stripslashes($comment_content))]]></code>
-      <code><![CDATA[get_l10n_args('Email: %s', stripslashes($comment_email))]]></code>
-      <code><![CDATA[get_l10n_args('Manage this user comment: %s', $comment_url)]]></code>
-      <code><![CDATA[get_l10n_args('Manage this user comment: %s', $comment_url)]]></code>
-      <code><![CDATA[get_l10n_args('This author modified following comment:')]]></code>
-      <code><![CDATA[get_l10n_args('This author removed the comment with id %d', $comment['comment_id'])]]></code>
-      <code><![CDATA[invalidate_user_cache_nb_comments()]]></code>
-      <code><![CDATA[invalidate_user_cache_nb_comments()]]></code>
-      <code><![CDATA[invalidate_user_cache_nb_comments()]]></code>
-      <code><![CDATA[is_a_guest()]]></code>
-      <code><![CDATA[is_admin()]]></code>
-      <code><![CDATA[is_admin()]]></code>
-      <code><![CDATA[is_admin()]]></code>
-      <code><![CDATA[is_admin()]]></code>
-      <code><![CDATA[is_admin()]]></code>
-      <code><![CDATA[is_classic_user()]]></code>
-      <code><![CDATA[is_classic_user()]]></code>
-      <code><![CDATA[l10n('Anti-flood system : please wait for a moment before trying to post another comment')]]></code>
-      <code><![CDATA[l10n('Email address is missing. Please specify an email address.')]]></code>
-      <code><![CDATA[l10n('This login is already used by another user')]]></code>
-      <code><![CDATA[l10n('Username is mandatory')]]></code>
-      <code><![CDATA[l10n('Your website URL is invalid')]]></code>
-      <code><![CDATA[l10n('Your website URL is invalid')]]></code>
-      <code><![CDATA[l10n('mail address must be like xxx@yyy.eee (example : jack@altern.org)')]]></code>
-      <code><![CDATA[pwg_db_changes()]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc(pwg_query($query))]]></code>
-      <code><![CDATA[pwg_db_fetch_row($result)]]></code>
-      <code><![CDATA[pwg_db_fetch_row(pwg_query($query))]]></code>
-      <code><![CDATA[pwg_db_get_flood_period_expression($anti_flood_time)]]></code>
-      <code><![CDATA[pwg_db_insert_id()]]></code>
-      <code><![CDATA[pwg_db_num_rows($result)]]></code>
-      <code><![CDATA[pwg_mail_notification_admins(
-                get_l10n_args('Comment by %s', stripslashes($comment_author)),
-                $keyargs_content
-            )]]></code>
-      <code><![CDATA[pwg_mail_notification_admins(
-                get_l10n_args('Comment by %s', stripslashes($user_username)),
-                $keyargs_content
-            )]]></code>
-      <code><![CDATA[pwg_mail_notification_admins(
-        get_l10n_args('Comment by %s', $comment['author']),
-        $keyargs_content
-    )]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[trigger_change(
-          'user_comment_check',
-          $comment_action,
-          array_merge(
-              $comment,
-              [
-                  'author' => $user_username,
-              ]
-          )
-      )]]></code>
-      <code><![CDATA[trigger_change(
-        'user_comment_check',
-        $comment_action,
-        $comm
-    )]]></code>
-      <code><![CDATA[trigger_notify('user_comment_deletion', $comment_id)]]></code>
-      <code><![CDATA[trigger_notify('user_comment_validation', $comment_id)]]></code>
-      <code><![CDATA[url_check_format($website_url)]]></code>
-      <code><![CDATA[url_check_format($website_url)]]></code>
-      <code><![CDATA[verify_ephemeral_key($post_key, $comment_image_id)]]></code>
-      <code><![CDATA[verify_ephemeral_key(@$key, $comm_image_id)]]></code>
-    </UndefinedFunction>
-    <UnresolvableInclude>
-      <code><![CDATA[include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php']]></code>
-      <code><![CDATA[include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php']]></code>
-      <code><![CDATA[include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php']]></code>
-    </UnresolvableInclude>
-  </file>
-  <file src="include/functions_cookie.inc.php">
-    <DocblockTypeContradiction>
-      <code><![CDATA[str_starts_with(PHPWG_ROOT_PATH, '../')]]></code>
-    </DocblockTypeContradiction>
-    <PossiblyUndefinedArrayOffset>
-      <code><![CDATA[$_SERVER['SCRIPT_NAME']]]></code>
-    </PossiblyUndefinedArrayOffset>
-    <RedundantCondition>
-      <code><![CDATA[is_string($_SERVER['PATH_INFO'])]]></code>
-      <code><![CDATA[is_string($_SERVER['REDIRECT_URL'])]]></code>
-      <code><![CDATA[isset($_SERVER['PATH_INFO']) && is_string($_SERVER['PATH_INFO'])]]></code>
-    </RedundantCondition>
-    <TypeDoesNotContainType>
-      <code><![CDATA['']]></code>
-      <code><![CDATA['']]></code>
-    </TypeDoesNotContainType>
-    <UndefinedConstant>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-    </UndefinedConstant>
-    <UndefinedFunction>
-      <code><![CDATA[cookie_path()]]></code>
-      <code><![CDATA[cookie_path()]]></code>
-    </UndefinedFunction>
-  </file>
-  <file src="include/functions_html.inc.php">
-    <InvalidReturnType>
-      <code><![CDATA[never]]></code>
-      <code><![CDATA[never]]></code>
-      <code><![CDATA[never]]></code>
-      <code><![CDATA[never]]></code>
-    </InvalidReturnType>
-    <RedundantCondition>
-      <code><![CDATA[is_string($protocol)]]></code>
-      <code><![CDATA[is_string($request_uri)]]></code>
-      <code><![CDATA[isset($user)]]></code>
-    </RedundantCondition>
-    <RiskyTruthyFalsyComparison>
-      <code><![CDATA[empty($string)]]></code>
-      <code><![CDATA[empty($title)]]></code>
-    </RiskyTruthyFalsyComparison>
-    <TypeDoesNotContainType>
-      <code><![CDATA['']]></code>
-      <code><![CDATA['']]></code>
-    </TypeDoesNotContainType>
-    <UndefinedConstant>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-    </UndefinedConstant>
-    <UndefinedFunction>
-      <code><![CDATA[add_url_params(
-                make_index_url(
-                    [
-                        'category' => $cat,
-                    ]
-                ),
-                $add_url_params
-            )]]></code>
-      <code><![CDATA[add_url_params(get_root_url() . $url . array_pop($uppercats_array), $add_url_params)]]></code>
-      <code><![CDATA[get_action_url($id, 'e', false)]]></code>
-      <code><![CDATA[get_action_url($src_image->id, $src_image->is_original() ? 'e' : 'r', false)]]></code>
-      <code><![CDATA[get_cat_display_name($upper_names, $url)]]></code>
-      <code><![CDATA[get_cat_display_name([$category])]]></code>
-      <code><![CDATA[get_cat_info($cat_id)]]></code>
-      <code><![CDATA[get_extension(is_string($path) ? $path : null)]]></code>
-      <code><![CDATA[get_name_from_file(is_string($filename) ? $filename : '')]]></code>
-      <code><![CDATA[get_root_url()]]></code>
-      <code><![CDATA[get_root_url()]]></code>
-      <code><![CDATA[get_root_url()]]></code>
-      <code><![CDATA[get_root_url()]]></code>
-      <code><![CDATA[get_themeconf('icon_dir')]]></code>
-      <code><![CDATA[is_a_guest()]]></code>
-      <code><![CDATA[l10n('%d visits', $info['hit'])]]></code>
-      <code><![CDATA[l10n('Albums')]]></code>
-      <code><![CDATA[l10n('Bad request')]]></code>
-      <code><![CDATA[l10n('Forbidden')]]></code>
-      <code><![CDATA[l10n('Home')]]></code>
-      <code><![CDATA[l10n('Page not found')]]></code>
-      <code><![CDATA[l10n('Piwigo encountered a non recoverable error')]]></code>
-      <code><![CDATA[l10n('You are not authorized to access the requested page')]]></code>
-      <code><![CDATA[l10n('display available tags')]]></code>
-      <code><![CDATA[l10n('rating score %s', $info['rating_score'])]]></code>
-      <code><![CDATA[l10n('remove this tag from the list')]]></code>
-      <code><![CDATA[l10n(count($tags) > 1 ? 'Tags' : 'Tag')]]></code>
-      <code><![CDATA[l10n_dec('%d comment', '%d comments', (int) $info['nb_comments'])]]></code>
-      <code><![CDATA[make_index_url(
-                      [
-                          'category' => $cat,
-                      ]
-                  )]]></code>
-      <code><![CDATA[make_index_url(
-                    [
-                        'category' => $cat,
-                    ]
-                )]]></code>
-      <code><![CDATA[make_index_url($params)]]></code>
-      <code><![CDATA[make_index_url()]]></code>
-      <code><![CDATA[make_index_url()]]></code>
-      <code><![CDATA[make_index_url()]]></code>
-      <code><![CDATA[make_index_url()]]></code>
-      <code><![CDATA[pwg_transliterate($name_a)]]></code>
-      <code><![CDATA[pwg_transliterate($name_b)]]></code>
-      <code><![CDATA[pwg_transliterate($tag_name)]]></code>
-      <code><![CDATA[query2array($query, 'id')]]></code>
-      <code><![CDATA[redirect_html(
-        $alternate_url,
-        '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">
-<h1 style="text-align:left; font-size:36px;">' . l10n('Bad request') . '</h1><br>'
-. $msg . '</div>',
-        5
-    )]]></code>
-      <code><![CDATA[redirect_html(
-        $alternate_url,
-        '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">
-<h1 style="text-align:left; font-size:36px;">' . l10n('Forbidden') . '</h1><br>'
-. $msg . '</div>',
-        5
-    )]]></code>
-      <code><![CDATA[redirect_html(
-        $alternate_url,
-        '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">
-<h1 style="text-align:left; font-size:36px;">' . l10n('Page not found') . '</h1><br>'
-. $msg . '</div>',
-        5
-    )]]></code>
-      <code><![CDATA[redirect_http(get_root_url() . 'identification.php?redirect=' . urlencode(urlencode($request_uri)))]]></code>
-      <code><![CDATA[script_basename()]]></code>
-      <code><![CDATA[set_status_header(400)]]></code>
-      <code><![CDATA[set_status_header(401)]]></code>
-      <code><![CDATA[set_status_header(403)]]></code>
-      <code><![CDATA[set_status_header(404)]]></code>
-      <code><![CDATA[set_status_header(500)]]></code>
-      <code><![CDATA[trigger_change(
-            'render_category_name',
-            $cat['name'],
-            'get_cat_display_name'
-        )]]></code>
-      <code><![CDATA[trigger_change(
-            'render_category_name',
-            $cat['name'],
-            'get_cat_display_name_cache'
-        )]]></code>
-      <code><![CDATA[trigger_change('get_thumbnail_title', $title, $info)]]></code>
-      <code><![CDATA[trigger_change('render_element_description', $info['comment'], $param)]]></code>
-      <code><![CDATA[trigger_change('render_element_name', $info['name'], $info)]]></code>
-      <code><![CDATA[trigger_notify('set_status_header', $code, $text)]]></code>
     </UndefinedFunction>
   </file>
   <file src="include/functions_mail.inc.php">
-    <InvalidOperand>
-      <code><![CDATA[pwg_mail($u_email, $user_args, $user_tpl)]]></code>
-    </InvalidOperand>
-    <InvalidReturnStatement>
-      <code><![CDATA[$return]]></code>
-    </InvalidReturnStatement>
-    <InvalidReturnType>
-      <code><![CDATA[bool]]></code>
-    </InvalidReturnType>
-    <ParadoxicalCondition>
-      <code><![CDATA[$conf_mail[$cache_key]]]></code>
-    </ParadoxicalCondition>
-    <PossiblyInvalidOperand>
-      <code><![CDATA[$return]]></code>
-    </PossiblyInvalidOperand>
-    <PossiblyUndefinedArrayOffset>
-      <code><![CDATA[$_SERVER['HTTP_USER_AGENT']]]></code>
-      <code><![CDATA[$_SERVER['REMOTE_ADDR']]]></code>
-    </PossiblyUndefinedArrayOffset>
-    <RedundantCondition>
-      <code><![CDATA[[]]]></code>
-    </RedundantCondition>
-    <ReferenceConstraintViolation>
-      <code><![CDATA[$lang]]></code>
-      <code><![CDATA[$lang]]></code>
-      <code><![CDATA[$lang_info]]></code>
-      <code><![CDATA[$lang_info]]></code>
-    </ReferenceConstraintViolation>
-    <RiskyTruthyFalsyComparison>
-      <code><![CDATA[empty($Bcc)]]></code>
-      <code><![CDATA[empty($args['Bcc'])]]></code>
-      <code><![CDATA[empty($args['Cc'])]]></code>
-      <code><![CDATA[empty($args['Cc'])]]></code>
-      <code><![CDATA[empty($args['auth_key'])]]></code>
-      <code><![CDATA[empty($args['auth_key'])]]></code>
-      <code><![CDATA[empty($args['content'])]]></code>
-      <code><![CDATA[empty($args['content'])]]></code>
-      <code><![CDATA[empty($args['content_format'])]]></code>
-      <code><![CDATA[empty($args['from'])]]></code>
-      <code><![CDATA[empty($args['language_selected'])]]></code>
-      <code><![CDATA[empty($args['subject'])]]></code>
-      <code><![CDATA[empty($args['theme'])]]></code>
-      <code><![CDATA[empty($conf_mail['smtp_user'])]]></code>
-      <code><![CDATA[empty($conf_mail['smtp_user'])]]></code>
-      <code><![CDATA[empty($sender_email)]]></code>
-      <code><![CDATA[empty($sender_name)]]></code>
-      <code><![CDATA[empty($tpl['assign'])]]></code>
-    </RiskyTruthyFalsyComparison>
-    <TypeDoesNotContainType>
-      <code><![CDATA[is_array($cache_entry)]]></code>
-    </TypeDoesNotContainType>
-    <UndefinedConstant>
-      <code><![CDATA[MKGETDIR_DEFAULT]]></code>
-      <code><![CDATA[MKGETDIR_DIE_ON_ERROR]]></code>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-      <code><![CDATA[PWG_LOCAL_DIR]]></code>
-    </UndefinedConstant>
     <UndefinedFunction>
-      <code><![CDATA[add_url_params(
-                        $img['link'],
-                        [
-                            'auth' => $authkey['auth_key'] ?? null,
-                        ]
-                    )]]></code>
-      <code><![CDATA[add_url_params($gallery_home_url, $add_url_params)]]></code>
-      <code><![CDATA[add_url_params(is_string($link) ? $link : '', [
-                    'auth' => $authkey['auth_key'] ?? null,
-                ])]]></code>
-      <code><![CDATA[array_from_query($query)]]></code>
-      <code><![CDATA[array_from_query($query)]]></code>
-      <code><![CDATA[array_from_query($query, 'language')]]></code>
-      <code><![CDATA[create_user_auth_key((int) $u_user_id, $u_status)]]></code>
-      <code><![CDATA[get_clean_recipients_list($args['Bcc'] ?? null)]]></code>
-      <code><![CDATA[get_clean_recipients_list($args['Cc'])]]></code>
-      <code><![CDATA[get_clean_recipients_list($to)]]></code>
-      <code><![CDATA[get_default_language()]]></code>
-      <code><![CDATA[get_default_language()]]></code>
-      <code><![CDATA[get_gallery_home_url()]]></code>
-      <code><![CDATA[get_mail_configuration()]]></code>
-      <code><![CDATA[get_mail_sender_email()]]></code>
-      <code><![CDATA[get_mail_sender_name()]]></code>
-      <code><![CDATA[get_mail_template($content_type)]]></code>
-      <code><![CDATA[get_mail_template($content_type)]]></code>
-      <code><![CDATA[get_mail_template($content_type)]]></code>
-      <code><![CDATA[get_pwg_charset()]]></code>
-      <code><![CDATA[get_root_url()]]></code>
-      <code><![CDATA[get_webmaster_mail_address()]]></code>
-      <code><![CDATA[get_webmaster_mail_address()]]></code>
       <code><![CDATA[is_admin()]]></code>
-      <code><![CDATA[is_admin()]]></code>
-      <code><![CDATA[l10n(
-            'If you changed your password because you think it was stolen, we recommend revoking your %d API keys <a href="%s">in your profile</a>.',
-            $nb_of_apikeys,
-            $profile_url
-        )]]></code>
-      <code><![CDATA[l10n('A photo library administrator has created the following account for you:')]]></code>
-      <code><![CDATA[l10n('Activate')]]></code>
-      <code><![CDATA[l10n('Change my password')]]></code>
-      <code><![CDATA[l10n('Hello %s,', $username)]]></code>
-      <code><![CDATA[l10n('Here is your verification code:')]]></code>
-      <code><![CDATA[l10n('If this was a mistake, just ignore this email and nothing will happen.')]]></code>
-      <code><![CDATA[l10n('If this was a mistake, just ignore this email and nothing will happen.')]]></code>
-      <code><![CDATA[l10n('If this was a mistake, just ignore this email and nothing will happen.')]]></code>
-      <code><![CDATA[l10n('If this wasn\'t you, please change your password immediately or contact your webmaster.')]]></code>
-      <code><![CDATA[l10n('Password Reset')]]></code>
-      <code><![CDATA[l10n('Someone requested that the password be reset for the following user account:')]]></code>
-      <code><![CDATA[l10n('This link is valid for %s. After this time, you will need to request a new link.', $remaining_time)]]></code>
-      <code><![CDATA[l10n('This link is valid for %s. After this time, you will need to request a new link.', $remaining_time)]]></code>
-      <code><![CDATA[l10n('To reset your password, visit the following address:')]]></code>
-      <code><![CDATA[l10n('To set your password, visit the following address:')]]></code>
-      <code><![CDATA[l10n('Welcome to %s', $gallery_title)]]></code>
-      <code><![CDATA[l10n('Your password has been reset')]]></code>
-      <code><![CDATA[l10n('Your password was successfully reset')]]></code>
-      <code><![CDATA[l10n('Your verification code')]]></code>
-      <code><![CDATA[l10n_args($content)]]></code>
-      <code><![CDATA[l10n_args($subject)]]></code>
-      <code><![CDATA[load_language(
-            'lang',
-            PHPWG_ROOT_PATH . PWG_LOCAL_DIR,
-            [
-                'language' => $language,
-                'no_fallback' => true,
-                'local' => true,
-            ]
-        )]]></code>
-      <code><![CDATA[load_language($filename, $dirname, $options)]]></code>
-      <code><![CDATA[load_language('admin.lang', '', [
-            'language' => $language,
-        ])]]></code>
-      <code><![CDATA[load_language('common.lang', '', [
-            'language' => $language,
-        ])]]></code>
-      <code><![CDATA[mkgetdir($dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)]]></code>
-      <code><![CDATA[move_css_to_body($contents['text/html'])]]></code>
-      <code><![CDATA[pwg_mail($admins, $args, $tpl)]]></code>
       <code><![CDATA[pwg_mail($to, [
             'content' => $content,
             'subject' => $subject,
         ])]]></code>
-      <code><![CDATA[pwg_mail($u_email, $user_args, $user_tpl)]]></code>
-      <code><![CDATA[pwg_mail_admins(
-        [
-            'subject' => '[' . $gallery_title . '] ' . $subject,
-            'mail_title' => $gallery_title,
-            'mail_subtitle' => $subject,
-            'content' => $content,
-            'content_format' => 'text/plain',
-        ],
-        [
-            'filename' => 'notification_admin',
-            'assign' => $tpl_vars,
-        ],
-        true, // exclude_current_user
-        false, // only_webmasters
-        $group_id
-    )]]></code>
-      <code><![CDATA[pwg_send_mail_test($ret, $email, $args, $error_message)]]></code>
-      <code><![CDATA[set_make_full_url()]]></code>
-      <code><![CDATA[set_make_full_url()]]></code>
-      <code><![CDATA[set_make_full_url()]]></code>
-      <code><![CDATA[set_make_full_url()]]></code>
-      <code><![CDATA[set_make_full_url()]]></code>
-      <code><![CDATA[switch_lang_back()]]></code>
-      <code><![CDATA[switch_lang_back()]]></code>
-      <code><![CDATA[switch_lang_back()]]></code>
-      <code><![CDATA[switch_lang_to($language)]]></code>
-      <code><![CDATA[switch_lang_to(get_default_language())]]></code>
-      <code><![CDATA[switch_lang_to(get_default_language())]]></code>
-      <code><![CDATA[trigger_change('before_send_mail', true, $to, $args, $email)]]></code>
-      <code><![CDATA[trigger_change('render_lost_password_mail_content', $message)]]></code>
-      <code><![CDATA[trigger_change('render_lost_password_mail_content', $message)]]></code>
-      <code><![CDATA[trigger_notify('before_parse_mail_template', $cache_key, $content_type)]]></code>
       <code><![CDATA[trigger_notify('functions_mail_included')]]></code>
-      <code><![CDATA[trigger_notify('loading_lang')]]></code>
-      <code><![CDATA[unformat_email($data)]]></code>
-      <code><![CDATA[unformat_email($from_input)]]></code>
-      <code><![CDATA[unformat_email($item)]]></code>
-      <code><![CDATA[unformat_email($item)]]></code>
-      <code><![CDATA[unset_make_full_url()]]></code>
-      <code><![CDATA[unset_make_full_url()]]></code>
-      <code><![CDATA[unset_make_full_url()]]></code>
-      <code><![CDATA[unset_make_full_url()]]></code>
-      <code><![CDATA[unset_make_full_url()]]></code>
     </UndefinedFunction>
-  </file>
-  <file src="include/functions_metadata.inc.php">
-    <InvalidOperand>
-      <code><![CDATA[$latitude]]></code>
-      <code><![CDATA[$longitude]]></code>
-      <code><![CDATA[$parsed[0] + $parsed[1] / 60]]></code>
-      <code><![CDATA[$parsed[1] / 60]]></code>
-      <code><![CDATA[$parsed[2] / 3600]]></code>
-    </InvalidOperand>
-    <UndefinedFunction>
-      <code><![CDATA[clean_iptc_value($iptc[$iptc_key][0])]]></code>
-      <code><![CDATA[clean_iptc_value(...)]]></code>
-      <code><![CDATA[convert_charset($value, $input_encoding, get_pwg_charset())]]></code>
-      <code><![CDATA[get_pwg_charset()]]></code>
-      <code><![CDATA[qualify_utf8($value)]]></code>
-      <code><![CDATA[trigger_change('clean_iptc_value', $value)]]></code>
-    </UndefinedFunction>
-    <UndefinedVariable>
-      <code><![CDATA[$exif2]]></code>
-    </UndefinedVariable>
   </file>
   <file src="include/functions_notification.inc.php">
-    <PossiblyFalseOperand>
-      <code><![CDATA[strpos($field_id, '.')]]></code>
-    </PossiblyFalseOperand>
-    <PossiblyUndefinedVariable>
-      <code><![CDATA[$cached]]></code>
-    </PossiblyUndefinedVariable>
     <ReferenceConstraintViolation>
       <code><![CDATA[$news]]></code>
     </ReferenceConstraintViolation>
     <RiskyTruthyFalsyComparison>
-      <code><![CDATA[$persistent_cache->get($cache_key, $cached)]]></code>
       <code><![CDATA[empty($args['max_cats'])]]></code>
       <code><![CDATA[empty($args['max_dates'])]]></code>
       <code><![CDATA[empty($args['max_elements'])]]></code>
-      <code><![CDATA[empty($end)]]></code>
-      <code><![CDATA[empty($end)]]></code>
-      <code><![CDATA[empty($end)]]></code>
-      <code><![CDATA[empty($end)]]></code>
-      <code><![CDATA[empty($end)]]></code>
-      <code><![CDATA[empty($start)]]></code>
-      <code><![CDATA[empty($start)]]></code>
-      <code><![CDATA[empty($start)]]></code>
-      <code><![CDATA[empty($start)]]></code>
-      <code><![CDATA[empty($start)]]></code>
     </RiskyTruthyFalsyComparison>
     <TypeDoesNotContainType>
       <code><![CDATA[$persistent_cache instanceof PersistentCache]]></code>
+      <code><![CDATA[$persistent_cache instanceof PersistentCache]]></code>
+      <code><![CDATA[$persistent_cache instanceof PersistentCache]]></code>
     </TypeDoesNotContainType>
-    <UndefinedConstant>
-      <code><![CDATA[DB_RANDOM_FUNCTION]]></code>
-    </UndefinedConstant>
     <UndefinedFunction>
       <code><![CDATA[add_news_line(
             $news,
@@ -5978,6 +5206,8 @@
       <code><![CDATA[custom_notification_query('info', 'new_users', $start, $end)]]></code>
       <code><![CDATA[custom_notification_query('info', 'updated_categories', $start, $end)]]></code>
       <code><![CDATA[fatal_error('persistent cache not initialized')]]></code>
+      <code><![CDATA[fatal_error('persistent cache not initialized')]]></code>
+      <code><![CDATA[fatal_error('persistent cache not initialized')]]></code>
       <code><![CDATA[get_cat_display_name_cache($uppercats, '', false, null, $auth_key)]]></code>
       <code><![CDATA[get_recent_post_dates(
         (empty($args['max_dates']) ? 3 : $args['max_dates']),
@@ -5987,19 +5217,6 @@
       <code><![CDATA[get_root_url()]]></code>
       <code><![CDATA[get_root_url()]]></code>
       <code><![CDATA[get_root_url()]]></code>
-      <code><![CDATA[get_sql_condition_FandF(
-        [
-            'forbidden_categories' => 'ic.category_id',
-            'visible_categories' => 'ic.category_id',
-            'visible_images' => $img_field,
-        ],
-        $prefix_condition,
-        $force_one_condition
-    )]]></code>
-      <code><![CDATA[get_std_sql_where_restrict_filter('AND')]]></code>
-      <code><![CDATA[get_std_sql_where_restrict_filter('AND', 'id')]]></code>
-      <code><![CDATA[get_std_sql_where_restrict_filter('AND', 'id')]]></code>
-      <code><![CDATA[get_std_sql_where_restrict_filter('WHERE', 'i.id', true)]]></code>
       <code><![CDATA[is_admin()]]></code>
       <code><![CDATA[is_admin()]]></code>
       <code><![CDATA[is_admin()]]></code>
@@ -6034,34 +5251,16 @@
       <code><![CDATA[nb_unvalidated_comments($start, $end)]]></code>
       <code><![CDATA[nb_updated_categories($start, $end)]]></code>
       <code><![CDATA[nb_updated_categories($start, $end)]]></code>
-      <code><![CDATA[pwg_db_fetch_row(pwg_query($query))]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[query2array($query)]]></code>
-      <code><![CDATA[query2array($query)]]></code>
-      <code><![CDATA[query2array($query)]]></code>
-      <code><![CDATA[query2array($query, null, $result_field)]]></code>
     </UndefinedFunction>
   </file>
   <file src="include/functions_picture.inc.php">
     <FalsableReturnStatement>
-      <code><![CDATA[$num]]></code>
-      <code><![CDATA[false]]></code>
+      <code><![CDATA[new ImageService()
+        ->countPdfPages($pdfPath)]]></code>
     </FalsableReturnStatement>
     <InvalidFalsableReturnType>
       <code><![CDATA[int]]></code>
     </InvalidFalsableReturnType>
-    <InvalidOperand>
-      <code><![CDATA[$value]]></code>
-    </InvalidOperand>
-    <UndefinedFunction>
-      <code><![CDATA[boolean_to_string($value)]]></code>
-      <code><![CDATA[correct_slideshow_params($decode_params)]]></code>
-      <code><![CDATA[correct_slideshow_params($result)]]></code>
-      <code><![CDATA[get_boolean($matches[2][$i])]]></code>
-      <code><![CDATA[get_default_slideshow_params()]]></code>
-      <code><![CDATA[get_default_slideshow_params()]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-    </UndefinedFunction>
   </file>
   <file src="include/functions_plugins.inc.php">
     <InvalidGlobal>
@@ -6122,224 +5321,33 @@
       <code><![CDATA[include_once $handler['include_path']]]></code>
     </UnresolvableInclude>
   </file>
-  <file src="include/functions_rate.inc.php">
-    <InvalidOperand>
-      <code><![CDATA[$all_rates_avg += $row_rsum]]></code>
-      <code><![CDATA[$all_rates_avg /= $all_rates_count]]></code>
-      <code><![CDATA[$item_ratecount_avg * $all_rates_avg]]></code>
-      <code><![CDATA[$item_ratecount_avg + $rate_summary['rcount']]]></code>
-      <code><![CDATA[$rate_summary['rsum'] / $rate_summary['rcount']]]></code>
-      <code><![CDATA[($item_ratecount_avg * $all_rates_avg + $rate_summary['rsum']) / ($item_ratecount_avg + $rate_summary['rcount'])]]></code>
-    </InvalidOperand>
-    <PossiblyUndefinedArrayOffset>
-      <code><![CDATA[$_SERVER['REMOTE_ADDR']]]></code>
-    </PossiblyUndefinedArrayOffset>
-    <UndefinedFunction>
-      <code><![CDATA[array_from_query($query, 'element_id')]]></code>
-      <code><![CDATA[array_from_query($query, 'id')]]></code>
-      <code><![CDATA[is_autorize_status(AccessLevel::Classic)]]></code>
-      <code><![CDATA[mass_updates(
-        Tables::images(),
-        [
-            'primary' => ['id'],
-            'update' => ['rating_score'],
-        ],
-        $updates
-    )]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_get_cookie_var('anonymous_rater', $anonymous_id)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_set_cookie_var('anonymous_rater', $anonymous_id)]]></code>
-      <code><![CDATA[trigger_change('update_rating_score', false, $element_id)]]></code>
-      <code><![CDATA[update_rating_score($image_id)]]></code>
-    </UndefinedFunction>
-  </file>
   <file src="include/functions_search.inc.php">
-    <InvalidOperand>
-      <code><![CDATA[$options['images_where']]]></code>
-      <code><![CDATA[(float) $filesize_max_raw + 100]]></code>
-      <code><![CDATA[(float) $filesize_max_raw + 100]]></code>
-      <code><![CDATA[(float) $filesize_min_raw - 100]]></code>
-      <code><![CDATA[(float) $filesize_min_raw - 100]]></code>
-    </InvalidOperand>
-    <InvalidScalarArgument>
-      <code><![CDATA[array_values($normalized_filter_ids)]]></code>
-    </InvalidScalarArgument>
-    <PossiblyFalseArgument>
-      <code><![CDATA[$search]]></code>
-    </PossiblyFalseArgument>
-    <PossiblyNullArrayAccess>
-      <code><![CDATA[$allwords_field['mode']]]></code>
-      <code><![CDATA[$allwords_field['mode']]]></code>
-    </PossiblyNullArrayAccess>
     <PossiblyNullArrayOffset>
       <code><![CDATA[$image_ids_for_filter]]></code>
     </PossiblyNullArrayOffset>
-    <ReferenceConstraintViolation>
-      <code><![CDATA[return $ids;]]></code>
-    </ReferenceConstraintViolation>
     <RiskyTruthyFalsyComparison>
-      <code><![CDATA[empty($cat_ids)]]></code>
-      <code><![CDATA[empty($clause_pattern)]]></code>
-      <code><![CDATA[empty($date_created_preset)]]></code>
-      <code><![CDATA[empty($date_posted_preset)]]></code>
-      <code><![CDATA[empty($expert_string)]]></code>
-      <code><![CDATA[empty($filesize_max_raw)]]></code>
-      <code><![CDATA[empty($filesize_min_raw)]]></code>
-      <code><![CDATA[empty($height_max_raw)]]></code>
-      <code><![CDATA[empty($height_min_raw)]]></code>
       <code><![CDATA[empty($search)]]></code>
-      <code><![CDATA[empty($width_max_raw)]]></code>
-      <code><![CDATA[empty($width_min_raw)]]></code>
     </RiskyTruthyFalsyComparison>
     <UndefinedFunction>
-      <code><![CDATA[array_from_query($query, 'id')]]></code>
       <code><![CDATA[bad_request('this search identifier does not exist')]]></code>
-      <code><![CDATA[bad_request('this search identifier does not exist')]]></code>
-      <code><![CDATA[conf_get_param('filters_views', $conf['default_filters_views'])]]></code>
       <code><![CDATA[fatal_error('this search is not reachable with its id, need the search_uuid instead')]]></code>
-      <code><![CDATA[generate_key(10)]]></code>
-      <code><![CDATA[get_available_search_uuid()]]></code>
-      <code><![CDATA[get_available_search_uuid()]]></code>
-      <code><![CDATA[get_default_language()]]></code>
       <code><![CDATA[get_elapsed_time($function_start, get_moment())]]></code>
-      <code><![CDATA[get_image_ids_for_tags(
-            $tags_words,
-            $tags_mode
-        )]]></code>
       <code><![CDATA[get_items_for_filter($filter_name)]]></code>
       <code><![CDATA[get_moment()]]></code>
       <code><![CDATA[get_moment()]]></code>
-      <code><![CDATA[get_quick_search_results($expert_string, [])]]></code>
-      <code><![CDATA[get_quick_search_results($search['q'], [
-            'super_order_by' => $super_order_by,
-            'images_where' => $images_where,
-        ])]]></code>
-      <code><![CDATA[get_quick_search_results_no_cache($q, $options)]]></code>
-      <code><![CDATA[get_regular_search_results($search, $images_where)]]></code>
-      <code><![CDATA[get_search_array($search_id)]]></code>
       <code><![CDATA[get_search_id_pattern($candidate)]]></code>
       <code><![CDATA[get_search_info($search_id)]]></code>
-      <code><![CDATA[get_sql_condition_FandF(
-            [
-                'forbidden_categories' => 'category_id',
-                'forbidden_images' => 'i.id',
-            ],
-            null,
-            true
-        )]]></code>
-      <code><![CDATA[get_sql_condition_FandF(
-        [
-            'forbidden_categories' => 'category_id',
-            'visible_categories' => 'category_id',
-            'visible_images' => 'id',
-        ],
-        "\n  AND"
-    )]]></code>
-      <code><![CDATA[get_subcat_ids($cat_ids)]]></code>
-      <code><![CDATA[get_subcat_ids($cat_words)]]></code>
-      <code><![CDATA[is_a_guest()]]></code>
-      <code><![CDATA[is_admin()]]></code>
-      <code><![CDATA[is_classic_user()]]></code>
-      <code><![CDATA[is_generic()]]></code>
-      <code><![CDATA[make_index_url(
-        [
-            'section' => 'search',
-            'search' => $search_uuid,
-        ]
-    )]]></code>
-      <code><![CDATA[prepend_append_array_items($date_created_subclauses, '(', ')')]]></code>
-      <code><![CDATA[prepend_append_array_items($date_posted_subclauses, '(', ')')]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_db_fetch_row(pwg_query($query))]]></code>
-      <code><![CDATA[pwg_db_fetch_row(pwg_query('SELECT NOW()'))]]></code>
-      <code><![CDATA[pwg_db_real_escape_string(serialize($rules))]]></code>
-      <code><![CDATA[pwg_get_db_version()]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query('SELECT NOW()')]]></code>
-      <code><![CDATA[qsearch_eval($crt, $qsr, $crt_qualifies, $crt_ignored_terms)]]></code>
-      <code><![CDATA[qsearch_eval($expression, $qsr, $tmp, $search_results['qs']['unmatched_terms'])]]></code>
-      <code><![CDATA[qsearch_get_categories($expression, $qsr)]]></code>
-      <code><![CDATA[qsearch_get_images($expression, $qsr)]]></code>
-      <code><![CDATA[qsearch_get_tags($expression, $qsr)]]></code>
-      <code><![CDATA[qsearch_get_text_token_search_sql($token, ['author'])]]></code>
-      <code><![CDATA[qsearch_get_text_token_search_sql($token, ['name', 'comment'])]]></code>
-      <code><![CDATA[qsearch_get_text_token_search_sql($token, ['name', 'comment'])]]></code>
-      <code><![CDATA[qsearch_get_text_token_search_sql($token, ['name'])]]></code>
-      <code><![CDATA[query2array($query)]]></code>
-      <code><![CDATA[query2array($query, null, 'id')]]></code>
-      <code><![CDATA[query2array($query, null, 'id')]]></code>
-      <code><![CDATA[query2array($query, null, 'id')]]></code>
-      <code><![CDATA[query2array($query, null, 'id')]]></code>
-      <code><![CDATA[query2array($query, null, 'id')]]></code>
-      <code><![CDATA[query2array($query, null, 'id')]]></code>
-      <code><![CDATA[query2array($query, null, 'id')]]></code>
-      <code><![CDATA[query2array($query, null, 'id')]]></code>
-      <code><![CDATA[query2array($query, null, 'id')]]></code>
-      <code><![CDATA[query2array($query, null, 'id')]]></code>
-      <code><![CDATA[query2array($query, null, 'id')]]></code>
-      <code><![CDATA[query2array($query, null, 'id')]]></code>
-      <code><![CDATA[query2array($query, null, 'id')]]></code>
-      <code><![CDATA[query2array($query, null, 'id')]]></code>
-      <code><![CDATA[query2array($query, null, 'id')]]></code>
-      <code><![CDATA[query2array($query, null, 'id')]]></code>
-      <code><![CDATA[query2array($query, null, 'id')]]></code>
-      <code><![CDATA[query2array($query, null, 'id')]]></code>
-      <code><![CDATA[query2array($query, null, 'image_id')]]></code>
-      <code><![CDATA[query2array($query, null, 'image_id')]]></code>
-      <code><![CDATA[query2array($query, null, 'image_id')]]></code>
-      <code><![CDATA[query2array($query, null, 'image_id')]]></code>
-      <code><![CDATA[query2array('SELECT DISTINCT image_id FROM ' . Tables::imageCategory(), null, 'image_id')]]></code>
-      <code><![CDATA[query2array('SELECT DISTINCT image_id FROM ' . Tables::imageTag(), null, 'image_id')]]></code>
-      <code><![CDATA[query2array('SELECT id FROM ' . Tables::images() . ' LEFT JOIN ' . Tables::imageCategory() . ' ON id=image_id WHERE image_id IS NULL', null, 'id')]]></code>
-      <code><![CDATA[query2array('SELECT id FROM ' . Tables::images() . ' LEFT JOIN ' . Tables::imageTag() . ' ON id=image_id WHERE image_id IS NULL', null, 'id')]]></code>
-      <code><![CDATA[safe_unserialize($raw_filters_views)]]></code>
       <code><![CDATA[script_basename()]]></code>
-      <code><![CDATA[single_insert(
-        Tables::search(),
-        [
-            'rules' => pwg_db_real_escape_string(serialize($rules)),
-            'created_on' => $dbnow,
-            'created_by' => $user_id,
-            'search_uuid' => $search_uuid,
-            'forked_from' => $forked_from,
-        ]
-    )]]></code>
-      <code><![CDATA[tag_alpha_compare(...)]]></code>
-      <code><![CDATA[tag_alpha_compare(...)]]></code>
-      <code><![CDATA[trigger_change('qsearch_get_images_sql_scopes', $clauses, $token, $expr)]]></code>
-      <code><![CDATA[trigger_change('qsearch_get_scopes', $scopes)]]></code>
-      <code><![CDATA[trigger_change('qsearch_pre', $q)]]></code>
-      <code><![CDATA[trigger_change('qsearch_results', $search_results, $expression, $qsr)]]></code>
-      <code><![CDATA[trigger_change('render_category_name', $cat['name'], $cat)]]></code>
-      <code><![CDATA[trigger_change('render_tag_name', $tag['name'], $tag)]]></code>
-      <code><![CDATA[trigger_notify('qsearch_before_eval', $expression, $qsr)]]></code>
-      <code><![CDATA[trigger_notify('qsearch_expression_parsed', $expression)]]></code>
-      <code><![CDATA[userprefs_update_param('gallery_search_filters', array_keys(is_array($rules_fields) ? $rules_fields : []))]]></code>
     </UndefinedFunction>
   </file>
   <file src="include/functions_session.inc.php">
-    <InvalidOperand>
-      <code><![CDATA[$session_length]]></code>
-    </InvalidOperand>
-    <PossiblyUndefinedArrayOffset>
-      <code><![CDATA[$_SERVER['REMOTE_ADDR']]]></code>
-    </PossiblyUndefinedArrayOffset>
     <RedundantCondition>
       <code><![CDATA[is_scalar($session_use_cookies)]]></code>
       <code><![CDATA[is_scalar($session_use_only_cookies)]]></code>
       <code><![CDATA[is_scalar($session_use_trans_sid)]]></code>
       <code><![CDATA[is_string($session_name)]]></code>
       <code><![CDATA[isset($conf['session_save_handler'])
-  and ($conf['session_save_handler'] == 'db')]]></code>
+  and ($conf['session_save_handler'] === 'db')]]></code>
     </RedundantCondition>
     <TypeDoesNotContainType>
       <code><![CDATA[0]]></code>
@@ -6347,26 +5355,8 @@
       <code><![CDATA[null]]></code>
       <code><![CDATA[null]]></code>
     </TypeDoesNotContainType>
-    <UndefinedFunction>
-      <code><![CDATA[get_remote_addr_session_hash()]]></code>
-      <code><![CDATA[get_remote_addr_session_hash()]]></code>
-      <code><![CDATA[get_remote_addr_session_hash()]]></code>
-      <code><![CDATA[pwg_db_changes()]]></code>
-      <code><![CDATA[pwg_db_date_to_ts('NOW()')]]></code>
-      <code><![CDATA[pwg_db_date_to_ts('expiration')]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_db_real_escape_string($data)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-    </UndefinedFunction>
   </file>
   <file src="include/functions_tag.inc.php">
-    <InvalidOperand>
-      <code><![CDATA[2 * $i * $tag_average_count]]></code>
-    </InvalidOperand>
     <RiskyTruthyFalsyComparison>
       <code><![CDATA[empty($extra_images_where_sql)]]></code>
       <code><![CDATA[empty($order_by)]]></code>
@@ -6391,11 +5381,8 @@
     )]]></code>
       <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
       <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[query2array($query)]]></code>
       <code><![CDATA[query2array($query, 'tag_id', 'counter')]]></code>
       <code><![CDATA[query2array($query, 'tag_id', 'counter')]]></code>
       <code><![CDATA[query2array($query, null, 'id')]]></code>
@@ -6409,112 +5396,8 @@
             ]
         )]]></code>
       <code><![CDATA[tag_alpha_compare(...)]]></code>
-      <code><![CDATA[tag_alpha_compare(...)]]></code>
-      <code><![CDATA[tags_id_compare($a, $b)]]></code>
       <code><![CDATA[trigger_change('render_tag_name', $row['name'], $row)]]></code>
       <code><![CDATA[trigger_change('render_tag_name', $row['name'], $row)]]></code>
-      <code><![CDATA[trigger_change('render_tag_name', $row['name'], $row)]]></code>
-    </UndefinedFunction>
-  </file>
-  <file src="include/functions_url.inc.php">
-    <InvalidGlobal>
-      <code><![CDATA[global $conf;]]></code>
-    </InvalidGlobal>
-    <InvalidLiteralArgument>
-      <code><![CDATA[$root_url]]></code>
-      <code><![CDATA[$root_url]]></code>
-    </InvalidLiteralArgument>
-    <InvalidOperand>
-      <code><![CDATA[$tag_url_name]]></code>
-      <code><![CDATA[$tag_url_name]]></code>
-      <code><![CDATA[is_scalar($category_id) ? $category_id : '']]></code>
-      <code><![CDATA[is_scalar($category_permalink) ? $category_permalink : '']]></code>
-      <code><![CDATA[is_scalar($chronology_field) ? $chronology_field : '']]></code>
-      <code><![CDATA[is_scalar($chronology_style) ? $chronology_style : '']]></code>
-      <code><![CDATA[is_scalar($chronology_view) ? $chronology_view : '']]></code>
-      <code><![CDATA[is_scalar($combined_id) ? $combined_id : '']]></code>
-      <code><![CDATA[is_scalar($combined_permalink) ? $combined_permalink : '']]></code>
-      <code><![CDATA[is_scalar($conf['url_port']) ? $conf['url_port'] : '']]></code>
-      <code><![CDATA[is_scalar($image_id) ? $image_id : '']]></code>
-      <code><![CDATA[is_scalar($image_id) ? $image_id : '']]></code>
-      <code><![CDATA[is_scalar($search_param) ? $search_param : '']]></code>
-      <code><![CDATA[is_scalar($start) ? $start : '']]></code>
-      <code><![CDATA[is_scalar($tag_id) ? $tag_id : '']]></code>
-      <code><![CDATA[is_scalar($tag_id) ? $tag_id : '']]></code>
-      <code><![CDATA[is_scalar($val) ? $val : '']]></code>
-    </InvalidOperand>
-    <PossiblyUndefinedVariable>
-      <code><![CDATA[$perma_index]]></code>
-    </PossiblyUndefinedVariable>
-    <RedundantCast>
-      <code><![CDATA[(string) $https_value]]></code>
-    </RedundantCast>
-    <RedundantCondition>
-      <code><![CDATA['']]></code>
-    </RedundantCondition>
-    <RiskyTruthyFalsyComparison>
-      <code><![CDATA[empty($category_info['permalink'])]]></code>
-      <code><![CDATA[empty($tokens[$next_token])]]></code>
-    </RiskyTruthyFalsyComparison>
-    <TypeDoesNotContainType>
-      <code><![CDATA[is_int($server_port)]]></code>
-      <code><![CDATA[is_string($server_port) || is_int($server_port)]]></code>
-    </TypeDoesNotContainType>
-    <UndefinedConstant>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-    </UndefinedConstant>
-    <UndefinedFunction>
-      <code><![CDATA[add_url_params(get_root_url() . 'action.php', $params)]]></code>
-      <code><![CDATA[add_well_known_params_in_url($url, $params)]]></code>
-      <code><![CDATA[add_well_known_params_in_url($url, $params)]]></code>
-      <code><![CDATA[bad_request('at least one tag required')]]></code>
-      <code><![CDATA[bad_request('search identifier is missing')]]></code>
-      <code><![CDATA[bad_request('wrong format on list GET parameter')]]></code>
-      <code><![CDATA[cookie_path()]]></code>
-      <code><![CDATA[embellish_url(get_root_url() . $url)]]></code>
-      <code><![CDATA[fatal_error('bad chronology field (date)')]]></code>
-      <code><![CDATA[fatal_error('bad chronology field (style)')]]></code>
-      <code><![CDATA[find_tags($requested_tag_ids, $requested_tag_url_names)]]></code>
-      <code><![CDATA[get_absolute_root_url()]]></code>
-      <code><![CDATA[get_absolute_root_url(url_is_remote($url))]]></code>
-      <code><![CDATA[get_cat_id_from_permalinks($maybe_permalinks, $perma_index)]]></code>
-      <code><![CDATA[get_cat_info((int) $cat_id)]]></code>
-      <code><![CDATA[get_cat_info((int) $category)]]></code>
-      <code><![CDATA[get_filename_wo_extension($params['image_file'])]]></code>
-      <code><![CDATA[get_filename_wo_extension($params['image_file'])]]></code>
-      <code><![CDATA[get_root_url()]]></code>
-      <code><![CDATA[get_root_url()]]></code>
-      <code><![CDATA[get_root_url()]]></code>
-      <code><![CDATA[get_root_url()]]></code>
-      <code><![CDATA[get_root_url()]]></code>
-      <code><![CDATA[get_root_url()]]></code>
-      <code><![CDATA[is_a_guest()]]></code>
-      <code><![CDATA[l10n('Permalink for album not found')]]></code>
-      <code><![CDATA[l10n('Requested album does not exist')]]></code>
-      <code><![CDATA[l10n('Requested album does not exist')]]></code>
-      <code><![CDATA[l10n('Requested tag does not exist')]]></code>
-      <code><![CDATA[make_index_url(
-        params_for_duplication($redefined, $removed)
-    )]]></code>
-      <code><![CDATA[make_index_url()]]></code>
-      <code><![CDATA[make_picture_url(
-        params_for_duplication($redefined, $removed)
-    )]]></code>
-      <code><![CDATA[make_section_in_url($params)]]></code>
-      <code><![CDATA[make_section_in_url($params)]]></code>
-      <code><![CDATA[page_not_found(l10n('Permalink for album not found'))]]></code>
-      <code><![CDATA[page_not_found(l10n('Requested album does not exist'))]]></code>
-      <code><![CDATA[page_not_found(l10n('Requested album does not exist'))]]></code>
-      <code><![CDATA[page_not_found(l10n('Requested tag does not exist'), get_root_url() . 'tags.php')]]></code>
-      <code><![CDATA[params_for_duplication($redefined, $removed)]]></code>
-      <code><![CDATA[params_for_duplication($redefined, $removed)]]></code>
-      <code><![CDATA[query2array($query, 'image_id', 'fake_value')]]></code>
-      <code><![CDATA[str2url(get_filename_wo_extension($params['image_file']))]]></code>
-      <code><![CDATA[str2url(is_string($category_name) ? $category_name : '')]]></code>
-      <code><![CDATA[str2url(is_string($combined_name) ? $combined_name : '')]]></code>
-      <code><![CDATA[url_is_remote($gallery_url)]]></code>
-      <code><![CDATA[url_is_remote($url)]]></code>
-      <code><![CDATA[url_is_remote($url)]]></code>
     </UndefinedFunction>
   </file>
   <file src="include/functions_user.inc.php">
@@ -6532,10 +5415,6 @@
     <InvalidOperand>
       <code><![CDATA[$value]]></code>
     </InvalidOperand>
-    <NullReference>
-      <code><![CDATA[$username]]></code>
-      <code><![CDATA[$username]]></code>
-    </NullReference>
     <PossiblyInvalidArrayOffset>
       <code><![CDATA[$languages_available[$accept_languages_full[$i]]]]></code>
       <code><![CDATA[$languages_available[$accept_languages_short[$i]]]]></code>
@@ -6543,32 +5422,20 @@
     <PossiblyNullArgument>
       <code><![CDATA[$secret_key]]></code>
     </PossiblyNullArgument>
-    <PossiblyUndefinedVariable>
-      <code><![CDATA[$username]]></code>
-      <code><![CDATA[$username]]></code>
-    </PossiblyUndefinedVariable>
-    <RedundantCondition>
-      <code><![CDATA[is_string($remember_me_cookie)]]></code>
-    </RedundantCondition>
     <ReferenceConstraintViolation>
-      <code><![CDATA[return false;]]></code>
+      <code><![CDATA[return $result['userId'] ?? false;]]></code>
     </ReferenceConstraintViolation>
     <RiskyTruthyFalsyComparison>
       <code><![CDATA[empty($duration)]]></code>
       <code><![CDATA[empty($last_photo_date)]]></code>
-      <code><![CDATA[empty($mail_address)]]></code>
-      <code><![CDATA[empty($mail_address)]]></code>
       <code><![CDATA[empty($params['username'])]]></code>
       <code><![CDATA[empty($user_found)]]></code>
       <code><![CDATA[empty($user_found)]]></code>
     </RiskyTruthyFalsyComparison>
     <TypeDoesNotContainType>
       <code><![CDATA[$language_header === '']]></code>
-      <code><![CDATA[is_string($lang_cookie)]]></code>
     </TypeDoesNotContainType>
     <UndefinedConstant>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
       <code><![CDATA[WS_ERR_INVALID_PARAM]]></code>
@@ -6590,28 +5457,16 @@
       <code><![CDATA[boolean_to_string($params['expand'])]]></code>
       <code><![CDATA[boolean_to_string($params['show_nb_comments'])]]></code>
       <code><![CDATA[boolean_to_string($params['show_nb_hits'])]]></code>
-      <code><![CDATA[boolean_to_string(true)]]></code>
-      <code><![CDATA[calculate_auto_login_key($cookie[0], $cookie[1], $username)]]></code>
-      <code><![CDATA[calculate_auto_login_key($user_id, $now, $username)]]></code>
       <code><![CDATA[calculate_permissions($user_id, $status)]]></code>
       <code><![CDATA[check_theme_installed($theme)]]></code>
       <code><![CDATA[check_theme_installed($theme)]]></code>
       <code><![CDATA[clear_fake_user_cache()]]></code>
-      <code><![CDATA[cookie_path()]]></code>
-      <code><![CDATA[cookie_path()]]></code>
-      <code><![CDATA[cookie_path()]]></code>
-      <code><![CDATA[cookie_path()]]></code>
       <code><![CDATA[create_user_auth_key($user_id, $user_status)]]></code>
       <code><![CDATA[create_user_infos($user_id)]]></code>
-      <code><![CDATA[create_user_infos($user_id, $override)]]></code>
       <code><![CDATA[dateDiff($now, $expired_on)]]></code>
       <code><![CDATA[deactivate_password_reset_key($user_ids[0])]]></code>
       <code><![CDATA[deactivate_user_auth_keys($user_ids[0])]]></code>
       <code><![CDATA[delete_user_sessions($user_id_for_status)]]></code>
-      <code><![CDATA[email_check_format($mail_address)]]></code>
-      <code><![CDATA[email_check_format($mail_address)]]></code>
-      <code><![CDATA[fatal_error('[Hacking attempt] the input parameter "' . $lang_cookie . '" is not valid')]]></code>
-      <code><![CDATA[fatal_error('[Hacking attempt] the input parameter "lang" is not valid')]]></code>
       <code><![CDATA[find_user_by_username_or_email($username)]]></code>
       <code><![CDATA[format_date($created_on, ['day', 'month', 'year'])]]></code>
       <code><![CDATA[format_date($expired_on_raw, ['day', 'month', 'year'])]]></code>
@@ -6622,37 +5477,15 @@
       <code><![CDATA[generate_key(30)]]></code>
       <code><![CDATA[generate_key(40)]]></code>
       <code><![CDATA[get_absolute_root_url()]]></code>
-      <code><![CDATA[get_absolute_root_url()]]></code>
-      <code><![CDATA[get_absolute_root_url()]]></code>
       <code><![CDATA[get_access_type_status($user_status)]]></code>
       <code><![CDATA[get_api_key($user_id)]]></code>
-      <code><![CDATA[get_browser_language()]]></code>
       <code><![CDATA[get_computed_categories($userdata, null)]]></code>
       <code><![CDATA[get_default_theme()]]></code>
-      <code><![CDATA[get_default_user_info(false)]]></code>
-      <code><![CDATA[get_default_user_info(true)]]></code>
       <code><![CDATA[get_default_user_value('language', AppInfo::DEFAULT_LANGUAGE)]]></code>
       <code><![CDATA[get_default_user_value('theme', AppInfo::DEFAULT_TEMPLATE)]]></code>
       <code><![CDATA[get_elapsed_time($user_cache_generation_start_time, get_moment())]]></code>
       <code><![CDATA[get_elapsed_time($user_cache_waiting_start_time, get_moment())]]></code>
       <code><![CDATA[get_elapsed_time($user_cache_waiting_start_time, get_moment())]]></code>
-      <code><![CDATA[get_l10n_args('')]]></code>
-      <code><![CDATA[get_l10n_args('', '')]]></code>
-      <code><![CDATA[get_l10n_args('', '')]]></code>
-      <code><![CDATA[get_l10n_args('', '')]]></code>
-      <code><![CDATA[get_l10n_args('Admin: %s', $admin_url)]]></code>
-      <code><![CDATA[get_l10n_args('Email: %s', $mail_address)]]></code>
-      <code><![CDATA[get_l10n_args('Email: %s', $mail_address)]]></code>
-      <code><![CDATA[get_l10n_args('Hello %s,', stripslashes($login))]]></code>
-      <code><![CDATA[get_l10n_args('Here are your connection settings', '')]]></code>
-      <code><![CDATA[get_l10n_args('If you think you\'ve received this email in error, please contact us at %s', get_webmaster_mail_address())]]></code>
-      <code><![CDATA[get_l10n_args('Link: %s', get_absolute_root_url())]]></code>
-      <code><![CDATA[get_l10n_args('Password: %s', str_repeat('*', $length))]]></code>
-      <code><![CDATA[get_l10n_args('Registration of %s', stripslashes($login))]]></code>
-      <code><![CDATA[get_l10n_args('Thank you for registering at %s!', $conf['gallery_title'])]]></code>
-      <code><![CDATA[get_l10n_args('User: %s', stripslashes($login))]]></code>
-      <code><![CDATA[get_l10n_args('Username: %s', stripslashes($login))]]></code>
-      <code><![CDATA[get_languages()]]></code>
       <code><![CDATA[get_languages()]]></code>
       <code><![CDATA[get_languages()]]></code>
       <code><![CDATA[get_moment()]]></code>
@@ -6673,17 +5506,14 @@
       <code><![CDATA[get_user_status($user_status)]]></code>
       <code><![CDATA[get_user_status($user_status)]]></code>
       <code><![CDATA[get_user_status($user_status)]]></code>
-      <code><![CDATA[get_userid($login)]]></code>
       <code><![CDATA[get_userid($username_param)]]></code>
       <code><![CDATA[get_username($user_ids[0])]]></code>
-      <code><![CDATA[get_webmaster_mail_address()]]></code>
       <code><![CDATA[getuserdata($user_id, $use_cache)]]></code>
       <code><![CDATA[getuserdata($user_id, false)]]></code>
       <code><![CDATA[getuserdata($user_id, true)]]></code>
       <code><![CDATA[invalidate_user_cache()]]></code>
       <code><![CDATA[is_a_guest()]]></code>
       <code><![CDATA[is_admin($status)]]></code>
-      <code><![CDATA[is_admin($user_status)]]></code>
       <code><![CDATA[is_admin()]]></code>
       <code><![CDATA[is_admin()]]></code>
       <code><![CDATA[is_autorize_status($access_type, $user_status)]]></code>
@@ -6700,9 +5530,7 @@
       <code><![CDATA[l10n('Expired')]]></code>
       <code><![CDATA[l10n('Hello %s,', $username)]]></code>
       <code><![CDATA[l10n('Never')]]></code>
-      <code><![CDATA[l10n('Please, enter a login')]]></code>
       <code><![CDATA[l10n('Rebuilding user cache takes long. Please, come back later.')]]></code>
-      <code><![CDATA[l10n('Registration')]]></code>
       <code><![CDATA[l10n('This API key was manually revoked on %s', format_date($revoked_on, ['day', 'month', 'year']))]]></code>
       <code><![CDATA[l10n('To continue using the API, please renew your key before it expires.')]]></code>
       <code><![CDATA[l10n('You can manage your API keys in your <a href="%s">account settings.</a>', get_absolute_root_url() . 'profile.php')]]></code>
@@ -6710,16 +5538,8 @@
       <code><![CDATA[l10n('Your API key will expire in %d days.', $days_left)]]></code>
       <code><![CDATA[l10n('Your API key will expire soon')]]></code>
       <code><![CDATA[l10n('html tags are not allowed in login')]]></code>
-      <code><![CDATA[l10n('html tags are not allowed in login')]]></code>
-      <code><![CDATA[l10n('login mustn\'t end with a space character')]]></code>
-      <code><![CDATA[l10n('login mustn\'t start with a space character')]]></code>
-      <code><![CDATA[l10n('mail address must be like xxx@yyy.eee (example : jack@altern.org)')]]></code>
-      <code><![CDATA[l10n('this email address is already in use')]]></code>
       <code><![CDATA[l10n('this login is already used')]]></code>
       <code><![CDATA[l10n('this login is already used')]]></code>
-      <code><![CDATA[l10n('this login is already used')]]></code>
-      <code><![CDATA[l10n_args($keyargs_content)]]></code>
-      <code><![CDATA[log_user($cookie[0], true)]]></code>
       <code><![CDATA[log_user($found_user_id, $remember_me)]]></code>
       <code><![CDATA[log_user($key_user_id, false)]]></code>
       <code><![CDATA[mass_inserts(
@@ -6737,27 +5557,15 @@
                     'ignore' => true,
                 ]
             )]]></code>
-      <code><![CDATA[mass_inserts(Tables::userGroup(), ['user_id', 'group_id'], $inserts)]]></code>
       <code><![CDATA[mass_inserts(Tables::userGroup(), array_keys($inserts[0]), $inserts)]]></code>
-      <code><![CDATA[mass_inserts(Tables::userInfos(), array_keys($inserts[0]), $inserts)]]></code>
       <code><![CDATA[pwg_activity('user', $found_user_id, 'login_failure_wrong_password')]]></code>
       <code><![CDATA[pwg_activity('user', $found_user_id, is_string($reason) ? $reason : 'login_failure_before_log_user')]]></code>
-      <code><![CDATA[pwg_activity('user', $pwg_uid, 'logout')]]></code>
-      <code><![CDATA[pwg_activity('user', $user['id'], 'login')]]></code>
-      <code><![CDATA[pwg_activity('user', $user_id, 'add')]]></code>
       <code><![CDATA[pwg_activity('user', $user_ids, 'edit')]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($q)]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
       <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
       <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
       <code><![CDATA[pwg_db_fetch_assoc(pwg_query($query . $where_email))]]></code>
       <code><![CDATA[pwg_db_fetch_assoc(pwg_query($query . $where_username))]]></code>
       <code><![CDATA[pwg_db_fetch_assoc(pwg_query($query))]]></code>
-      <code><![CDATA[pwg_db_fetch_row($result)]]></code>
-      <code><![CDATA[pwg_db_fetch_row($result)]]></code>
-      <code><![CDATA[pwg_db_fetch_row(pwg_query($query))]]></code>
       <code><![CDATA[pwg_db_fetch_row(pwg_query($query))]]></code>
       <code><![CDATA[pwg_db_fetch_row(pwg_query($query))]]></code>
       <code><![CDATA[pwg_db_fetch_row(pwg_query($query))]]></code>
@@ -6769,29 +5577,10 @@
       <code><![CDATA[pwg_db_fetch_row(pwg_query($query))]]></code>
       <code><![CDATA[pwg_db_fetch_row(pwg_query('SELECT ADDDATE(NOW(), INTERVAL ' . $duration . ' SECOND)'))]]></code>
       <code><![CDATA[pwg_db_fetch_row(pwg_query('SELECT NOW();'))]]></code>
-      <code><![CDATA[pwg_db_fetch_row(pwg_query('SELECT NOW();'))]]></code>
       <code><![CDATA[pwg_db_get_recent_period_expression($recent_period)]]></code>
       <code><![CDATA[pwg_db_get_recent_period_expression(1, $last_photo_date)]]></code>
       <code><![CDATA[pwg_db_insert_id()]]></code>
-      <code><![CDATA[pwg_db_insert_id()]]></code>
-      <code><![CDATA[pwg_db_num_rows($result)]]></code>
-      <code><![CDATA[pwg_db_num_rows($result)]]></code>
-      <code><![CDATA[pwg_db_num_rows($result)]]></code>
-      <code><![CDATA[pwg_db_num_rows($result)]]></code>
-      <code><![CDATA[pwg_db_num_rows(pwg_query($query))]]></code>
-      <code><![CDATA[pwg_db_real_escape_string($email)]]></code>
-      <code><![CDATA[pwg_db_real_escape_string($username)]]></code>
       <code><![CDATA[pwg_db_real_escape_string($username_or_email)]]></code>
-      <code><![CDATA[pwg_db_real_escape_string($value)]]></code>
-      <code><![CDATA[pwg_db_real_escape_string(serialize($user['preferences']))]]></code>
-      <code><![CDATA[pwg_mail(
-                $mail_address,
-                [
-                    'subject' => '[' . $gallery_title . '] ' . l10n('Registration'),
-                    'content' => l10n_args($keyargs_content),
-                    'content_format' => 'text/plain',
-                ]
-            )]]></code>
       <code><![CDATA[pwg_mail(
         $email,
         [
@@ -6800,17 +5589,9 @@
             'content_format' => 'text/html',
         ]
     )]]></code>
-      <code><![CDATA[pwg_mail_notification_admins(
-                get_l10n_args('Registration of %s', stripslashes($login)),
-                $keyargs_content,
-                true, // $send_technical_details
-                $group_id
-            )]]></code>
       <code><![CDATA[pwg_password_hash($activation_key)]]></code>
       <code><![CDATA[pwg_password_hash($fake_password)]]></code>
       <code><![CDATA[pwg_password_hash($key_secret)]]></code>
-      <code><![CDATA[pwg_password_hash($password)]]></code>
-      <code><![CDATA[pwg_password_hash($password)]]></code>
       <code><![CDATA[pwg_password_hash($password_param)]]></code>
       <code><![CDATA[pwg_password_verify(
         $password,
@@ -6818,7 +5599,6 @@
         $verify_user_id
     )]]></code>
       <code><![CDATA[pwg_password_verify($secret_key, $apikey_secret)]]></code>
-      <code><![CDATA[pwg_phpass_verify_legacy($password, $hash)]]></code>
       <code><![CDATA[pwg_query($query . $where_email)]]></code>
       <code><![CDATA[pwg_query($query . $where_username)]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
@@ -6842,64 +5622,25 @@
       <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query('
-    SELECT ' . $user_fields['username'] . ' AS username
-    FROM `' . Tables::users() . '`;
-  ')]]></code>
       <code><![CDATA[pwg_query('SELECT ADDDATE(NOW(), INTERVAL ' . $duration . ' SECOND)')]]></code>
       <code><![CDATA[pwg_query('SELECT NOW();')]]></code>
-      <code><![CDATA[pwg_query('SELECT NOW();')]]></code>
       <code><![CDATA[pwg_session_gc()]]></code>
-      <code><![CDATA[pwg_test_mode_is_active()]]></code>
       <code><![CDATA[pwg_unique_exec_begins($cache_generation_token_name)]]></code>
       <code><![CDATA[pwg_unique_exec_ends($cache_generation_token_name)]]></code>
       <code><![CDATA[pwg_unique_exec_is_running($cache_generation_token_name)]]></code>
       <code><![CDATA[query2array($query)]]></code>
       <code><![CDATA[query2array($query)]]></code>
       <code><![CDATA[query2array($query)]]></code>
-      <code><![CDATA[query2array($query, null, 'cat_id')]]></code>
-      <code><![CDATA[query2array($query, null, 'cat_id')]]></code>
-      <code><![CDATA[query2array($query, null, 'id')]]></code>
-      <code><![CDATA[query2array($query, null, 'id')]]></code>
       <code><![CDATA[query2array($query, null, 'id')]]></code>
       <code><![CDATA[query2array($query, null, 'image_id')]]></code>
       <code><![CDATA[query2array($query, null, 'image_id')]]></code>
       <code><![CDATA[query2array($query, null, 'user_id')]]></code>
       <code><![CDATA[query2array($query, null, 'user_id')]]></code>
       <code><![CDATA[remove_computed_category($user_cache_cats, $cat)]]></code>
-      <code><![CDATA[script_basename()]]></code>
-      <code><![CDATA[script_basename()]]></code>
       <code><![CDATA[set_make_full_url()]]></code>
       <code><![CDATA[set_status_header(503, 'Service Unavailable')]]></code>
       <code><![CDATA[single_insert(Tables::userAuthKeys(), $key)]]></code>
       <code><![CDATA[single_insert(Tables::userAuthKeys(), $key)]]></code>
-      <code><![CDATA[single_insert(Tables::users(), $insert)]]></code>
-      <code><![CDATA[single_update(
-            Tables::userInfos(),
-            [
-                'language' => $lang_cookie,
-            ],
-            [
-                'user_id' => $user_id,
-            ]
-        )]]></code>
-      <code><![CDATA[single_update(
-            Tables::users(),
-            [
-                'password' => $new_hash,
-            ],
-            [
-                'id' => $user_id,
-            ]
-        )]]></code>
       <code><![CDATA[single_update(
         Tables::userAuthKeys(),
         [
@@ -6968,43 +5709,16 @@
       <code><![CDATA[time_since($api_key['last_used_on'], 'day')]]></code>
       <code><![CDATA[time_since($expired_on_raw, 'day')]]></code>
       <code><![CDATA[time_since($revoked_on, 'day')]]></code>
-      <code><![CDATA[trigger_change(
-        'register_user_check',
-        $errors,
-        [
-            'username' => $login,
-            'password' => $password,
-            'email' => $mail_address,
-        ]
-    )]]></code>
       <code><![CDATA[trigger_change('finalize_login', $state, $user_found, $remember_me)]]></code>
-      <code><![CDATA[trigger_change('try_log_user', false, $username, $password, $remember_me)]]></code>
-      <code><![CDATA[trigger_notify(
-            'register_user',
-            [
-                'id' => $user_id,
-                'username' => $login,
-                'email' => $mail_address,
-            ]
-        )]]></code>
       <code><![CDATA[trigger_notify('login_failure', stripslashes($username))]]></code>
       <code><![CDATA[trigger_notify('login_failure_before_log_user', stripslashes($username))]]></code>
       <code><![CDATA[trigger_notify('login_success', $key['username'])]]></code>
       <code><![CDATA[trigger_notify('login_success', stripslashes($username))]]></code>
-      <code><![CDATA[trigger_notify('login_success', stripslashes($username))]]></code>
-      <code><![CDATA[trigger_notify('user_login', $user['id'])]]></code>
-      <code><![CDATA[trigger_notify('user_logout', $pwg_uid)]]></code>
       <code><![CDATA[unset_make_full_url()]]></code>
-      <code><![CDATA[userprefs_save()]]></code>
-      <code><![CDATA[userprefs_save()]]></code>
-      <code><![CDATA[validate_login_case($login)]]></code>
       <code><![CDATA[validate_mail_address($user_ids[0], $email_param)]]></code>
-      <code><![CDATA[validate_mail_address(null, $mail_address)]]></code>
     </UndefinedFunction>
     <UnresolvableInclude>
       <code><![CDATA[include_once PHPWG_ROOT_PATH . 'admin/include/functions.php']]></code>
-      <code><![CDATA[include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php']]></code>
-      <code><![CDATA[include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php']]></code>
       <code><![CDATA[include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php']]></code>
     </UnresolvableInclude>
   </file>
@@ -8125,29 +6839,11 @@
     </UnresolvableInclude>
   </file>
   <file src="include/ws_functions/pwg.groups.php">
-    <PossiblyInvalidArgument>
-      <code><![CDATA[str_replace(' ', '', $params['name'])]]></code>
-    </PossiblyInvalidArgument>
-    <PossiblyUndefinedArrayOffset>
-      <code><![CDATA[$params['is_default']]]></code>
-    </PossiblyUndefinedArrayOffset>
     <RiskyTruthyFalsyComparison>
-      <code><![CDATA[empty($params['group_id'])]]></code>
-      <code><![CDATA[empty($params['is_default'])]]></code>
-      <code><![CDATA[empty($params['name'])]]></code>
       <code><![CDATA[empty($params['name'])]]></code>
     </RiskyTruthyFalsyComparison>
     <UndefinedConstant>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-      <code><![CDATA[WS_ERR_INVALID_PARAM]]></code>
-      <code><![CDATA[WS_ERR_INVALID_PARAM]]></code>
-      <code><![CDATA[WS_ERR_INVALID_PARAM]]></code>
-      <code><![CDATA[WS_ERR_INVALID_PARAM]]></code>
       <code><![CDATA[WS_ERR_INVALID_PARAM]]></code>
       <code><![CDATA[WS_ERR_INVALID_PARAM]]></code>
       <code><![CDATA[WS_ERR_INVALID_PARAM]]></code>
@@ -8157,11 +6853,6 @@
       <code><![CDATA[WS_ERR_INVALID_PARAM]]></code>
     </UndefinedConstant>
     <UndefinedFunction>
-      <code><![CDATA[array_from_query($query)]]></code>
-      <code><![CDATA[boolean_to_string($is_default)]]></code>
-      <code><![CDATA[boolean_to_string($params['is_default'])]]></code>
-      <code><![CDATA[boolean_to_string($params['is_default'])]]></code>
-      <code><![CDATA[delete_groups($merge_group)]]></code>
       <code><![CDATA[delete_groups($params['group_id'])]]></code>
       <code><![CDATA[get_pwg_token()]]></code>
       <code><![CDATA[get_pwg_token()]]></code>
@@ -8170,104 +6861,8 @@
       <code><![CDATA[get_pwg_token()]]></code>
       <code><![CDATA[get_pwg_token()]]></code>
       <code><![CDATA[invalidate_user_cache()]]></code>
-      <code><![CDATA[invalidate_user_cache()]]></code>
-      <code><![CDATA[invalidate_user_cache()]]></code>
-      <code><![CDATA[invalidate_user_cache()]]></code>
-      <code><![CDATA[invalidate_user_cache()]]></code>
-      <code><![CDATA[mass_inserts(
-        Tables::userGroup(),
-        ['group_id', 'user_id'],
-        $inserts,
-        [
-            'ignore' => true,
-        ]
-    )]]></code>
-      <code><![CDATA[mass_inserts(
-        Tables::userGroup(),
-        ['group_id', 'user_id'],
-        $inserts,
-        [
-            'ignore' => true,
-        ]
-    )]]></code>
-      <code><![CDATA[mass_inserts(
-        Tables::userGroup(),
-        ['group_id', 'user_id'],
-        $inserts,
-        [
-            'ignore' => true,
-        ]
-    )]]></code>
-      <code><![CDATA[pwg_activity('group', $inserted_id, 'add')]]></code>
-      <code><![CDATA[pwg_activity('group', $inserted_id, 'add')]]></code>
-      <code><![CDATA[pwg_activity('group', $params['destination_group_id'], 'edit')]]></code>
-      <code><![CDATA[pwg_activity('group', $params['group_id'], 'edit')]]></code>
-      <code><![CDATA[pwg_activity('group', $params['group_id'], 'edit')]]></code>
-      <code><![CDATA[pwg_activity('group', $params['group_id'], 'edit')]]></code>
-      <code><![CDATA[pwg_activity('user', $params['user_id'], 'edit')]]></code>
-      <code><![CDATA[pwg_activity('user', $params['user_id'], 'edit')]]></code>
-      <code><![CDATA[pwg_activity('user', $user_id, 'edit', [
-            'associated' => $params['destination_group_id'],
-        ])]]></code>
-      <code><![CDATA[pwg_activity('user', $user_id, 'edit', [
-            'associated' => $params['group_id'],
-        ])]]></code>
-      <code><![CDATA[pwg_db_fetch_row(pwg_query($query))]]></code>
-      <code><![CDATA[pwg_db_fetch_row(pwg_query($query))]]></code>
-      <code><![CDATA[pwg_db_fetch_row(pwg_query($query))]]></code>
-      <code><![CDATA[pwg_db_fetch_row(pwg_query($query))]]></code>
-      <code><![CDATA[pwg_db_fetch_row(pwg_query($query))]]></code>
-      <code><![CDATA[pwg_db_fetch_row(pwg_query($query))]]></code>
-      <code><![CDATA[pwg_db_fetch_row(pwg_query($query))]]></code>
-      <code><![CDATA[pwg_db_fetch_row(pwg_query($query))]]></code>
-      <code><![CDATA[pwg_db_fetch_row(pwg_query($query))]]></code>
-      <code><![CDATA[pwg_db_insert_id()]]></code>
-      <code><![CDATA[pwg_db_insert_id()]]></code>
-      <code><![CDATA[pwg_db_real_escape_string($params['copy_name'])]]></code>
-      <code><![CDATA[pwg_db_real_escape_string($params['name'])]]></code>
-      <code><![CDATA[pwg_db_real_escape_string(strip_tags(stripslashes($params['name'])))]]></code>
-      <code><![CDATA[pwg_db_real_escape_string(strip_tags(stripslashes($params['name'])))]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[query2array($query, null, 'user_id')]]></code>
-      <code><![CDATA[query2array($query, null, 'user_id')]]></code>
-      <code><![CDATA[query2array($query, null, 'user_id')]]></code>
-      <code><![CDATA[single_insert(
-        Tables::groups(),
-        [
-            'name' => $params['copy_name'],
-            'is_default' => boolean_to_string($is_default),
-        ]
-    )]]></code>
-      <code><![CDATA[single_insert(
-        Tables::groups(),
-        [
-            'name' => $params['name'],
-            'is_default' => boolean_to_string($params['is_default']),
-        ]
-    )]]></code>
-      <code><![CDATA[single_update(
-        Tables::groups(),
-        $updates,
-        [
-            'id' => $params['group_id'],
-        ]
-    )]]></code>
     </UndefinedFunction>
     <UnresolvableInclude>
-      <code><![CDATA[include_once PHPWG_ROOT_PATH . 'admin/include/functions.php']]></code>
-      <code><![CDATA[include_once PHPWG_ROOT_PATH . 'admin/include/functions.php']]></code>
-      <code><![CDATA[include_once PHPWG_ROOT_PATH . 'admin/include/functions.php']]></code>
-      <code><![CDATA[include_once PHPWG_ROOT_PATH . 'admin/include/functions.php']]></code>
-      <code><![CDATA[include_once PHPWG_ROOT_PATH . 'admin/include/functions.php']]></code>
       <code><![CDATA[include_once PHPWG_ROOT_PATH . 'admin/include/functions.php']]></code>
     </UnresolvableInclude>
   </file>
@@ -8327,6 +6922,8 @@
       <code><![CDATA[MKGETDIR_DIE_ON_ERROR]]></code>
       <code><![CDATA[MKGETDIR_DIE_ON_ERROR]]></code>
       <code><![CDATA[MKGETDIR_DIE_ON_ERROR]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
@@ -8859,7 +7456,6 @@
       <code><![CDATA[WS_ERR_INVALID_PARAM]]></code>
     </UndefinedConstant>
     <UndefinedFunction>
-      <code><![CDATA[array_from_query($query, 'id')]]></code>
       <code><![CDATA[auth_key_login($params['username'] . ':' . $secret)]]></code>
       <code><![CDATA[check_input_parameter('display_thumbnail', $param, false, '/^(' . implode('|', array_keys($display_thumbnails)) . ')$/')]]></code>
       <code><![CDATA[check_input_parameter('end', $param, false, '/^\d{4}-\d{2}-\d{2}$/')]]></code>
@@ -8913,11 +7509,6 @@
                     'image_id' => $line_image_id,
                 ]
             )]]></code>
-      <code><![CDATA[mass_inserts(
-            Tables::caddie(),
-            ['element_id', 'user_id'],
-            $datas
-        )]]></code>
       <code><![CDATA[pwg_db_changes()]]></code>
       <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
       <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
@@ -9976,8 +8567,6 @@
     </InvalidGlobal>
     <UndefinedFunction>
       <code><![CDATA[generate_key(50)]]></code>
-      <code><![CDATA[pwg_db_fetch_row(pwg_query($query))]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
     </UndefinedFunction>
   </file>
   <file src="password.php">
@@ -10216,9 +8805,11 @@
     <InvalidGlobal>
       <code><![CDATA[global $conf, $page, $template, $user;]]></code>
     </InvalidGlobal>
-    <InvalidOperand>
-      <code><![CDATA[$registration_errors]]></code>
-    </InvalidOperand>
+    <PossiblyInvalidArgument>
+      <code><![CDATA[$post_login]]></code>
+      <code><![CDATA[$post_mail_address]]></code>
+      <code><![CDATA[$post_password]]></code>
+    </PossiblyInvalidArgument>
     <PossiblyUndefinedArrayOffset>
       <code><![CDATA[$_POST['login']]]></code>
       <code><![CDATA[$_POST['mail_address']]]></code>
@@ -10231,7 +8822,6 @@
       <code><![CDATA[empty($mail_raw)]]></code>
     </RiskyTruthyFalsyComparison>
     <TypeDoesNotContainType>
-      <code><![CDATA[$registration_errors !== []]]></code>
       <code><![CDATA[is_string($lang_cookie)]]></code>
     </TypeDoesNotContainType>
   </file>
@@ -10246,6 +8836,25 @@
     <RiskyTruthyFalsyComparison>
       <code><![CDATA[empty($_GET['q'])]]></code>
     </RiskyTruthyFalsyComparison>
+  </file>
+  <file src="src/Piwigo/Activity/ActivityService.php">
+    <RedundantCondition>
+      <code><![CDATA[is_string($_SERVER['HTTP_REFERER'])]]></code>
+      <code><![CDATA[is_string($_SERVER['HTTP_USER_AGENT'])]]></code>
+      <code><![CDATA[is_string($_SERVER['REMOTE_ADDR'])]]></code>
+      <code><![CDATA[isset($_SERVER['HTTP_REFERER']) && is_string($_SERVER['HTTP_REFERER'])]]></code>
+      <code><![CDATA[isset($_SERVER['HTTP_USER_AGENT']) && is_string($_SERVER['HTTP_USER_AGENT'])]]></code>
+      <code><![CDATA[isset($_SERVER['REMOTE_ADDR']) && is_string($_SERVER['REMOTE_ADDR'])]]></code>
+    </RedundantCondition>
+    <TypeDoesNotContainType>
+      <code><![CDATA['']]></code>
+      <code><![CDATA[null]]></code>
+      <code><![CDATA[null]]></code>
+    </TypeDoesNotContainType>
+    <UndefinedFunction>
+      <code><![CDATA[pwg_now()]]></code>
+      <code><![CDATA[script_basename()]]></code>
+    </UndefinedFunction>
   </file>
   <file src="src/Piwigo/Admin/DummyPlugin_maintain.php">
     <ClassMustBeFinal>
@@ -10286,8 +8895,6 @@
     </InvalidOperand>
     <PossiblyFalseOperand>
       <code><![CDATA[realpath($dest['dirname'])]]></code>
-      <code><![CDATA[realpath($this->source_filepath)]]></code>
-      <code><![CDATA[realpath($this->source_filepath)]]></code>
     </PossiblyFalseOperand>
     <PossiblyInvalidOperand>
       <code><![CDATA[$params]]></code>
@@ -10865,6 +9472,87 @@
       <code><![CDATA[include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php']]></code>
     </UnresolvableInclude>
   </file>
+  <file src="src/Piwigo/Audit/AuditService.php">
+    <RedundantCondition>
+      <code><![CDATA[is_string($_SERVER['REMOTE_ADDR'])]]></code>
+      <code><![CDATA[isset($_SERVER['REMOTE_ADDR']) && is_string($_SERVER['REMOTE_ADDR'])]]></code>
+    </RedundantCondition>
+    <TypeDoesNotContainType>
+      <code><![CDATA[null]]></code>
+    </TypeDoesNotContainType>
+    <UndefinedFunction>
+      <code><![CDATA[pwg_now()]]></code>
+    </UndefinedFunction>
+  </file>
+  <file src="src/Piwigo/Auth/AuthService.php">
+    <RedundantCondition>
+      <code><![CDATA[is_string($remember_me_cookie)]]></code>
+    </RedundantCondition>
+    <TypeDoesNotContainType>
+      <code><![CDATA[is_string($lang_cookie)]]></code>
+    </TypeDoesNotContainType>
+    <UndefinedFunction>
+      <code><![CDATA[cookie_path()]]></code>
+      <code><![CDATA[cookie_path()]]></code>
+      <code><![CDATA[cookie_path()]]></code>
+      <code><![CDATA[cookie_path()]]></code>
+      <code><![CDATA[fatal_error('[Hacking attempt] the input parameter "' . $lang_cookie . '" is not valid')]]></code>
+      <code><![CDATA[fatal_error('[Hacking attempt] the input parameter "lang" is not valid')]]></code>
+      <code><![CDATA[get_languages()]]></code>
+      <code><![CDATA[pwg_activity('user', $pwg_uid, 'logout')]]></code>
+      <code><![CDATA[pwg_activity('user', $user['id'], 'login')]]></code>
+      <code><![CDATA[script_basename()]]></code>
+      <code><![CDATA[trigger_change('try_log_user', false, $username, $password, $rememberMe)]]></code>
+      <code><![CDATA[trigger_notify('login_success', stripslashes($calculated['username']))]]></code>
+      <code><![CDATA[trigger_notify('user_login', $user['id'])]]></code>
+      <code><![CDATA[trigger_notify('user_logout', $pwg_uid)]]></code>
+    </UndefinedFunction>
+  </file>
+  <file src="src/Piwigo/Auth/CookieService.php">
+    <DocblockTypeContradiction>
+      <code><![CDATA[str_starts_with(PHPWG_ROOT_PATH, '../')]]></code>
+    </DocblockTypeContradiction>
+    <PossiblyUndefinedArrayOffset>
+      <code><![CDATA[$_SERVER['PATH_INFO']]]></code>
+      <code><![CDATA[$_SERVER['SCRIPT_NAME']]]></code>
+    </PossiblyUndefinedArrayOffset>
+    <RedundantCondition>
+      <code><![CDATA[is_string($_SERVER['PATH_INFO'])]]></code>
+      <code><![CDATA[is_string($_SERVER['REDIRECT_SCRIPT_NAME'])]]></code>
+      <code><![CDATA[is_string($_SERVER['REDIRECT_URL'])]]></code>
+      <code><![CDATA[isset($_SERVER['PATH_INFO']) && is_string($_SERVER['PATH_INFO'])]]></code>
+      <code><![CDATA[isset($_SERVER['REDIRECT_SCRIPT_NAME']) && is_string($_SERVER['REDIRECT_SCRIPT_NAME'])]]></code>
+    </RedundantCondition>
+    <TypeDoesNotContainType>
+      <code><![CDATA['']]></code>
+      <code><![CDATA['']]></code>
+      <code><![CDATA['']]></code>
+    </TypeDoesNotContainType>
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+  </file>
+  <file src="src/Piwigo/Auth/EphemeralKeyService.php">
+    <InvalidOperand>
+      <code><![CDATA[$time]]></code>
+      <code><![CDATA[$time]]></code>
+      <code><![CDATA[$time - 3600]]></code>
+    </InvalidOperand>
+    <RedundantCondition>
+      <code><![CDATA[is_string($remote_addr)]]></code>
+      <code><![CDATA[is_string($remote_addr)]]></code>
+    </RedundantCondition>
+    <TypeDoesNotContainType>
+      <code><![CDATA['']]></code>
+      <code><![CDATA['']]></code>
+    </TypeDoesNotContainType>
+  </file>
+  <file src="src/Piwigo/Auth/PasswordService.php">
+    <UndefinedFunction>
+      <code><![CDATA[pwg_test_mode_is_active()]]></code>
+    </UndefinedFunction>
+  </file>
   <file src="src/Piwigo/Auth/PwgBase32.php">
     <ClassMustBeFinal>
       <code><![CDATA[PwgBase32]]></code>
@@ -11066,6 +9754,17 @@
       <code><![CDATA[pwg_query($query)]]></code>
     </UndefinedFunction>
   </file>
+  <file src="src/Piwigo/Calendar/CalendarService.php">
+    <NoValue>
+      <code><![CDATA[$subIds]]></code>
+    </NoValue>
+    <RedundantConditionGivenDocblockType>
+      <code><![CDATA[$subIds === []]]></code>
+    </RedundantConditionGivenDocblockType>
+    <UndefinedFunction>
+      <code><![CDATA[get_subcat_ids([$categoryId])]]></code>
+    </UndefinedFunction>
+  </file>
   <file src="src/Piwigo/Calendar/CalendarWeekly.php">
     <ClassMustBeFinal>
       <code><![CDATA[CalendarWeekly]]></code>
@@ -11101,6 +9800,150 @@
       <code><![CDATA[pwg_db_get_weekday($this->date_field)]]></code>
       <code><![CDATA[pwg_db_get_year($this->date_field)]]></code>
     </UndefinedFunction>
+  </file>
+  <file src="src/Piwigo/Category/CategoryRepository.php">
+    <UndefinedFunction>
+      <code><![CDATA[pwg_db_get_recent_period_expression($filterDays)]]></code>
+    </UndefinedFunction>
+  </file>
+  <file src="src/Piwigo/Category/CategoryService.php">
+    <LessSpecificReturnStatement>
+      <code><![CDATA[$cats]]></code>
+    </LessSpecificReturnStatement>
+    <MoreSpecificReturnType>
+      <code><![CDATA[list<array<string, mixed>>]]></code>
+    </MoreSpecificReturnType>
+    <RedundantCast>
+      <code><![CDATA[(int) $countCategories]]></code>
+      <code><![CDATA[(int) $countImages]]></code>
+    </RedundantCast>
+    <UndefinedFunction>
+      <code><![CDATA[get_boolean($v)]]></code>
+      <code><![CDATA[is_admin()]]></code>
+      <code><![CDATA[l10n('Date created, new &rarr; old')]]></code>
+      <code><![CDATA[l10n('Date created, old &rarr; new')]]></code>
+      <code><![CDATA[l10n('Date posted, new &rarr; old')]]></code>
+      <code><![CDATA[l10n('Date posted, old &rarr; new')]]></code>
+      <code><![CDATA[l10n('Default')]]></code>
+      <code><![CDATA[l10n('Permissions')]]></code>
+      <code><![CDATA[l10n('Photo title, A &rarr; Z')]]></code>
+      <code><![CDATA[l10n('Photo title, Z &rarr; A')]]></code>
+      <code><![CDATA[l10n('Rating score, high &rarr; low')]]></code>
+      <code><![CDATA[l10n('Rating score, low &rarr; high')]]></code>
+      <code><![CDATA[l10n('Visits, high &rarr; low')]]></code>
+      <code><![CDATA[l10n('Visits, low &rarr; high')]]></code>
+      <code><![CDATA[l10n('in this album')]]></code>
+      <code><![CDATA[l10n_dec('%d photo', '%d photos', $catCountImages)]]></code>
+      <code><![CDATA[l10n_dec('in %d sub-album', 'in %d sub-albums', $catCountCategories)]]></code>
+      <code><![CDATA[trigger_change('get_category_preferred_image_orders', [
+            [l10n('Default'), '', true],
+            [l10n('Photo title, A &rarr; Z'), 'name ASC', true],
+            [l10n('Photo title, Z &rarr; A'), 'name DESC', true],
+            [l10n('Date created, new &rarr; old'), 'date_creation DESC', true],
+            [l10n('Date created, old &rarr; new'), 'date_creation ASC', true],
+            [l10n('Date posted, new &rarr; old'), 'date_available DESC', true],
+            [l10n('Date posted, old &rarr; new'), 'date_available ASC', true],
+            [l10n('Rating score, high &rarr; low'), 'rating_score DESC', $conf['rate']],
+            [l10n('Rating score, low &rarr; high'), 'rating_score ASC', $conf['rate']],
+            [l10n('Visits, high &rarr; low'), 'hit DESC', true],
+            [l10n('Visits, low &rarr; high'), 'hit ASC', true],
+            [l10n('Permissions'), 'level DESC', is_admin()],
+        ])]]></code>
+      <code><![CDATA[trigger_change('render_category_name', $cat['name'], $cat)]]></code>
+    </UndefinedFunction>
+  </file>
+  <file src="src/Piwigo/Comment/CommentService.php">
+    <ParadoxicalCondition>
+      <code><![CDATA[$action === $myAction]]></code>
+    </ParadoxicalCondition>
+    <PossiblyUndefinedArrayOffset>
+      <code><![CDATA[$_SERVER['HTTP_USER_AGENT']]]></code>
+      <code><![CDATA[$_SERVER['REMOTE_ADDR']]]></code>
+      <code><![CDATA[$comm['author']]]></code>
+      <code><![CDATA[$comm['author']]]></code>
+      <code><![CDATA[$comm['content']]]></code>
+      <code><![CDATA[$comm['email']]]></code>
+      <code><![CDATA[$comm['email']]]></code>
+      <code><![CDATA[$comm['image_id']]]></code>
+      <code><![CDATA[$comm['website_url']]]></code>
+      <code><![CDATA[$comm['website_url']]]></code>
+    </PossiblyUndefinedArrayOffset>
+    <ReferenceConstraintViolation>
+      <code><![CDATA[return $commentAction;]]></code>
+    </ReferenceConstraintViolation>
+    <UndefinedConstant>
+      <code><![CDATA[\PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[\PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[\PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UndefinedFunction>
+      <code><![CDATA[email_check_format($email)]]></code>
+      <code><![CDATA[fatal_error('Unknown comment identifier')]]></code>
+      <code><![CDATA[get_absolute_root_url()]]></code>
+      <code><![CDATA[get_absolute_root_url()]]></code>
+      <code><![CDATA[get_l10n_args('')]]></code>
+      <code><![CDATA[get_l10n_args('')]]></code>
+      <code><![CDATA[get_l10n_args('(!) This comment requires validation')]]></code>
+      <code><![CDATA[get_l10n_args('(!) This comment requires validation')]]></code>
+      <code><![CDATA[get_l10n_args('Author: %s', $author)]]></code>
+      <code><![CDATA[get_l10n_args('Author: %s', stripslashes($author))]]></code>
+      <code><![CDATA[get_l10n_args('Author: %s', stripslashes($username))]]></code>
+      <code><![CDATA[get_l10n_args('Comment by %s', $author)]]></code>
+      <code><![CDATA[get_l10n_args('Comment by %s', stripslashes($author))]]></code>
+      <code><![CDATA[get_l10n_args('Comment by %s', stripslashes($username))]]></code>
+      <code><![CDATA[get_l10n_args('Comment: %s', $comment['content'])]]></code>
+      <code><![CDATA[get_l10n_args('Comment: %s', stripslashes($content))]]></code>
+      <code><![CDATA[get_l10n_args('Comment: %s', stripslashes($content))]]></code>
+      <code><![CDATA[get_l10n_args('Email: %s', stripslashes($email ?? ''))]]></code>
+      <code><![CDATA[get_l10n_args('Manage this user comment: %s', $commentUrl)]]></code>
+      <code><![CDATA[get_l10n_args('Manage this user comment: %s', $commentUrl)]]></code>
+      <code><![CDATA[get_l10n_args('This author modified following comment:')]]></code>
+      <code><![CDATA[get_l10n_args('This author removed the comment with id %d', $comment['comment_id'])]]></code>
+      <code><![CDATA[is_a_guest()]]></code>
+      <code><![CDATA[is_admin()]]></code>
+      <code><![CDATA[is_admin()]]></code>
+      <code><![CDATA[is_admin()]]></code>
+      <code><![CDATA[is_admin()]]></code>
+      <code><![CDATA[is_admin()]]></code>
+      <code><![CDATA[is_classic_user()]]></code>
+      <code><![CDATA[is_classic_user()]]></code>
+      <code><![CDATA[l10n('Anti-flood system : please wait for a moment before trying to post another comment')]]></code>
+      <code><![CDATA[l10n('Email address is missing. Please specify an email address.')]]></code>
+      <code><![CDATA[l10n('This login is already used by another user')]]></code>
+      <code><![CDATA[l10n('Username is mandatory')]]></code>
+      <code><![CDATA[l10n('Your website URL is invalid')]]></code>
+      <code><![CDATA[l10n('Your website URL is invalid')]]></code>
+      <code><![CDATA[l10n('mail address must be like xxx@yyy.eee (example : jack@altern.org)')]]></code>
+      <code><![CDATA[pwg_mail_notification_admins(
+                    get_l10n_args('Comment by %s', stripslashes($author)),
+                    $keyargsContent
+                )]]></code>
+      <code><![CDATA[pwg_mail_notification_admins(
+                    get_l10n_args('Comment by %s', stripslashes($username)),
+                    $keyargsContent
+                )]]></code>
+      <code><![CDATA[pwg_mail_notification_admins(
+            get_l10n_args('Comment by %s', $author),
+            $keyargsContent
+        )]]></code>
+      <code><![CDATA[trigger_change(
+            'user_comment_check',
+            $commentAction,
+            array_merge($comment, [
+                'author' => $username,
+            ])
+        )]]></code>
+      <code><![CDATA[trigger_change('user_comment_check', $commentAction, $comm)]]></code>
+      <code><![CDATA[trigger_notify('user_comment_deletion', $commentId)]]></code>
+      <code><![CDATA[trigger_notify('user_comment_validation', $commentId)]]></code>
+      <code><![CDATA[url_check_format($websiteUrl)]]></code>
+      <code><![CDATA[url_check_format($websiteUrl)]]></code>
+    </UndefinedFunction>
+    <UnresolvableInclude>
+      <code><![CDATA[include_once \PHPWG_ROOT_PATH . 'include/functions_mail.inc.php']]></code>
+      <code><![CDATA[include_once \PHPWG_ROOT_PATH . 'include/functions_mail.inc.php']]></code>
+      <code><![CDATA[include_once \PHPWG_ROOT_PATH . 'include/functions_mail.inc.php']]></code>
+    </UnresolvableInclude>
   </file>
   <file src="src/Piwigo/Core/FeatureFlag.php">
     <EmptyArrayAccess>
@@ -11156,6 +9999,153 @@
     <MoreSpecificReturnType>
       <code><![CDATA[array{driver: 'mysqli', user: string, password: string, dbname: string, charset: string, driverOptions: array<int, bool>, host?: string, unix_socket?: string, port?: int}]]></code>
     </MoreSpecificReturnType>
+  </file>
+  <file src="src/Piwigo/Group/GroupService.php">
+    <UndefinedConstant>
+      <code><![CDATA[\PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UndefinedFunction>
+      <code><![CDATA[invalidate_user_cache()]]></code>
+      <code><![CDATA[invalidate_user_cache()]]></code>
+      <code><![CDATA[invalidate_user_cache()]]></code>
+      <code><![CDATA[invalidate_user_cache()]]></code>
+      <code><![CDATA[invalidate_user_cache()]]></code>
+      <code><![CDATA[pwg_activity('group', $destinationGroupId, 'edit')]]></code>
+      <code><![CDATA[pwg_activity('group', $groupId, 'edit')]]></code>
+      <code><![CDATA[pwg_activity('group', $groupId, 'edit')]]></code>
+      <code><![CDATA[pwg_activity('group', $groupId, 'edit')]]></code>
+      <code><![CDATA[pwg_activity('group', $id, 'add')]]></code>
+      <code><![CDATA[pwg_activity('group', $ids, 'delete')]]></code>
+      <code><![CDATA[pwg_activity('group', $newId, 'add')]]></code>
+      <code><![CDATA[pwg_activity('user', $userId, 'edit', [
+                'associated' => $destinationGroupId,
+            ])]]></code>
+      <code><![CDATA[pwg_activity('user', $userId, 'edit', [
+                'associated' => $groupId,
+            ])]]></code>
+      <code><![CDATA[pwg_activity('user', $userIds, 'edit')]]></code>
+      <code><![CDATA[pwg_activity('user', $userIds, 'edit')]]></code>
+      <code><![CDATA[trigger_notify('delete_group', $ids)]]></code>
+    </UndefinedFunction>
+    <UnresolvableInclude>
+      <code><![CDATA[include_once \PHPWG_ROOT_PATH . 'admin/include/functions.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Html/HtmlService.php">
+    <InvalidReturnType>
+      <code><![CDATA[never]]></code>
+      <code><![CDATA[never]]></code>
+      <code><![CDATA[never]]></code>
+      <code><![CDATA[never]]></code>
+    </InvalidReturnType>
+    <RedundantCondition>
+      <code><![CDATA[is_string($protocol)]]></code>
+      <code><![CDATA[is_string($request_uri)]]></code>
+    </RedundantCondition>
+    <TypeDoesNotContainType>
+      <code><![CDATA['']]></code>
+      <code><![CDATA['']]></code>
+    </TypeDoesNotContainType>
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UndefinedFunction>
+      <code><![CDATA[add_url_params(
+                    make_index_url(
+                        [
+                            'category' => $cat,
+                        ],
+                    ),
+                    $add_url_params,
+                )]]></code>
+      <code><![CDATA[add_url_params(get_root_url() . $url . array_pop($uppercats_array), $add_url_params)]]></code>
+      <code><![CDATA[get_action_url($id, 'e', false)]]></code>
+      <code><![CDATA[get_action_url($srcImage->id, $srcImage->is_original() ? 'e' : 'r', false)]]></code>
+      <code><![CDATA[get_cat_info($catId)]]></code>
+      <code><![CDATA[get_extension(is_string($path) ? $path : null)]]></code>
+      <code><![CDATA[get_name_from_file(is_string($filename) ? $filename : '')]]></code>
+      <code><![CDATA[get_root_url()]]></code>
+      <code><![CDATA[get_root_url()]]></code>
+      <code><![CDATA[get_root_url()]]></code>
+      <code><![CDATA[get_root_url()]]></code>
+      <code><![CDATA[get_themeconf('icon_dir')]]></code>
+      <code><![CDATA[is_a_guest()]]></code>
+      <code><![CDATA[l10n('%d visits', $info['hit'])]]></code>
+      <code><![CDATA[l10n('Albums')]]></code>
+      <code><![CDATA[l10n('Bad request')]]></code>
+      <code><![CDATA[l10n('Forbidden')]]></code>
+      <code><![CDATA[l10n('Home')]]></code>
+      <code><![CDATA[l10n('Page not found')]]></code>
+      <code><![CDATA[l10n('Piwigo encountered a non recoverable error')]]></code>
+      <code><![CDATA[l10n('You are not authorized to access the requested page')]]></code>
+      <code><![CDATA[l10n('display available tags')]]></code>
+      <code><![CDATA[l10n('rating score %s', $info['rating_score'])]]></code>
+      <code><![CDATA[l10n('remove this tag from the list')]]></code>
+      <code><![CDATA[l10n(count($tags) > 1 ? 'Tags' : 'Tag')]]></code>
+      <code><![CDATA[l10n_dec('%d comment', '%d comments', (int) $info['nb_comments'])]]></code>
+      <code><![CDATA[make_index_url(
+                          [
+                              'category' => $cat,
+                          ],
+                      )]]></code>
+      <code><![CDATA[make_index_url(
+                        [
+                            'category' => $cat,
+                        ],
+                    )]]></code>
+      <code><![CDATA[make_index_url($params)]]></code>
+      <code><![CDATA[make_index_url()]]></code>
+      <code><![CDATA[make_index_url()]]></code>
+      <code><![CDATA[make_index_url()]]></code>
+      <code><![CDATA[make_index_url()]]></code>
+      <code><![CDATA[pwg_transliterate($name_a)]]></code>
+      <code><![CDATA[pwg_transliterate($name_b)]]></code>
+      <code><![CDATA[pwg_transliterate($tag_name)]]></code>
+      <code><![CDATA[query2array($query, 'id')]]></code>
+      <code><![CDATA[redirect_html(
+            $alternateUrl,
+            '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">
+<h1 style="text-align:left; font-size:36px;">' . l10n('Bad request') . '</h1><br>'
+. $msg . '</div>',
+            5,
+        )]]></code>
+      <code><![CDATA[redirect_html(
+            $alternateUrl,
+            '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">
+<h1 style="text-align:left; font-size:36px;">' . l10n('Forbidden') . '</h1><br>'
+. $msg . '</div>',
+            5,
+        )]]></code>
+      <code><![CDATA[redirect_html(
+            $alternateUrl,
+            '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">
+<h1 style="text-align:left; font-size:36px;">' . l10n('Page not found') . '</h1><br>'
+. $msg . '</div>',
+            5,
+        )]]></code>
+      <code><![CDATA[redirect_http(get_root_url() . 'identification.php?redirect=' . urlencode(urlencode($request_uri)))]]></code>
+      <code><![CDATA[script_basename()]]></code>
+      <code><![CDATA[trigger_change(
+                'render_category_name',
+                $cat['name'],
+                'get_cat_display_name',
+            )]]></code>
+      <code><![CDATA[trigger_change(
+                'render_category_name',
+                $cat['name'],
+                'get_cat_display_name_cache',
+            )]]></code>
+      <code><![CDATA[trigger_change('get_thumbnail_title', $title, $info)]]></code>
+      <code><![CDATA[trigger_change('render_element_description', $info['comment'], $param)]]></code>
+      <code><![CDATA[trigger_change('render_element_name', $info['name'], $info)]]></code>
+      <code><![CDATA[trigger_notify('set_status_header', $code, $text)]]></code>
+    </UndefinedFunction>
+  </file>
+  <file src="src/Piwigo/Http/HttpClientService.php">
+    <UndefinedFunction>
+      <code><![CDATA[pwg_http_client()]]></code>
+    </UndefinedFunction>
   </file>
   <file src="src/Piwigo/Image/DerivativeImage.php">
     <InvalidNullableReturnType>
@@ -11240,6 +10230,15 @@
       <code><![CDATA[char_to_fraction($coi[1])]]></code>
       <code><![CDATA[char_to_fraction($coi[2])]]></code>
       <code><![CDATA[char_to_fraction($coi[3])]]></code>
+    </UndefinedFunction>
+  </file>
+  <file src="src/Piwigo/Image/ImageService.php">
+    <InvalidOperand>
+      <code><![CDATA[$value]]></code>
+    </InvalidOperand>
+    <UndefinedFunction>
+      <code><![CDATA[boolean_to_string($value)]]></code>
+      <code><![CDATA[get_boolean($matches[2][$i])]]></code>
     </UndefinedFunction>
   </file>
   <file src="src/Piwigo/Image/ImageStdParams.php">
@@ -11333,6 +10332,98 @@
       <code><![CDATA[trigger_change('get_src_image_url', $url, $this)]]></code>
     </UndefinedFunction>
   </file>
+  <file src="src/Piwigo/Mail/MailService.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PWG_LOCAL_DIR]]></code>
+      <code><![CDATA[\MKGETDIR_DEFAULT]]></code>
+      <code><![CDATA[\MKGETDIR_DIE_ON_ERROR]]></code>
+    </UndefinedConstant>
+    <UndefinedFunction>
+      <code><![CDATA[add_url_params(
+                            $img['link'],
+                            [
+                                'auth' => $authkey['auth_key'] ?? null,
+                            ]
+                        )]]></code>
+      <code><![CDATA[add_url_params($galleryHomeUrl, $addUrlParams)]]></code>
+      <code><![CDATA[add_url_params(is_string($link) ? $link : '', [
+                        'auth' => $authkey['auth_key'] ?? null,
+                    ])]]></code>
+      <code><![CDATA[array_from_query($query)]]></code>
+      <code><![CDATA[array_from_query($query)]]></code>
+      <code><![CDATA[array_from_query($query, 'language')]]></code>
+      <code><![CDATA[create_user_auth_key((int) $uUserId, $uStatus)]]></code>
+      <code><![CDATA[get_default_language()]]></code>
+      <code><![CDATA[get_default_language()]]></code>
+      <code><![CDATA[get_gallery_home_url()]]></code>
+      <code><![CDATA[get_pwg_charset()]]></code>
+      <code><![CDATA[get_root_url()]]></code>
+      <code><![CDATA[get_webmaster_mail_address()]]></code>
+      <code><![CDATA[get_webmaster_mail_address()]]></code>
+      <code><![CDATA[is_admin()]]></code>
+      <code><![CDATA[l10n(
+                'If you changed your password because you think it was stolen, we recommend revoking your %d API keys <a href="%s">in your profile</a>.',
+                $nbOfApikeys,
+                $profileUrl
+            )]]></code>
+      <code><![CDATA[l10n('A photo library administrator has created the following account for you:')]]></code>
+      <code><![CDATA[l10n('Activate')]]></code>
+      <code><![CDATA[l10n('Change my password')]]></code>
+      <code><![CDATA[l10n('Hello %s,', $username)]]></code>
+      <code><![CDATA[l10n('Here is your verification code:')]]></code>
+      <code><![CDATA[l10n('If this was a mistake, just ignore this email and nothing will happen.')]]></code>
+      <code><![CDATA[l10n('If this was a mistake, just ignore this email and nothing will happen.')]]></code>
+      <code><![CDATA[l10n('If this was a mistake, just ignore this email and nothing will happen.')]]></code>
+      <code><![CDATA[l10n('If this wasn\'t you, please change your password immediately or contact your webmaster.')]]></code>
+      <code><![CDATA[l10n('Password Reset')]]></code>
+      <code><![CDATA[l10n('Someone requested that the password be reset for the following user account:')]]></code>
+      <code><![CDATA[l10n('This link is valid for %s. After this time, you will need to request a new link.', $remainingTime)]]></code>
+      <code><![CDATA[l10n('This link is valid for %s. After this time, you will need to request a new link.', $remainingTime)]]></code>
+      <code><![CDATA[l10n('To reset your password, visit the following address:')]]></code>
+      <code><![CDATA[l10n('To set your password, visit the following address:')]]></code>
+      <code><![CDATA[l10n('Welcome to %s', $galleryTitle)]]></code>
+      <code><![CDATA[l10n('Your password has been reset')]]></code>
+      <code><![CDATA[l10n('Your password was successfully reset')]]></code>
+      <code><![CDATA[l10n('Your verification code')]]></code>
+      <code><![CDATA[l10n_args($content)]]></code>
+      <code><![CDATA[l10n_args($subject)]]></code>
+      <code><![CDATA[load_language(
+                'lang',
+                PHPWG_ROOT_PATH . PWG_LOCAL_DIR,
+                [
+                    'language' => $language,
+                    'no_fallback' => true,
+                    'local' => true,
+                ]
+            )]]></code>
+      <code><![CDATA[load_language($filename, $dirname, $options)]]></code>
+      <code><![CDATA[load_language('admin.lang', '', [
+                'language' => $language,
+            ])]]></code>
+      <code><![CDATA[load_language('common.lang', '', [
+                'language' => $language,
+            ])]]></code>
+      <code><![CDATA[mkgetdir($dir, \MKGETDIR_DEFAULT & ~\MKGETDIR_DIE_ON_ERROR)]]></code>
+      <code><![CDATA[set_make_full_url()]]></code>
+      <code><![CDATA[set_make_full_url()]]></code>
+      <code><![CDATA[set_make_full_url()]]></code>
+      <code><![CDATA[set_make_full_url()]]></code>
+      <code><![CDATA[set_make_full_url()]]></code>
+      <code><![CDATA[trigger_change('before_send_mail', true, $to, $args, $email)]]></code>
+      <code><![CDATA[trigger_change('render_lost_password_mail_content', $message)]]></code>
+      <code><![CDATA[trigger_change('render_lost_password_mail_content', $message)]]></code>
+      <code><![CDATA[trigger_notify('before_parse_mail_template', $cacheKey, $contentType)]]></code>
+      <code><![CDATA[trigger_notify('loading_lang')]]></code>
+      <code><![CDATA[unset_make_full_url()]]></code>
+      <code><![CDATA[unset_make_full_url()]]></code>
+      <code><![CDATA[unset_make_full_url()]]></code>
+      <code><![CDATA[unset_make_full_url()]]></code>
+      <code><![CDATA[unset_make_full_url()]]></code>
+    </UndefinedFunction>
+  </file>
   <file src="src/Piwigo/Menu/BlockManager.php">
     <ClassMustBeFinal>
       <code><![CDATA[BlockManager]]></code>
@@ -11361,6 +10452,45 @@
     <ClassMustBeFinal>
       <code><![CDATA[RegisteredBlock]]></code>
     </ClassMustBeFinal>
+  </file>
+  <file src="src/Piwigo/Metadata/MetadataService.php">
+    <ArgumentTypeCoercion>
+      <code><![CDATA[$separatorRegex]]></code>
+    </ArgumentTypeCoercion>
+    <InvalidOperand>
+      <code><![CDATA[$latitude]]></code>
+      <code><![CDATA[$longitude]]></code>
+      <code><![CDATA[($parsed[0] ?? 0) + ($parsed[1] ?? 0) / 60]]></code>
+      <code><![CDATA[($parsed[1] ?? 0) / 60]]></code>
+      <code><![CDATA[($parsed[2] ?? 0) / 3600]]></code>
+    </InvalidOperand>
+    <PossiblyNullPropertyFetch>
+      <code><![CDATA[$attributes->height]]></code>
+      <code><![CDATA[$attributes->viewBox]]></code>
+      <code><![CDATA[$attributes->width]]></code>
+    </PossiblyNullPropertyFetch>
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UndefinedFunction>
+      <code><![CDATA[convert_charset($value, $inputEncoding, get_pwg_charset())]]></code>
+      <code><![CDATA[get_pwg_charset()]]></code>
+      <code><![CDATA[mass_updates(
+                Tables::images(),
+                [
+                    'primary' => ['id'],
+                    'update' => $updateFields,
+                ],
+                $datas,
+                MASS_UPDATES_SKIP_EMPTY
+            )]]></code>
+      <code><![CDATA[original_to_representative($file, $representativeExt)]]></code>
+      <code><![CDATA[qualify_utf8($value)]]></code>
+      <code><![CDATA[set_tags_of($tagsOf)]]></code>
+      <code><![CDATA[tag_id_from_tag_name($tagName)]]></code>
+      <code><![CDATA[trigger_change('clean_iptc_value', $value)]]></code>
+    </UndefinedFunction>
   </file>
   <file src="src/Piwigo/Migrations/Version20260711150857.php">
     <DeprecatedMethod>
@@ -11415,6 +10545,55 @@
       <code><![CDATA[setPrimaryKey]]></code>
       <code><![CDATA[setPrimaryKey]]></code>
     </DeprecatedMethod>
+  </file>
+  <file src="src/Piwigo/Migrations/Version20260712101706.php">
+    <DeprecatedMethod>
+      <code><![CDATA[setPrimaryKey]]></code>
+    </DeprecatedMethod>
+  </file>
+  <file src="src/Piwigo/Notification/NotificationByMailService.php">
+    <UndefinedFunction>
+      <code><![CDATA[boolean_to_string($enabledFilterValue)]]></code>
+      <code><![CDATA[generate_key(16)]]></code>
+    </UndefinedFunction>
+  </file>
+  <file src="src/Piwigo/Notification/NotificationService.php">
+    <UndefinedFunction>
+      <code><![CDATA[is_admin()]]></code>
+      <code><![CDATA[is_admin()]]></code>
+    </UndefinedFunction>
+  </file>
+  <file src="src/Piwigo/Permalink/PermalinkService.php">
+    <UndefinedFunction>
+      <code><![CDATA[l10n('Permalink %s has been previously used by album %s. Delete from the permalink history first')]]></code>
+      <code><![CDATA[l10n('Permalink %s has been previously used by album %s. Delete from the permalink history first')]]></code>
+      <code><![CDATA[l10n('Permalink %s is already used by album %s')]]></code>
+      <code><![CDATA[l10n('The permalink name must be composed of a-z, A-Z, 0-9, "-", "_" or "/". It must not be numeric or start with number followed by "-"')]]></code>
+    </UndefinedFunction>
+  </file>
+  <file src="src/Piwigo/Permission/PermissionService.php">
+    <UndefinedFunction>
+      <code><![CDATA[is_admin($userStatus)]]></code>
+    </UndefinedFunction>
+  </file>
+  <file src="src/Piwigo/Rate/RateService.php">
+    <InvalidOperand>
+      <code><![CDATA[$allRatesAvg /= $allRatesCount]]></code>
+      <code><![CDATA[$itemRatecountAvg * $allRatesAvg]]></code>
+      <code><![CDATA[$itemRatecountAvg + $summary['rcount']]]></code>
+      <code><![CDATA[$summary['rsum'] / $summary['rcount']]]></code>
+      <code><![CDATA[($itemRatecountAvg * $allRatesAvg + $summary['rsum']) / ($itemRatecountAvg + $summary['rcount'])]]></code>
+    </InvalidOperand>
+    <RedundantCondition>
+      <code><![CDATA[is_string($remoteAddr)]]></code>
+    </RedundantCondition>
+    <TypeDoesNotContainType>
+      <code><![CDATA['']]></code>
+    </TypeDoesNotContainType>
+    <UndefinedFunction>
+      <code><![CDATA[is_autorize_status(AccessLevel::Classic)]]></code>
+      <code><![CDATA[trigger_change('update_rating_score', false, $elementId)]]></code>
+    </UndefinedFunction>
   </file>
   <file src="src/Piwigo/Routing/Router.php">
     <UnresolvableInclude>
@@ -11532,18 +10711,98 @@
       <code><![CDATA[QST_WILDCARD_END]]></code>
     </UndefinedConstant>
   </file>
+  <file src="src/Piwigo/Search/SearchService.php">
+    <InvalidOperand>
+      <code><![CDATA[$options['images_where']]]></code>
+      <code><![CDATA[(float) $filesizeMaxRaw + 100]]></code>
+      <code><![CDATA[(float) $filesizeMinRaw - 100]]></code>
+    </InvalidOperand>
+    <InvalidScalarArgument>
+      <code><![CDATA[array_values($imageIdsForFilter)]]></code>
+    </InvalidScalarArgument>
+    <PossiblyFalseArgument>
+      <code><![CDATA[$first]]></code>
+      <code><![CDATA[$search]]></code>
+    </PossiblyFalseArgument>
+    <UndefinedConstant>
+      <code><![CDATA[\QST_BREAK]]></code>
+      <code><![CDATA[\QST_BREAK]]></code>
+      <code><![CDATA[\QST_NOT]]></code>
+      <code><![CDATA[\QST_NOT]]></code>
+      <code><![CDATA[\QST_NOT]]></code>
+      <code><![CDATA[\QST_OR]]></code>
+      <code><![CDATA[\QST_QUOTED]]></code>
+      <code><![CDATA[\QST_QUOTED]]></code>
+      <code><![CDATA[\QST_QUOTED]]></code>
+      <code><![CDATA[\QST_QUOTED]]></code>
+      <code><![CDATA[\QST_QUOTED]]></code>
+      <code><![CDATA[\QST_QUOTED]]></code>
+      <code><![CDATA[\QST_QUOTED]]></code>
+      <code><![CDATA[\QST_QUOTED]]></code>
+      <code><![CDATA[\QST_QUOTED]]></code>
+      <code><![CDATA[\QST_QUOTED]]></code>
+      <code><![CDATA[\QST_WILDCARD]]></code>
+      <code><![CDATA[\QST_WILDCARD]]></code>
+      <code><![CDATA[\QST_WILDCARD]]></code>
+      <code><![CDATA[\QST_WILDCARD]]></code>
+      <code><![CDATA[\QST_WILDCARD]]></code>
+      <code><![CDATA[\QST_WILDCARD]]></code>
+      <code><![CDATA[\QST_WILDCARD]]></code>
+      <code><![CDATA[\QST_WILDCARD]]></code>
+      <code><![CDATA[\QST_WILDCARD]]></code>
+      <code><![CDATA[\QST_WILDCARD]]></code>
+      <code><![CDATA[\QST_WILDCARD_BEGIN]]></code>
+      <code><![CDATA[\QST_WILDCARD_BEGIN]]></code>
+      <code><![CDATA[\QST_WILDCARD_END]]></code>
+      <code><![CDATA[\QST_WILDCARD_END]]></code>
+      <code><![CDATA[\QST_WILDCARD_END]]></code>
+      <code><![CDATA[\QST_WILDCARD_END]]></code>
+    </UndefinedConstant>
+    <UndefinedFunction>
+      <code><![CDATA[bad_request('this search identifier does not exist')]]></code>
+      <code><![CDATA[conf_get_param('filters_views', $conf['default_filters_views'])]]></code>
+      <code><![CDATA[generate_key(10)]]></code>
+      <code><![CDATA[get_default_language()]]></code>
+      <code><![CDATA[get_image_ids_for_tags($tagsWords, $tagsMode)]]></code>
+      <code><![CDATA[get_quick_search_results($expertString, [])]]></code>
+      <code><![CDATA[get_subcat_ids($catIds)]]></code>
+      <code><![CDATA[get_subcat_ids($catWords)]]></code>
+      <code><![CDATA[is_a_guest()]]></code>
+      <code><![CDATA[is_admin()]]></code>
+      <code><![CDATA[is_classic_user()]]></code>
+      <code><![CDATA[is_generic()]]></code>
+      <code><![CDATA[make_index_url([
+            'section' => 'search',
+            'search' => $searchUuid,
+        ])]]></code>
+      <code><![CDATA[pwg_get_db_version()]]></code>
+      <code><![CDATA[safe_unserialize($rawFiltersViews)]]></code>
+      <code><![CDATA[tag_alpha_compare(...)]]></code>
+      <code><![CDATA[tag_alpha_compare(...)]]></code>
+      <code><![CDATA[trigger_change('qsearch_get_images_sql_scopes', $clauses, $token, $expr)]]></code>
+      <code><![CDATA[trigger_change('qsearch_get_scopes', $scopes)]]></code>
+      <code><![CDATA[trigger_change('qsearch_pre', $q)]]></code>
+      <code><![CDATA[trigger_change('qsearch_results', $searchResults, $expression, $qsr)]]></code>
+      <code><![CDATA[trigger_change('render_category_name', $cat['name'], $cat)]]></code>
+      <code><![CDATA[trigger_change('render_tag_name', $tag['name'], $tag)]]></code>
+      <code><![CDATA[trigger_notify('qsearch_before_eval', $expression, $qsr)]]></code>
+      <code><![CDATA[trigger_notify('qsearch_expression_parsed', $expression)]]></code>
+      <code><![CDATA[userprefs_update_param('gallery_search_filters', array_keys(is_array($rulesFields) ? $rulesFields : []))]]></code>
+    </UndefinedFunction>
+  </file>
   <file src="src/Piwigo/Session/PwgSession.php">
     <ClassMustBeFinal>
       <code><![CDATA[PwgSession]]></code>
     </ClassMustBeFinal>
-    <UndefinedFunction>
-      <code><![CDATA[pwg_session_close()]]></code>
-      <code><![CDATA[pwg_session_destroy($id)]]></code>
-      <code><![CDATA[pwg_session_gc()]]></code>
-      <code><![CDATA[pwg_session_open($path, $name)]]></code>
-      <code><![CDATA[pwg_session_read($id)]]></code>
-      <code><![CDATA[pwg_session_write($id, $data)]]></code>
-    </UndefinedFunction>
+  </file>
+  <file src="src/Piwigo/Session/SessionService.php">
+    <RedundantCondition>
+      <code><![CDATA[is_string($_SERVER['REMOTE_ADDR'])]]></code>
+      <code><![CDATA[isset($_SERVER['REMOTE_ADDR']) && is_string($_SERVER['REMOTE_ADDR'])]]></code>
+    </RedundantCondition>
+    <TypeDoesNotContainType>
+      <code><![CDATA['']]></code>
+    </TypeDoesNotContainType>
   </file>
   <file src="src/Piwigo/Site/LocalSiteReader.php">
     <ClassMustBeFinal>
@@ -11557,6 +10816,23 @@
       <code><![CDATA[get_fs_directories($basedir)]]></code>
       <code><![CDATA[get_sync_metadata($infos)]]></code>
       <code><![CDATA[get_sync_metadata_attributes()]]></code>
+    </UndefinedFunction>
+  </file>
+  <file src="src/Piwigo/Storage/StorageRegistry.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UnresolvableInclude>
+      <code><![CDATA[require $configPath]]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Tag/TagService.php">
+    <InvalidOperand>
+      <code><![CDATA[2 * $i * $tagAverageCount]]></code>
+    </InvalidOperand>
+    <UndefinedFunction>
+      <code><![CDATA[tag_alpha_compare(...)]]></code>
+      <code><![CDATA[trigger_change('render_tag_name', $row['name'], $row)]]></code>
     </UndefinedFunction>
   </file>
   <file src="src/Piwigo/Template/Combinable.php">
@@ -11764,6 +11040,199 @@
       <code><![CDATA[include $dir . '/themeconf.inc.php']]></code>
     </UnresolvableInclude>
   </file>
+  <file src="src/Piwigo/Url/UrlService.php">
+    <InvalidGlobal>
+      <code><![CDATA[global $conf;]]></code>
+    </InvalidGlobal>
+    <InvalidOperand>
+      <code><![CDATA[$tag_url_name]]></code>
+      <code><![CDATA[$tag_url_name]]></code>
+      <code><![CDATA[is_scalar($category_id) ? $category_id : '']]></code>
+      <code><![CDATA[is_scalar($category_permalink) ? $category_permalink : '']]></code>
+      <code><![CDATA[is_scalar($chronology_field) ? $chronology_field : '']]></code>
+      <code><![CDATA[is_scalar($chronology_style) ? $chronology_style : '']]></code>
+      <code><![CDATA[is_scalar($chronology_view) ? $chronology_view : '']]></code>
+      <code><![CDATA[is_scalar($combined_id) ? $combined_id : '']]></code>
+      <code><![CDATA[is_scalar($combined_permalink) ? $combined_permalink : '']]></code>
+      <code><![CDATA[is_scalar($conf['url_port']) ? $conf['url_port'] : '']]></code>
+      <code><![CDATA[is_scalar($image_id) ? $image_id : '']]></code>
+      <code><![CDATA[is_scalar($image_id) ? $image_id : '']]></code>
+      <code><![CDATA[is_scalar($search_param) ? $search_param : '']]></code>
+      <code><![CDATA[is_scalar($start) ? $start : '']]></code>
+      <code><![CDATA[is_scalar($tag_id) ? $tag_id : '']]></code>
+      <code><![CDATA[is_scalar($tag_id) ? $tag_id : '']]></code>
+      <code><![CDATA[is_scalar($val) ? $val : '']]></code>
+    </InvalidOperand>
+    <PossiblyUndefinedVariable>
+      <code><![CDATA[$perma_index]]></code>
+    </PossiblyUndefinedVariable>
+    <RedundantCast>
+      <code><![CDATA[(string) $https_value]]></code>
+      <code><![CDATA[(string) $https_value]]></code>
+    </RedundantCast>
+    <RedundantCondition>
+      <code><![CDATA['']]></code>
+    </RedundantCondition>
+    <TypeDoesNotContainType>
+      <code><![CDATA[is_int($server_port_raw)]]></code>
+      <code><![CDATA[is_string($server_port_raw) || is_int($server_port_raw)]]></code>
+    </TypeDoesNotContainType>
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UndefinedFunction>
+      <code><![CDATA[bad_request('at least one tag required')]]></code>
+      <code><![CDATA[bad_request('search identifier is missing')]]></code>
+      <code><![CDATA[bad_request('wrong format on list GET parameter')]]></code>
+      <code><![CDATA[cookie_path()]]></code>
+      <code><![CDATA[fatal_error('bad chronology field (date)')]]></code>
+      <code><![CDATA[fatal_error('bad chronology field (style)')]]></code>
+      <code><![CDATA[find_tags($requested_tag_ids, $requested_tag_url_names)]]></code>
+      <code><![CDATA[get_cat_id_from_permalinks($maybe_permalinks, $perma_index)]]></code>
+      <code><![CDATA[get_cat_info((int) $cat_id)]]></code>
+      <code><![CDATA[get_cat_info((int) $category)]]></code>
+      <code><![CDATA[get_filename_wo_extension($params['image_file'])]]></code>
+      <code><![CDATA[get_filename_wo_extension($params['image_file'])]]></code>
+      <code><![CDATA[is_a_guest()]]></code>
+      <code><![CDATA[l10n('Permalink for album not found')]]></code>
+      <code><![CDATA[l10n('Requested album does not exist')]]></code>
+      <code><![CDATA[l10n('Requested album does not exist')]]></code>
+      <code><![CDATA[l10n('Requested tag does not exist')]]></code>
+      <code><![CDATA[page_not_found(l10n('Permalink for album not found'))]]></code>
+      <code><![CDATA[page_not_found(l10n('Requested album does not exist'))]]></code>
+      <code><![CDATA[page_not_found(l10n('Requested album does not exist'))]]></code>
+      <code><![CDATA[page_not_found(l10n('Requested tag does not exist'), $this->getRootUrl() . 'tags.php')]]></code>
+      <code><![CDATA[query2array($query, 'image_id', 'fake_value')]]></code>
+      <code><![CDATA[str2url(get_filename_wo_extension($params['image_file']))]]></code>
+      <code><![CDATA[str2url(is_string($category_name) ? $category_name : '')]]></code>
+      <code><![CDATA[str2url(is_string($combined_name) ? $combined_name : '')]]></code>
+    </UndefinedFunction>
+  </file>
+  <file src="src/Piwigo/Users/UserService.php">
+    <PossiblyNullArgument>
+      <code><![CDATA[$mailAddress]]></code>
+    </PossiblyNullArgument>
+    <UndefinedConstant>
+      <code><![CDATA[\PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[\PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[\PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UndefinedFunction>
+      <code><![CDATA[email_check_format($existing['email'])]]></code>
+      <code><![CDATA[email_check_format($mailAddress)]]></code>
+      <code><![CDATA[email_check_format($mailAddress)]]></code>
+      <code><![CDATA[get_absolute_root_url()]]></code>
+      <code><![CDATA[get_absolute_root_url()]]></code>
+      <code><![CDATA[get_browser_language()]]></code>
+      <code><![CDATA[get_l10n_args('')]]></code>
+      <code><![CDATA[get_l10n_args('', '')]]></code>
+      <code><![CDATA[get_l10n_args('', '')]]></code>
+      <code><![CDATA[get_l10n_args('', '')]]></code>
+      <code><![CDATA[get_l10n_args('', '')]]></code>
+      <code><![CDATA[get_l10n_args('Admin: %s', $adminUrl)]]></code>
+      <code><![CDATA[get_l10n_args('Email: %s', $mailAddress)]]></code>
+      <code><![CDATA[get_l10n_args('Email: %s', $mailAddress)]]></code>
+      <code><![CDATA[get_l10n_args('Hello %s,', stripslashes($login))]]></code>
+      <code><![CDATA[get_l10n_args('Here are your connection settings', '')]]></code>
+      <code><![CDATA[get_l10n_args('If this was not you, no action is needed.', '')]]></code>
+      <code><![CDATA[get_l10n_args('If this was you, you already have an account -- try logging in or resetting your password instead.', '')]]></code>
+      <code><![CDATA[get_l10n_args('If you think you\'ve received this email in error, please contact us at %s', get_webmaster_mail_address())]]></code>
+      <code><![CDATA[get_l10n_args('Link: %s', get_absolute_root_url())]]></code>
+      <code><![CDATA[get_l10n_args('Password: %s', str_repeat('*', $length))]]></code>
+      <code><![CDATA[get_l10n_args('Registration of %s', stripslashes($login))]]></code>
+      <code><![CDATA[get_l10n_args('Someone tried to create an account on %s using your username.', $gallery_title)]]></code>
+      <code><![CDATA[get_l10n_args('Thank you for registering at %s!', $conf['gallery_title'])]]></code>
+      <code><![CDATA[get_l10n_args('User: %s', stripslashes($login))]]></code>
+      <code><![CDATA[get_l10n_args('Username: %s', stripslashes($login))]]></code>
+      <code><![CDATA[get_webmaster_mail_address()]]></code>
+      <code><![CDATA[l10n('Please, enter a login')]]></code>
+      <code><![CDATA[l10n('Registration')]]></code>
+      <code><![CDATA[l10n('Registration')]]></code>
+      <code><![CDATA[l10n('html tags are not allowed in login')]]></code>
+      <code><![CDATA[l10n('login mustn\'t end with a space character')]]></code>
+      <code><![CDATA[l10n('login mustn\'t start with a space character')]]></code>
+      <code><![CDATA[l10n('mail address must be like xxx@yyy.eee (example : jack@altern.org)')]]></code>
+      <code><![CDATA[l10n('this email address is already in use')]]></code>
+      <code><![CDATA[l10n('this login is already used')]]></code>
+      <code><![CDATA[l10n_args($keyargsContent)]]></code>
+      <code><![CDATA[l10n_args([
+                    get_l10n_args('Someone tried to create an account on %s using your username.', $gallery_title),
+                    get_l10n_args('', ''),
+                    get_l10n_args('If this was you, you already have an account -- try logging in or resetting your password instead.', ''),
+                    get_l10n_args('If this was not you, no action is needed.', ''),
+                ])]]></code>
+      <code><![CDATA[pwg_activity('user', $userId, 'add')]]></code>
+      <code><![CDATA[pwg_mail(
+            $existing['email'],
+            [
+                'subject' => '[' . $gallery_title . '] ' . l10n('Registration'),
+                'content' => l10n_args([
+                    get_l10n_args('Someone tried to create an account on %s using your username.', $gallery_title),
+                    get_l10n_args('', ''),
+                    get_l10n_args('If this was you, you already have an account -- try logging in or resetting your password instead.', ''),
+                    get_l10n_args('If this was not you, no action is needed.', ''),
+                ]),
+                'content_format' => 'text/plain',
+            ]
+        )]]></code>
+      <code><![CDATA[pwg_mail(
+            $mailAddress,
+            [
+                'subject' => '[' . $gallery_title . '] ' . l10n('Registration'),
+                'content' => l10n_args($keyargsContent),
+                'content_format' => 'text/plain',
+            ]
+        )]]></code>
+      <code><![CDATA[pwg_mail_notification_admins(
+            get_l10n_args('Registration of %s', stripslashes($login)),
+            $keyargsContent,
+            true,
+            $groupId
+        )]]></code>
+      <code><![CDATA[pwg_now()]]></code>
+      <code><![CDATA[pwg_password_hash($password)]]></code>
+      <code><![CDATA[script_basename()]]></code>
+      <code><![CDATA[trigger_change(
+            'register_user_check',
+            $errors,
+            [
+                'username' => $login,
+                'password' => $password,
+                'email' => $mailAddress,
+            ]
+        )]]></code>
+      <code><![CDATA[trigger_notify(
+            'register_user',
+            [
+                'id' => $userId,
+                'username' => $login,
+                'email' => $mailAddress,
+            ]
+        )]]></code>
+    </UndefinedFunction>
+    <UnresolvableInclude>
+      <code><![CDATA[include_once \PHPWG_ROOT_PATH . 'include/functions_mail.inc.php']]></code>
+      <code><![CDATA[include_once \PHPWG_ROOT_PATH . 'include/functions_mail.inc.php']]></code>
+      <code><![CDATA[include_once \PHPWG_ROOT_PATH . 'include/functions_mail.inc.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Validation/InputValidator.php">
+    <ArgumentTypeCoercion>
+      <code><![CDATA[$pattern]]></code>
+      <code><![CDATA[$pattern]]></code>
+    </ArgumentTypeCoercion>
+    <PossiblyNullIterator>
+      <code><![CDATA[$paramValue]]></code>
+    </PossiblyNullIterator>
+    <UndefinedFunction>
+      <code><![CDATA[fatal_error('[Hacking attempt] an item is not valid in input parameter "' . $paramName . '"')]]></code>
+      <code><![CDATA[fatal_error('[Hacking attempt] an item is not valid in input parameter "' . $paramName . '"')]]></code>
+      <code><![CDATA[fatal_error('[Hacking attempt] the input parameter "' . $paramName . '" is not valid')]]></code>
+      <code><![CDATA[fatal_error('[Hacking attempt] the input parameter "' . $paramName . '" is not valid')]]></code>
+      <code><![CDATA[fatal_error('[Hacking attempt] the input parameter "' . $paramName . '" is not valid')]]></code>
+      <code><![CDATA[fatal_error('[Hacking attempt] the input parameter "' . $paramName . '" should be an array')]]></code>
+    </UndefinedFunction>
+  </file>
   <file src="src/Piwigo/Ws/Encoder/PwgResponseEncoder.php">
     <UndefinedConstant>
       <code><![CDATA[WS_XML_ATTRIBUTES]]></code>
@@ -11912,6 +11381,8 @@
   </file>
   <file src="tests/Arch/StructuralTest.php">
     <InternalMethod>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
       <code><![CDATA[toBe]]></code>
       <code><![CDATA[toBe]]></code>
       <code><![CDATA[toBe]]></code>
@@ -12205,11 +11676,107 @@
       <code><![CDATA[json_encode($response)]]></code>
     </PossiblyFalseOperand>
   </file>
+  <file src="tests/Integration/ActivityRepositoryTest.php">
+    <InvalidArrayOffset>
+      <code><![CDATA[$rows[count($rows) - 1]]]></code>
+    </InvalidArrayOffset>
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$repo]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/ActivityServiceTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$service]]></code>
+    </PropertyNotSetInConstructor>
+    <RedundantCondition>
+      <code><![CDATA[$basename !== '']]></code>
+    </RedundantCondition>
+    <UndefinedFunction>
+      <code><![CDATA[get_extension($filename)]]></code>
+    </UndefinedFunction>
+  </file>
+  <file src="tests/Integration/AuditRepositoryTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$repo]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/AuditServiceTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$service]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/AuthRepositoryTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$repo]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/AuthServiceTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$service]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
   <file src="tests/Integration/BackupServiceTest.php">
     <PossiblyNullArrayAccess>
       <code><![CDATA[$imagesResult->fetch_row()[0]]]></code>
       <code><![CDATA[$usersResult->fetch_row()[0]]]></code>
     </PossiblyNullArrayAccess>
+  </file>
+  <file src="tests/Integration/CaddieRepositoryTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$repo]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/CalendarRepositoryTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$repo]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/CalendarServiceTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$service]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/CategoryRepositoryTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$repo]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/CategoryServiceTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$service]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/CommentRepositoryTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$repo]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/CommentServiceTest.php">
+    <InvalidOperand>
+      <code><![CDATA[$issuedAt]]></code>
+      <code><![CDATA[$issuedAt]]></code>
+    </InvalidOperand>
+    <PossiblyNullArgument>
+      <code><![CDATA[$remoteAddr]]></code>
+    </PossiblyNullArgument>
+    <PossiblyUndefinedArrayOffset>
+      <code><![CDATA[$_SERVER['REMOTE_ADDR']]]></code>
+    </PossiblyUndefinedArrayOffset>
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$service]]></code>
+    </PropertyNotSetInConstructor>
   </file>
   <file src="tests/Integration/ConfigRepositoryTest.php">
     <PropertyNotSetInConstructor>
@@ -12228,10 +11795,130 @@
       <code><![CDATA[assertIsString]]></code>
     </RedundantCondition>
   </file>
+  <file src="tests/Integration/FeedRepositoryTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$repo]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/GroupRepositoryTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$repo]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/GroupServiceTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$repo]]></code>
+      <code><![CDATA[$service]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/HistoryRepositoryTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$repo]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/HistoryServiceTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$service]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/ImageRepositoryTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$repo]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
   <file src="tests/Integration/IntegrationTestCase.php">
     <PossiblyFalseOperand>
       <code><![CDATA[$stderr]]></code>
     </PossiblyFalseOperand>
+  </file>
+  <file src="tests/Integration/MetadataRepositoryTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$repo]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/MetadataServiceTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$scratchDir]]></code>
+      <code><![CDATA[$service]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/NotificationByMailRepositoryTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$repo]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/NotificationByMailServiceTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$service]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/NotificationRepositoryTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$repo]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/NotificationServiceTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$cacheDir]]></code>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$service]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/PasswordServiceTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$service]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/PermalinkRepositoryTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$repo]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/PermalinkServiceTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$repo]]></code>
+      <code><![CDATA[$service]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/PermissionRepositoryTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$repo]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/PermissionServiceTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$service]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/PreferencesServiceTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$service]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/RateRepositoryTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$repo]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/RateServiceTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$service]]></code>
+    </PropertyNotSetInConstructor>
   </file>
   <file src="tests/Integration/SchemaParityTest.php">
     <DeprecatedMethod>
@@ -12241,10 +11928,103 @@
       <code><![CDATA[$em]]></code>
     </PropertyNotSetInConstructor>
   </file>
+  <file src="tests/Integration/SearchRepositoryTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$repo]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/SearchServiceTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$cacheDir]]></code>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$repo]]></code>
+      <code><![CDATA[$service]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/SessionRepositoryTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$repo]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/SiteRepositoryTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$repo]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/TagRepositoryTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$repo]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/TagServiceTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$service]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/TelemetryServiceTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$configRepo]]></code>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$service]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/UserRepositoryTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$repo]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/UserServiceTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$service]]></code>
+    </PropertyNotSetInConstructor>
+    <RedundantCondition>
+      <code><![CDATA[$basename !== '']]></code>
+    </RedundantCondition>
+    <UndefinedFunction>
+      <code><![CDATA[get_extension($filename)]]></code>
+    </UndefinedFunction>
+  </file>
   <file src="tests/Pest.php">
     <InternalMethod>
       <code><![CDATA[in]]></code>
     </InternalMethod>
+  </file>
+  <file src="tests/Unit/Auth/CookieServiceTest.php">
+    <InternalMethod>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+    </InternalMethod>
+  </file>
+  <file src="tests/Unit/Auth/EphemeralKeyServiceTest.php">
+    <InternalMethod>
+      <code><![CDATA[toBeFalse]]></code>
+      <code><![CDATA[toBeFalse]]></code>
+      <code><![CDATA[toBeFalse]]></code>
+      <code><![CDATA[toBeFalse]]></code>
+      <code><![CDATA[toBeFalse]]></code>
+      <code><![CDATA[toBeFalse]]></code>
+      <code><![CDATA[toBeFalse]]></code>
+      <code><![CDATA[toBeFalse]]></code>
+      <code><![CDATA[toBeTrue]]></code>
+      <code><![CDATA[toBeTrue]]></code>
+    </InternalMethod>
+    <InvalidOperand>
+      <code><![CDATA[$issuedAt]]></code>
+      <code><![CDATA[$issuedAt]]></code>
+      <code><![CDATA[$issuedAt]]></code>
+      <code><![CDATA[$issuedAt]]></code>
+      <code><![CDATA[$issuedAt]]></code>
+      <code><![CDATA[$issuedAt]]></code>
+      <code><![CDATA[round(microtime(true), 1) - 3601]]></code>
+    </InvalidOperand>
   </file>
   <file src="tests/Unit/Bootstrap/CliBootstrapTest.php">
     <InternalMethod>
@@ -12533,6 +12313,17 @@
       <code><![CDATA[toBeInstanceOf]]></code>
     </InternalMethod>
   </file>
+  <file src="tests/Unit/Csrf/CsrfServiceTest.php">
+    <InternalMethod>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBeFalse]]></code>
+      <code><![CDATA[toBeNull]]></code>
+      <code><![CDATA[toBeTrue]]></code>
+    </InternalMethod>
+    <UndefinedMagicMethod>
+      <code><![CDATA[toBe]]></code>
+    </UndefinedMagicMethod>
+  </file>
   <file src="tests/Unit/Db/DbConnectionTest.php">
     <InternalMethod>
       <code><![CDATA[toBe]]></code>
@@ -12583,6 +12374,87 @@
     <UndefinedMagicMethod>
       <code><![CDATA[toBeEmpty]]></code>
     </UndefinedMagicMethod>
+  </file>
+  <file src="tests/Unit/Feed/FeedHelperTest.php">
+    <InternalMethod>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBeFalse]]></code>
+      <code><![CDATA[toContain]]></code>
+      <code><![CDATA[toContain]]></code>
+      <code><![CDATA[toContain]]></code>
+      <code><![CDATA[toContain]]></code>
+      <code><![CDATA[toContain]]></code>
+      <code><![CDATA[toContain]]></code>
+      <code><![CDATA[toContain]]></code>
+      <code><![CDATA[toContain]]></code>
+      <code><![CDATA[toContain]]></code>
+    </InternalMethod>
+    <UndefinedMagicMethod>
+      <code><![CDATA[toContain]]></code>
+    </UndefinedMagicMethod>
+  </file>
+  <file src="tests/Unit/Filter/FilterServiceTest.php">
+    <InternalMethod>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBeNull]]></code>
+    </InternalMethod>
+  </file>
+  <file src="tests/Unit/Html/HtmlServiceTest.php">
+    <InternalMethod>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBeFalse]]></code>
+      <code><![CDATA[toBeGreaterThan]]></code>
+      <code><![CDATA[toBeNull]]></code>
+      <code><![CDATA[toBeTrue]]></code>
+    </InternalMethod>
+  </file>
+  <file src="tests/Unit/Http/HttpClientServiceTest.php">
+    <InternalMethod>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBeInstanceOf]]></code>
+      <code><![CDATA[toThrow]]></code>
+      <code><![CDATA[toThrow]]></code>
+      <code><![CDATA[toThrow]]></code>
+      <code><![CDATA[toThrow]]></code>
+      <code><![CDATA[toThrow]]></code>
+      <code><![CDATA[toThrow]]></code>
+      <code><![CDATA[toThrow]]></code>
+      <code><![CDATA[toThrow]]></code>
+      <code><![CDATA[toThrow]]></code>
+    </InternalMethod>
   </file>
   <file src="tests/Unit/Http/Middleware/ControllerInvokerMiddlewareTest.php">
     <InaccessibleProperty>
@@ -12685,6 +12557,35 @@
       <code><![CDATA[toBe]]></code>
     </InternalMethod>
   </file>
+  <file src="tests/Unit/Image/ImageServiceTest.php">
+    <InternalMethod>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBeFalse]]></code>
+      <code><![CDATA[toBeFalse]]></code>
+      <code><![CDATA[toBeString]]></code>
+      <code><![CDATA[toBeTrue]]></code>
+      <code><![CDATA[toBeTrue]]></code>
+      <code><![CDATA[toBeTrue]]></code>
+      <code><![CDATA[toBeTrue]]></code>
+    </InternalMethod>
+    <PossiblyFalseArgument>
+      <code><![CDATA[$tmp]]></code>
+      <code><![CDATA[$tmp]]></code>
+      <code><![CDATA[$tmp]]></code>
+    </PossiblyFalseArgument>
+  </file>
   <file src="tests/Unit/Lang/LangServiceTest.php">
     <InternalMethod>
       <code><![CDATA[toBe]]></code>
@@ -12741,35 +12642,35 @@
       <code><![CDATA[$this]]></code>
     </InvalidScope>
   </file>
-  <file src="tests/Unit/PasswordHashTest.php">
+  <file src="tests/Unit/Mail/MailServiceTest.php">
     <InternalMethod>
-      <code><![CDATA[toBeFalse]]></code>
-      <code><![CDATA[toBeFalse]]></code>
-      <code><![CDATA[toBeFalse]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
       <code><![CDATA[toBeFalse]]></code>
       <code><![CDATA[toBeTrue]]></code>
-      <code><![CDATA[toBeTrue]]></code>
-      <code><![CDATA[toBeTrue]]></code>
-      <code><![CDATA[toBeTrue]]></code>
-      <code><![CDATA[toStartWith]]></code>
-      <code><![CDATA[toStartWith]]></code>
+      <code><![CDATA[toContain]]></code>
+      <code><![CDATA[toThrow]]></code>
     </InternalMethod>
-    <UndefinedFunction>
-      <code><![CDATA[pwg_password_hash('correcthorsebatterystaple')]]></code>
-      <code><![CDATA[pwg_password_hash('costcheck')]]></code>
-      <code><![CDATA[pwg_password_hash('hunter2')]]></code>
-      <code><![CDATA[pwg_password_verify('hunter2', $hash)]]></code>
-      <code><![CDATA[pwg_password_verify('legacyPhpassPassw0rd!', $phpassHash)]]></code>
-      <code><![CDATA[pwg_password_verify('legacyPhpassPassw0rd!', $phpassHash)]]></code>
-      <code><![CDATA[pwg_password_verify('legacyPhpassPassw0rd!', $phpassHash, 42)]]></code>
-      <code><![CDATA[pwg_password_verify('wrong', $hash)]]></code>
-      <code><![CDATA[pwg_password_verify('wrongpassword', $phpassHash)]]></code>
-      <code><![CDATA[pwg_phpass_verify_legacy('anything', '$2y$04$tooshortforbcryptbutwrongprefix')]]></code>
-      <code><![CDATA[pwg_phpass_verify_legacy('anything', 'not-a-phpass-hash')]]></code>
-    </UndefinedFunction>
-    <UnresolvableInclude>
-      <code><![CDATA[require_once PHPWG_ROOT_PATH . 'include/functions_user.inc.php']]></code>
-    </UnresolvableInclude>
   </file>
   <file src="tests/Unit/Routing/RouteDefinitionsTest.php">
     <InternalMethod>
@@ -12799,6 +12700,30 @@
       <code><![CDATA[toBe]]></code>
     </InternalMethod>
   </file>
+  <file src="tests/Unit/Session/SessionServiceTest.php">
+    <InternalMethod>
+      <code><![CDATA[throws]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBeFalse]]></code>
+      <code><![CDATA[toBeFalse]]></code>
+      <code><![CDATA[toBeTrue]]></code>
+      <code><![CDATA[toBeTrue]]></code>
+      <code><![CDATA[toBeTrue]]></code>
+      <code><![CDATA[toBeTrue]]></code>
+    </InternalMethod>
+    <UndefinedMagicMethod>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toContain]]></code>
+    </UndefinedMagicMethod>
+  </file>
   <file src="tests/Unit/Session/SessionTest.php">
     <InternalMethod>
       <code><![CDATA[toBe]]></code>
@@ -12809,6 +12734,66 @@
   <file src="tests/Unit/SmokeTest.php">
     <InternalMethod>
       <code><![CDATA[toBeGreaterThanOrEqual]]></code>
+      <code><![CDATA[toBeTrue]]></code>
+    </InternalMethod>
+  </file>
+  <file src="tests/Unit/Storage/StorageRegistryTest.php">
+    <InternalMethod>
+      <code><![CDATA[throws]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+    </InternalMethod>
+  </file>
+  <file src="tests/Unit/Telemetry/TelemetryPayloadTest.php">
+    <InternalMethod>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+    </InternalMethod>
+    <UndefinedMagicMethod>
+      <code><![CDATA[toContain]]></code>
+    </UndefinedMagicMethod>
+  </file>
+  <file src="tests/Unit/Url/UrlServiceTest.php">
+    <InternalMethod>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBeFalse]]></code>
+      <code><![CDATA[toBeFalse]]></code>
+      <code><![CDATA[toBeTrue]]></code>
       <code><![CDATA[toBeTrue]]></code>
     </InternalMethod>
   </file>
@@ -12857,6 +12842,22 @@
     <UndefinedMagicMethod>
       <code><![CDATA[toBe]]></code>
     </UndefinedMagicMethod>
+  </file>
+  <file src="tests/Unit/Validation/InputValidatorTest.php">
+    <InternalMethod>
+      <code><![CDATA[toBeNull]]></code>
+      <code><![CDATA[toBeNull]]></code>
+      <code><![CDATA[toBeNull]]></code>
+      <code><![CDATA[toBeTrue]]></code>
+      <code><![CDATA[toBeTrue]]></code>
+      <code><![CDATA[toBeTrue]]></code>
+      <code><![CDATA[toThrow]]></code>
+      <code><![CDATA[toThrow]]></code>
+      <code><![CDATA[toThrow]]></code>
+      <code><![CDATA[toThrow]]></code>
+      <code><![CDATA[toThrow]]></code>
+      <code><![CDATA[toThrow]]></code>
+    </InternalMethod>
   </file>
   <file src="themes/standard_pages/themeconf.inc.php">
     <InvalidGlobal>
@@ -12921,9 +12922,13 @@
       <code><![CDATA[$direction !== '']]></code>
       <code><![CDATA[empty($lang)]]></code>
       <code><![CDATA[empty($lang)]]></code>
+      <code><![CDATA[is_string($lang[$pluralKey])]]></code>
+      <code><![CDATA[isset($lang[$pluralKey]) && is_string($lang[$pluralKey])]]></code>
     </RedundantCondition>
     <TypeDoesNotContainType>
       <code><![CDATA[! empty($lang_info['zero_plural'])]]></code>
+      <code><![CDATA[! is_string($msgid)]]></code>
+      <code><![CDATA[! is_string($msgstr)]]></code>
       <code><![CDATA[$code !== '']]></code>
       <code><![CDATA[$country !== '']]></code>
       <code><![CDATA[$jqueryCode !== '']]></code>
@@ -12936,22 +12941,13 @@
     </UnresolvableInclude>
   </file>
   <file src="tools/i18n/verify-parity.php">
-    <EmptyArrayAccess>
-      <code><![CDATA[$lang]]></code>
-    </EmptyArrayAccess>
     <PossiblyFalseOperand>
       <code><![CDATA[json_encode($key)]]></code>
     </PossiblyFalseOperand>
-    <RedundantCondition>
-      <code><![CDATA[$stringKeys === []]]></code>
-    </RedundantCondition>
     <RiskyTruthyFalsyComparison>
       <code><![CDATA[scandir($langDir)]]></code>
       <code><![CDATA[scandir($localeDir)]]></code>
     </RiskyTruthyFalsyComparison>
-    <TypeDoesNotContainType>
-      <code><![CDATA['is_string']]></code>
-    </TypeDoesNotContainType>
     <UnresolvableInclude>
       <code><![CDATA[include $phpFile]]></code>
     </UnresolvableInclude>

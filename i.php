@@ -11,11 +11,14 @@ declare(strict_types=1);
 
 use Piwigo\Admin\Image\pwg_image;
 use Piwigo\Config\Config;
+use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\Logger;
+use Piwigo\Db\DbConnection;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageRect;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SizingParams;
+use Piwigo\Session\SessionRepository;
 
 define('PHPWG_ROOT_PATH', './');
 
@@ -43,6 +46,14 @@ include PHPWG_ROOT_PATH . 'include/env.inc.php';
 pwg_load_env_file(PHPWG_ROOT_PATH);
 $prefixeTable = '';
 pwg_apply_env_to_conf($conf, $prefixeTable);
+
+// [SEC-33] populates Piwigo\Config\Config, needed below for DbConnection::
+// build() (the SessionRepository lookup backing check_derivative_permission())
+// -- this is the same lightweight, side-effect-free two-liner every other
+// domain's bootstrap already runs, not the full common.inc.php pipeline
+// this file otherwise deliberately avoids.
+ConfigLoader::applyDefaults();
+ConfigLoader::applyEnvOverrides();
 
 // $conf['data_location']/'log_dir'/'db_password' lost their specific string
 // types the same way include/common.inc.php's equivalent config reads do
@@ -105,6 +116,122 @@ function mkgetdir(string $dir): bool
     return true;
 }
 
+/**
+ * [SEC-33] Resolves a session cookie value to its logged-in user id, or
+ * null if the session doesn't exist / was never logged in. Goes through
+ * the real SessionRepository (DBAL) for the composite-key lookup --
+ * AuthService writes sessions keyed by `getRemoteAddrSessionHash() .
+ * $sessionId`, not the raw cookie value alone, so hand-rolling this
+ * against the legacy mysqli layer would silently never find a real
+ * session (same hash logic as Piwigo\Session\SessionService::
+ * getRemoteAddrSessionHash(), reimplemented here against $conf directly
+ * rather than Piwigo\Config\Config -- Config::$data isn't authoritatively
+ * populated from local config overrides in this file, only from
+ * ConfigLoader's own defaults/env, unlike $conf).
+ */
+function resolve_session_user_id(string $cookieValue): ?int
+{
+    /** @var array<string, mixed> $conf */
+    global $conf;
+
+    $ipHash = '';
+    if ((bool) ($conf['session_use_ip_address'] ?? true)) {
+        $remoteAddr = $_SERVER['REMOTE_ADDR'] ?? null;
+        $remoteAddr = is_string($remoteAddr) ? $remoteAddr : '';
+        if (! str_contains($remoteAddr, ':')) {
+            $ipHash = vsprintf('%02X%02X', explode('.', $remoteAddr));
+        }
+    }
+
+    $sessionRepo = new SessionRepository(DbConnection::build());
+    $raw = $sessionRepo->read($ipHash . $cookieValue);
+    if ($raw === '') {
+        return null;
+    }
+
+    // PHP's native session serialization format is `key|type:value;...` --
+    // pwg_uid is always written as a plain top-level int
+    // (Piwigo\Auth\AuthService::login(): `$_SESSION['pwg_uid'] = (int)
+    // $userId;`), so `i:N;` is unambiguous regardless of whatever other
+    // keys/values are also present in the raw session data.
+    if (preg_match('/pwg_uid\|i:(\d+);/', $raw, $matches) === 1) {
+        return (int) $matches[1];
+    }
+
+    return null;
+}
+
+/**
+ * [SEC-33] Denies (403), regardless of whether a cached derivative
+ * already exists on disk, any request for an image belonging exclusively
+ * to categories the current visitor cannot see. Mirrors the
+ * bootMinimal()-era design ADR-0007/0008 already settled (session cookie
+ * -> 1 query for the session's pwg_uid -> 1 query for the already-computed
+ * user_cache.forbidden_categories, never recomputing permissions live in
+ * this fast path) -- implemented here directly against the legacy mysqli
+ * layer already connected in this file (a second, DBAL-only connection is
+ * opened just for the session lookup above, since SessionRepository has no
+ * legacy-layer equivalent).
+ */
+function check_derivative_permission(int $imageId): void
+{
+    /**
+     * @var array<string, mixed> $conf
+     * @var string $prefixeTable
+     */
+    global $conf, $prefixeTable;
+
+    $guestId = is_numeric($conf['guest_id'] ?? null) ? (int) $conf['guest_id'] : 0;
+    $userId = $guestId;
+
+    $sessionName = $conf['session_name'] ?? null;
+    if (is_string($sessionName) && $sessionName !== '') {
+        $cookieValue = $_COOKIE[$sessionName] ?? null;
+        if (is_string($cookieValue) && $cookieValue !== '') {
+            $resolved = resolve_session_user_id($cookieValue);
+            if ($resolved !== null) {
+                $userId = $resolved;
+            }
+        }
+    }
+
+    $query = '
+SELECT forbidden_categories
+  FROM ' . $prefixeTable . 'user_cache
+  WHERE user_id = ' . $userId . '
+;';
+    $cacheRow = pwg_db_fetch_assoc(pwg_query($query));
+
+    // No user_cache row at all for this identity -- fail closed. A
+    // missing row means permissions were never computed for this user,
+    // not that nothing is forbidden (see PermissionService::
+    // getForbiddenCategories()'s own "at least contains 0" contract,
+    // which this cache column always reflects once computed).
+    if (! is_array($cacheRow)) {
+        ierror('Forbidden', 403);
+    }
+
+    $forbidden = $cacheRow['forbidden_categories'] ?? null;
+    $forbidden = is_string($forbidden) ? trim($forbidden) : '';
+
+    if ($forbidden === '' || $forbidden === '0') {
+        return; // nothing forbidden for this user -- fast accept
+    }
+
+    $query = '
+SELECT COUNT(*) AS nb
+  FROM ' . $prefixeTable . 'image_category
+  WHERE image_id = ' . $imageId . '
+    AND category_id NOT IN (' . $forbidden . ')
+;';
+    $countRow = pwg_db_fetch_assoc(pwg_query($query));
+    $nb = is_array($countRow) && is_numeric($countRow['nb'] ?? null) ? (int) $countRow['nb'] : 0;
+
+    if ($nb === 0) {
+        ierror('Forbidden', 403);
+    }
+}
+
 // end fast bootstrap
 
 function ierror(string $msg, int $code): never
@@ -120,8 +247,10 @@ function ierror(string $msg, int $code): never
         $logger->debug($code . ' ' . $url, 'i.php', [
             'url' => $_SERVER['REQUEST_URI'],
         ]);
-        header('Request-URI: ' . $url);
-        header('Content-Location: ' . $url);
+        // [SEC-35] Request-URI/Content-Location echoed the redirect target
+        // back as response headers with no purpose beyond the real
+        // Location redirect -- dropped, not just cosmetic (the original
+        // request path/query never needs to reach the client twice).
         header('Location: ' . $url);
         exit;
     }
@@ -561,6 +690,73 @@ if ($src_mtime === false) {
     ierror('Source not found', 404);
 }
 
+// [SEC-33] Resolved (and permission-checked) before $need_generate is even
+// computed -- must run before EVERY fast-path exit below (cached-derivative
+// serve or 304 Not Modified), not just the "generate a new derivative"
+// branch. Otherwise a private album's derivative, once generated once,
+// would be served to anyone who knows/guesses the URL on every later
+// request forever, without ever touching the DB again.
+$page['coi'] = null;
+if (! str_contains($page['src_location'], '/pwg_representative/')
+    && ! str_contains($page['src_location'], 'themes/')
+    && ! str_contains($page['src_location'], 'plugins/')) {
+    try {
+        $query = '
+SELECT *
+  FROM ' . $prefixeTable . 'images
+  WHERE path=\'' . addslashes($page['src_location']) . '\'
+;';
+
+        $row = pwg_db_fetch_assoc(pwg_query($query));
+        if (! (bool) $row) {
+            ierror('Db file path not found', 404);
+        }
+
+        $image_id = $row['id'];
+        $image_id = is_numeric($image_id) ? (int) $image_id : null;
+        if ($image_id === null) {
+            ierror('Invalid image id in database', 500);
+        }
+        check_derivative_permission($image_id);
+
+        if (isset($row['width'])) {
+            $page['original_size'] = [$row['width'], $row['height']];
+        }
+        $page['coi'] = $row['coi'];
+
+        if (! isset($row['rotation'])) {
+            $page['rotation_angle'] = pwg_image::get_rotation_angle($page['src_path']);
+
+            single_update(
+                $prefixeTable . 'images',
+                [
+                    'rotation' => pwg_image::get_rotation_code_from_angle($page['rotation_angle']),
+                ],
+                [
+                    'id' => $row['id'],
+                ]
+            );
+        } else {
+            // get_rotation_angle_from_code()'s docblock confirms
+            // (empirically, against the real DB) that this driver's
+            // fetch_assoc() always returns a numeric string here; guard
+            // it explicitly rather than casting, since a cast alone
+            // wouldn't satisfy the numeric-string contract.
+            // isset($row['rotation']) above already narrows this to string.
+            $rotation = $row['rotation'];
+            if (! is_numeric($rotation)) {
+                ierror('Invalid rotation value in database', 500);
+            }
+            $page['rotation_angle'] = pwg_image::get_rotation_angle_from_code($rotation);
+        }
+    } catch (Exception $e) {
+        $logger->error($e->getMessage(), 'i.php');
+    }
+} else {
+    $page['rotation_angle'] = 0;
+}
+pwg_db_close();
+
 $need_generate = false;
 $derivative_mtime = @filemtime($page['derivative_path']);
 if ($derivative_mtime === false or
@@ -589,60 +785,6 @@ if (! $need_generate) {
     send_derivative($expires);
     exit;
 }
-
-$page['coi'] = null;
-if (! str_contains($page['src_location'], '/pwg_representative/')
-    && ! str_contains($page['src_location'], 'themes/')
-    && ! str_contains($page['src_location'], 'plugins/')) {
-    try {
-        $query = '
-SELECT *
-  FROM ' . $prefixeTable . 'images
-  WHERE path=\'' . addslashes($page['src_location']) . '\'
-;';
-
-        if ((bool) ($row = pwg_db_fetch_assoc(pwg_query($query)))) {
-            if (isset($row['width'])) {
-                $page['original_size'] = [$row['width'], $row['height']];
-            }
-            $page['coi'] = $row['coi'];
-
-            if (! isset($row['rotation'])) {
-                $page['rotation_angle'] = pwg_image::get_rotation_angle($page['src_path']);
-
-                single_update(
-                    $prefixeTable . 'images',
-                    [
-                        'rotation' => pwg_image::get_rotation_code_from_angle($page['rotation_angle']),
-                    ],
-                    [
-                        'id' => $row['id'],
-                    ]
-                );
-            } else {
-                // get_rotation_angle_from_code()'s docblock confirms
-                // (empirically, against the real DB) that this driver's
-                // fetch_assoc() always returns a numeric string here; guard
-                // it explicitly rather than casting, since a cast alone
-                // wouldn't satisfy the numeric-string contract.
-                // isset($row['rotation']) above already narrows this to string.
-                $rotation = $row['rotation'];
-                if (! is_numeric($rotation)) {
-                    ierror('Invalid rotation value in database', 500);
-                }
-                $page['rotation_angle'] = pwg_image::get_rotation_angle_from_code($rotation);
-            }
-        }
-        if (! (bool) $row) {
-            ierror('Db file path not found', 404);
-        }
-    } catch (Exception $e) {
-        $logger->error($e->getMessage(), 'i.php');
-    }
-} else {
-    $page['rotation_angle'] = 0;
-}
-pwg_db_close();
 
 if (! try_switch_source($params, $src_mtime) && $params->type == IMG_CUSTOM) {
     $sharpen = 0;

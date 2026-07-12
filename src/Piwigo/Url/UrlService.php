@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Url;
 
-use Piwigo\Config\Config;
 use Piwigo\Db\Tables;
 
 /**
@@ -111,13 +110,26 @@ final class UrlService
     }
 
     /**
-     * Returns Config::galleryUrl()'s host[:port], or null when unconfigured
-     * (auto-detect mode).
+     * Returns the configured gallery_url's host[:port], or null when
+     * unconfigured (auto-detect mode). Reads `global $conf` directly, same
+     * as getGalleryHomeUrl() below and every other admin-configurable
+     * setting in this class -- NOT Piwigo\Config\Config's typed accessors,
+     * which are never synced with the real, admin-configurable DB-persisted
+     * config table during a live request (confirmed via direct read:
+     * ConfigLoader only seeds SCHEMA defaults + a small DB-connection
+     * env-var mapping; the legacy load_conf_from_db(), which reads the real
+     * config table, populates this same $conf global with no sync back into
+     * Config::$data). A Config::galleryUrl()-based version here would be
+     * silently inert for every real admin-configured value -- caught
+     * empirically while building P18's MailService.
      */
     private function configuredHost(): ?string
     {
-        $gallery_url = Config::galleryUrl();
-        if ($gallery_url === null) {
+        /** @var array<string, mixed> $conf */
+        global $conf;
+
+        $gallery_url = $conf['gallery_url'] ?? null;
+        if (! is_string($gallery_url) || $gallery_url === '') {
             return null;
         }
 
@@ -132,15 +144,23 @@ final class UrlService
     }
 
     /**
-     * [SEC-29] Host-header poisoning guard: when Config::allowedHosts() is
+     * [SEC-29] Host-header poisoning guard: when $conf['allowed_hosts'] is
      * non-empty, an unrecognized candidate host is never embedded into an
      * outbound URL -- falls back to the first configured host instead.
      * Empty allow-list means "not configured", preserving the historical
-     * auto-detect (trust the header) behavior.
+     * auto-detect (trust the header) behavior. Reads `global $conf`
+     * directly -- see configuredHost()'s doc comment for why.
      */
     private function trustedHost(string $candidate): string
     {
-        $allowed = Config::allowedHosts();
+        /** @var array<string, mixed> $conf */
+        global $conf;
+
+        $allowedRaw = $conf['allowed_hosts'] ?? [];
+        $allowed = is_array($allowedRaw)
+            ? array_values(array_filter(array_map(static fn (mixed $x): string => is_scalar($x) ? (string) $x : '', $allowedRaw), static fn (string $x): bool => $x !== ''))
+            : [];
+
         if ($allowed === [] || in_array($candidate, $allowed, true)) {
             return $candidate;
         }

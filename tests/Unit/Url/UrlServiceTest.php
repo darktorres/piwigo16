@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Piwigo\Config\Config;
 use Piwigo\Url\UrlService;
 
 if (! defined('PHPWG_ROOT_PATH')) {
@@ -23,7 +22,11 @@ if (! function_exists('cookie_path')) {
 
 beforeEach(function (): void {
     unset($_SERVER['HTTPS'], $_SERVER['HTTP_X_FORWARDED_PROTO'], $_SERVER['HTTP_X_FORWARDED_HOST'], $_SERVER['HTTP_HOST']);
-    Config::reset();
+    // getAbsoluteRootUrl()'s gallery_url/allowed_hosts reads go through the
+    // live $conf global, not Piwigo\Config\Config -- see UrlService's own
+    // configuredHost()/trustedHost() doc comments for why (Config::$data is
+    // never synced with the real, admin-configurable DB-persisted config
+    // table during a live request).
     $GLOBALS['conf'] = ['url_port' => 'none'];
 });
 
@@ -165,7 +168,7 @@ test('getAbsoluteRootUrl trusts the Host header when allowed_hosts is unconfigur
 });
 
 test('getAbsoluteRootUrl uses gallery_url\'s host, ignoring the Host header entirely', function (): void {
-    Config::override('gallery_url', 'https://canonical.example.test/gallery/');
+    $GLOBALS['conf'] = ['url_port' => 'none', 'gallery_url' => 'https://canonical.example.test/gallery/'];
     $_SERVER['HTTP_HOST'] = 'evil.test';
     $service = new UrlService();
 
@@ -173,14 +176,14 @@ test('getAbsoluteRootUrl uses gallery_url\'s host, ignoring the Host header enti
 });
 
 test('getAbsoluteRootUrl keeps gallery_url\'s configured port', function (): void {
-    Config::override('gallery_url', 'https://canonical.example.test:8080/gallery/');
+    $GLOBALS['conf'] = ['url_port' => 'none', 'gallery_url' => 'https://canonical.example.test:8080/gallery/'];
     $service = new UrlService();
 
     expect($service->getAbsoluteRootUrl())->toBe('http://canonical.example.test:8080/piwigo/');
 });
 
 test('getAbsoluteRootUrl accepts a Host that matches the allowed_hosts list', function (): void {
-    Config::override('allowed_hosts', ['gallery.example.test']);
+    $GLOBALS['conf'] = ['url_port' => 'none', 'allowed_hosts' => ['gallery.example.test']];
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
     $service = new UrlService();
 
@@ -188,7 +191,7 @@ test('getAbsoluteRootUrl accepts a Host that matches the allowed_hosts list', fu
 });
 
 test('getAbsoluteRootUrl [SEC-29] falls back to the first allowed host when Host is forged', function (): void {
-    Config::override('allowed_hosts', ['gallery.example.test', 'gallery-alt.example.test']);
+    $GLOBALS['conf'] = ['url_port' => 'none', 'allowed_hosts' => ['gallery.example.test', 'gallery-alt.example.test']];
     $_SERVER['HTTP_HOST'] = 'evil.test';
     $service = new UrlService();
 
@@ -196,10 +199,25 @@ test('getAbsoluteRootUrl [SEC-29] falls back to the first allowed host when Host
 });
 
 test('getAbsoluteRootUrl [SEC-29] falls back for a forged X-Forwarded-Host too', function (): void {
-    Config::override('allowed_hosts', ['gallery.example.test']);
+    $GLOBALS['conf'] = ['url_port' => 'none', 'allowed_hosts' => ['gallery.example.test']];
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
     $_SERVER['HTTP_X_FORWARDED_HOST'] = 'evil.test';
     $service = new UrlService();
 
     expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test/piwigo/');
+});
+
+test('getAbsoluteRootUrl [SEC-29] reflects a real DB-persisted gallery_url the way load_conf_from_db() would set it', function (): void {
+    // Regression test for the Config::-accessor bug this file's own history
+    // records: MailService's build caught that Piwigo\Config\Config's typed
+    // accessors are never synced with the real config DB table on a live
+    // request (see load_conf_from_db(), include/functions.inc.php) -- only
+    // $conf is. Simulates exactly that: a raw array write to $conf, the
+    // same shape load_conf_from_db() itself produces, with no Config::
+    // involvement at all.
+    $GLOBALS['conf'] = ['url_port' => 'none', 'gallery_url' => 'https://real-admin-configured.example.test/'];
+    $_SERVER['HTTP_HOST'] = 'evil.test';
+    $service = new UrlService();
+
+    expect($service->getAbsoluteRootUrl())->toBe('http://real-admin-configured.example.test/piwigo/');
 });

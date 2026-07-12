@@ -6447,7 +6447,7 @@ parameters:
 		-
 			rawMessage: 'Call to method toBe() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
 			identifier: method.internalClass
-			count: 24
+			count: 25
 			path: tests/Unit/Url/UrlServiceTest.php
 
 		-

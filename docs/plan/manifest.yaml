@@ -91,7 +91,7 @@ sec:
   - {id: SEC-26, phase: P16, threat: "Local file inclusion via locale", verified_by: "LangService unit test (P16)", status: planned}
   - {id: SEC-27, phase: P18, threat: "Session hijacking / fixation", verified_by: "cookie-attribute + session-regen tests (P18/P28)", status: planned}
   - {id: SEC-28, phase: P18, threat: "Session hijacking / fixation", verified_by: "cookie-attribute + session-regen tests (P18/P28)", status: planned}
-  - {id: SEC-29, phase: P17, threat: "Open redirect / host-header poisoning", verified_by: "UrlServiceTest unit tests: gallery_url-configured host takes priority over Host header; allowed_hosts rejects an unrecognized Host/X-Forwarded-Host (P17)", status: done}
+  - {id: SEC-29, phase: P17, threat: "Open redirect / host-header poisoning", verified_by: "UrlServiceTest unit tests: gallery_url-configured host takes priority over Host header; allowed_hosts rejects an unrecognized Host/X-Forwarded-Host. Fixed (406cd15ad, P18 follow-up) to read global $conf instead of the unsynced Piwigo\\Config\\Config accessors the original fix used; live-verified via a real DB-persisted gallery_url reflected correctly in an outbound email despite a forged Host header (P17/P18)", status: done}
   # SEC-30's own fix ("add a userMessage() method to PiwigoException") targets
   # a class that doesn't exist in this repo -- investigated during P17.
   # This repo's real ExceptionHandlerMiddleware (built P9) already returns a

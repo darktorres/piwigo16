@@ -26,6 +26,19 @@ test('getToken is stable for the same session id and secret key', function (): v
     expect($service->getToken())->toBe($service->getToken());
 });
 
+// [SEC-11] Regression test: getToken() must use sha256, not md5. Verified by
+// recomputing the expected HMAC directly rather than just checking the
+// output length, matching EphemeralKeyServiceTest's precedent for the same
+// SEC-27/SEC-28 fix.
+test('getToken uses sha256, not md5', function (): void {
+    session_id('fixed-test-session-id');
+    $GLOBALS['conf'] = ['secret_key' => 'test-secret-key'];
+
+    $expected = hash_hmac('sha256', 'fixed-test-session-id', 'test-secret-key');
+
+    expect(new CsrfService()->getToken())->toBe($expected);
+});
+
 test('getToken changes when the secret key changes', function (): void {
     session_id('fixed-test-session-id');
     $service = new CsrfService();

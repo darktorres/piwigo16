@@ -22,6 +22,14 @@ namespace Piwigo\Csrf;
  * (found while building EphemeralKeyService, which copied this same
  * Config::secretKey() pattern before shipping and was caught first).
  *
+ * [SEC-11/SEC-12] getToken()/check() use sha256 + hash_equals(), matching
+ * EphemeralKeyService/AuthService::calculateAutoLoginKey() (SEC-27/SEC-28) --
+ * this class was the original trigger for finding that weak-hash-plus-
+ * non-constant-time-comparison pattern (see the secret_key note above), but
+ * only the secret_key-sourcing bug got fixed at the time; the hash algorithm
+ * (md5) and comparison (===, both timing-unsafe) were missed until a
+ * 2026-07-13 audit caught the same pattern still live here.
+ *
  * check() returns bool rather than acting on failure itself (unlike the
  * reference implementation's later, Util-retirement-era CsrfService, which
  * constructor-injects HtmlService and calls accessDenied()/badRequest()
@@ -50,7 +58,7 @@ final class CsrfService
         $secret_key = $conf['secret_key'] ?? '';
         $secret_key = is_scalar($secret_key) ? (string) $secret_key : '';
 
-        return hash_hmac('md5', $session_id, $secret_key);
+        return hash_hmac('sha256', $session_id, $secret_key);
     }
 
     /**
@@ -71,6 +79,6 @@ final class CsrfService
             return null;
         }
 
-        return $this->getToken() === $submitted;
+        return hash_equals($this->getToken(), $submitted);
     }
 }

@@ -72,8 +72,22 @@ sec:
   - {id: SEC-08, phase: P5,  threat: "SQL injection", verified_by: "SearchService unit + REST contract tests (P19/P26)", status: planned}
   - {id: SEC-09, phase: P5,  threat: "Secrets leaking into stack traces / logs", verified_by: "inspection + logged-context unit test (P18)", status: done}
   - {id: SEC-10, phase: P9,  threat: "Missing input validation (mass assignment, type confusion)", verified_by: "Request-DTO validation tests (P27)", status: planned}
-  - {id: SEC-11, phase: P9,  threat: "CSRF on state-changing actions", verified_by: "CSRF middleware integration tests (P9/P28)", status: planned}
-  - {id: SEC-12, phase: P9,  threat: "CSRF on state-changing actions", verified_by: "CSRF middleware integration tests (P9/P28)", status: planned}
+  # SEC-11/SEC-12 found unfixed by a 2026-07-13 phase-by-phase audit despite
+  # being tagged P9/done: CsrfService::getToken() was still hash_hmac('md5',
+  # ...) and check() still plain === (both timing-unsafe), even though the
+  # identical weak-hash-plus-non-constant-comparison pattern was correctly
+  # fixed in the sibling AuthService::calculateAutoLoginKey()/
+  # EphemeralKeyService during P18 (SEC-27/SEC-28) -- CsrfService's own
+  # docblock says it was the original trigger for finding that pattern, but
+  # only its secret_key-sourcing bug got fixed at the time (a64fccbb6), not
+  # the hash/comparison itself. Fixed now: getToken() uses
+  # hash_hmac('sha256', ...), check() uses hash_equals(). Covered by
+  # CsrfServiceTest's new "getToken uses sha256, not md5" regression test
+  # (recomputes the expected HMAC directly, not just an output-length
+  # check); live-verified via a real browser session performing a real
+  # pwg_token-protected admin action (tag create/delete, TagCrudTest).
+  - {id: SEC-11, phase: P9,  threat: "CSRF on state-changing actions", verified_by: "CsrfService::getToken() uses hash_hmac('sha256', ...) instead of md5; CsrfServiceTest regression test; live-verified via a real pwg_token-protected admin action", status: done}
+  - {id: SEC-12, phase: P9,  threat: "CSRF on state-changing actions", verified_by: "CsrfService::check() uses hash_equals() instead of ===; CsrfServiceTest; live-verified via a real pwg_token-protected admin action", status: done}
   - {id: SEC-13, phase: P9,  threat: "Session hijacking / fixation", verified_by: "CookieService::setCookieVar() was missing secure/httponly entirely (confirmed via direct read); fixed (f90d0fc84) to set both via the same ini_get()-based pattern the remember-me cookie already used (P18)", status: done}
   - {id: SEC-14, phase: P9,  threat: "Session hijacking / fixation", verified_by: "CookieService::setCookieVar() was missing secure/httponly entirely (confirmed via direct read); fixed (f90d0fc84) to set both via the same ini_get()-based pattern the remember-me cookie already used (P18)", status: done}
   # SEC-15 is only PARTIALLY closed by P20, matching the doc's own "2 of 3"

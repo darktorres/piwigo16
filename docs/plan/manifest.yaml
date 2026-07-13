@@ -34,7 +34,7 @@ phases:
   - {id: P19, tier: T1,    depends_on: [P18],   status: done,    epoch: E}
   - {id: P20, tier: T1,    depends_on: [P19],   status: done,    epoch: E}
   - {id: P21, tier: T1,    depends_on: [P20],   status: done,    epoch: E}
-  - {id: P22, tier: T1,    depends_on: [P21],   status: planned, epoch: E}
+  - {id: P22, tier: T1,    depends_on: [P21],   status: done,    epoch: E}
   - {id: P23, tier: T1,    depends_on: [P22],   status: planned, epoch: E}
   - {id: P24, tier: T2,    depends_on: [P23],   status: planned, epoch: F}
   - {id: P25, tier: T2,    depends_on: [P24],   status: planned, epoch: F}
@@ -110,6 +110,17 @@ sec:
   # ones, still has its legacy body read $_GET/$_POST directly. Stays
   # planned -- the real per-page mass-assignment/type-confusion validation
   # this item is about is P27's Request-DTO work, not this phase's.
+  #
+  # P22 makes the same limited kind of progress on the frontend side: all
+  # 21 root files now dispatch through a real ControllerInterface::
+  # __invoke(ServerRequestInterface), but only 4 of 17 real controllers
+  # (Nbm/Tags/Popuphelp/QSearch -- confirmed via direct grep for
+  # getQueryParams()/getParsedBody()) actually read from $request; the
+  # rest (including Identification/Password/Register, deliberately -- see
+  # IdentificationController's own docblock) still read $_GET/$_POST/
+  # $_SESSION/$_COOKIE directly, since the legacy functions they call
+  # (check_input_parameter(), try_log_user()) are themselves written
+  # against the real superglobals. Stays planned for the same P27 reason.
   - {id: SEC-20, phase: P19, threat: "XXE protection on SVG/XML parsing", verified_by: "MetadataService::parseSvgDimensions() strips <!DOCTYPE> + LIBXML_NONET (never LIBXML_NOENT/DTDLOAD); verified fail-safe against a real secret-file-read payload via a temp SVG with an internal DTD subset (P19)", status: done}
   - {id: SEC-21, phase: P21, threat: "Stored XSS via uploaded SVG or HTML descriptions", verified_by: "XXE-safe parsing half done in P19 (shared mechanism with SEC-20); upload-time half closed in P21's Upload batch -- Piwigo\\Admin\\Upload\\UploadService::sanitizeSvgIfNeeded() strips <script> elements and on*= event-handler attributes via DOMDocument (LIBXML_NONET), covered by UploadServiceTest; Content-Disposition:attachment defense-in-depth added to .htaccess/Caddyfile/nginx docs for anything that slips through (P19/P21)", status: done}
   - {id: SEC-22, phase: P21, threat: "Information disclosure (errors / debug output)", verified_by: "both real phpinfo() call sites (admin/maintenance_env.php, admin/maintenance_actions.php) replaced with Piwigo\\Admin\\Maintenance\\ServerInfoService's curated output (PHP/SAPI/OS version, loaded extensions, a fixed ini-setting allowlist, not a raw dump); covered by ServerInfoServiceTest + live-verified against the real instance with zero raw-phpinfo() markers present (P21)", status: done}
@@ -149,7 +160,23 @@ sec:
   # "X-Sendfile + lightweight auth" for -- Kernel/bootMinimal()-era
   # architecture that doesn't exist in this still-procedural i.php.
   # Genuinely needs the isolation gate (P32). Stays planned.
+  #
+  # P22's own served-path check (its own plan doc calls this out
+  # explicitly) is ActionController's forbidden_categories/
+  # forbidden_images permission query, gating direct original/
+  # representative/format-file downloads (action.php) -- unchanged from
+  # legacy, confirmed still wired the same way after the port (live
+  # curl-verified: a non-admin download without pwg_token access is
+  # correctly denied). This was already-existing protection surviving the
+  # port, not new ground closed, and it's a different attack surface from
+  # i.php's still-open on-disk-cache bypass above. Stays planned.
   - {id: SEC-34, phase: P22, threat: "Re-install / setup abuse", verified_by: "install E2E (P22)", status: planned}
+  # install.php/upgrade.php/upgrade_feed.php were deliberately left
+  # untouched this phase (user decision, matching i.php's own exception
+  # above): all three bypass include/common.inc.php entirely (no session,
+  # no full Kernel::boot()) for the same pre-DB-configured-state reasons,
+  # so forcing them through the new RequestPipeline wasn't attempted. No
+  # install E2E test was built. Stays planned.
   - {id: SEC-35, phase: P19, threat: "Anonymous reads a private album's originals/derivatives", verified_by: "i.php's ierror() no longer sends Request-URI/Content-Location headers alongside Location, keeping it only for real redirects; trivial, self-contained, fully closed (P19)", status: done}
   - {id: SEC-36, phase: P26, threat: "Information disclosure (errors / debug output)", verified_by: "error-path integration tests (P21/P26)", status: planned}
   - {id: SEC-37, phase: P26, threat: "Information disclosure (errors / debug output)", verified_by: "error-path integration tests (P21/P26)", status: planned}

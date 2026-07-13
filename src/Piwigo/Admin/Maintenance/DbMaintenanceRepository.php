@@ -50,6 +50,45 @@ final class DbMaintenanceRepository
             ->executeStatement();
     }
 
+    /**
+     * Deletes tags with no linked image and untouched for over a day
+     * (matches the original's `get_orphan_tags()`+`delete_tags()` cutoff).
+     * Returns the number of tags deleted, for CLI output.
+     *
+     * Deliberately does NOT replicate `delete_tags()`'s (`admin/include/
+     * functions.php`) side effects -- the `delete_tags` event trigger,
+     * activity logging, `lastmodified` touch on affected images, and
+     * `invalidate_user_cache_nb_tags()`. Those are user-facing
+     * tag-management concerns; this method backs an operator-run CLI
+     * maintenance sweep (`bin/piwigo maintenance:orphan-tags`), where a
+     * plain DB cleanup is the correct scope. The existing admin web UI
+     * action (`admin/maintenance_actions.php`'s `delete_orphan_tags` case)
+     * is untouched and keeps the full side-effect behavior.
+     */
+    public function deleteOrphanTags(): int
+    {
+        $orphanTagIds = $this->conn->createQueryBuilder()
+            ->select('t.id')
+            ->from(Tables::tags(), 't')
+            ->leftJoin('t', Tables::imageTag(), 'it', 't.id = it.tag_id')
+            ->where('it.tag_id IS NULL')
+            ->andWhere('t.lastmodified < SUBDATE(NOW(), INTERVAL 1 DAY)')
+            ->executeQuery()
+            ->fetchFirstColumn();
+
+        if ($orphanTagIds === []) {
+            return 0;
+        }
+
+        $this->conn->createQueryBuilder()
+            ->delete(Tables::tags())
+            ->where('id IN (:ids)')
+            ->setParameter('ids', $orphanTagIds, ArrayParameterType::INTEGER)
+            ->executeStatement();
+
+        return count($orphanTagIds);
+    }
+
     public function countLoungeItems(): int
     {
         $value = $this->conn->createQueryBuilder()

@@ -132,6 +132,88 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
         }
     }
 
+    public function test_delete_orphan_tags_removes_a_tag_with_no_linked_image_older_than_a_day(): void
+    {
+        $this->conn->createQueryBuilder()
+            ->insert(Tables::tags())
+            ->values([
+                'name' => ':name',
+                'url_name' => ':urlName',
+                'lastmodified' => ':lastmodified',
+            ])
+            ->setParameter('name', 'orphan-tag')
+            ->setParameter('urlName', 'orphan-tag')
+            ->setParameter('lastmodified', '2020-01-01 00:00:00')
+            ->executeStatement();
+
+        try {
+            $deleted = $this->repo->deleteOrphanTags();
+
+            self::assertSame(1, $deleted);
+            $remaining = $this->conn->createQueryBuilder()
+                ->select('id')
+                ->from(Tables::tags())
+                ->where('name = :name')
+                ->setParameter('name', 'orphan-tag')
+                ->executeQuery()
+                ->fetchOne();
+            self::assertFalse($remaining, 'the orphan tag must have been deleted');
+        } finally {
+            $this->conn->createQueryBuilder()
+                ->delete(Tables::tags())
+                ->where('name = :name')
+                ->setParameter('name', 'orphan-tag')
+                ->executeStatement();
+        }
+    }
+
+    public function test_delete_orphan_tags_keeps_a_tag_linked_to_an_image(): void
+    {
+        $this->conn->createQueryBuilder()
+            ->insert(Tables::tags())
+            ->values([
+                'name' => ':name',
+                'url_name' => ':urlName',
+                'lastmodified' => ':lastmodified',
+            ])
+            ->setParameter('name', 'linked-tag')
+            ->setParameter('urlName', 'linked-tag')
+            ->setParameter('lastmodified', '2020-01-01 00:00:00')
+            ->executeStatement();
+        $tagId = $this->conn->lastInsertId();
+
+        $this->conn->createQueryBuilder()
+            ->insert(Tables::imageTag())
+            ->values(['image_id' => ':imageId', 'tag_id' => ':tagId'])
+            ->setParameter('imageId', 1)
+            ->setParameter('tagId', $tagId)
+            ->executeStatement();
+
+        try {
+            $this->repo->deleteOrphanTags();
+
+            $remaining = $this->conn->createQueryBuilder()
+                ->select('id')
+                ->from(Tables::tags())
+                ->where('name = :name')
+                ->setParameter('name', 'linked-tag')
+                ->executeQuery()
+                ->fetchOne();
+            self::assertNotFalse($remaining, 'a tag linked to an image must not be deleted');
+        } finally {
+            $this->conn->createQueryBuilder()
+                ->delete(Tables::imageTag())
+                ->where('tag_id = :tagId')
+                ->setParameter('tagId', $tagId)
+                ->executeStatement();
+            $this->conn->createQueryBuilder()
+                ->delete(Tables::tags())
+                ->where('name = :name')
+                ->setParameter('name', 'linked-tag')
+                ->executeStatement();
+        }
+    }
+
     public function test_purge_sessions_for_deleted_users_keeps_sessions_for_real_users(): void
     {
         // Fixture already has a real session for user 1.

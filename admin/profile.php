@@ -37,7 +37,11 @@ if (! empty($_POST)) {
     check_pwg_token();
 }
 
-include_once PHPWG_ROOT_PATH . 'profile.php';
+// P22: profile.php's own save_profile_from_post()/
+// load_profile_in_template() moved to this shared include (root
+// profile.php is now pure bootstrap + dispatch, no free function
+// definitions left in it).
+include_once PHPWG_ROOT_PATH . 'include/profile_functions.inc.php';
 
 $errors = [];
 save_profile_from_post($edit_user, $errors);

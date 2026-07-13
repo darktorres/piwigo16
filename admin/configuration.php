@@ -550,7 +550,11 @@ switch ($page['section']) {
         $guest_id = is_numeric($conf_guest_id) ? (int) $conf_guest_id : 0;
 
         $edit_user = build_user($guest_id, false);
-        include_once PHPWG_ROOT_PATH . 'profile.php';
+        // P22: profile.php's own save_profile_from_post()/
+        // load_profile_in_template() moved to this shared include (root
+        // profile.php is now pure bootstrap + dispatch, no free function
+        // definitions left in it).
+        include_once PHPWG_ROOT_PATH . 'include/profile_functions.inc.php';
 
         $errors = [];
         if (save_profile_from_post($edit_user, $errors)) {

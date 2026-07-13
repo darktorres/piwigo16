@@ -1,0 +1,87 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Piwigo\Controller;
+
+use Piwigo\Core\AccessLevel;
+use Piwigo\Http\ControllerInterface;
+use Piwigo\Http\ResponseFactory;
+use Piwigo\Template\Template;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+
+/**
+ * Replaces nbm.php -- the public "notification by mail" subscribe/
+ * unsubscribe confirmation link target (distinct from admin/
+ * notification_by_mail.php, P21's admin sender page). check_status() stays
+ * outside the captured closure, same exit()-based-termination limitation
+ * as every other controller this phase.
+ */
+final class NbmController implements ControllerInterface
+{
+    #[\Override]
+    public function __invoke(ServerRequestInterface $request): ResponseInterface
+    {
+        check_status(AccessLevel::Free);
+
+        include_once PHPWG_ROOT_PATH . 'include/functions_notification.inc.php';
+        include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php';
+        include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
+        include_once PHPWG_ROOT_PATH . 'admin/include/functions_notification_by_mail.inc.php';
+        // Translations are in the admin file too.
+        load_language('admin.lang');
+        // Need to update a second time.
+        trigger_notify('loading_lang');
+        load_language('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, [
+            'no_fallback' => true,
+            'local' => true,
+        ]);
+
+        $queryParams = $request->getQueryParams();
+        $subscribe = $queryParams['subscribe'] ?? null;
+        $unsubscribe = $queryParams['unsubscribe'] ?? null;
+
+        $body = LegacyRenderCapture::capture(static function () use ($subscribe, $unsubscribe): void {
+            /**
+             * @var array<string, mixed> $page
+             * @var Template $template
+             */
+            global $page, $template, $title;
+
+            // $page['errors'] is always initialized to an array by
+            // common.inc.php, but that isn't visible across the include()
+            // boundary -- narrow it once here so the write below type-checks.
+            $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
+
+            if (is_string($subscribe) && (bool) preg_match('/^[A-Za-z0-9]{16}$/', $subscribe)) {
+                subscribe_notification_by_mail(false, [$subscribe]);
+            } elseif (is_string($unsubscribe) && (bool) preg_match('/^[A-Za-z0-9]{16}$/', $unsubscribe)) {
+                unsubscribe_notification_by_mail(false, [$unsubscribe]);
+            } else {
+                $page['errors'][] = l10n('Unknown identifier');
+            }
+
+            $title = l10n('Notification');
+            $page['body_id'] = 'theNBMPage';
+
+            $template->set_filenames([
+                'nbm' => 'nbm.tpl',
+            ]);
+
+            $themeconf = $template->get_template_vars('themeconf');
+            $themeconf = is_array($themeconf) ? $themeconf : [];
+            $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
+            if (! is_array($hide_menu_on) or ! in_array('theNBMPage', $hide_menu_on, true)) {
+                include PHPWG_ROOT_PATH . 'include/menubar.inc.php';
+            }
+
+            include PHPWG_ROOT_PATH . 'include/page_header.php';
+            flush_page_messages();
+            $template->parse('nbm');
+            include PHPWG_ROOT_PATH . 'include/page_tail.php';
+        });
+
+        return ResponseFactory::html($body);
+    }
+}

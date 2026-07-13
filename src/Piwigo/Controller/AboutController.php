@@ -1,0 +1,90 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Piwigo\Controller;
+
+use Piwigo\Config\Config;
+use Piwigo\Core\AccessLevel;
+use Piwigo\Http\ControllerInterface;
+use Piwigo\Http\ResponseFactory;
+use Piwigo\Template\Template;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+
+/**
+ * Replaces about.php -- P22's own proof-of-concept controller (smallest,
+ * lowest-risk real page: no POST handling, no redirects). Its legacy body
+ * is unchanged, wrapped in LegacyRenderCapture instead of echoing directly.
+ *
+ * check_status() stays outside the captured closure: it can call
+ * access_denied() (-> exit()) directly on failure, same accepted
+ * exit()-based-termination limitation as every other legacy redirect/
+ * denial path this phase (see docs/plan/manifest.yaml's P22 entry) --
+ * letting that exit() escape an active output buffer would risk PHP's
+ * shutdown-time auto-flush interacting unpredictably with headers already
+ * sent by access_denied() itself.
+ */
+final class AboutController implements ControllerInterface
+{
+    #[\Override]
+    public function __invoke(ServerRequestInterface $request): ResponseInterface
+    {
+        check_status(AccessLevel::Guest);
+
+        $body = LegacyRenderCapture::capture(static function (): void {
+            // Bootstrap globals, set by include/common.inc.php; $title is
+            // read back by include/page_header.php via its own
+            // `global $title;` -- this method's own top-level `include`
+            // calls run in *this closure's* scope, not real global scope,
+            // so both reads and writes need an explicit `global` here
+            // (same lesson as P21's AdminDispatcher scope bug).
+            /**
+             * @var array<string, mixed> $conf
+             * @var array<string, mixed> $page
+             * @var Template $template
+             * @var array<string, mixed> $user
+             */
+            global $conf, $page, $template, $user, $title;
+
+            $title = l10n('About Piwigo');
+            $page['body_id'] = 'theAboutPage';
+
+            trigger_notify('loc_begin_about');
+
+            $template->set_filename('about', 'about.tpl');
+
+            $template->assign('ABOUT_MESSAGE', load_language('about.html', '', [
+                'return' => true,
+            ]));
+
+            // build_user() (include/functions_user.inc.php) always resolves
+            // $user['theme'] to a validated, installed theme string before
+            // include/common.inc.php returns; $user itself is only known
+            // here as array<string, mixed>, so narrow with a defensive
+            // fallback rather than trust the shape blindly.
+            $user_theme = $user['theme'] ?? null;
+            $user_theme = is_string($user_theme) ? $user_theme : '';
+
+            $theme_about = load_language('about.html', Config::themesPath() . $user_theme . '/', [
+                'return' => true,
+            ]);
+            if ($theme_about !== false) {
+                $template->assign('THEME_ABOUT', $theme_about);
+            }
+
+            $themeconf = $template->get_template_vars('themeconf');
+            $themeconf = is_array($themeconf) ? $themeconf : [];
+            if (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('theAboutPage', $themeconf['hide_menu_on'], true)) {
+                include PHPWG_ROOT_PATH . 'include/menubar.inc.php';
+            }
+
+            include PHPWG_ROOT_PATH . 'include/page_header.php';
+            flush_page_messages();
+            $template->pparse('about');
+            include PHPWG_ROOT_PATH . 'include/page_tail.php';
+        });
+
+        return ResponseFactory::html($body);
+    }
+}

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Http\Middleware;
 
+use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Routing\RouteMatchStatus;
 use Piwigo\Routing\RouteResult;
@@ -17,10 +18,9 @@ use Psr\Http\Server\RequestHandlerInterface;
  * Terminal middleware -- resolves the matched route's handler from the
  * container and invokes it, instead of calling $handler->handle() onward.
  *
- * Scoped to PSR-15 RequestHandlerInterface (->handle()) as an interim
- * contract: Piwigo\Controller\ControllerInterface (->__invoke()) is P22's
- * own deliverable, once real Controllers exist to reference from
- * config/routes.php's `_controller` defaults.
+ * Resolves Piwigo\Http\ControllerInterface (->__invoke()), P22's own
+ * deliverable -- real Controllers now exist for config/routes.php's
+ * `_controller` defaults to reference.
  */
 final readonly class ControllerInvokerMiddleware implements MiddlewareInterface
 {
@@ -43,12 +43,12 @@ final readonly class ControllerInvokerMiddleware implements MiddlewareInterface
         }
 
         $controller = $this->container->get($result->handler);
-        if (! $controller instanceof RequestHandlerInterface) {
+        if (! $controller instanceof ControllerInterface) {
             throw new \LogicException(
-                "Route handler '{$result->handler}' must implement Psr\\Http\\Server\\RequestHandlerInterface."
+                "Route handler '{$result->handler}' must implement Piwigo\\Http\\ControllerInterface."
             );
         }
 
-        return $controller->handle($request->withAttribute('route_args', $result->args));
+        return $controller($request->withAttribute('route_args', $result->args));
     }
 }

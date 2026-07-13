@@ -9,22 +9,24 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-use Piwigo\Core\AccessLevel;
+// P22: page logic moved to Piwigo\Controller\QSearchController
+// (config/routes.php's `/qsearch.php` route); this file is now pure
+// bootstrap + dispatch, matching every other P22 controller's root file.
+require __DIR__ . '/vendor/autoload.php';
 
+use Piwigo\Bootstrap\CommonBootstrap;
+use Piwigo\Bootstrap\RequestPipeline;
+use Piwigo\Core\Paths;
+use Piwigo\Http\RequestFactory;
+use Piwigo\Http\ResponseEmitter;
+
+// ----------------------------------------------------------- include
+$paths = Paths::fromIndex(__FILE__);
 define('PHPWG_ROOT_PATH', './');
 include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 
-// +-----------------------------------------------------------------------+
-// | Check Access and exit when user status is not ok                      |
-// +-----------------------------------------------------------------------+
-check_status(AccessLevel::Guest);
+CommonBootstrap::run($paths);
 
-// if (empty($_GET['q']))
-// {
-//   redirect( make_index_url() );
-// }
-
-$q = $_GET['q'] ?? '';
-$q = is_string($q) ? $q : '';
-
-redirect(get_root_url() . 'search.php?q=' . $q);
+$response = RequestPipeline::handle(RequestFactory::fromGlobals());
+new ResponseEmitter()
+    ->emit($response);

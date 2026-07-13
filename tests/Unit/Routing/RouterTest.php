@@ -49,3 +49,33 @@ test('fromFile loads a RouteCollection from a real file', function (): void {
 
     expect($result->status)->toBe(RouteMatchStatus::NotFound);
 });
+
+test('dispatch strips the app mount-point prefix derived from SCRIPT_NAME before matching', function (): void {
+    // Reproduces this dev instance's own real shape: reached at
+    // /piwigo17/about.php, not /about.php -- confirmed via a real
+    // live-curl 404 before this fix (Router::pathInfo()'s own docblock).
+    $routes = new RouteCollection();
+    $routes->add('about', new Route('/about.php', defaults: ['_controller' => 'AboutController']));
+
+    $request = new ServerRequest('GET', '/piwigo17/about.php', serverParams: ['SCRIPT_NAME' => '/piwigo17/about.php']);
+    $result = new Router($routes)->dispatch($request);
+
+    expect($result->status)->toBe(RouteMatchStatus::Found);
+    expect($result->handler)->toBe('AboutController');
+});
+
+test('dispatch matches unprefixed paths unchanged when the app is mounted at the domain root', function (): void {
+    $routes = new RouteCollection();
+    $routes->add('about', new Route('/about.php', defaults: ['_controller' => 'AboutController']));
+
+    $request = new ServerRequest('GET', '/about.php', serverParams: ['SCRIPT_NAME' => '/about.php']);
+    $result = new Router($routes)->dispatch($request);
+
+    expect($result->status)->toBe(RouteMatchStatus::Found);
+});
+
+test('dispatch falls back to the raw path when SCRIPT_NAME is absent (e.g. CLI/test requests)', function (): void {
+    $result = new Router(new RouteCollection())->dispatch(new ServerRequest('GET', '/anything'));
+
+    expect($result->status)->toBe(RouteMatchStatus::NotFound);
+});

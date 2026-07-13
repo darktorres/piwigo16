@@ -11,10 +11,17 @@ use Piwigo\Core\Kernel;
 
 /**
  * Confirms RequestPipeline::handle() runs the real pipeline end-to-end.
- * Nothing in production calls this yet (index.php still only calls
- * CommonBootstrap::run(), P7) -- config/routes.php is empty, so every
- * request correctly 404s. This is the honest, currently-true behavior; it
- * changes once P22 registers real routes.
+ * config/routes.php now has real routes (P22) and every root frontend file
+ * (about.php first, the rest incrementally) actually calls this for live
+ * traffic -- an unmatched path (used throughout this file) still correctly
+ * 404s, same as before any routes existed. A real registered route
+ * (/about.php) is deliberately *not* exercised here: its controller needs
+ * the full legacy include/common.inc.php bootstrap (real $template/$page/
+ * $user/$conf globals, check_status()/l10n()/etc. free functions) that
+ * only a real HTTP request through Apache -- or CommonBootstrap::run()
+ * itself -- provides; live-curl verification against the real instance is
+ * the actual end-to-end proof for that (see docs/plan/manifest.yaml's P22
+ * wrap-up memory).
  */
 final class RequestPipelineTest extends TestCase
 {
@@ -24,7 +31,7 @@ final class RequestPipelineTest extends TestCase
         Kernel::reset();
     }
 
-    public function test_handle_returns_404_when_no_routes_are_registered(): void
+    public function test_handle_returns_404_for_an_unmatched_path(): void
     {
         Kernel::boot();
 

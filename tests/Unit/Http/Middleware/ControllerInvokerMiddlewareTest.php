@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Nyholm\Psr7\Response;
 use Nyholm\Psr7\ServerRequest;
+use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\Middleware\ControllerInvokerMiddleware;
 use Piwigo\Routing\RouteResult;
 use Psr\Container\ContainerInterface;
@@ -45,7 +46,7 @@ function containerInvokerNoopHandler(): RequestHandlerInterface
 
 test('invokes the resolved handler for a found route and passes route args', function (): void {
     $captured = new ArrayObject();
-    $controller = new class ($captured) implements RequestHandlerInterface {
+    $controller = new class ($captured) implements ControllerInterface {
         /**
          * @param ArrayObject<string, mixed> $captured
          */
@@ -54,7 +55,7 @@ test('invokes the resolved handler for a found route and passes route args', fun
         }
 
         #[Override]
-        public function handle(ServerRequestInterface $request): ResponseInterface
+        public function __invoke(ServerRequestInterface $request): ResponseInterface
         {
             $this->captured['args'] = $request->getAttribute('route_args');
 
@@ -95,7 +96,7 @@ test('throws when no RouteResult attribute is present', function (): void {
     $middleware->process(new ServerRequest('GET', '/'), containerInvokerNoopHandler());
 })->throws(LogicException::class);
 
-test('throws when the resolved service does not implement RequestHandlerInterface', function (): void {
+test('throws when the resolved service does not implement ControllerInterface', function (): void {
     $middleware = new ControllerInvokerMiddleware(containerInvokerFakeContainer(new stdClass()));
     $request = new ServerRequest('GET', '/')->withAttribute(RouteResult::class, RouteResult::found('X', []));
 

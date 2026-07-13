@@ -9,8 +9,9 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Activity\ActivityRepository;
 use Piwigo\Core\ActivitySystem;
-use Piwigo\Db\Tables;
+use Piwigo\Db\DbConnection;
 use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
@@ -44,24 +45,11 @@ if (is_webmaster()) {
         $username_field = is_string($user_fields['username'] ?? null) ? $user_fields['username'] : 'username';
         $id_field = is_string($user_fields['id'] ?? null) ? $user_fields['id'] : 'id';
 
-        $query = '
-  SELECT
-      activity_id,
-      object,
-      object_id,
-      action,
-      performed_by,
-      occured_on,
-      details,
-  IF(performed_by = 0, \'System\', ' . $username_field . ') AS username
-  FROM ' . Tables::activity() . '
-  LEFT JOIN ' . Tables::users() . ' ON performed_by = ' . $id_field . '
-  WHERE object = \'system\'
-  ORDER BY activity_id DESC';
+        $activity_log = new ActivityRepository(DbConnection::build())
+            ->findSystemObjectLogWithUsernames($username_field, $id_field);
 
         // Format our data for frontend
-        $result = pwg_query($query);
-        while ((bool) ($rows = pwg_db_fetch_assoc($result))) {
+        foreach ($activity_log as $rows) {
             $major_infos = false;
             $object = '';
             $object_icon = '';
@@ -347,7 +335,7 @@ if (is_webmaster()) {
 
             // Format our data before send
             // This data will be manipulate by maintenance_sys.js
-            [$date, $hour] = explode(' ', (string) $rows['occured_on']);
+            [$date, $hour] = explode(' ', $rows['occured_on']);
             $data[] = [
                 'major_infos' => $major_infos,
                 'id' => $rows['activity_id'],

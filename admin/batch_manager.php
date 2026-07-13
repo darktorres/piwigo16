@@ -9,9 +9,11 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Admin\BatchManager\FilterResolver;
 use Piwigo\Admin\tabsheet;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
@@ -369,218 +371,64 @@ $bulk_filter = $_SESSION['bulk_manager_filter'];
 // echo '<pre>'; print_r($bulk_filter); echo '</pre>';
 
 // depending on the current filter (in session), we find the appropriate photos
+$filter_resolver = new FilterResolver(DbConnection::build());
+
 $filter_sets = [];
-if (isset($bulk_filter['prefilter'])) {
-    switch ($bulk_filter['prefilter']) {
-        case 'caddie':
-            $query = '
-SELECT element_id
-  FROM ' . Tables::caddie() . '
-  WHERE user_id = ' . $user_id . '
-;';
-            $filter_sets[] = query2array($query, null, 'element_id');
+if (isset($bulk_filter['prefilter']) && is_string($bulk_filter['prefilter'])) {
+    $prefilter = $bulk_filter['prefilter'];
 
-            break;
+    // $duplicates_on_fields is only ever set for the 'duplicates' prefilter
+    // (matching the legacy switch's own scoping) -- admin/batch_manager_
+    // global.php reads it back (via PHP's shared include() scope) for its
+    // own duplicates-mode thumbnail ordering.
+    if ($prefilter === 'duplicates') {
+        $duplicates_on_fields = $filter_resolver->duplicateFieldsFromFilter($bulk_filter);
+    }
 
-        case 'favorites':
-            $query = '
-SELECT image_id
-  FROM ' . Tables::favorites() . '
-  WHERE user_id = ' . $user_id . '
-;';
-            $filter_sets[] = query2array($query, null, 'image_id');
+    $prefilter_result = match ($prefilter) {
+        // get_orphans()/get_photos_no_md5sum() are existing, already-tested
+        // free functions -- not duplicated into FilterResolver.
+        'no_album' => get_orphans(),
+        'no_sync_md5sum' => get_photos_no_md5sum(),
+        default => $filter_resolver->resolvePrefilter($prefilter, $bulk_filter, $user_id, $conf_order_by),
+    };
 
-            break;
-
-        case 'last_import':
-            $query = '
-SELECT MAX(date_available) AS date
-  FROM ' . Tables::images() . '
-;';
-            $row = pwg_db_fetch_assoc(pwg_query($query));
-            if (! empty($row['date'])) {
-                $query = '
-SELECT id
-  FROM ' . Tables::images() . '
-  WHERE date_available BETWEEN ' . pwg_db_get_recent_period_expression(1, $row['date']) . ' AND \'' . $row['date'] . '\'
-;';
-                $filter_sets[] = query2array($query, null, 'id');
-            }
-
-            break;
-
-        case 'no_virtual_album':
-            // we are searching elements not linked to any virtual category
-            $query = '
- SELECT id
-   FROM ' . Tables::images() . '
- ;';
-            $all_elements = query2array($query, null, 'id');
-
-            $linked_to_virtual = [];
-
-            $query = '
- SELECT id
-   FROM ' . Tables::categories() . '
-   WHERE dir IS NULL
- ;';
-            $virtual_categories = query2array($query, null, 'id');
-            if (! empty($virtual_categories)) {
-                $query = '
- SELECT DISTINCT(image_id)
-   FROM ' . Tables::imageCategory() . '
-   WHERE category_id IN (' . implode(',', $virtual_categories) . ')
- ;';
-                $linked_to_virtual = query2array($query, null, 'image_id');
-            }
-
-            $filter_sets[] = array_diff($all_elements, $linked_to_virtual);
-
-            break;
-
-        case 'no_album':
-            $filter_sets[] = get_orphans();
-            break;
-        case 'no_sync_md5sum':
-            $filter_sets[] = get_photos_no_md5sum();
-            break;
-
-        case 'no_tag':
-            $query = '
-SELECT
-    id
-  FROM ' . Tables::images() . '
-    LEFT JOIN ' . Tables::imageTag() . ' ON id = image_id
-  WHERE tag_id is null
-;';
-            $filter_sets[] = query2array($query, null, 'id');
-
-            break;
-
-        case 'duplicates':
-            $duplicates_on_fields = [];
-
-            if (isset($bulk_filter['duplicates_filename'])) {
-                $duplicates_on_fields[] = 'file';
-            }
-
-            if (isset($bulk_filter['duplicates_checksum'])) {
-                $duplicates_on_fields[] = 'md5sum';
-            }
-
-            if (isset($bulk_filter['duplicates_date'])) {
-                $duplicates_on_fields[] = 'date_creation';
-            }
-
-            if (isset($bulk_filter['duplicates_dimensions'])) {
-                $duplicates_on_fields[] = 'width';
-                $duplicates_on_fields[] = 'height';
-            }
-
-            // TODO improve this algorithm, because GROUP_CONCAT is truncated at
-            // 1024 chars. So if you have more than ~250 duplicates for a given
-            // combination of "duplicates_on_fields" you won't get all the
-            // duplicates.
-
-            $query = '
-SELECT
-    GROUP_CONCAT(id) AS ids
-  FROM ' . Tables::images();
-
-            if (in_array('md5sum', $duplicates_on_fields)) {
-                $query .= '
-  WHERE md5sum IS NOT NULL
-';
-            }
-
-            $query .= '
-  GROUP BY ' . implode(',', $duplicates_on_fields) . '
-  HAVING COUNT(*) > 1
-;';
-            $array_of_ids_string = query2array($query, null, 'ids');
-
-            $ids = [];
-
-            foreach ($array_of_ids_string as $ids_string) {
-                $ids_string = rtrim((string) $ids_string, ',');
-                $ids = array_merge($ids, explode(',', $ids_string));
-            }
-
-            $filter_sets[] = $ids;
-
-            break;
-
-        case 'all_photos':
-            if (count($bulk_filter) == 1) {// make the query only if this is the only filter
-                $query = '
-SELECT id
-  FROM ' . Tables::images() . '
-  ' . $conf_order_by;
-
-                $filter_sets[] = query2array($query, null, 'id');
-            }
-            break;
-
-        default:
-            $filter_sets = trigger_change('perform_batch_manager_prefilters', $filter_sets, $bulk_filter['prefilter']);
-            if (! is_array($filter_sets)) {
-                // Plugin handlers must return the (possibly extended) list
-                // of id sets; fall back to an empty set of filters rather
-                // than propagating a non-array value into array-only code
-                // below.
-                $filter_sets = [];
-            }
-            break;
+    if ($prefilter_result !== null) {
+        $filter_sets[] = $prefilter_result;
+    } else {
+        $filter_sets = trigger_change('perform_batch_manager_prefilters', $filter_sets, $prefilter);
+        if (! is_array($filter_sets)) {
+            // Plugin handlers must return the (possibly extended) list of id
+            // sets; fall back to an empty set of filters rather than
+            // propagating a non-array value into array-only code below.
+            $filter_sets = [];
+        }
     }
 }
 
 if (isset($bulk_filter['category']) && is_numeric($bulk_filter['category'])) {
-    $categories = [];
     $category_id = (int) $bulk_filter['category'];
 
     // we need to check the category still exists (it may have been deleted since it was added in the session)
-    $query = '
-SELECT COUNT(*)
-  FROM ' . Tables::categories() . '
-  WHERE id = ' . $category_id . '
-;';
-    $row = pwg_db_fetch_row(pwg_query($query));
-    assert($row !== null);
-    [$counter] = $row;
-    if ($counter == 0) {
+    if (! $filter_resolver->categoryExists($category_id)) {
         unset($_SESSION['bulk_manager_filter']);
         redirect(get_root_url() . 'admin.php?page=' . $get_page);
     }
 
-    if (isset($bulk_filter['category_recursive'])) {
-        $categories = get_subcat_ids([$category_id]);
-    } else {
-        $categories = [$category_id];
-    }
+    $categories = isset($bulk_filter['category_recursive'])
+        ? get_subcat_ids([$category_id])
+        : [$category_id];
+    $categories = array_values(array_map(intval(...), array_filter($categories, is_numeric(...))));
 
-    $query = '
- SELECT DISTINCT(image_id)
-   FROM ' . Tables::imageCategory() . '
-   WHERE category_id IN (' . implode(',', array_map(strval(...), $categories)) . ')
- ;';
-    $filter_sets[] = query2array($query, null, 'image_id');
+    $filter_sets[] = $filter_resolver->categoryImageIds($categories);
 }
 
 if (isset($bulk_filter['level']) && is_numeric($bulk_filter['level'])) {
-    $operator = '=';
-    if (isset($bulk_filter['level_include_lower'])) {
-        $operator = '<=';
-    }
-
-    $level = (int) $bulk_filter['level'];
-
-    $query = '
-SELECT id
-  FROM ' . Tables::images() . '
-  WHERE level ' . $operator . ' ' . $level . '
-  ' . $conf_order_by;
-
-    $filter_sets[] = query2array($query, null, 'id');
+    $filter_sets[] = $filter_resolver->levelPhotoIds(
+        (int) $bulk_filter['level'],
+        isset($bulk_filter['level_include_lower']),
+        $conf_order_by
+    );
 }
 
 if (! empty($bulk_filter['tags']) && is_array($bulk_filter['tags'])) {
@@ -603,58 +451,34 @@ if (! empty($bulk_filter['tags']) && is_array($bulk_filter['tags'])) {
 }
 
 if (isset($bulk_filter['dimension']) && is_array($bulk_filter['dimension'])) {
-    $filter_dimension = $bulk_filter['dimension'];
-    $where_clause = [];
-    if (isset($filter_dimension['min_width']) && is_numeric($filter_dimension['min_width'])) {
-        $where_clause[] = 'width >= ' . (int) $filter_dimension['min_width'];
+    // $bulk_filter is only known as array<string, mixed>, so a nested array
+    // offset only narrows to array<mixed, mixed> after is_array() --
+    // rebuild with only string keys so dimensionPhotoIds()'s declared
+    // array<string, mixed> parameter type-checks against a real, verified
+    // shape rather than a trust-me cast.
+    $filter_dimension = [];
+    foreach ($bulk_filter['dimension'] as $dimension_key => $dimension_value) {
+        if (is_string($dimension_key)) {
+            $filter_dimension[$dimension_key] = $dimension_value;
+        }
     }
-    if (isset($filter_dimension['max_width']) && is_numeric($filter_dimension['max_width'])) {
-        $where_clause[] = 'width <= ' . (int) $filter_dimension['max_width'];
+    $dimension_ids = $filter_resolver->dimensionPhotoIds($filter_dimension, $conf_order_by);
+    if ($dimension_ids !== null) {
+        $filter_sets[] = $dimension_ids;
     }
-    if (isset($filter_dimension['min_height']) && is_numeric($filter_dimension['min_height'])) {
-        $where_clause[] = 'height >= ' . (int) $filter_dimension['min_height'];
-    }
-    if (isset($filter_dimension['max_height']) && is_numeric($filter_dimension['max_height'])) {
-        $where_clause[] = 'height <= ' . (int) $filter_dimension['max_height'];
-    }
-    if (isset($filter_dimension['min_ratio']) && is_numeric($filter_dimension['min_ratio'])) {
-        $where_clause[] = 'width/height >= ' . (float) $filter_dimension['min_ratio'];
-    }
-    if (isset($filter_dimension['max_ratio']) && is_numeric($filter_dimension['max_ratio'])) {
-        // max_ratio is a floor value, so must be a bit increased
-        $where_clause[] = 'width/height < ' . ((float) $filter_dimension['max_ratio'] + 0.01);
-    }
-
-    $query = '
-SELECT id
-  FROM ' . Tables::images() . '
-  WHERE ' . implode(' AND ', $where_clause) . '
-  ' . $conf_order_by;
-
-    $filter_sets[] = query2array($query, null, 'id');
 }
 
 if (isset($bulk_filter['filesize']) && is_array($bulk_filter['filesize'])) {
-    $filter_filesize = $bulk_filter['filesize'];
-    $where_clause = [];
-
-    if (isset($filter_filesize['min']) && is_numeric($filter_filesize['min'])) {
-        // to counter the effect of converting kB to mB and rounding, we need to go slightly lower for the minimum value
-        $where_clause[] = 'filesize >= ' . (((float) $filter_filesize['min'] - 0.1) * 1024);
+    $filter_filesize = [];
+    foreach ($bulk_filter['filesize'] as $filesize_key => $filesize_value) {
+        if (is_string($filesize_key)) {
+            $filter_filesize[$filesize_key] = $filesize_value;
+        }
     }
-
-    if (isset($filter_filesize['max']) && is_numeric($filter_filesize['max'])) {
-        // to counter the effect of converting kB to mB and rounding, we need to go slightly higher for the maximum value
-        $where_clause[] = 'filesize <= ' . (((float) $filter_filesize['max'] + 0.1) * 1024);
+    $filesize_ids = $filter_resolver->filesizePhotoIds($filter_filesize, $conf_order_by);
+    if ($filesize_ids !== null) {
+        $filter_sets[] = $filesize_ids;
     }
-
-    $query = '
-SELECT id
-  FROM ' . Tables::images() . '
-  WHERE ' . implode(' AND ', $where_clause) . '
-  ' . $conf_order_by;
-
-    $filter_sets[] = query2array($query, null, 'id');
 }
 
 if (isset($bulk_filter['search']) && is_array($bulk_filter['search'])

@@ -11,9 +11,10 @@ declare(strict_types=1);
 
 use Piwigo\Admin\tabsheet;
 use Piwigo\Core\AccessLevel;
-use Piwigo\Db\Tables;
+use Piwigo\Db\DbConnection;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Rate\RateRepository;
 use Piwigo\Template\Template;
 
 defined('PHPWG_ROOT_PATH') or die('Hacking attempt!');
@@ -42,20 +43,13 @@ if (isset($_GET['consensus_top_number']) && is_numeric($_GET['consensus_top_numb
 // build users
 /** @var array<string, string> $user_fields */
 $user_fields = $conf['user_fields'];
-$query = 'SELECT DISTINCT
-  u.' . $user_fields['id'] . ' AS id,
-  u.' . $user_fields['username'] . ' AS name,
-  ui.status
-  FROM ' . Tables::users() . ' AS u INNER JOIN ' . Tables::userInfos() . ' AS ui
-    ON u.' . $user_fields['id'] . ' = ui.user_id';
+$rate_repository = new RateRepository(DbConnection::build());
 
 $users_by_id = [];
-$result = pwg_query($query);
-while ((bool) ($row = pwg_db_fetch_assoc($result))) {
-    $status = $row['status'];
-    $users_by_id[(int) $row['id']] = [
-        'name' => is_string($row['name']) ? $row['name'] : '',
-        'anon' => is_autorize_status(AccessLevel::Classic, is_string($status) ? $status : '') ? false : true,
+foreach ($rate_repository->findUsersWithStatusByIdUsername($user_fields['id'], $user_fields['username']) as $u) {
+    $users_by_id[$u['id']] = [
+        'name' => $u['name'],
+        'anon' => is_autorize_status(AccessLevel::Classic, $u['status']) ? false : true,
     ];
 }
 
@@ -73,37 +67,34 @@ foreach ($rate_items as $rate) {
 // by user aggregation
 $image_ids = [];
 $by_user_ratings = [];
-$query = '
-SELECT * FROM ' . Tables::rate() . ' ORDER by date DESC';
-$result = pwg_query($query);
-while ((bool) ($row = pwg_db_fetch_assoc($result))) {
-    $user_id = (int) $row['user_id'];
+foreach ($rate_repository->findAllRatesOrderedByDateDesc() as $rate_row) {
+    $user_id = $rate_row['user_id'];
     if (! isset($users_by_id[$user_id])) {
         $users_by_id[$user_id] = [
-            'name' => '???' . $row['user_id'],
+            'name' => '???' . $user_id,
             'anon' => false,
         ];
     }
     $usr = $users_by_id[$user_id];
     if ($usr['anon']) {
-        $user_key = $usr['name'] . '(' . $row['anonymous_id'] . ')';
+        $user_key = $usr['name'] . '(' . $rate_row['anonymous_id'] . ')';
     } else {
         $user_key = $usr['name'];
     }
     if (! isset($by_user_ratings[$user_key])) {
         $rating = $by_user_rating_model;
         $rating['uid'] = $user_id;
-        $rating['aid'] = $usr['anon'] ? $row['anonymous_id'] : '';
-        $rating['last_date'] = $rating['first_date'] = $row['date'];
+        $rating['aid'] = $usr['anon'] ? $rate_row['anonymous_id'] : '';
+        $rating['last_date'] = $rating['first_date'] = $rate_row['date'];
     } else {
         $rating = $by_user_ratings[$user_key];
-        $rating['first_date'] = $row['date'];
+        $rating['first_date'] = $rate_row['date'];
     }
 
-    $element_id = (int) $row['element_id'];
-    $rating['rates'][(int) $row['rate']][] = [
+    $element_id = $rate_row['element_id'];
+    $rating['rates'][$rate_row['rate']][] = [
         'id' => $element_id,
-        'date' => $row['date'],
+        'date' => $rate_row['date'],
     ];
     $by_user_ratings[$user_key] = $rating;
     $image_ids[$element_id] = 1;
@@ -112,45 +103,27 @@ while ((bool) ($row = pwg_db_fetch_assoc($result))) {
 // get image tn urls
 $image_urls = [];
 if (count($image_ids) > 0) {
-    $query = 'SELECT id, name, file, path, representative_ext, level
-  FROM ' . Tables::images() . '
-  WHERE id IN (' . implode(',', array_keys($image_ids)) . ')';
-    $result = pwg_query($query);
     $params = ImageStdParams::get_by_type(IMG_SQUARE);
-    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
-        $image_urls[(int) $row['id']] = [
-            'tn' => DerivativeImage::url($params, $row),
+    foreach ($rate_repository->findImageThumbInfoByIds(array_keys($image_ids)) as $thumb_row) {
+        $image_urls[$thumb_row['id']] = [
+            'tn' => DerivativeImage::url($params, $thumb_row),
             'page' => make_picture_url([
-                'image_id' => $row['id'],
-                'image_file' => $row['file'],
+                'image_id' => $thumb_row['id'],
+                'image_file' => $thumb_row['file'],
             ]),
         ];
     }
 }
 
 // all image averages
-$query = 'SELECT element_id,
-    AVG(rate) AS avg
-  FROM ' . Tables::rate() . '
-  GROUP BY element_id';
 $all_img_sum = [];
-$result = pwg_query($query);
-while ((bool) ($row = pwg_db_fetch_assoc($result))) {
-    $all_img_sum[(int) $row['element_id']] = [
-        'avg' => (float) $row['avg'],
+foreach ($rate_repository->findAverageRatePerElement() as $element_id => $avg) {
+    $all_img_sum[$element_id] = [
+        'avg' => $avg,
     ];
 }
 
-$query = 'SELECT id
-  FROM ' . Tables::images() . '
-  ORDER by rating_score DESC
-  LIMIT ' . $consensus_top_number;
-// array_from_query()'s declared return type is array<int|string, mixed>
-// (it loses query2array()'s more precise list<string|null> for this
-// single-column mode); filter to numeric strings and cast to int (matching
-// how $id_date['id'] -- this array's lookup key below -- is always a real
-// int) before array_flip().
-$best_rated = array_flip(array_map(intval(...), array_filter(array_from_query($query, 'id'), is_numeric(...))));
+$best_rated = array_flip($rate_repository->findTopRatedImageIds($consensus_top_number));
 
 // by user stats
 foreach ($by_user_ratings as $id => &$rating) {
@@ -281,14 +254,7 @@ $template->assign('order_by_options_selected', [$order_by_index]);
 
 $x = uasort($by_user_ratings, $available_order_by[$order_by_index][1]);
 
-$query = '
-SELECT
-    COUNT(*)
-  FROM ' . Tables::rate() .
-';';
-$row = pwg_db_fetch_row(pwg_query($query));
-assert($row !== null);
-[$nb_elements] = $row;
+$nb_elements = $rate_repository->countAllRates();
 
 $template->assign([
     'F_ACTION' => get_root_url() . 'admin.php',

@@ -10,8 +10,10 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Core\AccessLevel;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
+use Piwigo\Users\UserRepository;
 
 /**
  * Display filtered history lines
@@ -150,18 +152,17 @@ if (isset($_GET['filter_ip']) or isset($_GET['filter_image_id']) or isset($_GET[
 }
 
 if ($form_param['user_id'] !== -1) {
-    $query = '
-  SELECT
-      username
-    FROM ' . Tables::users() . '
-    WHERE id = ' . $form_param['user_id'] . '
-  ;';
+    // $conf['user_fields'] maps generic field names to table-specific DB
+    // column names (see include/config_default.inc.php, used for external
+    // auth integrations) -- the previous raw query here hardcoded the
+    // literal 'id'/'username' column names, unlike sibling admin pages
+    // (e.g. admin/batch_manager_unit.php) that already read this mapping.
+    /** @var array<string, string> $user_fields */
+    $user_fields = $conf['user_fields'];
 
-    $row = pwg_db_fetch_row(pwg_query($query));
-    $form_param['user_name'] = $row !== null ? $row[0] : null;
-    // $row already holds this exact query's result; re-running the query a
-    // second time just to test emptiness was a redundant duplicate DB call.
-    $form_param['user_id'] = empty($row) ? -1 : $form_param['user_id'];
+    $form_param['user_name'] = new UserRepository(DbConnection::build())
+        ->findUsernameById($form_param['user_id'], $user_fields['id'], $user_fields['username']);
+    $form_param['user_id'] = $form_param['user_name'] === null ? -1 : $form_param['user_id'];
 }
 
 $template->assign(

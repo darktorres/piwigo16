@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Permission;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\Tables;
 
@@ -64,6 +65,29 @@ final class PermissionRepository extends AbstractRepository
             ->fetchFirstColumn();
 
         return self::toIntList($ids);
+    }
+
+    /**
+     * Deletes direct user-category access rows. Ported from
+     * admin/user_perm.php's own inline `DELETE FROM user_access WHERE
+     * user_id = ... AND cat_id IN (...)` (P21 Users batch) -- bound
+     * parameters replacing the original's raw implode()'d id list.
+     *
+     * @param list<int> $catIds
+     */
+    public function deleteUserAccess(int $userId, array $catIds): void
+    {
+        if ($catIds === []) {
+            return;
+        }
+
+        $this->conn->createQueryBuilder()
+            ->delete(Tables::userAccess())
+            ->where('user_id = :userId')
+            ->andWhere('cat_id IN (:catIds)')
+            ->setParameter('userId', $userId)
+            ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER)
+            ->executeStatement();
     }
 
     /**

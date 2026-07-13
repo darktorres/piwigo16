@@ -11,8 +11,10 @@ declare(strict_types=1);
 
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Template\Template;
@@ -44,13 +46,11 @@ if (isset($_GET['image_id']) && is_numeric($_GET['image_id'])) {
 }
 
 if (isset($_POST['submit'])) {
-    $query = 'UPDATE ' . Tables::images();
-
     $coi_l = $_POST['l'] ?? null;
     $coi_l_str = is_scalar($coi_l) ? (string) $coi_l : '';
 
     if (strlen($coi_l_str) == 0) {
-        $query .= ' SET coi=NULL';
+        $coi = null;
     } else {
         $to_fraction = (static fn (mixed $v): float => is_numeric($v) ? (float) $v : 0.0);
 
@@ -58,10 +58,8 @@ if (isset($_POST['submit'])) {
           . fraction_to_char($to_fraction($_POST['t'] ?? null))
           . fraction_to_char($to_fraction($_POST['r'] ?? null))
           . fraction_to_char($to_fraction($_POST['b'] ?? null));
-        $query .= ' SET coi=\'' . $coi . '\'';
     }
-    $query .= ' WHERE id=' . $image_id;
-    pwg_query($query);
+    new ImageRepository(DbConnection::build())->updateCoi($image_id, $coi);
 }
 
 $query = 'SELECT * FROM ' . Tables::images() . ' WHERE id=' . $image_id;

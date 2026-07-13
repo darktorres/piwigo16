@@ -12,8 +12,9 @@ declare(strict_types=1);
 use Piwigo\Admin\tabsheet;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ValidationPattern;
-use Piwigo\Db\Tables;
+use Piwigo\Db\DbConnection;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Rate\RateRepository;
 use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
@@ -65,64 +66,35 @@ if (isset($_GET['order_by']) and is_numeric($_GET['order_by'])) {
 $conf_guest_id = $conf['guest_id'];
 $guest_id = is_numeric($conf_guest_id) ? (int) $conf_guest_id : 0;
 
-$user_filter = '';
+$cat_ids = [];
+if (isset($_GET['cat']) and is_numeric($_GET['cat'])) {
+    $cat_ids = array_values(array_map(intval(...), array_filter(get_subcat_ids([(int) $_GET['cat']]), is_numeric(...))));
+}
+
+$filter_user_id = null;
+$exclude_filter_user = false;
 if (isset($_GET['users'])) {
     if ($_GET['users'] == 'user') {
-        $user_filter = ' AND r.user_id <> ' . $guest_id;
+        $filter_user_id = $guest_id;
+        $exclude_filter_user = true;
     } elseif ($_GET['users'] == 'guest') {
-        $user_filter = ' AND r.user_id = ' . $guest_id;
+        $filter_user_id = $guest_id;
+        $exclude_filter_user = false;
     }
 }
 
-$cat_filter = '';
-if (isset($_GET['cat']) and is_numeric($_GET['cat'])) {
-    $cat_ids = get_subcat_ids([(int) $_GET['cat']]);
-
-    if (count($cat_ids) > 0) {
-        $cat_filter = ' AND ic.category_id IN (' . implode(',', $cat_ids) . ')';
-    }
-}
-
-$users = [];
 /** @var array<string, string> $user_fields */
 $user_fields = $conf['user_fields'];
-$query = '
-SELECT ' . $user_fields['username'] . ' as username, ' . $user_fields['id'] . ' as id
-  FROM ' . Tables::users() . '
-;';
-$result = pwg_query($query);
-while ((bool) ($row = pwg_db_fetch_assoc($result))) {
-    if (is_string($row['id'])) {
-        $users[$row['id']] = stripslashes((string) $row['username']);
-    }
+$rate_repository = new RateRepository(DbConnection::build());
+
+$usernames_by_id = $rate_repository->findUsernamesById($user_fields['id'], $user_fields['username']);
+$users = [];
+foreach ($usernames_by_id as $user_id => $username) {
+    $users[$user_id] = stripslashes($username);
 }
 
-$query = '
-SELECT
-    COUNT(DISTINCT(r.element_id))
-  FROM ' . Tables::rate() . ' AS r';
-
-if (! empty($cat_filter)) {
-    $query .= '
-    JOIN ' . Tables::images() . ' AS i ON r.element_id = i.id
-    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id';
-}
-
-$query .= '
-WHERE 1=1' . $user_filter;
-$count_row = pwg_db_fetch_row(pwg_query($query));
-assert($count_row !== null);
-[$nb_images] = $count_row;
-$nb_images = is_numeric($nb_images) ? (int) $nb_images : 0;
-
-$query = '
-SELECT
-    COUNT(*)
-  FROM ' . Tables::rate() .
-';';
-$count_row = pwg_db_fetch_row(pwg_query($query));
-assert($count_row !== null);
-[$nb_elements] = $count_row;
+$nb_images = $rate_repository->countRatedElements($filter_user_id, $exclude_filter_user, $cat_ids);
+$nb_elements = $rate_repository->countAllRates();
 
 // +-----------------------------------------------------------------------+
 // |                             template init                             |
@@ -175,41 +147,14 @@ $template->assign('user_options', $user_options);
 $template->assign('user_options_selected', [@$_GET['users']]);
 $template->assign('ADMIN_PAGE_TITLE', l10n('Rating'));
 
-$query = '
-SELECT i.id,
-    i.path,
-    i.file,
-    i.representative_ext,
-    i.rating_score       AS score,
-    MAX(r.date)          AS recently_rated,
-    ROUND(AVG(r.rate),2) AS avg_rates,
-    COUNT(r.rate)        AS nb_rates,
-    SUM(r.rate)          AS sum_rates
-  FROM ' . Tables::rate() . ' AS r
-    LEFT JOIN ' . Tables::images() . ' AS i ON r.element_id = i.id';
-
-if (! empty($cat_filter)) {
-    $query .= '
-    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id';
-}
-
-$query .= '
-  WHERE 1 = 1 ' . $user_filter . $cat_filter . '
-  GROUP BY i.id,
-        i.path,
-        i.file,
-        i.representative_ext,
-        i.rating_score,
-        r.element_id
-  ORDER BY ' . $available_order_by[$order_by_index][1] . '
-  LIMIT ' . $elements_per_page . ' OFFSET ' . $start . '
-;';
-
-$images = [];
-$result = pwg_query($query);
-while ((bool) ($row = pwg_db_fetch_assoc($result))) {
-    $images[] = $row;
-}
+$images = $rate_repository->findRatingReport(
+    $filter_user_id,
+    $exclude_filter_user,
+    $cat_ids,
+    $available_order_by[$order_by_index][1],
+    $elements_per_page,
+    $start
+);
 
 $template->assign('images', []);
 foreach ($images as $image) {
@@ -217,12 +162,8 @@ foreach ($images as $image) {
 
     $image_url = get_root_url() . 'admin.php?page=photo-' . $image['id'];
 
-    $query = 'SELECT *
-FROM ' . Tables::rate() . ' AS r
-WHERE r.element_id=' . $image['id'] . '
-ORDER BY date DESC;';
-    $result = pwg_query($query);
-    $nb_rates = pwg_db_num_rows($result);
+    $rates = $rate_repository->findRateRowsForElement($image['id']);
+    $nb_rates = count($rates);
 
     $tpl_image =
       [
@@ -232,25 +173,26 @@ ORDER BY date DESC;';
           'SCORE_RATE' => $image['score'],
           'AVG_RATE' => $image['avg_rates'],
           'SUM_RATE' => $image['sum_rates'],
-          'NB_RATES' => (int) $image['nb_rates'],
-          'NB_RATES_TOTAL' => (int) $nb_rates,
+          'NB_RATES' => $image['nb_rates'],
+          'NB_RATES_TOTAL' => $nb_rates,
           'FILE' => $image['file'],
           'rates' => [],
       ];
 
-    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
-        $row_user_id = is_string($row['user_id']) ? $row['user_id'] : '';
-        if (isset($users[$row_user_id])) {
-            $user_rate = $users[$row_user_id];
+    foreach ($rates as $rate_row) {
+        if (isset($users[$rate_row['user_id']])) {
+            $user_rate = $users[$rate_row['user_id']];
         } else {
-            $user_rate = '? ' . $row_user_id;
+            $user_rate = '? ' . $rate_row['user_id'];
         }
-        if (strlen((string) $row['anonymous_id']) > 0) {
-            $user_rate .= '(' . $row['anonymous_id'] . ')';
+        if ($rate_row['anonymous_id'] !== '') {
+            $user_rate .= '(' . $rate_row['anonymous_id'] . ')';
         }
 
-        $row['USER'] = $user_rate;
-        $tpl_image['rates'][] = $row;
+        $tpl_image['rates'][] = [
+            ...$rate_row,
+            'USER' => $user_rate,
+        ];
     }
     $template->append('images', $tpl_image);
 }

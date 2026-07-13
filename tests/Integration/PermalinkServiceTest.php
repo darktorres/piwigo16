@@ -132,5 +132,22 @@ namespace Piwigo\Tests\Integration {
 
             $this->repo->deleteOldPermalink(1, $slug);
         }
+
+        public function test_delete_old_permalink_by_value_removes_a_recorded_history_entry(): void
+        {
+            $slug = 'p17-service-test-' . bin2hex(random_bytes(4));
+            $this->repo->insertOldPermalinkDeleted(1, $slug);
+
+            self::assertTrue($this->service->deleteOldPermalinkByValue($slug));
+            self::assertNull($this->repo->findOldCategoryId($slug));
+        }
+
+        public function test_delete_old_permalink_by_value_returns_false_and_records_an_error_when_unmatched(): void
+        {
+            $result = $this->service->deleteOldPermalinkByValue('never-used-' . bin2hex(random_bytes(4)));
+
+            self::assertFalse($result);
+            self::assertNotSame([], PageState::current()->errors);
+        }
     }
 }

@@ -9,7 +9,11 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-use Piwigo\Admin\updates;
+use Piwigo\Admin\Extensions\CoreUpdateService;
+use Piwigo\Admin\Extensions\ExtensionScanner;
+use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
+use Piwigo\Admin\Extensions\PemCatalog;
+use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Core\AppInfo;
 use Piwigo\Template\Template;
 
@@ -59,8 +63,8 @@ if ($ct_env === 'Official') {
     $upgrade_to = is_string($get_to) ? $get_to : '';
 }
 
-$updates = new updates();
-$new_versions = $updates->get_piwigo_new_versions();
+$core_update_service = new CoreUpdateService(new ZipExtractor());
+$new_versions = $core_update_service->getPiwigoNewVersions();
 
 // +-----------------------------------------------------------------------+
 // |                                Step 0                                 |
@@ -93,7 +97,7 @@ if ($step == 1) {
 // +-----------------------------------------------------------------------+
 if ($step == 2 and is_webmaster()) {
     if (isset($_POST['submit']) and isset($_POST['upgrade_to']) and is_string($_POST['upgrade_to'])) {
-        updates::upgrade_to($_POST['upgrade_to'], $step);
+        $core_update_service->upgradeTo($_POST['upgrade_to'], $step);
     }
 }
 
@@ -102,12 +106,11 @@ if ($step == 2 and is_webmaster()) {
 // +-----------------------------------------------------------------------+
 if ($step == 3 and is_webmaster()) {
     if (isset($_POST['submit']) and isset($_POST['upgrade_to']) and is_string($_POST['upgrade_to'])) {
-        updates::upgrade_to($_POST['upgrade_to'], $step);
+        $core_update_service->upgradeTo($_POST['upgrade_to'], $step);
     }
 
-    $updates->get_merged_extensions($upgrade_to);
-    $updates->get_server_extensions($upgrade_to);
-    $template->assign('missing', $updates->missing);
+    $extension_update_checker = new ExtensionUpdateChecker(new ExtensionScanner(), new PemCatalog(new ZipExtractor()));
+    $template->assign('missing', $extension_update_checker->getMissingExtensions($upgrade_to));
 }
 
 // +-----------------------------------------------------------------------+

@@ -178,4 +178,64 @@ final class ActivityRepositoryTest extends IntegrationTestCase
         // newest first
         self::assertGreaterThan($rows[count($rows) - 1]['activity_id'], $rows[0]['activity_id']);
     }
+
+    public function test_find_system_object_log_with_usernames_uses_the_real_username_when_performed_by_is_a_real_user(): void
+    {
+        $this->repo->insertMany([[
+            'object' => 'system',
+            'objectId' => 0,
+            'action' => 'maintenance',
+            'performedBy' => 1,
+            'sessionIdx' => 'sess-1',
+            'ipAddress' => null,
+            'occuredOn' => '2026-07-12 00:00:00',
+            'details' => 'a:0:{}',
+            'userAgent' => null,
+        ]]);
+
+        try {
+            $rows = $this->repo->findSystemObjectLogWithUsernames('username', 'id');
+
+            self::assertCount(1, $rows);
+            self::assertSame('fixture_admin', $rows[0]['username']);
+        } finally {
+            $this->conn->executeStatement("DELETE FROM " . Tables::activity() . " WHERE object = 'system'");
+        }
+    }
+
+    public function test_find_system_object_log_with_usernames_renders_a_null_performed_by_as_system(): void
+    {
+        // A real, adversarially-verified bug fixed in this same batch (see
+        // ActivityService::record()'s own fix note): activity.performed_by
+        // has an ON DELETE SET NULL foreign key to users.id, and 0 (the
+        // legacy "no known actor" sentinel) is not a valid user id --
+        // writing it throws a real ForeignKeyConstraintViolationException.
+        // null is the column's real "no known actor" value (e.g. a plugin
+        // autoupdate that ran before $user was loaded); it must render as
+        // "System" here, matching the intent the legacy
+        // IF(performed_by = 0, 'System', username) expression could no
+        // longer actually reach once this FK was added.
+        $this->repo->insertMany([[
+            'object' => 'system',
+            'objectId' => 0,
+            'action' => 'update',
+            'performedBy' => null,
+            'sessionIdx' => 'sess-1',
+            'ipAddress' => null,
+            'occuredOn' => '2026-07-12 00:00:00',
+            'details' => 'a:0:{}',
+            'userAgent' => null,
+        ]]);
+
+        try {
+            $rows = $this->repo->findSystemObjectLogWithUsernames('username', 'id');
+
+            self::assertCount(1, $rows);
+            self::assertSame('update', $rows[0]['action']);
+            self::assertNull($rows[0]['performed_by']);
+            self::assertSame('System', $rows[0]['username']);
+        } finally {
+            $this->conn->executeStatement("DELETE FROM " . Tables::activity() . " WHERE object = 'system'");
+        }
+    }
 }

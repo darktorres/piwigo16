@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Template\Template;
@@ -686,21 +687,21 @@ class updates
             }
 
             if ((bool) @filesize($filename)) {
-                include_once PHPWG_ROOT_PATH . 'admin/include/functions_zip.inc.php';
-                if ((bool) ($result = zip_extract($filename, PHPWG_ROOT_PATH, $remove_path, 0755))) {
+                $zip_extractor = new ZipExtractor();
+                if (($result = $zip_extractor->extract($filename, PHPWG_ROOT_PATH, $remove_path, 0755)) !== null) {
                     // Check if all files were extracted
                     $error = '';
                     foreach ($result as $extract) {
                         if (! in_array($extract['status'], ['ok', 'filtered', 'already_a_directory'])) {
                             // Try to change chmod and extract
                             if (@chmod(PHPWG_ROOT_PATH . $extract['filename'], 0777)
-                              and (bool) ($res = zip_extract(
+                              and ($res = $zip_extractor->extract(
                                   $filename,
                                   PHPWG_ROOT_PATH,
                                   $remove_path,
                                   0755,
                                   $remove_path . '/' . $extract['filename']
-                              ))
+                              )) !== null
                               and isset($res[0]['status'])
                               and $res[0]['status'] == 'ok') {
                                 continue;

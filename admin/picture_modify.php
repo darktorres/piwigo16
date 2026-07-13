@@ -11,10 +11,12 @@ declare(strict_types=1);
 
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\SrcImage;
 use Piwigo\Template\Template;
+use Piwigo\Users\UserRepository;
 
 if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
@@ -327,15 +329,10 @@ $added_by = 'N/A';
 $user_fields = is_array($conf['user_fields']) ? $conf['user_fields'] : [];
 $uf_username = is_string($user_fields['username'] ?? null) ? $user_fields['username'] : '';
 $uf_id = is_string($user_fields['id'] ?? null) ? $user_fields['id'] : '';
-$row_added_by_str = is_numeric($row['added_by']) ? (string) (int) $row['added_by'] : '0';
-$query = '
-SELECT ' . $uf_username . ' AS username
-  FROM ' . Tables::users() . '
-  WHERE ' . $uf_id . ' = ' . $row_added_by_str . '
-;';
-$result = pwg_query($query);
-while ((bool) ($user_row = pwg_db_fetch_assoc($result))) {
-    $row['added_by'] = $user_row['username'];
+$row_added_by = is_numeric($row['added_by']) ? (int) $row['added_by'] : 0;
+$added_by_username = new UserRepository(DbConnection::build())->findUsernameById($row_added_by, $uf_id, $uf_username);
+if ($added_by_username !== null) {
+    $row['added_by'] = $added_by_username;
 }
 
 $row_file = is_string($row['file']) ? $row['file'] : '';

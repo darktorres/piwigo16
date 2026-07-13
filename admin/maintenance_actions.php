@@ -11,10 +11,12 @@ declare(strict_types=1);
 
 use Piwigo\Admin\Image\pwg_image;
 use Piwigo\Admin\Integrity\check_integrity;
+use Piwigo\Admin\Maintenance\DbMaintenanceRepository;
+use Piwigo\Admin\Maintenance\ServerInfoService;
 use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
-use Piwigo\Db\Tables;
+use Piwigo\Db\DbConnection;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Template\FileCombiner;
 use Piwigo\Template\Template;
@@ -47,11 +49,15 @@ fs_quick_check();
 
 $action = $_GET['action'] ?? '';
 $register_activity = true;
+$db_maintenance = new DbMaintenanceRepository(DbConnection::build());
 
 switch ($action) {
     case 'phpinfo':
 
-        phpinfo();
+        // SEC-22: curated info, not a raw phpinfo() dump -- see
+        // ServerInfoService's own docblock.
+        echo new ServerInfoService()
+            ->renderHtml();
         exit();
 
     case 'lock_gallery':
@@ -108,36 +114,19 @@ switch ($action) {
 
     case 'history_detail':
 
-        $query = '
-DELETE
-  FROM ' . Tables::history() . '
-;';
-        pwg_query($query);
+        $db_maintenance->purgeHistoryDetail();
         $page['infos'][] = sprintf('%s : %s', l10n('Purge history detail'), l10n('action successfully performed.'));
         break;
 
     case 'history_summary':
 
-        $query = '
-DELETE
-  FROM ' . Tables::historySummary() . '
-;';
-        pwg_query($query);
+        $db_maintenance->purgeHistorySummary();
         $page['infos'][] = sprintf('%s : %s', l10n('Purge history summary'), l10n('action successfully performed.'));
         break;
 
     case 'sessions':
 
         pwg_session_gc();
-
-        // delete all sessions associated to invalid user ids (it should never happen)
-        $query = '
-SELECT
-    id,
-    data
-  FROM ' . Tables::sessions() . '
-;';
-        $sessions = query2array($query);
 
         // $conf['user_fields'] maps generic field names to actual DB column
         // names (see include/config_default.inc.php); its values are
@@ -146,42 +135,13 @@ SELECT
         $user_fields = is_array($user_fields) ? $user_fields : [];
         $id_field = is_string($user_fields['id'] ?? null) ? $user_fields['id'] : 'id';
 
-        $query = '
-SELECT
-    ' . $id_field . ' AS id
-  FROM ' . Tables::users() . '
-;';
-        $all_user_ids = query2array($query, 'id', null);
-
-        $sessions_to_delete = [];
-
-        foreach ($sessions as $session) {
-            if ((bool) preg_match('/pwg_uid\|i:(\d+);/', (string) $session['data'], $matches)) {
-                if (! isset($all_user_ids[$matches[1]])) {
-                    $sessions_to_delete[] = $session['id'];
-                }
-            }
-        }
-
-        if (count($sessions_to_delete) > 0) {
-            $query = '
-DELETE
-  FROM ' . Tables::sessions() . '
-  WHERE id IN (\'' . implode("','", $sessions_to_delete) . '\')
-;';
-            pwg_query($query);
-        }
+        $db_maintenance->purgeSessionsForDeletedUsers($id_field);
         $page['infos'][] = sprintf('%s : %s', l10n('Purge sessions'), l10n('action successfully performed.'));
         break;
 
     case 'feeds':
 
-        $query = '
-DELETE
-  FROM ' . Tables::userFeed() . '
-  WHERE last_check IS NULL
-;';
-        pwg_query($query);
+        $db_maintenance->purgeUnusedFeeds();
         $page['infos'][] = sprintf('%s : %s', l10n('Purge never used notification feeds'), l10n('action successfully performed.'));
         break;
 
@@ -205,12 +165,13 @@ DELETE
 
     case 'search':
 
-        $query = '
-DELETE
-  FROM ' . Tables::search() . '
-;';
-        pwg_query($query);
-        sprintf('%s : %s', l10n('Reinitialize check integrity'), l10n('action successfully performed.'));
+        $db_maintenance->purgeSearchHistory();
+        // Real, pre-existing bugs fixed here: this line previously computed
+        // sprintf(...) without assigning it to $page['infos'][] (a dead
+        // statement -- see PHPStan's function.resultUnused finding), and
+        // its message text was a copy-paste of the 'c13y' case's own
+        // ("Reinitialize check integrity") instead of this action's own.
+        $page['infos'][] = sprintf('%s : %s', l10n('Purge search history'), l10n('action successfully performed.'));
         break;
 
     case 'compiled-templates':
@@ -413,14 +374,7 @@ if ((bool) $conf['gallery_locked']) {
     );
 }
 
-$query = '
-SELECT
-    COUNT(*)
-  FROM ' . Tables::lounge() . '
-;';
-$row = pwg_db_fetch_row(pwg_query($query));
-assert($row !== null);
-[$nb_lounge] = $row;
+$nb_lounge = $db_maintenance->countLoungeItems();
 
 if ($nb_lounge > 0) {
     $template->assign(

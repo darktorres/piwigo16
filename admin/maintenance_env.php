@@ -10,10 +10,12 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\Integrity\check_integrity;
+use Piwigo\Admin\Maintenance\DbMaintenanceRepository;
+use Piwigo\Admin\Maintenance\ServerInfoService;
 use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\AppInfo;
-use Piwigo\Db\Tables;
+use Piwigo\Db\DbConnection;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Template\FileCombiner;
 use Piwigo\Template\Template;
@@ -49,11 +51,15 @@ if (isset($_GET['action'])) {
 // +-----------------------------------------------------------------------+
 
 $action = $_GET['action'] ?? '';
+$db_maintenance = new DbMaintenanceRepository(DbConnection::build());
 
 switch ($action) {
     case 'phpinfo':
 
-        phpinfo();
+        // SEC-22: curated info, not a raw phpinfo() dump -- see
+        // ServerInfoService's own docblock.
+        echo new ServerInfoService()
+            ->renderHtml();
         exit();
 
     case 'lock_gallery':
@@ -100,76 +106,30 @@ switch ($action) {
 
     case 'history_detail':
 
-        $query = '
-DELETE
-  FROM ' . Tables::history() . '
-;';
-        pwg_query($query);
+        $db_maintenance->purgeHistoryDetail();
         break;
 
     case 'history_summary':
 
-        $query = '
-DELETE
-  FROM ' . Tables::historySummary() . '
-;';
-        pwg_query($query);
+        $db_maintenance->purgeHistorySummary();
         break;
 
     case 'sessions':
 
         pwg_session_gc();
 
-        // delete all sessions associated to invalid user ids (it should never happen)
-        $query = '
-SELECT
-    id,
-    data
-  FROM ' . Tables::sessions() . '
-;';
-        $sessions = query2array($query);
-
         // $conf['user_fields'] maps generic field names to actual DB column
         // names (see config_default.inc.php).
         /** @var array<string, string> $user_fields */
         $user_fields = $conf['user_fields'];
 
-        $query = '
-SELECT
-    ' . $user_fields['id'] . ' AS id
-  FROM ' . Tables::users() . '
-;';
-        $all_user_ids = query2array($query, 'id', null);
-
-        $sessions_to_delete = [];
-
-        foreach ($sessions as $session) {
-            if ((bool) preg_match('/pwg_uid\|i:(\d+);/', (string) $session['data'], $matches)) {
-                if (! isset($all_user_ids[$matches[1]])) {
-                    $sessions_to_delete[] = $session['id'];
-                }
-            }
-        }
-
-        if (count($sessions_to_delete) > 0) {
-            $query = '
-DELETE
-  FROM ' . Tables::sessions() . '
-  WHERE id IN (\'' . implode("','", $sessions_to_delete) . '\')
-;';
-            pwg_query($query);
-        }
+        $db_maintenance->purgeSessionsForDeletedUsers($user_fields['id']);
 
         break;
 
     case 'feeds':
 
-        $query = '
-DELETE
-  FROM ' . Tables::userFeed() . '
-  WHERE last_check IS NULL
-;';
-        pwg_query($query);
+        $db_maintenance->purgeUnusedFeeds();
         break;
 
     case 'database':
@@ -185,11 +145,7 @@ DELETE
 
     case 'search':
 
-        $query = '
-DELETE
-  FROM ' . Tables::search() . '
-;';
-        pwg_query($query);
+        $db_maintenance->purgeSearchHistory();
         break;
 
     case 'compiled-templates':

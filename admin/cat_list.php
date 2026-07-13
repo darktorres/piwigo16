@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\Tables;
@@ -48,78 +49,6 @@ $sort_orders = [
     'date_available DESC' => l10n('Date posted, new &rarr; old') . ' ' . l10n('(determined from photos)'),
     'date_available ASC' => l10n('Date posted, old &rarr; new') . ' ' . l10n('(determined from photos)'),
 ];
-
-// +-----------------------------------------------------------------------+
-// |                               functions                               |
-// +-----------------------------------------------------------------------+
-/**
- * @param array<int|string> $ids
- * @return array<int|string, mixed>
- */
-function get_categories_ref_date(array $ids, string $field = 'date_available', string $minmax = 'max'): array
-{
-    // we need to work on the whole tree under each category, even if we don't
-    // want to sort sub categories
-    $category_ids = get_subcat_ids($ids);
-
-    // search for the reference date of each album
-    $query = '
-SELECT
-    category_id,
-    ' . $minmax . '(' . $field . ') as ref_date
-  FROM ' . Tables::imageCategory() . '
-    JOIN ' . Tables::images() . ' ON image_id = id
-  WHERE category_id IN (' . implode(',', $category_ids) . ')
-  GROUP BY category_id
-;';
-    $ref_dates = query2array($query, 'category_id', 'ref_date');
-
-    // the iterate on all albums (having a ref_date or not) to find the
-    // reference_date, with a search on sub-albums
-    $query = '
-SELECT
-    id,
-    uppercats
-  FROM ' . Tables::categories() . '
-  WHERE id IN (' . implode(',', $category_ids) . ')
-;';
-    $uppercats_of = query2array($query, 'id', 'uppercats');
-
-    foreach (array_keys($uppercats_of) as $cat_id) {
-        // find the subcats
-        $subcat_ids = [];
-
-        foreach ($uppercats_of as $id => $uppercats) {
-            if (! is_string($uppercats)) {
-                continue;
-            }
-            if ((bool) preg_match('/(^|,)' . $cat_id . '(,|$)/', $uppercats)) {
-                $subcat_ids[] = $id;
-            }
-        }
-
-        $to_compare = [];
-        foreach ($subcat_ids as $id) {
-            if (isset($ref_dates[$id])) {
-                $to_compare[] = $ref_dates[$id];
-            }
-        }
-
-        if (count($to_compare) > 0) {
-            $ref_dates[$cat_id] = $minmax == 'max' ? max($to_compare) : min($to_compare);
-        } else {
-            $ref_dates[$cat_id] = null;
-        }
-    }
-
-    // only return the list of $ids, not the sub-categories
-    $return = [];
-    foreach ($ids as $id) {
-        $return[$id] = $ref_dates[$id];
-    }
-
-    return $return;
-}
 
 // +-----------------------------------------------------------------------+
 // |                            initialization                             |
@@ -174,10 +103,8 @@ if (isset($_GET['delete']) and is_numeric($_GET['delete'])) {
 // request to add a virtual category
 elseif (isset($_POST['submitAdd'])) {
     $virtual_name = is_string($_POST['virtual_name'] ?? null) ? $_POST['virtual_name'] : '';
-    $output_create = create_virtual_category(
-        $virtual_name,
-        $parent_id
-    );
+    $output_create = new CategoryAdminService()
+        ->createVirtualCategory($virtual_name, $parent_id);
 
     invalidate_user_cache();
     // $page['errors']/$page['infos'] are always initialized to an array by
@@ -186,11 +113,11 @@ elseif (isset($_POST['submitAdd'])) {
     // admin/include/functions.php).
     $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
     $page['infos'] = is_array($page['infos'] ?? null) ? $page['infos'] : [];
-    if (isset($output_create['error'])) {
-        $page['errors'][] = $output_create['error'];
+    if (! $output_create->success) {
+        $page['errors'][] = $output_create->message;
     } else {
-        $edit_url = get_root_url() . 'admin.php?page=album-' . $output_create['id'];
-        $page['infos'][] = $output_create['info'] . ' <a class="icon-pencil" href="' . $edit_url . '">' . l10n('Edit album') . '</a>';
+        $edit_url = get_root_url() . 'admin.php?page=album-' . $output_create->categoryId;
+        $page['infos'][] = $output_create->message . ' <a class="icon-pencil" href="' . $edit_url . '">' . l10n('Edit album') . '</a>';
     }
 }
 // +-----------------------------------------------------------------------+

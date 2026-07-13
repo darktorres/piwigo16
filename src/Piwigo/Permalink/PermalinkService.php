@@ -146,4 +146,26 @@ final class PermalinkService
 
         return true;
     }
+
+    /**
+     * Permanently deletes an old-permalink history row by its permalink
+     * value. Returns true on success, appending a $page['errors'] entry
+     * (same global-bridge convention as deleteCatPermalink()/
+     * setCatPermalink() above) and returning false if nothing matched.
+     */
+    public function deleteOldPermalinkByValue(string $permalink): bool
+    {
+        /** @var array<string, mixed> $page */
+        global $page;
+
+        $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
+
+        if (! $this->repo->deleteOldPermalinkByValue($permalink)) {
+            $page['errors'][] = l10n('Cannot delete the old permalink !');
+
+            return false;
+        }
+
+        return true;
+    }
 }

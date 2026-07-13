@@ -11,7 +11,11 @@ declare(strict_types=1);
 
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
 use Piwigo\Template\Template;
 
 if (! defined('IN_ADMIN')) {
@@ -45,7 +49,7 @@ $cat_true = isset($_POST['cat_true']) && is_array($_POST['cat_true'])
     ? array_filter($_POST['cat_true'], is_string(...))
     : [];
 $cat_false = isset($_POST['cat_false']) && is_array($_POST['cat_false'])
-    ? array_map(intval(...), array_filter($_POST['cat_false'], is_numeric(...)))
+    ? array_values(array_map(intval(...), array_filter($_POST['cat_false'], is_numeric(...))))
     : [];
 
 // +-----------------------------------------------------------------------+
@@ -62,20 +66,20 @@ if (isset($_GET['user_id']) and is_numeric($_GET['user_id'])) {
 // |                                updates                                |
 // +-----------------------------------------------------------------------+
 
+$permission_service = new PermissionService(
+    new PermissionRepository(DbConnection::build()),
+    new GroupRepository(DbConnection::build())
+);
+
 if (isset($_POST['falsify'])
     and count($cat_true) > 0) {
     // if you forbid access to a category, all sub-categories become
     // automatically forbidden
-    $subcats = get_subcat_ids($cat_true);
-    $query = '
-DELETE FROM ' . Tables::userAccess() . '
-  WHERE user_id = ' . $page['user'] . '
-    AND cat_id IN (' . implode(',', $subcats) . ')
-;';
-    pwg_query($query);
+    $subcats = array_map(intval(...), get_subcat_ids($cat_true));
+    $permission_service->removeUserAccess($page['user'], $subcats);
 } elseif (isset($_POST['trueify'])
     and count($cat_false) > 0) {
-    add_permission_on_category($cat_false, $page['user']);
+    $permission_service->grantUserAccess($page['user'], $cat_false);
 }
 
 // +-----------------------------------------------------------------------+

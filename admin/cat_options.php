@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\tabsheet;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ValidationPattern;
@@ -54,43 +55,9 @@ if (isset($_POST['falsify'])
         }
     }
 
-    switch ($_GET['section']) {
-        case 'comments':
-
-            $query = '
-UPDATE ' . Tables::categories() . '
-  SET commentable = \'false\'
-  WHERE id IN (' . implode(',', $cat_true) . ')
-;';
-            pwg_query($query);
-            break;
-
-        case 'visible':
-
-            set_cat_visible($cat_true, 'false');
-            break;
-
-        case 'status':
-
-            set_cat_status($cat_true, 'private');
-            break;
-
-        case 'representative':
-
-            $query = '
-UPDATE ' . Tables::categories() . '
-  SET representative_picture_id = NULL
-  WHERE id IN (' . implode(',', $cat_true) . ')
-;';
-            pwg_query($query);
-            break;
-
-    }
-
-    pwg_activity('album', $cat_true, 'edit', [
-        'section' => $_GET['section'],
-        'action' => 'falsify',
-    ]);
+    $section_param = $_GET['section'] ?? '';
+    new CategoryAdminService()
+        ->setCategoryOption($cat_true, is_string($section_param) ? $section_param : '', false);
 } elseif (isset($_POST['trueify'])
          and isset($_POST['cat_false'])
          and is_array($_POST['cat_false'])
@@ -102,40 +69,9 @@ UPDATE ' . Tables::categories() . '
         }
     }
 
-    switch ($_GET['section']) {
-        case 'comments':
-
-            $query = '
-UPDATE ' . Tables::categories() . '
-  SET commentable = \'true\'
-  WHERE id IN (' . implode(',', $cat_false) . ')
-;';
-            pwg_query($query);
-            break;
-
-        case 'visible':
-
-            set_cat_visible($cat_false, 'true');
-            break;
-
-        case 'status':
-
-            set_cat_status($cat_false, 'public');
-            break;
-
-        case 'representative':
-
-            // theoretically, all categories in $cat_false contain at
-            // least one element, so Piwigo can find a representant.
-            set_random_representant($cat_false);
-            break;
-
-    }
-
-    pwg_activity('album', $cat_false, 'edit', [
-        'section' => $_GET['section'],
-        'action' => 'trueify',
-    ]);
+    $section_param = $_GET['section'] ?? '';
+    new CategoryAdminService()
+        ->setCategoryOption($cat_false, is_string($section_param) ? $section_param : '', true);
 }
 
 // +-----------------------------------------------------------------------+

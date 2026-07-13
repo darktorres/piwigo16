@@ -25,7 +25,14 @@ if (! (bool) $conf['enable_extensions_install'] and ! (bool) $conf['enable_core_
 
 $my_base_url = get_root_url() . 'admin.php?page=updates';
 
+// SECURITY: unlike plugins.php/themes.php/languages.php's own tab dispatch,
+// this file never validated $_GET['tab'] before splicing it into the
+// include path below -- an authenticated admin could reach
+// `include admin/updates_<tab>.php` with an arbitrary $tab (e.g.
+// `../../include/functions`), a real local file inclusion, not just a
+// hypothetical one. Fixed to match the sibling files' own allowlist.
 /** @var array<string, mixed> $page */
+check_input_parameter('tab', $_GET, false, '/^(pwg|ext)$/');
 if (isset($_GET['tab']) && is_string($_GET['tab'])) {
     $page['tab'] = $_GET['tab'];
 } else {

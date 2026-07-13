@@ -10,7 +10,10 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Permalink\PermalinkRepository;
+use Piwigo\Permalink\PermalinkService;
 use Piwigo\Template\Template;
 
 /**
@@ -110,18 +113,9 @@ if (isset($_POST['set_permalink']) and $post_cat_id > 0) {
     $selected_cat = [$post_cat_id];
 } elseif (isset($_GET['delete_permanent'])) {
     check_pwg_token();
-    $delete_permanent = is_string($_GET['delete_permanent']) ? $_GET['delete_permanent'] : null;
-    $query = '
-DELETE FROM ' . Tables::oldPermalinks() . '
-  WHERE permalink=\'' . pwg_db_real_escape_string($delete_permanent) . '\'
-  LIMIT 1';
-    $result = pwg_query($query);
-    if (pwg_db_changes() == 0) {
-        if (! is_array($page['errors'] ?? null)) {
-            $page['errors'] = [];
-        }
-        $page['errors'][] = l10n('Cannot delete the old permalink !');
-    }
+    $delete_permanent = is_string($_GET['delete_permanent']) ? $_GET['delete_permanent'] : '';
+    new PermalinkService(new PermalinkRepository(DbConnection::build()))
+        ->deleteOldPermalinkByValue($delete_permanent);
 }
 
 $template->set_filename('permalinks', 'permalinks.tpl');

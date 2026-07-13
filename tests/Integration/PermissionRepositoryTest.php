@@ -86,4 +86,26 @@ final class PermissionRepositoryTest extends IntegrationTestCase
 
         self::assertSame([1], $this->repo->findDirectlyAuthorizedCategoryIds(2));
     }
+
+    public function test_delete_user_access_removes_only_the_given_categories(): void
+    {
+        $this->conn->executeStatement(
+            'INSERT INTO ' . Tables::userAccess() . ' (user_id, cat_id) VALUES (2, 1), (2, 2)'
+        );
+
+        $this->repo->deleteUserAccess(2, [1]);
+
+        self::assertSame([2], $this->repo->findDirectlyAuthorizedCategoryIds(2));
+    }
+
+    public function test_delete_user_access_with_an_empty_id_list_does_nothing(): void
+    {
+        $this->conn->executeStatement(
+            'INSERT INTO ' . Tables::userAccess() . ' (user_id, cat_id) VALUES (2, 1)'
+        );
+
+        $this->repo->deleteUserAccess(2, []);
+
+        self::assertSame([1], $this->repo->findDirectlyAuthorizedCategoryIds(2));
+    }
 }

@@ -45,6 +45,16 @@ final class UserRepositoryTest extends IntegrationTestCase
         self::assertFalse($this->repo->findIdByUsername('does-not-exist', 'id', 'username'));
     }
 
+    public function test_find_username_by_id_returns_a_fixture_user(): void
+    {
+        self::assertSame('fixture_admin', $this->repo->findUsernameById(1, 'id', 'username'));
+    }
+
+    public function test_find_username_by_id_returns_null_for_a_nonexistent_user(): void
+    {
+        self::assertNull($this->repo->findUsernameById(999999, 'id', 'username'));
+    }
+
     public function test_find_id_by_email_returns_a_fixture_user(): void
     {
         self::assertSame(1, $this->repo->findIdByEmail('fixture_admin@example.test', 'id', 'mail_address'));

@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
@@ -53,149 +54,30 @@ if (! empty($_POST)) {
     // the status <select> always submits this field; fall back to an empty
     // string (never matches 'public'/'private') on malformed input
     $post_status = isset($_POST['status']) && is_string($_POST['status']) ? $_POST['status'] : '';
+    $current_status = is_string($category['status']) ? $category['status'] : '';
+    $apply_on_sub = isset($_POST['apply_on_sub']);
 
-    if ($category['status'] != $post_status or ($category['status'] != 'public' and isset($_POST['apply_on_sub']))) {
-        $cat_ids = [$page['cat']];
-        if (isset($_POST['apply_on_sub'])) {
-            $cat_ids = array_merge($cat_ids, get_subcat_ids([$page['cat']]));
-        }
-        set_cat_status($cat_ids, $post_status);
-        $category['status'] = $post_status;
-    }
-
-    if ($post_status == 'private') {
-        //
-        // manage groups
-        //
-        $query = '
-SELECT group_id
-  FROM ' . Tables::groupAccess() . '
-  WHERE cat_id = ' . $page['cat'] . '
-;';
-        // array_from_query()'s own return type is declared array<int|string,
-        // mixed>; narrow to the real int ids (DB values are string|null per
-        // this driver, group_id is a NOT NULL numeric column)
-        $groups_granted = [];
-        foreach (array_from_query($query, 'group_id') as $raw_group_id) {
+    $post_groups = [];
+    if (isset($_POST['groups']) && is_array($_POST['groups'])) {
+        foreach ($_POST['groups'] as $raw_group_id) {
             if (is_numeric($raw_group_id)) {
-                $groups_granted[] = (int) $raw_group_id;
+                $post_groups[] = (int) $raw_group_id;
             }
-        }
-
-        $post_groups = [];
-        if (isset($_POST['groups']) && is_array($_POST['groups'])) {
-            foreach ($_POST['groups'] as $raw_group_id) {
-                if (is_numeric($raw_group_id)) {
-                    $post_groups[] = (int) $raw_group_id;
-                }
-            }
-        }
-
-        //
-        // remove permissions to groups
-        //
-        $deny_groups = array_diff($groups_granted, $post_groups);
-        if (count($deny_groups) > 0) {
-            // if you forbid access to an album, all sub-albums become
-            // automatically forbidden
-            $query = '
-DELETE
-  FROM ' . Tables::groupAccess() . '
-  WHERE group_id IN (' . implode(',', $deny_groups) . ')
-    AND cat_id IN (' . implode(',', get_subcat_ids([$page['cat']])) . ')
-;';
-            pwg_query($query);
-        }
-
-        //
-        // add permissions to groups
-        //
-        $grant_groups = $post_groups;
-        if (count($grant_groups) > 0) {
-            $cat_ids = get_uppercat_ids([$page['cat']]);
-            if (isset($_POST['apply_on_sub'])) {
-                $cat_ids = array_merge($cat_ids, get_subcat_ids([$page['cat']]));
-            }
-
-            $query = '
-SELECT id
-  FROM ' . Tables::categories() . '
-  WHERE id IN (' . implode(',', $cat_ids) . ')
-    AND status = \'private\'
-;';
-            $private_cats = array_from_query($query, 'id');
-
-            $inserts = [];
-            foreach ($private_cats as $cat_id) {
-                foreach ($grant_groups as $group_id) {
-                    $inserts[] = [
-                        'group_id' => $group_id,
-                        'cat_id' => $cat_id,
-                    ];
-                }
-            }
-
-            mass_inserts(
-                Tables::groupAccess(),
-                ['group_id', 'cat_id'],
-                $inserts,
-                [
-                    'ignore' => true,
-                ]
-            );
-        }
-
-        //
-        // users
-        //
-        $query = '
-SELECT user_id
-  FROM ' . Tables::userAccess() . '
-  WHERE cat_id = ' . $page['cat'] . '
-;';
-        // array_from_query()'s own return type is declared array<int|string,
-        // mixed>; narrow to the real int ids (DB values are string|null per
-        // this driver, user_id is a NOT NULL numeric column)
-        $users_granted = [];
-        foreach (array_from_query($query, 'user_id') as $raw_user_id) {
-            if (is_numeric($raw_user_id)) {
-                $users_granted[] = (int) $raw_user_id;
-            }
-        }
-
-        $post_users = [];
-        if (isset($_POST['users']) && is_array($_POST['users'])) {
-            foreach ($_POST['users'] as $raw_user_id) {
-                if (is_numeric($raw_user_id)) {
-                    $post_users[] = (int) $raw_user_id;
-                }
-            }
-        }
-
-        //
-        // remove permissions to users
-        //
-        $deny_users = array_diff($users_granted, $post_users);
-        if (count($deny_users) > 0) {
-            // if you forbid access to an album, all sub-album become automatically
-            // forbidden
-            $query = '
-DELETE
-  FROM ' . Tables::userAccess() . '
-  WHERE user_id IN (' . implode(',', $deny_users) . ')
-    AND cat_id IN (' . implode(',', get_subcat_ids([$page['cat']])) . ')
-;';
-            pwg_query($query);
-        }
-
-        //
-        // add permissions to users
-        //
-        $grant_users = $post_users;
-        if (count($grant_users) > 0) {
-            add_permission_on_category($page['cat'], $grant_users);
         }
     }
+
+    $post_users = [];
+    if (isset($_POST['users']) && is_array($_POST['users'])) {
+        foreach ($_POST['users'] as $raw_user_id) {
+            if (is_numeric($raw_user_id)) {
+                $post_users[] = (int) $raw_user_id;
+            }
+        }
+    }
+
+    new CategoryAdminService()
+        ->setCategoryPermissions($page['cat'], $current_status, $post_status, $apply_on_sub, $post_groups, $post_users);
+    $category['status'] = $post_status;
 
     $template->assign(
         [

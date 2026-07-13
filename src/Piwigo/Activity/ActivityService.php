@@ -116,11 +116,21 @@ final class ActivityService
 
         $rows = [];
         foreach ($objectIds as $loopObjectId) {
-            $performedBy = $user['id'] ?? 0; // on a plugin autoupdate, $user is not yet loaded
-            $performedBy = is_numeric($performedBy) ? (int) $performedBy : 0;
+            // Real, adversarially-verified bug fixed here: activity.performed_by
+            // has an ON DELETE SET NULL foreign key to users.id (confirmed
+            // via a real ForeignKeyConstraintViolationException writing this
+            // batch's own Integration tests) -- 0 is not a valid user id
+            // (AUTO_INCREMENT starts at 1), so the "on a plugin autoupdate,
+            // $user is not yet loaded" case this comment describes would
+            // throw an uncaught exception on every such write, not silently
+            // log "performed by user 0" as originally intended. null is the
+            // column's own real "unknown actor" value, matching the FK's
+            // own semantics for a since-deleted user.
+            $performedBy = $user['id'] ?? null;
+            $performedBy = is_numeric($performedBy) ? (int) $performedBy : null;
 
             if ($action === 'logout') {
-                $performedBy = is_numeric($loopObjectId) ? (int) $loopObjectId : 0;
+                $performedBy = is_numeric($loopObjectId) ? (int) $loopObjectId : null;
             }
 
             $rows[] = [

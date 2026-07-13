@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Logger;
 use Piwigo\Db\Tables;
@@ -406,25 +407,20 @@ UPDATE ' . Tables::userInfos() . '
                 if (is_resource($handle)) {
                     fclose($handle);
                 }
-                include_once PHPWG_ROOT_PATH . 'admin/include/functions_zip.inc.php';
-                if ((bool) ($list = zip_list_filenames($archive))) {
+                $zip_extractor = new ZipExtractor();
+                if (($list = $zip_extractor->listFilenames($archive)) !== null) {
                     // Declared before the loop (rather than relying on
                     // isset($main_filepath) to narrow it after the loop) --
                     // PHPStan doesn't reliably preserve isset()-based
                     // narrowing for a variable only ever conditionally
                     // assigned inside a foreach body.
                     $main_filepath = null;
-                    foreach ($list as $file) {
+                    foreach ($list as $filename) {
                         // we search common.lang.php in archive
-                        if (basename($file['filename']) == 'common.lang.php'
+                        if (basename($filename) == 'common.lang.php'
                           and ($main_filepath === null
-                          or strlen($file['filename']) < strlen($main_filepath))) {
-                            // cast once at assignment (rather than at every
-                            // read site below) since zip_list_filenames()'s
-                            // 'filename' entry is PHPStan-mixed (it comes
-                            // from ZipArchive::statIndex()['name']) but is
-                            // always a real string archive entry name.
-                            $main_filepath = $file['filename'];
+                          or strlen($filename) < strlen($main_filepath))) {
+                            $main_filepath = $filename;
                         }
                     }
 
@@ -440,7 +436,7 @@ UPDATE ' . Tables::userInfos() . '
 
                             $logger->debug(__FUNCTION__ . ', $extract_path = ' . $extract_path);
 
-                            if ((bool) ($result = zip_extract($archive, $extract_path, $root))) {
+                            if (($result = $zip_extractor->extract($archive, $extract_path, $root)) !== null) {
                                 // extraction succeeded; 'ok' if the extracted result
                                 // list doesn't happen to include the main file itself
                                 $status = 'ok';
@@ -464,9 +460,9 @@ UPDATE ' . Tables::userInfos() . '
                                     $extract_path_realpath = realpath($extract_path);
 
                                     // realpath() failing here would mean
-                                    // $extract_path (just populated by the
-                                    // zip_extract() above) doesn't actually
-                                    // exist as a real directory — skip the
+                                    // $extract_path (just populated by
+                                    // ZipExtractor::extract() above) doesn't
+                                    // actually exist as a real directory — skip the
                                     // obsolete-file cleanup rather than risk
                                     // the traversal check below against a
                                     // non-canonical path.

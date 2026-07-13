@@ -31,9 +31,6 @@
       <code><![CDATA[$_GET[$url_param]]]></code>
       <code><![CDATA[$fs_quick_check_period]]></code>
     </InvalidOperand>
-    <UnresolvableInclude>
-      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/' . $page_slug . '.php']]></code>
-    </UnresolvableInclude>
   </file>
   <file src="admin/album.php">
     <InvalidGlobal>
@@ -157,15 +154,9 @@
     <InvalidGlobal>
       <code><![CDATA[global $conf, $page, $template, $user;]]></code>
     </InvalidGlobal>
-    <InvalidOperand>
-      <code><![CDATA[$cat_id]]></code>
-    </InvalidOperand>
     <NoValue>
       <code><![CDATA[$the_place]]></code>
     </NoValue>
-    <PossiblyInvalidArrayOffset>
-      <code><![CDATA[$ref_dates[$id]]]></code>
-    </PossiblyInvalidArrayOffset>
     <PossiblyUndefinedArrayOffset>
       <code><![CDATA[$row['id']]]></code>
     </PossiblyUndefinedArrayOffset>
@@ -190,7 +181,6 @@
       <code><![CDATA[get_pwg_token()]]></code>
       <code><![CDATA[get_root_url()]]></code>
       <code><![CDATA[get_subcat_ids($category_ids)]]></code>
-      <code><![CDATA[get_subcat_ids($numeric_ids)]]></code>
       <code><![CDATA[l10n('Albums')]]></code>
       <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
       <code><![CDATA[pwg_db_fetch_row(pwg_query($query))]]></code>
@@ -198,8 +188,6 @@
       <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[query2array($query)]]></code>
       <code><![CDATA[query2array($query, 'category_id', 'nb_photos')]]></code>
-      <code><![CDATA[query2array($query, 'category_id', 'ref_date')]]></code>
-      <code><![CDATA[query2array($query, 'id', 'uppercats')]]></code>
       <code><![CDATA[query2array($query, 'id', 'uppercats')]]></code>
       <code><![CDATA[remove_accents((string) $row['name'])]]></code>
       <code><![CDATA[save_categories_order($categories)]]></code>
@@ -220,12 +208,6 @@
       <code><![CDATA[global $conf, $page, $template, $user;]]></code>
     </InvalidGlobal>
     <InvalidOperand>
-      <code><![CDATA[((float) $filter_filesize['max'] + 0.1) * 1024]]></code>
-      <code><![CDATA[((float) $filter_filesize['max'] + 0.1) * 1024]]></code>
-      <code><![CDATA[((float) $filter_filesize['min'] - 0.1) * 1024]]></code>
-      <code><![CDATA[((float) $filter_filesize['min'] - 0.1) * 1024]]></code>
-      <code><![CDATA[(float) $filter_dimension['max_ratio'] + 0.01]]></code>
-      <code><![CDATA[(float) $filter_dimension['min_ratio']]]></code>
       <code><![CDATA[(float) $row['filesize'] / 1024]]></code>
       <code><![CDATA[(float) $row['width'] / (float) $row['height'] * 100]]></code>
       <code><![CDATA[floor((float) $row['width'] / (float) $row['height'] * 100) / 100]]></code>
@@ -302,28 +284,10 @@
             )]]></code>
       <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
       <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc(pwg_query($query))]]></code>
-      <code><![CDATA[pwg_db_fetch_row(pwg_query($query))]]></code>
-      <code><![CDATA[pwg_db_get_recent_period_expression(1, $row['date'])]]></code>
       <code><![CDATA[pwg_db_num_rows($result)]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[query2array($query, null, 'element_id')]]></code>
-      <code><![CDATA[query2array($query, null, 'id')]]></code>
-      <code><![CDATA[query2array($query, null, 'id')]]></code>
-      <code><![CDATA[query2array($query, null, 'id')]]></code>
-      <code><![CDATA[query2array($query, null, 'id')]]></code>
-      <code><![CDATA[query2array($query, null, 'id')]]></code>
-      <code><![CDATA[query2array($query, null, 'id')]]></code>
-      <code><![CDATA[query2array($query, null, 'id')]]></code>
-      <code><![CDATA[query2array($query, null, 'id')]]></code>
-      <code><![CDATA[query2array($query, null, 'ids')]]></code>
-      <code><![CDATA[query2array($query, null, 'image_id')]]></code>
-      <code><![CDATA[query2array($query, null, 'image_id')]]></code>
-      <code><![CDATA[query2array($query, null, 'image_id')]]></code>
       <code><![CDATA[redirect(get_root_url() . 'admin.php?page=' . $get_page)]]></code>
       <code><![CDATA[redirect(get_root_url() . 'admin.php?page=' . $get_page)]]></code>
       <code><![CDATA[redirect(get_root_url() . 'admin.php?page=' . $get_page)]]></code>
@@ -331,7 +295,7 @@
       <code><![CDATA[trigger_change('batch_manager_perform_filters', $filter_sets, $bulk_filter)]]></code>
       <code><![CDATA[trigger_change('batch_manager_register_filters', $_SESSION['bulk_manager_filter'])]]></code>
       <code><![CDATA[trigger_change('batch_manager_url_filter', $url_filter, $filter)]]></code>
-      <code><![CDATA[trigger_change('perform_batch_manager_prefilters', $filter_sets, $bulk_filter['prefilter'])]]></code>
+      <code><![CDATA[trigger_change('perform_batch_manager_prefilters', $filter_sets, $prefilter)]]></code>
     </UndefinedFunction>
     <UnresolvableInclude>
       <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/batch_manager_' . $page['tab'] . '.php']]></code>
@@ -604,11 +568,11 @@
       <code><![CDATA[global $conf, $page, $template;]]></code>
     </InvalidGlobal>
     <InvalidOperand>
-      <code><![CDATA[$cat_id]]></code>
+      <code><![CDATA[$output_create->categoryId]]></code>
     </InvalidOperand>
-    <PossiblyInvalidArrayOffset>
-      <code><![CDATA[$ref_dates[$id]]]></code>
-    </PossiblyInvalidArrayOffset>
+    <PossiblyInvalidArgument>
+      <code><![CDATA[$virtual_name]]></code>
+    </PossiblyInvalidArgument>
     <PossiblyUndefinedArrayOffset>
       <code><![CDATA[$_POST['virtual_name']]]></code>
       <code><![CDATA[$page['errors']]]></code>
@@ -626,10 +590,6 @@
       <code><![CDATA[check_input_parameter('parent_id', $_GET, false, ValidationPattern::ID)]]></code>
       <code><![CDATA[check_pwg_token()]]></code>
       <code><![CDATA[check_status(AccessLevel::Administrator)]]></code>
-      <code><![CDATA[create_virtual_category(
-        $virtual_name,
-        $parent_id
-    )]]></code>
       <code><![CDATA[delete_categories([(int) $_GET['delete']], $photo_deletion_mode)]]></code>
       <code><![CDATA[get_cat_display_name_from_id(
         $parent_id,
@@ -641,7 +601,6 @@
       <code><![CDATA[get_root_url()]]></code>
       <code><![CDATA[get_root_url()]]></code>
       <code><![CDATA[get_root_url()]]></code>
-      <code><![CDATA[get_subcat_ids($ids)]]></code>
       <code><![CDATA[hash_from_query($query, 'id')]]></code>
       <code><![CDATA[invalidate_user_cache()]]></code>
       <code><![CDATA[invalidate_user_cache()]]></code>
@@ -665,8 +624,6 @@
               ]
           )]]></code>
       <code><![CDATA[query2array($query, 'category_id', 'nb_photos')]]></code>
-      <code><![CDATA[query2array($query, 'category_id', 'ref_date')]]></code>
-      <code><![CDATA[query2array($query, 'id', 'uppercats')]]></code>
       <code><![CDATA[query2array($query, 'id', 'uppercats')]]></code>
       <code><![CDATA[redirect($redirect_url)]]></code>
       <code><![CDATA[trigger_change(
@@ -822,22 +779,6 @@
       <code><![CDATA[l10n('Unlocked')]]></code>
       <code><![CDATA[l10n('randomly represented')]]></code>
       <code><![CDATA[l10n('singly represented')]]></code>
-      <code><![CDATA[pwg_activity('album', $cat_false, 'edit', [
-        'section' => $_GET['section'],
-        'action' => 'trueify',
-    ])]]></code>
-      <code><![CDATA[pwg_activity('album', $cat_true, 'edit', [
-        'section' => $_GET['section'],
-        'action' => 'falsify',
-    ])]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[set_cat_status($cat_false, 'public')]]></code>
-      <code><![CDATA[set_cat_status($cat_true, 'private')]]></code>
-      <code><![CDATA[set_cat_visible($cat_false, 'true')]]></code>
-      <code><![CDATA[set_cat_visible($cat_true, 'false')]]></code>
-      <code><![CDATA[set_random_representant($cat_false)]]></code>
     </UndefinedFunction>
     <UnresolvableInclude>
       <code><![CDATA[include_once PHPWG_ROOT_PATH . 'admin/include/functions.php']]></code>
@@ -848,11 +789,7 @@
       <code><![CDATA[global $admin_album_base_url, $category, $conf, $template, $page;]]></code>
     </InvalidGlobal>
     <UndefinedFunction>
-      <code><![CDATA[add_permission_on_category($page['cat'], $grant_users)]]></code>
       <code><![CDATA[array_from_query($query, 'group_id')]]></code>
-      <code><![CDATA[array_from_query($query, 'group_id')]]></code>
-      <code><![CDATA[array_from_query($query, 'id')]]></code>
-      <code><![CDATA[array_from_query($query, 'user_id')]]></code>
       <code><![CDATA[array_from_query($query, 'user_id')]]></code>
       <code><![CDATA[check_pwg_token()]]></code>
       <code><![CDATA[check_status(AccessLevel::Administrator)]]></code>
@@ -863,25 +800,9 @@
         )]]></code>
       <code><![CDATA[get_pwg_token()]]></code>
       <code><![CDATA[get_root_url()]]></code>
-      <code><![CDATA[get_subcat_ids([$page['cat']])]]></code>
-      <code><![CDATA[get_subcat_ids([$page['cat']])]]></code>
-      <code><![CDATA[get_subcat_ids([$page['cat']])]]></code>
-      <code><![CDATA[get_subcat_ids([$page['cat']])]]></code>
-      <code><![CDATA[get_uppercat_ids([$page['cat']])]]></code>
       <code><![CDATA[l10n('Album updated successfully')]]></code>
-      <code><![CDATA[mass_inserts(
-                Tables::groupAccess(),
-                ['group_id', 'cat_id'],
-                $inserts,
-                [
-                    'ignore' => true,
-                ]
-            )]]></code>
       <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[set_cat_status($cat_ids, $post_status)]]></code>
       <code><![CDATA[simple_hash_from_query($query, 'id', 'name')]]></code>
       <code><![CDATA[simple_hash_from_query($query, 'id', 'username')]]></code>
     </UndefinedFunction>
@@ -1065,7 +986,6 @@
     $category['uppercats'],
     get_root_url() . 'admin.php?page=album-'
 )]]></code>
-      <code><![CDATA[get_cat_info((int) $page['category_id'])]]></code>
       <code><![CDATA[get_filename_wo_extension($row['file'])]]></code>
       <code><![CDATA[get_query_string_diff([])]]></code>
       <code><![CDATA[get_root_url()]]></code>
@@ -1088,12 +1008,9 @@
       <code><![CDATA[l10n('Visits, high &rarr; low')]]></code>
       <code><![CDATA[l10n('Visits, low &rarr; high')]]></code>
       <code><![CDATA[page_not_found('Requested album does not exist')]]></code>
-      <code><![CDATA[page_not_found('Requested album does not exist')]]></code>
       <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
       <code><![CDATA[pwg_db_fetch_assoc(pwg_query($query))]]></code>
       <code><![CDATA[pwg_db_num_rows($result)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[save_images_order(
@@ -1212,9 +1129,6 @@
     <PossiblyUndefinedVariable>
       <code><![CDATA[$_GET]]></code>
     </PossiblyUndefinedVariable>
-    <RiskyTruthyFalsyComparison>
-      <code><![CDATA[empty($row)]]></code>
-    </RiskyTruthyFalsyComparison>
     <UndefinedFunction>
       <code><![CDATA[check_input_parameter('filter_image_id', $_GET, false, '/^\d+$/')]]></code>
       <code><![CDATA[check_input_parameter('filter_ip', $_GET, false, '/^[0-9.]+$/')]]></code>
@@ -1235,10 +1149,8 @@
       <code><![CDATA[l10n('History')]]></code>
       <code><![CDATA[l10n('Hoverbox display')]]></code>
       <code><![CDATA[l10n('No display')]]></code>
-      <code><![CDATA[pwg_db_fetch_row(pwg_query($query))]]></code>
       <code><![CDATA[pwg_get_cookie_var('display_thumbnail', 'no_display_thumbnail')]]></code>
       <code><![CDATA[pwg_now()]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
     </UndefinedFunction>
     <UnresolvableInclude>
       <code><![CDATA[include_once PHPWG_ROOT_PATH . 'admin/include/functions.php']]></code>
@@ -1937,6 +1849,7 @@
   <file src="admin/include/functions_notification_by_mail.inc.php">
     <InvalidGlobal>
       <code><![CDATA[global $conf;]]></code>
+      <code><![CDATA[global $env_nbm;]]></code>
     </InvalidGlobal>
     <InvalidOperand>
       <code><![CDATA[intval(ini_get('max_execution_time')) * $nbm_max_treatment_timeout_percent]]></code>
@@ -2136,164 +2049,18 @@
     </UndefinedFunction>
   </file>
   <file src="admin/include/functions_upload.inc.php">
-    <ArgumentTypeCoercion>
-      <code><![CDATA[$pattern]]></code>
-    </ArgumentTypeCoercion>
-    <InvalidArrayAccess>
-      <code><![CDATA[$AO[0]]]></code>
-      <code><![CDATA[$FO[0]]]></code>
-      <code><![CDATA[$O[0]]]></code>
-    </InvalidArrayAccess>
-    <InvalidGlobal>
-      <code><![CDATA[global $service;]]></code>
-    </InvalidGlobal>
-    <InvalidOperand>
-      <code><![CDATA[$h * $margin_coef]]></code>
-      <code><![CDATA[$jpg_quality]]></code>
-      <code><![CDATA[$second]]></code>
-      <code><![CDATA[$second]]></code>
-      <code><![CDATA[$w * $margin_coef]]></code>
-      <code><![CDATA[(float) $O[0] * 10]]></code>
-      <code><![CDATA[floor((float) $O[0] * 10) / 10]]></code>
-    </InvalidOperand>
-    <PossiblyFalseArgument>
-      <code><![CDATA[get_ini_size('upload_max_filesize', false)]]></code>
-    </PossiblyFalseArgument>
-    <PossiblyFalseOperand>
-      <code><![CDATA[$finfo_type]]></code>
-      <code><![CDATA[$md5sum]]></code>
-      <code><![CDATA[realpath($dest['dirname'])]]></code>
-      <code><![CDATA[realpath($dest['dirname'])]]></code>
-      <code><![CDATA[realpath($dest['dirname'])]]></code>
-      <code><![CDATA[realpath($dest['dirname'])]]></code>
-      <code><![CDATA[realpath($file_path)]]></code>
-      <code><![CDATA[realpath($file_path)]]></code>
-      <code><![CDATA[realpath($file_path)]]></code>
-      <code><![CDATA[realpath($file_path)]]></code>
-      <code><![CDATA[realpath($file_path)]]></code>
-    </PossiblyFalseOperand>
-    <PossiblyNullArgument>
-      <code><![CDATA[$relative_dir]]></code>
-      <code><![CDATA[$relative_dir]]></code>
-    </PossiblyNullArgument>
-    <PossiblyUndefinedArrayOffset>
-      <code><![CDATA[$conf['lounge_active']]]></code>
-      <code><![CDATA[$conf['lounge_active']]]></code>
-      <code><![CDATA[$conf['lounge_active']]]></code>
-    </PossiblyUndefinedArrayOffset>
-    <PossiblyUndefinedVariable>
-      <code><![CDATA[$dbnow]]></code>
-      <code><![CDATA[$dest]]></code>
-    </PossiblyUndefinedVariable>
     <UndefinedConstant>
-      <code><![CDATA[IMG_MEDIUM]]></code>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
     </UndefinedConstant>
     <UndefinedFunction>
-      <code><![CDATA[add_event_handler('upload_file', 'upload_file_eps')]]></code>
-      <code><![CDATA[add_event_handler('upload_file', 'upload_file_heic')]]></code>
-      <code><![CDATA[add_event_handler('upload_file', 'upload_file_pdf')]]></code>
-      <code><![CDATA[add_event_handler('upload_file', 'upload_file_psd')]]></code>
-      <code><![CDATA[add_event_handler('upload_file', 'upload_file_tiff')]]></code>
-      <code><![CDATA[add_event_handler('upload_file', 'upload_file_video')]]></code>
+      <code><![CDATA[add_event_handler('upload_file', [UploadService::class, 'uploadFileEps'])]]></code>
+      <code><![CDATA[add_event_handler('upload_file', [UploadService::class, 'uploadFileHeic'])]]></code>
+      <code><![CDATA[add_event_handler('upload_file', [UploadService::class, 'uploadFilePdf'])]]></code>
+      <code><![CDATA[add_event_handler('upload_file', [UploadService::class, 'uploadFilePsd'])]]></code>
+      <code><![CDATA[add_event_handler('upload_file', [UploadService::class, 'uploadFileTiff'])]]></code>
+      <code><![CDATA[add_event_handler('upload_file', [UploadService::class, 'uploadFileVideo'])]]></code>
       <code><![CDATA[add_event_handler('upload_image_resize', 'pwg_image_resize')]]></code>
       <code><![CDATA[add_event_handler('upload_thumbnail_resize', 'pwg_image_resize')]]></code>
-      <code><![CDATA[associate_images_to_categories([(int) $image_id], $categories)]]></code>
-      <code><![CDATA[boolean_to_string($value)]]></code>
-      <code><![CDATA[conf_get_param('enable_formats', false)]]></code>
-      <code><![CDATA[conf_get_param('format_ext', ['cr2'])]]></code>
-      <code><![CDATA[conf_get_param('pdf_jpg_quality', 90)]]></code>
-      <code><![CDATA[conf_get_param('pdf_representative_ext', 'jpg')]]></code>
-      <code><![CDATA[conf_update_param('lounge_active', false, true)]]></code>
-      <code><![CDATA[conf_update_param('lounge_active', true, true)]]></code>
-      <code><![CDATA[delete_element_files([$image_id])]]></code>
-      <code><![CDATA[fetchRemote($derivative_url, $dest)]]></code>
-      <code><![CDATA[fill_lounge([$image_id], array_values($categories))]]></code>
-      <code><![CDATA[get_extension($file_path)]]></code>
-      <code><![CDATA[get_extension($file_path)]]></code>
-      <code><![CDATA[get_extension($file_path)]]></code>
-      <code><![CDATA[get_extension($file_path)]]></code>
-      <code><![CDATA[get_extension($file_path)]]></code>
-      <code><![CDATA[get_extension($file_path)]]></code>
-      <code><![CDATA[get_extension($image_filepath)]]></code>
-      <code><![CDATA[get_extension($original_filename)]]></code>
-      <code><![CDATA[get_extension($representative_file_abspath)]]></code>
-      <code><![CDATA[get_extension($representative_file_abspath)]]></code>
-      <code><![CDATA[get_filename_wo_extension(basename($file_path))]]></code>
-      <code><![CDATA[get_filename_wo_extension(basename($file_path))]]></code>
-      <code><![CDATA[get_filename_wo_extension(basename($file_path))]]></code>
-      <code><![CDATA[get_filename_wo_extension(basename((string) $images[0]['path']))]]></code>
-      <code><![CDATA[get_name_from_file($file)]]></code>
-      <code><![CDATA[invalidate_user_cache()]]></code>
-      <code><![CDATA[l10n('Create the "%s" directory at the root of your Piwigo installation')]]></code>
-      <code><![CDATA[l10n('Failed to write file to disk')]]></code>
-      <code><![CDATA[l10n('File upload stopped by extension')]]></code>
-      <code><![CDATA[l10n('Give write access (chmod 777) to "%s" directory at the root of your Piwigo installation')]]></code>
-      <code><![CDATA[l10n('Missing a temporary folder')]]></code>
-      <code><![CDATA[l10n('No file was uploaded')]]></code>
-      <code><![CDATA[l10n('The original image quality must be a number between %d and %d')]]></code>
-      <code><![CDATA[l10n('The original maximum height must be a number between %d and %d')]]></code>
-      <code><![CDATA[l10n('The original maximum width must be a number between %d and %d')]]></code>
-      <code><![CDATA[l10n('The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form')]]></code>
-      <code><![CDATA[l10n('The uploaded file exceeds the upload_max_filesize directive in php.ini: %sB')]]></code>
-      <code><![CDATA[l10n('The uploaded file was only partially uploaded')]]></code>
-      <code><![CDATA[l10n('Unknown upload error')]]></code>
-      <code><![CDATA[mass_updates(
-            Tables::config(),
-            [
-                'primary' => ['param'],
-                'update' => ['value'],
-            ],
-            $updates
-        )]]></code>
-      <code><![CDATA[original_to_representative($file_path, $ext)]]></code>
-      <code><![CDATA[original_to_representative($file_path, $ext)]]></code>
-      <code><![CDATA[original_to_representative($file_path, $ext)]]></code>
-      <code><![CDATA[pwg_activity('photo', $format_of, 'edit', [
-        'action' => 'add format',
-        'format_ext' => $format_ext,
-        'format_id' => $format_id,
-    ])]]></code>
-      <code><![CDATA[pwg_activity('photo', $image_id, 'add')]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc(pwg_query($query))]]></code>
-      <code><![CDATA[pwg_db_fetch_row(pwg_query('SELECT COUNT(*) FROM ' . Tables::images() . ';'))]]></code>
-      <code><![CDATA[pwg_db_fetch_row(pwg_query('SELECT NOW();'))]]></code>
-      <code><![CDATA[pwg_db_insert_id()]]></code>
-      <code><![CDATA[pwg_db_insert_id()]]></code>
-      <code><![CDATA[pwg_db_real_escape_string($original_filename ?? basename($file_path))]]></code>
-      <code><![CDATA[pwg_db_real_escape_string($original_filename ?? basename($file_path))]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query('SELECT COUNT(*) FROM ' . Tables::images() . ';')]]></code>
-      <code><![CDATA[pwg_query('SELECT NOW();')]]></code>
-      <code><![CDATA[query2array($query)]]></code>
-      <code><![CDATA[query2array($query)]]></code>
-      <code><![CDATA[query2array($query)]]></code>
-      <code><![CDATA[safe_unserialize(ImageStdParams::get_disabled_type_map())]]></code>
-      <code><![CDATA[secure_directory($directory)]]></code>
-      <code><![CDATA[set_make_full_url()]]></code>
-      <code><![CDATA[single_insert(Tables::imageFormat(), $insert)]]></code>
-      <code><![CDATA[single_insert(Tables::images(), $insert)]]></code>
-      <code><![CDATA[single_update(
-            Tables::images(),
-            $update,
-            [
-                'id' => $image_id,
-            ]
-        )]]></code>
-      <code><![CDATA[single_update(Tables::imageFormat(), $set_fields, $where_fields)]]></code>
-      <code><![CDATA[sync_metadata([(int) $image_id])]]></code>
-      <code><![CDATA[trigger_change('upload_file', null, $file_path)]]></code>
-      <code><![CDATA[trigger_notify('loc_end_add_format', $format_infos)]]></code>
-      <code><![CDATA[trigger_notify('loc_end_add_uploaded_file', $image_infos)]]></code>
-      <code><![CDATA[unset_make_full_url()]]></code>
     </UndefinedFunction>
     <UnresolvableInclude>
       <code><![CDATA[include_once PHPWG_ROOT_PATH . 'admin/include/functions.php']]></code>
@@ -2446,7 +2213,7 @@
         'language' => $language_id,
     ])]]></code>
       <code><![CDATA[check_input_parameter('action', $_GET, false, '/^(activate|deactivate|set_default|delete)$/')]]></code>
-      <code><![CDATA[check_input_parameter('language', $_GET, false, '/^(' . join('|', array_keys($languages->fs_languages)) . ')$/')]]></code>
+      <code><![CDATA[check_input_parameter('language', $_GET, false, '/^(' . join('|', array_keys($fs_languages)) . ')$/')]]></code>
       <code><![CDATA[get_default_language()]]></code>
       <code><![CDATA[get_default_language()]]></code>
       <code><![CDATA[get_root_url()]]></code>
@@ -2458,8 +2225,6 @@
       <code><![CDATA[l10n('Impossible to deactivate this language, you need at least one language.')]]></code>
       <code><![CDATA[l10n('Languages')]]></code>
       <code><![CDATA[l10n('user_status_webmaster')]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[redirect($base_url)]]></code>
     </UndefinedFunction>
   </file>
@@ -2572,9 +2337,9 @@
       <code><![CDATA[l10n('Purge history detail')]]></code>
       <code><![CDATA[l10n('Purge history summary')]]></code>
       <code><![CDATA[l10n('Purge never used notification feeds')]]></code>
+      <code><![CDATA[l10n('Purge search history')]]></code>
       <code><![CDATA[l10n('Purge sessions')]]></code>
       <code><![CDATA[l10n('Purge user cache')]]></code>
-      <code><![CDATA[l10n('Reinitialize check integrity')]]></code>
       <code><![CDATA[l10n('Reinitialize check integrity')]]></code>
       <code><![CDATA[l10n('Unable to check for upgrade.')]]></code>
       <code><![CDATA[l10n('Update albums informations')]]></code>
@@ -2604,19 +2369,10 @@
       <code><![CDATA[pwg_activity('system', ActivitySystem::Core, 'maintenance', [
         'maintenance_action' => $action,
     ])]]></code>
-      <code><![CDATA[pwg_db_fetch_row(pwg_query($query))]]></code>
       <code><![CDATA[pwg_db_fetch_row(pwg_query('SELECT now();'))]]></code>
       <code><![CDATA[pwg_get_db_version()]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[pwg_query('SELECT now();')]]></code>
       <code><![CDATA[pwg_session_gc()]]></code>
-      <code><![CDATA[query2array($query)]]></code>
-      <code><![CDATA[query2array($query, 'id', null)]]></code>
       <code><![CDATA[redirect(get_root_url() . 'admin.php?page=maintenance')]]></code>
       <code><![CDATA[redirect(get_root_url() . 'admin.php?page=maintenance')]]></code>
       <code><![CDATA[time_since($last_calc_value, 'year')]]></code>
@@ -2679,15 +2435,8 @@
       <code><![CDATA[l10n(IMG_CUSTOM)]]></code>
       <code><![CDATA[pwg_db_fetch_row(pwg_query('SELECT now();'))]]></code>
       <code><![CDATA[pwg_get_db_version()]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[pwg_query('SELECT now();')]]></code>
       <code><![CDATA[pwg_session_gc()]]></code>
-      <code><![CDATA[query2array($query)]]></code>
-      <code><![CDATA[query2array($query, 'id', null)]]></code>
       <code><![CDATA[redirect(get_root_url() . 'admin.php?page=maintenance')]]></code>
       <code><![CDATA[redirect(get_root_url() . 'admin.php?page=maintenance')]]></code>
       <code><![CDATA[time_since($cache_sizes[3]['value'], 'year')]]></code>
@@ -2743,8 +2492,6 @@
       <code><![CDATA[l10n('Update')]]></code>
       <code><![CDATA[l10n('Watermark')]]></code>
       <code><![CDATA[l10n('user_status_webmaster')]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
     </UndefinedFunction>
   </file>
   <file src="admin/menubar.php">
@@ -2765,6 +2512,7 @@
   </file>
   <file src="admin/notification_by_mail.php">
     <InvalidGlobal>
+      <code><![CDATA[global $base_url;]]></code>
       <code><![CDATA[global $conf, $template;]]></code>
     </InvalidGlobal>
     <PossiblyUndefinedVariable>
@@ -2951,13 +2699,9 @@
       <code><![CDATA[get_root_url()]]></code>
       <code><![CDATA[global_rank_compare(...)]]></code>
       <code><![CDATA[l10n('Albums')]]></code>
-      <code><![CDATA[l10n('Cannot delete the old permalink !')]]></code>
       <code><![CDATA[l10n('Sort order')]]></code>
-      <code><![CDATA[pwg_db_changes()]]></code>
       <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
       <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_db_real_escape_string($delete_permanent)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[set_cat_permalink($post_cat_id, $permalink, isset($_POST['save']))]]></code>
@@ -2992,20 +2736,9 @@
     </UnresolvableInclude>
   </file>
   <file src="admin/photos_add.php">
-    <InvalidGlobal>
-      <code><![CDATA[global $page;]]></code>
-      <code><![CDATA[global $template;]]></code>
-    </InvalidGlobal>
     <UndefinedFunction>
-      <code><![CDATA[check_status(AccessLevel::Administrator)]]></code>
       <code><![CDATA[get_root_url()]]></code>
-      <code><![CDATA[get_upload_form_config()]]></code>
     </UndefinedFunction>
-    <UnresolvableInclude>
-      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/photos_add_' . $page['tab'] . '.php']]></code>
-      <code><![CDATA[include_once PHPWG_ROOT_PATH . 'admin/include/functions.php']]></code>
-      <code><![CDATA[include_once PHPWG_ROOT_PATH . 'admin/include/functions_upload.inc.php']]></code>
-    </UnresolvableInclude>
   </file>
   <file src="admin/photos_add_applications.php">
     <InvalidGlobal>
@@ -3103,7 +2836,6 @@
       <code><![CDATA[fraction_to_char($to_fraction($coi_l))]]></code>
       <code><![CDATA[page_not_found('Requested photo does not exist')]]></code>
       <code><![CDATA[pwg_db_fetch_assoc(pwg_query($query))]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[render_element_name($row)]]></code>
     </UndefinedFunction>
@@ -3213,9 +2945,7 @@
       <code><![CDATA[move_images_to_categories([$image_id], $associate_categories)]]></code>
       <code><![CDATA[pwg_activity('photo', $image_id, 'edit')]]></code>
       <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
       <code><![CDATA[pwg_db_fetch_row(pwg_query($query))]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
@@ -3285,9 +3015,9 @@
       <code><![CDATA[l10n('ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW.')]]></code>
       <code><![CDATA[l10n('Plugins')]]></code>
       <code><![CDATA[l10n('THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW.')]]></code>
+      <code><![CDATA[name_compare(...)]]></code>
       <code><![CDATA[pwg_get_session_var('plugins_show_details')]]></code>
       <code><![CDATA[pwg_get_session_var('plugins_show_details')]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[pwg_set_session_var('plugins_show_details', $show_details)]]></code>
       <code><![CDATA[trigger_change('get_admin_plugin_menu_links', [])]]></code>
       <code><![CDATA[userprefs_get_param('plugin-manager-view', 'classic')]]></code>
@@ -3330,7 +3060,7 @@
                     'install',
                     [
                         'plugin_id' => $installed_plugin_id,
-                        'version' => $plugins->fs_plugins[$installed_plugin_id]['version'],
+                        'version' => $installed_fs_plugin['version'],
                     ]
                 )]]></code>
       <code><![CDATA[pwg_get_session_var('plugins_new_order')]]></code>
@@ -3403,17 +3133,6 @@
       <code><![CDATA[l10n('Sum of rates')]]></code>
       <code><![CDATA[l10n('Users')]]></code>
       <code><![CDATA[l10n('all')]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_db_fetch_row(pwg_query($query))]]></code>
-      <code><![CDATA[pwg_db_fetch_row(pwg_query($query))]]></code>
-      <code><![CDATA[pwg_db_num_rows($result)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
     </UndefinedFunction>
     <UnresolvableInclude>
       <code><![CDATA[include_once PHPWG_ROOT_PATH . 'admin/include/functions.php']]></code>
@@ -3439,9 +3158,8 @@
       <code><![CDATA[sqrt($var) / ($s / $c)]]></code>
     </InvalidOperand>
     <UndefinedFunction>
-      <code><![CDATA[array_from_query($query, 'id')]]></code>
       <code><![CDATA[get_root_url()]]></code>
-      <code><![CDATA[is_autorize_status(AccessLevel::Classic, is_string($status) ? $status : '')]]></code>
+      <code><![CDATA[is_autorize_status(AccessLevel::Classic, $u['status'])]]></code>
       <code><![CDATA[l10n('Average rate')]]></code>
       <code><![CDATA[l10n('Consensus deviation')]]></code>
       <code><![CDATA[l10n('Last')]]></code>
@@ -3449,19 +3167,9 @@
       <code><![CDATA[l10n('Rating')]]></code>
       <code><![CDATA[l10n('Variation')]]></code>
       <code><![CDATA[make_picture_url([
-                'image_id' => $row['id'],
-                'image_file' => $row['file'],
+                'image_id' => $thumb_row['id'],
+                'image_file' => $thumb_row['file'],
             ])]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_db_fetch_row(pwg_query($query))]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
     </UndefinedFunction>
   </file>
   <file src="admin/site_manager.php">
@@ -3820,6 +3528,7 @@
       <code><![CDATA[l10n('Themes')]]></code>
       <code><![CDATA[l10n('This theme was not designed to be directly activated')]]></code>
       <code><![CDATA[l10n('user_status_webmaster')]]></code>
+      <code><![CDATA[name_compare(...)]]></code>
       <code><![CDATA[redirect($base_url)]]></code>
       <code><![CDATA[trigger_notify('loc_end_themes_installed')]]></code>
     </UndefinedFunction>
@@ -3855,7 +3564,7 @@
                     'install',
                     [
                         'theme_id' => $installed_theme_id,
-                        'version' => $themes->fs_themes[$installed_theme_id]['version'],
+                        'version' => $installed_fs_theme['version'],
                     ]
                 )]]></code>
       <code><![CDATA[redirect($base_url . '&installstatus=' . $install_status . '&theme_id=' . $theme_id)]]></code>
@@ -3905,7 +3614,11 @@
     <InvalidGlobal>
       <code><![CDATA[global $conf;]]></code>
     </InvalidGlobal>
+    <PossiblyUndefinedVariable>
+      <code><![CDATA[$_GET]]></code>
+    </PossiblyUndefinedVariable>
     <UndefinedFunction>
+      <code><![CDATA[check_input_parameter('tab', $_GET, false, '/^(pwg|ext)$/')]]></code>
       <code><![CDATA[get_root_url()]]></code>
     </UndefinedFunction>
     <UnresolvableInclude>
@@ -3916,9 +3629,6 @@
     <InvalidGlobal>
       <code><![CDATA[global $conf, $page, $template;]]></code>
     </InvalidGlobal>
-    <PossiblyNullArgument>
-      <code><![CDATA[$page_slug]]></code>
-    </PossiblyNullArgument>
     <PossiblyUndefinedArrayOffset>
       <code><![CDATA[$page['errors']]]></code>
       <code><![CDATA[$page['page']]]></code>
@@ -3932,7 +3642,6 @@
       <code><![CDATA[l10n('Can\'t connect to server.')]]></code>
       <code><![CDATA[l10n('Updates')]]></code>
       <code><![CDATA[l10n('user_status_webmaster')]]></code>
-      <code><![CDATA[safe_version_compare($fs_version, $revision_name, '>=')]]></code>
     </UndefinedFunction>
   </file>
   <file src="admin/updates_pwg.php">
@@ -4046,11 +3755,13 @@
     </UnresolvableInclude>
   </file>
   <file src="admin/user_perm.php">
+    <ArgumentTypeCoercion>
+      <code><![CDATA[$subcats]]></code>
+    </ArgumentTypeCoercion>
     <InvalidGlobal>
       <code><![CDATA[global $page, $template;]]></code>
     </InvalidGlobal>
     <UndefinedFunction>
-      <code><![CDATA[add_permission_on_category($cat_false, $page['user'])]]></code>
       <code><![CDATA[check_input_parameter('cat_false', $_POST, true, ValidationPattern::ID)]]></code>
       <code><![CDATA[check_input_parameter('cat_true', $_POST, true, ValidationPattern::ID)]]></code>
       <code><![CDATA[check_pwg_token()]]></code>
@@ -4071,7 +3782,6 @@
       <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
       <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
       <code><![CDATA[pwg_db_num_rows($result)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[pwg_query($query_true)]]></code>
     </UndefinedFunction>
@@ -8595,6 +8305,90 @@
       <code><![CDATA[script_basename()]]></code>
     </UndefinedFunction>
   </file>
+  <file src="src/Piwigo/Admin/BatchManager/FilterResolver.php">
+    <InvalidOperand>
+      <code><![CDATA[((float) $filesize['max'] + 0.1) * 1024]]></code>
+      <code><![CDATA[((float) $filesize['min'] - 0.1) * 1024]]></code>
+    </InvalidOperand>
+    <UndefinedFunction>
+      <code><![CDATA[pwg_db_get_recent_period_expression(1, $lastDate)]]></code>
+    </UndefinedFunction>
+  </file>
+  <file src="src/Piwigo/Admin/Category/CategoryAdminService.php">
+    <InvalidOperand>
+      <code><![CDATA[$cat_id]]></code>
+    </InvalidOperand>
+    <PossiblyInvalidArrayOffset>
+      <code><![CDATA[$ref_dates[$id]]]></code>
+    </PossiblyInvalidArrayOffset>
+    <UndefinedFunction>
+      <code><![CDATA[add_permission_on_category($catId, $userIds)]]></code>
+      <code><![CDATA[array_from_query($query, $column)]]></code>
+      <code><![CDATA[array_from_query('
+SELECT id
+  FROM ' . Tables::categories() . '
+  WHERE id IN (' . implode(',', $catIdsForGrant) . ')
+    AND status = \'private\'
+;', 'id')]]></code>
+      <code><![CDATA[create_virtual_category($name, $parentId, $options)]]></code>
+      <code><![CDATA[get_cat_info($catId)]]></code>
+      <code><![CDATA[get_subcat_ids($ids)]]></code>
+      <code><![CDATA[get_subcat_ids([$catId])]]></code>
+      <code><![CDATA[get_subcat_ids([$catId])]]></code>
+      <code><![CDATA[get_subcat_ids([$catId])]]></code>
+      <code><![CDATA[get_subcat_ids([$catId])]]></code>
+      <code><![CDATA[get_uppercat_ids([$catId])]]></code>
+      <code><![CDATA[mass_inserts(
+                Tables::groupAccess(),
+                ['group_id', 'cat_id'],
+                $inserts,
+                [
+                    'ignore' => true,
+                ]
+            )]]></code>
+      <code><![CDATA[page_not_found('Requested album does not exist')]]></code>
+      <code><![CDATA[pwg_activity('album', $catIds, 'edit', [
+            'section' => $section,
+            'action' => $value ? 'trueify' : 'falsify',
+        ])]]></code>
+      <code><![CDATA[pwg_query('
+DELETE
+  FROM ' . Tables::groupAccess() . '
+  WHERE group_id IN (' . implode(',', $denyGroups) . ')
+    AND cat_id IN (' . implode(',', get_subcat_ids([$catId])) . ')
+;')]]></code>
+      <code><![CDATA[pwg_query('
+DELETE
+  FROM ' . Tables::userAccess() . '
+  WHERE user_id IN (' . implode(',', $denyUsers) . ')
+    AND cat_id IN (' . implode(',', get_subcat_ids([$catId])) . ')
+;')]]></code>
+      <code><![CDATA[pwg_query('
+UPDATE ' . Tables::categories() . '
+  SET commentable = \'' . ($value ? 'true' : 'false') . '\'
+  WHERE id IN (' . $idList . ')
+;')]]></code>
+      <code><![CDATA[pwg_query('
+UPDATE ' . Tables::categories() . '
+  SET image_order = ' . $orderValue . '
+  WHERE id=' . $catId)]]></code>
+      <code><![CDATA[pwg_query('
+UPDATE ' . Tables::categories() . '
+  SET image_order = ' . $orderValue . '
+  WHERE uppercats LIKE \'' . $catInfo['uppercats'] . ',%\'')]]></code>
+      <code><![CDATA[pwg_query('
+UPDATE ' . Tables::categories() . '
+  SET representative_picture_id = NULL
+  WHERE id IN (' . $idList . ')
+;')]]></code>
+      <code><![CDATA[query2array($query, 'category_id', 'ref_date')]]></code>
+      <code><![CDATA[query2array($query, 'id', 'uppercats')]]></code>
+      <code><![CDATA[set_cat_status($catIds, $value ? 'public' : 'private')]]></code>
+      <code><![CDATA[set_cat_status($catIdsForStatus, $newStatus)]]></code>
+      <code><![CDATA[set_cat_visible($catIds, $value ? 'true' : 'false')]]></code>
+      <code><![CDATA[set_random_representant($catIds)]]></code>
+    </UndefinedFunction>
+  </file>
   <file src="src/Piwigo/Admin/DummyPlugin_maintain.php">
     <ClassMustBeFinal>
       <code><![CDATA[DummyPlugin_maintain]]></code>
@@ -8613,6 +8407,223 @@
     <MissingParamType>
       <code><![CDATA[$theme_version]]></code>
     </MissingParamType>
+  </file>
+  <file src="src/Piwigo/Admin/Extensions/CoreUpdateService.php">
+    <PossiblyUndefinedArrayOffset>
+      <code><![CDATA[$page['infos']]]></code>
+    </PossiblyUndefinedArrayOffset>
+    <PossiblyUndefinedVariable>
+      <code><![CDATA[$result]]></code>
+      <code><![CDATA[$result]]></code>
+      <code><![CDATA[$result]]></code>
+    </PossiblyUndefinedVariable>
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_URL]]></code>
+      <code><![CDATA[PHPWG_URL]]></code>
+      <code><![CDATA[PHPWG_URL]]></code>
+    </UndefinedConstant>
+    <UndefinedFunction>
+      <code><![CDATA[conf_delete_param('fs_quick_check_last_check')]]></code>
+      <code><![CDATA[conf_update_param(
+            'update_notify_last_notification',
+            [
+                'version' => $newVersionsString,
+                'notified_on' => date('c'),
+            ]
+        )]]></code>
+      <code><![CDATA[conf_update_param('piwigo_installed_version', $upgradeTo)]]></code>
+      <code><![CDATA[conf_update_param('update_notify_last_check', date('c'))]]></code>
+      <code><![CDATA[deltree($path, PHPWG_ROOT_PATH . '_trash')]]></code>
+      <code><![CDATA[deltree(PHPWG_ROOT_PATH . $dataLocation . 'update')]]></code>
+      <code><![CDATA[deltree(PHPWG_ROOT_PATH . $dataLocation . 'update')]]></code>
+      <code><![CDATA[fetchRemote($url, $result)]]></code>
+      <code><![CDATA[fetchRemote(PHPWG_URL . '/download/all_versions.php?rand=' . md5(uniqid((string) mt_rand(), true)), $result)]]></code>
+      <code><![CDATA[fetchRemote(PHPWG_URL . '/download/dlcounter.php?code=' . $dlCode . '&chunk_num=' . $chunkNum, $result)]]></code>
+      <code><![CDATA[get_absolute_root_url()]]></code>
+      <code><![CDATA[get_absolute_root_url()]]></code>
+      <code><![CDATA[get_branch_from_version(
+            $env === 'Official' ? substr((string) $buildVersion, 0, -1) : AppInfo::VERSION
+        )]]></code>
+      <code><![CDATA[get_branch_from_version($lastVersionNumber)]]></code>
+      <code><![CDATA[get_branch_from_version($versionNumber)]]></code>
+      <code><![CDATA[get_branch_from_version(AppInfo::VERSION)]]></code>
+      <code><![CDATA[get_branch_from_version(substr($lastVersion, 0, -1))]]></code>
+      <code><![CDATA[get_branch_from_version(substr($version, 0, -1))]]></code>
+      <code><![CDATA[get_container_info()]]></code>
+      <code><![CDATA[get_default_language()]]></code>
+      <code><![CDATA[get_root_url()]]></code>
+      <code><![CDATA[get_root_url()]]></code>
+      <code><![CDATA[invalidate_user_cache(true)]]></code>
+      <code><![CDATA[l10n(
+                'An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href="%s">Click here to show log error</a>.',
+                get_root_url() . $dataLocation . 'update/log_error.txt'
+            )]]></code>
+      <code><![CDATA[l10n(
+            'Time has come to update your Piwigo with version %s, go to %s',
+            $newVersionsString,
+            get_absolute_root_url() . 'admin.php?page=updates'
+        )]]></code>
+      <code><![CDATA[l10n('An error has occured during upgrade.')]]></code>
+      <code><![CDATA[l10n('Hello,')]]></code>
+      <code><![CDATA[l10n('It only takes a few clicks.')]]></code>
+      <code><![CDATA[l10n('Piwigo %s is available, please update', $newVersionsString)]]></code>
+      <code><![CDATA[l10n('Piwigo cannot retrieve upgrade file from server')]]></code>
+      <code><![CDATA[l10n('Running on an up-to-date Piwigo is important for security.')]]></code>
+      <code><![CDATA[l10n('Update Complete')]]></code>
+      <code><![CDATA[mkgetdir($path)]]></code>
+      <code><![CDATA[pwg_activity('system', ActivitySystem::Core, 'update', [
+            'from_version' => AppInfo::VERSION,
+            'to_version' => $upgradeTo,
+        ])]]></code>
+      <code><![CDATA[pwg_is_dbconf_writeable()]]></code>
+      <code><![CDATA[pwg_mail_admins(
+            [
+                'subject' => l10n('Piwigo %s is available, please update', $newVersionsString),
+                'content' => $content,
+                'content_format' => 'text/plain',
+            ],
+            [
+                'filename' => 'notification_admin',
+            ],
+            false,
+            true
+        )]]></code>
+      <code><![CDATA[redirect(PHPWG_ROOT_PATH . 'upgrade.php?now=')]]></code>
+      <code><![CDATA[redirect(get_root_url() . 'admin.php?page=plugin-' . basename(__DIR__))]]></code>
+      <code><![CDATA[safe_unserialize($lastNotificationSetting)]]></code>
+      <code><![CDATA[switch_lang_back()]]></code>
+      <code><![CDATA[switch_lang_to(get_default_language())]]></code>
+    </UndefinedFunction>
+    <UndefinedVariable>
+      <code><![CDATA[$result]]></code>
+    </UndefinedVariable>
+    <UnresolvableInclude>
+      <code><![CDATA[include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Admin/Extensions/ExtensionLifecycle.php">
+    <InvalidStringClass>
+      <code><![CDATA[new $classname($pluginId)]]></code>
+    </InvalidStringClass>
+    <RedundantCondition>
+      <code><![CDATA[null]]></code>
+    </RedundantCondition>
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_PLUGINS_PATH]]></code>
+      <code><![CDATA[PHPWG_PLUGINS_PATH]]></code>
+      <code><![CDATA[PHPWG_PLUGINS_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UndefinedFunction>
+      <code><![CDATA[conf_update_param('mobile_theme', $id)]]></code>
+      <code><![CDATA[conf_update_param('mobile_theme', '')]]></code>
+      <code><![CDATA[deltree(Config::themesPath() . $id, Config::themesPath() . 'trash')]]></code>
+      <code><![CDATA[deltree(PHPWG_PLUGINS_PATH . $id, PHPWG_PLUGINS_PATH . 'trash')]]></code>
+      <code><![CDATA[deltree(PHPWG_ROOT_PATH . 'language/' . $id, PHPWG_ROOT_PATH . 'language/trash')]]></code>
+      <code><![CDATA[get_default_language()]]></code>
+      <code><![CDATA[get_default_language()]]></code>
+      <code><![CDATA[get_default_theme()]]></code>
+      <code><![CDATA[get_default_theme()]]></code>
+      <code><![CDATA[l10n('Impossible to activate this theme, the parent theme is missing: %s', $missingParent)]]></code>
+      <code><![CDATA[l10n('Impossible to deactivate this theme, you need at least one theme.')]]></code>
+      <code><![CDATA[l10n('Impossible to delete this theme. Other themes depends on it: %s', implode(', ', $children))]]></code>
+      <code><![CDATA[l10n('You can activate only one mobile theme.')]]></code>
+      <code><![CDATA[pwg_activity('system', ActivitySystem::Plugin, $action, $activityDetails)]]></code>
+      <code><![CDATA[pwg_activity('system', ActivitySystem::Theme, $action, $activityDetails)]]></code>
+    </UndefinedFunction>
+    <UnresolvableInclude>
+      <code><![CDATA[include_once $fileToInclude . '.class.php']]></code>
+      <code><![CDATA[include_once $fileToInclude . '.inc.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Admin/Extensions/ExtensionScanner.php">
+    <InvalidGlobal>
+      <code><![CDATA[global $user;]]></code>
+    </InvalidGlobal>
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_PLUGINS_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UndefinedFunction>
+      <code><![CDATA[convert_charset($language['name'], 'utf-8', $targetCharset)]]></code>
+      <code><![CDATA[get_boolean($val[1])]]></code>
+      <code><![CDATA[get_boolean($val[1])]]></code>
+      <code><![CDATA[get_boolean($val[1])]]></code>
+      <code><![CDATA[get_pwg_charset()]]></code>
+      <code><![CDATA[get_root_url()]]></code>
+      <code><![CDATA[load_language('description.txt', $path . '/', [
+            'return' => true,
+        ])]]></code>
+      <code><![CDATA[load_language('description.txt', $path . '/', [
+            'return' => true,
+        ])]]></code>
+      <code><![CDATA[name_compare(...)]]></code>
+      <code><![CDATA[userprefs_get_param('admin_theme', 'clear')]]></code>
+    </UndefinedFunction>
+  </file>
+  <file src="src/Piwigo/Admin/Extensions/ExtensionType.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_PLUGINS_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+  </file>
+  <file src="src/Piwigo/Admin/Extensions/ExtensionUpdateChecker.php">
+    <PossiblyUndefinedVariable>
+      <code><![CDATA[$result]]></code>
+    </PossiblyUndefinedVariable>
+    <UndefinedFunction>
+      <code><![CDATA[conf_update_param('updates_ignored', pwg_db_real_escape_string(serialize($updatesIgnored)))]]></code>
+      <code><![CDATA[fetchRemote($mergedExtensionUrl, $result)]]></code>
+      <code><![CDATA[pwg_db_real_escape_string(serialize($updatesIgnored))]]></code>
+      <code><![CDATA[safe_version_compare($fsVersion, $neededVersion, '>=')]]></code>
+      <code><![CDATA[safe_version_compare($fsVersion, $revisionName, '>=')]]></code>
+    </UndefinedFunction>
+  </file>
+  <file src="src/Piwigo/Admin/Extensions/PemCatalog.php">
+    <PossiblyUndefinedVariable>
+      <code><![CDATA[$result]]></code>
+      <code><![CDATA[$result]]></code>
+      <code><![CDATA[$result]]></code>
+    </PossiblyUndefinedVariable>
+    <RedundantCondition>
+      <code><![CDATA[is_resource($handle)]]></code>
+    </RedundantCondition>
+    <UndefinedConstant>
+      <code><![CDATA[PEM_URL]]></code>
+      <code><![CDATA[PEM_URL]]></code>
+      <code><![CDATA[PEM_URL]]></code>
+      <code><![CDATA[PEM_URL]]></code>
+      <code><![CDATA[PEM_URL]]></code>
+      <code><![CDATA[PEM_URL]]></code>
+      <code><![CDATA[PEM_URL]]></code>
+      <code><![CDATA[PEM_URL]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UndefinedFunction>
+      <code><![CDATA[deltree($path, $trashPath)]]></code>
+      <code><![CDATA[fetchRemote($url, $handle, $getData)]]></code>
+      <code><![CDATA[fetchRemote($url, $result, $getData)]]></code>
+      <code><![CDATA[fetchRemote($url, $result, $getData)]]></code>
+      <code><![CDATA[fetchRemote($url, $result, $getData)]]></code>
+      <code><![CDATA[get_branch_from_version($pemVersionName)]]></code>
+      <code><![CDATA[get_branch_from_version($version)]]></code>
+    </UndefinedFunction>
   </file>
   <file src="src/Piwigo/Admin/Image/image_ext_imagick.php">
     <ClassMustBeFinal>
@@ -8845,6 +8856,150 @@
       <code><![CDATA[mixed]]></code>
     </InvalidReturnType>
   </file>
+  <file src="src/Piwigo/Admin/Upload/UploadService.php">
+    <ArgumentTypeCoercion>
+      <code><![CDATA[$pattern]]></code>
+    </ArgumentTypeCoercion>
+    <InvalidArrayAccess>
+      <code><![CDATA[$AO[0]]]></code>
+      <code><![CDATA[$FO[0]]]></code>
+      <code><![CDATA[$O[0]]]></code>
+    </InvalidArrayAccess>
+    <InvalidGlobal>
+      <code><![CDATA[global $service;]]></code>
+    </InvalidGlobal>
+    <InvalidOperand>
+      <code><![CDATA[$h * $margin_coef]]></code>
+      <code><![CDATA[$jpg_quality]]></code>
+      <code><![CDATA[$second]]></code>
+      <code><![CDATA[$second]]></code>
+      <code><![CDATA[$w * $margin_coef]]></code>
+      <code><![CDATA[(float) $O[0] * 10]]></code>
+      <code><![CDATA[floor((float) $O[0] * 10) / 10]]></code>
+    </InvalidOperand>
+    <PossiblyFalseArgument>
+      <code><![CDATA[$this->getIniSize('upload_max_filesize', false)]]></code>
+    </PossiblyFalseArgument>
+    <PossiblyFalseOperand>
+      <code><![CDATA[$md5sum]]></code>
+      <code><![CDATA[realpath($dest['dirname'])]]></code>
+      <code><![CDATA[realpath($dest['dirname'])]]></code>
+    </PossiblyFalseOperand>
+    <PossiblyNullArgument>
+      <code><![CDATA[$relative_dir]]></code>
+      <code><![CDATA[$relative_dir]]></code>
+    </PossiblyNullArgument>
+    <PossiblyUndefinedArrayOffset>
+      <code><![CDATA[$conf['lounge_active']]]></code>
+      <code><![CDATA[$conf['lounge_active']]]></code>
+      <code><![CDATA[$conf['lounge_active']]]></code>
+    </PossiblyUndefinedArrayOffset>
+    <PossiblyUndefinedVariable>
+      <code><![CDATA[$dbnow]]></code>
+      <code><![CDATA[$dest]]></code>
+    </PossiblyUndefinedVariable>
+    <UndefinedConstant>
+      <code><![CDATA[IMG_MEDIUM]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UndefinedFunction>
+      <code><![CDATA[associate_images_to_categories([(int) $image_id], $categories)]]></code>
+      <code><![CDATA[boolean_to_string($value)]]></code>
+      <code><![CDATA[conf_get_param('enable_formats', false)]]></code>
+      <code><![CDATA[conf_get_param('format_ext', ['cr2'])]]></code>
+      <code><![CDATA[conf_get_param('pdf_jpg_quality', 90)]]></code>
+      <code><![CDATA[conf_get_param('pdf_representative_ext', 'jpg')]]></code>
+      <code><![CDATA[conf_update_param('lounge_active', false, true)]]></code>
+      <code><![CDATA[conf_update_param('lounge_active', true, true)]]></code>
+      <code><![CDATA[delete_element_files([$image_id])]]></code>
+      <code><![CDATA[fetchRemote($derivative_url, $dest)]]></code>
+      <code><![CDATA[fill_lounge([$image_id], array_values($categories))]]></code>
+      <code><![CDATA[get_extension($file_path)]]></code>
+      <code><![CDATA[get_extension($file_path)]]></code>
+      <code><![CDATA[get_extension($file_path)]]></code>
+      <code><![CDATA[get_extension($file_path)]]></code>
+      <code><![CDATA[get_extension($file_path)]]></code>
+      <code><![CDATA[get_extension($file_path)]]></code>
+      <code><![CDATA[get_extension($image_filepath)]]></code>
+      <code><![CDATA[get_extension($original_filename)]]></code>
+      <code><![CDATA[get_extension($representative_file_abspath)]]></code>
+      <code><![CDATA[get_extension($representative_file_abspath)]]></code>
+      <code><![CDATA[get_filename_wo_extension(basename($file_path))]]></code>
+      <code><![CDATA[get_filename_wo_extension(basename($file_path))]]></code>
+      <code><![CDATA[get_filename_wo_extension(basename($file_path))]]></code>
+      <code><![CDATA[get_filename_wo_extension(basename((string) $images[0]['path']))]]></code>
+      <code><![CDATA[get_name_from_file($file)]]></code>
+      <code><![CDATA[invalidate_user_cache()]]></code>
+      <code><![CDATA[l10n('Create the "%s" directory at the root of your Piwigo installation')]]></code>
+      <code><![CDATA[l10n('Failed to write file to disk')]]></code>
+      <code><![CDATA[l10n('File upload stopped by extension')]]></code>
+      <code><![CDATA[l10n('Give write access (chmod 777) to "%s" directory at the root of your Piwigo installation')]]></code>
+      <code><![CDATA[l10n('Missing a temporary folder')]]></code>
+      <code><![CDATA[l10n('No file was uploaded')]]></code>
+      <code><![CDATA[l10n('The original image quality must be a number between %d and %d')]]></code>
+      <code><![CDATA[l10n('The original maximum height must be a number between %d and %d')]]></code>
+      <code><![CDATA[l10n('The original maximum width must be a number between %d and %d')]]></code>
+      <code><![CDATA[l10n('The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form')]]></code>
+      <code><![CDATA[l10n('The uploaded file exceeds the upload_max_filesize directive in php.ini: %sB')]]></code>
+      <code><![CDATA[l10n('The uploaded file was only partially uploaded')]]></code>
+      <code><![CDATA[l10n('Unknown upload error')]]></code>
+      <code><![CDATA[mass_updates(
+                Tables::config(),
+                [
+                    'primary' => ['param'],
+                    'update' => ['value'],
+                ],
+                $updates
+            )]]></code>
+      <code><![CDATA[original_to_representative($file_path, $ext)]]></code>
+      <code><![CDATA[original_to_representative($file_path, $ext)]]></code>
+      <code><![CDATA[original_to_representative($file_path, $ext)]]></code>
+      <code><![CDATA[pwg_activity('photo', $format_of, 'edit', [
+            'action' => 'add format',
+            'format_ext' => $format_ext,
+            'format_id' => $format_id,
+        ])]]></code>
+      <code><![CDATA[pwg_activity('photo', $image_id, 'add')]]></code>
+      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
+      <code><![CDATA[pwg_db_fetch_assoc(pwg_query($query))]]></code>
+      <code><![CDATA[pwg_db_fetch_row(pwg_query('SELECT COUNT(*) FROM ' . Tables::images() . ';'))]]></code>
+      <code><![CDATA[pwg_db_fetch_row(pwg_query('SELECT NOW();'))]]></code>
+      <code><![CDATA[pwg_db_insert_id()]]></code>
+      <code><![CDATA[pwg_db_insert_id()]]></code>
+      <code><![CDATA[pwg_db_real_escape_string($original_filename ?? basename($file_path))]]></code>
+      <code><![CDATA[pwg_db_real_escape_string($original_filename ?? basename($file_path))]]></code>
+      <code><![CDATA[pwg_query($query)]]></code>
+      <code><![CDATA[pwg_query($query)]]></code>
+      <code><![CDATA[pwg_query('SELECT COUNT(*) FROM ' . Tables::images() . ';')]]></code>
+      <code><![CDATA[pwg_query('SELECT NOW();')]]></code>
+      <code><![CDATA[query2array($query)]]></code>
+      <code><![CDATA[query2array($query)]]></code>
+      <code><![CDATA[query2array($query)]]></code>
+      <code><![CDATA[safe_unserialize(ImageStdParams::get_disabled_type_map())]]></code>
+      <code><![CDATA[secure_directory($directory)]]></code>
+      <code><![CDATA[set_make_full_url()]]></code>
+      <code><![CDATA[single_insert(Tables::imageFormat(), $insert)]]></code>
+      <code><![CDATA[single_insert(Tables::images(), $insert)]]></code>
+      <code><![CDATA[single_update(
+                Tables::images(),
+                $update,
+                [
+                    'id' => $image_id,
+                ]
+            )]]></code>
+      <code><![CDATA[single_update(Tables::imageFormat(), $set_fields, $where_fields)]]></code>
+      <code><![CDATA[sync_metadata([(int) $image_id])]]></code>
+      <code><![CDATA[trigger_change('upload_file', null, $file_path)]]></code>
+      <code><![CDATA[trigger_notify('loc_end_add_format', $format_infos)]]></code>
+      <code><![CDATA[trigger_notify('loc_end_add_uploaded_file', $image_infos)]]></code>
+      <code><![CDATA[unset_make_full_url()]]></code>
+    </UndefinedFunction>
+  </file>
   <file src="src/Piwigo/Admin/languages.php">
     <ClassMustBeFinal>
       <code><![CDATA[languages]]></code>
@@ -8875,7 +9030,6 @@
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
     </UndefinedConstant>
     <UndefinedFunction>
       <code><![CDATA[convert_charset($language['name'], 'utf-8', $target_charset)]]></code>
@@ -8895,12 +9049,7 @@
       <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[zip_extract($archive, $extract_path, $root)]]></code>
-      <code><![CDATA[zip_list_filenames($archive)]]></code>
     </UndefinedFunction>
-    <UnresolvableInclude>
-      <code><![CDATA[include_once PHPWG_ROOT_PATH . 'admin/include/functions_zip.inc.php']]></code>
-    </UnresolvableInclude>
   </file>
   <file src="src/Piwigo/Admin/plugins.php">
     <ClassMustBeFinal>
@@ -8949,7 +9098,6 @@
       <code><![CDATA[PHPWG_PLUGINS_PATH]]></code>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
     </UndefinedConstant>
     <UndefinedFunction>
       <code><![CDATA[deltree($path, PHPWG_PLUGINS_PATH . 'trash')]]></code>
@@ -8975,14 +9123,11 @@
       <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[zip_extract($archive, $extract_path, $root)]]></code>
-      <code><![CDATA[zip_list_filenames($archive)]]></code>
     </UndefinedFunction>
     <UnresolvableInclude>
       <code><![CDATA[include_once $file_to_include . '.class.php']]></code>
       <code><![CDATA[include_once $file_to_include . '.inc.php']]></code>
       <code><![CDATA[include_once PHPWG_ROOT_PATH . 'admin/include/functions.php']]></code>
-      <code><![CDATA[include_once PHPWG_ROOT_PATH . 'admin/include/functions_zip.inc.php']]></code>
     </UnresolvableInclude>
   </file>
   <file src="src/Piwigo/Admin/tabsheet.php">
@@ -9018,7 +9163,6 @@
       <code><![CDATA[PEM_URL]]></code>
       <code><![CDATA[PEM_URL]]></code>
       <code><![CDATA[PEM_URL]]></code>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
     </UndefinedConstant>
@@ -9064,12 +9208,9 @@
       <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[userprefs_get_param('admin_theme', 'clear')]]></code>
-      <code><![CDATA[zip_extract($archive, $extract_path, $root)]]></code>
-      <code><![CDATA[zip_list_filenames($archive)]]></code>
     </UndefinedFunction>
     <UnresolvableInclude>
       <code><![CDATA[include_once PHPWG_ROOT_PATH . 'admin/include/functions.php']]></code>
-      <code><![CDATA[include_once PHPWG_ROOT_PATH . 'admin/include/functions_zip.inc.php']]></code>
     </UnresolvableInclude>
   </file>
   <file src="src/Piwigo/Admin/updates.php">
@@ -9096,7 +9237,6 @@
     <UndefinedConstant>
       <code><![CDATA[PEM_URL]]></code>
       <code><![CDATA[PEM_URL]]></code>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
@@ -9197,17 +9337,8 @@
       <code><![CDATA[safe_version_compare($fs_version, $revision_name, '>=')]]></code>
       <code><![CDATA[switch_lang_back()]]></code>
       <code><![CDATA[switch_lang_to(get_default_language())]]></code>
-      <code><![CDATA[zip_extract(
-                                  $filename,
-                                  PHPWG_ROOT_PATH,
-                                  $remove_path,
-                                  0755,
-                                  $remove_path . '/' . $extract['filename']
-                              )]]></code>
-      <code><![CDATA[zip_extract($filename, PHPWG_ROOT_PATH, $remove_path, 0755)]]></code>
     </UndefinedFunction>
     <UnresolvableInclude>
-      <code><![CDATA[include_once PHPWG_ROOT_PATH . 'admin/include/functions_zip.inc.php']]></code>
       <code><![CDATA[include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php']]></code>
     </UnresolvableInclude>
   </file>
@@ -9310,6 +9441,16 @@
     <UndefinedFunction>
       <code><![CDATA[get_absolute_root_url()]]></code>
     </UndefinedFunction>
+  </file>
+  <file src="src/Piwigo/Bootstrap/AdminDispatcher.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UnresolvableInclude>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/' . $pageSlug . '.php']]></code>
+      <code><![CDATA[require PHPWG_ROOT_PATH . 'config/admin_pages.php']]></code>
+    </UnresolvableInclude>
   </file>
   <file src="src/Piwigo/Bootstrap/CliBootstrap.php">
     <TypeDoesNotContainType>
@@ -9682,6 +9823,331 @@
       <code><![CDATA[include_once \PHPWG_ROOT_PATH . 'include/functions_mail.inc.php']]></code>
       <code><![CDATA[include_once \PHPWG_ROOT_PATH . 'include/functions_mail.inc.php']]></code>
       <code><![CDATA[include_once \PHPWG_ROOT_PATH . 'include/functions_mail.inc.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Controller/Admin/AlbumSubController.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UndefinedFunction>
+      <code><![CDATA[get_root_url()]]></code>
+      <code><![CDATA[l10n('Edit album')]]></code>
+      <code><![CDATA[pwg_db_fetch_assoc(pwg_query($query))]]></code>
+      <code><![CDATA[pwg_query($query)]]></code>
+      <code><![CDATA[trigger_change('render_category_name', $category['name'], 'get_cat_display_name_cache')]]></code>
+    </UndefinedFunction>
+    <UnresolvableInclude>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/album_notification.php']]></code>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/cat_modify.php']]></code>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/cat_perm.php']]></code>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/element_set_ranks.php']]></code>
+      <code><![CDATA[include_once PHPWG_ROOT_PATH . 'admin/include/functions.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Controller/Admin/AlbumsSubController.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UnresolvableInclude>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/albums.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Controller/Admin/BatchManagerSubController.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UnresolvableInclude>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/batch_manager.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Controller/Admin/CatListSubController.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UnresolvableInclude>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/cat_list.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Controller/Admin/CatOptionsSubController.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UnresolvableInclude>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/cat_options.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Controller/Admin/CommentsSubController.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UnresolvableInclude>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/comments.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Controller/Admin/ConfigurationSubController.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UnresolvableInclude>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/configuration.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Controller/Admin/ExtendForTemplatesSubController.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UnresolvableInclude>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/extend_for_templates.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Controller/Admin/GroupListSubController.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UnresolvableInclude>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/group_list.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Controller/Admin/GroupPermSubController.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UnresolvableInclude>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/group_perm.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Controller/Admin/HelpSubController.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UnresolvableInclude>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/help.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Controller/Admin/HistorySubController.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UnresolvableInclude>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/history.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Controller/Admin/IntroSubController.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UnresolvableInclude>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/intro.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Controller/Admin/LanguagesSubController.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UnresolvableInclude>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/languages.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Controller/Admin/MaintenanceSubController.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UnresolvableInclude>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/maintenance.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Controller/Admin/MenubarSubController.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UnresolvableInclude>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/menubar.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Controller/Admin/NotificationByMailSubController.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UnresolvableInclude>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/notification_by_mail.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Controller/Admin/PermalinksSubController.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UnresolvableInclude>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/permalinks.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Controller/Admin/PhotoSubController.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UnresolvableInclude>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/photo.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Controller/Admin/PhotosAddSubController.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UnresolvableInclude>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/photos_add_' . $tab . '.php']]></code>
+      <code><![CDATA[include_once PHPWG_ROOT_PATH . 'admin/include/functions.php']]></code>
+      <code><![CDATA[include_once PHPWG_ROOT_PATH . 'admin/include/functions_upload.inc.php']]></code>
+      <code><![CDATA[include_once PHPWG_ROOT_PATH . 'admin/photos_add.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Controller/Admin/PictureCoiSubController.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UnresolvableInclude>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/picture_coi.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Controller/Admin/PictureFormatsSubController.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UnresolvableInclude>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/picture_formats.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Controller/Admin/PluginSubController.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UnresolvableInclude>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/plugin.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Controller/Admin/PluginsSubController.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UnresolvableInclude>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/plugins.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Controller/Admin/ProfileSubController.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UnresolvableInclude>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/profile.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Controller/Admin/RatingSubController.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UnresolvableInclude>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/rating.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Controller/Admin/RatingUserSubController.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UnresolvableInclude>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/rating_user.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Controller/Admin/SiteManagerSubController.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UnresolvableInclude>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/site_manager.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Controller/Admin/SiteUpdateSubController.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UnresolvableInclude>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/site_update.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Controller/Admin/StatsSubController.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UnresolvableInclude>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/stats.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Controller/Admin/TagsSubController.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UnresolvableInclude>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/tags.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Controller/Admin/ThemeSubController.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UnresolvableInclude>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/theme.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Controller/Admin/ThemesStandardPagesSubController.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UnresolvableInclude>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/themes_standard_pages.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Controller/Admin/ThemesSubController.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UnresolvableInclude>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/themes.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Controller/Admin/UpdatesSubController.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UnresolvableInclude>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/updates.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Controller/Admin/UserActivitySubController.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UnresolvableInclude>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/user_activity.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Controller/Admin/UserListSubController.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UnresolvableInclude>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/user_list.php']]></code>
+    </UnresolvableInclude>
+  </file>
+  <file src="src/Piwigo/Controller/Admin/UserPermSubController.php">
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UnresolvableInclude>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'admin/user_perm.php']]></code>
     </UnresolvableInclude>
   </file>
   <file src="src/Piwigo/Core/FeatureFlag.php">
@@ -10542,6 +11008,7 @@
   </file>
   <file src="src/Piwigo/Permalink/PermalinkService.php">
     <UndefinedFunction>
+      <code><![CDATA[l10n('Cannot delete the old permalink !')]]></code>
       <code><![CDATA[l10n('Permalink %s has been previously used by album %s. Delete from the permalink history first')]]></code>
       <code><![CDATA[l10n('Permalink %s has been previously used by album %s. Delete from the permalink history first')]]></code>
       <code><![CDATA[l10n('Permalink %s is already used by album %s')]]></code>
@@ -10550,6 +11017,7 @@
   </file>
   <file src="src/Piwigo/Permission/PermissionService.php">
     <UndefinedFunction>
+      <code><![CDATA[add_permission_on_category($catIds, $userId)]]></code>
       <code><![CDATA[is_admin($userStatus)]]></code>
     </UndefinedFunction>
   </file>
@@ -11414,8 +11882,11 @@
     <InvalidScope>
       <code><![CDATA[$this]]></code>
       <code><![CDATA[$this]]></code>
+      <code><![CDATA[$this]]></code>
     </InvalidScope>
     <UndefinedMagicMethod>
+      <code><![CDATA[assertNoJavaScriptErrors]]></code>
+      <code><![CDATA[assertNoJavaScriptErrors]]></code>
       <code><![CDATA[assertNoJavaScriptErrors]]></code>
       <code><![CDATA[assertNoJavaScriptErrors]]></code>
     </UndefinedMagicMethod>
@@ -11803,9 +12274,40 @@
       <code><![CDATA[assertIsString]]></code>
     </RedundantCondition>
   </file>
+  <file src="tests/Integration/DbMaintenanceRepositoryTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$repo]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/ExtensionLifecycleTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$lifecycle]]></code>
+      <code><![CDATA[$repo]]></code>
+    </PropertyNotSetInConstructor>
+    <RedundantCondition>
+      <code><![CDATA[$basename !== '']]></code>
+    </RedundantCondition>
+    <UndefinedFunction>
+      <code><![CDATA[get_extension($filename)]]></code>
+    </UndefinedFunction>
+  </file>
+  <file src="tests/Integration/ExtensionRepositoryTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$repo]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
   <file src="tests/Integration/FeedRepositoryTest.php">
     <PropertyNotSetInConstructor>
       <code><![CDATA[$repo]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
+  <file src="tests/Integration/FilterResolverTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$resolver]]></code>
     </PropertyNotSetInConstructor>
   </file>
   <file src="tests/Integration/GroupRepositoryTest.php">
@@ -12035,6 +12537,142 @@
     <InternalMethod>
       <code><![CDATA[in]]></code>
     </InternalMethod>
+  </file>
+  <file src="tests/Unit/Admin/Category/CategoryAdminServiceTest.php">
+    <InternalMethod>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBeFalse]]></code>
+      <code><![CDATA[toBeNull]]></code>
+      <code><![CDATA[toBeTrue]]></code>
+      <code><![CDATA[toContain]]></code>
+      <code><![CDATA[toContain]]></code>
+      <code><![CDATA[toContain]]></code>
+      <code><![CDATA[toContain]]></code>
+      <code><![CDATA[toContain]]></code>
+      <code><![CDATA[toContain]]></code>
+      <code><![CDATA[toHaveCount]]></code>
+      <code><![CDATA[toHaveCount]]></code>
+    </InternalMethod>
+    <LessSpecificReturnStatement>
+      <code><![CDATA[$ids]]></code>
+      <code><![CDATA[$ids]]></code>
+    </LessSpecificReturnStatement>
+    <MoreSpecificReturnType>
+      <code><![CDATA[list<int|string>]]></code>
+      <code><![CDATA[list<int|string>]]></code>
+    </MoreSpecificReturnType>
+  </file>
+  <file src="tests/Unit/Admin/Extensions/CoreUpdateServiceTest.php">
+    <InternalMethod>
+      <code><![CDATA[toBeFalse]]></code>
+      <code><![CDATA[toBeFalse]]></code>
+      <code><![CDATA[toBeGreaterThan]]></code>
+      <code><![CDATA[toBeLessThan]]></code>
+      <code><![CDATA[toBeTrue]]></code>
+    </InternalMethod>
+  </file>
+  <file src="tests/Unit/Admin/Extensions/ExtensionScannerTest.php">
+    <InternalMethod>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toHaveKey]]></code>
+    </InternalMethod>
+    <UndefinedMagicMethod>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toHaveKey]]></code>
+    </UndefinedMagicMethod>
+  </file>
+  <file src="tests/Unit/Admin/Extensions/ExtensionTypeTest.php">
+    <InternalMethod>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBeNull]]></code>
+    </InternalMethod>
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_PLUGINS_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+  </file>
+  <file src="tests/Unit/Admin/Extensions/ZipExtractorTest.php">
+    <InternalMethod>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBeFalse]]></code>
+      <code><![CDATA[toBeFalse]]></code>
+      <code><![CDATA[toBeNull]]></code>
+      <code><![CDATA[toBeNull]]></code>
+      <code><![CDATA[toBeNull]]></code>
+      <code><![CDATA[toBeNull]]></code>
+    </InternalMethod>
+    <UndefinedMagicMethod>
+      <code><![CDATA[toBeNull]]></code>
+      <code><![CDATA[toBeNull]]></code>
+      <code><![CDATA[toBeNull]]></code>
+    </UndefinedMagicMethod>
+  </file>
+  <file src="tests/Unit/Admin/Maintenance/ServerInfoServiceTest.php">
+    <InternalMethod>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toContain]]></code>
+      <code><![CDATA[toContain]]></code>
+      <code><![CDATA[toContain]]></code>
+    </InternalMethod>
+    <UndefinedPropertyFetch>
+      <code><![CDATA[expect($html)->toContain(htmlspecialchars(PHP_VERSION))
+        ->toContain('Loaded extensions')
+        ->not]]></code>
+    </UndefinedPropertyFetch>
+  </file>
+  <file src="tests/Unit/Admin/Upload/UploadServiceTest.php">
+    <InternalMethod>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toContain]]></code>
+      <code><![CDATA[toContain]]></code>
+    </InternalMethod>
+    <UndefinedMagicMethod>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBeFalse]]></code>
+      <code><![CDATA[toContain]]></code>
+      <code><![CDATA[toContain]]></code>
+    </UndefinedMagicMethod>
   </file>
   <file src="tests/Unit/Auth/CookieServiceTest.php">
     <InternalMethod>

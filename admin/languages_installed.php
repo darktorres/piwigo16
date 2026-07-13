@@ -9,8 +9,13 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-use Piwigo\Admin\languages;
-use Piwigo\Db\Tables;
+use Piwigo\Admin\Extensions\ExtensionLifecycle;
+use Piwigo\Admin\Extensions\ExtensionRepository;
+use Piwigo\Admin\Extensions\ExtensionScanner;
+use Piwigo\Admin\Extensions\ExtensionType;
+use Piwigo\Admin\Extensions\PemCatalog;
+use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Db\DbConnection;
 use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
@@ -48,12 +53,17 @@ $page_id = $page['page'] ?? null;
 $page_id = is_scalar($page_id) ? (string) $page_id : '';
 $base_url = get_root_url() . 'admin.php?page=' . $page_id;
 
-$languages = new languages();
-$languages->get_db_languages();
+$extension_repository = new ExtensionRepository(DbConnection::build());
+$pem_catalog = new PemCatalog(new ZipExtractor());
+$extension_scanner = new ExtensionScanner();
+$extension_lifecycle = new ExtensionLifecycle($extension_repository, $pem_catalog);
+
+$fs_languages = $extension_scanner->scan(ExtensionType::Language);
+$db_languages = $extension_repository->findAll(ExtensionType::Language);
 
 // --------------------------------------------------perform requested actions
 check_input_parameter('action', $_GET, false, '/^(activate|deactivate|set_default|delete)$/');
-check_input_parameter('language', $_GET, false, '/^(' . join('|', array_keys($languages->fs_languages)) . ')$/');
+check_input_parameter('language', $_GET, false, '/^(' . join('|', array_keys($fs_languages)) . ')$/');
 
 if (isset($_GET['action']) and isset($_GET['language']) and is_webmaster()) {
     // check_input_parameter() above already fatal_error()s if either value
@@ -64,7 +74,8 @@ if (isset($_GET['action']) and isset($_GET['language']) and is_webmaster()) {
     $language_id = $_GET['language'];
 
     if (is_string($action) and is_string($language_id)) {
-        $page['errors'] = $languages->perform_action($action, $language_id);
+        $fs_language_entry = $fs_languages[$language_id] ?? null;
+        $page['errors'] = $extension_lifecycle->performAction(ExtensionType::Language, $action, $language_id, $fs_language_entry);
 
         if (empty($page['errors'])) {
             redirect($base_url);
@@ -79,16 +90,16 @@ $default_language = get_default_language();
 
 $tpl_languages = [];
 
-foreach ($languages->fs_languages as $language_id => $language) {
+foreach ($fs_languages as $language_id => $language) {
     $language['u_action'] = add_url_params($base_url, [
         'language' => $language_id,
     ]);
 
-    if (in_array($language_id, array_keys($languages->db_languages))) {
+    if (in_array($language_id, array_keys($db_languages))) {
         $language['state'] = 'active';
         $language['deactivable'] = true;
 
-        if (count($languages->db_languages) <= 1) {
+        if (count($db_languages) <= 1) {
             $language['deactivable'] = false;
             $language['deactivate_tooltip'] = l10n('Impossible to deactivate this language, you need at least one language.');
         }
@@ -119,24 +130,13 @@ $template->append('language_states', 'active');
 $template->append('language_states', 'inactive');
 
 $missing_language_ids = array_diff(
-    array_keys($languages->db_languages),
-    array_keys($languages->fs_languages)
+    array_keys($db_languages),
+    array_keys($fs_languages)
 );
 
 foreach ($missing_language_ids as $language_id) {
-    $query = '
-UPDATE ' . Tables::userInfos() . '
-  SET language = \'' . get_default_language() . '\'
-  WHERE language = \'' . $language_id . '\'
-;';
-    pwg_query($query);
-
-    $query = '
-DELETE
-  FROM ' . Tables::languages() . '
-  WHERE id= \'' . $language_id . '\'
-;';
-    pwg_query($query);
+    $extension_repository->reassignUsersFromLanguage($language_id, get_default_language());
+    $extension_repository->delete(ExtensionType::Language, $language_id);
 }
 
 $template->assign('isWebmaster', (is_webmaster()) ? 1 : 0);

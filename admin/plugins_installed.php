@@ -9,8 +9,12 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-use Piwigo\Admin\plugins;
-use Piwigo\Db\Tables;
+use Piwigo\Admin\Extensions\ExtensionRepository;
+use Piwigo\Admin\Extensions\ExtensionScanner;
+use Piwigo\Admin\Extensions\ExtensionType;
+use Piwigo\Admin\Extensions\PemCatalog;
+use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Db\DbConnection;
 use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
@@ -53,11 +57,15 @@ $base_url = get_root_url() . 'admin.php?page=' . $page_page;
 $pwg_token = get_pwg_token();
 $action_url = $base_url . '&amp;plugin=%s&amp;pwg_token=' . $pwg_token;
 
-$plugins = new plugins();
+$extension_repository = new ExtensionRepository(DbConnection::build());
+$pem_catalog = new PemCatalog(new ZipExtractor());
+$fs_plugins = (new ExtensionScanner())->scan(ExtensionType::Plugin);
+uasort($fs_plugins, name_compare(...));
+$db_plugins_by_id = $extension_repository->findAll(ExtensionType::Plugin);
 
 // --------------------------------------------------------Incompatible Plugins
 if (isset($_GET['incompatible_plugins'])) {
-    $incompatible_plugins_raw = $plugins->get_incompatible_plugins();
+    $incompatible_plugins_raw = $pem_catalog->getIncompatibleExtensions(ExtensionType::Plugin, $fs_plugins, ExtensionType::Plugin->defaultIds());
 
     if ($incompatible_plugins_raw === false) {
         echo json_encode([]);
@@ -106,8 +114,7 @@ if (is_array($plugin_menu_links_deprec)) {
 // |                     start template output                             |
 // +-----------------------------------------------------------------------+
 
-$plugins->sort_fs_plugins('name');
-$merged_extensions = $plugins->get_merged_extensions();
+$merged_extensions = $pem_catalog->getLocallyMergedExtensions();
 $merged_plugins = false;
 $tpl_plugins = [];
 $count_types_plugins = [
@@ -117,7 +124,7 @@ $count_types_plugins = [
     'merged' => 0,
 ];
 
-foreach ($plugins->fs_plugins as $plugin_id => $fs_plugin) {
+foreach ($fs_plugins as $plugin_id => $fs_plugin) {
     // $_SESSION is a superglobal with no known value type, so PHPStan
     // sees $_SESSION['incompatible_plugins'] as mixed; narrow it once here
     // (same pattern as plugins.class.php's get_incompatible_plugins()).
@@ -168,8 +175,8 @@ foreach ($plugins->fs_plugins as $plugin_id => $fs_plugin) {
         'SETTINGS_URL' => $setting_url,
     ];
 
-    if (isset($plugins->db_plugins_by_id[$plugin_id])) {
-        $db_plugin_state = $plugins->db_plugins_by_id[$plugin_id]['state'] ?? null;
+    if (isset($db_plugins_by_id[$plugin_id])) {
+        $db_plugin_state = $db_plugins_by_id[$plugin_id]['state'] ?? null;
         $plugin_state = is_string($db_plugin_state) ? $db_plugin_state : 'inactive';
     } else {
         $plugin_state = 'inactive';
@@ -179,8 +186,7 @@ foreach ($plugins->fs_plugins as $plugin_id => $fs_plugin) {
     $fs_plugin_extension = $fs_plugin['extension'] ?? null;
     if (is_string($fs_plugin_extension) and isset($merged_extensions[$fs_plugin_extension])) {
         // Deactivate manually plugin from database
-        $query = 'UPDATE ' . Tables::plugins() . ' SET state=\'inactive\' WHERE id=\'' . $plugin_id . '\'';
-        pwg_query($query);
+        $extension_repository->updatePluginState($plugin_id, 'inactive');
 
         $plugin_state = 'merged';
         $tpl_plugin['STATE'] = $plugin_state;
@@ -201,8 +207,8 @@ if ($merged_plugins) {
 }
 
 $missing_plugin_ids = array_diff(
-    array_keys($plugins->db_plugins_by_id),
-    array_keys($plugins->fs_plugins)
+    array_keys($db_plugins_by_id),
+    array_keys($fs_plugins)
 );
 
 if (count($missing_plugin_ids) > 0) {
@@ -210,7 +216,7 @@ if (count($missing_plugin_ids) > 0) {
         $tpl_plugins[] = [
             'NAME' => $plugin_id,
             'ID' => $plugin_id,
-            'VERSION' => $plugins->db_plugins_by_id[$plugin_id]['version'],
+            'VERSION' => $db_plugins_by_id[$plugin_id]['version'],
             'DESC' => l10n('ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW.'),
             'U_ACTION' => sprintf($action_url, $plugin_id),
             'STATE' => 'missing',
@@ -221,11 +227,15 @@ if (count($missing_plugin_ids) > 0) {
 }
 
 // sort plugins by state then by name
+// Uniquely named (not cmp()) since PHPStan analyzes every included file
+// together and admin/themes_installed.php declares its own top-level
+// cmp() -- same pattern as push_plugins_new_page_message() in
+// admin/plugins_new.php.
 /**
  * @param array<string, mixed> $a
  * @param array<string, mixed> $b
  */
-function cmp(array $a, array $b): int|bool
+function cmp_plugins(array $a, array $b): int|bool
 {
     $s = [
         'merged' => 0,

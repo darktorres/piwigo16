@@ -130,4 +130,24 @@ final class PermalinkRepository extends AbstractRepository
             ->setParameter('permalink', $permalink)
             ->executeStatement();
     }
+
+    /**
+     * Deletes a single old-permalink row by its permalink value alone (no
+     * cat_id known -- admin/permalinks.php's "delete permanently" action
+     * only has the permalink string from the link it renders). No LIMIT
+     * needed: `permalink` is old_permalinks' own primary key (see
+     * install/piwigo_structure-mysql.sql), so at most one row can ever
+     * match. Returns whether a row was actually deleted, mirroring the
+     * legacy pwg_db_changes() == 0 check this replaces.
+     */
+    public function deleteOldPermalinkByValue(string $permalink): bool
+    {
+        $affected = $this->conn->createQueryBuilder()
+            ->delete(Tables::oldPermalinks())
+            ->where('permalink = :permalink')
+            ->setParameter('permalink', $permalink)
+            ->executeStatement();
+
+        return $affected > 0;
+    }
 }

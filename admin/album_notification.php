@@ -369,12 +369,16 @@ SELECT
 }
 
 if (count($user_ids) > 0) {
+    // WHERE must filter on the same (possibly remapped, see $user_fields
+    // above) id column the SELECT aliases to "id" -- a literal `id` here
+    // would silently filter on the wrong column for a site using a
+    // non-default external-auth $conf['user_fields']['id'] mapping.
     $query = '
 SELECT
     ' . $user_field_id . ' AS id,
     ' . $user_field_username . ' AS username
   FROM ' . Tables::users() . '
-  WHERE id IN (' . implode(',', $user_ids) . ')
+  WHERE ' . $user_field_id . ' IN (' . implode(',', $user_ids) . ')
 ;';
 
     $users = query2array($query, 'id', 'username');

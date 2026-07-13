@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Config\Config;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
@@ -682,26 +683,20 @@ SELECT
                 if (is_resource($handle)) {
                     fclose($handle);
                 }
-                include_once PHPWG_ROOT_PATH . 'admin/include/functions_zip.inc.php';
-                if ((bool) ($list = zip_list_filenames($archive))) {
+                $zip_extractor = new ZipExtractor();
+                if (($list = $zip_extractor->listFilenames($archive)) !== null) {
                     // Declared before the loop (rather than relying on
                     // isset($main_filepath) to narrow it after the loop) --
                     // PHPStan doesn't reliably preserve isset()-based
                     // narrowing for a variable only ever conditionally
                     // assigned inside a foreach body.
                     $main_filepath = null;
-                    foreach ($list as $file) {
+                    foreach ($list as $filename) {
                         // we search main.inc.php in archive
-                        if (basename($file['filename']) == 'themeconf.inc.php'
+                        if (basename($filename) == 'themeconf.inc.php'
                           and ($main_filepath === null
-                          or strlen($file['filename']) < strlen($main_filepath))) {
-                            // cast once at assignment (rather than at every
-                            // read site below) since zip_list_filenames()'s
-                            // 'filename' entry is PHPStan-mixed but is
-                            // always a real string archive entry name (same
-                            // pattern as
-                            // languages.class.php::extract_language_files()).
-                            $main_filepath = $file['filename'];
+                          or strlen($filename) < strlen($main_filepath))) {
+                            $main_filepath = $filename;
                         }
                     }
 
@@ -717,7 +712,7 @@ SELECT
                         $extract_path = Config::themesPath() . $theme_id;
                         $logger->debug(__FUNCTION__ . ', $extract_path = ' . $extract_path);
 
-                        if ((bool) ($result = zip_extract($archive, $extract_path, $root))) {
+                        if (($result = $zip_extractor->extract($archive, $extract_path, $root)) !== null) {
                             // extraction succeeded; 'ok' if the extracted result
                             // list doesn't happen to include main.inc.php itself
                             $status = 'ok';
@@ -736,9 +731,9 @@ SELECT
                                 $extract_path_realpath = realpath($extract_path);
 
                                 // realpath() failing here would mean
-                                // $extract_path (just populated by the
-                                // zip_extract() above) doesn't actually
-                                // exist as a real directory — skip the
+                                // $extract_path (just populated by
+                                // ZipExtractor::extract() above) doesn't
+                                // actually exist as a real directory — skip the
                                 // obsolete-file cleanup rather than risk the
                                 // traversal check below against a
                                 // non-canonical path.

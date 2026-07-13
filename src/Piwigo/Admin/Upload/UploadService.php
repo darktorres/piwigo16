@@ -1,0 +1,1404 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Piwigo\Admin\Upload;
+
+use Piwigo\Admin\Image\pwg_image;
+use Piwigo\Config\Config;
+use Piwigo\Core\Logger;
+use Piwigo\Db\Tables;
+use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\DerivativeParams;
+use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\SrcImage;
+use Piwigo\Storage\StorageRegistry;
+use Piwigo\Ws\PwgError;
+use Piwigo\Ws\PwgServer;
+
+/**
+ * Ported from admin/include/functions_upload.inc.php (22 free functions).
+ * Behavior-preserving port -- global $conf/$user/$logger reads stay inline
+ * (same "keep legacy global reads inline" pattern as every P17-20 domain
+ * service), except two real fixes made during the port:
+ *
+ * [SEC-21] addUploadedFile()'s SVG branch validated that the sniffed MIME
+ * type matched the ".svg" extension, but never sanitized the SVG's own
+ * XML content -- a genuinely-named "photo.svg" containing an embedded
+ * <script> passed straight through to storage and is later served
+ * inline by the web server. sanitizeSvgIfNeeded() (new) strips <script>
+ * elements and on*= event-handler attributes via DOMDocument (LIBXML_NONET,
+ * DOCTYPE stripped first -- same safe-parsing shape as
+ * MetadataService::parseSvgDimensions(), P19's own SEC-20 fix), run right
+ * after the MIME/extension check, before the file is written to permanent
+ * storage. Content-Disposition: attachment for uploaded SVG/HTML (the
+ * other SEC-21 half) is a web-server-level fix, see upload/.htaccess.
+ *
+ * [SEC-16] all 8 real exec() calls (PDF/HEIC/TIFF/video/PSD/EPS
+ * representative generation) built their command string via unescaped
+ * `'"' . $path . '"'` concatenation -- P19 only fixed pwg_image.php's and
+ * image_ext_imagick.php's 4 call sites (the doc's own SEC-16 text already
+ * scoped "UploadService (10 calls)" separately, i.e. this file was always
+ * the remaining half). Every exec() call now uses escapeshellarg(), same
+ * `escapeshellarg($ext_imagick_dir) . pwg_image::get_ext_imagick_command()`
+ * dir-prefix pattern P19 established in pwg_image.php/image_ext_imagick.php.
+ *
+ * The 6 upload_file_* representative-generation handlers are `public
+ * static` (not instance methods, unlike the rest of this class) because
+ * they're registered as PluginConfig event handlers
+ * (admin/include/functions_upload.inc.php's thin delegate file, at
+ * include time) -- EventDispatcher::addEventHandler() dedupes by
+ * `$a === $b` on the callable, which for an array callable compares the
+ * bound object by identity; an instance-method callable
+ * ([$this, 'method']) would silently re-register (and double-fire) a new
+ * "distinct" handler on every `new UploadService()`. A `[self::class,
+ * 'method']` static callable compares equal across any number of
+ * registrations, matching the original free function's true
+ * once-per-process registration semantics.
+ */
+final class UploadService
+{
+    /**
+     * @return array<string, array{default: bool|int, min: int|null, max: int|null, pattern: string|null, can_be_null: bool, error_message: string|null}>
+     */
+    public function getUploadFormConfig(): array
+    {
+        return [
+            'original_resize' => [
+                'default' => false,
+                'min' => null,
+                'max' => null,
+                'pattern' => null,
+                'can_be_null' => false,
+                'error_message' => null,
+            ],
+
+            'original_resize_maxwidth' => [
+                'default' => 2000,
+                'min' => 500,
+                'max' => 20000,
+                'pattern' => '/^\d+$/',
+                'can_be_null' => false,
+                'error_message' => l10n('The original maximum width must be a number between %d and %d'),
+            ],
+
+            'original_resize_maxheight' => [
+                'default' => 2000,
+                'min' => 300,
+                'max' => 20000,
+                'pattern' => '/^\d+$/',
+                'can_be_null' => false,
+                'error_message' => l10n('The original maximum height must be a number between %d and %d'),
+            ],
+
+            'original_resize_quality' => [
+                'default' => 95,
+                'min' => 50,
+                'max' => 98,
+                'pattern' => '/^\d+$/',
+                'can_be_null' => false,
+                'error_message' => l10n('The original image quality must be a number between %d and %d'),
+            ],
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     * @param array<int, string> $errors
+     * @param array<string, string> $form_errors
+     */
+    public function saveUploadFormConfig(array $data, array &$errors = [], array &$form_errors = []): bool
+    {
+        if ($data === []) {
+            return false;
+        }
+
+        $upload_form_config = $this->getUploadFormConfig();
+        $updates = [];
+
+        foreach ($data as $field => $value) {
+            if (! isset($upload_form_config[$field])) {
+                continue;
+            }
+            if (is_bool($upload_form_config[$field]['default'])) {
+                if (isset($value)) {
+                    $value = true;
+                } else {
+                    $value = false;
+                }
+
+                $updates[] = [
+                    'param' => $field,
+                    'value' => boolean_to_string($value),
+                ];
+            } elseif ($upload_form_config[$field]['can_be_null'] and self::isFalsy($value)) {
+                $updates[] = [
+                    'param' => $field,
+                    'value' => 'false',
+                ];
+            } else {
+                $min = $upload_form_config[$field]['min'];
+                $max = $upload_form_config[$field]['max'];
+                $pattern = $upload_form_config[$field]['pattern'];
+                $error_message = $upload_form_config[$field]['error_message'];
+
+                if (! is_int($min) || ! is_int($max) || ! is_string($pattern) || ! is_string($error_message) || ! is_scalar($value)) {
+                    // every upload_form_config entry that reaches this branch
+                    // (i.e. isn't the boolean toggle handled above) defines
+                    // min/max/pattern/error_message as int/int/string/string;
+                    // this guard only exists to give PHPStan a real narrowing
+                    // and should never actually skip a field in practice.
+                    continue;
+                }
+
+                if ((bool) preg_match($pattern, (string) $value) and $value >= $min and $value <= $max) {
+                    $updates[] = [
+                        'param' => $field,
+                        'value' => $value,
+                    ];
+                } else {
+                    $errors[] = sprintf(
+                        $error_message,
+                        $min,
+                        $max
+                    );
+
+                    $form_errors[$field] = '[' . $min . ' .. ' . $max . ']';
+                }
+            }
+        }
+
+        if (count($errors) === 0) {
+            mass_updates(
+                Tables::config(),
+                [
+                    'primary' => ['param'],
+                    'update' => ['value'],
+                ],
+                $updates
+            );
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * 1) move uploaded file to upload/2010/01/22/20100122003814-449ada00.jpg
+     * 2) keep/resize original
+     * 3) register in database
+     *
+     * @param int[]|null $categories
+     */
+    public function addUploadedFile(string $source_filepath, ?string $original_filename = null, ?array $categories = null, ?int $level = null, ?int $image_id = null, ?string $original_md5sum = null): int|string
+    {
+        /**
+         * @var array<string, mixed> $conf
+         * @var array<string, mixed> $user
+         * @var Logger $logger
+         */
+        global $conf, $user, $logger;
+
+        if ($original_filename !== null) {
+            $original_filename = htmlspecialchars($original_filename);
+        }
+
+        if (isset($original_md5sum)) {
+            $md5sum = $original_md5sum;
+        } else {
+            $md5sum = md5_file($source_filepath);
+        }
+
+        // we only try to detect duplicate on a new image, not when updating an existing image
+        if (! isset($image_id) and (bool) $conf['upload_detect_duplicate']) {
+            $query = '
+SELECT
+    id
+  FROM ' . Tables::images() . '
+  WHERE md5sum = \'' . $md5sum . '\'
+;';
+            $images_found = query2array($query);
+
+            if (count($images_found) > 0) {
+                $found_id = $images_found[0]['id'];
+                if (! is_string($found_id) || ! is_numeric($found_id)) {
+                    // id is the table's NOT NULL auto-increment primary key,
+                    // so it is always a numeric string here; this guard only
+                    // exists to give PHPStan a real narrowing.
+                    throw new \Exception(__METHOD__ . '(): unexpected non-numeric image id while checking for duplicates');
+                }
+                $image_id = (int) $found_id;
+                $logger->info('[' . __METHOD__ . '] image already exist #' . $image_id . ', we delete the newly uploaded file : ' . $source_filepath);
+                unlink($source_filepath);
+
+                // if the destination category is already linked to this photo, no worry,
+                // associate_images_to_categories perfectly handles this case
+                $this->addUploadedFileAddToCategories($image_id, $categories);
+
+                return $image_id;
+            }
+        }
+
+        $file_path = null;
+
+        if (isset($image_id)) {
+            // this photo already exists, we update it
+            $query = '
+SELECT
+    path
+  FROM ' . Tables::images() . '
+  WHERE id = ' . $image_id . '
+;';
+            $result = pwg_query($query);
+            while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+                $file_path = $row['path'];
+            }
+
+            if (! isset($file_path)) {
+                die('[' . __METHOD__ . '] this photo does not exist in the database');
+            }
+
+            // delete all physical files related to the photo (thumbnail, web site, HD)
+            delete_element_files([$image_id]);
+        } else {
+            // this photo is new
+
+            // current date -- pwg_now() rather than a raw "SELECT NOW();",
+            // since the latter runs on the MySQL server's real clock,
+            // invisible to pwg_now()'s PIWIGO_TEST_NOW freeze. This value
+            // drives both piwigo_images.date_available and the upload
+            // directory/filename's date portion, so a real-clock read here
+            // made every fixture regeneration produce a fresh, unstable
+            // upload path and a non-reproducible photo sort order.
+            $dbnow = pwg_now()
+                ->format('Y-m-d H:i:s');
+            $date_parts = preg_split('/[^\d]/', $dbnow, 4);
+            if ($date_parts === false) {
+                throw new \Exception(__METHOD__ . '(): preg_split() failed');
+            }
+            [$year, $month, $day] = $date_parts;
+
+            // upload directory hierarchy
+            $conf_upload_dir = $conf['upload_dir'];
+            $conf_upload_dir = is_string($conf_upload_dir) ? $conf_upload_dir : '';
+            $upload_dir = sprintf(
+                PHPWG_ROOT_PATH . $conf_upload_dir . '/%s/%s/%s',
+                $year,
+                $month,
+                $day
+            );
+
+            // compute file path
+            $date_string = preg_replace('/[^\d]/', '', $dbnow);
+            $random_string = substr((string) $md5sum, 0, 4) . '%s';
+            $filename_wo_ext = $date_string . '-' . $random_string;
+            $file_path = $upload_dir . '/' . $filename_wo_ext . '.';
+
+            $image_size = getimagesize($source_filepath);
+            if ($image_size === false) {
+                // not a real image (e.g. upload_form_all_types lets through a
+                // non-image file); fall through to the same "unrecognized
+                // type" handling as any other $type that isn't a known
+                // IMAGETYPE_* constant
+                $type = false;
+            } else {
+                [$width, $height, $type] = $image_size;
+            }
+
+            if ($type === IMAGETYPE_PNG) {
+                $file_path .= 'png';
+            } elseif ($type === IMAGETYPE_GIF) {
+                $file_path .= 'gif';
+            } elseif ($type === IMAGETYPE_JPEG) {
+                $file_path .= 'jpg';
+            } elseif ($type === IMAGETYPE_WEBP) {
+                $file_path .= 'webp';
+            } elseif (isset($conf['upload_form_all_types']) and (bool) $conf['upload_form_all_types']) {
+                $original_extension = strtolower(get_extension($original_filename));
+
+                $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                if ($finfo === false) {
+                    throw new \Exception(__METHOD__ . '(): finfo_open() failed');
+                }
+                $finfo_type = finfo_file($finfo, $source_filepath);
+
+                if (in_array($finfo_type, ['image/svg', 'image/svg+xml'], true) and $original_extension !== 'svg') {
+                    unlink($source_filepath);
+                    $error_msg = 'File extension "' . $original_extension . '" for file "' . $original_filename . '" does not match file MIME type "' . $finfo_type . '"';
+                    if (defined('IN_WS')) {
+                        /** @var PwgServer $service */
+                        global $service;
+                        $service->sendResponse(new PwgError(415, $error_msg));
+                        exit;
+                    }
+
+                    die($error_msg);
+                }
+
+                // [SEC-21] strip <script>/event-handler content from a
+                // genuinely-matching SVG before it ever reaches storage.
+                $this->sanitizeSvgIfNeeded($source_filepath, is_string($finfo_type) ? $finfo_type : null);
+
+                $conf_file_ext = $conf['file_ext'];
+                $conf_file_ext = is_array($conf_file_ext) ? $conf_file_ext : [];
+                if (in_array($original_extension, $conf_file_ext, true)) {
+                    $file_path .= $original_extension;
+                } else {
+                    unlink($source_filepath);
+                    die('unexpected file type');
+                }
+            } else {
+                unlink($source_filepath);
+                die('forbidden file type');
+            }
+
+            $this->prepareDirectory($upload_dir);
+
+            $file_path_pattern = $file_path;
+            do {
+                // we generate a random string for each upload. If the user uploads
+                // the same photo twice at the same time (same timestamp, same md5sum)
+                // we still want the path to be unique.
+                $file_path = sprintf($file_path_pattern, substr(bin2hex(random_bytes(4)), 0, 4));
+            } while (file_exists($file_path));
+        }
+
+        // move_uploaded_file()/rename() both write $source_filepath's content
+        // to $file_path under the uploads tree and consume the source -- routed
+        // through StorageRegistry's 'uploads' disk instead so a future non-local
+        // adapter (S3/SFTP) needs no call-site change here. PHP's own SAPI-level
+        // upload cleanup deletes a real is_uploaded_file() tmp file at request
+        // end even without an explicit unlink() (verified via PHP's documented
+        // upload garbage-collection guarantee), matching what move_uploaded_file()
+        // used to do immediately; the "already local" (rename()) branch still
+        // needs an explicit unlink() since nothing else will remove that source.
+        $upload_root = rtrim(PHPWG_ROOT_PATH . Config::uploadDir(), '/');
+        $upload_rel_path = StorageRegistry::stripRoot($upload_root, $file_path);
+        $upload_stream = fopen($source_filepath, 'rb');
+        if ($upload_stream !== false) {
+            StorageRegistry::disk('uploads')->writeStream($upload_rel_path, $upload_stream);
+            fclose($upload_stream);
+            if (! is_uploaded_file($source_filepath)) {
+                @unlink($source_filepath);
+            }
+        }
+        @chmod($file_path, 0644);
+
+        // handle the uploaded file type by potentially making a
+        // pwg_representative file.
+        $representative_ext = trigger_change('upload_file', null, $file_path);
+
+        // If it is set to either true (the file didn't need a
+        // representative generated), false (the generation of the
+        // representative failed), or any other non-string value an event
+        // handler might return, set it to null because we have no
+        // representative file. (All upload_file handlers registered in this
+        // file return ?string, but trigger_change() itself is inherently
+        // mixed since any plugin can register a handler for this event.)
+        if (! is_string($representative_ext)) {
+            $representative_ext = null;
+        }
+
+        $logger->info(__METHOD__ . ' : force cache generation, representative_ext = ' . ($representative_ext ?? ''));
+
+        if (pwg_image::get_library() !== 'gd') {
+            if ((bool) $conf['original_resize']) {
+                $original_resize_maxwidth = $conf['original_resize_maxwidth'];
+                $original_resize_maxwidth = is_numeric($original_resize_maxwidth) ? (int) $original_resize_maxwidth : 2000;
+
+                $original_resize_maxheight = $conf['original_resize_maxheight'];
+                $original_resize_maxheight = is_numeric($original_resize_maxheight) ? (int) $original_resize_maxheight : 2000;
+
+                $need_resize = $this->needResize($file_path, $original_resize_maxwidth, $original_resize_maxheight);
+
+                if ($need_resize) {
+                    $img = new pwg_image($file_path);
+
+                    $original_resize_quality = $conf['original_resize_quality'];
+                    $original_resize_quality = is_numeric($original_resize_quality) ? (int) $original_resize_quality : 95;
+
+                    $img->pwg_resize(
+                        $file_path,
+                        $original_resize_maxwidth,
+                        $original_resize_maxheight,
+                        $original_resize_quality,
+                        (bool) $conf['upload_form_automatic_rotation'],
+                        false
+                    );
+
+                    $img->destroy();
+                }
+            }
+        }
+
+        // we need to save the rotation angle in the database to compute
+        // width/height of "multisizes"
+        $rotation_angle = pwg_image::get_rotation_angle($file_path);
+        $rotation = pwg_image::get_rotation_code_from_angle($rotation_angle);
+
+        $file_infos = $this->pwgImageInfos($file_path);
+
+        if (isset($image_id)) {
+            $update = [
+                'file' => pwg_db_real_escape_string($original_filename ?? basename($file_path)),
+                'filesize' => $file_infos['filesize'],
+                'width' => $file_infos['width'],
+                'height' => $file_infos['height'],
+                'md5sum' => $md5sum,
+                'added_by' => $user['id'],
+                'rotation' => $rotation,
+            ];
+
+            if (isset($level)) {
+                $update['level'] = $level;
+            }
+
+            single_update(
+                Tables::images(),
+                $update,
+                [
+                    'id' => $image_id,
+                ]
+            );
+        } else {
+            // database registration
+            // pwg_db_real_escape_string() only returns null for a null input,
+            // and basename() never returns null, so the ?? fallback rules
+            // that out.
+            $file = pwg_db_real_escape_string($original_filename ?? basename($file_path));
+            assert($file !== null);
+            $insert = [
+                'file' => $file,
+                'name' => get_name_from_file($file),
+                'date_available' => $dbnow,
+                // Otherwise relies on the schema's own DEFAULT
+                // CURRENT_TIMESTAMP, which reads the real DB-server clock --
+                // invisible to pwg_now()'s PIWIGO_TEST_NOW freeze, same
+                // reasoning as date_available above. Reuses $dbnow rather
+                // than a second pwg_now() call so both columns agree on the
+                // exact same instant, matching what the DB default would
+                // have produced for a single INSERT.
+                'lastmodified' => $dbnow,
+                'path' => preg_replace('#^' . preg_quote(PHPWG_ROOT_PATH) . '#', '', $file_path),
+                'filesize' => $file_infos['filesize'],
+                'width' => $file_infos['width'],
+                'height' => $file_infos['height'],
+                'md5sum' => $md5sum,
+                'added_by' => $user['id'],
+                'rotation' => $rotation,
+            ];
+
+            if (isset($level)) {
+                $insert['level'] = $level;
+            }
+
+            if (isset($representative_ext)) {
+                $insert['representative_ext'] = $representative_ext;
+            }
+
+            single_insert(Tables::images(), $insert);
+
+            $image_id = pwg_db_insert_id();
+            pwg_activity('photo', $image_id, 'add');
+        }
+
+        $this->addUploadedFileAddToCategories($image_id, $categories);
+
+        // update metadata from the uploaded file (exif/iptc)
+        if ((bool) $conf['use_exif'] and ! function_exists('exif_read_data')) {
+            $conf['use_exif'] = false;
+        }
+        sync_metadata([(int) $image_id]);
+
+        // cache a derivative
+        $query = '
+SELECT
+    id,
+    path,
+    representative_ext
+  FROM ' . Tables::images() . '
+  WHERE id = ' . $image_id . '
+;';
+        $image_infos = pwg_db_fetch_assoc(pwg_query($query));
+        if (! is_array($image_infos)) {
+            throw new \Exception(__METHOD__ . '(): image #' . $image_id . ' not found right after being saved');
+        }
+        $src_image = new SrcImage($image_infos);
+
+        set_make_full_url();
+        // in case we are on uploadify.php, we have to replace the false path
+        $derivative_url = preg_replace('#admin/include/i#', 'i', DerivativeImage::url(IMG_MEDIUM, $src_image));
+        assert($derivative_url !== null);
+        unset_make_full_url();
+
+        $logger->info(__METHOD__ . ' : force cache generation, derivative_url = ' . $derivative_url);
+
+        fetchRemote($derivative_url, $dest);
+
+        trigger_notify('loc_end_add_uploaded_file', $image_infos);
+
+        return $image_id;
+    }
+
+    /**
+     * @param int[]|null $categories
+     */
+    private function addUploadedFileAddToCategories(int|string $image_id, ?array $categories): void
+    {
+        /** @var array<string, mixed> $conf */
+        global $conf;
+
+        if (! isset($conf['lounge_active'])) {
+            conf_update_param('lounge_active', false, true);
+        }
+
+        if (! (bool) $conf['lounge_active']) {
+            // check if we need to use the lounge from now
+            $row = pwg_db_fetch_row(pwg_query('SELECT COUNT(*) FROM ' . Tables::images() . ';'));
+            assert($row !== null);
+            [$nb_photos] = $row;
+            if ($nb_photos >= $conf['lounge_activate_threshold']) {
+                conf_update_param('lounge_active', true, true);
+            }
+        }
+
+        if (isset($categories) and count($categories) > 0) {
+            if ((bool) $conf['lounge_active']) {
+                // fill_lounge() requires int keys for $categories; a WS param
+                // forced into an array by makeArrayParam() could theoretically
+                // carry non-sequential/string keys, so reindex to guarantee it.
+                fill_lounge([$image_id], array_values($categories));
+            } else {
+                associate_images_to_categories([(int) $image_id], $categories);
+            }
+        }
+
+        if (! (bool) $conf['lounge_active']) {
+            invalidate_user_cache();
+        }
+    }
+
+    /**
+     * [SEC-21] Strips <script> elements and on*= event-handler attributes
+     * from a genuinely-sniffed SVG before it's written to permanent
+     * storage -- the caller already confirmed the extension matches the
+     * MIME type; this closes the remaining "genuinely-named .svg with
+     * embedded script" stored-XSS gap. Same safe-parsing shape as
+     * MetadataService::parseSvgDimensions() (P19, SEC-20): strip
+     * <!DOCTYPE> first, then DOMDocument with LIBXML_NONET so no external
+     * entity/network fetch can happen during parsing. A file that fails to
+     * parse as XML is left untouched (finfo already confirmed it isn't a
+     * real SVG in that case, so nothing to sanitize -- the caller's own
+     * mismatch check further up handles genuinely wrong content).
+     */
+    private function sanitizeSvgIfNeeded(string $source_filepath, ?string $finfo_type): void
+    {
+        if (! in_array($finfo_type, ['image/svg', 'image/svg+xml'], true)) {
+            return;
+        }
+
+        $xml = file_get_contents($source_filepath);
+        if ($xml === false) {
+            return;
+        }
+
+        $xml = preg_replace('/<!DOCTYPE[^>]*>/i', '', $xml);
+        if ($xml === null) {
+            return;
+        }
+
+        // libxml_use_internal_errors() (not @) so a malformed upload
+        // doesn't surface as a PHP-level warning at all -- parse errors
+        // are just discarded, matching the "leave untouched" fallback below.
+        $previous_use_errors = libxml_use_internal_errors(true);
+        $dom = new \DOMDocument();
+        $loaded = $dom->loadXML($xml, LIBXML_NONET);
+        libxml_clear_errors();
+        libxml_use_internal_errors($previous_use_errors);
+        if (! $loaded || $dom->documentElement === null) {
+            return;
+        }
+
+        $xpath = new \DOMXPath($dom);
+
+        $scriptNodes = $xpath->query('//*[local-name()="script"]');
+        foreach (iterator_to_array($scriptNodes !== false ? $scriptNodes : new \ArrayIterator([])) as $scriptNode) {
+            if ($scriptNode instanceof \DOMNode && $scriptNode->parentNode !== null) {
+                $scriptNode->parentNode->removeChild($scriptNode);
+            }
+        }
+
+        $attrNodes = $xpath->query('//@*');
+        foreach (iterator_to_array($attrNodes !== false ? $attrNodes : new \ArrayIterator([])) as $attrNode) {
+            if ($attrNode instanceof \DOMAttr && stripos($attrNode->nodeName, 'on') === 0) {
+                $attrNode->ownerElement?->removeAttributeNode($attrNode);
+            }
+        }
+
+        $sanitized = $dom->saveXML();
+        if ($sanitized !== false) {
+            file_put_contents($source_filepath, $sanitized);
+        }
+    }
+
+    /**
+     * 1) find infos about the extended image
+     * 2) move uploaded file to upload/2022/05/16/pwg_format/20100122003814-449ada00.cr2
+     * 3) register in database
+     */
+    public function addFormat(string $source_filepath, string $format_ext, int|string $format_of): string
+    {
+        if (! (bool) conf_get_param('enable_formats', false)) {
+            die('[' . __METHOD__ . '] formats are disabled');
+        }
+
+        $authorized_format_exts = conf_get_param('format_ext', ['cr2']);
+        // conf_get_param() is inherently mixed (config values come straight
+        // from the $conf global); only elements that are actually strings can
+        // be safely passed to in_array()/implode() below.
+        $authorized_format_exts = is_array($authorized_format_exts) ? array_filter($authorized_format_exts, is_string(...)) : ['cr2'];
+
+        if (! in_array($format_ext, $authorized_format_exts, true)) {
+            die('[' . __METHOD__ . '] unexpected format extension "' . $format_ext . '" (authorized extensions: ' . implode(', ', $authorized_format_exts) . ')');
+        }
+
+        $query = '
+SELECT
+    path
+  FROM ' . Tables::images() . '
+  WHERE id = ' . $format_of . '
+;';
+        $images = query2array($query);
+
+        if (! isset($images[0])) {
+            die('[' . __METHOD__ . '] this photo does not exist in the database');
+        }
+
+        $format_path = dirname((string) $images[0]['path']) . '/pwg_format/';
+        $format_path .= get_filename_wo_extension(basename((string) $images[0]['path']));
+        $format_path .= '.' . $format_ext;
+
+        $this->prepareDirectory(dirname($format_path));
+
+        // Same StorageRegistry-routed migration as addUploadedFile()'s own
+        // move_uploaded_file()/rename() pair above -- $format_path here (built
+        // from the DB-stored images.path column) is relative, not yet prefixed
+        // with PHPWG_ROOT_PATH, so it needs normalizing to an absolute path
+        // before stripRoot() can compute the disk-relative path.
+        $format_root = PHPWG_ROOT_PATH . Config::uploadDir();
+        $format_abs_path = PHPWG_ROOT_PATH . ltrim(str_replace(['\\', '/./'], ['/', '/'], $format_path), '/');
+        $format_rel_path = StorageRegistry::stripRoot($format_root, $format_abs_path);
+        $format_stream = fopen($source_filepath, 'rb');
+        if ($format_stream !== false) {
+            StorageRegistry::disk('uploads')->writeStream($format_rel_path, $format_stream);
+            fclose($format_stream);
+            if (! is_uploaded_file($source_filepath)) {
+                @unlink($source_filepath);
+            }
+        }
+        @chmod($format_path, 0644);
+
+        $file_infos = $this->pwgImageInfos($format_path);
+
+        $insert = [
+            'image_id' => $format_of,
+            'ext' => $format_ext,
+            'filesize' => $file_infos['filesize'],
+        ];
+
+        $query = '
+SELECT
+  format_id
+  FROM ' . Tables::imageFormat() . '
+  WHERE image_id = ' . $format_of . '
+  AND ext = "' . $format_ext . '"
+;';
+
+        $formats = query2array($query);
+        if ((bool) $formats) {
+            $set_fields = [
+                'filesize' => $file_infos['filesize'],
+            ];
+            $where_fields = [
+                'format_id' => $formats[0]['format_id'],
+                'image_id' => $format_of,
+                'ext' => $format_ext,
+            ];
+            single_update(Tables::imageFormat(), $set_fields, $where_fields);
+            $format_id = $formats[0]['format_id'];
+            $add_status = 'update';
+        } else {
+            single_insert(Tables::imageFormat(), $insert);
+            $format_id = pwg_db_insert_id();
+            $add_status = 'add';
+        }
+
+        pwg_activity('photo', $format_of, 'edit', [
+            'action' => 'add format',
+            'format_ext' => $format_ext,
+            'format_id' => $format_id,
+        ]);
+
+        $format_infos = $insert;
+        $format_infos['format_id'] = $format_id;
+
+        trigger_notify('loc_end_add_format', $format_infos);
+
+        return $add_status;
+    }
+
+    public static function uploadFilePdf(?string $representative_ext, string $file_path): ?string
+    {
+        /**
+         * @var array<string, mixed> $conf
+         * @var Logger $logger
+         */
+        global $logger, $conf;
+
+        $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
+
+        if (isset($representative_ext)) {
+            return $representative_ext;
+        }
+
+        if (pwg_image::get_library() !== 'ext_imagick') {
+            return $representative_ext;
+        }
+
+        if (! in_array(strtolower(get_extension($file_path)), ['pdf'], true)) {
+            return $representative_ext;
+        }
+
+        $ext = conf_get_param('pdf_representative_ext', 'jpg');
+        if (! is_string($ext)) {
+            $ext = 'jpg';
+        }
+        $jpg_quality = conf_get_param('pdf_jpg_quality', 90);
+        if (! is_numeric($jpg_quality)) {
+            $jpg_quality = 90;
+        }
+
+        // move the uploaded file to pwg_representative sub-directory
+        $representative_file_path = original_to_representative($file_path, $ext);
+        self::prepareDirectoryStatic(dirname($representative_file_path));
+
+        $ext_imagick_dir = $conf['ext_imagick_dir'];
+        $ext_imagick_dir = is_string($ext_imagick_dir) ? $ext_imagick_dir : '';
+        // [SEC-16] escapeshellarg() on the dir prefix and both real paths
+        // below -- same pattern P19 established in pwg_image.php/
+        // image_ext_imagick.php; the original never escaped an embedded
+        // '"' or shell metacharacter in either path.
+        $exec = escapeshellarg($ext_imagick_dir) . pwg_image::get_ext_imagick_command();
+        $exec .= ' ' . escapeshellarg((string) realpath($file_path) . '[0]');
+        if ($ext === 'jpg') {
+            $exec .= ' -quality ' . $jpg_quality;
+        }
+        $exec .= ' ' . escapeshellarg($representative_file_path);
+        $exec .= ' 2>&1';
+        @exec($exec, $returnarray);
+
+        // Return the extension (if successful) or false (if failed)
+        if (file_exists($representative_file_path)) {
+            $representative_ext = $ext;
+        }
+
+        return $representative_ext;
+    }
+
+    public static function uploadFileHeic(?string $representative_ext, string $file_path): ?string
+    {
+        /**
+         * @var array<string, mixed> $conf
+         * @var Logger $logger
+         */
+        global $logger, $conf;
+
+        $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
+
+        if (isset($representative_ext)) {
+            return $representative_ext;
+        }
+
+        if (pwg_image::get_library() !== 'ext_imagick') {
+            return $representative_ext;
+        }
+
+        if (! in_array(strtolower(get_extension($file_path)), ['heic'], true)) {
+            return $representative_ext;
+        }
+
+        $ext = 'jpg';
+
+        // move the uploaded file to pwg_representative sub-directory
+        $representative_file_path = original_to_representative($file_path, $ext);
+        self::prepareDirectoryStatic(dirname($representative_file_path));
+
+        [$w, $h] = self::getOptimalDimensionsForRepresentative();
+
+        $ext_imagick_dir = $conf['ext_imagick_dir'];
+        $ext_imagick_dir = is_string($ext_imagick_dir) ? $ext_imagick_dir : '';
+        // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above.
+        $exec = escapeshellarg($ext_imagick_dir) . pwg_image::get_ext_imagick_command();
+        $exec .= ' ' . escapeshellarg((string) realpath($file_path));
+        $exec .= ' -sampling-factor 4:2:0 -quality 85 -interlace JPEG -colorspace sRGB -auto-orient +repage -resize "' . $w . 'x' . $h . '>"';
+        $exec .= ' ' . escapeshellarg($representative_file_path);
+        $exec .= ' 2>&1';
+
+        $logger->info(__METHOD__ . ', exec = ' . $exec);
+
+        @exec($exec, $returnarray);
+
+        // Return the extension (if successful) or false (if failed)
+        if (file_exists($representative_file_path)) {
+            $representative_ext = $ext;
+        }
+
+        return $representative_ext;
+    }
+
+    public static function uploadFileTiff(?string $representative_ext, string $file_path): ?string
+    {
+        /**
+         * @var array<string, mixed> $conf
+         * @var Logger $logger
+         */
+        global $logger, $conf;
+
+        $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
+
+        if (isset($representative_ext)) {
+            return $representative_ext;
+        }
+
+        if (pwg_image::get_library() !== 'ext_imagick') {
+            return $representative_ext;
+        }
+
+        if (! in_array(strtolower(get_extension($file_path)), ['tif', 'tiff'], true)) {
+            return $representative_ext;
+        }
+
+        // move the uploaded file to pwg_representative sub-directory
+        $representative_file_path = dirname($file_path) . '/pwg_representative/';
+        $representative_file_path .= get_filename_wo_extension(basename($file_path)) . '.';
+
+        $conf_tiff_representative_ext = $conf['tiff_representative_ext'];
+        $representative_ext = is_string($conf_tiff_representative_ext) ? $conf_tiff_representative_ext : 'jpg';
+        $representative_file_path .= $representative_ext;
+
+        self::prepareDirectoryStatic(dirname($representative_file_path));
+
+        $ext_imagick_dir = $conf['ext_imagick_dir'];
+        $ext_imagick_dir = is_string($ext_imagick_dir) ? $ext_imagick_dir : '';
+        // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above.
+        $exec = escapeshellarg($ext_imagick_dir) . pwg_image::get_ext_imagick_command();
+        $exec .= ' ' . escapeshellarg((string) realpath($file_path));
+
+        if ($representative_ext === 'jpg') {
+            $exec .= ' -quality 98';
+        }
+
+        $dest = pathinfo($representative_file_path);
+        $exec .= ' ' . escapeshellarg((string) realpath($dest['dirname']) . '/' . $dest['basename']);
+
+        $exec .= ' 2>&1';
+        @exec($exec, $returnarray);
+
+        // sometimes ImageMagick creates file-0.jpg (full size) + file-1.jpg
+        // (thumbnail). I don't know how to avoid it.
+        $representative_file_abspath = realpath($dest['dirname']) . '/' . $dest['basename'];
+        if (! file_exists($representative_file_abspath)) {
+            $first_file_abspath = preg_replace(
+                '/\.' . $representative_ext . '$/',
+                '-0.' . $representative_ext,
+                $representative_file_abspath
+            );
+            assert($first_file_abspath !== null);
+
+            if (file_exists($first_file_abspath)) {
+                rename($first_file_abspath, $representative_file_abspath);
+            }
+        }
+
+        return get_extension($representative_file_abspath);
+    }
+
+    public static function uploadFileVideo(?string $representative_ext, string $file_path): ?string
+    {
+        /**
+         * @var array<string, mixed> $conf
+         * @var Logger $logger
+         */
+        global $logger, $conf;
+
+        $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
+
+        if (isset($representative_ext)) {
+            return $representative_ext;
+        }
+
+        $ffmpeg_video_exts = [ // extensions tested with FFmpeg
+            'wmv', 'mov', 'mkv', 'mp4', 'mpg', 'flv', 'asf', 'xvid', 'divx', 'mpeg',
+            'avi', 'rm', 'm4v', 'ogg', 'ogv', 'webm', 'webmv',
+        ];
+
+        if (! in_array(strtolower(get_extension($file_path)), $ffmpeg_video_exts, true)) {
+            return $representative_ext;
+        }
+
+        $representative_file_path = dirname($file_path) . '/pwg_representative/';
+        $representative_file_path .= get_filename_wo_extension(basename($file_path)) . '.';
+
+        $representative_ext = 'jpg';
+        $representative_file_path .= $representative_ext;
+
+        self::prepareDirectoryStatic(dirname($representative_file_path));
+
+        // Get duration of video and determine time of poster
+        // [SEC-16] escapeshellarg() on the video path -- the original
+        // single-quoted it manually, which never escapes an embedded `'`.
+        exec('ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 ' . escapeshellarg($file_path), $O, $S);
+
+        if (isset($O[0]) && $O[0] !== '') {
+            $second = min(floor((float) $O[0] * 10) / 10, 2);
+        } else {
+            $second = 0; // Safest position of the poster
+        }
+
+        $logger->info(__METHOD__ . ', Poster at ' . $second . 's');
+
+        // Generate poster, see https://trac.ffmpeg.org/wiki/Seeking
+        $ffmpeg_dir = $conf['ffmpeg_dir'];
+        $ffmpeg_dir = is_string($ffmpeg_dir) ? $ffmpeg_dir : '';
+        // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above (same
+        // dir-prefix pattern applied to the ffmpeg/avconv binaries here).
+        $ffmpeg = escapeshellarg($ffmpeg_dir) . 'ffmpeg';
+        $ffmpeg .= ' -ss ' . $second;  // Fast seeking
+        $ffmpeg .= ' -i ' . escapeshellarg($file_path); // Video file
+        $ffmpeg .= ' -frames:v 1';  // Extract one frame
+        $ffmpeg .= ' ' . escapeshellarg($representative_file_path); // Output file
+
+        @exec($ffmpeg . ' 2>&1', $FO, $FS);
+        if (isset($FO[0]) && $FO[0] !== '') {
+            $logger->debug(__METHOD__ . ', Tried ' . $ffmpeg);
+            $logger->debug($FO[0]);
+        }
+
+        // Did we generate the file ?
+        if (! file_exists($representative_file_path)) {
+            // Let's try with avconv if ffmpeg unavailable
+            $avconv = str_replace('ffmpeg', 'avconv', $ffmpeg);
+            @exec($avconv . ' 2>&1', $AO, $AS);
+
+            if (isset($AO[0]) && $AO[0] !== '') {
+                $logger->debug(__METHOD__ . ', Tried ' . $avconv);
+                $logger->debug($AO[0]);
+            }
+        }
+
+        // Did we finally generate the file ?
+        if (! file_exists($representative_file_path)) {
+            return null;
+        }
+
+        return $representative_ext;
+    }
+
+    public static function uploadFilePsd(?string $representative_ext, string $file_path): ?string
+    {
+        /**
+         * @var array<string, mixed> $conf
+         * @var Logger $logger
+         */
+        global $logger, $conf;
+
+        $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
+
+        if (isset($representative_ext)) {
+            return $representative_ext;
+        }
+
+        if (pwg_image::get_library() !== 'ext_imagick') {
+            return $representative_ext;
+        }
+
+        if (! in_array(strtolower(get_extension($file_path)), ['psd'], true)) {
+            return $representative_ext;
+        }
+
+        // move the uploaded file to pwg_representative sub-directory
+        $representative_file_path = dirname($file_path) . '/pwg_representative/';
+        $representative_file_path .= get_filename_wo_extension(basename($file_path)) . '.';
+
+        $representative_ext = 'png';
+        $representative_file_path .= $representative_ext;
+
+        self::prepareDirectoryStatic(dirname($representative_file_path));
+
+        $ext_imagick_dir = $conf['ext_imagick_dir'];
+        $ext_imagick_dir = is_string($ext_imagick_dir) ? $ext_imagick_dir : '';
+        // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above.
+        $exec = escapeshellarg($ext_imagick_dir) . pwg_image::get_ext_imagick_command();
+
+        $exec .= ' ' . escapeshellarg((string) realpath($file_path));
+
+        $dest = pathinfo($representative_file_path);
+        $exec .= ' ' . escapeshellarg((string) realpath($dest['dirname']) . '/' . $dest['basename']);
+
+        $exec .= ' 2>&1';
+        $logger->info(__METHOD__ . ', exec = ' . $exec);
+        @exec($exec, $returnarray);
+
+        // sometimes ImageMagick creates file-0.png + file-1.png + file-2.png...
+        // It seems we can't avoid it.
+        $representative_file_abspath = realpath($dest['dirname']) . '/' . $dest['basename'];
+        if (! file_exists($representative_file_abspath)) {
+            $first_file_abspath = preg_replace(
+                '/\.' . $representative_ext . '$/',
+                '-0.' . $representative_ext,
+                $representative_file_abspath
+            );
+            assert($first_file_abspath !== null);
+
+            if (file_exists($first_file_abspath)) {
+                rename($first_file_abspath, $representative_file_abspath);
+            }
+        }
+
+        return get_extension($representative_file_abspath);
+    }
+
+    public static function uploadFileEps(?string $representative_ext, string $file_path): ?string
+    {
+        /**
+         * @var array<string, mixed> $conf
+         * @var Logger $logger
+         */
+        global $logger, $conf;
+
+        $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
+
+        if (isset($representative_ext)) {
+            return $representative_ext;
+        }
+
+        if (pwg_image::get_library() !== 'ext_imagick') {
+            return $representative_ext;
+        }
+
+        if (! in_array(strtolower(get_extension($file_path)), ['eps'], true)) {
+            return $representative_ext;
+        }
+
+        // if the representative is "jpg", the derivatives are ugly. With "png" it's fine.
+        $ext = 'png';
+
+        // move the uploaded file to pwg_representative sub-directory
+        $representative_file_path = original_to_representative($file_path, $ext);
+        self::prepareDirectoryStatic(dirname($representative_file_path));
+
+        // convert -density 300 image.eps -resize 2048x2048 image.png
+
+        $ext_imagick_dir = $conf['ext_imagick_dir'];
+        $ext_imagick_dir = is_string($ext_imagick_dir) ? $ext_imagick_dir : '';
+        // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above.
+        $exec = escapeshellarg($ext_imagick_dir) . pwg_image::get_ext_imagick_command();
+        $exec .= ' ' . escapeshellarg((string) realpath($file_path));
+        $exec .= ' -density 300';
+        $exec .= ' -resize 2048x2048';
+        $exec .= ' ' . escapeshellarg($representative_file_path);
+        $exec .= ' 2>&1';
+        $logger->info(__METHOD__ . ', $exec = ' . $exec);
+        @exec($exec, $returnarray);
+
+        // Return the extension (if successful) or false (if failed)
+        if (file_exists($representative_file_path)) {
+            $representative_ext = $ext;
+        }
+
+        return $representative_ext;
+    }
+
+    private function prepareDirectory(string $directory): void
+    {
+        self::prepareDirectoryStatic($directory);
+    }
+
+    private static function prepareDirectoryStatic(string $directory): void
+    {
+        if (! is_dir($directory)) {
+            if (str_starts_with(PHP_OS, 'WIN')) {
+                $directory = str_replace('/', DIRECTORY_SEPARATOR, $directory);
+            }
+            umask(0000);
+            $recursive = true;
+            if (! @mkdir($directory, 0777, $recursive)) {
+                die('[prepare_directory] cannot create directory "' . $directory . '"');
+            }
+        }
+
+        if (! is_writable($directory)) {
+            // last chance to make the directory writable
+            @chmod($directory, 0777);
+
+            // PHPStan assumes two is_writable() calls on the same path return
+            // the same result, since it doesn't model chmod()'s real side
+            // effect (confirmed independently: PHP's own filesystem functions,
+            // including chmod(), clear the stat cache for the affected path, so
+            // this recheck genuinely can and does observe the chmod() above).
+            // @phpstan-ignore booleanNot.alwaysTrue
+            if (! is_writable($directory)) {
+                die('[prepare_directory] directory "' . $directory . '" has no write access');
+            }
+        }
+
+        secure_directory($directory);
+    }
+
+    private function needResize(string $image_filepath, int $max_width, int $max_height): bool
+    {
+        /**
+         * @var array<string, mixed> $conf
+         * @var Logger $logger
+         */
+        global $conf, $logger;
+
+        $picture_ext = $conf['picture_ext'];
+        $picture_ext = is_array($picture_ext) ? $picture_ext : [];
+        if (! in_array(strtolower(get_extension($image_filepath)), $picture_ext, true)) {
+            return false;
+        }
+
+        // TODO : the resize check should take the orientation into account. If a
+        // rotation must be applied to the resized photo, then we should test
+        // invert width and height.
+        $image_size = getimagesize($image_filepath);
+        if ($image_size === false) {
+            // can't determine dimensions, so we can't tell whether a resize
+            // is needed
+            return false;
+        }
+        [$width, $height] = $image_size;
+
+        if ($width > $max_width or $height > $max_height) {
+            $logger->info(__METHOD__ . ' ' . $image_filepath . ' is too big (current=' . $width . 'x' . $height . 'px Vs max=' . $max_width . 'x' . $max_height . 'px)');
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Strict, PHPStan-friendly equivalent of empty() for a genuinely mixed
+     * value (this class's only caller is a form-data loop over
+     * array<string, mixed>) -- mirrors empty()'s real falsy set exactly:
+     * null, false, 0, 0.0, '0', '', [].
+     */
+    private static function isFalsy(mixed $value): bool
+    {
+        return $value === null
+            || $value === false
+            || $value === 0
+            || $value === 0.0
+            || $value === '0'
+            || $value === ''
+            || $value === [];
+    }
+
+    /**
+     * @return array{width: int, height: int, filesize: float}
+     */
+    public function pwgImageInfos(string $path): array
+    {
+        $image_size = getimagesize($path);
+        if ($image_size === false) {
+            // every caller stores width/height straight into the database;
+            // there is no sane fallback shape to return here
+            throw new \Exception(__METHOD__ . '(): getimagesize() failed for ' . $path);
+        }
+        [$width, $height] = $image_size;
+        $filesize_bytes = filesize($path);
+        if ($filesize_bytes === false) {
+            // same rationale as the getimagesize() guard above: every caller
+            // stores this straight into the database, no sane fallback shape.
+            throw new \Exception(__METHOD__ . '(): filesize() failed for ' . $path);
+        }
+        $filesize = floor($filesize_bytes / 1024);
+
+        return [
+            'width' => $width,
+            'height' => $height,
+            'filesize' => $filesize,
+        ];
+    }
+
+    /**
+     * @return string[]
+     */
+    public function isValidImageExtension(string $extension): array
+    {
+        /** @var array<string, mixed> $conf */
+        global $conf;
+
+        if (isset($conf['upload_form_all_types']) and (bool) $conf['upload_form_all_types']) {
+            $extensions = $conf['file_ext'];
+        } else {
+            $extensions = $conf['picture_ext'];
+        }
+
+        // $conf values are inherently mixed; only string elements can safely
+        // be passed to strtolower() below.
+        $extensions = is_array($extensions) ? array_filter($extensions, is_string(...)) : [];
+
+        return array_unique(array_map(strtolower(...), $extensions));
+    }
+
+    public function fileUploadErrorMessage(int $error_code): string
+    {
+        return match ($error_code) {
+            UPLOAD_ERR_INI_SIZE => sprintf(
+                l10n('The uploaded file exceeds the upload_max_filesize directive in php.ini: %sB'),
+                $this->getIniSize('upload_max_filesize', false)
+            ),
+            UPLOAD_ERR_FORM_SIZE => l10n('The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form'),
+            UPLOAD_ERR_PARTIAL => l10n('The uploaded file was only partially uploaded'),
+            UPLOAD_ERR_NO_FILE => l10n('No file was uploaded'),
+            UPLOAD_ERR_NO_TMP_DIR => l10n('Missing a temporary folder'),
+            UPLOAD_ERR_CANT_WRITE => l10n('Failed to write file to disk'),
+            UPLOAD_ERR_EXTENSION => l10n('File upload stopped by extension'),
+            default => l10n('Unknown upload error'),
+        };
+    }
+
+    public function getIniSize(string $ini_key, bool $in_bytes = true): int|string|false
+    {
+        $size = ini_get($ini_key);
+
+        if ($in_bytes) {
+            $size = $this->convertShorthandNotationToBytes($size);
+        }
+
+        return $size;
+    }
+
+    private function convertShorthandNotationToBytes(string|false $value): int|string|false
+    {
+        $suffix = substr((string) $value, -1);
+        $multiply_by = null;
+
+        if ($suffix === 'K') {
+            $multiply_by = 1024;
+        } elseif ($suffix === 'M') {
+            $multiply_by = 1024 * 1024;
+        } elseif ($suffix === 'G') {
+            $multiply_by = 1024 * 1024 * 1024;
+        }
+
+        if (isset($multiply_by)) {
+            $value = (int) substr((string) $value, 0, -1) * $multiply_by;
+        }
+
+        return $value;
+    }
+
+    public function addUploadError(int|string $upload_id, string $error_message): void
+    {
+        if (! isset($_SESSION['uploads_error']) || ! is_array($_SESSION['uploads_error'])) {
+            $_SESSION['uploads_error'] = [];
+        }
+
+        if (! isset($_SESSION['uploads_error'][$upload_id]) || ! is_array($_SESSION['uploads_error'][$upload_id])) {
+            $_SESSION['uploads_error'][$upload_id] = [];
+        }
+
+        $_SESSION['uploads_error'][$upload_id][] = $error_message;
+    }
+
+    public function readyForUploadMessage(): ?string
+    {
+        /** @var array<string, mixed> $conf */
+        global $conf;
+
+        $upload_dir = $conf['upload_dir'];
+        $upload_dir = is_string($upload_dir) ? $upload_dir : '';
+
+        $relative_dir = preg_replace('#^' . PHPWG_ROOT_PATH . '#', '', $upload_dir);
+
+        if (! is_dir($upload_dir)) {
+            if (! is_writable(dirname($upload_dir))) {
+                return sprintf(
+                    l10n('Create the "%s" directory at the root of your Piwigo installation'),
+                    $relative_dir
+                );
+            }
+        } else {
+            if (! is_writable($upload_dir)) {
+                @chmod($upload_dir, 0777);
+
+                // PHPStan has no model of chmod()'s real filesystem side effect,
+                // so it (wrongly) proves this repeat is_writable() call must
+                // still return the same false as the enclosing if — this is a
+                // genuine re-check of chmod()'s actual outcome, not dead code.
+                // @phpstan-ignore booleanNot.alwaysTrue
+                if (! is_writable($upload_dir)) {
+                    return sprintf(
+                        l10n('Give write access (chmod 777) to "%s" directory at the root of your Piwigo installation'),
+                        $relative_dir
+                    );
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Return the optimized resize dimensions for a representative, based
+     * on maximum display size. There is no need to generate a 4000x3000
+     * JPEG from a 4000x3000 HEIC if XXL size is only 1600x1200.
+     *
+     * @return int[] [width, height]
+     */
+    private static function getOptimalDimensionsForRepresentative(): array
+    {
+        $enabled = ImageStdParams::get_defined_type_map();
+
+        $disabled_raw = safe_unserialize(ImageStdParams::get_disabled_type_map());
+        // ImageStdParams persists this map as serialize()d DerivativeParams[]
+        // (see ImageStdParams::get_disabled_type_map()'s docblock);
+        // unserialize() is only typed mixed by PHP itself, so filter out
+        // anything that isn't actually a DerivativeParams instance rather
+        // than trusting the blob blindly.
+        /** @var array<string, DerivativeParams> $disabled */
+        $disabled = [];
+        if (is_array($disabled_raw)) {
+            foreach ($disabled_raw as $disabled_type => $disabled_params) {
+                if (is_string($disabled_type) && $disabled_params instanceof DerivativeParams) {
+                    $disabled[$disabled_type] = $disabled_params;
+                }
+            }
+        }
+
+        $w = $h = 2000; // safe default values
+
+        foreach (ImageStdParams::get_all_types() as $type) {
+            // get_all_types() includes types disabled by default (e.g.
+            // IMG_3XLARGE/IMG_4XLARGE), which get_defined_type_map() genuinely
+            // omits (get_enabled_default_sizes() unsets them) -- $enabled can
+            // really lack a $type key here, so this isn't PHPStan-provable
+            // dead code even though its docblock-only DerivativeParams[]
+            // return type makes it look that way; array_key_exists() forces a
+            // real control-flow check instead of trusting that docblock as
+            // exhaustive.
+            $params = array_key_exists($type, $enabled) ? $enabled[$type] : ($disabled[$type] ?? null);
+
+            if ((bool) $params) {
+                [$w, $h] = $params->sizing->ideal_size;
+            }
+        }
+
+        $margin_coef = 1.5;
+
+        return [(int) ($w * $margin_coef), (int) ($h * $margin_coef)];
+    }
+}

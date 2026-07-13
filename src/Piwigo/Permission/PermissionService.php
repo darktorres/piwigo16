@@ -165,4 +165,32 @@ final class PermissionService
 
         return $sql;
     }
+
+    /**
+     * Revokes direct user-category access. Ported from
+     * admin/user_perm.php's own inline `DELETE FROM user_access` (P21
+     * Users batch) -- same "if you forbid access to a category, all
+     * sub-categories become automatically forbidden" contract as the
+     * original (caller passes get_subcat_ids()'s own expansion).
+     *
+     * @param list<int> $catIds
+     */
+    public function removeUserAccess(int $userId, array $catIds): void
+    {
+        $this->repo->deleteUserAccess($userId, $catIds);
+    }
+
+    /**
+     * Grants direct user-category access. Thin wrapper around the existing
+     * add_permission_on_category() free function (admin/include/
+     * functions.php) -- that function is also called from
+     * create_virtual_category()'s own inheritance logic (P21 Albums
+     * batch), out of this method's scope to duplicate.
+     *
+     * @param list<int> $catIds
+     */
+    public function grantUserAccess(int $userId, array $catIds): void
+    {
+        add_permission_on_category($catIds, $userId);
+    }
 }

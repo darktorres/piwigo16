@@ -21,7 +21,7 @@ final class ActivityRepository extends AbstractRepository
      *   object: string,
      *   objectId: int|string,
      *   action: string,
-     *   performedBy: int,
+     *   performedBy: ?int,
      *   sessionIdx: string,
      *   ipAddress: ?string,
      *   occuredOn: string,
@@ -185,6 +185,58 @@ final class ActivityRepository extends AbstractRepository
                 'occured_on' => is_string($row['occured_on']) ? $row['occured_on'] : '',
                 'details' => is_string($row['details']) ? $row['details'] : null,
                 'username' => is_string($row['username']) ? $row['username'] : '',
+            ],
+            $rows
+        );
+    }
+
+    /**
+     * admin/maintenance_sys.php's own log ('object' = 'system', core/
+     * plugin/theme install/update/activate/etc.) -- a LEFT JOIN (not the
+     * INNER JOIN findUserObjectLogWithUsernames() uses), since a
+     * system-triggered row's performed_by is NULL (no known actor, e.g. a
+     * plugin autoupdate that ran before $user was loaded -- see
+     * ActivityService::record()'s own fix note) and has no matching user
+     * row. 'username' renders as "System" when performed_by IS NULL (the
+     * real, reachable "unknown actor" state under the column's ON DELETE
+     * SET NULL foreign key -- 0 was the legacy sentinel before that FK
+     * existed and is no longer a value this column can ever hold, confirmed
+     * via a real ForeignKeyConstraintViolationException) -- 0 is kept in
+     * the condition too, defensively, in case any pre-FK historical row
+     * still holds it. A row whose performed_by references a since-deleted
+     * user id specifically is impossible under this FK (deletion always
+     * nulls it), so that's not a distinct case to preserve.
+     *
+     * @return list<array{
+     *   activity_id: int,
+     *   performed_by: ?int,
+     *   object_id: int,
+     *   action: string,
+     *   occured_on: string,
+     *   details: ?string,
+     *   username: ?string,
+     * }>
+     */
+    public function findSystemObjectLogWithUsernames(string $usernameColumn, string $idColumn): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('activity_id', 'performed_by', 'object_id', 'action', 'occured_on', 'details', "IF(performed_by = 0 OR performed_by IS NULL, 'System', u." . $usernameColumn . ') AS username')
+            ->from(Tables::activity(), 'a')
+            ->leftJoin('a', Tables::users(), 'u', 'a.performed_by = u.' . $idColumn)
+            ->where("a.object = 'system'")
+            ->orderBy('a.activity_id', 'DESC')
+            ->executeQuery()
+            ->fetchAllAssociative();
+
+        return array_map(
+            static fn (array $row): array => [
+                'activity_id' => is_numeric($row['activity_id']) ? (int) $row['activity_id'] : 0,
+                'performed_by' => is_numeric($row['performed_by']) ? (int) $row['performed_by'] : null,
+                'object_id' => is_numeric($row['object_id']) ? (int) $row['object_id'] : 0,
+                'action' => is_string($row['action']) ? $row['action'] : '',
+                'occured_on' => is_string($row['occured_on']) ? $row['occured_on'] : '',
+                'details' => is_string($row['details']) ? $row['details'] : null,
+                'username' => is_string($row['username']) ? $row['username'] : null,
             ],
             $rows
         );

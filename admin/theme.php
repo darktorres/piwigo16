@@ -9,7 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-use Piwigo\Admin\themes;
+use Piwigo\Admin\Extensions\ExtensionScanner;
+use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 
@@ -25,8 +26,8 @@ if (empty($_GET['theme']) || ! is_string($_GET['theme'])) {
 }
 $theme = $_GET['theme'];
 
-$themes = new themes();
-if (! in_array($theme, array_keys($themes->fs_themes))) {
+$fs_themes = (new ExtensionScanner())->scan(ExtensionType::Theme);
+if (! in_array($theme, array_keys($fs_themes))) {
     die('Invalid theme');
 }
 

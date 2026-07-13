@@ -108,4 +108,18 @@ final class PermalinkRepositoryTest extends IntegrationTestCase
 
         self::assertNull($this->repo->findOldCategoryId($slug));
     }
+
+    public function test_delete_old_permalink_by_value_removes_the_row_and_returns_true(): void
+    {
+        $slug = 'p17-old-test-' . bin2hex(random_bytes(4));
+        $this->repo->insertOldPermalinkDeleted(1, $slug);
+
+        self::assertTrue($this->repo->deleteOldPermalinkByValue($slug));
+        self::assertNull($this->repo->findOldCategoryId($slug));
+    }
+
+    public function test_delete_old_permalink_by_value_returns_false_when_nothing_matches(): void
+    {
+        self::assertFalse($this->repo->deleteOldPermalinkByValue('never-used-' . bin2hex(random_bytes(4))));
+    }
 }

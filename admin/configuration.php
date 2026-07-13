@@ -461,11 +461,13 @@ switch ($page['section']) {
         $conf_page_banner = $conf['page_banner'];
         $conf_email_admin_on_new_user = $conf['email_admin_on_new_user'];
         $conf_email_admin_on_new_user_str = is_string($conf_email_admin_on_new_user) ? $conf_email_admin_on_new_user : '';
-        // $lang['day'] is always a 7-entry array of weekday names, defined
-        // per-locale in each language/*/common.lang.php; guard rather than
-        // trust that shape blindly since $lang is typed as
-        // array<string, mixed> here.
-        $lang_day = $lang['day'];
+        // $lang['day'] is never actually set by any language/*/common.lang.php
+        // in this codebase (confirmed by grep across every locale) nor by any
+        // runtime code -- a genuinely dead key, not a per-locale gap. Guard
+        // with ?? rather than a direct read, matching the same defensive
+        // pattern already used for this exact key by admin/intro.php and
+        // format_date_legacy() (include/functions.inc.php).
+        $lang_day = $lang['day'] ?? null;
         $lang_day = is_array($lang_day) ? $lang_day : [];
 
         $template->assign(

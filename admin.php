@@ -9,9 +9,21 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+// vendor/autoload.php must be required directly here (not just reached
+// transitively via common.inc.php's own include/env.inc.php) -- Paths::
+// fromIndex() below needs the autoloader before common.inc.php has even
+// started running. Requiring it twice is safe (PHP's own realpath-keyed
+// include cache no-ops the second require). Mirrors index.php's own
+// ordering exactly.
+require __DIR__ . '/vendor/autoload.php';
+
+use Piwigo\Bootstrap\AdminDispatcher;
+use Piwigo\Bootstrap\CommonBootstrap;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\Paths;
 use Piwigo\Db\Tables;
+use Piwigo\Http\RequestFactory;
 use Piwigo\Template\Template;
 
 // Bootstrap globals, set by include/common.inc.php below.
@@ -26,12 +38,22 @@ global $conf, $template, $user;
 // | Basic constants and includes                                          |
 // +-----------------------------------------------------------------------+
 
+$paths = Paths::fromIndex(__FILE__);
 define('PHPWG_ROOT_PATH', './');
 define('IN_ADMIN', true);
 
 include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 include_once PHPWG_ROOT_PATH . 'admin/include/functions_plugins.inc.php';
+
+// P21 boots the Kernel/DI container on the admin.php path too -- needed by
+// AdminDispatcher (below) to resolve AdminSubControllerInterface services.
+// Safe to run after common.inc.php's own legacy config/db/session/user
+// bootstrap: every attachGlobals() this calls is additive/idempotent
+// (CurrentUser/PageState/Lang all bridge onto or read from the *existing*
+// $GLOBALS state rather than overwriting it -- see their own docblocks),
+// same ordering index.php already uses.
+CommonBootstrap::run($paths);
 include_once PHPWG_ROOT_PATH . 'admin/include/add_core_tabs.inc.php';
 
 trigger_notify('loc_begin_admin');
@@ -212,7 +234,6 @@ $template->assign(
         'U_SITE_MANAGER' => $link_start . 'site_manager',
         'U_HISTORY_STAT' => $link_start . 'stats&amp;year=' . date('Y') . '&amp;month=' . date('n'),
         'U_FAQ' => $link_start . 'help',
-        'U_SITES' => $link_start . 'remote_site',
         'U_MAINTENANCE' => $link_start . 'maintenance',
         'U_NOTIFICATION_BY_MAIL' => $link_start . 'notification_by_mail',
         'U_CONFIG_GENERAL' => $link_start . 'configuration',
@@ -224,7 +245,6 @@ $template->assign(
         'U_CATEGORIES' => $link_start . 'cat_list',
         'U_ALBUMS' => $link_start . 'albums',
         'U_CAT_OPTIONS' => $link_start . 'cat_options',
-        'U_CAT_SEARCH' => $link_start . 'cat_search',
         'U_CAT_UPDATE' => $link_start . 'site_update&amp;site=1',
         'U_RATING' => $link_start . 'rating',
         'U_RECENT_SET' => $link_start . 'batch_manager&amp;filter=prefilter-last_import',
@@ -422,7 +442,12 @@ trigger_notify('loc_begin_admin_page');
 // string), so this offset is always string here.
 $page_slug = $page['page'];
 
-include PHPWG_ROOT_PATH . 'admin/' . $page_slug . '.php';
+// SEC-19: sub-controllers read input from this PSR-7 request
+// (getQueryParams()/getParsedBody()), not $_GET/$_POST directly. Slugs not
+// yet migrated to a sub-controller still get the raw superglobals via the
+// legacy include, unchanged, until AdminDispatcher's fallback path is
+// retired (P23).
+AdminDispatcher::dispatch($page_slug, RequestFactory::fromGlobals());
 
 $template->assign('ACTIVE_MENU', get_active_menu($page_slug));
 

@@ -272,6 +272,30 @@ final class ActivityServiceTest extends IntegrationTestCase
         self::assertSame(3, $performedBy);
     }
 
+    public function test_record_writes_a_null_performed_by_when_no_user_is_loaded(): void
+    {
+        // Real, adversarially-verified bug fixed in this same batch:
+        // activity.performed_by has an ON DELETE SET NULL foreign key to
+        // users.id, so the old `$user['id'] ?? 0` fallback (for "on a
+        // plugin autoupdate, $user is not yet loaded", per the removed
+        // comment) threw a real ForeignKeyConstraintViolationException on
+        // every such write, since 0 is never a valid user id
+        // (AUTO_INCREMENT starts at 1) -- this test would have failed with
+        // that exception before the fix.
+        unset($GLOBALS['user']);
+
+        $this->service->record('test-no-user', 1, 'add');
+
+        $performedBy = $this->conn->createQueryBuilder()
+            ->select('performed_by')
+            ->from(Tables::activity())
+            ->where("object = 'test-no-user'")
+            ->executeQuery()
+            ->fetchOne();
+
+        self::assertNull($performedBy);
+    }
+
     private function countRows(string $object, int|string|null $objectId, string $action): int
     {
         $qb = $this->conn->createQueryBuilder()

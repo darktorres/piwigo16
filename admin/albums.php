@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\Tables;
@@ -27,6 +28,18 @@ if (! defined('PHPWG_ROOT_PATH')) {
  * @var array<string, mixed> $user
  */
 global $conf, $page, $template, $user;
+
+// This file is always include_once'd from inside an
+// AdminSubControllerInterface::handle() method (Piwigo\Bootstrap\AdminDispatcher),
+// never from real top-level script scope -- a bare `$is_forbidden = ...` /
+// `$nb_photos_in = ...` / `$nb_sub_photos = ...` below would only ever
+// create a variable local to that method's call frame, invisible to
+// assocToOrderedTree() below, which reads all three back via
+// `global $nb_photos_in, $nb_sub_photos, $is_forbidden;`. The explicit
+// `global` here is what actually makes those assignments reach the real
+// global scope that function expects (same fix as
+// admin/include/functions_notification_by_mail.inc.php's $env_nbm).
+global $is_forbidden, $nb_photos_in, $nb_sub_photos;
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
@@ -110,11 +123,8 @@ SELECT id
     if (str_starts_with($order_by_field, 'date_')) {
         $order_by_date = true;
 
-        $ref_dates = get_categories_ref_date(
-            $category_ids,
-            $order_by_field,
-            $order_by_asc == 'ASC' ? 'min' : 'max'
-        );
+        $ref_dates = new CategoryAdminService()
+            ->getCategoriesRefDate($category_ids, $order_by_field, $order_by_asc == 'ASC' ? 'min' : 'max');
     }
 
     $query = '
@@ -352,83 +362,3 @@ $template->assign(
 // +-----------------------------------------------------------------------+
 
 $template->assign_var_from_handle('ADMIN_CONTENT', 'albums');
-
-// +-----------------------------------------------------------------------+
-// |                              functions                                |
-// +-----------------------------------------------------------------------+
-/**
- * @param array<int, mixed> $ids
- * @return array<int|string, mixed>
- */
-function get_categories_ref_date(array $ids, string $field = 'date_available', string $minmax = 'max'): array
-{
-    // $ids is documented as array<int, mixed> because callers pass an
-    // already-mixed source ($_POST/array_from_query() cascades); filter to
-    // the int|string values get_subcat_ids() and the final lookup below
-    // actually need, rather than trusting every element's shape.
-    $numeric_ids = [];
-    foreach ($ids as $id) {
-        if (is_int($id) || is_string($id)) {
-            $numeric_ids[] = $id;
-        }
-    }
-
-    // we need to work on the whole tree under each category, even if we don't
-    // want to sort sub categories
-    $category_ids = get_subcat_ids($numeric_ids);
-
-    // search for the reference date of each album
-    $query = '
-SELECT
-    category_id,
-    ' . $minmax . '(' . $field . ') as ref_date
-  FROM ' . Tables::imageCategory() . '
-    JOIN ' . Tables::images() . ' ON image_id = id
-  WHERE category_id IN (' . implode(',', $category_ids) . ')
-  GROUP BY category_id
-;';
-    $ref_dates = query2array($query, 'category_id', 'ref_date');
-
-    // the iterate on all albums (having a ref_date or not) to find the
-    // reference_date, with a search on sub-albums
-    $query = '
-SELECT
-    id,
-    uppercats
-  FROM ' . Tables::categories() . '
-  WHERE id IN (' . implode(',', $category_ids) . ')
-;';
-    $uppercats_of = query2array($query, 'id', 'uppercats');
-
-    foreach (array_keys($uppercats_of) as $cat_id) {
-        // find the subcats
-        $subcat_ids = [];
-
-        foreach ($uppercats_of as $id => $uppercats) {
-            if ((bool) preg_match('/(^|,)' . $cat_id . '(,|$)/', (string) $uppercats)) {
-                $subcat_ids[] = $id;
-            }
-        }
-
-        $to_compare = [];
-        foreach ($subcat_ids as $id) {
-            if (isset($ref_dates[$id])) {
-                $to_compare[] = $ref_dates[$id];
-            }
-        }
-
-        if (count($to_compare) > 0) {
-            $ref_dates[$cat_id] = $minmax == 'max' ? max($to_compare) : min($to_compare);
-        } else {
-            $ref_dates[$cat_id] = null;
-        }
-    }
-
-    // only return the list of $ids, not the sub-categories
-    $return = [];
-    foreach ($numeric_ids as $id) {
-        $return[$id] = $ref_dates[$id];
-    }
-
-    return $return;
-}

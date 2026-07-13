@@ -106,6 +106,19 @@ final class UserRepository extends AbstractRepository
         return is_numeric($value) && (int) $value > 0;
     }
 
+    public function findUsernameById(int $userId, string $idColumn, string $usernameColumn): ?string
+    {
+        $value = $this->conn->createQueryBuilder()
+            ->select($usernameColumn)
+            ->from(Tables::users())
+            ->where($idColumn . ' = :id')
+            ->setParameter('id', $userId)
+            ->executeQuery()
+            ->fetchOne();
+
+        return is_string($value) ? $value : null;
+    }
+
     /**
      * @return list<string>
      */

@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
@@ -105,24 +106,8 @@ if (isset($_POST['submit'])) {
 
         $message = l10n('Images manual order was saved');
     }
-    $query = '
-UPDATE ' . Tables::categories() . '
-  SET image_order = ' . (isset($image_order) ? '\'' . $image_order . '\'' : 'NULL') . '
-  WHERE id=' . $page['category_id'];
-    pwg_query($query);
-
-    if (isset($_POST['image_order_subcats'])) {
-        $cat_info = get_cat_info((int) $page['category_id']);
-        if (! is_array($cat_info) || ! is_string($cat_info['uppercats'] ?? null)) {
-            page_not_found('Requested album does not exist');
-        }
-
-        $query = '
-UPDATE ' . Tables::categories() . '
-  SET image_order = ' . (isset($image_order) ? '\'' . $image_order . '\'' : 'NULL') . '
-  WHERE uppercats LIKE \'' . $cat_info['uppercats'] . ',%\'';
-        pwg_query($query);
-    }
+    new CategoryAdminService()
+        ->saveImageOrder((int) $page['category_id'], $image_order, isset($_POST['image_order_subcats']));
 
     $template->assign(
         [

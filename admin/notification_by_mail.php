@@ -45,6 +45,12 @@ check_input_parameter('mode', $_GET, false, '/^(param|subscribe|send)$/');
 // +-----------------------------------------------------------------------+
 // | Initialization                                                        |
 // +-----------------------------------------------------------------------+
+// insert_new_data_user_mail_notification() below reads this back via
+// `global $base_url;` -- this page is always include()'d from inside an
+// AdminSubControllerInterface::handle() method now (Piwigo\Bootstrap\
+// AdminDispatcher), so a bare assignment here would only be local to that
+// method's call frame, invisible to the function's own `global` read.
+global $base_url;
 $base_url = get_root_url() . 'admin.php';
 $must_repost = false;
 

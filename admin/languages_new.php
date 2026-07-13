@@ -9,7 +9,13 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-use Piwigo\Admin\languages;
+use Piwigo\Admin\Extensions\ExtensionLifecycle;
+use Piwigo\Admin\Extensions\ExtensionRepository;
+use Piwigo\Admin\Extensions\ExtensionScanner;
+use Piwigo\Admin\Extensions\ExtensionType;
+use Piwigo\Admin\Extensions\PemCatalog;
+use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Db\DbConnection;
 use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
@@ -65,8 +71,10 @@ $page_tab = $page['tab'] ?? null;
 $page_tab = is_scalar($page_tab) ? (string) $page_tab : '';
 $base_url = get_root_url() . 'admin.php?page=' . $page_page . '&tab=' . $page_tab;
 
-$languages = new languages();
-$languages->get_db_languages();
+$extension_repository = new ExtensionRepository(DbConnection::build());
+$pem_catalog = new PemCatalog(new ZipExtractor());
+$extension_scanner = new ExtensionScanner();
+$extension_lifecycle = new ExtensionLifecycle($extension_repository, $pem_catalog);
 
 // +-----------------------------------------------------------------------+
 // |                           setup check                                 |
@@ -93,11 +101,18 @@ if (isset($_GET['revision'])) {
         $revision = $_GET['revision'];
         $revision = is_string($revision) ? $revision : '';
 
-        $install_status = $languages->extract_language_files('install', $revision);
-        // extract_language_files() is declared "@return mixed" but every
-        // internal code path assigns $status a string literal before
-        // returning it; narrow defensively rather than trust the docblock.
-        $install_status = is_string($install_status) ? $install_status : '';
+        $extraction = $pem_catalog->extractArchive(ExtensionType::Language, 'install', $revision, '');
+        $install_status = $extraction['status'];
+
+        // extract_language_files() legacy quirk: a successful install
+        // auto-activates the new language immediately (languages have no
+        // separate "installed but inactive" state) -- reproduced here since
+        // PemCatalog::extractArchive() only extracts, it doesn't know about
+        // the lifecycle state machine.
+        if ($install_status === 'ok' && $extraction['id'] !== null) {
+            $fs_language_entry = $extension_scanner->scan(ExtensionType::Language)[$extraction['id']] ?? null;
+            $extension_lifecycle->performAction(ExtensionType::Language, 'activate', $extraction['id'], $fs_language_entry);
+        }
 
         redirect($base_url . '&installstatus=' . $install_status);
     }
@@ -122,14 +137,23 @@ if (isset($_GET['installstatus'])) {
 // +-----------------------------------------------------------------------+
 // |                     start template output                             |
 // +-----------------------------------------------------------------------+
-if ($languages->get_server_languages(true)) {
+$fs_language_ids = [];
+foreach ($extension_scanner->scan(ExtensionType::Language) as $fs_language) {
+    $extension = $fs_language['extension'] ?? null;
+    if (is_scalar($extension)) {
+        $fs_language_ids[] = (string) $extension;
+    }
+}
+$server_languages = $pem_catalog->getServerExtensions(ExtensionType::Language, $fs_language_ids, true);
+
+if ($server_languages !== null) {
     // PEM_URL is defined via define('PEM_URL', $conf['alternative_pem_url'])
     // in one branch of include/common.inc.php, so PHPStan can't prove it's
     // a string across that file boundary -- narrow it once here (same
     // pattern as languages.class.php::get_server_languages()).
     $pem_base_url = is_string(PEM_URL) ? PEM_URL : '';
 
-    foreach ($languages->server_languages as $language) {
+    foreach ($server_languages as $language) {
         // $language comes from an untyped unserialize() of a remote PEM
         // payload (see languages::get_server_languages()); only cast
         // scalars actually safe to stringify, treat anything else as empty

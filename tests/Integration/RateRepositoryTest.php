@@ -249,6 +249,159 @@ final class RateRepositoryTest extends IntegrationTestCase
         self::assertSame($original, $this->fetchRatingScore(1));
     }
 
+    /**
+     * fixture: user1 rated element1(=5) and element3(=5); user3 rated
+     * element1(=4) and element4(=2); user4 rated element2(=3). images
+     * rating_score: 1=>4.50, 2=>3.00, 3=>5.00, 4=>2.00, 5=>NULL.
+     */
+    public function test_find_usernames_by_id_maps_id_to_username(): void
+    {
+        $usernames = $this->repo->findUsernamesById('id', 'username');
+
+        ksort($usernames);
+        self::assertSame(
+            [1 => 'fixture_admin', 2 => 'guest', 3 => 'regular_user', 4 => 'power_user'],
+            $usernames
+        );
+    }
+
+    public function test_count_rated_elements_with_no_filters(): void
+    {
+        self::assertSame(4, $this->repo->countRatedElements(null, false, []));
+    }
+
+    public function test_count_rated_elements_filtered_by_category(): void
+    {
+        // category 1 -> images [1,2,3], all three rated at least once
+        self::assertSame(3, $this->repo->countRatedElements(null, false, [1]));
+        // category 2 -> images [4,5]; only 4 is rated
+        self::assertSame(1, $this->repo->countRatedElements(null, false, [2]));
+    }
+
+    public function test_count_rated_elements_filtered_by_user(): void
+    {
+        // user 1 rated elements 1 and 3
+        self::assertSame(2, $this->repo->countRatedElements(1, false, []));
+        // everyone except user 1 rated elements 1, 2, 4
+        self::assertSame(3, $this->repo->countRatedElements(1, true, []));
+    }
+
+    public function test_find_rating_report_matches_the_fixture(): void
+    {
+        $rows = $this->repo->findRatingReport(null, false, [], 'i.id ASC', 10, 0);
+
+        self::assertCount(4, $rows);
+        $byId = [];
+        foreach ($rows as $row) {
+            $byId[$row['id']] = $row;
+        }
+
+        self::assertSame(4.5, $byId[1]['score']);
+        self::assertSame(4.5, $byId[1]['avg_rates']);
+        self::assertSame(2, $byId[1]['nb_rates']);
+        self::assertSame(9.0, $byId[1]['sum_rates']);
+
+        self::assertSame(1, $byId[3]['nb_rates']);
+        self::assertSame(5.0, $byId[3]['sum_rates']);
+    }
+
+    public function test_find_rating_report_filters_by_category(): void
+    {
+        $rows = $this->repo->findRatingReport(null, false, [2], 'i.id ASC', 10, 0);
+
+        self::assertCount(1, $rows);
+        self::assertSame(4, $rows[0]['id']);
+    }
+
+    public function test_find_rating_report_orders_and_paginates(): void
+    {
+        $rows = $this->repo->findRatingReport(null, false, [], 'sum_rates DESC', 2, 0);
+
+        self::assertCount(2, $rows);
+        self::assertSame([1, 3], array_column($rows, 'id'));
+    }
+
+    public function test_find_rate_rows_for_element(): void
+    {
+        $rows = $this->repo->findRateRowsForElement(1);
+
+        self::assertCount(2, $rows);
+        self::assertSame(9, array_sum(array_column($rows, 'rate')));
+        self::assertSame([1, 1], array_column($rows, 'element_id'));
+    }
+
+    public function test_find_rate_rows_for_element_returns_empty_for_an_unrated_element(): void
+    {
+        self::assertSame([], $this->repo->findRateRowsForElement(5));
+    }
+
+    public function test_count_all_rates_matches_the_fixture(): void
+    {
+        self::assertSame(5, $this->repo->countAllRates());
+    }
+
+    public function test_find_users_with_status_by_id_username(): void
+    {
+        $users = $this->repo->findUsersWithStatusByIdUsername('id', 'username');
+
+        self::assertCount(4, $users);
+        $byId = [];
+        foreach ($users as $user) {
+            $byId[$user['id']] = $user;
+        }
+
+        self::assertSame(['id' => 1, 'name' => 'fixture_admin', 'status' => 'webmaster'], $byId[1]);
+        self::assertSame(['id' => 2, 'name' => 'guest', 'status' => 'guest'], $byId[2]);
+    }
+
+    public function test_find_all_rates_ordered_by_date_desc_matches_the_fixture(): void
+    {
+        $rows = $this->repo->findAllRatesOrderedByDateDesc();
+
+        self::assertCount(5, $rows);
+        self::assertSame(19, array_sum(array_column($rows, 'rate')));
+        $rowUserIds = array_column($rows, 'user_id');
+        sort($rowUserIds);
+        self::assertSame([1, 1, 3, 3, 4], $rowUserIds);
+    }
+
+    public function test_find_image_thumb_info_by_ids(): void
+    {
+        $rows = $this->repo->findImageThumbInfoByIds([1, 4]);
+
+        self::assertCount(2, $rows);
+        $byId = [];
+        foreach ($rows as $row) {
+            $byId[$row['id']] = $row;
+        }
+
+        self::assertSame('Photo 1', $byId[1]['name']);
+        self::assertSame('fixture-photo-4.jpg', $byId[4]['file']);
+    }
+
+    public function test_find_image_thumb_info_by_ids_is_a_no_op_for_empty_ids(): void
+    {
+        self::assertSame([], $this->repo->findImageThumbInfoByIds([]));
+    }
+
+    public function test_find_average_rate_per_element(): void
+    {
+        $averages = $this->repo->findAverageRatePerElement();
+
+        self::assertSame(4.5, $averages[1]);
+        self::assertSame(3.0, $averages[2]);
+        self::assertSame(5.0, $averages[3]);
+        self::assertSame(2.0, $averages[4]);
+        self::assertArrayNotHasKey(5, $averages);
+    }
+
+    public function test_find_top_rated_image_ids_orders_by_rating_score_desc(): void
+    {
+        // rating_score: 3=5.00, 1=4.50, 2=3.00, 4=2.00, 5=NULL (sorts last)
+        self::assertSame([3, 1, 2], $this->repo->findTopRatedImageIds(3));
+        self::assertSame([3, 1, 2, 4, 5], $this->repo->findTopRatedImageIds(10));
+    }
+
     private function fetchRateCount(int $elementId, int $userId): int
     {
         $value = $this->conn->createQueryBuilder()

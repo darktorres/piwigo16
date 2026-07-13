@@ -9,7 +9,10 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-use Piwigo\Admin\plugins;
+use Piwigo\Admin\Extensions\ExtensionScanner;
+use Piwigo\Admin\Extensions\ExtensionType;
+use Piwigo\Admin\Extensions\PemCatalog;
+use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Template\Template;
@@ -67,7 +70,8 @@ $page_tab = $page['tab'] ?? null;
 $page_tab = is_scalar($page_tab) ? (string) $page_tab : '';
 $base_url = get_root_url() . 'admin.php?page=' . $page_page . '&tab=' . $page_tab;
 
-$plugins = new plugins();
+$pem_catalog = new PemCatalog(new ZipExtractor());
+$extension_scanner = new ExtensionScanner();
 
 // ------------------------------------------------------automatic installation
 if (isset($_GET['revision']) and isset($_GET['extension'])
@@ -78,8 +82,9 @@ if (isset($_GET['revision']) and isset($_GET['extension'])
     } else {
         check_pwg_token();
 
-        $plugin_id = null;
-        $install_status = $plugins->extract_plugin_files('install', $_GET['revision'], $_GET['extension'], $plugin_id);
+        $extraction = $pem_catalog->extractArchive(ExtensionType::Plugin, 'install', $_GET['revision'], $_GET['extension']);
+        $install_status = $extraction['status'];
+        $plugin_id = $extraction['id'];
 
         redirect($base_url . '&installstatus=' . $install_status . '&plugin_id=' . $plugin_id);
     }
@@ -99,14 +104,15 @@ if (isset($_GET['installstatus'])) {
             push_plugins_new_page_message('infos', '<a href="' . $activate_url . '">' . l10n('Activate it now') . '</a>', $page);
 
             $installed_plugin_id = $_GET['plugin_id'] ?? null;
-            if (is_string($installed_plugin_id) && isset($plugins->fs_plugins[$installed_plugin_id])) {
+            $installed_fs_plugin = is_string($installed_plugin_id) ? ($extension_scanner->scan(ExtensionType::Plugin)[$installed_plugin_id] ?? null) : null;
+            if ($installed_fs_plugin !== null) {
                 pwg_activity(
                     'system',
                     ActivitySystem::Plugin,
                     'install',
                     [
                         'plugin_id' => $installed_plugin_id,
-                        'version' => $plugins->fs_plugins[$installed_plugin_id]['version'],
+                        'version' => $installed_fs_plugin['version'],
                     ]
                 );
             }
@@ -162,19 +168,36 @@ if (isset($_GET['beta-test']) && $_GET['beta-test'] == 'true') {
 // plugins.class.php::extract_plugin_files()).
 $pem_base_url = is_string(PEM_URL) ? PEM_URL : '';
 
-if ($plugins->get_server_plugins(true, $beta_test)) {
+$fs_plugin_ids = [];
+foreach ($extension_scanner->scan(ExtensionType::Plugin) as $fs_plugin) {
+    $extension = $fs_plugin['extension'] ?? null;
+    if (is_scalar($extension)) {
+        $fs_plugin_ids[] = (string) $extension;
+    }
+}
+
+// get_server_plugins() legacy quirk: an empty versions-to-check list (no
+// PEM version matches the current branch) is treated as "nothing to show",
+// NOT a connection error -- only a real fetchRemote()/unserialize() failure
+// triggers the "Can't connect to server" message below.
+$versions_to_check = $pem_catalog->getVersionsToCheck(ExtensionType::Plugin, $beta_test);
+$server_plugins = $versions_to_check === [] ? [] : $pem_catalog->getServerExtensions(ExtensionType::Plugin, $fs_plugin_ids, true, $beta_test);
+
+if ($server_plugins !== null) {
     /* order plugins */
     $session_order = pwg_get_session_var('plugins_new_order');
-    if ($session_order != null) {
-        $order_selected = is_string($session_order) ? $session_order : 'date';
-        $plugins->sort_server_plugins($order_selected);
-        $template->assign('order_selected', $order_selected);
-    } else {
-        $plugins->sort_server_plugins('date');
-        $template->assign('order_selected', 'date');
-    }
+    $order_selected = is_string($session_order) && $session_order !== '' ? $session_order : 'date';
+    $template->assign('order_selected', $order_selected);
 
-    foreach ($plugins->server_plugins as $plugin) {
+    match ($order_selected) {
+        'revision' => usort($server_plugins, PemCatalog::compareByRevisionDate(...)),
+        'name' => uasort($server_plugins, PemCatalog::compareByName(...)),
+        'author' => uasort($server_plugins, PemCatalog::compareByAuthor(...)),
+        'downloads' => usort($server_plugins, PemCatalog::compareByDownloads(...)),
+        default => krsort($server_plugins),
+    };
+
+    foreach ($server_plugins as $plugin) {
         // server_plugins entries come from an untyped unserialize() of a
         // remote PEM payload (plugins::get_server_plugins()) — every field
         // is mixed; narrow the ones used in a typed context below rather

@@ -193,6 +193,267 @@ final class RateRepository extends AbstractRepository
     }
 
     /**
+     * @return array<int, string>
+     */
+    public function findUsernamesById(string $idColumn, string $usernameColumn): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select($idColumn . ' AS id', $usernameColumn . ' AS username')
+            ->from(Tables::users())
+            ->executeQuery()
+            ->fetchAllAssociative();
+
+        $result = [];
+        foreach ($rows as $row) {
+            if (is_numeric($row['id'])) {
+                $result[(int) $row['id']] = is_string($row['username']) ? $row['username'] : '';
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Admin "Rating" report: distinct rated elements, optionally scoped to
+     * one user (included or excluded) and/or a set of categories.
+     *
+     * @param list<int> $categoryIds
+     */
+    public function countRatedElements(?int $filterUserId, bool $excludeFilterUser, array $categoryIds): int
+    {
+        $qb = $this->conn->createQueryBuilder()
+            ->select('COUNT(DISTINCT r.element_id)')
+            ->from(Tables::rate(), 'r');
+
+        if ($categoryIds !== []) {
+            $qb->join('r', Tables::images(), 'i', 'r.element_id = i.id')
+                ->join('i', Tables::imageCategory(), 'ic', 'ic.image_id = i.id')
+                ->andWhere('ic.category_id IN (:categoryIds)')
+                ->setParameter('categoryIds', $categoryIds, ArrayParameterType::INTEGER);
+        }
+
+        if ($filterUserId !== null) {
+            $qb->andWhere($excludeFilterUser ? 'r.user_id <> :filterUserId' : 'r.user_id = :filterUserId')
+                ->setParameter('filterUserId', $filterUserId);
+        }
+
+        $value = $qb->executeQuery()
+            ->fetchOne();
+
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    /**
+     * Same report as countRatedElements(), one row per rated image with its
+     * rate aggregates.
+     *
+     * @param list<int> $categoryIds
+     * @param string $orderBySql a raw "column DIRECTION" SQL fragment, always
+     *   picked from the admin page's own fixed allowlist array, never from
+     *   raw user input
+     * @return list<array{id: int, path: string, file: string, representative_ext: ?string, score: ?float, recently_rated: ?string, avg_rates: ?float, nb_rates: int, sum_rates: float}>
+     */
+    public function findRatingReport(?int $filterUserId, bool $excludeFilterUser, array $categoryIds, string $orderBySql, int $limit, int $offset): array
+    {
+        $qb = $this->conn->createQueryBuilder()
+            ->select(
+                'i.id',
+                'i.path',
+                'i.file',
+                'i.representative_ext',
+                'i.rating_score AS score',
+                'MAX(r.date) AS recently_rated',
+                'ROUND(AVG(r.rate), 2) AS avg_rates',
+                'COUNT(r.rate) AS nb_rates',
+                'SUM(r.rate) AS sum_rates',
+            )
+            ->from(Tables::rate(), 'r')
+            ->leftJoin('r', Tables::images(), 'i', 'r.element_id = i.id')
+            ->groupBy('i.id', 'i.path', 'i.file', 'i.representative_ext', 'i.rating_score', 'r.element_id')
+            ->orderBy($orderBySql)
+            ->setMaxResults($limit)
+            ->setFirstResult($offset);
+
+        if ($categoryIds !== []) {
+            $qb->join('i', Tables::imageCategory(), 'ic', 'ic.image_id = i.id')
+                ->andWhere('ic.category_id IN (:categoryIds)')
+                ->setParameter('categoryIds', $categoryIds, ArrayParameterType::INTEGER);
+        }
+
+        if ($filterUserId !== null) {
+            $qb->andWhere($excludeFilterUser ? 'r.user_id <> :filterUserId' : 'r.user_id = :filterUserId')
+                ->setParameter('filterUserId', $filterUserId);
+        }
+
+        $rows = $qb->executeQuery()
+            ->fetchAllAssociative();
+
+        return array_map(
+            static fn (array $row): array => [
+                'id' => is_numeric($row['id']) ? (int) $row['id'] : 0,
+                'path' => is_string($row['path']) ? $row['path'] : '',
+                'file' => is_string($row['file']) ? $row['file'] : '',
+                'representative_ext' => is_string($row['representative_ext']) ? $row['representative_ext'] : null,
+                'score' => is_numeric($row['score']) ? (float) $row['score'] : null,
+                'recently_rated' => is_string($row['recently_rated']) ? $row['recently_rated'] : null,
+                'avg_rates' => is_numeric($row['avg_rates']) ? (float) $row['avg_rates'] : null,
+                'nb_rates' => is_numeric($row['nb_rates']) ? (int) $row['nb_rates'] : 0,
+                'sum_rates' => is_numeric($row['sum_rates']) ? (float) $row['sum_rates'] : 0.0,
+            ],
+            $rows
+        );
+    }
+
+    /**
+     * @return list<array{user_id: int, element_id: int, anonymous_id: string, rate: int, date: string}>
+     */
+    public function findRateRowsForElement(int $elementId): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('*')
+            ->from(Tables::rate())
+            ->where('element_id = :elementId')
+            ->orderBy('date', 'DESC')
+            ->setParameter('elementId', $elementId)
+            ->executeQuery()
+            ->fetchAllAssociative();
+
+        return array_map(self::toRateRow(...), $rows);
+    }
+
+    public function countAllRates(): int
+    {
+        $value = $this->conn->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from(Tables::rate())
+            ->executeQuery()
+            ->fetchOne();
+
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    /**
+     * Admin "Rating by user" report: every rater, joined to their account
+     * status (used by the page to decide whether to render them as an
+     * anonymous rater).
+     *
+     * @return list<array{id: int, name: string, status: string}>
+     */
+    public function findUsersWithStatusByIdUsername(string $idColumn, string $usernameColumn): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('DISTINCT u.' . $idColumn . ' AS id', 'u.' . $usernameColumn . ' AS name', 'ui.status')
+            ->from(Tables::users(), 'u')
+            ->innerJoin('u', Tables::userInfos(), 'ui', 'u.' . $idColumn . ' = ui.user_id')
+            ->executeQuery()
+            ->fetchAllAssociative();
+
+        $result = [];
+        foreach ($rows as $row) {
+            if (! is_numeric($row['id'])) {
+                continue;
+            }
+
+            $result[] = [
+                'id' => (int) $row['id'],
+                'name' => is_string($row['name']) ? $row['name'] : '',
+                'status' => is_string($row['status']) ? $row['status'] : '',
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
+     * @return list<array{user_id: int, element_id: int, anonymous_id: string, rate: int, date: string}>
+     */
+    public function findAllRatesOrderedByDateDesc(): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('*')
+            ->from(Tables::rate())
+            ->orderBy('date', 'DESC')
+            ->executeQuery()
+            ->fetchAllAssociative();
+
+        return array_map(self::toRateRow(...), $rows);
+    }
+
+    /**
+     * Thin cross-domain touch (image thumbnail info for the "by user" rating
+     * report), same precedent as this repository's own images.rating_score
+     * update above -- not worth a new ImageRepository dependency for one
+     * report query.
+     *
+     * @param list<int> $imageIds
+     * @return list<array{id: int, name: ?string, file: string, path: string, representative_ext: ?string, level: int}>
+     */
+    public function findImageThumbInfoByIds(array $imageIds): array
+    {
+        if ($imageIds === []) {
+            return [];
+        }
+
+        $rows = $this->conn->createQueryBuilder()
+            ->select('id', 'name', 'file', 'path', 'representative_ext', 'level')
+            ->from(Tables::images())
+            ->where('id IN (:ids)')
+            ->setParameter('ids', $imageIds, ArrayParameterType::INTEGER)
+            ->executeQuery()
+            ->fetchAllAssociative();
+
+        return array_map(
+            static fn (array $row): array => [
+                'id' => is_numeric($row['id']) ? (int) $row['id'] : 0,
+                'name' => is_string($row['name']) ? $row['name'] : null,
+                'file' => is_string($row['file']) ? $row['file'] : '',
+                'path' => is_string($row['path']) ? $row['path'] : '',
+                'representative_ext' => is_string($row['representative_ext']) ? $row['representative_ext'] : null,
+                'level' => is_numeric($row['level']) ? (int) $row['level'] : 0,
+            ],
+            $rows
+        );
+    }
+
+    /**
+     * @return array<int, float>
+     */
+    public function findAverageRatePerElement(): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('element_id', 'AVG(rate) AS avg_rate')
+            ->from(Tables::rate())
+            ->groupBy('element_id')
+            ->executeQuery()
+            ->fetchAllAssociative();
+
+        $result = [];
+        foreach ($rows as $row) {
+            if (is_numeric($row['element_id'])) {
+                $result[(int) $row['element_id']] = is_numeric($row['avg_rate']) ? (float) $row['avg_rate'] : 0.0;
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function findTopRatedImageIds(int $limit): array
+    {
+        $ids = $this->conn->createQueryBuilder()
+            ->select('id')
+            ->from(Tables::images())
+            ->orderBy('rating_score', 'DESC')
+            ->setMaxResults($limit)
+            ->executeQuery()
+            ->fetchFirstColumn();
+
+        return self::toIntList($ids);
+    }
+
+    /**
      * @param list<mixed> $values
      * @return list<int>
      */
@@ -202,5 +463,20 @@ final class RateRepository extends AbstractRepository
             static fn (mixed $value): int => is_numeric($value) ? (int) $value : 0,
             $values
         );
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     * @return array{user_id: int, element_id: int, anonymous_id: string, rate: int, date: string}
+     */
+    private static function toRateRow(array $row): array
+    {
+        return [
+            'user_id' => is_numeric($row['user_id']) ? (int) $row['user_id'] : 0,
+            'element_id' => is_numeric($row['element_id']) ? (int) $row['element_id'] : 0,
+            'anonymous_id' => is_string($row['anonymous_id']) ? $row['anonymous_id'] : '',
+            'rate' => is_numeric($row['rate']) ? (int) $row['rate'] : 0,
+            'date' => is_string($row['date']) ? $row['date'] : '',
+        ];
     }
 }

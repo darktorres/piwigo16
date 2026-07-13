@@ -29,4 +29,19 @@ final class ImageRepository extends AbstractRepository
             [$imageId]
         );
     }
+
+    /**
+     * Sets (or clears, when $coi is null) an image's crop-of-interest
+     * 4-character code (admin/picture_coi.php, the only caller).
+     */
+    public function updateCoi(int $imageId, ?string $coi): void
+    {
+        $this->conn->createQueryBuilder()
+            ->update(Tables::images())
+            ->set('coi', ':coi')
+            ->where('id = :id')
+            ->setParameter('coi', $coi)
+            ->setParameter('id', $imageId)
+            ->executeStatement();
+    }
 }

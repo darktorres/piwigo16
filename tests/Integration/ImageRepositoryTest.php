@@ -42,7 +42,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
     #[\Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement('UPDATE ' . Tables::images() . " SET hit = 0 WHERE id IN (1, 2)");
+        $this->conn->executeStatement('UPDATE ' . Tables::images() . " SET hit = 0, coi = NULL WHERE id IN (1, 2)");
         parent::tearDown();
     }
 
@@ -90,5 +90,35 @@ final class ImageRepositoryTest extends IntegrationTestCase
         $after = is_numeric($after) ? (int) $after : 0;
 
         self::assertSame($before, $after);
+    }
+
+    public function test_update_coi_sets_the_column(): void
+    {
+        $this->repo->updateCoi(1, 'ABCD');
+
+        $coi = $this->conn->createQueryBuilder()
+            ->select('coi')
+            ->from(Tables::images())
+            ->where('id = 1')
+            ->executeQuery()
+            ->fetchOne();
+
+        self::assertSame('ABCD', $coi);
+    }
+
+    public function test_update_coi_with_null_clears_the_column(): void
+    {
+        $this->repo->updateCoi(1, 'ABCD');
+
+        $this->repo->updateCoi(1, null);
+
+        $coi = $this->conn->createQueryBuilder()
+            ->select('coi')
+            ->from(Tables::images())
+            ->where('id = 1')
+            ->executeQuery()
+            ->fetchOne();
+
+        self::assertNull($coi);
     }
 }

@@ -135,11 +135,19 @@ Shipped as:
   location ~ \.[0-9a-f]{8}\.(js|css|woff2|avif|webp|png|jpg)$ {
       add_header Cache-Control "public, max-age=31536000, immutable";
   }
+
+  location ~ ^/upload/.*\.(svg|html?)$ {
+      add_header Content-Disposition attachment;
+  }
   ```
 
 All three are exercised by CI's cross-server deny-rule jobs (`.github/workflows/ci.yml`)
 against Apache and the built container image — nginx is docs-only since this project
 doesn't ship an nginx-based image.
+
+[SEC-21] uploaded SVG/HTML is additionally forced to download instead of rendering
+inline (`Content-Disposition: attachment`), matching the same three-target split above —
+see `.htaccess`'s own comment for the full rationale.
 
 ## Environment variables
 

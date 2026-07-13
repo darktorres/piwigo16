@@ -50,3 +50,19 @@
         Header set Cache-Control "public, max-age=31536000, immutable"
     </FilesMatch>
 </IfModule>
+
+# [SEC-21] uploaded SVG/HTML must never render inline -- a genuinely-named
+# "photo.svg"/"photo.html" (upload_form_all_types config) is otherwise
+# served by the web server with its real content-type, letting an embedded
+# <script> execute in the visitor's origin. Piwigo\Admin\Upload\
+# UploadService::sanitizeSvgIfNeeded() already strips <script>/on*= content
+# from SVGs at upload time (the other SEC-21 half); this forces a download
+# instead of inline rendering as defense-in-depth for anything that slips
+# through (e.g. HTML, which isn't sanitized the same way).
+<IfModule mod_rewrite.c>
+    RewriteCond %{REQUEST_URI} /upload/.*\.(svg|html?)$ [NC]
+    RewriteRule ^ - [E=UPLOADED_SVG_HTML:1]
+</IfModule>
+<IfModule mod_headers.c>
+    Header set Content-Disposition attachment env=UPLOADED_SVG_HTML
+</IfModule>

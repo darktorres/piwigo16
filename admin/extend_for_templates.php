@@ -175,12 +175,13 @@ if (isset($_POST['submit'])) {
         }
         $i++;
     }
-    $conf['extents_for_templates'] = serialize($replacements);
+    $serialized_extents = serialize($replacements);
+    $conf['extents_for_templates'] = $serialized_extents;
     $tpl_extension = $replacements;
     /* ecrire la nouvelle conf */
     $query = '
 UPDATE ' . Tables::config() . '
-  SET value = \'' . $conf['extents_for_templates'] . '\'
+  SET value = \'' . str_replace("\'", "''", $serialized_extents) . '\'
 WHERE param = \'extents_for_templates\';';
     if ((bool) pwg_query($query)) {
         $page['infos'][] = l10n('Templates configuration has been recorded.');

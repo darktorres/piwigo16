@@ -25,7 +25,18 @@ global $conf;
 $nbm_max_treatment_timeout_percent = $conf['nbm_max_treatment_timeout_percent'] ?? null;
 $nbm_max_treatment_timeout_percent = is_numeric($nbm_max_treatment_timeout_percent) ? (float) $nbm_max_treatment_timeout_percent : 0.8;
 
-/* nbm_global_var */
+/*
+ * nbm_global_var
+ *
+ * This file is always include_once'd from inside an AdminSubControllerInterface::handle()
+ * method (Piwigo\Bootstrap\AdminDispatcher), never from real top-level
+ * script scope -- a bare `$env_nbm = ...` here would only ever create a
+ * variable local to that method's call frame, invisible to every function
+ * below (and in admin/notification_by_mail.php) that reads it back via
+ * `global $env_nbm;`. The explicit `global` here is what actually makes
+ * this bootstrap reach the real global scope those functions expect.
+ */
+global $env_nbm;
 $env_nbm =
           [
             'start_time' => get_moment(),

@@ -9,7 +9,13 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-use Piwigo\Admin\themes;
+use Piwigo\Admin\Extensions\ExtensionLifecycle;
+use Piwigo\Admin\Extensions\ExtensionRepository;
+use Piwigo\Admin\Extensions\ExtensionScanner;
+use Piwigo\Admin\Extensions\ExtensionType;
+use Piwigo\Admin\Extensions\PemCatalog;
+use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Db\DbConnection;
 use Piwigo\Template\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
@@ -38,14 +44,18 @@ $page_page = $page['page'] ?? null;
 $page_page = is_string($page_page) ? $page_page : '';
 $base_url = get_root_url() . 'admin.php?page=' . $page_page;
 
-$themes = new themes();
+$extension_repository = new ExtensionRepository(DbConnection::build());
+$pem_catalog = new PemCatalog(new ZipExtractor());
+$extension_scanner = new ExtensionScanner();
+$extension_lifecycle = new ExtensionLifecycle($extension_repository, $pem_catalog);
 
 // +-----------------------------------------------------------------------+
 // |                          perform actions                              |
 // +-----------------------------------------------------------------------+
 
 if (isset($_GET['action']) and is_string($_GET['action']) and isset($_GET['theme']) and is_string($_GET['theme'])) {
-    $page['errors'] = $themes->perform_action($_GET['action'], $_GET['theme']);
+    $fs_theme_entry = $extension_scanner->scan(ExtensionType::Theme)[$_GET['theme']] ?? null;
+    $page['errors'] = $extension_lifecycle->performAction(ExtensionType::Theme, $_GET['action'], $_GET['theme'], $fs_theme_entry);
 
     if (empty($page['errors'])) {
         if ($_GET['action'] == 'activate' or $_GET['action'] == 'deactivate') {
@@ -59,24 +69,16 @@ if (isset($_GET['action']) and is_string($_GET['action']) and isset($_GET['theme
 // |                     start template output                             |
 // +-----------------------------------------------------------------------+
 
-$themes->sort_fs_themes();
+$fs_themes = $extension_scanner->scan(ExtensionType::Theme);
+uasort($fs_themes, name_compare(...));
 
 $default_theme = get_default_theme();
 
-$db_themes = $themes->get_db_themes();
-$db_theme_ids = [];
-foreach ($db_themes as $db_theme) {
-    // get_db_themes() is typed array<int, array<string, string|null>>, so
-    // $db_theme is always an array here.
-    $db_theme_id = $db_theme['id'] ?? null;
-    if (is_string($db_theme_id)) {
-        $db_theme_ids[] = $db_theme_id;
-    }
-}
+$db_theme_ids = array_keys($extension_repository->findAll(ExtensionType::Theme));
 
 $tpl_themes = [];
 
-foreach ($themes->fs_themes as $theme_id => $fs_theme) {
+foreach ($fs_themes as $theme_id => $fs_theme) {
     if ($theme_id == 'default' or $theme_id == 'standard_pages') {
         continue;
     }
@@ -119,7 +121,7 @@ foreach ($themes->fs_themes as $theme_id => $fs_theme) {
             $tpl_theme['ACTIVABLE'] = true;
         }
 
-        $missing_parent = $themes->missing_parent_theme($theme_id);
+        $missing_parent = $extension_lifecycle->missingParentTheme($theme_id, $fs_theme);
         if (isset($missing_parent)) {
             $tpl_theme['ACTIVABLE'] = false;
 
@@ -130,7 +132,7 @@ foreach ($themes->fs_themes as $theme_id => $fs_theme) {
         }
 
         // is the theme "deletable" ?
-        $children = $themes->get_children_themes($theme_id);
+        $children = $extension_lifecycle->getChildrenThemes($theme_id);
 
         $tpl_theme['DELETABLE'] = true;
 
@@ -148,11 +150,15 @@ foreach ($themes->fs_themes as $theme_id => $fs_theme) {
 }
 
 // sort themes by state then by name
+// Uniquely named (not cmp()) since PHPStan analyzes every included file
+// together and admin/plugins_installed.php declares its own top-level
+// cmp() -- same pattern as push_plugins_new_page_message() in
+// admin/plugins_new.php.
 /**
  * @param array<string, mixed> $a
  * @param array<string, mixed> $b
  */
-function cmp(array $a, array $b): int
+function cmp_themes(array $a, array $b): int
 {
     $s = [
         'active' => 0,
@@ -186,7 +192,7 @@ function cmp(array $a, array $b): int
         return ($s[$a_state] ?? 1) >= ($s[$b_state] ?? 1) ? 1 : -1;
     }
 }
-usort($tpl_themes, cmp(...));
+usort($tpl_themes, cmp_themes(...));
 
 $template->assign(
     [

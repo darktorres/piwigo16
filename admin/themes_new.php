@@ -9,7 +9,10 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-use Piwigo\Admin\themes;
+use Piwigo\Admin\Extensions\ExtensionScanner;
+use Piwigo\Admin\Extensions\ExtensionType;
+use Piwigo\Admin\Extensions\PemCatalog;
+use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Template\Template;
 
@@ -62,7 +65,8 @@ $page_tab = $page['tab'] ?? null;
 $page_tab = is_scalar($page_tab) ? (string) $page_tab : '';
 $base_url = get_root_url() . 'admin.php?page=' . $page_page . '&tab=' . $page_tab;
 
-$themes = new themes();
+$pem_catalog = new PemCatalog(new ZipExtractor());
+$extension_scanner = new ExtensionScanner();
 
 // +-----------------------------------------------------------------------+
 // |                           setup check                                 |
@@ -85,13 +89,9 @@ if (isset($_GET['revision']) and isset($_GET['extension'])
     } else {
         check_pwg_token();
 
-        $theme_id = null;
-        $install_status = $themes->extract_theme_files(
-            'install',
-            $_GET['revision'],
-            $_GET['extension'],
-            $theme_id
-        );
+        $extraction = $pem_catalog->extractArchive(ExtensionType::Theme, 'install', $_GET['revision'], $_GET['extension']);
+        $install_status = $extraction['status'];
+        $theme_id = $extraction['id'];
 
         redirect($base_url . '&installstatus=' . $install_status . '&theme_id=' . $theme_id);
     }
@@ -107,14 +107,15 @@ if (isset($_GET['installstatus'])) {
             push_themes_new_page_message('infos', l10n('Theme has been successfully installed'), $page);
 
             $installed_theme_id = $_GET['theme_id'] ?? null;
-            if (is_string($installed_theme_id) && isset($themes->fs_themes[$installed_theme_id])) {
+            $installed_fs_theme = is_string($installed_theme_id) ? ($extension_scanner->scan(ExtensionType::Theme)[$installed_theme_id] ?? null) : null;
+            if ($installed_fs_theme !== null) {
                 pwg_activity(
                     'system',
                     ActivitySystem::Theme,
                     'install',
                     [
                         'theme_id' => $installed_theme_id,
-                        'version' => $themes->fs_themes[$installed_theme_id]['version'],
+                        'version' => $installed_fs_theme['version'],
                     ]
                 );
             }
@@ -154,8 +155,17 @@ $template->set_filenames([
     'themes' => 'themes_new.tpl',
 ]);
 
-if ($themes->get_server_themes(true)) { // only new themes
-    foreach ($themes->server_themes as $theme) {
+$fs_theme_ids = [];
+foreach ($extension_scanner->scan(ExtensionType::Theme) as $fs_theme) {
+    $extension = $fs_theme['extension'] ?? null;
+    if (is_scalar($extension)) {
+        $fs_theme_ids[] = (string) $extension;
+    }
+}
+$server_themes = $pem_catalog->getServerExtensions(ExtensionType::Theme, $fs_theme_ids, true);
+
+if ($server_themes !== null) { // only new themes
+    foreach ($server_themes as $theme) {
         // server_themes entries come from an untyped unserialize() of a
         // remote PEM payload (themes::get_server_themes()); narrow the
         // fields used in a typed context below rather than trusting the

@@ -33,7 +33,7 @@ phases:
   - {id: P18, tier: T1,    depends_on: [P17],   status: done,    epoch: E}
   - {id: P19, tier: T1,    depends_on: [P18],   status: done,    epoch: E}
   - {id: P20, tier: T1,    depends_on: [P19],   status: done,    epoch: E}
-  - {id: P21, tier: T1,    depends_on: [P20],   status: planned, epoch: E}
+  - {id: P21, tier: T1,    depends_on: [P20],   status: done,    epoch: E}
   - {id: P22, tier: T1,    depends_on: [P21],   status: planned, epoch: E}
   - {id: P23, tier: T1,    depends_on: [P22],   status: planned, epoch: E}
   - {id: P24, tier: T2,    depends_on: [P23],   status: planned, epoch: F}
@@ -99,15 +99,20 @@ sec:
   - {id: SEC-17, phase: P17, threat: "Open redirect / host-header poisoning", verified_by: "redirect + host-header integration tests (P17)", status: planned}
   - {id: SEC-18, phase: P19, threat: "SQL injection", verified_by: "SearchRepository/SearchService bound-parameter query construction replacing addslashes(); SearchRepositoryTest/SearchServiceTest + live-verified quote-character search (P19)", status: done}
   - {id: SEC-19, phase: P21, threat: "Missing input validation (mass assignment, type confusion)", verified_by: "Request-DTO validation tests (P27)", status: planned}
+  # SEC-19 is only PARTIALLY addressed by P21: admin.php now builds a real
+  # PSR-7 ServerRequestInterface via RequestFactory::fromGlobals() and
+  # threads it through AdminDispatcher into every AdminSubControllerInterface
+  # ::handle($request) -- the real infrastructure seam now exists. But per
+  # this phase's own "keep request-parsing glue inline in the legacy
+  # admin/*.php file" split (P23 deletes those bodies, not P21), only 2 of
+  # 38 SubControllers (Album/PhotosAdd) actually read from $request at all
+  # (confirmed via direct grep); every other page, including all 9 Misc-batch
+  # ones, still has its legacy body read $_GET/$_POST directly. Stays
+  # planned -- the real per-page mass-assignment/type-confusion validation
+  # this item is about is P27's Request-DTO work, not this phase's.
   - {id: SEC-20, phase: P19, threat: "XXE protection on SVG/XML parsing", verified_by: "MetadataService::parseSvgDimensions() strips <!DOCTYPE> + LIBXML_NONET (never LIBXML_NOENT/DTDLOAD); verified fail-safe against a real secret-file-read payload via a temp SVG with an internal DTD subset (P19)", status: done}
-  - {id: SEC-21, phase: P19, threat: "Stored XSS via uploaded SVG or HTML descriptions", verified_by: "upload-sanitization tests (P19/P29)", status: planned}
-  # SEC-21 is only PARTIALLY closed by P19: the XXE-safe parsing half
-  # (shared mechanism with SEC-20) is done, but the upload-time
-  # <script>-stripping + Content-Disposition:attachment half targets
-  # admin/include/functions_upload.inc.php -> Piwigo\Admin\Upload\
-  # UploadService, which doesn't exist until P21 (admin controller
-  # migration). Stays planned until that lands.
-  - {id: SEC-22, phase: P21, threat: "Information disclosure (errors / debug output)", verified_by: "error-path integration tests (P21/P26)", status: planned}
+  - {id: SEC-21, phase: P21, threat: "Stored XSS via uploaded SVG or HTML descriptions", verified_by: "XXE-safe parsing half done in P19 (shared mechanism with SEC-20); upload-time half closed in P21's Upload batch -- Piwigo\\Admin\\Upload\\UploadService::sanitizeSvgIfNeeded() strips <script> elements and on*= event-handler attributes via DOMDocument (LIBXML_NONET), covered by UploadServiceTest; Content-Disposition:attachment defense-in-depth added to .htaccess/Caddyfile/nginx docs for anything that slips through (P19/P21)", status: done}
+  - {id: SEC-22, phase: P21, threat: "Information disclosure (errors / debug output)", verified_by: "both real phpinfo() call sites (admin/maintenance_env.php, admin/maintenance_actions.php) replaced with Piwigo\\Admin\\Maintenance\\ServerInfoService's curated output (PHP/SAPI/OS version, loaded extensions, a fixed ini-setting allowlist, not a raw dump); covered by ServerInfoServiceTest + live-verified against the real instance with zero raw-phpinfo() markers present (P21)", status: done}
   - {id: SEC-23, phase: P17, threat: "SSRF via remote fetch", verified_by: "HttpClientServiceTest unit tests: private/reserved-IP + non-https rejection, redirect-target re-validation (P17)", status: done}
   - {id: SEC-24, phase: P17, threat: "SSRF via remote fetch", verified_by: "fetchRemote() local-file-read fallback deleted; HttpClientServiceTest covers the guarded replacement path (P17)", status: done}
   - {id: SEC-25, phase: P18, threat: "Session hijacking / fixation", verified_by: "was already largely covered pre-migration (auto_login()/auth_key_login() both funneled through log_user()'s unconditional session_regenerate_id(true)); re-confirmed the same call survives intact in the new AuthService::logUser(), reached from both tryLogUser() and autoLogin(); live-verified via a real login/auto-login/logout round trip (P18)", status: done}
@@ -124,7 +129,15 @@ sec:
   # nothing here was actually expected to fully close in P17 alone.
   - {id: SEC-30, phase: P17, threat: "Information disclosure (errors / debug output)", verified_by: "error-path integration tests (P21/P26)", status: planned}
   - {id: SEC-31, phase: P18, threat: "Account enumeration via registration", verified_by: "UserService::registerUser() returns a generic success message + userId: null on a duplicate username instead of the original's 'this login is already used' (the existing account is emailed instead); covered by UserServiceTest ('register user sets duplicate username without revealing it in errors'); register.php's own auto-login/audit-log gates on userId !== null so a duplicate is never treated as a real success (P18)", status: done}
-  - {id: SEC-32, phase: P20, threat: "DoS (zip bomb, unbounded API/queries)", verified_by: "zip-bomb unit test + rate-limit + idempotency-replay tests (P20/P26/P28)", status: planned}
+  - {id: SEC-32, phase: P21, threat: "DoS (zip bomb, unbounded API/queries)", verified_by: "zip-bomb unit test + rate-limit + idempotency-replay tests (P20/P26/P28)", status: planned}
+  # SEC-32 is only PARTIALLY closed by P21: the zip-bomb half is done --
+  # Piwigo\Admin\Extensions\ZipExtractor (Extensions batch) enforces a real
+  # entry-count and uncompressed-size ceiling, replacing raw
+  # ZipArchive::extractTo(), covered by ZipExtractorTest. The
+  # rate-limit/idempotency-replay halves are unrelated concerns for
+  # different phases (P26/P28) and remain unbuilt -- stays planned.
+  # (originally tagged phase: P20 in this file; the real ZipExtractor build
+  # landed in P21's Extensions batch, corrected here to match.)
   - {id: SEC-33, phase: P19, threat: "Anonymous reads a private album's originals/derivatives", verified_by: "derivative/permission integration tests (P19/P28); isolation gate (P32)", status: planned}
   # SEC-33 is only PARTIALLY closed by P19: i.php's own PHP-level
   # permission check is fixed (check_derivative_permission() now runs

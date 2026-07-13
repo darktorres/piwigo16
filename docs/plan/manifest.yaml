@@ -57,7 +57,14 @@ adoption:
 sec:
   - {id: SEC-01, phase: P4,  threat: "Sensitive files served over HTTP", verified_by: ".htaccess deny E2E (P4); isolation gate (P32)", status: done}
   - {id: SEC-02, phase: P0,  threat: "Sensitive files served over HTTP", verified_by: ".htaccess deny E2E (P4); isolation gate (P32)", status: done}
-  - {id: SEC-03, phase: P2,  threat: "Sensitive files served over HTTP", verified_by: ".htaccess deny E2E (P4); isolation gate (P32)", status: planned}
+  # SEC-03 is fully closed, not just partially: confirmed via direct read of
+  # .htaccess -- the SEC-01 deny ruleset's RewriteCond explicitly matches
+  # "/tests/" (among other sensitive dirs) with a [F,L] (403 Forbidden,
+  # last-rule) RewriteRule, keeping tests/Fixtures/piwigo-17.0.sql (which
+  # contains secret_key + bcrypt hashes) out of the web-servable surface.
+  # Manifest was simply never flipped when this landed in P4. Found during a
+  # 2026-07-13 phase-by-phase audit (P0-P22, code verified directly).
+  - {id: SEC-03, phase: P2,  threat: "Sensitive files served over HTTP", verified_by: ".htaccess SEC-01 deny ruleset denies /tests/ with [F,L] (P4); isolation gate (P32)", status: done}
   - {id: SEC-04, phase: P4,  threat: "Sensitive files served over HTTP", verified_by: ".htaccess deny E2E (P4); isolation gate (P32)", status: done}
   - {id: SEC-05, phase: P4,  threat: "n/a - performance item (Brotli), not a mitigation", verified_by: "n/a", status: done}
   - {id: SEC-06, phase: P4,  threat: "n/a - performance item (Cache-Control: immutable), not a mitigation", verified_by: "n/a", status: done}
@@ -127,7 +134,15 @@ sec:
   - {id: SEC-23, phase: P17, threat: "SSRF via remote fetch", verified_by: "HttpClientServiceTest unit tests: private/reserved-IP + non-https rejection, redirect-target re-validation (P17)", status: done}
   - {id: SEC-24, phase: P17, threat: "SSRF via remote fetch", verified_by: "fetchRemote() local-file-read fallback deleted; HttpClientServiceTest covers the guarded replacement path (P17)", status: done}
   - {id: SEC-25, phase: P18, threat: "Session hijacking / fixation", verified_by: "was already largely covered pre-migration (auto_login()/auth_key_login() both funneled through log_user()'s unconditional session_regenerate_id(true)); re-confirmed the same call survives intact in the new AuthService::logUser(), reached from both tryLogUser() and autoLogin(); live-verified via a real login/auto-login/logout round trip (P18)", status: done}
-  - {id: SEC-26, phase: P16, threat: "Local file inclusion via locale", verified_by: "LangService unit test (P16)", status: planned}
+  # SEC-26 is fully closed: LangService::isInstalledLocale() (P16) validates
+  # $locale against a regex (^[a-z]{2,3}(_[A-Z]{2})?$) AND the real,
+  # filesystem-verifiable set of installed language/<locale>/ directories
+  # BEFORE it's composed into any path in loadLanguageForPlugin() -- blocks
+  # path traversal / arbitrary-file-read. The class's own docblock already
+  # documents this as "[SEC-26]"; the manifest was simply never flipped.
+  # Found during a 2026-07-13 phase-by-phase audit (P0-P22, code verified
+  # directly).
+  - {id: SEC-26, phase: P16, threat: "Local file inclusion via locale", verified_by: "LangService::isInstalledLocale() regex + filesystem check before any path composition, confirmed in loadLanguageForPlugin() (P16)", status: done}
   - {id: SEC-27, phase: P18, threat: "Session hijacking / fixation", verified_by: "AuthService::calculateAutoLoginKey() built as sha256+hash_equals() from the start (was hash_hmac('sha1')+=== in the original); live-verified via a real auto-login cookie round trip (P18)", status: done}
   - {id: SEC-28, phase: P18, threat: "Session hijacking / fixation", verified_by: "EphemeralKeyService built as sha256+hash_equals() from the start (was hash_hmac('md5')+!== in the original); covered by EphemeralKeyServiceTest unit tests (P18)", status: done}
   - {id: SEC-29, phase: P17, threat: "Open redirect / host-header poisoning", verified_by: "UrlServiceTest unit tests: gallery_url-configured host takes priority over Host header; allowed_hosts rejects an unrecognized Host/X-Forwarded-Host. Fixed (406cd15ad, P18 follow-up) to read global $conf instead of the unsynced Piwigo\\Config\\Config accessors the original fix used; live-verified via a real DB-persisted gallery_url reflected correctly in an outbound email despite a forged Host header (P17/P18)", status: done}
@@ -207,7 +222,18 @@ sec:
   # Revisit once P19/P26/P29 exist.
   - {id: SEC-56, phase: P18, threat: "Privacy / data-subject abuse (mass export, erasure griefing)", verified_by: "data-subject endpoint tests: re-auth + rate limit (P18/P28)", status: planned}
   - {id: SEC-57, phase: P15, threat: "Audit-log tampering / repudiation", verified_by: "AuditService: append-only audit_log table, per-row sha256 hash chain, verifyChain() walks and recomputes every hash; caught+fixed a real bug where MySQL's JSON column re-serialization made verifyChain() always report tampering (canonicalJson() fix); wired into 4 real admin actions (user registration, group create/delete, permission grant/revoke); live-verified via real WS/admin calls with verifyChain() == true against the resulting chain (P18)", status: done}
-  - {id: SEC-58, phase: P11, threat: "Unauthorized feature-flag change", verified_by: "flag-service authz + audit tests (P11)", status: planned}
+  # SEC-58 is only PARTIALLY closed by P11, and deliberately so -- not an
+  # oversight. FeatureFlag (src/Piwigo/Core/FeatureFlag.php) is read-only by
+  # design: isEnabled() only reads config/feature-flags.php, with no
+  # mutation/toggle path at all. The class's own docblock already explains
+  # why: "unauthorized feature-flag change" needs authz, which needs a real
+  # write/toggle capability to protect -- there's no such surface yet. The
+  # admin-facing mutation capability (P21 admin UI + P16 CurrentUser +
+  # audit_log, P13-16/SEC-57) is a later phase's job, not built here. Stays
+  # planned; this note was just never copied from the class docblock into
+  # the manifest. Found during a 2026-07-13 phase-by-phase audit (P0-P22,
+  # code verified directly).
+  - {id: SEC-58, phase: P11, threat: "Unauthorized feature-flag change", verified_by: "FeatureFlag is read-only by design (no mutation path exists yet to protect); authz-gated mutation is later-phase scope (P21 admin UI + P16 CurrentUser + audit_log)", status: planned}
   - {id: SEC-59, phase: T3-AI, threat: "AI-surface abuse (MCP leaks private data / unbounded calls)", verified_by: "MCP auth-scope + permission tests + rate limit (T3-AI)", status: planned}
   - {id: SEC-60, phase: P7,  threat: "Cross-request state bleed (worker mode serves user A's data to B)", verified_by: "worker-isolation arch test + integration (P7)", status: planned}
   - {id: SEC-61, phase: P11, threat: "Realtime topic leak (private-album update pushed to an unauthorized subscriber)", verified_by: "Mercure JWT topic-authz tests (P11)", status: planned}

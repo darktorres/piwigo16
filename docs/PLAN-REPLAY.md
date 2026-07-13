@@ -699,6 +699,13 @@ count. CI enforces ratchets: counts can only go down.
     handles PHP, Prettier handles JS/TS — `.editorconfig` catches everything
     else. Universal editor support, zero runtime cost.
 
+> **Audit note (2026-07-13):** item 11b's `web-vitals` RUM wiring was never
+> actually built — the npm package is installed (confirmed in `package.json`),
+> but there's no beacon call anywhere in the TS tree, no `/analytics/vitals`
+> endpoint, and no admin dashboard. Found during a full P0-P22 phase-by-phase
+> audit (code verified directly, not manifest claims). Remediation tracked as
+> a standalone post-P22 fix, independent of P23.
+
 ### P2 — Test harness (env/install, fixtures, browser-E2E + contract suites)
 
 > **Tier** T2 · **Depends on** P1 · **Greenfield delta:** none — *merges* the three test-setup units (env/install, browser-E2E + WS contract, fixtures/tools). **Replay:** env split, fixtures, Pest-browser + contract suites.
@@ -1661,6 +1668,22 @@ the hand-maintained `piwigo_structure-mysql.sql` is deleted.
   and zstd/brotli come from the Caddy core. **Apache + PHP-FPM stays a supported fallback**
   (classic per-request boot via `opcache.preload`); worker mode is opt-in.
 
+> **Audit note (2026-07-13):** the worker loop was never actually implemented.
+> The production Dockerfile does run `dunglas/frankenphp:1-php8.5`, but
+> `docker/Caddyfile` has no `worker` directive and `index.php` has no
+> `frankenphp_handle_request()` loop — it's classic per-request execution on
+> the FrankenPHP binary, not true worker mode. "The injectable-`Config` design
+> already complies" is also incomplete as a state-isolation claim: direct grep
+> found **13 classes** with request-scoped static/singleton state and a
+> `reset()` method (`Kernel`, `Config`, `ShutdownHandler`, `SessionService`,
+> `StorageRegistry`, `ServerTiming`, `Lang`, `PageState`, `CurrentUser`,
+> `SectionContextRegistry`, `Translator`, `MailService`, `EventDispatcher`),
+> only 5 of which have an arch test enforcing their `reset()` stays
+> test-only. Found during a full P0-P22 phase-by-phase audit. Remediation
+> tracked as a post-P23 fix (deferred past P23 so the reset-state audit isn't
+> done twice — P23's bootstrap-chain replacement changes what state
+> `CommonBootstrap` manages).
+
 ### P8 — DI container
 
 > **Tier** T2 · **Depends on** P7 · **Greenfield delta:** none. **Replay:** `Container`, `config/container.php`, autowire default.
@@ -1687,6 +1710,19 @@ the hand-maintained `piwigo_structure-mysql.sql` is deleted.
   T3·WEB adds 103 Early-Hints `Link` headers. This avoids re-authoring the middleware in P28/P29.
 - Legacy entry points (`i.php`, `action.php`, `ws.php`, etc.) routed through `index.php`
 - **Tests:** Middleware unit tests, `FastPathHeadersTest.php`, browser E2E for legacy URLs
+
+> **Audit note (2026-07-13):** SEC-11/SEC-12 (CSRF token hardening — this
+> section's own reference material specifies `hash_hmac('sha256', ...)` +
+> `hash_equals()`) were never actually applied to `CsrfService`. Direct read
+> of `src/Piwigo/Csrf/CsrfService.php` found `getToken()` still using
+> `hash_hmac('md5', ...)` and `check()` still using plain `===`. A P17/P18
+> follow-up (`a64fccbb6`) fixed a *different* bug in the same file (reading
+> the DB-persisted secret key correctly) but never touched the hash algorithm
+> or comparison method — despite the identical weak-hash-plus-non-constant-
+> comparison pattern being correctly fixed in the sibling `AuthService`/
+> `EphemeralKeyService` classes during P18 (SEC-27/SEC-28). Found during a
+> full P0-P22 phase-by-phase audit. Remediation tracked as a standalone
+> post-P22 fix, independent of P23.
 
 ### P10 — Observability (Monolog + Server-Timing + Sentry)
 
@@ -1865,6 +1901,21 @@ force `ArrayAdapter` to avoid test pollution across cache stores.
 (derivative fast-path latency). Record baseline numbers as CI artifacts.
 Subsequent phases compare against these — regressions flag warnings.
 
+> **Audit note (2026-07-13):** the "Named cache pools" architecture above
+> (`config`/`permissions`/`category_tree`/`tag_cloud`/`rate_limiter`/`general`,
+> each its own namespace and TTL) was never built. `CacheFactory::create()`
+> only produces one generic `piwigo`-namespaced pool; direct grep found zero
+> real consumers of `CacheItemPoolInterface`/`CacheInterface` anywhere in
+> `src/Piwigo/` besides `CacheClearCommand` (which only clears it). None of
+> the phases that were supposed to wire a named pool did so:
+> `ConfigService::loadConfFromDb()` (P13), `PermissionService::
+> getForbiddenCategories()` (P18), `TagRepository::getCloudTags()` (P18),
+> `CategoryRepository`'s tree queries (P19) all recompute fresh on every call
+> with no caching at all. This is directly load-bearing for P23's own
+> cache-table-rationalization gate, which assumes the `permissions`/
+> `category_tree` pools already exist. Found during a full P0-P22
+> phase-by-phase audit. Remediation folded into P23 (see that section).
+
 ### P12 — CLI tool + backup/restore + graceful shutdown
 
 > **Tier** T2 · **Depends on** P11 · **Greenfield delta:** all of it — `bin/piwigo`, backup/restore, graceful shutdown, PHPBench. **Replay:** none.
@@ -1885,6 +1936,20 @@ currently web-UI-only:
 | `bin/piwigo schema:dump` | Regenerate `install/schema/*.sql` from migrations (all 3 providers) |
 | `bin/piwigo backup:create` | Dump DB + uploads to timestamped archive |
 | `bin/piwigo backup:restore <file>` | Restore from backup archive |
+
+> **Audit note (2026-07-13):** the 4 `maintenance:*` commands in this table
+> were never built. `config/commands.php`'s own comment says they're
+> deferred and points at "docs/PLAN-REPLAY.md P12's scope-decision section"
+> for the reasoning — that section doesn't exist; this note is the first
+> real one. Of the 4, `purge-history` and `purge-sessions` are ready to wrap
+> today (`DbMaintenanceRepository::purgeHistoryDetail()`/`purgeHistorySummary()`/
+> `purgeSessionsForDeletedUsers()` have existed since P21); `orphan-tags`
+> needs a small extraction first (`delete_orphan_tags()` is still a free
+> function in `admin/include/functions.php:424`); `repair-db`'s backing logic
+> lives in `include/dblayer/functions_mysqli.inc.php`, genuinely P23 scope
+> since that file is part of P23's own absorption work. Found during a full
+> P0-P22 phase-by-phase audit. Remediation: 3 of the 4 as a standalone
+> post-P22 fix, `repair-db` folded into P23.
 
 **Backup strategy:** `backup:create` produces a `.tar.gz` containing:
 
@@ -2777,6 +2842,22 @@ their browser language automatically — no manual selection needed.
   Gate: `grep -rn '\$conf\[' src/` → 0 by end of P23.
 - **Tests:** `ConfigTest.php`, `ConfigRepositoryTest.php`, accessor sync CI
 
+> **Audit note (2026-07-13):** the `$conf` → `Config` migration stalled well
+> short of the P23 gate above. Direct grep found **72 files** under
+> `src/Piwigo/` (not just legacy `include/`) still read `global $conf`
+> directly. This isn't stalled migration — it's a necessary workaround:
+> `Config::` accessors are provably unsynced with DB-persisted values.
+> `ConfigService::loadConfFromDb()` populates the legacy `$conf` global (via
+> `common.inc.php`'s bootstrap chain) but never writes back into
+> `Config::$data`, so any `src/Piwigo/` code that used `Config::` accessors
+> for a DB-configurable setting would silently read stale/default values —
+> confirmed as the root cause of a real shipped bug (`CsrfService` reading an
+> empty `secret_key` via `Config::secretKey()`, fixed P17/P18 by switching to
+> `global $conf` instead, `a64fccbb6`). The `grep -rn '\$conf\[' src/` → 0
+> gate isn't achievable until `ConfigService`'s DB-loaded values actually
+> flow into `Config::$data`. Found during a full P0-P22 phase-by-phase audit.
+> Remediation folded into P23's bootstrap-chain-replacement batch.
+
 ### P14 — DB layer + Doctrine ORM
 
 > **Tier** T2 · **Depends on** P13 · **Greenfield delta:** none — Doctrine ORM/DBAL, EntityManager, custom types. **Replay:** repositories as `ServiceEntityRepository` from day one. *(Schema migration is P15.)*
@@ -2791,6 +2872,26 @@ their browser language automatically — no manual selection needed.
   a thin shim for procedural code still in `include/` that issues raw SQL; it is
   deleted in P23 when `include/` is removed. New code in `src/Piwigo/` never
   uses it.
+
+> **Audit note (2026-07-13):** this design was followed only for
+> `ConfigRepository` itself (P13's own repository, genuinely a real
+> `EntityRepository` over an attribute-mapped `ConfigEntry` entity). Direct
+> grep found all ~27 domain repositories built in P17-21 (`Category`,
+> `Image`, `Users`, `Search`, `Comment`, `Tag`, `Rate`, `History`,
+> `Activity`, `Permission`, `Group`, `Audit`, and more) extend
+> `AbstractRepository` instead — the exact DBAL pattern this section says is
+> "ONLY" for not-yet-migrated `include/` code. In practice `AbstractRepository`
+> +`Tables::` became the real, working, tested pattern for query-heavy domain
+> repositories (hand-tuned JOINs/aggregates that don't map cleanly onto DQL),
+> not a legacy-only shim. Found during a full P0-P22 phase-by-phase audit.
+> **User decision:** migrate all ~27 repositories to the originally-intended
+> ORM pattern for real, rather than correct this section to match current
+> practice — tracked as a new `remediation:` initiative in
+> `docs/plan/manifest.yaml`, sequenced after P23 (so it touches a stable,
+> already-cleaned-up repository surface exactly once, not concurrently with
+> P23's own changes to `PermissionService`/`TagRepository`/`CategoryRepository`).
+> `Tables.php`/`AbstractRepository` are therefore **not** deleted in P23 —
+> see that phase's own note.
 ### P15 — Schema migration + multi-provider
 
 > **Tier** T1–T2 · **Depends on** P14 · **Greenfield delta:** FK constraints + orphan cleanup, JSON CHECK constraints, multi-provider (MariaDB/PG), `audit_log` (SEC-57). Cache tables (`user_cache`, `user_cache_categories`, `history_summary`) get engine/charset only — type-norm skipped (dropped in P23). **Replay:** InnoDB+utf8mb4, 7 new tables. *(Schema half of the DB-layer work.)*
@@ -3054,6 +3155,18 @@ their browser language automatically — no manual selection needed.
 - Arch test: no `define()` in src/, no `PHPWG_ROOT_PATH` in src/
 
 **Gate:** Config accessor sync CI. All tests green.
+
+> **Audit note (2026-07-13):** a full P0-P22 phase-by-phase audit checked
+> test coverage per top-level `src/Piwigo/` namespace and found exactly one
+> namespace with real logic and zero direct unit tests: `Template/` (8
+> files — `Template`, `ScriptLoader`, `CssLoader`, `FileCombiner`,
+> `Combinable`, `Css`, `Script`, `PwgTemplateAdapter`). It's indirectly
+> exercised by the Browser E2E suite (every page renders through it) but has
+> no dedicated `tests/Unit/Template/` coverage of its own logic (asset
+> combining/ordering, loader dedup). Noted here since this is the closest
+> "typed facades" section to where that coverage belongs; the classes
+> themselves weren't necessarily built in P16. Remediation tracked as a
+> standalone post-P22 fix, independent of P23.
 
 **Documentation:** Update `docs/ARCHITECTURE.md` with Config SCHEMA, DB layer,
 language system. `docs/CONFIG.md` — all 277 config keys with types and
@@ -3890,6 +4003,17 @@ Smarty `Template` engine in P22, collecting an engine-agnostic `$vars` array; P2
 only the render call to Latte `renderToString($file, $vars)` — a one-line change per
 controller, not a rewrite. `ActionController` is the permission-checked original-file
 handler (legacy `action.php`); it enforces the served-path check ([SEC-33]) here in P22.
+
+> **Audit note (2026-07-13):** P20's own `SectionInitializer` docblock said
+> the `$page`/`$template` population half of `include/section_init.inc.php`
+> (the ~450 non-`SectionInitializer::parse()` lines — raw SQL for `$page['items']`,
+> favorites, next/prev navigation) was "P22 scope." `GalleryController`
+> (built here) only relocated the `include()` call site into the controller
+> — the actual absorption never happened, and `GalleryController`'s own
+> docblock doesn't explain why. A full P0-P22 phase-by-phase audit swept all
+> of `src/`/`include/`/`admin/` for this exact "PXX scope, not delivered"
+> pattern and found this to be the only instance. Remediation folded into
+> P23 (see that section's Gallery/Picture absorption batch).
 
 ### P23 — Legacy deletion & cleanup
 

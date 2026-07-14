@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Piwigo\Category\CategoryCatsRenderer;
+use Piwigo\Category\CategoryDefaultRenderer;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
@@ -452,11 +454,13 @@ final class GalleryController implements ControllerInterface
                   and ($page['section'] === 'recent_cats' or $page['section'] === 'categories')
                   and (! isset($page['category']) or ! is_array($page['category']) or ! isset($page['category']['count_categories']) or $page['category']['count_categories'] > 0)
                 ) {
-                    include PHPWG_ROOT_PATH . 'include/category_cats.inc.php';
+                    new CategoryCatsRenderer()
+                        ->render();
                 }
 
                 if ($page_items !== []) {
-                    include PHPWG_ROOT_PATH . 'include/category_default.inc.php';
+                    new CategoryDefaultRenderer()
+                        ->render();
 
                     if ((bool) $conf['index_sizes_icon']) {
                         $url = add_url_params(

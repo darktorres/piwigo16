@@ -194,10 +194,14 @@ final class CategoryRepository extends AbstractRepository
      * date -- {@see \Piwigo\Category\CategoryService::getComputedCategories()}
      * rolls these up into subtree totals.
      *
-     * cat_id/id_uppercat/global_rank/date_last/nb_images -- returned loosely
-     * typed, same as every other row-map result in this project; CategoryService
-     * narrows each field explicitly (is_numeric()/is_string() checks) same as
-     * the original pwg_db_fetch_assoc() loop did.
+     * cat_id/id_uppercat/global_rank/rank/date_last/nb_images -- returned
+     * loosely typed, same as every other row-map result in this project;
+     * CategoryService narrows each field explicitly (is_numeric()/is_string()
+     * checks) same as the original pwg_db_fetch_assoc() loop did. `rank`
+     * (sibling order within a parent, distinct from `global_rank`) is
+     * carried through purely for P23 batch 4b's CategoryCatsRenderer
+     * (CategoryService::compareByRank()) -- CategoryService/CategoryTreeCache
+     * themselves never read it.
      *
      * @return list<array<string, mixed>>
      */
@@ -221,6 +225,7 @@ final class CategoryRepository extends AbstractRepository
                 'c.id AS cat_id',
                 'id_uppercat',
                 'global_rank',
+                'c.rank',
                 'MAX(date_available) AS date_last',
                 'COUNT(date_available) AS nb_images'
             )
@@ -347,6 +352,33 @@ final class CategoryRepository extends AbstractRepository
 
         return $this->conn->createQueryBuilder()
             ->select('id', 'name', 'permalink', 'id_uppercat', 'uppercats', 'global_rank')
+            ->from(Tables::categories())
+            ->where('id IN (:ids)')
+            ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
+            ->executeQuery()
+            ->fetchAllAssociative();
+    }
+
+    /**
+     * Every column on `categories` for the given ids -- deliberately a
+     * separate method from {@see findCategoriesByIds()} (a narrower,
+     * differently-shaped, already-tested 6-column contract with its own
+     * real caller) rather than widening that one. P23 batch 4b's
+     * CategoryCatsRenderer calls this only for the small, already-paginated
+     * subset of cat_ids being displayed on one page -- never the whole
+     * tree, unlike CategoryTreeCache's own cached rollup.
+     *
+     * @param  list<int>  $ids
+     * @return list<array<string, mixed>>
+     */
+    public function findFullCategoriesByIds(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+
+        return $this->conn->createQueryBuilder()
+            ->select('*')
             ->from(Tables::categories())
             ->where('id IN (:ids)')
             ->setParameter('ids', $ids, ArrayParameterType::INTEGER)

@@ -51,6 +51,32 @@ final class CategoryService
     }
 
     /**
+     * PHP-side port of `get_recent_photos_sql()`'s (`include/
+     * functions_user.inc.php`) SQL fragment: `$dbField >= LEAST(today -
+     * $recentPeriod days, $lastPhotoDate - 1 day)`. P23 batch 4b's
+     * CategoryCatsRenderer applies this per already-cached tree row
+     * (CategoryTreeCache) instead of building a SQL `WHERE`, matching the
+     * same existence-filter-over-cached-data pattern batch 3a/3b already
+     * established. $lastPhotoDate === null matches the original's own
+     * `if (!isset($user['last_photo_date'])) return '0=1';` -- nothing is
+     * ever "recent" without it, not merely half of the LEAST() comparison.
+     */
+    public static function isRecentCategory(?string $dateLast, int $recentPeriod, ?string $lastPhotoDate, \DateTimeImmutable $now): bool
+    {
+        if ($lastPhotoDate === null || $lastPhotoDate === '' || $dateLast === null || $dateLast === '') {
+            return false;
+        }
+
+        $thresholdFromToday = $now->setTime(0, 0, 0)
+            ->modify('-' . $recentPeriod . ' days');
+        $thresholdFromLastPhoto = new \DateTimeImmutable($lastPhotoDate)
+            ->modify('-1 day');
+        $threshold = $thresholdFromToday < $thresholdFromLastPhoto ? $thresholdFromToday : $thresholdFromLastPhoto;
+
+        return new \DateTimeImmutable($dateLast) >= $threshold;
+    }
+
+    /**
      * `get_categories_menu()`'s (`include/functions_category.inc.php`) menu
      * filter, extracted as a pure function so it's testable without that
      * free function's `$page`/`$user`/`$filter`/`$conf` global dependencies

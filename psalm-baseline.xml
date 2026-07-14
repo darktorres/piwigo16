@@ -3887,122 +3887,6 @@
       <code><![CDATA[include_once PHPWG_ROOT_PATH . 'include/dblayer/functions_' . $dblayer . '.inc.php']]></code>
     </UnresolvableInclude>
   </file>
-  <file src="include/category_cats.inc.php">
-    <InvalidGlobal>
-      <code><![CDATA[global $conf, $logger, $page, $template, $user;]]></code>
-    </InvalidGlobal>
-    <PossiblyUndefinedArrayOffset>
-      <code><![CDATA[$conf['index_new_icon']]]></code>
-      <code><![CDATA[$conf['representative_cache_on_level']]]></code>
-    </PossiblyUndefinedArrayOffset>
-    <PossiblyUndefinedGlobalVariable>
-      <code><![CDATA[$infos_of_image]]></code>
-    </PossiblyUndefinedGlobalVariable>
-    <UndefinedConstant>
-      <code><![CDATA[DB_RANDOM_FUNCTION]]></code>
-    </UndefinedConstant>
-    <UndefinedFunction>
-      <code><![CDATA[get_random_image_in_category($category)]]></code>
-      <code><![CDATA[get_random_image_in_category($row)]]></code>
-      <code><![CDATA[get_recent_photos_sql('date_last')]]></code>
-      <code><![CDATA[get_sql_condition_FandF(
-            [
-                'visible_categories' => 'category_id',
-                'visible_images' => 'id',
-            ],
-            'AND'
-        )]]></code>
-      <code><![CDATA[get_sql_condition_FandF(
-      [
-          'visible_categories' => 'id',
-      ],
-      "\n  AND"
-  )]]></code>
-      <code><![CDATA[get_sql_condition_FandF(
-    [
-        'visible_categories' => 'id',
-    ],
-    'AND'
-)]]></code>
-      <code><![CDATA[global_rank_compare(...)]]></code>
-      <code><![CDATA[mass_updates(
-        Tables::userCacheCategories(),
-        [
-            'primary' => ['user_id', 'cat_id'],
-            'update' => ['user_representative_picture_id'],
-        ],
-        $updates
-    )]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_db_fetch_row($subresult)]]></code>
-      <code><![CDATA[pwg_db_fetch_row(pwg_query('SELECT FOUND_ROWS()'))]]></code>
-      <code><![CDATA[pwg_db_num_rows($subresult)]]></code>
-      <code><![CDATA[pwg_debug('end include/category_cats.inc.php')]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query('SELECT FOUND_ROWS()')]]></code>
-      <code><![CDATA[query2array($query, 'category_id')]]></code>
-      <code><![CDATA[trigger_change('loc_begin_index_category_thumbnails_query', $query)]]></code>
-    </UndefinedFunction>
-  </file>
-  <file src="include/category_default.inc.php">
-    <InvalidGlobal>
-      <code><![CDATA[global $conf, $page, $template, $user;]]></code>
-    </InvalidGlobal>
-    <UndefinedConstant>
-      <code><![CDATA[IMG_THUMB]]></code>
-      <code><![CDATA[IMG_THUMB]]></code>
-    </UndefinedConstant>
-    <UndefinedFunction>
-      <code><![CDATA[add_url_params(
-          duplicate_picture_url(
-              [
-                  'image_id' => $row['id'],
-                  'image_file' => $row['file'],
-              ],
-              ['start']
-          ),
-          [
-              'slideshow' => ($_GET['slideshow']
-                                                 ?? ''),
-          ]
-      )]]></code>
-      <code><![CDATA[duplicate_picture_url(
-              [
-                  'image_id' => $row['id'],
-                  'image_file' => $row['file'],
-              ],
-              ['start']
-          )]]></code>
-      <code><![CDATA[duplicate_picture_url(
-        [
-            'image_id' => $image_id,
-            'image_file' => $row['file'],
-        ],
-        ['start']
-    )]]></code>
-      <code><![CDATA[get_extension($row_file)]]></code>
-      <code><![CDATA[get_extension($row_path)]]></code>
-      <code><![CDATA[get_icon($date_available)]]></code>
-      <code><![CDATA[get_thumbnail_title($row, $name, $desc)]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_debug('end include/category_default.inc.php')]]></code>
-      <code><![CDATA[pwg_get_session_var('index_deriv', IMG_THUMB)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[query2array($query, 'image_id', 'nb_comments')]]></code>
-      <code><![CDATA[rank_compare(...)]]></code>
-      <code><![CDATA[render_element_description($row, 'main_page_element_description')]]></code>
-      <code><![CDATA[render_element_name($row)]]></code>
-      <code><![CDATA[trigger_change('get_index_derivative_params', ImageStdParams::get_by_type($index_deriv))]]></code>
-      <code><![CDATA[trigger_change('loc_end_index_thumbnails', $tpl_thumbnails_var, $pictures)]]></code>
-      <code><![CDATA[trigger_change('loc_index_thumbnails_selection', $selection)]]></code>
-      <code><![CDATA[trigger_notify('loc_begin_index_thumbnails', $pictures)]]></code>
-    </UndefinedFunction>
-  </file>
   <file src="include/common.inc.php">
     <EmptyArrayAccess>
       <code><![CDATA[$conf['db_base']]]></code>
@@ -5200,111 +5084,6 @@
     </UndefinedFunction>
     <UnresolvableInclude>
       <code><![CDATA[include_once PHPWG_ROOT_PATH . 'admin/include/functions.php']]></code>
-    </UnresolvableInclude>
-  </file>
-  <file src="include/picture_comment.inc.php">
-    <InvalidGlobal>
-      <code><![CDATA[global $conf, $page, $template, $user;]]></code>
-      <code><![CDATA[global $related_categories, $url_self;]]></code>
-    </InvalidGlobal>
-    <PossiblyUndefinedArrayOffset>
-      <code><![CDATA[$page['infos']]]></code>
-    </PossiblyUndefinedArrayOffset>
-    <UndefinedConstant>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-    </UndefinedConstant>
-    <UndefinedFunction>
-      <code><![CDATA[add_url_params(
-                        $url_self,
-                        [
-                            'action' => 'validate_comment',
-                            'comment_to_validate' => $row['id'],
-                            'pwg_token' => get_pwg_token(),
-                        ]
-                    )]]></code>
-      <code><![CDATA[add_url_params(
-                    $url_self,
-                    [
-                        'action' => 'delete_comment',
-                        'comment_to_delete' => $row['id'],
-                        'pwg_token' => get_pwg_token(),
-                    ]
-                )]]></code>
-      <code><![CDATA[add_url_params(
-                    $url_self,
-                    [
-                        'action' => 'edit_comment',
-                        'comment_to_edit' => $row['id'],
-                    ]
-                )]]></code>
-      <code><![CDATA[add_url_params(duplicate_picture_url(), [
-                'comments_order' => ($comments_order == 'ASC' ? 'DESC' : 'ASC'),
-            ])]]></code>
-      <code><![CDATA[can_manage_comment('delete', $comment_author_id)]]></code>
-      <code><![CDATA[can_manage_comment('edit', $comment_author_id)]]></code>
-      <code><![CDATA[create_navigation_bar(
-        duplicate_picture_url([], ['start']),
-        $nb_comments,
-        $start,
-        $nb_comment_page,
-        true // We want a clean URL
-    )]]></code>
-      <code><![CDATA[duplicate_picture_url()]]></code>
-      <code><![CDATA[duplicate_picture_url([], ['start'])]]></code>
-      <code><![CDATA[format_date($row['date'], ['day_name', 'day', 'month', 'year', 'time'])]]></code>
-      <code><![CDATA[get_ephemeral_key(2, (string) $image_id)]]></code>
-      <code><![CDATA[get_ephemeral_key(3, (string) $image_id)]]></code>
-      <code><![CDATA[get_pwg_token()]]></code>
-      <code><![CDATA[get_pwg_token()]]></code>
-      <code><![CDATA[get_pwg_token()]]></code>
-      <code><![CDATA[insert_user_comment($comm, is_string($post_key) ? $post_key : '', $comment_errors)]]></code>
-      <code><![CDATA[is_a_guest()]]></code>
-      <code><![CDATA[is_a_guest()]]></code>
-      <code><![CDATA[is_admin()]]></code>
-      <code><![CDATA[is_admin()]]></code>
-      <code><![CDATA[is_classic_user()]]></code>
-      <code><![CDATA[is_classic_user()]]></code>
-      <code><![CDATA[l10n('An administrator must authorize your comment before it is visible.')]]></code>
-      <code><![CDATA[l10n('Show latest comments first')]]></code>
-      <code><![CDATA[l10n('Show oldest comments first')]]></code>
-      <code><![CDATA[l10n('Your comment has NOT been registered because it did not pass the validation rules')]]></code>
-      <code><![CDATA[l10n('Your comment has been registered')]]></code>
-      <code><![CDATA[l10n('guest')]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc(pwg_query($query))]]></code>
-      <code><![CDATA[pwg_get_session_var('comments_order', $conf['comments_order'])]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_set_session_var('comments_order', $get_comments_order)]]></code>
-      <code><![CDATA[set_status_header(403)]]></code>
-      <code><![CDATA[set_status_header(403)]]></code>
-      <code><![CDATA[trigger_change('render_comment_author', $row['author'])]]></code>
-      <code><![CDATA[trigger_change('render_comment_content', $row['content'])]]></code>
-      <code><![CDATA[trigger_notify(
-        'user_comment_insertion',
-        array_merge($comm, [
-            'action' => $comment_action,
-        ])
-    )]]></code>
-    </UndefinedFunction>
-    <UnresolvableInclude>
-      <code><![CDATA[include_once PHPWG_ROOT_PATH . 'include/functions_comment.inc.php']]></code>
-    </UnresolvableInclude>
-  </file>
-  <file src="include/picture_metadata.inc.php">
-    <InvalidGlobal>
-      <code><![CDATA[global $conf, $lang, $template;]]></code>
-      <code><![CDATA[global $picture;]]></code>
-    </InvalidGlobal>
-    <UndefinedConstant>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-    </UndefinedConstant>
-    <UndefinedFunction>
-      <code><![CDATA[get_iptc_data($picture['current']['src_image']->get_path(), $show_iptc_mapping, ', ')]]></code>
-      <code><![CDATA[l10n('IPTC Metadata')]]></code>
-    </UndefinedFunction>
-    <UnresolvableInclude>
-      <code><![CDATA[include_once PHPWG_ROOT_PATH . '/include/functions_metadata.inc.php']]></code>
     </UnresolvableInclude>
   </file>
   <file src="include/picture_rate.inc.php">
@@ -9706,6 +9485,103 @@ UPDATE ' . Tables::categories() . '
       <code><![CDATA[pwg_db_get_year($this->date_field)]]></code>
     </UndefinedFunction>
   </file>
+  <file src="src/Piwigo/Category/CategoryCatsRenderer.php">
+    <PossiblyUndefinedArrayOffset>
+      <code><![CDATA[$category['uppercats']]]></code>
+      <code><![CDATA[$conf['index_new_icon']]]></code>
+      <code><![CDATA[$conf['representative_cache_on_level']]]></code>
+      <code><![CDATA[$merged['uppercats']]]></code>
+      <code><![CDATA[$page['startcat']]]></code>
+    </PossiblyUndefinedArrayOffset>
+    <PossiblyUndefinedVariable>
+      <code><![CDATA[$infosOfImage]]></code>
+    </PossiblyUndefinedVariable>
+    <RedundantCondition>
+      <code><![CDATA[is_bool($categoryIsChildDateLast)]]></code>
+    </RedundantCondition>
+    <TypeDoesNotContainType>
+      <code><![CDATA[false]]></code>
+    </TypeDoesNotContainType>
+    <UndefinedConstant>
+      <code><![CDATA[DB_RANDOM_FUNCTION]]></code>
+    </UndefinedConstant>
+    <UndefinedFunction>
+      <code><![CDATA[get_sql_condition_FandF(
+                    [
+                        'visible_categories' => 'category_id',
+                        'visible_images' => 'id',
+                    ],
+                    'AND'
+                )]]></code>
+      <code><![CDATA[get_sql_condition_FandF(
+      [
+          'visible_categories' => 'id',
+      ],
+      "\n  AND"
+  )]]></code>
+      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
+      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
+      <code><![CDATA[pwg_db_fetch_row($subresult)]]></code>
+      <code><![CDATA[pwg_db_num_rows($subresult)]]></code>
+      <code><![CDATA[pwg_debug('end CategoryCatsRenderer::render()')]]></code>
+      <code><![CDATA[pwg_now()]]></code>
+      <code><![CDATA[pwg_query($query)]]></code>
+      <code><![CDATA[pwg_query($query)]]></code>
+      <code><![CDATA[pwg_query($query)]]></code>
+      <code><![CDATA[query2array($query, 'category_id')]]></code>
+    </UndefinedFunction>
+  </file>
+  <file src="src/Piwigo/Category/CategoryDefaultRenderer.php">
+    <UndefinedConstant>
+      <code><![CDATA[IMG_THUMB]]></code>
+      <code><![CDATA[IMG_THUMB]]></code>
+    </UndefinedConstant>
+    <UndefinedFunction>
+      <code><![CDATA[add_url_params(
+                  duplicate_picture_url(
+                      [
+                          'image_id' => $row['id'],
+                          'image_file' => $row['file'],
+                      ],
+                      ['start']
+                  ),
+                  [
+                      'slideshow' => ($_GET['slideshow']
+                                                         ?? ''),
+                  ]
+              )]]></code>
+      <code><![CDATA[duplicate_picture_url(
+                      [
+                          'image_id' => $row['id'],
+                          'image_file' => $row['file'],
+                      ],
+                      ['start']
+                  )]]></code>
+      <code><![CDATA[duplicate_picture_url(
+                [
+                    'image_id' => $imageId,
+                    'image_file' => $row['file'],
+                ],
+                ['start']
+            )]]></code>
+      <code><![CDATA[get_extension($rowFile)]]></code>
+      <code><![CDATA[get_extension($rowPath)]]></code>
+      <code><![CDATA[get_icon($dateAvailable)]]></code>
+      <code><![CDATA[get_thumbnail_title($row, $name, $desc)]]></code>
+      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
+      <code><![CDATA[pwg_debug('end CategoryDefaultRenderer::render()')]]></code>
+      <code><![CDATA[pwg_get_session_var('index_deriv', IMG_THUMB)]]></code>
+      <code><![CDATA[pwg_query($query)]]></code>
+      <code><![CDATA[query2array($query, 'image_id', 'nb_comments')]]></code>
+      <code><![CDATA[rank_compare(...)]]></code>
+      <code><![CDATA[render_element_description($row, 'main_page_element_description')]]></code>
+      <code><![CDATA[render_element_name($row)]]></code>
+      <code><![CDATA[trigger_change('get_index_derivative_params', ImageStdParams::get_by_type($indexDeriv))]]></code>
+      <code><![CDATA[trigger_change('loc_end_index_thumbnails', $tplThumbnailsVar, $pictures)]]></code>
+      <code><![CDATA[trigger_change('loc_index_thumbnails_selection', $selection)]]></code>
+      <code><![CDATA[trigger_notify('loc_begin_index_thumbnails', $pictures)]]></code>
+    </UndefinedFunction>
+  </file>
   <file src="src/Piwigo/Category/CategoryRepository.php">
     <UndefinedFunction>
       <code><![CDATA[pwg_db_get_recent_period_expression($filterDays)]]></code>
@@ -10516,8 +10392,6 @@ UPDATE ' . Tables::categories() . '
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
     </UndefinedConstant>
     <UndefinedFunction>
       <code><![CDATA[add_level_to_tags($tags)]]></code>
@@ -10632,8 +10506,6 @@ UPDATE ' . Tables::categories() . '
       <code><![CDATA[trigger_notify('loc_end_index')]]></code>
     </UndefinedFunction>
     <UnresolvableInclude>
-      <code><![CDATA[include PHPWG_ROOT_PATH . 'include/category_cats.inc.php']]></code>
-      <code><![CDATA[include PHPWG_ROOT_PATH . 'include/category_default.inc.php']]></code>
       <code><![CDATA[include PHPWG_ROOT_PATH . 'include/menubar.inc.php']]></code>
       <code><![CDATA[include PHPWG_ROOT_PATH . 'include/page_header.php']]></code>
       <code><![CDATA[include PHPWG_ROOT_PATH . 'include/page_tail.php']]></code>
@@ -10917,8 +10789,6 @@ UPDATE ' . Tables::categories() . '
       <code><![CDATA[IMG_MEDIUM]]></code>
       <code><![CDATA[IMG_SQUARE]]></code>
       <code><![CDATA[IMG_THUMB]]></code>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
@@ -11217,8 +11087,6 @@ UPDATE ' . Tables::categories() . '
       <code><![CDATA[include PHPWG_ROOT_PATH . 'include/menubar.inc.php']]></code>
       <code><![CDATA[include PHPWG_ROOT_PATH . 'include/page_header.php']]></code>
       <code><![CDATA[include PHPWG_ROOT_PATH . 'include/page_tail.php']]></code>
-      <code><![CDATA[include PHPWG_ROOT_PATH . 'include/picture_comment.inc.php']]></code>
-      <code><![CDATA[include PHPWG_ROOT_PATH . 'include/picture_metadata.inc.php']]></code>
       <code><![CDATA[include PHPWG_ROOT_PATH . 'include/picture_rate.inc.php']]></code>
       <code><![CDATA[include PHPWG_ROOT_PATH . 'include/section_init.inc.php']]></code>
       <code><![CDATA[include_once PHPWG_ROOT_PATH . 'admin/include/functions.php']]></code>
@@ -12349,6 +12217,86 @@ UPDATE ' . Tables::categories() . '
       <code><![CDATA[is_admin($userStatus)]]></code>
     </UndefinedFunction>
   </file>
+  <file src="src/Piwigo/Picture/PictureCommentRenderer.php">
+    <PossiblyUndefinedArrayOffset>
+      <code><![CDATA[$page['infos']]]></code>
+      <code><![CDATA[$row['id']]]></code>
+    </PossiblyUndefinedArrayOffset>
+    <UndefinedFunction>
+      <code><![CDATA[add_url_params(
+                            $url_self,
+                            [
+                                'action' => 'validate_comment',
+                                'comment_to_validate' => $row['id'],
+                                'pwg_token' => get_pwg_token(),
+                            ]
+                        )]]></code>
+      <code><![CDATA[add_url_params(
+                        $url_self,
+                        [
+                            'action' => 'delete_comment',
+                            'comment_to_delete' => $row['id'],
+                            'pwg_token' => get_pwg_token(),
+                        ]
+                    )]]></code>
+      <code><![CDATA[add_url_params(
+                        $url_self,
+                        [
+                            'action' => 'edit_comment',
+                            'comment_to_edit' => $row['id'],
+                        ]
+                    )]]></code>
+      <code><![CDATA[add_url_params(duplicate_picture_url(), [
+                    'comments_order' => ($commentsOrder === 'ASC' ? 'DESC' : 'ASC'),
+                ])]]></code>
+      <code><![CDATA[can_manage_comment('delete', $commentAuthorId)]]></code>
+      <code><![CDATA[can_manage_comment('edit', $commentAuthorId)]]></code>
+      <code><![CDATA[create_navigation_bar(
+            duplicate_picture_url([], ['start']),
+            $nbComments,
+            $start,
+            $nbCommentPage,
+            true // We want a clean URL
+        )]]></code>
+      <code><![CDATA[duplicate_picture_url()]]></code>
+      <code><![CDATA[duplicate_picture_url([], ['start'])]]></code>
+      <code><![CDATA[format_date($row['date'], ['day_name', 'day', 'month', 'year', 'time'])]]></code>
+      <code><![CDATA[get_ephemeral_key(2, (string) $imageId)]]></code>
+      <code><![CDATA[get_ephemeral_key(3, (string) $imageId)]]></code>
+      <code><![CDATA[get_pwg_token()]]></code>
+      <code><![CDATA[get_pwg_token()]]></code>
+      <code><![CDATA[get_pwg_token()]]></code>
+      <code><![CDATA[is_a_guest()]]></code>
+      <code><![CDATA[is_a_guest()]]></code>
+      <code><![CDATA[is_admin()]]></code>
+      <code><![CDATA[is_admin()]]></code>
+      <code><![CDATA[is_classic_user()]]></code>
+      <code><![CDATA[is_classic_user()]]></code>
+      <code><![CDATA[l10n('An administrator must authorize your comment before it is visible.')]]></code>
+      <code><![CDATA[l10n('Show latest comments first')]]></code>
+      <code><![CDATA[l10n('Show oldest comments first')]]></code>
+      <code><![CDATA[l10n('Your comment has NOT been registered because it did not pass the validation rules')]]></code>
+      <code><![CDATA[l10n('Your comment has been registered')]]></code>
+      <code><![CDATA[l10n('guest')]]></code>
+      <code><![CDATA[pwg_get_session_var('comments_order', $conf['comments_order'])]]></code>
+      <code><![CDATA[pwg_set_session_var('comments_order', $getCommentsOrder)]]></code>
+      <code><![CDATA[set_status_header(403)]]></code>
+      <code><![CDATA[set_status_header(403)]]></code>
+      <code><![CDATA[trigger_change('render_comment_author', $row['author'])]]></code>
+      <code><![CDATA[trigger_change('render_comment_content', $row['content'])]]></code>
+      <code><![CDATA[trigger_notify(
+                'user_comment_insertion',
+                array_merge($comm, [
+                    'action' => $commentAction,
+                ])
+            )]]></code>
+    </UndefinedFunction>
+  </file>
+  <file src="src/Piwigo/Picture/PictureMetadataRenderer.php">
+    <UndefinedFunction>
+      <code><![CDATA[l10n('IPTC Metadata')]]></code>
+    </UndefinedFunction>
+  </file>
   <file src="src/Piwigo/PluginConfig/EventDispatcher.php">
     <UnresolvableInclude>
       <code><![CDATA[include_once $handler['include_path']]]></code>
@@ -13308,6 +13256,7 @@ UPDATE ' . Tables::categories() . '
       <code><![CDATA[fill]]></code>
       <code><![CDATA[script]]></code>
       <code><![CDATA[script]]></code>
+      <code><![CDATA[script]]></code>
     </UndefinedMagicMethod>
   </file>
   <file src="tests/Browser/InstallTest.php">
@@ -13553,6 +13502,46 @@ UPDATE ' . Tables::categories() . '
     </PropertyNotSetInConstructor>
   </file>
   <file src="tests/Integration/CategoryRepositoryTest.php">
+    <ParseError>
+      <code><![CDATA[public function test_find_computed_categories_rollup_includes_rank(): void
+    {
+        // P23 batch 4b: CategoryCatsRenderer needs `rank` (sibling order)
+        // for CategoryService::compareByRank(), distinct from `global_rank`
+        // -- added to this rollup purely additively.
+        $rows = $this->repo->findComputedCategoriesRollup(0, null, '');
+
+        $byId = [];
+        foreach ($rows as $row) {
+            $catId = $row['cat_id'];
+            if (is_int($catId) || is_string($catId)) {
+                $byId[$catId] = $row;
+            }
+        }
+
+        self::assertArrayHasKey('rank', $byId['1']);
+        self::assertArrayHasKey('rank', $byId['2']);
+    }]]></code>
+      <code><![CDATA[public function test_find_full_categories_by_ids_returns_empty_for_no_ids(): void
+    {
+        self::assertSame([], $this->repo->findFullCategoriesByIds([]));
+    }]]></code>
+      <code><![CDATA[public function test_find_full_categories_by_ids_returns_every_column(): void
+    {
+        $cats = $this->repo->findFullCategoriesByIds([1]);
+
+        self::assertCount(1, $cats);
+        $cat = $cats[0];
+        self::assertSame('Sample Album', $cat['name']);
+        // 'uppercats'/'rank'/'representative_picture_id' are real
+        // `categories` columns findCategoriesByIds()'s own narrower
+        // 6-column contract doesn't expose -- confirms this is genuinely
+        // `SELECT *`, not a duplicate of that method.
+        self::assertArrayHasKey('uppercats', $cat);
+        self::assertArrayHasKey('rank', $cat);
+        self::assertArrayHasKey('representative_picture_id', $cat);
+        self::assertArrayHasKey('comment', $cat);
+    }]]></code>
+    </ParseError>
     <PropertyNotSetInConstructor>
       <code><![CDATA[$conn]]></code>
       <code><![CDATA[$repo]]></code>

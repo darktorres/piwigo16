@@ -271,5 +271,46 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         self::assertSame(['Nested Sub Album', 'Sample Album'], $names);
     }
 
+    public function test_find_computed_categories_rollup_includes_rank(): void
+    {
+        // P23 batch 4b: CategoryCatsRenderer needs `rank` (sibling order)
+        // for CategoryService::compareByRank(), distinct from `global_rank`
+        // -- added to this rollup purely additively.
+        $rows = $this->repo->findComputedCategoriesRollup(0, null, '');
+
+        $byId = [];
+        foreach ($rows as $row) {
+            $catId = $row['cat_id'];
+            if (is_int($catId) || is_string($catId)) {
+                $byId[$catId] = $row;
+            }
+        }
+
+        self::assertArrayHasKey('rank', $byId['1']);
+        self::assertArrayHasKey('rank', $byId['2']);
+    }
+
+    public function test_find_full_categories_by_ids_returns_every_column(): void
+    {
+        $cats = $this->repo->findFullCategoriesByIds([1]);
+
+        self::assertCount(1, $cats);
+        $cat = $cats[0];
+        self::assertSame('Sample Album', $cat['name']);
+        // 'uppercats'/'rank'/'representative_picture_id' are real
+        // `categories` columns findCategoriesByIds()'s own narrower
+        // 6-column contract doesn't expose -- confirms this is genuinely
+        // `SELECT *`, not a duplicate of that method.
+        self::assertArrayHasKey('uppercats', $cat);
+        self::assertArrayHasKey('rank', $cat);
+        self::assertArrayHasKey('representative_picture_id', $cat);
+        self::assertArrayHasKey('comment', $cat);
+    }
+
+    public function test_find_full_categories_by_ids_returns_empty_for_no_ids(): void
+    {
+        self::assertSame([], $this->repo->findFullCategoriesByIds([]));
+    }
+
 }
 }

@@ -7,9 +7,28 @@
 # pestphp/pest-plugin-browser#169). This wrapper force-kills whatever leaked
 # instead of relying on the plugin's own (currently broken) cleanup.
 #
+# A process that's already running when this script STARTS is also treated as
+# a leak, not a legitimate concurrent instance: this project's own convention
+# is to never run heavy tools (including Browser/VR pest suites) concurrently
+# (see feedback_no_concurrent_heavy_tools memory), so a pre-existing
+# `playwright run-server` here is essentially always a stale leak from an
+# earlier crashed/interrupted/bypassed run -- left alone, it silently
+# corrupts the NEXT run's screenshot comparisons (the plugin's own diff view
+# falls back to a "?" placeholder instead of a real pixelmatch diff when this
+# happens, which is easy to mistake for a real visual regression).
+#
 # Usage: tools/pest-cleanup.sh <args passed straight to vendor/bin/pest>
 
 set -uo pipefail
+
+stale="$(pgrep -f 'playwright run-server' || true)"
+if [ -n "$stale" ]; then
+  echo "pest-cleanup.sh: found pre-existing playwright run-server process(es), killing as stale leak(s) before starting:" >&2
+  pgrep -fa 'playwright run-server' >&2 || true
+  xargs -r kill -TERM <<<"$stale"
+  sleep 0.3
+  xargs -r kill -KILL <<<"$stale" 2>/dev/null || true
+fi
 
 before="$(pgrep -f 'playwright run-server' || true)"
 

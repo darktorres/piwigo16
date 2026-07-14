@@ -27,15 +27,6 @@ add_event_handler('upload_file', [UploadService::class, 'uploadFilePsd']);
 add_event_handler('upload_file', [UploadService::class, 'uploadFileEps']);
 
 /**
- * @return array<string, array{default: bool|int, min: int|null, max: int|null, pattern: string|null, can_be_null: bool, error_message: string|null}>
- */
-function get_upload_form_config(): array
-{
-    return new UploadService()
-        ->getUploadFormConfig();
-}
-
-/**
  * @param array<string, mixed> $data
  * @param array<int, string> $errors
  * @param array<string, string> $form_errors
@@ -70,31 +61,10 @@ function pwg_image_infos(string $path): array
         ->pwgImageInfos($path);
 }
 
-/**
- * @return string[]
- */
-function is_valid_image_extension(string $extension): array
-{
-    return new UploadService()
-        ->isValidImageExtension($extension);
-}
-
-function file_upload_error_message(int $error_code): string
-{
-    return new UploadService()
-        ->fileUploadErrorMessage($error_code);
-}
-
 function get_ini_size(string $ini_key, bool $in_bytes = true): int|string|false
 {
     return new UploadService()
         ->getIniSize($ini_key, $in_bytes);
-}
-
-function add_upload_error(int|string $upload_id, string $error_message): void
-{
-    new UploadService()
-        ->addUploadError($upload_id, $error_message);
 }
 
 function ready_for_upload_message(): ?string

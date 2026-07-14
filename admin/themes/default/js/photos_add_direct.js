@@ -480,7 +480,7 @@ $(function () {
         // pwg.caddie.add(uploadedPhotos) instead of relying on huge GET parameter
         // (and remove useless code from admin/photos_add_direct.php)
 
-        $(".batchLink").attr("href", "admin.php?page=photos_add&section=direct&batch=" + [...new Set(uploadedPhotos)].join(","));
+        $(".batchLink").attr("href", "admin.php?page=photos_add&section=direct&batch=" + [...new Set(uploadedPhotos)].join(",") + "&pwg_token=" + pwg_token);
         $(".batchLink").html(sprintf(batch_Label, uploadedPhotos.length));
 
         $(".afterUploadActions").show();

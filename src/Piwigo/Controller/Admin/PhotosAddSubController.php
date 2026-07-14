@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Piwigo\Admin\PhotosAddApplicationsPageRenderer;
+use Piwigo\Admin\PhotosAddDirectPageRenderer;
+use Piwigo\Admin\PhotosAddFtpPageRenderer;
 use Piwigo\Admin\tabsheet;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Template\Template;
@@ -11,12 +14,13 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Replaces admin/photos_add.php's own tab-dispatch shell (page slug
- * "photos_add"). The 3 tab bodies (photos_add_direct.php/
- * _applications.php/_ftp.php, 32-197L each) stay legacy `include` glue --
- * pure template/form display, no security-sensitive logic; the real
- * upload pipeline they call into (add_uploaded_file() et al) is fully
- * migrated to UploadService (see that class + its own SEC-16/SEC-21 fixes).
- * Same "keep page/template glue inline" split as every P17-20 renderer.
+ * "photos_add"). The 3 tab bodies are typed renderers:
+ * PhotosAddDirectPageRenderer ("direct", P23 batch 6e, folding in
+ * photos_add_direct_prepare.inc.php's form-prep body too) /
+ * PhotosAddApplicationsPageRenderer / PhotosAddFtpPageRenderer -- pure
+ * template/form display, no security-sensitive logic; the real upload
+ * pipeline they call into (add_uploaded_file() et al) is fully migrated
+ * to UploadService (see that class + its own SEC-16/SEC-21 fixes).
  *
  * admin.php itself already gates every page behind
  * check_status(AccessLevel::Administrator) before dispatch, so the
@@ -77,6 +81,15 @@ final class PhotosAddSubController implements AdminSubControllerInterface
             'photos_add' => 'photos_add_' . $tab . '.tpl',
         ]);
 
-        include PHPWG_ROOT_PATH . 'admin/photos_add_' . $tab . '.php';
+        if ($tab === 'direct') {
+            new PhotosAddDirectPageRenderer()
+                ->render();
+        } elseif ($tab === 'applications') {
+            new PhotosAddApplicationsPageRenderer()
+                ->render();
+        } else {
+            new PhotosAddFtpPageRenderer()
+                ->render();
+        }
     }
 }

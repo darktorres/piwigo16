@@ -119,22 +119,21 @@ final class SearchController implements ControllerInterface
 
             $cat_id = (string) $cat_id_value;
 
-            // $user['id'] is always numeric here: build_user()
-            // (include/user.inc.php) sets it to an int derived from
-            // $conf['guest_id'] or the session user id; this is a
-            // defensive narrowing to satisfy the SQL query below, matching
-            // the guest_id fallback pattern used in build_user()'s caller.
-            $user_id_raw = $user['id'] ?? null;
-            $guest_id = $conf['guest_id'];
-            $guest_id_str = is_scalar($guest_id) ? (string) $guest_id : '2';
-            $user_id = is_numeric($user_id_raw) ? (string) $user_id_raw : $guest_id_str;
+            // P23 batch 3: user_cache_categories's row-existence check below
+            // used to mean "category exists AND isn't forbidden/empty for
+            // this user" -- exactly what build_user()/getuserdata()
+            // (include/functions_user.inc.php) already computes into
+            // $user['forbidden_categories'] (see SearchService::
+            // qsearchGetCategories()'s identical fix for the full trace).
+            $forbidden_categories = $user['forbidden_categories'] ?? null;
+            $forbidden_categories_csv = is_string($forbidden_categories) && $forbidden_categories !== '' ? $forbidden_categories : '0';
 
             $query = '
 SELECT
-    *
-  FROM ' . Tables::userCacheCategories() . '
-  WHERE cat_id = ' . $cat_id . '
-    AND user_id = ' . $user_id . '
+    id
+  FROM ' . Tables::categories() . '
+  WHERE id = ' . $cat_id . '
+    AND id NOT IN (' . $forbidden_categories_csv . ')
 ;';
             $found_categories = query2array($query);
             if ($found_categories === []) {

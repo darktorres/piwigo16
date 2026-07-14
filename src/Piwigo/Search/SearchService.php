@@ -805,7 +805,19 @@ final class SearchService
          */
         global $user, $conf;
 
-        $userId = is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0;
+        // P23 batch 3: user_cache_categories's INNER JOIN below used to
+        // filter to "categories this user's cache row exists for" -- exactly
+        // the set build_user()/getuserdata() (include/functions_user.inc.php)
+        // already computes into $user['forbidden_categories'] (private/locked
+        // categories via calculate_permissions(), extended with 0-image
+        // categories for non-admins -- verified by tracing getuserdata()'s
+        // cache-population branch, which appends to the same
+        // forbidden_categories value it later writes into
+        // user_cache_categories via get_computed_categories()/mass_inserts()).
+        // Reading it directly here needs no query at all, on either a
+        // cache-hit or cache-miss request.
+        $forbiddenCategories = $user['forbidden_categories'] ?? null;
+        $forbiddenCategoriesCsv = is_string($forbiddenCategories) && $forbiddenCategories !== '' ? $forbiddenCategories : '0';
 
         $tokenCatIds = $qsr->cat_iids = array_fill(0, count($expr->stokens), []);
         $allCats = [];
@@ -822,8 +834,8 @@ final class SearchService
 
             $clauses = $this->qsearchGetTextTokenSearchSql($token, ['name', 'comment']);
             $rows = $this->repo->findRowsByClause(
-                Tables::categories() . ' INNER JOIN ' . Tables::userCacheCategories() . ' ON id = cat_id and user_id = ' . $userId,
-                '(' . implode("\n OR ", $clauses) . ')'
+                Tables::categories(),
+                '(' . implode("\n OR ", $clauses) . ') AND id NOT IN (' . $forbiddenCategoriesCsv . ')'
             );
             foreach ($rows as $cat) {
                 if (! is_numeric($cat['id'])) {
@@ -858,8 +870,8 @@ final class SearchService
                     $catIds = $subcatIds !== []
                         ? $this->repo->findIdsByClause(
                             'id',
-                            Tables::categories() . ' INNER JOIN ' . Tables::userCacheCategories() . ' ON id = cat_id and user_id = ' . $userId,
-                            'id IN (' . implode(',', $subcatIds) . ')'
+                            Tables::categories(),
+                            'id IN (' . implode(',', $subcatIds) . ') AND id NOT IN (' . $forbiddenCategoriesCsv . ')'
                         )
                         : [];
                 }

@@ -495,6 +495,30 @@ final class SearchServiceTest extends IntegrationTestCase
         self::assertSame([], $results['items']);
     }
 
+    public function test_get_quick_search_results_no_cache_finds_a_category_named_match(): void
+    {
+        // "Nested" only matches category 2's name ("Nested Sub Album",
+        // fixture) -- exercises qsearchGetCategories()'s P23 batch 3 fix
+        // (categories filtered via $user['forbidden_categories'] instead
+        // of an INNER JOIN against user_cache_categories) end to end.
+        // Category 2 holds images 4 and 5 (piwigo_image_category fixture).
+        $results = $this->service->getQuickSearchResultsNoCache('Nested', []);
+
+        self::assertSame([4, 5], $results['items']);
+    }
+
+    public function test_get_quick_search_results_no_cache_excludes_a_forbidden_category_match(): void
+    {
+        // Same search as above, but with category 2 marked forbidden for
+        // this user -- proves the NOT IN (...) replacement actually
+        // excludes it, not just that it's syntactically present.
+        $GLOBALS['user']['forbidden_categories'] = '2';
+
+        $results = $this->service->getQuickSearchResultsNoCache('Nested', []);
+
+        self::assertSame([], $results['items']);
+    }
+
     public function test_get_quick_search_results_caches_across_calls(): void
     {
         $first = $this->service->getQuickSearchResults('family', []);

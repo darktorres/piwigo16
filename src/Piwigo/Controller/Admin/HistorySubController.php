@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Piwigo\Admin\HistoryPageRenderer;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -24,6 +25,7 @@ final class HistorySubController implements AdminSubControllerInterface
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        include PHPWG_ROOT_PATH . 'admin/history.php';
+        new HistoryPageRenderer()
+            ->render();
     }
 }

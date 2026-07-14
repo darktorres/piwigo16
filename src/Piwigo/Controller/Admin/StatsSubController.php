@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Piwigo\Admin\StatsPageRenderer;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -20,6 +21,7 @@ final class StatsSubController implements AdminSubControllerInterface
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        include PHPWG_ROOT_PATH . 'admin/stats.php';
+        new StatsPageRenderer()
+            ->render();
     }
 }

@@ -11456,6 +11456,11 @@ UPDATE ' . Tables::categories() . '
       <code><![CDATA[include PHPWG_ROOT_PATH . 'include/page_tail.php']]></code>
     </UnresolvableInclude>
   </file>
+  <file src="src/Piwigo/Controller/VitalsController.php">
+    <UndefinedFunction>
+      <code><![CDATA[check_status(AccessLevel::Guest)]]></code>
+    </UndefinedFunction>
+  </file>
   <file src="src/Piwigo/Controller/WsController.php">
     <UndefinedConstant>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
@@ -12310,6 +12315,7 @@ UPDATE ' . Tables::categories() . '
       <code><![CDATA[get_device()]]></code>
       <code><![CDATA[get_elapsed_time($startTime, get_moment())]]></code>
       <code><![CDATA[get_moment()]]></code>
+      <code><![CDATA[get_root_url()]]></code>
       <code><![CDATA[get_webmaster_mail_address()]]></code>
       <code><![CDATA[is_a_guest()]]></code>
       <code><![CDATA[mobile_theme()]]></code>
@@ -14071,6 +14077,18 @@ UPDATE ' . Tables::categories() . '
       <code><![CDATA[toBeInstanceOf]]></code>
       <code><![CDATA[toThrow]]></code>
       <code><![CDATA[toThrow]]></code>
+    </InternalMethod>
+  </file>
+  <file src="tests/Unit/Cache/CachePoolsTest.php">
+    <InternalMethod>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBeFalse]]></code>
+      <code><![CDATA[toBeFalse]]></code>
+      <code><![CDATA[toBeTrue]]></code>
     </InternalMethod>
   </file>
   <file src="tests/Unit/Command/BackupRestoreCommandTest.php">

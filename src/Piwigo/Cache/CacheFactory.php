@@ -20,18 +20,25 @@ use Symfony\Component\Cache\Adapter\RedisAdapter;
  * unavailable adapter (PIWIGO_CACHE_ADAPTER=apcu with no ext-apcu) fails
  * loudly instead of silently falling back -- that's a real misconfiguration
  * worth surfacing, unlike the auto-detect default case.
+ *
+ * `$namespace`/`$defaultLifetime` (P23 batch 2) let CachePools build several
+ * independent, non-colliding pools sharing one backend -- every Symfony
+ * cache adapter used here accepts both as its own first two constructor
+ * params, so this just threads them through instead of hardcoding 'piwigo'/0
+ * the way every call site did until now (still the default, so the existing
+ * single generic pool wired in config/container.php is unaffected).
  */
 final class CacheFactory
 {
-    public static function create(?string $adapter = null): CacheItemPoolInterface
+    public static function create(?string $adapter = null, string $namespace = 'piwigo', int $defaultLifetime = 0): CacheItemPoolInterface
     {
         $explicit = $adapter ?? self::envAdapter();
         $resolved = $explicit ?? (ApcuAdapter::isSupported() ? 'apcu' : 'filesystem');
 
         return match ($resolved) {
-            'apcu' => self::buildApcu(),
-            'redis' => self::buildRedis(),
-            'filesystem' => self::buildFilesystem(),
+            'apcu' => self::buildApcu($namespace, $defaultLifetime),
+            'redis' => self::buildRedis($namespace, $defaultLifetime),
+            'filesystem' => self::buildFilesystem($namespace, $defaultLifetime),
             default => throw new \InvalidArgumentException(
                 "Unknown cache adapter '{$resolved}'. Expected apcu, redis, or filesystem."
             ),
@@ -45,7 +52,7 @@ final class CacheFactory
         return $env !== false && $env !== '' ? $env : null;
     }
 
-    private static function buildApcu(): CacheItemPoolInterface
+    private static function buildApcu(string $namespace, int $defaultLifetime): CacheItemPoolInterface
     {
         if (! ApcuAdapter::isSupported()) {
             throw new \RuntimeException(
@@ -53,21 +60,21 @@ final class CacheFactory
             );
         }
 
-        return new ApcuAdapter('piwigo');
+        return new ApcuAdapter($namespace, $defaultLifetime);
     }
 
-    private static function buildFilesystem(): CacheItemPoolInterface
+    private static function buildFilesystem(string $namespace, int $defaultLifetime): CacheItemPoolInterface
     {
-        return new FilesystemAdapter('piwigo', 0, dirname(__DIR__, 3) . '/_data/cache/');
+        return new FilesystemAdapter($namespace, $defaultLifetime, dirname(__DIR__, 3) . '/_data/cache/');
     }
 
-    private static function buildRedis(): CacheItemPoolInterface
+    private static function buildRedis(string $namespace, int $defaultLifetime): CacheItemPoolInterface
     {
         $dsn = getenv('PIWIGO_REDIS_DSN');
         $dsn = $dsn !== false && $dsn !== '' ? $dsn : 'redis://localhost:6379';
 
         $client = RedisAdapter::createConnection($dsn);
 
-        return new RedisAdapter($client, 'piwigo');
+        return new RedisAdapter($client, $namespace, $defaultLifetime);
     }
 }

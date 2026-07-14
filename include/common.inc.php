@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Bootstrap\UserBootstrap;
 use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\ActivitySystem;
@@ -240,29 +241,35 @@ if (isset($conf['order_by_inside_category_custom'])) {
 
 check_lounge();
 
-// include/user.inc.php sets these by calling build_user()/auto_login()/
-// auth_key_login(), each mutating the $user/$page globals from its own
-// function scope, which static analysis can't trace through the include()
-// below. $user's keys are always overwritten before use in every real path;
-// $page's are genuinely optional (only auth_key_login() sets them, and only
-// on an invalid/expiring auth key), so these defaults are real fallbacks,
-// not just analysis scaffolding.
+// Piwigo\Bootstrap\UserBootstrap::initialize() sets these by calling
+// build_user()/AuthService::autoLogin()/auth_key_login(), each mutating the
+// $user/$page globals via their own `global` declarations. $user's keys are
+// always overwritten before use in every real path; $page's are genuinely
+// optional (only auth_key_login() sets them, and only on an invalid/expiring
+// auth key), so these defaults are real fallbacks, not just analysis
+// scaffolding.
 $user['id'] = $conf['guest_id'];
 $user['email'] = null;
 $user['theme'] = '';
 $page['auth_key_invalid'] = false;
 $page['notify_api_key_expiration'] = null;
 
-include PHPWG_ROOT_PATH . 'include/user.inc.php';
+new UserBootstrap()
+    ->initialize();
 
-// include/user.inc.php's own top-level code calls build_user() (which can
-// set $user['internal_status']) and auth_key_login() (which can set
+// UserBootstrap::initialize() calls build_user() (which can set
+// $user['internal_status']) and auth_key_login() (which can set
 // $page['auth_key_invalid']/['notify_api_key_expiration']) — both mutate
-// these globals from their own function scope, a function-call-inside-an-
-// include hop static analysis can't trace. get_defined_vars() (rather than
-// reading $user/$page directly) keeps their real, post-include shape
-// visible here instead of appearing to still be exactly the pre-include
-// defaults above.
+// these globals via their own `global` declarations, a mutation-through-a-
+// called-function's-own-global-scope static analysis can't trace any more
+// through a real method call than it could through the old include().
+// get_defined_vars() (rather than reading $user/$page directly) keeps
+// their real, post-call shape visible here instead of appearing to still
+// be exactly the pre-call defaults above -- confirmed empirically: removing
+// this step reintroduces 8 real PHPStan errors around every $user/$page
+// read below (offsetAccess.notFound on $user['username'], several
+// nullCoalesce.offset/if.alwaysFalse on $page['auth_key_invalid']/
+// ['notify_api_key_expiration'], etc.).
 $included_vars = get_defined_vars();
 /** @var array<string, mixed> $user */
 $user = $included_vars['user'];

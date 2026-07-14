@@ -4,35 +4,176 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Piwigo\Admin\MaintenanceActionsPageRenderer;
+use Piwigo\Admin\MaintenanceEnvPageRenderer;
+use Piwigo\Admin\MaintenanceSysPageRenderer;
+use Piwigo\Admin\tabsheet;
+use Piwigo\Template\Template;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * Replaces admin/maintenance.php (page slug "maintenance") -- a tab
- * dispatcher (actions/env/sys) that stays a pure delegate; its own tab
- * dispatch is already validated (/^(actions|env|sys)$/). This batch closed
- * SEC-22 (both phpinfo() call sites, in the "actions" and "env" tabs,
- * replaced with Piwigo\Admin\Maintenance\ServerInfoService's curated
- * output -- PHP/SAPI/OS version, loaded extensions, key ini settings, not
- * a full phpinfo() dump) and extracted the raw SQL shared (as near-
- * identical duplicate code, confirmed by direct read, not assumed) between
- * the "actions" and "env" tabs into Piwigo\Admin\Maintenance\
- * DbMaintenanceRepository. The "sys" tab's own raw activity-log query
- * moved onto a new Piwigo\Activity\ActivityRepository::
- * findSystemObjectLogWithUsernames() method instead (a natural sibling of
- * that repository's existing findUserObjectLogWithUsernames(), not a new
- * Maintenance-namespaced class, since it's squarely an Activity-domain
- * query).
+ * Replaces admin/maintenance.php's own tab-dispatch shell (page slug
+ * "maintenance"), folded directly into this controller -- same shape as
+ * every prior P23 batch 6 sub-batch's shell folding. Its own tab dispatch
+ * is already validated (`/^(actions|env|sys)$/`). admin.php itself already
+ * gates every page behind check_status(AccessLevel::Administrator) before
+ * dispatch, so the shell's own (redundant) check_status() call is dropped
+ * here. The shell's own check_pwg_token() gate for every $_GET['action']
+ * IS real and load-bearing (no CSRF gap found in this sub-batch, unlike
+ * 6d-6g) -- kept unchanged. `$my_base_url` (the shell's own local var) was
+ * genuinely dead code (assigned, never read anywhere -- confirmed via
+ * grep) and is dropped here rather than carried forward.
  *
- * Real bugs found and fixed in the "actions" tab's own 'search' case: a
- * dead sprintf(...) statement (result never assigned to $page['infos'][])
- * and its message text was a copy-paste of the 'c13y' case's own
- * ("Reinitialize check integrity") instead of "Purge search history".
+ * A prior P21-era pass had already closed SEC-22 (both phpinfo() call
+ * sites, in the "actions" and "env" tabs, replaced with Piwigo\Admin\
+ * Maintenance\ServerInfoService's curated output) and extracted the raw
+ * SQL shared between the "actions" and "env" tabs into Piwigo\Admin\
+ * Maintenance\DbMaintenanceRepository, plus the "sys" tab's own
+ * activity-log query onto Piwigo\Activity\ActivityRepository::
+ * findSystemObjectLogWithUsernames(). This batch (P23 batch 6h) finishes
+ * the job that same class's own docblock had already flagged as
+ * outstanding: the "actions"/"env" tabs' own ~18-case action-dispatch
+ * switch was still duplicated between them (and had drifted while unused
+ * -- see Piwigo\Admin\Maintenance\MaintenanceActionDispatcher's own
+ * docblock for the 2 real bugs found and fixed by consolidating it there),
+ * ports the 3 tab bodies into Piwigo\Admin\MaintenanceActionsPageRenderer/
+ * MaintenanceEnvPageRenderer/MaintenanceSysPageRenderer. (That same P21
+ * pass had already fixed a real bug in the "actions" tab's own 'search'
+ * case -- a dead sprintf(...) statement whose message text was a
+ * copy-paste of the 'c13y' case's own -- carried forward unchanged into
+ * MaintenanceActionDispatcher, not re-fixed here.)
  */
 final class MaintenanceSubController implements AdminSubControllerInterface
 {
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        include PHPWG_ROOT_PATH . 'admin/maintenance.php';
+        /**
+         * @var array<string, mixed> $page
+         * @var Template $template
+         */
+        global $page, $template;
+
+        // Explicit `global` for $maint_actions (assigned as a bare
+        // `$maint_actions = [...]` below) so the 3 renderer classes' own
+        // `global $maint_actions;` reads see this array -- load-bearing now
+        // that the dynamic include is a real method call frame, not a
+        // top-level script include.
+        global $maint_actions;
+
+        include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
+
+        if (isset($_GET['action'])) {
+            check_pwg_token();
+        }
+
+        // +-------------------------------------------------------------------+
+        // | Commons parameters                                                    |
+        // +-------------------------------------------------------------------+
+
+        $maint_actions = [
+            'derivatives' => [
+                'icon' => 'icon-trash-1',
+                'label' => l10n('Delete multiple size images'),
+            ],
+            'lock_gallery' => [
+                'icon' => 'icon-lock',
+                'label' => l10n('Lock gallery'),
+            ],
+            'unlock_gallery' => [
+                'icon' => 'icon-lock',
+                'label' => l10n('Unlock gallery'),
+            ],
+            'categories' => [
+                'icon' => 'icon-folder-open',
+                'label' => l10n('Update albums informations'),
+            ],
+            'images' => [
+                'icon' => 'icon-info-circled-1',
+                'label' => l10n('Update photos information'),
+            ],
+            'empty_lounge' => [
+                'icon' => 'icon-thumbs-up',
+                'label' => l10n('Empty lounge'),
+            ],
+            'delete_orphan_tags' => [
+                'icon' => 'icon-tags',
+                'label' => l10n('Delete orphan tags'),
+            ],
+            'user_cache' => [
+                'icon' => 'icon-user-1',
+                'label' => l10n('Purge user cache'),
+            ],
+            'history_detail' => [
+                'icon' => 'icon-back-in-time',
+                'label' => l10n('Purge history detail'),
+            ],
+            'history_summary' => [
+                'icon' => 'icon-back-in-time',
+                'label' => l10n('Purge history summary'),
+            ],
+            'sessions' => [
+                'icon' => 'icon-th-list',
+                'label' => l10n('Purge sessions'),
+            ],
+            'feeds' => [
+                'icon' => 'icon-bell',
+                'label' => l10n('Purge never used notification feeds'),
+            ],
+            'database' => [
+                'icon' => 'icon-database',
+                'label' => l10n('Repair and optimize database'),
+            ],
+            'c13y' => [
+                'icon' => 'icon-ok',
+                'label' => l10n('Reinitialize check integrity'),
+            ],
+            'search' => [
+                'icon' => 'icon-search',
+                'label' => l10n('Purge search history'),
+            ],
+            'compiled-templates' => [
+                'icon' => 'icon-file-code',
+                'label' => l10n('Purge compiled templates'),
+            ],
+        ];
+
+        // +-------------------------------------------------------------------+
+        // | tabs                                                                  |
+        // +-------------------------------------------------------------------+
+
+        if (isset($_GET['tab'])) {
+            check_input_parameter('tab', $_GET, false, '/^(actions|env|sys)$/');
+            // check_input_parameter() validates the raw value against the pattern
+            // above (fatal_error()-ing on anything else) but does not narrow its
+            // type for static analysis -- $_GET values are string|array<mixed> at
+            // best, so re-check it is a string before trusting it as the tab name.
+            $tab = $_GET['tab'];
+            $page['tab'] = is_string($tab) ? $tab : 'actions';
+        } else {
+            $page['tab'] = 'actions';
+        }
+
+        $tabsheet = new tabsheet();
+        $tabsheet->set_id('maintenance');
+        $tabsheet->select($page['tab']);
+        $tabsheet->assign();
+
+        if ($page['tab'] === 'env') {
+            new MaintenanceEnvPageRenderer()
+                ->render();
+        } elseif ($page['tab'] === 'sys') {
+            new MaintenanceSysPageRenderer()
+                ->render();
+        } else {
+            new MaintenanceActionsPageRenderer()
+                ->render();
+        }
+
+        $template->assign(
+            [
+                'ADMIN_PAGE_TITLE' => l10n('Maintenance'),
+            ]
+        );
     }
 }

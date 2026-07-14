@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Piwigo\Admin\AlbumNotificationPageRenderer;
+use Piwigo\Admin\CatModifyPageRenderer;
+use Piwigo\Admin\CatPermPageRenderer;
+use Piwigo\Admin\ElementSetRanksPageRenderer;
 use Piwigo\Admin\tabsheet;
 use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
@@ -11,13 +15,13 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Replaces admin/album.php's own tab-dispatch shell (page slug "album").
- * The 4 tab bodies (cat_modify.php "properties" / element_set_ranks.php
- * "sort_order" / cat_perm.php "permissions" / album_notification.php
- * "notification") stay legacy `include` glue for their display/template
- * halves -- their write operations were extracted into
+ * The 4 tab bodies are typed renderers: CatModifyPageRenderer
+ * ("properties", P23 batch 6f) / ElementSetRanksPageRenderer
+ * ("sort_order", P23 batch 6f) / CatPermPageRenderer ("permissions", P23
+ * batch 6f) / AlbumNotificationPageRenderer ("notification", P23 batch
+ * 6f) -- their write operations were extracted into
  * Piwigo\Admin\Category\CategoryAdminService (setCategoryPermissions(),
- * saveImageOrder()) during this same batch. Same "keep page/template glue
- * inline" split as PhotosAddSubController (P21 Upload batch).
+ * saveImageOrder()) during an earlier batch.
  *
  * admin.php's own shared check_input_parameter('tab', ...,
  * '/^[a-zA-Z\d_-]+$/') already blocks real path traversal on the 'tab'
@@ -77,14 +81,18 @@ SELECT *
         ]);
 
         if ($tab === 'properties') {
-            include PHPWG_ROOT_PATH . 'admin/cat_modify.php';
+            new CatModifyPageRenderer()
+                ->render();
         } elseif ($tab === 'sort_order') {
-            include PHPWG_ROOT_PATH . 'admin/element_set_ranks.php';
+            new ElementSetRanksPageRenderer()
+                ->render();
         } elseif ($tab === 'permissions') {
             $_GET['cat'] = $cat_id;
-            include PHPWG_ROOT_PATH . 'admin/cat_perm.php';
+            new CatPermPageRenderer()
+                ->render();
         } else {
-            include PHPWG_ROOT_PATH . 'admin/album_notification.php';
+            new AlbumNotificationPageRenderer()
+                ->render();
         }
     }
 }

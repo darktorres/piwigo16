@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Piwigo\Admin\GroupPermPageRenderer;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -17,6 +18,7 @@ final class GroupPermSubController implements AdminSubControllerInterface
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        include PHPWG_ROOT_PATH . 'admin/group_perm.php';
+        new GroupPermPageRenderer()
+            ->render();
     }
 }

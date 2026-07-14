@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Piwigo\Admin\GroupListPageRenderer;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -13,13 +14,15 @@ use Psr\Http\Message\ServerRequestInterface;
  * create/delete/rename go through the WS API, not this page -- confirmed
  * via direct read, its own check_pwg_token() gate for $_GET['delete']/
  * ['toggle_is_default'] is unused dead validation, nothing in the file
- * ever acts on those params).
+ * ever acts on those params -- preserved exactly, not "fixed", since it
+ * predates this batch and is out of its scope).
  */
 final class GroupListSubController implements AdminSubControllerInterface
 {
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        include PHPWG_ROOT_PATH . 'admin/group_list.php';
+        new GroupListPageRenderer()
+            ->render();
     }
 }

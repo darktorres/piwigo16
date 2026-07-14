@@ -38,8 +38,17 @@ test('run records a boot timing', function (): void {
 test('run seeds Config from SCHEMA defaults (P13)', function (): void {
     CommonBootstrap::run(Paths::fromRoot(sys_get_temp_dir()));
 
-    expect(Config::has('gallery_title'))->toBeTrue()
-        ->and(Config::galleryTitle())->toBe('Piwigo');
+    expect(Config::has('gallery_title'))->toBeTrue();
+});
+
+test('run merges DB-persisted config overrides into Config (P23 batch 1)', function (): void {
+    // tests/Fixtures/piwigo-17.0.sql overrides gallery_title away from its
+    // SCHEMA default ('Piwigo') to prove loadConfFromDb() actually ran,
+    // not just that the key exists (SCHEMA defaults alone would also make
+    // has() true).
+    CommonBootstrap::run(Paths::fromRoot(sys_get_temp_dir()));
+
+    expect(Config::galleryTitle())->toBe('Fixture Gallery');
 });
 
 test('run attaches a guest CurrentUser', function (): void {

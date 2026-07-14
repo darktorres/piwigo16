@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Bootstrap;
 
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\ConfigService;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
@@ -41,6 +42,23 @@ use Piwigo\Users\CurrentUser;
  * meaning on the CLI path -- CliBootstrap deliberately never calls it.
  * `Lang::attachGlobals()` follows the identical reasoning for
  * $GLOBALS['lang'] (populated by common.inc.php's load_language() calls).
+ *
+ * P23 batch 1 adds the ConfigService::loadConfFromDb() call: common.inc.php
+ * already merges DB-persisted config overrides into $GLOBALS['conf'] (via
+ * the legacy load_conf_from_db()), but nothing merged them into
+ * Config::$data -- ConfigLoader::applyDefaults()/applyEnvOverrides() above
+ * only seed schema defaults + env vars. Config::xxx() accessors therefore
+ * silently returned stale/default values whenever a setting had been
+ * changed from the DB (the CsrfService secret_key bug, fixed directly in
+ * P17/P18, was one symptom of this exact gap). Called here, not from
+ * common.inc.php itself: this needs Kernel::container() (only available
+ * post Kernel::boot()) to resolve ConfigService, and common.inc.php's own
+ * body executes before Kernel ever boots on the HTTP path. Only wired for
+ * the HTTP path (this class), not CliBootstrap -- CLI commands can run
+ * before the `config` table exists (e.g. `migrations:migrate` on a fresh
+ * DB), where an unconditional loadConfFromDb() would throw; every real
+ * request reaching here has already passed common.inc.php's
+ * install-check, so the table is guaranteed to exist.
  */
 final class CommonBootstrap
 {
@@ -52,6 +70,11 @@ final class CommonBootstrap
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         Kernel::boot($paths);
+        $configService = Kernel::container()->get(ConfigService::class);
+        if (! $configService instanceof ConfigService) {
+            throw new \LogicException('Container returned an unexpected type for ' . ConfigService::class);
+        }
+        $configService->loadConfFromDb();
         CurrentUser::attachGlobals();
         PageState::attachGlobals();
         Lang::attachGlobals();

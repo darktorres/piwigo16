@@ -40,7 +40,13 @@ final class SectionInitializer
         } else {
             $rewritten = '';
             foreach (array_keys($_GET) as $key) {
-                $rewritten = $key;
+                // PHP auto-casts a purely-numeric query-string key (e.g.
+                // "?1") to a real int array key -- a bare numeric token
+                // (no id-name suffix) crashed pwg_db_real_escape_string()
+                // below with a TypeError (?string required), found live via
+                // picture.php?1. Cast back to the string this variable was
+                // always meant to hold.
+                $rewritten = (string) $key;
                 break;
             }
 

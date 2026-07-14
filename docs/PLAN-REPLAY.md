@@ -4061,6 +4061,39 @@ handler (legacy `action.php`); it enforces the served-path check ([SEC-33]) here
     `INSERT ... SELECT ... WITH ROLLUP`.
   Gate: no direct reads of `user_cache.forbidden_categories` in `src/`; the three cache tables
   do not exist after P23. (These tables also skip P15 type-normalization — see P15.)
+
+> **Batch 3 progress note (2026-07-14):** implementation-time verification split this batch
+> into three sub-batches, each independently gated on its own real read surface rather than
+> attempted as one cutover.
+> - **3a — `user_cache_categories` existence-filter reads** (`SearchService`'s 2 JOINs,
+>   `SearchController`'s 1 raw query): **done**. All three were pure "is this category not
+>   forbidden for this user" checks, never reading any other cache-table column — converted to
+>   a plain `id NOT IN ($user['forbidden_categories'])` filter against `categories` alone, using
+>   a value already computed on every request. Zero new caching needed.
+> - **3b — `CategoryRepository::findMenuCategories()`** (the sidebar category-menu rollup —
+>   `nb_images`/`count_images`/`count_categories`/`max_date_last`): **done**. Unlike 3a, this
+>   reads precomputed aggregate columns, so it needed a real cache-backed replacement, not a
+>   query rewrite. New `Piwigo\Category\CategoryTreeCache` wraps `CategoryService::
+>   getComputedCategories()` (the same recursive rollup already used to *build* the cache row)
+>   merged with `CategoryRepository::findNamesByIds()` (name/permalink, already existed),
+>   cached in the `category_tree` pool (300s TTL) — matching the TTL this doc's own bullet
+>   above already specified. `get_categories_menu()`'s SQL `$where` branches became `array_filter()`
+>   predicates over the cached rollup; `findMenuCategories()` deleted. The `300s` TTL is a real,
+>   user-visible staleness tradeoff vs. the current immediate-on-next-request cache-rebuild
+>   behavior — accepted, matches this doc's original design.
+> - **3c — `history_summary`**: **deferred**, not built in batch 3. Full consumer trace found
+>   two real, substantial, still-unabsorbed `admin/*.php` files reading the table directly
+>   (`admin/stats.php`'s 4 chart queries, `admin/include/functions.php`'s
+>   `get_pwg_general_statitics()` feeding `admin/intro.php`'s dashboard) — unlike 3a/3b, whose
+>   only real callers were already in `src/`. `StatsSubController`/`IntroSubController` are
+>   deliberately thin delegates around these files (P21's own documented decision), so
+>   replacing the table now means either preempting batch 6's ("admin absorption") own per-page
+>   audit or leaving those two pages' raw SQL broken. `HistoryService::summarize()`/
+>   `autopurge()` (the write side and the purge safety gate) and
+>   `DbMaintenanceRepository::purgeHistorySummary()` are all already typed and unaffected either
+>   way. Its actual replacement (`WITH ROLLUP` live queries vs. a materialized summary, per this
+>   section's own text above) and the Doctrine Migration dropping the table now land
+>   interleaved with batch 6 instead.
 - Arch tests: no `ServiceLocator`, no `$GLOBALS`, no `include/`, no `admin/`,
   no `Tables::`, no static bridge methods (`Config::instance()`, etc.)
 

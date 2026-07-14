@@ -4652,13 +4652,6 @@
                     null
                 )]]></code>
       <code><![CDATA[get_icon(is_string($max_date_last) ? $max_date_last : '', $child_date_last)]]></code>
-      <code><![CDATA[get_sql_condition_FandF(
-            [
-                'visible_categories' => 'id',
-            ],
-            null,
-            true
-        )]]></code>
       <code><![CDATA[global_rank_compare(...)]]></code>
       <code><![CDATA[global_rank_compare(...)]]></code>
       <code><![CDATA[make_index_url($url_params)]]></code>
@@ -4676,12 +4669,6 @@
                 $category['name'],
                 'display_select_categories'
             )]]></code>
-      <code><![CDATA[trigger_change(
-        'get_categories_menu_sql_where',
-        $where,
-        $user['expand'],
-        $filter['enabled']
-    )]]></code>
     </UndefinedFunction>
   </file>
   <file src="include/functions_comment.inc.php">
@@ -13567,6 +13554,13 @@ UPDATE ' . Tables::categories() . '
       <code><![CDATA[$service]]></code>
     </PropertyNotSetInConstructor>
   </file>
+  <file src="tests/Integration/CategoryTreeCacheTest.php">
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$cache]]></code>
+      <code><![CDATA[$conn]]></code>
+      <code><![CDATA[$pool]]></code>
+    </PropertyNotSetInConstructor>
+  </file>
   <file src="tests/Integration/CommentRepositoryTest.php">
     <PropertyNotSetInConstructor>
       <code><![CDATA[$conn]]></code>
@@ -13948,6 +13942,9 @@ UPDATE ' . Tables::categories() . '
       <code><![CDATA[toBe]]></code>
       <code><![CDATA[toBeNull]]></code>
     </InternalMethod>
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_PLUGINS_PATH]]></code>
+    </UndefinedConstant>
   </file>
   <file src="tests/Unit/Admin/Extensions/ZipExtractorTest.php">
     <InternalMethod>

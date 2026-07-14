@@ -9,8 +9,10 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Cache\CachePools;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Category\CategoryTreeCache;
 use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionRepository;
@@ -72,45 +74,40 @@ function get_categories_menu(): array
      */
     global $page, $user, $filter, $conf;
 
-    $user_id = $user['id'] ?? null;
-    $user_id_int = is_numeric($user_id) ? (int) $user_id : 0;
-
     // category currently displayed, if any; narrowed once here and reused
     // at every nested-offset access site below (see fix pattern #4/#7)
     $category_page_raw = $page['category'] ?? null;
+    /** @var array<string, mixed>|null $category_page */
     $category_page = is_array($category_page_raw) ? $category_page_raw : null;
 
-    // Always expand when filter is activated
-    if (! (bool) $user['expand'] and ! (bool) $filter['enabled']) {
-        $where = '
-(id_uppercat is NULL';
-        if ($category_page !== null) {
-            $uppercats = $category_page['uppercats'] ?? null;
-            $where .= ' OR id_uppercat IN (' . (is_scalar($uppercats) ? (string) $uppercats : '') . ')';
-        }
-        $where .= ')';
-    } else {
-        $where = '
-  ' . get_sql_condition_FandF(
-            [
-                'visible_categories' => 'id',
-            ],
-            null,
-            true
-        );
-    }
-
-    $where = trigger_change(
-        'get_categories_menu_sql_where',
-        $where,
-        $user['expand'],
-        $filter['enabled']
-    );
-    $where = is_string($where) ? $where : '';
-
+    // P23 batch 3b: findMenuCategories()'s SQL WHERE (structural id_uppercat
+    // filter, or PermissionService::getSqlConditionFandF()'s
+    // visible_categories condition) is replaced by an equivalent PHP-side
+    // filter applied to CategoryTreeCache's cached, permission-filtered row
+    // set -- see that class's own docblock for why this can no longer be
+    // pushed down to SQL (it no longer reads from a DB-backed cache table).
+    // The get_categories_menu_sql_where trigger_change() hook is dropped:
+    // grep confirms zero real handlers exist for it anywhere in this repo,
+    // and its whole contract (mutate a SQL string) has no PHP-filter
+    // equivalent worth inventing for zero real consumers.
     $conn = DbConnection::build();
-    $rows = new CategoryRepository($conn)
-        ->findMenuCategories($user_id_int, $where);
+    $all_rows = new CategoryTreeCache(
+        new CategoryService(
+            new CategoryRepository($conn),
+            new PermissionService(new PermissionRepository($conn), new GroupRepository($conn))
+        ),
+        new CategoryRepository($conn),
+        CachePools::categoryTree()
+    )->getForUser($user);
+
+    $visible_categories_raw = $filter['visible_categories'] ?? null;
+    $rows = CategoryService::filterMenuRows(
+        $all_rows,
+        $category_page,
+        (bool) $user['expand'],
+        (bool) $filter['enabled'],
+        is_scalar($visible_categories_raw) ? (string) $visible_categories_raw : ''
+    );
 
     $cats = [];
     $selected_category = $category_page;

@@ -51,6 +51,58 @@ final class CategoryService
     }
 
     /**
+     * `get_categories_menu()`'s (`include/functions_category.inc.php`) menu
+     * filter, extracted as a pure function so it's testable without that
+     * free function's `$page`/`$user`/`$filter`/`$conf` global dependencies
+     * -- P23 batch 3b replaced `findMenuCategories()`'s SQL `WHERE` (a
+     * structural `id_uppercat` filter, or `PermissionService::
+     * getSqlConditionFandF()`'s `visible_categories` condition) with this
+     * PHP-side equivalent, applied to `CategoryTreeCache`'s cached,
+     * permission-filtered row set.
+     *
+     * @param array<int, array<string, mixed>> $allRows keyed by category id,
+     *   already permission-filtered (CategoryTreeCache::getForUser())
+     * @param array<string, mixed>|null $categoryPage the currently-viewed
+     *   category ($page['category']), if any
+     * @return array<int, array<string, mixed>>
+     */
+    public static function filterMenuRows(
+        array $allRows,
+        ?array $categoryPage,
+        bool $expand,
+        bool $filterEnabled,
+        string $visibleCategoriesCsv
+    ): array {
+        // Always expand when a filter is active -- matches the original
+        // SQL's own branch condition exactly.
+        if (! $expand && ! $filterEnabled) {
+            $uppercatsRaw = $categoryPage['uppercats'] ?? null;
+            $uppercatIds = $categoryPage !== null && is_scalar($uppercatsRaw) && $uppercatsRaw !== ''
+                ? array_map(intval(...), explode(',', (string) $uppercatsRaw))
+                : [];
+
+            return array_filter(
+                $allRows,
+                static fn (array $row): bool => ($row['id_uppercat'] ?? null) === null
+                    || in_array($row['id_uppercat'], $uppercatIds, true)
+            );
+        }
+
+        if ($visibleCategoriesCsv === '') {
+            // Matches getSqlConditionFandF()'s own fallthrough: no active
+            // filter means "everything visible" (the original's `1 = 1`).
+            return $allRows;
+        }
+
+        $visibleIds = array_map(intval(...), explode(',', $visibleCategoriesCsv));
+
+        return array_filter(
+            $allRows,
+            static fn (array $row): bool => in_array($row['id'] ?? null, $visibleIds, true)
+        );
+    }
+
+    /**
      * @return array<string, mixed>|null
      */
     public function getCategoryInfo(int $id): ?array

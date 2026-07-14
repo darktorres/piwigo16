@@ -267,12 +267,5 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         self::assertSame(['Nested Sub Album', 'Sample Album'], $names);
     }
 
-    public function test_find_menu_categories_returns_top_level_categories(): void
-    {
-        $rows = $this->repo->findMenuCategories(1, '(id_uppercat is NULL)');
-
-        self::assertCount(1, $rows);
-        self::assertSame('Sample Album', $rows[0]['name']);
-    }
 }
 }

@@ -512,7 +512,7 @@ final class SearchServiceTest extends IntegrationTestCase
         // Same search as above, but with category 2 marked forbidden for
         // this user -- proves the NOT IN (...) replacement actually
         // excludes it, not just that it's syntactically present.
-        $GLOBALS['user']['forbidden_categories'] = '2';
+        $GLOBALS['user'] = array_merge(self::realisticUserGlobal(), ['forbidden_categories' => '2']);
 
         $results = $this->service->getQuickSearchResultsNoCache('Nested', []);
 

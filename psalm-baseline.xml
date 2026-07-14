@@ -5221,184 +5221,6 @@
       <code><![CDATA[include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php']]></code>
     </UnresolvableInclude>
   </file>
-  <file src="include/section_init.inc.php">
-    <InvalidGlobal>
-      <code><![CDATA[global $conf, $filter, $logger, $page, $persistent_cache, $template, $user;]]></code>
-    </InvalidGlobal>
-    <InvalidOperand>
-      <code><![CDATA[$body_category_id]]></code>
-      <code><![CDATA[$body_image_id]]></code>
-      <code><![CDATA[$body_search_id]]></code>
-      <code><![CDATA[$body_tag_id]]></code>
-      <code><![CDATA[$cache_update_time]]></code>
-      <code><![CDATA[$combined_body_id]]></code>
-      <code><![CDATA[$user_id_for_cache]]></code>
-      <code><![CDATA[$user_id_sql]]></code>
-      <code><![CDATA[$user_id_sql]]></code>
-      <code><![CDATA[is_scalar($normal_mode_cat_id) ? $normal_mode_cat_id : '0']]></code>
-    </InvalidOperand>
-    <PossiblyNullArrayAccess>
-      <code><![CDATA[$hit_by['cat_permalink']]]></code>
-      <code><![CDATA[$hit_by['cat_url_name']]]></code>
-    </PossiblyNullArrayAccess>
-    <PossiblyUndefinedArrayOffset>
-      <code><![CDATA[$_SERVER['REMOTE_ADDR']]]></code>
-      <code><![CDATA[$page['body_classes']]]></code>
-      <code><![CDATA[$page['body_data']]]></code>
-      <code><![CDATA[$page['hit_by']]]></code>
-      <code><![CDATA[$page['section']]]></code>
-      <code><![CDATA[$page['section']]]></code>
-      <code><![CDATA[$page['section']]]></code>
-      <code><![CDATA[$page['section']]]></code>
-      <code><![CDATA[$page['section']]]></code>
-      <code><![CDATA[$page['section']]]></code>
-    </PossiblyUndefinedArrayOffset>
-    <ReferenceConstraintViolation>
-      <code><![CDATA[$page]]></code>
-      <code><![CDATA[$page]]></code>
-      <code><![CDATA[$page]]></code>
-      <code><![CDATA[$page]]></code>
-      <code><![CDATA[$page]]></code>
-      <code><![CDATA[$page]]></code>
-      <code><![CDATA[$page]]></code>
-      <code><![CDATA[$page]]></code>
-      <code><![CDATA[$page]]></code>
-      <code><![CDATA[$page]]></code>
-      <code><![CDATA[$page]]></code>
-    </ReferenceConstraintViolation>
-    <RiskyTruthyFalsyComparison>
-      <code><![CDATA[! $persistent_cache->get($cache_key_str, $page['items'])]]></code>
-      <code><![CDATA[empty($_GET['action'])]]></code>
-      <code><![CDATA[empty($category_permalink)]]></code>
-      <code><![CDATA[empty($tokens[$next_token])]]></code>
-    </RiskyTruthyFalsyComparison>
-    <UndefinedConstant>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-    </UndefinedConstant>
-    <UndefinedFunction>
-      <code><![CDATA[access_denied()]]></code>
-      <code><![CDATA[add_url_params(
-                            make_index_url([
-                                'section' => 'favorites',
-                            ]),
-                            [
-                                'action' => 'remove_all_from_favorites',
-                            ]
-                        )]]></code>
-      <code><![CDATA[check_restrictions(is_numeric($redirect_category_id) ? (int) $redirect_category_id : 0)]]></code>
-      <code><![CDATA[check_user_favorites()]]></code>
-      <code><![CDATA[duplicate_index_url()]]></code>
-      <code><![CDATA[duplicate_index_url([
-                    'start' => 0,
-                ])]]></code>
-      <code><![CDATA[duplicate_index_url([
-                    'start' => 0,
-                ])]]></code>
-      <code><![CDATA[duplicate_index_url([
-                    'start' => 0,
-                ])]]></code>
-      <code><![CDATA[duplicate_index_url([
-                    'start' => 0,
-                ])]]></code>
-      <code><![CDATA[duplicate_index_url([
-                    'start' => 0,
-                ])]]></code>
-      <code><![CDATA[duplicate_index_url([
-                    'start' => 0,
-                ])]]></code>
-      <code><![CDATA[duplicate_index_url([
-                    'start' => 0,
-                ])]]></code>
-      <code><![CDATA[duplicate_picture_url()]]></code>
-      <code><![CDATA[fatal_error('persistent cache not initialized')]]></code>
-      <code><![CDATA[get_cat_display_name($upper_names, '')]]></code>
-      <code><![CDATA[get_category_preferred_image_orders()]]></code>
-      <code><![CDATA[get_combined_categories_content_title()]]></code>
-      <code><![CDATA[get_gallery_home_url()]]></code>
-      <code><![CDATA[get_image_ids_for_categories($cat_ids)]]></code>
-      <code><![CDATA[get_image_ids_for_tags($tag_ids)]]></code>
-      <code><![CDATA[get_recent_photos_sql('date_available')]]></code>
-      <code><![CDATA[get_search_results($search_id, $search_super_order_by)]]></code>
-      <code><![CDATA[get_sql_condition_FandF(
-                    [
-                        'visible_images' => 'id',
-                    ],
-                    'AND'
-                )]]></code>
-      <code><![CDATA[get_sql_condition_FandF(
-                [
-                    'visible_images' => 'id',
-                ],
-                'AND'
-            )]]></code>
-      <code><![CDATA[get_sql_condition_FandF(
-        [
-            'forbidden_categories' => 'id',
-            'visible_categories' => 'id',
-        ],
-        "\n  AND"
-    )]]></code>
-      <code><![CDATA[get_sql_condition_FandF(
-    [
-        'forbidden_categories' => 'category_id',
-        'visible_categories' => 'category_id',
-        'visible_images' => 'id',
-    ],
-    'AND'
-)]]></code>
-      <code><![CDATA[get_tags_content_title()]]></code>
-      <code><![CDATA[initialize_calendar()]]></code>
-      <code><![CDATA[l10n('Best rated')]]></code>
-      <code><![CDATA[l10n('Favorites')]]></code>
-      <code><![CDATA[l10n('Home')]]></code>
-      <code><![CDATA[l10n('Most visited')]]></code>
-      <code><![CDATA[l10n('Random photos')]]></code>
-      <code><![CDATA[l10n('Recent albums')]]></code>
-      <code><![CDATA[l10n('Recent photos')]]></code>
-      <code><![CDATA[l10n('Search results')]]></code>
-      <code><![CDATA[make_index_url([
-                                'section' => 'favorites',
-                            ])]]></code>
-      <code><![CDATA[make_index_url([
-                'section' => 'favorites',
-            ])]]></code>
-      <code><![CDATA[parse_well_known_params_url($tokens, $next_token)]]></code>
-      <code><![CDATA[pwg_get_session_var('image_order')]]></code>
-      <code><![CDATA[pwg_get_session_var('image_order', 0)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_unset_session_var('image_order')]]></code>
-      <code><![CDATA[query2array($query, null, 'id')]]></code>
-      <code><![CDATA[query2array($query, null, 'id')]]></code>
-      <code><![CDATA[query2array($query, null, 'id')]]></code>
-      <code><![CDATA[query2array($query, null, 'id')]]></code>
-      <code><![CDATA[query2array($query, null, 'id')]]></code>
-      <code><![CDATA[query2array($query, null, 'image_id')]]></code>
-      <code><![CDATA[query2array($query, null, 'image_id')]]></code>
-      <code><![CDATA[redirect($random_index_redirect[random_int(0, count($random_index_redirect) - 1)])]]></code>
-      <code><![CDATA[redirect($redirect_url)]]></code>
-      <code><![CDATA[redirect(make_index_url([
-                'section' => 'favorites',
-            ]))]]></code>
-      <code><![CDATA[redirect_http($redirect_url)]]></code>
-      <code><![CDATA[script_basename()]]></code>
-      <code><![CDATA[script_basename()]]></code>
-      <code><![CDATA[script_basename()]]></code>
-      <code><![CDATA[script_basename()]]></code>
-      <code><![CDATA[set_status_header(301)]]></code>
-      <code><![CDATA[str2url($category_name)]]></code>
-      <code><![CDATA[trigger_change(
-                    'render_category_description',
-                    $page_category['comment'],
-                    'main_page_category_description'
-                )]]></code>
-      <code><![CDATA[trigger_notify('loc_end_section_init')]]></code>
-    </UndefinedFunction>
-    <UnresolvableInclude>
-      <code><![CDATA[include_once PHPWG_ROOT_PATH . 'include/functions_calendar.inc.php']]></code>
-      <code><![CDATA[include_once PHPWG_ROOT_PATH . 'include/functions_search.inc.php']]></code>
-    </UnresolvableInclude>
-  </file>
   <file src="include/selected_tags.inc.php">
     <InvalidGlobal>
       <code><![CDATA[global $page, $template;]]></code>
@@ -10245,7 +10067,6 @@ UPDATE ' . Tables::categories() . '
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
     </UndefinedConstant>
     <UndefinedFunction>
       <code><![CDATA[add_level_to_tags($tags)]]></code>
@@ -10363,7 +10184,6 @@ UPDATE ' . Tables::categories() . '
       <code><![CDATA[include PHPWG_ROOT_PATH . 'include/menubar.inc.php']]></code>
       <code><![CDATA[include PHPWG_ROOT_PATH . 'include/page_header.php']]></code>
       <code><![CDATA[include PHPWG_ROOT_PATH . 'include/page_tail.php']]></code>
-      <code><![CDATA[include PHPWG_ROOT_PATH . 'include/section_init.inc.php']]></code>
       <code><![CDATA[include_once PHPWG_ROOT_PATH . 'include/selected_tags.inc.php']]></code>
     </UnresolvableInclude>
   </file>
@@ -10642,7 +10462,6 @@ UPDATE ' . Tables::categories() . '
       <code><![CDATA[IMG_MEDIUM]]></code>
       <code><![CDATA[IMG_SQUARE]]></code>
       <code><![CDATA[IMG_THUMB]]></code>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
@@ -10941,7 +10760,6 @@ UPDATE ' . Tables::categories() . '
       <code><![CDATA[include PHPWG_ROOT_PATH . 'include/page_header.php']]></code>
       <code><![CDATA[include PHPWG_ROOT_PATH . 'include/page_tail.php']]></code>
       <code><![CDATA[include PHPWG_ROOT_PATH . 'include/picture_rate.inc.php']]></code>
-      <code><![CDATA[include PHPWG_ROOT_PATH . 'include/section_init.inc.php']]></code>
       <code><![CDATA[include_once PHPWG_ROOT_PATH . 'admin/include/functions.php']]></code>
       <code><![CDATA[include_once PHPWG_ROOT_PATH . 'include/functions_comment.inc.php']]></code>
       <code><![CDATA[include_once PHPWG_ROOT_PATH . 'include/functions_comment.inc.php']]></code>
@@ -12515,6 +12333,172 @@ UPDATE ' . Tables::categories() . '
       <code><![CDATA[pwg_db_real_escape_string($rewritten)]]></code>
       <code><![CDATA[script_basename()]]></code>
     </UndefinedFunction>
+  </file>
+  <file src="src/Piwigo/Section/SectionPopulator.php">
+    <InvalidOperand>
+      <code><![CDATA[$body_category_id]]></code>
+      <code><![CDATA[$body_image_id]]></code>
+      <code><![CDATA[$body_search_id]]></code>
+      <code><![CDATA[$body_tag_id]]></code>
+      <code><![CDATA[$cache_update_time]]></code>
+      <code><![CDATA[$combined_body_id]]></code>
+      <code><![CDATA[$user_id_for_cache]]></code>
+      <code><![CDATA[$user_id_sql]]></code>
+      <code><![CDATA[$user_id_sql]]></code>
+      <code><![CDATA[is_scalar($normal_mode_cat_id) ? $normal_mode_cat_id : '0']]></code>
+    </InvalidOperand>
+    <PossiblyNullArrayAccess>
+      <code><![CDATA[$hit_by['cat_permalink']]]></code>
+      <code><![CDATA[$hit_by['cat_url_name']]]></code>
+    </PossiblyNullArrayAccess>
+    <PossiblyUndefinedArrayOffset>
+      <code><![CDATA[$_SERVER['REMOTE_ADDR']]]></code>
+      <code><![CDATA[$page['body_classes']]]></code>
+      <code><![CDATA[$page['body_data']]]></code>
+      <code><![CDATA[$page['hit_by']]]></code>
+    </PossiblyUndefinedArrayOffset>
+    <ReferenceConstraintViolation>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$page]]></code>
+    </ReferenceConstraintViolation>
+    <RiskyTruthyFalsyComparison>
+      <code><![CDATA[! $persistent_cache->get($cache_key_str, $page['items'])]]></code>
+    </RiskyTruthyFalsyComparison>
+    <UndefinedConstant>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
+    </UndefinedConstant>
+    <UndefinedFunction>
+      <code><![CDATA[access_denied()]]></code>
+      <code><![CDATA[add_url_params(
+                                    make_index_url([
+                                        'section' => 'favorites',
+                                    ]),
+                                    [
+                                        'action' => 'remove_all_from_favorites',
+                                    ]
+                                )]]></code>
+      <code><![CDATA[check_restrictions(is_numeric($redirect_category_id) ? (int) $redirect_category_id : 0)]]></code>
+      <code><![CDATA[check_user_favorites()]]></code>
+      <code><![CDATA[duplicate_index_url()]]></code>
+      <code><![CDATA[duplicate_index_url([
+                            'start' => 0,
+                        ])]]></code>
+      <code><![CDATA[duplicate_index_url([
+                            'start' => 0,
+                        ])]]></code>
+      <code><![CDATA[duplicate_index_url([
+                            'start' => 0,
+                        ])]]></code>
+      <code><![CDATA[duplicate_index_url([
+                            'start' => 0,
+                        ])]]></code>
+      <code><![CDATA[duplicate_index_url([
+                            'start' => 0,
+                        ])]]></code>
+      <code><![CDATA[duplicate_index_url([
+                            'start' => 0,
+                        ])]]></code>
+      <code><![CDATA[duplicate_index_url([
+                            'start' => 0,
+                        ])]]></code>
+      <code><![CDATA[duplicate_picture_url()]]></code>
+      <code><![CDATA[fatal_error('persistent cache not initialized')]]></code>
+      <code><![CDATA[get_cat_display_name($upper_names, '')]]></code>
+      <code><![CDATA[get_category_preferred_image_orders()]]></code>
+      <code><![CDATA[get_combined_categories_content_title()]]></code>
+      <code><![CDATA[get_gallery_home_url()]]></code>
+      <code><![CDATA[get_image_ids_for_categories($cat_ids)]]></code>
+      <code><![CDATA[get_image_ids_for_tags($tag_ids)]]></code>
+      <code><![CDATA[get_recent_photos_sql('date_available')]]></code>
+      <code><![CDATA[get_search_results($search_id, $search_super_order_by)]]></code>
+      <code><![CDATA[get_sql_condition_FandF(
+                            [
+                                'visible_images' => 'id',
+                            ],
+                            'AND'
+                        )]]></code>
+      <code><![CDATA[get_sql_condition_FandF(
+                        [
+                            'visible_images' => 'id',
+                        ],
+                        'AND'
+                    )]]></code>
+      <code><![CDATA[get_sql_condition_FandF(
+            [
+                'forbidden_categories' => 'category_id',
+                'visible_categories' => 'category_id',
+                'visible_images' => 'id',
+            ],
+            'AND'
+        )]]></code>
+      <code><![CDATA[get_sql_condition_FandF(
+        [
+            'forbidden_categories' => 'id',
+            'visible_categories' => 'id',
+        ],
+        "\n  AND"
+    )]]></code>
+      <code><![CDATA[get_tags_content_title()]]></code>
+      <code><![CDATA[initialize_calendar()]]></code>
+      <code><![CDATA[l10n('Best rated')]]></code>
+      <code><![CDATA[l10n('Favorites')]]></code>
+      <code><![CDATA[l10n('Home')]]></code>
+      <code><![CDATA[l10n('Most visited')]]></code>
+      <code><![CDATA[l10n('Random photos')]]></code>
+      <code><![CDATA[l10n('Recent albums')]]></code>
+      <code><![CDATA[l10n('Recent photos')]]></code>
+      <code><![CDATA[l10n('Search results')]]></code>
+      <code><![CDATA[make_index_url([
+                                        'section' => 'favorites',
+                                    ])]]></code>
+      <code><![CDATA[make_index_url([
+                        'section' => 'favorites',
+                    ])]]></code>
+      <code><![CDATA[parse_well_known_params_url($tokens, $next_token)]]></code>
+      <code><![CDATA[pwg_get_session_var('image_order')]]></code>
+      <code><![CDATA[pwg_get_session_var('image_order', 0)]]></code>
+      <code><![CDATA[pwg_query($query)]]></code>
+      <code><![CDATA[pwg_unset_session_var('image_order')]]></code>
+      <code><![CDATA[query2array($query, null, 'id')]]></code>
+      <code><![CDATA[query2array($query, null, 'id')]]></code>
+      <code><![CDATA[query2array($query, null, 'id')]]></code>
+      <code><![CDATA[query2array($query, null, 'id')]]></code>
+      <code><![CDATA[query2array($query, null, 'id')]]></code>
+      <code><![CDATA[query2array($query, null, 'image_id')]]></code>
+      <code><![CDATA[query2array($query, null, 'image_id')]]></code>
+      <code><![CDATA[redirect($random_index_redirect[random_int(0, count($random_index_redirect) - 1)])]]></code>
+      <code><![CDATA[redirect($redirect_url)]]></code>
+      <code><![CDATA[redirect(make_index_url([
+                        'section' => 'favorites',
+                    ]))]]></code>
+      <code><![CDATA[redirect_http($redirect_url)]]></code>
+      <code><![CDATA[script_basename()]]></code>
+      <code><![CDATA[script_basename()]]></code>
+      <code><![CDATA[script_basename()]]></code>
+      <code><![CDATA[script_basename()]]></code>
+      <code><![CDATA[set_status_header(301)]]></code>
+      <code><![CDATA[str2url($category_name)]]></code>
+      <code><![CDATA[trigger_change(
+                            'render_category_description',
+                            $page_category['comment'],
+                            'main_page_category_description'
+                        )]]></code>
+      <code><![CDATA[trigger_notify('loc_end_section_init')]]></code>
+    </UndefinedFunction>
+    <UnresolvableInclude>
+      <code><![CDATA[include_once PHPWG_ROOT_PATH . 'include/functions_calendar.inc.php']]></code>
+      <code><![CDATA[include_once PHPWG_ROOT_PATH . 'include/functions_search.inc.php']]></code>
+    </UnresolvableInclude>
   </file>
   <file src="src/Piwigo/Session/PwgSession.php">
     <ClassMustBeFinal>

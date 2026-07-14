@@ -14,6 +14,7 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Picture\PictureCommentRenderer;
 use Piwigo\Picture\PictureMetadataRenderer;
+use Piwigo\Section\SectionPopulator;
 use Piwigo\Template\Template;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -37,13 +38,18 @@ use Psr\Http\Message\ServerRequestInterface;
  * own "management block" split. Everything after is bundled into one
  * closure, matching TagsController/CommentsController/GalleryController's
  * own precedent for this page shape.
+ *
+ * Like GalleryController, Piwigo\Section\SectionPopulator::populate() (P23
+ * batch 4d) must run before check_status() -- check_restrictions() below
+ * depends on $page['category'] already being populated.
  */
 final class PictureController implements ControllerInterface
 {
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        include PHPWG_ROOT_PATH . 'include/section_init.inc.php';
+        new SectionPopulator()
+            ->populate();
         include_once PHPWG_ROOT_PATH . 'include/functions_picture.inc.php';
 
         /**
@@ -59,7 +65,7 @@ final class PictureController implements ControllerInterface
 
         check_status(AccessLevel::Guest);
 
-        // $page['category'] (see include/section_init.inc.php /
+        // $page['category'] (see SectionPopulator::populate() /
         // get_cat_info()) is set at most once, before this method runs,
         // and is never reassigned below -- snapshot it locally once so
         // every isset($page['category']) check below can be replaced with
@@ -72,7 +78,7 @@ final class PictureController implements ControllerInterface
             check_restrictions(is_numeric($category_id) ? (int) $category_id : 0);
         }
 
-        // $page['items'] (see include/section_init.inc.php) is always a
+        // $page['items'] (see SectionPopulator::populate()) is always a
         // list of image ids (int or numeric string); mutated in place
         // below (best_rated fallback) so it is kept as a local variable
         // synced back into $page.

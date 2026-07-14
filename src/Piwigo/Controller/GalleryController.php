@@ -12,6 +12,7 @@ use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Search\SearchFilterRenderer;
+use Piwigo\Section\SectionPopulator;
 use Piwigo\Template\Template;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -20,14 +21,14 @@ use Psr\Http\Message\ServerRequestInterface;
  * Replaces index.php -- the main gallery browsing page (categories,
  * thumbnails, search results, calendar, tags, etc.), picking up
  * P20's SectionInitializer's own deferred note ("the $page/$template
- * population half stays procedural, P22 scope").
+ * population half stays procedural, P22 scope") -- that half was absorbed
+ * into Piwigo\Section\SectionPopulator in P23 batch 4d.
  *
- * Unlike every other P22 controller, include/section_init.inc.php must run
+ * Unlike every other P22 controller, SectionPopulator::populate() must run
  * BEFORE check_status() -- check_restrictions() (called right after)
- * depends on $page['category'] already being populated. section_init.inc.php
+ * depends on $page['category'] already being populated. populate()
  * declares its own `global $page, $conf, ...;` at its top level, so it
- * binds to the real $GLOBALS table correctly even though it's include()'d
- * from inside this method rather than true top-level script scope.
+ * binds to the real $GLOBALS table correctly regardless of nesting depth.
  *
  * check_status()/check_restrictions()/page_not_found() all stay outside the
  * captured closure. Everything else -- including the interleaved
@@ -51,13 +52,14 @@ final class GalleryController implements ControllerInterface
          */
         global $conf, $page, $template;
 
-        include PHPWG_ROOT_PATH . 'include/section_init.inc.php';
+        new SectionPopulator()
+            ->populate();
 
         check_status(AccessLevel::Guest);
 
         // Real invariant: $page['items'] always holds a list of numeric
         // image ids (array_from_query()/query2array() single-column
-        // results in include/section_init.inc.php), possibly as numeric
+        // results in SectionPopulator::populate()), possibly as numeric
         // strings coming straight from the database.
         $page_items = [];
         if (is_array($page['items'])) {
@@ -69,14 +71,14 @@ final class GalleryController implements ControllerInterface
         }
 
         // Real invariant: $page['start'] is either the int 0 default set
-        // in include/section_init.inc.php, or a numeric string captured
+        // in SectionPopulator::populate(), or a numeric string captured
         // from the URL (see the preg_match capture group in
         // include/functions_url.inc.php).
         $page_start = is_numeric($page['start']) ? (int) $page['start'] : 0;
 
         // Real invariant: $page['nb_image_page'] comes from
         // $user['nb_image_page'], a numeric value read from the database
-        // (see include/section_init.inc.php).
+        // (see SectionPopulator::populate()).
         $page_nb_image_page = is_numeric($page['nb_image_page']) ? (int) $page['nb_image_page'] : 0;
 
         // access authorization check

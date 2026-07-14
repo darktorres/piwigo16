@@ -65,6 +65,10 @@ namespace {
     if (! function_exists('pwg_db_get_recent_period_expression')) {
         function pwg_db_get_recent_period_expression(int|string $period, string $date = 'CURRENT_DATE'): string
         {
+            if ($date === 'CURRENT_DATE' && pwg_test_mode_is_active()) {
+                $date = pwg_now()->format('Y-m-d');
+            }
+
             if ($date !== 'CURRENT_DATE') {
                 $date = '\'' . $date . '\'';
             }

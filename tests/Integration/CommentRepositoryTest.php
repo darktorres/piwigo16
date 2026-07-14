@@ -151,9 +151,15 @@ final class CommentRepositoryTest extends IntegrationTestCase
         // author_id has an FK onto piwigo_users, so a real fixture user id
         // is needed -- 4 (power_user), not reused by insertFixtureComment()
         // (which only ever uses 1 or 3), so no other test's disposable rows
-        // inflate this count. Fixture comment 4 (also author_id 4) has a
-        // fixed, long-past fixture timestamp -- well outside any of the
-        // windows asserted below -- so only this fresh insert counts.
+        // inflate this count. Fixture comments 3 and 4 (also author_id 4)
+        // are seeded at the same uniform timestamp every fixture row uses
+        // (2026-08-01 00:00:00, matching PIWIGO_TEST_NOW) -- pushed safely
+        // into the past here, scoped to this test only, so only the fresh
+        // insert below counts as "recent".
+        $this->conn->executeStatement(
+            "UPDATE " . Tables::comments() . " SET date = '2026-01-01 00:00:00' WHERE author_id = 4"
+        );
+
         $this->repo->insert([
             'author' => 'power_user',
             'authorId' => 4,

@@ -12,9 +12,13 @@ use Piwigo\Db\Tables;
 use Piwigo\Notification\NotificationRepository;
 
 /**
- * Fixture shape: comments 1-4 validated (validation_date
- * '2026-07-07 05:02:38'), comment 5 unvalidated (validated='', on image
- * 4); images 1-2 date_available '...05:02:36', 3-4 '...05:02:37', 5
+ * The committed fixture seeds every comment/image/user at one uniform
+ * timestamp (2026-08-01 00:00:00, matching PIWIGO_TEST_NOW) -- setUp()
+ * below explicitly restores graduated dates this class's own tests need to
+ * exercise date-RANGE filtering meaningfully, scoped to this class's own DB
+ * session only. Resulting shape: comments 1-4 validated (validation_date
+ * '2026-07-07 05:02:38'), comment 5 unvalidated (validated='false', on
+ * image 4); images 1-2 date_available '...05:02:36', 3-4 '...05:02:37', 5
  * '...05:02:38'; users 1-2 registered '...05:02:35', 3-4 '...05:02:38'.
  */
 final class NotificationRepositoryTest extends IntegrationTestCase
@@ -31,7 +35,8 @@ final class NotificationRepositoryTest extends IntegrationTestCase
         parent::setUp();
         $this->setUpConnectionFromEnv();
 
-        if (! self::$fixtureReady) {
+        $freshFixture = ! self::$fixtureReady;
+        if ($freshFixture) {
             $this->resetDatabase();
             $this->loadFixture(dirname(__DIR__, 2) . '/tests/Fixtures/piwigo-17.0.sql');
             self::$fixtureReady = true;
@@ -43,6 +48,23 @@ final class NotificationRepositoryTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
         $this->repo = new NotificationRepository($this->conn);
+
+        if ($freshFixture) {
+            // The committed fixture seeds every comment/image/user at one
+            // uniform timestamp (2026-08-01 00:00:00, matching
+            // PIWIGO_TEST_NOW) -- this class's own tests need graduated,
+            // distinguishable dates to exercise date-RANGE filtering
+            // meaningfully, so they're set explicitly here, scoped to this
+            // test class's own DB session only (never touches the shared
+            // fixture file). See this class's own docblock for the exact
+            // shape these values match.
+            $this->conn->executeStatement('UPDATE ' . Tables::comments() . " SET validation_date = '2026-07-07 05:02:38' WHERE validated = 'true'");
+            $this->conn->executeStatement('UPDATE ' . Tables::images() . " SET date_available = '2026-07-07 05:02:36' WHERE id IN (1, 2)");
+            $this->conn->executeStatement('UPDATE ' . Tables::images() . " SET date_available = '2026-07-07 05:02:37' WHERE id IN (3, 4)");
+            $this->conn->executeStatement('UPDATE ' . Tables::images() . " SET date_available = '2026-07-07 05:02:38' WHERE id = 5");
+            $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . " SET registration_date = '2026-07-07 05:02:35' WHERE user_id IN (1, 2)");
+            $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . " SET registration_date = '2026-07-07 05:02:38' WHERE user_id IN (3, 4)");
+        }
     }
 
     public function test_count_by_type_counts_new_comments_in_range(): void
@@ -69,9 +91,9 @@ final class NotificationRepositoryTest extends IntegrationTestCase
 
     public function test_count_by_type_counts_unvalidated_comments(): void
     {
-        // Fixture comment 5's validated column is '' (a raw insert
-        // artifact), not the enum's real 'false' value -- insert a proper
-        // one to exercise the `validated = 'false'` filter meaningfully.
+        // Fixture comment 5 already has the enum's real 'false' value, so
+        // it counts as unvalidated on its own -- this insert adds a second,
+        // proving the filter counts every matching row, not just one.
         $this->conn->executeStatement(
             'INSERT INTO ' . Tables::comments() . ' (image_id, date, author, anonymous_id, content, validated) VALUES (1, NOW(), ?, ?, ?, ?)',
             ['test author', '127.0.0.9', 'pending test comment', 'false']
@@ -79,7 +101,7 @@ final class NotificationRepositoryTest extends IntegrationTestCase
 
         $count = $this->repo->countByType('unvalidated_comments', null, null, '');
 
-        self::assertSame(1, $count);
+        self::assertSame(2, $count);
 
         $this->conn->executeStatement("DELETE FROM " . Tables::comments() . " WHERE author = 'test author'");
     }

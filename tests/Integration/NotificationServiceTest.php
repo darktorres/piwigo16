@@ -59,7 +59,8 @@ final class NotificationServiceTest extends IntegrationTestCase
         parent::setUp();
         $this->setUpConnectionFromEnv();
 
-        if (! self::$fixtureReady) {
+        $freshFixture = ! self::$fixtureReady;
+        if ($freshFixture) {
             $this->resetDatabase();
             $this->loadFixture(dirname(__DIR__, 2) . '/tests/Fixtures/piwigo-17.0.sql');
             self::$fixtureReady = true;
@@ -70,6 +71,20 @@ final class NotificationServiceTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
+
+        if ($freshFixture) {
+            // Same graduated-date restoration as NotificationRepositoryTest
+            // (see that class's own docblock) -- the committed fixture
+            // seeds every comment/image/user at one uniform timestamp,
+            // this class's tests need distinguishable dates to exercise
+            // date-RANGE filtering meaningfully.
+            $this->conn->executeStatement('UPDATE ' . Tables::comments() . " SET validation_date = '2026-07-07 05:02:38' WHERE validated = 'true'");
+            $this->conn->executeStatement('UPDATE ' . Tables::images() . " SET date_available = '2026-07-07 05:02:36' WHERE id IN (1, 2)");
+            $this->conn->executeStatement('UPDATE ' . Tables::images() . " SET date_available = '2026-07-07 05:02:37' WHERE id IN (3, 4)");
+            $this->conn->executeStatement('UPDATE ' . Tables::images() . " SET date_available = '2026-07-07 05:02:38' WHERE id = 5");
+            $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . " SET registration_date = '2026-07-07 05:02:35' WHERE user_id IN (1, 2)");
+            $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . " SET registration_date = '2026-07-07 05:02:38' WHERE user_id IN (3, 4)");
+        }
 
         // Same self-contained scratch cache dir pattern as
         // SearchServiceTest -- never the real _data/cache/.

@@ -61,7 +61,10 @@ final class MetadataRepositoryTest extends IntegrationTestCase
         $ids = array_column($rows, 'id');
         sort($ids);
         self::assertSame([1, 3], $ids);
-        self::assertStringContainsString('20260707050236-2e7ee679.jpg', $rows[0]['path'] . $rows[1]['path']);
+        // Asserts the stable date-based upload path, not the filename's
+        // opaque content-hash suffix (regenerated whenever the fixture SQL
+        // itself is regenerated, unlike the rest of this row's data).
+        self::assertStringContainsString('/upload/2026/08/01/', $rows[0]['path'] . $rows[1]['path']);
     }
 
     public function test_find_images_by_ids_returns_empty_for_no_ids(): void

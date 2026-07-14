@@ -789,6 +789,18 @@ function boolean_to_string($var)
 
 function pwg_db_get_recent_period_expression(int|string $period, string $date = 'CURRENT_DATE'): string
 {
+    // Route the default through pwg_now() (env.inc.php) rather than the raw
+    // SQL keyword: pwg_now() already resolves to PIWIGO_TEST_NOW in test
+    // mode (same mechanism time_since()-based "recent" text already relies
+    // on for deterministic rendering) -- CURRENT_DATE is the DB SERVER's
+    // real wall-clock date, which drifts out of sync with fixture data
+    // dated relative to PIWIGO_TEST_NOW once real time catches up to it.
+    // A caller-supplied $date is left untouched either way.
+    if ($date === 'CURRENT_DATE' && pwg_test_mode_is_active()) {
+        $date = pwg_now()
+            ->format('Y-m-d');
+    }
+
     if ($date != 'CURRENT_DATE') {
         $date = '\'' . $date . '\'';
     }

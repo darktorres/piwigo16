@@ -412,7 +412,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_validate_comment_marks_it_validated(): void
         {
-            self::assertSame('', $this->fetchColumn(5, 'validated'));
+            self::assertSame('false', $this->fetchColumn(5, 'validated'));
 
             $this->service->validateComment(5);
 

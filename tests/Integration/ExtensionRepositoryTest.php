@@ -61,7 +61,7 @@ final class ExtensionRepositoryTest extends IntegrationTestCase
         $rows = $this->repo->findAll(ExtensionType::Language);
 
         self::assertArrayHasKey('en_UK', $rows);
-        self::assertSame('English [UK]', $rows['en_UK']['name']);
+        self::assertSame('English (Great Britain)', $rows['en_UK']['name']);
     }
 
     public function test_find_returns_a_single_row(): void
@@ -69,7 +69,7 @@ final class ExtensionRepositoryTest extends IntegrationTestCase
         $row = $this->repo->find(ExtensionType::Language, 'en_UK');
 
         self::assertIsArray($row);
-        self::assertSame('auto', $row['version']);
+        self::assertSame('16.3.0', $row['version']);
     }
 
     public function test_find_returns_null_for_a_missing_row(): void

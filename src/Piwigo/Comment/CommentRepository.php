@@ -32,6 +32,13 @@ final class CommentRepository extends AbstractRepository
      */
     public function insert(array $data): int
     {
+        // pwg_now() rather than SQL's NOW() -- see countRecentComments()'s
+        // own docblock; date/validation_date must share the same time
+        // reference that the flood-window comparison reads, not the real
+        // DB-server clock.
+        $now = pwg_now()
+            ->format('Y-m-d H:i:s');
+
         $this->conn->createQueryBuilder()
             ->insert(Tables::comments())
             ->values([
@@ -39,9 +46,9 @@ final class CommentRepository extends AbstractRepository
                 'author_id' => ':authorId',
                 'anonymous_id' => ':anonymousId',
                 'content' => ':content',
-                'date' => 'NOW()',
+                'date' => ':now',
                 'validated' => ':validated',
-                'validation_date' => $data['validated'] ? 'NOW()' : 'NULL',
+                'validation_date' => $data['validated'] ? ':now' : 'NULL',
                 'image_id' => ':imageId',
                 'website_url' => ':websiteUrl',
                 'email' => ':email',
@@ -50,6 +57,7 @@ final class CommentRepository extends AbstractRepository
             ->setParameter('authorId', $data['authorId'])
             ->setParameter('anonymousId', $data['anonymousId'])
             ->setParameter('content', $data['content'])
+            ->setParameter('now', $now)
             ->setParameter('validated', $data['validated'] ? 'true' : 'false')
             ->setParameter('imageId', $data['imageId'])
             ->setParameter('websiteUrl', $data['websiteUrl'])
@@ -101,11 +109,12 @@ final class CommentRepository extends AbstractRepository
             ->set('content', ':content')
             ->set('website_url', ':websiteUrl')
             ->set('validated', ':validated')
-            ->set('validation_date', $data['validated'] ? 'NOW()' : 'NULL')
+            ->set('validation_date', $data['validated'] ? ':now' : 'NULL')
             ->where('id = :id')
             ->setParameter('content', $data['content'])
             ->setParameter('websiteUrl', $data['websiteUrl'])
             ->setParameter('validated', $data['validated'] ? 'true' : 'false')
+            ->setParameter('now', pwg_now()->format('Y-m-d H:i:s'))
             ->setParameter('id', $id);
 
         if ($authorId !== null) {
@@ -153,9 +162,10 @@ final class CommentRepository extends AbstractRepository
         $this->conn->createQueryBuilder()
             ->update(Tables::comments())
             ->set('validated', ':validated')
-            ->set('validation_date', 'NOW()')
+            ->set('validation_date', ':now')
             ->where('id IN (:ids)')
             ->setParameter('validated', 'true')
+            ->setParameter('now', pwg_now()->format('Y-m-d H:i:s'))
             ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
             ->executeStatement();
     }
@@ -167,11 +177,17 @@ final class CommentRepository extends AbstractRepository
      */
     public function countRecentComments(int $authorId, ?string $anonymousIdPrefix, int $antiFloodSeconds): int
     {
+        // pwg_now() rather than SQL's NOW() (the real DB-server clock) --
+        // matches SessionRepository's own reasoning: invisible to
+        // PIWIGO_TEST_NOW, so fixture comments dated relative to it would
+        // read as "within the flood window" whenever real time drifted
+        // away from the fixture's own dates.
         $qb = $this->conn->createQueryBuilder()
             ->select('COUNT(1)')
             ->from(Tables::comments())
-            ->where('date > SUBDATE(NOW(), INTERVAL :seconds SECOND)')
+            ->where('date > SUBDATE(:now, INTERVAL :seconds SECOND)')
             ->andWhere('author_id = :authorId')
+            ->setParameter('now', pwg_now()->format('Y-m-d H:i:s'))
             ->setParameter('seconds', $antiFloodSeconds)
             ->setParameter('authorId', $authorId);
 

@@ -4171,6 +4171,7 @@
       <code><![CDATA[pwg_db_get_recent_period_expression($period)]]></code>
       <code><![CDATA[pwg_db_num_rows($result)]]></code>
       <code><![CDATA[pwg_get_db_version()]]></code>
+      <code><![CDATA[pwg_now()]]></code>
       <code><![CDATA[pwg_query("SET SESSION sql_mode='" . $sql_mode_altered . "'")]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
@@ -4192,6 +4193,7 @@
       <code><![CDATA[pwg_query('DROP TABLE ' . $temporary_tablename)]]></code>
       <code><![CDATA[pwg_query('SELECT @@SESSION.sql_mode')]]></code>
       <code><![CDATA[pwg_query('SHOW FULL COLUMNS FROM ' . protect_column_name($tablename))]]></code>
+      <code><![CDATA[pwg_test_mode_is_active()]]></code>
     </UndefinedFunction>
   </file>
   <file src="include/derivative_params.inc.php">
@@ -9755,6 +9757,14 @@ UPDATE ' . Tables::categories() . '
       <code><![CDATA[trigger_change('render_category_name', $cat['name'], $cat)]]></code>
     </UndefinedFunction>
   </file>
+  <file src="src/Piwigo/Comment/CommentRepository.php">
+    <UndefinedFunction>
+      <code><![CDATA[pwg_now()]]></code>
+      <code><![CDATA[pwg_now()]]></code>
+      <code><![CDATA[pwg_now()]]></code>
+      <code><![CDATA[pwg_now()]]></code>
+    </UndefinedFunction>
+  </file>
   <file src="src/Piwigo/Comment/CommentService.php">
     <ParadoxicalCondition>
       <code><![CDATA[$action === $myAction]]></code>
@@ -13547,12 +13557,20 @@ UPDATE ' . Tables::categories() . '
       <code><![CDATA[$conn]]></code>
       <code><![CDATA[$repo]]></code>
     </PropertyNotSetInConstructor>
+    <UndefinedFunction>
+      <code><![CDATA[pwg_now()]]></code>
+      <code><![CDATA[pwg_test_mode_is_active()]]></code>
+    </UndefinedFunction>
   </file>
   <file src="tests/Integration/CategoryServiceTest.php">
     <PropertyNotSetInConstructor>
       <code><![CDATA[$conn]]></code>
       <code><![CDATA[$service]]></code>
     </PropertyNotSetInConstructor>
+    <UndefinedFunction>
+      <code><![CDATA[pwg_now()]]></code>
+      <code><![CDATA[pwg_test_mode_is_active()]]></code>
+    </UndefinedFunction>
   </file>
   <file src="tests/Integration/CategoryTreeCacheTest.php">
     <PropertyNotSetInConstructor>
@@ -13944,6 +13962,7 @@ UPDATE ' . Tables::categories() . '
     </InternalMethod>
     <UndefinedConstant>
       <code><![CDATA[PHPWG_PLUGINS_PATH]]></code>
+      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
     </UndefinedConstant>
   </file>
   <file src="tests/Unit/Admin/Extensions/ZipExtractorTest.php">

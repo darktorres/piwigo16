@@ -40,6 +40,10 @@ final class AuditServiceTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
         $this->service = new AuditService(new AuditRepository($this->conn));
+        // The fixture seeds 3 real audit_log rows (group-creation events) --
+        // cleared so every test starts from a genuinely empty table, same
+        // reasoning as AuditRepositoryTest's own setUp().
+        $this->conn->executeStatement('DELETE FROM ' . Tables::auditLog());
     }
 
     #[\Override]

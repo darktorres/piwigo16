@@ -12,8 +12,10 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 
 /**
- * `audit_log` is empty in the fixture, so every test cleans up its own
- * rows via tearDown() -- same isolation discipline as
+ * The fixture actually seeds 3 real audit_log rows (group-creation events
+ * for Editors/Reviewers/Guests) -- cleared once in setUp() below so every
+ * test starts from a genuinely empty table, then each test cleans up its
+ * own rows via tearDown() -- same isolation discipline as
  * CaddieRepositoryTest/ActivityServiceTest.
  */
 final class AuditRepositoryTest extends IntegrationTestCase
@@ -42,6 +44,7 @@ final class AuditRepositoryTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
         $this->repo = new AuditRepository($this->conn);
+        $this->conn->executeStatement('DELETE FROM ' . Tables::auditLog());
     }
 
     #[\Override]

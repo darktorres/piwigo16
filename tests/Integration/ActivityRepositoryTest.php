@@ -12,11 +12,16 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 
 /**
- * Fixture: 18 activity rows (ids 2-19), all performed_by=1
- * (fixture_admin), covering object types user/album/photo/tag/group, none
- * of them 'system'. Read-only tests query this fixture data directly;
- * write tests insert their own disposable rows and clean up via
- * try/finally.
+ * Fixture: 18 activity rows (activity_id 1-18). Row 1 is object='system',
+ * action='install', performed_by=NULL. Rows 2-18 (17 rows) are all
+ * performed_by=1 (fixture_admin), covering object types
+ * user/album/photo/tag/group: user (2,3 login; 14,15 add), album (4,5 add),
+ * photo (6-10 add), tag (11-13 add), group (16-18 add). Every row shares
+ * the same fixture-wide timestamp (2026-08-01 00:00:00, matching
+ * PIWIGO_TEST_NOW) -- tests needing genuinely distinguishable dates mutate
+ * their own row(s), scoped to that test only. Read-only tests query this
+ * fixture data directly; write tests insert their own disposable rows and
+ * clean up via try/finally.
  */
 final class ActivityRepositoryTest extends IntegrationTestCase
 {
@@ -96,7 +101,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
     {
         $counts = $this->repo->countByUser();
 
-        self::assertSame(18, $counts[1]);
+        self::assertSame(17, $counts[1]);
     }
 
     public function test_count_by_user_excludes_system_object(): void
@@ -114,22 +119,21 @@ final class ActivityRepositoryTest extends IntegrationTestCase
         ]]);
 
         try {
-            self::assertSame(18, $this->repo->countByUser()[1], 'the system row must not be counted');
+            self::assertSame(17, $this->repo->countByUser()[1], 'the system row must not be counted');
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . Tables::activity() . " WHERE object = 'system'");
+            $this->conn->executeStatement("DELETE FROM " . Tables::activity() . " WHERE object = 'system' AND action != 'install'");
         }
     }
 
     public function test_find_min_and_max_occured_on_match_the_fixture(): void
     {
-        // `occured_on` is a TIMESTAMP column (unlike history's plain
-        // DATETIME date/time columns) -- MySQL converts it to the reading
-        // session's own time_zone on SELECT, so a literal fixture value
-        // read back through this test's own connection legitimately
-        // differs from what was written by the fixture-load session.
-        // activity_id 2 (2026-07-07) is the earliest row, activity_id 19
-        // (2026-08-01) is the latest -- assert only their relative order,
-        // not an exact literal.
+        // Every fixture row shares the same timestamp -- push activity_id
+        // 1 (the earliest-inserted row) genuinely earlier, scoped to this
+        // test only, so min/max are actually distinguishable.
+        $this->conn->executeStatement(
+            "UPDATE " . Tables::activity() . " SET occured_on = '2026-07-07 00:00:00' WHERE activity_id = 1"
+        );
+
         self::assertLessThan($this->repo->findMaxOccuredOn(), $this->repo->findMinOccuredOn());
         self::assertStringStartsWith('2026-07-07', $this->repo->findMinOccuredOn() ?? '');
         self::assertStringStartsWith('2026-08-01', $this->repo->findMaxOccuredOn() ?? '');
@@ -144,8 +148,8 @@ final class ActivityRepositoryTest extends IntegrationTestCase
             $byObject[$row['object']] = ($byObject[$row['object']] ?? 0) + $row['counter'];
         }
 
-        // user: 3 logins (activity_id 2,3,19) + 2 adds (14,15) = 5
-        self::assertSame(5, $byObject['user']);
+        // user: 2 logins (activity_id 2,3) + 2 adds (14,15) = 4
+        self::assertSame(4, $byObject['user']);
         self::assertSame(5, $byObject['photo']);
         self::assertSame(3, $byObject['tag']);
         self::assertSame(3, $byObject['group']);
@@ -166,9 +170,9 @@ final class ActivityRepositoryTest extends IntegrationTestCase
     {
         $rows = $this->repo->findUserObjectLogWithUsernames('username', 'id');
 
-        // fixture: object='user' rows are activity_id 2, 3, 14, 15, 19
-        // (3 logins + 2 adds), all performed_by fixture_admin
-        self::assertCount(5, $rows);
+        // fixture: object='user' rows are activity_id 2, 3, 14, 15
+        // (2 logins + 2 adds), all performed_by fixture_admin
+        self::assertCount(4, $rows);
 
         foreach ($rows as $row) {
             self::assertSame('user', $row['object']);
@@ -196,10 +200,15 @@ final class ActivityRepositoryTest extends IntegrationTestCase
         try {
             $rows = $this->repo->findSystemObjectLogWithUsernames('username', 'id');
 
-            self::assertCount(1, $rows);
-            self::assertSame('fixture_admin', $rows[0]['username']);
+            // The fixture's own row 1 (action='install') is also a
+            // 'system' row -- filter to this test's own inserted row
+            // rather than assuming it's the only one.
+            $matching = array_values(array_filter($rows, static fn (array $row): bool => $row['action'] === 'maintenance'));
+
+            self::assertCount(1, $matching);
+            self::assertSame('fixture_admin', $matching[0]['username']);
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . Tables::activity() . " WHERE object = 'system'");
+            $this->conn->executeStatement("DELETE FROM " . Tables::activity() . " WHERE object = 'system' AND action != 'install'");
         }
     }
 
@@ -230,12 +239,16 @@ final class ActivityRepositoryTest extends IntegrationTestCase
         try {
             $rows = $this->repo->findSystemObjectLogWithUsernames('username', 'id');
 
-            self::assertCount(1, $rows);
-            self::assertSame('update', $rows[0]['action']);
-            self::assertNull($rows[0]['performed_by']);
-            self::assertSame('System', $rows[0]['username']);
+            // The fixture's own row 1 (action='install', also performed_by
+            // NULL) legitimately renders "System" too -- filter to this
+            // test's own inserted row rather than assuming it's the only one.
+            $matching = array_values(array_filter($rows, static fn (array $row): bool => $row['action'] === 'update'));
+
+            self::assertCount(1, $matching);
+            self::assertNull($matching[0]['performed_by']);
+            self::assertSame('System', $matching[0]['username']);
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . Tables::activity() . " WHERE object = 'system'");
+            $this->conn->executeStatement("DELETE FROM " . Tables::activity() . " WHERE object = 'system' AND action != 'install'");
         }
     }
 }

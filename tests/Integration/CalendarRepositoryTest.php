@@ -100,11 +100,17 @@ final class CalendarRepositoryTest extends IntegrationTestCase
         // $fromWhereSql's own WHERE and before GROUP BY -- a real
         // regression once concatenated it after GROUP BY/next to ORDER BY
         // instead, producing invalid SQL for every live calendar page.
-        // images 1 and 2 share the same fixture date_available timestamp;
-        // image 3's differs by one second.
+        // The fixture seeds every image at the same uniform date_available
+        // (2026-08-01 00:00:00, matching PIWIGO_TEST_NOW) -- image 3's is
+        // pushed a day later here, scoped to this test only, so images 1
+        // and 2 are the only ones matching the filter below.
+        $this->conn->executeStatement(
+            "UPDATE " . Tables::images() . " SET date_available = '2026-08-02 00:00:00' WHERE id = 3"
+        );
+
         $ids = $this->repo->findImageIds(
             ' FROM ' . Tables::images() . ' WHERE id IN (1, 2, 3)',
-            "AND (date_available = '2026-07-07 05:02:36')",
+            "AND (date_available = '2026-08-01 00:00:00')",
             'ORDER BY id ASC'
         );
 

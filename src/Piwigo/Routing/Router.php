@@ -26,11 +26,35 @@ use Symfony\Component\Routing\RouteCollection;
  * genuinely-registered route (this dev instance is reached at
  * /piwigo17/about.php, not /about.php) that UrlMatcher::match() needs the
  * prefix stripped, not the raw request path.
+ *
+ * MOUNT_DEPTH_ATTRIBUTE (P23 batch 6a) corrects a real bug found live:
+ * every routed entry point until admin/popuphelp.php lived directly at the
+ * app's mount point, so a single `dirname(SCRIPT_NAME)` call always
+ * happened to strip exactly the right prefix. For a file one directory
+ * deeper (admin/), `dirname(SCRIPT_NAME)` over-strips by that extra
+ * directory (e.g. "/piwigo17/admin" instead of "/piwigo17"), silently
+ * matching a *different*, wrong route rather than 404ing (confirmed live:
+ * requests to /admin/popuphelp.php were actually being served by the
+ * front-end PopuphelpController instead of AdminPopuphelpController).
+ *
+ * Deriving the extra depth from real filesystem paths (SCRIPT_FILENAME vs.
+ * the app root) was tried first and rejected: this dev instance serves
+ * the app through a symlink (`/var/www/html/piwigo17` -> the real repo
+ * checkout), and Apache's own SCRIPT_FILENAME reflects the *symlinked*
+ * path while PHP's own `__DIR__`/realpath-resolved paths reflect the
+ * *target* path -- the two are never string-comparable, confirmed live.
+ * Instead, the entry point itself (the one file that genuinely knows its
+ * own real depth below the app root, e.g. admin/popuphelp.php's own
+ * bootstrap) attaches it as a request attribute before dispatch; every
+ * existing root-level entry point never sets it, defaulting to 0 (no
+ * behavior change for any of them).
  */
 final readonly class Router
 {
+    public const string MOUNT_DEPTH_ATTRIBUTE = 'router_extra_mount_depth';
+
     public function __construct(
-        private RouteCollection $routes
+        private RouteCollection $routes,
     ) {}
 
     public static function fromFile(string $path): self
@@ -87,6 +111,11 @@ final readonly class Router
      * prefix of it (SCRIPT_NAME absent, or a CLI/test request that never
      * set it) -- same "degrade to the domain-root shape" default a bare
      * `Request::getBaseUrl()` would produce with no SCRIPT_NAME either.
+     *
+     * Strips one extra `dirname()` per self::MOUNT_DEPTH_ATTRIBUTE level
+     * (see class docblock) -- 0 by default (every existing root-level
+     * file), explicitly set higher by an entry point that genuinely lives
+     * in a subdirectory.
      */
     private static function pathInfo(ServerRequestInterface $request, string $path): string
     {
@@ -95,7 +124,13 @@ final readonly class Router
             return $path;
         }
 
-        $prefix = str_replace('\\', '/', dirname($scriptName));
+        $prefix = str_replace('\\', '/', $scriptName);
+        $extraLevels = self::mountDepth($request);
+        for ($i = 0; $i <= $extraLevels; $i++) {
+            $prefix = dirname($prefix);
+        }
+        $prefix = str_replace('\\', '/', $prefix);
+
         if ($prefix === '/' || $prefix === '.') {
             return $path;
         }
@@ -107,5 +142,12 @@ final readonly class Router
         $stripped = substr($path, strlen($prefix));
 
         return $stripped === '' ? '/' : $stripped;
+    }
+
+    private static function mountDepth(ServerRequestInterface $request): int
+    {
+        $depth = $request->getAttribute(self::MOUNT_DEPTH_ATTRIBUTE, 0);
+
+        return is_int($depth) && $depth > 0 ? $depth : 0;
     }
 }

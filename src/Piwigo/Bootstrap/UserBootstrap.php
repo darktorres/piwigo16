@@ -6,6 +6,7 @@ namespace Piwigo\Bootstrap;
 
 use Piwigo\Auth\AuthRepository;
 use Piwigo\Auth\AuthService;
+use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\Logger;
 use Piwigo\Db\DbConnection;
 use Piwigo\Ws\PwgError;
@@ -115,7 +116,7 @@ final class UserBootstrap
                     $service->sendResponse(new PwgError(401, 'Invalid api_key'));
                     exit;
                 }
-                define('PWG_API_KEY_REQUEST', true);
+                ApiKeyRequestFlag::activate();
 
                 // set pwg_token for api_key request
                 $_POST['pwg_token'] = $_GET['pwg_token'] = get_pwg_token();

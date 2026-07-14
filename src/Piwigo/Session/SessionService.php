@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Session;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Db\DbConnection;
 
 final class SessionService
@@ -107,11 +108,11 @@ final class SessionService
      */
     public function sessionWrite(string $sessionId, string $data): true
     {
-        // when the request is authenticated via api_key (PWG_API_KEY_REQUEST),
+        // when the request is authenticated via api_key (ApiKeyRequestFlag),
         // you do not want the session to be written to the database (no user
         // session persistence) -- this avoids polluting the session table
         // with stateless API accesses
-        if (defined('PWG_API_KEY_REQUEST')) {
+        if (ApiKeyRequestFlag::isActive()) {
             return true;
         }
         $this->repo->write($this->getRemoteAddrSessionHash() . $sessionId, $data);

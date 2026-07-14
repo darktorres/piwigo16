@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Controller\AboutController;
 use Piwigo\Controller\ActionController;
+use Piwigo\Controller\Admin\AdminPopuphelpController;
 use Piwigo\Controller\CommentsController;
 use Piwigo\Controller\FeedController;
 use Piwigo\Controller\GalleryController;
@@ -38,6 +39,10 @@ $routes->add('about', new Route('/about.php', [
 
 $routes->add('popuphelp', new Route('/popuphelp.php', [
     '_controller' => PopuphelpController::class,
+]));
+
+$routes->add('admin_popuphelp', new Route('/admin/popuphelp.php', [
+    '_controller' => AdminPopuphelpController::class,
 ]));
 
 $routes->add('nbm', new Route('/nbm.php', [

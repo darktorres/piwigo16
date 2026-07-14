@@ -93,6 +93,21 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  *     wrapped calls incidentally spent longer than 1.8s per navigation,
  *     which had been masking this race. Fixed the same way as
  *     admin-history: H::waitUntilHidden($page, '.pageLoad').
+ *   - P23 batch 6a's own admin-tags failure turned out to be a DIFFERENT,
+ *     real content bug, initially misdiagnosed as a variant of the race
+ *     above (the pixel-diff percentage looked similar and the failure was
+ *     deterministic under git-stash A/B testing, which is also true of a
+ *     real regression). Piwigo\Admin\TagsPageRenderer's first port of
+ *     admin/tags.php dropped the file's `new tabsheet(); ->set_id('tags');
+ *     ->assign();` block entirely — every sibling renderer in that same
+ *     sub-batch (Comments/Rating/RatingUser/Menubar/Help/CatOptions) ported
+ *     it correctly, Tags alone missed it. This removed the page's entire
+ *     "List" tab strip from the rendered HTML, a real, permanent layout
+ *     change, not a timing-dependent one — decoding the failing screenshot
+ *     and diffing it against the baseline showed a missing grey tab band
+ *     and every element below it shifted up, not the partial-opacity
+ *     ghosting a genuine animation race would produce. Fixed at the
+ *     source (TagsPageRenderer, restoring the tabsheet block), not here.
  *   - admin-dashboard's "Activity peak in the last weeks" widget
  *     (admin/intro.php) is a second, distinct source of drift from the
  *     `pwg_now()` fix noted above — that fix only froze the WINDOW the

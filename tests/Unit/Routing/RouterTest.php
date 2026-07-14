@@ -79,3 +79,43 @@ test('dispatch falls back to the raw path when SCRIPT_NAME is absent (e.g. CLI/t
 
     expect($result->status)->toBe(RouteMatchStatus::NotFound);
 });
+
+test('dispatch strips one extra SCRIPT_NAME directory level per MOUNT_DEPTH_ATTRIBUTE, for an entry point one subdirectory below the app root', function (): void {
+    // Reproduces admin/popuphelp.php's own real shape (P23 batch 6a): a
+    // routed entry point one directory below the app root, unlike every
+    // other routed file. Without the attribute, dirname(SCRIPT_NAME) alone
+    // over-strips by the extra "admin" segment and either 404s or -- worse,
+    // confirmed live -- silently matches a different, wrong route.
+    $routes = new RouteCollection();
+    $routes->add('admin_popuphelp', new Route('/admin/popuphelp.php', defaults: ['_controller' => 'AdminPopuphelpController']));
+
+    $request = (new ServerRequest(
+        'GET',
+        '/piwigo17/admin/popuphelp.php',
+        serverParams: ['SCRIPT_NAME' => '/piwigo17/admin/popuphelp.php'],
+    ))->withAttribute(Router::MOUNT_DEPTH_ATTRIBUTE, 1);
+    $result = new Router($routes)->dispatch($request);
+
+    expect($result->status)->toBe(RouteMatchStatus::Found);
+    expect($result->handler)->toBe('AdminPopuphelpController');
+});
+
+test('dispatch without MOUNT_DEPTH_ATTRIBUTE set does not match a route one directory below the app root', function (): void {
+    // The other half of the fix above: confirms the attribute is genuinely
+    // load-bearing, not a no-op -- omitting it reproduces the real bug
+    // this fixes (a request for a nested entry point falls through to
+    // NotFound rather than being silently misrouted, since this
+    // RouteCollection has no "/popuphelp.php"-shaped route to accidentally
+    // match, unlike the real config/routes.php).
+    $routes = new RouteCollection();
+    $routes->add('admin_popuphelp', new Route('/admin/popuphelp.php', defaults: ['_controller' => 'AdminPopuphelpController']));
+
+    $request = new ServerRequest(
+        'GET',
+        '/piwigo17/admin/popuphelp.php',
+        serverParams: ['SCRIPT_NAME' => '/piwigo17/admin/popuphelp.php'],
+    );
+    $result = new Router($routes)->dispatch($request);
+
+    expect($result->status)->toBe(RouteMatchStatus::NotFound);
+});

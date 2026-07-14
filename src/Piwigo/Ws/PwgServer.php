@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
+use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Ws\Encoder\PwgResponseEncoder;
 
 class PwgServer
@@ -526,7 +527,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
         // list of prohibited methods ($conf['api_key_forbidden_methods']) for API keys
         // if it is, access is refused (false)
         if (
-            defined('PWG_API_KEY_REQUEST')
+            ApiKeyRequestFlag::isActive()
             or (isset($_SESSION['connected_with']) and $_SESSION['connected_with'] === 'ws_session_login_api_key')
         ) {
             $forbidden_methods = $conf['api_key_forbidden_methods'] ?? [];

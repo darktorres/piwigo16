@@ -10,6 +10,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Caddie\CaddieRepository;
+use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\AppInfo;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -377,7 +378,7 @@ DELETE FROM ' . Tables::rate() . '
  */
 function ws_session_login(array $params, PwgServer &$service): PwgError|true
 {
-    if (defined('PWG_API_KEY_REQUEST')) {
+    if (ApiKeyRequestFlag::isActive()) {
         return new PwgError(401, 'Cannot use this method with an api key');
     }
 
@@ -402,7 +403,7 @@ function ws_session_login(array $params, PwgServer &$service): PwgError|true
  */
 function ws_session_logout($params, PwgServer &$service): PwgError|true
 {
-    if (defined('PWG_API_KEY_REQUEST')) {
+    if (ApiKeyRequestFlag::isActive()) {
         return new PwgError(401, 'Cannot use this method with an api key');
     }
 

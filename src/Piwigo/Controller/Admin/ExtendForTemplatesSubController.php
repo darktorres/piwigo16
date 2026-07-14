@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Piwigo\Admin\ExtendForTemplatesPageRenderer;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -20,6 +21,7 @@ final class ExtendForTemplatesSubController implements AdminSubControllerInterfa
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        include PHPWG_ROOT_PATH . 'admin/extend_for_templates.php';
+        new ExtendForTemplatesPageRenderer()
+            ->render();
     }
 }

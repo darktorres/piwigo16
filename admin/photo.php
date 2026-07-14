@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Admin\PictureCoiPageRenderer;
+use Piwigo\Admin\PictureFormatsPageRenderer;
 use Piwigo\Admin\tabsheet;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ValidationPattern;
@@ -84,9 +86,11 @@ $template->assign(
 if ($page['tab'] == 'properties') {
     include PHPWG_ROOT_PATH . 'admin/picture_modify.php';
 } elseif ($page['tab'] == 'coi') {
-    include PHPWG_ROOT_PATH . 'admin/picture_coi.php';
+    new PictureCoiPageRenderer()
+        ->render();
 } elseif ($page['tab'] == 'formats' && (bool) $conf['enable_formats']) {
-    include PHPWG_ROOT_PATH . 'admin/picture_formats.php';
+    new PictureFormatsPageRenderer()
+        ->render();
 } else {
     include PHPWG_ROOT_PATH . 'admin/photo_' . $page['tab'] . '.php';
 }

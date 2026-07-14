@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Piwigo\Admin\RatingPageRenderer;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -21,6 +22,7 @@ final class RatingSubController implements AdminSubControllerInterface
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        include PHPWG_ROOT_PATH . 'admin/rating.php';
+        new RatingPageRenderer()
+            ->render();
     }
 }

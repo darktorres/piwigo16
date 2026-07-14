@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Piwigo\Admin\PictureFormatsPageRenderer;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -16,6 +17,7 @@ final class PictureFormatsSubController implements AdminSubControllerInterface
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        include PHPWG_ROOT_PATH . 'admin/picture_formats.php';
+        new PictureFormatsPageRenderer()
+            ->render();
     }
 }

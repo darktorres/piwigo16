@@ -594,7 +594,7 @@ SELECT *
                     assert(is_string($row_id)); // images.id is the NOT NULL primary key
 
                     if ($row['src_image']->is_original()) {// we have a photo
-                        if ($user['enabled_high'] === 'true') {
+                        if ((bool) $user['enabled_high']) {
                             $row['element_url'] = $row['src_image']->get_url();
                             $row['download_url'] = get_action_url($row_id, 'e', true);
                         }
@@ -764,7 +764,7 @@ SELECT *
             }
             $download_url = $picture['current']['download_url'] ?? null;
             $download_url_present = is_string($download_url) && $download_url !== '' && $download_url !== '0';
-            if ((bool) $conf['picture_download_icon'] and $download_url_present and $user['enabled_high'] === 'true') {
+            if ((bool) $conf['picture_download_icon'] and $download_url_present and (bool) $user['enabled_high']) {
                 $template->append('current', [
                     'U_DOWNLOAD' => $download_url,
                 ], true);

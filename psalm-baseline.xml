@@ -5221,151 +5221,6 @@
       <code><![CDATA[include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php']]></code>
     </UnresolvableInclude>
   </file>
-  <file src="include/search_filters.inc.php">
-    <EmptyArrayAccess>
-      <code><![CDATA[$pre_counters[$threshold]]]></code>
-      <code><![CDATA[$pre_counters[$threshold]]]></code>
-      <code><![CDATA[$search_fields['author']['words']]]></code>
-      <code><![CDATA[$search_fields['author']['words']]]></code>
-      <code><![CDATA[$search_fields['tags']['words']]]></code>
-      <code><![CDATA[$search_fields['tags']['words']]]></code>
-    </EmptyArrayAccess>
-    <InvalidGlobal>
-      <code><![CDATA[global $conf, $lang, $page, $persistent_cache, $template, $user;]]></code>
-    </InvalidGlobal>
-    <InvalidOperand>
-      <code><![CDATA[(float) $filesize_max / 1024]]></code>
-      <code><![CDATA[(float) $filesize_min / 1024]]></code>
-      <code><![CDATA[(float) $row['filesize'] / 1024]]></code>
-    </InvalidOperand>
-    <PossiblyUndefinedArrayOffset>
-      <code><![CDATA[$list_of_dates[$y]['months'][$y . '-' . $m]['count']]]></code>
-      <code><![CDATA[$list_of_dates[$y]['months'][$y . '-' . $m]['count']]]></code>
-      <code><![CDATA[$page['search']]]></code>
-    </PossiblyUndefinedArrayOffset>
-    <RedundantCondition>
-      <code><![CDATA[$cache_applicable]]></code>
-      <code><![CDATA[$cache_applicable]]></code>
-      <code><![CDATA[is_array($search_fields['cat'])]]></code>
-    </RedundantCondition>
-    <RiskyTruthyFalsyComparison>
-      <code><![CDATA[! $persistent_cache->get($cache_key, $all_exts)]]></code>
-      <code><![CDATA[! $persistent_cache->get($cache_key, $filter_rows)]]></code>
-      <code><![CDATA[! $persistent_cache->get($cache_key, $filter_rows)]]></code>
-      <code><![CDATA[! $persistent_cache->get($cache_key, $filter_rows)]]></code>
-      <code><![CDATA[! $persistent_cache->get($cache_key, $filter_rows)]]></code>
-      <code><![CDATA[! $persistent_cache->get($cache_key, $ratings)]]></code>
-      <code><![CDATA[! $persistent_cache->get($cache_key, $ratios)]]></code>
-    </RiskyTruthyFalsyComparison>
-    <TypeDoesNotContainType>
-      <code><![CDATA[$heights[0]]]></code>
-      <code><![CDATA[$widths[0]]]></code>
-      <code><![CDATA[end($heights)]]></code>
-      <code><![CDATA[end($widths)]]></code>
-      <code><![CDATA[is_array($search_fields['added_by'])]]></code>
-      <code><![CDATA[is_array($search_fields['author'])]]></code>
-      <code><![CDATA[is_array($search_fields['cat'])]]></code>
-      <code><![CDATA[is_array($search_fields['tags'])]]></code>
-    </TypeDoesNotContainType>
-    <UndefinedConstant>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-    </UndefinedConstant>
-    <UndefinedFunction>
-      <code><![CDATA[conf_get_param('filters_views', null)]]></code>
-      <code><![CDATA[fatal_error('persistent cache not initialized')]]></code>
-      <code><![CDATA[format_date($ymd)]]></code>
-      <code><![CDATA[format_date($ymd)]]></code>
-      <code><![CDATA[get_available_tags($missing_tag_ids)]]></code>
-      <code><![CDATA[get_available_tags($tag_ids)]]></code>
-      <code><![CDATA[get_available_tags()]]></code>
-      <code><![CDATA[get_cat_display_name_cache(
-                        $cat['uppercats'],
-                        '',
-                        $single_link
-                    )]]></code>
-      <code><![CDATA[get_cat_display_name_cache(
-                    $row['uppercats'],
-                    'admin.php?page=album-' // TODO not sure it's relevant to link to admin pages
-                )]]></code>
-      <code><![CDATA[get_clause_for_filter('added_by')]]></code>
-      <code><![CDATA[get_clause_for_filter('author')]]></code>
-      <code><![CDATA[get_clause_for_filter('date_created')]]></code>
-      <code><![CDATA[get_clause_for_filter('date_posted')]]></code>
-      <code><![CDATA[get_clause_for_filter('filesize')]]></code>
-      <code><![CDATA[get_clause_for_filter('filetypes')]]></code>
-      <code><![CDATA[get_clause_for_filter('height')]]></code>
-      <code><![CDATA[get_clause_for_filter('ratings')]]></code>
-      <code><![CDATA[get_clause_for_filter('ratios')]]></code>
-      <code><![CDATA[get_clause_for_filter('width')]]></code>
-      <code><![CDATA[get_common_tags($tag_filter_items, 0)]]></code>
-      <code><![CDATA[get_items_for_filter('tags')]]></code>
-      <code><![CDATA[get_search_array($search_id)]]></code>
-      <code><![CDATA[get_sql_condition_FandF(
-        [
-            'forbidden_categories' => 'category_id',
-            'visible_categories' => 'category_id',
-            'visible_images' => 'id',
-        ],
-        "\n  AND"
-    )]]></code>
-      <code><![CDATA[is_admin()]]></code>
-      <code><![CDATA[is_classic_user()]]></code>
-      <code><![CDATA[l10n('last 12 months')]]></code>
-      <code><![CDATA[l10n('last 24 hours')]]></code>
-      <code><![CDATA[l10n('last 3 months')]]></code>
-      <code><![CDATA[l10n('last 3 months')]]></code>
-      <code><![CDATA[l10n('last 30 days')]]></code>
-      <code><![CDATA[l10n('last 30 days')]]></code>
-      <code><![CDATA[l10n('last 6 months')]]></code>
-      <code><![CDATA[l10n('last 6 months')]]></code>
-      <code><![CDATA[l10n('last 7 days')]]></code>
-      <code><![CDATA[l10n('last 7 days')]]></code>
-      <code><![CDATA[l10n('year %d', $y)]]></code>
-      <code><![CDATA[l10n('year %d', $y)]]></code>
-      <code><![CDATA[load_language('help_quick_search.lang')]]></code>
-      <code><![CDATA[make_index_url(
-                        [
-                            'tags' => [$tag],
-                        ]
-                    )]]></code>
-      <code><![CDATA[name_compare(...)]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[pwg_query($query)]]></code>
-      <code><![CDATA[query2array($all_exts_query, 'ext', 'counter')]]></code>
-      <code><![CDATA[query2array($all_exts_query, 'ext', 'counter')]]></code>
-      <code><![CDATA[query2array($query)]]></code>
-      <code><![CDATA[query2array($query)]]></code>
-      <code><![CDATA[query2array($query)]]></code>
-      <code><![CDATA[query2array($query)]]></code>
-      <code><![CDATA[query2array($query)]]></code>
-      <code><![CDATA[query2array($query)]]></code>
-      <code><![CDATA[query2array($query)]]></code>
-      <code><![CDATA[query2array($query)]]></code>
-      <code><![CDATA[query2array($query)]]></code>
-      <code><![CDATA[query2array($query)]]></code>
-      <code><![CDATA[query2array($query)]]></code>
-      <code><![CDATA[query2array($query, 'ext', 'counter')]]></code>
-      <code><![CDATA[query2array($query, 'id', 'username')]]></code>
-      <code><![CDATA[query2array($query, null, 'height')]]></code>
-      <code><![CDATA[query2array($query, null, 'height')]]></code>
-      <code><![CDATA[query2array($query, null, 'height')]]></code>
-      <code><![CDATA[query2array($query, null, 'width')]]></code>
-      <code><![CDATA[query2array($query, null, 'width')]]></code>
-      <code><![CDATA[query2array($query, null, 'width')]]></code>
-      <code><![CDATA[safe_unserialize($filters_views_conf)]]></code>
-      <code><![CDATA[tag_alpha_compare(...)]]></code>
-      <code><![CDATA[tag_alpha_compare(...)]]></code>
-    </UndefinedFunction>
-    <UnresolvableInclude>
-      <code><![CDATA[include_once PHPWG_ROOT_PATH . 'include/functions_search.inc.php']]></code>
-    </UnresolvableInclude>
-  </file>
   <file src="include/section_init.inc.php">
     <InvalidGlobal>
       <code><![CDATA[global $conf, $filter, $logger, $page, $persistent_cache, $template, $user;]]></code>
@@ -10391,7 +10246,6 @@ UPDATE ' . Tables::categories() . '
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
     </UndefinedConstant>
     <UndefinedFunction>
       <code><![CDATA[add_level_to_tags($tags)]]></code>
@@ -10509,7 +10363,6 @@ UPDATE ' . Tables::categories() . '
       <code><![CDATA[include PHPWG_ROOT_PATH . 'include/menubar.inc.php']]></code>
       <code><![CDATA[include PHPWG_ROOT_PATH . 'include/page_header.php']]></code>
       <code><![CDATA[include PHPWG_ROOT_PATH . 'include/page_tail.php']]></code>
-      <code><![CDATA[include PHPWG_ROOT_PATH . 'include/search_filters.inc.php']]></code>
       <code><![CDATA[include PHPWG_ROOT_PATH . 'include/section_init.inc.php']]></code>
       <code><![CDATA[include_once PHPWG_ROOT_PATH . 'include/selected_tags.inc.php']]></code>
     </UnresolvableInclude>
@@ -12438,6 +12291,127 @@ UPDATE ' . Tables::categories() . '
       <code><![CDATA[QST_WILDCARD_END]]></code>
     </UndefinedConstant>
   </file>
+  <file src="src/Piwigo/Search/SearchFilterRenderer.php">
+    <EmptyArrayAccess>
+      <code><![CDATA[$searchFields['author']['words']]]></code>
+      <code><![CDATA[$searchFields['author']['words']]]></code>
+      <code><![CDATA[$searchFields['tags']['words']]]></code>
+      <code><![CDATA[$searchFields['tags']['words']]]></code>
+    </EmptyArrayAccess>
+    <InvalidOperand>
+      <code><![CDATA[(float) $filesizeMax / 1024]]></code>
+      <code><![CDATA[(float) $filesizeMin / 1024]]></code>
+      <code><![CDATA[(float) $row['filesize'] / 1024]]></code>
+    </InvalidOperand>
+    <PossiblyUndefinedArrayOffset>
+      <code><![CDATA[$listOfDates[$y]['months'][$y . '-' . $m]['count']]]></code>
+      <code><![CDATA[$page['search']]]></code>
+    </PossiblyUndefinedArrayOffset>
+    <RedundantCondition>
+      <code><![CDATA[$cacheApplicable]]></code>
+      <code><![CDATA[is_array($searchFields['cat'])]]></code>
+    </RedundantCondition>
+    <RiskyTruthyFalsyComparison>
+      <code><![CDATA[! $persistent_cache->get($cacheKey, $allExts)]]></code>
+      <code><![CDATA[! $persistent_cache->get($cacheKey, $filterRows)]]></code>
+      <code><![CDATA[! $persistent_cache->get($cacheKey, $filterRows)]]></code>
+      <code><![CDATA[! $persistent_cache->get($cacheKey, $filterRows)]]></code>
+      <code><![CDATA[! $persistent_cache->get($cacheKey, $filterRows)]]></code>
+      <code><![CDATA[! $persistent_cache->get($cacheKey, $ratings)]]></code>
+      <code><![CDATA[! $persistent_cache->get($cacheKey, $ratios)]]></code>
+    </RiskyTruthyFalsyComparison>
+    <TypeDoesNotContainType>
+      <code><![CDATA[is_array($searchFields['added_by'])]]></code>
+      <code><![CDATA[is_array($searchFields['author'])]]></code>
+      <code><![CDATA[is_array($searchFields['cat'])]]></code>
+      <code><![CDATA[is_array($searchFields['tags'])]]></code>
+    </TypeDoesNotContainType>
+    <UndefinedFunction>
+      <code><![CDATA[conf_get_param('filters_views', null)]]></code>
+      <code><![CDATA[fatal_error('persistent cache not initialized')]]></code>
+      <code><![CDATA[format_date($ymd)]]></code>
+      <code><![CDATA[get_available_tags($missingTagIds)]]></code>
+      <code><![CDATA[get_available_tags($tagIds)]]></code>
+      <code><![CDATA[get_available_tags()]]></code>
+      <code><![CDATA[get_cat_display_name_cache(
+                        $row['uppercats'],
+                        'admin.php?page=album-' // TODO not sure it's relevant to link to admin pages
+                    )]]></code>
+      <code><![CDATA[get_cat_display_name_cache(
+                $uppercats,
+                '',
+                $singleLink
+            )]]></code>
+      <code><![CDATA[get_clause_for_filter($filterName)]]></code>
+      <code><![CDATA[get_clause_for_filter('added_by')]]></code>
+      <code><![CDATA[get_clause_for_filter('author')]]></code>
+      <code><![CDATA[get_clause_for_filter('filesize')]]></code>
+      <code><![CDATA[get_clause_for_filter('filetypes')]]></code>
+      <code><![CDATA[get_clause_for_filter('height')]]></code>
+      <code><![CDATA[get_clause_for_filter('ratings')]]></code>
+      <code><![CDATA[get_clause_for_filter('ratios')]]></code>
+      <code><![CDATA[get_clause_for_filter('width')]]></code>
+      <code><![CDATA[get_common_tags($tagFilterItems, 0)]]></code>
+      <code><![CDATA[get_items_for_filter('tags')]]></code>
+      <code><![CDATA[get_search_array($searchId)]]></code>
+      <code><![CDATA[get_sql_condition_FandF(
+            [
+                'forbidden_categories' => 'category_id',
+                'visible_categories' => 'category_id',
+                'visible_images' => 'id',
+            ],
+            "\n  AND"
+        )]]></code>
+      <code><![CDATA[is_admin()]]></code>
+      <code><![CDATA[is_classic_user()]]></code>
+      <code><![CDATA[l10n('last 12 months')]]></code>
+      <code><![CDATA[l10n('last 24 hours')]]></code>
+      <code><![CDATA[l10n('last 3 months')]]></code>
+      <code><![CDATA[l10n('last 3 months')]]></code>
+      <code><![CDATA[l10n('last 30 days')]]></code>
+      <code><![CDATA[l10n('last 30 days')]]></code>
+      <code><![CDATA[l10n('last 6 months')]]></code>
+      <code><![CDATA[l10n('last 6 months')]]></code>
+      <code><![CDATA[l10n('last 7 days')]]></code>
+      <code><![CDATA[l10n('last 7 days')]]></code>
+      <code><![CDATA[l10n('year %d', $y)]]></code>
+      <code><![CDATA[load_language('help_quick_search.lang')]]></code>
+      <code><![CDATA[make_index_url(
+                [
+                    'tags' => [$tag],
+                ]
+            )]]></code>
+      <code><![CDATA[name_compare(...)]]></code>
+      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
+      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
+      <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
+      <code><![CDATA[pwg_query($query)]]></code>
+      <code><![CDATA[pwg_query($query)]]></code>
+      <code><![CDATA[pwg_query($query)]]></code>
+      <code><![CDATA[query2array($allExtsQuery, 'ext', 'counter')]]></code>
+      <code><![CDATA[query2array($allExtsQuery, 'ext', 'counter')]]></code>
+      <code><![CDATA[query2array($query)]]></code>
+      <code><![CDATA[query2array($query)]]></code>
+      <code><![CDATA[query2array($query)]]></code>
+      <code><![CDATA[query2array($query)]]></code>
+      <code><![CDATA[query2array($query)]]></code>
+      <code><![CDATA[query2array($query)]]></code>
+      <code><![CDATA[query2array($query)]]></code>
+      <code><![CDATA[query2array($query)]]></code>
+      <code><![CDATA[query2array($query)]]></code>
+      <code><![CDATA[query2array($query, 'ext', 'counter')]]></code>
+      <code><![CDATA[query2array($query, 'id', 'username')]]></code>
+      <code><![CDATA[query2array($query, null, 'height')]]></code>
+      <code><![CDATA[query2array($query, null, 'height')]]></code>
+      <code><![CDATA[query2array($query, null, 'height')]]></code>
+      <code><![CDATA[query2array($query, null, 'width')]]></code>
+      <code><![CDATA[query2array($query, null, 'width')]]></code>
+      <code><![CDATA[query2array($query, null, 'width')]]></code>
+      <code><![CDATA[safe_unserialize($filtersViewsConf)]]></code>
+      <code><![CDATA[tag_alpha_compare(...)]]></code>
+      <code><![CDATA[tag_alpha_compare(...)]]></code>
+    </UndefinedFunction>
+  </file>
   <file src="src/Piwigo/Search/SearchService.php">
     <InvalidOperand>
       <code><![CDATA[$options['images_where']]]></code>
@@ -13502,46 +13476,6 @@ UPDATE ' . Tables::categories() . '
     </PropertyNotSetInConstructor>
   </file>
   <file src="tests/Integration/CategoryRepositoryTest.php">
-    <ParseError>
-      <code><![CDATA[public function test_find_computed_categories_rollup_includes_rank(): void
-    {
-        // P23 batch 4b: CategoryCatsRenderer needs `rank` (sibling order)
-        // for CategoryService::compareByRank(), distinct from `global_rank`
-        // -- added to this rollup purely additively.
-        $rows = $this->repo->findComputedCategoriesRollup(0, null, '');
-
-        $byId = [];
-        foreach ($rows as $row) {
-            $catId = $row['cat_id'];
-            if (is_int($catId) || is_string($catId)) {
-                $byId[$catId] = $row;
-            }
-        }
-
-        self::assertArrayHasKey('rank', $byId['1']);
-        self::assertArrayHasKey('rank', $byId['2']);
-    }]]></code>
-      <code><![CDATA[public function test_find_full_categories_by_ids_returns_empty_for_no_ids(): void
-    {
-        self::assertSame([], $this->repo->findFullCategoriesByIds([]));
-    }]]></code>
-      <code><![CDATA[public function test_find_full_categories_by_ids_returns_every_column(): void
-    {
-        $cats = $this->repo->findFullCategoriesByIds([1]);
-
-        self::assertCount(1, $cats);
-        $cat = $cats[0];
-        self::assertSame('Sample Album', $cat['name']);
-        // 'uppercats'/'rank'/'representative_picture_id' are real
-        // `categories` columns findCategoriesByIds()'s own narrower
-        // 6-column contract doesn't expose -- confirms this is genuinely
-        // `SELECT *`, not a duplicate of that method.
-        self::assertArrayHasKey('uppercats', $cat);
-        self::assertArrayHasKey('rank', $cat);
-        self::assertArrayHasKey('representative_picture_id', $cat);
-        self::assertArrayHasKey('comment', $cat);
-    }]]></code>
-    </ParseError>
     <PropertyNotSetInConstructor>
       <code><![CDATA[$conn]]></code>
       <code><![CDATA[$repo]]></code>
@@ -13951,7 +13885,6 @@ UPDATE ' . Tables::categories() . '
     </InternalMethod>
     <UndefinedConstant>
       <code><![CDATA[PHPWG_PLUGINS_PATH]]></code>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
     </UndefinedConstant>
   </file>
   <file src="tests/Unit/Admin/Extensions/ZipExtractorTest.php">

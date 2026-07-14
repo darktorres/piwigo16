@@ -11,6 +11,7 @@ use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Search\SearchFilterRenderer;
 use Piwigo\Template\Template;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -237,7 +238,8 @@ final class GalleryController implements ControllerInterface
                     }
                 }
 
-                include PHPWG_ROOT_PATH . 'include/search_filters.inc.php';
+                new SearchFilterRenderer()
+                    ->render();
 
                 if ($page['section'] === 'categories' and isset($page['category']) and is_array($page['category']) and ! isset($page['combined_categories'])) {
                     $template->assign(

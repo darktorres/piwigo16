@@ -12,6 +12,8 @@ use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Picture\PictureCommentRenderer;
+use Piwigo\Picture\PictureMetadataRenderer;
 use Piwigo\Template\Template;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -254,6 +256,13 @@ SELECT id
         // |                                actions                           |
         // +-----------------------------------------------------------------+
 
+        // Set by the 'edit_comment' action case below (only when
+        // can_manage_comment('edit', ...) passes), threaded explicitly into
+        // the LegacyRenderCapture closure's use() list further down and
+        // from there into PictureCommentRenderer::render() -- see that
+        // class's own docblock for the bare-scope bug this replaced.
+        $edit_comment = null;
+
         /**
          * Actions are favorite adding, user comment deletion, setting the
          * picture as representative of the current category...
@@ -395,7 +404,9 @@ UPDATE ' . Tables::categories() . '
                             unset($_POST['content']);
                         }
 
-                        $edit_comment = $_GET['comment_to_edit'];
+                        // check_input_parameter()/assert() above already
+                        // proved $_GET['comment_to_edit'] is numeric.
+                        $edit_comment = (int) $_GET['comment_to_edit'];
                     }
                     break;
 
@@ -459,7 +470,8 @@ UPDATE ' . Tables::categories() . '
             $first_item,
             $next_item,
             $last_item,
-            $url_up
+            $url_up,
+            $edit_comment
         ): void {
             /**
              * @var array<string, mixed> $conf
@@ -1156,10 +1168,12 @@ SELECT id, name, permalink
 
             include PHPWG_ROOT_PATH . 'include/picture_rate.inc.php';
             if ((bool) $conf['activate_comments']) {
-                include PHPWG_ROOT_PATH . 'include/picture_comment.inc.php';
+                new PictureCommentRenderer()
+                    ->render($edit_comment);
             }
             if ((bool) $metadata_showable and pwg_get_session_var('show_metadata') !== null) {
-                include PHPWG_ROOT_PATH . 'include/picture_metadata.inc.php';
+                new PictureMetadataRenderer()
+                    ->render();
             }
 
             // include menubar

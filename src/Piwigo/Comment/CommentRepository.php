@@ -230,4 +230,78 @@ final class CommentRepository extends AbstractRepository
             ->set('nb_available_comments', 'NULL')
             ->executeStatement();
     }
+
+    /**
+     * Number of comments on a single image (the picture page's comment
+     * count), optionally restricted to validated ones (non-admin viewers).
+     */
+    public function countForImage(int $imageId, bool $onlyValidated): int
+    {
+        $qb = $this->conn->createQueryBuilder()
+            ->select('COUNT(*) AS nb_comments')
+            ->from(Tables::comments())
+            ->where('image_id = :imageId')
+            ->setParameter('imageId', $imageId);
+
+        if ($onlyValidated) {
+            $qb->andWhere("validated = 'true'");
+        }
+
+        $value = $qb->executeQuery()
+            ->fetchOne();
+
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    /**
+     * Paginated comment listing for a single image, joined with the
+     * commenting user's email column (looked up by DB primary key --
+     * $conf['user_fields'] maps the generic 'id'/'email' names to the
+     * actual column names, resolved by the caller since that's
+     * config-domain knowledge, not persistence-domain).
+     *
+     * @param string $order 'ASC'|'asc'|'DESC'|'desc' only -- the caller must
+     *   validate this before calling (matches the original's own
+     *   in_array(strtoupper($x), ['ASC', 'DESC']) check), this method
+     *   concatenates it directly into the query with no further validation.
+     * @return list<array<string, mixed>>
+     */
+    public function findForImage(
+        int $imageId,
+        bool $onlyValidated,
+        string $userIdColumn,
+        string $userEmailColumn,
+        string $order,
+        int $limit,
+        int $offset
+    ): array {
+        $qb = $this->conn->createQueryBuilder()
+            ->select(
+                'com.id',
+                'com.author',
+                'com.author_id',
+                'u.' . $userEmailColumn . ' AS user_email',
+                'com.date',
+                'com.image_id',
+                'com.website_url',
+                'com.email',
+                'com.content',
+                'com.validated'
+            )
+            ->from(Tables::comments(), 'com')
+            ->leftJoin('com', Tables::users(), 'u', 'u.' . $userIdColumn . ' = com.author_id')
+            ->where('com.image_id = :imageId')
+            ->orderBy('com.date', $order)
+            ->setMaxResults($limit)
+            ->setFirstResult($offset)
+            ->setParameter('imageId', $imageId);
+
+        if ($onlyValidated) {
+            $qb->andWhere("com.validated = 'true'");
+        }
+
+        /** @var list<array<string, mixed>> */
+        return $qb->executeQuery()
+            ->fetchAllAssociative();
+    }
 }

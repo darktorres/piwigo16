@@ -151,10 +151,15 @@ deptrac:
     # not-yet-injectable cross-layer capability as a free function" shape as
     # Url/Html/FeedHelper.
     # Page/Asset/Listener are later-phase additions.
+    # Picture lands in P23 batch 4 (Piwigo\Picture\PictureCommentRenderer/
+    # PictureMetadataRenderer, ported from include/picture_comment.inc.php/
+    # picture_metadata.inc.php) -- same "renderer constructs an L2b service
+    # directly, called from a Controller" shape as Page\PageHeaderRenderer,
+    # same layer.
     - name: L3Presentation
       collectors:
         - type: classLike
-          value: ^Piwigo\\(Html|Http|Menu|Page|Template|Asset|Listener|Routing|Mail)\\.*
+          value: ^Piwigo\\(Html|Http|Menu|Page|Template|Asset|Listener|Routing|Mail|Picture)\\.*
     # L4 Integration — Admin (incl. Admin\Image, Admin\Integrity) and Ws
     # (incl. Ws\Encoder, Ws\Protocol) land here in P6; Bootstrap/Controller/
     # Job are later-phase additions. Command lands in P12 (bin/piwigo's

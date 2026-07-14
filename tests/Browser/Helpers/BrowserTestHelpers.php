@@ -370,6 +370,50 @@ final class BrowserTestHelpers
     }
 
     /**
+     * Same polling shape as waitUntilHidden(), but for <img> elements
+     * finishing to load rather than a selector disappearing -- lazily
+     * generated derivative thumbnails (i.php) race
+     * assertScreenshotMatches() the same way an async content panel does,
+     * just via the browser's own image-loading pipeline instead of an
+     * explicit ajax call.
+     *
+     * Two categories of <img> are deliberately excluded, not waited on:
+     * an empty/unset `src` (self-references the current page URL, always
+     * "complete" with naturalWidth 0 -- not a real image), and anything
+     * pointing at upstream.example.invalid (the "what's new" preview
+     * images, PHPWG_DOMAIN's own deliberately-unresolvable .invalid TLD --
+     * see common.inc.php's own comment -- these never load by design in
+     * this fork, real or test).
+     */
+    public static function waitUntilImagesLoaded(Webpage|PendingAwaitablePage|AwaitableWebpage $page, float $timeoutSeconds = 5.0): void
+    {
+        $timeoutMs = (int) ($timeoutSeconds * 1000.0);
+        $js = <<<JS
+        new Promise((resolve, reject) => {
+            const deadline = Date.now() + {$timeoutMs};
+            const relevant = () => Array.from(document.querySelectorAll('img'))
+                .filter((img) => img.getAttribute('src') && !img.src.includes('upstream.example.invalid'));
+            const check = () => {
+                const imgs = relevant();
+                const allLoaded = imgs.every((img) => img.complete && img.naturalWidth > 0);
+                if (allLoaded) {
+                    return resolve(true);
+                }
+                if (Date.now() > deadline) {
+                    const pending = imgs.filter((img) => !(img.complete && img.naturalWidth > 0))
+                        .map((img) => img.src + ' (complete=' + img.complete + ', naturalWidth=' + img.naturalWidth + ')');
+                    return reject(new Error('Timed out waiting for images to load: ' + pending.join(', ')));
+                }
+                setTimeout(check, 100);
+            };
+            check();
+        })
+        JS;
+
+        $page->script($js);
+    }
+
+    /**
      * Deletes every row from piwigo_history before a visual-regression
      * screenshot of admin.php?page=history. Its "Search" tab always filters
      * to today's date server-side (admin/history.php has no start/end GET

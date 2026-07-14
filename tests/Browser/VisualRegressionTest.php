@@ -196,6 +196,19 @@ foreach ($routes as $name => [$path, $needsAuth]) {
             H::waitUntilHidden($page, '.pageLoad');
         }
 
+        if ($name === 'admin-comments') {
+            // Comment thumbnails are lazily-generated derivatives (i.php,
+            // generated on first request) -- a genuine client-side loading
+            // race against assertScreenshotMatches()'s own networkidle
+            // wait, which resolves once outstanding requests finish, not
+            // once every <img> has actually painted. Confirmed via direct
+            // A/B testing (git stash) that this reproduces identically
+            // with or without unrelated code changes -- pre-existing
+            // fragility in this page's own thumbnail loading, not a
+            // content difference.
+            H::waitUntilImagesLoaded($page, 10.0);
+        }
+
         $page->assertScreenshotMatches();
     })->group('visual-regression');
 }

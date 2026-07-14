@@ -2214,7 +2214,7 @@ DELETE
  * This function will preserve ranks.
  *
  * @param int[] $images
- * @param int[]|string $categories admin/picture_modify.php's
+ * @param int[]|string $categories Piwigo\Admin\PictureModifyPageRenderer's
  *   $_POST['associate'] can reach here as a non-array scalar (e.g. a
  *   literal '0') since check_input_parameter() only validates array-ness
  *   when the value is non-empty
@@ -3290,9 +3290,10 @@ function number_format_human_readable($numbers): string
  * Get infos related to an image
  *
  * @since 2.9
- * @param int|string $image_id several callers (admin/picture_modify.php,
- *   admin/photo.php, admin/photos_add_direct.php) pass a raw, unvalidated
- *   $_GET value directly
+ * @param int|string $image_id several callers (Piwigo\Admin\
+ *   PictureModifyPageRenderer, Piwigo\Controller\Admin\PhotoSubController,
+ *   admin/photos_add_direct.php) pass a raw, unvalidated $_GET value
+ *   directly
  * @param bool $die_on_missing
  * @return array<string, mixed>|null
  */

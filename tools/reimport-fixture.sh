@@ -7,6 +7,17 @@
 # DB in (VR in particular produces a wave of false diffs if a CRUD-mutating
 # test:browser run happened first without a reimport in between).
 #
+# Also clears the named cache pools' filesystem backing (_data/cache/piwigo.*,
+# see src/Piwigo/Cache/CacheFactory.php) -- P23 batch 4b found live that a
+# 300s-TTL CategoryTreeCache entry warmed by an earlier test:browser run
+# survives a plain DB reimport (this script only ever touched the DB), so a
+# later test:visual run can read a category tree that no longer matches the
+# freshly-reimported fixture, producing a real (not flaky) VR mismatch on any
+# page whose content depends on a named pool. Some subdirectories can be
+# www-data-owned from live Apache-driven testing (directory write permission,
+# not file ownership, governs deletion) -- sudo, matching this project's own
+# established fix for the same class of permission gap elsewhere.
+#
 # Reads DB credentials from .env.test, same variables IntegrationTestCase.php
 # uses (PIWIGO_DB_HOST/USER/PASSWORD/BASE/PREFIX) — no PIWIGO_DB_PORT support,
 # matching that class, which doesn't read one either.
@@ -27,3 +38,5 @@ mysql "${mysql_args[@]}" "${PIWIGO_DB_BASE}" < tests/Fixtures/piwigo-17.0.sql
 until mysql "${mysql_args[@]}" "${PIWIGO_DB_BASE}" -e "SELECT COUNT(*) FROM ${PIWIGO_DB_PREFIX}images;" > /dev/null 2>&1; do
   sleep 0.5
 done
+
+sudo rm -rf _data/cache/piwigo.*/

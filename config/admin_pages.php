@@ -21,7 +21,6 @@ return [
     'user_list' => \Piwigo\Controller\Admin\UserListSubController::class,
     'user_perm' => \Piwigo\Controller\Admin\UserPermSubController::class,
     'user_activity' => \Piwigo\Controller\Admin\UserActivitySubController::class,
-    'profile' => \Piwigo\Controller\Admin\ProfileSubController::class,
     'configuration' => \Piwigo\Controller\Admin\ConfigurationSubController::class,
     'extend_for_templates' => \Piwigo\Controller\Admin\ExtendForTemplatesSubController::class,
     'menubar' => \Piwigo\Controller\Admin\MenubarSubController::class,

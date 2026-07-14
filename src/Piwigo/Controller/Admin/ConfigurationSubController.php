@@ -20,7 +20,11 @@ use Psr\Http\Message\ServerRequestInterface;
  * (ImageStdParams::save()/set_and_save(), UploadService::
  * saveUploadFormConfig()) with no raw SQL. The "default" tab's
  * build_user()/save_profile_from_post() calls are task #343's own
- * already-closed scope (see ProfileSubController). The one remaining
+ * already-closed scope -- the same include/profile_functions.inc.php
+ * pair the standalone admin/profile.php page once shared before P23
+ * batch 6c deleted it as upstream-dead code (bug:3122, 2014: upstream
+ * folded "edit a user's profile" into this file's own "default" tab
+ * years ago, never as a separate admin page). The one remaining
  * generic-config-row UPDATE loop already double-quotes its value
  * (str_replace("\'", "''", ...)) before splicing it into SQL -- safe,
  * just stylistically raw; left as-is rather than routed through

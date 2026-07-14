@@ -123,7 +123,34 @@ final class BrowserTestHelpers
         // just theoretical: this exact call is where the photo editor page
         // (heavier DOM than plain listing pages) kept failing with "Timeout
         // 5000ms exceeded" even after navigate() was fixed.
-        $html = self::rawWebpage($page)->content();
+        //
+        // A second, distinct race lives here too (task #426): Playwright's
+        // real server-side "page is navigating and changing the content"
+        // error can fire from content() even when goto()'s own "waitUntil:
+        // load" RPC call already returned -- confirmed live (git-stash A/B,
+        // 5 isolated reruns, ~3/5 fail rate) that explicitly waiting on the
+        // page for 'load'/'networkidle' after the preceding click() doesn't
+        // prevent it, and the Apache access log shows only one real POST per
+        // click (no double-submit from AwaitableWebpage's own click()
+        // retry-wrap) -- so this is a genuine client/engine-level lag
+        // between the frame's navigation-committed bookkeeping and the
+        // network response, not a bug in this test's own call sequence.
+        // Unlike retrying navigate()/click() (which redo a real mutating
+        // action), content() is a pure read with no side effects, so a
+        // short bounded retry scoped to exactly this one Playwright error
+        // message is safe and idempotent, not a blind catch-all.
+        $html = '';
+        for ($attempt = 1; $attempt <= 5; ++$attempt) {
+            try {
+                $html = self::rawWebpage($page)->content();
+                break;
+            } catch (ExpectationFailedException $e) {
+                if (! str_contains($e->getMessage(), 'page is navigating and changing the content') || $attempt === 5) {
+                    throw $e;
+                }
+                usleep(200_000);
+            }
+        }
         $hits = [];
         foreach (self::serverErrorPatterns() as $name => $pattern) {
             if (preg_match($pattern, $html) === 1) {

@@ -29,6 +29,13 @@
     # these currently resolve to the plain health.php/ready.php scripts.
     RewriteRule ^health$ health.php [L]
     RewriteRule ^ready$ ready.php [L]
+
+    # web-vitals RUM beacon (docs/PLAN-REPLAY.md P1, item 11b). Clean-URL
+    # target for build/vitals.ts's navigator.sendBeacon() call; the real
+    # entry point is analytics_vitals.php (Piwigo\Controller\VitalsController
+    # via config/routes.php), which needs the full bootstrap unlike
+    # health.php/ready.php above.
+    RewriteRule ^analytics/vitals$ analytics_vitals.php [L]
 </IfModule>
 
 # SEC-05: Brotli compression (15-20% better than gzip for text assets).

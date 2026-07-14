@@ -18,6 +18,7 @@ use Piwigo\Controller\QSearchController;
 use Piwigo\Controller\RegisterController;
 use Piwigo\Controller\SearchController;
 use Piwigo\Controller\TagsController;
+use Piwigo\Controller\VitalsController;
 use Piwigo\Controller\WsController;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
@@ -109,6 +110,13 @@ $routes->add('action', new Route('/action.php', [
 
 $routes->add('ws', new Route('/ws.php', [
     '_controller' => WsController::class,
+]));
+
+// Clean URL (no .php), rewritten to analytics_vitals.php by .htaccess --
+// Router::pathInfo() matches against this raw REQUEST_URI, not the
+// rewritten-to filename (see that file's own docblock).
+$routes->add('analytics_vitals', new Route('/analytics/vitals', [
+    '_controller' => VitalsController::class,
 ]));
 
 return $routes;

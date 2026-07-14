@@ -705,6 +705,14 @@ count. CI enforces ratchets: counts can only go down.
 > endpoint, and no admin dashboard. Found during a full P0-P22 phase-by-phase
 > audit (code verified directly, not manifest claims). Remediation tracked as
 > a standalone post-P22 fix, independent of P23.
+>
+> **Remediated (2026-07-13), Step 3.4:** `build/vitals.ts` reports
+> LCP/INP/CLS/FCP/TTFB via `navigator.sendBeacon()` to `/analytics/vitals`
+> (`Piwigo\Controller\VitalsController`), logged as structured JSON on the
+> Monolog `app` channel. Loaded on every page via `footer.tpl`. Deliberately
+> log-only — no admin dashboard yet, tracked as a separate follow-up once the
+> log data's real shape is known (building UI against unseen data was judged
+> premature).
 
 ### P2 — Test harness (env/install, fixtures, browser-E2E + contract suites)
 

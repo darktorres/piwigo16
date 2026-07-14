@@ -277,12 +277,6 @@ parameters:
 			path: admin/configuration.php
 
 		-
-			rawMessage: 'Path in include() "./local/config/config.inc.php" is not a file or it does not exist.'
-			identifier: include.fileNotFound
-			count: 2
-			path: admin/configuration.php
-
-		-
 			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
 			identifier: function.strict
 			count: 1
@@ -1201,12 +1195,6 @@ parameters:
 			path: admin/user_list.php
 
 		-
-			rawMessage: 'Path in include() "./local/config/config.inc.php" is not a file or it does not exist.'
-			identifier: include.fileNotFound
-			count: 2
-			path: admin/user_list.php
-
-		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
 			count: 1
@@ -1407,12 +1395,6 @@ parameters:
 		-
 			rawMessage: 'Loose comparison via "==" between string|null and string is not allowed.'
 			identifier: equal.notAllowed
-			count: 1
-			path: include/common.inc.php
-
-		-
-			rawMessage: 'Path in include() "./local/config/config.inc.php" is not a file or it does not exist.'
-			identifier: include.fileNotFound
 			count: 1
 			path: include/common.inc.php
 
@@ -2809,6 +2791,24 @@ parameters:
 			path: src/Piwigo/Admin/DummyTheme_maintain.php
 
 		-
+			rawMessage: 'Call to function is_string() with false will always evaluate to false.'
+			identifier: function.impossibleType
+			count: 2
+			path: src/Piwigo/Admin/Extensions/ExtensionScanner.php
+
+		-
+			rawMessage: Result of && is always false.
+			identifier: booleanAnd.alwaysFalse
+			count: 2
+			path: src/Piwigo/Admin/Extensions/ExtensionScanner.php
+
+		-
+			rawMessage: 'Strict comparison using !== between *NEVER* and '''' will always evaluate to true.'
+			identifier: notIdentical.alwaysTrue
+			count: 2
+			path: src/Piwigo/Admin/Extensions/ExtensionScanner.php
+
+		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
 			count: 3
@@ -2827,7 +2827,7 @@ parameters:
 			path: src/Piwigo/Admin/Image/image_ext_imagick.php
 
 		-
-			rawMessage: 'Out of 379 possible property types, only 287 - 75.7 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 382 possible property types, only 290 - 75.9 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 4
 			path: src/Piwigo/Admin/Image/image_ext_imagick.php
@@ -2851,7 +2851,7 @@ parameters:
 			path: src/Piwigo/Admin/Image/image_imagick.php
 
 		-
-			rawMessage: 'Out of 379 possible property types, only 287 - 75.7 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 382 possible property types, only 290 - 75.9 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 1
 			path: src/Piwigo/Admin/Image/image_imagick.php
@@ -2935,7 +2935,7 @@ parameters:
 			path: src/Piwigo/Admin/Integrity/c13y_internal.php
 
 		-
-			rawMessage: 'Out of 2486 possible return types, only 2437 - 98.0 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 2498 possible return types, only 2449 - 98.0 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 1
 			path: src/Piwigo/Admin/Integrity/c13y_internal.php
@@ -2977,7 +2977,7 @@ parameters:
 			path: src/Piwigo/Admin/Integrity/check_integrity.php
 
 		-
-			rawMessage: 'Out of 379 possible property types, only 287 - 75.7 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 382 possible property types, only 290 - 75.9 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 3
 			path: src/Piwigo/Admin/Integrity/check_integrity.php
@@ -3007,7 +3007,7 @@ parameters:
 			path: src/Piwigo/Admin/PluginMaintain.php
 
 		-
-			rawMessage: 'Out of 2486 possible return types, only 2437 - 98.0 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 2498 possible return types, only 2449 - 98.0 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 5
 			path: src/Piwigo/Admin/PluginMaintain.php
@@ -3037,7 +3037,7 @@ parameters:
 			path: src/Piwigo/Admin/ThemeMaintain.php
 
 		-
-			rawMessage: 'Out of 2486 possible return types, only 2437 - 98.0 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 2498 possible return types, only 2449 - 98.0 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 3
 			path: src/Piwigo/Admin/ThemeMaintain.php
@@ -3051,7 +3051,7 @@ parameters:
 		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
-			count: 6
+			count: 5
 			path: src/Piwigo/Admin/languages.php
 
 		-
@@ -3067,7 +3067,7 @@ parameters:
 			path: src/Piwigo/Admin/languages.php
 
 		-
-			rawMessage: 'Out of 2486 possible return types, only 2437 - 98.0 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 2498 possible return types, only 2449 - 98.0 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 1
 			path: src/Piwigo/Admin/languages.php
@@ -3079,7 +3079,7 @@ parameters:
 			path: src/Piwigo/Admin/languages.php
 
 		-
-			rawMessage: 'Out of 379 possible property types, only 287 - 75.7 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 382 possible property types, only 290 - 75.9 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 3
 			path: src/Piwigo/Admin/languages.php
@@ -3151,7 +3151,7 @@ parameters:
 			path: src/Piwigo/Admin/plugins.php
 
 		-
-			rawMessage: 'Out of 379 possible property types, only 287 - 75.7 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 382 possible property types, only 290 - 75.9 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 4
 			path: src/Piwigo/Admin/plugins.php
@@ -3175,7 +3175,7 @@ parameters:
 			path: src/Piwigo/Admin/tabsheet.php
 
 		-
-			rawMessage: 'Out of 379 possible property types, only 287 - 75.7 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 382 possible property types, only 290 - 75.9 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 3
 			path: src/Piwigo/Admin/tabsheet.php
@@ -3229,7 +3229,7 @@ parameters:
 			path: src/Piwigo/Admin/themes.php
 
 		-
-			rawMessage: 'Out of 379 possible property types, only 287 - 75.7 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 382 possible property types, only 290 - 75.9 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 3
 			path: src/Piwigo/Admin/themes.php
@@ -3295,7 +3295,7 @@ parameters:
 			path: src/Piwigo/Admin/updates.php
 
 		-
-			rawMessage: 'Out of 379 possible property types, only 287 - 75.7 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 382 possible property types, only 290 - 75.9 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 7
 			path: src/Piwigo/Admin/updates.php
@@ -3379,7 +3379,7 @@ parameters:
 			path: src/Piwigo/Auth/PwgTOTP.php
 
 		-
-			rawMessage: 'Out of 2486 possible return types, only 2437 - 98.0 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 2498 possible return types, only 2449 - 98.0 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 2
 			path: src/Piwigo/Cache/PersistentCache.php
@@ -3439,7 +3439,7 @@ parameters:
 			path: src/Piwigo/Calendar/CalendarBase.php
 
 		-
-			rawMessage: 'Out of 2486 possible return types, only 2437 - 98.0 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 2498 possible return types, only 2449 - 98.0 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 6
 			path: src/Piwigo/Calendar/CalendarBase.php
@@ -3451,7 +3451,7 @@ parameters:
 			path: src/Piwigo/Calendar/CalendarBase.php
 
 		-
-			rawMessage: 'Out of 379 possible property types, only 287 - 75.7 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 382 possible property types, only 290 - 75.9 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 3
 			path: src/Piwigo/Calendar/CalendarBase.php
@@ -3607,7 +3607,7 @@ parameters:
 			path: src/Piwigo/Core/Logger.php
 
 		-
-			rawMessage: 'Out of 2486 possible return types, only 2437 - 98.0 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 2498 possible return types, only 2449 - 98.0 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 1
 			path: src/Piwigo/Core/Logger.php
@@ -3697,7 +3697,7 @@ parameters:
 			path: src/Piwigo/Image/DerivativeImage.php
 
 		-
-			rawMessage: 'Out of 2486 possible return types, only 2437 - 98.0 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 2498 possible return types, only 2449 - 98.0 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 5
 			path: src/Piwigo/Image/DerivativeImage.php
@@ -3709,7 +3709,7 @@ parameters:
 			path: src/Piwigo/Image/DerivativeImage.php
 
 		-
-			rawMessage: 'Out of 379 possible property types, only 287 - 75.7 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 382 possible property types, only 290 - 75.9 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 2
 			path: src/Piwigo/Image/DerivativeImage.php
@@ -3721,7 +3721,7 @@ parameters:
 			path: src/Piwigo/Image/DerivativeParams.php
 
 		-
-			rawMessage: 'Out of 2486 possible return types, only 2437 - 98.0 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 2498 possible return types, only 2449 - 98.0 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 3
 			path: src/Piwigo/Image/DerivativeParams.php
@@ -3733,7 +3733,7 @@ parameters:
 			path: src/Piwigo/Image/DerivativeParams.php
 
 		-
-			rawMessage: 'Out of 379 possible property types, only 287 - 75.7 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 382 possible property types, only 290 - 75.9 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 4
 			path: src/Piwigo/Image/DerivativeParams.php
@@ -3751,7 +3751,7 @@ parameters:
 			path: src/Piwigo/Image/ImageRect.php
 
 		-
-			rawMessage: 'Out of 379 possible property types, only 287 - 75.7 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 382 possible property types, only 290 - 75.9 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 4
 			path: src/Piwigo/Image/ImageRect.php
@@ -3763,7 +3763,7 @@ parameters:
 			path: src/Piwigo/Image/ImageStdParams.php
 
 		-
-			rawMessage: 'Out of 2486 possible return types, only 2437 - 98.0 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 2498 possible return types, only 2449 - 98.0 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 5
 			path: src/Piwigo/Image/ImageStdParams.php
@@ -3775,7 +3775,7 @@ parameters:
 			path: src/Piwigo/Image/ImageStdParams.php
 
 		-
-			rawMessage: 'Out of 379 possible property types, only 287 - 75.7 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 382 possible property types, only 290 - 75.9 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 6
 			path: src/Piwigo/Image/ImageStdParams.php
@@ -3829,13 +3829,13 @@ parameters:
 			path: src/Piwigo/Image/SrcImage.php
 
 		-
-			rawMessage: 'Out of 379 possible property types, only 287 - 75.7 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 382 possible property types, only 290 - 75.9 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 3
 			path: src/Piwigo/Image/SrcImage.php
 
 		-
-			rawMessage: 'Out of 379 possible property types, only 287 - 75.7 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 382 possible property types, only 290 - 75.9 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 7
 			path: src/Piwigo/Image/WatermarkParams.php
@@ -3853,7 +3853,7 @@ parameters:
 			path: src/Piwigo/Menu/BlockManager.php
 
 		-
-			rawMessage: 'Out of 2486 possible return types, only 2437 - 98.0 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 2498 possible return types, only 2449 - 98.0 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 3
 			path: src/Piwigo/Menu/BlockManager.php
@@ -3865,13 +3865,13 @@ parameters:
 			path: src/Piwigo/Menu/BlockManager.php
 
 		-
-			rawMessage: 'Out of 379 possible property types, only 287 - 75.7 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 382 possible property types, only 290 - 75.9 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 2
 			path: src/Piwigo/Menu/BlockManager.php
 
 		-
-			rawMessage: 'Out of 2486 possible return types, only 2437 - 98.0 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 2498 possible return types, only 2449 - 98.0 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 3
 			path: src/Piwigo/Menu/DisplayBlock.php
@@ -3883,13 +3883,13 @@ parameters:
 			path: src/Piwigo/Menu/DisplayBlock.php
 
 		-
-			rawMessage: 'Out of 379 possible property types, only 287 - 75.7 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 382 possible property types, only 290 - 75.9 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 6
 			path: src/Piwigo/Menu/DisplayBlock.php
 
 		-
-			rawMessage: 'Out of 2486 possible return types, only 2437 - 98.0 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 2498 possible return types, only 2449 - 98.0 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 3
 			path: src/Piwigo/Menu/RegisteredBlock.php
@@ -3931,7 +3931,7 @@ parameters:
 			path: src/Piwigo/Search/QDateRangeScope.php
 
 		-
-			rawMessage: 'Out of 379 possible property types, only 287 - 75.7 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 382 possible property types, only 290 - 75.9 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 3
 			path: src/Piwigo/Search/QExpression.php
@@ -3961,7 +3961,7 @@ parameters:
 			path: src/Piwigo/Search/QMultiToken.php
 
 		-
-			rawMessage: 'Out of 379 possible property types, only 287 - 75.7 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 382 possible property types, only 290 - 75.9 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 1
 			path: src/Piwigo/Search/QMultiToken.php
@@ -3985,7 +3985,7 @@ parameters:
 			path: src/Piwigo/Search/QSearchScope.php
 
 		-
-			rawMessage: 'Out of 379 possible property types, only 287 - 75.7 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 382 possible property types, only 290 - 75.9 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 2
 			path: src/Piwigo/Search/QSingleToken.php
@@ -4021,7 +4021,7 @@ parameters:
 			path: src/Piwigo/Template/Combinable.php
 
 		-
-			rawMessage: 'Out of 379 possible property types, only 287 - 75.7 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 382 possible property types, only 290 - 75.9 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 2
 			path: src/Piwigo/Template/Combinable.php
@@ -4051,7 +4051,7 @@ parameters:
 			path: src/Piwigo/Template/FileCombiner.php
 
 		-
-			rawMessage: 'Out of 2486 possible return types, only 2437 - 98.0 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 2498 possible return types, only 2449 - 98.0 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 1
 			path: src/Piwigo/Template/FileCombiner.php
@@ -4069,7 +4069,7 @@ parameters:
 			path: src/Piwigo/Template/PwgTemplateAdapter.php
 
 		-
-			rawMessage: 'Out of 379 possible property types, only 287 - 75.7 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 382 possible property types, only 290 - 75.9 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 1
 			path: src/Piwigo/Template/Script.php
@@ -4111,7 +4111,7 @@ parameters:
 			path: src/Piwigo/Template/ScriptLoader.php
 
 		-
-			rawMessage: 'Out of 379 possible property types, only 287 - 75.7 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 382 possible property types, only 290 - 75.9 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 1
 			path: src/Piwigo/Template/ScriptLoader.php
@@ -4171,7 +4171,7 @@ parameters:
 			path: src/Piwigo/Template/Template.php
 
 		-
-			rawMessage: 'Out of 2486 possible return types, only 2437 - 98.0 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 2498 possible return types, only 2449 - 98.0 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 6
 			path: src/Piwigo/Template/Template.php
@@ -4183,7 +4183,7 @@ parameters:
 			path: src/Piwigo/Template/Template.php
 
 		-
-			rawMessage: 'Out of 379 possible property types, only 287 - 75.7 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 382 possible property types, only 290 - 75.9 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 9
 			path: src/Piwigo/Template/Template.php
@@ -4249,13 +4249,13 @@ parameters:
 			path: src/Piwigo/Ws/Protocol/PwgXmlWriter.php
 
 		-
-			rawMessage: 'Out of 379 possible property types, only 287 - 75.7 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 382 possible property types, only 290 - 75.9 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 5
 			path: src/Piwigo/Ws/Protocol/PwgXmlWriter.php
 
 		-
-			rawMessage: 'Out of 379 possible property types, only 287 - 75.7 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 382 possible property types, only 290 - 75.9 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 1
 			path: src/Piwigo/Ws/PwgNamedArray.php
@@ -4273,7 +4273,7 @@ parameters:
 			path: src/Piwigo/Ws/PwgNamedStruct.php
 
 		-
-			rawMessage: 'Out of 379 possible property types, only 287 - 75.7 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 382 possible property types, only 290 - 75.9 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 1
 			path: src/Piwigo/Ws/PwgNamedStruct.php
@@ -4309,7 +4309,7 @@ parameters:
 			path: src/Piwigo/Ws/PwgServer.php
 
 		-
-			rawMessage: 'Out of 379 possible property types, only 287 - 75.7 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 382 possible property types, only 290 - 75.9 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 1
 			path: src/Piwigo/Ws/PwgServer.php
@@ -5205,7 +5205,7 @@ parameters:
 		-
 			rawMessage: 'Call to method toBe() of internal class Pest\Mixins\Expectation<TValue> from outside its root namespace Pest.'
 			identifier: method.internalClass
-			count: 2
+			count: 3
 			path: tests/Unit/Csrf/CsrfServiceTest.php
 
 		-
@@ -5359,7 +5359,7 @@ parameters:
 			path: tests/Unit/Http/Middleware/ControllerInvokerMiddlewareTest.php
 
 		-
-			rawMessage: 'Out of 2486 possible return types, only 2437 - 98.0 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 2498 possible return types, only 2449 - 98.0 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 1
 			path: tests/Unit/Http/Middleware/ControllerInvokerMiddlewareTest.php

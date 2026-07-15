@@ -214,7 +214,7 @@ $(".restore-settings-button").each(function() {
     {if isset($ferrors.resize_quality)}<span class="dErrorDesc" title="{$ferrors.resize_quality}">!</span>{/if}
   </p>
   <p style="margin:10px 0 0 0;{if isset($ferrors)} display:block;{/if}" class="sizeDetails">
-    <a href="{$F_ACTION}&action=restore_settings" class="restore-settings-button">{'Reset to default values'|translate}</a>
+    <a href="{$F_ACTION}&action=restore_settings&pwg_token={$PWG_TOKEN}" class="restore-settings-button">{'Reset to default values'|translate}</a>
   </p>
 
   </fieldset>
@@ -234,7 +234,7 @@ $(".restore-settings-button").each(function() {
 {/if}
       <div class="savebar-footer-block">
         <button class="buttonLike"  type="submit" name="submit" {if $isWebmaster != 1}disabled{/if}><i class="icon-floppy"></i> {'Save Settings'|@translate}</button>
-      </div>    
+      </div>
     </div>
     <input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">
   </div>

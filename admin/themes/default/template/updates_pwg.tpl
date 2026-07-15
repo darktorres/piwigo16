@@ -137,7 +137,7 @@ p.release .errors {margin:0}
   {/if}
 </p>
 <p class="autoupdate_bar" style="display:none;">&nbsp; {'Update in progress...'|@translate}<br><img src="admin/themes/default/images/ajax-loader-bar.gif"></p>
-<p><input type="hidden" name="upgrade_to" value="{$UPGRADE_TO}"></p>
+<p><input type="hidden" name="upgrade_to" value="{$UPGRADE_TO}"><input type="hidden" name="pwg_token" value="{$PWG_TOKEN}"></p>
 </form>
 {/if}
 
@@ -188,6 +188,6 @@ p.release .errors {margin:0}
   <p class="autoupdate_bar" style="display:none;">&nbsp; {'Update in progress...'|@translate}<br><img src="admin/themes/default/images/ajax-loader-bar.gif"></p>
 </fieldset>
 
-<p><input type="hidden" name="upgrade_to" value="{$UPGRADE_TO}"></p>
+<p><input type="hidden" name="upgrade_to" value="{$UPGRADE_TO}"><input type="hidden" name="pwg_token" value="{$PWG_TOKEN}"></p>
 </form>
 {/if}

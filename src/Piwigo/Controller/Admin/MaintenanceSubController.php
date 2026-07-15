@@ -20,9 +20,15 @@ use Psr\Http\Message\ServerRequestInterface;
  * dispatch, so the shell's own (redundant) check_status() call is dropped
  * here. The shell's own check_pwg_token() gate for every $_GET['action']
  * IS real and load-bearing (no CSRF gap found in this sub-batch, unlike
- * 6d-6g) -- kept unchanged. `$my_base_url` (the shell's own local var) was
- * genuinely dead code (assigned, never read anywhere -- confirmed via
- * grep) and is dropped here rather than carried forward.
+ * 6d-6g) -- kept unchanged.
+ *
+ * Correction (found during 6i-4): `$my_base_url` is NOT dead code, despite
+ * this docblock originally claiming so. It's consumed indirectly by
+ * `add_core_tabs()`'s own `case 'maintenance':` branch (`admin/include/
+ * add_core_tabs.inc.php`), read via `global $my_base_url;` when
+ * `tabsheet::select()` fires its `tabsheet_before_select` event a few
+ * lines below -- dropping it silently degraded every tab href (missing
+ * the `admin.php?page=` prefix entirely). Restored here.
  *
  * A prior P21-era pass had already closed SEC-22 (both phpinfo() call
  * sites, in the "actions" and "env" tabs, replaced with Piwigo\Admin\
@@ -60,6 +66,13 @@ final class MaintenanceSubController implements AdminSubControllerInterface
         // that the dynamic include is a real method call frame, not a
         // top-level script include.
         global $maint_actions;
+
+        // Consumed by add_core_tabs()'s own 'maintenance' case via
+        // `global $my_base_url;`, triggered synchronously inside
+        // tabsheet::select() below -- must be set before that call, not
+        // dead code (see this class's own docblock).
+        global $my_base_url;
+        $my_base_url = get_root_url() . 'admin.php?page=';
 
         include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 

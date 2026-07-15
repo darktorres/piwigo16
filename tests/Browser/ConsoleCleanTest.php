@@ -35,6 +35,7 @@ $adminRoutes = [
     'admin languages'  => '/admin.php?page=languages',
     'admin themes'     => '/admin.php?page=themes',
     'admin maintenance' => '/admin.php?page=maintenance',
+    'admin updates'    => '/admin.php?page=updates',
 ];
 
 foreach ($adminRoutes as $name => $path) {

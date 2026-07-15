@@ -4,32 +4,91 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Piwigo\Admin\tabsheet;
+use Piwigo\Admin\UpdatesExtPageRenderer;
+use Piwigo\Admin\UpdatesPwgPageRenderer;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * Replaces admin/updates.php (page slug "updates") -- a tab dispatcher
- * (pwg/ext) that stays a pure delegate. This batch also fixed a real,
- * verified bug in the dispatched-to file: its ?tab= value was never
- * validated before being spliced into `include admin/updates_<tab>.php`
- * (unlike plugins.php/themes.php/languages.php's own tab dispatch, which
- * all allowlist their tab values) -- a genuine local file inclusion, not
- * just a hypothetical one, reachable by any authenticated admin.
+ * Replaces admin/updates.php's own tab-dispatch shell (page slug
+ * "updates"), folded directly into this controller (P23 sub-batch 6i-4) --
+ * same shape as `LanguagesSubController`/`ThemesSubController`/
+ * `PluginsSubController`. Its own tab dispatch is already validated
+ * (`/^(pwg|ext)$/`) -- a prior remediation pass already fixed a real LFI
+ * here (this ?tab= value was never validated before being spliced into
+ * `include admin/updates_<tab>.php`, unlike the sibling clusters' own tab
+ * dispatch), re-verified still correct during this port, not a new find.
  *
- * The 2 leaf files this dispatches to (updates_pwg.php/updates_ext.php)
- * were migrated off the updates.class.php god-class onto the new
- * CoreUpdateService (Piwigo-core self-update) and ExtensionUpdateChecker
- * (cross-type "any installed extension outdated" check), both built on
- * PemCatalog/ExtensionScanner (this batch's real scope). updates.class.php
- * itself is NOT deleted -- install.php/upgrade.php/include/functions.inc.php's
+ * `$my_base_url` is NOT dead code, despite every prior 6h/6i-1/6i-2/6i-3
+ * sub-batch's own shell-fold docblock claiming the same-shaped local var
+ * was (confirmed via grep within each file's own scope, which is true --
+ * but incomplete). It's a real, load-bearing global consumed indirectly:
+ * `tabsheet::select()` fires a `tabsheet_before_select` event
+ * (`admin/include/add_core_tabs.inc.php`'s `add_core_tabs()`), whose own
+ * `case 'updates':`/`'languages':`/`'themes':`/`'plugins':`/`'maintenance':`
+ * branches each read `global $my_base_url;` to build every tab's own href.
+ * Dropping it silently degrades those hrefs (concatenating onto an
+ * undefined-then-null global coerces to `''`, e.g. `&amp;tab=installed`
+ * instead of `admin.php?page=languages&amp;tab=installed`) rather than
+ * erroring -- confirmed live post-port that every one of the 4 prior
+ * sub-batches' own tab links were broken this way; see the follow-up
+ * correction commit fixing all 4 alongside this one.
+ *
+ * The 2 leaf files this dispatches to were migrated off the
+ * updates.class.php god-class (already replaced by CoreUpdateService/
+ * ExtensionUpdateChecker/PemCatalog/ExtensionScanner in a prior P21-era
+ * pass) onto Piwigo\Admin\UpdatesPwgPageRenderer/UpdatesExtPageRenderer --
+ * see UpdatesPwgPageRenderer's own docblock for the most severe CSRF gap
+ * found across the whole P23 batch 6 effort, found and fixed here.
+ * UpdatesExtPageRenderer is a shared class also called directly by
+ * LanguagesSubController/ThemesSubController/PluginsSubController's own
+ * "update" tab (previously each did its own raw
+ * `include admin/updates_ext.php`). updates.class.php itself is NOT
+ * deleted -- install.php/upgrade.php/include/functions.inc.php's
  * telemetry sender/include/ws_functions/pwg.extensions.php all still
  * construct it directly, and none of those are admin pages (P21's real
- * scope).
+ * scope, re-verified still accurate).
  */
 final class UpdatesSubController implements AdminSubControllerInterface
 {
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        include PHPWG_ROOT_PATH . 'admin/updates.php';
+        /**
+         * @var array<string, mixed> $conf
+         * @var array<string, mixed> $page
+         */
+        global $conf, $page;
+
+        if (! (bool) $conf['enable_extensions_install'] and ! (bool) $conf['enable_core_update']) {
+            die('update system is disabled');
+        }
+
+        // Consumed by add_core_tabs()'s own 'updates' case via
+        // `global $my_base_url;`, triggered synchronously inside
+        // tabsheet::select() below -- must be set before that call, not
+        // dead code (see this class's own docblock).
+        global $my_base_url;
+        $my_base_url = get_root_url() . 'admin.php?page=updates';
+
+        check_input_parameter('tab', $_GET, false, '/^(pwg|ext)$/');
+        if (isset($_GET['tab']) && is_string($_GET['tab'])) {
+            $page['tab'] = $_GET['tab'];
+        } else {
+            $page['tab'] = 'pwg';
+        }
+
+        $tabsheet = new tabsheet();
+        $tabsheet->set_id('updates');
+        $tabsheet->select($page['tab']);
+        $tabsheet->assign();
+
+        if ($page['tab'] === 'ext') {
+            new UpdatesExtPageRenderer()
+                ->render();
+        } else {
+            new UpdatesPwgPageRenderer()
+                ->render();
+        }
     }
 }

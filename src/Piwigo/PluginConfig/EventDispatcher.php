@@ -18,7 +18,8 @@ final class EventDispatcher
     // 'function' is declared string|array|object rather than PHPStan's
     // usual `callable` -- PHP's native `callable` type hint validates
     // callability EAGERLY, at registration time. A real pre-existing bug
-    // this surfaced: admin/include/functions_upload.inc.php registers
+    // this surfaced: include/common.inc.php (formerly admin/include/
+    // functions_upload.inc.php, relocated in P23 sub-batch 8b-3) registers
     // 'pwg_image_resize' for 'upload_image_resize'/'upload_thumbnail_resize',
     // but that function doesn't exist anywhere in this codebase (dead
     // legacy code -- confirmed absent from both reference branches too,

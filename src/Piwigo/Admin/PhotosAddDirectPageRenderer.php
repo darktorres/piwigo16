@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Admin\Image\pwg_image;
+use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
@@ -228,6 +229,8 @@ SELECT *
          */
         global $conf, $template;
 
+        $uploadService = new UploadService();
+
         // +-------------------------------------------------------------------+
         // | Photo selection                                                    |
         // +-------------------------------------------------------------------+
@@ -244,7 +247,7 @@ SELECT *
         // what is the maximum number of pixels permitted by the memory_limit?
         if (pwg_image::get_library() === 'gd') {
             $fudge_factor = 1.7;
-            $memory_limit = get_ini_size('memory_limit');
+            $memory_limit = $uploadService->getIniSize('memory_limit');
             // memory_limit is a core php.ini directive, always present
             assert($memory_limit !== false);
             $available_memory = (int) $memory_limit - memory_get_usage();
@@ -391,7 +394,7 @@ SELECT
         // Errors
         $setup_errors = [];
 
-        $error_message = ready_for_upload_message();
+        $error_message = $uploadService->readyForUploadMessage();
         if (! empty($error_message)) {
             $setup_errors[] = $error_message;
         }
@@ -417,18 +420,18 @@ SELECT
                 $setup_warnings[] = l10n('Exif extension not available, admin should disable exif use');
             }
 
-            if (get_ini_size('upload_max_filesize') > get_ini_size('post_max_size')) {
+            if ($uploadService->getIniSize('upload_max_filesize') > $uploadService->getIniSize('post_max_size')) {
                 $setup_warnings[] = l10n(
                     'In your php.ini file, the upload_max_filesize (%sB) is bigger than post_max_size (%sB), you should change this setting',
-                    get_ini_size('upload_max_filesize', false),
-                    get_ini_size('post_max_size', false)
+                    $uploadService->getIniSize('upload_max_filesize', false),
+                    $uploadService->getIniSize('post_max_size', false)
                 );
             }
 
             $upload_form_chunk_size = $conf['upload_form_chunk_size'];
             $upload_form_chunk_size = is_numeric($upload_form_chunk_size) ? (int) $upload_form_chunk_size : 0;
-            if (get_ini_size('upload_max_filesize') < $upload_form_chunk_size * 1024) {
-                $upload_max_filesize = get_ini_size('upload_max_filesize');
+            if ($uploadService->getIniSize('upload_max_filesize') < $upload_form_chunk_size * 1024) {
+                $upload_max_filesize = $uploadService->getIniSize('upload_max_filesize');
                 // upload_max_filesize is a core php.ini directive, always present
                 assert($upload_max_filesize !== false);
                 $setup_warnings[] = sprintf(

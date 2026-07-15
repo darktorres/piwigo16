@@ -10,6 +10,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\PluginLoader;
+use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Bootstrap\UserBootstrap;
 use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Config\ConfigLoader;
@@ -435,6 +436,25 @@ add_event_handler('render_comment_content', 'render_comment_content');
 add_event_handler('render_comment_author', 'strip_tags');
 add_event_handler('render_tag_url', 'str2url');
 add_event_handler('blockmanager_register_blocks', 'register_default_menubar_blocks');
+// Relocated from admin/include/functions_upload.inc.php (deleted in P23
+// sub-batch 8b-3) -- must stay after PluginLoader::loadPlugins() above so
+// a plugin's own 'upload_file' handler (if any) keeps first crack in the
+// trigger_change() chain, matching the original file's own registration
+// timing (its include_once always fired well after plugin loading).
+//
+// 'pwg_image_resize' doesn't exist as a function anywhere in this
+// codebase and neither event is ever triggered -- a confirmed pre-existing
+// dead-but-harmless registration, already documented in
+// Piwigo\PluginConfig\EventDispatcher's own class docblock. Preserved
+// unchanged rather than "fixed", per that same documented decision.
+add_event_handler('upload_image_resize', 'pwg_image_resize');
+add_event_handler('upload_thumbnail_resize', 'pwg_image_resize');
+add_event_handler('upload_file', [UploadService::class, 'uploadFilePdf']);
+add_event_handler('upload_file', [UploadService::class, 'uploadFileHeic']);
+add_event_handler('upload_file', [UploadService::class, 'uploadFileTiff']);
+add_event_handler('upload_file', [UploadService::class, 'uploadFileVideo']);
+add_event_handler('upload_file', [UploadService::class, 'uploadFilePsd']);
+add_event_handler('upload_file', [UploadService::class, 'uploadFileEps']);
 if (! empty($conf['original_url_protection'])) {
     add_event_handler('get_element_url', 'get_element_url_protection_handler');
     add_event_handler('get_src_image_url', 'get_src_image_url_protection_handler');

@@ -7,10 +7,10 @@ namespace Piwigo\Job;
 /**
  * Represents a file already staged on disk (e.g. by a tus resumable
  * upload) that still needs to be committed to the gallery -- the
- * heavy part of the original synchronous add_uploaded_file() (thumbnail
- * generation, DB insert, category assignment, metadata sync). Mirrors
- * that free function's own parameter shape (admin/include/
- * functions_upload.inc.php); BatchUploadHandler is a thin delegate to it.
+ * heavy part of the original synchronous UploadService::addUploadedFile()
+ * (thumbnail generation, DB insert, category assignment, metadata sync).
+ * Mirrors that method's own parameter shape; BatchUploadHandler is a
+ * thin delegate to it.
  */
 final readonly class BatchUploadJob
 {

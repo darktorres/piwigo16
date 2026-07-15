@@ -48,9 +48,10 @@ use Piwigo\Ws\PwgServer;
  *
  * The 6 upload_file_* representative-generation handlers are `public
  * static` (not instance methods, unlike the rest of this class) because
- * they're registered as PluginConfig event handlers
- * (admin/include/functions_upload.inc.php's thin delegate file, at
- * include time) -- EventDispatcher::addEventHandler() dedupes by
+ * they're registered as PluginConfig event handlers (in
+ * include/common.inc.php's "default event handlers" block since P23
+ * sub-batch 8b-3, formerly admin/include/functions_upload.inc.php's thin
+ * delegate file) -- EventDispatcher::addEventHandler() dedupes by
  * `$a === $b` on the callable, which for an array callable compares the
  * bound object by identity; an instance-method callable
  * ([$this, 'method']) would silently re-register (and double-fire) a new

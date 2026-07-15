@@ -20,8 +20,9 @@ test('get() lazily builds and reuses the same instance', function (): void {
 });
 
 test('addEventHandler registers a nonexistent function name without eagerly validating callability', function (): void {
-    // Real pre-existing bug this locks in the fix for: admin/include/
-    // functions_upload.inc.php registers 'pwg_image_resize', a function
+    // Real pre-existing bug this locks in the fix for: include/common.inc.php
+    // (formerly admin/include/functions_upload.inc.php, relocated in P23
+    // sub-batch 8b-3) registers 'pwg_image_resize', a function
     // that doesn't exist anywhere in this codebase, for two events that
     // are never triggered. PHP's native `callable` type hint validates
     // eagerly, which would fatal registration itself -- the original

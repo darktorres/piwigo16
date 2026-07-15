@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Config\Config;
 use Piwigo\Core\Logger;
 use Piwigo\Core\ValidationPattern;
@@ -1344,14 +1345,17 @@ SELECT
     merge_chunks($file_path, $image['md5sum'], $original_type);
     chmod($file_path, 0644);
 
-    include_once PHPWG_ROOT_PATH . 'admin/include/functions_upload.inc.php';
+    // fill_lounge(), called indirectly via UploadService::addUploadedFile()
+    // when $conf['lounge_active'] is set.
+    include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
     // if we receive the "file", we only update the original if the "file" is
     // bigger than current original
     if ($params['type'] == 'file') {
         $do_update = false;
 
-        $infos = pwg_image_infos($file_path);
+        $infos = new UploadService()
+            ->pwgImageInfos($file_path);
 
         foreach (['width', 'height', 'filesize'] as $image_info) {
             if ($infos[$image_info] > $image[$image_info]) {
@@ -1365,14 +1369,15 @@ SELECT
         }
     }
 
-    $image_id = add_uploaded_file(
-        $file_path,
-        $image['file'],
-        null,
-        null,
-        $params['image_id'],
-        $image['md5sum'] // we force the md5sum to remain the same
-    );
+    $image_id = new UploadService()
+        ->addUploadedFile(
+            $file_path,
+            $image['file'],
+            null,
+            null,
+            $params['image_id'],
+            $image['md5sum'] // we force the md5sum to remain the same
+        );
 
     return null;
 }
@@ -1463,16 +1468,19 @@ SELECT COUNT(*)
     merge_chunks($file_path, $params['original_sum'], $original_type);
     chmod($file_path, 0644);
 
-    include_once PHPWG_ROOT_PATH . 'admin/include/functions_upload.inc.php';
+    // fill_lounge(), called indirectly via UploadService::addUploadedFile()
+    // when $conf['lounge_active'] is set.
+    include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
-    $image_id = add_uploaded_file(
-        $file_path,
-        $params['original_filename'],
-        null, // categories
-        $params['level'],
-        $params['image_id'] > 0 ? $params['image_id'] : null,
-        $params['original_sum']
-    );
+    $image_id = new UploadService()
+        ->addUploadedFile(
+            $file_path,
+            $params['original_filename'],
+            null, // categories
+            $params['level'],
+            $params['image_id'] > 0 ? $params['image_id'] : null,
+            $params['original_sum']
+        );
 
     $info_columns = [
         'name',
@@ -1598,21 +1606,24 @@ SELECT COUNT(*)
         }
     }
 
-    include_once PHPWG_ROOT_PATH . 'admin/include/functions_upload.inc.php';
-
     $uploaded_tmp_name = $uploaded_image['tmp_name'] ?? null;
     if (! is_string($uploaded_tmp_name)) {
         return new PwgError(500, '[ws_images_addSimple] missing uploaded file temp name');
     }
     $uploaded_name = $uploaded_image['name'] ?? null;
 
-    $image_id = add_uploaded_file(
-        $uploaded_tmp_name,
-        is_string($uploaded_name) ? $uploaded_name : null,
-        $params['category'],
-        8,
-        $params['image_id'] > 0 ? $params['image_id'] : null
-    );
+    // fill_lounge(), called indirectly via UploadService::addUploadedFile()
+    // when $conf['lounge_active'] is set.
+    include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
+
+    $image_id = new UploadService()
+        ->addUploadedFile(
+            $uploaded_tmp_name,
+            is_string($uploaded_name) ? $uploaded_name : null,
+            $params['category'],
+            8,
+            $params['image_id'] > 0 ? $params['image_id'] : null
+        );
 
     $info_columns = [
         'name',
@@ -1705,6 +1716,13 @@ function ws_images_upload(array $params, PwgServer $service): PwgError|array|nul
 {
     /** @var array<string, mixed> $conf */
     global $conf;
+
+    // fill_lounge(), called indirectly via UploadService::addUploadedFile()
+    // when $conf['lounge_active'] is set. Loaded up front rather than
+    // right before use, since include_once is opaque to PHPStan's flow
+    // analysis and would otherwise invalidate the $format_ext narrowing
+    // below.
+    include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
     $format_ext = null;
 
@@ -1811,8 +1829,6 @@ function ws_images_upload(array $params, PwgServer $service): PwgError|array|nul
         // Strip the temp .part suffix off
         rename("{$filePath}.part", $filePath);
 
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions_upload.inc.php';
-
         if (isset($params['format_of'])) {
             $query = '
 SELECT *
@@ -1826,11 +1842,9 @@ SELECT *
 
             $image = $images[0];
 
-            // guaranteed non-null by the empty($format_ext) guard above,
-            // inside the same isset($params['format_of']) branch.
-            assert($format_ext !== null);
             assert($image['id'] !== null);
-            $add_status = add_format($filePath, $format_ext, $image['id']);
+            $add_status = new UploadService()
+                ->addFormat($filePath, $format_ext, $image['id']);
 
             return [
                 'image_id' => $image['id'],
@@ -1861,13 +1875,14 @@ SELECT
             }
         }
 
-        $image_id = add_uploaded_file(
-            $filePath,
-            $name, // function add_uploaded_file will secure before insert
-            $params['category'],
-            $params['level'],
-            $id_image
-        );
+        $image_id = new UploadService()
+            ->addUploadedFile(
+                $filePath,
+                $name, // function add_uploaded_file will secure before insert
+                $params['category'],
+                $params['level'],
+                $id_image
+            );
 
         $query = '
 SELECT
@@ -2122,16 +2137,19 @@ SELECT COUNT(*)
 
     $logger->debug(__FUNCTION__ . ' ' . $output_filepath . ' MD5 checksum OK');
 
-    include_once PHPWG_ROOT_PATH . 'admin/include/functions_upload.inc.php';
+    // fill_lounge(), called indirectly via UploadService::addUploadedFile()
+    // when $conf['lounge_active'] is set.
+    include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
-    $image_id = add_uploaded_file(
-        $output_filepath,
-        $params['filename'],
-        $params['category'],
-        $params['level'],
-        $params['image_id'],
-        $params['original_sum']
-    );
+    $image_id = new UploadService()
+        ->addUploadedFile(
+            $output_filepath,
+            $params['filename'],
+            $params['category'],
+            $params['level'],
+            $params['image_id'],
+            $params['original_sum']
+        );
 
     $logger->debug(__FUNCTION__ . ' image_id after add_uploaded_file = ' . $image_id);
 
@@ -2799,10 +2817,8 @@ function ws_images_delete(array $params, PwgServer $service): PwgError|int
  */
 function ws_images_checkUpload(array $params, PwgServer $service): array
 {
-    include_once PHPWG_ROOT_PATH . 'admin/include/functions_upload.inc.php';
-
     $ret = [];
-    $ret['message'] = ready_for_upload_message();
+    $ret['message'] = new UploadService()->readyForUploadMessage();
     $ret['ready_for_upload'] = true;
     if (! empty($ret['message'])) {
         $ret['ready_for_upload'] = false;

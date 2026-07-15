@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
@@ -50,9 +51,10 @@ foreach ($original_fields as $field) {
 
 // $page['errors'] is only known to be array<string, mixed> one level deep;
 // narrow the nested value to array<int, string> before passing it by
-// reference into save_upload_form_config() (same filter-into-a-fresh-array
-// pattern as $pderivatives below), then write the possibly-appended-to
-// result back so callers of this include still see the errors.
+// reference into UploadService::saveUploadFormConfig() (same
+// filter-into-a-fresh-array pattern as $pderivatives below), then write
+// the possibly-appended-to result back so callers of this include still
+// see the errors.
 $page_errors_raw = $page['errors'] ?? null;
 /** @var array<int, string> $page_errors */
 $page_errors = [];
@@ -64,7 +66,8 @@ if (is_array($page_errors_raw)) {
     }
 }
 
-save_upload_form_config($updates, $page_errors, $errors);
+new UploadService()
+    ->saveUploadFormConfig($updates, $page_errors, $errors);
 
 $page['errors'] = $page_errors;
 

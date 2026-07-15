@@ -105,7 +105,6 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         }
 
         include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions_upload.inc.php';
 
         // -------------------------------------------------------- sections definitions
 

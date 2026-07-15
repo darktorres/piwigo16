@@ -16,12 +16,10 @@ use Piwigo\Template\FileCombiner;
 //
 // is_admin() (called unconditionally inside combine()) is a free function
 // (include/functions_user.inc.php) -- not autoloaded like a class. A
-// minimal guarded stub, not a require_once of the real file: the real
-// file's own top-level code cascades into functions_plugins.inc.php
-// (add_event_handler()), which redeclares trigger_notify() and fatals
-// against HtmlServiceTest.php's own stub when both load in the same Unit
-// suite run. Same "minimal stubs for not-yet-migrated free functions"
-// pattern as HtmlServiceTest.php/PasswordHashTest.php.
+// minimal guarded stub, not a require_once of the real file, to avoid
+// pulling in the whole legacy bootstrap chain. Same "minimal stubs for
+// not-yet-migrated free functions" pattern as HtmlServiceTest.php/
+// PasswordHashTest.php.
 if (! function_exists('is_admin')) {
     function is_admin(string $user_status = ''): bool
     {

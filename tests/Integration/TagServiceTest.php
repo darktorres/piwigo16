@@ -2,20 +2,10 @@
 
 declare(strict_types=1);
 
-// getAllTags() calls the real trigger_change() (unqualified, resolves to
-// the global namespace) -- lives in include/functions_plugins.inc.php,
-// which needs PHPWG_ROOT_PATH defined and pulls in the whole plugin-system
-// stack this isolated integration test doesn't want to depend on. Same
-// "minimal stub to load standalone" pattern as
-// tests/Integration/AuthServiceTest.php.
+// getAllTags() calls the real trigger_change() -- always available now via
+// composer autoload.files (src/Piwigo/PluginConfig/functions.php), a pure
+// passthrough with no handlers registered, so no local stub is needed.
 namespace {
-    if (! function_exists('trigger_change')) {
-        function trigger_change(string $event, mixed $data = null, mixed ...$args): mixed
-        {
-            return $data;
-        }
-    }
-
     // Also stubbed: the real tag_alpha_compare() (functions_html.inc.php)
     // delegates to Piwigo\Html\HtmlService::tagAlphaCompare(), which needs
     // pwg_transliterate() (Lang domain) -- plain alphabetical comparison

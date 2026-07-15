@@ -8,14 +8,12 @@ if (! defined('PHPWG_ROOT_PATH')) {
     define('PHPWG_ROOT_PATH', './');
 }
 
-// Minimal stubs for the two not-yet-migrated free functions HtmlService
-// still delegates to (Plugin events, P18+ territory) -- same "load
-// standalone" pattern as PasswordHashTest.php's own stubs.
-if (! function_exists('trigger_notify')) {
-    function trigger_notify(string $event, mixed ...$args): void
-    {
-    }
-}
+// trigger_notify() is now always available (composer autoload.files,
+// src/Piwigo/PluginConfig/functions.php) and is a pure no-op with no
+// handlers registered, so no local stub is needed for it here anymore --
+// only get_name_from_file() (a separate not-yet-migrated free function)
+// still needs one, same "load standalone" pattern as PasswordHashTest.php's
+// own stubs.
 if (! function_exists('get_name_from_file')) {
     function get_name_from_file(string $filename): string
     {

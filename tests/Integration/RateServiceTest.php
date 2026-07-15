@@ -3,17 +3,14 @@
 declare(strict_types=1);
 
 // RateService calls is_autorize_status() (the access-level-check family,
-// explicitly out of scope for this phase -- see task #343) and
-// trigger_change() (needs the plugin-event bootstrap) exactly as the
+// explicitly out of scope for this phase -- see task #343) exactly as the
 // original functions_rate.inc.php did. Same "minimal stub to load
-// standalone" pattern as tests/Integration/CommentServiceTest.php --
-// including trigger_change()'s exact "return $data unchanged" body: every
-// Integration test file that stubs it uses this same simple form, and
-// since function_exists() guards mean whichever file's stub loads first
-// wins for the whole process (test discovery requires every file), a
-// same-named stub with different behavior here would silently never
-// apply. CookieService::cookiePath() needs PHPWG_ROOT_PATH defined, same
-// as tests/Unit/Auth/CookieServiceTest.php.
+// standalone" pattern as tests/Integration/CommentServiceTest.php.
+// trigger_change() is always available now via composer autoload.files
+// (src/Piwigo/PluginConfig/functions.php), a pure passthrough with no
+// handlers registered, so no local stub is needed for it anymore.
+// CookieService::cookiePath() needs PHPWG_ROOT_PATH defined, same as
+// tests/Unit/Auth/CookieServiceTest.php.
 namespace {
     if (! defined('PHPWG_ROOT_PATH')) {
         define('PHPWG_ROOT_PATH', './');
@@ -23,13 +20,6 @@ namespace {
         function is_autorize_status(int $access_type, string $user_status = ''): bool
         {
             return (bool) ($GLOBALS['test_is_classic_or_above'] ?? true);
-        }
-    }
-
-    if (! function_exists('trigger_change')) {
-        function trigger_change(string $event, mixed $data = null, mixed ...$args): mixed
-        {
-            return $data;
         }
     }
 }

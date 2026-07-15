@@ -15,7 +15,9 @@ use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Logger;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\PluginConfig\PluginRepository;
 
 class plugins
 {
@@ -46,15 +48,7 @@ class plugins
     {
         $this->get_fs_plugins();
 
-        // get_db_plugins() is declared to return array<int|string, mixed>
-        // in include/functions_plugins.inc.php, but it's a thin wrapper
-        // around query2array($query) with no $key_name/$value_name, which
-        // is precisely typed as list<array<string, string|null>> (this
-        // driver never enables MYSQLI_OPT_INT_AND_FLOAT_NATIVE). The
-        // under-typed docblock lives in that other file; narrow locally
-        // here instead of widening the property below.
-        /** @var list<array<string, string|null>> $db_plugins */
-        $db_plugins = get_db_plugins();
+        $db_plugins = new PluginRepository(DbConnection::build())->getDbPlugins();
         foreach ($db_plugins as $db_plugin) {
             $id = $db_plugin['id'] ?? null;
             if (! is_string($id)) {
@@ -204,11 +198,7 @@ UPDATE ' . Tables::plugins() . '
             case 'activate':
                 if (! isset($crt_db_plugin)) {
                     $errors = $this->perform_action('install', $plugin_id);
-                    // get_db_plugins() is under-typed (see __construct()'s
-                    // comment above) — its real shape here is
-                    // list<array<string, string|null>>.
-                    /** @var list<array<string, string|null>> $matching_db_plugins */
-                    $matching_db_plugins = get_db_plugins(null, $plugin_id);
+                    $matching_db_plugins = new PluginRepository(DbConnection::build())->getDbPlugins('', $plugin_id);
                     [$crt_db_plugin] = $matching_db_plugins;
                     load_conf_from_db();
                 } elseif ($crt_db_plugin['state'] == 'active') {

@@ -16,8 +16,8 @@ namespace {
     }
 
     // buildPluginMaintain() reads PHPWG_PLUGINS_PATH directly -- normally
-    // define()'d by include/functions_plugins.inc.php as part of full
-    // legacy bootstrap, never loaded by this isolated integration test.
+    // define()'d by include/functions.inc.php as part of full legacy
+    // bootstrap, never loaded by this isolated integration test.
     // Every plugin id used in this suite is synthetic and never on disk, so
     // this only needs to resolve to a real (if empty-of-that-id) directory
     // for file_exists() checks to return false safely. '.' (not an

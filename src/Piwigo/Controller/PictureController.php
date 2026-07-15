@@ -714,7 +714,7 @@ SELECT *
             // allow plugins to change what we computed before passing data
             // to template
             /**
-             * trigger_change() (include/functions_plugins.inc.php) is
+             * trigger_change() (src/Piwigo/PluginConfig/functions.php) is
              * only typed to return mixed -- restate the shape plugins are
              * expected to preserve: one images-table row
              * (pwg_db_fetch_assoc(), string|null columns) per navigation

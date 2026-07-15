@@ -3,15 +3,18 @@
 declare(strict_types=1);
 
 // SearchService calls several real, stable, already-migrated free functions
-// that need more bootstrap (the plugin-event system, $user/$conf-driven
-// access-level checks, the Category domain's own free-function delegate)
-// than this isolated integration test wants to depend on. Same
-// "minimal stub to load standalone" pattern as CategoryServiceTest.php --
-// is_admin()/trigger_change()/trigger_notify()/is_classic_user() bodies
-// copied verbatim from CategoryServiceTest.php/CommentServiceTest.php
-// (function_exists() guards mean whichever Integration test file's stub
-// loads first wins for the whole run, so every file declaring these must
-// keep the bodies identical).
+// that need more bootstrap ($user/$conf-driven access-level checks, the
+// Category domain's own free-function delegate) than this isolated
+// integration test wants to depend on. Same "minimal stub to load
+// standalone" pattern as CategoryServiceTest.php -- is_admin()/
+// is_classic_user() bodies copied verbatim from CategoryServiceTest.php/
+// CommentServiceTest.php (function_exists() guards mean whichever
+// Integration test file's stub loads first wins for the whole run, so
+// every file declaring these must keep the bodies identical).
+// trigger_change()/trigger_notify() are always available now via composer
+// autoload.files (src/Piwigo/PluginConfig/functions.php), pure
+// passthroughs with no handlers registered, so no local stubs are needed
+// for them anymore.
 //
 // get_subcat_ids() is NOT stubbed -- functions_category.inc.php (P19
 // Category domain, already built and DB-backed) is required directly
@@ -34,16 +37,10 @@ namespace {
         define('PHPWG_ROOT_PATH', './');
     }
 
-    if (! function_exists('trigger_change')) {
-        function trigger_change(string $event, mixed $data = null, mixed ...$args): mixed
-        {
-            return $data;
-        }
-    }
-
-    if (! function_exists('trigger_notify')) {
-        function trigger_notify(string $event, mixed ...$args): void {}
-    }
+    // trigger_change()/trigger_notify() are always available now via
+    // composer autoload.files (src/Piwigo/PluginConfig/functions.php), pure
+    // passthroughs with no handlers registered, so no local stubs are
+    // needed for them here.
 
     if (! function_exists('is_admin')) {
         function is_admin(string $user_status = ''): bool

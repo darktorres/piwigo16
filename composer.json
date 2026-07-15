@@ -83,7 +83,10 @@
   "autoload": {
     "psr-4": {
       "Piwigo\\": "src/Piwigo/"
-    }
+    },
+    "files": [
+      "src/Piwigo/PluginConfig/functions.php"
+    ]
   },
   "autoload-dev": {
     "psr-4": {

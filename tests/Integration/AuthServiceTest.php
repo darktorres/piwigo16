@@ -2,22 +2,9 @@
 
 declare(strict_types=1);
 
-// tryLogUser() calls the real trigger_change() (unqualified, resolves to
-// the global namespace) -- a stable, already-migrated function, but one
-// that lives in include/functions_plugins.inc.php, which needs
-// PHPWG_ROOT_PATH defined and pulls in the whole plugin-system stack this
-// isolated integration test doesn't want to depend on. Same "minimal stub
-// to load standalone" pattern as tests/Unit/PasswordHashTest.php, just
-// needing PHP's bracketed namespace syntax here since this file's own test
-// class must stay in Piwigo\Tests\Integration for PSR-4 discovery.
-namespace {
-    if (! function_exists('trigger_change')) {
-        function trigger_change(string $event, mixed $data = null, mixed ...$args): mixed
-        {
-            return $data;
-        }
-    }
-}
+// tryLogUser() calls the real trigger_change() -- always available now via
+// composer autoload.files (src/Piwigo/PluginConfig/functions.php), a pure
+// passthrough with no handlers registered, so no local stub is needed.
 
 namespace Piwigo\Tests\Integration {
 

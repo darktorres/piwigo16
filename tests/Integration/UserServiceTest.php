@@ -67,12 +67,9 @@ namespace {
         }
     }
 
-    if (! function_exists('trigger_change')) {
-        function trigger_change(string $event, mixed $data = null, mixed ...$args): mixed
-        {
-            return $data;
-        }
-    }
+    // trigger_change() is always available now via composer autoload.files
+    // (src/Piwigo/PluginConfig/functions.php), a pure passthrough with no
+    // handlers registered, so no local stub is needed.
 
     // No get_browser_language() stub: $GLOBALS['conf']['browser_language']
     // is set to false below, and registerUser()'s own `(bool)

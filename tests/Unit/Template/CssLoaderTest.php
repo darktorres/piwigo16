@@ -9,9 +9,8 @@ use Piwigo\Template\CssLoader;
 // going through get_css() -> FileCombiner::combine(), which cascades
 // through several legacy free functions with top-level side effects
 // (is_admin() -> ... -> functions_user.inc.php's own top-level
-// add_event_handler() call, which itself needs functions_plugins.inc.php
-// loaded first). CssLoader::add()'s dedup/ordering logic -- what's under
-// test here -- doesn't need any of that machinery.
+// add_event_handler() call). CssLoader::add()'s dedup/ordering logic --
+// what's under test here -- doesn't need any of that machinery.
 
 /**
  * @return array<string, Css>

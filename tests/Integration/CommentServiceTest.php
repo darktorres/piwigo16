@@ -55,16 +55,10 @@ namespace {
         }
     }
 
-    if (! function_exists('trigger_change')) {
-        function trigger_change(string $event, mixed $data = null, mixed ...$args): mixed
-        {
-            return $data;
-        }
-    }
-
-    if (! function_exists('trigger_notify')) {
-        function trigger_notify(string $event, mixed ...$args): void {}
-    }
+    // trigger_change()/trigger_notify() are always available now via
+    // composer autoload.files (src/Piwigo/PluginConfig/functions.php), pure
+    // passthroughs with no handlers registered, so no local stubs are
+    // needed for them here.
 
     if (! function_exists('is_admin')) {
         // Matches the real is_admin($user_status = '')'s own contract: an

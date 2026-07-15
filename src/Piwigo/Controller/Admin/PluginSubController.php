@@ -12,7 +12,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * of a whitelisted file from within an already-active plugin's own
  * directory (e.g. that plugin's settings page). Doesn't touch the
  * plugins/themes/languages god-classes at all, only $pwg_loaded_plugins (a
- * real, already-established global from include/functions_plugins.inc.php's
+ * real, already-established global from Piwigo\Admin\PluginLoader's
  * plugin-loading bootstrap chain, unrelated to this batch's real scope --
  * same usage already exists in BatchManagerUnitPageRenderer). No other real
  * caller of admin/plugin.php exists (confirmed via grep) -- admin.php's own

@@ -9,7 +9,7 @@ use Piwigo\Template\ScriptLoader;
 // rather than going through get_head_scripts()/get_footer_scripts() ->
 // FileCombiner::combine(), which cascades through several legacy free
 // functions with top-level side effects (is_admin(), and
-// functions_plugins.inc.php's own top-level define(PHPWG_PLUGINS_PATH, ...)
+// include/functions.inc.php's own top-level define(PHPWG_PLUGINS_PATH, ...)
 // which needs PHPWG_ROOT_PATH already defined -- exactly the kind of
 // legacy-bootstrap coupling this whole audit is about). add()'s dependency-
 // merging and compute_script_topological_order()'s ordering logic -- what's

@@ -3,14 +3,16 @@
 declare(strict_types=1);
 
 // CategoryService calls several real, stable, already-migrated free
-// functions that need more bootstrap (plugin-event system, Translator's
-// locale-driven plural rules, $user/$conf-driven access checks) than this
-// isolated integration test wants to depend on. Same "minimal stub to load
-// standalone" pattern as CommentServiceTest/PermissionServiceTest --
-// is_admin()/trigger_change()/l10n() bodies copied verbatim from those
-// files (function_exists() guards mean whichever Integration test file's
-// stub loads first wins for the whole run, so every file declaring these
-// must keep the bodies identical).
+// functions that need more bootstrap (Translator's locale-driven plural
+// rules, $user/$conf-driven access checks) than this isolated integration
+// test wants to depend on. Same "minimal stub to load standalone" pattern
+// as CommentServiceTest/PermissionServiceTest -- is_admin()/l10n() bodies
+// copied verbatim from those files (function_exists() guards mean
+// whichever Integration test file's stub loads first wins for the whole
+// run, so every file declaring these must keep the bodies identical).
+// trigger_change() is always available now via composer autoload.files
+// (src/Piwigo/PluginConfig/functions.php), a pure passthrough with no
+// handlers registered, so no local stub is needed for it anymore.
 namespace {
     if (! function_exists('l10n')) {
         function l10n(string $key, mixed ...$args): string
@@ -33,12 +35,9 @@ namespace {
         }
     }
 
-    if (! function_exists('trigger_change')) {
-        function trigger_change(string $event, mixed $data = null, mixed ...$args): mixed
-        {
-            return $data;
-        }
-    }
+    // trigger_change() is always available now via composer autoload.files
+    // (src/Piwigo/PluginConfig/functions.php), a pure passthrough with no
+    // handlers registered, so no local stub is needed.
 
     if (! function_exists('is_admin')) {
         function is_admin(string $user_status = ''): bool

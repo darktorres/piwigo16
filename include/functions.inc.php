@@ -28,7 +28,9 @@ use Piwigo\Page\PaginationService;
 use Piwigo\Template\Template;
 use Piwigo\Validation\InputValidator;
 
-include_once PHPWG_ROOT_PATH . 'include/functions_plugins.inc.php';
+/** base directory of plugins */
+define('PHPWG_PLUGINS_PATH', PHPWG_ROOT_PATH . 'plugins/');
+
 include_once PHPWG_ROOT_PATH . 'include/functions_user.inc.php';
 include_once PHPWG_ROOT_PATH . 'include/functions_cookie.inc.php';
 include_once PHPWG_ROOT_PATH . 'include/functions_session.inc.php';

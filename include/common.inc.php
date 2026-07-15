@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Admin\PluginLoader;
 use Piwigo\Bootstrap\UserBootstrap;
 use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Config\ConfigLoader;
@@ -198,7 +199,7 @@ if (! (bool) $conf['check_upgrade_feed']) {
 ImageStdParams::load_from_db();
 
 session_start();
-load_plugins();
+PluginLoader::loadPlugins();
 
 if (! isset($conf['piwigo_installed_version'])) {
     conf_update_param('piwigo_installed_version', AppInfo::VERSION);

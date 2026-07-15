@@ -11,11 +11,10 @@ beforeEach(function (): void {
     Config::reset();
 
     // scanDirectory()'s Plugin branch reads PHPWG_PLUGINS_PATH, normally
-    // defined by include/functions_plugins.inc.php during full app
-    // bootstrap -- this Unit test doesn't load that, so define it
-    // defensively (guarded, same precedent as ExtensionLifecycleTest's
-    // identical stub, since define() is process-wide and Pest test files
-    // can share a process).
+    // defined by include/functions.inc.php during full app bootstrap --
+    // this Unit test doesn't load that, so define it defensively (guarded,
+    // same precedent as ExtensionLifecycleTest's identical stub, since
+    // define() is process-wide and Pest test files can share a process).
     if (! defined('PHPWG_PLUGINS_PATH')) {
         define('PHPWG_PLUGINS_PATH', PHPWG_ROOT_PATH . 'plugins/');
     }

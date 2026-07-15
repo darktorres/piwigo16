@@ -12,9 +12,10 @@ use Piwigo\Template\Template;
  * shared by both batch_manager tabs) into a class. Its only 2 real callers
  * (BatchManagerGlobalPageRenderer, BatchManagerUnitPageRenderer) are both
  * ported in this same P23 batch 6g -- unlike admin/include/
- * albums_tab.inc.php's 3rd caller (admin/permalinks.php, still 6j scope, P23
- * batch 6f), which is why that file stayed a raw include while this one is
- * fully folded into a shared class instead.
+ * albums_tab.inc.php's 3rd caller (Piwigo\Controller\Admin\
+ * PermalinksSubController, P23 batch 6j-1), which is why that file stayed
+ * a raw include while this one is fully folded into a shared class
+ * instead.
  *
  * $baseUrl/$collection/$catElementsId/$pageStart are passed explicitly
  * instead of read via `global` -- both callers already compute their own

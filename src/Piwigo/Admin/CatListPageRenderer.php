@@ -16,6 +16,16 @@ use Piwigo\Template\Template;
  * check_status(AccessLevel::Administrator) before dispatch (admin.php:65),
  * so the original cat_list.php's own (redundant) check_status() call is
  * dropped here -- same precedent as PhotosAddSubController.
+ *
+ * `global $my_base_url;` below is a real bug fix (P23 batch 6j-1), not a
+ * mechanical carry-over: admin/include/albums_tab.inc.php sets
+ * `$my_base_url` via a bare assignment, and without a preceding `global`
+ * declaration in this method's own call frame that assignment stays local
+ * to this method, invisible to add_core_tabs()'s own
+ * `global $my_base_url;` read for the 'albums' tabsheet case. Verified
+ * live that this page's own "List"/"Permalinks" tab hrefs were rendering
+ * as bare `href="albums"` / `href="permalinks"` instead of
+ * `admin.php?page=albums` / `admin.php?page=permalinks` before this fix.
  */
 final class CatListPageRenderer
 {
@@ -27,6 +37,7 @@ final class CatListPageRenderer
          * @var Template $template
          */
         global $conf, $page, $template;
+        global $my_base_url;
 
         include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 

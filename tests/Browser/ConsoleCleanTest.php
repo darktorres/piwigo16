@@ -36,6 +36,8 @@ $adminRoutes = [
     'admin themes'     => '/admin.php?page=themes',
     'admin maintenance' => '/admin.php?page=maintenance',
     'admin updates'    => '/admin.php?page=updates',
+    'admin site_manager' => '/admin.php?page=site_manager',
+    'admin permalinks' => '/admin.php?page=permalinks',
 ];
 
 foreach ($adminRoutes as $name => $path) {

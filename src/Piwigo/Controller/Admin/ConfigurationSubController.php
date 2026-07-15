@@ -6,10 +6,14 @@ namespace Piwigo\Controller\Admin;
 
 use Piwigo\Admin\Image\pwg_image;
 use Piwigo\Admin\tabsheet;
+use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\SizingParams;
+use Piwigo\Image\WatermarkParams;
+use Piwigo\Storage\StorageRegistry;
 use Piwigo\Template\Template;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -29,10 +33,11 @@ use Psr\Http\Message\ServerRequestInterface;
  * IntroSubController.
  *
  * Real write paths verified during this batch: the "watermark"/"sizes"
- * tabs delegate to admin/include/configuration_{watermark,sizes}_process.
- * inc.php, both already writing through typed abstractions
- * (ImageStdParams::save()/set_and_save(), UploadService::
- * saveUploadFormConfig()) with no raw SQL. The "default" tab's
+ * tabs' POST handlers were originally admin/include/configuration_
+ * {watermark,sizes}_process.inc.php, folded into processWatermark()/
+ * processSizes() below in P23 sub-batch 8b-4 -- both already write
+ * through typed abstractions (ImageStdParams::save()/set_and_save(),
+ * UploadService::saveUploadFormConfig()) with no raw SQL. The "default" tab's
  * build_user()/save_profile_from_post() calls are task #343's own
  * already-closed scope -- the same include/profile_functions.inc.php
  * pair the standalone admin/profile.php page once shared before P23
@@ -306,12 +311,12 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
                 case 'watermark':
 
-                    include PHPWG_ROOT_PATH . 'admin/include/configuration_watermark_process.inc.php';
+                    self::processWatermark();
                     break;
 
                 case 'sizes':
 
-                    include PHPWG_ROOT_PATH . 'admin/include/configuration_sizes_process.inc.php';
+                    self::processSizes();
                     break;
 
                 case 'comments':
@@ -814,5 +819,538 @@ WHERE param = \'' . $row['param'] . '\'
 
         // @phpstan-ignore isset.offset, isset.offset, logicalOr.alwaysFalse
         return isset($conf['order_by']) or isset($conf['order_by_inside_category']);
+    }
+
+    /**
+     * Ported from admin/include/configuration_sizes_process.inc.php
+     * (P23 sub-batch 8b-4) -- the "sizes" tab's POST handler. This
+     * method's own is_webmaster() check is the *only* thing gating this
+     * tab's write: the generic config-row UPDATE loop in handle() itself
+     * explicitly excludes 'sizes'/'watermark' from its own is_webmaster()
+     * check.
+     */
+    private static function processSizes(): void
+    {
+        /**
+         * @var array<string, mixed> $conf
+         * @var Template $template
+         * @var array<string, mixed> $page
+         */
+        global $conf, $template, $page;
+
+        if (! is_webmaster()) {
+            return;
+        }
+
+        $errors = [];
+
+        // original resize
+        $original_fields = [
+            'original_resize',
+            'original_resize_maxwidth',
+            'original_resize_maxheight',
+            'original_resize_quality',
+        ];
+
+        $updates = [];
+
+        foreach ($original_fields as $field) {
+            $value = ! empty($_POST[$field]) ? $_POST[$field] : null;
+            $updates[$field] = $value;
+        }
+
+        // $page['errors'] is only known to be array<string, mixed> one level deep;
+        // narrow the nested value to array<int, string> before passing it by
+        // reference into UploadService::saveUploadFormConfig() (same
+        // filter-into-a-fresh-array pattern as $pderivatives below), then write
+        // the possibly-appended-to result back so callers of this method still
+        // see the errors.
+        $page_errors_raw = $page['errors'] ?? null;
+        /** @var array<int, string> $page_errors */
+        $page_errors = [];
+        if (is_array($page_errors_raw)) {
+            foreach ($page_errors_raw as $page_error) {
+                if (is_string($page_error)) {
+                    $page_errors[] = $page_error;
+                }
+            }
+        }
+
+        new UploadService()
+            ->saveUploadFormConfig($updates, $page_errors, $errors);
+
+        $page['errors'] = $page_errors;
+
+        if ($_POST['resize_quality'] < 50 or $_POST['resize_quality'] > 98) {
+            $errors['resize_quality'] = '[50..98]';
+        }
+
+        $pderivatives_post = $_POST['d'] ?? null;
+
+        // The form posts a nested array keyed by derivative type, e.g.
+        // d[square][w], d[square][enabled] — every leaf value therefore arrives as
+        // a plain string. Anything else (missing key, or a tampered field name
+        // producing a nested array where a scalar is expected) is dropped here so
+        // the rest of this method can rely on a real, non-mixed shape instead of
+        // bare-casting raw superglobal data at each point of use.
+        /** @var array<string, array<string, string|int|bool|null>> $pderivatives */
+        $pderivatives = [];
+        if (is_array($pderivatives_post)) {
+            foreach ($pderivatives_post as $ptype => $pfields) {
+                if (! is_string($ptype) || ! is_array($pfields)) {
+                    continue;
+                }
+                $normalized = [];
+                foreach ($pfields as $pkey => $pvalue) {
+                    if (is_string($pkey) && is_string($pvalue)) {
+                        $normalized[$pkey] = $pvalue;
+                    }
+                }
+                $pderivatives[$ptype] = $normalized;
+            }
+        }
+
+        // step 1 - sanitize HTML input
+        foreach ($pderivatives as $type => &$pderivative) {
+            if ($pderivative['must_square'] = ($type == IMG_SQUARE ? true : false)) {
+                $pderivative['h'] = $pderivative['w'];
+                $pderivative['minh'] = $pderivative['minw'] = $pderivative['w'];
+                $pderivative['crop'] = 100;
+            }
+            $pderivative['must_enable'] = ($type == IMG_SQUARE || $type == IMG_THUMB || $type == $conf['derivative_default_size']) ? true : false;
+            $pderivative['enabled'] = isset($pderivative['enabled']) || $pderivative['must_enable'] ? true : false;
+
+            if (isset($pderivative['crop'])) {
+                $pderivative['crop'] = 100;
+                $pderivative['minw'] = $pderivative['w'];
+                $pderivative['minh'] = $pderivative['h'];
+            } else {
+                $pderivative['crop'] = 0;
+                $pderivative['minw'] = null;
+                $pderivative['minh'] = null;
+            }
+        }
+        unset($pderivative);
+
+        // step 2 - check validity
+        //
+        // $derivative_errors is kept separate from $errors (a flat field =>
+        // message map) because it's a nested type => ['w' => message, ...] map;
+        // the two are merged back together below for the 'ferrors' template
+        // assignment
+        /** @var array<string, array<string, string>> $derivative_errors */
+        $derivative_errors = [];
+        $prev_w = $prev_h = 0;
+        foreach (ImageStdParams::get_all_types() as $type) {
+            $pderivative = $pderivatives[$type];
+            if (! $pderivative['enabled']) {
+                continue;
+            }
+
+            if ($type == IMG_THUMB) {
+                $w = intval($pderivative['w']);
+                if ($w <= 0) {
+                    $derivative_errors[$type]['w'] = '>0';
+                }
+
+                $h = intval($pderivative['h']);
+                if ($h <= 0) {
+                    $derivative_errors[$type]['h'] = '>0';
+                }
+
+                if (max($w, $h) <= $prev_w) {
+                    $derivative_errors[$type]['w'] = $derivative_errors[$type]['h'] = '>' . $prev_w;
+                }
+            } else {
+                $v = intval($pderivative['w']);
+                if ($v <= 0 or $v <= $prev_w) {
+                    $derivative_errors[$type]['w'] = '>' . $prev_w;
+                }
+
+                $v = intval($pderivative['h']);
+                if ($v <= 0 or $v <= $prev_h) {
+                    $derivative_errors[$type]['h'] = '>' . $prev_h;
+                }
+            }
+
+            if (count($errors) == 0 && count($derivative_errors) == 0) {
+                $prev_w = intval($pderivative['w']);
+                $prev_h = intval($pderivative['h']);
+            }
+
+            $v = intval($pderivative['sharpen']);
+            if ($v < 0 || $v > 100) {
+                $derivative_errors[$type]['sharpen'] = '[0..100]';
+            }
+        }
+
+        // step 3 - save data
+        if (count($errors) == 0 && count($derivative_errors) == 0) {
+            $resize_quality_post = $_POST['resize_quality'] ?? null;
+            $resize_quality = is_numeric($resize_quality_post) ? intval($resize_quality_post) : 0;
+            $quality_changed = ImageStdParams::$quality != $resize_quality;
+            ImageStdParams::$quality = $resize_quality;
+
+            $enabled = ImageStdParams::get_defined_type_map();
+            $disabled_raw = safe_unserialize(ImageStdParams::get_disabled_type_map());
+            // ImageStdParams persists this map as serialize()d DerivativeParams[]
+            // (see ImageStdParams::save_disabled()); unserialize() is only typed
+            // mixed by PHP itself, so filter out anything that isn't actually a
+            // DerivativeParams instance rather than trusting the blob blindly.
+            /** @var array<string, DerivativeParams> $disabled */
+            $disabled = [];
+            if (is_array($disabled_raw)) {
+                foreach ($disabled_raw as $disabled_type => $disabled_params) {
+                    if (is_string($disabled_type) && $disabled_params instanceof DerivativeParams) {
+                        $disabled[$disabled_type] = $disabled_params;
+                    }
+                }
+            }
+            $changed_types = [];
+
+            foreach (ImageStdParams::get_all_types() as $type) {
+                $pderivative = $pderivatives[$type];
+
+                if ($pderivative['enabled']) {
+                    $new_params = new DerivativeParams(
+                        new SizingParams(
+                            [intval($pderivative['w']), intval($pderivative['h'])],
+                            round(intval($pderivative['crop']) / 100, 2),
+                            [intval($pderivative['minw']), intval($pderivative['minh'])]
+                        )
+                    );
+                    $new_params->sharpen = intval($pderivative['sharpen']);
+
+                    ImageStdParams::apply_global($new_params);
+
+                    if (isset($enabled[$type])) {
+                        $old_params = $enabled[$type];
+                        $same = true;
+                        if (! size_equals($old_params->sizing->ideal_size, $new_params->sizing->ideal_size)
+                            or $old_params->sizing->max_crop != $new_params->sizing->max_crop) {
+                            $same = false;
+                        }
+
+                        if ($same
+                            and $new_params->sizing->max_crop != 0
+                            and ! size_equals($old_params->sizing->min_size, $new_params->sizing->min_size)) {
+                            $same = false;
+                        }
+
+                        if ($quality_changed
+                            || $new_params->sharpen != $old_params->sharpen) {
+                            $same = false;
+                        }
+
+                        if (! $same) {
+                            $new_params->last_mod_time = time();
+                            $changed_types[] = $type;
+                        } else {
+                            $new_params->last_mod_time = $old_params->last_mod_time;
+                        }
+                        $enabled[$type] = $new_params;
+                    } else {// now enabled, before was disabled
+                        $enabled[$type] = $new_params;
+                        unset($disabled[$type]);
+                    }
+                } else {// disabled
+                    if (isset($enabled[$type])) {// now disabled, before was enabled
+                        $changed_types[] = $type;
+                        $disabled[$type] = $enabled[$type];
+                        unset($enabled[$type]);
+                    }
+                }
+            }
+
+            $enabled_by = []; // keys ordered by all types
+            foreach (ImageStdParams::get_all_types() as $type) {
+                if (isset($enabled[$type])) {
+                    $enabled_by[$type] = $enabled[$type];
+                }
+            }
+
+            foreach (array_keys(ImageStdParams::$custom) as $custom) {
+                if (isset($_POST['delete_custom_derivative_' . $custom])) {
+                    $changed_types[] = $custom;
+                    unset(ImageStdParams::$custom[$custom]);
+                }
+            }
+
+            ImageStdParams::set_and_save($enabled_by);
+            ImageStdParams::set_and_save_disabled($disabled);
+
+            if ((bool) count($changed_types)) {
+                clear_derivative_cache($changed_types);
+            }
+
+            $template->assign(
+                [
+                    'save_success' => l10n('Your configuration settings are saved'),
+                ]
+            );
+
+            pwg_activity('system', ActivitySystem::Core, 'config', [
+                'config_section' => 'sizes',
+            ]);
+        } else {
+            foreach ($original_fields as $field) {
+                if (isset($_POST[$field]) && is_string($_POST[$field])) {
+                    $template->append(
+                        'sizes',
+                        [
+                            $field => strip_tags($_POST[$field]), // strip_tags prevents from XSS attempt
+                        ],
+                        true
+                    );
+                }
+            }
+
+            $template->assign('derivatives', $pderivatives);
+            $template->assign('ferrors', $errors + $derivative_errors);
+            $template->assign('resize_quality', $_POST['resize_quality']);
+            $page['sizes_loaded_in_tpl'] = true;
+        }
+    }
+
+    /**
+     * Ported from admin/include/configuration_watermark_process.inc.php
+     * (P23 sub-batch 8b-4) -- the "watermark" tab's POST handler. Same
+     * is_webmaster()-is-the-only-gate shape as processSizes() above.
+     */
+    private static function processWatermark(): void
+    {
+        /** @var Template $template */
+        global $template;
+
+        // $page['errors'] is always initialized to [] by handle() itself,
+        // but that isn't visible across this method's own scope boundary --
+        // narrow once here so the appends below type-check.
+        /** @var array<string, mixed> $page */
+        global $page;
+        if (! is_array($page['errors'] ?? null)) {
+            $page['errors'] = [];
+        }
+
+        if (! is_webmaster()) {
+            return;
+        }
+
+        $errors = [];
+        $pwatermark_post = $_POST['w'] ?? null;
+
+        // The form posts a flat array w[key]=value (see configuration_watermark.tpl)
+        // where every leaf arrives as a plain string; normalize into a concrete
+        // shape so the rest of this method can rely on real types instead of
+        // bare-casting raw superglobal data at each point of use.
+        /** @var array<string, string> $pwatermark */
+        $pwatermark = [];
+        if (is_array($pwatermark_post)) {
+            foreach ($pwatermark_post as $pkey => $pvalue) {
+                if (is_string($pkey) && is_string($pvalue)) {
+                    $pwatermark[$pkey] = $pvalue;
+                }
+            }
+        }
+
+        // step 0 - manage upload if any
+        $watermark_upload = $_FILES['watermarkImage'] ?? null;
+        $watermark_tmp_name = null;
+        $watermark_upload_name = null;
+        if (is_array($watermark_upload)) {
+            if (isset($watermark_upload['tmp_name']) && is_string($watermark_upload['tmp_name'])) {
+                $watermark_tmp_name = $watermark_upload['tmp_name'];
+            }
+            if (isset($watermark_upload['name']) && is_string($watermark_upload['name'])) {
+                $watermark_upload_name = $watermark_upload['name'];
+            }
+        }
+
+        if (! empty($watermark_tmp_name)) {
+            $image_size = getimagesize($watermark_tmp_name);
+            $type = $image_size === false ? false : $image_size[2];
+            if ($type != IMAGETYPE_PNG) {
+                $errors['watermarkImage'] = sprintf(
+                    l10n('Allowed file types: %s.'),
+                    'PNG'
+                );
+            } else {
+                $upload_dir = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'watermarks';
+                if (mkgetdir($upload_dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
+                    // file name may include exotic chars like single quote, we need a safe name
+                    $new_name = str2url(get_filename_wo_extension($watermark_upload_name ?? ''));
+
+                    // we need existing watermarks to avoid overwritting one
+                    $watermark_files = [];
+                    if (($glob = glob(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'watermarks/*.png')) !== false) {
+                        foreach ($glob as $file) {
+                            $watermark_files[] = get_filename_wo_extension(
+                                substr($file, strlen(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'watermarks/'))
+                            );
+                        }
+                    }
+
+                    $file_path = $upload_dir . '/' . self::getWatermarkFilename($watermark_files, $new_name);
+
+                    // $upload_dir is exactly the 'watermarks' disk's own root, so
+                    // the disk-relative path is just the filename.
+                    $watermark_stream = fopen($watermark_tmp_name, 'rb');
+                    if ($watermark_stream !== false) {
+                        StorageRegistry::disk('watermarks')->writeStream(basename($file_path), $watermark_stream);
+                        fclose($watermark_stream);
+                        $pwatermark['file'] = substr($file_path, strlen(PHPWG_ROOT_PATH));
+                    } else {
+                        $page['errors'][] = $errors['watermarkImage'] = "{$file_path} " . l10n('no write access');
+                    }
+                } else {
+                    $page['errors'][] = $errors['watermarkImage'] = sprintf(l10n('Add write access to the "%s" directory'), $upload_dir);
+                }
+            }
+        }
+
+        // step 1 - sanitize HTML input
+        // $pwatermark is declared array<string, string> above; assign string
+        // literals here (not int) so that promise holds for every key, not just
+        // the ones read via intval() below -- an int write here would otherwise
+        // widen PHPStan's inferred value type for the whole array to int|string.
+        switch ($pwatermark['position']) {
+            case 'topleft':
+
+                $pwatermark['xpos'] = '0';
+                $pwatermark['ypos'] = '0';
+                break;
+
+            case 'topright':
+
+                $pwatermark['xpos'] = '100';
+                $pwatermark['ypos'] = '0';
+                break;
+
+            case 'middle':
+
+                $pwatermark['xpos'] = '50';
+                $pwatermark['ypos'] = '50';
+                break;
+
+            case 'bottomleft':
+
+                $pwatermark['xpos'] = '0';
+                $pwatermark['ypos'] = '100';
+                break;
+
+            case 'bottomright':
+
+                $pwatermark['xpos'] = '100';
+                $pwatermark['ypos'] = '100';
+                break;
+
+        }
+
+        // step 2 - check validity
+        // Accumulate into a local array and only assign it into $errors['watermark']
+        // if non-empty, matching this method's original auto-vivification behavior --
+        // pre-creating $errors['watermark'] unconditionally would make count($errors)
+        // never 0, permanently skipping "step 3 - save data" below. (xpos/ypos come
+        // from raw user input when position=custom -- see configuration_watermark.tpl
+        // -- so out-of-range values are a real, reachable case, not dead code.)
+        $watermark_errors = [];
+        $v = intval($pwatermark['xpos']);
+        if ($v < 0 or $v > 100) {
+            $watermark_errors['xpos'] = '[0..100]';
+        }
+
+        $v = intval($pwatermark['ypos']);
+        if ($v < 0 or $v > 100) {
+            $watermark_errors['ypos'] = '[0..100]';
+        }
+
+        $v = intval($pwatermark['opacity']);
+        if ($v <= 0 or $v > 100) {
+            $watermark_errors['opacity'] = '(0..100]';
+        }
+
+        if ($watermark_errors !== []) {
+            $errors['watermark'] = $watermark_errors;
+        }
+
+        // step 3 - save data
+        if (count($errors) == 0) {
+            $watermark = new WatermarkParams();
+            $watermark->file = $pwatermark['file'];
+            $watermark->xpos = intval($pwatermark['xpos']);
+            $watermark->ypos = intval($pwatermark['ypos']);
+            $watermark->xrepeat = intval($pwatermark['xrepeat']);
+            $watermark->yrepeat = intval($pwatermark['yrepeat']);
+            $watermark->opacity = intval($pwatermark['opacity']);
+            $watermark->min_size = [intval($pwatermark['minw']), intval($pwatermark['minh'])];
+
+            $old_watermark = ImageStdParams::get_watermark();
+            $watermark_changed =
+              $watermark->file != $old_watermark->file
+              || $watermark->xpos != $old_watermark->xpos
+              || $watermark->ypos != $old_watermark->ypos
+              || $watermark->xrepeat != $old_watermark->xrepeat
+              || $watermark->yrepeat != $old_watermark->yrepeat
+              || $watermark->opacity != $old_watermark->opacity;
+
+            // save the new watermark configuration
+            ImageStdParams::set_watermark($watermark);
+
+            // do we have to regenerate the derivatives (and which types)?
+            $changed_types = [];
+
+            foreach (ImageStdParams::get_defined_type_map() as $type => $params) {
+                $old_use_watermark = $params->use_watermark;
+                ImageStdParams::apply_global($params);
+
+                $changed = $params->use_watermark != $old_use_watermark;
+                if (! $changed and $params->use_watermark) {
+                    $changed = $watermark_changed;
+                }
+                if (! $changed and $params->use_watermark) {
+                    // if thresholds change and before/after the threshold is lower than the corresponding derivative side -> some derivatives might switch the watermark
+                    (bool) ($changed |= $watermark->min_size[0] != $old_watermark->min_size[0]) and ($watermark->min_size[0] < $params->max_width() or $old_watermark->min_size[0] < $params->max_width());
+                    (bool) ($changed |= $watermark->min_size[1] != $old_watermark->min_size[1]) and ($watermark->min_size[1] < $params->max_height() or $old_watermark->min_size[1] < $params->max_height());
+                }
+
+                if ((bool) $changed) {
+                    $params->last_mod_time = time();
+                    $changed_types[] = $type;
+                }
+            }
+
+            ImageStdParams::save();
+
+            if ((bool) count($changed_types)) {
+                clear_derivative_cache($changed_types);
+            }
+
+            $template->assign(
+                [
+                    'save_success' => l10n('Your configuration settings are saved'),
+                ]
+            );
+
+            pwg_activity('system', ActivitySystem::Core, 'config', [
+                'config_section' => 'watermark',
+            ]);
+        } else {
+            $template->assign('watermark', $pwatermark);
+            $template->assign('ferrors', $errors);
+        }
+    }
+
+    /**
+     * @param array<int, string> $list
+     */
+    private static function getWatermarkFilename(array $list, string $candidate, int $step = 0): string
+    {
+        $change_name = $candidate;
+        if ($step != 0) {
+            $change_name .= '-' . $step;
+        }
+        if (in_array($change_name, $list)) {
+            return self::getWatermarkFilename($list, $candidate, $step + 1);
+        }
+        return $change_name . '.png';
     }
 }

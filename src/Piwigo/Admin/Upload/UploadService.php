@@ -7,11 +7,14 @@ namespace Piwigo\Admin\Upload;
 use Piwigo\Admin\Image\pwg_image;
 use Piwigo\Config\Config;
 use Piwigo\Core\Logger;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Metadata\MetadataRepository;
+use Piwigo\Metadata\MetadataService;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
@@ -508,7 +511,7 @@ SELECT
         if ((bool) $conf['use_exif'] and ! function_exists('exif_read_data')) {
             $conf['use_exif'] = false;
         }
-        sync_metadata([(int) $image_id]);
+        new MetadataService(new MetadataRepository(DbConnection::build()))->syncMetadata([(int) $image_id]);
 
         // cache a derivative
         $query = '

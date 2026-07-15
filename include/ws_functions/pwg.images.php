@@ -12,9 +12,12 @@ declare(strict_types=1);
 use Piwigo\Config\Config;
 use Piwigo\Core\Logger;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Metadata\MetadataRepository;
+use Piwigo\Metadata\MetadataService;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
@@ -1676,8 +1679,7 @@ SELECT id, name, permalink
 
     // update metadata from the uploaded file (exif/iptc), even if the sync
     // was already performed by add_uploaded_file().
-    require_once PHPWG_ROOT_PATH . 'admin/include/functions_metadata.php';
-    sync_metadata([(int) $image_id]);
+    new MetadataService(new MetadataRepository(DbConnection::build()))->syncMetadata([(int) $image_id]);
 
     return [
         'image_id' => $image_id,
@@ -2992,9 +2994,8 @@ SELECT id
 
     $image_ids = array_map(intval(...), $image_ids);
 
-    include_once PHPWG_ROOT_PATH . 'admin/include/functions_metadata.php';
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-    sync_metadata($image_ids);
+    new MetadataService(new MetadataRepository(DbConnection::build()))->syncMetadata($image_ids);
 
     return [
         'nb_synchronized' => count($image_ids),

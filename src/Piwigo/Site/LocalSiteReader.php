@@ -11,6 +11,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Site;
 
+use Piwigo\Db\DbConnection;
+use Piwigo\Metadata\MetadataRepository;
+use Piwigo\Metadata\MetadataService;
+
 // provides data for site synchronization from the local file system
 class LocalSiteReader
 {
@@ -167,7 +171,7 @@ class LocalSiteReader
      */
     public function get_metadata_attributes(): array
     {
-        return get_sync_metadata_attributes();
+        return new MetadataService(new MetadataRepository(DbConnection::build()))->getSyncMetadataAttributes();
     }
 
     // returns a hash of attributes (metadata+filesize+width,...) for file
@@ -177,7 +181,7 @@ class LocalSiteReader
      */
     public function get_element_metadata($infos): array|false
     {
-        return get_sync_metadata($infos);
+        return new MetadataService(new MetadataRepository(DbConnection::build()))->getSyncMetadata($infos);
     }
 
     // -------------------------------------------------- private functions --------

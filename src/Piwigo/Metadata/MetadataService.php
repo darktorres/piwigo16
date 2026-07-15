@@ -10,8 +10,9 @@ use Piwigo\Db\Tables;
 /**
  * Pure computation ported from `admin/include/functions_metadata.php`
  * (7 functions) + `include/functions_metadata.inc.php` (5 functions) --
- * raw EXIF/IPTC extraction, SVG dimension parsing, GPS math, keyword
- * normalization -- plus the 2 orchestrator methods
+ * both deleted in P23 sub-batch 8b-1, their real callers retargeted
+ * directly here -- raw EXIF/IPTC extraction, SVG dimension parsing, GPS
+ * math, keyword normalization -- plus the 2 orchestrator methods
  * (`syncMetadata()`/`getFilelist()`) that call {@see MetadataRepository}
  * for their own DB access.
  *

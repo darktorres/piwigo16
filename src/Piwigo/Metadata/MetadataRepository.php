@@ -9,13 +9,14 @@ use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\Tables;
 
 /**
- * Persistence layer for the 2 genuinely data-touching functions in
- * `admin/include/functions_metadata.php` (`sync_metadata()`,
- * `get_filelist()`) -- the other 10 functions across that file and
- * `include/functions_metadata.inc.php` are pure computation over raw
- * EXIF/IPTC/SVG file data (parsing, charset conversion, GPS math,
- * keyword normalization) with no DB access of their own; they live on
- * {@see MetadataService} instead.
+ * Persistence layer for the 2 genuinely data-touching functions formerly
+ * in `admin/include/functions_metadata.php` (`sync_metadata()`,
+ * `get_filelist()`, now `syncMetadata()`/`getFilelist()` on
+ * {@see MetadataService}) -- the other 10 functions across that file and
+ * `include/functions_metadata.inc.php` (both deleted in P23 sub-batch
+ * 8b-1) were pure computation over raw EXIF/IPTC/SVG file data (parsing,
+ * charset conversion, GPS math, keyword normalization) with no DB access
+ * of their own; they live on {@see MetadataService} instead.
  */
 final class MetadataRepository extends AbstractRepository
 {

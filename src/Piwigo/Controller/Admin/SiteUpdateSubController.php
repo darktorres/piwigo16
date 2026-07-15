@@ -8,7 +8,10 @@ use Piwigo\Admin\tabsheet;
 use Piwigo\Config\Config;
 use Piwigo\Core\Logger;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Metadata\MetadataRepository;
+use Piwigo\Metadata\MetadataService;
 use Piwigo\Site\LocalSiteReader;
 use Piwigo\Template\Template;
 use Psr\Http\Message\ServerRequestInterface;
@@ -874,7 +877,7 @@ DELETE
                         $opts['recursive'] = false;
                     }
                 }
-                $files = get_filelist(
+                $files = new MetadataService(new MetadataRepository(DbConnection::build()))->getFilelist(
                     $opts['category_id'],
                     $site_id,
                     $opts['recursive'],
@@ -956,7 +959,7 @@ DELETE
                 }
             }
             $start = get_moment();
-            $files = get_filelist(
+            $files = new MetadataService(new MetadataRepository(DbConnection::build()))->getFilelist(
                 $opts['category_id'],
                 $site_id,
                 $opts['recursive'],

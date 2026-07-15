@@ -14,11 +14,12 @@ use Piwigo\Template\Template;
  * Renders the picture page's EXIF/IPTC metadata panel. Ported from
  * include/picture_metadata.inc.php -- pure presentation glue around
  * MetadataService::getExifData()/getIptcData() (already the real
- * implementation; get_exif_data()/get_iptc_data() in
- * include/functions_metadata.inc.php are confirmed thin wrappers around the
- * same two methods, so this class calls MetadataService directly instead of
- * include_once-ing that wrapper file). No constructor deps -- same "plain
- * global-function/global-variable reads" shape as Page\PageHeaderRenderer.
+ * implementation; get_exif_data()/get_iptc_data(), formerly thin wrappers
+ * around the same two methods in include/functions_metadata.inc.php,
+ * were deleted in P23 sub-batch 8b-1 -- this class always called
+ * MetadataService directly, never that wrapper file). No constructor
+ * deps -- same "plain global-function/global-variable reads" shape as
+ * Page\PageHeaderRenderer.
  */
 final class PictureMetadataRenderer
 {

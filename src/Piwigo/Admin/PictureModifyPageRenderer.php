@@ -10,6 +10,8 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\SrcImage;
+use Piwigo\Metadata\MetadataRepository;
+use Piwigo\Metadata\MetadataService;
 use Piwigo\Template\Template;
 use Piwigo\Users\UserRepository;
 
@@ -110,7 +112,7 @@ SELECT id
         if (isset($_GET['sync_metadata'])) {
             check_pwg_token();
 
-            sync_metadata([$image_id]);
+            new MetadataService(new MetadataRepository(DbConnection::build()))->syncMetadata([$image_id]);
             if (! is_array($page['infos'] ?? null)) {
                 $page['infos'] = [];
             }

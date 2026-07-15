@@ -25,8 +25,6 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Template\Template;
 use Psr\Http\Client\ClientExceptionInterface;
 
-include_once PHPWG_ROOT_PATH . 'admin/include/functions_metadata.php';
-
 // Relocated from the now-deleted admin/photos_add.php (P23 batch 8a):
 // admin/include/add_core_tabs.inc.php's add_core_tabs() and
 // Piwigo\Admin\PhotosAddDirectPageRenderer both read this constant, and

@@ -151,13 +151,9 @@ let plugin_filter = searchParams.get('filter');
           <div class="tiptip" title="{'Uninstall'|@translate}">
             <a class="uninstall-plugin-button">{'Uninstall'|@translate}</a>
           </div>
-        {elseif $plugin.STATE == 'merged' and $CONF_ENABLE_EXTENSIONS_INSTALL}
-          <div class="tiptip" title="{'Delete'|@translate}">
-            <a class="" href="{$plugin.U_ACTION}&amp;action=delete">{'Delete'|@translate}</a>
-          </div>
-        {/if}                     
+        {/if}
       </div>
-      
+
       <div class="PluginOptionsBlock dropdown">
         <div class="dropdown-option-content"> {if !empty($author)}{'By %s'|@translate:$author} | {/if}{'Version'|@translate} {$version}</div>
         <div class="pluginDescCompact">
@@ -189,9 +185,7 @@ let plugin_filter = searchParams.get('filter');
           {/if}
         {elseif $plugin.STATE == 'missing'}
           <a class="pluginActionLevel3 uninstall-plugin-button">{'Uninstall'|@translate}</a>
-        {elseif $plugin.STATE == 'merged' and $CONF_ENABLE_EXTENSIONS_INSTALL}
-          <a class="pluginActionLevel3" href="{$plugin.U_ACTION}&amp;action=delete">{'Delete'|@translate}</a>
-        {/if}                     
+        {/if}
       </div>
     </div>
     

@@ -18,10 +18,11 @@ use Piwigo\Template\Template;
  * dropped here -- same precedent as PhotosAddSubController.
  *
  * `global $my_base_url;` below is a real bug fix (P23 batch 6j-1), not a
- * mechanical carry-over: admin/include/albums_tab.inc.php sets
+ * mechanical carry-over: the inline tabsheet block below (formerly
+ * admin/include/albums_tab.inc.php, folded in P23 batch 8b-5) sets
  * `$my_base_url` via a bare assignment, and without a preceding `global`
  * declaration in this method's own call frame that assignment stays local
- * to this method, invisible to add_core_tabs()'s own
+ * to this method, invisible to CoreTabs::addCoreTabs()'s own
  * `global $my_base_url;` read for the 'albums' tabsheet case. Verified
  * live that this page's own "List"/"Permalinks" tab hrefs were rendering
  * as bare `href="albums"` / `href="permalinks"` instead of
@@ -83,7 +84,26 @@ final class CatListPageRenderer
         // +-------------------------------------------------------------------+
 
         $page['tab'] = 'list';
-        include PHPWG_ROOT_PATH . 'admin/include/albums_tab.inc.php';
+
+        $my_base_url = get_root_url() . 'admin.php?page=';
+
+        $tabsheet = new tabsheet();
+        $tabsheet->set_id('albums');
+        $tabsheet->select($page['tab']);
+        $tabsheet->assign();
+
+        $query = '
+SELECT COUNT(*)
+  FROM ' . Tables::categories() . '
+;';
+        $row = pwg_db_fetch_row(pwg_query($query));
+        assert($row !== null);
+        [$nb_cats] = $row;
+        $template->assign(
+            [
+                'nb_cats' => $nb_cats,
+            ]
+        );
 
         // +-------------------------------------------------------------------+
         // |                    virtual categories management                  |

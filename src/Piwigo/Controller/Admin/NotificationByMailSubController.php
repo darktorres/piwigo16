@@ -6,22 +6,34 @@ namespace Piwigo\Controller\Admin;
 
 use Piwigo\Admin\tabsheet;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Mail\NotificationByMailSender;
+use Piwigo\Notification\NotificationByMailRepository;
+use Piwigo\Notification\NotificationByMailService;
 use Piwigo\Template\Template;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Replaces admin/notification_by_mail.php (page slug "notification_by_mail"),
  * folded directly into this controller -- same shape as every prior P23
- * batch 6 sub-batch's shell folding. Its data access already lives entirely
- * behind the admin/include/functions_notification_by_mail.inc.php bridge
- * built on top of Piwigo\Notification\NotificationByMailService (P19, task
- * #350) -- left untouched, no cross-file free-function naming conflicts with
- * the 5 functions folded below. This class's own remaining ~800 lines are
- * request-orchestration (timeout handling across 3 POST modes, mail
- * template assignment), not extractable data access, the same "most logic
- * already factored, no new AdminService warranted" shape as
- * HistorySubController.
+ * batch 6 sub-batch's shell folding.
+ *
+ * `admin/include/functions_notification_by_mail.inc.php` (P23 batch 8b-7)
+ * is now folded into `Piwigo\Mail\NotificationByMailSender`, constructed
+ * once as `$nbmSender` near the top of `handle()` and threaded explicitly
+ * into the private static methods below that need it -- replacing the
+ * former `include_once` + implicit `global $env_nbm;` state-threading with
+ * a real constructed dependency. `doActionSendMailNotification()`'s own
+ * body moved with it (as `NotificationByMailSender::sendMailNotifications()`)
+ * since it read the sender's internal `$env_nbm`-equivalent state
+ * (email format, mail template, sender address) directly rather than just
+ * calling the sender's own public methods -- keeping it here would have
+ * meant leaking that internal state back out through new getters, when the
+ * method is really part of the same mail-sending pipeline the sender
+ * already owns. See `NotificationByMailSender`'s own docblock for why it
+ * lives in `Piwigo\Mail` (L3Presentation), not `Piwigo\Notification`
+ * (L2bExtendedDomain, which may not depend on `Piwigo\Template\Template`).
  *
  * admin.php itself already gates every page behind
  * check_status(AccessLevel::Administrator) before dispatch (admin.php:65),
@@ -43,13 +55,14 @@ use Psr\Http\Message\ServerRequestInterface;
  * controlled outcome" precedent from P23 batch 6g).
  *
  * do_timeout_treatment()/get_tab_status()/insertNewDataUserMailNotification()/
- * renderGlobalCustomizeMailContent()/doActionSendMailNotification() were
- * top-level functions in the original file with zero external callers
- * (confirmed via a direct grep -- tools/triggers_list.php mentions 2 of
- * them in a documentation string only, not executable code) -- folded into
- * private static methods here, removing the "cannot redeclare function on
- * double-include" risk every prior sub-batch with this shape has already
- * converted away from.
+ * renderGlobalCustomizeMailContent() were top-level functions in the
+ * original file with zero external callers (confirmed via a direct grep --
+ * tools/triggers_list.php mentions 2 of them in a documentation string
+ * only, not executable code) -- folded into private static methods here,
+ * removing the "cannot redeclare function on double-include" risk every
+ * prior sub-batch with this shape has already converted away from.
+ * doActionSendMailNotification() moved to NotificationByMailSender instead,
+ * see above.
  *
  * renderGlobalCustomizeMailContent() needed different handling than the
  * other 4: it's registered as an event handler
@@ -73,10 +86,11 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         global $conf, $template;
 
         include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions_notification_by_mail.inc.php';
         include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
         include_once PHPWG_ROOT_PATH . 'include/functions_notification.inc.php';
         include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php';
+
+        $nbmSender = new NotificationByMailSender(new NotificationByMailService(new NotificationByMailRepository(DbConnection::build())));
 
         check_input_parameter('mode', $_GET, false, '/^(param|subscribe|send)$/');
 
@@ -123,7 +137,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         // +-----------------------------------------------------------------------+
         if (count($_POST) == 0) {
             // No insert data in post mode
-            self::insertNewDataUserMailNotification();
+            self::insertNewDataUserMailNotification($nbmSender);
         }
 
         // +-----------------------------------------------------------------------+
@@ -174,17 +188,17 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
             case 'subscribe':
 
                 if (isset($_POST['falsify']) and isset($_POST['cat_true']) and is_array($_POST['cat_true'])) {
-                    // unsubscribe_notification_by_mail() is declared to return
+                    // unsubscribeNotificationByMail() is declared to return
                     // mixed[] (a list, always sequentially int-keyed in practice via
                     // $check_key_treated[] appends), but PHPStan reads that shorthand
                     // as array<mixed> (key type not pinned to int); array_values()
                     // re-keys it to the array<int, mixed> doTimeoutTreatment()
                     // actually expects.
-                    $check_key_treated = array_values(unsubscribe_notification_by_mail(true, array_values($_POST['cat_true'])));
-                    $must_repost = self::doTimeoutTreatment('cat_true', $check_key_treated);
+                    $check_key_treated = array_values($nbmSender->unsubscribeNotificationByMail(true, array_values($_POST['cat_true'])));
+                    $must_repost = self::doTimeoutTreatment($nbmSender, 'cat_true', $check_key_treated);
                 } elseif (isset($_POST['trueify']) and isset($_POST['cat_false']) and is_array($_POST['cat_false'])) {
-                    $check_key_treated = array_values(subscribe_notification_by_mail(true, array_values($_POST['cat_false'])));
-                    $must_repost = self::doTimeoutTreatment('cat_false', $check_key_treated);
+                    $check_key_treated = array_values($nbmSender->subscribeNotificationByMail(true, array_values($_POST['cat_false'])));
+                    $must_repost = self::doTimeoutTreatment($nbmSender, 'cat_false', $check_key_treated);
                 }
                 break;
 
@@ -195,12 +209,12 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                     and isset($_POST['send_selection']) and is_array($_POST['send_selection'])
                     and isset($_POST['send_customize_mail_content']) and is_string($_POST['send_customize_mail_content'])
                 ) {
-                    $check_key_treated = self::doActionSendMailNotification(
+                    $check_key_treated = $nbmSender->sendMailNotifications(
                         'send',
                         array_values($_POST['send_selection']),
                         stripslashes($_POST['send_customize_mail_content'])
                     );
-                    $must_repost = self::doTimeoutTreatment('send_selection', $check_key_treated);
+                    $must_repost = self::doTimeoutTreatment($nbmSender, 'send_selection', $check_key_treated);
                 }
 
         }
@@ -271,7 +285,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                     ]
                 );
 
-                $data_users = get_user_notifications('subscribe');
+                $data_users = $nbmSender->getUserNotifications('subscribe');
 
                 $opt_true = [];
                 $opt_true_selected = [];
@@ -311,7 +325,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                     'users' => [],
                 ];
 
-                $data_users = self::doActionSendMailNotification('list_to_send');
+                $data_users = $nbmSender->sendMailNotifications('list_to_send');
 
                 $tpl_var['CUSTOMIZE_MAIL_CONTENT'] =
                   (isset($_POST['send_customize_mail_content']) and is_string($_POST['send_customize_mail_content']))
@@ -324,8 +338,8 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
 
                 if ((bool) count($data_users)) {
                     foreach ($data_users as $nbm_user) {
-                        // doActionSendMailNotification('list_to_send') returns
-                        // get_user_notifications() rows unchanged.
+                        // sendMailNotifications('list_to_send') returns
+                        // getUserNotifications() rows unchanged.
                         assert(is_array($nbm_user));
                         /** @var array<string, string|null> $nbm_user */
                         if (
@@ -384,35 +398,27 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
      * @param array<int, mixed> $check_key_treated: array of check_key treated
      * @return bool whether treatment timed out and must be reposted
      */
-    private static function doTimeoutTreatment(string $post_keyname, array $check_key_treated = []): bool
+    private static function doTimeoutTreatment(NotificationByMailSender $nbmSender, string $post_keyname, array $check_key_treated = []): bool
     {
-        /**
-         * @var array<string, mixed> $env_nbm
-         * @var array<string, mixed> $page
-         */
-        global $env_nbm, $page;
+        /** @var array<string, mixed> $page */
+        global $page;
 
-        if ((bool) $env_nbm['is_sendmail_timeout']) {
+        if ($nbmSender->isSendmailTimeout()) {
             if (isset($_POST[$post_keyname]) and is_array($_POST[$post_keyname])) {
                 $post_count = count($_POST[$post_keyname]);
                 $treated_count = count($check_key_treated);
                 if ($treated_count != 0) {
-                    // start_time is set (via get_moment(), always float) by the
-                    // nbm_global_var bootstrap in
-                    // admin/include/functions_notification_by_mail.inc.php.
-                    $start_time = $env_nbm['start_time'];
-                    $start_time_num = is_numeric($start_time) ? (float) $start_time : 0.0;
-                    $time_refresh = (int) ceil((get_moment() - $start_time_num) * $post_count / $treated_count);
+                    $time_refresh = (int) ceil((get_moment() - $nbmSender->startTime()) * $post_count / $treated_count);
                 } else {
                     $time_refresh = 0;
                 }
                 // $check_key_treated is check_key strings returned by the nbm
-                // helpers (typed mixed[] there); keep only the string ones so
+                // sender (typed mixed[] there); keep only the string ones so
                 // array_diff() gets values it can actually compare.
                 $check_key_treated_strings = array_filter($check_key_treated, is_string(...));
                 $_POST[$post_keyname] = array_diff(array_filter($_POST[$post_keyname], is_string(...)), $check_key_treated_strings);
 
-                push_page_message($page, 'errors', l10n_dec(
+                NotificationByMailSender::pushPageMessage($page, 'errors', l10n_dec(
                     'Execution time is out, treatment must be continue [Estimated time: %d second].',
                     'Execution time is out, treatment must be continue [Estimated time: %d seconds].',
                     $time_refresh
@@ -440,15 +446,14 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
     /**
      * Inserting News users
      */
-    private static function insertNewDataUserMailNotification(): void
+    private static function insertNewDataUserMailNotification(NotificationByMailSender $nbmSender): void
     {
         /**
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $page
-         * @var array<string, mixed> $env_nbm
          * @var string $base_url set at the top of handle()
          */
-        global $conf, $page, $env_nbm, $base_url;
+        global $conf, $page, $base_url;
 
         // user_fields maps generic field names to table-specific column names
         // (see include/config_default.inc.php); every value is a plain string.
@@ -497,7 +502,7 @@ order by
 
             while ((bool) ($nbm_user = pwg_db_fetch_assoc($result))) {
                 // Calculate key
-                $nbm_user['check_key'] = find_available_check_key();
+                $nbm_user['check_key'] = $nbmSender->findAvailableCheckKey();
 
                 // Save key
                 $check_key_list[] = $nbm_user['check_key'];
@@ -509,7 +514,7 @@ order by
                     'enabled' => 'false', // By default if false, set to true with specific functions
                 ];
 
-                push_page_message($page, 'infos', l10n(
+                NotificationByMailSender::pushPageMessage($page, 'infos', l10n(
                     'User %s [%s] added.',
                     stripslashes((string) $nbm_user['username']),
                     $nbm_user['mail_address']
@@ -519,19 +524,19 @@ order by
             // Insert new nbm_users
             mass_inserts(Tables::userMailNotification(), ['user_id', 'check_key', 'enabled'], $inserts);
             // Update field enabled with specific function
-            $check_key_treated = do_subscribe_unsubscribe_notification_by_mail(
+            $check_key_treated = $nbmSender->doSubscribeUnsubscribeNotificationByMail(
                 true,
                 (bool) $conf['nbm_default_value_user_enabled'],
                 $check_key_list
             );
 
             // On timeout simulate like tabsheet send
-            if ((bool) $env_nbm['is_sendmail_timeout']) {
-                // do_subscribe_unsubscribe_notification_by_mail() returns mixed[]
+            if ($nbmSender->isSendmailTimeout()) {
+                // doSubscribeUnsubscribeNotificationByMail() returns mixed[]
                 // of check_key strings; narrow before array_diff() needs values
                 // castable to string.
                 $check_key_treated_strings = array_filter($check_key_treated, is_string(...));
-                $quoted_check_key_list = quote_check_key_list(array_diff($check_key_list, $check_key_treated_strings));
+                $quoted_check_key_list = NotificationByMailSender::quoteCheckKeyList(array_diff($check_key_list, $check_key_treated_strings));
                 if (count($quoted_check_key_list) != 0) {
                     $query = 'delete from ' . Tables::userMailNotification() . ' where check_key in (' . implode(',', $quoted_check_key_list) . ');';
                     $result = pwg_query($query);
@@ -564,286 +569,5 @@ order by
         } else {
             return $customize_mail_content;
         }
-    }
-
-    /**
-     * Send mail for notification to all users
-     * Return list of "selected" users for 'list_to_send'
-     * Return list of "treated" check_key for 'send'
-     *
-     * @param array<int, mixed> $check_key_list
-     * @param mixed $customize_mail_content
-     * @return array<int, mixed>
-     */
-    private static function doActionSendMailNotification(string $action = 'list_to_send', array $check_key_list = [], $customize_mail_content = ''): array
-    {
-        /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $page
-         * @var array<string, mixed> $env_nbm
-         */
-        global $conf, $page, $user, $lang_info, $lang, $env_nbm;
-        $return_list = [];
-
-        if (in_array($action, ['list_to_send', 'send'])) {
-            $row = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
-            assert($row !== null);
-            [$dbnow] = $row;
-
-            $is_action_send = ($action == 'send');
-
-            // disabled and null mail_address are not selected in the list
-            $data_users = get_user_notifications('send', $check_key_list);
-
-            // List all if it's define on options or on timeout
-            $is_list_all_without_test = ((bool) $env_nbm['is_sendmail_timeout'] or (bool) $conf['nbm_list_all_enabled_users_to_send']);
-
-            // Check if exist news to list user or send mails
-            if ((! $is_list_all_without_test) or ($is_action_send)) {
-                if (count($data_users) > 0) {
-                    $datas = [];
-
-                    if (! isset($customize_mail_content)) {
-                        $customize_mail_content = $conf['nbm_complementary_mail_content'];
-                    }
-
-                    $customize_mail_content =
-                      trigger_change('nbm_render_global_customize_mail_content', $customize_mail_content);
-
-                    // Prepare message after change language
-                    if ($is_action_send) {
-                        $msg_break_timeout = l10n('Time to send mail is limited. Others mails are skipped.');
-                    } else {
-                        $msg_break_timeout = l10n('Prepared time for list of users to send mail is limited. Others users are not listed.');
-                    }
-
-                    // Begin nbm users environment
-                    begin_users_env_nbm($is_action_send);
-
-                    foreach ($data_users as $nbm_user) {
-                        if ((! $is_action_send) and check_sendmail_timeout()) {
-                            // Stop fill list on 'list_to_send', if the quota is override
-                            push_page_message($page, 'infos', $msg_break_timeout);
-                            break;
-                        }
-                        if (($is_action_send) and check_sendmail_timeout()) {
-                            // Stop fill list on 'send', if the quota is override
-                            push_page_message($page, 'errors', $msg_break_timeout);
-                            break;
-                        }
-
-                        // set env nbm user
-                        set_user_on_env_nbm($nbm_user, $is_action_send);
-                        // set_user_on_env_nbm()'s by-ref $nbm_user param is only
-                        // typed array<string, mixed>, so the narrowing above is
-                        // lost across the call -- restate it.
-                        /** @var array<string, string|null> $nbm_user */
-                        if ($is_action_send) {
-                            $auth = null;
-                            $add_url_params = [];
-
-                            // user_id is the joined users.id column, always a
-                            // non-null numeric DB value.
-                            $nbm_user_id_raw = $nbm_user['user_id'];
-                            assert(is_string($nbm_user_id_raw) && is_numeric($nbm_user_id_raw));
-                            $auth_key = create_user_auth_key((int) $nbm_user_id_raw, $nbm_user['status']);
-
-                            if ($auth_key !== false and is_string($auth_key['auth_key'])) {
-                                $auth = $auth_key['auth_key'];
-                                $add_url_params['auth'] = $auth;
-                            }
-
-                            set_make_full_url();
-                            // Fill return list of "treated" check_key for 'send'
-                            $return_list[] = $nbm_user['check_key'];
-
-                            // These nbm_* flags are plain booleans in
-                            // include/config_default.inc.php; (bool) is always a
-                            // safe, non-failing cast for a mixed config value.
-                            $nbm_send_detailed_content = (bool) $conf['nbm_send_detailed_content'];
-                            $nbm_send_html_mail = (bool) $conf['nbm_send_html_mail'];
-
-                            if ($nbm_send_detailed_content) {
-                                $news = news($nbm_user['last_send'], $dbnow, false, $nbm_send_html_mail, $auth);
-                                $exist_data = count($news) > 0;
-                            } else {
-                                $exist_data = news_exists($nbm_user['last_send'], $dbnow);
-                            }
-
-                            if ($exist_data) {
-                                // gallery_title is always a configured string
-                                // (see include/config_default.inc.php).
-                                $gallery_title = is_string($conf['gallery_title']) ? $conf['gallery_title'] : '';
-                                $subject = '[' . $gallery_title . '] ' . l10n('New photos added');
-
-                                // email_format/mail_template were set by
-                                // begin_users_env_nbm($is_action_send) and
-                                // set_user_on_env_nbm($nbm_user, true) a few lines
-                                // above, which are always called (in that order)
-                                // before this branch can be reached; the
-                                // instanceof/is_string fallback mirrors the same
-                                // pattern used in assign_vars_nbm_mail_content()
-                                // for the same kind of mixed-valued cached-object
-                                // array slot.
-                                $mail_email_format = $env_nbm['email_format'] ?? null;
-                                $mail_email_format = is_string($mail_email_format) ? $mail_email_format : get_str_email_format($nbm_send_html_mail);
-                                $mail_template = $env_nbm['mail_template'] ?? null;
-                                $mail_template = $mail_template instanceof Template ? $mail_template : get_mail_template($mail_email_format);
-
-                                // Assign current var for nbm mail
-                                assign_vars_nbm_mail_content($nbm_user);
-
-                                if ($nbm_user['last_send'] !== null) {
-                                    $mail_template->assign(
-                                        'content_new_elements_between',
-                                        [
-                                            'DATE_BETWEEN_1' => $nbm_user['last_send'],
-                                            'DATE_BETWEEN_2' => $dbnow,
-                                        ]
-                                    );
-                                } else {
-                                    $mail_template->assign(
-                                        'content_new_elements_single',
-                                        [
-                                            'DATE_SINGLE' => $dbnow,
-                                        ]
-                                    );
-                                }
-
-                                if ($nbm_send_detailed_content) {
-                                    $mail_template->assign('global_new_lines', $news);
-                                }
-
-                                $nbm_user_customize_mail_content =
-                                  trigger_change(
-                                      'nbm_render_user_customize_mail_content',
-                                      $customize_mail_content,
-                                      $nbm_user
-                                  );
-                                if (! empty($nbm_user_customize_mail_content)) {
-                                    $mail_template->assign(
-                                        'custom_mail_content',
-                                        $nbm_user_customize_mail_content
-                                    );
-                                }
-
-                                $nbm_send_recent_post_dates = (bool) $conf['nbm_send_recent_post_dates'];
-                                if ($nbm_send_html_mail and $nbm_send_recent_post_dates) {
-                                    // recent_post_dates is a config array of
-                                    // per-notification-kind int settings (see
-                                    // include/config_default.inc.php); narrow the
-                                    // 'NBM' entry to the array<string, int> shape
-                                    // get_recent_post_dates_array() expects.
-                                    $recent_post_dates_conf = $conf['recent_post_dates'];
-                                    $nbm_recent_post_dates_raw = (is_array($recent_post_dates_conf) and is_array($recent_post_dates_conf['NBM'] ?? null))
-                                        ? $recent_post_dates_conf['NBM']
-                                        : [];
-                                    $nbm_recent_post_dates_args = [];
-                                    foreach ($nbm_recent_post_dates_raw as $arg_key => $arg_value) {
-                                        if (is_string($arg_key) and is_int($arg_value)) {
-                                            $nbm_recent_post_dates_args[$arg_key] = $arg_value;
-                                        }
-                                    }
-
-                                    $recent_post_dates = get_recent_post_dates_array($nbm_recent_post_dates_args);
-                                    foreach ($recent_post_dates as $date_detail) {
-                                        // get_recent_post_dates_array() is typed to
-                                        // return array<int|string, mixed>; each
-                                        // element is really one get_recent_post_dates()
-                                        // date-detail row (array<string, mixed>).
-                                        assert(is_array($date_detail));
-                                        /** @var array<string, mixed> $date_detail */
-                                        $mail_template->append(
-                                            'recent_posts',
-                                            [
-                                                'TITLE' => get_title_recent_post_date($date_detail),
-                                                'HTML_DATA' => get_html_description_recent_post_date($date_detail, $auth),
-                                            ]
-                                        );
-                                    }
-                                }
-
-                                $gallery_home_url = get_gallery_home_url();
-                                $mail_template->assign(
-                                    [
-                                        'GOTO_GALLERY_TITLE' => $gallery_title,
-                                        'GOTO_GALLERY_URL' => add_url_params(is_string($gallery_home_url) ? $gallery_home_url : '', $add_url_params),
-                                        'SEND_AS_NAME' => $env_nbm['send_as_name'],
-                                    ]
-                                );
-
-                                $mail_args = [
-                                    'from' => $env_nbm['send_as_mail_formated'],
-                                    'subject' => $subject,
-                                    'email_format' => $mail_email_format,
-                                    'content' => $mail_template->parse('notification_by_mail', true),
-                                    'content_format' => $mail_email_format,
-                                ];
-                                if (is_string($auth)) {
-                                    $mail_args['auth_key'] = $auth;
-                                }
-
-                                $ret = pwg_mail(
-                                    [
-                                        'name' => stripslashes((string) $nbm_user['username']),
-                                        'email' => $nbm_user['mail_address'],
-                                    ],
-                                    $mail_args
-                                );
-
-                                if ($ret) {
-                                    inc_mail_sent_success($nbm_user);
-
-                                    $datas[] = [
-                                        'user_id' => $nbm_user['user_id'],
-                                        'last_send' => $dbnow,
-                                    ];
-                                } else {
-                                    inc_mail_sent_failed($nbm_user);
-                                }
-
-                                unset_make_full_url();
-                            }
-                        } else {
-                            if (news_exists($nbm_user['last_send'], $dbnow)) {
-                                // Fill return list of "selected" users for 'list_to_send'
-                                $return_list[] = $nbm_user;
-                            }
-                        }
-
-                        // unset env nbm user
-                        unset_user_on_env_nbm();
-                    }
-
-                    // Restore nbm environment
-                    end_users_env_nbm();
-
-                    if ($is_action_send) {
-                        mass_updates(
-                            Tables::userMailNotification(),
-                            [
-                                'primary' => ['user_id'],
-                                'update' => ['last_send'],
-                            ],
-                            $datas
-                        );
-
-                        display_counter_info();
-                    }
-                } else {
-                    if ($is_action_send) {
-                        push_page_message($page, 'errors', l10n('No user to send notifications by mail.'));
-                    }
-                }
-            } else {
-                // Quick List, don't check news
-                // Fill return list of "selected" users for 'list_to_send'
-                $return_list = $data_users;
-            }
-        }
-
-        // Return list of "selected" users for 'list_to_send'
-        // Return list of "treated" check_key for 'send'
-        return $return_list;
     }
 }

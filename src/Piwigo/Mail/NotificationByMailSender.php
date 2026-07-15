@@ -1,0 +1,780 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Piwigo\Mail;
+
+use Piwigo\Db\Tables;
+use Piwigo\Notification\NotificationByMailService;
+use Piwigo\Template\Template;
+
+/**
+ * Ported from admin/include/functions_notification_by_mail.inc.php (P23
+ * batch 8b-7) -- 13 free functions threading a shared `global $env_nbm;`
+ * array through a subscribe/unsubscribe/send-mail pipeline with
+ * language-switch stacking. This class replaces that untyped array with
+ * real instance state, constructed fresh per logical "mail-sending
+ * session" -- matching the original code's own `$env_nbm` lifecycle,
+ * which was always reset by `begin_users_env_nbm()` per use, never truly
+ * request-global despite being a `global`.
+ *
+ * Placed in `Piwigo\Mail` (L3Presentation in deptrac.yaml), NOT
+ * `Piwigo\Notification` (L2bExtendedDomain, home of the constructor-injected
+ * `NotificationByMailService` below): this class holds a real
+ * `Piwigo\Template\Template` instance (`$mailTemplate`, built via
+ * `get_mail_template()`), and L2bExtendedDomain may not depend on
+ * L3Presentation -- same "Template dependency forces L3/L4 placement" shape
+ * already documented on `NotificationByMailService`'s own docblock and on
+ * `Piwigo\Mail\MailService`'s (`deptrac.yaml`'s own comment on the Mail
+ * layer). L3->L2b (this class -> NotificationByMailService) and L4->L3
+ * (both real callers, NotificationByMailSubController and NbmController,
+ * both L4Integration) are both allowed downward dependencies.
+ *
+ * Every other free-function call this file made that has no existing OO
+ * equivalent (`pwg_mail()`, `get_mail_template()`, `switch_lang_to()`/
+ * `switch_lang_back()`, `get_str_email_format()`, `set_make_full_url()`/
+ * `unset_make_full_url()`, `mass_updates()`, `boolean_to_string()`, ...)
+ * stays a bare free-function call, unchanged -- same "inject nothing, call
+ * the not-yet-injectable capability as a free function" shape already
+ * established for Comment/UserService's mail calls (P18). Rewriting those
+ * onto `Piwigo\Mail\MailService` is a separate, not-yet-scoped concern.
+ */
+final class NotificationByMailSender
+{
+    private readonly float $startTime;
+
+    private float $sendmailTimeout;
+
+    private bool $isSendmailTimeout = false;
+
+    /**
+     * @var array<string, mixed>
+     */
+    private array $saveUser = [];
+
+    private bool $isToSendMail = false;
+
+    private ?string $emailFormat = null;
+
+    private ?string $sendAsName = null;
+
+    private ?string $sendAsMailAddress = null;
+
+    private ?string $sendAsMailFormatted = null;
+
+    private int $errorOnMailCount = 0;
+
+    private int $sentMailCount = 0;
+
+    private ?string $msgInfo = null;
+
+    private ?string $msgError = null;
+
+    private ?Template $mailTemplate = null;
+
+    public function __construct(
+        private readonly NotificationByMailService $notificationByMailService,
+    ) {
+        /** @var array<string, mixed> $conf */
+        global $conf;
+
+        // $conf['nbm_max_treatment_timeout_percent']/'nbm_treatment_timeout_default'
+        // are always numeric (config_default.inc.php: 0.8 and 20
+        // respectively), but that isn't visible through $conf's own
+        // array<string, mixed> type.
+        $nbmMaxTreatmentTimeoutPercent = $conf['nbm_max_treatment_timeout_percent'] ?? null;
+        $nbmMaxTreatmentTimeoutPercent = is_numeric($nbmMaxTreatmentTimeoutPercent) ? (float) $nbmMaxTreatmentTimeoutPercent : 0.8;
+
+        $this->startTime = get_moment();
+        $this->sendmailTimeout = intval(ini_get('max_execution_time')) * $nbmMaxTreatmentTimeoutPercent;
+
+        if ($this->sendmailTimeout <= 0) {
+            $nbmTreatmentTimeoutDefault = $conf['nbm_treatment_timeout_default'] ?? null;
+            $this->sendmailTimeout = is_numeric($nbmTreatmentTimeoutDefault) ? (float) $nbmTreatmentTimeoutDefault : 20.0;
+        }
+    }
+
+    public function findAvailableCheckKey(): string
+    {
+        return $this->notificationByMailService->findAvailableCheckKey();
+    }
+
+    /**
+     * @param array<array-key, mixed> $checkKeyList
+     * @return list<array<string, string|null>>
+     */
+    public function getUserNotifications(string $action, array $checkKeyList = [], bool|string $enabledFilterValue = ''): array
+    {
+        return $this->notificationByMailService->getUserNotifications($action, $checkKeyList, $enabledFilterValue);
+    }
+
+    public function checkSendmailTimeout(): bool
+    {
+        $isTimeout = (get_moment() - $this->startTime) > $this->sendmailTimeout;
+        $this->isSendmailTimeout = $isTimeout;
+
+        return $isTimeout;
+    }
+
+    /**
+     * Whether the last checkSendmailTimeout() call found the session past
+     * its deadline -- read by callers that need to react to a timeout
+     * detected during an earlier doSubscribeUnsubscribeNotificationByMail()/
+     * doActionSendMailNotification() call, once it has already returned.
+     */
+    public function isSendmailTimeout(): bool
+    {
+        return $this->isSendmailTimeout;
+    }
+
+    public function startTime(): float
+    {
+        return $this->startTime;
+    }
+
+    public function beginUsersEnv(bool $isToSendMail = false): void
+    {
+        /**
+         * @var array<string, mixed> $user
+         * @var array<string, mixed> $conf
+         */
+        global $user, $conf;
+
+        $this->saveUser = $user;
+        $userLanguage = $user['language'] ?? null;
+        switch_lang_to(is_string($userLanguage) ? $userLanguage : get_default_language());
+
+        $this->isToSendMail = $isToSendMail;
+
+        if ($isToSendMail) {
+            $this->emailFormat = get_str_email_format(get_boolean($conf['nbm_send_html_mail'] ?? false));
+
+            // $conf['nbm_send_mail_as'] is admin-submitted free text (see
+            // NotificationByMailSubController), always a string when set.
+            $nbmSendMailAs = $conf['nbm_send_mail_as'] ?? null;
+            $sendAsName = (isset($nbmSendMailAs) and ! empty($nbmSendMailAs) and is_string($nbmSendMailAs))
+                ? $nbmSendMailAs
+                : get_mail_sender_name();
+            $this->sendAsName = $sendAsName;
+
+            $sendAsMailAddress = get_webmaster_mail_address();
+            $this->sendAsMailAddress = $sendAsMailAddress;
+
+            $this->sendAsMailFormatted = format_email($sendAsName, $sendAsMailAddress);
+
+            $this->errorOnMailCount = 0;
+            $this->sentMailCount = 0;
+            $this->msgInfo = l10n('Mail sent to %s [%s].');
+            $this->msgError = l10n('Error when sending email to %s [%s].');
+        }
+    }
+
+    public function endUsersEnv(): void
+    {
+        /** @var array<string, mixed> $user */
+        global $user;
+
+        $user = $this->saveUser;
+        switch_lang_back();
+
+        if ($this->isToSendMail) {
+            $this->emailFormat = null;
+            $this->sendAsName = null;
+            $this->sendAsMailAddress = null;
+            $this->sendAsMailFormatted = null;
+            // Don't reset the counters -- matches the original's own
+            // "Don t unset counter" comment.
+            $this->msgInfo = null;
+            $this->msgError = null;
+        }
+
+        $this->saveUser = [];
+        $this->isToSendMail = false;
+    }
+
+    /**
+     * @param array<string, string|null> $nbmUser a getUserNotifications() row
+     */
+    public function setUserOnEnv(array &$nbmUser, bool $isActionSend): void
+    {
+        /** @var array<string, mixed> $user */
+        global $user;
+
+        // user_id is Tables::userMailNotification()'s primary key (NOT NULL
+        // per install/piwigo_structure-mysql.sql), always a non-null
+        // numeric value.
+        $nbmUserIdRaw = $nbmUser['user_id'];
+        assert(is_string($nbmUserIdRaw) && is_numeric($nbmUserIdRaw));
+        $user = build_user((int) $nbmUserIdRaw, true);
+
+        switch_lang_to(is_string($user['language']) ? $user['language'] : get_default_language());
+
+        if ($isActionSend) {
+            $emailFormat = $this->emailFormat ?? get_str_email_format(false);
+            $mailTemplate = get_mail_template($emailFormat);
+            $this->mailTemplate = $mailTemplate;
+            $mailTemplate->set_filename('notification_by_mail', 'notification_by_mail.tpl');
+        }
+    }
+
+    public function unsetUserOnEnv(): void
+    {
+        switch_lang_back();
+        $this->mailTemplate = null;
+    }
+
+    /**
+     * @param array<string, string|null> $nbmUser a getUserNotifications() row
+     */
+    public function incMailSentSuccess(array $nbmUser): void
+    {
+        /** @var array<string, mixed> $page */
+        global $page;
+
+        $this->sentMailCount++;
+
+        $msgInfo = $this->msgInfo ?? 'Mail sent to %s [%s].';
+        self::pushPageMessage($page, 'infos', sprintf($msgInfo, stripslashes((string) $nbmUser['username']), $nbmUser['mail_address']));
+    }
+
+    /**
+     * @param array<string, string|null> $nbmUser a getUserNotifications() row
+     */
+    public function incMailSentFailed(array $nbmUser): void
+    {
+        /** @var array<string, mixed> $page */
+        global $page;
+
+        $this->errorOnMailCount++;
+
+        $msgError = $this->msgError ?? 'Error when sending email to %s [%s].';
+        self::pushPageMessage($page, 'errors', sprintf($msgError, stripslashes((string) $nbmUser['username']), $nbmUser['mail_address']));
+    }
+
+    public function displayCounterInfo(): void
+    {
+        /** @var array<string, mixed> $page */
+        global $page;
+
+        if ($this->errorOnMailCount != 0) {
+            self::pushPageMessage($page, 'errors', l10n_dec(
+                '%d mail was not sent.',
+                '%d mails were not sent.',
+                $this->errorOnMailCount
+            ));
+
+            if ($this->sentMailCount != 0) {
+                self::pushPageMessage($page, 'infos', l10n_dec(
+                    '%d mail was sent.',
+                    '%d mails were sent.',
+                    $this->sentMailCount
+                ));
+            }
+        } else {
+            if ($this->sentMailCount == 0) {
+                self::pushPageMessage($page, 'infos', l10n('No mail to send.'));
+            } else {
+                self::pushPageMessage($page, 'infos', l10n_dec(
+                    '%d mail was sent.',
+                    '%d mails were sent.',
+                    $this->sentMailCount
+                ));
+            }
+        }
+    }
+
+    /**
+     * @param array<string, string|null> $nbmUser a getUserNotifications() row
+     */
+    public function assignVarsNbmMailContent(array $nbmUser): void
+    {
+        set_make_full_url();
+
+        // get_gallery_home_url() is declared to return mixed; real callers
+        // always get back a string URL, but that isn't visible through its
+        // own signature.
+        $galleryHomeUrl = get_gallery_home_url();
+        $galleryHomeUrlStr = is_string($galleryHomeUrl) ? $galleryHomeUrl : '';
+
+        $emailFormat = $this->emailFormat ?? get_str_email_format(false);
+        $mailTemplate = $this->mailTemplate ?? get_mail_template($emailFormat);
+
+        $mailTemplate->assign(
+            [
+                'USERNAME' => stripslashes((string) $nbmUser['username']),
+
+                'SEND_AS_NAME' => $this->sendAsName,
+
+                'UNSUBSCRIBE_LINK' => add_url_params($galleryHomeUrlStr . '/nbm.php', [
+                    'unsubscribe' => $nbmUser['check_key'],
+                ]),
+                'SUBSCRIBE_LINK' => add_url_params($galleryHomeUrlStr . '/nbm.php', [
+                    'subscribe' => $nbmUser['check_key'],
+                ]),
+                'CONTACT_EMAIL' => $this->sendAsMailAddress,
+            ]
+        );
+
+        unset_make_full_url();
+    }
+
+    /**
+     * Subscribe or unsubscribe notification by mail.
+     *
+     * @param array<int, mixed> $checkKeyList check_key list where action will be done
+     * @return mixed[] check_key list treated
+     */
+    public function doSubscribeUnsubscribeNotificationByMail(bool $isAdminRequest, bool $isSubscribe, array $checkKeyList): array
+    {
+        /**
+         * @var array<string, mixed> $conf
+         * @var array<string, mixed> $page
+         */
+        global $conf, $page;
+
+        set_make_full_url();
+
+        // $conf['gallery_title'] is always a string (config_default.inc.php),
+        // but that isn't visible through $conf's own array<string, mixed> type.
+        $galleryTitle = $conf['gallery_title'] ?? null;
+        $galleryTitle = is_string($galleryTitle) ? $galleryTitle : '';
+
+        $checkKeyTreated = [];
+        $updatedDataCount = 0;
+        $errorOnUpdatedDataCount = 0;
+
+        if ($isSubscribe) {
+            $msgInfo = l10n('User %s [%s] was added to the subscription list.');
+            $msgError = l10n('User %s [%s] was not added to the subscription list.');
+        } else {
+            $msgInfo = l10n('User %s [%s] was removed from the subscription list.');
+            $msgError = l10n('User %s [%s] was not removed from the subscription list.');
+        }
+
+        if (count($checkKeyList) != 0) {
+            $updates = [];
+            $enabledValue = boolean_to_string($isSubscribe);
+            $dataUsers = $this->getUserNotifications('subscribe', $checkKeyList, ! $isSubscribe);
+
+            // Prepare message after change language
+            $msgBreakTimeout = l10n('Time to send mail is limited. Others mails are skipped.');
+
+            $this->beginUsersEnv(true);
+
+            foreach ($dataUsers as $nbmUser) {
+                if ($this->checkSendmailTimeout()) {
+                    // Stop fill list on 'send', if the quota is override
+                    self::pushPageMessage($page, 'errors', $msgBreakTimeout);
+                    break;
+                }
+
+                $checkKeyTreated[] = $nbmUser['check_key'];
+
+                $doUpdate = true;
+                if ($nbmUser['mail_address'] != '') {
+                    $this->setUserOnEnv($nbmUser, true);
+
+                    $subject = '[' . $galleryTitle . '] ' . ($isSubscribe ? l10n('Subscribe to notification by mail') : l10n('Unsubscribe from notification by mail'));
+
+                    $this->assignVarsNbmMailContent($nbmUser);
+
+                    $sectionActionBy = ($isSubscribe ? 'subscribe_by_' : 'unsubscribe_by_');
+                    $sectionActionBy .= ($isAdminRequest ? 'admin' : 'himself');
+
+                    $emailFormat = $this->emailFormat ?? get_str_email_format(false);
+                    $mailTemplate = $this->mailTemplate ?? get_mail_template($emailFormat);
+
+                    $mailTemplate->assign(
+                        [
+                            $sectionActionBy => true,
+                            'GOTO_GALLERY_TITLE' => $galleryTitle,
+                            'GOTO_GALLERY_URL' => get_gallery_home_url(),
+                        ]
+                    );
+
+                    $sendAsMailFormatted = $this->sendAsMailFormatted ?? '';
+
+                    $ret = pwg_mail(
+                        [
+                            'name' => stripslashes((string) $nbmUser['username']),
+                            'email' => $nbmUser['mail_address'],
+                        ],
+                        [
+                            'from' => $sendAsMailFormatted,
+                            'subject' => $subject,
+                            'email_format' => $emailFormat,
+                            'content' => $mailTemplate->parse('notification_by_mail', true),
+                            'content_format' => $emailFormat,
+                        ]
+                    );
+
+                    if ($ret) {
+                        $this->incMailSentSuccess($nbmUser);
+                    } else {
+                        $this->incMailSentFailed($nbmUser);
+                        $doUpdate = false;
+                    }
+
+                    $this->unsetUserOnEnv();
+                }
+
+                if ($doUpdate) {
+                    $updates[] = [
+                        'check_key' => $nbmUser['check_key'],
+                        'enabled' => $enabledValue,
+                    ];
+                    ++$updatedDataCount;
+                    self::pushPageMessage($page, 'infos', sprintf($msgInfo, stripslashes((string) $nbmUser['username']), $nbmUser['mail_address']));
+                } else {
+                    ++$errorOnUpdatedDataCount;
+                    self::pushPageMessage($page, 'errors', sprintf($msgError, stripslashes((string) $nbmUser['username']), $nbmUser['mail_address']));
+                }
+            }
+
+            $this->endUsersEnv();
+
+            $this->displayCounterInfo();
+
+            mass_updates(
+                Tables::userMailNotification(),
+                [
+                    'primary' => ['check_key'],
+                    'update' => ['enabled'],
+                ],
+                $updates
+            );
+        }
+
+        self::pushPageMessage($page, 'infos', l10n_dec(
+            '%d user was updated.',
+            '%d users were updated.',
+            $updatedDataCount
+        ));
+
+        if ($errorOnUpdatedDataCount != 0) {
+            self::pushPageMessage($page, 'errors', l10n_dec(
+                '%d user was not updated.',
+                '%d users were not updated.',
+                $errorOnUpdatedDataCount
+            ));
+        }
+
+        unset_make_full_url();
+
+        return $checkKeyTreated;
+    }
+
+    /**
+     * Send mail for notification to all users.
+     * Returns the list of "selected" users for 'list_to_send'.
+     * Returns the list of "treated" check_key for 'send'.
+     *
+     * @param array<int, mixed> $checkKeyList
+     * @return array<int, mixed>
+     */
+    public function sendMailNotifications(string $action = 'list_to_send', array $checkKeyList = [], mixed $customizeMailContent = ''): array
+    {
+        /**
+         * @var array<string, mixed> $conf
+         * @var array<string, mixed> $page
+         */
+        global $conf, $page;
+        $returnList = [];
+
+        if (in_array($action, ['list_to_send', 'send'])) {
+            $row = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
+            assert($row !== null);
+            [$dbnow] = $row;
+
+            $isActionSend = ($action == 'send');
+
+            // disabled and null mail_address are not selected in the list
+            $dataUsers = $this->getUserNotifications('send', $checkKeyList);
+
+            // List all if it's define on options or on timeout
+            $isListAllWithoutTest = ($this->isSendmailTimeout or (bool) $conf['nbm_list_all_enabled_users_to_send']);
+
+            // Check if exist news to list user or send mails
+            if ((! $isListAllWithoutTest) or ($isActionSend)) {
+                if (count($dataUsers) > 0) {
+                    $datas = [];
+
+                    if (! isset($customizeMailContent)) {
+                        $customizeMailContent = $conf['nbm_complementary_mail_content'];
+                    }
+
+                    $customizeMailContent =
+                      trigger_change('nbm_render_global_customize_mail_content', $customizeMailContent);
+
+                    // Prepare message after change language
+                    if ($isActionSend) {
+                        $msgBreakTimeout = l10n('Time to send mail is limited. Others mails are skipped.');
+                    } else {
+                        $msgBreakTimeout = l10n('Prepared time for list of users to send mail is limited. Others users are not listed.');
+                    }
+
+                    $this->beginUsersEnv($isActionSend);
+
+                    foreach ($dataUsers as $nbmUser) {
+                        if ((! $isActionSend) and $this->checkSendmailTimeout()) {
+                            // Stop fill list on 'list_to_send', if the quota is override
+                            self::pushPageMessage($page, 'infos', $msgBreakTimeout);
+                            break;
+                        }
+                        if (($isActionSend) and $this->checkSendmailTimeout()) {
+                            // Stop fill list on 'send', if the quota is override
+                            self::pushPageMessage($page, 'errors', $msgBreakTimeout);
+                            break;
+                        }
+
+                        $this->setUserOnEnv($nbmUser, $isActionSend);
+                        // setUserOnEnv()'s by-ref $nbmUser param is only typed
+                        // array<string, mixed>, so the narrowing above is lost
+                        // across the call -- restate it.
+                        /** @var array<string, string|null> $nbmUser */
+                        if ($isActionSend) {
+                            $auth = null;
+                            $addUrlParams = [];
+
+                            // user_id is the joined users.id column, always a
+                            // non-null numeric DB value.
+                            $nbmUserIdRaw = $nbmUser['user_id'];
+                            assert(is_string($nbmUserIdRaw) && is_numeric($nbmUserIdRaw));
+                            $authKey = create_user_auth_key((int) $nbmUserIdRaw, $nbmUser['status']);
+
+                            if ($authKey !== false and is_string($authKey['auth_key'])) {
+                                $auth = $authKey['auth_key'];
+                                $addUrlParams['auth'] = $auth;
+                            }
+
+                            set_make_full_url();
+                            // Fill return list of "treated" check_key for 'send'
+                            $returnList[] = $nbmUser['check_key'];
+
+                            // These nbm_* flags are plain booleans in
+                            // include/config_default.inc.php; (bool) is always a
+                            // safe, non-failing cast for a mixed config value.
+                            $nbmSendDetailedContent = (bool) $conf['nbm_send_detailed_content'];
+                            $nbmSendHtmlMail = (bool) $conf['nbm_send_html_mail'];
+
+                            if ($nbmSendDetailedContent) {
+                                $news = news($nbmUser['last_send'], $dbnow, false, $nbmSendHtmlMail, $auth);
+                                $existData = count($news) > 0;
+                            } else {
+                                $existData = news_exists($nbmUser['last_send'], $dbnow);
+                            }
+
+                            if ($existData) {
+                                // gallery_title is always a configured string
+                                // (see include/config_default.inc.php).
+                                $galleryTitle = is_string($conf['gallery_title']) ? $conf['gallery_title'] : '';
+                                $subject = '[' . $galleryTitle . '] ' . l10n('New photos added');
+
+                                $mailEmailFormat = $this->emailFormat ?? get_str_email_format($nbmSendHtmlMail);
+                                $mailTemplate = $this->mailTemplate ?? get_mail_template($mailEmailFormat);
+
+                                // Assign current var for nbm mail
+                                $this->assignVarsNbmMailContent($nbmUser);
+
+                                if ($nbmUser['last_send'] !== null) {
+                                    $mailTemplate->assign(
+                                        'content_new_elements_between',
+                                        [
+                                            'DATE_BETWEEN_1' => $nbmUser['last_send'],
+                                            'DATE_BETWEEN_2' => $dbnow,
+                                        ]
+                                    );
+                                } else {
+                                    $mailTemplate->assign(
+                                        'content_new_elements_single',
+                                        [
+                                            'DATE_SINGLE' => $dbnow,
+                                        ]
+                                    );
+                                }
+
+                                if ($nbmSendDetailedContent) {
+                                    $mailTemplate->assign('global_new_lines', $news);
+                                }
+
+                                $nbmUserCustomizeMailContent =
+                                  trigger_change(
+                                      'nbm_render_user_customize_mail_content',
+                                      $customizeMailContent,
+                                      $nbmUser
+                                  );
+                                if (! empty($nbmUserCustomizeMailContent)) {
+                                    $mailTemplate->assign(
+                                        'custom_mail_content',
+                                        $nbmUserCustomizeMailContent
+                                    );
+                                }
+
+                                $nbmSendRecentPostDates = (bool) $conf['nbm_send_recent_post_dates'];
+                                if ($nbmSendHtmlMail and $nbmSendRecentPostDates) {
+                                    // recent_post_dates is a config array of
+                                    // per-notification-kind int settings (see
+                                    // include/config_default.inc.php); narrow the
+                                    // 'NBM' entry to the array<string, int> shape
+                                    // get_recent_post_dates_array() expects.
+                                    $recentPostDatesConf = $conf['recent_post_dates'];
+                                    $nbmRecentPostDatesRaw = (is_array($recentPostDatesConf) and is_array($recentPostDatesConf['NBM'] ?? null))
+                                        ? $recentPostDatesConf['NBM']
+                                        : [];
+                                    $nbmRecentPostDatesArgs = [];
+                                    foreach ($nbmRecentPostDatesRaw as $argKey => $argValue) {
+                                        if (is_string($argKey) and is_int($argValue)) {
+                                            $nbmRecentPostDatesArgs[$argKey] = $argValue;
+                                        }
+                                    }
+
+                                    $recentPostDates = get_recent_post_dates_array($nbmRecentPostDatesArgs);
+                                    foreach ($recentPostDates as $dateDetail) {
+                                        // get_recent_post_dates_array() is typed to
+                                        // return array<int|string, mixed>; each
+                                        // element is really one get_recent_post_dates()
+                                        // date-detail row (array<string, mixed>).
+                                        assert(is_array($dateDetail));
+                                        /** @var array<string, mixed> $dateDetail */
+                                        $mailTemplate->append(
+                                            'recent_posts',
+                                            [
+                                                'TITLE' => get_title_recent_post_date($dateDetail),
+                                                'HTML_DATA' => get_html_description_recent_post_date($dateDetail, $auth),
+                                            ]
+                                        );
+                                    }
+                                }
+
+                                $galleryHomeUrl = get_gallery_home_url();
+                                $mailTemplate->assign(
+                                    [
+                                        'GOTO_GALLERY_TITLE' => $galleryTitle,
+                                        'GOTO_GALLERY_URL' => add_url_params(is_string($galleryHomeUrl) ? $galleryHomeUrl : '', $addUrlParams),
+                                        'SEND_AS_NAME' => $this->sendAsName,
+                                    ]
+                                );
+
+                                $mailArgs = [
+                                    'from' => $this->sendAsMailFormatted,
+                                    'subject' => $subject,
+                                    'email_format' => $mailEmailFormat,
+                                    'content' => $mailTemplate->parse('notification_by_mail', true),
+                                    'content_format' => $mailEmailFormat,
+                                ];
+                                if (is_string($auth)) {
+                                    $mailArgs['auth_key'] = $auth;
+                                }
+
+                                $ret = pwg_mail(
+                                    [
+                                        'name' => stripslashes((string) $nbmUser['username']),
+                                        'email' => $nbmUser['mail_address'],
+                                    ],
+                                    $mailArgs
+                                );
+
+                                if ($ret) {
+                                    $this->incMailSentSuccess($nbmUser);
+
+                                    $datas[] = [
+                                        'user_id' => $nbmUser['user_id'],
+                                        'last_send' => $dbnow,
+                                    ];
+                                } else {
+                                    $this->incMailSentFailed($nbmUser);
+                                }
+
+                                unset_make_full_url();
+                            }
+                        } else {
+                            if (news_exists($nbmUser['last_send'], $dbnow)) {
+                                // Fill return list of "selected" users for 'list_to_send'
+                                $returnList[] = $nbmUser;
+                            }
+                        }
+
+                        $this->unsetUserOnEnv();
+                    }
+
+                    $this->endUsersEnv();
+
+                    if ($isActionSend) {
+                        mass_updates(
+                            Tables::userMailNotification(),
+                            [
+                                'primary' => ['user_id'],
+                                'update' => ['last_send'],
+                            ],
+                            $datas
+                        );
+
+                        $this->displayCounterInfo();
+                    }
+                } else {
+                    if ($isActionSend) {
+                        self::pushPageMessage($page, 'errors', l10n('No user to send notifications by mail.'));
+                    }
+                }
+            } else {
+                // Quick List, don't check news
+                // Fill return list of "selected" users for 'list_to_send'
+                $returnList = $dataUsers;
+            }
+        }
+
+        // Return list of "selected" users for 'list_to_send'
+        // Return list of "treated" check_key for 'send'
+        return $returnList;
+    }
+
+    /**
+     * @param array<int, mixed> $checkKeyList check_key list where action will be done
+     * @return mixed[] check_key list treated
+     */
+    public function subscribeNotificationByMail(bool $isAdminRequest, array $checkKeyList = []): array
+    {
+        return $this->doSubscribeUnsubscribeNotificationByMail($isAdminRequest, true, $checkKeyList);
+    }
+
+    /**
+     * @param array<int, mixed> $checkKeyList check_key list where action will be done
+     * @return mixed[] check_key list treated
+     */
+    public function unsubscribeNotificationByMail(bool $isAdminRequest, array $checkKeyList = []): array
+    {
+        return $this->doSubscribeUnsubscribeNotificationByMail($isAdminRequest, false, $checkKeyList);
+    }
+
+    /**
+     * Append a message to a $page message bucket (e.g. 'infos'/'errors'),
+     * narrowing it to an array first if it isn't provably one yet ($page
+     * itself is only known as array<string, mixed>, so $page[$key] is still
+     * mixed).
+     *
+     * @param array<string, mixed> $page
+     */
+    public static function pushPageMessage(array &$page, string $key, string $message): void
+    {
+        $list = $page[$key] ?? [];
+        $list = is_array($list) ? $list : [];
+        $list[] = $message;
+        $page[$key] = $list;
+    }
+
+    /**
+     * Add quote to all elements of a check_key list.
+     *
+     * @param array<int, mixed> $checkKeyList
+     * @return string[] quoted check key list
+     */
+    public static function quoteCheckKeyList(array $checkKeyList = []): array
+    {
+        // $checkKeyList may come straight from $_POST (see
+        // NotificationByMailSubController), so its elements are only
+        // provably string-castable once filtered.
+        $stringCheckKeys = array_filter($checkKeyList, is_string(...));
+
+        return array_map(fn (string $s): string => '\'' . $s . '\'', $stringCheckKeys);
+    }
+}

@@ -24,7 +24,9 @@ use Psr\Http\Message\ServerRequestInterface;
  * was (confirmed via grep within each file's own scope, which is true --
  * but incomplete). It's a real, load-bearing global consumed indirectly:
  * `tabsheet::select()` fires a `tabsheet_before_select` event
- * (`admin/include/add_core_tabs.inc.php`'s `add_core_tabs()`), whose own
+ * (`Piwigo\Admin\CoreTabs::addCoreTabs()`, formerly `admin/include/
+ * add_core_tabs.inc.php`'s `add_core_tabs()`, folded in P23 batch 8b-6),
+ * whose own
  * `case 'updates':`/`'languages':`/`'themes':`/`'plugins':`/`'maintenance':`
  * branches each read `global $my_base_url;` to build every tab's own href.
  * Dropping it silently degrades those hrefs (concatenating onto an
@@ -64,7 +66,7 @@ final class UpdatesSubController implements AdminSubControllerInterface
             die('update system is disabled');
         }
 
-        // Consumed by add_core_tabs()'s own 'updates' case via
+        // Consumed by CoreTabs::addCoreTabs()'s own 'updates' case via
         // `global $my_base_url;`, triggered synchronously inside
         // tabsheet::select() below -- must be set before that call, not
         // dead code (see this class's own docblock).

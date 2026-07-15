@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Piwigo\Admin\tabsheet;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -27,22 +28,23 @@ use Psr\Http\Message\ServerRequestInterface;
  * (`set_permalink`, `delete_permanent`) already call `check_pwg_token()`
  * first, kept unchanged.
  *
- * `global $my_base_url;` before the `admin/include/albums_tab.inc.php`
- * include below is a real bug fix, not a mechanical carry-over: that file
- * sets `$my_base_url` via a bare assignment, and without a preceding
+ * `global $my_base_url;` before the inline tabsheet block below (formerly
+ * the `admin/include/albums_tab.inc.php` include, folded in P23 batch
+ * 8b-5) is a real bug fix, not a mechanical carry-over: that block sets
+ * `$my_base_url` via a bare assignment, and without a preceding
  * `global` declaration in this method's own call frame that assignment
- * would stay local to this method, invisible to add_core_tabs()'s own
+ * would stay local to this method, invisible to CoreTabs::addCoreTabs()'s own
  * `global $my_base_url;` read for the 'albums' tabsheet case (triggered
- * synchronously inside albums_tab.inc.php's own `$tabsheet->select()`
- * call). Verified live that this exact bug already existed, unfixed, in
- * the other 2 real callers of albums_tab.inc.php --
+ * synchronously inside the block's own `$tabsheet->select()` call).
+ * Verified live that this exact bug already existed, unfixed, in the
+ * other 2 real callers of the same tabsheet block --
  * Piwigo\Admin\CatListPageRenderer and Piwigo\Admin\AlbumsPageRenderer
  * (both P23 batch 6f) -- neither declared `global $my_base_url;` before
  * their own `include`, so `?page=cat_list`/`?page=albums`'s own
  * "List"/"Permalinks" tab hrefs were rendering as bare `href="albums"` /
  * `href="permalinks"` instead of `admin.php?page=albums` /
- * `admin.php?page=permalinks` -- fixed in both of those files in this same
- * commit (P23 batch 6j-1) so the pattern isn't introduced a 3rd time here.
+ * `admin.php?page=permalinks` -- fixed in both of those files in the P23
+ * batch 6j-1 commit so the pattern isn't introduced a 3rd time here.
  */
 final class PermalinksSubController implements AdminSubControllerInterface
 {
@@ -88,7 +90,26 @@ final class PermalinksSubController implements AdminSubControllerInterface
         // +-----------------------------------------------------------------------+
 
         $page['tab'] = 'permalinks';
-        include PHPWG_ROOT_PATH . 'admin/include/albums_tab.inc.php';
+
+        $my_base_url = get_root_url() . 'admin.php?page=';
+
+        $tabsheet = new tabsheet();
+        $tabsheet->set_id('albums');
+        $tabsheet->select($page['tab']);
+        $tabsheet->assign();
+
+        $query = '
+SELECT COUNT(*)
+  FROM ' . Tables::categories() . '
+;';
+        $row = pwg_db_fetch_row(pwg_query($query));
+        assert($row !== null);
+        [$nb_cats] = $row;
+        $template->assign(
+            [
+                'nb_cats' => $nb_cats,
+            ]
+        );
 
         $query = '
 SELECT

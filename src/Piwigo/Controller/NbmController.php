@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Piwigo\Core\AccessLevel;
+use Piwigo\Db\DbConnection;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Mail\NotificationByMailSender;
+use Piwigo\Notification\NotificationByMailRepository;
+use Piwigo\Notification\NotificationByMailService;
 use Piwigo\Template\Template;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -28,7 +32,6 @@ final class NbmController implements ControllerInterface
         include_once PHPWG_ROOT_PATH . 'include/functions_notification.inc.php';
         include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php';
         include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions_notification_by_mail.inc.php';
         // Translations are in the admin file too.
         load_language('admin.lang');
         // Need to update a second time.
@@ -38,11 +41,13 @@ final class NbmController implements ControllerInterface
             'local' => true,
         ]);
 
+        $nbmSender = new NotificationByMailSender(new NotificationByMailService(new NotificationByMailRepository(DbConnection::build())));
+
         $queryParams = $request->getQueryParams();
         $subscribe = $queryParams['subscribe'] ?? null;
         $unsubscribe = $queryParams['unsubscribe'] ?? null;
 
-        $body = LegacyRenderCapture::capture(static function () use ($subscribe, $unsubscribe): void {
+        $body = LegacyRenderCapture::capture(static function () use ($subscribe, $unsubscribe, $nbmSender): void {
             /**
              * @var array<string, mixed> $page
              * @var Template $template
@@ -55,9 +60,9 @@ final class NbmController implements ControllerInterface
             $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
 
             if (is_string($subscribe) && (bool) preg_match('/^[A-Za-z0-9]{16}$/', $subscribe)) {
-                subscribe_notification_by_mail(false, [$subscribe]);
+                $nbmSender->subscribeNotificationByMail(false, [$subscribe]);
             } elseif (is_string($unsubscribe) && (bool) preg_match('/^[A-Za-z0-9]{16}$/', $unsubscribe)) {
-                unsubscribe_notification_by_mail(false, [$unsubscribe]);
+                $nbmSender->unsubscribeNotificationByMail(false, [$unsubscribe]);
             } else {
                 $page['errors'][] = l10n('Unknown identifier');
             }

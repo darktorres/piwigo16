@@ -177,7 +177,7 @@ SELECT galleries_url
         // | tabs                                                                  |
         // +-----------------------------------------------------------------------+
 
-        // Consumed by add_core_tabs()'s own 'site_update' case via
+        // Consumed by CoreTabs::addCoreTabs()'s own 'site_update' case via
         // `global $my_base_url;`, triggered synchronously inside
         // tabsheet::select() below -- must be set before that call, not
         // dead code (see this class's own docblock).

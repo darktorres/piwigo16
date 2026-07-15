@@ -26,7 +26,8 @@ use Piwigo\Template\Template;
 use Psr\Http\Client\ClientExceptionInterface;
 
 // Relocated from the now-deleted admin/photos_add.php (P23 batch 8a):
-// admin/include/add_core_tabs.inc.php's add_core_tabs() and
+// Piwigo\Admin\CoreTabs::addCoreTabs() (formerly admin/include/
+// add_core_tabs.inc.php's add_core_tabs(), P23 batch 8b-6) and
 // Piwigo\Admin\PhotosAddDirectPageRenderer both read this constant, and
 // this file is already include_once'd before either of them ever runs
 // (PhotosAddSubController::handle() loads this file first) -- can't

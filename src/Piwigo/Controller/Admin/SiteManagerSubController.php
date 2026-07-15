@@ -23,8 +23,10 @@ use Psr\Http\Message\ServerRequestInterface;
  * no CSRF gap found in this sub-batch, kept unchanged.
  *
  * `$tabsheet->select('site_maager')` (missing "n") is not a typo to fix
- * here: `admin/include/add_core_tabs.inc.php`'s own `case 'site_update':`
- * branch defines the exact same misspelled key
+ * here: `Piwigo\Admin\CoreTabs::addCoreTabs()`'s own `case 'site_update':`
+ * branch (formerly `admin/include/add_core_tabs.inc.php`'s
+ * `add_core_tabs()`, folded in P23 batch 8b-6) defines the exact same
+ * misspelled key
  * (`$sheets['site_maager']`), so both sides match and the correct tab
  * highlights. Renaming only one side would silently break tab
  * highlighting (the same regression class found in P23 batch 6i-4);
@@ -36,7 +38,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * method is always invoked from inside an AdminSubControllerInterface::
  * handle() call frame (Piwigo\Bootstrap\AdminDispatcher), never real
  * top-level script scope, so a bare `$my_base_url = ...` would only be
- * local to this call frame, invisible to add_core_tabs()'s own
+ * local to this call frame, invisible to CoreTabs::addCoreTabs()'s own
  * `global $my_base_url;` read a few lines below inside
  * $tabsheet->select() (same fix class as P23 batch 6i-4's cross-batch
  * regression).
@@ -72,8 +74,8 @@ final class SiteManagerSubController implements AdminSubControllerInterface
 
         $tabsheet = new tabsheet();
         $tabsheet->set_id('site_update');
-        // Matches add_core_tabs.inc.php's own 'site_maager' key -- see this
-        // class's own docblock.
+        // Matches CoreTabs::addCoreTabs()'s own 'site_maager' key -- see
+        // this class's own docblock.
         $tabsheet->select('site_maager');
         $tabsheet->assign();
 

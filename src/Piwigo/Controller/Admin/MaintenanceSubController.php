@@ -24,8 +24,9 @@ use Psr\Http\Message\ServerRequestInterface;
  *
  * Correction (found during 6i-4): `$my_base_url` is NOT dead code, despite
  * this docblock originally claiming so. It's consumed indirectly by
- * `add_core_tabs()`'s own `case 'maintenance':` branch (`admin/include/
- * add_core_tabs.inc.php`), read via `global $my_base_url;` when
+ * `Piwigo\Admin\CoreTabs::addCoreTabs()`'s own `case 'maintenance':` branch
+ * (formerly `admin/include/add_core_tabs.inc.php`'s `add_core_tabs()`,
+ * folded in P23 batch 8b-6), read via `global $my_base_url;` when
  * `tabsheet::select()` fires its `tabsheet_before_select` event a few
  * lines below -- dropping it silently degraded every tab href (missing
  * the `admin.php?page=` prefix entirely). Restored here.
@@ -67,7 +68,7 @@ final class MaintenanceSubController implements AdminSubControllerInterface
         // top-level script include.
         global $maint_actions;
 
-        // Consumed by add_core_tabs()'s own 'maintenance' case via
+        // Consumed by CoreTabs::addCoreTabs()'s own 'maintenance' case via
         // `global $my_base_url;`, triggered synchronously inside
         // tabsheet::select() below -- must be set before that call, not
         // dead code (see this class's own docblock).

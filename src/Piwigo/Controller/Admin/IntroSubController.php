@@ -33,7 +33,7 @@ use Psr\Http\Message\ServerRequestInterface;
  *
  * `$my_base_url = get_root_url() . 'admin.php?page=';` is genuinely dead
  * here, unlike the P23 batch 6i-4/6j-1 cases where dropping it broke tab
- * navigation: add_core_tabs()'s own `case 'admin_home':` branch (the only
+ * navigation: CoreTabs::addCoreTabs()'s own `case 'admin_home':` branch (the only
  * case this page's `$tabsheet->set_id('admin_home'); $tabsheet->
  * select('');` can ever reach) hardcodes `'url' => 'admin.php'` and never
  * reads `global $my_base_url;` at all -- confirmed by reading that case

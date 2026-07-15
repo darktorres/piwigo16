@@ -17,6 +17,7 @@ declare(strict_types=1);
 // ordering exactly.
 require __DIR__ . '/vendor/autoload.php';
 
+use Piwigo\Admin\CoreTabs;
 use Piwigo\Bootstrap\AdminDispatcher;
 use Piwigo\Bootstrap\CommonBootstrap;
 use Piwigo\Core\AccessLevel;
@@ -53,7 +54,7 @@ include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 // $GLOBALS state rather than overwriting it -- see their own docblocks),
 // same ordering index.php already uses.
 CommonBootstrap::run($paths);
-include_once PHPWG_ROOT_PATH . 'admin/include/add_core_tabs.inc.php';
+add_event_handler('tabsheet_before_select', CoreTabs::addCoreTabs(...));
 
 trigger_notify('loc_begin_admin');
 

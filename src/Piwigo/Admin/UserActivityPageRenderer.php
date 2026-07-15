@@ -40,13 +40,20 @@ final class UserActivityPageRenderer
         check_input_parameter('group', $_GET, false, ValidationPattern::ID);
 
         $page['tab'] = 'user_activity';
-        // admin/include/user_tabs.inc.php does a bare top-level
-        // $my_base_url = ...; assignment -- without this global
+        // The inline tabsheet block below (formerly admin/include/
+        // user_tabs.inc.php, folded in P23 batch 8b-5) does a bare
+        // top-level $my_base_url = ...; assignment -- without this global
         // declaration it becomes local to this call frame, silently
         // dropping the admin.php?page= prefix from this page's own
         // tab-nav hrefs (see feedback_admindispatcher_breaks_bare_global_bootstrap).
         global $my_base_url;
-        include PHPWG_ROOT_PATH . 'admin/include/user_tabs.inc.php';
+
+        $my_base_url = get_root_url() . 'admin.php?page=';
+
+        $tabsheet = new tabsheet();
+        $tabsheet->set_id('users');
+        $tabsheet->select($page['tab']);
+        $tabsheet->assign();
 
         // $conf['user_fields'] maps generic field names to table-specific column
         // names; narrow once here and reuse below.

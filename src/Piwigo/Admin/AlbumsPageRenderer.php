@@ -26,14 +26,15 @@ use Piwigo\Template\Template;
  * (which binds the true global scope regardless of nesting depth, so this
  * is a pure mechanical port, not a behavior change).
  *
- * The same fix was missing for `$my_base_url` (set by the
- * admin/include/albums_tab.inc.php include below) until P23 batch 6j-1:
- * without `global $my_base_url;` here, that assignment stayed local to
- * this call frame, invisible to add_core_tabs()'s own
- * `global $my_base_url;` read for the 'albums' tabsheet case -- verified
- * live that this page's own "List"/"Permalinks" tab hrefs were rendering
- * as bare `href="albums"` / `href="permalinks"` instead of
- * `admin.php?page=albums` / `admin.php?page=permalinks`. Fixed here.
+ * The same fix was missing for `$my_base_url` (set by the inline tabsheet
+ * block below, formerly the admin/include/albums_tab.inc.php include,
+ * folded in P23 batch 8b-5) until P23 batch 6j-1: without
+ * `global $my_base_url;` here, that assignment stayed local to this call
+ * frame, invisible to CoreTabs::addCoreTabs()'s own `global $my_base_url;` read
+ * for the 'albums' tabsheet case -- verified live that this page's own
+ * "List"/"Permalinks" tab hrefs were rendering as bare `href="albums"` /
+ * `href="permalinks"` instead of `admin.php?page=albums` /
+ * `admin.php?page=permalinks`. Fixed here.
  */
 final class AlbumsPageRenderer
 {
@@ -60,8 +61,8 @@ final class AlbumsPageRenderer
         // admin/include/functions_notification_by_mail.inc.php's
         // $env_nbm).
         global $is_forbidden, $nb_photos_in, $nb_sub_photos;
-        // See this class's own docblock -- required before the
-        // albums_tab.inc.php include below (P23 batch 6j-1 fix).
+        // See this class's own docblock -- required before the inline
+        // tabsheet block below (P23 batch 6j-1 fix).
         global $my_base_url;
 
         include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
@@ -82,7 +83,26 @@ SELECT
         // +-------------------------------------------------------------------+
 
         $page['tab'] = 'list';
-        include PHPWG_ROOT_PATH . 'admin/include/albums_tab.inc.php';
+
+        $my_base_url = get_root_url() . 'admin.php?page=';
+
+        $tabsheet = new tabsheet();
+        $tabsheet->set_id('albums');
+        $tabsheet->select($page['tab']);
+        $tabsheet->assign();
+
+        $query = '
+SELECT COUNT(*)
+  FROM ' . Tables::categories() . '
+;';
+        $row = pwg_db_fetch_row(pwg_query($query));
+        assert($row !== null);
+        [$nb_cats] = $row;
+        $template->assign(
+            [
+                'nb_cats' => $nb_cats,
+            ]
+        );
 
         // +-------------------------------------------------------------------+
         // |                         categories auto order                     |

@@ -25,9 +25,9 @@ namespace Piwigo\History;
  *
  * `history_tabsheet()` (admin UI tabsheet setup, no DB/domain logic at
  * all) also stays out of scope -- it's presentation glue, not history
- * domain logic, and is left as a plain free function in
- * admin/include/functions_history.inc.php, unmigrated (same category as
- * Menu/Template helpers elsewhere in this project).
+ * domain logic, and is inlined directly into HistoryPageRenderer/
+ * StatsPageRenderer instead (same shape as every other admin renderer's
+ * own tabsheet construction, see P23 sub-batch 8b-2).
  */
 final class HistoryService
 {

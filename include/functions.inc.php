@@ -23,6 +23,8 @@ use Piwigo\Core\Logger;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\History\HistoryRepository;
+use Piwigo\History\HistoryService;
 use Piwigo\Lang\Translator;
 use Piwigo\Page\PaginationService;
 use Piwigo\Template\Template;
@@ -696,15 +698,13 @@ INSERT INTO ' . Tables::history() . '
 
     $history_id = (int) pwg_db_insert_id();
     if ($history_id % 1000 == 0) {
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions_history.inc.php';
-        history_summarize(50000);
+        new HistoryService(new HistoryRepository(DbConnection::build()))->summarize(50000);
     }
 
     $history_autopurge_every = $conf['history_autopurge_every'];
     $history_autopurge_every = is_numeric($history_autopurge_every) ? (int) $history_autopurge_every : 0;
     if ($history_autopurge_every > 0 and $history_id % $history_autopurge_every == 0) {
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions_history.inc.php';
-        history_autopurge();
+        new HistoryService(new HistoryRepository(DbConnection::build()))->autopurge();
     }
 
     return true;

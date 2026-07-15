@@ -19,9 +19,6 @@ use Piwigo\Users\UserRepository;
  * search_id is already present in $page (reachable via a direct URL, not
  * the current UI flow -- ws_history_search()'s own redirect for this is
  * commented out), a navigation bar for a prior search's results.
- *
- * admin/include/functions_history.inc.php is NOT ported/deleted here -- see
- * StatsPageRenderer's own docblock for why (real callers outside admin/).
  */
 final class HistoryPageRenderer
 {
@@ -35,7 +32,6 @@ final class HistoryPageRenderer
         global $conf, $template, $page;
 
         include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions_history.inc.php';
 
         $types = array_merge(['none'], get_enums(Tables::history(), 'image_type'));
 
@@ -53,7 +49,11 @@ final class HistoryPageRenderer
 
         $template->set_filename('history', 'history.tpl');
 
-        history_tabsheet();
+        $tabsheet = new tabsheet();
+        $tabsheet->set_id('history');
+        $page_tab = isset($page['page']) && is_string($page['page']) ? $page['page'] : '';
+        $tabsheet->select($page_tab);
+        $tabsheet->assign();
 
         $template->assign(
             [

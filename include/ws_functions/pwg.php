@@ -14,6 +14,8 @@ use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\AppInfo;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\History\HistoryRepository;
+use Piwigo\History\HistoryService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -780,6 +782,26 @@ function ws_history_log(array $params, PwgServer &$service): void
 }
 
 /**
+ * Perform history search. Registered as the default 'get_history' event
+ * handler below -- ws_history_search() (this file's only real caller of
+ * that event) dispatches via trigger_change() rather than calling this
+ * directly, so a plugin can still override history search behavior by
+ * registering its own 'get_history' handler at a higher priority.
+ *
+ * @param array<int, array<string, mixed>> $data  - used in trigger_change
+ * @param array<string, mixed> $search
+ * @param list<string> $types
+ * @return array<int, array<string, mixed>>
+ */
+function get_history($data, array $search, $types): array
+{
+    return new HistoryService(new HistoryRepository(DbConnection::build()))
+        ->getHistory($data, $search, $types);
+}
+
+add_event_handler('get_history', 'get_history');
+
+/**
  * API method
  * Returns lines of an history search
  * @since 13
@@ -798,7 +820,6 @@ function ws_history_search(array $param, PwgServer &$service): array
 {
 
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-    include_once PHPWG_ROOT_PATH . 'admin/include/functions_history.inc.php';
 
     /** @var array<string, mixed> $conf */
     global $conf;
@@ -931,13 +952,14 @@ SELECT rules
     if (! is_array($data)) {
         $data = [];
     }
-    // get_history() (the only real handler for the 'get_history' event, per
-    // admin/include/functions_history.inc.php) returns array<int,
-    // array<string, mixed>>; the trigger_change() dispatch above only
-    // proved each element is an array, not that its keys are strings.
+    // get_history() (the only real handler for the 'get_history' event,
+    // defined earlier in this file) returns array<int, array<string,
+    // mixed>>; the trigger_change() dispatch above only proved each
+    // element is an array, not that its keys are strings.
     /** @var array<int, array<string, mixed>> $data */
     $data = array_values(array_filter($data, is_array(...)));
-    usort($data, history_compare(...));
+    $historyService = new HistoryService(new HistoryRepository(DbConnection::build()));
+    usort($data, $historyService->historyCompare(...));
 
     $page['nb_lines'] = count($data);
 

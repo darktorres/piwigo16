@@ -8,25 +8,22 @@ use DateInterval;
 use DateTime;
 use InvalidArgumentException;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\History\HistoryRepository;
+use Piwigo\History\HistoryService;
 use Piwigo\Template\Template;
 
 /**
  * Ported from admin/stats.php (page slug "stats") -- a sibling top-level
- * page to "history" sharing the same tabsheet group (history_tabsheet(),
- * still a free function in admin/include/functions_history.inc.php, selects
- * on the real page slug, not a `?tab=` param). Its history_summary chart
+ * page to "history" sharing the same tabsheet group (built inline here,
+ * same shape as every other admin renderer's own tabsheet, selecting on
+ * the real page slug, not a `?tab=` param). Its history_summary chart
  * queries are single-purpose view-shaping for this one page (date-bucketing
  * into hour/day/month/year series) -- no HistoryRepository method covers
  * this shape (findSummaryRowsForHierarchy() takes one specific year/month/
  * day/hour combination, not "last N buckets ordered descending"), matching
  * this project's established "page/template glue stays inline" precedent.
- *
- * admin/include/functions_history.inc.php is NOT ported/deleted here -- it
- * has real callers outside admin/ entirely (include/functions.inc.php's
- * history-logging code, include/ws_functions/pwg.php's ws_history_search())
- * -- called unchanged via its own include_once, same as every sibling
- * P23 batch 6 renderer's use of admin/include/functions.php.
  */
 final class StatsPageRenderer
 {
@@ -35,21 +32,25 @@ final class StatsPageRenderer
         /**
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $lang
+         * @var array<string, mixed> $page
          * @var Template $template
          * @var array<string, mixed> $user
          */
-        global $conf, $lang, $template, $user;
+        global $conf, $lang, $page, $template, $user;
 
         include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions_history.inc.php';
 
         check_status(AccessLevel::Administrator);
 
-        history_summarize();
+        new HistoryService(new HistoryRepository(DbConnection::build()))->summarize();
 
         $template->set_filename('stats', 'stats.tpl');
 
-        history_tabsheet();
+        $tabsheet = new tabsheet();
+        $tabsheet->set_id('history');
+        $page_tab = isset($page['page']) && is_string($page['page']) ? $page['page'] : '';
+        $tabsheet->select($page_tab);
+        $tabsheet->assign();
 
         $base_url = get_root_url() . 'admin.php?page=history';
 

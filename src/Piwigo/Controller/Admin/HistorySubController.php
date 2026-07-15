@@ -12,8 +12,9 @@ use Psr\Http\Message\ServerRequestInterface;
  * delegate. Its own data access was already almost entirely factored into
  * Piwigo\History\HistoryService/HistoryRepository during P18 (this file
  * only ever called them through the free-function bridge in
- * admin/include/functions_history.inc.php, e.g. get_history()) -- no new
- * Admin\History\HistoryAdminService was warranted; the only real
+ * admin/include/functions_history.inc.php, e.g. get_history() -- that
+ * bridge file was deleted in P23 sub-batch 8b-2, its real callers
+ * retargeted directly to HistoryService) -- no new
  * remaining gap was this page's own username-lookup query, fixed by
  * adding Piwigo\Users\UserRepository::findUsernameById() (also closes a
  * real, if narrow, correctness gap: the old raw query hardcoded 'id'/

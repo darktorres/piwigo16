@@ -38,6 +38,12 @@ $adminRoutes = [
     'admin updates'    => '/admin.php?page=updates',
     'admin site_manager' => '/admin.php?page=site_manager',
     'admin permalinks' => '/admin.php?page=permalinks',
+    // insertNewDataUserMailNotification() runs on every GET to this page
+    // and can send real mail via pwg_mail() if any user is missing its own
+    // notification-subscription row -- confirmed a no-op against the
+    // current fixture (every user with an email already has one), see
+    // NotificationByMailSubController's own docblock.
+    'admin notification_by_mail' => '/admin.php?page=notification_by_mail',
 ];
 
 foreach ($adminRoutes as $name => $path) {

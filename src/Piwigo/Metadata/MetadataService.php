@@ -492,12 +492,17 @@ final class MetadataService
      */
     public function syncMetadata(array $ids): void
     {
-        // Reuse the DB-consistent CURRENT_DATE set by admin/site_update.php's
-        // own bootstrap when available (matches the original's date exactly
-        // for callers that go through that page); other real callers
-        // (batch_manager_unit.php, picture_modify.php) never define it, so
-        // fall back to today's date locally -- src/Piwigo/ itself never
-        // calls define() (see tests/Arch/StructuralTest.php).
+        // Reuse the DB-consistent CURRENT_DATE when a real top-level definer
+        // (install.php/upgrade.php -- not src/Piwigo/, which itself never
+        // calls define(), see tests/Arch/StructuralTest.php) already set it
+        // earlier in this same request; otherwise fall back to today's date
+        // locally. admin/site_update.php (P23 batch 6j-5's own
+        // SiteUpdateSubController) used to define this constant too, but
+        // never actually called this method itself and, once absorbed into
+        // src/Piwigo/, is bound by the same no-define() rule -- it now uses
+        // its own local $dbnow directly instead, so this fallback's real
+        // callers (batch_manager_unit.php, picture_modify.php) are
+        // unaffected either way.
         $definedCurrentDate = defined('CURRENT_DATE') ? constant('CURRENT_DATE') : null;
         $currentDate = is_string($definedCurrentDate) ? $definedCurrentDate : date('Y-m-d');
 

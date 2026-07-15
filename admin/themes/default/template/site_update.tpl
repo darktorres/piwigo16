@@ -65,6 +65,7 @@ $('#syncFiles label').click(function () {
 
 {if isset($introduction)}
 <form action="" method="post" id="update">
+	<input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">
 
 	<fieldset id="syncFiles">
 		<legend><span class="icon-docs icon-blue"></span>{'synchronize files structure with database'|@translate}</legend>
@@ -133,7 +134,7 @@ $('#syncFiles label').click(function () {
         </div>
       </div>
 {/if}
-    
+
       <div class="savebar-footer-block">
         <button class="buttonLike"  type="submit" name="submit"><i class="icon-exchange"></i> {'Synchronize'|@translate}</button>
       </div>

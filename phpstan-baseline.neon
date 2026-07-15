@@ -319,54 +319,6 @@ parameters:
 			path: admin/include/functions_upgrade.php
 
 		-
-			rawMessage: 'Call to function array_search() requires parameter #3 to be set.'
-			identifier: function.strict
-			count: 1
-			path: admin/site_update.php
-
-		-
-			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
-			identifier: function.strict
-			count: 1
-			path: admin/site_update.php
-
-		-
-			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
-			identifier: empty.notAllowed
-			count: 4
-			path: admin/site_update.php
-
-		-
-			rawMessage: 'Loose comparison via "!=" between mixed and int is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 4
-			path: admin/site_update.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: admin/site_update.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between mixed and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 7
-			path: admin/site_update.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
-			identifier: equal.notAllowed
-			count: 11
-			path: admin/site_update.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: admin/site_update.php
-
-		-
 			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
 			identifier: function.strict
 			count: 1
@@ -2873,6 +2825,54 @@ parameters:
 			identifier: equal.notAllowed
 			count: 2
 			path: src/Piwigo/Controller/Admin/SiteManagerSubController.php
+
+		-
+			rawMessage: 'Call to function array_search() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: src/Piwigo/Controller/Admin/SiteUpdateSubController.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: src/Piwigo/Controller/Admin/SiteUpdateSubController.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 4
+			path: src/Piwigo/Controller/Admin/SiteUpdateSubController.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between mixed and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 4
+			path: src/Piwigo/Controller/Admin/SiteUpdateSubController.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Controller/Admin/SiteUpdateSubController.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 7
+			path: src/Piwigo/Controller/Admin/SiteUpdateSubController.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 11
+			path: src/Piwigo/Controller/Admin/SiteUpdateSubController.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Controller/Admin/SiteUpdateSubController.php
 
 		-
 			rawMessage: 'Out of 3317 possible param types, only 2552 - 76.9 %% actually have it. Add more param types to get over 99 %%'

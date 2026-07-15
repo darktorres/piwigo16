@@ -1336,7 +1336,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      *
      * @param string $content
      */
-    public function add_picture_button($content, int $rank = BUTTONS_RANK_NEUTRAL): void
+    public function add_picture_button($content, int $rank = 50): void
     {
         $this->picture_buttons[$rank][] = $content;
     }
@@ -1346,7 +1346,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      *
      * @param string $content
      */
-    public function add_index_button($content, int $rank = BUTTONS_RANK_NEUTRAL): void
+    public function add_index_button($content, int $rank = 50): void
     {
         $this->index_buttons[$rank][] = $content;
     }

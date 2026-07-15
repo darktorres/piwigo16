@@ -44,7 +44,7 @@ EOD;
         }
 
         parent::flattenResponse($response);
-        $ret = xmlrpc_encode($response);
+        $ret = self::xmlrpcEncode($response);
         $ret = <<<EOD
 <methodResponse>
   <params>
@@ -63,5 +63,41 @@ EOD;
     public function getContentType(): string
     {
         return 'text/xml';
+    }
+
+    private static function xmlrpcEncode(mixed $data): string
+    {
+        switch (gettype($data)) {
+            case 'boolean':
+                return '<boolean>' . ($data ? '1' : '0') . '</boolean>';
+            case 'integer':
+                return '<int>' . $data . '</int>';
+            case 'double':
+                return '<double>' . $data . '</double>';
+            case 'string':
+                return '<string>' . htmlspecialchars($data) . '</string>';
+            case 'object':
+            case 'array':
+                $data = is_object($data) ? get_object_vars($data) : $data;
+                $is_array = range(0, count($data) - 1) === array_keys($data);
+                if ($is_array) {
+                    $return = '<array><data>' . "\n";
+                    foreach ($data as $item) {
+                        $return .= '  <value>' . self::xmlrpcEncode($item) . "</value>\n";
+                    }
+                    $return .= '</data></array>';
+                } else {
+                    $return = '<struct>' . "\n";
+                    foreach ($data as $name => $value) {
+                        $name = htmlspecialchars((string) $name);
+                        $return .= "  <member><name>{$name}</name><value>";
+                        $return .= self::xmlrpcEncode($value) . "</value></member>\n";
+                    }
+                    $return .= '</struct>';
+                }
+                return $return;
+        }
+
+        return '';
     }
 }

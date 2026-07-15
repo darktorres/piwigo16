@@ -134,7 +134,7 @@ final class ImageStdParams
     public static function get_custom($w, $h, $crop = 0, $minw = null, $minh = null): DerivativeParams
     {
         // $minw/$minh are always both null or both set together (see the
-        // sole caller, template.class.php's func_define_derivative()).
+        // sole caller, Template::func_define_derivative()).
         $min_size = $minw !== null && $minh !== null ? [$minw, $minh] : null;
         $params = new DerivativeParams(new SizingParams([$w, $h], $crop, $min_size));
         self::apply_global($params);

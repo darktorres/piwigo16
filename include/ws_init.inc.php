@@ -63,9 +63,6 @@ switch ($responseFormat) {
         $encoder = new PwgJsonEncoder();
         break;
     case 'xmlrpc':
-        // xmlrpc_encoder.php is still procedural (xmlrpc_encode()'s home,
-        // not autoloadable) -- PwgXmlRpcEncoder itself is autoloaded.
-        include_once PHPWG_ROOT_PATH . 'include/ws_protocols/xmlrpc_encoder.php';
         $encoder = new PwgXmlRpcEncoder();
         break;
 }

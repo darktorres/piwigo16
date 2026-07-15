@@ -135,7 +135,6 @@ if ($conf['session_gc_probability'] > 0) {
 }
 
 include PHPWG_ROOT_PATH . 'include/functions.inc.php';
-include PHPWG_ROOT_PATH . 'include/template.class.php';
 
 $page['execution_uuid'] = generate_key(10);
 

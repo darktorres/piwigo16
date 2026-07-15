@@ -76,7 +76,6 @@ defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
 global $conf;
 
 include PHPWG_ROOT_PATH . 'include/functions.inc.php';
-include PHPWG_ROOT_PATH . 'include/template.class.php';
 
 // download database config file if exists
 check_input_parameter('dl', $_GET, false, '/^[a-f0-9]{32}$/');

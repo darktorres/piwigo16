@@ -40,9 +40,6 @@ final class PhotosAddSubController implements AdminSubControllerInterface
 
         include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
         include_once PHPWG_ROOT_PATH . 'admin/include/functions_upload.inc.php';
-        // define()'d there instead of here -- an arch test forbids define()
-        // calls under src/Piwigo/ (see that file's own docblock).
-        include_once PHPWG_ROOT_PATH . 'admin/photos_add.php';
 
         // upload form config is loaded here to match the original page's
         // own behavior (validated/used by the tab templates), even though

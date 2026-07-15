@@ -27,6 +27,16 @@ use Psr\Http\Client\ClientExceptionInterface;
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions_metadata.php';
 
+// Relocated from the now-deleted admin/photos_add.php (P23 batch 8a):
+// admin/include/add_core_tabs.inc.php's add_core_tabs() and
+// Piwigo\Admin\PhotosAddDirectPageRenderer both read this constant, and
+// this file is already include_once'd before either of them ever runs
+// (PhotosAddSubController::handle() loads this file first) -- can't
+// define() it in src/Piwigo/ itself (SEC-60 Arch rule).
+if (! defined('PHOTOS_ADD_BASE_URL')) {
+    define('PHOTOS_ADD_BASE_URL', get_root_url() . 'admin.php?page=photos_add');
+}
+
 /**
  * Deletes a site and call delete_categories for each primary category of the site
  *

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Mail;
 
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Notification\NotificationByMailService;
 use Piwigo\Notification\NotificationService;
 use Piwigo\Template\Template;
@@ -151,7 +152,7 @@ final class NotificationByMailSender
         $this->saveUser = $user;
         $userLanguage = $user['language'] ?? null;
         new MailService()
-            ->switchLangTo(is_string($userLanguage) ? $userLanguage : (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->getDefaultLanguage());
+            ->switchLangTo(is_string($userLanguage) ? $userLanguage : (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->getDefaultLanguage());
 
         $this->isToSendMail = $isToSendMail;
 
@@ -218,10 +219,10 @@ final class NotificationByMailSender
         // numeric value.
         $nbmUserIdRaw = $nbmUser['user_id'];
         assert(is_string($nbmUserIdRaw) && is_numeric($nbmUserIdRaw));
-        $user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->buildUser((int) $nbmUserIdRaw, true);
+        $user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->buildUser((int) $nbmUserIdRaw, true);
 
         new MailService()
-            ->switchLangTo(is_string($user['language']) ? $user['language'] : (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->getDefaultLanguage());
+            ->switchLangTo(is_string($user['language']) ? $user['language'] : (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->getDefaultLanguage());
 
         if ($isActionSend) {
             $emailFormat = $this->emailFormat ?? new MailService()
@@ -562,7 +563,7 @@ final class NotificationByMailSender
                             // non-null numeric DB value.
                             $nbmUserIdRaw = $nbmUser['user_id'];
                             assert(is_string($nbmUserIdRaw) && is_numeric($nbmUserIdRaw));
-                            $authKey = (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->createUserAuthKey((int) $nbmUserIdRaw, $nbmUser['status']);
+                            $authKey = (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->createUserAuthKey((int) $nbmUserIdRaw, $nbmUser['status']);
 
                             if ($authKey !== false and is_string($authKey['auth_key'])) {
                                 $auth = $authKey['auth_key'];

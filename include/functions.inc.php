@@ -14,6 +14,7 @@ use Piwigo\Activity\ActivityService;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
 
@@ -56,7 +57,6 @@ define('QST_WILDCARD', QST_WILDCARD_BEGIN | QST_WILDCARD_END);
 define('QST_BREAK', 0x20);
 
 include_once PHPWG_ROOT_PATH . 'include/functions_session.inc.php';
-include_once PHPWG_ROOT_PATH . 'include/functions_html.inc.php';
 include_once PHPWG_ROOT_PATH . 'include/derivative_std_params.inc.php';
 
 /** no option for mkgetdir() */
@@ -215,7 +215,8 @@ SELECT param, value
     $result = \Piwigo\Db\MysqliDb::query($query);
 
     if ((\Piwigo\Db\MysqliDb::numRows($result) == 0) and ! empty($condition) and $die_on_condition_with_no_result) {
-        fatal_error('No configuration data');
+        new HtmlService()
+            ->fatalError('No configuration data');
     }
 
     while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
@@ -358,9 +359,11 @@ function check_pwg_token(): void
     $result = new CsrfService()
         ->check();
     if ($result === null) {
-        bad_request('missing token');
+        new HtmlService()
+            ->badRequest('missing token');
     } elseif ($result === false) {
-        access_denied();
+        new HtmlService()
+            ->accessDenied();
     }
 }
 

@@ -7,6 +7,7 @@ namespace Piwigo\Search;
 use Piwigo\Cache\PersistentCache;
 use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Category\CategoryRepository;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
 use Piwigo\Core\MailerInterface;
@@ -36,6 +37,7 @@ final class SearchFilterRenderer
 {
     public function __construct(
         private readonly MailerInterface $mailer,
+        private readonly HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     public function render(): void
@@ -49,7 +51,7 @@ final class SearchFilterRenderer
          */
         global $conf, $lang, $page, $persistent_cache, $template, $user;
         if (! $persistent_cache instanceof PersistentCache) {
-            fatal_error('persistent cache not initialized');
+            $this->htmlRenderer->fatalError('persistent cache not initialized');
         }
 
         $tagConn = DbConnection::build();
@@ -124,6 +126,7 @@ final class SearchFilterRenderer
             new PermissionService(new PermissionRepository($searchConn), new GroupRepository($searchConn)),
             new PersistentFileCache(),
             $this->mailer,
+            $this->htmlRenderer,
         );
         $mySearch = $searchService->getValidatedSearchArray($searchId);
         if (! is_array($mySearch)) {
@@ -207,7 +210,7 @@ final class SearchFilterRenderer
             $otherFiltersItems = $this->getItemsForFilter('tags');
             if ($otherFiltersItems === false) {
                 $filterTags = $tagService->getAvailableTags();
-                usort($filterTags, tag_alpha_compare(...));
+                usort($filterTags, $this->htmlRenderer->tagAlphaCompare(...));
             } else {
                 $tagFilterItems = [];
                 foreach ($otherFiltersItems as $otherFilterItem) {
@@ -216,7 +219,7 @@ final class SearchFilterRenderer
                     }
                 }
 
-                $filterTags = $tagService->getCommonTags($tagFilterItems, 0);
+                $filterTags = $tagService->getCommonTags($tagFilterItems, 0, $this->htmlRenderer);
 
                 // the user may have started a search on 2 or more tags that
                 // have no intersection. In this case, $searchItems is empty
@@ -492,7 +495,7 @@ SELECT
                         continue;
                     }
 
-                    $catDisplayName = get_cat_display_name_cache(
+                    $catDisplayName = $this->htmlRenderer->getCatDisplayNameCache(
                         $row['uppercats'],
                         'admin.php?page=album-' // TODO not sure it's relevant to link to admin pages
                     );
@@ -961,7 +964,7 @@ SELECT
 
         $repo = new CategoryRepository(DbConnection::build());
         $cats = $repo->findFullCategoriesByIds($allowedCatIds);
-        usort($cats, name_compare(...));
+        usort($cats, $this->htmlRenderer->nameCompare(...));
 
         $albumsFound = [];
         foreach ($cats as $cat) {
@@ -971,7 +974,7 @@ SELECT
             }
 
             $singleLink = false;
-            $albumsFound[] = get_cat_display_name_cache(
+            $albumsFound[] = $this->htmlRenderer->getCatDisplayNameCache(
                 $uppercats,
                 '',
                 $singleLink
@@ -1035,7 +1038,7 @@ SELECT
         $tagConn = DbConnection::build();
         $tags = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
             ->getAvailableTags($tagIds);
-        usort($tags, tag_alpha_compare(...));
+        usort($tags, $this->htmlRenderer->tagAlphaCompare(...));
         $tagsFound = [];
         foreach ($tags as $tag) {
             if (! isset($tag['name']) || ! is_string($tag['name'])) {

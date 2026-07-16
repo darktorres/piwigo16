@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
@@ -48,6 +49,8 @@ final class ElementSetRanksPageRenderer
          * @var Template $template
          */
         global $page, $template;
+
+        $htmlRenderer = new HtmlService();
 
         $sort_fields = [
             '' => '',
@@ -148,7 +151,7 @@ SELECT *
 ;';
         $category = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
         if (! is_array($category) || ! is_string($category['uppercats'] ?? null)) {
-            page_not_found('Requested album does not exist');
+            $htmlRenderer->pageNotFound('Requested album does not exist');
         }
 
         if ($category['image_order'] === 'rank ASC' or $category['image_order'] === '`rank` ASC') {
@@ -158,7 +161,7 @@ SELECT *
         }
 
         // Navigation path
-        $navigation = get_cat_display_name_cache(
+        $navigation = $htmlRenderer->getCatDisplayNameCache(
             $category['uppercats'],
             get_root_url() . 'admin.php?page=album-'
         );

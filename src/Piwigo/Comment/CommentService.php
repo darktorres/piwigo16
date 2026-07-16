@@ -6,6 +6,7 @@ namespace Piwigo\Comment;
 
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\EphemeralKeyService;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Db\DbConnection;
@@ -25,10 +26,10 @@ use Piwigo\Permission\PermissionService;
  * `mailNotificationAdmins()` rather than depending on
  * Piwigo\Mail\MailService directly -- same L2b-may-not-depend-on-L3
  * constraint as UserService, see deptrac.yaml's own comment on the Mail
- * namespace entry and MailerInterface's own docblock. `fatal_error()`
- * (1 call site, `validateComment()`'s unknown-comment-id branch) stays a
- * bare free-function call, deliberately, permanently -- P23 batch 8's
- * finding 8, not an oversight.
+ * namespace entry and MailerInterface's own docblock. P23 batch 8f-3:
+ * `validateComment()`'s unknown-comment-id `fatal_error()` call is now
+ * routed through the same-shaped HtmlRenderingInterface (Piwigo\Core)
+ * instead of staying a bare free-function call.
  *
  * is_admin()/is_a_guest()/is_classic_user() and the `$user`/`$conf`
  * globals they and this class read are called exactly as the original
@@ -42,6 +43,7 @@ final class CommentService
         private readonly CommentRepository $repo,
         private readonly EphemeralKeyService $ephemeralKeys,
         private readonly MailerInterface $mailer,
+        private readonly HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     /**
@@ -536,7 +538,7 @@ SELECT COUNT(DISTINCT(com.id))
 
         if ($value === false) {
             if ($dieOnError) {
-                fatal_error('Unknown comment identifier');
+                $this->htmlRenderer->fatalError('Unknown comment identifier');
             }
 
             return false;

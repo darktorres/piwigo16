@@ -67,7 +67,7 @@ final class GalleryController implements ControllerInterface
          */
         global $conf, $page, $template;
 
-        new SectionPopulator(new MailService())
+        new SectionPopulator(new MailService(), new HtmlService())
             ->populate();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
@@ -102,12 +102,13 @@ final class GalleryController implements ControllerInterface
             new CategoryService(
                 new CategoryRepository($categoryConn),
                 new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
-            )->checkRestrictions((int) $page['category']['id']);
+            )->checkRestrictions((int) $page['category']['id'], new HtmlService());
         }
         if ($page_start > 0 && $page_start >= count($page_items)) {
-            page_not_found('', duplicate_index_url([
-                'start' => 0,
-            ]));
+            new HtmlService()
+                ->pageNotFound('', duplicate_index_url([
+                    'start' => 0,
+                ]));
         }
 
         $body = LegacyRenderCapture::capture(static function () use ($page_items, $page_start, $page_nb_image_page): void {
@@ -257,7 +258,7 @@ final class GalleryController implements ControllerInterface
                     }
                 }
 
-                new SearchFilterRenderer(new MailService())
+                new SearchFilterRenderer(new MailService(), new HtmlService())
                     ->render();
 
                 if ($page['section'] === 'categories' and isset($page['category']) and is_array($page['category']) and ! isset($page['combined_categories'])) {
@@ -292,6 +293,7 @@ final class GalleryController implements ControllerInterface
                     $tags = $tagService->getCommonTags(
                         $page_items,
                         is_numeric($conf['menubar_tag_cloud_items_number']) ? (int) $conf['menubar_tag_cloud_items_number'] : 0,
+                        new HtmlService(),
                         $excluded_tag_ids
                     );
 
@@ -417,10 +419,10 @@ final class GalleryController implements ControllerInterface
                      */
                     $cats = array_merge($matching_cats_no_images, $matching_cats);
                     if ($cats !== []) {
-                        usort($cats, name_compare(...));
+                        usort($cats, new HtmlService()->nameCompare(...));
                         $hints = [];
                         foreach ($cats as $cat) {
-                            $hints[] = get_cat_display_name([$cat], '');
+                            $hints[] = new HtmlService()->getCatDisplayName([$cat], '');
                         }
                         $template->assign('category_search_results', $hints);
                     }
@@ -514,12 +516,12 @@ final class GalleryController implements ControllerInterface
                   and ($page['section'] === 'recent_cats' or $page['section'] === 'categories')
                   and (! isset($page['category']) or ! is_array($page['category']) or ! isset($page['category']['count_categories']) or $page['category']['count_categories'] > 0)
                 ) {
-                    new CategoryCatsRenderer(new FilterService())
+                    new CategoryCatsRenderer(new FilterService(), new HtmlService())
                         ->render();
                 }
 
                 if ($page_items !== []) {
-                    new CategoryDefaultRenderer()
+                    new CategoryDefaultRenderer(new HtmlService())
                         ->render();
 
                     if ((bool) $conf['index_sizes_icon']) {
@@ -568,7 +570,7 @@ final class GalleryController implements ControllerInterface
                 $body_data_section = is_array($page['body_data'] ?? null) ? ($page['body_data']['section'] ?? null) : null;
                 if ($page_items !== [] and is_array($page['body_data'] ?? null) and $body_data_section !== 'tags') {
                     $selection = array_slice($page_items, $page_start, $page_nb_image_page);
-                    $tags = $tagService->addLevelToTags($tagService->getCommonTags($selection, is_numeric($conf['content_tag_cloud_items_number']) ? (int) $conf['content_tag_cloud_items_number'] : 0));
+                    $tags = $tagService->addLevelToTags($tagService->getCommonTags($selection, is_numeric($conf['content_tag_cloud_items_number']) ? (int) $conf['content_tag_cloud_items_number'] : 0, new HtmlService()));
                     $related_tags = [];
                     foreach ($tags as $tag) {
                         $related_tags[] =

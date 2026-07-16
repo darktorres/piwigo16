@@ -56,6 +56,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\Tables;
     use Piwigo\Group\GroupRepository;
+    use Piwigo\Html\HtmlService;
     use Piwigo\Mail\MailService;
     use Piwigo\Users\UserRepository;
     use Piwigo\Users\UserService;
@@ -110,7 +111,7 @@ namespace Piwigo\Tests\Integration {
             ];
 
             $this->conn = DbConnection::build();
-            $this->service = new UserService(new UserRepository($this->conn), new GroupRepository($this->conn), new MailService(), new ActivityService(new ActivityRepository($this->conn)));
+            $this->service = new UserService(new UserRepository($this->conn), new GroupRepository($this->conn), new MailService(), new ActivityService(new ActivityRepository($this->conn)), new HtmlService());
         }
 
         public function test_validate_mail_address_accepts_an_unused_address(): void

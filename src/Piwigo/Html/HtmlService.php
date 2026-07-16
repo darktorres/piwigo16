@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Html;
 
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Db\Tables;
 use Piwigo\Image\SrcImage;
 use Piwigo\Menu\BlockManager;
@@ -19,8 +20,12 @@ use Piwigo\Template\Template;
  * script_basename(), is_a_guest(), pwg_transliterate(), \Piwigo\Db\MysqliDb::query2Array(),
  * l10n()) stay as plain global-function calls to modules not yet migrated
  * in P17.
+ *
+ * Implements HtmlRenderingInterface (P23 batch 8f-3) so L1/L2a/L2b classes
+ * that can't depend on this L3Presentation class directly can depend on
+ * that interface instead -- see its own docblock.
  */
-final class HtmlService
+final class HtmlService implements HtmlRenderingInterface
 {
     /**
      * Generates breadcrumb from categories list.
@@ -31,6 +36,7 @@ final class HtmlService
      *
      * @param array<int, array<string, mixed>> $catInformations
      */
+    #[\Override]
     public function getCatDisplayName(array $catInformations, ?string $url = ''): string
     {
         /** @var array<string, mixed> $conf */
@@ -84,6 +90,7 @@ final class HtmlService
      * Generates breadcrumb from categories list using a cache.
      * @see getCatDisplayName()
      */
+    #[\Override]
     public function getCatDisplayNameCache(
         string $uppercats,
         ?string $url = '',
@@ -237,6 +244,7 @@ SELECT id, name, permalink
      * @param array<string, mixed> $a
      * @param array<string, mixed> $b
      */
+    #[\Override]
     public function nameCompare(array $a, array $b): int
     {
         $name_a = is_string($a['name'] ?? null) ? $a['name'] : '';
@@ -251,6 +259,7 @@ SELECT id, name, permalink
      * @param array<string, mixed> $a
      * @param array<string, mixed> $b
      */
+    #[\Override]
     public function tagAlphaCompare(array $a, array $b): int
     {
         /** @var array<string, mixed> $cache */
@@ -286,6 +295,7 @@ SELECT id, name, permalink
     /**
      * Exits the current script.
      */
+    #[\Override]
     public function accessDenied(): never
     {
         global $user;
@@ -333,6 +343,7 @@ SELECT id, name, permalink
      * Exits the current script with 400 code.
      * @todo nice display if $template loaded
      */
+    #[\Override]
     public function badRequest(string $msg, ?string $alternateUrl = null): never
     {
         $this->setStatusHeader(400);
@@ -355,6 +366,7 @@ SELECT id, name, permalink
      * @param string|null $msg null is treated the same as '' below (string
      *   concatenation); comments.php passes null when comments are disabled
      */
+    #[\Override]
     public function pageNotFound(?string $msg, ?string $alternateUrl = null): never
     {
         $this->setStatusHeader(404);
@@ -374,6 +386,7 @@ SELECT id, name, permalink
      * Exits the current script with 500 code.
      * @todo nice display if $template loaded
      */
+    #[\Override]
     public function fatalError(string $msg, ?string $title = null, bool $showTrace = true): never
     {
         if ($title === null || $title === '') {
@@ -419,6 +432,7 @@ SELECT id, name, permalink
     /**
      * Returns the breadcrumb to be displayed above thumbnails on tag page.
      */
+    #[\Override]
     public function getTagsContentTitle(): string
     {
         /** @var array<string, mixed> $page */
@@ -435,6 +449,7 @@ SELECT id, name, permalink
      * Returns the breadcrumb to be displayed above thumbnails on combined
      * categories page.
      */
+    #[\Override]
     public function getCombinedCategoriesContentTitle(): string
     {
         /** @var array<string, mixed> $page */
@@ -486,6 +501,7 @@ SELECT id, name, permalink
     /**
      * Sets the http status header (200,401,...).
      */
+    #[\Override]
     public function setStatusHeader(int $code, string $text = ''): void
     {
         if ($text === '') {
@@ -559,6 +575,7 @@ SELECT id, name, permalink
      *
      * @param array<string, mixed> $info at least file or name
      */
+    #[\Override]
     public function renderElementName(array $info): string
     {
         if (isset($info['name']) && is_string($info['name']) && $info['name'] !== '') {
@@ -578,6 +595,7 @@ SELECT id, name, permalink
      * @param array<string, mixed> $info at least comment
      * @param string $param used to identify the trigger
      */
+    #[\Override]
     public function renderElementDescription(array $info, string $param = ''): string
     {
         if (isset($info['comment']) && is_string($info['comment']) && $info['comment'] !== '') {
@@ -596,6 +614,7 @@ SELECT id, name, permalink
      *
      * @param array<string, mixed> $info hit, rating_score, nb_comments
      */
+    #[\Override]
     public function getThumbnailTitle(array $info, string $title, string $comment = ''): string
     {
         /** @var array<string, mixed> $conf */

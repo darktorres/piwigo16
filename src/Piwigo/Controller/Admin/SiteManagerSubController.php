@@ -10,6 +10,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Html\HtmlService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Site\SiteRepository;
@@ -89,7 +90,8 @@ final class SiteManagerSubController implements AdminSubControllerInterface
             $galleries_url_input = $_POST['galleries_url'];
             $is_remote = url_is_remote($galleries_url_input);
             if ($is_remote) {
-                fatal_error('remote sites not supported');
+                new HtmlService()
+                    ->fatalError('remote sites not supported');
             }
             $url = preg_replace('/[\/]*$/', '', $galleries_url_input);
             $url .= '/';

@@ -135,10 +135,12 @@ SELECT ' . implode(',', $fields) . '
             $cookie_lang = $_COOKIE['lang'] ?? null;
             if ($cookie_lang !== null and (! is_string($cookie_lang) or $user['language'] !== $cookie_lang)) {
                 if (! is_string($cookie_lang)) {
-                    fatal_error('[Hacking attempt] the input parameter "lang" is not valid');
+                    new HtmlService()
+                        ->fatalError('[Hacking attempt] the input parameter "lang" is not valid');
                 }
                 if (! array_key_exists($cookie_lang, \Piwigo\Lang\LangService::getLanguages())) {
-                    fatal_error('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');
+                    new HtmlService()
+                        ->fatalError('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');
                 }
 
                 $user['language'] = $cookie_lang;

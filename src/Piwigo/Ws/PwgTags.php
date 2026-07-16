@@ -19,6 +19,7 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Html\HtmlService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Tag\TagRepository;
@@ -55,7 +56,7 @@ final class PwgTags
                 return $b_counter <=> $a_counter;
             });
         } else {
-            usort($tags, tag_alpha_compare(...));
+            usort($tags, new HtmlService()->tagAlphaCompare(...));
         }
 
         for ($i = 0; $i < count($tags); $i++) {
@@ -94,7 +95,7 @@ final class PwgTags
     {
         return [
             'tags' => new PwgNamedArray(
-                self::tagService()->getAllTags(),
+                self::tagService()->getAllTags(new HtmlService()),
                 'tag',
                 WsHelper::stdGetTagXmlAttributes()
             ),

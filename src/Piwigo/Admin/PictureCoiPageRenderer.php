@@ -8,6 +8,7 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeUrlCodec;
@@ -28,6 +29,8 @@ final class PictureCoiPageRenderer
          * @var Template $template
          */
         global $conf, $template;
+
+        $htmlRenderer = new HtmlService();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
@@ -61,7 +64,7 @@ final class PictureCoiPageRenderer
         $query = 'SELECT * FROM ' . Tables::images() . ' WHERE id=' . $image_id;
         $row = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
         if (! is_array($row)) {
-            page_not_found('Requested photo does not exist');
+            $htmlRenderer->pageNotFound('Requested photo does not exist');
         }
 
         if (isset($_POST['submit'])) {
@@ -90,7 +93,7 @@ final class PictureCoiPageRenderer
         }
 
         $tpl_var = [
-            'TITLE' => render_element_name($row),
+            'TITLE' => $htmlRenderer->renderElementName($row),
             'ALT' => $row['file'],
             'U_IMG' => DerivativeImage::url(IMG_LARGE, $row),
         ];

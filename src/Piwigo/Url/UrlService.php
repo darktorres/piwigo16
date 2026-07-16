@@ -7,6 +7,7 @@ namespace Piwigo\Url;
 use Piwigo\Auth\CookieService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -19,18 +20,23 @@ use Piwigo\Tag\TagService;
  * URL building/parsing for the gallery's own routes (index/picture/action
  * sections, permalinks, chronology/start/flat params).
  *
- * Injects nothing -- cross-domain calls (str2url(), is_a_guest(), l10n(),
- * page_not_found(), etc.) stay as plain global-function calls to modules
- * not yet migrated in P17. Same "injects nothing" shape the reference
- * implementation's own mature UrlService settled on. `cookie_path()`,
- * `find_tags()` (`Piwigo\Tag\TagService::findTags()`), `get_cat_info()`/
- * `get_cat_id_from_permalinks()` (`Piwigo\Category\CategoryService`, P23
- * batch 8c) are exceptions -- Auth\CookieService/Tag/Category are all
- * same-layer-or-below (L2b may depend on L2a), so they're called directly
- * rather than left as free-function delegates.
+ * `cookie_path()`, `find_tags()` (`Piwigo\Tag\TagService::findTags()`),
+ * `get_cat_info()`/`get_cat_id_from_permalinks()`
+ * (`Piwigo\Category\CategoryService`, P23 batch 8c) are called directly
+ * (not free-function delegates) -- Auth\CookieService/Tag/Category are all
+ * same-layer-or-below (L2b may depend on L2a). P23 batch 8f-3: the P17-era
+ * "injects nothing" shape is retired for the HTML-rendering surface
+ * specifically -- `bad_request()`/`page_not_found()`/`fatal_error()` now
+ * route through the constructor-injected HtmlRenderingInterface
+ * (Piwigo\Core), same pattern as CategoryService/AuthService/CommentService/
+ * UserService's own equivalent treatment.
  */
 final class UrlService
 {
+    public function __construct(
+        private readonly HtmlRenderingInterface $htmlRenderer,
+    ) {}
+
     /**
      * Returns a prefix for each url link on displayed page and returns an
      * empty string for current path.
@@ -635,7 +641,7 @@ final class UrlService
                                 $combined_category_ids[] = $cat_id;
                             }
                         } else {
-                            page_not_found(l10n('Permalink for album not found'));
+                            $this->htmlRenderer->pageNotFound(l10n('Permalink for album not found'));
                         }
                     }
                 }
@@ -648,7 +654,7 @@ final class UrlService
             if ($category !== null) {
                 $result = $categoryService->getCategoryInfo((int) $category);
                 if ($result === null || $result === []) {
-                    page_not_found(l10n('Requested album does not exist'));
+                    $this->htmlRenderer->pageNotFound(l10n('Requested album does not exist'));
                 }
                 $page['category'] = $result;
             }
@@ -659,7 +665,7 @@ final class UrlService
                 foreach ($combined_category_ids as $cat_id) {
                     $result = $categoryService->getCategoryInfo((int) $cat_id);
                     if ($result === null || $result === []) {
-                        page_not_found(l10n('Requested album does not exist'));
+                        $this->htmlRenderer->pageNotFound(l10n('Requested album does not exist'));
                     }
 
                     $combined_categories[] = $result;
@@ -697,14 +703,14 @@ final class UrlService
             $nextToken = $i;
 
             if ($requested_tag_ids === [] && $requested_tag_url_names === []) {
-                bad_request('at least one tag required');
+                $this->htmlRenderer->badRequest('at least one tag required');
             }
 
             $tagConn = DbConnection::build();
             $page['tags'] = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
                 ->findTags($requested_tag_ids, $requested_tag_url_names);
             if ($page['tags'] === []) {
-                page_not_found(l10n('Requested tag does not exist'), $this->getRootUrl() . 'tags.php');
+                $this->htmlRenderer->pageNotFound(l10n('Requested tag does not exist'), $this->getRootUrl() . 'tags.php');
             }
         } elseif (@$tokens[$nextToken] === 'favorites') {
             $page['section'] = 'favorites';
@@ -729,7 +735,7 @@ final class UrlService
             if (! isset($matches[1])) {
                 preg_match('/(\d+)/', @$tokens[$nextToken], $matches);
                 if (! isset($matches[1])) {
-                    bad_request('search identifier is missing');
+                    $this->htmlRenderer->badRequest('search identifier is missing');
                 }
             }
             $page['search'] = $matches[1];
@@ -748,7 +754,7 @@ final class UrlService
             // With pictures list
             else {
                 if (! (bool) preg_match('/^\d+(,\d+)*$/', $tokens[$nextToken])) {
-                    bad_request('wrong format on list GET parameter');
+                    $this->htmlRenderer->badRequest('wrong format on list GET parameter');
                 }
                 foreach (explode(',', $tokens[$nextToken]) as $image_id) {
                     $page['list'][] = $image_id;
@@ -783,7 +789,7 @@ final class UrlService
                 $page['chronology_style'] = $chronology_tokens[0];
 
                 if (! in_array($page['chronology_style'], ['monthly', 'weekly'], true)) {
-                    fatal_error('bad chronology field (style)');
+                    $this->htmlRenderer->fatalError('bad chronology field (style)');
                 }
 
                 array_shift($chronology_tokens);
@@ -798,7 +804,7 @@ final class UrlService
                     foreach ($page['chronology_date'] as $date_token) {
                         // each date part must be an integer (number of the year, number of the month, number of the week or number of the day)
                         if (! (bool) preg_match('/^(\d+|any)$/', $date_token)) {
-                            fatal_error('bad chronology field (date)');
+                            $this->htmlRenderer->fatalError('bad chronology field (date)');
                         }
                     }
                 }

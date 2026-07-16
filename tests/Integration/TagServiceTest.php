@@ -34,6 +34,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
     use Piwigo\Group\GroupRepository;
+    use Piwigo\Html\HtmlService;
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
     use Piwigo\Tag\TagRepository;
@@ -69,14 +70,14 @@ namespace Piwigo\Tests\Integration {
 
         public function test_get_all_tags_returns_every_fixture_tag_alphabetically(): void
         {
-            $names = array_column($this->service->getAllTags(), 'name');
+            $names = array_column($this->service->getAllTags(new HtmlService()), 'name');
 
             self::assertSame(['family', 'nature', 'travel'], $names);
         }
 
         public function test_get_all_tags_sets_name_raw(): void
         {
-            $tags = $this->service->getAllTags();
+            $tags = $this->service->getAllTags(new HtmlService());
 
             self::assertSame($tags[0]['name'], $tags[0]['name_raw']);
         }

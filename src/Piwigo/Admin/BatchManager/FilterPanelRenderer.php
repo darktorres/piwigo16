@@ -183,7 +183,7 @@ SELECT
 
             $tagConn = DbConnection::build();
             $filter_tags = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
-                ->getTagList($query);
+                ->getTagList($query, new HtmlService());
         }
 
         $template->assign('filter_tags', $filter_tags);

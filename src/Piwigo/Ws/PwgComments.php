@@ -17,6 +17,7 @@ use Piwigo\Comment\CommentService;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Mail\MailService;
 
@@ -265,7 +266,7 @@ GROUP BY author_id
         }
 
         $params['comment_id'] = array_unique($params['comment_id']);
-        new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService())
+        new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService(), new HtmlService())
             ->deleteComment($params['comment_id']);
         return 'Comment successfully deleted';
     }
@@ -286,7 +287,7 @@ GROUP BY author_id
         }
 
         $params['comment_id'] = array_unique($params['comment_id']);
-        new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService())
+        new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService(), new HtmlService())
             ->validateComment($params['comment_id']);
         return 'Comment successfully validated';
     }

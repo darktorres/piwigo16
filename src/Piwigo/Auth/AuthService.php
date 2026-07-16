@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Auth;
 
 use Piwigo\Core\ActivityLoggerInterface;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Session\SessionService;
@@ -35,6 +36,7 @@ final class AuthService
     public function __construct(
         private readonly AuthRepository $repo,
         private readonly ActivityLoggerInterface $activityLogger,
+        private readonly HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     /**
@@ -124,10 +126,10 @@ final class AuthService
         if (isset($_COOKIE['lang']) && ($user['language'] ?? null) !== $_COOKIE['lang']) {
             $lang_cookie = $_COOKIE['lang'];
             if (! is_string($lang_cookie)) {
-                fatal_error('[Hacking attempt] the input parameter "lang" is not valid');
+                $this->htmlRenderer->fatalError('[Hacking attempt] the input parameter "lang" is not valid');
             }
             if (! array_key_exists($lang_cookie, \Piwigo\Lang\LangService::getLanguages())) {
-                fatal_error('[Hacking attempt] the input parameter "' . $lang_cookie . '" is not valid');
+                $this->htmlRenderer->fatalError('[Hacking attempt] the input parameter "' . $lang_cookie . '" is not valid');
             }
 
             $this->repo->updateLanguage($userId, $lang_cookie);

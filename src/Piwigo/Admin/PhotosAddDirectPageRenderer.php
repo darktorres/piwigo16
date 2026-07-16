@@ -9,6 +9,7 @@ use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
@@ -55,6 +56,8 @@ final class PhotosAddDirectPageRenderer
          * @var array<string, mixed> $user
          */
         global $conf, $page, $template, $user;
+
+        $htmlRenderer = new HtmlService();
 
         // $user['id'] (the logged in / guest user id) is always numeric here
         // (DB primary key, or $conf['guest_id']); narrow once and reuse at
@@ -152,7 +155,7 @@ SELECT COUNT(*)
             $formats_id_param = $_GET['formats'];
             $imageConn = DbConnection::build();
             $formats_original_info = new ImageService(new ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)))
-                ->getImageInfos(is_int($formats_id_param) || is_string($formats_id_param) ? $formats_id_param : '');
+                ->getImageInfos(is_int($formats_id_param) || is_string($formats_id_param) ? $formats_id_param : '', $htmlRenderer);
             if ((bool) $formats_original_info) {
                 $src_image = new SrcImage($formats_original_info);
 
@@ -247,6 +250,8 @@ SELECT *
          * @var Template $template
          */
         global $conf, $template;
+
+        $htmlRenderer = new HtmlService();
 
         $uploadService = new UploadService();
 
@@ -354,9 +359,9 @@ SELECT id, uppercats
                 $uppercats = $cat['uppercats'];
                 // uppercats is a NOT NULL varchar column (install/piwigo_structure-mysql.sql)
                 assert(is_string($uppercats));
-                $template->assign('ADD_TO_ALBUM', get_cat_display_name_cache($uppercats, null));
+                $template->assign('ADD_TO_ALBUM', $htmlRenderer->getCatDisplayNameCache($uppercats, null));
             } else {
-                fatal_error('[Hacking attempt] the album id = "' . ($album_id ?? '') . '" is not valid');
+                $htmlRenderer->fatalError('[Hacking attempt] the album id = "' . ($album_id ?? '') . '" is not valid');
             }
         } else {
             // we need to know the category in which the last photo was added
@@ -378,7 +383,7 @@ SELECT category_id, c.uppercats
                 $uppercats = $row['uppercats'];
                 // uppercats is a NOT NULL varchar column (install/piwigo_structure-mysql.sql)
                 assert(is_string($uppercats));
-                $selected_category_name = get_cat_display_name_cache($uppercats, null);
+                $selected_category_name = $htmlRenderer->getCatDisplayNameCache($uppercats, null);
                 $template->assign('selected_category_name', $selected_category_name);
             }
         }

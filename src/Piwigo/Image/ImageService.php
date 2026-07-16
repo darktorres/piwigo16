@@ -8,6 +8,7 @@ use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\ActivityLoggerInterface;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Logger;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -627,16 +628,16 @@ final class ImageService
      *   directly
      * @return array<string, mixed>|null
      */
-    public function getImageInfos(int|string $imageId, bool $dieOnMissing = false): ?array
+    public function getImageInfos(int|string $imageId, HtmlRenderingInterface $htmlRenderer, bool $dieOnMissing = false): ?array
     {
         if (! is_numeric($imageId)) {
-            fatal_error('[' . __FUNCTION__ . '] invalid image identifier ' . htmlentities($imageId));
+            $htmlRenderer->fatalError('[' . __FUNCTION__ . '] invalid image identifier ' . htmlentities($imageId));
         }
 
         $image = $this->repo->findById($imageId);
         if ($image === null) {
             if ($dieOnMissing) {
-                fatal_error('photo ' . $imageId . ' does not exist');
+                $htmlRenderer->fatalError('photo ' . $imageId . ' does not exist');
             }
 
             return null;

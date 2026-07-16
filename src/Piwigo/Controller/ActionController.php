@@ -10,6 +10,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\History\HistoryRepository;
 use Piwigo\History\HistoryService;
+use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeImage;
@@ -231,7 +232,8 @@ SELECT id
             $http_headers['Cache-Control'] = 'private, must-revalidate, max-age='.$max_age;*/
 
             if ($get_part !== 'f' and isset($_SERVER['HTTP_IF_MODIFIED_SINCE'])) {
-                set_status_header(304);
+                new HtmlService()
+                    ->setStatusHeader(304);
                 foreach ($http_headers as $name => $value) {
                     header($name . ': ' . $value);
                 }
@@ -283,7 +285,8 @@ SELECT id
 
     private function doError(int $code, string $str): never
     {
-        set_status_header($code);
+        new HtmlService()
+            ->setStatusHeader($code);
         echo $str;
         exit();
     }

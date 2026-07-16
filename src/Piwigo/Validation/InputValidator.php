@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Validation;
 
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\ValidationPattern;
 
 /**
@@ -13,14 +14,35 @@ use Piwigo\Core\ValidationPattern;
  * `check_input_parameter()` becomes a thin free-function delegate to
  * `validate()` (same shape as `get_ephemeral_key()`).
  *
- * Calls the free function `fatal_error()` on a failed check rather than
- * throwing -- L1Infrastructure may not depend on L3Presentation's
- * HtmlService (deptrac), and every real call site already relies on
- * fatal_error()'s `never` return type to halt the request exactly as
+ * P23 batch 8f-3: `validate()` is this class's own single, near-universal
+ * method (81 real construction sites) -- constructor- or parameter-
+ * injecting `HtmlRenderingInterface` would ripple across every one of
+ * them for zero real benefit, so this uses the same static-setter shape
+ * as `Piwigo\Core\Lang::setDefaultLanguageProvider()` instead: set once by
+ * include/common.inc.php (legacy, not subject to deptrac), reused by
+ * every `validate()` call in the request. Needed because this
+ * L1Infrastructure class may not depend on L3Presentation's HtmlService
+ * directly (deptrac), and every real call site already relies on
+ * fatalError()'s `never` return type to halt the request exactly as
  * before.
  */
 final class InputValidator
 {
+    private static ?HtmlRenderingInterface $htmlRenderer = null;
+
+    public static function setHtmlRenderer(HtmlRenderingInterface $renderer): void
+    {
+        self::$htmlRenderer = $renderer;
+    }
+
+    private static function fatalError(string $msg): never
+    {
+        if (self::$htmlRenderer !== null) {
+            self::$htmlRenderer->fatalError($msg);
+        }
+        throw new \RuntimeException($msg);
+    }
+
     /**
      * @param array<int|string, mixed> $paramArray
      */
@@ -31,14 +53,14 @@ final class InputValidator
         // it's ok if the input parameter is null
         if (self::emptyValue($paramValue)) {
             if ($mandatory) {
-                fatal_error('[Hacking attempt] the input parameter "' . $paramName . '" is not valid');
+                self::fatalError('[Hacking attempt] the input parameter "' . $paramName . '" is not valid');
             }
             return true;
         }
 
         if ($isArray) {
             if (! is_array($paramValue)) {
-                fatal_error('[Hacking attempt] the input parameter "' . $paramName . '" should be an array');
+                self::fatalError('[Hacking attempt] the input parameter "' . $paramName . '" should be an array');
             }
 
             foreach ($paramValue as $key => $itemToCheck) {
@@ -46,20 +68,20 @@ final class InputValidator
                 // sane string form to validate against $pattern -- that's a
                 // malformed/hacking-attempt input in its own right.
                 if (! is_scalar($itemToCheck)) {
-                    fatal_error('[Hacking attempt] an item is not valid in input parameter "' . $paramName . '"');
+                    self::fatalError('[Hacking attempt] an item is not valid in input parameter "' . $paramName . '"');
                 }
 
                 if (! (bool) preg_match(ValidationPattern::ID, (string) $key) || ! (bool) preg_match($pattern, (string) $itemToCheck)) {
-                    fatal_error('[Hacking attempt] an item is not valid in input parameter "' . $paramName . '"');
+                    self::fatalError('[Hacking attempt] an item is not valid in input parameter "' . $paramName . '"');
                 }
             }
         } else {
             if (! is_scalar($paramValue)) {
-                fatal_error('[Hacking attempt] the input parameter "' . $paramName . '" is not valid');
+                self::fatalError('[Hacking attempt] the input parameter "' . $paramName . '" is not valid');
             }
 
             if (! (bool) preg_match($pattern, (string) $paramValue)) {
-                fatal_error('[Hacking attempt] the input parameter "' . $paramName . '" is not valid');
+                self::fatalError('[Hacking attempt] the input parameter "' . $paramName . '" is not valid');
             }
         }
 

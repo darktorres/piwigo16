@@ -27,6 +27,7 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Html\HtmlService;
 use Piwigo\Mail\MailService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -44,7 +45,7 @@ final class PwgUsers
 {
     private static function userService(): UserService
     {
-        return new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), new MailService(), new ActivityService(new ActivityRepository(DbConnection::build())));
+        return new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), new MailService(), new ActivityService(new ActivityRepository(DbConnection::build())), new HtmlService());
     }
 
     /**
@@ -355,7 +356,7 @@ SELECT DISTINCT ';
                     $users[$cur_user_id]['last_visit'] = $last_visit;
 
                     if (! \Piwigo\Db\MysqliDb::getBoolean($cur_user['last_visit_from_history']) and empty($last_visit)) {
-                        $last_visit = new AuthService(new AuthRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())))->getUserLastVisitFromHistory($cur_user_id, true);
+                        $last_visit = new AuthService(new AuthRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())), new HtmlService())->getUserLastVisitFromHistory($cur_user_id, true);
                         $users[$cur_user_id]['last_visit'] = $last_visit;
                     }
 
@@ -487,7 +488,7 @@ SELECT DISTINCT ';
             return new PwgError(403, 'Invalid security token');
         }
 
-        $authkey = new AuthService(new AuthRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())))->createUserAuthKey($params['user_id']);
+        $authkey = new AuthService(new AuthRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())), new HtmlService())->createUserAuthKey($params['user_id']);
 
         if ($authkey === false) {
             return new PwgError(WsError::INVALID_PARAM, 'invalid user_id');
@@ -956,14 +957,14 @@ SELECT
             return new PwgError(403, 'You cannot perform this action');
         }
 
-        $first_login = new AuthService(new AuthRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())))->hasAlreadyLoggedIn($params['user_id']);
+        $first_login = new AuthService(new AuthRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())), new HtmlService())->hasAlreadyLoggedIn($params['user_id']);
         $send_by_mail_response = null;
         $user_lost_language = is_string($user_lost['language']) ? $user_lost['language'] : self::userService()->getDefaultLanguage();
         $lang_to_use = $first_login ? self::userService()->getDefaultLanguage() : $user_lost_language;
 
         new MailService()
             ->switchLangTo($lang_to_use);
-        $generate_link = new AuthService(new AuthRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())))->generatePasswordLink($params['user_id'], $first_login);
+        $generate_link = new AuthService(new AuthRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())), new HtmlService())->generatePasswordLink($params['user_id'], $first_login);
 
         $user_lost_email = is_string($user_lost['email']) ? $user_lost['email'] : null;
 

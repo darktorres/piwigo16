@@ -11,6 +11,7 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Html\HtmlService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Template\Template;
@@ -34,6 +35,8 @@ final class UserPermPageRenderer
          * @var Template $template
          */
         global $page, $template;
+
+        $htmlRenderer = new HtmlService();
 
         $categoryConn = DbConnection::build();
         $categoryService = new CategoryService(
@@ -93,7 +96,7 @@ final class UserPermPageRenderer
             [
                 'TITLE' => l10n(
                     'Manage permissions for user "%s"',
-                    (new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build()))))->getUsername($page['user'])
+                    (new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())), $htmlRenderer))->getUsername($page['user'])
                 ),
                 'L_CAT_OPTIONS_TRUE' => l10n('Authorized'),
                 'L_CAT_OPTIONS_FALSE' => l10n('Forbidden'),
@@ -133,7 +136,7 @@ SELECT DISTINCT cat_id, c.uppercats, c.global_rank
 
                 $template->append(
                     'categories_because_of_groups',
-                    get_cat_display_name_cache($category['uppercats'], null)
+                    $htmlRenderer->getCatDisplayNameCache($category['uppercats'], null)
                 );
             }
         }
@@ -150,7 +153,7 @@ SELECT id,name,uppercats,global_rank
         }
         $query_true .= '
 ;';
-        $categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true');
+        $categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true', $htmlRenderer);
 
         $result = \Piwigo\Db\MysqliDb::query($query_true);
         $authorized_ids = [];
@@ -172,7 +175,7 @@ SELECT id,name,uppercats,global_rank
         }
         $query_false .= '
 ;';
-        $categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false');
+        $categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false', $htmlRenderer);
 
         $template->assign('PWG_TOKEN', (new \Piwigo\Csrf\CsrfService())->getToken());
 

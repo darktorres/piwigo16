@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Image;
 
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Db\Tables;
 
 /**
@@ -20,6 +21,31 @@ use Piwigo\Db\Tables;
  */
 final class SrcImage
 {
+    private static ?HtmlRenderingInterface $htmlRenderer = null;
+
+    /**
+     * Set once by include/common.inc.php (legacy, not subject to deptrac) --
+     * same static-setter shape as Piwigo\Core\Lang::setDefaultLanguageProvider().
+     * P23 batch 8f-3: get_size()'s fatal_error() call sits behind a rare
+     * edge case (dimensions genuinely never provided); this class has ~20
+     * real construction sites and get_size() itself is called transitively
+     * through DerivativeImage's own many callers, so constructor/
+     * per-method injection would ripple unreasonably for a rarely-hit path
+     * -- same reasoning as Validation\InputValidator.
+     */
+    public static function setHtmlRenderer(HtmlRenderingInterface $renderer): void
+    {
+        self::$htmlRenderer = $renderer;
+    }
+
+    private static function fatalError(string $msg): never
+    {
+        if (self::$htmlRenderer !== null) {
+            self::$htmlRenderer->fatalError($msg);
+        }
+        throw new \RuntimeException($msg);
+    }
+
     public const int IS_ORIGINAL = 0x01;
 
     public const int IS_MIMETYPE = 0x02;
@@ -160,7 +186,7 @@ final class SrcImage
     {
         if ($this->size == null) {
             if ((bool) ($this->flags & self::DIM_NOT_GIVEN)) {
-                fatal_error('SrcImage dimensions required but not provided');
+                self::fatalError('SrcImage dimensions required but not provided');
             }
             // probably not metadata synced
             if (($size = getimagesize($this->get_path())) !== false) {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Search;
 
 use Piwigo\Cache\PersistentFileCache;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -43,6 +44,7 @@ final class SearchService
         private readonly PermissionService $permissionService,
         private readonly PersistentFileCache $cache,
         private readonly MailerInterface $mailer,
+        private readonly HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     public static function getSearchIdPattern(int|string $candidate): ?string
@@ -98,7 +100,7 @@ final class SearchService
 
         if ($search !== null) {
             if (\Piwigo\Core\PageFilterHelper::scriptBasename() != 'ws' and $clausePattern == 'id = ?' and isset($search['search_uuid'])) {
-                fatal_error('this search is not reachable with its id, need the search_uuid instead');
+                $this->htmlRenderer->fatalError('this search is not reachable with its id, need the search_uuid instead');
             }
 
             if (isset($page['section']) and $page['section'] == 'search') {
@@ -149,7 +151,7 @@ final class SearchService
     {
         $search = $this->getValidatedSearchInfo($searchId);
         if (empty($search)) {
-            bad_request('this search identifier does not exist');
+            $this->htmlRenderer->badRequest('this search identifier does not exist');
         }
 
         $rules = $search['rules'] ?? null;
@@ -867,7 +869,7 @@ final class SearchService
         }
 
         $allTags = array_intersect_key($allTags, array_flip(array_diff($positiveIds, $notIds)));
-        usort($allTags, tag_alpha_compare(...));
+        usort($allTags, $this->htmlRenderer->tagAlphaCompare(...));
         foreach ($allTags as &$tag) {
             $tag['name'] = trigger_change('render_tag_name', $tag['name'], $tag);
         }
@@ -980,7 +982,7 @@ final class SearchService
         }
 
         $allCats = array_intersect_key($allCats, array_flip(array_diff($positiveIds, $notIds)));
-        usort($allCats, tag_alpha_compare(...));
+        usort($allCats, $this->htmlRenderer->tagAlphaCompare(...));
         foreach ($allCats as &$cat) {
             $cat['name'] = trigger_change('render_category_name', $cat['name'], $cat);
         }
@@ -1138,7 +1140,7 @@ final class SearchService
         $expression = new QExpression($q, $scopes);
 
         $inflector = null;
-        $langCode = substr(new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), $this->mailer, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())))->getDefaultLanguage(), 0, 2);
+        $langCode = substr(new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), $this->mailer, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())), $this->htmlRenderer)->getDefaultLanguage(), 0, 2);
         $className = '\\Piwigo\\Search\\Inflector\\Inflector_' . $langCode;
         if (class_exists($className)) {
             $inflector = new $className();
@@ -1347,7 +1349,7 @@ final class SearchService
     {
         $search = $this->getSearchArray($searchId);
         if ($search === false) {
-            bad_request('this search identifier does not exist');
+            $this->htmlRenderer->badRequest('this search identifier does not exist');
         }
 
         if (! isset($search['q']) || ! is_string($search['q'])) {

@@ -6,6 +6,7 @@ namespace Piwigo\Page;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Template\Template;
 
 /**
@@ -50,7 +51,7 @@ final class NoPhotoYetRenderer
                 // make sure we don't use the mobile theme, which is not compatible with
                 // the "no photo yet" feature
                 $user_theme = $user['theme'] ?? null;
-                $user_theme = is_string($user_theme) ? $user_theme : (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->getDefaultTheme();
+                $user_theme = is_string($user_theme) ? $user_theme : (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->getDefaultTheme();
                 /** @var Template $template */
                 global $template;
                 $template = new Template(PHPWG_ROOT_PATH . 'themes', $user_theme);

@@ -21,6 +21,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\History\HistoryRepository;
 use Piwigo\History\HistoryService;
+use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeUrlCodec;
 use Piwigo\Image\ImageRepository;
@@ -402,12 +403,12 @@ DELETE FROM ' . Tables::rate() . '
 
         if ((bool) preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $params['username'])) {
             $secret = \Piwigo\Db\MysqliDb::realEscapeString($params['password']);
-            $authenticate = new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->authKeyLogin($params['username'] . ':' . $secret);
+            $authenticate = new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->authKeyLogin($params['username'] . ':' . $secret);
             if ($authenticate) {
                 $_SESSION['connected_with'] = 'ws_session_login_api_key';
                 return true;
             }
-        } elseif (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->tryLogUser($params['username'], $params['password'], false)) {
+        } elseif (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->tryLogUser($params['username'], $params['password'], false)) {
             $_SESSION['connected_with'] = 'ws_session_login';
             return true;
         }
@@ -426,7 +427,7 @@ DELETE FROM ' . Tables::rate() . '
         }
 
         if (! \Piwigo\Auth\AccessControl::isAGuest()) {
-            new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->logoutUser();
+            new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->logoutUser();
         }
         return true;
     }
@@ -1115,13 +1116,13 @@ SELECT id, uppercats
                     continue;
                 }
 
-                $full_cat_path[$category_id] = get_cat_display_name_cache(
+                $full_cat_path[$category_id] = new HtmlService()->getCatDisplayNameCache(
                     $uppercats,
                     'admin.php?page=album-'
                 );
 
                 $uppercats = explode(',', $uppercats);
-                $name_of_category[$category_id] = get_cat_display_name_cache(
+                $name_of_category[$category_id] = new HtmlService()->getCatDisplayNameCache(
                     end($uppercats),
                     'admin.php?page=album-'
                 );

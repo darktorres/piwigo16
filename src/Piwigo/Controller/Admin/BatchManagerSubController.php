@@ -13,6 +13,7 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Mail\MailService;
@@ -620,6 +621,7 @@ DELETE FROM ' . Tables::caddie() . '
                 new PermissionService(new PermissionRepository($searchConn), new GroupRepository($searchConn)),
                 new PersistentFileCache(),
                 new MailService(),
+                new HtmlService(),
             )->getQuickSearchResultsNoCache($bulkFilter['search']['q'], [
                 'permissions' => false,
             ]);

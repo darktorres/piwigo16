@@ -47,6 +47,27 @@ final class Lang
 
     private static ?DefaultLanguageProviderInterface $defaultLanguageProvider = null;
 
+    private static ?HtmlRenderingInterface $htmlRenderer = null;
+
+    /**
+     * Set once by include/common.inc.php (legacy, not subject to deptrac) --
+     * same shape as setDefaultLanguageProvider() above, needed because this
+     * L1Infrastructure class may not depend on L3Presentation's HtmlService
+     * directly (deptrac).
+     */
+    public static function setHtmlRenderer(HtmlRenderingInterface $renderer): void
+    {
+        self::$htmlRenderer = $renderer;
+    }
+
+    private static function fatalError(string $msg): never
+    {
+        if (self::$htmlRenderer !== null) {
+            self::$htmlRenderer->fatalError($msg);
+        }
+        throw new \RuntimeException($msg);
+    }
+
     /**
      * Called by CommonBootstrap::run() after include/common.inc.php's
      * load_language() calls have populated $GLOBALS['lang'] -- HTTP-path
@@ -334,7 +355,7 @@ final class Lang
     {
         $result = '';
         if (! is_array($key_args)) {
-            \fatal_error('Lang::args: Invalid arguments');
+            self::fatalError('Lang::args: Invalid arguments');
         }
 
         $first = true;
@@ -488,5 +509,6 @@ final class Lang
     {
         self::$data = [];
         self::$defaultLanguageProvider = null;
+        self::$htmlRenderer = null;
     }
 }

@@ -9,6 +9,7 @@ use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
@@ -59,6 +60,8 @@ final class BatchManagerUnitPageRenderer
          * @var array<string, mixed> $user
          */
         global $cache, $conf, $page, $pwg_loaded_plugins, $template, $user;
+
+        $htmlRenderer = new HtmlService();
 
         trigger_notify('loc_begin_element_set_unit');
 
@@ -170,7 +173,7 @@ SELECT id, date_creation
 
             foreach ($collection as $id) {
                 if (! (bool) preg_match('/^\d+$/', $id)) {
-                    fatal_error('[Hacking attempt] the input parameter "whole_set" is not valid');
+                    $htmlRenderer->fatalError('[Hacking attempt] the input parameter "whole_set" is not valid');
                 }
             }
         } elseif (isset($_POST['selection']) && is_array($_POST['selection'])) {
@@ -358,10 +361,10 @@ SELECT
   WHERE image_id = ' . $row['id'] . '
 ;';
 
-                $tag_selection = $tagService->getTagList($query);
+                $tag_selection = $tagService->getTagList($query, $htmlRenderer);
 
                 $row_file = is_string($row['file']) ? $row['file'] : '';
-                $legend = render_element_name($row);
+                $legend = $htmlRenderer->renderElementName($row);
                 if ($legend !== \Piwigo\Core\StringHelper::getNameFromFile($row_file)) {
                     $legend .= ' (' . $row['file'] . ')';
                 }
@@ -383,7 +386,7 @@ SELECT
                 $related_categories = [];
                 $related_category_ids = [];
                 $media = [
-                    'image' => $imageService->getImageInfos($row['id'], true),
+                    'image' => $imageService->getImageInfos($row['id'], $htmlRenderer, true),
                 ];
                 // die_on_missing=true means getImageInfos() only returns null via
                 // a fatal_error() path that never returns.
@@ -399,7 +402,7 @@ SELECT
                     }
 
                     $name =
-                      get_cat_display_name_cache(
+                      $htmlRenderer->getCatDisplayNameCache(
                           $item['uppercats'],
                           get_root_url() . 'admin.php?page=album-'
                       );
@@ -493,7 +496,7 @@ SELECT
                             'DATE_CREATION' => $row['date_creation'],
                             'TAGS' => $tag_selection,
                             'is_svg' => (strtoupper(end($extTab)) === 'SVG'),
-                            'TITLE' => render_element_name($row),
+                            'TITLE' => $htmlRenderer->renderElementName($row),
                             'DIMENSIONS' => @$row['width'] . 'x' . @$row['height'] . ' px',
                             'FORMAT' => ($row['width'] >= $row['height']) ? 1 : 0, // 0:horizontal, 1:vertical
                             'FILESIZE' => l10n('%.2f MB', $row_filesize / 1024),

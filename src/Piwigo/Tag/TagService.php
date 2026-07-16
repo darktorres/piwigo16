@@ -7,6 +7,7 @@ namespace Piwigo\Tag;
 use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Core\ActivityLoggerInterface;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Logger;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -25,11 +26,15 @@ use Piwigo\Permission\PermissionService;
  * this exact layering constraint (see ActivityLoggerInterface's own
  * docblock).
  *
- * Calls the still-procedural tag_alpha_compare() (functions_html.inc.php,
- * Html domain, already migrated in P17), trigger_change(), and
- * \Piwigo\Db\MysqliDb::singleUpdate() (functions_mysqli.inc.php, relocate-only per P23 batch
- * 8c precedent) directly -- free functions, no class dependency, no
- * deptrac concern.
+ * Calls trigger_change() and \Piwigo\Db\MysqliDb::singleUpdate()
+ * (functions_mysqli.inc.php, relocate-only per P23 batch 8c precedent)
+ * directly -- free functions, no class dependency, no deptrac concern.
+ *
+ * getAllTags()/getCommonTags()/getTagList() each take HtmlRenderingInterface
+ * as an explicit parameter (P23 batch 8f-3), same per-method shape as
+ * ActivityLoggerInterface above -- their real callers already construct an
+ * HtmlService for their own unrelated needs, or can trivially do so (all
+ * L3/L4/L2b, HtmlService itself injects nothing).
  */
 final class TagService
 {
@@ -62,7 +67,7 @@ final class TagService
      *
      * @return list<array<string, mixed>> [id, name, url_name]
      */
-    public function getAllTags(): array
+    public function getAllTags(HtmlRenderingInterface $htmlRenderer): array
     {
         $tags = [];
         foreach ($this->repo->findAll() as $row) {
@@ -71,7 +76,7 @@ final class TagService
             $tags[] = $row;
         }
 
-        usort($tags, tag_alpha_compare(...));
+        usort($tags, $htmlRenderer->tagAlphaCompare(...));
 
         return $tags;
     }
@@ -316,7 +321,7 @@ final class TagService
      * @param int[] $excludedTagIds
      * @return list<array<string, mixed>> [id, name, counter, url_name]
      */
-    public function getCommonTags(array $items, int $maxTags, array $excludedTagIds = []): array
+    public function getCommonTags(array $items, int $maxTags, HtmlRenderingInterface $htmlRenderer, array $excludedTagIds = []): array
     {
         if ($items === []) {
             return [];
@@ -328,7 +333,7 @@ final class TagService
             $tags[] = $row;
         }
 
-        usort($tags, tag_alpha_compare(...));
+        usort($tags, $htmlRenderer->tagAlphaCompare(...));
 
         return $tags;
     }
@@ -641,7 +646,7 @@ final class TagService
      *    multilingual tags (if ExtendedDescription plugin is active)
      * @return array<int, array{name: mixed, id: string}>
      */
-    public function getTagList(string $query, bool $onlyUserLanguage = true): array
+    public function getTagList(string $query, HtmlRenderingInterface $htmlRenderer, bool $onlyUserLanguage = true): array
     {
         $taglist = [];
         $altlist = [];
@@ -670,9 +675,9 @@ final class TagService
             }
         }
 
-        usort($taglist, tag_alpha_compare(...));
+        usort($taglist, $htmlRenderer->tagAlphaCompare(...));
         if ($altlist !== []) {
-            usort($altlist, tag_alpha_compare(...));
+            usort($altlist, $htmlRenderer->tagAlphaCompare(...));
             $taglist = array_merge($taglist, $altlist);
         }
 

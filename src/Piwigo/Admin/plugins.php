@@ -19,6 +19,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Http\HttpClientService;
 use Piwigo\PluginConfig\PluginRepository;
 
@@ -413,7 +414,7 @@ DELETE FROM ' . Tables::plugins() . '
     {
         switch ($order) {
             case 'name':
-                uasort($this->fs_plugins, name_compare(...));
+                uasort($this->fs_plugins, new HtmlService()->nameCompare(...));
                 break;
             case 'status':
                 $this->sort_plugins_by_state();
@@ -934,7 +935,8 @@ DELETE FROM ' . Tables::plugins() . '
         $b_author = is_scalar($b_author) ? (string) $b_author : '';
         $r = strcasecmp($a_author, $b_author);
         if ($r == 0) {
-            return name_compare($a, $b);
+            return new HtmlService()
+                ->nameCompare($a, $b);
         } else {
             return $r;
         }
@@ -955,7 +957,7 @@ DELETE FROM ' . Tables::plugins() . '
 
     public function sort_plugins_by_state(): void
     {
-        uasort($this->fs_plugins, name_compare(...));
+        uasort($this->fs_plugins, new HtmlService()->nameCompare(...));
 
         $active_plugins = [];
         $inactive_plugins = [];

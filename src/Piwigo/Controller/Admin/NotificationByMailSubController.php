@@ -10,6 +10,7 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Html\HtmlService;
 use Piwigo\Mail\NotificationByMailSender;
 use Piwigo\Notification\NotificationByMailRepository;
 use Piwigo\Notification\NotificationByMailService;
@@ -95,8 +96,11 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
 
         /** @var mixed $persistent_cache */
         global $persistent_cache;
+
+        $htmlRenderer = new HtmlService();
+
         if (! $persistent_cache instanceof PersistentCache) {
-            fatal_error('persistent cache not initialized');
+            $htmlRenderer->fatalError('persistent cache not initialized');
         }
 
         $conn = DbConnection::build();
@@ -105,7 +109,8 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
             new NotificationService(
                 new NotificationRepository($conn),
                 new PermissionService(new PermissionRepository($conn), new GroupRepository($conn)),
-                $persistent_cache
+                $persistent_cache,
+                $htmlRenderer
             )
         );
 

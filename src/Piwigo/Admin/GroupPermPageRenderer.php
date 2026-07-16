@@ -14,6 +14,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Group\GroupService;
+use Piwigo\Html\HtmlService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Template\Template;
@@ -61,7 +62,8 @@ final class GroupPermPageRenderer
             : [];
 
         if (! isset($_GET['group_id'])) {
-            fatal_error('group_id URL parameter is missing');
+            new HtmlService()
+                ->fatalError('group_id URL parameter is missing');
         }
 
         (new \Piwigo\Validation\InputValidator())->validate('group_id', $_GET, false, ValidationPattern::ID);
@@ -71,7 +73,8 @@ final class GroupPermPageRenderer
         // guarantee isn't visible to static analysis across the call;
         // re-check here for a real int narrowing.
         if (! is_numeric($_GET['group_id'])) {
-            fatal_error('group_id URL parameter is missing');
+            new HtmlService()
+                ->fatalError('group_id URL parameter is missing');
         }
 
         $page['group'] = (int) $_GET['group_id'];
@@ -151,7 +154,7 @@ SELECT id,name,uppercats,global_rank
   WHERE status = \'private\'
     AND group_id = ' . $page['group'] . '
 ;';
-        $categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true');
+        $categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true', new HtmlService());
 
         $result = \Piwigo\Db\MysqliDb::query($query_true);
         $authorized_ids = [];
@@ -169,7 +172,7 @@ SELECT id,name,uppercats,global_rank
         }
         $query_false .= '
 ;';
-        $categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false');
+        $categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false', new HtmlService());
 
         $template->assign('PWG_TOKEN', (new \Piwigo\Csrf\CsrfService())->getToken());
 

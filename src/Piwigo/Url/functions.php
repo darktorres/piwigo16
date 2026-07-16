@@ -6,6 +6,7 @@ declare(strict_types=1);
 // | This file is part of Piwigo.                                          |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Html\HtmlService;
 use Piwigo\Url\UrlService;
 
 // P23 batch 8c: relocated unchanged from the deleted include/functions_url.inc.php
@@ -36,7 +37,7 @@ use Piwigo\Url\UrlService;
 if (! function_exists('get_root_url')) {
     function get_root_url(): string
     {
-        return new UrlService()
+        return new UrlService(new HtmlService())
             ->getRootUrl();
     }
 }
@@ -48,7 +49,7 @@ if (! function_exists('get_root_url')) {
 if (! function_exists('get_absolute_root_url')) {
     function get_absolute_root_url($with_scheme = true): string
     {
-        return new UrlService()
+        return new UrlService(new HtmlService())
             ->getAbsoluteRootUrl($with_scheme);
     }
 }
@@ -64,7 +65,7 @@ if (! function_exists('get_absolute_root_url')) {
 if (! function_exists('add_url_params')) {
     function add_url_params($url, $params, string $arg_separator = '&amp;')
     {
-        return new UrlService()
+        return new UrlService(new HtmlService())
             ->addUrlParams($url, $params, $arg_separator);
     }
 }
@@ -77,7 +78,7 @@ if (! function_exists('add_url_params')) {
 if (! function_exists('make_index_url')) {
     function make_index_url(array $params = []): string
     {
-        return new UrlService()
+        return new UrlService(new HtmlService())
             ->makeIndexUrl($params);
     }
 }
@@ -98,7 +99,7 @@ if (! function_exists('make_index_url')) {
 if (! function_exists('duplicate_index_url')) {
     function duplicate_index_url($redefined = [], $removed = []): string
     {
-        return new UrlService()
+        return new UrlService(new HtmlService())
             ->duplicateIndexUrl($redefined, $removed);
     }
 }
@@ -113,7 +114,7 @@ if (! function_exists('duplicate_index_url')) {
 if (! function_exists('duplicate_picture_url')) {
     function duplicate_picture_url($redefined = [], $removed = []): string
     {
-        return new UrlService()
+        return new UrlService(new HtmlService())
             ->duplicatePictureUrl($redefined, $removed);
     }
 }
@@ -126,7 +127,7 @@ if (! function_exists('duplicate_picture_url')) {
 if (! function_exists('make_picture_url')) {
     function make_picture_url(array $params): string
     {
-        return new UrlService()
+        return new UrlService(new HtmlService())
             ->makePictureUrl($params);
     }
 }
@@ -144,7 +145,7 @@ if (! function_exists('make_picture_url')) {
 if (! function_exists('parse_section_url')) {
     function parse_section_url(array $tokens, &$next_token): array
     {
-        return new UrlService()
+        return new UrlService(new HtmlService())
             ->parseSectionUrl($tokens, $next_token);
     }
 }
@@ -158,7 +159,7 @@ if (! function_exists('parse_section_url')) {
 if (! function_exists('parse_well_known_params_url')) {
     function parse_well_known_params_url(array $tokens, int &$i): array
     {
-        return new UrlService()
+        return new UrlService(new HtmlService())
             ->parseWellKnownParamsUrl($tokens, $i);
     }
 }
@@ -170,7 +171,7 @@ if (! function_exists('parse_well_known_params_url')) {
 if (! function_exists('get_action_url')) {
     function get_action_url($id, $what_part, bool $download): string
     {
-        return new UrlService()
+        return new UrlService(new HtmlService())
             ->getActionUrl($id, $what_part, $download);
     }
 }
@@ -182,7 +183,7 @@ if (! function_exists('get_action_url')) {
 if (! function_exists('get_element_url')) {
     function get_element_url(array $element_info): mixed
     {
-        return new UrlService()
+        return new UrlService(new HtmlService())
             ->getElementUrl($element_info);
     }
 }
@@ -193,7 +194,7 @@ if (! function_exists('get_element_url')) {
 if (! function_exists('set_make_full_url')) {
     function set_make_full_url(): void
     {
-        new UrlService()
+        new UrlService(new HtmlService())
             ->setMakeFullUrl();
     }
 }
@@ -204,7 +205,7 @@ if (! function_exists('set_make_full_url')) {
 if (! function_exists('unset_make_full_url')) {
     function unset_make_full_url(): void
     {
-        new UrlService()
+        new UrlService(new HtmlService())
             ->unsetMakeFullUrl();
     }
 }
@@ -217,7 +218,7 @@ if (! function_exists('unset_make_full_url')) {
 if (! function_exists('embellish_url')) {
     function embellish_url($url): string
     {
-        return new UrlService()
+        return new UrlService(new HtmlService())
             ->embellishUrl($url);
     }
 }
@@ -228,7 +229,7 @@ if (! function_exists('embellish_url')) {
 if (! function_exists('get_gallery_home_url')) {
     function get_gallery_home_url(): mixed
     {
-        return new UrlService()
+        return new UrlService(new HtmlService())
             ->getGalleryHomeUrl();
     }
 }
@@ -242,7 +243,7 @@ if (! function_exists('get_gallery_home_url')) {
 if (! function_exists('get_query_string_diff')) {
     function get_query_string_diff($rejects = [], $escape = true): string
     {
-        return new UrlService()
+        return new UrlService(new HtmlService())
             ->getQueryStringDiff($rejects, $escape);
     }
 }
@@ -255,7 +256,7 @@ if (! function_exists('get_query_string_diff')) {
 if (! function_exists('url_is_remote')) {
     function url_is_remote($url): bool
     {
-        return new UrlService()
+        return new UrlService(new HtmlService())
             ->urlIsRemote($url);
     }
 }
@@ -268,7 +269,7 @@ if (! function_exists('url_is_remote')) {
 if (! function_exists('get_user_favorites')) {
     function get_user_favorites(): array
     {
-        return new UrlService()
+        return new UrlService(new HtmlService())
             ->getUserFavorites();
     }
 }

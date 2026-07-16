@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Template;
 
+use Piwigo\Html\HtmlService;
+
 class ScriptLoader
 {
     /**
@@ -87,7 +89,8 @@ class ScriptLoader
         if (! empty($require)) {
             foreach ($require as $id) {
                 if (! isset($this->registered_scripts[$id])) {
-                    $this->load_known_required_script($id, 1) or fatal_error("inline script not found require {$id}");
+                    $this->load_known_required_script($id, 1) or new HtmlService()
+                        ->fatalError("inline script not found require {$id}");
                 }
                 $s = $this->registered_scripts[$id];
                 if ($s->load_mode == 2) {
@@ -316,7 +319,8 @@ class ScriptLoader
             trigger_error("Undefined script {$script_id} is required by someone", E_USER_WARNING);
             return 0;
         }
-        $recursion_limiter < 5 or fatal_error('combined script circular dependency');
+        $recursion_limiter < 5 or new HtmlService()
+            ->fatalError('combined script circular dependency');
         $script = $this->registered_scripts[$script_id];
         if (isset($script->extra['order'])) {
             return $script->extra['order'];

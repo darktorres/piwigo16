@@ -53,6 +53,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\Tables;
+    use Piwigo\Html\HtmlService;
     use Piwigo\Mail\MailService;
 
     /**
@@ -110,7 +111,7 @@ namespace Piwigo\Tests\Integration {
             $_POST['cr'] = [];
 
             $this->conn = DbConnection::build();
-            $this->service = new CommentService(new CommentRepository($this->conn), new EphemeralKeyService(), new MailService());
+            $this->service = new CommentService(new CommentRepository($this->conn), new EphemeralKeyService(), new MailService(), new HtmlService());
         }
 
         // --- checkForSpam() -------------------------------------------------

@@ -94,11 +94,6 @@ namespace Piwigo\Admin\Category {
         return $GLOBALS['category_admin_service_test_cat_info'] ?? ['uppercats' => (string) $catId];
     }
 
-    function page_not_found(string $message): never
-    {
-        throw new \RuntimeException($message);
-    }
-
     /**
      * @param array<string, mixed> $options
      * @return array{error?: string, info?: string, id?: int}

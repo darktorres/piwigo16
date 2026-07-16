@@ -9,6 +9,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Html\HtmlService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Template\Template;
@@ -39,6 +40,8 @@ final class CatModifyPageRenderer
          * @var Template $template
          */
         global $admin_album_base_url, $category, $conf, $page, $template;
+
+        $htmlRenderer = new HtmlService();
 
         $categoryConn = DbConnection::build();
         $categoryService = new CategoryService(
@@ -85,7 +88,7 @@ final class CatModifyPageRenderer
 
         // Navigation path
         $category_uppercats = is_string($category['uppercats']) ? $category['uppercats'] : '';
-        $navigation = get_cat_display_name_cache(
+        $navigation = $htmlRenderer->getCatDisplayNameCache(
             $category_uppercats,
             get_root_url() . 'admin.php?page=album-'
         );
@@ -94,7 +97,7 @@ final class CatModifyPageRenderer
         $uppercats_array = explode(',', $category_uppercats);
         if (count($uppercats_array) > 1) {
             array_pop($uppercats_array);
-            $parent_navigation = get_cat_display_name_cache(
+            $parent_navigation = $htmlRenderer->getCatDisplayNameCache(
                 implode(',', $uppercats_array),
                 get_root_url() . 'admin.php?page=album-'
             );

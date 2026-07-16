@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Calendar;
 
 use Piwigo\Cache\PersistentCache;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionRepository;
@@ -29,6 +30,10 @@ use Piwigo\Template\Template;
  */
 final class CalendarRenderer
 {
+    public function __construct(
+        private readonly HtmlRenderingInterface $htmlRenderer,
+    ) {}
+
     public function render(): void
     {
         /**
@@ -39,7 +44,7 @@ final class CalendarRenderer
          */
         global $page, $conf, $user, $template, $persistent_cache, $filter;
         if (! $persistent_cache instanceof PersistentCache) {
-            fatal_error('persistent cache not initialized');
+            $this->htmlRenderer->fatalError('persistent cache not initialized');
         }
 
         // ------------------ initialize the condition on items to take into account ---
@@ -105,7 +110,7 @@ final class CalendarRenderer
         // Retrieve calendar field
         $chronology_field = $page['chronology_field'] ?? null;
         $chronology_field = is_string($chronology_field) ? $chronology_field : '';
-        isset($fields[$chronology_field]) or fatal_error('bad chronology field');
+        isset($fields[$chronology_field]) or $this->htmlRenderer->fatalError('bad chronology field');
 
         // Retrieve style
         $chronology_style = $page['chronology_style'] ?? null;

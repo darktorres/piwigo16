@@ -7,6 +7,7 @@ namespace Piwigo\Admin\Category;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Html\HtmlService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 
@@ -280,7 +281,8 @@ UPDATE ' . Tables::categories() . '
 
         $catInfo = get_cat_info($catId);
         if (! is_array($catInfo) || ! is_string($catInfo['uppercats'] ?? null)) {
-            page_not_found('Requested album does not exist');
+            new HtmlService()
+                ->pageNotFound('Requested album does not exist');
         }
 
         pwg_query('

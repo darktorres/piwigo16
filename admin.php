@@ -153,7 +153,8 @@ if ((bool) $conf['external_authentification']) {
         new \Piwigo\Users\UserRepository($syncUsersConn),
         new \Piwigo\Group\GroupRepository($syncUsersConn),
         new \Piwigo\Mail\MailService(),
-        new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($syncUsersConn))
+        new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($syncUsersConn)),
+        new HtmlService()
     )->syncUsers();
 }
 

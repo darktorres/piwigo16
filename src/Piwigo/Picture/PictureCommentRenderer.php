@@ -8,6 +8,7 @@ use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
 use Piwigo\Db\DbConnection;
+use Piwigo\Html\HtmlService;
 use Piwigo\Mail\MailService;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
@@ -54,7 +55,7 @@ final class PictureCommentRenderer
         global $related_categories, $url_self;
 
         $commentRepository = new CommentRepository(DbConnection::build());
-        $commentService = new CommentService($commentRepository, new EphemeralKeyService(), new MailService());
+        $commentService = new CommentService($commentRepository, new EphemeralKeyService(), new MailService(), new HtmlService());
 
         $commentAction = null;
 
@@ -116,7 +117,8 @@ final class PictureCommentRenderer
                     $commentInfos[] = l10n('Your comment has been registered');
                     break;
                 case 'reject':
-                    set_status_header(403);
+                    new HtmlService()
+                        ->setStatusHeader(403);
                     $commentErrors[] = l10n('Your comment has NOT been registered because it did not pass the validation rules');
                     break;
                 default:
@@ -134,7 +136,8 @@ final class PictureCommentRenderer
                 ])
             );
         } elseif (isset($_POST['content'])) {
-            set_status_header(403);
+            new HtmlService()
+                ->setStatusHeader(403);
             die('ugly spammer');
         }
 

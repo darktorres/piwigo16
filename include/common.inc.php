@@ -29,6 +29,7 @@ use Piwigo\Core\StringHelper;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
@@ -104,6 +105,24 @@ include PHPWG_ROOT_PATH . 'include/env.inc.php';
 pwg_load_env_file(PHPWG_ROOT_PATH);
 $prefixeTable = '';
 pwg_apply_env_to_conf($conf, $prefixeTable);
+
+// P23 batch 8f-3: wires the static-setter HtmlRenderingInterface consumers
+// (Piwigo\Core class-level fatal-error/access-denied paths that can't take
+// constructor/per-method injection without an unreasonable call-site
+// ripple, same reasoning as Piwigo\Core\Lang::setDefaultLanguageProvider()
+// below). Must run after include/env.inc.php (just above), which is what
+// actually requires vendor/autoload.php -- some entry points (e.g.
+// random.php) rely entirely on that include to make every Piwigo\ class
+// autoloadable and never require the autoloader themselves beforehand,
+// unlike admin.php/index.php's own explicit up-front require. Placing this
+// wiring any earlier than here fatals on those entry points with a real
+// "Class ... not found", caught live via a random.php smoke test.
+\Piwigo\Auth\AccessControl::setHtmlRenderer(new HtmlService());
+\Piwigo\Core\FilesystemHelper::setHtmlRenderer(new HtmlService());
+Lang::setHtmlRenderer(new HtmlService());
+\Piwigo\Db\MysqliDb::setHtmlRenderer(new HtmlService());
+\Piwigo\Validation\InputValidator::setHtmlRenderer(new HtmlService());
+\Piwigo\Image\SrcImage::setHtmlRenderer(new HtmlService());
 
 // Piwigo\Db\Tables::*()/other Piwigo\Config\Config::* accessors used
 // further down in this file's own body (not just by code that runs
@@ -193,7 +212,8 @@ load_conf_from_db();
 $log_data_location = $conf['data_location'];
 $log_dir = $conf['log_dir'];
 if (! is_string($log_data_location) || ! is_string($log_dir)) {
-    fatal_error("Invalid \$conf['data_location']/'log_dir' configuration: expected strings.");
+    new HtmlService()
+        ->fatalError("Invalid \$conf['data_location']/'log_dir' configuration: expected strings.");
 }
 
 $logger = new Logger([
@@ -317,6 +337,7 @@ Lang::setDefaultLanguageProvider(new UserService(
     new GroupRepository(DbConnection::build()),
     new MailService(),
     new ActivityService(new ActivityRepository(DbConnection::build())),
+    new HtmlService(),
 ));
 Lang::load('common.lang');
 if (\Piwigo\Auth\AccessControl::isAdmin() || (defined('IN_ADMIN') and IN_ADMIN)) {
@@ -417,7 +438,8 @@ if ((bool) $conf['gallery_locked']) {
     $header_msgs[] = l10n('The gallery is locked for maintenance. Please, come back later.');
 
     if (\Piwigo\Core\PageFilterHelper::scriptBasename() != 'identification' and ! \Piwigo\Auth\AccessControl::isAdmin()) {
-        set_status_header(503, 'Service Unavailable');
+        new HtmlService()
+            ->setStatusHeader(503, 'Service Unavailable');
         @header('Retry-After: 900');
         header('Content-Type: text/html; charset=' . \Piwigo\Core\CharsetHelper::getPwgCharset());
         echo '<a href="' . get_absolute_root_url(false) . 'identification.php">' . l10n('The gallery is locked for maintenance. Please, come back later.') . '</a>';
@@ -450,11 +472,11 @@ if (isset($conf['header_notes']) && is_array($conf['header_notes'])) {
 }
 
 // default event handlers
-add_event_handler('render_category_literal_description', 'render_category_literal_description');
+add_event_handler('render_category_literal_description', new HtmlService()->renderCategoryLiteralDescription(...));
 if (! (bool) $conf['allow_html_descriptions']) {
-    add_event_handler('render_category_description', 'pwg_nl2br');
+    add_event_handler('render_category_description', new HtmlService()->pwgNl2br(...));
 }
-add_event_handler('render_comment_content', 'render_comment_content');
+add_event_handler('render_comment_content', new HtmlService()->renderCommentContent(...));
 add_event_handler('render_comment_author', 'strip_tags');
 // Was registered as the bare string 'str2url' -- dead since some earlier
 // phase migrated the global function to StringHelper::str2url() without
@@ -466,7 +488,7 @@ add_event_handler('render_comment_author', 'strip_tags');
 // fixture is static SQL data, never actually round-tripped through this
 // handler.
 add_event_handler('render_tag_url', StringHelper::str2url(...));
-add_event_handler('blockmanager_register_blocks', 'register_default_menubar_blocks');
+add_event_handler('blockmanager_register_blocks', new HtmlService()->registerDefaultMenubarBlocks(...));
 // Relocated from include/functions_comment.inc.php (deleted, P23 batch 8c)
 // -- that file's own top-level add_event_handler() call only ever ran via
 // its include_once at each real caller, all of which now construct
@@ -475,14 +497,14 @@ add_event_handler('blockmanager_register_blocks', 'register_default_menubar_bloc
 // (unlike UploadService's static upload_file handlers above), hence the
 // bound first-class-callable form rather than a bare [Class::class, 'method']
 // array.
-add_event_handler('user_comment_check', new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService())->checkForSpam(...));
+add_event_handler('user_comment_check', new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService(), new HtmlService())->checkForSpam(...));
 // Relocated from include/functions_user.inc.php (deleted, P23 batch 8d) --
 // same reasoning as user_comment_check above: every real caller of
 // AuthService::tryLogUser() now constructs AuthService directly instead of
 // including the old file, so this registration has to live somewhere that
 // always executes. pwgLogin() is a bound instance method, same
 // first-class-callable shape as checkForSpam() above.
-add_event_handler('try_log_user', new AuthService(new AuthRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->pwgLogin(...));
+add_event_handler('try_log_user', new AuthService(new AuthRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->pwgLogin(...));
 // Relocated from admin/include/functions_upload.inc.php (deleted in P23
 // sub-batch 8b-3) -- must stay after PluginLoader::loadPlugins() above so
 // a plugin's own 'upload_file' handler (if any) keeps first crack in the
@@ -503,7 +525,7 @@ add_event_handler('upload_file', [UploadService::class, 'uploadFileVideo']);
 add_event_handler('upload_file', [UploadService::class, 'uploadFilePsd']);
 add_event_handler('upload_file', [UploadService::class, 'uploadFileEps']);
 if (! empty($conf['original_url_protection'])) {
-    add_event_handler('get_element_url', 'get_element_url_protection_handler');
-    add_event_handler('get_src_image_url', 'get_src_image_url_protection_handler');
+    add_event_handler('get_element_url', new HtmlService()->getElementUrlProtectionHandler(...));
+    add_event_handler('get_src_image_url', new HtmlService()->getSrcImageUrlProtectionHandler(...));
 }
 trigger_notify('init');

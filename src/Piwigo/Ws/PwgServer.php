@@ -15,6 +15,7 @@ use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\WsError;
 use Piwigo\Core\WsParamFlag;
 use Piwigo\Core\WsParamType;
+use Piwigo\Html\HtmlService;
 use Piwigo\Ws\Encoder\PwgResponseEncoder;
 
 class PwgServer
@@ -80,7 +81,8 @@ class PwgServer
     public function run(): void
     {
         if (! $this->_responseEncoder instanceof PwgResponseEncoder) {
-            set_status_header(400);
+            new HtmlService()
+                ->setStatusHeader(400);
             @header('Content-Type: text/plain');
             echo 'Cannot process your request. Unknown response format.
 Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_responseFormat . "\n";

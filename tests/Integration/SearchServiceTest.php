@@ -134,6 +134,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\Tables;
     use Piwigo\Group\GroupRepository;
+    use Piwigo\Html\HtmlService;
     use Piwigo\Mail\MailService;
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
@@ -215,7 +216,8 @@ final class SearchServiceTest extends IntegrationTestCase
             $this->repo,
             new PermissionService(new PermissionRepository($this->conn), new GroupRepository($this->conn)),
             new PersistentFileCache(),
-            new MailService()
+            new MailService(),
+            new HtmlService()
         );
     }
 

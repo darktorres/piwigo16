@@ -12,6 +12,7 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
@@ -53,6 +54,7 @@ final class PictureModifyPageRenderer
 
         $imageConn = DbConnection::build();
         $imageService = new ImageService(new ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)));
+        $htmlRenderer = new HtmlService();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
@@ -72,7 +74,7 @@ final class PictureModifyPageRenderer
         // already done by PhotoSubController but this renderer can also be
         // reached directly.
         if (! isset($page['image'])) {
-            $page['image'] = $imageService->getImageInfos($image_id, true);
+            $page['image'] = $imageService->getImageInfos($image_id, $htmlRenderer, true);
         }
 
         // represent
@@ -105,7 +107,7 @@ SELECT id
             // 2. else use the first reachable linked category
             // 3. redirect to gallery root
 
-            if ((bool) ($custom_context = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->getEditContext($image_id))) {
+            if ((bool) ($custom_context = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->getEditContext($image_id))) {
                 // considering we have a context available, we fake one to build the url
                 // and we replace it with the context found in the session for this image_id
                 redirect(str_replace('list/1,2', $custom_context, make_index_url([
@@ -251,7 +253,7 @@ UPDATE ' . Tables::categories() . '
             (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('photo', $image_id, 'edit');
 
             // refresh page cache
-            $page['image'] = $imageService->getImageInfos($image_id, true);
+            $page['image'] = $imageService->getImageInfos($image_id, $htmlRenderer, true);
         }
 
         // tags
@@ -265,9 +267,9 @@ SELECT
 ;';
         $tagConn = DbConnection::build();
         $tag_selection = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
-            ->getTagList($query);
+            ->getTagList($query, $htmlRenderer);
 
-        // getImageInfos($image_id, true) fatal_errors (never returns) when the
+        // getImageInfos($image_id, $htmlRenderer, true) fatal_errors (never returns) when the
         // photo doesn't exist, so $page['image'] is guaranteed to be a real
         // array<string, mixed> row by this point.
         /** @var array<string, mixed> $row */
@@ -331,7 +333,7 @@ SELECT
 
                 'NAME' => $name_value,
 
-                'TITLE' => render_element_name($row),
+                'TITLE' => $htmlRenderer->renderElementName($row),
 
                 'DIMENSIONS' => (is_scalar($row['width']) ? (string) $row['width'] : '') . ' * ' . (is_scalar($row['height']) ? (string) $row['height'] : ''),
 
@@ -451,7 +453,7 @@ SELECT category_id, uppercats, dir
             $row_uppercats = is_string($row['uppercats']) ? $row['uppercats'] : '';
 
             $name =
-              get_cat_display_name_cache(
+              $htmlRenderer->getCatDisplayNameCache(
                   $row_uppercats,
                   get_root_url() . 'admin.php?page=album-'
               );
@@ -484,7 +486,7 @@ SELECT category_id, uppercats, dir
             $image_level = (int) $page['image']['level'];
         }
 
-        if ((bool) ($custom_context = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->getEditContext($image_id))) {
+        if ((bool) ($custom_context = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->getEditContext($image_id))) {
             $template->assign('U_JUMPTO', make_picture_url([
                 'image_id' => $image_id,
             ]) . '/' . $custom_context);

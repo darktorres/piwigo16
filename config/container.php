@@ -21,10 +21,12 @@ use Piwigo\Config\ConfigRepository;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\DefaultLanguageProviderInterface;
 use Piwigo\Core\FilterUpdaterInterface;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\TablePrefixListener;
 use Piwigo\Filter\FilterService;
+use Piwigo\Html\HtmlService;
 use Piwigo\Mail\MailService;
 use Piwigo\Routing\Router;
 use Piwigo\Users\UserService;
@@ -82,6 +84,14 @@ return [
     // the concrete class directly, per deptrac.yaml's ruleset. See
     // src/Piwigo/Core/FilterUpdaterInterface.php's own docblock.
     FilterUpdaterInterface::class => \DI\get(FilterService::class),
+
+    // Interface binding (P23 batch 8f-3) -- Piwigo\Html\HtmlService is
+    // L3Presentation; real L1Infrastructure/L2aCoreDomain/L2bExtendedDomain
+    // callers constructor- or method-inject HtmlRenderingInterface instead
+    // of depending on the concrete class directly, per deptrac.yaml's
+    // ruleset. See src/Piwigo/Core/HtmlRenderingInterface.php's own
+    // docblock.
+    HtmlRenderingInterface::class => \DI\get(HtmlService::class),
 
     // Unresolvable string param (the routes file path) -- Router::fromFile()
     // needs a path autowire can't provide.

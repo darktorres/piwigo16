@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Notification;
 
 use Piwigo\Cache\PersistentCache;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Permission\PermissionService;
 
@@ -25,6 +26,7 @@ final class NotificationService
         private readonly NotificationRepository $repo,
         private readonly PermissionService $permissionService,
         private readonly PersistentCache $cache,
+        private readonly HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     /**
@@ -361,7 +363,7 @@ final class NotificationService
             $imgCount = is_numeric($imgCount) ? (int) $imgCount : 0;
             $description .=
                   '<li>'
-                  . get_cat_display_name_cache($uppercats, '', false, null, $authKey)
+                  . $this->htmlRenderer->getCatDisplayNameCache($uppercats, '', false, null, $authKey)
                   . ' (' .
                   l10n_dec('%d new photo', '%d new photos', $imgCount) . ')'
                   . '</li>';

@@ -15,6 +15,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\DefaultLanguageProviderInterface;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
 use Piwigo\Core\MailerInterface;
@@ -51,6 +52,7 @@ final class UserService implements DefaultLanguageProviderInterface
         private readonly GroupRepository $groupRepo,
         private readonly MailerInterface $mailer,
         private readonly ActivityLoggerInterface $activityLogger,
+        private readonly HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     /**
@@ -727,7 +729,7 @@ SELECT
                     }
 
                     $logger->info($logger_msg_prefix . 'user_cache generation waiting has timed out after ' . \Piwigo\Core\TimingHelper::getElapsedTime($user_cache_waiting_start_time, \Piwigo\Core\TimingHelper::getMoment()));
-                    set_status_header(503, 'Service Unavailable');
+                    $this->htmlRenderer->setStatusHeader(503, 'Service Unavailable');
                     @header('Retry-After: 900');
                     header('Content-Type: text/html; charset=' . \Piwigo\Core\CharsetHelper::getPwgCharset());
                     echo l10n('Rebuilding user cache takes long. Please, come back later.');
@@ -1402,7 +1404,7 @@ SELECT
             ]
         );
 
-        $authService = new AuthService(new AuthRepository(DbConnection::build()), $this->activityLogger);
+        $authService = new AuthService(new AuthRepository(DbConnection::build()), $this->activityLogger, $this->htmlRenderer);
 
         if (isset($updates[$user_fields['password']])) {
             $authService->deactivateUserAuthKeys($user_ids[0]);

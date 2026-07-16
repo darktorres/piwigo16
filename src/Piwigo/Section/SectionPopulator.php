@@ -9,6 +9,7 @@ use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Calendar\CalendarRenderer;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Logger;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Db\DbConnection;
@@ -61,6 +62,7 @@ final class SectionPopulator
 {
     public function __construct(
         private readonly MailerInterface $mailer,
+        private readonly HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     public function populate(): void
@@ -75,13 +77,13 @@ final class SectionPopulator
          */
         global $conf, $filter, $logger, $page, $persistent_cache, $template, $user;
         if (! $persistent_cache instanceof PersistentCache) {
-            fatal_error('persistent cache not initialized');
+            $this->htmlRenderer->fatalError('persistent cache not initialized');
         }
 
         $page['items'] = [];
         $page['start'] = $page['startcat'] = 0;
 
-        $section_context = new SectionInitializer()
+        $section_context = new SectionInitializer($this->htmlRenderer)
             ->parse();
         SectionContextRegistry::set($section_context);
 
@@ -218,7 +220,7 @@ final class SectionPopulator
         // +-----------------------------------------------------------------------+
         if ($section === 'categories') {
             if (isset($page['combined_categories'])) {
-                $page['title'] = get_combined_categories_content_title();
+                $page['title'] = $this->htmlRenderer->getCombinedCategoriesContentTitle();
             } elseif ($page_category !== null) {
                 $upper_names_raw = $page_category['upper_names'] ?? null;
                 if (! is_array($upper_names_raw)) {
@@ -235,7 +237,7 @@ final class SectionPopulator
                             $page_category['comment'],
                             'main_page_category_description'
                         ),
-                        'title' => get_cat_display_name($upper_names, ''),
+                        'title' => $this->htmlRenderer->getCatDisplayName($upper_names, ''),
                     ]
                 );
             } else {
@@ -398,13 +400,13 @@ SELECT DISTINCT(image_id)
                         'attempt to see the name of the tag #' . implode(', #', array_map(strval(...), $tag_ids))
                 . ' from the address : ' . $remote_addr
                     );
-                    access_denied();
+                    $this->htmlRenderer->accessDenied();
                 }
 
                 $page = array_merge(
                     $page,
                     [
-                        'title' => get_tags_content_title(),
+                        'title' => $this->htmlRenderer->getTagsContentTitle(),
                         'items' => $items,
                     ]
                 );
@@ -426,6 +428,7 @@ SELECT DISTINCT(image_id)
                     new PermissionService(new PermissionRepository($searchConn), new GroupRepository($searchConn)),
                     new PersistentFileCache(),
                     $this->mailer,
+                    $this->htmlRenderer,
                 )->getSearchResults($search_id, $search_super_order_by);
 
                 // save the details of the query search
@@ -450,7 +453,7 @@ SELECT DISTINCT(image_id)
             // |                           favorite section                            |
             // +-----------------------------------------------------------------------+
             elseif ($section === 'favorites') {
-                new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), $this->mailer, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())))->checkUserFavorites();
+                new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), $this->mailer, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())), $this->htmlRenderer)->checkUserFavorites();
 
                 $page = array_merge(
                     $page,
@@ -525,7 +528,7 @@ SELECT DISTINCT(id)
   FROM ' . Tables::images() . '
     INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
   WHERE '
-  . new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), $this->mailer, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())))->getRecentPhotosSql('date_available') . '
+  . new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), $this->mailer, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())), $this->htmlRenderer)->getRecentPhotosSql('date_available') . '
   ' . $forbidden
   . (is_string($conf['order_by']) ? $conf['order_by'] : '') . '
 ;';
@@ -650,7 +653,7 @@ SELECT DISTINCT(id)
         // +-----------------------------------------------------------------------+
         if (isset($page['chronology_field'])) {
             unset($page['is_homepage']);
-            new CalendarRenderer()
+            new CalendarRenderer($this->htmlRenderer)
                 ->render();
         }
 
@@ -695,11 +698,11 @@ SELECT DISTINCT(id)
                 new CategoryService(
                     new CategoryRepository($categoryConn),
                     new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
-                )->checkRestrictions(is_numeric($redirect_category_id) ? (int) $redirect_category_id : 0);
+                )->checkRestrictions(is_numeric($redirect_category_id) ? (int) $redirect_category_id : 0, $this->htmlRenderer);
                 $redirect_url = \Piwigo\Core\PageFilterHelper::scriptBasename() === 'picture' ? duplicate_picture_url() : duplicate_index_url();
 
                 if (! headers_sent()) { // this is a permanent redirection
-                    set_status_header(301);
+                    $this->htmlRenderer->setStatusHeader(301);
                     redirect_http($redirect_url);
                 }
                 redirect($redirect_url);

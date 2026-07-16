@@ -368,7 +368,7 @@ SELECT DISTINCT image_id
         ];
 
         $infos = [];
-        $comment_action = new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService())
+        $comment_action = new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService(), new HtmlService())
             ->insertComment($comm, $params['key'], $infos);
 
         switch ($comment_action) {
@@ -513,7 +513,7 @@ SELECT id, name, permalink, uppercats, global_rank, commentable
         // -------------------------------------------------------------- related tags
         $tagConn = DbConnection::build();
         $related_tags = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
-            ->getCommonTags([$image_id], -1);
+            ->getCommonTags([$image_id], -1, new HtmlService());
         foreach ($related_tags as $i => $tag) {
             $tag['url'] = make_index_url(
                 [
@@ -721,6 +721,7 @@ SELECT DISTINCT id
             new PermissionService(new PermissionRepository($searchConn), new GroupRepository($searchConn)),
             new PersistentFileCache(),
             new MailService(),
+            new HtmlService(),
         )->getQuickSearchResults(
             $params['query'],
             [
@@ -826,6 +827,7 @@ SELECT *
             new PermissionService(new PermissionRepository($searchConn), new GroupRepository($searchConn)),
             new PersistentFileCache(),
             new MailService(),
+            new HtmlService(),
         );
 
         // * check the search exists

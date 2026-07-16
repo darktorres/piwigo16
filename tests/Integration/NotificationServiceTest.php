@@ -20,6 +20,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\Tables;
     use Piwigo\Group\GroupRepository;
+    use Piwigo\Html\HtmlService;
     use Piwigo\Notification\NotificationRepository;
     use Piwigo\Notification\NotificationService;
     use Piwigo\Permission\PermissionRepository;
@@ -91,7 +92,8 @@ final class NotificationServiceTest extends IntegrationTestCase
         $this->service = new NotificationService(
             new NotificationRepository($this->conn),
             new PermissionService(new PermissionRepository($this->conn), new GroupRepository($this->conn)),
-            new PersistentFileCache()
+            new PersistentFileCache(),
+            new HtmlService()
         );
     }
 

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Db;
 
+use Piwigo\Core\HtmlRenderingInterface;
+
 /**
  * P23 batch 8f-2: real logic ported verbatim from
  * include/dblayer/functions_mysqli.inc.php's 45 free functions (the raw
@@ -21,6 +23,27 @@ namespace Piwigo\Db;
  */
 final class MysqliDb
 {
+    private static ?HtmlRenderingInterface $htmlRenderer = null;
+
+    /**
+     * Set once by include/common.inc.php (legacy, not subject to deptrac) --
+     * same static-setter shape as Piwigo\Core\Lang::setDefaultLanguageProvider(),
+     * needed because this L1Infrastructure class may not depend on
+     * L3Presentation's HtmlService directly (deptrac).
+     */
+    public static function setHtmlRenderer(HtmlRenderingInterface $renderer): void
+    {
+        self::$htmlRenderer = $renderer;
+    }
+
+    private static function fatalError(string $msg): never
+    {
+        if (self::$htmlRenderer !== null) {
+            self::$htmlRenderer->fatalError($msg);
+        }
+        throw new \RuntimeException($msg);
+    }
+
     /**
      * Connect to database and store MySQLi resource in the $mysqli global.
      *
@@ -93,7 +116,7 @@ final class MysqliDb
     {
         $current_mysql = self::getDbVersion();
         if (version_compare($current_mysql, REQUIRED_MYSQL_VERSION, '<')) {
-            fatal_error(
+            self::fatalError(
                 sprintf(
                     'your MySQL version is too old, you have "%s" and you need at least "%s"',
                     $current_mysql,
@@ -878,7 +901,7 @@ SELECT ' . self::getRecentPeriodExpression($period);
         $error .= $header;
 
         if ($die) {
-            fatal_error($error);
+            self::fatalError($error);
         }
         echo '<pre>';
         trigger_error($error, E_USER_WARNING);

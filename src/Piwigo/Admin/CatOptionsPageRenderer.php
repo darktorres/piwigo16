@@ -12,6 +12,7 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Html\HtmlService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Template\Template;
@@ -185,8 +186,8 @@ SELECT DISTINCT id,name,uppercats,global_rank
             new CategoryRepository($categoryConn),
             new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
         );
-        $categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true');
-        $categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false');
+        $categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true', new HtmlService());
+        $categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false', new HtmlService());
         $template->assign('PWG_TOKEN', (new \Piwigo\Csrf\CsrfService())->getToken());
         $template->assign('ADMIN_PAGE_TITLE', l10n('Properties of abums'));
 

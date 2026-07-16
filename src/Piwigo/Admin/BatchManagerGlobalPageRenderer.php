@@ -10,6 +10,7 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
@@ -96,7 +97,8 @@ final class BatchManagerGlobalPageRenderer
 
             foreach (explode(',', $whole_set) as $id) {
                 if (! (bool) preg_match('/^\d+$/', $id)) {
-                    fatal_error('[Hacking attempt] the input parameter "whole_set" is not valid');
+                    new HtmlService()
+                        ->fatalError('[Hacking attempt] the input parameter "whole_set" is not valid');
                 }
                 $collection[] = (int) $id;
             }
@@ -519,7 +521,7 @@ DELETE
             // remove tags
             $tagConn = DbConnection::build();
             $template->assign('associated_tags', new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
-                ->getCommonTags($cat_elements_id, -1));
+                ->getCommonTags($cat_elements_id, -1, new HtmlService()));
         }
 
         // creation date
@@ -656,7 +658,8 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
                 $nb_thumbs_page++;
                 $src_image = new SrcImage($row);
 
-                $ttitle = render_element_name($row);
+                $ttitle = new HtmlService()
+                    ->renderElementName($row);
                 $row_file = is_string($row['file']) ? $row['file'] : '';
                 if ($ttitle !== \Piwigo\Core\StringHelper::getNameFromFile($row_file)) {
                     $ttitle .= ' (' . $row['file'] . ')';

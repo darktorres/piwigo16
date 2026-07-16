@@ -49,8 +49,11 @@ final class NbmController implements ControllerInterface
 
         /** @var mixed $persistent_cache */
         global $persistent_cache;
+
+        $htmlRenderer = new HtmlService();
+
         if (! $persistent_cache instanceof PersistentCache) {
-            fatal_error('persistent cache not initialized');
+            $htmlRenderer->fatalError('persistent cache not initialized');
         }
 
         $conn = DbConnection::build();
@@ -59,7 +62,8 @@ final class NbmController implements ControllerInterface
             new NotificationService(
                 new NotificationRepository($conn),
                 new PermissionService(new PermissionRepository($conn), new GroupRepository($conn)),
-                $persistent_cache
+                $persistent_cache,
+                $htmlRenderer
             )
         );
 

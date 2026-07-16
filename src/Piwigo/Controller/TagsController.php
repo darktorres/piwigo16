@@ -77,7 +77,7 @@ final class TagsController implements ControllerInterface
 
             if ($display_mode === 'letters') {
                 // we want tags diplayed in alphabetic order
-                usort($tags, tag_alpha_compare(...));
+                usort($tags, new HtmlService()->tagAlphaCompare(...));
 
                 $tag_letters_column_number = is_numeric($conf['tag_letters_column_number']) ? (int) $conf['tag_letters_column_number'] : 4;
 
@@ -160,7 +160,7 @@ final class TagsController implements ControllerInterface
                 $tags = $tagService->addLevelToTags($tags);
 
                 // we want tags diplayed in alphabetic order
-                usort($tags, tag_alpha_compare(...));
+                usort($tags, new HtmlService()->tagAlphaCompare(...));
 
                 foreach ($tags as $tag) {
                     $template->append(

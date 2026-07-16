@@ -10,6 +10,7 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Mail\MailService;
 use Piwigo\Permission\PermissionRepository;
@@ -45,6 +46,7 @@ final class SearchController implements ControllerInterface
             new PermissionService(new PermissionRepository($searchConn), new GroupRepository($searchConn)),
             new PersistentFileCache(),
             new MailService(),
+            new HtmlService(),
         );
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
@@ -130,7 +132,8 @@ final class SearchController implements ControllerInterface
 
             $cat_id_value = $_GET['cat_id'];
             if (! is_scalar($cat_id_value)) {
-                fatal_error('[Hacking attempt] the input parameter "cat_id" is not valid');
+                new HtmlService()
+                    ->fatalError('[Hacking attempt] the input parameter "cat_id" is not valid');
             }
 
             $cat_id = (string) $cat_id_value;
@@ -153,7 +156,8 @@ SELECT
 ;';
             $found_categories = \Piwigo\Db\MysqliDb::query2Array($query);
             if ($found_categories === []) {
-                page_not_found(l10n('Requested album does not exist'));
+                new HtmlService()
+                    ->pageNotFound(l10n('Requested album does not exist'));
             }
 
             $cat_ids = [$cat_id];
@@ -176,7 +180,8 @@ SELECT
 
                 $tag_id_value = $_GET['tag_id'];
                 if (! is_scalar($tag_id_value)) {
-                    fatal_error('[Hacking attempt] the input parameter "tag_id" is not valid');
+                    new HtmlService()
+                        ->fatalError('[Hacking attempt] the input parameter "tag_id" is not valid');
                 }
 
                 $tag_ids = explode(',', (string) $tag_id_value);

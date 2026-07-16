@@ -6,6 +6,7 @@ namespace Piwigo\Category;
 
 use Piwigo\Cache\CachePools;
 use Piwigo\Core\FilterUpdaterInterface;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Logger;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -53,6 +54,7 @@ final class CategoryCatsRenderer
 {
     public function __construct(
         private readonly FilterUpdaterInterface $filterUpdater,
+        private readonly HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     public function render(): void
@@ -372,7 +374,7 @@ SELECT *
                 if ($isRecentCats) {
                     $categoryUppercats = $category['uppercats'];
                     $categoryUppercats = is_string($categoryUppercats) ? $categoryUppercats : '';
-                    $name = get_cat_display_name_cache($categoryUppercats, null);
+                    $name = $this->htmlRenderer->getCatDisplayNameCache($categoryUppercats, null);
                 } else {
                     $name = $category['name'];
                 }

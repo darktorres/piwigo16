@@ -8,6 +8,7 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Html\HtmlService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Tag\TagRepository;
@@ -143,7 +144,7 @@ SELECT name, id, url_name
             }
             $all_tags[] = $tag;
         }
-        usort($all_tags, tag_alpha_compare(...));
+        usort($all_tags, new HtmlService()->tagAlphaCompare(...));
 
         $template->assign(
             [

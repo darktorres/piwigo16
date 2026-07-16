@@ -6,6 +6,7 @@ namespace Piwigo\Admin\Extensions;
 
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
+use Piwigo\Html\HtmlService;
 
 /**
  * Filesystem scan for installable extensions, replacing get_fs_plugins()/
@@ -53,7 +54,7 @@ final class ExtensionScanner
         closedir($dir);
 
         if ($type === ExtensionType::Language) {
-            @uasort($found, name_compare(...));
+            @uasort($found, new HtmlService()->nameCompare(...));
         }
 
         return $found;

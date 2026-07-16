@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Auth;
 
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\HtmlRenderingInterface;
 
 /**
  * Current-request access-level checks: status/ACCESS_* introspection for
@@ -27,6 +28,21 @@ use Piwigo\Core\AccessLevel;
 final class AccessControl
 {
     private function __construct() {}
+
+    private static ?HtmlRenderingInterface $htmlRenderer = null;
+
+    /**
+     * Set once by include/common.inc.php (legacy, not subject to deptrac) --
+     * same static-setter shape as Piwigo\Core\Lang::setDefaultLanguageProvider(),
+     * chosen for the same reason: checkStatus() is this class's own primary,
+     * near-universal entry point (36 real call sites), so constructor/
+     * per-method injection would ripple across every one of them for zero
+     * real benefit.
+     */
+    public static function setHtmlRenderer(HtmlRenderingInterface $renderer): void
+    {
+        self::$htmlRenderer = $renderer;
+    }
 
     public static function getUserStatus(string $userStatus = ''): string
     {
@@ -67,7 +83,10 @@ final class AccessControl
     public static function checkStatus(int $accessType, string $userStatus = ''): void
     {
         if (! self::isAuthorizeStatus($accessType, $userStatus)) {
-            access_denied();
+            if (self::$htmlRenderer !== null) {
+                self::$htmlRenderer->accessDenied();
+            }
+            throw new \RuntimeException('Access denied');
         }
     }
 

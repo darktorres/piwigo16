@@ -59,7 +59,8 @@ final class RegisterController implements ControllerInterface
                 $post_key = '';
             }
             if (! (new \Piwigo\Auth\EphemeralKeyService())->verify($post_key)) {
-                set_status_header(403);
+                new HtmlService()
+                    ->setStatusHeader(403);
                 $page['errors']['register_page_error'] = l10n('Invalid/expired form key');
             }
 
@@ -98,7 +99,7 @@ final class RegisterController implements ControllerInterface
             // rationale (this is also why an existing account gets a
             // "someone tried to register your username" email instead of
             // the requester ever seeing an error here).
-            $registration_result = new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), new MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
+            $registration_result = new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), new MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())
                 ->registerUser(
                     $post_login,
                     $post_password,
@@ -145,7 +146,7 @@ final class RegisterController implements ControllerInterface
                 // would be a full account-takeover, not just an
                 // information leak. Both cases redirect identically.
                 if ($new_user_id !== null) {
-                    (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->logUser($new_user_id, false);
+                    (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->logUser($new_user_id, false);
                 }
                 redirect(make_index_url());
             }
@@ -196,10 +197,12 @@ final class RegisterController implements ControllerInterface
             $lang_cookie = $_COOKIE['lang'] ?? null;
             if ($lang_cookie !== null and (! is_string($lang_cookie) or $user['language'] !== $lang_cookie)) {
                 if (! is_string($lang_cookie)) {
-                    fatal_error('[Hacking attempt] the input parameter "lang" is not valid');
+                    new HtmlService()
+                        ->fatalError('[Hacking attempt] the input parameter "lang" is not valid');
                 }
                 if (! array_key_exists($lang_cookie, \Piwigo\Lang\LangService::getLanguages())) {
-                    fatal_error('[Hacking attempt] the input parameter "' . $lang_cookie . '" is not valid');
+                    new HtmlService()
+                        ->fatalError('[Hacking attempt] the input parameter "' . $lang_cookie . '" is not valid');
                 }
 
                 $user['language'] = $lang_cookie;

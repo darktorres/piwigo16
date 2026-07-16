@@ -11,6 +11,7 @@ use Piwigo\Admin\tabsheet;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
+use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Template\Template;
@@ -65,7 +66,7 @@ final class PhotoSubController implements AdminSubControllerInterface
         // retrieving direct information about picture
         $imageConn = DbConnection::build();
         $page['image'] = new ImageService(new ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)))
-            ->getImageInfos($get_image_id, true);
+            ->getImageInfos($get_image_id, new HtmlService(), true);
 
         $tab_param = $_GET['tab'] ?? null;
         $tab = is_string($tab_param) && in_array($tab_param, self::KNOWN_TABS, true) ? $tab_param : 'properties';

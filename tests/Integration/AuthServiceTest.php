@@ -13,6 +13,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Config\Config;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
+    use Piwigo\Html\HtmlService;
 
     /**
      * Covers calculateAutoLoginKey() fully (a pure DB read + HMAC
@@ -54,7 +55,7 @@ namespace Piwigo\Tests\Integration {
                 'secret_key' => 'test-secret-key',
             ];
 
-            $this->service = new AuthService(new AuthRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
+            $this->service = new AuthService(new AuthRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService());
         }
 
         public function test_calculate_auto_login_key_returns_a_key_and_username_for_a_real_user(): void

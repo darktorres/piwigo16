@@ -10,6 +10,7 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Template\Template;
 
 /**
@@ -175,7 +176,8 @@ SELECT COUNT(*)
             if (isset($_GET[$filter_key])) {
                 $filter_value = $_GET[$filter_key];
                 if (! is_scalar($filter_value)) {
-                    fatal_error('[Hacking attempt] the input parameter "' . $filter_key . '" is not valid');
+                    new HtmlService()
+                        ->fatalError('[Hacking attempt] the input parameter "' . $filter_key . '" is not valid');
                 }
                 $filter_value = (string) $filter_value;
 
@@ -188,7 +190,8 @@ SELECT
                 $rows = \Piwigo\Db\MysqliDb::query2Array($query);
 
                 if (count($rows) === 0) {
-                    fatal_error($filter_key . ' #' . $filter_value . ' does not exist');
+                    new HtmlService()
+                        ->fatalError($filter_key . ' #' . $filter_value . ' does not exist');
                 }
 
                 $additional_filt_type = $filter_key;

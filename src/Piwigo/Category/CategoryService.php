@@ -7,6 +7,7 @@ namespace Piwigo\Category;
 use Piwigo\Cache\CachePools;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\FilterUpdaterInterface;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
@@ -621,7 +622,7 @@ final class CategoryService
      * Is the category accessible to the connected user? If the user is not
      * authorized to see this category, the script exits.
      */
-    public function checkRestrictions(int $categoryId): void
+    public function checkRestrictions(int $categoryId, HtmlRenderingInterface $htmlRenderer): void
     {
         /** @var array<string, mixed> $user */
         global $user;
@@ -631,7 +632,7 @@ final class CategoryService
         $forbiddenCategories = $user['forbidden_categories'] ?? null;
         $forbiddenCategoriesStr = is_scalar($forbiddenCategories) ? (string) $forbiddenCategories : '';
         if (in_array($categoryId, explode(',', $forbiddenCategoriesStr))) {
-            access_denied();
+            $htmlRenderer->accessDenied();
         }
     }
 
@@ -788,6 +789,7 @@ final class CategoryService
         array $categories,
         array $selecteds,
         string $blockname,
+        HtmlRenderingInterface $htmlRenderer,
         bool $fullname = true
     ): void {
         /** @var Template $template */
@@ -798,7 +800,7 @@ final class CategoryService
             if ($fullname) {
                 $uppercats = $category['uppercats'];
                 $option = strip_tags(
-                    get_cat_display_name_cache(
+                    $htmlRenderer->getCatDisplayNameCache(
                         is_string($uppercats) ? $uppercats : '',
                         null
                     )
@@ -839,11 +841,12 @@ final class CategoryService
         string $query,
         array $selecteds,
         string $blockname,
+        HtmlRenderingInterface $htmlRenderer,
         bool $fullname = true
     ): void {
         $categories = \Piwigo\Db\MysqliDb::query2Array($query);
         usort($categories, self::compareByGlobalRank(...));
-        $this->displaySelectCategories($categories, $selecteds, $blockname, $fullname);
+        $this->displaySelectCategories($categories, $selecteds, $blockname, $htmlRenderer, $fullname);
     }
 
     /**

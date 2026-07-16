@@ -13,6 +13,7 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
@@ -166,7 +167,8 @@ SELECT galleries_url
         $simulate = false;
 
         if ($site_is_remote) {
-            fatal_error('remote sites not supported');
+            new HtmlService()
+                ->fatalError('remote sites not supported');
         } else {
             $site_reader = new LocalSiteReader($site_url);
         }
@@ -1168,6 +1170,7 @@ SELECT id,name,uppercats,global_rank
             $query,
             $cat_selected,
             'category_options',
+            new HtmlService(),
             false
         );
 

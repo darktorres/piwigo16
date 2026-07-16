@@ -23,6 +23,7 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Permission\PermissionRepository;
@@ -406,7 +407,7 @@ SELECT SQL_CALC_FOUND_ROWS
                 // uppercats is a NOT NULL column of the categories table --
                 // verified against install/piwigo_structure-mysql.sql.
                 assert(is_string($row['uppercats']));
-                $row['name'] = strip_tags(get_cat_display_name_cache($row['uppercats'], null));
+                $row['name'] = strip_tags(new HtmlService()->getCatDisplayNameCache($row['uppercats'], null));
             } else {
                 $row['name_raw'] = $row['name'];
 
@@ -678,10 +679,11 @@ SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, statu
             $row['nb_images'] = $nb_images_of[$id] ?? 0;
 
             assert(is_string($row['uppercats']));
-            $cat_display_name = get_cat_display_name_cache(
-                $row['uppercats'],
-                'admin.php?page=album-'
-            );
+            $cat_display_name = new HtmlService()
+                ->getCatDisplayNameCache(
+                    $row['uppercats'],
+                    'admin.php?page=album-'
+                );
 
             $row['name_raw'] = $row['name'];
 
@@ -1373,10 +1375,11 @@ SELECT id, name, dir, uppercats
             // uppercats is a NOT NULL column of the categories table --
             // verified against install/piwigo_structure-mysql.sql.
             assert(is_string($row['uppercats']));
-            $cat_display_name = get_cat_display_name_cache(
-                $row['uppercats'],
-                'admin.php?page=album-'
-            );
+            $cat_display_name = new HtmlService()
+                ->getCatDisplayNameCache(
+                    $row['uppercats'],
+                    'admin.php?page=album-'
+                );
             $update_cat_ids = array_merge($update_cat_ids, array_slice(explode(',', $row['uppercats']), 0, -1));
         }
 

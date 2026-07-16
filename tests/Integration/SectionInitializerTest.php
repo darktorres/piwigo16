@@ -11,6 +11,7 @@ namespace Piwigo\Tests\Integration {
 
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Html\HtmlService;
 use Piwigo\Section\SectionInitializer;
 
 /**
@@ -59,7 +60,7 @@ final class SectionInitializerTest extends IntegrationTestCase
     {
         $_SERVER['PATH_INFO'] = '/category/1';
 
-        $context = new SectionInitializer()
+        $context = new SectionInitializer(new HtmlService())
             ->parse();
 
         self::assertSame('../../', $context->rootPath);
@@ -71,7 +72,7 @@ final class SectionInitializerTest extends IntegrationTestCase
     {
         $_SERVER['PATH_INFO'] = '/category/1/start-20';
 
-        $context = new SectionInitializer()
+        $context = new SectionInitializer(new HtmlService())
             ->parse();
 
         self::assertSame('../../../', $context->rootPath);
@@ -81,7 +82,7 @@ final class SectionInitializerTest extends IntegrationTestCase
     {
         $_SERVER['PATH_INFO'] = '/category/1';
 
-        $context = new SectionInitializer()
+        $context = new SectionInitializer(new HtmlService())
             ->parse();
 
         self::assertNull($context->imageId);
@@ -93,7 +94,7 @@ final class SectionInitializerTest extends IntegrationTestCase
         $_SERVER['SCRIPT_NAME'] = '/piwigo17/picture.php';
         $_SERVER['PATH_INFO'] = '/42';
 
-        $context = new SectionInitializer()
+        $context = new SectionInitializer(new HtmlService())
             ->parse();
 
         self::assertSame('42', $context->imageId);
@@ -106,7 +107,7 @@ final class SectionInitializerTest extends IntegrationTestCase
         $_SERVER['SCRIPT_NAME'] = '/piwigo17/picture.php';
         $_SERVER['PATH_INFO'] = '/42-my-photo';
 
-        $context = new SectionInitializer()
+        $context = new SectionInitializer(new HtmlService())
             ->parse();
 
         self::assertSame('42', $context->imageId);
@@ -121,7 +122,7 @@ final class SectionInitializerTest extends IntegrationTestCase
         // happened rather than this being a hardcoded default.
         $_SERVER['PATH_INFO'] = '/most_visited';
 
-        $context = new SectionInitializer()
+        $context = new SectionInitializer(new HtmlService())
             ->parse();
 
         self::assertSame('most_visited', $context->parsed['section'] ?? null);

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Section;
 
+use Piwigo\Core\HtmlRenderingInterface;
+
 /**
  * URL token parser: "category/12-name/start-24" -> a structured
  * SectionContext. Ported from the first half of
@@ -21,6 +23,10 @@ namespace Piwigo\Section;
  */
 final class SectionInitializer
 {
+    public function __construct(
+        private readonly HtmlRenderingInterface $htmlRenderer,
+    ) {}
+
     public function parse(): SectionContext
     {
         /** @var array<string, mixed> $conf */
@@ -90,7 +96,7 @@ final class SectionInitializer
             if (is_numeric($token)) {
                 $image_id = $token;
                 if ((int) $image_id === 0) {
-                    bad_request('invalid picture identifier');
+                    $this->htmlRenderer->badRequest('invalid picture identifier');
                 }
             } else {
                 preg_match('/^(\d+-)?(.*)?$/', $token, $matches);
@@ -105,7 +111,7 @@ final class SectionInitializer
                     if (! self::emptyValue($match_2)) {
                         $image_file = $match_2;
                     } else {
-                        bad_request('picture identifier is missing');
+                        $this->htmlRenderer->badRequest('picture identifier is missing');
                     }
                 }
             }

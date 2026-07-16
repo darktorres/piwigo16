@@ -19,6 +19,7 @@ use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Http\HttpClientService;
 
 class themes
@@ -192,7 +193,7 @@ INSERT INTO ' . Tables::themes() . '
                     break;
                 }
 
-                if ($theme_id == (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->getDefaultTheme()) {
+                if ($theme_id == (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->getDefaultTheme()) {
                     // find a random theme to replace
                     $new_theme = null;
 
@@ -315,7 +316,7 @@ DELETE
         global $conf;
 
         // first we need to know which users are using the current default theme
-        $default_theme = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->getDefaultTheme();
+        $default_theme = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->getDefaultTheme();
 
         $query = '
 SELECT
@@ -500,7 +501,7 @@ SELECT
     {
         switch ($order) {
             case 'name':
-                uasort($this->fs_themes, name_compare(...));
+                uasort($this->fs_themes, new HtmlService()->nameCompare(...));
                 break;
             case 'status':
                 $this->sort_themes_by_state();
@@ -846,7 +847,8 @@ SELECT
         $b_author = is_scalar($b_author) ? (string) $b_author : '';
         $r = strcasecmp($a_author, $b_author);
         if ($r == 0) {
-            return name_compare($a, $b);
+            return new HtmlService()
+                ->nameCompare($a, $b);
         } else {
             return $r;
         }
@@ -867,7 +869,7 @@ SELECT
 
     public function sort_themes_by_state(): void
     {
-        uasort($this->fs_themes, name_compare(...));
+        uasort($this->fs_themes, new HtmlService()->nameCompare(...));
 
         $active_themes = [];
         $inactive_themes = [];

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Category;
 
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Db\Tables;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -20,6 +21,10 @@ use Piwigo\Template\Template;
  */
 final class CategoryDefaultRenderer
 {
+    public function __construct(
+        private readonly HtmlRenderingInterface $htmlRenderer,
+    ) {}
+
     public function render(): void
     {
         /**
@@ -139,8 +144,8 @@ SELECT image_id, COUNT(*) AS nb_comments
                 $row['NB_COMMENTS'] = $row['nb_comments'] = (int) @$nbCommentsOf[$imageId];
             }
 
-            $name = render_element_name($row);
-            $desc = render_element_description($row, 'main_page_element_description');
+            $name = $this->htmlRenderer->renderElementName($row);
+            $desc = $this->htmlRenderer->renderElementDescription($row, 'main_page_element_description');
 
             // 'path'/'file' are non-nullable text columns in practice, but
             // $row is a dynamically-fetched DB row (SELECT *), so PHPStan
@@ -151,7 +156,7 @@ SELECT image_id, COUNT(*) AS nb_comments
 
             $tplVar = array_merge($row, [
                 'TN_ALT' => htmlspecialchars(strip_tags($name)),
-                'TN_TITLE' => get_thumbnail_title($row, $name, $desc),
+                'TN_TITLE' => $this->htmlRenderer->getThumbnailTitle($row, $name, $desc),
                 'URL' => $url,
                 'DESCRIPTION' => $desc,
                 'src_image' => new SrcImage($row),

@@ -15,6 +15,7 @@ use Piwigo\Auth\AccessControl;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\DeviceHelper;
 use Piwigo\Core\Lang;
+use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
 use Smarty\Smarty;
@@ -124,7 +125,8 @@ class Template
 
         $conf_data_location = $conf['data_location'] ?? null;
         if (! is_string($conf_data_location)) {
-            fatal_error("Invalid \$conf['data_location'] configuration: expected a string.");
+            new HtmlService()
+                ->fatalError("Invalid \$conf['data_location'] configuration: expected a string.");
         }
 
         if (! isset($conf['data_dir_checked'])) {
@@ -132,14 +134,15 @@ class Template
             \Piwigo\Core\FilesystemHelper::mkgetdir($dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR);
             if (! is_writable($dir)) {
                 Lang::load('admin.lang');
-                fatal_error(
-                    l10n(
-                        'Give write access (chmod 777) to "%s" directory at the root of your Piwigo installation',
-                        $conf_data_location
-                    ),
-                    l10n('an error happened'),
-                    false // show trace
-                );
+                new HtmlService()
+                    ->fatalError(
+                        l10n(
+                            'Give write access (chmod 777) to "%s" directory at the root of your Piwigo installation',
+                            $conf_data_location
+                        ),
+                        l10n('an error happened'),
+                        false // show trace
+                    );
             }
             if (function_exists('pwg_query')) {
                 conf_update_param('data_dir_checked', 1);
@@ -537,7 +540,8 @@ class Template
     public function parse(string $handle, bool $return = false): ?string
     {
         if (! isset($this->files[$handle])) {
-            fatal_error("Template->parse(): Couldn't load template file for handle {$handle}");
+            new HtmlService()
+                ->fatalError("Template->parse(): Couldn't load template file for handle {$handle}");
         }
 
         $this->smarty->assign('ROOT_URL', get_root_url());
@@ -845,20 +849,24 @@ class Template
     public function func_define_derivative(array $params, $smarty): void
     {
         $name = $params['name'] ?? null;
-        (! empty($name) && is_string($name)) or fatal_error('define_derivative missing name');
+        (! empty($name) && is_string($name)) or new HtmlService()
+            ->fatalError('define_derivative missing name');
         if (isset($params['type'])) {
             $type = $params['type'];
-            is_string($type) or fatal_error('define_derivative type must be a string');
+            is_string($type) or new HtmlService()
+                ->fatalError('define_derivative type must be a string');
             $derivative = ImageStdParams::get_by_type($type);
             $smarty->assign($name, $derivative);
             return;
         }
-        ! empty($params['width']) or fatal_error('define_derivative missing width');
-        ! empty($params['height']) or fatal_error('define_derivative missing height');
+        ! empty($params['width']) or new HtmlService()->fatalError('define_derivative missing width');
+        ! empty($params['height']) or new HtmlService()->fatalError('define_derivative missing height');
         $width = $params['width'];
         $height = $params['height'];
-        is_scalar($width) or fatal_error('define_derivative width must be scalar');
-        is_scalar($height) or fatal_error('define_derivative height must be scalar');
+        is_scalar($width) or new HtmlService()
+            ->fatalError('define_derivative width must be scalar');
+        is_scalar($height) or new HtmlService()
+            ->fatalError('define_derivative height must be scalar');
 
         $w = intval($width);
         $h = intval($height);
@@ -871,7 +879,8 @@ class Template
                 $crop = $params['crop'] ? 1 : 0;
             } else {
                 $crop_val = $params['crop'];
-                is_numeric($crop_val) or fatal_error('define_derivative crop must be numeric');
+                is_numeric($crop_val) or new HtmlService()
+                    ->fatalError('define_derivative crop must be numeric');
                 $crop = round((float) $crop_val / 100, 2);
             }
 
@@ -880,18 +889,22 @@ class Template
                     $minw = $w;
                 } else {
                     $min_width = $params['min_width'];
-                    is_scalar($min_width) or fatal_error('define_derivative min_width must be scalar');
+                    is_scalar($min_width) or new HtmlService()
+                        ->fatalError('define_derivative min_width must be scalar');
                     $minw = intval($min_width);
                 }
-                $minw <= $w or fatal_error('define_derivative invalid min_width');
+                $minw <= $w or new HtmlService()
+                    ->fatalError('define_derivative invalid min_width');
                 if (empty($params['min_height'])) {
                     $minh = $h;
                 } else {
                     $min_height = $params['min_height'];
-                    is_scalar($min_height) or fatal_error('define_derivative min_height must be scalar');
+                    is_scalar($min_height) or new HtmlService()
+                        ->fatalError('define_derivative min_height must be scalar');
                     $minh = intval($min_height);
                 }
-                $minh <= $h or fatal_error('define_derivative invalid min_height');
+                $minh <= $h or new HtmlService()
+                    ->fatalError('define_derivative invalid min_height');
             }
         }
 
@@ -1073,7 +1086,8 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
     public function func_combine_css(array $params): void
     {
         if (empty($params['path']) || ! is_string($params['path'])) {
-            fatal_error('combine_css missing path');
+            new HtmlService()
+                ->fatalError('combine_css missing path');
         }
         $path = $params['path'];
 

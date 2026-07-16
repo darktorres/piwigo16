@@ -11,6 +11,7 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Html\HtmlService;
 use Piwigo\Permalink\PermalinkRepository;
 use Piwigo\Permalink\PermalinkService;
 use Piwigo\Permission\PermissionRepository;
@@ -62,6 +63,8 @@ final class PermalinksSubController implements AdminSubControllerInterface
          */
         global $page, $template;
         global $my_base_url;
+
+        $htmlRenderer = new HtmlService();
 
         (new \Piwigo\Validation\InputValidator())->validate('cat_id', $_POST, false, ValidationPattern::ID);
 
@@ -127,7 +130,7 @@ FROM ' . Tables::categories();
         new CategoryService(
             new CategoryRepository($categoryConn),
             new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
-        )->displaySelectCatWrapper($query, $selected_cat, 'categories', false);
+        )->displaySelectCatWrapper($query, $selected_cat, 'categories', $htmlRenderer, false);
 
         $pwg_token = (new \Piwigo\Csrf\CsrfService())->getToken();
 
@@ -155,7 +158,7 @@ SELECT id, permalink, uppercats, global_rank
             // narrowing of the driver's generic string|null column type, not a
             // documented nullability.
             $uppercats = is_string($row['uppercats']) ? $row['uppercats'] : '';
-            $row['name'] = get_cat_display_name_cache($uppercats);
+            $row['name'] = $htmlRenderer->getCatDisplayNameCache($uppercats);
             $categories[] = $row;
         }
 
@@ -187,7 +190,7 @@ SELECT id, permalink, uppercats, global_rank
             // narrowing of the driver's generic string|null column type, not a
             // documented nullability.
             $cat_id_str = is_string($row['cat_id']) ? $row['cat_id'] : '';
-            $row['name'] = get_cat_display_name_cache($cat_id_str);
+            $row['name'] = $htmlRenderer->getCatDisplayNameCache($cat_id_str);
             $row['U_DELETE'] =
                 add_url_params(
                     $url_del_base,
@@ -241,7 +244,8 @@ SELECT id, permalink, uppercats, global_rank
                 $is_first = false;
 
                 if (! in_array($key, ['page', 'psf', 'dpsf', 'pwg_token'])) {
-                    fatal_error('unexpected URL get key');
+                    new HtmlService()
+                        ->fatalError('unexpected URL get key');
                 }
 
                 $base_url .= urlencode((string) $key) . '=' . urlencode(is_array($value) ? '' : $value);

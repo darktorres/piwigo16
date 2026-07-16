@@ -51,7 +51,8 @@ final class CommentsController implements ControllerInterface
         global $conf, $template, $page;
 
         if (! (bool) $conf['activate_comments']) {
-            page_not_found(null);
+            new HtmlService()
+                ->pageNotFound(null);
         }
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
@@ -272,7 +273,7 @@ final class CommentsController implements ControllerInterface
         $action = null;
         $edit_comment = null;
 
-        $commentService = new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService());
+        $commentService = new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService(), new HtmlService());
 
         $actions = ['delete', 'validate', 'edit'];
         foreach ($actions as $loop_action) {
@@ -420,7 +421,7 @@ SELECT id, name, uppercats, global_rank
             new CategoryService(
                 new CategoryRepository($categoryConn),
                 new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
-            )->displaySelectCatWrapper($query, [@$_GET['cat']], $blockname, true);
+            )->displaySelectCatWrapper($query, [@$_GET['cat']], $blockname, new HtmlService(), true);
 
             // Filter on recent comments...
             $tpl_var = [];

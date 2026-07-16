@@ -14,6 +14,27 @@ namespace Piwigo\Core;
  */
 final class FilesystemHelper
 {
+    private static ?HtmlRenderingInterface $htmlRenderer = null;
+
+    /**
+     * Set once by include/common.inc.php (legacy, not subject to deptrac) --
+     * same static-setter shape as Piwigo\Core\Lang::setDefaultLanguageProvider(),
+     * needed because this L1Infrastructure class may not depend on
+     * L3Presentation's HtmlService directly (deptrac).
+     */
+    public static function setHtmlRenderer(HtmlRenderingInterface $renderer): void
+    {
+        self::$htmlRenderer = $renderer;
+    }
+
+    private static function fatalError(string $msg): never
+    {
+        if (self::$htmlRenderer !== null) {
+            self::$htmlRenderer->fatalError($msg);
+        }
+        throw new \RuntimeException($msg);
+    }
+
     /**
      * creates directory if not exists and ensures that directory is writable
      *
@@ -33,7 +54,7 @@ final class FilesystemHelper
             $mkd = @mkdir($dir, $chmod_value, ((bool) ($flags & MKGETDIR_RECURSIVE)) ? true : false);
             umask($umask);
             if ($mkd === false) {
-                ! (bool) ($flags & MKGETDIR_DIE_ON_ERROR) or fatal_error("{$dir} " . l10n('no write access'));
+                ! (bool) ($flags & MKGETDIR_DIE_ON_ERROR) or self::fatalError("{$dir} " . l10n('no write access'));
                 return false;
             }
             if ((bool) ($flags & MKGETDIR_PROTECT_HTACCESS)) {
@@ -46,7 +67,7 @@ final class FilesystemHelper
             }
         }
         if (! is_writable($dir)) {
-            ! (bool) ($flags & MKGETDIR_DIE_ON_ERROR) or fatal_error("{$dir} " . l10n('no write access'));
+            ! (bool) ($flags & MKGETDIR_DIE_ON_ERROR) or self::fatalError("{$dir} " . l10n('no write access'));
             return false;
         }
         return true;

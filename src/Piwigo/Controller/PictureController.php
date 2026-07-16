@@ -72,7 +72,7 @@ final class PictureController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        new SectionPopulator(new MailService())
+        new SectionPopulator(new MailService(), new HtmlService())
             ->populate();
 
         /**
@@ -84,7 +84,7 @@ final class PictureController implements ControllerInterface
          */
         global $conf, $page, $template, $user, $url_self;
 
-        (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->saveEditContext();
+        (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->saveEditContext();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
@@ -102,7 +102,7 @@ final class PictureController implements ControllerInterface
             new CategoryService(
                 new CategoryRepository($categoryConn),
                 new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
-            )->checkRestrictions(is_numeric($category_id) ? (int) $category_id : 0);
+            )->checkRestrictions(is_numeric($category_id) ? (int) $category_id : 0, new HtmlService());
         }
 
         // $page['items'] (see SectionPopulator::populate()) is always a
@@ -149,15 +149,17 @@ SELECT id, file, level
             }
             $row = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
             if ($row === false || $row === null) {// element does not exist
-                page_not_found(
-                    'The requested image does not exist',
-                    duplicate_index_url()
-                );
+                new HtmlService()
+                    ->pageNotFound(
+                        'The requested image does not exist',
+                        duplicate_index_url()
+                    );
             }
             $row_level = $row['level'];
             $user_level = $user['level'];
             if ((is_numeric($row_level) ? (int) $row_level : 0) > (is_numeric($user_level) ? (int) $user_level : 0)) {
-                access_denied();
+                new HtmlService()
+                    ->accessDenied();
             }
 
             $row_id = $row['id'];
@@ -171,14 +173,16 @@ SELECT id, file, level
                 $visible_images = $filter['visible_images'] ?? null;
                 if (is_string($visible_images) && $visible_images !== '' &&
                   ! in_array((string) $image_id, explode(',', $visible_images), true)) {
-                    page_not_found(
-                        'The requested image is filtered',
-                        duplicate_index_url()
-                    );
+                    new HtmlService()
+                        ->pageNotFound(
+                            'The requested image is filtered',
+                            duplicate_index_url()
+                        );
                 }
                 $page_section = $page['section'];
                 if ($page_section === 'categories' and $page_category === null) {// flat view - all items
-                    access_denied();
+                    new HtmlService()
+                        ->accessDenied();
                 } else {// try to see if we can access it differently
                     $query = '
 SELECT id
@@ -189,7 +193,8 @@ SELECT id
                       ], ' AND') . '
   LIMIT 1';
                     if (\Piwigo\Db\MysqliDb::numRows(\Piwigo\Db\MysqliDb::query($query)) === 0) {
-                        access_denied();
+                        new HtmlService()
+                            ->accessDenied();
                     } else {
                         if ($page_section === 'best_rated') {
                             $rank_of[$image_id] = count($items);
@@ -205,7 +210,8 @@ SELECT id
                                     'flat' => true,
                                 ]
                             );
-                            set_status_header($page_section === 'recent_pics' ? 301 : 302);
+                            new HtmlService()
+                                ->setStatusHeader($page_section === 'recent_pics' ? 301 : 302);
                             redirect_http($url);
                         }
                     }
@@ -371,7 +377,7 @@ UPDATE ' . Tables::categories() . '
                     // no break
                 case 'edit_comment':
 
-                    $commentService = new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService());
+                    $commentService = new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService(), new HtmlService());
                     (new \Piwigo\Validation\InputValidator())->validate('comment_to_edit', $_GET, false, ValidationPattern::ID);
                     // check_input_parameter() validated this against
                     // ValidationPattern::ID (/^\d+$/) above -- it would
@@ -443,7 +449,7 @@ UPDATE ' . Tables::categories() . '
 
                     check_pwg_token();
 
-                    $commentService = new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService());
+                    $commentService = new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService(), new HtmlService());
 
                     (new \Piwigo\Validation\InputValidator())->validate('comment_to_delete', $_GET, false, ValidationPattern::ID);
                     // check_input_parameter() validated this against
@@ -467,7 +473,7 @@ UPDATE ' . Tables::categories() . '
 
                     check_pwg_token();
 
-                    $commentService = new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService());
+                    $commentService = new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService(), new HtmlService());
 
                     (new \Piwigo\Validation\InputValidator())->validate('comment_to_validate', $_GET, false, ValidationPattern::ID);
                     // check_input_parameter() validated this against
@@ -635,7 +641,7 @@ SELECT *
                 );
 
                 $picture[$i] = $row;
-                $picture[$i]['TITLE'] = render_element_name($row);
+                $picture[$i]['TITLE'] = new HtmlService()->renderElementName($row);
                 $picture[$i]['TITLE_ESC'] = str_replace('"', '&quot;', $picture[$i]['TITLE']);
 
                 if ($i === 'previous' and (string) $previous_item === (string) $first_item) {
@@ -1082,7 +1088,7 @@ SELECT COUNT(*) AS nb_fav
             // related tags
             $tagConn = DbConnection::build();
             $tags = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
-                ->getCommonTags([$image_id], -1);
+                ->getCommonTags([$image_id], -1, new HtmlService());
             if ($tags !== []) {
                 foreach ($tags as $tag) {
                     $template->append(
@@ -1121,7 +1127,8 @@ SELECT COUNT(*) AS nb_fav
                 /** @var array<int, array<string, mixed>> $upper_names */
                 $template->append(
                     'related_categories',
-                    get_cat_display_name($upper_names)
+                    new HtmlService()
+                        ->getCatDisplayName($upper_names)
                 );
             } else { // use only 1 sql query to get names for all related categories
                 $ids = [];
@@ -1144,7 +1151,7 @@ SELECT id, name, permalink
                     foreach (explode(',', (string) $category['uppercats']) as $id) {
                         $cats[] = $cat_map[$id];
                     }
-                    $template->append('related_categories', get_cat_display_name($cats));
+                    $template->append('related_categories', new HtmlService()->getCatDisplayName($cats));
                 }
             }
 

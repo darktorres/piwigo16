@@ -5,8 +5,13 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Piwigo\Admin\tabsheet;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
 use Piwigo\Site\SiteRepository;
 use Piwigo\Template\Template;
 use Psr\Http\Message\ServerRequestInterface;
@@ -130,7 +135,11 @@ final class SiteManagerSubController implements AdminSubControllerInterface
             switch ($_GET['action']) {
                 case 'delete':
 
-                    delete_site($site_id);
+                    $conn = DbConnection::build();
+                    new CategoryService(
+                        new CategoryRepository($conn),
+                        new PermissionService(new PermissionRepository($conn), new GroupRepository($conn))
+                    )->deleteSite($site_id, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)));
                     // $page['infos'] is always a plain array, initialized by
                     // include/common.inc.php
                     assert(is_array($page['infos']));

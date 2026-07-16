@@ -149,7 +149,13 @@ if (isset($_GET['change_theme'])) {
 
 // sync_user() is only useful when external authentication is activated
 if ((bool) $conf['external_authentification']) {
-    sync_users();
+    $syncUsersConn = \Piwigo\Db\DbConnection::build();
+    new \Piwigo\Users\UserService(
+        new \Piwigo\Users\UserRepository($syncUsersConn),
+        new \Piwigo\Group\GroupRepository($syncUsersConn),
+        new \Piwigo\Mail\MailService(),
+        new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($syncUsersConn))
+    )->syncUsers();
 }
 
 // +-----------------------------------------------------------------------+

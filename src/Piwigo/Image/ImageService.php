@@ -5,9 +5,15 @@ declare(strict_types=1);
 namespace Piwigo\Image;
 
 use Piwigo\Cache\UserCacheInvalidator;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\Logger;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
 use Piwigo\Session\SessionService;
 
 /**
@@ -28,6 +34,24 @@ final class ImageService
         private readonly ImageRepository $repo,
         private readonly ActivityLoggerInterface $activityLogger,
     ) {}
+
+    /**
+     * `Category` is L2aCoreDomain, same layer as this class -- no
+     * deptrac concern, but constructor-injecting `CategoryService` would
+     * still ripple across every one of this class's own real call sites
+     * for the sake of the 2 methods below, so it's inline-constructed
+     * instead, matching {@see \Piwigo\Tag\TagService::newImageService()}'s
+     * established precedent.
+     */
+    private function categoryService(): CategoryService
+    {
+        $conn = DbConnection::build();
+
+        return new CategoryService(
+            new CategoryRepository($conn),
+            new PermissionService(new PermissionRepository($conn), new GroupRepository($conn))
+        );
+    }
 
     /**
      * @return array{period: mixed, repeat: mixed, play: bool}
@@ -253,7 +277,8 @@ final class ImageService
         // are the photos used as category representant?
         $categoryIds = $this->repo->findRepresentedCategoryIds($ids);
         if ($categoryIds !== []) {
-            update_category($categoryIds);
+            $this->categoryService()
+                ->updateCategory($categoryIds);
         }
 
         trigger_notify('delete_elements', $ids);
@@ -428,7 +453,8 @@ final class ImageService
                 $inserts
             );
 
-            update_category($categories);
+            $this->categoryService()
+                ->updateCategory($categories);
         }
 
         return null;

@@ -5,8 +5,15 @@ declare(strict_types=1);
 namespace Piwigo\Category;
 
 use Piwigo\Cache\CachePools;
+use Piwigo\Core\ActivityLoggerInterface;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\Tables;
+use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageRepository;
+use Piwigo\Image\ImageService;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Template\Template;
+use Piwigo\Users\UserRepository;
 
 /**
  * Category domain business logic, ported from the deleted
@@ -18,6 +25,19 @@ use Piwigo\Template\Template;
  * globals via a docblock-typed `global`, same "no hard class dependency"
  * shape already established by `Piwigo\Category\CategoryDefaultRenderer`
  * importing `Template` the same way with 0 deptrac violations).
+ *
+ * P23 batch 8d file 3 added 17 more (`admin/include/functions.php`'s
+ * Categories domain group -- `sync_users()` went to
+ * `Piwigo\Users\UserService` instead, wrong domain despite the file
+ * grouping). `Activity` is L2bExtendedDomain; {@see deleteSite()}/
+ * {@see deleteCategories()}/{@see moveCategories()}/
+ * {@see createVirtualCategory()} need it to log activity, but
+ * constructor-injecting `ActivityLoggerInterface` (this class's usual
+ * cross-layer-dependency fix elsewhere, e.g. {@see imageService()}) would
+ * force all ~45 real `new CategoryService(...)` call sites to supply one
+ * -- the vast majority pure-read (menu rendering, gallery browsing) and
+ * never touch activity logging. Instead, only those 4 write methods take
+ * `ActivityLoggerInterface` as an explicit parameter.
  */
 final class CategoryService
 {
@@ -25,6 +45,32 @@ final class CategoryService
         private readonly CategoryRepository $repo,
         private readonly PermissionService $permissionService,
     ) {}
+
+    /**
+     * `Activity` is L2bExtendedDomain; `CategoryService` is L2aCoreDomain
+     * and may not depend on it directly (a private helper constructing
+     * `ActivityService` inline, same as {@see \Piwigo\Image\ImageService}'s
+     * own `categoryService()` helper does for same-layer `CategoryService`,
+     * is a real `deptrac analyse` violation here specifically because
+     * Activity crosses layers). Unlike `ImageService`/`TagService` (each
+     * constructed fresh per write operation), `CategoryService` has ~45
+     * real construction sites, the vast majority pure-read (menu
+     * rendering, gallery browsing) that never touch activity logging --
+     * constructor-injecting `ActivityLoggerInterface` would force all 45
+     * to supply one. Instead, only the 4 methods that actually log
+     * activity ({@see deleteSite()}, {@see deleteCategories()},
+     * {@see moveCategories()}, {@see createVirtualCategory()}) take it as
+     * an explicit parameter, matching this method's own shape.
+     */
+    private function imageService(ActivityLoggerInterface $activityLogger): ImageService
+    {
+        return new ImageService(new ImageRepository(DbConnection::build()), $activityLogger);
+    }
+
+    private function userRepository(): UserRepository
+    {
+        return new UserRepository(DbConnection::build());
+    }
 
     /**
      * @param  array<string, mixed>  $a
@@ -847,5 +893,880 @@ final class CategoryService
         }
 
         return $cats;
+    }
+
+    /**
+     * Deletes a site and its primary categories.
+     */
+    public function deleteSite(int $id, ActivityLoggerInterface $activityLogger): void
+    {
+        $categoryIds = $this->repo->findCategoryIdsBySite($id);
+        $this->deleteCategories($categoryIds, $activityLogger);
+
+        $this->repo->deleteSiteRow($id);
+    }
+
+    /**
+     * Recursively deletes one or more categories.
+     * It also deletes:
+     *    - all the elements physically linked to the category (with ImageService::deleteElements())
+     *    - all the links between elements and this category
+     *    - all the restrictions linked to the category
+     *
+     * @param array<int, int> $ids
+     * @param string $photoDeletionMode
+     *    - no_delete: delete no photo, may create orphans
+     *    - delete_orphans: delete photos that are no longer linked to any category
+     *    - force_delete: delete photos even if they are linked to another category
+     */
+    public function deleteCategories(array $ids, ActivityLoggerInterface $activityLogger, string $photoDeletionMode = 'no_delete'): void
+    {
+        if (count($ids) === 0) {
+            return;
+        }
+
+        // add sub-category ids to the given ids : if a category is deleted, all
+        // sub-categories must be so
+        $ids = $this->getSubcatIds($ids);
+
+        $imageService = $this->imageService($activityLogger);
+
+        // destruction of all photos physically linked to the category
+        $elementIds = $this->repo->findStorageLinkedImageIds($ids);
+        $imageService->deleteElements($elementIds);
+
+        // now, should we delete photos that are virtually linked to the category?
+        if ($photoDeletionMode === 'delete_orphans' || $photoDeletionMode === 'force_delete') {
+            $imageIdsLinked = $this->repo->findDistinctLinkedImageIds($ids);
+
+            if (count($imageIdsLinked) > 0) {
+                if ($photoDeletionMode === 'delete_orphans') {
+                    $imageIdsNotOrphans = $this->repo->findNonOrphanImageIds($imageIdsLinked, $ids);
+                    $imageIdsToDelete = array_diff($imageIdsLinked, $imageIdsNotOrphans);
+                } else {
+                    $imageIdsToDelete = $imageIdsLinked;
+                }
+
+                $imageService->deleteElements(array_map(intval(...), $imageIdsToDelete), true);
+            }
+        }
+
+        // destruction of the links between images and this category
+        $this->repo->deleteImageCategoryLinksForCategories($ids);
+
+        // destruction of the access linked to the category
+        $this->repo->deleteUserAccessForCategories($ids);
+        $this->repo->deleteGroupAccessForCategories($ids);
+
+        // destruction of the category
+        $this->repo->deleteCategoriesByIds($ids);
+
+        $this->repo->deleteOldPermalinksForCategories($ids);
+        $this->repo->deleteUserCacheCategoriesForCategories($ids);
+
+        trigger_notify('delete_categories', $ids);
+        $activityLogger->record('album', $ids, 'delete', [
+            'photo_deletion_mode' => $photoDeletionMode,
+        ]);
+    }
+
+    /**
+     * Verifies that the representative picture really exists in the db and
+     * picks up a random representative if possible and based on config.
+     *
+     * @param 'all'|int|array<int|string> $ids ws_functions/pwg.images.php passes
+     *   preg_match()-validated but never int-cast category id strings; $ids only
+     *   ever flows into implode()/SQL contexts below, so numeric strings work
+     *   identically
+     */
+    public function updateCategory(array|int|string $ids = 'all'): ?false
+    {
+        /** @var array<string, mixed> $conf */
+        global $conf;
+
+        if ($ids === 'all') {
+            $whereCats = '1=1';
+        } elseif (! is_array($ids)) {
+            $whereCats = '%s=' . $ids;
+        } else {
+            if (count($ids) === 0) {
+                return false;
+            }
+            $whereCats = '%s IN(' . wordwrap(implode(', ', $ids), 120, "\n") . ')';
+        }
+
+        // find all categories where the setted representative is not possible :
+        // the picture does not exist
+        $wrongRepresentant = $this->repo->findWrongRepresentativeCategoryIds(sprintf($whereCats, 'c.id'));
+
+        if (count($wrongRepresentant) > 0) {
+            $this->repo->clearRepresentativePictureIds($wrongRepresentant);
+        }
+
+        if (! (bool) $conf['allow_random_representative']) {
+            // If the random representant is not allowed, we need to find
+            // categories with elements and with no representant. Those categories
+            // must be added to the list of categories to set to a random
+            // representant.
+            $toRand = $this->repo->findCategoriesNeedingRandomRepresentative(sprintf($whereCats, 'category_id'));
+            if (count($toRand) > 0) {
+                $this->setRandomRepresentant($toRand);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Checks and repairs integrity on categories.
+     * Removes all entries from related tables which correspond to a deleted category.
+     */
+    public function checkCategoriesIntegrity(): void
+    {
+        $relatedColumns = [
+            [Tables::imageCategory(), 'category_id'],
+            [Tables::userAccess(), 'cat_id'],
+            [Tables::groupAccess(), 'cat_id'],
+            [Tables::oldPermalinks(), 'cat_id'],
+            [Tables::userCacheCategories(), 'cat_id'],
+        ];
+
+        foreach ($relatedColumns as [$table, $column]) {
+            $orphans = $this->repo->findOrphanedColumnValues($table, $column);
+
+            if (count($orphans) > 0) {
+                $this->repo->deleteRowsWhereColumnIn($table, $column, $orphans);
+            }
+        }
+    }
+
+    /**
+     * save the rank depending on given categories order
+     *
+     * The list of ordered categories id is supposed to be in the same parent
+     * category
+     *
+     * @param array<int, mixed> $categories
+     */
+    public function saveCategoriesOrder(array $categories): void
+    {
+        $currentRankForIdUppercat = [];
+        $currentRank = 0;
+
+        $datas = [];
+        foreach ($categories as $category) {
+            if (is_array($category)) {
+                $id = $category['id'];
+                $idUppercat = $category['id_uppercat'];
+                if (! is_int($idUppercat) && ! is_string($idUppercat)) {
+                    // id_uppercat is null (or otherwise non-scalar) for top-level
+                    // categories; bucket them together like the '' sentinel used
+                    // for $currentUppercat in updateGlobalRank() below.
+                    $idUppercat = '';
+                }
+
+                if (! isset($currentRankForIdUppercat[$idUppercat])) {
+                    $currentRankForIdUppercat[$idUppercat] = 0;
+                }
+                $currentRank = ++$currentRankForIdUppercat[$idUppercat];
+            } else {
+                $id = $category;
+                $currentRank++;
+            }
+
+            $datas[] = [
+                'id' => $id,
+                'rank' => $currentRank,
+            ];
+        }
+        $fields = [
+            'primary' => ['id'],
+            'update' => ['rank'],
+        ];
+        mass_updates(Tables::categories(), $fields, $datas);
+
+        $this->updateGlobalRank();
+    }
+
+    /**
+     * Orders categories (update categories.rank and global_rank database fields)
+     * so that rank field are consecutive integers starting at 1 for each child.
+     */
+    public function updateGlobalRank(): int
+    {
+        $rows = $this->repo->findCategoriesForRankUpdate();
+
+        $catMap = [];
+        $currentRank = 0;
+        $currentUppercat = null;
+
+        foreach ($rows as $row) {
+            $rowIdUppercat = is_scalar($row['id_uppercat']) ? (string) $row['id_uppercat'] : null;
+            if ($rowIdUppercat !== $currentUppercat) {
+                $currentRank = 0;
+                $currentUppercat = $rowIdUppercat;
+            }
+            ++$currentRank;
+
+            $rowId = $row['id'];
+            $rowUppercats = $row['uppercats'];
+            $rowRank = $row['rank'];
+            // id, uppercats, and rank are NOT NULL columns in the categories table.
+            assert(is_string($rowId) && is_string($rowUppercats) && is_numeric($rowRank));
+
+            $cat =
+              [
+                  'rank' => $currentRank,
+                  'rank_changed' => $currentRank !== (int) $rowRank,
+                  'global_rank' => $row['global_rank'],
+                  'uppercats' => $rowUppercats,
+              ];
+            $catMap[$rowId] = $cat;
+        }
+
+        $datas = [];
+
+        $catMapCallback = function (array $m) use ($catMap): string {
+            $matchedId = $m[1] ?? null;
+            if (! is_string($matchedId) || ! isset($catMap[$matchedId])) {
+                return '';
+            }
+            return (string) $catMap[$matchedId]['rank'];
+        };
+
+        foreach ($catMap as $id => $cat) {
+            $newGlobalRank = preg_replace_callback(
+                '/(\d+)/',
+                $catMapCallback,
+                str_replace(',', '.', $cat['uppercats'])
+            );
+
+            if ($cat['rank_changed'] || $newGlobalRank !== $cat['global_rank']) {
+                $datas[] = [
+                    'id' => $id,
+                    'rank' => $cat['rank'],
+                    'global_rank' => $newGlobalRank,
+                ];
+            }
+        }
+
+        mass_updates(
+            Tables::categories(),
+            [
+                'primary' => ['id'],
+                'update' => ['rank', 'global_rank'],
+            ],
+            $datas
+        );
+        return count($datas);
+    }
+
+    /**
+     * Change the **visible** property on a set of categories.
+     *
+     * @param int[] $categories
+     */
+    public function setCatVisible(array $categories, bool|string $value, bool $unlockChild = false): ?false
+    {
+        if (($value = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)) === null) {
+            trigger_error("setCatVisible invalid param {$value}", E_USER_WARNING);
+            return false;
+        }
+
+        // unlocking a category => all its parent categories become unlocked
+        if ($value) {
+            $cats = $this->getUppercatIds($categories);
+            if ($unlockChild) {
+                $cats = array_merge($cats, $this->getSubcatIds($categories));
+            }
+            $this->repo->updateCategoryVisibility($cats, true);
+        } else {
+            // locking a category => all its child categories become locked
+            $subcats = $this->getSubcatIds($categories);
+            $this->repo->updateCategoryVisibility($subcats, false);
+        }
+
+        return null;
+    }
+
+    /**
+     * Change the **status** property on a set of categories : private or public.
+     *
+     * @param int[] $categories
+     */
+    public function setCatStatus(array $categories, string $value): ?false
+    {
+        if (! in_array($value, ['public', 'private'], true)) {
+            trigger_error("setCatStatus invalid param {$value}", E_USER_WARNING);
+            return false;
+        }
+
+        // make public a category => all its parent categories become public
+        if ($value === 'public') {
+            $uppercats = $this->getUppercatIds($categories);
+            $this->repo->updateCategoryStatus($uppercats, 'public');
+        }
+
+        // make a category private => all its child categories become private
+        if ($value === 'private') {
+            $subcats = $this->getSubcatIds($categories);
+            $this->repo->updateCategoryStatus($subcats, 'private');
+
+            // We have to keep permissions consistant: a sub-album can't be
+            // permitted to a user or group if its parent album is not permitted to
+            // the same user or group. Let's remove all permissions on sub-albums if
+            // it is not consistant. Let's take the following example:
+            //
+            // A1        permitted to U1,G1
+            // A1/A2     permitted to U1,U2,G1,G2
+            // A1/A2/A3  permitted to U3,G1
+            // A1/A2/A4  permitted to U2
+            // A1/A5     permitted to U4
+            // A6        permitted to U4
+            // A6/A7     permitted to G1
+            //
+            // (we consider that it can be possible to start with inconsistant
+            // permission, given that public albums can have hidden permissions,
+            // revealed once the album returns to private status)
+            //
+            // The admin selects A2,A3,A4,A5,A6,A7 to become private (all but A1,
+            // which is private, which can be true if we're moving A2 into A1). The
+            // result must be:
+            //
+            // A2 permission removed to U2,G2
+            // A3 permission removed to U3
+            // A4 permission removed to U2
+            // A5 permission removed to U2
+            // A6 permission removed to U4
+            // A7 no permission removed
+            //
+            // 1) we must extract "top albums": A2, A5 and A6
+            // 2) for each top album, decide which album is the reference for permissions
+            // 3) remove all inconsistant permissions from sub-albums of each top-album
+
+            // step 1, search top albums
+            $topCategories = [];
+            $parentIds = [];
+
+            $allCategories = $this->repo->findCategoriesByIds(array_values(array_map(intval(...), $categories)));
+            usort($allCategories, self::compareByGlobalRank(...));
+
+            foreach ($allCategories as $cat) {
+                $isTop = true;
+
+                $catIdUppercat = $cat['id_uppercat'];
+                $catHasParent = $catIdUppercat !== null && $catIdUppercat !== '' && $catIdUppercat !== '0' && $catIdUppercat !== 0;
+                $catUppercats = $cat['uppercats'];
+                assert(is_string($catUppercats));
+
+                if ($catHasParent) {
+                    foreach (explode(',', $catUppercats) as $idUppercat) {
+                        if (isset($topCategories[$idUppercat])) {
+                            $isTop = false;
+                            break;
+                        }
+                    }
+                }
+
+                if ($isTop) {
+                    $catId = $cat['id'];
+                    assert(is_string($catId) || is_int($catId));
+                    $topCategories[$catId] = $cat;
+
+                    if ($catHasParent) {
+                        $parentIds[] = $catIdUppercat;
+                    }
+                }
+            }
+
+            // step 2, search the reference album for permissions
+            //
+            // to find the reference of each top album, we will need the parent albums
+            $parentCats = [];
+
+            if (count($parentIds) > 0) {
+                $parentCats = $this->repo->findStatusByIds(array_map(intval(...), $parentIds));
+            }
+
+            $tables = [
+                Tables::userAccess() => 'user_id',
+                Tables::groupAccess() => 'group_id',
+            ];
+
+            foreach ($topCategories as $topCategory) {
+                // what is the "reference" for list of permissions? The parent album
+                // if it is private, else the album itself
+                $topCategoryId = $topCategory['id'];
+                assert(is_string($topCategoryId) || is_int($topCategoryId));
+                $refCatId = (int) $topCategoryId;
+
+                $topCategoryIdUppercat = $topCategory['id_uppercat'];
+                $topCategoryHasParent = $topCategoryIdUppercat !== null && $topCategoryIdUppercat !== '' && $topCategoryIdUppercat !== '0' && $topCategoryIdUppercat !== 0;
+                if ($topCategoryHasParent && is_numeric($topCategoryIdUppercat)) {
+                    $parentCatId = (int) $topCategoryIdUppercat;
+                    if (isset($parentCats[$parentCatId]) && $parentCats[$parentCatId]['status'] === 'private') {
+                        $refCatId = $parentCatId;
+                    }
+                }
+
+                $subcats = $this->getSubcatIds([$topCategoryId]);
+
+                foreach ($tables as $table => $field) {
+                    // what are the permissions user/group of the reference album
+                    $refAccess = $field === 'user_id'
+                        ? $this->repo->findAccessUserIds($refCatId)
+                        : $this->repo->findAccessGroupIds($refCatId);
+
+                    if (count($refAccess) === 0) {
+                        $refAccess[] = -1;
+                    }
+
+                    // step 3, remove the inconsistant permissions from sub-albums
+                    $this->repo->deleteInconsistentAccess($table, $field, $refAccess, $subcats);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns all uppercats category ids of the given category ids.
+     *
+     * @param int[] $catIds
+     * @return int[]
+     */
+    public function getUppercatIds(array $catIds): array
+    {
+        if (count($catIds) < 1) {
+            return [];
+        }
+
+        $uppercats = [];
+        foreach ($this->repo->findUppercatsColumns(array_map(intval(...), $catIds)) as $uppercatsCsv) {
+            $uppercats = array_merge(
+                $uppercats,
+                array_map(intval(...), explode(',', $uppercatsCsv))
+            );
+        }
+
+        return array_unique($uppercats);
+    }
+
+    /**
+     * @return array{src: string|array<int|string, mixed>, url: string}
+     */
+    public function getCategoryRepresentantProperties(int|string $imageId, ?string $size = null): array
+    {
+        $row = new ImageRepository(DbConnection::build())->findById($imageId);
+        if ($row === null) {
+            throw new \Exception("getCategoryRepresentantProperties(): image {$imageId} does not exist (stale representative_picture_id?)");
+        }
+        if ($size === null) {
+            $src = DerivativeImage::thumb_url($row);
+        } else {
+            $src = DerivativeImage::url($size, $row);
+        }
+        $url = get_root_url() . 'admin.php?page=photo-' . $imageId;
+
+        return [
+            'src' => $src,
+            'url' => $url,
+        ];
+    }
+
+    /**
+     * Set a new random representant to the categories.
+     *
+     * @param int[] $categories
+     */
+    public function setRandomRepresentant(array $categories): void
+    {
+        $datas = [];
+        foreach ($categories as $categoryId) {
+            $representative = $this->repo->findRandomImageIdInCategory($categoryId);
+
+            $datas[] = [
+                'id' => $categoryId,
+                'representative_picture_id' => $representative,
+            ];
+        }
+
+        mass_updates(
+            Tables::categories(),
+            [
+                'primary' => ['id'],
+                'update' => ['representative_picture_id'],
+            ],
+            $datas
+        );
+    }
+
+    /**
+     * Returns the fulldir for each given category id.
+     *
+     * @param int[] $catIds
+     * @return string[]
+     */
+    public function getFulldirs(array $catIds): array
+    {
+        if (count($catIds) === 0) {
+            return [];
+        }
+
+        $catDirs = $this->repo->findCategoryDirsById();
+        $galleriesUrl = $this->repo->findSiteGalleriesUrls();
+        $categories = $this->repo->findCategoriesForFulldirs(array_map(intval(...), $catIds));
+
+        $catDirsCallback = function (array $m) use ($catDirs): string {
+            $matchedId = $m[1] ?? null;
+            return (is_string($matchedId) && isset($catDirs[(int) $matchedId])) ? $catDirs[(int) $matchedId] : '';
+        };
+
+        $catFulldirs = [];
+        foreach ($categories as $category) {
+            $catId = $category['id'];
+            $siteId = $category['site_id'];
+            $categoryUppercats = $category['uppercats'];
+            // id and uppercats are NOT NULL columns; site_id is always populated
+            // when a category is created (defaults to the local site).
+            assert(is_numeric($catId) && is_numeric($siteId) && is_string($categoryUppercats));
+            $catId = (int) $catId;
+            $siteId = (int) $siteId;
+
+            $uppercats = str_replace(',', '/', $categoryUppercats);
+            $catFulldirs[$catId] = $galleriesUrl[$siteId];
+            $catFulldirs[$catId] .= preg_replace_callback(
+                '/(\d+)/',
+                $catDirsCallback,
+                $uppercats
+            );
+        }
+
+        return $catFulldirs;
+    }
+
+    /**
+     * Updates categories.uppercats field based on categories.id + categories.id_uppercat
+     */
+    public function updateUppercats(): void
+    {
+        $catMap = [];
+        foreach ($this->repo->findCategoriesForRankUpdate() as $row) {
+            // findCategoriesForRankUpdate() carries the extra rank/global_rank
+            // columns this method never reads -- shared with updateGlobalRank()
+            // rather than adding a near-duplicate id/id_uppercat/uppercats-only
+            // query.
+            $id = $row['id'];
+            assert(is_string($id));
+            $catMap[$id] = $row;
+        }
+
+        $datas = [];
+        foreach ($catMap as $id => $cat) {
+            $upperList = [];
+
+            $uppercat = $id;
+            while ((bool) $uppercat) {
+                $upperList[] = $uppercat;
+                $nextUppercat = $catMap[$uppercat]['id_uppercat'] ?? null;
+                $uppercat = is_string($nextUppercat) ? $nextUppercat : null;
+            }
+
+            $newUppercats = implode(',', array_reverse($upperList));
+            $catUppercats = $cat['uppercats'];
+            assert(is_string($catUppercats));
+            if ($newUppercats !== $catUppercats) {
+                $datas[] = [
+                    'id' => $id,
+                    'uppercats' => $newUppercats,
+                ];
+            }
+        }
+        $fields = [
+            'primary' => ['id'],
+            'update' => ['uppercats'],
+        ];
+        mass_updates(Tables::categories(), $fields, $datas);
+    }
+
+    /**
+     * Update images.path field base on images.file and storage categories fulldirs.
+     */
+    public function updatePath(): void
+    {
+        $catIds = $this->repo->findDistinctStorageCategoryIds();
+        $fulldirs = $this->getFulldirs($catIds);
+
+        foreach ($catIds as $catId) {
+            $this->repo->updateImagePathsForCategory($catId, $fulldirs[$catId]);
+        }
+    }
+
+    /**
+     * Change the parent category of the given categories. The categories are
+     * supposed virtual.
+     *
+     * @param array<int, int> $categoryIds
+     * @param int $newParent (-1 for root)
+     */
+    public function moveCategories(array $categoryIds, ActivityLoggerInterface $activityLogger, int $newParent = -1): void
+    {
+        /** @var array<string, mixed> $page */
+        global $page;
+
+        // $page['errors']/$page['infos'] are always initialized to an array by
+        // common.inc.php, but that isn't visible across this method's own
+        // scope boundary -- narrow them once here so the appends below
+        // type-check, matching the original free function's own comment.
+        $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
+        $page['infos'] = is_array($page['infos'] ?? null) ? $page['infos'] : [];
+
+        if (count($categoryIds) === 0) {
+            return;
+        }
+
+        $newParentSql = $newParent < 1 ? 'NULL' : (string) $newParent;
+
+        $categories = [];
+        foreach ($this->repo->findCategoriesForMove($categoryIds) as $row) {
+            $rowId = $row['id'];
+            $rowUppercats = $row['uppercats'];
+            assert(is_string($rowId) && is_string($rowUppercats));
+
+            $rowIdUppercat = $row['id_uppercat'];
+            $rowHasParent = $rowIdUppercat !== null && $rowIdUppercat !== '' && $rowIdUppercat !== '0' && $rowIdUppercat !== 0;
+
+            $categories[$rowId] =
+              [
+                  'parent' => $rowHasParent ? $rowIdUppercat : 'NULL',
+                  'status' => $row['status'],
+                  'uppercats' => $rowUppercats,
+              ];
+        }
+
+        // is the movement possible? The movement is impossible if you try to move
+        // a category in a sub-category or itself
+        if ($newParentSql !== 'NULL') {
+            $newParentUppercats = $this->repo->findCategoryUppercatsById((int) $newParentSql);
+            assert($newParentUppercats !== null);
+
+            foreach ($categories as $category) {
+                // technically, you can't move a category with uppercats 12,125,13,14
+                // into a new parent category with uppercats 12,125,13,14,24
+                if ((bool) preg_match('/^' . $category['uppercats'] . '(,|$)/', $newParentUppercats)) {
+                    $page['errors'][] = l10n('You cannot move an album in its own sub album');
+                    return;
+                }
+            }
+        }
+
+        $this->repo->updateCategoryParent($categoryIds, $newParentSql);
+
+        $this->updateUppercats();
+        $this->updateGlobalRank();
+
+        // status and related permissions management
+        if ($newParentSql === 'NULL') {
+            $parentStatus = 'public';
+        } else {
+            $parentStatus = $this->repo->findCategoryStatus((int) $newParentSql);
+        }
+
+        if ($parentStatus === 'private') {
+            $this->setCatStatus(array_map(intval(...), array_keys($categories)), 'private');
+        }
+
+        $page['infos'][] = l10n_dec(
+            '%d album moved',
+            '%d albums moved',
+            count($categories)
+        );
+
+        $activityLogger->record('album', $categoryIds, 'move', [
+            'parent' => $newParentSql,
+        ]);
+    }
+
+    /**
+     * Create a virtual category.
+     *
+     * @param int|string|null $parentId ws_categories_add() passes null by
+     *   default (WS_TYPE_INT param, unset by the caller), admin/cat_list.php
+     *   passes a raw, unvalidated $_GET['parent_id'] string
+     * @param array{commentable?: mixed, visible?: mixed, status?: mixed, comment?: mixed, inherit?: mixed} $options
+     *   values are validated internally (is_bool()/==), not trusted from callers
+     * @return array{error: string}|array{info: string, id: int|string}
+     */
+    public function createVirtualCategory(string $categoryName, ActivityLoggerInterface $activityLogger, int|string|null $parentId = null, array $options = []): array
+    {
+        /**
+         * @var array<string, mixed> $conf
+         * @var array<string, mixed> $user
+         */
+        global $conf, $user;
+
+        // is the given category name only containing blank spaces ?
+        if ((bool) preg_match('/^\s*$/', $categoryName)) {
+            return [
+                'error' => l10n('The name of an album must not be empty'),
+            ];
+        }
+
+        $rank = 0;
+        if ($conf['newcat_default_position'] === 'last') {
+            // what is the current higher rank for this parent?
+            $maxRank = $this->repo->findMaxRankForParent($parentId);
+            if ($maxRank !== null) {
+                $rank = $maxRank + 1;
+            }
+        }
+
+        $insert = [
+            'name' => $categoryName,
+            'rank' => $rank,
+            'global_rank' => 0,
+            // Otherwise relies on the schema's own DEFAULT CURRENT_TIMESTAMP,
+            // which reads the real DB-server clock -- invisible to pwg_now()'s
+            // PIWIGO_TEST_NOW freeze.
+            'lastmodified' => pwg_now()
+                ->format('Y-m-d H:i:s'),
+        ];
+
+        // is the album commentable?
+        if (isset($options['commentable']) && is_bool($options['commentable'])) {
+            $insert['commentable'] = $options['commentable'];
+        } else {
+            $insert['commentable'] = $conf['newcat_default_commentable'];
+        }
+        $insert['commentable'] = boolean_to_string($insert['commentable']);
+
+        // is the album temporarily locked? (only visible by administrators,
+        // whatever permissions) (may be overwritten if parent album is not
+        // visible)
+        if (isset($options['visible']) && is_bool($options['visible'])) {
+            $insert['visible'] = $options['visible'];
+        } else {
+            $insert['visible'] = $conf['newcat_default_visible'];
+        }
+        $insert['visible'] = boolean_to_string($insert['visible']);
+
+        // is the album private? (may be overwritten if parent album is private)
+        if (isset($options['status']) && $options['status'] === 'private') {
+            $insert['status'] = 'private';
+        } else {
+            $insert['status'] = $conf['newcat_default_status'];
+        }
+
+        // any description for this album?
+        if (isset($options['comment'])) {
+            $comment = is_scalar($options['comment']) ? (string) $options['comment'] : '';
+            $insert['comment'] = ((bool) $conf['allow_html_descriptions']) ? $options['comment'] : strip_tags($comment);
+        }
+
+        $parentIdIsEmpty = $parentId === null || $parentId === 0 || $parentId === '0' || $parentId === '';
+        if (! $parentIdIsEmpty && is_numeric($parentId)) {
+            $parent = $this->repo->findParentCategoryForCreate($parentId);
+            if ($parent === null) {
+                return [
+                    'error' => l10n('The parent album does not exist'),
+                ];
+            }
+
+            $insert['id_uppercat'] = $parent['id'];
+            $insert['global_rank'] = $parent['global_rank'] . '.' . $insert['rank'];
+
+            // at creation, must a category be visible or not ? Warning : if the
+            // parent category is invisible, the category is automatically create
+            // invisible. (invisible = locked)
+            if ($parent['visible'] === 'false') {
+                $insert['visible'] = 'false';
+            }
+
+            // at creation, must a category be public or private ? Warning : if the
+            // parent category is private, the category is automatically create
+            // private.
+            if ($parent['status'] === 'private') {
+                $insert['status'] = 'private';
+            }
+
+            $uppercatsPrefix = $parent['uppercats'] . ',';
+        } else {
+            $uppercatsPrefix = '';
+        }
+
+        // we have then to add the virtual category
+        single_insert(Tables::categories(), $insert);
+        $insertedId = pwg_db_insert_id();
+
+        single_update(
+            Tables::categories(),
+            [
+                'uppercats' => $uppercatsPrefix . $insertedId,
+                // This UPDATE is an unconditional, immediate follow-up to the
+                // INSERT above (needs the auto-generated id first) -- part of
+                // the same logical "create category" operation, not a later,
+                // independent edit. Re-set explicitly, since ON UPDATE
+                // CURRENT_TIMESTAMP would otherwise silently overwrite the
+                // INSERT's own frozen lastmodified with the real DB-server
+                // clock the moment this UPDATE runs.
+                'lastmodified' => pwg_now()
+                    ->format('Y-m-d H:i:s'),
+            ],
+            [
+                'id' => $insertedId,
+            ]
+        );
+
+        $this->updateGlobalRank();
+
+        $insertIdUppercat = $insert['id_uppercat'] ?? null;
+        if ($insert['status'] === 'private' && $insertIdUppercat !== null && $insertIdUppercat !== 0 && ((isset($options['inherit']) && (bool) $options['inherit']) || (bool) $conf['inheritance_by_default'])) {
+            $grantedGrps = $this->repo->findAccessGroupIds($insertIdUppercat);
+            $inserts = [];
+            foreach ($grantedGrps as $grantedGrp) {
+                $inserts[] = [
+                    'group_id' => $grantedGrp,
+                    'cat_id' => $insertedId,
+                ];
+            }
+            mass_inserts(Tables::groupAccess(), ['group_id', 'cat_id'], $inserts);
+
+            $grantedUsers = $this->repo->findAccessUserIds($insertIdUppercat);
+            $this->permissionService->addPermissionOnCategory((int) $insertedId, $grantedUsers);
+        } elseif ($insert['status'] === 'private') {
+            $currentUserId = $user['id'];
+            $currentUserId = is_numeric($currentUserId) ? (int) $currentUserId : 0;
+            $adminIds = $this->userRepository()
+                ->findAdminIds();
+            $this->permissionService->addPermissionOnCategory((int) $insertedId, array_unique(array_merge($adminIds, [$currentUserId])));
+        }
+
+        trigger_notify('create_virtual_category', array_merge([
+            'id' => $insertedId,
+        ], $insert));
+        $activityLogger->record('album', $insertedId, 'add');
+
+        return [
+            'info' => l10n('Album added'),
+            'id' => $insertedId,
+        ];
+    }
+
+    /**
+     * Is the category accessible to the (Admin) user ?
+     * Note : if the user is not authorized to see this category, category jump
+     * will be replaced by admin cat_modify page
+     */
+    public function catAdminAccess(int $categoryId): bool
+    {
+        /** @var array<string, mixed> $user */
+        global $user;
+
+        // $filter['visible_categories'] and $filter['visible_images']
+        // are not used because it's not necessary (filter <> restriction)
+        $forbiddenCategories = $user['forbidden_categories'];
+        $forbiddenCategories = is_string($forbiddenCategories) ? $forbiddenCategories : '';
+        return ! in_array((string) $categoryId, explode(',', $forbiddenCategories), true);
     }
 }

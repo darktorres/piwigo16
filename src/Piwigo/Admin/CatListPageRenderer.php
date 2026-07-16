@@ -6,9 +6,15 @@ namespace Piwigo\Admin;
 
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Cache\UserCacheInvalidator;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
 use Piwigo\Template\Template;
 
 /**
@@ -42,7 +48,11 @@ final class CatListPageRenderer
         global $conf, $page, $template;
         global $my_base_url;
 
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
+        $categoryConn = DbConnection::build();
+        $categoryService = new CategoryService(
+            new CategoryRepository($categoryConn),
+            new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
+        );
 
         trigger_notify('loc_begin_cat_list');
 
@@ -116,10 +126,14 @@ SELECT COUNT(*)
             if (isset($_GET['photo_deletion_mode']) and is_string($_GET['photo_deletion_mode'])) {
                 $photo_deletion_mode = $_GET['photo_deletion_mode'];
             }
-            delete_categories([(int) $_GET['delete']], $photo_deletion_mode);
+            $categoryService->deleteCategories(
+                [(int) $_GET['delete']],
+                new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($categoryConn)),
+                $photo_deletion_mode
+            );
 
             $_SESSION['page_infos'] = [l10n('Virtual album deleted')];
-            update_global_rank();
+            $categoryService->updateGlobalRank();
             UserCacheInvalidator::invalidate();
 
             $redirect_url = get_root_url() . 'admin.php?page=cat_list';
@@ -307,7 +321,7 @@ SELECT
                   'U_MOVE' => $base_url . 'albums#cat-' . $cat_id,
 
                   'IS_VIRTUAL' => empty($category['dir']),
-                  'CAT_ADMIN_ACCESS' => cat_admin_access($cat_id),
+                  'CAT_ADMIN_ACCESS' => $categoryService->catAdminAccess($cat_id),
               ];
 
             if (empty($category['dir'])) {

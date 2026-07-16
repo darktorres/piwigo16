@@ -748,8 +748,6 @@ SELECT
  */
 function ws_categories_add(array $params, PwgServer &$service): PwgError|array
 {
-    include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
     /** @var array<string, mixed> $conf */
     global $conf;
 
@@ -771,8 +769,13 @@ function ws_categories_add(array $params, PwgServer &$service): PwgError|array
         $options['comment'] = (! (bool) $conf['allow_html_descriptions'] or ! isset($params['pwg_token'])) ? strip_tags($params['comment']) : $params['comment'];
     }
 
-    $creation_output = create_virtual_category(
+    $categoryConn = DbConnection::build();
+    $creation_output = new CategoryService(
+        new CategoryRepository($categoryConn),
+        new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
+    )->createVirtualCategory(
         (! (bool) $conf['allow_html_descriptions'] or ! isset($params['pwg_token'])) ? strip_tags($params['name']) : $params['name'],
+        new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($categoryConn)),
         $params['parent'],
         $options
     );
@@ -857,9 +860,12 @@ SELECT id
             $order_new[] = $params['category_id'];
         }
     }
-    // include function to set the global rank
-    include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-    save_categories_order($order_new);
+    // set the global rank
+    $categoryConn = DbConnection::build();
+    new CategoryService(
+        new CategoryRepository($categoryConn),
+        new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
+    )->saveCategoriesOrder($order_new);
 
     return null;
 }
@@ -899,14 +905,19 @@ SELECT *
 
     $category = $categories[0];
 
+    $categoryConn = DbConnection::build();
+    $categoryService = new CategoryService(
+        new CategoryRepository($categoryConn),
+        new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
+    );
+
     if (! empty($params['status'])) {
         if (! in_array($params['status'], ['private', 'public'])) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid status, only public/private');
         }
 
         if ($params['status'] != $category['status']) {
-            include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-            set_cat_status([$params['category_id']], $params['status']);
+            $categoryService->setCatStatus([$params['category_id']], $params['status']);
         }
     }
 
@@ -921,8 +932,7 @@ SELECT *
     }
 
     if (! empty($params['visible']) and ($params['visible'] != $category['visible'])) {
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-        set_cat_visible([$params['category_id']], $params['visible']);
+        $categoryService->setCatVisible([$params['category_id']], $params['visible']);
     }
 
     $info_columns = ['name', 'comment', 'commentable'];
@@ -1110,9 +1120,13 @@ SELECT
         return new PwgError(401, 'not permitted');
     }
 
-    include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
+    $categoryConn = DbConnection::build();
+    $categoryService = new CategoryService(
+        new CategoryRepository($categoryConn),
+        new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
+    );
 
-    set_random_representant([$params['category_id']]);
+    $categoryService->setRandomRepresentant([$params['category_id']]);
 
     (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('album', $params['category_id'], 'edit');
 
@@ -1135,7 +1149,7 @@ SELECT *
         return new PwgError(500, 'unable to determine a new representative picture for this category');
     }
 
-    return get_category_representant_properties($representative_picture_id, IMG_SMALL);
+    return $categoryService->getCategoryRepresentantProperties($representative_picture_id, IMG_SMALL);
 }
 
 /**
@@ -1204,9 +1218,17 @@ SELECT id
         return null;
     }
 
-    include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-    delete_categories($category_ids, $params['photo_deletion_mode']);
-    update_global_rank();
+    $categoryConn = DbConnection::build();
+    $categoryService = new CategoryService(
+        new CategoryRepository($categoryConn),
+        new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
+    );
+    $categoryService->deleteCategories(
+        $category_ids,
+        new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($categoryConn)),
+        $params['photo_deletion_mode']
+    );
+    $categoryService->updateGlobalRank();
     UserCacheInvalidator::invalidate();
 
     return null;
@@ -1318,8 +1340,15 @@ SELECT id, name, dir, uppercats
     $page['infos'] = [];
     $page['errors'] = [];
 
-    include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-    move_categories($category_ids, $params['parent']);
+    $categoryConn = DbConnection::build();
+    new CategoryService(
+        new CategoryRepository($categoryConn),
+        new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
+    )->moveCategories(
+        $category_ids,
+        new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($categoryConn)),
+        $params['parent']
+    );
     UserCacheInvalidator::invalidate();
 
     // move_categories() mutates $page['errors'] from its own function scope

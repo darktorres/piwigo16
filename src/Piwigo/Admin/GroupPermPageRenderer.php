@@ -35,8 +35,6 @@ final class GroupPermPageRenderer
          */
         global $page, $template, $user;
 
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         $categoryConn = DbConnection::build();
         $categoryService = new CategoryService(
             new CategoryRepository($categoryConn),
@@ -98,7 +96,7 @@ final class GroupPermPageRenderer
                 ], null);
         } elseif (isset($_POST['trueify'])
                  and count($cat_false) > 0) {
-            $uppercats = get_uppercat_ids($cat_false);
+            $uppercats = $categoryService->getUppercatIds($cat_false);
             $private_uppercats = [];
 
             $query = '

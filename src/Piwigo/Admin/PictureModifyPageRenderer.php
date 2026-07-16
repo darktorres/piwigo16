@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Cache\UserCacheInvalidator;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
@@ -48,8 +50,6 @@ final class PictureModifyPageRenderer
          * @var array<string, mixed> $user
          */
         global $admin_photo_base_url, $cache, $conf, $page, $template, $user;
-
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
         $imageConn = DbConnection::build();
         $imageService = new ImageService(new ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)));
@@ -223,7 +223,11 @@ SELECT id
 
             $no_longer_thumbnail_for = array_diff($represented_albums, $represent_categories);
             if (count($no_longer_thumbnail_for) > 0) {
-                set_random_representant($no_longer_thumbnail_for);
+                $representantConn = DbConnection::build();
+                new CategoryService(
+                    new CategoryRepository($representantConn),
+                    new PermissionService(new PermissionRepository($representantConn), new GroupRepository($representantConn))
+                )->setRandomRepresentant($no_longer_thumbnail_for);
             }
 
             $new_thumbnail_for = array_diff($represent_categories, $represented_albums);

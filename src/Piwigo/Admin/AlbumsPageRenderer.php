@@ -5,8 +5,14 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Admin\Category\CategoryAdminService;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
 use Piwigo\Template\Template;
 
 /**
@@ -64,8 +70,6 @@ final class AlbumsPageRenderer
         // See this class's own docblock -- required before the inline
         // tabsheet block below (P23 batch 6j-1 fix).
         global $my_base_url;
-
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
         $query = '
 SELECT
@@ -197,7 +201,11 @@ SELECT id, name, id_uppercat
                 $categories
             );
 
-            save_categories_order($categories);
+            $categoryConn = DbConnection::build();
+            new CategoryService(
+                new CategoryRepository($categoryConn),
+                new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
+            )->saveCategoriesOrder($categories);
 
             $open_cat = $_POST['id'];
         }

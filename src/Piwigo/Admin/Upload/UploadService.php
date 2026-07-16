@@ -585,10 +585,6 @@ SELECT
                 // carry non-sequential/string keys, so reindex to guarantee it.
                 $imageService->fillLounge([$image_id], array_values($categories));
             } else {
-                // associateImagesToCategories() still calls the not-yet-migrated
-                // bare update_category() (Categories domain) when it actually
-                // inserts new associations.
-                include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
                 $imageService->associateImagesToCategories([(int) $image_id], $categories);
             }
         }

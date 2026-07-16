@@ -499,8 +499,13 @@ mass_inserts(
 );
 
 // refresh calculated datas
-update_global_rank();
-update_category();
+$upgradeCategoryConn = \Piwigo\Db\DbConnection::build();
+$upgradeCategoryService = new \Piwigo\Category\CategoryService(
+    new \Piwigo\Category\CategoryRepository($upgradeCategoryConn),
+    new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository($upgradeCategoryConn), new \Piwigo\Group\GroupRepository($upgradeCategoryConn))
+);
+$upgradeCategoryService->updateGlobalRank();
+$upgradeCategoryService->updateCategory();
 
 // update calculated field "images.path"
 $cat_ids = [];
@@ -513,7 +518,7 @@ $result = pwg_query($query);
 while ($row = pwg_db_fetch_assoc($result)) {
     array_push($cat_ids, $row['unique_storage_category_id']);
 }
-$fulldirs = get_fulldirs($cat_ids);
+$fulldirs = $upgradeCategoryService->getFulldirs($cat_ids);
 
 foreach ($cat_ids as $cat_id) {
     $query = '

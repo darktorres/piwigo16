@@ -106,8 +106,6 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
          * @var array<string, mixed> $user
          */
 
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         // +-----------------------------------------------------------------------+
         // | Check Access and exit when user status is not ok                      |
         // +-----------------------------------------------------------------------+
@@ -270,7 +268,11 @@ SELECT id, uppercats, global_rank, status, visible
 
             // get categort full directories in an array for comparison with file
             // system directory tree
-            $db_fulldirs = get_fulldirs(array_map(intval(...), array_keys($db_categories)));
+            $fulldirsConn = DbConnection::build();
+            $db_fulldirs = new CategoryService(
+                new CategoryRepository($fulldirsConn),
+                new PermissionService(new PermissionRepository($fulldirsConn), new GroupRepository($fulldirsConn))
+            )->getFulldirs(array_map(intval(...), array_keys($db_categories)));
 
             // what is the base directory to search file system sub-directories ?
             if (isset($_POST['cat']) and is_numeric($_POST['cat'])) {
@@ -571,7 +573,11 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
 
             if (count($to_delete) > 0) {
                 if (! $simulate) {
-                    delete_categories($to_delete);
+                    $deleteCatsConn = DbConnection::build();
+                    new CategoryService(
+                        new CategoryRepository($deleteCatsConn),
+                        new PermissionService(new PermissionRepository($deleteCatsConn), new GroupRepository($deleteCatsConn))
+                    )->deleteCategories($to_delete, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($deleteCatsConn)));
                     foreach ($to_delete_derivative_dirs as $to_delete_dir) {
                         if (is_dir($to_delete_dir)) {
                             new DerivativeCacheService()
@@ -868,13 +874,19 @@ DELETE
             and ($_POST['sync'] == 'dirs' or $_POST['sync'] == 'files')
             and ! $general_failure) {
             if (! $simulate) {
+                $syncConn = DbConnection::build();
+                $syncCategoryService = new CategoryService(
+                    new CategoryRepository($syncConn),
+                    new PermissionService(new PermissionRepository($syncConn), new GroupRepository($syncConn))
+                );
+
                 $start = \Piwigo\Core\TimingHelper::getMoment();
-                update_category('all');
+                $syncCategoryService->updateCategory('all');
                 $template->append('footer_elements', '<!-- update_category(all) : '
                   . \Piwigo\Core\TimingHelper::getElapsedTime($start, \Piwigo\Core\TimingHelper::getMoment())
                   . ' -->');
                 $start = \Piwigo\Core\TimingHelper::getMoment();
-                update_global_rank();
+                $syncCategoryService->updateGlobalRank();
                 $template->append('footer_elements', '<!-- ordering categories : '
                   . \Piwigo\Core\TimingHelper::getElapsedTime($start, \Piwigo\Core\TimingHelper::getMoment())
                   . ' -->');

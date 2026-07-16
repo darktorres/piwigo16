@@ -1504,4 +1504,61 @@ SELECT
             'account' => $updates,
         ];
     }
+
+    /**
+     * Synchronize base users list and related users list.
+     *
+     * Compares and synchronizes the base users table (`Tables::users()`)
+     * with its child tables (`Tables::userInfos()`, USER_ACCESS,
+     * USER_CACHE, USER_GROUP): each base user must be present in child
+     * tables, users in child tables not present in base table must be
+     * deleted.
+     *
+     * P23 batch 8d file 3: physically grouped with the Categories domain
+     * in `admin/include/functions.php` (file-position, not real domain),
+     * but touches only user-related tables and internally constructs
+     * {@see createUserInfos()} -- belongs here, not
+     * `Piwigo\Category\CategoryService`.
+     */
+    public function syncUsers(): void
+    {
+        /** @var array<string, mixed> $conf */
+        global $conf;
+
+        $userFields = $conf['user_fields'];
+        $userIdField = is_array($userFields) && is_string($userFields['id'] ?? null) ? $userFields['id'] : 'id';
+
+        $baseUsers = $this->repo->findAllUserIds($userIdField);
+        $infosUsers = $this->repo->findDistinctUserIdsInTable(Tables::userInfos());
+
+        // users present in $baseUsers and not in $infosUsers must be added
+        $toCreate = array_diff($baseUsers, $infosUsers);
+
+        if (count($toCreate) > 0) {
+            $this->createUserInfos($toCreate);
+        }
+
+        // users present in user related tables must be present in the base user
+        // table
+        $tables = [
+            Tables::userMailNotification(),
+            Tables::userFeed(),
+            Tables::userInfos(),
+            Tables::userAccess(),
+            Tables::userCache(),
+            Tables::userCacheCategories(),
+            Tables::userGroup(),
+        ];
+
+        foreach ($tables as $table) {
+            $toDelete = array_diff(
+                $this->repo->findDistinctUserIdsInTable($table),
+                $baseUsers
+            );
+
+            if (count($toDelete) > 0) {
+                $this->repo->deleteUsersFromTable($table, $toDelete);
+            }
+        }
+    }
 }

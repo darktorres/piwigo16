@@ -4,7 +4,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
 use Piwigo\Template\Template;
 
 /**
@@ -33,6 +39,12 @@ final class CatModifyPageRenderer
          * @var Template $template
          */
         global $admin_album_base_url, $category, $conf, $page, $template;
+
+        $categoryConn = DbConnection::build();
+        $categoryService = new CategoryService(
+            new CategoryRepository($categoryConn),
+            new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
+        );
 
         trigger_notify('loc_begin_cat_modify');
 
@@ -121,7 +133,7 @@ final class CatModifyPageRenderer
                 'CAT_NAME' => @htmlspecialchars(is_string($category['name']) ? $category['name'] : ''),
                 'CAT_COMMENT' => @htmlspecialchars(is_string($category['comment']) ? $category['comment'] : ''),
                 'IS_VISIBLE' => boolean_to_string($category['visible']),
-                'CAT_ADMIN_ACCESS' => cat_admin_access($category_id),
+                'CAT_ADMIN_ACCESS' => $categoryService->catAdminAccess($category_id),
 
                 'U_DELETE' => $base_url . 'albums',
 
@@ -308,7 +320,7 @@ SELECT COUNT(*)
             // picture to display : the identified representant or the generic random
             // representant ?
             if (! empty($category_representative_picture_id)) {
-                $tpl_representant['picture'] = get_category_representant_properties($category_representative_picture_id, IMG_MEDIUM);
+                $tpl_representant['picture'] = $categoryService->getCategoryRepresentantProperties($category_representative_picture_id, IMG_MEDIUM);
             }
 
             // can the admin choose to set a new random representant ?

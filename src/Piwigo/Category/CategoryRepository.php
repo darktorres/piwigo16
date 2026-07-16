@@ -385,4 +385,524 @@ final class CategoryRepository extends AbstractRepository
             ->executeQuery()
             ->fetchAllAssociative();
     }
+
+    /**
+     * @return list<int>
+     */
+    public function findCategoryIdsBySite(int $siteId): array
+    {
+        return array_map(intval(...), $this->conn->createQueryBuilder()
+            ->select('id')
+            ->from(Tables::categories())
+            ->where('site_id = :siteId')
+            ->setParameter('siteId', $siteId)
+            ->executeQuery()
+            ->fetchFirstColumn());
+    }
+
+    public function deleteSiteRow(int $id): void
+    {
+        $this->conn->createQueryBuilder()
+            ->delete(Tables::sites())
+            ->where('id = :id')
+            ->setParameter('id', $id)
+            ->executeStatement();
+    }
+
+    /**
+     * @param  list<int>  $ids
+     * @return list<int>
+     */
+    public function findStorageLinkedImageIds(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+
+        return array_map(intval(...), $this->conn->executeQuery('
+SELECT id
+  FROM ' . Tables::images() . '
+  WHERE storage_category_id IN (
+' . wordwrap(implode(', ', $ids), 80, "\n") . ')
+;')->fetchFirstColumn());
+    }
+
+    /**
+     * @param  list<int>  $ids
+     * @return list<int>
+     */
+    public function findDistinctLinkedImageIds(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+
+        return array_map(intval(...), $this->conn->executeQuery('
+SELECT
+    DISTINCT(image_id)
+  FROM ' . Tables::imageCategory() . '
+  WHERE category_id IN (' . implode(',', $ids) . ')
+;')->fetchFirstColumn());
+    }
+
+    /**
+     * Image ids from $imageIds still linked to a category outside $excludeIds
+     * -- used by delete_categories()'s "delete_orphans" mode to find images
+     * that would become orphaned by dropping $excludeIds.
+     *
+     * @param  list<int>  $imageIds
+     * @param  list<int>  $excludeIds
+     * @return list<int>
+     */
+    public function findNonOrphanImageIds(array $imageIds, array $excludeIds): array
+    {
+        if ($imageIds === []) {
+            return [];
+        }
+
+        return array_map(intval(...), $this->conn->executeQuery('
+SELECT
+    DISTINCT(image_id)
+  FROM ' . Tables::imageCategory() . '
+  WHERE image_id IN (' . implode(',', $imageIds) . ')
+    AND category_id NOT IN (' . implode(',', $excludeIds) . ')
+;')->fetchFirstColumn());
+    }
+
+    /**
+     * @param  list<int>  $ids
+     */
+    public function deleteImageCategoryLinksForCategories(array $ids): void
+    {
+        $this->conn->executeStatement('
+DELETE FROM ' . Tables::imageCategory() . '
+  WHERE category_id IN (
+' . wordwrap(implode(', ', $ids), 80, "\n") . ')
+;');
+    }
+
+    /**
+     * @param  list<int>  $ids
+     */
+    public function deleteUserAccessForCategories(array $ids): void
+    {
+        $this->conn->executeStatement('
+DELETE FROM ' . Tables::userAccess() . '
+  WHERE cat_id IN (
+' . wordwrap(implode(', ', $ids), 80, "\n") . ')
+;');
+    }
+
+    /**
+     * @param  list<int>  $ids
+     */
+    public function deleteGroupAccessForCategories(array $ids): void
+    {
+        $this->conn->executeStatement('
+DELETE FROM ' . Tables::groupAccess() . '
+  WHERE cat_id IN (
+' . wordwrap(implode(', ', $ids), 80, "\n") . ')
+;');
+    }
+
+    /**
+     * @param  list<int>  $ids
+     */
+    public function deleteCategoriesByIds(array $ids): void
+    {
+        $this->conn->executeStatement('
+DELETE FROM ' . Tables::categories() . '
+  WHERE id IN (
+' . wordwrap(implode(', ', $ids), 80, "\n") . ')
+;');
+    }
+
+    /**
+     * @param  list<int>  $ids
+     */
+    public function deleteOldPermalinksForCategories(array $ids): void
+    {
+        $this->conn->executeStatement('
+DELETE FROM ' . Tables::oldPermalinks() . '
+  WHERE cat_id IN (' . implode(',', $ids) . ')');
+    }
+
+    /**
+     * @param  list<int>  $ids
+     */
+    public function deleteUserCacheCategoriesForCategories(array $ids): void
+    {
+        $this->conn->executeStatement('
+DELETE FROM ' . Tables::userCacheCategories() . '
+  WHERE cat_id IN (' . implode(',', $ids) . ')');
+    }
+
+    /**
+     * $whereCatsSql is a pre-built SQL fragment from the caller (e.g. `1=1`,
+     * `c.id=5`, `c.id IN (1,2,3)`) -- same "repository takes a pre-built SQL
+     * fragment" shape this class already uses for permission conditions.
+     *
+     * @return list<int>
+     */
+    public function findWrongRepresentativeCategoryIds(string $whereCatsSql): array
+    {
+        return array_map(intval(...), $this->conn->executeQuery('
+SELECT DISTINCT c.id
+  FROM ' . Tables::categories() . ' AS c LEFT JOIN ' . Tables::images() . ' AS i
+    ON c.representative_picture_id = i.id
+  WHERE representative_picture_id IS NOT NULL
+    AND ' . $whereCatsSql . '
+    AND i.id IS NULL
+;')->fetchFirstColumn());
+    }
+
+    /**
+     * @param  list<int>  $ids
+     */
+    public function clearRepresentativePictureIds(array $ids): void
+    {
+        $this->conn->executeStatement('
+UPDATE ' . Tables::categories() . '
+  SET representative_picture_id = NULL
+  WHERE id IN (
+' . wordwrap(implode(', ', $ids), 120, "\n") . ')
+;');
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function findCategoriesNeedingRandomRepresentative(string $whereCatsSql): array
+    {
+        return array_map(intval(...), $this->conn->executeQuery('
+SELECT DISTINCT id
+  FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::imageCategory() . '
+    ON id = category_id
+  WHERE representative_picture_id IS NULL
+    AND ' . $whereCatsSql . '
+;')->fetchFirstColumn());
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function findOrphanedColumnValues(string $table, string $column): array
+    {
+        return array_values(array_unique(array_map(strval(...), $this->conn->executeQuery('
+SELECT
+    ' . $column . '
+  FROM ' . $table . '
+    LEFT JOIN ' . Tables::categories() . ' ON id = ' . $column . '
+  WHERE id IS NULL
+;')->fetchFirstColumn())));
+    }
+
+    /**
+     * @param  list<int|string>  $values
+     */
+    public function deleteRowsWhereColumnIn(string $table, string $column, array $values): void
+    {
+        $this->conn->executeStatement('
+DELETE
+  FROM ' . $table . '
+  WHERE ' . $column . ' IN (' . implode(',', $values) . ')
+;');
+    }
+
+    /**
+     * id/id_uppercat/uppercats/rank/global_rank for every category, ordered
+     * for {@see \Piwigo\Category\CategoryService::updateGlobalRank()}'s own
+     * per-parent rank-numbering pass.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findCategoriesForRankUpdate(): array
+    {
+        return $this->conn->executeQuery('
+SELECT id, id_uppercat, uppercats, `rank`, global_rank
+  FROM ' . Tables::categories() . '
+  ORDER BY id_uppercat, `rank`, name
+;')->fetchAllAssociative();
+    }
+
+    /**
+     * @param  array<int>  $ids  real callers (getUppercatIds()/getSubcatIds()'s
+     *   own array_unique()/array_merge() results) don't guarantee a list
+     */
+    public function updateCategoryVisibility(array $ids, bool $visible): void
+    {
+        $this->conn->executeStatement('
+UPDATE ' . Tables::categories() . '
+  SET visible = \'' . ($visible ? 'true' : 'false') . '\'
+  WHERE id IN (' . implode(',', $ids) . ')');
+    }
+
+    /**
+     * @param  array<int>  $ids  same non-list caveat as {@see updateCategoryVisibility()}
+     */
+    public function updateCategoryStatus(array $ids, string $status): void
+    {
+        $this->conn->executeStatement('
+UPDATE ' . Tables::categories() . '
+  SET status = \'' . $status . '\'
+  WHERE id IN (' . implode(',', $ids) . ')
+;');
+    }
+
+    /**
+     * @param  list<int>  $ids
+     * @return array<int, array{id: int, status: string}> keyed by id
+     */
+    public function findStatusByIds(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+
+        $rows = $this->conn->executeQuery('
+SELECT
+    id,
+    status
+  FROM ' . Tables::categories() . '
+  WHERE id IN (' . implode(',', $ids) . ')
+;')->fetchAllAssociative();
+
+        $byId = [];
+        foreach ($rows as $row) {
+            /** @var array{id: int, status: string} $row */
+            $byId[$row['id']] = $row;
+        }
+
+        return $byId;
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function findAccessUserIds(int $catId): array
+    {
+        return array_map(intval(...), $this->conn->executeQuery('
+SELECT user_id
+  FROM ' . Tables::userAccess() . '
+  WHERE cat_id = ' . $catId . '
+;')->fetchFirstColumn());
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function findAccessGroupIds(int $catId): array
+    {
+        return array_map(intval(...), $this->conn->executeQuery('
+SELECT group_id
+  FROM ' . Tables::groupAccess() . '
+  WHERE cat_id = ' . $catId . '
+;')->fetchFirstColumn());
+    }
+
+    /**
+     * @param  list<int>  $keepIds  a non-empty list is guaranteed by the
+     *   caller (-1 is substituted when no reference access exists, matching
+     *   the original's own `$ref_access[] = -1;` sentinel)
+     * @param  list<int>  $catIds
+     */
+    public function deleteInconsistentAccess(string $table, string $field, array $keepIds, array $catIds): void
+    {
+        $this->conn->executeStatement('
+DELETE
+  FROM ' . $table . '
+  WHERE ' . $field . ' NOT IN (' . implode(',', $keepIds) . ')
+    AND cat_id IN (' . implode(',', $catIds) . ')
+;');
+    }
+
+    /**
+     * @param  array<int>  $ids  real callers don't guarantee a list
+     * @return list<string>
+     */
+    public function findUppercatsColumns(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+
+        return array_map(strval(...), $this->conn->executeQuery('
+SELECT uppercats
+  FROM ' . Tables::categories() . '
+  WHERE id IN (' . implode(',', $ids) . ')
+;')->fetchFirstColumn());
+    }
+
+    public function findRandomImageIdInCategory(int $categoryId): ?int
+    {
+        $value = $this->conn->executeQuery('
+SELECT image_id
+  FROM ' . Tables::imageCategory() . '
+  WHERE category_id = ' . $categoryId . '
+  ORDER BY ' . $this->randomFunction() . '()
+  LIMIT 1
+;')->fetchOne();
+
+        return is_numeric($value) ? (int) $value : null;
+    }
+
+    /**
+     * `DB_RANDOM_FUNCTION`'s replacement -- MySQL/MariaDB's random-row
+     * ordering function, matching {@see findRandomImageId()}'s own `RAND()`.
+     */
+    private function randomFunction(): string
+    {
+        return 'RAND';
+    }
+
+    /**
+     * @return array<int|string, string> id => dir, filtered to non-null (dir
+     *   is nullable in the schema; only categories with a real directory can
+     *   contribute a fulldir segment) -- id keys are numeric strings (PHP
+     *   coerces them to int automatically when used as real array keys, but
+     *   fetchAllKeyValue()'s own generic type doesn't track that statically)
+     */
+    public function findCategoryDirsById(): array
+    {
+        return array_filter($this->conn->executeQuery('
+SELECT id, dir
+  FROM ' . Tables::categories() . '
+  WHERE dir IS NOT NULL
+;')->fetchAllKeyValue(), is_string(...));
+    }
+
+    /**
+     * @return array<int|string, string> id => galleries_url, same
+     *   numeric-string key caveat as {@see findCategoryDirsById()}
+     */
+    public function findSiteGalleriesUrls(): array
+    {
+        return array_filter($this->conn->executeQuery('
+SELECT id, galleries_url
+  FROM ' . Tables::sites() . '
+;')->fetchAllKeyValue(), is_string(...));
+    }
+
+    /**
+     * @param  array<int>  $ids  real callers don't guarantee a list
+     * @return list<array<string, mixed>>
+     */
+    public function findCategoriesForFulldirs(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+
+        return $this->conn->executeQuery('
+SELECT id, uppercats, site_id
+  FROM ' . Tables::categories() . '
+  WHERE dir IS NOT NULL
+    AND id IN (
+' . wordwrap(implode(', ', $ids), 80, "\n") . ')
+;')->fetchAllAssociative();
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function findDistinctStorageCategoryIds(): array
+    {
+        return array_map(intval(...), $this->conn->executeQuery('
+SELECT DISTINCT(storage_category_id)
+  FROM ' . Tables::images() . '
+  WHERE storage_category_id IS NOT NULL
+;')->fetchFirstColumn());
+    }
+
+    public function updateImagePathsForCategory(int $categoryId, string $fulldir): void
+    {
+        $this->conn->executeStatement('
+UPDATE ' . Tables::images() . '
+  SET path = ' . pwg_db_concat(["'" . $fulldir . "/'", 'file']) . '
+  WHERE storage_category_id = ' . $categoryId . '
+;');
+    }
+
+    /**
+     * @param  array<int>  $ids  real callers don't guarantee a list
+     * @return list<array<string, mixed>>
+     */
+    public function findCategoriesForMove(array $ids): array
+    {
+        return $this->conn->executeQuery('
+SELECT id, id_uppercat, status, uppercats
+  FROM ' . Tables::categories() . '
+  WHERE id IN (' . implode(',', $ids) . ')
+;')->fetchAllAssociative();
+    }
+
+    public function findCategoryUppercatsById(int $id): ?string
+    {
+        $value = $this->conn->executeQuery('
+SELECT uppercats
+  FROM ' . Tables::categories() . '
+  WHERE id = ' . $id . '
+;')->fetchOne();
+
+        return is_string($value) ? $value : null;
+    }
+
+    /**
+     * $newParent is either a numeric category id or the literal string
+     * `'NULL'` (root) -- matches the original's own `$new_parent < 1 ?
+     * 'NULL' : $new_parent` substitution, embedded directly into the SQL
+     * (not bindable as a parameter since it must appear unquoted as either
+     * a number or the SQL keyword).
+     *
+     * @param  array<int>  $ids  real callers don't guarantee a list
+     */
+    public function updateCategoryParent(array $ids, string $newParent): void
+    {
+        $this->conn->executeStatement('
+UPDATE ' . Tables::categories() . '
+  SET id_uppercat = ' . $newParent . '
+  WHERE id IN (' . implode(',', $ids) . ')
+;');
+    }
+
+    public function findCategoryStatus(int $id): ?string
+    {
+        $value = $this->conn->executeQuery('
+SELECT status
+  FROM ' . Tables::categories() . '
+  WHERE id = ' . $id . '
+;')->fetchOne();
+
+        return is_string($value) ? $value : null;
+    }
+
+    public function findMaxRankForParent(int|string|null $parentId): ?int
+    {
+        // Matches the original's own empty($parent_id) semantics (null, 0,
+        // '0', and '' all mean "no parent" / root level).
+        $parentIsEmpty = $parentId === null || $parentId === 0 || $parentId === '0' || $parentId === '';
+
+        $value = $this->conn->executeQuery('
+SELECT MAX(`rank`) AS max_rank
+  FROM ' . Tables::categories() . '
+  WHERE id_uppercat ' . ($parentIsEmpty ? 'IS NULL' : '= ' . $parentId) . '
+;')->fetchOne();
+
+        return is_numeric($value) ? (int) $value : null;
+    }
+
+    /**
+     * @return array{id: int, uppercats: string, global_rank: string, visible: string, status: string}|null
+     */
+    public function findParentCategoryForCreate(int|string $parentId): ?array
+    {
+        $row = $this->conn->executeQuery('
+SELECT id, uppercats, global_rank, visible, status
+  FROM ' . Tables::categories() . '
+  WHERE id = ' . $parentId . '
+;')->fetchAssociative();
+
+        /** @var array{id: int, uppercats: string, global_rank: string, visible: string, status: string}|false $row */
+        return $row === false ? null : $row;
+    }
 }

@@ -14,6 +14,7 @@ use Piwigo\Auth\CookieService;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Cache\UserCacheInvalidator;
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
@@ -57,6 +58,12 @@ use Piwigo\Ws\PwgServer;
  */
 function ws_add_image_category_relations($image_id, $categories_string, $replace_mode = false): true|PwgError
 {
+    $categoryConn = DbConnection::build();
+    $categoryService = new CategoryService(
+        new CategoryRepository($categoryConn),
+        new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
+    );
+
     // let's add links between the image and the categories
     //
     // $params['categories'] should look like 123,12;456,auto;789 which means:
@@ -76,7 +83,7 @@ DELETE
   WHERE image_id = ' . $image_id . '
 ;';
             pwg_query($query);
-            update_category([]);
+            $categoryService->updateCategory([]);
         }
         return true;
     }
@@ -108,7 +115,7 @@ DELETE
   WHERE image_id = ' . $image_id . '
 ;';
             pwg_query($query);
-            update_category([]);
+            $categoryService->updateCategory([]);
         }
         return true;
     }
@@ -152,7 +159,7 @@ DELETE
     AND category_id IN (' . implode(', ', $to_remove_cat_ids) . ')
 ;';
             pwg_query($query);
-            update_category($to_remove_cat_ids);
+            $categoryService->updateCategory($to_remove_cat_ids);
         }
     }
 
@@ -203,8 +210,7 @@ SELECT category_id, MAX(`rank`) AS max_rank
         $inserts
     );
 
-    include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-    update_category($new_cat_ids);
+    $categoryService->updateCategory($new_cat_ids);
     return true;
 }
 
@@ -2832,10 +2838,6 @@ function ws_images_delete(array $params, PwgServer $service): PwgError|int
         }
     }
 
-    // deleteElements() still calls the not-yet-migrated bare update_category()
-    // (Categories domain) when a deleted image was a category representative.
-    include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
     $imageConn = DbConnection::build();
     $ret = new ImageService(new ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)))
         ->deleteElements($image_ids, true);
@@ -2871,10 +2873,6 @@ function ws_images_checkUpload(array $params, PwgServer $service): array
  */
 function ws_images_emptyLounge(array $params, PwgServer $service): array
 {
-    // emptyLounge() -> associateImagesToCategories() still calls the
-    // not-yet-migrated bare update_category() (Categories domain).
-    include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
     $imageConn = DbConnection::build();
     $ret = [
         'rows' => new ImageService(new ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)))
@@ -2926,10 +2924,6 @@ function ws_images_uploadCompleted(array $params, PwgServer $service): PwgError|
             $image_ids[] = $image_id;
         }
     }
-
-    // emptyLounge() -> associateImagesToCategories() still calls the
-    // not-yet-migrated bare update_category() (Categories domain).
-    include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
     // the list of images moved from the lounge might not be the same than
     // $image_ids (canbe a subset or more image_ids from another upload too)
@@ -3077,10 +3071,6 @@ function ws_images_deleteOrphans(array $params, PwgServer $service): PwgError|ar
         return new PwgError(403, 'Invalid security token');
     }
 
-    // deleteElements() still calls the not-yet-migrated bare update_category()
-    // (Categories domain) when a deleted image was a category representative.
-    include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
     $imageConn = DbConnection::build();
     $imageService = new ImageService(new ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)));
 
@@ -3123,10 +3113,6 @@ SELECT
     if (count($categories) == 0) {
         return new PwgError(404, 'category_id not found');
     }
-
-    // associateImagesToCategories()/moveImagesToCategories() still call the
-    // not-yet-migrated bare update_category() (Categories domain).
-    include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
     $imageConn = DbConnection::build();
     $imageService = new ImageService(new ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)));

@@ -258,12 +258,6 @@ if (isset($conf['order_by_inside_category_custom'])) {
 }
 
 if (\Piwigo\Core\LoungeMaintenance::needsEmptying()) {
-    // ImageService::emptyLounge() -> associateImagesToCategories() still
-    // calls the not-yet-migrated bare update_category() (Categories
-    // domain); this code path runs on every request (not just admin), so
-    // the file defining it must be explicitly loaded here rather than
-    // relying on an admin-only bootstrap chain.
-    include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
     new ImageService(new ImageRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())))
         ->emptyLounge();
 }

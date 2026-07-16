@@ -326,4 +326,49 @@ final class UserRepository extends AbstractRepository
             ->setParameter('userId', $userId)
             ->executeStatement();
     }
+
+    /**
+     * Every user id from the base users table -- `$userIdColumn` matches
+     * {@see deleteUser()}'s own `$conf['user_fields']['id']` multi-auth
+     * compat column-name lookup (the caller passes it, this method never
+     * reads `$conf` itself).
+     *
+     * @return list<int>
+     */
+    public function findAllUserIds(string $userIdColumn): array
+    {
+        return array_map(intval(...), $this->conn->createQueryBuilder()
+            ->select($userIdColumn . ' AS id')
+            ->from(Tables::users())
+            ->executeQuery()
+            ->fetchFirstColumn());
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function findDistinctUserIdsInTable(string $table): array
+    {
+        return array_map(intval(...), $this->conn->createQueryBuilder()
+            ->select('DISTINCT user_id')
+            ->from($table)
+            ->executeQuery()
+            ->fetchFirstColumn());
+    }
+
+    /**
+     * @param  array<int>  $userIds  array_diff()'s result doesn't guarantee a list
+     */
+    public function deleteUsersFromTable(string $table, array $userIds): void
+    {
+        if ($userIds === []) {
+            return;
+        }
+
+        $this->conn->createQueryBuilder()
+            ->delete($table)
+            ->where('user_id IN (:userIds)')
+            ->setParameter('userIds', $userIds, ArrayParameterType::INTEGER)
+            ->executeStatement();
+    }
 }

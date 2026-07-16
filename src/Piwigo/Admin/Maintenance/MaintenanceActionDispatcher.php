@@ -8,6 +8,8 @@ use Piwigo\Admin\Integrity\check_integrity;
 use Piwigo\Auth\CookieService;
 use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Cache\UserCacheInvalidator;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Db\DbConnection;
@@ -114,10 +116,15 @@ final class MaintenanceActionDispatcher
             case 'categories':
 
                 FilesystemIntegrityChecker::imagesIntegrity();
-                categories_integrity();
-                update_uppercats();
-                update_category('all');
-                update_global_rank();
+                $categoriesConn = DbConnection::build();
+                $categoriesService = new CategoryService(
+                    new CategoryRepository($categoriesConn),
+                    new PermissionService(new PermissionRepository($categoriesConn), new GroupRepository($categoriesConn))
+                );
+                $categoriesService->checkCategoriesIntegrity();
+                $categoriesService->updateUppercats();
+                $categoriesService->updateCategory('all');
+                $categoriesService->updateGlobalRank();
                 UserCacheInvalidator::invalidate(true);
                 $page['infos'][] = sprintf('%s : %s', l10n('Update albums informations'), l10n('action successfully performed.'));
                 break;
@@ -125,7 +132,11 @@ final class MaintenanceActionDispatcher
             case 'images':
 
                 FilesystemIntegrityChecker::imagesIntegrity();
-                update_path();
+                $imagesConn = DbConnection::build();
+                new CategoryService(
+                    new CategoryRepository($imagesConn),
+                    new PermissionService(new PermissionRepository($imagesConn), new GroupRepository($imagesConn))
+                )->updatePath();
                 new RateService(new RateRepository(DbConnection::build()), new CookieService())
                     ->updateRatingScore();
                 UserCacheInvalidator::invalidate();

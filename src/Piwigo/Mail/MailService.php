@@ -141,6 +141,14 @@ final class MailService implements MailerInterface
             return $senderEmail;
         }
 
+        // deliberately bare, not new UserRepository(...)->getWebmasterMailAddress()
+        // -- tests/Unit/Mail/MailServiceTest.php and
+        // tests/Unit/Job/SendNotificationEmailHandlerTest.php both spy on
+        // this exact call via same-namespace function shadowing (no real
+        // DB connection available to either), same "one narrow,
+        // structurally-forced exception" shape as CategoryAdminService::
+        // setCatStatus()'s pwg_activity() call (P23 batch 8d finding 8-
+        // adjacent pattern).
         return get_webmaster_mail_address();
     }
 
@@ -749,6 +757,9 @@ SELECT
         // Bcc.
         $bcc = $this->getCleanRecipientsList($args['Bcc'] ?? null);
         if ($confMail['send_bcc_mail_webmaster'] === true) {
+            // deliberately bare -- same MailServiceTest/
+            // SendNotificationEmailHandlerTest spy dependency as
+            // getMailSenderEmail() above.
             $bcc[] = [
                 'email' => get_webmaster_mail_address(),
                 'name' => '',

@@ -800,7 +800,7 @@ SELECT *
 
                     // add new photos to caddie
                     if (isset($_POST['add_to_caddie']) and $_POST['add_to_caddie'] == 1) {
-                        fill_caddie($caddiables);
+                        \Piwigo\Caddie\CaddieService::fillCurrentUserCaddie($caddiables);
                     }
                 }
 
@@ -1126,7 +1126,7 @@ DELETE
             }
         }
 
-        $tpl_introduction['privacy_level_options'] = get_privacy_level_options();
+        $tpl_introduction['privacy_level_options'] = \Piwigo\Permission\PermissionService::getPrivacyLevelOptions();
 
         $template->assign('introduction', $tpl_introduction);
 

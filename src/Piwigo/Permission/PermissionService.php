@@ -22,6 +22,46 @@ final class PermissionService
     ) {}
 
     /**
+     * get localized privacy level values
+     *
+     * P23 batch 8d: relocated from include/functions.inc.php's
+     * get_privacy_level_options(), unchanged logic -- static since it
+     * needs no repository access (a pure $conf + l10n() read), matching
+     * InputValidator's own mixed static/instance precedent.
+     *
+     * @return string[]
+     */
+    public static function getPrivacyLevelOptions(): array
+    {
+        /** @var array<string, mixed> $conf */
+        global $conf;
+
+        $available_permission_levels = $conf['available_permission_levels'];
+        $available_permission_levels = is_array($available_permission_levels) ? $available_permission_levels : [];
+
+        $options = [];
+        $label = '';
+        foreach (array_reverse($available_permission_levels) as $level) {
+            // config_default.inc.php seeds this as [0, 1, 2, 4, 8] (always
+            // int); a non-int entry would come from a broken custom config
+            // override and has no meaningful privacy level to render.
+            if (! is_int($level)) {
+                continue;
+            }
+            if ($level === 0) {
+                $label = l10n('Everybody');
+            } else {
+                if (strlen($label) > 0) {
+                    $label .= ', ';
+                }
+                $label .= l10n(sprintf('Level %d', $level));
+            }
+            $options[$level] = $label;
+        }
+        return $options;
+    }
+
+    /**
      * Calculates the list of forbidden categories for a given user.
      *
      * Calculation is based on private categories minus categories authorized

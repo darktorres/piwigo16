@@ -4,8 +4,14 @@ declare(strict_types=1);
 
 namespace Piwigo\Comment;
 
+use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Core\MailerInterface;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
 
 /**
  * Comment domain business logic: spam/flood checks, insert/update/delete/
@@ -36,6 +42,58 @@ final class CommentService
         private readonly EphemeralKeyService $ephemeralKeys,
         private readonly MailerInterface $mailer,
     ) {}
+
+    /**
+     * returns the number of available comments for the connected user
+     *
+     * P23 batch 8d: relocated from include/functions.inc.php's
+     * get_nb_available_comments(), unchanged logic -- static since it
+     * builds its own PermissionService/GroupRepository internally (same
+     * as the original free function did) rather than needing this class's
+     * own injected CommentRepository/EphemeralKeyService/MailerInterface,
+     * matching InputValidator's own mixed static/instance precedent.
+     */
+    public static function getNbAvailableComments(): int
+    {
+        /** @var array<string, mixed> $user */
+        global $user;
+        if (! isset($user['nb_available_comments'])) {
+            $where = [];
+            if (! AccessControl::isAdmin()) {
+                $where[] = 'validated=\'true\'';
+            }
+            $where[] = new PermissionService(new PermissionRepository(DbConnection::build()), new GroupRepository(DbConnection::build()))
+                ->getSqlConditionFandF([
+                    'forbidden_categories' => 'category_id',
+                    'forbidden_images' => 'ic.image_id',
+                ], '', true);
+
+            $query = '
+SELECT COUNT(DISTINCT(com.id))
+  FROM ' . Tables::imageCategory() . ' AS ic
+    INNER JOIN ' . Tables::comments() . ' AS com
+    ON ic.image_id = com.image_id
+  WHERE ' . implode('
+    AND ', $where);
+            $row = pwg_db_fetch_row(pwg_query($query));
+            assert($row !== null);
+            [$user['nb_available_comments']] = $row;
+
+            $user_id = is_numeric($user['id']) ? (int) $user['id'] : 0;
+
+            single_update(
+                Tables::userCache(),
+                [
+                    'nb_available_comments' => $user['nb_available_comments'],
+                ],
+                [
+                    'user_id' => $user_id,
+                ]
+            );
+        }
+        $nb_available_comments = $user['nb_available_comments'];
+        return is_numeric($nb_available_comments) ? (int) $nb_available_comments : 0;
+    }
 
     /**
      * Basic spam check (plugins can do more via the same `user_comment_check`

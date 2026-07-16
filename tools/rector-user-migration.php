@@ -94,6 +94,26 @@ return RectorConfig::configure()
         new FuncCallToStaticCall('email_check_format', 'Piwigo\Validation\InputValidator', 'checkEmailFormat'),
         new FuncCallToStaticCall('script_basename', 'Piwigo\Core\PageFilterHelper', 'scriptBasename'),
         new FuncCallToStaticCall('get_filter_page_value', 'Piwigo\Core\PageFilterHelper', 'getFilterPageValue'),
+        // P23 batch 8d, file 2 pass 2b-ii: domain-specific utility
+        // functions, still stateless/pure-rename despite living on a
+        // domain class rather than a generic Core one.
+        new FuncCallToStaticCall('get_languages', 'Piwigo\Lang\LangService', 'getLanguages'),
+        new FuncCallToStaticCall('get_pwg_themes', 'Piwigo\Core\ThemeCatalog', 'getPwgThemes'),
+        // check_theme_installed() intentionally NOT mapped (removed after
+        // an initial run retargeted it everywhere): UserService::
+        // checkAndSaveUserInfos()/getDefaultTheme() must keep calling it
+        // bare -- tests/Integration/ExtensionLifecycleTest.php spies on
+        // both via same-namespace function shadowing. Its own definition
+        // stays in functions.inc.php as a permanent facade, same shape as
+        // check_pwg_token() above.
+        new FuncCallToStaticCall('original_to_representative', 'Piwigo\Image\ImagePathHelper', 'originalToRepresentative'),
+        new FuncCallToStaticCall('original_to_format', 'Piwigo\Image\ImagePathHelper', 'originalToFormat'),
+        new FuncCallToStaticCall('get_element_path', 'Piwigo\Image\ImagePathHelper', 'getElementPath'),
+        new FuncCallToStaticCall('fill_caddie', 'Piwigo\Caddie\CaddieService', 'fillCurrentUserCaddie'),
+        new FuncCallToStaticCall('get_privacy_level_options', 'Piwigo\Permission\PermissionService', 'getPrivacyLevelOptions'),
+        new FuncCallToStaticCall('get_nb_available_comments', 'Piwigo\Comment\CommentService', 'getNbAvailableComments'),
+        new FuncCallToStaticCall('get_icon', 'Piwigo\Core\RecentIconResolver', 'getIcon'),
+        new FuncCallToStaticCall('pwg_debug', 'Piwigo\Core\TimingHelper', 'debug'),
     ])
     ->withPhpVersion(\Rector\ValueObject\PhpVersion::PHP_85)
     ->withParallel(timeoutSeconds: 300);

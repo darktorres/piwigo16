@@ -382,7 +382,7 @@ SELECT
         $selected_level = $_POST['level'] ?? 0;
         $template->assign(
             [
-                'level_options' => get_privacy_level_options(),
+                'level_options' => \Piwigo\Permission\PermissionService::getPrivacyLevelOptions(),
                 'level_options_selected' => [$selected_level],
             ]
         );

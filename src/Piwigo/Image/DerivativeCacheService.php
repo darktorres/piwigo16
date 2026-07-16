@@ -78,7 +78,7 @@ final class DerivativeCacheService
         $path = $infos['path'];
         $representativeExt = $infos['representative_ext'] ?? null;
         if ($representativeExt !== null && $representativeExt !== '') {
-            $path = original_to_representative($path, $representativeExt);
+            $path = \Piwigo\Image\ImagePathHelper::originalToRepresentative($path, $representativeExt);
         }
         if (substr_compare($path, '../', 0, 3) === 0) {
             $path = substr($path, 3);

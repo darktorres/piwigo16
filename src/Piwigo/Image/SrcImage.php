@@ -77,7 +77,7 @@ final class SrcImage
             $this->rel_path = $path;
             $this->flags |= self::IS_ORIGINAL;
         } elseif (! empty($representative_ext)) {
-            $this->rel_path = original_to_representative($path, $representative_ext);
+            $this->rel_path = \Piwigo\Image\ImagePathHelper::originalToRepresentative($path, $representative_ext);
         } else {
             $default_mimetype_location = get_themeconf('mime_icon_dir') . $ext . '.png';
             $mimetype_location = trigger_change('get_mimetype_location', $default_mimetype_location, $ext);

@@ -20,6 +20,7 @@ $csrfServiceCtor = 'new \Piwigo\Csrf\CsrfService()';
 $inputValidatorCtor = 'new \Piwigo\Validation\InputValidator()';
 $paginationServiceCtor = 'new \Piwigo\Core\PaginationService()';
 $ephemeralKeyServiceCtor = 'new \Piwigo\Auth\EphemeralKeyService()';
+$userRepositoryCtor = 'new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())';
 
 return [
     'search_case_username' => [$userServiceCtor, 'searchCaseUsername'],
@@ -90,6 +91,12 @@ return [
     'create_navigation_bar' => [$paginationServiceCtor, 'createNavigationBar'],
     'get_ephemeral_key' => [$ephemeralKeyServiceCtor, 'generate'],
     'verify_ephemeral_key' => [$ephemeralKeyServiceCtor, 'verify'],
+    // P23 batch 8d, file 2 pass 2b-ii: functions.inc.php domain-specific
+    // functions with a real cross-layer caller (UserService itself),
+    // needing this custom instantiate-then-call rule rather than the
+    // simple static-call one.
+    'get_webmaster_mail_address' => [$userRepositoryCtor, 'getWebmasterMailAddress'],
+
     // check_pwg_token() intentionally NOT mapped: CsrfService::check()
     // deliberately returns bool|null instead of acting on failure itself
     // (see that class's own docblock) -- L2bExtendedDomain may not depend

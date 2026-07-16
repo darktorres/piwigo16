@@ -175,7 +175,7 @@ final class IdentificationController implements ControllerInterface
                 if (! is_string($lang_cookie)) {
                     fatal_error('[Hacking attempt] the input parameter "lang" is not valid');
                 }
-                if (! array_key_exists($lang_cookie, get_languages())) {
+                if (! array_key_exists($lang_cookie, \Piwigo\Lang\LangService::getLanguages())) {
                     fatal_error('[Hacking attempt] the input parameter "' . $lang_cookie . '" is not valid');
                 }
 
@@ -186,7 +186,7 @@ final class IdentificationController implements ControllerInterface
             }
 
             $language_options = [];
-            foreach (get_languages() as $language_code => $language_name) {
+            foreach (\Piwigo\Lang\LangService::getLanguages() as $language_code => $language_name) {
                 $language_options[$language_code] = $language_name;
             }
 

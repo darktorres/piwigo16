@@ -96,11 +96,11 @@ final class ProfileFormHandler
                 $errors[] = l10n('Recent period must be a positive integer value');
             }
 
-            if (! in_array($_POST['language'], array_keys(get_languages()), true)) {
+            if (! in_array($_POST['language'], array_keys(\Piwigo\Lang\LangService::getLanguages()), true)) {
                 die('Hacking attempt, incorrect language value');
             }
 
-            if (! in_array($_POST['theme'], array_keys(get_pwg_themes()), true)) {
+            if (! in_array($_POST['theme'], array_keys(\Piwigo\Core\ThemeCatalog::getPwgThemes()), true)) {
                 die('Hacking attempt, incorrect theme value');
             }
         }
@@ -316,10 +316,10 @@ final class ProfileFormHandler
         );
 
         $template->assign('template_selection', $userdata['theme']);
-        $template->assign('template_options', get_pwg_themes());
+        $template->assign('template_options', \Piwigo\Core\ThemeCatalog::getPwgThemes());
 
         $language_options = [];
-        foreach (get_languages() as $language_code => $language_name) {
+        foreach (\Piwigo\Lang\LangService::getLanguages() as $language_code => $language_name) {
             if (isset($_POST['submit']) or (is_string($userdata['language']) and $userdata['language'] === $language_code)) {
                 $template->assign('language_selection', $language_code);
             }

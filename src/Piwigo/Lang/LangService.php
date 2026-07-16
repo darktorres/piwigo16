@@ -6,6 +6,7 @@ namespace Piwigo\Lang;
 
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
+use Piwigo\Db\Tables;
 
 /**
  * Thin object-oriented facade over Lang/Translator for constructor
@@ -49,6 +50,42 @@ final class LangService
     public function l10n(?string $key, mixed ...$args): string
     {
         return $this->t($key, ...$args);
+    }
+
+    /**
+     * returns an array with a list of {language_code => language_name} for
+     * every language installed under the core language/ tree
+     *
+     * P23 batch 8d: relocated from include/functions.inc.php's
+     * get_languages(), unchanged logic -- static since it needs neither
+     * Paths nor any other instance state, matching InputValidator's own
+     * mixed static/instance precedent.
+     *
+     * @return string[]
+     */
+    public static function getLanguages(): array
+    {
+        $query = '
+SELECT id, name
+  FROM ' . Tables::languages() . '
+  ORDER BY name ASC
+;';
+        $result = pwg_query($query);
+
+        $languages = [];
+        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+            $id = $row['id'];
+            $name = $row['name'];
+            if (! is_string($id) || ! is_string($name)) {
+                continue;
+            }
+
+            if (is_dir(PHPWG_ROOT_PATH . 'language/' . $id)) {
+                $languages[$id] = $name;
+            }
+        }
+
+        return $languages;
     }
 
     public function loadLanguageForPlugin(string $pluginDir, string $locale): bool

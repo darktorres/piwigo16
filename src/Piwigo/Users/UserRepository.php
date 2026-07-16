@@ -20,6 +20,48 @@ use Piwigo\Db\Tables;
  */
 final class UserRepository extends AbstractRepository
 {
+    /**
+     * Returns the webmaster's email address (the users row whose id
+     * column matches $conf['webmaster_id']).
+     *
+     * P23 batch 8d: relocated from include/functions.inc.php's
+     * get_webmaster_mail_address(), unchanged logic (including its
+     * trigger_change('get_webmaster_mail_address', ...) filter hook and
+     * its own $conf['user_fields'] column-name resolution) -- stays
+     * zero-arg, matching the original's own signature exactly, so every
+     * real call site retargets as a pure rename.
+     */
+    public function getWebmasterMailAddress(): string
+    {
+        /** @var array<string, mixed> $conf */
+        global $conf;
+
+        $user_fields = $conf['user_fields'] ?? [];
+        $user_fields = is_array($user_fields) ? $user_fields : [];
+        $email_field = $user_fields['email'] ?? 'email';
+        $email_field = is_string($email_field) ? $email_field : 'email';
+        $id_field = $user_fields['id'] ?? 'id';
+        $id_field = is_string($id_field) ? $id_field : 'id';
+        $webmaster_id = $conf['webmaster_id'] ?? 0;
+        $webmaster_id = is_numeric($webmaster_id) ? (int) $webmaster_id : 0;
+
+        $value = $this->conn->createQueryBuilder()
+            ->select($email_field)
+            ->from(Tables::users())
+            ->where($id_field . ' = :webmasterId')
+            ->setParameter('webmasterId', $webmaster_id)
+            ->executeQuery()
+            ->fetchOne();
+
+        // users.email is nullable — a webmaster without an email set is real,
+        // not a bug, so this degrades to '' rather than asserting non-null.
+        $email = is_string($value) ? $value : '';
+
+        $email = trigger_change('get_webmaster_mail_address', $email);
+
+        return is_string($email) ? $email : '';
+    }
+
     public function findIdByUsername(string $username, string $idColumn, string $usernameColumn): int|false
     {
         $value = $this->conn->createQueryBuilder()

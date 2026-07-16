@@ -703,7 +703,7 @@ final class CategoryService
             );
             if ((bool) $conf['index_new_icon']) {
                 $maxDateLast = $row['max_date_last'] ?? null;
-                $row['icon_ts'] = get_icon(is_string($maxDateLast) ? $maxDateLast : '', $childDateLast);
+                $row['icon_ts'] = \Piwigo\Core\RecentIconResolver::getIcon(is_string($maxDateLast) ? $maxDateLast : '', $childDateLast);
             }
             $cats[] = $row;
             $categoryPageId = $categoryPage['id'] ?? null;

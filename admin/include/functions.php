@@ -232,15 +232,15 @@ SELECT
         }
 
         $files = [];
-        $files[] = get_element_path($row);
+        $files[] = \Piwigo\Image\ImagePathHelper::getElementPath($row);
 
         if (! empty($row['representative_ext'])) {
-            $files[] = original_to_representative($files[0], $row['representative_ext']);
+            $files[] = \Piwigo\Image\ImagePathHelper::originalToRepresentative($files[0], $row['representative_ext']);
         }
 
         if (isset($formats_of[$row_id])) {
             foreach ($formats_of[$row_id] as $format_ext) {
-                $files[] = original_to_format($files[0], $format_ext);
+                $files[] = \Piwigo\Image\ImagePathHelper::originalToFormat($files[0], $format_ext);
             }
         }
 

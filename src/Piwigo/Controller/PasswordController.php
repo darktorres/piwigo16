@@ -180,7 +180,7 @@ final class PasswordController implements ControllerInterface
             // pages
             $cookie_lang = $_COOKIE['lang'] ?? null;
             if (is_string($cookie_lang) and $user['language'] !== $cookie_lang) {
-                if (! array_key_exists($cookie_lang, get_languages())) {
+                if (! array_key_exists($cookie_lang, \Piwigo\Lang\LangService::getLanguages())) {
                     fatal_error('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');
                 }
 
@@ -191,7 +191,7 @@ final class PasswordController implements ControllerInterface
             }
 
             $language_options = [];
-            foreach (get_languages() as $language_code => $language_name) {
+            foreach (\Piwigo\Lang\LangService::getLanguages() as $language_code => $language_name) {
                 $language_options[$language_code] = $language_name;
             }
 

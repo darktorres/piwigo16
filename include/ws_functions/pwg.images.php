@@ -2530,12 +2530,12 @@ SELECT
         }
 
         $files = [];
-        $image_path = get_element_path($row);
+        $image_path = \Piwigo\Image\ImagePathHelper::getElementPath($row);
 
         assert($row['id'] !== null);
         if (isset($formats_of[$row['id']])) {
             foreach ($formats_of[$row['id']] as $format_ext) {
-                $files[] = original_to_format($image_path, $format_ext);
+                $files[] = \Piwigo\Image\ImagePathHelper::originalToFormat($image_path, $format_ext);
             }
         }
 

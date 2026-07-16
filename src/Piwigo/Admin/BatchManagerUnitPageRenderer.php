@@ -183,7 +183,7 @@ SELECT id, date_creation
             [
 
                 'U_ELEMENTS_PAGE' => $base_url . get_query_string_diff(['display', 'start']),
-                'level_options' => get_privacy_level_options(),
+                'level_options' => \Piwigo\Permission\PermissionService::getPrivacyLevelOptions(),
                 'ADMIN_PAGE_TITLE' => l10n('Batch Manager'),
                 'PWG_TOKEN' => (new \Piwigo\Csrf\CsrfService())->getToken(),
             ]

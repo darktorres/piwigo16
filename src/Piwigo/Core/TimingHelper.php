@@ -35,4 +35,33 @@ final class TimingHelper
     {
         return number_format($end - $start, 3, '.', ' ') . ' s';
     }
+
+    /**
+     * append a variable to the $debug global
+     *
+     * P23 batch 8d: relocated from include/functions.inc.php's
+     * pwg_debug(), unchanged logic.
+     */
+    public static function debug(string $string): void
+    {
+        /**
+         * @var string $debug
+         * @var float $t2
+         * @var array<string, mixed> $page
+         */
+        global $debug, $t2, $page;
+
+        $now = explode(' ', microtime());
+        $now2 = explode('.', $now[0]);
+        // microtime()'s own format ("<fraction> <seconds>", both always numeric)
+        // guarantees this concatenation is always a numeric string.
+        $now2_float = (float) ($now[1] . '.' . $now2[1]);
+        $time = number_format($now2_float - $t2, 3, '.', ' ') . ' s';
+        $debug .= '<p>';
+        $debug .= '[' . $time . ', ';
+        $count_queries = $page['count_queries'] ?? 0;
+        $count_queries = is_numeric($count_queries) ? $count_queries : 0;
+        $debug .= $count_queries . ' queries] : ' . $string;
+        $debug .= "</p>\n";
+    }
 }

@@ -409,7 +409,7 @@ DELETE
 
             // add_to_caddie
             elseif ($action === 'add_to_caddie') {
-                fill_caddie($collection);
+                \Piwigo\Caddie\CaddieService::fillCurrentUserCaddie($collection);
             }
 
             // delete
@@ -524,7 +524,7 @@ DELETE
         // image level options
         $template->assign(
             [
-                'level_options' => get_privacy_level_options(),
+                'level_options' => \Piwigo\Permission\PermissionService::getPrivacyLevelOptions(),
                 'level_options_selected' => 0,
             ]
         );

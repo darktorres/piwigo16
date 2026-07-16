@@ -74,7 +74,7 @@ final class CalendarRenderer
         }
 
         // -------------------------------------- initialize the calendar parameters ---
-        pwg_debug('start initialize_calendar');
+        \Piwigo\Core\TimingHelper::debug('start initialize_calendar');
 
         $fields = [
             // Created
@@ -275,6 +275,6 @@ final class CalendarRenderer
                 }
             }
         }
-        pwg_debug('end initialize_calendar');
+        \Piwigo\Core\TimingHelper::debug('end initialize_calendar');
     }
 }

@@ -15,7 +15,6 @@ use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\plugins;
 use Piwigo\Admin\themes;
-use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Logger;
@@ -84,36 +83,6 @@ define('MKGETDIR_PROTECT_INDEX', 4);
 define('MKGETDIR_PROTECT_HTACCESS', 8);
 /** default options for mkgetdir() = MKGETDIR_RECURSIVE | MKGETDIR_DIE_ON_ERROR | MKGETDIR_PROTECT_INDEX */
 define('MKGETDIR_DEFAULT', MKGETDIR_RECURSIVE | MKGETDIR_DIE_ON_ERROR | MKGETDIR_PROTECT_INDEX);
-
-/**
- * returns an array with a list of {language_code => language_name}
- *
- * @return string[]
- */
-function get_languages(): array
-{
-    $query = '
-SELECT id, name
-  FROM ' . Tables::languages() . '
-  ORDER BY name ASC
-;';
-    $result = pwg_query($query);
-
-    $languages = [];
-    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
-        $id = $row['id'];
-        $name = $row['name'];
-        if (! is_string($id) || ! is_string($name)) {
-            continue;
-        }
-
-        if (is_dir(PHPWG_ROOT_PATH . 'language/' . $id)) {
-            $languages[$id] = $name;
-        }
-    }
-
-    return $languages;
-}
 
 /**
  * Does the current user must log visits in history table
@@ -344,34 +313,6 @@ function pwg_activity(string $object, $object_id, string $action, array $details
 }
 
 /**
- * append a variable to _$debug_ global
- *
- * @param string $string
- */
-function pwg_debug($string): void
-{
-    /**
-     * @var string $debug
-     * @var float $t2
-     * @var array<string, mixed> $page
-     */
-    global $debug,$t2,$page;
-
-    $now = explode(' ', microtime());
-    $now2 = explode('.', $now[0]);
-    // microtime()'s own format ("<fraction> <seconds>", both always numeric)
-    // guarantees this concatenation is always a numeric string.
-    $now2_float = (float) ($now[1] . '.' . $now2[1]);
-    $time = number_format($now2_float - $t2, 3, '.', ' ') . ' s';
-    $debug .= '<p>';
-    $debug .= '[' . $time . ', ';
-    $count_queries = $page['count_queries'] ?? 0;
-    $count_queries = is_numeric($count_queries) ? $count_queries : 0;
-    $debug .= $count_queries . ' queries] : ' . $string;
-    $debug .= "</p>\n";
-}
-
-/**
  * Redirects to the given URL (HTTP method).
  *
  * @param string $url
@@ -484,139 +425,6 @@ function redirect($url, $msg = '', $refresh_time = 0): never
     } else {
         redirect_html($url, $msg, $refresh_time);
     }
-}
-
-/**
- * returns available themes
- *
- * @param bool $show_mobile
- * @return array<int|string, string>
- */
-function get_pwg_themes($show_mobile = false): array
-{
-    /** @var array<string, mixed> $conf */
-    global $conf;
-
-    $themes = [];
-
-    $query = '
-SELECT
-    id,
-    name
-  FROM ' . Tables::themes() . '
-  ORDER BY name ASC
-;';
-    $result = pwg_query($query);
-    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
-        $id = $row['id'];
-        $name = $row['name'];
-        if (! is_string($id) || ! is_string($name)) {
-            continue;
-        }
-
-        if ($id == $conf['mobile_theme']) {
-            if (! $show_mobile) {
-                continue;
-            }
-            $name .= ' (' . l10n('Mobile') . ')';
-        }
-        if (check_theme_installed($id)) {
-            $themes[$id] = $name;
-        }
-    }
-
-    // plugins want remove some themes based on user status maybe?
-    $themes = trigger_change('get_pwg_themes', $themes);
-    if (! is_array($themes)) {
-        return [];
-    }
-
-    $filtered_themes = [];
-    foreach ($themes as $key => $value) {
-        if (is_string($value)) {
-            $filtered_themes[$key] = $value;
-        }
-    }
-
-    return $filtered_themes;
-}
-
-/**
- * check if a theme is installed (directory exsists)
- *
- * @param string $theme_id
- */
-function check_theme_installed($theme_id): bool
-{
-    /** @var array<string, mixed> $conf */
-    global $conf;
-
-    $themes_dir = $conf['themes_dir'];
-    $themes_dir = is_string($themes_dir) ? $themes_dir : '';
-
-    return file_exists($themes_dir . '/' . $theme_id . '/themeconf.inc.php');
-}
-
-/**
- * Transforms an original path to its pwg representative
- *
- * @param string $path
- * @param string $representative_ext
- */
-function original_to_representative($path, $representative_ext): string
-{
-    $pos = strrpos($path, '/');
-    $path = substr_replace($path, 'pwg_representative/', $pos + 1, 0);
-    $pos = strrpos($path, '.');
-    return substr_replace($path, $representative_ext, $pos + 1);
-}
-
-/**
- * Transforms an original path to its format
- *
- * @param string $path
- * @param string $format_ext
- */
-function original_to_format($path, $format_ext): string
-{
-    $pos = strrpos($path, '/');
-    $path = substr_replace($path, 'pwg_format/', $pos + 1, 0);
-    $pos = strrpos($path, '.');
-    return substr_replace($path, $format_ext, $pos + 1);
-}
-
-/**
- * get the full path of an image
- *
- * @param array<string, mixed> $element_info element information from db (at least 'path')
- */
-function get_element_path(array $element_info): string
-{
-    $path = $element_info['path'];
-    // images.path is `varchar(255) NOT NULL` in the schema — a genuine DB
-    // row for this element always carries a string here.
-    assert(is_string($path));
-
-    if (! url_is_remote($path)) {
-        $path = PHPWG_ROOT_PATH . $path;
-    }
-    return $path;
-}
-
-/**
- * fill the current user caddie with given elements, if not already in caddie
- *
- * @param array<int, int> $elements_id
- */
-function fill_caddie($elements_id): void
-{
-    /** @var array<string, mixed> $user */
-    global $user;
-
-    $user_id = is_numeric($user['id']) ? (int) $user['id'] : 0;
-
-    new CaddieRepository(DbConnection::build())
-        ->addElements($user_id, $elements_id);
 }
 
 /**
@@ -768,6 +576,15 @@ function l10n_args($key_args, $sep = "\n"): string
 /**
  * returns the corresponding value from $themeconf if existing or an empty string
  *
+ * P23 batch 8d: permanent free-function facade, same structural shape as
+ * fatal_error()/check_pwg_token() (finding 8 case 3) -- one of its two
+ * real external callers, Piwigo\Image\SrcImage (L2aCoreDomain), cannot
+ * depend on Piwigo\Template\Template (L3Presentation), which this
+ * function's own real logic needs (Template::get_themeconf()). Already
+ * fully delegated (its own body is a pure Template::get_themeconf() call),
+ * so "real logic lives in a real class" is already satisfied; only the
+ * thin facade survives, deliberately, not an oversight to fix later.
+ *
  * @param string $key
  */
 function get_themeconf($key): string
@@ -784,36 +601,47 @@ function get_themeconf($key): string
 
 /**
  * Returns webmaster mail address depending on $conf['webmaster_id']
+ *
+ * P23 batch 8d: every real caller retargets directly to
+ * Piwigo\Users\UserRepository::getWebmasterMailAddress(), except ONE
+ * deliberate exception: Piwigo\Mail\MailService::getMailSenderEmail()/
+ * mail()'s Bcc-webmaster branch keep calling this bare -- both are spied
+ * on by tests/Unit/Mail/MailServiceTest.php and
+ * tests/Unit/Job/SendNotificationEmailHandlerTest.php via same-namespace
+ * function shadowing, which only works for a genuinely bare, unqualified
+ * call; retargeting would make those Unit tests hit a real (unavailable)
+ * DB connection. Same "one narrow, structurally-forced exception" shape
+ * as pwg_activity()'s own CategoryAdminService::setCatStatus() exception.
+ * This function itself stays defined here (not deleted) purely to keep
+ * those 2 call sites working -- its own body is a pure delegate.
  */
 function get_webmaster_mail_address(): string
 {
-    /** @var array<string, mixed> $conf */
-    global $conf;
+    return new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())
+        ->getWebmasterMailAddress();
+}
 
-    $user_fields = $conf['user_fields'] ?? [];
-    $user_fields = is_array($user_fields) ? $user_fields : [];
-    $email_field = $user_fields['email'] ?? 'email';
-    $email_field = is_string($email_field) ? $email_field : 'email';
-    $id_field = $user_fields['id'] ?? 'id';
-    $id_field = is_string($id_field) ? $id_field : 'id';
-    $webmaster_id = $conf['webmaster_id'] ?? 0;
-    $webmaster_id = is_numeric($webmaster_id) ? (int) $webmaster_id : 0;
-
-    $query = '
-SELECT ' . $email_field . '
-  FROM ' . Tables::users() . '
-  WHERE ' . $id_field . ' = ' . $webmaster_id . '
-;';
-    $row = pwg_db_fetch_row(pwg_query($query));
-    assert($row !== null);
-    [$email] = $row;
-    // users.email is nullable — a webmaster without an email set is real,
-    // not a bug, so this degrades to '' rather than asserting non-null.
-    $email = is_string($email) ? $email : '';
-
-    $email = trigger_change('get_webmaster_mail_address', $email);
-
-    return is_string($email) ? $email : '';
+/**
+ * check if a theme is installed (directory exists)
+ *
+ * P23 batch 8d: every real caller retargets directly to
+ * Piwigo\Core\ThemeCatalog::checkThemeInstalled(), except TWO deliberate
+ * exceptions: Piwigo\Users\UserService::checkAndSaveUserInfos()/
+ * getDefaultTheme() keep calling this bare -- both are spied on by
+ * tests/Integration/ExtensionLifecycleTest.php via same-namespace function
+ * shadowing (its own isolated bootstrap doesn't load pwg_query(), which
+ * getDefaultTheme()'s own get_pwg_themes()-based fallback branch would hit
+ * if this check ever fell through to it for real). Same "one narrow,
+ * structurally-forced exception" shape as pwg_activity()'s
+ * CategoryAdminService::setCatStatus() exception. This function itself
+ * stays defined here (not deleted) purely to keep those 2 call sites
+ * working -- its own body is a pure delegate.
+ *
+ * @param string $theme_id
+ */
+function check_theme_installed($theme_id): bool
+{
+    return \Piwigo\Core\ThemeCatalog::checkThemeInstalled($theme_id);
 }
 
 /**
@@ -1267,58 +1095,6 @@ function load_language($filename, $dirname = '', array $options = []): string|bo
 }
 
 /**
- * return an array which will be sent to template to display recent icon
- *
- * @param string $date
- * @param bool $is_child_date
- * @return false|array<string, mixed>
- */
-function get_icon($date, $is_child_date = false): false|array
-{
-    /**
-     * @var array<string, mixed> $cache
-     * @var array<string, mixed> $user
-     */
-    global $cache, $user;
-
-    if (empty($date)) {
-        return false;
-    }
-
-    $recent_period = $user['recent_period'] ?? null;
-    $recent_period = is_numeric($recent_period) ? (int) $recent_period : (is_string($recent_period) ? $recent_period : 0);
-
-    $get_icon_cache = is_array($cache['get_icon'] ?? null) ? $cache['get_icon'] : [];
-
-    if (! isset($get_icon_cache['title'])) {
-        $get_icon_cache['title'] = l10n(
-            'photos posted during the last %d days',
-            $recent_period
-        );
-    }
-
-    $icon = [
-        'TITLE' => $get_icon_cache['title'],
-        'IS_CHILD_DATE' => $is_child_date,
-    ];
-
-    if (isset($get_icon_cache[$date])) {
-        $cache['get_icon'] = $get_icon_cache;
-        return ((bool) $get_icon_cache[$date]) ? $icon : [];
-    }
-
-    if (! isset($get_icon_cache['sql_recent_date'])) {
-        // Use MySql date in order to standardize all recent "actions/queries"
-        $get_icon_cache['sql_recent_date'] = pwg_db_get_recent_period($recent_period);
-    }
-
-    $get_icon_cache[$date] = $date > $get_icon_cache['sql_recent_date'];
-    $cache['get_icon'] = $get_icon_cache;
-
-    return $get_icon_cache[$date] ? $icon : [];
-}
-
-/**
  * check token comming from form posted or get params to prevent csrf attacks.
  * if pwg_token is empty action doesn't require token
  * else pwg_token is compare to server token
@@ -1332,85 +1108,6 @@ function check_pwg_token(): void
     } elseif ($result === false) {
         access_denied();
     }
-}
-
-/**
- * get localized privacy level values
- *
- * @return string[]
- */
-function get_privacy_level_options(): array
-{
-    /** @var array<string, mixed> $conf */
-    global $conf;
-
-    $available_permission_levels = $conf['available_permission_levels'];
-    $available_permission_levels = is_array($available_permission_levels) ? $available_permission_levels : [];
-
-    $options = [];
-    $label = '';
-    foreach (array_reverse($available_permission_levels) as $level) {
-        // config_default.inc.php seeds this as [0, 1, 2, 4, 8] (always
-        // int); a non-int entry would come from a broken custom config
-        // override and has no meaningful privacy level to render.
-        if (! is_int($level)) {
-            continue;
-        }
-        if ($level == 0) {
-            $label = l10n('Everybody');
-        } else {
-            if ((bool) strlen($label)) {
-                $label .= ', ';
-            }
-            $label .= l10n(sprintf('Level %d', $level));
-        }
-        $options[$level] = $label;
-    }
-    return $options;
-}
-
-/**
- * returns the number of available comments for the connected user
- */
-function get_nb_available_comments(): int
-{
-    /** @var array<string, mixed> $user */
-    global $user;
-    if (! isset($user['nb_available_comments'])) {
-        $where = [];
-        if (! \Piwigo\Auth\AccessControl::isAdmin()) {
-            $where[] = 'validated=\'true\'';
-        }
-        $where[] = (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
-            'forbidden_categories' => 'category_id',
-            'forbidden_images' => 'ic.image_id',
-        ], '', true);
-
-        $query = '
-SELECT COUNT(DISTINCT(com.id))
-  FROM ' . Tables::imageCategory() . ' AS ic
-    INNER JOIN ' . Tables::comments() . ' AS com
-    ON ic.image_id = com.image_id
-  WHERE ' . implode('
-    AND ', $where);
-        $row = pwg_db_fetch_row(pwg_query($query));
-        assert($row !== null);
-        [$user['nb_available_comments']] = $row;
-
-        $user_id = is_numeric($user['id']) ? (int) $user['id'] : 0;
-
-        single_update(
-            Tables::userCache(),
-            [
-                'nb_available_comments' => $user['nb_available_comments'],
-            ],
-            [
-                'user_id' => $user_id,
-            ]
-        );
-    }
-    $nb_available_comments = $user['nb_available_comments'];
-    return is_numeric($nb_available_comments) ? (int) $nb_available_comments : 0;
 }
 
 /**

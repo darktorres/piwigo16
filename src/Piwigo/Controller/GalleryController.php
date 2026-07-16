@@ -156,7 +156,7 @@ final class GalleryController implements ControllerInterface
 
             // caddie filling :-)
             if (isset($_GET['caddie'])) {
-                fill_caddie($page_items);
+                \Piwigo\Caddie\CaddieService::fillCurrentUserCaddie($page_items);
                 redirect(duplicate_index_url());
             }
 

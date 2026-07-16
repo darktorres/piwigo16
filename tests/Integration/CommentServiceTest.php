@@ -7,12 +7,11 @@ declare(strict_types=1);
 // $user/$conf-driven access-level checks, HtmlService's Template-rendering
 // fatal_error()) than this isolated integration test wants to depend on.
 // Same "minimal stub to load standalone" pattern as
-// tests/Integration/UserServiceTest.php. url_check_format()/
-// email_check_format() are copied verbatim from include/functions.inc.php
-// -- both are pure, dependency-free, and stable, so a faithful copy is
-// safe here (unlike e.g. tag_alpha_compare()'s stand-in in
-// TagServiceTest, which needed a simplification because the real function
-// pulls in the Lang domain).
+// tests/Integration/UserServiceTest.php. No url_check_format()/
+// email_check_format() stubs: CommentService's real call sites now call
+// Piwigo\Validation\InputValidator::checkUrlFormat()/checkEmailFormat()
+// directly (P23 batch 8d), real class methods a same-named bare-function
+// stub can no longer intercept.
 //
 // No fatal_error() stub: only getCommentAuthorId()'s $dieOnError=true path
 // (never exercised below) would reach it, and it's `never`-typed (renders
@@ -30,28 +29,6 @@ namespace {
         function l10n(string $key, mixed ...$args): string
         {
             return $args === [] ? $key : vsprintf($key, array_map(static fn (mixed $a): string => is_scalar($a) ? (string) $a : '', $args));
-        }
-    }
-
-    if (! function_exists('email_check_format')) {
-        function email_check_format(?string $mail_address): bool
-        {
-            return filter_var($mail_address, \FILTER_VALIDATE_EMAIL) !== false;
-        }
-    }
-
-    if (! function_exists('url_check_format')) {
-        function url_check_format(string $url): bool
-        {
-            if (str_contains($url, '"')) {
-                return false;
-            }
-
-            if (! str_starts_with($url, 'http://') && ! str_starts_with($url, 'https://')) {
-                return false;
-            }
-
-            return filter_var($url, \FILTER_VALIDATE_URL) !== false;
         }
     }
 

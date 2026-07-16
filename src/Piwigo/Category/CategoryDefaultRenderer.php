@@ -164,7 +164,7 @@ SELECT image_id, COUNT(*) AS nb_comments
                 // exactly like a non-string/null column value would, so
                 // behavior is unchanged.
                 $dateAvailable = is_string($row['date_available']) ? $row['date_available'] : '';
-                $tplVar['icon_ts'] = get_icon($dateAvailable);
+                $tplVar['icon_ts'] = \Piwigo\Core\RecentIconResolver::getIcon($dateAvailable);
             }
 
             if ((bool) $user['show_nb_hits']) {
@@ -202,6 +202,6 @@ SELECT image_id, COUNT(*) AS nb_comments
         $template->assign_var_from_handle('THUMBNAILS', 'index_thumbnails');
         unset($pictures, $selection, $tplThumbnailsVar);
         $template->clear_assign('thumbnails');
-        pwg_debug('end CategoryDefaultRenderer::render()');
+        \Piwigo\Core\TimingHelper::debug('end CategoryDefaultRenderer::render()');
     }
 }

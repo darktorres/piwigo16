@@ -352,7 +352,7 @@ UPDATE ' . Tables::categories() . '
                     // no break
                 case 'add_to_caddie':
 
-                    fill_caddie([$image_id]);
+                    \Piwigo\Caddie\CaddieService::fillCurrentUserCaddie([$image_id]);
                     redirect($url_self);
 
                     // no break
@@ -606,7 +606,7 @@ SELECT *
                 $row['file_ext'] = strtolower(\Piwigo\Core\StringHelper::getExtension($row_file));
 
                 if ($i === 'current') {
-                    $row['element_path'] = get_element_path($row);
+                    $row['element_path'] = \Piwigo\Image\ImagePathHelper::getElementPath($row);
 
                     $row_id = $row['id'];
                     assert(is_string($row_id)); // images.id is the NOT NULL primary key

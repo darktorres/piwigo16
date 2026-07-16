@@ -126,7 +126,7 @@ final class AuthService
             if (! is_string($lang_cookie)) {
                 fatal_error('[Hacking attempt] the input parameter "lang" is not valid');
             }
-            if (! array_key_exists($lang_cookie, get_languages())) {
+            if (! array_key_exists($lang_cookie, \Piwigo\Lang\LangService::getLanguages())) {
                 fatal_error('[Hacking attempt] the input parameter "' . $lang_cookie . '" is not valid');
             }
 

@@ -136,7 +136,7 @@ SELECT ' . implode(',', $fields) . '
                 if (! is_string($cookie_lang)) {
                     fatal_error('[Hacking attempt] the input parameter "lang" is not valid');
                 }
-                if (! array_key_exists($cookie_lang, get_languages())) {
+                if (! array_key_exists($cookie_lang, \Piwigo\Lang\LangService::getLanguages())) {
                     fatal_error('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');
                 }
 
@@ -158,7 +158,7 @@ SELECT ' . implode(',', $fields) . '
 
             // Get list of languages
             $language_options = [];
-            foreach (get_languages() as $language_code => $language_name) {
+            foreach (\Piwigo\Lang\LangService::getLanguages() as $language_code => $language_name) {
                 $language_options[$language_code] = $language_name;
             }
 

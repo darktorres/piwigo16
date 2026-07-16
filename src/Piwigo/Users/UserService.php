@@ -476,7 +476,7 @@ final class UserService
             get_l10n_args('Password: %s', str_repeat('*', $length)),
             get_l10n_args('Email: %s', $mailAddress),
             get_l10n_args('', ''),
-            get_l10n_args('If you think you\'ve received this email in error, please contact us at %s', get_webmaster_mail_address()),
+            get_l10n_args('If you think you\'ve received this email in error, please contact us at %s', (new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->getWebmasterMailAddress()),
         ];
 
         $gallery_title = $conf['gallery_title'] ?? '';
@@ -530,6 +530,14 @@ final class UserService
         // 1. the user_infos.theme was not found in the themes table, thus themes.name is null
         // 2. the theme is not really installed on the filesystem
         $theme = $user['theme'] ?? null;
+        // deliberately bare, not ThemeCatalog::checkThemeInstalled() --
+        // tests/Integration/ExtensionLifecycleTest.php spies on this exact
+        // call via same-namespace function shadowing (its own isolated
+        // bootstrap doesn't load pwg_query(), which getDefaultTheme()'s
+        // own fallback branch below would need if this check ever fell
+        // through to it for real), same "one narrow, structurally-forced
+        // exception" shape as pwg_activity()'s CategoryAdminService
+        // exception.
         if (! isset($user['theme_name']) or ! is_string($theme) or ! check_theme_installed($theme)) {
             $user['theme'] = $this->getDefaultTheme();
             $user['theme_name'] = $user['theme'];
@@ -903,12 +911,14 @@ DELETE FROM ' . Tables::favorites() . '
         if (! is_string($theme)) {
             $theme = AppInfo::DEFAULT_TEMPLATE;
         }
+        // deliberately bare -- same ExtensionLifecycleTest spy dependency
+        // as checkAndSaveUserInfos()'s call above.
         if (check_theme_installed($theme)) {
             return $theme;
         }
 
         // let's find the first available theme
-        $active_themes = array_keys(get_pwg_themes());
+        $active_themes = array_keys(\Piwigo\Core\ThemeCatalog::getPwgThemes());
         return isset($active_themes[0]) ? (string) $active_themes[0] : 'default';
     }
 
@@ -966,7 +976,7 @@ DELETE FROM ' . Tables::favorites() . '
         // list all enabled language codes in the Piwigo installation
         // in both full and short forms, and case insensitive
         $languages_available = [];
-        foreach (get_languages() as $language_code => $language_name) {
+        foreach (\Piwigo\Lang\LangService::getLanguages() as $language_code => $language_name) {
             $lowercase_full = strtolower((string) $language_code);
             $lowercase_parts = explode('_', $lowercase_full, 2);
             $lowercase_prefix = $lowercase_parts[0];
@@ -1297,7 +1307,7 @@ SELECT
         }
 
         if (! empty($params['language'])) {
-            if (! in_array($params['language'], array_keys(get_languages()))) {
+            if (! in_array($params['language'], array_keys(\Piwigo\Lang\LangService::getLanguages()))) {
                 return [
                     'error' => [
                         'code' => WS_ERR_INVALID_PARAM,
@@ -1309,7 +1319,7 @@ SELECT
         }
 
         if (! empty($params['theme'])) {
-            if (! in_array($params['theme'], array_keys(get_pwg_themes()))) {
+            if (! in_array($params['theme'], array_keys(\Piwigo\Core\ThemeCatalog::getPwgThemes()))) {
                 return [
                     'error' => [
                         'code' => WS_ERR_INVALID_PARAM,

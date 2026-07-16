@@ -783,7 +783,7 @@ SELECT
         }
 
         // move the uploaded file to pwg_representative sub-directory
-        $representative_file_path = original_to_representative($file_path, $ext);
+        $representative_file_path = \Piwigo\Image\ImagePathHelper::originalToRepresentative($file_path, $ext);
         self::prepareDirectoryStatic(dirname($representative_file_path));
 
         $ext_imagick_dir = $conf['ext_imagick_dir'];
@@ -834,7 +834,7 @@ SELECT
         $ext = 'jpg';
 
         // move the uploaded file to pwg_representative sub-directory
-        $representative_file_path = original_to_representative($file_path, $ext);
+        $representative_file_path = \Piwigo\Image\ImagePathHelper::originalToRepresentative($file_path, $ext);
         self::prepareDirectoryStatic(dirname($representative_file_path));
 
         [$w, $h] = self::getOptimalDimensionsForRepresentative();
@@ -1098,7 +1098,7 @@ SELECT
         $ext = 'png';
 
         // move the uploaded file to pwg_representative sub-directory
-        $representative_file_path = original_to_representative($file_path, $ext);
+        $representative_file_path = \Piwigo\Image\ImagePathHelper::originalToRepresentative($file_path, $ext);
         self::prepareDirectoryStatic(dirname($representative_file_path));
 
         // convert -density 300 image.eps -resize 2048x2048 image.png

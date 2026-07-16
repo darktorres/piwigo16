@@ -52,7 +52,7 @@ final class PageTailRenderer
         if (! \Piwigo\Auth\AccessControl::isAGuest()) {
             $template->assign(
                 'CONTACT_MAIL',
-                get_webmaster_mail_address()
+                (new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->getWebmasterMailAddress()
             );
         }
 

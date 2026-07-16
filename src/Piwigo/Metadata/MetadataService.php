@@ -394,7 +394,7 @@ final class MetadataService
 
             $representativeExt = $infos['representative_ext'];
             $representativeExt = is_string($representativeExt) ? $representativeExt : '';
-            $file = original_to_representative($file, $representativeExt);
+            $file = \Piwigo\Image\ImagePathHelper::originalToRepresentative($file, $representativeExt);
         }
 
         if (function_exists('mime_content_type')) {

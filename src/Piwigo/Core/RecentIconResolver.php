@@ -1,0 +1,67 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Piwigo\Core;
+
+/**
+ * P23 batch 8d: "recent" badge/icon computation relocated from
+ * include/functions.inc.php -- no natural existing class home (real
+ * callers span Category and Users domains: CategoryCatsRenderer/
+ * CategoryService/CategoryDefaultRenderer, and UserService), stateless
+ * beyond the per-request `$cache['get_icon']` memoization bridge it reads/
+ * writes through, unchanged. `pwg_db_get_recent_period()` stays a bare
+ * call -- functions_mysqli.inc.php, relocate-only (batch 8f, finding 2).
+ */
+final class RecentIconResolver
+{
+    /**
+     * return an array which will be sent to template to display recent icon
+     *
+     * @return false|array<string, mixed>
+     */
+    public static function getIcon(string $date, bool $isChildDate = false): false|array
+    {
+        /**
+         * @var array<string, mixed> $cache
+         * @var array<string, mixed> $user
+         */
+        global $cache, $user;
+
+        if ($date === '' || $date === '0') {
+            return false;
+        }
+
+        $recent_period = $user['recent_period'] ?? null;
+        $recent_period = is_numeric($recent_period) ? (int) $recent_period : (is_string($recent_period) ? $recent_period : 0);
+
+        $get_icon_cache = is_array($cache['get_icon'] ?? null) ? $cache['get_icon'] : [];
+
+        if (! isset($get_icon_cache['title'])) {
+            $get_icon_cache['title'] = l10n(
+                'photos posted during the last %d days',
+                $recent_period
+            );
+        }
+
+        $icon = [
+            'TITLE' => $get_icon_cache['title'],
+            'IS_CHILD_DATE' => $isChildDate,
+        ];
+
+        if (isset($get_icon_cache[$date])) {
+            $cache['get_icon'] = $get_icon_cache;
+            return ((bool) $get_icon_cache[$date]) ? $icon : [];
+        }
+
+        if (! isset($get_icon_cache['sql_recent_date'])) {
+            // Use MySql date in order to standardize all recent "actions/queries"
+            $get_icon_cache['sql_recent_date'] = pwg_db_get_recent_period($recent_period);
+        }
+
+        $get_icon_cache[$date] = $date > $get_icon_cache['sql_recent_date'];
+        $cache['get_icon'] = $get_icon_cache;
+
+        return $get_icon_cache[$date] ? $icon : [];
+    }
+}

@@ -310,7 +310,7 @@ final class MenubarRenderer
                       'TITLE' => l10n('display last user comments'),
                       'NAME' => l10n('Comments'),
                       'URL' => get_root_url() . 'comments.php',
-                      'COUNTER' => get_nb_available_comments(),
+                      'COUNTER' => \Piwigo\Comment\CommentService::getNbAvailableComments(),
                   ];
             }
 

@@ -422,7 +422,7 @@ SELECT *
                     $categoryMaxDateLast = is_string($categoryMaxDateLast) ? $categoryMaxDateLast : '';
                     $categoryIsChildDateLast = $category['is_child_date_last'];
                     $categoryIsChildDateLast = is_bool($categoryIsChildDateLast) ? $categoryIsChildDateLast : false;
-                    $tplVar['icon_ts'] = get_icon($categoryMaxDateLast, $categoryIsChildDateLast);
+                    $tplVar['icon_ts'] = \Piwigo\Core\RecentIconResolver::getIcon($categoryMaxDateLast, $categoryIsChildDateLast);
                 }
 
                 if ((bool) $conf['display_fromto']) {
@@ -464,7 +464,7 @@ SELECT *
             $template->assign('cats_navbar', $page['cats_navigation_bar']);
         }
 
-        pwg_debug('end CategoryCatsRenderer::render()');
+        \Piwigo\Core\TimingHelper::debug('end CategoryCatsRenderer::render()');
     }
 
     private function getCachedRepresentative(CacheItemPoolInterface $pool, int $userId, int $catId): ?string

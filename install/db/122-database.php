@@ -27,7 +27,7 @@ SELECT
   FROM ' . IMAGES_TABLE . '
 ;';
 $result = pwg_query($query);
-$starttime = get_moment();
+$starttime = \Piwigo\Core\TimingHelper::getMoment();
 
 $updates = [];
 
@@ -60,6 +60,6 @@ if (count($updates) > 0) {
 }
 
 echo "\n"
-. $upgrade_description . sprintf(' (execution in %.3fs)', (get_moment() - $starttime))
+. $upgrade_description . sprintf(' (execution in %.3fs)', (\Piwigo\Core\TimingHelper::getMoment() - $starttime))
 . "\n"
 ;

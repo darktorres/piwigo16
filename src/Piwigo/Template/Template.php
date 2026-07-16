@@ -11,7 +11,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Template;
 
+use Piwigo\Auth\AccessControl;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\DeviceHelper;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
 use Smarty\Smarty;
@@ -185,9 +187,9 @@ class Template
         $this->smarty->registerPlugin('modifier', 'is_null', 'is_null');
         $this->smarty->registerPlugin('modifier', 'l10n', 'l10n');
         $this->smarty->registerPlugin('modifier', 'str_replace', 'str_replace');
-        $this->smarty->registerPlugin('modifier', 'is_admin', 'is_admin');
-        $this->smarty->registerPlugin('modifier', 'is_classic_user', 'is_classic_user');
-        $this->smarty->registerPlugin('modifier', 'get_device', 'get_device');
+        $this->smarty->registerPlugin('modifier', 'is_admin', [AccessControl::class, 'isAdmin']);
+        $this->smarty->registerPlugin('modifier', 'is_classic_user', [AccessControl::class, 'isClassicUser']);
+        $this->smarty->registerPlugin('modifier', 'get_device', [DeviceHelper::class, 'getDevice']);
         $this->smarty->registerPlugin('modifier', 'is_file', 'is_file');
         $this->smarty->registerPlugin('modifier', 'strpos', 'strpos');
         $this->smarty->registerPlugin('modifier', 'preg_match', 'preg_match');

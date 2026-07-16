@@ -28,7 +28,7 @@ $updates = [];
 while ($row = pwg_db_fetch_assoc($images)) {
     $updates[] = [
         'id' => $row['id'],
-        'name' => get_name_from_file($row['file']),
+        'name' => \Piwigo\Core\StringHelper::getNameFromFile($row['file']),
     ];
 }
 

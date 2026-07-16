@@ -58,7 +58,7 @@ if (is_dir(dirname($backup_filepath))) {
 }
 
 if ($save_conf) {
-    mkgetdir(dirname($backup_filepath));
+    \Piwigo\Core\FilesystemHelper::mkgetdir(dirname($backup_filepath));
 
     file_put_contents(
         $backup_filepath,

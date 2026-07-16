@@ -457,7 +457,7 @@ function ws_users_add(array $params, PwgServer &$service): mixed
     // UserService::registerUser() itself never puts that message in
     // errors (it would let an attacker enumerate accounts through the
     // public self-registration form).
-    $result = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new MailService())
+    $result = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
         ->registerUser(
             $params['username'],
             $params['password'],

@@ -1039,12 +1039,6 @@ parameters:
 			path: include/ws_functions/pwg.users.php
 
 		-
-			rawMessage: 'Class Piwigo\Users\UserService constructor invoked with 3 parameters, 4 required.'
-			identifier: arguments.count
-			count: 1
-			path: include/ws_functions/pwg.users.php
-
-		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
 			count: 17
@@ -3124,12 +3118,6 @@ parameters:
 			rawMessage: 'Call to function is_array() with array<string, string|null> will always evaluate to true.'
 			identifier: function.alreadyNarrowedType
 			count: 1
-			path: src/Piwigo/Mail/MailService.php
-
-		-
-			rawMessage: 'Class Piwigo\Users\UserService constructor invoked with 3 parameters, 4 required.'
-			identifier: arguments.count
-			count: 2
 			path: src/Piwigo/Mail/MailService.php
 
 		-

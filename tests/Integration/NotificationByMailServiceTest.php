@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-// boolean_to_string() is a real, pure, dependency-free function -- copied
+// \Piwigo\Db\MysqliDb::booleanToString() is a real, pure, dependency-free function -- copied
 // verbatim (same body as SearchServiceTest.php/ImageServiceTest.php;
 // function_exists() guards mean whichever Integration test file's stub
 // loads first wins for the whole run, so every file declaring it must

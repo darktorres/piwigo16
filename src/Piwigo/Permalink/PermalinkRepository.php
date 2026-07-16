@@ -138,7 +138,7 @@ final class PermalinkRepository extends AbstractRepository
      * needed: `permalink` is old_permalinks' own primary key (see
      * install/piwigo_structure-mysql.sql), so at most one row can ever
      * match. Returns whether a row was actually deleted, mirroring the
-     * legacy pwg_db_changes() == 0 check this replaces.
+     * legacy \Piwigo\Db\MysqliDb::changes() == 0 check this replaces.
      */
     public function deleteOldPermalinkByValue(string $permalink): bool
     {

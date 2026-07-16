@@ -665,7 +665,7 @@ final class SearchService
             if (! $useFt) {
                 if (! isset($page['use_regexp_ICU'])) {
                     $page['use_regexp_ICU'] = false;
-                    $dbVersion = pwg_get_db_version();
+                    $dbVersion = \Piwigo\Db\MysqliDb::getDbVersion();
                     if (preg_match('/mariadb/i', $dbVersion) !== 1 && version_compare($dbVersion, '8.0.4', '>')) {
                         $page['use_regexp_ICU'] = true;
                     }
@@ -893,7 +893,7 @@ final class SearchService
         // categories for non-admins -- verified by tracing getuserdata()'s
         // cache-population branch, which appends to the same
         // forbidden_categories value it later writes into
-        // user_cache_categories via get_computed_categories()/mass_inserts()).
+        // user_cache_categories via get_computed_categories()/\Piwigo\Db\MysqliDb::massInserts()).
         // Reading it directly here needs no query at all, on either a
         // cache-hit or cache-miss request.
         $forbiddenCategories = $user['forbidden_categories'] ?? null;

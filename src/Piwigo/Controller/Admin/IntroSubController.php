@@ -140,7 +140,7 @@ SELECT COUNT(*)
   FROM ' . Tables::categories() . '
   WHERE visible =\'false\'
 ;';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$locked_album] = $row;
         if ($locked_album > 0) {
@@ -171,14 +171,14 @@ SELECT COUNT(*)
     ORDER BY user_id ASC
     LIMIT 1
   ;';
-            $row = pwg_db_fetch_row(pwg_query($query));
+            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
             $register_date = $row !== null ? $row[0] : null;
 
             $query = '
   SELECT COUNT(*)
     FROM ' . Tables::categories() . '
   ;';
-            $row = pwg_db_fetch_row(pwg_query($query));
+            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
             assert($row !== null);
             [$nb_cats] = $row;
 
@@ -186,7 +186,7 @@ SELECT COUNT(*)
   SELECT COUNT(*)
     FROM ' . Tables::images() . '
   ;';
-            $row = pwg_db_fetch_row(pwg_query($query));
+            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
             assert($row !== null);
             [$nb_images] = $row;
 
@@ -247,7 +247,7 @@ SELECT COUNT(*)
 SELECT COUNT(*)
   FROM ' . Tables::comments() . '
 ;';
-            $row = pwg_db_fetch_row(pwg_query($query));
+            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
             assert($row !== null);
             [$nb_comments] = $row;
             $template->assign('NB_COMMENTS', $nb_comments);
@@ -336,7 +336,7 @@ SELECT COUNT(*)
     WHERE occured_on >= \'' . $date_string . '\'
     GROUP BY activity_day, object, action
   ;';
-            $activity_actions = query2array($query);
+            $activity_actions = \Piwigo\Db\MysqliDb::query2Array($query);
 
             foreach ($activity_actions as $action) {
                 // set the time to 12:00 (midday) so that it doesn't goes to previous/next day due to timezone offset
@@ -503,7 +503,7 @@ SELECT
   GROUP BY ext
 ;';
 
-        $file_extensions = query2array($query, 'ext');
+        $file_extensions = \Piwigo\Db\MysqliDb::query2Array($query, 'ext');
 
         foreach ($file_extensions as $ext => $ext_details) {
             $type = null;
@@ -547,7 +547,7 @@ SELECT
   GROUP BY ext
 ;';
 
-        $file_extensions = query2array($query, 'ext');
+        $file_extensions = \Piwigo\Db\MysqliDb::query2Array($query, 'ext');
         foreach ($file_extensions as $ext => $ext_details) {
             $type = 'Formats';
 

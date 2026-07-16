@@ -88,7 +88,7 @@ INSERT INTO ' . Tables::languages() . '
          \'' . $fs_version . '\',
          \'' . $fs_name . '\')
 ;';
-                pwg_query($query);
+                \Piwigo\Db\MysqliDb::query($query);
                 break;
 
             case 'deactivate':
@@ -107,7 +107,7 @@ DELETE
   FROM ' . Tables::languages() . '
   WHERE id= \'' . $language_id . '\'
 ;';
-                pwg_query($query);
+                \Piwigo\Db\MysqliDb::query($query);
                 break;
 
             case 'delete':
@@ -126,7 +126,7 @@ UPDATE ' . Tables::userInfos() . '
   SET language = \'' . (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->getDefaultLanguage() . '\'
   WHERE language = \'' . $language_id . '\'
 ;';
-                pwg_query($query);
+                \Piwigo\Db\MysqliDb::query($query);
 
                 FilesystemHelper::deltree(PHPWG_ROOT_PATH . 'language/' . $language_id, PHPWG_ROOT_PATH . 'language/trash');
                 break;
@@ -142,7 +142,7 @@ UPDATE ' . Tables::userInfos() . '
   SET language = \'' . $language_id . '\'
   WHERE user_id IN (' . $default_user_id . ', ' . $guest_id . ')
 ;';
-                pwg_query($query);
+                \Piwigo\Db\MysqliDb::query($query);
                 break;
         }
         return $errors;
@@ -244,11 +244,11 @@ UPDATE ' . Tables::userInfos() . '
     FROM ' . Tables::languages() . '
     ORDER BY name ASC
   ;';
-        $result = pwg_query($query);
+        $result = \Piwigo\Db\MysqliDb::query($query);
 
-        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
             // 'id' is the languages table's primary key (NOT NULL); guard it
-            // anyway since pwg_db_fetch_assoc() types every column string|null.
+            // anyway since \Piwigo\Db\MysqliDb::fetchAssoc() types every column string|null.
             $id = $row['id'];
             if (! is_string($id)) {
                 continue;

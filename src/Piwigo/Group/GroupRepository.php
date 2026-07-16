@@ -267,7 +267,7 @@ final class GroupRepository extends AbstractRepository
 
     /**
      * Adds the given users to the group. Re-adding an existing member is a
-     * silent no-op (INSERT IGNORE, matching the original mass_inserts(...,
+     * silent no-op (INSERT IGNORE, matching the original \Piwigo\Db\MysqliDb::massInserts(...,
      * ['ignore' => true]) semantics) -- (group_id, user_id) is the table's
      * primary key, and callers (ws_groups_addUser, merge, duplicate) can
      * legitimately pass an already-member user id. No query-builder

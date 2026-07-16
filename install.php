@@ -216,7 +216,7 @@ if (isset($_POST['install'])) {
         print_r($errors);
     }
 
-    pwg_db_check_charset();
+    \Piwigo\Db\MysqliDb::checkCharset();
 
     if (
         strlen($prefixeTable) > 20
@@ -365,14 +365,14 @@ define(\'DB_COLLATE\', \'\');
 INSERT INTO ' . $prefixeTable . 'config (param,value,comment)
    VALUES (\'secret_key\',\'' . sha1(random_bytes(1000)) . '\',
    \'a secret key specific to the gallery for internal use\');';
-        pwg_query($query);
+        \Piwigo\Db\MysqliDb::query($query);
 
         conf_update_param('piwigo_db_version', \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION));
-        conf_update_param('gallery_title', pwg_db_real_escape_string(l10n('Just another Piwigo gallery')));
+        conf_update_param('gallery_title', \Piwigo\Db\MysqliDb::realEscapeString(l10n('Just another Piwigo gallery')));
 
         conf_update_param(
             'page_banner',
-            '<h1>%gallery_title%</h1>' . "\n\n<p>" . pwg_db_real_escape_string(l10n('Welcome to my photo gallery')) . '</p>'
+            '<h1>%gallery_title%</h1>' . "\n\n<p>" . \Piwigo\Db\MysqliDb::realEscapeString(l10n('Welcome to my photo gallery')) . '</p>'
         );
 
         // fill languages table, only activate the current language
@@ -393,7 +393,7 @@ INSERT INTO ' . $prefixeTable . 'config (param,value,comment)
             'id' => 1,
             'galleries_url' => PHPWG_ROOT_PATH . 'galleries/',
         ];
-        mass_inserts(Tables::sites(), array_keys($insert), [$insert]);
+        \Piwigo\Db\MysqliDb::massInserts(Tables::sites(), array_keys($insert), [$insert]);
 
         // webmaster admin user
         $inserts = [
@@ -408,7 +408,7 @@ INSERT INTO ' . $prefixeTable . 'config (param,value,comment)
                 'username' => 'guest',
             ],
         ];
-        mass_inserts(Tables::users(), array_keys($inserts[0]), $inserts);
+        \Piwigo\Db\MysqliDb::massInserts(Tables::users(), array_keys($inserts[0]), $inserts);
 
         (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->createUserInfos([1, 2], [
             'language' => $language,
@@ -417,7 +417,7 @@ INSERT INTO ' . $prefixeTable . 'config (param,value,comment)
         // Available upgrades must be ignored after a fresh installation. To
         // make PWG avoid upgrading, we must tell it upgrades have already been
         // made.
-        $row = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT NOW();'));
         assert($row !== null);
         [$dbnow] = $row;
         define('CURRENT_DATE', $dbnow);
@@ -429,7 +429,7 @@ INSERT INTO ' . $prefixeTable . 'config (param,value,comment)
                 'description' => 'upgrade included in installation',
             ];
         }
-        mass_inserts(
+        \Piwigo\Db\MysqliDb::massInserts(
             Tables::upgrade(),
             array_keys($datas[0]),
             $datas

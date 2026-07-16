@@ -986,6 +986,6 @@ SELECT
   WHERE user_id = ' . $user_id . '
 ';
 
-        return query2array($query, 'image_id', 'fake_value');
+        return \Piwigo\Db\MysqliDb::query2Array($query, 'image_id', 'fake_value');
     }
 }

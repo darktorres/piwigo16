@@ -75,9 +75,9 @@ SELECT id, file, path, representative_ext
   WHERE id = ' . $category['representative_picture_id'] . '
 ;';
 
-                $result = pwg_query($query);
-                if (pwg_db_num_rows($result) > 0) {
-                    $element = pwg_db_fetch_assoc($result);
+                $result = \Piwigo\Db\MysqliDb::query($query);
+                if (\Piwigo\Db\MysqliDb::numRows($result) > 0) {
+                    $element = \Piwigo\Db\MysqliDb::fetchAssoc($result);
                     // the num_rows > 0 check above guarantees a row is available
                     assert(is_array($element));
 
@@ -148,7 +148,7 @@ SELECT
     JOIN ' . Tables::users() . ' AS u ON u.' . $user_field_id . ' = ui.user_id
   WHERE ui.user_id IN (' . implode(',', $post_user_ids) . ')
 ;';
-                $users = query2array($query);
+                $users = \Piwigo\Db\MysqliDb::query2Array($query);
                 $usernames = [];
 
                 foreach ($users as $u) {
@@ -221,7 +221,7 @@ SELECT
   FROM `' . Tables::groups() . '`
   WHERE id = ' . $group_id . '
 ;';
-                $row = pwg_db_fetch_row(pwg_query($query));
+                $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
                 $group_name = $row !== null ? $row[0] : null;
 
                 $template->assign(
@@ -282,7 +282,7 @@ SELECT
     id AS group_id
   FROM `' . Tables::groups() . '`
 ;';
-        $all_group_ids = query2array($query, null, 'group_id');
+        $all_group_ids = \Piwigo\Db\MysqliDb::query2Array($query, null, 'group_id');
         // group_ids stays [] (rather than undefined) when the gallery has no
         // groups at all, so the "private album" branch below can safely read it
         // unconditionally instead of guarding on definedness.
@@ -300,7 +300,7 @@ SELECT
   FROM ' . Tables::groupAccess() . '
   WHERE cat_id = ' . $category['id'] . '
 ;';
-                $group_ids = query2array($query, null, 'group_id');
+                $group_ids = \Piwigo\Db\MysqliDb::query2Array($query, null, 'group_id');
             } else {
                 $group_ids = $all_group_ids;
             }
@@ -316,7 +316,7 @@ SELECT
 ;';
                 $template->assign(
                     'group_mail_options',
-                    query2array($query, 'id', 'name')
+                    \Piwigo\Db\MysqliDb::query2Array($query, 'id', 'name')
                 );
             }
         }
@@ -330,7 +330,7 @@ SELECT
   FROM ' . Tables::userInfos() . '
   WHERE status != \'guest\'
 ;';
-        $all_user_ids = query2array($query, null, 'user_id');
+        $all_user_ids = \Piwigo\Db\MysqliDb::query2Array($query, null, 'user_id');
 
         if ($category['status'] === 'private') {
             $user_ids_access_indirect = [];
@@ -342,7 +342,7 @@ SELECT
   FROM ' . Tables::userGroup() . '
   WHERE group_id IN (' . implode(',', array_filter($group_ids, is_string(...))) . ')
 ';
-                $user_ids_access_indirect = query2array($query, null, 'user_id');
+                $user_ids_access_indirect = \Piwigo\Db\MysqliDb::query2Array($query, null, 'user_id');
             }
 
             $query = '
@@ -351,7 +351,7 @@ SELECT
   FROM ' . Tables::userAccess() . '
   WHERE cat_id = ' . $category['id'] . '
 ;';
-            $user_ids_access_direct = query2array($query, null, 'user_id');
+            $user_ids_access_direct = \Piwigo\Db\MysqliDb::query2Array($query, null, 'user_id');
 
             $user_ids_access = array_unique(array_merge($user_ids_access_direct, $user_ids_access_indirect));
 
@@ -373,7 +373,7 @@ SELECT
   WHERE ' . $user_field_id . ' IN (' . implode(',', $user_ids) . ')
 ;';
 
-            $users = query2array($query, 'id', 'username');
+            $users = \Piwigo\Db\MysqliDb::query2Array($query, 'id', 'username');
 
             $template->assign('user_options', $users);
         }

@@ -74,7 +74,7 @@ final class PhotosAddDirectPageRenderer
 DELETE FROM ' . Tables::caddie() . '
   WHERE user_id = ' . $user_id . '
 ;';
-            pwg_query($query);
+            \Piwigo\Db\MysqliDb::query($query);
 
             $inserts = [];
             $batch_param = $_GET['batch'];
@@ -84,7 +84,7 @@ DELETE FROM ' . Tables::caddie() . '
                     'element_id' => $image_id,
                 ];
             }
-            mass_inserts(
+            \Piwigo\Db\MysqliDb::massInserts(
                 Tables::caddie(),
                 array_keys($inserts[0]),
                 $inserts
@@ -101,14 +101,14 @@ SELECT registration_date
   ORDER BY user_id ASC
   LIMIT 1
 ;';
-            $row = pwg_db_fetch_row(pwg_query($query));
+            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
             $register_date = $row !== null ? $row[0] : null;
 
             $query = '
 SELECT COUNT(*)
   FROM ' . Tables::categories() . '
 ;';
-            $row = pwg_db_fetch_row(pwg_query($query));
+            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
             assert($row !== null);
             [$nb_cats] = $row;
 
@@ -116,7 +116,7 @@ SELECT COUNT(*)
 SELECT COUNT(*)
   FROM ' . Tables::images() . '
 ;';
-            $row = pwg_db_fetch_row(pwg_query($query));
+            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
             assert($row !== null);
             [$nb_images] = $row;
 
@@ -169,7 +169,7 @@ SELECT *
   FROM ' . Tables::imageFormat() . '
   WHERE image_id = ' . $formats_image_id . '
 ;';
-                $formats = query2array($query);
+                $formats = \Piwigo\Db\MysqliDb::query2Array($query);
 
                 if (! empty($formats)) {
                     $format_strings = [];
@@ -344,11 +344,11 @@ SELECT id, uppercats
   FROM ' . Tables::categories() . '
   WHERE id = ' . ($album_id ?? 0) . '
 ;';
-            $result = pwg_query($query);
-            if ($album_id !== null && pwg_db_num_rows($result) === 1) {
+            $result = \Piwigo\Db\MysqliDb::query($query);
+            if ($album_id !== null && \Piwigo\Db\MysqliDb::numRows($result) === 1) {
                 $selected_category = [$album_id];
 
-                $cat = pwg_db_fetch_assoc($result);
+                $cat = \Piwigo\Db\MysqliDb::fetchAssoc($result);
                 // the num_rows === 1 check above guarantees a row is available
                 assert(is_array($cat));
                 $uppercats = $cat['uppercats'];
@@ -369,9 +369,9 @@ SELECT category_id, c.uppercats
   LIMIT 1
 ;
 ';
-            $result = pwg_query($query);
-            if (pwg_db_num_rows($result) > 0) {
-                $row = pwg_db_fetch_assoc($result);
+            $result = \Piwigo\Db\MysqliDb::query($query);
+            if (\Piwigo\Db\MysqliDb::numRows($result) > 0) {
+                $row = \Piwigo\Db\MysqliDb::fetchAssoc($result);
                 // the num_rows > 0 check above guarantees a row is available
                 assert(is_array($row));
                 $selected_category = [$row['category_id']];
@@ -392,7 +392,7 @@ SELECT
     COUNT(*)
   FROM ' . Tables::categories() . '
 ;';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$nb_albums] = $row;
         $template->assign('NB_ALBUMS', $nb_albums);

@@ -35,8 +35,8 @@ SELECT
   FROM ' . Tables::themes() . '
   ORDER BY name ASC
 ;';
-        $result = pwg_query($query);
-        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+        $result = \Piwigo\Db\MysqliDb::query($query);
+        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
             $id = $row['id'];
             $name = $row['name'];
             if (! is_string($id) || ! is_string($name)) {

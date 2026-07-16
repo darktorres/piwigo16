@@ -76,7 +76,7 @@ SELECT
   FROM ' . Tables::imageFormat() . '
   WHERE format_id = ' . $format_id . '
 ;';
-            $formats = query2array($query);
+            $formats = \Piwigo\Db\MysqliDb::query2Array($query);
 
             if (count($formats) === 0) {
                 $this->doError(400, 'Invalid request - format');
@@ -102,7 +102,7 @@ SELECT * FROM ' . Tables::images() . '
   WHERE id=' . $_GET['id'] . '
 ;';
 
-        $element_info = pwg_db_fetch_assoc(pwg_query($query));
+        $element_info = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
         if ($element_info === false || $element_info === null) {
             $this->doError(404, 'Requested id not found');
         }
@@ -129,7 +129,7 @@ SELECT id
         ], '    AND') . '
   LIMIT 1
 ;';
-        if (! $is_admin_download and pwg_db_num_rows(pwg_query($query)) < 1) {
+        if (! $is_admin_download and \Piwigo\Db\MysqliDb::numRows(\Piwigo\Db\MysqliDb::query($query)) < 1) {
             $this->doError(401, 'Access denied');
         }
 

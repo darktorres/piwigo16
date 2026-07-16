@@ -300,7 +300,7 @@ SELECT id
         'visible_categories' => 'id',
     ], "\n  AND");
 
-                        $subcat_ids_raw = query2array($query, null, 'id');
+                        $subcat_ids_raw = \Piwigo\Db\MysqliDb::query2Array($query, null, 'id');
                         $subcat_ids = array_values(array_filter($subcat_ids_raw, is_string(...)));
                         $cat_id = $page_category['id'] ?? null;
                         if (is_scalar($cat_id)) {
@@ -350,7 +350,7 @@ SELECT DISTINCT(image_id)
   ' . (is_string($conf['order_by']) ? $conf['order_by'] : '') . '
 ;';
 
-                    $page['items'] = query2array($query, null, 'image_id');
+                    $page['items'] = \Piwigo\Db\MysqliDb::query2Array($query, null, 'image_id');
 
                     if ($cache_key_str !== null) {
                         $persistent_cache->set($cache_key_str, $page['items']);
@@ -469,7 +469,7 @@ SELECT DISTINCT(image_id)
 DELETE FROM ' . Tables::favorites() . '
   WHERE user_id = ' . $user_id_sql . '
 ;';
-                    pwg_query($query);
+                    \Piwigo\Db\MysqliDb::query($query);
                     redirect(make_index_url([
                         'section' => 'favorites',
                     ]));
@@ -487,7 +487,7 @@ SELECT image_id
                     $page = array_merge(
                         $page,
                         [
-                            'items' => query2array($query, null, 'image_id'),
+                            'items' => \Piwigo\Db\MysqliDb::query2Array($query, null, 'image_id'),
                         ]
                     );
 
@@ -537,7 +537,7 @@ SELECT DISTINCT(id)
                             'start' => 0,
                         ]) . '">'
                                     . l10n('Recent photos') . '</a>',
-                        'items' => query2array($query, null, 'id'),
+                        'items' => \Piwigo\Db\MysqliDb::query2Array($query, null, 'id'),
                     ]
                 );
             }
@@ -581,7 +581,7 @@ SELECT DISTINCT(id)
                             'start' => 0,
                         ]) . '">'
                                     . $top_number . ' ' . l10n('Most visited') . '</a>',
-                        'items' => query2array($query, null, 'id'),
+                        'items' => \Piwigo\Db\MysqliDb::query2Array($query, null, 'id'),
                     ]
                 );
             }
@@ -610,7 +610,7 @@ SELECT DISTINCT(id)
                             'start' => 0,
                         ]) . '">'
                                     . $top_number . ' ' . l10n('Best rated') . '</a>',
-                        'items' => query2array($query, null, 'id'),
+                        'items' => \Piwigo\Db\MysqliDb::query2Array($query, null, 'id'),
                     ]
                 );
             }
@@ -639,7 +639,7 @@ SELECT DISTINCT(id)
                             'start' => 0,
                         ]) . '">'
                                     . l10n('Random photos') . '</a>',
-                        'items' => query2array($query, null, 'id'),
+                        'items' => \Piwigo\Db\MysqliDb::query2Array($query, null, 'id'),
                     ]
                 );
             }

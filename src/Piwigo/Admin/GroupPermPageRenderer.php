@@ -105,8 +105,8 @@ SELECT id
   WHERE id IN (' . implode(',', $uppercats) . ')
   AND status = \'private\'
 ;';
-            $result = pwg_query($query);
-            while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+            $result = \Piwigo\Db\MysqliDb::query($query);
+            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
                 $private_uppercats[] = $row['id'];
             }
 
@@ -153,9 +153,9 @@ SELECT id,name,uppercats,global_rank
 ;';
         $categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true');
 
-        $result = pwg_query($query_true);
+        $result = \Piwigo\Db\MysqliDb::query($query_true);
         $authorized_ids = [];
-        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
             $authorized_ids[] = $row['id'];
         }
 

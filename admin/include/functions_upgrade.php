@@ -89,9 +89,9 @@ WHERE state = \'active\'
 AND id NOT IN (\'' . implode('\',\'', $standard_plugins) . '\')
 ;';
 
-    $result = pwg_query($query);
+    $result = \Piwigo\Db\MysqliDb::query($query);
     $plugins = [];
-    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+    while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
         $plugins[] = $row['id'];
     }
 
@@ -101,7 +101,7 @@ UPDATE ' . PREFIX_TABLE . 'plugins
 SET state=\'inactive\'
 WHERE id IN (\'' . implode('\',\'', $plugins) . '\')
 ;';
-        pwg_query($query);
+        \Piwigo\Db\MysqliDb::query($query);
 
         $page['infos'][] = l10n('As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:')
                             . '<p><i>' . implode(', ', $plugins) . '</i></p>';
@@ -134,10 +134,10 @@ SELECT
   FROM ' . PREFIX_TABLE . 'themes
   WHERE id NOT IN (\'' . implode("','", $standard_themes) . '\')
 ;';
-    $result = pwg_query($query);
+    $result = \Piwigo\Db\MysqliDb::query($query);
     $theme_ids = [];
     $theme_names = [];
-    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+    while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
         $theme_ids[] = $row['id'];
         $theme_names[] = $row['name'];
     }
@@ -148,7 +148,7 @@ DELETE
   FROM ' . PREFIX_TABLE . 'themes
   WHERE id IN (\'' . implode("','", $theme_ids) . '\')
 ;';
-        pwg_query($query);
+        \Piwigo\Db\MysqliDb::query($query);
 
         $page['infos'][] = l10n('As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:')
                             . '<p><i>' . implode(', ', $theme_names) . '</i></p>';
@@ -161,7 +161,7 @@ SELECT theme
   FROM ' . PREFIX_TABLE . 'user_infos
   WHERE user_id = ' . $default_user_id . '
 ;';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$default_theme] = $row;
 
@@ -174,7 +174,7 @@ SELECT
   FROM ' . PREFIX_TABLE . 'themes
   WHERE id = \'' . AppInfo::DEFAULT_TEMPLATE . '\'
 ;';
-            $row = pwg_db_fetch_row(pwg_query($query));
+            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
             assert($row !== null);
             [$counter] = $row;
             if ($counter < 1) {
@@ -189,7 +189,7 @@ UPDATE ' . PREFIX_TABLE . 'user_infos
   SET theme = \'' . AppInfo::DEFAULT_TEMPLATE . '\'
   WHERE user_id = ' . $default_user_id . '
 ;';
-            pwg_query($query);
+            \Piwigo\Db\MysqliDb::query($query);
         }
     }
 }
@@ -224,9 +224,9 @@ SELECT status
   FROM ' . Tables::userInfos() . '
   WHERE user_id = ' . (int) $pwg_uid . '
 ;';
-            pwg_query($query);
+            \Piwigo\Db\MysqliDb::query($query);
 
-            $row = pwg_db_fetch_assoc(pwg_query($query));
+            $row = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
             if (isset($row['status']) and $row['status'] == 'webmaster') {
                 define('PHPWG_IN_UPGRADE', true);
                 return;
@@ -246,7 +246,7 @@ SELECT status
     }
 
     if (function_exists('get_magic_quotes_gpc') && ! @get_magic_quotes_gpc()) {
-        $username = pwg_db_real_escape_string($username) ?? $username;
+        $username = \Piwigo\Db\MysqliDb::realEscapeString($username) ?? $username;
     }
 
     if (version_compare($current_release, '2.0', '<')) {
@@ -276,7 +276,7 @@ ON u.' . $id_field . '=ui.user_id
 WHERE ' . $username_field . '=\'' . $username . '\'
 ;';
     }
-    $row = pwg_db_fetch_assoc(pwg_query($query));
+    $row = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
 
     if (! is_array($row) or ! isset($row['password'])) {
         $page['errors'][] = l10n('Invalid password!');
@@ -322,7 +322,7 @@ function check_upgrade_feed(): bool
 SELECT id
   FROM ' . Tables::upgrade() . '
 ;';
-    $applied = array_filter(query2array($query, null, 'id'), is_string(...));
+    $applied = array_filter(\Piwigo\Db\MysqliDb::query2Array($query, null, 'id'), is_string(...));
 
     // retrieve existing upgrades
     $existing = get_available_upgrade_ids();
@@ -344,14 +344,14 @@ function upgrade_db_connect(): void
         if (! is_string($db_host) || ! is_string($db_user) || ! is_string($db_password) || ! is_string($db_base)) {
             throw new Exception("Invalid database configuration: \$conf['db_host'], 'db_user', 'db_password' and 'db_base' must be strings.");
         }
-        pwg_db_connect(
+        \Piwigo\Db\MysqliDb::connect(
             $db_host,
             $db_user,
             $db_password,
             $db_base
         );
-        pwg_db_check_version();
+        \Piwigo\Db\MysqliDb::checkVersion();
     } catch (Exception $e) {
-        my_error(l10n($e->getMessage()), true);
+        \Piwigo\Db\MysqliDb::myError(l10n($e->getMessage()), true);
     }
 }

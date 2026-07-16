@@ -104,15 +104,15 @@ final class CommentsController implements ControllerInterface
         $since_options = [
             1 => [
                 'label' => l10n('today'),
-                'clause' => 'date > ' . pwg_db_get_recent_period_expression(1),
+                'clause' => 'date > ' . \Piwigo\Db\MysqliDb::getRecentPeriodExpression(1),
             ],
             2 => [
                 'label' => l10n('last %d days', 7),
-                'clause' => 'date > ' . pwg_db_get_recent_period_expression(7),
+                'clause' => 'date > ' . \Piwigo\Db\MysqliDb::getRecentPeriodExpression(7),
             ],
             3 => [
                 'label' => l10n('last %d days', 30),
-                'clause' => 'date > ' . pwg_db_get_recent_period_expression(30),
+                'clause' => 'date > ' . \Piwigo\Db\MysqliDb::getRecentPeriodExpression(30),
             ],
             4 => [
                 'label' => l10n('the beginning'),
@@ -497,13 +497,13 @@ SELECT SQL_CALC_FOUND_ROWS com.id AS comment_id,
             }
             $query .= '
 ;';
-            $result = pwg_query($query);
-            while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+            $result = \Piwigo\Db\MysqliDb::query($query);
+            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
                 $comments[] = $row;
                 $element_ids[] = $row['image_id'];
                 $category_ids[] = $row['category_id'];
             }
-            $count_row = pwg_db_fetch_row(pwg_query('SELECT FOUND_ROWS()'));
+            $count_row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT FOUND_ROWS()'));
             assert($count_row !== null);
             [$counter] = $count_row;
             // FOUND_ROWS() always returns a single non-null numeric value
@@ -529,13 +529,13 @@ SELECT *
   FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', $element_ids) . ')
 ;';
-                $elements = query2array($query, 'id');
+                $elements = \Piwigo\Db\MysqliDb::query2Array($query, 'id');
 
                 // retrieving category informations
                 $query = 'SELECT id, name, permalink, uppercats
   FROM ' . Tables::categories() . '
   WHERE id IN (' . implode(',', $category_ids) . ')';
-                $categories = query2array($query, 'id');
+                $categories = \Piwigo\Db\MysqliDb::query2Array($query, 'id');
 
                 foreach ($comments as $comment) {
                     $image_id = $comment['image_id'];

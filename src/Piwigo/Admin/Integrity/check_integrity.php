@@ -290,7 +290,7 @@ class check_integrity
         $conf_c13y_ignore['version'] = AppInfo::VERSION;
         $conf_c13y_ignore['list'] = $conf_ignore_list;
         $query = 'update ' . Tables::config() . ' set value =\'' . serialize($conf_c13y_ignore) . '\'where param = \'c13y_ignore\';';
-        pwg_query($query);
+        \Piwigo\Db\MysqliDb::query($query);
     }
 
     /**

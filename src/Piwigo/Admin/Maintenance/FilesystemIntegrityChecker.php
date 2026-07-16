@@ -50,7 +50,7 @@ SELECT
     AND path LIKE \'./upload/%\'
   LIMIT 5000
 ;';
-        $issue1827_ids = query2array($query, null, 'id');
+        $issue1827_ids = \Piwigo\Db\MysqliDb::query2Array($query, null, 'id');
         shuffle($issue1827_ids);
         $issue1827_ids = array_slice($issue1827_ids, 0, 50);
 
@@ -60,7 +60,7 @@ SELECT
   FROM ' . Tables::images() . '
   LIMIT 5000
 ;';
-        $random_image_ids = query2array($query, null, 'id');
+        $random_image_ids = \Piwigo\Db\MysqliDb::query2Array($query, null, 'id');
         shuffle($random_image_ids);
         $random_image_ids = array_slice($random_image_ids, 0, 50);
 
@@ -77,7 +77,7 @@ SELECT
   FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', $fs_quick_check_ids) . ')
 ;';
-        $fsqc_paths = query2array($query, 'id', 'path');
+        $fsqc_paths = \Piwigo\Db\MysqliDb::query2Array($query, 'id', 'path');
 
         foreach ($fsqc_paths as $id => $path) {
             // path is a NOT NULL column in the images table.
@@ -105,7 +105,7 @@ SELECT
   GROUP BY path
   HAVING COUNT(*) > 1
 ;';
-        $duplicate_paths = query2array($query);
+        $duplicate_paths = \Piwigo\Db\MysqliDb::query2Array($query);
 
         if (count($duplicate_paths) > 0) {
             /** @var Template $template */
@@ -131,7 +131,7 @@ SELECT
     LEFT JOIN ' . Tables::images() . ' ON id = image_id
   WHERE id IS NULL
 ;';
-        $orphan_image_ids = query2array($query, null, 'image_id');
+        $orphan_image_ids = \Piwigo\Db\MysqliDb::query2Array($query, null, 'image_id');
 
         if (count($orphan_image_ids) > 0) {
             $query = '
@@ -139,7 +139,7 @@ DELETE
   FROM ' . Tables::imageCategory() . '
   WHERE image_id IN (' . implode(',', $orphan_image_ids) . ')
 ;';
-            pwg_query($query);
+            \Piwigo\Db\MysqliDb::query($query);
         }
     }
 }

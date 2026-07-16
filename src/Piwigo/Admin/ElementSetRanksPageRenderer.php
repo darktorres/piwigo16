@@ -146,7 +146,7 @@ SELECT *
   FROM ' . Tables::categories() . '
   WHERE id = ' . $page['category_id'] . '
 ;';
-        $category = pwg_db_fetch_assoc(pwg_query($query));
+        $category = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
         if (! is_array($category) || ! is_string($category['uppercats'] ?? null)) {
             page_not_found('Requested album does not exist');
         }
@@ -189,12 +189,12 @@ SELECT
   WHERE category_id = ' . $page['category_id'] . '
   ORDER BY `rank`
 ;';
-        $result = pwg_query($query);
-        if (pwg_db_num_rows($result) > 0) {
+        $result = \Piwigo\Db\MysqliDb::query($query);
+        if (\Piwigo\Db\MysqliDb::numRows($result) > 0) {
             // template thumbnail initialization
             $current_rank = 1;
             $derivativeParams = ImageStdParams::get_by_type(IMG_SQUARE);
-            while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
                 $derivative = new DerivativeImage($derivativeParams, new SrcImage($row));
 
                 if (! empty($row['name'])) {

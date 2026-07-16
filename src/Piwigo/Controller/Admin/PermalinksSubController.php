@@ -107,7 +107,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
 SELECT COUNT(*)
   FROM ' . Tables::categories() . '
 ;';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$nb_cats] = $row;
         $template->assign(
@@ -149,8 +149,8 @@ SELECT id, permalink, uppercats, global_rank
             $query .= ' ORDER BY ' . $sort_by[0];
         }
         $categories = [];
-        $result = pwg_query($query);
-        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+        $result = \Piwigo\Db\MysqliDb::query($query);
+        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
             // uppercats is NOT NULL in the schema; is_string() is a defensive
             // narrowing of the driver's generic string|null column type, not a
             // documented nullability.
@@ -180,9 +180,9 @@ SELECT id, permalink, uppercats, global_rank
         if ((bool) count($sort_by)) {
             $query .= ' ORDER BY ' . $sort_by[0];
         }
-        $result = pwg_query($query);
+        $result = \Piwigo\Db\MysqliDb::query($query);
         $deleted_permalinks = [];
-        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
             // cat_id is NOT NULL in the schema; is_string() is a defensive
             // narrowing of the driver's generic string|null column type, not a
             // documented nullability.

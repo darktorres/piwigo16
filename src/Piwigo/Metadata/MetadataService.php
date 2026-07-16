@@ -561,7 +561,7 @@ final class MetadataService
             $updateFields[] = 'date_metadata_update';
             $updateFields = array_diff($updateFields, ['tags', 'keywords']);
 
-            mass_updates(
+            \Piwigo\Db\MysqliDb::massUpdates(
                 Tables::images(),
                 [
                     'primary' => ['id'],

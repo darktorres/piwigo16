@@ -107,16 +107,16 @@ final class TagsPageRenderer
 SELECT tag_id, COUNT(image_id) AS counter
   FROM ' . Tables::imageTag() . '
   GROUP BY tag_id';
-        $tag_counters = query2array($query, 'tag_id', 'counter');
+        $tag_counters = \Piwigo\Db\MysqliDb::query2Array($query, 'tag_id', 'counter');
 
         // all tags
         $query = '
 SELECT name, id, url_name
   FROM ' . Tables::tags() . '
 ;';
-        $result = pwg_query($query);
+        $result = \Piwigo\Db\MysqliDb::query($query);
         $all_tags = [];
-        while ((bool) ($tag = pwg_db_fetch_assoc($result))) {
+        while ((bool) ($tag = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
             $raw_name = $tag['name'];
             $tag['raw_name'] = $raw_name;
             $rendered_name = trigger_change('render_tag_name', $raw_name, $tag);

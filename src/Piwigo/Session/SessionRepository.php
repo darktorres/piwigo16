@@ -55,7 +55,7 @@ final class SessionRepository extends AbstractRepository
     /**
      * Deletes every session whose expiration is older than $sessionLength
      * seconds, returning the number of deleted rows (matches the current
-     * procedural pwg_session_gc()'s real pwg_db_changes()-backed return
+     * procedural pwg_session_gc()'s real \Piwigo\Db\MysqliDb::changes()-backed return
      * value -- not discarded the way the reference implementation's
      * equivalent does). The cutoff is computed in PHP and bound as a plain
      * parameter -- cross-provider safe (no MySQL-only UNIX_TIMESTAMP()/

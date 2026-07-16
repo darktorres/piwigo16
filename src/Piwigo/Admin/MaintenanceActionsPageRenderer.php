@@ -81,8 +81,8 @@ final class MaintenanceActionsPageRenderer
         $purge_urls[l10n(IMG_CUSTOM)] = IMG_CUSTOM;
 
         $php_current_timestamp = date('Y-m-d H:i:s');
-        $db_version = pwg_get_db_version();
-        $row = pwg_db_fetch_row(pwg_query('SELECT now();'));
+        $db_version = \Piwigo\Db\MysqliDb::getDbVersion();
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT now();'));
         assert($row !== null);
         [$db_current_date] = $row;
 

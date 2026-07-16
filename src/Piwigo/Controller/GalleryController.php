@@ -73,7 +73,7 @@ final class GalleryController implements ControllerInterface
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
         // Real invariant: $page['items'] always holds a list of numeric
-        // image ids (array_from_query()/query2array() single-column
+        // image ids (array_from_query()/\Piwigo\Db\MysqliDb::query2Array() single-column
         // results in SectionPopulator::populate()), possibly as numeric
         // strings coming straight from the database.
         $page_items = [];

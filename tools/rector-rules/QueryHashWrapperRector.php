@@ -15,22 +15,22 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
 /**
  * One-shot P23 batch 8d codemod: retargets the 3 deprecated
- * include/functions.inc.php query2array() wrappers (simple_hash_from_query/
- * hash_from_query/array_from_query) onto query2array() directly (itself a
+ * include/functions.inc.php \Piwigo\Db\MysqliDb::query2Array() wrappers (simple_hash_from_query/
+ * hash_from_query/array_from_query) onto \Piwigo\Db\MysqliDb::query2Array() directly (itself a
  * relocate-only free function, functions_mysqli.inc.php, batch 8f --
  * staying bare, not becoming a class method, finding 2). The first two are
  * pure argument-preserving renames; array_from_query()'s single-arg form
  * is also a pure rename, but its two-arg form needs `null` inserted as
- * query2array()'s 2nd positional argument (array_from_query($q, $field) ==
- * query2array($q, null, $field) -- see array_from_query()'s own body).
+ * \Piwigo\Db\MysqliDb::query2Array()'s 2nd positional argument (array_from_query($q, $field) ==
+ * \Piwigo\Db\MysqliDb::query2Array($q, null, $field) -- see array_from_query()'s own body).
  * Discarded after this migration lands; see tools/rector-user-migration.php.
  */
 final class QueryHashWrapperRector extends AbstractRector
 {
     public function getRuleDefinition(): RuleDefinition
     {
-        return new RuleDefinition('Retarget simple_hash_from_query()/hash_from_query()/array_from_query() onto query2array()', [
-            new CodeSample('array_from_query($q, $field);', 'query2array($q, null, $field);'),
+        return new RuleDefinition('Retarget simple_hash_from_query()/hash_from_query()/array_from_query() onto \Piwigo\Db\MysqliDb::query2Array()', [
+            new CodeSample('array_from_query($q, $field);', '\Piwigo\Db\MysqliDb::query2Array($q, null, $field);'),
         ]);
     }
 
@@ -59,7 +59,7 @@ final class QueryHashWrapperRector extends AbstractRector
                 return $node;
             }
 
-            // array_from_query($query, $fieldname) -> query2array($query, null, $fieldname)
+            // array_from_query($query, $fieldname) -> \Piwigo\Db\MysqliDb::query2Array($query, null, $fieldname)
             $node->name = new Name('query2array');
             $nullArg = new Arg(new ConstFetch(new Name('null')));
             $node->args = [$args[0], $nullArg, $args[1]];

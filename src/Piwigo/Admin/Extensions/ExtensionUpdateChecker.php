@@ -126,7 +126,7 @@ final class ExtensionUpdateChecker
         }
 
         $conf['updates_ignored'] = $updatesIgnored;
-        conf_update_param('updates_ignored', pwg_db_real_escape_string(serialize($updatesIgnored)));
+        conf_update_param('updates_ignored', \Piwigo\Db\MysqliDb::realEscapeString(serialize($updatesIgnored)));
     }
 
     /**

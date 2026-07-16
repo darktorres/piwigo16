@@ -192,7 +192,7 @@ final class MaintenanceActionDispatcher
 
             case 'database':
 
-                do_maintenance_all_tables();
+                \Piwigo\Db\MysqliDb::doMaintenanceAllTables();
                 break;
 
             case 'c13y':

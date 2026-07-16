@@ -38,7 +38,7 @@ final class ApiKeyService
         $key_id = 'pkid-' . date('Ymd') . '-' . SessionService::get()->generateKey(20);
         $key_secret = SessionService::get()->generateKey(40);
 
-        $row = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT NOW();'));
         assert($row !== null);
         [$dbnow] = $row;
 
@@ -57,14 +57,14 @@ final class ApiKeyService
 SELECT
   ADDDATE(NOW(), INTERVAL ' . ($duration * 60 * 60 * 24) . ' SECOND)
 ;';
-            $row = pwg_db_fetch_row(pwg_query($query));
+            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
             assert($row !== null);
             [$expiration] = $row;
             $key['duration'] = $duration;
         }
         $key['expired_on'] = $expiration;
 
-        single_insert(Tables::userAuthKeys(), $key);
+        \Piwigo\Db\MysqliDb::singleInsert(Tables::userAuthKeys(), $key);
 
         $key['apikey_secret'] = $key_secret;
         return $key;
@@ -85,14 +85,14 @@ SELECT
   AND user_id = ' . $userId . '
 ;';
 
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$key, $now] = $row;
         if ($key == 0) {
             return l10n('API Key not found');
         }
 
-        single_update(
+        \Piwigo\Db\MysqliDb::singleUpdate(
             Tables::userAuthKeys(),
             [
                 'revoked_on' => $now,
@@ -120,14 +120,14 @@ SELECT
   AND user_id = ' . $userId . '
 ;';
 
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$key] = $row;
         if ($key == 0) {
             return l10n('API Key not found');
         }
 
-        single_update(
+        \Piwigo\Db\MysqliDb::singleUpdate(
             Tables::userAuthKeys(),
             [
                 'apikey_name' => $apiName,
@@ -154,12 +154,12 @@ SELECT *
   AND key_type = "api_key"
 ;';
 
-        // query2array() with no key_name/value_name always returns a
+        // \Piwigo\Db\MysqliDb::query2Array() with no key_name/value_name always returns a
         // sequential list (array<int, mixed>) -- see qsearch_get_images()'s
         // comment in the (now-deleted) functions_search.inc.php for the
         // general pattern; it's already a list, so no array_values()
         // wrapper is needed.
-        $api_keys = query2array($query);
+        $api_keys = \Piwigo\Db\MysqliDb::query2Array($query);
         if (! (bool) $api_keys) {
             return false;
         }
@@ -168,7 +168,7 @@ SELECT *
 SELECT
   NOW()
 ;';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$now] = $row;
         assert($now !== null);

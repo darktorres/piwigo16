@@ -31,7 +31,7 @@ class QResults
      * always real int -- SearchRepository casts every fetched id
      * explicitly, matching this project's DBAL/mysqli driver, which
      * returns native int for numeric columns unlike the legacy
-     * query2array() layer's all-string rows).
+     * \Piwigo\Db\MysqliDb::query2Array() layer's all-string rows).
      *
      * @var array<int, list<int>>
      */

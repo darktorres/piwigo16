@@ -38,7 +38,7 @@ final class NotificationByMailRepository extends AbstractRepository
      * query, kept untouched here).
      *
      * Every column is normalized to string|null, matching the legacy
-     * pwg_db_fetch_assoc()'s own contract -- downstream callers
+     * \Piwigo\Db\MysqliDb::fetchAssoc()'s own contract -- downstream callers
      * (set_user_on_env_nbm()/inc_mail_sent_success()/etc., untouched by
      * this port) are all typed against that exact shape.
      *

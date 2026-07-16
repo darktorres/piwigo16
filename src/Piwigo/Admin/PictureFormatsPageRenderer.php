@@ -38,7 +38,7 @@ SELECT *
   FROM ' . Tables::images() . '
   WHERE id = ' . $image_id . '
 ;';
-        $images = query2array($query);
+        $images = \Piwigo\Db\MysqliDb::query2Array($query);
         $image = $images[0];
 
         $query = '
@@ -48,7 +48,7 @@ SELECT
   WHERE image_id = ' . $image_id . '
 ;';
 
-        $formats = query2array($query);
+        $formats = \Piwigo\Db\MysqliDb::query2Array($query);
 
         foreach ($formats as &$format) {
             $format['download_url'] = 'action.php?format=' . $format['format_id'] . '&amp;download';

@@ -123,14 +123,14 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
 SELECT galleries_url
   FROM ' . Tables::sites() . '
   WHERE id = ' . $site_id;
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         $site_url = $row !== null ? $row[0] : null;
         if (! isset($site_url)) {
             die('site ' . $site_id . ' does not exist');
         }
         $site_is_remote = url_is_remote($site_url);
 
-        $row = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT NOW();'));
         assert($row !== null);
         [$dbnow] = $row;
 
@@ -263,7 +263,7 @@ SELECT id, uppercats, global_rank, status, visible
             // 'id'/'rank'/'global_rank' fields. array<string, mixed> is the honest
             // common shape for both origins; individual fields are narrowed with
             // is_string()/is_int() at each point of use below.
-            $db_categories = query2array($query, 'id');
+            $db_categories = \Piwigo\Db\MysqliDb::query2Array($query, 'id');
             /** @var array<int|string, array<string, mixed>> $db_categories */
 
             // get categort full directories in an array for comparison with file
@@ -296,8 +296,8 @@ SELECT id, uppercats, global_rank, status, visible
             $query = '
 SELECT id
   FROM ' . Tables::categories();
-            $result = pwg_query($query);
-            while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+            $result = \Piwigo\Db\MysqliDb::query($query);
+            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
                 // id is a NOT NULL primary key; skip defensively rather than use a
                 // null value as an invalid array key.
                 if ($row['id'] === null) {
@@ -311,8 +311,8 @@ SELECT id
 SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
   FROM ' . Tables::categories() . '
   GROUP BY id_uppercat';
-            $result = pwg_query($query);
-            while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+            $result = \Piwigo\Db\MysqliDb::query($query);
+            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
                 // for the id_uppercat NULL, we write 'NULL' and not the empty string
                 if (! isset($row['id_uppercat']) or $row['id_uppercat'] == '') {
                     $row['id_uppercat'] = 'NULL';
@@ -325,7 +325,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
             }
 
             // next category id available
-            $next_id = pwg_db_nextval('id', Tables::categories());
+            $next_id = \Piwigo\Db\MysqliDb::nextval('id', Tables::categories());
 
             // retrieve sub-directories fulldirs from the site reader
             // get_full_directories() is declared to return mixed[], but in practice
@@ -359,9 +359,9 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                         'dir' => $dir,
                         'name' => str_replace('_', ' ', $dir),
                         'site_id' => $site_id,
-                        'commentable' => boolean_to_string($conf['newcat_default_commentable']),
+                        'commentable' => \Piwigo\Db\MysqliDb::booleanToString($conf['newcat_default_commentable']),
                         'status' => $conf['newcat_default_status'],
-                        'visible' => boolean_to_string($conf['newcat_default_visible']),
+                        'visible' => \Piwigo\Db\MysqliDb::booleanToString($conf['newcat_default_visible']),
                     ];
 
                     if (isset($db_fulldirs[dirname($fulldir)])) {
@@ -429,7 +429,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                         'id', 'dir', 'name', 'site_id', 'id_uppercat', 'uppercats', 'commentable',
                         'visible', 'status', 'rank', 'global_rank',
                     ];
-                    mass_inserts(Tables::categories(), $dbfields, $inserts);
+                    \Piwigo\Db\MysqliDb::massInserts(Tables::categories(), $dbfields, $inserts);
 
                     // add default permissions to categories
                     $category_ids = [];
@@ -456,10 +456,10 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
           FROM ' . Tables::groupAccess() . '
           WHERE cat_id IN (' . $category_up . ')
         ;';
-                        $result = pwg_query($query);
+                        $result = \Piwigo\Db\MysqliDb::query($query);
                         if (! empty($result)) {
                             $granted_grps = [];
-                            while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+                            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
                                 // cat_id is a NOT NULL foreign key; skip defensively
                                 // if it's ever missing/non-numeric rather than using
                                 // it as an invalid array key.
@@ -485,10 +485,10 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
           FROM ' . Tables::userAccess() . '
           WHERE cat_id IN (' . $category_up . ')
         ;';
-                        $result = pwg_query($query);
+                        $result = \Piwigo\Db\MysqliDb::query($query);
                         if (! empty($result)) {
                             $granted_users = [];
-                            while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+                            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
                                 // cat_id is a NOT NULL foreign key; skip defensively
                                 // if it's ever missing/non-numeric rather than using
                                 // it as an invalid array key.
@@ -540,9 +540,9 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                                 }
                             }
                         }
-                        mass_inserts(Tables::groupAccess(), ['group_id', 'cat_id'], $insert_granted_grps);
+                        \Piwigo\Db\MysqliDb::massInserts(Tables::groupAccess(), ['group_id', 'cat_id'], $insert_granted_grps);
                         $insert_granted_users = array_unique($insert_granted_users, SORT_REGULAR);
-                        mass_inserts(Tables::userAccess(), ['user_id', 'cat_id'], $insert_granted_users);
+                        \Piwigo\Db\MysqliDb::massInserts(Tables::userAccess(), ['user_id', 'cat_id'], $insert_granted_users);
                     } else {
                         new PermissionService(new PermissionRepository(DbConnection::build()), new GroupRepository(DbConnection::build()))
                             ->addPermissionOnCategory($category_ids, new UserRepository(DbConnection::build())->findAdminIds());
@@ -623,11 +623,11 @@ SELECT id, path
                 // simple_hash_from_query()'s declared return type is under-typed
                 // (array<int|string, mixed>); path is a NOT NULL varchar column, so
                 // filter defensively to guarantee real strings here.
-                $db_elements = array_filter(query2array($query, 'id', 'path'), is_string(...));
+                $db_elements = array_filter(\Piwigo\Db\MysqliDb::query2Array($query, 'id', 'path'), is_string(...));
             }
 
             // next element id available
-            $next_element_id = pwg_db_nextval('id', Tables::images());
+            $next_element_id = \Piwigo\Db\MysqliDb::nextval('id', Tables::images());
 
             $start = \Piwigo\Core\TimingHelper::getMoment();
 
@@ -659,10 +659,10 @@ SELECT id, path
 
                 $insert = [
                     'id' => $next_element_id++,
-                    'file' => pwg_db_real_escape_string($filename),
-                    'name' => pwg_db_real_escape_string(\Piwigo\Core\StringHelper::getNameFromFile($filename)),
+                    'file' => \Piwigo\Db\MysqliDb::realEscapeString($filename),
+                    'name' => \Piwigo\Db\MysqliDb::realEscapeString(\Piwigo\Core\StringHelper::getNameFromFile($filename)),
                     'date_available' => $dbnow,
-                    'path' => pwg_db_real_escape_string($path),
+                    'path' => \Piwigo\Db\MysqliDb::realEscapeString($path),
                     'representative_ext' => $fs[$path]['representative_ext'],
                     'storage_category_id' => $db_fulldirs[$dirname],
                     'added_by' => $user['id'],
@@ -729,8 +729,8 @@ SELECT *
   FROM ' . Tables::imageFormat() . '
   WHERE image_id IN (' . implode(',', $existing_ids) . ')
 ;';
-                    $result = pwg_query($query);
-                    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+                    $result = \Piwigo\Db\MysqliDb::query($query);
+                    while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
                         // image_id/ext are NOT NULL columns; skip defensively rather
                         // than use a null/non-scalar value as an array key.
                         $format_image_id = $row['image_id'];
@@ -796,14 +796,14 @@ SELECT *
             if (! $simulate) {
                 // inserts all new elements
                 if (count($inserts) > 0) {
-                    mass_inserts(
+                    \Piwigo\Db\MysqliDb::massInserts(
                         Tables::images(),
                         array_keys($inserts[0]),
                         $inserts
                     );
 
                     // inserts all links between new elements and their storage category
-                    mass_inserts(
+                    \Piwigo\Db\MysqliDb::massInserts(
                         Tables::imageCategory(),
                         array_keys($insert_links[0]),
                         $insert_links
@@ -821,7 +821,7 @@ SELECT *
 
                 // inserts all formats
                 if (count($insert_formats) > 0) {
-                    mass_inserts(
+                    \Piwigo\Db\MysqliDb::massInserts(
                         Tables::imageFormat(),
                         array_keys($insert_formats[0]),
                         $insert_formats
@@ -834,7 +834,7 @@ DELETE
   FROM ' . Tables::imageFormat() . '
   WHERE format_id IN (' . implode(',', $formats_to_delete) . ')
 ;';
-                    pwg_query($query);
+                    \Piwigo\Db\MysqliDb::query($query);
                 }
             }
 
@@ -919,7 +919,7 @@ DELETE
                 $datas = [];
                 foreach ($files as $id => $file) {
                     // get_filelist() returns hash_from_query($query, 'id'), i.e.
-                    // each row from query2array() with key_name set and value_name
+                    // each row from \Piwigo\Db\MysqliDb::query2Array() with key_name set and value_name
                     // null: always the full fetch_assoc() row array (string keys =
                     // id/path/representative_ext column names, string|null values).
                     assert(is_array($file));
@@ -932,7 +932,7 @@ DELETE
 
                 $counts['upd_elements'] = count($datas);
                 if (! $simulate and count($datas) > 0) {
-                    mass_updates(
+                    \Piwigo\Db\MysqliDb::massUpdates(
                         Tables::images(),
                         // fields
                         [
@@ -1007,7 +1007,7 @@ DELETE
 
             foreach ($files as $id => $element_infos) {
                 // get_filelist() returns hash_from_query($query, 'id'), i.e. each
-                // row from query2array() with key_name set and value_name null:
+                // row from \Piwigo\Db\MysqliDb::query2Array() with key_name set and value_name null:
                 // always the full fetch_assoc() row array (string keys = column
                 // names, string|null values).
                 assert(is_array($element_infos));
@@ -1040,7 +1040,7 @@ DELETE
 
             if (! $simulate) {
                 if (count($datas) > 0) {
-                    mass_updates(
+                    \Piwigo\Db\MysqliDb::massUpdates(
                         Tables::images(),
                         // fields
                         [

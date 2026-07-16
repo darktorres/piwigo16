@@ -221,7 +221,7 @@ SELECT
     )
 ;';
 
-            $associated_categories = query2array($query, 'id', 'id');
+            $associated_categories = \Piwigo\Db\MysqliDb::query2Array($query, 'id', 'id');
         }
 
         $template->assign('associated_categories', $associated_categories);

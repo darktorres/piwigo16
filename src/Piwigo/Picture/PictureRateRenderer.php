@@ -45,7 +45,7 @@ final class PictureRateRenderer
         ];
         if ($rate_summary['score'] != null) {
             // images.id is the NOT NULL primary key, always a numeric string
-            // once fetched (see pwg_db_fetch_assoc()'s return type and the
+            // once fetched (see \Piwigo\Db\MysqliDb::fetchAssoc()'s return type and the
             // matching assert in picture.php).
             $picture_current_id = $picture['current']['id'];
             assert(is_string($picture_current_id));
@@ -56,7 +56,7 @@ SELECT COUNT(rate) AS count
   FROM ' . Tables::rate() . '
   WHERE element_id = ' . $picture_current_id . '
 ;';
-            $row = pwg_db_fetch_row(pwg_query($query));
+            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
             assert($row !== null);
             [$rate_summary['count'], $rate_summary['average']] = $row;
         }
@@ -88,9 +88,9 @@ SELECT COUNT(rate) AS count
                     $query .= ' AND anonymous_id = \'' . $anonymous_id . '\'';
                 }
 
-                $result = pwg_query($query);
-                if (pwg_db_num_rows($result) > 0) {
-                    $row = pwg_db_fetch_assoc($result);
+                $result = \Piwigo\Db\MysqliDb::query($query);
+                if (\Piwigo\Db\MysqliDb::numRows($result) > 0) {
+                    $row = \Piwigo\Db\MysqliDb::fetchAssoc($result);
                     assert(is_array($row));
                     $user_rate = $row['rate'];
                 }

@@ -87,15 +87,15 @@ SELECT id, date_creation
   FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', $collection) . ')
 ;';
-            $result = pwg_query($query);
+            $result = \Piwigo\Db\MysqliDb::query($query);
 
             $tagConn = DbConnection::build();
             $tagService = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
 
-            while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
                 // Tables::images().id is a NOT NULL auto_increment primary key; this
                 // guard only defends against the generic string|null element type
-                // pwg_db_fetch_assoc() carries for every column.
+                // \Piwigo\Db\MysqliDb::fetchAssoc() carries for every column.
                 if ($row['id'] === null) {
                     continue;
                 }
@@ -136,7 +136,7 @@ SELECT id, date_creation
                 $tagService->setTags($tag_ids, $image_id);
             }
 
-            mass_updates(
+            \Piwigo\Db\MysqliDb::massUpdates(
                 Tables::images(),
                 [
                     'primary' => ['id'],
@@ -289,8 +289,8 @@ SELECT *
   ' . (is_string($conf['order_by']) ? $conf['order_by'] : '') . '
   LIMIT ' . $page_nb_images . ' OFFSET ' . $page_start . '
 ;';
-            // $result = pwg_query($query);
-            $images = query2array($query);
+            // $result = \Piwigo\Db\MysqliDb::query($query);
+            $images = \Piwigo\Db\MysqliDb::query2Array($query);
             $added_by_ids = array_unique(array_column($images, 'added_by'));
             // Defaults to empty so the read inside the foreach loop below is always
             // a real array, whether or not $added_by_ids was non-empty (the
@@ -312,7 +312,7 @@ SELECT
   FROM ' . Tables::users() . '
   WHERE ' . $user_fields['id'] . ' IN ( ' . implode(',', $added_by_ids) . ' )
 ;';
-                $added_by_username_of = query2array($query, 'id', 'username');
+                $added_by_username_of = \Piwigo\Db\MysqliDb::query2Array($query, 'id', 'username');
             }
 
             // NOTE (pre-existing bug, not fixed here): $row is not defined by a
@@ -338,7 +338,7 @@ SELECT
             foreach ($images as $row) {
                 // Tables::images().id is a NOT NULL auto_increment primary key; this
                 // guard only defends against the generic string|null element type
-                // query2array() carries for every column.
+                // \Piwigo\Db\MysqliDb::query2Array() carries for every column.
                 if ($row['id'] === null) {
                     continue;
                 }
@@ -379,7 +379,7 @@ SELECT
       WHERE image_id = ' . $row['id'] . '
     ;';
 
-                $sub_result = pwg_query($query);
+                $sub_result = \Piwigo\Db\MysqliDb::query($query);
                 $related_categories = [];
                 $related_category_ids = [];
                 $media = [
@@ -389,10 +389,10 @@ SELECT
                 // a fatal_error() path that never returns.
                 assert($media['image'] !== null);
 
-                while ((bool) ($item = pwg_db_fetch_assoc($sub_result))) {
+                while ((bool) ($item = \Piwigo\Db\MysqliDb::fetchAssoc($sub_result))) {
                     // Tables::imageCategory()/Tables::categories().category_id/uppercats are
                     // NOT NULL; this guard only defends against the generic
-                    // string|null element type pwg_db_fetch_assoc() carries for
+                    // string|null element type \Piwigo\Db\MysqliDb::fetchAssoc() carries for
                     // every column.
                     if ($item['category_id'] === null || $item['uppercats'] === null) {
                         continue;
@@ -434,7 +434,7 @@ SELECT
                 assert(is_numeric($user['id']));
                 assert(is_string($user['status']));
                 $authorizeds = array_diff(
-                    array_filter(query2array($query, null, 'category_id'), is_string(...)),
+                    array_filter(\Piwigo\Db\MysqliDb::query2Array($query, null, 'category_id'), is_string(...)),
                     explode(
                         ',',
                         (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getForbiddenCategories((int) $user['id'], $user['status'])

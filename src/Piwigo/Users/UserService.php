@@ -573,7 +573,7 @@ final class UserService implements DefaultLanguageProviderInterface
         // deliberately bare, not ThemeCatalog::checkThemeInstalled() --
         // tests/Integration/ExtensionLifecycleTest.php spies on this exact
         // call via same-namespace function shadowing (its own isolated
-        // bootstrap doesn't load pwg_query(), which getDefaultTheme()'s
+        // bootstrap doesn't load \Piwigo\Db\MysqliDb::query(), which getDefaultTheme()'s
         // own fallback branch below would need if this check ever fell
         // through to it for real), same "one narrow, structurally-forced
         // exception" shape as pwg_activity()'s CategoryAdminService
@@ -620,7 +620,7 @@ SELECT ';
   FROM ' . Tables::users() . '
   WHERE ' . $user_fields['id'] . ' = \'' . $userId . '\'';
 
-        $row = pwg_db_fetch_assoc(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
         if ($row === false || $row === null) {
             throw new \Exception('UserService::getUserData(): no such user_id ' . $userId);
         }
@@ -636,7 +636,7 @@ SELECT
   WHERE ui.user_id = ' . $userId . '
   GROUP BY ui.user_id
 ;';
-            $counter_row = pwg_db_fetch_row(pwg_query($query));
+            $counter_row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
             $counter = $counter_row !== null ? $counter_row[0] : 0;
             if ($counter != 1) {
                 $this->createUserInfos([$userId]);
@@ -655,8 +655,8 @@ SELECT
   WHERE ui.user_id = ' . $userId . '
 ;';
 
-        $result = pwg_query($query);
-        $user_infos_row = pwg_db_fetch_assoc($result);
+        $result = \Piwigo\Db\MysqliDb::query($query);
+        $user_infos_row = \Piwigo\Db\MysqliDb::fetchAssoc($result);
         if ($user_infos_row === false || $user_infos_row === null) {
             throw new \Exception('UserService::getUserData(): user_infos fetch failed for user_id ' . $userId);
         }
@@ -707,7 +707,7 @@ SELECT
   FROM ' . Tables::userCache() . '
   WHERE user_id=' . $userId . '
 ;';
-                        $row = pwg_db_fetch_row(pwg_query($query));
+                        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
                         assert($row !== null);
                         [$nb_cache_lines] = $row;
 
@@ -767,7 +767,7 @@ SELECT DISTINCT(id)
   FROM ' . Tables::images() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id=image_id
   WHERE category_id NOT IN (' . $forbidden_categories . ')
     AND level>' . $level;
-                $forbidden_ids = query2array($query, null, 'id');
+                $forbidden_ids = \Piwigo\Db\MysqliDb::query2Array($query, null, 'id');
 
                 if (empty($forbidden_ids)) {
                     $forbidden_ids[] = 0;
@@ -782,7 +782,7 @@ SELECT COUNT(DISTINCT(image_id)) as total
   FROM ' . Tables::imageCategory() . '
   WHERE category_id NOT IN (' . $forbidden_categories . ')
     AND image_id ' . $image_access_type . ' (' . $image_access_list . ')';
-                $row = pwg_db_fetch_row(pwg_query($query));
+                $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
                 assert($row !== null);
                 [$nb_total_images] = $row;
                 assert($nb_total_images !== null);
@@ -826,18 +826,18 @@ SELECT COUNT(DISTINCT(image_id)) as total
                 $query = '
 DELETE FROM ' . Tables::userCacheCategories() . '
   WHERE user_id = ' . $userId;
-                pwg_query($query);
+                \Piwigo\Db\MysqliDb::query($query);
 
                 // Due to concurrency issues, we ask MySQL to ignore errors on
                 // insert. This may happen when cache needs refresh and that Piwigo is
                 // called "very simultaneously".
-                mass_inserts(
+                \Piwigo\Db\MysqliDb::massInserts(
                     Tables::userCacheCategories(),
                     [
                         'user_id', 'cat_id',
                         'date_last', 'max_date_last', 'nb_images', 'count_images', 'nb_categories', 'count_categories',
                     ],
-                    // mass_inserts() only reads values (row shape/data), never
+                    // \Piwigo\Db\MysqliDb::massInserts() only reads values (row shape/data), never
                     // this array's own keys -- CategoryService::
                     // getComputedCategories() keys by cat_id (int|string, a
                     // raw DB fetch value) for the removeComputedCategory()
@@ -852,13 +852,13 @@ DELETE FROM ' . Tables::userCacheCategories() . '
                 $query = '
 DELETE FROM ' . Tables::userCache() . '
   WHERE user_id = ' . $userId;
-                pwg_query($query);
+                \Piwigo\Db\MysqliDb::query($query);
 
-                // boolean_to_string() only returns non-string when its input
+                // \Piwigo\Db\MysqliDb::booleanToString() only returns non-string when its input
                 // isn't a bool (@return mixed in
                 // dblayer/functions_mysqli.inc.php); $need_update is always a
                 // real bool here, so the result is guaranteed to be a string.
-                $need_update_str = boolean_to_string($need_update);
+                $need_update_str = \Piwigo\Db\MysqliDb::booleanToString($need_update);
                 assert(is_string($need_update_str));
 
                 // for the same reason as user_cache_categories, we ignore error on
@@ -874,7 +874,7 @@ INSERT IGNORE INTO ' . Tables::userCache() . '
   . $forbidden_categories . '\',' . $nb_total_images . ',' .
   (empty($last_photo_date) ? 'NULL' : '\'' . $last_photo_date . '\'') .
   ',\'' . $image_access_type . '\',\'' . $image_access_list . '\')';
-                pwg_query($query);
+                \Piwigo\Db\MysqliDb::query($query);
 
                 \Piwigo\Core\UniqueExecLock::ends($cache_generation_token_name);
                 $logger->info($logger_msg_prefix . 'user_cache generated, executed in ' . \Piwigo\Core\TimingHelper::getElapsedTime($user_cache_generation_start_time, \Piwigo\Core\TimingHelper::getMoment()));
@@ -921,14 +921,14 @@ SELECT DISTINCT f.image_id
             'AND'
         ) . '
 ;';
-        $authorizeds = query2array($query, null, 'image_id');
+        $authorizeds = \Piwigo\Db\MysqliDb::query2Array($query, null, 'image_id');
 
         $query = '
 SELECT image_id
   FROM ' . Tables::favorites() . '
   WHERE user_id = ' . $user_id_str . '
 ;';
-        $favorites = query2array($query, null, 'image_id');
+        $favorites = \Piwigo\Db\MysqliDb::query2Array($query, null, 'image_id');
 
         $to_deletes = array_diff($favorites, $authorizeds);
         if (count($to_deletes) > 0) {
@@ -937,7 +937,7 @@ DELETE FROM ' . Tables::favorites() . '
   WHERE image_id IN (' . implode(',', $to_deletes) . ')
     AND user_id = ' . $user_id_str . '
 ;';
-            pwg_query($query);
+            \Piwigo\Db\MysqliDb::query($query);
         }
     }
 
@@ -1063,8 +1063,8 @@ DELETE FROM ' . Tables::favorites() . '
         $last_photo_date = is_string($last_photo_date) ? $last_photo_date : '';
 
         return $dbField . '>=LEAST('
-          . pwg_db_get_recent_period_expression($recent_period)
-          . ',' . pwg_db_get_recent_period_expression(1, $last_photo_date) . ')';
+          . \Piwigo\Db\MysqliDb::getRecentPeriodExpression($recent_period)
+          . ',' . \Piwigo\Db\MysqliDb::getRecentPeriodExpression(1, $last_photo_date) . ')';
     }
 
     /**
@@ -1252,7 +1252,7 @@ SELECT
   FROM ' . Tables::userInfos() . '
   WHERE status IN (\'webmaster\', \'admin\')
 ;';
-                    $admin_ids = query2array($query, null, 'user_id');
+                    $admin_ids = \Piwigo\Db\MysqliDb::query2Array($query, null, 'user_id');
 
                     // user_infos.id (primary key, NOT NULL): a raw DB fetch
                     // value is a numeric string, buildUser() may also set it as
@@ -1317,7 +1317,7 @@ SELECT
   FROM ' . Tables::userInfos() . '
   WHERE status IN (\'webmaster\', \'admin\')
 ;';
-                $protected_users = array_merge($protected_users, query2array($query, null, 'user_id'));
+                $protected_users = array_merge($protected_users, \Piwigo\Db\MysqliDb::query2Array($query, null, 'user_id'));
             }
 
             // status update query is separated from the rest as not applying to the same
@@ -1378,23 +1378,23 @@ SELECT
         }
 
         if (! empty($params['expand']) or @$params['expand'] === false) {
-            $updates_infos['expand'] = boolean_to_string($params['expand']);
+            $updates_infos['expand'] = \Piwigo\Db\MysqliDb::booleanToString($params['expand']);
         }
 
         if (! empty($params['show_nb_comments']) or @$params['show_nb_comments'] === false) {
-            $updates_infos['show_nb_comments'] = boolean_to_string($params['show_nb_comments']);
+            $updates_infos['show_nb_comments'] = \Piwigo\Db\MysqliDb::booleanToString($params['show_nb_comments']);
         }
 
         if (! empty($params['show_nb_hits']) or @$params['show_nb_hits'] === false) {
-            $updates_infos['show_nb_hits'] = boolean_to_string($params['show_nb_hits']);
+            $updates_infos['show_nb_hits'] = \Piwigo\Db\MysqliDb::booleanToString($params['show_nb_hits']);
         }
 
         if (! empty($params['enabled_high']) or @$params['enabled_high'] === false) {
-            $updates_infos['enabled_high'] = boolean_to_string($params['enabled_high']);
+            $updates_infos['enabled_high'] = \Piwigo\Db\MysqliDb::booleanToString($params['enabled_high']);
         }
 
         // perform updates
-        single_update(
+        \Piwigo\Db\MysqliDb::singleUpdate(
             Tables::users(),
             $updates,
             [
@@ -1418,7 +1418,7 @@ UPDATE ' . Tables::userInfos() . ' SET
     status = "' . $update_status . '"
   WHERE user_id IN(' . implode(',', array_map(strval(...), $user_ids_for_status)) . ')
 ;';
-            pwg_query($query);
+            \Piwigo\Db\MysqliDb::query($query);
 
             // we delete sessions, ie disconnect, for users if status becomes "guest".
             // It's like deactivating the user.
@@ -1447,7 +1447,7 @@ UPDATE ' . Tables::userInfos() . ' SET ';
             $query .= '
   WHERE user_id IN(' . implode(',', array_map(strval(...), $user_ids)) . ')
 ;';
-            pwg_query($query);
+            \Piwigo\Db\MysqliDb::query($query);
         }
 
         // manage association to groups
@@ -1465,7 +1465,7 @@ DELETE
   FROM ' . Tables::userGroup() . '
   WHERE user_id IN (' . implode(',', array_map(strval(...), $user_ids)) . ')
 ;';
-            pwg_query($query);
+            \Piwigo\Db\MysqliDb::query($query);
 
             // we remove all provided groups that do not really exist
             $query = '
@@ -1474,7 +1474,7 @@ SELECT
   FROM `' . Tables::groups() . '`
   WHERE id IN (' . implode(',', array_map(strval(...), $group_ids_param)) . ')
 ;';
-            $group_ids = query2array($query, null, 'id');
+            $group_ids = \Piwigo\Db\MysqliDb::query2Array($query, null, 'id');
 
             // if only -1 (a group id that can't exist) is in the list, then no
             // group is associated
@@ -1491,7 +1491,7 @@ SELECT
                     }
                 }
 
-                mass_inserts(Tables::userGroup(), array_keys($inserts[0]), $inserts);
+                \Piwigo\Db\MysqliDb::massInserts(Tables::userGroup(), array_keys($inserts[0]), $inserts);
             }
         }
 

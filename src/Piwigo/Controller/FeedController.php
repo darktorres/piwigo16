@@ -87,7 +87,7 @@ final class FeedController implements ControllerInterface
         // Check the status now after the user has been loaded
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
-        $row = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT NOW();'));
         assert($row !== null);
         [$dbnow] = $row;
         // NOW() is a MySQL builtin that always returns a valid non-null

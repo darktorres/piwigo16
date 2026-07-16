@@ -96,7 +96,7 @@ final class PwgComments
         // reset all filters during search
         if (! empty($params['search'])) {
             $where_clauses = ['1=1'];
-            $where_clauses[] = 'content LIKE "%' . pwg_db_real_escape_string($params['search']) . '%"';
+            $where_clauses[] = 'content LIKE "%' . \Piwigo\Db\MysqliDb::realEscapeString($params['search']) . '%"';
         }
 
         // summary
@@ -109,7 +109,7 @@ FROM ' . Tables::comments() . '
 WHERE ' . implode(' AND ', $where_clauses) . '
 ;';
 
-        $summary = pwg_db_fetch_assoc(pwg_query($query));
+        $summary = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
         if (! is_array($summary)) {
             return new PwgError(500, 'Unable to compute comments summary');
         }
@@ -160,10 +160,10 @@ SELECT
   ORDER BY c.date DESC, c.id DESC
   LIMIT ' . $params['per_page'] * $params['page'] . ', ' . $params['per_page'] . '
 ;';
-        $result = pwg_query($query);
+        $result = \Piwigo\Db\MysqliDb::query($query);
 
         $list = [];
-        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
 
             $medium_derivative = DerivativeImage::get_one(
                 IMG_MEDIUM,
@@ -215,7 +215,7 @@ FROM ' . Tables::comments() . '
 WHERE ' . implode(' AND ', $where_clauses) . '
 ;';
 
-        $dates = pwg_db_fetch_assoc(pwg_query($query));
+        $dates = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
         if (! is_array($dates)) {
             return new PwgError(500, 'Unable to compute comments date range');
         }
@@ -231,7 +231,7 @@ WHERE ' . implode(' AND ', $where_clauses) . '
 GROUP BY author_id
 ;';
 
-        $nb_authors_in = query2array($query);
+        $nb_authors_in = \Piwigo\Db\MysqliDb::query2Array($query);
 
         return [
             'summary' => $summary,

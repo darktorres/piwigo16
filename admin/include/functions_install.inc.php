@@ -48,7 +48,7 @@ function execute_sqlfile($filepath, $replaced, $replacing, $dblayer): void
                         $query = $matches[1] . ' DEFAULT CHARACTER SET utf8;';
                     }
                 }
-                pwg_query($query);
+                \Piwigo\Db\MysqliDb::query($query);
             }
             $query = '';
         }
@@ -96,13 +96,13 @@ function install_db_connect(&$infos, &$errors): void
     $dbname = is_string($_POST['dbname'] ?? null) ? $_POST['dbname'] : '';
 
     try {
-        pwg_db_connect(
+        \Piwigo\Db\MysqliDb::connect(
             $dbhost,
             $dbuser,
             $dbpasswd,
             $dbname
         );
-        pwg_db_check_version();
+        \Piwigo\Db\MysqliDb::checkVersion();
     } catch (Exception $e) {
         $errors[] = l10n($e->getMessage());
     }

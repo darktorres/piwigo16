@@ -54,7 +54,7 @@ SELECT *
   FROM ' . Tables::categories() . '
   WHERE id = ' . $cat_id . '
 ;';
-        $category = pwg_db_fetch_assoc(pwg_query($query));
+        $category = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
         if (! isset($category['id'])) {
             die('unknown album');
         }

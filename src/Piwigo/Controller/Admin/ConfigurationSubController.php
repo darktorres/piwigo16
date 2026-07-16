@@ -387,8 +387,8 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             $page_errors_for_count = $page['errors'];
             if (! in_array($page_section, ['sizes', 'watermark']) and count($page_errors_for_count) == 0 and \Piwigo\Auth\AccessControl::isWebmaster()) {
                 // echo '<pre>'; print_r($_POST); echo '</pre>';
-                $result = pwg_query('SELECT param FROM ' . Tables::config());
-                while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+                $result = \Piwigo\Db\MysqliDb::query('SELECT param FROM ' . Tables::config());
+                while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
                     if (! is_string($row['param'])) {
                         // `param` is the config table's NOT NULL primary key; a
                         // non-string row here would mean the query result changed
@@ -411,7 +411,7 @@ UPDATE ' . Tables::config() . '
 SET value = \'' . str_replace("\'", "''", $value) . '\'
 WHERE param = \'' . $row['param'] . '\'
 ;';
-                        pwg_query($query);
+                        \Piwigo\Db\MysqliDb::query($query);
                     }
                 }
                 $template->assign(
@@ -530,7 +530,7 @@ WHERE param = \'' . $row['param'] . '\'
         name
       FROM `' . Tables::groups() . '`
     ;';
-                $groups = query2array($query, 'id', 'name');
+                $groups = \Piwigo\Db\MysqliDb::query2Array($query, 'id', 'name');
                 natcasesort($groups);
 
                 $template->assign(

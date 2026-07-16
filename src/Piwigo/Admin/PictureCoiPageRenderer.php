@@ -59,7 +59,7 @@ final class PictureCoiPageRenderer
         }
 
         $query = 'SELECT * FROM ' . Tables::images() . ' WHERE id=' . $image_id;
-        $row = pwg_db_fetch_assoc(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
         if (! is_array($row)) {
             page_not_found('Requested photo does not exist');
         }

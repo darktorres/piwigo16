@@ -257,7 +257,7 @@ $this->inner_sql .
 $this->get_date_where($level) . '
   GROUP BY period;';
 
-        $level_items = query2array($query, 'period', 'nb_images');
+        $level_items = \Piwigo\Db\MysqliDb::query2Array($query, 'period', 'nb_images');
 
         // chronology_date is always an array by the time calendar classes
         // run (see CalendarRenderer::render(),
@@ -336,19 +336,19 @@ $this->get_date_where($level) . '
             if ($page_chronology_date[$i] === 'any') {
                 $sub_queries[] = '\'any\'';
             } else {
-                $sub_queries[] = pwg_db_cast_to_text($this->calendar_levels[$i]['sql']);
+                $sub_queries[] = \Piwigo\Db\MysqliDb::castToText($this->calendar_levels[$i]['sql']);
             }
         }
-        $query = 'SELECT ' . pwg_db_concat_ws($sub_queries, '-') . ' AS period';
+        $query = 'SELECT ' . \Piwigo\Db\MysqliDb::concatWs($sub_queries, '-') . ' AS period';
         $query .= $this->inner_sql . '
 AND ' . $this->date_field . ' IS NOT NULL
 GROUP BY period';
 
         $current = implode('-', array_filter($page_chronology_date, is_string(...)));
         // period is a concatenation of non-null date parts (enforced by the
-        // "date_field IS NOT NULL" clause above), but query2array()'s generic
+        // "date_field IS NOT NULL" clause above), but \Piwigo\Db\MysqliDb::query2Array()'s generic
         // signature still types each element as string|null, so filter for real.
-        $upper_items = array_values(array_filter(query2array($query, null, 'period'), is_string(...)));
+        $upper_items = array_values(array_filter(\Piwigo\Db\MysqliDb::query2Array($query, null, 'period'), is_string(...)));
 
         $version_compare_2arg = static fn (string $a, string $b): int => version_compare($a, $b);
 

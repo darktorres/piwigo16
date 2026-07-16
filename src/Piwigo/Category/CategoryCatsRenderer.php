@@ -43,7 +43,7 @@ use Psr\Cache\CacheItemPoolInterface;
  * - `user_representative_picture_id` -- a real, stateful write-back cache
  *   (not a pure rollup value; see the plan's finding 6) -- moves to
  *   `CachePools::categoryTree()`, distinctly key-prefixed (`repr_*`) from
- *   the tree cache's own `tree_*` keys, replacing the `mass_updates()` write
+ *   the tree cache's own `tree_*` keys, replacing the `\Piwigo\Db\MysqliDb::massUpdates()` write
  *   onto `user_cache_categories`.
  * - The representative-image fallback chain, privacy-level re-pick,
  *   `$conf['display_fromto']` query, and all template-variable building are
@@ -200,9 +200,9 @@ SELECT representative_picture_id
   ORDER BY ' . DB_RANDOM_FUNCTION . '()
   LIMIT 1
 ;';
-                $subresult = pwg_query($query);
-                if (pwg_db_num_rows($subresult) > 0) {
-                    $subrow = pwg_db_fetch_row($subresult);
+                $subresult = \Piwigo\Db\MysqliDb::query($query);
+                if (\Piwigo\Db\MysqliDb::numRows($subresult) > 0) {
+                    $subrow = \Piwigo\Db\MysqliDb::fetchRow($subresult);
                     assert($subrow !== null);
                     [$imageId] = $subrow;
                 }
@@ -253,7 +253,7 @@ SELECT
                 ], 'AND') . '
   GROUP BY category_id
 ;';
-                $datesOfCategory = query2array($query, 'category_id');
+                $datesOfCategory = \Piwigo\Db\MysqliDb::query2Array($query, 'category_id');
             }
         }
 
@@ -271,8 +271,8 @@ SELECT *
   FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', array_filter($imageIds, is_string(...))) . ')
 ;';
-            $result = pwg_query($query);
-            while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+            $result = \Piwigo\Db\MysqliDb::query($query);
+            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
                 $imageRowId = $row['id'];
                 if (! is_string($imageRowId)) {
                     // 'id' is the images table primary key (NOT NULL); this should never happen
@@ -322,8 +322,8 @@ SELECT *
   FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', $newImageIds) . ')
 ;';
-                $result = pwg_query($query);
-                while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+                $result = \Piwigo\Db\MysqliDb::query($query);
+                while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
                     $newImageRowId = $row['id'];
                     if (! is_string($newImageRowId)) {
                         // 'id' is the images table primary key (NOT NULL); this should never happen

@@ -468,7 +468,7 @@ final class RegenerateFixtureTest extends IntegrationTestCase
     /**
      * Narrows a WS response id field down to a real int. Piwigo's WS layer
      * surfaces ids in two different but equally real shapes depending on
-     * the call: pwg_db_insert_id()'s own return type is int|string (see
+     * the call: \Piwigo\Db\MysqliDb::insertId()'s own return type is int|string (see
      * create_virtual_category()/create_tag(), backing pwg.categories.add/
      * pwg.tags.add, and ws_images_addSimple()'s own declared return shape
      * of PwgError or array{image_id: int|string, url: string}), while ids

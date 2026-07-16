@@ -197,7 +197,7 @@ final class CategoryRepository extends AbstractRepository
      * cat_id/id_uppercat/global_rank/rank/date_last/nb_images -- returned
      * loosely typed, same as every other row-map result in this project;
      * CategoryService narrows each field explicitly (is_numeric()/is_string()
-     * checks) same as the original pwg_db_fetch_assoc() loop did. `rank`
+     * checks) same as the original \Piwigo\Db\MysqliDb::fetchAssoc() loop did. `rank`
      * (sibling order within a parent, distinct from `global_rank`) is
      * carried through purely for P23 batch 4b's CategoryCatsRenderer
      * (CategoryService::compareByRank()) -- CategoryService/CategoryTreeCache
@@ -217,7 +217,7 @@ final class CategoryRepository extends AbstractRepository
         // correctly before its own post-hoc pruning step runs.
         $imagesJoinCondition = 'ic.image_id = i.id AND i.level <= :level';
         if ($filterDays !== null) {
-            $imagesJoinCondition .= ' AND i.date_available > ' . pwg_db_get_recent_period_expression($filterDays);
+            $imagesJoinCondition .= ' AND i.date_available > ' . \Piwigo\Db\MysqliDb::getRecentPeriodExpression($filterDays);
         }
 
         $qb = $this->conn->createQueryBuilder()
@@ -818,7 +818,7 @@ SELECT DISTINCT(storage_category_id)
     {
         $this->conn->executeStatement('
 UPDATE ' . Tables::images() . '
-  SET path = ' . pwg_db_concat(["'" . $fulldir . "/'", 'file']) . '
+  SET path = ' . \Piwigo\Db\MysqliDb::concat(["'" . $fulldir . "/'", 'file']) . '
   WHERE storage_category_id = ' . $categoryId . '
 ;');
     }

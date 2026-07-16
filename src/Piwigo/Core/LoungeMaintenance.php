@@ -46,7 +46,7 @@ SELECT
   ORDER BY image_id ASC
   LIMIT 1
 ;';
-        $voyagers = query2array($query);
+        $voyagers = \Piwigo\Db\MysqliDb::query2Array($query);
         if (count($voyagers) === 0) {
             return false;
         }

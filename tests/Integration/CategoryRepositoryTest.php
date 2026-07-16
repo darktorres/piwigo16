@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 // findComputedCategoriesRollup() calls the real, stable, dependency-free
-// pwg_db_get_recent_period_expression() (include/dblayer/functions_mysqli.inc.php),
+// \Piwigo\Db\MysqliDb::getRecentPeriodExpression() (include/dblayer/functions_mysqli.inc.php),
 // which this isolated integration test doesn't load. Copied verbatim --
 // pure string building, no bootstrap needed. function_exists() guard: same
 // "whichever Integration test file's stub loads first wins" reasoning as

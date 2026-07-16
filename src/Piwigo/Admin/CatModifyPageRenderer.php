@@ -70,11 +70,11 @@ final class CatModifyPageRenderer
   FROM ' . Tables::imageCategory() . '
   WHERE category_id = ' . $_GET['cat_id'] . '
   LIMIT 1';
-        $result = pwg_query($query);
-        $category['has_images'] = pwg_db_num_rows($result) > 0 ? true : false;
+        $result = \Piwigo\Db\MysqliDb::query($query);
+        $category['has_images'] = \Piwigo\Db\MysqliDb::numRows($result) > 0 ? true : false;
 
         // number of sub-categories
-        // 'id' is the categories table primary key (NOT NULL); pwg_db_fetch_assoc()
+        // 'id' is the categories table primary key (NOT NULL); \Piwigo\Db\MysqliDb::fetchAssoc()
         // in AlbumSubController (one file over the include boundary PHPStan can't see
         // into) always returns it as a numeric string. Narrow once here and reuse
         // throughout the rest of this method's many uses of the category id.
@@ -132,7 +132,7 @@ final class CatModifyPageRenderer
                 'CAT_ID' => $category_id,
                 'CAT_NAME' => @htmlspecialchars(is_string($category['name']) ? $category['name'] : ''),
                 'CAT_COMMENT' => @htmlspecialchars(is_string($category['comment']) ? $category['comment'] : ''),
-                'IS_VISIBLE' => boolean_to_string($category['visible']),
+                'IS_VISIBLE' => \Piwigo\Db\MysqliDb::booleanToString($category['visible']),
                 'CAT_ADMIN_ACCESS' => $categoryService->catAdminAccess($category_id),
 
                 'U_DELETE' => $base_url . 'albums',
@@ -151,7 +151,7 @@ final class CatModifyPageRenderer
         );
 
         if ((bool) $conf['activate_comments']) {
-            $template->assign('CAT_COMMENTABLE', boolean_to_string($category['commentable']));
+            $template->assign('CAT_COMMENTABLE', \Piwigo\Db\MysqliDb::booleanToString($category['commentable']));
         }
 
         // manage album elements link
@@ -172,7 +172,7 @@ SELECT
     JOIN ' . Tables::imageCategory() . ' ON image_id = id
   WHERE category_id = ' . $category_id . '
 ;';
-            $row = pwg_db_fetch_row(pwg_query($query));
+            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
             if (! is_array($row)) {
                 throw new \Exception("cat_modify: aggregate photo count/date query returned no row for category #{$category_id}");
             }
@@ -218,7 +218,7 @@ SELECT DISTINCT
   WHERE
     category_id IN (' . implode(',', $subcat_ids) . ')
   ;';
-        $image_ids_recursive = query2array($query, null, 'image_id');
+        $image_ids_recursive = \Piwigo\Db\MysqliDb::query2Array($query, null, 'image_id');
 
         $category['nb_images_recursive'] = count($image_ids_recursive);
 
@@ -230,7 +230,7 @@ SELECT occured_on
     AND object = "album"
     AND action = "add"
 ';
-        $result = query2array($query);
+        $result = \Piwigo\Db\MysqliDb::query2Array($query);
 
         if (count($result) > 0) {
             // occured_on is a nullable timestamp column; the driver always types
@@ -251,7 +251,7 @@ SELECT COUNT(*)
   FROM `' . Tables::categories() . '`
   WHERE id_uppercat = ' . $category_id . '
 ';
-        $result = query2array($query);
+        $result = \Piwigo\Db\MysqliDb::query2Array($query);
 
         $template->assign(
             [
@@ -392,7 +392,7 @@ SELECT COUNT(*)
             $query = 'SELECT uppercats';
             $query .= ' FROM ' . Tables::categories() . ' WHERE id = ' . $category_id;
             $query .= ';';
-            $row = pwg_db_fetch_assoc(pwg_query($query));
+            $row = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
             if (! is_array($row)) {
                 throw new \Exception(__FUNCTION__ . "(): category #{$category_id} not found");
             }
@@ -405,8 +405,8 @@ SELECT COUNT(*)
         $query = 'SELECT id,dir';
         $query .= ' FROM ' . Tables::categories() . ' WHERE id IN (' . $uppercats . ')';
         $query .= ';';
-        $result = pwg_query($query);
-        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+        $result = \Piwigo\Db\MysqliDb::query($query);
+        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
             $row_id = $row['id'];
             if (is_string($row_id)) {
                 $database_dirs[$row_id] = $row['dir'];
@@ -431,7 +431,7 @@ SELECT galleries_url
   WHERE s.id = c.site_id
     AND c.id = ' . $category_id . '
 ;';
-        $row = pwg_db_fetch_assoc(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
         if (! is_array($row)) {
             throw new \Exception(__FUNCTION__ . "(): category #{$category_id} not found");
         }

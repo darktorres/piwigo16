@@ -314,7 +314,7 @@ final class ImageStdParams
             conf_update_param('disabled_derivatives', $disabled);
         } else {
             $query = 'DELETE FROM ' . Tables::config() . ' WHERE param = \'disabled_derivatives\'';
-            pwg_query($query);
+            \Piwigo\Db\MysqliDb::query($query);
         }
     }
 

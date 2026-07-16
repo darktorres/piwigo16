@@ -548,7 +548,7 @@ SELECT
         $query .= '
   ORDER BY name
 ;';
-        $admins = query2array($query);
+        $admins = \Piwigo\Db\MysqliDb::query2Array($query);
 
         if ($admins === []) {
             return true;
@@ -592,7 +592,7 @@ SELECT DISTINCT language
 
         $query .= '
 ;';
-        $languages = query2array($query, null, 'language');
+        $languages = \Piwigo\Db\MysqliDb::query2Array($query, null, 'language');
 
         if ($languages === []) {
             return $return;
@@ -618,7 +618,7 @@ SELECT
     AND ' . $userFields['email'] . ' <> ""
     AND language = \'' . $language . '\'
 ;';
-            $users = query2array($query);
+            $users = \Piwigo\Db\MysqliDb::query2Array($query);
 
             if ($users === []) {
                 continue;

@@ -170,7 +170,7 @@ INSERT INTO ' . Tables::themes() . '
          \'' . $fs_version . '\',
          \'' . $fs_name . '\')
 ;';
-                    pwg_query($query);
+                    \Piwigo\Db\MysqliDb::query($query);
 
                     $activity_details['version'] = $fs_version;
 
@@ -201,11 +201,11 @@ SELECT id
   FROM ' . Tables::themes() . '
   WHERE id != \'' . $theme_id . '\'
 ;';
-                    $result = pwg_query($query);
-                    if (pwg_db_num_rows($result) == 0) {
+                    $result = \Piwigo\Db\MysqliDb::query($query);
+                    if (\Piwigo\Db\MysqliDb::numRows($result) == 0) {
                         $new_theme = 'default';
                     } else {
-                        $row = pwg_db_fetch_row($result);
+                        $row = \Piwigo\Db\MysqliDb::fetchRow($result);
                         assert($row !== null);
                         [$new_theme] = $row;
                         if (! is_string($new_theme)) {
@@ -224,7 +224,7 @@ DELETE
   FROM ' . Tables::themes() . '
   WHERE id= \'' . $theme_id . '\'
 ;';
-                pwg_query($query);
+                \Piwigo\Db\MysqliDb::query($query);
 
                 if ((bool) $this->fs_themes[$theme_id]['mobile']) {
                     conf_update_param('mobile_theme', '');
@@ -328,7 +328,7 @@ SELECT
         // defensively rather than trusting it, same as elsewhere in this
         // file (e.g. get_children_themes()).
         $user_ids_str = [];
-        foreach (query2array($query, null, 'user_id') as $query_user_id) {
+        foreach (\Piwigo\Db\MysqliDb::query2Array($query, null, 'user_id') as $query_user_id) {
             if (is_scalar($query_user_id)) {
                 $user_ids_str[] = (string) $query_user_id;
             }
@@ -355,7 +355,7 @@ UPDATE ' . Tables::userInfos() . '
   SET theme = \'' . $theme_id . '\'
   WHERE user_id IN (' . implode(',', $user_ids) . ')
 ;';
-        pwg_query($query);
+        \Piwigo\Db\MysqliDb::query($query);
     }
 
     /**
@@ -377,9 +377,9 @@ SELECT
   WHERE ' . implode(' AND ', $clauses);
         }
 
-        $result = pwg_query($query);
+        $result = \Piwigo\Db\MysqliDb::query($query);
         $themes = [];
-        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
             $themes[] = $row;
         }
         return $themes;
@@ -449,13 +449,13 @@ SELECT
                         $theme['parent'] = $val[1];
                     }
                     if ((bool) preg_match('/["\']activable["\'].*?(true|false)/i', $theme_data, $val)) {
-                        $theme['activable'] = get_boolean($val[1]);
+                        $theme['activable'] = \Piwigo\Db\MysqliDb::getBoolean($val[1]);
                     }
                     if ((bool) preg_match('/["\']mobile["\'].*?(true|false)/i', $theme_data, $val)) {
-                        $theme['mobile'] = get_boolean($val[1]);
+                        $theme['mobile'] = \Piwigo\Db\MysqliDb::getBoolean($val[1]);
                     }
                     if ((bool) preg_match('/["\']use_standard_pages["\'].*?(true|false)/i', $theme_data, $val)) {
-                        $theme['use_standard_pages'] = get_boolean($val[1]);
+                        $theme['use_standard_pages'] = \Piwigo\Db\MysqliDb::getBoolean($val[1]);
                     }
 
                     // screenshot

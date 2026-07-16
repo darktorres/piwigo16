@@ -70,10 +70,10 @@ SELECT id, name
   FROM ' . Tables::languages() . '
   ORDER BY name ASC
 ;';
-        $result = pwg_query($query);
+        $result = \Piwigo\Db\MysqliDb::query($query);
 
         $languages = [];
-        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
             $id = $row['id'];
             $name = $row['name'];
             if (! is_string($id) || ! is_string($name)) {

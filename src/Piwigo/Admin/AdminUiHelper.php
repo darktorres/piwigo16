@@ -168,7 +168,7 @@ SELECT CONCAT(
   )
   FROM `' . $tables[$item] . '`
 ;';
-            $row = pwg_db_fetch_row(pwg_query($query));
+            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
             assert($row !== null);
             $cache_key = $row[0];
             assert(is_string($cache_key));

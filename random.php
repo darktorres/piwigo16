@@ -58,5 +58,5 @@ SELECT id
 // +-----------------------------------------------------------------------+
 
 redirect(make_index_url([
-    'list' => query2array($query, null, 'id'),
+    'list' => \Piwigo\Db\MysqliDb::query2Array($query, null, 'id'),
 ]));

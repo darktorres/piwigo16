@@ -470,9 +470,9 @@ SELECT
   WHERE activation_key IS NOT NULL
     AND activation_key_expire > NOW()
 ;';
-        $result = pwg_query($query);
+        $result = \Piwigo\Db\MysqliDb::query($query);
         $user_id = null;
-        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
             $activation_key = $row['activation_key'] ?? null;
             if (! is_string($activation_key)) {
                 continue;
@@ -534,7 +534,7 @@ SELECT
         /** @var array<string, string> $user_fields */
         $user_fields = $conf['user_fields'];
 
-        single_update(
+        \Piwigo\Db\MysqliDb::singleUpdate(
             Tables::users(),
             [
                 $user_fields['password'] => (new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())))->hash($new_password),

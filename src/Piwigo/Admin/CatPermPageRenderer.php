@@ -113,7 +113,7 @@ SELECT id, name
   FROM `' . Tables::groups() . '`
   ORDER BY name ASC
 ;';
-        $groups = query2array($query, 'id', 'name');
+        $groups = \Piwigo\Db\MysqliDb::query2Array($query, 'id', 'name');
         $template->assign('groups', $groups);
 
         // groups granted to access the category
@@ -126,7 +126,7 @@ SELECT group_id
         // narrow to the real int ids (DB values are string|null per this driver,
         // group_id is a NOT NULL numeric column)
         $group_granted_ids = [];
-        foreach (query2array($query, null, 'group_id') as $raw_group_id) {
+        foreach (\Piwigo\Db\MysqliDb::query2Array($query, null, 'group_id') as $raw_group_id) {
             if (is_numeric($raw_group_id)) {
                 $group_granted_ids[] = (int) $raw_group_id;
             }
@@ -156,7 +156,7 @@ SELECT ' . $user_field_id . ' AS id,
        ' . $user_field_username . ' AS username
   FROM ' . Tables::users() . '
 ;';
-        $users = query2array($query, 'id', 'username');
+        $users = \Piwigo\Db\MysqliDb::query2Array($query, 'id', 'username');
         $template->assign('users', $users);
 
         $query = '
@@ -168,7 +168,7 @@ SELECT user_id
         // narrow to the real int ids (DB values are string|null per this driver,
         // user_id is a NOT NULL numeric column)
         $user_granted_direct_ids = [];
-        foreach (query2array($query, null, 'user_id') as $raw_user_id) {
+        foreach (\Piwigo\Db\MysqliDb::query2Array($query, null, 'user_id') as $raw_user_id) {
             if (is_numeric($raw_user_id)) {
                 $user_granted_direct_ids[] = (int) $raw_user_id;
             }
@@ -184,8 +184,8 @@ SELECT user_id, group_id
   FROM ' . Tables::userGroup() . '
   WHERE group_id IN (' . implode(',', $group_granted_ids) . ')
 ';
-            $result = pwg_query($query);
-            while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+            $result = \Piwigo\Db\MysqliDb::query($query);
+            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
                 // group_id/user_id are NOT NULL numeric columns; this driver
                 // returns every column as string|null, so guard before using
                 // group_id as an array key and collecting user_id

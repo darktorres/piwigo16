@@ -16,7 +16,7 @@ use Piwigo\Template\Template;
  * Injects nothing -- same "no constructor deps" shape as Piwigo\Url\
  * UrlService (this phase's sibling namespace): cross-domain calls
  * (trigger_change(), get_cat_info(), redirect_http()/redirect_html(),
- * script_basename(), is_a_guest(), pwg_transliterate(), query2array(),
+ * script_basename(), is_a_guest(), pwg_transliterate(), \Piwigo\Db\MysqliDb::query2Array(),
  * l10n()) stay as plain global-function calls to modules not yet migrated
  * in P17.
  */
@@ -108,7 +108,7 @@ final class HtmlService
 SELECT id, name, permalink
   FROM ' . Tables::categories() . '
 ;';
-            $cache['cat_names'] = query2array($query, 'id');
+            $cache['cat_names'] = \Piwigo\Db\MysqliDb::query2Array($query, 'id');
         }
         // Narrowed once here (fix pattern #7): $cache is array<string, mixed>,
         // proving $cache is array-like does not prove $cache['cat_names'] is

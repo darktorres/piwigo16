@@ -108,7 +108,7 @@ final class UserBootstrap
             and isset($_REQUEST['method'])
             and is_string($_REQUEST['method'])
         ) {
-            $auth_header = pwg_db_real_escape_string($_SERVER['HTTP_X_PIWIGO_API']) ?? null;
+            $auth_header = \Piwigo\Db\MysqliDb::realEscapeString($_SERVER['HTTP_X_PIWIGO_API']) ?? null;
 
             if ((bool) $auth_header) {
                 $authenticate = (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->authKeyLogin($auth_header, true);

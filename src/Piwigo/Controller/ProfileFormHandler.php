@@ -136,7 +136,7 @@ final class ProfileFormHandler
     FROM ' . Tables::users() . '
     WHERE ' . $user_fields['id'] . ' = \'' . $user_id . '\'
   ;';
-                $row = pwg_db_fetch_row(pwg_query($query));
+                $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
                 assert($row !== null);
                 [$current_password] = $row;
 
@@ -215,7 +215,7 @@ final class ProfileFormHandler
                     }
                 }
 
-                mass_updates(
+                \Piwigo\Db\MysqliDb::massUpdates(
                     Tables::users(),
                     [
                         'primary' => [$user_fields['id']],
@@ -250,7 +250,7 @@ final class ProfileFormHandler
                         $data[$field] = $_POST[$field];
                     }
                 }
-                mass_updates(
+                \Piwigo\Db\MysqliDb::massUpdates(
                     Tables::userInfos(),
                     [
                         'primary' => ['user_id'],
@@ -334,7 +334,7 @@ final class ProfileFormHandler
         $template->assign('IN_ADMIN', defined('IN_ADMIN'));
 
         // api key expiration choice
-        $row = pwg_db_fetch_row(pwg_query('SELECT ADDDATE(NOW(), INTERVAL 1 DAY);'));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT ADDDATE(NOW(), INTERVAL 1 DAY);'));
         assert($row !== null);
         [$dbnow] = $row;
         $template->assign('API_CURRENT_DATE', explode(' ', (string) $dbnow)[0]);
@@ -357,7 +357,7 @@ final class ProfileFormHandler
 SELECT
   ' . implode(', ', $duration) . '
 ;';
-        $result = query2array($query)[0];
+        $result = \Piwigo\Db\MysqliDb::query2Array($query)[0];
         foreach ($result as $day => $date) {
             $display_duration[$day] = l10n('%d days', $day) . ' (' . \Piwigo\Core\DateHelper::formatDate($date ?? false, ['day', 'month', 'year']) . ')';
         }

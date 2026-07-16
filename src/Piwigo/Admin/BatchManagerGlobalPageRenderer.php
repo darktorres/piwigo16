@@ -175,7 +175,7 @@ DELETE
   WHERE element_id IN (' . implode(',', $collection) . ')
     AND user_id = ' . $user['id'] . '
 ;';
-                pwg_query($query);
+                \Piwigo\Db\MysqliDb::query($query);
 
                 // remove from caddie action available only in caddie so reload content
                 $redirect = true;
@@ -208,7 +208,7 @@ DELETE
   WHERE image_id IN (' . implode(',', $collection) . ')
     AND tag_id IN (' . implode(',', $del_tags) . ')
 ;';
-                    pwg_query($query);
+                    \Piwigo\Db\MysqliDb::query($query);
 
                     $taglist_after = $tagService->getImageTagIds($collection);
                     $images_to_update = $tagService->compareImageTagLists($taglist_before, $taglist_after);
@@ -311,7 +311,7 @@ DELETE
                     ];
                 }
 
-                mass_updates(
+                \Piwigo\Db\MysqliDb::massUpdates(
                     Tables::images(),
                     [
                         'primary' => ['id'],
@@ -339,7 +339,7 @@ DELETE
                     ];
                 }
 
-                mass_updates(
+                \Piwigo\Db\MysqliDb::massUpdates(
                     Tables::images(),
                     [
                         'primary' => ['id'],
@@ -369,7 +369,7 @@ DELETE
                     ];
                 }
 
-                mass_updates(
+                \Piwigo\Db\MysqliDb::massUpdates(
                     Tables::images(),
                     [
                         'primary' => ['id'],
@@ -393,7 +393,7 @@ DELETE
                     ];
                 }
 
-                mass_updates(
+                \Piwigo\Db\MysqliDb::massUpdates(
                     Tables::images(),
                     [
                         'primary' => ['id'],
@@ -449,8 +449,8 @@ DELETE
             } elseif ($action === 'delete_derivatives' && isset($_POST['del_derivatives_type']) && is_array($_POST['del_derivatives_type']) && count($_POST['del_derivatives_type']) > 0) {
                 $query = 'SELECT path,representative_ext FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', $collection) . ')';
-                $result = pwg_query($query);
-                while ((bool) ($info = pwg_db_fetch_assoc($result))) {
+                $result = \Piwigo\Db\MysqliDb::query($query);
+                while ((bool) ($info = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
                     $derivative_infos = [
                         'path' => (string) $info['path'],
                     ];
@@ -648,11 +648,11 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
   ' . $order_by . '
   LIMIT ' . $nb_images . ' OFFSET ' . $page_start . '
 ;';
-            $result = pwg_query($query);
+            $result = \Piwigo\Db\MysqliDb::query($query);
 
             $thumb_params = ImageStdParams::get_by_type(IMG_SQUARE);
             // template thumbnail initialization
-            while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
                 $nb_thumbs_page++;
                 $src_image = new SrcImage($row);
 

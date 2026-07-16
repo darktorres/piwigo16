@@ -167,17 +167,17 @@ try {
     if (! is_string($db_host) || ! is_string($db_user) || ! is_string($db_password) || ! is_string($db_base)) {
         throw new Exception("Invalid database configuration: \$conf['db_host'], 'db_user', 'db_password' and 'db_base' must be strings.");
     }
-    pwg_db_connect(
+    \Piwigo\Db\MysqliDb::connect(
         $db_host,
         $db_user,
         $db_password,
         $db_base
     );
 } catch (Exception $e) {
-    my_error(l10n($e->getMessage()), true);
+    \Piwigo\Db\MysqliDb::myError(l10n($e->getMessage()), true);
 }
 
-pwg_db_check_charset();
+\Piwigo\Db\MysqliDb::checkCharset();
 
 // in Piwigo 15, configuration setting webmaster_id is moved from config files
 // to database. It may be undefined at some point, with Piwigo 15+ scripts and
@@ -231,7 +231,7 @@ if (! isset($conf['piwigo_installed_version'])) {
 
 // Check if last major update conf is set if not set it
 if (! isset($conf['last_major_update'])) {
-    $row = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
+    $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT NOW();'));
     assert($row !== null);
     [$dbnow] = $row;
     conf_update_param('last_major_update', $dbnow, true);
@@ -371,7 +371,7 @@ if (is_array($page['notify_api_key_expiration'])) {
     $is_mail_send = (new \Piwigo\Auth\ApiKeyService(new \Piwigo\Mail\MailService()))->notifyExpiration($notify_username, $notify_email, $days_left);
 
     if ($is_mail_send) {
-        single_update(
+        \Piwigo\Db\MysqliDb::singleUpdate(
             Tables::userAuthKeys(),
             [
                 'last_notified_on' => $page['notify_api_key_expiration']['dbnow'],

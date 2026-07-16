@@ -76,7 +76,7 @@ SELECT
     COUNT(*)
   FROM ' . Tables::categories() . '
 ;';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$albums_counter] = $row;
 
@@ -99,7 +99,7 @@ SELECT
 SELECT COUNT(*)
   FROM ' . Tables::categories() . '
 ;';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$nb_cats] = $row;
         $template->assign(
@@ -145,7 +145,7 @@ SELECT id
   WHERE id_uppercat ' .
               (($post_id === '-1') ? 'IS NULL' : '= ' . $post_id) . '
 ;';
-            $category_ids = query2array($query, null, 'id');
+            $category_ids = \Piwigo\Db\MysqliDb::query2Array($query, null, 'id');
             // 'id' is Tables::categories()'s primary key column, always a numeric
             // string per this driver's string|null fetch convention -- filter out
             // the (never-actually-occurring) null case so downstream implode()/
@@ -174,8 +174,8 @@ SELECT id, name, id_uppercat
   FROM ' . Tables::categories() . '
   WHERE id IN (' . implode(',', $category_ids) . ')
 ;';
-            $result = pwg_query($query);
-            while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+            $result = \Piwigo\Db\MysqliDb::query($query);
+            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
                 /** @var array<string, string|null> $row */
                 $rendered_name = trigger_change('render_category_name', $row['name'], 'admin_cat_list');
                 $row['name'] = is_string($rendered_name) ? $rendered_name : $row['name'];
@@ -237,7 +237,7 @@ SELECT id,name,`rank`,status, visible, uppercats, lastmodified
   FROM ' . Tables::categories() . '
 ;';
 
-        $allAlbum = query2array($query);
+        $allAlbum = \Piwigo\Db\MysqliDb::query2Array($query);
 
         // Make an id tree
         $associatedTree = [];
@@ -296,7 +296,7 @@ SELECT
   GROUP BY category_id
 ;';
 
-        $nb_photos_in = query2array($query, 'category_id', 'nb_photos');
+        $nb_photos_in = \Piwigo\Db\MysqliDb::query2Array($query, 'category_id', 'nb_photos');
 
         $query = '
 SELECT
@@ -304,7 +304,7 @@ SELECT
     uppercats
   FROM ' . Tables::categories() . '
 ;';
-        $all_categories = query2array($query, 'id', 'uppercats');
+        $all_categories = \Piwigo\Db\MysqliDb::query2Array($query, 'id', 'uppercats');
 
         $subcats_of = [];
 
@@ -320,7 +320,7 @@ SELECT
             foreach ($subcat_ids as $id) {
                 if (isset($nb_photos_in[$id])) {
                     // COUNT(*) always yields a numeric string per this driver's
-                    // string|null fetch convention (see query2array()); cast so the
+                    // string|null fetch convention (see \Piwigo\Db\MysqliDb::query2Array()); cast so the
                     // accumulator stays a provably-int running total.
                     $nb_photos += (int) $nb_photos_in[$id];
                 }

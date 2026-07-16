@@ -331,7 +331,7 @@ final class PwgExtensions
                 ];
             }
 
-            conf_update_param('updates_ignored', pwg_db_real_escape_string(serialize($conf['updates_ignored'])));
+            conf_update_param('updates_ignored', \Piwigo\Db\MysqliDb::realEscapeString(serialize($conf['updates_ignored'])));
             unset($_SESSION['extensions_need_update']);
             return true;
         }
@@ -345,7 +345,7 @@ final class PwgExtensions
             $conf['updates_ignored'][$params['type']][] = $params['id'];
         }
 
-        conf_update_param('updates_ignored', pwg_db_real_escape_string(serialize($conf['updates_ignored'])));
+        conf_update_param('updates_ignored', \Piwigo\Db\MysqliDb::realEscapeString(serialize($conf['updates_ignored'])));
         unset($_SESSION['extensions_need_update']);
         return true;
     }

@@ -42,8 +42,8 @@ use Piwigo\Template\Template;
  * P23 batch 8c) -- `Notification` is L2bExtendedDomain, this class is
  * L3Presentation, same allowed downward direction as
  * `NotificationByMailService` above.
- * `set_make_full_url()`/`unset_make_full_url()`/`mass_updates()`/
- * `boolean_to_string()` have no `src/Piwigo/` equivalent yet and stay bare
+ * `set_make_full_url()`/`unset_make_full_url()`/`\Piwigo\Db\MysqliDb::massUpdates()`/
+ * `\Piwigo\Db\MysqliDb::booleanToString()` have no `src/Piwigo/` equivalent yet and stay bare
  * free-function calls, unchanged.
  */
 final class NotificationByMailSender
@@ -157,7 +157,7 @@ final class NotificationByMailSender
 
         if ($isToSendMail) {
             $this->emailFormat = new MailService()
-                ->getStrEmailFormat(get_boolean($conf['nbm_send_html_mail'] ?? false));
+                ->getStrEmailFormat(\Piwigo\Db\MysqliDb::getBoolean($conf['nbm_send_html_mail'] ?? false));
 
             // $conf['nbm_send_mail_as'] is admin-submitted free text (see
             // NotificationByMailSubController), always a string when set.
@@ -372,7 +372,7 @@ final class NotificationByMailSender
 
         if (count($checkKeyList) != 0) {
             $updates = [];
-            $enabledValue = boolean_to_string($isSubscribe);
+            $enabledValue = \Piwigo\Db\MysqliDb::booleanToString($isSubscribe);
             $dataUsers = $this->getUserNotifications('subscribe', $checkKeyList, ! $isSubscribe);
 
             // Prepare message after change language
@@ -457,7 +457,7 @@ final class NotificationByMailSender
 
             $this->displayCounterInfo();
 
-            mass_updates(
+            \Piwigo\Db\MysqliDb::massUpdates(
                 Tables::userMailNotification(),
                 [
                     'primary' => ['check_key'],
@@ -504,7 +504,7 @@ final class NotificationByMailSender
         $returnList = [];
 
         if (in_array($action, ['list_to_send', 'send'])) {
-            $row = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
+            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT NOW();'));
             assert($row !== null);
             [$dbnow] = $row;
 
@@ -726,7 +726,7 @@ final class NotificationByMailSender
                     $this->endUsersEnv();
 
                     if ($isActionSend) {
-                        mass_updates(
+                        \Piwigo\Db\MysqliDb::massUpdates(
                             Tables::userMailNotification(),
                             [
                                 'primary' => ['user_id'],

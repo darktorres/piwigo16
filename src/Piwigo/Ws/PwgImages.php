@@ -89,7 +89,7 @@ DELETE
   FROM ' . Tables::imageCategory() . '
   WHERE image_id = ' . $image_id . '
 ;';
-                pwg_query($query);
+                \Piwigo\Db\MysqliDb::query($query);
                 $categoryService->updateCategory([]);
             }
             return true;
@@ -121,7 +121,7 @@ DELETE
   FROM ' . Tables::imageCategory() . '
   WHERE image_id = ' . $image_id . '
 ;';
-                pwg_query($query);
+                \Piwigo\Db\MysqliDb::query($query);
                 $categoryService->updateCategory([]);
             }
             return true;
@@ -134,7 +134,7 @@ SELECT id
 ;';
         // $value_name is given, so every element is a single 'id' column value
         // (string|null), never the nested-row array branch.
-        $db_cat_ids = array_map(static fn (?string $v): string => is_string($v) ? $v : '', query2array($query, null, 'id'));
+        $db_cat_ids = array_map(static fn (?string $v): string => is_string($v) ? $v : '', \Piwigo\Db\MysqliDb::query2Array($query, null, 'id'));
 
         $unknown_cat_ids = array_diff($cat_ids, $db_cat_ids);
         if (count($unknown_cat_ids) != 0) {
@@ -154,7 +154,7 @@ SELECT category_id
 ;';
         // $value_name is given, so every element is a single 'category_id'
         // column value (string|null), never the nested-row array branch.
-        $existing_cat_ids = array_map(static fn (?string $v): string => is_string($v) ? $v : '', query2array($query, null, 'category_id'));
+        $existing_cat_ids = array_map(static fn (?string $v): string => is_string($v) ? $v : '', \Piwigo\Db\MysqliDb::query2Array($query, null, 'category_id'));
 
         if ($replace_mode) {
             $to_remove_cat_ids = array_diff($existing_cat_ids, $cat_ids);
@@ -165,7 +165,7 @@ DELETE
   WHERE image_id = ' . $image_id . '
     AND category_id IN (' . implode(', ', $to_remove_cat_ids) . ')
 ;';
-                pwg_query($query);
+                \Piwigo\Db\MysqliDb::query($query);
                 $categoryService->updateCategory($to_remove_cat_ids);
             }
         }
@@ -183,7 +183,7 @@ SELECT category_id, MAX(`rank`) AS max_rank
     AND category_id IN (' . implode(',', $new_cat_ids) . ')
   GROUP BY category_id
 ;';
-            $current_rank_of = query2array(
+            $current_rank_of = \Piwigo\Db\MysqliDb::query2Array(
                 $query,
                 'category_id',
                 'max_rank'
@@ -211,7 +211,7 @@ SELECT category_id, MAX(`rank`) AS max_rank
             ];
         }
 
-        mass_inserts(
+        \Piwigo\Db\MysqliDb::massInserts(
             Tables::imageCategory(),
             array_keys($inserts[0]),
             $inserts
@@ -357,7 +357,7 @@ SELECT DISTINCT image_id
           ], ' AND') . '
 ;';
 
-        if (! (bool) pwg_db_num_rows(pwg_query($query))) {
+        if (! (bool) \Piwigo\Db\MysqliDb::numRows(\Piwigo\Db\MysqliDb::query($query))) {
             return new PwgError(WsError::INVALID_PARAM, 'Invalid image_id');
         }
 
@@ -417,15 +417,15 @@ SELECT *
           ], ' AND') . '
 LIMIT 1
 ;';
-        $result = pwg_query($query);
+        $result = \Piwigo\Db\MysqliDb::query($query);
 
-        if (pwg_db_num_rows($result) == 0) {
+        if (\Piwigo\Db\MysqliDb::numRows($result) == 0) {
             return new PwgError(404, 'image_id not found');
         }
 
-        $image_row = pwg_db_fetch_assoc($result);
+        $image_row = \Piwigo\Db\MysqliDb::fetchAssoc($result);
         if ($image_row === false || $image_row === null) {
-            throw new Exception('ws_images_getInfo(): fetch failed after a non-zero pwg_db_num_rows()');
+            throw new Exception('ws_images_getInfo(): fetch failed after a non-zero \Piwigo\Db\MysqliDb::numRows()');
         }
         // id is the Tables::images() primary key, guaranteed numeric; captured
         // before array_merge() below widens every value of $image_row to mixed.
@@ -434,7 +434,7 @@ LIMIT 1
 
         // array_merge() with WsHelper::stdGetUrls()'s mixed-valued return widens
         // PHPStan's tracked shape for every other key of the original
-        // pwg_db_fetch_assoc() row -- restate the columns this function reads
+        // \Piwigo\Db\MysqliDb::fetchAssoc() row -- restate the columns this function reads
         // below (id/file: Tables::images() NOT NULL; name/comment/rating_score:
         // nullable) plus an open tail for the rest of the row and the
         // page_url/element_url/download_url/derivatives keys WsHelper::stdGetUrls()
@@ -467,11 +467,11 @@ SELECT id, name, permalink, uppercats, global_rank, commentable
               'forbidden_categories' => 'category_id',
           ], ' AND') . '
 ;';
-        $result = pwg_query($query);
+        $result = \Piwigo\Db\MysqliDb::query($query);
 
         $is_commentable = false;
         $related_categories = [];
-        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
             if ($row['commentable'] == 'true') {
                 $is_commentable = true;
             }
@@ -547,7 +547,7 @@ SELECT COUNT(rate) AS count, ROUND(AVG(rate),2) AS average
   FROM ' . Tables::rate() . '
   WHERE element_id = ' . $image_id . '
 ;';
-            $row = pwg_db_fetch_assoc(pwg_query($query));
+            $row = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
             if ($row === false || $row === null) {
                 throw new Exception('ws_images_getInfo(): rate aggregate query returned no row');
             }
@@ -571,7 +571,7 @@ SELECT COUNT(id) AS nb_comments
   FROM ' . Tables::comments() . '
   WHERE ' . $where_comments . '
 ;';
-        [$nb_comments] = query2array($query, null, 'nb_comments');
+        [$nb_comments] = \Piwigo\Db\MysqliDb::query2Array($query, null, 'nb_comments');
         $nb_comments = (int) $nb_comments;
 
         if ($nb_comments > 0 and $params['comments_per_page'] > 0) {
@@ -583,9 +583,9 @@ SELECT id, date, author, content
   LIMIT ' . $params['comments_per_page'] . '
   OFFSET ' . ($params['comments_per_page'] * $params['comments_page']) . '
 ;';
-            $result = pwg_query($query);
+            $result = \Piwigo\Db\MysqliDb::query($query);
 
-            while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
                 $row['id'] = (int) $row['id'];
                 $related_comments[] = $row;
             }
@@ -675,7 +675,7 @@ SELECT DISTINCT id
           ], '    AND') . '
   LIMIT 1
 ;';
-        if (pwg_db_num_rows(pwg_query($query)) == 0) {
+        if (\Piwigo\Db\MysqliDb::numRows(\Piwigo\Db\MysqliDb::query($query)) == 0) {
             return new PwgError(404, 'Invalid image_id or access denied');
         }
 
@@ -753,11 +753,11 @@ SELECT *
   FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', $image_ids) . ')
 ;';
-            $result = pwg_query($query);
+            $result = \Piwigo\Db\MysqliDb::query($query);
             $image_ids = array_flip($image_ids);
             $favorite_ids = get_user_favorites();
 
-            while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
                 $image = [];
                 assert($row['id'] !== null);
                 $image['is_favorite'] = isset($favorite_ids[$row['id']]);
@@ -1123,11 +1123,11 @@ UPDATE ' . Tables::images() . '
   SET level=' . $params['level'] . '
   WHERE id IN (' . implode(',', $params['image_id']) . ')
 ;';
-        $result = pwg_query($query);
+        $result = \Piwigo\Db\MysqliDb::query($query);
 
         new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build()))->record('photo', $params['image_id'], 'edit');
 
-        $affected_rows = pwg_db_changes();
+        $affected_rows = \Piwigo\Db\MysqliDb::changes();
         if ((bool) $affected_rows) {
             UserCacheInvalidator::invalidate();
         }
@@ -1161,7 +1161,7 @@ SELECT
   WHERE category_id = ' . $params['category_id'] . '
   ORDER BY `rank` ASC
 ;';
-            $image_ids = query2array($query, null, 'image_id');
+            $image_ids = \Piwigo\Db\MysqliDb::query2Array($query, null, 'image_id');
 
             // return data for client
             return [
@@ -1183,7 +1183,7 @@ SELECT COUNT(*)
   FROM ' . Tables::images() . '
   WHERE id = ' . $params['image_id'] . '
 ;';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$count] = $row;
         if ($count == 0) {
@@ -1197,7 +1197,7 @@ SELECT COUNT(*)
   WHERE image_id = ' . $params['image_id'] . '
     AND category_id = ' . $params['category_id'] . '
 ;';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$count] = $row;
         if ($count == 0) {
@@ -1210,7 +1210,7 @@ SELECT MAX(`rank`) AS max_rank
   FROM ' . Tables::imageCategory() . '
   WHERE category_id = ' . $params['category_id'] . '
 ;';
-        $row = pwg_db_fetch_assoc(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
         if ($row === false || $row === null) {
             throw new Exception('ws_images_setRank(): max-rank aggregate query returned no row');
         }
@@ -1231,7 +1231,7 @@ UPDATE ' . Tables::imageCategory() . '
     AND `rank` IS NOT NULL
     AND `rank` >= ' . $params['rank'] . '
 ;';
-        pwg_query($query);
+        \Piwigo\Db\MysqliDb::query($query);
 
         // set the new rank for the photo
         $query = '
@@ -1240,7 +1240,7 @@ UPDATE ' . Tables::imageCategory() . '
   WHERE image_id = ' . $params['image_id'] . '
     AND category_id = ' . $params['category_id'] . '
 ;';
-        pwg_query($query);
+        \Piwigo\Db\MysqliDb::query($query);
 
         // return data for client
         return [
@@ -1336,15 +1336,15 @@ SELECT
   FROM ' . Tables::images() . '
   WHERE id = ' . $params['image_id'] . '
 ;';
-        $result = pwg_query($query);
+        $result = \Piwigo\Db\MysqliDb::query($query);
 
-        if (pwg_db_num_rows($result) == 0) {
+        if (\Piwigo\Db\MysqliDb::numRows($result) == 0) {
             return new PwgError(404, 'image_id not found');
         }
 
-        $image = pwg_db_fetch_assoc($result);
+        $image = \Piwigo\Db\MysqliDb::fetchAssoc($result);
         if ($image === false || $image === null) {
-            throw new Exception('ws_images_addFile(): fetch failed after a non-zero pwg_db_num_rows()');
+            throw new Exception('ws_images_addFile(): fetch failed after a non-zero \Piwigo\Db\MysqliDb::numRows()');
         }
 
         // this legacy chunked-upload flow locates buffered chunks by md5sum, so
@@ -1441,7 +1441,7 @@ SELECT COUNT(*)
   FROM ' . Tables::images() . '
   WHERE id = ' . $params['image_id'] . '
 ;';
-            $row = pwg_db_fetch_row(pwg_query($query));
+            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
             assert($row !== null);
             [$count] = $row;
             if ($count == 0) {
@@ -1464,7 +1464,7 @@ SELECT COUNT(*)
   FROM ' . Tables::images() . '
   WHERE ' . $where_clause . '
 ;';
-            $row = pwg_db_fetch_row(pwg_query($query));
+            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
             assert($row !== null);
             [$counter] = $row;
             if ($counter != 0) {
@@ -1517,7 +1517,7 @@ SELECT COUNT(*)
         }
 
         if (count(array_keys($update)) > 0) {
-            single_update(
+            \Piwigo\Db\MysqliDb::singleUpdate(
                 Tables::images(),
                 $update,
                 [
@@ -1542,8 +1542,8 @@ SELECT id, name, permalink
   FROM ' . Tables::categories() . '
   WHERE id = ' . $category_id . '
 ;';
-                $result = pwg_query($query);
-                $category = pwg_db_fetch_assoc($result);
+                $result = \Piwigo\Db\MysqliDb::query($query);
+                $category = \Piwigo\Db\MysqliDb::fetchAssoc($result);
 
                 $url_params['section'] = 'categories';
                 $url_params['category'] = $category;
@@ -1620,7 +1620,7 @@ SELECT COUNT(*)
   FROM ' . Tables::images() . '
   WHERE id = ' . $params['image_id'] . '
 ;';
-            $row = pwg_db_fetch_row(pwg_query($query));
+            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
             assert($row !== null);
             [$count] = $row;
             if ($count == 0) {
@@ -1658,7 +1658,7 @@ SELECT COUNT(*)
             }
         }
 
-        single_update(
+        \Piwigo\Db\MysqliDb::singleUpdate(
             Tables::images(),
             $update,
             [
@@ -1700,8 +1700,8 @@ SELECT id, name, permalink
   FROM ' . Tables::categories() . '
   WHERE id = ' . $params['category'][0] . '
 ;';
-            $result = pwg_query($query);
-            $category = pwg_db_fetch_assoc($result);
+            $result = \Piwigo\Db\MysqliDb::query($query);
+            $category = \Piwigo\Db\MysqliDb::fetchAssoc($result);
 
             $url_params['section'] = 'categories';
             $url_params['category'] = $category;
@@ -1834,7 +1834,7 @@ SELECT *
   FROM ' . Tables::images() . '
   WHERE id = ' . $params['format_of'] . '
 ;';
-                $images = query2array($query);
+                $images = \Piwigo\Db\MysqliDb::query2Array($query);
                 if (count($images) == 0) {
                     return new PwgError(404, __FUNCTION__ . ' : image_id not found');
                 }
@@ -1854,7 +1854,7 @@ SELECT *
                 ];
             }
 
-            $name = pwg_db_real_escape_string(stripslashes((string) $params['name']));
+            $name = \Piwigo\Db\MysqliDb::realEscapeString(stripslashes((string) $params['name']));
             $id_image = null; // null by default
 
             if ($params['update_mode']) {
@@ -1866,7 +1866,7 @@ SELECT
   WHERE i.file = \'' . $name . '\'
   AND ic.category_id = ' . $params['category'][0] . '
 ;';
-                $images = query2array($query);
+                $images = \Piwigo\Db\MysqliDb::query2Array($query);
                 if ($images != null) {
                     $existing_id = $images[0]['id']; // take the id of the already existing image to replace it
                     $id_image = is_numeric($existing_id) ? (int) $existing_id : null;
@@ -1892,7 +1892,7 @@ SELECT
   FROM ' . Tables::images() . '
   WHERE id = ' . $image_id . '
 ;';
-            $image_infos = pwg_db_fetch_assoc(pwg_query($query));
+            $image_infos = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
             if ($image_infos === false || $image_infos === null) {
                 throw new Exception('ws_images_upload(): image fetch failed right after inserting it');
             }
@@ -1903,7 +1903,7 @@ SELECT
   FROM ' . Tables::imageCategory() . '
   WHERE category_id = ' . $params['category'][0] . '
 ;';
-            $category_infos = pwg_db_fetch_assoc(pwg_query($query));
+            $category_infos = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
             if ($category_infos === false || $category_infos === null) {
                 throw new Exception('ws_images_upload(): category-count aggregate query returned no row');
             }
@@ -1915,7 +1915,7 @@ SELECT
   WHERE category_id = ' . $params['category'][0] . '
   AND image_id NOT IN (Select image_id from ' . Tables::imageCategory() . ')
 ;';
-            $row = pwg_db_fetch_row(pwg_query($query));
+            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
             assert($row !== null);
             [$nb_photos_lounge] = $row;
 
@@ -1980,7 +1980,7 @@ SELECT COUNT(*)
   FROM ' . Tables::images() . '
   WHERE id = ' . $params['image_id'] . '
 ;';
-            $row = pwg_db_fetch_row(pwg_query($query));
+            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
             assert($row !== null);
             [$count] = $row;
             if ($count == 0) {
@@ -2172,7 +2172,7 @@ SELECT COUNT(*)
         }
 
         if (count(array_keys($update)) > 0) {
-            single_update(
+            \Piwigo\Db\MysqliDb::singleUpdate(
                 Tables::images(),
                 $update,
                 [
@@ -2267,7 +2267,7 @@ SELECT id, md5sum
   FROM ' . Tables::images() . '
   WHERE md5sum IN (\'' . implode("','", $md5sums) . '\')
 ;';
-            $id_of_md5 = query2array($query, 'md5sum', 'id');
+            $id_of_md5 = \Piwigo\Db\MysqliDb::query2Array($query, 'md5sum', 'id');
 
             foreach ($md5sums as $md5sum) {
                 $result[$md5sum] = null;
@@ -2293,7 +2293,7 @@ SELECT id, file
   FROM ' . Tables::images() . '
   WHERE file IN (\'' . implode("','", $filenames) . '\')
 ;';
-            $id_of_filename = query2array($query, 'file', 'id');
+            $id_of_filename = \Piwigo\Db\MysqliDb::query2Array($query, 'file', 'id');
 
             foreach ($filenames as $filename) {
                 $result[$filename] = null;
@@ -2338,8 +2338,8 @@ SELECT
     file
   FROM ' . Tables::images() . '
 ;';
-        $result = pwg_query($query);
-        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+        $result = \Piwigo\Db\MysqliDb::query($query);
+        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
             assert($row['file'] !== null);
             $filename_wo_ext = \Piwigo\Core\StringHelper::getFilenameWoExtension($row['file']);
             @$unique_filenames_db[$filename_wo_ext][] = $row['id'];
@@ -2360,9 +2360,9 @@ SELECT
     ext
   FROM ' . Tables::imageFormat() . '
 ;';
-        $result = pwg_query($query);
+        $result = \Piwigo\Db\MysqliDb::query($query);
         $format_db = [];
-        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
             assert($row['image_id'] !== null);
             $format_image_id = $row['image_id'];
             @$format_db[$format_image_id][] = $row['ext'];
@@ -2473,8 +2473,8 @@ SELECT
   FROM ' . Tables::imageFormat() . '
   WHERE format_id IN (' . implode(',', $format_ids) . ')
 ;';
-        $result = pwg_query($query);
-        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+        $result = \Piwigo\Db\MysqliDb::query($query);
+        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
             assert($row['image_id'] !== null);
             assert($row['ext'] !== null);
 
@@ -2498,8 +2498,8 @@ SELECT
   FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', $image_ids) . ')
 ;';
-        $result = pwg_query($query);
-        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+        $result = \Piwigo\Db\MysqliDb::query($query);
+        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
             assert($row['path'] !== null);
             if (url_is_remote($row['path'])) {
                 continue;
@@ -2529,7 +2529,7 @@ SELECT
 DELETE FROM ' . Tables::imageFormat() . '
   WHERE format_id IN (' . implode(',', $format_ids) . ')
 ;';
-        pwg_query($query);
+        \Piwigo\Db\MysqliDb::query($query);
 
         UserCacheInvalidator::invalidate();
 
@@ -2556,13 +2556,13 @@ SELECT path
   FROM ' . Tables::images() . '
   WHERE id = ' . $params['image_id'] . '
 ;';
-        $result = pwg_query($query);
+        $result = \Piwigo\Db\MysqliDb::query($query);
 
-        if (pwg_db_num_rows($result) == 0) {
+        if (\Piwigo\Db\MysqliDb::numRows($result) == 0) {
             return new PwgError(404, 'image_id not found');
         }
 
-        $row = pwg_db_fetch_row($result);
+        $row = \Piwigo\Db\MysqliDb::fetchRow($result);
         assert($row !== null);
         [$path] = $row;
         assert($path !== null);
@@ -2622,13 +2622,13 @@ SELECT *
   FROM ' . Tables::images() . '
   WHERE id = ' . $params['image_id'] . '
 ;';
-        $result = pwg_query($query);
+        $result = \Piwigo\Db\MysqliDb::query($query);
 
-        if (pwg_db_num_rows($result) == 0) {
+        if (\Piwigo\Db\MysqliDb::numRows($result) == 0) {
             return new PwgError(404, 'image_id not found');
         }
 
-        $image_row = pwg_db_fetch_assoc($result);
+        $image_row = \Piwigo\Db\MysqliDb::fetchAssoc($result);
 
         // database registration
         $update = [];
@@ -2682,7 +2682,7 @@ SELECT *
         if (count(array_keys($update)) > 0) {
             $update['id'] = $params['image_id'];
 
-            single_update(
+            \Piwigo\Db\MysqliDb::singleUpdate(
                 Tables::images(),
                 $update,
                 [
@@ -2747,10 +2747,10 @@ SELECT *
             // clean user input
             $cleaned_tag_list = [];
             foreach ($_REQUEST['tag_list'] as $tag_candidate) {
-                $cleaned_tag_list[] = pwg_db_real_escape_string(strip_tags(stripslashes(is_scalar($tag_candidate) ? (string) $tag_candidate : '')));
+                $cleaned_tag_list[] = \Piwigo\Db\MysqliDb::realEscapeString(strip_tags(stripslashes(is_scalar($tag_candidate) ? (string) $tag_candidate : '')));
             }
 
-            // pwg_db_real_escape_string() only returns null for a null input,
+            // \Piwigo\Db\MysqliDb::realEscapeString() only returns null for a null input,
             // and every element pushed above is already a string.
             $tag_list = $tagService->getTagIds(array_filter($cleaned_tag_list, is_string(...)));
             $tagService->setTags($tag_list, $params['image_id']);
@@ -2895,7 +2895,7 @@ SELECT
   FROM ' . Tables::imageCategory() . '
   WHERE category_id = ' . $params['category_id'] . '
 ;';
-        $category_infos = pwg_db_fetch_assoc(pwg_query($query));
+        $category_infos = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
         if ($category_infos === false || $category_infos === null) {
             throw new Exception(__FUNCTION__ . '(): category-count aggregate query returned no row');
         }
@@ -2999,7 +2999,7 @@ SELECT id
   FROM ' . Tables::images() . '
   WHERE id IN (' . implode(', ', $image_ids) . ')
 ;';
-        $image_ids = query2array($query, null, 'id');
+        $image_ids = \Piwigo\Db\MysqliDb::query2Array($query, null, 'id');
 
         if (empty($image_ids)) {
             return new PwgError(403, 'No image found');
@@ -3065,7 +3065,7 @@ SELECT
   FROM ' . Tables::categories() . '
   WHERE id = ' . $params['category_id'] . '
 ;';
-        $categories = query2array($query);
+        $categories = \Piwigo\Db\MysqliDb::query2Array($query);
 
         if (count($categories) == 0) {
             return new PwgError(404, 'category_id not found');

@@ -350,8 +350,8 @@ SELECT id
     /**
      * Same insert as {@see insert()} but deliberately does NOT set
      * `lastmodified` explicitly -- matches the original
-     * `tag_id_from_tag_name()`'s own `mass_inserts()` call, which (unlike
-     * `create_tag()`'s `single_insert()`) leaves it to the schema's DEFAULT
+     * `tag_id_from_tag_name()`'s own `\Piwigo\Db\MysqliDb::massInserts()` call, which (unlike
+     * `create_tag()`'s `\Piwigo\Db\MysqliDb::singleInsert()`) leaves it to the schema's DEFAULT
      * CURRENT_TIMESTAMP. Preserved as-is rather than unified with
      * `insert()`: a real behavioral difference between the two original
      * functions, not an oversight to silently "fix" here.

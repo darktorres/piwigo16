@@ -160,7 +160,7 @@ class plugins
 INSERT INTO ' . Tables::plugins() . ' (id,version)
   VALUES (\'' . $plugin_id . '\', \'' . $fs_version . '\')
 ;';
-                    pwg_query($query);
+                    \Piwigo\Db\MysqliDb::query($query);
                 } else {
                     $activity_details['result'] = 'error';
                 }
@@ -190,7 +190,7 @@ UPDATE ' . Tables::plugins() . '
   SET version=\'' . $new_version . '\'
   WHERE id=\'' . $plugin_id . '\'
 ;';
-                        pwg_query($query);
+                        \Piwigo\Db\MysqliDb::query($query);
                     }
                 } else {
                     $activity_details['result'] = 'error';
@@ -222,7 +222,7 @@ UPDATE ' . Tables::plugins() . '
   SET state=\'active\'
   WHERE id=\'' . $plugin_id . '\'
 ;';
-                    pwg_query($query);
+                    \Piwigo\Db\MysqliDb::query($query);
                 } else {
                     $activity_details['result'] = 'error';
                 }
@@ -239,7 +239,7 @@ UPDATE ' . Tables::plugins() . '
   SET state=\'inactive\'
   WHERE id=\'' . $plugin_id . '\'
 ;';
-                pwg_query($query);
+                \Piwigo\Db\MysqliDb::query($query);
 
                 $plugin_maintain = self::build_maintain_class($plugin_id);
                 $plugin_maintain->deactivate();
@@ -269,7 +269,7 @@ UPDATE ' . Tables::plugins() . '
 DELETE FROM ' . Tables::plugins() . '
   WHERE id=\'' . $plugin_id . '\'
 ;';
-                pwg_query($query);
+                \Piwigo\Db\MysqliDb::query($query);
 
                 $plugin_maintain = self::build_maintain_class($plugin_id);
                 $plugin_maintain->uninstall();

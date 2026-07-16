@@ -59,9 +59,9 @@ SELECT user_id, cat_id
   FROM ' . Tables::userAccess() . '
   ' . $cat_filter . '
 ;';
-        $result = pwg_query($query);
+        $result = \Piwigo\Db\MysqliDb::query($query);
 
-        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
             if (! isset($row['cat_id']) || ! is_numeric($row['cat_id'])) {
                 continue;
             }
@@ -80,9 +80,9 @@ SELECT ug.user_id, ga.cat_id
     ON ug.group_id = ga.group_id
   ' . $cat_filter . '
 ;';
-        $result = pwg_query($query);
+        $result = \Piwigo\Db\MysqliDb::query($query);
 
-        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
             if (! isset($row['cat_id']) || ! is_numeric($row['cat_id'])) {
                 continue;
             }
@@ -99,9 +99,9 @@ SELECT group_id, cat_id
   FROM ' . Tables::groupAccess() . '
   ' . $cat_filter . '
 ;';
-        $result = pwg_query($query);
+        $result = \Piwigo\Db\MysqliDb::query($query);
 
-        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
             if (! isset($row['cat_id']) || ! is_numeric($row['cat_id'])) {
                 continue;
             }
@@ -176,7 +176,7 @@ SELECT id
   WHERE id IN (' . implode(',', $cat_ids) . ')
     AND status = \'private\'
 ;';
-            $private_cats = query2array($query, null, 'id');
+            $private_cats = \Piwigo\Db\MysqliDb::query2Array($query, null, 'id');
 
             $inserts = [];
             foreach ($private_cats as $cat_id) {
@@ -188,7 +188,7 @@ SELECT id
                 }
             }
 
-            mass_inserts(
+            \Piwigo\Db\MysqliDb::massInserts(
                 Tables::groupAccess(),
                 ['group_id', 'cat_id'],
                 $inserts,
@@ -238,7 +238,7 @@ DELETE
   WHERE group_id IN (' . implode(',', $params['group_id']) . ')
     AND cat_id IN (' . implode(',', $cat_ids) . ')
 ;';
-            pwg_query($query);
+            \Piwigo\Db\MysqliDb::query($query);
         }
 
         if (! empty($params['user_id'])) {
@@ -248,7 +248,7 @@ DELETE
   WHERE user_id IN (' . implode(',', $params['user_id']) . ')
     AND cat_id IN (' . implode(',', $cat_ids) . ')
 ;';
-            pwg_query($query);
+            \Piwigo\Db\MysqliDb::query($query);
         }
 
         return $service->invoke('pwg.permissions.getList', [

@@ -131,9 +131,9 @@ WHERE ';
         $query .= '
   category_id  IN (' . $filter['visible_categories'] . ') and';
         $query .= '
-    date_available >= ' . pwg_db_get_recent_period_expression($filter_recent_period);
+    date_available >= ' . \Piwigo\Db\MysqliDb::getRecentPeriodExpression($filter_recent_period);
 
-        $visible_image_ids = query2array($query, null, 'image_id');
+        $visible_image_ids = \Piwigo\Db\MysqliDb::query2Array($query, null, 'image_id');
         $filter['visible_images'] = implode(',', array_filter($visible_image_ids, is_string(...)));
 
         if (empty($filter['visible_images'])) {

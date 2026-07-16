@@ -147,7 +147,7 @@ SELECT id, file, level
                   str_replace(['_', '%'], ['/_', '/%'], is_string($page_image_file) ? $page_image_file : '') .
                   '.%\' ESCAPE \'/\' LIMIT 1';
             }
-            $row = pwg_db_fetch_assoc(pwg_query($query));
+            $row = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
             if ($row === false || $row === null) {// element does not exist
                 page_not_found(
                     'The requested image does not exist',
@@ -188,7 +188,7 @@ SELECT id
                           'forbidden_categories' => 'category_id',
                       ], ' AND') . '
   LIMIT 1';
-                    if (pwg_db_num_rows(pwg_query($query)) === 0) {
+                    if (\Piwigo\Db\MysqliDb::numRows(\Piwigo\Db\MysqliDb::query($query)) === 0) {
                         access_denied();
                     } else {
                         if ($page_section === 'best_rated') {
@@ -309,7 +309,7 @@ INSERT INTO ' . Tables::favorites() . '
   VALUES
   (' . $image_id . ',' . $user_id . ')
 ;';
-                    pwg_query($query);
+                    \Piwigo\Db\MysqliDb::query($query);
 
                     redirect($url_self);
 
@@ -321,7 +321,7 @@ DELETE FROM ' . Tables::favorites() . '
   WHERE user_id = ' . $user_id . '
     AND image_id = ' . $image_id . '
 ;';
-                    pwg_query($query);
+                    \Piwigo\Db\MysqliDb::query($query);
 
                     if ($page['section'] === 'favorites') {
                         redirect($url_up);
@@ -340,7 +340,7 @@ UPDATE ' . Tables::categories() . '
   SET representative_picture_id = ' . $image_id . '
   WHERE id = ' . $representative_category_id . '
 ;';
-                        pwg_query($query);
+                        \Piwigo\Db\MysqliDb::query($query);
                         (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('album', $representative_category_id, 'edit', [
                             'action' => $_GET['action'],
                             'image_id' => $image_id,
@@ -548,10 +548,10 @@ SELECT id,uppercats,commentable,visible,status,global_rank
                 'visible_categories' => 'id',
             ], 'AND') . '
 ;';
-            $related_categories = query2array($query);
+            $related_categories = \Piwigo\Db\MysqliDb::query2Array($query);
             // array_from_query() with no $fieldname argument delegates
-            // straight to query2array($query) -- its own @return docblock
-            // (array<int|string, mixed>) is looser than query2array()'s
+            // straight to \Piwigo\Db\MysqliDb::query2Array($query) -- its own @return docblock
+            // (array<int|string, mixed>) is looser than \Piwigo\Db\MysqliDb::query2Array()'s
             // precise conditional return type.
             /** @var list<array<string, string|null>> $related_categories */
             usort($related_categories, CategoryService::compareByGlobalRank(...));
@@ -574,9 +574,9 @@ SELECT *
   WHERE id IN (' . implode(',', $ids) . ')
 ;';
 
-            $result = pwg_query($query);
+            $result = \Piwigo\Db\MysqliDb::query($query);
 
-            while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
                 if ($previous_item !== null and (string) $row['id'] === (string) $previous_item) {
                     $i = 'previous';
                 } elseif ($next_item !== null and (string) $row['id'] === (string) $next_item) {
@@ -595,7 +595,7 @@ SELECT *
                 // Writing computed keys (src_image, derivatives, ...) back
                 // into $row widens PHPStan's inferred value type for every
                 // key in this array (it was array<string, string|null>
-                // from pwg_db_fetch_assoc()) to a shared union across all
+                // from \Piwigo\Db\MysqliDb::fetchAssoc()) to a shared union across all
                 // of them -- narrow explicitly at each still-scalar column
                 // read below instead of casting the widened union
                 // directly.
@@ -738,7 +738,7 @@ SELECT *
              * trigger_change() (src/Piwigo/PluginConfig/functions.php) is
              * only typed to return mixed -- restate the shape plugins are
              * expected to preserve: one images-table row
-             * (pwg_db_fetch_assoc(), string|null columns) per navigation
+             * (\Piwigo\Db\MysqliDb::fetchAssoc(), string|null columns) per navigation
              * slot, plus the computed fields set on $row above.
              *
              * @var array<string, array{
@@ -796,7 +796,7 @@ SELECT *
   FROM ' . Tables::imageFormat() . '
   WHERE image_id = ' . $picture['current']['id'] . '
 ;';
-                    $formats = query2array($query);
+                    $formats = \Piwigo\Db\MysqliDb::query2Array($query);
 
                     // let's add the original as a format among others. It
                     // will just have a specific download URL
@@ -813,7 +813,7 @@ SELECT *
                         // array_unshift() above prepends a differently-
                         // shaped literal (only
                         // download_url/ext/filesize) onto the
-                        // query2array() rows
+                        // \Piwigo\Db\MysqliDb::query2Array() rows
                         // (format_id/image_id/ext/filesize), so PHPStan
                         // can no longer track a precise per-key type for
                         // $format -- narrow explicitly.
@@ -981,7 +981,7 @@ SELECT COUNT(*) AS nb_fav
   WHERE image_id = ' . $image_id . '
     AND user_id = ' . $user_id . '
 ;';
-                $row = pwg_db_fetch_assoc(pwg_query($query));
+                $row = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
                 if ($row === false || $row === null) {
                     throw new \Exception('picture.php: favorite-count aggregate query returned no row');
                 }
@@ -1135,10 +1135,10 @@ SELECT id, name, permalink
   WHERE id IN (' . implode(',', $ids) . ')';
                 // hash_from_query()'s own @return docblock
                 // (array<int|string, mixed>) is looser than
-                // query2array()'s precise conditional return type, which
+                // \Piwigo\Db\MysqliDb::query2Array()'s precise conditional return type, which
                 // it delegates to with a non-null $keyname.
                 /** @var array<int|string, array<string, string|null>> $cat_map */
-                $cat_map = query2array($query, 'id');
+                $cat_map = \Piwigo\Db\MysqliDb::query2Array($query, 'id');
                 foreach ($related_categories as $category) {
                     $cats = [];
                     foreach (explode(',', (string) $category['uppercats']) as $id) {

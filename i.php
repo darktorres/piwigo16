@@ -201,7 +201,7 @@ SELECT forbidden_categories
   FROM ' . $prefixeTable . 'user_cache
   WHERE user_id = ' . $userId . '
 ;';
-    $cacheRow = pwg_db_fetch_assoc(pwg_query($query));
+    $cacheRow = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
 
     // No user_cache row at all for this identity -- fail closed. A
     // missing row means permissions were never computed for this user,
@@ -225,7 +225,7 @@ SELECT COUNT(*) AS nb
   WHERE image_id = ' . $imageId . '
     AND category_id NOT IN (' . $forbidden . ')
 ;';
-    $countRow = pwg_db_fetch_assoc(pwg_query($query));
+    $countRow = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
     $nb = is_array($countRow) && is_numeric($countRow['nb'] ?? null) ? (int) $countRow['nb'] : 0;
 
     if ($nb === 0) {
@@ -458,7 +458,7 @@ function try_switch_source(DerivativeParams $params, int $original_mtime): bool
     }
 
     // $page['original_size'] is only ever set (see i.php's top-level flow)
-    // from a DB row's width/height columns, which pwg_db_fetch_assoc() types
+    // from a DB row's width/height columns, which \Piwigo\Db\MysqliDb::fetchAssoc() types
     // as numeric strings; guard the shape and coerce rather than trust it.
     $original_size = $page['original_size'];
     if (! is_array($original_size)
@@ -630,7 +630,7 @@ if (! is_string($db_host) || ! is_string($db_user) || ! is_string($db_base)) {
 }
 
 try {
-    pwg_db_connect(
+    \Piwigo\Db\MysqliDb::connect(
         $db_host,
         $db_user,
         $db_password,
@@ -639,7 +639,7 @@ try {
 } catch (Exception $e) {
     $logger->error($e->getMessage(), 'i.php');
 }
-pwg_db_check_charset();
+\Piwigo\Db\MysqliDb::checkCharset();
 
 $query = '
 SELECT param, value
@@ -647,10 +647,10 @@ SELECT param, value
   WHERE param IN (\'derivatives\', \'disabled_derivatives\')
 ;';
 
-$result = pwg_query($query);
-while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+$result = \Piwigo\Db\MysqliDb::query($query);
+while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
     // 'param' is the config table's primary key column (never NULL in
-    // practice), but pwg_db_fetch_assoc() types every column as
+    // practice), but \Piwigo\Db\MysqliDb::fetchAssoc() types every column as
     // string|null, so an array key still needs narrowing.
     if (! is_string($row['param'])) {
         continue;
@@ -704,7 +704,7 @@ SELECT *
   WHERE path=\'' . addslashes($page['src_location']) . '\'
 ;';
 
-        $row = pwg_db_fetch_assoc(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
         if (! (bool) $row) {
             ierror('Db file path not found', 404);
         }
@@ -724,7 +724,7 @@ SELECT *
         if (! isset($row['rotation'])) {
             $page['rotation_angle'] = pwg_image::get_rotation_angle($page['src_path']);
 
-            single_update(
+            \Piwigo\Db\MysqliDb::singleUpdate(
                 $prefixeTable . 'images',
                 [
                     'rotation' => pwg_image::get_rotation_code_from_angle($page['rotation_angle']),
@@ -752,7 +752,7 @@ SELECT *
 } else {
     $page['rotation_angle'] = 0;
 }
-pwg_db_close();
+\Piwigo\Db\MysqliDb::close();
 
 $need_generate = false;
 $derivative_mtime = @filemtime($page['derivative_path']);

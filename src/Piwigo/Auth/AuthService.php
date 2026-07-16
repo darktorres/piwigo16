@@ -408,7 +408,7 @@ final class AuthService
         /** @var array<string, string> $user_fields */
         $user_fields = $conf['user_fields'];
 
-        $usernameOrEmail = pwg_db_real_escape_string($usernameOrEmail);
+        $usernameOrEmail = \Piwigo\Db\MysqliDb::realEscapeString($usernameOrEmail);
 
         $query = '
 SELECT
@@ -425,8 +425,8 @@ FROM ' . Tables::users() . ' AS u
         $where_username = $user_fields['username'] . ' = \'' . $usernameOrEmail . '\'';
         $where_email = $user_fields['email'] . ' = \'' . $usernameOrEmail . '\'';
 
-        $user_by_username = pwg_db_fetch_assoc(pwg_query($query . $where_username));
-        $user = (bool) $user_by_username ? $user_by_username : pwg_db_fetch_assoc(pwg_query($query . $where_email));
+        $user_by_username = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query . $where_username));
+        $user = (bool) $user_by_username ? $user_by_username : \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query . $where_email));
 
         if (! empty($user)) {
             // The user may not exist in the user_infos table, so we consider it's a "normal" user by default
@@ -533,7 +533,7 @@ SELECT
     JOIN ' . Tables::users() . ' AS u ON u.' . $user_fields['id'] . ' = ui.user_id
   WHERE auth_key = \'' . $authKey . '\'
 ;';
-        $keys = query2array($query);
+        $keys = \Piwigo\Db\MysqliDb::query2Array($query);
 
         if (count($keys) == 0) {
             return false;
@@ -588,7 +588,7 @@ SELECT
         $user['id'] = $key_user_id;
 
         // update last used key
-        single_update(
+        \Piwigo\Db\MysqliDb::singleUpdate(
             Tables::userAuthKeys(),
             [
                 'last_used_on' => $key['dbnow'],
@@ -647,7 +647,7 @@ SELECT
   FROM ' . Tables::userInfos() . '
   WHERE user_id = ' . $userId . '
 ;';
-            $user_infos = query2array($query);
+            $user_infos = \Piwigo\Db\MysqliDb::query2Array($query);
 
             if (count($user_infos) == 0) {
                 return false;
@@ -670,7 +670,7 @@ SELECT
   FROM ' . Tables::userAuthKeys() . '
   WHERE auth_key = \'' . $candidate . '\'
 ;';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$counter, $now, $expiration] = $row;
         if ($counter == 0) {
@@ -683,9 +683,9 @@ SELECT
                 'key_type' => 'auth_key',
             ];
 
-            single_insert(Tables::userAuthKeys(), $key);
+            \Piwigo\Db\MysqliDb::singleInsert(Tables::userAuthKeys(), $key);
 
-            $key['auth_key_id'] = pwg_db_insert_id();
+            $key['auth_key_id'] = \Piwigo\Db\MysqliDb::insertId();
 
             return $key;
         } else {
@@ -707,7 +707,7 @@ UPDATE ' . Tables::userAuthKeys() . '
     AND expired_on > NOW()
     AND key_type = \'auth_key\'
 ;';
-        pwg_query($query);
+        \Piwigo\Db\MysqliDb::query($query);
     }
 
     /**
@@ -717,7 +717,7 @@ UPDATE ' . Tables::userAuthKeys() . '
      */
     public function deactivatePasswordResetKey(int $userId): void
     {
-        single_update(
+        \Piwigo\Db\MysqliDb::singleUpdate(
             Tables::userInfos(),
             [
                 'activation_key' => null,
@@ -749,11 +749,11 @@ UPDATE ' . Tables::userAuthKeys() . '
         ? $conf['password_activation_duration']
         : $conf['password_reset_duration'];
         $duration = is_numeric($duration) ? (int) $duration : 0;
-        $row = pwg_db_fetch_row(pwg_query('SELECT ADDDATE(NOW(), INTERVAL ' . $duration . ' SECOND)'));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT ADDDATE(NOW(), INTERVAL ' . $duration . ' SECOND)'));
         assert($row !== null);
         [$expire] = $row;
 
-        single_update(
+        \Piwigo\Db\MysqliDb::singleUpdate(
             Tables::userInfos(),
             [
                 'activation_key' => new PasswordService(new PasswordRepository(DbConnection::build()))->hash($activation_key),
@@ -802,8 +802,8 @@ FROM ' . Tables::history() . '
   ORDER BY id DESC
   LIMIT 1
 ;';
-        $result = pwg_query($query);
-        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+        $result = \Piwigo\Db\MysqliDb::query($query);
+        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
             $last_visit = $row['date'] . ' ' . $row['time'];
         }
 
@@ -815,7 +815,7 @@ UPDATE ' . Tables::userInfos() . '
       lastmodified = lastmodified
   WHERE user_id = ' . $userId . '
 ';
-            pwg_query($query);
+            \Piwigo\Db\MysqliDb::query($query);
         }
 
         return $last_visit;
@@ -833,7 +833,7 @@ SELECT COUNT(*)
   FROM ' . Tables::activity() . '
   WHERE action = \'login\' and performed_by = ' . $userId . '';
 
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$logged_in] = $row;
         if ($logged_in > 0) {

@@ -10,7 +10,7 @@ use Piwigo\Db\AbstractRepository;
  * Persistence layer for `CalendarRenderer::render()`'s own single
  * data-access point -- the pre-existing
  * CalendarBase/CalendarMonthly/CalendarWeekly rendering classes
- * (already-built, P6-era) keep using the legacy query2array()/pwg_query()
+ * (already-built, P6-era) keep using the legacy \Piwigo\Db\MysqliDb::query2Array()/\Piwigo\Db\MysqliDb::query()
  * layer internally; only this call site's own final "list of matching
  * image ids" query is ported to DBAL here.
  */

@@ -108,7 +108,7 @@ final class CatListPageRenderer
 SELECT COUNT(*)
   FROM ' . Tables::categories() . '
 ;';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$nb_cats] = $row;
         $template->assign(
@@ -218,7 +218,7 @@ SELECT id, name, permalink, dir, `rank`, status
         $query .= '
   ORDER BY `rank` ASC
 ;';
-        $categories = query2array($query, 'id');
+        $categories = \Piwigo\Db\MysqliDb::query2Array($query, 'id');
         /** @var array<int|string, array<string, string|null>> $categories */
 
         // get the categories containing images directly
@@ -236,7 +236,7 @@ SELECT
 ;';
             // WHERE category_id IN ('.implode(',', array_keys($categories)).')
 
-            $nb_photos_in = query2array($query, 'category_id', 'nb_photos');
+            $nb_photos_in = \Piwigo\Db\MysqliDb::query2Array($query, 'category_id', 'nb_photos');
 
             $query = '
 SELECT
@@ -244,7 +244,7 @@ SELECT
     uppercats
   FROM ' . Tables::categories() . '
 ;';
-            $all_categories = query2array($query, 'id', 'uppercats');
+            $all_categories = \Piwigo\Db\MysqliDb::query2Array($query, 'id', 'uppercats');
             $subcats_of = [];
 
             foreach ($all_categories as $id => $uppercats) {
@@ -282,7 +282,7 @@ SELECT
         foreach ($categories as $category) {
             // 'id' is the Tables::categories() primary key (NOT NULL, auto-increment) --
             // it is always a numeric string here; this is a real guard, not dead
-            // code, since query2array()'s return type is generically string|null
+            // code, since \Piwigo\Db\MysqliDb::query2Array()'s return type is generically string|null
             // for every column.
             if (! is_numeric($category['id'])) {
                 continue;

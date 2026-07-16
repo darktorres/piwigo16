@@ -42,7 +42,7 @@ use Piwigo\Users\UserService;
  * "check for updates" block); same shape as fatal_error()/
  * check_pwg_token()/get_themeconf().
  *
- * pwg_get_db_version() (functions_mysqli.inc.php, batch 8f relocate-only)
+ * \Piwigo\Db\MysqliDb::getDbVersion() (functions_mysqli.inc.php, batch 8f relocate-only)
  * stays a bare free-function call -- a class-extraction pass doesn't also
  * chase down every transitive not-yet-migrated dependency.
  * get_graphics_library()/get_pwg_general_statitics()/get_installation_date()
@@ -110,7 +110,7 @@ final class PiwigoInfosSender
             return;
         }
 
-        $row = pwg_db_fetch_row(pwg_query('SELECT now();'));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT now();'));
         assert($row !== null);
         [$dbCurrentDate] = $row;
 
@@ -128,7 +128,7 @@ final class PiwigoInfosSender
                 'os_version' => PHP_OS,
                 'container_type' => $containerType,
                 'container_version' => $containerVersion,
-                'db_version' => pwg_get_db_version(),
+                'db_version' => \Piwigo\Db\MysqliDb::getDbVersion(),
                 'php_datetime' => date('Y-m-d H:i:s'),
                 'db_datetime' => $dbCurrentDate,
                 'graphics_library' => pwg_image::get_graphics_library(),
@@ -156,7 +156,7 @@ SELECT
   FROM `' . Tables::images() . '`
   WHERE storage_category_id IS NOT NULL
 ;';
-            if (query2array($query, null, 'counter')[0] > 0) {
+            if (\Piwigo\Db\MysqliDb::query2Array($query, null, 'counter')[0] > 0) {
                 // slow SQL query, but necessary if you have files added by sync
                 $query = '
 SELECT
@@ -166,7 +166,7 @@ SELECT
   FROM `' . Tables::images() . '`
   GROUP BY add_method
 ;';
-                $filesAddedBy = query2array($query, 'add_method');
+                $filesAddedBy = \Piwigo\Db\MysqliDb::query2Array($query, 'add_method');
 
                 $piwigoInfos['general_stats']['nb_photos_synced'] = $filesAddedBy['sync']['nb_files'];
                 $piwigoInfos['general_stats']['last_photo_synced'] = $filesAddedBy['sync']['last_added_on'];
@@ -185,7 +185,7 @@ SELECT
   ORDER BY id DESC
   LIMIT 1
 ;';
-                $images = query2array($query);
+                $images = \Piwigo\Db\MysqliDb::query2Array($query);
                 if (count($images) > 0) {
                     $piwigoInfos['general_stats']['last_photo'] = $images[0]['date_available'];
                 }
@@ -199,7 +199,7 @@ SELECT
   FROM `' . Tables::images() . '`
   GROUP BY ext
 ;';
-            $piwigoInfos['file_extensions'] = query2array($query, 'ext');
+            $piwigoInfos['file_extensions'] = \Piwigo\Db\MysqliDb::query2Array($query, 'ext');
         }
 
         // $conf['pem_plugins_category'] = 12;
@@ -367,7 +367,7 @@ SELECT
   GROUP BY theme
   ORDER BY theme
 ;';
-        $themesUsed = query2array($query, 'theme', 'theme_counter');
+        $themesUsed = \Piwigo\Db\MysqliDb::query2Array($query, 'theme', 'theme_counter');
         // built as a separate local accumulator (rather than mutating
         // $piwigoInfos directly with a dynamic key) so PHPStan keeps tracking
         // a precise array<string, int> type instead of widening the whole
@@ -393,7 +393,7 @@ SELECT
   GROUP BY language
   ORDER BY language
 ;';
-        $piwigoInfos['languages_usage'] = query2array($query, 'language', 'language_counter');
+        $piwigoInfos['languages_usage'] = \Piwigo\Db\MysqliDb::query2Array($query, 'language', 'language_counter');
 
         $piwigoInfos['activities'] = [];
         $piwigoInfos['general_stats']['nb_activities'] = 0;
@@ -407,7 +407,7 @@ SELECT
   WHERE object != \'system\'
   GROUP BY object, action
 ;';
-        $activities = query2array($query);
+        $activities = \Piwigo\Db\MysqliDb::query2Array($query);
         // 'activities' is heterogeneous by design: every object except 'system'
         // (queried here, WHERE object != 'system') stores a flat action=>counter
         // map; 'system' (queried below) stores an extra label-bucketing level.
@@ -447,7 +447,7 @@ SELECT
   WHERE object = \'system\'
   GROUP BY object, object_id, action
 ;';
-        $activities = query2array($query);
+        $activities = \Piwigo\Db\MysqliDb::query2Array($query);
         /** @var array<string, array<string, array<string, string|null>>> $piwigoActivitiesSystem */
         $piwigoActivitiesSystem = [];
         foreach ($activities as $activity) {
@@ -476,7 +476,7 @@ SELECT
     AND action IN (\'update\', \'autoupdate\')
   ORDER BY activity_id ASC
 ;';
-        $updates = query2array($query);
+        $updates = \Piwigo\Db\MysqliDb::query2Array($query);
         foreach ($updates as $update) {
             $updateDetails = $update['details'];
             if (! is_string($updateDetails)) {
@@ -517,7 +517,7 @@ SELECT
   WHERE user_agent NOT LIKE \'Mozilla/5%\'
   GROUP BY user_agent
 ;';
-        $activities = query2array($query);
+        $activities = \Piwigo\Db\MysqliDb::query2Array($query);
         $apps = [];
 
         $appsPattern = [

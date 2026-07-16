@@ -190,7 +190,7 @@ final class CategoryService
 
         foreach ($cat as $k => $v) {
             if ($v === 'true' || $v === 'false') {
-                $cat[$k] = get_boolean($v);
+                $cat[$k] = \Piwigo\Db\MysqliDb::getBoolean($v);
             }
         }
 
@@ -841,7 +841,7 @@ final class CategoryService
         string $blockname,
         bool $fullname = true
     ): void {
-        $categories = query2array($query);
+        $categories = \Piwigo\Db\MysqliDb::query2Array($query);
         usort($categories, self::compareByGlobalRank(...));
         $this->displaySelectCategories($categories, $selecteds, $blockname, $fullname);
     }
@@ -1088,7 +1088,7 @@ final class CategoryService
             'primary' => ['id'],
             'update' => ['rank'],
         ];
-        mass_updates(Tables::categories(), $fields, $datas);
+        \Piwigo\Db\MysqliDb::massUpdates(Tables::categories(), $fields, $datas);
 
         $this->updateGlobalRank();
     }
@@ -1155,7 +1155,7 @@ final class CategoryService
             }
         }
 
-        mass_updates(
+        \Piwigo\Db\MysqliDb::massUpdates(
             Tables::categories(),
             [
                 'primary' => ['id'],
@@ -1397,7 +1397,7 @@ final class CategoryService
             ];
         }
 
-        mass_updates(
+        \Piwigo\Db\MysqliDb::massUpdates(
             Tables::categories(),
             [
                 'primary' => ['id'],
@@ -1492,7 +1492,7 @@ final class CategoryService
             'primary' => ['id'],
             'update' => ['uppercats'],
         ];
-        mass_updates(Tables::categories(), $fields, $datas);
+        \Piwigo\Db\MysqliDb::massUpdates(Tables::categories(), $fields, $datas);
     }
 
     /**
@@ -1644,7 +1644,7 @@ final class CategoryService
         } else {
             $insert['commentable'] = $conf['newcat_default_commentable'];
         }
-        $insert['commentable'] = boolean_to_string($insert['commentable']);
+        $insert['commentable'] = \Piwigo\Db\MysqliDb::booleanToString($insert['commentable']);
 
         // is the album temporarily locked? (only visible by administrators,
         // whatever permissions) (may be overwritten if parent album is not
@@ -1654,7 +1654,7 @@ final class CategoryService
         } else {
             $insert['visible'] = $conf['newcat_default_visible'];
         }
-        $insert['visible'] = boolean_to_string($insert['visible']);
+        $insert['visible'] = \Piwigo\Db\MysqliDb::booleanToString($insert['visible']);
 
         // is the album private? (may be overwritten if parent album is private)
         if (isset($options['status']) && $options['status'] === 'private') {
@@ -1701,10 +1701,10 @@ final class CategoryService
         }
 
         // we have then to add the virtual category
-        single_insert(Tables::categories(), $insert);
-        $insertedId = pwg_db_insert_id();
+        \Piwigo\Db\MysqliDb::singleInsert(Tables::categories(), $insert);
+        $insertedId = \Piwigo\Db\MysqliDb::insertId();
 
-        single_update(
+        \Piwigo\Db\MysqliDb::singleUpdate(
             Tables::categories(),
             [
                 'uppercats' => $uppercatsPrefix . $insertedId,
@@ -1735,7 +1735,7 @@ final class CategoryService
                     'cat_id' => $insertedId,
                 ];
             }
-            mass_inserts(Tables::groupAccess(), ['group_id', 'cat_id'], $inserts);
+            \Piwigo\Db\MysqliDb::massInserts(Tables::groupAccess(), ['group_id', 'cat_id'], $inserts);
 
             $grantedUsers = $this->repo->findAccessUserIds($insertIdUppercat);
             $this->permissionService->addPermissionOnCategory((int) $insertedId, $grantedUsers);

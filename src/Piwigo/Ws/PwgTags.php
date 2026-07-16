@@ -165,9 +165,9 @@ SELECT image_id, GROUP_CONCAT(tag_id) AS tag_ids
     AND image_id IN (' . implode(',', $image_ids) . ')
   GROUP BY image_id
 ;';
-            $result = pwg_query($query);
+            $result = \Piwigo\Db\MysqliDb::query($query);
 
-            while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
                 $row['image_id'] = (int) $row['image_id'];
                 $image_tag_map[$row['image_id']] = explode(',', (string) $row['tag_ids']);
             }
@@ -183,9 +183,9 @@ SELECT *
   FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', $image_ids) . ')
 ;';
-            $result = pwg_query($query);
+            $result = \Piwigo\Db\MysqliDb::query($query);
 
-            while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
                 if (! is_numeric($row['id'])) {
                     continue;
                 }
@@ -282,7 +282,7 @@ SELECT name, url_name
 FROM `' . Tables::tags() . '`
 WHERE id = ' . $creation_output['id'] . ';';
 
-        $new_tag = query2array($query);
+        $new_tag = \Piwigo\Db\MysqliDb::query2Array($query);
         $new_tag_name = $new_tag[0]['name'] ?? null;
         $new_tag_url_name = $new_tag[0]['url_name'] ?? null;
 
@@ -314,7 +314,7 @@ SELECT COUNT(*)
   FROM `' . Tables::tags() . '`
   WHERE id in (' . implode(',', $params['tag_id']) . ')
 ;';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$count] = $row;
         if ($count != count($params['tag_id'])) {
@@ -359,7 +359,7 @@ SELECT COUNT(*)
   FROM `' . Tables::tags() . '`
   WHERE id = ' . $tag_id . '
 ;';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$count] = $row;
         if ($count == 0) {
@@ -371,7 +371,7 @@ SELECT name
   FROM ' . Tables::tags() . '
   WHERE id != ' . $tag_id . '
 ;';
-        $existing_names = query2array($query, null, 'name');
+        $existing_names = \Piwigo\Db\MysqliDb::query2Array($query, null, 'name');
 
         $update = [];
 
@@ -380,7 +380,7 @@ SELECT name
         }
         if (! empty($tag_name)) {
             $update = [
-                'name' => pwg_db_real_escape_string($tag_name),
+                'name' => \Piwigo\Db\MysqliDb::realEscapeString($tag_name),
                 'url_name' => trigger_change('render_tag_url', $tag_name),
             ];
 
@@ -388,7 +388,7 @@ SELECT name
 
         new ActivityService(new ActivityRepository(DbConnection::build()))->record('tag', $tag_id, 'edit');
 
-        single_update(
+        \Piwigo\Db\MysqliDb::singleUpdate(
             Tables::tags(),
             $update,
             [
@@ -405,7 +405,7 @@ SELECT
   WHERE id = ' . $tag_id . '
 ;';
 
-        $tag = query2array($query)[0];
+        $tag = \Piwigo\Db\MysqliDb::query2Array($query)[0];
         $tag['raw_name'] = $tag['name'];
         $tag['name'] = trigger_change('render_tag_name', $tag['raw_name'], $tag);
         $tag['alt_names'] = trigger_change('get_tag_alt_names', [], $tag['raw_name']);
@@ -436,7 +436,7 @@ SELECT COUNT(*)
   FROM `' . Tables::tags() . '`
   WHERE id = ' . $tag_id . '
 ;';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$count] = $row;
         if ($count == 0) {
@@ -448,21 +448,21 @@ SELECT COUNT(*)
   FROM `' . Tables::tags() . '`
   WHERE name = "' . $copy_name . '"
 ;';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$count] = $row;
         if ($count != 0) {
             return new PwgError(WsError::INVALID_PARAM, 'This name is already taken.');
         }
 
-        single_insert(
+        \Piwigo\Db\MysqliDb::singleInsert(
             Tables::tags(),
             [
                 'name' => $copy_name,
                 'url_name' => trigger_change('render_tag_url', $copy_name),
             ]
         );
-        $destination_tag_id = pwg_db_insert_id();
+        $destination_tag_id = \Piwigo\Db\MysqliDb::insertId();
 
         new ActivityService(new ActivityRepository(DbConnection::build()))->record('tag', $destination_tag_id, 'add', [
             'action' => 'duplicate',
@@ -474,7 +474,7 @@ SELECT image_id
   FROM ' . Tables::imageTag() . '
   WHERE tag_id = ' . $tag_id . '
 ;';
-        $destination_tag_image_ids = query2array($query, null, 'image_id');
+        $destination_tag_image_ids = \Piwigo\Db\MysqliDb::query2Array($query, null, 'image_id');
         $destination_tag_image_ids = array_values(array_filter($destination_tag_image_ids, is_string(...)));
 
         $inserts = [];
@@ -490,7 +490,7 @@ SELECT image_id
         }
 
         if (count($inserts) > 0) {
-            mass_inserts(
+            \Piwigo\Db\MysqliDb::massInserts(
                 Tables::imageTag(),
                 array_keys($inserts[0]),
                 $inserts
@@ -532,7 +532,7 @@ SELECT COUNT(*)
   FROM `' . Tables::tags() . '`
   WHERE id in (' . implode(',', $all_tags) . ')
 ;';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$count] = $row;
         if ($count != count($all_tags)) {
@@ -549,7 +549,7 @@ SELECT DISTINCT(image_id)
   WHERE
     tag_id IN (' . implode(',', $merge_tag) . ')
 ;';
-        $image_in_merge_tags = query2array($query, null, 'image_id');
+        $image_in_merge_tags = \Piwigo\Db\MysqliDb::query2Array($query, null, 'image_id');
 
         $query = '
 SELECT image_id
@@ -557,7 +557,7 @@ SELECT image_id
   WHERE tag_id = ' . $params['destination_tag_id'] . '
 ;';
 
-        $image_in_dest = query2array($query, null, 'image_id');
+        $image_in_dest = \Piwigo\Db\MysqliDb::query2Array($query, null, 'image_id');
 
         $image_to_add = array_diff($image_in_merge_tags, $image_in_dest);
         $image_to_add = array_values(array_filter($image_to_add, is_string(...)));
@@ -570,7 +570,7 @@ SELECT image_id
             ];
         }
 
-        mass_inserts(
+        \Piwigo\Db\MysqliDb::massInserts(
             Tables::imageTag(),
             ['tag_id', 'image_id'],
             $inserts,

@@ -175,7 +175,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
 DELETE FROM ' . Tables::caddie() . '
   WHERE user_id = ' . $userId . '
 ;';
-            pwg_query($query);
+            \Piwigo\Db\MysqliDb::query($query);
 
             $_SESSION['page_infos'] = [
                 l10n('Information data registered in database'),
@@ -677,10 +677,10 @@ SELECT
   WHERE width IS NOT NULL
     AND height IS NOT NULL
 ;';
-        $result = pwg_query($query);
+        $result = \Piwigo\Db\MysqliDb::query($query);
 
-        if ((bool) pwg_db_num_rows($result)) {
-            while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+        if ((bool) \Piwigo\Db\MysqliDb::numRows($result)) {
+            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
                 if (is_numeric($row['width']) && is_numeric($row['height']) && $row['width'] > 0 && $row['height'] > 0) {
                     $widths[] = $row['width'];
                     $heights[] = $row['height'];
@@ -772,9 +772,9 @@ SELECT
   WHERE filesize IS NOT NULL
   GROUP BY filesize
 ;';
-        $result = pwg_query($query);
+        $result = \Piwigo\Db\MysqliDb::query($query);
 
-        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
             if (is_numeric($row['filesize'])) {
                 $filesizes[] = sprintf('%.1f', (float) $row['filesize'] / 1024);
             }

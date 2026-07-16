@@ -153,7 +153,7 @@ function get_webmaster_mail_address(): string
  * exceptions: Piwigo\Users\UserService::checkAndSaveUserInfos()/
  * getDefaultTheme() keep calling this bare -- both are spied on by
  * tests/Integration/ExtensionLifecycleTest.php via same-namespace function
- * shadowing (its own isolated bootstrap doesn't load pwg_query(), which
+ * shadowing (its own isolated bootstrap doesn't load \Piwigo\Db\MysqliDb::query(), which
  * getDefaultTheme()'s own get_pwg_themes()-based fallback branch would hit
  * if this check ever fell through to it for real). Same "one narrow,
  * structurally-forced exception" shape as pwg_activity()'s
@@ -212,13 +212,13 @@ SELECT param, value
  FROM ' . Tables::config() . '
  ' . (! empty($condition) ? 'WHERE ' . $condition : '') . '
 ;';
-    $result = pwg_query($query);
+    $result = \Piwigo\Db\MysqliDb::query($query);
 
-    if ((pwg_db_num_rows($result) == 0) and ! empty($condition) and $die_on_condition_with_no_result) {
+    if ((\Piwigo\Db\MysqliDb::numRows($result) == 0) and ! empty($condition) and $die_on_condition_with_no_result) {
         fatal_error('No configuration data');
     }
 
-    while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+    while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
         $val = $row['value'] ?? '';
         // If the field is true or false, the variable is transformed into a boolean value.
         if ($val == 'true') {
@@ -249,7 +249,7 @@ function pwg_is_dbconf_writeable(): bool
     [$param, $value] = ['pwg_is_dbconf_writeable_' . SessionService::get()->generateKey(12), date('c') . ' ' . SessionService::get()->generateKey(20)];
 
     conf_update_param($param, $value);
-    $row = pwg_db_fetch_row(pwg_query('SELECT value FROM ' . Tables::config() . ' WHERE param = \'' . $param . '\''));
+    $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT value FROM ' . Tables::config() . ' WHERE param = \'' . $param . '\''));
     assert($row !== null);
     [$dbvalue] = $row;
 
@@ -277,10 +277,10 @@ function conf_update_param($param, $value, $updateGlobal = false, $parser = null
     } elseif (is_array($value) || is_object($value)) {
         $dbValue = addslashes(serialize($value));
     } else {
-        $dbValue = boolean_to_string($value);
+        $dbValue = \Piwigo\Db\MysqliDb::booleanToString($value);
     }
 
-    // call_user_func() and boolean_to_string() are both typed mixed in/out;
+    // call_user_func() and \Piwigo\Db\MysqliDb::booleanToString() are both typed mixed in/out;
     // a custom $parser or an untouched non-scalar $value could still hand
     // back something that isn't safe to splice into SQL as-is.
     if (! is_scalar($dbValue) && $dbValue !== null) {
@@ -294,7 +294,7 @@ INSERT INTO
   ON DUPLICATE KEY UPDATE value = \'' . $dbValue . '\'
 ;';
 
-    pwg_query($query);
+    \Piwigo\Db\MysqliDb::query($query);
 
     if ($updateGlobal) {
         /** @var array<string, mixed> $conf */
@@ -325,7 +325,7 @@ function conf_delete_param($params): void
 DELETE FROM ' . Tables::config() . '
   WHERE param IN(\'' . implode('\',\'', $params) . '\')
 ;';
-    pwg_query($query);
+    \Piwigo\Db\MysqliDb::query($query);
 
     foreach ($params as $param) {
         unset($conf[$param]);

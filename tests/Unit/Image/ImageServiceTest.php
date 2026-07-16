@@ -6,7 +6,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 
-// get_boolean()/boolean_to_string() are real, pure, dependency-free
+// \Piwigo\Db\MysqliDb::getBoolean()/\Piwigo\Db\MysqliDb::booleanToString() are real, pure, dependency-free
 // functions (include/dblayer/functions_mysqli.inc.php) -- copied verbatim
 // rather than requiring that file (which pulls in the whole legacy mysqli
 // driver bootstrap this isolated unit test doesn't want).

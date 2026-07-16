@@ -66,17 +66,17 @@ try {
     if (! is_string($db_host) || ! is_string($db_user) || ! is_string($db_password) || ! is_string($db_base)) {
         throw new Exception("Invalid database configuration: \$conf['db_host'], 'db_user', 'db_password' and 'db_base' must be strings.");
     }
-    pwg_db_connect(
+    \Piwigo\Db\MysqliDb::connect(
         $db_host,
         $db_user,
         $db_password,
         $db_base
     );
 } catch (Exception $e) {
-    my_error(l10n($e->getMessage(), true));
+    \Piwigo\Db\MysqliDb::myError(l10n($e->getMessage(), true));
 }
 
-pwg_db_check_charset();
+\Piwigo\Db\MysqliDb::checkCharset();
 
 // +-----------------------------------------------------------------------+
 // |                              Upgrades                                 |
@@ -87,7 +87,7 @@ $query = '
 SELECT id
   FROM ' . PREFIX_TABLE . 'upgrade
 ;';
-$applied = array_filter(query2array($query, null, 'id'), is_string(...));
+$applied = array_filter(\Piwigo\Db\MysqliDb::query2Array($query, null, 'id'), is_string(...));
 
 // retrieve existing upgrades
 $existing = get_available_upgrade_ids();
@@ -116,7 +116,7 @@ INSERT INTO ' . PREFIX_TABLE . 'upgrade
   VALUES
   (\'' . $upgrade_id . '\', NOW(), \'' . $upgrade_description . '\')
 ;';
-    pwg_query($query);
+    \Piwigo\Db\MysqliDb::query($query);
 }
 
 echo '</pre>';

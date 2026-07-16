@@ -31,15 +31,15 @@ final class UserCacheInvalidator
         if ($full) {
             $query = '
 TRUNCATE TABLE ' . Tables::userCacheCategories() . ';';
-            pwg_query($query);
+            \Piwigo\Db\MysqliDb::query($query);
             $query = '
 TRUNCATE TABLE ' . Tables::userCache() . ';';
-            pwg_query($query);
+            \Piwigo\Db\MysqliDb::query($query);
         } else {
             $query = '
 UPDATE ' . Tables::userCache() . '
   SET need_update = \'true\';';
-            pwg_query($query);
+            \Piwigo\Db\MysqliDb::query($query);
         }
         $persistent_cache->purge(true);
         conf_delete_param('count_orphans');
@@ -55,6 +55,6 @@ UPDATE ' . Tables::userCache() . '
         $query = '
 UPDATE ' . Tables::userCache() . '
   SET nb_available_tags = NULL';
-        pwg_query($query);
+        \Piwigo\Db\MysqliDb::query($query);
     }
 }

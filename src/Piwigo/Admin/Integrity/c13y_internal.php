@@ -43,7 +43,7 @@ class c13y_internal
 
         $check_list[] = [
             'type' => 'MySQL',
-            'current' => pwg_get_db_version(),
+            'current' => \Piwigo\Db\MysqliDb::getDbVersion(),
             'required' => REQUIRED_MYSQL_VERSION,
         ];
 
@@ -144,8 +144,8 @@ class c13y_internal
 
         $status = [];
 
-        $result = pwg_query($query);
-        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+        $result = \Piwigo\Db\MysqliDb::query($query);
+        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
             if (! is_string($row['id'])) {
                 continue;
             }
@@ -240,7 +240,7 @@ class c13y_internal
                                 'password' => $password,
                             ],
                         ];
-                        mass_inserts(Tables::users(), array_keys($inserts[0]), $inserts);
+                        \Piwigo\Db\MysqliDb::massInserts(Tables::users(), array_keys($inserts[0]), $inserts);
 
                         (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->createUserInfos($id);
 
@@ -265,7 +265,7 @@ class c13y_internal
                                 'status' => $status,
                             ],
                         ];
-                        mass_updates(
+                        \Piwigo\Db\MysqliDb::massUpdates(
                             Tables::userInfos(),
                             [
                                 'primary' => ['user_id'],

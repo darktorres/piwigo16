@@ -85,7 +85,7 @@ final class FilterResolver
 
     /**
      * Images added on the same day as the most recently added image --
-     * "day" per pwg_db_get_recent_period_expression()'s own DB-specific
+     * "day" per \Piwigo\Db\MysqliDb::getRecentPeriodExpression()'s own DB-specific
      * date arithmetic (kept as-is: not parameterizable SQL text, and
      * already correct/tested).
      *
@@ -104,7 +104,7 @@ final class FilterResolver
         }
 
         $sql = 'SELECT id FROM ' . Tables::images()
-            . ' WHERE date_available BETWEEN ' . pwg_db_get_recent_period_expression(1, $lastDate) . ' AND :last_date';
+            . ' WHERE date_available BETWEEN ' . \Piwigo\Db\MysqliDb::getRecentPeriodExpression(1, $lastDate) . ' AND :last_date';
 
         return $this->fetchIntColumnSql($sql, [
             'last_date' => $lastDate,

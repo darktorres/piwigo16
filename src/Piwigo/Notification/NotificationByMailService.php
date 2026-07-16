@@ -69,7 +69,7 @@ final class NotificationByMailService
 
         $enabledFilterString = '';
         if ($hasFilter) {
-            $converted = boolean_to_string($enabledFilterValue);
+            $converted = \Piwigo\Db\MysqliDb::booleanToString($enabledFilterValue);
             $enabledFilterString = is_string($converted) ? $converted : '';
         }
 

@@ -200,10 +200,10 @@ SELECT
 ;';
         }
 
-        $result = pwg_query($query);
+        $result = \Piwigo\Db\MysqliDb::query($query);
 
         $output = [];
-        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
             $output[] = $row;
         }
 
@@ -235,18 +235,18 @@ ORDER BY
             $limit = ($last - 1) * 12 + $date->format('n') - 1;
             $query .=
 ' LIMIT ' . $limit;
-            $result = query2array($query . ';');
+            $result = \Piwigo\Db\MysqliDb::query2Array($query . ';');
             $lastDate = $date->sub(new DateInterval('P' . ($last - 1) . 'Y' . ($date->format('n') - 1) . 'M'));
             return self::setMissingValues('month', $result, $lastDate, new DateTime());
         }
 
-        if (count(query2array($query . ';')) > 1) {
-            return self::setMissingValues('month', query2array($query . ';'));
+        if (count(\Piwigo\Db\MysqliDb::query2Array($query . ';')) > 1) {
+            return self::setMissingValues('month', \Piwigo\Db\MysqliDb::query2Array($query . ';'));
         } else {
             $last_year_date = new DateTime();
             return self::setMissingValues(
                 'month',
-                query2array($query . ';'),
+                \Piwigo\Db\MysqliDb::query2Array($query . ';'),
                 $last_year_date->sub(new DateInterval('P1Y')),
                 new DateTime()
             );
@@ -287,7 +287,7 @@ ORDER BY
   month DESC
 ;';
 
-        foreach (query2array($query) as $value) {
+        foreach (\Piwigo\Db\MysqliDb::query2Array($query) as $value) {
             $date = self::getDateObject($value);
             @$months[$date->format('Y/m/1')][] = $value;
         }
@@ -329,7 +329,7 @@ ORDER BY
   month DESC
 ;';
 
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$result['avg']] = $row;
 

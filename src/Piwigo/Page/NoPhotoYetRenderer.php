@@ -34,7 +34,7 @@ final class NoPhotoYetRenderer
         global $conf, $user;
 
         if (
-            ! (defined('IN_ADMIN') and IN_ADMIN)   // no message inside administration
+            ! defined('IN_ADMIN')   // no message inside administration
             and \Piwigo\Core\PageFilterHelper::scriptBasename() !== 'identification' // keep the ability to login
             and \Piwigo\Core\PageFilterHelper::scriptBasename() !== 'password'       // keep the ability to reset password
             and \Piwigo\Core\PageFilterHelper::scriptBasename() !== 'ws'             // keep the ability to discuss with web API

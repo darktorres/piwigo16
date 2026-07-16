@@ -251,12 +251,12 @@ final class PermissionService
      *
      * get_uppercat_ids()/get_subcat_ids() (Categories domain) stay bare
      * calls -- not yet migrated, still live in admin/include/
-     * functions.php (a later sub-batch's scope). mass_inserts() is a
+     * functions.php (a later sub-batch's scope). \Piwigo\Db\MysqliDb::massInserts() is a
      * permanent free-function facade (finding 8).
      *
      * @param int|array<int, int> $categoryIds real callers pass a mix of
      *   `list<int>` and array-key-preserving results of array_map()/
-     *   query2array() -- never index-dependent below, so not narrowed to
+     *   \Piwigo\Db\MysqliDb::query2Array() -- never index-dependent below, so not narrowed to
      *   `list`
      * @param int|array<int, int> $userIds
      */
@@ -292,7 +292,7 @@ SELECT id
   WHERE id IN (' . implode(',', array_map(strval(...), $catIds)) . ')
     AND status = \'private\'
 ;';
-        $privateCats = query2array($query, null, 'id');
+        $privateCats = \Piwigo\Db\MysqliDb::query2Array($query, null, 'id');
 
         if (count($privateCats) === 0) {
             return;
@@ -308,7 +308,7 @@ SELECT id
             }
         }
 
-        mass_inserts(
+        \Piwigo\Db\MysqliDb::massInserts(
             Tables::userAccess(),
             ['user_id', 'cat_id'],
             $inserts,

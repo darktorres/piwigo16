@@ -10,7 +10,7 @@ namespace Piwigo\Core;
  * callers span Category and Users domains: CategoryCatsRenderer/
  * CategoryService/CategoryDefaultRenderer, and UserService), stateless
  * beyond the per-request `$cache['get_icon']` memoization bridge it reads/
- * writes through, unchanged. `pwg_db_get_recent_period()` stays a bare
+ * writes through, unchanged. `\Piwigo\Db\MysqliDb::getRecentPeriod()` stays a bare
  * call -- functions_mysqli.inc.php, relocate-only (batch 8f, finding 2).
  */
 final class RecentIconResolver
@@ -56,7 +56,7 @@ final class RecentIconResolver
 
         if (! isset($get_icon_cache['sql_recent_date'])) {
             // Use MySql date in order to standardize all recent "actions/queries"
-            $get_icon_cache['sql_recent_date'] = pwg_db_get_recent_period($recent_period);
+            $get_icon_cache['sql_recent_date'] = \Piwigo\Db\MysqliDb::getRecentPeriod($recent_period);
         }
 
         $get_icon_cache[$date] = $date > $get_icon_cache['sql_recent_date'];

@@ -16,7 +16,7 @@ use Piwigo\Section\SectionInitializer;
 /**
  * Forces the $_SERVER['PATH_INFO'] branch (question_mark_in_urls=false)
  * throughout -- the alternative $_GET-key branch calls
- * pwg_db_real_escape_string(), which needs a legacy `global $mysqli`
+ * \Piwigo\Db\MysqliDb::realEscapeString(), which needs a legacy `global $mysqli`
  * connection this isolated test process never bootstraps. Never exercises
  * the "invalid/missing picture identifier" branches (bad_request() is
  * exit-triggering), same "don't stub/exercise what would kill the test"

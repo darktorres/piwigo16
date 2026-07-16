@@ -178,8 +178,8 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
 
                     $updated_param_count = 0;
                     // Update param
-                    $result = pwg_query('select param, value from ' . Tables::config() . ' where param like \'nbm\\_%\'');
-                    while ((bool) ($nbm_user = pwg_db_fetch_assoc($result))) {
+                    $result = \Piwigo\Db\MysqliDb::query('select param, value from ' . Tables::config() . ' where param like \'nbm\\_%\'');
+                    while ((bool) ($nbm_user = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
                         // 'param' is the config table's primary key, never null.
                         if (! is_string($nbm_user['param'])) {
                             continue;
@@ -313,7 +313,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                         // check_key is the table's unique key, never null in practice.
                         continue;
                     }
-                    if (get_boolean($nbm_user['enabled'])) {
+                    if (\Piwigo\Db\MysqliDb::getBoolean($nbm_user['enabled'])) {
                         $opt_true[$nbm_user['check_key']] = stripslashes((string) $nbm_user['username']) . '[' . $nbm_user['mail_address'] . ']';
                         if (isset($_POST['falsify']) and isset($_POST['cat_true']) and is_array($_POST['cat_true']) and in_array($nbm_user['check_key'], $_POST['cat_true'])) {
                             $opt_true_selected[] = $nbm_user['check_key'];
@@ -490,7 +490,7 @@ set
   ' . $user_field_email . ' = null
 where
   trim(' . $user_field_email . ') = \'\';';
-        pwg_query($query);
+        \Piwigo\Db\MysqliDb::query($query);
 
         // null mail_address are not selected in the list
         $query = '
@@ -506,13 +506,13 @@ where
 order by
   user_id;';
 
-        $result = pwg_query($query);
+        $result = \Piwigo\Db\MysqliDb::query($query);
 
-        if (pwg_db_num_rows($result) > 0) {
+        if (\Piwigo\Db\MysqliDb::numRows($result) > 0) {
             $inserts = [];
             $check_key_list = [];
 
-            while ((bool) ($nbm_user = pwg_db_fetch_assoc($result))) {
+            while ((bool) ($nbm_user = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
                 // Calculate key
                 $nbm_user['check_key'] = $nbmSender->findAvailableCheckKey();
 
@@ -534,7 +534,7 @@ order by
             }
 
             // Insert new nbm_users
-            mass_inserts(Tables::userMailNotification(), ['user_id', 'check_key', 'enabled'], $inserts);
+            \Piwigo\Db\MysqliDb::massInserts(Tables::userMailNotification(), ['user_id', 'check_key', 'enabled'], $inserts);
             // Update field enabled with specific function
             $check_key_treated = $nbmSender->doSubscribeUnsubscribeNotificationByMail(
                 true,
@@ -551,7 +551,7 @@ order by
                 $quoted_check_key_list = NotificationByMailSender::quoteCheckKeyList(array_diff($check_key_list, $check_key_treated_strings));
                 if (count($quoted_check_key_list) != 0) {
                     $query = 'delete from ' . Tables::userMailNotification() . ' where check_key in (' . implode(',', $quoted_check_key_list) . ');';
-                    $result = pwg_query($query);
+                    $result = \Piwigo\Db\MysqliDb::query($query);
 
                     redirect($base_url . get_query_string_diff([], false), l10n('Operation in progress') . "\n" . l10n('Please wait...'));
                 }

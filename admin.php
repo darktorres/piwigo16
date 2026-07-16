@@ -302,7 +302,7 @@ SELECT COUNT(*)
   FROM ' . Tables::comments() . '
   WHERE validated=\'false\'
 ;';
-    $row = pwg_db_fetch_row(pwg_query($query));
+    $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
     assert($row !== null);
     [$nb_comments] = $row;
 
@@ -321,7 +321,7 @@ SELECT COUNT(*)
   FROM ' . Tables::caddie() . '
   WHERE user_id = ' . $user_id . '
 ;';
-$row = pwg_db_fetch_row(pwg_query($query));
+$row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
 assert($row !== null);
 [$nb_photos_in_caddie] = $row;
 
@@ -356,7 +356,7 @@ if (in_array($page['page'], ['site_update', 'batch_manager'])) {
 // only calculate number of orphans on all pages if the number of images is "not huge"
 $page['nb_orphans'] = 0;
 
-$row = pwg_db_fetch_row(pwg_query('SELECT COUNT(*) FROM ' . Tables::images()));
+$row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT COUNT(*) FROM ' . Tables::images()));
 assert($row !== null);
 [$page['nb_photos_total']] = $row;
 if ($page['nb_photos_total'] < 100000) { // 100k is already a big gallery

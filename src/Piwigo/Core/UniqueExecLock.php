@@ -10,7 +10,7 @@ use Piwigo\Db\Tables;
  * P23 batch 8d: DB-row-backed "only one execution at a time" lock,
  * relocated from include/functions.inc.php -- no natural existing class
  * home, stateless beyond the config-table row it reads/writes through bare
- * pwg_query()/pwg_db_*() calls (functions_mysqli.inc.php, batch 8f
+ * \Piwigo\Db\MysqliDb::query()/pwg_db_*() calls (functions_mysqli.inc.php, batch 8f
  * relocate-only, finding 2 -- not becoming class methods).
  *
  * `endsExec()`'s own `conf_delete_param()` call stays bare -- that
@@ -46,9 +46,9 @@ INSERT IGNORE
   SET param="' . $tokenName . '_running"
     , value="' . $exec_id . '-' . time() . '"
 ;';
-        pwg_query($query);
+        \Piwigo\Db\MysqliDb::query($query);
 
-        $row = pwg_db_fetch_row(pwg_query('SELECT value FROM ' . Tables::config() . ' WHERE param = "' . $tokenName . '_running"'));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT value FROM ' . Tables::config() . ' WHERE param = "' . $tokenName . '_running"'));
         assert($row !== null);
         [$running_exec] = $row;
         [$running_exec_id] = explode('-', (string) $running_exec);
@@ -70,7 +70,7 @@ SELECT
   FROM ' . Tables::config() . '
   WHERE param = "' . $tokenName . '_running"
 ;';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$counter] = $row;
 

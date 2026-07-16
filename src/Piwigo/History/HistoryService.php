@@ -15,7 +15,7 @@ use Piwigo\Db\Tables;
  *
  * P23 batch 8d: isLoggingAllowed()/logVisit() (ported from
  * include/functions.inc.php's do_log()/pwg_log()) still call the bare
- * pwg_query()/pwg_db_insert_id()/get_enums() free functions internally --
+ * \Piwigo\Db\MysqliDb::query()/\Piwigo\Db\MysqliDb::insertId()/\Piwigo\Db\MysqliDb::getEnums() free functions internally --
  * functions_mysqli.inc.php's real DBAL migration is a separate,
  * later-tracked project step (see this whole migration's finding 2),
  * not something a pure class-extraction pass rewrites. AccessControl
@@ -107,7 +107,7 @@ UPDATE ' . Tables::userInfos() . '
       lastmodified = lastmodified
   WHERE user_id = ' . $userId . '
 ';
-            pwg_query($query);
+            \Piwigo\Db\MysqliDb::query($query);
         }
 
         if (! $this->isLoggingAllowed($imageId, $imageType)) {
@@ -149,13 +149,13 @@ UPDATE ' . Tables::userInfos() . '
         if ($pageSection !== null) {
             // set cache if not available
             if (! isset($conf['history_sections_cache'])) {
-                conf_update_param('history_sections_cache', get_enums(Tables::history(), 'section'), true);
+                conf_update_param('history_sections_cache', \Piwigo\Db\MysqliDb::getEnums(Tables::history(), 'section'), true);
             }
 
             $cachedSections = $conf['history_sections_cache'];
             $cachedSections = is_string($cachedSections) || is_array($cachedSections) ? \Piwigo\Core\ArrayHelper::safeUnserialize($cachedSections) : null;
             if (! is_array($cachedSections)) {
-                $cachedSections = get_enums(Tables::history(), 'section');
+                $cachedSections = \Piwigo\Db\MysqliDb::getEnums(Tables::history(), 'section');
             }
 
             $historySectionsCache = [];
@@ -173,14 +173,14 @@ UPDATE ' . Tables::userInfos() . '
             ) {
                 $section = $pageSection;
             } elseif ((bool) preg_match('/^[a-zA-Z0-9_-]+$/', $pageSection)) {
-                $historySections = get_enums(Tables::history(), 'section');
+                $historySections = \Piwigo\Db\MysqliDb::getEnums(Tables::history(), 'section');
                 $historySections[] = $pageSection;
 
                 // alter history table structure, to include a new section
-                pwg_query('ALTER TABLE ' . Tables::history() . ' CHANGE section section enum(\'' . implode("','", array_unique($historySections)) . '\') DEFAULT NULL;');
+                \Piwigo\Db\MysqliDb::query('ALTER TABLE ' . Tables::history() . ' CHANGE section section enum(\'' . implode("','", array_unique($historySections)) . '\') DEFAULT NULL;');
 
                 // and refresh cache
-                conf_update_param('history_sections_cache', get_enums(Tables::history(), 'section'), true);
+                conf_update_param('history_sections_cache', \Piwigo\Db\MysqliDb::getEnums(Tables::history(), 'section'), true);
 
                 $section = $pageSection;
             }
@@ -230,9 +230,9 @@ INSERT INTO ' . Tables::history() . '
     ' . ($tagsString !== null ? "'" . $tagsString . "'" : 'NULL') . '
   )
 ;';
-        pwg_query($query);
+        \Piwigo\Db\MysqliDb::query($query);
 
-        $historyId = (int) pwg_db_insert_id();
+        $historyId = (int) \Piwigo\Db\MysqliDb::insertId();
         if ($historyId % 1000 == 0) {
             $this->summarize(50000);
         }

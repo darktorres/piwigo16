@@ -269,18 +269,18 @@ SELECT
                 $cacheKey = $persistent_cache->make_key('filter_author_rows' . $userId . $userCacheUpdateTime);
                 $filterRows = null;
                 if (! $persistent_cache->get($cacheKey, $filterRows)) {
-                    $filterRows = query2array($query);
+                    $filterRows = \Piwigo\Db\MysqliDb::query2Array($query);
                     $persistent_cache->set($cacheKey, $filterRows);
                 }
             } else {
-                $filterRows = query2array($query);
+                $filterRows = \Piwigo\Db\MysqliDb::query2Array($query);
             }
 
             if (! is_array($filterRows)) {
                 // the persistent cache should only ever hold what
-                // query2array() just produced above; re-run the query if a
+                // \Piwigo\Db\MysqliDb::query2Array() just produced above; re-run the query if a
                 // corrupted entry slipped through.
-                $filterRows = query2array($query);
+                $filterRows = \Piwigo\Db\MysqliDb::query2Array($query);
             }
 
             // the persistent cache stores this row set as plain mixed data,
@@ -385,18 +385,18 @@ SELECT
                 $cacheKey = $persistent_cache->make_key('filter_added_by_rows' . $userId . $userCacheUpdateTime);
                 $filterRows = null;
                 if (! $persistent_cache->get($cacheKey, $filterRows)) {
-                    $filterRows = query2array($query);
+                    $filterRows = \Piwigo\Db\MysqliDb::query2Array($query);
                     $persistent_cache->set($cacheKey, $filterRows);
                 }
             } else {
-                $filterRows = query2array($query);
+                $filterRows = \Piwigo\Db\MysqliDb::query2Array($query);
             }
 
             if (! is_array($filterRows)) {
                 // the persistent cache should only ever hold what
-                // query2array() just produced above; re-run the query if a
+                // \Piwigo\Db\MysqliDb::query2Array() just produced above; re-run the query if a
                 // corrupted entry slipped through.
-                $filterRows = query2array($query);
+                $filterRows = \Piwigo\Db\MysqliDb::query2Array($query);
             }
 
             // the persistent cache stores this row set as plain mixed data,
@@ -435,7 +435,7 @@ SELECT
   FROM ' . Tables::users() . '
   WHERE ' . $userFieldId . ' IN (' . implode(',', $userIds) . ')
 ;';
-                $usernameOf = query2array($query, 'id', 'username');
+                $usernameOf = \Piwigo\Db\MysqliDb::query2Array($query, 'id', 'username');
 
                 foreach (array_keys($addedBy) as $addedByIdx) {
                     $addedById = $addedBy[$addedByIdx]['added_by_id'] ?? null;
@@ -485,9 +485,9 @@ SELECT
     INNER JOIN ' . Tables::userCacheCategories() . ' ON id = cat_id AND user_id = ' . $userId . '
   WHERE id IN (' . implode(',', $catWords) . ')
 ;';
-                $result = pwg_query($query);
+                $result = \Piwigo\Db\MysqliDb::query($query);
 
-                while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+                while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
                     if ($row['id'] === null || $row['uppercats'] === null) {
                         continue;
                     }
@@ -536,15 +536,15 @@ SELECT
 ;';
             $allExts = null;
             if (! $persistent_cache->get($cacheKey, $allExts)) {
-                $allExts = query2array($allExtsQuery, 'ext', 'counter');
+                $allExts = \Piwigo\Db\MysqliDb::query2Array($allExtsQuery, 'ext', 'counter');
                 $persistent_cache->set($cacheKey, $allExts);
             }
 
             if (! is_array($allExts)) {
                 // the persistent cache should only ever hold what
-                // query2array() just produced above; re-run the query if a
+                // \Piwigo\Db\MysqliDb::query2Array() just produced above; re-run the query if a
                 // corrupted entry slipped through.
-                $allExts = query2array($allExtsQuery, 'ext', 'counter');
+                $allExts = \Piwigo\Db\MysqliDb::query2Array($allExtsQuery, 'ext', 'counter');
             }
 
             if ((bool) preg_match('/^image_id IN/', $filterClause)) {
@@ -558,7 +558,7 @@ SELECT
   GROUP BY ext
   ORDER BY counter DESC
 ;';
-                $filteredExts = query2array($query, 'ext', 'counter');
+                $filteredExts = \Piwigo\Db\MysqliDb::query2Array($query, 'ext', 'counter');
 
                 $exts = [];
                 foreach ($allExts as $ext => $counter) {
@@ -594,7 +594,7 @@ SELECT
     JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
   WHERE ' . $filterClause;
 
-                    $filterRows = query2array($query);
+                    $filterRows = \Piwigo\Db\MysqliDb::query2Array($query);
 
                     $ratings = array_fill(0, 6, 0);
 
@@ -649,8 +649,8 @@ SELECT
     JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
   WHERE ' . $filterClause . '
 ;';
-            $result = pwg_query($query);
-            while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+            $result = \Piwigo\Db\MysqliDb::query($query);
+            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
                 if (! is_numeric($row['filesize'])) {
                     continue;
                 }
@@ -718,7 +718,7 @@ SELECT
     AND height IS NOT NULL
 ;';
 
-                $filterRows = query2array($query);
+                $filterRows = \Piwigo\Db\MysqliDb::query2Array($query);
 
                 $ratios = [
                     'Portrait' => 0,
@@ -784,18 +784,18 @@ SELECT
                 $cacheKey = $persistent_cache->make_key('filter_height_rows' . $userId . $userCacheUpdateTime);
                 $filterRows = null;
                 if (! $persistent_cache->get($cacheKey, $filterRows)) {
-                    $filterRows = query2array($query, null, 'height');
+                    $filterRows = \Piwigo\Db\MysqliDb::query2Array($query, null, 'height');
                     $persistent_cache->set($cacheKey, $filterRows);
                 }
             } else {
-                $filterRows = query2array($query, null, 'height');
+                $filterRows = \Piwigo\Db\MysqliDb::query2Array($query, null, 'height');
             }
 
             if (! is_array($filterRows)) {
                 // the persistent cache should only ever hold what
-                // query2array() just produced above; re-run the query if a
+                // \Piwigo\Db\MysqliDb::query2Array() just produced above; re-run the query if a
                 // corrupted entry slipped through.
-                $filterRows = query2array($query, null, 'height');
+                $filterRows = \Piwigo\Db\MysqliDb::query2Array($query, null, 'height');
             }
 
             // the persistent cache stores this row set as plain mixed data,
@@ -848,18 +848,18 @@ SELECT
                 $cacheKey = $persistent_cache->make_key('filter_width_rows' . $userId . $userCacheUpdateTime);
                 $filterRows = null;
                 if (! $persistent_cache->get($cacheKey, $filterRows)) {
-                    $filterRows = query2array($query, null, 'width');
+                    $filterRows = \Piwigo\Db\MysqliDb::query2Array($query, null, 'width');
                     $persistent_cache->set($cacheKey, $filterRows);
                 }
             } else {
-                $filterRows = query2array($query, null, 'width');
+                $filterRows = \Piwigo\Db\MysqliDb::query2Array($query, null, 'width');
             }
 
             if (! is_array($filterRows)) {
                 // the persistent cache should only ever hold what
-                // query2array() just produced above; re-run the query if a
+                // \Piwigo\Db\MysqliDb::query2Array() just produced above; re-run the query if a
                 // corrupted entry slipped through.
-                $filterRows = query2array($query, null, 'width');
+                $filterRows = \Piwigo\Db\MysqliDb::query2Array($query, null, 'width');
             }
 
             // the persistent cache stores this row set as plain mixed data,
@@ -1103,7 +1103,7 @@ SELECT
 SELECT
     ' . implode(",\n    ", $intervalExprs) . '
 ;';
-            $thresholds = query2array($query)[0];
+            $thresholds = \Piwigo\Db\MysqliDb::query2Array($query)[0];
 
             $query = '
 SELECT
@@ -1117,8 +1117,8 @@ SELECT
             $listOfDates = [];
             $preCounters = [];
 
-            $result = pwg_query($query);
-            while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+            $result = \Piwigo\Db\MysqliDb::query($query);
+            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
                 $date = $row['date'] ?? null;
                 if (! is_string($date) || $date === '') {
                     continue;
@@ -1294,7 +1294,7 @@ SELECT
         if (! isset($filterCache[$cacheKey])) {
             $functionStart = \Piwigo\Core\TimingHelper::getMoment();
 
-            // every entry of $imageIdsForFilter is either a query2array() id
+            // every entry of $imageIdsForFilter is either a \Piwigo\Db\MysqliDb::query2Array() id
             // list (list<string|null>) or, for 'expert', the already-narrowed
             // result of SearchService::getQuickSearchResults() — normalize
             // each to a plain string-id list here so array_intersect() below

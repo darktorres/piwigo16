@@ -55,9 +55,9 @@ SELECT id, name, COUNT(ug.user_id) as nb_users_of
   GROUP BY name
   ORDER BY name ASC
 ;';
-        $result = pwg_query($query);
+        $result = \Piwigo\Db\MysqliDb::query($query);
 
-        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
             $group_id = $row['id'];
             if (! is_string($group_id)) {
                 continue;
@@ -79,10 +79,10 @@ SELECT DISTINCT
 FROM ' . Tables::userInfos() . '
 ORDER BY registration_date
 ;';
-        $result = pwg_query($query);
+        $result = \Piwigo\Db\MysqliDb::query($query);
 
         $register_dates = [];
-        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
             $registration_month = is_numeric($row['registration_month']) ? (int) $row['registration_month'] : 0;
             $register_dates[] = $row['registration_year'] . '-' . sprintf('%02u', $registration_month);
         }
@@ -133,7 +133,7 @@ SELECT
   FROM ' . Tables::userInfos() . '
   WHERE status IN (\'webmaster\', \'admin\')
 ;';
-            $admin_ids = query2array($query, null, 'user_id');
+            $admin_ids = \Piwigo\Db\MysqliDb::query2Array($query, null, 'user_id');
 
             $protected_users = array_merge($protected_users, $admin_ids);
 
@@ -161,7 +161,7 @@ SELECT
     WHERE ' . $user_fields['id'] . ' = ' . $webmaster_id . '
 ;';
 
-        $owner_username = query2array($query, null, 'username');
+        $owner_username = \Piwigo\Db\MysqliDb::query2Array($query, null, 'username');
 
         // protected_users/password_protected_users mix $user['id'], several $conf
         // ids (already normalized to int above) and $admin_ids (query2array
@@ -199,7 +199,7 @@ SELECT
 
         // Status options
         $label_of_status = [];
-        foreach (get_enums(Tables::userInfos(), 'status') as $status) {
+        foreach (\Piwigo\Db\MysqliDb::getEnums(Tables::userInfos(), 'status') as $status) {
             $label_of_status[$status] = l10n('user_status_' . $status);
         }
 
@@ -212,9 +212,9 @@ SELECT
   GROUP BY status
 ';
 
-        $result = pwg_query($query);
+        $result = \Piwigo\Db\MysqliDb::query($query);
         $nb_users_by_status = [];
-        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
             $status = $row['status'];
             if (! is_string($status)) {
                 continue;
@@ -264,9 +264,9 @@ SELECT
   GROUP BY level
 ';
 
-        $result = pwg_query($query);
+        $result = \Piwigo\Db\MysqliDb::query($query);
         $nb_users_by_level = $level_options;
-        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
             $level = $row['level'];
             if (! is_numeric($level)) {
                 continue;
@@ -287,12 +287,12 @@ SELECT id, name, is_default
   FROM `' . Tables::groups() . '`
   ORDER BY name ASC
 ;';
-        $result = pwg_query($query);
+        $result = \Piwigo\Db\MysqliDb::query($query);
 
         $groups_arr_id = [];
         $groups_arr_name = [];
-        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
-            $groups_arr_name[] = '"' . pwg_db_real_escape_string($row['name']) . '"';
+        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
+            $groups_arr_name[] = '"' . \Piwigo\Db\MysqliDb::realEscapeString($row['name']) . '"';
             $groups_arr_id[] = $row['id'];
         }
 

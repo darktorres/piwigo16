@@ -137,7 +137,7 @@ final class UploadService
 
                 $updates[] = [
                     'param' => $field,
-                    'value' => boolean_to_string($value),
+                    'value' => \Piwigo\Db\MysqliDb::booleanToString($value),
                 ];
             } elseif ($upload_form_config[$field]['can_be_null'] and self::isFalsy($value)) {
                 $updates[] = [
@@ -177,7 +177,7 @@ final class UploadService
         }
 
         if (count($errors) === 0) {
-            mass_updates(
+            \Piwigo\Db\MysqliDb::massUpdates(
                 Tables::config(),
                 [
                     'primary' => ['param'],
@@ -225,7 +225,7 @@ SELECT
   FROM ' . Tables::images() . '
   WHERE md5sum = \'' . $md5sum . '\'
 ;';
-            $images_found = query2array($query);
+            $images_found = \Piwigo\Db\MysqliDb::query2Array($query);
 
             if (count($images_found) > 0) {
                 $found_id = $images_found[0]['id'];
@@ -257,8 +257,8 @@ SELECT
   FROM ' . Tables::images() . '
   WHERE id = ' . $image_id . '
 ;';
-            $result = pwg_query($query);
-            while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+            $result = \Piwigo\Db\MysqliDb::query($query);
+            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
                 $file_path = $row['path'];
             }
 
@@ -450,7 +450,7 @@ SELECT
 
         if (isset($image_id)) {
             $update = [
-                'file' => pwg_db_real_escape_string($original_filename ?? basename($file_path)),
+                'file' => \Piwigo\Db\MysqliDb::realEscapeString($original_filename ?? basename($file_path)),
                 'filesize' => $file_infos['filesize'],
                 'width' => $file_infos['width'],
                 'height' => $file_infos['height'],
@@ -463,7 +463,7 @@ SELECT
                 $update['level'] = $level;
             }
 
-            single_update(
+            \Piwigo\Db\MysqliDb::singleUpdate(
                 Tables::images(),
                 $update,
                 [
@@ -472,10 +472,10 @@ SELECT
             );
         } else {
             // database registration
-            // pwg_db_real_escape_string() only returns null for a null input,
+            // \Piwigo\Db\MysqliDb::realEscapeString() only returns null for a null input,
             // and basename() never returns null, so the ?? fallback rules
             // that out.
-            $file = pwg_db_real_escape_string($original_filename ?? basename($file_path));
+            $file = \Piwigo\Db\MysqliDb::realEscapeString($original_filename ?? basename($file_path));
             assert($file !== null);
             $insert = [
                 'file' => $file,
@@ -506,9 +506,9 @@ SELECT
                 $insert['representative_ext'] = $representative_ext;
             }
 
-            single_insert(Tables::images(), $insert);
+            \Piwigo\Db\MysqliDb::singleInsert(Tables::images(), $insert);
 
-            $image_id = pwg_db_insert_id();
+            $image_id = \Piwigo\Db\MysqliDb::insertId();
             (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('photo', $image_id, 'add');
         }
 
@@ -529,7 +529,7 @@ SELECT
   FROM ' . Tables::images() . '
   WHERE id = ' . $image_id . '
 ;';
-        $image_infos = pwg_db_fetch_assoc(pwg_query($query));
+        $image_infos = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
         if (! is_array($image_infos)) {
             throw new \Exception(__METHOD__ . '(): image #' . $image_id . ' not found right after being saved');
         }
@@ -567,7 +567,7 @@ SELECT
 
         if (! (bool) $conf['lounge_active']) {
             // check if we need to use the lounge from now
-            $row = pwg_db_fetch_row(pwg_query('SELECT COUNT(*) FROM ' . Tables::images() . ';'));
+            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT COUNT(*) FROM ' . Tables::images() . ';'));
             assert($row !== null);
             [$nb_photos] = $row;
             if ($nb_photos >= $conf['lounge_activate_threshold']) {
@@ -684,7 +684,7 @@ SELECT
   FROM ' . Tables::images() . '
   WHERE id = ' . $format_of . '
 ;';
-        $images = query2array($query);
+        $images = \Piwigo\Db\MysqliDb::query2Array($query);
 
         if (! isset($images[0])) {
             die('[' . __METHOD__ . '] this photo does not exist in the database');
@@ -730,7 +730,7 @@ SELECT
   AND ext = "' . $format_ext . '"
 ;';
 
-        $formats = query2array($query);
+        $formats = \Piwigo\Db\MysqliDb::query2Array($query);
         if ((bool) $formats) {
             $set_fields = [
                 'filesize' => $file_infos['filesize'],
@@ -740,12 +740,12 @@ SELECT
                 'image_id' => $format_of,
                 'ext' => $format_ext,
             ];
-            single_update(Tables::imageFormat(), $set_fields, $where_fields);
+            \Piwigo\Db\MysqliDb::singleUpdate(Tables::imageFormat(), $set_fields, $where_fields);
             $format_id = $formats[0]['format_id'];
             $add_status = 'update';
         } else {
-            single_insert(Tables::imageFormat(), $insert);
-            $format_id = pwg_db_insert_id();
+            \Piwigo\Db\MysqliDb::singleInsert(Tables::imageFormat(), $insert);
+            $format_id = \Piwigo\Db\MysqliDb::insertId();
             $add_status = 'add';
         }
 

@@ -11,7 +11,7 @@ use Piwigo\Session\SessionService;
  * include/functions.inc.php -- no natural existing class home, stateless
  * beyond the session it reads/writes through SessionService.
  *
- * `get_boolean()` (bare call inside mobileTheme()) stays a free function --
+ * `\Piwigo\Db\MysqliDb::getBoolean()` (bare call inside mobileTheme()) stays a free function --
  * lives in include/dblayer/functions_mysqli.inc.php, relocate-only in
  * batch 8f (finding 2), not becoming a class method.
  */
@@ -53,7 +53,7 @@ final class DeviceHelper
         }
 
         if (isset($_GET['mobile'])) {
-            $is_mobile_theme = get_boolean($_GET['mobile']);
+            $is_mobile_theme = \Piwigo\Db\MysqliDb::getBoolean($_GET['mobile']);
             SessionService::get()->setSessionVar('mobile_theme', $is_mobile_theme);
         } else {
             $session_mobile_theme = SessionService::get()->getSessionVar('mobile_theme');

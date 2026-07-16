@@ -81,7 +81,7 @@ SELECT id
   FROM ' . Tables::categories() . '
   WHERE representative_picture_id = ' . $image_id . '
 ;';
-        $represented_albums_raw = query2array($query, null, 'id');
+        $represented_albums_raw = \Piwigo\Db\MysqliDb::query2Array($query, null, 'id');
         $represented_albums = [];
         foreach ($represented_albums_raw as $represented_album_value) {
             if (is_numeric($represented_album_value)) {
@@ -165,7 +165,7 @@ SELECT id
             }
 
             /** @var array<string, mixed> $data */
-            single_update(
+            \Piwigo\Db\MysqliDb::singleUpdate(
                 Tables::images(),
                 $data,
                 [
@@ -237,7 +237,7 @@ UPDATE ' . Tables::categories() . '
   SET representative_picture_id = ' . $image_id . '
   WHERE id IN (' . implode(',', $new_thumbnail_for) . ')
 ;';
-                pwg_query($query);
+                \Piwigo\Db\MysqliDb::query($query);
             }
 
             $represented_albums = $represent_categories;
@@ -384,8 +384,8 @@ SELECT
   FROM ' . Tables::rate() . '
   WHERE element_id = ' . $image_id . '
 ;';
-            $rate_row = pwg_db_fetch_row(pwg_query($query));
-            // pwg_query() can return false (and pwg_db_fetch_row() then null) on a
+            $rate_row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
+            // \Piwigo\Db\MysqliDb::query() can return false (and \Piwigo\Db\MysqliDb::fetchRow() then null) on a
             // SQL error when $conf['die_on_sql_error'] is off; a COUNT(*) query
             // always yields exactly one row otherwise, so this guard -- not
             // assert(), which is a no-op under this app's zend.assertions=-1 -- is
@@ -403,7 +403,7 @@ SELECT *
   FROM ' . Tables::imageFormat() . '
   WHERE image_id = ' . $row_id_str . '
 ;';
-        $formats = query2array($query);
+        $formats = \Piwigo\Db\MysqliDb::query2Array($query);
 
         if (! empty($formats)) {
             $format_strings = [];
@@ -441,12 +441,12 @@ SELECT category_id, uppercats, dir
       ON c.id = ic.category_id
   WHERE image_id = ' . $image_id . '
 ;';
-        $result = pwg_query($query);
+        $result = \Piwigo\Db\MysqliDb::query($query);
 
         $related_categories = [];
         $related_categories_ids = [];
 
-        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
             $row_category_id = is_string($row['category_id']) ? $row['category_id'] : '';
             $row_uppercats = is_string($row['uppercats']) ? $row['uppercats'] : '';
 
@@ -496,9 +496,9 @@ SELECT category_id
 ;';
 
             // array_from_query() is deprecated and returns array<int|string, mixed>;
-            // query2array() is its typed replacement, giving list<string|null> here
+            // \Piwigo\Db\MysqliDb::query2Array() is its typed replacement, giving list<string|null> here
             // since only the 'category_id' column is selected.
-            $authorized_category_ids = array_filter(query2array($query, null, 'category_id'), is_string(...));
+            $authorized_category_ids = array_filter(\Piwigo\Db\MysqliDb::query2Array($query, null, 'category_id'), is_string(...));
 
             $authorizeds = array_diff(
                 $authorized_category_ids,
@@ -532,7 +532,7 @@ SELECT id
     INNER JOIN ' . Tables::imageCategory() . ' ON id = category_id
   WHERE image_id = ' . $image_id . '
 ;';
-        $associated_albums = query2array($query, null, 'id');
+        $associated_albums = \Piwigo\Db\MysqliDb::query2Array($query, null, 'id');
 
         $template->assign([
             'associated_albums' => $associated_albums,

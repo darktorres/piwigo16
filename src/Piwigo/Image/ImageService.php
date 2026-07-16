@@ -111,7 +111,7 @@ final class ImageService
             if ((bool) preg_match_all('/([a-z]+)-(true|false)/', (string) $encodeParams, $matches)) {
                 $matchCount = count($matches[1]);
                 for ($i = 0; $i < $matchCount; $i++) {
-                    $result[$matches[1][$i]] = get_boolean($matches[2][$i]);
+                    $result[$matches[1][$i]] = \Piwigo\Db\MysqliDb::getBoolean($matches[2][$i]);
                 }
             }
         }
@@ -136,7 +136,7 @@ final class ImageService
         // $params' keys are always string: correctSlideshowParams() and
         // getDefaultSlideshowParams() both declare array<string, mixed>.
         foreach ($params as $name => $value) {
-            $value = boolean_to_string($value);
+            $value = \Piwigo\Db\MysqliDb::booleanToString($value);
             if (! is_scalar($value)) {
                 continue;
             }
@@ -306,7 +306,7 @@ final class ImageService
         }
 
         if ($inserts !== []) {
-            mass_inserts(
+            \Piwigo\Db\MysqliDb::massInserts(
                 Tables::lounge(),
                 array_keys($inserts[0]),
                 $inserts,
@@ -447,7 +447,7 @@ final class ImageService
         }
 
         if ($inserts !== []) {
-            mass_inserts(
+            \Piwigo\Db\MysqliDb::massInserts(
                 Tables::imageCategory(),
                 array_keys($inserts[0]),
                 $inserts
@@ -538,7 +538,7 @@ final class ImageService
             ];
         }
 
-        mass_updates(
+        \Piwigo\Db\MysqliDb::massUpdates(
             Tables::images(),
             [
                 'primary' => ['id'],
@@ -598,7 +598,7 @@ final class ImageService
             'primary' => ['image_id', 'category_id'],
             'update' => ['rank'],
         ];
-        mass_updates(Tables::imageCategory(), $fields, $datas);
+        \Piwigo\Db\MysqliDb::massUpdates(Tables::imageCategory(), $fields, $datas);
     }
 
     /**

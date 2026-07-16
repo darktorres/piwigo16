@@ -42,7 +42,7 @@ final class SectionInitializer
             foreach (array_keys($_GET) as $key) {
                 // PHP auto-casts a purely-numeric query-string key (e.g.
                 // "?1") to a real int array key -- a bare numeric token
-                // (no id-name suffix) crashed pwg_db_real_escape_string()
+                // (no id-name suffix) crashed \Piwigo\Db\MysqliDb::realEscapeString()
                 // below with a TypeError (?string required), found live via
                 // picture.php?1. Cast back to the string this variable was
                 // always meant to hold.
@@ -51,7 +51,7 @@ final class SectionInitializer
             }
 
             // the $_GET keys are not protected in include/common.inc.php, only the values
-            $rewritten = pwg_db_real_escape_string($rewritten);
+            $rewritten = \Piwigo\Db\MysqliDb::realEscapeString($rewritten);
             $root_path = PHPWG_ROOT_PATH;
         }
 

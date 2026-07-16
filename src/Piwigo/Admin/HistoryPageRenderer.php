@@ -32,7 +32,7 @@ final class HistoryPageRenderer
          */
         global $conf, $template, $page;
 
-        $types = array_merge(['none'], get_enums(Tables::history(), 'image_type'));
+        $types = array_merge(['none'], \Piwigo\Db\MysqliDb::getEnums(Tables::history(), 'image_type'));
 
         $display_thumbnails = [
             'no_display_thumbnail' => l10n('No display'),

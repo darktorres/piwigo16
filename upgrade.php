@@ -81,9 +81,9 @@ function get_tables(): array
     $query = '
 SHOW TABLES
 ;';
-    $result = pwg_query($query);
+    $result = \Piwigo\Db\MysqliDb::query($query);
 
-    while ((bool) ($row = pwg_db_fetch_row($result))) {
+    while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchRow($result))) {
         $table_name = $row[0];
         if (! is_string($table_name)) {
             continue;
@@ -110,11 +110,11 @@ function get_columns_of($tables): array
         $query = '
 DESC `' . $table . '`
 ;';
-        $result = pwg_query($query);
+        $result = \Piwigo\Db\MysqliDb::query($query);
 
         $columns_of[$table] = [];
 
-        while ((bool) ($row = pwg_db_fetch_row($result))) {
+        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchRow($result))) {
             $column_name = $row[0];
             if (! is_string($column_name)) {
                 continue;
@@ -219,9 +219,9 @@ if (! is_string($dblayer)) {
 include PHPWG_ROOT_PATH . 'include/dblayer/functions_' . $dblayer . '.inc.php';
 
 upgrade_db_connect();
-pwg_db_check_charset();
+\Piwigo\Db\MysqliDb::checkCharset();
 
-$row = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
+$row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT NOW();'));
 assert($row !== null);
 [$dbnow] = $row;
 define('CURRENT_DATE', $dbnow);
@@ -248,8 +248,8 @@ $template->assign(
 $has_remote_site = false;
 
 $query = 'SELECT galleries_url FROM ' . Tables::sites() . ';';
-$result = pwg_query($query);
-while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+$result = \Piwigo\Db\MysqliDb::query($query);
+while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
     $galleries_url = $row['galleries_url'] ?? null;
     if (is_string($galleries_url) && url_is_remote($galleries_url)) {
         $has_remote_site = true;
@@ -330,7 +330,7 @@ if (! in_array('param', $columns_of[PREFIX_TABLE . 'config'])) {
 SELECT id
   FROM ' . PREFIX_TABLE . 'upgrade
 ;';
-    $applied_upgrades = query2array($query, null, 'id');
+    $applied_upgrades = \Piwigo\Db\MysqliDb::query2Array($query, null, 'id');
 
     if (! in_array(159, $applied_upgrades)) {
         $current_release = '2.10.0';
@@ -482,7 +482,7 @@ REPLACE INTO ' . Tables::plugins() . '
   (id, state)
   VALUES (\'TakeATour\', \'active\')
 ;';
-                pwg_query($query);
+                \Piwigo\Db\MysqliDb::query($query);
 
                 // we need the secret key for get_pwg_token()
                 load_conf_from_db();

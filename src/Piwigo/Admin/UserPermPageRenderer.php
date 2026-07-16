@@ -116,11 +116,11 @@ SELECT DISTINCT cat_id, c.uppercats, c.global_rank
       ON c.id = ga.cat_id
   WHERE ug.user_id = ' . $page['user'] . '
 ;';
-        $result = pwg_query($query);
+        $result = \Piwigo\Db\MysqliDb::query($query);
 
-        if (pwg_db_num_rows($result) > 0) {
+        if (\Piwigo\Db\MysqliDb::numRows($result) > 0) {
             $cats = [];
-            while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
                 $cats[] = $row;
                 $group_authorized[] = $row['cat_id'];
             }
@@ -152,9 +152,9 @@ SELECT id,name,uppercats,global_rank
 ;';
         $categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true');
 
-        $result = pwg_query($query_true);
+        $result = \Piwigo\Db\MysqliDb::query($query_true);
         $authorized_ids = [];
-        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
             $authorized_ids[] = $row['id'];
         }
 

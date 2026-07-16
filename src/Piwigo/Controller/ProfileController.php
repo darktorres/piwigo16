@@ -76,8 +76,8 @@ SELECT ' . implode(',', $fields) . '
   FROM ' . Tables::userInfos() . '
   WHERE user_id = ' . $default_user_id . '
 ;';
-        $result = pwg_query($query);
-        $default_user = pwg_db_fetch_assoc($result);
+        $result = \Piwigo\Db\MysqliDb::query($query);
+        $default_user = \Piwigo\Db\MysqliDb::fetchAssoc($result);
         // The guest user_infos row can plausibly be missing (deleted directly in
         // DB, broken migration, ...); fall back to an empty array rather than
         // trusting a no-op assert() (zend.assertions=-1 in this environment --
@@ -142,7 +142,7 @@ SELECT ' . implode(',', $fields) . '
                 }
 
                 $user['language'] = $cookie_lang;
-                single_update(
+                \Piwigo\Db\MysqliDb::singleUpdate(
                     Tables::userInfos(),
                     [
                         'language' => $cookie_lang,

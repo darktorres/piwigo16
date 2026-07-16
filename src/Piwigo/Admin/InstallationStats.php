@@ -27,7 +27,7 @@ final class InstallationStats
 SELECT COUNT(*)
   FROM ' . Tables::images() . '
 ;';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$stats['nb_photos']] = $row;
 
@@ -35,7 +35,7 @@ SELECT COUNT(*)
 SELECT COUNT(*)
   FROM ' . Tables::categories() . '
 ;';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$stats['nb_categories']] = $row;
 
@@ -43,7 +43,7 @@ SELECT COUNT(*)
 SELECT COUNT(*)
   FROM ' . Tables::tags() . '
 ;';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$stats['nb_tags']] = $row;
 
@@ -51,7 +51,7 @@ SELECT COUNT(*)
 SELECT COUNT(*)
   FROM ' . Tables::imageTag() . '
 ;';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$stats['nb_image_tag']] = $row;
 
@@ -59,7 +59,7 @@ SELECT COUNT(*)
 SELECT COUNT(*)
   FROM ' . Tables::users() . '
 ;';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$stats['nb_users']] = $row;
 
@@ -69,7 +69,7 @@ SELECT
   FROM ' . Tables::userInfos() . '
   WHERE status IN (\'webmaster\', \'admin\')
 ;';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$stats['nb_admins']] = $row;
 
@@ -77,7 +77,7 @@ SELECT
 SELECT COUNT(*)
   FROM `' . Tables::groups() . '`
 ;';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$stats['nb_groups']] = $row;
 
@@ -85,7 +85,7 @@ SELECT COUNT(*)
 SELECT COUNT(*)
   FROM ' . Tables::rate() . '
 ;';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$stats['nb_rates']] = $row;
 
@@ -95,7 +95,7 @@ SELECT
   FROM ' . Tables::historySummary() . '
   WHERE month IS NULL
 ;';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$stats['nb_views']] = $row;
 
@@ -104,7 +104,7 @@ SELECT
     SUM(filesize)
   FROM ' . Tables::images() . '
 ;';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$stats['disk_usage']] = $row;
 
@@ -114,7 +114,7 @@ SELECT
     SUM(filesize)
   FROM ' . Tables::imageFormat() . '
 ;';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$stats['nb_formats'], $stats['formats_disk_usage']] = $row;
 
@@ -141,7 +141,7 @@ SELECT
   FROM ' . Tables::userInfos() . '
   WHERE user_id = 2
 ;';
-        $users = query2array($query);
+        $users = \Piwigo\Db\MysqliDb::query2Array($query);
         if (count($users) > 0) {
             $candidate = $users[0]['registration_date'];
         }
@@ -153,7 +153,7 @@ SELECT
   FROM ' . Tables::userInfos() . '
   WHERE registration_date > \'' . $piwigo_origins . '\'
 ;';
-            $users = query2array($query);
+            $users = \Piwigo\Db\MysqliDb::query2Array($query);
             if (count($users) > 0) {
                 $candidate = $users[0]['min_registration_date'];
             }
@@ -168,7 +168,7 @@ SELECT
   ORDER BY id ASC
   LIMIT 1
 ;';
-            $images = query2array($query);
+            $images = \Piwigo\Db\MysqliDb::query2Array($query);
             if (count($images) > 0) {
                 $candidate = $images[0]['date_available'];
             }

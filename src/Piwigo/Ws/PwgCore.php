@@ -68,7 +68,7 @@ final class PwgCore
 
         $max_urls = $params['max_urls'];
         $query = 'SELECT MAX(id)+1, COUNT(*) FROM ' . Tables::images() . ';';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$max_id, $image_count] = $row;
         // COUNT(*) is always numeric; MAX(id)+1 is numeric whenever rows
@@ -109,10 +109,10 @@ SELECT id, path, representative_ext, width, height, rotation
 
         $urls = [];
         do {
-            $result = pwg_query(str_replace('start_id', (string) $start_id, $query_model));
-            $is_last = pwg_db_num_rows($result) < $qlimit;
+            $result = \Piwigo\Db\MysqliDb::query(str_replace('start_id', (string) $start_id, $query_model));
+            $is_last = \Piwigo\Db\MysqliDb::numRows($result) < $qlimit;
 
-            while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
                 $start_id = is_numeric($row['id']) ? (int) $row['id'] : 0;
                 $src_image = new SrcImage($row);
                 if ($src_image->is_mimetype()) {
@@ -168,59 +168,59 @@ SELECT id, path, representative_ext, width, height, rotation
         $infos['version'] = AppInfo::VERSION;
 
         $query = 'SELECT COUNT(*) FROM ' . Tables::images() . ';';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$infos['nb_elements']] = $row;
 
         $query = 'SELECT COUNT(*) FROM ' . Tables::categories() . ';';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$infos['nb_categories']] = $row;
 
         $query = 'SELECT COUNT(*) FROM ' . Tables::categories() . ' WHERE dir IS NULL;';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$infos['nb_virtual']] = $row;
 
         $query = 'SELECT COUNT(*) FROM ' . Tables::categories() . ' WHERE dir IS NOT NULL;';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$infos['nb_physical']] = $row;
 
         $query = 'SELECT COUNT(*) FROM ' . Tables::imageCategory() . ';';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$infos['nb_image_category']] = $row;
 
         $query = 'SELECT COUNT(*) FROM ' . Tables::tags() . ';';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$infos['nb_tags']] = $row;
 
         $query = 'SELECT COUNT(*) FROM ' . Tables::imageTag() . ';';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$infos['nb_image_tag']] = $row;
 
         $query = 'SELECT COUNT(*) FROM ' . Tables::users() . ';';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$infos['nb_users']] = $row;
 
         $query = 'SELECT COUNT(*) FROM `' . Tables::groups() . '`;';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$infos['nb_groups']] = $row;
 
         $query = 'SELECT COUNT(*) FROM ' . Tables::comments() . ';';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$infos['nb_comments']] = $row;
 
         // first element
         if ($infos['nb_elements'] > 0) {
             $query = 'SELECT MIN(date_available) FROM ' . Tables::images() . ';';
-            $row = pwg_db_fetch_row(pwg_query($query));
+            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
             assert($row !== null);
             [$infos['first_date']] = $row;
         }
@@ -228,7 +228,7 @@ SELECT id, path, representative_ext, width, height, rotation
         // unvalidated comments
         if ($infos['nb_comments'] > 0) {
             $query = 'SELECT COUNT(*) FROM ' . Tables::comments() . ' WHERE validated=\'false\';';
-            $row = pwg_db_fetch_row(pwg_query($query));
+            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
             assert($row !== null);
             [$infos['nb_unvalidated_comments']] = $row;
         }
@@ -379,7 +379,7 @@ DELETE FROM ' . Tables::rate() . '
             $query .= ' AND element_id=' . $params['image_id'];
         }
 
-        $changes = pwg_db_changes();
+        $changes = \Piwigo\Db\MysqliDb::changes();
         if ((bool) $changes) {
             new RateService(new RateRepository(DbConnection::build()), new CookieService())
                 ->updateRatingScore();
@@ -401,7 +401,7 @@ DELETE FROM ' . Tables::rate() . '
         }
 
         if ((bool) preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $params['username'])) {
-            $secret = pwg_db_real_escape_string($params['password']);
+            $secret = \Piwigo\Db\MysqliDb::realEscapeString($params['password']);
             $authenticate = new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->authKeyLogin($params['username'] . ':' . $secret);
             if ($authenticate) {
                 $_SESSION['connected_with'] = 'ws_session_login_api_key';
@@ -455,7 +455,7 @@ DELETE FROM ' . Tables::rate() . '
         $res['pwg_token'] = new \Piwigo\Csrf\CsrfService()->getToken();
         $res['charset'] = \Piwigo\Core\CharsetHelper::getPwgCharset();
 
-        $row = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT NOW();'));
         assert($row !== null);
         [$dbnow] = $row;
         $res['current_datetime'] = $dbnow;
@@ -564,12 +564,12 @@ DELETE FROM ' . Tables::rate() . '
 
         if (isset($param['action'])) {
             $where .= '
-    AND action = "' . pwg_db_real_escape_string($param['action']) . '"';
+    AND action = "' . \Piwigo\Db\MysqliDb::realEscapeString($param['action']) . '"';
         }
 
         if (isset($param['object'])) {
             $where .= '
-    AND object = "' . pwg_db_real_escape_string($param['object']) . '"';
+    AND object = "' . \Piwigo\Db\MysqliDb::realEscapeString($param['object']) . '"';
         }
 
         if (! empty($param['date_min'])) {
@@ -616,7 +616,7 @@ SELECT
   ORDER BY activity_id DESC
   LIMIT ' . $nb_rows_to_fetch . ' OFFSET ' . $page_offset . '
 ;';
-            $rows = query2array($query);
+            $rows = \Piwigo\Db\MysqliDb::query2Array($query);
 
             if (count($rows) < $nb_rows_to_fetch) {
                 $more_rows_available = false;
@@ -708,7 +708,7 @@ SELECT
   FROM ' . Tables::users() . '
   WHERE `' . $user_field_id . '` IN (' . implode(',', array_keys($user_ids)) . ')
 ;';
-            $username_of = query2array($query, 'user_id', 'username');
+            $username_of = \Piwigo\Db\MysqliDb::query2Array($query, 'user_id', 'username');
         }
 
         foreach ($output_lines as $idx => $output_line) {
@@ -768,7 +768,7 @@ SELECT
         /** @var array<string, mixed> $page */
         global $logger, $page;
 
-        if (! empty($params['section']) and in_array($params['section'], get_enums(Tables::history(), 'section'))) {
+        if (! empty($params['section']) and in_array($params['section'], \Piwigo\Db\MysqliDb::getEnums(Tables::history(), 'section'))) {
             $page['section'] = $params['section'];
         }
 
@@ -843,7 +843,7 @@ SELECT
             $page['start'] = 0;
         }
 
-        $types = array_merge(['none'], get_enums(Tables::history(), 'image_type'));
+        $types = array_merge(['none'], \Piwigo\Db\MysqliDb::getEnums(Tables::history(), 'image_type'));
 
         $display_thumbnails = [
             'no_display_thumbnail' => l10n('No display'),
@@ -892,16 +892,16 @@ SELECT
 
         // filename
         if (! empty($param['filename'])) {
-            // pwg_db_real_escape_string() only returns null for a null input,
+            // \Piwigo\Db\MysqliDb::realEscapeString() only returns null for a null input,
             // and the empty() guard above already rules that out.
-            $escaped_filename = pwg_db_real_escape_string($param['filename']);
+            $escaped_filename = \Piwigo\Db\MysqliDb::realEscapeString($param['filename']);
             assert($escaped_filename !== null);
             $search['fields']['filename'] = str_replace('*', '%', $escaped_filename);
         }
 
         // ip
         if (! empty($param['ip'])) {
-            $escaped_ip = pwg_db_real_escape_string($param['ip']);
+            $escaped_ip = \Piwigo\Db\MysqliDb::realEscapeString($param['ip']);
             assert($escaped_ip !== null);
             $search['fields']['ip'] = str_replace('*', '%', $escaped_ip);
         }
@@ -932,12 +932,12 @@ SELECT
   INSERT INTO ' . Tables::search() . '
   (rules)
   VALUES
-  (\'' . pwg_db_real_escape_string(serialize($search)) . '\')
+  (\'' . \Piwigo\Db\MysqliDb::realEscapeString(serialize($search)) . '\')
   ;';
 
-        pwg_query($query);
+        \Piwigo\Db\MysqliDb::query($query);
 
-        $search_id = pwg_db_insert_id();
+        $search_id = \Piwigo\Db\MysqliDb::insertId();
 
         // Remove redirect for ajax //
         // redirect(
@@ -950,11 +950,11 @@ SELECT rules
   FROM ' . Tables::search() . '
   WHERE id = ' . $search_id . '
 ;';
-        $rules_row = pwg_db_fetch_row(pwg_query($query));
+        $rules_row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($rules_row !== null);
         [$serialized_rules] = $rules_row;
         // this row is the one we just INSERTed above (via $search_id =
-        // pwg_db_insert_id()) with a serialize() call we made ourselves, so
+        // \Piwigo\Db\MysqliDb::insertId()) with a serialize() call we made ourselves, so
         // the 'rules' column is guaranteed to be a non-null string here.
         assert(is_string($serialized_rules));
 
@@ -989,7 +989,7 @@ SELECT rules
         $search_ids = [];
 
         // historyGet() (the real 'get_history' handler) builds each $row via
-        // pwg_db_fetch_assoc(), so every field here is really string|null.
+        // \Piwigo\Db\MysqliDb::fetchAssoc(), so every field here is really string|null.
         foreach ($data as $row) {
             $row_user_id = $row['user_id'] ?? null;
             if (is_string($row_user_id)) {
@@ -1028,7 +1028,7 @@ SELECT
   FROM ' . Tables::search() . '
   WHERE id IN (' . implode(',', $search_ids) . ')
 ;';
-            $search_details_raw = query2array($query, 'id', 'rules');
+            $search_details_raw = \Piwigo\Db\MysqliDb::query2Array($query, 'id', 'rules');
             // Built into a fresh array (rather than mutating $search_details_raw
             // while iterating over it) so PHPStan can keep a precise
             // array<int|string, array<array-key, mixed>> element type instead of
@@ -1084,10 +1084,10 @@ SELECT ' . $user_field_id . ' AS id
   FROM ' . Tables::users() . '
   WHERE id IN (' . implode(',', array_keys($user_ids)) . ')
 ;';
-            $result = pwg_query($query);
+            $result = \Piwigo\Db\MysqliDb::query($query);
 
             $username_of = [];
-            while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
                 if ($row['id'] === null) {
                     continue;
                 }
@@ -1108,7 +1108,7 @@ SELECT id, uppercats
   FROM ' . Tables::categories() . '
   WHERE id IN (' . implode(',', $category_ids) . ')
 ;';
-            $uppercats_of = query2array($query, 'id', 'uppercats');
+            $uppercats_of = \Piwigo\Db\MysqliDb::query2Array($query, 'id', 'uppercats');
 
             foreach ($uppercats_of as $category_id => $uppercats) {
                 if ($uppercats === null) {
@@ -1141,7 +1141,7 @@ SELECT
   FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', array_keys($image_ids)) . ')
 ;';
-            $image_infos = query2array($query, 'id');
+            $image_infos = \Piwigo\Db\MysqliDb::query2Array($query, 'id');
         }
 
         global $name_of_tag; // used for preg_replace
@@ -1153,8 +1153,8 @@ SELECT
     name, url_name
   FROM ' . Tables::tags();
 
-            $result = pwg_query($query);
-            while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+            $result = \Piwigo\Db\MysqliDb::query($query);
+            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
                 if ($row['id'] === null) {
                     continue;
                 }
@@ -1182,7 +1182,7 @@ SELECT
 
         foreach ($history_lines as $line) {
             // every field of $line comes straight from historyGet()'s
-            // pwg_db_fetch_assoc() rows, so it is really string|null.
+            // \Piwigo\Db\MysqliDb::fetchAssoc() rows, so it is really string|null.
             $line_image_type = $line['image_type'] ?? null;
             $line_image_type = is_string($line_image_type) ? $line_image_type : null;
             $line_image_id = $line['image_id'] ?? null;

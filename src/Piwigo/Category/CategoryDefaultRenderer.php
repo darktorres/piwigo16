@@ -63,8 +63,8 @@ SELECT *
   FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', $selection) . ')
 ;';
-            $result = pwg_query($query);
-            while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+            $result = \Piwigo\Db\MysqliDb::query($query);
+            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
                 $imageId = $row['id'] ?? '';
                 $row['rank'] = $rankOf[$imageId] ?? 0;
                 $pictures[] = $row;
@@ -78,7 +78,7 @@ SELECT *
         // show_nb_comments both truthy AND at least one picture) --
         // declared up front (rather than relying on isset() to gate a
         // maybe-undefined variable) so PHPStan can prove its real type --
-        // null, or query2array()'s actual inferred return type -- at every
+        // null, or \Piwigo\Db\MysqliDb::query2Array()'s actual inferred return type -- at every
         // later read.
         $nbCommentsOf = null;
 
@@ -108,7 +108,7 @@ SELECT image_id, COUNT(*) AS nb_comments
     AND image_id IN (' . implode(',', $selection) . ')
   GROUP BY image_id
 ;';
-                $nbCommentsOf = query2array($query, 'image_id', 'nb_comments');
+                $nbCommentsOf = \Piwigo\Db\MysqliDb::query2Array($query, 'image_id', 'nb_comments');
             }
         }
 

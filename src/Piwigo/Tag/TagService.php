@@ -27,7 +27,7 @@ use Piwigo\Permission\PermissionService;
  *
  * Calls the still-procedural tag_alpha_compare() (functions_html.inc.php,
  * Html domain, already migrated in P17), trigger_change(), and
- * single_update() (functions_mysqli.inc.php, relocate-only per P23 batch
+ * \Piwigo\Db\MysqliDb::singleUpdate() (functions_mysqli.inc.php, relocate-only per P23 batch
  * 8c precedent) directly -- free functions, no class dependency, no
  * deptrac concern.
  */
@@ -241,7 +241,7 @@ final class TagService
 
         if (! isset($user['nb_available_tags'])) {
             $user['nb_available_tags'] = count($this->getAvailableTags());
-            single_update(
+            \Piwigo\Db\MysqliDb::singleUpdate(
                 Tables::userCache(),
                 [
                     'nb_available_tags' => $user['nb_available_tags'],
@@ -405,7 +405,7 @@ final class TagService
                 ];
             }
         }
-        mass_inserts(
+        \Piwigo\Db\MysqliDb::massInserts(
             Tables::imageTag(),
             array_keys($inserts[0]),
             $inserts
@@ -529,7 +529,7 @@ final class TagService
         }
 
         if ($inserts !== []) {
-            mass_inserts(
+            \Piwigo\Db\MysqliDb::massInserts(
                 Tables::imageTag(),
                 array_keys($inserts[0]),
                 $inserts

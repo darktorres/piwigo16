@@ -86,7 +86,7 @@ SELECT permalink
 ';
 
         /* Add active permalinks */
-        $permalinks = query2array($query, null, 'permalink');
+        $permalinks = \Piwigo\Db\MysqliDb::query2Array($query, null, 'permalink');
         $relevant_parameters = array_merge($relevant_parameters, $permalinks);
 
         /* Link all supported templates to their respective handle */
@@ -171,7 +171,7 @@ SELECT permalink
 UPDATE ' . Tables::config() . '
   SET value = \'' . str_replace("\'", "''", $serialized_extents) . '\'
 WHERE param = \'extents_for_templates\';';
-            if ((bool) pwg_query($query)) {
+            if ((bool) \Piwigo\Db\MysqliDb::query($query)) {
                 $page['infos'][] = l10n('Templates configuration has been recorded.');
             }
         }

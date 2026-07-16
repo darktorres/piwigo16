@@ -188,13 +188,13 @@ final class ExtensionScanner
             $theme['parent'] = $val[1];
         }
         if ((bool) preg_match('/["\']activable["\'].*?(true|false)/i', $data, $val)) {
-            $theme['activable'] = get_boolean($val[1]);
+            $theme['activable'] = \Piwigo\Db\MysqliDb::getBoolean($val[1]);
         }
         if ((bool) preg_match('/["\']mobile["\'].*?(true|false)/i', $data, $val)) {
-            $theme['mobile'] = get_boolean($val[1]);
+            $theme['mobile'] = \Piwigo\Db\MysqliDb::getBoolean($val[1]);
         }
         if ((bool) preg_match('/["\']use_standard_pages["\'].*?(true|false)/i', $data, $val)) {
-            $theme['use_standard_pages'] = get_boolean($val[1]);
+            $theme['use_standard_pages'] = \Piwigo\Db\MysqliDb::getBoolean($val[1]);
         }
 
         $screenshotPath = $path . '/screenshot.png';

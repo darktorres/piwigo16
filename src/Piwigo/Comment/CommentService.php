@@ -76,13 +76,13 @@ SELECT COUNT(DISTINCT(com.id))
     ON ic.image_id = com.image_id
   WHERE ' . implode('
     AND ', $where);
-            $row = pwg_db_fetch_row(pwg_query($query));
+            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
             assert($row !== null);
             [$user['nb_available_comments']] = $row;
 
             $user_id = is_numeric($user['id']) ? (int) $user['id'] : 0;
 
-            single_update(
+            \Piwigo\Db\MysqliDb::singleUpdate(
                 Tables::userCache(),
                 [
                     'nb_available_comments' => $user['nb_available_comments'],

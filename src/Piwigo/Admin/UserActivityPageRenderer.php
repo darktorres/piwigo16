@@ -117,7 +117,7 @@ final class UserActivityPageRenderer
       ' . $user_fields['username'] . ' AS username
     FROM ' . Tables::users() . '
     WHERE ' . $user_fields['id'] . ' IN (' . implode(',', array_keys($nb_lines_for_user)) . ');';
-            $username_of = query2array($query, 'id', 'username');
+            $username_of = \Piwigo\Db\MysqliDb::query2Array($query, 'id', 'username');
         } else {
             // no activity lines at all: skip the lookup query rather than
             // re-running the stale $query from above (previously left in place
@@ -145,7 +145,7 @@ SELECT COUNT(*)
   FROM ' . Tables::users() . '
 ;';
 
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$nb_users] = $row;
         $template->assign('nb_users', $nb_users);
@@ -185,7 +185,7 @@ SELECT
   FROM ' . $filter_table . '
   WHERE id = ' . $filter_value . '
 ;';
-                $rows = query2array($query);
+                $rows = \Piwigo\Db\MysqliDb::query2Array($query);
 
                 if (count($rows) === 0) {
                     fatal_error($filter_key . ' #' . $filter_value . ' does not exist');

@@ -100,20 +100,20 @@ final class PwgUsers
         }
 
         if (! empty($params['username'])) {
-            $where_clauses[] = 'u.' . $user_field_username . ' LIKE \'' . pwg_db_real_escape_string($params['username']) . '\'';
+            $where_clauses[] = 'u.' . $user_field_username . ' LIKE \'' . \Piwigo\Db\MysqliDb::realEscapeString($params['username']) . '\'';
         }
 
         $filtered_groups = [];
         if (! empty($params['filter'])) {
-            $filter_query = 'SELECT id FROM `' . Tables::groups() . '` WHERE name LIKE \'%' . pwg_db_real_escape_string($params['filter']) . '%\';';
-            $filtered_groups_res = pwg_query($filter_query);
-            while ((bool) ($row = pwg_db_fetch_assoc($filtered_groups_res))) {
+            $filter_query = 'SELECT id FROM `' . Tables::groups() . '` WHERE name LIKE \'%' . \Piwigo\Db\MysqliDb::realEscapeString($params['filter']) . '%\';';
+            $filtered_groups_res = \Piwigo\Db\MysqliDb::query($filter_query);
+            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($filtered_groups_res))) {
                 $filtered_groups[] = $row['id'];
             }
             $filter_where_clause = '(u.' . $user_field_username . ' LIKE \'%' .
-            pwg_db_real_escape_string($params['filter']) . '%\' OR '
+            \Piwigo\Db\MysqliDb::realEscapeString($params['filter']) . '%\' OR '
             . 'u.' . $user_field_email . ' LIKE \'%' .
-            pwg_db_real_escape_string($params['filter']) . '%\'';
+            \Piwigo\Db\MysqliDb::realEscapeString($params['filter']) . '%\'';
 
             if (! empty($filtered_groups)) {
                 $filter_where_clause .= 'OR ug.group_id IN (' . implode(',', $filtered_groups) . ')';
@@ -157,7 +157,7 @@ final class PwgUsers
         }
 
         if (! empty($params['status'])) {
-            $params['status'] = array_intersect($params['status'], get_enums(Tables::userInfos(), 'status'));
+            $params['status'] = array_intersect($params['status'], \Piwigo\Db\MysqliDb::getEnums(Tables::userInfos(), 'status'));
             if (count($params['status']) > 0) {
                 $where_clauses[] = 'ui.status IN("' . implode('","', $params['status']) . '")';
             }
@@ -291,13 +291,13 @@ SELECT DISTINCT ';
     ;';
         }
         $users = [];
-        $result = pwg_query($query);
+        $result = \Piwigo\Db\MysqliDb::query($query);
         $total_count = 0;
 
         /* GET THE RESULT OF SQL_CALC_FOUND_ROWS if display total_count is requested */
         if (isset($display_flags['total_count'])) {
-            $total_count_query_result = pwg_query('SELECT FOUND_ROWS();');
-            $row = pwg_db_fetch_row($total_count_query_result);
+            $total_count_query_result = \Piwigo\Db\MysqliDb::query('SELECT FOUND_ROWS();');
+            $row = \Piwigo\Db\MysqliDb::fetchRow($total_count_query_result);
             assert($row !== null);
             [$total_count] = $row;
             $total_count = (int) $total_count;
@@ -307,7 +307,7 @@ SELECT DISTINCT ';
         // type narrowing otherwise mis-infers the offset as unconditionally
         // present after the loop.
         $want_groups = isset($display_flags['groups']);
-        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
             $row['id'] = intval($row['id']);
             if ($want_groups) {
                 $row['groups'] = []; // will be filled later
@@ -323,11 +323,11 @@ SELECT DISTINCT ';
   FROM ' . Tables::userGroup() . '
   WHERE user_id IN (' . implode(',', array_keys($users)) . ')
 ;';
-                $result = pwg_query($query);
+                $result = \Piwigo\Db\MysqliDb::query($query);
                 // a dedicated $group_row (instead of reusing $row from the loop
                 // above, which iterates a differently-shaped result set) keeps
                 // PHPStan's per-loop type inference precise.
-                while ((bool) ($group_row = pwg_db_fetch_assoc($result))) {
+                while ((bool) ($group_row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
                     $group_user_id = is_numeric($group_row['user_id']) ? (int) $group_row['user_id'] : null;
                     $group_id = is_numeric($group_row['group_id']) ? (int) $group_row['group_id'] : null;
                     if ($group_user_id === null || $group_id === null || ! isset($users[$group_user_id]) || ! is_array($users[$group_user_id]['groups'] ?? null)) {
@@ -354,7 +354,7 @@ SELECT DISTINCT ';
                     $last_visit = is_string($cur_user['last_visit']) ? $cur_user['last_visit'] : null;
                     $users[$cur_user_id]['last_visit'] = $last_visit;
 
-                    if (! get_boolean($cur_user['last_visit_from_history']) and empty($last_visit)) {
+                    if (! \Piwigo\Db\MysqliDb::getBoolean($cur_user['last_visit_from_history']) and empty($last_visit)) {
                         $last_visit = new AuthService(new AuthRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())))->getUserLastVisitFromHistory($cur_user_id, true);
                         $users[$cur_user_id]['last_visit'] = $last_visit;
                     }
@@ -531,12 +531,12 @@ SELECT
   FROM ' . Tables::userInfos() . '
   WHERE status IN (\'webmaster\', \'admin\')
 ;';
-            $protected_users = array_merge($protected_users, query2array($query, null, 'user_id'));
+            $protected_users = array_merge($protected_users, \Piwigo\Db\MysqliDb::query2Array($query, null, 'user_id'));
         }
 
         // protect some users
         // array_diff() requires every element to be string-castable;
-        // query2array()'s list<string|null> return (key_name=null,
+        // \Piwigo\Db\MysqliDb::query2Array()'s list<string|null> return (key_name=null,
         // value_name='user_id') can contain null for a NULL user_id column, and
         // $protected_users' own entries are still `mixed` even after typing
         // $conf/$user above, so filter down to scalars (int/string) before
@@ -674,7 +674,7 @@ SELECT ' . $user_field_password . ' AS password
   FROM ' . Tables::users() . '
   WHERE ' . $user_field_id . ' = \'' . $current_user_id . '\'
 ;';
-            $row = pwg_db_fetch_row(pwg_query($query));
+            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
             assert($row !== null);
             [$current_password] = $row;
             $current_password = is_string($current_password) ? $current_password : '';
@@ -772,14 +772,14 @@ SELECT COUNT(*)
   FROM ' . Tables::images() . '
   WHERE id = ' . $params['image_id'] . '
 ;';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$count] = $row;
         if ($count == 0) {
             return new PwgError(404, 'image_id not found');
         }
 
-        single_insert(
+        \Piwigo\Db\MysqliDb::singleInsert(
             Tables::favorites(),
             [
                 'image_id' => $params['image_id'],
@@ -815,7 +815,7 @@ SELECT COUNT(*)
   FROM ' . Tables::images() . '
   WHERE id = ' . $params['image_id'] . '
 ;';
-        $row = pwg_db_fetch_row(pwg_query($query));
+        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
         assert($row !== null);
         [$count] = $row;
         if ($count == 0) {
@@ -830,7 +830,7 @@ DELETE
     AND image_id = ' . $params['image_id'] . '
 ;';
 
-        pwg_query($query);
+        \Piwigo\Db\MysqliDb::query($query);
 
         return true;
     }
@@ -876,8 +876,8 @@ SELECT
     ' . $order_by . '
 ;';
         $images = [];
-        $result = pwg_query($query);
-        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+        $result = \Piwigo\Db\MysqliDb::query($query);
+        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
             $image = [];
 
             foreach (['id', 'width', 'height', 'hit'] as $k) {
@@ -1069,7 +1069,7 @@ SELECT
             return new PwgError(400, 'Key name is too long');
         }
 
-        $key_name = pwg_db_real_escape_string($params['key_name']);
+        $key_name = \Piwigo\Db\MysqliDb::realEscapeString($params['key_name']);
         assert($key_name !== null);
         // the guard above already rejects any duration outside [1, 999999], so
         // it can never be 0 here.
@@ -1166,7 +1166,7 @@ SELECT
             return new PwgError(403, l10n('Invalid pkid format'));
         }
 
-        $key_name = pwg_db_real_escape_string($params['key_name']);
+        $key_name = \Piwigo\Db\MysqliDb::realEscapeString($params['key_name']);
         // edit_api_key() requires a real int $user_id (its own @param
         // docblock, include/functions_user.inc.php); a logged-in, non-guest
         // session's $user['id'] is always the numeric users.id primary key.

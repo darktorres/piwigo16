@@ -93,7 +93,7 @@ final class NotificationByMailRepositoryTest extends IntegrationTestCase
 
         // user_id is a native int under this project's DBAL/mysqli driver
         // config, but must come back as a string here, matching the legacy
-        // pwg_db_fetch_assoc() contract downstream callers
+        // \Piwigo\Db\MysqliDb::fetchAssoc() contract downstream callers
         // (set_user_on_env_nbm() etc., untouched by this port) still rely
         // on -- proven at runtime, not just declared via the return type.
         self::assertIsString($rows[0]['user_id']);

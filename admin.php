@@ -389,7 +389,7 @@ if (
 
 $show_whats_new = false;
 
-$whats_new_major_version = get_branch_from_version(AppInfo::VERSION);
+$whats_new_major_version = \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION);
 
 if ((bool) (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->getParam('show_whats_new_' . $whats_new_major_version, true) and pwg_is_dbconf_writeable()) {
     if ($user['registration_date'] > $conf['last_major_update']) {

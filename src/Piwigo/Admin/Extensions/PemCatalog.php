@@ -59,7 +59,7 @@ final class PemCatalog
                 $pemVersion = $pemVersions[$i] ?? null;
                 if (is_array($pemVersion)) {
                     $pemVersionName = $pemVersion['name'] ?? null;
-                    if (is_string($pemVersionName) and get_branch_from_version($pemVersionName) === get_branch_from_version($version)) {
+                    if (is_string($pemVersionName) and \Piwigo\Core\VersionHelper::getBranchFromVersion($pemVersionName) === \Piwigo\Core\VersionHelper::getBranchFromVersion($version)) {
                         $pemVersionId = $pemVersion['id'] ?? null;
                         if (is_scalar($pemVersionId)) {
                             $versionsToCheck[] = (string) $pemVersionId;

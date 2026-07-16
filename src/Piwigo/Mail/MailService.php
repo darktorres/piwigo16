@@ -828,7 +828,7 @@ SELECT
                         'GALLERY_TITLE' => $page['gallery_title'] ?? $conf['gallery_title'],
                         'VERSION' => ((bool) ($conf['show_version'] ?? false)) ? AppInfo::VERSION : '',
                         'PHPWG_URL' => defined('PHPWG_URL') ? PHPWG_URL : '',
-                        'CONTENT_ENCODING' => get_pwg_charset(),
+                        'CONTENT_ENCODING' => \Piwigo\Core\CharsetHelper::getPwgCharset(),
                         'CONTACT_MAIL' => $confMail['email_webmaster'],
                     ]
                 );

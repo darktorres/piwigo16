@@ -131,7 +131,7 @@ final class RegisterController implements ControllerInterface
 
             if (count($page['errors']) === 0) {
                 // email notification
-                if (isset($_POST['send_password_by_mail']) and email_check_format($post_mail_address)) {
+                if (isset($_POST['send_password_by_mail']) and \Piwigo\Validation\InputValidator::checkEmailFormat($post_mail_address)) {
                     if (! isset($_SESSION['page_infos']) or ! is_array($_SESSION['page_infos'])) {
                         $_SESSION['page_infos'] = [];
                     }

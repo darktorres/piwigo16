@@ -74,4 +74,30 @@ final class InputValidator
     {
         return $value === null || $value === '' || $value === 0 || $value === 0.0 || $value === '0' || $value === false || $value === [];
     }
+
+    /**
+     * P23 batch 8d: relocated from include/functions.inc.php's
+     * url_check_format(), unchanged logic.
+     */
+    public static function checkUrlFormat(string $url): bool
+    {
+        if (str_contains($url, '"')) {
+            return false;
+        }
+
+        if (! str_starts_with($url, 'http://') && ! str_starts_with($url, 'https://')) {
+            return false;
+        }
+
+        return filter_var($url, FILTER_VALIDATE_URL) !== false;
+    }
+
+    /**
+     * P23 batch 8d: relocated from include/functions.inc.php's
+     * email_check_format(), unchanged logic.
+     */
+    public static function checkEmailFormat(?string $mailAddress): bool
+    {
+        return filter_var($mailAddress, FILTER_VALIDATE_EMAIL) !== false;
+    }
 }

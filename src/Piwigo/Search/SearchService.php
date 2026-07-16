@@ -96,7 +96,7 @@ final class SearchService
         $search = $this->getSearchInfo($candidate);
 
         if ($search !== null) {
-            if (script_basename() != 'ws' and $clausePattern == 'id = ?' and isset($search['search_uuid'])) {
+            if (\Piwigo\Core\PageFilterHelper::scriptBasename() != 'ws' and $clausePattern == 'id = ?' and isset($search['search_uuid'])) {
                 fatal_error('this search is not reachable with its id, need the search_uuid instead');
             }
 
@@ -191,7 +191,7 @@ final class SearchService
 
         $rawFiltersViews = conf_get_param('filters_views', $conf['default_filters_views']);
         $unserializedDisplayFilters = (is_array($rawFiltersViews) || is_string($rawFiltersViews))
-            ? safe_unserialize($rawFiltersViews)
+            ? \Piwigo\Core\ArrayHelper::safeUnserialize($rawFiltersViews)
             : [];
 
         $displayFilters = [];

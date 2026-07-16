@@ -245,7 +245,7 @@ final class ExtensionScanner
             return null;
         }
 
-        $targetCharset = strtolower($targetCharset ?? get_pwg_charset());
+        $targetCharset = strtolower($targetCharset ?? \Piwigo\Core\CharsetHelper::getPwgCharset());
 
         $language = [
             'name' => $languageId,
@@ -262,7 +262,7 @@ final class ExtensionScanner
 
         if ((bool) preg_match('/"X-Piwigo-Language-Name:\s*(.+?)\\\\n"/', $data, $val)) {
             $language['name'] = trim($val[1]);
-            $converted = convert_charset($language['name'], 'utf-8', $targetCharset);
+            $converted = \Piwigo\Core\CharsetHelper::convertCharset($language['name'], 'utf-8', $targetCharset);
             if ($converted !== false) {
                 $language['name'] = $converted;
             }
@@ -276,7 +276,7 @@ final class ExtensionScanner
         // Restore it (same fix as the old languages::get_fs_languages()).
         if ((bool) preg_match('/"X-Piwigo-Country:\s*(.+?)\\\\n"/', $data, $val)) {
             $country = trim($val[1]);
-            $convertedCountry = convert_charset($country, 'utf-8', $targetCharset);
+            $convertedCountry = \Piwigo\Core\CharsetHelper::convertCharset($country, 'utf-8', $targetCharset);
             if ($convertedCountry !== false) {
                 $country = $convertedCountry;
             }

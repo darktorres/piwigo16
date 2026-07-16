@@ -199,7 +199,7 @@ $logger = new Logger([
 ]);
 
 if (! (bool) $conf['check_upgrade_feed']) {
-    if (! isset($conf['piwigo_db_version']) or $conf['piwigo_db_version'] != get_branch_from_version(AppInfo::VERSION)) {
+    if (! isset($conf['piwigo_db_version']) or $conf['piwigo_db_version'] != \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION)) {
         redirect(get_root_url() . 'upgrade.php');
     }
 }
@@ -248,7 +248,7 @@ if (isset($conf['order_by_inside_category_custom'])) {
     $conf['order_by_inside_category'] = $conf['order_by_inside_category_custom'];
 }
 
-check_lounge();
+\Piwigo\Core\LoungeMaintenance::checkLounge();
 
 // Piwigo\Bootstrap\UserBootstrap::initialize() sets these by calling
 // build_user()/AuthService::autoLogin()/auth_key_login(), each mutating the
@@ -304,7 +304,7 @@ load_language('common.lang');
 if (\Piwigo\Auth\AccessControl::isAdmin() || (defined('IN_ADMIN') and IN_ADMIN)) {
     load_language('admin.lang');
     // Add language for temporary strings for new popup, from piwigo 15
-    load_language('whats_new_' . get_branch_from_version(AppInfo::VERSION) . '.lang');
+    load_language('whats_new_' . \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION) . '.lang');
 }
 trigger_notify('loading_lang');
 load_language('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, [
@@ -379,7 +379,7 @@ if (defined('IN_ADMIN') and IN_ADMIN) {// Admin template
     $template = new Template(PHPWG_ROOT_PATH . 'admin/themes', $admin_theme);
 } else { // Classic template
     $theme = $user['theme'];
-    if (script_basename() != 'ws' and mobile_theme()) {
+    if (\Piwigo\Core\PageFilterHelper::scriptBasename() != 'ws' and \Piwigo\Core\DeviceHelper::mobileTheme()) {
         $theme = $conf['mobile_theme'];
     }
     $theme = is_string($theme) ? $theme : '';
@@ -398,10 +398,10 @@ if (is_array($user_internal_status) && ($user_internal_status['guest_must_be_gue
 if ((bool) $conf['gallery_locked']) {
     $header_msgs[] = l10n('The gallery is locked for maintenance. Please, come back later.');
 
-    if (script_basename() != 'identification' and ! \Piwigo\Auth\AccessControl::isAdmin()) {
+    if (\Piwigo\Core\PageFilterHelper::scriptBasename() != 'identification' and ! \Piwigo\Auth\AccessControl::isAdmin()) {
         set_status_header(503, 'Service Unavailable');
         @header('Retry-After: 900');
-        header('Content-Type: text/html; charset=' . get_pwg_charset());
+        header('Content-Type: text/html; charset=' . \Piwigo\Core\CharsetHelper::getPwgCharset());
         echo '<a href="' . get_absolute_root_url(false) . 'identification.php">' . l10n('The gallery is locked for maintenance. Please, come back later.') . '</a>';
         echo str_repeat(' ', 512); // IE6 doesn't error output if below a size
         exit();
@@ -421,7 +421,7 @@ if (count($header_msgs) > 0) {
     $header_msgs = [];
 }
 
-if (! empty($conf['filter_pages']) and (bool) get_filter_page_value('used')) {
+if (! empty($conf['filter_pages']) and (bool) \Piwigo\Core\PageFilterHelper::getFilterPageValue('used')) {
     include PHPWG_ROOT_PATH . 'include/filter.inc.php';
 } else {
     $filter['enabled'] = false;

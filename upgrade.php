@@ -345,9 +345,9 @@ SELECT id
         $current_release = '15.0.0';
     } else {
         // confirm that the database is in the same version as source code files
-        conf_update_param('piwigo_db_version', get_branch_from_version(AppInfo::VERSION));
+        conf_update_param('piwigo_db_version', \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION));
 
-        header('Content-Type: text/html; charset=' . get_pwg_charset());
+        header('Content-Type: text/html; charset=' . \Piwigo\Core\CharsetHelper::getPwgCharset());
         echo 'No upgrade required, the database structure is up to date';
         echo '<br><a href="index.php">← back to gallery</a>';
         exit();
@@ -396,7 +396,7 @@ if ((isset($_POST['submit']) or isset($_GET['now']))
         $mysql_changes_raw = $included_vars['mysql_changes'] ?? null;
         $mysql_changes = is_array($mysql_changes_raw) ? array_filter($mysql_changes_raw, is_string(...)) : [];
 
-        conf_update_param('piwigo_db_version', get_branch_from_version(AppInfo::VERSION));
+        conf_update_param('piwigo_db_version', \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION));
 
         // Conf delete param on last major update for whats new popin to be displayed when changing major version
         conf_delete_param('last_major_update');
@@ -473,7 +473,7 @@ if ((isset($_POST['submit']) or isset($_GET['now']))
 
         // if the webmaster has a session, let's give a link to discover new features
         if (! empty($_SESSION['pwg_uid'])) {
-            $version_ = str_replace('.', '_', get_branch_from_version(AppInfo::VERSION) . '.0');
+            $version_ = str_replace('.', '_', \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION) . '.0');
 
             if (file_exists(PHPWG_PLUGINS_PATH . 'TakeATour/tours/' . $version_ . '/config.inc.php')) {
                 $query = '
@@ -488,7 +488,7 @@ REPLACE INTO ' . Tables::plugins() . '
 
                 $template->assign(
                     [
-                        'button_label' => l10n('Discover what\'s new in Piwigo %s', get_branch_from_version(AppInfo::VERSION)),
+                        'button_label' => l10n('Discover what\'s new in Piwigo %s', \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION)),
                         'button_link' => 'admin.php?submited_tour_path=tours/' . $version_ . '&amp;pwg_token=' . (new \Piwigo\Csrf\CsrfService())->getToken(),
                     ]
                 );

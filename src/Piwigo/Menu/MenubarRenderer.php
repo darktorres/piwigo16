@@ -104,7 +104,7 @@ final class MenubarRenderer
         // -------------------------------------------------------------- categories
         $block = $menu->get_block('mbCategories');
         // ------------------------------------------------------------------------ filter
-        if ((bool) $conf['menubar_filter_icon'] and ! self::emptyValue($conf['filter_pages']) and (bool) get_filter_page_value('used')) {
+        if ((bool) $conf['menubar_filter_icon'] and ! self::emptyValue($conf['filter_pages']) and (bool) \Piwigo\Core\PageFilterHelper::getFilterPageValue('used')) {
             if ((bool) $filter['enabled']) {
                 $template->assign(
                     'U_STOP_FILTER',
@@ -178,7 +178,7 @@ final class MenubarRenderer
 
         // ------------------------------------------------------------------------ tags
         $block = $menu->get_block('mbTags');
-        if ($block !== null and script_basename() !== 'picture') {
+        if ($block !== null and \Piwigo\Core\PageFilterHelper::scriptBasename() !== 'picture') {
             $block->data = [];
             $tags = $tagService->getAvailableTags();
             usort($tags, $tagService->tagsCounterCompare(...));

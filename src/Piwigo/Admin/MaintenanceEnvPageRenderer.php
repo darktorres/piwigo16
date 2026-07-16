@@ -70,7 +70,7 @@ final class MaintenanceEnvPageRenderer
         assert($row !== null);
         [$db_current_date] = $row;
 
-        [$container_name, $container_version] = get_container_info();
+        [$container_name, $container_version] = \Piwigo\Core\ContainerDetector::detect();
 
         if (! in_array($container_name, ['Official', 'none'], true)) {
             $container_name = '(unofficial) ' . $container_name;

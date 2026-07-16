@@ -96,7 +96,7 @@ final class FeedController implements ControllerInterface
 
         set_make_full_url();
 
-        $rss_encoding = get_pwg_charset();
+        $rss_encoding = \Piwigo\Core\CharsetHelper::getPwgCharset();
 
         // $conf/$user are typed array<string, mixed> (see the global
         // declaration above); each of these values is read again later in

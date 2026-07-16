@@ -212,7 +212,7 @@ final class AuthService
                         // defines the authentication context (UI, API,
                         // etc). Auto-login via remember-me may miss this,
                         // so we set it to 'pwg_ui' for UI logins (not API).
-                        if (script_basename() !== 'ws') {
+                        if (\Piwigo\Core\PageFilterHelper::scriptBasename() !== 'ws') {
                             $_SESSION['connected_with'] = 'pwg_ui';
                         }
                         $this->logUser($cookie[0], true);

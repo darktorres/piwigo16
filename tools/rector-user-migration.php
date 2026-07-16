@@ -74,6 +74,26 @@ return RectorConfig::configure()
         new FuncCallToStaticCall('is_valid_mysql_datetime', 'Piwigo\Core\DateHelper', 'isValidMysqlDatetime'),
         new FuncCallToStaticCall('mkgetdir', 'Piwigo\Core\FilesystemHelper', 'mkgetdir'),
         new FuncCallToStaticCall('secure_directory', 'Piwigo\Core\FilesystemHelper', 'secureDirectory'),
+        // P23 batch 8d, file 2 pass 2b-i: remaining pure/lightly-global-
+        // coupled utility functions -- same static-rename shape.
+        new FuncCallToStaticCall('safe_unserialize', 'Piwigo\Core\ArrayHelper', 'safeUnserialize'),
+        new FuncCallToStaticCall('safe_json_decode', 'Piwigo\Core\ArrayHelper', 'safeJsonDecode'),
+        new FuncCallToStaticCall('prepend_append_array_items', 'Piwigo\Core\ArrayHelper', 'prependAppendArrayItems'),
+        new FuncCallToStaticCall('get_pwg_charset', 'Piwigo\Core\CharsetHelper', 'getPwgCharset'),
+        new FuncCallToStaticCall('convert_charset', 'Piwigo\Core\CharsetHelper', 'convertCharset'),
+        new FuncCallToStaticCall('get_device', 'Piwigo\Core\DeviceHelper', 'getDevice'),
+        new FuncCallToStaticCall('mobile_theme', 'Piwigo\Core\DeviceHelper', 'mobileTheme'),
+        new FuncCallToStaticCall('safe_version_compare', 'Piwigo\Core\VersionHelper', 'safeVersionCompare'),
+        new FuncCallToStaticCall('get_branch_from_version', 'Piwigo\Core\VersionHelper', 'getBranchFromVersion'),
+        new FuncCallToStaticCall('pwg_unique_exec_begins', 'Piwigo\Core\UniqueExecLock', 'begins'),
+        new FuncCallToStaticCall('pwg_unique_exec_is_running', 'Piwigo\Core\UniqueExecLock', 'isRunning'),
+        new FuncCallToStaticCall('pwg_unique_exec_ends', 'Piwigo\Core\UniqueExecLock', 'ends'),
+        new FuncCallToStaticCall('get_container_info', 'Piwigo\Core\ContainerDetector', 'detect'),
+        new FuncCallToStaticCall('check_lounge', 'Piwigo\Core\LoungeMaintenance', 'checkLounge'),
+        new FuncCallToStaticCall('url_check_format', 'Piwigo\Validation\InputValidator', 'checkUrlFormat'),
+        new FuncCallToStaticCall('email_check_format', 'Piwigo\Validation\InputValidator', 'checkEmailFormat'),
+        new FuncCallToStaticCall('script_basename', 'Piwigo\Core\PageFilterHelper', 'scriptBasename'),
+        new FuncCallToStaticCall('get_filter_page_value', 'Piwigo\Core\PageFilterHelper', 'getFilterPageValue'),
     ])
     ->withPhpVersion(\Rector\ValueObject\PhpVersion::PHP_85)
     ->withParallel(timeoutSeconds: 300);

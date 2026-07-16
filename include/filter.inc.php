@@ -35,7 +35,7 @@ global $user;
  */
 global $filter, $header_notes;
 
-if (! (bool) get_filter_page_value('cancel')) {
+if (! (bool) \Piwigo\Core\PageFilterHelper::getFilterPageValue('cancel')) {
     if (isset($_GET['filter'])) {
         $filter['matches'] = [];
         $filter_get_param = $_GET['filter'];
@@ -155,7 +155,7 @@ WHERE ';
         $filter['visible_images'] = SessionService::get()->getSessionVar('filter_visible_images', '');
     }
     unset($filter_key);
-    if ((bool) get_filter_page_value('add_notes')) {
+    if ((bool) \Piwigo\Core\PageFilterHelper::getFilterPageValue('add_notes')) {
         $header_notes[] = l10n_dec(
             'Photos posted within the last %d day.',
             'Photos posted within the last %d days.',

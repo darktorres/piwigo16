@@ -117,7 +117,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
         $contentType = $this->responseEncoder()
             ->getContentType();
 
-        @header('Content-Type: ' . $contentType . '; charset=' . get_pwg_charset());
+        @header('Content-Type: ' . $contentType . '; charset=' . \Piwigo\Core\CharsetHelper::getPwgCharset());
         print_r($encodedResponse);
         trigger_notify('sendResponse', $encodedResponse);
     }

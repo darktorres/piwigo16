@@ -168,7 +168,7 @@ final class CommentService
                 }
 
                 $comm['website_url'] = $websiteUrl;
-                if (! url_check_format($websiteUrl)) {
+                if (! \Piwigo\Validation\InputValidator::checkUrlFormat($websiteUrl)) {
                     $infos[] = l10n('Your website URL is invalid');
                     $commentAction = 'reject';
                 }
@@ -185,7 +185,7 @@ final class CommentService
             }
         } else {
             $email = is_string($comm['email']) ? $comm['email'] : null;
-            if (! email_check_format($email)) {
+            if (! \Piwigo\Validation\InputValidator::checkEmailFormat($email)) {
                 $infos[] = l10n('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
                 $commentAction = 'reject';
             }
@@ -369,7 +369,7 @@ final class CommentService
             }
 
             $comment['website_url'] = $websiteUrl;
-            if (! url_check_format($websiteUrl)) {
+            if (! \Piwigo\Validation\InputValidator::checkUrlFormat($websiteUrl)) {
                 if (! is_array($page['errors'] ?? null)) {
                     $page['errors'] = [];
                 }

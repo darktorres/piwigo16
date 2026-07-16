@@ -63,7 +63,7 @@ final class SearchController implements ControllerInterface
         // list of filters in user preferences
         $raw_filters_views = conf_get_param('filters_views', $conf['default_filters_views']);
         $filters_views = (is_array($raw_filters_views) or is_string($raw_filters_views))
-            ? safe_unserialize($raw_filters_views)
+            ? \Piwigo\Core\ArrayHelper::safeUnserialize($raw_filters_views)
             : [];
 
         // change the name of the keys so that they can be used with this

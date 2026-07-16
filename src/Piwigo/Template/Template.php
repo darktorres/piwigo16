@@ -245,7 +245,7 @@ class Template
         // standard pages can't get the header to load the html header
         if (
             $theme != 'default'
-            and in_array(script_basename(), ['identification', 'register', 'password', 'profile'])
+            and in_array(\Piwigo\Core\PageFilterHelper::scriptBasename(), ['identification', 'register', 'password', 'profile'])
             and ((bool) ($themeconf['use_standard_pages'] ?? false) or (bool) conf_get_param('use_standard_pages', false))
         ) {
             $theme = 'standard_pages';

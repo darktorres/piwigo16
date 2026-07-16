@@ -74,7 +74,7 @@ final class ExtensionUpdateChecker
             $revisionNameRaw = $serverInfo['revision_name'] ?? null;
             $revisionName = is_string($revisionNameRaw) ? $revisionNameRaw : '';
 
-            if (! (bool) safe_version_compare($fsVersion, $revisionName, '>=')) {
+            if (! (bool) \Piwigo\Core\VersionHelper::safeVersionCompare($fsVersion, $revisionName, '>=')) {
                 $pending[$extId] = [
                     'fs' => $fsExt,
                     'server' => $serverInfo,
@@ -150,7 +150,7 @@ final class ExtensionUpdateChecker
                 $fsVersionRaw = $fsExt['version'] ?? null;
                 $fsVersion = is_string($fsVersionRaw) ? $fsVersionRaw : '';
 
-                if (is_string($neededVersion) and (bool) safe_version_compare($fsVersion, $neededVersion, '>=')) {
+                if (is_string($neededVersion) and (bool) \Piwigo\Core\VersionHelper::safeVersionCompare($fsVersion, $neededVersion, '>=')) {
                     $this->checkExtensions();
 
                     return;

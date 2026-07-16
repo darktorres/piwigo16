@@ -1367,7 +1367,7 @@ SELECT
     {
         $enabled = ImageStdParams::get_defined_type_map();
 
-        $disabled_raw = safe_unserialize(ImageStdParams::get_disabled_type_map());
+        $disabled_raw = \Piwigo\Core\ArrayHelper::safeUnserialize(ImageStdParams::get_disabled_type_map());
         // ImageStdParams persists this map as serialize()d DerivativeParams[]
         // (see ImageStdParams::get_disabled_type_map()'s docblock);
         // unserialize() is only typed mixed by PHP itself, so filter out

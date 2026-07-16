@@ -170,7 +170,7 @@ final class CalendarRenderer
         // echo ('<pre>'. var_export($calendar, true) . '</pre>');
 
         $must_show_list = true; // true until calendar generates its own display
-        if (script_basename() != 'picture') { // basename without file extention
+        if (\Piwigo\Core\PageFilterHelper::scriptBasename() != 'picture') { // basename without file extention
             if ($calendar->generate_category_content()) {
                 $page['items'] = [];
                 $must_show_list = false;

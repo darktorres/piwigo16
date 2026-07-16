@@ -67,7 +67,7 @@ final class PageHeaderRenderer
 
                 'BODY_ID' => $page['body_id'] ?? '',
 
-                'CONTENT_ENCODING' => get_pwg_charset(),
+                'CONTENT_ENCODING' => \Piwigo\Core\CharsetHelper::getPwgCharset(),
                 'PAGE_TITLE' => strip_tags($title),
 
                 'U_HOME' => get_gallery_home_url(),
@@ -127,7 +127,7 @@ final class PageHeaderRenderer
 
         trigger_notify('loc_end_page_header');
 
-        header('Content-Type: text/html; charset=' . get_pwg_charset());
+        header('Content-Type: text/html; charset=' . \Piwigo\Core\CharsetHelper::getPwgCharset());
         $template->parse('header');
 
         trigger_notify('loc_after_page_header');

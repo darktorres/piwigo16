@@ -109,7 +109,7 @@ final class MetadataService
                     }
                 }
 
-                $convertedValue = convert_charset($value, $inputEncoding, get_pwg_charset());
+                $convertedValue = \Piwigo\Core\CharsetHelper::convertCharset($value, $inputEncoding, \Piwigo\Core\CharsetHelper::getPwgCharset());
                 // convert_charset() can fail (iconv()/mb_convert_encoding()
                 // returning false on malformed input) -- keep the
                 // unconverted value rather than propagating false.

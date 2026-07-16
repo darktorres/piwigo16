@@ -126,14 +126,12 @@ class updates
             'is_dev' => true,
         ];
 
-        [$env, $build_version] = get_container_info();
+        [$env, $build_version] = \Piwigo\Core\ContainerDetector::detect();
         if ((bool) preg_match('/^(\d+\.\d+)\.(\d+)$/', AppInfo::VERSION)) {
             $new_versions['is_dev'] = false;
-            $actual_branch = get_branch_from_version(
-                ($env === 'Official')
-        ? substr((string) $build_version, 0, -1)
-        : AppInfo::VERSION
-            );
+            $actual_branch = \Piwigo\Core\VersionHelper::getBranchFromVersion(($env === 'Official')
+    ? substr((string) $build_version, 0, -1)
+    : AppInfo::VERSION);
 
             $url = PHPWG_URL . '/download/all_versions.php';
             $url .= '?rand=' . md5(uniqid((string) mt_rand(), true)); // Avoid server cache
@@ -151,13 +149,13 @@ class updates
                 if ($env === 'Official') {
                     // Check if build_version is lower than the latest version
                     if ($this->container_version_compare($build_version, $last_version) == '-1') {
-                        $last_branch = get_branch_from_version(substr($last_version, 0, -1));
+                        $last_branch = \Piwigo\Core\VersionHelper::getBranchFromVersion(substr($last_version, 0, -1));
                         if ($last_branch == $actual_branch) {
                             $new_versions['minor'] = $last_version;
                         } else {
                             $new_versions['major'] = $last_version;
                             foreach ($all_versions as $version) {
-                                $branch = get_branch_from_version(substr($version, 0, -1));
+                                $branch = \Piwigo\Core\VersionHelper::getBranchFromVersion(substr($version, 0, -1));
                                 if ($branch == $actual_branch) {
                                     if ($this->container_version_compare($build_version, $version) == '-1') {
                                         $new_versions['minor'] = $version;
@@ -171,7 +169,7 @@ class updates
                     [$last_version_number, $last_version_php] = explode('/', trim($all_versions[0]));
 
                     if (version_compare(AppInfo::VERSION, $last_version_number, '<')) {
-                        $last_branch = get_branch_from_version($last_version_number);
+                        $last_branch = \Piwigo\Core\VersionHelper::getBranchFromVersion($last_version_number);
 
                         if ($last_branch == $actual_branch) {
                             $new_versions['minor'] = $last_version_number;
@@ -183,7 +181,7 @@ class updates
                             // Check if new version exists in same branch
                             foreach ($all_versions as $version) {
                                 [$version_number, $version_php] = explode('/', trim($version));
-                                $branch = get_branch_from_version($version_number);
+                                $branch = \Piwigo\Core\VersionHelper::getBranchFromVersion($version_number);
 
                                 if ($branch == $actual_branch) {
                                     if (version_compare(AppInfo::VERSION, $version_number, '<')) {
@@ -254,7 +252,7 @@ class updates
             // isset() above already guarantees this offset exists.
             $last_notification_setting = $conf['update_notify_last_notification'];
             $last_notification_raw = (is_array($last_notification_setting) || is_string($last_notification_setting))
-                ? safe_unserialize($last_notification_setting)
+                ? \Piwigo\Core\ArrayHelper::safeUnserialize($last_notification_setting)
                 : false;
             $last_notification_data = is_array($last_notification_raw) ? $last_notification_raw : [];
             $conf['update_notify_last_notification'] = $last_notification_data;
@@ -351,7 +349,7 @@ class updates
                         }
                     }
                 }
-                $branch = get_branch_from_version($version);
+                $branch = \Piwigo\Core\VersionHelper::getBranchFromVersion($version);
                 foreach ($pem_versions as $pem_version) {
                     if (! is_array($pem_version)) {
                         continue;
@@ -496,7 +494,7 @@ class updates
                 $revision_name_raw = $ext_info['revision_name'] ?? null;
                 $revision_name = is_string($revision_name_raw) ? $revision_name_raw : '';
 
-                if (! (bool) safe_version_compare($fs_version, $revision_name, '>=')) {
+                if (! (bool) \Piwigo\Core\VersionHelper::safeVersionCompare($fs_version, $revision_name, '>=')) {
                     if (in_array($ext_id, $ignored_for_type)) {
                         $ignore_list[] = $ext_id;
                     } else {
@@ -536,7 +534,7 @@ class updates
                 $fs_version = is_string($fs_version_raw) ? $fs_version_raw : '';
                 if (isset($needed_version)
                   and is_string($needed_version)
-                  and (bool) safe_version_compare($fs_version, $needed_version, '>=')) {
+                  and (bool) \Piwigo\Core\VersionHelper::safeVersionCompare($fs_version, $needed_version, '>=')) {
                     // Extension have been upgraded
                     $this->check_extensions();
                     break;
@@ -635,7 +633,7 @@ class updates
         $obsolete_list = null;
 
         if ($step == 2) {
-            $code = get_branch_from_version(AppInfo::VERSION) . '.x_to_' . $upgrade_to;
+            $code = \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION) . '.x_to_' . $upgrade_to;
             $dl_code = str_replace(['.', '_'], '', $code);
             $remove_path = $code;
             // no longer try to delete files on a minor upgrade

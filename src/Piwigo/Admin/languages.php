@@ -152,7 +152,7 @@ UPDATE ' . Tables::userInfos() . '
     public function get_fs_languages(?string $target_charset = null): void
     {
         if (empty($target_charset)) {
-            $target_charset = get_pwg_charset();
+            $target_charset = \Piwigo\Core\CharsetHelper::getPwgCharset();
         }
         $target_charset = strtolower($target_charset);
 
@@ -198,7 +198,7 @@ UPDATE ' . Tables::userInfos() . '
 
                     if ((bool) preg_match('/"X-Piwigo-Language-Name:\\s*(.+?)\\\\n"/', $plg_data, $val)) {
                         $language['name'] = trim($val[1]);
-                        $converted_name = convert_charset($language['name'], 'utf-8', $target_charset);
+                        $converted_name = \Piwigo\Core\CharsetHelper::convertCharset($language['name'], 'utf-8', $target_charset);
                         if ($converted_name !== false) {
                             $language['name'] = $converted_name;
                         }
@@ -216,7 +216,7 @@ UPDATE ' . Tables::userInfos() . '
                     // structured data instead of a bracketed code.
                     if ((bool) preg_match('/"X-Piwigo-Country:\\s*(.+?)\\\\n"/', $plg_data, $val)) {
                         $country = trim($val[1]);
-                        $converted_country = convert_charset($country, 'utf-8', $target_charset);
+                        $converted_country = \Piwigo\Core\CharsetHelper::convertCharset($country, 'utf-8', $target_charset);
                         if ($converted_country !== false) {
                             $country = $converted_country;
                         }
@@ -298,7 +298,7 @@ UPDATE ' . Tables::userInfos() . '
                         }
                     }
                 }
-                $branch = get_branch_from_version($version);
+                $branch = \Piwigo\Core\VersionHelper::getBranchFromVersion($version);
                 foreach ($pem_versions as $pem_version) {
                     if (! is_array($pem_version)) {
                         continue;

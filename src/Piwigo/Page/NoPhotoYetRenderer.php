@@ -35,10 +35,10 @@ final class NoPhotoYetRenderer
 
         if (
             ! (defined('IN_ADMIN') and IN_ADMIN)   // no message inside administration
-            and script_basename() !== 'identification' // keep the ability to login
-            and script_basename() !== 'password'       // keep the ability to reset password
-            and script_basename() !== 'ws'             // keep the ability to discuss with web API
-            and script_basename() !== 'popuphelp'      // keep the ability to display help popups
+            and \Piwigo\Core\PageFilterHelper::scriptBasename() !== 'identification' // keep the ability to login
+            and \Piwigo\Core\PageFilterHelper::scriptBasename() !== 'password'       // keep the ability to reset password
+            and \Piwigo\Core\PageFilterHelper::scriptBasename() !== 'ws'             // keep the ability to discuss with web API
+            and \Piwigo\Core\PageFilterHelper::scriptBasename() !== 'popuphelp'      // keep the ability to display help popups
             and (\Piwigo\Auth\AccessControl::isAGuest() or \Piwigo\Auth\AccessControl::isAdmin())          // normal users are not concerned by no_photo_yet
             and ! isset($_SESSION['no_photo_yet'])     // temporary hide
         ) {
@@ -67,7 +67,7 @@ final class NoPhotoYetRenderer
                     }
                 }
 
-                header('Content-Type: text/html; charset=' . get_pwg_charset());
+                header('Content-Type: text/html; charset=' . \Piwigo\Core\CharsetHelper::getPwgCharset());
                 $template->set_filenames([
                     'no_photo_yet' => 'no_photo_yet.tpl',
                 ]);

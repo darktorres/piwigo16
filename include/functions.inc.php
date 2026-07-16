@@ -225,7 +225,7 @@ UPDATE ' . Tables::userInfos() . '
         }
 
         $cached_sections = $conf['history_sections_cache'];
-        $cached_sections = is_string($cached_sections) || is_array($cached_sections) ? safe_unserialize($cached_sections) : null;
+        $cached_sections = is_string($cached_sections) || is_array($cached_sections) ? \Piwigo\Core\ArrayHelper::safeUnserialize($cached_sections) : null;
         if (! is_array($cached_sections)) {
             $cached_sections = get_enums(Tables::history(), 'section');
         }
@@ -968,56 +968,6 @@ function conf_get_param($param, $default_value = null)
 }
 
 /**
- * Apply *unserialize* on a value only if it is a string
- * @since 2.7
- *
- * @param array<int|string, mixed>|string $value
- * @return mixed the unserialized value, false if $value is a malformed
- *   serialized string, or $value itself unchanged if it isn't a string
- */
-function safe_unserialize($value)
-{
-    if (is_string($value)) {
-        return unserialize($value);
-    }
-    return $value;
-}
-
-/**
- * Apply *json_decode* on a value only if it is a string
- * @since 2.7
- *
- * @param array<int|string, mixed>|string $value
- * @return array<int|string, mixed>
- */
-function safe_json_decode($value)
-{
-    if (is_string($value)) {
-        $decoded = json_decode($value, true);
-        // json_decode(..., true) returns null/scalar for malformed input or
-        // a JSON scalar; this function's contract is always an array.
-        return is_array($decoded) ? $decoded : [];
-    }
-    return $value;
-}
-
-/**
- * Prepends and appends strings at each value of the given array.
- *
- * @param array<int|string, mixed> $array
- * @param string $prepend_str
- * @param string $append_str
- * @return array<int|string, string>
- */
-function prepend_append_array_items($array, $prepend_str, $append_str)
-{
-    array_walk($array, function (&$value, $key) use ($prepend_str, $append_str): void {
-        $value = $prepend_str . (is_scalar($value) ? (string) $value : '') . $append_str;
-    });
-    return $array;
-}
-
-/**
  * creates an simple hashmap based on a SQL query.
  * choose one to be the key, another one to be the value.
  *
@@ -1057,71 +1007,6 @@ function array_from_query(string $query, $fieldname = false): array
     } else {
         return query2array($query, null, $fieldname);
     }
-}
-
-/**
- * Return the basename of the current script.
- * The lowercase case filename of the current script without extension
- */
-function script_basename(): string
-{
-    /** @var array<string, mixed> $conf */
-    global $conf;
-
-    foreach (['SCRIPT_NAME', 'SCRIPT_FILENAME', 'PHP_SELF'] as $key) {
-        $raw = $_SERVER[$key] ?? null;
-        if (is_string($raw) && $raw !== '') {
-            $filename = strtolower($raw);
-            if ((bool) $conf['php_extension_in_urls'] and \Piwigo\Core\StringHelper::getExtension($filename) !== 'php') {
-                continue;
-            }
-            $basename = basename($filename, '.php');
-            if (! empty($basename)) {
-                return $basename;
-            }
-        }
-    }
-    return '';
-}
-
-/**
- * Return $conf['filter_pages'] value for the current page
- *
- * @param string $value_name
- * @return mixed
- */
-function get_filter_page_value($value_name)
-{
-    /** @var array<string, mixed> $conf */
-    global $conf;
-
-    $page_name = script_basename();
-
-    $filter_pages = $conf['filter_pages'] ?? [];
-    $filter_pages = is_array($filter_pages) ? $filter_pages : [];
-
-    $page_filters = $filter_pages[$page_name] ?? null;
-    if (is_array($page_filters) && isset($page_filters[$value_name])) {
-        return $page_filters[$value_name];
-    }
-    $default_filters = $filter_pages['default'] ?? null;
-    if (is_array($default_filters) && isset($default_filters[$value_name])) {
-        return $default_filters[$value_name];
-    } else {
-        return null;
-    }
-}
-
-/**
- * return the character set used by Piwigo
- */
-function get_pwg_charset(): string
-{
-    $pwg_charset = 'utf-8';
-    if (defined('PWG_CHARSET')) {
-        $pwg_charset = PWG_CHARSET;
-    }
-    return $pwg_charset;
 }
 
 /**
@@ -1382,33 +1267,6 @@ function load_language($filename, $dirname = '', array $options = []): string|bo
 }
 
 /**
- * converts a string from a character set to another character set
- *
- * @param string $str
- * @param string $source_charset
- * @param string $dest_charset
- */
-function convert_charset($str, $source_charset, $dest_charset): string|false
-{
-    if ($source_charset == $dest_charset) {
-        return $str;
-    }
-    if ($source_charset == 'iso-8859-1' and $dest_charset == 'utf-8') {
-        return mb_convert_encoding($str, 'UTF-8', 'ISO-8859-1');
-    }
-    if ($source_charset == 'utf-8' and $dest_charset == 'iso-8859-1') {
-        return mb_convert_encoding($str, 'ISO-8859-1', 'UTF-8');
-    }
-    if (function_exists('iconv')) {
-        return iconv($source_charset, $dest_charset . '//TRANSLIT', $str);
-    }
-    if (function_exists('mb_convert_encoding')) {
-        return mb_convert_encoding($str, $dest_charset, $source_charset);
-    }
-    return $str; // TODO
-}
-
-/**
  * return an array which will be sent to template to display recent icon
  *
  * @param string $date
@@ -1512,94 +1370,6 @@ function get_privacy_level_options(): array
 }
 
 /**
- * return the branch from the version. For example version 11.1.2 is on branch 11
- *
- * @param string $version
- */
-function get_branch_from_version($version): string
-{
-    // the algorithm is a bit complicated to just retrieve the first digits before
-    // the first ".". It's because before version 11.0.0, we used to take the 2 first
-    // digits, ie version 2.2.4 was on branch 2.2
-    return implode('.', array_slice(explode('.', $version), 0, 1));
-}
-
-/**
- * return the device type: mobile, tablet or desktop
- */
-function get_device(): string
-{
-    $device = SessionService::get()->getSessionVar('device');
-
-    if (! is_string($device)) {
-        // No UA-sniffing library (removed, no replacement — see
-        // docs/adr/0021-native-platform-first-library-policy.md): the v17
-        // responsive CSS (P30) removes the need for a separate mobile theme
-        // via device detection. mobile_theme() still honors an explicit
-        // ?mobile=1/0 override independent of this default.
-        $device = 'desktop';
-        SessionService::get()->setSessionVar('device', $device);
-    }
-
-    return $device;
-}
-
-/**
- * return true if mobile theme should be loaded
- */
-function mobile_theme(): bool
-{
-    /** @var array<string, mixed> $conf */
-    global $conf;
-
-    if (empty($conf['mobile_theme'])) {
-        return false;
-    }
-
-    if (isset($_GET['mobile'])) {
-        $is_mobile_theme = get_boolean($_GET['mobile']);
-        SessionService::get()->setSessionVar('mobile_theme', $is_mobile_theme);
-    } else {
-        $session_mobile_theme = SessionService::get()->getSessionVar('mobile_theme');
-        $is_mobile_theme = is_bool($session_mobile_theme) ? $session_mobile_theme : null;
-    }
-
-    if ($is_mobile_theme === null) {
-        $is_mobile_theme = (get_device() == 'mobile');
-        SessionService::get()->setSessionVar('mobile_theme', $is_mobile_theme);
-    }
-
-    return $is_mobile_theme;
-}
-
-/**
- * check url format
- *
- * @param string $url
- * @return bool
- */
-function url_check_format($url)
-{
-    if (str_contains($url, '"')) {
-        return false;
-    }
-
-    if (! str_starts_with($url, 'http://') and ! str_starts_with($url, 'https://')) {
-        return false;
-    }
-
-    return filter_var($url, FILTER_VALIDATE_URL) !== false;
-}
-
-/**
- * check email format
- */
-function email_check_format(?string $mail_address): bool
-{
-    return filter_var($mail_address, FILTER_VALIDATE_EMAIL) !== false;
-}
-
-/**
  * returns the number of available comments for the connected user
  */
 function get_nb_available_comments(): int
@@ -1641,78 +1411,6 @@ SELECT COUNT(DISTINCT(com.id))
     }
     $nb_available_comments = $user['nb_available_comments'];
     return is_numeric($nb_available_comments) ? (int) $nb_available_comments : 0;
-}
-
-/**
- * Compare two versions with version_compare after having converted
- * single chars to their decimal values.
- * Needed because version_compare does not understand versions like '2.5.c'.
- * @since 2.6
- *
- * @param string $a
- * @param string $b
- * @param string $op
- */
-function safe_version_compare($a, $b, $op = null): int|bool
-{
-    $replace_chars = (fn (array $m): string => (string) ord(strtolower(is_string($m[1] ?? null) ? $m[1] : '')[0]));
-
-    // add dot before groups of letters (version_compare does the same thing)
-    $a = preg_replace('#([0-9]+)([a-z]+)#i', '$1.$2', $a);
-    $b = preg_replace('#([0-9]+)([a-z]+)#i', '$1.$2', $b);
-
-    // apply ord() to any single letter
-    $a = preg_replace_callback('#\b([a-z]{1})\b#i', $replace_chars, (string) $a);
-    $b = preg_replace_callback('#\b([a-z]{1})\b#i', $replace_chars, (string) $b);
-
-    if (empty($op)) {
-        return version_compare((string) $a, (string) $b);
-    } else {
-        return version_compare((string) $a, (string) $b, $op);
-    }
-}
-
-/**
- * Checks if the lounge needs to be emptied automatically.
- *
- * @since 12
- */
-function check_lounge(): void
-{
-    /** @var array<string, mixed> $conf */
-    global $conf;
-
-    if (! isset($conf['lounge_active']) or ! (bool) $conf['lounge_active']) {
-        return;
-    }
-
-    if (isset($_REQUEST['method']) and in_array($_REQUEST['method'], ['pwg.images.upload', 'pwg.images.uploadAsync'])) {
-        return;
-    }
-
-    // is the oldest photo in the lounge older than lounge maximum waiting time?
-    $query = '
-SELECT
-    image_id,
-    date_available,
-    NOW() AS dbnow
-  FROM ' . Tables::lounge() . '
-    JOIN ' . Tables::images() . ' ON image_id = id
-  ORDER BY image_id ASC
-  LIMIT 1
-;';
-    $voyagers = query2array($query);
-    if ((bool) count($voyagers)) {
-        $voyager = $voyagers[0];
-        $age = strtotime((string) $voyager['dbnow']) - strtotime((string) $voyager['date_available']);
-
-        $lounge_max_duration = $conf['lounge_max_duration'];
-        $lounge_max_duration = is_numeric($lounge_max_duration) ? (int) $lounge_max_duration : 0;
-        if ($age > $lounge_max_duration) {
-            include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-            empty_lounge();
-        }
-    }
 }
 
 /**
@@ -1773,7 +1471,7 @@ function send_piwigo_infos(): void
         return;
     }
 
-    $exec_id = pwg_unique_exec_begins('send_piwigo_infos');
+    $exec_id = \Piwigo\Core\UniqueExecLock::begins('send_piwigo_infos');
     if ($exec_id === false) {
         $logger->info('[' . __FUNCTION__ . '] another execution is running, abort');
         return;
@@ -1789,7 +1487,7 @@ function send_piwigo_infos(): void
         conf_update_param('send_piwigo_infos_origin_hash', sha1(random_bytes(1000)), true);
     }
 
-    [$container_type, $container_version] = get_container_info();
+    [$container_type, $container_version] = \Piwigo\Core\ContainerDetector::detect();
 
     $piwigo_infos = [
         'origin_hash' => $conf['send_piwigo_infos_origin_hash'],
@@ -1922,7 +1620,7 @@ SELECT
     } else {
         $logger->info('[' . __FUNCTION__ . '][exec=' . $exec_id . '] fetchRemote on ' . $url . ' has failed');
         send_piwigo_infos_retry_later(1 * 60 * 60); // 1 hour later
-        pwg_unique_exec_ends('send_piwigo_infos');
+        \Piwigo\Core\UniqueExecLock::ends('send_piwigo_infos');
         $logger->info('[' . __FUNCTION__ . '][exec=' . $exec_id . '] executed in ' . \Piwigo\Core\TimingHelper::getElapsedTime($start_time, \Piwigo\Core\TimingHelper::getMoment()));
         return;
     }
@@ -2158,7 +1856,7 @@ SELECT
             continue;
         }
 
-        $details = safe_unserialize($update_details);
+        $details = \Piwigo\Core\ArrayHelper::safeUnserialize($update_details);
         if (! is_array($details)) {
             continue;
         }
@@ -2277,7 +1975,7 @@ SELECT
         $logger->info('[' . __FUNCTION__ . '][exec=' . $exec_id . '] fetchRemote success, new send_piwigo_infos_last_notice=' . $last_notice);
     }
 
-    pwg_unique_exec_ends('send_piwigo_infos');
+    \Piwigo\Core\UniqueExecLock::ends('send_piwigo_infos');
     $logger->info('[' . __FUNCTION__ . '][exec=' . $exec_id . '] executed in ' . \Piwigo\Core\TimingHelper::getElapsedTime($start_time, \Piwigo\Core\TimingHelper::getMoment()));
 }
 
@@ -2297,132 +1995,4 @@ function send_piwigo_infos_retry_later(int $wait_time): void
     $new_last_notice = date('c', $last_notice);
     conf_update_param('send_piwigo_infos_last_notice', $new_last_notice, true);
     $logger->info('[' . __FUNCTION__ . '] new send_piwigo_infos_last_notice=' . $new_last_notice);
-}
-
-function pwg_unique_exec_begins(string $token_name, int $timeout = 60): false|string
-{
-    /**
-     * @var array<string, mixed> $conf
-     * @var Logger $logger
-     */
-    global $conf, $logger;
-
-    $exec_id = substr(sha1(random_bytes(1000)), 0, 8);
-    $logger->info('[' . $token_name . '][exec=' . $exec_id . '] starts now');
-
-    if (isset($conf[$token_name . '_running'])) {
-        $running_token = $conf[$token_name . '_running'];
-        $running_token = is_scalar($running_token) ? (string) $running_token : '';
-        [$running_exec_id, $running_exec_start_time] = explode('-', $running_token);
-        if (time() - (int) $running_exec_start_time > $timeout) {
-            $logger->info('[' . $token_name . '][exec=' . $exec_id . '] exec=' . $running_exec_id . ', timeout stopped by another call to the function');
-            pwg_unique_exec_ends($token_name);
-        }
-    }
-
-    $query = '
-INSERT IGNORE
-  INTO ' . Tables::config() . '
-  SET param="' . $token_name . '_running"
-    , value="' . $exec_id . '-' . time() . '"
-;';
-    pwg_query($query);
-
-    $row = pwg_db_fetch_row(pwg_query('SELECT value FROM ' . Tables::config() . ' WHERE param = "' . $token_name . '_running"'));
-    assert($row !== null);
-    [$running_exec] = $row;
-    [$running_exec_id] = explode('-', (string) $running_exec);
-
-    if ($running_exec_id != $exec_id) {
-        $logger->info('[' . $token_name . '][exec=' . $exec_id . '] skip');
-        return false;
-    }
-    $logger->info('[' . $token_name . '][exec=' . $exec_id . '] wins the race and gets the token!');
-
-    return $exec_id;
-}
-
-function pwg_unique_exec_is_running(string $token_name): bool
-{
-    $query = '
-SELECT
-    COUNT(*)
-  FROM ' . Tables::config() . '
-  WHERE param = "' . $token_name . '_running"
-;';
-    $row = pwg_db_fetch_row(pwg_query($query));
-    assert($row !== null);
-    [$counter] = $row;
-
-    return $counter > 0;
-}
-
-function pwg_unique_exec_ends(string $token_name): void
-{
-    /** @var Logger $logger */
-    global $logger;
-
-    conf_delete_param($token_name . '_running');
-    $logger->info('[' . $token_name . '] ends now');
-}
-
-/**
- * Detect if Piwigo is running in a containerized environment
- * Assume all containers are Linux based and don't enforce php open_basedir rules
- * Doesn't differentiate between VMs, Mutual hosting and bare metal installs
- *
- * Possible values :
- *  ('none',null)                 => PHP is not running in a container
- *  ('Official',<VersionCode>)    => PHP is running in a official container
- *  ('LinuxServer',<VersionCode>) => PHP is running in a LinuxServer container
- *  ('Unknown',null)              => PHP is running in a non-identified container
- *
- * @since 16.3
- *
- * @return array{0: string, 1: ?string}
- */
-function get_container_info(): array
-{
-    // Check if OS is Linux and PHP doesn't restrict opening files
-    if ((strtoupper(substr(PHP_OS, 0, 5)) === 'LINUX' and empty(ini_get('open_basedir')))) {
-        if (file_exists('/proc/2/sched')) { // Check if PID2 exist
-            $file = file_get_contents('/proc/2/sched'); // Read PID2 name
-            if ((bool) $file and str_starts_with($file, 'kthreadd')) { // If PID 2 is kthreadd PHP is not running in a container
-                return ['none', null];
-            }
-        }
-
-        // PHP is running in a container, trying to determine container type
-        $info_file_path = '/var/www/html/piwigo-docker.info';
-        $info_file_linuxserver = '/build_version';
-
-        // Check for official container tagfile
-        if (is_readable($info_file_path)) {
-            $file_lines = @file($info_file_path);
-            if (is_array($file_lines) and trim($file_lines[0]) === 'Official Piwigo container') {
-                $container_version = null;
-                // Take the last line and remove prefix (Build Version)
-                if ((bool) preg_match('/^Build Version (.*)$/', $file_lines[count($file_lines) - 1], $matches)) {
-                    $container_version = $matches[1];
-                }
-                return ['Official', $container_version];
-            }
-        }
-        // Check for LinuxServer tagfile
-        elseif (is_readable($info_file_linuxserver)) {
-            $file_lines = file($info_file_linuxserver);
-            if (is_array($file_lines) and str_starts_with($file_lines[0], 'Linuxserver.io')) {
-                $container_version = null;
-                if ((bool) preg_match('/version:\s*(.*)$/', $file_lines[0], $matches)) {
-                    $container_version = $matches[1];
-                }
-                return ['LinuxServer.io', $container_version];
-            }
-        }
-        // If no tagfile are found, default to unkown
-        return ['Unknown', null];
-    } else {
-        // If the OS is not Linux or PHP basedir are enforced, assume PHP is not in a container
-        return ['none', null];
-    }
 }

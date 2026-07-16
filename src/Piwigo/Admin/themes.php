@@ -556,7 +556,7 @@ SELECT
                     $version = $first_pem_version_name;
                 }
             }
-            $branch = get_branch_from_version($version);
+            $branch = \Piwigo\Core\VersionHelper::getBranchFromVersion($version);
             foreach ($pem_versions as $pem_version) {
                 if (! is_array($pem_version)) {
                     continue;

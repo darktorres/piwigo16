@@ -56,7 +56,7 @@ final class SearchFilterRenderer
 
         $filtersViewsConf = conf_get_param('filters_views', null);
         if (is_array($filtersViewsConf) || is_string($filtersViewsConf)) {
-            $filtersViewsRaw = safe_unserialize($filtersViewsConf);
+            $filtersViewsRaw = \Piwigo\Core\ArrayHelper::safeUnserialize($filtersViewsConf);
         } else {
             $filtersViewsRaw = $conf['default_filters_views'];
         }

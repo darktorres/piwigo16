@@ -66,15 +66,13 @@ final class CoreUpdateService
             'is_dev' => true,
         ];
 
-        [$env, $buildVersion] = get_container_info();
+        [$env, $buildVersion] = \Piwigo\Core\ContainerDetector::detect();
         if (! (bool) preg_match('/^(\d+\.\d+)\.(\d+)$/', AppInfo::VERSION)) {
             return $newVersions;
         }
 
         $newVersions['is_dev'] = false;
-        $actualBranch = get_branch_from_version(
-            $env === 'Official' ? substr((string) $buildVersion, 0, -1) : AppInfo::VERSION
-        );
+        $actualBranch = \Piwigo\Core\VersionHelper::getBranchFromVersion($env === 'Official' ? substr((string) $buildVersion, 0, -1) : AppInfo::VERSION);
 
         $url = PHPWG_URL . '/download/all_versions.php';
         $url .= '?rand=' . md5(uniqid((string) mt_rand(), true));
@@ -95,13 +93,13 @@ final class CoreUpdateService
 
         if ($env === 'Official') {
             if ($this->containerVersionCompare($buildVersion, $lastVersion) === -1) {
-                $lastBranch = get_branch_from_version(substr($lastVersion, 0, -1));
+                $lastBranch = \Piwigo\Core\VersionHelper::getBranchFromVersion(substr($lastVersion, 0, -1));
                 if ($lastBranch === $actualBranch) {
                     $newVersions['minor'] = $lastVersion;
                 } else {
                     $newVersions['major'] = $lastVersion;
                     foreach ($allVersions as $version) {
-                        $branch = get_branch_from_version(substr($version, 0, -1));
+                        $branch = \Piwigo\Core\VersionHelper::getBranchFromVersion(substr($version, 0, -1));
                         if ($branch === $actualBranch) {
                             if ($this->containerVersionCompare($buildVersion, $version) === -1) {
                                 $newVersions['minor'] = $version;
@@ -118,7 +116,7 @@ final class CoreUpdateService
         [$lastVersionNumber, $lastVersionPhp] = explode('/', trim($allVersions[0]));
 
         if (version_compare(AppInfo::VERSION, $lastVersionNumber, '<')) {
-            $lastBranch = get_branch_from_version($lastVersionNumber);
+            $lastBranch = \Piwigo\Core\VersionHelper::getBranchFromVersion($lastVersionNumber);
 
             if ($lastBranch === $actualBranch) {
                 $newVersions['minor'] = $lastVersionNumber;
@@ -129,7 +127,7 @@ final class CoreUpdateService
 
                 foreach ($allVersions as $version) {
                     [$versionNumber, $versionPhp] = explode('/', trim($version));
-                    $branch = get_branch_from_version($versionNumber);
+                    $branch = \Piwigo\Core\VersionHelper::getBranchFromVersion($versionNumber);
 
                     if ($branch === $actualBranch) {
                         if (version_compare(AppInfo::VERSION, $versionNumber, '<')) {
@@ -181,7 +179,7 @@ final class CoreUpdateService
         } else {
             $lastNotificationSetting = $conf['update_notify_last_notification'];
             $lastNotificationRaw = (is_array($lastNotificationSetting) || is_string($lastNotificationSetting))
-                ? safe_unserialize($lastNotificationSetting)
+                ? \Piwigo\Core\ArrayHelper::safeUnserialize($lastNotificationSetting)
                 : false;
             $lastNotificationData = is_array($lastNotificationRaw) ? $lastNotificationRaw : [];
             $conf['update_notify_last_notification'] = $lastNotificationData;
@@ -266,7 +264,7 @@ final class CoreUpdateService
         $obsoleteList = null;
 
         if ($this->stepIs($step, 2)) {
-            $code = get_branch_from_version(AppInfo::VERSION) . '.x_to_' . $upgradeTo;
+            $code = \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION) . '.x_to_' . $upgradeTo;
             $dlCode = str_replace(['.', '_'], '', $code);
             $removePath = $code;
         } else {

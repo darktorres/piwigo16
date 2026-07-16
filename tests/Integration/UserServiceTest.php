@@ -24,48 +24,11 @@ namespace {
         }
     }
 
-    if (! function_exists('email_check_format')) {
-        function email_check_format(?string $mail_address): bool
-        {
-            return filter_var($mail_address, \FILTER_VALIDATE_EMAIL) !== false;
-        }
-    }
-
-    if (! function_exists('script_basename')) {
-        // Copied from the real include/functions.inc.php implementation
-        // (not loaded standalone here) -- function_exists() guards mean
-        // whichever Integration test file's stub loads first wins for the
-        // whole test run, so this must behave correctly for every file
-        // that relies on it (see tests/Integration/ActivityServiceTest.php,
-        // which needs the real $_SERVER-driven computation, not a fixed
-        // placeholder). `?? false` on php_extension_in_urls is the one
-        // deliberate deviation from the original's direct access: this
-        // test's own $GLOBALS['conf'] doesn't set that key, and the real
-        // production bootstrap guarantees it's always set (config_default.
-        // inc.php), a guarantee this lightweight harness doesn't share.
-        function script_basename(): string
-        {
-            /** @var array<string, mixed> $conf */
-            global $conf;
-
-            foreach (['SCRIPT_NAME', 'SCRIPT_FILENAME', 'PHP_SELF'] as $key) {
-                $raw = $_SERVER[$key] ?? null;
-                if (is_string($raw) && $raw !== '') {
-                    $filename = strtolower($raw);
-                    if ((bool) ($conf['php_extension_in_urls'] ?? false) && \Piwigo\Core\StringHelper::getExtension($filename) !== 'php') {
-                        continue;
-                    }
-
-                    $basename = basename($filename, '.php');
-                    if ($basename !== '') {
-                        return $basename;
-                    }
-                }
-            }
-
-            return '';
-        }
-    }
+    // email_check_format()/script_basename() stubs removed -- UserService's
+    // real call sites now retarget directly to Piwigo\Validation\
+    // InputValidator::checkEmailFormat()/Piwigo\Core\PageFilterHelper::
+    // scriptBasename() (P23 batch 8d), so a same-named bare-function stub
+    // is unreachable dead code, not a spy any real call site depends on.
 
     // trigger_change() is always available now via composer autoload.files
     // (src/Piwigo/PluginConfig/functions.php), a pure passthrough with no

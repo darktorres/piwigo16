@@ -56,7 +56,7 @@ final class ActivityService implements ActivityLoggerInterface
         if ($requestMethod !== null) {
             $details['method'] = $requestMethod;
         } else {
-            $script = script_basename();
+            $script = \Piwigo\Core\PageFilterHelper::scriptBasename();
             $pageParam = isset($_GET['page']) && is_string($_GET['page']) ? $_GET['page'] : null;
             $details['script'] = $script === 'admin' && $pageParam !== null ? $script . '/' . $pageParam : $script;
         }

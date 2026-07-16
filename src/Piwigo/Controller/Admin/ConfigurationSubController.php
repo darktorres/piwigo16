@@ -207,7 +207,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
         $filters_views_raw = $conf['filters_views'];
         $filters_views_unserialized = (is_array($filters_views_raw) or is_string($filters_views_raw))
-            ? safe_unserialize($filters_views_raw)
+            ? \Piwigo\Core\ArrayHelper::safeUnserialize($filters_views_raw)
             : [];
         $filters_views_default = is_array($filters_views_unserialized) ? $filters_views_unserialized : [];
         $filters_names_checkboxes = array_values(array_diff(array_keys($filters_views_default), ['last_filters_conf']));
@@ -659,7 +659,7 @@ WHERE param = \'' . $row['param'] . '\'
 
                     // derivatives = multiple size
                     $enabled = ImageStdParams::get_defined_type_map();
-                    $disabled_unserialized = safe_unserialize(ImageStdParams::get_disabled_type_map());
+                    $disabled_unserialized = \Piwigo\Core\ArrayHelper::safeUnserialize(ImageStdParams::get_disabled_type_map());
                     $disabled = is_array($disabled_unserialized) ? $disabled_unserialized : [];
 
                     $tpl_vars = [];
@@ -775,7 +775,7 @@ WHERE param = \'' . $row['param'] . '\'
                 $template->assign(
                     'search',
                     [
-                        'filters_views' => safe_unserialize($conf_filters_views_for_search),
+                        'filters_views' => \Piwigo\Core\ArrayHelper::safeUnserialize($conf_filters_views_for_search),
                         'filters_names' => $filters_names_checkboxes,
                     ],
                 );
@@ -993,7 +993,7 @@ WHERE param = \'' . $row['param'] . '\'
             ImageStdParams::$quality = $resize_quality;
 
             $enabled = ImageStdParams::get_defined_type_map();
-            $disabled_raw = safe_unserialize(ImageStdParams::get_disabled_type_map());
+            $disabled_raw = \Piwigo\Core\ArrayHelper::safeUnserialize(ImageStdParams::get_disabled_type_map());
             // ImageStdParams persists this map as serialize()d DerivativeParams[]
             // (see ImageStdParams::save_disabled()); unserialize() is only typed
             // mixed by PHP itself, so filter out anything that isn't actually a

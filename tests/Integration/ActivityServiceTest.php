@@ -2,40 +2,10 @@
 
 declare(strict_types=1);
 
-// ActivityService::record() calls the real, stable, already-migrated
-// script_basename() (needs full $_SERVER-driven bootstrap this isolated
-// integration test doesn't load). Same "minimal stub to load standalone"
-// pattern as tests/Integration/UserServiceTest.php -- copied verbatim
-// from there (function_exists() guards mean whichever Integration test
-// file's stub loads first wins for the whole test run, so every file
-// that needs this function must declare an identical body).
-namespace {
-    if (! function_exists('script_basename')) {
-        function script_basename(): string
-        {
-            /** @var array<string, mixed> $conf */
-            global $conf;
-
-            foreach (['SCRIPT_NAME', 'SCRIPT_FILENAME', 'PHP_SELF'] as $key) {
-                $raw = $_SERVER[$key] ?? null;
-                if (is_string($raw) && $raw !== '') {
-                    $filename = strtolower($raw);
-                    if ((bool) ($conf['php_extension_in_urls'] ?? false) && \Piwigo\Core\StringHelper::getExtension($filename) !== 'php') {
-                        continue;
-                    }
-
-                    $basename = basename($filename, '.php');
-                    if ($basename !== '') {
-                        return $basename;
-                    }
-                }
-            }
-
-            return '';
-        }
-    }
-}
-
+// script_basename() stub removed -- ActivityService::record() now calls
+// Piwigo\Core\PageFilterHelper::scriptBasename() directly (P23 batch 8d),
+// a real class method a same-named bare-function stub can no longer
+// intercept, so the stub was unreachable dead code.
 namespace Piwigo\Tests\Integration {
 
 use Doctrine\DBAL\Connection;

@@ -364,7 +364,7 @@ INSERT INTO ' . $prefixeTable . 'config (param,value,comment)
    \'a secret key specific to the gallery for internal use\');';
         pwg_query($query);
 
-        conf_update_param('piwigo_db_version', get_branch_from_version(AppInfo::VERSION));
+        conf_update_param('piwigo_db_version', \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION));
         conf_update_param('gallery_title', pwg_db_real_escape_string(l10n('Just another Piwigo gallery')));
 
         conf_update_param(
@@ -510,7 +510,7 @@ if ($step == 1) {
         // whatever getuserdata() already populated it with.
         $preferences = $user['preferences'] ?? null;
         $preferences = is_array($preferences) ? $preferences : [];
-        $preferences['show_whats_new_' . get_branch_from_version(AppInfo::VERSION)] = false;
+        $preferences['show_whats_new_' . \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION)] = false;
         $user['preferences'] = $preferences;
 
         // newsletter subscription

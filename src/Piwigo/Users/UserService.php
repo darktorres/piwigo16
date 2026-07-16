@@ -56,12 +56,12 @@ final class UserService
         $isEmpty = $mailAddress === null || $mailAddress === '';
         if (
             $isEmpty
-            && ! ((bool) $conf['obligatory_user_mail_address'] && in_array(script_basename(), ['register', 'profile'], true))
+            && ! ((bool) $conf['obligatory_user_mail_address'] && in_array(\Piwigo\Core\PageFilterHelper::scriptBasename(), ['register', 'profile'], true))
         ) {
             return '';
         }
 
-        if (! email_check_format($mailAddress)) {
+        if (! \Piwigo\Validation\InputValidator::checkEmailFormat($mailAddress)) {
             return l10n('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
         }
 
@@ -254,7 +254,7 @@ final class UserService
             $this->notifyAdminsOfNewRegistration($userId, $login, $mailAddress);
         }
 
-        if ($notifyUser && email_check_format($mailAddress)) {
+        if ($notifyUser && \Piwigo\Validation\InputValidator::checkEmailFormat($mailAddress)) {
             assert($mailAddress !== null);
             $this->sendWelcomeEmail($login, $mailAddress);
         }
@@ -408,7 +408,7 @@ final class UserService
         $user_fields = $conf['user_fields'];
 
         $existing = $this->repo->findByUsernameCaseInsensitive($login, $user_fields['id'], $user_fields['username'], $user_fields['email']);
-        if ($existing === null || $existing['email'] === '' || ! email_check_format($existing['email'])) {
+        if ($existing === null || $existing['email'] === '' || ! \Piwigo\Validation\InputValidator::checkEmailFormat($existing['email'])) {
             return;
         }
 
@@ -646,7 +646,7 @@ SELECT
                 or $userdata['need_update'] == true) {
                 $logger->info($logger_msg_prefix . 'needs user_cache to be rebuilt');
 
-                $exec_id = pwg_unique_exec_begins($cache_generation_token_name);
+                $exec_id = \Piwigo\Core\UniqueExecLock::begins($cache_generation_token_name);
                 if ($exec_id === false) {
                     $logger->info($logger_msg_prefix . 'starts to wait for another request to build user_cache');
                     $user_cache_waiting_start_time = \Piwigo\Core\TimingHelper::getMoment();
@@ -670,7 +670,7 @@ SELECT
                             $logger->info($logger_msg . 'user_cache rebuilt, after waiting ' . $waiting_time);
                             return $this->getUserData($userId, false);
                         }
-                        if (! pwg_unique_exec_is_running($cache_generation_token_name)) {
+                        if (! \Piwigo\Core\UniqueExecLock::isRunning($cache_generation_token_name)) {
                             $logger->info($logger_msg . 'user_cache rebuilt but has been reset since, give it another try, after waiting ' . $waiting_time);
                             return $this->getUserData($userId, true);
                         } else {
@@ -681,7 +681,7 @@ SELECT
                     $logger->info($logger_msg_prefix . 'user_cache generation waiting has timed out after ' . \Piwigo\Core\TimingHelper::getElapsedTime($user_cache_waiting_start_time, \Piwigo\Core\TimingHelper::getMoment()));
                     set_status_header(503, 'Service Unavailable');
                     @header('Retry-After: 900');
-                    header('Content-Type: text/html; charset=' . get_pwg_charset());
+                    header('Content-Type: text/html; charset=' . \Piwigo\Core\CharsetHelper::getPwgCharset());
                     echo l10n('Rebuilding user cache takes long. Please, come back later.');
                     echo str_repeat(' ', 512); // IE6 doesn't error output if below a size
                     exit();
@@ -828,7 +828,7 @@ INSERT IGNORE INTO ' . Tables::userCache() . '
   ',\'' . $image_access_type . '\',\'' . $image_access_list . '\')';
                 pwg_query($query);
 
-                pwg_unique_exec_ends($cache_generation_token_name);
+                \Piwigo\Core\UniqueExecLock::ends($cache_generation_token_name);
                 $logger->info($logger_msg_prefix . 'user_cache generated, executed in ' . \Piwigo\Core\TimingHelper::getElapsedTime($user_cache_generation_start_time, \Piwigo\Core\TimingHelper::getMoment()));
             }
         }

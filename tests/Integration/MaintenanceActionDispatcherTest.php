@@ -24,37 +24,10 @@ namespace {
     // genuine activity-logging behavior (the whole point of
     // test_a_real_action_is_logged_to_pwg_activity()) without a stub.
 
-    // ActivityService::record() calls the real, stable,
-    // already-migrated script_basename() (needs full $_SERVER-driven
-    // bootstrap this isolated integration test doesn't load). Copied
-    // verbatim from ActivityServiceTest.php's own identical stub -- per
-    // that file's own docblock, every Integration test file that needs
-    // this function must declare an identical body, since function_exists()
-    // guards mean whichever loads first wins for the whole test run.
-    if (! function_exists('script_basename')) {
-        function script_basename(): string
-        {
-            /** @var array<string, mixed> $conf */
-            global $conf;
-
-            foreach (['SCRIPT_NAME', 'SCRIPT_FILENAME', 'PHP_SELF'] as $key) {
-                $raw = $_SERVER[$key] ?? null;
-                if (is_string($raw) && $raw !== '') {
-                    $filename = strtolower($raw);
-                    if ((bool) ($conf['php_extension_in_urls'] ?? false) && \Piwigo\Core\StringHelper::getExtension($filename) !== 'php') {
-                        continue;
-                    }
-
-                    $basename = basename($filename, '.php');
-                    if ($basename !== '') {
-                        return $basename;
-                    }
-                }
-            }
-
-            return '';
-        }
-    }
+    // script_basename() stub removed -- ActivityService::record() now
+    // calls Piwigo\Core\PageFilterHelper::scriptBasename() directly (P23
+    // batch 8d), a real class method a same-named bare-function stub can
+    // no longer intercept.
 }
 
 namespace Piwigo\Tests\Integration {

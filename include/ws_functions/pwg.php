@@ -442,7 +442,7 @@ function ws_session_getStatus($params, PwgServer &$service): array
         $res[$k] = $user[$k];
     }
     $res['pwg_token'] = (new \Piwigo\Csrf\CsrfService())->getToken();
-    $res['charset'] = get_pwg_charset();
+    $res['charset'] = \Piwigo\Core\CharsetHelper::getPwgCharset();
 
     $row = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
     assert($row !== null);
@@ -1027,7 +1027,7 @@ SELECT
                 continue;
             }
 
-            $unserialized = safe_unserialize($rules_search_raw);
+            $unserialized = \Piwigo\Core\ArrayHelper::safeUnserialize($rules_search_raw);
             $rules_search = is_array($unserialized) && isset($unserialized['fields']) && is_array($unserialized['fields'])
                 ? $unserialized['fields']
                 : [];

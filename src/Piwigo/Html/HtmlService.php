@@ -548,7 +548,7 @@ SELECT id, name, permalink
 
         // We hide the quick identification menu on the identification page. It
         // would be confusing.
-        if (script_basename() !== 'identification') {
+        if (\Piwigo\Core\PageFilterHelper::scriptBasename() !== 'identification') {
             $menu->register_block(new RegisteredBlock('mbIdentification', 'Identification', 'piwigo'));
         }
     }

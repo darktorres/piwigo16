@@ -470,7 +470,7 @@ DELETE FROM ' . Tables::plugins() . '
                 $pem_version = $pem_versions[$i] ?? null;
                 if (is_array($pem_version)) {
                     $pem_version_name = $pem_version['name'] ?? null;
-                    if (is_string($pem_version_name) and get_branch_from_version($pem_version_name) == get_branch_from_version($version)) {
+                    if (is_string($pem_version_name) and \Piwigo\Core\VersionHelper::getBranchFromVersion($pem_version_name) == \Piwigo\Core\VersionHelper::getBranchFromVersion($version)) {
                         $versions_to_check[] = $pem_version['id'] ?? null;
                     }
                 }

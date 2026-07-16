@@ -60,7 +60,7 @@ final class UpdatesPwgPageRenderer
         $step_param = $_GET['step'] ?? 0;
         $step = (is_string($step_param) || is_int($step_param)) ? (int) $step_param : 0;
 
-        [$ct_env, $ct_build_version] = get_container_info();
+        [$ct_env, $ct_build_version] = \Piwigo\Core\ContainerDetector::detect();
 
         if ($ct_env === 'Official') {
             $template->assign([

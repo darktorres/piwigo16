@@ -84,7 +84,7 @@ final class SectionInitializer
         // |                             picture page                              |
         // +-----------------------------------------------------------------------+
         // the first token must be the identifier for the picture
-        if (script_basename() === 'picture') {
+        if (\Piwigo\Core\PageFilterHelper::scriptBasename() === 'picture') {
             $token = $tokens[$next_token];
             $next_token++;
             if (is_numeric($token)) {

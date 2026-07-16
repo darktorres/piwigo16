@@ -117,7 +117,7 @@ final class PluginLoader
         // if version is auto (dev) or superior
         if ($fs_version != null && (
             $fs_version == 'auto' || $plugin_version == 'auto' ||
-              (bool) safe_version_compare($plugin_version, $fs_version, '<')
+              (bool) \Piwigo\Core\VersionHelper::safeVersionCompare($plugin_version, $fs_version, '<')
         )
         ) {
             $old_version = $plugin_version;

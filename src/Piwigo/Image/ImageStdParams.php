@@ -245,7 +245,7 @@ final class ImageStdParams
             self::save(false);
         }
 
-        $disabled_raw = safe_unserialize(self::get_disabled_type_map());
+        $disabled_raw = \Piwigo\Core\ArrayHelper::safeUnserialize(self::get_disabled_type_map());
         // get_disabled_type_map() persists its map as serialize()d
         // DerivativeParams[] too (see its own docblock) -- same
         // untyped-blob situation as above, so filter it the same way.

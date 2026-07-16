@@ -100,7 +100,7 @@ final class SectionPopulator
         if (! isset($page['section'])) {
             $page['section'] = 'categories';
 
-            switch (script_basename()) {
+            switch (\Piwigo\Core\PageFilterHelper::scriptBasename()) {
                 case 'picture':
                     break;
                 case 'index':
@@ -127,7 +127,7 @@ final class SectionPopulator
 
                 default:
                     trigger_error(
-                        'script_basename "' . script_basename() . '" unknown',
+                        'script_basename "' . \Piwigo\Core\PageFilterHelper::scriptBasename() . '" unknown',
                         E_USER_WARNING
                     );
             }
@@ -142,7 +142,7 @@ final class SectionPopulator
         $section = is_string($page['section'] ?? null) ? $page['section'] : '';
 
         // access a picture only by id, file or id-file without given section
-        if (script_basename() === 'picture' and $section === 'categories' and
+        if (\Piwigo\Core\PageFilterHelper::scriptBasename() === 'picture' and $section === 'categories' and
               ! isset($page['category']) and ! isset($page['chronology_field'])) {
             $page['flat'] = true;
         }
@@ -696,7 +696,7 @@ SELECT DISTINCT(id)
                     new CategoryRepository($categoryConn),
                     new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
                 )->checkRestrictions(is_numeric($redirect_category_id) ? (int) $redirect_category_id : 0);
-                $redirect_url = script_basename() === 'picture' ? duplicate_picture_url() : duplicate_index_url();
+                $redirect_url = \Piwigo\Core\PageFilterHelper::scriptBasename() === 'picture' ? duplicate_picture_url() : duplicate_index_url();
 
                 if (! headers_sent()) { // this is a permanent redirection
                     set_status_header(301);

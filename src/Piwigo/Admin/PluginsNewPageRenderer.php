@@ -217,7 +217,7 @@ final class PluginsNewPageRenderer
                     $compatible_with_versions = $plugin['compatible_with_versions'] ?? null;
                     if (is_array($compatible_with_versions)) {
                         foreach ($compatible_with_versions as $vers) {
-                            if (is_string($vers) and get_branch_from_version($vers) === get_branch_from_version(AppInfo::VERSION)) {
+                            if (is_string($vers) and \Piwigo\Core\VersionHelper::getBranchFromVersion($vers) === \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION)) {
                                 $has_compatible_version = true;
                             }
                         }

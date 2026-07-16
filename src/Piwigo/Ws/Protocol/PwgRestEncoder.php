@@ -46,7 +46,7 @@ class PwgRestEncoder extends PwgResponseEncoder
         $this->encode($response);
         $ret = $this->writer()
             ->getOutput();
-        $ret = '<?xml version="1.0" encoding="' . get_pwg_charset() . '" ?>
+        $ret = '<?xml version="1.0" encoding="' . \Piwigo\Core\CharsetHelper::getPwgCharset() . '" ?>
 <rsp stat="ok">
 ' . $ret . '
 </rsp>';

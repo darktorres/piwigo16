@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Image\pwg_image;
 use Piwigo\Admin\Maintenance\MaintenanceActionDispatcher;
 use Piwigo\Core\AppInfo;
 use Piwigo\Image\ImageStdParams;
@@ -131,7 +132,7 @@ final class MaintenanceEnvPageRenderer
         );
 
         // graphics library
-        $graphics_library = get_graphics_library_label();
+        $graphics_library = pwg_image::get_graphics_library_label();
         if ($graphics_library !== '') {
             $template->assign('GRAPHICS_LIBRARY', $graphics_library);
         }
@@ -150,7 +151,7 @@ final class MaintenanceEnvPageRenderer
             );
         }
 
-        $installed_on = get_installation_date();
+        $installed_on = InstallationStats::getInstallationDate();
         if (is_string($installed_on) && $installed_on !== '') {
             $template->assign(
                 [

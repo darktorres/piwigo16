@@ -489,6 +489,61 @@ class pwg_image
         return false;
     }
 
+    /**
+     * P23 batch 8d: ported from admin/include/functions.php's
+     * get_graphics_library() -- a natural extension of this class's own
+     * library-detection concern (is_imagick()/is_ext_imagick()/is_gd()/
+     * get_library() above), appending a version-string suffix on top of
+     * get_library()'s bare identifier.
+     */
+    public static function get_graphics_library(): string|false
+    {
+        /** @var array<string, mixed> $conf */
+        global $conf;
+
+        $library = self::get_library();
+
+        switch ($library) {
+            case 'ext_imagick':
+                $ext_imagick_dir = $conf['ext_imagick_dir'];
+                $ext_imagick_dir = is_string($ext_imagick_dir) ? $ext_imagick_dir : '';
+                exec($ext_imagick_dir . self::get_ext_imagick_command() . ' -version', $returnarray);
+                if ((bool) preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
+                    $library .= '/' . $match[1];
+                }
+                break;
+
+            case 'imagick':
+                $version = \Imagick::getVersion();
+                if ((bool) preg_match('/ImageMagick \d+\.\d+\.\d+-?\d*/', $version['versionString'], $match)) {
+                    $library .= '/' . $match[0];
+                }
+                break;
+
+            case 'gd':
+                $gd_info = gd_info();
+                $gd_version = $gd_info['GD Version'] ?? null;
+                $gd_version = is_string($gd_version) ? $gd_version : '';
+                $library .= '/' . $gd_version;
+                break;
+        }
+
+        return $library;
+    }
+
+    public static function get_graphics_library_label(): string
+    {
+        [$library_code, $library_version] = explode('/', (string) self::get_graphics_library());
+
+        $label_for_lib = [
+            'imagick' => 'ImageMagick',
+            'ext_imagick' => 'External ImageMagick',
+            'gd' => 'GD',
+        ];
+
+        return $label_for_lib[$library_code] . ' ' . $library_version;
+    }
+
     public function destroy(): bool
     {
         $image = $this->getImage();

@@ -6,6 +6,7 @@ namespace Piwigo\Controller\Admin;
 
 use DateInterval;
 use DateTime;
+use Piwigo\Admin\InstallationStats;
 use Piwigo\Admin\Integrity\c13y_internal;
 use Piwigo\Admin\Integrity\check_integrity;
 use Piwigo\Admin\tabsheet;
@@ -19,7 +20,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * admin.php's own default `?page=` fallback), folded directly into this
  * controller -- same shape as every prior P23 batch 6 sub-batch's shell
  * folding. Its dashboard queries (activity chart, storage chart, general
- * stats via the existing get_pwg_general_statitics()) are single-purpose
+ * stats via the existing InstallationStats::getGeneralStatistics()) are single-purpose
  * view-shaping for this one page, the same "page/template glue stays
  * inline" precedent as admin.php's own dashboard-badge queries (pending
  * comments/orphans/locked albums), so no new Admin\Dashboard service was
@@ -200,11 +201,12 @@ SELECT COUNT(*)
 
         }
 
-        $stats = get_pwg_general_statitics();
+        $stats = InstallationStats::getGeneralStatistics();
 
-        // get_pwg_general_statitics() is declared to return array<string, mixed>,
-        // so PHPStan can't see that these two keys are already coerced from the
-        // SUM() DB values to int within that function; narrow locally.
+        // InstallationStats::getGeneralStatistics() is declared to return
+        // array<string, mixed>, so PHPStan can't see that these two keys
+        // are already coerced from the SUM() DB values to int within that
+        // method; narrow locally.
         $disk_usage = $stats['disk_usage'];
         $disk_usage = is_numeric($disk_usage) ? (float) $disk_usage : 0.0;
 

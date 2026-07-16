@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
+use Piwigo\Admin\Image\pwg_image;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\ArrayHelper;
@@ -40,11 +41,14 @@ use Piwigo\Users\UserService;
  * "check for updates" block); same shape as fatal_error()/
  * check_pwg_token()/get_themeconf().
  *
- * fetchRemote()/get_graphics_library()/get_pwg_general_statitics()/
- * get_installation_date() (admin/include/functions.php, not yet migrated)
- * and pwg_get_db_version() (functions_mysqli.inc.php, batch 8f
- * relocate-only) stay bare free-function calls -- a class-extraction pass
- * doesn't also chase down every transitive not-yet-migrated dependency.
+ * fetchRemote() (admin/include/functions.php, not yet migrated) and
+ * pwg_get_db_version() (functions_mysqli.inc.php, batch 8f relocate-only)
+ * stay bare free-function calls -- a class-extraction pass doesn't also
+ * chase down every transitive not-yet-migrated dependency.
+ * get_graphics_library()/get_pwg_general_statitics()/get_installation_date()
+ * were migrated onto pwg_image::get_graphics_library()/
+ * InstallationStats::getGeneralStatistics()/getInstallationDate() in the
+ * very next sub-batch (file 3, System info group).
  */
 final class PiwigoInfosSender
 {
@@ -128,20 +132,20 @@ final class PiwigoInfosSender
                 'db_version' => pwg_get_db_version(),
                 'php_datetime' => date('Y-m-d H:i:s'),
                 'db_datetime' => $dbCurrentDate,
-                'graphics_library' => get_graphics_library(),
+                'graphics_library' => pwg_image::get_graphics_library(),
             ],
-            'general_stats' => get_pwg_general_statitics(),
+            'general_stats' => InstallationStats::getGeneralStatistics(),
         ];
 
         // convert disk_usage from kB to mB
-        // get_pwg_general_statitics() is typed array<string, mixed>, so
-        // 'disk_usage' comes back mixed even though it's always a numeric
-        // byte count in practice.
+        // InstallationStats::getGeneralStatistics() is typed
+        // array<string, mixed>, so 'disk_usage' comes back mixed even
+        // though it's always a numeric byte count in practice.
         $diskUsageKb = $piwigoInfos['general_stats']['disk_usage'];
         $diskUsageKb = is_numeric($diskUsageKb) ? (float) $diskUsageKb : 0.0;
         $piwigoInfos['general_stats']['disk_usage'] = intval($diskUsageKb / 1024);
 
-        $piwigoInfos['general_stats']['installed_on'] = get_installation_date();
+        $piwigoInfos['general_stats']['installed_on'] = InstallationStats::getInstallationDate();
         $piwigoInfos['general_stats']['nb_photos_synced'] = 0;
         $piwigoInfos['general_stats']['last_photo_synced'] = null;
         $piwigoInfos['general_stats']['last_photo'] = null;

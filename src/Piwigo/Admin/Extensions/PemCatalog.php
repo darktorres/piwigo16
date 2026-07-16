@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Extensions;
 
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Logger;
 use Piwigo\Http\HttpClientService;
 
@@ -405,7 +406,7 @@ final class PemCatalog
             if (is_file($path)) {
                 @unlink($path);
             } elseif (is_dir($path)) {
-                deltree($path, $trashPath);
+                FilesystemHelper::deltree($path, $trashPath);
             }
         }
     }

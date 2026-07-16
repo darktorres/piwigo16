@@ -10,6 +10,7 @@ use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Controller\ProfileFormHandler;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Db\Tables;
+use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\DerivativeUrlCodec;
 use Piwigo\Image\ImageStdParams;
@@ -435,7 +436,8 @@ WHERE param = \'' . $row['param'] . '\'
             check_pwg_token();
 
             ImageStdParams::restore_default();
-            clear_derivative_cache();
+            new DerivativeCacheService()
+                ->clearDerivativeCache();
 
             // reset conf
             load_conf_from_db();
@@ -1081,7 +1083,8 @@ WHERE param = \'' . $row['param'] . '\'
             ImageStdParams::set_and_save_disabled($disabled);
 
             if ((bool) count($changed_types)) {
-                clear_derivative_cache($changed_types);
+                new DerivativeCacheService()
+                    ->clearDerivativeCache($changed_types);
             }
 
             $template->assign(
@@ -1320,7 +1323,8 @@ WHERE param = \'' . $row['param'] . '\'
             ImageStdParams::save();
 
             if ((bool) count($changed_types)) {
-                clear_derivative_cache($changed_types);
+                new DerivativeCacheService()
+                    ->clearDerivativeCache($changed_types);
             }
 
             $template->assign(

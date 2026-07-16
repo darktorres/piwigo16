@@ -6,6 +6,7 @@ namespace Piwigo\Admin\Extensions;
 
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\FilesystemHelper;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Mail\MailService;
 use Piwigo\Template\Template;
@@ -316,7 +317,7 @@ final class CoreUpdateService
 
         $result = $this->zipExtractor->extract($filename, PHPWG_ROOT_PATH, $removePath, 0755);
         if ($result === null) {
-            deltree(PHPWG_ROOT_PATH . $dataLocation . 'update');
+            FilesystemHelper::deltree(PHPWG_ROOT_PATH . $dataLocation . 'update');
             $page['errors'][] = l10n('An error has occured during upgrade.');
             return;
         }
@@ -354,7 +355,7 @@ final class CoreUpdateService
             $this->processObsoleteList($obsoleteList);
         }
 
-        deltree(PHPWG_ROOT_PATH . $dataLocation . 'update');
+        FilesystemHelper::deltree(PHPWG_ROOT_PATH . $dataLocation . 'update');
         invalidate_user_cache(true);
         conf_update_param('piwigo_installed_version', $upgradeTo);
         (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('system', ActivitySystem::Core, 'update', [
@@ -401,7 +402,7 @@ final class CoreUpdateService
             if (is_file($path)) {
                 @unlink($path);
             } elseif (is_dir($path)) {
-                deltree($path, PHPWG_ROOT_PATH . '_trash');
+                FilesystemHelper::deltree($path, PHPWG_ROOT_PATH . '_trash');
             }
         }
     }

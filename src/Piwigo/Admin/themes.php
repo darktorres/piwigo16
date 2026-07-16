@@ -15,6 +15,7 @@ use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Config\Config;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
 use Piwigo\Db\Tables;
@@ -252,8 +253,7 @@ DELETE
                 $theme_maintain = self::build_maintain_class($theme_id);
                 $theme_maintain->delete();
 
-                include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-                deltree(Config::themesPath() . $theme_id, Config::themesPath() . 'trash');
+                FilesystemHelper::deltree(Config::themesPath() . $theme_id, Config::themesPath() . 'trash');
                 break;
 
             case 'set_default':
@@ -756,7 +756,7 @@ SELECT
                                     if (is_file($path)) {
                                         @unlink($path);
                                     } elseif (is_dir($path)) {
-                                        deltree($path, Config::themesPath() . 'trash');
+                                        FilesystemHelper::deltree($path, Config::themesPath() . 'trash');
                                     }
                                 }
                             }

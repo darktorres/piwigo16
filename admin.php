@@ -18,6 +18,7 @@ declare(strict_types=1);
 require __DIR__ . '/vendor/autoload.php';
 
 use Piwigo\Admin\CoreTabs;
+use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Bootstrap\AdminDispatcher;
 use Piwigo\Bootstrap\CommonBootstrap;
 use Piwigo\Core\AccessLevel;
@@ -95,7 +96,7 @@ if ($conf['fs_quick_check_period'] > 0) {
     }
 
     if ($perform_fsqc) {
-        fs_quick_check();
+        FilesystemIntegrityChecker::fsQuickCheck();
     }
 }
 

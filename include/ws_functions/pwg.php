@@ -13,6 +13,7 @@ use Piwigo\Auth\CookieService;
 use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\FilesystemHelper;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\History\HistoryRepository;
@@ -267,10 +268,9 @@ function ws_getCacheSize($params, PwgServer &$service): array
         }
     }
 
-    include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
     // Multiples sizes size
     $path_msizes = $data_location . 'i';
-    $msizes = get_cache_size_derivatives($path_msizes);
+    $msizes = FilesystemHelper::getCacheSizeDerivatives($path_msizes);
 
     $infos['msizes'] = array_fill_keys(array_keys(ImageStdParams::get_defined_type_map()), 0);
     $infos['msizes']['custom'] = 0;

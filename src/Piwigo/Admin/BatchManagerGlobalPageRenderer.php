@@ -9,6 +9,7 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -453,7 +454,8 @@ DELETE
                     }
                     foreach ($_POST['del_derivatives_type'] as $type) {
                         if (is_string($type)) {
-                            delete_element_derivatives($derivative_infos, $type);
+                            new DerivativeCacheService()
+                                ->deleteElementDerivatives($derivative_infos, $type);
                         }
                     }
                 }

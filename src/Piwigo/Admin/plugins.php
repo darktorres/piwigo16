@@ -14,6 +14,7 @@ namespace Piwigo\Admin;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
 use Piwigo\Db\DbConnection;
@@ -294,8 +295,7 @@ DELETE FROM ' . Tables::plugins() . '
                     $activity_details['fs_version'] = $this->fs_plugins[$plugin_id]['version'];
                 }
 
-                include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-                deltree(PHPWG_PLUGINS_PATH . $plugin_id, PHPWG_PLUGINS_PATH . 'trash');
+                FilesystemHelper::deltree(PHPWG_PLUGINS_PATH . $plugin_id, PHPWG_PLUGINS_PATH . 'trash');
                 break;
         }
 
@@ -827,7 +827,7 @@ DELETE FROM ' . Tables::plugins() . '
                                     if (is_file($path)) {
                                         @unlink($path);
                                     } elseif (is_dir($path)) {
-                                        deltree($path, PHPWG_PLUGINS_PATH . 'trash');
+                                        FilesystemHelper::deltree($path, PHPWG_PLUGINS_PATH . 'trash');
                                     }
                                 }
                             }

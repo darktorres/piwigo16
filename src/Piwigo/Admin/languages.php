@@ -13,6 +13,7 @@ namespace Piwigo\Admin;
 
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Logger;
 use Piwigo\Db\Tables;
 use Piwigo\Http\HttpClientService;
@@ -127,7 +128,7 @@ UPDATE ' . Tables::userInfos() . '
 ;';
                 pwg_query($query);
 
-                deltree(PHPWG_ROOT_PATH . 'language/' . $language_id, PHPWG_ROOT_PATH . 'language/trash');
+                FilesystemHelper::deltree(PHPWG_ROOT_PATH . 'language/' . $language_id, PHPWG_ROOT_PATH . 'language/trash');
                 break;
 
             case 'set_default':
@@ -484,7 +485,7 @@ UPDATE ' . Tables::userInfos() . '
                                         if (is_file($path)) {
                                             @unlink($path);
                                         } elseif (is_dir($path)) {
-                                            deltree($path, PHPWG_ROOT_PATH . 'language/trash');
+                                            FilesystemHelper::deltree($path, PHPWG_ROOT_PATH . 'language/trash');
                                         }
                                     }
                                 }

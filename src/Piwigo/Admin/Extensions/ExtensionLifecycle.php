@@ -10,6 +10,7 @@ use Piwigo\Admin\PluginMaintain;
 use Piwigo\Admin\ThemeMaintain;
 use Piwigo\Config\Config;
 use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\FilesystemHelper;
 
 /**
  * Install/activate/deactivate/uninstall/delete state machine, replacing
@@ -216,7 +217,7 @@ final class ExtensionLifecycle
                 }
                 $activityDetails['fs_version'] = $fsEntry['version'] ?? null;
 
-                deltree(PHPWG_PLUGINS_PATH . $id, PHPWG_PLUGINS_PATH . 'trash');
+                FilesystemHelper::deltree(PHPWG_PLUGINS_PATH . $id, PHPWG_PLUGINS_PATH . 'trash');
                 break;
         }
 
@@ -319,7 +320,7 @@ final class ExtensionLifecycle
                 $maintain = $this->buildThemeMaintain($id);
                 $maintain->delete();
 
-                deltree(Config::themesPath() . $id, Config::themesPath() . 'trash');
+                FilesystemHelper::deltree(Config::themesPath() . $id, Config::themesPath() . 'trash');
                 break;
 
             case 'set_default':
@@ -381,7 +382,7 @@ final class ExtensionLifecycle
 
                 $this->repo->reassignUsersFromLanguage($id, (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->getDefaultLanguage());
 
-                deltree(PHPWG_ROOT_PATH . 'language/' . $id, PHPWG_ROOT_PATH . 'language/trash');
+                FilesystemHelper::deltree(PHPWG_ROOT_PATH . 'language/' . $id, PHPWG_ROOT_PATH . 'language/trash');
                 break;
 
             case 'set_default':

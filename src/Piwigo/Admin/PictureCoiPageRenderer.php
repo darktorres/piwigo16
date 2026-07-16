@@ -8,6 +8,7 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeUrlCodec;
 use Piwigo\Image\ImageRepository;
@@ -73,10 +74,12 @@ final class PictureCoiPageRenderer
 
             foreach (ImageStdParams::get_defined_type_map() as $params) {
                 if ($params->sizing->max_crop !== 0.0) {
-                    delete_element_derivatives($derivative_infos, $params->type);
+                    new DerivativeCacheService()
+                        ->deleteElementDerivatives($derivative_infos, $params->type);
                 }
             }
-            delete_element_derivatives($derivative_infos, IMG_CUSTOM);
+            new DerivativeCacheService()
+                ->deleteElementDerivatives($derivative_infos, IMG_CUSTOM);
             $uid = '&b=' . time();
             $conf['question_mark_in_urls'] = $conf['php_extension_in_urls'] = true;
             if ($conf['derivative_url_style'] === 1) {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\FilesystemHelper;
 use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
@@ -131,7 +132,7 @@ SELECT permalink
             [
                 'N/A' => '----------',
             ],
-            get_dirs(PHPWG_ROOT_PATH . 'themes')
+            FilesystemHelper::getDirs(PHPWG_ROOT_PATH . 'themes')
         );
 
         if (isset($_POST['submit'])) {

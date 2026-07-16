@@ -9,6 +9,7 @@ use DateTime;
 use Piwigo\Admin\InstallationStats;
 use Piwigo\Admin\Integrity\c13y_internal;
 use Piwigo\Admin\Integrity\check_integrity;
+use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Admin\tabsheet;
 use Piwigo\Core\Logger;
 use Piwigo\Db\Tables;
@@ -81,8 +82,6 @@ final class IntroSubController implements AdminSubControllerInterface
             $page['warnings'] = [];
         }
 
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         // +-----------------------------------------------------------------------+
         // | tabs                                                                  |
         // +-----------------------------------------------------------------------+
@@ -148,7 +147,7 @@ SELECT COUNT(*)
             $page['warnings'][] = $message;
         }
 
-        fs_quick_check();
+        FilesystemIntegrityChecker::fsQuickCheck();
 
         // +-----------------------------------------------------------------------+
         // |                             template init                             |

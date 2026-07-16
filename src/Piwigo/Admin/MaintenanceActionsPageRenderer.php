@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Imagick;
 use Piwigo\Admin\Image\pwg_image;
 use Piwigo\Admin\Maintenance\DbMaintenanceRepository;
+use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Admin\Maintenance\MaintenanceActionDispatcher;
 use Piwigo\Core\AppInfo;
 use Piwigo\Db\DbConnection;
@@ -44,9 +45,7 @@ final class MaintenanceActionsPageRenderer
          */
         global $conf, $maint_actions, $page, $template;
 
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
-        fs_quick_check();
+        FilesystemIntegrityChecker::fsQuickCheck();
 
         $action = is_string($_GET['action'] ?? null) ? $_GET['action'] : '';
         new MaintenanceActionDispatcher()

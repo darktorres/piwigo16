@@ -13,6 +13,7 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
 use Piwigo\Permission\PermissionRepository;
@@ -321,8 +322,9 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
 
             // retrieve sub-directories fulldirs from the site reader
             // get_full_directories() is declared to return mixed[], but in practice
-            // it always forwards get_fs_directories()'s string[] result; filter
-            // defensively so this array's element type is a real string.
+            // it always forwards FilesystemHelper::getFsDirectories()'s string[]
+            // result; filter defensively so this array's element type is a real
+            // string.
             $fs_fulldirs = array_filter($site_reader->get_full_directories($basedir), is_string(...));
 
             // get_full_directories doesn't include the base directory, so if it's a
@@ -566,7 +568,8 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                     delete_categories($to_delete);
                     foreach ($to_delete_derivative_dirs as $to_delete_dir) {
                         if (is_dir($to_delete_dir)) {
-                            clear_derivative_cache_rec($to_delete_dir, '#.+#');
+                            new DerivativeCacheService()
+                                ->clearDerivativeCacheRecursive($to_delete_dir, '#.+#');
                         }
                     }
                 }

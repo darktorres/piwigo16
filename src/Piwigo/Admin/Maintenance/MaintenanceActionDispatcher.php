@@ -11,6 +11,7 @@ use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Db\DbConnection;
 use Piwigo\Http\HttpClientService;
+use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Rate\RateService;
 use Piwigo\Session\SessionService;
@@ -104,7 +105,7 @@ final class MaintenanceActionDispatcher
                 // no break
             case 'categories':
 
-                images_integrity();
+                FilesystemIntegrityChecker::imagesIntegrity();
                 categories_integrity();
                 update_uppercats();
                 update_category('all');
@@ -115,7 +116,7 @@ final class MaintenanceActionDispatcher
 
             case 'images':
 
-                images_integrity();
+                FilesystemIntegrityChecker::imagesIntegrity();
                 update_path();
                 new RateService(new RateRepository(DbConnection::build()), new CookieService())
                     ->updateRatingScore();
@@ -205,11 +206,13 @@ final class MaintenanceActionDispatcher
                 $types_str = $_GET['type'] ?? '';
                 $types_str = is_string($types_str) ? $types_str : '';
                 if ($types_str === 'all') {
-                    clear_derivative_cache($types_str);
+                    new DerivativeCacheService()
+                        ->clearDerivativeCache($types_str);
                 } else {
                     $types = explode('_', $types_str);
                     foreach ($types as $type_to_clear) {
-                        clear_derivative_cache($type_to_clear);
+                        new DerivativeCacheService()
+                            ->clearDerivativeCache($type_to_clear);
                     }
                 }
                 $page['infos'][] = l10n('action successfully performed.');

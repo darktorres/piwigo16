@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Site;
 
+use Piwigo\Core\FilesystemHelper;
 use Piwigo\Db\DbConnection;
 use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
@@ -63,7 +64,7 @@ class LocalSiteReader
      */
     public function get_full_directories(string $basedir): array
     {
-        $fs_fulldirs = get_fs_directories($basedir);
+        $fs_fulldirs = FilesystemHelper::getFsDirectories($basedir);
         return $fs_fulldirs;
     }
 

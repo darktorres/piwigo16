@@ -8,6 +8,7 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Db\DbConnection;
+use Piwigo\Filter\FilterService;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -127,7 +128,7 @@ final class MenubarRenderer
         if ($block !== null) {
             $block->data = [
                 'NB_PICTURE' => $user['nb_total_images'],
-                'MENU_CATEGORIES' => $categoryService->getCategoriesMenu(),
+                'MENU_CATEGORIES' => $categoryService->getCategoriesMenu(new FilterService()),
                 'U_CATEGORIES' => make_index_url([
                     'section' => 'categories',
                 ]),

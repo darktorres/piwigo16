@@ -33,8 +33,6 @@ final class AlbumNotificationPageRenderer
          */
         global $admin_album_base_url, $category, $conf, $page, $template;
 
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         // +-------------------------------------------------------------------+
         // |                       variable initialization                     |
         // +-------------------------------------------------------------------+

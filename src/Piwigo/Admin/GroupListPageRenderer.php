@@ -22,8 +22,6 @@ final class GroupListPageRenderer
          */
         global $conf, $template;
 
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         $tabsheet = new tabsheet();
         $tabsheet->set_id('groups');
         $tabsheet->select('group_list');

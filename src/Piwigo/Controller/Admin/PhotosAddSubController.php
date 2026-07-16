@@ -38,8 +38,6 @@ final class PhotosAddSubController implements AdminSubControllerInterface
          */
         global $template, $page;
 
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         // upload form config is loaded here to match the original page's
         // own behavior (validated/used by the tab templates), even though
         // this sub-controller doesn't read it directly itself.

@@ -61,8 +61,6 @@ final class SiteManagerSubController implements AdminSubControllerInterface
         global $conf, $page, $template;
         global $my_base_url;
 
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         if (! (bool) $conf['enable_synchronization']) {
             die('synchronization is disabled');
         }

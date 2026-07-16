@@ -25,8 +25,6 @@ final class ThemeSubController implements AdminSubControllerInterface
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         $theme_raw = $_GET['theme'] ?? null;
         if (! is_string($theme_raw) || $theme_raw === '') {
             die('Invalid theme URL');

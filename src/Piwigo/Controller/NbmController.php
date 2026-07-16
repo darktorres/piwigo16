@@ -38,7 +38,6 @@ final class NbmController implements ControllerInterface
     {
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Free);
 
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
         // Translations are in the admin file too.
         Lang::load('admin.lang');
         // Need to update a second time.

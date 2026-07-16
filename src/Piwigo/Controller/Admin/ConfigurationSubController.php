@@ -112,8 +112,6 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             $page['warnings'][] = str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'));
         }
 
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         // -------------------------------------------------------- sections definitions
 
         (new \Piwigo\Validation\InputValidator())->validate('section', $_GET, false, '/^[a-z]+$/i');

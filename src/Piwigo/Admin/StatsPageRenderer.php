@@ -38,8 +38,6 @@ final class StatsPageRenderer
          */
         global $conf, $lang, $page, $template, $user;
 
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
         new HistoryService(new HistoryRepository(DbConnection::build()))->summarize();

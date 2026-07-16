@@ -32,8 +32,6 @@ final class CatPermPageRenderer
          */
         global $admin_album_base_url, $category, $conf, $template, $page;
 
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         // +-------------------------------------------------------------------+
         // |                       variable initialization                     |
         // +-------------------------------------------------------------------+

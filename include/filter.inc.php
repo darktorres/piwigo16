@@ -162,7 +162,6 @@ WHERE ';
             $filter_recent_period
         );
     }
-    include_once PHPWG_ROOT_PATH . 'include/functions_filter.inc.php';
 } else {
     if ((bool) SessionService::get()->getSessionVar('filter_enabled', false)) {
         SessionService::get()->unsetSessionVar('filter_enabled');

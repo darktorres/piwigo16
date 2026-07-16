@@ -91,7 +91,6 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
          */
         global $conf, $template;
 
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
         include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 
         /** @var mixed $persistent_cache */

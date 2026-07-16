@@ -59,8 +59,6 @@ final class BatchManagerGlobalPageRenderer
          */
         global $conf, $page, $template, $user;
 
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         if (count($_POST) > 0) {
             check_pwg_token();
         }

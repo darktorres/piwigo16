@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Category;
 
 use Piwigo\Cache\CachePools;
+use Piwigo\Core\FilterUpdaterInterface;
 use Piwigo\Core\Logger;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -50,6 +51,10 @@ use Psr\Cache\CacheItemPoolInterface;
  */
 final class CategoryCatsRenderer
 {
+    public function __construct(
+        private readonly FilterUpdaterInterface $filterUpdater,
+    ) {}
+
     public function render(): void
     {
         /**
@@ -341,9 +346,7 @@ SELECT *
 
         if (count($categories) > 0) {
             // Update filtered data
-            if (function_exists('update_cats_with_filtered_data')) {
-                update_cats_with_filtered_data($categories);
-            }
+            $this->filterUpdater->updateCatsWithFilteredData($categories);
 
             $template->set_filename('index_category_thumbnails', 'mainpage_categories.tpl');
 

@@ -41,8 +41,6 @@ final class MaintenanceEnvPageRenderer
          */
         global $conf, $template;
 
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         $action = is_string($_GET['action'] ?? null) ? $_GET['action'] : '';
         new MaintenanceActionDispatcher()
             ->dispatch($action);

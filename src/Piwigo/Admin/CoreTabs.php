@@ -299,16 +299,16 @@ final class CoreTabs
             case 'photos_add':
                 $sheets['direct'] = [
                     'caption' => '<span class="icon-upload"></span>' . l10n('Web Form'),
-                    'url' => PHOTOS_ADD_BASE_URL . '&amp;section=direct',
+                    'url' => PhotosAddDirectPageRenderer::baseUrl() . '&amp;section=direct',
                 ];
                 $sheets['applications'] = [
                     'caption' => '<span class="icon-network"></span>' . l10n('Applications'),
-                    'url' => PHOTOS_ADD_BASE_URL . '&amp;section=applications',
+                    'url' => PhotosAddDirectPageRenderer::baseUrl() . '&amp;section=applications',
                 ];
                 if ((bool) $conf['enable_synchronization']) {
                     $sheets['ftp'] = [
                         'caption' => '<span class="icon-exchange"></span>' . l10n('FTP + Synchronization'),
-                        'url' => PHOTOS_ADD_BASE_URL . '&amp;section=ftp',
+                        'url' => PhotosAddDirectPageRenderer::baseUrl() . '&amp;section=ftp',
                     ];
                 }
                 break;

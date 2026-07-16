@@ -32,8 +32,6 @@ final class HistoryPageRenderer
          */
         global $conf, $template, $page;
 
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         $types = array_merge(['none'], get_enums(Tables::history(), 'image_type'));
 
         $display_thumbnails = [

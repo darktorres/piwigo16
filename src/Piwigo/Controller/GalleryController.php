@@ -10,6 +10,7 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Db\DbConnection;
+use Piwigo\Filter\FilterService;
 use Piwigo\Group\GroupRepository;
 use Piwigo\History\HistoryRepository;
 use Piwigo\History\HistoryService;
@@ -513,7 +514,7 @@ final class GalleryController implements ControllerInterface
                   and ($page['section'] === 'recent_cats' or $page['section'] === 'categories')
                   and (! isset($page['category']) or ! is_array($page['category']) or ! isset($page['category']['count_categories']) or $page['category']['count_categories'] > 0)
                 ) {
-                    new CategoryCatsRenderer()
+                    new CategoryCatsRenderer(new FilterService())
                         ->render();
                 }
 

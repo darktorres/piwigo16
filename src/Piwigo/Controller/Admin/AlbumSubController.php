@@ -43,8 +43,6 @@ final class AlbumSubController implements AdminSubControllerInterface
          */
         global $page, $template;
 
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         $query_params = $request->getQueryParams();
         $cat_id_param = $query_params['cat_id'] ?? null;
         $cat_id = is_numeric($cat_id_param) ? (int) $cat_id_param : 0;

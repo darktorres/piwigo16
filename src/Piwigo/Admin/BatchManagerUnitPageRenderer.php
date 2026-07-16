@@ -60,8 +60,6 @@ final class BatchManagerUnitPageRenderer
          */
         global $cache, $conf, $page, $pwg_loaded_plugins, $template, $user;
 
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         trigger_notify('loc_begin_element_set_unit');
 
         // $page is bootstrap-initialized by include/common.inc.php with

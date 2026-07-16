@@ -31,8 +31,6 @@ final class UserActivityPageRenderer
          */
         global $conf, $template, $page;
 
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
         (new \Piwigo\Validation\InputValidator())->validate('photo', $_GET, false, ValidationPattern::ID);

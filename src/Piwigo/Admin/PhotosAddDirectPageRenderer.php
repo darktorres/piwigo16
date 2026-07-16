@@ -32,6 +32,20 @@ use Piwigo\Template\Template;
  */
 final class PhotosAddDirectPageRenderer
 {
+    /**
+     * P23 batch 8f-1: relocated from admin/include/functions.php's
+     * PHOTOS_ADD_BASE_URL define() (formerly relocated there from the
+     * deleted admin/photos_add.php, P23 batch 8a) -- get_root_url() is a
+     * request-time value, not a compile-time constant expression, so this
+     * can't become a real class `const`; a static method is the SEC-60-
+     * compliant equivalent (src/Piwigo/ forbids define()). CoreTabs
+     * (the other real reader) calls this directly.
+     */
+    public static function baseUrl(): string
+    {
+        return get_root_url() . 'admin.php?page=photos_add';
+    }
+
     public function render(): void
     {
         /**
@@ -242,7 +256,7 @@ SELECT *
 
         $template->assign(
             [
-                'F_ADD_ACTION' => PHOTOS_ADD_BASE_URL,
+                'F_ADD_ACTION' => self::baseUrl(),
                 'chunk_size' => $conf['upload_form_chunk_size'],
                 'max_file_size' => $conf['upload_form_max_file_size'],
                 'ADMIN_PAGE_TITLE' => l10n('Upload Photos'),
@@ -289,7 +303,7 @@ SELECT *
 
         $template->assign(
             [
-                'form_action' => PHOTOS_ADD_BASE_URL,
+                'form_action' => self::baseUrl(),
                 'pwg_token' => (new \Piwigo\Csrf\CsrfService())->getToken(),
             ]
         );
@@ -449,7 +463,7 @@ SELECT
             $template->assign(
                 [
                     'setup_warnings' => $setup_warnings,
-                    'hide_warnings_link' => PHOTOS_ADD_BASE_URL . '&amp;hide_warnings=1',
+                    'hide_warnings_link' => self::baseUrl() . '&amp;hide_warnings=1',
                 ]
             );
         }

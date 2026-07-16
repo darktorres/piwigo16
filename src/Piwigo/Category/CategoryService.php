@@ -6,6 +6,7 @@ namespace Piwigo\Category;
 
 use Piwigo\Cache\CachePools;
 use Piwigo\Core\ActivityLoggerInterface;
+use Piwigo\Core\FilterUpdaterInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
@@ -666,9 +667,15 @@ final class CategoryService
     /**
      * Returns template vars for main categories menu.
      *
+     * P23 batch 8f-1: `FilterUpdaterInterface` is an explicit parameter
+     * here, not a constructor dependency, for the same reason as
+     * `ActivityLoggerInterface` above (~45 real construction sites, the
+     * vast majority pure-read and never touching filtered-category data;
+     * this is the one method that does).
+     *
      * @return array<int, array<string, mixed>>
      */
-    public function getCategoriesMenu(): array
+    public function getCategoriesMenu(FilterUpdaterInterface $filterUpdater): array
     {
         /**
          * @var array<string, mixed> $page
@@ -763,9 +770,7 @@ final class CategoryService
         usort($cats, self::compareByGlobalRank(...));
 
         // Update filtered data
-        if (function_exists('update_cats_with_filtered_data')) {
-            update_cats_with_filtered_data($cats);
-        }
+        $filterUpdater->updateCatsWithFilteredData($cats);
 
         return $cats;
     }

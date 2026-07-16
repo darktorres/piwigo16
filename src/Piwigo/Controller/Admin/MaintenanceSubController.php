@@ -75,8 +75,6 @@ final class MaintenanceSubController implements AdminSubControllerInterface
         global $my_base_url;
         $my_base_url = get_root_url() . 'admin.php?page=';
 
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         if (isset($_GET['action'])) {
             check_pwg_token();
         }

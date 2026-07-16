@@ -20,9 +20,11 @@ use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigRepository;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\DefaultLanguageProviderInterface;
+use Piwigo\Core\FilterUpdaterInterface;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\TablePrefixListener;
+use Piwigo\Filter\FilterService;
 use Piwigo\Mail\MailService;
 use Piwigo\Routing\Router;
 use Piwigo\Users\UserService;
@@ -73,6 +75,13 @@ return [
     // see src/Piwigo/Core/DefaultLanguageProviderInterface.php's own
     // docblock for why a static method can't just constructor-inject this.
     DefaultLanguageProviderInterface::class => \DI\get(UserService::class),
+
+    // Interface binding (P23 batch 8f-1) -- Piwigo\Filter\FilterService is
+    // L2bExtendedDomain; Category\CategoryService (L2aCoreDomain)
+    // constructor-injects FilterUpdaterInterface instead of depending on
+    // the concrete class directly, per deptrac.yaml's ruleset. See
+    // src/Piwigo/Core/FilterUpdaterInterface.php's own docblock.
+    FilterUpdaterInterface::class => \DI\get(FilterService::class),
 
     // Unresolvable string param (the routes file path) -- Router::fromFile()
     // needs a path autowire can't provide.

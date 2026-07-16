@@ -69,8 +69,6 @@ final class BatchManagerSubController implements AdminSubControllerInterface
          */
         global $conf, $page, $template, $user;
 
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         (new \Piwigo\Validation\InputValidator())->validate('selection', $_POST, true, ValidationPattern::ID);
         (new \Piwigo\Validation\InputValidator())->validate('display', $_REQUEST, false, '/^(\d+|all)$/');
 

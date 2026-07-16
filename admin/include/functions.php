@@ -9,19 +9,18 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-// Relocated from the now-deleted admin/photos_add.php (P23 batch 8a):
-// Piwigo\Admin\CoreTabs::addCoreTabs() (formerly admin/include/
-// add_core_tabs.inc.php's add_core_tabs(), P23 batch 8b-6) and
-// Piwigo\Admin\PhotosAddDirectPageRenderer both read this constant, and
-// this file is already include_once'd before either of them ever runs
-// (PhotosAddSubController::handle() loads this file first) -- can't
-// define() it in src/Piwigo/ itself (SEC-60 Arch rule).
-//
-// P23 batch 8d file 3 removed the last of this file's 18 Categories-domain
-// functions (migrated to Piwigo\Category\CategoryService/
-// Piwigo\Users\UserService) -- this constant-definition block is the only
-// thing left. Whether to relocate it and delete this file entirely is
-// P23 batch 9's scope (final legacy-file deletion sweep), not this one.
-if (! defined('PHOTOS_ADD_BASE_URL')) {
-    define('PHOTOS_ADD_BASE_URL', get_root_url() . 'admin.php?page=photos_add');
-}
+// P23 batch 8f-1: this file's last remaining content (the
+// PHOTOS_ADD_BASE_URL define()) relocated to
+// Piwigo\Admin\PhotosAddDirectPageRenderer::baseUrl() -- get_root_url()
+// is a request-time value, not a compile-time constant expression, so it
+// couldn't become a real class `const` (and src/Piwigo/ forbids define()
+// outright, SEC-60). The file itself is kept as a deliberately empty
+// stub, not deleted: install/db/119-database.php and
+// install/upgrade_1.4.0.php (frozen historical upgrade scripts, out of
+// P23's migration scope -- see p23/04-batch8f-overview.md's exclusions)
+// still unconditionally `include_once` this exact path; deleting it
+// outright would fatal ("Failed opening required") if either of those
+// scripts ever ran. Every other real caller's `include_once` of this
+// path (all now genuinely dead, the file has no functions left) is
+// removed at each of those call sites instead of relying on this stub
+// staying empty forever.

@@ -35,8 +35,6 @@ final class UserPermPageRenderer
          */
         global $page, $template;
 
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         $categoryConn = DbConnection::build();
         $categoryService = new CategoryService(
             new CategoryRepository($categoryConn),

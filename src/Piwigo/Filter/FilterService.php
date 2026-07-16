@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Filter;
 
+use Piwigo\Core\FilterUpdaterInterface;
+
 /**
  * Applies the current request's recent-content filter (see
  * include/filter.inc.php: $filter['enabled']/$filter['categories'], built
@@ -11,13 +13,14 @@ namespace Piwigo\Filter;
  * of category rows freshly loaded from the DB, overwriting their
  * aggregate columns with the filtered equivalents.
  */
-final class FilterService
+final class FilterService implements FilterUpdaterInterface
 {
     /**
      * Updates data of categories with filtered values.
      *
      * @param array<int, array<string, mixed>> $cats
      */
+    #[\Override]
     public function updateCatsWithFilteredData(array &$cats): void
     {
         /** @var array<string, mixed> $filter */

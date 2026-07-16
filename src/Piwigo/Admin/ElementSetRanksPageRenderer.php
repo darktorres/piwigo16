@@ -49,8 +49,6 @@ final class ElementSetRanksPageRenderer
          */
         global $page, $template;
 
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         $sort_fields = [
             '' => '',
             'file ASC' => l10n('File name, A &rarr; Z'),

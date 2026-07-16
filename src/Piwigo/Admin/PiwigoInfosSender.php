@@ -110,8 +110,6 @@ final class PiwigoInfosSender
             return;
         }
 
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         $row = pwg_db_fetch_row(pwg_query('SELECT now();'));
         assert($row !== null);
         [$dbCurrentDate] = $row;

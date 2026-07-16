@@ -49,7 +49,6 @@ define('PHPWG_ROOT_PATH', './');
 define('IN_ADMIN', true);
 
 include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
-include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
 // P21 boots the Kernel/DI container on the admin.php path too -- needed by
 // AdminDispatcher (below) to resolve AdminSubControllerInterface services.

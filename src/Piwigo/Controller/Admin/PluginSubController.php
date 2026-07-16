@@ -49,8 +49,6 @@ final class PluginSubController implements AdminSubControllerInterface
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         $section_param = $_GET['section'] ?? '';
         $sections = array_values(array_filter(
             explode('/', is_string($section_param) ? $section_param : ''),

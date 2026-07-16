@@ -16,11 +16,17 @@ use Piwigo\Ws\Protocol\PwgSerialPhpEncoder;
 use Piwigo\Ws\Protocol\PwgXmlRpcEncoder;
 use Piwigo\Ws\PwgCore;
 use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\WsDefaultMethods;
 use Piwigo\Ws\WsHelper;
 
 defined('PHPWG_ROOT_PATH') or trigger_error('Hacking attempt!', E_USER_ERROR);
 
-add_event_handler('ws_add_methods', 'ws_addDefaultMethods');
+// P23 batch 8e-8: WsDefaultMethods::register() replaces the old bare
+// ws_addDefaultMethods() free function (formerly include/
+// ws_default_methods.inc.php, include_once'd by WsController before this
+// file ran); first-class-callable, same pattern as the 2 registrations
+// below it.
+add_event_handler('ws_add_methods', WsDefaultMethods::register(...));
 add_event_handler('ws_invoke_allowed', WsHelper::isInvokeAllowed(...));
 // P23 batch 8e-4: relocated from include/ws_functions/pwg.php's own
 // top-level add_event_handler('get_history', 'get_history') call --

@@ -12,8 +12,8 @@ declare(strict_types=1);
 // P22: page logic moved to Piwigo\Controller\WsController
 // (config/routes.php's `/ws.php` route); this file is now pure
 // bootstrap + dispatch, matching every other P22 controller's root file.
-// The ~100-method registration list (ws_addDefaultMethods()) moved
-// verbatim to include/ws_default_methods.inc.php.
+// The ~100-method registration catalog is Piwigo\Ws\WsDefaultMethods
+// (P23 batch 8e-8).
 require __DIR__ . '/vendor/autoload.php';
 
 use Piwigo\Bootstrap\CommonBootstrap;

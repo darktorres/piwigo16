@@ -14,11 +14,11 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * Replaces ws.php -- the web-service dispatcher entry point. Wraps the
  * existing PwgServer registration/dispatch/response-formatting mechanism
- * as-is; the ~100 web-service methods across include/ws_functions/*.php
- * (and their addMethod() registrations, moved verbatim to
- * include/ws_default_methods.inc.php -- see that file's own docblock for
- * why it couldn't just become a private method here) are explicitly NOT
- * decomposed this phase, matching this phase's own scoped plan.
+ * as-is; the ~100 web-service methods that used to live across
+ * include/ws_functions/*.php are now real Piwigo\Ws\* class methods
+ * (P23 batch 8e), and their addMethod() registration catalog is
+ * Piwigo\Ws\WsDefaultMethods::register() (P23 batch 8e-8) -- autoloaded
+ * like every other class, no include_once needed here anymore.
  *
  * IN_WS deliberately stays defined in ws.php's own root file, not here:
  * include/user.inc.php (part of common.inc.php's own bootstrap chain)
@@ -53,7 +53,6 @@ final class WsController implements ControllerInterface
                 ->pageForbidden('Web services are disabled');
         }
 
-        include_once PHPWG_ROOT_PATH . 'include/ws_default_methods.inc.php';
         include_once PHPWG_ROOT_PATH . 'include/ws_init.inc.php';
 
         // ws_init.inc.php assigns $service with a bare (non-global)

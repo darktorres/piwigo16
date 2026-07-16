@@ -28,7 +28,7 @@ class PwgServer
     public ?string $_responseFormat = null;
 
     /**
-     * @var array<string, array{callback: string|array<int, string>, description: string, signature: array<string, array<string, mixed>>, include: string, options: array<string, mixed>}>
+     * @var array<string, array{callback: string|array<int, string>, description: string, signature: array<string, array<string, mixed>>, options: array<string, mixed>}>
      */
     public $_methods = [];
 
@@ -130,11 +130,8 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
      * @param string $methodName - the name of the method as seen externally
      * @param string|array<int, string> $callback - a callable (function name,
      *   or [class, method]); typed as string|array rather than native
-     *   `callable`, since most registrations in ws.php name a function that
-     *   is not yet defined at this point (its file is only include_once'd
-     *   lazily, from $include_file, right before invoke() actually calls it)
-     *   — a native `callable` type would fail PHP's is-it-currently-callable
-     *   check immediately at registration time
+     *   `callable` for parity with every registration's literal
+     *   [ClassName::class, 'method'] array form
      * @param array<int, string>|array<string, mixed>|null $params - either a
      *   plain list of allowed parameter names (shorthand, no options) or a map
      *   of allowed parameter names to their options; many real registrations
@@ -149,13 +146,12 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
      *    @option int|float maxValue (optional)
      * @param string|null $description - a description of the method; some
      *   real registrations in ws.php explicitly pass null for "no description"
-     * @param string $include_file - a file to be included befaore the callback is executed
      * @param array<string, mixed> $options
      *    @option bool hidden (optional) - if true, this method won't be visible by reflection.getMethodList
      *    @option bool admin_only (optional)
      *    @option bool post_only (optional)
      */
-    public function addMethod(string $methodName, string|array $callback, ?array $params = [], ?string $description = '', string $include_file = '', array $options = []): void
+    public function addMethod(string $methodName, string|array $callback, ?array $params = [], ?string $description = '', array $options = []): void
     {
         if (! is_array($params)) {
             $params = [];
@@ -205,7 +201,6 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
             'callback' => $callback,
             'description' => $description,
             'signature' => $signature,
-            'include' => $include_file,
             'options' => $options,
         ];
     }
@@ -421,9 +416,6 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
         }
 
         if (! $is_error) {
-            if (! empty($method['include'])) {
-                include_once $method['include'];
-            }
             // every real registration (ws.php, and this class's own
             // reflection methods) passes a genuinely callable function
             // name or [class, method] pair

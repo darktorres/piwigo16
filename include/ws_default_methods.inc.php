@@ -12,6 +12,9 @@ declare(strict_types=1);
 use Piwigo\Core\WsParamFlag;
 use Piwigo\Core\WsParamType;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Ws\PwgComments;
+use Piwigo\Ws\PwgExtensions;
+use Piwigo\Ws\PwgPermissions;
 use Piwigo\Ws\PwgServer;
 
 // P22: extracted verbatim from ws.php's own top-level function definition
@@ -1400,18 +1403,17 @@ function ws_addDefaultMethods(array $arr): void
 
     $service->addMethod(
         'pwg.plugins.getList',
-        'ws_plugins_getList',
+        [PwgExtensions::class, 'pluginsGetList'],
         null,
         'Gets the list of plugins with id, name, version, state and description.',
-        $ws_functions_root . 'pwg.extensions.php',
-        [
+        options: [
             'admin_only' => true,
         ]
     );
 
     $service->addMethod(
         'pwg.plugins.performAction',
-        'ws_plugins_performAction',
+        [PwgExtensions::class, 'pluginsPerformAction'],
         [
             'action' => [
                 'info' => 'install, activate, deactivate, uninstall, delete',
@@ -1420,15 +1422,14 @@ function ws_addDefaultMethods(array $arr): void
             'pwg_token' => [],
         ],
         null,
-        $ws_functions_root . 'pwg.extensions.php',
-        [
+        options: [
             'admin_only' => true,
         ]
     );
 
     $service->addMethod(
         'pwg.themes.performAction',
-        'ws_themes_performAction',
+        [PwgExtensions::class, 'themesPerformAction'],
         [
             'action' => [
                 'info' => 'activate, deactivate, delete, set_default',
@@ -1437,15 +1438,14 @@ function ws_addDefaultMethods(array $arr): void
             'pwg_token' => [],
         ],
         null,
-        $ws_functions_root . 'pwg.extensions.php',
-        [
+        options: [
             'admin_only' => true,
         ]
     );
 
     $service->addMethod(
         'pwg.extensions.update',
-        'ws_extensions_update',
+        [PwgExtensions::class, 'update'],
         [
             'type' => [
                 'info' => 'plugins, languages, themes',
@@ -1455,15 +1455,14 @@ function ws_addDefaultMethods(array $arr): void
             'pwg_token' => [],
         ],
         '<b>Webmaster only.</b>',
-        $ws_functions_root . 'pwg.extensions.php',
-        [
+        options: [
             'admin_only' => true,
         ]
     );
 
     $service->addMethod(
         'pwg.extensions.ignoreUpdate',
-        'ws_extensions_ignoreupdate',
+        [PwgExtensions::class, 'ignoreUpdate'],
         [
             'type' => [
                 'default' => null,
@@ -1480,19 +1479,17 @@ function ws_addDefaultMethods(array $arr): void
             'pwg_token' => [],
         ],
         '<b>Webmaster only.</b> Ignores an extension if it needs update.',
-        $ws_functions_root . 'pwg.extensions.php',
-        [
+        options: [
             'admin_only' => true,
         ]
     );
 
     $service->addMethod(
         'pwg.extensions.checkUpdates',
-        'ws_extensions_checkupdates',
+        [PwgExtensions::class, 'checkUpdates'],
         null,
         'Checks if piwigo or extensions are up to date.',
-        $ws_functions_root . 'pwg.extensions.php',
-        [
+        options: [
             'admin_only' => true,
         ]
     );
@@ -1942,7 +1939,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
     $service->addMethod(
         'pwg.permissions.getList',
-        'ws_permissions_getList',
+        [PwgPermissions::class, 'getList'],
         [
             'cat_id' => [
                 'flags' => WsParamFlag::FORCE_ARRAY | WsParamFlag::OPTIONAL,
@@ -1959,15 +1956,14 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
         ],
         'Returns permissions: user ids and group ids having access to each album ; this list can be filtered.
 <br>Provide only one parameter!',
-        $ws_functions_root . 'pwg.permissions.php',
-        [
+        options: [
             'admin_only' => true,
         ]
     );
 
     $service->addMethod(
         'pwg.permissions.add',
-        'ws_permissions_add',
+        [PwgPermissions::class, 'add'],
         [
             'cat_id' => [
                 'flags' => WsParamFlag::FORCE_ARRAY,
@@ -1988,8 +1984,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
             'pwg_token' => [],
         ],
         'Adds permissions to an album.',
-        $ws_functions_root . 'pwg.permissions.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]
@@ -1997,7 +1992,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
     $service->addMethod(
         'pwg.permissions.remove',
-        'ws_permissions_remove',
+        [PwgPermissions::class, 'remove'],
         [
             'cat_id' => [
                 'flags' => WsParamFlag::FORCE_ARRAY,
@@ -2014,8 +2009,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
             'pwg_token' => [],
         ],
         'Removes permissions from an album.',
-        $ws_functions_root . 'pwg.permissions.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]
@@ -2366,7 +2360,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
     $service->addMethod(
         'pwg.userComments.getList',
-        'ws_userComments_getList',
+        [PwgComments::class, 'getList'],
         [
             'status' => [
                 'default' => 'all',
@@ -2400,8 +2394,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
             ],
         ],
         'Get comments',
-        $ws_functions_root . 'pwg.comments.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => false,
         ]
@@ -2409,7 +2402,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
     $service->addMethod(
         'pwg.userComments.delete',
-        'ws_userComments_delete',
+        [PwgComments::class, 'delete'],
         [
             'comment_id' => [
                 'flags' => WsParamFlag::FORCE_ARRAY,
@@ -2418,8 +2411,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
             'pwg_token' => [],
         ],
         'Delete comments',
-        $ws_functions_root . 'pwg.comments.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]
@@ -2427,7 +2419,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
     $service->addMethod(
         'pwg.userComments.validate',
-        'ws_userComments_validate',
+        [PwgComments::class, 'validate'],
         [
             'comment_id' => [
                 'flags' => WsParamFlag::FORCE_ARRAY,
@@ -2436,8 +2428,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
             'pwg_token' => [],
         ],
         'Validate comments',
-        $ws_functions_root . 'pwg.comments.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]

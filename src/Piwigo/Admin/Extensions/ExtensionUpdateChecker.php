@@ -89,7 +89,7 @@ final class ExtensionUpdateChecker
     /**
      * Computes pending updates for every ExtensionType, stores the result
      * in $_SESSION['extensions_need_update'] (consumed by
-     * ws_extensions_checkupdates()), and persists the ignore-list into
+     * Piwigo\Ws\PwgExtensions::checkUpdates()), and persists the ignore-list into
      * $conf['updates_ignored'] -- mirrors updates.class.php::check_extensions()
      * exactly, including its ignore-list side effect.
      */

@@ -21,8 +21,8 @@ use Piwigo\Template\Template;
  * No CSRF gap here (confirmed by direct read and by tracing
  * plugins_installated.js's real activate/deactivate/delete/restore flow to
  * the already token-protected ws.php?method=pwg.plugins.performAction --
- * ws_plugins_performAction() in include/ws_functions/pwg.extensions.php
- * checks get_pwg_token() against $params['pwg_token'] itself).
+ * Piwigo\Ws\PwgExtensions::pluginsPerformAction() checks get_pwg_token()
+ * against $params['pwg_token'] itself).
  *
  * P23 sub-batch 6i-3 cleanup: dropped the dead per-plugin U_ACTION field
  * (and the $action_url construction that fed it) -- grepping the whole

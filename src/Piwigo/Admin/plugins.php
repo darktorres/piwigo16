@@ -120,7 +120,7 @@ class plugins
      * @param string $action - action
      * @param string $plugin_id - plugin id
      * @param array{revision?: string} $options - errors: the only real
-     *   caller (pwg.extensions.php's ws_extensions_update()) always passes
+     *   caller (Piwigo\Ws\PwgExtensions::update()) always passes
      *   a string here, coming from a WS param already typed `revision:
      *   string` in that function's own @param array{...} shape
      * @return array<int|string, mixed>

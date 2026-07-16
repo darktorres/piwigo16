@@ -119,9 +119,9 @@ final class ExtensionLifecycle
                 // "errors" (any real caller checks $errors[0] === 'ok',
                 // never empty($errors)). Preserved as-is rather than
                 // "fixed" -- changing it would silently change behavior
-                // for the one existing caller (pwg.extensions.php's
-                // ws_extensions_update()), which is out of this phase's
-                // scope to also migrate.
+                // for the one existing caller (Piwigo\Ws\PwgExtensions::
+                // update()), which is out of this phase's scope to also
+                // migrate.
                 $extraction = $this->pemCatalog->extractArchive(ExtensionType::Plugin, 'upgrade', $options['revision'], $id);
                 $errors[0] = $extraction['status'];
 

@@ -211,6 +211,12 @@ parameters:
 			path: include/common.inc.php
 
 		-
+			rawMessage: Right side of and is always true.
+			identifier: logicalAnd.rightAlwaysTrue
+			count: 2
+			path: include/common.inc.php
+
+		-
 			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
 			identifier: equal.notAllowed
 			count: 1
@@ -487,72 +493,6 @@ parameters:
 			path: include/ws_functions/pwg.categories.php
 
 		-
-			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
-			identifier: function.strict
-			count: 2
-			path: include/ws_functions/pwg.comments.php
-
-		-
-			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
-			identifier: empty.notAllowed
-			count: 6
-			path: include/ws_functions/pwg.comments.php
-
-		-
-			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 2
-			path: include/ws_functions/pwg.comments.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between mixed and string|null is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: include/ws_functions/pwg.comments.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between string and mixed is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: include/ws_functions/pwg.comments.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between string|null and string is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: include/ws_functions/pwg.comments.php
-
-		-
-			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
-			identifier: function.strict
-			count: 5
-			path: include/ws_functions/pwg.extensions.php
-
-		-
-			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
-			identifier: empty.notAllowed
-			count: 6
-			path: include/ws_functions/pwg.extensions.php
-
-		-
-			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 4
-			path: include/ws_functions/pwg.extensions.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: include/ws_functions/pwg.extensions.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
-			identifier: equal.notAllowed
-			count: 3
-			path: include/ws_functions/pwg.extensions.php
-
-		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
 			count: 1
@@ -719,30 +659,6 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: include/ws_functions/pwg.images.php
-
-		-
-			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
-			identifier: empty.notAllowed
-			count: 11
-			path: include/ws_functions/pwg.permissions.php
-
-		-
-			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 2
-			path: include/ws_functions/pwg.permissions.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 3
-			path: include/ws_functions/pwg.permissions.php
-
-		-
-			rawMessage: 'Parameter #2 $array of function implode expects array<string>, array given.'
-			identifier: argument.type
-			count: 3
-			path: include/ws_functions/pwg.permissions.php
 
 		-
 			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
@@ -1303,7 +1219,7 @@ parameters:
 			path: src/Piwigo/Admin/Integrity/c13y_internal.php
 
 		-
-			rawMessage: 'Out of 3037 possible return types, only 2986 - 98.3 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 3049 possible return types, only 2998 - 98.3 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 1
 			path: src/Piwigo/Admin/Integrity/c13y_internal.php
@@ -1441,7 +1357,7 @@ parameters:
 			path: src/Piwigo/Admin/PluginMaintain.php
 
 		-
-			rawMessage: 'Out of 3037 possible return types, only 2986 - 98.3 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 3049 possible return types, only 2998 - 98.3 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 5
 			path: src/Piwigo/Admin/PluginMaintain.php
@@ -1477,7 +1393,7 @@ parameters:
 			path: src/Piwigo/Admin/ThemeMaintain.php
 
 		-
-			rawMessage: 'Out of 3037 possible return types, only 2986 - 98.3 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 3049 possible return types, only 2998 - 98.3 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 3
 			path: src/Piwigo/Admin/ThemeMaintain.php
@@ -1525,7 +1441,7 @@ parameters:
 			path: src/Piwigo/Admin/languages.php
 
 		-
-			rawMessage: 'Out of 3037 possible return types, only 2986 - 98.3 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 3049 possible return types, only 2998 - 98.3 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 1
 			path: src/Piwigo/Admin/languages.php
@@ -1795,7 +1711,7 @@ parameters:
 			path: src/Piwigo/Auth/ApiKeyService.php
 
 		-
-			rawMessage: 'Out of 3037 possible return types, only 2986 - 98.3 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 3049 possible return types, only 2998 - 98.3 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 2
 			path: src/Piwigo/Auth/ApiKeyService.php
@@ -1909,7 +1825,7 @@ parameters:
 			path: src/Piwigo/Auth/PwgTOTP.php
 
 		-
-			rawMessage: 'Out of 3037 possible return types, only 2986 - 98.3 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 3049 possible return types, only 2998 - 98.3 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 2
 			path: src/Piwigo/Cache/PersistentCache.php
@@ -1969,7 +1885,7 @@ parameters:
 			path: src/Piwigo/Calendar/CalendarBase.php
 
 		-
-			rawMessage: 'Out of 3037 possible return types, only 2986 - 98.3 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 3049 possible return types, only 2998 - 98.3 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 6
 			path: src/Piwigo/Calendar/CalendarBase.php
@@ -2659,7 +2575,7 @@ parameters:
 			path: src/Piwigo/Core/Logger.php
 
 		-
-			rawMessage: 'Out of 3037 possible return types, only 2986 - 98.3 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 3049 possible return types, only 2998 - 98.3 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 1
 			path: src/Piwigo/Core/Logger.php
@@ -2869,7 +2785,7 @@ parameters:
 			path: src/Piwigo/Image/DerivativeImage.php
 
 		-
-			rawMessage: 'Out of 3037 possible return types, only 2986 - 98.3 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 3049 possible return types, only 2998 - 98.3 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 5
 			path: src/Piwigo/Image/DerivativeImage.php
@@ -2893,7 +2809,7 @@ parameters:
 			path: src/Piwigo/Image/DerivativeParams.php
 
 		-
-			rawMessage: 'Out of 3037 possible return types, only 2986 - 98.3 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 3049 possible return types, only 2998 - 98.3 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 3
 			path: src/Piwigo/Image/DerivativeParams.php
@@ -2953,7 +2869,7 @@ parameters:
 			path: src/Piwigo/Image/ImageStdParams.php
 
 		-
-			rawMessage: 'Out of 3037 possible return types, only 2986 - 98.3 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 3049 possible return types, only 2998 - 98.3 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 5
 			path: src/Piwigo/Image/ImageStdParams.php
@@ -3139,7 +3055,7 @@ parameters:
 			path: src/Piwigo/Menu/BlockManager.php
 
 		-
-			rawMessage: 'Out of 3037 possible return types, only 2986 - 98.3 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 3049 possible return types, only 2998 - 98.3 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 3
 			path: src/Piwigo/Menu/BlockManager.php
@@ -3157,7 +3073,7 @@ parameters:
 			path: src/Piwigo/Menu/BlockManager.php
 
 		-
-			rawMessage: 'Out of 3037 possible return types, only 2986 - 98.3 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 3049 possible return types, only 2998 - 98.3 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 3
 			path: src/Piwigo/Menu/DisplayBlock.php
@@ -3175,7 +3091,7 @@ parameters:
 			path: src/Piwigo/Menu/DisplayBlock.php
 
 		-
-			rawMessage: 'Out of 3037 possible return types, only 2986 - 98.3 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 3049 possible return types, only 2998 - 98.3 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 3
 			path: src/Piwigo/Menu/RegisteredBlock.php
@@ -3541,7 +3457,7 @@ parameters:
 			path: src/Piwigo/Template/FileCombiner.php
 
 		-
-			rawMessage: 'Out of 3037 possible return types, only 2986 - 98.3 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 3049 possible return types, only 2998 - 98.3 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 1
 			path: src/Piwigo/Template/FileCombiner.php
@@ -3655,7 +3571,7 @@ parameters:
 			path: src/Piwigo/Template/Template.php
 
 		-
-			rawMessage: 'Out of 3037 possible return types, only 2986 - 98.3 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 3049 possible return types, only 2998 - 98.3 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 6
 			path: src/Piwigo/Template/Template.php
@@ -4087,6 +4003,72 @@ parameters:
 			path: src/Piwigo/Ws/Protocol/PwgXmlWriter.php
 
 		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 2
+			path: src/Piwigo/Ws/PwgComments.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 6
+			path: src/Piwigo/Ws/PwgComments.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: src/Piwigo/Ws/PwgComments.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string|null is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Ws/PwgComments.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and mixed is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Ws/PwgComments.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|null and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Ws/PwgComments.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 5
+			path: src/Piwigo/Ws/PwgExtensions.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 6
+			path: src/Piwigo/Ws/PwgExtensions.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 4
+			path: src/Piwigo/Ws/PwgExtensions.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Ws/PwgExtensions.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 3
+			path: src/Piwigo/Ws/PwgExtensions.php
+
+		-
 			rawMessage: 'Out of 408 possible property types, only 316 - 77.4 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 1
@@ -4109,6 +4091,30 @@ parameters:
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 1
 			path: src/Piwigo/Ws/PwgNamedStruct.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 11
+			path: src/Piwigo/Ws/PwgPermissions.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: src/Piwigo/Ws/PwgPermissions.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 3
+			path: src/Piwigo/Ws/PwgPermissions.php
+
+		-
+			rawMessage: 'Parameter #2 $array of function implode expects array<string>, array given.'
+			identifier: argument.type
+			count: 3
+			path: src/Piwigo/Ws/PwgPermissions.php
 
 		-
 			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
@@ -5245,7 +5251,7 @@ parameters:
 			path: tests/Unit/Http/Middleware/ControllerInvokerMiddlewareTest.php
 
 		-
-			rawMessage: 'Out of 3037 possible return types, only 2986 - 98.3 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 3049 possible return types, only 2998 - 98.3 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 1
 			path: tests/Unit/Http/Middleware/ControllerInvokerMiddlewareTest.php

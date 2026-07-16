@@ -555,7 +555,7 @@ SELECT *
                         $file = $elements[$image_id]['file'];
                         // images.file is a NOT NULL column
                         assert($file !== null);
-                        $name = get_name_from_file($file);
+                        $name = \Piwigo\Core\StringHelper::getNameFromFile($file);
                     }
 
                     // source of the thumbnail picture
@@ -596,7 +596,7 @@ SELECT *
                         'ALT' => $name,
                         'AUTHOR' => trigger_change('render_comment_author', $comment['author']),
                         'WEBSITE_URL' => $comment['website_url'],
-                        'DATE' => format_date($date, ['day_name', 'day', 'month', 'year', 'time']),
+                        'DATE' => \Piwigo\Core\DateHelper::formatDate($date, ['day_name', 'day', 'month', 'year', 'time']),
                         'CONTENT' => trigger_change('render_comment_content', $comment['content']),
                     ];
 

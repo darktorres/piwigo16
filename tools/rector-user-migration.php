@@ -34,6 +34,7 @@ return RectorConfig::configure()
         // being deleted outright in this same fold -- its own function
         // definitions must not be rewritten into calls to themselves
         __DIR__ . '/../include/functions_user.inc.php',
+        __DIR__ . '/../include/functions.inc.php',
     ])
     ->withRules([
         FuncCallToNewMethodCallRector::class,
@@ -49,6 +50,30 @@ return RectorConfig::configure()
         new FuncCallToStaticCall('can_manage_comment', 'Piwigo\Auth\AccessControl', 'canManageComment'),
         new FuncCallToStaticCall('generate_user_code', 'Piwigo\Auth\AuthService', 'generateUserCode'),
         new FuncCallToStaticCall('verify_user_code', 'Piwigo\Auth\AuthService', 'verifyUserCode'),
+        // P23 batch 8d, file 2 pass 2a: functions.inc.php pure utility
+        // functions -- all stateless pure renames onto new static
+        // Piwigo\Core\* helper classes, same shape as the AccessControl
+        // block above.
+        new FuncCallToStaticCall('micro_seconds', 'Piwigo\Core\TimingHelper', 'microSeconds'),
+        new FuncCallToStaticCall('get_moment', 'Piwigo\Core\TimingHelper', 'getMoment'),
+        new FuncCallToStaticCall('get_elapsed_time', 'Piwigo\Core\TimingHelper', 'getElapsedTime'),
+        new FuncCallToStaticCall('get_extension', 'Piwigo\Core\StringHelper', 'getExtension'),
+        new FuncCallToStaticCall('get_filename_wo_extension', 'Piwigo\Core\StringHelper', 'getFilenameWoExtension'),
+        new FuncCallToStaticCall('qualify_utf8', 'Piwigo\Core\StringHelper', 'qualifyUtf8'),
+        new FuncCallToStaticCall('remove_accents', 'Piwigo\Core\StringHelper', 'removeAccents'),
+        new FuncCallToStaticCall('pwg_transliterate', 'Piwigo\Core\StringHelper', 'pwgTransliterate'),
+        new FuncCallToStaticCall('str2url', 'Piwigo\Core\StringHelper', 'str2url'),
+        new FuncCallToStaticCall('get_name_from_file', 'Piwigo\Core\StringHelper', 'getNameFromFile'),
+        new FuncCallToStaticCall('dateDiff', 'Piwigo\Core\DateHelper', 'dateDiff'),
+        new FuncCallToStaticCall('str2DateTime', 'Piwigo\Core\DateHelper', 'str2DateTime'),
+        new FuncCallToStaticCall('format_date_legacy', 'Piwigo\Core\DateHelper', 'formatDateLegacy'),
+        new FuncCallToStaticCall('format_date', 'Piwigo\Core\DateHelper', 'formatDate'),
+        new FuncCallToStaticCall('format_fromto', 'Piwigo\Core\DateHelper', 'formatFromto'),
+        new FuncCallToStaticCall('time_since', 'Piwigo\Core\DateHelper', 'timeSince'),
+        new FuncCallToStaticCall('transform_date', 'Piwigo\Core\DateHelper', 'transformDate'),
+        new FuncCallToStaticCall('is_valid_mysql_datetime', 'Piwigo\Core\DateHelper', 'isValidMysqlDatetime'),
+        new FuncCallToStaticCall('mkgetdir', 'Piwigo\Core\FilesystemHelper', 'mkgetdir'),
+        new FuncCallToStaticCall('secure_directory', 'Piwigo\Core\FilesystemHelper', 'secureDirectory'),
     ])
     ->withPhpVersion(\Rector\ValueObject\PhpVersion::PHP_85)
     ->withParallel(timeoutSeconds: 300);

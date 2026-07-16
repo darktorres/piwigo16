@@ -245,7 +245,7 @@ final class PluginsNewPageRenderer
                     'BIG_DESC' => $ext_desc,
                     'VERSION' => $plugin['revision_name'],
                     'REVISION_DATE' => preg_replace('/[^0-9]/', '', (string) strtotime($revision_date_str)),
-                    'REVISION_FORMATED_DATE' => format_date($revision_date_str, ['day', 'month', 'year']) . ', ' . time_since($revision_date_str, 'day'),
+                    'REVISION_FORMATED_DATE' => \Piwigo\Core\DateHelper::formatDate($revision_date_str, ['day', 'month', 'year']) . ', ' . \Piwigo\Core\DateHelper::timeSince($revision_date_str, 'day'),
                     'AUTHOR' => $plugin['author_name'],
                     'DOWNLOADS' => $plugin['extension_nb_downloads'],
                     'URL_INSTALL' => $url_auto_install,

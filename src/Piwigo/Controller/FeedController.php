@@ -135,7 +135,7 @@ final class FeedController implements ControllerInterface
                 assert($dbnow_ts !== false);
 
                 $rss_items[] = [
-                    'title' => l10n('New on %s', format_date($dbnow)),
+                    'title' => l10n('New on %s', \Piwigo\Core\DateHelper::formatDate($dbnow)),
                     'link' => get_gallery_home_url(),
                     'description' => $description,
                     'html' => true,
@@ -230,7 +230,7 @@ final class FeedController implements ControllerInterface
         }
 
         $fileName = PHPWG_ROOT_PATH . $data_location . 'tmp';
-        mkgetdir($fileName); // just in case
+        \Piwigo\Core\FilesystemHelper::mkgetdir($fileName); // just in case
         $fileName .= '/feed.xml';
         file_put_contents($fileName, $feed_content);
 

@@ -126,7 +126,7 @@ class Template
 
         if (! isset($conf['data_dir_checked'])) {
             $dir = PHPWG_ROOT_PATH . $conf_data_location;
-            mkgetdir($dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR);
+            \Piwigo\Core\FilesystemHelper::mkgetdir($dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR);
             if (! is_writable($dir)) {
                 load_language('admin.lang');
                 fatal_error(
@@ -144,7 +144,7 @@ class Template
         }
 
         $compile_dir = PHPWG_ROOT_PATH . $conf_data_location . 'templates_c';
-        mkgetdir($compile_dir);
+        \Piwigo\Core\FilesystemHelper::mkgetdir($compile_dir);
 
         $this->smarty->setCompileDir($compile_dir);
 
@@ -648,7 +648,7 @@ class Template
             global $t2;
             $this->smarty->assign(
                 [
-                    'AAAA_DEBUG_TOTAL_TIME__' => get_elapsed_time($t2, get_moment()),
+                    'AAAA_DEBUG_TOTAL_TIME__' => \Piwigo\Core\TimingHelper::getElapsedTime($t2, \Piwigo\Core\TimingHelper::getMoment()),
                 ]
             );
             // Pre-existing dead code, unchanged by this extraction: class

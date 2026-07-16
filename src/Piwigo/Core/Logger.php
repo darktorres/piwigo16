@@ -133,7 +133,7 @@ class Logger
             $directory = is_string($directory) ? $directory : '';
 
             if (! file_exists($directory)) {
-                mkgetdir($directory, MKGETDIR_DEFAULT | MKGETDIR_PROTECT_HTACCESS);
+                \Piwigo\Core\FilesystemHelper::mkgetdir($directory, MKGETDIR_DEFAULT | MKGETDIR_PROTECT_HTACCESS);
             }
 
             $filePath = $this->options['filePath'];

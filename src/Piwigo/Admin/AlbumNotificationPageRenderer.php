@@ -271,12 +271,7 @@ SELECT
             assert($auth_key_since !== false);
             $template->assign(
                 'auth_key_duration',
-                time_since(
-                    $auth_key_since,
-                    'second',
-                    null,
-                    false
-                )
+                \Piwigo\Core\DateHelper::timeSince($auth_key_since, 'second', null, false)
             );
         }
 

@@ -439,7 +439,7 @@ UPDATE ' . protect_column_name($tablename) . '
             }
         }
 
-        $temporary_tablename = $tablename . '_' . micro_seconds();
+        $temporary_tablename = $tablename . '_' . \Piwigo\Core\TimingHelper::microSeconds();
 
         $query = '
 CREATE TABLE ' . $temporary_tablename . '

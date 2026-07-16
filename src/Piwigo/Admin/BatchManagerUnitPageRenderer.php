@@ -348,7 +348,7 @@ SELECT
 
                 $row_file = is_string($row['file']) ? $row['file'] : '';
                 $legend = render_element_name($row);
-                if ($legend !== get_name_from_file($row_file)) {
+                if ($legend !== \Piwigo\Core\StringHelper::getNameFromFile($row_file)) {
                     $legend .= ' (' . $row['file'] . ')';
                 }
                 $extTab = explode('.', (string) $row['path']);
@@ -483,10 +483,10 @@ SELECT
                             'DIMENSIONS' => @$row['width'] . 'x' . @$row['height'] . ' px',
                             'FORMAT' => ($row['width'] >= $row['height']) ? 1 : 0, // 0:horizontal, 1:vertical
                             'FILESIZE' => l10n('%.2f MB', $row_filesize / 1024),
-                            'REGISTRATION_DATE' => format_date($row_date_available),
+                            'REGISTRATION_DATE' => \Piwigo\Core\DateHelper::formatDate($row_date_available),
                             'EXT' => l10n('%s file type', end($extTab)),
-                            'POST_DATE' => l10n('Added on %s', format_date($row_date_available, ['day', 'month', 'year'])),
-                            'AGE' => l10n(ucfirst(time_since($row_date_available, 'year'))),
+                            'POST_DATE' => l10n('Added on %s', \Piwigo\Core\DateHelper::formatDate($row_date_available, ['day', 'month', 'year'])),
+                            'AGE' => l10n(ucfirst(\Piwigo\Core\DateHelper::timeSince($row_date_available, 'year'))),
                             'ADDED_BY' => l10n('Added by %s', is_string($row['added_by']) ? ($added_by_username_of[$row['added_by']] ?? l10n('N/A')) : l10n('N/A')),
                             'STATS' => l10n('Visited %d times', $row['hit']),
                             'FILE' => l10n('%s', $row['file']),

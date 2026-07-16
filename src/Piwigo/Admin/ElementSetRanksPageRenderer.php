@@ -197,7 +197,7 @@ SELECT
                 if (! empty($row['name'])) {
                     $thumbnail_name = $row['name'];
                 } else {
-                    $file_wo_ext = is_string($row['file']) ? get_filename_wo_extension($row['file']) : '';
+                    $file_wo_ext = is_string($row['file']) ? \Piwigo\Core\StringHelper::getFilenameWoExtension($row['file']) : '';
                     $thumbnail_name = str_replace('_', ' ', $file_wo_ext);
                 }
                 $current_rank++;

@@ -318,7 +318,7 @@ SELECT
             } elseif ($type === IMAGETYPE_WEBP) {
                 $file_path .= 'webp';
             } elseif (isset($conf['upload_form_all_types']) and (bool) $conf['upload_form_all_types']) {
-                $original_extension = strtolower(get_extension($original_filename));
+                $original_extension = strtolower(\Piwigo\Core\StringHelper::getExtension($original_filename));
 
                 $finfo = finfo_open(FILEINFO_MIME_TYPE);
                 if ($finfo === false) {
@@ -473,7 +473,7 @@ SELECT
             assert($file !== null);
             $insert = [
                 'file' => $file,
-                'name' => get_name_from_file($file),
+                'name' => \Piwigo\Core\StringHelper::getNameFromFile($file),
                 'date_available' => $dbnow,
                 // Otherwise relies on the schema's own DEFAULT
                 // CURRENT_TIMESTAMP, which reads the real DB-server clock --
@@ -679,7 +679,7 @@ SELECT
         }
 
         $format_path = dirname((string) $images[0]['path']) . '/pwg_format/';
-        $format_path .= get_filename_wo_extension(basename((string) $images[0]['path']));
+        $format_path .= \Piwigo\Core\StringHelper::getFilenameWoExtension(basename((string) $images[0]['path']));
         $format_path .= '.' . $format_ext;
 
         $this->prepareDirectory(dirname($format_path));
@@ -769,7 +769,7 @@ SELECT
             return $representative_ext;
         }
 
-        if (! in_array(strtolower(get_extension($file_path)), ['pdf'], true)) {
+        if (! in_array(strtolower(\Piwigo\Core\StringHelper::getExtension($file_path)), ['pdf'], true)) {
             return $representative_ext;
         }
 
@@ -827,7 +827,7 @@ SELECT
             return $representative_ext;
         }
 
-        if (! in_array(strtolower(get_extension($file_path)), ['heic'], true)) {
+        if (! in_array(strtolower(\Piwigo\Core\StringHelper::getExtension($file_path)), ['heic'], true)) {
             return $representative_ext;
         }
 
@@ -878,13 +878,13 @@ SELECT
             return $representative_ext;
         }
 
-        if (! in_array(strtolower(get_extension($file_path)), ['tif', 'tiff'], true)) {
+        if (! in_array(strtolower(\Piwigo\Core\StringHelper::getExtension($file_path)), ['tif', 'tiff'], true)) {
             return $representative_ext;
         }
 
         // move the uploaded file to pwg_representative sub-directory
         $representative_file_path = dirname($file_path) . '/pwg_representative/';
-        $representative_file_path .= get_filename_wo_extension(basename($file_path)) . '.';
+        $representative_file_path .= \Piwigo\Core\StringHelper::getFilenameWoExtension(basename($file_path)) . '.';
 
         $conf_tiff_representative_ext = $conf['tiff_representative_ext'];
         $representative_ext = is_string($conf_tiff_representative_ext) ? $conf_tiff_representative_ext : 'jpg';
@@ -924,7 +924,7 @@ SELECT
             }
         }
 
-        return get_extension($representative_file_abspath);
+        return \Piwigo\Core\StringHelper::getExtension($representative_file_abspath);
     }
 
     public static function uploadFileVideo(?string $representative_ext, string $file_path): ?string
@@ -946,12 +946,12 @@ SELECT
             'avi', 'rm', 'm4v', 'ogg', 'ogv', 'webm', 'webmv',
         ];
 
-        if (! in_array(strtolower(get_extension($file_path)), $ffmpeg_video_exts, true)) {
+        if (! in_array(strtolower(\Piwigo\Core\StringHelper::getExtension($file_path)), $ffmpeg_video_exts, true)) {
             return $representative_ext;
         }
 
         $representative_file_path = dirname($file_path) . '/pwg_representative/';
-        $representative_file_path .= get_filename_wo_extension(basename($file_path)) . '.';
+        $representative_file_path .= \Piwigo\Core\StringHelper::getFilenameWoExtension(basename($file_path)) . '.';
 
         $representative_ext = 'jpg';
         $representative_file_path .= $representative_ext;
@@ -1026,13 +1026,13 @@ SELECT
             return $representative_ext;
         }
 
-        if (! in_array(strtolower(get_extension($file_path)), ['psd'], true)) {
+        if (! in_array(strtolower(\Piwigo\Core\StringHelper::getExtension($file_path)), ['psd'], true)) {
             return $representative_ext;
         }
 
         // move the uploaded file to pwg_representative sub-directory
         $representative_file_path = dirname($file_path) . '/pwg_representative/';
-        $representative_file_path .= get_filename_wo_extension(basename($file_path)) . '.';
+        $representative_file_path .= \Piwigo\Core\StringHelper::getFilenameWoExtension(basename($file_path)) . '.';
 
         $representative_ext = 'png';
         $representative_file_path .= $representative_ext;
@@ -1069,7 +1069,7 @@ SELECT
             }
         }
 
-        return get_extension($representative_file_abspath);
+        return \Piwigo\Core\StringHelper::getExtension($representative_file_abspath);
     }
 
     public static function uploadFileEps(?string $representative_ext, string $file_path): ?string
@@ -1090,7 +1090,7 @@ SELECT
             return $representative_ext;
         }
 
-        if (! in_array(strtolower(get_extension($file_path)), ['eps'], true)) {
+        if (! in_array(strtolower(\Piwigo\Core\StringHelper::getExtension($file_path)), ['eps'], true)) {
             return $representative_ext;
         }
 
@@ -1156,7 +1156,7 @@ SELECT
             }
         }
 
-        secure_directory($directory);
+        \Piwigo\Core\FilesystemHelper::secureDirectory($directory);
     }
 
     private function needResize(string $image_filepath, int $max_width, int $max_height): bool
@@ -1169,7 +1169,7 @@ SELECT
 
         $picture_ext = $conf['picture_ext'];
         $picture_ext = is_array($picture_ext) ? $picture_ext : [];
-        if (! in_array(strtolower(get_extension($image_filepath)), $picture_ext, true)) {
+        if (! in_array(strtolower(\Piwigo\Core\StringHelper::getExtension($image_filepath)), $picture_ext, true)) {
             return false;
         }
 

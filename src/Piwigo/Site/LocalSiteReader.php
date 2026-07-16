@@ -92,8 +92,8 @@ class LocalSiteReader
                 }
 
                 if (is_file($path . '/' . $node)) {
-                    $extension = strtolower(get_extension($node));
-                    $filename_wo_ext = get_filename_wo_extension($node);
+                    $extension = strtolower(\Piwigo\Core\StringHelper::getExtension($node));
+                    $filename_wo_ext = \Piwigo\Core\StringHelper::getFilenameWoExtension($node);
 
                     if (isset($flip_file_ext[$extension])) {
                         $representative_ext = null;
@@ -148,7 +148,7 @@ class LocalSiteReader
         $data = [];
 
         $filename = basename($file);
-        $extension = get_extension($filename);
+        $extension = \Piwigo\Core\StringHelper::getExtension($filename);
 
         $flip_picture_ext = $conf['flip_picture_ext'];
         $flip_picture_ext = is_array($flip_picture_ext) ? $flip_picture_ext : [];
@@ -156,7 +156,7 @@ class LocalSiteReader
         $representative_ext = null;
         if (! isset($flip_picture_ext[$extension])) {
             $dirname = dirname($file);
-            $filename_wo_ext = get_filename_wo_extension($filename);
+            $filename_wo_ext = \Piwigo\Core\StringHelper::getFilenameWoExtension($filename);
             $representative_ext = $this->get_representative_ext($dirname, $filename_wo_ext);
         }
 

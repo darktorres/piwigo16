@@ -434,7 +434,7 @@ SELECT *
                         $to = is_string($to) ? $to : '';
 
                         if (is_string($from) && $from !== '') {
-                            $tplVar['INFO_DATES'] = format_fromto($from, $to);
+                            $tplVar['INFO_DATES'] = \Piwigo\Core\DateHelper::formatFromto($from, $to);
                         }
                     }
                 }

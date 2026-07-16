@@ -93,7 +93,7 @@ final class MaintenanceEnvPageRenderer
 
         $time_elapsed_since_last_calc = null;
         if ($cache_sizes !== null && is_array($cache_sizes[3] ?? null) && (is_string($cache_sizes[3]['value'] ?? null) || is_int($cache_sizes[3]['value'] ?? null))) {
-            $time_elapsed_since_last_calc = time_since($cache_sizes[3]['value'], 'year');
+            $time_elapsed_since_last_calc = \Piwigo\Core\DateHelper::timeSince($cache_sizes[3]['value'], 'year');
         }
 
         $template->assign(
@@ -154,8 +154,8 @@ final class MaintenanceEnvPageRenderer
         if (is_string($installed_on) && $installed_on !== '') {
             $template->assign(
                 [
-                    'INSTALLED_ON' => format_date($installed_on, ['day', 'month', 'year']),
-                    'INSTALLED_SINCE' => time_since($installed_on, 'day'),
+                    'INSTALLED_ON' => \Piwigo\Core\DateHelper::formatDate($installed_on, ['day', 'month', 'year']),
+                    'INSTALLED_SINCE' => \Piwigo\Core\DateHelper::timeSince($installed_on, 'day'),
                 ]
             );
         }

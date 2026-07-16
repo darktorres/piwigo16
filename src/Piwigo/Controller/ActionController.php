@@ -172,7 +172,7 @@ SELECT id
                 // a genuine DB row for this element always carries a
                 // string here.
                 assert(is_string($original_file));
-                $element_info['file'] = get_filename_wo_extension($original_file) . '.' . $format_ext;
+                $element_info['file'] = \Piwigo\Core\StringHelper::getFilenameWoExtension($original_file) . '.' . $format_ext;
                 break;
         }
 
@@ -236,7 +236,7 @@ SELECT id
         }
 
         if ($ctype === null) { // give it a guess
-            $ctype = $this->guessMimeType(get_extension($file));
+            $ctype = $this->guessMimeType(\Piwigo\Core\StringHelper::getExtension($file));
         }
 
         $http_headers['Content-Type'] = $ctype;

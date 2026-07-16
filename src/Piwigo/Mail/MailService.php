@@ -1003,7 +1003,7 @@ SELECT
         $dataLocation = is_string($dataLocation) ? $dataLocation : '';
 
         $dir = PHPWG_ROOT_PATH . $dataLocation . 'tmp';
-        if (mkgetdir($dir, \MKGETDIR_DEFAULT & ~\MKGETDIR_DIE_ON_ERROR)) {
+        if (\Piwigo\Core\FilesystemHelper::mkgetdir($dir, \MKGETDIR_DEFAULT & ~\MKGETDIR_DIE_ON_ERROR)) {
             $username = $user['username'] ?? null;
             $username = is_string($username) ? $username : '';
             $langCode = $lang_info['code'] ?? null;

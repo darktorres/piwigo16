@@ -93,7 +93,7 @@ final class NotificationByMailSender
         $nbmMaxTreatmentTimeoutPercent = $conf['nbm_max_treatment_timeout_percent'] ?? null;
         $nbmMaxTreatmentTimeoutPercent = is_numeric($nbmMaxTreatmentTimeoutPercent) ? (float) $nbmMaxTreatmentTimeoutPercent : 0.8;
 
-        $this->startTime = get_moment();
+        $this->startTime = \Piwigo\Core\TimingHelper::getMoment();
         $this->sendmailTimeout = intval(ini_get('max_execution_time')) * $nbmMaxTreatmentTimeoutPercent;
 
         if ($this->sendmailTimeout <= 0) {
@@ -118,7 +118,7 @@ final class NotificationByMailSender
 
     public function checkSendmailTimeout(): bool
     {
-        $isTimeout = (get_moment() - $this->startTime) > $this->sendmailTimeout;
+        $isTimeout = (\Piwigo\Core\TimingHelper::getMoment() - $this->startTime) > $this->sendmailTimeout;
         $this->isSendmailTimeout = $isTimeout;
 
         return $isTimeout;

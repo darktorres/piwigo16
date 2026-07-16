@@ -181,7 +181,7 @@ SELECT id, name, id_uppercat
                     assert($row['id'] !== null);
                     $sort[] = $ref_dates[$row['id']];
                 } else {
-                    $sort[] = remove_accents((string) $row['name']);
+                    $sort[] = \Piwigo\Core\StringHelper::removeAccents((string) $row['name']);
                 }
 
                 $categories[] = [
@@ -263,7 +263,7 @@ SELECT id,name,`rank`,status, visible, uppercats, lastmodified
 
             $rendered_name = trigger_change('render_category_name', $album['name'], 'admin_cat_list');
             $album['name'] = is_string($rendered_name) ? $rendered_name : $album['name'];
-            $album['lastmodified'] = time_since((string) $album['lastmodified'], 'year');
+            $album['lastmodified'] = \Piwigo\Core\DateHelper::timeSince((string) $album['lastmodified'], 'year');
 
             $the_place['cat'] = $album;
         }

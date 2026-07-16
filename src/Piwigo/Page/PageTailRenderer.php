@@ -78,7 +78,7 @@ final class PageTailRenderer
             $queries_time = $page['queries_time'] ?? 0;
             $queries_time = is_numeric($queries_time) ? (float) $queries_time : 0.0;
 
-            $time = get_elapsed_time($startTime, get_moment());
+            $time = \Piwigo\Core\TimingHelper::getElapsedTime($startTime, \Piwigo\Core\TimingHelper::getMoment());
 
             $debug_vars = array_merge(
                 $debug_vars,

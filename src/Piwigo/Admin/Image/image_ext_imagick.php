@@ -50,7 +50,7 @@ class image_ext_imagick implements imageInterface
             @putenv('MAGICK_THREAD_LIMIT=1');
         }
 
-        if (strtolower(get_extension($this->source_filepath)) == 'webp') {
+        if (strtolower(\Piwigo\Core\StringHelper::getExtension($this->source_filepath)) == 'webp') {
             $webp_info = pwg_image::webp_info($this->source_filepath);
 
             if ($webp_info['has-animation']) {

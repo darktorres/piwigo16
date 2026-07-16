@@ -274,7 +274,7 @@ SELECT COUNT(*)
                     '%s <a href="%s" title="%s" target="_blank"><i class="icon-bell"></i> %s</a>',
                     l10n('Latest Piwigo news'),
                     $news_url,
-                    time_since($news_posted_on, 'year') . ' (' . $news_posted . ')',
+                    \Piwigo\Core\DateHelper::timeSince($news_posted_on, 'year') . ' (' . $news_posted . ')',
                     $news_subject
                 );
             }
@@ -316,7 +316,7 @@ SELECT COUNT(*)
         $session_cache_calculated_on = is_numeric($session_cache_calculated_on) ? (int) $session_cache_calculated_on : null;
 
         if ($session_cache_calculated_on === null or $session_cache_calculated_on < pwg_now()->getTimestamp() - 300) {
-            $start_time = get_moment();
+            $start_time = \Piwigo\Core\TimingHelper::getMoment();
 
             $query = '
   SELECT
@@ -353,10 +353,10 @@ SELECT COUNT(*)
                 $current_number = $activity_last_weeks[$week][$day_nb]['number'] ?? 0;
                 $activity_last_weeks[$week][$day_nb]['number'] = $current_number + $activity_counter;
 
-                $activity_last_weeks[$week][$day_nb]['date'] = format_date($day_date->getTimestamp());
+                $activity_last_weeks[$week][$day_nb]['date'] = \Piwigo\Core\DateHelper::formatDate($day_date->getTimestamp());
             }
 
-            $logger->debug('[admin/intro::' . __LINE__ . '] recent activity calculated in ' . get_elapsed_time($start_time, get_moment()));
+            $logger->debug('[admin/intro::' . __LINE__ . '] recent activity calculated in ' . \Piwigo\Core\TimingHelper::getElapsedTime($start_time, \Piwigo\Core\TimingHelper::getMoment()));
 
             $_SESSION['cache_activity_last_weeks'] = [
                 'calculated_on' => pwg_now()

@@ -1195,7 +1195,7 @@ function get_fs($path, $recursive = true)
                 }
 
                 if (is_file($path . '/' . $node)) {
-                    $extension = get_extension($node);
+                    $extension = \Piwigo\Core\StringHelper::getExtension($node);
 
                     if (isset($flip_picture_ext[$extension])) {
                         if (basename($path) == 'thumbnail') {
@@ -2398,7 +2398,7 @@ function get_extents($start = ''): array
         if (is_dir($path)) {
             $extents = array_merge($extents, get_extents($path));
         } elseif (! is_link($path) and file_exists($path)
-                and get_extension($path) == 'tpl') {
+                and \Piwigo\Core\StringHelper::getExtension($path) == 'tpl') {
             $extents[] = substr($path, 21);
         }
     }
@@ -3031,7 +3031,7 @@ function deltree($path, $trash_path = null): ?bool
         }
         if (! empty($trash_path)) {
             if (! is_dir($trash_path)) {
-                @mkgetdir($trash_path, MKGETDIR_RECURSIVE | MKGETDIR_DIE_ON_ERROR | MKGETDIR_PROTECT_HTACCESS);
+                @\Piwigo\Core\FilesystemHelper::mkgetdir($trash_path, MKGETDIR_RECURSIVE | MKGETDIR_DIE_ON_ERROR | MKGETDIR_PROTECT_HTACCESS);
             }
             while ((bool) ($r = $trash_path . '/' . md5(uniqid((string) mt_rand(), true)))) {
                 if (! is_dir($r)) {
@@ -3511,12 +3511,12 @@ function get_piwigo_news(): mixed
                     'id' => $topic['topic_id'] ?? null,
                     'subject' => $topic['subject'] ?? null,
                     'posted_on' => $posted_on,
-                    'posted' => format_date($posted_on_for_format),
+                    'posted' => \Piwigo\Core\DateHelper::formatDate($posted_on_for_format),
                     'url' => $topic['url'] ?? null,
                 ];
             }
 
-            if (mkgetdir(dirname($cache_path))) {
+            if (\Piwigo\Core\FilesystemHelper::mkgetdir(dirname($cache_path))) {
                 file_put_contents($cache_path, serialize($news));
             }
         } else {

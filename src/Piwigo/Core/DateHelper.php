@@ -1,0 +1,343 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Piwigo\Core;
+
+/**
+ * P23 batch 8d: pure date/time formatting helpers relocated from
+ * include/functions.inc.php -- no natural existing class home, stateless.
+ * l10n()/l10n_dec() calls inside stay bare free-function calls -- l10n()'s
+ * own migration is deliberately its own dedicated pass (finding 5's
+ * Smarty-modifier checklist), not folded into this one.
+ */
+final class DateHelper
+{
+    public static function dateDiff(\DateTime $date1, \DateTime $date2): \DateInterval
+    {
+        return $date1->diff($date2);
+    }
+
+    /**
+     * converts a value into a DateTime object
+     *
+     * @param int|string|\DateTime|false $original timestamp, datetime
+     *   string, or an already-converted DateTime (returned as-is; some
+     *   callers pass the same value through this method repeatedly) --
+     *   false/empty short-circuits to the empty() check below, so callers
+     *   may pass another method's own DateTime|false return straight
+     *   through
+     * @param string|null $format input format respecting date() syntax
+     */
+    public static function str2DateTime(int|string|\DateTime|false $original, ?string $format = null): \DateTime|false
+    {
+        if ($original === false || $original === '' || $original === 0 || $original === '0') {
+            return false;
+        }
+
+        if ($original instanceof \DateTime) {
+            return $original;
+        }
+
+        if ($format !== null && $format !== '') {// from known date format
+            return \DateTime::createFromFormat('!' . $format, (string) $original); // ! char to reset fields to UNIX epoch
+        } else {
+            $t = trim((string) $original, '0123456789');
+            if ($t === '') { // from timestamp
+                return new \DateTime('@' . $original);
+            } else { // from unknown date format (assuming something like Y-m-d H:i:s)
+                $ymdhms = [];
+                $tok = strtok((string) $original, '- :/');
+                while ($tok !== false) {
+                    $ymdhms[] = $tok;
+                    $tok = strtok('- :/');
+                }
+
+                if (count($ymdhms) < 3) {
+                    return false;
+                }
+                if (! isset($ymdhms[3])) {
+                    $ymdhms[3] = 0;
+                }
+                if (! isset($ymdhms[4])) {
+                    $ymdhms[4] = 0;
+                }
+                if (! isset($ymdhms[5])) {
+                    $ymdhms[5] = 0;
+                }
+
+                $date = new \DateTime();
+                $date->setDate((int) $ymdhms[0], (int) $ymdhms[1], (int) $ymdhms[2]);
+                $date->setTime((int) $ymdhms[3], (int) $ymdhms[4], (int) $ymdhms[5]);
+                return $date;
+            }
+        }
+    }
+
+    /**
+     * returns a formatted and localized date for display (LEGACY use formatDate)
+     *
+     * @param int|string|\DateTime|false $original timestamp, datetime string, or
+     *   an already-converted DateTime/false -- same as formatDate(), since this
+     *   re-derives via the same permissive str2DateTime()
+     * @param string[]|null $show list of components displayed, default is ['day_name', 'day', 'month', 'year']
+     * @param string|null $format input format respecting date() syntax
+     */
+    public static function formatDateLegacy(int|string|\DateTime|false $original, ?array $show = null, ?string $format = null): string
+    {
+        /** @var array<string, mixed> $lang */
+        global $lang;
+
+        $date = self::str2DateTime($original, $format);
+
+        if (! (bool) $date) {
+            return l10n('N/A');
+        }
+
+        if ($show === null) {
+            $show = ['day_name', 'day', 'month', 'year'];
+        }
+
+        $day_names = $lang['day'] ?? [];
+        $day_names = is_array($day_names) ? $day_names : [];
+        $month_names = $lang['month'] ?? [];
+        $month_names = is_array($month_names) ? $month_names : [];
+
+        $print = '';
+        if (in_array('day_name', $show, true)) {
+            $day_name = $day_names[$date->format('w')] ?? '';
+            $print .= (is_string($day_name) ? $day_name : '') . ' ';
+        }
+
+        if (in_array('day', $show, true)) {
+            $print .= $date->format('j') . ' ';
+        }
+
+        if (in_array('month', $show, true)) {
+            $month_name = $month_names[$date->format('n')] ?? '';
+            $print .= (is_string($month_name) ? $month_name : '') . ' ';
+        }
+
+        if (in_array('year', $show, true)) {
+            $print .= $date->format('Y') . ' ';
+        }
+
+        if (in_array('time', $show, true)) {
+            $temp = $date->format('H:i');
+            if ($temp !== '00:00') {
+                $print .= $temp . ' ';
+            }
+        }
+
+        return trim($print);
+    }
+
+    /**
+     * returns a formatted and localized date for display
+     *
+     * @param int|string|\DateTime|false $original timestamp, datetime string, or
+     *   an already-converted DateTime/false -- formatFromto() passes
+     *   str2DateTime()'s own return type straight through; both are handled
+     *   gracefully (DateTime passes through str2DateTime() as-is, false/empty
+     *   short-circuits to the "N/A" string below)
+     * @param string[]|null $show list of components displayed, default is ['day_name', 'day', 'month', 'year']
+     *    THIS PARAMETER IS PLANNED TO CHANGE
+     * @param string|null $format input format respecting date() syntax
+     * @since 16
+     */
+    public static function formatDate(int|string|\DateTime|false $original, ?array $show = null, ?string $format = null): string
+    {
+        /** @var array<string, mixed> $user */
+        global $user;
+
+        $date = self::str2DateTime($original, $format);
+
+        if (! (bool) $date) {
+            return l10n('N/A');
+        }
+
+        if ($show === null) {
+            $show = ['day_name', 'day', 'month', 'year'];
+        }
+
+        // use IntlDateFormatter for proper i18n need pkg php-intl
+        if (class_exists('IntlDateFormatter')
+          and in_array('year', $show, true)
+          and in_array('month', $show, true)
+        ) {
+            $timeType = in_array('time', $show, true) ? \IntlDateFormatter::MEDIUM : \IntlDateFormatter::NONE;
+            $dateType = \IntlDateFormatter::FULL;
+
+            if (! in_array('day_name', $show, true)) {
+                $dateType = \IntlDateFormatter::LONG;
+            }
+
+            $user_language = $user['language'] ?? null;
+            $user_language = is_string($user_language) ? $user_language : null;
+            $fmt = new \IntlDateFormatter($user_language, $dateType, $timeType);
+            $formatted = $fmt->format($date);
+            if ($formatted !== false) {
+                return $formatted;
+            }
+        }
+
+        return self::formatDateLegacy($original, $show, $format);
+    }
+
+    /**
+     * Format a "From ... to ..." string from two dates
+     */
+    public static function formatFromto(string $from, string $to, bool $full = false): string
+    {
+        $fromDate = self::str2DateTime($from);
+        $toDate = self::str2DateTime($to);
+
+        if ($fromDate === false || $toDate === false) {
+            return l10n('N/A');
+        }
+
+        if ($fromDate->format('Y-m-d') === $toDate->format('Y-m-d')) {
+            return self::formatDate($fromDate);
+        } else {
+            if ($full || $fromDate->format('Y') !== $toDate->format('Y')) {
+                $from_str = self::formatDate($fromDate);
+            } elseif ($fromDate->format('m') !== $toDate->format('m')) {
+                $from_str = self::formatDate($fromDate, ['day_name', 'day', 'month']);
+            } else {
+                $from_str = self::formatDate($fromDate, ['day_name', 'day']);
+            }
+            $to_str = self::formatDate($toDate);
+
+            return l10n('from %s to %s', $from_str, $to_str);
+        }
+    }
+
+    /**
+     * Works out the time since the given date
+     *
+     * @param int|string $original timestamp or datetime string
+     * @param string $stop year,month,week,day,hour,minute,second
+     * @param string|null $format input format respecting date() syntax
+     * @param bool $with_text append "ago" or "in the future"
+     */
+    public static function timeSince(int|string $original, string $stop = 'minute', ?string $format = null, bool $with_text = true, bool $with_week = true, bool $only_last_unit = false): string
+    {
+        $date = self::str2DateTime($original, $format);
+
+        if (! (bool) $date) {
+            return l10n('N/A');
+        }
+
+        $now = pwg_now();
+        $diff = self::dateDiff($now, $date);
+
+        $chunks = [
+            'year' => $diff->y,
+            'month' => $diff->m,
+            'week' => 0,
+            'day' => $diff->d,
+            'hour' => $diff->h,
+            'minute' => $diff->i,
+            'second' => $diff->s,
+        ];
+
+        // DateInterval does not contain the number of weeks
+        if ($with_week) {
+            $chunks['week'] = (int) floor($chunks['day'] / 7);
+            $chunks['day'] = $chunks['day'] - $chunks['week'] * 7;
+        }
+
+        $j = array_search($stop, array_keys($chunks), true);
+
+        $print = '';
+        $i = 0;
+
+        if (! $only_last_unit) {
+            foreach ($chunks as $name => $value) {
+                if ($value !== 0) {
+                    $print .= ' ' . l10n_dec('%d ' . $name, '%d ' . $name . 's', $value);
+                }
+                if ($print !== '' && $i >= $j) {
+                    break;
+                }
+                $i++;
+            }
+        } else {
+            $reversed_chunks_names = array_keys($chunks);
+            while ($print === '' && $i < count($reversed_chunks_names)) {
+                $name = $reversed_chunks_names[$i];
+                $value = $chunks[$name];
+                if ($value !== 0) {
+                    $print = l10n_dec('%d ' . $name, '%d ' . $name . 's', $value);
+                }
+                if ($print !== '' && $i >= $j) {
+                    break;
+                }
+                $i++;
+            }
+        }
+
+        $print = trim($print);
+
+        if ($with_text) {
+            // $diff->invert is 0 both when $date is strictly after $now AND
+            // when $date == $now exactly (PHP's own DateInterval semantics: a
+            // zero-length interval isn't "negative") -- comparing the DateTime
+            // objects directly instead of trusting $diff->invert avoids
+            // misreporting an exact-equality result ("0 seconds ago") as "in
+            // the future". Real-clock callers essentially never hit this exact
+            // tie; a frozen pwg_now() test clock hits it whenever the compared
+            // timestamp was itself written via pwg_now().
+            if ($now >= $date) {
+                $print = l10n('%s ago', $print);
+            } else {
+                $print = l10n('%s in the future', $print);
+            }
+        }
+
+        return $print;
+    }
+
+    /**
+     * transform a date string from a format to another (MySQL to d/M/Y for instance)
+     *
+     * @param string|null $default returned as-is if $original is empty or unparsable
+     */
+    public static function transformDate(string $original, string $format_in, string $format_out, ?string $default = null): ?string
+    {
+        if ($original === '' || $original === '0') {
+            return $default;
+        }
+        $date = self::str2DateTime($original, $format_in);
+        if ($date === false) {
+            return $default;
+        }
+        return $date->format($format_out);
+    }
+
+    /**
+     * Checks if the provided string is valid for a comparison test with a datetime field in MySQL
+     *
+     * Possible values : YYYY-MM-DD HH-MM-SS or YYYY-MM-DD
+     *
+     * @since 16.3
+     */
+    public static function isValidMysqlDatetime(string $datetime): bool
+    {
+        // first we check the full date+time
+        $format = 'Y-m-d H:i:s';
+        $date = \DateTime::createFromFormat($format, $datetime);
+        if ((bool) $date and $date->format($format) === $datetime) {
+            return true;
+        }
+
+        // in case it fails, let's check with only date and no time
+        $format = 'Y-m-d';
+        $date = \DateTime::createFromFormat($format, $datetime);
+        if ((bool) $date and $date->format($format) === $datetime) {
+            return true;
+        }
+
+        return false;
+    }
+}

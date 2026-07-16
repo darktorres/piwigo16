@@ -85,7 +85,7 @@ SELECT id, keywords
             [
                 'id' => $tag_id,
                 'name' => $tag_name,
-                'url_name' => str2url($tag_name),
+                'url_name' => \Piwigo\Core\StringHelper::str2url($tag_name),
             ]
         );
     }

@@ -694,7 +694,7 @@ WHERE param = \'' . $row['param'] . '\'
                     $tpl_vars = [];
                     $now = time();
                     foreach (ImageStdParams::$custom as $custom => $time) {
-                        $tpl_vars[$custom] = ($now - $time <= 24 * 3600) ? l10n('today') : time_since($time, 'day');
+                        $tpl_vars[$custom] = ($now - $time <= 24 * 3600) ? l10n('today') : \Piwigo\Core\DateHelper::timeSince($time, 'day');
                     }
                     $template->assign('custom_derivatives', $tpl_vars);
                 }
@@ -1176,17 +1176,15 @@ WHERE param = \'' . $row['param'] . '\'
                 );
             } else {
                 $upload_dir = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'watermarks';
-                if (mkgetdir($upload_dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
+                if (\Piwigo\Core\FilesystemHelper::mkgetdir($upload_dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
                     // file name may include exotic chars like single quote, we need a safe name
-                    $new_name = str2url(get_filename_wo_extension($watermark_upload_name ?? ''));
+                    $new_name = \Piwigo\Core\StringHelper::str2url(\Piwigo\Core\StringHelper::getFilenameWoExtension($watermark_upload_name ?? ''));
 
                     // we need existing watermarks to avoid overwritting one
                     $watermark_files = [];
                     if (($glob = glob(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'watermarks/*.png')) !== false) {
                         foreach ($glob as $file) {
-                            $watermark_files[] = get_filename_wo_extension(
-                                substr($file, strlen(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'watermarks/'))
-                            );
+                            $watermark_files[] = \Piwigo\Core\StringHelper::getFilenameWoExtension(substr($file, strlen(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'watermarks/')));
                         }
                     }
 

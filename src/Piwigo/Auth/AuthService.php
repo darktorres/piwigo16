@@ -774,12 +774,7 @@ UPDATE ' . Tables::userAuthKeys() . '
         if ($validation_timestamp === false) {
             throw new \Exception('generatePasswordLink(): strtotime() failed for duration ' . $duration);
         }
-        $time_validation = time_since(
-            $validation_timestamp,
-            'second',
-            null,
-            false
-        );
+        $time_validation = \Piwigo\Core\DateHelper::timeSince($validation_timestamp, 'second', null, false);
 
         return [
             'time_validation' => $time_validation,

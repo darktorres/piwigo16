@@ -101,7 +101,7 @@ final class MaintenanceActionsPageRenderer
             if (is_array($last_calc_row)) {
                 $last_calc_value = $last_calc_row['value'] ?? null;
                 if (is_int($last_calc_value) || is_string($last_calc_value)) {
-                    $time_elapsed_since_last_calc = time_since($last_calc_value, 'year');
+                    $time_elapsed_since_last_calc = \Piwigo\Core\DateHelper::timeSince($last_calc_value, 'year');
                 }
             }
         }

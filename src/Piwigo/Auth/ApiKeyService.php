@@ -184,11 +184,11 @@ SELECT
             // key's inferred type for the rest of this loop iteration
             $created_on = $api_key['created_on'];
             assert(is_string($created_on));
-            $api_key['created_on_format'] = format_date($created_on, ['day', 'month', 'year']);
+            $api_key['created_on_format'] = \Piwigo\Core\DateHelper::formatDate($created_on, ['day', 'month', 'year']);
 
             $expired_on_raw = $api_key['expired_on'];
             assert(is_string($expired_on_raw));
-            $api_key['expired_on_format'] = format_date($expired_on_raw, ['day', 'month', 'year']);
+            $api_key['expired_on_format'] = \Piwigo\Core\DateHelper::formatDate($expired_on_raw, ['day', 'month', 'year']);
 
             // also extracted early, for the same reason -- read again below,
             // after 'is_expired' has already widened $api_key's value type
@@ -196,11 +196,11 @@ SELECT
 
             $api_key['last_used_on_since'] =
               (bool) $api_key['last_used_on']
-              ? time_since($api_key['last_used_on'], 'day')
+              ? \Piwigo\Core\DateHelper::timeSince($api_key['last_used_on'], 'day')
               : l10n('Never');
 
-            $expired_on = str2DateTime($expired_on_raw);
-            $now = str2DateTime($now);
+            $expired_on = \Piwigo\Core\DateHelper::str2DateTime($expired_on_raw);
+            $now = \Piwigo\Core\DateHelper::str2DateTime($now);
             if ($expired_on === false || $now === false) {
                 throw new \Exception('ApiKeyService::get(): str2DateTime() failed on a DB-stored date');
             }
@@ -209,7 +209,7 @@ SELECT
             if ($api_key['is_expired']) {
                 $api_key['expiration'] = l10n('Expired');
             } else {
-                $diff = dateDiff($now, $expired_on);
+                $diff = \Piwigo\Core\DateHelper::dateDiff($now, $expired_on);
                 if ($diff->days > 0) {
                     $api_key['expiration'] = l10n('%d days', $diff->days);
                 } elseif ($diff->h > 0) {
@@ -219,16 +219,16 @@ SELECT
                 }
             }
 
-            $api_key['expired_on_since'] = time_since($expired_on_raw, 'day');
+            $api_key['expired_on_since'] = \Piwigo\Core\DateHelper::timeSince($expired_on_raw, 'day');
 
             $api_key['revoked_on_since'] =
               (bool) $revoked_on
-              ? time_since($revoked_on, 'day')
+              ? \Piwigo\Core\DateHelper::timeSince($revoked_on, 'day')
               : null;
 
             $api_key['revoked_on_message'] =
               (bool) $revoked_on
-              ? l10n('This API key was manually revoked on %s', format_date($revoked_on, ['day', 'month', 'year']))
+              ? l10n('This API key was manually revoked on %s', \Piwigo\Core\DateHelper::formatDate($revoked_on, ['day', 'month', 'year']))
               : null;
 
             $api_keys[$i] = $api_key;

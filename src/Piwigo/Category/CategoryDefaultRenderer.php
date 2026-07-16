@@ -155,8 +155,8 @@ SELECT image_id, COUNT(*) AS nb_comments
                 'URL' => $url,
                 'DESCRIPTION' => $desc,
                 'src_image' => new SrcImage($row),
-                'path_ext' => strtolower(get_extension($rowPath)),
-                'file_ext' => strtolower(get_extension($rowFile)),
+                'path_ext' => strtolower(\Piwigo\Core\StringHelper::getExtension($rowPath)),
+                'file_ext' => strtolower(\Piwigo\Core\StringHelper::getExtension($rowFile)),
             ]);
 
             if ((bool) $conf['index_new_icon']) {

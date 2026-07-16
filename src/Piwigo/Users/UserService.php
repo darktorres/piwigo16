@@ -649,7 +649,7 @@ SELECT
                 $exec_id = pwg_unique_exec_begins($cache_generation_token_name);
                 if ($exec_id === false) {
                     $logger->info($logger_msg_prefix . 'starts to wait for another request to build user_cache');
-                    $user_cache_waiting_start_time = get_moment();
+                    $user_cache_waiting_start_time = \Piwigo\Core\TimingHelper::getMoment();
                     for ($k = 0; $k < 20; $k++) {
                         sleep(1);
 
@@ -664,7 +664,7 @@ SELECT
                         [$nb_cache_lines] = $row;
 
                         $logger_msg = $logger_msg_prefix . 'user_cache generation waiting k=' . $k . ' ';
-                        $waiting_time = get_elapsed_time($user_cache_waiting_start_time, get_moment());
+                        $waiting_time = \Piwigo\Core\TimingHelper::getElapsedTime($user_cache_waiting_start_time, \Piwigo\Core\TimingHelper::getMoment());
 
                         if ($nb_cache_lines > 0) {
                             $logger->info($logger_msg . 'user_cache rebuilt, after waiting ' . $waiting_time);
@@ -678,7 +678,7 @@ SELECT
                         }
                     }
 
-                    $logger->info($logger_msg_prefix . 'user_cache generation waiting has timed out after ' . get_elapsed_time($user_cache_waiting_start_time, get_moment()));
+                    $logger->info($logger_msg_prefix . 'user_cache generation waiting has timed out after ' . \Piwigo\Core\TimingHelper::getElapsedTime($user_cache_waiting_start_time, \Piwigo\Core\TimingHelper::getMoment()));
                     set_status_header(503, 'Service Unavailable');
                     @header('Retry-After: 900');
                     header('Content-Type: text/html; charset=' . get_pwg_charset());
@@ -691,7 +691,7 @@ SELECT
             }
 
             if ($generate_user_cache) {
-                $user_cache_generation_start_time = get_moment();
+                $user_cache_generation_start_time = \Piwigo\Core\TimingHelper::getMoment();
                 $cache_update_time = time();
                 $userdata['cache_update_time'] = $cache_update_time;
 
@@ -829,7 +829,7 @@ INSERT IGNORE INTO ' . Tables::userCache() . '
                 pwg_query($query);
 
                 pwg_unique_exec_ends($cache_generation_token_name);
-                $logger->info($logger_msg_prefix . 'user_cache generated, executed in ' . get_elapsed_time($user_cache_generation_start_time, get_moment()));
+                $logger->info($logger_msg_prefix . 'user_cache generated, executed in ' . \Piwigo\Core\TimingHelper::getElapsedTime($user_cache_generation_start_time, \Piwigo\Core\TimingHelper::getMoment()));
             }
         }
 

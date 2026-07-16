@@ -233,7 +233,7 @@ SELECT galleries_url
         if (isset($_POST['submit'])
             and ($_POST['sync'] == 'dirs' or $_POST['sync'] == 'files')
             and ! $general_failure) {
-            $start = get_moment();
+            $start = \Piwigo\Core\TimingHelper::getMoment();
             // which categories to update ?
             $query = '
 SELECT id, uppercats, global_rank, status, visible
@@ -574,7 +574,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
             }
 
             $template->append('footer_elements', '<!-- scanning dirs : '
-              . get_elapsed_time($start, get_moment())
+              . \Piwigo\Core\TimingHelper::getElapsedTime($start, \Piwigo\Core\TimingHelper::getMoment())
               . ' -->');
         }
         // +-----------------------------------------------------------------------+
@@ -582,13 +582,13 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
         // +-----------------------------------------------------------------------+
         if (isset($_POST['submit']) and $_POST['sync'] == 'files'
               and ! $general_failure) {
-            $start_files = get_moment();
+            $start_files = \Piwigo\Core\TimingHelper::getMoment();
             $start = $start_files;
 
             $fs = $site_reader->get_elements($basedir);
 
             $template->append('footer_elements', '<!-- get_elements: '
-              . get_elapsed_time($start, get_moment())
+              . \Piwigo\Core\TimingHelper::getElapsedTime($start, \Piwigo\Core\TimingHelper::getMoment())
               . ' -->');
 
             $cat_ids = array_diff(array_keys($db_categories), $to_delete);
@@ -614,7 +614,7 @@ SELECT id, path
             // next element id available
             $next_element_id = pwg_db_nextval('id', Tables::images());
 
-            $start = get_moment();
+            $start = \Piwigo\Core\TimingHelper::getMoment();
 
             $inserts = [];
             $insert_links = [];
@@ -645,7 +645,7 @@ SELECT id, path
                 $insert = [
                     'id' => $next_element_id++,
                     'file' => pwg_db_real_escape_string($filename),
-                    'name' => pwg_db_real_escape_string(get_name_from_file($filename)),
+                    'name' => pwg_db_real_escape_string(\Piwigo\Core\StringHelper::getNameFromFile($filename)),
                     'date_available' => $dbnow,
                     'path' => pwg_db_real_escape_string($path),
                     'representative_ext' => $fs[$path]['representative_ext'],
@@ -846,7 +846,7 @@ DELETE
             }
 
             $template->append('footer_elements', '<!-- scanning files : '
-              . get_elapsed_time($start_files, get_moment())
+              . \Piwigo\Core\TimingHelper::getElapsedTime($start_files, \Piwigo\Core\TimingHelper::getMoment())
               . ' -->');
         }
 
@@ -857,20 +857,20 @@ DELETE
             and ($_POST['sync'] == 'dirs' or $_POST['sync'] == 'files')
             and ! $general_failure) {
             if (! $simulate) {
-                $start = get_moment();
+                $start = \Piwigo\Core\TimingHelper::getMoment();
                 update_category('all');
                 $template->append('footer_elements', '<!-- update_category(all) : '
-                  . get_elapsed_time($start, get_moment())
+                  . \Piwigo\Core\TimingHelper::getElapsedTime($start, \Piwigo\Core\TimingHelper::getMoment())
                   . ' -->');
-                $start = get_moment();
+                $start = \Piwigo\Core\TimingHelper::getMoment();
                 update_global_rank();
                 $template->append('footer_elements', '<!-- ordering categories : '
-                  . get_elapsed_time($start, get_moment())
+                  . \Piwigo\Core\TimingHelper::getElapsedTime($start, \Piwigo\Core\TimingHelper::getMoment())
                   . ' -->');
             }
 
             if ($_POST['sync'] == 'files') {
-                $start = get_moment();
+                $start = \Piwigo\Core\TimingHelper::getMoment();
                 $opts = [
                     'category_id' => '',
                     'recursive' => true,
@@ -889,9 +889,9 @@ DELETE
                     false
                 );
                 $template->append('footer_elements', '<!-- get_filelist : '
-                  . get_elapsed_time($start, get_moment())
+                  . \Piwigo\Core\TimingHelper::getElapsedTime($start, \Piwigo\Core\TimingHelper::getMoment())
                   . ' -->');
-                $start = get_moment();
+                $start = \Piwigo\Core\TimingHelper::getMoment();
 
                 $datas = [];
                 foreach ($files as $id => $file) {
@@ -920,7 +920,7 @@ DELETE
                     );
                 }
                 $template->append('footer_elements', '<!-- update files : '
-                  . get_elapsed_time($start, get_moment())
+                  . \Piwigo\Core\TimingHelper::getElapsedTime($start, \Piwigo\Core\TimingHelper::getMoment())
                   . ' -->');
             }// end if sync files
         }
@@ -963,7 +963,7 @@ DELETE
                     $opts['recursive'] = false;
                 }
             }
-            $start = get_moment();
+            $start = \Piwigo\Core\TimingHelper::getMoment();
             $files = new MetadataService(new MetadataRepository(DbConnection::build()))->getFilelist(
                 $opts['category_id'],
                 $site_id,
@@ -972,10 +972,10 @@ DELETE
             );
 
             $template->append('footer_elements', '<!-- get_filelist : '
-              . get_elapsed_time($start, get_moment())
+              . \Piwigo\Core\TimingHelper::getElapsedTime($start, \Piwigo\Core\TimingHelper::getMoment())
               . ' -->');
 
-            $start = get_moment();
+            $start = \Piwigo\Core\TimingHelper::getMoment();
             $datas = [];
             $tags_of = [];
 
@@ -1038,7 +1038,7 @@ DELETE
             }
 
             $template->append('footer_elements', '<!-- metadata update : '
-              . get_elapsed_time($start, get_moment())
+              . \Piwigo\Core\TimingHelper::getElapsedTime($start, \Piwigo\Core\TimingHelper::getMoment())
               . ' -->');
 
             $template->assign(

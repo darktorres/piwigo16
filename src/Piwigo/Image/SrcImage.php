@@ -64,8 +64,8 @@ final class SrcImage
         $this->id = is_numeric($infos['id']) ? (int) $infos['id'] : 0;
         $path = is_string($infos['path']) ? $infos['path'] : '';
         $file = is_string($infos['file']) ? $infos['file'] : null;
-        $ext = strtolower(get_extension($path));
-        $infos['file_ext'] = @strtolower(get_extension($file));
+        $ext = strtolower(\Piwigo\Core\StringHelper::getExtension($path));
+        $infos['file_ext'] = @strtolower(\Piwigo\Core\StringHelper::getExtension($file));
         $infos['path_ext'] = $ext;
         // representative_ext is a nullable DB column; empty()'s silent
         // handling of a missing/non-string key is preserved via `?? null`.

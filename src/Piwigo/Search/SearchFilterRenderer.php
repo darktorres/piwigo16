@@ -1192,7 +1192,7 @@ SELECT
                             if (! is_array($dayBucket)) {
                                 continue;
                             }
-                            $dayBucket['label'] = format_date($ymd);
+                            $dayBucket['label'] = \Piwigo\Core\DateHelper::formatDate($ymd);
                             $daysBucket[$ymd] = $dayBucket;
                         }
                         $monthBucket['days'] = $daysBucket;
@@ -1291,7 +1291,7 @@ SELECT
         $filterCache = is_array($searchDetails[__METHOD__] ?? null) ? $searchDetails[__METHOD__] : [];
 
         if (! isset($filterCache[$cacheKey])) {
-            $functionStart = get_moment();
+            $functionStart = \Piwigo\Core\TimingHelper::getMoment();
 
             // every entry of $imageIdsForFilter is either a query2array() id
             // list (list<string|null>) or, for 'expert', the already-narrowed
@@ -1326,7 +1326,7 @@ SELECT
 
             $debugMsg = '[' . __METHOD__ . '] cache computed for ' . (count($otherFilters) + 1) . ' other filters';
             $debugMsg .= ' (' . count($otherFiltersItems) . ' items)';
-            $debugMsg .= ', time = ' . get_elapsed_time($functionStart, get_moment());
+            $debugMsg .= ', time = ' . \Piwigo\Core\TimingHelper::getElapsedTime($functionStart, \Piwigo\Core\TimingHelper::getMoment());
             $logger->debug($debugMsg);
 
             if (empty($otherFiltersItems)) {

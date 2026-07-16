@@ -17,7 +17,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
     }
 }
 
-$last_time = get_moment();
+$last_time = \Piwigo\Core\TimingHelper::getMoment();
 
 // will the user have to edit include/config_local.inc.php for
 // prefix_thumbnail configuration parameter

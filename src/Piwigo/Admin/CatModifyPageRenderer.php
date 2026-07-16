@@ -176,14 +176,14 @@ SELECT
                 $info_title = l10n(
                     'This album contains %d photos, added on %s.',
                     $image_count,
-                    format_date($min_date)
+                    \Piwigo\Core\DateHelper::formatDate($min_date)
                 );
             } else {
                 $info_title = l10n(
                     'This album contains %d photos, added between %s and %s.',
                     $image_count,
-                    format_date($min_date),
-                    format_date($max_date)
+                    \Piwigo\Core\DateHelper::formatDate($min_date),
+                    \Piwigo\Core\DateHelper::formatDate($max_date)
                 );
             }
 
@@ -227,8 +227,8 @@ SELECT occured_on
             $occured_on = $result[0]['occured_on'];
             $template->assign(
                 [
-                    'INFO_CREATION_SINCE' => time_since(is_string($occured_on) ? $occured_on : '', 'day', $format = null, $with_text = true, $with_week = true, $only_last_unit = true),
-                    'INFO_CREATION' => format_date(is_string($occured_on) ? $occured_on : false, ['day', 'month', 'year']),
+                    'INFO_CREATION_SINCE' => \Piwigo\Core\DateHelper::timeSince(is_string($occured_on) ? $occured_on : '', 'day', $format = null, $with_text = true, $with_week = true, $only_last_unit = true),
+                    'INFO_CREATION' => \Piwigo\Core\DateHelper::formatDate(is_string($occured_on) ? $occured_on : false, ['day', 'month', 'year']),
                 ]
             );
         }
@@ -257,8 +257,8 @@ SELECT COUNT(*)
         $template->assign(
             [
                 'INFO_ID' => l10n('Numeric identifier : %d', $category_id),
-                'INFO_LAST_MODIFIED_SINCE' => time_since($category_lastmodified ?? '', 'minute', $format = null, $with_text = true, $with_week = true, $only_last_unit = true),
-                'INFO_LAST_MODIFIED' => format_date($category_lastmodified ?? false, ['day', 'month', 'year']),
+                'INFO_LAST_MODIFIED_SINCE' => \Piwigo\Core\DateHelper::timeSince($category_lastmodified ?? '', 'minute', $format = null, $with_text = true, $with_week = true, $only_last_unit = true),
+                'INFO_LAST_MODIFIED' => \Piwigo\Core\DateHelper::formatDate($category_lastmodified ?? false, ['day', 'month', 'year']),
                 'INFO_IMAGES_RECURSIVE' => l10n(
                     '%d including sub-albums',
                     $category['nb_images_recursive']

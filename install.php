@@ -316,7 +316,7 @@ define(\'DB_COLLATE\', \'\');
             // writing the configuration file
             if (! (bool) ($fp = @fopen($config_file, 'w'))) {
                 // make sure nobody can list files of _data directory
-                secure_directory(PHPWG_ROOT_PATH . $conf_data_location);
+                \Piwigo\Core\FilesystemHelper::secureDirectory(PHPWG_ROOT_PATH . $conf_data_location);
 
                 $tmp_filename = md5(uniqid((string) time()));
                 $fh = @fopen(PHPWG_ROOT_PATH . $conf_data_location . 'pwg_' . $tmp_filename, 'w');

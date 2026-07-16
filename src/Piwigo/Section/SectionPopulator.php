@@ -210,7 +210,6 @@ final class SectionPopulator
             // what every downstream $page_category['...'] read in this method
             // relies on (see the class-level comment above).
             /** @var array<string, mixed> $page_category */
-            // @phpstan-ignore varTag.type
             $page_category = $page['category'];
         }
 
@@ -377,15 +376,12 @@ SELECT DISTINCT(image_id)
                     // *this* code path is find_tags()'s row shape (array with an
                     // 'id' key, confirmed via `git log -p` on this file's prior
                     // revision), so this is a real defensive check, not dead code.
-                    // @phpstan-ignore function.impossibleType, nullCoalesce.offset
                     $tag_id = is_array($tag) ? ($tag['id'] ?? null) : null;
-                    // @phpstan-ignore function.impossibleType
                     if (is_numeric($tag_id)) {
                         // same cross-file $page[...] false-narrowing as above --
                         // PHPStan believes $tag_id is already int here, but the
                         // real, original row shape (see comment above) can yield a
                         // numeric string, so this cast is load-bearing.
-                        // @phpstan-ignore cast.useless
                         $tag_ids[] = (int) $tag_id;
                     }
                 }
@@ -691,7 +687,7 @@ SELECT DISTINCT(id)
             $category_permalink = is_string($page_category['permalink'] ?? null) ? $page_category['permalink'] : null;
             $category_name = $page_category['name'] ?? null;
             $category_name = is_string($category_name) ? $category_name : '';
-            $expected_cat_url_name = str2url($category_name);
+            $expected_cat_url_name = \Piwigo\Core\StringHelper::str2url($category_name);
 
             if (self::needsPermalinkRedirect($category_permalink, $category_url_style, $hit_by_cat_url_name, $hit_by_cat_permalink, $expected_cat_url_name)) {
                 $redirect_category_id = $page_category['id'] ?? null;

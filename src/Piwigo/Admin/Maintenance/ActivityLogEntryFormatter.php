@@ -323,7 +323,7 @@ final class ActivityLogEntryFormatter
             'action' => $action,
             'user_id' => $row['performed_by'],
             'username' => $row['username'],
-            'date' => format_date($date),
+            'date' => \Piwigo\Core\DateHelper::formatDate($date),
             'hour' => $hour,
             'detail' => $detail,
         ];

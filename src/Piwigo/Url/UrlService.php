@@ -323,13 +323,13 @@ final class UrlService
             case 'id-file':
                 $url .= is_scalar($image_id) ? $image_id : '';
                 if (isset($params['image_file']) and is_string($params['image_file'])) {
-                    $url .= '-' . str2url(get_filename_wo_extension($params['image_file']));
+                    $url .= '-' . \Piwigo\Core\StringHelper::str2url(\Piwigo\Core\StringHelper::getFilenameWoExtension($params['image_file']));
                 }
 
                 break;
             case 'file':
                 if (isset($params['image_file']) and is_string($params['image_file'])) {
-                    $fname_wo_ext = get_filename_wo_extension($params['image_file']);
+                    $fname_wo_ext = \Piwigo\Core\StringHelper::getFilenameWoExtension($params['image_file']);
                     if (ord($fname_wo_ext) > ord('9') or ! (bool) preg_match('/^\d+(-|$)/', $fname_wo_ext)) {
                         $url .= $fname_wo_ext;
 
@@ -446,7 +446,7 @@ final class UrlService
                         $section_string .= is_scalar($category_id) ? $category_id : '';
                         if ($conf['category_url_style'] === 'id-name') {
                             $category_name = $category_info['name'] ?? null;
-                            $section_string .= '-' . str2url(is_string($category_name) ? $category_name : '');
+                            $section_string .= '-' . \Piwigo\Core\StringHelper::str2url(is_string($category_name) ? $category_name : '');
                         }
                     } else {
                         $category_permalink = $category_info['permalink'];
@@ -466,7 +466,7 @@ final class UrlService
                                 $section_string .= is_scalar($combined_id) ? $combined_id : '';
                                 if ($conf['category_url_style'] === 'id-name') {
                                     $combined_name = $category['name'] ?? null;
-                                    $section_string .= '-' . str2url(is_string($combined_name) ? $combined_name : '');
+                                    $section_string .= '-' . \Piwigo\Core\StringHelper::str2url(is_string($combined_name) ? $combined_name : '');
                                 }
                             } else {
                                 $combined_permalink = $category['permalink'];

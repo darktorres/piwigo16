@@ -358,7 +358,7 @@ SELECT
 ;';
         $result = query2array($query)[0];
         foreach ($result as $day => $date) {
-            $display_duration[$day] = l10n('%d days', $day) . ' (' . format_date($date ?? false, ['day', 'month', 'year']) . ')';
+            $display_duration[$day] = l10n('%d days', $day) . ' (' . \Piwigo\Core\DateHelper::formatDate($date ?? false, ['day', 'month', 'year']) . ')';
         }
 
         if ($has_custom) {

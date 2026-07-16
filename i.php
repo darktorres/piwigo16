@@ -791,7 +791,7 @@ if (! try_switch_source($params, $src_mtime) && $params->type == IMG_CUSTOM) {
     $params->sharpen = round($sharpen / count(ImageStdParams::get_defined_type_map()));
 }
 
-if (! mkgetdir(dirname($page['derivative_path']))) {
+if (! \Piwigo\Core\FilesystemHelper::mkgetdir(dirname($page['derivative_path']))) {
     ierror('dir create error', 500);
 }
 

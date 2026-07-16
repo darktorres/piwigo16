@@ -651,7 +651,7 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
 
                 $ttitle = render_element_name($row);
                 $row_file = is_string($row['file']) ? $row['file'] : '';
-                if ($ttitle !== get_name_from_file($row_file)) {
+                if ($ttitle !== \Piwigo\Core\StringHelper::getNameFromFile($row_file)) {
                     $ttitle .= ' (' . $row['file'] . ')';
                 }
 

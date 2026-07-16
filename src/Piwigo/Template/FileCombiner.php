@@ -38,7 +38,7 @@ final class FileCombiner
             return;
         }
         while ((bool) ($file = readdir($dir))) {
-            if (get_extension($file) == 'js' || get_extension($file) == 'css') {
+            if (\Piwigo\Core\StringHelper::getExtension($file) == 'js' || \Piwigo\Core\StringHelper::getExtension($file) == 'css') {
                 unlink(PHPWG_ROOT_PATH . Config::combinedDir() . $file);
             }
         }
@@ -119,7 +119,7 @@ final class FileCombiner
                     $output .= "\n";
                 }
                 $output = "/*BEGIN header */\n" . $header . "\n" . $output;
-                mkgetdir(dirname(PHPWG_ROOT_PATH . $file));
+                \Piwigo\Core\FilesystemHelper::mkgetdir(dirname(PHPWG_ROOT_PATH . $file));
                 file_put_contents(PHPWG_ROOT_PATH . $file, $output);
                 @chmod(PHPWG_ROOT_PATH . $file, 0644);
             }

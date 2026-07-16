@@ -282,7 +282,7 @@ final class CoreUpdateService
 
         $path = PHPWG_ROOT_PATH . $dataLocation . 'update';
         $filename = $path . '/' . $code . '.zip';
-        @mkgetdir($path);
+        @\Piwigo\Core\FilesystemHelper::mkgetdir($path);
 
         $chunkNum = 0;
         $end = false;

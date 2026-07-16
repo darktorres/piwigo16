@@ -319,7 +319,7 @@ SELECT
 
                 'FILESIZE' => (is_scalar($row['filesize']) ? (string) $row['filesize'] : '') . ' KB',
 
-                'REGISTRATION_DATE' => format_date(is_string($row['date_available']) || is_int($row['date_available']) ? $row['date_available'] : false),
+                'REGISTRATION_DATE' => \Piwigo\Core\DateHelper::formatDate(is_string($row['date_available']) || is_int($row['date_available']) ? $row['date_available'] : false),
 
                 'AUTHOR' => htmlspecialchars($author_value),
 
@@ -347,8 +347,8 @@ SELECT
 
         $intro_vars = [
             'file' => l10n('%s', $row_file),
-            'date' => l10n('Posted the %s', format_date(is_string($row['date_available']) || is_int($row['date_available']) ? $row['date_available'] : false, ['day', 'month', 'year'])),
-            'age' => l10n(ucfirst(time_since(is_string($row['date_available']) || is_int($row['date_available']) ? $row['date_available'] : '', 'year'))),
+            'date' => l10n('Posted the %s', \Piwigo\Core\DateHelper::formatDate(is_string($row['date_available']) || is_int($row['date_available']) ? $row['date_available'] : false, ['day', 'month', 'year'])),
+            'age' => l10n(ucfirst(\Piwigo\Core\DateHelper::timeSince(is_string($row['date_available']) || is_int($row['date_available']) ? $row['date_available'] : '', 'year'))),
             'added_by' => l10n('Added by %s', $row['added_by']),
             'size' => l10n('%s pixels, %.2f MB', (is_scalar($row['width']) ? (string) $row['width'] : '') . '&times;' . (is_scalar($row['height']) ? (string) $row['height'] : ''), (is_numeric($row['filesize']) ? (float) $row['filesize'] : 0.0) / 1024),
             'stats' => l10n('Visited %d times', $row['hit']),
@@ -400,7 +400,7 @@ SELECT *
 
         $row_path = is_string($row['path']) ? $row['path'] : null;
         $picture_ext = is_array($conf['picture_ext']) ? $conf['picture_ext'] : [];
-        if (in_array(get_extension($row_path), $picture_ext)) {
+        if (in_array(\Piwigo\Core\StringHelper::getExtension($row_path), $picture_ext)) {
             $template->assign('U_COI', get_root_url() . 'admin.php?page=picture_coi&amp;image_id=' . $image_id);
         }
 

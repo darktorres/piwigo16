@@ -650,7 +650,7 @@ class updates
         if (empty($page['errors'])) {
             $path = PHPWG_ROOT_PATH . $data_location . 'update';
             $filename = $path . '/' . $code . '.zip';
-            @mkgetdir($path);
+            @\Piwigo\Core\FilesystemHelper::mkgetdir($path);
 
             $chunk_num = 0;
             $end = false;

@@ -53,7 +53,7 @@ function ws_isInvokeAllowed(mixed $res, string $methodName, array $params): mixe
 function ws_std_image_sql_filter(array $params, string $tbl_name = ''): array
 {
     foreach (['f_min_date_available', 'f_max_date_available', 'f_min_date_created', 'f_max_date_created'] as $datefield) {
-        if (isset($params[$datefield]) and ! is_valid_mysql_datetime($params[$datefield])) {
+        if (isset($params[$datefield]) and ! \Piwigo\Core\DateHelper::isValidMysqlDatetime($params[$datefield])) {
             /** @var PwgServer $service */
             global $service;
             $service->sendResponse(new PwgError(WS_ERR_INVALID_PARAM, 'Invalid ' . $datefield));

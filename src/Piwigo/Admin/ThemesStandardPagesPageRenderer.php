@@ -136,13 +136,13 @@ final class ThemesStandardPagesPageRenderer
                 );
             } else {
                 $upload_dir = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'logo';
-                if (mkgetdir($upload_dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
+                if (\Piwigo\Core\FilesystemHelper::mkgetdir($upload_dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
                     $std_pgs_logo_name = isset($std_pgs_logo_upload['name']) && is_string($std_pgs_logo_upload['name'])
                         ? $std_pgs_logo_upload['name']
                         : '';
                     $pathinfo = pathinfo($std_pgs_logo_name);
 
-                    $file_path = $upload_dir . '/' . str2url($pathinfo['filename']) . '.' . $allowed_mimes[$mime_type];
+                    $file_path = $upload_dir . '/' . \Piwigo\Core\StringHelper::str2url($pathinfo['filename']) . '.' . $allowed_mimes[$mime_type];
 
                     conf_update_param('standard_pages_selected_logo_path', $file_path, true);
 

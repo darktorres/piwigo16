@@ -59,7 +59,7 @@ class pwg_image
             return; // A plugin may have load its own library
         }
 
-        $extension = strtolower(get_extension($this->source_filepath));
+        $extension = strtolower(\Piwigo\Core\StringHelper::getExtension($this->source_filepath));
 
         $picture_ext = is_array($conf['picture_ext']) ? $conf['picture_ext'] : [];
         if (! in_array($extension, $picture_ext)) {
@@ -108,7 +108,7 @@ class pwg_image
      */
     public function pwg_resize(string $destination_filepath, int $max_width, int $max_height, int $quality, bool $automatic_rotation = true, bool $strip_metadata = false, bool $crop = false, bool $follow_orientation = true): array
     {
-        $starttime = get_moment();
+        $starttime = \Piwigo\Core\TimingHelper::getMoment();
         $image = $this->getImage();
 
         // width/height
@@ -391,7 +391,7 @@ class pwg_image
             'width' => $width,
             'height' => $height,
             'size' => floor($destination_filesize / 1024) . ' KB',
-            'time' => ((bool) $time) ? number_format((get_moment() - $time) * 1000, 2, '.', ' ') . ' ms' : null,
+            'time' => ((bool) $time) ? number_format((\Piwigo\Core\TimingHelper::getMoment() - $time) * 1000, 2, '.', ' ') . ' ms' : null,
             'library' => $this->library,
         ];
     }

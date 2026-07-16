@@ -94,7 +94,7 @@ final class MetadataService
                 $value = $changedValue;
             }
 
-            $qual = qualify_utf8($value);
+            $qual = \Piwigo\Core\StringHelper::qualifyUtf8($value);
             if ($qual !== 0) { // has non-ascii chars
                 if ($qual > 0) {
                     $inputEncoding = 'utf-8';

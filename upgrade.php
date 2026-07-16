@@ -129,7 +129,7 @@ function print_time(mixed $message): void
 {
     global $last_time;
 
-    $new_time = get_moment();
+    $new_time = \Piwigo\Core\TimingHelper::getMoment();
     // $last_time is only ever assigned via get_moment() (this function, or
     // install/upgrade_1.4.0.php's top-level init, which runs in this same
     // include-shared scope but isn't visible to static analysis); if this is
@@ -139,7 +139,7 @@ function print_time(mixed $message): void
         ? (string) $message
         : print_r($message, true);
 
-    echo '<pre>[' . get_elapsed_time($start_time, $new_time) . ']';
+    echo '<pre>[' . \Piwigo\Core\TimingHelper::getElapsedTime($start_time, $new_time) . ']';
     echo ' ' . $message_str;
     echo '</pre>';
     flush();
@@ -381,7 +381,7 @@ if ((isset($_POST['submit']) or isset($_GET['now']))
         $page['queries_time'] = 0;
         $page['count_queries'] = 0;
 
-        $page['upgrade_start'] = get_moment();
+        $page['upgrade_start'] = \Piwigo\Core\TimingHelper::getMoment();
         $conf['die_on_sql_error'] = false;
         include $upgrade_file;
         // install/upgrade_*.php scripts (e.g. upgrade_1.3.1.php) can
@@ -430,7 +430,7 @@ if ((isset($_POST['submit']) or isset($_GET['now']))
         deactivate_non_standard_themes();
         deactivate_templates();
 
-        $page['upgrade_end'] = get_moment();
+        $page['upgrade_end'] = \Piwigo\Core\TimingHelper::getMoment();
 
         // $page['upgrade_start']/'upgrade_end'/'queries_time'] are only ever
         // set within this same scope: get_moment() (native float return)
@@ -444,10 +444,7 @@ if ((isset($_POST['submit']) or isset($_GET['now']))
             'upgrade',
             [
                 'VERSION' => $current_release,
-                'TOTAL_TIME' => get_elapsed_time(
-                    $upgrade_start,
-                    $upgrade_end
-                ),
+                'TOTAL_TIME' => \Piwigo\Core\TimingHelper::getElapsedTime($upgrade_start, $upgrade_end),
                 'SQL_TIME' => number_format(
                     $queries_time,
                     3,

@@ -52,7 +52,7 @@ namespace {
                 $raw = $_SERVER[$key] ?? null;
                 if (is_string($raw) && $raw !== '') {
                     $filename = strtolower($raw);
-                    if ((bool) ($conf['php_extension_in_urls'] ?? false) && get_extension($filename) !== 'php') {
+                    if ((bool) ($conf['php_extension_in_urls'] ?? false) && \Piwigo\Core\StringHelper::getExtension($filename) !== 'php') {
                         continue;
                     }
 

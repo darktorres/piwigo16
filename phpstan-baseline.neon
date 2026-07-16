@@ -127,9 +127,21 @@ parameters:
 			path: admin/include/functions.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 78
+			path: admin/include/functions.php
+
+		-
+			rawMessage: 'Parameter #2 $array of function implode expects array<string>, array given.'
+			identifier: argument.type
+			count: 14
+			path: admin/include/functions.php
+
+		-
+			rawMessage: 'Parameter #2 $objectId of method Piwigo\Activity\ActivityService::record() expects array<int, int|string>|int|string, array given.'
+			identifier: argument.type
+			count: 1
 			path: admin/include/functions.php
 
 		-
@@ -145,7 +157,7 @@ parameters:
 			path: admin/include/functions_install.inc.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 6
 			path: admin/include/functions_install.inc.php
@@ -283,7 +295,7 @@ parameters:
 			path: i.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 1
 			path: i.php
@@ -391,7 +403,7 @@ parameters:
 			path: include/dblayer/functions_mysqli.inc.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 11
 			path: include/dblayer/functions_mysqli.inc.php
@@ -401,18 +413,6 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: include/dblayer/functions_mysqli.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 3
-			path: include/derivative_params.inc.php
-
-		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
-			identifier: typeCoverage.paramTypeCoverage
-			count: 2
-			path: include/derivative_params.inc.php
 
 		-
 			rawMessage: 'Call to internal function pwg_error_collector_flush().'
@@ -451,15 +451,15 @@ parameters:
 			path: include/filter.inc.php
 
 		-
-			rawMessage: 'Call to function array_search() requires parameter #3 to be set.'
-			identifier: function.strict
-			count: 1
+			rawMessage: Binary operation "." between non-falsy-string and mixed results in an error.
+			identifier: binaryOp.invalid
+			count: 2
 			path: include/functions.inc.php
 
 		-
 			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
 			identifier: function.strict
-			count: 12
+			count: 3
 			path: include/functions.inc.php
 
 		-
@@ -471,7 +471,19 @@ parameters:
 		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
-			count: 36
+			count: 29
+			path: include/functions.inc.php
+
+		-
+			rawMessage: Function get_elapsed_time not found.
+			identifier: function.notFound
+			count: 2
+			path: include/functions.inc.php
+
+		-
+			rawMessage: Function get_moment not found.
+			identifier: function.notFound
+			count: 4
 			path: include/functions.inc.php
 
 		-
@@ -481,21 +493,9 @@ parameters:
 			path: include/functions.inc.php
 
 		-
-			rawMessage: 'Loose comparison via "!=" between int and int is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 2
-			path: include/functions.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "!=" between int<0, 192> and int is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 1
-			path: include/functions.inc.php
-
-		-
 			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
 			identifier: notEqual.notAllowed
-			count: 6
+			count: 3
 			path: include/functions.inc.php
 
 		-
@@ -511,25 +511,13 @@ parameters:
 			path: include/functions.inc.php
 
 		-
-			rawMessage: 'Loose comparison via "==" between bool and false is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: include/functions.inc.php
-
-		-
 			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
 			identifier: equal.notAllowed
-			count: 9
+			count: 3
 			path: include/functions.inc.php
 
 		-
 			rawMessage: 'Loose comparison via "==" between int<-999, 999> and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: include/functions.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between int<1, max> and int<1, max> is not allowed.'
 			identifier: equal.notAllowed
 			count: 1
 			path: include/functions.inc.php
@@ -555,7 +543,7 @@ parameters:
 		-
 			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
 			identifier: equal.notAllowed
-			count: 10
+			count: 8
 			path: include/functions.inc.php
 
 		-
@@ -577,292 +565,16 @@ parameters:
 			path: include/functions.inc.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
-			count: 100
+			count: 55
 			path: include/functions.inc.php
 
 		-
-			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
-			identifier: function.strict
-			count: 2
-			path: include/functions_calendar.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 3
-			path: include/functions_calendar.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 3
-			path: include/functions_calendar.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between int<1, max> and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: include/functions_calendar.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
-			identifier: equal.notAllowed
-			count: 6
-			path: include/functions_calendar.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between string and mixed is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: include/functions_calendar.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: include/functions_calendar.inc.php
-
-		-
-			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
-			identifier: function.strict
-			count: 1
-			path: include/functions_category.inc.php
-
-		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
-			identifier: typeCoverage.paramTypeCoverage
-			count: 26
-			path: include/functions_category.inc.php
-
-		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
-			identifier: typeCoverage.paramTypeCoverage
-			count: 10
-			path: include/functions_comment.inc.php
-
-		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
-			identifier: typeCoverage.paramTypeCoverage
-			count: 4
-			path: include/functions_cookie.inc.php
-
-		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 28
 			path: include/functions_html.inc.php
-
-		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
-			identifier: typeCoverage.paramTypeCoverage
-			count: 34
-			path: include/functions_mail.inc.php
-
-		-
-			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
-			identifier: empty.notAllowed
-			count: 4
-			path: include/functions_notification.inc.php
-
-		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
-			identifier: typeCoverage.paramTypeCoverage
-			count: 41
-			path: include/functions_notification.inc.php
-
-		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
-			identifier: typeCoverage.paramTypeCoverage
-			count: 3
-			path: include/functions_picture.inc.php
-
-		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
-			identifier: typeCoverage.paramTypeCoverage
-			count: 2
-			path: include/functions_rate.inc.php
-
-		-
-			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
-			identifier: empty.notAllowed
-			count: 3
-			path: include/functions_search.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 1
-			path: include/functions_search.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: include/functions_search.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: include/functions_search.inc.php
-
-		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
-			identifier: typeCoverage.paramTypeCoverage
-			count: 12
-			path: include/functions_session.inc.php
-
-		-
-			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
-			identifier: empty.notAllowed
-			count: 6
-			path: include/functions_tag.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: include/functions_tag.inc.php
-
-		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
-			identifier: typeCoverage.paramTypeCoverage
-			count: 11
-			path: include/functions_tag.inc.php
-
-		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
-			identifier: typeCoverage.paramTypeCoverage
-			count: 16
-			path: include/functions_url.inc.php
-
-		-
-			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
-			identifier: function.strict
-			count: 9
-			path: include/functions_user.inc.php
-
-		-
-			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
-			identifier: empty.notAllowed
-			count: 26
-			path: include/functions_user.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "!=" between int<min, -1>|int<1, max> and int is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 1
-			path: include/functions_user.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "!=" between int|string|null and int is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 1
-			path: include/functions_user.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "!=" between mixed and string is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 1
-			path: include/functions_user.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 2
-			path: include/functions_user.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "!=" between string|null and null is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 1
-			path: include/functions_user.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between bool and true is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: include/functions_user.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: include/functions_user.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between int and mixed is not allowed.'
-			identifier: equal.notAllowed
-			count: 2
-			path: include/functions_user.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 4
-			path: include/functions_user.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between mixed and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: include/functions_user.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between mixed and mixed is not allowed.'
-			identifier: equal.notAllowed
-			count: 1
-			path: include/functions_user.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
-			identifier: equal.notAllowed
-			count: 2
-			path: include/functions_user.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
-			identifier: equal.notAllowed
-			count: 5
-			path: include/functions_user.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between string|null and int is not allowed.'
-			identifier: equal.notAllowed
-			count: 3
-			path: include/functions_user.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "==" between string|null and string is not allowed.'
-			identifier: equal.notAllowed
-			count: 2
-			path: include/functions_user.inc.php
-
-		-
-			rawMessage: 'Offset ''status'' might not exist on array{id: mixed, ...<string, mixed>}.'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: include/functions_user.inc.php
-
-		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
-			identifier: typeCoverage.paramTypeCoverage
-			count: 77
-			path: include/functions_user.inc.php
-
-		-
-			rawMessage: 'Loose comparison via "!=" between mixed and null is not allowed.'
-			identifier: notEqual.notAllowed
-			count: 1
-			path: include/picture_rate.inc.php
-
-		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
-			identifier: typeCoverage.paramTypeCoverage
-			count: 3
-			path: include/profile_functions.inc.php
 
 		-
 			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
@@ -991,8 +703,26 @@ parameters:
 			path: include/ws_functions/pwg.categories.php
 
 		-
+			rawMessage: 'Parameter #1 $array of function array_diff expects an array of values castable to string, array given.'
+			identifier: argument.type
+			count: 1
+			path: include/ws_functions/pwg.categories.php
+
+		-
+			rawMessage: 'Parameter #2 $array of function implode expects array<string>, array given.'
+			identifier: argument.type
+			count: 4
+			path: include/ws_functions/pwg.categories.php
+
+		-
 			rawMessage: 'Parameter #3 of function sprintf is expected to be int by placeholder #2 ("%%u"), string|null given.'
 			identifier: argument.type
+			count: 1
+			path: include/ws_functions/pwg.categories.php
+
+		-
+			rawMessage: Possibly invalid array key type mixed.
+			identifier: offsetAccess.invalidOffset
 			count: 1
 			path: include/ws_functions/pwg.categories.php
 
@@ -1213,7 +943,7 @@ parameters:
 			path: include/ws_functions/pwg.images.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 5
 			path: include/ws_functions/pwg.images.php
@@ -1245,6 +975,12 @@ parameters:
 		-
 			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
 			identifier: equal.notAllowed
+			count: 3
+			path: include/ws_functions/pwg.permissions.php
+
+		-
+			rawMessage: 'Parameter #2 $array of function implode expects array<string>, array given.'
+			identifier: argument.type
 			count: 3
 			path: include/ws_functions/pwg.permissions.php
 
@@ -1339,7 +1075,7 @@ parameters:
 			path: include/ws_functions/pwg.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 7
 			path: include/ws_functions/pwg.php
@@ -1347,6 +1083,12 @@ parameters:
 		-
 			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
 			identifier: function.strict
+			count: 1
+			path: include/ws_functions/pwg.tags.php
+
+		-
+			rawMessage: 'Call to function is_array() with array<string, mixed> will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
 			count: 1
 			path: include/ws_functions/pwg.tags.php
 
@@ -1393,15 +1135,15 @@ parameters:
 			path: include/ws_functions/pwg.users.php
 
 		-
-			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
-			identifier: empty.notAllowed
-			count: 17
+			rawMessage: 'Class Piwigo\Users\UserService constructor invoked with 3 parameters, 4 required.'
+			identifier: arguments.count
+			count: 1
 			path: include/ws_functions/pwg.users.php
 
 		-
-			rawMessage: 'Function is_a_guest invoked with 1 parameter, 0 required.'
-			identifier: arguments.count
-			count: 1
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 17
 			path: include/ws_functions/pwg.users.php
 
 		-
@@ -1444,6 +1186,12 @@ parameters:
 			rawMessage: 'Loose comparison via "==" between string|null and int is not allowed.'
 			identifier: equal.notAllowed
 			count: 2
+			path: include/ws_functions/pwg.users.php
+
+		-
+			rawMessage: 'Parameter #1 $userId of method Piwigo\Auth\ApiKeyService::get() expects int, string given.'
+			identifier: argument.type
+			count: 1
 			path: include/ws_functions/pwg.users.php
 
 		-
@@ -1549,6 +1297,18 @@ parameters:
 			path: src/Piwigo/Admin/AlbumsPageRenderer.php
 
 		-
+			rawMessage: 'Parameter #1 $ids of method Piwigo\Admin\Category\CategoryAdminService::getCategoriesRefDate() expects list<int|string>, array given.'
+			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Admin/AlbumsPageRenderer.php
+
+		-
+			rawMessage: 'Parameter #2 $array of function implode expects array<string>, array given.'
+			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Admin/AlbumsPageRenderer.php
+
+		-
 			rawMessage: 'Call to function load_language() on a separate line has no effect.'
 			identifier: function.resultUnused
 			count: 1
@@ -1564,6 +1324,12 @@ parameters:
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
 			count: 6
+			path: src/Piwigo/Admin/CatModifyPageRenderer.php
+
+		-
+			rawMessage: 'Parameter #2 $array of function implode expects array<string>, array given.'
+			identifier: argument.type
+			count: 1
 			path: src/Piwigo/Admin/CatModifyPageRenderer.php
 
 		-
@@ -1651,6 +1417,18 @@ parameters:
 			path: src/Piwigo/Admin/Extensions/ExtensionScanner.php
 
 		-
+			rawMessage: 'Parameter #1 $callback of function array_map expects (callable(mixed): mixed)|null, Closure(array|bool|float|GMP|int|resource|SimpleXMLElement|string|null, int=): int given.'
+			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Admin/GroupPermPageRenderer.php
+
+		-
+			rawMessage: 'Parameter #2 $catIds of method Piwigo\Group\GroupService::removeAccess() expects array<int, int>, array<int> given.'
+			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Admin/GroupPermPageRenderer.php
+
+		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
 			count: 3
@@ -1669,7 +1447,7 @@ parameters:
 			path: src/Piwigo/Admin/Image/image_ext_imagick.php
 
 		-
-			rawMessage: 'Out of 405 possible property types, only 313 - 77.2 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 407 possible property types, only 315 - 77.3 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 4
 			path: src/Piwigo/Admin/Image/image_ext_imagick.php
@@ -1693,7 +1471,7 @@ parameters:
 			path: src/Piwigo/Admin/Image/image_imagick.php
 
 		-
-			rawMessage: 'Out of 405 possible property types, only 313 - 77.2 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 407 possible property types, only 315 - 77.3 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 1
 			path: src/Piwigo/Admin/Image/image_imagick.php
@@ -1777,15 +1555,21 @@ parameters:
 			path: src/Piwigo/Admin/Integrity/c13y_internal.php
 
 		-
-			rawMessage: 'Out of 2735 possible return types, only 2686 - 98.2 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 2834 possible return types, only 2783 - 98.2 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 1
 			path: src/Piwigo/Admin/Integrity/c13y_internal.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 5
+			path: src/Piwigo/Admin/Integrity/c13y_internal.php
+
+		-
+			rawMessage: 'Parameter #1 $userIds of method Piwigo\Users\UserService::createUserInfos() expects array<int|string, int|string>, int<min, -1>|int<1, max> given.'
+			identifier: argument.type
+			count: 1
 			path: src/Piwigo/Admin/Integrity/c13y_internal.php
 
 		-
@@ -1813,13 +1597,13 @@ parameters:
 			path: src/Piwigo/Admin/Integrity/check_integrity.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 5
 			path: src/Piwigo/Admin/Integrity/check_integrity.php
 
 		-
-			rawMessage: 'Out of 405 possible property types, only 313 - 77.2 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 407 possible property types, only 315 - 77.3 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 3
 			path: src/Piwigo/Admin/Integrity/check_integrity.php
@@ -1897,19 +1681,19 @@ parameters:
 			path: src/Piwigo/Admin/PluginMaintain.php
 
 		-
-			rawMessage: 'Out of 2735 possible return types, only 2686 - 98.2 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 2834 possible return types, only 2783 - 98.2 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 5
 			path: src/Piwigo/Admin/PluginMaintain.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 8
 			path: src/Piwigo/Admin/PluginMaintain.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 1
 			path: src/Piwigo/Admin/StatsPageRenderer.php
@@ -1933,13 +1717,13 @@ parameters:
 			path: src/Piwigo/Admin/ThemeMaintain.php
 
 		-
-			rawMessage: 'Out of 2735 possible return types, only 2686 - 98.2 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 2834 possible return types, only 2783 - 98.2 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 3
 			path: src/Piwigo/Admin/ThemeMaintain.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 3
 			path: src/Piwigo/Admin/ThemeMaintain.php
@@ -1949,6 +1733,18 @@ parameters:
 			identifier: include.fileNotFound
 			count: 2
 			path: src/Piwigo/Admin/UserListPageRenderer.php
+
+		-
+			rawMessage: 'Parameter #1 $callback of function array_map expects (callable(mixed): mixed)|null, Closure(array|bool|float|GMP|int|resource|SimpleXMLElement|string|null, int=): int given.'
+			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Admin/UserPermPageRenderer.php
+
+		-
+			rawMessage: 'Parameter #2 $catIds of method Piwigo\Permission\PermissionService::removeUserAccess() expects list<int>, array<int> given.'
+			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Admin/UserPermPageRenderer.php
 
 		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
@@ -1969,19 +1765,19 @@ parameters:
 			path: src/Piwigo/Admin/languages.php
 
 		-
-			rawMessage: 'Out of 2735 possible return types, only 2686 - 98.2 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 2834 possible return types, only 2783 - 98.2 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 1
 			path: src/Piwigo/Admin/languages.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 5
 			path: src/Piwigo/Admin/languages.php
 
 		-
-			rawMessage: 'Out of 405 possible property types, only 313 - 77.2 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 407 possible property types, only 315 - 77.3 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 3
 			path: src/Piwigo/Admin/languages.php
@@ -2053,13 +1849,13 @@ parameters:
 			path: src/Piwigo/Admin/plugins.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 6
 			path: src/Piwigo/Admin/plugins.php
 
 		-
-			rawMessage: 'Out of 405 possible property types, only 313 - 77.2 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 407 possible property types, only 315 - 77.3 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 4
 			path: src/Piwigo/Admin/plugins.php
@@ -2095,7 +1891,7 @@ parameters:
 			path: src/Piwigo/Admin/tabsheet.php
 
 		-
-			rawMessage: 'Out of 405 possible property types, only 313 - 77.2 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 407 possible property types, only 315 - 77.3 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 3
 			path: src/Piwigo/Admin/tabsheet.php
@@ -2149,13 +1945,13 @@ parameters:
 			path: src/Piwigo/Admin/themes.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 6
 			path: src/Piwigo/Admin/themes.php
 
 		-
-			rawMessage: 'Out of 405 possible property types, only 313 - 77.2 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 407 possible property types, only 315 - 77.3 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 3
 			path: src/Piwigo/Admin/themes.php
@@ -2233,7 +2029,7 @@ parameters:
 			path: src/Piwigo/Admin/updates.php
 
 		-
-			rawMessage: 'Out of 405 possible property types, only 313 - 77.2 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 407 possible property types, only 315 - 77.3 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 7
 			path: src/Piwigo/Admin/updates.php
@@ -2249,6 +2045,72 @@ parameters:
 			identifier: property.dynamicName
 			count: 6
 			path: src/Piwigo/Admin/updates.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int|string and mixed is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: src/Piwigo/Auth/AccessControl.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 2
+			path: src/Piwigo/Auth/ApiKeyService.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|null and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: src/Piwigo/Auth/ApiKeyService.php
+
+		-
+			rawMessage: 'Out of 2834 possible return types, only 2783 - 98.2 %% actually have it. Add more return types to get over 99 %%'
+			identifier: typeCoverage.returnTypeCoverage
+			count: 2
+			path: src/Piwigo/Auth/ApiKeyService.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 2
+			path: src/Piwigo/Auth/AuthService.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 4
+			path: src/Piwigo/Auth/AuthService.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string|null and null is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: src/Piwigo/Auth/AuthService.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Auth/AuthService.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: src/Piwigo/Auth/AuthService.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|null and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Auth/AuthService.php
+
+		-
+			rawMessage: Variable $secret_key on left side of ?? always exists and is not nullable.
+			identifier: nullCoalesce.variable
+			count: 1
+			path: src/Piwigo/Auth/AuthService.php
 
 		-
 			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
@@ -2311,19 +2173,19 @@ parameters:
 			path: src/Piwigo/Auth/PwgBase32.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 7
 			path: src/Piwigo/Auth/PwgTOTP.php
 
 		-
-			rawMessage: 'Out of 2735 possible return types, only 2686 - 98.2 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 2834 possible return types, only 2783 - 98.2 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 2
 			path: src/Piwigo/Cache/PersistentCache.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 5
 			path: src/Piwigo/Cache/PersistentCache.php
@@ -2377,19 +2239,19 @@ parameters:
 			path: src/Piwigo/Calendar/CalendarBase.php
 
 		-
-			rawMessage: 'Out of 2735 possible return types, only 2686 - 98.2 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 2834 possible return types, only 2783 - 98.2 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 6
 			path: src/Piwigo/Calendar/CalendarBase.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 7
 			path: src/Piwigo/Calendar/CalendarBase.php
 
 		-
-			rawMessage: 'Out of 405 possible property types, only 313 - 77.2 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 407 possible property types, only 315 - 77.3 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 3
 			path: src/Piwigo/Calendar/CalendarBase.php
@@ -2449,10 +2311,64 @@ parameters:
 			path: src/Piwigo/Calendar/CalendarMonthly.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 2
 			path: src/Piwigo/Calendar/CalendarMonthly.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 2
+			path: src/Piwigo/Calendar/CalendarRenderer.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 3
+			path: src/Piwigo/Calendar/CalendarRenderer.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 3
+			path: src/Piwigo/Calendar/CalendarRenderer.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<1, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Calendar/CalendarRenderer.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 6
+			path: src/Piwigo/Calendar/CalendarRenderer.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and mixed is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Calendar/CalendarRenderer.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Calendar/CalendarRenderer.php
+
+		-
+			rawMessage: 'Parameter #1 $array of function array_diff expects an array of values castable to string, array given.'
+			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Calendar/CalendarService.php
+
+		-
+			rawMessage: 'Parameter #2 $array of function implode expects array<string>, array given.'
+			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Calendar/CalendarService.php
 
 		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
@@ -2473,10 +2389,46 @@ parameters:
 			path: src/Piwigo/Calendar/CalendarWeekly.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 1
 			path: src/Piwigo/Category/CategoryDefaultRenderer.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 1
+			path: src/Piwigo/Category/CategoryService.php
+
+		-
+			rawMessage: 'Function get_cat_info() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Piwigo/Category/functions.php
+
+		-
+			rawMessage: 'Function get_subcat_ids() has parameter $ids with no type specified.'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Piwigo/Category/functions.php
+
+		-
+			rawMessage: 'Function get_subcat_ids() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Piwigo/Category/functions.php
+
+		-
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 1
+			path: src/Piwigo/Category/functions.php
+
+		-
+			rawMessage: 'Parameter #1 $ids of method Piwigo\Category\CategoryService::getSubcatIds() expects array<int|string>, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Category/functions.php
 
 		-
 			rawMessage: 'Strict comparison using !== between false and false will always evaluate to false.'
@@ -2485,10 +2437,52 @@ parameters:
 			path: src/Piwigo/Controller/AboutController.php
 
 		-
+			rawMessage: 'Call to function is_array() with array<string, string|null> will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Controller/ActionController.php
+
+		-
+			rawMessage: 'PHPDoc tag @var with type array<string, mixed>|null is not subtype of type array<string, string|null>|null.'
+			identifier: varTag.type
+			count: 1
+			path: src/Piwigo/Controller/ActionController.php
+
+		-
 			rawMessage: 'Strict comparison using === between false and false will always evaluate to true.'
 			identifier: identical.alwaysTrue
 			count: 1
 			path: src/Piwigo/Controller/Admin/AdminPopuphelpController.php
+
+		-
+			rawMessage: 'Call to function is_array() with array<int, mixed> will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Controller/Admin/BatchManagerSubController.php
+
+		-
+			rawMessage: 'Call to function is_array() with array<string, mixed> will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Controller/Admin/BatchManagerSubController.php
+
+		-
+			rawMessage: 'Call to function is_array() with list<string> will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Controller/Admin/BatchManagerSubController.php
+
+		-
+			rawMessage: 'Offset ''debug'' on array{items: array<int, mixed>, qs: array<string, mixed>, debug: list<string>, ...<string, mixed>} on left side of ?? always exists and is not nullable.'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Piwigo/Controller/Admin/BatchManagerSubController.php
+
+		-
+			rawMessage: 'Offset ''items'' on array{items: array<int, mixed>, qs: array<string, mixed>, ...<string, mixed>} on left side of ?? always exists and is not nullable.'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Piwigo/Controller/Admin/BatchManagerSubController.php
 
 		-
 			rawMessage: 'Call to function array_search() requires parameter #3 to be set.'
@@ -2659,6 +2653,12 @@ parameters:
 			path: src/Piwigo/Controller/Admin/NotificationByMailSubController.php
 
 		-
+			rawMessage: 'Binary operation "." between ''<a href="'' and mixed results in an error.'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Piwigo/Controller/Admin/PermalinksSubController.php
+
+		-
 			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
 			identifier: function.strict
 			count: 2
@@ -2749,10 +2749,28 @@ parameters:
 			path: src/Piwigo/Controller/Admin/SiteUpdateSubController.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 1
 			path: src/Piwigo/Controller/CommentsController.php
+
+		-
+			rawMessage: 'Parameter #2 $array of function implode expects array<string>, array given.'
+			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Controller/CommentsController.php
+
+		-
+			rawMessage: Binary operation "." between mixed and int results in an error.
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Piwigo/Controller/GalleryController.php
+
+		-
+			rawMessage: Binary operation "." between mixed and string results in an error.
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Piwigo/Controller/GalleryController.php
 
 		-
 			rawMessage: 'Call to function load_language() on a separate line has no effect.'
@@ -2773,9 +2791,9 @@ parameters:
 			path: src/Piwigo/Controller/PasswordController.php
 
 		-
-			rawMessage: 'Function is_a_guest invoked with 1 parameter, 0 required.'
-			identifier: arguments.count
-			count: 3
+			rawMessage: 'Parameter #1 $userId of method Piwigo\Auth\ApiKeyService::getAvailable() expects int, string given.'
+			identifier: argument.type
+			count: 1
 			path: src/Piwigo/Controller/PasswordController.php
 
 		-
@@ -2789,6 +2807,12 @@ parameters:
 			identifier: function.resultUnused
 			count: 1
 			path: src/Piwigo/Controller/ProfileController.php
+
+		-
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 2
+			path: src/Piwigo/Controller/ProfileFormHandler.php
 
 		-
 			rawMessage: 'Call to function load_language() on a separate line has no effect.'
@@ -2833,19 +2857,19 @@ parameters:
 			path: src/Piwigo/Core/Logger.php
 
 		-
-			rawMessage: 'Out of 2735 possible return types, only 2686 - 98.2 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 2834 possible return types, only 2783 - 98.2 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 1
 			path: src/Piwigo/Core/Logger.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 38
 			path: src/Piwigo/Core/Logger.php
 
 		-
-			rawMessage: 'Out of 68 possible constant types, only 48 - 70.5 %% actually have it. Add more constant types to get over 99 %%'
+			rawMessage: 'Out of 80 possible constant types, only 60 - 75.0 %% actually have it. Add more constant types to get over 99 %%'
 			identifier: typeCoverage.constantTypeCoverage
 			count: 13
 			path: src/Piwigo/Core/Logger.php
@@ -2855,6 +2879,18 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: src/Piwigo/Core/Logger.php
+
+		-
+			rawMessage: 'Binary operation "." between "\n<a href=\"" and mixed results in an error.'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Piwigo/Html/HtmlService.php
+
+		-
+			rawMessage: 'Binary operation "." between ''<a href="'' and mixed results in an error.'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Piwigo/Html/HtmlService.php
 
 		-
 			rawMessage: 'Loose comparison via "==" between (int|string) and string is not allowed.'
@@ -2923,19 +2959,19 @@ parameters:
 			path: src/Piwigo/Image/DerivativeImage.php
 
 		-
-			rawMessage: 'Out of 2735 possible return types, only 2686 - 98.2 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 2834 possible return types, only 2783 - 98.2 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 5
 			path: src/Piwigo/Image/DerivativeImage.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 15
 			path: src/Piwigo/Image/DerivativeImage.php
 
 		-
-			rawMessage: 'Out of 405 possible property types, only 313 - 77.2 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 407 possible property types, only 315 - 77.3 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 2
 			path: src/Piwigo/Image/DerivativeImage.php
@@ -2947,37 +2983,43 @@ parameters:
 			path: src/Piwigo/Image/DerivativeParams.php
 
 		-
-			rawMessage: 'Out of 2735 possible return types, only 2686 - 98.2 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 2834 possible return types, only 2783 - 98.2 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 3
 			path: src/Piwigo/Image/DerivativeParams.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 1
 			path: src/Piwigo/Image/DerivativeParams.php
 
 		-
-			rawMessage: 'Out of 405 possible property types, only 313 - 77.2 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 407 possible property types, only 315 - 77.3 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 4
 			path: src/Piwigo/Image/DerivativeParams.php
 
 		-
+			rawMessage: 'Loose comparison via "==" between int and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 3
+			path: src/Piwigo/Image/DerivativeUrlCodec.php
+
+		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
 			count: 2
 			path: src/Piwigo/Image/ImageRect.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 2
 			path: src/Piwigo/Image/ImageRect.php
 
 		-
-			rawMessage: 'Out of 405 possible property types, only 313 - 77.2 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 407 possible property types, only 315 - 77.3 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 4
 			path: src/Piwigo/Image/ImageRect.php
@@ -2989,19 +3031,19 @@ parameters:
 			path: src/Piwigo/Image/ImageStdParams.php
 
 		-
-			rawMessage: 'Out of 2735 possible return types, only 2686 - 98.2 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 2834 possible return types, only 2783 - 98.2 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 5
 			path: src/Piwigo/Image/ImageStdParams.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 8
 			path: src/Piwigo/Image/ImageStdParams.php
 
 		-
-			rawMessage: 'Out of 405 possible property types, only 313 - 77.2 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 407 possible property types, only 315 - 77.3 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 6
 			path: src/Piwigo/Image/ImageStdParams.php
@@ -3019,7 +3061,7 @@ parameters:
 			path: src/Piwigo/Image/SizingParams.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 5
 			path: src/Piwigo/Image/SizingParams.php
@@ -3055,13 +3097,13 @@ parameters:
 			path: src/Piwigo/Image/SrcImage.php
 
 		-
-			rawMessage: 'Out of 405 possible property types, only 313 - 77.2 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 407 possible property types, only 315 - 77.3 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 3
 			path: src/Piwigo/Image/SrcImage.php
 
 		-
-			rawMessage: 'Out of 405 possible property types, only 313 - 77.2 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 407 possible property types, only 315 - 77.3 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 7
 			path: src/Piwigo/Image/WatermarkParams.php
@@ -3070,6 +3112,12 @@ parameters:
 			rawMessage: 'Call to function load_language() on a separate line has no effect.'
 			identifier: function.resultUnused
 			count: 4
+			path: src/Piwigo/Mail/MailService.php
+
+		-
+			rawMessage: 'Class Piwigo\Users\UserService constructor invoked with 3 parameters, 4 required.'
+			identifier: arguments.count
+			count: 2
 			path: src/Piwigo/Mail/MailService.php
 
 		-
@@ -3121,58 +3169,82 @@ parameters:
 			path: src/Piwigo/Menu/BlockManager.php
 
 		-
-			rawMessage: 'Out of 2735 possible return types, only 2686 - 98.2 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 2834 possible return types, only 2783 - 98.2 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 3
 			path: src/Piwigo/Menu/BlockManager.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 9
 			path: src/Piwigo/Menu/BlockManager.php
 
 		-
-			rawMessage: 'Out of 405 possible property types, only 313 - 77.2 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 407 possible property types, only 315 - 77.3 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 2
 			path: src/Piwigo/Menu/BlockManager.php
 
 		-
-			rawMessage: 'Out of 2735 possible return types, only 2686 - 98.2 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 2834 possible return types, only 2783 - 98.2 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 3
 			path: src/Piwigo/Menu/DisplayBlock.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 3
 			path: src/Piwigo/Menu/DisplayBlock.php
 
 		-
-			rawMessage: 'Out of 405 possible property types, only 313 - 77.2 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 407 possible property types, only 315 - 77.3 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 6
 			path: src/Piwigo/Menu/DisplayBlock.php
 
 		-
-			rawMessage: 'Out of 2735 possible return types, only 2686 - 98.2 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 2834 possible return types, only 2783 - 98.2 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 3
 			path: src/Piwigo/Menu/RegisteredBlock.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 3
 			path: src/Piwigo/Menu/RegisteredBlock.php
 
 		-
-			rawMessage: 'Out of 68 possible constant types, only 48 - 70.5 %% actually have it. Add more constant types to get over 99 %%'
+			rawMessage: 'Binary operation "." between ''<a href="'' and mixed results in an error.'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Piwigo/Notification/NotificationService.php
+
+		-
+			rawMessage: Binary operation "." between non-falsy-string and mixed results in an error.
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Piwigo/Notification/NotificationService.php
+
+		-
+			rawMessage: 'Out of 80 possible constant types, only 60 - 75.0 %% actually have it. Add more constant types to get over 99 %%'
 			identifier: typeCoverage.constantTypeCoverage
 			count: 1
 			path: src/Piwigo/Notification/NotificationService.php
+
+		-
+			rawMessage: 'Parameter #5 $url of method Piwigo\Notification\NotificationService::addNewsLine() expects string, mixed given.'
+			identifier: argument.type
+			count: 3
+			path: src/Piwigo/Notification/NotificationService.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between mixed and null is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: src/Piwigo/Picture/PictureRateRenderer.php
 
 		-
 			rawMessage: 'Function add_event_handler() has parameter $event with no type specified.'
@@ -3229,7 +3301,7 @@ parameters:
 			path: src/Piwigo/PluginConfig/functions.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 7
 			path: src/Piwigo/PluginConfig/functions.php
@@ -3289,7 +3361,7 @@ parameters:
 			path: src/Piwigo/Search/QDateRangeScope.php
 
 		-
-			rawMessage: 'Out of 405 possible property types, only 313 - 77.2 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 407 possible property types, only 315 - 77.3 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 3
 			path: src/Piwigo/Search/QExpression.php
@@ -3319,7 +3391,7 @@ parameters:
 			path: src/Piwigo/Search/QMultiToken.php
 
 		-
-			rawMessage: 'Out of 405 possible property types, only 313 - 77.2 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 407 possible property types, only 315 - 77.3 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 1
 			path: src/Piwigo/Search/QMultiToken.php
@@ -3343,7 +3415,7 @@ parameters:
 			path: src/Piwigo/Search/QSearchScope.php
 
 		-
-			rawMessage: 'Out of 405 possible property types, only 313 - 77.2 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 407 possible property types, only 315 - 77.3 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 2
 			path: src/Piwigo/Search/QSingleToken.php
@@ -3353,6 +3425,60 @@ parameters:
 			identifier: function.resultUnused
 			count: 1
 			path: src/Piwigo/Search/SearchFilterRenderer.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 2
+			path: src/Piwigo/Search/SearchFilterRenderer.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 1
+			path: src/Piwigo/Search/SearchService.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: src/Piwigo/Search/SearchService.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Search/SearchService.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Search/SearchService.php
+
+		-
+			rawMessage: 'Parameter #2 $array of function implode expects array<string>, array given.'
+			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Search/SearchService.php
+
+		-
+			rawMessage: 'Parameter #2 $params of method Piwigo\Search\SearchService::queryImageIdsFor() expects list<mixed>, non-empty-array given.'
+			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Search/SearchService.php
+
+		-
+			rawMessage: 'Parameter #4 $nextToken of class Piwigo\Section\SectionContext constructor expects int, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Section/SectionInitializer.php
+
+		-
+			rawMessage: 'Parameter #7 $parsed of class Piwigo\Section\SectionContext constructor expects array<string, mixed>, array given.'
+			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Section/SectionInitializer.php
 
 		-
 			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
@@ -3367,10 +3493,34 @@ parameters:
 			path: src/Piwigo/Site/LocalSiteReader.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 2
 			path: src/Piwigo/Site/LocalSiteReader.php
+
+		-
+			rawMessage: Cannot cast mixed to int.
+			identifier: cast.int
+			count: 2
+			path: src/Piwigo/Tag/TagRepository.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 2
+			path: src/Piwigo/Tag/TagService.php
+
+		-
+			rawMessage: 'Parameter #1 $items of method Piwigo\Tag\TagRepository::findCommonTags() expects list<int>, non-empty-array<int> given.'
+			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Tag/TagService.php
+
+		-
+			rawMessage: 'Parameter #3 $excludedTagIds of method Piwigo\Tag\TagRepository::findCommonTags() expects list<int>, array<int> given.'
+			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Tag/TagService.php
 
 		-
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
@@ -3379,19 +3529,19 @@ parameters:
 			path: src/Piwigo/Template/Combinable.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 4
 			path: src/Piwigo/Template/Combinable.php
 
 		-
-			rawMessage: 'Out of 405 possible property types, only 313 - 77.2 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 407 possible property types, only 315 - 77.3 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 2
 			path: src/Piwigo/Template/Combinable.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 5
 			path: src/Piwigo/Template/CssLoader.php
@@ -3415,25 +3565,25 @@ parameters:
 			path: src/Piwigo/Template/FileCombiner.php
 
 		-
-			rawMessage: 'Out of 2735 possible return types, only 2686 - 98.2 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 2834 possible return types, only 2783 - 98.2 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 1
 			path: src/Piwigo/Template/FileCombiner.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 9
 			path: src/Piwigo/Template/FileCombiner.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 4
 			path: src/Piwigo/Template/PwgTemplateAdapter.php
 
 		-
-			rawMessage: 'Out of 405 possible property types, only 313 - 77.2 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 407 possible property types, only 315 - 77.3 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 1
 			path: src/Piwigo/Template/Script.php
@@ -3469,13 +3619,13 @@ parameters:
 			path: src/Piwigo/Template/ScriptLoader.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 11
 			path: src/Piwigo/Template/ScriptLoader.php
 
 		-
-			rawMessage: 'Out of 405 possible property types, only 313 - 77.2 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 407 possible property types, only 315 - 77.3 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 1
 			path: src/Piwigo/Template/ScriptLoader.php
@@ -3535,27 +3685,39 @@ parameters:
 			path: src/Piwigo/Template/Template.php
 
 		-
-			rawMessage: 'Out of 2735 possible return types, only 2686 - 98.2 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 2834 possible return types, only 2783 - 98.2 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 6
 			path: src/Piwigo/Template/Template.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 56
 			path: src/Piwigo/Template/Template.php
 
 		-
-			rawMessage: 'Out of 405 possible property types, only 313 - 77.2 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 407 possible property types, only 315 - 77.3 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 9
 			path: src/Piwigo/Template/Template.php
 
 		-
-			rawMessage: 'Out of 68 possible constant types, only 48 - 70.5 %% actually have it. Add more constant types to get over 99 %%'
+			rawMessage: 'Out of 80 possible constant types, only 60 - 75.0 %% actually have it. Add more constant types to get over 99 %%'
 			identifier: typeCoverage.constantTypeCoverage
 			count: 2
+			path: src/Piwigo/Template/Template.php
+
+		-
+			rawMessage: 'Parameter #3 $callback of method Smarty\Smarty::registerPlugin() expects callable(): mixed, ''is_admin'' given.'
+			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Template/Template.php
+
+		-
+			rawMessage: 'Parameter #3 $callback of method Smarty\Smarty::registerPlugin() expects callable(): mixed, ''is_classic_user'' given.'
+			identifier: argument.type
+			count: 1
 			path: src/Piwigo/Template/Template.php
 
 		-
@@ -3565,13 +3727,355 @@ parameters:
 			path: src/Piwigo/Template/Template.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 3
 			path: src/Piwigo/Url/UrlService.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Function add_url_params() has no return type specified.'
+			identifier: missingType.return
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Function add_url_params() has parameter $params with no type specified.'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Function add_url_params() has parameter $url with no type specified.'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Function duplicate_index_url() has parameter $redefined with no type specified.'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Function duplicate_index_url() has parameter $removed with no type specified.'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Function duplicate_picture_url() has parameter $redefined with no type specified.'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Function duplicate_picture_url() has parameter $removed with no type specified.'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Function embellish_url() has parameter $url with no type specified.'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Function get_absolute_root_url() has parameter $with_scheme with no type specified.'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Function get_action_url() has parameter $id with no type specified.'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Function get_action_url() has parameter $what_part with no type specified.'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Function get_element_url() has parameter $element_info with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Function get_query_string_diff() has parameter $escape with no type specified.'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Function get_query_string_diff() has parameter $rejects with no type specified.'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Function get_user_favorites() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Function make_index_url() has parameter $params with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Function make_picture_url() has parameter $params with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Function parse_section_url() has parameter $next_token with no type specified.'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Function parse_section_url() has parameter $tokens with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Function parse_section_url() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Function parse_well_known_params_url() has parameter $tokens with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Function parse_well_known_params_url() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Function url_is_remote() has parameter $url with no type specified.'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
+			identifier: typeCoverage.paramTypeCoverage
+			count: 14
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Parameter #1 $elementInfo of method Piwigo\Url\UrlService::getElementUrl() expects array<string, mixed>, array given.'
+			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Parameter #1 $id of method Piwigo\Url\UrlService::getActionUrl() expects int|string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Parameter #1 $params of method Piwigo\Url\UrlService::makeIndexUrl() expects array<string, mixed>, array given.'
+			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Parameter #1 $params of method Piwigo\Url\UrlService::makePictureUrl() expects array<string, mixed>, array given.'
+			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Parameter #1 $redefined of method Piwigo\Url\UrlService::duplicateIndexUrl() expects array<string, mixed>, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Parameter #1 $redefined of method Piwigo\Url\UrlService::duplicatePictureUrl() expects array<string, mixed>, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Parameter #1 $rejects of method Piwigo\Url\UrlService::getQueryStringDiff() expects array<string>, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Parameter #1 $tokens of method Piwigo\Url\UrlService::parseSectionUrl() expects array<string>, array given.'
+			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Parameter #1 $tokens of method Piwigo\Url\UrlService::parseWellKnownParamsUrl() expects array<string>, array given.'
+			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Parameter #1 $url of method Piwigo\Url\UrlService::addUrlParams() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Parameter #1 $url of method Piwigo\Url\UrlService::embellishUrl() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Parameter #1 $url of method Piwigo\Url\UrlService::urlIsRemote() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Parameter #1 $withScheme of method Piwigo\Url\UrlService::getAbsoluteRootUrl() expects bool, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Parameter #2 $escape of method Piwigo\Url\UrlService::getQueryStringDiff() expects bool, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Parameter #2 $nextToken of method Piwigo\Url\UrlService::parseSectionUrl() expects int, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Parameter #2 $params of method Piwigo\Url\UrlService::addUrlParams() expects array<int|string, mixed>, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Parameter #2 $removed of method Piwigo\Url\UrlService::duplicateIndexUrl() expects array<int, string>, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Parameter #2 $removed of method Piwigo\Url\UrlService::duplicatePictureUrl() expects array<int, string>, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Parameter #2 $whatPart of method Piwigo\Url\UrlService::getActionUrl() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: src/Piwigo/Url/functions.php
+
+		-
+			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
+			identifier: function.strict
+			count: 6
+			path: src/Piwigo/Users/UserService.php
+
+		-
+			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
+			identifier: empty.notAllowed
+			count: 19
+			path: src/Piwigo/Users/UserService.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int<min, -1>|int<1, max> and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: src/Piwigo/Users/UserService.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between int|string|null and int is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: src/Piwigo/Users/UserService.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between mixed and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 1
+			path: src/Piwigo/Users/UserService.php
+
+		-
+			rawMessage: 'Loose comparison via "!=" between string and string is not allowed.'
+			identifier: notEqual.notAllowed
+			count: 2
+			path: src/Piwigo/Users/UserService.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between bool and true is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Users/UserService.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between int<0, max> and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: src/Piwigo/Users/UserService.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and int is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Users/UserService.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and mixed is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Users/UserService.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between mixed and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: src/Piwigo/Users/UserService.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 1
+			path: src/Piwigo/Users/UserService.php
+
+		-
+			rawMessage: 'Loose comparison via "==" between string|null and string is not allowed.'
+			identifier: equal.notAllowed
+			count: 2
+			path: src/Piwigo/Users/UserService.php
+
+		-
+			rawMessage: 'Offset ''status'' might not exist on array{id: mixed, ...<string, mixed>}.'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: src/Piwigo/Users/UserService.php
+
+		-
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 1
 			path: src/Piwigo/Ws/Encoder/PwgResponseEncoder.php
@@ -3613,13 +4117,13 @@ parameters:
 			path: src/Piwigo/Ws/Protocol/PwgXmlWriter.php
 
 		-
-			rawMessage: 'Out of 405 possible property types, only 313 - 77.2 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 407 possible property types, only 315 - 77.3 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 5
 			path: src/Piwigo/Ws/Protocol/PwgXmlWriter.php
 
 		-
-			rawMessage: 'Out of 405 possible property types, only 313 - 77.2 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 407 possible property types, only 315 - 77.3 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 1
 			path: src/Piwigo/Ws/PwgNamedArray.php
@@ -3637,7 +4141,7 @@ parameters:
 			path: src/Piwigo/Ws/PwgNamedStruct.php
 
 		-
-			rawMessage: 'Out of 405 possible property types, only 313 - 77.2 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 407 possible property types, only 315 - 77.3 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 1
 			path: src/Piwigo/Ws/PwgNamedStruct.php
@@ -3673,7 +4177,7 @@ parameters:
 			path: src/Piwigo/Ws/PwgServer.php
 
 		-
-			rawMessage: 'Out of 405 possible property types, only 313 - 77.2 %% actually have it. Add more property types to get over 99 %%'
+			rawMessage: 'Out of 407 possible property types, only 315 - 77.3 %% actually have it. Add more property types to get over 99 %%'
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 1
 			path: src/Piwigo/Ws/PwgServer.php
@@ -3817,7 +4321,7 @@ parameters:
 			path: tests/Browser/VisualRegressionTest.php
 
 		-
-			rawMessage: 'Out of 68 possible constant types, only 48 - 70.5 %% actually have it. Add more constant types to get over 99 %%'
+			rawMessage: 'Out of 80 possible constant types, only 60 - 75.0 %% actually have it. Add more constant types to get over 99 %%'
 			identifier: typeCoverage.constantTypeCoverage
 			count: 1
 			path: tests/Contract/ContractTestCase.php
@@ -3853,13 +4357,25 @@ parameters:
 			path: tests/Integration/CommentRepositoryTest.php
 
 		-
+			rawMessage: Cannot access offset 'status' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 6
+			path: tests/Integration/CommentServiceTest.php
+
+		-
 			rawMessage: 'Config::has(''this_param_does_not_exist_anywhere'') uses a key not in Config::SCHEMA. Either add the key to SCHEMA + run tools/build-config-accessors.php, or add it to ConfigKeyExistsRule::ALLOWED_RUNTIME_KEYS if it is a genuine runtime sentinel.'
 			identifier: piwigo.configKeyExists
 			count: 1
 			path: tests/Integration/ConfigServiceTest.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: Cannot access offset 'status' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: tests/Integration/NotificationServiceTest.php
+
+		-
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 3
 			path: tests/Integration/SearchServiceTest.php
@@ -4777,7 +5293,7 @@ parameters:
 			path: tests/Unit/Http/Middleware/ControllerInvokerMiddlewareTest.php
 
 		-
-			rawMessage: 'Out of 2735 possible return types, only 2686 - 98.2 %% actually have it. Add more return types to get over 99 %%'
+			rawMessage: 'Out of 2834 possible return types, only 2783 - 98.2 %% actually have it. Add more return types to get over 99 %%'
 			identifier: typeCoverage.returnTypeCoverage
 			count: 1
 			path: tests/Unit/Http/Middleware/ControllerInvokerMiddlewareTest.php
@@ -5563,10 +6079,22 @@ parameters:
 			path: tools/i18n/verify-parity.php
 
 		-
-			rawMessage: 'Out of 68 possible constant types, only 48 - 70.5 %% actually have it. Add more constant types to get over 99 %%'
+			rawMessage: 'Out of 80 possible constant types, only 60 - 75.0 %% actually have it. Add more constant types to get over 99 %%'
 			identifier: typeCoverage.constantTypeCoverage
 			count: 3
 			path: tools/phpstan/ConfigKeyExistsRule.php
+
+		-
+			rawMessage: 'Parameter #1 $node (PhpParser\Node\Expr\FuncCall) of method Utils\Rector\FuncCallToNewMethodCallRector::refactor() should be contravariant with parameter $node (PhpParser\Node) of method Rector\Contract\Rector\RectorInterface::refactor()'
+			identifier: method.childParameterType
+			count: 2
+			path: tools/rector-rules/FuncCallToNewMethodCallRector.php
+
+		-
+			rawMessage: 'Property Utils\Rector\FuncCallToNewMethodCallRector::$map (array<string, array{string, string}>) does not accept mixed.'
+			identifier: assign.propertyType
+			count: 1
+			path: tools/rector-rules/FuncCallToNewMethodCallRector.php
 
 		-
 			rawMessage: 'Loose comparison via "==" between list<mixed>|string|false and true is not allowed.'
@@ -5629,7 +6157,7 @@ parameters:
 			path: upgrade.php
 
 		-
-			rawMessage: 'Out of 3248 possible param types, only 2519 - 77.5 %% actually have it. Add more param types to get over 99 %%'
+			rawMessage: 'Out of 3012 possible param types, only 2552 - 84.7 %% actually have it. Add more param types to get over 99 %%'
 			identifier: typeCoverage.paramTypeCoverage
 			count: 1
 			path: upgrade.php

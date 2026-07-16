@@ -83,7 +83,7 @@ for ($upgrade_id = 157; $upgrade_id <= 159; $upgrade_id++) { // TODO change on e
     // include & execute upgrade script. Each upgrade script must contain
     // $upgrade_description variable which describe briefly what the upgrade
     // script does.
-    $up_start = get_moment();
+    $up_start = \Piwigo\Core\TimingHelper::getMoment();
     include UPGRADES_PATH . '/' . $upgrade_id . '-database.php';
 
     // notify upgrade (TODO change on each release)
@@ -91,7 +91,7 @@ for ($upgrade_id = 157; $upgrade_id <= 159; $upgrade_id++) { // TODO change on e
 INSERT INTO `' . PREFIX_TABLE . 'upgrade`
   (id, applied, description)
   VALUES
-  (\'' . $upgrade_id . '\', NOW(), \'[migration from 2.10.0 to ' . PHPWG_VERSION . ', ' . get_elapsed_time($up_start, get_moment()) . '] ' . $upgrade_description . '\')
+  (\'' . $upgrade_id . '\', NOW(), \'[migration from 2.10.0 to ' . PHPWG_VERSION . ', ' . \Piwigo\Core\TimingHelper::getElapsedTime($up_start, \Piwigo\Core\TimingHelper::getMoment()) . '] ' . $upgrade_description . '\')
 ;';
     pwg_query($query);
 }

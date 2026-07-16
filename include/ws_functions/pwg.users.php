@@ -317,10 +317,10 @@ SELECT DISTINCT ';
             $cur_user_registration_date = is_string($cur_user['registration_date']) ? $cur_user['registration_date'] : null;
 
             if (isset($display_flags['registration_date_string'])) {
-                $users[$cur_user_id]['registration_date_string'] = format_date($cur_user_registration_date ?? false, ['day', 'month', 'year']);
+                $users[$cur_user_id]['registration_date_string'] = \Piwigo\Core\DateHelper::formatDate($cur_user_registration_date ?? false, ['day', 'month', 'year']);
             }
             if (isset($display_flags['registration_date_since'])) {
-                $users[$cur_user_id]['registration_date_since'] = time_since($cur_user_registration_date ?? '', 'month');
+                $users[$cur_user_id]['registration_date_since'] = \Piwigo\Core\DateHelper::timeSince($cur_user_registration_date ?? '', 'month');
             }
             if (isset($display_flags['last_visit'])) {
                 $last_visit = is_string($cur_user['last_visit']) ? $cur_user['last_visit'] : null;
@@ -332,11 +332,11 @@ SELECT DISTINCT ';
                 }
 
                 if (isset($display_flags['last_visit_string'])) {
-                    $users[$cur_user_id]['last_visit_string'] = format_date($last_visit ?? false, ['day', 'month', 'year']);
+                    $users[$cur_user_id]['last_visit_string'] = \Piwigo\Core\DateHelper::formatDate($last_visit ?? false, ['day', 'month', 'year']);
                 }
 
                 if (isset($display_flags['last_visit_since'])) {
-                    $users[$cur_user_id]['last_visit_since'] = time_since($last_visit ?? '', 'day');
+                    $users[$cur_user_id]['last_visit_since'] = \Piwigo\Core\DateHelper::timeSince($last_visit ?? '', 'day');
                 }
             }
         }

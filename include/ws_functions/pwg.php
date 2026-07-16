@@ -503,7 +503,7 @@ function ws_getActivityList(array $param, PwgServer &$service): PwgError|array
     global $conf;
 
     foreach (['date_min', 'date_max'] as $datefield) {
-        if (! empty($param[$datefield]) and ! is_valid_mysql_datetime($param[$datefield])) {
+        if (! empty($param[$datefield]) and ! \Piwigo\Core\DateHelper::isValidMysqlDatetime($param[$datefield])) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid ' . $datefield);
         }
     }
@@ -655,7 +655,7 @@ SELECT
                         'object_id' => [$row['object_id']],
                         'action' => $row['action'],
                         'ip_address' => $row['ip_address'],
-                        'date' => format_date($date),
+                        'date' => \Piwigo\Core\DateHelper::formatDate($date),
                         'hour' => $hour,
                         'user_id' => $row['performed_by'],
                         'detailsType' => $detailsType,
@@ -1340,7 +1340,7 @@ SELECT
         array_push(
             $result,
             [
-                'DATE' => format_date($line_date ?? ''),
+                'DATE' => \Piwigo\Core\DateHelper::formatDate($line_date ?? ''),
                 'TIME' => $line_time,
                 'USER' => $user_string,
                 'USERNAME' => $user_name,

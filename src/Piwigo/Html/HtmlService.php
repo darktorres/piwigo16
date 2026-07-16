@@ -271,14 +271,14 @@ SELECT id, name, permalink
             // (re)computed -- a real runtime guard equivalent to the original
             // isset() check (fix pattern #6).
             if (! is_string($transliterated[$tag_name] ?? null)) {
-                $transliterated[$tag_name] = pwg_transliterate($tag_name);
+                $transliterated[$tag_name] = \Piwigo\Core\StringHelper::pwgTransliterate($tag_name);
             }
         }
 
         $cache[self::class . '::tagAlphaCompare'] = $transliterated;
 
-        $translit_a = is_string($transliterated[$name_a] ?? null) ? $transliterated[$name_a] : pwg_transliterate($name_a);
-        $translit_b = is_string($transliterated[$name_b] ?? null) ? $transliterated[$name_b] : pwg_transliterate($name_b);
+        $translit_a = is_string($transliterated[$name_a] ?? null) ? $transliterated[$name_a] : \Piwigo\Core\StringHelper::pwgTransliterate($name_a);
+        $translit_b = is_string($transliterated[$name_b] ?? null) ? $transliterated[$name_b] : \Piwigo\Core\StringHelper::pwgTransliterate($name_b);
 
         return strcmp($translit_a, $translit_b);
     }
@@ -569,7 +569,7 @@ SELECT id, name, permalink
         }
         $filename = $info['file'] ?? null;
 
-        return get_name_from_file(is_string($filename) ? $filename : '');
+        return \Piwigo\Core\StringHelper::getNameFromFile(is_string($filename) ? $filename : '');
     }
 
     /**
@@ -651,7 +651,7 @@ SELECT id, name, permalink
         global $conf;
         if ($conf['original_url_protection'] === 'images') { // protect only images and not other file types (for example large movies that we don't want to send through our file proxy)
             $path = $infos['path'] ?? null;
-            $ext = get_extension(is_string($path) ? $path : null);
+            $ext = \Piwigo\Core\StringHelper::getExtension(is_string($path) ? $path : null);
             $picture_ext = is_array($conf['picture_ext'] ?? null) ? $conf['picture_ext'] : [];
             if (! in_array($ext, $picture_ext, true)) {
                 return $url;

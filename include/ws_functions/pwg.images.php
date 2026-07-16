@@ -1271,7 +1271,7 @@ function ws_images_add_chunk(array $params, PwgServer $service): ?PwgError
     $upload_dir = $upload_dir_conf . '/buffer';
 
     // create the upload directory tree if not exists
-    if (! mkgetdir($upload_dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
+    if (! \Piwigo\Core\FilesystemHelper::mkgetdir($upload_dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
         return new PwgError(500, 'error during buffer directory creation');
     }
 
@@ -1781,7 +1781,7 @@ function ws_images_upload(array $params, PwgServer $service): PwgError|array|nul
     $upload_dir = $upload_dir_conf . '/buffer';
 
     // create the upload directory tree if not exists
-    if (! mkgetdir($upload_dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
+    if (! \Piwigo\Core\FilesystemHelper::mkgetdir($upload_dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
         return new PwgError(500, 'error during buffer directory creation');
     }
 
@@ -2018,10 +2018,10 @@ SELECT COUNT(*)
     $chunkfile_path = sprintf($chunkfile_path_pattern, $params['chunk'] + 1, $params['chunks']);
 
     // create the upload directory tree if not exists
-    if (! mkgetdir(dirname($chunkfile_path), MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
+    if (! \Piwigo\Core\FilesystemHelper::mkgetdir(dirname($chunkfile_path), MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
         return new PwgError(500, 'error during buffer directory creation');
     }
-    secure_directory(dirname($chunkfile_path));
+    \Piwigo\Core\FilesystemHelper::secureDirectory(dirname($chunkfile_path));
 
     // move uploaded file
     $uploaded_chunk = $_FILES['file'] ?? null;
@@ -2363,7 +2363,7 @@ SELECT
     $result = pwg_query($query);
     while ((bool) ($row = pwg_db_fetch_assoc($result))) {
         assert($row['file'] !== null);
-        $filename_wo_ext = get_filename_wo_extension($row['file']);
+        $filename_wo_ext = \Piwigo\Core\StringHelper::getFilenameWoExtension($row['file']);
         @$unique_filenames_db[$filename_wo_ext][] = $row['id'];
     }
 

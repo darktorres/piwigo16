@@ -599,11 +599,11 @@ SELECT *
                 // directly.
                 $row_path = $row['path'];
                 assert(is_string($row_path)); // images.path is NOT NULL
-                $row['path_ext'] = strtolower(get_extension($row_path));
+                $row['path_ext'] = strtolower(\Piwigo\Core\StringHelper::getExtension($row_path));
 
                 $row_file = $row['file'];
                 assert(is_string($row_file)); // images.file is NOT NULL
-                $row['file_ext'] = strtolower(get_extension($row_file));
+                $row['file_ext'] = strtolower(\Piwigo\Core\StringHelper::getExtension($row_file));
 
                 if ($i === 'current') {
                     $row['element_path'] = get_element_path($row);
@@ -802,7 +802,7 @@ SELECT *
                         $formats,
                         [
                             'download_url' => $download_url,
-                            'ext' => get_extension($picture['current']['file']),
+                            'ext' => \Piwigo\Core\StringHelper::getExtension($picture['current']['file']),
                             'filesize' => $picture['current']['filesize'],
                         ]
                     );
@@ -1027,7 +1027,7 @@ SELECT COUNT(*) AS nb_fav
             // creation date
             $date_creation = $picture['current']['date_creation'] ?? null;
             if (is_string($date_creation) && $date_creation !== '' && $date_creation !== '0') {
-                $val = format_date($date_creation);
+                $val = \Piwigo\Core\DateHelper::formatDate($date_creation);
                 $url = make_index_url(
                     [
                         'chronology_field' => 'created',
@@ -1041,7 +1041,7 @@ SELECT COUNT(*) AS nb_fav
             }
 
             // date of availability
-            $val = format_date($picture['current']['date_available']);
+            $val = \Piwigo\Core\DateHelper::formatDate($picture['current']['date_available']);
             $url = make_index_url(
                 [
                     'chronology_field' => 'posted',
@@ -1146,7 +1146,7 @@ SELECT id, name, permalink
                 }
             }
 
-            if (in_array(strtolower(get_extension($picture['current']['file'])), ['pdf'], true)) {
+            if (in_array(strtolower(\Piwigo\Core\StringHelper::getExtension($picture['current']['file'])), ['pdf'], true)) {
                 $pdf_viewer_filesize_threshold = $conf['pdf_viewer_filesize_threshold'];
                 $pdf_viewer_filesize_threshold = is_numeric($pdf_viewer_filesize_threshold) ? (int) $pdf_viewer_filesize_threshold : 0;
                 $template->assign(

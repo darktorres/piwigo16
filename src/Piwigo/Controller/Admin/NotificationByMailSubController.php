@@ -390,12 +390,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                     assert($auth_key_since !== false);
                     $template->assign(
                         'auth_key_duration',
-                        time_since(
-                            $auth_key_since,
-                            'second',
-                            null,
-                            false
-                        )
+                        \Piwigo\Core\DateHelper::timeSince($auth_key_since, 'second', null, false)
                     );
                 }
 
@@ -426,7 +421,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                 $post_count = count($_POST[$post_keyname]);
                 $treated_count = count($check_key_treated);
                 if ($treated_count != 0) {
-                    $time_refresh = (int) ceil((get_moment() - $nbmSender->startTime()) * $post_count / $treated_count);
+                    $time_refresh = (int) ceil((\Piwigo\Core\TimingHelper::getMoment() - $nbmSender->startTime()) * $post_count / $treated_count);
                 } else {
                     $time_refresh = 0;
                 }

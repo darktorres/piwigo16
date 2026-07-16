@@ -588,7 +588,7 @@ SELECT id, date, author, content
     ) {
         $username = $user['username'];
         $comment_post_data['author'] = stripslashes(is_string($username) ? $username : '');
-        $comment_post_data['key'] = get_ephemeral_key(2, (string) $params['image_id']);
+        $comment_post_data['key'] = (new \Piwigo\Auth\EphemeralKeyService())->generate(2, (string) $params['image_id']);
     }
 
     $ret = $image_row;
@@ -1112,7 +1112,7 @@ UPDATE ' . Tables::images() . '
 ;';
     $result = pwg_query($query);
 
-    pwg_activity('photo', $params['image_id'], 'edit');
+    (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('photo', $params['image_id'], 'edit');
 
     $affected_rows = pwg_db_changes();
     if ((bool) $affected_rows) {
@@ -1742,7 +1742,7 @@ function ws_images_upload(array $params, PwgServer $service): PwgError|array|nul
 
     $format_ext = null;
 
-    if (get_pwg_token() != $params['pwg_token']) {
+    if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 
@@ -2457,7 +2457,7 @@ SELECT
  */
 function ws_images_formats_delete(array $params, PwgServer $service): PwgError|bool
 {
-    if (get_pwg_token() != $params['pwg_token']) {
+    if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 
@@ -2637,7 +2637,7 @@ function ws_images_setInfo(array $params, PwgServer $service): ?PwgError
     /** @var array<string, mixed> $conf */
     global $conf;
 
-    if (isset($params['pwg_token']) and get_pwg_token() != $params['pwg_token']) {
+    if (isset($params['pwg_token']) and (new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 
@@ -2716,7 +2716,7 @@ SELECT *
             ]
         );
 
-        pwg_activity('photo', $update['id'], 'edit');
+        (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('photo', $update['id'], 'edit');
     }
 
     if (isset($params['categories'])) {
@@ -2794,7 +2794,7 @@ SELECT *
  */
 function ws_images_delete(array $params, PwgServer $service): PwgError|int
 {
-    if (get_pwg_token() != $params['pwg_token']) {
+    if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 
@@ -2877,7 +2877,7 @@ function ws_images_uploadCompleted(array $params, PwgServer $service): PwgError|
 {
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
-    if (get_pwg_token() != $params['pwg_token']) {
+    if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 
@@ -2953,7 +2953,7 @@ SELECT
  */
 function ws_images_setMd5sum(array $params, PwgServer $service): PwgError|array
 {
-    if (get_pwg_token() != $params['pwg_token']) {
+    if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 
@@ -2983,7 +2983,7 @@ function ws_images_setMd5sum(array $params, PwgServer $service): PwgError|array
  */
 function ws_images_syncMetadata(array $params, PwgServer $service): PwgError|array
 {
-    if (get_pwg_token() != $params['pwg_token']) {
+    if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 
@@ -3046,7 +3046,7 @@ SELECT id
  */
 function ws_images_deleteOrphans(array $params, PwgServer $service): PwgError|array
 {
-    if (get_pwg_token() != $params['pwg_token']) {
+    if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 
@@ -3075,7 +3075,7 @@ function ws_images_deleteOrphans(array $params, PwgServer $service): PwgError|ar
  */
 function ws_images_setCategory(array $params, PwgServer $service): ?PwgError
 {
-    if (get_pwg_token() != $params['pwg_token']) {
+    if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 

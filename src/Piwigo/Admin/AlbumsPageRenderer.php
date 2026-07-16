@@ -76,7 +76,7 @@ SELECT
         assert($row !== null);
         [$albums_counter] = $row;
 
-        check_input_parameter('parent_id', $_GET, false, ValidationPattern::ID);
+        (new \Piwigo\Validation\InputValidator())->validate('parent_id', $_GET, false, ValidationPattern::ID);
 
         // +-------------------------------------------------------------------+
         // | tabs                                                              |
@@ -127,7 +127,7 @@ SELECT COUNT(*)
             if (! is_string($post_order) || ! in_array($post_order, $sort_orders)) {
                 die('Invalid sort order');
             }
-            check_input_parameter('id', $_POST, false, '/^-?\d+$/');
+            (new \Piwigo\Validation\InputValidator())->validate('id', $_POST, false, '/^-?\d+$/');
 
             // check_input_parameter() above fatal_error()s on a non-scalar or
             // non-matching value, but only narrows the type on its own end; $_POST
@@ -324,7 +324,7 @@ SELECT
         $template->assign(
             [
                 'album_data' => self::assocToOrderedTree($associatedTree),
-                'PWG_TOKEN' => get_pwg_token(),
+                'PWG_TOKEN' => (new \Piwigo\Csrf\CsrfService())->getToken(),
                 'nb_albums' => count($allAlbum),
                 'ADMIN_PAGE_TITLE' => l10n('Albums'),
                 'light_album_manager' => ($albums_counter > $conf['light_album_manager_threshold']) ? 1 : 0,

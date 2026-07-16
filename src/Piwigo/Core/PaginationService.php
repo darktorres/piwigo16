@@ -2,11 +2,22 @@
 
 declare(strict_types=1);
 
-namespace Piwigo\Page;
+namespace Piwigo\Core;
 
 /**
  * Pure pagination math -- no template/DB dependency, ported verbatim
  * from create_navigation_bar() (include/functions.inc.php).
+ *
+ * P23 batch 8d: moved from Piwigo\Page to Piwigo\Core -- deptrac's `Page`
+ * collector is L3Presentation (grouped with PageHeaderRenderer/
+ * PageTailRenderer, which genuinely need Template), but this class has
+ * zero imports and no such dependency; `Category\CategoryCatsRenderer`
+ * (L2aCoreDomain) needs to construct it directly for create_navigation_bar()'s
+ * retarget, which the L3 grouping blocked. Reclassifying by namespace
+ * (L1Infrastructure, same direction as every other `Piwigo\Core\*`
+ * cross-cutting utility) resolves the violation architecturally --
+ * cheaper and more honest than a dependency-inversion interface for a
+ * class with no real Presentation-layer dependency to invert away from.
  */
 final class PaginationService
 {

@@ -63,7 +63,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
         global $page, $template;
         global $my_base_url;
 
-        check_input_parameter('cat_id', $_POST, false, ValidationPattern::ID);
+        (new \Piwigo\Validation\InputValidator())->validate('cat_id', $_POST, false, ValidationPattern::ID);
 
         $selected_cat = [];
         // check_input_parameter() above only validates the format when 'cat_id' is
@@ -129,7 +129,7 @@ FROM ' . Tables::categories();
             new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
         )->displaySelectCatWrapper($query, $selected_cat, 'categories', false);
 
-        $pwg_token = get_pwg_token();
+        $pwg_token = (new \Piwigo\Csrf\CsrfService())->getToken();
 
         // --- generate display of active permalinks -----------------------------------
         $sort_by = $this->parseSortVariables(

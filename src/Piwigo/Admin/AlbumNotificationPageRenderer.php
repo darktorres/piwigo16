@@ -124,7 +124,7 @@ SELECT id, file, path, representative_ext
             ];
 
             if ($_POST['who'] === 'users' and isset($_POST['users']) and is_array($_POST['users']) and count($_POST['users']) > 0) {
-                check_input_parameter('users', $_POST, true, ValidationPattern::ID);
+                (new \Piwigo\Validation\InputValidator())->validate('users', $_POST, true, ValidationPattern::ID);
 
                 // TODO code very similar to function pwg_mail_group. We'd better create
                 // a function pwg_mail_users that could be called from here and from
@@ -163,7 +163,7 @@ SELECT
 
                     $usernames[] = $u['username'];
 
-                    $authkey = (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build())))->createUserAuthKey((int) $u['user_id'], $u['status']);
+                    $authkey = (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->createUserAuthKey((int) $u['user_id'], $u['status']);
 
                     $user_tpl = $tpl;
 
@@ -187,7 +187,7 @@ SELECT
                         $user_args['auth_key'] = $authkey['auth_key'];
                     }
 
-                    $user_language = is_string($u['language']) ? $u['language'] : (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultLanguage();
+                    $user_language = is_string($u['language']) ? $u['language'] : (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->getDefaultLanguage();
                     $user_email = is_string($u['email']) ? $u['email'] : '';
 
                     new MailService()
@@ -207,7 +207,7 @@ SELECT
                     ]
                 );
             } elseif ($_POST['who'] === 'group' and ! empty($_POST['group'])) {
-                check_input_parameter('group', $_POST, false, ValidationPattern::ID);
+                (new \Piwigo\Validation\InputValidator())->validate('group', $_POST, false, ValidationPattern::ID);
 
                 // check_input_parameter() above fatal_errors (never returns) unless
                 // $_POST['group'] matches ValidationPattern::ID (digits only); the is_numeric()
@@ -257,7 +257,7 @@ SELECT
                         )
                 ),
                 'F_ACTION' => $admin_album_base_url . '-notification',
-                'PWG_TOKEN' => get_pwg_token(),
+                'PWG_TOKEN' => (new \Piwigo\Csrf\CsrfService())->getToken(),
             ]
         );
 

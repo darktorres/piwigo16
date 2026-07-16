@@ -38,9 +38,9 @@ final class CatOptionsPageRenderer
 
         if ($_POST !== []) {
             check_pwg_token();
-            check_input_parameter('cat_true', $_POST, true, ValidationPattern::ID);
-            check_input_parameter('cat_false', $_POST, true, ValidationPattern::ID);
-            check_input_parameter('section', $_GET, false, '/^[a-z0-9_-]+$/i');
+            (new \Piwigo\Validation\InputValidator())->validate('cat_true', $_POST, true, ValidationPattern::ID);
+            (new \Piwigo\Validation\InputValidator())->validate('cat_false', $_POST, true, ValidationPattern::ID);
+            (new \Piwigo\Validation\InputValidator())->validate('section', $_GET, false, '/^[a-z0-9_-]+$/i');
         }
 
         if (isset($_POST['falsify'])
@@ -187,7 +187,7 @@ SELECT DISTINCT id,name,uppercats,global_rank
         );
         $categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true');
         $categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false');
-        $template->assign('PWG_TOKEN', get_pwg_token());
+        $template->assign('PWG_TOKEN', (new \Piwigo\Csrf\CsrfService())->getToken());
         $template->assign('ADMIN_PAGE_TITLE', l10n('Properties of abums'));
 
         $template->assign_var_from_handle('DOUBLE_SELECT', 'double_select');

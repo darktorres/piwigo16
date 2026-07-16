@@ -80,7 +80,7 @@ global $conf;
 include PHPWG_ROOT_PATH . 'include/functions.inc.php';
 
 // download database config file if exists
-check_input_parameter('dl', $_GET, false, '/^[a-f0-9]{32}$/');
+(new \Piwigo\Validation\InputValidator())->validate('dl', $_GET, false, '/^[a-f0-9]{32}$/');
 
 // $conf['data_location'] needs narrowing here specifically (used to build
 // on-disk paths below); narrowed once and reused for every use in this
@@ -235,7 +235,7 @@ if (isset($_POST['install'])) {
     if (empty($admin_mail)) {
         $errors[] = l10n('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
     } else {
-        $error_mail_address = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->validateMailAddress(null, $admin_mail);
+        $error_mail_address = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->validateMailAddress(null, $admin_mail);
         if (! empty($error_mail_address)) {
             $errors[] = $error_mail_address;
         }
@@ -407,7 +407,7 @@ INSERT INTO ' . $prefixeTable . 'config (param,value,comment)
         ];
         mass_inserts(Tables::users(), array_keys($inserts[0]), $inserts);
 
-        (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->createUserInfos([1, 2], [
+        (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->createUserInfos([1, 2], [
             'language' => $language,
         ]);
 
@@ -465,7 +465,7 @@ $template->assign(
 if ($step == 1) {
     $template->assign('install', true);
 } else {
-    pwg_activity('system', ActivitySystem::Core, 'install', [
+    (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('system', ActivitySystem::Core, 'install', [
         'version' => AppInfo::VERSION,
     ]);
     $infos[] = l10n('Congratulations, Piwigo installation is completed');
@@ -497,13 +497,13 @@ if ($step == 1) {
 
         // we don't load user cache because since Piwigo 15.4.0 the calculation of user
         // cache requires $logger which is not instanciated
-        $user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->buildUser(1, false);
+        $user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->buildUser(1, false);
         // build_user() returns array<string, mixed>; the 'id' key we just set
         // to the literal user id 1 doesn't retain that literal type through
         // the return, so narrow to what log_user() actually accepts.
         $login_user_id = $user['id'];
         $login_user_id = is_int($login_user_id) || (is_string($login_user_id) && is_numeric($login_user_id)) ? $login_user_id : false;
-        (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build())))->logUser($login_user_id, false);
+        (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->logUser($login_user_id, false);
         $_SESSION['connected_with'] = 'pwg_ui';
 
         // Same reason: narrow 'preferences' to array without discarding

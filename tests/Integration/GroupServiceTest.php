@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Piwigo\Activity\ActivityRepository;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
@@ -47,7 +49,7 @@ final class GroupServiceTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->repo = new GroupRepository(DbConnection::build());
-        $this->service = new GroupService($this->repo);
+        $this->service = new GroupService($this->repo, new ActivityService(new ActivityRepository(DbConnection::build())));
     }
 
     public function test_create_rejects_an_already_used_name(): void

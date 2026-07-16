@@ -172,7 +172,7 @@ final class UpdatesExtPageRenderer
 
         $template->assign('UPDATES_EXTENSION', $updates_extension);
         $template->assign('SHOW_RESET', $show_reset);
-        $template->assign('PWG_TOKEN', get_pwg_token());
+        $template->assign('PWG_TOKEN', (new \Piwigo\Csrf\CsrfService())->getToken());
         $template->assign('EXT_TYPE', $page_slug === 'updates' ? 'extensions' : $page_slug);
         $template->assign('isWebmaster', (\Piwigo\Auth\AccessControl::isWebmaster()) ? 1 : 0);
         $template->set_filename('plugin_admin_content', 'updates_ext.tpl');

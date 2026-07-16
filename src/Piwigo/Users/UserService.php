@@ -11,6 +11,7 @@ use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Logger;
 use Piwigo\Core\MailerInterface;
@@ -40,6 +41,7 @@ final class UserService
         private readonly UserRepository $repo,
         private readonly GroupRepository $groupRepo,
         private readonly MailerInterface $mailer,
+        private readonly ActivityLoggerInterface $activityLogger,
     ) {}
 
     /**
@@ -266,7 +268,7 @@ final class UserService
             ]
         );
 
-        pwg_activity('user', $userId, 'add');
+        $this->activityLogger->record('user', $userId, 'add');
 
         return [
             'userId' => $userId,
@@ -1351,7 +1353,7 @@ SELECT
             ]
         );
 
-        $authService = new AuthService(new AuthRepository(DbConnection::build()));
+        $authService = new AuthService(new AuthRepository(DbConnection::build()), $this->activityLogger);
 
         if (isset($updates[$user_fields['password']])) {
             $authService->deactivateUserAuthKeys($user_ids[0]);
@@ -1446,7 +1448,7 @@ SELECT
 
         invalidate_user_cache();
 
-        pwg_activity('user', $user_ids, 'edit');
+        $this->activityLogger->record('user', $user_ids, 'edit');
 
         return [
             'user_id' => $params['user_id'],

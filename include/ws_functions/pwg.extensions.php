@@ -67,7 +67,7 @@ function ws_plugins_performAction(array $params, PwgServer &$service): PwgError|
 
     /** @var Template $template */
     /** @var array<string, mixed> $conf */
-    if (get_pwg_token() != $params['pwg_token']) {
+    if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 
@@ -108,7 +108,7 @@ function ws_themes_performAction(array $params, PwgServer &$service): PwgError|t
 
     /** @var Template $template */
     /** @var array<string, mixed> $conf */
-    if (get_pwg_token() != $params['pwg_token']) {
+    if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 
@@ -155,7 +155,7 @@ function ws_extensions_update(array $params, PwgServer &$service): PwgError|stri
         return new PwgError(401, l10n('Webmaster status is required.'));
     }
 
-    if (get_pwg_token() != $params['pwg_token']) {
+    if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 
@@ -193,7 +193,7 @@ function ws_extensions_update(array $params, PwgServer &$service): PwgError|stri
         . '&id=' . $extension_id
         . '&revision=' . $revision
         . '&reactivate=true'
-        . '&pwg_token=' . get_pwg_token()
+        . '&pwg_token=' . (new \Piwigo\Csrf\CsrfService())->getToken()
         . '&format=json'
             );
         }
@@ -222,7 +222,7 @@ function ws_extensions_update(array $params, PwgServer &$service): PwgError|stri
             $activity_details['result'] = 'error';
         }
 
-        pwg_activity('system', ActivitySystem::Theme, 'update', $activity_details);
+        (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('system', ActivitySystem::Theme, 'update', $activity_details);
     } elseif ($extension instanceof languages) {
         $upgrade_status = $extension->extract_language_files('upgrade', $revision, $extension_id);
         $extension_name = $extension->fs_languages[$extension_id]['name'];
@@ -267,7 +267,7 @@ function ws_extensions_ignoreupdate(array $params, PwgServer &$service): PwgErro
         return new PwgError(401, 'Access denied');
     }
 
-    if (get_pwg_token() != $params['pwg_token']) {
+    if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 

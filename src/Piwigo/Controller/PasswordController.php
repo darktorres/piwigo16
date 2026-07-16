@@ -51,7 +51,7 @@ final class PasswordController implements ControllerInterface
 
         trigger_notify('loc_begin_password');
 
-        check_input_parameter('action', $_GET, false, '/^(lost|reset|lost_code|reset_end|none)$/');
+        (new \Piwigo\Validation\InputValidator())->validate('action', $_GET, false, '/^(lost|reset|lost_code|reset_end|none)$/');
         $action_param = is_string($_GET['action'] ?? null) ? $_GET['action'] : null;
 
         // ------------------------------------------------------- process form
@@ -90,10 +90,10 @@ final class PasswordController implements ControllerInterface
         if (isset($_GET['key']) and ! isset($_POST['submit'])) {
             $user_id = $this->checkPasswordResetKey($_GET['key']);
             if (is_numeric($user_id)) {
-                $userdata = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getUserData((int) $user_id, false);
+                $userdata = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->getUserData((int) $user_id, false);
                 $page['username'] = $userdata['username'];
                 $template->assign('key', $_GET['key']);
-                $first_login = (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build())))->hasAlreadyLoggedIn((int) $user_id);
+                $first_login = (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->hasAlreadyLoggedIn((int) $user_id);
 
                 if (! isset($page['action'])) {
                     $page['action'] = 'reset';
@@ -164,7 +164,7 @@ final class PasswordController implements ControllerInterface
                     'form_action' => get_root_url() . 'password.php',
                     'action' => $page['action'],
                     'username' => $page['username'] ?? $user['username'],
-                    'PWG_TOKEN' => get_pwg_token(),
+                    'PWG_TOKEN' => (new \Piwigo\Csrf\CsrfService())->getToken(),
                 ]
             );
 
@@ -248,10 +248,10 @@ final class PasswordController implements ControllerInterface
         }
 
         // retrievies user by email is not try by username
-        $user_id_raw = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getUserIdByEmail($username_or_email);
+        $user_id_raw = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->getUserIdByEmail($username_or_email);
 
         if (! is_numeric($user_id_raw)) {
-            $user_id_raw = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getUserId($username_or_email);
+            $user_id_raw = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->getUserId($username_or_email);
         }
 
         // when no user is found, we assign guest_id instead of stopping.
@@ -265,7 +265,7 @@ final class PasswordController implements ControllerInterface
             $user_id = is_numeric($guest_id) ? (int) $guest_id : 0;
         }
 
-        $userdata = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getUserData($user_id, false);
+        $userdata = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->getUserData($user_id, false);
 
         $status = $userdata['status'] ?? '';
         $status = is_string($status) ? $status : '';
@@ -388,18 +388,18 @@ final class PasswordController implements ControllerInterface
                 // lockout account for 1hour
                 if ($has_valid_user_id) {
                     $save_user = $user;
-                    $user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->buildUser((int) $user_id_raw, false);
+                    $user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->buildUser((int) $user_id_raw, false);
                     (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->updateParam('reset_password_forbidden_until', time() + 60 * 60);
                     $user = $save_user;
 
-                    pwg_activity('user', (int) $user_id_raw, 'reset_password_failure_too_many');
+                    (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('user', (int) $user_id_raw, 'reset_password_failure_too_many');
                 }
                 $page['errors']['login_page_error'] = l10n('Too many attempts, please try later..');
                 return false;
             }
 
             if ($has_valid_user_id) {
-                pwg_activity('user', (int) $user_id_raw, 'reset_password_failure_code');
+                (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('user', (int) $user_id_raw, 'reset_password_failure_code');
             }
             $page['errors']['password_form_error'] = l10n('Invalid verification code');
             return false;
@@ -415,7 +415,7 @@ final class PasswordController implements ControllerInterface
         $user_id = (int) $user_id_raw;
 
         $save_user = $user;
-        $user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->buildUser($user_id, false);
+        $user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->buildUser($user_id, false);
         (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->deleteParam('reset_password_forbidden_until');
 
         $_SESSION['valid_reset_password_code'] = [
@@ -572,7 +572,7 @@ SELECT
         }
         unset($_SESSION['valid_reset_password_code']);
 
-        pwg_activity('user', (int) $user_id, 'reset_password_success');
+        (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('user', (int) $user_id, 'reset_password_success');
 
         $page['infos'][] = l10n('Your password has been reset');
         $page['infos'][] = '<a href="' . get_root_url() . 'identification.php">' . l10n('Login') . '</a>';
@@ -592,8 +592,8 @@ SELECT
             return false;
         }
 
-        (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build())))->deactivatePasswordResetKey((int) $user_id);
-        (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build())))->deactivateUserAuthKeys((int) $user_id);
+        (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->deactivatePasswordResetKey((int) $user_id);
+        (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->deactivateUserAuthKeys((int) $user_id);
         return $user_id;
     }
 

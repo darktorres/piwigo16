@@ -18,25 +18,13 @@ namespace {
         }
     }
 
-    // pwg_activity() itself (include/functions.inc.php) isn't loaded by this
-    // isolated integration test either -- reimplemented here calling the
-    // exact same real ActivityService/ActivityRepository it delegates to
-    // (same pattern as tests/Integration/ExtensionLifecycleTest.php), so
-    // this suite exercises genuine activity-logging behavior rather than a
-    // mock -- the whole point of test_a_real_action_is_logged_to_pwg_activity().
-    if (! function_exists('pwg_activity')) {
-        /**
-         * @param array<int, int|string>|int|string $objectId
-         * @param array<string, mixed> $details
-         */
-        function pwg_activity(string $object, array|int|string $objectId, string $action, array $details = []): void
-        {
-            new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))
-                ->record($object, $objectId, $action, $details);
-        }
-    }
+    // pwg_activity() -- MaintenanceActionDispatcher now calls Piwigo\
+    // Activity\ActivityService::record() directly (P23 batch 8d), so no
+    // stub is needed; this Integration test's real DB connection exercises
+    // genuine activity-logging behavior (the whole point of
+    // test_a_real_action_is_logged_to_pwg_activity()) without a stub.
 
-    // pwg_activity() -> ActivityService::record() calls the real, stable,
+    // ActivityService::record() calls the real, stable,
     // already-migrated script_basename() (needs full $_SERVER-driven
     // bootstrap this isolated integration test doesn't load). Copied
     // verbatim from ActivityServiceTest.php's own identical stub -- per

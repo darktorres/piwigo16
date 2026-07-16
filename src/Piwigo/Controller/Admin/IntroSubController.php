@@ -229,7 +229,7 @@ SELECT COUNT(*)
                 'NB_VIEWS' => number_format_human_readable($nb_views),
                 'NB_PLUGINS' => count($pwg_loaded_plugins),
                 'STORAGE_USED' => str_replace(' ', '&nbsp;', l10n('%sGB', number_format($du_gb, $du_decimals))),
-                'U_QUICK_SYNC' => PHPWG_ROOT_PATH . 'admin.php?page=site_update&amp;site=1&amp;quick_sync=1&amp;pwg_token=' . get_pwg_token(),
+                'U_QUICK_SYNC' => PHPWG_ROOT_PATH . 'admin.php?page=site_update&amp;site=1&amp;quick_sync=1&amp;pwg_token=' . (new \Piwigo\Csrf\CsrfService())->getToken(),
                 'CHECK_FOR_UPDATES' => $conf['dashboard_check_for_updates'],
             ]
         );

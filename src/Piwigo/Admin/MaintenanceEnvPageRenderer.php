@@ -54,7 +54,7 @@ final class MaintenanceEnvPageRenderer
             'maintenance' => 'maintenance_env.tpl',
         ]);
 
-        $url_format = get_root_url() . 'admin.php?page=maintenance&amp;action=%s&amp;pwg_token=' . get_pwg_token();
+        $url_format = get_root_url() . 'admin.php?page=maintenance&amp;action=%s&amp;pwg_token=' . (new \Piwigo\Csrf\CsrfService())->getToken();
 
         /** @var array<string, string> $purge_urls */
         $purge_urls = [];

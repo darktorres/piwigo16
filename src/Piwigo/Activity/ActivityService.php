@@ -4,19 +4,22 @@ declare(strict_types=1);
 
 namespace Piwigo\Activity;
 
+use Piwigo\Core\ActivityLoggerInterface;
+
 /**
  * Activity domain business logic: request-context detection/enrichment
  * for pwg_activity()'s log line(s), plus thin read wrappers for
  * admin/user_activity.php's own dashboard queries. Constructor-injects
  * only ActivityRepository (plain constructor injection).
  *
- * record() itself stays a free-function delegate at its original call
- * sites (pwg_activity(), still in include/functions.inc.php) rather than
- * being replaced by direct DI everywhere -- it's called from dozens of
- * sites app-wide, same "wide-fanout write stays a free-function delegate"
- * shape as P17's get_pwg_token().
+ * P23 batch 8d: implements Piwigo\Core\ActivityLoggerInterface so the 3
+ * L2aCoreDomain classes that call record() (UserService/GroupService/
+ * AuthService) can constructor-inject it without a forbidden L2a->L2b
+ * dependency (see that interface's own docblock) -- every other real
+ * caller (dozens of L4Integration/legacy sites) still retargets straight
+ * to this class.
  */
-final class ActivityService
+final class ActivityService implements ActivityLoggerInterface
 {
     public function __construct(
         private readonly ActivityRepository $repo,
@@ -26,6 +29,7 @@ final class ActivityService
      * @param int|string|array<int, int|string> $objectId
      * @param array<string, mixed> $details
      */
+    #[\Override]
     public function record(string $object, int|string|array $objectId, string $action, array $details = []): void
     {
         /** @var array<string, mixed> $user */

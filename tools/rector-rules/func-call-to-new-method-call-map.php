@@ -9,12 +9,17 @@ declare(strict_types=1);
 // through unchanged is always correct. See
 // tools/rector-rules/FuncCallToNewMethodCallRector.php.
 
-$userServiceCtor = 'new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService())';
-$authServiceCtor = 'new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()))';
+$activityServiceCtor = 'new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))';
+$userServiceCtor = 'new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), ' . $activityServiceCtor . ')';
+$authServiceCtor = 'new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), ' . $activityServiceCtor . ')';
 $passwordServiceCtor = 'new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build()))';
 $permissionServiceCtor = 'new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()))';
 $preferencesServiceCtor = 'new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))';
 $apiKeyServiceCtor = 'new \Piwigo\Auth\ApiKeyService(new \Piwigo\Mail\MailService())';
+$csrfServiceCtor = 'new \Piwigo\Csrf\CsrfService()';
+$inputValidatorCtor = 'new \Piwigo\Validation\InputValidator()';
+$paginationServiceCtor = 'new \Piwigo\Core\PaginationService()';
+$ephemeralKeyServiceCtor = 'new \Piwigo\Auth\EphemeralKeyService()';
 
 return [
     'search_case_username' => [$userServiceCtor, 'searchCaseUsername'],
@@ -70,4 +75,29 @@ return [
     'get_available_api_key' => [$apiKeyServiceCtor, 'getAvailable'],
     'connected_with_pwg_ui' => [$apiKeyServiceCtor, 'connectedWithPwgUi'],
     'notification_api_key_expiration' => [$apiKeyServiceCtor, 'notifyExpiration'],
+
+    // P23 batch 8d, include/functions.inc.php pass 1 (already-delegating
+    // functions -- same "half the work is done" shape as pass 0).
+    // pwg_activity() itself: the 3 real L2aCoreDomain callers
+    // (UserService/GroupService/AuthService) were fixed by hand first
+    // (constructor-injected ActivityLoggerInterface, $this->activityLogger->
+    // record()) BEFORE this map runs, so this mapping only ever matches
+    // the remaining L3/L4/legacy call sites -- safe to retarget straight
+    // to the concrete class there.
+    'pwg_activity' => [$activityServiceCtor, 'record'],
+    'get_pwg_token' => [$csrfServiceCtor, 'getToken'],
+    'check_input_parameter' => [$inputValidatorCtor, 'validate'],
+    'create_navigation_bar' => [$paginationServiceCtor, 'createNavigationBar'],
+    'get_ephemeral_key' => [$ephemeralKeyServiceCtor, 'generate'],
+    'verify_ephemeral_key' => [$ephemeralKeyServiceCtor, 'verify'],
+    // check_pwg_token() intentionally NOT mapped: CsrfService::check()
+    // deliberately returns bool|null instead of acting on failure itself
+    // (see that class's own docblock) -- L2bExtendedDomain may not depend
+    // upward on L3Presentation's HtmlService, which bad_request()/
+    // access_denied() need. check_pwg_token() is a permanent free-function
+    // facade, same structural shape as fatal_error() (P23 batch 8c finding
+    // 8 case 3) -- already fully delegated (its own body is a pure
+    // CsrfService::check() call plus the failure-handling glue), so "real
+    // logic lives in a real class" is already satisfied; only the thin
+    // facade survives, deliberately.
 ];

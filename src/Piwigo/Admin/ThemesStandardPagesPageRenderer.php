@@ -202,7 +202,7 @@ final class ThemesStandardPagesPageRenderer
                 'is_standard_pages_used' => $is_standard_pages_used,
                 'standard_pages_used_by' => $standard_pages_used_by,
                 'std_pgs_selected_logo_path' => conf_get_param('standard_pages_selected_logo_path', null),
-                'PWG_TOKEN' => get_pwg_token(),
+                'PWG_TOKEN' => (new \Piwigo\Csrf\CsrfService())->getToken(),
             ]
         );
 

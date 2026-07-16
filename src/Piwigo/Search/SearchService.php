@@ -1137,7 +1137,7 @@ final class SearchService
         $expression = new QExpression($q, $scopes);
 
         $inflector = null;
-        $langCode = substr(new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), $this->mailer)->getDefaultLanguage(), 0, 2);
+        $langCode = substr(new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), $this->mailer, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())))->getDefaultLanguage(), 0, 2);
         $className = '\\Piwigo\\Search\\Inflector\\Inflector_' . $langCode;
         if (class_exists($className)) {
             $inflector = new $className();

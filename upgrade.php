@@ -492,7 +492,7 @@ REPLACE INTO ' . Tables::plugins() . '
                 $template->assign(
                     [
                         'button_label' => l10n('Discover what\'s new in Piwigo %s', get_branch_from_version(AppInfo::VERSION)),
-                        'button_link' => 'admin.php?submited_tour_path=tours/' . $version_ . '&amp;pwg_token=' . get_pwg_token(),
+                        'button_link' => 'admin.php?submited_tour_path=tours/' . $version_ . '&amp;pwg_token=' . (new \Piwigo\Csrf\CsrfService())->getToken(),
                     ]
                 );
             }

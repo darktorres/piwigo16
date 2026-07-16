@@ -14,9 +14,11 @@ use Doctrine\ORM\ORMSetup;
 use Monolog\Formatter\JsonFormatter;
 use Monolog\Handler\RotatingFileHandler;
 use Monolog\Logger as MonologLogger;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Cache\CacheFactory;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigRepository;
+use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\TablePrefixListener;
@@ -51,6 +53,14 @@ return [
     // directly, per deptrac.yaml's ruleset. See src/Piwigo/Core/
     // MailerInterface.php's own docblock.
     MailerInterface::class => \DI\get(MailService::class),
+
+    // Interface binding (P23 batch 8d) -- Piwigo\Activity\ActivityService is
+    // L2bExtendedDomain; Users\UserService/Group\GroupService/Auth\AuthService
+    // (all L2aCoreDomain) constructor-inject ActivityLoggerInterface instead
+    // of depending on the concrete class directly, per deptrac.yaml's
+    // ruleset. See src/Piwigo/Core/ActivityLoggerInterface.php's own
+    // docblock.
+    ActivityLoggerInterface::class => \DI\get(ActivityService::class),
 
     // Unresolvable string param (the routes file path) -- Router::fromFile()
     // needs a path autowire can't provide.

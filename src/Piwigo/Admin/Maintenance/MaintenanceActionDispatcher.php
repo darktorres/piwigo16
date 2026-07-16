@@ -85,7 +85,7 @@ final class MaintenanceActionDispatcher
             case 'lock_gallery':
 
                 conf_update_param('gallery_locked', 'true');
-                pwg_activity('system', ActivitySystem::Core, 'maintenance', [
+                (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('system', ActivitySystem::Core, 'maintenance', [
                     'maintenance_action' => $action,
                 ]);
                 redirect(get_root_url() . 'admin.php?page=maintenance');
@@ -95,7 +95,7 @@ final class MaintenanceActionDispatcher
 
                 conf_update_param('gallery_locked', 'false');
                 $_SESSION['page_infos'] = [l10n('Gallery unlocked')];
-                pwg_activity('system', ActivitySystem::Core, 'maintenance', [
+                (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('system', ActivitySystem::Core, 'maintenance', [
                     'maintenance_action' => $action,
                 ]);
                 redirect(get_root_url() . 'admin.php?page=maintenance');
@@ -262,7 +262,7 @@ final class MaintenanceActionDispatcher
         }
 
         if ($register_activity) {
-            pwg_activity('system', ActivitySystem::Core, 'maintenance', [
+            (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('system', ActivitySystem::Core, 'maintenance', [
                 'maintenance_action' => $action,
             ]);
         }

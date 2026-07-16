@@ -391,12 +391,12 @@ function ws_session_login(array $params, PwgServer &$service): PwgError|true
 
     if ((bool) preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $params['username'])) {
         $secret = pwg_db_real_escape_string($params['password']);
-        $authenticate = (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build())))->authKeyLogin($params['username'] . ':' . $secret);
+        $authenticate = (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->authKeyLogin($params['username'] . ':' . $secret);
         if ($authenticate) {
             $_SESSION['connected_with'] = 'ws_session_login_api_key';
             return true;
         }
-    } elseif ((new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build())))->tryLogUser($params['username'], $params['password'], false)) {
+    } elseif ((new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->tryLogUser($params['username'], $params['password'], false)) {
         $_SESSION['connected_with'] = 'ws_session_login';
         return true;
     }
@@ -415,7 +415,7 @@ function ws_session_logout($params, PwgServer &$service): PwgError|true
     }
 
     if (! \Piwigo\Auth\AccessControl::isAGuest()) {
-        (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build())))->logoutUser();
+        (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->logoutUser();
     }
     return true;
 }
@@ -441,7 +441,7 @@ function ws_session_getStatus($params, PwgServer &$service): array
     foreach (['status', 'theme', 'language'] as $k) {
         $res[$k] = $user[$k];
     }
-    $res['pwg_token'] = get_pwg_token();
+    $res['pwg_token'] = (new \Piwigo\Csrf\CsrfService())->getToken();
     $res['charset'] = get_pwg_charset();
 
     $row = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
@@ -854,13 +854,13 @@ function ws_history_search(array $param, PwgServer &$service): array
 
     // date start
     if (! empty($param['start'])) {
-        check_input_parameter('start', $param, false, '/^\d{4}-\d{2}-\d{2}$/');
+        (new \Piwigo\Validation\InputValidator())->validate('start', $param, false, '/^\d{4}-\d{2}-\d{2}$/');
         $search['fields']['date-after'] = $param['start'];
     }
 
     // date end
     if (! empty($param['end'])) {
-        check_input_parameter('end', $param, false, '/^\d{4}-\d{2}-\d{2}$/');
+        (new \Piwigo\Validation\InputValidator())->validate('end', $param, false, '/^\d{4}-\d{2}-\d{2}$/');
         $search['fields']['date-before'] = $param['end'];
     }
 
@@ -868,7 +868,7 @@ function ws_history_search(array $param, PwgServer &$service): array
     if (empty($param['types'])) {
         $search['fields']['types'] = $types;
     } else {
-        check_input_parameter('types', $param, true, '/^(' . implode('|', $types) . ')$/');
+        (new \Piwigo\Validation\InputValidator())->validate('types', $param, true, '/^(' . implode('|', $types) . ')$/');
         $search['fields']['types'] = $param['types'];
     }
 
@@ -897,7 +897,7 @@ function ws_history_search(array $param, PwgServer &$service): array
     }
 
     // thumbnails
-    check_input_parameter('display_thumbnail', $param, false, '/^(' . implode('|', array_keys($display_thumbnails)) . ')$/');
+    (new \Piwigo\Validation\InputValidator())->validate('display_thumbnail', $param, false, '/^(' . implode('|', array_keys($display_thumbnails)) . ')$/');
 
     $search['fields']['display_thumbnail'] = $param['display_thumbnail'];
     // Display choise are also save to one cookie

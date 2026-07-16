@@ -62,7 +62,7 @@ final class CatListPageRenderer
         // |                            initialization                          |
         // +-------------------------------------------------------------------+
 
-        check_input_parameter('parent_id', $_GET, false, ValidationPattern::ID);
+        (new \Piwigo\Validation\InputValidator())->validate('parent_id', $_GET, false, ValidationPattern::ID);
 
         // check_input_parameter() already validated (or killed the request) that
         // $_GET['parent_id'], when present, matches ValidationPattern::ID (digits only) -- but
@@ -179,7 +179,7 @@ SELECT COUNT(*)
             'ADMIN_PAGE_TITLE' => l10n('Album list management'),
             'CATEGORIES_NAV' => preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation)),
             'F_ACTION' => $form_action,
-            'PWG_TOKEN' => get_pwg_token(),
+            'PWG_TOKEN' => (new \Piwigo\Csrf\CsrfService())->getToken(),
             'sort_orders' => $sort_orders,
             'sort_order_checked' => array_shift($sort_orders_checked),
         ]);
@@ -311,7 +311,7 @@ SELECT
 
             if (empty($category['dir'])) {
                 $tpl_cat['U_DELETE'] = $self_url . '&amp;delete=' . $cat_id;
-                $tpl_cat['U_DELETE'] .= '&amp;pwg_token=' . get_pwg_token();
+                $tpl_cat['U_DELETE'] .= '&amp;pwg_token=' . (new \Piwigo\Csrf\CsrfService())->getToken();
             } else {
                 if ((bool) $conf['enable_synchronization']) {
                     $tpl_cat['U_SYNC'] = $base_url . 'site_update&amp;site=1&amp;cat_id=' . $cat_id;

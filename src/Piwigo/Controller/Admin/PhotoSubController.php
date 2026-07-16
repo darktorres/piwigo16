@@ -49,8 +49,8 @@ final class PhotoSubController implements AdminSubControllerInterface
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
-        check_input_parameter('cat_id', $_GET, false, ValidationPattern::ID);
-        check_input_parameter('image_id', $_GET, false, ValidationPattern::ID);
+        (new \Piwigo\Validation\InputValidator())->validate('cat_id', $_GET, false, ValidationPattern::ID);
+        (new \Piwigo\Validation\InputValidator())->validate('image_id', $_GET, false, ValidationPattern::ID);
 
         // check_input_parameter() above already validated $_GET['image_id'] against
         // ValidationPattern::ID (digits only) when present; $_GET values are always strings

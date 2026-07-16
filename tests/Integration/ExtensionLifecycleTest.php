@@ -85,23 +85,12 @@ namespace {
         }
     }
 
-    // pwg_activity() itself (include/functions.inc.php) isn't loaded by
-    // this isolated integration test either -- reimplemented here calling
-    // the exact same real ActivityService/ActivityRepository it delegates
-    // to, so this suite exercises genuine activity-logging behavior (the
-    // whole point of test_language_actions_never_log_activity()/
-    // test_plugin_actions_do_log_activity() below) rather than a mock.
-    if (! function_exists('pwg_activity')) {
-        /**
-         * @param array<int, int|string>|int|string $objectId
-         * @param array<string, mixed> $details
-         */
-        function pwg_activity(string $object, array|int|string $objectId, string $action, array $details = []): void
-        {
-            new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))
-                ->record($object, $objectId, $action, $details);
-        }
-    }
+    // pwg_activity() -- ExtensionLifecycle now calls Piwigo\Activity\
+    // ActivityService::record() directly (P23 batch 8d), so no stub is
+    // needed; this Integration test's real DB connection exercises
+    // genuine activity-logging behavior (the whole point of
+    // test_language_actions_never_log_activity()/
+    // test_plugin_actions_do_log_activity() below) without a stub.
 
     // get_default_theme()/get_default_language()/userprefs_get_param() are
     // now real Piwigo\Users\UserService/PreferencesService calls (P23 batch

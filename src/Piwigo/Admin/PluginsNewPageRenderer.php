@@ -89,15 +89,10 @@ final class PluginsNewPageRenderer
                     $installed_plugin_id = $_GET['plugin_id'] ?? null;
                     $installed_fs_plugin = is_string($installed_plugin_id) ? ($extension_scanner->scan(ExtensionType::Plugin)[$installed_plugin_id] ?? null) : null;
                     if ($installed_fs_plugin !== null) {
-                        pwg_activity(
-                            'system',
-                            ActivitySystem::Plugin,
-                            'install',
-                            [
-                                'plugin_id' => $installed_plugin_id,
-                                'version' => $installed_fs_plugin['version'],
-                            ]
-                        );
+                        (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('system', ActivitySystem::Plugin, 'install', [
+                            'plugin_id' => $installed_plugin_id,
+                            'version' => $installed_fs_plugin['version'],
+                        ]);
                     }
                     break;
 
@@ -197,7 +192,7 @@ final class PluginsNewPageRenderer
                 $url_auto_install = htmlentities($base_url)
                   . '&amp;revision=' . $revision_id
                   . '&amp;extension=' . $extension_id
-                  . '&amp;pwg_token=' . get_pwg_token()
+                  . '&amp;pwg_token=' . (new \Piwigo\Csrf\CsrfService())->getToken()
                 ;
 
                 // get the age of the last revision in days

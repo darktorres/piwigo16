@@ -69,8 +69,8 @@ final class BatchManagerSubController implements AdminSubControllerInterface
 
         include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
-        check_input_parameter('selection', $_POST, true, ValidationPattern::ID);
-        check_input_parameter('display', $_REQUEST, false, '/^(\d+|all)$/');
+        (new \Piwigo\Validation\InputValidator())->validate('selection', $_POST, true, ValidationPattern::ID);
+        (new \Piwigo\Validation\InputValidator())->validate('display', $_REQUEST, false, '/^(\d+|all)$/');
 
         // $user['id'] (the logged in / guest user id) is always numeric here (DB
         // primary key, or $conf['guest_id']); narrow once and reuse at every query
@@ -126,7 +126,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         // +-------------------------------------------------------------------+
 
         if (isset($_GET['mode'])) {
-            check_input_parameter('mode', $_GET, false, '/^(global|unit)$/');
+            (new \Piwigo\Validation\InputValidator())->validate('mode', $_GET, false, '/^(global|unit)$/');
             $page['tab'] = is_string($_GET['mode']) ? $_GET['mode'] : 'global';
         } else {
             $page['tab'] = 'global';
@@ -185,7 +185,7 @@ DELETE FROM ' . Tables::caddie() . '
         }
 
         if ($_GET['action'] === 'delete_orphans' and isset($_GET['nb_orphans_deleted'])) {
-            check_input_parameter('nb_orphans_deleted', $_GET, false, '/^\d+$/');
+            (new \Piwigo\Validation\InputValidator())->validate('nb_orphans_deleted', $_GET, false, '/^\d+$/');
             $nb_orphans_deleted = is_numeric($_GET['nb_orphans_deleted']) ? (int) $_GET['nb_orphans_deleted'] : 0;
 
             if ($nb_orphans_deleted > 0) {
@@ -203,7 +203,7 @@ DELETE FROM ' . Tables::caddie() . '
         }
 
         if ($_GET['action'] === 'sync_md5sum' and isset($_GET['nb_md5sum_added'])) {
-            check_input_parameter('nb_md5sum_added', $_GET, false, '/^\d+$/');
+            (new \Piwigo\Validation\InputValidator())->validate('nb_md5sum_added', $_GET, false, '/^\d+$/');
             $nb_md5sum_added = is_numeric($_GET['nb_md5sum_added']) ? (int) $_GET['nb_md5sum_added'] : 0;
 
             if ($nb_md5sum_added > 0) {
@@ -260,7 +260,7 @@ DELETE FROM ' . Tables::caddie() . '
             }
 
             if (isset($_POST['filter_category_use'])) {
-                check_input_parameter('filter_category', $_POST, false, ValidationPattern::ID);
+                (new \Piwigo\Validation\InputValidator())->validate('filter_category', $_POST, false, ValidationPattern::ID);
 
                 $_SESSION['bulk_manager_filter']['category'] = $_POST['filter_category'];
 
@@ -289,7 +289,7 @@ DELETE FROM ' . Tables::caddie() . '
             }
 
             if (isset($_POST['filter_level_use'])) {
-                check_input_parameter('filter_level', $_POST, false, '/^\d+$/');
+                (new \Piwigo\Validation\InputValidator())->validate('filter_level', $_POST, false, '/^\d+$/');
 
                 // $_POST['filter_level'] is a numeric string (validated by
                 // check_input_parameter() above); $availablePermissionLevels holds

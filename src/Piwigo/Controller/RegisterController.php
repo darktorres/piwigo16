@@ -57,7 +57,7 @@ final class RegisterController implements ControllerInterface
             if (! is_string($post_key)) {
                 $post_key = '';
             }
-            if (! verify_ephemeral_key($post_key)) {
+            if (! (new \Piwigo\Auth\EphemeralKeyService())->verify($post_key)) {
                 set_status_header(403);
                 $page['errors']['register_page_error'] = l10n('Invalid/expired form key');
             }
@@ -97,7 +97,7 @@ final class RegisterController implements ControllerInterface
             // rationale (this is also why an existing account gets a
             // "someone tried to register your username" email instead of
             // the requester ever seeing an error here).
-            $registration_result = new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), new MailService())
+            $registration_result = new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), new MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
                 ->registerUser(
                     $post_login,
                     $post_password,
@@ -144,13 +144,13 @@ final class RegisterController implements ControllerInterface
                 // would be a full account-takeover, not just an
                 // information leak. Both cases redirect identically.
                 if ($new_user_id !== null) {
-                    (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build())))->logUser($new_user_id, false);
+                    (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->logUser($new_user_id, false);
                 }
                 redirect(make_index_url());
             }
-            $registration_post_key = get_ephemeral_key(2);
+            $registration_post_key = (new \Piwigo\Auth\EphemeralKeyService())->generate(2);
         } else {
-            $registration_post_key = get_ephemeral_key(6);
+            $registration_post_key = (new \Piwigo\Auth\EphemeralKeyService())->generate(6);
         }
 
         $login_raw = $_POST['login'] ?? null;

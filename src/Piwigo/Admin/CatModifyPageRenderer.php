@@ -332,7 +332,7 @@ SELECT COUNT(*)
             $template->assign('parent_category', empty($category_id_uppercat) ? [] : [$category_id_uppercat]);
         }
 
-        $template->assign('PWG_TOKEN', get_pwg_token());
+        $template->assign('PWG_TOKEN', (new \Piwigo\Csrf\CsrfService())->getToken());
 
         trigger_notify('loc_end_cat_modify');
 

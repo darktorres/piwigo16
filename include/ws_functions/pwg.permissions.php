@@ -148,7 +148,7 @@ SELECT group_id, cat_id
  */
 function ws_permissions_add(array $params, PwgServer &$service): mixed
 {
-    if (get_pwg_token() != $params['pwg_token']) {
+    if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 
@@ -213,7 +213,7 @@ SELECT id
  */
 function ws_permissions_remove(array $params, PwgServer &$service): mixed
 {
-    if (get_pwg_token() != $params['pwg_token']) {
+    if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 

@@ -458,14 +458,7 @@ SELECT *
             // navigation bar
             $page['cats_navigation_bar'] = [];
             if ($totalCategories > $nbCategoriesPage) {
-                $page['cats_navigation_bar'] = create_navigation_bar(
-                    duplicate_index_url([], ['startcat']),
-                    $totalCategories,
-                    $startcat,
-                    $nbCategoriesPage,
-                    true,
-                    'startcat'
-                );
+                $page['cats_navigation_bar'] = (new \Piwigo\Core\PaginationService())->createNavigationBar(duplicate_index_url([], ['startcat']), $totalCategories, $startcat, $nbCategoriesPage, true, 'startcat');
             }
 
             $template->assign('cats_navbar', $page['cats_navigation_bar']);

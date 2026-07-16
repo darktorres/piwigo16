@@ -157,13 +157,7 @@ final class PictureCommentRenderer
         $nbCommentPage = $conf['nb_comment_page'];
         $nbCommentPage = is_numeric($nbCommentPage) ? (int) $nbCommentPage : 0;
 
-        $navigationBar = create_navigation_bar(
-            duplicate_picture_url([], ['start']),
-            $nbComments,
-            $start,
-            $nbCommentPage,
-            true // We want a clean URL
-        );
+        $navigationBar = (new \Piwigo\Core\PaginationService())->createNavigationBar(duplicate_picture_url([], ['start']), $nbComments, $start, $nbCommentPage, true);
 
         $template->assign(
             [
@@ -247,7 +241,7 @@ final class PictureCommentRenderer
                         [
                             'action' => 'delete_comment',
                             'comment_to_delete' => $row['id'],
-                            'pwg_token' => get_pwg_token(),
+                            'pwg_token' => (new \Piwigo\Csrf\CsrfService())->getToken(),
                         ]
                     );
                 }
@@ -261,10 +255,10 @@ final class PictureCommentRenderer
                     );
                     if ($editCommentId !== null and is_numeric($row['id']) and (int) $row['id'] === $editCommentId) {
                         $tplComment['IN_EDIT'] = true;
-                        $key = get_ephemeral_key(2, (string) $imageId);
+                        $key = (new \Piwigo\Auth\EphemeralKeyService())->generate(2, (string) $imageId);
                         $tplComment['KEY'] = $key;
                         $tplComment['CONTENT'] = $row['content'];
-                        $tplComment['PWG_TOKEN'] = get_pwg_token();
+                        $tplComment['PWG_TOKEN'] = (new \Piwigo\Csrf\CsrfService())->getToken();
                         $tplComment['U_CANCEL'] = $url_self;
                     }
                 }
@@ -277,7 +271,7 @@ final class PictureCommentRenderer
                             [
                                 'action' => 'validate_comment',
                                 'comment_to_validate' => $row['id'],
-                                'pwg_token' => get_pwg_token(),
+                                'pwg_token' => (new \Piwigo\Csrf\CsrfService())->getToken(),
                             ]
                         );
                     }
@@ -295,7 +289,7 @@ final class PictureCommentRenderer
         }
 
         if ($showAddCommentForm) {
-            $key = get_ephemeral_key(3, (string) $imageId);
+            $key = (new \Piwigo\Auth\EphemeralKeyService())->generate(3, (string) $imageId);
 
             $userEmail = $user['email'] ?? null;
             $userEmailEmpty = ! is_string($userEmail) || $userEmail === '' || $userEmail === '0';

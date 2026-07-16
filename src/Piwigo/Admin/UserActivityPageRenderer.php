@@ -35,9 +35,9 @@ final class UserActivityPageRenderer
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
-        check_input_parameter('photo', $_GET, false, ValidationPattern::ID);
-        check_input_parameter('album', $_GET, false, ValidationPattern::ID);
-        check_input_parameter('group', $_GET, false, ValidationPattern::ID);
+        (new \Piwigo\Validation\InputValidator())->validate('photo', $_GET, false, ValidationPattern::ID);
+        (new \Piwigo\Validation\InputValidator())->validate('album', $_GET, false, ValidationPattern::ID);
+        (new \Piwigo\Validation\InputValidator())->validate('group', $_GET, false, ValidationPattern::ID);
 
         $page['tab'] = 'user_activity';
         // The inline tabsheet block below (formerly admin/include/
@@ -105,7 +105,7 @@ final class UserActivityPageRenderer
         $template->assign('ADMIN_PAGE_TITLE', l10n('Users'));
 
         $template->assign([
-            'PWG_TOKEN' => get_pwg_token(),
+            'PWG_TOKEN' => (new \Piwigo\Csrf\CsrfService())->getToken(),
             'INHERIT' => $conf['inheritance_by_default'],
             'CACHE_KEYS' => get_admin_client_cache_keys(['users']),
         ]);

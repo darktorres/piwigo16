@@ -752,7 +752,7 @@ function ws_categories_add(array $params, PwgServer &$service): PwgError|array
     /** @var array<string, mixed> $conf */
     global $conf;
 
-    if (isset($params['pwg_token']) and get_pwg_token() != $params['pwg_token']) {
+    if (isset($params['pwg_token']) and (new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 
@@ -881,7 +881,7 @@ function ws_categories_setInfo(array $params, PwgServer &$service): ?PwgError
     /** @var array<string, mixed> $conf */
     global $conf;
 
-    if (isset($params['pwg_token']) and get_pwg_token() != $params['pwg_token']) {
+    if (isset($params['pwg_token']) and (new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 
@@ -956,7 +956,7 @@ UPDATE ' . Tables::categories() . '
         );
     }
 
-    pwg_activity('album', $params['category_id'], 'edit', [
+    (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('album', $params['category_id'], 'edit', [
         'fields' => implode(',', array_keys($update)),
     ]);
 
@@ -1014,7 +1014,7 @@ UPDATE ' . Tables::userCacheCategories() . '
 ;';
     pwg_query($query);
 
-    pwg_activity('album', $params['category_id'], 'edit', [
+    (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('album', $params['category_id'], 'edit', [
         'image_id' => $params['image_id'],
     ]);
 
@@ -1066,7 +1066,7 @@ UPDATE ' . Tables::categories() . '
 ;';
     pwg_query($query);
 
-    pwg_activity('album', $params['category_id'], 'edit');
+    (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('album', $params['category_id'], 'edit');
 
     return null;
 }
@@ -1113,7 +1113,7 @@ SELECT
 
     set_random_representant([$params['category_id']]);
 
-    pwg_activity('album', $params['category_id'], 'edit');
+    (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('album', $params['category_id'], 'edit');
 
     // return url of the new representative
     $query = '
@@ -1150,7 +1150,7 @@ SELECT *
  */
 function ws_categories_delete(array $params, PwgServer &$service): ?PwgError
 {
-    if (get_pwg_token() != $params['pwg_token']) {
+    if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 
@@ -1228,7 +1228,7 @@ function ws_categories_move(array $params, PwgServer &$service): PwgError|array
     /** @var array<string, mixed> $page */
     global $page;
 
-    if (get_pwg_token() != $params['pwg_token']) {
+    if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 

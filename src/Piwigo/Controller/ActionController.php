@@ -60,7 +60,7 @@ final class ActionController implements ControllerInterface
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
         if ((bool) $conf['enable_formats'] and isset($_GET['format'])) {
-            check_input_parameter('format', $_GET, false, ValidationPattern::ID);
+            (new \Piwigo\Validation\InputValidator())->validate('format', $_GET, false, ValidationPattern::ID);
 
             if (! is_numeric($_GET['format'])) {
                 $this->doError(400, 'Invalid request - format');
@@ -106,7 +106,7 @@ SELECT * FROM ' . Tables::images() . '
 
         // special download action for admins
         $is_admin_download = false;
-        if (\Piwigo\Auth\AccessControl::isAdmin() and isset($_GET['pwg_token']) and $_GET['pwg_token'] === get_pwg_token()) {
+        if (\Piwigo\Auth\AccessControl::isAdmin() and isset($_GET['pwg_token']) and $_GET['pwg_token'] === (new \Piwigo\Csrf\CsrfService())->getToken()) {
             $is_admin_download = true;
             $user['enabled_high'] = true;
         }

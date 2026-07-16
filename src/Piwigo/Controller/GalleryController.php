@@ -149,14 +149,7 @@ final class GalleryController implements ControllerInterface
             // navigation bar
             $page['navigation_bar'] = [];
             if (count($page_items) > $page_nb_image_page) {
-                $page['navigation_bar'] = create_navigation_bar(
-                    duplicate_index_url([], ['start']),
-                    count($page_items),
-                    $page_start,
-                    $page_nb_image_page,
-                    true,
-                    'start'
-                );
+                $page['navigation_bar'] = (new \Piwigo\Core\PaginationService())->createNavigationBar(duplicate_index_url([], ['start']), count($page_items), $page_start, $page_nb_image_page, true, 'start');
             }
 
             $template->assign('thumb_navbar', $page['navigation_bar']);

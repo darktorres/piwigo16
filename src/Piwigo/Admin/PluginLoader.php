@@ -161,7 +161,7 @@ final class PluginLoader
             if ($new_version != $old_version) {
                 new PluginRepository(DbConnection::build())->updateVersion($plugin_id, $fs_version);
 
-                pwg_activity('system', ActivitySystem::Plugin, 'autoupdate', [
+                (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('system', ActivitySystem::Plugin, 'autoupdate', [
                     'plugin_id' => $plugin_id,
                     'from_version' => $old_version,
                     'to_version' => $new_version,

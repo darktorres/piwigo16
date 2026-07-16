@@ -74,7 +74,7 @@ function ws_groups_add(array $params, PwgServer &$service): mixed
     $name = strip_tags(stripslashes($params['name']));
 
     try {
-        $inserted_id = new GroupService(new GroupRepository(DbConnection::build()))
+        $inserted_id = new GroupService(new GroupRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
             ->create($name, $params['is_default']);
     } catch (\InvalidArgumentException $e) {
         return new PwgError(WS_ERR_INVALID_PARAM, $e->getMessage());
@@ -102,7 +102,7 @@ function ws_groups_add(array $params, PwgServer &$service): mixed
  */
 function ws_groups_delete(array $params, PwgServer &$service): PwgError|PwgNamedArray
 {
-    if (get_pwg_token() != $params['pwg_token']) {
+    if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 
@@ -130,7 +130,7 @@ function ws_groups_delete(array $params, PwgServer &$service): PwgError|PwgNamed
  */
 function ws_groups_setInfo(array $params, PwgServer &$service): mixed
 {
-    if (get_pwg_token() != $params['pwg_token']) {
+    if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 
@@ -144,7 +144,7 @@ function ws_groups_setInfo(array $params, PwgServer &$service): mixed
     }
 
     try {
-        new GroupService(new GroupRepository(DbConnection::build()))
+        new GroupService(new GroupRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
             ->update($params['group_id'], $updates);
     } catch (\InvalidArgumentException $e) {
         return new PwgError(WS_ERR_INVALID_PARAM, $e->getMessage());
@@ -167,11 +167,11 @@ function ws_groups_setInfo(array $params, PwgServer &$service): mixed
  */
 function ws_groups_addUser(array $params, PwgServer &$service): mixed
 {
-    if (get_pwg_token() != $params['pwg_token']) {
+    if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 
-    $added = new GroupService(new GroupRepository(DbConnection::build()))
+    $added = new GroupService(new GroupRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
         ->addMembers($params['group_id'], $params['user_id']);
     if (! $added) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'This group does not exist.');
@@ -195,7 +195,7 @@ function ws_groups_addUser(array $params, PwgServer &$service): mixed
  */
 function ws_groups_merge(array $params, PwgServer &$service): PwgError|array
 {
-    if (get_pwg_token() != $params['pwg_token']) {
+    if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 
@@ -203,7 +203,7 @@ function ws_groups_merge(array $params, PwgServer &$service): PwgError|array
         'group_id' => $params['merge_group_id'],
     ]);
 
-    $merged = new GroupService(new GroupRepository(DbConnection::build()))
+    $merged = new GroupService(new GroupRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
         ->merge($params['destination_group_id'], $params['merge_group_id']);
     if (! $merged) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'All groups does not exist.');
@@ -228,12 +228,12 @@ function ws_groups_merge(array $params, PwgServer &$service): PwgError|array
  */
 function ws_groups_duplicate(array $params, PwgServer &$service): mixed
 {
-    if (get_pwg_token() != $params['pwg_token']) {
+    if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 
     try {
-        $inserted_id = new GroupService(new GroupRepository(DbConnection::build()))
+        $inserted_id = new GroupService(new GroupRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
             ->duplicate($params['group_id'], $params['copy_name']);
     } catch (\InvalidArgumentException $e) {
         return new PwgError(WS_ERR_INVALID_PARAM, $e->getMessage());
@@ -256,11 +256,11 @@ function ws_groups_duplicate(array $params, PwgServer &$service): mixed
  */
 function ws_groups_deleteUser(array $params, PwgServer &$service): mixed
 {
-    if (get_pwg_token() != $params['pwg_token']) {
+    if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 
-    $removed = new GroupService(new GroupRepository(DbConnection::build()))
+    $removed = new GroupService(new GroupRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
         ->removeMembers($params['group_id'], $params['user_id']);
     if (! $removed) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'This group does not exist.');

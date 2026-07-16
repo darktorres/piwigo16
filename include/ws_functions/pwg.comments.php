@@ -252,7 +252,7 @@ GROUP BY author_id
  */
 function ws_userComments_delete(array $params, PwgServer &$service): PwgError|string
 {
-    if (get_pwg_token() != $params['pwg_token']) {
+    if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, l10n('Invalid security token'));
     }
 
@@ -273,7 +273,7 @@ function ws_userComments_delete(array $params, PwgServer &$service): PwgError|st
  */
 function ws_userComments_validate(array $params, PwgServer &$service): PwgError|string
 {
-    if (get_pwg_token() != $params['pwg_token']) {
+    if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, l10n('Invalid security token'));
     }
 

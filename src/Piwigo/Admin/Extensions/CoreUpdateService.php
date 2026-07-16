@@ -207,7 +207,7 @@ final class CoreUpdateService
         }
 
         new MailService()
-            ->switchLangTo((new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultLanguage());
+            ->switchLangTo((new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->getDefaultLanguage());
 
         $content = l10n('Hello,');
         $content .= "\n\n" . l10n(
@@ -366,7 +366,7 @@ final class CoreUpdateService
         deltree(PHPWG_ROOT_PATH . $dataLocation . 'update');
         invalidate_user_cache(true);
         conf_update_param('piwigo_installed_version', $upgradeTo);
-        pwg_activity('system', ActivitySystem::Core, 'update', [
+        (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('system', ActivitySystem::Core, 'update', [
             'from_version' => AppInfo::VERSION,
             'to_version' => $upgradeTo,
         ]);

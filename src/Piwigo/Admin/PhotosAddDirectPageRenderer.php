@@ -51,7 +51,7 @@ final class PhotosAddDirectPageRenderer
 
         if (isset($_GET['batch'])) {
             check_pwg_token();
-            check_input_parameter('batch', $_GET, false, '/^\d+(,\d+)*$/');
+            (new \Piwigo\Validation\InputValidator())->validate('batch', $_GET, false, '/^\d+(,\d+)*$/');
 
             $query = '
 DELETE FROM ' . Tables::caddie() . '
@@ -130,7 +130,7 @@ SELECT COUNT(*)
 
         // If URL parameter isn't empty
         if ($display_formats && (bool) $_GET['formats']) {
-            check_input_parameter('formats', $_GET, false, ValidationPattern::ID, false);
+            (new \Piwigo\Validation\InputValidator())->validate('formats', $_GET, false, ValidationPattern::ID, false);
 
             $formats_id_param = $_GET['formats'];
             $formats_original_info = get_image_infos(is_int($formats_id_param) || is_string($formats_id_param) ? $formats_id_param : '');
@@ -285,7 +285,7 @@ SELECT *
         $template->assign(
             [
                 'form_action' => PHOTOS_ADD_BASE_URL,
-                'pwg_token' => get_pwg_token(),
+                'pwg_token' => (new \Piwigo\Csrf\CsrfService())->getToken(),
             ]
         );
 
@@ -311,7 +311,7 @@ SELECT *
 
         if (isset($_GET['album'])) {
             // set the category from get url or ...
-            check_input_parameter('album', $_GET, false, ValidationPattern::ID);
+            (new \Piwigo\Validation\InputValidator())->validate('album', $_GET, false, ValidationPattern::ID);
 
             // check_input_parameter() above validated (or killed the request via
             // fatal_error()) that a non-empty $_GET['album'] matches ValidationPattern::ID

@@ -213,7 +213,7 @@ if (! isset($conf['piwigo_installed_version'])) {
     conf_update_param('piwigo_installed_version', AppInfo::VERSION);
 } elseif ($conf['piwigo_installed_version'] != AppInfo::VERSION) {
     // Piwigo has been updated "from filesystem" and not "from the administration UI". We mark it as an autoupdate in the system activities log
-    pwg_activity('system', ActivitySystem::Core, 'autoupdate', [
+    (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('system', ActivitySystem::Core, 'autoupdate', [
         'from_version' => $conf['piwigo_installed_version'],
         'to_version' => AppInfo::VERSION,
     ]);
@@ -455,7 +455,7 @@ add_event_handler('user_comment_check', new CommentService(new CommentRepository
 // including the old file, so this registration has to live somewhere that
 // always executes. pwgLogin() is a bound instance method, same
 // first-class-callable shape as checkForSpam() above.
-add_event_handler('try_log_user', new AuthService(new AuthRepository(DbConnection::build()))->pwgLogin(...));
+add_event_handler('try_log_user', new AuthService(new AuthRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->pwgLogin(...));
 // Relocated from admin/include/functions_upload.inc.php (deleted in P23
 // sub-batch 8b-3) -- must stay after PluginLoader::loadPlugins() above so
 // a plugin's own 'upload_file' handler (if any) keeps first crack in the

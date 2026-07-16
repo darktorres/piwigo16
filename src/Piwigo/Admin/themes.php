@@ -189,7 +189,7 @@ INSERT INTO ' . Tables::themes() . '
                     break;
                 }
 
-                if ($theme_id == (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultTheme()) {
+                if ($theme_id == (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->getDefaultTheme()) {
                     // find a random theme to replace
                     $new_theme = null;
 
@@ -260,7 +260,7 @@ DELETE
                 break;
         }
 
-        pwg_activity('system', ActivitySystem::Theme, $action, $activity_details);
+        (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('system', ActivitySystem::Theme, $action, $activity_details);
 
         return $errors;
     }
@@ -313,7 +313,7 @@ DELETE
         global $conf;
 
         // first we need to know which users are using the current default theme
-        $default_theme = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultTheme();
+        $default_theme = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->getDefaultTheme();
 
         $query = '
 SELECT

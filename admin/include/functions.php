@@ -168,7 +168,7 @@ DELETE FROM ' . Tables::userCacheCategories() . '
     pwg_query($query);
 
     trigger_notify('delete_categories', $ids);
-    pwg_activity('album', $ids, 'delete', [
+    (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('album', $ids, 'delete', [
         'photo_deletion_mode' => $photo_deletion_mode,
     ]);
 }
@@ -368,7 +368,7 @@ SELECT
     }
 
     trigger_notify('delete_elements', $ids);
-    pwg_activity('photo', $ids, 'delete');
+    (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('photo', $ids, 'delete');
     return count($ids);
 }
 
@@ -426,7 +426,7 @@ DELETE FROM ' . Tables::users() . '
     pwg_query($query);
 
     trigger_notify('delete_user', $user_id);
-    pwg_activity('user', $user_id, 'delete');
+    (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('user', $user_id, 'delete');
 }
 
 /**
@@ -1268,7 +1268,7 @@ SELECT user_id
     $to_create = array_diff($base_users, $infos_users);
 
     if (count($to_create) > 0) {
-        (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->createUserInfos($to_create);
+        (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->createUserInfos($to_create);
     }
 
     // users present in user related tables must be present in the base user
@@ -1469,7 +1469,7 @@ SELECT status
         count($categories)
     );
 
-    pwg_activity('album', $category_ids, 'move', [
+    (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('album', $category_ids, 'move', [
         'parent' => $new_parent,
     ]);
 }
@@ -1649,7 +1649,7 @@ SELECT id, uppercats, global_rank, visible, status
     trigger_notify('create_virtual_category', array_merge([
         'id' => $inserted_id,
     ], $insert));
-    pwg_activity('album', $inserted_id, 'add');
+    (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('album', $inserted_id, 'add');
 
     return [
         'info' => l10n('Album added'),
@@ -1756,7 +1756,7 @@ DELETE
     pwg_query($query);
 
     trigger_notify('delete_tags', $tag_ids);
-    pwg_activity('tag', $tag_ids, 'delete');
+    (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('tag', $tag_ids, 'delete');
 
     update_images_lastmodified($image_ids);
     invalidate_user_cache_nb_tags();
@@ -2628,7 +2628,7 @@ function delete_groups($group_ids): false|array
 
     $ids = array_map(intval(...), $group_ids);
 
-    $deleted = new GroupService(new GroupRepository(DbConnection::build()))
+    $deleted = new GroupService(new GroupRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
         ->delete($ids);
 
     // [SEC-57] one row per group actually deleted

@@ -454,7 +454,7 @@ SELECT DISTINCT(image_id)
             // |                           favorite section                            |
             // +-----------------------------------------------------------------------+
             elseif ($section === 'favorites') {
-                new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), $this->mailer)->checkUserFavorites();
+                new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), $this->mailer, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())))->checkUserFavorites();
 
                 $page = array_merge(
                     $page,
@@ -529,7 +529,7 @@ SELECT DISTINCT(id)
   FROM ' . Tables::images() . '
     INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
   WHERE '
-  . new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), $this->mailer)->getRecentPhotosSql('date_available') . '
+  . new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), $this->mailer, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())))->getRecentPhotosSql('date_available') . '
   ' . $forbidden
   . (is_string($conf['order_by']) ? $conf['order_by'] : '') . '
 ;';

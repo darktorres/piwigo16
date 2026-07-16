@@ -44,9 +44,9 @@ final class HistoryPageRenderer
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
-        check_input_parameter('filter_ip', $_GET, false, '/^[0-9.]+$/');
-        check_input_parameter('filter_image_id', $_GET, false, '/^\d+$/');
-        check_input_parameter('filter_user_id', $_GET, false, '/^\d+$/');
+        (new \Piwigo\Validation\InputValidator())->validate('filter_ip', $_GET, false, '/^[0-9.]+$/');
+        (new \Piwigo\Validation\InputValidator())->validate('filter_image_id', $_GET, false, '/^\d+$/');
+        (new \Piwigo\Validation\InputValidator())->validate('filter_user_id', $_GET, false, '/^\d+$/');
 
         $template->set_filename('history', 'history.tpl');
 
@@ -76,12 +76,7 @@ final class HistoryPageRenderer
             $nb_logs_page = $conf['nb_logs_page'] ?? null;
             $nb_logs_page = is_numeric($nb_logs_page) ? (int) $nb_logs_page : 0;
 
-            $navbar = create_navigation_bar(
-                get_root_url() . 'admin.php' . get_query_string_diff(['start']),
-                $nb_lines,
-                $navbar_start,
-                $nb_logs_page
-            );
+            $navbar = (new \Piwigo\Core\PaginationService())->createNavigationBar(get_root_url() . 'admin.php' . get_query_string_diff(['start']), $nb_lines, $navbar_start, $nb_logs_page);
 
             $template->assign('navbar', $navbar);
         }

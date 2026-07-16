@@ -327,7 +327,7 @@ SELECT DISTINCT ';
                 $users[$cur_user_id]['last_visit'] = $last_visit;
 
                 if (! get_boolean($cur_user['last_visit_from_history']) and empty($last_visit)) {
-                    $last_visit = (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build())))->getUserLastVisitFromHistory($cur_user_id, true);
+                    $last_visit = (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->getUserLastVisitFromHistory($cur_user_id, true);
                     $users[$cur_user_id]['last_visit'] = $last_visit;
                 }
 
@@ -422,7 +422,7 @@ SELECT DISTINCT ';
  */
 function ws_users_add(array $params, PwgServer &$service): mixed
 {
-    if (get_pwg_token() != $params['pwg_token']) {
+    if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 
@@ -492,11 +492,11 @@ function ws_users_add(array $params, PwgServer &$service): mixed
  */
 function ws_users_getAuthKey(array $params, PwgServer &$service): mixed
 {
-    if (get_pwg_token() != $params['pwg_token']) {
+    if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 
-    $authkey = (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build())))->createUserAuthKey($params['user_id']);
+    $authkey = (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->createUserAuthKey($params['user_id']);
 
     if ($authkey === false) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'invalid user_id');
@@ -515,7 +515,7 @@ function ws_users_getAuthKey(array $params, PwgServer &$service): mixed
  */
 function ws_users_delete(array $params, PwgServer &$service): PwgError|string
 {
-    if (get_pwg_token() != $params['pwg_token']) {
+    if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 
@@ -582,11 +582,11 @@ SELECT
  */
 function ws_users_setInfo(array $params, PwgServer &$service): mixed
 {
-    if (get_pwg_token() != $params['pwg_token']) {
+    if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 
-    $updated_users = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->checkAndSaveUserInfos($params);
+    $updated_users = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->checkAndSaveUserInfos($params);
 
     if (isset($updated_users['error'])) {
         // check_and_save_user_infos() is declared to return plain `array`
@@ -623,7 +623,7 @@ function ws_users_setInfo(array $params, PwgServer &$service): mixed
  */
 function ws_users_setMyInfo(array $params, PwgServer &$service): PwgError|string
 {
-    if (get_pwg_token() != $params['pwg_token']) {
+    if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 
@@ -714,7 +714,7 @@ SELECT ' . $user_field_password . ' AS password
     );
 
     $params['user_id'] = [$user['id']];
-    $updated_users = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->checkAndSaveUserInfos($params);
+    $updated_users = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->checkAndSaveUserInfos($params);
 
     if (isset($updated_users['error'])) {
         // check_and_save_user_infos() is declared to return plain `array`
@@ -867,7 +867,7 @@ function ws_users_favorites_getList(array $params, PwgServer &$service): false|a
         return false;
     }
 
-    (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->checkUserFavorites();
+    (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->checkUserFavorites();
 
     $order_by = ws_std_image_sql_order($params, 'i.');
     $conf_order_by = is_string($conf['order_by'] ?? null) ? $conf['order_by'] : '';
@@ -942,7 +942,7 @@ function ws_users_generate_password_link(array $params, PwgServer &$service): Pw
     global $user, $conf;
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
-    if (get_pwg_token() != $params['pwg_token']) {
+    if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 
@@ -954,7 +954,7 @@ function ws_users_generate_password_link(array $params, PwgServer &$service): Pw
     // getuserdata() is declared to return array<string, mixed> (its own
     // @return docblock, include/functions_user.inc.php); narrow the
     // specific fields this function consumes to their real column types.
-    $user_lost = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getUserData($params['user_id']);
+    $user_lost = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->getUserData($params['user_id']);
     $user_lost_status = is_string($user_lost['status']) ? $user_lost['status'] : '';
 
     // Cannot perform this action for a guest or generic user
@@ -967,14 +967,14 @@ function ws_users_generate_password_link(array $params, PwgServer &$service): Pw
         return new PwgError(403, 'You cannot perform this action');
     }
 
-    $first_login = (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build())))->hasAlreadyLoggedIn($params['user_id']);
+    $first_login = (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->hasAlreadyLoggedIn($params['user_id']);
     $send_by_mail_response = null;
-    $user_lost_language = is_string($user_lost['language']) ? $user_lost['language'] : (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultLanguage();
-    $lang_to_use = $first_login ? (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultLanguage() : $user_lost_language;
+    $user_lost_language = is_string($user_lost['language']) ? $user_lost['language'] : (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->getDefaultLanguage();
+    $lang_to_use = $first_login ? (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->getDefaultLanguage() : $user_lost_language;
 
     new MailService()
         ->switchLangTo($lang_to_use);
-    $generate_link = (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build())))->generatePasswordLink($params['user_id'], $first_login);
+    $generate_link = (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->generatePasswordLink($params['user_id'], $first_login);
 
     $user_lost_email = is_string($user_lost['email']) ? $user_lost['email'] : null;
 
@@ -1028,7 +1028,7 @@ function ws_set_main_user(array $params, PwgServer &$service): PwgError|string
     }
 
     // check pwg_token
-    if (get_pwg_token() != $params['pwg_token']) {
+    if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 
@@ -1037,7 +1037,7 @@ function ws_set_main_user(array $params, PwgServer &$service): PwgError|string
         return new PwgError(WS_ERR_INVALID_PARAM, 'This user does not exist.');
     }
 
-    $new_main_user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getUserData($params['user_id']);
+    $new_main_user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->getUserData($params['user_id']);
 
     // check if the user to set as main user is not webmaster
     if ($new_main_user['status'] !== 'webmaster') {
@@ -1070,7 +1070,7 @@ function ws_create_api_key(array $params, PwgServer &$service): PwgError|array
         return new PwgError(401, 'Acces Denied');
     }
 
-    if (get_pwg_token() != $params['pwg_token']) {
+    if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 
@@ -1120,7 +1120,7 @@ function ws_revoke_api_key(array $params, PwgServer &$service): PwgError|string
         return new PwgError(401, 'Acces Denied');
     }
 
-    if (get_pwg_token() != $params['pwg_token']) {
+    if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, l10n('Invalid security token'));
     }
 
@@ -1169,7 +1169,7 @@ function ws_edit_api_key(array $params, PwgServer &$service): PwgError|string
         return new PwgError(401, 'Acces Denied');
     }
 
-    if (get_pwg_token() != $params['pwg_token']) {
+    if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, l10n('Invalid security token'));
     }
 
@@ -1215,7 +1215,7 @@ function ws_get_api_key(array $params, PwgServer &$service): PwgError|array|stri
         return new PwgError(401, 'Acces Denied');
     }
 
-    if (get_pwg_token() != $params['pwg_token']) {
+    if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 

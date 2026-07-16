@@ -4,14 +4,20 @@ declare(strict_types=1);
 
 namespace Piwigo\Group;
 
+use Piwigo\Core\ActivityLoggerInterface;
+
 /**
  * Group domain business logic: creation/rename/deletion, membership
  * management, merge/duplicate. Constructor-injects GroupRepository (plain
- * constructor injection, same shape as PermalinkService), and calls the
- * still-procedural activity/cache-invalidation free functions directly
- * (pwg_activity(), invalidate_user_cache()) -- those aren't class
- * dependencies, so no deptrac layer concern, same as how MailService/
- * HtmlService already call trigger_notify()/trigger_change() directly.
+ * constructor injection, same shape as PermalinkService) and
+ * ActivityLoggerInterface (P23 batch 8d -- pwg_activity()'s real target,
+ * Piwigo\Activity\ActivityService, is L2bExtendedDomain; this class is
+ * L2aCoreDomain, so it depends on the L1Infrastructure interface instead,
+ * same shape as MailerInterface -- see ActivityLoggerInterface's own
+ * docblock), and calls the still-procedural cache-invalidation free
+ * function directly (invalidate_user_cache()) -- not a class dependency,
+ * so no deptrac layer concern, same as how MailService/HtmlService already
+ * call trigger_notify()/trigger_change() directly.
  *
  * invalidate_user_cache() specifically lives in admin/include/functions.php,
  * which common.inc.php's bootstrap does NOT load unconditionally (unlike
@@ -27,6 +33,7 @@ final class GroupService
 {
     public function __construct(
         private readonly GroupRepository $repo,
+        private readonly ActivityLoggerInterface $activityLogger,
     ) {}
 
     private static function ensureLegacyFunctionsLoaded(): void
@@ -81,7 +88,7 @@ final class GroupService
         }
 
         $id = $this->repo->insert($name, $isDefault);
-        pwg_activity('group', $id, 'add');
+        $this->activityLogger->record('group', $id, 'add');
 
         return $id;
     }
@@ -104,7 +111,7 @@ final class GroupService
         }
 
         $newId = $this->repo->insert($copyName, $this->repo->isDefault($groupId));
-        pwg_activity('group', $newId, 'add');
+        $this->activityLogger->record('group', $newId, 'add');
 
         $memberIds = $this->repo->findMemberUserIds($groupId);
         $this->repo->addMembers($newId, $memberIds);
@@ -115,7 +122,7 @@ final class GroupService
         // accidental, but faithfully preserved) choice of 'associated' id:
         // the *source* group being copied from, not the newly created copy.
         foreach ($memberIds as $userId) {
-            pwg_activity('user', $userId, 'edit', [
+            $this->activityLogger->record('user', $userId, 'edit', [
                 'associated' => $groupId,
             ]);
         }
@@ -149,7 +156,7 @@ final class GroupService
         }
 
         $this->repo->update($groupId, $updates);
-        pwg_activity('group', $groupId, 'edit');
+        $this->activityLogger->record('group', $groupId, 'edit');
     }
 
     /**
@@ -167,8 +174,8 @@ final class GroupService
         self::ensureLegacyFunctionsLoaded();
         invalidate_user_cache();
 
-        pwg_activity('group', $groupId, 'edit');
-        pwg_activity('user', $userIds, 'edit');
+        $this->activityLogger->record('group', $groupId, 'edit');
+        $this->activityLogger->record('user', $userIds, 'edit');
 
         return true;
     }
@@ -188,8 +195,8 @@ final class GroupService
         self::ensureLegacyFunctionsLoaded();
         invalidate_user_cache();
 
-        pwg_activity('group', $groupId, 'edit');
-        pwg_activity('user', $userIds, 'edit');
+        $this->activityLogger->record('group', $groupId, 'edit');
+        $this->activityLogger->record('user', $userIds, 'edit');
 
         return true;
     }
@@ -226,10 +233,10 @@ final class GroupService
         // activity fire even when no members actually moved.
         self::ensureLegacyFunctionsLoaded();
         invalidate_user_cache();
-        pwg_activity('group', $destinationGroupId, 'edit');
+        $this->activityLogger->record('group', $destinationGroupId, 'edit');
 
         foreach ($membersToAdd as $userId) {
-            pwg_activity('user', $userId, 'edit', [
+            $this->activityLogger->record('user', $userId, 'edit', [
                 'associated' => $destinationGroupId,
             ]);
         }
@@ -258,7 +265,7 @@ final class GroupService
 
         $ids = array_keys($deleted);
         trigger_notify('delete_group', $ids);
-        pwg_activity('group', $ids, 'delete');
+        $this->activityLogger->record('group', $ids, 'delete');
 
         return $deleted;
     }

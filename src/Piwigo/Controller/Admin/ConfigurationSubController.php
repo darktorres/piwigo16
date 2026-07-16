@@ -115,7 +115,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
         // -------------------------------------------------------- sections definitions
 
-        check_input_parameter('section', $_GET, false, '/^[a-z]+$/i');
+        (new \Piwigo\Validation\InputValidator())->validate('section', $_GET, false, '/^[a-z]+$/i');
 
         // check_input_parameter() above fatal_error()s unless $_GET['section'] is a
         // scalar matching /^[a-z]+$/i, but that guarantee isn't visible to static
@@ -252,7 +252,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
                     if (! isset($conf['order_by_custom']) and ! isset($conf['order_by_inside_category_custom'])) {
                         if (! empty($_POST['order_by'])) {
-                            check_input_parameter('order_by', $_POST, true, '/^(' . implode('|', array_keys($sort_fields)) . ')$/');
+                            (new \Piwigo\Validation\InputValidator())->validate('order_by', $_POST, true, '/^(' . implode('|', array_keys($sort_fields)) . ')$/');
 
                             // check_input_parameter() above fatal_error()s unless
                             // $_POST['order_by'] is an array of scalars matching
@@ -421,7 +421,7 @@ WHERE param = \'' . $row['param'] . '\'
                     ]
                 );
 
-                pwg_activity('system', ActivitySystem::Core, 'config', [
+                (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('system', ActivitySystem::Core, 'config', [
                     'config_section' => $page['section'],
                 ]);
             }
@@ -446,7 +446,7 @@ WHERE param = \'' . $row['param'] . '\'
                 ]
             );
 
-            pwg_activity('system', ActivitySystem::Core, 'config', [
+            (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('system', ActivitySystem::Core, 'config', [
                 'config_section' => $page['section'],
                 'config_action' => $_GET['action'],
             ]);
@@ -467,7 +467,7 @@ WHERE param = \'' . $row['param'] . '\'
         $template->assign(
             [
                 'U_HELP' => get_root_url() . 'admin/popuphelp.php?page=configuration',
-                'PWG_TOKEN' => get_pwg_token(),
+                'PWG_TOKEN' => (new \Piwigo\Csrf\CsrfService())->getToken(),
                 'F_ACTION' => $action,
             ]
         );
@@ -582,7 +582,7 @@ WHERE param = \'' . $row['param'] . '\'
                 $conf_guest_id = $conf['guest_id'];
                 $guest_id = is_numeric($conf_guest_id) ? (int) $conf_guest_id : 0;
 
-                $edit_user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->buildUser($guest_id, false);
+                $edit_user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->buildUser($guest_id, false);
                 // P22: profile.php's own save_profile_from_post()/
                 // load_profile_in_template() ported to Piwigo\Controller\
                 // ProfileFormHandler in P23 batch 8c.
@@ -591,7 +591,7 @@ WHERE param = \'' . $row['param'] . '\'
                 $errors = [];
                 if ($profileFormHandler->saveFromPost($edit_user, $errors)) {
                     // Reload user
-                    $edit_user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->buildUser($guest_id, false);
+                    $edit_user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->buildUser($guest_id, false);
                     $page['infos'][] = l10n('Information data registered in database');
                 }
                 $page['errors'] = array_merge($page['errors'], $errors);
@@ -1090,7 +1090,7 @@ WHERE param = \'' . $row['param'] . '\'
                 ]
             );
 
-            pwg_activity('system', ActivitySystem::Core, 'config', [
+            (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('system', ActivitySystem::Core, 'config', [
                 'config_section' => 'sizes',
             ]);
         } else {
@@ -1331,7 +1331,7 @@ WHERE param = \'' . $row['param'] . '\'
                 ]
             );
 
-            pwg_activity('system', ActivitySystem::Core, 'config', [
+            (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('system', ActivitySystem::Core, 'config', [
                 'config_section' => 'watermark',
             ]);
         } else {

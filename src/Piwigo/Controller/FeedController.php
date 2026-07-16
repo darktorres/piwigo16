@@ -56,7 +56,7 @@ final class FeedController implements ControllerInterface
             $persistent_cache
         );
 
-        check_input_parameter('feed', $_GET, false, '/^[0-9a-z]{50}$/i');
+        (new \Piwigo\Validation\InputValidator())->validate('feed', $_GET, false, '/^[0-9a-z]{50}$/i');
 
         $feed_id = $_GET['feed'] ?? '';
         $feed_id = is_string($feed_id) ? $feed_id : '';
@@ -73,14 +73,14 @@ final class FeedController implements ControllerInterface
             $feed_last_check = $feed_row['lastCheck'];
             $user_id_before = is_numeric($user['id']) ? (int) $user['id'] : null;
             if ($feed_row['userId'] !== $user_id_before) { // new user
-                $user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->buildUser($feed_row['userId'], true);
+                $user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->buildUser($feed_row['userId'], true);
             }
         } else {
             $image_only = true;
             if (! \Piwigo\Auth\AccessControl::isAGuest()) {// auto session was created - so switch to guest
                 $guest_id = $conf['guest_id'];
                 $guest_id = is_numeric($guest_id) ? (int) $guest_id : 0;
-                $user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->buildUser($guest_id, true);
+                $user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->buildUser($guest_id, true);
             }
         }
 

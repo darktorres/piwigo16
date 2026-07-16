@@ -143,7 +143,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
         $template->assign(
             [
                 'F_ACTION' => get_root_url() . 'admin.php' . get_query_string_diff(['action', 'site', 'pwg_token']),
-                'PWG_TOKEN' => get_pwg_token(),
+                'PWG_TOKEN' => (new \Piwigo\Csrf\CsrfService())->getToken(),
                 'ADMIN_PAGE_TITLE' => l10n('Synchronize'),
             ]
         );
@@ -168,7 +168,7 @@ SELECT c.site_id, COUNT(DISTINCT c.id) AS nb_categories, COUNT(i.id) AS nb_image
             $base_url = PHPWG_ROOT_PATH . 'admin.php';
             $base_url .= '?page=site_manager';
             $base_url .= '&amp;site=' . $id;
-            $base_url .= '&amp;pwg_token=' . get_pwg_token();
+            $base_url .= '&amp;pwg_token=' . (new \Piwigo\Csrf\CsrfService())->getToken();
             $base_url .= '&amp;action=';
 
             $update_url = PHPWG_ROOT_PATH . 'admin.php';

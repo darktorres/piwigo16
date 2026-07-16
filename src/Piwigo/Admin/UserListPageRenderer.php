@@ -26,8 +26,8 @@ final class UserListPageRenderer
          */
         global $conf, $page, $template, $user;
 
-        check_input_parameter('group', $_GET, false, ValidationPattern::ID);
-        check_input_parameter('user_id', $_GET, false, ValidationPattern::ID);
+        (new \Piwigo\Validation\InputValidator())->validate('group', $_GET, false, ValidationPattern::ID);
+        (new \Piwigo\Validation\InputValidator())->validate('user_id', $_GET, false, ValidationPattern::ID);
 
         $page['tab'] = 'user_list';
         // The inline tabsheet block below (formerly admin/include/
@@ -101,7 +101,7 @@ ORDER BY registration_date
             'user_list' => 'user_list.tpl',
         ]);
 
-        $default_user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultUserInfo(true);
+        $default_user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->getDefaultUserInfo(true);
         if (! is_array($default_user)) {
             fatal_error('Default user not found');
         }
@@ -173,13 +173,13 @@ SELECT
         $template->assign(
             [
                 'U_HISTORY' => get_root_url() . 'admin.php?page=history&filter_user_id=',
-                'PWG_TOKEN' => get_pwg_token(),
+                'PWG_TOKEN' => (new \Piwigo\Csrf\CsrfService())->getToken(),
                 'NB_IMAGE_PAGE' => $default_user['nb_image_page'],
                 'RECENT_PERIOD' => $default_user['recent_period'],
                 'theme_options' => get_pwg_themes(),
-                'theme_selected' => (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultTheme(),
+                'theme_selected' => (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->getDefaultTheme(),
                 'language_options' => get_languages(),
-                'language_selected' => (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultLanguage(),
+                'language_selected' => (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->getDefaultLanguage(),
                 'association_options' => $groups,
                 'protected_users' => implode(',', array_unique($protected_users)),
                 'password_protected_users' => implode(',', array_unique($password_protected_users)),

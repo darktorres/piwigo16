@@ -126,7 +126,7 @@ final class SearchController implements ControllerInterface
 
         $cat_ids = [];
         if (isset($_GET['cat_id'])) {
-            check_input_parameter('cat_id', $_GET, false, ValidationPattern::ID);
+            (new \Piwigo\Validation\InputValidator())->validate('cat_id', $_GET, false, ValidationPattern::ID);
 
             $cat_id_value = $_GET['cat_id'];
             if (! is_scalar($cat_id_value)) {
@@ -172,7 +172,7 @@ SELECT
         if (count($tagService->getAvailableTags()) > 0) {
             $tag_ids = [];
             if (isset($_GET['tag_id'])) {
-                check_input_parameter('tag_id', $_GET, false, '/^\d+(,\d+)*$/');
+                (new \Piwigo\Validation\InputValidator())->validate('tag_id', $_GET, false, '/^\d+(,\d+)*$/');
 
                 $tag_id_value = $_GET['tag_id'];
                 if (! is_scalar($tag_id_value)) {

@@ -89,15 +89,10 @@ final class ThemesNewPageRenderer
                     $installed_theme_id = $_GET['theme_id'] ?? null;
                     $installed_fs_theme = is_string($installed_theme_id) ? ($extension_scanner->scan(ExtensionType::Theme)[$installed_theme_id] ?? null) : null;
                     if ($installed_fs_theme !== null) {
-                        pwg_activity(
-                            'system',
-                            ActivitySystem::Theme,
-                            'install',
-                            [
-                                'theme_id' => $installed_theme_id,
-                                'version' => $installed_fs_theme['version'],
-                            ]
-                        );
+                        (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('system', ActivitySystem::Theme, 'install', [
+                            'theme_id' => $installed_theme_id,
+                            'version' => $installed_fs_theme['version'],
+                        ]);
                     }
                     break;
 
@@ -158,7 +153,7 @@ final class ThemesNewPageRenderer
                 $url_auto_install = htmlentities($base_url)
                   . '&amp;revision=' . $revision_id
                   . '&amp;extension=' . $extension_id
-                  . '&amp;pwg_token=' . get_pwg_token()
+                  . '&amp;pwg_token=' . (new \Piwigo\Csrf\CsrfService())->getToken()
                 ;
 
                 $template->append(

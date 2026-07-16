@@ -60,7 +60,7 @@ final class PluginsSubController implements AdminSubControllerInterface
         $my_base_url = get_root_url() . 'admin.php?page=plugins';
 
         if (isset($_GET['tab'])) {
-            check_input_parameter('tab', $_GET, false, '/^(installed|update|new)$/');
+            (new \Piwigo\Validation\InputValidator())->validate('tab', $_GET, false, '/^(installed|update|new)$/');
             // check_input_parameter() validates the raw value against the pattern
             // above (fatal_error()-ing on anything else) but does not narrow its
             // type for static analysis -- $_GET values are string|array<mixed> at

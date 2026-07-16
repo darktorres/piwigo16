@@ -73,7 +73,7 @@ final class UpdatesSubController implements AdminSubControllerInterface
         global $my_base_url;
         $my_base_url = get_root_url() . 'admin.php?page=updates';
 
-        check_input_parameter('tab', $_GET, false, '/^(pwg|ext)$/');
+        (new \Piwigo\Validation\InputValidator())->validate('tab', $_GET, false, '/^(pwg|ext)$/');
         if (isset($_GET['tab']) && is_string($_GET['tab'])) {
             $page['tab'] = $_GET['tab'];
         } else {

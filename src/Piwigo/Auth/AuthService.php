@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Auth;
 
+use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Session\SessionService;
@@ -33,6 +34,7 @@ final class AuthService
 {
     public function __construct(
         private readonly AuthRepository $repo,
+        private readonly ActivityLoggerInterface $activityLogger,
     ) {}
 
     /**
@@ -175,7 +177,7 @@ final class AuthService
 
         $user['id'] = $_SESSION['pwg_uid'];
         trigger_notify('user_login', $user['id']);
-        pwg_activity('user', $user['id'], 'login');
+        $this->activityLogger->record('user', $user['id'], 'login');
     }
 
     /**
@@ -260,7 +262,7 @@ final class AuthService
         $pwg_uid = $_SESSION['pwg_uid'] ?? null;
         trigger_notify('user_logout', $pwg_uid);
         if (is_int($pwg_uid) || is_string($pwg_uid)) {
-            pwg_activity('user', $pwg_uid, 'logout');
+            $this->activityLogger->record('user', $pwg_uid, 'logout');
         }
 
         $_SESSION = [];
@@ -335,7 +337,7 @@ final class AuthService
             if (! empty($user_found) && ! $password_verify) {
                 $found_user_id = $user_found['id'];
                 assert(is_string($found_user_id));
-                pwg_activity('user', $found_user_id, 'login_failure_wrong_password');
+                $this->activityLogger->record('user', $found_user_id, 'login_failure_wrong_password');
             }
             trigger_notify('login_failure', stripslashes($username));
             return false;
@@ -374,7 +376,7 @@ final class AuthService
         if (! $can_login) {
             $found_user_id = $user_found['id'];
             assert(is_string($found_user_id));
-            pwg_activity('user', $found_user_id, is_string($reason) ? $reason : 'login_failure_before_log_user');
+            $this->activityLogger->record('user', $found_user_id, is_string($reason) ? $reason : 'login_failure_before_log_user');
             trigger_notify('login_failure_before_log_user', stripslashes($username));
             return false;
         }

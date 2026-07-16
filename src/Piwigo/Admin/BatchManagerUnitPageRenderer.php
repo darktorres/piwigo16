@@ -69,7 +69,7 @@ final class BatchManagerUnitPageRenderer
 
         if (isset($_POST['submit'])) {
             check_pwg_token();
-            check_input_parameter('element_ids', $_POST, false, '/^\d+(,\d+)*$/');
+            (new \Piwigo\Validation\InputValidator())->validate('element_ids', $_POST, false, '/^\d+(,\d+)*$/');
             $element_ids_param = $_POST['element_ids'] ?? null;
             $collection = explode(',', is_string($element_ids_param) ? $element_ids_param : '');
 
@@ -142,7 +142,7 @@ SELECT id, date_creation
         // collection
         $collection = [];
         if (isset($_POST['nb_photos_deleted'])) {
-            check_input_parameter('nb_photos_deleted', $_POST, false, '/^\d+$/');
+            (new \Piwigo\Validation\InputValidator())->validate('nb_photos_deleted', $_POST, false, '/^\d+$/');
 
             // let's fake a collection (we don't know the image_ids so we use "null", we only
             // care about the number of items here)
@@ -185,7 +185,7 @@ SELECT id, date_creation
                 'U_ELEMENTS_PAGE' => $base_url . get_query_string_diff(['display', 'start']),
                 'level_options' => get_privacy_level_options(),
                 'ADMIN_PAGE_TITLE' => l10n('Batch Manager'),
-                'PWG_TOKEN' => get_pwg_token(),
+                'PWG_TOKEN' => (new \Piwigo\Csrf\CsrfService())->getToken(),
             ]
         );
 
@@ -222,12 +222,7 @@ SELECT id, date_creation
             // BatchManagerGlobalPageRenderer's own nb_images narrowing.
             $page_nb_images = $page['nb_images'];
 
-            $nav_bar = create_navigation_bar(
-                $base_url . get_query_string_diff(['start']),
-                count($cat_elements_id),
-                $page_start,
-                $page_nb_images
-            );
+            $nav_bar = (new \Piwigo\Core\PaginationService())->createNavigationBar($base_url . get_query_string_diff(['start']), count($cat_elements_id), $page_start, $page_nb_images);
             $template->assign([
                 'navbar' => $nav_bar,
             ]);
@@ -499,10 +494,10 @@ SELECT
                             'related_category_ids' => json_encode($related_category_ids),
                             'U_JUMPTO' => (isset($url_img) and $user['level'] >= $media['image']['level']) ? $url_img : null,
                             'tag_selection' => $tag_selection,
-                            'U_DOWNLOAD' => 'action.php?id=' . $row['id'] . '&amp;part=e&amp;pwg_token=' . get_pwg_token() . '&amp;download',
+                            'U_DOWNLOAD' => 'action.php?id=' . $row['id'] . '&amp;part=e&amp;pwg_token=' . (new \Piwigo\Csrf\CsrfService())->getToken() . '&amp;download',
                             'U_HISTORY' => get_root_url() . 'admin.php?page=history&amp;filter_image_id=' . $row['id'],
                             'U_ACTIVITY' => get_root_url() . 'admin.php?page=user_activity&photo=' . $row['id'],
-                            'U_DELETE' => $admin_url_start . '&amp;delete=1&amp;pwg_token=' . get_pwg_token(),
+                            'U_DELETE' => $admin_url_start . '&amp;delete=1&amp;pwg_token=' . (new \Piwigo\Csrf\CsrfService())->getToken(),
                             'U_SYNC' => $admin_url_start . '&amp;sync_metadata=1',
                             'PATH' => $row['path'],
                             'level_options_selected' => [$selected_level],

@@ -59,8 +59,8 @@ final class MaintenanceActionsPageRenderer
         $template->set_filenames([
             'maintenance' => 'maintenance_actions.tpl',
         ]);
-        $pwg_token = get_pwg_token();
-        $url_format = get_root_url() . 'admin.php?page=maintenance&amp;action=%s&amp;pwg_token=' . get_pwg_token();
+        $pwg_token = (new \Piwigo\Csrf\CsrfService())->getToken();
+        $url_format = get_root_url() . 'admin.php?page=maintenance&amp;action=%s&amp;pwg_token=' . (new \Piwigo\Csrf\CsrfService())->getToken();
 
         if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
             // $page['warnings'] is always an array by this point --

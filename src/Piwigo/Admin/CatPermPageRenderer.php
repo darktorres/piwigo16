@@ -239,7 +239,7 @@ SELECT user_id, group_id
         // |                           sending html code                       |
         // +-------------------------------------------------------------------+
         $template->assign([
-            'PWG_TOKEN' => get_pwg_token(),
+            'PWG_TOKEN' => (new \Piwigo\Csrf\CsrfService())->getToken(),
             'INHERIT' => $conf['inheritance_by_default'],
             'CACHE_KEYS' => get_admin_client_cache_keys(['groups', 'users']),
         ]);

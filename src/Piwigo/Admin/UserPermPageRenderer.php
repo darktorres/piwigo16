@@ -45,8 +45,8 @@ final class UserPermPageRenderer
 
         if ($_POST !== []) {
             check_pwg_token();
-            check_input_parameter('cat_true', $_POST, true, ValidationPattern::ID);
-            check_input_parameter('cat_false', $_POST, true, ValidationPattern::ID);
+            (new \Piwigo\Validation\InputValidator())->validate('cat_true', $_POST, true, ValidationPattern::ID);
+            (new \Piwigo\Validation\InputValidator())->validate('cat_false', $_POST, true, ValidationPattern::ID);
         }
 
         // check_input_parameter() above already fatal_error()s out unless
@@ -174,7 +174,7 @@ SELECT id,name,uppercats,global_rank
 ;';
         $categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false');
 
-        $template->assign('PWG_TOKEN', get_pwg_token());
+        $template->assign('PWG_TOKEN', (new \Piwigo\Csrf\CsrfService())->getToken());
 
         $template->assign_var_from_handle('DOUBLE_SELECT', 'double_select');
         $template->assign_var_from_handle('ADMIN_CONTENT', 'user_perm');

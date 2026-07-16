@@ -268,7 +268,7 @@ function ws_tags_add(array $params, PwgServer &$service): PwgError|array
         return new PwgError(WS_ERR_INVALID_PARAM, $creation_output['error']);
     }
 
-    pwg_activity('tag', $creation_output['id'], 'add');
+    (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('tag', $creation_output['id'], 'add');
 
     $query = '
 SELECT name, url_name
@@ -300,7 +300,7 @@ function ws_tags_delete(array $params, PwgServer &$service): PwgError|array
 {
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
-    if (get_pwg_token() != $params['pwg_token']) {
+    if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 
@@ -343,7 +343,7 @@ function ws_tags_rename(array $params, PwgServer &$service): PwgError|array
 {
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
-    if (get_pwg_token() != $params['pwg_token']) {
+    if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 
@@ -383,7 +383,7 @@ SELECT name
 
     }
 
-    pwg_activity('tag', $tag_id, 'edit');
+    (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('tag', $tag_id, 'edit');
 
     single_update(
         Tables::tags(),
@@ -423,7 +423,7 @@ function ws_tags_duplicate(array $params, PwgServer &$service): PwgError|array
 
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
-    if (get_pwg_token() != $params['pwg_token']) {
+    if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 
@@ -464,7 +464,7 @@ SELECT COUNT(*)
     );
     $destination_tag_id = pwg_db_insert_id();
 
-    pwg_activity('tag', $destination_tag_id, 'add', [
+    (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('tag', $destination_tag_id, 'add', [
         'action' => 'duplicate',
         'source_tag' => $tag_id,
     ]);
@@ -484,7 +484,7 @@ SELECT image_id
             'tag_id' => $destination_tag_id,
             'image_id' => $image_id,
         ];
-        pwg_activity('photo', $image_id, 'edit', [
+        (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('photo', $image_id, 'edit', [
             'add-tag' => $destination_tag_id,
         ]);
     }
@@ -518,7 +518,7 @@ SELECT image_id
 function ws_tags_merge(array $params, PwgServer &$service): PwgError|array
 {
 
-    if (get_pwg_token() != $params['pwg_token']) {
+    if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 
@@ -580,9 +580,9 @@ SELECT image_id
         ]
     );
 
-    pwg_activity('tag', $params['destination_tag_id'], 'edit');
+    (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('tag', $params['destination_tag_id'], 'edit');
     foreach ($image_to_add as $image_id) {
-        pwg_activity('photo', $image_id, 'edit', [
+        (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('photo', $image_id, 'edit', [
             'tag-add' => $params['destination_tag_id'],
         ]);
     }

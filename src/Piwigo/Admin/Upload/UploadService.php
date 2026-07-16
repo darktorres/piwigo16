@@ -503,7 +503,7 @@ SELECT
             single_insert(Tables::images(), $insert);
 
             $image_id = pwg_db_insert_id();
-            pwg_activity('photo', $image_id, 'add');
+            (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('photo', $image_id, 'add');
         }
 
         $this->addUploadedFileAddToCategories($image_id, $categories);
@@ -737,7 +737,7 @@ SELECT
             $add_status = 'add';
         }
 
-        pwg_activity('photo', $format_of, 'edit', [
+        (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('photo', $format_of, 'edit', [
             'action' => 'add format',
             'format_ext' => $format_ext,
             'format_id' => $format_id,

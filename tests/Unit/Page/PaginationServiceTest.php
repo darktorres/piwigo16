@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Piwigo\Page\PaginationService;
+use Piwigo\Core\PaginationService;
 
 beforeEach(function (): void {
     $GLOBALS['conf'] = ['paginate_pages_around' => 2];

@@ -81,7 +81,7 @@ final class PictureController implements ControllerInterface
          */
         global $conf, $page, $template, $user, $url_self;
 
-        (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->saveEditContext();
+        (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->saveEditContext();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
@@ -338,7 +338,7 @@ UPDATE ' . Tables::categories() . '
   WHERE id = ' . $representative_category_id . '
 ;';
                         pwg_query($query);
-                        pwg_activity('album', $representative_category_id, 'edit', [
+                        (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('album', $representative_category_id, 'edit', [
                             'action' => $_GET['action'],
                             'image_id' => $image_id,
                         ]);
@@ -370,7 +370,7 @@ UPDATE ' . Tables::categories() . '
                 case 'edit_comment':
 
                     $commentService = new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService());
-                    check_input_parameter('comment_to_edit', $_GET, false, ValidationPattern::ID);
+                    (new \Piwigo\Validation\InputValidator())->validate('comment_to_edit', $_GET, false, ValidationPattern::ID);
                     // check_input_parameter() validated this against
                     // ValidationPattern::ID (/^\d+$/) above -- it would
                     // have called fatal_error() otherwise.
@@ -443,7 +443,7 @@ UPDATE ' . Tables::categories() . '
 
                     $commentService = new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService());
 
-                    check_input_parameter('comment_to_delete', $_GET, false, ValidationPattern::ID);
+                    (new \Piwigo\Validation\InputValidator())->validate('comment_to_delete', $_GET, false, ValidationPattern::ID);
                     // check_input_parameter() validated this against
                     // ValidationPattern::ID (/^\d+$/) above -- it would
                     // have called fatal_error() otherwise.
@@ -467,7 +467,7 @@ UPDATE ' . Tables::categories() . '
 
                     $commentService = new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService());
 
-                    check_input_parameter('comment_to_validate', $_GET, false, ValidationPattern::ID);
+                    (new \Piwigo\Validation\InputValidator())->validate('comment_to_validate', $_GET, false, ValidationPattern::ID);
                     // check_input_parameter() validated this against
                     // ValidationPattern::ID (/^\d+$/) above -- it would
                     // have called fatal_error() otherwise.

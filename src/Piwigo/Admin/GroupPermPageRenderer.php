@@ -47,8 +47,8 @@ final class GroupPermPageRenderer
 
         if ($_POST !== []) {
             check_pwg_token();
-            check_input_parameter('cat_true', $_POST, true, ValidationPattern::ID);
-            check_input_parameter('cat_false', $_POST, true, ValidationPattern::ID);
+            (new \Piwigo\Validation\InputValidator())->validate('cat_true', $_POST, true, ValidationPattern::ID);
+            (new \Piwigo\Validation\InputValidator())->validate('cat_false', $_POST, true, ValidationPattern::ID);
         }
 
         // check_input_parameter() above already fatal_error()s out unless
@@ -66,7 +66,7 @@ final class GroupPermPageRenderer
             fatal_error('group_id URL parameter is missing');
         }
 
-        check_input_parameter('group_id', $_GET, false, ValidationPattern::ID);
+        (new \Piwigo\Validation\InputValidator())->validate('group_id', $_GET, false, ValidationPattern::ID);
 
         // check_input_parameter() above already fatal_error()s out unless
         // group_id matches ValidationPattern::ID (digits only), but that
@@ -78,7 +78,7 @@ final class GroupPermPageRenderer
 
         $page['group'] = (int) $_GET['group_id'];
 
-        $group_service = new GroupService(new GroupRepository(DbConnection::build()));
+        $group_service = new GroupService(new GroupRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
 
         // [SEC-57] actor for either branch below
         $actor_id = $user['id'] ?? null;
@@ -173,7 +173,7 @@ SELECT id,name,uppercats,global_rank
 ;';
         $categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false');
 
-        $template->assign('PWG_TOKEN', get_pwg_token());
+        $template->assign('PWG_TOKEN', (new \Piwigo\Csrf\CsrfService())->getToken());
 
         $template->assign_var_from_handle('DOUBLE_SELECT', 'double_select');
         $template->assign_var_from_handle('ADMIN_CONTENT', 'group_perm');

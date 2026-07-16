@@ -28,7 +28,7 @@ final class CommentsPageRenderer
         $template->assign(
             [
                 'F_ACTION' => get_root_url() . 'admin.php?page=comments',
-                'PWG_TOKEN' => get_pwg_token(),
+                'PWG_TOKEN' => (new \Piwigo\Csrf\CsrfService())->getToken(),
             ]
         );
 

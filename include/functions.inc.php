@@ -15,7 +15,6 @@ use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\plugins;
 use Piwigo\Admin\themes;
-use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
@@ -26,10 +25,8 @@ use Piwigo\Db\Tables;
 use Piwigo\History\HistoryRepository;
 use Piwigo\History\HistoryService;
 use Piwigo\Lang\Translator;
-use Piwigo\Page\PaginationService;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
-use Piwigo\Validation\InputValidator;
 
 /** base directory of plugins */
 define('PHPWG_PLUGINS_PATH', PHPWG_ROOT_PATH . 'plugins/');
@@ -741,6 +738,21 @@ INSERT INTO ' . Tables::history() . '
 }
 
 /**
+ * P23 batch 8d: every real caller retargets directly to
+ * Piwigo\Activity\ActivityService::record() (the 3 L2aCoreDomain callers --
+ * UserService/GroupService/AuthService -- via constructor-injected
+ * Piwigo\Core\ActivityLoggerInterface, everything else straight to the
+ * concrete class), except ONE deliberate exception:
+ * Piwigo\Admin\Category\CategoryAdminService::setCatStatus() keeps calling
+ * this bare -- its own Unit test (CategoryAdminServiceTest.php) relies on
+ * same-namespace function shadowing to intercept the call as a spy, which
+ * only works for a genuinely bare, unqualified call; retargeting it to a
+ * real `new ActivityService(...)` construction would make that Unit test
+ * hit a real (unavailable) DB connection instead. This function itself
+ * stays defined here (not deleted) purely to keep that one call site
+ * working -- same "one narrow, structurally-forced exception" shape as
+ * fatal_error(), not a general policy.
+ *
  * @param int|string|array<int, int|string> $object_id
  * @param array<string, mixed> $details
  */
@@ -1145,23 +1157,23 @@ function redirect_html($url, $msg = '', $refresh_time = 0): never
     if (! isset($lang_info) || ! isset($template)) {
         $guest_id = $conf['guest_id'];
         $guest_id = is_numeric($guest_id) ? (int) $guest_id : 0;
-        $user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->buildUser($guest_id, true);
+        $user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->buildUser($guest_id, true);
         load_language('common.lang');
         trigger_notify('loading_lang');
         load_language('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, [
             'no_fallback' => true,
             'local' => true,
         ]);
-        $template = new Template(PHPWG_ROOT_PATH . 'themes', (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultTheme());
+        $template = new Template(PHPWG_ROOT_PATH . 'themes', (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->getDefaultTheme());
     } elseif (defined('IN_ADMIN') and IN_ADMIN) {
-        $template = new Template(PHPWG_ROOT_PATH . 'themes', (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultTheme());
+        $template = new Template(PHPWG_ROOT_PATH . 'themes', (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->getDefaultTheme());
     }
 
     // Neither branch above runs when $template was already set and we're
     // not in admin -- it's the pre-existing bootstrap Template in that case,
     // but re-check for real since that isn't provable here statically.
     if (! ($template instanceof Template)) {
-        $template = new Template(PHPWG_ROOT_PATH . 'themes', (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultTheme());
+        $template = new Template(PHPWG_ROOT_PATH . 'themes', (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->getDefaultTheme());
     }
 
     if (empty($msg)) {
@@ -1962,7 +1974,7 @@ function load_language($filename, $dirname = '', array $options = []): string|bo
     $dirname .= 'language/';
 
     $default_language = (defined('PHPWG_INSTALLED') and ! defined('UPGRADES_PATH')) ?
-        (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultLanguage() : AppInfo::DEFAULT_LANGUAGE;
+        (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->getDefaultLanguage() : AppInfo::DEFAULT_LANGUAGE;
 
     // construct list of potential languages
     // Every element pushed here must be a real string: $user['language'] and
@@ -2161,53 +2173,6 @@ function secure_directory($dir): void
 }
 
 /**
- * returns a "secret key" that is to be sent back when a user posts a form
- *
- * @param int $valid_after_seconds - key validity start time from now
- * @param string $aditionnal_data_to_hash
- */
-function get_ephemeral_key($valid_after_seconds, $aditionnal_data_to_hash = ''): string
-{
-    return new EphemeralKeyService()
-        ->generate($valid_after_seconds, $aditionnal_data_to_hash);
-}
-
-/**
- * verify a key sent back with a form
- *
- * @param string $key
- * @param string $aditionnal_data_to_hash
- */
-function verify_ephemeral_key($key, $aditionnal_data_to_hash = ''): bool
-{
-    return new EphemeralKeyService()
-        ->verify($key, $aditionnal_data_to_hash);
-}
-
-/**
- * return an array which will be sent to template to display navigation bar
- *
- * @param string $url base url of all links
- * @param int|string $nb_element may be a numeric string: comments.php,
- *   include/category_cats.inc.php, include/picture_comment.inc.php and
- *   admin/rating.php all pass a raw pwg_db_fetch_row()/FOUND_ROWS() value
- *   straight through, unlike the other call sites which pass a count()
- * @param int|string $start may be a numeric string: index.php/category_cats.inc.php
- *   pass a raw preg_match() capture (include/functions_url.inc.php), and
- *   admin/rating.php/admin/batch_manager.php pass $_GET/$_REQUEST directly
- *   after only an is_numeric() check
- * @param int $nb_element_page
- * @param bool $clean_url
- * @param string $param_name
- * @return array<string, mixed>
- */
-function create_navigation_bar($url, int|string $nb_element, $start, $nb_element_page, $clean_url = false, $param_name = 'start'): array
-{
-    return new PaginationService()
-        ->createNavigationBar($url, $nb_element, $start, $nb_element_page, $clean_url, $param_name);
-}
-
-/**
  * return an array which will be sent to template to display recent icon
  *
  * @param string $date
@@ -2273,30 +2238,6 @@ function check_pwg_token(): void
     } elseif ($result === false) {
         access_denied();
     }
-}
-
-/**
- * get pwg_token used to prevent csrf attacks
- */
-function get_pwg_token(): string
-{
-    return new CsrfService()
-        ->getToken();
-}
-
-/**
- * breaks the script execution if the given value doesn't match the given
- * pattern. This should happen only during hacking attempts.
- * @param string $param_name
- * @param bool $is_array
- * @param string $pattern
- * @param bool $mandatory
- * @param array<int|string, mixed> $param_array
- */
-function check_input_parameter($param_name, array $param_array, $is_array, $pattern, $mandatory = false): ?true
-{
-    return new InputValidator()
-        ->validate($param_name, $param_array, $is_array, $pattern, $mandatory);
 }
 
 /**
@@ -2850,7 +2791,7 @@ SELECT
     $piwigo_infos['general_stats']['nb_private_themes'] = count(array_keys($private_themes));
     $piwigo_infos['general_stats']['nb_themes'] = $piwigo_infos['general_stats']['nb_private_themes'] + count($piwigo_infos['themes']);
 
-    $default_theme = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultTheme();
+    $default_theme = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->getDefaultTheme();
     if (isset($private_themes[$default_theme])) {
         $default_theme = 'private theme';
     }
@@ -2881,7 +2822,7 @@ SELECT
     }
     $piwigo_infos['themes_usage'] = $themes_usage;
 
-    $piwigo_infos['general_stats']['default_language'] = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultLanguage();
+    $piwigo_infos['general_stats']['default_language'] = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->getDefaultLanguage();
 
     $query = '
 SELECT

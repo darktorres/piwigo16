@@ -70,7 +70,7 @@ final class PluginsInstalledPageRenderer
         $page_page = $page['page'] ?? null;
         $page_page = is_string($page_page) ? $page_page : '';
         $base_url = get_root_url() . 'admin.php?page=' . $page_page;
-        $pwg_token = get_pwg_token();
+        $pwg_token = (new \Piwigo\Csrf\CsrfService())->getToken();
 
         $extension_repository = new ExtensionRepository(DbConnection::build());
         $pem_catalog = new PemCatalog(new ZipExtractor());

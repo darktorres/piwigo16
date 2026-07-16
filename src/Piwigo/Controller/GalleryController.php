@@ -193,7 +193,8 @@ final class GalleryController implements ControllerInterface
             $template->assign('NB_ITEMS', $nb_items);
 
             // -------------------------------------------------- menubar
-            new MenubarRenderer()->render();
+            new MenubarRenderer()
+                ->render();
 
             $template->set_filename('index', 'index.tpl');
 
@@ -597,7 +598,8 @@ final class GalleryController implements ControllerInterface
             // ---------------------------------------------------------- end
             include PHPWG_ROOT_PATH . 'include/page_header.php';
             trigger_notify('loc_end_index');
-            new HtmlService()->flushPageMessages();
+            new HtmlService()
+                ->flushPageMessages();
             $template->parse_index_buttons();
             $template->pparse('index');
 

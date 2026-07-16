@@ -550,14 +550,15 @@ if ($step == 1) {
                 get_l10n_args('Don\'t hesitate to consult our forums for any help: %s', PHPWG_URL),
             ];
 
-            new MailService()->mail(
-                $admin_mail,
-                [
-                    'subject' => l10n('Just another Piwigo gallery'),
-                    'content' => l10n_args($keyargs_content),
-                    'content_format' => 'text/plain',
-                ]
-            );
+            new MailService()
+                ->mail(
+                    $admin_mail,
+                    [
+                        'subject' => l10n('Just another Piwigo gallery'),
+                        'content' => l10n_args($keyargs_content),
+                        'content_format' => 'text/plain',
+                    ]
+                );
         }
     }
 }

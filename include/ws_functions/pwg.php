@@ -908,7 +908,8 @@ function ws_history_search(array $param, PwgServer &$service): array
         $cookie_val = null;
     }
 
-    new CookieService()->setCookieVar('display_thumbnail', $cookie_val, strtotime('+1 month'));
+    new CookieService()
+        ->setCookieVar('display_thumbnail', $cookie_val, strtotime('+1 month'));
 
     // TODO manage inconsistency of having $_POST['image_id'] and
     // $_POST['filename'] simultaneously

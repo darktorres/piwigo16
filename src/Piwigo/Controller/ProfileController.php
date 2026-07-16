@@ -123,7 +123,8 @@ SELECT ' . implode(',', $fields) . '
             $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
             if (! is_array($hide_menu_on) or ! in_array('theProfilePage', $hide_menu_on, true)) {
                 if (($themeconf['id'] ?? null) !== 'standard_pages') {
-                    new MenubarRenderer()->render();
+                    new MenubarRenderer()
+                        ->render();
                 }
             }
 
@@ -181,7 +182,8 @@ SELECT ' . implode(',', $fields) . '
             $template->assign('HELP_LINK', $help_link);
 
             trigger_notify('loc_end_profile');
-            new HtmlService()->flushPageMessages();
+            new HtmlService()
+                ->flushPageMessages();
             $template->pparse('profile');
             include PHPWG_ROOT_PATH . 'include/page_tail.php';
         });

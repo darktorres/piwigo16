@@ -90,10 +90,11 @@ final class CatPermPageRenderer
 
         $template->assign(
             [
-                'CATEGORIES_NAV' => new HtmlService()->getCatDisplayNameFromId(
-                    $page['cat'],
-                    'admin.php?page=album-'
-                ),
+                'CATEGORIES_NAV' => new HtmlService()
+                    ->getCatDisplayNameFromId(
+                        $page['cat'],
+                        'admin.php?page=album-'
+                    ),
                 'U_HELP' => get_root_url() . 'admin/popuphelp.php?page=cat_perm',
                 'F_ACTION' => $admin_album_base_url . '-permissions',
                 'private' => ($category['status'] === 'private'),

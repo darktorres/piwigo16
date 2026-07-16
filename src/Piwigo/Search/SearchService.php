@@ -27,7 +27,6 @@ use Piwigo\Users\UserService;
  * were folded as private methods on their single real caller,
  * `Search\SearchFilterRenderer`, instead of onto this class.
  *
-
  * [SEC-18] The 3 `addslashes()` sites (REGEXP/FULLTEXT/LIKE clause
  * construction in the quick-search token evaluator) are replaced with
  * `SearchRepository::quote()` (the real DBAL driver's own escaping) --

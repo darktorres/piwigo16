@@ -31,7 +31,6 @@ interface MailerInterface
     /**
      * @param string|array<int|string, mixed> $subject
      * @param string|array<int|string, mixed> $content
-     * @param int|string|null $groupId
      */
     public function mailNotificationAdmins(string|array $subject, string|array $content, bool $sendTechnicalDetails = true, int|string|null $groupId = null): bool;
 }

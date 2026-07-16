@@ -1936,7 +1936,8 @@ SELECT
         assert($row !== null);
         [$nb_photos_lounge] = $row;
 
-        $category_name = new HtmlService()->getCatDisplayNameFromId($params['category'][0], null);
+        $category_name = new HtmlService()
+            ->getCatDisplayNameFromId($params['category'][0], null);
 
         $nb_photos_in_category = is_numeric($category_infos['nb_photos']) ? (int) $category_infos['nb_photos'] : 0;
         $nb_photos_lounge = is_numeric($nb_photos_lounge) ? (int) $nb_photos_lounge : 0;
@@ -2920,7 +2921,8 @@ SELECT
     if ($category_infos === false || $category_infos === null) {
         throw new Exception(__FUNCTION__ . '(): category-count aggregate query returned no row');
     }
-    $category_name = new HtmlService()->getCatDisplayNameFromId($params['category_id'], null);
+    $category_name = new HtmlService()
+        ->getCatDisplayNameFromId($params['category_id'], null);
 
     trigger_notify(
         'ws_images_uploadCompleted',

@@ -185,7 +185,8 @@ SELECT
 
         if (isset($bulk_manager_filter['category']) && is_numeric($bulk_manager_filter['category'])) {
             $selected_category = intval($bulk_manager_filter['category']);
-            $selected_category_name = new HtmlService()->getCatDisplayNameFromId($selected_category);
+            $selected_category_name = new HtmlService()
+                ->getCatDisplayNameFromId($selected_category);
         }
 
         $template->assign('filter_category_selected_name', strip_tags($selected_category_name));

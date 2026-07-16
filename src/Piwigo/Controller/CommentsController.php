@@ -15,11 +15,11 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
-use Piwigo\Mail\MailService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Mail\MailService;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -660,7 +660,8 @@ SELECT *
             $themeconf = $template->get_template_vars('themeconf');
             $themeconf = is_array($themeconf) ? $themeconf : [];
             if (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('theCommentsPage', $themeconf['hide_menu_on'], true)) {
-                new MenubarRenderer()->render();
+                new MenubarRenderer()
+                    ->render();
             }
 
             // +---------------------------------------------------------------+
@@ -668,7 +669,8 @@ SELECT *
             // +---------------------------------------------------------------+
             include PHPWG_ROOT_PATH . 'include/page_header.php';
             trigger_notify('loc_end_comments');
-            new HtmlService()->flushPageMessages();
+            new HtmlService()
+                ->flushPageMessages();
             if (count($comments) > 0) {
                 $template->assign_var_from_handle('COMMENT_LIST', 'comment_list');
             }

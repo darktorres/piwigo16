@@ -150,25 +150,29 @@ final class NotificationByMailSender
 
         $this->saveUser = $user;
         $userLanguage = $user['language'] ?? null;
-        new MailService()->switchLangTo(is_string($userLanguage) ? $userLanguage : (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultLanguage());
+        new MailService()
+            ->switchLangTo(is_string($userLanguage) ? $userLanguage : (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultLanguage());
 
         $this->isToSendMail = $isToSendMail;
 
         if ($isToSendMail) {
-            $this->emailFormat = new MailService()->getStrEmailFormat(get_boolean($conf['nbm_send_html_mail'] ?? false));
+            $this->emailFormat = new MailService()
+                ->getStrEmailFormat(get_boolean($conf['nbm_send_html_mail'] ?? false));
 
             // $conf['nbm_send_mail_as'] is admin-submitted free text (see
             // NotificationByMailSubController), always a string when set.
             $nbmSendMailAs = $conf['nbm_send_mail_as'] ?? null;
             $sendAsName = (isset($nbmSendMailAs) and ! empty($nbmSendMailAs) and is_string($nbmSendMailAs))
                 ? $nbmSendMailAs
-                : new MailService()->getMailSenderName();
+                : new MailService()
+                    ->getMailSenderName();
             $this->sendAsName = $sendAsName;
 
             $sendAsMailAddress = get_webmaster_mail_address();
             $this->sendAsMailAddress = $sendAsMailAddress;
 
-            $this->sendAsMailFormatted = new MailService()->formatEmail($sendAsName, $sendAsMailAddress);
+            $this->sendAsMailFormatted = new MailService()
+                ->formatEmail($sendAsName, $sendAsMailAddress);
 
             $this->errorOnMailCount = 0;
             $this->sentMailCount = 0;
@@ -183,7 +187,8 @@ final class NotificationByMailSender
         global $user;
 
         $user = $this->saveUser;
-        new MailService()->switchLangBack();
+        new MailService()
+            ->switchLangBack();
 
         if ($this->isToSendMail) {
             $this->emailFormat = null;
@@ -215,11 +220,14 @@ final class NotificationByMailSender
         assert(is_string($nbmUserIdRaw) && is_numeric($nbmUserIdRaw));
         $user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->buildUser((int) $nbmUserIdRaw, true);
 
-        new MailService()->switchLangTo(is_string($user['language']) ? $user['language'] : (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultLanguage());
+        new MailService()
+            ->switchLangTo(is_string($user['language']) ? $user['language'] : (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultLanguage());
 
         if ($isActionSend) {
-            $emailFormat = $this->emailFormat ?? new MailService()->getStrEmailFormat(false);
-            $mailTemplate = new MailService()->getMailTemplate($emailFormat);
+            $emailFormat = $this->emailFormat ?? new MailService()
+                ->getStrEmailFormat(false);
+            $mailTemplate = new MailService()
+                ->getMailTemplate($emailFormat);
             $this->mailTemplate = $mailTemplate;
             $mailTemplate->set_filename('notification_by_mail', 'notification_by_mail.tpl');
         }
@@ -227,7 +235,8 @@ final class NotificationByMailSender
 
     public function unsetUserOnEnv(): void
     {
-        new MailService()->switchLangBack();
+        new MailService()
+            ->switchLangBack();
         $this->mailTemplate = null;
     }
 
@@ -304,8 +313,10 @@ final class NotificationByMailSender
         $galleryHomeUrl = get_gallery_home_url();
         $galleryHomeUrlStr = is_string($galleryHomeUrl) ? $galleryHomeUrl : '';
 
-        $emailFormat = $this->emailFormat ?? new MailService()->getStrEmailFormat(false);
-        $mailTemplate = $this->mailTemplate ?? new MailService()->getMailTemplate($emailFormat);
+        $emailFormat = $this->emailFormat ?? new MailService()
+            ->getStrEmailFormat(false);
+        $mailTemplate = $this->mailTemplate ?? new MailService()
+            ->getMailTemplate($emailFormat);
 
         $mailTemplate->assign(
             [
@@ -389,8 +400,10 @@ final class NotificationByMailSender
                     $sectionActionBy = ($isSubscribe ? 'subscribe_by_' : 'unsubscribe_by_');
                     $sectionActionBy .= ($isAdminRequest ? 'admin' : 'himself');
 
-                    $emailFormat = $this->emailFormat ?? new MailService()->getStrEmailFormat(false);
-                    $mailTemplate = $this->mailTemplate ?? new MailService()->getMailTemplate($emailFormat);
+                    $emailFormat = $this->emailFormat ?? new MailService()
+                        ->getStrEmailFormat(false);
+                    $mailTemplate = $this->mailTemplate ?? new MailService()
+                        ->getMailTemplate($emailFormat);
 
                     $mailTemplate->assign(
                         [
@@ -402,19 +415,20 @@ final class NotificationByMailSender
 
                     $sendAsMailFormatted = $this->sendAsMailFormatted ?? '';
 
-                    $ret = new MailService()->mail(
-                        [
-                            'name' => stripslashes((string) $nbmUser['username']),
-                            'email' => $nbmUser['mail_address'],
-                        ],
-                        [
-                            'from' => $sendAsMailFormatted,
-                            'subject' => $subject,
-                            'email_format' => $emailFormat,
-                            'content' => $mailTemplate->parse('notification_by_mail', true),
-                            'content_format' => $emailFormat,
-                        ]
-                    );
+                    $ret = new MailService()
+                        ->mail(
+                            [
+                                'name' => stripslashes((string) $nbmUser['username']),
+                                'email' => $nbmUser['mail_address'],
+                            ],
+                            [
+                                'from' => $sendAsMailFormatted,
+                                'subject' => $subject,
+                                'email_format' => $emailFormat,
+                                'content' => $mailTemplate->parse('notification_by_mail', true),
+                                'content_format' => $emailFormat,
+                            ]
+                        );
 
                     if ($ret) {
                         $this->incMailSentSuccess($nbmUser);
@@ -578,8 +592,10 @@ final class NotificationByMailSender
                                 $galleryTitle = is_string($conf['gallery_title']) ? $conf['gallery_title'] : '';
                                 $subject = '[' . $galleryTitle . '] ' . l10n('New photos added');
 
-                                $mailEmailFormat = $this->emailFormat ?? new MailService()->getStrEmailFormat($nbmSendHtmlMail);
-                                $mailTemplate = $this->mailTemplate ?? new MailService()->getMailTemplate($mailEmailFormat);
+                                $mailEmailFormat = $this->emailFormat ?? new MailService()
+                                    ->getStrEmailFormat($nbmSendHtmlMail);
+                                $mailTemplate = $this->mailTemplate ?? new MailService()
+                                    ->getMailTemplate($mailEmailFormat);
 
                                 // Assign current var for nbm mail
                                 $this->assignVarsNbmMailContent($nbmUser);
@@ -675,13 +691,14 @@ final class NotificationByMailSender
                                     $mailArgs['auth_key'] = $auth;
                                 }
 
-                                $ret = new MailService()->mail(
-                                    [
-                                        'name' => stripslashes((string) $nbmUser['username']),
-                                        'email' => $nbmUser['mail_address'],
-                                    ],
-                                    $mailArgs
-                                );
+                                $ret = new MailService()
+                                    ->mail(
+                                        [
+                                            'name' => stripslashes((string) $nbmUser['username']),
+                                            'email' => $nbmUser['mail_address'],
+                                        ],
+                                        $mailArgs
+                                    );
 
                                 if ($ret) {
                                     $this->incMailSentSuccess($nbmUser);

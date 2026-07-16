@@ -478,7 +478,8 @@ include PHPWG_ROOT_PATH . 'include/page_header.php';
 
 trigger_notify('loc_end_admin');
 
-new HtmlService()->flushPageMessages();
+new HtmlService()
+    ->flushPageMessages();
 
 $template->pparse('admin');
 

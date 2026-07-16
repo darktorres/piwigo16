@@ -182,12 +182,14 @@ final class TagsController implements ControllerInterface
             $themeconf = $template->get_template_vars('themeconf');
             $themeconf = is_array($themeconf) ? $themeconf : [];
             if (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('theTagsPage', $themeconf['hide_menu_on'], true)) {
-                new MenubarRenderer()->render();
+                new MenubarRenderer()
+                    ->render();
             }
 
             include PHPWG_ROOT_PATH . 'include/page_header.php';
             trigger_notify('loc_end_tags');
-            new HtmlService()->flushPageMessages();
+            new HtmlService()
+                ->flushPageMessages();
             $template->pparse('tags');
             include PHPWG_ROOT_PATH . 'include/page_tail.php';
         });

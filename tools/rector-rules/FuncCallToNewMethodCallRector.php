@@ -24,10 +24,14 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
  */
 final class FuncCallToNewMethodCallRector extends AbstractRector
 {
-    /** @var array<string, array{0: string, 1: string}> old func name => [constructor expr PHP code, method name] */
+    /**
+     * @var array<string, array{0: string, 1: string}> old func name => [constructor expr PHP code, method name]
+     */
     private array $map;
 
-    /** @var array<string, New_> old func name => parsed+cached constructor AST (cloned per use) */
+    /**
+     * @var array<string, New_> old func name => parsed+cached constructor AST (cloned per use)
+     */
     private array $parsedCtor = [];
 
     public function __construct()

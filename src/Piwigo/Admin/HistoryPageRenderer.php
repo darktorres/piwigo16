@@ -110,7 +110,8 @@ final class HistoryPageRenderer
             $form['types'] = $types;
             // Hoverbox by default
             $form['display_thumbnail'] =
-              new CookieService()->getCookieVar('display_thumbnail', 'no_display_thumbnail');
+              new CookieService()
+                  ->getCookieVar('display_thumbnail', 'no_display_thumbnail');
         }
 
         $form_param = [];

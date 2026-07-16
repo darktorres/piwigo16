@@ -972,7 +972,8 @@ function ws_users_generate_password_link(array $params, PwgServer &$service): Pw
     $user_lost_language = is_string($user_lost['language']) ? $user_lost['language'] : (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultLanguage();
     $lang_to_use = $first_login ? (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultLanguage() : $user_lost_language;
 
-    new MailService()->switchLangTo($lang_to_use);
+    new MailService()
+        ->switchLangTo($lang_to_use);
     $generate_link = (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build())))->generatePasswordLink($params['user_id'], $first_login);
 
     $user_lost_email = is_string($user_lost['email']) ? $user_lost['email'] : null;
@@ -985,9 +986,11 @@ function ws_users_generate_password_link(array $params, PwgServer &$service): Pw
     if ($params['send_by_mail'] and ! empty($user_lost_email)) {
         $user_lost_username = is_string($user_lost['username']) ? $user_lost['username'] : '';
         if ($first_login) {
-            $email_params = new MailService()->generateSetPasswordMail($user_lost_username, $generate_link['password_link'], $gallery_title, $generate_link['time_validation']);
+            $email_params = new MailService()
+                ->generateSetPasswordMail($user_lost_username, $generate_link['password_link'], $gallery_title, $generate_link['time_validation']);
         } else {
-            $email_params = new MailService()->generateResetPasswordMail($user_lost_username, $generate_link['password_link'], $gallery_title, $generate_link['time_validation']);
+            $email_params = new MailService()
+                ->generateResetPasswordMail($user_lost_username, $generate_link['password_link'], $gallery_title, $generate_link['time_validation']);
         }
         // Here we remove the display of errors because they prevent the response from being parsed
         if (@new MailService()->mail($user_lost_email, $email_params)) {
@@ -996,7 +999,8 @@ function ws_users_generate_password_link(array $params, PwgServer &$service): Pw
             $send_by_mail_response = false;
         }
     }
-    new MailService()->switchLangBack();
+    new MailService()
+        ->switchLangBack();
 
     return [
         'generated_link' => $generate_link['password_link'],

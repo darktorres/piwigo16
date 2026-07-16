@@ -654,7 +654,8 @@ SELECT DISTINCT(id)
         // +-----------------------------------------------------------------------+
         if (isset($page['chronology_field'])) {
             unset($page['is_homepage']);
-            new CalendarRenderer()->render();
+            new CalendarRenderer()
+                ->render();
         }
 
         // title update

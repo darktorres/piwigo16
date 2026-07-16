@@ -436,7 +436,7 @@ final class MailService implements MailerInterface
         global $conf, $user;
 
         if (is_array($subject) || is_array($content)) {
-            $this->switchLangTo((new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultLanguage());
+            $this->switchLangTo((new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new self()))->getDefaultLanguage());
 
             if (is_array($subject)) {
                 $subject = l10n_args($subject);
@@ -543,7 +543,7 @@ SELECT
             return true;
         }
 
-        $this->switchLangTo((new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultLanguage());
+        $this->switchLangTo((new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new self()))->getDefaultLanguage());
         $return = $this->mail($admins, $args, $tpl);
         $this->switchLangBack();
 

@@ -277,7 +277,8 @@ class updates
 
         if ($notify) {
             // send email
-            new MailService()->switchLangTo((new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultLanguage());
+            new MailService()
+                ->switchLangTo((new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultLanguage());
 
             $content = l10n('Hello,');
             $content .= "\n\n" . l10n(
@@ -288,20 +289,22 @@ class updates
             $content .= "\n\n" . l10n('It only takes a few clicks.');
             $content .= "\n\n" . l10n('Running on an up-to-date Piwigo is important for security.');
 
-            new MailService()->mailAdmins(
-                [
-                    'subject' => l10n('Piwigo %s is available, please update', $new_versions_string),
-                    'content' => $content,
-                    'content_format' => 'text/plain',
-                ],
-                [
-                    'filename' => 'notification_admin',
-                ],
-                false, // do not exclude current user
-                true // only webmasters
-            );
+            new MailService()
+                ->mailAdmins(
+                    [
+                        'subject' => l10n('Piwigo %s is available, please update', $new_versions_string),
+                        'content' => $content,
+                        'content_format' => 'text/plain',
+                    ],
+                    [
+                        'filename' => 'notification_admin',
+                    ],
+                    false, // do not exclude current user
+                    true // only webmasters
+                );
 
-            new MailService()->switchLangBack();
+            new MailService()
+                ->switchLangBack();
 
             // save notify
             conf_update_param(

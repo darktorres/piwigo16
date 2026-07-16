@@ -98,11 +98,13 @@ final class NbmController implements ControllerInterface
             $themeconf = is_array($themeconf) ? $themeconf : [];
             $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
             if (! is_array($hide_menu_on) or ! in_array('theNBMPage', $hide_menu_on, true)) {
-                new MenubarRenderer()->render();
+                new MenubarRenderer()
+                    ->render();
             }
 
             include PHPWG_ROOT_PATH . 'include/page_header.php';
-            new HtmlService()->flushPageMessages();
+            new HtmlService()
+                ->flushPageMessages();
             $template->parse('nbm');
             include PHPWG_ROOT_PATH . 'include/page_tail.php';
         });

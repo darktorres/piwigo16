@@ -46,7 +46,8 @@ final class RegisterController implements ControllerInterface
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Free);
 
         if (! (bool) $conf['allow_user_registration']) {
-            new HtmlService()->pageForbidden('User registration closed');
+            new HtmlService()
+                ->pageForbidden('User registration closed');
         }
 
         trigger_notify('loc_begin_register');
@@ -185,7 +186,8 @@ final class RegisterController implements ControllerInterface
             $themeconf = $template->get_template_vars('themeconf');
             $hide_menu_on = is_array($themeconf) ? ($themeconf['hide_menu_on'] ?? null) : null;
             if (! is_array($hide_menu_on) or ! in_array('theRegisterPage', $hide_menu_on, true)) {
-                new MenubarRenderer()->render();
+                new MenubarRenderer()
+                    ->render();
             }
 
             // Load language if cookie is set from login/register/password
@@ -227,7 +229,8 @@ final class RegisterController implements ControllerInterface
 
             include PHPWG_ROOT_PATH . 'include/page_header.php';
             trigger_notify('loc_end_register');
-            new HtmlService()->flushPageMessages();
+            new HtmlService()
+                ->flushPageMessages();
             $template->parse('register');
             include PHPWG_ROOT_PATH . 'include/page_tail.php';
         });

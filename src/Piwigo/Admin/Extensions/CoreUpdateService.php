@@ -206,7 +206,8 @@ final class CoreUpdateService
             return;
         }
 
-        new MailService()->switchLangTo((new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultLanguage());
+        new MailService()
+            ->switchLangTo((new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultLanguage());
 
         $content = l10n('Hello,');
         $content .= "\n\n" . l10n(
@@ -217,20 +218,22 @@ final class CoreUpdateService
         $content .= "\n\n" . l10n('It only takes a few clicks.');
         $content .= "\n\n" . l10n('Running on an up-to-date Piwigo is important for security.');
 
-        new MailService()->mailAdmins(
-            [
-                'subject' => l10n('Piwigo %s is available, please update', $newVersionsString),
-                'content' => $content,
-                'content_format' => 'text/plain',
-            ],
-            [
-                'filename' => 'notification_admin',
-            ],
-            false,
-            true
-        );
+        new MailService()
+            ->mailAdmins(
+                [
+                    'subject' => l10n('Piwigo %s is available, please update', $newVersionsString),
+                    'content' => $content,
+                    'content_format' => 'text/plain',
+                ],
+                [
+                    'filename' => 'notification_admin',
+                ],
+                false,
+                true
+            );
 
-        new MailService()->switchLangBack();
+        new MailService()
+            ->switchLangBack();
 
         conf_update_param(
             'update_notify_last_notification',

@@ -164,7 +164,8 @@ final class IdentificationController implements ControllerInterface
             $themeconf = is_array($themeconf) ? $themeconf : [];
             $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
             if (! (bool) $conf['gallery_locked'] && (! is_array($hide_menu_on) or ! in_array('theIdentificationPage', $hide_menu_on, true))) {
-                new MenubarRenderer()->render();
+                new MenubarRenderer()
+                    ->render();
             }
 
             // Load language if cookie is set from login/register/password
@@ -206,7 +207,8 @@ final class IdentificationController implements ControllerInterface
 
             include PHPWG_ROOT_PATH . 'include/page_header.php';
             trigger_notify('loc_end_identification');
-            new HtmlService()->flushPageMessages();
+            new HtmlService()
+                ->flushPageMessages();
             $template->pparse('identification');
             include PHPWG_ROOT_PATH . 'include/page_tail.php';
         });

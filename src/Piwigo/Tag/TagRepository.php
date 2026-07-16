@@ -122,7 +122,8 @@ SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
             $query .= ' WHERE id IN (' . implode(',', $ids) . ')';
         }
 
-        return $this->conn->executeQuery($query)->fetchAllAssociative();
+        return $this->conn->executeQuery($query)
+            ->fetchAllAssociative();
     }
 
     /**
@@ -151,7 +152,8 @@ SELECT t.*, count(*) AS counter
             ? 'counter DESC LIMIT ' . $maxTags
             : 'NULL';
 
-        return $this->conn->executeQuery($query)->fetchAllAssociative();
+        return $this->conn->executeQuery($query)
+            ->fetchAllAssociative();
     }
 
     /**

@@ -189,7 +189,8 @@ final class ProfileFormHandler
                         // send email to the user
                         if ($username !== $userdata['username']) {
                             $notification_language = is_string($userdata['language']) ? $userdata['language'] : (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultLanguage();
-                            new MailService()->switchLangTo($notification_language);
+                            new MailService()
+                                ->switchLangTo($notification_language);
 
                             $keyargs_content = [
                                 get_l10n_args('Hello', ''),
@@ -197,16 +198,18 @@ final class ProfileFormHandler
                             ];
 
                             $gallery_title = is_string($conf['gallery_title']) ? $conf['gallery_title'] : '';
-                            new MailService()->mail(
-                                $mail_address,
-                                [
-                                    'subject' => '[' . $gallery_title . '] ' . l10n('Username modification'),
-                                    'content' => l10n_args($keyargs_content),
-                                    'content_format' => 'text/plain',
-                                ]
-                            );
+                            new MailService()
+                                ->mail(
+                                    $mail_address,
+                                    [
+                                        'subject' => '[' . $gallery_title . '] ' . l10n('Username modification'),
+                                        'content' => l10n_args($keyargs_content),
+                                        'content_format' => 'text/plain',
+                                    ]
+                                );
 
-                            new MailService()->switchLangBack();
+                            new MailService()
+                                ->switchLangBack();
                         }
                     }
                 }

@@ -158,10 +158,11 @@ SELECT COUNT(*)
             $level_separator = is_string($conf['level_separator']) ? $conf['level_separator'] : ' / ';
             $navigation .= $level_separator;
 
-            $navigation .= new HtmlService()->getCatDisplayNameFromId(
-                $parent_id,
-                $base_url . '&amp;parent_id='
-            );
+            $navigation .= new HtmlService()
+                ->getCatDisplayNameFromId(
+                    $parent_id,
+                    $base_url . '&amp;parent_id='
+                );
         }
         // +-------------------------------------------------------------------+
         // |                       template initialization                     |

@@ -148,7 +148,8 @@ final class AuthService
                     $cookie,
                     [
                         'expires' => time() + $remember_me_length,
-                        'path' => new CookieService()->cookiePath(),
+                        'path' => new CookieService()
+                            ->cookiePath(),
                         'domain' => (string) ini_get('session.cookie_domain'),
                         'secure' => (bool) ini_get('session.cookie_secure'),
                         'httponly' => (bool) ini_get('session.cookie_httponly'),
@@ -158,7 +159,8 @@ final class AuthService
         } else { // make sure we clean any remember me ...
             setcookie($remember_me_name, '', [
                 'expires' => 0,
-                'path' => new CookieService()->cookiePath(),
+                'path' => new CookieService()
+                    ->cookiePath(),
                 'domain' => (string) ini_get('session.cookie_domain'),
             ]);
         }
@@ -220,7 +222,8 @@ final class AuthService
             }
             setcookie($remember_me_name, '', [
                 'expires' => 0,
-                'path' => new CookieService()->cookiePath(),
+                'path' => new CookieService()
+                    ->cookiePath(),
                 'domain' => (string) ini_get('session.cookie_domain'),
             ]);
         }
@@ -281,7 +284,8 @@ final class AuthService
         $remember_me_name = is_string($remember_me_name) ? $remember_me_name : 'pwg_remember';
         setcookie($remember_me_name, '', [
             'expires' => 0,
-            'path' => new CookieService()->cookiePath(),
+            'path' => new CookieService()
+                ->cookiePath(),
             'domain' => (string) ini_get('session.cookie_domain'),
         ]);
     }

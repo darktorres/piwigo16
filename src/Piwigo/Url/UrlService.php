@@ -114,7 +114,8 @@ final class UrlService
                 }
             }
         }
-        $url .= new CookieService()->cookiePath();
+        $url .= new CookieService()
+            ->cookiePath();
 
         return $url;
     }

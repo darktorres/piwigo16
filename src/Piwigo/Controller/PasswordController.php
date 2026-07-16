@@ -172,7 +172,8 @@ final class PasswordController implements ControllerInterface
             $themeconf = is_array($themeconf) ? $themeconf : [];
             $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
             if (! is_array($hide_menu_on) or ! in_array('thePasswordPage', $hide_menu_on, true)) {
-                new MenubarRenderer()->render();
+                new MenubarRenderer()
+                    ->render();
             }
 
             // Load language if cookie is set from login/register/password
@@ -211,7 +212,8 @@ final class PasswordController implements ControllerInterface
 
             include PHPWG_ROOT_PATH . 'include/page_header.php';
             trigger_notify('loc_end_password');
-            new HtmlService()->flushPageMessages();
+            new HtmlService()
+                ->flushPageMessages();
             $template->pparse('password');
             include PHPWG_ROOT_PATH . 'include/page_tail.php';
         });
@@ -298,15 +300,19 @@ final class PasswordController implements ControllerInterface
         // send mail with verification code to user
         $language = $userdata['language'] ?? '';
         $language = is_string($language) ? $language : '';
-        new MailService()->switchLangTo($language);
+        new MailService()
+            ->switchLangTo($language);
         $user_code = \Piwigo\Auth\AuthService::generateUserCode();
-        $template_mail = new MailService()->generateCodeVerificationMail($user_code['code']);
+        $template_mail = new MailService()
+            ->generateCodeVerificationMail($user_code['code']);
         // $skip_mail already covers $email === null/''), so $email is
         // provably a non-empty string here.
         if (! $skip_mail) {
-            new MailService()->mail($email, $template_mail);
+            new MailService()
+                ->mail($email, $template_mail);
         }
-        new MailService()->switchLangBack();
+        new MailService()
+            ->switchLangBack();
 
         $_SESSION['reset_password_code'] = [
             'secret' => $user_code['secret'],
@@ -542,7 +548,8 @@ SELECT
         if (is_array($reset_session) and is_string($reset_session_email) and $reset_session_email !== '') {
             $reset_language = $reset_session['language'] ?? '';
             $reset_language = is_string($reset_language) ? $reset_language : '';
-            new MailService()->switchLangTo($reset_language);
+            new MailService()
+                ->switchLangTo($reset_language);
 
             $reset_user_id = $reset_session['user_id'] ?? null;
             $reset_user_id_str = is_numeric($reset_user_id) ? (string) $reset_user_id : '';
@@ -551,14 +558,17 @@ SELECT
 
             $reset_username = $reset_session['username'] ?? '';
             $reset_username = is_string($reset_username) ? $reset_username : '';
-            $template_mail = new MailService()->generateSuccessResetPasswordMail($reset_username, $nb_of_apikeys);
+            $template_mail = new MailService()
+                ->generateSuccessResetPasswordMail($reset_username, $nb_of_apikeys);
 
             // is_string($reset_session_email)/!== '' above already
             // guarantees this is a non-empty string.
             $reset_email = $reset_session_email;
-            new MailService()->mail($reset_email, $template_mail);
+            new MailService()
+                ->mail($reset_email, $template_mail);
 
-            new MailService()->switchLangBack();
+            new MailService()
+                ->switchLangBack();
         }
         unset($_SESSION['valid_reset_password_code']);
 

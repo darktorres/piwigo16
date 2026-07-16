@@ -659,7 +659,8 @@ SELECT *
                 ];
 
                 $get_slideshow = $_GET['slideshow'];
-                $slideshow_params = new ImageService()->decodeSlideshowParams(is_string($get_slideshow) ? $get_slideshow : null);
+                $slideshow_params = new ImageService()
+                    ->decodeSlideshowParams(is_string($get_slideshow) ? $get_slideshow : null);
                 $slideshow_url_params['slideshow'] = new ImageService()->encodeSlideshowParams($slideshow_params);
 
                 if ((bool) $slideshow_params['play']) {
@@ -858,14 +859,15 @@ SELECT *
                           add_url_params(
                               $picture['current']['url'],
                               [
-                                  'slideshow' => new ImageService()->encodeSlideshowParams(
-                                      array_merge(
-                                          $slideshow_params,
-                                          [
-                                              $p => ! (bool) $slideshow_params[$p],
-                                          ]
-                                      )
-                                  ),
+                                  'slideshow' => new ImageService()
+                                      ->encodeSlideshowParams(
+                                          array_merge(
+                                              $slideshow_params,
+                                              [
+                                                  $p => ! (bool) $slideshow_params[$p],
+                                              ]
+                                          )
+                                      ),
                               ]
                           );
                 }
@@ -881,14 +883,15 @@ SELECT *
                     $slideshow_period_step = is_numeric($slideshow_period_step) ? (int) $slideshow_period_step : 0;
                     $new_period = $current_period + ((($op === 'dec') ? -1 : 1) * $slideshow_period_step);
                     $new_slideshow_params =
-                      new ImageService()->correctSlideshowParams(
-                          array_merge(
-                              $slideshow_params,
-                              [
-                                  'period' => $new_period,
-                              ]
-                          )
-                      );
+                      new ImageService()
+                          ->correctSlideshowParams(
+                              array_merge(
+                                  $slideshow_params,
+                                  [
+                                      'period' => $new_period,
+                                  ]
+                              )
+                          );
 
                     if ($new_slideshow_params['period'] === $new_period) {
                         $var_name = 'U_' . strtoupper($op) . '_PERIOD';
@@ -896,7 +899,8 @@ SELECT *
                               add_url_params(
                                   $picture['current']['url'],
                                   [
-                                      'slideshow' => new ImageService()->encodeSlideshowParams($new_slideshow_params),
+                                      'slideshow' => new ImageService()
+                                          ->encodeSlideshowParams($new_slideshow_params),
                                   ]
                               );
                     }
@@ -1148,7 +1152,8 @@ SELECT id, name, permalink
                 $template->assign(
                     [
                         'PDF_VIEWER_FILESIZE_THRESHOLD' => $pdf_viewer_filesize_threshold * 1024,
-                        'PDF_NB_PAGES' => new ImageService()->countPdfPages($picture['current']['path']),
+                        'PDF_NB_PAGES' => new ImageService()
+                            ->countPdfPages($picture['current']['path']),
                     ]
                 );
             }
@@ -1210,12 +1215,14 @@ SELECT id, name, permalink
                 if (! isset($page['start'])) {
                     $page['start'] = 0;
                 }
-                new MenubarRenderer()->render();
+                new MenubarRenderer()
+                    ->render();
             }
 
             include PHPWG_ROOT_PATH . 'include/page_header.php';
             trigger_notify('loc_end_picture');
-            new HtmlService()->flushPageMessages();
+            new HtmlService()
+                ->flushPageMessages();
             if ($page['slideshow'] and (bool) $conf['light_slideshow']) {
                 $template->pparse('slideshow');
             } else {
@@ -1260,7 +1267,8 @@ SELECT id, name, permalink
             }
             setcookie('picture_deriv', '', [
                 'expires' => 0,
-                'path' => new CookieService()->cookiePath(),
+                'path' => new CookieService()
+                    ->cookiePath(),
             ]);
         }
         $deriv_type = SessionService::get()->getSessionVar('picture_deriv', $conf['derivative_default_size']);
@@ -1317,7 +1325,8 @@ SELECT id, name, permalink
         $template->assign(
             [
                 'ALT_IMG' => $element_info['file'],
-                'COOKIE_PATH' => new CookieService()->cookiePath(),
+                'COOKIE_PATH' => new CookieService()
+                    ->cookiePath(),
             ]
         );
         return $template->parse('default_content', true);

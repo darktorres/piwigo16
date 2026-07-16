@@ -47,7 +47,8 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  *     and `admin/intro.php`'s activity-chart computation. Real behavior is
  *     unaffected outside test mode.
  *   - The dashboard ALSO makes two live calls to piwigo.org unrelated to
- *     the clock: `get_piwigo_news()` (a real news-feed fetch) and
+ *     the clock: `IntroSubController::getLatestNews()` (a real news-feed
+ *     fetch, P23 batch 8d — was `get_piwigo_news()`) and
  *     `pwg.extensions.checkUpdates` (a core/extension update check), both
  *     enabled by default. `pwg_now()` does nothing for these — fixed
  *     separately by disabling both config keys in the fixture itself

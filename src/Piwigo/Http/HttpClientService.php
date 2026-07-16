@@ -14,8 +14,11 @@ use Symfony\Contracts\HttpClient\ResponseInterface as SymfonyResponseInterface;
 
 /**
  * PSR-18 HTTP client wrapping the app's shared Symfony transport
- * (pwg_http_client()), with an SSRF guard applied to the initial URL and
- * to every redirect target it follows, not just the first request. [SEC-23]
+ * (self::defaultClient(), P23 batch 8d -- ported from the deleted
+ * admin/include/functions.php's pwg_http_client(), whose only real
+ * caller was this class's own constructor default), with an SSRF guard
+ * applied to the initial URL and to every redirect target it follows,
+ * not just the first request. [SEC-23]
  *
  * Symfony's own auto-redirect-following happens transport-side, before a
  * response is ever handed back to the caller -- there is no hook to
@@ -73,9 +76,25 @@ final class HttpClientService implements ClientInterface
 
     public function __construct(?HttpClientInterface $client = null, ?string $trustedSelfHost = null)
     {
-        $this->client = $client ?? pwg_http_client();
+        $this->client = $client ?? self::defaultClient();
         $this->factory = new Psr17Factory();
         $this->trustedSelfHost = $trustedSelfHost;
+    }
+
+    /**
+     * A shared, lazily-built Symfony HttpClient instance. Symfony picks the
+     * best available transport itself (curl if present, native streams
+     * otherwise) -- no need to hand-roll the curl/file_get_contents/fsockopen
+     * fallback chain the old fetchRemote() implementation did.
+     */
+    private static function defaultClient(): HttpClientInterface
+    {
+        /** @var HttpClientInterface|null $client */
+        static $client = null;
+        if ($client === null) {
+            $client = \Symfony\Component\HttpClient\HttpClient::create();
+        }
+        return $client;
     }
 
     #[\Override]

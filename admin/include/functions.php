@@ -2474,24 +2474,6 @@ function cat_admin_access($category_id): bool
 }
 
 /**
- * Returns a shared, lazily-built Symfony HttpClient instance. Symfony picks
- * the best available transport itself (curl if present, native streams
- * otherwise) -- no need to hand-roll the curl/file_get_contents/fsockopen
- * fallback chain the old fetchRemote() implementation did.
- *
- * @return \Symfony\Contracts\HttpClient\HttpClientInterface
- */
-function pwg_http_client()
-{
-    /** @var \Symfony\Contracts\HttpClient\HttpClientInterface|null */
-    static $client = null;
-    if ($client === null) {
-        $client = \Symfony\Component\HttpClient\HttpClient::create();
-    }
-    return $client;
-}
-
-/**
  * Retrieve data from a remote URL. [SEC-24] There is no local-file-read
  * fallback -- every $src must be a real https:// URL, guarded against
  * private/reserved IP targets (including on every redirect it follows) by
@@ -3468,67 +3450,4 @@ SELECT
 
         return;
     }
-}
-
-/**
- * Return latest news from piwigo.org.
- *
- * @since 13
- */
-function get_piwigo_news(): mixed
-{
-    /** @var array<string, mixed> $lang_info */
-    global $lang_info;
-
-    $news = null;
-
-    $data_location = conf_get_param('data_location');
-    $data_location = is_string($data_location) ? $data_location : '';
-    $lang_code = $lang_info['code'] ?? null;
-    $lang_code = is_string($lang_code) ? $lang_code : '';
-    $cache_path = PHPWG_ROOT_PATH . $data_location . 'cache/piwigo_latest_news-' . $lang_code . '.cache.php';
-    if (! is_file($cache_path) or filemtime($cache_path) < strtotime('24 hours ago')) {
-        $url = PHPWG_URL . '/ws.php?method=porg.news.getLatest&format=json';
-
-        if (fetchRemote($url, $content)) {
-            $all_news = [];
-
-            // $content is never a resource here: no fopen() handle is
-            // passed to fetchRemote() above, unlike e.g. themes.class.php's
-            // archive-download call sites.
-            if (! is_string($content)) {
-                throw new Exception('get_piwigo_news(): unexpected resource from fetchRemote()');
-            }
-            $porg_news_getLatest = json_decode($content, true);
-
-            if (is_array($porg_news_getLatest) && isset($porg_news_getLatest['result']) && is_array($porg_news_getLatest['result'])) {
-                $topic = $porg_news_getLatest['result'];
-                $posted_on = $topic['posted_on'] ?? null;
-                $posted_on_for_format = (is_string($posted_on) || is_int($posted_on)) ? $posted_on : false;
-
-                $news = [
-                    'id' => $topic['topic_id'] ?? null,
-                    'subject' => $topic['subject'] ?? null,
-                    'posted_on' => $posted_on,
-                    'posted' => \Piwigo\Core\DateHelper::formatDate($posted_on_for_format),
-                    'url' => $topic['url'] ?? null,
-                ];
-            }
-
-            if (\Piwigo\Core\FilesystemHelper::mkgetdir(dirname($cache_path))) {
-                file_put_contents($cache_path, serialize($news));
-            }
-        } else {
-            return [];
-        }
-    }
-
-    if ($news === null) {
-        $cached_contents = file_get_contents($cache_path);
-        if ($cached_contents !== false) {
-            $news = unserialize($cached_contents);
-        }
-    }
-
-    return $news;
 }

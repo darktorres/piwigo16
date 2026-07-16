@@ -644,6 +644,35 @@ function check_theme_installed($theme_id): bool
     return \Piwigo\Core\ThemeCatalog::checkThemeInstalled($theme_id);
 }
 
+// P23 batch 8d: the 5 functions below (load_conf_from_db/
+// pwg_is_dbconf_writeable/conf_update_param/conf_delete_param/
+// conf_get_param) are permanent free-function facades, NOT deferred --
+// checked and rejected as migration candidates, not an oversight.
+// Piwigo\Config\ConfigService already has equivalent, real, typed methods
+// (loadConfFromDb()/pwgIsDbconfWriteable()/confUpdateParam()/
+// confDeleteParam()/confGetParam(), built P13/P14, wired into
+// CommonBootstrap::run() since P23 batch 1) -- but unlike every other
+// class this migration retargets onto, ConfigService's own
+// ConfigRepository cannot be constructed inline the
+// `new XRepository(DbConnection::build())` way every other repository in
+// this codebase uses: it extends Doctrine's EntityRepository, which
+// requires a real EntityManager + ClassMetadata and is only ever obtained
+// via `$em->getRepository(ConfigEntry::class)` inside the DI container
+// (config/container.php's own comment: "EntityRepository's real
+// constructor takes ClassMetadata, which PHP-DI can't autowire"). These 5
+// functions have 90+ real call sites (conf_update_param alone) spanning
+// dozens of files that are not themselves DI-constructed classes --
+// install/db/*.php one-shot migration snippets, install.php/upgrade.php,
+// admin/include/functions.php and include/ws_functions/*.php (not yet
+// migrated, batches 8e/file-3), and already-migrated classes never
+// designed to accept a ConfigService constructor dependency. Retargeting
+// would mean constructor-injecting ConfigService into every one of those
+// call sites -- a fundamentally different, much larger scope of work than
+// this pass's "inline-construct and retarget" pattern, not a sub-pass.
+// Deferred to whenever that's tackled deliberately (plausibly folded into
+// the already-tracked post-P23 ORM migration step, which unifies the
+// Doctrine-vs-DBAL split these functions straddle), not part of P23
+// batch 8.
 /**
  * Add configuration parameters from database to global $conf array
  *

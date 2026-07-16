@@ -12,10 +12,16 @@ declare(strict_types=1);
 use Piwigo\Core\WsParamFlag;
 use Piwigo\Core\WsParamType;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Ws\PwgCategories;
 use Piwigo\Ws\PwgComments;
+use Piwigo\Ws\PwgCore;
 use Piwigo\Ws\PwgExtensions;
+use Piwigo\Ws\PwgGroups;
+use Piwigo\Ws\PwgImages;
 use Piwigo\Ws\PwgPermissions;
 use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\PwgTags;
+use Piwigo\Ws\PwgUsers;
 
 // P22: extracted verbatim from ws.php's own top-level function definition
 // (unchanged) -- ws_addDefaultMethods() is registered with
@@ -99,37 +105,34 @@ function ws_addDefaultMethods(array $arr): void
 
     $service->addMethod(
         'pwg.getVersion',
-        'ws_getVersion',
+        [PwgCore::class, 'getVersion'],
         null,
-        'Returns the Piwigo version.',
-        $ws_functions_root . 'pwg.php'
+        'Returns the Piwigo version.'
     );
 
     $service->addMethod(
         'pwg.getInfos',
-        'ws_getInfos',
+        [PwgCore::class, 'getInfos'],
         null,
         'Returns general informations.',
-        $ws_functions_root . 'pwg.php',
-        [
+        options: [
             'admin_only' => true,
         ]
     );
 
     $service->addMethod(
         'pwg.getCacheSize',
-        'ws_getCacheSize',
+        [PwgCore::class, 'getCacheSize'],
         null,
         'Returns general informations.',
-        $ws_functions_root . 'pwg.php',
-        [
+        options: [
             'admin_only' => true,
         ]
     );
 
     $service->addMethod(
         'pwg.activity.getList',
-        'ws_getActivityList',
+        [PwgCore::class, 'getActivityList'],
         [
             'page' => [
                 'default' => null,
@@ -161,26 +164,32 @@ function ws_addDefaultMethods(array $arr): void
             ],
         ],
         'Returns general informations.',
-        $ws_functions_root . 'pwg.php',
-        [
+        options: [
             'admin_only' => true,
         ]
     );
 
     $service->addMethod(
         'pwg.activity.downloadLog',
+        // P23 batch 8e-4: pre-existing bug, confirmed predating this
+        // migration -- 'ws_activity_downloadLog' was never defined
+        // anywhere in include/ws_functions/pwg.php (verified via a
+        // full-repo grep before deleting that file); this registration
+        // has always fataled with "call to undefined function" if ever
+        // invoked. Left as a bare (still-broken) string rather than
+        // inventing an implementation here -- flagged for its own
+        // follow-up task, out of this sub-batch's scope.
         'ws_activity_downloadLog',
         null,
         'Returns general informations.',
-        $ws_functions_root . 'pwg.php',
-        [
+        options: [
             'admin_only' => true,
         ]
     );
 
     $service->addMethod(
         'pwg.caddie.add',
-        'ws_caddie_add',
+        [PwgCore::class, 'caddieAdd'],
         [
             'image_id' => [
                 'flags' => WsParamFlag::FORCE_ARRAY,
@@ -188,15 +197,14 @@ function ws_addDefaultMethods(array $arr): void
             ],
         ],
         'Adds elements to the caddie. Returns the number of elements added.',
-        $ws_functions_root . 'pwg.php',
-        [
+        options: [
             'admin_only' => true,
         ]
     );
 
     $service->addMethod(
         'pwg.categories.getImages',
-        'ws_categories_getImages',
+        [PwgCategories::class, 'getImages'],
         array_merge([
             'cat_id' => [
                 'default' => null,
@@ -223,13 +231,12 @@ function ws_addDefaultMethods(array $arr): void
         ], $f_params),
         'Returns elements for the corresponding categories.
 <br><b>cat_id</b> can be empty if <b>recursive</b> is true.
-<br><b>order</b> comma separated fields for sorting',
-        $ws_functions_root . 'pwg.categories.php'
+<br><b>order</b> comma separated fields for sorting'
     );
 
     $service->addMethod(
         'pwg.categories.getList',
-        'ws_categories_getList',
+        [PwgCategories::class, 'getList'],
         [
             'cat_id' => [
                 'default' => null,
@@ -265,13 +272,12 @@ function ws_addDefaultMethods(array $arr): void
                 'info' => 'Parameter not compatible with recursive=true',
             ],
         ],
-        'Returns a list of categories.',
-        $ws_functions_root . 'pwg.categories.php'
+        'Returns a list of categories.'
     );
 
     $service->addMethod(
         'pwg.getMissingDerivatives',
-        'ws_getMissingDerivatives',
+        [PwgCore::class, 'getMissingDerivatives'],
         array_merge([
             'types' => [
                 'default' => null,
@@ -293,15 +299,14 @@ function ws_addDefaultMethods(array $arr): void
             ],
         ], $f_params),
         'Returns a list of derivatives to build.',
-        $ws_functions_root . 'pwg.php',
-        [
+        options: [
             'admin_only' => true,
         ]
     );
 
     $service->addMethod(
         'pwg.images.addComment',
-        'ws_images_addComment',
+        [PwgImages::class, 'addComment'],
         [
             'image_id' => [
                 'type' => WsParamType::ID,
@@ -313,15 +318,14 @@ function ws_addDefaultMethods(array $arr): void
             'key' => [],
         ],
         'Adds a comment to an image.',
-        $ws_functions_root . 'pwg.images.php',
-        [
+        options: [
             'post_only' => true,
         ]
     );
 
     $service->addMethod(
         'pwg.images.getInfo',
-        'ws_images_getInfo',
+        [PwgImages::class, 'getInfo'],
         [
             'image_id' => [
                 'type' => WsParamType::ID,
@@ -336,13 +340,12 @@ function ws_addDefaultMethods(array $arr): void
                 'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
         ],
-        'Returns information about an image.',
-        $ws_functions_root . 'pwg.images.php'
+        'Returns information about an image.'
     );
 
     $service->addMethod(
         'pwg.images.rate',
-        'ws_images_rate',
+        [PwgImages::class, 'rate'],
         [
             'image_id' => [
                 'type' => WsParamType::ID,
@@ -351,13 +354,12 @@ function ws_addDefaultMethods(array $arr): void
                 'type' => WsParamType::FLOAT,
             ],
         ],
-        'Rates an image.',
-        $ws_functions_root . 'pwg.images.php'
+        'Rates an image.'
     );
 
     $service->addMethod(
         'pwg.images.search',
-        'ws_images_search',
+        [PwgImages::class, 'search'],
         array_merge([
             'query' => [],
             'per_page' => [
@@ -374,13 +376,12 @@ function ws_addDefaultMethods(array $arr): void
                 'info' => 'id, file, name, hit, rating_score, date_creation, date_available, random',
             ],
         ], $f_params),
-        'Returns elements for the corresponding query search.',
-        $ws_functions_root . 'pwg.images.php'
+        'Returns elements for the corresponding query search.'
     );
 
     $service->addMethod(
         'pwg.images.setPrivacyLevel',
-        'ws_images_setPrivacyLevel',
+        [PwgImages::class, 'setPrivacyLevel'],
         [
             'image_id' => [
                 'flags' => WsParamFlag::FORCE_ARRAY,
@@ -392,8 +393,7 @@ function ws_addDefaultMethods(array $arr): void
             ],
         ],
         'Sets the privacy levels for the images.',
-        $ws_functions_root . 'pwg.images.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]
@@ -401,13 +401,12 @@ function ws_addDefaultMethods(array $arr): void
 
     $service->addMethod(
         'pwg.images.formats.searchImage',
-        'ws_images_formats_searchImage',
+        [PwgImages::class, 'formatsSearchImage'],
         [
             'filename_list' => [],
         ],
         'Search for image ids matching the provided filenames. <b>filename_list</b> must be a JSON encoded associative array of unique_id:filename.<br><br>The method returns a list of unique_id:image_id.',
-        $ws_functions_root . 'pwg.images.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]
@@ -415,7 +414,7 @@ function ws_addDefaultMethods(array $arr): void
 
     $service->addMethod(
         'pwg.images.formats.delete',
-        'ws_images_formats_delete',
+        [PwgImages::class, 'formatsDelete'],
         [
             'format_id' => [
                 'type' => WsParamType::ID,
@@ -425,8 +424,7 @@ function ws_addDefaultMethods(array $arr): void
             'pwg_token' => [],
         ],
         'Remove a format',
-        $ws_functions_root . 'pwg.images.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]
@@ -434,7 +432,7 @@ function ws_addDefaultMethods(array $arr): void
 
     $service->addMethod(
         'pwg.images.setRank',
-        'ws_images_setRank',
+        [PwgImages::class, 'setRank'],
         [
             'image_id' => [
                 'type' => WsParamType::ID,
@@ -454,8 +452,7 @@ function ws_addDefaultMethods(array $arr): void
 <li>rank becomes useless, only the order of the image_id list matters</li>
 <li>you are supposed to provide the list of all image_ids belonging to the album.
 </ul>',
-        $ws_functions_root . 'pwg.images.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]
@@ -463,7 +460,7 @@ function ws_addDefaultMethods(array $arr): void
 
     $service->addMethod(
         'pwg.images.setCategory',
-        'ws_images_setCategory',
+        [PwgImages::class, 'setCategory'],
         [
             'image_id' => [
                 'flags' => WsParamFlag::FORCE_ARRAY,
@@ -479,8 +476,7 @@ function ws_addDefaultMethods(array $arr): void
             'pwg_token' => [],
         ],
         'Manage associations of images with an album. <b>action</b> can be:<ul><li><i>associate</i> : add photos to this album</li><li><i>dissociate</i> : remove photos from this album</li><li><i>move</i> : dissociate photos from any other album and adds photos to this album</li></ul>',
-        $ws_functions_root . 'pwg.images.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]
@@ -488,7 +484,7 @@ function ws_addDefaultMethods(array $arr): void
 
     $service->addMethod(
         'pwg.rates.delete',
-        'ws_rates_delete',
+        [PwgCore::class, 'ratesDelete'],
         [
             'user_id' => [
                 'type' => WsParamType::ID,
@@ -502,8 +498,7 @@ function ws_addDefaultMethods(array $arr): void
             ],
         ],
         'Deletes all rates for a user.',
-        $ws_functions_root . 'pwg.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]
@@ -511,15 +506,14 @@ function ws_addDefaultMethods(array $arr): void
 
     $service->addMethod(
         'pwg.session.getStatus',
-        'ws_session_getStatus',
+        [PwgCore::class, 'sessionGetStatus'],
         null,
-        'Gets information about the current session. Also provides a token useable with admin methods.',
-        $ws_functions_root . 'pwg.php'
+        'Gets information about the current session. Also provides a token useable with admin methods.'
     );
 
     $service->addMethod(
         'pwg.session.login',
-        'ws_session_login',
+        [PwgCore::class, 'sessionLogin'],
         [
             'username' => [],
             'password' => [
@@ -527,36 +521,33 @@ function ws_addDefaultMethods(array $arr): void
             ],
         ],
         'Tries to login the user.',
-        $ws_functions_root . 'pwg.php',
-        [
+        options: [
             'post_only' => true,
         ]
     );
 
     $service->addMethod(
         'pwg.session.logout',
-        'ws_session_logout',
+        [PwgCore::class, 'sessionLogout'],
         null,
-        'Ends the current session.',
-        $ws_functions_root . 'pwg.php'
+        'Ends the current session.'
     );
 
     $service->addMethod(
         'pwg.tags.getList',
-        'ws_tags_getList',
+        [PwgTags::class, 'getList'],
         [
             'sort_by_counter' => [
                 'default' => false,
                 'type' => WsParamType::BOOL,
             ],
         ],
-        'Retrieves a list of available tags.',
-        $ws_functions_root . 'pwg.tags.php'
+        'Retrieves a list of available tags.'
     );
 
     $service->addMethod(
         'pwg.tags.getImages',
-        'ws_tags_getImages',
+        [PwgTags::class, 'getImages'],
         array_merge([
             'tag_id' => [
                 'default' => null,
@@ -589,13 +580,12 @@ function ws_addDefaultMethods(array $arr): void
                 'info' => 'id, file, name, hit, rating_score, date_creation, date_available, random',
             ],
         ], $f_params),
-        'Returns elements for the corresponding tags. Fill at least tag_id, tag_url_name or tag_name.',
-        $ws_functions_root . 'pwg.tags.php'
+        'Returns elements for the corresponding tags. Fill at least tag_id, tag_url_name or tag_name.'
     );
 
     $service->addMethod(
         'pwg.images.addChunk',
-        'ws_images_add_chunk',
+        [PwgImages::class, 'addChunk'],
         [
             'data' => [],
             'original_sum' => [],
@@ -606,8 +596,7 @@ function ws_addDefaultMethods(array $arr): void
             'position' => [],
         ],
         'Add a chunk of a file.',
-        $ws_functions_root . 'pwg.images.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]
@@ -615,7 +604,7 @@ function ws_addDefaultMethods(array $arr): void
 
     $service->addMethod(
         'pwg.images.addFile',
-        'ws_images_addFile',
+        [PwgImages::class, 'addFile'],
         [
             'image_id' => [
                 'type' => WsParamType::ID,
@@ -628,15 +617,14 @@ function ws_addDefaultMethods(array $arr): void
         ],
         'Add or update a file for an existing photo.
 <br>pwg.images.addChunk must have been called before (maybe several times).',
-        $ws_functions_root . 'pwg.images.php',
-        [
+        options: [
             'admin_only' => true,
         ]
     );
 
     $service->addMethod(
         'pwg.images.add',
-        'ws_images_add',
+        [PwgImages::class, 'add'],
         [
             'thumbnail_sum' => [
                 'default' => null,
@@ -686,15 +674,14 @@ function ws_addDefaultMethods(array $arr): void
         'Add an image.
 <br>pwg.images.addChunk must have been called before (maybe several times).
 <br>Don\'t use "thumbnail_sum" and "high_sum", these parameters are here for backward compatibility.',
-        $ws_functions_root . 'pwg.images.php',
-        [
+        options: [
             'admin_only' => true,
         ]
     );
 
     $service->addMethod(
         'pwg.images.addSimple',
-        'ws_images_addSimple',
+        [PwgImages::class, 'addSimple'],
         [
             'category' => [
                 'default' => null,
@@ -728,8 +715,7 @@ function ws_addDefaultMethods(array $arr): void
 <br>Use the <b>$_FILES[image]</b> field for uploading file.
 <br>Set the form encoding to "form-data".
 <br>You can update an existing photo if you define an existing image_id.',
-        $ws_functions_root . 'pwg.images.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]
@@ -737,7 +723,7 @@ function ws_addDefaultMethods(array $arr): void
 
     $service->addMethod(
         'pwg.images.upload',
-        'ws_images_upload',
+        [PwgImages::class, 'upload'],
         [
             'name' => [
                 'default' => null,
@@ -767,8 +753,7 @@ function ws_addDefaultMethods(array $arr): void
         'Add an image.
 <br>Use the <b>$_FILES[image]</b> field for uploading file.
 <br>Set the form encoding to "form-data".',
-        $ws_functions_root . 'pwg.images.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]
@@ -776,7 +761,7 @@ function ws_addDefaultMethods(array $arr): void
 
     $service->addMethod(
         'pwg.images.uploadAsync',
-        'ws_images_uploadAsync',
+        [PwgImages::class, 'uploadAsync'],
         [
             'username' => [
                 'flags' => WsParamFlag::OPTIONAL,
@@ -831,8 +816,7 @@ function ws_addDefaultMethods(array $arr): void
 <br>Set the form encoding to "form-data".
 <br>You can update an existing photo if you define an existing image_id.
 <br>Requires <b>admin</b> credentials: either with username/password or header authorization with api key.',
-        $ws_functions_root . 'pwg.images.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]
@@ -840,7 +824,7 @@ function ws_addDefaultMethods(array $arr): void
 
     $service->addMethod(
         'pwg.images.delete',
-        'ws_images_delete',
+        [PwgImages::class, 'delete'],
         [
             'image_id' => [
                 'flags' => WsParamFlag::ACCEPT_ARRAY,
@@ -848,8 +832,7 @@ function ws_addDefaultMethods(array $arr): void
             'pwg_token' => [],
         ],
         'Deletes image(s).',
-        $ws_functions_root . 'pwg.images.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]
@@ -857,7 +840,7 @@ function ws_addDefaultMethods(array $arr): void
 
     $service->addMethod(
         'pwg.images.setMd5sum',
-        'ws_images_setMd5sum',
+        [PwgImages::class, 'setMd5sum'],
         [
             'block_size' => [
                 'default' => $conf['checksum_compute_blocksize'],
@@ -866,8 +849,7 @@ function ws_addDefaultMethods(array $arr): void
             'pwg_token' => [],
         ],
         'Set md5sum column, by blocks. Returns how many md5sums were added and how many are remaining.',
-        $ws_functions_root . 'pwg.images.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]
@@ -875,7 +857,7 @@ function ws_addDefaultMethods(array $arr): void
 
     $service->addMethod(
         'pwg.images.syncMetadata',
-        'ws_images_syncMetadata',
+        [PwgImages::class, 'syncMetadata'],
         [
             'image_id' => [
                 'flags' => WsParamFlag::ACCEPT_ARRAY,
@@ -884,8 +866,7 @@ function ws_addDefaultMethods(array $arr): void
             'pwg_token' => [],
         ],
         'Sync metadatas, by blocks. Returns how many images were synchronized',
-        $ws_functions_root . 'pwg.images.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]
@@ -893,7 +874,7 @@ function ws_addDefaultMethods(array $arr): void
 
     $service->addMethod(
         'pwg.images.deleteOrphans',
-        'ws_images_deleteOrphans',
+        [PwgImages::class, 'deleteOrphans'],
         [
             'block_size' => [
                 'default' => 1000,
@@ -902,8 +883,7 @@ function ws_addDefaultMethods(array $arr): void
             'pwg_token' => [],
         ],
         'Deletes orphans, by blocks. Returns how many orphans were deleted and how many are remaining.',
-        $ws_functions_root . 'pwg.images.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]
@@ -911,7 +891,7 @@ function ws_addDefaultMethods(array $arr): void
 
     $service->addMethod(
         'pwg.categories.calculateOrphans',
-        'ws_categories_calculateOrphans',
+        [PwgCategories::class, 'calculateOrphans'],
         [
             'category_id' => [
                 'type' => WsParamType::ID,
@@ -919,15 +899,14 @@ function ws_addDefaultMethods(array $arr): void
             ],
         ],
         'Return the number of orphan photos if an album is deleted.',
-        $ws_functions_root . 'pwg.categories.php',
-        [
+        options: [
             'admin_only' => true,
         ]
     );
 
     $service->addMethod(
         'pwg.categories.getAdminList',
-        'ws_categories_getAdminList',
+        [PwgCategories::class, 'getAdminList'],
         [
             'cat_id' => [
                 'default' => null,
@@ -949,15 +928,14 @@ function ws_addDefaultMethods(array $arr): void
         'Get albums list as displayed on admin page. <br>
       <b>additional_output</b> controls which data are returned, possible values are:<br>
       null, full_name_with_admin_links<br>',
-        $ws_functions_root . 'pwg.categories.php',
-        [
+        options: [
             'admin_only' => true,
         ]
     );
 
     $service->addMethod(
         'pwg.categories.add',
-        'ws_categories_add',
+        [PwgCategories::class, 'add'],
         [
             'name' => [],
             'parent' => [
@@ -988,15 +966,14 @@ function ws_addDefaultMethods(array $arr): void
             ],
         ],
         'Adds an album.<br><br><b>pwg_token</b> required if you want to use HTML in name/comment.',
-        $ws_functions_root . 'pwg.categories.php',
-        [
+        options: [
             'admin_only' => true,
         ]
     );
 
     $service->addMethod(
         'pwg.categories.delete',
-        'ws_categories_delete',
+        [PwgCategories::class, 'delete'],
         [
             'category_id' => [
                 'flags' => WsParamFlag::ACCEPT_ARRAY,
@@ -1009,8 +986,7 @@ function ws_addDefaultMethods(array $arr): void
         'Deletes album(s).
 <br><b>photo_deletion_mode</b> can be "no_delete" (may create orphan photos), "delete_orphans"
 (default mode, only deletes photos linked to no other album) or "force_delete" (delete all photos, even those linked to other albums)',
-        $ws_functions_root . 'pwg.categories.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]
@@ -1018,7 +994,7 @@ function ws_addDefaultMethods(array $arr): void
 
     $service->addMethod(
         'pwg.categories.move',
-        'ws_categories_move',
+        [PwgCategories::class, 'move'],
         [
             'category_id' => [
                 'flags' => WsParamFlag::ACCEPT_ARRAY,
@@ -1030,8 +1006,7 @@ function ws_addDefaultMethods(array $arr): void
         ],
         'Move album(s).
 <br>Set parent as 0 to move to gallery root. Only virtual categories can be moved.',
-        $ws_functions_root . 'pwg.categories.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]
@@ -1039,7 +1014,7 @@ function ws_addDefaultMethods(array $arr): void
 
     $service->addMethod(
         'pwg.categories.setRepresentative',
-        'ws_categories_setRepresentative',
+        [PwgCategories::class, 'setRepresentative'],
         [
             'category_id' => [
                 'type' => WsParamType::ID,
@@ -1049,8 +1024,7 @@ function ws_addDefaultMethods(array $arr): void
             ],
         ],
         'Sets the representative photo for an album. The photo doesn\'t have to belong to the album.',
-        $ws_functions_root . 'pwg.categories.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]
@@ -1058,15 +1032,14 @@ function ws_addDefaultMethods(array $arr): void
 
     $service->addMethod(
         'pwg.categories.deleteRepresentative',
-        'ws_categories_deleteRepresentative',
+        [PwgCategories::class, 'deleteRepresentative'],
         [
             'category_id' => [
                 'type' => WsParamType::ID,
             ],
         ],
         'Deletes the album thumbnail. Only possible if $conf[\'allow_random_representative\']',
-        $ws_functions_root . 'pwg.categories.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]
@@ -1074,15 +1047,14 @@ function ws_addDefaultMethods(array $arr): void
 
     $service->addMethod(
         'pwg.categories.refreshRepresentative',
-        'ws_categories_refreshRepresentative',
+        [PwgCategories::class, 'refreshRepresentative'],
         [
             'category_id' => [
                 'type' => WsParamType::ID,
             ],
         ],
         'Find a new album thumbnail.',
-        $ws_functions_root . 'pwg.categories.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]
@@ -1090,31 +1062,29 @@ function ws_addDefaultMethods(array $arr): void
 
     $service->addMethod(
         'pwg.tags.getAdminList',
-        'ws_tags_getAdminList',
+        [PwgTags::class, 'getAdminList'],
         null,
         '<b>Admin only.</b>',
-        $ws_functions_root . 'pwg.tags.php',
-        [
+        options: [
             'admin_only' => true,
         ]
     );
 
     $service->addMethod( // TODO: create multiple tags
         'pwg.tags.add',
-        'ws_tags_add',
+        [PwgTags::class, 'add'],
         [
             'name' => [],
         ],
         'Adds a new tag.',
-        $ws_functions_root . 'pwg.tags.php',
-        [
+        options: [
             'admin_only' => true,
         ]
     );
 
     $service->addMethod(
         'pwg.tags.delete',
-        'ws_tags_delete',
+        [PwgTags::class, 'delete'],
         [
             'tag_id' => [
                 'type' => WsParamType::ID,
@@ -1123,15 +1093,14 @@ function ws_addDefaultMethods(array $arr): void
             'pwg_token' => [],
         ],
         'Delete tag(s) by ID.',
-        $ws_functions_root . 'pwg.tags.php',
-        [
+        options: [
             'admin_only' => true,
         ]
     );
 
     $service->addMethod(
         'pwg.tags.rename',
-        'ws_tags_rename',
+        [PwgTags::class, 'rename'],
         [
             'tag_id' => [
                 'type' => WsParamType::ID,
@@ -1140,15 +1109,14 @@ function ws_addDefaultMethods(array $arr): void
             'pwg_token' => [],
         ],
         'Rename tag',
-        $ws_functions_root . 'pwg.tags.php',
-        [
+        options: [
             'admin_only' => true,
         ]
     );
 
     $service->addMethod(
         'pwg.tags.duplicate',
-        'ws_tags_duplicate',
+        [PwgTags::class, 'duplicate'],
         [
             'tag_id' => [
                 'type' => WsParamType::ID,
@@ -1157,8 +1125,7 @@ function ws_addDefaultMethods(array $arr): void
             'pwg_token' => [],
         ],
         'Create a copy of a tag',
-        $ws_functions_root . 'pwg.tags.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]
@@ -1166,7 +1133,7 @@ function ws_addDefaultMethods(array $arr): void
 
     $service->addMethod(
         'pwg.tags.merge',
-        'ws_tags_merge',
+        [PwgTags::class, 'merge'],
         [
             'destination_tag_id' => [
                 'type' => WsParamType::ID,
@@ -1179,8 +1146,7 @@ function ws_addDefaultMethods(array $arr): void
             'pwg_token' => [],
         ],
         'Merge tags in one other group',
-        $ws_functions_root . 'pwg.tags.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]
@@ -1188,7 +1154,7 @@ function ws_addDefaultMethods(array $arr): void
 
     $service->addMethod(
         'pwg.images.exist',
-        'ws_images_exist',
+        [PwgImages::class, 'exist'],
         [
             'md5sum_list' => [
                 'default' => null,
@@ -1199,15 +1165,14 @@ function ws_addDefaultMethods(array $arr): void
         ],
         'Checks existence of images.
 <br>Give <b>md5sum_list</b> if $conf[uniqueness_mode]==md5sum. Give <b>filename_list</b> if $conf[uniqueness_mode]==filename.',
-        $ws_functions_root . 'pwg.images.php',
-        [
+        options: [
             'admin_only' => true,
         ]
     );
 
     $service->addMethod(
         'pwg.images.checkFiles',
-        'ws_images_checkFiles',
+        [PwgImages::class, 'checkFiles'],
         [
             'image_id' => [
                 'type' => WsParamType::ID,
@@ -1224,37 +1189,34 @@ function ws_addDefaultMethods(array $arr): void
         ],
         'Checks if you have updated version of your files for a given photo, the answer can be "missing", "equals" or "differs".
 <br>Don\'t use "thumbnail_sum" and "high_sum", these parameters are here for backward compatibility.',
-        $ws_functions_root . 'pwg.images.php',
-        [
+        options: [
             'admin_only' => true,
         ]
     );
 
     $service->addMethod(
         'pwg.images.checkUpload',
-        'ws_images_checkUpload',
+        [PwgImages::class, 'checkUpload'],
         null,
         'Checks if Piwigo is ready for upload.',
-        $ws_functions_root . 'pwg.images.php',
-        [
+        options: [
             'admin_only' => true,
         ]
     );
 
     $service->addMethod(
         'pwg.images.emptyLounge',
-        'ws_images_emptyLounge',
+        [PwgImages::class, 'emptyLounge'],
         null,
         'Empty lounge, where images may be waiting before taking off.',
-        $ws_functions_root . 'pwg.images.php',
-        [
+        options: [
             'admin_only' => true,
         ]
     );
 
     $service->addMethod(
         'pwg.images.uploadCompleted',
-        'ws_images_uploadCompleted',
+        [PwgImages::class, 'uploadCompleted'],
         [
             'image_id' => [
                 'default' => null,
@@ -1266,15 +1228,14 @@ function ws_addDefaultMethods(array $arr): void
             ],
         ],
         'Notify Piwigo you have finished uploading a set of photos. It will empty the lounge, if any.',
-        $ws_functions_root . 'pwg.images.php',
-        [
+        options: [
             'admin_only' => true,
         ]
     );
 
     $service->addMethod(
         'pwg.images.setInfo',
-        'ws_images_setInfo',
+        [PwgImages::class, 'setInfo'],
         [
             'image_id' => [
                 'type' => WsParamType::ID,
@@ -1322,8 +1283,7 @@ function ws_addDefaultMethods(array $arr): void
 (overwrite any existing value) and applies to single values properties like name/author/date_creation/comment.
 <br><b>multiple_value_mode</b> can be "append" (no change on existing values, add the new values) or "replace" and applies to multiple values properties like tag_ids/categories.
 <br><b>pwg_token</b> required if you want to use HTML in name/comment/author.',
-        $ws_functions_root . 'pwg.images.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]
@@ -1331,7 +1291,7 @@ function ws_addDefaultMethods(array $arr): void
 
     $service->addMethod(
         'pwg.categories.setInfo',
-        'ws_categories_setInfo',
+        [PwgCategories::class, 'setInfo'],
         [
             'category_id' => [
                 'type' => WsParamType::ID,
@@ -1368,8 +1328,7 @@ function ws_addDefaultMethods(array $arr): void
             ],
         ],
         'Changes properties of an album.<br><br><b>pwg_token</b> required if you want to use HTML in name/comment.',
-        $ws_functions_root . 'pwg.categories.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]
@@ -1377,7 +1336,7 @@ function ws_addDefaultMethods(array $arr): void
 
     $service->addMethod(
         'pwg.categories.setRank',
-        'ws_categories_setRank',
+        [PwgCategories::class, 'setRank'],
         [
             'category_id' => [
                 'type' => WsParamType::ID,
@@ -1394,8 +1353,7 @@ function ws_addDefaultMethods(array $arr): void
         <li>rank becomes useless, only the order of the image_id list matters</li>
         <li>you are supposed to provide the list of all categories_ids belonging to the album.
         </ul>.',
-        $ws_functions_root . 'pwg.categories.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]
@@ -1496,7 +1454,7 @@ function ws_addDefaultMethods(array $arr): void
 
     $service->addMethod(
         'pwg.groups.getList',
-        'ws_groups_getList',
+        [PwgGroups::class, 'getList'],
         [
             'group_id' => [
                 'flags' => WsParamFlag::OPTIONAL | WsParamFlag::FORCE_ARRAY,
@@ -1521,15 +1479,14 @@ function ws_addDefaultMethods(array $arr): void
             ],
         ],
         'Retrieves a list of all groups. The list can be filtered.',
-        $ws_functions_root . 'pwg.groups.php',
-        [
+        options: [
             'admin_only' => true,
         ]
     );
 
     $service->addMethod(
         'pwg.groups.add',
-        'ws_groups_add',
+        [PwgGroups::class, 'add'],
         [
             'name' => [],
             'is_default' => [
@@ -1538,8 +1495,7 @@ function ws_addDefaultMethods(array $arr): void
             ],
         ],
         'Creates a group and returns the new group record.',
-        $ws_functions_root . 'pwg.groups.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]
@@ -1547,7 +1503,7 @@ function ws_addDefaultMethods(array $arr): void
 
     $service->addMethod(
         'pwg.groups.delete',
-        'ws_groups_delete',
+        [PwgGroups::class, 'delete'],
         [
             'group_id' => [
                 'flags' => WsParamFlag::FORCE_ARRAY,
@@ -1556,8 +1512,7 @@ function ws_addDefaultMethods(array $arr): void
             'pwg_token' => [],
         ],
         'Deletes a or more groups. Users and photos are not deleted.',
-        $ws_functions_root . 'pwg.groups.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]
@@ -1565,7 +1520,7 @@ function ws_addDefaultMethods(array $arr): void
 
     $service->addMethod(
         'pwg.groups.setInfo',
-        'ws_groups_setInfo',
+        [PwgGroups::class, 'setInfo'],
         [
             'group_id' => [
                 'type' => WsParamType::ID,
@@ -1580,8 +1535,7 @@ function ws_addDefaultMethods(array $arr): void
             'pwg_token' => [],
         ],
         'Updates a group. Leave a field blank to keep the current value.',
-        $ws_functions_root . 'pwg.groups.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]
@@ -1589,7 +1543,7 @@ function ws_addDefaultMethods(array $arr): void
 
     $service->addMethod(
         'pwg.groups.addUser',
-        'ws_groups_addUser',
+        [PwgGroups::class, 'addUser'],
         [
             'group_id' => [
                 'type' => WsParamType::ID,
@@ -1601,8 +1555,7 @@ function ws_addDefaultMethods(array $arr): void
             'pwg_token' => [],
         ],
         'Adds one or more users to a group.',
-        $ws_functions_root . 'pwg.groups.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]
@@ -1610,7 +1563,7 @@ function ws_addDefaultMethods(array $arr): void
 
     $service->addMethod(
         'pwg.groups.deleteUser',
-        'ws_groups_deleteUser',
+        [PwgGroups::class, 'deleteUser'],
         [
             'group_id' => [
                 'type' => WsParamType::ID,
@@ -1622,8 +1575,7 @@ function ws_addDefaultMethods(array $arr): void
             'pwg_token' => [],
         ],
         'Removes one or more users from a group.',
-        $ws_functions_root . 'pwg.groups.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]
@@ -1631,7 +1583,7 @@ function ws_addDefaultMethods(array $arr): void
 
     $service->addMethod(
         'pwg.groups.merge',
-        'ws_groups_merge',
+        [PwgGroups::class, 'merge'],
         [
             'destination_group_id' => [
                 'type' => WsParamType::ID,
@@ -1644,8 +1596,7 @@ function ws_addDefaultMethods(array $arr): void
             'pwg_token' => [],
         ],
         'Merge groups in one other group',
-        $ws_functions_root . 'pwg.groups.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]
@@ -1653,7 +1604,7 @@ function ws_addDefaultMethods(array $arr): void
 
     $service->addMethod(
         'pwg.groups.duplicate',
-        'ws_groups_duplicate',
+        [PwgGroups::class, 'duplicate'],
         [
             'group_id' => [
                 'type' => WsParamType::ID,
@@ -1662,8 +1613,7 @@ function ws_addDefaultMethods(array $arr): void
             'pwg_token' => [],
         ],
         'Create a copy of a group',
-        $ws_functions_root . 'pwg.groups.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]
@@ -1671,7 +1621,7 @@ function ws_addDefaultMethods(array $arr): void
 
     $service->addMethod(
         'pwg.users.getList',
-        'ws_users_getList',
+        [PwgUsers::class, 'getList'],
         [
             'user_id' => [
                 'flags' => WsParamFlag::OPTIONAL | WsParamFlag::FORCE_ARRAY,
@@ -1738,15 +1688,14 @@ language, theme, nb_image_page, recent_period, expand, show_nb_comments, show_nb
 enabled_high, registration_date, registration_date_string, registration_date_since, last_visit, last_visit_string, last_visit_since<br>
 <b>basics</b> stands for "username,email,status,level,groups"<br>
 <b>min_register</b> and <b>max_register</b> filter users by their registration date expecting format "YYYY" or "YYYY-mm" or "YYYY-mm-dd".',
-        $ws_functions_root . 'pwg.users.php',
-        [
+        options: [
             'admin_only' => true,
         ]
     );
 
     $service->addMethod(
         'pwg.users.add',
-        'ws_users_add',
+        [PwgUsers::class, 'add'],
         [
             'username' => [],
             'auto_password' => [
@@ -1770,8 +1719,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
             'pwg_token' => [],
         ],
         'Registers a new user.',
-        $ws_functions_root . 'pwg.users.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]
@@ -1779,7 +1727,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
     $service->addMethod(
         'pwg.users.delete',
-        'ws_users_delete',
+        [PwgUsers::class, 'delete'],
         [
             'user_id' => [
                 'flags' => WsParamFlag::FORCE_ARRAY,
@@ -1788,8 +1736,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
             'pwg_token' => [],
         ],
         'Deletes on or more users. Photos owned by this user are not deleted.',
-        $ws_functions_root . 'pwg.users.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]
@@ -1797,7 +1744,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
     $service->addMethod(
         'pwg.users.getAuthKey',
-        'ws_users_getAuthKey',
+        [PwgUsers::class, 'getAuthKey'],
         [
             'user_id' => [
                 'type' => WsParamType::ID,
@@ -1805,8 +1752,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
             'pwg_token' => [],
         ],
         'Get a new authentication key for a user. Only works for normal/generic users (not admins)',
-        $ws_functions_root . 'pwg.users.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]
@@ -1814,7 +1760,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
     $service->addMethod(
         'pwg.users.setInfo',
-        'ws_users_setInfo',
+        [PwgUsers::class, 'setInfo'],
         [
             'user_id' => [
                 'flags' => WsParamFlag::FORCE_ARRAY,
@@ -1878,8 +1824,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
         'Updates a user. Leave a field blank to keep the current value.
 <br>"username", "password" and "email" are ignored if "user_id" is an array.
 <br>set "group_id" to -1 if you want to dissociate users from all groups',
-        $ws_functions_root . 'pwg.users.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]
@@ -1887,7 +1832,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
     $service->addMethod(
         'pwg.users.setMyInfo',
-        'ws_users_setMyInfo',
+        [PwgUsers::class, 'setMyInfo'],
         [
             'email' => [
                 'flags' => WsParamFlag::OPTIONAL,
@@ -1930,8 +1875,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
             'pwg_token' => [],
         ],
         '',
-        $ws_functions_root . 'pwg.users.php',
-        [
+        options: [
             'admin_only' => false,
             'post_only' => true,
         ]
@@ -2017,7 +1961,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
     $service->addMethod(
         'pwg.users.preferences.set',
-        'ws_users_preferences_set',
+        [PwgUsers::class, 'preferencesSet'],
         [
             'param' => [],
             'value' => [
@@ -2028,37 +1972,34 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
                 'type' => WsParamType::BOOL,
             ],
         ],
-        'Set a user preferences parameter. JSON encode the value (and set is_json to true) if you need a complex data structure.',
-        $ws_functions_root . 'pwg.users.php'
+        'Set a user preferences parameter. JSON encode the value (and set is_json to true) if you need a complex data structure.'
     );
 
     $service->addMethod(
         'pwg.users.favorites.add',
-        'ws_users_favorites_add',
+        [PwgUsers::class, 'favoritesAdd'],
         [
             'image_id' => [
                 'type' => WsParamType::ID,
             ],
         ],
-        'Adds the indicated image to the current user\'s favorite images.',
-        $ws_functions_root . 'pwg.users.php'
+        'Adds the indicated image to the current user\'s favorite images.'
     );
 
     $service->addMethod(
         'pwg.users.favorites.remove',
-        'ws_users_favorites_remove',
+        [PwgUsers::class, 'favoritesRemove'],
         [
             'image_id' => [
                 'type' => WsParamType::ID,
             ],
         ],
-        'Removes the indicated image from the current user\'s favorite images.',
-        $ws_functions_root . 'pwg.users.php'
+        'Removes the indicated image from the current user\'s favorite images.'
     );
 
     $service->addMethod(
         'pwg.users.favorites.getList',
-        'ws_users_favorites_getList',
+        [PwgUsers::class, 'favoritesGetList'],
         [
             'per_page' => [
                 'default' => 100,
@@ -2074,13 +2015,12 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
                 'info' => 'id, file, name, hit, rating_score, date_creation, date_available, random',
             ],
         ],
-        'Returns the favorite images of the current user.',
-        $ws_functions_root . 'pwg.users.php'
+        'Returns the favorite images of the current user.'
     );
 
     $service->addMethod(
         'pwg.history.log',
-        'ws_history_log',
+        [PwgCore::class, 'historyLog'],
         [
             'image_id' => [
                 'type' => WsParamType::ID,
@@ -2100,13 +2040,12 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
                 'type' => WsParamType::BOOL,
             ],
         ],
-        'Log visit in history',
-        $ws_functions_root . 'pwg.php'
+        'Log visit in history'
     );
 
     $service->addMethod(
         'pwg.history.search',
-        'ws_history_search',
+        [PwgCore::class, 'historySearch'],
         [
             'start' => [
                 'default' => null,
@@ -2148,15 +2087,14 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
       <br> <strong>Types </strong> can be : \'none\', \'picture\', \'high\', \'other\'
       <br> <strong>Date format</strong> is yyyy-mm-dd
       <br> <strong>display_thumbnail</strong> can be : \'no_display_thumbnail\', \'display_thumbnail_classic\', \'display_thumbnail_hoverbox\'',
-        $ws_functions_root . 'pwg.php',
-        [
+        options: [
             'admin_only' => true,
         ]
     );
 
     $service->addMethod(
         'pwg.images.filteredSearch.create',
-        'ws_images_filteredSearch_create',
+        [PwgImages::class, 'filteredSearchCreate'],
         [
             'search_id' => [
                 'flags' => WsParamFlag::OPTIONAL,
@@ -2248,13 +2186,12 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
                 'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
         ],
-        '',
-        $ws_functions_root . 'pwg.images.php'
+        ''
     );
 
     $service->addMethod(
         'pwg.users.generatePasswordLink',
-        'ws_users_generate_password_link',
+        [PwgUsers::class, 'generatePasswordLink'],
         [
             'user_id' => [
                 'type' => WsParamType::ID,
@@ -2268,8 +2205,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
         ],
         'Return the reset password link <br />
        (Only webmaster can perform this action for another webmaster)',
-        $ws_functions_root . 'pwg.users.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]
@@ -2277,7 +2213,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
     $service->addMethod(
         'pwg.users.setMainUser',
-        'ws_set_main_user',
+        [PwgUsers::class, 'setMainUser'],
         [
             'user_id' => [
                 'type' => WsParamType::ID,
@@ -2287,8 +2223,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
         'Update the main user (owner) <br />
         - To be the main user, the user must have the status "webmaster".<br />
         - Only a webmaster can perform this action',
-        $ws_functions_root . 'pwg.users.php',
-        [
+        options: [
             'admin_only' => true,
             'post_only' => true,
         ]
@@ -2296,7 +2231,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
     $service->addMethod(
         'pwg.users.api_key.create',
-        'ws_create_api_key',
+        [PwgUsers::class, 'createApiKey'],
         [
             'key_name' => [],
             'duration' => [
@@ -2306,8 +2241,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
             'pwg_token' => [],
         ],
         'Create a new api key for the user in the current session',
-        $ws_functions_root . 'pwg.users.php',
-        [
+        options: [
             'admin_only' => false,
             'post_only' => true,
         ]
@@ -2315,14 +2249,13 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
     $service->addMethod(
         'pwg.users.api_key.revoke',
-        'ws_revoke_api_key',
+        [PwgUsers::class, 'revokeApiKey'],
         [
             'pkid' => [],
             'pwg_token' => [],
         ],
         'Revoke a api key for the user in the current session',
-        $ws_functions_root . 'pwg.users.php',
-        [
+        options: [
             'admin_only' => false,
             'post_only' => true,
         ]
@@ -2330,15 +2263,14 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
     $service->addMethod(
         'pwg.users.api_key.edit',
-        'ws_edit_api_key',
+        [PwgUsers::class, 'editApiKey'],
         [
             'key_name' => [],
             'pkid' => [],
             'pwg_token' => [],
         ],
         'Edit a api key for the user in the current session',
-        $ws_functions_root . 'pwg.users.php',
-        [
+        options: [
             'admin_only' => false,
             'post_only' => true,
         ]
@@ -2346,13 +2278,12 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
     $service->addMethod(
         'pwg.users.api_key.get',
-        'ws_get_api_key',
+        [PwgUsers::class, 'getApiKey'],
         [
             'pwg_token' => [],
         ],
         'Get all api key for the user in the current session',
-        $ws_functions_root . 'pwg.users.php',
-        [
+        options: [
             'admin_only' => false,
             'post_only' => true,
         ]

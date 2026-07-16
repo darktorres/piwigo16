@@ -14,6 +14,7 @@ use Piwigo\Ws\Protocol\PwgRestEncoder;
 use Piwigo\Ws\Protocol\PwgRestRequestHandler;
 use Piwigo\Ws\Protocol\PwgSerialPhpEncoder;
 use Piwigo\Ws\Protocol\PwgXmlRpcEncoder;
+use Piwigo\Ws\PwgCore;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsHelper;
 
@@ -21,6 +22,15 @@ defined('PHPWG_ROOT_PATH') or trigger_error('Hacking attempt!', E_USER_ERROR);
 
 add_event_handler('ws_add_methods', 'ws_addDefaultMethods');
 add_event_handler('ws_invoke_allowed', WsHelper::isInvokeAllowed(...));
+// P23 batch 8e-4: relocated from include/ws_functions/pwg.php's own
+// top-level add_event_handler('get_history', 'get_history') call --
+// that file's lazy include_once (right before PwgServer::invoke() calls
+// a pwg.php-registered callback) guaranteed this ran before
+// PwgCore::historySearch()'s own trigger_change('get_history', ...)
+// call could fire; now that pwg.php's functions are class methods
+// (autoloaded, no include-time side effect to hook this to), it
+// registers here instead, unconditionally, once per WS request.
+add_event_handler('get_history', PwgCore::historyGet(...));
 
 $requestFormat = 'rest';
 $responseFormat = null;

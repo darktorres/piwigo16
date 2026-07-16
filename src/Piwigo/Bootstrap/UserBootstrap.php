@@ -9,6 +9,7 @@ use Piwigo\Auth\AuthService;
 use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\Logger;
 use Piwigo\Db\DbConnection;
+use Piwigo\Ws\PwgCore;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 
@@ -137,7 +138,6 @@ final class UserBootstrap
             and is_string($_POST['password'] ?? null)
         ) {
             include_once PHPWG_ROOT_PATH . 'include/ws_init.inc.php';
-            include_once PHPWG_ROOT_PATH . 'include/ws_functions/pwg.php';
 
             $credentials = [
                 'username' => $_POST['username'],
@@ -145,7 +145,7 @@ final class UserBootstrap
             ];
 
             /** @var PwgServer $service */
-            $login = ws_session_login($credentials, $service);
+            $login = PwgCore::sessionLogin($credentials, $service);
 
             if ($login !== true) {
                 $service->sendResponse($login);

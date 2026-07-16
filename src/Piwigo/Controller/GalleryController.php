@@ -11,6 +11,8 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupRepository;
+use Piwigo\History\HistoryRepository;
+use Piwigo\History\HistoryService;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
@@ -597,7 +599,7 @@ final class GalleryController implements ControllerInterface
             $template->pparse('index');
 
             // ------------------------------------------------ log informations
-            pwg_log();
+            new HistoryService(new HistoryRepository(DbConnection::build()))->logVisit();
             include PHPWG_ROOT_PATH . 'include/page_tail.php';
         });
 

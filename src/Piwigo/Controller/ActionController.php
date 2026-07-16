@@ -6,7 +6,10 @@ namespace Piwigo\Controller;
 
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\History\HistoryRepository;
+use Piwigo\History\HistoryService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeImage;
@@ -180,17 +183,18 @@ SELECT id
             $this->doError(404, 'Requested file not found');
         }
 
+        $image_id_val = $_GET['id'];
         if ($get_part === 'e') {
-            pwg_log($_GET['id'], 'high');
+            new HistoryService(new HistoryRepository(DbConnection::build()))->logVisit($image_id_val, 'high');
         } elseif ($get_part === 'r') {
-            pwg_log($_GET['id'], 'other');
+            new HistoryService(new HistoryRepository(DbConnection::build()))->logVisit($image_id_val, 'other');
         } elseif ($get_part === 'f') {
             if ($format_row === null) {
                 $this->doError(400, 'Invalid request - format');
             }
             $format_id_val = $format_row['format_id'] ?? null;
             $format_id_val = is_string($format_id_val) ? $format_id_val : null;
-            pwg_log($_GET['id'], 'high', $format_id_val);
+            new HistoryService(new HistoryRepository(DbConnection::build()))->logVisit($image_id_val, 'high', $format_id_val);
         }
 
         trigger_notify('loc_action_before_http_headers');

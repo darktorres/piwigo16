@@ -4,11 +4,24 @@ declare(strict_types=1);
 
 namespace Piwigo\History;
 
+use Piwigo\Auth\AccessControl;
+use Piwigo\Db\Tables;
+
 /**
  * History domain business logic: page-view search/filtering, the
- * year/month/day/hour summary rollup, and autopurge. Constructor-injects
- * only HistoryRepository (plain constructor injection, same shape as
- * PermalinkService).
+ * year/month/day/hour summary rollup, autopurge, and visit logging.
+ * Constructor-injects only HistoryRepository (plain constructor
+ * injection, same shape as PermalinkService).
+ *
+ * P23 batch 8d: isLoggingAllowed()/logVisit() (ported from
+ * include/functions.inc.php's do_log()/pwg_log()) still call the bare
+ * pwg_query()/pwg_db_insert_id()/get_enums() free functions internally --
+ * functions_mysqli.inc.php's real DBAL migration is a separate,
+ * later-tracked project step (see this whole migration's finding 2),
+ * not something a pure class-extraction pass rewrites. AccessControl
+ * (Piwigo\Auth, L2aCoreDomain) is a safe dependency from here
+ * (L2bExtendedDomain) -- RateService/CommentService/SearchService already
+ * establish the same precedent.
  *
  * `history_remove_summarized_column()` (originally called from
  * history_autopurge()) is deliberately NOT ported: it exists to
@@ -34,6 +47,204 @@ final class HistoryService
     public function __construct(
         private readonly HistoryRepository $repo,
     ) {}
+
+    /**
+     * Does the current user must log visits in history table.
+     *
+     * @since 14
+     */
+    public function isLoggingAllowed(?int $imageId = null, ?string $imageType = null): bool
+    {
+        /** @var array<string, mixed> $conf */
+        global $conf;
+
+        $doLog = $conf['log'];
+        if (AccessControl::isAdmin()) {
+            $doLog = $conf['history_admin'];
+        }
+        if (AccessControl::isAGuest()) {
+            $doLog = $conf['history_guest'];
+        }
+
+        $doLog = trigger_change('pwg_log_allowed', $doLog, $imageId, $imageType);
+
+        // trigger_change() hands the value through arbitrary registered event
+        // handlers (mixed return); the contract of this filter is a bool, so a
+        // misbehaving handler falls back to the pre-filter truthiness instead of
+        // being trusted blindly.
+        return is_bool($doLog) ? $doLog : (bool) $doLog;
+    }
+
+    /**
+     * Logs the visit into the history table.
+     */
+    public function logVisit(?int $imageId = null, ?string $imageType = null, int|string|null $formatId = null): bool
+    {
+        /**
+         * @var array<string, mixed> $conf
+         * @var array<string, mixed> $user
+         * @var array<string, mixed> $page
+         */
+        global $conf, $user, $page;
+
+        $lastVisit = $user['last_visit'] ?? null;
+        $lastVisitStr = is_string($lastVisit) ? $lastVisit : (is_numeric($lastVisit) ? (string) $lastVisit : '');
+        $sessionLength = $conf['session_length'];
+        $sessionLength = is_numeric($sessionLength) ? (int) $sessionLength : 0;
+
+        $updateLastVisit = false;
+        if (empty($lastVisit) or strtotime($lastVisitStr) < time() - $sessionLength) {
+            $updateLastVisit = true;
+        }
+        $updateLastVisit = trigger_change('pwg_log_update_last_visit', $updateLastVisit);
+
+        $userId = is_numeric($user['id']) ? (int) $user['id'] : 0;
+
+        if ((bool) $updateLastVisit) {
+            $query = '
+UPDATE ' . Tables::userInfos() . '
+  SET last_visit = NOW(),
+      lastmodified = lastmodified
+  WHERE user_id = ' . $userId . '
+';
+            pwg_query($query);
+        }
+
+        if (! $this->isLoggingAllowed($imageId, $imageType)) {
+            return false;
+        }
+
+        $pageSection = $page['section'] ?? null;
+        $pageSection = is_string($pageSection) ? $pageSection : null;
+
+        $tagsString = null;
+        if ($pageSection === 'tags') {
+            $tagIds = $page['tag_ids'] ?? [];
+            $tagIds = is_array($tagIds) ? array_filter($tagIds, is_scalar(...)) : [];
+            $tagsString = implode(',', $tagIds);
+
+            if (strlen($tagsString) > 50) {
+                // we need to truncate, mysql won't accept a too long string
+                $tagsString = substr($tagsString, 0, 50);
+                // the last tag_id may have been truncated itself, so we must
+                // remove it — unless there's no comma at all (a single tag_id
+                // >= 50 digits long, not realistic but keep the substring as-is)
+                $lastComma = strrpos($tagsString, ',');
+                if ($lastComma !== false) {
+                    $tagsString = substr($tagsString, 0, $lastComma);
+                }
+            }
+        }
+
+        $ip = $_SERVER['REMOTE_ADDR'];
+        $ip = is_string($ip) ? $ip : '';
+        // IPv6 should not be longer than 39 chars, and that is the maximum length of
+        // the column in the database, but in case it would be longer, let's truncate it.
+        if (strlen($ip) > 39) {
+            $ip = substr($ip, 0, 39);
+        }
+
+        $section = null;
+        // If plugin developers add their own sections, Piwigo will automatically add it in the history.section enum column
+        if ($pageSection !== null) {
+            // set cache if not available
+            if (! isset($conf['history_sections_cache'])) {
+                conf_update_param('history_sections_cache', get_enums(Tables::history(), 'section'), true);
+            }
+
+            $cachedSections = $conf['history_sections_cache'];
+            $cachedSections = is_string($cachedSections) || is_array($cachedSections) ? \Piwigo\Core\ArrayHelper::safeUnserialize($cachedSections) : null;
+            if (! is_array($cachedSections)) {
+                $cachedSections = get_enums(Tables::history(), 'section');
+            }
+
+            $historySectionsCache = [];
+            foreach ($cachedSections as $cachedSection) {
+                if (is_string($cachedSection)) {
+                    $historySectionsCache[] = $cachedSection;
+                }
+            }
+
+            $conf['history_sections_cache'] = $historySectionsCache;
+
+            if (
+                in_array($pageSection, $historySectionsCache)
+                or in_array(strtolower($pageSection), array_map(strtolower(...), $historySectionsCache))
+            ) {
+                $section = $pageSection;
+            } elseif ((bool) preg_match('/^[a-zA-Z0-9_-]+$/', $pageSection)) {
+                $historySections = get_enums(Tables::history(), 'section');
+                $historySections[] = $pageSection;
+
+                // alter history table structure, to include a new section
+                pwg_query('ALTER TABLE ' . Tables::history() . ' CHANGE section section enum(\'' . implode("','", array_unique($historySections)) . '\') DEFAULT NULL;');
+
+                // and refresh cache
+                conf_update_param('history_sections_cache', get_enums(Tables::history(), 'section'), true);
+
+                $section = $pageSection;
+            }
+        }
+
+        // $user['id']/$page[...] are read from loosely-typed global bags fed by
+        // DB rows (string|null) and session/config data (mixed); narrow each
+        // to the scalar the column actually stores before splicing into SQL.
+        $category = $page['category'] ?? null;
+        $category = is_array($category) ? $category : [];
+        $categoryId = $category['id'] ?? null;
+        $categoryId = is_numeric($categoryId) ? (int) $categoryId : null;
+        $searchId = $page['search_id'] ?? null;
+        $searchId = is_numeric($searchId) ? (int) $searchId : null;
+        $authKeyId = $page['auth_key_id'] ?? null;
+        $authKeyId = is_numeric($authKeyId) ? (int) $authKeyId : null;
+
+        $query = '
+INSERT INTO ' . Tables::history() . '
+  (
+    date,
+    time,
+    user_id,
+    IP,
+    section,
+    category_id,
+    search_id,
+    image_id,
+    image_type,
+    format_id,
+    auth_key_id,
+    tag_ids
+  )
+  VALUES
+  (
+    CURRENT_DATE,
+    CURRENT_TIME,
+    ' . $userId . ',
+    \'' . $ip . '\',
+    ' . ($section !== null ? "'" . $section . "'" : 'NULL') . ',
+    ' . ($categoryId ?? 'NULL') . ',
+    ' . ($searchId ?? 'NULL') . ',
+    ' . ($imageId ?? 'NULL') . ',
+    ' . ($imageType !== null ? "'" . $imageType . "'" : 'NULL') . ',
+    ' . ($formatId ?? 'NULL') . ',
+    ' . ($authKeyId ?? 'NULL') . ',
+    ' . ($tagsString !== null ? "'" . $tagsString . "'" : 'NULL') . '
+  )
+;';
+        pwg_query($query);
+
+        $historyId = (int) pwg_db_insert_id();
+        if ($historyId % 1000 == 0) {
+            $this->summarize(50000);
+        }
+
+        $historyAutopurgeEvery = $conf['history_autopurge_every'];
+        $historyAutopurgeEvery = is_numeric($historyAutopurgeEvery) ? (int) $historyAutopurgeEvery : 0;
+        if ($historyAutopurgeEvery > 0 and $historyId % $historyAutopurgeEvery == 0) {
+            $this->autopurge();
+        }
+
+        return true;
+    }
 
     /**
      * Callback used to sort history entries.

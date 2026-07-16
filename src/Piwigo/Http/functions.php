@@ -1,0 +1,160 @@
+<?php
+
+declare(strict_types=1);
+
+// +-----------------------------------------------------------------------+
+// | This file is part of Piwigo.                                          |
+// +-----------------------------------------------------------------------+
+
+use Piwigo\Template\Template;
+
+// P23 batch 8d: relocated unchanged from the deleted include/functions.inc.php
+// -- redirect() alone has ~72 real call sites across ~34 files (on finding
+// 4's original high-traffic table), too widely used to retarget every
+// caller onto a class method, same "relocate ubiquitous utilities as
+// unchanged free functions" two-track precedent as l10n()
+// (src/Piwigo/Lang/functions.php) and get_root_url() (P23 batch 8c,
+// src/Piwigo/Url/functions.php). Unlike those two, there's no natural
+// existing class these delegate to: redirect_http() is pure header
+// manipulation with zero dependencies, and redirect_html() is a real,
+// self-contained page-render routine (literal `include
+// PHPWG_ROOT_PATH . 'include/page_header.php'`/`page_tail.php`, matching
+// an already-established pattern -- ~12 already-migrated src/Piwigo/
+// controllers do the same literal include from inside a method) with no
+// natural domain home; forcing a PSR-7 Response-object redesign to fit
+// Piwigo\Http\ResponseFactory/ResponseEmitter's modern pipeline would be
+// a behavioral rewrite, not a relocation, and is explicitly out of scope
+// here. Every real caller keeps calling the exact same free-function
+// names unchanged -- zero call sites retargeted.
+//
+// Every declaration is guarded with function_exists() for the same reason
+// as PluginConfig/functions.php: composer's autoload.files loads this file
+// once at process start, but a class_exists()/interface_exists() probe for
+// a plausible-but-nonexistent FQCN under this namespace (e.g.
+// tests/Arch/StructuralTest.php's "every Piwigo\ class ... has #[\Override]"
+// test, which computes Piwigo\Http\functions from this file's own basename
+// while walking every .php file under src/Piwigo/) makes composer's PSR-4
+// resolver try to autoload Piwigo\Http\functions, resolve it to this exact
+// file via the PSR-4 basename match, and `include` it a second time. The
+// guard makes the second pass a safe no-op instead of a fatal.
+
+/**
+ * Redirects to the given URL (HTTP method).
+ *
+ * @param string $url
+ */
+if (! function_exists('redirect_http')) {
+    function redirect_http($url): never
+    {
+        if (ob_get_length() !== false) {
+            ob_clean();
+        }
+        // default url is on html format
+        $url = html_entity_decode($url);
+        header('Request-URI: ' . $url);
+        header('Content-Location: ' . $url);
+        header('Location: ' . $url);
+        exit();
+    }
+}
+
+/**
+ * Redirects to the given URL (HTML method).
+ *
+ * @param string $url
+ * @param string $msg
+ * @param int $refresh_time
+ */
+if (! function_exists('redirect_html')) {
+    function redirect_html($url, $msg = '', $refresh_time = 0): never
+    {
+        /** @var array<string, mixed> $conf */
+        global $user, $template, $lang_info, $conf, $lang, $t2, $page, $debug;
+        // $title/$refresh/$url_link below must reach $GLOBALS (not stay
+        // function-local) -- include/page_header.php reads them via `global`,
+        // and PHP's include-inside-a-function only shares the enclosing
+        // function's LOCAL scope, never $GLOBALS, unless explicitly declared
+        // here. A real, pre-existing bug (title stayed null for every real
+        // redirect_html() caller), only surfaced live once PageHeaderRenderer
+        // started requiring a real string instead of silently letting
+        // strip_tags(null) fatal deeper inside the original code.
+        global $title, $refresh, $url_link;
+
+        // $template/$lang_info are genuinely not always set here: this function
+        // can be called very early (e.g. a fatal before common.inc.php finishes
+        // bootstrapping), which is exactly what this isset() check detects --
+        // do not declare $template's type above, it would make PHPStan wrongly
+        // treat this real fallback path as dead code.
+        if (! isset($lang_info) || ! isset($template)) {
+            $guest_id = $conf['guest_id'];
+            $guest_id = is_numeric($guest_id) ? (int) $guest_id : 0;
+            $user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->buildUser($guest_id, true);
+            \Piwigo\Core\Lang::load('common.lang');
+            trigger_notify('loading_lang');
+            \Piwigo\Core\Lang::load('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, [
+                'no_fallback' => true,
+                'local' => true,
+            ]);
+            $template = new Template(PHPWG_ROOT_PATH . 'themes', (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->getDefaultTheme());
+        } elseif (defined('IN_ADMIN') and IN_ADMIN) {
+            $template = new Template(PHPWG_ROOT_PATH . 'themes', (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->getDefaultTheme());
+        }
+
+        // Neither branch above runs when $template was already set and we're
+        // not in admin -- it's the pre-existing bootstrap Template in that case,
+        // but re-check for real since that isn't provable here statically.
+        if (! ($template instanceof Template)) {
+            $template = new Template(PHPWG_ROOT_PATH . 'themes', (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->getDefaultTheme());
+        }
+
+        if (empty($msg)) {
+            $msg = nl2br(l10n('Redirection...'));
+        }
+
+        $refresh = $refresh_time;
+        $url_link = $url;
+        $title = 'redirection';
+
+        $template->set_filenames([
+            'redirect' => 'redirect.tpl',
+        ]);
+
+        include PHPWG_ROOT_PATH . 'include/page_header.php';
+
+        $template->set_filenames([
+            'redirect' => 'redirect.tpl',
+        ]);
+        $template->assign('REDIRECT_MSG', $msg);
+
+        $template->parse('redirect');
+
+        include PHPWG_ROOT_PATH . 'include/page_tail.php';
+
+        exit();
+    }
+}
+
+/**
+ * Redirects to the given URL (automatically choose HTTP or HTML method).
+ *
+ * @param string $url
+ * @param string $msg
+ * @param int $refresh_time
+ */
+if (! function_exists('redirect')) {
+    function redirect($url, $msg = '', $refresh_time = 0): never
+    {
+        /** @var array<string, mixed> $conf */
+        global $conf;
+
+        // with RefeshTime <> 0, only html must be used
+        if ($conf['default_redirect_method'] == 'http'
+            and $refresh_time == 0
+            and ! headers_sent()
+        ) {
+            redirect_http($url);
+        } else {
+            redirect_html($url, $msg, $refresh_time);
+        }
+    }
+}

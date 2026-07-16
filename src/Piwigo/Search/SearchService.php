@@ -78,8 +78,9 @@ final class SearchService
      * refuses (outside the web-service API) to resolve an old-style
      * numeric-only id once the search row already has a search_uuid (spies
      * shouldn't be able to walk index.php?/search/123, .../124, ...), and
-     * records the resolved id onto $page['search_id'] for pwg_log() to
-     * read later, when rendering the "search" section.
+     * records the resolved id onto $page['search_id'] for
+     * HistoryService::logVisit() to read later, when rendering the
+     * "search" section.
      *
      * @return array<string, mixed>|null
      */

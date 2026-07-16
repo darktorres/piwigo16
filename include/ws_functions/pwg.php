@@ -449,7 +449,7 @@ function ws_session_getStatus($params, PwgServer &$service): array
     [$dbnow] = $row;
     $res['current_datetime'] = $dbnow;
     $res['version'] = AppInfo::VERSION;
-    $res['save_visits'] = do_log();
+    $res['save_visits'] = new HistoryService(new HistoryRepository(DbConnection::build()))->isLoggingAllowed();
     $res['connected_with'] = $_SESSION['connected_with'] ?? null;
 
     // Piwigo Remote Sync does not support receiving the new (version 14) output "save_visits"
@@ -782,7 +782,7 @@ function ws_history_log(array $params, PwgServer &$service): void
         $image_type = 'high';
     }
 
-    pwg_log($params['image_id'], $image_type);
+    new HistoryService(new HistoryRepository(DbConnection::build()))->logVisit(is_numeric($params['image_id']) ? (int) $params['image_id'] : null, $image_type);
 }
 
 /**

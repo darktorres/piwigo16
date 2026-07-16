@@ -15,6 +15,8 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
+use Piwigo\History\HistoryRepository;
+use Piwigo\History\HistoryService;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
@@ -1231,7 +1233,7 @@ SELECT id, name, permalink
             }
             // -------------------------------------------------- log informations
             $current_image_id = $picture['current']['id'];
-            pwg_log(is_numeric($current_image_id) ? (int) $current_image_id : null, 'picture');
+            new HistoryService(new HistoryRepository(DbConnection::build()))->logVisit(is_numeric($current_image_id) ? (int) $current_image_id : null, 'picture');
             include PHPWG_ROOT_PATH . 'include/page_tail.php';
         });
 

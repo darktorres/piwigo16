@@ -1081,7 +1081,7 @@ SELECT COUNT(*) AS nb_fav
 
             // related tags
             $tagConn = DbConnection::build();
-            $tags = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)))
+            $tags = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
                 ->getCommonTags([$image_id], -1);
             if ($tags !== []) {
                 foreach ($tags as $tag) {

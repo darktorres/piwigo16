@@ -19,6 +19,8 @@ use Piwigo\Metadata\MetadataService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Site\LocalSiteReader;
+use Piwigo\Tag\TagRepository;
+use Piwigo\Tag\TagService;
 use Piwigo\Template\Template;
 use Piwigo\Users\UserRepository;
 use Psr\Http\Message\ServerRequestInterface;
@@ -984,6 +986,9 @@ DELETE
             $datas = [];
             $tags_of = [];
 
+            $tagConn = DbConnection::build();
+            $tagService = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
+
             foreach ($files as $id => $element_infos) {
                 // get_filelist() returns hash_from_query($query, 'id'), i.e. each
                 // row from query2array() with key_name set and value_name null:
@@ -1005,7 +1010,7 @@ DELETE
                             }
 
                             foreach (explode(',', $data[$key]) as $tag_name) {
-                                $tags_of[$id][] = tag_id_from_tag_name($tag_name);
+                                $tags_of[$id][] = $tagService->tagIdFromTagName($tag_name);
                             }
                         }
                     }
@@ -1039,7 +1044,7 @@ DELETE
                         isset($_POST['meta_empty_overrides']) ? 0 : MASS_UPDATES_SKIP_EMPTY
                     );
                 }
-                set_tags_of($tags_of);
+                $tagService->setTagsOf($tags_of);
             }
 
             $template->append('footer_elements', '<!-- metadata update : '

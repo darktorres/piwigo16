@@ -49,7 +49,7 @@ final class MenubarRenderer
         global $page, $conf, $user, $template, $filter;
 
         $conn = DbConnection::build();
-        $tagService = new TagService(new TagRepository($conn), new PermissionService(new PermissionRepository($conn), new GroupRepository($conn)));
+        $tagService = new TagService(new TagRepository($conn), new PermissionService(new PermissionRepository($conn), new GroupRepository($conn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
         $categoryService = new CategoryService(new CategoryRepository($conn), new PermissionService(new PermissionRepository($conn), new GroupRepository($conn)));
 
         $menu = new BlockManager('menubar');

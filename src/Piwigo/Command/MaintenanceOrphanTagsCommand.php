@@ -14,7 +14,7 @@ use Symfony\Component\Console\Output\OutputInterface;
  * CLI wrapper for the admin/maintenance_actions.php "Delete orphan tags"
  * action, via the new DbMaintenanceRepository::deleteOrphanTags() (see that
  * method's own docblock for why it's a plain DB cleanup, not a full replay
- * of delete_tags()'s user-facing side effects).
+ * of TagService::deleteTags()'s user-facing side effects).
  */
 #[AsCommand(name: 'maintenance:orphan-tags', description: 'Delete tags with no linked image, untouched for over a day')]
 final class MaintenanceOrphanTagsCommand extends Command

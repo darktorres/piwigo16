@@ -53,7 +53,7 @@ final class SearchFilterRenderer
         }
 
         $tagConn = DbConnection::build();
-        $tagService = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)));
+        $tagService = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
 
         $filtersViewsConf = conf_get_param('filters_views', null);
         if (is_array($filtersViewsConf) || is_string($filtersViewsConf)) {
@@ -1033,7 +1033,7 @@ SELECT
         }
 
         $tagConn = DbConnection::build();
-        $tags = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)))
+        $tags = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
             ->getAvailableTags($tagIds);
         usort($tags, tag_alpha_compare(...));
         $tagsFound = [];

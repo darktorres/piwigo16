@@ -701,7 +701,7 @@ final class UrlService
             }
 
             $tagConn = DbConnection::build();
-            $page['tags'] = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)))
+            $page['tags'] = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
                 ->findTags($requested_tag_ids, $requested_tag_url_names);
             if ($page['tags'] === []) {
                 page_not_found(l10n('Requested tag does not exist'), $this->getRootUrl() . 'tags.php');

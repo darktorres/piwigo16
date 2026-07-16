@@ -118,7 +118,7 @@ final class GalleryController implements ControllerInterface
             global $conf, $page, $template, $title;
 
             $tagConn = DbConnection::build();
-            $tagService = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)));
+            $tagService = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
             $categoryService = new CategoryService(new CategoryRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)));
 
             trigger_notify('loc_begin_index');

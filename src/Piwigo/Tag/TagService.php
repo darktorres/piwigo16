@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Tag;
 
 use Piwigo\Cache\PersistentFileCache;
+use Piwigo\Cache\UserCacheInvalidator;
+use Piwigo\Core\ActivityLoggerInterface;
+use Piwigo\Core\Logger;
 use Piwigo\Db\Tables;
 use Piwigo\Permission\PermissionService;
 
@@ -12,7 +15,12 @@ use Piwigo\Permission\PermissionService;
  * Tag domain business logic. Constructor-injects TagRepository and
  * PermissionService, plain constructor injection (same shape as
  * CalendarService, also L2aCoreDomain -- Permission is same-layer, no
- * deptrac concern).
+ * deptrac concern). Also injects ActivityLoggerInterface (P23 batch 8d) --
+ * `Piwigo\Activity\ActivityService` itself is L2bExtendedDomain, so
+ * deleteTags() depends on the L1Infrastructure interface instead, same
+ * shape as GroupService/UserService/AuthService's own established fix for
+ * this exact layering constraint (see ActivityLoggerInterface's own
+ * docblock).
  *
  * Calls the still-procedural tag_alpha_compare() (functions_html.inc.php,
  * Html domain, already migrated in P17), trigger_change(), and
@@ -25,6 +33,7 @@ final class TagService
     public function __construct(
         private readonly TagRepository $repo,
         private readonly PermissionService $permissionService,
+        private readonly ActivityLoggerInterface $activityLogger,
     ) {}
 
     /**
@@ -301,5 +310,380 @@ final class TagService
         usort($tags, tag_alpha_compare(...));
 
         return $tags;
+    }
+
+    /**
+     * Deletes all tags linked to no photo.
+     */
+    public function deleteOrphanTags(): void
+    {
+        $orphanTags = $this->getOrphanTags();
+
+        if ($orphanTags !== []) {
+            $orphanTagIds = [];
+            foreach ($orphanTags as $tag) {
+                $orphanTagIds[] = $tag['id'];
+            }
+
+            $this->deleteTags($orphanTagIds);
+        }
+    }
+
+    /**
+     * Get all tags (id + name) linked to no photo.
+     *
+     * @return list<array{id: string, name: string}>
+     */
+    public function getOrphanTags(): array
+    {
+        return $this->repo->findOrphanTags();
+    }
+
+    /**
+     * Set tags to an image.
+     * Warning: given tags are all tags associated to the image, not additionnal tags.
+     *
+     * @param array<int|string> $tags real callers (ws_functions/pwg.images.php)
+     *   pass explode()'d tag id strings, never converted to int -- tag ids only
+     *   ever flow into SQL/array-value contexts here, so numeric strings work
+     *   identically
+     */
+    public function setTags(array $tags, int $imageId): void
+    {
+        $this->setTagsOf([
+            $imageId => array_values($tags),
+        ]);
+    }
+
+    /**
+     * Add new tags to a set of images.
+     *
+     * @param array<int|string> $tags see setTags()'s $tags
+     * @param int[] $images
+     */
+    public function addTags(array $tags, array $images): void
+    {
+        if (count($tags) === 0 || count($images) === 0) {
+            return;
+        }
+
+        $imageIds = array_values($images);
+
+        $taglistBefore = $this->getImageTagIds($imageIds);
+
+        // we can't insert twice the same {image_id,tag_id} so we must first
+        // delete lines we'll insert later
+        $this->repo->deleteImageTagByImageAndTagIds($images, $tags);
+
+        $inserts = [];
+        foreach ($images as $imageId) {
+            foreach (array_unique($tags) as $tagId) {
+                $inserts[] = [
+                    'image_id' => $imageId,
+                    'tag_id' => $tagId,
+                ];
+            }
+        }
+        mass_inserts(
+            Tables::imageTag(),
+            array_keys($inserts[0]),
+            $inserts
+        );
+
+        $taglistAfter = $this->getImageTagIds($imageIds);
+        $imagesToUpdate = $this->compareImageTagLists($taglistBefore, $taglistAfter);
+        update_images_lastmodified($imagesToUpdate);
+
+        UserCacheInvalidator::invalidateNbTags();
+    }
+
+    /**
+     * Delete tags and tags associations.
+     *
+     * @param array<int, int|string> $tagIds getOrphanTags()'s ids flow in as
+     *   mysqli-returned numeric strings; tag ids only ever flow into SQL/array
+     *   contexts here, so numeric strings work identically
+     */
+    public function deleteTags(array $tagIds): void
+    {
+        // we need the list of impacted images, to update their lastmodified
+        $imageIds = $this->repo->findImageIdsForTagIds($tagIds);
+
+        $this->repo->deleteImageTagByTagIds($tagIds);
+        $this->repo->deleteByIds($tagIds);
+
+        trigger_notify('delete_tags', $tagIds);
+        $this->activityLogger->record('tag', $tagIds, 'delete');
+
+        update_images_lastmodified($imageIds);
+        UserCacheInvalidator::invalidateNbTags();
+    }
+
+    /**
+     * Returns a tag id from its name. If nothing found, create a new tag.
+     */
+    public function tagIdFromTagName(string $tagName): int
+    {
+        /** @var array<string, mixed> $page */
+        global $page;
+
+        if (! isset($page['tag_id_from_tag_name_cache']) || ! is_array($page['tag_id_from_tag_name_cache'])) {
+            $page['tag_id_from_tag_name_cache'] = [];
+        }
+        /** @var array<string, int> $tagIdCache */
+        $tagIdCache = &$page['tag_id_from_tag_name_cache'];
+
+        $tagName = trim($tagName);
+        if (isset($tagIdCache[$tagName])) {
+            return $tagIdCache[$tagName];
+        }
+
+        // search existing by exact name
+        $existingId = $this->repo->findIdByName($tagName);
+
+        if ($existingId === null) {
+            $urlName = trigger_change('render_tag_url', $tagName);
+            if (! is_string($urlName)) {
+                // a misbehaving plugin handler could return a non-string; fall
+                // back to the untransformed tag name rather than propagate it.
+                $urlName = $tagName;
+            }
+
+            // search existing by url name
+            $existingId = $this->repo->findIdByUrlName($urlName);
+
+            if ($existingId === null) {
+                // search by extended description (plugin sub name)
+                $subNameWhere = trigger_change('get_tag_name_like_where', [], $tagName);
+                $subNameWhere = is_array($subNameWhere) ? array_filter($subNameWhere, is_string(...)) : [];
+                if ($subNameWhere !== []) {
+                    $existingId = $this->repo->findIdByWhereFragment(implode(' OR ', $subNameWhere));
+                }
+
+                if ($existingId === null) {
+                    // finally create the tag
+                    $tagIdCache[$tagName] = $this->repo->insertWithoutTimestamp($tagName, $urlName);
+
+                    UserCacheInvalidator::invalidateNbTags();
+
+                    return $tagIdCache[$tagName];
+                }
+            }
+        }
+
+        $tagIdCache[$tagName] = $existingId;
+        return $tagIdCache[$tagName];
+    }
+
+    /**
+     * Set tags of images. Overwrites all existing associations.
+     *
+     * @param array<int|string, array<int, int|string>> $tagsOf - keys are image ids, values are array of tag ids
+     */
+    public function setTagsOf(array $tagsOf): void
+    {
+        if (count($tagsOf) === 0) {
+            return;
+        }
+
+        /** @var Logger $logger */
+        global $logger;
+
+        $taglistBefore = $this->getImageTagIds(array_keys($tagsOf));
+        $logger->debug('taglist_before', $taglistBefore);
+
+        $this->repo->deleteImageTagByImageIds(array_keys($tagsOf));
+
+        $inserts = [];
+
+        foreach ($tagsOf as $imageId => $tagIds) {
+            foreach (array_unique($tagIds) as $tagId) {
+                $inserts[] = [
+                    'image_id' => $imageId,
+                    'tag_id' => $tagId,
+                ];
+            }
+        }
+
+        if ($inserts !== []) {
+            mass_inserts(
+                Tables::imageTag(),
+                array_keys($inserts[0]),
+                $inserts
+            );
+        }
+
+        $taglistAfter = $this->getImageTagIds(array_keys($tagsOf));
+        $logger->debug('taglist_after', $taglistAfter);
+        $imagesToUpdate = $this->compareImageTagLists($taglistBefore, $taglistAfter);
+        $logger->debug('$images_to_update', $imagesToUpdate);
+
+        update_images_lastmodified($imagesToUpdate);
+        UserCacheInvalidator::invalidateNbTags();
+    }
+
+    /**
+     * Get list of tag ids for each image. Returns an empty list if the image has
+     * no tags.
+     *
+     * @since 2.9
+     * @param array<int, int|string> $imageIds
+     * @return array<int, int[]> image_id => list of tag ids
+     */
+    public function getImageTagIds(array $imageIds): array
+    {
+        if (count($imageIds) === 0) {
+            return [];
+        }
+
+        $imageIds = array_map(intval(...), $imageIds);
+
+        $tagsOf = array_fill_keys($imageIds, []);
+        foreach ($this->repo->findTagIdsByImageIds($imageIds) as $imageTag) {
+            $tagImageId = $imageTag['image_id'];
+            $tagId = $imageTag['tag_id'];
+            assert(is_numeric($tagImageId) && is_numeric($tagId));
+            $tagsOf[(int) $tagImageId][] = (int) $tagId;
+        }
+
+        return $tagsOf;
+    }
+
+    /**
+     * Compare the list of tags, for each image. Returns image_ids where tag list has changed.
+     *
+     * @since 2.9
+     * @param array<int, int[]> $taglistBefore - for each image_id (key), list of tag ids;
+     *   all real callers pass getImageTagIds()'s return directly
+     * @param array<int, int[]> $taglistAfter - for each image_id (key), list of tag ids
+     * @return array<int, int> - image_ids where the list has changed
+     */
+    public function compareImageTagLists(array $taglistBefore, array $taglistAfter): array
+    {
+        $imagesToUpdate = [];
+
+        foreach ($taglistAfter as $imageId => $listAfter) {
+            sort($listAfter);
+
+            $listBefore = $taglistBefore[$imageId] ?? [];
+            sort($listBefore);
+
+            if ($listAfter !== $listBefore) {
+                $imagesToUpdate[] = $imageId;
+            }
+        }
+
+        return $imagesToUpdate;
+    }
+
+    /**
+     * Create a new tag.
+     *
+     * @return array{info: string, id: int|string}|array{error: string}
+     */
+    public function createTag(string $tagName): array
+    {
+        // clean the tag, no html/js allowed in tag name
+        $tagName = strip_tags($tagName);
+
+        // does the tag already exist?
+        if ($this->repo->findIdByName($tagName) === null) {
+            $urlName = trigger_change('render_tag_url', $tagName);
+            // a misbehaving plugin handler could return a non-string; fall
+            // back to the untransformed tag name rather than propagate it
+            // (same guard as tagIdFromTagName()'s own url_name resolution).
+            $urlName = is_string($urlName) ? $urlName : $tagName;
+
+            $insertedId = $this->repo->insert($tagName, $urlName);
+
+            return [
+                'info' => l10n('Tag "%s" was added', stripslashes($tagName)),
+                'id' => $insertedId,
+            ];
+        }
+
+        return [
+            'error' => l10n('Tag "%s" already exists', stripslashes($tagName)),
+        ];
+    }
+
+    /**
+     * Get tags list from SQL query (ids are surrounded by ~~, for getTagIds()).
+     *
+     * @param string $query a complete, already-built SELECT id, name query --
+     *   real callers each build their own WHERE clause against
+     *   Tables::tags()/Tables::imageTag() and hand the whole thing in
+     * @param bool $onlyUserLanguage - if true, only local name is returned for
+     *    multilingual tags (if ExtendedDescription plugin is active)
+     * @return array<int, array{name: mixed, id: string}>
+     */
+    public function getTagList(string $query, bool $onlyUserLanguage = true): array
+    {
+        $taglist = [];
+        $altlist = [];
+
+        foreach ($this->repo->fetchTagListRows($query) as $row) {
+            $rawName = $row['name'];
+            $name = trigger_change('render_tag_name', $rawName, $row);
+            $rowId = is_scalar($row['id']) ? (string) $row['id'] : '';
+
+            $taglist[] = [
+                'name' => $name,
+                'id' => '~~' . $rowId . '~~',
+            ];
+
+            if (! $onlyUserLanguage) {
+                $altNames = trigger_change('get_tag_alt_names', [], $rawName);
+                $altNames = is_array($altNames) ? array_filter($altNames, is_string(...)) : [];
+                $nameForDiff = is_scalar($name) ? (string) $name : '';
+
+                foreach (array_diff(array_unique($altNames), [$nameForDiff]) as $alt) {
+                    $altlist[] = [
+                        'name' => $alt,
+                        'id' => '~~' . $rowId . '~~',
+                    ];
+                }
+            }
+        }
+
+        usort($taglist, tag_alpha_compare(...));
+        if ($altlist !== []) {
+            usort($altlist, tag_alpha_compare(...));
+            $taglist = array_merge($taglist, $altlist);
+        }
+
+        return $taglist;
+    }
+
+    /**
+     * Get tags ids from a list of raw tags (existing tags or new tags).
+     *
+     * In $rawTags we receive something like array('~~6~~', '~~59~~', 'New
+     * tag', 'Another new tag') The ~~34~~ means that it is an existing
+     * tag. We added the surrounding ~~ to permit creation of tags like "10"
+     * or "1234" (numeric characters only)
+     *
+     * @param string|array<string> $rawTags - array or comma separated string;
+     *   real callers (array_filter()'d $_POST fields) don't guarantee a
+     *   list -- key type is never read below, only values
+     * @return int[]
+     */
+    public function getTagIds(string|array $rawTags, bool $allowCreate = true): array
+    {
+        $tagIds = [];
+        if (! is_array($rawTags)) {
+            $rawTags = explode(',', $rawTags);
+        }
+
+        foreach ($rawTags as $rawTag) {
+            if (preg_match('/^~~(\d+)~~$/', $rawTag, $matches) === 1) {
+                $tagIds[] = (int) $matches[1];
+            } elseif ($allowCreate) {
+                // we have to create a new tag
+                $tagIds[] = $this->tagIdFromTagName(strip_tags($rawTag));
+            }
+        }
+
+        return $tagIds;
     }
 }

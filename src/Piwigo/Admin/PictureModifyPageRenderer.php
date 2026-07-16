@@ -9,10 +9,15 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\SrcImage;
 use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
+use Piwigo\Tag\TagRepository;
+use Piwigo\Tag\TagService;
 use Piwigo\Template\Template;
 use Piwigo\Users\UserRepository;
 
@@ -164,16 +169,19 @@ SELECT id
             );
 
             // time to deal with tags
+            $tagConn = DbConnection::build();
+            $tagService = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
+
             $tag_ids = [];
             $raw_tags_post = $_POST['tags'] ?? null;
             if (! empty($raw_tags_post)) {
                 if (is_array($raw_tags_post)) {
-                    $tag_ids = get_tag_ids(array_filter($raw_tags_post, is_string(...)));
+                    $tag_ids = $tagService->getTagIds(array_filter($raw_tags_post, is_string(...)));
                 } elseif (is_string($raw_tags_post)) {
-                    $tag_ids = get_tag_ids($raw_tags_post);
+                    $tag_ids = $tagService->getTagIds($raw_tags_post);
                 }
             }
-            set_tags($tag_ids, $image_id);
+            $tagService->setTags($tag_ids, $image_id);
 
             // association to albums
             if (! isset($_POST['associate'])) {
@@ -246,7 +254,9 @@ SELECT
     JOIN ' . Tables::tags() . ' AS t ON t.id = it.tag_id
   WHERE image_id = ' . $image_id . '
 ;';
-        $tag_selection = get_taglist($query);
+        $tagConn = DbConnection::build();
+        $tag_selection = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
+            ->getTagList($query);
 
         // get_image_infos($image_id, true) fatal_errors (never returns) when the
         // photo doesn't exist, so $page['image'] is guaranteed to be a real

@@ -281,7 +281,9 @@ DELETE FROM ' . Tables::caddie() . '
                 } else {
                     $filter_tags = is_string($raw_filter_tags) ? $raw_filter_tags : '';
                 }
-                $_SESSION['bulk_manager_filter']['tags'] = get_tag_ids($filter_tags, false);
+                $filterTagConn = DbConnection::build();
+                $_SESSION['bulk_manager_filter']['tags'] = new TagService(new TagRepository($filterTagConn), new PermissionService(new PermissionRepository($filterTagConn), new GroupRepository($filterTagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
+                    ->getTagIds($filter_tags, false);
 
                 if (isset($_POST['tag_mode']) and in_array($_POST['tag_mode'], ['AND', 'OR'], true)) {
                     $_SESSION['bulk_manager_filter']['tag_mode'] = $_POST['tag_mode'];
@@ -568,7 +570,7 @@ DELETE FROM ' . Tables::caddie() . '
             $filter_tag_mode = is_string($bulkFilter['tag_mode'] ?? null) ? $bulkFilter['tag_mode'] : 'AND';
 
             $tagConn = DbConnection::build();
-            $filter_sets[] = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)))
+            $filter_sets[] = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
                 ->getImageIdsForTags(
                     $filter_tag_ids,
                     $filter_tag_mode,

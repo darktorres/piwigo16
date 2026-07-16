@@ -52,13 +52,13 @@ final class DbMaintenanceRepository
 
     /**
      * Deletes tags with no linked image and untouched for over a day
-     * (matches the original's `get_orphan_tags()`+`delete_tags()` cutoff).
+     * (matches TagService::getOrphanTags()/deleteTags()'s own cutoff).
      * Returns the number of tags deleted, for CLI output.
      *
-     * Deliberately does NOT replicate `delete_tags()`'s (`admin/include/
-     * functions.php`) side effects -- the `delete_tags` event trigger,
-     * activity logging, `lastmodified` touch on affected images, and
-     * `invalidate_user_cache_nb_tags()`. Those are user-facing
+     * Deliberately does NOT replicate TagService::deleteTags()'s side
+     * effects -- the `delete_tags` event trigger, activity logging,
+     * `lastmodified` touch on affected images, and
+     * `UserCacheInvalidator::invalidateNbTags()`. Those are user-facing
      * tag-management concerns; this method backs an operator-run CLI
      * maintenance sweep (`bin/piwigo maintenance:orphan-tags`), where a
      * plain DB cleanup is the correct scope. The existing admin web UI

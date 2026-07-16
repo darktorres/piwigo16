@@ -5,7 +5,13 @@ declare(strict_types=1);
 namespace Piwigo\Metadata;
 
 use Piwigo\Core\Logger;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
+use Piwigo\Tag\TagRepository;
+use Piwigo\Tag\TagService;
 
 /**
  * Pure computation ported from `admin/include/functions_metadata.php`
@@ -510,6 +516,13 @@ final class MetadataService
         $datas = [];
         $tagsOf = [];
 
+        // Inline-constructed rather than constructor-injected -- matches
+        // SearchService::getElements()'s own established precedent for a
+        // one-method-only TagService dependency, avoiding touching every
+        // existing `new MetadataService(...)` call site for zero benefit.
+        $tagConn = DbConnection::build();
+        $tagService = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
+
         foreach ($this->repo->findImagesByIds($ids) as $row) {
             $data = $this->getSyncMetadata($row);
             if ($data === false) {
@@ -533,7 +546,7 @@ final class MetadataService
                     $tagList = is_scalar($tagList) ? (string) $tagList : '';
 
                     foreach (explode(',', $tagList) as $tagName) {
-                        $tagsOf[$id][] = tag_id_from_tag_name($tagName);
+                        $tagsOf[$id][] = $tagService->tagIdFromTagName($tagName);
                     }
                 }
             }
@@ -559,7 +572,7 @@ final class MetadataService
             );
         }
 
-        set_tags_of($tagsOf);
+        $tagService->setTagsOf($tagsOf);
     }
 
     /**

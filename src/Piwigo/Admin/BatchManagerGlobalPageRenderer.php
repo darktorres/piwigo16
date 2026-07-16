@@ -159,6 +159,9 @@ final class BatchManagerGlobalPageRenderer
             $action = is_string($_POST['selectAction'] ?? null) ? $_POST['selectAction'] : '';
             $redirect = false;
 
+            $tagConn = DbConnection::build();
+            $tagService = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
+
             if ($action === 'remove_from_caddie') {
                 // $user['id'] is always numeric: include/user.inc.php (part of the
                 // include/common.inc.php bootstrap that always runs before this
@@ -186,8 +189,8 @@ DELETE
                         }
                     }
 
-                    $tag_ids = get_tag_ids($add_tags);
-                    add_tags($tag_ids, $collection);
+                    $tag_ids = $tagService->getTagIds($add_tags);
+                    $tagService->addTags($tag_ids, $collection);
 
                     if ($prefilter_value === 'no_tag') {
                         $redirect = true;
@@ -196,7 +199,7 @@ DELETE
             } elseif ($action === 'del_tags') {
                 $del_tags = isset($_POST['del_tags']) && is_array($_POST['del_tags']) ? array_filter($_POST['del_tags'], is_scalar(...)) : [];
                 if (count($del_tags) > 0) {
-                    $taglist_before = get_image_tag_ids($collection);
+                    $taglist_before = $tagService->getImageTagIds($collection);
 
                     $query = '
 DELETE
@@ -206,8 +209,8 @@ DELETE
 ;';
                     pwg_query($query);
 
-                    $taglist_after = get_image_tag_ids($collection);
-                    $images_to_update = compare_image_tag_lists($taglist_before, $taglist_after);
+                    $taglist_after = $tagService->getImageTagIds($collection);
+                    $images_to_update = $tagService->compareImageTagLists($taglist_before, $taglist_after);
                     update_images_lastmodified($images_to_update);
 
                     if (isset($bulk_manager_filter['tags']) && is_array($bulk_manager_filter['tags']) &&
@@ -514,7 +517,7 @@ DELETE
         if (count($cat_elements_id) > 0) {
             // remove tags
             $tagConn = DbConnection::build();
-            $template->assign('associated_tags', new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)))
+            $template->assign('associated_tags', new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
                 ->getCommonTags($cat_elements_id, -1));
         }
 

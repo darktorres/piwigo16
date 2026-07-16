@@ -11,11 +11,16 @@ use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Db\DbConnection;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Image\DerivativeCacheService;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Rate\RateService;
 use Piwigo\Session\SessionService;
+use Piwigo\Tag\TagRepository;
+use Piwigo\Tag\TagService;
 use Piwigo\Template\FileCombiner;
 use Piwigo\Template\Template;
 
@@ -127,7 +132,9 @@ final class MaintenanceActionDispatcher
 
             case 'delete_orphan_tags':
 
-                delete_orphan_tags();
+                $tagConn = DbConnection::build();
+                new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
+                    ->deleteOrphanTags();
                 $page['infos'][] = sprintf('%s : %s', l10n('Delete orphan tags'), l10n('action successfully performed.'));
                 break;
 

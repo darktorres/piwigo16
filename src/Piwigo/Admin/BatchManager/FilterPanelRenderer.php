@@ -5,8 +5,14 @@ declare(strict_types=1);
 namespace Piwigo\Admin\BatchManager;
 
 use Piwigo\Core\Lang;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
+use Piwigo\Tag\TagRepository;
+use Piwigo\Tag\TagService;
 use Piwigo\Template\Template;
 
 /**
@@ -175,7 +181,9 @@ SELECT
   WHERE id IN (' . implode(',', $filter_tags_ids) . ')
 ;';
 
-            $filter_tags = get_taglist($query);
+            $tagConn = DbConnection::build();
+            $filter_tags = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
+                ->getTagList($query);
         }
 
         $template->assign('filter_tags', $filter_tags);

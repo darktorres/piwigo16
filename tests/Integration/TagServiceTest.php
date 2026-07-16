@@ -28,6 +28,8 @@ namespace {
 
 namespace Piwigo\Tests\Integration {
 
+    use Piwigo\Activity\ActivityRepository;
+    use Piwigo\Activity\ActivityService;
     use Piwigo\Config\Config;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
@@ -62,7 +64,7 @@ namespace Piwigo\Tests\Integration {
             $GLOBALS['conf'] = ['tags_levels' => 5];
 
             $conn = DbConnection::build();
-            $this->service = new TagService(new TagRepository($conn), new PermissionService(new PermissionRepository($conn), new GroupRepository($conn)));
+            $this->service = new TagService(new TagRepository($conn), new PermissionService(new PermissionRepository($conn), new GroupRepository($conn)), new ActivityService(new ActivityRepository($conn)));
         }
 
         public function test_get_all_tags_returns_every_fixture_tag_alphabetically(): void

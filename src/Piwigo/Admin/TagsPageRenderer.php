@@ -5,7 +5,13 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Core\AccessLevel;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
+use Piwigo\Tag\TagRepository;
+use Piwigo\Tag\TagService;
 use Piwigo\Template\Template;
 
 /**
@@ -25,10 +31,13 @@ final class TagsPageRenderer
         $tabsheet->select('');
         $tabsheet->assign();
 
+        $tagConn = DbConnection::build();
+        $tagService = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
+
         if (($_GET['action'] ?? null) === 'delete_orphans') {
             check_pwg_token();
 
-            delete_orphan_tags();
+            $tagService->deleteOrphanTags();
             $_SESSION['message_tags'] = l10n('Orphan tags deleted');
             redirect(get_root_url() . 'admin.php?page=tags');
         }
@@ -46,7 +55,7 @@ final class TagsPageRenderer
 
         $warning_tags = '';
 
-        $orphan_tags = get_orphan_tags();
+        $orphan_tags = $tagService->getOrphanTags();
 
         $orphan_tag_names_array = '[]';
         $orphan_tag_names = [];

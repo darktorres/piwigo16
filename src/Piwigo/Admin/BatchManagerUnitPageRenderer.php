@@ -6,9 +6,15 @@ namespace Piwigo\Admin;
 
 use Piwigo\Admin\BatchManager\FilterPanelRenderer;
 use Piwigo\Cache\UserCacheInvalidator;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\SrcImage;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
+use Piwigo\Tag\TagRepository;
+use Piwigo\Tag\TagService;
 use Piwigo\Template\Template;
 
 /**
@@ -83,6 +89,9 @@ SELECT id, date_creation
 ;';
             $result = pwg_query($query);
 
+            $tagConn = DbConnection::build();
+            $tagService = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
+
             while ((bool) ($row = pwg_db_fetch_assoc($result))) {
                 // Tables::images().id is a NOT NULL auto_increment primary key; this
                 // guard only defends against the generic string|null element type
@@ -119,12 +128,12 @@ SELECT id, date_creation
                 $raw_tags_post = $_POST['tags-' . $row['id']] ?? null;
                 if ($raw_tags_post !== null && $raw_tags_post !== '' && $raw_tags_post !== '0' && $raw_tags_post !== []) {
                     if (is_array($raw_tags_post)) {
-                        $tag_ids = get_tag_ids(array_filter($raw_tags_post, is_string(...)));
+                        $tag_ids = $tagService->getTagIds(array_filter($raw_tags_post, is_string(...)));
                     } elseif (is_string($raw_tags_post)) {
-                        $tag_ids = get_tag_ids($raw_tags_post);
+                        $tag_ids = $tagService->getTagIds($raw_tags_post);
                     }
                 }
-                set_tags($tag_ids, $image_id);
+                $tagService->setTags($tag_ids, $image_id);
             }
 
             mass_updates(
@@ -322,6 +331,9 @@ SELECT
                 $storage_category_id = $row['storage_category_id'];
             }
 
+            $tagConn = DbConnection::build();
+            $tagService = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
+
             foreach ($images as $row) {
                 // Tables::images().id is a NOT NULL auto_increment primary key; this
                 // guard only defends against the generic string|null element type
@@ -345,7 +357,7 @@ SELECT
   WHERE image_id = ' . $row['id'] . '
 ;';
 
-                $tag_selection = get_taglist($query);
+                $tag_selection = $tagService->getTagList($query);
 
                 $row_file = is_string($row['file']) ? $row['file'] : '';
                 $legend = render_element_name($row);

@@ -70,7 +70,7 @@ final class TagsController implements ControllerInterface
             $template->assign('display_mode', $display_mode);
 
             $tagConn = DbConnection::build();
-            $tagService = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)));
+            $tagService = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
 
             // find all tags available for the current user
             $tags = $tagService->getAvailableTags();

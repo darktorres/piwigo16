@@ -406,7 +406,7 @@ final class SearchService
         $tagsMode = is_array($tagsField) && is_string($tagsField['mode'] ?? null) ? $tagsField['mode'] : 'AND';
         if (isset($searchFields['tags']) && $tagsWords !== [] && (bool) ($displayFilters['tags']['access'] ?? false)) {
             $hasFiltersFilled = true;
-            $tagService = new TagService(new TagRepository(DbConnection::build()), $this->permissionService);
+            $tagService = new TagService(new TagRepository(DbConnection::build()), $this->permissionService, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())));
             $imageIdsForFilter['tags'] = array_values(array_map(intval(...), array_filter($tagService->getImageIdsForTags($tagsWords, $tagsMode), is_numeric(...))));
         }
 

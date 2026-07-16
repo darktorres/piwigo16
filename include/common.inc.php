@@ -25,6 +25,7 @@ use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
+use Piwigo\Core\StringHelper;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -450,7 +451,16 @@ if (! (bool) $conf['allow_html_descriptions']) {
 }
 add_event_handler('render_comment_content', 'render_comment_content');
 add_event_handler('render_comment_author', 'strip_tags');
-add_event_handler('render_tag_url', 'str2url');
+// Was registered as the bare string 'str2url' -- dead since some earlier
+// phase migrated the global function to StringHelper::str2url() without
+// updating this one string-literal reference (add_event_handler() doesn't
+// get caught by a normal call-site grep). Dormant until P23 batch 8d's
+// Tags sub-batch's live curl verification actually exercised a real
+// trigger_change('render_tag_url', ...) call and hit "Event handler ...
+// is not callable" -- every prior tag-creation activity-log row in the
+// fixture is static SQL data, never actually round-tripped through this
+// handler.
+add_event_handler('render_tag_url', StringHelper::str2url(...));
 add_event_handler('blockmanager_register_blocks', 'register_default_menubar_blocks');
 // Relocated from include/functions_comment.inc.php (deleted, P23 batch 8c)
 // -- that file's own top-level add_event_handler() call only ever ran via

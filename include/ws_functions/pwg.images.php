@@ -501,7 +501,7 @@ SELECT id, name, permalink, uppercats, global_rank, commentable
 
     // -------------------------------------------------------------- related tags
     $tagConn = DbConnection::build();
-    $related_tags = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)))
+    $related_tags = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
         ->getCommonTags([$image_id], -1);
     foreach ($related_tags as $i => $tag) {
         $tag['url'] = make_index_url(
@@ -1549,10 +1549,12 @@ SELECT id, name, permalink
 
     // and now, let's create tag associations
     if (isset($params['tag_ids']) and ! empty($params['tag_ids'])) {
-        set_tags(
-            explode(',', $params['tag_ids']),
-            (int) $image_id
-        );
+        $tagConn = DbConnection::build();
+        new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
+            ->setTags(
+                explode(',', $params['tag_ids']),
+                (int) $image_id
+            );
     }
 
     UserCacheInvalidator::invalidate();
@@ -1668,10 +1670,13 @@ SELECT COUNT(*)
     if (isset($params['tags']) and ! empty($params['tags'])) {
         include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
+        $tagConn = DbConnection::build();
+        $tagService = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
+
         $tag_ids = [];
         if (is_array($params['tags'])) {
             foreach ($params['tags'] as $tag_name) {
-                $tag_ids[] = tag_id_from_tag_name($tag_name);
+                $tag_ids[] = $tagService->tagIdFromTagName($tag_name);
             }
         } else {
             $tag_names = preg_split('~(?<!\\\),~', $params['tags']);
@@ -1681,11 +1686,11 @@ SELECT COUNT(*)
             foreach ($tag_names as $tag_name) {
                 $unescaped_tag_name = preg_replace('#\\\\*,#', ',', $tag_name);
                 assert($unescaped_tag_name !== null);
-                $tag_ids[] = tag_id_from_tag_name($unescaped_tag_name);
+                $tag_ids[] = $tagService->tagIdFromTagName($unescaped_tag_name);
             }
         }
 
-        add_tags($tag_ids, [(int) $image_id]);
+        $tagService->addTags($tag_ids, [(int) $image_id]);
     }
 
     $url_params = [
@@ -2173,10 +2178,12 @@ SELECT COUNT(*)
 
     // and now, let's create tag associations
     if (isset($params['tag_ids']) and ! empty($params['tag_ids'])) {
-        set_tags(
-            explode(',', $params['tag_ids']),
-            (int) $image_id
-        );
+        $tagConn = DbConnection::build();
+        new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
+            ->setTags(
+                explode(',', $params['tag_ids']),
+                (int) $image_id
+            );
     }
 
     // time to set other infos
@@ -2729,6 +2736,9 @@ SELECT *
     }
 
     // and now, let's create tag associations
+    $tagConn = DbConnection::build();
+    $tagService = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
+
     if (isset($params['tag_ids'])) {
         $tag_ids = [];
 
@@ -2741,12 +2751,12 @@ SELECT *
         }
 
         if ($params['multiple_value_mode'] == 'replace') {
-            set_tags(
+            $tagService->setTags(
                 $tag_ids,
                 $params['image_id']
             );
         } elseif ($params['multiple_value_mode'] == 'append') {
-            add_tags(
+            $tagService->addTags(
                 $tag_ids,
                 [$params['image_id']]
             );
@@ -2776,8 +2786,8 @@ SELECT *
 
         // pwg_db_real_escape_string() only returns null for a null input,
         // and every element pushed above is already a string.
-        $tag_list = get_tag_ids(array_filter($cleaned_tag_list, is_string(...)));
-        set_tags($tag_list, $params['image_id']);
+        $tag_list = $tagService->getTagIds(array_filter($cleaned_tag_list, is_string(...)));
+        $tagService->setTags($tag_list, $params['image_id']);
     }
 
     UserCacheInvalidator::invalidate();

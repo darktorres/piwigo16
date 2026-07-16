@@ -388,7 +388,7 @@ SELECT DISTINCT(image_id)
                 $page['tag_ids'] = $tag_ids;
 
                 $tagConn = DbConnection::build();
-                $items = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)))
+                $items = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
                     ->getImageIdsForTags($tag_ids);
 
                 if (count($items) === 0) {

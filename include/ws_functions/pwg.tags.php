@@ -33,7 +33,7 @@ use Piwigo\Ws\PwgServer;
 function ws_tags_getList(array $params, PwgServer &$service): array
 {
     $tagConn = DbConnection::build();
-    $tags = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)))
+    $tags = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
         ->getAvailableTags();
     if ($params['sort_by_counter']) {
         usort($tags, function (array $a, array $b): int {
@@ -83,7 +83,7 @@ function ws_tags_getAdminList(array $params, PwgServer &$service): array
 
     return [
         'tags' => new PwgNamedArray(
-            new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)))
+            new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
                 ->getAllTags(),
             'tag',
             ws_std_get_tag_xml_attributes()
@@ -109,7 +109,7 @@ function ws_tags_getAdminList(array $params, PwgServer &$service): array
 function ws_tags_getImages(array $params, PwgServer &$service): array
 {
     $tagConn = DbConnection::build();
-    $tagService = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)));
+    $tagService = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
 
     // first build all the tag_ids we are interested in
     $tags = $tagService->findTags($params['tag_id'], $params['tag_url_name'], $params['tag_name']);
@@ -260,9 +260,9 @@ SELECT *
  */
 function ws_tags_add(array $params, PwgServer &$service): PwgError|array
 {
-    include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
-    $creation_output = create_tag($params['name']);
+    $tagConn = DbConnection::build();
+    $creation_output = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
+        ->createTag($params['name']);
 
     if (isset($creation_output['error'])) {
         return new PwgError(WS_ERR_INVALID_PARAM, $creation_output['error']);
@@ -298,6 +298,8 @@ WHERE id = ' . $creation_output['id'] . ';';
  */
 function ws_tags_delete(array $params, PwgServer &$service): PwgError|array
 {
+    // TagService::deleteTags() itself still calls the not-yet-migrated
+    // bare update_images_lastmodified() (Elements/photos domain).
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
     if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
@@ -319,7 +321,9 @@ SELECT COUNT(*)
     $tag_ids = $params['tag_id'];
 
     if (count($tag_ids) > 0) {
-        delete_tags($params['tag_id']);
+        $tagConn = DbConnection::build();
+        new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
+            ->deleteTags($params['tag_id']);
         return [
             'id' => $tag_ids,
         ];
@@ -517,6 +521,9 @@ SELECT image_id
  */
 function ws_tags_merge(array $params, PwgServer &$service): PwgError|array
 {
+    // TagService::deleteTags() itself still calls the not-yet-migrated
+    // bare update_images_lastmodified() (Elements/photos domain).
+    include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
     if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -587,10 +594,11 @@ SELECT image_id
         ]);
     }
 
-    include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
     trigger_notify('merge_tags', $params['destination_tag_id'], $merge_tag);
-    delete_tags($merge_tag);
+
+    $tagConn = DbConnection::build();
+    new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
+        ->deleteTags($merge_tag);
 
     $image_in_merged = array_merge($image_in_dest, $image_to_add);
 

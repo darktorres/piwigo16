@@ -171,4 +171,218 @@ SELECT t.*, count(*) AS counter
 
         return array_values(array_map(intval(...), array_filter($ids, is_numeric(...))));
     }
+
+    /**
+     * Tags (id + name) linked to no photo, and not modified in the last day
+     * (grace period so a tag freshly created/detached isn't immediately
+     * swept up).
+     *
+     * @return list<array{id: string, name: string}>
+     */
+    public function findOrphanTags(): array
+    {
+        $query = '
+SELECT
+    id,
+    name
+  FROM ' . Tables::tags() . '
+    LEFT JOIN ' . Tables::imageTag() . ' ON id = tag_id
+  WHERE tag_id IS NULL
+    AND lastmodified < SUBDATE(NOW(), INTERVAL 1 DAY)
+;';
+        $orphan_tags = [];
+        foreach ($this->conn->executeQuery($query)->fetchAllAssociative() as $row) {
+            $orphan_tags[] = [
+                'id' => is_scalar($row['id']) ? (string) $row['id'] : '',
+                'name' => is_scalar($row['name']) ? (string) $row['name'] : '',
+            ];
+        }
+        return $orphan_tags;
+    }
+
+    /**
+     * @param array<int, int|string> $imageIds
+     * @return list<array<string, mixed>> [image_id, tag_id]
+     */
+    public function findTagIdsByImageIds(array $imageIds): array
+    {
+        $query = '
+SELECT
+    image_id,
+    tag_id
+  FROM ' . Tables::imageTag() . '
+  WHERE image_id IN (' . implode(',', $imageIds) . ')
+;';
+        return $this->conn->executeQuery($query)
+            ->fetchAllAssociative();
+    }
+
+    /**
+     * @param array<int, int|string> $tagIds
+     * @return list<int>
+     */
+    public function findImageIdsForTagIds(array $tagIds): array
+    {
+        $query = '
+SELECT
+    image_id
+  FROM ' . Tables::imageTag() . '
+  WHERE tag_id IN (' . implode(',', $tagIds) . ')
+;';
+        // image_id is Tables::imageTag()'s NOT NULL foreign key.
+        return array_map(intval(...), $this->conn->executeQuery($query)->fetchFirstColumn());
+    }
+
+    /**
+     * @param array<int, int|string> $tagIds
+     */
+    public function deleteImageTagByTagIds(array $tagIds): void
+    {
+        $this->conn->executeStatement('
+DELETE
+  FROM ' . Tables::imageTag() . '
+  WHERE tag_id IN (' . implode(',', $tagIds) . ')
+;');
+    }
+
+    /**
+     * @param array<int, int|string> $imageIds real callers pass
+     *   array_keys()'d image-id-keyed maps
+     */
+    public function deleteImageTagByImageIds(array $imageIds): void
+    {
+        $this->conn->executeStatement('
+DELETE
+  FROM ' . Tables::imageTag() . '
+  WHERE image_id IN (' . implode(',', $imageIds) . ')
+;');
+    }
+
+    /**
+     * @param array<int|string> $imageIds real caller (TagService::addTags())
+     *   doesn't guarantee a list -- key type is never read below
+     * @param array<int|string> $tagIds
+     */
+    public function deleteImageTagByImageAndTagIds(array $imageIds, array $tagIds): void
+    {
+        $this->conn->executeStatement('
+DELETE
+  FROM ' . Tables::imageTag() . '
+  WHERE image_id IN (' . implode(',', $imageIds) . ')
+    AND tag_id IN (' . implode(',', $tagIds) . ')
+;');
+    }
+
+    /**
+     * @param array<int, int|string> $tagIds
+     */
+    public function deleteByIds(array $tagIds): void
+    {
+        $this->conn->executeStatement('
+DELETE
+  FROM ' . Tables::tags() . '
+  WHERE id IN (' . implode(',', $tagIds) . ')
+;');
+    }
+
+    public function findIdByName(string $name): ?int
+    {
+        $id = $this->conn->createQueryBuilder()
+            ->select('id')
+            ->from(Tables::tags())
+            ->where('name = :name')
+            ->setParameter('name', $name)
+            ->executeQuery()
+            ->fetchOne();
+
+        return is_numeric($id) ? (int) $id : null;
+    }
+
+    public function findIdByUrlName(string $urlName): ?int
+    {
+        $id = $this->conn->createQueryBuilder()
+            ->select('id')
+            ->from(Tables::tags())
+            ->where('url_name = :urlName')
+            ->setParameter('urlName', $urlName)
+            ->executeQuery()
+            ->fetchOne();
+
+        return is_numeric($id) ? (int) $id : null;
+    }
+
+    /**
+     * $whereSql is a raw, already-built SQL WHERE-continuation fragment
+     * (plugin-supplied extended-description sub-name matching) -- same
+     * fragment-passing shape as countImagesPerTag()'s $fandFSql.
+     */
+    public function findIdByWhereFragment(string $whereSql): ?int
+    {
+        $id = $this->conn->executeQuery('
+SELECT id
+  FROM ' . Tables::tags() . '
+  WHERE ' . $whereSql . '
+;')->fetchOne();
+
+        return is_numeric($id) ? (int) $id : null;
+    }
+
+    public function insert(string $name, string $urlName): int
+    {
+        // lastmodified set explicitly rather than left to the schema's own
+        // DEFAULT CURRENT_TIMESTAMP, which reads the real DB-server clock --
+        // invisible to pwg_now()'s PIWIGO_TEST_NOW freeze.
+        $this->conn->createQueryBuilder()
+            ->insert(Tables::tags())
+            ->values([
+                'name' => ':name',
+                'url_name' => ':urlName',
+                'lastmodified' => ':lastmodified',
+            ])
+            ->setParameter('name', $name)
+            ->setParameter('urlName', $urlName)
+            ->setParameter('lastmodified', pwg_now()->format('Y-m-d H:i:s'))
+            ->executeStatement();
+
+        return (int) $this->conn->lastInsertId();
+    }
+
+    /**
+     * Same insert as {@see insert()} but deliberately does NOT set
+     * `lastmodified` explicitly -- matches the original
+     * `tag_id_from_tag_name()`'s own `mass_inserts()` call, which (unlike
+     * `create_tag()`'s `single_insert()`) leaves it to the schema's DEFAULT
+     * CURRENT_TIMESTAMP. Preserved as-is rather than unified with
+     * `insert()`: a real behavioral difference between the two original
+     * functions, not an oversight to silently "fix" here.
+     */
+    public function insertWithoutTimestamp(string $name, string $urlName): int
+    {
+        $this->conn->createQueryBuilder()
+            ->insert(Tables::tags())
+            ->values([
+                'name' => ':name',
+                'url_name' => ':urlName',
+            ])
+            ->setParameter('name', $name)
+            ->setParameter('urlName', $urlName)
+            ->executeStatement();
+
+        return (int) $this->conn->lastInsertId();
+    }
+
+    /**
+     * Executes an arbitrary, already fully-built `SELECT id, name` query and
+     * returns the raw rows -- real callers (PictureModifyPageRenderer/
+     * BatchManagerUnitPageRenderer/FilterPanelRenderer) each build their own
+     * WHERE clause against Tables::tags()/Tables::imageTag() and hand the
+     * complete query in, matching the original get_taglist()'s own shape.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function fetchTagListRows(string $query): array
+    {
+        return $this->conn->executeQuery($query)
+            ->fetchAllAssociative();
+    }
 }

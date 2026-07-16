@@ -13,6 +13,8 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\DefaultLanguageProviderInterface;
+use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Db\DbConnection;
@@ -34,8 +36,13 @@ use Piwigo\Session\SessionService;
  * L3Presentation (constructs Piwigo\Template\Template), and L2aCoreDomain
  * may not depend upward on L3; see deptrac.yaml's own comment on the Mail
  * namespace entry and MailerInterface's own docblock.
+ *
+ * P23 batch 8d: implements DefaultLanguageProviderInterface (Piwigo\Core)
+ * so Piwigo\Core\Lang::load() (L1Infrastructure, static) can resolve the
+ * DB-configured default language without depending on this class
+ * directly -- see that interface's own docblock.
  */
-final class UserService
+final class UserService implements DefaultLanguageProviderInterface
 {
     public function __construct(
         private readonly UserRepository $repo,
@@ -419,11 +426,11 @@ final class UserService
             $existing['email'],
             [
                 'subject' => '[' . $gallery_title . '] ' . l10n('Registration'),
-                'content' => l10n_args([
-                    get_l10n_args('Someone tried to create an account on %s using your username.', $gallery_title),
-                    get_l10n_args('', ''),
-                    get_l10n_args('If this was you, you already have an account -- try logging in or resetting your password instead.', ''),
-                    get_l10n_args('If this was not you, no action is needed.', ''),
+                'content' => Lang::args([
+                    Lang::buildArgs('Someone tried to create an account on %s using your username.', $gallery_title),
+                    Lang::buildArgs('', ''),
+                    Lang::buildArgs('If this was you, you already have an account -- try logging in or resetting your password instead.', ''),
+                    Lang::buildArgs('If this was not you, no action is needed.', ''),
                 ]),
                 'content_format' => 'text/plain',
             ]
@@ -438,10 +445,10 @@ final class UserService
         $adminUrl = get_absolute_root_url() . 'admin.php?page=user_list&user_id=' . $userId;
 
         $keyargsContent = [
-            get_l10n_args('User: %s', stripslashes($login)),
-            get_l10n_args('Email: %s', $mailAddress),
-            get_l10n_args(''),
-            get_l10n_args('Admin: %s', $adminUrl),
+            Lang::buildArgs('User: %s', stripslashes($login)),
+            Lang::buildArgs('Email: %s', $mailAddress),
+            Lang::buildArgs(''),
+            Lang::buildArgs('Admin: %s', $adminUrl),
         ];
 
         $groupId = null;
@@ -452,7 +459,7 @@ final class UserService
         }
 
         $this->mailer->mailNotificationAdmins(
-            get_l10n_args('Registration of %s', stripslashes($login)),
+            Lang::buildArgs('Registration of %s', stripslashes($login)),
             $keyargsContent,
             true,
             $groupId
@@ -466,17 +473,17 @@ final class UserService
 
         $length = mt_rand(10, 15);
         $keyargsContent = [
-            get_l10n_args('Hello %s,', stripslashes($login)),
-            get_l10n_args('Thank you for registering at %s!', $conf['gallery_title']),
-            get_l10n_args('', ''),
-            get_l10n_args('Here are your connection settings', ''),
-            get_l10n_args('', ''),
-            get_l10n_args('Link: %s', get_absolute_root_url()),
-            get_l10n_args('Username: %s', stripslashes($login)),
-            get_l10n_args('Password: %s', str_repeat('*', $length)),
-            get_l10n_args('Email: %s', $mailAddress),
-            get_l10n_args('', ''),
-            get_l10n_args('If you think you\'ve received this email in error, please contact us at %s', (new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->getWebmasterMailAddress()),
+            Lang::buildArgs('Hello %s,', stripslashes($login)),
+            Lang::buildArgs('Thank you for registering at %s!', $conf['gallery_title']),
+            Lang::buildArgs('', ''),
+            Lang::buildArgs('Here are your connection settings', ''),
+            Lang::buildArgs('', ''),
+            Lang::buildArgs('Link: %s', get_absolute_root_url()),
+            Lang::buildArgs('Username: %s', stripslashes($login)),
+            Lang::buildArgs('Password: %s', str_repeat('*', $length)),
+            Lang::buildArgs('Email: %s', $mailAddress),
+            Lang::buildArgs('', ''),
+            Lang::buildArgs('If you think you\'ve received this email in error, please contact us at %s', (new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->getWebmasterMailAddress()),
         ];
 
         $gallery_title = $conf['gallery_title'] ?? '';
@@ -486,7 +493,7 @@ final class UserService
             $mailAddress,
             [
                 'subject' => '[' . $gallery_title . '] ' . l10n('Registration'),
-                'content' => l10n_args($keyargsContent),
+                'content' => Lang::args($keyargsContent),
                 'content_format' => 'text/plain',
             ]
         );
@@ -925,6 +932,7 @@ DELETE FROM ' . Tables::favorites() . '
     /**
      * Returns the default language.
      */
+    #[\Override]
     public function getDefaultLanguage(): string
     {
         $language = $this->getDefaultUserValue('language', AppInfo::DEFAULT_LANGUAGE);

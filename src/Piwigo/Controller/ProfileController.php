@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
@@ -151,7 +152,7 @@ SELECT ' . implode(',', $fields) . '
                     ]
                 );
 
-                load_language('common.lang', '', [
+                Lang::load('common.lang', '', [
                     'language' => $user['language'],
                 ]);
             }

@@ -6,6 +6,7 @@ namespace Piwigo\Controller\Admin;
 
 use Piwigo\Controller\LegacyRenderCapture;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Template\Template;
@@ -81,7 +82,7 @@ final class AdminPopuphelpController implements ControllerInterface
                 die('Hacking attempt!');
             }
 
-            $help_content = load_language(
+            $help_content = Lang::load(
                 'help/' . $rawPage . '.html',
                 '',
                 [

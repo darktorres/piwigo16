@@ -87,7 +87,8 @@
     "files": [
       "src/Piwigo/PluginConfig/functions.php",
       "src/Piwigo/Url/functions.php",
-      "src/Piwigo/Category/functions.php"
+      "src/Piwigo/Category/functions.php",
+      "src/Piwigo/Lang/functions.php"
     ]
   },
   "autoload-dev": {

@@ -15,6 +15,7 @@ use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Config\Config;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
 use Piwigo\Db\Tables;
 
@@ -423,7 +424,7 @@ SELECT
                     if ((bool) preg_match('|Theme URI:\\s*(https?:\\/\\/.+)|', $theme_data, $val)) {
                         $theme['uri'] = trim($val[1]);
                     }
-                    $desc = load_language('description.txt', $path . '/', [
+                    $desc = Lang::load('description.txt', $path . '/', [
                         'return' => true,
                     ]);
                     if (is_string($desc) && $desc !== '') {

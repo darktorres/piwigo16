@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\BatchManager;
 
+use Piwigo\Core\Lang;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Template\Template;
@@ -217,7 +218,7 @@ SELECT
 
         $template->assign('associated_categories', $associated_categories);
 
-        load_language('help_quick_search.lang');
+        Lang::load('help_quick_search.lang');
     }
 
     /**

@@ -6,6 +6,7 @@ namespace Piwigo\Controller;
 
 use Piwigo\Cache\PersistentCache;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
@@ -39,10 +40,10 @@ final class NbmController implements ControllerInterface
 
         include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
         // Translations are in the admin file too.
-        load_language('admin.lang');
+        Lang::load('admin.lang');
         // Need to update a second time.
         trigger_notify('loading_lang');
-        load_language('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, [
+        Lang::load('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, [
             'no_fallback' => true,
             'local' => true,
         ]);

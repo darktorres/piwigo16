@@ -14,6 +14,7 @@ use Piwigo\Auth\CookieService;
 use Piwigo\Config\Config;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\Lang;
 use Piwigo\Db\Tables;
 use Piwigo\Mail\MailService;
 use Piwigo\Session\PwgSession;
@@ -177,13 +178,13 @@ if (isset($_GET['language']) && is_string($_GET['language'])) {
 define('PHPWG_DOMAIN', 'upstream.example.invalid');
 define('PHPWG_URL', 'https://' . PHPWG_DOMAIN);
 
-load_language('common.lang', '', [
+Lang::load('common.lang', '', [
     'language' => $language,
 ]);
-load_language('admin.lang', '', [
+Lang::load('admin.lang', '', [
     'language' => $language,
 ]);
-load_language('install.lang', '', [
+Lang::load('install.lang', '', [
     'language' => $language,
 ]);
 
@@ -537,17 +538,17 @@ if ($step == 1) {
         // email notification
         if (isset($_POST['send_credentials_by_mail'])) {
             $keyargs_content = [
-                get_l10n_args('Hello %s,', $admin_name),
-                get_l10n_args('Welcome to your new installation of Piwigo!', ''),
-                get_l10n_args('', ''),
-                get_l10n_args('Here are your connection settings', ''),
-                get_l10n_args('', ''),
-                get_l10n_args('Link: %s', get_absolute_root_url()),
-                get_l10n_args('Username: %s', $admin_name),
-                get_l10n_args('Password: ********** (no copy by email)', ''),
-                get_l10n_args('Email: %s', $admin_mail),
-                get_l10n_args('', ''),
-                get_l10n_args('Don\'t hesitate to consult our forums for any help: %s', PHPWG_URL),
+                Lang::buildArgs('Hello %s,', $admin_name),
+                Lang::buildArgs('Welcome to your new installation of Piwigo!', ''),
+                Lang::buildArgs('', ''),
+                Lang::buildArgs('Here are your connection settings', ''),
+                Lang::buildArgs('', ''),
+                Lang::buildArgs('Link: %s', get_absolute_root_url()),
+                Lang::buildArgs('Username: %s', $admin_name),
+                Lang::buildArgs('Password: ********** (no copy by email)', ''),
+                Lang::buildArgs('Email: %s', $admin_mail),
+                Lang::buildArgs('', ''),
+                Lang::buildArgs('Don\'t hesitate to consult our forums for any help: %s', PHPWG_URL),
             ];
 
             new MailService()
@@ -555,7 +556,7 @@ if ($step == 1) {
                     $admin_mail,
                     [
                         'subject' => l10n('Just another Piwigo gallery'),
-                        'content' => l10n_args($keyargs_content),
+                        'content' => Lang::args($keyargs_content),
                         'content_format' => 'text/plain',
                     ]
                 );

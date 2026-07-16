@@ -7,6 +7,7 @@ namespace Piwigo\Search;
 use Piwigo\Cache\PersistentCache;
 use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Category\CategoryRepository;
+use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Db\DbConnection;
@@ -244,7 +245,7 @@ final class SearchFilterRenderer
             if (! (bool) $displayFilters['expert']['access']) {
                 unset($searchFields['expert']);
             } else {
-                load_language('help_quick_search.lang');
+                Lang::load('help_quick_search.lang');
             }
         }
 

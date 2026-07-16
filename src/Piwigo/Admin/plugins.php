@@ -14,6 +14,7 @@ namespace Piwigo\Admin;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -355,7 +356,7 @@ DELETE FROM ' . Tables::plugins() . '
             if ((bool) preg_match('|Plugin URI:\\s*(https?:\\/\\/.+)|', $plg_data, $val)) {
                 $plugin['uri'] = trim($val[1]);
             }
-            $desc = load_language('description.txt', $path . '/', [
+            $desc = Lang::load('description.txt', $path . '/', [
                 'return' => true,
             ]);
             if (is_string($desc) && $desc !== '') {

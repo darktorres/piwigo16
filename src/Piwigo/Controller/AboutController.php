@@ -6,6 +6,7 @@ namespace Piwigo\Controller;
 
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
@@ -56,7 +57,7 @@ final class AboutController implements ControllerInterface
 
             $template->set_filename('about', 'about.tpl');
 
-            $template->assign('ABOUT_MESSAGE', load_language('about.html', '', [
+            $template->assign('ABOUT_MESSAGE', Lang::load('about.html', '', [
                 'return' => true,
             ]));
 
@@ -68,7 +69,7 @@ final class AboutController implements ControllerInterface
             $user_theme = $user['theme'] ?? null;
             $user_theme = is_string($user_theme) ? $user_theme : '';
 
-            $theme_about = load_language('about.html', Config::themesPath() . $user_theme . '/', [
+            $theme_about = Lang::load('about.html', Config::themesPath() . $user_theme . '/', [
                 'return' => true,
             ]);
             if ($theme_about !== false) {

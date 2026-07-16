@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Piwigo\Core\Lang;
 use Piwigo\Db\Tables;
 use Piwigo\Mail\MailService;
 use Piwigo\Template\Template;
@@ -193,8 +194,8 @@ final class ProfileFormHandler
                                 ->switchLangTo($notification_language);
 
                             $keyargs_content = [
-                                get_l10n_args('Hello', ''),
-                                get_l10n_args('Your username has been successfully changed to : %s', $username),
+                                Lang::buildArgs('Hello', ''),
+                                Lang::buildArgs('Your username has been successfully changed to : %s', $username),
                             ];
 
                             $gallery_title = is_string($conf['gallery_title']) ? $conf['gallery_title'] : '';
@@ -203,7 +204,7 @@ final class ProfileFormHandler
                                     $mail_address,
                                     [
                                         'subject' => '[' . $gallery_title . '] ' . l10n('Username modification'),
-                                        'content' => l10n_args($keyargs_content),
+                                        'content' => Lang::args($keyargs_content),
                                         'content_format' => 'text/plain',
                                     ]
                                 );

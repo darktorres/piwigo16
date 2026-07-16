@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Template\Template;
 
 /**
@@ -43,7 +44,7 @@ final class HelpPageRenderer
 
         $template->assign(
             [
-                'HELP_CONTENT' => load_language(
+                'HELP_CONTENT' => Lang::load(
                     'help/help_' . $tabsheet->selected . '.html',
                     '',
                     [

@@ -19,11 +19,13 @@ use Piwigo\Cache\CacheFactory;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigRepository;
 use Piwigo\Core\ActivityLoggerInterface;
+use Piwigo\Core\DefaultLanguageProviderInterface;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\TablePrefixListener;
 use Piwigo\Mail\MailService;
 use Piwigo\Routing\Router;
+use Piwigo\Users\UserService;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -61,6 +63,16 @@ return [
     // ruleset. See src/Piwigo/Core/ActivityLoggerInterface.php's own
     // docblock.
     ActivityLoggerInterface::class => \DI\get(ActivityService::class),
+
+    // Interface binding (P23 batch 8d) -- Piwigo\Core\Lang::load() is a
+    // static L1Infrastructure method that needs the DB-configured default
+    // language (Users\UserService::getDefaultLanguage(), L2aCoreDomain).
+    // Bound here for consistency with the other 2 interfaces above, though
+    // Lang::load() itself is populated via Lang::setDefaultLanguageProvider()
+    // from include/common.inc.php (legacy code, not container-managed) --
+    // see src/Piwigo/Core/DefaultLanguageProviderInterface.php's own
+    // docblock for why a static method can't just constructor-inject this.
+    DefaultLanguageProviderInterface::class => \DI\get(UserService::class),
 
     // Unresolvable string param (the routes file path) -- Router::fromFile()
     // needs a path autowire can't provide.

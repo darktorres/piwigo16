@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Activity\ActivityRepository;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\PluginLoader;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Auth\AuthRepository;
@@ -21,13 +23,17 @@ use Piwigo\Comment\CommentService;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Mail\MailService;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
+use Piwigo\Users\UserRepository;
+use Piwigo\Users\UserService;
 
 defined('PHPWG_ROOT_PATH') or trigger_error('Hacking attempt!', E_USER_ERROR);
 
@@ -300,14 +306,20 @@ if (isset($conf['alternative_pem_url']) and $conf['alternative_pem_url'] != '') 
 }
 
 // language files
-load_language('common.lang');
+Lang::setDefaultLanguageProvider(new UserService(
+    new UserRepository(DbConnection::build()),
+    new GroupRepository(DbConnection::build()),
+    new MailService(),
+    new ActivityService(new ActivityRepository(DbConnection::build())),
+));
+Lang::load('common.lang');
 if (\Piwigo\Auth\AccessControl::isAdmin() || (defined('IN_ADMIN') and IN_ADMIN)) {
-    load_language('admin.lang');
+    Lang::load('admin.lang');
     // Add language for temporary strings for new popup, from piwigo 15
-    load_language('whats_new_' . \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION) . '.lang');
+    Lang::load('whats_new_' . \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION) . '.lang');
 }
 trigger_notify('loading_lang');
-load_language('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, [
+Lang::load('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, [
     'no_fallback' => true,
     'local' => true,
 ]);

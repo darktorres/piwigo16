@@ -14,6 +14,7 @@ namespace Piwigo\Template;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\DeviceHelper;
+use Piwigo\Core\Lang;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
 use Smarty\Smarty;
@@ -130,7 +131,7 @@ class Template
             $dir = PHPWG_ROOT_PATH . $conf_data_location;
             \Piwigo\Core\FilesystemHelper::mkgetdir($dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR);
             if (! is_writable($dir)) {
-                load_language('admin.lang');
+                Lang::load('admin.lang');
                 fatal_error(
                     l10n(
                         'Give write access (chmod 777) to "%s" directory at the root of your Piwigo installation',

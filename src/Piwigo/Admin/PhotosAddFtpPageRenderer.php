@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Core\Lang;
 use Piwigo\Template\Template;
 
 /**
@@ -19,7 +20,7 @@ final class PhotosAddFtpPageRenderer
 
         $template->assign(
             'FTP_HELP_CONTENT',
-            load_language(
+            Lang::load(
                 'help/photos_add_ftp.html',
                 '',
                 [

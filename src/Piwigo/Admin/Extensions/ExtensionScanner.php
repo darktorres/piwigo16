@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Extensions;
 
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\Lang;
 
 /**
  * Filesystem scan for installable extensions, replacing get_fs_plugins()/
@@ -90,7 +91,7 @@ final class ExtensionScanner
         if ((bool) preg_match('|Plugin URI:\s*(https?:\/\/.+)|', $data, $val)) {
             $plugin['uri'] = trim($val[1]);
         }
-        $desc = load_language('description.txt', $path . '/', [
+        $desc = Lang::load('description.txt', $path . '/', [
             'return' => true,
         ]);
         if (is_string($desc) && $desc !== '') {
@@ -165,7 +166,7 @@ final class ExtensionScanner
         if ((bool) preg_match('|Theme URI:\s*(https?:\/\/.+)|', $data, $val)) {
             $theme['uri'] = trim($val[1]);
         }
-        $desc = load_language('description.txt', $path . '/', [
+        $desc = Lang::load('description.txt', $path . '/', [
             'return' => true,
         ]);
         if (is_string($desc) && $desc !== '') {

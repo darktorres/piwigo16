@@ -6,6 +6,7 @@ namespace Piwigo\Comment;
 
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\EphemeralKeyService;
+use Piwigo\Core\Lang;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -312,19 +313,19 @@ SELECT COUNT(DISTINCT(com.id))
                 $commentUrl = get_absolute_root_url() . 'comments.php?comment_id=' . $id;
 
                 $keyargsContent = [
-                    get_l10n_args('Author: %s', stripslashes($author)),
-                    get_l10n_args('Email: %s', stripslashes($email ?? '')),
-                    get_l10n_args('Comment: %s', stripslashes($content)),
-                    get_l10n_args(''),
-                    get_l10n_args('Manage this user comment: %s', $commentUrl),
+                    Lang::buildArgs('Author: %s', stripslashes($author)),
+                    Lang::buildArgs('Email: %s', stripslashes($email ?? '')),
+                    Lang::buildArgs('Comment: %s', stripslashes($content)),
+                    Lang::buildArgs(''),
+                    Lang::buildArgs('Manage this user comment: %s', $commentUrl),
                 ];
 
                 if ($commentAction === 'moderate') {
-                    $keyargsContent[] = get_l10n_args('(!) This comment requires validation');
+                    $keyargsContent[] = Lang::buildArgs('(!) This comment requires validation');
                 }
 
                 $this->mailer->mailNotificationAdmins(
-                    get_l10n_args('Comment by %s', stripslashes($author)),
+                    Lang::buildArgs('Comment by %s', stripslashes($author)),
                     $keyargsContent
                 );
             }
@@ -463,15 +464,15 @@ SELECT COUNT(DISTINCT(com.id))
                 $commentUrl = get_absolute_root_url() . 'comments.php?comment_id=' . $commentId;
 
                 $keyargsContent = [
-                    get_l10n_args('Author: %s', stripslashes($username)),
-                    get_l10n_args('Comment: %s', stripslashes($content)),
-                    get_l10n_args(''),
-                    get_l10n_args('Manage this user comment: %s', $commentUrl),
-                    get_l10n_args('(!) This comment requires validation'),
+                    Lang::buildArgs('Author: %s', stripslashes($username)),
+                    Lang::buildArgs('Comment: %s', stripslashes($content)),
+                    Lang::buildArgs(''),
+                    Lang::buildArgs('Manage this user comment: %s', $commentUrl),
+                    Lang::buildArgs('(!) This comment requires validation'),
                 ];
 
                 $this->mailer->mailNotificationAdmins(
-                    get_l10n_args('Comment by %s', stripslashes($username)),
+                    Lang::buildArgs('Comment by %s', stripslashes($username)),
                     $keyargsContent
                 );
             } elseif ($updated) {
@@ -506,18 +507,18 @@ SELECT COUNT(DISTINCT(com.id))
 
         $author = is_string($comment['author'] ?? null) ? $comment['author'] : '';
         $keyargsContent = [
-            get_l10n_args('Author: %s', $author),
+            Lang::buildArgs('Author: %s', $author),
         ];
 
         if ($action === 'delete') {
-            $keyargsContent[] = get_l10n_args('This author removed the comment with id %d', $comment['comment_id']);
+            $keyargsContent[] = Lang::buildArgs('This author removed the comment with id %d', $comment['comment_id']);
         } else {
-            $keyargsContent[] = get_l10n_args('This author modified following comment:');
-            $keyargsContent[] = get_l10n_args('Comment: %s', $comment['content']);
+            $keyargsContent[] = Lang::buildArgs('This author modified following comment:');
+            $keyargsContent[] = Lang::buildArgs('Comment: %s', $comment['content']);
         }
 
         $this->mailer->mailNotificationAdmins(
-            get_l10n_args('Comment by %s', $author),
+            Lang::buildArgs('Comment by %s', $author),
             $keyargsContent
         );
     }

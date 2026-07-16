@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Mail;
 
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\Lang;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
@@ -36,14 +37,16 @@ use Symfony\Component\Mime\Email;
  * caught empirically: a real `debug_mail=true` DB row written directly had
  * zero effect on this class's behavior until this fix.
  *
- * Injects nothing -- cross-domain calls (l10n()/l10n_args(), is_admin(),
+ * Injects nothing -- cross-domain calls (l10n(), is_admin(),
  * get_pwg_charset(), get_gallery_home_url(), add_url_params(),
  * set_make_full_url()/unset_make_full_url(), trigger_notify()/
- * trigger_change(), load_language(), array_from_query(),
- * create_user_auth_key(), get_default_language(), mkgetdir(),
- * get_webmaster_mail_address(), get_root_url()) stay as plain
+ * trigger_change(), create_user_auth_key(), get_default_language(),
+ * mkgetdir(), get_webmaster_mail_address(), get_root_url()) stay as plain
  * global-function calls to modules not yet migrated in P18, matching every
- * other "injects nothing" P17/P18 service.
+ * other "injects nothing" P17/P18 service. l10n_args()/load_language()
+ * calls above were retargeted to Piwigo\Core\Lang::args()/::load() in
+ * P23 batch 8d -- l10n() itself stays a bare call (track-2 relocated,
+ * too widely used to retarget, see src/Piwigo/Lang/functions.php).
  *
  * The template-render cache and language-switch stack (`$conf_mail`/
  * `$switch_lang` in the procedural version) are request-scoped state with no
@@ -356,25 +359,25 @@ final class MailService implements MailerInterface
             $lang_info = [];
             $lang = [];
 
-            load_language('common.lang', '', [
+            Lang::load('common.lang', '', [
                 'language' => $language,
             ]);
             // No test admin because script is checked admin (user selected no).
             // Translations are in admin file too.
-            load_language('admin.lang', '', [
+            Lang::load('admin.lang', '', [
                 'language' => $language,
             ]);
 
-            // Reload all plugin files (see load_language declaration).
+            // Reload all plugin files (see Lang::load()'s own docblock).
             foreach ($language_files as $dirname => $files) {
                 foreach ($files as $filename => $options) {
                     $options['language'] = $language;
-                    load_language($filename, $dirname, $options);
+                    Lang::load($filename, $dirname, $options);
                 }
             }
 
             trigger_notify('loading_lang');
-            load_language(
+            Lang::load(
                 'lang',
                 PHPWG_ROOT_PATH . PWG_LOCAL_DIR,
                 [
@@ -447,10 +450,10 @@ final class MailService implements MailerInterface
             $this->switchLangTo((new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new self()))->getDefaultLanguage());
 
             if (is_array($subject)) {
-                $subject = l10n_args($subject);
+                $subject = Lang::args($subject);
             }
             if (is_array($content)) {
-                $content = l10n_args($content);
+                $content = Lang::args($content);
             }
 
             $this->switchLangBack();

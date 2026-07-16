@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Template\Template;
@@ -64,7 +65,7 @@ final class PopuphelpController implements ControllerInterface
                 die('Hacking attempt!');
             }
 
-            $help_content = load_language('help/' . $rawPage . '.html', '', [
+            $help_content = Lang::load('help/' . $rawPage . '.html', '', [
                 'return' => true,
             ]);
             if ($help_content === false) {

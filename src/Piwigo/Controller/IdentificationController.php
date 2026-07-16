@@ -6,6 +6,7 @@ namespace Piwigo\Controller;
 
 use Piwigo\Auth\CookieService;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
@@ -180,7 +181,7 @@ final class IdentificationController implements ControllerInterface
                 }
 
                 $user['language'] = $lang_cookie;
-                load_language('common.lang', '', [
+                Lang::load('common.lang', '', [
                     'language' => $user['language'],
                 ]);
             }

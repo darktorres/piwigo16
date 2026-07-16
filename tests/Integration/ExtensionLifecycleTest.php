@@ -42,21 +42,14 @@ namespace {
 
     // ExtensionScanner's real-disk theme scan (missingParentTheme()/
     // getChildrenThemes() scan the actual themes/ directory, which
-    // contains a real 'default' theme) calls the real, stable,
-    // already-migrated load_language() (needs full i18n bootstrap this
-    // isolated integration test doesn't load). Stubbed to always report
-    // "no description file found" -- a legitimate real-world outcome the
-    // caller (ExtensionScanner::scanTheme()) already falls back from
-    // correctly via its own preg_match() branch.
-    if (! function_exists('load_language')) {
-        /**
-         * @param array<string, mixed> $options
-         */
-        function load_language(string $filename, string $dirname = '', array $options = []): false
-        {
-            return false;
-        }
-    }
+    // contains a real 'default' theme) now calls Piwigo\Core\Lang::load()
+    // directly (P23 batch 8d) -- a real static method call, which a
+    // bare-function stub in this namespace can no longer intercept (unlike
+    // the old free function, method calls always resolve to the real
+    // class). No stub needed: this Integration test's real DB/filesystem
+    // exercises Lang::load()'s genuine "no description.txt found" fallback
+    // for themes without one, which ExtensionScanner::scanTheme() already
+    // handles correctly via its own preg_match() branch.
 
     // pwg_activity() -- ExtensionLifecycle now calls Piwigo\Activity\
     // ActivityService::record() directly (P23 batch 8d), so no stub is

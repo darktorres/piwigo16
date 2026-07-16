@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
@@ -185,7 +186,7 @@ final class PasswordController implements ControllerInterface
                 }
 
                 $user['language'] = $cookie_lang;
-                load_language('common.lang', '', [
+                Lang::load('common.lang', '', [
                     'language' => $cookie_lang,
                 ]);
             }

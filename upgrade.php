@@ -14,6 +14,7 @@ use Piwigo\Admin\updates;
 use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\Lang;
 use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
@@ -186,19 +187,19 @@ if (isset($_GET['language'])) {
 define('PHPWG_DOMAIN', 'upstream.example.invalid');
 define('PHPWG_URL', 'https://' . PHPWG_DOMAIN);
 
-load_language('common.lang', '', [
+Lang::load('common.lang', '', [
     'language' => $language,
     'no_fallback' => true,
 ]);
-load_language('admin.lang', '', [
+Lang::load('admin.lang', '', [
     'language' => $language,
     'no_fallback' => true,
 ]);
-load_language('install.lang', '', [
+Lang::load('install.lang', '', [
     'language' => $language,
     'no_fallback' => true,
 ]);
-load_language('upgrade.lang', '', [
+Lang::load('upgrade.lang', '', [
     'language' => $language,
     'no_fallback' => true,
 ]);

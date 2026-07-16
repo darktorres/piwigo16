@@ -7,6 +7,7 @@ namespace Piwigo\Controller;
 use Piwigo\Audit\AuditRepository;
 use Piwigo\Audit\AuditService;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
@@ -202,7 +203,7 @@ final class RegisterController implements ControllerInterface
                 }
 
                 $user['language'] = $lang_cookie;
-                load_language('common.lang', '', [
+                Lang::load('common.lang', '', [
                     'language' => $user['language'],
                 ]);
             }

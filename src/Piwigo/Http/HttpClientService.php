@@ -89,7 +89,7 @@ final class HttpClientService implements ClientInterface
      */
     private static function defaultClient(): HttpClientInterface
     {
-        /** @var HttpClientInterface|null $client */
+        /** @var HttpClientInterface|null */
         static $client = null;
         if ($client === null) {
             $client = \Symfony\Component\HttpClient\HttpClient::create();

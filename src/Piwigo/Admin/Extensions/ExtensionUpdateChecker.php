@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Extensions;
 
 use Piwigo\Core\AppInfo;
+use Piwigo\Http\HttpClientService;
 
 /**
  * Cross-type "which of my installed extensions have a newer PEM revision
@@ -172,9 +173,7 @@ final class ExtensionUpdateChecker
         $mergedExtensionUrl = 'https://upstream.example.invalid/merged_extensions.txt';
         $merged = [];
 
-        // $result is never a resource here: no fopen() handle is passed to
-        // fetchRemote() above.
-        if (fetchRemote($mergedExtensionUrl, $result) and is_string($result)) {
+        if (is_string($result = HttpClientService::fetch($mergedExtensionUrl))) {
             $rows = explode("\n", $result);
             foreach ($rows as $row) {
                 if ((bool) preg_match('/^(\d+\.\d+): *(.*)$/', $row, $match)) {

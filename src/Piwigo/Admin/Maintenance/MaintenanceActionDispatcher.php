@@ -10,6 +10,7 @@ use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Db\DbConnection;
+use Piwigo\Http\HttpClientService;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Rate\RateService;
 use Piwigo\Session\SessionService;
@@ -216,14 +217,14 @@ final class MaintenanceActionDispatcher
 
             case 'check_upgrade':
 
-                $result = '';
-                if (! fetchRemote(PHPWG_URL . '/download/latest_version', $result)) {
+                $result = HttpClientService::fetch(PHPWG_URL . '/download/latest_version');
+                if ($result === false) {
                     $page['errors'][] = l10n('Unable to check for upgrade.');
                 } else {
                     $versions = [
                         'current' => AppInfo::VERSION,
                     ];
-                    $lines = @explode("\r\n", (string) $result);
+                    $lines = @explode("\r\n", $result);
 
                     // if the current version is a BSF (development branch) build, we check
                     // the first line, for stable versions, we check the second line

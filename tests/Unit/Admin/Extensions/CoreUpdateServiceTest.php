@@ -7,10 +7,11 @@ use Piwigo\Admin\Extensions\ZipExtractor;
 
 // Only containerVersionCompare() is covered here -- checkPiwigoUpgrade()/
 // getPiwigoNewVersions()/notifyPiwigoNewVersions()/upgradeTo() all talk to
-// the real PHPWG_URL over the network via the legacy fetchRemote() free
-// function (no injectable HTTP client seam), matching the project's own
-// documented "piwigo.org outbound-call" flakiness class -- not exercised
-// here.
+// the real PHPWG_URL over the network via Piwigo\Http\HttpClientService's
+// static fetch()/fetchToFile() (P23 batch 8d -- was the legacy fetchRemote()
+// free function; still no injectable HTTP client seam, same limitation),
+// matching the project's own documented "piwigo.org outbound-call"
+// flakiness class -- not exercised here.
 function core_update_service(): CoreUpdateService
 {
     return new CoreUpdateService(new ZipExtractor());

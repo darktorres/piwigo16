@@ -17,6 +17,7 @@ use Piwigo\Core\UniqueExecLock;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Http\HttpClientService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Mail\MailService;
 use Piwigo\Users\UserRepository;
@@ -41,14 +42,14 @@ use Piwigo\Users\UserService;
  * "check for updates" block); same shape as fatal_error()/
  * check_pwg_token()/get_themeconf().
  *
- * fetchRemote() (admin/include/functions.php, not yet migrated) and
  * pwg_get_db_version() (functions_mysqli.inc.php, batch 8f relocate-only)
- * stay bare free-function calls -- a class-extraction pass doesn't also
+ * stays a bare free-function call -- a class-extraction pass doesn't also
  * chase down every transitive not-yet-migrated dependency.
  * get_graphics_library()/get_pwg_general_statitics()/get_installation_date()
  * were migrated onto pwg_image::get_graphics_library()/
- * InstallationStats::getGeneralStatistics()/getInstallationDate() in the
- * very next sub-batch (file 3, System info group).
+ * InstallationStats::getGeneralStatistics()/getInstallationDate(), and
+ * fetchRemote() onto Piwigo\Http\HttpClientService::fetch(), in the
+ * following file-3 sub-batches (System info, Network/HTTP).
  */
 final class PiwigoInfosSender
 {
@@ -211,17 +212,13 @@ SELECT
         $pemUrl = PEM_URL;
         $pemUrl = is_string($pemUrl) ? $pemUrl : '';
         $url = $pemUrl . '/api/get_extension_list.php';
-        // $result is never a resource here: no fopen() handle is passed to
-        // fetchRemote() above. Seeded as a string so the by-reference $dest
-        // parameter isn't inferred as mixed before the call.
         // unserialize() is typed mixed by PHP's own stub; the PEM API's
         // contract is an array of {eid: {...}} extension records, but a
         // malformed/unexpected response must degrade to the retry-later path
         // instead of crashing on a foreach/array-access of something else.
         $pemExtensions = [];
         $pemDecodeOk = false;
-        $result = '';
-        if (fetchRemote($url, $result) and is_string($result)) {
+        if (is_string($result = HttpClientService::fetch($url))) {
             $decodedExtensions = @unserialize($result);
             if (is_array($decodedExtensions) and $decodedExtensions !== []) {
                 $pemDecodeOk = true;
@@ -598,7 +595,7 @@ SELECT
             'data' => json_encode($piwigoInfos),
         ];
 
-        if (! fetchRemote($url, $result, $getData, $postData)) {
+        if (HttpClientService::fetch($url, $getData, $postData) === false) {
             $logger->info('[' . __FUNCTION__ . '][exec=' . $execId . '] fetchRemote on ' . $url . ' method=porg.installs.update has failed');
             $this->retryLater(24 * 60 * 60);
         } else {

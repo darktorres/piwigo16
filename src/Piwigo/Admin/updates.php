@@ -14,6 +14,7 @@ namespace Piwigo\Admin;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
+use Piwigo\Http\HttpClientService;
 use Piwigo\Mail\MailService;
 use Piwigo\Template\Template;
 
@@ -93,11 +94,8 @@ class updates
     {
         $_SESSION['need_update' . AppInfo::VERSION] = null;
 
-        // $result is never a resource here: no fopen() handle is passed to
-        // fetchRemote() above.
         if ((bool) preg_match('/(\d+\.\d+)\.(\d+)/', AppInfo::VERSION, $matches)
-          and @fetchRemote(PHPWG_URL . '/download/all_versions.php?rand=' . md5(uniqid((string) mt_rand(), true)), $result)
-          and is_string($result)) {
+          and is_string($result = @HttpClientService::fetch(PHPWG_URL . '/download/all_versions.php?rand=' . md5(uniqid((string) mt_rand(), true))))) {
             $all_versions = @explode("\n", $result);
             $new_version = trim($all_versions[0]);
             $_SESSION['need_update' . AppInfo::VERSION] = version_compare(AppInfo::VERSION, $new_version, '<');
@@ -140,9 +138,7 @@ class updates
             $secret_key = is_string($secret_key_raw) ? $secret_key_raw : '';
             $url .= '&origin_hash=' . sha1($secret_key . get_absolute_root_url());
 
-            // $result is never a resource here: no fopen() handle is passed
-            // to fetchRemote() above.
-            if (@fetchRemote($url, $result) and is_string($result)) {
+            if (is_string($result = @HttpClientService::fetch($url))) {
                 $all_versions = explode("\n", $result);
                 $new_versions['piwigo.org-checked'] = true;
                 $last_version = trim($all_versions[0]);
@@ -332,9 +328,7 @@ class updates
         // Retrieve PEM versions
         $versions_to_check = [];
         $url = $pem_base_url . '/api/get_version_list.php';
-        // $result is never a resource here: no fopen() handle is passed to
-        // fetchRemote() above.
-        if (fetchRemote($url, $result, $get_data) and is_string($result) and (bool) ($pem_versions = @unserialize($result))) {
+        if (is_string($result = HttpClientService::fetch($url, $get_data)) and (bool) ($pem_versions = @unserialize($result))) {
             // unserialize() of a remote PEM response is genuinely untyped —
             // validate it's an array of arrays before indexing into it
             // below, rather than trusting the external payload (see the
@@ -404,9 +398,7 @@ class updates
             $post_data['extension_include'] = implode(',', array_keys($ext_to_check));
         }
 
-        // $result is never a resource here: no fopen() handle is passed to
-        // fetchRemote() above.
-        if (fetchRemote($url, $result, $get_data, $post_data) and is_string($result)) {
+        if (is_string($result = HttpClientService::fetch($url, $get_data, $post_data))) {
             $pem_exts = @unserialize($result);
             if (! is_array($pem_exts)) {
                 return false;
@@ -575,9 +567,7 @@ class updates
 
     public function get_merged_extensions(string $version): void
     {
-        // $result is never a resource here: no fopen() handle is passed to
-        // fetchRemote() above.
-        if (fetchRemote($this->merged_extension_url, $result) and is_string($result)) {
+        if (is_string($result = HttpClientService::fetch($this->merged_extension_url))) {
             $rows = explode("\n", $result);
             foreach ($rows as $row) {
                 if ((bool) preg_match('/^(\d+\.\d+): *(.*)$/', $row, $match)) {
@@ -656,10 +646,7 @@ class updates
 
             while (! $end) {
                 $chunk_num++;
-                // $result is never a resource here: no fopen() handle is
-                // passed to fetchRemote() above.
-                if (@fetchRemote(PHPWG_URL . '/download/dlcounter.php?code=' . $dl_code . '&chunk_num=' . $chunk_num, $result)
-                  and is_string($result)
+                if (is_string($result = @HttpClientService::fetch(PHPWG_URL . '/download/dlcounter.php?code=' . $dl_code . '&chunk_num=' . $chunk_num))
                   and (bool) ($input = @unserialize($result))) {
                     // unserialize() of a remote dlcounter response is
                     // genuinely untyped — validate it's an array before

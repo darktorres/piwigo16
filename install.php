@@ -16,6 +16,7 @@ use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
 use Piwigo\Db\Tables;
+use Piwigo\Http\HttpClientService;
 use Piwigo\Mail\MailService;
 use Piwigo\Session\PwgSession;
 use Piwigo\Template\Template;
@@ -516,13 +517,10 @@ if ($step == 1) {
 
         // newsletter subscription
         if ($is_newsletter_subscribe) {
-            // $result is never a resource here: no fopen() handle is passed to
-            // fetchRemote() above. Seeded as a string so the by-reference $dest
-            // out-param satisfies fetchRemote()'s string|resource contract.
-            $result = '';
-            fetchRemote(
+            // Fire-and-forget: the response content is never read, only the
+            // request's side effect (subscribing $admin_mail) matters.
+            HttpClientService::fetch(
                 get_newsletter_subscribe_base_url($language) . $admin_mail,
-                $result,
                 [],
                 [
                     'origin' => 'installation',

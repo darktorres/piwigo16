@@ -9,6 +9,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\Logger;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Http\HttpClientService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
@@ -537,7 +538,10 @@ SELECT
 
         $logger->info(__METHOD__ . ' : force cache generation, derivative_url = ' . $derivative_url);
 
-        fetchRemote($derivative_url, $dest);
+        // Fire-and-forget: the response content is never read, only the
+        // self-request's side effect (forcing derivative-image generation)
+        // matters.
+        HttpClientService::fetch($derivative_url);
 
         trigger_notify('loc_end_add_uploaded_file', $image_infos);
 

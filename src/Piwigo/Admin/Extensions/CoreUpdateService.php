@@ -6,6 +6,7 @@ namespace Piwigo\Admin\Extensions;
 
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
+use Piwigo\Http\HttpClientService;
 use Piwigo\Mail\MailService;
 use Piwigo\Template\Template;
 
@@ -38,11 +39,8 @@ final class CoreUpdateService
     {
         $_SESSION['need_update' . AppInfo::VERSION] = null;
 
-        // $result is never a resource here: no fopen() handle is passed to
-        // fetchRemote() above.
         if ((bool) preg_match('/(\d+\.\d+)\.(\d+)/', AppInfo::VERSION)
-          and @fetchRemote(PHPWG_URL . '/download/all_versions.php?rand=' . md5(uniqid((string) mt_rand(), true)), $result)
-          and is_string($result)) {
+          and is_string($result = @HttpClientService::fetch(PHPWG_URL . '/download/all_versions.php?rand=' . md5(uniqid((string) mt_rand(), true))))) {
             $allVersions = @explode("\n", $result);
             $newVersion = trim($allVersions[0]);
             $_SESSION['need_update' . AppInfo::VERSION] = version_compare(AppInfo::VERSION, $newVersion, '<');
@@ -81,9 +79,7 @@ final class CoreUpdateService
         $secretKey = is_string($secretKeyRaw) ? $secretKeyRaw : '';
         $url .= '&origin_hash=' . sha1($secretKey . get_absolute_root_url());
 
-        // $result is never a resource here: no fopen() handle is passed to
-        // fetchRemote() above.
-        if (! (@fetchRemote($url, $result) and is_string($result))) {
+        if (! is_string($result = @HttpClientService::fetch($url))) {
             return $newVersions;
         }
 
@@ -288,10 +284,7 @@ final class CoreUpdateService
 
         while (! $end) {
             $chunkNum++;
-            // $result is never a resource here: no fopen() handle is passed
-            // to fetchRemote() above.
-            if (@fetchRemote(PHPWG_URL . '/download/dlcounter.php?code=' . $dlCode . '&chunk_num=' . $chunkNum, $result)
-              and is_string($result)
+            if (is_string($result = @HttpClientService::fetch(PHPWG_URL . '/download/dlcounter.php?code=' . $dlCode . '&chunk_num=' . $chunkNum))
               and (bool) ($input = @unserialize($result))) {
                 if (is_array($input)) {
                     $remaining = $input['remaining'] ?? null;

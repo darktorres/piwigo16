@@ -18,6 +18,7 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
 use Piwigo\Db\Tables;
+use Piwigo\Http\HttpClientService;
 
 class themes
 {
@@ -539,9 +540,7 @@ SELECT
         $version = AppInfo::VERSION;
         $versions_to_check = [];
         $url = $pem_base_url . '/api/get_version_list.php';
-        // $result is never a resource here: no fopen() handle is passed to
-        // fetchRemote() above.
-        if (fetchRemote($url, $result, $get_data) and is_string($result) and (bool) ($pem_versions = @unserialize($result))) {
+        if (is_string($result = HttpClientService::fetch($url, $get_data)) and (bool) ($pem_versions = @unserialize($result))) {
             // unserialize() of a remote PEM response is genuinely untyped —
             // validate it's an array of arrays before indexing into it
             // below, rather than trusting the external payload (see
@@ -604,9 +603,7 @@ SELECT
                 $get_data['extension_include'] = implode(',', $themes_to_check);
             }
         }
-        // $result is never a resource here: no fopen() handle is passed to
-        // fetchRemote() above.
-        if (fetchRemote($url, $result, $get_data) and is_string($result)) {
+        if (is_string($result = HttpClientService::fetch($url, $get_data))) {
             $pem_themes = @unserialize($result);
             if (! is_array($pem_themes)) {
                 return false;
@@ -676,11 +673,7 @@ SELECT
                 'origin' => 'piwigo_' . $action,
             ];
 
-            if ((bool) ($handle = @fopen($archive, 'wb')) and fetchRemote($url, $handle, $get_data)) {
-                // fetchRemote()'s &$dest out-param could in principle reset
-                // to a string, but only when the value passed in wasn't
-                // already a resource — $handle always is here (just opened
-                // above), so it's still a resource after the call.
+            if ((bool) ($handle = @fopen($archive, 'wb')) and HttpClientService::fetchToFile($handle, $url, $get_data)) {
                 if (is_resource($handle)) {
                     fclose($handle);
                 }

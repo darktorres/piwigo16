@@ -19,12 +19,10 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Group\GroupService;
-use Piwigo\Http\HttpClientService;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
-use Psr\Http\Client\ClientExceptionInterface;
 
 // Relocated from the now-deleted admin/photos_add.php (P23 batch 8a):
 // Piwigo\Admin\CoreTabs::addCoreTabs() (formerly admin/include/
@@ -2470,103 +2468,6 @@ function cat_admin_access($category_id): bool
     if (in_array($category_id, @explode(',', $forbidden_categories))) {
         return false;
     }
-    return true;
-}
-
-/**
- * Retrieve data from a remote URL. [SEC-24] There is no local-file-read
- * fallback -- every $src must be a real https:// URL, guarded against
- * private/reserved IP targets (including on every redirect it follows) by
- * HttpClientService. [SEC-23]
- *
- * @param string $src
- * @param string|resource $dest - can be a file ressource or string
- * @param array<string, mixed> $get_data - data added to request url
- * @param array<string, mixed> $post_data - data transmitted with POST
- * @param string $user_agent
- */
-function fetchRemote($src, &$dest, $get_data = [], $post_data = [], $user_agent = 'Piwigo'): bool
-{
-    /** @var array<string, mixed> $conf */
-    global $conf;
-
-    // Initialization
-    $method = empty($post_data) ? 'GET' : 'POST';
-    if (! empty($get_data)) {
-        $src .= ! str_contains($src, '?') ? '?' : '&';
-        $src .= http_build_query($get_data, '', '&');
-    }
-
-    // Initialize $dest
-    if (! is_resource($dest)) {
-        $dest = '';
-    }
-
-    $headers = [
-        'User-Agent' => $user_agent,
-    ];
-
-    // Piwigo makes real self-requests back into this same app (e.g. forcing
-    // derivative-image generation right after upload, see
-    // add_uploaded_file() in functions_upload.inc.php). Test mode is detected
-    // per-request from the X-Piwigo-Env header (see pwg_test_mode_is_active()),
-    // so without forwarding it here, a self-request looks like a plain
-    // production hit and never picks up the test DB config. Only forward it
-    // for same-host requests, not genuinely external ones (piwigo.org etc).
-    // The same same-host comparison also tells HttpClientService's SSRF
-    // guard which host to exempt (see its $trustedSelfHost doc comment) --
-    // a self-request back into this same app is never attacker-influenceable,
-    // so it must not be held to the guard's https-only + no-private-IP
-    // rules the way a genuinely external target is.
-    $src_host = parse_url($src, PHP_URL_HOST);
-    $current_host = $_SERVER['HTTP_HOST'] ?? null;
-    $is_self_request = $src_host !== null && $src_host === $current_host;
-
-    if ($is_self_request && pwg_test_mode_is_active()) {
-        $header_value = pwg_test_mode_header();
-        if ($header_value !== null) {
-            $headers['X-Piwigo-Env'] = $header_value;
-        }
-    }
-
-    $body = '';
-    if ($method === 'POST') {
-        // Matches Symfony HttpClientTrait's own array-body normalization
-        // (http_build_query() + an explicit form-urlencoded Content-Type)
-        // -- HttpClientService::requestRaw() takes a plain string body.
-        $body = http_build_query($post_data, '', '&');
-        $headers['Content-Type'] = 'application/x-www-form-urlencoded';
-    }
-
-    $extraOptions = [
-        'timeout' => 10,
-    ];
-
-    if (! empty($conf['use_proxy']) && ! empty($conf['proxy_server'])) {
-        $proxy_server = $conf['proxy_server'];
-        $proxy_url = is_string($proxy_server) ? $proxy_server : '';
-        if (! empty($conf['proxy_auth'])) {
-            $proxy_auth = $conf['proxy_auth'];
-            $proxy_auth = is_string($proxy_auth) ? $proxy_auth : '';
-            $proxy_url = preg_replace('#^(https?://)#', '$1' . $proxy_auth . '@', $proxy_url);
-        }
-        $extraOptions['proxy'] = $proxy_url;
-    }
-
-    try {
-        $response = new HttpClientService(trustedSelfHost: $is_self_request && is_string($current_host) ? $current_host : null)
-            ->requestRaw($method, $src, $headers, $body, $extraOptions);
-        $content = $response->getContent(false);
-        $status = $response->getStatusCode();
-    } catch (ClientExceptionInterface) {
-        return false;
-    }
-
-    if ($status < 200 || $status >= 400) {
-        return false;
-    }
-
-    is_resource($dest) ? @fwrite($dest, $content) : $dest = $content;
     return true;
 }
 

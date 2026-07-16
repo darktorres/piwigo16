@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Http;
 
 use Nyholm\Psr7\Factory\Psr17Factory;
+use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -104,9 +105,144 @@ final class HttpClientService implements ClientInterface
     }
 
     /**
+     * P23 batch 8d: ported from admin/include/functions.php's
+     * fetchRemote(), which already delegated its real network call to
+     * requestRaw() below -- this absorbs the orchestration that used to
+     * wrap that call (GET query-string building, proxy config, same-host
+     * X-Piwigo-Env test-mode header forwarding for self-requests,
+     * POST body/Content-Type construction). Static, and internally
+     * constructs its own scoped instance (matching the free function's
+     * own "new HttpClientService(trustedSelfHost: ...) per call" shape) --
+     * trustedSelfHost is only known once the target URL's host is
+     * compared against the current request's host, which varies per call,
+     * not per HttpClientService instance.
+     *
+     * Replaces fetchRemote()'s legacy `string|resource &$dest` dual
+     * contract with a plain return value -- covers both real usage shapes
+     * that don't need a file handle: content wanted (returned directly)
+     * and fire-and-forget (caller discards the return). See
+     * fetchToFile() for the file-resource shape.
+     *
+     * @param array<string, mixed> $getData data added to the request URL
+     * @param array<string, mixed> $postData data transmitted with POST
+     */
+    public static function fetch(string $url, array $getData = [], array $postData = [], string $userAgent = 'Piwigo'): string|false
+    {
+        $response = self::guardedFetch($url, $getData, $postData, $userAgent);
+        if ($response === null) {
+            return false;
+        }
+
+        return $response->getContent(false);
+    }
+
+    /**
+     * Same request as fetch(), but writes the response body into the
+     * given file resource instead of returning it -- covers
+     * fetchRemote()'s other real usage shape (downloading an extension
+     * archive straight to disk).
+     *
+     * @param resource $fileHandle
+     * @param array<string, mixed> $getData data added to the request URL
+     * @param array<string, mixed> $postData data transmitted with POST
+     */
+    public static function fetchToFile($fileHandle, string $url, array $getData = [], array $postData = [], string $userAgent = 'Piwigo'): bool
+    {
+        $response = self::guardedFetch($url, $getData, $postData, $userAgent);
+        if ($response === null) {
+            return false;
+        }
+
+        return @fwrite($fileHandle, $response->getContent(false)) !== false;
+    }
+
+    /**
+     * @param array<string, mixed> $getData
+     * @param array<string, mixed> $postData
+     */
+    private static function guardedFetch(string $url, array $getData, array $postData, string $userAgent): ?SymfonyResponseInterface
+    {
+        /** @var array<string, mixed> $conf */
+        global $conf;
+
+        $method = $postData === [] ? 'GET' : 'POST';
+        if ($getData !== []) {
+            $url .= ! str_contains($url, '?') ? '?' : '&';
+            $url .= http_build_query($getData, '', '&');
+        }
+
+        $headers = [
+            'User-Agent' => $userAgent,
+        ];
+
+        // Piwigo makes real self-requests back into this same app (e.g. forcing
+        // derivative-image generation right after upload, see
+        // UploadService::addUploadedFile()). Test mode is detected per-request
+        // from the X-Piwigo-Env header (see pwg_test_mode_is_active()), so
+        // without forwarding it here, a self-request looks like a plain
+        // production hit and never picks up the test DB config. Only forward
+        // it for same-host requests, not genuinely external ones (piwigo.org
+        // etc). The same same-host comparison also tells this class's own
+        // SSRF guard which host to exempt (see $trustedSelfHost's own doc
+        // comment) -- a self-request back into this same app is never
+        // attacker-influenceable, so it must not be held to the guard's
+        // https-only + no-private-IP rules the way a genuinely external
+        // target is.
+        $srcHost = parse_url($url, PHP_URL_HOST);
+        $currentHost = $_SERVER['HTTP_HOST'] ?? null;
+        $isSelfRequest = $srcHost !== null && $srcHost === $currentHost;
+
+        if ($isSelfRequest && pwg_test_mode_is_active()) {
+            $headerValue = pwg_test_mode_header();
+            if ($headerValue !== null) {
+                $headers['X-Piwigo-Env'] = $headerValue;
+            }
+        }
+
+        $body = '';
+        if ($method === 'POST') {
+            // Matches Symfony HttpClientTrait's own array-body normalization
+            // (http_build_query() + an explicit form-urlencoded Content-Type)
+            // -- requestRaw() takes a plain string body.
+            $body = http_build_query($postData, '', '&');
+            $headers['Content-Type'] = 'application/x-www-form-urlencoded';
+        }
+
+        $extraOptions = [
+            'timeout' => 10,
+        ];
+
+        if (! empty($conf['use_proxy']) && ! empty($conf['proxy_server'])) {
+            $proxyServer = $conf['proxy_server'];
+            $proxyUrl = is_string($proxyServer) ? $proxyServer : '';
+            if (! empty($conf['proxy_auth'])) {
+                $proxyAuth = $conf['proxy_auth'];
+                $proxyAuth = is_string($proxyAuth) ? $proxyAuth : '';
+                $proxyUrl = preg_replace('#^(https?://)#', '$1' . $proxyAuth . '@', $proxyUrl);
+            }
+            $extraOptions['proxy'] = $proxyUrl;
+        }
+
+        try {
+            $response = new self(trustedSelfHost: $isSelfRequest && is_string($currentHost) ? $currentHost : null)
+                ->requestRaw($method, $url, $headers, $body, $extraOptions);
+            $status = $response->getStatusCode();
+        } catch (ClientExceptionInterface) {
+            return null;
+        }
+
+        if ($status < 200 || $status >= 400) {
+            return null;
+        }
+
+        return $response;
+    }
+
+    /**
      * Symfony-shaped entry point for callers needing per-request options
      * PSR-7's RequestInterface has no room for (proxy, timeout) --
-     * fetchRemote() is the real caller. Runs through the identical SSRF
+     * guardedFetch() (fetch()/fetchToFile()'s shared helper) is the real
+     * caller. Runs through the identical SSRF
      * guard + manual redirect loop as sendRequest(); returns Symfony's own
      * response type so a caller that only wants status/content doesn't pay
      * for a PSR-7 round-trip.

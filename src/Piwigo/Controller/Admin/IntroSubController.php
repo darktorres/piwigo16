@@ -12,6 +12,7 @@ use Piwigo\Admin\Integrity\check_integrity;
 use Piwigo\Admin\tabsheet;
 use Piwigo\Core\Logger;
 use Piwigo\Db\Tables;
+use Piwigo\Http\HttpClientService;
 use Piwigo\Template\Template;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -651,15 +652,10 @@ SELECT
         if (! is_file($cache_path) or filemtime($cache_path) < strtotime('24 hours ago')) {
             $url = PHPWG_URL . '/ws.php?method=porg.news.getLatest&format=json';
 
-            if (fetchRemote($url, $content)) {
+            $content = HttpClientService::fetch($url);
+            if ($content !== false) {
                 $all_news = [];
 
-                // $content is never a resource here: no fopen() handle is
-                // passed to fetchRemote() above, unlike e.g. themes.class.php's
-                // archive-download call sites.
-                if (! is_string($content)) {
-                    throw new \Exception('IntroSubController::getLatestNews(): unexpected resource from fetchRemote()');
-                }
                 $porg_news_getLatest = json_decode($content, true);
 
                 if (is_array($porg_news_getLatest) && isset($porg_news_getLatest['result']) && is_array($porg_news_getLatest['result'])) {

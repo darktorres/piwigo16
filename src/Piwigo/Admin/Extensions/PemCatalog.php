@@ -6,6 +6,7 @@ namespace Piwigo\Admin\Extensions;
 
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Logger;
+use Piwigo\Http\HttpClientService;
 
 /**
  * PEM (piwigo extension market) remote-server communication: shared by the
@@ -47,9 +48,7 @@ final class PemCatalog
             'format' => 'php',
         ];
 
-        // $result is never a resource here: no fopen() handle is passed to
-        // fetchRemote() above.
-        if (fetchRemote($url, $result, $getData) and is_string($result) and (bool) ($pemVersions = @unserialize($result))) {
+        if (is_string($result = HttpClientService::fetch($url, $getData)) and (bool) ($pemVersions = @unserialize($result))) {
             if (! is_array($pemVersions)) {
                 return $versionsToCheck;
             }
@@ -142,9 +141,7 @@ final class PemCatalog
             }
         }
 
-        // $result is never a resource here: no fopen() handle is passed to
-        // fetchRemote() above.
-        if (! (fetchRemote($url, $result, $getData) and is_string($result))) {
+        if (! is_string($result = HttpClientService::fetch($url, $getData))) {
             return null;
         }
 
@@ -229,9 +226,7 @@ final class PemCatalog
             'extension_include' => implode(',', $extensionIds),
         ];
 
-        // $result is never a resource here: no fopen() handle is passed to
-        // fetchRemote() above.
-        if (! (fetchRemote($url, $result, $getData) and is_string($result))) {
+        if (! is_string($result = HttpClientService::fetch($url, $getData))) {
             return false;
         }
 
@@ -306,7 +301,7 @@ final class PemCatalog
         $extensionId = null;
 
         $handle = @fopen($archive, 'wb');
-        if ($handle !== false && fetchRemote($url, $handle, $getData)) {
+        if ($handle !== false && HttpClientService::fetchToFile($handle, $url, $getData)) {
             if (is_resource($handle)) {
                 fclose($handle);
             }

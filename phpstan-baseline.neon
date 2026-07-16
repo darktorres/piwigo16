@@ -451,12 +451,6 @@ parameters:
 			path: include/filter.inc.php
 
 		-
-			rawMessage: Binary operation "." between non-falsy-string and mixed results in an error.
-			identifier: binaryOp.invalid
-			count: 2
-			path: include/functions.inc.php
-
-		-
 			rawMessage: 'Call to function in_array() requires parameter #3 to be set.'
 			identifier: function.strict
 			count: 3
@@ -472,18 +466,6 @@ parameters:
 			rawMessage: 'Construct empty() is not allowed. Use more strict comparison.'
 			identifier: empty.notAllowed
 			count: 29
-			path: include/functions.inc.php
-
-		-
-			rawMessage: Function get_elapsed_time not found.
-			identifier: function.notFound
-			count: 2
-			path: include/functions.inc.php
-
-		-
-			rawMessage: Function get_moment not found.
-			identifier: function.notFound
-			count: 4
 			path: include/functions.inc.php
 
 		-

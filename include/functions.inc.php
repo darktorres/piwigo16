@@ -1072,7 +1072,7 @@ function script_basename(): string
         $raw = $_SERVER[$key] ?? null;
         if (is_string($raw) && $raw !== '') {
             $filename = strtolower($raw);
-            if ((bool) $conf['php_extension_in_urls'] and get_extension($filename) !== 'php') {
+            if ((bool) $conf['php_extension_in_urls'] and \Piwigo\Core\StringHelper::getExtension($filename) !== 'php') {
                 continue;
             }
             $basename = basename($filename, '.php');
@@ -1730,7 +1730,7 @@ function send_piwigo_infos(): void
      */
     global $logger, $conf;
 
-    $start_time = get_moment();
+    $start_time = \Piwigo\Core\TimingHelper::getMoment();
 
     if (! (bool) $conf['send_piwigo_infos']) {
         return;
@@ -1923,7 +1923,7 @@ SELECT
         $logger->info('[' . __FUNCTION__ . '][exec=' . $exec_id . '] fetchRemote on ' . $url . ' has failed');
         send_piwigo_infos_retry_later(1 * 60 * 60); // 1 hour later
         pwg_unique_exec_ends('send_piwigo_infos');
-        $logger->info('[' . __FUNCTION__ . '][exec=' . $exec_id . '] executed in ' . get_elapsed_time($start_time, get_moment()));
+        $logger->info('[' . __FUNCTION__ . '][exec=' . $exec_id . '] executed in ' . \Piwigo\Core\TimingHelper::getElapsedTime($start_time, \Piwigo\Core\TimingHelper::getMoment()));
         return;
     }
 
@@ -2180,7 +2180,7 @@ SELECT
     ];
 
     // which remote apps have been used?
-    $remote_apps_start_time = get_moment();
+    $remote_apps_start_time = \Piwigo\Core\TimingHelper::getMoment();
 
     $query = '
 SELECT
@@ -2278,7 +2278,7 @@ SELECT
     }
 
     pwg_unique_exec_ends('send_piwigo_infos');
-    $logger->info('[' . __FUNCTION__ . '][exec=' . $exec_id . '] executed in ' . get_elapsed_time($start_time, get_moment()));
+    $logger->info('[' . __FUNCTION__ . '][exec=' . $exec_id . '] executed in ' . \Piwigo\Core\TimingHelper::getElapsedTime($start_time, \Piwigo\Core\TimingHelper::getMoment()));
 }
 
 function send_piwigo_infos_retry_later(int $wait_time): void

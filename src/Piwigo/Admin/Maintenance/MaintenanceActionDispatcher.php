@@ -14,6 +14,8 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Image\DerivativeCacheService;
+use Piwigo\Image\ImageRepository;
+use Piwigo\Image\ImageService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Rate\RateRepository;
@@ -191,7 +193,9 @@ final class MaintenanceActionDispatcher
 
             case 'empty_lounge':
 
-                $rows = empty_lounge();
+                $imageConn = DbConnection::build();
+                $rows = new ImageService(new ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)))
+                    ->emptyLounge();
                 $page['infos'][] = sprintf('%d photos were moved from the upload lounge to their albums', count($rows ?? []));
                 break;
 

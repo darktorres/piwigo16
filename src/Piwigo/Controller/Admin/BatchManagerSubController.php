@@ -13,6 +13,8 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Image\ImageRepository;
+use Piwigo\Image\ImageService;
 use Piwigo\Mail\MailService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -514,10 +516,10 @@ DELETE FROM ' . Tables::caddie() . '
             }
 
             $prefilter_result = match ($prefilter) {
-                // get_orphans()/get_photos_no_md5sum() are existing, already-tested
-                // free functions -- not duplicated into FilterResolver.
-                'no_album' => get_orphans(),
-                'no_sync_md5sum' => get_photos_no_md5sum(),
+                // getOrphans()/getPhotosNoMd5sum() are existing, already-tested
+                // ImageService methods -- not duplicated into FilterResolver.
+                'no_album' => new ImageService(new ImageRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())))->getOrphans(),
+                'no_sync_md5sum' => new ImageService(new ImageRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())))->getPhotosNoMd5sum(),
                 default => $filterResolver->resolvePrefilter($prefilter, $bulkFilter, $userId, $confOrderBy),
             };
 

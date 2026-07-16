@@ -338,7 +338,10 @@ if ($nb_photos_in_caddie > 0) {
 
 // any photos with no md5sum ?
 if (in_array($page['page'], ['site_update', 'batch_manager'])) {
-    $nb_no_md5sum = count(get_photos_no_md5sum());
+    $imageConn = \Piwigo\Db\DbConnection::build();
+    $imageService = new \Piwigo\Image\ImageService(new \Piwigo\Image\ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)));
+
+    $nb_no_md5sum = count($imageService->getPhotosNoMd5sum());
 
     if ($nb_no_md5sum > 0) {
         $page['no_md5sum_number'] = $nb_no_md5sum;
@@ -352,7 +355,9 @@ $row = pwg_db_fetch_row(pwg_query('SELECT COUNT(*) FROM ' . Tables::images()));
 assert($row !== null);
 [$page['nb_photos_total']] = $row;
 if ($page['nb_photos_total'] < 100000) { // 100k is already a big gallery
-    $page['nb_orphans'] = count_orphans();
+    $imageConn = \Piwigo\Db\DbConnection::build();
+    $page['nb_orphans'] = new \Piwigo\Image\ImageService(new \Piwigo\Image\ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)))
+        ->countOrphans();
 }
 
 $template->assign(

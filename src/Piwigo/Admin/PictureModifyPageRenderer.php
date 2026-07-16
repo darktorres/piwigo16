@@ -11,6 +11,8 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageRepository;
+use Piwigo\Image\ImageService;
 use Piwigo\Image\SrcImage;
 use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
@@ -49,6 +51,9 @@ final class PictureModifyPageRenderer
 
         include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
+        $imageConn = DbConnection::build();
+        $imageService = new ImageService(new ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)));
+
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
         (new \Piwigo\Validation\InputValidator())->validate('image_id', $_GET, false, ValidationPattern::ID);
@@ -67,7 +72,7 @@ final class PictureModifyPageRenderer
         // already done by PhotoSubController but this renderer can also be
         // reached directly.
         if (! isset($page['image'])) {
-            $page['image'] = get_image_infos($image_id, true);
+            $page['image'] = $imageService->getImageInfos($image_id, true);
         }
 
         // represent
@@ -91,7 +96,7 @@ SELECT id
         if (isset($_GET['delete'])) {
             check_pwg_token();
 
-            delete_elements([$image_id], true);
+            $imageService->deleteElements([$image_id], true);
             UserCacheInvalidator::invalidate();
 
             // where to redirect the user now?
@@ -197,7 +202,7 @@ SELECT id
                     }
                 }
             }
-            move_images_to_categories([$image_id], $associate_categories);
+            $imageService->moveImagesToCategories([$image_id], $associate_categories);
 
             UserCacheInvalidator::invalidate();
 
@@ -242,7 +247,7 @@ UPDATE ' . Tables::categories() . '
             (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('photo', $image_id, 'edit');
 
             // refresh page cache
-            $page['image'] = get_image_infos($image_id, true);
+            $page['image'] = $imageService->getImageInfos($image_id, true);
         }
 
         // tags
@@ -258,7 +263,7 @@ SELECT
         $tag_selection = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
             ->getTagList($query);
 
-        // get_image_infos($image_id, true) fatal_errors (never returns) when the
+        // getImageInfos($image_id, true) fatal_errors (never returns) when the
         // photo doesn't exist, so $page['image'] is guaranteed to be a real
         // array<string, mixed> row by this point.
         /** @var array<string, mixed> $row */

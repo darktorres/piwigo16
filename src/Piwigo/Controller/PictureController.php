@@ -661,9 +661,9 @@ SELECT *
                 ];
 
                 $get_slideshow = $_GET['slideshow'];
-                $slideshow_params = new ImageService()
+                $slideshow_params = new ImageService(new ImageRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())))
                     ->decodeSlideshowParams(is_string($get_slideshow) ? $get_slideshow : null);
-                $slideshow_url_params['slideshow'] = new ImageService()->encodeSlideshowParams($slideshow_params);
+                $slideshow_url_params['slideshow'] = new ImageService(new ImageRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())))->encodeSlideshowParams($slideshow_params);
 
                 if ((bool) $slideshow_params['play']) {
                     $id_pict_redirect = '';
@@ -861,7 +861,7 @@ SELECT *
                           add_url_params(
                               $picture['current']['url'],
                               [
-                                  'slideshow' => new ImageService()
+                                  'slideshow' => new ImageService(new ImageRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())))
                                       ->encodeSlideshowParams(
                                           array_merge(
                                               $slideshow_params,
@@ -885,7 +885,7 @@ SELECT *
                     $slideshow_period_step = is_numeric($slideshow_period_step) ? (int) $slideshow_period_step : 0;
                     $new_period = $current_period + ((($op === 'dec') ? -1 : 1) * $slideshow_period_step);
                     $new_slideshow_params =
-                      new ImageService()
+                      new ImageService(new ImageRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())))
                           ->correctSlideshowParams(
                               array_merge(
                                   $slideshow_params,
@@ -901,7 +901,7 @@ SELECT *
                               add_url_params(
                                   $picture['current']['url'],
                                   [
-                                      'slideshow' => new ImageService()
+                                      'slideshow' => new ImageService(new ImageRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())))
                                           ->encodeSlideshowParams($new_slideshow_params),
                                   ]
                               );
@@ -1154,7 +1154,7 @@ SELECT id, name, permalink
                 $template->assign(
                     [
                         'PDF_VIEWER_FILESIZE_THRESHOLD' => $pdf_viewer_filesize_threshold * 1024,
-                        'PDF_NB_PAGES' => new ImageService()
+                        'PDF_NB_PAGES' => new ImageService(new ImageRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())))
                             ->countPdfPages($picture['current']['path']),
                     ]
                 );

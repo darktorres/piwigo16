@@ -7,8 +7,11 @@ namespace Piwigo\Admin;
 use Piwigo\Admin\Image\pwg_image;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageRepository;
+use Piwigo\Image\ImageService;
 use Piwigo\Image\SrcImage;
 use Piwigo\Template\Template;
 
@@ -133,7 +136,9 @@ SELECT COUNT(*)
             (new \Piwigo\Validation\InputValidator())->validate('formats', $_GET, false, ValidationPattern::ID, false);
 
             $formats_id_param = $_GET['formats'];
-            $formats_original_info = get_image_infos(is_int($formats_id_param) || is_string($formats_id_param) ? $formats_id_param : '');
+            $imageConn = DbConnection::build();
+            $formats_original_info = new ImageService(new ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)))
+                ->getImageInfos(is_int($formats_id_param) || is_string($formats_id_param) ? $formats_id_param : '');
             if ((bool) $formats_original_info) {
                 $src_image = new SrcImage($formats_original_info);
 

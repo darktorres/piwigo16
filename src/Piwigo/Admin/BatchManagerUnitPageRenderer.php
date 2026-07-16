@@ -10,6 +10,8 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageRepository;
+use Piwigo\Image\ImageService;
 use Piwigo\Image\SrcImage;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -333,6 +335,7 @@ SELECT
 
             $tagConn = DbConnection::build();
             $tagService = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
+            $imageService = new ImageService(new ImageRepository($tagConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
 
             foreach ($images as $row) {
                 // Tables::images().id is a NOT NULL auto_increment primary key; this
@@ -382,9 +385,9 @@ SELECT
                 $related_categories = [];
                 $related_category_ids = [];
                 $media = [
-                    'image' => get_image_infos($row['id'], true),
+                    'image' => $imageService->getImageInfos($row['id'], true),
                 ];
-                // die_on_missing=true means get_image_infos() only returns null via
+                // die_on_missing=true means getImageInfos() only returns null via
                 // a fatal_error() path that never returns.
                 assert($media['image'] !== null);
 

@@ -12,6 +12,8 @@ use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageRepository;
+use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Permission\PermissionRepository;
@@ -161,6 +163,7 @@ final class BatchManagerGlobalPageRenderer
 
             $tagConn = DbConnection::build();
             $tagService = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
+            $imageService = new ImageService(new ImageRepository($tagConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
 
             if ($action === 'remove_from_caddie') {
                 // $user['id'] is always numeric: include/user.inc.php (part of the
@@ -211,7 +214,7 @@ DELETE
 
                     $taglist_after = $tagService->getImageTagIds($collection);
                     $images_to_update = $tagService->compareImageTagLists($taglist_before, $taglist_after);
-                    update_images_lastmodified($images_to_update);
+                    $imageService->updateImagesLastmodified($images_to_update);
 
                     if (isset($bulk_manager_filter['tags']) && is_array($bulk_manager_filter['tags']) &&
                       (bool) count(array_intersect(array_filter($bulk_manager_filter['tags'], is_scalar(...)), $del_tags))) {
@@ -233,7 +236,7 @@ DELETE
                         }
                     }
 
-                    associate_images_to_categories(
+                    $imageService->associateImagesToCategories(
                         $collection,
                         $associate_categories
                     );
@@ -262,7 +265,7 @@ DELETE
                 }
             } elseif ($action === 'move') {
                 $move_category = isset($_POST['move']) && is_numeric($_POST['move']) ? (int) $_POST['move'] : null;
-                move_images_to_categories($collection, $move_category !== null ? [$move_category] : []);
+                $imageService->moveImagesToCategories($collection, $move_category !== null ? [$move_category] : []);
 
                 $_SESSION['page_infos'] = [
                     l10n('Information data registered in database'),
@@ -284,7 +287,7 @@ DELETE
                 }
             } elseif ($action === 'dissociate') {
                 $dissociate_category = isset($_POST['dissociate']) && is_numeric($_POST['dissociate']) ? (int) $_POST['dissociate'] : 0;
-                $nb_dissociated = dissociate_images_from_category($collection, $dissociate_category);
+                $nb_dissociated = $imageService->dissociateImagesFromCategory($collection, $dissociate_category);
 
                 if ($nb_dissociated > 0) {
                     $_SESSION['page_infos'] = [

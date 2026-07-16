@@ -13,8 +13,11 @@ use Piwigo\Admin\Integrity\check_integrity;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Admin\tabsheet;
 use Piwigo\Core\Logger;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Http\HttpClientService;
+use Piwigo\Image\ImageRepository;
+use Piwigo\Image\ImageService;
 use Piwigo\Template\Template;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -115,7 +118,9 @@ final class IntroSubController implements AdminSubControllerInterface
         $nb_orphans = is_numeric($nb_orphans) ? (int) $nb_orphans : 0;
 
         if ($page['nb_photos_total'] >= 100000) { // but has not been calculated on a big gallery, so force it now
-            $nb_orphans = count_orphans();
+            $imageConn = DbConnection::build();
+            $nb_orphans = new ImageService(new ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)))
+                ->countOrphans();
             $nb_orphans = is_numeric($nb_orphans) ? (int) $nb_orphans : 0;
         }
 

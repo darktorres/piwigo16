@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Admin\Category\CategoryAdminService;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageRepository;
+use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Template\Template;
@@ -87,10 +90,12 @@ final class ElementSetRanksPageRenderer
                 $rank_of_image = array_filter($_POST['rank_of_image'], is_numeric(...));
                 asort($rank_of_image, SORT_NUMERIC);
 
-                save_images_order(
-                    (int) $page['category_id'],
-                    array_map(intval(...), array_keys($rank_of_image))
-                );
+                $imageConn = DbConnection::build();
+                new ImageService(new ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)))
+                    ->saveImagesOrder(
+                        (int) $page['category_id'],
+                        array_map(intval(...), array_keys($rank_of_image))
+                    );
             }
 
             if (! empty($_POST['image_order_choice'])

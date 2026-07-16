@@ -298,10 +298,6 @@ WHERE id = ' . $creation_output['id'] . ';';
  */
 function ws_tags_delete(array $params, PwgServer &$service): PwgError|array
 {
-    // TagService::deleteTags() itself still calls the not-yet-migrated
-    // bare update_images_lastmodified() (Elements/photos domain).
-    include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
     if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
@@ -521,10 +517,6 @@ SELECT image_id
  */
 function ws_tags_merge(array $params, PwgServer &$service): PwgError|array
 {
-    // TagService::deleteTags() itself still calls the not-yet-migrated
-    // bare update_images_lastmodified() (Elements/photos domain).
-    include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
     if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }

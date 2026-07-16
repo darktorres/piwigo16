@@ -8,7 +8,10 @@ use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\Logger;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Image\ImageRepository;
+use Piwigo\Image\ImageService;
 use Piwigo\Permission\PermissionService;
 
 /**
@@ -35,6 +38,24 @@ final class TagService
         private readonly PermissionService $permissionService,
         private readonly ActivityLoggerInterface $activityLogger,
     ) {}
+
+    /**
+     * Inline-constructed rather than constructor-injected -- ImageService
+     * (P23 batch 8d, Elements/photos sub-batch) is only ever needed for
+     * updateImagesLastmodified(), so adding it as a 4th constructor param
+     * would mean touching every existing manual `new TagService(...)`
+     * call site a 2nd time for a single one-line delegation, matching
+     * MetadataService::syncMetadata()'s own established "inline-construct
+     * a one-off dependency" precedent rather than TagRepository/
+     * PermissionService/ActivityLoggerInterface's own multi-method,
+     * constructor-injected shape. Reuses $this->activityLogger (Image and
+     * Tag are both L2aCoreDomain, so ActivityLoggerInterface -> concrete
+     * ActivityService's own dependency direction is identical either way).
+     */
+    private function newImageService(): ImageService
+    {
+        return new ImageService(new ImageRepository(DbConnection::build()), $this->activityLogger);
+    }
 
     /**
      * Returns all tags even associated to no image.
@@ -392,7 +413,8 @@ final class TagService
 
         $taglistAfter = $this->getImageTagIds($imageIds);
         $imagesToUpdate = $this->compareImageTagLists($taglistBefore, $taglistAfter);
-        update_images_lastmodified($imagesToUpdate);
+        $this->newImageService()
+            ->updateImagesLastmodified($imagesToUpdate);
 
         UserCacheInvalidator::invalidateNbTags();
     }
@@ -415,7 +437,8 @@ final class TagService
         trigger_notify('delete_tags', $tagIds);
         $this->activityLogger->record('tag', $tagIds, 'delete');
 
-        update_images_lastmodified($imageIds);
+        $this->newImageService()
+            ->updateImagesLastmodified($imageIds);
         UserCacheInvalidator::invalidateNbTags();
     }
 
@@ -518,7 +541,8 @@ final class TagService
         $imagesToUpdate = $this->compareImageTagLists($taglistBefore, $taglistAfter);
         $logger->debug('$images_to_update', $imagesToUpdate);
 
-        update_images_lastmodified($imagesToUpdate);
+        $this->newImageService()
+            ->updateImagesLastmodified($imagesToUpdate);
         UserCacheInvalidator::invalidateNbTags();
     }
 

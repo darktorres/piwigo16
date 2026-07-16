@@ -14,6 +14,8 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Image\DerivativeCacheService;
+use Piwigo\Image\ImageRepository;
+use Piwigo\Image\ImageService;
 use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
 use Piwigo\Permission\PermissionRepository;
@@ -847,7 +849,9 @@ DELETE
             }
             if (count($to_delete_elements) > 0) {
                 if (! $simulate) {
-                    delete_elements($to_delete_elements);
+                    $imageConn = DbConnection::build();
+                    new ImageService(new ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)))
+                        ->deleteElements($to_delete_elements);
                 }
                 $counts['del_elements'] = count($to_delete_elements);
             }

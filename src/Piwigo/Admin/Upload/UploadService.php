@@ -13,6 +13,8 @@ use Piwigo\Db\Tables;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeParams;
+use Piwigo\Image\ImageRepository;
+use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Metadata\MetadataRepository;
@@ -265,7 +267,9 @@ SELECT
             }
 
             // delete all physical files related to the photo (thumbnail, web site, HD)
-            delete_element_files([$image_id]);
+            $imageConn = DbConnection::build();
+            new ImageService(new ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)))
+                ->deleteElementFiles([$image_id]);
         } else {
             // this photo is new
 
@@ -572,13 +576,20 @@ SELECT
         }
 
         if (isset($categories) and count($categories) > 0) {
+            $imageConn = DbConnection::build();
+            $imageService = new ImageService(new ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)));
+
             if ((bool) $conf['lounge_active']) {
-                // fill_lounge() requires int keys for $categories; a WS param
+                // fillLounge() requires int keys for $categories; a WS param
                 // forced into an array by makeArrayParam() could theoretically
                 // carry non-sequential/string keys, so reindex to guarantee it.
-                fill_lounge([$image_id], array_values($categories));
+                $imageService->fillLounge([$image_id], array_values($categories));
             } else {
-                associate_images_to_categories([(int) $image_id], $categories);
+                // associateImagesToCategories() still calls the not-yet-migrated
+                // bare update_category() (Categories domain) when it actually
+                // inserts new associations.
+                include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
+                $imageService->associateImagesToCategories([(int) $image_id], $categories);
             }
         }
 

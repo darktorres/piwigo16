@@ -25,6 +25,8 @@ use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageRepository;
+use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Mail\MailService;
 use Piwigo\Metadata\MetadataRepository;
@@ -1136,12 +1138,12 @@ UPDATE ' . Tables::images() . '
 function ws_images_setRank(array $params, PwgServer $service): array|PwgError
 {
     if (count($params['image_id']) > 1) {
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
-        save_images_order(
-            $params['category_id'],
-            $params['image_id']
-        );
+        $imageConn = DbConnection::build();
+        new ImageService(new ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)))
+            ->saveImagesOrder(
+                $params['category_id'],
+                $params['image_id']
+            );
 
         $query = '
 SELECT
@@ -2830,8 +2832,13 @@ function ws_images_delete(array $params, PwgServer $service): PwgError|int
         }
     }
 
+    // deleteElements() still calls the not-yet-migrated bare update_category()
+    // (Categories domain) when a deleted image was a category representative.
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-    $ret = delete_elements($image_ids, true);
+
+    $imageConn = DbConnection::build();
+    $ret = new ImageService(new ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)))
+        ->deleteElements($image_ids, true);
     UserCacheInvalidator::invalidate();
 
     return $ret;
@@ -2864,10 +2871,14 @@ function ws_images_checkUpload(array $params, PwgServer $service): array
  */
 function ws_images_emptyLounge(array $params, PwgServer $service): array
 {
+    // emptyLounge() -> associateImagesToCategories() still calls the
+    // not-yet-migrated bare update_category() (Categories domain).
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
+    $imageConn = DbConnection::build();
     $ret = [
-        'rows' => empty_lounge(),
+        'rows' => new ImageService(new ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)))
+            ->emptyLounge(),
     ];
 
     return $ret;
@@ -2886,8 +2897,6 @@ function ws_images_emptyLounge(array $params, PwgServer $service): array
  */
 function ws_images_uploadCompleted(array $params, PwgServer $service): PwgError|array
 {
-    include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
     if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
@@ -2918,9 +2927,15 @@ function ws_images_uploadCompleted(array $params, PwgServer $service): PwgError|
         }
     }
 
+    // emptyLounge() -> associateImagesToCategories() still calls the
+    // not-yet-migrated bare update_category() (Categories domain).
+    include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
+
     // the list of images moved from the lounge might not be the same than
     // $image_ids (canbe a subset or more image_ids from another upload too)
-    $moved_from_lounge = empty_lounge();
+    $imageConn = DbConnection::build();
+    $moved_from_lounge = new ImageService(new ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)))
+        ->emptyLounge();
 
     $query = '
 SELECT
@@ -2968,19 +2983,20 @@ function ws_images_setMd5sum(array $params, PwgServer $service): PwgError|array
         return new PwgError(403, 'Invalid security token');
     }
 
-    include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
+    $imageConn = DbConnection::build();
+    $imageService = new ImageService(new ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)));
 
-    $no_md5sum_ids = get_photos_no_md5sum();
+    $no_md5sum_ids = $imageService->getPhotosNoMd5sum();
     $added_count = 0;
 
     if (count($no_md5sum_ids) > 0) {
         $md5sum_ids_to_add = array_slice($no_md5sum_ids, 0, $params['block_size']);
-        $added_count = add_md5sum($md5sum_ids_to_add);
+        $added_count = $imageService->addMd5sum($md5sum_ids_to_add);
     }
 
     return [
         'nb_added' => $added_count,
-        'nb_no_md5sum' => count(get_photos_no_md5sum()),
+        'nb_no_md5sum' => count($imageService->getPhotosNoMd5sum()),
     ];
 }
 
@@ -3061,15 +3077,20 @@ function ws_images_deleteOrphans(array $params, PwgServer $service): PwgError|ar
         return new PwgError(403, 'Invalid security token');
     }
 
+    // deleteElements() still calls the not-yet-migrated bare update_category()
+    // (Categories domain) when a deleted image was a category representative.
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
-    $orphan_ids_to_delete = array_slice(get_orphans(), 0, $params['block_size']);
-    $deleted_count = delete_elements($orphan_ids_to_delete, true);
+    $imageConn = DbConnection::build();
+    $imageService = new ImageService(new ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)));
+
+    $orphan_ids_to_delete = array_slice($imageService->getOrphans(), 0, $params['block_size']);
+    $deleted_count = $imageService->deleteElements($orphan_ids_to_delete, true);
     UserCacheInvalidator::invalidate();
 
     return [
         'nb_deleted' => $deleted_count,
-        'nb_orphans' => count(get_orphans()),
+        'nb_orphans' => count($imageService->getOrphans()),
     ];
 }
 
@@ -3103,14 +3124,19 @@ SELECT
         return new PwgError(404, 'category_id not found');
     }
 
+    // associateImagesToCategories()/moveImagesToCategories() still call the
+    // not-yet-migrated bare update_category() (Categories domain).
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
+    $imageConn = DbConnection::build();
+    $imageService = new ImageService(new ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)));
+
     if ($params['action'] == 'associate') {
-        associate_images_to_categories($params['image_id'], [$params['category_id']]);
+        $imageService->associateImagesToCategories($params['image_id'], [$params['category_id']]);
     } elseif ($params['action'] == 'dissociate') {
-        dissociate_images_from_category($params['image_id'], $params['category_id']);
+        $imageService->dissociateImagesFromCategory($params['image_id'], $params['category_id']);
     } elseif ($params['action'] == 'move') {
-        move_images_to_categories($params['image_id'], [$params['category_id']]);
+        $imageService->moveImagesToCategories($params['image_id'], [$params['category_id']]);
     }
 
     UserCacheInvalidator::invalidate();

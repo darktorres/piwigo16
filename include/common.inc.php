@@ -29,6 +29,8 @@ use Piwigo\Core\StringHelper;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Image\ImageRepository;
+use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Mail\MailService;
 use Piwigo\Session\SessionService;
@@ -255,7 +257,16 @@ if (isset($conf['order_by_inside_category_custom'])) {
     $conf['order_by_inside_category'] = $conf['order_by_inside_category_custom'];
 }
 
-\Piwigo\Core\LoungeMaintenance::checkLounge();
+if (\Piwigo\Core\LoungeMaintenance::needsEmptying()) {
+    // ImageService::emptyLounge() -> associateImagesToCategories() still
+    // calls the not-yet-migrated bare update_category() (Categories
+    // domain); this code path runs on every request (not just admin), so
+    // the file defining it must be explicitly loaded here rather than
+    // relying on an admin-only bootstrap chain.
+    include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
+    new ImageService(new ImageRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())))
+        ->emptyLounge();
+}
 
 // Piwigo\Bootstrap\UserBootstrap::initialize() sets these by calling
 // build_user()/AuthService::autoLogin()/auth_key_login(), each mutating the

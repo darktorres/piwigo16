@@ -2,25 +2,14 @@
 
 declare(strict_types=1);
 
-// RateService calls is_autorize_status() (the access-level-check family,
-// explicitly out of scope for this phase -- see task #343) exactly as the
-// original functions_rate.inc.php did. Same "minimal stub to load
-// standalone" pattern as tests/Integration/CommentServiceTest.php.
-// trigger_change() is always available now via composer autoload.files
-// (src/Piwigo/PluginConfig/functions.php), a pure passthrough with no
-// handlers registered, so no local stub is needed for it anymore.
+// RateService now calls Piwigo\Auth\AccessControl::isAuthorizeStatus()
+// directly (P23 batch 8d), a pure `global $user;` read -- tests below set
+// $GLOBALS['user']['status'] instead.
 // CookieService::cookiePath() needs PHPWG_ROOT_PATH defined, same as
 // tests/Unit/Auth/CookieServiceTest.php.
 namespace {
     if (! defined('PHPWG_ROOT_PATH')) {
         define('PHPWG_ROOT_PATH', './');
-    }
-
-    if (! function_exists('is_autorize_status')) {
-        function is_autorize_status(int $access_type, string $user_status = ''): bool
-        {
-            return (bool) ($GLOBALS['test_is_classic_or_above'] ?? true);
-        }
     }
 }
 
@@ -63,9 +52,9 @@ namespace Piwigo\Tests\Integration {
                 'rate' => true,
                 'rate_anonymous' => true,
                 'rate_items' => [0, 1, 2, 3, 4, 5],
+                'guest_access' => true,
             ];
-            $GLOBALS['user'] = ['id' => 3];
-            $GLOBALS['test_is_classic_or_above'] = true;
+            $GLOBALS['user'] = ['id' => 3, 'status' => 'normal'];
             $_SERVER['REMOTE_ADDR'] = '10.20.30.40';
             unset($_COOKIE['pwg_anonymous_rater']);
 
@@ -98,8 +87,7 @@ namespace Piwigo\Tests\Integration {
         public function test_rate_returns_false_for_an_anonymous_user_when_rate_anonymous_is_disabled(): void
         {
             $this->setConf('rate_anonymous', false);
-            $GLOBALS['test_is_classic_or_above'] = false;
-            $GLOBALS['user'] = ['id' => 2];
+            $GLOBALS['user'] = ['id' => 2, 'status' => 'guest'];
 
             self::assertFalse($this->service->rate(5, 3));
         }
@@ -152,8 +140,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_rate_for_an_anonymous_user_sets_the_cookie_and_records_the_ip(): void
         {
-            $GLOBALS['test_is_classic_or_above'] = false;
-            $GLOBALS['user'] = ['id' => 2];
+            $GLOBALS['user'] = ['id' => 2, 'status' => 'guest'];
 
             try {
                 $result = $this->service->rate(5, 3);

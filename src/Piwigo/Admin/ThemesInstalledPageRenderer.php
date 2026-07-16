@@ -44,7 +44,7 @@ final class ThemesInstalledPageRenderer
          */
         global $conf, $page, $template;
 
-        if (! is_webmaster()) {
+        if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
             $page_warnings = $page['warnings'] ?? [];
             if (! is_array($page_warnings)) {
                 $page_warnings = [];
@@ -69,7 +69,7 @@ final class ThemesInstalledPageRenderer
         // |                          perform actions                              |
         // +-----------------------------------------------------------------------+
 
-        if (isset($_GET['action']) and is_string($_GET['action']) and isset($_GET['theme']) and is_string($_GET['theme']) and is_webmaster()) {
+        if (isset($_GET['action']) and is_string($_GET['action']) and isset($_GET['theme']) and is_string($_GET['theme']) and \Piwigo\Auth\AccessControl::isWebmaster()) {
             check_pwg_token();
 
             $fs_theme_entry = $extension_scanner->scan(ExtensionType::Theme)[$_GET['theme']] ?? null;
@@ -91,7 +91,7 @@ final class ThemesInstalledPageRenderer
         $fs_themes = $extension_scanner->scan(ExtensionType::Theme);
         uasort($fs_themes, name_compare(...));
 
-        $default_theme = get_default_theme();
+        $default_theme = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultTheme();
 
         $db_theme_ids = array_keys($extension_repository->findAll(ExtensionType::Theme));
 
@@ -185,7 +185,7 @@ final class ThemesInstalledPageRenderer
 
         trigger_notify('loc_end_themes_installed');
 
-        $template->assign('isWebmaster', (is_webmaster()) ? 1 : 0);
+        $template->assign('isWebmaster', (\Piwigo\Auth\AccessControl::isWebmaster()) ? 1 : 0);
         $template->assign('ADMIN_PAGE_TITLE', l10n('Themes'));
         $template->assign('CONF_ENABLE_EXTENSIONS_INSTALL', $conf['enable_extensions_install']);
 

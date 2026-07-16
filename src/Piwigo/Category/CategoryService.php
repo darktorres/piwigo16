@@ -4,17 +4,20 @@ declare(strict_types=1);
 
 namespace Piwigo\Category;
 
+use Piwigo\Cache\CachePools;
 use Piwigo\Permission\PermissionService;
+use Piwigo\Template\Template;
 
 /**
- * Category domain business logic, ported from
- * `include/functions_category.inc.php`'s 17 functions. Functions with real
- * `$page`/`$template` coupling (`get_categories_menu()`,
- * `display_select_categories()`, `display_select_cat_wrapper()`,
- * `get_related_categories_menu()`'s URL-building half) stay as free-function
- * delegates that call into this service for the data-access/computation
- * half only -- same "extract data access, keep page/template glue inline"
- * split as every prior phase's page-coupled functions.
+ * Category domain business logic, ported from the deleted
+ * `include/functions_category.inc.php`'s 17 functions (P23 batch 8c
+ * folded the remaining `$page`/`$template`-coupled ones in here too --
+ * `checkRestrictions()`, `getCategoriesMenu()`, `displaySelectCategories()`/
+ * `displaySelectCatWrapper()`, `getRelatedCategoriesMenuWithUrls()` --
+ * none type-hint `Template`/`$page`'s callers anywhere, only read the
+ * globals via a docblock-typed `global`, same "no hard class dependency"
+ * shape already established by `Piwigo\Category\CategoryDefaultRenderer`
+ * importing `Template` the same way with 0 deptrac violations).
  */
 final class CategoryService
 {
@@ -189,7 +192,7 @@ final class CategoryService
             [l10n('Rating score, low &rarr; high'), 'rating_score ASC', $conf['rate']],
             [l10n('Visits, high &rarr; low'), 'hit DESC', true],
             [l10n('Visits, low &rarr; high'), 'hit ASC', true],
-            [l10n('Permissions'), 'level DESC', is_admin()],
+            [l10n('Permissions'), 'level DESC', \Piwigo\Auth\AccessControl::isAdmin()],
         ]);
 
         if (! is_array($orders)) {
@@ -562,6 +565,285 @@ final class CategoryService
                     $cats[$parentIdx]['count_categories'] = (is_numeric($countCategories) ? (int) $countCategories : 0) + 1;
                 }
             }
+        }
+
+        return $cats;
+    }
+
+    /**
+     * Is the category accessible to the connected user? If the user is not
+     * authorized to see this category, the script exits.
+     */
+    public function checkRestrictions(int $categoryId): void
+    {
+        /** @var array<string, mixed> $user */
+        global $user;
+
+        // $filter['visible_categories'] and $filter['visible_images']
+        // are not used because it's not necessary (filter <> restriction)
+        $forbiddenCategories = $user['forbidden_categories'] ?? null;
+        $forbiddenCategoriesStr = is_scalar($forbiddenCategories) ? (string) $forbiddenCategories : '';
+        if (in_array($categoryId, explode(',', $forbiddenCategoriesStr))) {
+            access_denied();
+        }
+    }
+
+    /**
+     * Returns all subcategory identifiers of given category ids.
+     *
+     * @param array<int|string> $ids several callers (comments.php, admin/rating.php)
+     *   wrap a raw, unvalidated $_GET value directly — the is_numeric() check
+     *   below is a real guard, not dead code
+     * @return list<int> array_values() below always reindexes the result
+     */
+    public function getSubcatIds(array $ids): array
+    {
+        // Non-numeric values are only warned about, never embedded into the
+        // query -- CategoryRepository::findSubcategoryIds() binds each id as a
+        // parameter, so a non-numeric value can never reach raw SQL.
+        $validatedIds = [];
+        foreach ($ids as $categoryId) {
+            if (is_numeric($categoryId)) {
+                $validatedIds[] = (int) $categoryId;
+                continue;
+            }
+
+            trigger_error(
+                'getSubcatIds expecting numeric, not ' . gettype($categoryId),
+                E_USER_WARNING
+            );
+        }
+
+        return $this->repo->findSubcategoryIds($validatedIds);
+    }
+
+    /**
+     * Returns template vars for main categories menu.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function getCategoriesMenu(): array
+    {
+        /**
+         * @var array<string, mixed> $page
+         * @var array<string, mixed> $user
+         * @var array<string, mixed> $filter
+         * @var array<string, mixed> $conf
+         */
+        global $page, $user, $filter, $conf;
+
+        // category currently displayed, if any; narrowed once here and reused
+        // at every nested-offset access site below (see fix pattern #4/#7)
+        $categoryPageRaw = $page['category'] ?? null;
+        /** @var array<string, mixed>|null $categoryPage */
+        $categoryPage = is_array($categoryPageRaw) ? $categoryPageRaw : null;
+
+        // P23 batch 3b: findMenuCategories()'s SQL WHERE (structural id_uppercat
+        // filter, or PermissionService::getSqlConditionFandF()'s
+        // visible_categories condition) is replaced by an equivalent PHP-side
+        // filter applied to CategoryTreeCache's cached, permission-filtered row
+        // set -- see that class's own docblock for why this can no longer be
+        // pushed down to SQL (it no longer reads from a DB-backed cache table).
+        // The get_categories_menu_sql_where trigger_change() hook is dropped:
+        // grep confirms zero real handlers exist for it anywhere in this repo,
+        // and its whole contract (mutate a SQL string) has no PHP-filter
+        // equivalent worth inventing for zero real consumers.
+        $allRows = new CategoryTreeCache(
+            $this,
+            $this->repo,
+            CachePools::categoryTree()
+        )->getForUser($user);
+
+        $visibleCategoriesRaw = $filter['visible_categories'] ?? null;
+        $rows = self::filterMenuRows(
+            $allRows,
+            $categoryPage,
+            (bool) $user['expand'],
+            (bool) $filter['enabled'],
+            is_scalar($visibleCategoriesRaw) ? (string) $visibleCategoriesRaw : ''
+        );
+
+        $cats = [];
+        $selectedCategory = $categoryPage;
+        foreach ($rows as $row) {
+            // both sides get coerced to string for comparison: $row['id'] is
+            // always a DB-fetch string, but $page['category']['id'] may already
+            // be an int depending on how that array was populated -- matches
+            // the original's loose ==, which PHPStan disallows outright.
+            $rowId = $row['id'] ?? null;
+            $rowIdStr = is_scalar($rowId) ? (string) $rowId : null;
+            $rowGlobalRank = $row['global_rank'] ?? null;
+            $childDateLast = @$row['max_date_last'] > @$row['date_last'];
+            $selectedId = $selectedCategory['id'] ?? null;
+            $selectedIdStr = is_scalar($selectedId) ? (string) $selectedId : null;
+            $selectedIdUppercat = $selectedCategory['id_uppercat'] ?? null;
+            $selectedIdUppercatStr = is_scalar($selectedIdUppercat) ? (string) $selectedIdUppercat : null;
+            $row = array_merge(
+                $row,
+                [
+                    'NAME' => trigger_change(
+                        'render_category_name',
+                        $row['name'],
+                        'get_categories_menu'
+                    ),
+                    'TITLE' => self::getDisplayImagesCount(
+                        is_numeric($row['nb_images']) ? (int) $row['nb_images'] : 0,
+                        is_numeric($row['count_images']) ? (int) $row['count_images'] : 0,
+                        is_numeric($row['count_categories']) ? (int) $row['count_categories'] : 0,
+                        false,
+                        ' / '
+                    ),
+                    'URL' => make_index_url([
+                        'category' => $row,
+                    ]),
+                    'LEVEL' => substr_count(is_scalar($rowGlobalRank) ? (string) $rowGlobalRank : '', '.') + 1,
+                    'SELECTED' => $selectedCategory !== null && $selectedIdStr !== null && $selectedIdStr === $rowIdStr,
+                    'IS_UPPERCAT' => $selectedCategory !== null && $selectedIdUppercatStr !== null && $selectedIdUppercatStr === $rowIdStr,
+                ]
+            );
+            if ((bool) $conf['index_new_icon']) {
+                $maxDateLast = $row['max_date_last'] ?? null;
+                $row['icon_ts'] = get_icon(is_string($maxDateLast) ? $maxDateLast : '', $childDateLast);
+            }
+            $cats[] = $row;
+            $categoryPageId = $categoryPage['id'] ?? null;
+            $categoryPageIdStr = is_scalar($categoryPageId) ? (string) $categoryPageId : null;
+            if ($categoryPage !== null && $categoryPageIdStr !== null && $categoryPageIdStr === $rowIdStr) { // save the number of subcats for later optim
+                if (is_array($page['category'] ?? null)) {
+                    $page['category']['count_categories'] = $row['count_categories'] ?? null;
+                }
+            }
+        }
+        usort($cats, self::compareByGlobalRank(...));
+
+        // Update filtered data
+        if (function_exists('update_cats_with_filtered_data')) {
+            update_cats_with_filtered_data($cats);
+        }
+
+        return $cats;
+    }
+
+    /**
+     * Assign a template var useable with {html_options} from a list of
+     * categories.
+     *
+     * @param array<int, array<string, mixed>> $categories (at least id,name,global_rank,uppercats for each)
+     * @param array<int, mixed> $selecteds
+     * @param string $blockname variable name in template
+     * @param bool $fullname full breadcrumb or not
+     */
+    public function displaySelectCategories(
+        array $categories,
+        array $selecteds,
+        string $blockname,
+        bool $fullname = true
+    ): void {
+        /** @var Template $template */
+        global $template;
+
+        $tplCats = [];
+        foreach ($categories as $category) {
+            if ($fullname) {
+                $uppercats = $category['uppercats'];
+                $option = strip_tags(
+                    get_cat_display_name_cache(
+                        is_string($uppercats) ? $uppercats : '',
+                        null
+                    )
+                );
+            } else {
+                $globalRank = $category['global_rank'];
+                $option = str_repeat(
+                    '&nbsp;',
+                    (3 * substr_count(is_string($globalRank) ? $globalRank : '', '.'))
+                );
+                $option .= '- ';
+                $renderedName = trigger_change(
+                    'render_category_name',
+                    $category['name'],
+                    'display_select_categories'
+                );
+                $option .= strip_tags(is_string($renderedName) ? $renderedName : '');
+            }
+            $id = $category['id'];
+            if (is_int($id) || is_string($id)) {
+                $tplCats[$id] = $option;
+            }
+        }
+
+        $template->assign($blockname, $tplCats);
+        $template->assign($blockname . '_selected', $selecteds);
+    }
+
+    /**
+     * Same as displaySelectCategories() but categories are ordered by rank.
+     *
+     * @see displaySelectCategories()
+     * @param array<int, mixed> $selecteds
+     * @param string $blockname variable name in template
+     * @param bool $fullname full breadcrumb or not
+     */
+    public function displaySelectCatWrapper(
+        string $query,
+        array $selecteds,
+        string $blockname,
+        bool $fullname = true
+    ): void {
+        $categories = query2array($query);
+        usort($categories, self::compareByGlobalRank(...));
+        $this->displaySelectCategories($categories, $selecteds, $blockname, $fullname);
+    }
+
+    /**
+     * Same as getRelatedCategoriesMenu(), plus the page-URL decoration
+     * (`url` key) the former free function get_related_categories_menu()
+     * (functions_category.inc.php, P23 batch 8c) added afterward from
+     * `$page`/`make_index_url()`.
+     *
+     * NOTE: 'combined_categories' below carries $cat AFTER
+     * getRelatedCategoriesMenu()'s own 'render_category_name'
+     * trigger_change() already ran on 'name' (the original built this
+     * array BEFORE that render), so UrlService::makeIndexUrl()'s id-name
+     * style would embed the *rendered* name instead of the raw one if a
+     * 'render_category_name' plugin handler is ever registered (none are
+     * today -- PEM extensions are unwired, trigger_change() is a
+     * same-value pass-through -- so this is currently a no-op
+     * difference). Re-verify once P31 wires real event handlers.
+     *
+     * @param  array<int, int|string>  $items
+     * @param  array<int, int|string>  $excludedCatIds
+     * @return list<array<string, mixed>>
+     */
+    public function getRelatedCategoriesMenuWithUrls(array $items, array $excludedCatIds = []): array
+    {
+        /** @var array<string, mixed> $page */
+        global $page;
+
+        $cats = $this->getRelatedCategoriesMenu(
+            array_values(array_map(intval(...), $items)),
+            array_values(array_map(intval(...), $excludedCatIds))
+        );
+
+        foreach ($cats as $idx => $cat) {
+            if (! isset($cat['count_images'])) {
+                continue;
+            }
+
+            $urlParams = [];
+            if (isset($page['category'])) {
+                $urlParams['category'] = $page['category'];
+
+                $urlParams['combined_categories'] = [$cat];
+                $combinedCategories = $page['combined_categories'] ?? null;
+                if (is_array($combinedCategories)) {
+                    $urlParams['combined_categories'] = array_merge($combinedCategories, [$cat]);
+                }
+            } else {
+                $urlParams['category'] = $cat;
+            }
+
+            $cats[$idx]['url'] = make_index_url($urlParams);
         }
 
         return $cats;

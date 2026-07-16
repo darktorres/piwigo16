@@ -200,7 +200,7 @@ final class ExtensionScanner
         if (file_exists($screenshotPath)) {
             $theme['screenshot'] = $screenshotPath;
         } else {
-            $adminTheme = userprefs_get_param('admin_theme', 'clear');
+            $adminTheme = (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->getParam('admin_theme', 'clear');
             $theme['screenshot'] = PHPWG_ROOT_PATH . 'admin/themes/'
                 . (is_string($adminTheme) ? $adminTheme : 'clear')
                 . '/images/missing_screenshot.png';

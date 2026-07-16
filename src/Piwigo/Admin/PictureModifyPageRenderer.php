@@ -43,7 +43,7 @@ final class PictureModifyPageRenderer
 
         include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
-        check_status(AccessLevel::Administrator);
+        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
         check_input_parameter('image_id', $_GET, false, ValidationPattern::ID);
         check_input_parameter('level', $_POST, false, '/^\d+$/');
@@ -94,7 +94,7 @@ SELECT id
             // 2. else use the first reachable linked category
             // 3. redirect to gallery root
 
-            if ((bool) ($custom_context = get_edit_context($image_id))) {
+            if ((bool) ($custom_context = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getEditContext($image_id))) {
                 // considering we have a context available, we fake one to build the url
                 // and we replace it with the context found in the session for this image_id
                 redirect(str_replace('list/1,2', $custom_context, make_index_url([
@@ -464,7 +464,7 @@ SELECT category_id, uppercats, dir
             $image_level = (int) $page['image']['level'];
         }
 
-        if ((bool) ($custom_context = get_edit_context($image_id))) {
+        if ((bool) ($custom_context = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getEditContext($image_id))) {
             $template->assign('U_JUMPTO', make_picture_url([
                 'image_id' => $image_id,
             ]) . '/' . $custom_context);
@@ -484,7 +484,7 @@ SELECT category_id
                 $authorized_category_ids,
                 explode(
                     ',',
-                    calculate_permissions(is_numeric($user['id']) ? (int) $user['id'] : 0, is_string($user['status']) ? $user['status'] : '')
+                    (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getForbiddenCategories(is_numeric($user['id']) ? (int) $user['id'] : 0, is_string($user['status']) ? $user['status'] : '')
                 )
             );
 

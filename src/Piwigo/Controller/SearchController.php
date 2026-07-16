@@ -4,10 +4,20 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Http\ControllerInterface;
+use Piwigo\Mail\MailService;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
+use Piwigo\Search\SearchRepository;
+use Piwigo\Search\SearchService;
+use Piwigo\Tag\TagRepository;
+use Piwigo\Tag\TagService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -23,15 +33,21 @@ final class SearchController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        include_once PHPWG_ROOT_PATH . 'include/functions_search.inc.php';
-
         /**
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $user
          */
         global $conf, $user;
 
-        check_status(AccessLevel::Guest);
+        $searchConn = DbConnection::build();
+        $searchService = new SearchService(
+            new SearchRepository($searchConn),
+            new PermissionService(new PermissionRepository($searchConn), new GroupRepository($searchConn)),
+            new PersistentFileCache(),
+            new MailService(),
+        );
+
+        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
         trigger_notify('loc_begin_search');
 
@@ -87,17 +103,17 @@ final class SearchController implements ControllerInterface
         }
 
         $last_filters_conf = $filters_conf['last_filters_conf'] ?? null;
-        if (is_a_guest() or is_generic() or ! (bool) $last_filters_conf) {
+        if (\Piwigo\Auth\AccessControl::isAGuest() or \Piwigo\Auth\AccessControl::isGeneric() or ! (bool) $last_filters_conf) {
             $fields = $default_fields;
         } else {
-            $raw_fields = userprefs_get_param('gallery_search_filters', $default_fields);
+            $raw_fields = (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->getParam('gallery_search_filters', $default_fields);
             $fields = is_array($raw_fields) ? $raw_fields : $default_fields;
         }
 
         $words = [];
         $q = $_GET['q'] ?? null;
         if (is_string($q) and $q !== '' and $q !== '0') {
-            $words = split_allwords($q) ?? [];
+            $words = SearchService::splitAllwords($q) ?? [];
         }
 
         if (count($words) > 0 or in_array('allwords', $fields, true)) {
@@ -150,7 +166,10 @@ SELECT
             ];
         }
 
-        if (count(get_available_tags()) > 0) {
+        $tagConn = DbConnection::build();
+        $tagService = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)));
+
+        if (count($tagService->getAvailableTags()) > 0) {
             $tag_ids = [];
             if (isset($_GET['tag_id'])) {
                 check_input_parameter('tag_id', $_GET, false, '/^\d+(,\d+)*$/');
@@ -178,14 +197,11 @@ SELECT
     id
   FROM ' . Tables::images() . ' AS i
     JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
-  ' . get_sql_condition_FandF(
-                [
-                    'forbidden_categories' => 'category_id',
-                    'visible_categories' => 'category_id',
-                    'visible_images' => 'id',
-                ],
-                ' WHERE '
-            ) . '
+  ' . (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
+                'forbidden_categories' => 'category_id',
+                'visible_categories' => 'category_id',
+                'visible_images' => 'id',
+            ], ' WHERE ') . '
     AND author IS NOT NULL
     LIMIT 1
 ;';
@@ -219,7 +235,7 @@ SELECT
             }
         }
 
-        [$search_uuid, $search_url] = save_search($search);
+        [$search_uuid, $search_url] = $searchService->saveSearch($search);
         redirect($search_url);
     }
 }

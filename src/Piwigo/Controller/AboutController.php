@@ -6,8 +6,10 @@ namespace Piwigo\Controller;
 
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Template\Template;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -30,7 +32,7 @@ final class AboutController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        check_status(AccessLevel::Guest);
+        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
         $body = LegacyRenderCapture::capture(static function (): void {
             // Bootstrap globals, set by include/common.inc.php; $title is
@@ -76,11 +78,11 @@ final class AboutController implements ControllerInterface
             $themeconf = $template->get_template_vars('themeconf');
             $themeconf = is_array($themeconf) ? $themeconf : [];
             if (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('theAboutPage', $themeconf['hide_menu_on'], true)) {
-                include PHPWG_ROOT_PATH . 'include/menubar.inc.php';
+                new MenubarRenderer()->render();
             }
 
             include PHPWG_ROOT_PATH . 'include/page_header.php';
-            flush_page_messages();
+            new HtmlService()->flushPageMessages();
             $template->pparse('about');
             include PHPWG_ROOT_PATH . 'include/page_tail.php';
         });

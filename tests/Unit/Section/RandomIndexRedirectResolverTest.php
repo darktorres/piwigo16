@@ -4,21 +4,12 @@ declare(strict_types=1);
 
 use Piwigo\Section\RandomIndexRedirectResolver;
 
-// is_a_guest() is a real functions_user.inc.php function, but whichever
-// Integration test file's own function_exists()-guarded global stub for
-// it loaded first in this shared process wins for the whole run (see
-// CommentServiceTest.php's own stub) -- that stub reads
-// $GLOBALS['test_is_guest'], not `global $user['status']`, when called
-// with no argument (this resolver's own real call convention).
-if (! function_exists('is_a_guest')) {
-    function is_a_guest(): bool
-    {
-        return (bool) ($GLOBALS['test_is_guest'] ?? false);
-    }
-}
-
+// RandomIndexRedirectResolver now calls Piwigo\Auth\AccessControl::isAGuest()
+// directly (P23 batch 8d) -- a pure `global $user;` read, zero DB
+// dependency, so no stub is needed here; setting the same global this
+// resolver's real dependency reads is enough.
 beforeEach(function (): void {
-    $GLOBALS['test_is_guest'] = false;
+    $GLOBALS['user'] = ['status' => 'normal'];
 });
 
 test('resolveCandidates matches an empty-string condition', function (): void {
@@ -37,10 +28,10 @@ test('resolveCandidates matches "return is_a_guest();" only for a real guest', f
     $resolver = new RandomIndexRedirectResolver();
     $candidates = ['guest.php' => 'return is_a_guest();'];
 
-    $GLOBALS['test_is_guest'] = true;
+    $GLOBALS['user'] = ['status' => 'guest'];
     expect($resolver->resolveCandidates($candidates))->toBe(['guest.php']);
 
-    $GLOBALS['test_is_guest'] = false;
+    $GLOBALS['user'] = ['status' => 'normal'];
     expect($resolver->resolveCandidates($candidates))->toBe([]);
 });
 

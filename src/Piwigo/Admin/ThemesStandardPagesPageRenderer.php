@@ -49,7 +49,7 @@ final class ThemesStandardPagesPageRenderer
          */
         global $page, $template;
 
-        if (! is_webmaster()) {
+        if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
             $page_warnings = $page['warnings'] ?? [];
             if (! is_array($page_warnings)) {
                 $page_warnings = [];
@@ -83,7 +83,7 @@ final class ThemesStandardPagesPageRenderer
             'teal',
         ];
 
-        if (isset($_POST['submit']) and is_webmaster()) {
+        if (isset($_POST['submit']) and \Piwigo\Auth\AccessControl::isWebmaster()) {
             check_pwg_token();
 
             // use_standard_pages or not -- a checkbox POST value, so "not
@@ -206,7 +206,7 @@ final class ThemesStandardPagesPageRenderer
             ]
         );
 
-        $template->assign('isWebmaster', (is_webmaster()) ? 1 : 0);
+        $template->assign('isWebmaster', (\Piwigo\Auth\AccessControl::isWebmaster()) ? 1 : 0);
 
         $template->set_filenames([
             'themes' => 'themes_standard_pages.tpl',

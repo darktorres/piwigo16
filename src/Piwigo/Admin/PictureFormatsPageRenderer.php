@@ -24,7 +24,7 @@ final class PictureFormatsPageRenderer
          */
         global $template, $lang;
 
-        check_status(AccessLevel::Administrator);
+        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
         check_input_parameter('image_id', $_GET, false, ValidationPattern::ID);
 

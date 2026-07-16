@@ -37,6 +37,27 @@ abstract class IntegrationTestCase extends TestCase
 
     protected string $baseUrl = '';
 
+    /**
+     * Piwigo\Users\UserService::getDefaultUserInfo() memoizes its DB read
+     * into `global $cache['default_user'];` for the lifetime of the
+     * process (a real production optimization -- one row read per
+     * request, not per call). Since PHPUnit/Pest run every test file in
+     * one shared process, a test with a minimal `$GLOBALS['conf']`
+     * (missing `default_user_id`) can cache `false` and poison the value
+     * every later test file reads (P23 batch 8d found this the moment a
+     * 2nd Integration test file started exercising the real
+     * getDefaultUserInfo()/getDefaultTheme()/getDefaultLanguage() call
+     * chain instead of a fixed-value stub). Every subclass's own setUp()
+     * already calls parent::setUp() first, so resetting here guarantees
+     * each test starts with a fresh memoization slot.
+     */
+    #[\Override]
+    protected function setUp(): void
+    {
+        parent::setUp();
+        unset($GLOBALS['cache']);
+    }
+
     protected function setUpConnectionFromEnv(): void
     {
         $dbHost   = getenv('PIWIGO_DB_HOST');

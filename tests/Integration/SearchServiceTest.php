@@ -16,22 +16,18 @@ declare(strict_types=1);
 // passthroughs with no handlers registered, so no local stubs are needed
 // for them anymore.
 //
-// get_subcat_ids() is NOT stubbed -- functions_category.inc.php (P19
-// Category domain, already built and DB-backed) is required directly
-// below; it declares no top-level side effects beyond function
-// definitions, so it's safe to load standalone, same as requiring a class
-// file. Same reasoning for functions_search.inc.php itself: it only
-// declares the QST_* bitmask constants (needed by SearchService's own
-// modifier checks) and free-function delegates, no side effects.
+// get_subcat_ids() is NOT stubbed -- always available now via composer
+// autoload.files (src/Piwigo/Category/functions.php, P23 batch 8c), no
+// explicit require needed. functions_search.inc.php itself is gone (P23
+// batch 8c) -- SearchService now calls the real Piwigo\Search\SearchService
+// methods directly; the QST_* bitmask constants it needs are defined
+// inline below.
 //
-// get_image_ids_for_tags() (functions_tag.inc.php) is a real function but
-// still uses the legacy query2array() mysqli layer (P18's Tag domain never
-// ported it -- deferred to task #343), which needs bootstrap this isolated
-// test doesn't want either. Stubbed here as a faithful, dependency-free
-// DBAL stand-in (real query against the real fixture DB, just without the
-// legacy layer/permission join) -- same "faithful real behavior, minus
-// unrelated legacy dependencies" precedent as TagServiceTest's
-// tag_alpha_compare().
+// get_image_ids_for_tags()'s own stub was removed (P23 batch 8c) --
+// SearchService now calls the real Piwigo\Tag\TagService::getImageIdsForTags()
+// directly, which this Integration test's real DB connection satisfies
+// without a stub (same DBAL-backed path this test already exercises via
+// PermissionService::getSqlConditionFandF() elsewhere).
 namespace {
     if (! defined('PHPWG_ROOT_PATH')) {
         define('PHPWG_ROOT_PATH', './');
@@ -42,47 +38,11 @@ namespace {
     // passthroughs with no handlers registered, so no local stubs are
     // needed for them here.
 
-    if (! function_exists('is_admin')) {
-        function is_admin(string $user_status = ''): bool
-        {
-            if ($user_status !== '') {
-                return $user_status === 'admin';
-            }
-
-            return (bool) ($GLOBALS['test_is_admin'] ?? false);
-        }
-    }
-
-    if (! function_exists('is_classic_user')) {
-        function is_classic_user(): bool
-        {
-            return (bool) ($GLOBALS['test_is_classic'] ?? true);
-        }
-    }
-
-    if (! function_exists('get_image_ids_for_tags')) {
-        /**
-         * @param  list<int>  $tag_ids
-         * @return list<int>
-         */
-        function get_image_ids_for_tags(array $tag_ids, string $mode = 'AND'): array
-        {
-            if ($tag_ids === []) {
-                return [];
-            }
-
-            $conn = \Piwigo\Db\DbConnection::build();
-            $placeholders = implode(',', array_fill(0, count($tag_ids), '?'));
-            $sql = 'SELECT image_id FROM ' . \Piwigo\Db\Tables::imageTag() . " WHERE tag_id IN ({$placeholders}) GROUP BY image_id";
-            if ($mode === 'AND' && count($tag_ids) > 1) {
-                $sql .= ' HAVING COUNT(DISTINCT tag_id) = ' . count($tag_ids);
-            }
-
-            $ids = $conn->executeQuery($sql, $tag_ids)->fetchFirstColumn();
-
-            return array_values(array_map(intval(...), array_filter($ids, is_numeric(...))));
-        }
-    }
+    // is_admin()/is_classic_user() -- SearchService/SearchFilterRenderer now
+    // call Piwigo\Auth\AccessControl::isAdmin()/isClassicUser() directly
+    // (P23 batch 8d), pure `global $user;` reads, so no stub is needed;
+    // realisticUserGlobal() below sets 'status' => 'normal' to match this
+    // file's old defaults (not admin, is a classic user).
 
     if (! function_exists('conf_get_param')) {
         // Copied verbatim from include/functions.inc.php -- pure,
@@ -119,17 +79,12 @@ namespace {
         }
     }
 
-    if (! function_exists('get_default_language')) {
-        // Real get_default_language() resolves get_default_user_value()
-        // against the Lang domain -- too much bootstrap for this isolated
-        // test. Fixed 'en' is a faithful-enough stand-in (matches
-        // Piwigo\Search\Inflector\Inflector_en, which is all the tests
-        // below need this for).
-        function get_default_language(): string
-        {
-            return 'en';
-        }
-    }
+    // get_default_language() -- SearchService now calls the real
+    // Piwigo\Users\UserService::getDefaultLanguage() directly (P23 batch
+    // 8d); this test's real DB connection resolves the fixture's default
+    // user language ('en_UK'), whose 2-letter prefix still matches
+    // Piwigo\Search\Inflector\Inflector_en the same way the old fixed 'en'
+    // stub did.
 
     if (! function_exists('tag_alpha_compare')) {
         // Copied verbatim from TagServiceTest.php -- same simplification
@@ -148,24 +103,26 @@ namespace {
         }
     }
 
-    if (! function_exists('generate_key')) {
-        // Copied verbatim from Piwigo\Auth\SessionService::generateKey()
-        // (the real generate_key() delegate's target) -- pure,
-        // dependency-free.
-        function generate_key(int $size): string
-        {
-            if ($size < 1) {
-                throw new \InvalidArgumentException('generate_key(): $size must be at least 1');
-            }
+    // generate_key()'s own stub was removed (P23 batch 8c) -- SearchService
+    // now calls the real Piwigo\Session\SessionService::get()->generateKey()
+    // directly, which this Integration test's real DB connection satisfies
+    // without a stub.
 
-            $bytes = random_bytes($size + 10);
-
-            return substr(str_replace(['+', '/'], '', base64_encode($bytes)), 0, $size);
-        }
+    // QST_* bitmask constants (needed by SearchService's own modifier
+    // checks) used to come from a plain require_once of
+    // include/functions_search.inc.php (no other side effects) -- that
+    // file is now deleted, its constants relocated into
+    // include/functions.inc.php (P23 batch 8c), too heavy a file for this
+    // isolated test to require standalone, so defined inline here instead.
+    if (! defined('QST_QUOTED')) {
+        define('QST_QUOTED', 0x01);
+        define('QST_NOT', 0x02);
+        define('QST_OR', 0x04);
+        define('QST_WILDCARD_BEGIN', 0x08);
+        define('QST_WILDCARD_END', 0x10);
+        define('QST_WILDCARD', QST_WILDCARD_BEGIN | QST_WILDCARD_END);
+        define('QST_BREAK', 0x20);
     }
-
-    require_once dirname(__DIR__, 2) . '/include/functions_category.inc.php';
-    require_once dirname(__DIR__, 2) . '/include/functions_search.inc.php';
 }
 
 namespace Piwigo\Tests\Integration {
@@ -177,6 +134,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\Tables;
     use Piwigo\Group\GroupRepository;
+    use Piwigo\Mail\MailService;
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
     use Piwigo\Search\QSingleToken;
@@ -256,7 +214,8 @@ final class SearchServiceTest extends IntegrationTestCase
         $this->service = new SearchService(
             $this->repo,
             new PermissionService(new PermissionRepository($this->conn), new GroupRepository($this->conn)),
-            new PersistentFileCache()
+            new PersistentFileCache(),
+            new MailService()
         );
     }
 
@@ -287,6 +246,7 @@ final class SearchServiceTest extends IntegrationTestCase
         // CategoryServiceTest.
         return [
             'id' => 1,
+            'status' => 'normal',
             'forbidden_categories' => '0',
             'level' => '0',
             'image_access_type' => 'NOT IN',

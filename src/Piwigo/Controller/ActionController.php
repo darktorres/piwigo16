@@ -57,7 +57,7 @@ final class ActionController implements ControllerInterface
          */
         global $conf, $user;
 
-        check_status(AccessLevel::Guest);
+        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
         if ((bool) $conf['enable_formats'] and isset($_GET['format'])) {
             check_input_parameter('format', $_GET, false, ValidationPattern::ID);
@@ -106,7 +106,7 @@ SELECT * FROM ' . Tables::images() . '
 
         // special download action for admins
         $is_admin_download = false;
-        if (is_admin() and isset($_GET['pwg_token']) and $_GET['pwg_token'] === get_pwg_token()) {
+        if (\Piwigo\Auth\AccessControl::isAdmin() and isset($_GET['pwg_token']) and $_GET['pwg_token'] === get_pwg_token()) {
             $is_admin_download = true;
             $user['enabled_high'] = true;
         }
@@ -120,20 +120,15 @@ SELECT id
   FROM ' . Tables::categories() . '
     INNER JOIN ' . Tables::imageCategory() . ' ON category_id = id
   WHERE image_id = ' . $_GET['id'] . '
-' . get_sql_condition_FandF(
-            [
-                'forbidden_categories' => 'category_id',
-                'forbidden_images' => 'image_id',
-            ],
-            '    AND'
-        ) . '
+' . (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
+            'forbidden_categories' => 'category_id',
+            'forbidden_images' => 'image_id',
+        ], '    AND') . '
   LIMIT 1
 ;';
         if (! $is_admin_download and pwg_db_num_rows(pwg_query($query)) < 1) {
             $this->doError(401, 'Access denied');
         }
-
-        include_once PHPWG_ROOT_PATH . 'include/functions_picture.inc.php';
 
         // $format is only set when the enable_formats block above ran;
         // part=f is reachable directly by request even when it never ran.

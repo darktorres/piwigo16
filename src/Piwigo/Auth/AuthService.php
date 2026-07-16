@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Auth;
 
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\Tables;
+use Piwigo\Session\SessionService;
+
 /**
  * Login/logout session lifecycle: remember-me auto-login, session
  * creation/regeneration/teardown. Constructor-injects AuthRepository,
@@ -144,7 +148,7 @@ final class AuthService
                     $cookie,
                     [
                         'expires' => time() + $remember_me_length,
-                        'path' => cookie_path(),
+                        'path' => new CookieService()->cookiePath(),
                         'domain' => (string) ini_get('session.cookie_domain'),
                         'secure' => (bool) ini_get('session.cookie_secure'),
                         'httponly' => (bool) ini_get('session.cookie_httponly'),
@@ -154,7 +158,7 @@ final class AuthService
         } else { // make sure we clean any remember me ...
             setcookie($remember_me_name, '', [
                 'expires' => 0,
-                'path' => cookie_path(),
+                'path' => new CookieService()->cookiePath(),
                 'domain' => (string) ini_get('session.cookie_domain'),
             ]);
         }
@@ -216,7 +220,7 @@ final class AuthService
             }
             setcookie($remember_me_name, '', [
                 'expires' => 0,
-                'path' => cookie_path(),
+                'path' => new CookieService()->cookiePath(),
                 'domain' => (string) ini_get('session.cookie_domain'),
             ]);
         }
@@ -277,8 +281,604 @@ final class AuthService
         $remember_me_name = is_string($remember_me_name) ? $remember_me_name : 'pwg_remember';
         setcookie($remember_me_name, '', [
             'expires' => 0,
-            'path' => cookie_path(),
+            'path' => new CookieService()->cookiePath(),
             'domain' => (string) ini_get('session.cookie_domain'),
         ]);
+    }
+
+    /**
+     * Default method for user login, can be overwritten with the
+     * 'try_log_user' trigger.
+     * @see tryLogUser()
+     */
+    public function pwgLogin(bool $success, string $username, ?string $password, bool $rememberMe): bool
+    {
+        if ($success === true) {
+            return true;
+        }
+
+        // we force the session table to be clean
+        SessionService::get()->sessionGc();
+
+        // Find user by username or email (if it exists)
+        $user_found = $this->findUserByUsernameOrEmail($username);
+
+        // SECURITY: Constant-time authentication to prevent timing attacks
+        //
+        // We always perform password verification, even when the user doesn't exist,
+        // to prevent attackers from distinguishing between:
+        //  - "user exists, wrong password" (slow: runs password_verify)
+        //  - "user doesn't exist" (fast: would skip verification)
+        //
+        // This timing difference could allow user enumeration. By using a fake user
+        // with a pre-generated hash, we ensure consistent execution time regardless
+        // of whether the account exists or not.
+        $fake_user = $this->generateFakeUser();
+
+        // Verify password with fallback to fake user
+        $hash = $user_found['password'] ?? $fake_user['password'];
+        assert(is_string($hash));
+        $verify_user_id = $user_found['id'] ?? $fake_user['id'];
+        if ($verify_user_id !== null) {
+            assert(is_numeric($verify_user_id));
+            $verify_user_id = (int) $verify_user_id;
+        }
+        $password_verify = new PasswordService(new PasswordRepository(DbConnection::build()))
+            ->verify($password ?? '', $hash, $verify_user_id);
+
+        // If the user was not found, is a guest, or the password is incorrect
+        if (empty($user_found) || $user_found['status'] === 'guest' || ! $password_verify) {
+            if (! empty($user_found) && ! $password_verify) {
+                $found_user_id = $user_found['id'];
+                assert(is_string($found_user_id));
+                pwg_activity('user', $found_user_id, 'login_failure_wrong_password');
+            }
+            trigger_notify('login_failure', stripslashes($username));
+            return false;
+        }
+
+        // PLUGIN HOOK: Allow plugins to intercept authentication before log_user()
+        //
+        // Expected $state array structure:
+        //  - 'can_login' (bool): Set to false to block login
+        //  - 'reason' (string|null): Custom activity log reason if login blocked
+        //  - 'authenticated' (bool): Set to true if plugin handles log_user() itself
+        //
+        // Example plugin implementation:
+        //   add_event_handler('finalize_login', 'my_2fa_check');
+        //   function my_2fa_check($state, $user, $remember_me) {
+        //     if (!verify_2fa_code()) {
+        //       $state['can_login'] = false;
+        //       $state['reason'] = '2fa_failed';
+        //     }
+        //     return $state;
+        //   }
+        $state = [
+            'can_login' => true,
+            'reason' => null,
+            'authenticated' => false,
+        ];
+        $state = trigger_change('finalize_login', $state, $user_found, $rememberMe);
+
+        // trigger_change()'s own return type is mixed; `&&` always yields a
+        // real bool regardless of operand types, which is what narrows
+        // $can_login/$authenticated below without needing an assert().
+        $can_login = is_array($state) && (bool) ($state['can_login'] ?? null);
+        $reason = is_array($state) ? ($state['reason'] ?? null) : null;
+        $authenticated = is_array($state) && (bool) ($state['authenticated'] ?? null);
+
+        if (! $can_login) {
+            $found_user_id = $user_found['id'];
+            assert(is_string($found_user_id));
+            pwg_activity('user', $found_user_id, is_string($reason) ? $reason : 'login_failure_before_log_user');
+            trigger_notify('login_failure_before_log_user', stripslashes($username));
+            return false;
+        }
+
+        // If plugin handled authentication, skip log_user()
+        if (! $authenticated) {
+            $found_user_id = $user_found['id'];
+            assert(is_string($found_user_id) && is_numeric($found_user_id));
+            $this->logUser($found_user_id, $rememberMe);
+        }
+
+        $this->clearFakeUserCache();
+        trigger_notify('login_success', stripslashes($username));
+        return true;
+    }
+
+    /**
+     * Find user by username or email search by username first then email.
+     *
+     * @since 16
+     * @return array<string, mixed>|null
+     */
+    public function findUserByUsernameOrEmail(string $usernameOrEmail): ?array
+    {
+        /** @var array<string, mixed> $conf */
+        global $conf;
+
+        // see UserService::validateMailAddress() for why this is string=>string
+        /** @var array<string, string> $user_fields */
+        $user_fields = $conf['user_fields'];
+
+        $usernameOrEmail = pwg_db_real_escape_string($usernameOrEmail);
+
+        $query = '
+SELECT
+  ' . $user_fields['id'] . ' AS id,
+  ' . $user_fields['username'] . ' AS username,
+  ' . $user_fields['email'] . ' AS email,
+  ' . $user_fields['password'] . ' AS password,
+  status
+FROM ' . Tables::users() . ' AS u
+  LEFT JOIN ' . Tables::userInfos() . ' AS i
+    ON u.' . $user_fields['id'] . ' = i.user_id
+  WHERE ';
+
+        $where_username = $user_fields['username'] . ' = \'' . $usernameOrEmail . '\'';
+        $where_email = $user_fields['email'] . ' = \'' . $usernameOrEmail . '\'';
+
+        $user_by_username = pwg_db_fetch_assoc(pwg_query($query . $where_username));
+        $user = (bool) $user_by_username ? $user_by_username : pwg_db_fetch_assoc(pwg_query($query . $where_email));
+
+        if (! empty($user)) {
+            // The user may not exist in the user_infos table, so we consider it's a "normal" user by default
+            $user['status'] ??= 'normal';
+            return $user;
+        }
+
+        return null;
+    }
+
+    /**
+     * Generate a fake user with hashed password (with the current algo).
+     *
+     * SECURITY: This function is used for timing attack mitigation in
+     * pwgLogin(). The fake user hash is cached per session to avoid
+     * repeated hashing overhead while maintaining constant-time
+     * authentication behavior.
+     *
+     * @since 16
+     * @return array{id: null, password: string} id and password
+     */
+    public function generateFakeUser(): array
+    {
+        // Generate once per session to avoid repeated hashing overhead.
+        // Uses current password_hash algorithm to match real user verification costs.
+        if (! isset($_SESSION['fake_user_cache'])) {
+            $fake_password = bin2hex(random_bytes(10));
+            $_SESSION['fake_user_cache'] = [
+                'id' => null,
+                'password' => new PasswordService(new PasswordRepository(DbConnection::build()))->hash($fake_password),
+            ];
+        }
+
+        $fake_user = $_SESSION['fake_user_cache'];
+        assert(is_array($fake_user));
+        assert(array_key_exists('id', $fake_user) && $fake_user['id'] === null);
+        assert(isset($fake_user['password']) && is_string($fake_user['password']));
+
+        return [
+            'id' => null,
+            'password' => $fake_user['password'],
+        ];
+    }
+
+    /**
+     * Clear current session fake user cache.
+     *
+     * @since 16
+     */
+    public function clearFakeUserCache(): void
+    {
+        unset($_SESSION['fake_user_cache']);
+    }
+
+    /**
+     * Performs auto-connection if authentication key is valid.
+     *
+     * @since 2.8
+     * @param mixed $authKey raw, unvalidated request input ($_GET['auth'], an
+     *   Authorization header value, or a ws param) -- normalized to '' when
+     *   not already a string (a malicious/malformed request can hand this an
+     *   array), which safely fails every format check below
+     */
+    public function authKeyLogin(mixed $authKey, bool $connectionByHeader = false): bool
+    {
+        /**
+         * @var array<string, mixed> $conf
+         * @var array<string, mixed> $user
+         * @var array<string, mixed> $page
+         */
+        global $conf, $user, $page;
+
+        // see UserService::validateMailAddress() for why this is string=>string
+        /** @var array<string, string> $user_fields */
+        $user_fields = $conf['user_fields'];
+
+        $authKey = is_string($authKey) ? $authKey : '';
+
+        $valid_key = false;
+        $secret_key = null;
+        if ((bool) preg_match('/^[a-z0-9]{30}$/i', $authKey)) {
+            $valid_key = 'auth_key';
+        } elseif ((bool) preg_match('/^pkid-\d{8}-[a-z0-9]{20}:[a-z0-9]{40}$/i', $authKey)) {
+            $valid_key = 'api_key';
+            $tmp_key = explode(':', $authKey);
+            $authKey = $tmp_key[0];
+            $secret_key = $tmp_key[1];
+        }
+
+        if (! (bool) $valid_key) {
+            return false;
+        }
+
+        $query = '
+SELECT
+    *,
+    ' . $user_fields['username'] . ' AS username,
+    ' . $user_fields['email'] . ' AS email,
+    NOW() AS dbnow,
+    DATEDIFF(uak.expired_on, NOW()) AS days_left,
+    SUBDATE(NOW(), INTERVAL 48 HOUR) AS 48h_ago
+  FROM ' . Tables::userAuthKeys() . ' AS uak
+    JOIN ' . Tables::userInfos() . ' AS ui ON uak.user_id = ui.user_id
+    JOIN ' . Tables::users() . ' AS u ON u.' . $user_fields['id'] . ' = ui.user_id
+  WHERE auth_key = \'' . $authKey . '\'
+;';
+        $keys = query2array($query);
+
+        if (count($keys) == 0) {
+            return false;
+        }
+
+        $key = $keys[0];
+
+        // is the key still valid?
+        if (strtotime((string) $key['expired_on']) < strtotime((string) $key['dbnow'])) {
+            $page['auth_key_invalid'] = true;
+            return false;
+        }
+
+        // admin/webmaster/guest can't get connected with authentication keys
+        if ($valid_key === 'auth_key' and ! in_array($key['status'], ['normal', 'generic'])) {
+            return false;
+        }
+
+        // the key is an api_key
+        if ($valid_key === 'api_key') {
+            // check secret
+            $apikey_secret = $key['apikey_secret'];
+            if (! is_string($apikey_secret) || ! new PasswordService(new PasswordRepository(DbConnection::build()))->verify($secret_key ?? '', $apikey_secret)) {
+                return false;
+            }
+
+            // is the key is revoked?
+            if ($key['revoked_on'] != null) {
+                return false;
+            }
+
+            // check if we need to notificate the user
+            $days_left = intval($key['days_left']);
+            if (
+                $days_left <= 7 // the key expire in max 7 days
+                and ! empty($key['email']) // the user have an email
+                and (
+                    $key['last_notified_on'] === null // we never send an email for this key
+                    or strtotime($key['last_notified_on']) < strtotime((string) $key['48h_ago']) // OR when the last email was sent more than 48 hours ago
+                )
+            ) {
+                $page['notify_api_key_expiration'] = [
+                    'days_left' => $days_left,
+                    'dbnow' => $key['dbnow'],
+                    'auth_key' => $key['auth_key'],
+                ];
+            }
+        }
+
+        $key_user_id = $key['user_id'];
+        assert(is_numeric($key_user_id));
+        $user['id'] = $key_user_id;
+
+        // update last used key
+        single_update(
+            Tables::userAuthKeys(),
+            [
+                'last_used_on' => $key['dbnow'],
+            ],
+            [
+                'user_id' => $key_user_id,
+                'auth_key' => $key['auth_key'],
+            ],
+        );
+
+        // set the type of connection
+        $_SESSION['connected_with'] = $valid_key;
+
+        // if the connection is made via an API key in the header,
+        // access is authenticated without creating a persistent user session
+        // this enables stateless authentication for API calls
+        if ($connectionByHeader) {
+            return true;
+        }
+
+        $this->logUser($key_user_id, false);
+        trigger_notify('login_success', $key['username']);
+
+        // to be registered in history table by pwg_log function
+        $page['auth_key_id'] = $key['auth_key_id'];
+
+        return true;
+    }
+
+    /**
+     * Creates an authentication key.
+     *
+     * @since 2.8
+     * @return array<string, mixed>|false false if auth keys are disabled or the user status is ineligible
+     */
+    public function createUserAuthKey(int $userId, ?string $userStatus = null): array|false
+    {
+        /** @var array<string, mixed> $conf */
+        global $conf;
+
+        // auth_key_duration defaults to 3*24*60*60 (int) in
+        // include/config_default.inc.php, but once persisted to the config DB
+        // table it comes back as a raw string (see load_conf_from_db())
+        $auth_key_duration = $conf['auth_key_duration'];
+        $auth_key_duration = is_numeric($auth_key_duration) ? (int) $auth_key_duration : 0;
+
+        if ($auth_key_duration == 0) {
+            return false;
+        }
+
+        if (! isset($userStatus)) {
+            // we have to find the user status
+            $query = '
+SELECT
+    status
+  FROM ' . Tables::userInfos() . '
+  WHERE user_id = ' . $userId . '
+;';
+            $user_infos = query2array($query);
+
+            if (count($user_infos) == 0) {
+                return false;
+            }
+
+            $userStatus = $user_infos[0]['status'];
+        }
+
+        if (! in_array($userStatus, ['normal', 'generic'])) {
+            return false;
+        }
+
+        $candidate = SessionService::get()->generateKey(30);
+
+        $query = '
+SELECT
+    COUNT(*),
+    NOW(),
+    ADDDATE(NOW(), INTERVAL ' . $auth_key_duration . ' SECOND)
+  FROM ' . Tables::userAuthKeys() . '
+  WHERE auth_key = \'' . $candidate . '\'
+;';
+        $row = pwg_db_fetch_row(pwg_query($query));
+        assert($row !== null);
+        [$counter, $now, $expiration] = $row;
+        if ($counter == 0) {
+            $key = [
+                'auth_key' => $candidate,
+                'user_id' => $userId,
+                'created_on' => $now,
+                'duration' => $auth_key_duration,
+                'expired_on' => $expiration,
+                'key_type' => 'auth_key',
+            ];
+
+            single_insert(Tables::userAuthKeys(), $key);
+
+            $key['auth_key_id'] = pwg_db_insert_id();
+
+            return $key;
+        } else {
+            return $this->createUserAuthKey($userId, $userStatus);
+        }
+    }
+
+    /**
+     * Deactivates authentication keys.
+     *
+     * @since 2.8
+     */
+    public function deactivateUserAuthKeys(int $userId): void
+    {
+        $query = '
+UPDATE ' . Tables::userAuthKeys() . '
+  SET expired_on = NOW()
+  WHERE user_id = ' . $userId . '
+    AND expired_on > NOW()
+    AND key_type = \'auth_key\'
+;';
+        pwg_query($query);
+    }
+
+    /**
+     * Deactivates password reset key.
+     *
+     * @since 11
+     */
+    public function deactivatePasswordResetKey(int $userId): void
+    {
+        single_update(
+            Tables::userInfos(),
+            [
+                'activation_key' => null,
+                'activation_key_expire' => null,
+            ],
+            [
+                'user_id' => $userId,
+            ]
+        );
+    }
+
+    /**
+     * Generate reset password link.
+     *
+     * @since 15
+     * @return array{time_validation: string, password_link: string}
+     */
+    public function generatePasswordLink(int $userId, bool $firstLogin = false): array
+    {
+        /** @var array<string, mixed> $conf */
+        global $conf;
+
+        $activation_key = SessionService::get()->generateKey(20);
+
+        // password_activation_duration/password_reset_duration default to ints
+        // in include/config_default.inc.php, but once persisted to the config
+        // DB table they come back as raw strings (see load_conf_from_db())
+        $duration = $firstLogin
+        ? $conf['password_activation_duration']
+        : $conf['password_reset_duration'];
+        $duration = is_numeric($duration) ? (int) $duration : 0;
+        $row = pwg_db_fetch_row(pwg_query('SELECT ADDDATE(NOW(), INTERVAL ' . $duration . ' SECOND)'));
+        assert($row !== null);
+        [$expire] = $row;
+
+        single_update(
+            Tables::userInfos(),
+            [
+                'activation_key' => new PasswordService(new PasswordRepository(DbConnection::build()))->hash($activation_key),
+                'activation_key_expire' => $expire,
+            ],
+            [
+                'user_id' => $userId,
+            ]
+        );
+
+        set_make_full_url();
+
+        $password_link = get_root_url() . 'password.php?key=' . $activation_key;
+
+        unset_make_full_url();
+
+        $validation_timestamp = strtotime('now -' . $duration . ' second');
+        if ($validation_timestamp === false) {
+            throw new \Exception('generatePasswordLink(): strtotime() failed for duration ' . $duration);
+        }
+        $time_validation = time_since(
+            $validation_timestamp,
+            'second',
+            null,
+            false
+        );
+
+        return [
+            'time_validation' => $time_validation,
+            'password_link' => $password_link,
+        ];
+    }
+
+    /**
+     * Gets the last visit (datetime) of a user, based on history table.
+     *
+     * @since 2.9
+     * @param bool $saveInUserInfos to store result in user_infos.last_visit
+     * @return string|null date & time of last visit
+     */
+    public function getUserLastVisitFromHistory(int $userId, bool $saveInUserInfos = false): ?string
+    {
+        $last_visit = null;
+
+        $query = '
+SELECT
+    date,
+    time
+FROM ' . Tables::history() . '
+  WHERE user_id = ' . $userId . '
+  ORDER BY id DESC
+  LIMIT 1
+;';
+        $result = pwg_query($query);
+        while ((bool) ($row = pwg_db_fetch_assoc($result))) {
+            $last_visit = $row['date'] . ' ' . $row['time'];
+        }
+
+        if ($saveInUserInfos) {
+            $query = '
+UPDATE ' . Tables::userInfos() . '
+  SET last_visit = ' . ($last_visit === null ? 'NULL' : "'" . $last_visit . "'") . ',
+      last_visit_from_history = \'true\',
+      lastmodified = lastmodified
+  WHERE user_id = ' . $userId . '
+';
+            pwg_query($query);
+        }
+
+        return $last_visit;
+    }
+
+    /**
+     * See if this is the first time the user has logged on.
+     *
+     * @since 15
+     */
+    public function hasAlreadyLoggedIn(int $userId): bool
+    {
+        $query = '
+SELECT COUNT(*)
+  FROM ' . Tables::activity() . '
+  WHERE action = \'login\' and performed_by = ' . $userId . '';
+
+        $row = pwg_db_fetch_row(pwg_query($query));
+        assert($row !== null);
+        [$logged_in] = $row;
+        if ($logged_in > 0) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Generate a user code for verification.
+     *
+     * @since 16
+     * @return array{secret: string, code: string}
+     */
+    public static function generateUserCode(): array
+    {
+        /** @var array<string, mixed> $conf */
+        global $conf;
+
+        $secret = PwgTOTP::generateSecret();
+        // password_reset_code_duration defaults to 5*60 (int) in
+        // include/config_default.inc.php, but once persisted to the config DB
+        // table it comes back as a raw string (see load_conf_from_db())
+        $password_reset_code_duration = $conf['password_reset_code_duration'];
+        $password_reset_code_duration = is_numeric($password_reset_code_duration) ? (int) $password_reset_code_duration : 300;
+        $code = PwgTOTP::generateCode($secret, min($password_reset_code_duration, 900)); // max 15 minutes
+
+        return [
+            'secret' => $secret,
+            'code' => $code,
+        ];
+    }
+
+    /**
+     * Verify a user code.
+     *
+     * @since 16
+     */
+    public static function verifyUserCode(string $secret, string $code): bool
+    {
+        /** @var array<string, mixed> $conf */
+        global $conf;
+
+        // see generateUserCode() for why this needs numeric narrowing
+        $password_reset_code_duration = $conf['password_reset_code_duration'];
+        $password_reset_code_duration = is_numeric($password_reset_code_duration) ? (int) $password_reset_code_duration : 300;
+        return PwgTOTP::verifyCode($code, $secret, min($password_reset_code_duration, 900), 1);
     }
 }

@@ -90,7 +90,7 @@ abstract class CalendarBase
         // include/section_init.inc.php and admin/cat_list.php.
         $level_separator = is_string($conf['level_separator']) ? $conf['level_separator'] : ' / ';
         // chronology_date is always an array by the time calendar classes
-        // run (see functions_calendar.inc.php::init_calendar_chronology(),
+        // run (see CalendarRenderer::render(),
         // which sanitizes it before this is ever called); see the identical
         // pattern in calendar_monthly.class.php.
         $page_chronology_date = is_array($page['chronology_date']) ? $page['chronology_date'] : [];
@@ -260,7 +260,7 @@ $this->get_date_where($level) . '
         $level_items = query2array($query, 'period', 'nb_images');
 
         // chronology_date is always an array by the time calendar classes
-        // run (see functions_calendar.inc.php::init_calendar_chronology(),
+        // run (see CalendarRenderer::render(),
         // which sanitizes it before initialize()/generate_category_content()
         // are ever called); see the identical pattern in
         // calendar_monthly.class.php.
@@ -325,7 +325,7 @@ $this->get_date_where($level) . '
         }
 
         // chronology_date is always an array by the time calendar classes
-        // run (see functions_calendar.inc.php::init_calendar_chronology(),
+        // run (see CalendarRenderer::render(),
         // which sanitizes it before this is ever called); see the identical
         // pattern in calendar_monthly.class.php.
         $page_chronology_date = is_array($page['chronology_date']) ? $page['chronology_date'] : [];

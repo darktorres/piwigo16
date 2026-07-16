@@ -5,9 +5,15 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Admin\Category\CategoryAdminService;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
 use Piwigo\Template\Template;
 
 /**
@@ -28,7 +34,7 @@ final class CatOptionsPageRenderer
          */
         global $page, $template;
 
-        check_status(AccessLevel::Administrator);
+        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
         if ($_POST !== []) {
             check_pwg_token();
@@ -174,8 +180,13 @@ SELECT DISTINCT id,name,uppercats,global_rank
                 'L_CAT_OPTIONS_FALSE' => $l_false,
             ]
         );
-        display_select_cat_wrapper($query_true, [], 'category_option_true');
-        display_select_cat_wrapper($query_false, [], 'category_option_false');
+        $categoryConn = DbConnection::build();
+        $categoryService = new CategoryService(
+            new CategoryRepository($categoryConn),
+            new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
+        );
+        $categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true');
+        $categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false');
         $template->assign('PWG_TOKEN', get_pwg_token());
         $template->assign('ADMIN_PAGE_TITLE', l10n('Properties of abums'));
 

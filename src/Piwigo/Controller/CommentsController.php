@@ -4,13 +4,25 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Piwigo\Auth\EphemeralKeyService;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
+use Piwigo\Comment\CommentRepository;
+use Piwigo\Comment\CommentService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
+use Piwigo\Html\HtmlService;
+use Piwigo\Mail\MailService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Menu\MenubarRenderer;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
 use Piwigo\Template\Template;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -31,8 +43,6 @@ final class CommentsController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        include_once PHPWG_ROOT_PATH . 'include/functions_comment.inc.php';
-
         /**
          * @var array<string, mixed> $conf
          * @var Template $template
@@ -44,7 +54,7 @@ final class CommentsController implements ControllerInterface
             page_not_found(null);
         }
 
-        check_status(AccessLevel::Guest);
+        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
         $url_self = PHPWG_ROOT_PATH . 'comments.php'
           . get_query_string_diff(['delete', 'edit', 'validate', 'pwg_token']);
@@ -206,7 +216,7 @@ final class CommentsController implements ControllerInterface
 
             // currently, the $_GET['comment_id'] is only used by admins
             // from email for management purpose (validate/delete)
-            if (! is_admin()) {
+            if (! \Piwigo\Auth\AccessControl::isAdmin()) {
                 $request_uri = $_SERVER['REQUEST_URI'] ?? '';
                 $request_uri = is_string($request_uri) ? $request_uri : '';
                 $login_url =
@@ -244,19 +254,15 @@ final class CommentsController implements ControllerInterface
         $page['where_clauses'][] = $since_options[$since_id]['clause'];
 
         // which status to filter on ?
-        if (! is_admin()) {
+        if (! \Piwigo\Auth\AccessControl::isAdmin()) {
             $page['where_clauses'][] = 'validated=\'true\'';
         }
 
-        $page['where_clauses'][] = get_sql_condition_FandF(
-            [
-                'forbidden_categories' => 'category_id',
-                'visible_categories' => 'category_id',
-                'visible_images' => 'ic.image_id',
-            ],
-            '',
-            true
-        );
+        $page['where_clauses'][] = (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
+            'forbidden_categories' => 'category_id',
+            'visible_categories' => 'category_id',
+            'visible_images' => 'ic.image_id',
+        ], '', true);
 
         // +-----------------------------------------------------------+
         // |                   comments management                     |
@@ -265,6 +271,8 @@ final class CommentsController implements ControllerInterface
         $comment_id = null;
         $action = null;
         $edit_comment = null;
+
+        $commentService = new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService());
 
         $actions = ['delete', 'validate', 'edit'];
         foreach ($actions as $loop_action) {
@@ -281,22 +289,22 @@ final class CommentsController implements ControllerInterface
         }
 
         if (isset($action) and $comment_id !== null) {
-            $comment_author_id = get_comment_author_id($comment_id);
+            $comment_author_id = $commentService->getCommentAuthorId($comment_id);
             // die_on_error defaults to true, so false is unreachable here
             assert($comment_author_id !== false);
 
-            if (can_manage_comment($action, $comment_author_id)) {
+            if (\Piwigo\Auth\AccessControl::canManageComment($action, $comment_author_id)) {
                 $perform_redirect = false;
 
                 if ($action === 'delete') {
                     check_pwg_token();
-                    delete_user_comment($comment_id);
+                    $commentService->deleteComment($comment_id);
                     $perform_redirect = true;
                 }
 
                 if ($action === 'validate') {
                     check_pwg_token();
-                    validate_user_comment($comment_id);
+                    $commentService->validateComment($comment_id);
                     $perform_redirect = true;
                 }
 
@@ -308,7 +316,7 @@ final class CommentsController implements ControllerInterface
                         if (! is_string($post_key)) {
                             $post_key = '';
                         }
-                        $comment_action = update_user_comment(
+                        $comment_action = $commentService->updateComment(
                             [
                                 'comment_id' => $_GET['edit'],
                                 'image_id' => $_POST['image_id'],
@@ -403,15 +411,16 @@ final class CommentsController implements ControllerInterface
             $query = '
 SELECT id, name, uppercats, global_rank
   FROM ' . Tables::categories() . '
-' . get_sql_condition_FandF(
-                [
-                    'forbidden_categories' => 'id',
-                    'visible_categories' => 'id',
-                ],
-                'WHERE'
-            ) . '
+' . (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
+                'forbidden_categories' => 'id',
+                'visible_categories' => 'id',
+            ], 'WHERE') . '
 ;';
-            display_select_cat_wrapper($query, [@$_GET['cat']], $blockname, true);
+            $categoryConn = DbConnection::build();
+            new CategoryService(
+                new CategoryRepository($categoryConn),
+                new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
+            )->displaySelectCatWrapper($query, [@$_GET['cat']], $blockname, true);
 
             // Filter on recent comments...
             $tpl_var = [];
@@ -596,11 +605,11 @@ SELECT *
                         'CONTENT' => trigger_change('render_comment_content', $comment['content']),
                     ];
 
-                    if (is_admin()) {
+                    if (\Piwigo\Auth\AccessControl::isAdmin()) {
                         $tpl_comment['EMAIL'] = $email;
                     }
 
-                    if (can_manage_comment('delete', $author_id)) {
+                    if (\Piwigo\Auth\AccessControl::canManageComment('delete', $author_id)) {
                         $tpl_comment['U_DELETE'] = add_url_params(
                             $url_self,
                             [
@@ -610,7 +619,7 @@ SELECT *
                         );
                     }
 
-                    if (can_manage_comment('edit', $author_id)) {
+                    if (\Piwigo\Auth\AccessControl::canManageComment('edit', $author_id)) {
                         $tpl_comment['U_EDIT'] = add_url_params(
                             $url_self,
                             [
@@ -629,7 +638,7 @@ SELECT *
                         }
                     }
 
-                    if (can_manage_comment('validate', $author_id)) {
+                    if (\Piwigo\Auth\AccessControl::canManageComment('validate', $author_id)) {
                         if ($comment['validated'] !== 'true') {
                             $tpl_comment['U_VALIDATE'] = add_url_params(
                                 $url_self,
@@ -651,7 +660,7 @@ SELECT *
             $themeconf = $template->get_template_vars('themeconf');
             $themeconf = is_array($themeconf) ? $themeconf : [];
             if (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('theCommentsPage', $themeconf['hide_menu_on'], true)) {
-                include PHPWG_ROOT_PATH . 'include/menubar.inc.php';
+                new MenubarRenderer()->render();
             }
 
             // +---------------------------------------------------------------+
@@ -659,7 +668,7 @@ SELECT *
             // +---------------------------------------------------------------+
             include PHPWG_ROOT_PATH . 'include/page_header.php';
             trigger_notify('loc_end_comments');
-            flush_page_messages();
+            new HtmlService()->flushPageMessages();
             if (count($comments) > 0) {
                 $template->assign_var_from_handle('COMMENT_LIST', 'comment_list');
             }

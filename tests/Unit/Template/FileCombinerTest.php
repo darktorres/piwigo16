@@ -14,22 +14,13 @@ use Piwigo\Template\FileCombiner;
 // filesystem (confirmed by reading flush_pending()/process_combinable()'s
 // own branches).
 //
-// is_admin() (called unconditionally inside combine()) is a free function
-// (include/functions_user.inc.php) -- not autoloaded like a class. A
-// minimal guarded stub, not a require_once of the real file, to avoid
-// pulling in the whole legacy bootstrap chain. Same "minimal stubs for
-// not-yet-migrated free functions" pattern as HtmlServiceTest.php/
-// PasswordHashTest.php.
-if (! function_exists('is_admin')) {
-    function is_admin(string $user_status = ''): bool
-    {
-        return false;
-    }
-}
+// combine() now calls Piwigo\Auth\AccessControl::isAdmin() directly (P23
+// batch 8d) -- a pure `global $user;` read, zero DB dependency -- so no
+// stub is needed; beforeEach()'s $GLOBALS['user']['status'] = 'guest'
+// below already makes it return false, matching this test's old stub.
 
-if (! function_exists('url_is_remote')) {
-    require_once dirname(__DIR__, 3) . '/include/functions_url.inc.php';
-}
+// url_is_remote() -- always available now via composer autoload.files
+// (src/Piwigo/Url/functions.php, P23 batch 8c), no explicit require needed.
 
 beforeEach(function (): void {
     $GLOBALS['conf'] = [

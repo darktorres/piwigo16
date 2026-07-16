@@ -6,6 +6,7 @@ namespace Piwigo\Admin\Extensions;
 
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
+use Piwigo\Mail\MailService;
 use Piwigo\Template\Template;
 
 /**
@@ -205,9 +206,7 @@ final class CoreUpdateService
             return;
         }
 
-        include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php';
-
-        switch_lang_to(get_default_language());
+        new MailService()->switchLangTo((new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultLanguage());
 
         $content = l10n('Hello,');
         $content .= "\n\n" . l10n(
@@ -218,7 +217,7 @@ final class CoreUpdateService
         $content .= "\n\n" . l10n('It only takes a few clicks.');
         $content .= "\n\n" . l10n('Running on an up-to-date Piwigo is important for security.');
 
-        pwg_mail_admins(
+        new MailService()->mailAdmins(
             [
                 'subject' => l10n('Piwigo %s is available, please update', $newVersionsString),
                 'content' => $content,
@@ -231,7 +230,7 @@ final class CoreUpdateService
             true
         );
 
-        switch_lang_back();
+        new MailService()->switchLangBack();
 
         conf_update_param(
             'update_notify_last_notification',

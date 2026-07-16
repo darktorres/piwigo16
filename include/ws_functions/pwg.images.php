@@ -10,16 +10,33 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\Upload\UploadService;
+use Piwigo\Auth\CookieService;
+use Piwigo\Auth\EphemeralKeyService;
+use Piwigo\Cache\PersistentFileCache;
+use Piwigo\Category\CategoryService;
+use Piwigo\Comment\CommentRepository;
+use Piwigo\Comment\CommentService;
 use Piwigo\Config\Config;
 use Piwigo\Core\Logger;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
+use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Mail\MailService;
 use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
+use Piwigo\Rate\RateRepository;
+use Piwigo\Rate\RateService;
+use Piwigo\Search\SearchRepository;
+use Piwigo\Search\SearchService;
 use Piwigo\Storage\StorageRegistry;
+use Piwigo\Tag\TagRepository;
+use Piwigo\Tag\TagService;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
@@ -321,14 +338,11 @@ SELECT DISTINCT image_id
       INNER JOIN ' . Tables::categories() . ' ON category_id=id
   WHERE commentable="true"
     AND image_id=' . $params['image_id'] .
-      get_sql_condition_FandF(
-          [
-              'forbidden_categories' => 'id',
-              'visible_categories' => 'id',
-              'visible_images' => 'image_id',
-          ],
-          ' AND'
-      ) . '
+      (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
+          'forbidden_categories' => 'id',
+          'visible_categories' => 'id',
+          'visible_images' => 'image_id',
+      ], ' AND') . '
 ;';
 
     if (! (bool) pwg_db_num_rows(pwg_query($query))) {
@@ -341,10 +355,9 @@ SELECT DISTINCT image_id
         'image_id' => $params['image_id'],
     ];
 
-    include_once PHPWG_ROOT_PATH . 'include/functions_comment.inc.php';
-
     $infos = [];
-    $comment_action = insert_user_comment($comm, $params['key'], $infos);
+    $comment_action = new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService())
+        ->insertComment($comm, $params['key'], $infos);
 
     switch ($comment_action) {
         case 'reject':
@@ -387,12 +400,9 @@ function ws_images_getInfo(array $params, PwgServer $service): PwgError|array
 SELECT *
   FROM ' . Tables::images() . '
   WHERE id=' . $params['image_id'] .
-      get_sql_condition_FandF(
-          [
-              'visible_images' => 'id',
-          ],
-          ' AND'
-      ) . '
+      (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
+          'visible_images' => 'id',
+      ], ' AND') . '
 LIMIT 1
 ;';
     $result = pwg_query($query);
@@ -441,12 +451,9 @@ SELECT id, name, permalink, uppercats, global_rank, commentable
   FROM ' . Tables::imageCategory() . '
     INNER JOIN ' . Tables::categories() . ' ON category_id = id
   WHERE image_id = ' . $image_id .
-      get_sql_condition_FandF(
-          [
-              'forbidden_categories' => 'category_id',
-          ],
-          ' AND'
-      ) . '
+      (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
+          'forbidden_categories' => 'category_id',
+      ], ' AND') . '
 ;';
     $result = pwg_query($query);
 
@@ -483,16 +490,18 @@ SELECT id, name, permalink, uppercats, global_rank, commentable
 
         $related_categories[] = $row;
     }
-    usort($related_categories, global_rank_compare(...));
+    usort($related_categories, CategoryService::compareByGlobalRank(...));
 
-    if (empty($related_categories) and ! is_admin()) {
+    if (empty($related_categories) and ! \Piwigo\Auth\AccessControl::isAdmin()) {
         // photo might be in the lounge? or simply orphan. A standard user should not get
         // info. An admin should still be able to get info.
         return new PwgError(401, 'Access denied');
     }
 
     // -------------------------------------------------------------- related tags
-    $related_tags = get_common_tags([$image_id], -1);
+    $tagConn = DbConnection::build();
+    $related_tags = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)))
+        ->getCommonTags([$image_id], -1);
     foreach ($related_tags as $i => $tag) {
         $tag['url'] = make_index_url(
             [
@@ -541,7 +550,7 @@ SELECT COUNT(rate) AS count, ROUND(AVG(rate),2) AS average
     $related_comments = [];
 
     $where_comments = 'image_id = ' . $image_id;
-    if (! is_admin()) {
+    if (! \Piwigo\Auth\AccessControl::isAdmin()) {
         $where_comments .= ' AND validated="true"';
     }
 
@@ -573,7 +582,7 @@ SELECT id, date, author, content
     $comment_post_data = null;
     if ((bool) $conf['activate_comments'] and
         $is_commentable and
-        (! is_a_guest()
+        (! \Piwigo\Auth\AccessControl::isAGuest()
           or (bool) $conf['comments_forall']
         )
     ) {
@@ -648,21 +657,18 @@ SELECT DISTINCT id
   FROM ' . Tables::images() . '
     INNER JOIN ' . Tables::imageCategory() . ' ON id=image_id
   WHERE id=' . $params['image_id']
-      . get_sql_condition_FandF(
-          [
-              'forbidden_categories' => 'category_id',
-              'forbidden_images' => 'id',
-          ],
-          '    AND'
-      ) . '
+      . (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
+          'forbidden_categories' => 'category_id',
+          'forbidden_images' => 'id',
+      ], '    AND') . '
   LIMIT 1
 ;';
     if (pwg_db_num_rows(pwg_query($query)) == 0) {
         return new PwgError(404, 'Invalid image_id or access denied');
     }
 
-    include_once PHPWG_ROOT_PATH . 'include/functions_rate.inc.php';
-    $res = rate_picture($params['image_id'], (int) $params['rate']);
+    $res = new RateService(new RateRepository(DbConnection::build()), new CookieService())
+        ->rate($params['image_id'], (int) $params['rate']);
 
     if ($res == false) {
         /** @var array<string, mixed> $conf */
@@ -685,8 +691,6 @@ SELECT DISTINCT id
  */
 function ws_images_search(array $params, PwgServer $service): array
 {
-    include_once PHPWG_ROOT_PATH . 'include/functions_search.inc.php';
-
     $images = [];
     $where_clauses = ws_std_image_sql_filter($params, 'i.');
     $order_by = ws_std_image_sql_order($params, 'i.');
@@ -699,7 +703,13 @@ function ws_images_search(array $params, PwgServer $service): array
         $super_order_by = true; // quick_search_result might be faster
     }
 
-    $search_result = get_quick_search_results(
+    $searchConn = DbConnection::build();
+    $search_result = new SearchService(
+        new SearchRepository($searchConn),
+        new PermissionService(new PermissionRepository($searchConn), new GroupRepository($searchConn)),
+        new PersistentFileCache(),
+        new MailService(),
+    )->getQuickSearchResults(
         $params['query'],
         [
             'super_order_by' => $super_order_by,
@@ -798,16 +808,22 @@ function ws_images_filteredSearch_create(array $params, PwgServer $service): Pwg
      */
     global $user, $conf;
 
-    include_once PHPWG_ROOT_PATH . 'include/functions_search.inc.php';
+    $searchConn = DbConnection::build();
+    $searchService = new SearchService(
+        new SearchRepository($searchConn),
+        new PermissionService(new PermissionRepository($searchConn), new GroupRepository($searchConn)),
+        new PersistentFileCache(),
+        new MailService(),
+    );
 
     // * check the search exists
     $search_info = null;
     if (isset($params['search_id'])) {
-        if (empty(get_search_id_pattern($params['search_id']))) {
+        if (empty(SearchService::getSearchIdPattern($params['search_id']))) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid search_id input parameter.');
         }
 
-        $search_info = get_search_info($params['search_id']);
+        $search_info = $searchService->getValidatedSearchInfo($params['search_id']);
         if (empty($search_info)) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This search does not exist.');
         }
@@ -848,7 +864,7 @@ function ws_images_filteredSearch_create(array $params, PwgServer $service): Pwg
         }
         $search['fields']['allwords']['fields'] = $params['allwords_fields'];
 
-        $search['fields']['allwords']['words'] = split_allwords($params['allwords']);
+        $search['fields']['allwords']['words'] = SearchService::splitAllwords($params['allwords']);
     }
 
     if (isset($params['tags'])) {
@@ -1061,7 +1077,7 @@ function ws_images_filteredSearch_create(array $params, PwgServer $service): Pwg
 
     $search_info_id = $search_info['id'] ?? null;
     $forked_from = is_numeric($search_info_id) ? (int) $search_info_id : null;
-    [$search_uuid, $search_url] = save_search($search, $forked_from);
+    [$search_uuid, $search_url] = $searchService->saveSearch($search, $forked_from);
 
     return [
         'search_id' => $search_uuid,
@@ -1920,7 +1936,7 @@ SELECT
         assert($row !== null);
         [$nb_photos_lounge] = $row;
 
-        $category_name = get_cat_display_name_from_id($params['category'][0], null);
+        $category_name = new HtmlService()->getCatDisplayNameFromId($params['category'][0], null);
 
         $nb_photos_in_category = is_numeric($category_infos['nb_photos']) ? (int) $category_infos['nb_photos'] : 0;
         $nb_photos_lounge = is_numeric($nb_photos_lounge) ? (int) $nb_photos_lounge : 0;
@@ -2904,7 +2920,7 @@ SELECT
     if ($category_infos === false || $category_infos === null) {
         throw new Exception(__FUNCTION__ . '(): category-count aggregate query returned no row');
     }
-    $category_name = get_cat_display_name_from_id($params['category_id'], null);
+    $category_name = new HtmlService()->getCatDisplayNameFromId($params['category_id'], null);
 
     trigger_notify(
         'ws_images_uploadCompleted',

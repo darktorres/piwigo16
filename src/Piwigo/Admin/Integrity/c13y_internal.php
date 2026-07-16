@@ -13,6 +13,7 @@ namespace Piwigo\Admin\Integrity;
 
 use Piwigo\Core\AppInfo;
 use Piwigo\Db\Tables;
+use Piwigo\Session\SessionService;
 
 class c13y_internal
 {
@@ -220,15 +221,15 @@ class c13y_internal
                         $name = 'guest';
                     } elseif ($id == $webmaster_id) {
                         $name = 'webmaster';
-                        $password = generate_key(6);
+                        $password = SessionService::get()->generateKey(6);
                     }
 
                     if (isset($name)) {
                         $name_ok = false;
                         while (! $name_ok) {
-                            $name_ok = (get_userid($name) === false);
+                            $name_ok = ((new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getUserId($name) === false);
                             if (! $name_ok) {
-                                $name .= generate_key(1);
+                                $name .= SessionService::get()->generateKey(1);
                             }
                         }
 
@@ -241,7 +242,7 @@ class c13y_internal
                         ];
                         mass_inserts(Tables::users(), array_keys($inserts[0]), $inserts);
 
-                        create_user_infos($id);
+                        (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->createUserInfos($id);
 
                         $page['infos'][] = sprintf(l10n('User "%s" created with "%s" like password'), $name, $password);
 

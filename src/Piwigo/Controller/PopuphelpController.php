@@ -31,7 +31,7 @@ final class PopuphelpController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        check_status(AccessLevel::Guest);
+        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
         $queryParams = $request->getQueryParams();
         $rawPage = $queryParams['page'] ?? null;

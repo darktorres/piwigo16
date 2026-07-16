@@ -21,7 +21,7 @@ final class HelpPageRenderer
          */
         global $page, $template, $user;
 
-        check_status(AccessLevel::Administrator);
+        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
         $selected = null;
         if (! isset($_GET['section']) || ! is_string($_GET['section'])) {

@@ -17,8 +17,10 @@ use Monolog\Logger as MonologLogger;
 use Piwigo\Cache\CacheFactory;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigRepository;
+use Piwigo\Core\MailerInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\TablePrefixListener;
+use Piwigo\Mail\MailService;
 use Piwigo\Routing\Router;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Container\ContainerInterface;
@@ -42,6 +44,14 @@ use function DI\factory;
  * @return array<string, mixed>
  */
 return [
+    // Interface binding (P23 batch 8c) -- Piwigo\Mail\MailService is
+    // L3Presentation (real Template dependency); L2aCoreDomain/
+    // L2bExtendedDomain classes (UserService/CommentService) constructor-
+    // inject MailerInterface instead of depending on the concrete class
+    // directly, per deptrac.yaml's ruleset. See src/Piwigo/Core/
+    // MailerInterface.php's own docblock.
+    MailerInterface::class => \DI\get(MailService::class),
+
     // Unresolvable string param (the routes file path) -- Router::fromFile()
     // needs a path autowire can't provide.
     Router::class => factory(static fn (): Router => Router::fromFile(dirname(__DIR__) . '/config/routes.php')),

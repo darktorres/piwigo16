@@ -8,6 +8,8 @@ use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
 use Piwigo\Db\DbConnection;
+use Piwigo\Mail\MailService;
+use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
 
 /**
@@ -52,7 +54,7 @@ final class PictureCommentRenderer
         global $related_categories, $url_self;
 
         $commentRepository = new CommentRepository(DbConnection::build());
-        $commentService = new CommentService($commentRepository, new EphemeralKeyService());
+        $commentService = new CommentService($commentRepository, new EphemeralKeyService(), new MailService());
 
         $commentAction = null;
 
@@ -73,7 +75,7 @@ final class PictureCommentRenderer
         }
 
         if ($page['show_comments'] and isset($_POST['content'])) {
-            if (is_a_guest() and ! (bool) $conf['comments_forall']) {
+            if (\Piwigo\Auth\AccessControl::isAGuest() and ! (bool) $conf['comments_forall']) {
                 die('Session expired');
             }
 
@@ -140,7 +142,7 @@ final class PictureCommentRenderer
             return;
         }
 
-        $onlyValidated = ! is_admin();
+        $onlyValidated = ! \Piwigo\Auth\AccessControl::isAdmin();
 
         // number of comments for this picture
         $nbComments = $commentRepository->countForImage($imageId, $onlyValidated);
@@ -175,9 +177,9 @@ final class PictureCommentRenderer
             // comments order (get, session, conf)
             $getCommentsOrder = $_GET['comments_order'] ?? null;
             if (is_string($getCommentsOrder) && $getCommentsOrder !== '' && $getCommentsOrder !== '0' && in_array(strtoupper($getCommentsOrder), ['ASC', 'DESC'], true)) {
-                pwg_set_session_var('comments_order', $getCommentsOrder);
+                SessionService::get()->setSessionVar('comments_order', $getCommentsOrder);
             }
-            $commentsOrder = pwg_get_session_var('comments_order', $conf['comments_order']);
+            $commentsOrder = SessionService::get()->getSessionVar('comments_order', $conf['comments_order']);
             $commentsOrder = is_string($commentsOrder) ? $commentsOrder : 'ASC';
 
             $template->assign([
@@ -239,7 +241,7 @@ final class PictureCommentRenderer
                 // "never matches" sentinel.
                 $commentAuthorId = is_numeric($row['author_id']) ? (int) $row['author_id'] : -1;
 
-                if (can_manage_comment('delete', $commentAuthorId)) {
+                if (\Piwigo\Auth\AccessControl::canManageComment('delete', $commentAuthorId)) {
                     $tplComment['U_DELETE'] = add_url_params(
                         $url_self,
                         [
@@ -249,7 +251,7 @@ final class PictureCommentRenderer
                         ]
                     );
                 }
-                if (can_manage_comment('edit', $commentAuthorId)) {
+                if (\Piwigo\Auth\AccessControl::canManageComment('edit', $commentAuthorId)) {
                     $tplComment['U_EDIT'] = add_url_params(
                         $url_self,
                         [
@@ -266,7 +268,7 @@ final class PictureCommentRenderer
                         $tplComment['U_CANCEL'] = $url_self;
                     }
                 }
-                if (is_admin()) {
+                if (\Piwigo\Auth\AccessControl::isAdmin()) {
                     $tplComment['EMAIL'] = $email;
 
                     if ($row['validated'] !== 'true') {
@@ -288,7 +290,7 @@ final class PictureCommentRenderer
         if ($editCommentId !== null) {
             $showAddCommentForm = false;
         }
-        if (is_a_guest() and ! (bool) $conf['comments_forall']) {
+        if (\Piwigo\Auth\AccessControl::isAGuest() and ! (bool) $conf['comments_forall']) {
             $showAddCommentForm = false;
         }
 
@@ -302,11 +304,11 @@ final class PictureCommentRenderer
                 'F_ACTION' => $url_self,
                 'KEY' => $key,
                 'CONTENT' => '',
-                'SHOW_AUTHOR' => ! is_classic_user(),
+                'SHOW_AUTHOR' => ! \Piwigo\Auth\AccessControl::isClassicUser(),
                 'AUTHOR_MANDATORY' => $conf['comments_author_mandatory'],
                 'AUTHOR' => '',
                 'WEBSITE_URL' => '',
-                'SHOW_EMAIL' => ! is_classic_user() or $userEmailEmpty,
+                'SHOW_EMAIL' => ! \Piwigo\Auth\AccessControl::isClassicUser() or $userEmailEmpty,
                 'EMAIL_MANDATORY' => $conf['comments_email_mandatory'],
                 'EMAIL' => '',
                 'SHOW_WEBSITE' => $conf['comments_enable_website'],

@@ -4,17 +4,38 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Piwigo\Auth\CookieService;
+use Piwigo\Auth\EphemeralKeyService;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
+use Piwigo\Comment\CommentRepository;
+use Piwigo\Comment\CommentService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
+use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageRepository;
+use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Mail\MailService;
+use Piwigo\Menu\MenubarRenderer;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
 use Piwigo\Picture\PictureCommentRenderer;
 use Piwigo\Picture\PictureMetadataRenderer;
+use Piwigo\Picture\PictureRateRenderer;
+use Piwigo\Rate\RateRepository;
+use Piwigo\Rate\RateService;
 use Piwigo\Section\SectionPopulator;
+use Piwigo\Session\SessionService;
+use Piwigo\Tag\TagRepository;
+use Piwigo\Tag\TagService;
 use Piwigo\Template\Template;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -48,9 +69,8 @@ final class PictureController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        new SectionPopulator()
+        new SectionPopulator(new MailService())
             ->populate();
-        include_once PHPWG_ROOT_PATH . 'include/functions_picture.inc.php';
 
         /**
          * @var array<string, mixed> $conf
@@ -61,9 +81,9 @@ final class PictureController implements ControllerInterface
          */
         global $conf, $page, $template, $user, $url_self;
 
-        save_edit_context();
+        (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->saveEditContext();
 
-        check_status(AccessLevel::Guest);
+        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
         // $page['category'] (see SectionPopulator::populate() /
         // get_cat_info()) is set at most once, before this method runs,
@@ -75,7 +95,11 @@ final class PictureController implements ControllerInterface
         // access authorization check
         if ($page_category !== null) {
             $category_id = $page_category['id'] ?? null;
-            check_restrictions(is_numeric($category_id) ? (int) $category_id : 0);
+            $categoryConn = DbConnection::build();
+            new CategoryService(
+                new CategoryRepository($categoryConn),
+                new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
+            )->checkRestrictions(is_numeric($category_id) ? (int) $category_id : 0);
         }
 
         // $page['items'] (see SectionPopulator::populate()) is always a
@@ -157,12 +181,9 @@ SELECT id, file, level
 SELECT id
   FROM ' . Tables::images() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id=image_id
   WHERE id=' . $image_id
-                      . get_sql_condition_FandF(
-                          [
-                              'forbidden_categories' => 'category_id',
-                          ],
-                          ' AND'
-                      ) . '
+                      . (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
+                          'forbidden_categories' => 'category_id',
+                      ], ' AND') . '
   LIMIT 1';
                     if (pwg_db_num_rows(pwg_query($query)) === 0) {
                         access_denied();
@@ -191,17 +212,17 @@ SELECT id
 
         // There is cookie, so we must handle it at the beginning
         if (isset($_GET['metadata'])) {
-            if (pwg_get_session_var('show_metadata') === null) {
-                pwg_set_session_var('show_metadata', 1);
+            if (SessionService::get()->getSessionVar('show_metadata') === null) {
+                SessionService::get()->setSessionVar('show_metadata', 1);
             } else {
-                pwg_unset_session_var('show_metadata');
+                SessionService::get()->unsetSessionVar('show_metadata');
             }
         }
 
         // add default event handler for rendering element content
         add_event_handler('render_element_content', $this->defaultPictureContent(...));
         // add default event handler for rendering element description
-        add_event_handler('render_element_description', 'pwg_nl2br');
+        add_event_handler('render_element_description', new HtmlService()->pwgNl2br(...));
 
         trigger_notify('loc_begin_picture');
 
@@ -308,7 +329,7 @@ DELETE FROM ' . Tables::favorites() . '
                     // no break
                 case 'set_as_representative':
 
-                    if (is_admin() and $page_category !== null) {
+                    if (\Piwigo\Auth\AccessControl::isAdmin() and $page_category !== null) {
                         $representative_category_id = $page_category['id'] ?? null;
                         $representative_category_id = is_numeric($representative_category_id) ? (int) $representative_category_id : 0;
                         $query = '
@@ -337,31 +358,31 @@ UPDATE ' . Tables::categories() . '
                     // no break
                 case 'rate':
 
-                    include_once PHPWG_ROOT_PATH . 'include/functions_rate.inc.php';
                     $rate = $_POST['rate'] ?? null;
                     if (! is_int($rate) and ! is_string($rate)) {
                         $rate = null;
                     }
-                    rate_picture($image_id, $rate);
+                    new RateService(new RateRepository(DbConnection::build()), new CookieService())
+                        ->rate($image_id, $rate);
                     redirect($url_self);
 
                     // no break
                 case 'edit_comment':
 
-                    include_once PHPWG_ROOT_PATH . 'include/functions_comment.inc.php';
+                    $commentService = new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService());
                     check_input_parameter('comment_to_edit', $_GET, false, ValidationPattern::ID);
                     // check_input_parameter() validated this against
                     // ValidationPattern::ID (/^\d+$/) above -- it would
                     // have called fatal_error() otherwise.
                     assert(is_numeric($_GET['comment_to_edit']));
                     // false is unreachable here: $die_on_error defaults to
-                    // true, and get_comment_author_id() calls
+                    // true, and getCommentAuthorId() calls
                     // fatal_error() (never) in that case instead of
                     // returning
-                    $author_id = get_comment_author_id((int) $_GET['comment_to_edit']);
+                    $author_id = $commentService->getCommentAuthorId((int) $_GET['comment_to_edit']);
                     assert($author_id !== false);
 
-                    if (can_manage_comment('edit', $author_id)) {
+                    if (\Piwigo\Auth\AccessControl::canManageComment('edit', $author_id)) {
                         $edit_content_raw = $_POST['content'] ?? null;
                         if (is_scalar($edit_content_raw) && $edit_content_raw !== '' && $edit_content_raw !== '0' && $edit_content_raw !== 0 && $edit_content_raw !== 0.0 && $edit_content_raw !== false) {
                             check_pwg_token();
@@ -369,7 +390,7 @@ UPDATE ' . Tables::categories() . '
                             if (! is_string($post_key)) {
                                 $post_key = '';
                             }
-                            $comment_action = update_user_comment(
+                            $comment_action = $commentService->updateComment(
                                 [
                                     'comment_id' => $_GET['comment_to_edit'],
                                     'image_id' => $page['image_id'],
@@ -420,7 +441,7 @@ UPDATE ' . Tables::categories() . '
 
                     check_pwg_token();
 
-                    include_once PHPWG_ROOT_PATH . 'include/functions_comment.inc.php';
+                    $commentService = new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService());
 
                     check_input_parameter('comment_to_delete', $_GET, false, ValidationPattern::ID);
                     // check_input_parameter() validated this against
@@ -430,11 +451,11 @@ UPDATE ' . Tables::categories() . '
 
                     // false is unreachable here: see the edit_comment case
                     // above
-                    $author_id = get_comment_author_id((int) $_GET['comment_to_delete']);
+                    $author_id = $commentService->getCommentAuthorId((int) $_GET['comment_to_delete']);
                     assert($author_id !== false);
 
-                    if (can_manage_comment('delete', $author_id)) {
-                        delete_user_comment((int) $_GET['comment_to_delete']);
+                    if (\Piwigo\Auth\AccessControl::canManageComment('delete', $author_id)) {
+                        $commentService->deleteComment((int) $_GET['comment_to_delete']);
                     }
 
                     redirect($url_self);
@@ -444,7 +465,7 @@ UPDATE ' . Tables::categories() . '
 
                     check_pwg_token();
 
-                    include_once PHPWG_ROOT_PATH . 'include/functions_comment.inc.php';
+                    $commentService = new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService());
 
                     check_input_parameter('comment_to_validate', $_GET, false, ValidationPattern::ID);
                     // check_input_parameter() validated this against
@@ -454,11 +475,11 @@ UPDATE ' . Tables::categories() . '
 
                     // false is unreachable here: see the edit_comment case
                     // above
-                    $author_id = get_comment_author_id((int) $_GET['comment_to_validate']);
+                    $author_id = $commentService->getCommentAuthorId((int) $_GET['comment_to_validate']);
                     assert($author_id !== false);
 
-                    if (can_manage_comment('validate', $author_id)) {
-                        validate_user_comment((int) $_GET['comment_to_validate']);
+                    if (\Piwigo\Auth\AccessControl::canManageComment('validate', $author_id)) {
+                        $commentService->validateComment((int) $_GET['comment_to_validate']);
                     }
 
                     redirect($url_self);
@@ -502,16 +523,16 @@ UPDATE ' . Tables::categories() . '
             } else {
                 // don't increment counter if comming from the same picture
                 // (actions)
-                $referer_image_id = pwg_get_session_var('referer_image_id', 0);
+                $referer_image_id = SessionService::get()->getSessionVar('referer_image_id', 0);
                 if (is_numeric($referer_image_id) and (int) $referer_image_id === $image_id) {
                     $inc_hit_count = false;
                 }
-                pwg_set_session_var('referer_image_id', $image_id);
+                SessionService::get()->setSessionVar('referer_image_id', $image_id);
             }
 
             // don't increment if adding a comment
             if ((bool) trigger_change('allow_increment_element_hit_count', $inc_hit_count, $image_id)) {
-                increase_image_visit_counter($image_id);
+                new ImageRepository(DbConnection::build())->incrementVisitCounter($image_id);
             }
 
             // -------------------------------------------------- related categories
@@ -520,13 +541,10 @@ SELECT id,uppercats,commentable,visible,status,global_rank
   FROM ' . Tables::imageCategory() . '
     INNER JOIN ' . Tables::categories() . ' ON category_id = id
   WHERE image_id = ' . $image_id . '
-' . get_sql_condition_FandF(
-                [
-                    'forbidden_categories' => 'id',
-                    'visible_categories' => 'id',
-                ],
-                'AND'
-            ) . '
+' . (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
+                'forbidden_categories' => 'id',
+                'visible_categories' => 'id',
+            ], 'AND') . '
 ;';
             $related_categories = array_from_query($query);
             // array_from_query() with no $fieldname argument delegates
@@ -534,7 +552,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
             // (array<int|string, mixed>) is looser than query2array()'s
             // precise conditional return type.
             /** @var list<array<string, string|null>> $related_categories */
-            usort($related_categories, global_rank_compare(...));
+            usort($related_categories, CategoryService::compareByGlobalRank(...));
             // ---------------------- first, prev, current, next & last picture management
             $picture = [];
 
@@ -641,8 +659,8 @@ SELECT *
                 ];
 
                 $get_slideshow = $_GET['slideshow'];
-                $slideshow_params = decode_slideshow_params(is_string($get_slideshow) ? $get_slideshow : null);
-                $slideshow_url_params['slideshow'] = encode_slideshow_params($slideshow_params);
+                $slideshow_params = new ImageService()->decodeSlideshowParams(is_string($get_slideshow) ? $get_slideshow : null);
+                $slideshow_url_params['slideshow'] = new ImageService()->encodeSlideshowParams($slideshow_params);
 
                 if ((bool) $slideshow_params['play']) {
                     $id_pict_redirect = '';
@@ -840,7 +858,7 @@ SELECT *
                           add_url_params(
                               $picture['current']['url'],
                               [
-                                  'slideshow' => encode_slideshow_params(
+                                  'slideshow' => new ImageService()->encodeSlideshowParams(
                                       array_merge(
                                           $slideshow_params,
                                           [
@@ -853,7 +871,7 @@ SELECT *
                 }
 
                 foreach (['dec', 'inc'] as $op) {
-                    // decode_slideshow_params()/correct_slideshow_params()
+                    // decodeSlideshowParams()/correctSlideshowParams()
                     // only declare @return array<string, mixed>; 'period'
                     // is always numeric in practice (int default, or a
                     // preg-captured \d+ string).
@@ -863,7 +881,7 @@ SELECT *
                     $slideshow_period_step = is_numeric($slideshow_period_step) ? (int) $slideshow_period_step : 0;
                     $new_period = $current_period + ((($op === 'dec') ? -1 : 1) * $slideshow_period_step);
                     $new_slideshow_params =
-                      correct_slideshow_params(
+                      new ImageService()->correctSlideshowParams(
                           array_merge(
                               $slideshow_params,
                               [
@@ -878,7 +896,7 @@ SELECT *
                               add_url_params(
                                   $picture['current']['url'],
                                   [
-                                      'slideshow' => encode_slideshow_params($new_slideshow_params),
+                                      'slideshow' => new ImageService()->encodeSlideshowParams($new_slideshow_params),
                                   ]
                               );
                     }
@@ -918,7 +936,7 @@ SELECT *
             // -------------------------------------------------- upper menu management
 
             // admin links
-            if (is_admin()) {
+            if (\Piwigo\Auth\AccessControl::isAdmin()) {
                 if ($page_category !== null and (bool) $conf['picture_representative_icon']) {
                     $template->assign(
                         [
@@ -948,7 +966,7 @@ SELECT *
             }
 
             // favorite manipulation
-            if (! is_a_guest() and (bool) $conf['picture_favorite_icon']) {
+            if (! \Piwigo\Auth\AccessControl::isAGuest() and (bool) $conf['picture_favorite_icon']) {
                 // verify if the picture is already in the favorite of the
                 // user
                 $query = '
@@ -1056,7 +1074,9 @@ SELECT COUNT(*) AS nb_fav
             $template->assign('display_info', unserialize(is_string($picture_informations) ? $picture_informations : ''));
 
             // related tags
-            $tags = get_common_tags([$image_id], -1);
+            $tagConn = DbConnection::build();
+            $tags = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)))
+                ->getCommonTags([$image_id], -1);
             if ($tags !== []) {
                 foreach ($tags as $tag) {
                     $template->append(
@@ -1128,7 +1148,7 @@ SELECT id, name, permalink
                 $template->assign(
                     [
                         'PDF_VIEWER_FILESIZE_THRESHOLD' => $pdf_viewer_filesize_threshold * 1024,
-                        'PDF_NB_PAGES' => count_pdf_pages($picture['current']['path']),
+                        'PDF_NB_PAGES' => new ImageService()->countPdfPages($picture['current']['path']),
                     ]
                 );
             }
@@ -1148,7 +1168,7 @@ SELECT id, name, permalink
                 and $picture['next']['src_image']->is_original()
                 and $template->get_template_vars('U_PREFETCH') === null
                 and ! str_contains($http_user_agent, 'Chrome/')) {
-                $prefetch_deriv_type = pwg_get_session_var('picture_deriv', $conf['derivative_default_size']);
+                $prefetch_deriv_type = SessionService::get()->getSessionVar('picture_deriv', $conf['derivative_default_size']);
                 if (! is_string($prefetch_deriv_type)) {
                     $prefetch_deriv_type = IMG_MEDIUM;
                 }
@@ -1172,12 +1192,13 @@ SELECT id, name, permalink
             // |                          sub pages                           |
             // +-------------------------------------------------------------+
 
-            include PHPWG_ROOT_PATH . 'include/picture_rate.inc.php';
+            new PictureRateRenderer()
+                ->render();
             if ((bool) $conf['activate_comments']) {
                 new PictureCommentRenderer()
                     ->render($edit_comment);
             }
-            if ((bool) $metadata_showable and pwg_get_session_var('show_metadata') !== null) {
+            if ((bool) $metadata_showable and SessionService::get()->getSessionVar('show_metadata') !== null) {
                 new PictureMetadataRenderer()
                     ->render();
             }
@@ -1189,12 +1210,12 @@ SELECT id, name, permalink
                 if (! isset($page['start'])) {
                     $page['start'] = 0;
                 }
-                include PHPWG_ROOT_PATH . 'include/menubar.inc.php';
+                new MenubarRenderer()->render();
             }
 
             include PHPWG_ROOT_PATH . 'include/page_header.php';
             trigger_notify('loc_end_picture');
-            flush_page_messages();
+            new HtmlService()->flushPageMessages();
             if ($page['slideshow'] and (bool) $conf['light_slideshow']) {
                 $template->pparse('slideshow');
             } else {
@@ -1235,14 +1256,14 @@ SELECT id, name, permalink
         if (isset($_COOKIE['picture_deriv'])) {
             if (is_string($_COOKIE['picture_deriv'])
                 and array_key_exists($_COOKIE['picture_deriv'], ImageStdParams::get_defined_type_map())) {
-                pwg_set_session_var('picture_deriv', $_COOKIE['picture_deriv']);
+                SessionService::get()->setSessionVar('picture_deriv', $_COOKIE['picture_deriv']);
             }
             setcookie('picture_deriv', '', [
                 'expires' => 0,
-                'path' => cookie_path(),
+                'path' => new CookieService()->cookiePath(),
             ]);
         }
-        $deriv_type = pwg_get_session_var('picture_deriv', $conf['derivative_default_size']);
+        $deriv_type = SessionService::get()->getSessionVar('picture_deriv', $conf['derivative_default_size']);
         if (! is_string($deriv_type)) {
             $deriv_type = IMG_MEDIUM;
         }
@@ -1296,7 +1317,7 @@ SELECT id, name, permalink
         $template->assign(
             [
                 'ALT_IMG' => $element_info['file'],
-                'COOKIE_PATH' => cookie_path(),
+                'COOKIE_PATH' => new CookieService()->cookiePath(),
             ]
         );
         return $template->parse('default_content', true);

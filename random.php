@@ -29,7 +29,7 @@ global $conf, $user;
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-check_status(AccessLevel::Guest);
+\Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
 // +-----------------------------------------------------------------------+
 // |                     generate random element list                      |
@@ -44,14 +44,11 @@ $query = '
 SELECT id
   FROM ' . Tables::images() . '
     INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
-' . get_sql_condition_FandF(
-    [
-        'forbidden_categories' => 'category_id',
-        'visible_categories' => 'category_id',
-        'visible_images' => 'id',
-    ],
-    'WHERE'
-) . '
+' . (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
+    'forbidden_categories' => 'category_id',
+    'visible_categories' => 'category_id',
+    'visible_images' => 'id',
+], 'WHERE') . '
   ORDER BY ' . DB_RANDOM_FUNCTION . '()
   LIMIT ' . min(50, $top_number, $nb_image_page) . '
 ;';

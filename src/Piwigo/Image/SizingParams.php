@@ -56,13 +56,13 @@ final class SizingParams
     public function add_url_tokens(array &$tokens): void
     {
         if ($this->max_crop == 0) {
-            $tokens[] = 's' . size_to_url($this->ideal_size);
-        } elseif ($this->max_crop == 1 && size_equals($this->ideal_size, $this->min_size)) {
-            $tokens[] = 'e' . size_to_url($this->ideal_size);
+            $tokens[] = 's' . DerivativeUrlCodec::sizeToUrl($this->ideal_size);
+        } elseif ($this->max_crop == 1 && DerivativeUrlCodec::sizeEquals($this->ideal_size, $this->min_size)) {
+            $tokens[] = 'e' . DerivativeUrlCodec::sizeToUrl($this->ideal_size);
         } else {
-            $tokens[] = size_to_url($this->ideal_size);
-            $tokens[] = fraction_to_char($this->max_crop);
-            $tokens[] = size_to_url($this->min_size);
+            $tokens[] = DerivativeUrlCodec::sizeToUrl($this->ideal_size);
+            $tokens[] = DerivativeUrlCodec::fractionToChar($this->max_crop);
+            $tokens[] = DerivativeUrlCodec::sizeToUrl($this->min_size);
         }
     }
 

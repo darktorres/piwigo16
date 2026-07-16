@@ -5,13 +5,18 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Piwigo\Admin\tabsheet;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
 use Piwigo\Core\Logger;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
 use Piwigo\Site\LocalSiteReader;
 use Piwigo\Template\Template;
 use Psr\Http\Message\ServerRequestInterface;
@@ -1129,7 +1134,11 @@ DELETE
 SELECT id,name,uppercats,global_rank
   FROM ' . Tables::categories() . '
   WHERE site_id = ' . $site_id;
-        display_select_cat_wrapper(
+        $categoryConn = DbConnection::build();
+        new CategoryService(
+            new CategoryRepository($categoryConn),
+            new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
+        )->displaySelectCatWrapper(
             $query,
             $cat_selected,
             'category_options',

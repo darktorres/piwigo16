@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Piwigo\Auth\CookieService;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Template\Template;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -43,11 +46,11 @@ final class IdentificationController implements ControllerInterface
         // boundary -- narrow it once here so every write below type-checks.
         $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
 
-        check_status(AccessLevel::Free);
+        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Free);
 
         // but if the user is already identified, we redirect to gallery
         // home instead of displaying the log in form
-        if (! is_a_guest()) {
+        if (! \Piwigo\Auth\AccessControl::isAGuest()) {
             $gallery_home_url = get_gallery_home_url();
             redirect(is_string($gallery_home_url) ? $gallery_home_url : '');
         }
@@ -61,7 +64,7 @@ final class IdentificationController implements ControllerInterface
         if (isset($_POST['redirect']) && is_string($_POST['redirect'])) {
             $_POST['redirect_decoded'] = urldecode($_POST['redirect']);
         }
-        check_input_parameter('redirect_decoded', $_POST, false, '{^' . preg_quote(cookie_path()) . '}');
+        check_input_parameter('redirect_decoded', $_POST, false, '{^' . preg_quote(new CookieService()->cookiePath()) . '}');
 
         $redirect_to = '';
         $get_redirect = $_GET['redirect'] ?? null;
@@ -88,14 +91,14 @@ final class IdentificationController implements ControllerInterface
                 $password = is_string($_POST['password'] ?? null) ? $_POST['password'] : null;
 
                 if ((bool) $conf['insensitive_case_logon']) {
-                    $username = search_case_username($username);
+                    $username = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->searchCaseUsername($username);
                 }
 
                 $redirect_to = is_string($_POST['redirect'] ?? null) ? urldecode($_POST['redirect']) : '';
                 $remember_me_raw = $_POST['remember_me'] ?? null;
                 $remember_me = isset($_POST['remember_me']) && is_scalar($remember_me_raw) && (string) $remember_me_raw === '1';
 
-                if (try_log_user($username, $password, $remember_me)) {
+                if ((new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build())))->tryLogUser($username, $password, $remember_me)) {
                     // security (level 2): force redirect within Piwigo. We
                     // redirect to absolute root url, including http(s)://,
                     // without the cookie path, concatenated with
@@ -116,7 +119,7 @@ final class IdentificationController implements ControllerInterface
                     redirect(
                         $redirect_to === ''
                         ? (is_string($gallery_home_url) ? $gallery_home_url : '')
-                        : substr($root_url, 0, strlen($root_url) - strlen(cookie_path())) . $redirect_to
+                        : substr($root_url, 0, strlen($root_url) - strlen(new CookieService()->cookiePath())) . $redirect_to
                     );
                 } else {
                     $page['errors']['login_form_error'] = l10n('Invalid username or password!');
@@ -161,7 +164,7 @@ final class IdentificationController implements ControllerInterface
             $themeconf = is_array($themeconf) ? $themeconf : [];
             $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
             if (! (bool) $conf['gallery_locked'] && (! is_array($hide_menu_on) or ! in_array('theIdentificationPage', $hide_menu_on, true))) {
-                include PHPWG_ROOT_PATH . 'include/menubar.inc.php';
+                new MenubarRenderer()->render();
             }
 
             // Load language if cookie is set from login/register/password
@@ -203,7 +206,7 @@ final class IdentificationController implements ControllerInterface
 
             include PHPWG_ROOT_PATH . 'include/page_header.php';
             trigger_notify('loc_end_identification');
-            flush_page_messages();
+            new HtmlService()->flushPageMessages();
             $template->pparse('identification');
             include PHPWG_ROOT_PATH . 'include/page_tail.php';
         });

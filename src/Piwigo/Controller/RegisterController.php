@@ -9,8 +9,11 @@ use Piwigo\Audit\AuditService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Mail\MailService;
+use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Template\Template;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
@@ -40,10 +43,10 @@ final class RegisterController implements ControllerInterface
         // boundary -- narrow it once here so every write below type-checks.
         $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
 
-        check_status(AccessLevel::Free);
+        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Free);
 
         if (! (bool) $conf['allow_user_registration']) {
-            page_forbidden('User registration closed');
+            new HtmlService()->pageForbidden('User registration closed');
         }
 
         trigger_notify('loc_begin_register');
@@ -93,7 +96,7 @@ final class RegisterController implements ControllerInterface
             // rationale (this is also why an existing account gets a
             // "someone tried to register your username" email instead of
             // the requester ever seeing an error here).
-            $registration_result = new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()))
+            $registration_result = new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), new MailService())
                 ->registerUser(
                     $post_login,
                     $post_password,
@@ -140,7 +143,7 @@ final class RegisterController implements ControllerInterface
                 // would be a full account-takeover, not just an
                 // information leak. Both cases redirect identically.
                 if ($new_user_id !== null) {
-                    log_user($new_user_id, false);
+                    (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build())))->logUser($new_user_id, false);
                 }
                 redirect(make_index_url());
             }
@@ -182,7 +185,7 @@ final class RegisterController implements ControllerInterface
             $themeconf = $template->get_template_vars('themeconf');
             $hide_menu_on = is_array($themeconf) ? ($themeconf['hide_menu_on'] ?? null) : null;
             if (! is_array($hide_menu_on) or ! in_array('theRegisterPage', $hide_menu_on, true)) {
-                include PHPWG_ROOT_PATH . 'include/menubar.inc.php';
+                new MenubarRenderer()->render();
             }
 
             // Load language if cookie is set from login/register/password
@@ -224,7 +227,7 @@ final class RegisterController implements ControllerInterface
 
             include PHPWG_ROOT_PATH . 'include/page_header.php';
             trigger_notify('loc_end_register');
-            flush_page_messages();
+            new HtmlService()->flushPageMessages();
             $template->parse('register');
             include PHPWG_ROOT_PATH . 'include/page_tail.php';
         });

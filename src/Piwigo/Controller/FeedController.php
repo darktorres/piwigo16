@@ -5,12 +5,18 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use DateTimeImmutable;
+use Piwigo\Cache\PersistentCache;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Feed\FeedHelper;
 use Piwigo\Feed\FeedRepository;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Notification\NotificationRepository;
+use Piwigo\Notification\NotificationService;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -31,16 +37,24 @@ final class FeedController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        include_once PHPWG_ROOT_PATH . 'include/functions_notification.inc.php';
-
         /**
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $user
+         * @var mixed $persistent_cache
          */
-        global $conf, $user;
+        global $conf, $user, $persistent_cache;
+        if (! $persistent_cache instanceof PersistentCache) {
+            fatal_error('persistent cache not initialized');
+        }
 
         $feed_helper = new FeedHelper();
-        $feed_repo = new FeedRepository(DbConnection::build());
+        $conn = DbConnection::build();
+        $feed_repo = new FeedRepository($conn);
+        $notificationService = new NotificationService(
+            new NotificationRepository($conn),
+            new PermissionService(new PermissionRepository($conn), new GroupRepository($conn)),
+            $persistent_cache
+        );
 
         check_input_parameter('feed', $_GET, false, '/^[0-9a-z]{50}$/i');
 
@@ -59,19 +73,19 @@ final class FeedController implements ControllerInterface
             $feed_last_check = $feed_row['lastCheck'];
             $user_id_before = is_numeric($user['id']) ? (int) $user['id'] : null;
             if ($feed_row['userId'] !== $user_id_before) { // new user
-                $user = build_user($feed_row['userId'], true);
+                $user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->buildUser($feed_row['userId'], true);
             }
         } else {
             $image_only = true;
-            if (! is_a_guest()) {// auto session was created - so switch to guest
+            if (! \Piwigo\Auth\AccessControl::isAGuest()) {// auto session was created - so switch to guest
                 $guest_id = $conf['guest_id'];
                 $guest_id = is_numeric($guest_id) ? (int) $guest_id : 0;
-                $user = build_user($guest_id, true);
+                $user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->buildUser($guest_id, true);
             }
         }
 
         // Check the status now after the user has been loaded
-        check_status(AccessLevel::Guest);
+        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
         $row = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
         assert($row !== null);
@@ -105,7 +119,7 @@ final class FeedController implements ControllerInterface
 
         $news = [];
         if (! $image_only) {
-            $news = news($feed_last_check?->format('Y-m-d H:i:s'), $dbnow, true, true);
+            $news = $notificationService->news($feed_last_check?->format('Y-m-d H:i:s'), $dbnow, true, true);
 
             if (count($news) > 0) {
                 // content creation
@@ -150,7 +164,7 @@ final class FeedController implements ControllerInterface
         // recent_post_dates is a config array of per-notification-kind int
         // settings (see include/config_default.inc.php); narrow the 'RSS'
         // entry to the array<string, int> shape
-        // get_recent_post_dates_array() expects.
+        // NotificationService::getRecentPostDatesArray() expects.
         $recent_post_dates_conf = $conf['recent_post_dates'];
         $rss_recent_post_dates_raw = (is_array($recent_post_dates_conf) and is_array($recent_post_dates_conf['RSS'] ?? null))
             ? $recent_post_dates_conf['RSS']
@@ -163,7 +177,7 @@ final class FeedController implements ControllerInterface
         }
 
         /** @var array<int, array<string, mixed>> $dates */
-        $dates = get_recent_post_dates_array($rss_recent_post_dates_args);
+        $dates = $notificationService->getRecentPostDatesArray($rss_recent_post_dates_args);
 
         foreach ($dates as $date_detail) { // for each recent post date we create a feed item
             $date = $date_detail['date_available'];
@@ -180,7 +194,7 @@ final class FeedController implements ControllerInterface
             );
 
             $description = '<a href="' . make_index_url() . '">' . $conf_gallery_title . '</a><br> ';
-            $description .= get_html_description_recent_post_date($date_detail);
+            $description .= $notificationService->getHtmlDescriptionRecentPostDate($date_detail);
 
             $date_ts = $feed_helper->datetimeToTs($date);
             // $date is a date_available value straight from the database,
@@ -188,7 +202,7 @@ final class FeedController implements ControllerInterface
             assert($date_ts !== false);
 
             $rss_items[] = [
-                'title' => get_title_recent_post_date($date_detail),
+                'title' => $notificationService->getTitleRecentPostDate($date_detail),
                 'link' => $link,
                 'description' => $description,
                 'html' => true,

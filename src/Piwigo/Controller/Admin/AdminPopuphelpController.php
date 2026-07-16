@@ -41,7 +41,7 @@ final class AdminPopuphelpController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        check_status(AccessLevel::Administrator);
+        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
         $queryParams = $request->getQueryParams();
         $rawPage = $queryParams['page'] ?? null;

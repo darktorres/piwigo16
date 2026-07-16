@@ -5,9 +5,25 @@ declare(strict_types=1);
 namespace Piwigo\Section;
 
 use Piwigo\Cache\PersistentCache;
+use Piwigo\Cache\PersistentFileCache;
+use Piwigo\Calendar\CalendarRenderer;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
 use Piwigo\Core\Logger;
+use Piwigo\Core\MailerInterface;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
+use Piwigo\Search\SearchRepository;
+use Piwigo\Search\SearchService;
+use Piwigo\Session\SessionService;
+use Piwigo\Tag\TagRepository;
+use Piwigo\Tag\TagService;
 use Piwigo\Template\Template;
+use Piwigo\Users\UserRepository;
+use Piwigo\Users\UserService;
 
 /**
  * Ported from include/section_init.inc.php's own remaining body -- the
@@ -43,6 +59,10 @@ use Piwigo\Template\Template;
  */
 final class SectionPopulator
 {
+    public function __construct(
+        private readonly MailerInterface $mailer,
+    ) {}
+
     public function populate(): void
     {
         /**
@@ -138,14 +158,18 @@ final class SectionPopulator
             $conf['order_by'] = $conf['order_by_inside_category'];
         }
 
-        if (pwg_get_session_var('image_order', 0) > 0) {
-            $image_order_id = pwg_get_session_var('image_order');
-            // pwg_get_session_var() is declared to return mixed; index.php is the
+        if (SessionService::get()->getSessionVar('image_order', 0) > 0) {
+            $image_order_id = SessionService::get()->getSessionVar('image_order');
+            // getSessionVar() is declared to return mixed; index.php is the
             // only writer of the 'image_order' session var and always stores an
             // int, but that isn't visible through the session accessor's signature
             $image_order_id = is_numeric($image_order_id) ? (int) $image_order_id : -1;
 
-            $orders = get_category_preferred_image_orders();
+            $categoryConn = DbConnection::build();
+            $orders = new CategoryService(
+                new CategoryRepository($categoryConn),
+                new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
+            )->getPreferredImageOrders();
 
             // the current session stored image_order might be not compatible with
             // current image set, for example if the current image_order is the rank
@@ -160,19 +184,16 @@ final class SectionPopulator
                 );
                 $page['super_order_by'] = true;
             } else {
-                pwg_unset_session_var('image_order');
+                SessionService::get()->unsetSessionVar('image_order');
                 $page['super_order_by'] = false;
             }
         }
 
-        $forbidden = get_sql_condition_FandF(
-            [
-                'forbidden_categories' => 'category_id',
-                'visible_categories' => 'category_id',
-                'visible_images' => 'id',
-            ],
-            'AND'
-        );
+        $forbidden = (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
+            'forbidden_categories' => 'category_id',
+            'visible_categories' => 'category_id',
+            'visible_images' => 'id',
+        ], 'AND');
 
         // parse_section_url()'s own return type is the generic array<string, mixed>
         // (functions_url.inc.php), so $page['category'] loses the more precise
@@ -240,7 +261,11 @@ final class SectionPopulator
                     }
                 }
 
-                $page['items'] = get_image_ids_for_categories($cat_ids);
+                $categoryConn = DbConnection::build();
+                $page['items'] = new CategoryService(
+                    new CategoryRepository($categoryConn),
+                    new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
+                )->getImageIdsForCategories($cat_ids);
             } elseif (
                 // startcat defaults to 0 above, and may be overwritten by a
                 // real 'startcat-N' URL token during parse_well_known_params_url()
@@ -271,13 +296,10 @@ SELECT id
   FROM ' . Tables::categories() . '
   WHERE
     uppercats LIKE \'' . $uppercats . ',%\' '
-    . get_sql_condition_FandF(
-        [
-            'forbidden_categories' => 'id',
-            'visible_categories' => 'id',
-        ],
-        "\n  AND"
-    );
+    . (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
+        'forbidden_categories' => 'id',
+        'visible_categories' => 'id',
+    ], "\n  AND");
 
                         $subcat_ids_raw = query2array($query, null, 'id');
                         $subcat_ids = array_values(array_filter($subcat_ids_raw, is_string(...)));
@@ -287,12 +309,9 @@ SELECT id
                         }
                         $where_sql = 'category_id IN (' . implode(',', $subcat_ids) . ')';
                         // remove categories from forbidden because just checked above
-                        $forbidden = get_sql_condition_FandF(
-                            [
-                                'visible_images' => 'id',
-                            ],
-                            'AND'
-                        );
+                        $forbidden = (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
+                            'visible_images' => 'id',
+                        ], 'AND');
                     } else {
                         $user_id_for_cache = $user['id'] ?? null;
                         $user_id_for_cache = is_scalar($user_id_for_cache) ? $user_id_for_cache : '';
@@ -372,7 +391,9 @@ SELECT DISTINCT(image_id)
                 }
                 $page['tag_ids'] = $tag_ids;
 
-                $items = get_image_ids_for_tags($tag_ids);
+                $tagConn = DbConnection::build();
+                $items = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)))
+                    ->getImageIdsForTags($tag_ids);
 
                 if (count($items) === 0) {
                     $remote_addr = $_SERVER['REMOTE_ADDR'];
@@ -396,16 +417,20 @@ SELECT DISTINCT(image_id)
             // |                           search section                              |
             // +-----------------------------------------------------------------------+
             elseif ($section === 'search') {
-                include_once PHPWG_ROOT_PATH . 'include/functions_search.inc.php';
-
                 // parse_section_url() (functions_url.inc.php) always sets 'search'
                 // alongside 'section' => 'search'; 'super_order_by' is genuinely
-                // optional (get_search_results()'s 2nd param is ?bool)
+                // optional (SearchService::getSearchResults()'s 2nd param is ?bool)
                 assert(isset($page['search']));
                 $search_id = is_string($page['search']) ? $page['search'] : '';
                 $search_super_order_by = $page['super_order_by'] ?? null;
                 $search_super_order_by = is_bool($search_super_order_by) ? $search_super_order_by : null;
-                $search_result = get_search_results($search_id, $search_super_order_by);
+                $searchConn = DbConnection::build();
+                $search_result = new SearchService(
+                    new SearchRepository($searchConn),
+                    new PermissionService(new PermissionRepository($searchConn), new GroupRepository($searchConn)),
+                    new PersistentFileCache(),
+                    $this->mailer,
+                )->getSearchResults($search_id, $search_super_order_by);
 
                 // save the details of the query search
                 if (isset($search_result['qs'])) {
@@ -429,7 +454,7 @@ SELECT DISTINCT(image_id)
             // |                           favorite section                            |
             // +-----------------------------------------------------------------------+
             elseif ($section === 'favorites') {
-                check_user_favorites();
+                new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), $this->mailer)->checkUserFavorites();
 
                 $page = array_merge(
                     $page,
@@ -458,12 +483,9 @@ SELECT image_id
   FROM ' . Tables::favorites() . '
     INNER JOIN ' . Tables::images() . ' ON image_id = id
   WHERE user_id = ' . $user_id_sql . '
-' . get_sql_condition_FandF(
-                        [
-                            'visible_images' => 'id',
-                        ],
-                        'AND'
-                    ) . '
+' . (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
+                        'visible_images' => 'id',
+                    ], 'AND') . '
   ' . (is_string($conf['order_by']) ? $conf['order_by'] : '') . '
 ;';
                     $page = array_merge(
@@ -507,7 +529,7 @@ SELECT DISTINCT(id)
   FROM ' . Tables::images() . '
     INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
   WHERE '
-  . get_recent_photos_sql('date_available') . '
+  . new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), $this->mailer)->getRecentPhotosSql('date_available') . '
   ' . $forbidden
   . (is_string($conf['order_by']) ? $conf['order_by'] : '') . '
 ;';
@@ -632,8 +654,7 @@ SELECT DISTINCT(id)
         // +-----------------------------------------------------------------------+
         if (isset($page['chronology_field'])) {
             unset($page['is_homepage']);
-            include_once PHPWG_ROOT_PATH . 'include/functions_calendar.inc.php';
-            initialize_calendar();
+            new CalendarRenderer()->render();
         }
 
         // title update
@@ -673,7 +694,11 @@ SELECT DISTINCT(id)
 
             if (self::needsPermalinkRedirect($category_permalink, $category_url_style, $hit_by_cat_url_name, $hit_by_cat_permalink, $expected_cat_url_name)) {
                 $redirect_category_id = $page_category['id'] ?? null;
-                check_restrictions(is_numeric($redirect_category_id) ? (int) $redirect_category_id : 0);
+                $categoryConn = DbConnection::build();
+                new CategoryService(
+                    new CategoryRepository($categoryConn),
+                    new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
+                )->checkRestrictions(is_numeric($redirect_category_id) ? (int) $redirect_category_id : 0);
                 $redirect_url = script_basename() === 'picture' ? duplicate_picture_url() : duplicate_index_url();
 
                 if (! headers_sent()) { // this is a permanent redirection

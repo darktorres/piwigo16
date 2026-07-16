@@ -11,6 +11,7 @@ use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
+use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
 
 /**
@@ -59,7 +60,7 @@ final class PluginsNewPageRenderer
         if (isset($_GET['revision']) and isset($_GET['extension'])
             and is_string($_GET['revision']) and is_string($_GET['extension'])
         ) {
-            if (! is_webmaster()) {
+            if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
                 $this->pushPageMessage('errors', l10n('Webmaster status is required.'), $page);
             } else {
                 check_pwg_token();
@@ -167,7 +168,7 @@ final class PluginsNewPageRenderer
 
         if ($server_plugins !== null) {
             /* order plugins */
-            $session_order = pwg_get_session_var('plugins_new_order');
+            $session_order = SessionService::get()->getSessionVar('plugins_new_order');
             $order_selected = is_string($session_order) && $session_order !== '' ? $session_order : 'date';
             $template->assign('order_selected', $order_selected);
 

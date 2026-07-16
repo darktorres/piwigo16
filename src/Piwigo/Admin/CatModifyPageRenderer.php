@@ -34,8 +34,6 @@ final class CatModifyPageRenderer
          */
         global $admin_album_base_url, $category, $conf, $page, $template;
 
-        include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php';
-
         trigger_notify('loc_begin_cat_modify');
 
         // ---------------------------------------------------------------- verification

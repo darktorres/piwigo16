@@ -86,15 +86,16 @@ final class UserBootstrap
             $remote_user = self::resolveApacheRemoteUser($_SERVER);
 
             if ($remote_user !== null) {
-                if (! (bool) ($user['id'] = get_userid($remote_user))) {
-                    $user['id'] = register_user($remote_user, '', '', false);
+                if (! (bool) ($user['id'] = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getUserId($remote_user))) {
+                    $user['id'] = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))
+                        ->registerUser($remote_user, '', '', false)['userId'] ?? false;
                 }
             }
         }
 
         // automatic login by authentication key
         if (isset($_GET['auth'])) {
-            auth_key_login($_GET['auth']);
+            (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build())))->authKeyLogin($_GET['auth']);
         }
 
         // HTTP_AUTHORIZATION api_key
@@ -109,7 +110,7 @@ final class UserBootstrap
             $auth_header = pwg_db_real_escape_string($_SERVER['HTTP_X_PIWIGO_API']) ?? null;
 
             if ((bool) $auth_header) {
-                $authenticate = auth_key_login($auth_header, true);
+                $authenticate = (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build())))->authKeyLogin($auth_header, true);
                 if (! $authenticate) {
                     include_once PHPWG_ROOT_PATH . 'include/ws_init.inc.php';
                     /** @var PwgServer $service */
@@ -167,9 +168,9 @@ final class UserBootstrap
         // guest_id fallback already used earlier in this file.
         $user_id_int = is_numeric($user['id']) ? (int) $user['id'] : $guest_id_int;
 
-        $user = build_user($user_id_int, $page['user_use_cache']);
+        $user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->buildUser($user_id_int, $page['user_use_cache']);
 
-        if ((bool) $conf['browser_language'] and (is_a_guest() or is_generic()) and (bool) ($language = get_browser_language())) {
+        if ((bool) $conf['browser_language'] and (\Piwigo\Auth\AccessControl::isAGuest() or \Piwigo\Auth\AccessControl::isGeneric()) and (bool) ($language = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getBrowserLanguage())) {
             $user['language'] = $language;
         }
         trigger_notify('user_init', $user);

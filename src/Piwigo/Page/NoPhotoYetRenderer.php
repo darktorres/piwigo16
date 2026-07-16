@@ -39,7 +39,7 @@ final class NoPhotoYetRenderer
             and script_basename() !== 'password'       // keep the ability to reset password
             and script_basename() !== 'ws'             // keep the ability to discuss with web API
             and script_basename() !== 'popuphelp'      // keep the ability to display help popups
-            and (is_a_guest() or is_admin())          // normal users are not concerned by no_photo_yet
+            and (\Piwigo\Auth\AccessControl::isAGuest() or \Piwigo\Auth\AccessControl::isAdmin())          // normal users are not concerned by no_photo_yet
             and ! isset($_SESSION['no_photo_yet'])     // temporary hide
         ) {
             $nb_photos = $this->conn->executeQuery('SELECT COUNT(*) FROM ' . Tables::images())
@@ -50,7 +50,7 @@ final class NoPhotoYetRenderer
                 // make sure we don't use the mobile theme, which is not compatible with
                 // the "no photo yet" feature
                 $user_theme = $user['theme'] ?? null;
-                $user_theme = is_string($user_theme) ? $user_theme : get_default_theme();
+                $user_theme = is_string($user_theme) ? $user_theme : (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultTheme();
                 /** @var Template $template */
                 global $template;
                 $template = new Template(PHPWG_ROOT_PATH . 'themes', $user_theme);
@@ -72,7 +72,7 @@ final class NoPhotoYetRenderer
                     'no_photo_yet' => 'no_photo_yet.tpl',
                 ]);
 
-                if (is_admin()) {
+                if (\Piwigo\Auth\AccessControl::isAdmin()) {
                     $url = $conf['no_photo_yet_url'];
                     $url = is_string($url) ? $url : '';
                     if (! str_starts_with($url, 'http')) {

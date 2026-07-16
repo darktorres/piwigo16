@@ -49,7 +49,7 @@ final class PageTailRenderer
 
         // --------------------------------------------------------------------- contact
 
-        if (! is_a_guest()) {
+        if (! \Piwigo\Auth\AccessControl::isAGuest()) {
             $template->assign(
                 'CONTACT_MAIL',
                 get_webmaster_mail_address()

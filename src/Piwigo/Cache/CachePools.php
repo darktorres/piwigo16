@@ -69,12 +69,13 @@ final class CachePools
 
     /**
      * No TTL from this doc's own design notes yet -- tag cloud computation
-     * (get_available_tags() and friends, include/functions_tag.inc.php)
-     * isn't ported to a typed service yet (task #343), so there's no real
-     * consumer to derive one from. Uses the same 300s default as
-     * categoryTree() (a comparable "expensive aggregate, tolerable
-     * staleness" shape) until a real caller's actual requirements are
-     * known.
+     * (Piwigo\Tag\TagService::getAvailableTags(), P23 batch 8c) still
+     * caches through the older PersistentFileCache mechanism
+     * (`global $persistent_cache;`), unchanged from the pre-port free
+     * function, so there's no real consumer of this pool to derive a TTL
+     * from yet. Uses the same 300s default as categoryTree() (a
+     * comparable "expensive aggregate, tolerable staleness" shape) until
+     * a real caller's actual requirements are known.
      */
     public static function tagCloud(): CacheItemPoolInterface
     {

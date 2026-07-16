@@ -5,9 +5,17 @@ declare(strict_types=1);
 namespace Piwigo\Search;
 
 use Piwigo\Cache\PersistentCache;
+use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Category\CategoryRepository;
+use Piwigo\Core\Logger;
+use Piwigo\Core\MailerInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
+use Piwigo\Tag\TagRepository;
+use Piwigo\Tag\TagService;
 use Piwigo\Template\Template;
 
 /**
@@ -25,6 +33,10 @@ use Piwigo\Template\Template;
  */
 final class SearchFilterRenderer
 {
+    public function __construct(
+        private readonly MailerInterface $mailer,
+    ) {}
+
     public function render(): void
     {
         /**
@@ -38,6 +50,9 @@ final class SearchFilterRenderer
         if (! $persistent_cache instanceof PersistentCache) {
             fatal_error('persistent cache not initialized');
         }
+
+        $tagConn = DbConnection::build();
+        $tagService = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)));
 
         $filtersViewsConf = conf_get_param('filters_views', null);
         if (is_array($filtersViewsConf) || is_string($filtersViewsConf)) {
@@ -75,7 +90,7 @@ final class SearchFilterRenderer
 
         foreach ($filtersViews as $filtName => $filtConf) {
             if (isset($filtConf['access'])) {
-                if ($filtConf['access'] === 'everybody' or ($filtConf['access'] === 'admins-only' and is_admin()) or ($filtConf['access'] === 'registered-users' and is_classic_user())) {
+                if ($filtConf['access'] === 'everybody' or ($filtConf['access'] === 'admins-only' and \Piwigo\Auth\AccessControl::isAdmin()) or ($filtConf['access'] === 'registered-users' and \Piwigo\Auth\AccessControl::isClassicUser())) {
                     $displayFilters[$filtName]['access'] = true;
                 } else {
                     $displayFilters[$filtName]['access'] = false;
@@ -102,7 +117,14 @@ final class SearchFilterRenderer
 
         $searchId = $page['search'] ?? null;
         $searchId = (is_int($searchId) || is_string($searchId)) ? $searchId : '';
-        $mySearch = get_search_array($searchId);
+        $searchConn = DbConnection::build();
+        $searchService = new SearchService(
+            new SearchRepository($searchConn),
+            new PermissionService(new PermissionRepository($searchConn), new GroupRepository($searchConn)),
+            new PersistentFileCache(),
+            $this->mailer,
+        );
+        $mySearch = $searchService->getValidatedSearchArray($searchId);
         if (! is_array($mySearch)) {
             // get_search_array() only returns false when unserialize() fails
             // on malformed data; this method only runs for an
@@ -118,14 +140,11 @@ final class SearchFilterRenderer
         /** @var array<string, mixed> $searchFields */
         $searchFields = &$mySearch['fields'];
 
-        $page['search_details']['forbidden'] = get_sql_condition_FandF(
-            [
-                'forbidden_categories' => 'category_id',
-                'visible_categories' => 'category_id',
-                'visible_images' => 'id',
-            ],
-            "\n  AND"
-        );
+        $page['search_details']['forbidden'] = (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
+            'forbidden_categories' => 'category_id',
+            'visible_categories' => 'category_id',
+            'visible_images' => 'id',
+        ], "\n  AND");
 
         // we want filters to be filled with values related to current items
         // ONLY IF we have some filters filled
@@ -149,7 +168,7 @@ final class SearchFilterRenderer
         if (isset($searchFields['tags']) and (bool) $displayFilters['tags']['access']) {
             $filterTags = [];
 
-            // TODO calling get_available_tags(), with lots of
+            // TODO calling TagService::getAvailableTags(), with lots of
             // photos/albums/tags may cost time, we should reuse the result
             // if already executed (for building the menu for example)
 
@@ -184,9 +203,9 @@ final class SearchFilterRenderer
                 return $ids;
             };
 
-            $otherFiltersItems = get_items_for_filter('tags');
+            $otherFiltersItems = $this->getItemsForFilter('tags');
             if ($otherFiltersItems === false) {
-                $filterTags = get_available_tags();
+                $filterTags = $tagService->getAvailableTags();
                 usort($filterTags, tag_alpha_compare(...));
             } else {
                 $tagFilterItems = [];
@@ -196,17 +215,17 @@ final class SearchFilterRenderer
                     }
                 }
 
-                $filterTags = get_common_tags($tagFilterItems, 0);
+                $filterTags = $tagService->getCommonTags($tagFilterItems, 0);
 
                 // the user may have started a search on 2 or more tags that
                 // have no intersection. In this case, $searchItems is empty
-                // and get_common_tags returns nothing. We should still
+                // and TagService::getCommonTags() returns nothing. We should still
                 // display the list of selected tags. We have to "force"
                 // them in the list.
                 $missingTagIds = array_diff($tagWords, $extractTagIds($filterTags));
 
                 if (count($missingTagIds) > 0) {
-                    $filterTags = array_merge(get_available_tags($missingTagIds), $filterTags);
+                    $filterTags = array_merge($tagService->getAvailableTags($missingTagIds), $filterTags);
                 }
             }
 
@@ -230,7 +249,7 @@ final class SearchFilterRenderer
         }
 
         if (isset($searchFields['author']) and (bool) $displayFilters['author']['access']) {
-            $filterClause = get_clause_for_filter('author');
+            $filterClause = $this->getClauseForFilter('author');
 
             $query = '
 SELECT
@@ -346,7 +365,7 @@ SELECT
         }
 
         if (isset($searchFields['added_by']) and (bool) $displayFilters['added_by']['access']) {
-            $filterClause = get_clause_for_filter('added_by');
+            $filterClause = $this->getClauseForFilter('added_by');
 
             $query = '
 SELECT
@@ -402,7 +421,7 @@ SELECT
 
                 // $conf['user_fields'] maps generic field names to actual
                 // DB columns; fall back to the generic names, matching
-                // functions_mail.inc.php.
+                // MailService::userFields().
                 $confUserFields = $conf['user_fields'] ?? null;
                 $confUserFields = is_array($confUserFields) ? $confUserFields : [];
                 $userFieldId = is_string($confUserFields['id'] ?? null) ? $confUserFields['id'] : 'id';
@@ -496,7 +515,7 @@ SELECT
         }
 
         if (isset($searchFields['filetypes']) and (bool) $displayFilters['file_type']['access']) {
-            $filterClause = get_clause_for_filter('filetypes');
+            $filterClause = $this->getClauseForFilter('filetypes');
 
             // get all file extensions for this user in the gallery,
             // whatever the current filters
@@ -558,7 +577,7 @@ SELECT
             $template->assign('SHOW_FILTER_RATINGS', true);
 
             if (isset($searchFields['ratings']) and (bool) $displayFilters['rating']['access']) {
-                $filterClause = get_clause_for_filter('ratings');
+                $filterClause = $this->getClauseForFilter('ratings');
 
                 $cacheKey = $persistent_cache->make_key('filter_ratings' . $userId . $userCacheUpdateTime);
 
@@ -617,7 +636,7 @@ SELECT
 
         // For filesize
         if (isset($searchFields['filesize_min']) && isset($searchFields['filesize_max']) and (bool) $displayFilters['file_size']['access']) {
-            $filterClause = get_clause_for_filter('filesize');
+            $filterClause = $this->getClauseForFilter('filesize');
 
             $filesizes = [];
 
@@ -678,7 +697,7 @@ SELECT
         }
 
         if (isset($searchFields['ratios']) and (bool) $displayFilters['ratio']['access']) {
-            $filterClause = get_clause_for_filter('ratios');
+            $filterClause = $this->getClauseForFilter('ratios');
 
             $cacheKey = $persistent_cache->make_key('filter_ratios' . $userId . $userCacheUpdateTime);
 
@@ -745,7 +764,7 @@ SELECT
         }
 
         if (isset($searchFields['height_min']) and isset($searchFields['height_max']) and (bool) $displayFilters['height']['access']) {
-            $filterClause = get_clause_for_filter('height');
+            $filterClause = $this->getClauseForFilter('height');
 
             $query = '
 SELECT
@@ -809,7 +828,7 @@ SELECT
         }
 
         if (isset($searchFields['width_min']) and isset($searchFields['width_max']) and (bool) $displayFilters['width']['access']) {
-            $filterClause = get_clause_for_filter('width');
+            $filterClause = $this->getClauseForFilter('width');
 
             $query = '
 SELECT
@@ -1012,7 +1031,9 @@ SELECT
             return;
         }
 
-        $tags = get_available_tags($tagIds);
+        $tagConn = DbConnection::build();
+        $tags = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)))
+            ->getAvailableTags($tagIds);
         usort($tags, tag_alpha_compare(...));
         $tagsFound = [];
         foreach ($tags as $tag) {
@@ -1057,7 +1078,7 @@ SELECT
         /** @var Template $template */
         global $template;
 
-        $filterClause = get_clause_for_filter($filterName);
+        $filterClause = $this->getClauseForFilter($filterName);
         $cacheKey = $persistentCache->make_key('filter_' . $filterName . $userId . $userCacheUpdateTime);
         // we use persistent_cache only for fetching lines filtered only by
         // permissions
@@ -1201,5 +1222,135 @@ SELECT
             '12m' => 'INTERVAL 12 MONTH',
             default => 'INTERVAL 0 DAY',
         };
+    }
+
+    /**
+     * Returns the SQL WHERE clause to be used to build filter values.
+     *
+     * @since 15
+     */
+    private function getClauseForFilter(string $filterName): string
+    {
+        /** @var array<string, mixed> $page */
+        global $page;
+
+        $otherFiltersItems = $this->getItemsForFilter($filterName);
+        if ($otherFiltersItems === false) {
+            // $page['search_details'] is set (as
+            // SearchService::getRegularSearchResults()'s return
+            // ['search_details']) in Section\SectionPopulator; 'forbidden' is
+            // itself set as a string a few lines above in this same render().
+            $searchDetails = is_array($page['search_details'] ?? null) ? $page['search_details'] : [];
+            $forbidden = $searchDetails['forbidden'] ?? null;
+            return '1=1' . (is_string($forbidden) ? $forbidden : '');
+        }
+
+        // getItemsForFilter() ultimately pulls its values from
+        // $page['search_details']['image_ids_for_filter'], which is declared
+        // array<string, mixed> (getRegularSearchResults()'s return shape) — in
+        // practice always image ids, but narrow to scalars here for implode().
+        $otherFiltersItemStrings = array_map(
+            static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0',
+            $otherFiltersItems
+        );
+
+        return 'image_id IN (' . implode(',', $otherFiltersItemStrings) . ')';
+    }
+
+    /**
+     * Returns the list of items (image_ids) to be used to build filter
+     * values for a given filter. Depends on the other filters. Use a cache
+     * to avoid computing the same large array_intersect several times.
+     *
+     * @since 15
+     *
+     * @return array<int, mixed>|false array of image_ids, or false
+     */
+    private function getItemsForFilter(string $filterName): false|array
+    {
+        /**
+         * @var array<string, mixed> $page
+         * @var Logger $logger
+         */
+        global $page, $logger;
+
+        // $page['search_details'] is set (as
+        // SearchService::getRegularSearchResults()'s return
+        // ['search_details']) in Section\SectionPopulator.
+        $searchDetails = is_array($page['search_details'] ?? null) ? $page['search_details'] : [];
+        $imageIdsForFilter = is_array($searchDetails['image_ids_for_filter'] ?? null) ? $searchDetails['image_ids_for_filter'] : [];
+
+        $otherFilters = array_diff(array_keys($imageIdsForFilter), [$filterName]);
+
+        if (empty($otherFilters)) {
+            return false;
+        }
+
+        $cacheKey = md5(implode(',', $otherFilters));
+
+        $filterCache = is_array($searchDetails[__METHOD__] ?? null) ? $searchDetails[__METHOD__] : [];
+
+        if (! isset($filterCache[$cacheKey])) {
+            $functionStart = get_moment();
+
+            // every entry of $imageIdsForFilter is either a query2array() id
+            // list (list<string|null>) or, for 'expert', the already-narrowed
+            // result of SearchService::getQuickSearchResults() — normalize
+            // each to a plain string-id list here so array_intersect() below
+            // has an unambiguous element type (same normalization as
+            // SearchService::getRegularSearchResults()).
+            $firstFilterRaw = $imageIdsForFilter[array_shift($otherFilters)] ?? null;
+            $otherFiltersItems = [];
+            if (is_array($firstFilterRaw)) {
+                foreach ($firstFilterRaw as $id) {
+                    if (is_scalar($id)) {
+                        $otherFiltersItems[] = (string) $id;
+                    }
+                }
+            }
+
+            foreach ($otherFilters as $otherFilter) {
+                $nextFilterRaw = $imageIdsForFilter[$otherFilter] ?? null;
+                $nextFilterItems = [];
+                if (is_array($nextFilterRaw)) {
+                    foreach ($nextFilterRaw as $id) {
+                        if (is_scalar($id)) {
+                            $nextFilterItems[] = (string) $id;
+                        }
+                    }
+                }
+                $otherFiltersItems = array_intersect($otherFiltersItems, $nextFilterItems);
+            }
+
+            $otherFiltersItems = array_unique($otherFiltersItems);
+
+            $debugMsg = '[' . __METHOD__ . '] cache computed for ' . (count($otherFilters) + 1) . ' other filters';
+            $debugMsg .= ' (' . count($otherFiltersItems) . ' items)';
+            $debugMsg .= ', time = ' . get_elapsed_time($functionStart, get_moment());
+            $logger->debug($debugMsg);
+
+            if (empty($otherFiltersItems)) {
+                $otherFiltersItems = [-1];
+            }
+
+            // write the whole 'search_details' structure back at once (rather
+            // than chaining offset-writes through $page directly) so every
+            // intermediate container is a value we've already proven is an array.
+            $filterCache[$cacheKey] = $otherFiltersItems;
+            $searchDetails[__METHOD__] = $filterCache;
+            $page['search_details'] = $searchDetails;
+
+            return $otherFiltersItems;
+        }
+
+        $cachedItems = $filterCache[$cacheKey];
+        if (! is_array($cachedItems)) {
+            return [];
+        }
+
+        // only ever populated a few lines above (in this same method) with an
+        // array<int, mixed> $otherFiltersItems.
+        /** @var array<int, mixed> $cachedItems */
+        return $cachedItems;
     }
 }

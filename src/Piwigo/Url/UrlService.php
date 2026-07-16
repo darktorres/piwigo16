@@ -4,20 +4,30 @@ declare(strict_types=1);
 
 namespace Piwigo\Url;
 
+use Piwigo\Auth\CookieService;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
+use Piwigo\Tag\TagRepository;
+use Piwigo\Tag\TagService;
 
 /**
  * URL building/parsing for the gallery's own routes (index/picture/action
  * sections, permalinks, chronology/start/flat params).
  *
- * Injects nothing -- cross-domain calls (get_cat_info(), find_tags(),
- * str2url(), is_a_guest(), l10n(), page_not_found(), etc.) stay as plain
- * global-function calls to modules not yet migrated in P17 (Category/Tag/
- * Auth/Html are P17-20 territory beyond this phase's own Html addition),
- * matching every one of these free functions' own already-established
- * "1-line delegate to the new class" migration shape once their module
- * lands. Same "injects nothing" shape the reference implementation's own
- * mature UrlService settled on.
+ * Injects nothing -- cross-domain calls (str2url(), is_a_guest(), l10n(),
+ * page_not_found(), etc.) stay as plain global-function calls to modules
+ * not yet migrated in P17. Same "injects nothing" shape the reference
+ * implementation's own mature UrlService settled on. `cookie_path()`,
+ * `find_tags()` (`Piwigo\Tag\TagService::findTags()`), `get_cat_info()`/
+ * `get_cat_id_from_permalinks()` (`Piwigo\Category\CategoryService`, P23
+ * batch 8c) are exceptions -- Auth\CookieService/Tag/Category are all
+ * same-layer-or-below (L2b may depend on L2a), so they're called directly
+ * rather than left as free-function delegates.
  */
 final class UrlService
 {
@@ -104,7 +114,7 @@ final class UrlService
                 }
             }
         }
-        $url .= cookie_path();
+        $url .= new CookieService()->cookiePath();
 
         return $url;
     }
@@ -556,6 +566,12 @@ final class UrlService
             /** @var array{cat_url_name?: string, cat_permalink?: string} $hit_by */
             $hit_by = [];
 
+            $categoryConn = DbConnection::build();
+            $categoryService = new CategoryService(
+                new CategoryRepository($categoryConn),
+                new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
+            );
+
             while (isset($tokens[$nextToken])) {
                 if ($loop_counter++ > count($tokens) + 10) {
                     die('infinite loop?');
@@ -602,7 +618,7 @@ final class UrlService
                     }
 
                     if ((bool) count($maybe_permalinks)) {
-                        $cat_id = get_cat_id_from_permalinks($maybe_permalinks, $perma_index);
+                        $cat_id = $categoryService->findCategoryIdFromPermalinks($maybe_permalinks, $perma_index);
                         // get_cat_id_from_permalinks() always sets $perma_index
                         // whenever it returns non-null (see its own docblock) --
                         // PHPStan can't correlate a by-ref out-param with the
@@ -629,7 +645,7 @@ final class UrlService
             }
 
             if ($category !== null) {
-                $result = get_cat_info((int) $category);
+                $result = $categoryService->getCategoryInfo((int) $category);
                 if ($result === null || $result === []) {
                     page_not_found(l10n('Requested album does not exist'));
                 }
@@ -640,7 +656,7 @@ final class UrlService
                 $combined_categories = [];
 
                 foreach ($combined_category_ids as $cat_id) {
-                    $result = get_cat_info((int) $cat_id);
+                    $result = $categoryService->getCategoryInfo((int) $cat_id);
                     if ($result === null || $result === []) {
                         page_not_found(l10n('Requested album does not exist'));
                     }
@@ -683,7 +699,9 @@ final class UrlService
                 bad_request('at least one tag required');
             }
 
-            $page['tags'] = find_tags($requested_tag_ids, $requested_tag_url_names);
+            $tagConn = DbConnection::build();
+            $page['tags'] = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)))
+                ->findTags($requested_tag_ids, $requested_tag_url_names);
             if ($page['tags'] === []) {
                 page_not_found(l10n('Requested tag does not exist'), $this->getRootUrl() . 'tags.php');
             }
@@ -953,7 +971,7 @@ final class UrlService
         /** @var array<string, mixed> $user */
         global $user;
 
-        if (is_a_guest()) {
+        if (\Piwigo\Auth\AccessControl::isAGuest()) {
             return [];
         }
 

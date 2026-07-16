@@ -141,15 +141,28 @@ deptrac:
     # necessary (themed HTML email rendering, not something to simplify
     # away), Mail has to sit at L3Presentation or L4Integration instead,
     # same layer as Template itself (same-layer deps are always allowed).
-    # This is why UserService/CommentService (L2aCoreDomain, built later
-    # this phase) call mail-sending through the free-function delegates
-    # (pwg_mail()/pwg_mail_admins()/etc., still in
-    # include/functions_mail.inc.php) rather than constructor-injecting
-    # MailService directly -- L2aCoreDomain may not depend on L3Presentation,
-    # so a real class-to-class dependency there would violate the same rule
-    # this comment is explaining. Same "injects nothing, call the
-    # not-yet-injectable cross-layer capability as a free function" shape as
-    # Url/Html/FeedHelper.
+    # This is why UserService (L2aCoreDomain)/CommentService
+    # (L2bExtendedDomain) may not constructor-inject MailService directly --
+    # L2a/L2b may not depend on L3Presentation. P23 batch 8c (finding 8)
+    # resolved this with real dependency inversion rather than keeping
+    # pwg_mail()/pwg_mail_admins() as free-function delegates forever:
+    # Piwigo\Core\MailerInterface (L1Infrastructure) is implemented by
+    # MailService and bound in config/container.php; UserService/
+    # CommentService constructor-inject the interface instead. Both
+    # directions are allowed (L3->L1 for MailService implementing it,
+    # L2a/L2b->L1 for the domain classes depending on it) -- see
+    # MailerInterface's own docblock for the full reasoning, including why
+    # this treatment doesn't extend to every free function (fatal_error()
+    # stays a permanent free-function facade instead, a structurally
+    # different case -- called from every layer including L1, not just a
+    # couple of narrowly-constructed domain classes). P23 batch 8d found 3
+    # more real L2b callers needing the same treatment while retargeting
+    # include/functions_user.inc.php's get_default_language()/
+    # checkUserFavorites()/getRecentPhotosSql() (each constructs UserService,
+    # which itself needs MailerInterface): Search\SearchService,
+    # Search\SearchFilterRenderer, Section\SectionPopulator all now
+    # constructor-inject MailerInterface too, threaded down to every
+    # UserService/SearchService they construct internally.
     # Page/Asset/Listener are later-phase additions.
     # Picture lands in P23 batch 4 (Piwigo\Picture\PictureCommentRenderer/
     # PictureMetadataRenderer, ported from include/picture_comment.inc.php/

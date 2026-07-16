@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Mail;
 
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\MailerInterface;
 use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
@@ -50,8 +51,14 @@ use Symfony\Component\Mime\Email;
  * static state on this class instead of raw globals, with a reset() for
  * test isolation, matching StorageRegistry/SessionService/PageState's own
  * established self-managed-state pattern.
+ *
+ * Implements `Piwigo\Core\MailerInterface` (P23 batch 8c) so
+ * L2aCoreDomain/L2bExtendedDomain classes that may not depend on this
+ * class directly (this file is L3Presentation) can constructor-inject the
+ * interface instead — `Users\UserService`/`Comment\CommentService`, bound
+ * via `config/container.php`.
  */
-final class MailService
+final class MailService implements MailerInterface
 {
     /**
      * @var array<string, array{theme: Template}>
@@ -415,6 +422,7 @@ final class MailService
      * @param string|array<int|string, mixed> $content
      * @param bool $sendTechnicalDetails send user IP and browser
      */
+    #[\Override]
     public function mailNotificationAdmins(string|array $subject, string|array $content, bool $sendTechnicalDetails = true, int|string|null $groupId = null): bool
     {
         if ($subject === '' || $subject === [] || $content === '' || $content === []) {
@@ -428,7 +436,7 @@ final class MailService
         global $conf, $user;
 
         if (is_array($subject) || is_array($content)) {
-            $this->switchLangTo(get_default_language());
+            $this->switchLangTo((new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultLanguage());
 
             if (is_array($subject)) {
                 $subject = l10n_args($subject);
@@ -535,7 +543,7 @@ SELECT
             return true;
         }
 
-        $this->switchLangTo(get_default_language());
+        $this->switchLangTo((new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultLanguage());
         $return = $this->mail($admins, $args, $tpl);
         $this->switchLangBack();
 
@@ -621,7 +629,7 @@ SELECT
                 $uEmail = $u['email'] ?? null;
                 $uEmail = is_string($uEmail) ? $uEmail : '';
 
-                $authkey = create_user_auth_key((int) $uUserId, $uStatus);
+                $authkey = (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build())))->createUserAuthKey((int) $uUserId, $uStatus);
 
                 $userTpl = $tpl;
 
@@ -681,6 +689,7 @@ SELECT
      *        auth_key: authentication key to add on the footer link
      * @param array{filename?: string, dirname?: string, assign?: array<string, mixed>} $tpl custom content template
      */
+    #[\Override]
     public function mail(string|array $to, array $args = [], array $tpl = []): bool
     {
         if (self::emptyValue($to) && (! isset($args['Cc']) || self::emptyValue($args['Cc'])) && (! isset($args['Bcc']) || self::emptyValue($args['Bcc']))) {
@@ -948,7 +957,7 @@ SELECT
                 $errorMessage = $e->getMessage();
             }
 
-            if (! $ret && (! (bool) ini_get('display_errors') || is_admin())) {
+            if (! $ret && (! (bool) ini_get('display_errors') || \Piwigo\Auth\AccessControl::isAdmin())) {
                 trigger_error('Mailer Error: ' . $errorMessage, \E_USER_WARNING);
             }
             if ((bool) ($conf['debug_mail'] ?? false)) {

@@ -40,7 +40,7 @@ final class RandomIndexRedirectResolver
             return true;
         }
         if ($condition === 'return is_a_guest();') {
-            return is_a_guest();
+            return \Piwigo\Auth\AccessControl::isAGuest();
         }
         return false;
     }

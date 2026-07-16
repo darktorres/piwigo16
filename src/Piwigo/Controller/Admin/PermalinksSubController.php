@@ -5,11 +5,16 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Piwigo\Admin\tabsheet;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Permalink\PermalinkRepository;
 use Piwigo\Permalink\PermalinkService;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
 use Piwigo\Template\Template;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -118,7 +123,11 @@ SELECT
   uppercats, global_rank
 FROM ' . Tables::categories();
 
-        display_select_cat_wrapper($query, $selected_cat, 'categories', false);
+        $categoryConn = DbConnection::build();
+        new CategoryService(
+            new CategoryRepository($categoryConn),
+            new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
+        )->displaySelectCatWrapper($query, $selected_cat, 'categories', false);
 
         $pwg_token = get_pwg_token();
 
@@ -151,7 +160,7 @@ SELECT id, permalink, uppercats, global_rank
         }
 
         if ($sort_by[0] == 'name') {
-            usort($categories, global_rank_compare(...));
+            usort($categories, CategoryService::compareByGlobalRank(...));
         }
         $template->assign('permalinks', $categories);
 

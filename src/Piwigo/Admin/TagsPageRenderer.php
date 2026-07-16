@@ -18,7 +18,7 @@ final class TagsPageRenderer
         /** @var Template $template */
         global $template;
 
-        check_status(AccessLevel::Administrator);
+        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
         $tabsheet = new tabsheet();
         $tabsheet->set_id('tags');

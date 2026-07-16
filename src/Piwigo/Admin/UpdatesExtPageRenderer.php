@@ -50,7 +50,7 @@ final class UpdatesExtPageRenderer
             die('Piwigo extensions install/update system is disabled');
         }
 
-        if (! is_webmaster()) {
+        if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
             $page['warnings'][] = str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'));
         }
 
@@ -174,7 +174,7 @@ final class UpdatesExtPageRenderer
         $template->assign('SHOW_RESET', $show_reset);
         $template->assign('PWG_TOKEN', get_pwg_token());
         $template->assign('EXT_TYPE', $page_slug === 'updates' ? 'extensions' : $page_slug);
-        $template->assign('isWebmaster', (is_webmaster()) ? 1 : 0);
+        $template->assign('isWebmaster', (\Piwigo\Auth\AccessControl::isWebmaster()) ? 1 : 0);
         $template->set_filename('plugin_admin_content', 'updates_ext.tpl');
         $template->assign_var_from_handle('ADMIN_CONTENT', 'plugin_admin_content');
         $template->assign('ADMIN_PAGE_TITLE', l10n('Updates'));

@@ -5,21 +5,29 @@ declare(strict_types=1);
 namespace Piwigo\Search;
 
 use Piwigo\Cache\PersistentFileCache;
+use Piwigo\Core\MailerInterface;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Search\Inflector\InflectorInterface;
+use Piwigo\Session\SessionService;
+use Piwigo\Tag\TagRepository;
+use Piwigo\Tag\TagService;
+use Piwigo\Users\UserRepository;
+use Piwigo\Users\UserService;
 
 /**
- * Search domain business logic, ported from `include/functions_search.inc.php`'s
- * 17 functions. `get_clause_for_filter()`/`get_items_for_filter()` stay as
- * free-function delegates unchanged -- both are entirely `$page`-coupled
- * (read `$page['search_details']`, written by this service's own
- * `getRegularSearchResults()` return value stored back into `$page` by
- * `section_init.inc.php`) with zero DB access of their own. Same split as
- * every other `$page`/`$template`-coupled function ported this project:
- * the free-function wrapper keeps the presentation-layer glue,
- * `SearchService` owns the query construction and business logic.
+ * Search domain business logic, ported from the deleted
+ * `include/functions_search.inc.php`'s 17 functions (P23 batch 8c).
+ * `get_clause_for_filter()`/`get_items_for_filter()` -- entirely
+ * `$page`-coupled (read `$page['search_details']`, written by this
+ * service's own `getRegularSearchResults()` return value stored back into
+ * `$page` by `Section\SectionPopulator`), zero DB access of their own --
+ * were folded as private methods on their single real caller,
+ * `Search\SearchFilterRenderer`, instead of onto this class.
  *
+
  * [SEC-18] The 3 `addslashes()` sites (REGEXP/FULLTEXT/LIKE clause
  * construction in the quick-search token evaluator) are replaced with
  * `SearchRepository::quote()` (the real DBAL driver's own escaping) --
@@ -35,6 +43,7 @@ final class SearchService
         private readonly SearchRepository $repo,
         private readonly PermissionService $permissionService,
         private readonly PersistentFileCache $cache,
+        private readonly MailerInterface $mailer,
     ) {}
 
     public static function getSearchIdPattern(int|string $candidate): ?string
@@ -64,6 +73,43 @@ final class SearchService
     }
 
     /**
+     * Same as getSearchInfo(), plus the request-context validation the
+     * former free function get_search_info() (functions_search.inc.php,
+     * P23 batch 8c) applied around it: dies on a malformed candidate,
+     * refuses (outside the web-service API) to resolve an old-style
+     * numeric-only id once the search row already has a search_uuid (spies
+     * shouldn't be able to walk index.php?/search/123, .../124, ...), and
+     * records the resolved id onto $page['search_id'] for pwg_log() to
+     * read later, when rendering the "search" section.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function getValidatedSearchInfo(int|string $candidate): ?array
+    {
+        /** @var array<string, mixed> $page */
+        global $page;
+
+        $clausePattern = self::getSearchIdPattern($candidate);
+        if ($clausePattern === null) {
+            die('Invalid search identifier');
+        }
+
+        $search = $this->getSearchInfo($candidate);
+
+        if ($search !== null) {
+            if (script_basename() != 'ws' and $clausePattern == 'id = ?' and isset($search['search_uuid'])) {
+                fatal_error('this search is not reachable with its id, need the search_uuid instead');
+            }
+
+            if (isset($page['section']) and $page['section'] == 'search') {
+                $page['search_id'] = $search['id'];
+            }
+        }
+
+        return $search;
+    }
+
+    /**
      * @return array<string, mixed>|false
      */
     public function getSearchArray(int|string $searchId): array|false
@@ -71,6 +117,39 @@ final class SearchService
         $search = $this->getSearchInfo($searchId);
         if ($search === null) {
             return false;
+        }
+
+        $rules = $search['rules'] ?? null;
+        if (! is_string($rules)) {
+            return false;
+        }
+
+        $result = unserialize($rules);
+        if (! is_array($result)) {
+            return false;
+        }
+
+        /** @var array<string, mixed> $result */
+        return $result;
+    }
+
+    /**
+     * Returns search rules stored into a serialized array in "search"
+     * table. Same as getSearchArray(), but resolves the candidate id via
+     * getValidatedSearchInfo() (die()/fatal_error()-on-hacking-attempt
+     * request-context validation, since this is only meant for a
+     * user-supplied search identifier from the URL, unlike getSearchArray()'s
+     * own internal callers) and bad_request()s when nothing was found --
+     * same composition as the former free function get_search_array()
+     * (functions_search.inc.php, P23 batch 8c).
+     *
+     * @return array<string, mixed>|false
+     */
+    public function getValidatedSearchArray(int|string $searchId): array|false
+    {
+        $search = $this->getValidatedSearchInfo($searchId);
+        if (empty($search)) {
+            bad_request('this search identifier does not exist');
         }
 
         $rules = $search['rules'] ?? null;
@@ -128,8 +207,8 @@ final class SearchService
         foreach ($displayFilters as $filtName => $filtConf) {
             if (isset($filtConf['access'])) {
                 $filtConf['access'] = $filtConf['access'] === 'everybody'
-                    || ($filtConf['access'] === 'admins-only' && is_admin())
-                    || ($filtConf['access'] === 'registered-users' && is_classic_user());
+                    || ($filtConf['access'] === 'admins-only' && \Piwigo\Auth\AccessControl::isAdmin())
+                    || ($filtConf['access'] === 'registered-users' && \Piwigo\Auth\AccessControl::isClassicUser());
                 $displayFilters[$filtName] = $filtConf;
             }
         }
@@ -142,7 +221,7 @@ final class SearchService
         $expertString = (is_array($expertField) && is_string($expertField['string'] ?? null)) ? $expertField['string'] : null;
         if (isset($searchFields['expert']) && $expertString !== null && $expertString !== '' && (bool) ($displayFilters['expert']['access'] ?? false)) {
             $hasFiltersFilled = true;
-            $expertItems = get_quick_search_results($expertString, [])['items'];
+            $expertItems = $this->getQuickSearchResults($expertString, [])['items'];
             $imageIdsForFilter['expert'] = is_array($expertItems) ? array_values(array_map(intval(...), array_filter($expertItems, is_numeric(...)))) : [];
         }
 
@@ -327,7 +406,8 @@ final class SearchService
         $tagsMode = is_array($tagsField) && is_string($tagsField['mode'] ?? null) ? $tagsField['mode'] : 'AND';
         if (isset($searchFields['tags']) && $tagsWords !== [] && (bool) ($displayFilters['tags']['access'] ?? false)) {
             $hasFiltersFilled = true;
-            $imageIdsForFilter['tags'] = array_values(array_map(intval(...), array_filter(get_image_ids_for_tags($tagsWords, $tagsMode), is_numeric(...))));
+            $tagService = new TagService(new TagRepository(DbConnection::build()), $this->permissionService);
+            $imageIdsForFilter['tags'] = array_values(array_map(intval(...), array_filter($tagService->getImageIdsForTags($tagsWords, $tagsMode), is_numeric(...))));
         }
 
         // custom search
@@ -1058,7 +1138,7 @@ final class SearchService
         $expression = new QExpression($q, $scopes);
 
         $inflector = null;
-        $langCode = substr(get_default_language(), 0, 2);
+        $langCode = substr(new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), $this->mailer)->getDefaultLanguage(), 0, 2);
         $className = '\\Piwigo\\Search\\Inflector\\Inflector_' . $langCode;
         if (class_exists($className)) {
             $inflector = new $className();
@@ -1222,7 +1302,7 @@ final class SearchService
 
     public function getAvailableSearchUuid(): string
     {
-        $candidate = 'psk-' . date('Ymd') . '-' . generate_key(10);
+        $candidate = 'psk-' . date('Ymd') . '-' . SessionService::get()->generateKey(10);
 
         if ($this->repo->countByUuid($candidate) === 0) {
             return $candidate;
@@ -1247,9 +1327,9 @@ final class SearchService
 
         $this->repo->insertSearch(serialize($rules), $dbNow, $userId, $searchUuid, $forkedFrom);
 
-        if (! is_a_guest() && ! is_generic()) {
+        if (! \Piwigo\Auth\AccessControl::isAGuest() && ! \Piwigo\Auth\AccessControl::isGeneric()) {
             $rulesFields = $rules['fields'] ?? [];
-            userprefs_update_param('gallery_search_filters', array_keys(is_array($rulesFields) ? $rulesFields : []));
+            (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->updateParam('gallery_search_filters', array_keys(is_array($rulesFields) ? $rulesFields : []));
         }
 
         $url = make_index_url([

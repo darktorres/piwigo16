@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\BatchManager;
 
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Template\Template;
 
 /**
@@ -184,7 +185,7 @@ SELECT
 
         if (isset($bulk_manager_filter['category']) && is_numeric($bulk_manager_filter['category'])) {
             $selected_category = intval($bulk_manager_filter['category']);
-            $selected_category_name = get_cat_display_name_from_id($selected_category);
+            $selected_category_name = new HtmlService()->getCatDisplayNameFromId($selected_category);
         }
 
         $template->assign('filter_category_selected_name', strip_tags($selected_category_name));

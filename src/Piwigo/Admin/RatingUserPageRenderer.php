@@ -50,7 +50,7 @@ final class RatingUserPageRenderer
         foreach ($rate_repository->findUsersWithStatusByIdUsername($user_fields['id'], $user_fields['username']) as $u) {
             $users_by_id[$u['id']] = [
                 'name' => $u['name'],
-                'anon' => ! is_autorize_status(AccessLevel::Classic, $u['status']),
+                'anon' => ! \Piwigo\Auth\AccessControl::isAuthorizeStatus(AccessLevel::Classic, $u['status']),
             ];
         }
 

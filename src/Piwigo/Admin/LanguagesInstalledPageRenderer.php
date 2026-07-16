@@ -43,7 +43,7 @@ final class LanguagesInstalledPageRenderer
          */
         global $conf, $page, $template;
 
-        if (! is_webmaster()) {
+        if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
             // include/common.inc.php seeds $page['warnings'] as [] -- always an
             // array; defensively re-initialized here in case that invariant is
             // ever broken by a prior include.
@@ -78,7 +78,7 @@ final class LanguagesInstalledPageRenderer
         check_input_parameter('action', $_GET, false, '/^(activate|deactivate|set_default|delete)$/');
         check_input_parameter('language', $_GET, false, '/^(' . join('|', array_keys($fs_languages)) . ')$/');
 
-        if (isset($_GET['action']) and isset($_GET['language']) and is_webmaster()) {
+        if (isset($_GET['action']) and isset($_GET['language']) and \Piwigo\Auth\AccessControl::isWebmaster()) {
             check_pwg_token();
 
             // check_input_parameter() above already fatal_error()s if either value
@@ -102,7 +102,7 @@ final class LanguagesInstalledPageRenderer
         // +-----------------------------------------------------------------------+
         // |                     start template output                             |
         // +-----------------------------------------------------------------------+
-        $default_language = get_default_language();
+        $default_language = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultLanguage();
 
         $tpl_languages = [];
 
@@ -152,11 +152,11 @@ final class LanguagesInstalledPageRenderer
         );
 
         foreach ($missing_language_ids as $language_id) {
-            $extension_repository->reassignUsersFromLanguage($language_id, get_default_language());
+            $extension_repository->reassignUsersFromLanguage($language_id, (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultLanguage());
             $extension_repository->delete(ExtensionType::Language, $language_id);
         }
 
-        $template->assign('isWebmaster', (is_webmaster()) ? 1 : 0);
+        $template->assign('isWebmaster', (\Piwigo\Auth\AccessControl::isWebmaster()) ? 1 : 0);
         $template->assign('ADMIN_PAGE_TITLE', l10n('Languages'));
         $template->assign('CONF_ENABLE_EXTENSIONS_INSTALL', $conf['enable_extensions_install']);
 

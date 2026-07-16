@@ -286,7 +286,7 @@ final class ExtensionLifecycle
                     break;
                 }
 
-                if ($id === get_default_theme()) {
+                if ($id === (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultTheme()) {
                     $newTheme = $this->pickReplacementDefaultTheme($id);
                     $this->setDefaultTheme($newTheme);
                 }
@@ -361,7 +361,7 @@ final class ExtensionLifecycle
                     $errors[] = 'CANNOT DEACTIVATE - LANGUAGE IS ALREADY DEACTIVATED';
                     break;
                 }
-                if ($id === get_default_language()) {
+                if ($id === (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultLanguage()) {
                     $errors[] = 'CANNOT DEACTIVATE - LANGUAGE IS DEFAULT LANGUAGE';
                     break;
                 }
@@ -379,7 +379,7 @@ final class ExtensionLifecycle
                     break;
                 }
 
-                $this->repo->reassignUsersFromLanguage($id, get_default_language());
+                $this->repo->reassignUsersFromLanguage($id, (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultLanguage());
 
                 deltree(PHPWG_ROOT_PATH . 'language/' . $id, PHPWG_ROOT_PATH . 'language/trash');
                 break;
@@ -446,7 +446,7 @@ final class ExtensionLifecycle
         /** @var array<string, mixed> $conf */
         global $conf;
 
-        $defaultTheme = get_default_theme();
+        $defaultTheme = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultTheme();
         $userIds = $this->repo->findUserIdsByTheme($defaultTheme);
 
         $defaultUserId = is_numeric($conf['default_user_id'] ?? null) ? (int) $conf['default_user_id'] : 0;

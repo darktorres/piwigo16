@@ -189,7 +189,7 @@ INSERT INTO ' . Tables::themes() . '
                     break;
                 }
 
-                if ($theme_id == get_default_theme()) {
+                if ($theme_id == (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultTheme()) {
                     // find a random theme to replace
                     $new_theme = null;
 
@@ -313,7 +313,7 @@ DELETE
         global $conf;
 
         // first we need to know which users are using the current default theme
-        $default_theme = get_default_theme();
+        $default_theme = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultTheme();
 
         $query = '
 SELECT
@@ -462,7 +462,7 @@ SELECT
                         $theme['screenshot'] = $screenshot_path;
                     } else {
                         global $conf;
-                        $admin_theme = userprefs_get_param('admin_theme', 'clear');
+                        $admin_theme = (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->getParam('admin_theme', 'clear');
                         $theme['screenshot'] =
                           PHPWG_ROOT_PATH . 'admin/themes/'
                           . (is_string($admin_theme) ? $admin_theme : 'clear')

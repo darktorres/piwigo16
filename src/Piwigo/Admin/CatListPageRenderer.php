@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Template\Template;
 
 /**
@@ -157,7 +158,7 @@ SELECT COUNT(*)
             $level_separator = is_string($conf['level_separator']) ? $conf['level_separator'] : ' / ';
             $navigation .= $level_separator;
 
-            $navigation .= get_cat_display_name_from_id(
+            $navigation .= new HtmlService()->getCatDisplayNameFromId(
                 $parent_id,
                 $base_url . '&amp;parent_id='
             );

@@ -13,6 +13,7 @@ use Piwigo\Admin\Image\pwg_image;
 use Piwigo\Audit\AuditRepository;
 use Piwigo\Audit\AuditService;
 use Piwigo\Cache\PersistentCache;
+use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Logger;
 use Piwigo\Db\DbConnection;
@@ -22,6 +23,7 @@ use Piwigo\Group\GroupService;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
 use Psr\Http\Client\ClientExceptionInterface;
 
@@ -412,7 +414,7 @@ DELETE FROM ' . $table . '
     }
 
     // purge of sessions
-    delete_user_sessions($user_id);
+    SessionService::get()->deleteUserSessions($user_id);
 
     // destruction of the user
     $user_fields = $conf['user_fields'];
@@ -896,7 +898,7 @@ SELECT
   WHERE id IN (' . implode(',', $categories) . ')
 ;';
         $all_categories = query2array($query);
-        usort($all_categories, global_rank_compare(...));
+        usort($all_categories, CategoryService::compareByGlobalRank(...));
 
         foreach ($all_categories as $cat) {
             $is_top = true;
@@ -1266,7 +1268,7 @@ SELECT user_id
     $to_create = array_diff($base_users, $infos_users);
 
     if (count($to_create) > 0) {
-        create_user_infos($to_create);
+        (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->createUserInfos($to_create);
     }
 
     // users present in user related tables must be present in the base user
@@ -2011,7 +2013,7 @@ function empty_lounge($invalidate_user_cache = true): ?array
         }
     }
 
-    $exec_id = generate_key(4);
+    $exec_id = SessionService::get()->generateKey(4);
     $request_method = $_REQUEST['method'] ?? null;
     $api_suffix = is_scalar($request_method) ? ' (API:' . $request_method . ')' : '';
     $logger->debug(__FUNCTION__ . $api_suffix . ', exec=' . $exec_id . ', begins');

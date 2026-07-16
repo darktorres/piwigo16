@@ -109,7 +109,7 @@ class CalendarWeekly extends CalendarBase
         global $page;
 
         // chronology_date is always an array: set to [] by
-        // functions_calendar.inc.php::init_calendar_chronology() and to a
+        // CalendarRenderer::render() and to a
         // list of int|string tokens by the URL router (functions_url.inc.php)
         // or feed.php/picture.php (same invariant documented in
         // CalendarMonthly::get_date_where()).

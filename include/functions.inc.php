@@ -27,20 +27,50 @@ use Piwigo\History\HistoryRepository;
 use Piwigo\History\HistoryService;
 use Piwigo\Lang\Translator;
 use Piwigo\Page\PaginationService;
+use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
 use Piwigo\Validation\InputValidator;
 
 /** base directory of plugins */
 define('PHPWG_PLUGINS_PATH', PHPWG_ROOT_PATH . 'plugins/');
 
-include_once PHPWG_ROOT_PATH . 'include/functions_user.inc.php';
-include_once PHPWG_ROOT_PATH . 'include/functions_cookie.inc.php';
+// Relocated from the deleted include/functions_calendar.inc.php (P23 batch
+// 8c) -- used only by Piwigo\Calendar\CalendarRenderer/CalendarMonthly/
+// CalendarWeekly, kept as global constants (not class constants) to match
+// this migration's established minimal-footprint precedent for widely-
+// used bootstrap-level constants (PHPWG_PLUGINS_PATH above).
+/** URL keyword for list view */
+define('CAL_VIEW_LIST', 'list');
+/** URL keyword for calendar view */
+define('CAL_VIEW_CALENDAR', 'calendar');
+// Chronology-date array indexes used throughout CalendarMonthly/
+// CalendarWeekly -- CWEEK and CMONTH intentionally share index 1 --
+// CalendarMonthly only ever uses CYEAR/CMONTH/CDAY and CalendarWeekly only
+// ever uses CYEAR/CWEEK/CDAY, never both in the same $chronology_date array.
+/** level of year view */
+define('CYEAR', 0);
+/** level of week view in weekly view */
+define('CWEEK', 1);
+/** level of month view in monthly view */
+define('CMONTH', 1);
+/** level of day view */
+define('CDAY', 2);
+
+// Relocated from the deleted include/functions_search.inc.php (P23 batch
+// 8c) -- quick-search token modifier bitmask flags, used throughout
+// Piwigo\Search\* (SearchService/QMultiToken/QSingleToken/QExpression/
+// QDateRangeScope/QNumericRangeScope), same minimal-footprint relocation
+// precedent as the calendar constants above.
+define('QST_QUOTED', 0x01);
+define('QST_NOT', 0x02);
+define('QST_OR', 0x04);
+define('QST_WILDCARD_BEGIN', 0x08);
+define('QST_WILDCARD_END', 0x10);
+define('QST_WILDCARD', QST_WILDCARD_BEGIN | QST_WILDCARD_END);
+define('QST_BREAK', 0x20);
+
 include_once PHPWG_ROOT_PATH . 'include/functions_session.inc.php';
-include_once PHPWG_ROOT_PATH . 'include/functions_category.inc.php';
 include_once PHPWG_ROOT_PATH . 'include/functions_html.inc.php';
-include_once PHPWG_ROOT_PATH . 'include/functions_tag.inc.php';
-include_once PHPWG_ROOT_PATH . 'include/functions_url.inc.php';
-include_once PHPWG_ROOT_PATH . 'include/derivative_params.inc.php';
 include_once PHPWG_ROOT_PATH . 'include/derivative_std_params.inc.php';
 
 use Piwigo\Image\ImageStdParams;
@@ -521,10 +551,10 @@ function do_log($image_id = null, $image_type = null): bool
     global $conf;
 
     $do_log = $conf['log'];
-    if (is_admin()) {
+    if (\Piwigo\Auth\AccessControl::isAdmin()) {
         $do_log = $conf['history_admin'];
     }
-    if (is_a_guest()) {
+    if (\Piwigo\Auth\AccessControl::isAGuest()) {
         $do_log = $conf['history_guest'];
     }
 
@@ -1115,23 +1145,23 @@ function redirect_html($url, $msg = '', $refresh_time = 0): never
     if (! isset($lang_info) || ! isset($template)) {
         $guest_id = $conf['guest_id'];
         $guest_id = is_numeric($guest_id) ? (int) $guest_id : 0;
-        $user = build_user($guest_id, true);
+        $user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->buildUser($guest_id, true);
         load_language('common.lang');
         trigger_notify('loading_lang');
         load_language('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, [
             'no_fallback' => true,
             'local' => true,
         ]);
-        $template = new Template(PHPWG_ROOT_PATH . 'themes', get_default_theme());
+        $template = new Template(PHPWG_ROOT_PATH . 'themes', (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultTheme());
     } elseif (defined('IN_ADMIN') and IN_ADMIN) {
-        $template = new Template(PHPWG_ROOT_PATH . 'themes', get_default_theme());
+        $template = new Template(PHPWG_ROOT_PATH . 'themes', (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultTheme());
     }
 
     // Neither branch above runs when $template was already set and we're
     // not in admin -- it's the pre-existing bootstrap Template in that case,
     // but re-check for real since that isn't provable here statically.
     if (! ($template instanceof Template)) {
-        $template = new Template(PHPWG_ROOT_PATH . 'themes', get_default_theme());
+        $template = new Template(PHPWG_ROOT_PATH . 'themes', (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultTheme());
     }
 
     if (empty($msg)) {
@@ -1574,7 +1604,7 @@ SELECT param, value
  */
 function pwg_is_dbconf_writeable(): bool
 {
-    [$param, $value] = ['pwg_is_dbconf_writeable_' . generate_key(12), date('c') . ' ' . generate_key(20)];
+    [$param, $value] = ['pwg_is_dbconf_writeable_' . SessionService::get()->generateKey(12), date('c') . ' ' . SessionService::get()->generateKey(20)];
 
     conf_update_param($param, $value);
     $row = pwg_db_fetch_row(pwg_query('SELECT value FROM ' . Tables::config() . ' WHERE param = \'' . $param . '\''));
@@ -1932,7 +1962,7 @@ function load_language($filename, $dirname = '', array $options = []): string|bo
     $dirname .= 'language/';
 
     $default_language = (defined('PHPWG_INSTALLED') and ! defined('UPGRADES_PATH')) ?
-        get_default_language() : AppInfo::DEFAULT_LANGUAGE;
+        (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultLanguage() : AppInfo::DEFAULT_LANGUAGE;
 
     // construct list of potential languages
     // Every element pushed here must be a real string: $user['language'] and
@@ -2322,7 +2352,7 @@ function get_branch_from_version($version): string
  */
 function get_device(): string
 {
-    $device = pwg_get_session_var('device');
+    $device = SessionService::get()->getSessionVar('device');
 
     if (! is_string($device)) {
         // No UA-sniffing library (removed, no replacement — see
@@ -2331,7 +2361,7 @@ function get_device(): string
         // via device detection. mobile_theme() still honors an explicit
         // ?mobile=1/0 override independent of this default.
         $device = 'desktop';
-        pwg_set_session_var('device', $device);
+        SessionService::get()->setSessionVar('device', $device);
     }
 
     return $device;
@@ -2351,15 +2381,15 @@ function mobile_theme(): bool
 
     if (isset($_GET['mobile'])) {
         $is_mobile_theme = get_boolean($_GET['mobile']);
-        pwg_set_session_var('mobile_theme', $is_mobile_theme);
+        SessionService::get()->setSessionVar('mobile_theme', $is_mobile_theme);
     } else {
-        $session_mobile_theme = pwg_get_session_var('mobile_theme');
+        $session_mobile_theme = SessionService::get()->getSessionVar('mobile_theme');
         $is_mobile_theme = is_bool($session_mobile_theme) ? $session_mobile_theme : null;
     }
 
     if ($is_mobile_theme === null) {
         $is_mobile_theme = (get_device() == 'mobile');
-        pwg_set_session_var('mobile_theme', $is_mobile_theme);
+        SessionService::get()->setSessionVar('mobile_theme', $is_mobile_theme);
     }
 
     return $is_mobile_theme;
@@ -2401,17 +2431,13 @@ function get_nb_available_comments(): int
     global $user;
     if (! isset($user['nb_available_comments'])) {
         $where = [];
-        if (! is_admin()) {
+        if (! \Piwigo\Auth\AccessControl::isAdmin()) {
             $where[] = 'validated=\'true\'';
         }
-        $where[] = get_sql_condition_FandF(
-            [
-                'forbidden_categories' => 'category_id',
-                'forbidden_images' => 'ic.image_id',
-            ],
-            '',
-            true
-        );
+        $where[] = (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
+            'forbidden_categories' => 'category_id',
+            'forbidden_images' => 'ic.image_id',
+        ], '', true);
 
         $query = '
 SELECT COUNT(DISTINCT(com.id))
@@ -2824,7 +2850,7 @@ SELECT
     $piwigo_infos['general_stats']['nb_private_themes'] = count(array_keys($private_themes));
     $piwigo_infos['general_stats']['nb_themes'] = $piwigo_infos['general_stats']['nb_private_themes'] + count($piwigo_infos['themes']);
 
-    $default_theme = get_default_theme();
+    $default_theme = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultTheme();
     if (isset($private_themes[$default_theme])) {
         $default_theme = 'private theme';
     }
@@ -2855,7 +2881,7 @@ SELECT
     }
     $piwigo_infos['themes_usage'] = $themes_usage;
 
-    $piwigo_infos['general_stats']['default_language'] = get_default_language();
+    $piwigo_infos['general_stats']['default_language'] = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultLanguage();
 
     $query = '
 SELECT

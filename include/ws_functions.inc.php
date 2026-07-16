@@ -30,7 +30,7 @@ function ws_isInvokeAllowed(mixed $res, string $methodName, array $params): mixe
         return $res;
     }
 
-    if (! is_autorize_status(AccessLevel::Guest) and
+    if (! \Piwigo\Auth\AccessControl::isAuthorizeStatus(AccessLevel::Guest) and
         ! str_starts_with($methodName, 'pwg.session.')) {
         return new PwgError(401, 'Access denied');
     }

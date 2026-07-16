@@ -70,7 +70,7 @@ final class LanguagesNewPageRenderer
         // +-----------------------------------------------------------------------+
 
         if (isset($_GET['revision'])) {
-            if (! is_webmaster()) {
+            if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
                 $this->pushPageMessage('errors', l10n('Webmaster status is required.'), $page);
             } else {
                 check_pwg_token();
@@ -173,7 +173,7 @@ final class LanguagesNewPageRenderer
             $this->pushPageMessage('errors', l10n('Can\'t connect to server.'), $page);
         }
         $template->assign('ADMIN_PAGE_TITLE', l10n('Languages'));
-        $template->assign('isWebmaster', (is_webmaster()) ? 1 : 0);
+        $template->assign('isWebmaster', (\Piwigo\Auth\AccessControl::isWebmaster()) ? 1 : 0);
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'languages');
     }

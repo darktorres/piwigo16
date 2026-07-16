@@ -76,7 +76,7 @@ DELETE FROM ' . Tables::caddie() . '
             redirect(get_root_url() . 'admin.php?page=batch_manager&filter=prefilter-caddie');
         }
 
-        if ((bool) userprefs_get_param('promote-mobile-apps', true)) {
+        if ((bool) (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->getParam('promote-mobile-apps', true)) {
             $query = '
 SELECT registration_date
   FROM ' . Tables::userInfos() . '

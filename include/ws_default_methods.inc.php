@@ -303,7 +303,7 @@ function ws_addDefaultMethods(array $arr): void
                 'type' => WS_TYPE_ID,
             ],
             'author' => [
-                'default' => is_a_guest() ? 'guest' : $user['username'],
+                'default' => \Piwigo\Auth\AccessControl::isAGuest() ? 'guest' : $user['username'],
             ],
             'content' => [],
             'key' => [],

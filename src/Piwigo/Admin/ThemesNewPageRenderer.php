@@ -64,7 +64,7 @@ final class ThemesNewPageRenderer
         if (isset($_GET['revision']) and isset($_GET['extension'])
             and is_string($_GET['revision']) and is_string($_GET['extension'])
         ) {
-            if (! is_webmaster()) {
+            if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
                 $this->pushPageMessage('errors', l10n('Webmaster status is required.'), $page);
             } else {
                 check_pwg_token();
@@ -175,7 +175,7 @@ final class ThemesNewPageRenderer
             $this->pushPageMessage('errors', l10n('Can\'t connect to server.'), $page);
         }
 
-        $admin_theme_pref = userprefs_get_param('admin_theme', 'clear');
+        $admin_theme_pref = (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->getParam('admin_theme', 'clear');
         $template->assign(
             'default_screenshot',
             get_root_url() . 'admin/themes/' . (is_string($admin_theme_pref) ? $admin_theme_pref : 'clear') . '/images/missing_screenshot.png'

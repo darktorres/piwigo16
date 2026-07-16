@@ -40,7 +40,7 @@ final class ExtendForTemplatesPageRenderer
         // so the $page['infos'][] = ... append below type-checks.
         $page['infos'] = is_array($page['infos'] ?? null) ? $page['infos'] : [];
 
-        check_status(AccessLevel::Administrator);
+        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
         $tpl_extension = [];
         if (isset($conf['extents_for_templates']) && is_string($conf['extents_for_templates'])) {

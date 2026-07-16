@@ -7,9 +7,11 @@ namespace Piwigo\Controller\Admin;
 use Piwigo\Admin\Image\pwg_image;
 use Piwigo\Admin\tabsheet;
 use Piwigo\Admin\Upload\UploadService;
+use Piwigo\Controller\ProfileFormHandler;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeParams;
+use Piwigo\Image\DerivativeUrlCodec;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SizingParams;
 use Piwigo\Image\WatermarkParams;
@@ -38,12 +40,12 @@ use Psr\Http\Message\ServerRequestInterface;
  * processSizes() below in P23 sub-batch 8b-4 -- both already write
  * through typed abstractions (ImageStdParams::save()/set_and_save(),
  * UploadService::saveUploadFormConfig()) with no raw SQL. The "default" tab's
- * build_user()/save_profile_from_post() calls are task #343's own
- * already-closed scope -- the same include/profile_functions.inc.php
- * pair the standalone admin/profile.php page once shared before P23
- * batch 6c deleted it as upstream-dead code (bug:3122, 2014: upstream
- * folded "edit a user's profile" into this file's own "default" tab
- * years ago, never as a separate admin page). The one remaining
+ * build_user()/ProfileFormHandler::saveFromPost() calls are the same
+ * `Piwigo\Controller\ProfileFormHandler` (P23 batch 8c) pair
+ * `ProfileController` (the standalone admin/profile.php page once shared
+ * before P23 batch 6c deleted it as upstream-dead code -- bug:3122, 2014:
+ * upstream folded "edit a user's profile" into this file's own "default"
+ * tab years ago, never as a separate admin page). The one remaining
  * generic-config-row UPDATE loop already double-quotes its value
  * (str_replace("\'", "''", ...)) before splicing it into SQL -- safe,
  * just stylistically raw; left as-is rather than routed through
@@ -105,7 +107,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             $page['infos'] = [];
         }
 
-        if (! is_webmaster()) {
+        if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
             $page['warnings'][] = str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'));
         }
 
@@ -384,7 +386,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             // updating configuration if no error found
             // ($page['errors'] is already narrowed to array above).
             $page_errors_for_count = $page['errors'];
-            if (! in_array($page_section, ['sizes', 'watermark']) and count($page_errors_for_count) == 0 and is_webmaster()) {
+            if (! in_array($page_section, ['sizes', 'watermark']) and count($page_errors_for_count) == 0 and \Piwigo\Auth\AccessControl::isWebmaster()) {
                 // echo '<pre>'; print_r($_POST); echo '</pre>';
                 $result = pwg_query('SELECT param FROM ' . Tables::config());
                 while ((bool) ($row = pwg_db_fetch_assoc($result))) {
@@ -429,7 +431,7 @@ WHERE param = \'' . $row['param'] . '\'
         }
 
         // restore default derivatives settings
-        if ($page['section'] == 'sizes' and isset($_GET['action']) and $_GET['action'] == 'restore_settings' and is_webmaster()) {
+        if ($page['section'] == 'sizes' and isset($_GET['action']) and $_GET['action'] == 'restore_settings' and \Piwigo\Auth\AccessControl::isWebmaster()) {
             check_pwg_token();
 
             ImageStdParams::restore_default();
@@ -580,22 +582,21 @@ WHERE param = \'' . $row['param'] . '\'
                 $conf_guest_id = $conf['guest_id'];
                 $guest_id = is_numeric($conf_guest_id) ? (int) $conf_guest_id : 0;
 
-                $edit_user = build_user($guest_id, false);
+                $edit_user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->buildUser($guest_id, false);
                 // P22: profile.php's own save_profile_from_post()/
-                // load_profile_in_template() moved to this shared include (root
-                // profile.php is now pure bootstrap + dispatch, no free function
-                // definitions left in it).
-                include_once PHPWG_ROOT_PATH . 'include/profile_functions.inc.php';
+                // load_profile_in_template() ported to Piwigo\Controller\
+                // ProfileFormHandler in P23 batch 8c.
+                $profileFormHandler = new ProfileFormHandler();
 
                 $errors = [];
-                if (save_profile_from_post($edit_user, $errors)) {
+                if ($profileFormHandler->saveFromPost($edit_user, $errors)) {
                     // Reload user
-                    $edit_user = build_user($guest_id, false);
+                    $edit_user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->buildUser($guest_id, false);
                     $page['infos'][] = l10n('Information data registered in database');
                 }
                 $page['errors'] = array_merge($page['errors'], $errors);
 
-                load_profile_in_template(
+                $profileFormHandler->loadIntoTemplate(
                     $action,
                     '',
                     $edit_user,
@@ -782,7 +783,7 @@ WHERE param = \'' . $row['param'] . '\'
 
         }
 
-        $template->assign('isWebmaster', (is_webmaster()) ? 1 : 0);
+        $template->assign('isWebmaster', (\Piwigo\Auth\AccessControl::isWebmaster()) ? 1 : 0);
         $template->assign('ADMIN_PAGE_TITLE', l10n('Configuration'));
 
         // ----------------------------------------------------------- sending html code
@@ -838,7 +839,7 @@ WHERE param = \'' . $row['param'] . '\'
          */
         global $conf, $template, $page;
 
-        if (! is_webmaster()) {
+        if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
             return;
         }
 
@@ -1026,14 +1027,14 @@ WHERE param = \'' . $row['param'] . '\'
                     if (isset($enabled[$type])) {
                         $old_params = $enabled[$type];
                         $same = true;
-                        if (! size_equals($old_params->sizing->ideal_size, $new_params->sizing->ideal_size)
+                        if (! DerivativeUrlCodec::sizeEquals($old_params->sizing->ideal_size, $new_params->sizing->ideal_size)
                             or $old_params->sizing->max_crop != $new_params->sizing->max_crop) {
                             $same = false;
                         }
 
                         if ($same
                             and $new_params->sizing->max_crop != 0
-                            and ! size_equals($old_params->sizing->min_size, $new_params->sizing->min_size)) {
+                            and ! DerivativeUrlCodec::sizeEquals($old_params->sizing->min_size, $new_params->sizing->min_size)) {
                             $same = false;
                         }
 
@@ -1131,7 +1132,7 @@ WHERE param = \'' . $row['param'] . '\'
             $page['errors'] = [];
         }
 
-        if (! is_webmaster()) {
+        if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
             return;
         }
 

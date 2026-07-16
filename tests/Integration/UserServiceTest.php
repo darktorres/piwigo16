@@ -91,6 +91,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\Tables;
     use Piwigo\Group\GroupRepository;
+    use Piwigo\Mail\MailService;
     use Piwigo\Users\UserRepository;
     use Piwigo\Users\UserService;
 
@@ -99,8 +100,8 @@ namespace Piwigo\Tests\Integration {
      * registerUser()'s two early-return paths -- a real validation error,
      * and [SEC-31]'s duplicate-username path (tested against a fixture
      * user with no email on file, so notifyExistingAccountOfDuplicateRegistration()
-     * short-circuits before ever calling pwg_mail() -- this harness
-     * shouldn't attempt a real mail send). registerUser()'s full SUCCESS
+     * short-circuits before ever calling MailerInterface::mail() -- this
+     * harness shouldn't attempt a real mail send). registerUser()'s full SUCCESS
      * path calls pwg_activity()/trigger_notify(), which need the legacy
      * $mysqli dblayer connection this lightweight harness doesn't
      * bootstrap -- live-verified separately instead, same limitation as
@@ -144,7 +145,7 @@ namespace Piwigo\Tests\Integration {
             ];
 
             $this->conn = DbConnection::build();
-            $this->service = new UserService(new UserRepository($this->conn), new GroupRepository($this->conn));
+            $this->service = new UserService(new UserRepository($this->conn), new GroupRepository($this->conn), new MailService());
         }
 
         public function test_validate_mail_address_accepts_an_unused_address(): void

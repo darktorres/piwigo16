@@ -24,7 +24,9 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Paths;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Http\RequestFactory;
+use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
 
 // Bootstrap globals, set by include/common.inc.php below.
@@ -62,7 +64,7 @@ trigger_notify('loc_begin_admin');
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
 
-check_status(AccessLevel::Administrator);
+\Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
 check_input_parameter('page', $_GET, false, '/^[a-zA-Z\d_-]+$/');
 check_input_parameter('section', $_GET, false, '/^[a-z]+[a-z_\/-]*(\.php)?$/i');
@@ -103,14 +105,14 @@ if ($conf['fs_quick_check_period'] > 0) {
 
 // save plugins_new display order (AJAX action)
 if (isset($_GET['plugins_new_order'])) {
-    pwg_set_session_var('plugins_new_order', $_GET['plugins_new_order']);
+    SessionService::get()->setSessionVar('plugins_new_order', $_GET['plugins_new_order']);
     exit;
 }
 
 // theme changer
 if (isset($_GET['change_theme'])) {
     $admin_themes = ['roma', 'clear'];
-    $admin_theme_param = userprefs_get_param('admin_theme', 'clear');
+    $admin_theme_param = (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->getParam('admin_theme', 'clear');
     $admin_theme_array = [is_string($admin_theme_param) ? $admin_theme_param : 'clear'];
     $result = array_diff(
         $admin_themes,
@@ -121,7 +123,7 @@ if (isset($_GET['change_theme'])) {
         $result
     );
 
-    userprefs_update_param('admin_theme', $new_admin_theme);
+    (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->updateParam('admin_theme', $new_admin_theme);
 
     $url_params = [];
     foreach (['page', 'tab', 'section'] as $url_param) {
@@ -389,9 +391,9 @@ $show_whats_new = false;
 
 $whats_new_major_version = get_branch_from_version(AppInfo::VERSION);
 
-if ((bool) userprefs_get_param('show_whats_new_' . $whats_new_major_version, true) and pwg_is_dbconf_writeable()) {
+if ((bool) (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->getParam('show_whats_new_' . $whats_new_major_version, true) and pwg_is_dbconf_writeable()) {
     if ($user['registration_date'] > $conf['last_major_update']) {
-        userprefs_update_param('show_whats_new_' . $whats_new_major_version, false);
+        (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->updateParam('show_whats_new_' . $whats_new_major_version, false);
     } else {
         // purge old whats_new_*
         // Real invariant: build_user()/getuserdata() always populate the
@@ -409,7 +411,7 @@ if ((bool) userprefs_get_param('show_whats_new_' . $whats_new_major_version, tru
             }
 
             if (count($userprefs_params_to_delete) > 0) {
-                userprefs_delete_param($userprefs_params_to_delete);
+                (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->deleteParam($userprefs_params_to_delete);
             }
         }
 
@@ -476,7 +478,7 @@ include PHPWG_ROOT_PATH . 'include/page_header.php';
 
 trigger_notify('loc_end_admin');
 
-flush_page_messages();
+new HtmlService()->flushPageMessages();
 
 $template->pparse('admin');
 

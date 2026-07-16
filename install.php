@@ -10,10 +10,12 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Admin\languages;
+use Piwigo\Auth\CookieService;
 use Piwigo\Config\Config;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Db\Tables;
+use Piwigo\Mail\MailService;
 use Piwigo\Session\PwgSession;
 use Piwigo\Template\Template;
 
@@ -233,7 +235,7 @@ if (isset($_POST['install'])) {
     if (empty($admin_mail)) {
         $errors[] = l10n('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
     } else {
-        $error_mail_address = validate_mail_address(null, $admin_mail);
+        $error_mail_address = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->validateMailAddress(null, $admin_mail);
         if (! empty($error_mail_address)) {
             $errors[] = $error_mail_address;
         }
@@ -395,7 +397,7 @@ INSERT INTO ' . $prefixeTable . 'config (param,value,comment)
             [
                 'id' => 1, // must be the same value as webmaster_id in config.sql
                 'username' => $admin_name,
-                'password' => pwg_password_hash($admin_pass1),
+                'password' => (new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())))->hash($admin_pass1),
                 'mail_address' => $admin_mail,
             ],
             [
@@ -405,7 +407,7 @@ INSERT INTO ' . $prefixeTable . 'config (param,value,comment)
         ];
         mass_inserts(Tables::users(), array_keys($inserts[0]), $inserts);
 
-        create_user_infos([1, 2], [
+        (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->createUserInfos([1, 2], [
             'language' => $language,
         ]);
 
@@ -490,18 +492,18 @@ if ($step == 1) {
         $session_name = $conf['session_name'];
         $session_name = is_string($session_name) ? $session_name : null;
         session_name($session_name);
-        session_set_cookie_params(0, cookie_path());
+        session_set_cookie_params(0, new CookieService()->cookiePath());
         register_shutdown_function(session_write_close(...));
 
         // we don't load user cache because since Piwigo 15.4.0 the calculation of user
         // cache requires $logger which is not instanciated
-        $user = build_user(1, false);
+        $user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->buildUser(1, false);
         // build_user() returns array<string, mixed>; the 'id' key we just set
         // to the literal user id 1 doesn't retain that literal type through
         // the return, so narrow to what log_user() actually accepts.
         $login_user_id = $user['id'];
         $login_user_id = is_int($login_user_id) || (is_string($login_user_id) && is_numeric($login_user_id)) ? $login_user_id : false;
-        log_user($login_user_id, false);
+        (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build())))->logUser($login_user_id, false);
         $_SESSION['connected_with'] = 'pwg_ui';
 
         // Same reason: narrow 'preferences' to array without discarding
@@ -530,12 +532,10 @@ if ($step == 1) {
             $user['preferences'] = $preferences;
         }
 
-        userprefs_save();
+        (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->save();
 
         // email notification
         if (isset($_POST['send_credentials_by_mail'])) {
-            include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php';
-
             $keyargs_content = [
                 get_l10n_args('Hello %s,', $admin_name),
                 get_l10n_args('Welcome to your new installation of Piwigo!', ''),
@@ -550,7 +550,7 @@ if ($step == 1) {
                 get_l10n_args('Don\'t hesitate to consult our forums for any help: %s', PHPWG_URL),
             ];
 
-            pwg_mail(
+            new MailService()->mail(
                 $admin_mail,
                 [
                     'subject' => l10n('Just another Piwigo gallery'),

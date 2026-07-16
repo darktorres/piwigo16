@@ -428,7 +428,7 @@ SELECT
                     array_filter(array_from_query($query, 'category_id'), is_string(...)),
                     explode(
                         ',',
-                        calculate_permissions((int) $user['id'], $user['status'])
+                        (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getForbiddenCategories((int) $user['id'], $user['status'])
                     )
                 );
 

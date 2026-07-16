@@ -6,11 +6,17 @@ namespace Piwigo\Admin;
 
 use Piwigo\Admin\BatchManager\FilterPanelRenderer;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
 use Piwigo\Site\LocalSiteReader;
+use Piwigo\Tag\TagRepository;
+use Piwigo\Tag\TagService;
 use Piwigo\Template\Template;
 
 /**
@@ -504,7 +510,9 @@ DELETE
 
         if (count($cat_elements_id) > 0) {
             // remove tags
-            $template->assign('associated_tags', get_common_tags($cat_elements_id, -1));
+            $tagConn = DbConnection::build();
+            $template->assign('associated_tags', new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)))
+                ->getCommonTags($cat_elements_id, -1));
         }
 
         // creation date

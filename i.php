@@ -15,6 +15,7 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\Logger;
 use Piwigo\Db\DbConnection;
 use Piwigo\Image\DerivativeParams;
+use Piwigo\Image\DerivativeUrlCodec;
 use Piwigo\Image\ImageRect;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SizingParams;
@@ -317,7 +318,7 @@ function parse_custom_params(array $tokens): DerivativeParams
         }
 
         $token = array_shift($tokens);
-        $crop = char_to_fraction($token);
+        $crop = DerivativeUrlCodec::charToFraction($token);
 
         $token = array_shift($tokens);
         assert($token !== null);
@@ -391,7 +392,7 @@ function parse_request(): DerivativeParams
 
     $deriv = explode('_', $deriv);
     foreach (ImageStdParams::get_defined_type_map() as $type => $params) {
-        if (derivative_to_url($type) == $deriv[0]) {
+        if (DerivativeUrlCodec::derivativeToUrl($type) == $deriv[0]) {
             $page['derivative_type'] = $type;
             $page['derivative_params'] = $params;
             break;
@@ -399,7 +400,7 @@ function parse_request(): DerivativeParams
     }
 
     if (! isset($page['derivative_type'])) {
-        if (derivative_to_url(IMG_CUSTOM) == $deriv[0]) {
+        if (DerivativeUrlCodec::derivativeToUrl(IMG_CUSTOM) == $deriv[0]) {
             $page['derivative_type'] = IMG_CUSTOM;
         } else {
             ierror('Unknown parsing type', 400);
@@ -519,7 +520,7 @@ function try_switch_source(DerivativeParams $params, int $original_mtime): bool
         if (! is_string($candidate_path)) {
             continue;
         }
-        $candidate_path = str_replace('-' . derivative_to_url($params->type), '-' . derivative_to_url($candidate->type), $candidate_path);
+        $candidate_path = str_replace('-' . DerivativeUrlCodec::derivativeToUrl($params->type), '-' . DerivativeUrlCodec::derivativeToUrl($candidate->type), $candidate_path);
         $candidate_mtime = @filemtime($candidate_path);
         if ($candidate_mtime === false
           || $candidate_mtime < $original_mtime
@@ -550,9 +551,6 @@ function send_derivative(false|int $expires): void
     $derivative_path = is_string($derivative_path) ? $derivative_path : '';
 
     if (isset($_GET['ajaxload']) and $_GET['ajaxload'] == 'true') {
-        include_once PHPWG_ROOT_PATH . 'include/functions_cookie.inc.php';
-        include_once PHPWG_ROOT_PATH . 'include/functions_url.inc.php';
-
         echo json_encode([
             'url' => embellish_url(get_absolute_root_url() . $derivative_path),
         ]);
@@ -622,7 +620,6 @@ if (! is_string($dblayer)) {
     ierror("Invalid \$conf['dblayer'] configuration: expected a string.", 500);
 }
 include_once PHPWG_ROOT_PATH . 'include/dblayer/functions_' . $dblayer . '.inc.php';
-include_once PHPWG_ROOT_PATH . '/include/derivative_params.inc.php';
 include_once PHPWG_ROOT_PATH . '/include/derivative_std_params.inc.php';
 
 $db_host = $conf['db_host'];

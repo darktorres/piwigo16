@@ -5,10 +5,14 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Maintenance;
 
 use Piwigo\Admin\Integrity\check_integrity;
+use Piwigo\Auth\CookieService;
 use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Db\DbConnection;
+use Piwigo\Rate\RateRepository;
+use Piwigo\Rate\RateService;
+use Piwigo\Session\SessionService;
 use Piwigo\Template\FileCombiner;
 use Piwigo\Template\Template;
 
@@ -112,8 +116,8 @@ final class MaintenanceActionDispatcher
 
                 images_integrity();
                 update_path();
-                include_once PHPWG_ROOT_PATH . 'include/functions_rate.inc.php';
-                update_rating_score();
+                new RateService(new RateRepository(DbConnection::build()), new CookieService())
+                    ->updateRatingScore();
                 invalidate_user_cache();
                 $page['infos'][] = sprintf('%s : %s', l10n('Update photos information'), l10n('action successfully performed.'));
                 break;
@@ -144,7 +148,7 @@ final class MaintenanceActionDispatcher
 
             case 'sessions':
 
-                pwg_session_gc();
+                SessionService::get()->sessionGc();
 
                 // $conf['user_fields'] maps generic field names to actual DB column
                 // names (see include/config_default.inc.php); its values are

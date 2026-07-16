@@ -101,7 +101,7 @@ ORDER BY registration_date
             'user_list' => 'user_list.tpl',
         ]);
 
-        $default_user = get_default_user_info(true);
+        $default_user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultUserInfo(true);
         if (! is_array($default_user)) {
             fatal_error('Default user not found');
         }
@@ -177,9 +177,9 @@ SELECT
                 'NB_IMAGE_PAGE' => $default_user['nb_image_page'],
                 'RECENT_PERIOD' => $default_user['recent_period'],
                 'theme_options' => get_pwg_themes(),
-                'theme_selected' => get_default_theme(),
+                'theme_selected' => (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultTheme(),
                 'language_options' => get_languages(),
-                'language_selected' => get_default_language(),
+                'language_selected' => (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultLanguage(),
                 'association_options' => $groups,
                 'protected_users' => implode(',', array_unique($protected_users)),
                 'password_protected_users' => implode(',', array_unique($password_protected_users)),
@@ -300,14 +300,14 @@ SELECT id, name, is_default
         $template->assign('groups_arr_name', implode(',', $groups_arr_name));
         $template->assign('guest_id', $guest_id);
 
-        $template->assign('view_selector', userprefs_get_param('user-manager-view', 'line'));
+        $template->assign('view_selector', (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->getParam('user-manager-view', 'line'));
 
-        if (userprefs_get_param('user-manager-view', 'line') === 'line') {
+        if ((new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->getParam('user-manager-view', 'line') === 'line') {
             // Show 5 users by default
-            $template->assign('pagination', userprefs_get_param('user-manager-pagination', 5));
+            $template->assign('pagination', (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->getParam('user-manager-pagination', 5));
         } else {
             // Show 10 users by default
-            $template->assign('pagination', userprefs_get_param('user-manager-pagination', 10));
+            $template->assign('pagination', (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->getParam('user-manager-pagination', 10));
         }
 
         if ((bool) self::webmasterIdIsLocal()) {

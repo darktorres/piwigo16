@@ -19,7 +19,7 @@ final class CommentsPageRenderer
         /** @var Template $template */
         global $template;
 
-        check_status(AccessLevel::Administrator);
+        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
         $template->set_filenames([
             'comments' => 'comments.tpl',

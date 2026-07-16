@@ -64,7 +64,7 @@ final class RateService
             return false;
         }
 
-        $userAnonymous = ! is_autorize_status(AccessLevel::Classic);
+        $userAnonymous = ! \Piwigo\Auth\AccessControl::isAuthorizeStatus(AccessLevel::Classic);
 
         if ($userAnonymous && ! (bool) $conf['rate_anonymous']) {
             return false;

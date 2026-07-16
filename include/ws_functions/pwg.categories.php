@@ -9,9 +9,15 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
@@ -66,13 +72,9 @@ SELECT id
     if (! empty($where_clauses)) {
         $where_clauses = ['(' . implode("\n    OR ", $where_clauses) . ')'];
     }
-    $where_clauses[] = get_sql_condition_FandF(
-        [
-            'forbidden_categories' => 'id',
-        ],
-        null,
-        true
-    );
+    $where_clauses[] = (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
+        'forbidden_categories' => 'id',
+    ], null, true);
 
     $query = '
 SELECT
@@ -93,13 +95,9 @@ SELECT
     if (! empty($cats)) {
         $where_clauses = ws_std_image_sql_filter($params, 'i.');
         $where_clauses[] = 'category_id IN (' . implode(',', array_keys($cats)) . ')';
-        $where_clauses[] = get_sql_condition_FandF(
-            [
-                'visible_images' => 'i.id',
-            ],
-            null,
-            true
-        );
+        $where_clauses[] = (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
+            'visible_images' => 'i.id',
+        ], null, true);
 
         $order_by = ws_std_image_sql_order($params, 'i.');
         if (empty($order_by)
@@ -165,7 +163,7 @@ SELECT
     category_id
   FROM ' . Tables::imageCategory() . '
   WHERE image_id IN (' . implode(',', $image_ids) . ')
-    AND ' . get_sql_condition_FandF([
+    AND ' . (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
                 'forbidden_categories' => 'category_id',
             ], null, true) . '
 ;';
@@ -271,6 +269,12 @@ function ws_categories_getList(array $params, PwgServer &$service): PwgError|arr
      */
     global $user, $conf;
 
+    $categoryConn = DbConnection::build();
+    $categoryService = new CategoryService(
+        new CategoryRepository($categoryConn),
+        new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
+    );
+
     if (! in_array($params['thumbnail_size'], array_keys(ImageStdParams::get_defined_type_map()))) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid thumbnail_size');
     }
@@ -306,14 +310,14 @@ function ws_categories_getList(array $params, PwgServer &$service): PwgError|arr
         $where[] = 'visible = "true"';
 
         $join_user = is_numeric($conf['guest_id']) ? (int) $conf['guest_id'] : 0;
-    } elseif (is_admin()) {
+    } elseif (\Piwigo\Auth\AccessControl::isAdmin()) {
         // in this very specific case, we don't want to hide empty
         // categories. Function calculate_permissions will only return
         // categories that are either locked or private and not permitted
         //
         // calculate_permissions does not consider empty categories as forbidden
         $user_status = is_string($user['status']) ? $user['status'] : '';
-        $forbidden_categories = calculate_permissions($user_id, $user_status);
+        $forbidden_categories = (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getForbiddenCategories($user_id, $user_status);
         $where[] = 'id NOT IN (' . $forbidden_categories . ')';
         $join_type = 'LEFT';
     }
@@ -423,7 +427,7 @@ SELECT SQL_CALC_FOUND_ROWS
             $image_id = $row['representative_picture_id'];
         } elseif ((bool) $conf['allow_random_representative']) {
             // searching a random representant among elements in sub-categories
-            $image_id = get_random_image_in_category($row);
+            $image_id = $categoryService->getRandomImageInCategory($row);
         } else { // searching a random representant among representant of sub-categories
             if ($row['count_categories'] > 0 and $row['count_images'] > 0) {
                 $query = '
@@ -433,12 +437,9 @@ SELECT representative_picture_id
     ON id=cat_id AND user_id=' . $user_id . '
   WHERE uppercats LIKE \'' . $row['uppercats'] . ',%\'
     AND representative_picture_id IS NOT NULL
-        ' . get_sql_condition_FandF(
-                    [
-                        'visible_categories' => 'id',
-                    ],
-                    "\n  AND"
-                ) . '
+        ' . (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
+                    'visible_categories' => 'id',
+                ], "\n  AND") . '
   ORDER BY ' . DB_RANDOM_FUNCTION . '()
   LIMIT 1
 ;';
@@ -470,7 +471,7 @@ SELECT representative_picture_id
 
         $cats[] = $row;
     }
-    usort($cats, global_rank_compare(...));
+    usort($cats, CategoryService::compareByGlobalRank(...));
 
     // management of the album thumbnail -- starts here
     if (count($categories) > 0) {
@@ -500,7 +501,7 @@ SELECT id, path, representative_ext, level
                 foreach ($categories as &$category) {
                     if ($row['id'] == $category['representative_picture_id']) {
                         // searching a random representant among elements in sub-categories
-                        $image_id = get_random_image_in_category($category);
+                        $image_id = $categoryService->getRandomImageInCategory($category);
 
                         if (isset($image_id) and ! in_array($image_id, $image_ids)) {
                             $new_image_ids[] = $image_id;
@@ -722,7 +723,7 @@ SELECT
         $limit_reached = true;
     }
 
-    usort($cats, global_rank_compare(...));
+    usort($cats, CategoryService::compareByGlobalRank(...));
     return [
         'categories' => new PwgNamedArray(
             $cats,

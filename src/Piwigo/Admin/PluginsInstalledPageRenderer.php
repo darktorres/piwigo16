@@ -10,6 +10,7 @@ use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Db\DbConnection;
+use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
 
 /**
@@ -56,9 +57,9 @@ final class PluginsInstalledPageRenderer
         if (isset($_GET['show_details'])) {
             $show_details = is_string($_GET['show_details']) && $_GET['show_details'] === '1';
 
-            pwg_set_session_var('plugins_show_details', $show_details);
-        } elseif (pwg_get_session_var('plugins_show_details') !== null) {
-            $show_details = pwg_get_session_var('plugins_show_details');
+            SessionService::get()->setSessionVar('plugins_show_details', $show_details);
+        } elseif (SessionService::get()->getSessionVar('plugins_show_details') !== null) {
+            $show_details = SessionService::get()->getSessionVar('plugins_show_details');
         } else {
             $show_details = false;
         }
@@ -252,9 +253,9 @@ final class PluginsInstalledPageRenderer
                 'base_url' => $base_url,
                 'show_details' => $show_details,
                 'max_inactive_before_hide' => isset($_GET['show_inactive']) ? 999 : 8,
-                'isWebmaster' => (is_webmaster()) ? 1 : 0,
+                'isWebmaster' => (\Piwigo\Auth\AccessControl::isWebmaster()) ? 1 : 0,
                 'ADMIN_PAGE_TITLE' => l10n('Plugins'),
-                'view_selector' => userprefs_get_param('plugin-manager-view', 'classic'),
+                'view_selector' => (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->getParam('plugin-manager-view', 'classic'),
                 'CONF_ENABLE_EXTENSIONS_INSTALL' => $conf['enable_extensions_install'],
             ]
         );

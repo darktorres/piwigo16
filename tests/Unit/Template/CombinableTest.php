@@ -4,14 +4,9 @@ declare(strict_types=1);
 
 use Piwigo\Template\Combinable;
 
-// Combinable::is_remote() calls the free function url_is_remote(), defined
-// procedurally in include/functions_url.inc.php -- not autoloaded like a
-// class, and only reliably available in-process once something requires
-// it. Required explicitly (guarded) rather than relying on some other,
-// earlier-run test file having pulled it in first.
-if (! function_exists('url_is_remote')) {
-    require_once dirname(__DIR__, 3) . '/include/functions_url.inc.php';
-}
+// Combinable::is_remote() calls the free function url_is_remote() --
+// always available now via composer autoload.files
+// (src/Piwigo/Url/functions.php, P23 batch 8c), no explicit require needed.
 
 test('constructor sets id, path and version', function (): void {
     $combinable = new Combinable('my-id', 'themes/default/js/foo.js', '1.2.3');

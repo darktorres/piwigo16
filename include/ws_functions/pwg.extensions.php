@@ -71,7 +71,7 @@ function ws_plugins_performAction(array $params, PwgServer &$service): PwgError|
         return new PwgError(403, 'Invalid security token');
     }
 
-    if (! is_webmaster()) {
+    if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
         return new PwgError(403, l10n('Webmaster status is required.'));
     }
 
@@ -151,7 +151,7 @@ function ws_extensions_update(array $params, PwgServer &$service): PwgError|stri
         return new PwgError(401, 'Piwigo extensions install/update system is disabled');
     }
 
-    if (! is_webmaster()) {
+    if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
         return new PwgError(401, l10n('Webmaster status is required.'));
     }
 
@@ -263,7 +263,7 @@ function ws_extensions_ignoreupdate(array $params, PwgServer &$service): PwgErro
     define('IN_ADMIN', true);
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
-    if (! is_webmaster()) {
+    if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
         return new PwgError(401, 'Access denied');
     }
 

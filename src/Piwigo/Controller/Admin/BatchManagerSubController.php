@@ -8,9 +8,18 @@ use Piwigo\Admin\BatchManager\FilterResolver;
 use Piwigo\Admin\BatchManagerGlobalPageRenderer;
 use Piwigo\Admin\BatchManagerUnitPageRenderer;
 use Piwigo\Admin\tabsheet;
+use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
+use Piwigo\Mail\MailService;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
+use Piwigo\Search\SearchRepository;
+use Piwigo\Search\SearchService;
+use Piwigo\Tag\TagRepository;
+use Piwigo\Tag\TagService;
 use Piwigo\Template\Template;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -558,13 +567,15 @@ DELETE FROM ' . Tables::caddie() . '
 
             $filter_tag_mode = is_string($bulkFilter['tag_mode'] ?? null) ? $bulkFilter['tag_mode'] : 'AND';
 
-            $filter_sets[] = get_image_ids_for_tags(
-                $filter_tag_ids,
-                $filter_tag_mode,
-                null,
-                null,
-                false // we don't apply permissions in administration screens
-            );
+            $tagConn = DbConnection::build();
+            $filter_sets[] = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)))
+                ->getImageIdsForTags(
+                    $filter_tag_ids,
+                    $filter_tag_mode,
+                    null,
+                    null,
+                    false // we don't apply permissions in administration screens
+                );
         }
 
         if (isset($bulkFilter['dimension']) && is_array($bulkFilter['dimension'])) {
@@ -601,10 +612,18 @@ DELETE FROM ' . Tables::caddie() . '
         if (isset($bulkFilter['search']) && is_array($bulkFilter['search'])
             && isset($bulkFilter['search']['q']) && is_string($bulkFilter['search']['q'])
             && (bool) strlen($bulkFilter['search']['q'])) {
-            include_once PHPWG_ROOT_PATH . 'include/functions_search.inc.php';
-            $res = get_quick_search_results_no_cache($bulkFilter['search']['q'], [
+            $searchConn = DbConnection::build();
+            $res = new SearchService(
+                new SearchRepository($searchConn),
+                new PermissionService(new PermissionRepository($searchConn), new GroupRepository($searchConn)),
+                new PersistentFileCache(),
+                new MailService(),
+            )->getQuickSearchResultsNoCache($bulkFilter['search']['q'], [
                 'permissions' => false,
             ]);
+            $res_debug = is_array($res['debug'] ?? null) ? array_filter($res['debug'], is_string(...)) : [];
+            unset($res['debug']);
+            $template->append('footer_elements', implode("\n", $res_debug));
             $res_items = is_array($res['items'] ?? null) ? $res['items'] : [];
             if (count($res_items) > 0 && is_array($res['qs']) && is_array($res['qs']['unmatched_terms'] ?? null) && count($res['qs']['unmatched_terms']) > 0) {
                 $unmatched_terms = array_filter($res['qs']['unmatched_terms'], is_string(...));

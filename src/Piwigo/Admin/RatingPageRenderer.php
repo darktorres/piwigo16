@@ -24,7 +24,7 @@ final class RatingPageRenderer
          */
         global $conf, $template;
 
-        check_status(AccessLevel::Administrator);
+        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
         check_input_parameter('display', $_GET, false, ValidationPattern::ID);
 

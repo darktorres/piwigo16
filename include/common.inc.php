@@ -11,14 +11,22 @@ declare(strict_types=1);
 
 use Piwigo\Admin\PluginLoader;
 use Piwigo\Admin\Upload\UploadService;
+use Piwigo\Auth\AuthRepository;
+use Piwigo\Auth\AuthService;
+use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Bootstrap\UserBootstrap;
 use Piwigo\Cache\PersistentFileCache;
+use Piwigo\Comment\CommentRepository;
+use Piwigo\Comment\CommentService;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Logger;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Mail\MailService;
+use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
 
 defined('PHPWG_ROOT_PATH') or trigger_error('Hacking attempt!', E_USER_ERROR);
@@ -137,7 +145,7 @@ if ($conf['session_gc_probability'] > 0) {
 
 include PHPWG_ROOT_PATH . 'include/functions.inc.php';
 
-$page['execution_uuid'] = generate_key(10);
+$page['execution_uuid'] = SessionService::get()->generateKey(10);
 
 $persistent_cache = new PersistentFileCache();
 
@@ -293,7 +301,7 @@ if (isset($conf['alternative_pem_url']) and $conf['alternative_pem_url'] != '') 
 
 // language files
 load_language('common.lang');
-if (is_admin() || (defined('IN_ADMIN') and IN_ADMIN)) {
+if (\Piwigo\Auth\AccessControl::isAdmin() || (defined('IN_ADMIN') and IN_ADMIN)) {
     load_language('admin.lang');
     // Add language for temporary strings for new popup, from piwigo 15
     load_language('whats_new_' . get_branch_from_version(AppInfo::VERSION) . '.lang');
@@ -306,7 +314,7 @@ load_language('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, [
 
 // only now we can set the localized username of the guest user (and not in
 // include/user.inc.php)
-if (is_a_guest()) {
+if (\Piwigo\Auth\AccessControl::isAGuest()) {
     $user['username'] = l10n('guest');
 }
 
@@ -342,11 +350,7 @@ if (is_array($page['notify_api_key_expiration'])) {
     $notify_username = is_string($notify_username) ? $notify_username : '';
     $notify_email = $user['email'];
     $notify_email = is_string($notify_email) ? $notify_email : '';
-    $is_mail_send = notification_api_key_expiration(
-        $notify_username,
-        $notify_email,
-        $days_left
-    );
+    $is_mail_send = (new \Piwigo\Auth\ApiKeyService(new \Piwigo\Mail\MailService()))->notifyExpiration($notify_username, $notify_email, $days_left);
 
     if ($is_mail_send) {
         single_update(
@@ -370,7 +374,7 @@ if (defined('IN_ADMIN') and IN_ADMIN) {// Admin template
     // comes from the equally-untyped global $user['preferences'][$param]),
     // so its return is inferred as mixed; narrow to the same 'clear'
     // fallback already passed as the default value.
-    $admin_theme = userprefs_get_param('admin_theme', 'clear');
+    $admin_theme = (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->getParam('admin_theme', 'clear');
     $admin_theme = is_string($admin_theme) ? $admin_theme : 'clear';
     $template = new Template(PHPWG_ROOT_PATH . 'admin/themes', $admin_theme);
 } else { // Classic template
@@ -394,7 +398,7 @@ if (is_array($user_internal_status) && ($user_internal_status['guest_must_be_gue
 if ((bool) $conf['gallery_locked']) {
     $header_msgs[] = l10n('The gallery is locked for maintenance. Please, come back later.');
 
-    if (script_basename() != 'identification' and ! is_admin()) {
+    if (script_basename() != 'identification' and ! \Piwigo\Auth\AccessControl::isAdmin()) {
         set_status_header(503, 'Service Unavailable');
         @header('Retry-After: 900');
         header('Content-Type: text/html; charset=' . get_pwg_charset());
@@ -436,6 +440,22 @@ add_event_handler('render_comment_content', 'render_comment_content');
 add_event_handler('render_comment_author', 'strip_tags');
 add_event_handler('render_tag_url', 'str2url');
 add_event_handler('blockmanager_register_blocks', 'register_default_menubar_blocks');
+// Relocated from include/functions_comment.inc.php (deleted, P23 batch 8c)
+// -- that file's own top-level add_event_handler() call only ever ran via
+// its include_once at each real caller, all of which now construct
+// CommentService directly instead, so this registration has to live
+// somewhere that always executes. checkForSpam() is an instance method
+// (unlike UploadService's static upload_file handlers above), hence the
+// bound first-class-callable form rather than a bare [Class::class, 'method']
+// array.
+add_event_handler('user_comment_check', new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService())->checkForSpam(...));
+// Relocated from include/functions_user.inc.php (deleted, P23 batch 8d) --
+// same reasoning as user_comment_check above: every real caller of
+// AuthService::tryLogUser() now constructs AuthService directly instead of
+// including the old file, so this registration has to live somewhere that
+// always executes. pwgLogin() is a bound instance method, same
+// first-class-callable shape as checkForSpam() above.
+add_event_handler('try_log_user', new AuthService(new AuthRepository(DbConnection::build()))->pwgLogin(...));
 // Relocated from admin/include/functions_upload.inc.php (deleted in P23
 // sub-batch 8b-3) -- must stay after PluginLoader::loadPlugins() above so
 // a plugin's own 'upload_file' handler (if any) keeps first crack in the

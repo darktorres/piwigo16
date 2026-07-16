@@ -7,6 +7,7 @@ namespace Piwigo\Category;
 use Piwigo\Db\Tables;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
 
 /**
@@ -69,7 +70,7 @@ SELECT *
                 $pictures[] = $row;
             }
 
-            usort($pictures, rank_compare(...));
+            usort($pictures, CategoryService::compareByRank(...));
             unset($rankOf);
         }
 
@@ -187,7 +188,7 @@ SELECT image_id, COUNT(*) AS nb_comments
             $tplThumbnailsVar[] = $tplVar;
         }
 
-        $indexDeriv = pwg_get_session_var('index_deriv', IMG_THUMB);
+        $indexDeriv = SessionService::get()->getSessionVar('index_deriv', IMG_THUMB);
         $indexDeriv = is_string($indexDeriv) ? $indexDeriv : IMG_THUMB;
 
         $template->assign([

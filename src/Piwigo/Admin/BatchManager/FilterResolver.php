@@ -19,8 +19,8 @@ use Piwigo\Db\Tables;
  * access, keep page/template glue inline" pattern).
  *
  * Deliberately does NOT re-implement filters that already have a correct,
- * tested free-function implementation elsewhere (get_orphans(),
- * get_photos_no_md5sum(), get_subcat_ids(), get_image_ids_for_tags(),
+ * tested implementation elsewhere (get_orphans(), get_photos_no_md5sum(),
+ * get_subcat_ids(), Piwigo\Tag\TagService::getImageIdsForTags(),
  * get_quick_search_results_no_cache()) -- those stay called directly from
  * the admin page glue, same as this phase's ExtensionLifecycle/
  * ExtensionUpdateChecker still calling pwg_activity()/conf_update_param().

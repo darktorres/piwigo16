@@ -33,7 +33,7 @@ final class UserActivityPageRenderer
 
         include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
-        check_status(AccessLevel::Administrator);
+        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
         check_input_parameter('photo', $_GET, false, ValidationPattern::ID);
         check_input_parameter('album', $_GET, false, ValidationPattern::ID);

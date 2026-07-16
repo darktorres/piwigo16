@@ -39,7 +39,7 @@ final class MaintenanceSysPageRenderer
         // |                    Only Webmaster can see this tab                    |
         // +-------------------------------------------------------------------+
 
-        if (is_webmaster()) {
+        if (\Piwigo\Auth\AccessControl::isWebmaster()) {
             // Get system activities data
             if (isset($_GET['method']) && $_GET['method'] === 'pwg.activity_sys.getList') {
                 $data = [];
@@ -81,7 +81,7 @@ final class MaintenanceSysPageRenderer
         // |                             template init                             |
         // +-------------------------------------------------------------------+
 
-        $template->assign('isWebmaster', (is_webmaster()) ? 1 : 0);
+        $template->assign('isWebmaster', (\Piwigo\Auth\AccessControl::isWebmaster()) ? 1 : 0);
         $template->set_filenames([
             'maintenance' => 'maintenance_sys.tpl',
         ]);

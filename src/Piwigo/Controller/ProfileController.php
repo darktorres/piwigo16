@@ -6,8 +6,10 @@ namespace Piwigo\Controller;
 
 use Piwigo\Core\AccessLevel;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Template\Template;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -15,31 +17,27 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * Replaces profile.php -- lets the current user customize their own gallery
  * display settings. The legacy file's own 2 top-level functions
- * (save_profile_from_post()/load_profile_in_template()) stay real global
- * functions, moved to include/profile_functions.inc.php rather than
- * becoming private methods here -- unlike every other page-owned free
- * function this phase, a project-wide grep found real external callers:
- * admin/configuration.php's "default" (Guest settings) tab and
- * admin/profile.php both still call these by name via their own
- * `include_once PHPWG_ROOT_PATH . 'profile.php';` (now retargeted at
- * include/profile_functions.inc.php). Found live via a full-project
- * PHPStan run surfacing "Function save_profile_from_post not found" in
- * admin/configuration.php -- the per-batch PHPStan checks earlier in this
- * phase never scanned that file, since they only ever passed this
- * batch's own new/changed files as explicit CLI arguments.
+ * (save_profile_from_post()/load_profile_in_template()) were ported to a
+ * real `Piwigo\Controller\ProfileFormHandler` class (P23 batch 8c) rather
+ * than becoming private methods here -- unlike every other page-owned free
+ * function this phase, a project-wide grep found a real external caller:
+ * `Controller\Admin\ConfigurationSubController`'s "default" (Guest
+ * settings) tab also calls both. `LegacyRenderCapture`'s own precedent
+ * (a non-`ControllerInterface` helper class living directly in
+ * `Piwigo\Controller`) is why the new class lives here rather than a new
+ * `Piwigo\Profile` namespace.
  *
- * check_pwg_token() and save_profile_from_post()'s own redirect() both
- * happen before any rendering starts, so all of the "process form" business
- * logic stays outside the captured closure -- same exit()-based-termination
- * limitation as every other controller this phase.
+ * check_pwg_token() and ProfileFormHandler::saveFromPost()'s own
+ * redirect() both happen before any rendering starts, so all of the
+ * "process form" business logic stays outside the captured closure --
+ * same exit()-based-termination limitation as every other controller
+ * this phase.
  */
 final class ProfileController implements ControllerInterface
 {
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        include_once PHPWG_ROOT_PATH . 'include/profile_functions.inc.php';
-
         /**
          * @var array<string, mixed> $conf
          * @var Template $template
@@ -53,7 +51,7 @@ final class ProfileController implements ControllerInterface
         // boundary -- narrow it once here so every write below type-checks.
         $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
 
-        check_status(AccessLevel::Classic);
+        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Classic);
 
         if ($_POST !== []) {
             check_pwg_token();
@@ -92,15 +90,17 @@ SELECT ' . implode(',', $fields) . '
             $userdata = array_merge($userdata, $default_user);
         }
 
+        $profileFormHandler = new ProfileFormHandler();
+
         $page_errors = array_values(array_filter($page['errors'], is_string(...)));
-        save_profile_from_post($userdata, $page_errors);
+        $profileFormHandler->saveFromPost($userdata, $page_errors);
         $page['errors'] = $page_errors;
 
         $page['body_id'] = 'theProfilePage';
         $template->set_filename('profile', 'profile.tpl');
         $template->set_filename('profile_content', 'profile_content.tpl');
 
-        load_profile_in_template(
+        $profileFormHandler->loadIntoTemplate(
             get_root_url() . 'profile.php', // action
             make_index_url(), // for redirect
             $userdata
@@ -123,7 +123,7 @@ SELECT ' . implode(',', $fields) . '
             $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
             if (! is_array($hide_menu_on) or ! in_array('theProfilePage', $hide_menu_on, true)) {
                 if (($themeconf['id'] ?? null) !== 'standard_pages') {
-                    include PHPWG_ROOT_PATH . 'include/menubar.inc.php';
+                    new MenubarRenderer()->render();
                 }
             }
 
@@ -181,7 +181,7 @@ SELECT ' . implode(',', $fields) . '
             $template->assign('HELP_LINK', $help_link);
 
             trigger_notify('loc_end_profile');
-            flush_page_messages();
+            new HtmlService()->flushPageMessages();
             $template->pparse('profile');
             include PHPWG_ROOT_PATH . 'include/page_tail.php';
         });

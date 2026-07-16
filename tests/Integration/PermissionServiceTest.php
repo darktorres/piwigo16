@@ -2,32 +2,10 @@
 
 declare(strict_types=1);
 
-// PermissionService::getForbiddenCategories() calls the real is_admin()
-// (unqualified, resolves to the global namespace) -- a real, stable,
-// already-migrated function, but one that needs full app bootstrap
-// (global $user, $conf) this isolated integration test doesn't load. Same
-// "minimal stub to load standalone" pattern as tests/Unit/PasswordHashTest.php.
-namespace {
-    if (! function_exists('is_admin')) {
-        // Matches the real is_admin($user_status = '')'s own contract: an
-        // explicit non-empty $user_status is checked directly (this file's
-        // own calling convention), an empty/default one falls back to a
-        // test-controlled global (needed by
-        // tests/Integration/CommentServiceTest.php's own calling
-        // convention) -- function_exists() guards mean whichever
-        // Integration test file's stub loads first wins for the whole test
-        // run, so every file declaring this stub must support both
-        // conventions identically.
-        function is_admin(string $user_status = ''): bool
-        {
-            if ($user_status !== '') {
-                return $user_status === 'admin';
-            }
-
-            return (bool) ($GLOBALS['test_is_admin'] ?? false);
-        }
-    }
-}
+// PermissionService::getForbiddenCategories() now calls
+// Piwigo\Auth\AccessControl::isAdmin($userStatus) directly (P23 batch 8d),
+// always with this file's own explicit $userStatus argument -- no stub
+// needed.
 
 namespace Piwigo\Tests\Integration {
 

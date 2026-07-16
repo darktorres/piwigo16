@@ -6,7 +6,9 @@ namespace Piwigo\Admin;
 
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Mail\MailService;
 use Piwigo\Template\Template;
 
 /**
@@ -31,7 +33,6 @@ final class AlbumNotificationPageRenderer
          */
         global $admin_album_base_url, $category, $conf, $page, $template;
 
-        include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php';
         include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
         // +-------------------------------------------------------------------+
@@ -162,7 +163,7 @@ SELECT
 
                     $usernames[] = $u['username'];
 
-                    $authkey = create_user_auth_key((int) $u['user_id'], $u['status']);
+                    $authkey = (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build())))->createUserAuthKey((int) $u['user_id'], $u['status']);
 
                     $user_tpl = $tpl;
 
@@ -186,12 +187,12 @@ SELECT
                         $user_args['auth_key'] = $authkey['auth_key'];
                     }
 
-                    $user_language = is_string($u['language']) ? $u['language'] : get_default_language();
+                    $user_language = is_string($u['language']) ? $u['language'] : (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultLanguage();
                     $user_email = is_string($u['email']) ? $u['email'] : '';
 
-                    switch_lang_to($user_language);
-                    pwg_mail($user_email, $user_args, $user_tpl);
-                    switch_lang_back();
+                    new MailService()->switchLangTo($user_language);
+                    new MailService()->mail($user_email, $user_args, $user_tpl);
+                    new MailService()->switchLangBack();
                 }
 
                 $message = l10n_dec('%d mail was sent.', '%d mails were sent.', count($users));
@@ -210,7 +211,7 @@ SELECT
                 // check here only narrows the type for what follows.
                 $group_id = is_numeric($_POST['group']) ? (int) $_POST['group'] : 0;
 
-                pwg_mail_group($group_id, $args, $tpl);
+                new MailService()->mailGroup($group_id, $args, $tpl);
 
                 $query = '
 SELECT
@@ -245,7 +246,7 @@ SELECT
         $template->assign(
             [
                 'CATEGORIES_NAV' => trim(
-                    get_cat_display_name_from_id(
+                    new HtmlService()->getCatDisplayNameFromId(
                         $page_cat,
                         'admin.php?page=album-'
                     )

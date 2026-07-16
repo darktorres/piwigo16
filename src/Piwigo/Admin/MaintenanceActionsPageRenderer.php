@@ -62,7 +62,7 @@ final class MaintenanceActionsPageRenderer
         $pwg_token = get_pwg_token();
         $url_format = get_root_url() . 'admin.php?page=maintenance&amp;action=%s&amp;pwg_token=' . get_pwg_token();
 
-        if (! is_webmaster()) {
+        if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
             // $page['warnings'] is always an array by this point --
             // MaintenanceActionDispatcher::dispatch() (already called above)
             // guarantees it, but PHPStan can't see across that method-call
@@ -199,7 +199,7 @@ final class MaintenanceActionsPageRenderer
             );
         }
 
-        $template->assign('isWebmaster', (is_webmaster()) ? 1 : 0);
+        $template->assign('isWebmaster', (\Piwigo\Auth\AccessControl::isWebmaster()) ? 1 : 0);
 
         // +-------------------------------------------------------------------+
         // | Define advanced features                                              |

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
@@ -33,7 +35,13 @@ final class UserPermPageRenderer
 
         include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
-        check_status(AccessLevel::Administrator);
+        $categoryConn = DbConnection::build();
+        $categoryService = new CategoryService(
+            new CategoryRepository($categoryConn),
+            new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
+        );
+
+        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
         if ($_POST !== []) {
             check_pwg_token();
@@ -116,7 +124,7 @@ SELECT DISTINCT cat_id, c.uppercats, c.global_rank
                 $cats[] = $row;
                 $group_authorized[] = $row['cat_id'];
             }
-            usort($cats, global_rank_compare(...));
+            usort($cats, CategoryService::compareByGlobalRank(...));
 
             foreach ($cats as $category) {
                 if ($category['uppercats'] === null) {
@@ -142,7 +150,7 @@ SELECT id,name,uppercats,global_rank
         }
         $query_true .= '
 ;';
-        display_select_cat_wrapper($query_true, [], 'category_option_true');
+        $categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true');
 
         $result = pwg_query($query_true);
         $authorized_ids = [];
@@ -164,7 +172,7 @@ SELECT id,name,uppercats,global_rank
         }
         $query_false .= '
 ;';
-        display_select_cat_wrapper($query_false, [], 'category_option_false');
+        $categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false');
 
         $template->assign('PWG_TOKEN', get_pwg_token());
 

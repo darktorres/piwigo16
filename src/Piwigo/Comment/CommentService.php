@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Comment;
 
 use Piwigo\Auth\EphemeralKeyService;
+use Piwigo\Core\MailerInterface;
 
 /**
  * Comment domain business logic: spam/flood checks, insert/update/delete/
@@ -13,10 +14,14 @@ use Piwigo\Auth\EphemeralKeyService;
  * posts) -- Auth lives in L2aCoreDomain, Comment in L2bExtendedDomain, so a
  * real class-to-class dependency there is allowed (unlike Mail, see below).
  *
- * Calls Mail's free-function delegates (pwg_mail_notification_admins()),
- * not Piwigo\Mail\MailService directly -- same L2b-may-not-depend-on-L3
+ * P23 batch 8c: constructor-injects MailerInterface (Piwigo\Core) for
+ * `mailNotificationAdmins()` rather than depending on
+ * Piwigo\Mail\MailService directly -- same L2b-may-not-depend-on-L3
  * constraint as UserService, see deptrac.yaml's own comment on the Mail
- * namespace entry.
+ * namespace entry and MailerInterface's own docblock. `fatal_error()`
+ * (1 call site, `validateComment()`'s unknown-comment-id branch) stays a
+ * bare free-function call, deliberately, permanently -- P23 batch 8's
+ * finding 8, not an oversight.
  *
  * is_admin()/is_a_guest()/is_classic_user() and the `$user`/`$conf`
  * globals they and this class read are called exactly as the original
@@ -29,13 +34,16 @@ final class CommentService
     public function __construct(
         private readonly CommentRepository $repo,
         private readonly EphemeralKeyService $ephemeralKeys,
+        private readonly MailerInterface $mailer,
     ) {}
 
     /**
      * Basic spam check (plugins can do more via the same `user_comment_check`
-     * event). Registered by functions_comment.inc.php as that event's own
-     * handler -- called by trigger_change() from insertComment()/
-     * updateComment() themselves, not directly by callers.
+     * event). Registered in include/common.inc.php's default-event-handlers
+     * block (P23 batch 8c, relocated from the now-deleted
+     * functions_comment.inc.php) as that event's own handler -- called by
+     * trigger_change() from insertComment()/updateComment() themselves, not
+     * directly by callers.
      *
      * @param array<string, mixed> $comment
      * @return string validate, moderate, reject
@@ -54,7 +62,7 @@ final class CommentService
             return $action;
         }
 
-        if (! is_a_guest()) {
+        if (! \Piwigo\Auth\AccessControl::isAGuest()) {
             return $action;
         }
 
@@ -100,9 +108,9 @@ final class CommentService
         $comm['agent'] = is_scalar($_SERVER['HTTP_USER_AGENT'] ?? null) ? (string) $_SERVER['HTTP_USER_AGENT'] : '';
 
         $infos = [];
-        $commentAction = (! (bool) $conf['comments_validation'] || is_admin()) ? 'validate' : 'moderate';
+        $commentAction = (! (bool) $conf['comments_validation'] || \Piwigo\Auth\AccessControl::isAdmin()) ? 'validate' : 'moderate';
 
-        if (! is_classic_user()) {
+        if (! \Piwigo\Auth\AccessControl::isClassicUser()) {
             if (self::emptyValue($comm['author'] ?? null)) {
                 if ((bool) $conf['comments_author_mandatory']) {
                     $infos[] = l10n('Username is mandatory');
@@ -203,8 +211,8 @@ final class CommentService
         $antiFloodTime = $conf['anti-flood_time'] ?? 0;
         $antiFloodTime = is_numeric($antiFloodTime) ? (int) $antiFloodTime : 0;
 
-        if ($commentAction !== 'reject' && $antiFloodTime > 0 && ! is_admin()) { // anti-flood system
-            $anonymousIdPrefix = is_classic_user() ? null : $trimmedIp;
+        if ($commentAction !== 'reject' && $antiFloodTime > 0 && ! \Piwigo\Auth\AccessControl::isAdmin()) { // anti-flood system
+            $anonymousIdPrefix = \Piwigo\Auth\AccessControl::isClassicUser() ? null : $trimmedIp;
             $counter = $this->repo->countRecentComments($authorId, $anonymousIdPrefix, $antiFloodTime);
             if ($counter > 0) {
                 $infos[] = l10n('Anti-flood system : please wait for a moment before trying to post another comment');
@@ -243,8 +251,6 @@ final class CommentService
             $emailAdminOnComment = (bool) $conf['email_admin_on_comment'] && $commentAction === 'validate';
             $emailAdminOnValidation = (bool) $conf['email_admin_on_comment_validation'] && $commentAction === 'moderate';
             if ($emailAdminOnComment || $emailAdminOnValidation) {
-                include_once \PHPWG_ROOT_PATH . 'include/functions_mail.inc.php';
-
                 $commentUrl = get_absolute_root_url() . 'comments.php?comment_id=' . $id;
 
                 $keyargsContent = [
@@ -259,7 +265,7 @@ final class CommentService
                     $keyargsContent[] = get_l10n_args('(!) This comment requires validation');
                 }
 
-                pwg_mail_notification_admins(
+                $this->mailer->mailNotificationAdmins(
                     get_l10n_args('Comment by %s', stripslashes($author)),
                     $keyargsContent
                 );
@@ -285,7 +291,7 @@ final class CommentService
         $ids = is_array($commentId) ? array_values(array_map(intval(...), $commentId)) : [$commentId];
 
         $authorId = null;
-        if (! is_admin()) {
+        if (! \Piwigo\Auth\AccessControl::isAdmin()) {
             $userId = $user['id'] ?? null;
             $authorId = is_numeric($userId) ? (int) $userId : 0;
         }
@@ -335,7 +341,7 @@ final class CommentService
 
         if (! $this->ephemeralKeys->verify($postKey, $imageIdRaw)) {
             $commentAction = 'reject';
-        } elseif (! (bool) $conf['comments_validation'] || is_admin()) { // should the updated comment be validated
+        } elseif (! (bool) $conf['comments_validation'] || \Piwigo\Auth\AccessControl::isAdmin()) { // should the updated comment be validated
             $commentAction = 'validate';
         } else {
             $commentAction = 'moderate';
@@ -375,7 +381,7 @@ final class CommentService
 
         if ($commentAction !== 'reject') {
             $authorId = null;
-            if (! is_admin()) {
+            if (! \Piwigo\Auth\AccessControl::isAdmin()) {
                 $userId = $user['id'] ?? null;
                 $authorId = is_numeric($userId) ? (int) $userId : 0;
             }
@@ -396,8 +402,6 @@ final class CommentService
 
             // mail admin and ask to validate the comment
             if ($updated && (bool) $conf['email_admin_on_comment_validation'] && $commentAction === 'moderate') {
-                include_once \PHPWG_ROOT_PATH . 'include/functions_mail.inc.php';
-
                 $commentUrl = get_absolute_root_url() . 'comments.php?comment_id=' . $commentId;
 
                 $keyargsContent = [
@@ -408,7 +412,7 @@ final class CommentService
                     get_l10n_args('(!) This comment requires validation'),
                 ];
 
-                pwg_mail_notification_admins(
+                $this->mailer->mailNotificationAdmins(
                     get_l10n_args('Comment by %s', stripslashes($username)),
                     $keyargsContent
                 );
@@ -442,8 +446,6 @@ final class CommentService
             return;
         }
 
-        include_once \PHPWG_ROOT_PATH . 'include/functions_mail.inc.php';
-
         $author = is_string($comment['author'] ?? null) ? $comment['author'] : '';
         $keyargsContent = [
             get_l10n_args('Author: %s', $author),
@@ -456,7 +458,7 @@ final class CommentService
             $keyargsContent[] = get_l10n_args('Comment: %s', $comment['content']);
         }
 
-        pwg_mail_notification_admins(
+        $this->mailer->mailNotificationAdmins(
             get_l10n_args('Comment by %s', $author),
             $keyargsContent
         );

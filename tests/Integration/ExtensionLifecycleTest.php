@@ -103,42 +103,29 @@ namespace {
         }
     }
 
-    // get_default_theme() (include/functions_user.inc.php) cascades through
-    // get_default_user_value()/check_theme_installed()/get_pwg_themes() --
-    // real DB+filesystem logic that (verified directly against this exact
-    // fixture: piwigo_themes starts empty, the guest user's theme='modus'
-    // has no real on-disk 'modus' directory) always resolves to the
-    // 'default' fallback here. Simplified fixed-value stand-in, same
-    // precedent as SearchServiceTest.php's identical-shaped
-    // get_default_language() stub.
-    if (! function_exists('get_default_theme')) {
-        function get_default_theme(): string
+    // get_default_theme()/get_default_language()/userprefs_get_param() are
+    // now real Piwigo\Users\UserService/PreferencesService calls (P23 batch
+    // 8d) -- ExtensionLifecycle/ExtensionScanner call them directly, so no
+    // stub is needed for THOSE; this Integration test's real DB connection
+    // exercises the exact same fixture-backed behavior these stubs used to
+    // approximate. getDefaultLanguage()'s comparisons below now use the
+    // fixture's real active 'en_UK' row directly instead of a synthetic
+    // 'en' id.
+    //
+    // check_theme_installed() is the one real remaining gap:
+    // UserService::getDefaultTheme() (called from
+    // ExtensionLifecycle's own theme-deactivate branch) always calls it
+    // before returning, and it's still a bare include/functions.inc.php
+    // free function (P23 batch 8d hasn't reached that file yet) this
+    // isolated test doesn't load. Stubbed to always report "installed" --
+    // every test below that reaches getDefaultTheme() only checks that its
+    // result does NOT equal a synthetic themeId() (random per call, never
+    // a real theme name), so the exact resolved value doesn't matter, only
+    // that resolving it doesn't crash.
+    if (! function_exists('check_theme_installed')) {
+        function check_theme_installed(string $theme_id): bool
         {
-            return 'default';
-        }
-    }
-
-    // get_default_language() already has an established shared stub
-    // (SearchServiceTest.php, fixed 'en') -- tests below that need to
-    // exercise the "is this the default language" guard use language id
-    // 'en' (not the fixture's real active en_UK row) to match it.
-    if (! function_exists('get_default_language')) {
-        function get_default_language(): string
-        {
-            return 'en';
-        }
-    }
-
-    // ExtensionScanner's real-disk theme scan falls back to
-    // userprefs_get_param('admin_theme', 'clear') when a scanned theme
-    // (the real on-disk 'default' theme, here) has no screenshot.png --
-    // reimplemented using the exact real underlying service, same pattern
-    // as pwg_activity() above.
-    if (! function_exists('userprefs_get_param')) {
-        function userprefs_get_param(string $param, mixed $defaultValue = null): mixed
-        {
-            return new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))
-                ->getParam($param, $defaultValue);
+            return true;
         }
     }
 }
@@ -477,18 +464,17 @@ namespace Piwigo\Tests\Integration {
 
         public function test_language_deactivate_of_the_default_language_is_rejected(): void
         {
-            // get_default_language() is stubbed to a fixed 'en' (see the
-            // shared stub above) rather than reading the fixture's real
-            // active 'en_UK' row -- activate a language literally named
-            // 'en' so this test exercises the real guard condition
-            // ($id === get_default_language()) instead of asserting
-            // against a value the stub can never actually produce.
-            $this->lifecycle->performAction(ExtensionType::Language, 'activate', 'en', ['version' => '1.0', 'name' => 'English']);
-
-            $errors = $this->lifecycle->performAction(ExtensionType::Language, 'deactivate', 'en', null);
+            // Piwigo\Users\UserService::getDefaultLanguage() now reads the
+            // real fixture default user's language column ('en_UK', the
+            // only row this class's setUp() keeps active -- see the
+            // DELETE ... WHERE id != 'en_UK' above) instead of a fixed
+            // 'en' stub, so this exercises the real guard condition
+            // ($id === getDefaultLanguage()) directly against 'en_UK'
+            // rather than a synthetic language id.
+            $errors = $this->lifecycle->performAction(ExtensionType::Language, 'deactivate', 'en_UK', null);
 
             self::assertSame(['CANNOT DEACTIVATE - LANGUAGE IS DEFAULT LANGUAGE'], $errors);
-            self::assertNotNull($this->repo->find(ExtensionType::Language, 'en'));
+            self::assertNotNull($this->repo->find(ExtensionType::Language, 'en_UK'));
         }
 
         public function test_language_deactivate_when_not_active_returns_the_exact_legacy_message(): void

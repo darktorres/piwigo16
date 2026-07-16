@@ -95,7 +95,7 @@ INSERT INTO ' . Tables::languages() . '
                     break;
                 }
 
-                if ($language_id == get_default_language()) {
+                if ($language_id == (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultLanguage()) {
                     $errors[] = 'CANNOT DEACTIVATE - LANGUAGE IS DEFAULT LANGUAGE';
                     break;
                 }
@@ -121,7 +121,7 @@ DELETE
                 // Set default language to user who are using this language
                 $query = '
 UPDATE ' . Tables::userInfos() . '
-  SET language = \'' . get_default_language() . '\'
+  SET language = \'' . (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultLanguage() . '\'
   WHERE language = \'' . $language_id . '\'
 ;';
                 pwg_query($query);

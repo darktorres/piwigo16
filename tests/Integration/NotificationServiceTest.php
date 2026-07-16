@@ -2,27 +2,12 @@
 
 declare(strict_types=1);
 
-// NotificationService::newsExists() calls the real is_admin() -- needs
-// more bootstrap ($user global/access-level resolution) than this
-// isolated integration test wants to depend on. Same "minimal stub to
-// load standalone" pattern as CategoryServiceTest.php -- body copied
-// verbatim (function_exists() guards mean whichever Integration test
-// file's stub loads first wins for the whole run, so every file
-// declaring this must keep the body identical).
+// NotificationService::newsExists() now calls Piwigo\Auth\AccessControl::
+// isAdmin() directly (P23 batch 8d), a pure `global $user;` read, so no
+// stub is needed; tests below set $GLOBALS['user']['status'] instead.
 namespace {
     if (! defined('PHPWG_ROOT_PATH')) {
         define('PHPWG_ROOT_PATH', './');
-    }
-
-    if (! function_exists('is_admin')) {
-        function is_admin(string $user_status = ''): bool
-        {
-            if ($user_status !== '') {
-                return $user_status === 'admin';
-            }
-
-            return (bool) ($GLOBALS['test_is_admin'] ?? false);
-        }
     }
 }
 
@@ -93,6 +78,7 @@ final class NotificationServiceTest extends IntegrationTestCase
 
         $GLOBALS['user'] = [
             'id' => 1,
+            'status' => 'normal',
             'cache_update_time' => '2026-07-07 05:02:38',
             'forbidden_categories' => '0',
             'level' => '0',
@@ -171,14 +157,14 @@ final class NotificationServiceTest extends IntegrationTestCase
 
     public function test_news_exists_is_true_when_new_elements_exist(): void
     {
-        $GLOBALS['test_is_admin'] = false;
+        $GLOBALS['user']['status'] = 'normal';
 
         self::assertTrue($this->service->newsExists('2026-07-07 05:02:36', '2026-07-07 05:02:38'));
     }
 
     public function test_news_exists_is_false_for_an_empty_window(): void
     {
-        $GLOBALS['test_is_admin'] = false;
+        $GLOBALS['user']['status'] = 'normal';
 
         self::assertFalse($this->service->newsExists('2026-07-08 00:00:00', '2026-07-09 00:00:00'));
     }
@@ -193,10 +179,10 @@ final class NotificationServiceTest extends IntegrationTestCase
             ['test author', '127.0.0.9', 'pending test comment']
         );
 
-        $GLOBALS['test_is_admin'] = false;
+        $GLOBALS['user']['status'] = 'normal';
         self::assertFalse($this->service->newsExists('2026-07-31 00:00:00', '2026-08-02 00:00:00'));
 
-        $GLOBALS['test_is_admin'] = true;
+        $GLOBALS['user']['status'] = 'admin';
         self::assertTrue($this->service->newsExists('2026-07-31 00:00:00', '2026-08-02 00:00:00'));
 
         $this->conn->executeStatement("DELETE FROM " . Tables::comments() . " WHERE author = 'test author'");

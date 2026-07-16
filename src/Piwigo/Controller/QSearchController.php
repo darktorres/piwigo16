@@ -21,7 +21,7 @@ final class QSearchController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        check_status(AccessLevel::Guest);
+        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
         $q = $request->getQueryParams()['q'] ?? '';
         $q = is_string($q) ? $q : '';

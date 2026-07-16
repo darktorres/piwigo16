@@ -7,8 +7,11 @@ namespace Piwigo\Controller;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Feed\FeedRepository;
+use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Menu\MenubarRenderer;
+use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -28,7 +31,7 @@ final class NotificationController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        check_status(AccessLevel::Guest);
+        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
         trigger_notify('loc_begin_notification');
 
@@ -52,7 +55,7 @@ final class NotificationController implements ControllerInterface
             $feedRepo->insert($feedId, $user_id);
 
             $feed_url = PHPWG_ROOT_PATH . 'feed.php';
-            if (is_a_guest()) {
+            if (\Piwigo\Auth\AccessControl::isAGuest()) {
                 $feed_image_only_url = $feed_url;
                 $feed_url .= '?feed=' . $feedId;
             } else {
@@ -81,12 +84,12 @@ final class NotificationController implements ControllerInterface
             $themeconf = $template->get_template_vars('themeconf');
             $themeconf = is_array($themeconf) ? $themeconf : [];
             if (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('theNotificationPage', $themeconf['hide_menu_on'], true)) {
-                include PHPWG_ROOT_PATH . 'include/menubar.inc.php';
+                new MenubarRenderer()->render();
             }
 
             include PHPWG_ROOT_PATH . 'include/page_header.php';
             trigger_notify('loc_end_notification');
-            flush_page_messages();
+            new HtmlService()->flushPageMessages();
             $template->pparse('notification');
             include PHPWG_ROOT_PATH . 'include/page_tail.php';
         });
@@ -97,7 +100,7 @@ final class NotificationController implements ControllerInterface
     private function findAvailableFeedId(FeedRepository $feedRepo): string
     {
         while (true) {
-            $key = generate_key(50);
+            $key = SessionService::get()->generateKey(50);
             if (! $feedRepo->existsById($key)) {
                 return $key;
             }

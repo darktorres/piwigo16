@@ -14,6 +14,7 @@ namespace Piwigo\Admin;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
+use Piwigo\Mail\MailService;
 use Piwigo\Template\Template;
 
 class updates
@@ -276,9 +277,7 @@ class updates
 
         if ($notify) {
             // send email
-            include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php';
-
-            switch_lang_to(get_default_language());
+            new MailService()->switchLangTo((new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultLanguage());
 
             $content = l10n('Hello,');
             $content .= "\n\n" . l10n(
@@ -289,7 +288,7 @@ class updates
             $content .= "\n\n" . l10n('It only takes a few clicks.');
             $content .= "\n\n" . l10n('Running on an up-to-date Piwigo is important for security.');
 
-            pwg_mail_admins(
+            new MailService()->mailAdmins(
                 [
                     'subject' => l10n('Piwigo %s is available, please update', $new_versions_string),
                     'content' => $content,
@@ -302,7 +301,7 @@ class updates
                 true // only webmasters
             );
 
-            switch_lang_back();
+            new MailService()->switchLangBack();
 
             // save notify
             conf_update_param(
@@ -394,7 +393,7 @@ class updates
             [
                 'last_revision_only' => 'true',
                 'version' => implode(',', $versions_to_check),
-                'lang' => substr(is_string($user['language']) ? $user['language'] : get_default_language(), 0, 2),
+                'lang' => substr(is_string($user['language']) ? $user['language'] : (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultLanguage(), 0, 2),
                 'get_nb_downloads' => 'true',
             ]
         );

@@ -5,8 +5,16 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Piwigo\Core\AccessLevel;
+use Piwigo\Db\DbConnection;
+use Piwigo\Group\GroupRepository;
+use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Menu\MenubarRenderer;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
+use Piwigo\Tag\TagRepository;
+use Piwigo\Tag\TagService;
 use Piwigo\Template\Template;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -22,7 +30,7 @@ final class TagsController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        check_status(AccessLevel::Guest);
+        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
         trigger_notify('loc_begin_tags');
 
@@ -61,8 +69,11 @@ final class TagsController implements ControllerInterface
 
             $template->assign('display_mode', $display_mode);
 
+            $tagConn = DbConnection::build();
+            $tagService = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)));
+
             // find all tags available for the current user
-            $tags = get_available_tags();
+            $tags = $tagService->getAvailableTags();
 
             if ($display_mode === 'letters') {
                 // we want tags diplayed in alphabetic order
@@ -140,13 +151,13 @@ final class TagsController implements ControllerInterface
             } else {
                 // we want only the first most represented tags, so we sort
                 // them by counter and take the first tags
-                usort($tags, tags_counter_compare(...));
+                usort($tags, $tagService->tagsCounterCompare(...));
                 $full_tag_cloud_items_number = is_numeric($conf['full_tag_cloud_items_number']) ? (int) $conf['full_tag_cloud_items_number'] : 200;
                 $tags = array_slice($tags, 0, $full_tag_cloud_items_number);
 
                 // depending on its counter and the other tags counter,
                 // each tag has a level
-                $tags = add_level_to_tags($tags);
+                $tags = $tagService->addLevelToTags($tags);
 
                 // we want tags diplayed in alphabetic order
                 usort($tags, tag_alpha_compare(...));
@@ -171,12 +182,12 @@ final class TagsController implements ControllerInterface
             $themeconf = $template->get_template_vars('themeconf');
             $themeconf = is_array($themeconf) ? $themeconf : [];
             if (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('theTagsPage', $themeconf['hide_menu_on'], true)) {
-                include PHPWG_ROOT_PATH . 'include/menubar.inc.php';
+                new MenubarRenderer()->render();
             }
 
             include PHPWG_ROOT_PATH . 'include/page_header.php';
             trigger_notify('loc_end_tags');
-            flush_page_messages();
+            new HtmlService()->flushPageMessages();
             $template->pparse('tags');
             include PHPWG_ROOT_PATH . 'include/page_tail.php';
         });

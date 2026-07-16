@@ -9,6 +9,7 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\DerivativeUrlCodec;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -27,7 +28,7 @@ final class PictureCoiPageRenderer
          */
         global $conf, $template;
 
-        check_status(AccessLevel::Administrator);
+        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
         check_input_parameter('image_id', $_GET, false, ValidationPattern::ID);
 
@@ -48,10 +49,10 @@ final class PictureCoiPageRenderer
             } else {
                 $to_fraction = (static fn (mixed $v): float => is_numeric($v) ? (float) $v : 0.0);
 
-                $coi = fraction_to_char($to_fraction($coi_l))
-                  . fraction_to_char($to_fraction($_POST['t'] ?? null))
-                  . fraction_to_char($to_fraction($_POST['r'] ?? null))
-                  . fraction_to_char($to_fraction($_POST['b'] ?? null));
+                $coi = DerivativeUrlCodec::fractionToChar($to_fraction($coi_l))
+                  . DerivativeUrlCodec::fractionToChar($to_fraction($_POST['t'] ?? null))
+                  . DerivativeUrlCodec::fractionToChar($to_fraction($_POST['r'] ?? null))
+                  . DerivativeUrlCodec::fractionToChar($to_fraction($_POST['b'] ?? null));
             }
             new ImageRepository(DbConnection::build())->updateCoi($image_id, $coi);
         }
@@ -93,10 +94,10 @@ final class PictureCoiPageRenderer
 
         if (isset($row['coi']) && $row['coi'] !== '' && $row['coi'] !== '0') {
             $tpl_var['coi'] = [
-                'l' => char_to_fraction($row['coi'][0]),
-                't' => char_to_fraction($row['coi'][1]),
-                'r' => char_to_fraction($row['coi'][2]),
-                'b' => char_to_fraction($row['coi'][3]),
+                'l' => DerivativeUrlCodec::charToFraction($row['coi'][0]),
+                't' => DerivativeUrlCodec::charToFraction($row['coi'][1]),
+                'r' => DerivativeUrlCodec::charToFraction($row['coi'][2]),
+                'b' => DerivativeUrlCodec::charToFraction($row['coi'][3]),
             ];
         }
 

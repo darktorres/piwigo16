@@ -65,7 +65,7 @@ final class FileCombiner
         /** @var array<string, mixed> $conf */
         global $conf;
         $force = false;
-        if (is_admin() && ($this->is_css || ! (bool) $conf['template_compile_check'])) {
+        if (\Piwigo\Auth\AccessControl::isAdmin() && ($this->is_css || ! (bool) $conf['template_compile_check'])) {
             $force = (isset($_SERVER['HTTP_CACHE_CONTROL']) && is_string($_SERVER['HTTP_CACHE_CONTROL']) && str_contains($_SERVER['HTTP_CACHE_CONTROL'], 'max-age=0'))
               || (isset($_SERVER['HTTP_PRAGMA']) && is_string($_SERVER['HTTP_PRAGMA']) && (bool) strpos($_SERVER['HTTP_PRAGMA'], 'no-cache'));
         }

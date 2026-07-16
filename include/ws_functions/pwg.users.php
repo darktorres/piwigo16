@@ -12,6 +12,8 @@ declare(strict_types=1);
 use Piwigo\Core\Logger;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\Tables;
+use Piwigo\Mail\MailService;
+use Piwigo\Session\SessionService;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
@@ -325,7 +327,7 @@ SELECT DISTINCT ';
                 $users[$cur_user_id]['last_visit'] = $last_visit;
 
                 if (! get_boolean($cur_user['last_visit_from_history']) and empty($last_visit)) {
-                    $last_visit = get_user_last_visit_from_history($cur_user_id, true);
+                    $last_visit = (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build())))->getUserLastVisitFromHistory($cur_user_id, true);
                     $users[$cur_user_id]['last_visit'] = $last_visit;
                 }
 
@@ -438,7 +440,7 @@ function ws_users_add(array $params, PwgServer &$service): mixed
     }
 
     if ($params['auto_password']) {
-        $params['password'] = generate_key(mt_rand(15, 20));
+        $params['password'] = SessionService::get()->generateKey(mt_rand(15, 20));
     }
 
     // register_user() genuinely requires a string password; a client that
@@ -449,14 +451,27 @@ function ws_users_add(array $params, PwgServer &$service): mixed
         return new PwgError(WS_ERR_INVALID_PARAM, l10n('Please, enter a password'));
     }
 
-    $user_id = register_user(
-        $params['username'],
-        $params['password'],
-        $params['email'],
-        false, // notify admin
-        $errors,
-        false // $params['send_password_by_mail']
-    );
+    // Preserves the pre-SEC-31 behavior for this real caller (admin-
+    // authenticated ws.users.add legitimately needs the real "already
+    // used" message to let an operator pick a different username) --
+    // UserService::registerUser() itself never puts that message in
+    // errors (it would let an attacker enumerate accounts through the
+    // public self-registration form).
+    $result = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new MailService())
+        ->registerUser(
+            $params['username'],
+            $params['password'],
+            $params['email'],
+            false, // notify admin
+            false // $params['send_password_by_mail']
+        );
+
+    $errors = $result['errors'];
+    if ($result['duplicateUsername']) {
+        array_unshift($errors, l10n('this login is already used'));
+    }
+
+    $user_id = $result['userId'] ?? false;
 
     if (! (bool) $user_id) {
         return new PwgError(WS_ERR_INVALID_PARAM, $errors[0]);
@@ -481,7 +496,7 @@ function ws_users_getAuthKey(array $params, PwgServer &$service): mixed
         return new PwgError(403, 'Invalid security token');
     }
 
-    $authkey = create_user_auth_key($params['user_id']);
+    $authkey = (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build())))->createUserAuthKey($params['user_id']);
 
     if ($authkey === false) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'invalid user_id');
@@ -571,7 +586,7 @@ function ws_users_setInfo(array $params, PwgServer &$service): mixed
         return new PwgError(403, 'Invalid security token');
     }
 
-    $updated_users = check_and_save_user_infos($params);
+    $updated_users = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->checkAndSaveUserInfos($params);
 
     if (isset($updated_users['error'])) {
         // check_and_save_user_infos() is declared to return plain `array`
@@ -612,7 +627,7 @@ function ws_users_setMyInfo(array $params, PwgServer &$service): PwgError|string
         return new PwgError(403, 'Invalid security token');
     }
 
-    if (is_a_guest()) {
+    if (\Piwigo\Auth\AccessControl::isAGuest()) {
         return new PwgError(401, 'Access Denied');
     }
 
@@ -680,7 +695,7 @@ SELECT ' . $user_field_password . ' AS password
         // precise type after the merge, so it's read back as mixed here.
         $params_password = is_string($params['password']) ? $params['password'] : '';
 
-        if (! pwg_password_verify($params_password, $current_password)) {
+        if (! (new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())))->verify($params_password, $current_password)) {
             return new PwgError(403, l10n('Current password is wrong'));
         }
 
@@ -699,7 +714,7 @@ SELECT ' . $user_field_password . ' AS password
     );
 
     $params['user_id'] = [$user['id']];
-    $updated_users = check_and_save_user_infos($params);
+    $updated_users = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->checkAndSaveUserInfos($params);
 
     if (isset($updated_users['error'])) {
         // check_and_save_user_infos() is declared to return plain `array`
@@ -740,7 +755,7 @@ function ws_users_preferences_set(array $params, PwgServer &$service): mixed
         $value = json_decode($value, true);
     }
 
-    userprefs_update_param($params['param'], $value);
+    (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->updateParam($params['param'], $value);
 
     return $user['preferences'];
 }
@@ -757,7 +772,7 @@ function ws_users_favorites_add(array $params, PwgServer &$service): PwgError|tr
     /** @var array<string, mixed> $user */
     global $user;
 
-    if (is_a_guest()) {
+    if (\Piwigo\Auth\AccessControl::isAGuest()) {
         return new PwgError(403, 'User must be logged in.');
     }
 
@@ -800,7 +815,7 @@ function ws_users_favorites_remove(array $params, PwgServer &$service): PwgError
     /** @var array<string, mixed> $user */
     global $user;
 
-    if (is_a_guest()) {
+    if (\Piwigo\Auth\AccessControl::isAGuest()) {
         return new PwgError(403, 'User must be logged in.');
     }
 
@@ -848,11 +863,11 @@ function ws_users_favorites_getList(array $params, PwgServer &$service): false|a
      */
     global $conf, $user;
 
-    if (is_a_guest()) {
+    if (\Piwigo\Auth\AccessControl::isAGuest()) {
         return false;
     }
 
-    check_user_favorites();
+    (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->checkUserFavorites();
 
     $order_by = ws_std_image_sql_order($params, 'i.');
     $conf_order_by = is_string($conf['order_by'] ?? null) ? $conf['order_by'] : '';
@@ -865,12 +880,9 @@ SELECT
   FROM ' . Tables::favorites() . '
     INNER JOIN ' . Tables::images() . ' i ON image_id = i.id
   WHERE user_id = ' . $current_user_id . '
-' . get_sql_condition_FandF(
-        [
-            'visible_images' => 'id',
-        ],
-        'AND'
-    ) . '
+' . (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
+        'visible_images' => 'id',
+    ], 'AND') . '
     ' . $order_by . '
 ;';
     $images = [];
@@ -929,7 +941,6 @@ function ws_users_generate_password_link(array $params, PwgServer &$service): Pw
      */
     global $user, $conf;
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-    include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php';
 
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -943,11 +954,11 @@ function ws_users_generate_password_link(array $params, PwgServer &$service): Pw
     // getuserdata() is declared to return array<string, mixed> (its own
     // @return docblock, include/functions_user.inc.php); narrow the
     // specific fields this function consumes to their real column types.
-    $user_lost = getuserdata($params['user_id']);
+    $user_lost = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getUserData($params['user_id']);
     $user_lost_status = is_string($user_lost['status']) ? $user_lost['status'] : '';
 
     // Cannot perform this action for a guest or generic user
-    if (is_a_guest($user_lost_status) or is_generic($user_lost_status)) {
+    if (\Piwigo\Auth\AccessControl::isAGuest($user_lost_status) or \Piwigo\Auth\AccessControl::isGeneric($user_lost_status)) {
         return new PwgError(403, 'Password reset is not allowed for this user');
     }
 
@@ -956,13 +967,13 @@ function ws_users_generate_password_link(array $params, PwgServer &$service): Pw
         return new PwgError(403, 'You cannot perform this action');
     }
 
-    $first_login = has_already_logged_in($params['user_id']);
+    $first_login = (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build())))->hasAlreadyLoggedIn($params['user_id']);
     $send_by_mail_response = null;
-    $user_lost_language = is_string($user_lost['language']) ? $user_lost['language'] : get_default_language();
-    $lang_to_use = $first_login ? get_default_language() : $user_lost_language;
+    $user_lost_language = is_string($user_lost['language']) ? $user_lost['language'] : (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultLanguage();
+    $lang_to_use = $first_login ? (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultLanguage() : $user_lost_language;
 
-    switch_lang_to($lang_to_use);
-    $generate_link = generate_password_link($params['user_id'], $first_login);
+    new MailService()->switchLangTo($lang_to_use);
+    $generate_link = (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build())))->generatePasswordLink($params['user_id'], $first_login);
 
     $user_lost_email = is_string($user_lost['email']) ? $user_lost['email'] : null;
 
@@ -974,18 +985,18 @@ function ws_users_generate_password_link(array $params, PwgServer &$service): Pw
     if ($params['send_by_mail'] and ! empty($user_lost_email)) {
         $user_lost_username = is_string($user_lost['username']) ? $user_lost['username'] : '';
         if ($first_login) {
-            $email_params = pwg_generate_set_password_mail($user_lost_username, $generate_link['password_link'], $gallery_title, $generate_link['time_validation']);
+            $email_params = new MailService()->generateSetPasswordMail($user_lost_username, $generate_link['password_link'], $gallery_title, $generate_link['time_validation']);
         } else {
-            $email_params = pwg_generate_reset_password_mail($user_lost_username, $generate_link['password_link'], $gallery_title, $generate_link['time_validation']);
+            $email_params = new MailService()->generateResetPasswordMail($user_lost_username, $generate_link['password_link'], $gallery_title, $generate_link['time_validation']);
         }
         // Here we remove the display of errors because they prevent the response from being parsed
-        if (@pwg_mail($user_lost_email, $email_params)) {
+        if (@new MailService()->mail($user_lost_email, $email_params)) {
             $send_by_mail_response = 'Mail sent at : ' . $user_lost_email;
         } else {
             $send_by_mail_response = false;
         }
     }
-    switch_lang_back();
+    new MailService()->switchLangBack();
 
     return [
         'generated_link' => $generate_link['password_link'],
@@ -1008,7 +1019,7 @@ function ws_set_main_user(array $params, PwgServer &$service): PwgError|string
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
     // check if not webmaster
-    if (! is_webmaster()) {
+    if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
         return new PwgError(403, 'You cannot perform this action');
     }
 
@@ -1022,7 +1033,7 @@ function ws_set_main_user(array $params, PwgServer &$service): PwgError|string
         return new PwgError(WS_ERR_INVALID_PARAM, 'This user does not exist.');
     }
 
-    $new_main_user = getuserdata($params['user_id']);
+    $new_main_user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getUserData($params['user_id']);
 
     // check if the user to set as main user is not webmaster
     if ($new_main_user['status'] !== 'webmaster') {
@@ -1051,7 +1062,7 @@ function ws_create_api_key(array $params, PwgServer &$service): PwgError|array
      */
     global $user, $logger;
 
-    if (is_a_guest() or ! connected_with_pwg_ui()) {
+    if (\Piwigo\Auth\AccessControl::isAGuest() or ! (new \Piwigo\Auth\ApiKeyService(new \Piwigo\Mail\MailService()))->connectedWithPwgUi()) {
         return new PwgError(401, 'Acces Denied');
     }
 
@@ -1078,7 +1089,7 @@ function ws_create_api_key(array $params, PwgServer &$service): PwgError|array
     // session's $user['id'] is always the numeric users.id primary key.
     $user_id = is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0;
 
-    $secret = create_api_key($user_id, $duration, $key_name);
+    $secret = (new \Piwigo\Auth\ApiKeyService(new \Piwigo\Mail\MailService()))->create($user_id, $duration, $key_name);
 
     $logger->info('[api_key][user_id=' . $user_id . '][action=create][key_name=' . $params['key_name'] . ']');
 
@@ -1101,7 +1112,7 @@ function ws_revoke_api_key(array $params, PwgServer &$service): PwgError|string
      */
     global $user, $logger;
 
-    if (is_a_guest() or ! connected_with_pwg_ui()) {
+    if (\Piwigo\Auth\AccessControl::isAGuest() or ! (new \Piwigo\Auth\ApiKeyService(new \Piwigo\Mail\MailService()))->connectedWithPwgUi()) {
         return new PwgError(401, 'Acces Denied');
     }
 
@@ -1118,7 +1129,7 @@ function ws_revoke_api_key(array $params, PwgServer &$service): PwgError|string
     // session's $user['id'] is always the numeric users.id primary key.
     $user_id = is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0;
 
-    $revoked_key = revoke_api_key($user_id, $params['pkid']);
+    $revoked_key = (new \Piwigo\Auth\ApiKeyService(new \Piwigo\Mail\MailService()))->revoke($user_id, $params['pkid']);
 
     if ($revoked_key !== true) {
         return new PwgError(403, $revoked_key);
@@ -1146,11 +1157,11 @@ function ws_edit_api_key(array $params, PwgServer &$service): PwgError|string
      */
     global $user, $logger;
 
-    if (is_a_guest()) {
+    if (\Piwigo\Auth\AccessControl::isAGuest()) {
         return new PwgError(401, 'Acces Denied');
     }
 
-    if (! connected_with_pwg_ui()) {
+    if (! (new \Piwigo\Auth\ApiKeyService(new \Piwigo\Mail\MailService()))->connectedWithPwgUi()) {
         return new PwgError(401, 'Acces Denied');
     }
 
@@ -1167,7 +1178,7 @@ function ws_edit_api_key(array $params, PwgServer &$service): PwgError|string
     // docblock, include/functions_user.inc.php); a logged-in, non-guest
     // session's $user['id'] is always the numeric users.id primary key.
     $user_id = is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0;
-    $edited_key = edit_api_key($user_id, $params['pkid'], $key_name);
+    $edited_key = (new \Piwigo\Auth\ApiKeyService(new \Piwigo\Mail\MailService()))->edit($user_id, $params['pkid'], $key_name);
 
     if ($edited_key !== true) {
         return new PwgError(403, $edited_key);
@@ -1192,11 +1203,11 @@ function ws_get_api_key(array $params, PwgServer &$service): PwgError|array|stri
     /** @var array<string, mixed> $user */
     global $user;
 
-    if (is_a_guest()) {
+    if (\Piwigo\Auth\AccessControl::isAGuest()) {
         return new PwgError(401, 'Acces Denied');
     }
 
-    if (! connected_with_pwg_ui()) {
+    if (! (new \Piwigo\Auth\ApiKeyService(new \Piwigo\Mail\MailService()))->connectedWithPwgUi()) {
         return new PwgError(401, 'Acces Denied');
     }
 
@@ -1210,7 +1221,7 @@ function ws_get_api_key(array $params, PwgServer &$service): PwgError|array|stri
     // this specific helper); a logged-in, non-guest session's $user['id']
     // is always the numeric users.id primary key.
     $user_id = is_numeric($user['id'] ?? null) ? (string) (int) $user['id'] : '';
-    $api_keys = get_api_key($user_id);
+    $api_keys = (new \Piwigo\Auth\ApiKeyService(new \Piwigo\Mail\MailService()))->get($user_id);
 
     return ((bool) $api_keys) ? $api_keys : l10n('No API key found');
 }

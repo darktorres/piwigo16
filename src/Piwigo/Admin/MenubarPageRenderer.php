@@ -33,7 +33,7 @@ final class MenubarPageRenderer
          */
         global $conf, $page, $template;
 
-        if (! is_webmaster()) {
+        if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
             if (! is_array($page['warnings'] ?? null)) {
                 $page['warnings'] = [];
             }
@@ -79,7 +79,7 @@ final class MenubarPageRenderer
             $idx++;
         }
 
-        if (isset($_POST['submit']) and is_webmaster()) {
+        if (isset($_POST['submit']) and \Piwigo\Auth\AccessControl::isWebmaster()) {
             foreach ($mb_conf as $id => $pos) {
                 $hide = isset($_POST['hide_' . $id]);
                 $mb_conf[$id] = ($hide ? -1 : +1) * abs($pos);
@@ -119,7 +119,7 @@ final class MenubarPageRenderer
             'F_ACTION' => $action,
         ]);
 
-        $template->assign('isWebmaster', is_webmaster() ? 1 : 0);
+        $template->assign('isWebmaster', \Piwigo\Auth\AccessControl::isWebmaster() ? 1 : 0);
         $template->assign('ADMIN_PAGE_TITLE', l10n('Menu Management'));
 
         $template->set_filename('menubar_admin_content', 'menubar.tpl');

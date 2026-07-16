@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Template\Template;
 
 /**
@@ -89,7 +90,7 @@ final class CatPermPageRenderer
 
         $template->assign(
             [
-                'CATEGORIES_NAV' => get_cat_display_name_from_id(
+                'CATEGORIES_NAV' => new HtmlService()->getCatDisplayNameFromId(
                     $page['cat'],
                     'admin.php?page=album-'
                 ),

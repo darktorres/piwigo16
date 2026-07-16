@@ -9,7 +9,14 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
+use Piwigo\Session\SessionService;
 
 // $filter['enabled']: Filter is enabled
 // $filter['recent_period']: Recent period used to computed filter data
@@ -36,14 +43,14 @@ if (! (bool) get_filter_page_value('cancel')) {
           is_string($filter_get_param)
           && preg_match('/^start-recent-(\d+)$/', $filter_get_param, $filter['matches']) === 1;
     } else {
-        $filter['enabled'] = pwg_get_session_var('filter_enabled', false);
+        $filter['enabled'] = SessionService::get()->getSessionVar('filter_enabled', false);
     }
 } else {
     $filter['enabled'] = false;
 }
 
 if ((bool) $filter['enabled']) {
-    $filter_key = pwg_get_session_var('filter_check_key', [
+    $filter_key = SessionService::get()->getSessionVar('filter_check_key', [
         'user' => 0,
         'recent_period' => -1,
         'time' => 0,
@@ -84,7 +91,7 @@ if ((bool) $filter['enabled']) {
 
     if (
         // New filter
-        ! (bool) pwg_get_session_var('filter_enabled', false) or
+        ! (bool) SessionService::get()->getSessionVar('filter_enabled', false) or
         // Cache data updated
         $filter_key['time'] <= $user['cache_update_time'] or
         // Date, period, user are changed
@@ -100,7 +107,11 @@ if ((bool) $filter['enabled']) {
             'date' => date('Ymd'),
         ];
 
-        $filter['categories'] = get_computed_categories($user, $filter_recent_period);
+        $categoryConn = DbConnection::build();
+        $filter['categories'] = new CategoryService(
+            new CategoryRepository($categoryConn),
+            new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
+        )->getComputedCategories($user, $filter_recent_period);
 
         $filter['visible_categories'] = implode(',', array_keys($filter['categories']));
         if (empty($filter['visible_categories'])) {
@@ -131,17 +142,17 @@ WHERE ';
         }
 
         // Save filter data on session
-        pwg_set_session_var('filter_enabled', $filter['enabled']);
-        pwg_set_session_var('filter_check_key', $filter_key);
-        pwg_set_session_var('filter_categories', serialize($filter['categories']));
-        pwg_set_session_var('filter_visible_categories', $filter['visible_categories']);
-        pwg_set_session_var('filter_visible_images', $filter['visible_images']);
+        SessionService::get()->setSessionVar('filter_enabled', $filter['enabled']);
+        SessionService::get()->setSessionVar('filter_check_key', $filter_key);
+        SessionService::get()->setSessionVar('filter_categories', serialize($filter['categories']));
+        SessionService::get()->setSessionVar('filter_visible_categories', $filter['visible_categories']);
+        SessionService::get()->setSessionVar('filter_visible_images', $filter['visible_images']);
     } else {
         // Read only data
-        $serialized_categories = pwg_get_session_var('filter_categories', serialize([]));
+        $serialized_categories = SessionService::get()->getSessionVar('filter_categories', serialize([]));
         $filter['categories'] = is_string($serialized_categories) ? unserialize($serialized_categories) : [];
-        $filter['visible_categories'] = pwg_get_session_var('filter_visible_categories', '');
-        $filter['visible_images'] = pwg_get_session_var('filter_visible_images', '');
+        $filter['visible_categories'] = SessionService::get()->getSessionVar('filter_visible_categories', '');
+        $filter['visible_images'] = SessionService::get()->getSessionVar('filter_visible_images', '');
     }
     unset($filter_key);
     if ((bool) get_filter_page_value('add_notes')) {
@@ -153,11 +164,11 @@ WHERE ';
     }
     include_once PHPWG_ROOT_PATH . 'include/functions_filter.inc.php';
 } else {
-    if ((bool) pwg_get_session_var('filter_enabled', false)) {
-        pwg_unset_session_var('filter_enabled');
-        pwg_unset_session_var('filter_check_key');
-        pwg_unset_session_var('filter_categories');
-        pwg_unset_session_var('filter_visible_categories');
-        pwg_unset_session_var('filter_visible_images');
+    if ((bool) SessionService::get()->getSessionVar('filter_enabled', false)) {
+        SessionService::get()->unsetSessionVar('filter_enabled');
+        SessionService::get()->unsetSessionVar('filter_check_key');
+        SessionService::get()->unsetSessionVar('filter_categories');
+        SessionService::get()->unsetSessionVar('filter_visible_categories');
+        SessionService::get()->unsetSessionVar('filter_visible_images');
     }
 }

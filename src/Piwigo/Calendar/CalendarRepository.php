@@ -7,8 +7,8 @@ namespace Piwigo\Calendar;
 use Piwigo\Db\AbstractRepository;
 
 /**
- * Persistence layer for `initialize_calendar()`'s own single data-access
- * point (`include/functions_calendar.inc.php`) -- the pre-existing
+ * Persistence layer for `CalendarRenderer::render()`'s own single
+ * data-access point -- the pre-existing
  * CalendarBase/CalendarMonthly/CalendarWeekly rendering classes
  * (already-built, P6-era) keep using the legacy query2array()/pwg_query()
  * layer internally; only this call site's own final "list of matching

@@ -29,7 +29,7 @@ final class GroupListPageRenderer
         $tabsheet->select('group_list');
         $tabsheet->assign();
 
-        check_status(AccessLevel::Administrator);
+        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
         if ($_POST !== [] or isset($_GET['delete']) or isset($_GET['toggle_is_default'])) {
             check_pwg_token();

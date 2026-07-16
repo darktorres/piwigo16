@@ -9,8 +9,25 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+// P23 batch 8c: this file's 12 free functions were all pure delegates to
+// Piwigo\Session\SessionService (already-typed, already-real) -- every
+// real caller retargeted directly to SessionService::get()->method(), 6
+// dead ones dropped outright (pwg_session_open/close/read/write/destroy --
+// PwgSession implements SessionHandlerInterface directly and PHP's own
+// session mechanism never called these bare-function wrappers;
+// get_remote_addr_session_hash() had zero real callers anywhere). Only
+// this file's own top-level bootstrap body survives -- SessionMiddleware's
+// own docblock documents it as the thing that registers PwgSession as the
+// save handler "on every real request" for the legacy (non-P22-pipeline)
+// bootstrap path, real session-security-relevant orchestration this pass
+// deliberately doesn't disturb. Relocating it into common.inc.php itself
+// (so this file can be deleted too) is deferred to P23 batch 8f, alongside
+// common.inc.php's own consolidation -- kept here, relocate-only, same
+// precedent as functions_mysqli.inc.php (finding 2) and
+// derivative_std_params.inc.php.
+
+use Piwigo\Auth\CookieService;
 use Piwigo\Session\PwgSession;
-use Piwigo\Session\SessionService;
 
 // In PHP 8.4+ calling session_set_save_handler with
 // two parameters is deprecated. To correct this,
@@ -41,144 +58,6 @@ if (isset($conf['session_save_handler'])
     $session_name = $conf['session_name'];
     $session_name = is_string($session_name) ? $session_name : null;
     session_name($session_name);
-    session_set_cookie_params(0, cookie_path());
+    session_set_cookie_params(0, new CookieService()->cookiePath());
     register_shutdown_function(session_write_close(...));
-}
-
-/**
- * Generates a pseudo random string.
- * Characters used are a-z A-Z and numerical values.
- *
- * @param int $size
- */
-function generate_key($size): string
-{
-    return SessionService::get()
-        ->generateKey($size);
-}
-
-/**
- * Called by PHP session manager, always return true.
- *
- * @param string $path
- * @param string $name
- * @return true
- */
-function pwg_session_open($path, $name): bool
-{
-    return SessionService::get()->sessionOpen();
-}
-
-/**
- * Called by PHP session manager, always return true.
- *
- * @return true
- */
-function pwg_session_close(): bool
-{
-    return SessionService::get()->sessionClose();
-}
-
-/**
- * Returns a hash from current user IP
- */
-function get_remote_addr_session_hash(): string
-{
-    return SessionService::get()
-        ->getRemoteAddrSessionHash();
-}
-
-/**
- * Called by PHP session manager, retrieves data stored in the sessions table.
- *
- * @param string $session_id
- * @return string
- */
-function pwg_session_read($session_id)
-{
-    return SessionService::get()
-        ->sessionRead($session_id);
-}
-
-/**
- * Called by PHP session manager, writes data in the sessions table.
- *
- * @param string $session_id
- * @return true
- */
-function pwg_session_write($session_id, ?string $data): bool
-{
-    return SessionService::get()
-        ->sessionWrite($session_id, $data ?? '');
-}
-
-/**
- * Called by PHP session manager, deletes data in the sessions table.
- *
- * @param string $session_id
- * @return true
- */
-function pwg_session_destroy($session_id): bool
-{
-    return SessionService::get()
-        ->sessionDestroy($session_id);
-}
-
-/**
- * Called by PHP session manager, garbage collector for expired sessions.
- *
- * @return int number of expired sessions deleted
- */
-function pwg_session_gc(): int
-{
-    return SessionService::get()
-        ->sessionGc();
-}
-
-/**
- * Persistently stores a variable for the current session.
- *
- * @param string $var
- * @param mixed $value
- */
-function pwg_set_session_var($var, $value): bool
-{
-    return SessionService::get()
-        ->setSessionVar($var, $value);
-}
-
-/**
- * Retrieves the value of a persistent variable for the current session.
- *
- * @param string $var
- * @param mixed $default
- * @return mixed
- */
-function pwg_get_session_var($var, $default = null)
-{
-    return SessionService::get()
-        ->getSessionVar($var, $default);
-}
-
-/**
- * Deletes a persistent variable for the current session.
- *
- * @param string $var
- */
-function pwg_unset_session_var($var): bool
-{
-    return SessionService::get()
-        ->unsetSessionVar($var);
-}
-
-/**
- * delete all sessions for a given user (certainly deleted)
- *
- * @since 2.8
- * @param int $user_id
- */
-function delete_user_sessions($user_id): void
-{
-    SessionService::get()
-        ->deleteUserSessions($user_id);
 }

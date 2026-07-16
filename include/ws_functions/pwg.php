@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Auth\CookieService;
 use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\AppInfo;
@@ -17,8 +18,12 @@ use Piwigo\Db\Tables;
 use Piwigo\History\HistoryRepository;
 use Piwigo\History\HistoryService;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\DerivativeUrlCodec;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Rate\RateRepository;
+use Piwigo\Rate\RateService;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgServer;
@@ -283,7 +288,7 @@ function ws_getCacheSize($params, PwgServer &$service): array
         // (wrongly) prove this offset always exists and is always int;
         // @ suppresses the resulting real undefined-key warning, and the
         // two guards below are the actual runtime safety net, not dead code.
-        $added_size = @$msizes[derivative_to_url($size_type)];
+        $added_size = @$msizes[DerivativeUrlCodec::derivativeToUrl($size_type)];
         // @phpstan-ignore function.alreadyNarrowedType
         $added_size = is_int($added_size) ? $added_size : 0;
 
@@ -365,8 +370,8 @@ DELETE FROM ' . Tables::rate() . '
 
     $changes = pwg_db_changes();
     if ((bool) $changes) {
-        include_once PHPWG_ROOT_PATH . 'include/functions_rate.inc.php';
-        update_rating_score();
+        new RateService(new RateRepository(DbConnection::build()), new CookieService())
+            ->updateRatingScore();
     }
     return $changes;
 }
@@ -386,12 +391,12 @@ function ws_session_login(array $params, PwgServer &$service): PwgError|true
 
     if ((bool) preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $params['username'])) {
         $secret = pwg_db_real_escape_string($params['password']);
-        $authenticate = auth_key_login($params['username'] . ':' . $secret);
+        $authenticate = (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build())))->authKeyLogin($params['username'] . ':' . $secret);
         if ($authenticate) {
             $_SESSION['connected_with'] = 'ws_session_login_api_key';
             return true;
         }
-    } elseif (try_log_user($params['username'], $params['password'], false)) {
+    } elseif ((new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build())))->tryLogUser($params['username'], $params['password'], false)) {
         $_SESSION['connected_with'] = 'ws_session_login';
         return true;
     }
@@ -409,8 +414,8 @@ function ws_session_logout($params, PwgServer &$service): PwgError|true
         return new PwgError(401, 'Cannot use this method with an api key');
     }
 
-    if (! is_a_guest()) {
-        logout_user();
+    if (! \Piwigo\Auth\AccessControl::isAGuest()) {
+        (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build())))->logoutUser();
     }
     return true;
 }
@@ -432,7 +437,7 @@ function ws_session_getStatus($params, PwgServer &$service): array
     $username_raw = $user['username'];
     $username_raw = is_string($username_raw) ? $username_raw : '';
     $res = [];
-    $res['username'] = is_a_guest() ? 'guest' : stripslashes($username_raw);
+    $res['username'] = \Piwigo\Auth\AccessControl::isAGuest() ? 'guest' : stripslashes($username_raw);
     foreach (['status', 'theme', 'language'] as $k) {
         $res[$k] = $user[$k];
     }
@@ -460,7 +465,7 @@ function ws_session_getStatus($params, PwgServer &$service): array
         $res['available_sizes'] = array_keys(ImageStdParams::get_defined_type_map());
     }
 
-    if (is_admin()) {
+    if (\Piwigo\Auth\AccessControl::isAdmin()) {
         $upload_ext_list = ((bool) $conf['upload_form_all_types']) ? $conf['file_ext'] : $conf['picture_ext'];
         $upload_ext_list = is_array($upload_ext_list) ? array_values(array_filter($upload_ext_list, is_string(...))) : [];
 
@@ -769,8 +774,7 @@ function ws_history_log(array $params, PwgServer &$service): void
     // when visiting a photo (which is currently, in version 14, the only event registered
     // by pwg.history.log) we should also increment images.hit
     if (! empty($params['image_id'])) {
-        include_once PHPWG_ROOT_PATH . 'include/functions_picture.inc.php';
-        increase_image_visit_counter($params['image_id']);
+        new ImageRepository(DbConnection::build())->incrementVisitCounter($params['image_id']);
     }
 
     $image_type = 'picture';
@@ -904,7 +908,7 @@ function ws_history_search(array $param, PwgServer &$service): array
         $cookie_val = null;
     }
 
-    pwg_set_cookie_var('display_thumbnail', $cookie_val, strtotime('+1 month'));
+    new CookieService()->setCookieVar('display_thumbnail', $cookie_val, strtotime('+1 month'));
 
     // TODO manage inconsistency of having $_POST['image_id'] and
     // $_POST['filename'] simultaneously

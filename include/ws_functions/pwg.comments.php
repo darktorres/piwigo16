@@ -9,8 +9,13 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Auth\EphemeralKeyService;
+use Piwigo\Comment\CommentRepository;
+use Piwigo\Comment\CommentService;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Mail\MailService;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 
@@ -247,14 +252,13 @@ GROUP BY author_id
  */
 function ws_userComments_delete(array $params, PwgServer &$service): PwgError|string
 {
-    include_once PHPWG_ROOT_PATH . 'include/functions_comment.inc.php';
-
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, l10n('Invalid security token'));
     }
 
     $params['comment_id'] = array_unique($params['comment_id']);
-    delete_user_comment($params['comment_id']);
+    new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService())
+        ->deleteComment($params['comment_id']);
     return 'Comment successfully deleted';
 }
 
@@ -269,13 +273,12 @@ function ws_userComments_delete(array $params, PwgServer &$service): PwgError|st
  */
 function ws_userComments_validate(array $params, PwgServer &$service): PwgError|string
 {
-    include_once PHPWG_ROOT_PATH . 'include/functions_comment.inc.php';
-
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, l10n('Invalid security token'));
     }
 
     $params['comment_id'] = array_unique($params['comment_id']);
-    validate_user_comment($params['comment_id']);
+    new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService())
+        ->validateComment($params['comment_id']);
     return 'Comment successfully validated';
 }

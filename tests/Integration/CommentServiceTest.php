@@ -60,51 +60,10 @@ namespace {
     // passthroughs with no handlers registered, so no local stubs are
     // needed for them here.
 
-    if (! function_exists('is_admin')) {
-        // Matches the real is_admin($user_status = '')'s own contract: an
-        // explicit non-empty $user_status is checked directly (needed by
-        // tests/Integration/PermissionServiceTest.php's own calling
-        // convention), an empty/default one falls back to a test-controlled
-        // global (this file's own calling convention) -- function_exists()
-        // guards mean whichever Integration test file's stub loads first
-        // wins for the whole test run, so every file declaring this stub
-        // must support both conventions identically.
-        function is_admin(string $user_status = ''): bool
-        {
-            if ($user_status !== '') {
-                return $user_status === 'admin';
-            }
-
-            return (bool) ($GLOBALS['test_is_admin'] ?? false);
-        }
-    }
-
-    if (! function_exists('is_a_guest')) {
-        // Signature must match the real is_a_guest($user_status = '') --
-        // a 0-param stub here previously made PHPStan misresolve real
-        // 1-argument call sites elsewhere (e.g. ws_functions/pwg.users.php,
-        // password.php) as "too many arguments", since it scans this
-        // global declaration project-wide alongside the real one.
-        function is_a_guest(string $user_status = ''): bool
-        {
-            if ($user_status !== '') {
-                return $user_status === 'guest';
-            }
-
-            return (bool) ($GLOBALS['test_is_guest'] ?? false);
-        }
-    }
-
-    if (! function_exists('is_classic_user')) {
-        function is_classic_user(string $user_status = ''): bool
-        {
-            if ($user_status !== '') {
-                return $user_status !== 'guest';
-            }
-
-            return (bool) ($GLOBALS['test_is_classic'] ?? true);
-        }
-    }
+    // is_admin()/is_a_guest()/is_classic_user() -- CommentService now calls
+    // Piwigo\Auth\AccessControl::isAdmin()/isAGuest()/isClassicUser()
+    // directly (P23 batch 8d), pure `global $user;` reads, so no stub is
+    // needed; tests below set $GLOBALS['user']['status'] instead.
 }
 
 namespace Piwigo\Tests\Integration {
@@ -117,13 +76,14 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\Tables;
+    use Piwigo\Mail\MailService;
 
     /**
      * Covers checkForSpam()/insertComment()/updateComment()/deleteComment()/
      * validateComment()/getCommentAuthorId()/invalidateNbCommentsCache()
      * with every `email_admin_on_comment*` config flag off, so no test
-     * needs the real Mail infrastructure (functions_mail.inc.php ->
-     * MailService -> Symfony Mailer) -- same split established for
+     * needs the real Mail infrastructure (MailerInterface -> MailService ->
+     * Symfony Mailer) -- same split established for
      * GroupService/UserService: the admin-notification email paths are
      * live-verified separately against the running Apache instance.
      */
@@ -161,21 +121,19 @@ namespace Piwigo\Tests\Integration {
                 'comment_spam_max_links' => 3,
                 'anti-flood_time' => 0,
                 'guest_id' => 2,
+                'guest_access' => true,
                 'user_fields' => ['id' => 'id', 'username' => 'username', 'password' => 'password', 'email' => 'mail_address'],
                 'email_admin_on_comment' => false,
                 'email_admin_on_comment_validation' => false,
                 'email_admin_on_comment_edition' => false,
                 'email_admin_on_comment_deletion' => false,
             ];
-            $GLOBALS['user'] = ['id' => 1, 'username' => 'fixture_admin', 'email' => 'fixture_admin@example.test'];
+            $GLOBALS['user'] = ['id' => 1, 'status' => 'normal', 'username' => 'fixture_admin', 'email' => 'fixture_admin@example.test'];
             $GLOBALS['page'] = [];
-            $GLOBALS['test_is_admin'] = false;
-            $GLOBALS['test_is_guest'] = false;
-            $GLOBALS['test_is_classic'] = true;
             $_POST['cr'] = [];
 
             $this->conn = DbConnection::build();
-            $this->service = new CommentService(new CommentRepository($this->conn), new EphemeralKeyService());
+            $this->service = new CommentService(new CommentRepository($this->conn), new EphemeralKeyService(), new MailService());
         }
 
         // --- checkForSpam() -------------------------------------------------
@@ -187,14 +145,14 @@ namespace Piwigo\Tests\Integration {
 
         public function test_check_for_spam_leaves_action_alone_for_a_non_guest(): void
         {
-            $GLOBALS['test_is_guest'] = false;
+            $GLOBALS['user']['status'] = 'normal';
 
             self::assertSame('moderate', $this->service->checkForSpam('moderate', ['content' => 'hi', 'author' => 'a']));
         }
 
         public function test_check_for_spam_escalates_when_link_count_exceeds_the_max(): void
         {
-            $GLOBALS['test_is_guest'] = true;
+            $GLOBALS['user']['status'] = 'guest';
 
             $content = 'http://a.test http://b.test http://c.test http://d.test';
             self::assertSame('reject', $this->service->checkForSpam('moderate', ['content' => $content, 'author' => 'a']));
@@ -203,7 +161,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_check_for_spam_leaves_action_alone_under_the_link_limit(): void
         {
-            $GLOBALS['test_is_guest'] = true;
+            $GLOBALS['user']['status'] = 'guest';
 
             self::assertSame('moderate', $this->service->checkForSpam('moderate', ['content' => 'http://a.test', 'author' => 'a']));
         }
@@ -262,7 +220,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_insert_comment_rejects_a_guest_impersonating_an_existing_username(): void
         {
-            $GLOBALS['test_is_classic'] = false;
+            $GLOBALS['user']['status'] = 'guest';
 
             $comm = $this->baseComm();
             $comm['author'] = 'fixture_admin';
@@ -315,7 +273,7 @@ namespace Piwigo\Tests\Integration {
         {
             $this->setConf('comments_validation', false);
             $this->setConf('anti-flood_time', 3600);
-            $GLOBALS['user'] = ['id' => 3, 'username' => 'regular_user'];
+            $GLOBALS['user'] = ['id' => 3, 'status' => 'normal', 'username' => 'regular_user'];
 
             $first = $this->baseComm();
             $infos = [];
@@ -348,7 +306,7 @@ namespace Piwigo\Tests\Integration {
             // authorized this exact edit, same as the real comments.php/
             // picture_comment.inc.php callers do via can_manage_comment()
             // before ever reaching this method.
-            $GLOBALS['user'] = ['id' => 3, 'username' => 'regular_user'];
+            $GLOBALS['user'] = ['id' => 3, 'status' => 'normal', 'username' => 'regular_user'];
             $comment = ['comment_id' => 2, 'image_id' => 2, 'content' => 'edited content', 'website_url' => ''];
 
             $action = $this->service->updateComment($comment, $this->validKey(2));
@@ -372,14 +330,14 @@ namespace Piwigo\Tests\Integration {
 
         public function test_delete_comment_returns_false_for_a_missing_comment(): void
         {
-            $GLOBALS['test_is_admin'] = true;
+            $GLOBALS['user']['status'] = 'admin';
 
             self::assertFalse($this->service->deleteComment(999999));
         }
 
         public function test_delete_comment_removes_as_admin(): void
         {
-            $GLOBALS['test_is_admin'] = true;
+            $GLOBALS['user']['status'] = 'admin';
 
             self::assertTrue($this->service->deleteComment(3));
             self::assertNull($this->fetchColumn(3, 'content'));
@@ -387,8 +345,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_delete_comment_denied_for_a_non_owning_user(): void
         {
-            $GLOBALS['test_is_admin'] = false;
-            $GLOBALS['user'] = ['id' => 999, 'username' => 'someone-else'];
+            $GLOBALS['user'] = ['id' => 999, 'status' => 'normal', 'username' => 'someone-else'];
 
             self::assertFalse($this->service->deleteComment(4)); // owned by author_id 4
             self::assertNotNull($this->fetchColumn(4, 'content'));
@@ -396,8 +353,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_delete_comment_allowed_for_the_owning_user(): void
         {
-            $GLOBALS['test_is_admin'] = false;
-            $GLOBALS['user'] = ['id' => 4, 'username' => 'power_user'];
+            $GLOBALS['user'] = ['id' => 4, 'status' => 'normal', 'username' => 'power_user'];
 
             self::assertTrue($this->service->deleteComment(4));
         }

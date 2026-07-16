@@ -2,14 +2,10 @@
 
 declare(strict_types=1);
 
-// get_subcat_ids() is a real, stable, already-migrated free function
-// (functions_category.inc.php, P19 Category domain) -- required directly
-// rather than stubbed, same "require the real dependency-free file"
-// pattern as SearchServiceTest.
-namespace {
-    require_once dirname(__DIR__, 2) . '/include/functions_category.inc.php';
-}
-
+// get_subcat_ids() is a real, stable, already-migrated free function --
+// always available now via composer autoload.files
+// (src/Piwigo/Category/functions.php, P23 batch 8c), no explicit require
+// needed.
 namespace Piwigo\Tests\Integration {
 
     use Doctrine\DBAL\Connection;

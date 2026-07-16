@@ -110,7 +110,7 @@ final class UpdatesPwgPageRenderer
         // +-----------------------------------------------------------------------+
         // |                                Step 2                                 |
         // +-----------------------------------------------------------------------+
-        if ($step === 2 and is_webmaster()) {
+        if ($step === 2 and \Piwigo\Auth\AccessControl::isWebmaster()) {
             if (isset($_POST['submit']) and isset($_POST['upgrade_to']) and is_string($_POST['upgrade_to'])) {
                 check_pwg_token();
                 $core_update_service->upgradeTo($_POST['upgrade_to'], $step);
@@ -120,7 +120,7 @@ final class UpdatesPwgPageRenderer
         // +-----------------------------------------------------------------------+
         // |                                Step 3                                 |
         // +-----------------------------------------------------------------------+
-        if ($step === 3 and is_webmaster()) {
+        if ($step === 3 and \Piwigo\Auth\AccessControl::isWebmaster()) {
             if (isset($_POST['submit']) and isset($_POST['upgrade_to']) and is_string($_POST['upgrade_to'])) {
                 check_pwg_token();
                 $core_update_service->upgradeTo($_POST['upgrade_to'], $step);
@@ -146,7 +146,7 @@ final class UpdatesPwgPageRenderer
         // |                        Process template                               |
         // +-----------------------------------------------------------------------+
 
-        if (! is_webmaster()) {
+        if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
             if (! is_array($page['warnings'] ?? null)) {
                 $page['warnings'] = [];
             }

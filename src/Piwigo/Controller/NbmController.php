@@ -4,13 +4,21 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Piwigo\Cache\PersistentCache;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Db\DbConnection;
+use Piwigo\Group\GroupRepository;
+use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Mail\NotificationByMailSender;
+use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Notification\NotificationByMailRepository;
 use Piwigo\Notification\NotificationByMailService;
+use Piwigo\Notification\NotificationRepository;
+use Piwigo\Notification\NotificationService;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
 use Piwigo\Template\Template;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -27,10 +35,8 @@ final class NbmController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        check_status(AccessLevel::Free);
+        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Free);
 
-        include_once PHPWG_ROOT_PATH . 'include/functions_notification.inc.php';
-        include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php';
         include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
         // Translations are in the admin file too.
         load_language('admin.lang');
@@ -41,7 +47,21 @@ final class NbmController implements ControllerInterface
             'local' => true,
         ]);
 
-        $nbmSender = new NotificationByMailSender(new NotificationByMailService(new NotificationByMailRepository(DbConnection::build())));
+        /** @var mixed $persistent_cache */
+        global $persistent_cache;
+        if (! $persistent_cache instanceof PersistentCache) {
+            fatal_error('persistent cache not initialized');
+        }
+
+        $conn = DbConnection::build();
+        $nbmSender = new NotificationByMailSender(
+            new NotificationByMailService(new NotificationByMailRepository($conn)),
+            new NotificationService(
+                new NotificationRepository($conn),
+                new PermissionService(new PermissionRepository($conn), new GroupRepository($conn)),
+                $persistent_cache
+            )
+        );
 
         $queryParams = $request->getQueryParams();
         $subscribe = $queryParams['subscribe'] ?? null;
@@ -78,11 +98,11 @@ final class NbmController implements ControllerInterface
             $themeconf = is_array($themeconf) ? $themeconf : [];
             $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
             if (! is_array($hide_menu_on) or ! in_array('theNBMPage', $hide_menu_on, true)) {
-                include PHPWG_ROOT_PATH . 'include/menubar.inc.php';
+                new MenubarRenderer()->render();
             }
 
             include PHPWG_ROOT_PATH . 'include/page_header.php';
-            flush_page_messages();
+            new HtmlService()->flushPageMessages();
             $template->parse('nbm');
             include PHPWG_ROOT_PATH . 'include/page_tail.php';
         });

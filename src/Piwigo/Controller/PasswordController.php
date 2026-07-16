@@ -6,8 +6,11 @@ namespace Piwigo\Controller;
 
 use Piwigo\Core\AccessLevel;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Mail\MailService;
+use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Template\Template;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -44,13 +47,7 @@ final class PasswordController implements ControllerInterface
         // boundary -- narrow it once here so every append below type-checks.
         $page['infos'] = is_array($page['infos'] ?? null) ? $page['infos'] : [];
 
-        // pwg_mail()/pwg_generate_code_verification_mail()/
-        // pwg_generate_success_reset_password_mail() below are all declared
-        // here, not by common.inc.php -- legacy password.php included this
-        // unconditionally at the top of the file for the same reason.
-        include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php';
-
-        check_status(AccessLevel::Free);
+        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Free);
 
         trigger_notify('loc_begin_password');
 
@@ -86,17 +83,17 @@ final class PasswordController implements ControllerInterface
         $first_login = false;
 
         // a connected user can't reset the password from a mail
-        if (isset($_GET['key']) and ! is_a_guest()) {
+        if (isset($_GET['key']) and ! \Piwigo\Auth\AccessControl::isAGuest()) {
             unset($_GET['key']);
         }
 
         if (isset($_GET['key']) and ! isset($_POST['submit'])) {
             $user_id = $this->checkPasswordResetKey($_GET['key']);
             if (is_numeric($user_id)) {
-                $userdata = getuserdata((int) $user_id, false);
+                $userdata = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getUserData((int) $user_id, false);
                 $page['username'] = $userdata['username'];
                 $template->assign('key', $_GET['key']);
-                $first_login = has_already_logged_in((int) $user_id);
+                $first_login = (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build())))->hasAlreadyLoggedIn((int) $user_id);
 
                 if (! isset($page['action'])) {
                     $page['action'] = 'reset';
@@ -115,13 +112,13 @@ final class PasswordController implements ControllerInterface
         }
 
         if (($page['action'] ?? null) === 'reset') {
-            if ((! isset($_GET['key']) and (is_a_guest() or is_generic())) and ! isset($_SESSION['valid_reset_password_code'])) {
+            if ((! isset($_GET['key']) and (\Piwigo\Auth\AccessControl::isAGuest() or \Piwigo\Auth\AccessControl::isGeneric())) and ! isset($_SESSION['valid_reset_password_code'])) {
                 $gallery_home_url = get_gallery_home_url();
                 redirect(is_string($gallery_home_url) ? $gallery_home_url : '');
             }
         }
 
-        if (($page['action'] ?? null) === 'lost' and ! is_a_guest()) {
+        if (($page['action'] ?? null) === 'lost' and ! \Piwigo\Auth\AccessControl::isAGuest()) {
             $gallery_home_url = get_gallery_home_url();
             redirect(is_string($gallery_home_url) ? $gallery_home_url : '');
         }
@@ -175,7 +172,7 @@ final class PasswordController implements ControllerInterface
             $themeconf = is_array($themeconf) ? $themeconf : [];
             $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
             if (! is_array($hide_menu_on) or ! in_array('thePasswordPage', $hide_menu_on, true)) {
-                include PHPWG_ROOT_PATH . 'include/menubar.inc.php';
+                new MenubarRenderer()->render();
             }
 
             // Load language if cookie is set from login/register/password
@@ -214,7 +211,7 @@ final class PasswordController implements ControllerInterface
 
             include PHPWG_ROOT_PATH . 'include/page_header.php';
             trigger_notify('loc_end_password');
-            flush_page_messages();
+            new HtmlService()->flushPageMessages();
             $template->pparse('password');
             include PHPWG_ROOT_PATH . 'include/page_tail.php';
         });
@@ -249,10 +246,10 @@ final class PasswordController implements ControllerInterface
         }
 
         // retrievies user by email is not try by username
-        $user_id_raw = get_userid_by_email($username_or_email);
+        $user_id_raw = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getUserIdByEmail($username_or_email);
 
         if (! is_numeric($user_id_raw)) {
-            $user_id_raw = get_userid($username_or_email);
+            $user_id_raw = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getUserId($username_or_email);
         }
 
         // when no user is found, we assign guest_id instead of stopping.
@@ -266,7 +263,7 @@ final class PasswordController implements ControllerInterface
             $user_id = is_numeric($guest_id) ? (int) $guest_id : 0;
         }
 
-        $userdata = getuserdata($user_id, false);
+        $userdata = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getUserData($user_id, false);
 
         $status = $userdata['status'] ?? '';
         $status = is_string($status) ? $status : '';
@@ -275,7 +272,7 @@ final class PasswordController implements ControllerInterface
             // block early for generic or guest user because we don't
             // consider theses users has sensible for username/email
             // enumeration
-            if (is_a_guest($status) or is_generic($status)) {
+            if (\Piwigo\Auth\AccessControl::isAGuest($status) or \Piwigo\Auth\AccessControl::isGeneric($status)) {
                 $page['errors']['password_form_error'] = l10n('Password reset is not allowed for this user');
                 return false;
             }
@@ -301,15 +298,15 @@ final class PasswordController implements ControllerInterface
         // send mail with verification code to user
         $language = $userdata['language'] ?? '';
         $language = is_string($language) ? $language : '';
-        switch_lang_to($language);
-        $user_code = generate_user_code();
-        $template_mail = pwg_generate_code_verification_mail($user_code['code']);
+        new MailService()->switchLangTo($language);
+        $user_code = \Piwigo\Auth\AuthService::generateUserCode();
+        $template_mail = new MailService()->generateCodeVerificationMail($user_code['code']);
         // $skip_mail already covers $email === null/''), so $email is
         // provably a non-empty string here.
         if (! $skip_mail) {
-            pwg_mail($email, $template_mail);
+            new MailService()->mail($email, $template_mail);
         }
-        switch_lang_back();
+        new MailService()->switchLangBack();
 
         $_SESSION['reset_password_code'] = [
             'secret' => $user_code['secret'],
@@ -375,7 +372,7 @@ final class PasswordController implements ControllerInterface
         if (
             $user_code === '' // empty user code
             || ! (bool) preg_match('/^\d{6}$/', $user_code) // check digit 6
-            || ! verify_user_code($secret, $user_code)) { // verify user code
+            || ! \Piwigo\Auth\AuthService::verifyUserCode($secret, $user_code)) { // verify user code
             $is_valid = false;
         }
 
@@ -385,8 +382,8 @@ final class PasswordController implements ControllerInterface
                 // lockout account for 1hour
                 if ($has_valid_user_id) {
                     $save_user = $user;
-                    $user = build_user((int) $user_id_raw, false);
-                    userprefs_update_param('reset_password_forbidden_until', time() + 60 * 60);
+                    $user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->buildUser((int) $user_id_raw, false);
+                    (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->updateParam('reset_password_forbidden_until', time() + 60 * 60);
                     $user = $save_user;
 
                     pwg_activity('user', (int) $user_id_raw, 'reset_password_failure_too_many');
@@ -412,8 +409,8 @@ final class PasswordController implements ControllerInterface
         $user_id = (int) $user_id_raw;
 
         $save_user = $user;
-        $user = build_user($user_id, false);
-        userprefs_delete_param('reset_password_forbidden_until');
+        $user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->buildUser($user_id, false);
+        (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->deleteParam('reset_password_forbidden_until');
 
         $_SESSION['valid_reset_password_code'] = [
             'user_id' => $user_id,
@@ -430,7 +427,7 @@ final class PasswordController implements ControllerInterface
 
         // fallback check: don't send mail when user is guest, generic or
         // doesn't have email
-        if (is_a_guest($status) || is_generic($status) || $has_no_email) {
+        if (\Piwigo\Auth\AccessControl::isAGuest($status) || \Piwigo\Auth\AccessControl::isGeneric($status) || $has_no_email) {
             $page['errors']['password_form_error'] = l10n('Password reset is not allowed for this user');
             return false;
         }
@@ -473,9 +470,9 @@ SELECT
             if (! is_string($activation_key)) {
                 continue;
             }
-            if (pwg_password_verify($key, $activation_key)) {
+            if ((new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())))->verify($key, $activation_key)) {
                 $status = $row['status'] ?? '';
-                if (is_a_guest($status) or is_generic($status)) {
+                if (\Piwigo\Auth\AccessControl::isAGuest($status) or \Piwigo\Auth\AccessControl::isGeneric($status)) {
                     $page['errors']['password_page_error'] = l10n('Password reset is not allowed for this user');
                     return false;
                 }
@@ -533,7 +530,7 @@ SELECT
         single_update(
             Tables::users(),
             [
-                $user_fields['password'] => pwg_password_hash($new_password),
+                $user_fields['password'] => (new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())))->hash($new_password),
             ],
             [
                 $user_fields['id'] => $user_id,
@@ -545,23 +542,23 @@ SELECT
         if (is_array($reset_session) and is_string($reset_session_email) and $reset_session_email !== '') {
             $reset_language = $reset_session['language'] ?? '';
             $reset_language = is_string($reset_language) ? $reset_language : '';
-            switch_lang_to($reset_language);
+            new MailService()->switchLangTo($reset_language);
 
             $reset_user_id = $reset_session['user_id'] ?? null;
             $reset_user_id_str = is_numeric($reset_user_id) ? (string) $reset_user_id : '';
-            $api_keys = get_available_api_key($reset_user_id_str);
+            $api_keys = (new \Piwigo\Auth\ApiKeyService(new \Piwigo\Mail\MailService()))->getAvailable($reset_user_id_str);
             $nb_of_apikeys = (bool) $api_keys ? count($api_keys) : 0;
 
             $reset_username = $reset_session['username'] ?? '';
             $reset_username = is_string($reset_username) ? $reset_username : '';
-            $template_mail = pwg_generate_success_reset_password_mail($reset_username, $nb_of_apikeys);
+            $template_mail = new MailService()->generateSuccessResetPasswordMail($reset_username, $nb_of_apikeys);
 
             // is_string($reset_session_email)/!== '' above already
             // guarantees this is a non-empty string.
             $reset_email = $reset_session_email;
-            pwg_mail($reset_email, $template_mail);
+            new MailService()->mail($reset_email, $template_mail);
 
-            switch_lang_back();
+            new MailService()->switchLangBack();
         }
         unset($_SESSION['valid_reset_password_code']);
 
@@ -585,8 +582,8 @@ SELECT
             return false;
         }
 
-        deactivate_password_reset_key((int) $user_id);
-        deactivate_user_auth_keys((int) $user_id);
+        (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build())))->deactivatePasswordResetKey((int) $user_id);
+        (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build())))->deactivateUserAuthKeys((int) $user_id);
         return $user_id;
     }
 

@@ -36,7 +36,7 @@ final readonly class VitalsController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        check_status(AccessLevel::Guest);
+        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
         $metric = $this->parseMetric((string) $request->getBody());
         if ($metric !== null) {

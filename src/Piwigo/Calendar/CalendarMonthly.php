@@ -142,7 +142,7 @@ class CalendarMonthly extends CalendarBase
         global $page;
 
         // chronology_date is always an array: set to [] by
-        // functions_calendar.inc.php::init_calendar_chronology() and to a
+        // CalendarRenderer::render() and to a
         // list of int|string tokens by the URL router (functions_url.inc.php)
         // or feed.php/picture.php (see get_all_days_in_month()'s own doc
         // comment for the same invariant already documented in this class).

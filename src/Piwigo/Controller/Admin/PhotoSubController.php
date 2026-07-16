@@ -47,7 +47,7 @@ final class PhotoSubController implements AdminSubControllerInterface
          */
         global $conf, $page, $template;
 
-        check_status(AccessLevel::Administrator);
+        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
         check_input_parameter('cat_id', $_GET, false, ValidationPattern::ID);
         check_input_parameter('image_id', $_GET, false, ValidationPattern::ID);

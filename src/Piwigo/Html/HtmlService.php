@@ -290,7 +290,7 @@ SELECT id, name, permalink
     {
         global $user;
 
-        if (isset($user) and ! is_a_guest()) {
+        if (isset($user) and ! \Piwigo\Auth\AccessControl::isAGuest()) {
             $this->setStatusHeader(401);
 
             echo '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">

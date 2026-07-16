@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Auth\CookieService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -41,7 +42,7 @@ final class HistoryPageRenderer
             'display_thumbnail_hoverbox' => l10n('Hoverbox display'),
         ];
 
-        check_status(AccessLevel::Administrator);
+        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
         check_input_parameter('filter_ip', $_GET, false, '/^[0-9.]+$/');
         check_input_parameter('filter_image_id', $_GET, false, '/^\d+$/');
@@ -109,7 +110,7 @@ final class HistoryPageRenderer
             $form['types'] = $types;
             // Hoverbox by default
             $form['display_thumbnail'] =
-              pwg_get_cookie_var('display_thumbnail', 'no_display_thumbnail');
+              new CookieService()->getCookieVar('display_thumbnail', 'no_display_thumbnail');
         }
 
         $form_param = [];

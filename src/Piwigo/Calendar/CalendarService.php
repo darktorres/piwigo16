@@ -8,8 +8,8 @@ use Piwigo\Db\Tables;
 use Piwigo\Permission\PermissionService;
 
 /**
- * The DB-query-building half of `initialize_calendar()`
- * (`include/functions_calendar.inc.php`) -- deciding the FROM/JOIN/WHERE
+ * The DB-query-building half of `CalendarRenderer::render()`
+ * -- deciding the FROM/JOIN/WHERE
  * fragment for the requested category/section context. The rest of that
  * function (chronology style/view resolution, calendar object
  * construction, the view-switcher UI links) is entirely `$page`/

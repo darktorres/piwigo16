@@ -2,23 +2,10 @@
 
 declare(strict_types=1);
 
-// parse_section_url() (include/functions_url.inc.php) isn't loaded by this
-// isolated Integration test process -- a faithful stand-in delegating to
-// the same real Piwigo\Url\UrlService the real function itself calls, not
-// a simplified fake.
-namespace {
-    if (! function_exists('parse_section_url')) {
-        /**
-         * @param list<string> $tokens
-         * @return array<string, mixed>
-         */
-        function parse_section_url(array $tokens, int &$next_token): array
-        {
-            return new \Piwigo\Url\UrlService()
-                ->parseSectionUrl($tokens, $next_token);
-        }
-    }
-}
+// parse_section_url()'s own stub was removed (P23 batch 8c) -- always
+// available now via composer autoload.files (src/Piwigo/Url/functions.php),
+// same real Piwigo\Url\UrlService::parseSectionUrl() delegate this stub
+// used to hand-duplicate.
 
 namespace Piwigo\Tests\Integration {
 

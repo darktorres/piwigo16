@@ -189,12 +189,9 @@ SELECT representative_picture_id
   ON id = cat_id and user_id = ' . $userId . '
   WHERE uppercats LIKE \'' . $uppercats . ',%\'
     AND representative_picture_id IS NOT NULL'
-  . get_sql_condition_FandF(
-      [
-          'visible_categories' => 'id',
-      ],
-      "\n  AND"
-  ) . '
+  . (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
+      'visible_categories' => 'id',
+  ], "\n  AND") . '
   ORDER BY ' . DB_RANDOM_FUNCTION . '()
   LIMIT 1
 ;';
@@ -245,13 +242,10 @@ SELECT
   FROM ' . Tables::imageCategory() . '
     INNER JOIN ' . Tables::images() . ' ON image_id = id
   WHERE category_id IN (' . implode(',', $categoryIds) . ')
-' . get_sql_condition_FandF(
-                    [
-                        'visible_categories' => 'category_id',
-                        'visible_images' => 'id',
-                    ],
-                    'AND'
-                ) . '
+' . (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
+                    'visible_categories' => 'category_id',
+                    'visible_images' => 'id',
+                ], 'AND') . '
   GROUP BY category_id
 ;';
                 $datesOfCategory = query2array($query, 'category_id');
@@ -406,7 +400,7 @@ SELECT *
                             'category' => $category,
                         ]
                     ),
-                    'CAPTION_NB_IMAGES' => get_display_images_count(
+                    'CAPTION_NB_IMAGES' => CategoryService::getDisplayImagesCount(
                         $catNbImages,
                         $catCountImages,
                         $catCountCategories,

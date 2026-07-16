@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Piwigo\Core\AccessLevel;
+use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Ws\PwgServer;
 use Psr\Http\Message\ResponseInterface;
@@ -45,10 +46,10 @@ final class WsController implements ControllerInterface
         /** @var array<string, mixed> $conf */
         global $conf;
 
-        check_status(AccessLevel::Free);
+        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Free);
 
         if (! (bool) $conf['allow_web_services']) {
-            page_forbidden('Web services are disabled');
+            new HtmlService()->pageForbidden('Web services are disabled');
         }
 
         include_once PHPWG_ROOT_PATH . 'include/ws_default_methods.inc.php';

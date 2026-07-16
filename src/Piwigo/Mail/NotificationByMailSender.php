@@ -6,6 +6,7 @@ namespace Piwigo\Mail;
 
 use Piwigo\Db\Tables;
 use Piwigo\Notification\NotificationByMailService;
+use Piwigo\Notification\NotificationService;
 use Piwigo\Template\Template;
 
 /**
@@ -22,7 +23,7 @@ use Piwigo\Template\Template;
  * `Piwigo\Notification` (L2bExtendedDomain, home of the constructor-injected
  * `NotificationByMailService` below): this class holds a real
  * `Piwigo\Template\Template` instance (`$mailTemplate`, built via
- * `get_mail_template()`), and L2bExtendedDomain may not depend on
+ * `MailService::getMailTemplate()`), and L2bExtendedDomain may not depend on
  * L3Presentation -- same "Template dependency forces L3/L4 placement" shape
  * already documented on `NotificationByMailService`'s own docblock and on
  * `Piwigo\Mail\MailService`'s (`deptrac.yaml`'s own comment on the Mail
@@ -30,14 +31,20 @@ use Piwigo\Template\Template;
  * (both real callers, NotificationByMailSubController and NbmController,
  * both L4Integration) are both allowed downward dependencies.
  *
- * Every other free-function call this file made that has no existing OO
- * equivalent (`pwg_mail()`, `get_mail_template()`, `switch_lang_to()`/
- * `switch_lang_back()`, `get_str_email_format()`, `set_make_full_url()`/
- * `unset_make_full_url()`, `mass_updates()`, `boolean_to_string()`, ...)
- * stays a bare free-function call, unchanged -- same "inject nothing, call
- * the not-yet-injectable capability as a free function" shape already
- * established for Comment/UserService's mail calls (P18). Rewriting those
- * onto `Piwigo\Mail\MailService` is a separate, not-yet-scoped concern.
+ * P23 batch 8c: every former free-function mail call
+ * (`pwg_mail()`/`get_mail_template()`/`switch_lang_to()`/`switch_lang_back()`/
+ * `get_str_email_format()`/`get_mail_sender_name()`/`format_email()`) now
+ * calls `MailService` directly (same namespace, no `use` import needed).
+ * `news()`/`news_exists()`/`get_recent_post_dates_array()`/
+ * `get_title_recent_post_date()`/`get_html_description_recent_post_date()`
+ * (`include/functions_notification.inc.php`, deleted) now call the
+ * constructor-injected `Piwigo\Notification\NotificationService` (also
+ * P23 batch 8c) -- `Notification` is L2bExtendedDomain, this class is
+ * L3Presentation, same allowed downward direction as
+ * `NotificationByMailService` above.
+ * `set_make_full_url()`/`unset_make_full_url()`/`mass_updates()`/
+ * `boolean_to_string()` have no `src/Piwigo/` equivalent yet and stay bare
+ * free-function calls, unchanged.
  */
 final class NotificationByMailSender
 {
@@ -74,6 +81,7 @@ final class NotificationByMailSender
 
     public function __construct(
         private readonly NotificationByMailService $notificationByMailService,
+        private readonly NotificationService $notificationService,
     ) {
         /** @var array<string, mixed> $conf */
         global $conf;
@@ -142,25 +150,25 @@ final class NotificationByMailSender
 
         $this->saveUser = $user;
         $userLanguage = $user['language'] ?? null;
-        switch_lang_to(is_string($userLanguage) ? $userLanguage : get_default_language());
+        new MailService()->switchLangTo(is_string($userLanguage) ? $userLanguage : (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultLanguage());
 
         $this->isToSendMail = $isToSendMail;
 
         if ($isToSendMail) {
-            $this->emailFormat = get_str_email_format(get_boolean($conf['nbm_send_html_mail'] ?? false));
+            $this->emailFormat = new MailService()->getStrEmailFormat(get_boolean($conf['nbm_send_html_mail'] ?? false));
 
             // $conf['nbm_send_mail_as'] is admin-submitted free text (see
             // NotificationByMailSubController), always a string when set.
             $nbmSendMailAs = $conf['nbm_send_mail_as'] ?? null;
             $sendAsName = (isset($nbmSendMailAs) and ! empty($nbmSendMailAs) and is_string($nbmSendMailAs))
                 ? $nbmSendMailAs
-                : get_mail_sender_name();
+                : new MailService()->getMailSenderName();
             $this->sendAsName = $sendAsName;
 
             $sendAsMailAddress = get_webmaster_mail_address();
             $this->sendAsMailAddress = $sendAsMailAddress;
 
-            $this->sendAsMailFormatted = format_email($sendAsName, $sendAsMailAddress);
+            $this->sendAsMailFormatted = new MailService()->formatEmail($sendAsName, $sendAsMailAddress);
 
             $this->errorOnMailCount = 0;
             $this->sentMailCount = 0;
@@ -175,7 +183,7 @@ final class NotificationByMailSender
         global $user;
 
         $user = $this->saveUser;
-        switch_lang_back();
+        new MailService()->switchLangBack();
 
         if ($this->isToSendMail) {
             $this->emailFormat = null;
@@ -205,13 +213,13 @@ final class NotificationByMailSender
         // numeric value.
         $nbmUserIdRaw = $nbmUser['user_id'];
         assert(is_string($nbmUserIdRaw) && is_numeric($nbmUserIdRaw));
-        $user = build_user((int) $nbmUserIdRaw, true);
+        $user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->buildUser((int) $nbmUserIdRaw, true);
 
-        switch_lang_to(is_string($user['language']) ? $user['language'] : get_default_language());
+        new MailService()->switchLangTo(is_string($user['language']) ? $user['language'] : (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService()))->getDefaultLanguage());
 
         if ($isActionSend) {
-            $emailFormat = $this->emailFormat ?? get_str_email_format(false);
-            $mailTemplate = get_mail_template($emailFormat);
+            $emailFormat = $this->emailFormat ?? new MailService()->getStrEmailFormat(false);
+            $mailTemplate = new MailService()->getMailTemplate($emailFormat);
             $this->mailTemplate = $mailTemplate;
             $mailTemplate->set_filename('notification_by_mail', 'notification_by_mail.tpl');
         }
@@ -219,7 +227,7 @@ final class NotificationByMailSender
 
     public function unsetUserOnEnv(): void
     {
-        switch_lang_back();
+        new MailService()->switchLangBack();
         $this->mailTemplate = null;
     }
 
@@ -296,8 +304,8 @@ final class NotificationByMailSender
         $galleryHomeUrl = get_gallery_home_url();
         $galleryHomeUrlStr = is_string($galleryHomeUrl) ? $galleryHomeUrl : '';
 
-        $emailFormat = $this->emailFormat ?? get_str_email_format(false);
-        $mailTemplate = $this->mailTemplate ?? get_mail_template($emailFormat);
+        $emailFormat = $this->emailFormat ?? new MailService()->getStrEmailFormat(false);
+        $mailTemplate = $this->mailTemplate ?? new MailService()->getMailTemplate($emailFormat);
 
         $mailTemplate->assign(
             [
@@ -381,8 +389,8 @@ final class NotificationByMailSender
                     $sectionActionBy = ($isSubscribe ? 'subscribe_by_' : 'unsubscribe_by_');
                     $sectionActionBy .= ($isAdminRequest ? 'admin' : 'himself');
 
-                    $emailFormat = $this->emailFormat ?? get_str_email_format(false);
-                    $mailTemplate = $this->mailTemplate ?? get_mail_template($emailFormat);
+                    $emailFormat = $this->emailFormat ?? new MailService()->getStrEmailFormat(false);
+                    $mailTemplate = $this->mailTemplate ?? new MailService()->getMailTemplate($emailFormat);
 
                     $mailTemplate->assign(
                         [
@@ -394,7 +402,7 @@ final class NotificationByMailSender
 
                     $sendAsMailFormatted = $this->sendAsMailFormatted ?? '';
 
-                    $ret = pwg_mail(
+                    $ret = new MailService()->mail(
                         [
                             'name' => stripslashes((string) $nbmUser['username']),
                             'email' => $nbmUser['mail_address'],
@@ -540,7 +548,7 @@ final class NotificationByMailSender
                             // non-null numeric DB value.
                             $nbmUserIdRaw = $nbmUser['user_id'];
                             assert(is_string($nbmUserIdRaw) && is_numeric($nbmUserIdRaw));
-                            $authKey = create_user_auth_key((int) $nbmUserIdRaw, $nbmUser['status']);
+                            $authKey = (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build())))->createUserAuthKey((int) $nbmUserIdRaw, $nbmUser['status']);
 
                             if ($authKey !== false and is_string($authKey['auth_key'])) {
                                 $auth = $authKey['auth_key'];
@@ -558,10 +566,10 @@ final class NotificationByMailSender
                             $nbmSendHtmlMail = (bool) $conf['nbm_send_html_mail'];
 
                             if ($nbmSendDetailedContent) {
-                                $news = news($nbmUser['last_send'], $dbnow, false, $nbmSendHtmlMail, $auth);
+                                $news = $this->notificationService->news($nbmUser['last_send'], $dbnow, false, $nbmSendHtmlMail, $auth);
                                 $existData = count($news) > 0;
                             } else {
-                                $existData = news_exists($nbmUser['last_send'], $dbnow);
+                                $existData = $this->notificationService->newsExists($nbmUser['last_send'], $dbnow);
                             }
 
                             if ($existData) {
@@ -570,8 +578,8 @@ final class NotificationByMailSender
                                 $galleryTitle = is_string($conf['gallery_title']) ? $conf['gallery_title'] : '';
                                 $subject = '[' . $galleryTitle . '] ' . l10n('New photos added');
 
-                                $mailEmailFormat = $this->emailFormat ?? get_str_email_format($nbmSendHtmlMail);
-                                $mailTemplate = $this->mailTemplate ?? get_mail_template($mailEmailFormat);
+                                $mailEmailFormat = $this->emailFormat ?? new MailService()->getStrEmailFormat($nbmSendHtmlMail);
+                                $mailTemplate = $this->mailTemplate ?? new MailService()->getMailTemplate($mailEmailFormat);
 
                                 // Assign current var for nbm mail
                                 $this->assignVarsNbmMailContent($nbmUser);
@@ -616,7 +624,8 @@ final class NotificationByMailSender
                                     // per-notification-kind int settings (see
                                     // include/config_default.inc.php); narrow the
                                     // 'NBM' entry to the array<string, int> shape
-                                    // get_recent_post_dates_array() expects.
+                                    // NotificationService::getRecentPostDatesArray()
+                                    // expects.
                                     $recentPostDatesConf = $conf['recent_post_dates'];
                                     $nbmRecentPostDatesRaw = (is_array($recentPostDatesConf) and is_array($recentPostDatesConf['NBM'] ?? null))
                                         ? $recentPostDatesConf['NBM']
@@ -628,19 +637,19 @@ final class NotificationByMailSender
                                         }
                                     }
 
-                                    $recentPostDates = get_recent_post_dates_array($nbmRecentPostDatesArgs);
+                                    $recentPostDates = $this->notificationService->getRecentPostDatesArray($nbmRecentPostDatesArgs);
                                     foreach ($recentPostDates as $dateDetail) {
-                                        // get_recent_post_dates_array() is typed to
+                                        // getRecentPostDatesArray() is typed to
                                         // return array<int|string, mixed>; each
-                                        // element is really one get_recent_post_dates()
+                                        // element is really one getRecentPostDates()
                                         // date-detail row (array<string, mixed>).
                                         assert(is_array($dateDetail));
                                         /** @var array<string, mixed> $dateDetail */
                                         $mailTemplate->append(
                                             'recent_posts',
                                             [
-                                                'TITLE' => get_title_recent_post_date($dateDetail),
-                                                'HTML_DATA' => get_html_description_recent_post_date($dateDetail, $auth),
+                                                'TITLE' => $this->notificationService->getTitleRecentPostDate($dateDetail),
+                                                'HTML_DATA' => $this->notificationService->getHtmlDescriptionRecentPostDate($dateDetail, $auth),
                                             ]
                                         );
                                     }
@@ -666,7 +675,7 @@ final class NotificationByMailSender
                                     $mailArgs['auth_key'] = $auth;
                                 }
 
-                                $ret = pwg_mail(
+                                $ret = new MailService()->mail(
                                     [
                                         'name' => stripslashes((string) $nbmUser['username']),
                                         'email' => $nbmUser['mail_address'],
@@ -688,7 +697,7 @@ final class NotificationByMailSender
                                 unset_make_full_url();
                             }
                         } else {
-                            if (news_exists($nbmUser['last_send'], $dbnow)) {
+                            if ($this->notificationService->newsExists($nbmUser['last_send'], $dbnow)) {
                                 // Fill return list of "selected" users for 'list_to_send'
                                 $returnList[] = $nbmUser;
                             }

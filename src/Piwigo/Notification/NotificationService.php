@@ -5,15 +5,19 @@ declare(strict_types=1);
 namespace Piwigo\Notification;
 
 use Piwigo\Cache\PersistentCache;
+use Piwigo\Image\DerivativeImage;
 use Piwigo\Permission\PermissionService;
 
 /**
- * "What's new" aggregation, ported from `include/functions_notification.inc.php`'s
- * 18 functions. `add_news_line()`/`news()`/`get_html_description_recent_post_date()`/
- * `get_title_recent_post_date()` stay as free-function delegates unchanged
- * -- all four are entirely `$page`/URL-building/l10n-coupled (make_index_url(),
- * make_picture_url(), DerivativeImage::thumb_url(), $lang) with no DB
- * access of their own, same split as every other P19 domain.
+ * "What's new" aggregation, ported from the deleted
+ * `include/functions_notification.inc.php`'s 18 functions (P23 batch 8c
+ * folded the remaining 4 -- `addNewsLine()`/`news()`/
+ * `getHtmlDescriptionRecentPostDate()`/`getTitleRecentPostDate()` -- in
+ * here too; none read `$page`/`$template`, only `global $conf;`/
+ * `global $lang;` plus URL-building/l10n free functions
+ * (make_index_url(), make_picture_url(), DerivativeImage::thumb_url()),
+ * same "global read inside a service method" precedent as
+ * TagService::addLevelToTags()).
  */
 final class NotificationService
 {
@@ -126,8 +130,8 @@ final class NotificationService
         return $this->nbNewComments($start, $end) > 0
             || $this->nbNewElements($start, $end) > 0
             || $this->nbUpdatedCategories($start, $end) > 0
-            || (is_admin() && $this->nbUnvalidatedComments($start, $end) > 0)
-            || (is_admin() && $this->nbNewUsers($start, $end) > 0);
+            || (\Piwigo\Auth\AccessControl::isAdmin() && $this->nbUnvalidatedComments($start, $end) > 0)
+            || (\Piwigo\Auth\AccessControl::isAdmin() && $this->nbNewUsers($start, $end) > 0);
     }
 
     /**
@@ -190,5 +194,209 @@ final class NotificationService
             $maxElements > 0 ? $maxElements : 3,
             $maxCats > 0 ? $maxCats : 3
         );
+    }
+
+    /**
+     * Formats a news line and adds it to the array (e.g. '5 new elements')
+     *
+     * @param array<int, string> $news
+     */
+    public function addNewsLine(array &$news, int $count, string $singularKey, string $pluralKey, string $url = '', bool $addUrl = false): void
+    {
+        if ($count > 0) {
+            $line = l10n_dec($singularKey, $pluralKey, $count);
+            if ($addUrl and $url !== '') {
+                $line = '<a href="' . $url . '">' . $line . '</a>';
+            }
+            $news[] = $line;
+        }
+    }
+
+    /**
+     * Returns new activity between two dates.
+     *
+     * Takes in account: number of new comments, number of new elements,
+     * number of updated categories. Administrators are also informed
+     * about: number of unvalidated comments, number of new users.
+     *
+     * @return array<int, string>
+     */
+    public function news(?string $start = null, ?string $end = null, bool $excludeImgCats = false, bool $addUrl = false, ?string $authKey = null): array
+    {
+        $news = [];
+
+        $addUrlParams = [];
+        if ($authKey !== null) {
+            $addUrlParams['auth'] = $authKey;
+        }
+
+        if (! $excludeImgCats) {
+            $this->addNewsLine(
+                $news,
+                $this->nbNewElements($start, $end),
+                '%d new photo',
+                '%d new photos',
+                add_url_params(make_index_url([
+                    'section' => 'recent_pics',
+                ]), $addUrlParams),
+                $addUrl
+            );
+
+            $this->addNewsLine(
+                $news,
+                $this->nbUpdatedCategories($start, $end),
+                '%d album updated',
+                '%d albums updated',
+                add_url_params(make_index_url([
+                    'section' => 'recent_cats',
+                ]), $addUrlParams),
+                $addUrl
+            );
+        }
+
+        $this->addNewsLine(
+            $news,
+            $this->nbNewComments($start, $end),
+            '%d new comment',
+            '%d new comments',
+            add_url_params(get_root_url() . 'comments.php', $addUrlParams),
+            $addUrl
+        );
+
+        if (\Piwigo\Auth\AccessControl::isAdmin()) {
+            $this->addNewsLine(
+                $news,
+                $this->nbUnvalidatedComments($start, $end),
+                '%d comment to validate',
+                '%d comments to validate',
+                get_root_url() . 'admin.php?page=comments',
+                $addUrl
+            );
+
+            $this->addNewsLine(
+                $news,
+                $this->nbNewUsers($start, $end),
+                '%d new user',
+                '%d new users',
+                get_root_url() . 'admin.php?page=user_list',
+                $addUrl
+            );
+        }
+
+        return $news;
+    }
+
+    /**
+     * Returns html description about recently published elements grouped
+     * by post date.
+     *
+     * @param array<string, mixed> $dateDetail returned value of getRecentPostDates()
+     */
+    public function getHtmlDescriptionRecentPostDate(array $dateDetail, ?string $authKey = null): string
+    {
+        /** @var array<string, mixed> $conf */
+        global $conf;
+
+        $addUrlParams = [];
+        if ($authKey !== null) {
+            $addUrlParams['auth'] = $authKey;
+        }
+
+        $description = '<ul>';
+
+        $nbElements = $dateDetail['nb_elements'] ?? null;
+        $nbElements = is_numeric($nbElements) ? (int) $nbElements : 0;
+
+        $description .=
+              '<li>'
+              . l10n_dec('%d new photo', '%d new photos', $nbElements)
+              . ' ('
+              . '<a href="' . add_url_params(make_index_url([
+                  'section' => 'recent_pics',
+              ]), $addUrlParams) . '">'
+                . l10n('Recent photos') . '</a>'
+              . ')'
+              . '</li><br>';
+
+        $elements = $dateDetail['elements'] ?? [];
+        $elements = is_array($elements) ? $elements : [];
+        foreach ($elements as $element) {
+            if (! is_array($element)) {
+                continue;
+            }
+            /** @var array<string, mixed> $element */
+            $tnSrc = DerivativeImage::thumb_url($element);
+            $description .= '<a href="' .
+              add_url_params(
+                  make_picture_url(
+                      [
+                          'image_id' => $element['id'],
+                          'image_file' => $element['file'],
+                      ]
+                  ),
+                  $addUrlParams
+              )
+              . '"><img src="' . $tnSrc . '"></a>';
+        }
+        $description .= '...<br>';
+
+        $nbCats = $dateDetail['nb_cats'] ?? null;
+        $nbCats = is_numeric($nbCats) ? (int) $nbCats : 0;
+
+        $description .=
+              '<li>'
+              . l10n_dec('%d album updated', '%d albums updated', $nbCats)
+              . '</li>';
+
+        $description .= '<ul>';
+        $categories = $dateDetail['categories'] ?? [];
+        $categories = is_array($categories) ? $categories : [];
+        foreach ($categories as $cat) {
+            if (! is_array($cat)) {
+                continue;
+            }
+            $uppercats = $cat['uppercats'] ?? null;
+            $uppercats = is_string($uppercats) ? $uppercats : '';
+            $imgCount = $cat['img_count'] ?? null;
+            $imgCount = is_numeric($imgCount) ? (int) $imgCount : 0;
+            $description .=
+                  '<li>'
+                  . get_cat_display_name_cache($uppercats, '', false, null, $authKey)
+                  . ' (' .
+                  l10n_dec('%d new photo', '%d new photos', $imgCount) . ')'
+                  . '</li>';
+        }
+        $description .= '</ul>';
+
+        $description .= '</ul>';
+
+        return $description;
+    }
+
+    /**
+     * Returns title about recently published elements grouped by post date.
+     *
+     * @param array<string, mixed> $dateDetail returned value of getRecentPostDates()
+     */
+    public function getTitleRecentPostDate(array $dateDetail): string
+    {
+        /** @var array<string, mixed> $lang */
+        global $lang;
+
+        $nbElements = $dateDetail['nb_elements'] ?? null;
+        $nbElements = is_numeric($nbElements) ? (int) $nbElements : 0;
+        $title = l10n_dec('%d new photo', '%d new photos', $nbElements);
+
+        $dateAvailable = $dateDetail['date_available'] ?? null;
+        $dateAvailable = is_string($dateAvailable) ? $dateAvailable : '';
+        if ((bool) preg_match('/^\d+-(\d+)-(\d+) /', $dateAvailable, $matches)) {
+            // $lang['month'] is the language file's month-index (1-12) to name map
+            $langMonth = is_array($lang['month'] ?? null) ? $lang['month'] : [];
+            $monthName = $langMonth[(int) $matches[1]] ?? '';
+            $monthName = is_string($monthName) ? $monthName : '';
+            $title .= ' (' . $monthName . ' ' . $matches[2] . ')';
+        }
+
+        return $title;
     }
 }

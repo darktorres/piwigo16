@@ -5,12 +5,18 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Piwigo\Admin\tabsheet;
+use Piwigo\Cache\PersistentCache;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Mail\NotificationByMailSender;
 use Piwigo\Notification\NotificationByMailRepository;
 use Piwigo\Notification\NotificationByMailService;
+use Piwigo\Notification\NotificationRepository;
+use Piwigo\Notification\NotificationService;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
 use Piwigo\Template\Template;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -87,10 +93,22 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
 
         include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
         include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
-        include_once PHPWG_ROOT_PATH . 'include/functions_notification.inc.php';
-        include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php';
 
-        $nbmSender = new NotificationByMailSender(new NotificationByMailService(new NotificationByMailRepository(DbConnection::build())));
+        /** @var mixed $persistent_cache */
+        global $persistent_cache;
+        if (! $persistent_cache instanceof PersistentCache) {
+            fatal_error('persistent cache not initialized');
+        }
+
+        $conn = DbConnection::build();
+        $nbmSender = new NotificationByMailSender(
+            new NotificationByMailService(new NotificationByMailRepository($conn)),
+            new NotificationService(
+                new NotificationRepository($conn),
+                new PermissionService(new PermissionRepository($conn), new GroupRepository($conn)),
+                $persistent_cache
+            )
+        );
 
         check_input_parameter('mode', $_GET, false, '/^(param|subscribe|send)$/');
 
@@ -124,7 +142,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         // +-----------------------------------------------------------------------+
         // | Check Access and exit when user status is not ok                      |
         // +-----------------------------------------------------------------------+
-        check_status(self::getTabStatus($page_mode));
+        \Piwigo\Auth\AccessControl::checkStatus(self::getTabStatus($page_mode));
 
         // +-----------------------------------------------------------------------+
         // | Add event handler                                                     |
@@ -237,7 +255,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
             ]
         );
 
-        if (is_autorize_status(AccessLevel::Webmaster)) {
+        if (\Piwigo\Auth\AccessControl::isAuthorizeStatus(AccessLevel::Webmaster)) {
             // TabSheet
             $tabsheet = new tabsheet();
             $tabsheet->set_id('nbm');

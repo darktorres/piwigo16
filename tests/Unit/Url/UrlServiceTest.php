@@ -8,20 +8,16 @@ if (! defined('PHPWG_ROOT_PATH')) {
     define('PHPWG_ROOT_PATH', './');
 }
 
-// getAbsoluteRootUrl() calls the real cookie_path() (unqualified, resolves
-// to the global namespace) -- a stable, already-migrated (P17) function,
-// but one that needs $_SERVER state this isolated test doesn't want to
-// depend on. Same "minimal stub to load standalone" pattern as
-// tests/Unit/PasswordHashTest.php.
-if (! function_exists('cookie_path')) {
-    function cookie_path(): string
-    {
-        return '/piwigo/';
-    }
-}
-
 beforeEach(function (): void {
     unset($_SERVER['HTTPS'], $_SERVER['HTTP_X_FORWARDED_PROTO'], $_SERVER['HTTP_X_FORWARDED_HOST'], $_SERVER['HTTP_HOST']);
+    // getAbsoluteRootUrl() calls the real Piwigo\Auth\CookieService::cookiePath()
+    // (P23 batch 8c retargeted the former unqualified cookie_path() free
+    // function call) -- deterministically produce '/piwigo/' the same way
+    // cookiePath()'s own SCRIPT_NAME fallback would under a real request
+    // rooted at /piwigo/, rather than depending on whatever the Pest CLI
+    // runner's ambient $_SERVER happens to contain.
+    unset($_SERVER['REDIRECT_SCRIPT_NAME'], $_SERVER['REDIRECT_URL'], $_SERVER['PATH_INFO']);
+    $_SERVER['SCRIPT_NAME'] = '/piwigo/index.php';
     // getAbsoluteRootUrl()'s gallery_url/allowed_hosts reads go through the
     // live $conf global, not Piwigo\Config\Config -- see UrlService's own
     // configuredHost()/trustedHost() doc comments for why (Config::$data is

@@ -15,21 +15,54 @@ use Piwigo\Db\Tables;
 
 /**
  * Container for standard derivatives parameters.
+ *
+ * P23 batch 8c: the 12 IMG_* derivative-type identifiers, formerly
+ * `define()`d in `include/derivative_std_params.inc.php`, are real class
+ * constants here instead -- SEC-60 forbids `define()` inside `src/Piwigo/`,
+ * and this class already owned the canonical mapping from each identifier
+ * to its real `DerivativeParams`. 118 real call sites across 37 files
+ * retargeted in the same pass (all L2a/L2b/L4 callers -- Image/Category/
+ * Calendar/Admin/Controller -- none below L2a, so no deptrac layering
+ * concern, unlike finding 8's cases).
  */
 final class ImageStdParams
 {
+    public const string SQUARE = 'square';
+
+    public const string THUMB = 'thumb';
+
+    public const string XXSMALL = '2small';
+
+    public const string XSMALL = 'xsmall';
+
+    public const string SMALL = 'small';
+
+    public const string MEDIUM = 'medium';
+
+    public const string LARGE = 'large';
+
+    public const string XLARGE = 'xlarge';
+
+    public const string XXLARGE = 'xxlarge';
+
+    public const string THREE_XLARGE = '3xlarge';
+
+    public const string FOUR_XLARGE = '4xlarge';
+
+    public const string CUSTOM = 'custom';
+
     /**
      * @var string[]
      */
     private static array $all_types = [
-        IMG_SQUARE, IMG_THUMB, IMG_XXSMALL, IMG_XSMALL, IMG_SMALL,
-        IMG_MEDIUM, IMG_LARGE, IMG_XLARGE, IMG_XXLARGE, IMG_3XLARGE, IMG_4XLARGE,
+        self::SQUARE, self::THUMB, self::XXSMALL, self::XSMALL, self::SMALL,
+        self::MEDIUM, self::LARGE, self::XLARGE, self::XXLARGE, self::THREE_XLARGE, self::FOUR_XLARGE,
     ];
 
     /**
      * @var string[]
      */
-    private static array $disabled_types_by_default = [IMG_3XLARGE, IMG_4XLARGE];
+    private static array $disabled_types_by_default = [self::THREE_XLARGE, self::FOUR_XLARGE];
 
     /**
      * @var DerivativeParams[]
@@ -308,17 +341,17 @@ final class ImageStdParams
     public static function get_default_sizes(): array
     {
         $arr = [
-            IMG_SQUARE => new DerivativeParams(SizingParams::square(120)),
-            IMG_THUMB => new DerivativeParams(SizingParams::classic(144, 144)),
-            IMG_XXSMALL => new DerivativeParams(SizingParams::classic(240, 240)),
-            IMG_XSMALL => new DerivativeParams(SizingParams::classic(432, 324)),
-            IMG_SMALL => new DerivativeParams(SizingParams::classic(576, 432)),
-            IMG_MEDIUM => new DerivativeParams(SizingParams::classic(792, 594)),
-            IMG_LARGE => new DerivativeParams(SizingParams::classic(1008, 756)),
-            IMG_XLARGE => new DerivativeParams(SizingParams::classic(1224, 918)),
-            IMG_XXLARGE => new DerivativeParams(SizingParams::classic(1656, 1242)),
-            IMG_3XLARGE => new DerivativeParams(SizingParams::classic(2232, 1674)),
-            IMG_4XLARGE => new DerivativeParams(SizingParams::classic(3000, 2250)),
+            self::SQUARE => new DerivativeParams(SizingParams::square(120)),
+            self::THUMB => new DerivativeParams(SizingParams::classic(144, 144)),
+            self::XXSMALL => new DerivativeParams(SizingParams::classic(240, 240)),
+            self::XSMALL => new DerivativeParams(SizingParams::classic(432, 324)),
+            self::SMALL => new DerivativeParams(SizingParams::classic(576, 432)),
+            self::MEDIUM => new DerivativeParams(SizingParams::classic(792, 594)),
+            self::LARGE => new DerivativeParams(SizingParams::classic(1008, 756)),
+            self::XLARGE => new DerivativeParams(SizingParams::classic(1224, 918)),
+            self::XXLARGE => new DerivativeParams(SizingParams::classic(1656, 1242)),
+            self::THREE_XLARGE => new DerivativeParams(SizingParams::classic(2232, 1674)),
+            self::FOUR_XLARGE => new DerivativeParams(SizingParams::classic(3000, 2250)),
         ];
         $now = time();
         foreach ($arr as $params) {

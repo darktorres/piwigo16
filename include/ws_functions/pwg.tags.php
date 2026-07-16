@@ -9,7 +9,14 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Category\CategoryService;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
+use Piwigo\Tag\TagRepository;
+use Piwigo\Tag\TagService;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
@@ -25,7 +32,9 @@ use Piwigo\Ws\PwgServer;
  */
 function ws_tags_getList(array $params, PwgServer &$service): array
 {
-    $tags = get_available_tags();
+    $tagConn = DbConnection::build();
+    $tags = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)))
+        ->getAvailableTags();
     if ($params['sort_by_counter']) {
         usort($tags, function (array $a, array $b): int {
             $a_counter = is_numeric($a['counter']) ? (float) $a['counter'] : 0.0;
@@ -70,9 +79,12 @@ function ws_tags_getList(array $params, PwgServer &$service): array
  */
 function ws_tags_getAdminList(array $params, PwgServer &$service): array
 {
+    $tagConn = DbConnection::build();
+
     return [
         'tags' => new PwgNamedArray(
-            get_all_tags(),
+            new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)))
+                ->getAllTags(),
             'tag',
             ws_std_get_tag_xml_attributes()
         ),
@@ -96,8 +108,11 @@ function ws_tags_getAdminList(array $params, PwgServer &$service): array
  */
 function ws_tags_getImages(array $params, PwgServer &$service): array
 {
+    $tagConn = DbConnection::build();
+    $tagService = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)));
+
     // first build all the tag_ids we are interested in
-    $tags = find_tags($params['tag_id'], $params['tag_url_name'], $params['tag_name']);
+    $tags = $tagService->findTags($params['tag_id'], $params['tag_url_name'], $params['tag_name']);
     $tags_by_id = [];
     foreach ($tags as $tag) {
         if (! is_array($tag)) {
@@ -117,7 +132,7 @@ function ws_tags_getImages(array $params, PwgServer &$service): array
     if (! empty($order_by)) {
         $order_by = 'ORDER BY ' . $order_by;
     }
-    $image_ids = get_image_ids_for_tags(
+    $image_ids = $tagService->getImageIdsForTags(
         $tag_ids,
         $params['tag_mode_and'] ? 'AND' : 'OR',
         $where_clauses,
@@ -214,7 +229,7 @@ SELECT *
             $images[] = $image;
         }
 
-        usort($images, rank_compare(...));
+        usort($images, CategoryService::compareByRank(...));
         unset($rank_of);
     }
 

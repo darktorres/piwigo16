@@ -39,16 +39,9 @@ namespace {
     // (src/Piwigo/PluginConfig/functions.php), a pure passthrough with no
     // handlers registered, so no local stub is needed.
 
-    if (! function_exists('is_admin')) {
-        function is_admin(string $user_status = ''): bool
-        {
-            if ($user_status !== '') {
-                return $user_status === 'admin';
-            }
-
-            return (bool) ($GLOBALS['test_is_admin'] ?? false);
-        }
-    }
+    // is_admin() -- CategoryService now calls Piwigo\Auth\AccessControl::
+    // isAdmin() directly (P23 batch 8d), a pure `global $user;` read, so no
+    // stub is needed; tests below set $GLOBALS['user']['status'] instead.
 
     if (! function_exists('get_boolean')) {
         function get_boolean(mixed $input): bool
@@ -199,7 +192,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_get_preferred_image_orders_returns_the_fixed_option_list(): void
     {
-        $GLOBALS['test_is_admin'] = false;
+        $GLOBALS['user'] = ['status' => 'normal'];
 
         $orders = $this->service->getPreferredImageOrders();
 
@@ -212,7 +205,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_get_preferred_image_orders_permissions_option_visible_to_admin(): void
     {
-        $GLOBALS['test_is_admin'] = true;
+        $GLOBALS['user'] = ['status' => 'admin'];
 
         $orders = $this->service->getPreferredImageOrders();
 

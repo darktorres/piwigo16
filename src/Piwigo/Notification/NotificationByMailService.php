@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Notification;
 
+use Piwigo\Session\SessionService;
+
 /**
  * The 2 genuinely data-touching functions of the admin bulk-subscription
  * -by-mail workflow (`admin/include/functions_notification_by_mail.inc.php`).
@@ -25,7 +27,7 @@ final class NotificationByMailService
     public function findAvailableCheckKey(): string
     {
         while (true) {
-            $key = generate_key(16);
+            $key = SessionService::get()->generateKey(16);
             if ($this->repo->countByCheckKey($key) === 0) {
                 return $key;
             }

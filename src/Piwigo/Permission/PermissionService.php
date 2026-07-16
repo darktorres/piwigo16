@@ -48,7 +48,7 @@ final class PermissionService
         $forbiddenIds = array_diff($privateIds, $authorizedIds);
 
         // if user is not an admin, locked categories are forbidden
-        if (! is_admin($userStatus)) {
+        if (! \Piwigo\Auth\AccessControl::isAdmin($userStatus)) {
             $forbiddenIds = array_unique(array_merge($forbiddenIds, $this->repo->findLockedCategoryIds()));
         }
 

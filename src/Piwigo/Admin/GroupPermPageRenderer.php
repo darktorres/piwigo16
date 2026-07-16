@@ -6,12 +6,16 @@ namespace Piwigo\Admin;
 
 use Piwigo\Audit\AuditRepository;
 use Piwigo\Audit\AuditService;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Group\GroupService;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
 use Piwigo\Template\Template;
 
 /**
@@ -33,7 +37,13 @@ final class GroupPermPageRenderer
 
         include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
-        check_status(AccessLevel::Administrator);
+        $categoryConn = DbConnection::build();
+        $categoryService = new CategoryService(
+            new CategoryRepository($categoryConn),
+            new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
+        );
+
+        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
         if ($_POST !== []) {
             check_pwg_token();
@@ -143,7 +153,7 @@ SELECT id,name,uppercats,global_rank
   WHERE status = \'private\'
     AND group_id = ' . $page['group'] . '
 ;';
-        display_select_cat_wrapper($query_true, [], 'category_option_true');
+        $categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true');
 
         $result = pwg_query($query_true);
         $authorized_ids = [];
@@ -161,7 +171,7 @@ SELECT id,name,uppercats,global_rank
         }
         $query_false .= '
 ;';
-        display_select_cat_wrapper($query_false, [], 'category_option_false');
+        $categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false');
 
         $template->assign('PWG_TOKEN', get_pwg_token());
 

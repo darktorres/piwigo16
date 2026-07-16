@@ -2,25 +2,15 @@
 
 declare(strict_types=1);
 
-// generate_key()/boolean_to_string() are real, pure, dependency-free
-// functions -- copied verbatim (same bodies as SearchServiceTest.php/
-// ImageServiceTest.php; function_exists() guards mean whichever
-// Integration test file's stub loads first wins for the whole run, so
-// every file declaring these must keep the bodies identical).
+// boolean_to_string() is a real, pure, dependency-free function -- copied
+// verbatim (same body as SearchServiceTest.php/ImageServiceTest.php;
+// function_exists() guards mean whichever Integration test file's stub
+// loads first wins for the whole run, so every file declaring it must
+// keep the body identical). generate_key()'s own stub was removed (P23
+// batch 8c) -- NotificationByMailService now calls the real
+// Piwigo\Session\SessionService::get()->generateKey() directly, which
+// this Integration test's real DB connection satisfies without a stub.
 namespace {
-    if (! function_exists('generate_key')) {
-        function generate_key(int $size): string
-        {
-            if ($size < 1) {
-                throw new \InvalidArgumentException('generate_key(): $size must be at least 1');
-            }
-
-            $bytes = random_bytes($size + 10);
-
-            return substr(str_replace(['+', '/'], '', base64_encode($bytes)), 0, $size);
-        }
-    }
-
     if (! function_exists('boolean_to_string')) {
         function boolean_to_string(mixed $var): mixed
         {

@@ -15,13 +15,12 @@ use Piwigo\Ws\Protocol\PwgRestRequestHandler;
 use Piwigo\Ws\Protocol\PwgSerialPhpEncoder;
 use Piwigo\Ws\Protocol\PwgXmlRpcEncoder;
 use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\WsHelper;
 
 defined('PHPWG_ROOT_PATH') or trigger_error('Hacking attempt!', E_USER_ERROR);
 
-include_once PHPWG_ROOT_PATH . 'include/ws_core.inc.php';
-
 add_event_handler('ws_add_methods', 'ws_addDefaultMethods');
-add_event_handler('ws_invoke_allowed', 'ws_isInvokeAllowed');
+add_event_handler('ws_invoke_allowed', WsHelper::isInvokeAllowed(...));
 
 $requestFormat = 'rest';
 $responseFormat = null;

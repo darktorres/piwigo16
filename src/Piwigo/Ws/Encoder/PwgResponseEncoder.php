@@ -19,6 +19,14 @@ use Piwigo\Ws\PwgNamedStruct;
  */
 abstract class PwgResponseEncoder
 {
+    /**
+     * P23 batch 8e: relocated from include/ws_core.inc.php's
+     * WS_XML_ATTRIBUTES define() -- the array-key marker this class's own
+     * flatten() uses to distinguish XML-attribute values from XML-element
+     * values in a response array.
+     */
+    public const string ATTRIBUTES_KEY = 'attributes_xml_';
+
     /** encodes the web service response to the appropriate output format
      * @param mixed $response the unencoded result of a service method call
      */
@@ -72,9 +80,9 @@ abstract class PwgResponseEncoder
         }
 
         if ($is_struct) {
-            if (isset($value[WS_XML_ATTRIBUTES]) and is_array($value[WS_XML_ATTRIBUTES])) {
-                $value = array_merge($value, $value[WS_XML_ATTRIBUTES]);
-                unset($value[WS_XML_ATTRIBUTES]);
+            if (isset($value[self::ATTRIBUTES_KEY]) and is_array($value[self::ATTRIBUTES_KEY])) {
+                $value = array_merge($value, $value[self::ATTRIBUTES_KEY]);
+                unset($value[self::ATTRIBUTES_KEY]);
             }
         }
 

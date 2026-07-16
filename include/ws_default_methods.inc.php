@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\WsParamFlag;
+use Piwigo\Core\WsParamType;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Ws\PwgServer;
 
@@ -35,7 +37,6 @@ function ws_addDefaultMethods(array $arr): void
     global $user;
     $service = &$arr[0];
 
-    include_once PHPWG_ROOT_PATH . 'include/ws_functions.inc.php';
     $ws_functions_root = PHPWG_ROOT_PATH . 'include/ws_functions/';
 
     // $conf['available_permission_levels'] defaults to [0, 1, 2, 4, 8] (see
@@ -53,31 +54,31 @@ function ws_addDefaultMethods(array $arr): void
     $f_params = [
         'f_min_rate' => [
             'default' => null,
-            'type' => WS_TYPE_FLOAT,
+            'type' => WsParamType::FLOAT,
         ],
         'f_max_rate' => [
             'default' => null,
-            'type' => WS_TYPE_FLOAT,
+            'type' => WsParamType::FLOAT,
         ],
         'f_min_hit' => [
             'default' => null,
-            'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+            'type' => WsParamType::INT | WsParamType::POSITIVE,
         ],
         'f_max_hit' => [
             'default' => null,
-            'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+            'type' => WsParamType::INT | WsParamType::POSITIVE,
         ],
         'f_min_ratio' => [
             'default' => null,
-            'type' => WS_TYPE_FLOAT | WS_TYPE_POSITIVE,
+            'type' => WsParamType::FLOAT | WsParamType::POSITIVE,
         ],
         'f_max_ratio' => [
             'default' => null,
-            'type' => WS_TYPE_FLOAT | WS_TYPE_POSITIVE,
+            'type' => WsParamType::FLOAT | WsParamType::POSITIVE,
         ],
         'f_max_level' => [
             'default' => null,
-            'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+            'type' => WsParamType::INT | WsParamType::POSITIVE,
         ],
         'f_min_date_available' => [
             'default' => null,
@@ -129,15 +130,15 @@ function ws_addDefaultMethods(array $arr): void
         [
             'page' => [
                 'default' => null,
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
             'offset' => [
                 'default' => 0,
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
             'uid' => [
                 'default' => null,
-                'type' => WS_TYPE_ID,
+                'type' => WsParamType::ID,
             ],
             'date_min' => [
                 'default' => null,
@@ -147,7 +148,7 @@ function ws_addDefaultMethods(array $arr): void
             ],
             'id' => [
                 'default' => null,
-                'type' => WS_TYPE_ID,
+                'type' => WsParamType::ID,
             ],
             'object' => [
                 'default' => null,
@@ -179,8 +180,8 @@ function ws_addDefaultMethods(array $arr): void
         'ws_caddie_add',
         [
             'image_id' => [
-                'flags' => WS_PARAM_FORCE_ARRAY,
-                'type' => WS_TYPE_ID,
+                'flags' => WsParamFlag::FORCE_ARRAY,
+                'type' => WsParamType::ID,
             ],
         ],
         'Adds elements to the caddie. Returns the number of elements added.',
@@ -196,21 +197,21 @@ function ws_addDefaultMethods(array $arr): void
         array_merge([
             'cat_id' => [
                 'default' => null,
-                'flags' => WS_PARAM_FORCE_ARRAY,
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'flags' => WsParamFlag::FORCE_ARRAY,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
             'recursive' => [
                 'default' => false,
-                'type' => WS_TYPE_BOOL,
+                'type' => WsParamType::BOOL,
             ],
             'per_page' => [
                 'default' => 100,
                 'maxValue' => $conf['ws_max_images_per_page'],
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
             'page' => [
                 'default' => 0,
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
             'order' => [
                 'default' => null,
@@ -229,24 +230,24 @@ function ws_addDefaultMethods(array $arr): void
         [
             'cat_id' => [
                 'default' => null,
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
                 'info' => 'Parent category. "0" or empty for root.',
             ],
             'recursive' => [
                 'default' => false,
-                'type' => WS_TYPE_BOOL,
+                'type' => WsParamType::BOOL,
             ],
             'public' => [
                 'default' => false,
-                'type' => WS_TYPE_BOOL,
+                'type' => WsParamType::BOOL,
             ],
             'tree_output' => [
                 'default' => false,
-                'type' => WS_TYPE_BOOL,
+                'type' => WsParamType::BOOL,
             ],
             'fullname' => [
                 'default' => false,
-                'type' => WS_TYPE_BOOL,
+                'type' => WsParamType::BOOL,
             ],
             'thumbnail_size' => [
                 'default' => IMG_THUMB,
@@ -257,7 +258,7 @@ function ws_addDefaultMethods(array $arr): void
             ],
             'limit' => [
                 'default' => null,
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
                 'info' => 'Parameter not compatible with recursive=true',
             ],
         ],
@@ -271,21 +272,21 @@ function ws_addDefaultMethods(array $arr): void
         array_merge([
             'types' => [
                 'default' => null,
-                'flags' => WS_PARAM_FORCE_ARRAY,
+                'flags' => WsParamFlag::FORCE_ARRAY,
                 'info' => 'square, thumb, 2small, xsmall, small, medium, large, xlarge, xxlarge, 3xlarge, 4xlarge',
             ],
             'ids' => [
                 'default' => null,
-                'flags' => WS_PARAM_FORCE_ARRAY,
-                'type' => WS_TYPE_ID,
+                'flags' => WsParamFlag::FORCE_ARRAY,
+                'type' => WsParamType::ID,
             ],
             'max_urls' => [
                 'default' => 200,
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
             'prev_page' => [
                 'default' => null,
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
         ], $f_params),
         'Returns a list of derivatives to build.',
@@ -300,7 +301,7 @@ function ws_addDefaultMethods(array $arr): void
         'ws_images_addComment',
         [
             'image_id' => [
-                'type' => WS_TYPE_ID,
+                'type' => WsParamType::ID,
             ],
             'author' => [
                 'default' => \Piwigo\Auth\AccessControl::isAGuest() ? 'guest' : $user['username'],
@@ -320,16 +321,16 @@ function ws_addDefaultMethods(array $arr): void
         'ws_images_getInfo',
         [
             'image_id' => [
-                'type' => WS_TYPE_ID,
+                'type' => WsParamType::ID,
             ],
             'comments_page' => [
                 'default' => 0,
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
             'comments_per_page' => [
                 'default' => $nb_comment_page,
                 'maxValue' => 2 * $nb_comment_page,
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
         ],
         'Returns information about an image.',
@@ -341,10 +342,10 @@ function ws_addDefaultMethods(array $arr): void
         'ws_images_rate',
         [
             'image_id' => [
-                'type' => WS_TYPE_ID,
+                'type' => WsParamType::ID,
             ],
             'rate' => [
-                'type' => WS_TYPE_FLOAT,
+                'type' => WsParamType::FLOAT,
             ],
         ],
         'Rates an image.',
@@ -359,11 +360,11 @@ function ws_addDefaultMethods(array $arr): void
             'per_page' => [
                 'default' => 100,
                 'maxValue' => $conf['ws_max_images_per_page'],
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
             'page' => [
                 'default' => 0,
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
             'order' => [
                 'default' => null,
@@ -379,12 +380,12 @@ function ws_addDefaultMethods(array $arr): void
         'ws_images_setPrivacyLevel',
         [
             'image_id' => [
-                'flags' => WS_PARAM_FORCE_ARRAY,
-                'type' => WS_TYPE_ID,
+                'flags' => WsParamFlag::FORCE_ARRAY,
+                'type' => WsParamType::ID,
             ],
             'level' => [
                 'maxValue' => max($available_permission_levels),
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
         ],
         'Sets the privacy levels for the images.',
@@ -414,9 +415,9 @@ function ws_addDefaultMethods(array $arr): void
         'ws_images_formats_delete',
         [
             'format_id' => [
-                'type' => WS_TYPE_ID,
+                'type' => WsParamType::ID,
                 'default' => null,
-                'flags' => WS_PARAM_ACCEPT_ARRAY,
+                'flags' => WsParamFlag::ACCEPT_ARRAY,
             ],
             'pwg_token' => [],
         ],
@@ -433,14 +434,14 @@ function ws_addDefaultMethods(array $arr): void
         'ws_images_setRank',
         [
             'image_id' => [
-                'type' => WS_TYPE_ID,
-                'flags' => WS_PARAM_FORCE_ARRAY,
+                'type' => WsParamType::ID,
+                'flags' => WsParamFlag::FORCE_ARRAY,
             ],
             'category_id' => [
-                'type' => WS_TYPE_ID,
+                'type' => WsParamType::ID,
             ],
             'rank' => [
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE | WS_TYPE_NOTNULL,
+                'type' => WsParamType::INT | WsParamType::POSITIVE | WsParamType::NOTNULL,
                 'default' => null,
             ],
         ],
@@ -462,11 +463,11 @@ function ws_addDefaultMethods(array $arr): void
         'ws_images_setCategory',
         [
             'image_id' => [
-                'flags' => WS_PARAM_FORCE_ARRAY,
-                'type' => WS_TYPE_ID,
+                'flags' => WsParamFlag::FORCE_ARRAY,
+                'type' => WsParamType::ID,
             ],
             'category_id' => [
-                'type' => WS_TYPE_ID,
+                'type' => WsParamType::ID,
             ],
             'action' => [
                 'default' => 'associate',
@@ -487,14 +488,14 @@ function ws_addDefaultMethods(array $arr): void
         'ws_rates_delete',
         [
             'user_id' => [
-                'type' => WS_TYPE_ID,
+                'type' => WsParamType::ID,
             ],
             'anonymous_id' => [
                 'default' => null,
             ],
             'image_id' => [
-                'flags' => WS_PARAM_OPTIONAL,
-                'type' => WS_TYPE_ID,
+                'flags' => WsParamFlag::OPTIONAL,
+                'type' => WsParamType::ID,
             ],
         ],
         'Deletes all rates for a user.',
@@ -543,7 +544,7 @@ function ws_addDefaultMethods(array $arr): void
         [
             'sort_by_counter' => [
                 'default' => false,
-                'type' => WS_TYPE_BOOL,
+                'type' => WsParamType::BOOL,
             ],
         ],
         'Retrieves a list of available tags.',
@@ -556,29 +557,29 @@ function ws_addDefaultMethods(array $arr): void
         array_merge([
             'tag_id' => [
                 'default' => null,
-                'flags' => WS_PARAM_FORCE_ARRAY,
-                'type' => WS_TYPE_ID,
+                'flags' => WsParamFlag::FORCE_ARRAY,
+                'type' => WsParamType::ID,
             ],
             'tag_url_name' => [
                 'default' => null,
-                'flags' => WS_PARAM_FORCE_ARRAY,
+                'flags' => WsParamFlag::FORCE_ARRAY,
             ],
             'tag_name' => [
                 'default' => null,
-                'flags' => WS_PARAM_FORCE_ARRAY,
+                'flags' => WsParamFlag::FORCE_ARRAY,
             ],
             'tag_mode_and' => [
                 'default' => false,
-                'type' => WS_TYPE_BOOL,
+                'type' => WsParamType::BOOL,
             ],
             'per_page' => [
                 'default' => 100,
                 'maxValue' => $conf['ws_max_images_per_page'],
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
             'page' => [
                 'default' => 0,
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
             'order' => [
                 'default' => null,
@@ -614,7 +615,7 @@ function ws_addDefaultMethods(array $arr): void
         'ws_images_addFile',
         [
             'image_id' => [
-                'type' => WS_TYPE_ID,
+                'type' => WsParamType::ID,
             ],
             'type' => [
                 'default' => 'file',
@@ -668,15 +669,15 @@ function ws_addDefaultMethods(array $arr): void
             'level' => [
                 'default' => 0,
                 'maxValue' => max($available_permission_levels),
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
             'check_uniqueness' => [
                 'default' => true,
-                'type' => WS_TYPE_BOOL,
+                'type' => WsParamType::BOOL,
             ],
             'image_id' => [
                 'default' => null,
-                'type' => WS_TYPE_ID,
+                'type' => WsParamType::ID,
             ],
         ],
         'Add an image.
@@ -694,8 +695,8 @@ function ws_addDefaultMethods(array $arr): void
         [
             'category' => [
                 'default' => null,
-                'flags' => WS_PARAM_FORCE_ARRAY,
-                'type' => WS_TYPE_ID,
+                'flags' => WsParamFlag::FORCE_ARRAY,
+                'type' => WsParamType::ID,
             ],
             'name' => [
                 'default' => null,
@@ -709,15 +710,15 @@ function ws_addDefaultMethods(array $arr): void
             'level' => [
                 'default' => 0,
                 'maxValue' => max($available_permission_levels),
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
             'tags' => [
                 'default' => null,
-                'flags' => WS_PARAM_ACCEPT_ARRAY,
+                'flags' => WsParamFlag::ACCEPT_ARRAY,
             ],
             'image_id' => [
                 'default' => null,
-                'type' => WS_TYPE_ID,
+                'type' => WsParamType::ID,
             ],
         ],
         'Add an image.
@@ -740,22 +741,22 @@ function ws_addDefaultMethods(array $arr): void
             ],
             'category' => [
                 'default' => null,
-                'flags' => WS_PARAM_FORCE_ARRAY,
-                'type' => WS_TYPE_ID,
+                'flags' => WsParamFlag::FORCE_ARRAY,
+                'type' => WsParamType::ID,
             ],
             'level' => [
                 'default' => 0,
                 'maxValue' => max($available_permission_levels),
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
             'format_of' => [
                 'default' => null,
-                'type' => WS_TYPE_ID,
+                'type' => WsParamType::ID,
                 'info' => 'id of the extended image (name/category/level are not used if format_of is provided)',
             ],
             'update_mode' => [
                 'default' => false,
-                'type' => WS_TYPE_BOOL,
+                'type' => WsParamType::BOOL,
                 'info' => 'true if the update mode is active',
             ],
             'pwg_token' => [],
@@ -775,24 +776,24 @@ function ws_addDefaultMethods(array $arr): void
         'ws_images_uploadAsync',
         [
             'username' => [
-                'flags' => WS_PARAM_OPTIONAL,
+                'flags' => WsParamFlag::OPTIONAL,
             ],
             'password' => [
                 'default' => null,
-                'flags' => WS_PARAM_OPTIONAL,
+                'flags' => WsParamFlag::OPTIONAL,
             ],
             'chunk' => [
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
             'chunk_sum' => [],
             'chunks' => [
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
             'original_sum' => [],
             'category' => [
                 'default' => null,
-                'flags' => WS_PARAM_FORCE_ARRAY,
-                'type' => WS_TYPE_ID,
+                'flags' => WsParamFlag::FORCE_ARRAY,
+                'type' => WsParamType::ID,
             ],
             'filename' => [],
             'name' => [
@@ -810,7 +811,7 @@ function ws_addDefaultMethods(array $arr): void
             'level' => [
                 'default' => 0,
                 'maxValue' => max($available_permission_levels),
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
             'tag_ids' => [
                 'default' => null,
@@ -818,7 +819,7 @@ function ws_addDefaultMethods(array $arr): void
             ],
             'image_id' => [
                 'default' => null,
-                'type' => WS_TYPE_ID,
+                'type' => WsParamType::ID,
             ],
         ],
         'Upload photo by chunks in a random order.
@@ -839,7 +840,7 @@ function ws_addDefaultMethods(array $arr): void
         'ws_images_delete',
         [
             'image_id' => [
-                'flags' => WS_PARAM_ACCEPT_ARRAY,
+                'flags' => WsParamFlag::ACCEPT_ARRAY,
             ],
             'pwg_token' => [],
         ],
@@ -857,7 +858,7 @@ function ws_addDefaultMethods(array $arr): void
         [
             'block_size' => [
                 'default' => $conf['checksum_compute_blocksize'],
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
             'pwg_token' => [],
         ],
@@ -874,7 +875,7 @@ function ws_addDefaultMethods(array $arr): void
         'ws_images_syncMetadata',
         [
             'image_id' => [
-                'flags' => WS_PARAM_ACCEPT_ARRAY,
+                'flags' => WsParamFlag::ACCEPT_ARRAY,
                 'info' => 'Comma separated ids or array of id',
             ],
             'pwg_token' => [],
@@ -893,7 +894,7 @@ function ws_addDefaultMethods(array $arr): void
         [
             'block_size' => [
                 'default' => 1000,
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
             'pwg_token' => [],
         ],
@@ -910,8 +911,8 @@ function ws_addDefaultMethods(array $arr): void
         'ws_categories_calculateOrphans',
         [
             'category_id' => [
-                'type' => WS_TYPE_ID,
-                'flags' => WS_PARAM_FORCE_ARRAY,
+                'type' => WsParamType::ID,
+                'flags' => WsParamFlag::FORCE_ARRAY,
             ],
         ],
         'Return the number of orphan photos if an album is deleted.',
@@ -927,7 +928,7 @@ function ws_addDefaultMethods(array $arr): void
         [
             'cat_id' => [
                 'default' => null,
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
                 'info' => 'Parent category. "0" or empty for root.',
             ],
             'search' => [
@@ -935,7 +936,7 @@ function ws_addDefaultMethods(array $arr): void
             ],
             'recursive' => [
                 'default' => true,
-                'type' => WS_TYPE_BOOL,
+                'type' => WsParamType::BOOL,
             ],
             'additional_output' => [
                 'default' => null,
@@ -958,14 +959,14 @@ function ws_addDefaultMethods(array $arr): void
             'name' => [],
             'parent' => [
                 'default' => null,
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
             'comment' => [
                 'default' => null,
             ],
             'visible' => [
                 'default' => true,
-                'type' => WS_TYPE_BOOL,
+                'type' => WsParamType::BOOL,
             ],
             'status' => [
                 'default' => null,
@@ -973,14 +974,14 @@ function ws_addDefaultMethods(array $arr): void
             ],
             'commentable' => [
                 'default' => true,
-                'type' => WS_TYPE_BOOL,
+                'type' => WsParamType::BOOL,
             ],
             'position' => [
                 'default' => null,
                 'info' => 'first, last',
             ],
             'pwg_token' => [
-                'flags' => WS_PARAM_OPTIONAL,
+                'flags' => WsParamFlag::OPTIONAL,
             ],
         ],
         'Adds an album.<br><br><b>pwg_token</b> required if you want to use HTML in name/comment.',
@@ -995,7 +996,7 @@ function ws_addDefaultMethods(array $arr): void
         'ws_categories_delete',
         [
             'category_id' => [
-                'flags' => WS_PARAM_ACCEPT_ARRAY,
+                'flags' => WsParamFlag::ACCEPT_ARRAY,
             ],
             'photo_deletion_mode' => [
                 'default' => 'delete_orphans',
@@ -1017,10 +1018,10 @@ function ws_addDefaultMethods(array $arr): void
         'ws_categories_move',
         [
             'category_id' => [
-                'flags' => WS_PARAM_ACCEPT_ARRAY,
+                'flags' => WsParamFlag::ACCEPT_ARRAY,
             ],
             'parent' => [
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
             'pwg_token' => [],
         ],
@@ -1038,10 +1039,10 @@ function ws_addDefaultMethods(array $arr): void
         'ws_categories_setRepresentative',
         [
             'category_id' => [
-                'type' => WS_TYPE_ID,
+                'type' => WsParamType::ID,
             ],
             'image_id' => [
-                'type' => WS_TYPE_ID,
+                'type' => WsParamType::ID,
             ],
         ],
         'Sets the representative photo for an album. The photo doesn\'t have to belong to the album.',
@@ -1057,7 +1058,7 @@ function ws_addDefaultMethods(array $arr): void
         'ws_categories_deleteRepresentative',
         [
             'category_id' => [
-                'type' => WS_TYPE_ID,
+                'type' => WsParamType::ID,
             ],
         ],
         'Deletes the album thumbnail. Only possible if $conf[\'allow_random_representative\']',
@@ -1073,7 +1074,7 @@ function ws_addDefaultMethods(array $arr): void
         'ws_categories_refreshRepresentative',
         [
             'category_id' => [
-                'type' => WS_TYPE_ID,
+                'type' => WsParamType::ID,
             ],
         ],
         'Find a new album thumbnail.',
@@ -1113,8 +1114,8 @@ function ws_addDefaultMethods(array $arr): void
         'ws_tags_delete',
         [
             'tag_id' => [
-                'type' => WS_TYPE_ID,
-                'flags' => WS_PARAM_FORCE_ARRAY,
+                'type' => WsParamType::ID,
+                'flags' => WsParamFlag::FORCE_ARRAY,
             ],
             'pwg_token' => [],
         ],
@@ -1130,7 +1131,7 @@ function ws_addDefaultMethods(array $arr): void
         'ws_tags_rename',
         [
             'tag_id' => [
-                'type' => WS_TYPE_ID,
+                'type' => WsParamType::ID,
             ],
             'new_name' => [],
             'pwg_token' => [],
@@ -1147,7 +1148,7 @@ function ws_addDefaultMethods(array $arr): void
         'ws_tags_duplicate',
         [
             'tag_id' => [
-                'type' => WS_TYPE_ID,
+                'type' => WsParamType::ID,
             ],
             'copy_name' => [],
             'pwg_token' => [],
@@ -1165,12 +1166,12 @@ function ws_addDefaultMethods(array $arr): void
         'ws_tags_merge',
         [
             'destination_tag_id' => [
-                'type' => WS_TYPE_ID,
+                'type' => WsParamType::ID,
                 'info' => 'Is not necessarily part of groups to merge',
             ],
             'merge_tag_id' => [
-                'flags' => WS_PARAM_FORCE_ARRAY,
-                'type' => WS_TYPE_ID,
+                'flags' => WsParamFlag::FORCE_ARRAY,
+                'type' => WsParamType::ID,
             ],
             'pwg_token' => [],
         ],
@@ -1206,7 +1207,7 @@ function ws_addDefaultMethods(array $arr): void
         'ws_images_checkFiles',
         [
             'image_id' => [
-                'type' => WS_TYPE_ID,
+                'type' => WsParamType::ID,
             ],
             'file_sum' => [
                 'default' => null,
@@ -1254,11 +1255,11 @@ function ws_addDefaultMethods(array $arr): void
         [
             'image_id' => [
                 'default' => null,
-                'flags' => WS_PARAM_ACCEPT_ARRAY,
+                'flags' => WsParamFlag::ACCEPT_ARRAY,
             ],
             'pwg_token' => [],
             'category_id' => [
-                'type' => WS_TYPE_ID,
+                'type' => WsParamType::ID,
             ],
         ],
         'Notify Piwigo you have finished uploading a set of photos. It will empty the lounge, if any.',
@@ -1273,7 +1274,7 @@ function ws_addDefaultMethods(array $arr): void
         'ws_images_setInfo',
         [
             'image_id' => [
-                'type' => WS_TYPE_ID,
+                'type' => WsParamType::ID,
             ],
             'file' => [
                 'default' => null,
@@ -1301,7 +1302,7 @@ function ws_addDefaultMethods(array $arr): void
             'level' => [
                 'default' => null,
                 'maxValue' => max($available_permission_levels),
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
             'single_value_mode' => [
                 'default' => 'fill_if_empty',
@@ -1310,7 +1311,7 @@ function ws_addDefaultMethods(array $arr): void
                 'default' => 'append',
             ],
             'pwg_token' => [
-                'flags' => WS_PARAM_OPTIONAL,
+                'flags' => WsParamFlag::OPTIONAL,
             ],
         ],
         'Changes properties of an image.
@@ -1330,37 +1331,37 @@ function ws_addDefaultMethods(array $arr): void
         'ws_categories_setInfo',
         [
             'category_id' => [
-                'type' => WS_TYPE_ID,
+                'type' => WsParamType::ID,
             ],
             'name' => [
                 'default' => null,
-                'flags' => WS_PARAM_OPTIONAL,
+                'flags' => WsParamFlag::OPTIONAL,
             ],
             'comment' => [
                 'default' => null,
-                'flags' => WS_PARAM_OPTIONAL,
+                'flags' => WsParamFlag::OPTIONAL,
             ],
             'status' => [
                 'default' => null,
-                'flags' => WS_PARAM_OPTIONAL,
+                'flags' => WsParamFlag::OPTIONAL,
                 'info' => 'public, private',
             ],
             'visible' => [
                 'default' => null,
-                'flags' => WS_PARAM_OPTIONAL,
+                'flags' => WsParamFlag::OPTIONAL,
             ],
             'commentable' => [
                 'default' => null,
-                'flags' => WS_PARAM_OPTIONAL,
+                'flags' => WsParamFlag::OPTIONAL,
                 'info' => 'Boolean, effective if configuration variable activate_comments is set to true',
             ],
             'apply_commentable_to_subalbums' => [
                 'default' => null,
-                'flags' => WS_PARAM_OPTIONAL,
+                'flags' => WsParamFlag::OPTIONAL,
                 'info' => 'If true, set commentable to all sub album',
             ],
             'pwg_token' => [
-                'flags' => WS_PARAM_OPTIONAL,
+                'flags' => WsParamFlag::OPTIONAL,
             ],
         ],
         'Changes properties of an album.<br><br><b>pwg_token</b> required if you want to use HTML in name/comment.',
@@ -1376,12 +1377,12 @@ function ws_addDefaultMethods(array $arr): void
         'ws_categories_setRank',
         [
             'category_id' => [
-                'type' => WS_TYPE_ID,
-                'flags' => WS_PARAM_FORCE_ARRAY,
+                'type' => WsParamType::ID,
+                'flags' => WsParamFlag::FORCE_ARRAY,
             ],
             'rank' => [
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE | WS_TYPE_NOTNULL,
-                'flags' => WS_PARAM_OPTIONAL,
+                'type' => WsParamType::INT | WsParamType::POSITIVE | WsParamType::NOTNULL,
+                'flags' => WsParamFlag::OPTIONAL,
             ],
         ],
         'Changes the rank of an album
@@ -1473,7 +1474,7 @@ function ws_addDefaultMethods(array $arr): void
             ],
             'reset' => [
                 'default' => false,
-                'type' => WS_TYPE_BOOL,
+                'type' => WsParamType::BOOL,
                 'info' => 'If true, all ignored extensions will be reinitilized.',
             ],
             'pwg_token' => [],
@@ -1501,21 +1502,21 @@ function ws_addDefaultMethods(array $arr): void
         'ws_groups_getList',
         [
             'group_id' => [
-                'flags' => WS_PARAM_OPTIONAL | WS_PARAM_FORCE_ARRAY,
-                'type' => WS_TYPE_ID,
+                'flags' => WsParamFlag::OPTIONAL | WsParamFlag::FORCE_ARRAY,
+                'type' => WsParamType::ID,
             ],
             'name' => [
-                'flags' => WS_PARAM_OPTIONAL,
+                'flags' => WsParamFlag::OPTIONAL,
                 'info' => 'Use "%" as wildcard.',
             ],
             'per_page' => [
                 'default' => 100,
                 'maxValue' => $conf['ws_max_users_per_page'],
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
             'page' => [
                 'default' => 0,
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
             'order' => [
                 'default' => 'name',
@@ -1536,7 +1537,7 @@ function ws_addDefaultMethods(array $arr): void
             'name' => [],
             'is_default' => [
                 'default' => false,
-                'type' => WS_TYPE_BOOL,
+                'type' => WsParamType::BOOL,
             ],
         ],
         'Creates a group and returns the new group record.',
@@ -1552,8 +1553,8 @@ function ws_addDefaultMethods(array $arr): void
         'ws_groups_delete',
         [
             'group_id' => [
-                'flags' => WS_PARAM_FORCE_ARRAY,
-                'type' => WS_TYPE_ID,
+                'flags' => WsParamFlag::FORCE_ARRAY,
+                'type' => WsParamType::ID,
             ],
             'pwg_token' => [],
         ],
@@ -1570,14 +1571,14 @@ function ws_addDefaultMethods(array $arr): void
         'ws_groups_setInfo',
         [
             'group_id' => [
-                'type' => WS_TYPE_ID,
+                'type' => WsParamType::ID,
             ],
             'name' => [
-                'flags' => WS_PARAM_OPTIONAL,
+                'flags' => WsParamFlag::OPTIONAL,
             ],
             'is_default' => [
-                'flags' => WS_PARAM_OPTIONAL,
-                'type' => WS_TYPE_BOOL,
+                'flags' => WsParamFlag::OPTIONAL,
+                'type' => WsParamType::BOOL,
             ],
             'pwg_token' => [],
         ],
@@ -1594,11 +1595,11 @@ function ws_addDefaultMethods(array $arr): void
         'ws_groups_addUser',
         [
             'group_id' => [
-                'type' => WS_TYPE_ID,
+                'type' => WsParamType::ID,
             ],
             'user_id' => [
-                'flags' => WS_PARAM_FORCE_ARRAY,
-                'type' => WS_TYPE_ID,
+                'flags' => WsParamFlag::FORCE_ARRAY,
+                'type' => WsParamType::ID,
             ],
             'pwg_token' => [],
         ],
@@ -1615,11 +1616,11 @@ function ws_addDefaultMethods(array $arr): void
         'ws_groups_deleteUser',
         [
             'group_id' => [
-                'type' => WS_TYPE_ID,
+                'type' => WsParamType::ID,
             ],
             'user_id' => [
-                'flags' => WS_PARAM_FORCE_ARRAY,
-                'type' => WS_TYPE_ID,
+                'flags' => WsParamFlag::FORCE_ARRAY,
+                'type' => WsParamType::ID,
             ],
             'pwg_token' => [],
         ],
@@ -1636,12 +1637,12 @@ function ws_addDefaultMethods(array $arr): void
         'ws_groups_merge',
         [
             'destination_group_id' => [
-                'type' => WS_TYPE_ID,
+                'type' => WsParamType::ID,
                 'info' => 'Is not necessarily part of groups to merge',
             ],
             'merge_group_id' => [
-                'flags' => WS_PARAM_FORCE_ARRAY,
-                'type' => WS_TYPE_ID,
+                'flags' => WsParamFlag::FORCE_ARRAY,
+                'type' => WsParamType::ID,
             ],
             'pwg_token' => [],
         ],
@@ -1658,7 +1659,7 @@ function ws_addDefaultMethods(array $arr): void
         'ws_groups_duplicate',
         [
             'group_id' => [
-                'type' => WS_TYPE_ID,
+                'type' => WsParamType::ID,
             ],
             'copy_name' => [],
             'pwg_token' => [],
@@ -1676,42 +1677,42 @@ function ws_addDefaultMethods(array $arr): void
         'ws_users_getList',
         [
             'user_id' => [
-                'flags' => WS_PARAM_OPTIONAL | WS_PARAM_FORCE_ARRAY,
-                'type' => WS_TYPE_ID,
+                'flags' => WsParamFlag::OPTIONAL | WsParamFlag::FORCE_ARRAY,
+                'type' => WsParamType::ID,
             ],
             'username' => [
-                'flags' => WS_PARAM_OPTIONAL,
+                'flags' => WsParamFlag::OPTIONAL,
                 'info' => 'Use "%" as wildcard.',
             ],
             'status' => [
-                'flags' => WS_PARAM_OPTIONAL | WS_PARAM_FORCE_ARRAY,
+                'flags' => WsParamFlag::OPTIONAL | WsParamFlag::FORCE_ARRAY,
                 'info' => 'guest,generic,normal,admin,webmaster',
             ],
             'min_level' => [
                 'default' => 0,
                 'maxValue' => max($available_permission_levels),
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
             'group_id' => [
-                'flags' => WS_PARAM_OPTIONAL | WS_PARAM_FORCE_ARRAY,
-                'type' => WS_TYPE_ID,
+                'flags' => WsParamFlag::OPTIONAL | WsParamFlag::FORCE_ARRAY,
+                'type' => WsParamType::ID,
             ],
             'per_page' => [
                 'default' => 100,
                 'maxValue' => $conf['ws_max_users_per_page'],
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
             'page' => [
                 'default' => 0,
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
             'order' => [
                 'default' => 'id',
                 'info' => 'id, username, level, email',
             ],
             'exclude' => [
-                'flags' => WS_PARAM_OPTIONAL | WS_PARAM_FORCE_ARRAY,
-                'type' => WS_TYPE_ID,
+                'flags' => WsParamFlag::OPTIONAL | WsParamFlag::FORCE_ARRAY,
+                'type' => WsParamType::ID,
                 'info' => 'Expects a user_id as value.',
             ],
             'display' => [
@@ -1719,15 +1720,15 @@ function ws_addDefaultMethods(array $arr): void
                 'info' => 'Comma saparated list (see method description)',
             ],
             'filter' => [
-                'flags' => WS_PARAM_OPTIONAL,
+                'flags' => WsParamFlag::OPTIONAL,
                 'info' => 'Filter by username, email, group',
             ],
             'min_register' => [
-                'flags' => WS_PARAM_OPTIONAL,
+                'flags' => WsParamFlag::OPTIONAL,
                 'info' => 'See method description',
             ],
             'max_register' => [
-                'flags' => WS_PARAM_OPTIONAL,
+                'flags' => WsParamFlag::OPTIONAL,
                 'info' => 'See method description',
             ],
         ],
@@ -1753,21 +1754,21 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
             'username' => [],
             'auto_password' => [
                 'default' => false,
-                'type' => WS_TYPE_BOOL,
+                'type' => WsParamType::BOOL,
                 'info' => 'if true ignores password and confirm password',
             ],
             'password' => [
                 'default' => null,
             ],
             'password_confirm' => [
-                'flags' => WS_PARAM_OPTIONAL,
+                'flags' => WsParamFlag::OPTIONAL,
             ],
             'email' => [
                 'default' => null,
             ],
             'send_password_by_mail' => [
                 'default' => false,
-                'type' => WS_TYPE_BOOL,
+                'type' => WsParamType::BOOL,
             ],
             'pwg_token' => [],
         ],
@@ -1784,8 +1785,8 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
         'ws_users_delete',
         [
             'user_id' => [
-                'flags' => WS_PARAM_FORCE_ARRAY,
-                'type' => WS_TYPE_ID,
+                'flags' => WsParamFlag::FORCE_ARRAY,
+                'type' => WsParamType::ID,
             ],
             'pwg_token' => [],
         ],
@@ -1802,7 +1803,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
         'ws_users_getAuthKey',
         [
             'user_id' => [
-                'type' => WS_TYPE_ID,
+                'type' => WsParamType::ID,
             ],
             'pwg_token' => [],
         ],
@@ -1819,61 +1820,61 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
         'ws_users_setInfo',
         [
             'user_id' => [
-                'flags' => WS_PARAM_FORCE_ARRAY,
-                'type' => WS_TYPE_ID,
+                'flags' => WsParamFlag::FORCE_ARRAY,
+                'type' => WsParamType::ID,
             ],
             'username' => [
-                'flags' => WS_PARAM_OPTIONAL,
+                'flags' => WsParamFlag::OPTIONAL,
             ],
             'password' => [
-                'flags' => WS_PARAM_OPTIONAL,
+                'flags' => WsParamFlag::OPTIONAL,
             ],
             'email' => [
-                'flags' => WS_PARAM_OPTIONAL,
+                'flags' => WsParamFlag::OPTIONAL,
             ],
             'status' => [
-                'flags' => WS_PARAM_OPTIONAL,
+                'flags' => WsParamFlag::OPTIONAL,
                 'info' => 'guest,generic,normal,admin,webmaster',
             ],
             'level' => [
-                'flags' => WS_PARAM_OPTIONAL,
+                'flags' => WsParamFlag::OPTIONAL,
                 'maxValue' => max($available_permission_levels),
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
             'language' => [
-                'flags' => WS_PARAM_OPTIONAL,
+                'flags' => WsParamFlag::OPTIONAL,
             ],
             'theme' => [
-                'flags' => WS_PARAM_OPTIONAL,
+                'flags' => WsParamFlag::OPTIONAL,
             ],
             'group_id' => [
-                'flags' => WS_PARAM_OPTIONAL | WS_PARAM_FORCE_ARRAY,
-                'type' => WS_TYPE_INT,
+                'flags' => WsParamFlag::OPTIONAL | WsParamFlag::FORCE_ARRAY,
+                'type' => WsParamType::INT,
             ],
             // bellow are parameters removed in a future version
             'nb_image_page' => [
-                'flags' => WS_PARAM_OPTIONAL,
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE | WS_TYPE_NOTNULL,
+                'flags' => WsParamFlag::OPTIONAL,
+                'type' => WsParamType::INT | WsParamType::POSITIVE | WsParamType::NOTNULL,
             ],
             'recent_period' => [
-                'flags' => WS_PARAM_OPTIONAL,
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'flags' => WsParamFlag::OPTIONAL,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
             'expand' => [
-                'flags' => WS_PARAM_OPTIONAL,
-                'type' => WS_TYPE_BOOL,
+                'flags' => WsParamFlag::OPTIONAL,
+                'type' => WsParamType::BOOL,
             ],
             'show_nb_comments' => [
-                'flags' => WS_PARAM_OPTIONAL,
-                'type' => WS_TYPE_BOOL,
+                'flags' => WsParamFlag::OPTIONAL,
+                'type' => WsParamType::BOOL,
             ],
             'show_nb_hits' => [
-                'flags' => WS_PARAM_OPTIONAL,
-                'type' => WS_TYPE_BOOL,
+                'flags' => WsParamFlag::OPTIONAL,
+                'type' => WsParamType::BOOL,
             ],
             'enabled_high' => [
-                'flags' => WS_PARAM_OPTIONAL,
-                'type' => WS_TYPE_BOOL,
+                'flags' => WsParamFlag::OPTIONAL,
+                'type' => WsParamType::BOOL,
             ],
             'pwg_token' => [],
         ],
@@ -1892,42 +1893,42 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
         'ws_users_setMyInfo',
         [
             'email' => [
-                'flags' => WS_PARAM_OPTIONAL,
+                'flags' => WsParamFlag::OPTIONAL,
             ],
             'nb_image_page' => [
-                'flags' => WS_PARAM_OPTIONAL,
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE | WS_TYPE_NOTNULL,
+                'flags' => WsParamFlag::OPTIONAL,
+                'type' => WsParamType::INT | WsParamType::POSITIVE | WsParamType::NOTNULL,
             ],
             'theme' => [
-                'flags' => WS_PARAM_OPTIONAL,
+                'flags' => WsParamFlag::OPTIONAL,
             ],
             'language' => [
-                'flags' => WS_PARAM_OPTIONAL,
+                'flags' => WsParamFlag::OPTIONAL,
             ],
             'recent_period' => [
-                'flags' => WS_PARAM_OPTIONAL,
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'flags' => WsParamFlag::OPTIONAL,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
             'expand' => [
-                'flags' => WS_PARAM_OPTIONAL,
-                'type' => WS_TYPE_BOOL,
+                'flags' => WsParamFlag::OPTIONAL,
+                'type' => WsParamType::BOOL,
             ],
             'show_nb_comments' => [
-                'flags' => WS_PARAM_OPTIONAL,
-                'type' => WS_TYPE_BOOL,
+                'flags' => WsParamFlag::OPTIONAL,
+                'type' => WsParamType::BOOL,
             ],
             'show_nb_hits' => [
-                'flags' => WS_PARAM_OPTIONAL,
-                'type' => WS_TYPE_BOOL,
+                'flags' => WsParamFlag::OPTIONAL,
+                'type' => WsParamType::BOOL,
             ],
             'password' => [
-                'flags' => WS_PARAM_OPTIONAL,
+                'flags' => WsParamFlag::OPTIONAL,
             ],
             'new_password' => [
-                'flags' => WS_PARAM_OPTIONAL,
+                'flags' => WsParamFlag::OPTIONAL,
             ],
             'conf_new_password' => [
-                'flags' => WS_PARAM_OPTIONAL,
+                'flags' => WsParamFlag::OPTIONAL,
             ],
             'pwg_token' => [],
         ],
@@ -1944,16 +1945,16 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
         'ws_permissions_getList',
         [
             'cat_id' => [
-                'flags' => WS_PARAM_FORCE_ARRAY | WS_PARAM_OPTIONAL,
-                'type' => WS_TYPE_ID,
+                'flags' => WsParamFlag::FORCE_ARRAY | WsParamFlag::OPTIONAL,
+                'type' => WsParamType::ID,
             ],
             'group_id' => [
-                'flags' => WS_PARAM_FORCE_ARRAY | WS_PARAM_OPTIONAL,
-                'type' => WS_TYPE_ID,
+                'flags' => WsParamFlag::FORCE_ARRAY | WsParamFlag::OPTIONAL,
+                'type' => WsParamType::ID,
             ],
             'user_id' => [
-                'flags' => WS_PARAM_FORCE_ARRAY | WS_PARAM_OPTIONAL,
-                'type' => WS_TYPE_ID,
+                'flags' => WsParamFlag::FORCE_ARRAY | WsParamFlag::OPTIONAL,
+                'type' => WsParamType::ID,
             ],
         ],
         'Returns permissions: user ids and group ids having access to each album ; this list can be filtered.
@@ -1969,20 +1970,20 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
         'ws_permissions_add',
         [
             'cat_id' => [
-                'flags' => WS_PARAM_FORCE_ARRAY,
-                'type' => WS_TYPE_ID,
+                'flags' => WsParamFlag::FORCE_ARRAY,
+                'type' => WsParamType::ID,
             ],
             'group_id' => [
-                'flags' => WS_PARAM_FORCE_ARRAY | WS_PARAM_OPTIONAL,
-                'type' => WS_TYPE_ID,
+                'flags' => WsParamFlag::FORCE_ARRAY | WsParamFlag::OPTIONAL,
+                'type' => WsParamType::ID,
             ],
             'user_id' => [
-                'flags' => WS_PARAM_FORCE_ARRAY | WS_PARAM_OPTIONAL,
-                'type' => WS_TYPE_ID,
+                'flags' => WsParamFlag::FORCE_ARRAY | WsParamFlag::OPTIONAL,
+                'type' => WsParamType::ID,
             ],
             'recursive' => [
                 'default' => false,
-                'type' => WS_TYPE_BOOL,
+                'type' => WsParamType::BOOL,
             ],
             'pwg_token' => [],
         ],
@@ -1999,16 +2000,16 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
         'ws_permissions_remove',
         [
             'cat_id' => [
-                'flags' => WS_PARAM_FORCE_ARRAY,
-                'type' => WS_TYPE_ID,
+                'flags' => WsParamFlag::FORCE_ARRAY,
+                'type' => WsParamType::ID,
             ],
             'group_id' => [
-                'flags' => WS_PARAM_FORCE_ARRAY | WS_PARAM_OPTIONAL,
-                'type' => WS_TYPE_ID,
+                'flags' => WsParamFlag::FORCE_ARRAY | WsParamFlag::OPTIONAL,
+                'type' => WsParamType::ID,
             ],
             'user_id' => [
-                'flags' => WS_PARAM_FORCE_ARRAY | WS_PARAM_OPTIONAL,
-                'type' => WS_TYPE_ID,
+                'flags' => WsParamFlag::FORCE_ARRAY | WsParamFlag::OPTIONAL,
+                'type' => WsParamType::ID,
             ],
             'pwg_token' => [],
         ],
@@ -2026,11 +2027,11 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
         [
             'param' => [],
             'value' => [
-                'flags' => WS_PARAM_OPTIONAL,
+                'flags' => WsParamFlag::OPTIONAL,
             ],
             'is_json' => [
                 'default' => false,
-                'type' => WS_TYPE_BOOL,
+                'type' => WsParamType::BOOL,
             ],
         ],
         'Set a user preferences parameter. JSON encode the value (and set is_json to true) if you need a complex data structure.',
@@ -2042,7 +2043,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
         'ws_users_favorites_add',
         [
             'image_id' => [
-                'type' => WS_TYPE_ID,
+                'type' => WsParamType::ID,
             ],
         ],
         'Adds the indicated image to the current user\'s favorite images.',
@@ -2054,7 +2055,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
         'ws_users_favorites_remove',
         [
             'image_id' => [
-                'type' => WS_TYPE_ID,
+                'type' => WsParamType::ID,
             ],
         ],
         'Removes the indicated image from the current user\'s favorite images.',
@@ -2068,11 +2069,11 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
             'per_page' => [
                 'default' => 100,
                 'maxValue' => $conf['ws_max_images_per_page'],
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
             'page' => [
                 'default' => 0,
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
             'order' => [
                 'default' => null,
@@ -2088,10 +2089,10 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
         'ws_history_log',
         [
             'image_id' => [
-                'type' => WS_TYPE_ID,
+                'type' => WsParamType::ID,
             ],
             'cat_id' => [
-                'type' => WS_TYPE_ID,
+                'type' => WsParamType::ID,
                 'default' => null,
             ],
             'section' => [
@@ -2102,7 +2103,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
             ],
             'is_download' => [
                 'default' => false,
-                'type' => WS_TYPE_BOOL,
+                'type' => WsParamType::BOOL,
             ],
         ],
         'Log visit in history',
@@ -2120,7 +2121,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
                 'default' => null,
             ],
             'types' => [
-                'flags' => WS_PARAM_FORCE_ARRAY,
+                'flags' => WsParamFlag::FORCE_ARRAY,
                 'default' => [
                     'none',
                     'picture',
@@ -2133,7 +2134,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
             ],
             'image_id' => [
                 'default' => null,
-                'type' => WS_TYPE_ID,
+                'type' => WsParamType::ID,
             ],
             'filename' => [
                 'default' => null,
@@ -2146,7 +2147,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
             ],
             'pageNumber' => [
                 'default' => null,
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
         ],
         'Gives an history of who has visited the galery and the actions done in it. Receives parameter.
@@ -2164,93 +2165,93 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
         'ws_images_filteredSearch_create',
         [
             'search_id' => [
-                'flags' => WS_PARAM_OPTIONAL,
+                'flags' => WsParamFlag::OPTIONAL,
                 'info' => 'prior search_id (or search_key), if any',
             ],
             'allwords' => [
-                'flags' => WS_PARAM_OPTIONAL,
+                'flags' => WsParamFlag::OPTIONAL,
                 'info' => 'query to search by words',
             ],
             'allwords_mode' => [
-                'flags' => WS_PARAM_OPTIONAL,
+                'flags' => WsParamFlag::OPTIONAL,
                 'info' => 'AND (by default) | OR',
             ],
             'allwords_fields' => [
-                'flags' => WS_PARAM_OPTIONAL | WS_PARAM_FORCE_ARRAY,
+                'flags' => WsParamFlag::OPTIONAL | WsParamFlag::FORCE_ARRAY,
                 'info' => 'values among [name, comment, tags, file, author, cat-title, cat-desc]',
             ],
             'tags' => [
-                'flags' => WS_PARAM_OPTIONAL | WS_PARAM_FORCE_ARRAY,
-                'type' => WS_TYPE_ID,
+                'flags' => WsParamFlag::OPTIONAL | WsParamFlag::FORCE_ARRAY,
+                'type' => WsParamType::ID,
             ],
             'tags_mode' => [
-                'flags' => WS_PARAM_OPTIONAL,
+                'flags' => WsParamFlag::OPTIONAL,
                 'info' => 'AND (by default) | OR',
             ],
             'categories' => [
-                'flags' => WS_PARAM_OPTIONAL | WS_PARAM_FORCE_ARRAY,
-                'type' => WS_TYPE_ID,
+                'flags' => WsParamFlag::OPTIONAL | WsParamFlag::FORCE_ARRAY,
+                'type' => WsParamType::ID,
             ],
             'categories_withsubs' => [
-                'flags' => WS_PARAM_OPTIONAL,
-                'type' => WS_TYPE_BOOL,
+                'flags' => WsParamFlag::OPTIONAL,
+                'type' => WsParamType::BOOL,
                 'info' => 'false, by default',
             ],
             'authors' => [
-                'flags' => WS_PARAM_OPTIONAL | WS_PARAM_FORCE_ARRAY,
+                'flags' => WsParamFlag::OPTIONAL | WsParamFlag::FORCE_ARRAY,
             ],
             'added_by' => [
-                'flags' => WS_PARAM_OPTIONAL | WS_PARAM_FORCE_ARRAY,
-                'type' => WS_TYPE_ID,
+                'flags' => WsParamFlag::OPTIONAL | WsParamFlag::FORCE_ARRAY,
+                'type' => WsParamType::ID,
             ],
             'filetypes' => [
-                'flags' => WS_PARAM_OPTIONAL | WS_PARAM_FORCE_ARRAY,
+                'flags' => WsParamFlag::OPTIONAL | WsParamFlag::FORCE_ARRAY,
             ],
             'date_posted_preset' => [
-                'flags' => WS_PARAM_OPTIONAL,
+                'flags' => WsParamFlag::OPTIONAL,
                 'info' => 'files posted within 24 hours, 7 days, 30 days, 3 months, 6 months or custom. Value among 24h|7d|30d|3m|6m|custom.',
             ],
             'date_posted_custom' => [
-                'flags' => WS_PARAM_OPTIONAL | WS_PARAM_FORCE_ARRAY,
+                'flags' => WsParamFlag::OPTIONAL | WsParamFlag::FORCE_ARRAY,
                 'info' => 'Must be provided if date_posted_preset is custom. List of yYYYY or mYYYY-MM or dYYYY-MM-DD.',
             ],
             'date_created_preset' => [
-                'flags' => WS_PARAM_OPTIONAL,
+                'flags' => WsParamFlag::OPTIONAL,
                 'info' => 'files created within 7 days, 30 days, 3 months, 6 months, 12 months or custom. Value among 7d|30d|3m|6m|12m|custom.',
             ],
             'date_created_custom' => [
-                'flags' => WS_PARAM_OPTIONAL | WS_PARAM_FORCE_ARRAY,
+                'flags' => WsParamFlag::OPTIONAL | WsParamFlag::FORCE_ARRAY,
                 'info' => 'Must be provided if date_created_preset is custom. List of yYYYY or mYYYY-MM or dYYYY-MM-DD.',
             ],
             'ratios' => [
-                'flags' => WS_PARAM_OPTIONAL | WS_PARAM_FORCE_ARRAY,
+                'flags' => WsParamFlag::OPTIONAL | WsParamFlag::FORCE_ARRAY,
             ],
             'ratings' => [
-                'flags' => WS_PARAM_OPTIONAL | WS_PARAM_FORCE_ARRAY,
+                'flags' => WsParamFlag::OPTIONAL | WsParamFlag::FORCE_ARRAY,
             ],
             'filesize_min' => [
-                'flags' => WS_PARAM_OPTIONAL,
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'flags' => WsParamFlag::OPTIONAL,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
             'filesize_max' => [
-                'flags' => WS_PARAM_OPTIONAL,
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'flags' => WsParamFlag::OPTIONAL,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
             'height_min' => [
-                'flags' => WS_PARAM_OPTIONAL,
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'flags' => WsParamFlag::OPTIONAL,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
             'height_max' => [
-                'flags' => WS_PARAM_OPTIONAL,
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'flags' => WsParamFlag::OPTIONAL,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
             'width_min' => [
-                'flags' => WS_PARAM_OPTIONAL,
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'flags' => WsParamFlag::OPTIONAL,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
             'width_max' => [
-                'flags' => WS_PARAM_OPTIONAL,
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'flags' => WsParamFlag::OPTIONAL,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
         ],
         '',
@@ -2262,12 +2263,12 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
         'ws_users_generate_password_link',
         [
             'user_id' => [
-                'type' => WS_TYPE_ID,
+                'type' => WsParamType::ID,
             ],
             'pwg_token' => [],
             'send_by_mail' => [
-                'flags' => WS_PARAM_OPTIONAL,
-                'type' => WS_TYPE_BOOL,
+                'flags' => WsParamFlag::OPTIONAL,
+                'type' => WsParamType::BOOL,
                 'default' => false,
             ],
         ],
@@ -2285,7 +2286,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
         'ws_set_main_user',
         [
             'user_id' => [
-                'type' => WS_TYPE_ID,
+                'type' => WsParamType::ID,
             ],
             'pwg_token' => [],
         ],
@@ -2305,7 +2306,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
         [
             'key_name' => [],
             'duration' => [
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
                 'info' => 'Number of days',
             ],
             'pwg_token' => [],
@@ -2376,12 +2377,12 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
                 'info' => 'All other parameters are not used during a search.',
             ],
             'author_id' => [
-                'flags' => WS_PARAM_OPTIONAL,
-                'type' => WS_TYPE_ID,
+                'flags' => WsParamFlag::OPTIONAL,
+                'type' => WsParamType::ID,
             ],
             'image_id' => [
-                'flags' => WS_PARAM_OPTIONAL,
-                'type' => WS_TYPE_ID,
+                'flags' => WsParamFlag::OPTIONAL,
+                'type' => WsParamType::ID,
             ],
             'f_min_date' => [
                 'default' => null,
@@ -2391,11 +2392,11 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
             ],
             'page' => [
                 'default' => 0,
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
             'per_page' => [
                 'default' => $conf['comments_page_nb_comments'],
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
         ],
         'Get comments',
@@ -2411,8 +2412,8 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
         'ws_userComments_delete',
         [
             'comment_id' => [
-                'flags' => WS_PARAM_FORCE_ARRAY,
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'flags' => WsParamFlag::FORCE_ARRAY,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
             'pwg_token' => [],
         ],
@@ -2429,8 +2430,8 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
         'ws_userComments_validate',
         [
             'comment_id' => [
-                'flags' => WS_PARAM_FORCE_ARRAY,
-                'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
+                'flags' => WsParamFlag::FORCE_ARRAY,
+                'type' => WsParamType::INT | WsParamType::POSITIVE,
             ],
             'pwg_token' => [],
         ],

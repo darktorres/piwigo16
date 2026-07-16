@@ -9,6 +9,9 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Core\WsError;
+use Piwigo\Core\WsParamFlag;
+use Piwigo\Core\WsParamType;
 use Piwigo\Db\Tables;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
@@ -19,7 +22,7 @@ use Piwigo\Ws\PwgServer;
  * Returns permissions
  *
  * @param array{cat_id?: array<int, int>, group_id?: array<int, int>, user_id?: array<int, int>, ...} $params
- *   all three keys: WS_PARAM_OPTIONAL with no 'default' key -- may be
+ *   all three keys: WsParamFlag::OPTIONAL with no 'default' key -- may be
  *   entirely absent; FORCE_ARRAY always coerces to a list of positive
  *   ints when present.
  * @return PwgError|array{categories: PwgNamedArray}
@@ -31,7 +34,7 @@ function ws_permissions_getList(array $params, PwgServer &$service): PwgError|ar
         static fn (string $key): bool => array_key_exists($key, $params)
     );
     if (count($my_params) > 1) {
-        return new PwgError(WS_ERR_INVALID_PARAM, 'Too many parameters, provide cat_id OR user_id OR group_id');
+        return new PwgError(WsError::INVALID_PARAM, 'Too many parameters, provide cat_id OR user_id OR group_id');
     }
 
     $cat_filter = '';
@@ -140,9 +143,9 @@ SELECT group_id, cat_id
  * @param array{cat_id: array<int, int>, group_id?: array<int, int>, user_id?: array<int, int>, recursive: bool, pwg_token: string, ...} $params
  *   cat_id: no 'default' key -- mandatory, always present, FORCE_ARRAY
  *   always coerces to a list of positive ints. group_id/user_id:
- *   WS_PARAM_OPTIONAL with no 'default' key -- may be entirely absent,
+ *   WsParamFlag::OPTIONAL with no 'default' key -- may be entirely absent,
  *   same FORCE_ARRAY coercion when present. recursive: non-null bool
- *   default, WS_TYPE_BOOL -- always present. pwg_token: no 'default'
+ *   default, WsParamType::BOOL -- always present. pwg_token: no 'default'
  *   key -- mandatory, always present.
  * @return mixed PwgError, or the result of the pwg.permissions.getList invocation
  */
@@ -209,7 +212,7 @@ SELECT id
  * @param array{cat_id: array<int, int>, group_id?: array<int, int>, user_id?: array<int, int>, pwg_token: string, ...} $params
  *   cat_id/pwg_token: no 'default' key -- mandatory, always present,
  *   FORCE_ARRAY always coerces cat_id to a list of positive ints.
- *   group_id/user_id: WS_PARAM_OPTIONAL with no 'default' key -- may be
+ *   group_id/user_id: WsParamFlag::OPTIONAL with no 'default' key -- may be
  *   entirely absent, same FORCE_ARRAY coercion when present.
  * @return mixed PwgError, or the result of the pwg.permissions.getList invocation
  */

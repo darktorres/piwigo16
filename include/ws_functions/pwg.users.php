@@ -11,6 +11,9 @@ declare(strict_types=1);
 
 use Piwigo\Core\Logger;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Core\WsError;
+use Piwigo\Core\WsParamFlag;
+use Piwigo\Core\WsParamType;
 use Piwigo\Db\Tables;
 use Piwigo\Mail\MailService;
 use Piwigo\Session\SessionService;
@@ -18,18 +21,19 @@ use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\WsHelper;
 
 /**
  * API method
  * Returns a list of users
  *
  * @param array{user_id?: array<int, int>, username?: string, status?: array<int, string>, min_level: int, group_id?: array<int, int>, per_page: int, page: int, order: string, exclude?: array<int, int>, display: string, filter?: string, min_register?: string, max_register?: string, ...} $params
- *   user_id/status/group_id/exclude: WS_PARAM_OPTIONAL with no 'default'
+ *   user_id/status/group_id/exclude: WsParamFlag::OPTIONAL with no 'default'
  *   key -- may be entirely absent; FORCE_ARRAY (user_id/group_id/exclude)
  *   always coerces to a list when present. username/filter/min_register/
- *   max_register: WS_PARAM_OPTIONAL with no 'default' key -- may be
+ *   max_register: WsParamFlag::OPTIONAL with no 'default' key -- may be
  *   entirely absent, no 'type' flag so plain string when present.
- *   min_level/per_page/page: non-null default, WS_TYPE_INT|WS_TYPE_POSITIVE
+ *   min_level/per_page/page: non-null default, WsParamType::INT|WsParamType::POSITIVE
  *   -- always present, always int. order/display: non-null string
  *   defaults, no 'type' flag -- always present, always string.
  *   max_level: not a registered param at all (checked in the body via
@@ -57,7 +61,7 @@ function ws_users_getList(array $params, PwgServer &$service): PwgError|array
     $available_permission_levels = is_array($available_permission_levels) ? $available_permission_levels : [];
 
     if (! (bool) preg_match(ValidationPattern::ORDER, $params['order'])) {
-        return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid input parameter order');
+        return new PwgError(WsError::INVALID_PARAM, 'Invalid input parameter order');
     }
 
     // Insensitive case sort order
@@ -95,7 +99,7 @@ function ws_users_getList(array $params, PwgServer &$service): PwgError|array
 
     if (! empty($params['min_register'])) {
         if (! (bool) preg_match('/^\d\d\d\d(-\d{1,2}){0,2}$/', $params['min_register'])) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid input parameter min_register');
+            return new PwgError(WsError::INVALID_PARAM, 'Invalid input parameter min_register');
         }
 
         $date_tokens = explode('-', $params['min_register']);
@@ -108,7 +112,7 @@ function ws_users_getList(array $params, PwgServer &$service): PwgError|array
 
     if (! empty($params['max_register'])) {
         if (! (bool) preg_match('/^\d\d\d\d(-\d{1,2}){0,2}$/', $params['max_register'])) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid input parameter max_register');
+            return new PwgError(WsError::INVALID_PARAM, 'Invalid input parameter max_register');
         }
 
         $max_date_tokens = explode('-', $params['max_register']);
@@ -137,14 +141,14 @@ function ws_users_getList(array $params, PwgServer &$service): PwgError|array
 
     if (! empty($params['min_level'])) {
         if (! in_array($params['min_level'], $available_permission_levels)) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid level');
+            return new PwgError(WsError::INVALID_PARAM, 'Invalid level');
         }
         $where_clauses[] = 'ui.level >= ' . $params['min_level'];
     }
 
     if (! empty($params['max_level'])) {
         if (! in_array($params['max_level'], $available_permission_levels)) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid level');
+            return new PwgError(WsError::INVALID_PARAM, 'Invalid level');
         }
         // 'max_level' is not a registered ws.php param (see this function's
         // @param docblock) -- reachable only via the shape's open tail, so
@@ -413,11 +417,11 @@ SELECT DISTINCT ';
  * @param array{username: string, auto_password: bool, password: string|null, password_confirm?: string, email: string|null, send_password_by_mail: bool, pwg_token: string, ...} $params
  *   username/pwg_token: no 'default' key -- mandatory, always present.
  *   auto_password/send_password_by_mail: non-null bool default,
- *   WS_TYPE_BOOL -- always present, always bool (auto_password's ws.php
- *   registration previously said 'flags' => WS_TYPE_BOOL, a typo that
- *   left it uncoerced -- fixed to 'type' => WS_TYPE_BOOL alongside this
+ *   WsParamType::BOOL -- always present, always bool (auto_password's ws.php
+ *   registration previously said 'flags' => WsParamType::BOOL, a typo that
+ *   left it uncoerced -- fixed to 'type' => WsParamType::BOOL alongside this
  *   shape). password/email: null default, no 'type' flag -- always
- *   present, string|null. password_confirm: WS_PARAM_OPTIONAL with no
+ *   present, string|null. password_confirm: WsParamFlag::OPTIONAL with no
  *   'default' key -- may be entirely absent.
  */
 function ws_users_add(array $params, PwgServer &$service): mixed
@@ -427,7 +431,7 @@ function ws_users_add(array $params, PwgServer &$service): mixed
     }
 
     if (strlen(str_replace(' ', '', $params['username'])) == 0) {
-        return new PwgError(WS_ERR_INVALID_PARAM, 'Name field must not be empty');
+        return new PwgError(WsError::INVALID_PARAM, 'Name field must not be empty');
     }
 
     /** @var array<string, mixed> $conf */
@@ -435,7 +439,7 @@ function ws_users_add(array $params, PwgServer &$service): mixed
 
     if ((bool) $conf['double_password_type_in_admin']) {
         if ($params['password'] != ($params['password_confirm'] ?? null)) {
-            return new PwgError(WS_ERR_INVALID_PARAM, l10n('The passwords do not match'));
+            return new PwgError(WsError::INVALID_PARAM, l10n('The passwords do not match'));
         }
     }
 
@@ -448,7 +452,7 @@ function ws_users_add(array $params, PwgServer &$service): mixed
     // otherwise reach it with null and crash inside pwg_password_hash() ->
     // password_hash() (a real string-typed native function).
     if ($params['password'] === null) {
-        return new PwgError(WS_ERR_INVALID_PARAM, l10n('Please, enter a password'));
+        return new PwgError(WsError::INVALID_PARAM, l10n('Please, enter a password'));
     }
 
     // Preserves the pre-SEC-31 behavior for this real caller (admin-
@@ -474,7 +478,7 @@ function ws_users_add(array $params, PwgServer &$service): mixed
     $user_id = $result['userId'] ?? false;
 
     if (! (bool) $user_id) {
-        return new PwgError(WS_ERR_INVALID_PARAM, $errors[0]);
+        return new PwgError(WsError::INVALID_PARAM, $errors[0]);
     }
 
     return $service->invoke('pwg.users.getList', [
@@ -487,7 +491,7 @@ function ws_users_add(array $params, PwgServer &$service): mixed
  * Get a new authentication key for a user.
  *
  * @param array{user_id: int, pwg_token: string, ...} $params neither has a
- *   'default' key -- both mandatory, always present. user_id: WS_TYPE_ID,
+ *   'default' key -- both mandatory, always present. user_id: WsParamType::ID,
  *   not FORCE_ARRAY here -- a plain int.
  */
 function ws_users_getAuthKey(array $params, PwgServer &$service): mixed
@@ -499,7 +503,7 @@ function ws_users_getAuthKey(array $params, PwgServer &$service): mixed
     $authkey = (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->createUserAuthKey($params['user_id']);
 
     if ($authkey === false) {
-        return new PwgError(WS_ERR_INVALID_PARAM, 'invalid user_id');
+        return new PwgError(WsError::INVALID_PARAM, 'invalid user_id');
     }
 
     return $authkey;
@@ -580,8 +584,8 @@ SELECT
  * @param array{user_id: array<int, int>, username?: string, password?: string, email?: string, status?: string, level?: int, language?: string, theme?: string, group_id?: array<int, int>, nb_image_page?: int, recent_period?: int, expand?: bool, show_nb_comments?: bool, show_nb_hits?: bool, enabled_high?: bool, pwg_token: string, ...} $params
  *   user_id/pwg_token: no 'default' key -- mandatory, always present;
  *   FORCE_ARRAY always coerces user_id to a list of positive ints. every
- *   other key: WS_PARAM_OPTIONAL with no 'default' key -- may be entirely
- *   absent; group_id: WS_TYPE_INT only (no POSITIVE) since -1 is a valid
+ *   other key: WsParamFlag::OPTIONAL with no 'default' key -- may be entirely
+ *   absent; group_id: WsParamType::INT only (no POSITIVE) since -1 is a valid
  *   value ("dissociate from all groups").
  */
 function ws_users_setInfo(array $params, PwgServer &$service): mixed
@@ -599,7 +603,7 @@ function ws_users_setInfo(array $params, PwgServer &$service): mixed
         // shape isn't statically expressed, so narrow defensively here
         // rather than trust the mixed offsets.
         $error = $updated_users['error'];
-        $error_code = is_array($error) && is_int($error['code'] ?? null) ? $error['code'] : WS_ERR_INVALID_PARAM;
+        $error_code = is_array($error) && is_int($error['code'] ?? null) ? $error['code'] : WsError::INVALID_PARAM;
         $error_message = is_array($error) && is_string($error['message'] ?? null) ? $error['message'] : 'Invalid parameters';
         return new PwgError($error_code, $error_message);
     }
@@ -619,7 +623,7 @@ function ws_users_setInfo(array $params, PwgServer &$service): mixed
  *
  * @param array{email?: string, nb_image_page?: int, theme?: string, language?: string, recent_period?: int, expand?: bool, show_nb_comments?: bool, show_nb_hits?: bool, password?: string, new_password?: string, conf_new_password?: string, pwg_token: string, ...} $params
  *   pwg_token: no 'default' key -- mandatory, always present. every other
- *   key: WS_PARAM_OPTIONAL with no 'default' key -- may be entirely
+ *   key: WsParamFlag::OPTIONAL with no 'default' key -- may be entirely
  *   absent. (the body's unset() calls for 'username'/'status'/'level'/
  *   'group_id'/'enabled_high' target keys not in this method's own
  *   ws.php registration at all -- harmless no-ops, not part of the real
@@ -727,7 +731,7 @@ SELECT ' . $user_field_password . ' AS password
         // shape isn't statically expressed, so narrow defensively here
         // rather than trust the mixed offsets.
         $error = $updated_users['error'];
-        $error_code = is_array($error) && is_int($error['code'] ?? null) ? $error['code'] : WS_ERR_INVALID_PARAM;
+        $error_code = is_array($error) && is_int($error['code'] ?? null) ? $error['code'] : WsError::INVALID_PARAM;
         $error_message = is_array($error) && is_string($error['message'] ?? null) ? $error['message'] : 'Invalid parameters';
         return new PwgError($error_code, $error_message);
     }
@@ -742,8 +746,8 @@ SELECT ' . $user_field_password . ' AS password
  *
  * @param array{param: string, value?: string, is_json: bool, ...} $params
  *   param: no 'default' key -- mandatory, always present. value:
- *   WS_PARAM_OPTIONAL with no 'default' key -- may be entirely absent.
- *   is_json: non-null bool default, WS_TYPE_BOOL -- always present.
+ *   WsParamFlag::OPTIONAL with no 'default' key -- may be entirely absent.
+ *   is_json: non-null bool default, WsParamType::BOOL -- always present.
  */
 function ws_users_preferences_set(array $params, PwgServer &$service): mixed
 {
@@ -751,7 +755,7 @@ function ws_users_preferences_set(array $params, PwgServer &$service): mixed
     global $user;
 
     if (! (bool) preg_match('/^[a-zA-Z0-9_-]+$/', $params['param'])) {
-        return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid param name #' . $params['param'] . '#');
+        return new PwgError(WsError::INVALID_PARAM, 'Invalid param name #' . $params['param'] . '#');
     }
 
     $value = stripslashes($params['value'] ?? '');
@@ -769,7 +773,7 @@ function ws_users_preferences_set(array $params, PwgServer &$service): mixed
  * Adds a favorite image for the current user
  *
  * @param array{image_id: int, ...} $params no 'default' key -- mandatory,
- *   always present, WS_TYPE_ID guarantees a plain int.
+ *   always present, WsParamType::ID guarantees a plain int.
  */
 function ws_users_favorites_add(array $params, PwgServer &$service): PwgError|true
 {
@@ -812,7 +816,7 @@ SELECT COUNT(*)
  * Removes a favorite image for the current user
  *
  * @param array{image_id: int, ...} $params no 'default' key -- mandatory,
- *   always present, WS_TYPE_ID guarantees a plain int.
+ *   always present, WsParamType::ID guarantees a plain int.
  */
 function ws_users_favorites_remove(array $params, PwgServer &$service): PwgError|true
 {
@@ -854,7 +858,7 @@ DELETE
  * Returns the favorite images of the current user
  *
  * @param array{per_page: int, page: int, order: string|null, ...} $params
- *   per_page/page: non-null int default, WS_TYPE_INT|WS_TYPE_POSITIVE --
+ *   per_page/page: non-null int default, WsParamType::INT|WsParamType::POSITIVE --
  *   always present. order: null default, no 'type' flag -- always
  *   present, string|null.
  * @return false|array{paging: PwgNamedStruct, images: PwgNamedArray}
@@ -873,7 +877,7 @@ function ws_users_favorites_getList(array $params, PwgServer &$service): false|a
 
     (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->checkUserFavorites();
 
-    $order_by = ws_std_image_sql_order($params, 'i.');
+    $order_by = WsHelper::stdImageSqlOrder($params, 'i.');
     $conf_order_by = is_string($conf['order_by'] ?? null) ? $conf['order_by'] : '';
     $order_by = empty($order_by) ? $conf_order_by : 'ORDER BY ' . $order_by;
     $current_user_id = is_scalar($user['id']) ? (string) $user['id'] : '';
@@ -904,7 +908,7 @@ SELECT
             $image[$k] = $row[$k];
         }
 
-        $images[] = array_merge($image, ws_std_get_urls($row));
+        $images[] = array_merge($image, WsHelper::stdGetUrls($row));
     }
 
     $count = count($images);
@@ -921,7 +925,7 @@ SELECT
         'images' => new PwgNamedArray(
             $images,
             'image',
-            ws_std_get_image_xml_attributes()
+            WsHelper::stdGetImageXmlAttributes()
         ),
     ];
 }
@@ -933,8 +937,8 @@ SELECT
  *
  * @param array{user_id: int, pwg_token: string, send_by_mail: bool, ...} $params
  *   user_id/pwg_token: no 'default' key -- mandatory, always present,
- *   WS_TYPE_ID guarantees a plain int for user_id. send_by_mail: non-null
- *   bool default, WS_TYPE_BOOL -- always present.
+ *   WsParamType::ID guarantees a plain int for user_id. send_by_mail: non-null
+ *   bool default, WsParamType::BOOL -- always present.
  * @return PwgError|array{generated_link: mixed, send_by_mail: string|false|null, time_validation: mixed}
  */
 function ws_users_generate_password_link(array $params, PwgServer &$service): PwgError|array
@@ -951,7 +955,7 @@ function ws_users_generate_password_link(array $params, PwgServer &$service): Pw
 
     // check if user exist
     if ((new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->getUsername($params['user_id']) === false) {
-        return new PwgError(WS_ERR_INVALID_PARAM, 'This user does not exist.');
+        return new PwgError(WsError::INVALID_PARAM, 'This user does not exist.');
     }
 
     // getuserdata() is declared to return array<string, mixed> (its own
@@ -1018,7 +1022,7 @@ function ws_users_generate_password_link(array $params, PwgServer &$service): Pw
  * @since 15
  *
  * @param array{user_id: int, pwg_token: string, ...} $params neither has a
- *   'default' key -- both mandatory, always present, WS_TYPE_ID guarantees
+ *   'default' key -- both mandatory, always present, WsParamType::ID guarantees
  *   a plain int for user_id.
  */
 function ws_set_main_user(array $params, PwgServer &$service): PwgError|string
@@ -1035,7 +1039,7 @@ function ws_set_main_user(array $params, PwgServer &$service): PwgError|string
 
     // checl if user exist
     if ((new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->getUsername($params['user_id']) === false) {
-        return new PwgError(WS_ERR_INVALID_PARAM, 'This user does not exist.');
+        return new PwgError(WsError::INVALID_PARAM, 'This user does not exist.');
     }
 
     $new_main_user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->getUserData($params['user_id']);
@@ -1056,7 +1060,7 @@ function ws_set_main_user(array $params, PwgServer &$service): PwgError|string
  *
  * @param array{key_name: string, duration: int, pwg_token: string, ...} $params
  *   none has a 'default' key -- all mandatory, always present; duration:
- *   WS_TYPE_INT|WS_TYPE_POSITIVE guarantees a plain int.
+ *   WsParamType::INT|WsParamType::POSITIVE guarantees a plain int.
  * @return PwgError|array<string, mixed>
  */
 function ws_create_api_key(array $params, PwgServer &$service): PwgError|array

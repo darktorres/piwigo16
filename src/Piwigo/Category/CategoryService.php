@@ -1592,7 +1592,7 @@ final class CategoryService
      * Create a virtual category.
      *
      * @param int|string|null $parentId ws_categories_add() passes null by
-     *   default (WS_TYPE_INT param, unset by the caller), admin/cat_list.php
+     *   default (WsParamType::INT param, unset by the caller), admin/cat_list.php
      *   passes a raw, unvalidated $_GET['parent_id'] string
      * @param array{commentable?: mixed, visible?: mixed, status?: mixed, comment?: mixed, inherit?: mixed} $options
      *   values are validated internally (is_bool()/==), not trusted from callers

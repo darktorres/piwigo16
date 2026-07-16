@@ -10,6 +10,8 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 use Piwigo\Category\CategoryService;
+use Piwigo\Core\WsError;
+use Piwigo\Core\WsParamType;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -21,13 +23,14 @@ use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\WsHelper;
 
 /**
  * API method
  * Returns a list of tags
  *
  * @param array{sort_by_counter: bool, ...} $params non-null bool default,
- *   WS_TYPE_BOOL -- always present.
+ *   WsParamType::BOOL -- always present.
  * @return array{tags: PwgNamedArray}
  */
 function ws_tags_getList(array $params, PwgServer &$service): array
@@ -60,7 +63,7 @@ function ws_tags_getList(array $params, PwgServer &$service): array
         'tags' => new PwgNamedArray(
             $tags,
             'tag',
-            ws_std_get_tag_xml_attributes()
+            WsHelper::stdGetTagXmlAttributes()
         ),
     ];
 }
@@ -86,7 +89,7 @@ function ws_tags_getAdminList(array $params, PwgServer &$service): array
             new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
                 ->getAllTags(),
             'tag',
-            ws_std_get_tag_xml_attributes()
+            WsHelper::stdGetTagXmlAttributes()
         ),
     ];
 }
@@ -98,12 +101,12 @@ function ws_tags_getAdminList(array $params, PwgServer &$service): array
  * @param array{tag_id: array<int, int>, tag_url_name: array<int, string>, tag_name: array<int, string>, tag_mode_and: bool, per_page: int, page: int, order: string|null, f_min_rate: float|null, f_max_rate: float|null, f_min_hit: int|null, f_max_hit: int|null, f_min_ratio: float|null, f_max_ratio: float|null, f_max_level: int|null, f_min_date_available: string|null, f_max_date_available: string|null, f_min_date_created: string|null, f_max_date_created: string|null, ...} $params
  *   tag_id/tag_url_name/tag_name: FORCE_ARRAY with a null default --
  *   makeArrayParam() converts the null default to [], always a list
- *   (tag_id: positive ints via WS_TYPE_ID; tag_url_name/tag_name:
+ *   (tag_id: positive ints via WsParamType::ID; tag_url_name/tag_name:
  *   untyped, so strings). tag_mode_and/per_page/page: non-null default,
  *   always present. order: null default, no 'type' flag -- always
  *   present, string|null. f_* keys: the shared $f_params block merged
  *   into this registration, see
- *   ws_std_image_sql_filter()/ws_std_image_sql_order().
+ *   WsHelper::stdImageSqlFilter()/WsHelper::stdImageSqlOrder().
  * @return array{paging: PwgNamedStruct, images: PwgNamedArray}
  */
 function ws_tags_getImages(array $params, PwgServer &$service): array
@@ -125,10 +128,10 @@ function ws_tags_getImages(array $params, PwgServer &$service): array
     unset($tags);
     $tag_ids = array_keys($tags_by_id);
 
-    $where_clauses = ws_std_image_sql_filter($params);
+    $where_clauses = WsHelper::stdImageSqlFilter($params);
     $where_clauses = ! empty($where_clauses) ? implode(' AND ', $where_clauses) : '';
 
-    $order_by = ws_std_image_sql_order($params, 'i.');
+    $order_by = WsHelper::stdImageSqlOrder($params, 'i.');
     if (! empty($order_by)) {
         $order_by = 'ORDER BY ' . $order_by;
     }
@@ -199,7 +202,7 @@ SELECT *
             $image['name'] = strip_tags(is_string($rendered_name) ? $rendered_name : '');
             $image['comment'] = trigger_change('render_element_description', $image['comment'], __FUNCTION__);
 
-            $image = array_merge($image, ws_std_get_urls($row));
+            $image = array_merge($image, WsHelper::stdGetUrls($row));
 
             $image_tag_ids = ($params['tag_mode_and']) ? $tag_ids : $image_tag_map[$row_id];
             $image_tags = [];
@@ -225,7 +228,7 @@ SELECT *
                 ];
             }
 
-            $image['tags'] = new PwgNamedArray($image_tags, 'tag', ws_std_get_tag_xml_attributes());
+            $image['tags'] = new PwgNamedArray($image_tags, 'tag', WsHelper::stdGetTagXmlAttributes());
             $images[] = $image;
         }
 
@@ -245,7 +248,7 @@ SELECT *
         'images' => new PwgNamedArray(
             $images,
             'image',
-            ws_std_get_image_xml_attributes()
+            WsHelper::stdGetImageXmlAttributes()
         ),
     ];
 }
@@ -265,7 +268,7 @@ function ws_tags_add(array $params, PwgServer &$service): PwgError|array
         ->createTag($params['name']);
 
     if (isset($creation_output['error'])) {
-        return new PwgError(WS_ERR_INVALID_PARAM, $creation_output['error']);
+        return new PwgError(WsError::INVALID_PARAM, $creation_output['error']);
     }
 
     (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('tag', $creation_output['id'], 'add');
@@ -311,7 +314,7 @@ SELECT COUNT(*)
     assert($row !== null);
     [$count] = $row;
     if ($count != count($params['tag_id'])) {
-        return new PwgError(WS_ERR_INVALID_PARAM, 'All tags does not exist.');
+        return new PwgError(WsError::INVALID_PARAM, 'All tags does not exist.');
     }
 
     $tag_ids = $params['tag_id'];
@@ -335,7 +338,7 @@ SELECT COUNT(*)
  * Rename tag
  *
  * @param array{tag_id: int, new_name: string, pwg_token: string, ...} $params
- *   none has a 'default' key -- all mandatory, always present, WS_TYPE_ID
+ *   none has a 'default' key -- all mandatory, always present, WsParamType::ID
  *   guarantees a plain int for tag_id.
  * @return PwgError|array<string, mixed>
  */
@@ -360,7 +363,7 @@ SELECT COUNT(*)
     assert($row !== null);
     [$count] = $row;
     if ($count == 0) {
-        return new PwgError(WS_ERR_INVALID_PARAM, 'This tag does not exist.');
+        return new PwgError(WsError::INVALID_PARAM, 'This tag does not exist.');
     }
 
     $query = '
@@ -373,7 +376,7 @@ SELECT name
     $update = [];
 
     if (in_array($tag_name, $existing_names)) {
-        return new PwgError(WS_ERR_INVALID_PARAM, 'This name is already token');
+        return new PwgError(WsError::INVALID_PARAM, 'This name is already token');
     }
     if (! empty($tag_name)) {
         $update = [
@@ -414,7 +417,7 @@ SELECT
  * Create a copy of a tag
  *
  * @param array{tag_id: int, copy_name: string, pwg_token: string, ...} $params
- *   none has a 'default' key -- all mandatory, always present, WS_TYPE_ID
+ *   none has a 'default' key -- all mandatory, always present, WsParamType::ID
  *   guarantees a plain int for tag_id.
  * @return PwgError|array{id: int|string, name: string, url_name: mixed, count: int}
  */
@@ -440,7 +443,7 @@ SELECT COUNT(*)
     assert($row !== null);
     [$count] = $row;
     if ($count == 0) {
-        return new PwgError(WS_ERR_INVALID_PARAM, 'This tag does not exist.');
+        return new PwgError(WsError::INVALID_PARAM, 'This tag does not exist.');
     }
 
     $query = '
@@ -452,7 +455,7 @@ SELECT COUNT(*)
     assert($row !== null);
     [$count] = $row;
     if ($count != 0) {
-        return new PwgError(WS_ERR_INVALID_PARAM, 'This name is already taken.');
+        return new PwgError(WsError::INVALID_PARAM, 'This name is already taken.');
     }
 
     single_insert(
@@ -511,7 +514,7 @@ SELECT image_id
  *
  * @param array{destination_tag_id: int, merge_tag_id: array<int, int>, pwg_token: string, ...} $params
  *   none has a 'default' key -- all mandatory, always present;
- *   destination_tag_id: WS_TYPE_ID guarantees a plain int; merge_tag_id:
+ *   destination_tag_id: WsParamType::ID guarantees a plain int; merge_tag_id:
  *   FORCE_ARRAY always coerces to a list of positive ints.
  * @return PwgError|array{destination_tag: int, deleted_tag: array<int, int>, images_in_merged_tag: array<int, mixed>}
  */
@@ -536,7 +539,7 @@ SELECT COUNT(*)
     assert($row !== null);
     [$count] = $row;
     if ($count != count($all_tags)) {
-        return new PwgError(WS_ERR_INVALID_PARAM, 'All tags does not exist.');
+        return new PwgError(WsError::INVALID_PARAM, 'All tags does not exist.');
     }
 
     $image_in_merge_tags = [];

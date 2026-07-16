@@ -21,6 +21,9 @@ use Piwigo\Comment\CommentService;
 use Piwigo\Config\Config;
 use Piwigo\Core\Logger;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Core\WsError;
+use Piwigo\Core\WsParamFlag;
+use Piwigo\Core\WsParamType;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -41,10 +44,12 @@ use Piwigo\Search\SearchService;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
+use Piwigo\Ws\Encoder\PwgResponseEncoder;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\WsHelper;
 
 // +-----------------------------------------------------------------------+
 // | UTILITIES                                                             |
@@ -325,9 +330,9 @@ function remove_chunks($original_sum, $type): void
  * API method
  * Adds a comment to an image
  * @param array{image_id: int, author: string, content: string, key: string, ...} $params
- *    image_id: WS_TYPE_ID, mandatory -- always a plain int. author/content/
+ *    image_id: WsParamType::ID, mandatory -- always a plain int. author/content/
  *    key have no WS_TYPE flag, but PwgServer::invoke() rejects an array
- *    value for any registered param without WS_PARAM_ACCEPT_ARRAY, so
+ *    value for any registered param without WsParamFlag::ACCEPT_ARRAY, so
  *    they're always plain strings too (author has a string default,
  *    content/key are mandatory)
  * @return PwgError|array{comment: PwgNamedStruct}
@@ -355,7 +360,7 @@ SELECT DISTINCT image_id
 ;';
 
     if (! (bool) pwg_db_num_rows(pwg_query($query))) {
-        return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid image_id');
+        return new PwgError(WsError::INVALID_PARAM, 'Invalid image_id');
     }
 
     $comm = [
@@ -392,7 +397,7 @@ SELECT DISTINCT image_id
  * API method
  * Returns detailed information for an element
  * @param array{image_id: int, comments_page: int, comments_per_page: int, ...} $params
- *    all three are WS_TYPE_INT|WS_TYPE_POSITIVE (image_id: WS_TYPE_ID) --
+ *    all three are WsParamType::INT|WsParamType::POSITIVE (image_id: WsParamType::ID) --
  *    always plain ints by the time this runs (comments_page/
  *    comments_per_page have defaults, so always present too)
  * @return PwgError|array<string, mixed>
@@ -429,15 +434,15 @@ LIMIT 1
     assert(is_numeric($image_row['id']));
     $image_id = (int) $image_row['id'];
 
-    // array_merge() with ws_std_get_urls()'s mixed-valued return widens
+    // array_merge() with WsHelper::stdGetUrls()'s mixed-valued return widens
     // PHPStan's tracked shape for every other key of the original
     // pwg_db_fetch_assoc() row -- restate the columns this function reads
     // below (id/file: Tables::images() NOT NULL; name/comment/rating_score:
     // nullable) plus an open tail for the rest of the row and the
-    // page_url/element_url/download_url/derivatives keys ws_std_get_urls()
+    // page_url/element_url/download_url/derivatives keys WsHelper::stdGetUrls()
     // injects.
     /** @var array{id: string, file: string, name: string|null, comment: string|null, rating_score: string|null, ...} $image_row */
-    $image_row = array_merge($image_row, ws_std_get_urls($image_row));
+    $image_row = array_merge($image_row, WsHelper::stdGetUrls($image_row));
 
     $image_row['name_raw'] = $image_row['name'];
     $rendered_name = trigger_change(
@@ -612,7 +617,7 @@ SELECT id, date, author, content
     }
 
     $ret['rates'] = [
-        WS_XML_ATTRIBUTES => $rating,
+        PwgResponseEncoder::ATTRIBUTES_KEY => $rating,
     ];
     $ret['categories'] = new PwgNamedArray(
         $related_categories,
@@ -622,11 +627,11 @@ SELECT id, date, author, content
     $ret['tags'] = new PwgNamedArray(
         $related_tags,
         'tag',
-        ws_std_get_tag_xml_attributes()
+        WsHelper::stdGetTagXmlAttributes()
     );
     if (isset($comment_post_data)) {
         $ret['comment_post'] = [
-            WS_XML_ATTRIBUTES => $comment_post_data,
+            PwgResponseEncoder::ATTRIBUTES_KEY => $comment_post_data,
         ];
     }
     $ret['comments_paging'] = new PwgNamedStruct(
@@ -656,7 +661,7 @@ SELECT id, date, author, content
  * API method
  * Rates an image
  * @param array{image_id: int, rate: float, ...} $params both mandatory
- *    (WS_TYPE_ID / WS_TYPE_FLOAT, no 'default') -- always plain scalars by
+ *    (WsParamType::ID / WsParamType::FLOAT, no 'default') -- always plain scalars by
  *    the time this runs
  */
 function ws_images_rate(array $params, PwgServer $service): mixed
@@ -694,15 +699,15 @@ SELECT DISTINCT id
  * Returns a list of elements corresponding to a query search
  * @param array{query: string, per_page: int, page: int, order: string|null, f_min_rate: float|null, f_max_rate: float|null, f_min_hit: int|null, f_max_hit: int|null, f_min_ratio: float|null, f_max_ratio: float|null, f_max_level: int|null, f_min_date_available: string|null, f_max_date_available: string|null, f_min_date_created: string|null, f_max_date_created: string|null, ...} $params
  *    query: no WS_TYPE flag, mandatory -- always a plain string (see
- *    ws_std_image_sql_filter()'s docblock for the shared f_* filter set,
+ *    WsHelper::stdImageSqlFilter()'s docblock for the shared f_* filter set,
  *    merged in via ws.php's $f_params)
  * @return array{paging: PwgNamedStruct, images: PwgNamedArray}
  */
 function ws_images_search(array $params, PwgServer $service): array
 {
     $images = [];
-    $where_clauses = ws_std_image_sql_filter($params, 'i.');
-    $order_by = ws_std_image_sql_order($params, 'i.');
+    $where_clauses = WsHelper::stdImageSqlFilter($params, 'i.');
+    $order_by = WsHelper::stdImageSqlOrder($params, 'i.');
 
     $super_order_by = false;
     if (! empty($order_by)) {
@@ -771,7 +776,7 @@ SELECT *
             $image['name'] = strip_tags(is_string($rendered_image_name) ? $rendered_image_name : '');
             $image['comment'] = trigger_change('render_element_description', $image['comment'], __FUNCTION__);
 
-            $image = array_merge($image, ws_std_get_urls($row));
+            $image = array_merge($image, WsHelper::stdGetUrls($row));
             assert(is_int($image['id']));
             $images[$image_ids[$image['id']]] = $image;
         }
@@ -791,7 +796,7 @@ SELECT *
         'images' => new PwgNamedArray(
             $images,
             'image',
-            ws_std_get_image_xml_attributes()
+            WsHelper::stdGetImageXmlAttributes()
         ),
     ];
 }
@@ -800,7 +805,7 @@ SELECT *
  * API method
  * Registers a new search
  *
- * Every param here is WS_PARAM_OPTIONAL with no 'default' key, so
+ * Every param here is WsParamFlag::OPTIONAL with no 'default' key, so
  * PwgServer::invoke() leaves any not provided by the caller entirely
  * absent from $params (not filled with null) -- hence the optional (?:)
  * shape keys throughout. FORCE_ARRAY params, when present, are always
@@ -829,12 +834,12 @@ function ws_images_filteredSearch_create(array $params, PwgServer $service): Pwg
     $search_info = null;
     if (isset($params['search_id'])) {
         if (empty(SearchService::getSearchIdPattern($params['search_id']))) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid search_id input parameter.');
+            return new PwgError(WsError::INVALID_PARAM, 'Invalid search_id input parameter.');
         }
 
         $search_info = $searchService->getValidatedSearchInfo($params['search_id']);
         if (empty($search_info)) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'This search does not exist.');
+            return new PwgError(WsError::INVALID_PARAM, 'This search does not exist.');
         }
     }
 
@@ -858,7 +863,7 @@ function ws_images_filteredSearch_create(array $params, PwgServer $service): Pwg
             $params['allwords_mode'] = 'AND';
         }
         if (! (bool) preg_match('/^(OR|AND)$/', $params['allwords_mode'])) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter allwords_mode');
+            return new PwgError(WsError::INVALID_PARAM, 'Invalid parameter allwords_mode');
         }
         $search['fields']['allwords']['mode'] = $params['allwords_mode'];
 
@@ -868,7 +873,7 @@ function ws_images_filteredSearch_create(array $params, PwgServer $service): Pwg
         }
         foreach ($params['allwords_fields'] as $field) {
             if (! in_array($field, $allwords_fields_available)) {
-                return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter allwords_fields');
+                return new PwgError(WsError::INVALID_PARAM, 'Invalid parameter allwords_fields');
             }
         }
         $search['fields']['allwords']['fields'] = $params['allwords_fields'];
@@ -879,7 +884,7 @@ function ws_images_filteredSearch_create(array $params, PwgServer $service): Pwg
     if (isset($params['tags'])) {
         foreach ($params['tags'] as $tag_id) {
             if (! (bool) preg_match('/^\d+$/', (string) $tag_id)) {
-                return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter tags');
+                return new PwgError(WsError::INVALID_PARAM, 'Invalid parameter tags');
             }
         }
 
@@ -887,7 +892,7 @@ function ws_images_filteredSearch_create(array $params, PwgServer $service): Pwg
             $params['tags_mode'] = 'AND';
         }
         if (! (bool) preg_match('/^(OR|AND)$/', $params['tags_mode'])) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter tags_mode');
+            return new PwgError(WsError::INVALID_PARAM, 'Invalid parameter tags_mode');
         }
 
         $search['fields']['tags'] = [
@@ -899,7 +904,7 @@ function ws_images_filteredSearch_create(array $params, PwgServer $service): Pwg
     if (isset($params['categories'])) {
         foreach ($params['categories'] as $cat_id) {
             if (! (bool) preg_match('/^\d+$/', (string) $cat_id)) {
-                return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter categories');
+                return new PwgError(WsError::INVALID_PARAM, 'Invalid parameter categories');
             }
         }
 
@@ -925,7 +930,7 @@ function ws_images_filteredSearch_create(array $params, PwgServer $service): Pwg
     if (isset($params['filetypes'])) {
         foreach ($params['filetypes'] as $ext) {
             if (! (bool) preg_match('/^[a-z0-9]+$/i', $ext)) {
-                return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter filetypes');
+                return new PwgError(WsError::INVALID_PARAM, 'Invalid parameter filetypes');
             }
         }
 
@@ -935,7 +940,7 @@ function ws_images_filteredSearch_create(array $params, PwgServer $service): Pwg
     if (isset($params['added_by'])) {
         foreach ($params['added_by'] as $user_id) {
             if (! (bool) preg_match('/^\d+$/', (string) $user_id)) {
-                return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter added_by');
+                return new PwgError(WsError::INVALID_PARAM, 'Invalid parameter added_by');
             }
         }
 
@@ -944,19 +949,19 @@ function ws_images_filteredSearch_create(array $params, PwgServer $service): Pwg
 
     if (isset($params['date_posted_preset'])) {
         if (! (bool) preg_match('/^(24h|7d|30d|3m|6m|custom|)$/', $params['date_posted_preset'])) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter date_posted_preset');
+            return new PwgError(WsError::INVALID_PARAM, 'Invalid parameter date_posted_preset');
         }
 
         @$search['fields']['date_posted']['preset'] = $params['date_posted_preset'];
 
         if ($search['fields']['date_posted']['preset'] == 'custom' and empty($params['date_posted_custom'])) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'date_posted_custom is missing');
+            return new PwgError(WsError::INVALID_PARAM, 'date_posted_custom is missing');
         }
     }
 
     if (isset($params['date_posted_custom'])) {
         if (! isset($search['fields']['date_posted']['preset']) or $search['fields']['date_posted']['preset'] != 'custom') {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'date_posted_custom provided date_posted_preset is not custom');
+            return new PwgError(WsError::INVALID_PARAM, 'date_posted_custom provided date_posted_preset is not custom');
         }
 
         foreach ($params['date_posted_custom'] as $date) {
@@ -984,7 +989,7 @@ function ws_images_filteredSearch_create(array $params, PwgServer $service): Pwg
             }
 
             if (! $correct_format) {
-                return new PwgError(WS_ERR_INVALID_PARAM, 'date_posted_custom, invalid option ' . $date);
+                return new PwgError(WsError::INVALID_PARAM, 'date_posted_custom, invalid option ' . $date);
             }
 
             @$search['fields']['date_posted']['custom'][] = $date;
@@ -993,19 +998,19 @@ function ws_images_filteredSearch_create(array $params, PwgServer $service): Pwg
 
     if (isset($params['date_created_preset'])) {
         if (! (bool) preg_match('/^(7d|30d|3m|6m|12m|custom|)$/', $params['date_created_preset'])) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter date_created_preset');
+            return new PwgError(WsError::INVALID_PARAM, 'Invalid parameter date_created_preset');
         }
 
         @$search['fields']['date_created']['preset'] = $params['date_created_preset'];
 
         if ($search['fields']['date_created']['preset'] == 'custom' and empty($params['date_created_custom'])) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'date_created_custom is missing');
+            return new PwgError(WsError::INVALID_PARAM, 'date_created_custom is missing');
         }
     }
 
     if (isset($params['date_created_custom'])) {
         if (! isset($search['fields']['date_created']['preset']) or $search['fields']['date_created']['preset'] != 'custom') {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'date_created_custom provided date_created_preset is not custom');
+            return new PwgError(WsError::INVALID_PARAM, 'date_created_custom provided date_created_preset is not custom');
         }
 
         foreach ($params['date_created_custom'] as $date) {
@@ -1033,7 +1038,7 @@ function ws_images_filteredSearch_create(array $params, PwgServer $service): Pwg
             }
 
             if (! $correct_format) {
-                return new PwgError(WS_ERR_INVALID_PARAM, 'date_created_custom, invalid option ' . $date);
+                return new PwgError(WsError::INVALID_PARAM, 'date_created_custom, invalid option ' . $date);
             }
 
             @$search['fields']['date_created']['custom'][] = $date;
@@ -1043,7 +1048,7 @@ function ws_images_filteredSearch_create(array $params, PwgServer $service): Pwg
     if (isset($params['ratios'])) {
         foreach ($params['ratios'] as $ext) {
             if (! (bool) preg_match('/^[a-z0-9]+$/i', $ext)) {
-                return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter ratios');
+                return new PwgError(WsError::INVALID_PARAM, 'Invalid parameter ratios');
             }
         }
 
@@ -1098,9 +1103,9 @@ function ws_images_filteredSearch_create(array $params, PwgServer $service): Pwg
  * API method
  * Sets the level of an image
  * @param array{image_id: array<int, int>, level: int, ...} $params
- *    image_id: WS_PARAM_FORCE_ARRAY|WS_TYPE_ID -- always coerced to a list
+ *    image_id: WsParamFlag::FORCE_ARRAY|WsParamType::ID -- always coerced to a list
  *      of positive ints by PwgServer::invoke() before this runs
- *    level: WS_TYPE_INT|WS_TYPE_POSITIVE, mandatory (no 'default') -- always
+ *    level: WsParamType::INT|WsParamType::POSITIVE, mandatory (no 'default') -- always
  *      a plain int by the time this runs
  */
 function ws_images_setPrivacyLevel(array $params, PwgServer $service): PwgError|int|string
@@ -1111,7 +1116,7 @@ function ws_images_setPrivacyLevel(array $params, PwgServer $service): PwgError|
     $available_permission_levels = $conf['available_permission_levels'];
     $available_permission_levels = is_array($available_permission_levels) ? $available_permission_levels : [];
     if (! in_array($params['level'], $available_permission_levels)) {
-        return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid level');
+        return new PwgError(WsError::INVALID_PARAM, 'Invalid level');
     }
 
     $query = '
@@ -1135,8 +1140,8 @@ UPDATE ' . Tables::images() . '
  * API method
  * Sets the rank of an image in a category
  * @param array{image_id: array<int, int>, category_id: int, rank: int|null, ...} $params
- *    image_id: WS_PARAM_FORCE_ARRAY|WS_TYPE_ID -- always a list of positive
- *    ints. category_id: WS_TYPE_ID, mandatory. rank: WS_TYPE_INT|POSITIVE|
+ *    image_id: WsParamFlag::FORCE_ARRAY|WsParamType::ID -- always a list of positive
+ *    ints. category_id: WsParamType::ID, mandatory. rank: WsParamType::INT|POSITIVE|
  *    NOTNULL with a null default -- int when the caller provides it, null
  *    otherwise
  * @return array<string, mixed>|PwgError
@@ -1171,7 +1176,7 @@ SELECT
     $params['image_id'] = array_shift($params['image_id']);
 
     if (empty($params['rank'])) {
-        return new PwgError(WS_ERR_MISSING_PARAM, 'rank is missing');
+        return new PwgError(WsError::MISSING_PARAM, 'rank is missing');
     }
 
     // does the image really exist?
@@ -1312,7 +1317,7 @@ function ws_images_add_chunk(array $params, PwgServer $service): ?PwgError
  * API method
  * Adds a file
  * @param array{image_id: int, type: string, sum: string, ...} $params
- *    image_id: WS_TYPE_ID, mandatory. type: no WS_TYPE flag, defaults to
+ *    image_id: WsParamType::ID, mandatory. type: no WS_TYPE flag, defaults to
  *    'file'. sum: no WS_TYPE flag, mandatory -- both always plain strings
  */
 function ws_images_addFile(array $params, PwgServer $service): PwgError|bool|null
@@ -1414,9 +1419,9 @@ SELECT
  *    All except level/check_uniqueness/image_id have no WS_TYPE flag and a
  *    null default (or none, for the mandatory original_sum) -- always
  *    plain strings when present (see PwgServer::invoke()'s array-rejection
- *    check). level: WS_TYPE_INT|POSITIVE, default 0 (non-null) -- always
- *    int. check_uniqueness: WS_TYPE_BOOL, default true -- always bool.
- *    image_id: WS_TYPE_ID, null default -- int|null.
+ *    check). level: WsParamType::INT|POSITIVE, default 0 (non-null) -- always
+ *    int. check_uniqueness: WsParamType::BOOL, default true -- always bool.
+ *    image_id: WsParamType::ID, null default -- int|null.
  * @return PwgError|array{image_id: int|string, url: string}
  */
 function ws_images_add(array $params, PwgServer $service): PwgError|array
@@ -1577,13 +1582,13 @@ SELECT id, name, permalink
  * API method
  * Adds a image (simple way)
  * @param array{category: array<int, int>, name: string|null, author: string|null, comment: string|null, level: int, tags: string|array<array-key, string>|null, image_id: int|null, ...} $params
- *    category: WS_PARAM_FORCE_ARRAY|WS_TYPE_ID with a null default --
+ *    category: WsParamFlag::FORCE_ARRAY|WsParamType::ID with a null default --
  *    makeArrayParam() converts the null default to [], so never null,
  *    always a list of positive ints. name/author/comment: no WS_TYPE
- *    flag, null default -- string|null. level: WS_TYPE_INT|POSITIVE,
- *    default 0 (non-null) -- always int. tags: WS_PARAM_ACCEPT_ARRAY (not
+ *    flag, null default -- string|null. level: WsParamType::INT|POSITIVE,
+ *    default 0 (non-null) -- always int. tags: WsParamFlag::ACCEPT_ARRAY (not
  *    FORCE), no WS_TYPE flag, null default -- string, array (if the
- *    caller uses bracket syntax), or null. image_id: WS_TYPE_ID, null
+ *    caller uses bracket syntax), or null. image_id: WsParamType::ID, null
  *    default -- int|null.
  * @return PwgError|array{image_id: int|string, url: string}
  */
@@ -1734,10 +1739,10 @@ SELECT id, name, permalink
  *
  * @param array{name: string|null, category: array<int, int>, level: int, format_of: int|null, update_mode: bool, pwg_token: string, ...} $params
  *    name: no WS_TYPE flag, null default -- string|null. category:
- *    WS_PARAM_FORCE_ARRAY|WS_TYPE_ID, null default -- makeArrayParam()
+ *    WsParamFlag::FORCE_ARRAY|WsParamType::ID, null default -- makeArrayParam()
  *    converts the null default to [], so never null. level:
- *    WS_TYPE_INT|POSITIVE, default 0 (non-null) -- always int. format_of:
- *    WS_TYPE_ID, null default -- int|null. update_mode: WS_TYPE_BOOL,
+ *    WsParamType::INT|POSITIVE, default 0 (non-null) -- always int. format_of:
+ *    WsParamType::ID, null default -- int|null. update_mode: WsParamType::BOOL,
  *    default false (non-null) -- always bool. pwg_token: no WS_TYPE flag,
  *    mandatory -- always a plain string.
  * @return PwgError|array<string, mixed>|null
@@ -1978,15 +1983,15 @@ SELECT
  * Adds a chunk of an image. Chunks don't have to be uploaded in the right sort order. When the last chunk is added, they get merged.
  * @since 11
  * @param array{username?: string, password: string|null, chunk: int, chunk_sum: string, chunks: int, original_sum: string, category: array<int, int>, filename: string, name: string|null, author: string|null, comment: string|null, date_creation: string|null, level: int, tag_ids: string|null, image_id: int|null, ...} $params
- *    username: WS_PARAM_OPTIONAL, no 'default' -- may be entirely absent
- *    from $params. password: WS_PARAM_OPTIONAL, null default. chunk/
- *    chunks: WS_TYPE_INT|POSITIVE, mandatory -- always int. chunk_sum/
+ *    username: WsParamFlag::OPTIONAL, no 'default' -- may be entirely absent
+ *    from $params. password: WsParamFlag::OPTIONAL, null default. chunk/
+ *    chunks: WsParamType::INT|POSITIVE, mandatory -- always int. chunk_sum/
  *    original_sum/filename: no WS_TYPE flag, mandatory -- always string.
- *    category: WS_PARAM_FORCE_ARRAY|WS_TYPE_ID, null default -- never
+ *    category: WsParamFlag::FORCE_ARRAY|WsParamType::ID, null default -- never
  *    null (makeArrayParam() converts to []). name/author/comment/
  *    date_creation/tag_ids: no WS_TYPE flag, null default -- string|null.
- *    level: WS_TYPE_INT|POSITIVE, default 0 (non-null) -- always int.
- *    image_id: WS_TYPE_ID, null default -- int|null.
+ *    level: WsParamType::INT|POSITIVE, default 0 (non-null) -- always int.
+ *    image_id: WsParamType::ID, null default -- int|null.
  */
 function ws_images_uploadAsync(array $params, PwgServer &$service): mixed
 {
@@ -2002,7 +2007,7 @@ function ws_images_uploadAsync(array $params, PwgServer &$service): mixed
 
     // additional check for some parameters
     if (! (bool) preg_match('/^[a-fA-F0-9]{32}$/', $params['original_sum'])) {
-        return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid original_sum');
+        return new PwgError(WsError::INVALID_PARAM, 'Invalid original_sum');
     }
 
     if ($params['image_id'] > 0) {
@@ -2467,7 +2472,7 @@ SELECT
  *
  * @since 13
  * @param array{format_id: int|array<int, int>|null, pwg_token: string, ...} $params
- *    format_id: WS_TYPE_ID + WS_PARAM_ACCEPT_ARRAY, null default -- a
+ *    format_id: WsParamType::ID + WsParamFlag::ACCEPT_ARRAY, null default -- a
  *    plain int, a list of ints, or null. pwg_token: no WS_TYPE flag,
  *    mandatory -- always a plain string.
  */
@@ -2580,7 +2585,7 @@ DELETE FROM ' . Tables::imageFormat() . '
  * API method
  * Check is file has been update
  * @param array{image_id: int, file_sum: string|null, thumbnail_sum: string|null, high_sum: string|null, ...} $params
- *    image_id: WS_TYPE_ID, mandatory -- always int. file_sum/
+ *    image_id: WsParamType::ID, mandatory -- always int. file_sum/
  *    thumbnail_sum/high_sum: no WS_TYPE flag, null default -- string|null.
  * @return PwgError|array<string, string>
  */
@@ -2641,12 +2646,12 @@ SELECT path
  * API method
  * Sets details of an image
  * @param array{image_id: int, file: string|null, name: string|null, author: string|null, date_creation: string|null, comment: string|null, categories: string|null, tag_ids: string|null, level: int|null, single_value_mode: string, multiple_value_mode: string, pwg_token?: string, ...} $params
- *    image_id: WS_TYPE_ID, mandatory -- always int. file/name/author/
+ *    image_id: WsParamType::ID, mandatory -- always int. file/name/author/
  *    date_creation/comment/categories/tag_ids: no WS_TYPE flag, null
- *    default -- string|null. level: WS_TYPE_INT|POSITIVE, null default --
+ *    default -- string|null. level: WsParamType::INT|POSITIVE, null default --
  *    int|null. single_value_mode/multiple_value_mode: no WS_TYPE flag,
  *    non-null string defaults -- always string. pwg_token:
- *    WS_PARAM_OPTIONAL with no 'default' key -- may be entirely absent.
+ *    WsParamFlag::OPTIONAL with no 'default' key -- may be entirely absent.
  */
 function ws_images_setInfo(array $params, PwgServer $service): ?PwgError
 {
@@ -2783,7 +2788,7 @@ SELECT *
     // as this code bellow will be deleted when a tag selector is added.
     if (isset($_REQUEST['tag_list']) && is_array($_REQUEST['tag_list'])) {
         if (isset($params['tag_ids'])) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'Do not use tag_list and tag_ids at the same time.');
+            return new PwgError(WsError::INVALID_PARAM, 'Do not use tag_list and tag_ids at the same time.');
         }
 
         // clean user input
@@ -2807,7 +2812,7 @@ SELECT *
  * API method
  * Deletes an image
  * @param array{image_id: string|array<array-key, string>, pwg_token: string, ...} $params
- *    image_id: WS_PARAM_ACCEPT_ARRAY (not FORCE), no WS_TYPE flag,
+ *    image_id: WsParamFlag::ACCEPT_ARRAY (not FORCE), no WS_TYPE flag,
  *    mandatory -- a plain string or an array, never null. pwg_token: no
  *    WS_TYPE flag, mandatory -- always a plain string.
  */
@@ -2887,9 +2892,9 @@ function ws_images_emptyLounge(array $params, PwgServer $service): array
  * Notify Piwigo you have finished uploading a set of photos.
  * @since 12
  * @param array{image_id: string|array<array-key, string>|null, pwg_token: string, category_id: int, ...} $params
- *    image_id: WS_PARAM_ACCEPT_ARRAY (not FORCE), no WS_TYPE flag, null
+ *    image_id: WsParamFlag::ACCEPT_ARRAY (not FORCE), no WS_TYPE flag, null
  *    default -- string, array, or null. pwg_token: no WS_TYPE flag,
- *    mandatory -- always string. category_id: WS_TYPE_ID, mandatory --
+ *    mandatory -- always string. category_id: WsParamType::ID, mandatory --
  *    always int.
  * @return PwgError|array<string, mixed>
  */
@@ -2967,7 +2972,7 @@ SELECT
  * API method
  * add md5sum at photos, by block. Returns how md5sum were added and how many are remaining.
  * @param array{block_size: int, pwg_token: string, ...} $params
- *    block_size: WS_TYPE_INT|POSITIVE, default is a non-null $conf value
+ *    block_size: WsParamType::INT|POSITIVE, default is a non-null $conf value
  *    -- always int. pwg_token: no WS_TYPE flag, mandatory -- always string.
  * @return PwgError|array{nb_added: int, nb_no_md5sum: int}
  */
@@ -2998,7 +3003,7 @@ function ws_images_setMd5sum(array $params, PwgServer $service): PwgError|array
  * API method
  * Synchronize metadatas photos. Returns how many metadatas were sync.
  * @param array{image_id: string|array<array-key, string>, pwg_token: string, ...} $params
- *    image_id: WS_PARAM_ACCEPT_ARRAY, no WS_TYPE flag, mandatory -- a
+ *    image_id: WsParamFlag::ACCEPT_ARRAY, no WS_TYPE flag, mandatory -- a
  *    plain string or an array, never null. pwg_token: mandatory string.
  * @return PwgError|array{nb_synchronized: int}
  */
@@ -3026,14 +3031,14 @@ function ws_images_syncMetadata(array $params, PwgServer $service): PwgError|arr
         $image_id = trim($image_id);
 
         if (! (bool) preg_match(ValidationPattern::ID, $image_id)) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid image_id "' . $image_id . '"');
+            return new PwgError(WsError::INVALID_PARAM, 'Invalid image_id "' . $image_id . '"');
         }
 
         $image_ids[] = $image_id;
     }
 
     if (empty($image_ids)) {
-        return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid image_id (no value after filters)');
+        return new PwgError(WsError::INVALID_PARAM, 'Invalid image_id (no value after filters)');
     }
 
     $query = '
@@ -3061,7 +3066,7 @@ SELECT id
  * API method
  * Deletes orphan photos, by block. Returns how many orphans were deleted and how many are remaining.
  * @param array{block_size: int, pwg_token: string, ...} $params
- *    block_size: WS_TYPE_INT|POSITIVE, default 1000 (non-null) -- always
+ *    block_size: WsParamType::INT|POSITIVE, default 1000 (non-null) -- always
  *    int. pwg_token: no WS_TYPE flag, mandatory -- always string.
  * @return PwgError|array{nb_deleted: int, nb_orphans: int}
  */
@@ -3090,8 +3095,8 @@ function ws_images_deleteOrphans(array $params, PwgServer $service): PwgError|ar
  *
  * @since 14
  * @param array{image_id: array<int, int>, category_id: int, action: string, pwg_token: string, ...} $params
- *    image_id: WS_PARAM_FORCE_ARRAY|WS_TYPE_ID -- always a list of positive
- *    ints. category_id: WS_TYPE_ID, mandatory. action/pwg_token: no
+ *    image_id: WsParamFlag::FORCE_ARRAY|WsParamType::ID -- always a list of positive
+ *    ints. category_id: WsParamType::ID, mandatory. action/pwg_token: no
  *    WS_TYPE flag, but always plain strings (action has a string default,
  *    pwg_token is mandatory)
  */

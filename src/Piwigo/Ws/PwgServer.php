@@ -12,6 +12,9 @@ declare(strict_types=1);
 namespace Piwigo\Ws;
 
 use Piwigo\Core\ApiKeyRequestFlag;
+use Piwigo\Core\WsError;
+use Piwigo\Core\WsParamFlag;
+use Piwigo\Core\WsParamType;
 use Piwigo\Ws\Encoder\PwgResponseEncoder;
 
 class PwgServer
@@ -139,10 +142,10 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
      *   explicitly pass null for "no params"
      *    @option mixed default (optional)
      *    @option int flags (optional)
-     *      possible values: WS_PARAM_ALLOW_ARRAY, WS_PARAM_FORCE_ARRAY, WS_PARAM_OPTIONAL
+     *      possible values: WsParamFlag::ACCEPT_ARRAY, WsParamFlag::FORCE_ARRAY, WsParamFlag::OPTIONAL
      *    @option int type (optional)
-     *      possible values: WS_TYPE_BOOL, WS_TYPE_INT, WS_TYPE_FLOAT, WS_TYPE_ID
-     *                       WS_TYPE_POSITIVE, WS_TYPE_NOTNULL
+     *      possible values: WsParamType::BOOL, WsParamType::INT, WsParamType::FLOAT, WsParamType::ID
+     *                       WsParamType::POSITIVE, WsParamType::NOTNULL
      *    @option int|float maxValue (optional)
      * @param string|null $description - a description of the method; some
      *   real registrations in ws.php explicitly pass null for "no description"
@@ -189,7 +192,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
                     $data['flags'] = 0;
                 }
                 if (array_key_exists('default', $data)) {
-                    $data['flags'] |= WS_PARAM_OPTIONAL;
+                    $data['flags'] |= WsParamFlag::OPTIONAL;
                 }
                 if (! isset($data['type'])) {
                     $data['type'] = 0;
@@ -263,55 +266,55 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
             'options' => [],
         ];
         $msg = '';
-        if (self::hasFlag($type, WS_TYPE_POSITIVE | WS_TYPE_NOTNULL)) {
+        if (self::hasFlag($type, WsParamType::POSITIVE | WsParamType::NOTNULL)) {
             $opts['options']['min_range'] = 1;
             $msg = ' positive and not null';
-        } elseif (self::hasFlag($type, WS_TYPE_POSITIVE)) {
+        } elseif (self::hasFlag($type, WsParamType::POSITIVE)) {
             $opts['options']['min_range'] = 0;
             $msg = ' positive';
         }
 
         if (is_array($param)) {
-            if (self::hasFlag($type, WS_TYPE_BOOL)) {
+            if (self::hasFlag($type, WsParamType::BOOL)) {
                 foreach ($param as &$value) {
                     if (($value = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)) === null) {
-                        return new PwgError(WS_ERR_INVALID_PARAM, $name . ' must only contain booleans');
+                        return new PwgError(WsError::INVALID_PARAM, $name . ' must only contain booleans');
                     }
                 }
                 unset($value);
-            } elseif (self::hasFlag($type, WS_TYPE_INT)) {
+            } elseif (self::hasFlag($type, WsParamType::INT)) {
                 foreach ($param as &$value) {
                     if (($value = filter_var($value, FILTER_VALIDATE_INT, $opts)) === false) {
-                        return new PwgError(WS_ERR_INVALID_PARAM, $name . ' must only contain' . $msg . ' integers');
+                        return new PwgError(WsError::INVALID_PARAM, $name . ' must only contain' . $msg . ' integers');
                     }
                 }
                 unset($value);
-            } elseif (self::hasFlag($type, WS_TYPE_FLOAT)) {
+            } elseif (self::hasFlag($type, WsParamType::FLOAT)) {
                 foreach ($param as &$value) {
                     if (
                         ($value = filter_var($value, FILTER_VALIDATE_FLOAT)) === false
                         or (isset($opts['options']['min_range']) and $value < $opts['options']['min_range'])
                     ) {
-                        return new PwgError(WS_ERR_INVALID_PARAM, $name . ' must only contain' . $msg . ' floats');
+                        return new PwgError(WsError::INVALID_PARAM, $name . ' must only contain' . $msg . ' floats');
                     }
                 }
                 unset($value);
             }
         } elseif ($param !== '') {
-            if (self::hasFlag($type, WS_TYPE_BOOL)) {
+            if (self::hasFlag($type, WsParamType::BOOL)) {
                 if (($param = filter_var($param, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)) === null) {
-                    return new PwgError(WS_ERR_INVALID_PARAM, $name . ' must be a boolean');
+                    return new PwgError(WsError::INVALID_PARAM, $name . ' must be a boolean');
                 }
-            } elseif (self::hasFlag($type, WS_TYPE_INT)) {
+            } elseif (self::hasFlag($type, WsParamType::INT)) {
                 if (($param = filter_var($param, FILTER_VALIDATE_INT, $opts)) === false) {
-                    return new PwgError(WS_ERR_INVALID_PARAM, $name . ' must be an' . $msg . ' integer');
+                    return new PwgError(WsError::INVALID_PARAM, $name . ' must be an' . $msg . ' integer');
                 }
-            } elseif (self::hasFlag($type, WS_TYPE_FLOAT)) {
+            } elseif (self::hasFlag($type, WsParamType::FLOAT)) {
                 if (
                     ($param = filter_var($param, FILTER_VALIDATE_FLOAT)) === false
                     or (isset($opts['options']['min_range']) and $param < $opts['options']['min_range'])
                 ) {
-                    return new PwgError(WS_ERR_INVALID_PARAM, $name . ' must be a' . $msg . ' float');
+                    return new PwgError(WsError::INVALID_PARAM, $name . ' must be a' . $msg . ' float');
                 }
             }
         }
@@ -335,7 +338,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
         $method = @$this->_methods[$methodName];
 
         if ($method == null) {
-            return new PwgError(WS_ERR_INVALID_METHOD, 'Method name is not valid');
+            return new PwgError(WsError::INVALID_METHOD, 'Method name is not valid');
         }
 
         if (isset($method['options']['post_only']) and (bool) $method['options']['post_only'] and ! self::isPost()) {
@@ -363,28 +366,28 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
 
             // parameter not provided in the request
             if (! array_key_exists($name, $params)) {
-                if (! self::hasFlag($flags, WS_PARAM_OPTIONAL)) {
+                if (! self::hasFlag($flags, WsParamFlag::OPTIONAL)) {
                     $missing_params[] = $name;
                 } elseif (array_key_exists('default', $options)) {
                     $params[$name] = $options['default'];
-                    if (self::hasFlag($flags, WS_PARAM_FORCE_ARRAY)) {
+                    if (self::hasFlag($flags, WsParamFlag::FORCE_ARRAY)) {
                         self::makeArrayParam($params[$name]);
                     }
                 }
             }
             // parameter provided but empty
-            elseif ($params[$name] === '' and ! self::hasFlag($flags, WS_PARAM_OPTIONAL)) {
+            elseif ($params[$name] === '' and ! self::hasFlag($flags, WsParamFlag::OPTIONAL)) {
                 $missing_params[] = $name;
             }
             // parameter provided - do some basic checks
             else {
                 $the_param = $params[$name];
 
-                if (is_array($the_param) and ! self::hasFlag($flags, WS_PARAM_ACCEPT_ARRAY)) {
-                    return new PwgError(WS_ERR_INVALID_PARAM, $name . ' must be scalar');
+                if (is_array($the_param) and ! self::hasFlag($flags, WsParamFlag::ACCEPT_ARRAY)) {
+                    return new PwgError(WsError::INVALID_PARAM, $name . ' must be scalar');
                 }
 
-                if (self::hasFlag($flags, WS_PARAM_FORCE_ARRAY)) {
+                if (self::hasFlag($flags, WsParamFlag::FORCE_ARRAY)) {
                     self::makeArrayParam($the_param);
                 }
 
@@ -407,7 +410,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
         }
 
         if ((bool) count($missing_params)) {
-            return new PwgError(WS_ERR_MISSING_PARAM, 'Missing parameters: ' . implode(',', $missing_params));
+            return new PwgError(WsError::MISSING_PARAM, 'Missing parameters: ' . implode(',', $missing_params));
         }
 
         $result = trigger_change('ws_invoke_allowed', true, $methodName, $params);
@@ -462,7 +465,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
         // never coerces it; narrow it here instead of trusting the raw
         // request value.
         if (! is_string($methodName) or ! $service->hasMethod($methodName)) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'Requested method does not exist');
+            return new PwgError(WsError::INVALID_PARAM, 'Requested method does not exist');
         }
 
         $res = [
@@ -483,8 +486,8 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
 
             $param_data = [
                 'name' => $name,
-                'optional' => self::hasFlag($flags, WS_PARAM_OPTIONAL),
-                'acceptArray' => self::hasFlag($flags, WS_PARAM_ACCEPT_ARRAY),
+                'optional' => self::hasFlag($flags, WsParamFlag::OPTIONAL),
+                'acceptArray' => self::hasFlag($flags, WsParamFlag::ACCEPT_ARRAY),
                 'type' => 'mixed',
             ];
 
@@ -498,17 +501,17 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
                 $param_data['info'] = $options['info'];
             }
 
-            if (self::hasFlag($type, WS_TYPE_BOOL)) {
+            if (self::hasFlag($type, WsParamType::BOOL)) {
                 $param_data['type'] = 'bool';
-            } elseif (self::hasFlag($type, WS_TYPE_INT)) {
+            } elseif (self::hasFlag($type, WsParamType::INT)) {
                 $param_data['type'] = 'int';
-            } elseif (self::hasFlag($type, WS_TYPE_FLOAT)) {
+            } elseif (self::hasFlag($type, WsParamType::FLOAT)) {
                 $param_data['type'] = 'float';
             }
-            if (self::hasFlag($type, WS_TYPE_POSITIVE)) {
+            if (self::hasFlag($type, WsParamType::POSITIVE)) {
                 $param_data['type'] .= ' positive';
             }
-            if (self::hasFlag($type, WS_TYPE_NOTNULL)) {
+            if (self::hasFlag($type, WsParamType::NOTNULL)) {
                 $param_data['type'] .= ' notnull';
             }
 

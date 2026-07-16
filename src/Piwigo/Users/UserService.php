@@ -18,6 +18,7 @@ use Piwigo\Core\DefaultLanguageProviderInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
 use Piwigo\Core\MailerInterface;
+use Piwigo\Core\WsError;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -1162,7 +1163,7 @@ DELETE FROM ' . Tables::favorites() . '
             if (strlen(str_replace(' ', '', $username_check)) == 0) {
                 return [
                     'error' => [
-                        'code' => WS_ERR_INVALID_PARAM,
+                        'code' => WsError::INVALID_PARAM,
                         'message' => 'Name field must not be empty',
                     ],
                 ];
@@ -1184,7 +1185,7 @@ DELETE FROM ' . Tables::favorites() . '
         $user_ids_for_status = [];
 
         // real callers (ws_users_setInfo/ws_users_setPreferences) always pass
-        // 'user_id' as a list of ints (WS_TYPE_ID-coerced) or numeric strings
+        // 'user_id' as a list of ints (WsParamType::ID-coerced) or numeric strings
         // (the global $user['id'] raw DB value); normalize once here so every
         // usage below is a well-typed int.
         assert(is_array($params['user_id']));
@@ -1198,7 +1199,7 @@ DELETE FROM ' . Tables::favorites() . '
             if ($this->getUsername($user_ids[0]) === false) {
                 return [
                     'error' => [
-                        'code' => WS_ERR_INVALID_PARAM,
+                        'code' => WsError::INVALID_PARAM,
                         'message' => 'This user does not exist.',
                     ],
                 ];
@@ -1211,7 +1212,7 @@ DELETE FROM ' . Tables::favorites() . '
                 if ((bool) $user_id and $user_id != $user_ids[0]) {
                     return [
                         'error' => [
-                            'code' => WS_ERR_INVALID_PARAM,
+                            'code' => WsError::INVALID_PARAM,
                             'message' => l10n('this login is already used'),
                         ],
                     ];
@@ -1219,7 +1220,7 @@ DELETE FROM ' . Tables::favorites() . '
                 if ($username_param != strip_tags($username_param)) {
                     return [
                         'error' => [
-                            'code' => WS_ERR_INVALID_PARAM,
+                            'code' => WsError::INVALID_PARAM,
                             'message' => l10n('html tags are not allowed in login'),
                         ],
                     ];
@@ -1233,7 +1234,7 @@ DELETE FROM ' . Tables::favorites() . '
                 if (($error = $this->validateMailAddress($user_ids[0], $email_param)) != '') {
                     return [
                         'error' => [
-                            'code' => WS_ERR_INVALID_PARAM,
+                            'code' => WsError::INVALID_PARAM,
                             'message' => $error,
                         ],
                     ];
@@ -1291,7 +1292,7 @@ SELECT
             if (! in_array($params['status'], ['guest', 'generic', 'normal', 'admin', 'webmaster'])) {
                 return [
                     'error' => [
-                        'code' => WS_ERR_INVALID_PARAM,
+                        'code' => WsError::INVALID_PARAM,
                         'message' => 'Invalid status',
                     ],
                 ];
@@ -1336,7 +1337,7 @@ SELECT
             if (! in_array($params['level'], $available_permission_levels)) {
                 return [
                     'error' => [
-                        'code' => WS_ERR_INVALID_PARAM,
+                        'code' => WsError::INVALID_PARAM,
                         'message' => 'Invalid level',
                     ],
                 ];
@@ -1348,7 +1349,7 @@ SELECT
             if (! in_array($params['language'], array_keys(\Piwigo\Lang\LangService::getLanguages()))) {
                 return [
                     'error' => [
-                        'code' => WS_ERR_INVALID_PARAM,
+                        'code' => WsError::INVALID_PARAM,
                         'message' => 'Invalid language',
                     ],
                 ];
@@ -1360,7 +1361,7 @@ SELECT
             if (! in_array($params['theme'], array_keys(\Piwigo\Core\ThemeCatalog::getPwgThemes()))) {
                 return [
                     'error' => [
-                        'code' => WS_ERR_INVALID_PARAM,
+                        'code' => WsError::INVALID_PARAM,
                         'message' => 'Invalid theme',
                     ],
                 ];

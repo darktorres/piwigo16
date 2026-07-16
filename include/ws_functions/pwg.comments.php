@@ -12,6 +12,8 @@ declare(strict_types=1);
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
+use Piwigo\Core\WsParamFlag;
+use Piwigo\Core\WsParamType;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
@@ -27,10 +29,10 @@ use Piwigo\Ws\PwgServer;
  * @param array{status: string, search: string|null, author_id?: int, image_id?: int, f_min_date: string|null, f_max_date: string|null, page: int, per_page: int, ...} $params
  *   status: non-null string default ('all'), no 'type' flag -- always
  *   present. search/f_min_date/f_max_date: null default, no 'type' flag
- *   -- always present, string|null. author_id/image_id: WS_PARAM_OPTIONAL
- *   with no 'default' key -- may be entirely absent; WS_TYPE_ID
+ *   -- always present, string|null. author_id/image_id: WsParamFlag::OPTIONAL
+ *   with no 'default' key -- may be entirely absent; WsParamType::ID
  *   guarantees a plain int when present. page: non-null int default,
- *   WS_TYPE_INT|WS_TYPE_POSITIVE -- always present. per_page: same type
+ *   WsParamType::INT|WsParamType::POSITIVE -- always present. per_page: same type
  *   flag, default is $conf['comments_page_nb_comments'] (a real int,
  *   confirmed 10 in config_default.inc.php) -- always present, always
  *   int.

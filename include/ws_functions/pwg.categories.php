@@ -12,6 +12,9 @@ declare(strict_types=1);
 use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Core\WsError;
+use Piwigo\Core\WsParamFlag;
+use Piwigo\Core\WsParamType;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -23,16 +26,17 @@ use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\WsHelper;
 
 /**
  * API method
  * Returns images per category
  *
  * @param array{cat_id: array<int, int>, recursive: bool, per_page: int, page: int, order: string|null, f_min_rate: float|null, f_max_rate: float|null, f_min_hit: int|null, f_max_hit: int|null, f_min_ratio: float|null, f_max_ratio: float|null, f_max_level: int|null, f_min_date_available: string|null, f_max_date_available: string|null, f_min_date_created: string|null, f_max_date_created: string|null, ...} $params
- *   cat_id: WS_PARAM_FORCE_ARRAY|WS_TYPE_INT|WS_TYPE_POSITIVE, null default
+ *   cat_id: WsParamFlag::FORCE_ARRAY|WsParamType::INT|WsParamType::POSITIVE, null default
  *   -- makeArrayParam() converts the null default to [], always a list of
  *   positive ints. f_* keys: the shared $f_params block merged into this
- *   registration, see ws_std_image_sql_filter()/ws_std_image_sql_order().
+ *   registration, see WsHelper::stdImageSqlFilter()/WsHelper::stdImageSqlOrder().
  * @return PwgError|array{paging: PwgNamedStruct, images: PwgNamedArray}
  */
 function ws_categories_getImages(array $params, PwgServer &$service): PwgError|array
@@ -94,13 +98,13 @@ SELECT
 
     // -------------------------------------------------------- get the images
     if (! empty($cats)) {
-        $where_clauses = ws_std_image_sql_filter($params, 'i.');
+        $where_clauses = WsHelper::stdImageSqlFilter($params, 'i.');
         $where_clauses[] = 'category_id IN (' . implode(',', array_keys($cats)) . ')';
         $where_clauses[] = (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
             'visible_images' => 'i.id',
         ], null, true);
 
-        $order_by = ws_std_image_sql_order($params, 'i.');
+        $order_by = WsHelper::stdImageSqlOrder($params, 'i.');
         if (empty($order_by)
               and count($params['cat_id']) == 1
               and isset($cats[$params['cat_id'][0]]['image_order'])
@@ -143,7 +147,7 @@ SELECT SQL_CALC_FOUND_ROWS i.*
             $image['name'] = strip_tags(is_string($rendered_name) ? $rendered_name : '');
             $image['comment'] = trigger_change('render_element_description', $image['comment'], __FUNCTION__);
 
-            $image = array_merge($image, ws_std_get_urls($row));
+            $image = array_merge($image, WsHelper::stdGetUrls($row));
 
             $images[] = $image;
         }
@@ -245,7 +249,7 @@ SELECT
         'images' => new PwgNamedArray(
             $images,
             'image',
-            ws_std_get_image_xml_attributes()
+            WsHelper::stdGetImageXmlAttributes()
         ),
     ];
 }
@@ -277,11 +281,11 @@ function ws_categories_getList(array $params, PwgServer &$service): PwgError|arr
     );
 
     if (! in_array($params['thumbnail_size'], array_keys(ImageStdParams::get_defined_type_map()))) {
-        return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid thumbnail_size');
+        return new PwgError(WsError::INVALID_PARAM, 'Invalid thumbnail_size');
     }
 
     if (! empty($params['limit']) and $params['recursive']) {
-        return new PwgError(WS_ERR_INVALID_PARAM, 'Cannot use both recursive and limit parameters at the same time');
+        return new PwgError(WsError::INVALID_PARAM, 'Cannot use both recursive and limit parameters at the same time');
     }
 
     $output = [];
@@ -575,13 +579,13 @@ SELECT id, path, representative_ext
     // management of the album thumbnail -- stops here
 
     if ($params['tree_output']) {
-        return categories_flatlist_to_tree($cats);
+        return WsHelper::categoriesFlatlistToTree($cats);
     }
 
     $output['categories'] = new PwgNamedArray(
         $cats,
         'category',
-        ws_std_get_category_xml_attributes()
+        WsHelper::stdGetCategoryXmlAttributes()
     );
 
     return $output;
@@ -742,7 +746,7 @@ SELECT
  *
  * @param array{name: string, parent: int|null, comment: string|null, visible: bool, status: string|null, commentable: bool, position: string|null, pwg_token?: string, ...} $params
  *   name: no 'default' key in ws.php's registration -- mandatory, always
- *   present. pwg_token: WS_PARAM_OPTIONAL with no 'default' key -- may be
+ *   present. pwg_token: WsParamFlag::OPTIONAL with no 'default' key -- may be
  *   entirely absent.
  * @return PwgError|array{info: string, id: int|string}
  */
@@ -795,7 +799,7 @@ function ws_categories_add(array $params, PwgServer &$service): PwgError|array
  *
  * @param array{category_id: array<int, int>, rank?: int, ...} $params
  *   category_id: no 'default' key -- mandatory, always present; FORCE_ARRAY
- *   always coerces to a list of positive ints. rank: WS_PARAM_OPTIONAL
+ *   always coerces to a list of positive ints. rank: WsParamFlag::OPTIONAL
  *   (explicit flag) with no 'default' key -- may be entirely absent.
  */
 function ws_categories_setRank(array $params, PwgServer &$service): ?PwgError
@@ -830,7 +834,7 @@ SELECT id
         $cat_asc = query2array($query, null, 'id');
 
         if (strcmp(implode(',', $cat_asc), implode(',', $order_new_by_id)) !== 0) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'you need to provide all sub-category ids for a given category');
+            return new PwgError(WsError::INVALID_PARAM, 'you need to provide all sub-category ids for a given category');
         }
     } else {
         $params['category_id'] = implode('', $params['category_id']);
@@ -875,12 +879,12 @@ SELECT id
  * Sets details of a category
  *
  * @param array{category_id: int, name: string|null, comment: string|null, status: string|null, visible: string|null, commentable: string|null, apply_commentable_to_subalbums: string|null, pwg_token?: string, ...} $params
- *   category_id: no 'default' key -- mandatory, always present, WS_TYPE_ID
+ *   category_id: no 'default' key -- mandatory, always present, WsParamType::ID
  *   guarantees a plain int. name/comment/status/visible/commentable/
  *   apply_commentable_to_subalbums: none has a 'type' flag (visible and
  *   commentable are validated by hand against /^(true|false)$/i below, not
- *   coerced by WS_TYPE_BOOL) -- all have a null default so string|null,
- *   always present. pwg_token: WS_PARAM_OPTIONAL with no 'default' key --
+ *   coerced by WsParamType::BOOL) -- all have a null default so string|null,
+ *   always present. pwg_token: WsParamFlag::OPTIONAL with no 'default' key --
  *   may be entirely absent.
  */
 function ws_categories_setInfo(array $params, PwgServer &$service): ?PwgError
@@ -913,7 +917,7 @@ SELECT *
 
     if (! empty($params['status'])) {
         if (! in_array($params['status'], ['private', 'public'])) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid status, only public/private');
+            return new PwgError(WsError::INVALID_PARAM, 'Invalid status, only public/private');
         }
 
         if ($params['status'] != $category['status']) {
@@ -927,7 +931,7 @@ SELECT *
 
     foreach (['visible', 'commentable'] as $param_name) {
         if (isset($params[$param_name]) and ! (bool) preg_match('/^(true|false)$/i', $params[$param_name])) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid param ' . $param_name . ' : ' . $params[$param_name]);
+            return new PwgError(WsError::INVALID_PARAM, 'Invalid param ' . $param_name . ' : ' . $params[$param_name]);
         }
     }
 
@@ -979,7 +983,7 @@ UPDATE ' . Tables::categories() . '
  * Sets representative image of a category
  *
  * @param array{category_id: int, image_id: int, ...} $params neither has a
- *   'default' key -- both mandatory, always present, WS_TYPE_ID guarantees
+ *   'default' key -- both mandatory, always present, WsParamType::ID guarantees
  *   plain ints.
  */
 function ws_categories_setRepresentative(array $params, PwgServer &$service): ?PwgError
@@ -1039,7 +1043,7 @@ UPDATE ' . Tables::userCacheCategories() . '
  * $conf['allow_random_representative'] or if the album has no direct photos.
  *
  * @param array{category_id: int, ...} $params no 'default' key -- mandatory,
- *   always present, WS_TYPE_ID guarantees a plain int.
+ *   always present, WsParamType::ID guarantees a plain int.
  */
 function ws_categories_deleteRepresentative(array $params, PwgServer &$service): ?PwgError
 {
@@ -1088,7 +1092,7 @@ UPDATE ' . Tables::categories() . '
  * Find a new album thumbnail.
  *
  * @param array{category_id: int, ...} $params no 'default' key -- mandatory,
- *   always present, WS_TYPE_ID guarantees a plain int.
+ *   always present, WsParamType::ID guarantees a plain int.
  * @return PwgError|array<string, mixed>
  */
 function ws_categories_refreshRepresentative(array $params, PwgServer &$service): PwgError|array
@@ -1157,7 +1161,7 @@ SELECT *
  * Deletes a category
  *
  * @param array{category_id: string|array<array-key, string>, photo_deletion_mode: string, pwg_token: string, ...} $params
- *   category_id: WS_PARAM_ACCEPT_ARRAY (not FORCE), no 'default' key --
+ *   category_id: WsParamFlag::ACCEPT_ARRAY (not FORCE), no 'default' key --
  *   mandatory, always present, accepts either a scalar or a bracket-array
  *   caller value (never null, since mandatory). photo_deletion_mode: no
  *   'type' flag, non-null default -- always a plain string. pwg_token: no
@@ -1239,9 +1243,9 @@ SELECT id
  * Moves a category
  *
  * @param array{category_id: string|array<array-key, string>, parent: int, pwg_token: string, ...} $params
- *   category_id: WS_PARAM_ACCEPT_ARRAY (not FORCE), no 'default' key --
+ *   category_id: WsParamFlag::ACCEPT_ARRAY (not FORCE), no 'default' key --
  *   mandatory, always present, accepts either a scalar or a bracket-array
- *   caller value. parent: WS_TYPE_INT|WS_TYPE_POSITIVE, no 'default' key --
+ *   caller value. parent: WsParamType::INT|WsParamType::POSITIVE, no 'default' key --
  *   mandatory, always a plain int. pwg_token: no 'default' key, no flags --
  *   mandatory, always present, plain string.
  * @return PwgError|array{new_ariane_string: string, updated_cats: array<int, array{cat_id: string, nb_sub_photos: int}>}

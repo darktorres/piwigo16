@@ -15,6 +15,7 @@ use Piwigo\Admin\themes;
 use Piwigo\Admin\updates;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\WsParamType;
 use Piwigo\Template\Template;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
@@ -252,7 +253,7 @@ function ws_extensions_update(array $params, PwgServer &$service): PwgError|stri
  *
  * @param array{type: string|null, id: string|null, reset: bool, pwg_token: string, ...} $params
  *   type/id: null default, no 'type' flag -- always present, string|null.
- *   reset: non-null bool default, WS_TYPE_BOOL -- always present.
+ *   reset: non-null bool default, WsParamType::BOOL -- always present.
  *   pwg_token: no 'default' key -- mandatory, always present.
  */
 function ws_extensions_ignoreupdate(array $params, PwgServer &$service): PwgError|true

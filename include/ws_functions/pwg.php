@@ -14,6 +14,9 @@ use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\FilesystemHelper;
+use Piwigo\Core\WsError;
+use Piwigo\Core\WsParamFlag;
+use Piwigo\Core\WsParamType;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\History\HistoryRepository;
@@ -28,16 +31,17 @@ use Piwigo\Rate\RateService;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\WsHelper;
 
 /**
  * API method
  * Returns a list of missing derivatives (not generated yet)
  * @param array{types: array<int, string>, ids: array<int, int>, max_urls: int, prev_page: int|null, f_min_rate: float|null, f_max_rate: float|null, f_min_hit: int|null, f_max_hit: int|null, f_min_ratio: float|null, f_max_ratio: float|null, f_max_level: int|null, f_min_date_available: string|null, f_max_date_available: string|null, f_min_date_created: string|null, f_max_date_created: string|null, ...} $params
- *    types/ids: WS_PARAM_FORCE_ARRAY, null default -- never null
- *    (makeArrayParam() converts to []). max_urls: WS_TYPE_INT|POSITIVE,
- *    default 200 (non-null) -- always int. prev_page: WS_TYPE_INT|
+ *    types/ids: WsParamFlag::FORCE_ARRAY, null default -- never null
+ *    (makeArrayParam() converts to []). max_urls: WsParamType::INT|POSITIVE,
+ *    default 200 (non-null) -- always int. prev_page: WsParamType::INT|
  *    POSITIVE, null default -- int|null. f_* (see
- *    ws_std_image_sql_filter()'s docblock): shared filter set merged in
+ *    WsHelper::stdImageSqlFilter()'s docblock): shared filter set merged in
  *    via ws.php's $f_params.
  * @return PwgError|array{next_page?: int|string, urls?: string[]}
  */
@@ -51,7 +55,7 @@ function ws_getMissingDerivatives(array $params, PwgServer &$service): PwgError|
     } else {
         $types = array_intersect(array_keys(ImageStdParams::get_defined_type_map()), $params['types']);
         if (count($types) == 0) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid types');
+            return new PwgError(WsError::INVALID_PARAM, 'Invalid types');
         }
     }
 
@@ -81,7 +85,7 @@ function ws_getMissingDerivatives(array $params, PwgServer &$service): PwgError|
     $conf['derivative_url_style'] = 2; // script
 
     $qlimit = min(5000, ceil(max($image_count / 500, $max_urls / count($types))));
-    $where_clauses = ws_std_image_sql_filter($params, '');
+    $where_clauses = WsHelper::stdImageSqlFilter($params, '');
     $where_clauses[] = 'id<start_id';
 
     if (! empty($params['ids'])) {
@@ -332,7 +336,7 @@ function ws_getCacheSize($params, PwgServer &$service): array
  * API method
  * Adds images to the caddie
  * @param array{image_id: array<int, int>, ...} $params image_id:
- *    WS_PARAM_FORCE_ARRAY|WS_TYPE_ID, mandatory (no 'default') -- always
+ *    WsParamFlag::FORCE_ARRAY|WsParamType::ID, mandatory (no 'default') -- always
  *    a list of positive ints.
  */
 function ws_caddie_add(array $params, PwgServer &$service): int
@@ -351,9 +355,9 @@ function ws_caddie_add(array $params, PwgServer &$service): int
  * API method
  * Deletes rates of an user
  * @param array{user_id: int, anonymous_id: string|null, image_id?: int, ...} $params
- *    user_id: WS_TYPE_ID, mandatory -- always int. anonymous_id: no
+ *    user_id: WsParamType::ID, mandatory -- always int. anonymous_id: no
  *    WS_TYPE flag, null default -- string|null. image_id:
- *    WS_PARAM_OPTIONAL with no 'default' -- may be entirely absent.
+ *    WsParamFlag::OPTIONAL with no 'default' -- may be entirely absent.
  */
 function ws_rates_delete(array $params, PwgServer &$service): int|string
 {
@@ -491,8 +495,8 @@ function ws_session_getStatus($params, PwgServer &$service): array
  * Returns lines of users activity
  *  @since 12
  * @param array{page: int|null, offset: int, uid: int|null, date_min: string|null, date_max: string|null, id: int|null, object: string|null, action: string|null, ...} $param
- *    page/uid/id: WS_TYPE_INT|POSITIVE or WS_TYPE_ID, null default ->
- *    int|null. offset: WS_TYPE_INT|POSITIVE, default 0 (non-null) ->
+ *    page/uid/id: WsParamType::INT|POSITIVE or WsParamType::ID, null default ->
+ *    int|null. offset: WsParamType::INT|POSITIVE, default 0 (non-null) ->
  *    always int. date_min/date_max/object/action: no WS_TYPE flag, null
  *    default -> string|null.
  * @return PwgError|array{result_lines: array<int, array<string, mixed>>, page_offset: int, end_page: bool, params: array<string, mixed>}
@@ -504,7 +508,7 @@ function ws_getActivityList(array $param, PwgServer &$service): PwgError|array
 
     foreach (['date_min', 'date_max'] as $datefield) {
         if (! empty($param[$datefield]) and ! \Piwigo\Core\DateHelper::isValidMysqlDatetime($param[$datefield])) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid ' . $datefield);
+            return new PwgError(WsError::INVALID_PARAM, 'Invalid ' . $datefield);
         }
     }
 
@@ -747,9 +751,9 @@ SELECT
  * Log a new line in visit history
  * @since 13
  * @param array{image_id: int, cat_id: int|null, section: string|null, tags_string: string|null, is_download: bool, ...} $params
- *    image_id: WS_TYPE_ID, mandatory -- always int. cat_id: WS_TYPE_ID,
+ *    image_id: WsParamType::ID, mandatory -- always int. cat_id: WsParamType::ID,
  *    null default -- int|null. section/tags_string: no WS_TYPE flag,
- *    null default -- string|null. is_download: WS_TYPE_BOOL, default
+ *    null default -- string|null. is_download: WsParamType::BOOL, default
  *    false (non-null) -- always bool.
  */
 function ws_history_log(array $params, PwgServer &$service): void
@@ -811,13 +815,13 @@ add_event_handler('get_history', 'get_history');
  * @since 13
  * @param array{start: string|null, end: string|null, types: array<int, string>, user_id: int|string, image_id: int|null, filename: string|null, ip: string|null, display_thumbnail: string, pageNumber: int|null, ...} $param
  *    start/end/filename/ip: no WS_TYPE flag, null default -- string|null.
- *    types: WS_PARAM_FORCE_ARRAY, non-null array default, no WS_TYPE flag
+ *    types: WsParamFlag::FORCE_ARRAY, non-null array default, no WS_TYPE flag
  *    -- always an array (never coerced element-wise). user_id: no
  *    WS_TYPE flag, non-null int default (-1) -- int if the default is
  *    used, otherwise the raw uncoerced request string. image_id:
- *    WS_TYPE_ID, null default -- int|null. display_thumbnail: no
+ *    WsParamType::ID, null default -- int|null. display_thumbnail: no
  *    WS_TYPE flag, non-null string default -- always string.
- *    pageNumber: WS_TYPE_INT|POSITIVE, null default -- int|null.
+ *    pageNumber: WsParamType::INT|POSITIVE, null default -- int|null.
  * @return array<string, mixed>
  */
 function ws_history_search(array $param, PwgServer &$service): array

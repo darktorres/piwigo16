@@ -12,6 +12,9 @@ declare(strict_types=1);
 use Piwigo\Audit\AuditRepository;
 use Piwigo\Audit\AuditService;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Core\WsError;
+use Piwigo\Core\WsParamFlag;
+use Piwigo\Core\WsParamType;
 use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Group\GroupService;
@@ -25,7 +28,7 @@ use Piwigo\Ws\PwgServer;
  * Returns the list of groups
  *
  * @param array{group_id?: array<int, int>, name?: string, per_page: int, page: int, order: string, ...} $params
- *   group_id/name: WS_PARAM_OPTIONAL with no 'default' key -- may be
+ *   group_id/name: WsParamFlag::OPTIONAL with no 'default' key -- may be
  *   entirely absent; FORCE_ARRAY always coerces group_id to a list of
  *   positive ints when present. per_page/page: non-null int default --
  *   always present. order: non-null string default ('name'), no 'type'
@@ -35,7 +38,7 @@ use Piwigo\Ws\PwgServer;
 function ws_groups_getList(array $params, PwgServer &$service): PwgError|array
 {
     if (! (bool) preg_match(ValidationPattern::ORDER, $params['order'])) {
-        return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid input parameter order');
+        return new PwgError(WsError::INVALID_PARAM, 'Invalid input parameter order');
     }
 
     $groups = new GroupRepository(DbConnection::build())
@@ -63,7 +66,7 @@ function ws_groups_getList(array $params, PwgServer &$service): PwgError|array
  *
  * @param array{name: string, is_default: bool, ...} $params name has no
  *   'default' key -- mandatory, always present. is_default: non-null
- *   bool default, WS_TYPE_BOOL -- always present.
+ *   bool default, WsParamType::BOOL -- always present.
  * @return mixed PwgError, or the result of the pwg.groups.getList invocation
  */
 function ws_groups_add(array $params, PwgServer &$service): mixed
@@ -77,7 +80,7 @@ function ws_groups_add(array $params, PwgServer &$service): mixed
         $inserted_id = new GroupService(new GroupRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
             ->create($name, $params['is_default']);
     } catch (\InvalidArgumentException $e) {
-        return new PwgError(WS_ERR_INVALID_PARAM, $e->getMessage());
+        return new PwgError(WsError::INVALID_PARAM, $e->getMessage());
     }
 
     // [SEC-57]
@@ -124,8 +127,8 @@ function ws_groups_delete(array $params, PwgServer &$service): PwgError|PwgNamed
  *
  * @param array{group_id: int, name?: string, is_default?: bool, pwg_token: string, ...} $params
  *   group_id/pwg_token: no 'default' key -- mandatory, always present,
- *   WS_TYPE_ID guarantees a plain int for group_id. name/is_default:
- *   WS_PARAM_OPTIONAL with no 'default' key -- may be entirely absent.
+ *   WsParamType::ID guarantees a plain int for group_id. name/is_default:
+ *   WsParamFlag::OPTIONAL with no 'default' key -- may be entirely absent.
  * @return mixed PwgError, or the result of the pwg.groups.getList invocation
  */
 function ws_groups_setInfo(array $params, PwgServer &$service): mixed
@@ -147,7 +150,7 @@ function ws_groups_setInfo(array $params, PwgServer &$service): mixed
         new GroupService(new GroupRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
             ->update($params['group_id'], $updates);
     } catch (\InvalidArgumentException $e) {
-        return new PwgError(WS_ERR_INVALID_PARAM, $e->getMessage());
+        return new PwgError(WsError::INVALID_PARAM, $e->getMessage());
     }
 
     return $service->invoke('pwg.groups.getList', [
@@ -161,7 +164,7 @@ function ws_groups_setInfo(array $params, PwgServer &$service): mixed
  *
  * @param array{group_id: int, user_id: array<int, int>, pwg_token: string, ...} $params
  *   none has a 'default' key -- all mandatory, always present; group_id:
- *   WS_TYPE_ID guarantees a plain int; user_id: FORCE_ARRAY always
+ *   WsParamType::ID guarantees a plain int; user_id: FORCE_ARRAY always
  *   coerces to a list of positive ints.
  * @return mixed PwgError, or the result of the pwg.groups.getList invocation
  */
@@ -174,7 +177,7 @@ function ws_groups_addUser(array $params, PwgServer &$service): mixed
     $added = new GroupService(new GroupRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
         ->addMembers($params['group_id'], $params['user_id']);
     if (! $added) {
-        return new PwgError(WS_ERR_INVALID_PARAM, 'This group does not exist.');
+        return new PwgError(WsError::INVALID_PARAM, 'This group does not exist.');
     }
 
     return $service->invoke('pwg.groups.getList', [
@@ -188,7 +191,7 @@ function ws_groups_addUser(array $params, PwgServer &$service): mixed
  *
  * @param array{destination_group_id: int, merge_group_id: array<int, int>, pwg_token: string, ...} $params
  *   none has a 'default' key -- all mandatory, always present;
- *   destination_group_id: WS_TYPE_ID guarantees a plain int;
+ *   destination_group_id: WsParamType::ID guarantees a plain int;
  *   merge_group_id: FORCE_ARRAY always coerces to a list of positive
  *   ints.
  * @return PwgError|array{destination_group: mixed, deleted_group: mixed}
@@ -206,7 +209,7 @@ function ws_groups_merge(array $params, PwgServer &$service): PwgError|array
     $merged = new GroupService(new GroupRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
         ->merge($params['destination_group_id'], $params['merge_group_id']);
     if (! $merged) {
-        return new PwgError(WS_ERR_INVALID_PARAM, 'All groups does not exist.');
+        return new PwgError(WsError::INVALID_PARAM, 'All groups does not exist.');
     }
 
     return [
@@ -223,7 +226,7 @@ function ws_groups_merge(array $params, PwgServer &$service): PwgError|array
  *
  * @param array{group_id: int, copy_name: string, pwg_token: string, ...} $params
  *   none has a 'default' key -- all mandatory, always present,
- *   WS_TYPE_ID guarantees a plain int for group_id.
+ *   WsParamType::ID guarantees a plain int for group_id.
  * @return mixed PwgError, or the result of the pwg.groups.getList invocation
  */
 function ws_groups_duplicate(array $params, PwgServer &$service): mixed
@@ -236,7 +239,7 @@ function ws_groups_duplicate(array $params, PwgServer &$service): mixed
         $inserted_id = new GroupService(new GroupRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
             ->duplicate($params['group_id'], $params['copy_name']);
     } catch (\InvalidArgumentException $e) {
-        return new PwgError(WS_ERR_INVALID_PARAM, $e->getMessage());
+        return new PwgError(WsError::INVALID_PARAM, $e->getMessage());
     }
 
     return $service->invoke('pwg.groups.getList', [
@@ -250,7 +253,7 @@ function ws_groups_duplicate(array $params, PwgServer &$service): mixed
  *
  * @param array{group_id: int, user_id: array<int, int>, pwg_token: string, ...} $params
  *   none has a 'default' key -- all mandatory, always present; group_id:
- *   WS_TYPE_ID guarantees a plain int; user_id: FORCE_ARRAY always
+ *   WsParamType::ID guarantees a plain int; user_id: FORCE_ARRAY always
  *   coerces to a list of positive ints.
  * @return mixed PwgError, or the result of the pwg.groups.getList invocation
  */
@@ -263,7 +266,7 @@ function ws_groups_deleteUser(array $params, PwgServer &$service): mixed
     $removed = new GroupService(new GroupRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
         ->removeMembers($params['group_id'], $params['user_id']);
     if (! $removed) {
-        return new PwgError(WS_ERR_INVALID_PARAM, 'This group does not exist.');
+        return new PwgError(WsError::INVALID_PARAM, 'This group does not exist.');
     }
 
     return $service->invoke('pwg.groups.getList', [

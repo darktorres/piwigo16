@@ -91,7 +91,7 @@ class PwgRestEncoder extends PwgResponseEncoder
             if ($value === null) {
                 continue;
             } // null means we dont put it
-            if ($name == WS_XML_ATTRIBUTES) {
+            if ($name == PwgResponseEncoder::ATTRIBUTES_KEY) {
                 if (is_array($value)) {
                     foreach ($value as $attr_name => $attr_value) {
                         $this->writer()

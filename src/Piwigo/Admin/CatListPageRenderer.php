@@ -203,7 +203,7 @@ SELECT id, name, permalink, dir, `rank`, status
         $query .= '
   ORDER BY `rank` ASC
 ;';
-        $categories = hash_from_query($query, 'id');
+        $categories = query2array($query, 'id');
         /** @var array<int|string, array<string, string|null>> $categories */
 
         // get the categories containing images directly

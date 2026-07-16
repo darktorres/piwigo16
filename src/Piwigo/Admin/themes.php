@@ -326,7 +326,7 @@ SELECT
         // defensively rather than trusting it, same as elsewhere in this
         // file (e.g. get_children_themes()).
         $user_ids_str = [];
-        foreach (array_from_query($query, 'user_id') as $query_user_id) {
+        foreach (query2array($query, null, 'user_id') as $query_user_id) {
             if (is_scalar($query_user_id)) {
                 $user_ids_str[] = (string) $query_user_id;
             }

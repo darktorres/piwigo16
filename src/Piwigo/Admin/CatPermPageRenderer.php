@@ -115,7 +115,7 @@ SELECT id, name
   FROM `' . Tables::groups() . '`
   ORDER BY name ASC
 ;';
-        $groups = simple_hash_from_query($query, 'id', 'name');
+        $groups = query2array($query, 'id', 'name');
         $template->assign('groups', $groups);
 
         // groups granted to access the category
@@ -128,7 +128,7 @@ SELECT group_id
         // narrow to the real int ids (DB values are string|null per this driver,
         // group_id is a NOT NULL numeric column)
         $group_granted_ids = [];
-        foreach (array_from_query($query, 'group_id') as $raw_group_id) {
+        foreach (query2array($query, null, 'group_id') as $raw_group_id) {
             if (is_numeric($raw_group_id)) {
                 $group_granted_ids[] = (int) $raw_group_id;
             }
@@ -158,7 +158,7 @@ SELECT ' . $user_field_id . ' AS id,
        ' . $user_field_username . ' AS username
   FROM ' . Tables::users() . '
 ;';
-        $users = simple_hash_from_query($query, 'id', 'username');
+        $users = query2array($query, 'id', 'username');
         $template->assign('users', $users);
 
         $query = '
@@ -170,7 +170,7 @@ SELECT user_id
         // narrow to the real int ids (DB values are string|null per this driver,
         // user_id is a NOT NULL numeric column)
         $user_granted_direct_ids = [];
-        foreach (array_from_query($query, 'user_id') as $raw_user_id) {
+        foreach (query2array($query, null, 'user_id') as $raw_user_id) {
             if (is_numeric($raw_user_id)) {
                 $user_granted_direct_ids[] = (int) $raw_user_id;
             }

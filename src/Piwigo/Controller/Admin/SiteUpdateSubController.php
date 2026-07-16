@@ -259,7 +259,7 @@ SELECT id, uppercats, global_rank, status, visible
             // 'id'/'rank'/'global_rank' fields. array<string, mixed> is the honest
             // common shape for both origins; individual fields are narrowed with
             // is_string()/is_int() at each point of use below.
-            $db_categories = hash_from_query($query, 'id');
+            $db_categories = query2array($query, 'id');
             /** @var array<int|string, array<string, mixed>> $db_categories */
 
             // get categort full directories in an array for comparison with file
@@ -608,7 +608,7 @@ SELECT id, path
                 // simple_hash_from_query()'s declared return type is under-typed
                 // (array<int|string, mixed>); path is a NOT NULL varchar column, so
                 // filter defensively to guarantee real strings here.
-                $db_elements = array_filter(simple_hash_from_query($query, 'id', 'path'), is_string(...));
+                $db_elements = array_filter(query2array($query, 'id', 'path'), is_string(...));
             }
 
             // next element id available

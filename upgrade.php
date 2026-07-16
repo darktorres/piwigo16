@@ -329,7 +329,7 @@ if (! in_array('param', $columns_of[PREFIX_TABLE . 'config'])) {
 SELECT id
   FROM ' . PREFIX_TABLE . 'upgrade
 ;';
-    $applied_upgrades = array_from_query($query, 'id');
+    $applied_upgrades = query2array($query, null, 'id');
 
     if (! in_array(159, $applied_upgrades)) {
         $current_release = '2.10.0';

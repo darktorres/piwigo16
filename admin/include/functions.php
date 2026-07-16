@@ -2204,7 +2204,7 @@ SELECT id
       OR storage_category_id IS NULL
     )
 ;';
-    $dissociables = array_filter(array_from_query($query, 'id'), is_string(...));
+    $dissociables = array_filter(query2array($query, null, 'id'), is_string(...));
 
     if (! empty($dissociables)) {
         $query = '

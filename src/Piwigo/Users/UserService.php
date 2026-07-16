@@ -1435,7 +1435,7 @@ SELECT
   FROM `' . Tables::groups() . '`
   WHERE id IN (' . implode(',', array_map(strval(...), $group_ids_param)) . ')
 ;';
-            $group_ids = array_from_query($query, 'id');
+            $group_ids = query2array($query, null, 'id');
 
             // if only -1 (a group id that can't exist) is in the list, then no
             // group is associated

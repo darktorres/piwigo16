@@ -72,15 +72,6 @@ namespace Piwigo\Admin\Category {
     }
 
     /**
-     * @return array<int, mixed>
-     */
-    function array_from_query(string $query, string $column): array
-    {
-        category_admin_service_test_calls(['fn' => 'array_from_query', 'args' => [$query, $column]]);
-        return $GLOBALS['category_admin_service_test_array_from_query'] ?? [];
-    }
-
-    /**
      * @return array<int|string, mixed>
      */
     function query2array(string $query, ?string $keyField = null, ?string $valueField = null): array
@@ -134,7 +125,6 @@ beforeEach(function (): void {
     // the recorder is a static array inside the stub function itself, not
     // resettable from outside -- filter '__reset__' markers out in each
     // test's own assertions instead of trying to clear it here.
-    unset($GLOBALS['category_admin_service_test_array_from_query']);
     unset($GLOBALS['category_admin_service_test_query2array']);
     unset($GLOBALS['category_admin_service_test_cat_info']);
     unset($GLOBALS['category_admin_service_test_create_result']);

@@ -830,11 +830,6 @@ function conf_get_param($param, $default_value = null)
  *
  * @return array<int|string, mixed>
  */
-#[\Deprecated(message: '2.6')]
-function simple_hash_from_query(string $query, ?string $keyname, ?string $valuename): array
-{
-    return query2array($query, $keyname, $valuename);
-}
 
 /**
  * creates an associative array based on a SQL query.
@@ -842,29 +837,14 @@ function simple_hash_from_query(string $query, ?string $keyname, ?string $valuen
  *
  * @return array<int|string, mixed>
  */
-#[\Deprecated(message: '2.6')]
-function hash_from_query(string $query, ?string $keyname): array
-{
-    return query2array($query, $keyname);
-}
 
 /**
  * creates a numeric array based on a SQL query.
  * if _$fieldname_ is empty the returned value will be an array of arrays
  * if _$fieldname_ is provided the returned value will be a one dimension array
  *
- * @param string|false $fieldname
  * @return array<int|string, mixed>
  */
-#[\Deprecated(message: '2.6')]
-function array_from_query(string $query, $fieldname = false): array
-{
-    if ($fieldname === false) {
-        return query2array($query);
-    } else {
-        return query2array($query, null, $fieldname);
-    }
-}
 
 /**
  * returns the parent (fallback) language of a language.

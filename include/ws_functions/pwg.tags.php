@@ -368,7 +368,7 @@ SELECT name
   FROM ' . Tables::tags() . '
   WHERE id != ' . $tag_id . '
 ;';
-    $existing_names = array_from_query($query, 'name');
+    $existing_names = query2array($query, null, 'name');
 
     $update = [];
 
@@ -474,7 +474,7 @@ SELECT image_id
   FROM ' . Tables::imageTag() . '
   WHERE tag_id = ' . $tag_id . '
 ;';
-    $destination_tag_image_ids = array_from_query($query, 'image_id');
+    $destination_tag_image_ids = query2array($query, null, 'image_id');
     $destination_tag_image_ids = array_values(array_filter($destination_tag_image_ids, is_string(...)));
 
     $inserts = [];

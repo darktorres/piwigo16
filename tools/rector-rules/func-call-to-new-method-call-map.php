@@ -20,7 +20,6 @@ $csrfServiceCtor = 'new \Piwigo\Csrf\CsrfService()';
 $inputValidatorCtor = 'new \Piwigo\Validation\InputValidator()';
 $paginationServiceCtor = 'new \Piwigo\Core\PaginationService()';
 $ephemeralKeyServiceCtor = 'new \Piwigo\Auth\EphemeralKeyService()';
-$userRepositoryCtor = 'new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())';
 
 return [
     'search_case_username' => [$userServiceCtor, 'searchCaseUsername'],
@@ -91,11 +90,20 @@ return [
     'create_navigation_bar' => [$paginationServiceCtor, 'createNavigationBar'],
     'get_ephemeral_key' => [$ephemeralKeyServiceCtor, 'generate'],
     'verify_ephemeral_key' => [$ephemeralKeyServiceCtor, 'verify'],
-    // P23 batch 8d, file 2 pass 2b-ii: functions.inc.php domain-specific
-    // functions with a real cross-layer caller (UserService itself),
-    // needing this custom instantiate-then-call rule rather than the
-    // simple static-call one.
-    'get_webmaster_mail_address' => [$userRepositoryCtor, 'getWebmasterMailAddress'],
+
+    // get_webmaster_mail_address() intentionally NOT mapped (removed after
+    // an initial run retargeted it everywhere, same lesson as
+    // check_theme_installed() in tools/rector-user-migration.php):
+    // Piwigo\Mail\MailService::getMailSenderEmail()/mail()'s Bcc-webmaster
+    // branch must keep calling it bare -- tests/Unit/Mail/MailServiceTest.php
+    // and tests/Unit/Job/SendNotificationEmailHandlerTest.php both spy on
+    // it via same-namespace function shadowing (no real DB connection
+    // available to either Unit test). Its own definition stays in
+    // functions.inc.php as a permanent facade, same shape as
+    // check_pwg_token() below. The real UserRepository::
+    // getWebmasterMailAddress() retarget already landed by hand at every
+    // OTHER real call site in an earlier commit -- this map entry's job
+    // is done, so it's removed rather than left inert.
 
     // check_pwg_token() intentionally NOT mapped: CsrfService::check()
     // deliberately returns bool|null instead of acting on failure itself

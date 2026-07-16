@@ -420,7 +420,7 @@ SELECT
                 assert(is_numeric($user['id']));
                 assert(is_string($user['status']));
                 $authorizeds = array_diff(
-                    array_filter(array_from_query($query, 'category_id'), is_string(...)),
+                    array_filter(query2array($query, null, 'category_id'), is_string(...)),
                     explode(
                         ',',
                         (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getForbiddenCategories((int) $user['id'], $user['status'])

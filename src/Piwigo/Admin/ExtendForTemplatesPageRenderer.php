@@ -85,7 +85,7 @@ SELECT permalink
 ';
 
         /* Add active permalinks */
-        $permalinks = array_from_query($query, 'permalink');
+        $permalinks = query2array($query, null, 'permalink');
         $relevant_parameters = array_merge($relevant_parameters, $permalinks);
 
         /* Link all supported templates to their respective handle */

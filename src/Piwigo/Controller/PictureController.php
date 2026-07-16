@@ -546,7 +546,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
                 'visible_categories' => 'id',
             ], 'AND') . '
 ;';
-            $related_categories = array_from_query($query);
+            $related_categories = query2array($query);
             // array_from_query() with no $fieldname argument delegates
             // straight to query2array($query) -- its own @return docblock
             // (array<int|string, mixed>) is looser than query2array()'s
@@ -1136,7 +1136,7 @@ SELECT id, name, permalink
                 // query2array()'s precise conditional return type, which
                 // it delegates to with a non-null $keyname.
                 /** @var array<int|string, array<string, string|null>> $cat_map */
-                $cat_map = hash_from_query($query, 'id');
+                $cat_map = query2array($query, 'id');
                 foreach ($related_categories as $category) {
                     $cats = [];
                     foreach (explode(',', (string) $category['uppercats']) as $id) {

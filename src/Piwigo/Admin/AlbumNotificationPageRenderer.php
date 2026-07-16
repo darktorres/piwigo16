@@ -284,7 +284,7 @@ SELECT
     id AS group_id
   FROM `' . Tables::groups() . '`
 ;';
-        $all_group_ids = array_from_query($query, 'group_id');
+        $all_group_ids = query2array($query, null, 'group_id');
         // group_ids stays [] (rather than undefined) when the gallery has no
         // groups at all, so the "private album" branch below can safely read it
         // unconditionally instead of guarding on definedness.
@@ -302,7 +302,7 @@ SELECT
   FROM ' . Tables::groupAccess() . '
   WHERE cat_id = ' . $category['id'] . '
 ;';
-                $group_ids = array_from_query($query, 'group_id');
+                $group_ids = query2array($query, null, 'group_id');
             } else {
                 $group_ids = $all_group_ids;
             }
@@ -318,7 +318,7 @@ SELECT
 ;';
                 $template->assign(
                     'group_mail_options',
-                    simple_hash_from_query($query, 'id', 'name')
+                    query2array($query, 'id', 'name')
                 );
             }
         }

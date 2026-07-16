@@ -156,7 +156,7 @@ SELECT c.site_id, COUNT(DISTINCT c.id) AS nb_categories, COUNT(i.id) AS nb_image
   GROUP BY c.site_id
 ;';
         /** @var array<int|string, array<string, string|null>> $sites_detail */
-        $sites_detail = hash_from_query($query, 'site_id');
+        $sites_detail = query2array($query, 'site_id');
 
         foreach (new SiteRepository(DbConnection::build())->findAll() as $row) {
             // 'id' and 'galleries_url' are both NOT NULL columns on the sites

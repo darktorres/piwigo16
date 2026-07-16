@@ -58,5 +58,5 @@ SELECT id
 // +-----------------------------------------------------------------------+
 
 redirect(make_index_url([
-    'list' => array_from_query($query, 'id'),
+    'list' => query2array($query, null, 'id'),
 ]));

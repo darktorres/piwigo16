@@ -88,7 +88,7 @@ $query = '
 SELECT id
   FROM ' . PREFIX_TABLE . 'upgrade
 ;';
-$applied = array_filter(array_from_query($query, 'id'), is_string(...));
+$applied = array_filter(query2array($query, null, 'id'), is_string(...));
 
 // retrieve existing upgrades
 $existing = get_available_upgrade_ids();

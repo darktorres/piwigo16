@@ -141,7 +141,7 @@ SELECT id
   WHERE id_uppercat ' .
               (($post_id === '-1') ? 'IS NULL' : '= ' . $post_id) . '
 ;';
-            $category_ids = array_from_query($query, 'id');
+            $category_ids = query2array($query, null, 'id');
             // 'id' is Tables::categories()'s primary key column, always a numeric
             // string per this driver's string|null fetch convention -- filter out
             // the (never-actually-occurring) null case so downstream implode()/

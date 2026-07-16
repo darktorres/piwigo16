@@ -13,11 +13,13 @@ declare(strict_types=1);
 // script (project convention: one-shot backfills as throwaway scripts).
 
 require_once __DIR__ . '/rector-rules/FuncCallToNewMethodCallRector.php';
+require_once __DIR__ . '/rector-rules/QueryHashWrapperRector.php';
 
 use Rector\Config\RectorConfig;
 use Rector\Transform\Rector\FuncCall\FuncCallToStaticCallRector;
 use Rector\Transform\ValueObject\FuncCallToStaticCall;
 use Utils\Rector\FuncCallToNewMethodCallRector;
+use Utils\Rector\QueryHashWrapperRector;
 
 return RectorConfig::configure()
     ->withPaths([
@@ -26,6 +28,15 @@ return RectorConfig::configure()
     ->withSkip([
         __DIR__ . '/../_data',
         __DIR__ . '/../galleries',
+        // NOTE: install/db/*.php are skip-listed here for historical
+        // performance/scope reasons, NOT because they're dead -- P23 batch
+        // 8d pass 2a found (the hard way) that these files ARE real,
+        // executable code (included by upgrade.php via UPGRADES_PATH
+        // during a real upgrade run). Any real call site in install/db/
+        // to a function this config's map touches must be checked and
+        // fixed BY HAND after every run, same as pass 2a's
+        // 94/117/122-database.php fixes -- do not assume this skip means
+        // "safe to ignore".
         __DIR__ . '/../install/db',
         __DIR__ . '/../language',
         __DIR__ . '/../local',
@@ -38,6 +49,7 @@ return RectorConfig::configure()
     ])
     ->withRules([
         FuncCallToNewMethodCallRector::class,
+        QueryHashWrapperRector::class,
     ])
     ->withConfiguredRule(FuncCallToStaticCallRector::class, [
         new FuncCallToStaticCall('check_status', 'Piwigo\Auth\AccessControl', 'checkStatus'),

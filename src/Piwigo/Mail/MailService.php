@@ -545,7 +545,7 @@ SELECT
         $query .= '
   ORDER BY name
 ;';
-        $admins = array_from_query($query);
+        $admins = query2array($query);
 
         if ($admins === []) {
             return true;
@@ -589,7 +589,7 @@ SELECT DISTINCT language
 
         $query .= '
 ;';
-        $languages = array_from_query($query, 'language');
+        $languages = query2array($query, null, 'language');
 
         if ($languages === []) {
             return $return;
@@ -615,7 +615,7 @@ SELECT
     AND ' . $userFields['email'] . ' <> ""
     AND language = \'' . $language . '\'
 ;';
-            $users = array_from_query($query);
+            $users = query2array($query);
 
             if ($users === []) {
                 continue;

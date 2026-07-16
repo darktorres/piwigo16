@@ -166,7 +166,7 @@ SELECT id
   WHERE id IN (' . implode(',', $cat_ids) . ')
     AND status = \'private\'
 ;';
-        $private_cats = array_from_query($query, 'id');
+        $private_cats = query2array($query, null, 'id');
 
         $inserts = [];
         foreach ($private_cats as $cat_id) {

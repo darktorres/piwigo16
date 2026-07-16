@@ -204,12 +204,12 @@ DELETE
                 $catIdsForGrant = array_merge($catIdsForGrant, get_subcat_ids([$catId]));
             }
 
-            $privateCats = array_from_query('
+            $privateCats = query2array('
 SELECT id
   FROM ' . Tables::categories() . '
   WHERE id IN (' . implode(',', $catIdsForGrant) . ')
     AND status = \'private\'
-;', 'id');
+;', null, 'id');
 
             $inserts = [];
             foreach ($privateCats as $privateCatId) {
@@ -289,7 +289,7 @@ UPDATE ' . Tables::categories() . '
     private function numericColumn(string $query, string $column): array
     {
         $ids = [];
-        foreach (array_from_query($query, $column) as $rawId) {
+        foreach (query2array($query, null, $column) as $rawId) {
             if (is_numeric($rawId)) {
                 $ids[] = (int) $rawId;
             }

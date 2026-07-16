@@ -346,14 +346,14 @@ SELECT value
   FROM ' . PREFIX_TABLE . 'config
   WHERE param=\'gallery_title\'
 ;';
-[$t] = array_from_query($query, 'value');
+[$t] = query2array($query, null, 'value');
 
 $query = '
 SELECT value
   FROM ' . PREFIX_TABLE . 'config
   WHERE param=\'gallery_description\'
 ;';
-[$d] = array_from_query($query, 'value');
+[$d] = query2array($query, null, 'value');
 
 $page_banner = '<h1>' . $t . '</h1><p>' . $d . '</p>';
 $page_banner = addslashes($page_banner);

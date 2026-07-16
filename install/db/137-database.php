@@ -18,7 +18,7 @@ SELECT id, image_order
   FROM ' . CATEGORIES_TABLE . '
   WHERE image_order != ""
 ;';
-$cats = hash_from_query($query, 'id');
+$cats = query2array($query, 'id');
 
 foreach ($cats as $id => &$data) {
     $image_order = explode(',', $data['image_order']);

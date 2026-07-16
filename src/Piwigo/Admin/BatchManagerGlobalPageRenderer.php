@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Admin\BatchManager\FilterPanelRenderer;
+use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -469,7 +470,7 @@ DELETE
             }
 
             if (! in_array($action, ['remove_from_caddie', 'add_to_caddie', 'delete_derivatives', 'generate_derivatives'], true)) {
-                invalidate_user_cache();
+                UserCacheInvalidator::invalidate();
             }
 
             trigger_notify('element_set_global_action', $action, $collection);

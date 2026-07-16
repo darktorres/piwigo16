@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\FilesystemHelper;
@@ -705,7 +706,7 @@ class updates
                         }
 
                         FilesystemHelper::deltree(PHPWG_ROOT_PATH . $data_location . 'update');
-                        invalidate_user_cache(true);
+                        UserCacheInvalidator::invalidate(true);
                         conf_update_param('piwigo_installed_version', $upgrade_to);
                         (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('system', ActivitySystem::Core, 'update', [
                             'from_version' => AppInfo::VERSION,

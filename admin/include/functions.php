@@ -9,20 +9,20 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-use Piwigo\Audit\AuditRepository;
-use Piwigo\Audit\AuditService;
-use Piwigo\Cache\PersistentCache;
+use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Logger;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
-use Piwigo\Group\GroupService;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
+use Piwigo\Users\UserRepository;
 
 // Relocated from the now-deleted admin/photos_add.php (P23 batch 8a):
 // Piwigo\Admin\CoreTabs::addCoreTabs() (formerly admin/include/
@@ -368,63 +368,6 @@ SELECT
     trigger_notify('delete_elements', $ids);
     (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('photo', $ids, 'delete');
     return count($ids);
-}
-
-/**
- * Deletes an user.
- * It also deletes all related data (accesses, favorites, permissions, etc.)
- * @todo : accept array input
- *
- * @param int $user_id
- */
-function delete_user($user_id): void
-{
-    /** @var array<string, mixed> $conf */
-    global $conf;
-    $tables = [
-        // destruction of the access linked to the user
-        Tables::userAccess(),
-        // destruction of data notification by mail for this user
-        Tables::userMailNotification(),
-        // destruction of data RSS notification for this user
-        Tables::userFeed(),
-        // deletion of calculated permissions linked to the user
-        Tables::userCache(),
-        // deletion of computed cache data linked to the user
-        Tables::userCacheCategories(),
-        // destruction of the group links for this user
-        Tables::userGroup(),
-        // destruction of the favorites associated with the user
-        Tables::favorites(),
-        // destruction of the caddie associated with the user
-        Tables::caddie(),
-        // deletion of piwigo specific informations
-        Tables::userInfos(),
-        Tables::userAuthKeys(),
-    ];
-
-    foreach ($tables as $table) {
-        $query = '
-DELETE FROM ' . $table . '
-  WHERE user_id = ' . $user_id . '
-;';
-        pwg_query($query);
-    }
-
-    // purge of sessions
-    SessionService::get()->deleteUserSessions($user_id);
-
-    // destruction of the user
-    $user_fields = $conf['user_fields'];
-    $user_id_field = is_array($user_fields) && is_string($user_fields['id'] ?? null) ? $user_fields['id'] : 'id';
-    $query = '
-DELETE FROM ' . Tables::users() . '
-  WHERE ' . $user_id_field . ' = ' . $user_id . '
-;';
-    pwg_query($query);
-
-    trigger_notify('delete_user', $user_id);
-    (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('user', $user_id, 'delete');
 }
 
 /**
@@ -1477,11 +1420,17 @@ SELECT id, uppercats, global_rank, visible, status
       WHERE cat_id = ' . $insert['id_uppercat'] . '
     ;';
         $granted_users = array_map(intval(...), query2array($query, null, 'user_id'));
-        add_permission_on_category((int) $inserted_id, $granted_users);
+        $conn = DbConnection::build();
+        new PermissionService(new PermissionRepository($conn), new GroupRepository($conn))
+            ->addPermissionOnCategory((int) $inserted_id, $granted_users);
     } elseif ($insert['status'] == 'private') {
         $current_user_id = $user['id'];
         $current_user_id = is_numeric($current_user_id) ? (int) $current_user_id : 0;
-        add_permission_on_category((int) $inserted_id, array_unique(array_merge(get_admins(), [$current_user_id])));
+        $conn = DbConnection::build();
+        $admin_ids = new UserRepository($conn)
+            ->findAdminIds();
+        new PermissionService(new PermissionRepository($conn), new GroupRepository($conn))
+            ->addPermissionOnCategory((int) $inserted_id, array_unique(array_merge($admin_ids, [$current_user_id])));
     }
 
     trigger_notify('create_virtual_category', array_merge([
@@ -1557,7 +1506,7 @@ DELETE
     $images_to_update = compare_image_tag_lists($taglist_before, $taglist_after);
     update_images_lastmodified($images_to_update);
 
-    invalidate_user_cache_nb_tags();
+    UserCacheInvalidator::invalidateNbTags();
 }
 
 /**
@@ -1597,7 +1546,7 @@ DELETE
     (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('tag', $tag_ids, 'delete');
 
     update_images_lastmodified($image_ids);
-    invalidate_user_cache_nb_tags();
+    UserCacheInvalidator::invalidateNbTags();
 }
 
 /**
@@ -1667,7 +1616,7 @@ SELECT id
 
                 $tag_id_cache[$tag_name] = (int) pwg_db_insert_id();
 
-                invalidate_user_cache_nb_tags();
+                UserCacheInvalidator::invalidateNbTags();
 
                 return $tag_id_cache[$tag_name];
             }
@@ -1727,7 +1676,7 @@ DELETE
         $logger->debug('$images_to_update', $images_to_update);
 
         update_images_lastmodified($images_to_update);
-        invalidate_user_cache_nb_tags();
+        UserCacheInvalidator::invalidateNbTags();
     }
 }
 
@@ -1920,7 +1869,7 @@ DELETE
     pwg_query($query);
 
     if ($invalidate_user_cache) {
-        invalidate_user_cache();
+        UserCacheInvalidator::invalidate();
     }
 
     conf_delete_param('empty_lounge_running');
@@ -2148,52 +2097,6 @@ function pwg_URL(): array
 }
 
 /**
- * Invalidates cached data (permissions and category counts) for all users.
- */
-function invalidate_user_cache(bool $full = true): void
-{
-    /**
-     * @var PersistentCache $persistent_cache
-     * @var Logger $logger
-     */
-    global $persistent_cache, $logger;
-
-    $logger->info(__FUNCTION__ . ' called');
-
-    if ($full) {
-        $query = '
-TRUNCATE TABLE ' . Tables::userCacheCategories() . ';';
-        pwg_query($query);
-        $query = '
-TRUNCATE TABLE ' . Tables::userCache() . ';';
-        pwg_query($query);
-    } else {
-        $query = '
-UPDATE ' . Tables::userCache() . '
-  SET need_update = \'true\';';
-        pwg_query($query);
-    }
-    $persistent_cache->purge(true);
-    conf_delete_param('count_orphans');
-    trigger_notify('invalidate_user_cache', $full);
-}
-
-/**
- * Invalidates cached tags counter for all users.
- */
-function invalidate_user_cache_nb_tags(): void
-{
-    /** @var array<string, mixed> $user */
-    global $user;
-    unset($user['nb_available_tags']);
-
-    $query = '
-UPDATE ' . Tables::userCache() . '
-  SET nb_available_tags = NULL';
-    pwg_query($query);
-}
-
-/**
  * Returns access levels as array used on template with html_options functions.
  *
  * @param int $MinLevelAccess
@@ -2310,93 +2213,6 @@ function cat_admin_access($category_id): bool
         return false;
     }
     return true;
-}
-
-/**
- * Returns the groupname corresponding to the given group identifier if exists.
- *
- * @param int $group_id
- */
-function get_groupname($group_id): false|string
-{
-    $name = new GroupRepository(DbConnection::build())
-        ->findName($group_id);
-
-    return $name ?? false;
-}
-
-/**
- * @param array<int, int|string> $group_ids
- * @return false|array<int|string, string>
- */
-function delete_groups($group_ids): false|array
-{
-    /** @var array<string, mixed> $user */
-    global $user;
-
-    if (count($group_ids) == 0) {
-        trigger_error('There is no group to delete', E_USER_WARNING);
-        return false;
-    }
-
-    $email_admin_on_new_user = conf_get_param('email_admin_on_new_user', 'undefined');
-    $email_admin_on_new_user = is_scalar($email_admin_on_new_user) ? (string) $email_admin_on_new_user : 'undefined';
-    if ((bool) preg_match('/^group:(\d+)$/', $email_admin_on_new_user, $matches)) {
-        foreach ($group_ids as $group_id) {
-            if ($group_id == $matches[1]) {
-                conf_update_param('email_admin_on_new_user', 'all', true);
-            }
-        }
-    }
-
-    $ids = array_map(intval(...), $group_ids);
-
-    $deleted = new GroupService(new GroupRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))
-        ->delete($ids);
-
-    // [SEC-57] one row per group actually deleted
-    if ($deleted !== []) {
-        $actor_id = $user['id'] ?? null;
-        $actor_id = is_numeric($actor_id) ? (int) $actor_id : null;
-        $audit = new AuditService(new AuditRepository(DbConnection::build()));
-        foreach ($deleted as $deleted_id => $deleted_name) {
-            $audit->record($actor_id, 'delete', 'group', $deleted_id, [
-                'name' => $deleted_name,
-            ], null);
-        }
-    }
-
-    return $deleted;
-}
-
-/**
- * Returns the username corresponding to the given user identifier if exists.
- *
- * @param int $user_id
- */
-function get_username($user_id): false|string
-{
-    /** @var array<string, mixed> $conf */
-    global $conf;
-
-    $user_fields = $conf['user_fields'];
-    $username_field = is_array($user_fields) && is_string($user_fields['username'] ?? null) ? $user_fields['username'] : 'username';
-    $user_id_field = is_array($user_fields) && is_string($user_fields['id'] ?? null) ? $user_fields['id'] : 'id';
-    $query = '
-SELECT ' . $username_field . '
-  FROM ' . Tables::users() . '
-  WHERE ' . $user_id_field . ' = ' . intval($user_id) . '
-;';
-    $result = pwg_query($query);
-    if (pwg_db_num_rows($result) > 0) {
-        $row = pwg_db_fetch_row($result);
-        assert($row !== null);
-        [$username] = $row;
-    } else {
-        return false;
-    }
-
-    return stripslashes((string) $username);
 }
 
 /**
@@ -2575,95 +2391,6 @@ function order_by_name($element_ids, array $name): array
     }
     ksort($ordered_element_ids);
     return $ordered_element_ids;
-}
-
-/**
- * Grant access to a list of categories for a list of users.
- *
- * @param int|numeric-string|int[] $category_ids may be a single scalar id
- *   (e.g. admin/cat_perm.php's $page['cat'], admin/include/functions.php's
- *   own $inserted_id) rather than an array
- * @param int|numeric-string|int[] $user_ids may be a single scalar id (e.g.
- *   admin/user_perm.php's $page['user'], sourced from $_GET['user_id'])
- */
-function add_permission_on_category($category_ids, $user_ids): void
-{
-    if (! is_array($category_ids)) {
-        $category_ids = [$category_ids];
-    }
-    if (! is_array($user_ids)) {
-        $user_ids = [$user_ids];
-    }
-
-    // check for emptiness
-    if (count($category_ids) == 0 or count($user_ids) == 0) {
-        return;
-    }
-
-    // normalize: real callers pass a mix of int and numeric-string ids
-    // (see this function's own docblock)
-    $category_ids = array_map(intval(...), $category_ids);
-
-    // make sure categories are private and select uppercats or subcats
-    $cat_ids = get_uppercat_ids($category_ids);
-    if (isset($_POST['apply_on_sub'])) {
-        $cat_ids = array_merge($cat_ids, get_subcat_ids($category_ids));
-    }
-
-    $query = '
-SELECT id
-  FROM ' . Tables::categories() . '
-  WHERE id IN (' . implode(',', $cat_ids) . ')
-    AND status = \'private\'
-;';
-    $private_cats = query2array($query, null, 'id');
-
-    if (count($private_cats) == 0) {
-        return;
-    }
-
-    $inserts = [];
-    foreach ($private_cats as $cat_id) {
-        foreach ($user_ids as $user_id) {
-            $inserts[] = [
-                'user_id' => $user_id,
-                'cat_id' => $cat_id,
-            ];
-        }
-    }
-
-    mass_inserts(
-        Tables::userAccess(),
-        ['user_id', 'cat_id'],
-        $inserts,
-        [
-            'ignore' => true,
-        ]
-    );
-}
-
-/**
- * Returns the list of admin users.
- *
- * @param bool $include_webmaster
- * @return int[]
- */
-function get_admins($include_webmaster = true): array
-{
-    $status_list = ['admin'];
-
-    if ($include_webmaster) {
-        $status_list[] = 'webmaster';
-    }
-
-    $query = '
-SELECT
-    user_id
-  FROM ' . Tables::userInfos() . '
-  WHERE status in (\'' . implode("','", $status_list) . '\')
-;';
-
-    return array_map(intval(...), query2array($query, null, 'user_id'));
 }
 
 /**

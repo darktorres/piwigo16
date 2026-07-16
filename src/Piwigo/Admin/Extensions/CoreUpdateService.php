@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Extensions;
 
+use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\FilesystemHelper;
@@ -356,7 +357,7 @@ final class CoreUpdateService
         }
 
         FilesystemHelper::deltree(PHPWG_ROOT_PATH . $dataLocation . 'update');
-        invalidate_user_cache(true);
+        UserCacheInvalidator::invalidate(true);
         conf_update_param('piwigo_installed_version', $upgradeTo);
         (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('system', ActivitySystem::Core, 'update', [
             'from_version' => AppInfo::VERSION,

@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Db\DbConnection;
@@ -780,7 +781,7 @@ function ws_categories_add(array $params, PwgServer &$service): PwgError|array
         return new PwgError(500, $creation_output['error']);
     }
 
-    invalidate_user_cache();
+    UserCacheInvalidator::invalidate();
 
     return $creation_output;
 }
@@ -1206,7 +1207,7 @@ SELECT id
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
     delete_categories($category_ids, $params['photo_deletion_mode']);
     update_global_rank();
-    invalidate_user_cache();
+    UserCacheInvalidator::invalidate();
 
     return null;
 }
@@ -1319,7 +1320,7 @@ SELECT id, name, dir, uppercats
 
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
     move_categories($category_ids, $params['parent']);
-    invalidate_user_cache();
+    UserCacheInvalidator::invalidate();
 
     // move_categories() mutates $page['errors'] from its own function scope
     // (global $page;) — get_defined_vars() (rather than reading $page

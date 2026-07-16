@@ -135,7 +135,7 @@ SELECT id
             [
                 'TITLE' => l10n(
                     'Manage permissions for group "%s"',
-                    get_groupname($page['group'])
+                    new GroupRepository(DbConnection::build())->findName($page['group']) ?? false
                 ),
                 'L_CAT_OPTIONS_TRUE' => l10n('Authorized'),
                 'L_CAT_OPTIONS_FALSE' => l10n('Forbidden'),

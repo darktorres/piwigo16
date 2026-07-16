@@ -20,6 +20,7 @@ use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Site\LocalSiteReader;
 use Piwigo\Template\Template;
+use Piwigo\Users\UserRepository;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -537,7 +538,8 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                         $insert_granted_users = array_unique($insert_granted_users, SORT_REGULAR);
                         mass_inserts(Tables::userAccess(), ['user_id', 'cat_id'], $insert_granted_users);
                     } else {
-                        add_permission_on_category($category_ids, get_admins());
+                        new PermissionService(new PermissionRepository(DbConnection::build()), new GroupRepository(DbConnection::build()))
+                            ->addPermissionOnCategory($category_ids, new UserRepository(DbConnection::build())->findAdminIds());
                     }
                 }
 

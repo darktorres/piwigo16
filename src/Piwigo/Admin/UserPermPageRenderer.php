@@ -14,6 +14,8 @@ use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Template\Template;
+use Piwigo\Users\UserRepository;
+use Piwigo\Users\UserService;
 
 /**
  * Ported from admin/user_perm.php (page slug "user_perm"). Its raw
@@ -93,7 +95,7 @@ final class UserPermPageRenderer
             [
                 'TITLE' => l10n(
                     'Manage permissions for user "%s"',
-                    get_username($page['user'])
+                    (new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build()))))->getUsername($page['user'])
                 ),
                 'L_CAT_OPTIONS_TRUE' => l10n('Authorized'),
                 'L_CAT_OPTIONS_FALSE' => l10n('Forbidden'),

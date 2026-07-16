@@ -274,7 +274,7 @@ class c13y_internal
                             $updates
                         );
 
-                        $page['infos'][] = sprintf(l10n('Status of user "%s" updated'), get_username($id));
+                        $page['infos'][] = sprintf(l10n('Status of user "%s" updated'), (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->getUsername($id));
 
                         $result = true;
                     }

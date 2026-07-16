@@ -580,9 +580,9 @@ function ws_getActivityList(array $param, PwgServer &$service): PwgError|array
         $where .= '
     AND action NOT IN (\'login\', \'logout\')';
     } elseif ($conf['activity_display_connections'] == 'admins_only') {
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
+        $admin_ids = new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())->findAdminIds();
         $where .= '
-    AND NOT (action IN (\'login\', \'logout\') AND object_id NOT IN (' . implode(',', get_admins()) . '))';
+    AND NOT (action IN (\'login\', \'logout\') AND object_id NOT IN (' . implode(',', $admin_ids) . '))';
     }
 
     $more_rows_available = true;

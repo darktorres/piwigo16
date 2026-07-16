@@ -106,14 +106,14 @@ function ws_groups_delete(array $params, PwgServer &$service): PwgError|PwgNamed
         return new PwgError(403, 'Invalid security token');
     }
 
-    include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-    $deleted_groups = delete_groups($params['group_id']);
+    $deleted_groups = new GroupService(new GroupRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())))
+        ->delete($params['group_id']);
     if ($deleted_groups === false) {
         return new PwgError(500, 'There is no group to delete');
     }
     $groupnames = array_values($deleted_groups);
 
-    invalidate_user_cache();
+    \Piwigo\Cache\UserCacheInvalidator::invalidate();
 
     return new PwgNamedArray($groupnames, 'group_deleted');
 }

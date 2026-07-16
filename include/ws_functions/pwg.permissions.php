@@ -192,7 +192,9 @@ SELECT id
         if ($params['recursive']) {
             $_POST['apply_on_sub'] = true;
         }
-        add_permission_on_category($params['cat_id'], $params['user_id']);
+        $conn = \Piwigo\Db\DbConnection::build();
+        new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository($conn), new \Piwigo\Group\GroupRepository($conn))
+            ->addPermissionOnCategory($params['cat_id'], $params['user_id']);
     }
 
     return $service->invoke('pwg.permissions.getList', [

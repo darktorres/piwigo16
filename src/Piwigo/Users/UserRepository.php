@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Users;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\Tables;
 
@@ -256,6 +257,72 @@ final class UserRepository extends AbstractRepository
             ->set('preferences', ':preferences')
             ->where('user_id = :userId')
             ->setParameter('preferences', $serializedPreferences)
+            ->setParameter('userId', $userId)
+            ->executeStatement();
+    }
+
+    /**
+     * Ported from admin/include/functions.php's get_admins() (P23 batch
+     * 8d), unchanged logic.
+     *
+     * @return list<int>
+     */
+    public function findAdminIds(bool $includeWebmaster = true): array
+    {
+        $statusList = ['admin'];
+        if ($includeWebmaster) {
+            $statusList[] = 'webmaster';
+        }
+
+        $ids = $this->conn->createQueryBuilder()
+            ->select('user_id')
+            ->from(Tables::userInfos())
+            ->where('status IN (:statuses)')
+            ->setParameter('statuses', $statusList, ArrayParameterType::STRING)
+            ->executeQuery()
+            ->fetchFirstColumn();
+
+        return array_map(intval(...), $ids);
+    }
+
+    /**
+     * Deletes a user's row across every table referencing it. Ported from
+     * admin/include/functions.php's delete_user() (P23 batch 8d),
+     * unchanged logic -- pure cascade delete, no business logic (session
+     * purge / activity log stay in Piwigo\Users\UserService::deleteUser(),
+     * which calls this).
+     */
+    public function deleteUser(int $userId): void
+    {
+        /** @var array<string, mixed> $conf */
+        global $conf;
+
+        $tables = [
+            Tables::userAccess(),
+            Tables::userMailNotification(),
+            Tables::userFeed(),
+            Tables::userCache(),
+            Tables::userCacheCategories(),
+            Tables::userGroup(),
+            Tables::favorites(),
+            Tables::caddie(),
+            Tables::userInfos(),
+            Tables::userAuthKeys(),
+        ];
+
+        foreach ($tables as $table) {
+            $this->conn->createQueryBuilder()
+                ->delete($table)
+                ->where('user_id = :userId')
+                ->setParameter('userId', $userId)
+                ->executeStatement();
+        }
+
+        $userFields = $conf['user_fields'];
+        $userIdField = is_array($userFields) && is_string($userFields['id'] ?? null) ? $userFields['id'] : 'id';
+        $this->conn->createQueryBuilder()
+            ->delete(Tables::users())
+            ->where($userIdField . ' = :userId')
             ->setParameter('userId', $userId)
             ->executeStatement();
     }

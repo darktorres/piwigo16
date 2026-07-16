@@ -13,6 +13,7 @@ use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Auth\CookieService;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Cache\PersistentFileCache;
+use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
@@ -1117,7 +1118,7 @@ UPDATE ' . Tables::images() . '
     $affected_rows = pwg_db_changes();
     if ((bool) $affected_rows) {
         include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-        invalidate_user_cache();
+        UserCacheInvalidator::invalidate();
     }
     return $affected_rows;
 }
@@ -1554,7 +1555,7 @@ SELECT id, name, permalink
         );
     }
 
-    invalidate_user_cache();
+    UserCacheInvalidator::invalidate();
 
     return [
         'image_id' => $image_id,
@@ -2204,7 +2205,7 @@ SELECT COUNT(*)
     }
 
     // final step, reset user cache
-    invalidate_user_cache();
+    UserCacheInvalidator::invalidate();
 
     // trick to bypass get_sql_condition_FandF
     if (! empty($params['level']) and $params['level'] > $user['level']) {
@@ -2555,7 +2556,7 @@ DELETE FROM ' . Tables::imageFormat() . '
 ;';
     pwg_query($query);
 
-    invalidate_user_cache();
+    UserCacheInvalidator::invalidate();
 
     return $ok;
 }
@@ -2779,7 +2780,7 @@ SELECT *
         set_tags($tag_list, $params['image_id']);
     }
 
-    invalidate_user_cache();
+    UserCacheInvalidator::invalidate();
 
     return null;
 }
@@ -2821,7 +2822,7 @@ function ws_images_delete(array $params, PwgServer $service): PwgError|int
 
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
     $ret = delete_elements($image_ids, true);
-    invalidate_user_cache();
+    UserCacheInvalidator::invalidate();
 
     return $ret;
 }
@@ -3054,7 +3055,7 @@ function ws_images_deleteOrphans(array $params, PwgServer $service): PwgError|ar
 
     $orphan_ids_to_delete = array_slice(get_orphans(), 0, $params['block_size']);
     $deleted_count = delete_elements($orphan_ids_to_delete, true);
-    invalidate_user_cache();
+    UserCacheInvalidator::invalidate();
 
     return [
         'nb_deleted' => $deleted_count,
@@ -3102,7 +3103,7 @@ SELECT
         move_images_to_categories($params['image_id'], [$params['category_id']]);
     }
 
-    invalidate_user_cache();
+    UserCacheInvalidator::invalidate();
 
     return null;
 }

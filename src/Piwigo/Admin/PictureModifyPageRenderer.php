@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
@@ -86,7 +87,7 @@ SELECT id
             check_pwg_token();
 
             delete_elements([$image_id], true);
-            invalidate_user_cache();
+            UserCacheInvalidator::invalidate();
 
             // where to redirect the user now?
             //
@@ -190,7 +191,7 @@ SELECT id
             }
             move_images_to_categories([$image_id], $associate_categories);
 
-            invalidate_user_cache();
+            UserCacheInvalidator::invalidate();
 
             // thumbnail for albums
             if (! isset($_POST['represent'])) {

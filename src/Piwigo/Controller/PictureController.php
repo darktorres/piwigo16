@@ -6,6 +6,7 @@ namespace Piwigo\Controller;
 
 use Piwigo\Auth\CookieService;
 use Piwigo\Auth\EphemeralKeyService;
+use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentRepository;
@@ -345,8 +346,7 @@ UPDATE ' . Tables::categories() . '
                             'image_id' => $image_id,
                         ]);
 
-                        include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-                        invalidate_user_cache();
+                        UserCacheInvalidator::invalidate();
                     }
 
                     redirect($url_self);

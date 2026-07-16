@@ -9,6 +9,7 @@ use Piwigo\Auth\AuthRepository;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
+use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\ActivityLoggerInterface;
@@ -152,6 +153,37 @@ final class UserService implements DefaultLanguageProviderInterface
         $user_fields = $conf['user_fields'];
 
         return $this->repo->findIdByEmail($email, $user_fields['id'], $user_fields['email']);
+    }
+
+    /**
+     * Ported from admin/include/functions.php's get_username() (P23 batch
+     * 8d), unchanged logic (including the stripslashes() call -- a real,
+     * already-established precedent in this same file, not legacy cruft).
+     */
+    public function getUsername(int $userId): false|string
+    {
+        /** @var array<string, mixed> $conf */
+        global $conf;
+
+        /** @var array<string, string> $user_fields */
+        $user_fields = $conf['user_fields'];
+
+        $username = $this->repo->findUsernameById($userId, $user_fields['id'], $user_fields['username']);
+
+        return $username === null ? false : stripslashes($username);
+    }
+
+    /**
+     * Deletes a user and every trace of it (sessions, cache rows, activity
+     * log entry). Ported from admin/include/functions.php's delete_user()
+     * (P23 batch 8d), unchanged logic.
+     */
+    public function deleteUser(int $userId): void
+    {
+        $this->repo->deleteUser($userId);
+        SessionService::get()->deleteUserSessions($userId);
+        trigger_notify('delete_user', $userId);
+        $this->activityLogger->record('user', $userId, 'delete');
     }
 
     /**
@@ -1147,8 +1179,6 @@ DELETE FROM ' . Tables::favorites() . '
         /** @var array<string, string> $user_fields */
         $user_fields = $conf['user_fields'];
 
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         $updates = $updates_infos = [];
         $update_status = null;
         $user_ids_for_status = [];
@@ -1165,7 +1195,7 @@ DELETE FROM ' . Tables::favorites() . '
         }
 
         if (count($user_ids) == 1) {
-            if (get_username($user_ids[0]) === false) {
+            if ($this->getUsername($user_ids[0]) === false) {
                 return [
                     'error' => [
                         'code' => WS_ERR_INVALID_PARAM,
@@ -1464,7 +1494,7 @@ SELECT
             }
         }
 
-        invalidate_user_cache();
+        UserCacheInvalidator::invalidate();
 
         $this->activityLogger->record('user', $user_ids, 'edit');
 

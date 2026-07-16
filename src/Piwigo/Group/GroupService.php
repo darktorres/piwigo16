@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Group;
 
+use Piwigo\Audit\AuditRepository;
+use Piwigo\Audit\AuditService;
+use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Core\ActivityLoggerInterface;
+use Piwigo\Db\DbConnection;
 
 /**
  * Group domain business logic: creation/rename/deletion, membership
@@ -14,20 +18,9 @@ use Piwigo\Core\ActivityLoggerInterface;
  * Piwigo\Activity\ActivityService, is L2bExtendedDomain; this class is
  * L2aCoreDomain, so it depends on the L1Infrastructure interface instead,
  * same shape as MailerInterface -- see ActivityLoggerInterface's own
- * docblock), and calls the still-procedural cache-invalidation free
- * function directly (invalidate_user_cache()) -- not a class dependency,
- * so no deptrac layer concern, same as how MailService/HtmlService already
- * call trigger_notify()/trigger_change() directly.
- *
- * invalidate_user_cache() specifically lives in admin/include/functions.php,
- * which common.inc.php's bootstrap does NOT load unconditionally (unlike
- * pwg_activity()/trigger_notify(), both in the always-loaded
- * include/functions.inc.php) -- confirmed empirically: a real ws.php
- * request path never happens to load it either. The original ws_groups_*
- * functions each did their own `include_once
- * PHPWG_ROOT_PATH . 'admin/include/functions.php';` immediately before
- * calling invalidate_user_cache(); ensureLegacyFunctionsLoaded() centralizes
- * that same guard here instead of repeating it at every call site.
+ * docblock), and calls Piwigo\Cache\UserCacheInvalidator (L1Infrastructure,
+ * P23 batch 8d) directly for cache invalidation -- a real class dependency,
+ * always allowed (L2a may depend on L1).
  */
 final class GroupService
 {
@@ -35,11 +28,6 @@ final class GroupService
         private readonly GroupRepository $repo,
         private readonly ActivityLoggerInterface $activityLogger,
     ) {}
-
-    private static function ensureLegacyFunctionsLoaded(): void
-    {
-        include_once \PHPWG_ROOT_PATH . 'admin/include/functions.php';
-    }
 
     /**
      * @return list<array{id: int, name: string, is_default: bool}>
@@ -115,8 +103,7 @@ final class GroupService
 
         $memberIds = $this->repo->findMemberUserIds($groupId);
         $this->repo->addMembers($newId, $memberIds);
-        self::ensureLegacyFunctionsLoaded();
-        invalidate_user_cache();
+        UserCacheInvalidator::invalidate();
 
         // Matches the original ws_groups_duplicate()'s own (likely
         // accidental, but faithfully preserved) choice of 'associated' id:
@@ -171,8 +158,7 @@ final class GroupService
         }
 
         $this->repo->addMembers($groupId, $userIds);
-        self::ensureLegacyFunctionsLoaded();
-        invalidate_user_cache();
+        UserCacheInvalidator::invalidate();
 
         $this->activityLogger->record('group', $groupId, 'edit');
         $this->activityLogger->record('user', $userIds, 'edit');
@@ -192,8 +178,7 @@ final class GroupService
         }
 
         $this->repo->removeMembers($groupId, $userIds);
-        self::ensureLegacyFunctionsLoaded();
-        invalidate_user_cache();
+        UserCacheInvalidator::invalidate();
 
         $this->activityLogger->record('group', $groupId, 'edit');
         $this->activityLogger->record('user', $userIds, 'edit');
@@ -231,8 +216,7 @@ final class GroupService
         // Unconditional, matching the original ws_groups_merge(): the
         // cache invalidation and the destination group's own 'edit'
         // activity fire even when no members actually moved.
-        self::ensureLegacyFunctionsLoaded();
-        invalidate_user_cache();
+        UserCacheInvalidator::invalidate();
         $this->activityLogger->record('group', $destinationGroupId, 'edit');
 
         foreach ($membersToAdd as $userId) {
@@ -248,16 +232,38 @@ final class GroupService
 
     /**
      * Deletes the given groups. Returns id => name of every group actually
-     * deleted (empty array when none of the ids existed). Does not itself
-     * invalidate the user cache -- matches the original delete_groups()
-     * free function's own scope; callers that need it (ws_groups_delete())
-     * call invalidate_user_cache() themselves afterward, same as before.
+     * deleted (empty array when none of the ids existed), or false when
+     * $groupIds is empty. Absorbs the former delete_groups() free
+     * function's own extra orchestration (P23 batch 8d): the
+     * email_admin_on_new_user config-consistency check and the [SEC-57]
+     * per-group audit trail. Does not itself invalidate the user cache --
+     * callers that need it (ws_groups_delete()) call
+     * Piwigo\Cache\UserCacheInvalidator::invalidate() themselves
+     * afterward, same as before.
      *
      * @param array<int, int> $groupIds
-     * @return array<int, string>
+     * @return false|array<int, string>
      */
-    public function delete(array $groupIds): array
+    public function delete(array $groupIds): false|array
     {
+        /** @var array<string, mixed> $user */
+        global $user;
+
+        if (count($groupIds) === 0) {
+            trigger_error('There is no group to delete', E_USER_WARNING);
+            return false;
+        }
+
+        $emailAdminOnNewUser = conf_get_param('email_admin_on_new_user', 'undefined');
+        $emailAdminOnNewUser = is_scalar($emailAdminOnNewUser) ? (string) $emailAdminOnNewUser : 'undefined';
+        if ((bool) preg_match('/^group:(\d+)$/', $emailAdminOnNewUser, $matches)) {
+            foreach ($groupIds as $groupId) {
+                if ($groupId === (int) $matches[1]) {
+                    conf_update_param('email_admin_on_new_user', 'all', true);
+                }
+            }
+        }
+
         $deleted = $this->repo->delete($groupIds);
         if ($deleted === []) {
             return [];
@@ -266,6 +272,16 @@ final class GroupService
         $ids = array_keys($deleted);
         trigger_notify('delete_group', $ids);
         $this->activityLogger->record('group', $ids, 'delete');
+
+        // [SEC-57] one row per group actually deleted
+        $actorId = $user['id'] ?? null;
+        $actorId = is_numeric($actorId) ? (int) $actorId : null;
+        $audit = new AuditService(new AuditRepository(DbConnection::build()));
+        foreach ($deleted as $deletedId => $deletedName) {
+            $audit->record($actorId, 'delete', 'group', $deletedId, [
+                'name' => $deletedName,
+            ], null);
+        }
 
         return $deleted;
     }
@@ -308,7 +324,6 @@ final class GroupService
         }
 
         $this->repo->addAccess($groupId, $toAuthorize);
-        self::ensureLegacyFunctionsLoaded();
-        invalidate_user_cache();
+        UserCacheInvalidator::invalidate();
     }
 }

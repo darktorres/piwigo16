@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Upload;
 
 use Piwigo\Admin\Image\pwg_image;
+use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Config\Config;
 use Piwigo\Core\Logger;
 use Piwigo\Db\DbConnection;
@@ -582,7 +583,7 @@ SELECT
         }
 
         if (! (bool) $conf['lounge_active']) {
-            invalidate_user_cache();
+            UserCacheInvalidator::invalidate();
         }
     }
 

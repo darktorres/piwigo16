@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Category;
 
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
 
 /**
  * Admin-side category WRITE operations -- deliberately separate from
@@ -251,7 +255,9 @@ DELETE
         }
 
         if (count($userIds) > 0) {
-            add_permission_on_category($catId, $userIds);
+            $conn = DbConnection::build();
+            new PermissionService(new PermissionRepository($conn), new GroupRepository($conn))
+                ->addPermissionOnCategory($catId, $userIds);
         }
     }
 

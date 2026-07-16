@@ -7,6 +7,7 @@ namespace Piwigo\Admin\Maintenance;
 use Piwigo\Admin\Integrity\check_integrity;
 use Piwigo\Auth\CookieService;
 use Piwigo\Cache\PersistentFileCache;
+use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Db\DbConnection;
@@ -110,7 +111,7 @@ final class MaintenanceActionDispatcher
                 update_uppercats();
                 update_category('all');
                 update_global_rank();
-                invalidate_user_cache(true);
+                UserCacheInvalidator::invalidate(true);
                 $page['infos'][] = sprintf('%s : %s', l10n('Update albums informations'), l10n('action successfully performed.'));
                 break;
 
@@ -120,7 +121,7 @@ final class MaintenanceActionDispatcher
                 update_path();
                 new RateService(new RateRepository(DbConnection::build()), new CookieService())
                     ->updateRatingScore();
-                invalidate_user_cache();
+                UserCacheInvalidator::invalidate();
                 $page['infos'][] = sprintf('%s : %s', l10n('Update photos information'), l10n('action successfully performed.'));
                 break;
 
@@ -132,7 +133,7 @@ final class MaintenanceActionDispatcher
 
             case 'user_cache':
 
-                invalidate_user_cache();
+                UserCacheInvalidator::invalidate();
                 $page['infos'][] = sprintf('%s : %s', l10n('Purge user cache'), l10n('action successfully performed.'));
                 break;
 

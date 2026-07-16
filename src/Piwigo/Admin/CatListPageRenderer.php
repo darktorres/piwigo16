@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Admin\Category\CategoryAdminService;
+use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
@@ -119,7 +120,7 @@ SELECT COUNT(*)
 
             $_SESSION['page_infos'] = [l10n('Virtual album deleted')];
             update_global_rank();
-            invalidate_user_cache();
+            UserCacheInvalidator::invalidate();
 
             $redirect_url = get_root_url() . 'admin.php?page=cat_list';
             if ($parent_id !== null) {
@@ -133,7 +134,7 @@ SELECT COUNT(*)
             $output_create = new CategoryAdminService()
                 ->createVirtualCategory($virtual_name, $parent_id);
 
-            invalidate_user_cache();
+            UserCacheInvalidator::invalidate();
             // $page['errors']/$page['infos'] are always initialized to an array by
             // include/common.inc.php; re-assert it here so PHPStan can prove the
             // pushes below are array-like (same pattern as

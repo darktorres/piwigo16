@@ -85,11 +85,6 @@ namespace Piwigo\Admin\Category {
         category_admin_service_test_calls(['fn' => 'mass_inserts', 'args' => [$table, $fields, $rows, $options]]);
     }
 
-    function add_permission_on_category(int $catId, array $userIds): void
-    {
-        category_admin_service_test_calls(['fn' => 'add_permission_on_category', 'args' => [$catId, $userIds]]);
-    }
-
     /**
      * @return array<string, mixed>|null
      */

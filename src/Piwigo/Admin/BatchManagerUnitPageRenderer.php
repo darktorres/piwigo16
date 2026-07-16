@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Admin\BatchManager\FilterPanelRenderer;
+use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\SrcImage;
@@ -136,7 +137,7 @@ SELECT id, date_creation
             );
 
             $page['infos'][] = l10n('Photo informations updated');
-            invalidate_user_cache();
+            UserCacheInvalidator::invalidate();
         }
 
         // collection

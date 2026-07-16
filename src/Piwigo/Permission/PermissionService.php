@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Permission;
 
+use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 
 /**
@@ -221,9 +222,8 @@ final class PermissionService
     }
 
     /**
-     * Grants direct user-category access. Thin wrapper around the existing
-     * add_permission_on_category() free function (admin/include/
-     * functions.php) -- that function is also called from
+     * Grants direct user-category access. Thin wrapper around
+     * addPermissionOnCategory() -- that method is also called from
      * create_virtual_category()'s own inheritance logic (P21 Albums
      * batch), out of this method's scope to duplicate.
      *
@@ -231,6 +231,90 @@ final class PermissionService
      */
     public function grantUserAccess(int $userId, array $catIds): void
     {
-        add_permission_on_category($catIds, $userId);
+        $this->addPermissionOnCategory($catIds, $userId);
+    }
+
+    /**
+     * Grants users direct access to categories -- but only to categories
+     * that are actually private; a request naming a public category is
+     * silently a no-op for that category, matching the original.
+     *
+     * Ported from admin/include/functions.php's
+     * add_permission_on_category() (P23 batch 8d), unchanged logic. Lives
+     * here (not Piwigo\Admin) because real callers span L2aCoreDomain
+     * (this class itself, via grantUserAccess()) and L4Integration
+     * (Piwigo\Admin\Category\CategoryAdminService,
+     * Piwigo\Controller\Admin\SiteUpdateSubController) -- the same
+     * L2a-may-not-depend-on-L4 wall this batch's own FilesystemHelper/
+     * PermissionService precedent already resolved elsewhere by picking
+     * the L2a domain owner as the target instead of Piwigo\Admin.
+     *
+     * get_uppercat_ids()/get_subcat_ids() (Categories domain) stay bare
+     * calls -- not yet migrated, still live in admin/include/
+     * functions.php (a later sub-batch's scope). mass_inserts() is a
+     * permanent free-function facade (finding 8).
+     *
+     * @param int|array<int, int> $categoryIds real callers pass a mix of
+     *   `list<int>` and array-key-preserving results of array_map()/
+     *   query2array() -- never index-dependent below, so not narrowed to
+     *   `list`
+     * @param int|array<int, int> $userIds
+     */
+    public function addPermissionOnCategory(int|array $categoryIds, int|array $userIds): void
+    {
+        if (! is_array($categoryIds)) {
+            $categoryIds = [$categoryIds];
+        }
+        if (! is_array($userIds)) {
+            $userIds = [$userIds];
+        }
+
+        // check for emptiness
+        if (count($categoryIds) === 0 or count($userIds) === 0) {
+            return;
+        }
+
+        // normalize: real callers pass a mix of int and numeric-string ids
+        $categoryIds = array_map(intval(...), $categoryIds);
+
+        // make sure categories are private and select uppercats or subcats
+        $catIds = get_uppercat_ids($categoryIds);
+        if (isset($_POST['apply_on_sub'])) {
+            $catIds = array_merge($catIds, get_subcat_ids($categoryIds));
+        }
+
+        // get_uppercat_ids()/get_subcat_ids() are still bare, untyped
+        // (Categories domain, not yet migrated) -- normalize their mixed
+        // element type for implode()'s strict array<string> param.
+        $query = '
+SELECT id
+  FROM ' . Tables::categories() . '
+  WHERE id IN (' . implode(',', array_map(strval(...), $catIds)) . ')
+    AND status = \'private\'
+;';
+        $privateCats = query2array($query, null, 'id');
+
+        if (count($privateCats) === 0) {
+            return;
+        }
+
+        $inserts = [];
+        foreach ($privateCats as $catId) {
+            foreach ($userIds as $userId) {
+                $inserts[] = [
+                    'user_id' => $userId,
+                    'cat_id' => $catId,
+                ];
+            }
+        }
+
+        mass_inserts(
+            Tables::userAccess(),
+            ['user_id', 'cat_id'],
+            $inserts,
+            [
+                'ignore' => true,
+            ]
+        );
     }
 }

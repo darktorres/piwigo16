@@ -525,8 +525,6 @@ function ws_users_delete(array $params, PwgServer &$service): PwgError|string
      */
     global $conf, $user;
 
-    include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
     $protected_users = [
         $user['id'],
         $conf['guest_id'],
@@ -557,8 +555,14 @@ SELECT
 
     $counter = 0;
 
+    $user_service = new \Piwigo\Users\UserService(
+        new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()),
+        new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()),
+        new MailService(),
+        new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))
+    );
     foreach ($params['user_id'] as $user_id) {
-        delete_user($user_id);
+        $user_service->deleteUser($user_id);
         $counter++;
     }
 
@@ -940,14 +944,13 @@ function ws_users_generate_password_link(array $params, PwgServer &$service): Pw
      * @var array<string, mixed> $conf
      */
     global $user, $conf;
-    include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
     if ((new \Piwigo\Csrf\CsrfService())->getToken() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 
     // check if user exist
-    if (get_username($params['user_id']) === false) {
+    if ((new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->getUsername($params['user_id']) === false) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'This user does not exist.');
     }
 
@@ -1020,8 +1023,6 @@ function ws_users_generate_password_link(array $params, PwgServer &$service): Pw
  */
 function ws_set_main_user(array $params, PwgServer &$service): PwgError|string
 {
-    include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
     // check if not webmaster
     if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
         return new PwgError(403, 'You cannot perform this action');
@@ -1033,7 +1034,7 @@ function ws_set_main_user(array $params, PwgServer &$service): PwgError|string
     }
 
     // checl if user exist
-    if (get_username($params['user_id']) === false) {
+    if ((new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))))->getUsername($params['user_id']) === false) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'This user does not exist.');
     }
 

@@ -12,6 +12,7 @@ declare(strict_types=1);
 use Piwigo\Admin\languages;
 use Piwigo\Admin\updates;
 use Piwigo\Cache\PersistentFileCache;
+use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
@@ -504,7 +505,7 @@ REPLACE INTO ' . Tables::plugins() . '
         // invalidate_user_cache will purge persistent_cache so it needs to be instantiated first
         $persistent_cache = new PersistentFileCache();
 
-        invalidate_user_cache(true);
+        UserCacheInvalidator::invalidate(true);
         $template->delete_compiled_templates();
 
         // Restore $page['infos'] in order to hide informations messages from functions calles

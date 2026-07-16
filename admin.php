@@ -21,6 +21,7 @@ use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Bootstrap\AdminDispatcher;
 use Piwigo\Bootstrap\CommonBootstrap;
+use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Paths;
@@ -385,7 +386,7 @@ if (
     )
     )
 ) {
-    invalidate_user_cache();
+    UserCacheInvalidator::invalidate();
 }
 
 $show_whats_new = false;

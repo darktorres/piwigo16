@@ -519,7 +519,7 @@ SELECT id
             'associated_albums' => $associated_albums,
             'represented_albums' => $represented_albums,
             'STORAGE_ALBUM' => $storage_category_id,
-            'CACHE_KEYS' => get_admin_client_cache_keys(['tags', 'categories']),
+            'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys(['tags', 'categories']),
             'PWG_TOKEN' => (new \Piwigo\Csrf\CsrfService())->getToken(),
         ]);
 

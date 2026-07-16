@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Integrity;
 
+use Piwigo\Admin\AdminUiHelper;
 use Piwigo\Core\AppInfo;
 use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
@@ -307,7 +308,7 @@ class check_integrity
      */
     public function get_htlm_links_more_info(): string
     {
-        $pwg_links = pwg_URL();
+        $pwg_links = AdminUiHelper::pwgUrl();
         $link_fmt = '<a href="%s" onclick="window.open(this.href, \'\'); return false;">%s</a>';
         return
           sprintf(

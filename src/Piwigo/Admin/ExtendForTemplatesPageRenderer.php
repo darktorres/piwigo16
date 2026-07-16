@@ -61,7 +61,7 @@ final class ExtendForTemplatesPageRenderer
                 }
             }
         }
-        $new_extensions = get_extents();
+        $new_extensions = AdminUiHelper::getExtents();
 
         /* Selective URLs keyword */
         $relevant_parameters = [

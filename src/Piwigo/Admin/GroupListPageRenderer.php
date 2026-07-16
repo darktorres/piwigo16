@@ -43,7 +43,7 @@ final class GroupListPageRenderer
             [
                 'F_ADD_ACTION' => get_root_url() . 'admin.php?page=group_list',
                 'PWG_TOKEN' => (new \Piwigo\Csrf\CsrfService())->getToken(),
-                'CACHE_KEYS' => get_admin_client_cache_keys(['groups', 'users']),
+                'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys(['groups', 'users']),
             ]
         );
 

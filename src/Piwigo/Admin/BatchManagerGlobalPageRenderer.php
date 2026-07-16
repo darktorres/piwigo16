@@ -680,7 +680,7 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
         $template->assign([
             'nb_thumbs_page' => $nb_thumbs_page,
             'nb_thumbs_set' => count($cat_elements_id),
-            'CACHE_KEYS' => get_admin_client_cache_keys(['tags', 'categories']),
+            'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys(['tags', 'categories']),
         ]);
 
         trigger_notify('loc_end_element_set_global');

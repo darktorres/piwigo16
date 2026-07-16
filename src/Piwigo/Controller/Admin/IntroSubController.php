@@ -6,6 +6,7 @@ namespace Piwigo\Controller\Admin;
 
 use DateInterval;
 use DateTime;
+use Piwigo\Admin\AdminUiHelper;
 use Piwigo\Admin\InstallationStats;
 use Piwigo\Admin\Integrity\c13y_internal;
 use Piwigo\Admin\Integrity\check_integrity;
@@ -193,8 +194,8 @@ SELECT COUNT(*)
                 $template->assign(
                     [
                         'EMAIL' => $user['email'],
-                        'SUBSCRIBE_BASE_URL' => get_newsletter_subscribe_base_url($user_language),
-                        'OLD_NEWSLETTERS_URL' => get_old_newsletters_base_url($user_language),
+                        'SUBSCRIBE_BASE_URL' => AdminUiHelper::getNewsletterSubscribeBaseUrl($user_language),
+                        'OLD_NEWSLETTERS_URL' => AdminUiHelper::getOldNewslettersBaseUrl($user_language),
                     ]
                 );
             }
@@ -228,7 +229,7 @@ SELECT COUNT(*)
                 'NB_USERS' => $stats['nb_users'],
                 'NB_GROUPS' => $stats['nb_groups'],
                 'NB_RATES' => $stats['nb_rates'],
-                'NB_VIEWS' => number_format_human_readable($nb_views),
+                'NB_VIEWS' => AdminUiHelper::numberFormatHumanReadable($nb_views),
                 'NB_PLUGINS' => count($pwg_loaded_plugins),
                 'STORAGE_USED' => str_replace(' ', '&nbsp;', l10n('%sGB', number_format($du_gb, $du_decimals))),
                 'U_QUICK_SYNC' => PHPWG_ROOT_PATH . 'admin.php?page=site_update&amp;site=1&amp;quick_sync=1&amp;pwg_token=' . (new \Piwigo\Csrf\CsrfService())->getToken(),

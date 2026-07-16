@@ -107,7 +107,7 @@ final class UserActivityPageRenderer
         $template->assign([
             'PWG_TOKEN' => (new \Piwigo\Csrf\CsrfService())->getToken(),
             'INHERIT' => $conf['inheritance_by_default'],
-            'CACHE_KEYS' => get_admin_client_cache_keys(['users']),
+            'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys(['users']),
         ]);
 
         $nb_lines_for_user = $activity_service->getCountByUser();

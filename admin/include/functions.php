@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Category\CategoryService;
-use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Logger;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -21,7 +20,6 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Session\SessionService;
-use Piwigo\Template\Template;
 use Piwigo\Users\UserRepository;
 
 // Relocated from the now-deleted admin/photos_add.php (P23 batch 8a):
@@ -2054,100 +2052,6 @@ DELETE ' . Tables::imageCategory() . '.*
 }
 
 /**
- * Associate images associated to a list of source categories to a list of
- * destination categories.
- *
- * @param int[] $sources
- * @param int[] $destinations
- */
-function associate_categories_to_categories($sources, $destinations): ?false
-{
-    if (count($sources) == 0) {
-        return false;
-    }
-
-    $query = '
-SELECT image_id
-  FROM ' . Tables::imageCategory() . '
-  WHERE category_id IN (' . implode(',', $sources) . ')
-;';
-    $images = array_map(intval(...), query2array($query, null, 'image_id'));
-
-    associate_images_to_categories($images, $destinations);
-
-    return null;
-}
-
-/**
- * Refer main Piwigo URLs (currently PHPWG_DOMAIN domain)
- *
- * @return string[]
- */
-function pwg_URL(): array
-{
-    $urls = [
-        'HOME' => PHPWG_URL,
-        'WIKI' => PHPWG_URL . '/doc',
-        'DEMO' => PHPWG_URL . '/demo',
-        'FORUM' => PHPWG_URL . '/forum',
-        'BUGS' => PHPWG_URL . '/bugs',
-        'EXTENSIONS' => PHPWG_URL . '/ext',
-    ];
-    return $urls;
-}
-
-/**
- * Returns access levels as array used on template with html_options functions.
- *
- * @param int $MinLevelAccess
- * @param int $MaxLevelAccess
- * @return array<int, string>
- */
-function get_user_access_level_html_options($MinLevelAccess = AccessLevel::Free, $MaxLevelAccess = AccessLevel::Closed): array
-{
-    $tpl_options = [];
-    for ($level = $MinLevelAccess; $level <= $MaxLevelAccess; $level++) {
-        $tpl_options[$level] = l10n(sprintf('ACCESS_%d', $level));
-    }
-    return $tpl_options;
-}
-
-/**
- * returns a list of templates currently available in template-extension.
- * Each .tpl file is extracted from template-extension.
- *
- * @param string $start (internal use)
- * @return string[]
- */
-function get_extents($start = ''): array
-{
-    if ($start == '') {
-        $start = './template-extension';
-    }
-    $extents = [];
-
-    $dir = opendir($start);
-    if ($dir === false) {
-        return $extents;
-    }
-
-    while (($file = readdir($dir)) !== false) {
-        if ($file == '.' or $file == '..' or $file == '.svn') {
-            continue;
-        }
-        $path = $start . '/' . $file;
-        if (is_dir($path)) {
-            $extents = array_merge($extents, get_extents($path));
-        } elseif (! is_link($path) and file_exists($path)
-                and \Piwigo\Core\StringHelper::getExtension($path) == 'tpl') {
-            $extents[] = substr($path, 21);
-        }
-    }
-    closedir($dir);
-    return $extents;
-}
-
-/**
  * Create a new tag.
  *
  * @param string $tag_name
@@ -2213,87 +2117,6 @@ function cat_admin_access($category_id): bool
         return false;
     }
     return true;
-}
-
-/**
- * Get url on piwigo.org for newsletter subscription
- *
- * @param string $language (unused)
- */
-function get_newsletter_subscribe_base_url($language = 'en_UK'): string
-{
-    return PHPWG_URL . '/announcement/subscribe/';
-}
-
-/**
- * Get url on piwigo.org for old newsletters
- *
- * @param string $language (unused)
- */
-function get_old_newsletters_base_url($language = 'en_UK'): string
-{
-    return PHPWG_URL . '/newsletter';
-}
-
-/**
- * Return admin menu id for accordion.
- *
- * @param string $menu_page
- */
-function get_active_menu($menu_page): int
-{
-    /** @var array<string, mixed> $page */
-    global $page;
-
-    if (isset($page['active_menu']) && is_int($page['active_menu'])) {
-        return $page['active_menu'];
-    }
-
-    switch ($menu_page) {
-        case 'photo':
-        case 'photos_add':
-        case 'rating':
-        case 'tags':
-        case 'batch_manager':
-            return 0;
-
-        case 'album':
-        case 'cat_list':
-        case 'albums':
-        case 'cat_options':
-        case 'cat_search':
-        case 'permalinks':
-            return 1;
-
-        case 'user_list':
-        case 'user_perm':
-        case 'group_list':
-        case 'group_perm':
-        case 'notification_by_mail':
-        case 'user_activity':
-            return 2;
-
-        case 'site_manager':
-        case 'site_update':
-        case 'stats':
-        case 'history':
-        case 'maintenance':
-        case 'comments':
-        case 'updates':
-            return 3;
-
-        case 'configuration':
-        case 'derivatives':
-        case 'extend_for_templates':
-        case 'menubar':
-        case 'themes':
-        case 'theme':
-        case 'languages':
-            return 4;
-
-        default:
-            return -1;
-    }
 }
 
 /**
@@ -2371,77 +2194,6 @@ function get_tag_ids($raw_tags, $allow_create = true): array
     }
 
     return $tag_ids;
-}
-
-/**
- * Returns the argument_ids array with new sequenced keys based on related
- * names. Sequence is not case sensitive.
- * Warning: By definition, this function breaks original keys.
- *
- * @param array<int, int|string> $element_ids
- * @param string[] $name - names of elements, indexed by ids
- * @return int[]
- */
-function order_by_name($element_ids, array $name): array
-{
-    $ordered_element_ids = [];
-    foreach ($element_ids as $k_id => $element_id) {
-        $key = strtolower($name[$element_id]) . '-' . $name[$element_id] . '-' . $k_id;
-        $ordered_element_ids[$key] = (int) $element_id;
-    }
-    ksort($ordered_element_ids);
-    return $ordered_element_ids;
-}
-
-/**
- * Returns keys to identify the state of main tables. A key consists of the
- * last modification timestamp and the total of items (separated by a _).
- * Additionally returns the hash of root path.
- * Used to invalidate LocalStorage cache on admin pages.
- *
- * @param string|string[] $requested list of keys to retrieve (categories,groups,images,tags,users)
- * @return string[]
- */
-function get_admin_client_cache_keys($requested = []): array
-{
-    $tables = [
-        'categories' => Tables::categories(),
-        'groups' => Tables::groups(),
-        'images' => Tables::images(),
-        'tags' => Tables::tags(),
-        'users' => Tables::userInfos(),
-    ];
-
-    if (! is_array($requested)) {
-        $requested = [$requested];
-    }
-    if (empty($requested)) {
-        $requested = array_keys($tables);
-    } else {
-        $requested = array_intersect($requested, array_keys($tables));
-    }
-
-    $keys = [
-        '_hash' => md5(get_absolute_root_url()),
-    ];
-
-    foreach ($requested as $item) {
-        $query = '
-SELECT CONCAT(
-    UNIX_TIMESTAMP(MAX(lastmodified)),
-    "_",
-    COUNT(*)
-  )
-  FROM `' . $tables[$item] . '`
-;';
-        $row = pwg_db_fetch_row(pwg_query($query));
-        assert($row !== null);
-        $cache_key = $row[0];
-        assert(is_string($cache_key));
-        $keys[$item] = $cache_key;
-    }
-
-    return $keys;
 }
 
 /**
@@ -2609,36 +2361,6 @@ UPDATE ' . Tables::images() . '
   WHERE id IN (' . implode(',', $image_ids) . ')
 ;';
     pwg_query($query);
-}
-
-/**
- * Get a more human friendly representation of big numbers. Like 17.8k instead of 17832
- *
- * @since 2.9
- * @param float $numbers
- */
-function number_format_human_readable($numbers): string
-{
-    $readable = ['',  'k', 'M'];
-    $index = 0;
-    $numbers = empty($numbers) ? 0 : $numbers;
-
-    while ($numbers >= 1000) {
-        $numbers /= 1000;
-        $index++;
-
-        if ($index > count($readable) - 1) {
-            $index--;
-            break;
-        }
-    }
-
-    $decimals = 1;
-    if ($readable[$index] == '') {
-        $decimals = 0;
-    }
-
-    return number_format($numbers, $decimals) . $readable[$index];
 }
 
 /**

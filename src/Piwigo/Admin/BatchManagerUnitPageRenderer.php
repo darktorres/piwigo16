@@ -514,7 +514,7 @@ SELECT
         }
 
         $template->assign([
-            'CACHE_KEYS' => get_admin_client_cache_keys(['tags', 'categories']),
+            'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys(['tags', 'categories']),
         ]);
 
         trigger_notify('loc_end_element_set_unit');

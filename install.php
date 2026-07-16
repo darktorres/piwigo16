@@ -9,6 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Piwigo\Admin\AdminUiHelper;
 use Piwigo\Admin\languages;
 use Piwigo\Auth\CookieService;
 use Piwigo\Config\Config;
@@ -520,7 +521,7 @@ if ($step == 1) {
             // Fire-and-forget: the response content is never read, only the
             // request's side effect (subscribing $admin_mail) matters.
             HttpClientService::fetch(
-                get_newsletter_subscribe_base_url($language) . $admin_mail,
+                AdminUiHelper::getNewsletterSubscribeBaseUrl($language) . $admin_mail,
                 [],
                 [
                     'origin' => 'installation',

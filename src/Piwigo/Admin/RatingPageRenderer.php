@@ -93,7 +93,7 @@ final class RatingPageRenderer
                 'DISPLAY' => $elements_per_page,
                 'NB_ELEMENTS' => $nb_elements,
                 'category' => (isset($_GET['cat']) ? [$_GET['cat']] : []),
-                'CACHE_KEYS' => get_admin_client_cache_keys(['categories']),
+                'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys(['categories']),
             ]
         );
 

@@ -17,6 +17,7 @@ declare(strict_types=1);
 // ordering exactly.
 require __DIR__ . '/vendor/autoload.php';
 
+use Piwigo\Admin\AdminUiHelper;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Bootstrap\AdminDispatcher;
@@ -467,14 +468,14 @@ $page_slug = $page['page'];
 // retired (P23).
 AdminDispatcher::dispatch($page_slug, RequestFactory::fromGlobals());
 
-$template->assign('ACTIVE_MENU', get_active_menu($page_slug));
+$template->assign('ACTIVE_MENU', AdminUiHelper::getActiveMenu($page_slug));
 
 // +-----------------------------------------------------------------------+
 // | Sending html code                                                     |
 // +-----------------------------------------------------------------------+
 
 // Add the Piwigo Official menu
-$template->assign('pwgmenu', pwg_URL());
+$template->assign('pwgmenu', AdminUiHelper::pwgUrl());
 
 include PHPWG_ROOT_PATH . 'include/page_header.php';
 

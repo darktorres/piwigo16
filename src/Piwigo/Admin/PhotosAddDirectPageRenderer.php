@@ -405,7 +405,7 @@ SELECT
 
         $template->assign([
             'setup_errors' => $setup_errors,
-            'CACHE_KEYS' => get_admin_client_cache_keys(['categories']),
+            'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys(['categories']),
         ]);
 
         // Warnings

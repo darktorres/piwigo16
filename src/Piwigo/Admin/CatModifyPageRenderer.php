@@ -274,7 +274,7 @@ SELECT COUNT(*)
 
         $template->assign([
             'U_MANAGE_RANKS' => $base_url . 'element_set_ranks&amp;cat_id=' . $category_id,
-            'CACHE_KEYS' => get_admin_client_cache_keys(['categories']),
+            'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys(['categories']),
         ]);
 
         if (! (bool) $category['is_virtual']) {

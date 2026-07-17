@@ -96,7 +96,7 @@ final class MaintenanceActionDispatcher
 
             case 'lock_gallery':
 
-                conf_update_param('gallery_locked', 'true');
+                \Piwigo\Config\ConfigDb::confUpdateParam('gallery_locked', 'true');
                 (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('system', ActivitySystem::Core, 'maintenance', [
                     'maintenance_action' => $action,
                 ]);
@@ -105,7 +105,7 @@ final class MaintenanceActionDispatcher
                 // no break
             case 'unlock_gallery':
 
-                conf_update_param('gallery_locked', 'false');
+                \Piwigo\Config\ConfigDb::confUpdateParam('gallery_locked', 'false');
                 $_SESSION['page_infos'] = [l10n('Gallery unlocked')];
                 (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('system', ActivitySystem::Core, 'maintenance', [
                     'maintenance_action' => $action,

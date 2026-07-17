@@ -208,12 +208,13 @@ final class IdentificationController implements ControllerInterface
 
             $template->assign('HELP_LINK', $help_link);
 
-            include PHPWG_ROOT_PATH . 'include/page_header.php';
+            new \Piwigo\Page\PageHeaderRenderer()
+                ->render($title);
             trigger_notify('loc_end_identification');
             new HtmlService()
                 ->flushPageMessages();
             $template->pparse('identification');
-            include PHPWG_ROOT_PATH . 'include/page_tail.php';
+            \Piwigo\Bootstrap\PageTail::render();
         });
 
         return ResponseFactory::html($body);

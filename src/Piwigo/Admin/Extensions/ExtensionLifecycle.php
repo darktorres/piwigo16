@@ -218,7 +218,7 @@ final class ExtensionLifecycle
                 }
                 $activityDetails['fs_version'] = $fsEntry['version'] ?? null;
 
-                FilesystemHelper::deltree(PHPWG_PLUGINS_PATH . $id, PHPWG_PLUGINS_PATH . 'trash');
+                FilesystemHelper::deltree(\Piwigo\Admin\PluginLoader::pluginsPath() . $id, \Piwigo\Admin\PluginLoader::pluginsPath() . 'trash');
                 break;
         }
 
@@ -273,7 +273,7 @@ final class ExtensionLifecycle
                     $activityDetails['version'] = $fsVersion;
 
                     if ($isMobile) {
-                        conf_update_param('mobile_theme', $id);
+                        \Piwigo\Config\ConfigDb::confUpdateParam('mobile_theme', $id);
                     }
                 }
                 break;
@@ -299,7 +299,7 @@ final class ExtensionLifecycle
                 $this->repo->delete(ExtensionType::Theme, $id);
 
                 if ((bool) ($fsEntry['mobile'] ?? false)) {
-                    conf_update_param('mobile_theme', '');
+                    \Piwigo\Config\ConfigDb::confUpdateParam('mobile_theme', '');
                 }
                 break;
 
@@ -463,7 +463,7 @@ final class ExtensionLifecycle
 
     private function buildPluginMaintain(string $pluginId): PluginMaintain
     {
-        $fileToInclude = PHPWG_PLUGINS_PATH . $pluginId . '/maintain';
+        $fileToInclude = \Piwigo\Admin\PluginLoader::pluginsPath() . $pluginId . '/maintain';
         // piwigo-videojs and piwigo-openstreetmap have a "-" in their
         // folder name (=plugin_id); a class name can't have a "-".
         $classname = str_replace('-', '_', $pluginId . '_maintain');

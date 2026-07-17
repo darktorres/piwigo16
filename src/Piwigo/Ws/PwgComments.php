@@ -19,6 +19,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageStdParams;
 use Piwigo\Mail\MailService;
 
 /**
@@ -167,14 +168,14 @@ SELECT
         while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
 
             $medium_derivative = DerivativeImage::get_one(
-                IMG_MEDIUM,
+                ImageStdParams::MEDIUM,
                 [
                     'id' => $row['image_id'],
                     'path' => $row['path'],
                     'representative_ext' => $row['representative_ext'],
                 ]
             );
-            // IMG_MEDIUM is a standard type, always present in the defined
+            // MEDIUM is a standard type, always present in the defined
             // type map — get_one() only returns null for an unknown type.
             assert($medium_derivative instanceof DerivativeImage);
             $medium = $medium_derivative->get_url();

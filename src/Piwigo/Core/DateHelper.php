@@ -228,7 +228,7 @@ final class DateHelper
             return l10n('N/A');
         }
 
-        $now = pwg_now();
+        $now = Env::now();
         $diff = self::dateDiff($now, $date);
 
         $chunks = [
@@ -286,8 +286,8 @@ final class DateHelper
             // objects directly instead of trusting $diff->invert avoids
             // misreporting an exact-equality result ("0 seconds ago") as "in
             // the future". Real-clock callers essentially never hit this exact
-            // tie; a frozen pwg_now() test clock hits it whenever the compared
-            // timestamp was itself written via pwg_now().
+            // tie; a frozen Env::now() test clock hits it whenever the compared
+            // timestamp was itself written via Env::now().
             if ($now >= $date) {
                 $print = l10n('%s ago', $print);
             } else {

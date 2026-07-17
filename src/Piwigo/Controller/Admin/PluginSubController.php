@@ -78,7 +78,7 @@ final class PluginSubController implements AdminSubControllerInterface
             die('Invalid URL - plugin ' . $plugin_id . ' not active');
         }
 
-        $filename = PHPWG_PLUGINS_PATH . implode('/', $sections);
+        $filename = \Piwigo\Admin\PluginLoader::pluginsPath() . implode('/', $sections);
         if (is_file($filename)) {
             include_once $filename;
         } else {

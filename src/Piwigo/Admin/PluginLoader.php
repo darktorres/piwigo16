@@ -25,6 +25,27 @@ use Piwigo\PluginConfig\PluginRepository;
 final class PluginLoader
 {
     /**
+     * Base directory of plugins, trailing slash included.
+     *
+     * P23 batch 8f-4: replaces the PHPWG_PLUGINS_PATH define (formerly
+     * include/functions.inc.php's top-level `define('PHPWG_PLUGINS_PATH',
+     * PHPWG_ROOT_PATH . 'plugins/')`, file deleted; verified: no frozen
+     * install/db or install/upgrade_*.php script reads that constant, so
+     * no legacy-bootstrap define needs to survive). A static method rather
+     * than a class constant because PHPWG_ROOT_PATH is itself a runtime
+     * define whose availability at class-linking time can't be guaranteed
+     * on every path -- same reasoning as
+     * PhotosAddDirectPageRenderer::baseUrl() (P23 batch 8f-1). Lives here
+     * (every real reader is L4Integration -- Admin/Admin\Extensions/
+     * Controller -- or a root entry script) on the class that owns
+     * per-request plugin loading.
+     */
+    public static function pluginsPath(): string
+    {
+        return PHPWG_ROOT_PATH . 'plugins/';
+    }
+
+    /**
      * Loads all the registered plugins.
      */
     public static function loadPlugins(): void
@@ -61,7 +82,7 @@ final class PluginLoader
             return;
         }
 
-        $file_name = PHPWG_PLUGINS_PATH . $plugin_id . '/main.inc.php';
+        $file_name = self::pluginsPath() . $plugin_id . '/main.inc.php';
         if (file_exists($file_name)) {
             self::autoupdatePlugin($plugin);
             /** @var array<string, array<string, mixed>> $pwg_loaded_plugins */
@@ -90,7 +111,7 @@ final class PluginLoader
         }
 
         // try to find the filesystem version in lines 2 to 10 of main.inc.php
-        $fh = fopen(PHPWG_PLUGINS_PATH . $plugin_id . '/main.inc.php', 'r');
+        $fh = fopen(self::pluginsPath() . $plugin_id . '/main.inc.php', 'r');
         $fs_version = null;
         $i = -1;
 
@@ -125,7 +146,7 @@ final class PluginLoader
 
             $plugin['version'] = $fs_version;
 
-            $maintain_file = PHPWG_PLUGINS_PATH . $plugin_id . '/maintain.class.php';
+            $maintain_file = self::pluginsPath() . $plugin_id . '/maintain.class.php';
 
             // autoupdate is applicable only to plugins with 2.7 architecture
             if (file_exists($maintain_file)) {

@@ -37,6 +37,25 @@ final class DerivativeUrlCodec
     }
 
     /**
+     * Parses a size identifier out of a derivative filename token --
+     * the exact inverse of sizeToUrl() ('NNN' or 'WWWxHHH').
+     *
+     * P23 batch 8f (i.php): relocated from i.php's url_to_size() free
+     * function, unchanged logic.
+     *
+     * @return array{0: int, 1: int}
+     */
+    public static function urlToSize(string $s): array
+    {
+        $pos = strpos($s, 'x');
+        if ($pos === false) {
+            return [(int) $s, (int) $s];
+        }
+
+        return [(int) substr($s, 0, $pos), (int) substr($s, $pos + 1)];
+    }
+
+    /**
      * @param int[] $size1
      * @param int[] $size2
      */

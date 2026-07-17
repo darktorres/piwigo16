@@ -48,8 +48,6 @@ final class UpdatesPwgPageRenderer
             die('Piwigo core update system is disabled');
         }
 
-        include_once PHPWG_ROOT_PATH . 'include/functions.inc.php';
-
         /*
         STEP:
         0 = check is needed. If version is latest or check fail, we stay on step 0
@@ -112,7 +110,7 @@ final class UpdatesPwgPageRenderer
         // +-----------------------------------------------------------------------+
         if ($step === 2 and \Piwigo\Auth\AccessControl::isWebmaster()) {
             if (isset($_POST['submit']) and isset($_POST['upgrade_to']) and is_string($_POST['upgrade_to'])) {
-                check_pwg_token();
+                new \Piwigo\Csrf\CsrfService()->checkOrFail(new \Piwigo\Html\HtmlService());
                 $core_update_service->upgradeTo($_POST['upgrade_to'], $step);
             }
         }
@@ -122,7 +120,7 @@ final class UpdatesPwgPageRenderer
         // +-----------------------------------------------------------------------+
         if ($step === 3 and \Piwigo\Auth\AccessControl::isWebmaster()) {
             if (isset($_POST['submit']) and isset($_POST['upgrade_to']) and is_string($_POST['upgrade_to'])) {
-                check_pwg_token();
+                new \Piwigo\Csrf\CsrfService()->checkOrFail(new \Piwigo\Html\HtmlService());
                 $core_update_service->upgradeTo($_POST['upgrade_to'], $step);
             }
 

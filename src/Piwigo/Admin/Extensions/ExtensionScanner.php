@@ -65,7 +65,7 @@ final class ExtensionScanner
      */
     private function scanPlugin(string $pluginId): ?array
     {
-        $path = PHPWG_PLUGINS_PATH . $pluginId;
+        $path = \Piwigo\Admin\PluginLoader::pluginsPath() . $pluginId;
         if (! is_dir($path) || is_link($path) || ! file_exists($path . '/main.inc.php')) {
             return null;
         }

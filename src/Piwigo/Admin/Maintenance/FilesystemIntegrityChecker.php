@@ -40,7 +40,7 @@ final class FilesystemIntegrityChecker
         }
 
         $page[__FUNCTION__ . '_already_called'] = true;
-        conf_update_param('fs_quick_check_last_check', date('c'));
+        \Piwigo\Config\ConfigDb::confUpdateParam('fs_quick_check_last_check', date('c'));
 
         $query = '
 SELECT

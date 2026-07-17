@@ -1,0 +1,598 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Piwigo\Bootstrap;
+
+use Piwigo\Activity\ActivityRepository;
+use Piwigo\Activity\ActivityService;
+use Piwigo\Admin\PluginLoader;
+use Piwigo\Admin\Upload\UploadService;
+use Piwigo\Auth\AuthRepository;
+use Piwigo\Auth\AuthService;
+use Piwigo\Auth\EphemeralKeyService;
+use Piwigo\Cache\PersistentFileCache;
+use Piwigo\Comment\CommentRepository;
+use Piwigo\Comment\CommentService;
+use Piwigo\Config\ConfigLoader;
+use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\AppInfo;
+use Piwigo\Core\Env;
+use Piwigo\Core\ErrorCollector;
+use Piwigo\Core\Lang;
+use Piwigo\Core\Logger;
+use Piwigo\Core\StringHelper;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\Tables;
+use Piwigo\Filter\FilterService;
+use Piwigo\Group\GroupRepository;
+use Piwigo\Html\HtmlService;
+use Piwigo\Image\ImageRepository;
+use Piwigo\Image\ImageService;
+use Piwigo\Image\ImageStdParams;
+use Piwigo\Mail\MailService;
+use Piwigo\Page\NoPhotoYetRenderer;
+use Piwigo\Session\SessionService;
+use Piwigo\Template\Template;
+use Piwigo\Users\UserRepository;
+use Piwigo\Users\UserService;
+
+/**
+ * The legacy per-request bootstrap — the entire orchestration body of
+ * include/common.inc.php, ported verbatim (P23 sub-batch 8f-5). That file
+ * survives as the thin include seam every entry point already targets; it
+ * initializes the plain-data globals ($t2/$debug/$conf/$page/...), pulls
+ * in include/config_default.inc.php + local/config/config.inc.php (kept
+ * at real top-level scope so a user config file writing arbitrary bare
+ * variables still lands in $GLOBALS), requires the autoloader via
+ * include/env.inc.php, and then calls the three phases below in order.
+ *
+ * Why three phases instead of one run(): src/Piwigo/ code may not call
+ * define() (arch rule SEC-60), and the legacy bootstrap defines
+ * PHPWG_INSTALLED mid-sequence (after the install-redirect check, before
+ * the session handler registration that tests defined('PHPWG_INSTALLED'))
+ * and PHPWG_DOMAIN/PHPWG_URL/PEM_URL later (after UserBootstrap, before
+ * language loading). Those define() calls stay in the seam file, slotted
+ * between the phases, preserving the original statement order exactly.
+ *
+ * Runs before Kernel::boot(): CommonBootstrap::run() (index.php/admin.php
+ * and the other P22 roots call it right after the common.inc.php include)
+ * still owns the Kernel/DI-container side of the request; this class owns
+ * the legacy $GLOBALS side, same division of labor as before this port.
+ */
+final class RequestBootstrap
+{
+    /**
+     * Phase 1 — superglobal sanitization, env-file loading, static-setter
+     * wiring, Config seeding, install-sentinel check
+     * (include/common.inc.php's former lines up to the install redirect).
+     *
+     * The seam file defines PHPWG_INSTALLED right after this returns.
+     *
+     * One deliberate ordering deviation from the original file: the
+     * superglobal sanitization used to run before the
+     * config_default/local-config includes; it now runs right after them
+     * (the seam's includes must stay at real top-level scope, and this
+     * class only starts executing post-autoload). Equivalent for every
+     * real input: the config includes never read $_GET/$_POST/$_COOKIE/
+     * PATH_INFO, and Env's own header read ($_SERVER['HTTP_X_PIWIGO_ENV'])
+     * was never touched by the sanitizer.
+     */
+    public static function configure(): void
+    {
+        /** @var array<string, mixed> $conf */
+        global $conf;
+        global $prefixeTable;
+
+        // @set_magic_quotes_runtime(0); // Disable magic_quotes_runtime
+        //
+        // addslashes to vars if magic_quotes_gpc is off this is a security
+        // precaution to prevent someone trying to break out of a SQL statement.
+        //
+        // The magic quote feature has been disabled since php 5.4
+        // but function get_magic_quotes_gpc was always replying false.
+        // Since php 8 the function get_magic_quotes_gpc is also removed
+        // but we stil want to sanitize user input variables.
+        if (! function_exists('get_magic_quotes_gpc') or ! @get_magic_quotes_gpc()) {
+            array_walk_recursive($_GET, self::sanitizeMysqlKv(...));
+            array_walk_recursive($_POST, self::sanitizeMysqlKv(...));
+            array_walk_recursive($_COOKIE, self::sanitizeMysqlKv(...));
+        }
+        if (! empty($_SERVER['PATH_INFO']) && is_string($_SERVER['PATH_INFO'])) {
+            $_SERVER['PATH_INFO'] = addslashes($_SERVER['PATH_INFO']);
+        }
+
+        Env::loadEnvFile(PHPWG_ROOT_PATH);
+        $prefixeTable = '';
+        Env::applyEnvToConf($conf, $prefixeTable);
+
+        // P23 batch 8f-3: wires the static-setter HtmlRenderingInterface
+        // consumers (Piwigo\Core class-level fatal-error/access-denied paths
+        // that can't take constructor/per-method injection without an
+        // unreasonable call-site ripple, same reasoning as
+        // Piwigo\Core\Lang::setDefaultLanguageProvider() in finalize()
+        // below). Safely post-autoload here: the seam file only calls this
+        // class after its include/env.inc.php include, which is what
+        // actually requires vendor/autoload.php -- some entry points (e.g.
+        // random.php) rely entirely on that include to make every Piwigo\
+        // class autoloadable and never require the autoloader themselves
+        // beforehand, unlike admin.php/index.php's own explicit up-front
+        // require (ordering bug caught live via a random.php smoke test).
+        \Piwigo\Auth\AccessControl::setHtmlRenderer(new HtmlService());
+        \Piwigo\Core\FilesystemHelper::setHtmlRenderer(new HtmlService());
+        Lang::setHtmlRenderer(new HtmlService());
+        \Piwigo\Db\MysqliDb::setHtmlRenderer(new HtmlService());
+        \Piwigo\Validation\InputValidator::setHtmlRenderer(new HtmlService());
+        \Piwigo\Image\SrcImage::setHtmlRenderer(new HtmlService());
+        \Piwigo\Config\ConfigDb::setHtmlRenderer(new HtmlService());
+
+        // Piwigo\Db\Tables::*()/other Piwigo\Config\Config::* accessors used
+        // further down in this bootstrap's own body (not just by code that
+        // runs after full boot) read Config's static state --
+        // CommonBootstrap::run() (index.php, after this whole bootstrap has
+        // already executed) is normally what seeds it via these same two
+        // calls, too late for callers here. Both are idempotent (verified:
+        // re-running never overwrites an already-set key), so calling them
+        // again from CommonBootstrap::run() right after is safe.
+        ConfigLoader::applyDefaults();
+        ConfigLoader::applyEnvOverrides();
+
+        if (! file_exists(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . Env::testModeInstalledStamp())) {
+            header('Location: install.php');
+            exit;
+        }
+    }
+
+    /**
+     * Phase 2 — dblayer include, error collector, session bootstrap, DB
+     * connection, DB-backed config, logger, plugins, and the current-user
+     * resolution (include/common.inc.php's former middle section, from the
+     * dblayer include through UserBootstrap::initialize()).
+     *
+     * The seam file defines PHPWG_DOMAIN/PHPWG_URL/PEM_URL right after
+     * this returns (the original defined them at exactly this point,
+     * between UserBootstrap and the language loading in finalize()).
+     */
+    public static function connect(): void
+    {
+        /**
+         * @var array<string, mixed> $conf
+         * @var array<string, mixed> $page
+         * @var array<string, mixed> $user
+         */
+        global $conf, $page, $user;
+        global $persistent_cache, $logger;
+
+        // config_default.inc.php/Env::applyEnvToConf() always set
+        // $conf['dblayer'] to a string ('mysqli'), but applyEnvToConf(array
+        // &$conf, ...)'s generic `array` by-ref parameter erases per-key type
+        // info PHPStan had built up for $conf, so we re-narrow at the point
+        // of use.
+        $dblayer = $conf['dblayer'];
+        if (! is_string($dblayer)) {
+            die("Invalid \$conf['dblayer'] configuration: expected a string.");
+        }
+        include PHPWG_ROOT_PATH . 'include/dblayer/functions_' . $dblayer . '.inc.php';
+
+        if (isset($conf['show_php_errors']) && ! empty($conf['show_php_errors'])) {
+            if (is_scalar($conf['show_php_errors'])) {
+                @ini_set('error_reporting', $conf['show_php_errors']);
+            }
+            if ((bool) $conf['show_php_errors_on_frontend']) {
+                // Route errors to DevTools (X-PHP-Error-N response headers)
+                // instead of inline output, which corrupts JSON/XML/binary
+                // responses (see Piwigo\Core\ErrorCollector).
+                ErrorCollector::install();
+            }
+        }
+
+        if ($conf['session_gc_probability'] > 0) {
+            @ini_set('session.gc_divisor', 100);
+            $gc_probability = $conf['session_gc_probability'];
+            $gc_probability = is_numeric($gc_probability) ? (int) $gc_probability : 1;
+            @ini_set('session.gc_probability', min($gc_probability, 100));
+        }
+
+        SessionBootstrap::register();
+
+        $page['execution_uuid'] = SessionService::get()->generateKey(10);
+
+        $persistent_cache = new PersistentFileCache();
+
+        // Database connection
+        try {
+            $db_host = $conf['db_host'];
+            $db_user = $conf['db_user'];
+            $db_password = $conf['db_password'];
+            $db_base = $conf['db_base'];
+            if (! is_string($db_host) || ! is_string($db_user) || ! is_string($db_password) || ! is_string($db_base)) {
+                throw new \Exception("Invalid database configuration: \$conf['db_host'], 'db_user', 'db_password' and 'db_base' must be strings.");
+            }
+            \Piwigo\Db\MysqliDb::connect(
+                $db_host,
+                $db_user,
+                $db_password,
+                $db_base
+            );
+        } catch (\Exception $e) {
+            \Piwigo\Db\MysqliDb::myError(l10n($e->getMessage()), true);
+        }
+
+        \Piwigo\Db\MysqliDb::checkCharset();
+
+        // in Piwigo 15, configuration setting webmaster_id is moved from config files
+        // to database. It may be undefined at some point, with Piwigo 15+ scripts and
+        // a Piwigo 14 database schema not upgraded yet. Let's avoid any problem.
+        $conf['webmaster_id'] ??= 1;
+
+        \Piwigo\Config\ConfigDb::loadConfFromDb();
+
+        // $conf['data_location']/'log_dir' lost their specific string types the same
+        // way $conf['dblayer'] did above (see comment near the dblayer include); we
+        // already validated 'db_password' is a string above ($db_password), so it is
+        // reused here rather than re-narrowed.
+        $log_data_location = $conf['data_location'];
+        $log_dir = $conf['log_dir'];
+        if (! is_string($log_data_location) || ! is_string($log_dir)) {
+            new HtmlService()
+                ->fatalError("Invalid \$conf['data_location']/'log_dir' configuration: expected strings.");
+        }
+
+        $logger = new Logger([
+            'directory' => PHPWG_ROOT_PATH . $log_data_location . $log_dir,
+            'severity' => $conf['log_level'],
+            // we use an hashed filename to prevent direct file access, and we salt with
+            // the db_password instead of secret_key because the log must be usable in i.php
+            // (secret_key is in the database)
+            'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . $db_password) . '.txt',
+            'globPattern' => 'log_*.txt',
+            'archiveDays' => $conf['log_archive_days'],
+        ]);
+
+        if (! (bool) $conf['check_upgrade_feed']) {
+            if (! isset($conf['piwigo_db_version']) or $conf['piwigo_db_version'] != \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION)) {
+                redirect(get_root_url() . 'upgrade.php');
+            }
+        }
+
+        ImageStdParams::load_from_db();
+
+        session_start();
+        PluginLoader::loadPlugins();
+
+        if (! isset($conf['piwigo_installed_version'])) {
+            \Piwigo\Config\ConfigDb::confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
+        } elseif ($conf['piwigo_installed_version'] != AppInfo::VERSION) {
+            // Piwigo has been updated "from filesystem" and not "from the administration UI". We mark it as an autoupdate in the system activities log
+            (new ActivityService(new ActivityRepository(DbConnection::build())))->record('system', ActivitySystem::Core, 'autoupdate', [
+                'from_version' => $conf['piwigo_installed_version'],
+                'to_version' => AppInfo::VERSION,
+            ]);
+            \Piwigo\Config\ConfigDb::confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
+        }
+
+        // Check if last major update conf is set if not set it
+        if (! isset($conf['last_major_update'])) {
+            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT NOW();'));
+            assert($row !== null);
+            [$dbnow] = $row;
+            \Piwigo\Config\ConfigDb::confUpdateParam('last_major_update', $dbnow, true);
+        }
+
+        // 2022-02-25 due to escape on "rank" (becoming a mysql keyword in version 8), the $conf['order_by'] might
+        // use a "rank", even if admin/configuration.php should have removed it. We must remove it.
+        // TODO remove this data update as soon as 2025 arrives
+        $conf_order_by = $conf['order_by'];
+        if (is_string($conf_order_by) && (bool) preg_match('/(, )?`rank` ASC/', $conf_order_by)) {
+            $order_by = preg_replace('/(, )?`rank` ASC/', '', $conf_order_by);
+            if ($order_by == 'ORDER BY ') {
+                $order_by = 'ORDER BY id ASC';
+            }
+            \Piwigo\Config\ConfigDb::confUpdateParam('order_by', $order_by, true);
+        }
+
+        // users can have defined a custom order pattern, incompatible with GUI form
+        if (isset($conf['order_by_custom'])) {
+            $conf['order_by'] = $conf['order_by_custom'];
+        }
+        if (isset($conf['order_by_inside_category_custom'])) {
+            $conf['order_by_inside_category'] = $conf['order_by_inside_category_custom'];
+        }
+
+        if (\Piwigo\Core\LoungeMaintenance::needsEmptying()) {
+            new ImageService(new ImageRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())))
+                ->emptyLounge();
+        }
+
+        // Piwigo\Bootstrap\UserBootstrap::initialize() sets these by calling
+        // build_user()/AuthService::autoLogin()/auth_key_login(), each mutating the
+        // $user/$page globals via their own `global` declarations. $user's keys are
+        // always overwritten before use in every real path; $page's are genuinely
+        // optional (only auth_key_login() sets them, and only on an invalid/expiring
+        // auth key), so these defaults are real fallbacks, not just analysis
+        // scaffolding.
+        $user['id'] = $conf['guest_id'];
+        $user['email'] = null;
+        $user['theme'] = '';
+        $page['auth_key_invalid'] = false;
+        $page['notify_api_key_expiration'] = null;
+
+        new UserBootstrap()
+            ->initialize();
+
+        // The original file followed this call with a get_defined_vars()
+        // based re-read of $user/$page -- pure PHPStan narrowing
+        // scaffolding (a self-assignment at runtime), dropped in this port:
+        // inside a method the `global` declarations above already carry
+        // array<string, mixed> for both, which is all the old dance
+        // re-established.
+    }
+
+    /**
+     * The PEM_URL value the seam file define()s right after connect() —
+     * kept as a method so the config-conditional lives on the class, not
+     * in the seam (which keeps only the define() call itself, SEC-60).
+     */
+    public static function pemUrl(): string
+    {
+        /** @var array<string, mixed> $conf */
+        global $conf;
+
+        if (isset($conf['alternative_pem_url']) and $conf['alternative_pem_url'] != '') {
+            $alternative_pem_url = $conf['alternative_pem_url'];
+            return is_scalar($alternative_pem_url) ? (string) $alternative_pem_url : '';
+        }
+
+        return 'https://' . PHPWG_DOMAIN . '/ext';
+    }
+
+    /**
+     * Phase 3 — language loading, auth-key messages, template creation,
+     * no-photo-yet, maintenance/upgrade notices, request filter, and the
+     * default event-handler registrations (include/common.inc.php's former
+     * tail, from the Lang wiring through trigger_notify('init')).
+     */
+    public static function finalize(): void
+    {
+        /**
+         * @var array<string, mixed> $conf
+         * @var array<string, mixed> $page
+         * @var array<string, mixed> $user
+         */
+        global $conf, $page, $user;
+        global $template, $header_msgs, $header_notes, $filter;
+
+        // language files
+        Lang::setDefaultLanguageProvider(new UserService(
+            new UserRepository(DbConnection::build()),
+            new GroupRepository(DbConnection::build()),
+            new MailService(),
+            new ActivityService(new ActivityRepository(DbConnection::build())),
+            new HtmlService(),
+        ));
+        Lang::load('common.lang');
+        if (\Piwigo\Auth\AccessControl::isAdmin() || (defined('IN_ADMIN') and IN_ADMIN)) {
+            Lang::load('admin.lang');
+            // Add language for temporary strings for new popup, from piwigo 15
+            Lang::load('whats_new_' . \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION) . '.lang');
+        }
+        trigger_notify('loading_lang');
+        Lang::load('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, [
+            'no_fallback' => true,
+            'local' => true,
+        ]);
+
+        // only now we can set the localized username of the guest user (and not in
+        // UserBootstrap::initialize())
+        if (\Piwigo\Auth\AccessControl::isAGuest()) {
+            $user['username'] = l10n('guest');
+        }
+
+        // in case an auth key was provided and is no longer valid, we must wait to
+        // be here, with language loaded, to prepare the message
+        if ((bool) $page['auth_key_invalid']) {
+            // $page itself is only known as array<string, mixed>, so
+            // $page['errors'] needs its own guard before the nested push --
+            // it's always set to [] by the seam file's plain-data
+            // initialization, but that specific narrowing is not visible
+            // through the `global` declaration above.
+            if (! is_array($page['errors'] ?? null)) {
+                $page['errors'] = [];
+            }
+            $page['errors'][] =
+              l10n('Your authentication key is no longer valid.')
+              . sprintf(' <a href="%s">%s</a>', get_root_url() . 'identification.php', l10n('Login'))
+            ;
+        }
+
+        // check if we need to notified user about api_key expiration
+        if (is_array($page['notify_api_key_expiration'])) {
+            // auth_key_login() (Piwigo\Auth\AuthService) always sets
+            // 'days_left' to intval($key['days_left']), i.e. an int, but the
+            // `global` declaration above erases that per-key type info.
+            $days_left = $page['notify_api_key_expiration']['days_left'] ?? null;
+            $days_left = is_int($days_left) ? $days_left : (is_numeric($days_left) ? (int) $days_left : 0);
+            // build_user() always populates 'username'/'email' from the database (see
+            // getuserdata()), so these are real strings on every path that reaches
+            // here (an auth key was just validated); the is_string() checks are a
+            // defensive narrowing, not expected to ever fall back.
+            $notify_username = $user['username'];
+            $notify_username = is_string($notify_username) ? $notify_username : '';
+            $notify_email = $user['email'];
+            $notify_email = is_string($notify_email) ? $notify_email : '';
+            $is_mail_send = (new \Piwigo\Auth\ApiKeyService(new MailService()))->notifyExpiration($notify_username, $notify_email, $days_left);
+
+            if ($is_mail_send) {
+                \Piwigo\Db\MysqliDb::singleUpdate(
+                    Tables::userAuthKeys(),
+                    [
+                        'last_notified_on' => $page['notify_api_key_expiration']['dbnow'],
+                    ],
+                    [
+                        'user_id' => $user['id'],
+                        'auth_key' => $page['notify_api_key_expiration']['auth_key'],
+                    ],
+                );
+            }
+
+            unset($page['notify_api_key_expiration']);
+        }
+
+        // template instance
+        if (defined('IN_ADMIN') and IN_ADMIN) {// Admin template
+            // getParam() has no return type declaration (its own value
+            // comes from the equally-untyped global $user['preferences'][$param]),
+            // so its return is inferred as mixed; narrow to the same 'clear'
+            // fallback already passed as the default value.
+            $admin_theme = (new \Piwigo\Users\PreferencesService(new UserRepository(DbConnection::build())))->getParam('admin_theme', 'clear');
+            $admin_theme = is_string($admin_theme) ? $admin_theme : 'clear';
+            $template = new Template(PHPWG_ROOT_PATH . 'admin/themes', $admin_theme);
+        } else { // Classic template
+            $theme = $user['theme'];
+            if (\Piwigo\Core\PageFilterHelper::scriptBasename() != 'ws' and \Piwigo\Core\DeviceHelper::mobileTheme()) {
+                $theme = $conf['mobile_theme'];
+            }
+            $theme = is_string($theme) ? $theme : '';
+            $template = new Template(PHPWG_ROOT_PATH . 'themes', $theme);
+        }
+
+        // P23 batch 8f-4: SrcImage (L2aCoreDomain) reads theme conf through
+        // Piwigo\Core\ThemeConfProviderInterface (implemented by Template)
+        // instead of the deleted get_themeconf() free function's
+        // $GLOBALS['template'] read. Wired here, not in the setHtmlRenderer
+        // block in configure() -- the provider IS the request's $template
+        // instance, which only exists from this point on (the deleted free
+        // function had the exact same availability window).
+        \Piwigo\Image\SrcImage::setThemeConfProvider($template);
+
+        if (! isset($conf['no_photo_yet'])) {
+            // Formerly include/no_photo_yet.inc.php, a seam of exactly this
+            // one call (deleted, P23 sub-batch 8f-5). render() exits itself
+            // when it decides to take over the page.
+            new NoPhotoYetRenderer(DbConnection::build())
+                ->render();
+        }
+
+        $user_internal_status = $user['internal_status'] ?? null;
+        if (is_array($user_internal_status) && ($user_internal_status['guest_must_be_guest'] ?? false) === true) {
+            $header_msgs[] = l10n('Bad status for user "guest", using default status. Please notify the webmaster.');
+        }
+
+        if ((bool) $conf['gallery_locked']) {
+            $header_msgs[] = l10n('The gallery is locked for maintenance. Please, come back later.');
+
+            if (\Piwigo\Core\PageFilterHelper::scriptBasename() != 'identification' and ! \Piwigo\Auth\AccessControl::isAdmin()) {
+                new HtmlService()
+                    ->setStatusHeader(503, 'Service Unavailable');
+                @header('Retry-After: 900');
+                header('Content-Type: text/html; charset=' . \Piwigo\Core\CharsetHelper::getPwgCharset());
+                echo '<a href="' . get_absolute_root_url(false) . 'identification.php">' . l10n('The gallery is locked for maintenance. Please, come back later.') . '</a>';
+                echo str_repeat(' ', 512); // IE6 doesn't error output if below a size
+                exit();
+            }
+        }
+
+        if ((bool) $conf['check_upgrade_feed']) {
+            // Formerly `include_once .../functions_upgrade.php` + bare
+            // check_upgrade_feed() (migrated to a real class, P23 sub-batch
+            // 8f-6; the legacy file now only carries frozen-script
+            // delegates this path doesn't need).
+            if (\Piwigo\Admin\Install\UpgradeService::checkUpgradeFeed()) {
+                $header_msgs[] = 'Some database upgrades are missing, '
+                  . '<a href="' . get_absolute_root_url(false) . 'upgrade_feed.php">upgrade now</a>';
+            }
+        }
+
+        if (count($header_msgs) > 0) {
+            $template->assign('header_msgs', $header_msgs);
+            $header_msgs = [];
+        }
+
+        if (! empty($conf['filter_pages']) and (bool) \Piwigo\Core\PageFilterHelper::getFilterPageValue('used')) {
+            // Formerly a conditional `include PHPWG_ROOT_PATH .
+            // 'include/filter.inc.php';` (deleted, P23 sub-batch 8f-5).
+            new FilterService()
+                ->initializeFromRequest();
+        } else {
+            $filter['enabled'] = false;
+        }
+
+        if (isset($conf['header_notes']) && is_array($conf['header_notes'])) {
+            $header_notes = array_merge($header_notes, $conf['header_notes']);
+        }
+
+        // default event handlers
+        add_event_handler('render_category_literal_description', new HtmlService()->renderCategoryLiteralDescription(...));
+        if (! (bool) $conf['allow_html_descriptions']) {
+            add_event_handler('render_category_description', new HtmlService()->pwgNl2br(...));
+        }
+        add_event_handler('render_comment_content', new HtmlService()->renderCommentContent(...));
+        add_event_handler('render_comment_author', 'strip_tags');
+        // Was registered as the bare string 'str2url' -- dead since some earlier
+        // phase migrated the global function to StringHelper::str2url() without
+        // updating this one string-literal reference (add_event_handler() doesn't
+        // get caught by a normal call-site grep). Dormant until P23 batch 8d's
+        // Tags sub-batch's live curl verification actually exercised a real
+        // trigger_change('render_tag_url', ...) call and hit "Event handler ...
+        // is not callable" -- every prior tag-creation activity-log row in the
+        // fixture is static SQL data, never actually round-tripped through this
+        // handler.
+        add_event_handler('render_tag_url', StringHelper::str2url(...));
+        add_event_handler('blockmanager_register_blocks', new HtmlService()->registerDefaultMenubarBlocks(...));
+        // Relocated from include/functions_comment.inc.php (deleted, P23 batch 8c)
+        // -- that file's own top-level add_event_handler() call only ever ran via
+        // its include_once at each real caller, all of which now construct
+        // CommentService directly instead, so this registration has to live
+        // somewhere that always executes. checkForSpam() is an instance method
+        // (unlike UploadService's static upload_file handlers below), hence the
+        // bound first-class-callable form rather than a bare [Class::class, 'method']
+        // array.
+        add_event_handler('user_comment_check', new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService(), new HtmlService())->checkForSpam(...));
+        // Relocated from include/functions_user.inc.php (deleted, P23 batch 8d) --
+        // same reasoning as user_comment_check above: every real caller of
+        // AuthService::tryLogUser() now constructs AuthService directly instead of
+        // including the old file, so this registration has to live somewhere that
+        // always executes. pwgLogin() is a bound instance method, same
+        // first-class-callable shape as checkForSpam() above.
+        add_event_handler('try_log_user', new AuthService(new AuthRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())), new HtmlService())->pwgLogin(...));
+        // Relocated from admin/include/functions_upload.inc.php (deleted in P23
+        // sub-batch 8b-3) -- must stay after PluginLoader::loadPlugins() (in
+        // connect() above) so a plugin's own 'upload_file' handler (if any)
+        // keeps first crack in the trigger_change() chain, matching the
+        // original file's own registration timing (its include_once always
+        // fired well after plugin loading).
+        //
+        // 'pwg_image_resize' doesn't exist as a function anywhere in this
+        // codebase and neither event is ever triggered -- a confirmed pre-existing
+        // dead-but-harmless registration, already documented in
+        // Piwigo\PluginConfig\EventDispatcher's own class docblock. Preserved
+        // unchanged rather than "fixed", per that same documented decision.
+        add_event_handler('upload_image_resize', 'pwg_image_resize');
+        add_event_handler('upload_thumbnail_resize', 'pwg_image_resize');
+        add_event_handler('upload_file', [UploadService::class, 'uploadFilePdf']);
+        add_event_handler('upload_file', [UploadService::class, 'uploadFileHeic']);
+        add_event_handler('upload_file', [UploadService::class, 'uploadFileTiff']);
+        add_event_handler('upload_file', [UploadService::class, 'uploadFileVideo']);
+        add_event_handler('upload_file', [UploadService::class, 'uploadFilePsd']);
+        add_event_handler('upload_file', [UploadService::class, 'uploadFileEps']);
+        if (! empty($conf['original_url_protection'])) {
+            add_event_handler('get_element_url', new HtmlService()->getElementUrlProtectionHandler(...));
+            add_event_handler('get_src_image_url', new HtmlService()->getSrcImageUrlProtectionHandler(...));
+        }
+        trigger_notify('init');
+    }
+
+    /**
+     * Leaf values recursed into by array_walk_recursive() from $_GET/
+     * $_POST/$_COOKIE are always strings in practice (HTTP request data
+     * never contains scalars other than strings; arrays are recursed
+     * into rather than passed to the callback), but the parameter is
+     * typed mixed so we narrow rather than force-cast it.
+     */
+    private static function sanitizeMysqlKv(mixed &$v, int|string $k): void
+    {
+        if (is_string($v)) {
+            $v = addslashes($v);
+        }
+    }
+}

@@ -484,11 +484,20 @@ SELECT id, name, permalink
                 }
                 $remove_url = make_index_url($params);
 
+                // P23 batch 8f-4: replaces the deleted get_themeconf()
+                // free function -- this class is L3Presentation, so it may
+                // read the request's Template instance (also L3) directly,
+                // no ThemeConfProviderInterface indirection needed (unlike
+                // SrcImage, L2a). $GLOBALS['template'] is always a real
+                // Template on any request that renders this markup.
+                $request_template = $GLOBALS['template'] ?? null;
+                $icon_dir = $request_template instanceof Template ? $request_template->themeConf('icon_dir') : '';
+
                 $title .=
                   '<a id="TagsGroupRemoveTag" href="' . $remove_url . '" style="border:none;" title="'
                   . l10n('remove this tag from the list')
                   . '"><img src="'
-                    . get_root_url() . get_themeconf('icon_dir') . '/remove_s.png'
+                    . get_root_url() . $icon_dir . '/remove_s.png'
                   . '" alt="x" style="vertical-align:bottom;" >'
                   . '<span class="pwg-icon pwg-icon-close" ></span>'
                   . '</a>';

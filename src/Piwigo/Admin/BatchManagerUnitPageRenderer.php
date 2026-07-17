@@ -13,6 +13,7 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
+use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -78,7 +79,7 @@ final class BatchManagerUnitPageRenderer
         // +-------------------------------------------------------------------+
 
         if (isset($_POST['submit'])) {
-            check_pwg_token();
+            new \Piwigo\Csrf\CsrfService()->checkOrFail($htmlRenderer);
             (new \Piwigo\Validation\InputValidator())->validate('element_ids', $_POST, false, '/^\d+(,\d+)*$/');
             $element_ids_param = $_POST['element_ids'] ?? null;
             $collection = explode(',', is_string($element_ids_param) ? $element_ids_param : '');
@@ -220,7 +221,7 @@ SELECT id, date_creation
 
         // how many items to display on this page
         if (isset($_GET['display']) && $_GET['display'] !== '' && $_GET['display'] !== '0') {
-            // conf_update_param('batch_manager_images_per_page_unit' , intval($_GET['display']));
+            // \Piwigo\Config\ConfigDb::confUpdateParam('batch_manager_images_per_page_unit' , intval($_GET['display']));
             // $page['nb_images'] = $conf['batch_manager_images_per_page_unit'];
             $page['nb_images'] = is_numeric($_GET['display']) ? intval($_GET['display']) : 0;
         } elseif (in_array($conf['batch_manager_images_per_page_unit'], [5, 10, 50], true)) {
@@ -485,8 +486,8 @@ SELECT
                         $row,
                         [
                             'ID' => $row['id'],
-                            'TN_SRC' => DerivativeImage::url(IMG_MEDIUM, $src_image),
-                            'FILE_SRC' => DerivativeImage::url(IMG_LARGE, $src_image),
+                            'TN_SRC' => DerivativeImage::url(ImageStdParams::MEDIUM, $src_image),
+                            'FILE_SRC' => DerivativeImage::url(ImageStdParams::LARGE, $src_image),
                             'LEGEND' => $legend,
                             'U_EDIT' => get_root_url() . 'admin.php?page=photo-' . $row['id'],
                             'NAME' => htmlspecialchars($row['name'] ?? ''),

@@ -17,28 +17,6 @@ if (! defined('PHPWG_ROOT_PATH')) {
     define('PHPWG_ROOT_PATH', sys_get_temp_dir() . '/piwigo-derivative-cache-test-root/');
 }
 
-// include/derivative_std_params.inc.php isn't loaded by this isolated
-// Unit test process -- ImageStdParams::get_all_types() and
-// DerivativeCacheService both reference these IMG_* constants directly.
-foreach ([
-    'IMG_SQUARE' => 'square',
-    'IMG_THUMB' => 'thumb',
-    'IMG_XXSMALL' => '2small',
-    'IMG_XSMALL' => 'xsmall',
-    'IMG_SMALL' => 'small',
-    'IMG_MEDIUM' => 'medium',
-    'IMG_LARGE' => 'large',
-    'IMG_XLARGE' => 'xlarge',
-    'IMG_XXLARGE' => 'xxlarge',
-    'IMG_3XLARGE' => '3xlarge',
-    'IMG_4XLARGE' => '4xlarge',
-    'IMG_CUSTOM' => 'custom',
-] as $name => $value) {
-    if (! defined($name)) {
-        define($name, $value);
-    }
-}
-
 // Unique per-run marker: every path this suite creates or deletes must
 // contain it, and the recursive-delete helper refuses to run on any path
 // that doesn't -- regardless of what PHPWG_ROOT_PATH actually resolves to.

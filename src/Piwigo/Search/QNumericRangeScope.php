@@ -39,9 +39,9 @@ class QNumericRangeScope extends QSearchScope
         } elseif (@$str[0] == '<') { // size:<5mp
             $range = ['', substr($str, 1)];
             $strict[1] = 1;
-        } elseif ((bool) ($token->modifier & QST_WILDCARD_BEGIN)) {
+        } elseif ((bool) ($token->modifier & QSingleToken::QST_WILDCARD_BEGIN)) {
             $range = ['', $str];
-        } elseif ((bool) ($token->modifier & QST_WILDCARD_END)) {
+        } elseif ((bool) ($token->modifier & QSingleToken::QST_WILDCARD_END)) {
             $range = [$str, ''];
         } else {
             $range = [$str, $str];
@@ -115,7 +115,7 @@ class QNumericRangeScope extends QSearchScope
         }
 
         if (empty($clauses)) {
-            if ((bool) ($token->modifier & QST_WILDCARD)) {
+            if ((bool) ($token->modifier & QSingleToken::QST_WILDCARD)) {
                 return $field . ' IS NOT NULL';
             } else {
                 return $field . ' IS NULL';

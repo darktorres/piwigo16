@@ -32,7 +32,7 @@ if (! function_exists('name_compare')) {
     }
 }
 
-// ExtensionType::scanDirectory() hardcodes real app paths (PHPWG_PLUGINS_PATH/
+// ExtensionType::scanDirectory() hardcodes real app paths (PluginLoader::pluginsPath()/
 // Config::themesPath()/PHPWG_ROOT_PATH.'language/') with no injection point,
 // so this can't safely redirect to a disposable temp directory the way
 // ZipExtractorTest/UploadServiceTest do. Scanning the real, git-tracked

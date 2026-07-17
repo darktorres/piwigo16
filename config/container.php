@@ -15,6 +15,7 @@ use Monolog\Formatter\JsonFormatter;
 use Monolog\Handler\RotatingFileHandler;
 use Monolog\Logger as MonologLogger;
 use Piwigo\Activity\ActivityService;
+use Piwigo\Admin\PiwigoInfosSender;
 use Piwigo\Cache\CacheFactory;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigRepository;
@@ -23,12 +24,15 @@ use Piwigo\Core\DefaultLanguageProviderInterface;
 use Piwigo\Core\FilterUpdaterInterface;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\MailerInterface;
+use Piwigo\Core\TelemetrySenderInterface;
+use Piwigo\Core\WebmasterMailProviderInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\TablePrefixListener;
 use Piwigo\Filter\FilterService;
 use Piwigo\Html\HtmlService;
 use Piwigo\Mail\MailService;
 use Piwigo\Routing\Router;
+use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Container\ContainerInterface;
@@ -92,6 +96,28 @@ return [
     // ruleset. See src/Piwigo/Core/HtmlRenderingInterface.php's own
     // docblock.
     HtmlRenderingInterface::class => \DI\get(HtmlService::class),
+
+    // Interface binding (P23 batch 8f-4) -- Piwigo\Admin\PiwigoInfosSender
+    // is L4Integration; Piwigo\Page\PageTailRenderer (L3Presentation)
+    // constructor-injects TelemetrySenderInterface instead of depending on
+    // the concrete class directly, per deptrac.yaml's ruleset. See
+    // src/Piwigo/Core/TelemetrySenderInterface.php's own docblock.
+    TelemetrySenderInterface::class => \DI\get(PiwigoInfosSender::class),
+
+    // Interface binding (P23 batch 8f-4) -- Piwigo\Users\UserRepository
+    // provides the webmaster mail address; Piwigo\Mail\MailService takes
+    // WebmasterMailProviderInterface as an optional constructor test seam
+    // (lazily defaulting to the real UserRepository). Bound here for
+    // consistency with the other Core interfaces. See
+    // src/Piwigo/Core/WebmasterMailProviderInterface.php's own docblock.
+    //
+    // No equivalent entry for Piwigo\Core\ThemeConfProviderInterface (also
+    // P23 batch 8f-4): its implementation is the request's own
+    // Piwigo\Template\Template instance (constructed with runtime
+    // path/theme strings in include/common.inc.php, never
+    // container-managed), handed to SrcImage::setThemeConfProvider() via
+    // the established static-setter pattern instead.
+    WebmasterMailProviderInterface::class => \DI\get(UserRepository::class),
 
     // Unresolvable string param (the routes file path) -- Router::fromFile()
     // needs a path autowire can't provide.

@@ -254,7 +254,7 @@ final class WsDefaultMethods
                     'type' => WsParamType::BOOL,
                 ],
                 'thumbnail_size' => [
-                    'default' => IMG_THUMB,
+                    'default' => ImageStdParams::THUMB,
                     'info' => implode(',', array_keys(ImageStdParams::get_defined_type_map())),
                 ],
                 'search' => [

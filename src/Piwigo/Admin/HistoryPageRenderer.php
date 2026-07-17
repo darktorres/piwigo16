@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Piwigo\Auth\CookieService;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Env;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
@@ -99,7 +100,7 @@ final class HistoryPageRenderer
         } else {
             // by default, at page load, we want the selected date to be the current
             // date
-            $form['start'] = $form['end'] = pwg_now()->format('Y-m-d');
+            $form['start'] = $form['end'] = Env::now()->format('Y-m-d');
             $form['types'] = $types;
             // Hoverbox by default
             $form['display_thumbnail'] =

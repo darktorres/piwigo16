@@ -80,7 +80,7 @@ final class LanguagesInstalledPageRenderer
         (new \Piwigo\Validation\InputValidator())->validate('language', $_GET, false, '/^(' . join('|', array_keys($fs_languages)) . ')$/');
 
         if (isset($_GET['action']) and isset($_GET['language']) and \Piwigo\Auth\AccessControl::isWebmaster()) {
-            check_pwg_token();
+            new \Piwigo\Csrf\CsrfService()->checkOrFail(new HtmlService());
 
             // check_input_parameter() above already fatal_error()s if either value
             // is non-scalar or doesn't match the expected pattern; query string

@@ -63,7 +63,7 @@ final class NoPhotoYetRenderer
                     }
 
                     if ($_GET['no_photo_yet'] === 'deactivate') {
-                        conf_update_param('no_photo_yet', 'false');
+                        \Piwigo\Config\ConfigDb::confUpdateParam('no_photo_yet', 'false');
                         redirect(make_index_url());
                     }
                 }
@@ -106,7 +106,7 @@ final class NoPhotoYetRenderer
                 $template->pparse('no_photo_yet');
                 exit();
             } else {
-                conf_update_param('no_photo_yet', 'false');
+                \Piwigo\Config\ConfigDb::confUpdateParam('no_photo_yet', 'false');
             }
         }
     }

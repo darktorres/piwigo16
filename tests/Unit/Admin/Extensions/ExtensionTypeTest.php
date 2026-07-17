@@ -9,15 +9,6 @@ use Piwigo\Db\Tables;
 
 beforeEach(function (): void {
     Config::reset();
-
-    // scanDirectory()'s Plugin branch reads PHPWG_PLUGINS_PATH, normally
-    // defined by include/functions.inc.php during full app bootstrap --
-    // this Unit test doesn't load that, so define it defensively (guarded,
-    // same precedent as ExtensionLifecycleTest's identical stub, since
-    // define() is process-wide and Pest test files can share a process).
-    if (! defined('PHPWG_PLUGINS_PATH')) {
-        define('PHPWG_PLUGINS_PATH', PHPWG_ROOT_PATH . 'plugins/');
-    }
 });
 
 afterEach(function (): void {
@@ -37,7 +28,9 @@ test('configCategoryKey returns each type\'s own pem category conf key', functio
 });
 
 test('scanDirectory returns each type\'s own filesystem root', function (): void {
-    expect(ExtensionType::Plugin->scanDirectory())->toBe(PHPWG_PLUGINS_PATH)
+    // P23 batch 8f-4: the PHPWG_PLUGINS_PATH define is gone --
+    // Piwigo\Admin\PluginLoader::pluginsPath() is the canonical value now.
+    expect(ExtensionType::Plugin->scanDirectory())->toBe(\Piwigo\Admin\PluginLoader::pluginsPath())
         ->and(ExtensionType::Theme->scanDirectory())->toBe(Config::themesPath())
         ->and(ExtensionType::Language->scanDirectory())->toBe(PHPWG_ROOT_PATH . 'language/');
 });

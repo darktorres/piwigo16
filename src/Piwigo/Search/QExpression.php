@@ -52,7 +52,7 @@ class QExpression extends QMultiToken
     {
         for ($i = 0; $i < count($expr->tokens); $i++) {
             $token = $expr->tokens[$i];
-            $crt_is_not = ($token->modifier ^ $this_is_not) & QST_NOT; // no negation OR double negation -> no negation;
+            $crt_is_not = ($token->modifier ^ $this_is_not) & QSingleToken::QST_NOT; // no negation OR double negation -> no negation;
 
             if ($token instanceof QSingleToken) {
                 $token->idx = count($this->stokens);
@@ -60,9 +60,9 @@ class QExpression extends QMultiToken
 
                 $modifier = $token->modifier;
                 if ((bool) $crt_is_not) {
-                    $modifier |= QST_NOT;
+                    $modifier |= QSingleToken::QST_NOT;
                 } else {
-                    $modifier &= ~QST_NOT;
+                    $modifier &= ~QSingleToken::QST_NOT;
                 }
                 $this->stoken_modifiers[] = $modifier;
             } else {

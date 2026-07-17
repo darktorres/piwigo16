@@ -192,7 +192,7 @@ final class SearchService
 
         $imageIdsForFilter = [];
 
-        $rawFiltersViews = conf_get_param('filters_views', $conf['default_filters_views']);
+        $rawFiltersViews = \Piwigo\Config\ConfigDb::confGetParam('filters_views', $conf['default_filters_views']);
         $unserializedDisplayFilters = (is_array($rawFiltersViews) || is_string($rawFiltersViews))
             ? \Piwigo\Core\ArrayHelper::safeUnserialize($rawFiltersViews)
             : [];
@@ -644,11 +644,11 @@ final class SearchService
         $fts = [];
         foreach ($variants as $variant) {
             $useFt = mb_strlen($variant) > 3;
-            if ((bool) ($token->modifier & \QST_WILDCARD_BEGIN)) {
+            if ((bool) ($token->modifier & QSingleToken::QST_WILDCARD_BEGIN)) {
                 $useFt = false;
             }
 
-            if (($token->modifier & (\QST_QUOTED | \QST_WILDCARD_END)) === (\QST_QUOTED | \QST_WILDCARD_END)) {
+            if (($token->modifier & (QSingleToken::QST_QUOTED | QSingleToken::QST_WILDCARD_END)) === (QSingleToken::QST_QUOTED | QSingleToken::QST_WILDCARD_END)) {
                 $useFt = false;
             }
 
@@ -673,18 +673,18 @@ final class SearchService
                     }
                 }
 
-                $pre = ((bool) ($token->modifier & \QST_WILDCARD_BEGIN)) ? '' : (((bool) $page['use_regexp_ICU']) ? '\\\\b' : '[[:<:]]');
-                $post = ((bool) ($token->modifier & \QST_WILDCARD_END)) ? '' : (((bool) $page['use_regexp_ICU']) ? '\\\\b' : '[[:>:]]');
+                $pre = ((bool) ($token->modifier & QSingleToken::QST_WILDCARD_BEGIN)) ? '' : (((bool) $page['use_regexp_ICU']) ? '\\\\b' : '[[:<:]]');
+                $post = ((bool) ($token->modifier & QSingleToken::QST_WILDCARD_END)) ? '' : (((bool) $page['use_regexp_ICU']) ? '\\\\b' : '[[:>:]]');
                 foreach ($fields as $field) {
                     $clauses[] = $field . ' REGEXP ' . $this->repo->quote($pre . preg_quote($variant) . $post);
                 }
             } else {
                 $ft = $variant;
-                if ((bool) ($token->modifier & \QST_QUOTED)) {
+                if ((bool) ($token->modifier & QSingleToken::QST_QUOTED)) {
                     $ft = '"' . $ft . '"';
                 }
 
-                if ((bool) ($token->modifier & \QST_WILDCARD_END)) {
+                if ((bool) ($token->modifier & QSingleToken::QST_WILDCARD_END)) {
                     $ft .= '*';
                 }
 
@@ -734,7 +734,7 @@ final class SearchService
                 case 'author':
                     if ((bool) strlen($token->term)) {
                         $clauses = array_merge($clauses, $this->qsearchGetTextTokenSearchSql($token, ['author']));
-                    } elseif ((bool) ($token->modifier & \QST_WILDCARD)) {
+                    } elseif ((bool) ($token->modifier & QSingleToken::QST_WILDCARD)) {
                         $clauses[] = 'author IS NOT NULL';
                     } else {
                         $clauses[] = 'author IS NULL';
@@ -830,8 +830,8 @@ final class SearchService
 
         for ($i = 0; $i < count($expr->stokens) - 1; $i++) {
             if ((strlen($expr->stokens[$i]->term) <= 3 || strlen($expr->stokens[$i + 1]->term) <= 3)
-                && ($expr->stoken_modifiers[$i] & (\QST_QUOTED | \QST_WILDCARD)) === 0
-                && ($expr->stoken_modifiers[$i + 1] & (\QST_BREAK | \QST_QUOTED | \QST_WILDCARD)) === 0) {
+                && ($expr->stoken_modifiers[$i] & (QSingleToken::QST_QUOTED | QSingleToken::QST_WILDCARD)) === 0
+                && ($expr->stoken_modifiers[$i + 1] & (QSingleToken::QST_BREAK | QSingleToken::QST_QUOTED | QSingleToken::QST_WILDCARD)) === 0) {
                 $common = array_intersect($tokenTagIds[$i], $tokenTagIds[$i + 1]);
                 if ((bool) count($common)) {
                     $tokenTagIds[$i] = $tokenTagIds[$i + 1] = $common;
@@ -850,13 +850,13 @@ final class SearchService
                     Tables::imageTag(),
                     'tag_id IN (' . implode(',', $tagIds) . ') GROUP BY image_id'
                 );
-                if ((bool) ($expr->stoken_modifiers[$i] & \QST_NOT)) {
+                if ((bool) ($expr->stoken_modifiers[$i] & QSingleToken::QST_NOT)) {
                     $notIds = array_merge($notIds, $tagIds);
-                } elseif (strlen($token->term) > 2 || count($expr->stokens) === 1 || isset($token->scope) || (bool) ($token->modifier & (\QST_WILDCARD | \QST_QUOTED))) {
+                } elseif (strlen($token->term) > 2 || count($expr->stokens) === 1 || isset($token->scope) || (bool) ($token->modifier & (QSingleToken::QST_WILDCARD | QSingleToken::QST_QUOTED))) {
                     $positiveIds = array_merge($positiveIds, $tagIds);
                 }
             } elseif (isset($token->scope) && $token->scope->id === 'tag' && strlen($token->term) === 0) {
-                if ((bool) ($token->modifier & \QST_WILDCARD)) {
+                if ((bool) ($token->modifier & QSingleToken::QST_WILDCARD)) {
                     $qsr->tag_iids[$i] = $this->repo->findIdsByClause('DISTINCT image_id', Tables::imageTag(), '1=1');
                 } else {
                     $qsr->tag_iids[$i] = $this->repo->findIdsByClause(
@@ -932,8 +932,8 @@ final class SearchService
 
         for ($i = 0; $i < count($expr->stokens) - 1; $i++) {
             if ((strlen($expr->stokens[$i]->term) <= 3 || strlen($expr->stokens[$i + 1]->term) <= 3)
-                && ($expr->stoken_modifiers[$i] & (\QST_QUOTED | \QST_WILDCARD)) === 0
-                && ($expr->stoken_modifiers[$i + 1] & (\QST_BREAK | \QST_QUOTED | \QST_WILDCARD)) === 0) {
+                && ($expr->stoken_modifiers[$i] & (QSingleToken::QST_QUOTED | QSingleToken::QST_WILDCARD)) === 0
+                && ($expr->stoken_modifiers[$i + 1] & (QSingleToken::QST_BREAK | QSingleToken::QST_QUOTED | QSingleToken::QST_WILDCARD)) === 0) {
                 $common = array_intersect($tokenCatIds[$i], $tokenCatIds[$i + 1]);
                 if ((bool) count($common)) {
                     $tokenCatIds[$i] = $tokenCatIds[$i + 1] = $common;
@@ -963,13 +963,13 @@ final class SearchService
                     Tables::imageCategory(),
                     'category_id IN (' . implode(',', $catIds) . ') GROUP BY image_id'
                 ) : [];
-                if ((bool) ($expr->stoken_modifiers[$i] & \QST_NOT)) {
+                if ((bool) ($expr->stoken_modifiers[$i] & QSingleToken::QST_NOT)) {
                     $notIds = array_merge($notIds, $catIds);
-                } elseif (strlen($token->term) > 2 || count($expr->stokens) === 1 || isset($token->scope) || (bool) ($token->modifier & (\QST_WILDCARD | \QST_QUOTED))) {
+                } elseif (strlen($token->term) > 2 || count($expr->stokens) === 1 || isset($token->scope) || (bool) ($token->modifier & (QSingleToken::QST_WILDCARD | QSingleToken::QST_QUOTED))) {
                     $positiveIds = array_merge($positiveIds, $catIds);
                 }
             } elseif (isset($token->scope) && $token->scope->id === 'category' && strlen($token->term) === 0) {
-                if ((bool) ($token->modifier & \QST_WILDCARD)) {
+                if ((bool) ($token->modifier & QSingleToken::QST_WILDCARD)) {
                     $qsr->cat_iids[$i] = $this->repo->findIdsByClause('DISTINCT image_id', Tables::imageCategory(), '1=1');
                 } else {
                     $qsr->cat_iids[$i] = $this->repo->findIdsByClause(
@@ -1025,11 +1025,11 @@ final class SearchService
             }
 
             $modifier = $crt->modifier;
-            if ((bool) ($modifier & \QST_NOT)) {
+            if ((bool) ($modifier & QSingleToken::QST_NOT)) {
                 $notIds = array_unique(array_merge($notIds, $crtIds));
             } else {
                 $ignoredTerms = array_merge($ignoredTerms, $crtIgnoredTerms);
-                if ((bool) ($modifier & \QST_OR)) {
+                if ((bool) ($modifier & QSingleToken::QST_OR)) {
                     $ids = array_unique(array_merge($ids, $crtIds));
                     $qualifies = $qualifies || $crtQualifies;
                 } elseif ($crtQualifies) {
@@ -1154,7 +1154,7 @@ final class SearchService
                 }
 
                 if (strlen($token->term) > 2
-                    && ($token->modifier & (\QST_QUOTED | \QST_WILDCARD)) === 0
+                    && ($token->modifier & (QSingleToken::QST_QUOTED | QSingleToken::QST_WILDCARD)) === 0
                     && strcspn($token->term, '\'0123456789') === strlen($token->term)) {
                     $token->variants = array_unique(array_diff($inflector->get_variants($token->term), [$token->term]));
                 }

@@ -149,7 +149,7 @@ UPDATE ' . Tables::userInfos() . '
         if ($pageSection !== null) {
             // set cache if not available
             if (! isset($conf['history_sections_cache'])) {
-                conf_update_param('history_sections_cache', \Piwigo\Db\MysqliDb::getEnums(Tables::history(), 'section'), true);
+                \Piwigo\Config\ConfigDb::confUpdateParam('history_sections_cache', \Piwigo\Db\MysqliDb::getEnums(Tables::history(), 'section'), true);
             }
 
             $cachedSections = $conf['history_sections_cache'];
@@ -180,7 +180,7 @@ UPDATE ' . Tables::userInfos() . '
                 \Piwigo\Db\MysqliDb::query('ALTER TABLE ' . Tables::history() . ' CHANGE section section enum(\'' . implode("','", array_unique($historySections)) . '\') DEFAULT NULL;');
 
                 // and refresh cache
-                conf_update_param('history_sections_cache', \Piwigo\Db\MysqliDb::getEnums(Tables::history(), 'section'), true);
+                \Piwigo\Config\ConfigDb::confUpdateParam('history_sections_cache', \Piwigo\Db\MysqliDb::getEnums(Tables::history(), 'section'), true);
 
                 $section = $pageSection;
             }

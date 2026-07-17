@@ -18,10 +18,10 @@ use Piwigo\Template\Template;
 // src/Piwigo/Url/functions.php). Unlike those two, there's no natural
 // existing class these delegate to: redirect_http() is pure header
 // manipulation with zero dependencies, and redirect_html() is a real,
-// self-contained page-render routine (literal `include
-// PHPWG_ROOT_PATH . 'include/page_header.php'`/`page_tail.php`, matching
-// an already-established pattern -- ~12 already-migrated src/Piwigo/
-// controllers do the same literal include from inside a method) with no
+// self-contained page-render routine (PageHeaderRenderer/Bootstrap\PageTail
+// calls since P23 sub-batch 8f-5 deleted the page_header.php/page_tail.php
+// seams, matching an already-established pattern -- ~12 already-migrated
+// src/Piwigo/ controllers do the same calls from inside a method) with no
 // natural domain home; forcing a PSR-7 Response-object redesign to fit
 // Piwigo\Http\ResponseFactory/ResponseEmitter's modern pipeline would be
 // a behavioral rewrite, not a relocation, and is explicitly out of scope
@@ -71,15 +71,6 @@ if (! function_exists('redirect_html')) {
     {
         /** @var array<string, mixed> $conf */
         global $user, $template, $lang_info, $conf, $lang, $t2, $page, $debug;
-        // $title/$refresh/$url_link below must reach $GLOBALS (not stay
-        // function-local) -- include/page_header.php reads them via `global`,
-        // and PHP's include-inside-a-function only shares the enclosing
-        // function's LOCAL scope, never $GLOBALS, unless explicitly declared
-        // here. A real, pre-existing bug (title stayed null for every real
-        // redirect_html() caller), only surfaced live once PageHeaderRenderer
-        // started requiring a real string instead of silently letting
-        // strip_tags(null) fatal deeper inside the original code.
-        global $title, $refresh, $url_link;
 
         // $template/$lang_info are genuinely not always set here: this function
         // can be called very early (e.g. a fatal before common.inc.php finishes
@@ -120,7 +111,11 @@ if (! function_exists('redirect_html')) {
             'redirect' => 'redirect.tpl',
         ]);
 
-        include PHPWG_ROOT_PATH . 'include/page_header.php';
+        // Same null-unless-numeric narrowing the deleted
+        // include/page_header.php seam applied before calling the renderer.
+        $refresh_str = is_numeric($refresh) ? (string) $refresh : null;
+        new \Piwigo\Page\PageHeaderRenderer()
+            ->render($title, $refresh_str, $url_link);
 
         $template->set_filenames([
             'redirect' => 'redirect.tpl',
@@ -129,7 +124,7 @@ if (! function_exists('redirect_html')) {
 
         $template->parse('redirect');
 
-        include PHPWG_ROOT_PATH . 'include/page_tail.php';
+        \Piwigo\Bootstrap\PageTail::render();
 
         exit();
     }

@@ -72,7 +72,7 @@ class PersistentFileCache extends PersistentCache
         $path = $this->dir . $key . '.cache';
         $written = @file_put_contents($path, $serialized);
         if ($written === false) {
-            \Piwigo\Core\FilesystemHelper::mkgetdir($this->dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR);
+            \Piwigo\Core\FilesystemHelper::mkgetdir($this->dir, \Piwigo\Core\FilesystemHelper::MKGETDIR_DEFAULT & ~\Piwigo\Core\FilesystemHelper::MKGETDIR_DIE_ON_ERROR);
             $written = @file_put_contents($path, $serialized);
             if ($written === false) {
                 return false;

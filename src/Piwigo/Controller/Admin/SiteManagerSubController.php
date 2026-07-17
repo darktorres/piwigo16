@@ -67,7 +67,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
         }
 
         if (! empty($_POST) or isset($_GET['action'])) {
-            check_pwg_token();
+            new \Piwigo\Csrf\CsrfService()->checkOrFail(new HtmlService());
         }
 
         $template->set_filenames([

@@ -17,9 +17,9 @@ namespace Piwigo\Image;
 final class DerivativeParams
 {
     /**
-     * @var string among IMG_*
+     * @var string among the ImageStdParams size-type constants
      */
-    public $type = IMG_CUSTOM;
+    public $type = ImageStdParams::CUSTOM;
 
     /**
      * @var int used for non-custom images to regenerate the cached files

@@ -333,7 +333,7 @@ SELECT id, path, representative_ext, width, height, rotation
             ];
         }
 
-        conf_update_param('cache_sizes', $output, true);
+        \Piwigo\Config\ConfigDb::confUpdateParam('cache_sizes', $output, true);
 
         return [
             'infos' => new PwgNamedArray($output, 'item'),
@@ -1309,7 +1309,7 @@ SELECT
                 $image_id = $line_image_id;
 
                 $image_string =
-                '<span><img src="' . @DerivativeImage::url(ImageStdParams::get_by_type(IMG_SQUARE), $element)
+                '<span><img src="' . @DerivativeImage::url(ImageStdParams::get_by_type(ImageStdParams::SQUARE), $element)
                 . '" alt="' . $image_title . '" title="' . $image_title . '">';
             }
 

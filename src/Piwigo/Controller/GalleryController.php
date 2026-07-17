@@ -180,7 +180,7 @@ final class GalleryController implements ControllerInterface
             // Standard Pages
             // Some themes will want to use standard pages so this will let
             // them know
-            $template->assign('use_standard_pages', conf_get_param('use_standard_pages', false));
+            $template->assign('use_standard_pages', \Piwigo\Config\ConfigDb::confGetParam('use_standard_pages', false));
 
             // -------------------------------------------------- page title
             $title = $page['title'];
@@ -536,7 +536,7 @@ final class GalleryController implements ControllerInterface
                         $selected_type = ($derivative_params_var instanceof DerivativeParams) ? $derivative_params_var->type : null;
                         $template->clear_assign('derivative_params');
                         $type_map = ImageStdParams::get_defined_type_map();
-                        unset($type_map[IMG_XXLARGE], $type_map[IMG_XLARGE]);
+                        unset($type_map[ImageStdParams::XXLARGE], $type_map[ImageStdParams::XLARGE]);
 
                         foreach ($type_map as $params) {
                             $template->append(
@@ -594,7 +594,8 @@ final class GalleryController implements ControllerInterface
             }
 
             // ---------------------------------------------------------- end
-            include PHPWG_ROOT_PATH . 'include/page_header.php';
+            new \Piwigo\Page\PageHeaderRenderer()
+                ->render($title);
             trigger_notify('loc_end_index');
             new HtmlService()
                 ->flushPageMessages();
@@ -603,7 +604,7 @@ final class GalleryController implements ControllerInterface
 
             // ------------------------------------------------ log informations
             new HistoryService(new HistoryRepository(DbConnection::build()))->logVisit();
-            include PHPWG_ROOT_PATH . 'include/page_tail.php';
+            \Piwigo\Bootstrap\PageTail::render();
         });
 
         return ResponseFactory::html($body);

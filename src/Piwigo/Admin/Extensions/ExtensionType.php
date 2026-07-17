@@ -49,7 +49,7 @@ enum ExtensionType: string
     public function scanDirectory(): string
     {
         return match ($this) {
-            self::Plugin => PHPWG_PLUGINS_PATH,
+            self::Plugin => \Piwigo\Admin\PluginLoader::pluginsPath(),
             self::Theme => Config::themesPath(),
             self::Language => PHPWG_ROOT_PATH . 'language/',
         };

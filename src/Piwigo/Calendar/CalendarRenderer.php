@@ -105,7 +105,7 @@ final class CalendarRenderer
             ],
         ];
 
-        $views = [CAL_VIEW_LIST, CAL_VIEW_CALENDAR];
+        $views = [CalendarBase::CAL_VIEW_LIST, CalendarBase::CAL_VIEW_CALENDAR];
 
         // Retrieve calendar field
         $chronology_field = $page['chronology_field'] ?? null;
@@ -128,13 +128,13 @@ final class CalendarRenderer
 
         if (! isset($page['chronology_view']) or
              ! in_array($page['chronology_view'], $views)) {
-            $page['chronology_view'] = CAL_VIEW_LIST;
+            $page['chronology_view'] = CalendarBase::CAL_VIEW_LIST;
         }
 
-        if ($page['chronology_view'] == CAL_VIEW_CALENDAR and
+        if ($page['chronology_view'] == CalendarBase::CAL_VIEW_CALENDAR and
               ! $styles[$cal_style]['view_calendar']) {
 
-            $page['chronology_view'] = CAL_VIEW_LIST;
+            $page['chronology_view'] = CalendarBase::CAL_VIEW_LIST;
         }
 
         // perform a sanity check on $requested
@@ -149,7 +149,7 @@ final class CalendarRenderer
         $any_count = 0;
         for ($i = 0; $i < count($page_chronology_date); $i++) {
             if ($page_chronology_date[$i] == 'any') {
-                if ($page['chronology_view'] == CAL_VIEW_CALENDAR) {// we dont allow any in calendar view
+                if ($page['chronology_view'] == CalendarBase::CAL_VIEW_CALENDAR) {// we dont allow any in calendar view
                     while ($i < count($page_chronology_date)) {
                         array_pop($page_chronology_date);
                     }
@@ -186,7 +186,7 @@ final class CalendarRenderer
 
             foreach ($styles as $style => $style_data) {
                 foreach ($views as $view) {
-                    if ($style_data['view_calendar'] or $view != CAL_VIEW_CALENDAR) {
+                    if ($style_data['view_calendar'] or $view != CalendarBase::CAL_VIEW_CALENDAR) {
                         $selected = false;
 
                         if ($style != $cal_style) {

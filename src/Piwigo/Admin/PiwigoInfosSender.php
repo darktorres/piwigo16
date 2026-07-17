@@ -35,13 +35,13 @@ use Piwigo\Users\UserService;
  * wrong direction. Same "administrative machinery invoked from
  * non-admin-page contexts" precedent as PluginLoader (P23 batch 7).
  *
- * send_piwigo_infos() itself stays a permanent free-function facade in
- * include/functions.inc.php (a thin `new PiwigoInfosSender()->send()`
- * delegate) -- its own caller, Piwigo\Page\PageTailRenderer
- * (L3Presentation), cannot depend on this class either (documented
- * already, in that exact file, for the structurally identical
- * "check for updates" block); same shape as fatal_error()/
- * check_pwg_token()/get_themeconf().
+ * P23 batch 8f-4: the send_piwigo_infos() free-function facade is deleted
+ * along with include/functions.inc.php -- this class now implements
+ * Piwigo\Core\TelemetrySenderInterface (bound in config/container.php),
+ * and its one real caller, Piwigo\Page\PageTailRenderer (L3Presentation,
+ * which cannot depend on this L4 class directly), constructor-injects
+ * that interface instead; include/page_tail.php passes the concrete
+ * instance. See TelemetrySenderInterface's own docblock.
  *
  * \Piwigo\Db\MysqliDb::getDbVersion() (functions_mysqli.inc.php, batch 8f relocate-only)
  * stays a bare free-function call -- a class-extraction pass doesn't also
@@ -52,7 +52,7 @@ use Piwigo\Users\UserService;
  * fetchRemote() onto Piwigo\Http\HttpClientService::fetch(), in the
  * following file-3 sub-batches (System info, Network/HTTP).
  */
-final class PiwigoInfosSender
+final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
 {
     public function send(): void
     {
@@ -71,7 +71,7 @@ final class PiwigoInfosSender
         // $conf['send_piwigo_infos_last_notice'] has been loaded in include/common, maybe
         // a few seconds earlier, we need a refreshed value from the database. Another
         // concurrent execution might have already performed send_piwigo_infos 3 seconds ago.
-        load_conf_from_db('param = "send_piwigo_infos_last_notice"', false);
+        \Piwigo\Config\ConfigDb::loadConfFromDb('param = "send_piwigo_infos_last_notice"', false);
 
         $doSend = false;
         $lastNotice = $conf['send_piwigo_infos_last_notice'] ?? null;
@@ -85,7 +85,7 @@ final class PiwigoInfosSender
             // its return stays mixed even though this specific param is always
             // an int of seconds; narrow it before splicing into strtotime()'s
             // relative-time string.
-            $period = conf_get_param('send_piwigo_infos_period', 7 * 24 * 60 * 60);
+            $period = \Piwigo\Config\ConfigDb::confGetParam('send_piwigo_infos_period', 7 * 24 * 60 * 60);
             $period = is_numeric($period) ? (int) $period : 7 * 24 * 60 * 60;
             if (strtotime($lastNoticeStr) < strtotime($period . ' second ago')) {
                 $doSend = true;
@@ -100,7 +100,7 @@ final class PiwigoInfosSender
 
         $logger->info('[' . __FUNCTION__ . '] current conf.send_piwigo_infos_last_notice=' . ($lastNoticeStr ?? 'notFound') . ' => lets do it');
 
-        if (! pwg_is_dbconf_writeable()) {
+        if (! \Piwigo\Config\ConfigDb::pwgIsDbconfWriteable()) {
             $logger->info('[' . __FUNCTION__ . '] conf is not writeable, abort');
             return;
         }
@@ -116,7 +116,7 @@ final class PiwigoInfosSender
         [$dbCurrentDate] = $row;
 
         if (! isset($conf['send_piwigo_infos_origin_hash'])) {
-            conf_update_param('send_piwigo_infos_origin_hash', sha1(random_bytes(1000)), true);
+            \Piwigo\Config\ConfigDb::confUpdateParam('send_piwigo_infos_origin_hash', sha1(random_bytes(1000)), true);
         }
 
         [$containerType, $containerVersion] = ContainerDetector::detect();
@@ -580,7 +580,7 @@ SELECT
 
         // conf_get_param() reads $conf with a dynamic (non-literal) key, so its
         // return stays mixed even though this param is always a URL string.
-        $updateUrlBase = conf_get_param('send_piwigo_infos_update_url', PHPWG_URL);
+        $updateUrlBase = \Piwigo\Config\ConfigDb::confGetParam('send_piwigo_infos_update_url', PHPWG_URL);
         $updateUrlBase = is_string($updateUrlBase) ? $updateUrlBase : PHPWG_URL;
         $url = $updateUrlBase . '/ws.php';
 
@@ -599,7 +599,7 @@ SELECT
             $this->retryLater(24 * 60 * 60);
         } else {
             $lastNotice = date('c');
-            conf_update_param('send_piwigo_infos_last_notice', $lastNotice, true);
+            \Piwigo\Config\ConfigDb::confUpdateParam('send_piwigo_infos_last_notice', $lastNotice, true);
             $logger->info('[' . __FUNCTION__ . '][exec=' . $execId . '] fetchRemote success, new send_piwigo_infos_last_notice=' . $lastNotice);
         }
 
@@ -621,7 +621,7 @@ SELECT
         $lastNotice = ($lastNotice === false ? time() : $lastNotice) + $waitTime;
 
         $newLastNotice = date('c', $lastNotice);
-        conf_update_param('send_piwigo_infos_last_notice', $newLastNotice, true);
+        \Piwigo\Config\ConfigDb::confUpdateParam('send_piwigo_infos_last_notice', $newLastNotice, true);
         $logger->info('[' . __FUNCTION__ . '] new send_piwigo_infos_last_notice=' . $newLastNotice);
     }
 }

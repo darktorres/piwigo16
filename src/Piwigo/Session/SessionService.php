@@ -80,7 +80,24 @@ final class SessionService
      */
     public function getRemoteAddrSessionHash(): string
     {
-        if (! Config::sessionUseIpAddress()) {
+        return self::remoteAddrHash(Config::sessionUseIpAddress());
+    }
+
+    /**
+     * Pure computation behind getRemoteAddrSessionHash(), with the
+     * "bind sessions to the client IP?" policy bit passed in explicitly.
+     *
+     * P23 batch 8f (i.php): extracted so SessionUserResolver (the i.php
+     * fast path) can share the exact composite-key hash logic while
+     * sourcing the policy bit from the legacy global $conf instead of
+     * Config:: -- on that fast-bootstrap path Config::$data is populated
+     * from ConfigLoader defaults/env only, never from local/config
+     * overrides, so Config::sessionUseIpAddress() would not be
+     * authoritative there.
+     */
+    public static function remoteAddrHash(bool $useIpAddress): string
+    {
+        if (! $useIpAddress) {
             return '';
         }
 

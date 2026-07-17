@@ -5,21 +5,33 @@ declare(strict_types=1);
 namespace Piwigo\Page;
 
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\TelemetrySenderInterface;
 use Piwigo\Template\Template;
 
 /**
- * Renders the page footer into $template. Injects nothing -- same shape
- * as PageHeaderRenderer.
+ * Renders the page footer into $template.
  *
  * The original page_tail.php's "check for Piwigo updates" block
  * (constructing Piwigo\Admin\updates) is deliberately NOT ported here --
  * L3Presentation may not depend on L4Integration (Admin), confirmed via a
- * real deptrac violation when tried. It stays inline in the thin
- * page_tail.php delegate, same "keep layer-crossing glue outside the
- * class" shape as admin/menubar.php's own $_POST handling.
+ * real deptrac violation when tried. It lives in
+ * Piwigo\Bootstrap\PageTail::render() (L4, the orchestrator that replaced
+ * the thin include/page_tail.php seam in P23 sub-batch 8f-5), which runs
+ * it right before constructing this renderer.
+ *
+ * P23 batch 8f-4: the telemetry send (formerly the bare
+ * send_piwigo_infos() free function, deleted with
+ * include/functions.inc.php) has the exact same L3-may-not-reach-L4 shape
+ * -- injected here as Piwigo\Core\TelemetrySenderInterface (constructor
+ * injection: exactly one construction site, Bootstrap\PageTail::render(),
+ * which passes the concrete Piwigo\Admin\PiwigoInfosSender).
  */
 final class PageTailRenderer
 {
+    public function __construct(
+        private readonly TelemetrySenderInterface $telemetrySender,
+    ) {}
+
     public function render(float $startTime): void
     {
         /**
@@ -56,7 +68,7 @@ final class PageTailRenderer
             );
         }
 
-        send_piwigo_infos();
+        $this->telemetrySender->send();
 
         // ------------------------------------------------------------- generation time
         $debug_vars = [];

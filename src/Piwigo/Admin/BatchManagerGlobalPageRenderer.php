@@ -61,7 +61,7 @@ final class BatchManagerGlobalPageRenderer
         global $conf, $page, $template, $user;
 
         if (count($_POST) > 0) {
-            check_pwg_token();
+            new \Piwigo\Csrf\CsrfService()->checkOrFail(new HtmlService());
         }
 
         trigger_notify('loc_begin_element_set_global');
@@ -554,7 +554,7 @@ DELETE
             $del_deriv_map[$params->type] = l10n($params->type);
         }
         $gen_deriv_map = $del_deriv_map;
-        $del_deriv_map[IMG_CUSTOM] = l10n(IMG_CUSTOM);
+        $del_deriv_map[ImageStdParams::CUSTOM] = l10n(ImageStdParams::CUSTOM);
         $template->assign(
             [
                 'del_derivatives_types' => $del_deriv_map,
@@ -641,7 +641,7 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
             }
 
             // $conf['order_by'] is always a string here: it's either loaded verbatim
-            // from the piwigo_config DB table by load_conf_from_db() in
+            // from the piwigo_config DB table by ConfigDb::loadConfFromDb() in
             // include/common.inc.php (install/config.sql always inserts this row),
             // or overwritten above with a string built from string concatenation.
             $order_by = is_string($conf['order_by']) ? $conf['order_by'] : '';
@@ -652,7 +652,7 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
 ;';
             $result = \Piwigo\Db\MysqliDb::query($query);
 
-            $thumb_params = ImageStdParams::get_by_type(IMG_SQUARE);
+            $thumb_params = ImageStdParams::get_by_type(ImageStdParams::SQUARE);
             // template thumbnail initialization
             while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
                 $nb_thumbs_page++;
@@ -675,7 +675,7 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
                         [
                             'thumb' => new DerivativeImage($thumb_params, $src_image),
                             'TITLE' => $ttitle,
-                            'FILE_SRC' => DerivativeImage::url(IMG_LARGE, $src_image),
+                            'FILE_SRC' => DerivativeImage::url(ImageStdParams::LARGE, $src_image),
                             'U_EDIT' => get_root_url() . 'admin.php?page=photo-' . $row['id'],
                         ]
                     )

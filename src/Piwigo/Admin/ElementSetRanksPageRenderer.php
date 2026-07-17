@@ -85,7 +85,7 @@ final class ElementSetRanksPageRenderer
         $image_order_choice = 'default';
 
         if (isset($_POST['submit'])) {
-            check_pwg_token();
+            new \Piwigo\Csrf\CsrfService()->checkOrFail(new HtmlService());
 
             if (isset($_POST['rank_of_image']) && is_array($_POST['rank_of_image'])) {
                 $rank_of_image = array_filter($_POST['rank_of_image'], is_numeric(...));
@@ -196,7 +196,7 @@ SELECT
         if (\Piwigo\Db\MysqliDb::numRows($result) > 0) {
             // template thumbnail initialization
             $current_rank = 1;
-            $derivativeParams = ImageStdParams::get_by_type(IMG_SQUARE);
+            $derivativeParams = ImageStdParams::get_by_type(ImageStdParams::SQUARE);
             while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
                 $derivative = new DerivativeImage($derivativeParams, new SrcImage($row));
 

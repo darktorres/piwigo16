@@ -393,7 +393,7 @@ UPDATE ' . Tables::categories() . '
                     if (\Piwigo\Auth\AccessControl::canManageComment('edit', $author_id)) {
                         $edit_content_raw = $_POST['content'] ?? null;
                         if (is_scalar($edit_content_raw) && $edit_content_raw !== '' && $edit_content_raw !== '0' && $edit_content_raw !== 0 && $edit_content_raw !== 0.0 && $edit_content_raw !== false) {
-                            check_pwg_token();
+                            new \Piwigo\Csrf\CsrfService()->checkOrFail(new HtmlService());
                             $post_key = $_POST['key'] ?? null;
                             if (! is_string($post_key)) {
                                 $post_key = '';
@@ -447,7 +447,7 @@ UPDATE ' . Tables::categories() . '
 
                 case 'delete_comment':
 
-                    check_pwg_token();
+                    new \Piwigo\Csrf\CsrfService()->checkOrFail(new HtmlService());
 
                     $commentService = new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService(), new HtmlService());
 
@@ -471,7 +471,7 @@ UPDATE ' . Tables::categories() . '
                     // no break
                 case 'validate_comment':
 
-                    check_pwg_token();
+                    new \Piwigo\Csrf\CsrfService()->checkOrFail(new HtmlService());
 
                     $commentService = new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService(), new HtmlService());
 
@@ -1184,7 +1184,7 @@ SELECT id, name, permalink
                 and ! str_contains($http_user_agent, 'Chrome/')) {
                 $prefetch_deriv_type = SessionService::get()->getSessionVar('picture_deriv', $conf['derivative_default_size']);
                 if (! is_string($prefetch_deriv_type)) {
-                    $prefetch_deriv_type = IMG_MEDIUM;
+                    $prefetch_deriv_type = ImageStdParams::MEDIUM;
                 }
                 $template->assign(
                     'U_PREFETCH',
@@ -1228,7 +1228,12 @@ SELECT id, name, permalink
                     ->render();
             }
 
-            include PHPWG_ROOT_PATH . 'include/page_header.php';
+            // The slideshow branch above may have set $refresh/$url_link
+            // (auto-advance meta refresh); same null-unless-numeric narrowing
+            // the deleted include/page_header.php seam applied.
+            $refresh_str = isset($refresh) && is_numeric($refresh) ? (string) $refresh : null;
+            new \Piwigo\Page\PageHeaderRenderer()
+                ->render($title, $refresh_str, $url_link ?? null);
             trigger_notify('loc_end_picture');
             new HtmlService()
                 ->flushPageMessages();
@@ -1241,7 +1246,7 @@ SELECT id, name, permalink
             // -------------------------------------------------- log informations
             $current_image_id = $picture['current']['id'];
             new HistoryService(new HistoryRepository(DbConnection::build()))->logVisit(is_numeric($current_image_id) ? (int) $current_image_id : null, 'picture');
-            include PHPWG_ROOT_PATH . 'include/page_tail.php';
+            \Piwigo\Bootstrap\PageTail::render();
         });
 
         return ResponseFactory::html($body);
@@ -1282,7 +1287,7 @@ SELECT id, name, permalink
         }
         $deriv_type = SessionService::get()->getSessionVar('picture_deriv', $conf['derivative_default_size']);
         if (! is_string($deriv_type)) {
-            $deriv_type = IMG_MEDIUM;
+            $deriv_type = ImageStdParams::MEDIUM;
         }
         $selected_derivative = $element_info['derivatives'][$deriv_type];
 
@@ -1290,7 +1295,7 @@ SELECT id, name, permalink
         $show_original = isset($element_info['element_url']);
         $added = [];
         foreach ($element_info['derivatives'] as $type => $derivative) {
-            if ($type === IMG_SQUARE || $type === IMG_THUMB) {
+            if ($type === ImageStdParams::SQUARE || $type === ImageStdParams::THUMB) {
                 continue;
             }
             if (! array_key_exists($type, ImageStdParams::get_defined_type_map())) {

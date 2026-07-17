@@ -12,6 +12,7 @@ use Piwigo\Admin\Integrity\c13y_internal;
 use Piwigo\Admin\Integrity\check_integrity;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Admin\tabsheet;
+use Piwigo\Core\Env;
 use Piwigo\Core\Logger;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -304,7 +305,7 @@ SELECT COUNT(*)
         $temp_data = [];
 
         $activity_last_weeks = [];
-        $date = pwg_now();
+        $date = Env::now();
 
         // Get data from $nb_weeks last weeks
         while ($mondays < $nb_weeks) {
@@ -323,7 +324,7 @@ SELECT COUNT(*)
         $session_cache_calculated_on = is_array($session_cache_activity) ? ($session_cache_activity['calculated_on'] ?? null) : null;
         $session_cache_calculated_on = is_numeric($session_cache_calculated_on) ? (int) $session_cache_calculated_on : null;
 
-        if ($session_cache_calculated_on === null or $session_cache_calculated_on < pwg_now()->getTimestamp() - 300) {
+        if ($session_cache_calculated_on === null or $session_cache_calculated_on < Env::now()->getTimestamp() - 300) {
             $start_time = \Piwigo\Core\TimingHelper::getMoment();
 
             $query = '
@@ -367,7 +368,7 @@ SELECT COUNT(*)
             $logger->debug('[admin/intro::' . __LINE__ . '] recent activity calculated in ' . \Piwigo\Core\TimingHelper::getElapsedTime($start_time, \Piwigo\Core\TimingHelper::getMoment()));
 
             $_SESSION['cache_activity_last_weeks'] = [
-                'calculated_on' => pwg_now()
+                'calculated_on' => Env::now()
                     ->getTimestamp(),
                 'data' => $activity_last_weeks,
             ];
@@ -649,7 +650,7 @@ SELECT
 
         $news = null;
 
-        $data_location = conf_get_param('data_location');
+        $data_location = \Piwigo\Config\ConfigDb::confGetParam('data_location');
         $data_location = is_string($data_location) ? $data_location : '';
         $lang_code = $lang_info['code'] ?? null;
         $lang_code = is_string($lang_code) ? $lang_code : '';

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Browser;
 
 use PHPUnit\Framework\Attributes\Group;
+use Piwigo\Core\Env;
 use Piwigo\Tests\Integration\IntegrationTestCase;
 use Symfony\Component\Process\Process;
 
@@ -79,7 +80,7 @@ final class RegenerateFixtureTest extends IntegrationTestCase
 
         // 2. Drive install.php with fixture admin credentials. install.php
         // itself preserves any pre-existing custom line (e.g. PIWIGO_TEST_NOW
-        // — see include/env.inc.php's pwg_now()) when it rewrites .env.test,
+        // — see \Piwigo\Core\Env::now()) when it rewrites .env.test,
         // so nothing extra is needed here to keep it across a regen.
         $installBody = $this->postForm('install.php', [
             'install'       => '1',
@@ -223,9 +224,9 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         // date/validation_date/last_send/date_deleted/last_hit below all use
         // $now (and rate.date uses $today) instead of raw SQL NOW()/CURDATE()
         // -- those run on the MySQL server's real clock, invisible to
-        // pwg_now()'s PIWIGO_TEST_NOW freeze, so every regeneration produced
+        // Env::now()'s PIWIGO_TEST_NOW freeze, so every regeneration produced
         // a fresh, non-reproducible timestamp in the committed fixture.
-        $now = pwg_now()->format('Y-m-d H:i:s');
+        $now = Env::now()->format('Y-m-d H:i:s');
         $db->query(sprintf(
             "INSERT INTO %scomments (image_id, date, author, anonymous_id, author_id, content, validated, validation_date) VALUES "
             . "(%d, '%s', 'fixture_admin', '127.0.0.1', 1, 'Fixture comment for integration tests.', 1, '%s'), "
@@ -272,7 +273,7 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         ));
 
         // 10. Five ratings across users/photos.
-        $today = pwg_now()->format('Y-m-d');
+        $today = Env::now()->format('Y-m-d');
         $db->query(sprintf(
             "INSERT INTO %srate (user_id, element_id, anonymous_id, rate, date) VALUES "
             . "(1,%d,'',5,'%s'), (%d,%d,'',4,'%s'), (%d,%d,'',3,'%s'), "

@@ -34,10 +34,10 @@ class QMultiToken implements \Stringable
             if ((bool) $i) {
                 $s .= ' ';
             }
-            if ((bool) ($modifier & QST_OR)) {
+            if ((bool) ($modifier & QSingleToken::QST_OR)) {
                 $s .= 'OR ';
             }
-            if ((bool) ($modifier & QST_NOT)) {
+            if ((bool) ($modifier & QSingleToken::QST_NOT)) {
                 $s .= 'NOT ';
             }
             if (! ($this->tokens[$i]->is_single)) {
@@ -59,7 +59,7 @@ class QMultiToken implements \Stringable
     {
         if ((bool) strlen($token) || (isset($scope) && $scope->nullable)) {
             if (isset($scope)) {
-                $modifier |= QST_BREAK;
+                $modifier |= QSingleToken::QST_BREAK;
             }
             $this->tokens[] = new QSingleToken($token, $modifier, $scope);
         }
@@ -83,7 +83,7 @@ class QMultiToken implements \Stringable
 
         for ($stop = false; ! $stop && $qi < strlen($q); $qi++) {
             $ch = $q[$qi];
-            if (($crt_modifier & QST_QUOTED) == 0) {
+            if (($crt_modifier & QSingleToken::QST_QUOTED) == 0) {
                 switch ($ch) {
                     case '(':
                         if ((bool) strlen($crt_token)) {
@@ -118,13 +118,13 @@ class QMultiToken implements \Stringable
                         if ((bool) strlen($crt_token)) {
                             $this->push($crt_token, $crt_modifier, $crt_scope);
                         }
-                        $crt_modifier |= QST_QUOTED;
+                        $crt_modifier |= QSingleToken::QST_QUOTED;
                         break;
                     case '-':
                         if ((bool) strlen($crt_token) || isset($crt_scope)) {
                             $crt_token .= $ch;
                         } else {
-                            $crt_modifier |= QST_NOT;
+                            $crt_modifier |= QSingleToken::QST_NOT;
                         }
                         break;
                     case '*':
@@ -132,7 +132,7 @@ class QMultiToken implements \Stringable
                             $crt_token .= $ch;
                         } // wildcard end later
                         else {
-                            $crt_modifier |= QST_WILDCARD_BEGIN;
+                            $crt_modifier |= QSingleToken::QST_WILDCARD_BEGIN;
                         }
                         break;
                     case '.':
@@ -160,7 +160,7 @@ class QMultiToken implements \Stringable
             } else {// quoted
                 if ($ch == '"') {
                     if ($qi + 1 < strlen($q) && $q[$qi + 1] == '*') {
-                        $crt_modifier |= QST_WILDCARD_END;
+                        $crt_modifier |= QSingleToken::QST_WILDCARD_END;
                         $qi++;
                     }
                     $this->push($crt_token, $crt_modifier, $crt_scope);
@@ -176,23 +176,23 @@ class QMultiToken implements \Stringable
             $token = $this->tokens[$i];
             $remove = false;
             if ($token instanceof QSingleToken) {
-                if (($token->modifier & QST_QUOTED) == 0
+                if (($token->modifier & QSingleToken::QST_QUOTED) == 0
                   && str_ends_with($token->term, '*')) {
                     $token->term = rtrim($token->term, '*');
-                    $token->modifier |= QST_WILDCARD_END;
+                    $token->modifier |= QSingleToken::QST_WILDCARD_END;
                 }
 
                 if (! isset($token->scope)
-                  && ($token->modifier & (QST_QUOTED | QST_WILDCARD)) == 0) {
+                  && ($token->modifier & (QSingleToken::QST_QUOTED | QSingleToken::QST_WILDCARD)) == 0) {
                     if (strtolower($token->term) == 'not') {
                         if ($i + 1 < count($this->tokens)) {
-                            $this->tokens[$i + 1]->modifier |= QST_NOT;
+                            $this->tokens[$i + 1]->modifier |= QSingleToken::QST_NOT;
                         }
                         $token->term = '';
                     }
                     if (strtolower($token->term) == 'or') {
                         if ($i + 1 < count($this->tokens)) {
-                            $this->tokens[$i + 1]->modifier |= QST_OR;
+                            $this->tokens[$i + 1]->modifier |= QSingleToken::QST_OR;
                         }
                         $token->term = '';
                     }
@@ -216,14 +216,14 @@ class QMultiToken implements \Stringable
             if ($remove) {
                 array_splice($this->tokens, $i, 1);
                 if ($i < count($this->tokens) && $this->tokens[$i]->is_single) {
-                    $this->tokens[$i]->modifier |= QST_BREAK;
+                    $this->tokens[$i]->modifier |= QSingleToken::QST_BREAK;
                 }
                 $i--;
             }
         }
 
         if ($level > 0 && (bool) count($this->tokens) && $this->tokens[0]->is_single) {
-            $this->tokens[0]->modifier |= QST_BREAK;
+            $this->tokens[0]->modifier |= QSingleToken::QST_BREAK;
         }
     }
 
@@ -246,7 +246,7 @@ class QMultiToken implements \Stringable
 
     private static function priority(int $modifier): int
     {
-        return ((bool) ($modifier & QST_OR)) ? 0 : 1;
+        return ((bool) ($modifier & QSingleToken::QST_OR)) ? 0 : 1;
     }
 
     /* because evaluations occur left to right, we ensure that 'a OR b c d' is interpreted as 'a OR (b c d)' */
@@ -285,8 +285,8 @@ class QMultiToken implements \Stringable
 
                 // rewrite ourseleves as a (b c d)
                 array_splice($this->tokens, $i, 0, [$sub]);
-                $sub->modifier = $sub->tokens[0]->modifier & QST_OR;
-                $sub->tokens[0]->modifier &= ~QST_OR;
+                $sub->modifier = $sub->tokens[0]->modifier & QSingleToken::QST_OR;
+                $sub->tokens[0]->modifier &= ~QSingleToken::QST_OR;
 
                 $sub->check_operator_priority();
             } else {

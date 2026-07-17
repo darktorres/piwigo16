@@ -15,6 +15,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\DefaultLanguageProviderInterface;
+use Piwigo\Core\Env;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
@@ -364,16 +365,16 @@ final class UserService implements DefaultLanguageProviderInterface
                 $defaultUser,
                 [
                     'status' => $status,
-                    // pwg_now() respects the frozen test-mode clock the
+                    // Env::now() respects the frozen test-mode clock the
                     // same way pwg_activity()'s own timestamp does --
                     // real behavior outside test mode is unaffected.
-                    'registration_date' => pwg_now()
+                    'registration_date' => Env::now()
                         ->format('Y-m-d H:i:s'),
                     // Otherwise relies on the schema's own DEFAULT
                     // CURRENT_TIMESTAMP, which reads the real DB-server
-                    // clock -- invisible to pwg_now()'s freeze, same
+                    // clock -- invisible to Env::now()'s freeze, same
                     // reasoning as registration_date above.
-                    'lastmodified' => pwg_now()
+                    'lastmodified' => Env::now()
                         ->format('Y-m-d H:i:s'),
                     'level' => $level,
                 ]
@@ -572,15 +573,7 @@ final class UserService implements DefaultLanguageProviderInterface
         // 1. the user_infos.theme was not found in the themes table, thus themes.name is null
         // 2. the theme is not really installed on the filesystem
         $theme = $user['theme'] ?? null;
-        // deliberately bare, not ThemeCatalog::checkThemeInstalled() --
-        // tests/Integration/ExtensionLifecycleTest.php spies on this exact
-        // call via same-namespace function shadowing (its own isolated
-        // bootstrap doesn't load \Piwigo\Db\MysqliDb::query(), which getDefaultTheme()'s
-        // own fallback branch below would need if this check ever fell
-        // through to it for real), same "one narrow, structurally-forced
-        // exception" shape as pwg_activity()'s CategoryAdminService
-        // exception.
-        if (! isset($user['theme_name']) or ! is_string($theme) or ! check_theme_installed($theme)) {
+        if (! isset($user['theme_name']) or ! is_string($theme) or ! \Piwigo\Core\ThemeCatalog::checkThemeInstalled($theme)) {
             $user['theme'] = $this->getDefaultTheme();
             $user['theme_name'] = $user['theme'];
         }
@@ -953,9 +946,7 @@ DELETE FROM ' . Tables::favorites() . '
         if (! is_string($theme)) {
             $theme = AppInfo::DEFAULT_TEMPLATE;
         }
-        // deliberately bare -- same ExtensionLifecycleTest spy dependency
-        // as checkAndSaveUserInfos()'s call above.
-        if (check_theme_installed($theme)) {
+        if (\Piwigo\Core\ThemeCatalog::checkThemeInstalled($theme)) {
             return $theme;
         }
 

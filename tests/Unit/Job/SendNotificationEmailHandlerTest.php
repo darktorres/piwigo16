@@ -6,15 +6,13 @@ use Piwigo\Job\Handler\SendNotificationEmailHandler;
 use Piwigo\Job\SendNotificationEmailJob;
 use Piwigo\Mail\MailService;
 
-// getMailSenderEmail()/getMailConfiguration() call the real
-// get_webmaster_mail_address() -- same minimal stub as
-// tests/Unit/Mail/MailServiceTest.php.
-if (! function_exists('get_webmaster_mail_address')) {
-    function get_webmaster_mail_address(): string
-    {
-        return 'webmaster@example.test';
-    }
-}
+// P23 batch 8f-4: the get_webmaster_mail_address() function stub is gone
+// (free function deleted with include/functions.inc.php; MailService now
+// reaches the webmaster address through its optional
+// WebmasterMailProviderInterface constructor param). No fake is needed
+// here: the empty-$to job below short-circuits MailService::mail() to
+// `return true` before getMailConfiguration()/the webmaster lookup ever
+// runs (verified against mail()'s own first guard).
 
 beforeEach(function (): void {
     $GLOBALS['conf'] = [];

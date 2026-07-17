@@ -18,9 +18,9 @@ require PHPWG_ROOT_PATH . 'include/config_default.inc.php';
 @include PHPWG_ROOT_PATH . 'local/config/config.inc.php';
 
 require PHPWG_ROOT_PATH . 'include/env.inc.php';
-pwg_load_env_file(PHPWG_ROOT_PATH);
+\Piwigo\Core\Env::loadEnvFile(PHPWG_ROOT_PATH);
 $prefixeTable = '';
-pwg_apply_env_to_conf($conf, $prefixeTable);
+\Piwigo\Core\Env::applyEnvToConf($conf, $prefixeTable);
 
 header('Content-Type: text/plain');
 

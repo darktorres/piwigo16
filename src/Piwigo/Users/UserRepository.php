@@ -19,11 +19,15 @@ use Piwigo\Db\Tables;
  * (get_computed_categories(), Tables::imageCategory(), image-count-based
  * cache invalidation) that don't exist as typed modules yet (P19).
  */
-final class UserRepository extends AbstractRepository
+final class UserRepository extends AbstractRepository implements \Piwigo\Core\WebmasterMailProviderInterface
 {
     /**
      * Returns the webmaster's email address (the users row whose id
      * column matches $conf['webmaster_id']).
+     *
+     * P23 batch 8f-4: implements Piwigo\Core\WebmasterMailProviderInterface
+     * (MailService's test seam for this exact lookup -- see that
+     * interface's own docblock); bound in config/container.php.
      *
      * P23 batch 8d: relocated from include/functions.inc.php's
      * get_webmaster_mail_address(), unchanged logic (including its

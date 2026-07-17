@@ -59,15 +59,15 @@ class CalendarWeekly extends CalendarBase
         // Comment next lines for week starting on Sunday or if MySQL version<4.0.17
         // WEEK(date,5) = "0-53 - Week 1=the first week with a Monday in this year"
         if ($conf['week_starts_on'] == 'monday') {
-            $this->calendar_levels[CWEEK]['sql'] = \Piwigo\Db\MysqliDb::getWeek($this->date_field, 5) . '+1';
-            $this->calendar_levels[CDAY]['sql'] = \Piwigo\Db\MysqliDb::getWeekday($this->date_field);
-            $cday_labels = $this->calendar_levels[CDAY]['labels'];
+            $this->calendar_levels[self::CWEEK]['sql'] = \Piwigo\Db\MysqliDb::getWeek($this->date_field, 5) . '+1';
+            $this->calendar_levels[self::CDAY]['sql'] = \Piwigo\Db\MysqliDb::getWeekday($this->date_field);
+            $cday_labels = $this->calendar_levels[self::CDAY]['labels'];
             if (is_array($cday_labels)) {
                 $shifted = array_shift($cday_labels);
                 if (is_string($shifted)) {
                     $cday_labels[] = $shifted;
                 }
-                $this->calendar_levels[CDAY]['labels'] = $cday_labels;
+                $this->calendar_levels[self::CDAY]['labels'] = $cday_labels;
             }
         }
     }
@@ -85,13 +85,13 @@ class CalendarWeekly extends CalendarBase
 
         $nb_date_parts = is_array($page['chronology_date']) ? count($page['chronology_date']) : 0;
         if ($nb_date_parts == 0) {
-            $this->build_nav_bar(CYEAR); // years
+            $this->build_nav_bar(self::CYEAR); // years
         }
         if ($nb_date_parts == 1) {
-            $this->build_nav_bar(CWEEK, []); // week nav bar 1-53
+            $this->build_nav_bar(self::CWEEK, []); // week nav bar 1-53
         }
         if ($nb_date_parts == 2) {
-            $this->build_nav_bar(CDAY); // days nav bar Mon-Sun
+            $this->build_nav_bar(self::CDAY); // days nav bar Mon-Sun
         }
         $this->build_next_prev();
         return false;
@@ -118,21 +118,21 @@ class CalendarWeekly extends CalendarBase
             array_pop($date);
         }
         $res = '';
-        if (isset($date[CYEAR]) and $date[CYEAR] !== 'any') {
-            $y = $date[CYEAR];
+        if (isset($date[self::CYEAR]) and $date[self::CYEAR] !== 'any') {
+            $y = $date[self::CYEAR];
             $y = is_int($y) || is_string($y) ? $y : '';
             $res = " AND {$this->date_field} BETWEEN '{$y}-01-01' AND '{$y}-12-31 23:59:59'";
         }
 
-        if (isset($date[CWEEK]) and $date[CWEEK] !== 'any') {
-            $week = $date[CWEEK];
+        if (isset($date[self::CWEEK]) and $date[self::CWEEK] !== 'any') {
+            $week = $date[self::CWEEK];
             $week = is_int($week) || is_string($week) ? $week : '';
-            $res .= ' AND ' . $this->calendar_levels[CWEEK]['sql'] . '=' . $week;
+            $res .= ' AND ' . $this->calendar_levels[self::CWEEK]['sql'] . '=' . $week;
         }
-        if (isset($date[CDAY]) and $date[CDAY] !== 'any') {
-            $day = $date[CDAY];
+        if (isset($date[self::CDAY]) and $date[self::CDAY] !== 'any') {
+            $day = $date[self::CDAY];
             $day = is_int($day) || is_string($day) ? $day : '';
-            $res .= ' AND ' . $this->calendar_levels[CDAY]['sql'] . '=' . $day;
+            $res .= ' AND ' . $this->calendar_levels[self::CDAY]['sql'] . '=' . $day;
         }
         if (empty($res)) {
             $res = ' AND ' . $this->date_field . ' IS NOT NULL';

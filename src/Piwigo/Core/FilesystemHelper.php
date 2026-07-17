@@ -6,14 +6,38 @@ namespace Piwigo\Core;
 
 /**
  * P23 batch 8d: relocated from include/functions.inc.php, unchanged logic.
- * The MKGETDIR_ bitmask flags stay global constants (not class
- * constants) -- same "widely-used bootstrap-level constants" precedent as
- * PHPWG_PLUGINS_PATH / QST_ / CAL_VIEW_ constants in that same file (10
- * real call sites use them with bitwise operators; converting to class
- * constants would be pure churn for zero benefit).
+ *
+ * P23 batch 8f-4: the MKGETDIR_ bitmask flags moved here as class
+ * constants (include/functions.inc.php is deleted). Beyond the mechanical
+ * relocation this fixes a real, documented live fatal: mkgetdir()'s
+ * default parameter used to reference the global MKGETDIR_DEFAULT, which
+ * only existed once include/functions.inc.php had run -- i.php's
+ * deliberately-lighter "fast bootstrap" path never loaded that file, so a
+ * cold-cache thumbnail generation calling mkgetdir() with default args
+ * fataled (surfaced live via admin.php?page=comments, noted in the 8f-3
+ * batch log). Class constants are autoloaded with the class itself, so
+ * the default is now self-contained on every path.
  */
 final class FilesystemHelper
 {
+    /** no option for mkgetdir() */
+    public const int MKGETDIR_NONE = 0;
+
+    /** sets mkgetdir() recursive */
+    public const int MKGETDIR_RECURSIVE = 1;
+
+    /** sets mkgetdir() exit script on error */
+    public const int MKGETDIR_DIE_ON_ERROR = 2;
+
+    /** sets mkgetdir() add a index.htm file */
+    public const int MKGETDIR_PROTECT_INDEX = 4;
+
+    /** sets mkgetdir() add a .htaccess file */
+    public const int MKGETDIR_PROTECT_HTACCESS = 8;
+
+    /** default options for mkgetdir() = MKGETDIR_RECURSIVE | MKGETDIR_DIE_ON_ERROR | MKGETDIR_PROTECT_INDEX */
+    public const int MKGETDIR_DEFAULT = self::MKGETDIR_RECURSIVE | self::MKGETDIR_DIE_ON_ERROR | self::MKGETDIR_PROTECT_INDEX;
+
     private static ?HtmlRenderingInterface $htmlRenderer = null;
 
     /**
@@ -38,9 +62,9 @@ final class FilesystemHelper
     /**
      * creates directory if not exists and ensures that directory is writable
      *
-     * @param int $flags combination of MKGETDIR_xxx
+     * @param int $flags combination of self::MKGETDIR_xxx
      */
-    public static function mkgetdir(string $dir, int $flags = MKGETDIR_DEFAULT): bool
+    public static function mkgetdir(string $dir, int $flags = self::MKGETDIR_DEFAULT): bool
     {
         if (! is_dir($dir)) {
             /** @var array<string, mixed> $conf */
@@ -51,23 +75,28 @@ final class FilesystemHelper
             $umask = umask(0);
             $chmod_value = $conf['chmod_value'];
             $chmod_value = is_numeric($chmod_value) ? (int) $chmod_value : 0755;
-            $mkd = @mkdir($dir, $chmod_value, ((bool) ($flags & MKGETDIR_RECURSIVE)) ? true : false);
+            $mkd = @mkdir($dir, $chmod_value, ((bool) ($flags & self::MKGETDIR_RECURSIVE)) ? true : false);
             umask($umask);
-            if ($mkd === false) {
-                ! (bool) ($flags & MKGETDIR_DIE_ON_ERROR) or self::fatalError("{$dir} " . l10n('no write access'));
+            // Retest existence on mkdir() failure: concurrent requests (e.g.
+            // parallel i.php derivative generations on a cold cache) race to
+            // create the same directory, and the losers fail with EEXIST on
+            // slow filesystems -- that is success, not an error (re-check
+            // ported from HEAD i.php's local mkgetdir()).
+            if ($mkd === false && ! is_dir($dir)) {
+                ! (bool) ($flags & self::MKGETDIR_DIE_ON_ERROR) or self::fatalError("{$dir} " . l10n('no write access'));
                 return false;
             }
-            if ((bool) ($flags & MKGETDIR_PROTECT_HTACCESS)) {
+            if ((bool) ($flags & self::MKGETDIR_PROTECT_HTACCESS)) {
                 $file = $dir . '/.htaccess';
                 file_exists($file) or (bool) @file_put_contents($file, 'deny from all');
             }
-            if ((bool) ($flags & MKGETDIR_PROTECT_INDEX)) {
+            if ((bool) ($flags & self::MKGETDIR_PROTECT_INDEX)) {
                 $file = $dir . '/index.htm';
                 file_exists($file) or (bool) @file_put_contents($file, 'Not allowed!');
             }
         }
         if (! is_writable($dir)) {
-            ! (bool) ($flags & MKGETDIR_DIE_ON_ERROR) or self::fatalError("{$dir} " . l10n('no write access'));
+            ! (bool) ($flags & self::MKGETDIR_DIE_ON_ERROR) or self::fatalError("{$dir} " . l10n('no write access'));
             return false;
         }
         return true;
@@ -185,7 +214,7 @@ final class FilesystemHelper
             }
             if ($trash_path !== null && $trash_path !== '') {
                 if (! is_dir($trash_path)) {
-                    @self::mkgetdir($trash_path, MKGETDIR_RECURSIVE | MKGETDIR_DIE_ON_ERROR | MKGETDIR_PROTECT_HTACCESS);
+                    @self::mkgetdir($trash_path, self::MKGETDIR_RECURSIVE | self::MKGETDIR_DIE_ON_ERROR | self::MKGETDIR_PROTECT_HTACCESS);
                 }
                 while ((bool) ($r = $trash_path . '/' . md5(uniqid((string) mt_rand(), true)))) {
                     if (! is_dir($r)) {

@@ -6,6 +6,7 @@ namespace Piwigo\Session;
 
 use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Types\Types;
+use Piwigo\Core\Env;
 use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\Tables;
 
@@ -32,13 +33,13 @@ final class SessionRepository extends AbstractRepository
         // REPLACE INTO has no query-builder equivalent in DBAL; raw SQL +
         // bindings is safe here (no string concatenation of $data).
         //
-        // pwg_now() rather than a bare `new \DateTimeImmutable()`, which
-        // reads the real system clock -- invisible to pwg_now()'s
+        // Env::now() rather than a bare `new \DateTimeImmutable()`, which
+        // reads the real system clock -- invisible to Env::now()'s
         // PIWIGO_TEST_NOW freeze, so every login during a fixture
         // regeneration wrote a fresh, non-reproducible expiration.
         $this->conn->executeStatement(
             'REPLACE INTO ' . Tables::sessions() . ' (id, data, expiration) VALUES (?, ?, ?)',
-            [$compositeId, $data, \DateTimeImmutable::createFromInterface(pwg_now())],
+            [$compositeId, $data, \DateTimeImmutable::createFromInterface(Env::now())],
             [ParameterType::STRING, ParameterType::STRING, Types::DATETIME_IMMUTABLE],
         );
     }

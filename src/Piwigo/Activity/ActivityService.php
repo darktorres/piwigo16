@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Activity;
 
 use Piwigo\Core\ActivityLoggerInterface;
+use Piwigo\Core\Env;
 
 /**
  * Activity domain business logic: request-context detection/enrichment
@@ -113,9 +114,9 @@ final class ActivityService implements ActivityLoggerInterface
         $sessionIdx = $sessionId !== false && $sessionId !== '' ? $sessionId : 'none';
         // Explicit, not left to the column's DEFAULT CURRENT_TIMESTAMP, so
         // this respects the frozen test-mode clock the same way other
-        // pwg_now() call sites already do -- real behavior outside test
+        // Env::now() call sites already do -- real behavior outside test
         // mode is unaffected.
-        $occuredOn = pwg_now()
+        $occuredOn = Env::now()
             ->format('Y-m-d H:i:s');
 
         $rows = [];

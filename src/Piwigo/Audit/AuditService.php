@@ -49,9 +49,9 @@ final class AuditService
         $ipAddress = isset($_SERVER['REMOTE_ADDR']) && is_string($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : null;
         // Explicit, not left to the column's DEFAULT CURRENT_TIMESTAMP, so
         // this respects the frozen test-mode clock the same way every
-        // other P17/P18 service's own pwg_now() call sites already do --
+        // other P17/P18 service's own Env::now() call sites already do --
         // real behavior outside test mode is unaffected.
-        $createdAt = pwg_now()
+        $createdAt = \Piwigo\Core\Env::now()
             ->format('Y-m-d H:i:s');
 
         $prevHash = $this->repo->findLatestRowHash();

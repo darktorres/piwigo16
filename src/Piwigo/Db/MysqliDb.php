@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Db;
 
+use Piwigo\Core\Env;
 use Piwigo\Core\HtmlRenderingInterface;
 
 /**
@@ -797,15 +798,15 @@ INSERT ' . $ignore . ' INTO ' . self::protectColumnName($table_name) . '
 
     public static function getRecentPeriodExpression(int|string $period, string $date = 'CURRENT_DATE'): string
     {
-        // Route the default through pwg_now() (env.inc.php) rather than the raw
-        // SQL keyword: pwg_now() already resolves to PIWIGO_TEST_NOW in test
+        // Route the default through Env::now() rather than the raw
+        // SQL keyword: Env::now() already resolves to PIWIGO_TEST_NOW in test
         // mode (same mechanism time_since()-based "recent" text already relies
         // on for deterministic rendering) -- CURRENT_DATE is the DB SERVER's
         // real wall-clock date, which drifts out of sync with fixture data
         // dated relative to PIWIGO_TEST_NOW once real time catches up to it.
         // A caller-supplied $date is left untouched either way.
-        if ($date === 'CURRENT_DATE' && pwg_test_mode_is_active()) {
-            $date = pwg_now()
+        if ($date === 'CURRENT_DATE' && Env::testModeIsActive()) {
+            $date = Env::now()
                 ->format('Y-m-d');
         }
 

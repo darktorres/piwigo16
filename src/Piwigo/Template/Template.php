@@ -20,7 +20,7 @@ use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
 use Smarty\Smarty;
 
-class Template
+class Template implements \Piwigo\Core\ThemeConfProviderInterface
 {
     /**
      * @var Smarty
@@ -131,7 +131,7 @@ class Template
 
         if (! isset($conf['data_dir_checked'])) {
             $dir = PHPWG_ROOT_PATH . $conf_data_location;
-            \Piwigo\Core\FilesystemHelper::mkgetdir($dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR);
+            \Piwigo\Core\FilesystemHelper::mkgetdir($dir, \Piwigo\Core\FilesystemHelper::MKGETDIR_DEFAULT & ~\Piwigo\Core\FilesystemHelper::MKGETDIR_DIE_ON_ERROR);
             if (! is_writable($dir)) {
                 Lang::load('admin.lang');
                 new HtmlService()
@@ -145,7 +145,7 @@ class Template
                     );
             }
             if (function_exists('pwg_query')) {
-                conf_update_param('data_dir_checked', 1);
+                \Piwigo\Config\ConfigDb::confUpdateParam('data_dir_checked', 1);
             }
         }
 
@@ -250,7 +250,7 @@ class Template
         if (
             $theme != 'default'
             and in_array(\Piwigo\Core\PageFilterHelper::scriptBasename(), ['identification', 'register', 'password', 'profile'])
-            and ((bool) ($themeconf['use_standard_pages'] ?? false) or (bool) conf_get_param('use_standard_pages', false))
+            and ((bool) ($themeconf['use_standard_pages'] ?? false) or (bool) \Piwigo\Config\ConfigDb::confGetParam('use_standard_pages', false))
         ) {
             $theme = 'standard_pages';
             $themeconf = $this->load_themeconf($root . '/' . $theme);
@@ -343,6 +343,22 @@ class Template
     {
         $tc = $this->smarty->getTemplateVars('themeconf');
         return is_array($tc) ? ($tc[$val] ?? '') : '';
+    }
+
+    /**
+     * P23 batch 8f-4: string-narrowed variant with the exact contract of
+     * the deleted get_themeconf() free function (include/functions.inc.php)
+     * -- the corresponding $themeconf value if existing and a string,
+     * otherwise an empty string. Implements
+     * Piwigo\Core\ThemeConfProviderInterface so L2a callers (SrcImage) can
+     * reach it without depending on this L3 class; see that interface's
+     * own docblock.
+     */
+    public function themeConf(string $key): string
+    {
+        $value = $this->get_themeconf($key);
+
+        return is_string($value) ? $value : '';
     }
 
     /**

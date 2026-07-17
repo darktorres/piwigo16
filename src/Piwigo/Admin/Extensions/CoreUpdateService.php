@@ -25,10 +25,10 @@ use Piwigo\Template\Template;
  * shape clean.
  *
  * Note: updates.class.php (src/Piwigo/Admin/updates.php) is NOT deleted by
- * this batch -- install.php/upgrade.php/include/functions.inc.php's
- * telemetry sender/include/ws_functions/pwg.extensions.php all still
- * construct it directly, and none of those are admin pages (P21's real
- * scope, per docs/PLAN-REPLAY.md's own "62 admin pages" framing). Only the
+ * this batch -- upgrade.php, include/page_tail.php's new-version notifier
+ * and src/Piwigo/Ws/PwgExtensions.php all still construct it directly, and
+ * none of those are admin pages (P21's real scope, per
+ * docs/PLAN-REPLAY.md's own "62 admin pages" framing). Only the
  * admin/updates_pwg.php page (this batch's real scope) is migrated to use
  * this new class instead.
  */
@@ -151,12 +151,12 @@ final class CoreUpdateService
         /** @var array<string, mixed> $conf */
         global $conf;
 
-        if (! pwg_is_dbconf_writeable()) {
+        if (! \Piwigo\Config\ConfigDb::pwgIsDbconfWriteable()) {
             return;
         }
 
         $newVersions = $this->getPiwigoNewVersions();
-        conf_update_param('update_notify_last_check', date('c'));
+        \Piwigo\Config\ConfigDb::confUpdateParam('update_notify_last_check', date('c'));
 
         if ((bool) $newVersions['is_dev']) {
             return;
@@ -232,7 +232,7 @@ final class CoreUpdateService
         new MailService()
             ->switchLangBack();
 
-        conf_update_param(
+        \Piwigo\Config\ConfigDb::confUpdateParam(
             'update_notify_last_notification',
             [
                 'version' => $newVersionsString,
@@ -359,7 +359,7 @@ final class CoreUpdateService
 
         FilesystemHelper::deltree(PHPWG_ROOT_PATH . $dataLocation . 'update');
         UserCacheInvalidator::invalidate(true);
-        conf_update_param('piwigo_installed_version', $upgradeTo);
+        \Piwigo\Config\ConfigDb::confUpdateParam('piwigo_installed_version', $upgradeTo);
         (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('system', ActivitySystem::Core, 'update', [
             'from_version' => AppInfo::VERSION,
             'to_version' => $upgradeTo,
@@ -367,7 +367,7 @@ final class CoreUpdateService
 
         if ($this->stepIs($step, 2)) {
             $template->delete_compiled_templates();
-            conf_delete_param('fs_quick_check_last_check');
+            \Piwigo\Config\ConfigDb::confDeleteParam('fs_quick_check_last_check');
 
             $page['infos'][] = l10n('Update Complete');
             $page['infos'][] = $upgradeTo;

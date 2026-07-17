@@ -22,13 +22,13 @@ final class DerivativeCacheService
      * Deletes all cached derivative files for one or several types.
      *
      * @param 'all'|string|array<int|string, string> $types type name(s)
-     *   (e.g. IMG_SQUARE), not ids
+     *   (e.g. ImageStdParams::SQUARE), not ids
      */
     public function clearDerivativeCache(string|array $types = 'all'): void
     {
         if ($types === 'all') {
             $resolvedTypes = ImageStdParams::get_all_types();
-            $resolvedTypes[] = IMG_CUSTOM;
+            $resolvedTypes[] = ImageStdParams::CUSTOM;
         } elseif (is_array($types)) {
             $resolvedTypes = array_values($types);
         } else {
@@ -37,12 +37,12 @@ final class DerivativeCacheService
 
         for ($i = 0; $i < count($resolvedTypes); $i++) {
             $type = $resolvedTypes[$i];
-            if ($type === IMG_CUSTOM) {
+            if ($type === ImageStdParams::CUSTOM) {
                 $type = $this->derivativeToUrl($type) . '_[a-zA-Z0-9]+';
             } elseif (in_array($type, ImageStdParams::get_all_types(), true)) {
                 $type = $this->derivativeToUrl($type);
             } else {
-                $type = $this->derivativeToUrl(IMG_CUSTOM) . '_' . $type;
+                $type = $this->derivativeToUrl(ImageStdParams::CUSTOM) . '_' . $type;
             }
             $resolvedTypes[$i] = $type;
         }
@@ -71,7 +71,7 @@ final class DerivativeCacheService
      * Deletes derivatives of a particular element.
      *
      * @param array{path: string, representative_ext?: string} $infos
-     * @param string $type 'all', or one of the IMG_* constants
+     * @param string $type 'all', or one of the ImageStdParams size-type constants
      */
     public function deleteElementDerivatives(array $infos, string $type = 'all'): void
     {

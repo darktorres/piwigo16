@@ -7,6 +7,7 @@ namespace Piwigo\Mail;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
 use Piwigo\Core\MailerInterface;
+use Piwigo\Core\WebmasterMailProviderInterface;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Template\Template;
@@ -27,24 +28,22 @@ use Symfony\Component\Mime\Email;
  * plus a small hardcoded DB-connection env-var mapping
  * (ConfigLoader::applyDefaults()/applyEnvOverrides()); the real,
  * admin-configurable DB-persisted config table is loaded into the legacy
- * `$conf` global by load_conf_from_db() (include/functions.inc.php),
- * called from common.inc.php on every real request, with NO corresponding
- * sync back into Config::$data (ConfigService::loadConfFromDb() exists but
- * is never called from the live bootstrap sequence -- its own docblock
- * confirms this is deliberately still pending, later-phase work). A
+ * `$conf` global by Piwigo\Config\ConfigDb::loadConfFromDb() (P23 batch
+ * 8f-4; formerly the load_conf_from_db() free function), called from
+ * common.inc.php on every real request. Config::$data has been boot-synced
+ * via CommonBootstrap::run() since P23 batch 1, but mid-request writes
+ * still diverge between the two stores. A
  * MailService built on Config:: accessors would silently ignore every
  * real admin-configured mail setting (debug_mail, smtp_host,
  * mail_sender_name, ...), always falling back to install-time defaults --
  * caught empirically: a real `debug_mail=true` DB row written directly had
  * zero effect on this class's behavior until this fix.
  *
- * Injects nothing -- cross-domain calls (l10n(), is_admin(),
- * get_pwg_charset(), get_gallery_home_url(), add_url_params(),
- * set_make_full_url()/unset_make_full_url(), trigger_notify()/
- * trigger_change(), create_user_auth_key(), get_default_language(),
- * mkgetdir(), get_webmaster_mail_address(), get_root_url()) stay as plain
- * global-function calls to modules not yet migrated in P18, matching every
- * other "injects nothing" P17/P18 service. l10n_args()/load_language()
+ * Injects only the optional WebmasterMailProviderInterface test seam (P23
+ * batch 8f-4, see the constructor's own docblock) -- remaining cross-domain
+ * calls (l10n(), trigger_notify()/trigger_change(), get_root_url(), ...)
+ * stay as plain global-function calls to the settled composer-autoloaded
+ * procedural helpers, matching every other P17/P18-era service. l10n_args()/load_language()
  * calls above were retargeted to Piwigo\Core\Lang::args()/::load() in
  * P23 batch 8d -- l10n() itself stays a bare call (track-2 relocated,
  * too widely used to retarget, see src/Piwigo/Lang/functions.php).
@@ -64,6 +63,31 @@ use Symfony\Component\Mime\Email;
  */
 final class MailService implements MailerInterface
 {
+    /**
+     * P23 batch 8f-4: replaces the 2 deliberately-bare
+     * get_webmaster_mail_address() calls (free function deleted with
+     * include/functions.inc.php). Optional-with-lazy-default rather than
+     * required: this class has ~98 `new MailService()` construction sites
+     * and the dependency is only reached on the sender-fallback/
+     * Bcc-webmaster paths -- production sites keep constructing with no
+     * args and get the real Piwigo\Users\UserRepository (a legal L3->L2a
+     * downward dep, constructed lazily so no DB connection is built for
+     * the many code paths that never need it); unit tests
+     * (MailServiceTest/SendNotificationEmailHandlerTest) pass a fake
+     * implementation instead of the old global-function-stub shadowing.
+     */
+    public function __construct(
+        private readonly ?WebmasterMailProviderInterface $webmasterMailProvider = null,
+    ) {}
+
+    private function webmasterMailAddress(): string
+    {
+        $provider = $this->webmasterMailProvider
+            ?? new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build());
+
+        return $provider->getWebmasterMailAddress();
+    }
+
     /**
      * @var array<string, array{theme: Template}>
      */
@@ -145,15 +169,7 @@ final class MailService implements MailerInterface
             return $senderEmail;
         }
 
-        // deliberately bare, not new UserRepository(...)->getWebmasterMailAddress()
-        // -- tests/Unit/Mail/MailServiceTest.php and
-        // tests/Unit/Job/SendNotificationEmailHandlerTest.php both spy on
-        // this exact call via same-namespace function shadowing (no real
-        // DB connection available to either), same "one narrow,
-        // structurally-forced exception" shape as CategoryAdminService::
-        // setCatStatus()'s pwg_activity() call (P23 batch 8d finding 8-
-        // adjacent pattern).
-        return get_webmaster_mail_address();
+        return $this->webmasterMailAddress();
     }
 
     /**
@@ -761,11 +777,8 @@ SELECT
         // Bcc.
         $bcc = $this->getCleanRecipientsList($args['Bcc'] ?? null);
         if ($confMail['send_bcc_mail_webmaster'] === true) {
-            // deliberately bare -- same MailServiceTest/
-            // SendNotificationEmailHandlerTest spy dependency as
-            // getMailSenderEmail() above.
             $bcc[] = [
-                'email' => get_webmaster_mail_address(),
+                'email' => $this->webmasterMailAddress(),
                 'name' => '',
             ];
         }
@@ -1018,7 +1031,7 @@ SELECT
         $dataLocation = is_string($dataLocation) ? $dataLocation : '';
 
         $dir = PHPWG_ROOT_PATH . $dataLocation . 'tmp';
-        if (\Piwigo\Core\FilesystemHelper::mkgetdir($dir, \MKGETDIR_DEFAULT & ~\MKGETDIR_DIE_ON_ERROR)) {
+        if (\Piwigo\Core\FilesystemHelper::mkgetdir($dir, \Piwigo\Core\FilesystemHelper::MKGETDIR_DEFAULT & ~\Piwigo\Core\FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
             $username = $user['username'] ?? null;
             $username = is_string($username) ? $username : '';
             $langCode = $lang_info['code'] ?? null;

@@ -69,7 +69,7 @@ class plugins
      */
     private static function build_maintain_class($plugin_id): PluginMaintain
     {
-        $file_to_include = PHPWG_PLUGINS_PATH . $plugin_id . '/maintain';
+        $file_to_include = PluginLoader::pluginsPath() . $plugin_id . '/maintain';
         $classname = $plugin_id . '_maintain';
 
         // piwigo-videojs and piwigo-openstreetmap unfortunately have a "-" in their folder
@@ -204,7 +204,7 @@ UPDATE ' . Tables::plugins() . '
                     $errors = $this->perform_action('install', $plugin_id);
                     $matching_db_plugins = new PluginRepository(DbConnection::build())->getDbPlugins('', $plugin_id);
                     [$crt_db_plugin] = $matching_db_plugins;
-                    load_conf_from_db();
+                    \Piwigo\Config\ConfigDb::loadConfFromDb();
                 } elseif ($crt_db_plugin['state'] == 'active') {
                     break;
                 }
@@ -296,7 +296,7 @@ DELETE FROM ' . Tables::plugins() . '
                     $activity_details['fs_version'] = $this->fs_plugins[$plugin_id]['version'];
                 }
 
-                FilesystemHelper::deltree(PHPWG_PLUGINS_PATH . $plugin_id, PHPWG_PLUGINS_PATH . 'trash');
+                FilesystemHelper::deltree(PluginLoader::pluginsPath() . $plugin_id, PluginLoader::pluginsPath() . 'trash');
                 break;
         }
 
@@ -310,7 +310,7 @@ DELETE FROM ' . Tables::plugins() . '
      */
     public function get_fs_plugins(): void
     {
-        $dir = opendir(PHPWG_PLUGINS_PATH);
+        $dir = opendir(PluginLoader::pluginsPath());
         if ($dir === false) {
             return;
         }
@@ -331,7 +331,7 @@ DELETE FROM ' . Tables::plugins() . '
      */
     public function get_fs_plugin(string $plugin_id): array|false
     {
-        $path = PHPWG_PLUGINS_PATH . $plugin_id;
+        $path = PluginLoader::pluginsPath() . $plugin_id;
 
         if (is_dir($path) and ! is_link($path)
             and file_exists($path . '/main.inc.php')
@@ -735,7 +735,7 @@ DELETE FROM ' . Tables::plugins() . '
         /** @var Logger $logger */
         global $logger;
 
-        if ($archive = tempnam(PHPWG_PLUGINS_PATH, 'zip')) {
+        if ($archive = tempnam(PluginLoader::pluginsPath(), 'zip')) {
             // PEM_URL is defined via define('PEM_URL', $conf['alternative_pem_url']) in
             // one branch of include/common.inc.php, so PHPStan can't prove it's a
             // string across that file boundary — narrow it once here (same
@@ -776,7 +776,7 @@ DELETE FROM ' . Tables::plugins() . '
                         } else {
                             $plugin_id = ($root == '.' ? 'extension_' . $dest : basename($root));
                         }
-                        $extract_path = PHPWG_PLUGINS_PATH . $plugin_id;
+                        $extract_path = PluginLoader::pluginsPath() . $plugin_id;
                         $logger->debug(__FUNCTION__ . ', $extract_path = ' . $extract_path);
 
                         if (($result = $zip_extractor->extract($archive, $extract_path, $root)) !== null) {
@@ -828,7 +828,7 @@ DELETE FROM ' . Tables::plugins() . '
                                     if (is_file($path)) {
                                         @unlink($path);
                                     } elseif (is_dir($path)) {
-                                        FilesystemHelper::deltree($path, PHPWG_PLUGINS_PATH . 'trash');
+                                        FilesystemHelper::deltree($path, PluginLoader::pluginsPath() . 'trash');
                                     }
                                 }
                             }

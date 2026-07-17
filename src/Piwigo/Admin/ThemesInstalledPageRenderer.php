@@ -71,7 +71,7 @@ final class ThemesInstalledPageRenderer
         // +-----------------------------------------------------------------------+
 
         if (isset($_GET['action']) and is_string($_GET['action']) and isset($_GET['theme']) and is_string($_GET['theme']) and \Piwigo\Auth\AccessControl::isWebmaster()) {
-            check_pwg_token();
+            new \Piwigo\Csrf\CsrfService()->checkOrFail(new HtmlService());
 
             $fs_theme_entry = $extension_scanner->scan(ExtensionType::Theme)[$_GET['theme']] ?? null;
             $action_errors = $extension_lifecycle->performAction(ExtensionType::Theme, $_GET['action'], $_GET['theme'], $fs_theme_entry);

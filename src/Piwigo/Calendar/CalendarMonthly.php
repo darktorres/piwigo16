@@ -68,7 +68,7 @@ class CalendarMonthly extends CalendarBase
         global $conf, $page;
 
         $view_type = $page['chronology_view'];
-        if ($view_type == CAL_VIEW_CALENDAR) {
+        if ($view_type == self::CAL_VIEW_CALENDAR) {
             /** @var Template $template */
             global $template;
             $tpl_var = [];
@@ -87,7 +87,7 @@ class CalendarMonthly extends CalendarBase
             if ($nb_date_parts == 1) {// case B: year given - display all days in given year
                 if ($this->build_year_calendar($tpl_var)) {
                     $template->assign('chronology_calendar', $tpl_var);
-                    $this->build_nav_bar(CYEAR); // years
+                    $this->build_nav_bar(self::CYEAR); // years
                     return true;
                 }
             }
@@ -105,25 +105,25 @@ class CalendarMonthly extends CalendarBase
         }
 
         $nb_date_parts = is_array($page['chronology_date']) ? count($page['chronology_date']) : 0;
-        if ($view_type == CAL_VIEW_LIST or $nb_date_parts == 3) {
+        if ($view_type == self::CAL_VIEW_LIST or $nb_date_parts == 3) {
             if ($nb_date_parts == 0) {
-                $this->build_nav_bar(CYEAR); // years
+                $this->build_nav_bar(self::CYEAR); // years
             }
             if ($nb_date_parts == 1) {
-                $this->build_nav_bar(CMONTH); // month
+                $this->build_nav_bar(self::CMONTH); // month
             }
             if ($nb_date_parts == 2) {
                 // $nb_date_parts can only be 2 if $page['chronology_date'] is
                 // already an array (see its computation above).
                 $chronology_date = $page['chronology_date'];
-                $year = $chronology_date[CYEAR] ?? null;
+                $year = $chronology_date[self::CYEAR] ?? null;
                 $year = is_int($year) || is_string($year) ? $year : 0;
-                $month = $chronology_date[CMONTH] ?? null;
+                $month = $chronology_date[self::CMONTH] ?? null;
                 $month = is_int($month) || is_string($month) ? $month : 0;
                 $day_labels = range(1, $this->get_all_days_in_month($year, $month));
                 array_unshift($day_labels, 0);
                 unset($day_labels[0]);
-                $this->build_nav_bar(CDAY, $day_labels); // days
+                $this->build_nav_bar(self::CDAY, $day_labels); // days
             }
             $this->build_next_prev();
         }
@@ -151,18 +151,18 @@ class CalendarMonthly extends CalendarBase
             array_pop($date);
         }
         $res = '';
-        if (isset($date[CYEAR]) and $date[CYEAR] !== 'any') {
-            $year = $date[CYEAR];
+        if (isset($date[self::CYEAR]) and $date[self::CYEAR] !== 'any') {
+            $year = $date[self::CYEAR];
             $year = is_int($year) || is_string($year) ? $year : '';
             $b = $year . '-';
             $e = $year . '-';
-            if (isset($date[CMONTH]) and $date[CMONTH] !== 'any') {
-                $month = $date[CMONTH];
+            if (isset($date[self::CMONTH]) and $date[self::CMONTH] !== 'any') {
+                $month = $date[self::CMONTH];
                 $month = is_numeric($month) ? (int) $month : 0;
                 $b .= sprintf('%02d-', $month);
                 $e .= sprintf('%02d-', $month);
-                if (isset($date[CDAY]) and $date[CDAY] !== 'any') {
-                    $day = $date[CDAY];
+                if (isset($date[self::CDAY]) and $date[self::CDAY] !== 'any') {
+                    $day = $date[self::CDAY];
                     $day = is_numeric($day) ? (int) $day : 0;
                     $b .= sprintf('%02d', $day);
                     $e .= sprintf('%02d', $day);
@@ -173,27 +173,27 @@ class CalendarMonthly extends CalendarBase
             } else {
                 $b .= '01-01';
                 $e .= '12-31';
-                // No CMONTH re-check here: this is the else of the exact
-                // same isset($date[CMONTH]) and $date[CMONTH] !== 'any'
+                // No self::CMONTH re-check here: this is the else of the exact
+                // same isset($date[self::CMONTH]) and $date[self::CMONTH] !== 'any'
                 // condition above, so it can never be true.
-                if (isset($date[CDAY]) and $date[CDAY] !== 'any') {
-                    $day = $date[CDAY];
+                if (isset($date[self::CDAY]) and $date[self::CDAY] !== 'any') {
+                    $day = $date[self::CDAY];
                     $day = is_int($day) || is_string($day) ? $day : '';
-                    $res .= ' AND ' . $this->calendar_levels[CDAY]['sql'] . '=' . $day;
+                    $res .= ' AND ' . $this->calendar_levels[self::CDAY]['sql'] . '=' . $day;
                 }
             }
             $res = " AND {$this->date_field} BETWEEN '{$b}' AND '{$e} 23:59:59'" . $res;
         } else {
             $res = ' AND ' . $this->date_field . ' IS NOT NULL';
-            if (isset($date[CMONTH]) and $date[CMONTH] !== 'any') {
-                $month = $date[CMONTH];
+            if (isset($date[self::CMONTH]) and $date[self::CMONTH] !== 'any') {
+                $month = $date[self::CMONTH];
                 $month = is_int($month) || is_string($month) ? $month : '';
-                $res .= ' AND ' . $this->calendar_levels[CMONTH]['sql'] . '=' . $month;
+                $res .= ' AND ' . $this->calendar_levels[self::CMONTH]['sql'] . '=' . $month;
             }
-            if (isset($date[CDAY]) and $date[CDAY] !== 'any') {
-                $day = $date[CDAY];
+            if (isset($date[self::CDAY]) and $date[self::CDAY] !== 'any') {
+                $day = $date[self::CDAY];
                 $day = is_int($day) || is_string($day) ? $day : '';
-                $res .= ' AND ' . $this->calendar_levels[CDAY]['sql'] . '=' . $day;
+                $res .= ' AND ' . $this->calendar_levels[self::CDAY]['sql'] . '=' . $day;
             }
         }
         return $res;
@@ -202,9 +202,9 @@ class CalendarMonthly extends CalendarBase
     /**
      * Returns an array with all the days in a given month.
      *
-     * @param int|string $year both callers pass $page['chronology_date'][CYEAR],
+     * @param int|string $year both callers pass $page['chronology_date'][self::CYEAR],
      *   a numeric string parsed from the URL (or the literal 'any')
-     * @param int|string $month same: $page['chronology_date'][CMONTH]
+     * @param int|string $month same: $page['chronology_date'][self::CMONTH]
      */
     protected function get_all_days_in_month($year, $month): int
     {
@@ -277,7 +277,7 @@ class CalendarMonthly extends CalendarBase
         if (count($items) == 1) {// only one year exists so bail out to year view
             [$y] = array_keys($items);
             assert(is_array($page['chronology_date']));
-            $page['chronology_date'][CYEAR] = $y;
+            $page['chronology_date'][self::CYEAR] = $y;
             return false;
         }
 
@@ -350,7 +350,7 @@ class CalendarMonthly extends CalendarBase
         }
         if (count($items) == 1) { // only one month exists so bail out to month view
             [$m] = array_keys($items);
-            $page['chronology_date'][CMONTH] = $m;
+            $page['chronology_date'][self::CMONTH] = $m;
             return false;
         }
         /** @var array<string, mixed> $lang */
@@ -360,7 +360,7 @@ class CalendarMonthly extends CalendarBase
         // $page['chronology_date'] is not mutated between the snapshot above
         // and here (the only mutation happens in the early-return branch
         // just above), so reusing the snapshot is equivalent to a fresh read.
-        $year = $page_chronology_date[CYEAR] ?? null;
+        $year = $page_chronology_date[self::CYEAR] ?? null;
         $year = is_int($year) || is_string($year) ? $year : 0;
         foreach ($items as $month => $month_data) {
             $chronology_date = [$year, $month];
@@ -400,13 +400,13 @@ class CalendarMonthly extends CalendarBase
          */
         global $page, $lang, $conf;
 
-        // CYEAR/CMONTH are never touched below (only CDAY is toggled, per
+        // self::CYEAR/self::CMONTH are never touched below (only self::CDAY is toggled, per
         // day, inside the loop), so a single snapshot taken here stays valid
         // for the rest of the method.
         $page_chronology_date = is_array($page['chronology_date']) ? $page['chronology_date'] : [];
-        $year = $page_chronology_date[CYEAR] ?? null;
+        $year = $page_chronology_date[self::CYEAR] ?? null;
         $year = is_int($year) || is_string($year) ? $year : 0;
-        $month = $page_chronology_date[CMONTH] ?? null;
+        $month = $page_chronology_date[self::CMONTH] ?? null;
         $month = is_int($month) || is_string($month) ? $month : 0;
 
         $query = 'SELECT ' . \Piwigo\Db\MysqliDb::getDayOfMonth($this->date_field) . ' as period,
@@ -431,7 +431,7 @@ class CalendarMonthly extends CalendarBase
             // doc comment for the invariant); narrow it right before writing
             // the per-day offset back to the real global.
             assert(is_array($page['chronology_date']));
-            $page['chronology_date'][CDAY] = $day;
+            $page['chronology_date'][self::CDAY] = $day;
             $query = '
   SELECT id, file,representative_ext,path,width,height,rotation, ' . \Piwigo\Db\MysqliDb::getDayOfWeek($this->date_field) . '-1 as dow';
             $query .= $this->inner_sql;
@@ -439,14 +439,14 @@ class CalendarMonthly extends CalendarBase
             $query .= '
     ORDER BY ' . DB_RANDOM_FUNCTION . '()
     LIMIT 1';
-            unset($page['chronology_date'][CDAY]);
+            unset($page['chronology_date'][self::CDAY]);
 
             $row = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
             // $day came from the grouped count query above, which only
             // includes days with at least one image, so this LIMIT 1
             // query always finds a row
             assert(is_array($row));
-            $derivative = new DerivativeImage(IMG_SQUARE, new SrcImage($row));
+            $derivative = new DerivativeImage(ImageStdParams::SQUARE, new SrcImage($row));
             $items[$day]['derivative'] = $derivative;
             $items[$day]['file'] = $row['file'];
             // dow is DAYOFWEEK(date_field)-1, a numeric SQL expression, so
@@ -475,7 +475,7 @@ class CalendarMonthly extends CalendarBase
                 $wday_labels[] = array_shift($wday_labels);
             }
 
-            [$cell_width, $cell_height] = ImageStdParams::get_by_type(IMG_SQUARE)->sizing->ideal_size;
+            [$cell_width, $cell_height] = ImageStdParams::get_by_type(ImageStdParams::SQUARE)->sizing->ideal_size;
 
             $tpl_weeks = [];
             $tpl_crt_week = [];

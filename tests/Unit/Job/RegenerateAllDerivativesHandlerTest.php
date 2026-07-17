@@ -13,25 +13,6 @@ if (! defined('PHPWG_ROOT_PATH')) {
     define('PHPWG_ROOT_PATH', sys_get_temp_dir() . '/piwigo-regen-handler-test-root/');
 }
 
-foreach ([
-    'IMG_SQUARE' => 'square',
-    'IMG_THUMB' => 'thumb',
-    'IMG_XXSMALL' => '2small',
-    'IMG_XSMALL' => 'xsmall',
-    'IMG_SMALL' => 'small',
-    'IMG_MEDIUM' => 'medium',
-    'IMG_LARGE' => 'large',
-    'IMG_XLARGE' => 'xlarge',
-    'IMG_XXLARGE' => 'xxlarge',
-    'IMG_3XLARGE' => '3xlarge',
-    'IMG_4XLARGE' => '4xlarge',
-    'IMG_CUSTOM' => 'custom',
-] as $name => $value) {
-    if (! defined($name)) {
-        define($name, $value);
-    }
-}
-
 function regen_handler_test_marker(): string
 {
     /** @var string|null $marker */

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tag;
 
+use Piwigo\Core\Env;
 use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\Tables;
 
@@ -331,7 +332,7 @@ SELECT id
     {
         // lastmodified set explicitly rather than left to the schema's own
         // DEFAULT CURRENT_TIMESTAMP, which reads the real DB-server clock --
-        // invisible to pwg_now()'s PIWIGO_TEST_NOW freeze.
+        // invisible to Env::now()'s PIWIGO_TEST_NOW freeze.
         $this->conn->createQueryBuilder()
             ->insert(Tables::tags())
             ->values([
@@ -341,7 +342,7 @@ SELECT id
             ])
             ->setParameter('name', $name)
             ->setParameter('urlName', $urlName)
-            ->setParameter('lastmodified', pwg_now()->format('Y-m-d H:i:s'))
+            ->setParameter('lastmodified', Env::now()->format('Y-m-d H:i:s'))
             ->executeStatement();
 
         return (int) $this->conn->lastInsertId();

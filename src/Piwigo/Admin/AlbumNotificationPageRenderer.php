@@ -8,6 +8,7 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageStdParams;
 use Piwigo\Mail\MailService;
 use Piwigo\Template\Template;
 
@@ -61,7 +62,7 @@ final class AlbumNotificationPageRenderer
 
         // info by email to an access granted group of category informations
         if (isset($_POST['submitEmail'])) {
-            check_pwg_token();
+            new \Piwigo\Csrf\CsrfService()->checkOrFail(new HtmlService());
             set_make_full_url();
 
             $img = [];
@@ -89,7 +90,7 @@ SELECT id, file, path, representative_ext
                                 'category' => $category,
                             ]
                         ),
-                        'src' => DerivativeImage::url(IMG_THUMB, $element),
+                        'src' => DerivativeImage::url(ImageStdParams::THUMB, $element),
                     ];
                 }
             }

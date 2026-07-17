@@ -8,12 +8,11 @@ use Piwigo\Template\ScriptLoader;
 // Inspects/invokes ScriptLoader's private state and methods via reflection
 // rather than going through get_head_scripts()/get_footer_scripts() ->
 // FileCombiner::combine(), which cascades through several legacy free
-// functions with top-level side effects (is_admin(), and
-// include/functions.inc.php's own top-level define(PHPWG_PLUGINS_PATH, ...)
-// which needs PHPWG_ROOT_PATH already defined -- exactly the kind of
-// legacy-bootstrap coupling this whole audit is about). add()'s dependency-
-// merging and compute_script_topological_order()'s ordering logic -- what's
-// under test here -- don't need any of that machinery.
+// functions with top-level side effects (is_admin(), plugin-path
+// resolution needing PHPWG_ROOT_PATH already defined -- exactly the kind
+// of legacy-bootstrap coupling this whole audit is about). add()'s
+// dependency-merging and compute_script_topological_order()'s ordering
+// logic -- what's under test here -- don't need any of that machinery.
 
 /**
  * @return array<string, Script>

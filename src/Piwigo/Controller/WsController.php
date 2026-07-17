@@ -7,7 +7,7 @@ namespace Piwigo\Controller;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
-use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\WsInitializer;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -53,17 +53,14 @@ final class WsController implements ControllerInterface
                 ->pageForbidden('Web services are disabled');
         }
 
-        include_once PHPWG_ROOT_PATH . 'include/ws_init.inc.php';
-
-        // ws_init.inc.php assigns $service with a bare (non-global)
-        // `$service = new PwgServer();` -- include() shares the calling
-        // scope for bare variable reads/writes, so the plain local read
-        // below correctly sees it. A `global $service;` declaration here
-        // would instead rebind to the empty $GLOBALS['service'] slot
-        // (nothing ever writes there), since ws_init.inc.php's own
-        // assignment was never `global`-qualified -- found live via a
-        // real "Call to a member function run() on null" 500.
-        /** @var PwgServer $service */
+        // Formerly `include_once PHPWG_ROOT_PATH . 'include/ws_init.inc.php';`
+        // (deleted, P23 sub-batch 8f-5). WsInitializer::init() carries that
+        // seam's include_once semantics: at most one PwgServer/default-event
+        // registration per process, and the same shared instance returned
+        // here even when UserBootstrap's api_key/uploadAsync branches
+        // already initialized it earlier in this request (the include_once
+        // era left this method's *local* $service unset in that case).
+        $service = WsInitializer::init();
         $service->run();
 
         // Unreachable: PwgServer::run() always ends the response itself

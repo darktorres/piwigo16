@@ -193,8 +193,8 @@ SELECT image_id, COUNT(*) AS nb_comments
             $tplThumbnailsVar[] = $tplVar;
         }
 
-        $indexDeriv = SessionService::get()->getSessionVar('index_deriv', IMG_THUMB);
-        $indexDeriv = is_string($indexDeriv) ? $indexDeriv : IMG_THUMB;
+        $indexDeriv = SessionService::get()->getSessionVar('index_deriv', ImageStdParams::THUMB);
+        $indexDeriv = is_string($indexDeriv) ? $indexDeriv : ImageStdParams::THUMB;
 
         $template->assign([
             'derivative_params' => trigger_change('get_index_derivative_params', ImageStdParams::get_by_type($indexDeriv)),

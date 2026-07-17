@@ -176,7 +176,7 @@ INSERT INTO ' . Tables::themes() . '
                     $activity_details['version'] = $fs_version;
 
                     if ((bool) $this->fs_themes[$theme_id]['mobile']) {
-                        conf_update_param('mobile_theme', $theme_id);
+                        \Piwigo\Config\ConfigDb::confUpdateParam('mobile_theme', $theme_id);
                     }
                 }
                 break;
@@ -228,7 +228,7 @@ DELETE
                 \Piwigo\Db\MysqliDb::query($query);
 
                 if ((bool) $this->fs_themes[$theme_id]['mobile']) {
-                    conf_update_param('mobile_theme', '');
+                    \Piwigo\Config\ConfigDb::confUpdateParam('mobile_theme', '');
                 }
                 break;
 

@@ -35,10 +35,16 @@ namespace Piwigo\Csrf;
  * constructor-injects HtmlService and calls accessDenied()/badRequest()
  * directly) -- Csrf lands in L2bExtendedDomain, Html lands in
  * L3Presentation, and L2b may not depend upward on L3 (the very "domain →
- * no Html/Template concretes" ratchet this phase establishes). The
- * free-function delegate (check_pwg_token(), staying procedural in
- * functions.inc.php) keeps deciding what to do on failure, exactly as
- * before.
+ * no Html/Template concretes" ratchet this phase establishes).
+ *
+ * P23 batch 8f-4: the old free-function delegate (check_pwg_token(),
+ * include/functions.inc.php) that used to decide what to do on failure is
+ * deleted; checkOrFail() below is its locally-complete replacement -- the
+ * failure handling moves onto this class, with the renderer passed
+ * per-method as Piwigo\Core\HtmlRenderingInterface (L1, legal downward
+ * dep; same per-method-injection style as CategoryService's
+ * ActivityLoggerInterface params). Every former check_pwg_token() call
+ * site is L3/L4 and constructs the concrete HtmlService inline.
  */
 final class CsrfService
 {
@@ -80,5 +86,22 @@ final class CsrfService
         }
 
         return hash_equals($this->getToken(), $submitted);
+    }
+
+    /**
+     * Check the token coming from form-posted or GET params and act on
+     * failure, exactly as the deleted check_pwg_token() free function did:
+     * no token submitted at all -> 400 "missing token"; a submitted token
+     * that doesn't match -> access denied. Both renderer methods are
+     * `never`-returning, so this only returns when the token is valid.
+     */
+    public function checkOrFail(\Piwigo\Core\HtmlRenderingInterface $renderer): void
+    {
+        $result = $this->check();
+        if ($result === null) {
+            $renderer->badRequest('missing token');
+        } elseif ($result === false) {
+            $renderer->accessDenied();
+        }
     }
 }

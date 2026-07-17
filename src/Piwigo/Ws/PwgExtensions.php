@@ -286,8 +286,9 @@ final class PwgExtensions
         // IN_ADMIN has no reader left in this request's lifecycle (see
         // pluginsPerformAction()'s own comment), and
         // admin/include/functions.php has been emptied of all functions
-        // since P23 batch 8d (conf_update_param() below is a permanent
-        // facade in include/functions.inc.php, already autoloaded).
+        // since P23 batch 8d (the config write below goes through
+        // \Piwigo\Config\ConfigDb::confUpdateParam() since P23 batch 8f-4,
+        // which deleted include/functions.inc.php entirely).
 
         if (! AccessControl::isWebmaster()) {
             return new PwgError(401, 'Access denied');
@@ -302,7 +303,7 @@ final class PwgExtensions
         // extension id strings, per the install-time default row in
         // install/db/103-database.php) before any offset access below.
         // $conf['updates_ignored'] is a serialized string written by
-        // conf_update_param() a few lines below and in
+        // ConfigDb::confUpdateParam() a few lines below and in
         // checkUpdates(); guard with is_string() rather than
         // assuming, since $conf is only known as array<string, mixed>.
         $updates_ignored_conf = $conf['updates_ignored'];
@@ -331,7 +332,7 @@ final class PwgExtensions
                 ];
             }
 
-            conf_update_param('updates_ignored', \Piwigo\Db\MysqliDb::realEscapeString(serialize($conf['updates_ignored'])));
+            \Piwigo\Config\ConfigDb::confUpdateParam('updates_ignored', \Piwigo\Db\MysqliDb::realEscapeString(serialize($conf['updates_ignored'])));
             unset($_SESSION['extensions_need_update']);
             return true;
         }
@@ -345,7 +346,7 @@ final class PwgExtensions
             $conf['updates_ignored'][$params['type']][] = $params['id'];
         }
 
-        conf_update_param('updates_ignored', \Piwigo\Db\MysqliDb::realEscapeString(serialize($conf['updates_ignored'])));
+        \Piwigo\Config\ConfigDb::confUpdateParam('updates_ignored', \Piwigo\Db\MysqliDb::realEscapeString(serialize($conf['updates_ignored'])));
         unset($_SESSION['extensions_need_update']);
         return true;
     }
@@ -374,7 +375,7 @@ final class PwgExtensions
         $result['piwigo_need_update'] = $_SESSION['need_update' . AppInfo::VERSION];
 
         // $conf['updates_ignored'] is a serialized string written by
-        // conf_update_param() (see ignoreUpdate() above); guard
+        // ConfigDb::confUpdateParam() (see ignoreUpdate() above); guard
         // with is_string() rather than assuming, since $conf is only known
         // as array<string, mixed>.
         $updates_ignored_conf = $conf['updates_ignored'];

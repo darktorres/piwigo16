@@ -42,7 +42,7 @@ UPDATE ' . Tables::userCache() . '
             \Piwigo\Db\MysqliDb::query($query);
         }
         $persistent_cache->purge(true);
-        conf_delete_param('count_orphans');
+        \Piwigo\Config\ConfigDb::confDeleteParam('count_orphans');
         trigger_notify('invalidate_user_cache', $full);
     }
 

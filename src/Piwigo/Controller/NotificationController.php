@@ -88,12 +88,13 @@ final class NotificationController implements ControllerInterface
                     ->render();
             }
 
-            include PHPWG_ROOT_PATH . 'include/page_header.php';
+            new \Piwigo\Page\PageHeaderRenderer()
+                ->render($title);
             trigger_notify('loc_end_notification');
             new HtmlService()
                 ->flushPageMessages();
             $template->pparse('notification');
-            include PHPWG_ROOT_PATH . 'include/page_tail.php';
+            \Piwigo\Bootstrap\PageTail::render();
         });
 
         return ResponseFactory::html($body);

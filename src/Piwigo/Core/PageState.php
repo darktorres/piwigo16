@@ -11,8 +11,9 @@ namespace Piwigo\Core;
  * (errors/warnings/messages/infos/body_classes/body_data/execution_uuid,
  * all seeded by include/common.inc.php) plus the standalone
  * `$GLOBALS['header_msgs']`/`$GLOBALS['header_notes']` globals (also real,
- * actively written/read -- see common.inc.php, filter.inc.php,
- * page_header.php) onto this singleton's properties. Once bridged, both
+ * actively written/read -- see common.inc.php/RequestBootstrap,
+ * FilterService::initializeFromRequest(), PageHeaderRenderer) onto this
+ * singleton's properties. Once bridged, both
  * sides share the same underlying storage: `$page['errors'][] = 'msg'`
  * from legacy code and `PageState::current()->addError('msg')` from new
  * code are the same write, not two copies that can diverge.

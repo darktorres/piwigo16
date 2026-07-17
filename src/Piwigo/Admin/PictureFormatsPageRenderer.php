@@ -67,7 +67,7 @@ SELECT
 
         $template->assign([
             'ADD_FORMATS_URL' => get_root_url() . 'admin.php?page=photos_add&formats=' . $image_id,
-            'IMG_SQUARE_SRC' => DerivativeImage::url(ImageStdParams::get_by_type(IMG_SQUARE), $image),
+            'IMG_SQUARE_SRC' => DerivativeImage::url(ImageStdParams::get_by_type(ImageStdParams::SQUARE), $image),
             'FORMATS' => $formats,
             'PWG_TOKEN' => (new \Piwigo\Csrf\CsrfService())->getToken(),
         ]);

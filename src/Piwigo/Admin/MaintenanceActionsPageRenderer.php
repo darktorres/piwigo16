@@ -78,7 +78,7 @@ final class MaintenanceActionsPageRenderer
         foreach (ImageStdParams::get_defined_type_map() as $params) {
             $purge_urls[l10n($params->type)] = $params->type;
         }
-        $purge_urls[l10n(IMG_CUSTOM)] = IMG_CUSTOM;
+        $purge_urls[l10n(ImageStdParams::CUSTOM)] = ImageStdParams::CUSTOM;
 
         $php_current_timestamp = date('Y-m-d H:i:s');
         $db_version = \Piwigo\Db\MysqliDb::getDbVersion();

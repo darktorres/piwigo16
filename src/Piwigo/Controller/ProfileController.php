@@ -55,7 +55,7 @@ final class ProfileController implements ControllerInterface
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Classic);
 
         if ($_POST !== []) {
-            check_pwg_token();
+            new \Piwigo\Csrf\CsrfService()->checkOrFail(new HtmlService());
         }
 
         $userdata = $user;
@@ -129,7 +129,8 @@ SELECT ' . implode(',', $fields) . '
                 }
             }
 
-            include PHPWG_ROOT_PATH . 'include/page_header.php';
+            new \Piwigo\Page\PageHeaderRenderer()
+                ->render($title);
 
             // Load language if cookie is set from login/register/password pages
             $cookie_lang = $_COOKIE['lang'] ?? null;
@@ -188,7 +189,7 @@ SELECT ' . implode(',', $fields) . '
             new HtmlService()
                 ->flushPageMessages();
             $template->pparse('profile');
-            include PHPWG_ROOT_PATH . 'include/page_tail.php';
+            \Piwigo\Bootstrap\PageTail::render();
         });
 
         return ResponseFactory::html($body);

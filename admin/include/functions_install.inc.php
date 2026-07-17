@@ -9,101 +9,28 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-use Piwigo\Admin\plugins;
-use Piwigo\Admin\themes;
+// P23 sub-batch 8f-6: compatibility surface for a FROZEN one-shot
+// historical script. The installation helpers that used to live here
+// (execute_sqlfile/activate_core_themes/activate_core_plugins/
+// install_db_connect) moved to Piwigo\Admin\Install\InstallService; every
+// non-frozen caller targets that class directly. This file must keep
+// existing at this exact path because the FROZEN install/db/86-database.php
+// (excluded from migration by standing decision, still reachable through
+// the real upgrade machinery) unconditionally
+// `include_once PHPWG_ROOT_PATH . 'admin/include/functions_install.inc.php';`
+// and then calls the bare activate_core_themes() -- same precedent as
+// admin/include/functions.php's deliberately-kept empty stub and
+// admin/include/functions_upgrade.php's frozen-script delegates. It is NOT
+// a general-purpose API and disappears whenever the frozen install/db
+// family does. function_exists() guard for safety against double-include
+// on mixed entry paths, mirroring the other frozen-compat delegates.
 
-/**
- * Loads a SQL file and executes all queries.
- * Before executing a query, $replaced is... replaced by $replacing. This is
- * useful when the SQL file contains generic words. Drop table queries are
- * not executed.
- *
- * @param string $filepath
- * @param string $replaced
- * @param string $replacing
- * @param string $dblayer
- */
-function execute_sqlfile($filepath, $replaced, $replacing, $dblayer): void
-{
-    $sql_lines = file($filepath);
-    if ($sql_lines === false) {
-        throw new \RuntimeException('Unable to read SQL file: ' . $filepath);
-    }
-    $query = '';
-    foreach ($sql_lines as $sql_line) {
-        $sql_line = trim($sql_line);
-        if ((bool) preg_match('/(^--|^$)/', $sql_line)) {
-            continue;
-        }
-        $query .= ' ' . $sql_line;
-        // if we reached the end of query, we execute it and reinitialize the
-        // variable "query"
-        if ((bool) preg_match('/;$/', $sql_line)) {
-            $query = trim($query);
-            $query = str_replace($replaced, $replacing, $query);
-            // we don't execute "DROP TABLE" queries
-            if (! (bool) preg_match('/^DROP TABLE/i', $query)) {
-                if ($dblayer == 'mysql') {
-                    if ((bool) preg_match('/^(CREATE TABLE .*)[\s]*;[\s]*/im', $query, $matches)) {
-                        $query = $matches[1] . ' DEFAULT CHARACTER SET utf8;';
-                    }
-                }
-                \Piwigo\Db\MysqliDb::query($query);
-            }
-            $query = '';
-        }
-    }
-}
-
-/**
- * Automatically activate all core themes in the "themes" directory.
- */
-function activate_core_themes(): void
-{
-    $themes = new themes();
-    foreach ($themes->fs_themes as $theme_id => $fs_theme) {
-        if (in_array($theme_id, ['modus'])) {
-            $themes->perform_action('activate', $theme_id);
-        }
-    }
-}
-
-/**
- * Automatically activate some core plugins
- */
-function activate_core_plugins(): void
-{
-    $plugins = new plugins();
-
-    foreach ($plugins->fs_plugins as $plugin_id => $fs_plugin) {
-        if (in_array($plugin_id, [])) {
-            $plugins->perform_action('activate', $plugin_id);
-        }
-    }
-}
-
-/**
- * Connect to database during installation. Uses $_POST.
- *
- * @param array<int, string> $infos - populated with infos
- * @param array<int, string> $errors - populated with errors
- */
-function install_db_connect(&$infos, &$errors): void
-{
-    $dbhost = is_string($_POST['dbhost'] ?? null) ? $_POST['dbhost'] : '';
-    $dbuser = is_string($_POST['dbuser'] ?? null) ? $_POST['dbuser'] : '';
-    $dbpasswd = is_string($_POST['dbpasswd'] ?? null) ? $_POST['dbpasswd'] : '';
-    $dbname = is_string($_POST['dbname'] ?? null) ? $_POST['dbname'] : '';
-
-    try {
-        \Piwigo\Db\MysqliDb::connect(
-            $dbhost,
-            $dbuser,
-            $dbpasswd,
-            $dbname
-        );
-        \Piwigo\Db\MysqliDb::checkVersion();
-    } catch (Exception $e) {
-        $errors[] = l10n($e->getMessage());
+if (! function_exists('activate_core_themes')) {
+    /**
+     * FROZEN-SCRIPT DELEGATE (single caller: install/db/86-database.php).
+     */
+    function activate_core_themes(): void
+    {
+        \Piwigo\Admin\Install\InstallService::activateCoreThemes();
     }
 }

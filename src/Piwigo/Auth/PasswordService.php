@@ -28,7 +28,7 @@ final class PasswordService
         #[\SensitiveParameter]
         string $password
     ): string {
-        $cost = pwg_test_mode_is_active() ? 4 : 13;
+        $cost = \Piwigo\Core\Env::testModeIsActive() ? 4 : 13;
 
         return password_hash($password, \PASSWORD_BCRYPT, [
             'cost' => $cost,

@@ -36,12 +36,10 @@ final class AboutController implements ControllerInterface
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
         $body = LegacyRenderCapture::capture(static function (): void {
-            // Bootstrap globals, set by include/common.inc.php; $title is
-            // read back by include/page_header.php via its own
-            // `global $title;` -- this method's own top-level `include`
-            // calls run in *this closure's* scope, not real global scope,
-            // so both reads and writes need an explicit `global` here
-            // (same lesson as P21's AdminDispatcher scope bug).
+            // Bootstrap globals, set by include/common.inc.php; reads and
+            // writes of them need an explicit `global` here since this
+            // closure is not real global scope (same lesson as P21's
+            // AdminDispatcher scope bug).
             /**
              * @var array<string, mixed> $conf
              * @var array<string, mixed> $page
@@ -83,11 +81,12 @@ final class AboutController implements ControllerInterface
                     ->render();
             }
 
-            include PHPWG_ROOT_PATH . 'include/page_header.php';
+            new \Piwigo\Page\PageHeaderRenderer()
+                ->render($title);
             new HtmlService()
                 ->flushPageMessages();
             $template->pparse('about');
-            include PHPWG_ROOT_PATH . 'include/page_tail.php';
+            \Piwigo\Bootstrap\PageTail::render();
         });
 
         return ResponseFactory::html($body);

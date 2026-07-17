@@ -82,7 +82,7 @@ final class PictureCoiPageRenderer
                 }
             }
             new DerivativeCacheService()
-                ->deleteElementDerivatives($derivative_infos, IMG_CUSTOM);
+                ->deleteElementDerivatives($derivative_infos, ImageStdParams::CUSTOM);
             $uid = '&b=' . time();
             $conf['question_mark_in_urls'] = $conf['php_extension_in_urls'] = true;
             if ($conf['derivative_url_style'] === 1) {
@@ -95,7 +95,7 @@ final class PictureCoiPageRenderer
         $tpl_var = [
             'TITLE' => $htmlRenderer->renderElementName($row),
             'ALT' => $row['file'],
-            'U_IMG' => DerivativeImage::url(IMG_LARGE, $row),
+            'U_IMG' => DerivativeImage::url(ImageStdParams::LARGE, $row),
         ];
 
         if (isset($row['coi']) && $row['coi'] !== '' && $row['coi'] !== '0') {

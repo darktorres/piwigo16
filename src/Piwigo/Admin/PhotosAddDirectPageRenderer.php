@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Piwigo\Admin\Image\pwg_image;
 use Piwigo\Admin\Upload\UploadService;
+use Piwigo\Core\Env;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -13,6 +14,7 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
+use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Template\Template;
 
@@ -70,7 +72,7 @@ final class PhotosAddDirectPageRenderer
         // +-------------------------------------------------------------------+
 
         if (isset($_GET['batch'])) {
-            check_pwg_token();
+            new \Piwigo\Csrf\CsrfService()->checkOrFail(new HtmlService());
             (new \Piwigo\Validation\InputValidator())->validate('batch', $_GET, false, '/^\d+(,\d+)*$/');
 
             $query = '
@@ -125,11 +127,11 @@ SELECT COUNT(*)
 
             // To see the mobile app promote, the account must have 2 weeks
             // ancient, 3 albums created and 30 photos uploaded. Anchored on
-            // pwg_now() (real behavior outside test mode is unaffected) --
+            // Env::now() (real behavior outside test mode is unaffected) --
             // dormant right now since the fixture never has 3 albums/30
             // photos, but consistent with every other date computation in
             // this project's admin pages.
-            $two_weeks_ago = (clone pwg_now())
+            $two_weeks_ago = (clone Env::now())
                 ->modify('-2 weeks');
             $template->assign('PROMOTE_MOBILE_APPS', (strtotime((string) $register_date) < $two_weeks_ago->getTimestamp() and $nb_cats >= 3 and $nb_images >= 30));
         } else {
@@ -159,7 +161,7 @@ SELECT COUNT(*)
             if ((bool) $formats_original_info) {
                 $src_image = new SrcImage($formats_original_info);
 
-                $formats_original_info['src'] = DerivativeImage::url(IMG_SQUARE, $src_image);
+                $formats_original_info['src'] = DerivativeImage::url(ImageStdParams::SQUARE, $src_image);
 
                 // The 'id' column is the Tables::images() primary key: always a numeric
                 // value on a row fetched by get_image_infos(), just typed mixed

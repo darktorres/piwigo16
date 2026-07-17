@@ -61,7 +61,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * across every locale) nor any runtime code, so the direct (unguarded)
  * read on the "main" tab threw "Undefined array key" -- fixed with the
  * same ?? guard already used for this exact key elsewhere (admin/intro.php,
- * format_date_legacy() in include/functions.inc.php).
+ * \Piwigo\Core\DateHelper::formatDateLegacy()).
  *
  * P23 batch 6j-3 fixed a real, previously-uncaught CSRF gap: the "sizes"
  * tab's "Reset to default values" action (`?action=restore_settings`,
@@ -202,7 +202,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         ];
 
         if (! isset($conf['filters_views'])) {
-            conf_update_param('filters_views', $conf['default_filters_views'], true);
+            \Piwigo\Config\ConfigDb::confUpdateParam('filters_views', $conf['default_filters_views'], true);
         }
 
         $filters_views_raw = $conf['filters_views'];
@@ -244,7 +244,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
         // ------------------------------ verification and registration of modifications
         if (isset($_POST['submit'])) {
-            check_pwg_token();
+            new \Piwigo\Csrf\CsrfService()->checkOrFail(new HtmlService());
             $int_pattern = '/^\d+$/';
 
             switch ($page['section']) {
@@ -427,19 +427,19 @@ WHERE param = \'' . $row['param'] . '\'
             }
 
             // ------------------------------------------------------ $conf reinitialization
-            load_conf_from_db();
+            \Piwigo\Config\ConfigDb::loadConfFromDb();
         }
 
         // restore default derivatives settings
         if ($page['section'] == 'sizes' and isset($_GET['action']) and $_GET['action'] == 'restore_settings' and \Piwigo\Auth\AccessControl::isWebmaster()) {
-            check_pwg_token();
+            new \Piwigo\Csrf\CsrfService()->checkOrFail(new HtmlService());
 
             ImageStdParams::restore_default();
             new DerivativeCacheService()
                 ->clearDerivativeCache();
 
             // reset conf
-            load_conf_from_db();
+            \Piwigo\Config\ConfigDb::loadConfFromDb();
 
             $template->assign(
                 [
@@ -500,7 +500,7 @@ WHERE param = \'' . $row['param'] . '\'
                 // runtime code -- a genuinely dead key, not a per-locale gap. Guard
                 // with ?? rather than a direct read, matching the same defensive
                 // pattern already used for this exact key by admin/intro.php and
-                // format_date_legacy() (include/functions.inc.php).
+                // \Piwigo\Core\DateHelper::formatDateLegacy().
                 $lang_day = $lang['day'] ?? null;
                 $lang_day = is_array($lang_day) ? $lang_day : [];
 
@@ -667,8 +667,8 @@ WHERE param = \'' . $row['param'] . '\'
                     foreach (ImageStdParams::get_all_types() as $type) {
                         $tpl_var = [];
 
-                        $tpl_var['must_square'] = ($type == IMG_SQUARE ? true : false);
-                        $tpl_var['must_enable'] = ($type == IMG_SQUARE || $type == IMG_THUMB || $type == $conf['derivative_default_size']) ? true : false;
+                        $tpl_var['must_square'] = ($type == ImageStdParams::SQUARE ? true : false);
+                        $tpl_var['must_enable'] = ($type == ImageStdParams::SQUARE || $type == ImageStdParams::THUMB || $type == $conf['derivative_default_size']) ? true : false;
 
                         if ((bool) ($params = $enabled[$type] ?? null)) {
                             $tpl_var['enabled'] = true;
@@ -914,12 +914,12 @@ WHERE param = \'' . $row['param'] . '\'
 
         // step 1 - sanitize HTML input
         foreach ($pderivatives as $type => &$pderivative) {
-            if ($pderivative['must_square'] = ($type == IMG_SQUARE ? true : false)) {
+            if ($pderivative['must_square'] = ($type == ImageStdParams::SQUARE ? true : false)) {
                 $pderivative['h'] = $pderivative['w'];
                 $pderivative['minh'] = $pderivative['minw'] = $pderivative['w'];
                 $pderivative['crop'] = 100;
             }
-            $pderivative['must_enable'] = ($type == IMG_SQUARE || $type == IMG_THUMB || $type == $conf['derivative_default_size']) ? true : false;
+            $pderivative['must_enable'] = ($type == ImageStdParams::SQUARE || $type == ImageStdParams::THUMB || $type == $conf['derivative_default_size']) ? true : false;
             $pderivative['enabled'] = isset($pderivative['enabled']) || $pderivative['must_enable'] ? true : false;
 
             if (isset($pderivative['crop'])) {
@@ -949,7 +949,7 @@ WHERE param = \'' . $row['param'] . '\'
                 continue;
             }
 
-            if ($type == IMG_THUMB) {
+            if ($type == ImageStdParams::THUMB) {
                 $w = intval($pderivative['w']);
                 if ($w <= 0) {
                     $derivative_errors[$type]['w'] = '>0';
@@ -1178,7 +1178,7 @@ WHERE param = \'' . $row['param'] . '\'
                 );
             } else {
                 $upload_dir = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'watermarks';
-                if (\Piwigo\Core\FilesystemHelper::mkgetdir($upload_dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
+                if (\Piwigo\Core\FilesystemHelper::mkgetdir($upload_dir, \Piwigo\Core\FilesystemHelper::MKGETDIR_DEFAULT & ~\Piwigo\Core\FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
                     // file name may include exotic chars like single quote, we need a safe name
                     $new_name = \Piwigo\Core\StringHelper::str2url(\Piwigo\Core\StringHelper::getFilenameWoExtension($watermark_upload_name ?? ''));
 

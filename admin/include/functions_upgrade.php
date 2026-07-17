@@ -9,349 +9,133 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-use Piwigo\Admin\themes;
-use Piwigo\Core\AppInfo;
-use Piwigo\Db\Tables;
+// P23 batch 8f-4/8f-5/8f-6: compatibility surface for the FROZEN one-shot
+// historical scripts the upgrade machinery includes at runtime
+// (install/db/*.php via UpgradeService::getAvailableUpgradeIds()'s scan +
+// UpgradeFeedRunner::run()/UpgradeRunner::performUpgrade()'s include
+// loops, and install/upgrade_X.Y.Z.php via performUpgrade()'s
+// $current_release include) -- those frozen files are excluded from
+// migration by standing decision ("keep them out for now, we might not
+// even keep those files") and still call the bare function names /
+// constants below at include time. These thin delegates keep those frozen
+// calls working, exactly like include/dblayer/functions_mysqli.inc.php's
+// deliberately-kept facades for the same files' bare pwg_query() family
+// (P23 batch 8f-2). They are NOT a general-purpose API: every non-frozen
+// caller in the codebase targets Piwigo\Config\ConfigDb::* /
+// Piwigo\Admin\Install\UpgradeService::* directly, and these delegates
+// disappear whenever the frozen install/db family does.
+//
+// The upgrade machinery itself (the former 9 free functions of this file)
+// moved to Piwigo\Admin\Install\UpgradeService in P23 sub-batch 8f-6
+// (prepare_conf_upgrade()'s define block was inlined into the
+// upgrade_feed.php entry shell -- SEC-60 forbids define() in src/Piwigo).
+//
+// function_exists()/defined() guards for safety against double-include on
+// mixed entry paths (this file is include_once'd from upgrade.php and
+// upgrade_feed.php).
 
-function check_upgrade(): bool
-{
-    if (defined('PHPWG_IN_UPGRADE')) {
-        // PHPWG_IN_UPGRADE is only ever define()'d with a bool literal `true`
-        // (see check_upgrade_access_rights() below); is_bool() reflects that
-        // real invariant without resorting to an unsafe cast on a mixed constant.
-        $in_upgrade = PHPWG_IN_UPGRADE;
-        return is_bool($in_upgrade) && $in_upgrade;
-    }
-    return false;
-}
-
-// concerning upgrade, we use the default tables
-function prepare_conf_upgrade(): void
-{
-    /** @var string $prefixeTable */
-    global $prefixeTable;
-
-    // $conf is not used for users tables
-    // define cannot be re-defined
-    define('Tables::categories()', $prefixeTable . 'categories');
-    define('Tables::comments()', $prefixeTable . 'comments');
-    define('Tables::config()', $prefixeTable . 'config');
-    define('Tables::favorites()', $prefixeTable . 'favorites');
-    define('Tables::groupAccess()', $prefixeTable . 'group_access');
-    define('Tables::groups()', $prefixeTable . 'groups');
-    define('Tables::history()', $prefixeTable . 'history');
-    define('Tables::historySummary()', $prefixeTable . 'history_summary');
-    define('Tables::imageCategory()', $prefixeTable . 'image_category');
-    define('Tables::images()', $prefixeTable . 'images');
-    define('Tables::sessions()', $prefixeTable . 'sessions');
-    define('Tables::sites()', $prefixeTable . 'sites');
-    define('Tables::userAccess()', $prefixeTable . 'user_access');
-    define('Tables::userGroup()', $prefixeTable . 'user_group');
-    define('Tables::users()', $prefixeTable . 'users');
-    define('Tables::userInfos()', $prefixeTable . 'user_infos');
-    define('Tables::userFeed()', $prefixeTable . 'user_feed');
-    define('Tables::rate()', $prefixeTable . 'rate');
-    define('Tables::userCache()', $prefixeTable . 'user_cache');
-    define('Tables::userCacheCategories()', $prefixeTable . 'user_cache_categories');
-    define('Tables::caddie()', $prefixeTable . 'caddie');
-    define('Tables::upgrade()', $prefixeTable . 'upgrade');
-    define('Tables::search()', $prefixeTable . 'search');
-    define('Tables::userMailNotification()', $prefixeTable . 'user_mail_notification');
-    define('Tables::tags()', $prefixeTable . 'tags');
-    define('Tables::imageTag()', $prefixeTable . 'image_tag');
-    define('Tables::plugins()', $prefixeTable . 'plugins');
-    define('Tables::oldPermalinks()', $prefixeTable . 'old_permalinks');
-    define('Tables::themes()', $prefixeTable . 'themes');
-    define('Tables::languages()', $prefixeTable . 'languages');
-}
-
-// Deactivate all non-standard plugins
-function deactivate_non_standard_plugins(): void
-{
-    /** @var array<string, mixed> $page */
-    global $page;
-
-    if (! is_array($page['infos'] ?? null)) {
-        $page['infos'] = [];
-    }
-
-    $standard_plugins = [
-        'AdminTools',
-        'TakeATour',
-        'language_switch',
-        'LocalFilesEditor',
-    ];
-
-    $query = '
-SELECT id
-FROM ' . PREFIX_TABLE . 'plugins
-WHERE state = \'active\'
-AND id NOT IN (\'' . implode('\',\'', $standard_plugins) . '\')
-;';
-
-    $result = \Piwigo\Db\MysqliDb::query($query);
-    $plugins = [];
-    while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
-        $plugins[] = $row['id'];
-    }
-
-    if (! empty($plugins)) {
-        $query = '
-UPDATE ' . PREFIX_TABLE . 'plugins
-SET state=\'inactive\'
-WHERE id IN (\'' . implode('\',\'', $plugins) . '\')
-;';
-        \Piwigo\Db\MysqliDb::query($query);
-
-        $page['infos'][] = l10n('As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:')
-                            . '<p><i>' . implode(', ', $plugins) . '</i></p>';
-    }
-}
-
-// Deactivate all non-standard themes
-function deactivate_non_standard_themes(): void
-{
+if (! function_exists('load_conf_from_db')) {
     /**
-     * @var array<string, mixed> $page
-     * @var array<string, mixed> $conf
+     * FROZEN-SCRIPT DELEGATE (25 install/db//install/upgrade_*.php callers).
+     *
+     * @param string $condition SQL condition
      */
-    global $page, $conf;
-
-    if (! is_array($page['infos'] ?? null)) {
-        $page['infos'] = [];
-    }
-
-    $standard_themes = [
-        'modus',
-        'elegant',
-        'smartpocket',
-    ];
-
-    $query = '
-SELECT
-    id,
-    name
-  FROM ' . PREFIX_TABLE . 'themes
-  WHERE id NOT IN (\'' . implode("','", $standard_themes) . '\')
-;';
-    $result = \Piwigo\Db\MysqliDb::query($query);
-    $theme_ids = [];
-    $theme_names = [];
-    while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
-        $theme_ids[] = $row['id'];
-        $theme_names[] = $row['name'];
-    }
-
-    if (! empty($theme_ids)) {
-        $query = '
-DELETE
-  FROM ' . PREFIX_TABLE . 'themes
-  WHERE id IN (\'' . implode("','", $theme_ids) . '\')
-;';
-        \Piwigo\Db\MysqliDb::query($query);
-
-        $page['infos'][] = l10n('As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:')
-                            . '<p><i>' . implode(', ', $theme_names) . '</i></p>';
-
-        // what is the default theme?
-        // $conf['default_user_id'] is always an int (see include/config_default.inc.php)
-        $default_user_id = is_numeric($conf['default_user_id']) ? (int) $conf['default_user_id'] : 0;
-        $query = '
-SELECT theme
-  FROM ' . PREFIX_TABLE . 'user_infos
-  WHERE user_id = ' . $default_user_id . '
-;';
-        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-        assert($row !== null);
-        [$default_theme] = $row;
-
-        // if the default theme has just been deactivated, let's set another core theme as default
-        if (in_array($default_theme, $theme_ids)) {
-            // make sure default Piwigo theme is active
-            $query = '
-SELECT
-    COUNT(*)
-  FROM ' . PREFIX_TABLE . 'themes
-  WHERE id = \'' . AppInfo::DEFAULT_TEMPLATE . '\'
-;';
-            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-            assert($row !== null);
-            [$counter] = $row;
-            if ($counter < 1) {
-                // we need to activate theme first
-                $themes = new themes();
-                $themes->perform_action('activate', AppInfo::DEFAULT_TEMPLATE);
-            }
-
-            // then associate it to default user
-            $query = '
-UPDATE ' . PREFIX_TABLE . 'user_infos
-  SET theme = \'' . AppInfo::DEFAULT_TEMPLATE . '\'
-  WHERE user_id = ' . $default_user_id . '
-;';
-            \Piwigo\Db\MysqliDb::query($query);
-        }
+    function load_conf_from_db($condition = '', bool $die_on_condition_with_no_result = true): void
+    {
+        \Piwigo\Config\ConfigDb::loadConfFromDb($condition, $die_on_condition_with_no_result);
     }
 }
-
-// Deactivate all templates
-function deactivate_templates(): void
-{
-    conf_update_param('extents_for_templates', []);
-}
-
-// Check access rights
-function check_upgrade_access_rights(): void
-{
+if (! function_exists('conf_update_param')) {
     /**
-     * @var array<string, mixed> $conf
-     * @var array<string, mixed> $page
-     * @var string $current_release
+     * FROZEN-SCRIPT DELEGATE (25 install/db//install/upgrade_*.php callers).
+     *
+     * @param string $param
+     * @param mixed $value
+     * @param bool $updateGlobal
+     * @param ?callable $parser
      */
-    global $conf, $page, $current_release;
-
-    if (! is_array($page['errors'] ?? null)) {
-        $page['errors'] = [];
+    function conf_update_param($param, $value, $updateGlobal = false, $parser = null): void
+    {
+        \Piwigo\Config\ConfigDb::confUpdateParam($param, $value, $updateGlobal, $parser);
     }
-
-    if (version_compare($current_release, '2.0', '>=') and isset($_COOKIE[session_name()])) {
-        // Check if user is already connected as webmaster
-        session_start();
-        $pwg_uid = $_SESSION['pwg_uid'] ?? null;
-        if (! empty($pwg_uid) and (is_int($pwg_uid) or (is_string($pwg_uid) and is_numeric($pwg_uid)))) {
-            $query = '
-SELECT status
-  FROM ' . Tables::userInfos() . '
-  WHERE user_id = ' . (int) $pwg_uid . '
-;';
-            \Piwigo\Db\MysqliDb::query($query);
-
-            $row = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
-            if (isset($row['status']) and $row['status'] == 'webmaster') {
-                define('PHPWG_IN_UPGRADE', true);
-                return;
-            }
-        }
+}
+if (! function_exists('safe_unserialize')) {
+    /**
+     * FROZEN-SCRIPT DELEGATE (install/db/177-database.php,
+     * install/db/181-database.php). Every non-frozen caller targets
+     * Piwigo\Core\ArrayHelper::safeUnserialize() directly.
+     *
+     * @param array<int|string, mixed>|string $value
+     * @return mixed the unserialized value, false if $value is a malformed
+     *   serialized string, or $value itself unchanged if it isn't a string
+     */
+    function safe_unserialize($value)
+    {
+        return \Piwigo\Core\ArrayHelper::safeUnserialize($value);
     }
-
-    if (! isset($_POST['username']) or ! isset($_POST['password'])) {
-        return;
+}
+if (! function_exists('clear_derivative_cache')) {
+    /**
+     * FROZEN-SCRIPT DELEGATE (install/db/119-database.php,
+     * install/db/123-database.php). Every non-frozen caller targets
+     * Piwigo\Image\DerivativeCacheService::clearDerivativeCache() directly.
+     *
+     * @param 'all'|string|array<int|string, string> $types
+     */
+    function clear_derivative_cache($types = 'all'): void
+    {
+        new \Piwigo\Image\DerivativeCacheService()->clearDerivativeCache($types);
     }
-
-    $username = is_string($_POST['username']) ? $_POST['username'] : null;
-    $password = is_string($_POST['password']) ? $_POST['password'] : null;
-
-    if ($username === null or $password === null) {
-        return;
+}
+if (! function_exists('invalidate_user_cache')) {
+    /**
+     * FROZEN-SCRIPT DELEGATE (install/db/69-database.php,
+     * install/db/135-database.php, install/db/136-database.php). Every
+     * non-frozen caller targets
+     * Piwigo\Cache\UserCacheInvalidator::invalidate() directly.
+     */
+    function invalidate_user_cache(bool $full = true): void
+    {
+        \Piwigo\Cache\UserCacheInvalidator::invalidate($full);
     }
-
-    if (function_exists('get_magic_quotes_gpc') && ! @get_magic_quotes_gpc()) {
-        $username = \Piwigo\Db\MysqliDb::realEscapeString($username) ?? $username;
-    }
-
-    if (version_compare($current_release, '2.0', '<')) {
-        // mb_convert_encoding() always returns a string given a string input.
-        $username = mb_convert_encoding($username, 'ISO-8859-1', 'UTF-8');
-        $password = mb_convert_encoding($password, 'ISO-8859-1', 'UTF-8');
-    }
-
-    if (version_compare($current_release, '1.5', '<')) {
-        $query = '
-SELECT password, status
-FROM ' . Tables::users() . '
-WHERE username = \'' . $username . '\'
-;';
-    } else {
-        // $conf['user_fields'] maps generic field names to table specific
-        // field names and is always array<string, string> (see
-        // include/config_default.inc.php).
-        $user_fields = is_array($conf['user_fields']) ? $conf['user_fields'] : [];
-        $id_field = isset($user_fields['id']) && is_string($user_fields['id']) ? $user_fields['id'] : 'id';
-        $username_field = isset($user_fields['username']) && is_string($user_fields['username']) ? $user_fields['username'] : 'username';
-        $query = '
-SELECT u.password, ui.status
-FROM ' . Tables::users() . ' AS u
-INNER JOIN ' . Tables::userInfos() . ' AS ui
-ON u.' . $id_field . '=ui.user_id
-WHERE ' . $username_field . '=\'' . $username . '\'
-;';
-    }
-    $row = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
-
-    if (! is_array($row) or ! isset($row['password'])) {
-        $page['errors'][] = l10n('Invalid password!');
-    } elseif (! (new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())))->verify($password, $row['password'])) {
-        $page['errors'][] = l10n('Invalid password!');
-    } elseif ($row['status'] != 'admin' and $row['status'] != 'webmaster') {
-        $page['errors'][] = l10n('You do not have access rights to run upgrade');
-    } else {
-        define('PHPWG_IN_UPGRADE', true);
+}
+if (! function_exists('get_available_upgrade_ids')) {
+    /**
+     * FROZEN-SCRIPT DELEGATE (17 install/upgrade_X.Y.Z.php callers use the
+     * bare name to compute which install/db/*.php tasks still need to run).
+     * Every non-frozen caller targets UpgradeService::getAvailableUpgradeIds()
+     * directly (P23 sub-batch 8f-6).
+     *
+     * @return array<int, string>
+     */
+    function get_available_upgrade_ids(): array
+    {
+        return \Piwigo\Admin\Install\UpgradeService::getAvailableUpgradeIds();
     }
 }
 
-/**
- * which upgrades are available ?
- * @return array<int, string>
- */
-function get_available_upgrade_ids(): array
-{
-    $upgrades_path = PHPWG_ROOT_PATH . 'install/db';
-
-    $available_upgrade_ids = [];
-
-    if ((bool) ($contents = opendir($upgrades_path))) {
-        while (($node = readdir($contents)) !== false) {
-            if (is_file($upgrades_path . '/' . $node)
-                and (bool) preg_match('/^(.*?)-database\.php$/', $node, $match)) {
-                $available_upgrade_ids[] = $match[1];
-            }
-        }
-    }
-    natcasesort($available_upgrade_ids);
-
-    return $available_upgrade_ids;
-}
-
-/**
- * returns true if there are available upgrade files
- */
-function check_upgrade_feed(): bool
-{
-    // retrieve already applied upgrades
-    $query = '
-SELECT id
-  FROM ' . Tables::upgrade() . '
-;';
-    $applied = array_filter(\Piwigo\Db\MysqliDb::query2Array($query, null, 'id'), is_string(...));
-
-    // retrieve existing upgrades
-    $existing = get_available_upgrade_ids();
-
-    // which upgrades need to be applied?
-    return count(array_diff($existing, $applied)) > 0;
-}
-
-function upgrade_db_connect(): void
-{
-    /** @var array<string, mixed> $conf */
-    global $conf;
-
-    try {
-        $db_host = $conf['db_host'];
-        $db_user = $conf['db_user'];
-        $db_password = $conf['db_password'];
-        $db_base = $conf['db_base'];
-        if (! is_string($db_host) || ! is_string($db_user) || ! is_string($db_password) || ! is_string($db_base)) {
-            throw new Exception("Invalid database configuration: \$conf['db_host'], 'db_user', 'db_password' and 'db_base' must be strings.");
-        }
-        \Piwigo\Db\MysqliDb::connect(
-            $db_host,
-            $db_user,
-            $db_password,
-            $db_base
-        );
-        \Piwigo\Db\MysqliDb::checkVersion();
-    } catch (Exception $e) {
-        \Piwigo\Db\MysqliDb::myError(l10n($e->getMessage()), true);
-    }
-}
+// P23 sub-batch 8f-5: same frozen-script compatibility surface as the
+// delegates above, for the IMG_* constants of the deleted
+// include/derivative_std_params.inc.php (thin aliases over
+// Piwigo\Image\ImageStdParams's class constants, the canonical values
+// since P23 batch 8c). Every real caller reads the class constants
+// directly; only the FROZEN install/db/123-database.php (IMG_THUMB/
+// IMG_XXSMALL/IMG_MEDIUM) and install/db/177-database.php (IMG_3XLARGE/
+// IMG_4XLARGE) still read the bare names, and both only ever run through
+// the upgrade machinery that include_once's this exact file first. All 12
+// are defined (not just the 5 read today) so a frozen script never
+// silently diverges from the historical alias set. defined() guards for
+// safety against double-include on mixed entry paths, mirroring the
+// function_exists() guards above.
+defined('IMG_SQUARE') or define('IMG_SQUARE', \Piwigo\Image\ImageStdParams::SQUARE);
+defined('IMG_THUMB') or define('IMG_THUMB', \Piwigo\Image\ImageStdParams::THUMB);
+defined('IMG_XXSMALL') or define('IMG_XXSMALL', \Piwigo\Image\ImageStdParams::XXSMALL);
+defined('IMG_XSMALL') or define('IMG_XSMALL', \Piwigo\Image\ImageStdParams::XSMALL);
+defined('IMG_SMALL') or define('IMG_SMALL', \Piwigo\Image\ImageStdParams::SMALL);
+defined('IMG_MEDIUM') or define('IMG_MEDIUM', \Piwigo\Image\ImageStdParams::MEDIUM);
+defined('IMG_LARGE') or define('IMG_LARGE', \Piwigo\Image\ImageStdParams::LARGE);
+defined('IMG_XLARGE') or define('IMG_XLARGE', \Piwigo\Image\ImageStdParams::XLARGE);
+defined('IMG_XXLARGE') or define('IMG_XXLARGE', \Piwigo\Image\ImageStdParams::XXLARGE);
+defined('IMG_3XLARGE') or define('IMG_3XLARGE', \Piwigo\Image\ImageStdParams::THREE_XLARGE);
+defined('IMG_4XLARGE') or define('IMG_4XLARGE', \Piwigo\Image\ImageStdParams::FOUR_XLARGE);
+defined('IMG_CUSTOM') or define('IMG_CUSTOM', \Piwigo\Image\ImageStdParams::CUSTOM);

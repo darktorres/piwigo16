@@ -9,9 +9,9 @@ use Piwigo\Template\Template;
 /**
  * Renders the page `<head>`/opening chrome into $template. Injects
  * nothing -- same "no constructor deps" shape as Html\HtmlService/
- * Menu\MenubarRenderer: cross-domain calls (conf_get_param(),
- * get_pwg_charset(), get_gallery_home_url(), trigger_notify()) stay as
- * plain global-function calls to modules migrated in earlier phases.
+ * Menu\MenubarRenderer: cross-domain calls (get_pwg_charset(),
+ * get_gallery_home_url(), trigger_notify()) stay as plain
+ * global-function calls to modules migrated in earlier phases.
  */
 final class PageHeaderRenderer
 {
@@ -39,9 +39,9 @@ final class PageHeaderRenderer
 
         trigger_notify('loc_begin_page_header');
 
-        $show_mobile_app_banner = conf_get_param('show_mobile_app_banner_in_gallery', false);
+        $show_mobile_app_banner = \Piwigo\Config\ConfigDb::confGetParam('show_mobile_app_banner_in_gallery', false);
         if (defined('IN_ADMIN') and IN_ADMIN) {
-            $show_mobile_app_banner = conf_get_param('show_mobile_app_banner_in_admin', true);
+            $show_mobile_app_banner = \Piwigo\Config\ConfigDb::confGetParam('show_mobile_app_banner_in_admin', true);
         }
 
         // Config values loaded from the piwigo_config DB table (TEXT column) are

@@ -38,7 +38,7 @@ final class CatOptionsPageRenderer
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
         if ($_POST !== []) {
-            check_pwg_token();
+            new \Piwigo\Csrf\CsrfService()->checkOrFail(new HtmlService());
             (new \Piwigo\Validation\InputValidator())->validate('cat_true', $_POST, true, ValidationPattern::ID);
             (new \Piwigo\Validation\InputValidator())->validate('cat_false', $_POST, true, ValidationPattern::ID);
             (new \Piwigo\Validation\InputValidator())->validate('section', $_GET, false, '/^[a-z0-9_-]+$/i');
@@ -57,7 +57,7 @@ final class CatOptionsPageRenderer
 
             $section_param = $_GET['section'] ?? '';
             new CategoryAdminService()
-                ->setCategoryOption($cat_true, is_string($section_param) ? $section_param : '', false);
+                ->setCategoryOption($cat_true, is_string($section_param) ? $section_param : '', false, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())));
         } elseif (isset($_POST['trueify'])
                  and isset($_POST['cat_false'])
                  and is_array($_POST['cat_false'])
@@ -71,7 +71,7 @@ final class CatOptionsPageRenderer
 
             $section_param = $_GET['section'] ?? '';
             new CategoryAdminService()
-                ->setCategoryOption($cat_false, is_string($section_param) ? $section_param : '', true);
+                ->setCategoryOption($cat_false, is_string($section_param) ? $section_param : '', true, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())));
         }
 
         $template->set_filenames(

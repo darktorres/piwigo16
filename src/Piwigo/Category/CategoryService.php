@@ -6,6 +6,7 @@ namespace Piwigo\Category;
 
 use Piwigo\Cache\CachePools;
 use Piwigo\Core\ActivityLoggerInterface;
+use Piwigo\Core\Env;
 use Piwigo\Core\FilterUpdaterInterface;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Db\DbConnection;
@@ -1635,9 +1636,9 @@ final class CategoryService
             'rank' => $rank,
             'global_rank' => 0,
             // Otherwise relies on the schema's own DEFAULT CURRENT_TIMESTAMP,
-            // which reads the real DB-server clock -- invisible to pwg_now()'s
+            // which reads the real DB-server clock -- invisible to Env::now()'s
             // PIWIGO_TEST_NOW freeze.
-            'lastmodified' => pwg_now()
+            'lastmodified' => Env::now()
                 ->format('Y-m-d H:i:s'),
         ];
 
@@ -1718,7 +1719,7 @@ final class CategoryService
                 // CURRENT_TIMESTAMP would otherwise silently overwrite the
                 // INSERT's own frozen lastmodified with the real DB-server
                 // clock the moment this UPDATE runs.
-                'lastmodified' => pwg_now()
+                'lastmodified' => Env::now()
                     ->format('Y-m-d H:i:s'),
             ],
             [

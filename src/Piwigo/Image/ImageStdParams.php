@@ -297,7 +297,7 @@ final class ImageStdParams
             'w' => self::$watermark,
             'c' => self::$custom,
         ]);
-        conf_update_param('derivatives', addslashes($ser));
+        \Piwigo\Config\ConfigDb::confUpdateParam('derivatives', addslashes($ser));
 
         if ($save_disabled) {
             self::save_disabled();
@@ -311,7 +311,7 @@ final class ImageStdParams
     {
         if (count(self::$disabled_type_map) > 0) {
             $disabled = addslashes(serialize(self::$disabled_type_map));
-            conf_update_param('disabled_derivatives', $disabled);
+            \Piwigo\Config\ConfigDb::confUpdateParam('disabled_derivatives', $disabled);
         } else {
             $query = 'DELETE FROM ' . Tables::config() . ' WHERE param = \'disabled_derivatives\'';
             \Piwigo\Db\MysqliDb::query($query);

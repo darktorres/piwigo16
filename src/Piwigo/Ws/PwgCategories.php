@@ -1155,7 +1155,7 @@ SELECT *
             return new PwgError(500, 'unable to determine a new representative picture for this category');
         }
 
-        return $categoryService->getCategoryRepresentantProperties($representative_picture_id, IMG_SMALL);
+        return $categoryService->getCategoryRepresentantProperties($representative_picture_id, ImageStdParams::SMALL);
     }
 
     /**

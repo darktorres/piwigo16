@@ -209,12 +209,12 @@ class updates
         /** @var array<string, mixed> $conf */
         global $conf;
 
-        if (! pwg_is_dbconf_writeable()) {
+        if (! \Piwigo\Config\ConfigDb::pwgIsDbconfWriteable()) {
             return;
         }
 
         $new_versions = $this->get_piwigo_new_versions();
-        conf_update_param('update_notify_last_check', date('c'));
+        \Piwigo\Config\ConfigDb::confUpdateParam('update_notify_last_check', date('c'));
 
         if ((bool) $new_versions['is_dev']) {
             return;
@@ -304,7 +304,7 @@ class updates
                 ->switchLangBack();
 
             // save notify
-            conf_update_param(
+            \Piwigo\Config\ConfigDb::confUpdateParam(
                 'update_notify_last_notification',
                 [
                     'version' => $new_versions_string,
@@ -500,7 +500,7 @@ class updates
             $updates_ignored[$type] = $ignore_list;
         }
         $conf['updates_ignored'] = $updates_ignored;
-        conf_update_param('updates_ignored', \Piwigo\Db\MysqliDb::realEscapeString(serialize($conf['updates_ignored'])));
+        \Piwigo\Config\ConfigDb::confUpdateParam('updates_ignored', \Piwigo\Db\MysqliDb::realEscapeString(serialize($conf['updates_ignored'])));
     }
 
     // Check if extension have been upgraded since last check
@@ -708,7 +708,7 @@ class updates
 
                         FilesystemHelper::deltree(PHPWG_ROOT_PATH . $data_location . 'update');
                         UserCacheInvalidator::invalidate(true);
-                        conf_update_param('piwigo_installed_version', $upgrade_to);
+                        \Piwigo\Config\ConfigDb::confUpdateParam('piwigo_installed_version', $upgrade_to);
                         (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('system', ActivitySystem::Core, 'update', [
                             'from_version' => AppInfo::VERSION,
                             'to_version' => $upgrade_to,
@@ -720,7 +720,7 @@ class updates
                             // changes. Anyway, a compiled template purge will be performed
                             // by upgrade.php
                             $template->delete_compiled_templates();
-                            conf_delete_param('fs_quick_check_last_check');
+                            \Piwigo\Config\ConfigDb::confDeleteParam('fs_quick_check_last_check');
 
                             $page['infos'][] = l10n('Update Complete');
                             $page['infos'][] = $upgrade_to;

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Category;
 
 use Piwigo\Cache\CachePools;
+use Piwigo\Core\Env;
 use Piwigo\Core\FilterUpdaterInterface;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Logger;
@@ -85,7 +86,7 @@ final class CategoryCatsRenderer
         if ($isRecentCats) {
             $recentPeriod = is_numeric($user['recent_period'] ?? null) ? (int) $user['recent_period'] : 0;
             $lastPhotoDate = is_string($user['last_photo_date'] ?? null) ? $user['last_photo_date'] : null;
-            $now = \DateTimeImmutable::createFromMutable(pwg_now());
+            $now = \DateTimeImmutable::createFromMutable(Env::now());
 
             $filtered = array_filter($tree, static function (array $row) use ($recentPeriod, $lastPhotoDate, $now): bool {
                 $countImages = is_numeric($row['count_images'] ?? null) ? (int) $row['count_images'] : 0;
@@ -450,7 +451,7 @@ SELECT *
             // pagination
             $tplThumbnailsVarSelection = $tplThumbnailsVar;
 
-            $derivativeParams = trigger_change('get_index_album_derivative_params', ImageStdParams::get_by_type(IMG_THUMB));
+            $derivativeParams = trigger_change('get_index_album_derivative_params', ImageStdParams::get_by_type(ImageStdParams::THUMB));
             $tplThumbnailsVarSelection = trigger_change('loc_end_index_category_thumbnails', $tplThumbnailsVarSelection);
             $template->assign([
                 'maxRequests' => $conf['max_requests'],

@@ -12,10 +12,6 @@ use Piwigo\Db\Tables;
  * home, stateless beyond the config-table row it reads/writes through bare
  * \Piwigo\Db\MysqliDb::query()/pwg_db_*() calls (functions_mysqli.inc.php, batch 8f
  * relocate-only, finding 2 -- not becoming class methods).
- *
- * `endsExec()`'s own `conf_delete_param()` call stays bare -- that
- * function is still defined in functions.inc.php (pass 2c scope), valid
- * until then.
  */
 final class UniqueExecLock
 {
@@ -82,7 +78,7 @@ SELECT
         /** @var Logger $logger */
         global $logger;
 
-        conf_delete_param($tokenName . '_running');
+        \Piwigo\Config\ConfigDb::confDeleteParam($tokenName . '_running');
         $logger->info('[' . $tokenName . '] ends now');
     }
 }

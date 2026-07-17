@@ -15,24 +15,21 @@ namespace {
         }
     }
 
-    // buildPluginMaintain() reads PHPWG_PLUGINS_PATH directly -- normally
-    // define()'d by include/functions.inc.php as part of full legacy
-    // bootstrap, never loaded by this isolated integration test.
-    // Every plugin id used in this suite is synthetic and never on disk, so
-    // this only needs to resolve to a real (if empty-of-that-id) directory
-    // for file_exists() checks to return false safely. '.' (not an
-    // absolute path) matches PHPWG_ROOT_PATH's real value everywhere else
-    // in this codebase (see e.g. UrlServiceTest.php's identical guard) --
-    // using an absolute path here corrupted PHPWG_ROOT_PATH project-wide
-    // for every other Integration test file loaded in the same Pest
-    // process (confirmed: it broke SectionInitializerTest's rootPath
-    // assertions, since define() guards mean whichever file's block runs
-    // first wins for the whole test run).
+    // buildPluginMaintain() now reads Piwigo\Admin\PluginLoader::pluginsPath()
+    // (P23 batch 8f-4; the PHPWG_PLUGINS_PATH define is gone), which
+    // composes on PHPWG_ROOT_PATH at call time -- so only the root-path
+    // guard survives here. Every plugin id used in this suite is synthetic
+    // and never on disk, so it only needs to resolve to a real
+    // (if empty-of-that-id) directory for file_exists() checks to return
+    // false safely. '.' (not an absolute path) matches PHPWG_ROOT_PATH's
+    // real value everywhere else in this codebase (see e.g.
+    // UrlServiceTest.php's identical guard) -- using an absolute path here
+    // corrupted PHPWG_ROOT_PATH project-wide for every other Integration
+    // test file loaded in the same Pest process (confirmed: it broke
+    // SectionInitializerTest's rootPath assertions, since define() guards
+    // mean whichever file's block runs first wins for the whole test run).
     if (! defined('PHPWG_ROOT_PATH')) {
         define('PHPWG_ROOT_PATH', './');
-    }
-    if (! defined('PHPWG_PLUGINS_PATH')) {
-        define('PHPWG_PLUGINS_PATH', PHPWG_ROOT_PATH . 'plugins/');
     }
 
     // script_basename() stub removed -- ActivityService::record() (what
@@ -67,22 +64,20 @@ namespace {
     // fixture's real active 'en_UK' row directly instead of a synthetic
     // 'en' id.
     //
-    // check_theme_installed() is the one real remaining gap:
-    // UserService::getDefaultTheme() (called from
-    // ExtensionLifecycle's own theme-deactivate branch) always calls it
-    // before returning, and it's still a bare include/functions.inc.php
-    // free function (P23 batch 8d hasn't reached that file yet) this
-    // isolated test doesn't load. Stubbed to always report "installed" --
-    // every test below that reaches getDefaultTheme() only checks that its
-    // result does NOT equal a synthetic themeId() (random per call, never
-    // a real theme name), so the exact resolved value doesn't matter, only
-    // that resolving it doesn't crash.
-    if (! function_exists('check_theme_installed')) {
-        function check_theme_installed(string $theme_id): bool
-        {
-            return true;
-        }
-    }
+    // check_theme_installed() (P23 batch 8f-4): the function stub is gone
+    // -- UserService now calls Piwigo\Core\ThemeCatalog::checkThemeInstalled()
+    // directly, a real static method a bare-function stub can no longer
+    // intercept. No stub replacement is needed: setUp() below establishes
+    // the real MysqliDb connection to the test database, so the genuine
+    // chain runs -- checkThemeInstalled() (false for the fixture's 'modus'
+    // default: $conf['themes_dir'] is unset in this suite's minimal $conf)
+    // falls through to ThemeCatalog::getPwgThemes()'s real SQL against the
+    // fixture's themes table, and getDefaultTheme() resolves to a real
+    // value ('default' when no installed theme matches). Every test below
+    // that reaches getDefaultTheme() only checks that its result does NOT
+    // equal a synthetic themeId() (random per call, never a real theme
+    // name), so the exact resolved value doesn't matter, only that
+    // resolving it doesn't crash.
 }
 
 namespace Piwigo\Tests\Integration {
@@ -132,6 +127,21 @@ namespace Piwigo\Tests\Integration {
                 self::$fixtureReady = true;
             }
 
+            // P23 batch 8f-4: the check_theme_installed()/conf_update_param()
+            // function-shadow stubs are gone -- ExtensionLifecycle and
+            // UserService now call real static methods
+            // (Piwigo\Config\ConfigDb::confUpdateParam(),
+            // Piwigo\Core\ThemeCatalog::checkThemeInstalled()/getPwgThemes())
+            // whose bodies run raw SQL through \Piwigo\Db\MysqliDb, a
+            // connection DBAL's own $this->conn below doesn't provide.
+            // Connect it for real so the genuine code paths execute against
+            // the same test database. Deliberately AFTER the
+            // resetDatabase()/loadFixture() block: dropping and recreating
+            // the schema would invalidate an already-selected default
+            // database on this session. Reconnecting per-test is safe --
+            // connect() replaces the shared global $mysqli handle.
+            \Piwigo\Db\MysqliDb::connect($this->dbHost, $this->dbUser, $this->dbPass, $this->dbName);
+
             Config::reset();
             ConfigLoader::applyDefaults();
             ConfigLoader::applyEnvOverrides();
@@ -143,6 +153,12 @@ namespace Piwigo\Tests\Integration {
             $GLOBALS['conf'] = [
                 'enable_extensions_install' => true,
                 'php_extension_in_urls' => false,
+                // P23 batch 8f-4: ThemeCatalog::checkThemeInstalled() (now
+                // called for real, see the MysqliDb::connect() note above)
+                // reads $conf['themes_dir'] with a direct array access --
+                // provide the production value so the real filesystem check
+                // runs instead of raising an undefined-array-key warning.
+                'themes_dir' => PHPWG_ROOT_PATH . 'themes',
             ];
             $GLOBALS['user'] = ['id' => 1];
             unset($_REQUEST['method'], $_REQUEST['action']);
@@ -327,7 +343,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_theme_activate_rejects_a_second_mobile_theme(): void
         {
-            // conf_update_param('mobile_theme', $id) (called by a
+            // ConfigDb::confUpdateParam('mobile_theme', $id) (called by a
             // successful mobile-theme activate) is deliberately called
             // WITHOUT updateGlobal=true, matching themes.class.php's own
             // exact call shape -- it persists to the DB but never updates

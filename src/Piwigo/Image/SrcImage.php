@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Image;
 
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\ThemeConfProviderInterface;
 use Piwigo\Db\Tables;
 
 /**
@@ -44,6 +45,35 @@ final class SrcImage
             self::$htmlRenderer->fatalError($msg);
         }
         throw new \RuntimeException($msg);
+    }
+
+    private static ?ThemeConfProviderInterface $themeConfProvider = null;
+
+    /**
+     * P23 batch 8f-4: set once by include/common.inc.php right after the
+     * request's $template instance is constructed (Template implements
+     * ThemeConfProviderInterface) -- same static-setter shape as
+     * setHtmlRenderer() above, and for the same reason: this
+     * L2aCoreDomain class may not depend on L3Presentation's Template
+     * directly (deptrac), and its ~20 real construction sites make
+     * constructor injection an unreasonable ripple. Replaces the deleted
+     * get_themeconf() free function's own `$GLOBALS['template']` read,
+     * with the same availability window (the provider exists as soon as
+     * the template does; no SrcImage is ever constructed earlier in a
+     * real request).
+     */
+    public static function setThemeConfProvider(ThemeConfProviderInterface $provider): void
+    {
+        self::$themeConfProvider = $provider;
+    }
+
+    private static function themeConf(string $key): string
+    {
+        if (self::$themeConfProvider === null) {
+            throw new \RuntimeException('SrcImage: no theme-conf provider set (Template not constructed yet?)');
+        }
+
+        return self::$themeConfProvider->themeConf($key);
     }
 
     public const int IS_ORIGINAL = 0x01;
@@ -105,7 +135,7 @@ final class SrcImage
         } elseif (! empty($representative_ext)) {
             $this->rel_path = \Piwigo\Image\ImagePathHelper::originalToRepresentative($path, $representative_ext);
         } else {
-            $default_mimetype_location = get_themeconf('mime_icon_dir') . $ext . '.png';
+            $default_mimetype_location = self::themeConf('mime_icon_dir') . $ext . '.png';
             $mimetype_location = trigger_change('get_mimetype_location', $default_mimetype_location, $ext);
             // trigger_change() hands the value through arbitrary registered
             // event handlers (mixed return); fall back to the pre-filter

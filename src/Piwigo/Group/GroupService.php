@@ -254,12 +254,12 @@ final class GroupService
             return false;
         }
 
-        $emailAdminOnNewUser = conf_get_param('email_admin_on_new_user', 'undefined');
+        $emailAdminOnNewUser = \Piwigo\Config\ConfigDb::confGetParam('email_admin_on_new_user', 'undefined');
         $emailAdminOnNewUser = is_scalar($emailAdminOnNewUser) ? (string) $emailAdminOnNewUser : 'undefined';
         if ((bool) preg_match('/^group:(\d+)$/', $emailAdminOnNewUser, $matches)) {
             foreach ($groupIds as $groupId) {
                 if ($groupId === (int) $matches[1]) {
-                    conf_update_param('email_admin_on_new_user', 'all', true);
+                    \Piwigo\Config\ConfigDb::confUpdateParam('email_admin_on_new_user', 'all', true);
                 }
             }
         }

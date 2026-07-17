@@ -157,8 +157,7 @@ abstract class IntegrationTestCase extends TestCase
 
     protected function markTestInstalled(): void
     {
-        require_once dirname(__DIR__, 2) . '/include/env.inc.php';
-        $stamp = dirname(__DIR__, 2) . '/local/' . pwg_test_mode_installed_stamp();
+        $stamp = dirname(__DIR__, 2) . '/local/' . \Piwigo\Core\Env::testModeInstalledStamp();
         // The stamp is often already present, created by install.php running
         // as the webserver user (e.g. www-data) — only the file's existence
         // matters (common.inc.php gates on file_exists(), not mtime), so
@@ -170,8 +169,7 @@ abstract class IntegrationTestCase extends TestCase
 
     protected function removeTestStamp(): void
     {
-        require_once dirname(__DIR__, 2) . '/include/env.inc.php';
-        $stamp = dirname(__DIR__, 2) . '/local/' . pwg_test_mode_installed_stamp();
+        $stamp = dirname(__DIR__, 2) . '/local/' . \Piwigo\Core\Env::testModeInstalledStamp();
         if (file_exists($stamp)) {
             unlink($stamp);
         }

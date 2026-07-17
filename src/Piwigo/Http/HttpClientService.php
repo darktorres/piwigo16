@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Http;
 
 use Nyholm\Psr7\Factory\Psr17Factory;
+use Piwigo\Core\Env;
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
@@ -178,7 +179,7 @@ final class HttpClientService implements ClientInterface
         // Piwigo makes real self-requests back into this same app (e.g. forcing
         // derivative-image generation right after upload, see
         // UploadService::addUploadedFile()). Test mode is detected per-request
-        // from the X-Piwigo-Env header (see pwg_test_mode_is_active()), so
+        // from the X-Piwigo-Env header (see Env::testModeIsActive()), so
         // without forwarding it here, a self-request looks like a plain
         // production hit and never picks up the test DB config. Only forward
         // it for same-host requests, not genuinely external ones (piwigo.org
@@ -192,8 +193,8 @@ final class HttpClientService implements ClientInterface
         $currentHost = $_SERVER['HTTP_HOST'] ?? null;
         $isSelfRequest = $srcHost !== null && $srcHost === $currentHost;
 
-        if ($isSelfRequest && pwg_test_mode_is_active()) {
-            $headerValue = pwg_test_mode_header();
+        if ($isSelfRequest && Env::testModeIsActive()) {
+            $headerValue = Env::testModeHeader();
             if ($headerValue !== null) {
                 $headers['X-Piwigo-Env'] = $headerValue;
             }

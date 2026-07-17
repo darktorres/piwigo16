@@ -1032,7 +1032,7 @@ SELECT
             return new PwgError(403, 'This user cannot become a main user because he is not a webmaster.');
         }
 
-        conf_update_param('webmaster_id', $params['user_id']);
+        \Piwigo\Config\ConfigDb::confUpdateParam('webmaster_id', $params['user_id']);
         return 'The main user has been changed.';
     }
 

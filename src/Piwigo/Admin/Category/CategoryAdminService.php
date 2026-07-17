@@ -126,9 +126,17 @@ SELECT
      * (comments/visible/status/representative x true/false) into one
      * parameterized method.
      *
+     * P23 batch 8f-4: takes ActivityLoggerInterface as an explicit
+     * per-method parameter (this class's only activity-writing method, 17
+     * construction sites -- same per-method-injection reasoning as
+     * CategoryService::deleteCategories()), replacing the formerly-bare
+     * pwg_activity() call kept unqualified purely for
+     * CategoryAdminServiceTest's function-shadowing spy; that test now
+     * passes a fake logger through this parameter instead.
+     *
      * @param list<int> $catIds
      */
-    public function setCategoryOption(array $catIds, string $section, bool $value): void
+    public function setCategoryOption(array $catIds, string $section, bool $value, \Piwigo\Core\ActivityLoggerInterface $activityLogger): void
     {
         if ($catIds === []) {
             return;
@@ -157,7 +165,7 @@ UPDATE ' . Tables::categories() . '
             default => null,
         };
 
-        pwg_activity('album', $catIds, 'edit', [
+        $activityLogger->record('album', $catIds, 'edit', [
             'section' => $section,
             'action' => $value ? 'trueify' : 'falsify',
         ]);

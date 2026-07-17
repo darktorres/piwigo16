@@ -73,7 +73,7 @@ final class LanguagesNewPageRenderer
             if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
                 $this->pushPageMessage('errors', l10n('Webmaster status is required.'), $page);
             } else {
-                check_pwg_token();
+                new \Piwigo\Csrf\CsrfService()->checkOrFail(new \Piwigo\Html\HtmlService());
 
                 // $_GET values are always string|array; 'revision' is only ever
                 // built from $language['revision_id'] in this file's own template

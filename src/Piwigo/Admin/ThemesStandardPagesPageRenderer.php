@@ -32,12 +32,13 @@ use Piwigo\Template\Template;
  * needs. The themes class itself stays (real callers remain outside this
  * batch: admin/include/functions_install.inc.php, functions_upgrade.php).
  *
- * Investigated, not fixed: this page's writes go through the free functions
- * conf_update_param()/conf_get_param(), not Piwigo\Config\ConfigService --
- * see the original deferral rationale in this class's predecessor,
- * ThemesStandardPagesSubController (task #343's precedent, re-verified
- * during this port: all 4 conf_update_param() call sites below still pass
- * only an allowlisted or sanitized value, so still not exploitable here).
+ * Investigated, not fixed: this page's writes go through the legacy store
+ * (ConfigDb::confUpdateParam()/confGetParam(), the raw-SQL + global $conf
+ * path), not Piwigo\Config\ConfigService -- see the original deferral
+ * rationale in this class's predecessor, ThemesStandardPagesSubController
+ * (task #343's precedent, re-verified during this port: all 4
+ * ConfigDb::confUpdateParam() call sites below still pass only an
+ * allowlisted or sanitized value, so still not exploitable here).
  */
 final class ThemesStandardPagesPageRenderer
 {
@@ -84,7 +85,7 @@ final class ThemesStandardPagesPageRenderer
         ];
 
         if (isset($_POST['submit']) and \Piwigo\Auth\AccessControl::isWebmaster()) {
-            check_pwg_token();
+            new \Piwigo\Csrf\CsrfService()->checkOrFail(new \Piwigo\Html\HtmlService());
 
             // use_standard_pages or not -- a checkbox POST value, so "not
             // set"/''/'0' are all "unchecked", matching empty()'s own
@@ -93,16 +94,16 @@ final class ThemesStandardPagesPageRenderer
             $use_standard_pages_checked = $use_standard_pages_raw !== null
                 && $use_standard_pages_raw !== ''
                 && $use_standard_pages_raw !== '0';
-            conf_update_param('use_standard_pages', $use_standard_pages_checked, true);
+            \Piwigo\Config\ConfigDb::confUpdateParam('use_standard_pages', $use_standard_pages_checked, true);
 
             // save selected logo
             if (isset($_POST['std_pgs_display_logo']) and in_array($_POST['std_pgs_display_logo'], $std_pgs_logo_options, true)) {
-                conf_update_param('standard_pages_selected_logo', $_POST['std_pgs_display_logo'], true);
+                \Piwigo\Config\ConfigDb::confUpdateParam('standard_pages_selected_logo', $_POST['std_pgs_display_logo'], true);
             }
 
             // save selected skin
             if (isset($_POST['std_pgs_selected_skin']) and in_array($_POST['std_pgs_selected_skin'], $std_pgs_skin_options, true)) {
-                conf_update_param('standard_pages_selected_skin', $_POST['std_pgs_selected_skin'], true);
+                \Piwigo\Config\ConfigDb::confUpdateParam('standard_pages_selected_skin', $_POST['std_pgs_selected_skin'], true);
             }
         }
 
@@ -136,7 +137,7 @@ final class ThemesStandardPagesPageRenderer
                 );
             } else {
                 $upload_dir = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'logo';
-                if (\Piwigo\Core\FilesystemHelper::mkgetdir($upload_dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
+                if (\Piwigo\Core\FilesystemHelper::mkgetdir($upload_dir, \Piwigo\Core\FilesystemHelper::MKGETDIR_DEFAULT & ~\Piwigo\Core\FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
                     $std_pgs_logo_name = isset($std_pgs_logo_upload['name']) && is_string($std_pgs_logo_upload['name'])
                         ? $std_pgs_logo_upload['name']
                         : '';
@@ -144,7 +145,7 @@ final class ThemesStandardPagesPageRenderer
 
                     $file_path = $upload_dir . '/' . \Piwigo\Core\StringHelper::str2url($pathinfo['filename']) . '.' . $allowed_mimes[$mime_type];
 
-                    conf_update_param('standard_pages_selected_logo_path', $file_path, true);
+                    \Piwigo\Config\ConfigDb::confUpdateParam('standard_pages_selected_logo_path', $file_path, true);
 
                     // $upload_dir is PWG_LOCAL_DIR . 'logo', a subdirectory of the
                     // 'local' disk's own root -- the disk-relative path needs the
@@ -194,14 +195,14 @@ final class ThemesStandardPagesPageRenderer
         // Send all info to template
         $template->assign(
             [
-                'use_standard_pages' => conf_get_param('use_standard_pages', true),
-                'std_pgs_selected_logo' => conf_get_param('standard_pages_selected_logo', 'piwigo_logo'),
+                'use_standard_pages' => \Piwigo\Config\ConfigDb::confGetParam('use_standard_pages', true),
+                'std_pgs_selected_logo' => \Piwigo\Config\ConfigDb::confGetParam('standard_pages_selected_logo', 'piwigo_logo'),
                 'std_pgs_logo_options' => $std_pgs_logo_options,
-                'std_pgs_selected_skin' => conf_get_param('standard_pages_selected_skin', 'default'),
+                'std_pgs_selected_skin' => \Piwigo\Config\ConfigDb::confGetParam('standard_pages_selected_skin', 'default'),
                 'std_pgs_skin_options' => $std_pgs_skin_options,
                 'is_standard_pages_used' => $is_standard_pages_used,
                 'standard_pages_used_by' => $standard_pages_used_by,
-                'std_pgs_selected_logo_path' => conf_get_param('standard_pages_selected_logo_path', null),
+                'std_pgs_selected_logo_path' => \Piwigo\Config\ConfigDb::confGetParam('standard_pages_selected_logo_path', null),
                 'PWG_TOKEN' => (new \Piwigo\Csrf\CsrfService())->getToken(),
             ]
         );

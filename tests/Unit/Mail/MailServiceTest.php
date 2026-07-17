@@ -2,18 +2,24 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\WebmasterMailProviderInterface;
 use Piwigo\Mail\MailService;
 
-// getMailSenderEmail()/getMailConfiguration() call the real
-// get_webmaster_mail_address() (unqualified, resolves to the global
-// namespace) -- a stable, already-migrated function that needs full app
-// bootstrap this isolated test doesn't load. Same "minimal stub to load
-// standalone" pattern as tests/Unit/PasswordHashTest.php.
-if (! function_exists('get_webmaster_mail_address')) {
-    function get_webmaster_mail_address(): string
-    {
-        return 'webmaster@example.test';
-    }
+// P23 batch 8f-4: the get_webmaster_mail_address() function stub is gone
+// (free function deleted with include/functions.inc.php). MailService now
+// takes WebmasterMailProviderInterface as an optional constructor param
+// (lazily defaulting to the real Piwigo\Users\UserRepository, which would
+// need a DB connection this isolated test doesn't have), so the tests
+// whose paths reach the webmaster lookup (getMailConfiguration() always
+// calls getMailSenderEmail()) construct the service with this real fake.
+function mail_service_with_fake_webmaster(): MailService
+{
+    return new MailService(new class implements WebmasterMailProviderInterface {
+        public function getWebmasterMailAddress(): string
+        {
+            return 'webmaster@example.test';
+        }
+    });
 }
 
 beforeEach(function (): void {
@@ -163,14 +169,14 @@ test('getMailSenderName uses mail_sender_name when configured', function (): voi
 });
 
 test('getMailConfiguration reports use_smtp false when smtp_host is unset', function (): void {
-    $service = new MailService();
+    $service = mail_service_with_fake_webmaster();
 
     expect($service->getMailConfiguration()['use_smtp'])->toBeFalse();
 });
 
 test('getMailConfiguration reports use_smtp true when smtp_host is configured', function (): void {
     $GLOBALS['conf'] = ['smtp_host' => 'smtp.example.test'];
-    $service = new MailService();
+    $service = mail_service_with_fake_webmaster();
 
     expect($service->getMailConfiguration()['use_smtp'])->toBeTrue();
 });
@@ -182,7 +188,7 @@ test('getMailConfiguration reads debug_mail-adjacent smtp settings from the live
         'smtp_password' => 'secret',
         'smtp_secure' => 'tls',
     ];
-    $service = new MailService();
+    $service = mail_service_with_fake_webmaster();
 
     $config = $service->getMailConfiguration();
 

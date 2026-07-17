@@ -20,8 +20,8 @@ declare(strict_types=1);
 // autoload.files (src/Piwigo/Category/functions.php, P23 batch 8c), no
 // explicit require needed. functions_search.inc.php itself is gone (P23
 // batch 8c) -- SearchService now calls the real Piwigo\Search\SearchService
-// methods directly; the QST_* bitmask constants it needs are defined
-// inline below.
+// methods directly; the QST_* bitmask flags it needs are class constants
+// on Piwigo\Search\QSingleToken (P23 batch 8f-4), autoloaded.
 //
 // get_image_ids_for_tags()'s own stub was removed (P23 batch 8c) --
 // SearchService now calls the real Piwigo\Tag\TagService::getImageIdsForTags()
@@ -44,27 +44,15 @@ namespace {
     // realisticUserGlobal() below sets 'status' => 'normal' to match this
     // file's old defaults (not admin, is a classic user).
 
-    if (! function_exists('conf_get_param')) {
-        // Copied verbatim from include/functions.inc.php -- pure,
-        // dependency-free, safe to duplicate here rather than requiring the
-        // whole file (which pulls in the plugin-event/session/category/tag
-        // bootstrap stack this isolated test doesn't want).
-        /**
-         * @param  string  $param
-         * @param  mixed  $default_value
-         * @return mixed
-         */
-        function conf_get_param($param, $default_value = null)
-        {
-            /** @var array<string, mixed> $conf */
-            global $conf;
-
-            return $conf[$param] ?? $default_value;
-        }
-    }
+    // conf_get_param() -- P23 batch 8f-4: the function stub is gone.
+    // SearchService/SearchFilterRenderer now call
+    // Piwigo\Config\ConfigDb::confGetParam() directly, a real static
+    // method with the same pure `global $conf` read the old stub
+    // duplicated, so this isolated test needs no replacement at all.
 
     if (! function_exists('safe_unserialize')) {
-        // Copied verbatim from include/functions.inc.php.
+        // Copied verbatim from the legacy include/functions.inc.php
+        // (deleted in P23 batch 8f-4).
         /**
          * @param  array<int|string, mixed>|string  $value
          * @return mixed
@@ -108,21 +96,9 @@ namespace {
     // directly, which this Integration test's real DB connection satisfies
     // without a stub.
 
-    // QST_* bitmask constants (needed by SearchService's own modifier
-    // checks) used to come from a plain require_once of
-    // include/functions_search.inc.php (no other side effects) -- that
-    // file is now deleted, its constants relocated into
-    // include/functions.inc.php (P23 batch 8c), too heavy a file for this
-    // isolated test to require standalone, so defined inline here instead.
-    if (! defined('QST_QUOTED')) {
-        define('QST_QUOTED', 0x01);
-        define('QST_NOT', 0x02);
-        define('QST_OR', 0x04);
-        define('QST_WILDCARD_BEGIN', 0x08);
-        define('QST_WILDCARD_END', 0x10);
-        define('QST_WILDCARD', QST_WILDCARD_BEGIN | QST_WILDCARD_END);
-        define('QST_BREAK', 0x20);
-    }
+    // QST_* bitmask flags -- P23 batch 8f-4: now class constants on
+    // Piwigo\Search\QSingleToken (autoloaded with the class itself), so
+    // the inline define() block this file used to carry is gone.
 }
 
 namespace Piwigo\Tests\Integration {

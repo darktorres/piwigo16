@@ -15,9 +15,39 @@ use Piwigo\Template\Template;
 
 /**
  * Base class for monthly and weekly calendar styles
+ *
+ * P23 batch 8f-4: the calendar view/chronology-date constants moved here
+ * as class constants (formerly top-level define()s in the deleted
+ * include/functions.inc.php, relocated there from
+ * include/functions_calendar.inc.php in batch 8c). This shared base hosts
+ * them; readers outside the hierarchy (CalendarRenderer) reference them
+ * as CalendarBase::CAL_VIEW_* / CalendarBase::C*.
  */
 abstract class CalendarBase
 {
+    /** URL keyword for list view */
+    public const string CAL_VIEW_LIST = 'list';
+
+    /** URL keyword for calendar view */
+    public const string CAL_VIEW_CALENDAR = 'calendar';
+
+    // Chronology-date array indexes used throughout CalendarMonthly/
+    // CalendarWeekly -- CWEEK and CMONTH intentionally share index 1 --
+    // CalendarMonthly only ever uses CYEAR/CMONTH/CDAY and CalendarWeekly
+    // only ever uses CYEAR/CWEEK/CDAY, never both in the same
+    // $chronology_date array.
+    /** level of year view */
+    public const int CYEAR = 0;
+
+    /** level of week view in weekly view */
+    public const int CWEEK = 1;
+
+    /** level of month view in monthly view */
+    public const int CMONTH = 1;
+
+    /** level of day view */
+    public const int CDAY = 2;
+
     /**
      * db column on which this calendar works
      *

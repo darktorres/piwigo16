@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Comment;
 
 use Doctrine\DBAL\ArrayParameterType;
+use Piwigo\Core\Env;
 use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\Tables;
 
@@ -32,11 +33,11 @@ final class CommentRepository extends AbstractRepository
      */
     public function insert(array $data): int
     {
-        // pwg_now() rather than SQL's NOW() -- see countRecentComments()'s
+        // Env::now() rather than SQL's NOW() -- see countRecentComments()'s
         // own docblock; date/validation_date must share the same time
         // reference that the flood-window comparison reads, not the real
         // DB-server clock.
-        $now = pwg_now()
+        $now = Env::now()
             ->format('Y-m-d H:i:s');
 
         $this->conn->createQueryBuilder()
@@ -114,7 +115,7 @@ final class CommentRepository extends AbstractRepository
             ->setParameter('content', $data['content'])
             ->setParameter('websiteUrl', $data['websiteUrl'])
             ->setParameter('validated', $data['validated'] ? 'true' : 'false')
-            ->setParameter('now', pwg_now()->format('Y-m-d H:i:s'))
+            ->setParameter('now', Env::now()->format('Y-m-d H:i:s'))
             ->setParameter('id', $id);
 
         if ($authorId !== null) {
@@ -165,7 +166,7 @@ final class CommentRepository extends AbstractRepository
             ->set('validation_date', ':now')
             ->where('id IN (:ids)')
             ->setParameter('validated', 'true')
-            ->setParameter('now', pwg_now()->format('Y-m-d H:i:s'))
+            ->setParameter('now', Env::now()->format('Y-m-d H:i:s'))
             ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
             ->executeStatement();
     }
@@ -177,7 +178,7 @@ final class CommentRepository extends AbstractRepository
      */
     public function countRecentComments(int $authorId, ?string $anonymousIdPrefix, int $antiFloodSeconds): int
     {
-        // pwg_now() rather than SQL's NOW() (the real DB-server clock) --
+        // Env::now() rather than SQL's NOW() (the real DB-server clock) --
         // matches SessionRepository's own reasoning: invisible to
         // PIWIGO_TEST_NOW, so fixture comments dated relative to it would
         // read as "within the flood window" whenever real time drifted
@@ -187,7 +188,7 @@ final class CommentRepository extends AbstractRepository
             ->from(Tables::comments())
             ->where('date > SUBDATE(:now, INTERVAL :seconds SECOND)')
             ->andWhere('author_id = :authorId')
-            ->setParameter('now', pwg_now()->format('Y-m-d H:i:s'))
+            ->setParameter('now', Env::now()->format('Y-m-d H:i:s'))
             ->setParameter('seconds', $antiFloodSeconds)
             ->setParameter('authorId', $authorId);
 

@@ -16,6 +16,7 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
+use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
@@ -96,7 +97,7 @@ SELECT id
         // +-------------------------------------------------------------------+
 
         if (isset($_GET['delete'])) {
-            check_pwg_token();
+            new \Piwigo\Csrf\CsrfService()->checkOrFail(new HtmlService());
 
             $imageService->deleteElements([$image_id], true);
             UserCacheInvalidator::invalidate();
@@ -123,7 +124,7 @@ SELECT id
         // +-------------------------------------------------------------------+
 
         if (isset($_GET['sync_metadata'])) {
-            check_pwg_token();
+            new \Piwigo\Csrf\CsrfService()->checkOrFail(new HtmlService());
 
             new MetadataService(new MetadataRepository(DbConnection::build()))->syncMetadata([$image_id]);
             if (! is_array($page['infos'] ?? null)) {
@@ -136,7 +137,7 @@ SELECT id
         /** @var array<string, mixed> $data */
         $data = [];
         if (isset($_POST['submit'])) {
-            check_pwg_token();
+            new \Piwigo\Csrf\CsrfService()->checkOrFail(new HtmlService());
 
             $data = [];
             $data['id'] = $image_id;
@@ -328,8 +329,8 @@ SELECT
 
                 'PATH' => $row['path'],
 
-                'TN_SRC' => DerivativeImage::url(IMG_MEDIUM, $src_image),
-                'FILE_SRC' => DerivativeImage::url(IMG_LARGE, $src_image),
+                'TN_SRC' => DerivativeImage::url(ImageStdParams::MEDIUM, $src_image),
+                'FILE_SRC' => DerivativeImage::url(ImageStdParams::LARGE, $src_image),
 
                 'NAME' => $name_value,
 

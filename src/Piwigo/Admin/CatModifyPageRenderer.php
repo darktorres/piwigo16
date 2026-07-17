@@ -10,6 +10,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
+use Piwigo\Image\ImageStdParams;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Template\Template;
@@ -323,7 +324,7 @@ SELECT COUNT(*)
             // picture to display : the identified representant or the generic random
             // representant ?
             if (! empty($category_representative_picture_id)) {
-                $tpl_representant['picture'] = $categoryService->getCategoryRepresentantProperties($category_representative_picture_id, IMG_MEDIUM);
+                $tpl_representant['picture'] = $categoryService->getCategoryRepresentantProperties($category_representative_picture_id, ImageStdParams::MEDIUM);
             }
 
             // can the admin choose to set a new random representant ?

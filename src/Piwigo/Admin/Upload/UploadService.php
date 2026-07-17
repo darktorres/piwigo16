@@ -7,6 +7,7 @@ namespace Piwigo\Admin\Upload;
 use Piwigo\Admin\Image\pwg_image;
 use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Config\Config;
+use Piwigo\Core\Env;
 use Piwigo\Core\Logger;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -273,14 +274,14 @@ SELECT
         } else {
             // this photo is new
 
-            // current date -- pwg_now() rather than a raw "SELECT NOW();",
+            // current date -- Env::now() rather than a raw "SELECT NOW();",
             // since the latter runs on the MySQL server's real clock,
-            // invisible to pwg_now()'s PIWIGO_TEST_NOW freeze. This value
+            // invisible to Env::now()'s PIWIGO_TEST_NOW freeze. This value
             // drives both piwigo_images.date_available and the upload
             // directory/filename's date portion, so a real-clock read here
             // made every fixture regeneration produce a fresh, unstable
             // upload path and a non-reproducible photo sort order.
-            $dbnow = pwg_now()
+            $dbnow = Env::now()
                 ->format('Y-m-d H:i:s');
             $date_parts = preg_split('/[^\d]/', $dbnow, 4);
             if ($date_parts === false) {
@@ -483,9 +484,9 @@ SELECT
                 'date_available' => $dbnow,
                 // Otherwise relies on the schema's own DEFAULT
                 // CURRENT_TIMESTAMP, which reads the real DB-server clock --
-                // invisible to pwg_now()'s PIWIGO_TEST_NOW freeze, same
+                // invisible to Env::now()'s PIWIGO_TEST_NOW freeze, same
                 // reasoning as date_available above. Reuses $dbnow rather
-                // than a second pwg_now() call so both columns agree on the
+                // than a second Env::now() call so both columns agree on the
                 // exact same instant, matching what the DB default would
                 // have produced for a single INSERT.
                 'lastmodified' => $dbnow,
@@ -537,7 +538,7 @@ SELECT
 
         set_make_full_url();
         // in case we are on uploadify.php, we have to replace the false path
-        $derivative_url = preg_replace('#admin/include/i#', 'i', DerivativeImage::url(IMG_MEDIUM, $src_image));
+        $derivative_url = preg_replace('#admin/include/i#', 'i', DerivativeImage::url(ImageStdParams::MEDIUM, $src_image));
         assert($derivative_url !== null);
         unset_make_full_url();
 
@@ -562,7 +563,7 @@ SELECT
         global $conf;
 
         if (! isset($conf['lounge_active'])) {
-            conf_update_param('lounge_active', false, true);
+            \Piwigo\Config\ConfigDb::confUpdateParam('lounge_active', false, true);
         }
 
         if (! (bool) $conf['lounge_active']) {
@@ -571,7 +572,7 @@ SELECT
             assert($row !== null);
             [$nb_photos] = $row;
             if ($nb_photos >= $conf['lounge_activate_threshold']) {
-                conf_update_param('lounge_active', true, true);
+                \Piwigo\Config\ConfigDb::confUpdateParam('lounge_active', true, true);
             }
         }
 
@@ -664,12 +665,12 @@ SELECT
      */
     public function addFormat(string $source_filepath, string $format_ext, int|string $format_of): string
     {
-        if (! (bool) conf_get_param('enable_formats', false)) {
+        if (! (bool) \Piwigo\Config\ConfigDb::confGetParam('enable_formats', false)) {
             die('[' . __METHOD__ . '] formats are disabled');
         }
 
-        $authorized_format_exts = conf_get_param('format_ext', ['cr2']);
-        // conf_get_param() is inherently mixed (config values come straight
+        $authorized_format_exts = \Piwigo\Config\ConfigDb::confGetParam('format_ext', ['cr2']);
+        // ConfigDb::confGetParam() is inherently mixed (config values come straight
         // from the $conf global); only elements that are actually strings can
         // be safely passed to in_array()/implode() below.
         $authorized_format_exts = is_array($authorized_format_exts) ? array_filter($authorized_format_exts, is_string(...)) : ['cr2'];
@@ -785,11 +786,11 @@ SELECT
             return $representative_ext;
         }
 
-        $ext = conf_get_param('pdf_representative_ext', 'jpg');
+        $ext = \Piwigo\Config\ConfigDb::confGetParam('pdf_representative_ext', 'jpg');
         if (! is_string($ext)) {
             $ext = 'jpg';
         }
-        $jpg_quality = conf_get_param('pdf_jpg_quality', 90);
+        $jpg_quality = \Piwigo\Config\ConfigDb::confGetParam('pdf_jpg_quality', 90);
         if (! is_numeric($jpg_quality)) {
             $jpg_quality = 90;
         }
@@ -1399,7 +1400,7 @@ SELECT
 
         foreach (ImageStdParams::get_all_types() as $type) {
             // get_all_types() includes types disabled by default (e.g.
-            // IMG_3XLARGE/IMG_4XLARGE), which get_defined_type_map() genuinely
+            // ImageStdParams::THREE_XLARGE/FOUR_XLARGE), which get_defined_type_map() genuinely
             // omits (get_enabled_default_sizes() unsets them) -- $enabled can
             // really lack a $type key here, so this isn't PHPStan-provable
             // dead code even though its docblock-only DerivativeParams[]

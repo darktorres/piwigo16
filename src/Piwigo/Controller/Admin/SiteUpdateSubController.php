@@ -205,7 +205,7 @@ SELECT galleries_url
         // +-----------------------------------------------------------------------+
 
         if (isset($_GET['quick_sync'])) {
-            check_pwg_token();
+            new \Piwigo\Csrf\CsrfService()->checkOrFail(new HtmlService());
 
             $_POST['sync'] = 'files';
             $_POST['display_info'] = '1';
@@ -219,7 +219,7 @@ SELECT galleries_url
 
         $general_failure = true;
         if (isset($_POST['submit'])) {
-            check_pwg_token();
+            new \Piwigo\Csrf\CsrfService()->checkOrFail(new HtmlService());
 
             if ($site_reader->open()) {
                 $general_failure = false;

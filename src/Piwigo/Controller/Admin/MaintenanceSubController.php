@@ -76,7 +76,7 @@ final class MaintenanceSubController implements AdminSubControllerInterface
         $my_base_url = get_root_url() . 'admin.php?page=';
 
         if (isset($_GET['action'])) {
-            check_pwg_token();
+            new \Piwigo\Csrf\CsrfService()->checkOrFail(new \Piwigo\Html\HtmlService());
         }
 
         // +-------------------------------------------------------------------+

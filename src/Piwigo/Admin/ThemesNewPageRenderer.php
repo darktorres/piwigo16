@@ -67,7 +67,7 @@ final class ThemesNewPageRenderer
             if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
                 $this->pushPageMessage('errors', l10n('Webmaster status is required.'), $page);
             } else {
-                check_pwg_token();
+                new \Piwigo\Csrf\CsrfService()->checkOrFail(new \Piwigo\Html\HtmlService());
 
                 $extraction = $pem_catalog->extractArchive(ExtensionType::Theme, 'install', $_GET['revision'], $_GET['extension']);
                 $install_status = $extraction['status'];

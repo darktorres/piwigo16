@@ -1285,7 +1285,7 @@ UPDATE ' . Tables::imageCategory() . '
         $upload_dir = $upload_dir_conf . '/buffer';
 
         // create the upload directory tree if not exists
-        if (! \Piwigo\Core\FilesystemHelper::mkgetdir($upload_dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
+        if (! \Piwigo\Core\FilesystemHelper::mkgetdir($upload_dir, \Piwigo\Core\FilesystemHelper::MKGETDIR_DEFAULT & ~\Piwigo\Core\FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
             return new PwgError(500, 'error during buffer directory creation');
         }
 
@@ -1768,7 +1768,7 @@ SELECT id, name, permalink
         $upload_dir = $upload_dir_conf . '/buffer';
 
         // create the upload directory tree if not exists
-        if (! \Piwigo\Core\FilesystemHelper::mkgetdir($upload_dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
+        if (! \Piwigo\Core\FilesystemHelper::mkgetdir($upload_dir, \Piwigo\Core\FilesystemHelper::MKGETDIR_DEFAULT & ~\Piwigo\Core\FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
             return new PwgError(500, 'error during buffer directory creation');
         }
 
@@ -1850,7 +1850,7 @@ SELECT *
                 return [
                     'image_id' => $image['id'],
                     'src' => DerivativeImage::thumb_url($image),
-                    'square_src' => DerivativeImage::url(ImageStdParams::get_by_type(IMG_SQUARE), $image),
+                    'square_src' => DerivativeImage::url(ImageStdParams::get_by_type(ImageStdParams::SQUARE), $image),
                     'name' => $image['name'],
                     'add_status' => $add_status,
                 ];
@@ -1930,7 +1930,7 @@ SELECT
             return [
                 'image_id' => $image_id,
                 'src' => DerivativeImage::thumb_url($image_infos),
-                'square_src' => DerivativeImage::url(ImageStdParams::get_by_type(IMG_SQUARE), $image_infos),
+                'square_src' => DerivativeImage::url(ImageStdParams::get_by_type(ImageStdParams::SQUARE), $image_infos),
                 'name' => $image_infos['name'],
                 'category' => [
                     'id' => $params['category'][0],
@@ -2000,7 +2000,7 @@ SELECT COUNT(*)
         $chunkfile_path = sprintf($chunkfile_path_pattern, $params['chunk'] + 1, $params['chunks']);
 
         // create the upload directory tree if not exists
-        if (! \Piwigo\Core\FilesystemHelper::mkgetdir(dirname($chunkfile_path), MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
+        if (! \Piwigo\Core\FilesystemHelper::mkgetdir(dirname($chunkfile_path), \Piwigo\Core\FilesystemHelper::MKGETDIR_DEFAULT & ~\Piwigo\Core\FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
             return new PwgError(500, 'error during buffer directory creation');
         }
         \Piwigo\Core\FilesystemHelper::secureDirectory(dirname($chunkfile_path));

@@ -59,7 +59,8 @@ final class PopuphelpController implements ControllerInterface
                 'noindex' => 1,
                 'nofollow' => 1,
             ];
-            include PHPWG_ROOT_PATH . 'include/page_header.php';
+            new \Piwigo\Page\PageHeaderRenderer()
+                ->render($title);
 
             if (! is_string($rawPage) || ! (bool) preg_match('/^[a-z_]*$/', $rawPage)) {
                 die('Hacking attempt!');
@@ -85,7 +86,7 @@ final class PopuphelpController implements ControllerInterface
 
             $template->pparse('popuphelp');
 
-            include PHPWG_ROOT_PATH . 'include/page_tail.php';
+            \Piwigo\Bootstrap\PageTail::render();
         });
 
         return ResponseFactory::html($body);

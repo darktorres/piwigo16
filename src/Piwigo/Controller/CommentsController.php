@@ -298,13 +298,13 @@ final class CommentsController implements ControllerInterface
                 $perform_redirect = false;
 
                 if ($action === 'delete') {
-                    check_pwg_token();
+                    new \Piwigo\Csrf\CsrfService()->checkOrFail(new HtmlService());
                     $commentService->deleteComment($comment_id);
                     $perform_redirect = true;
                 }
 
                 if ($action === 'validate') {
-                    check_pwg_token();
+                    new \Piwigo\Csrf\CsrfService()->checkOrFail(new HtmlService());
                     $commentService->validateComment($comment_id);
                     $perform_redirect = true;
                 }
@@ -312,7 +312,7 @@ final class CommentsController implements ControllerInterface
                 if ($action === 'edit') {
                     $content_raw = $_POST['content'] ?? null;
                     if (is_scalar($content_raw) && $content_raw !== '' && $content_raw !== '0' && $content_raw !== 0 && $content_raw !== 0.0 && $content_raw !== false) {
-                        check_pwg_token();
+                        new \Piwigo\Csrf\CsrfService()->checkOrFail(new HtmlService());
                         $post_key = $_POST['key'] ?? null;
                         if (! is_string($post_key)) {
                             $post_key = '';
@@ -649,7 +649,7 @@ SELECT *
                 }
             }
 
-            $derivative_params = trigger_change('get_comments_derivative_params', ImageStdParams::get_by_type(IMG_THUMB));
+            $derivative_params = trigger_change('get_comments_derivative_params', ImageStdParams::get_by_type(ImageStdParams::THUMB));
             $template->assign('comment_derivative_params', $derivative_params);
 
             // include menubar
@@ -663,7 +663,8 @@ SELECT *
             // +---------------------------------------------------------------+
             // |                      html code display                        |
             // +---------------------------------------------------------------+
-            include PHPWG_ROOT_PATH . 'include/page_header.php';
+            new \Piwigo\Page\PageHeaderRenderer()
+                ->render($title);
             trigger_notify('loc_end_comments');
             new HtmlService()
                 ->flushPageMessages();
@@ -671,7 +672,7 @@ SELECT *
                 $template->assign_var_from_handle('COMMENT_LIST', 'comment_list');
             }
             $template->pparse('comments');
-            include PHPWG_ROOT_PATH . 'include/page_tail.php';
+            \Piwigo\Bootstrap\PageTail::render();
         });
 
         return ResponseFactory::html($body);

@@ -244,7 +244,7 @@ $conf_link = $link_start . 'configuration&amp;section=';
 // | Template init                                                         |
 // +-----------------------------------------------------------------------+
 
-$title = l10n('Piwigo Administration'); // for include/page_header.php
+$title = l10n('Piwigo Administration'); // for the PageHeaderRenderer::render() call below
 $page['page_banner'] = '<h1>' . l10n('Piwigo Administration') . '</h1>';
 $page['body_id'] = 'theAdminPage';
 
@@ -405,7 +405,7 @@ $show_whats_new = false;
 
 $whats_new_major_version = \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION);
 
-if ((bool) (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->getParam('show_whats_new_' . $whats_new_major_version, true) and pwg_is_dbconf_writeable()) {
+if ((bool) (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->getParam('show_whats_new_' . $whats_new_major_version, true) and \Piwigo\Config\ConfigDb::pwgIsDbconfWriteable()) {
     if ($user['registration_date'] > $conf['last_major_update']) {
         (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->updateParam('show_whats_new_' . $whats_new_major_version, false);
     } else {
@@ -488,7 +488,8 @@ $template->assign('ACTIVE_MENU', AdminUiHelper::getActiveMenu($page_slug));
 // Add the Piwigo Official menu
 $template->assign('pwgmenu', AdminUiHelper::pwgUrl());
 
-include PHPWG_ROOT_PATH . 'include/page_header.php';
+new \Piwigo\Page\PageHeaderRenderer()
+    ->render($title);
 
 trigger_notify('loc_end_admin');
 
@@ -497,4 +498,4 @@ new HtmlService()
 
 $template->pparse('admin');
 
-include PHPWG_ROOT_PATH . 'include/page_tail.php';
+\Piwigo\Bootstrap\PageTail::render();

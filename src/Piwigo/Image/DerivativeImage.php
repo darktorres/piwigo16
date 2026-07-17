@@ -35,8 +35,8 @@ final class DerivativeImage
     private bool $is_cached = true;
 
     /**
-     * @param string|DerivativeParams $type standard derivative param type (e.g. IMG_*)
-     *    or a DerivativeParams object
+     * @param string|DerivativeParams $type standard derivative param type (an
+     *    ImageStdParams size-type constant) or a DerivativeParams object
      * @param SrcImage $src_image the source image of this derivative
      */
     public function __construct(
@@ -59,14 +59,14 @@ final class DerivativeImage
      */
     public static function thumb_url($infos): string
     {
-        return self::url(IMG_THUMB, $infos);
+        return self::url(ImageStdParams::THUMB, $infos);
     }
 
     /**
      * Generates the url for a particular photo size.
      *
-     * @param string|DerivativeParams $type standard derivative param type (e.g. IMG_*)
-     *    or a DerivativeParams object
+     * @param string|DerivativeParams $type standard derivative param type (an
+     *    ImageStdParams size-type constant) or a DerivativeParams object
      * @param array<string, mixed>|SrcImage $infos array of info from db or SrcImage
      */
     public static function url($type, $infos): string
@@ -95,7 +95,7 @@ final class DerivativeImage
      * Return associative an array of all DerivativeImage for a specific image.
      * Disabled derivative types can be still found in the return, mapped to an
      * enabled derivative (e.g. the values are not unique in the return array).
-     * This is useful for any plugin/theme to just use $deriv[IMG_XLARGE] even if
+     * This is useful for any plugin/theme to just use $deriv[ImageStdParams::XLARGE] even if
      * the XLARGE is disabled.
      *
      * @param array<string, mixed>|SrcImage $src_image array of info from db or SrcImage
@@ -125,7 +125,8 @@ final class DerivativeImage
      * Returns an instance of DerivativeImage for a specific image and size.
      * Disabled derivatives fallback to an enabled derivative.
      *
-     * @param string $type standard derivative param type (e.g. IMG_*)
+     * @param string $type standard derivative param type (an ImageStdParams
+     *    size-type constant)
      * @param array<string, mixed>|SrcImage $src_image array of info from db or SrcImage
      * @return DerivativeImage|null null if $type not found
      */
@@ -195,7 +196,7 @@ final class DerivativeImage
         $tokens = [];
         $tokens[] = substr($params->type, 0, 2);
 
-        if ($params->type == IMG_CUSTOM) {
+        if ($params->type == ImageStdParams::CUSTOM) {
             $params->add_url_tokens($tokens);
         }
 
@@ -270,7 +271,7 @@ final class DerivativeImage
     }
 
     /**
-     * @return string one if IMG_* or 'Original'
+     * @return string one of the ImageStdParams size-type constants or 'Original'
      */
     public function get_type()
     {

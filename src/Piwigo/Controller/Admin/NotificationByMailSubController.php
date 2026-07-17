@@ -167,7 +167,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         // +-----------------------------------------------------------------------+
 
         if (! empty($_POST)) {
-            check_pwg_token();
+            new \Piwigo\Csrf\CsrfService()->checkOrFail($htmlRenderer);
         }
 
         switch ($page_mode) {
@@ -190,7 +190,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                             continue;
                         }
                         if (isset($_POST[$nbm_user['param']])) {
-                            conf_update_param($nbm_user['param'], $_POST[$nbm_user['param']], true);
+                            \Piwigo\Config\ConfigDb::confUpdateParam($nbm_user['param'], $_POST[$nbm_user['param']], true);
                             $updated_param_count++;
                         }
                     }

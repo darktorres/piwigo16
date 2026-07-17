@@ -14,6 +14,7 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -143,7 +144,7 @@ SELECT id
         switch ($get_part) {
             case 'e':
                 if ($src_image->is_original() and ! (bool) $user['enabled_high']) {// we have a photo and the user has no access to HD
-                    $deriv = new DerivativeImage(IMG_XXLARGE, $src_image);
+                    $deriv = new DerivativeImage(ImageStdParams::XXLARGE, $src_image);
                     if (! $deriv->same_as_source()) {
                         $this->doError(401, 'Access denied e');
                     }

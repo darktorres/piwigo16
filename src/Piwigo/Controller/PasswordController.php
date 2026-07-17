@@ -57,7 +57,7 @@ final class PasswordController implements ControllerInterface
 
         // ------------------------------------------------------- process form
         if (isset($_POST['submit'])) {
-            check_pwg_token();
+            new \Piwigo\Csrf\CsrfService()->checkOrFail(new \Piwigo\Html\HtmlService());
 
             if ($action_param === 'lost') {
                 if ($this->processVerificationCode()) {
@@ -212,12 +212,13 @@ final class PasswordController implements ControllerInterface
 
             $template->assign('HELP_LINK', $help_link);
 
-            include PHPWG_ROOT_PATH . 'include/page_header.php';
+            new \Piwigo\Page\PageHeaderRenderer()
+                ->render($title);
             trigger_notify('loc_end_password');
             new HtmlService()
                 ->flushPageMessages();
             $template->pparse('password');
-            include PHPWG_ROOT_PATH . 'include/page_tail.php';
+            \Piwigo\Bootstrap\PageTail::render();
         });
 
         return ResponseFactory::html($body);

@@ -12,7 +12,6 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Html\HtmlService;
 use Piwigo\Ws\PwgCore;
 use Piwigo\Ws\PwgError;
-use Piwigo\Ws\PwgServer;
 
 /**
  * Ported from include/user.inc.php -- cookie/session/auto-login/Apache-
@@ -48,7 +47,10 @@ final class UserBootstrap
          * @var array<string, mixed> $page
          */
         global $conf, $user, $page;
-        // Set by include/ws_init.inc.php, included conditionally below.
+        // Set by Piwigo\Ws\WsInitializer::init(), called conditionally below
+        // (it publishes the shared PwgServer to $GLOBALS['service'] itself,
+        // preserving the deleted include/ws_init.inc.php's top-level
+        // global-scope contract).
         global $service;
 
         $authService = new AuthService(new AuthRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService());
@@ -114,8 +116,7 @@ final class UserBootstrap
             if ((bool) $auth_header) {
                 $authenticate = (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->authKeyLogin($auth_header, true);
                 if (! $authenticate) {
-                    include_once PHPWG_ROOT_PATH . 'include/ws_init.inc.php';
-                    /** @var PwgServer $service */
+                    $service = \Piwigo\Ws\WsInitializer::init();
                     $service->sendResponse(new PwgError(401, 'Invalid api_key'));
                     exit;
                 }
@@ -138,14 +139,13 @@ final class UserBootstrap
             and is_string($_POST['username'] ?? null)
             and is_string($_POST['password'] ?? null)
         ) {
-            include_once PHPWG_ROOT_PATH . 'include/ws_init.inc.php';
+            $service = \Piwigo\Ws\WsInitializer::init();
 
             $credentials = [
                 'username' => $_POST['username'],
                 'password' => $_POST['password'],
             ];
 
-            /** @var PwgServer $service */
             $login = PwgCore::sessionLogin($credentials, $service);
 
             if ($login !== true) {

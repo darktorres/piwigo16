@@ -61,7 +61,7 @@ final class MaintenanceEnvPageRenderer
         foreach (ImageStdParams::get_defined_type_map() as $params) {
             $purge_urls[l10n($params->type)] = sprintf($url_format, 'derivatives') . '&amp;type=' . $params->type;
         }
-        $purge_urls[l10n(IMG_CUSTOM)] = sprintf($url_format, 'derivatives') . '&amp;type=' . IMG_CUSTOM;
+        $purge_urls[l10n(ImageStdParams::CUSTOM)] = sprintf($url_format, 'derivatives') . '&amp;type=' . ImageStdParams::CUSTOM;
 
         $php_current_timestamp = date('Y-m-d H:i:s');
         $db_version = \Piwigo\Db\MysqliDb::getDbVersion();

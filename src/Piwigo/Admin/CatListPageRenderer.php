@@ -57,7 +57,7 @@ final class CatListPageRenderer
         trigger_notify('loc_begin_cat_list');
 
         if (! empty($_POST) or isset($_GET['delete'])) {
-            check_pwg_token();
+            new \Piwigo\Csrf\CsrfService()->checkOrFail(new HtmlService());
         }
 
         $sort_orders = [

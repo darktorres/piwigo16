@@ -231,12 +231,13 @@ final class RegisterController implements ControllerInterface
 
             $template->assign('HELP_LINK', $help_link);
 
-            include PHPWG_ROOT_PATH . 'include/page_header.php';
+            new \Piwigo\Page\PageHeaderRenderer()
+                ->render($title);
             trigger_notify('loc_end_register');
             new HtmlService()
                 ->flushPageMessages();
             $template->parse('register');
-            include PHPWG_ROOT_PATH . 'include/page_tail.php';
+            \Piwigo\Bootstrap\PageTail::render();
         });
 
         return ResponseFactory::html($body);

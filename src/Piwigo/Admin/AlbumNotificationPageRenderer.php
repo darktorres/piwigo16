@@ -62,7 +62,8 @@ final class AlbumNotificationPageRenderer
 
         // info by email to an access granted group of category informations
         if (isset($_POST['submitEmail'])) {
-            new \Piwigo\Csrf\CsrfService()->checkOrFail(new HtmlService());
+            new \Piwigo\Csrf\CsrfService()
+                ->checkOrFail(new HtmlService());
             set_make_full_url();
 
             $img = [];

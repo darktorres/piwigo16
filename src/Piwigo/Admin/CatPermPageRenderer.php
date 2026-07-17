@@ -43,7 +43,8 @@ final class CatPermPageRenderer
         // +-------------------------------------------------------------------+
 
         if (! empty($_POST)) {
-            new \Piwigo\Csrf\CsrfService()->checkOrFail(new HtmlService());
+            new \Piwigo\Csrf\CsrfService()
+                ->checkOrFail(new HtmlService());
 
             // the status <select> always submits this field; fall back to an empty
             // string (never matches 'public'/'private') on malformed input

@@ -25,10 +25,14 @@ use Piwigo\Template\Template;
  */
 abstract class CalendarBase
 {
-    /** URL keyword for list view */
+    /**
+     * URL keyword for list view
+     */
     public const string CAL_VIEW_LIST = 'list';
 
-    /** URL keyword for calendar view */
+    /**
+     * URL keyword for calendar view
+     */
     public const string CAL_VIEW_CALENDAR = 'calendar';
 
     // Chronology-date array indexes used throughout CalendarMonthly/
@@ -36,16 +40,24 @@ abstract class CalendarBase
     // CalendarMonthly only ever uses CYEAR/CMONTH/CDAY and CalendarWeekly
     // only ever uses CYEAR/CWEEK/CDAY, never both in the same
     // $chronology_date array.
-    /** level of year view */
+    /**
+     * level of year view
+     */
     public const int CYEAR = 0;
 
-    /** level of week view in weekly view */
+    /**
+     * level of week view in weekly view
+     */
     public const int CWEEK = 1;
 
-    /** level of month view in monthly view */
+    /**
+     * level of month view in monthly view
+     */
     public const int CMONTH = 1;
 
-    /** level of day view */
+    /**
+     * level of day view
+     */
     public const int CDAY = 2;
 
     /**

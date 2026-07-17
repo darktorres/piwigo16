@@ -36,7 +36,8 @@ final class TagsPageRenderer
         $tagService = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
 
         if (($_GET['action'] ?? null) === 'delete_orphans') {
-            new \Piwigo\Csrf\CsrfService()->checkOrFail(new HtmlService());
+            new \Piwigo\Csrf\CsrfService()
+                ->checkOrFail(new HtmlService());
 
             $tagService->deleteOrphanTags();
             $_SESSION['message_tags'] = l10n('Orphan tags deleted');

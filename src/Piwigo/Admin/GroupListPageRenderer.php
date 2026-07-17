@@ -30,7 +30,8 @@ final class GroupListPageRenderer
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
         if ($_POST !== [] or isset($_GET['delete']) or isset($_GET['toggle_is_default'])) {
-            new \Piwigo\Csrf\CsrfService()->checkOrFail(new \Piwigo\Html\HtmlService());
+            new \Piwigo\Csrf\CsrfService()
+                ->checkOrFail(new \Piwigo\Html\HtmlService());
         }
 
         $template->set_filenames([

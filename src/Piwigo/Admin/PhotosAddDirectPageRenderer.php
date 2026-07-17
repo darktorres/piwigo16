@@ -72,7 +72,8 @@ final class PhotosAddDirectPageRenderer
         // +-------------------------------------------------------------------+
 
         if (isset($_GET['batch'])) {
-            new \Piwigo\Csrf\CsrfService()->checkOrFail(new HtmlService());
+            new \Piwigo\Csrf\CsrfService()
+                ->checkOrFail(new HtmlService());
             (new \Piwigo\Validation\InputValidator())->validate('batch', $_GET, false, '/^\d+(,\d+)*$/');
 
             $query = '

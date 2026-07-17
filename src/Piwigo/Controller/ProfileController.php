@@ -55,7 +55,8 @@ final class ProfileController implements ControllerInterface
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Classic);
 
         if ($_POST !== []) {
-            new \Piwigo\Csrf\CsrfService()->checkOrFail(new HtmlService());
+            new \Piwigo\Csrf\CsrfService()
+                ->checkOrFail(new HtmlService());
         }
 
         $userdata = $user;

@@ -20,22 +20,34 @@ namespace Piwigo\Core;
  */
 final class FilesystemHelper
 {
-    /** no option for mkgetdir() */
+    /**
+     * no option for mkgetdir()
+     */
     public const int MKGETDIR_NONE = 0;
 
-    /** sets mkgetdir() recursive */
+    /**
+     * sets mkgetdir() recursive
+     */
     public const int MKGETDIR_RECURSIVE = 1;
 
-    /** sets mkgetdir() exit script on error */
+    /**
+     * sets mkgetdir() exit script on error
+     */
     public const int MKGETDIR_DIE_ON_ERROR = 2;
 
-    /** sets mkgetdir() add a index.htm file */
+    /**
+     * sets mkgetdir() add a index.htm file
+     */
     public const int MKGETDIR_PROTECT_INDEX = 4;
 
-    /** sets mkgetdir() add a .htaccess file */
+    /**
+     * sets mkgetdir() add a .htaccess file
+     */
     public const int MKGETDIR_PROTECT_HTACCESS = 8;
 
-    /** default options for mkgetdir() = MKGETDIR_RECURSIVE | MKGETDIR_DIE_ON_ERROR | MKGETDIR_PROTECT_INDEX */
+    /**
+     * default options for mkgetdir() = MKGETDIR_RECURSIVE | MKGETDIR_DIE_ON_ERROR | MKGETDIR_PROTECT_INDEX
+     */
     public const int MKGETDIR_DEFAULT = self::MKGETDIR_RECURSIVE | self::MKGETDIR_DIE_ON_ERROR | self::MKGETDIR_PROTECT_INDEX;
 
     private static ?HtmlRenderingInterface $htmlRenderer = null;

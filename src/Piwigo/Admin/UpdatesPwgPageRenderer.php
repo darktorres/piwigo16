@@ -110,7 +110,8 @@ final class UpdatesPwgPageRenderer
         // +-----------------------------------------------------------------------+
         if ($step === 2 and \Piwigo\Auth\AccessControl::isWebmaster()) {
             if (isset($_POST['submit']) and isset($_POST['upgrade_to']) and is_string($_POST['upgrade_to'])) {
-                new \Piwigo\Csrf\CsrfService()->checkOrFail(new \Piwigo\Html\HtmlService());
+                new \Piwigo\Csrf\CsrfService()
+                    ->checkOrFail(new \Piwigo\Html\HtmlService());
                 $core_update_service->upgradeTo($_POST['upgrade_to'], $step);
             }
         }
@@ -120,7 +121,8 @@ final class UpdatesPwgPageRenderer
         // +-----------------------------------------------------------------------+
         if ($step === 3 and \Piwigo\Auth\AccessControl::isWebmaster()) {
             if (isset($_POST['submit']) and isset($_POST['upgrade_to']) and is_string($_POST['upgrade_to'])) {
-                new \Piwigo\Csrf\CsrfService()->checkOrFail(new \Piwigo\Html\HtmlService());
+                new \Piwigo\Csrf\CsrfService()
+                    ->checkOrFail(new \Piwigo\Html\HtmlService());
                 $core_update_service->upgradeTo($_POST['upgrade_to'], $step);
             }
 

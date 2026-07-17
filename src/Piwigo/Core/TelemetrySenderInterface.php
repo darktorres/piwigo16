@@ -18,7 +18,6 @@ namespace Piwigo\Core;
  * single construction site (Piwigo\Bootstrap\PageTail::render(), the L4
  * orchestrator that replaced the include/page_tail.php seam in P23
  * sub-batch 8f-5) passes the concrete instance into PageTailRenderer's
- * constructor.
  */
 interface TelemetrySenderInterface
 {

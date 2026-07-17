@@ -354,6 +354,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface
      * reach it without depending on this L3 class; see that interface's
      * own docblock.
      */
+    #[\Override]
     public function themeConf(string $key): string
     {
         $value = $this->get_themeconf($key);

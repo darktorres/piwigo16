@@ -85,7 +85,8 @@ final class ElementSetRanksPageRenderer
         $image_order_choice = 'default';
 
         if (isset($_POST['submit'])) {
-            new \Piwigo\Csrf\CsrfService()->checkOrFail(new HtmlService());
+            new \Piwigo\Csrf\CsrfService()
+                ->checkOrFail(new HtmlService());
 
             if (isset($_POST['rank_of_image']) && is_array($_POST['rank_of_image'])) {
                 $rank_of_image = array_filter($_POST['rank_of_image'], is_numeric(...));

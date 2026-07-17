@@ -84,7 +84,8 @@ if (! function_exists('clear_derivative_cache')) {
      */
     function clear_derivative_cache($types = 'all'): void
     {
-        new \Piwigo\Image\DerivativeCacheService()->clearDerivativeCache($types);
+        new \Piwigo\Image\DerivativeCacheService()
+            ->clearDerivativeCache($types);
     }
 }
 if (! function_exists('invalidate_user_cache')) {

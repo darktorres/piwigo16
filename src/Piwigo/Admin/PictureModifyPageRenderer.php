@@ -97,7 +97,8 @@ SELECT id
         // +-------------------------------------------------------------------+
 
         if (isset($_GET['delete'])) {
-            new \Piwigo\Csrf\CsrfService()->checkOrFail(new HtmlService());
+            new \Piwigo\Csrf\CsrfService()
+                ->checkOrFail(new HtmlService());
 
             $imageService->deleteElements([$image_id], true);
             UserCacheInvalidator::invalidate();
@@ -124,7 +125,8 @@ SELECT id
         // +-------------------------------------------------------------------+
 
         if (isset($_GET['sync_metadata'])) {
-            new \Piwigo\Csrf\CsrfService()->checkOrFail(new HtmlService());
+            new \Piwigo\Csrf\CsrfService()
+                ->checkOrFail(new HtmlService());
 
             new MetadataService(new MetadataRepository(DbConnection::build()))->syncMetadata([$image_id]);
             if (! is_array($page['infos'] ?? null)) {
@@ -137,7 +139,8 @@ SELECT id
         /** @var array<string, mixed> $data */
         $data = [];
         if (isset($_POST['submit'])) {
-            new \Piwigo\Csrf\CsrfService()->checkOrFail(new HtmlService());
+            new \Piwigo\Csrf\CsrfService()
+                ->checkOrFail(new HtmlService());
 
             $data = [];
             $data['id'] = $image_id;

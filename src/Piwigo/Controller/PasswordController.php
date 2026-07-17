@@ -57,7 +57,8 @@ final class PasswordController implements ControllerInterface
 
         // ------------------------------------------------------- process form
         if (isset($_POST['submit'])) {
-            new \Piwigo\Csrf\CsrfService()->checkOrFail(new \Piwigo\Html\HtmlService());
+            new \Piwigo\Csrf\CsrfService()
+                ->checkOrFail(new \Piwigo\Html\HtmlService());
 
             if ($action_param === 'lost') {
                 if ($this->processVerificationCode()) {

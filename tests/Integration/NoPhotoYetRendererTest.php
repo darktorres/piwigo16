@@ -88,6 +88,21 @@ final class NoPhotoYetRendererTest extends IntegrationTestCase
         parent::tearDown();
     }
 
+    #[\Override]
+    public static function tearDownAfterClass(): void
+    {
+        // Close the legacy global mysqli handle setUp() opened: the rest of
+        // the Integration suite shares this PHP process and is written to the
+        // invariant that no legacy connection exists (see e.g.
+        // SectionInitializerTest's header) -- leaking it flips later files'
+        // MysqliDb-reachable branches from dead to live.
+        if (($GLOBALS['mysqli'] ?? null) instanceof \mysqli) {
+            $GLOBALS['mysqli']->close();
+        }
+        unset($GLOBALS['mysqli']);
+        parent::tearDownAfterClass();
+    }
+
     private function seedFlag(string $value): void
     {
         $this->conn->executeStatement(

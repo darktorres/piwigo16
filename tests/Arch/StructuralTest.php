@@ -371,12 +371,33 @@ function findCallSitesOutsideComments(string $dir, string $needle): array
             continue;
         }
 
-        $lines = file($file->getPathname());
-        foreach ($lines !== false ? $lines : [] as $lineNumber => $line) {
-            $trimmed = ltrim($line);
-            if (str_starts_with($trimmed, '//') || str_starts_with($trimmed, '*') || str_starts_with($trimmed, '/*')) {
+        $source = file_get_contents($file->getPathname());
+        if ($source === false) {
+            continue;
+        }
+
+        // Token-level scan: only real code can carry a call site. Comments,
+        // string literals (e.g. InstallWizard's generated local/config/
+        // database.inc.php template, whose define() lines execute in the
+        // legacy bootstrap outside src/), heredoc bodies, and inline HTML
+        // are blanked out (newlines preserved, so line numbers stay exact)
+        // before the text search. Strictly more precise than the previous
+        // comment-prefix line heuristic: every real call still matches.
+        $blanked = '';
+        foreach (token_get_all($source) as $token) {
+            if (! is_array($token)) {
+                $blanked .= $token;
                 continue;
             }
+            [$id, $text] = $token;
+            if (in_array($id, [T_COMMENT, T_DOC_COMMENT, T_CONSTANT_ENCAPSED_STRING, T_ENCAPSED_AND_WHITESPACE, T_INLINE_HTML], true)) {
+                $blanked .= preg_replace('/[^\n]/', ' ', $text);
+                continue;
+            }
+            $blanked .= $text;
+        }
+
+        foreach (explode("\n", $blanked) as $lineNumber => $line) {
             if (str_contains($line, $needle)) {
                 $hits[] = ['path' => $file->getPathname(), 'line' => $lineNumber + 1];
             }

@@ -45,7 +45,8 @@ final class GroupPermPageRenderer
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
         if ($_POST !== []) {
-            new \Piwigo\Csrf\CsrfService()->checkOrFail(new HtmlService());
+            new \Piwigo\Csrf\CsrfService()
+                ->checkOrFail(new HtmlService());
             (new \Piwigo\Validation\InputValidator())->validate('cat_true', $_POST, true, ValidationPattern::ID);
             (new \Piwigo\Validation\InputValidator())->validate('cat_false', $_POST, true, ValidationPattern::ID);
         }

@@ -30,4 +30,5 @@ defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
 // autoload boundary -- nothing above this line may reference a Piwigo\ class
 include PHPWG_ROOT_PATH . 'include/env.inc.php';
 
-new \Piwigo\Controller\ImageDerivativeController()->serve();
+new \Piwigo\Controller\ImageDerivativeController()
+    ->serve();

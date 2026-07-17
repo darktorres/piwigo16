@@ -54,6 +54,7 @@ use Piwigo\Users\UserService;
  */
 final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
 {
+    #[\Override]
     public function send(): void
     {
         /**

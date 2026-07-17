@@ -167,7 +167,8 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         // +-----------------------------------------------------------------------+
 
         if (! empty($_POST)) {
-            new \Piwigo\Csrf\CsrfService()->checkOrFail($htmlRenderer);
+            new \Piwigo\Csrf\CsrfService()
+                ->checkOrFail($htmlRenderer);
         }
 
         switch ($page_mode) {

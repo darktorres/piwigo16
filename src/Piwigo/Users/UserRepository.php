@@ -36,6 +36,7 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
      * zero-arg, matching the original's own signature exactly, so every
      * real call site retargets as a pure rename.
      */
+    #[\Override]
     public function getWebmasterMailAddress(): string
     {
         /** @var array<string, mixed> $conf */

@@ -61,7 +61,8 @@ final class BatchManagerGlobalPageRenderer
         global $conf, $page, $template, $user;
 
         if (count($_POST) > 0) {
-            new \Piwigo\Csrf\CsrfService()->checkOrFail(new HtmlService());
+            new \Piwigo\Csrf\CsrfService()
+                ->checkOrFail(new HtmlService());
         }
 
         trigger_notify('loc_begin_element_set_global');

@@ -46,8 +46,7 @@ class UpgradeRunner
         private readonly string $configFile,
         private readonly string $configFileContents,
         private readonly int $phpEndTag,
-    ) {
-    }
+    ) {}
 
     /**
      * Language pick + Lang loads (former upgrade.php "language" section).

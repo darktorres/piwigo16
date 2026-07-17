@@ -130,4 +130,5 @@ define('UPGRADES_PATH', PHPWG_ROOT_PATH . 'install/db');
 // |                              Upgrades                                 |
 // +-----------------------------------------------------------------------+
 
-new \Piwigo\Admin\Install\UpgradeFeedRunner()->run();
+new \Piwigo\Admin\Install\UpgradeFeedRunner()
+    ->run();

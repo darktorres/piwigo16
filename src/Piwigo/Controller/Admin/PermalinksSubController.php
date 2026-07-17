@@ -74,7 +74,8 @@ final class PermalinksSubController implements AdminSubControllerInterface
         // query from a missing/non-numeric value.
         $post_cat_id = isset($_POST['cat_id']) && is_numeric($_POST['cat_id']) ? (int) $_POST['cat_id'] : 0;
         if (isset($_POST['set_permalink']) and $post_cat_id > 0) {
-            new \Piwigo\Csrf\CsrfService()->checkOrFail($htmlRenderer);
+            new \Piwigo\Csrf\CsrfService()
+                ->checkOrFail($htmlRenderer);
             $permalink = $_POST['permalink'] ?? null;
             $permalink = is_string($permalink) ? $permalink : '';
             $permalink_service = new PermalinkService(new PermalinkRepository(DbConnection::build()));
@@ -85,7 +86,8 @@ final class PermalinksSubController implements AdminSubControllerInterface
             }
             $selected_cat = [$post_cat_id];
         } elseif (isset($_GET['delete_permanent'])) {
-            new \Piwigo\Csrf\CsrfService()->checkOrFail($htmlRenderer);
+            new \Piwigo\Csrf\CsrfService()
+                ->checkOrFail($htmlRenderer);
             $delete_permanent = is_string($_GET['delete_permanent']) ? $_GET['delete_permanent'] : '';
             new PermalinkService(new PermalinkRepository(DbConnection::build()))
                 ->deleteOldPermalinkByValue($delete_permanent);

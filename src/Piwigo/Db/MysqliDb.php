@@ -175,7 +175,7 @@ final class MysqliDb
         $queries_time += $time;
         $page['queries_time'] = $queries_time;
 
-        if ((bool) $conf['show_queries']) {
+        if ((bool) ($conf['show_queries'] ?? false)) {
             $output = '';
             $output .= '<pre>[' . $count_queries . '] ';
             $output .= "\n" . $query;

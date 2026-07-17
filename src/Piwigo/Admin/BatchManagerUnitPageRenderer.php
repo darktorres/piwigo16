@@ -79,7 +79,8 @@ final class BatchManagerUnitPageRenderer
         // +-------------------------------------------------------------------+
 
         if (isset($_POST['submit'])) {
-            new \Piwigo\Csrf\CsrfService()->checkOrFail($htmlRenderer);
+            new \Piwigo\Csrf\CsrfService()
+                ->checkOrFail($htmlRenderer);
             (new \Piwigo\Validation\InputValidator())->validate('element_ids', $_POST, false, '/^\d+(,\d+)*$/');
             $element_ids_param = $_POST['element_ids'] ?? null;
             $collection = explode(',', is_string($element_ids_param) ? $element_ids_param : '');

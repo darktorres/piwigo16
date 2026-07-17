@@ -244,7 +244,8 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
         // ------------------------------ verification and registration of modifications
         if (isset($_POST['submit'])) {
-            new \Piwigo\Csrf\CsrfService()->checkOrFail(new HtmlService());
+            new \Piwigo\Csrf\CsrfService()
+                ->checkOrFail(new HtmlService());
             $int_pattern = '/^\d+$/';
 
             switch ($page['section']) {
@@ -432,7 +433,8 @@ WHERE param = \'' . $row['param'] . '\'
 
         // restore default derivatives settings
         if ($page['section'] == 'sizes' and isset($_GET['action']) and $_GET['action'] == 'restore_settings' and \Piwigo\Auth\AccessControl::isWebmaster()) {
-            new \Piwigo\Csrf\CsrfService()->checkOrFail(new HtmlService());
+            new \Piwigo\Csrf\CsrfService()
+                ->checkOrFail(new HtmlService());
 
             ImageStdParams::restore_default();
             new DerivativeCacheService()

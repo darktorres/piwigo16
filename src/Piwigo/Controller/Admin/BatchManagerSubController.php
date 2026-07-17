@@ -170,7 +170,8 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         }
 
         if ($_GET['action'] === 'empty_caddie') {
-            new \Piwigo\Csrf\CsrfService()->checkOrFail(new HtmlService());
+            new \Piwigo\Csrf\CsrfService()
+                ->checkOrFail(new HtmlService());
 
             $query = '
 DELETE FROM ' . Tables::caddie() . '

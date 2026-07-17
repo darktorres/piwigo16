@@ -393,7 +393,8 @@ UPDATE ' . Tables::categories() . '
                     if (\Piwigo\Auth\AccessControl::canManageComment('edit', $author_id)) {
                         $edit_content_raw = $_POST['content'] ?? null;
                         if (is_scalar($edit_content_raw) && $edit_content_raw !== '' && $edit_content_raw !== '0' && $edit_content_raw !== 0 && $edit_content_raw !== 0.0 && $edit_content_raw !== false) {
-                            new \Piwigo\Csrf\CsrfService()->checkOrFail(new HtmlService());
+                            new \Piwigo\Csrf\CsrfService()
+                                ->checkOrFail(new HtmlService());
                             $post_key = $_POST['key'] ?? null;
                             if (! is_string($post_key)) {
                                 $post_key = '';
@@ -447,7 +448,8 @@ UPDATE ' . Tables::categories() . '
 
                 case 'delete_comment':
 
-                    new \Piwigo\Csrf\CsrfService()->checkOrFail(new HtmlService());
+                    new \Piwigo\Csrf\CsrfService()
+                        ->checkOrFail(new HtmlService());
 
                     $commentService = new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService(), new HtmlService());
 
@@ -471,7 +473,8 @@ UPDATE ' . Tables::categories() . '
                     // no break
                 case 'validate_comment':
 
-                    new \Piwigo\Csrf\CsrfService()->checkOrFail(new HtmlService());
+                    new \Piwigo\Csrf\CsrfService()
+                        ->checkOrFail(new HtmlService());
 
                     $commentService = new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService(), new HtmlService());
 

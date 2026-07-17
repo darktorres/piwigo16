@@ -281,28 +281,22 @@ SELECT id
          */
         global $conf, $prefixeTable, $page, $template, $persistent_cache, $last_time;
 
-        $upgrade_file = PHPWG_ROOT_PATH . 'install/upgrade_' . $this->currentRelease . '.php';
-        if (is_file($upgrade_file)) {
-            $mysql_changes = [];
-
+        if (\Piwigo\Admin\Install\VersionUpgrade\VersionUpgradeRegistry::has($this->currentRelease)) {
             // reset SQL counters
             $page['queries_time'] = 0;
             $page['count_queries'] = 0;
 
             $page['upgrade_start'] = \Piwigo\Core\TimingHelper::getMoment();
             $conf['die_on_sql_error'] = false;
-            include $upgrade_file;
-            // install/upgrade_*.php scripts (e.g. upgrade_1.3.1.php) can
-            // array_push() onto $mysql_changes from this same scope —
-            // get_defined_vars() (rather than reading $mysql_changes directly)
-            // keeps its real, post-include shape visible here instead of
-            // appearing to still be the empty array set above.
-            $included_vars = get_defined_vars();
-            // array_push($mysql_changes, '...') calls in install/upgrade_*.php
-            // (e.g. upgrade_1.3.1.php) only ever push PHP source-code strings,
-            // but get_defined_vars() itself returns array<string, mixed>.
-            $mysql_changes_raw = $included_vars['mysql_changes'] ?? null;
-            $mysql_changes = is_array($mysql_changes_raw) ? array_filter($mysql_changes_raw, is_string(...)) : [];
+            // P23 sub-batch 8g-4: the former `include install/upgrade_
+            // <release>.php` (whose chain of scripts array_push()ed onto a
+            // $mysql_changes local in THIS scope, harvested back via
+            // get_defined_vars()) is now the VersionUpgrade class chain;
+            // steps push database.inc.php snippets through the
+            // DatabaseConfigChanges collector instead.
+            \Piwigo\Admin\Install\VersionUpgrade\VersionUpgradeRegistry::make($this->currentRelease)
+                ->apply();
+            $mysql_changes = \Piwigo\Admin\Install\DbPatch\DatabaseConfigChanges::drain();
 
             \Piwigo\Config\ConfigDb::confUpdateParam('piwigo_db_version', \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION));
 

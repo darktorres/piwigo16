@@ -8,7 +8,6 @@ use Piwigo\Admin\LanguagesInstalledPageRenderer;
 use Piwigo\Admin\LanguagesNewPageRenderer;
 use Piwigo\Admin\tabsheet;
 use Piwigo\Admin\UpdatesExtPageRenderer;
-use Piwigo\Template\Template;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -47,10 +46,10 @@ final class LanguagesSubController implements AdminSubControllerInterface
     public function handle(ServerRequestInterface $request): void
     {
         /**
-         * @var array<string, mixed> $page
-         * @var Template $template
+         * @var array<string, mixed>
          */
-        global $page, $template;
+        global $page;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         // Consumed by CoreTabs::addCoreTabs()'s own 'languages' case via
         // `global $my_base_url;`, triggered synchronously inside

@@ -12,6 +12,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Logger;
 use Piwigo\Core\MailerInterface;
+use Piwigo\Core\TemplateInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -22,7 +23,6 @@ use Piwigo\Search\SearchService;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
-use Piwigo\Template\Template;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
@@ -63,6 +63,7 @@ final class SectionPopulator
     public function __construct(
         private readonly MailerInterface $mailer,
         private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly TemplateInterface $template,
     ) {}
 
     public function populate(): void
@@ -73,9 +74,9 @@ final class SectionPopulator
          * @var array<string, mixed> $page
          * @var array<string, mixed> $user
          * @var Logger $logger
-         * @var Template $template
          */
-        global $conf, $filter, $logger, $page, $persistent_cache, $template, $user;
+        global $conf, $filter, $logger, $page, $persistent_cache, $user;
+        $template = $this->template;
         if (! $persistent_cache instanceof PersistentCache) {
             $this->htmlRenderer->fatalError('persistent cache not initialized');
         }
@@ -653,7 +654,7 @@ SELECT DISTINCT(id)
         // +-----------------------------------------------------------------------+
         if (isset($page['chronology_field'])) {
             unset($page['is_homepage']);
-            new CalendarRenderer($this->htmlRenderer)
+            new CalendarRenderer($this->htmlRenderer, $this->template)
                 ->render();
         }
 

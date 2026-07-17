@@ -604,9 +604,9 @@ class updates
         /**
          * @var array<string, mixed> $page
          * @var array<string, mixed> $conf
-         * @var Template $template
          */
-        global $page, $conf, $template;
+        global $page, $conf;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         // $page['errors']/$page['infos'] are always initialized to an array by
         // common.inc.php, but that isn't visible across the include() boundary

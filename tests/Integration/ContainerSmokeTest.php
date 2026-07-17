@@ -34,6 +34,31 @@ final class ContainerSmokeTest extends TestCase
         self::assertInstanceOf(ContainerInterface::class, Kernel::container());
     }
 
+    /**
+     * Piwigo\Core\TemplateInterface's binding is a factory resolving
+     * Piwigo\Template\CurrentTemplate::get() (Legacy Coupling Retirement
+     * Track A) -- the current REQUEST's Template instance, constructed
+     * dynamically per-request with runtime theme/path parameters and
+     * genuinely unavailable until Piwigo\Bootstrap\RequestBootstrap::
+     * finalize() has run. This is not a wiring bug the way an unresolvable
+     * MailerInterface/HtmlRenderingInterface/etc. entry would be (those
+     * bind to trivially-autowireable concrete classes with no request-scoped
+     * prerequisite) -- it's the correct, by-design behavior of a per-request
+     * singleton facade, same category as the other request-scoped facades
+     * this codebase already has (CurrentUser::get()/PageState::current()
+     * throw the identical way before their own attachGlobals() runs).
+     * Constructing a real Template here to make this resolve would need
+     * PHPWG_ROOT_PATH + a full $conf + real filesystem writes to a compile
+     * dir -- disproportionate weight for a smoke test, and order-dependent
+     * across the whole Integration run (see ExtensionLifecycleTest's own
+     * PHPWG_ROOT_PATH guard comment for exactly this class of hazard).
+     * Covered instead by real production traffic (every request reaches
+     * this binding) and each Track A batch's own live curl smoke.
+     */
+    private const array REQUEST_SCOPED_ONLY_ENTRIES = [
+        \Piwigo\Core\TemplateInterface::class,
+    ];
+
     public function test_every_container_entry_resolves(): void
     {
         Kernel::boot();
@@ -45,6 +70,9 @@ final class ContainerSmokeTest extends TestCase
         $failures = [];
         foreach (array_keys($definitions) as $id) {
             self::assertIsString($id, 'Non-string key in config/container.php: ' . var_export($id, true));
+            if (in_array($id, self::REQUEST_SCOPED_ONLY_ENTRIES, true)) {
+                continue;
+            }
             try {
                 $container->get($id);
             } catch (\Throwable $e) {

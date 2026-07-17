@@ -6,7 +6,6 @@ namespace Piwigo\Page;
 
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\TelemetrySenderInterface;
-use Piwigo\Template\Template;
 
 /**
  * Renders the page footer into $template.
@@ -37,10 +36,10 @@ final class PageTailRenderer
         /**
          * @var array<string, mixed> $conf
          * @var string $debug
-         * @var Template $template
          * @var array<string, mixed> $page
          */
-        global $conf, $debug, $template, $page;
+        global $conf, $debug, $page;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         $template->set_filenames([
             'tail' => 'footer.tpl',

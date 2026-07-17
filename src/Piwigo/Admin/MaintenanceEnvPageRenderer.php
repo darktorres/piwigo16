@@ -36,10 +36,10 @@ final class MaintenanceEnvPageRenderer
     public function render(): void
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var Template $template
+         * @var array<string, mixed>
          */
-        global $conf, $template;
+        global $conf;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         $action = is_string($_GET['action'] ?? null) ? $_GET['action'] : '';
         new MaintenanceActionDispatcher()

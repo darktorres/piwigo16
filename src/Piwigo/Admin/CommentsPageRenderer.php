@@ -16,8 +16,7 @@ final class CommentsPageRenderer
 {
     public function render(): void
     {
-        /** @var Template $template */
-        global $template;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 

@@ -12,7 +12,6 @@ use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Session\SessionService;
-use Piwigo\Template\Template;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -41,10 +40,10 @@ final class NotificationController implements ControllerInterface
         $body = LegacyRenderCapture::capture(static function () use ($feedRepo, $feedId): void {
             /**
              * @var array<string, mixed> $page
-             * @var Template $template
              * @var array<string, mixed> $user
              */
-            global $page, $template, $user, $title;
+            global $page, $user, $title;
+            $template = \Piwigo\Template\CurrentTemplate::get();
 
             $page['feed'] = $feedId;
 

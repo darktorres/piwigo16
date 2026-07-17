@@ -12,7 +12,6 @@ use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Mail\MailService;
 use Piwigo\Menu\MenubarRenderer;
-use Piwigo\Template\Template;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -38,10 +37,10 @@ final class PasswordController implements ControllerInterface
     {
         /**
          * @var array<string, mixed> $page
-         * @var Template $template
          * @var array<string, mixed> $user
          */
-        global $page, $template, $user;
+        global $page, $user;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         // $page['infos'] is always initialized to an array by
         // common.inc.php, but that isn't visible across the include()
@@ -138,10 +137,10 @@ final class PasswordController implements ControllerInterface
         $body = LegacyRenderCapture::capture(static function () use ($first_login): void {
             /**
              * @var array<string, mixed> $page
-             * @var Template $template
              * @var array<string, mixed> $user
              */
-            global $page, $template, $user, $title;
+            global $page, $user, $title;
+            $template = \Piwigo\Template\CurrentTemplate::get();
 
             $title = l10n('Password Reset');
             if (($page['action'] ?? null) === 'lost') {

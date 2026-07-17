@@ -72,17 +72,17 @@ final class PictureController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        new SectionPopulator(new MailService(), new HtmlService())
+        new SectionPopulator(new MailService(), new HtmlService(), \Piwigo\Template\CurrentTemplate::get())
             ->populate();
 
         /**
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $page
-         * @var Template $template
          * @var array<string, mixed> $user
          * @var string $url_self
          */
-        global $conf, $page, $template, $user, $url_self;
+        global $conf, $page, $user, $url_self;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->saveEditContext();
 
@@ -514,7 +514,6 @@ UPDATE ' . Tables::categories() . '
             /**
              * @var array<string, mixed> $conf
              * @var array<string, mixed> $page
-             * @var Template $template
              * @var array<string, mixed> $user
              * @var array<string, mixed> $lang
              * @var string $url_self
@@ -523,7 +522,8 @@ UPDATE ' . Tables::categories() . '
              * @var int|string|null $refresh
              * @var string|null $url_link
              */
-            global $conf, $page, $template, $user, $title, $lang, $url_self, $picture, $related_categories, $refresh, $url_link;
+            global $conf, $page, $user, $title, $lang, $url_self, $picture, $related_categories, $refresh, $url_link;
+            $template = \Piwigo\Template\CurrentTemplate::get();
 
             // ---------- incrementation of the number of hits
             $inc_hit_count = ! isset($_POST['content']);
@@ -1319,10 +1319,10 @@ SELECT id, name, permalink
         }
 
         /**
-         * @var array<string, mixed> $page
-         * @var Template $template
+         * @var array<string, mixed>
          */
-        global $page, $template;
+        global $page;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         if ($show_original and isset($element_info['element_url'])) {
             $template->assign('U_ORIGINAL', $element_info['element_url']);

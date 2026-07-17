@@ -15,7 +15,6 @@ use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Mail\MailService;
 use Piwigo\Menu\MenubarRenderer;
-use Piwigo\Template\Template;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 use Psr\Http\Message\ResponseInterface;
@@ -165,10 +164,10 @@ final class RegisterController implements ControllerInterface
             /**
              * @var array<string, mixed> $conf
              * @var array<string, mixed> $page
-             * @var Template $template
              * @var array<string, mixed> $user
              */
-            global $conf, $page, $template, $user, $title;
+            global $conf, $page, $user, $title;
+            $template = \Piwigo\Template\CurrentTemplate::get();
 
             $title = l10n('Registration');
             $page['body_id'] = 'theRegisterPage';

@@ -11,7 +11,6 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
-use Piwigo\Template\Template;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -132,10 +131,10 @@ final class IdentificationController implements ControllerInterface
             /**
              * @var array<string, mixed> $conf
              * @var array<string, mixed> $page
-             * @var Template $template
              * @var array<string, mixed> $user
              */
-            global $conf, $page, $template, $user, $title;
+            global $conf, $page, $user, $title;
+            $template = \Piwigo\Template\CurrentTemplate::get();
 
             $title = l10n('Identification');
             $page['body_id'] = 'theIdentificationPage';

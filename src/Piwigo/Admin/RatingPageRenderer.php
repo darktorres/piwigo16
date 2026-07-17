@@ -9,7 +9,6 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Rate\RateRepository;
-use Piwigo\Template\Template;
 
 /**
  * Ported from admin/rating.php (page slug "rating").
@@ -19,10 +18,10 @@ final class RatingPageRenderer
     public function render(): void
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var Template $template
+         * @var array<string, mixed>
          */
-        global $conf, $template;
+        global $conf;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 

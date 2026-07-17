@@ -10,7 +10,6 @@ use Piwigo\Admin\CatPermPageRenderer;
 use Piwigo\Admin\ElementSetRanksPageRenderer;
 use Piwigo\Admin\tabsheet;
 use Piwigo\Db\Tables;
-use Piwigo\Template\Template;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -38,10 +37,10 @@ final class AlbumSubController implements AdminSubControllerInterface
     public function handle(ServerRequestInterface $request): void
     {
         /**
-         * @var array<string, mixed> $page
-         * @var Template $template
+         * @var array<string, mixed>
          */
-        global $page, $template;
+        global $page;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         $query_params = $request->getQueryParams();
         $cat_id_param = $query_params['cat_id'] ?? null;

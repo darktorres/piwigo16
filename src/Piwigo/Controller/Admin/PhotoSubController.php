@@ -14,7 +14,6 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
-use Piwigo\Template\Template;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -47,9 +46,9 @@ final class PhotoSubController implements AdminSubControllerInterface
         /**
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $page
-         * @var Template $template
          */
-        global $conf, $page, $template;
+        global $conf, $page;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 

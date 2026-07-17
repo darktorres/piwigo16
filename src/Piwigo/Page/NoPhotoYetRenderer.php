@@ -55,6 +55,7 @@ final class NoPhotoYetRenderer
                 /** @var Template $template */
                 global $template;
                 $template = new Template(PHPWG_ROOT_PATH . 'themes', $user_theme);
+                \Piwigo\Template\CurrentTemplate::set($template);
 
                 if (isset($_GET['no_photo_yet'])) {
                     if ($_GET['no_photo_yet'] === 'browse') {

@@ -14,7 +14,6 @@ namespace Piwigo\Calendar;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
-use Piwigo\Template\Template;
 
 /**
  * Monthly calendar style (composed of years/months and days)
@@ -59,7 +58,7 @@ class CalendarMonthly extends CalendarBase
      * @return bool false indicates that thumbnails where not included
      */
     #[\Override]
-    public function generate_category_content(): bool
+    public function generate_category_content(\Piwigo\Core\TemplateInterface $template): bool
     {
         /**
          * @var array<string, mixed> $conf
@@ -69,8 +68,6 @@ class CalendarMonthly extends CalendarBase
 
         $view_type = $page['chronology_view'];
         if ($view_type == self::CAL_VIEW_CALENDAR) {
-            /** @var Template $template */
-            global $template;
             $tpl_var = [];
             $nb_date_parts = is_array($page['chronology_date']) ? count($page['chronology_date']) : 0;
             if ($nb_date_parts == 0) {// case A: no year given - display all years+months
@@ -87,7 +84,7 @@ class CalendarMonthly extends CalendarBase
             if ($nb_date_parts == 1) {// case B: year given - display all days in given year
                 if ($this->build_year_calendar($tpl_var)) {
                     $template->assign('chronology_calendar', $tpl_var);
-                    $this->build_nav_bar(self::CYEAR); // years
+                    $this->build_nav_bar(self::CYEAR, null, $template); // years
                     return true;
                 }
             }
@@ -99,7 +96,7 @@ class CalendarMonthly extends CalendarBase
                 if ($this->build_month_calendar($tpl_var)) {
                     $template->assign('chronology_calendar', $tpl_var);
                 }
-                $this->build_next_prev();
+                $this->build_next_prev($template);
                 return true;
             }
         }
@@ -107,10 +104,10 @@ class CalendarMonthly extends CalendarBase
         $nb_date_parts = is_array($page['chronology_date']) ? count($page['chronology_date']) : 0;
         if ($view_type == self::CAL_VIEW_LIST or $nb_date_parts == 3) {
             if ($nb_date_parts == 0) {
-                $this->build_nav_bar(self::CYEAR); // years
+                $this->build_nav_bar(self::CYEAR, null, $template); // years
             }
             if ($nb_date_parts == 1) {
-                $this->build_nav_bar(self::CMONTH); // month
+                $this->build_nav_bar(self::CMONTH, null, $template); // month
             }
             if ($nb_date_parts == 2) {
                 // $nb_date_parts can only be 2 if $page['chronology_date'] is
@@ -123,9 +120,9 @@ class CalendarMonthly extends CalendarBase
                 $day_labels = range(1, $this->get_all_days_in_month($year, $month));
                 array_unshift($day_labels, 0);
                 unset($day_labels[0]);
-                $this->build_nav_bar(self::CDAY, $day_labels); // days
+                $this->build_nav_bar(self::CDAY, $day_labels, $template); // days
             }
-            $this->build_next_prev();
+            $this->build_next_prev($template);
         }
         return false;
     }

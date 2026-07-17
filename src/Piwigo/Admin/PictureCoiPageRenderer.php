@@ -15,7 +15,6 @@ use Piwigo\Image\DerivativeUrlCodec;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
-use Piwigo\Template\Template;
 
 /**
  * Ported from admin/picture_coi.php (page slug "picture_coi").
@@ -25,10 +24,10 @@ final class PictureCoiPageRenderer
     public function render(): void
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var Template $template
+         * @var array<string, mixed>
          */
-        global $conf, $template;
+        global $conf;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         $htmlRenderer = new HtmlService();
 

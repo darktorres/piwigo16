@@ -9,7 +9,6 @@ use Piwigo\Admin\ThemesInstalledPageRenderer;
 use Piwigo\Admin\ThemesNewPageRenderer;
 use Piwigo\Admin\ThemesStandardPagesPageRenderer;
 use Piwigo\Admin\UpdatesExtPageRenderer;
-use Piwigo\Template\Template;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -51,10 +50,10 @@ final class ThemesSubController implements AdminSubControllerInterface
     public function handle(ServerRequestInterface $request): void
     {
         /**
-         * @var array<string, mixed> $page
-         * @var Template $template
+         * @var array<string, mixed>
          */
-        global $page, $template;
+        global $page;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         // Consumed by CoreTabs::addCoreTabs()'s own 'themes' case via
         // `global $my_base_url;`, triggered synchronously inside

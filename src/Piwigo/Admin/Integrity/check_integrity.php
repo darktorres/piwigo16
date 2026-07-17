@@ -14,7 +14,6 @@ namespace Piwigo\Admin\Integrity;
 use Piwigo\Admin\AdminUiHelper;
 use Piwigo\Core\AppInfo;
 use Piwigo\Db\Tables;
-use Piwigo\Template\Template;
 
 class check_integrity
 {
@@ -178,8 +177,7 @@ class check_integrity
      */
     public function display(): void
     {
-        /** @var Template $template */
-        global $template;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         $check_automatic_correction = false;
         $submit_automatic_correction = false;

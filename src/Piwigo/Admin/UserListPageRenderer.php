@@ -7,7 +7,6 @@ namespace Piwigo\Admin;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
-use Piwigo\Template\Template;
 
 /**
  * Ported from admin/user_list.php (page slug "user_list") -- add users and
@@ -22,10 +21,10 @@ final class UserListPageRenderer
         /**
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $page
-         * @var Template $template
          * @var array<string, mixed> $user
          */
-        global $conf, $page, $template, $user;
+        global $conf, $page, $user;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         (new \Piwigo\Validation\InputValidator())->validate('group', $_GET, false, ValidationPattern::ID);
         (new \Piwigo\Validation\InputValidator())->validate('user_id', $_GET, false, ValidationPattern::ID);

@@ -8,7 +8,6 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Image\SrcImage;
 use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
-use Piwigo\Template\Template;
 
 /**
  * Renders the picture page's EXIF/IPTC metadata panel. Ported from
@@ -28,10 +27,10 @@ final class PictureMetadataRenderer
         /**
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $lang
-         * @var Template $template
          * @var array<string, array{src_image: SrcImage, ...}> $picture
          */
-        global $conf, $lang, $template, $picture;
+        global $conf, $lang, $picture;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         $metadataService = new MetadataService(new MetadataRepository(DbConnection::build()));
 

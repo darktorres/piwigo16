@@ -13,11 +13,11 @@ namespace Piwigo\Calendar;
 
 use Piwigo\Cache\PersistentCache;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\TemplateInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
-use Piwigo\Template\Template;
 
 /**
  * P23 batch 8c: ported from `initialize_calendar()`
@@ -32,6 +32,7 @@ final class CalendarRenderer
 {
     public function __construct(
         private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly TemplateInterface $template,
     ) {}
 
     public function render(): void
@@ -40,9 +41,9 @@ final class CalendarRenderer
          * @var array<string, mixed> $page
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $user
-         * @var Template $template
          */
-        global $page, $conf, $user, $template, $persistent_cache, $filter;
+        global $page, $conf, $user, $persistent_cache, $filter;
+        $template = $this->template;
         if (! $persistent_cache instanceof PersistentCache) {
             $this->htmlRenderer->fatalError('persistent cache not initialized');
         }
@@ -176,7 +177,7 @@ final class CalendarRenderer
 
         $must_show_list = true; // true until calendar generates its own display
         if (\Piwigo\Core\PageFilterHelper::scriptBasename() != 'picture') { // basename without file extention
-            if ($calendar->generate_category_content()) {
+            if ($calendar->generate_category_content($template)) {
                 $page['items'] = [];
                 $must_show_list = false;
             }

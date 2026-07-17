@@ -90,9 +90,9 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         /**
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $lang
-         * @var Template $template
          */
-        global $conf, $lang, $template;
+        global $conf, $lang;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         // $page['errors']/['warnings']/['infos'] are always initialized to [] by
         // include/common.inc.php, but that isn't visible across the include()
@@ -837,10 +837,10 @@ WHERE param = \'' . $row['param'] . '\'
     {
         /**
          * @var array<string, mixed> $conf
-         * @var Template $template
          * @var array<string, mixed> $page
          */
-        global $conf, $template, $page;
+        global $conf, $page;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
             return;
@@ -1124,8 +1124,7 @@ WHERE param = \'' . $row['param'] . '\'
      */
     private static function processWatermark(): void
     {
-        /** @var Template $template */
-        global $template;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         // $page['errors'] is always initialized to [] by handle() itself,
         // but that isn't visible across this method's own scope boundary --

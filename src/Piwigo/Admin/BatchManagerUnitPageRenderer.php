@@ -57,10 +57,10 @@ final class BatchManagerUnitPageRenderer
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $page
          * @var array<string, mixed> $pwg_loaded_plugins
-         * @var Template $template
          * @var array<string, mixed> $user
          */
-        global $cache, $conf, $page, $pwg_loaded_plugins, $template, $user;
+        global $cache, $conf, $page, $pwg_loaded_plugins, $user;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         $htmlRenderer = new HtmlService();
 

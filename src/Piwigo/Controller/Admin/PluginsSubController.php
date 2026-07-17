@@ -47,10 +47,10 @@ final class PluginsSubController implements AdminSubControllerInterface
     public function handle(ServerRequestInterface $request): void
     {
         /**
-         * @var array<string, mixed> $page
-         * @var Template $template
+         * @var array<string, mixed>
          */
-        global $page, $template;
+        global $page;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         // Consumed by CoreTabs::addCoreTabs()'s own 'plugins' case via
         // `global $my_base_url;`, triggered synchronously inside

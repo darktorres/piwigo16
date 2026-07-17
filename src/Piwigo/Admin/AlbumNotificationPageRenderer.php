@@ -30,9 +30,9 @@ final class AlbumNotificationPageRenderer
          * @var array<string, string|null> $category
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $page
-         * @var Template $template
          */
-        global $admin_album_base_url, $category, $conf, $page, $template;
+        global $admin_album_base_url, $category, $conf, $page;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         // +-------------------------------------------------------------------+
         // |                       variable initialization                     |

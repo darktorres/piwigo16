@@ -86,7 +86,7 @@ abstract class CalendarBase
      *
      * @return bool false indicates that thumbnails where not included
      */
-    abstract public function generate_category_content();
+    abstract public function generate_category_content(\Piwigo\Core\TemplateInterface $template);
 
     /**
      * Returns a sql WHERE subquery for the date field.
@@ -219,7 +219,7 @@ abstract class CalendarBase
         $labels = null
     ) {
         /** @var array<string, mixed> $conf */
-        global $conf, $page, $template;
+        global $conf, $page;
 
         $nav_bar_datas = [];
 
@@ -283,14 +283,13 @@ abstract class CalendarBase
      * @param int $level - 0-year, 1-month/week, 2-day
      * @param array<int|string, mixed>|null $labels
      */
-    protected function build_nav_bar($level, ?array $labels = null): void
+    protected function build_nav_bar($level, ?array $labels, \Piwigo\Core\TemplateInterface $template): void
     {
         /**
-         * @var Template $template
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $page
          */
-        global $template, $conf, $page;
+        global $conf, $page;
 
         $query = '
 SELECT DISTINCT(' . $this->calendar_levels[$level]['sql'] . ') as period,
@@ -353,13 +352,10 @@ $this->get_date_where($level) . '
      * Assigns the next/previous link to the template with regards to
      * the currently choosen date.
      */
-    protected function build_next_prev(): void
+    protected function build_next_prev(\Piwigo\Core\TemplateInterface $template): void
     {
-        /**
-         * @var Template $template
-         * @var array<string, mixed> $page
-         */
-        global $template, $page;
+        /** @var array<string, mixed> $page */
+        global $page;
 
         $prev = $next = null;
         if (empty($page['chronology_date'])) {
@@ -436,12 +432,11 @@ GROUP BY period';
         }
 
         if (! empty($tpl_var)) {
-            // Smarty::getTemplateVars() is declared to return mixed (see
-            // vendor/smarty/smarty/src/Data.php); every write to
-            // 'chronology_navigation_bars' (build_nav_bar() above, and the
-            // append() below) stores a list of arrays, so narrow with
-            // is_array() rather than trusting the vendor signature.
-            $existing = $template->smarty->getTemplateVars('chronology_navigation_bars');
+            // Template::get_template_vars() is declared to return mixed;
+            // every write to 'chronology_navigation_bars' (build_nav_bar()
+            // above, and the append() below) stores a list of arrays, so
+            // narrow with is_array() rather than trusting the signature.
+            $existing = $template->get_template_vars('chronology_navigation_bars');
             if (is_array($existing) && ! empty($existing)) {
                 $last_index = count($existing) - 1;
                 $last_item = $existing[$last_index] ?? null;

@@ -8,7 +8,6 @@ use Piwigo\Admin\MaintenanceActionsPageRenderer;
 use Piwigo\Admin\MaintenanceEnvPageRenderer;
 use Piwigo\Admin\MaintenanceSysPageRenderer;
 use Piwigo\Admin\tabsheet;
-use Piwigo\Template\Template;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -56,10 +55,10 @@ final class MaintenanceSubController implements AdminSubControllerInterface
     public function handle(ServerRequestInterface $request): void
     {
         /**
-         * @var array<string, mixed> $page
-         * @var Template $template
+         * @var array<string, mixed>
          */
-        global $page, $template;
+        global $page;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         // Explicit `global` for $maint_actions (assigned as a bare
         // `$maint_actions = [...]` below) so the 3 renderer classes' own

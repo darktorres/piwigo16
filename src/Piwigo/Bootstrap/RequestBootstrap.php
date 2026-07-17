@@ -450,6 +450,14 @@ final class RequestBootstrap
             $template = new Template(PHPWG_ROOT_PATH . 'themes', $theme);
         }
 
+        // Legacy Coupling Retirement Track A: CurrentTemplate is the real
+        // target every retargeted consumer reads from now; `global
+        // $template` stays live alongside it (dual-write) until every
+        // consumer is retargeted off the raw global, matching how
+        // CurrentUser/PageState's own attachGlobals() bridges worked during
+        // their migration.
+        \Piwigo\Template\CurrentTemplate::set($template);
+
         // P23 batch 8f-4: SrcImage (L2aCoreDomain) reads theme conf through
         // Piwigo\Core\ThemeConfProviderInterface (implemented by Template)
         // instead of the deleted get_themeconf() free function's

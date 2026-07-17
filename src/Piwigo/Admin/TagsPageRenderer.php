@@ -13,7 +13,6 @@ use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
-use Piwigo\Template\Template;
 
 /**
  * Ported from admin/tags.php (page slug "tags").
@@ -22,8 +21,7 @@ final class TagsPageRenderer
 {
     public function render(): void
     {
-        /** @var Template $template */
-        global $template;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 

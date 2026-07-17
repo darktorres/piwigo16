@@ -11,7 +11,6 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
-use Piwigo\Template\Template;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -41,11 +40,11 @@ final class ProfileController implements ControllerInterface
     {
         /**
          * @var array<string, mixed> $conf
-         * @var Template $template
          * @var array<string, mixed> $user
          * @var array<string, mixed> $page
          */
-        global $conf, $template, $user, $page;
+        global $conf, $user, $page;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         // $page['errors'] is always initialized to an array by
         // common.inc.php, but that isn't visible across the include()
@@ -112,10 +111,10 @@ SELECT ' . implode(',', $fields) . '
         $body = LegacyRenderCapture::capture(static function (): void {
             /**
              * @var array<string, mixed> $conf
-             * @var Template $template
              * @var array<string, mixed> $user
              */
-            global $conf, $template, $user, $title;
+            global $conf, $user, $title;
+            $template = \Piwigo\Template\CurrentTemplate::get();
 
             $title = l10n('Your Gallery Customization');
 

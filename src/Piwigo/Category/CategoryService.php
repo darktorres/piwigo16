@@ -9,13 +9,13 @@ use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\Env;
 use Piwigo\Core\FilterUpdaterInterface;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\TemplateInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Permission\PermissionService;
-use Piwigo\Template\Template;
 use Piwigo\Users\UserRepository;
 
 /**
@@ -791,11 +791,9 @@ final class CategoryService
         array $selecteds,
         string $blockname,
         HtmlRenderingInterface $htmlRenderer,
+        TemplateInterface $template,
         bool $fullname = true
     ): void {
-        /** @var Template $template */
-        global $template;
-
         $tplCats = [];
         foreach ($categories as $category) {
             if ($fullname) {
@@ -843,11 +841,12 @@ final class CategoryService
         array $selecteds,
         string $blockname,
         HtmlRenderingInterface $htmlRenderer,
+        TemplateInterface $template,
         bool $fullname = true
     ): void {
         $categories = \Piwigo\Db\MysqliDb::query2Array($query);
         usort($categories, self::compareByGlobalRank(...));
-        $this->displaySelectCategories($categories, $selecteds, $blockname, $htmlRenderer, $fullname);
+        $this->displaySelectCategories($categories, $selecteds, $blockname, $htmlRenderer, $template, $fullname);
     }
 
     /**

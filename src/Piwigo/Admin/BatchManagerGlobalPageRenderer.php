@@ -55,10 +55,10 @@ final class BatchManagerGlobalPageRenderer
         /**
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $page
-         * @var Template $template
          * @var array<string, mixed> $user
          */
-        global $conf, $page, $template, $user;
+        global $conf, $page, $user;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (count($_POST) > 0) {
             new \Piwigo\Csrf\CsrfService()

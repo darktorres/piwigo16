@@ -41,9 +41,9 @@ final class ThemesInstalledPageRenderer
         /**
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $page
-         * @var Template $template
          */
-        global $conf, $page, $template;
+        global $conf, $page;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
             $page_warnings = $page['warnings'] ?? [];

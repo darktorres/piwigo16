@@ -48,10 +48,10 @@ final class PictureModifyPageRenderer
          * @var array<string, mixed> $cache
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $page
-         * @var Template $template
          * @var array<string, mixed> $user
          */
-        global $admin_photo_base_url, $cache, $conf, $page, $template, $user;
+        global $admin_photo_base_url, $cache, $conf, $page, $user;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         $imageConn = DbConnection::build();
         $imageService = new ImageService(new ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)));

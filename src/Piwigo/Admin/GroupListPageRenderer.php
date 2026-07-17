@@ -7,7 +7,6 @@ namespace Piwigo\Admin;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupRepository;
-use Piwigo\Template\Template;
 
 /**
  * Ported from admin/group_list.php (page slug "group_list").
@@ -17,10 +16,10 @@ final class GroupListPageRenderer
     public function render(): void
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var Template $template
+         * @var array<string, mixed>
          */
-        global $conf, $template;
+        global $conf;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         $tabsheet = new tabsheet();
         $tabsheet->set_id('groups');

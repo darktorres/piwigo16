@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Piwigo\Category;
 
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\TemplateInterface;
 use Piwigo\Db\Tables;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Session\SessionService;
-use Piwigo\Template\Template;
 
 /**
  * Renders the main/index page's thumbnail grid for the current page's image
@@ -23,6 +23,7 @@ final class CategoryDefaultRenderer
 {
     public function __construct(
         private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly TemplateInterface $template,
     ) {}
 
     public function render(): void
@@ -30,10 +31,10 @@ final class CategoryDefaultRenderer
         /**
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $page
-         * @var Template $template
          * @var array<string, mixed> $user
          */
-        global $conf, $page, $template, $user;
+        global $conf, $page, $user;
+        $template = $this->template;
 
         $pictures = [];
 

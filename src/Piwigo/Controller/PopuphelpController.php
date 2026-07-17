@@ -8,7 +8,6 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
-use Piwigo\Template\Template;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -46,11 +45,10 @@ final class PopuphelpController implements ControllerInterface
             // arch-tested to contain zero define() calls at all
             // (tests/Arch/StructuralTest.php).
 
-            /**
-             * @var array<string, mixed> $page
-             * @var Template $template
-             */
-            global $page, $template, $title;
+            /** @var array<string, mixed> $page */
+            global $page;
+            global $title;
+            $template = \Piwigo\Template\CurrentTemplate::get();
 
             $page['body_id'] = 'thePopuphelpPage';
             $title = l10n('Piwigo Help');

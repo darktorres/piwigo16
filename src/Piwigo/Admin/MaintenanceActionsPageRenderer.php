@@ -41,9 +41,9 @@ final class MaintenanceActionsPageRenderer
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $maint_actions
          * @var array<string, mixed> $page
-         * @var Template $template
          */
-        global $conf, $maint_actions, $page, $template;
+        global $conf, $maint_actions, $page;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         FilesystemIntegrityChecker::fsQuickCheck();
 

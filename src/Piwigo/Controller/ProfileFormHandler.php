@@ -287,11 +287,11 @@ final class ProfileFormHandler
     public function loadIntoTemplate($url_action, $url_redirect, array $userdata, ?string $template_prefixe = null): void
     {
         /**
-         * @var Template $template
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $user
          */
-        global $template, $conf, $user;
+        global $conf, $user;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         $template->assign(
             'radio_options',

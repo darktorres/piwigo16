@@ -9,7 +9,6 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
-use Piwigo\Template\Template;
 
 /**
  * Ported from admin/picture_formats.php (page slug "picture_formats").
@@ -19,10 +18,10 @@ final class PictureFormatsPageRenderer
     public function render(): void
     {
         /**
-         * @var Template $template
-         * @var array<string, mixed> $lang
+         * @var array<string, mixed>
          */
-        global $template, $lang;
+        global $lang;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 

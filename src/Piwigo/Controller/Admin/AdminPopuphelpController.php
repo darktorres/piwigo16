@@ -49,11 +49,10 @@ final class AdminPopuphelpController implements ControllerInterface
         $output = $queryParams['output'] ?? null;
 
         $body = LegacyRenderCapture::capture(static function () use ($rawPage, $output): void {
-            /**
-             * @var array<string, mixed> $page
-             * @var Template $template
-             */
-            global $page, $template, $title;
+            /** @var array<string, mixed> $page */
+            global $page;
+            global $title;
+            $template = \Piwigo\Template\CurrentTemplate::get();
 
             if ($output !== 'content_only') {
                 $page['body_id'] = 'thePopuphelpPage';

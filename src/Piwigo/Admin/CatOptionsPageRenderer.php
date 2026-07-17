@@ -15,7 +15,6 @@ use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
-use Piwigo\Template\Template;
 
 /**
  * Ported from admin/cat_options.php (page slug "cat_options") -- a flat
@@ -30,10 +29,10 @@ final class CatOptionsPageRenderer
     public function render(): void
     {
         /**
-         * @var array<string, mixed> $page
-         * @var Template $template
+         * @var array<string, mixed>
          */
-        global $page, $template;
+        global $page;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
@@ -187,8 +186,8 @@ SELECT DISTINCT id,name,uppercats,global_rank
             new CategoryRepository($categoryConn),
             new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
         );
-        $categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true', new HtmlService());
-        $categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false', new HtmlService());
+        $categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true', new HtmlService(), $template);
+        $categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false', new HtmlService(), $template);
         $template->assign('PWG_TOKEN', (new \Piwigo\Csrf\CsrfService())->getToken());
         $template->assign('ADMIN_PAGE_TITLE', l10n('Properties of abums'));
 

@@ -23,7 +23,6 @@ use Piwigo\Search\SearchRepository;
 use Piwigo\Search\SearchService;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
-use Piwigo\Template\Template;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -65,10 +64,10 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         /**
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $page
-         * @var Template $template
          * @var array<string, mixed> $user
          */
-        global $conf, $page, $template, $user;
+        global $conf, $page, $user;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         (new \Piwigo\Validation\InputValidator())->validate('selection', $_POST, true, ValidationPattern::ID);
         (new \Piwigo\Validation\InputValidator())->validate('display', $_REQUEST, false, '/^(\d+|all)$/');
@@ -495,10 +494,10 @@ DELETE FROM ' . Tables::caddie() . '
         string $confOrderBy,
     ): array {
         /**
-         * @var array<string, mixed> $page
-         * @var Template $template
+         * @var array<string, mixed>
          */
-        global $page, $template;
+        global $page;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         $filter_sets = [];
         if (isset($bulkFilter['prefilter']) && is_string($bulkFilter['prefilter'])) {

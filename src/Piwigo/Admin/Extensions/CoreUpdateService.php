@@ -11,7 +11,6 @@ use Piwigo\Core\FilesystemHelper;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Mail\MailService;
-use Piwigo\Template\Template;
 
 /**
  * Piwigo-core (not extension) self-update: checking piwigo.org for a newer
@@ -246,9 +245,9 @@ final class CoreUpdateService
         /**
          * @var array<string, mixed> $page
          * @var array<string, mixed> $conf
-         * @var Template $template
          */
-        global $page, $conf, $template;
+        global $page, $conf;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
         $page['infos'] = is_array($page['infos'] ?? null) ? $page['infos'] : [];

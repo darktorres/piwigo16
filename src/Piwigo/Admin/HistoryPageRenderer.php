@@ -9,7 +9,6 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Env;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
-use Piwigo\Template\Template;
 use Piwigo\Users\UserRepository;
 
 /**
@@ -28,10 +27,10 @@ final class HistoryPageRenderer
     {
         /**
          * @var array<string, mixed> $conf
-         * @var Template $template
          * @var array<string, mixed> $page
          */
-        global $conf, $template, $page;
+        global $conf, $page;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         $types = array_merge(['none'], \Piwigo\Db\MysqliDb::getEnums(Tables::history(), 'image_type'));
 

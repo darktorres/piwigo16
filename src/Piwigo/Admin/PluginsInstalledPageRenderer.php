@@ -46,9 +46,9 @@ final class PluginsInstalledPageRenderer
         /**
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $page
-         * @var Template $template
          */
-        global $conf, $page, $template;
+        global $conf, $page;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         $template->set_filenames([
             'plugins' => 'plugins_installed.tpl',

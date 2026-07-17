@@ -14,7 +14,6 @@ use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
-use Piwigo\Template\Template;
 
 /**
  * Builds the main menubar's blocks. Injects nothing -- same "no
@@ -44,10 +43,10 @@ final class MenubarRenderer
          * @var array<string, mixed> $page
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $user
-         * @var Template $template
          * @var array<string, mixed> $filter
          */
-        global $page, $conf, $user, $template, $filter;
+        global $page, $conf, $user, $filter;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         $conn = DbConnection::build();
         $tagService = new TagService(new TagRepository($conn), new PermissionService(new PermissionRepository($conn), new GroupRepository($conn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));

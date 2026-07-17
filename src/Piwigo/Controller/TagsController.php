@@ -15,7 +15,6 @@ use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
-use Piwigo\Template\Template;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -40,9 +39,9 @@ final class TagsController implements ControllerInterface
             /**
              * @var array<string, mixed> $conf
              * @var array<string, mixed> $page
-             * @var Template $template
              */
-            global $conf, $page, $template, $title;
+            global $conf, $page, $title;
+            $template = \Piwigo\Template\CurrentTemplate::get();
 
             $title = l10n('Tags');
             $page['body_id'] = 'theTagsPage';

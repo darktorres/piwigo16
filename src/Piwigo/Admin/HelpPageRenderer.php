@@ -6,7 +6,6 @@ namespace Piwigo\Admin;
 
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
-use Piwigo\Template\Template;
 
 /**
  * Ported from admin/help.php (page slug "help").
@@ -17,10 +16,10 @@ final class HelpPageRenderer
     {
         /**
          * @var array<string, mixed> $page
-         * @var Template $template
          * @var array<string, mixed> $user
          */
-        global $page, $template, $user;
+        global $page, $user;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 

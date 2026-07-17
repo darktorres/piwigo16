@@ -28,9 +28,9 @@ final class ThemesNewPageRenderer
         /**
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $page
-         * @var Template $template
          */
-        global $conf, $page, $template;
+        global $conf, $page;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (! (bool) $conf['enable_extensions_install']) {
             die('Piwigo extensions install/update system is disabled');

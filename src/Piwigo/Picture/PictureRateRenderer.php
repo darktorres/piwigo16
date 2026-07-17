@@ -6,7 +6,6 @@ namespace Piwigo\Picture;
 
 use Piwigo\Core\AccessLevel;
 use Piwigo\Db\Tables;
-use Piwigo\Template\Template;
 
 /**
  * Renders the picture page's rating summary + rate form. Ported from
@@ -23,10 +22,10 @@ final class PictureRateRenderer
         /**
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $page
-         * @var Template $template
          * @var array<string, mixed> $user
          */
-        global $conf, $page, $template, $user;
+        global $conf, $page, $user;
+        $template = \Piwigo\Template\CurrentTemplate::get();
         // Set by picture.php/PictureController, right before this call.
         /**
          * @var array<string, array<string, mixed>> $picture

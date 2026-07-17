@@ -16,7 +16,6 @@ use Piwigo\Permalink\PermalinkRepository;
 use Piwigo\Permalink\PermalinkService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
-use Piwigo\Template\Template;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -58,10 +57,10 @@ final class PermalinksSubController implements AdminSubControllerInterface
     public function handle(ServerRequestInterface $request): void
     {
         /**
-         * @var array<string, mixed> $page
-         * @var Template $template
+         * @var array<string, mixed>
          */
-        global $page, $template;
+        global $page;
+        $template = \Piwigo\Template\CurrentTemplate::get();
         global $my_base_url;
 
         $htmlRenderer = new HtmlService();
@@ -132,7 +131,7 @@ FROM ' . Tables::categories();
         new CategoryService(
             new CategoryRepository($categoryConn),
             new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
-        )->displaySelectCatWrapper($query, $selected_cat, 'categories', $htmlRenderer, false);
+        )->displaySelectCatWrapper($query, $selected_cat, 'categories', $htmlRenderer, $template, false);
 
         $pwg_token = (new \Piwigo\Csrf\CsrfService())->getToken();
 
@@ -227,8 +226,7 @@ SELECT id, permalink, uppercats, global_rank
         string $template_var,
         string $anchor = ''
     ): array {
-        /** @var Template $template */
-        global $template;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         $request_uri = $_SERVER['REQUEST_URI'] ?? '';
         $request_uri = is_string($request_uri) ? $request_uri : '';

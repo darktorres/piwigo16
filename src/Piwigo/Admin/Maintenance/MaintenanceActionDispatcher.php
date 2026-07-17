@@ -26,7 +26,6 @@ use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\FileCombiner;
-use Piwigo\Template\Template;
 
 /**
  * Consolidates the ~18-case maintenance action switch that was previously
@@ -68,9 +67,8 @@ final class MaintenanceActionDispatcher
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $page
          * @var PersistentFileCache $persistent_cache
-         * @var Template $template
          */
-        global $conf, $page, $persistent_cache, $template;
+        global $conf, $page, $persistent_cache;
 
         if (! is_array($page['infos'] ?? null)) {
             $page['infos'] = [];
@@ -218,7 +216,7 @@ final class MaintenanceActionDispatcher
 
             case 'compiled-templates':
 
-                $template->delete_compiled_templates();
+                \Piwigo\Template\CurrentTemplate::get()->delete_compiled_templates();
                 FileCombiner::clear_combined_files();
                 $persistent_cache->purge(true);
                 $page['infos'][] = sprintf('%s : %s', l10n('Purge compiled templates'), l10n('action successfully performed.'));

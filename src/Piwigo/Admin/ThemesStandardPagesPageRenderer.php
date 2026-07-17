@@ -45,10 +45,10 @@ final class ThemesStandardPagesPageRenderer
     public function render(): void
     {
         /**
-         * @var array<string, mixed> $page
-         * @var Template $template
+         * @var array<string, mixed>
          */
-        global $page, $template;
+        global $page;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
             $page_warnings = $page['warnings'] ?? [];

@@ -87,10 +87,10 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
     public function handle(ServerRequestInterface $request): void
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var Template $template
+         * @var array<string, mixed>
          */
-        global $conf, $template;
+        global $conf;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 

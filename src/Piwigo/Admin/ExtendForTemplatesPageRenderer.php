@@ -32,9 +32,9 @@ final class ExtendForTemplatesPageRenderer
         /**
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $page
-         * @var Template $template
          */
-        global $conf, $page, $template;
+        global $conf, $page;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         // $page['infos'] is always initialized to an array by common.inc.php, but
         // that isn't visible across the include() boundary -- narrow it once here

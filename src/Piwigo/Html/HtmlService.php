@@ -696,10 +696,10 @@ SELECT id, name, permalink
     public function flushPageMessages(): void
     {
         /**
-         * @var Template $template
-         * @var array<string, mixed> $page
+         * @var array<string, mixed>
          */
-        global $template, $page;
+        global $page;
+        $template = \Piwigo\Template\CurrentTemplate::get();
         if ($template->get_template_vars('page_refresh') === null) {
             foreach (['errors', 'infos', 'warnings', 'messages'] as $mode) {
                 // Narrowed once here (fix pattern #7): $page is

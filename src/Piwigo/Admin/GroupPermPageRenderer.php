@@ -17,7 +17,6 @@ use Piwigo\Group\GroupService;
 use Piwigo\Html\HtmlService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
-use Piwigo\Template\Template;
 
 /**
  * Ported from admin/group_perm.php (page slug "group_perm"). Already used
@@ -31,10 +30,10 @@ final class GroupPermPageRenderer
     {
         /**
          * @var array<string, mixed> $page
-         * @var Template $template
          * @var array<string, mixed> $user
          */
-        global $page, $template, $user;
+        global $page, $user;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         $categoryConn = DbConnection::build();
         $categoryService = new CategoryService(
@@ -155,7 +154,7 @@ SELECT id,name,uppercats,global_rank
   WHERE status = \'private\'
     AND group_id = ' . $page['group'] . '
 ;';
-        $categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true', new HtmlService());
+        $categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true', new HtmlService(), $template);
 
         $result = \Piwigo\Db\MysqliDb::query($query_true);
         $authorized_ids = [];
@@ -173,7 +172,7 @@ SELECT id,name,uppercats,global_rank
         }
         $query_false .= '
 ;';
-        $categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false', new HtmlService());
+        $categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false', new HtmlService(), $template);
 
         $template->assign('PWG_TOKEN', (new \Piwigo\Csrf\CsrfService())->getToken());
 

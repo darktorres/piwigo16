@@ -14,7 +14,6 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Site\SiteRepository;
-use Piwigo\Template\Template;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -57,9 +56,9 @@ final class SiteManagerSubController implements AdminSubControllerInterface
         /**
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $page
-         * @var Template $template
          */
-        global $conf, $page, $template;
+        global $conf, $page;
+        $template = \Piwigo\Template\CurrentTemplate::get();
         global $my_base_url;
 
         if (! (bool) $conf['enable_synchronization']) {

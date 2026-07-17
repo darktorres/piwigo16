@@ -63,11 +63,11 @@ final class GalleryController implements ControllerInterface
         /**
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $page
-         * @var Template $template
          */
-        global $conf, $page, $template;
+        global $conf, $page;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
-        new SectionPopulator(new MailService(), new HtmlService())
+        new SectionPopulator(new MailService(), new HtmlService(), $template)
             ->populate();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
@@ -115,9 +115,9 @@ final class GalleryController implements ControllerInterface
             /**
              * @var array<string, mixed> $conf
              * @var array<string, mixed> $page
-             * @var Template $template
              */
-            global $conf, $page, $template, $title;
+            global $conf, $page, $title;
+            $template = \Piwigo\Template\CurrentTemplate::get();
 
             $tagConn = DbConnection::build();
             $tagService = new TagService(new TagRepository($tagConn), new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
@@ -258,7 +258,7 @@ final class GalleryController implements ControllerInterface
                     }
                 }
 
-                new SearchFilterRenderer(new MailService(), new HtmlService())
+                new SearchFilterRenderer(new MailService(), new HtmlService(), $template)
                     ->render();
 
                 if ($page['section'] === 'categories' and isset($page['category']) and is_array($page['category']) and ! isset($page['combined_categories'])) {
@@ -516,12 +516,12 @@ final class GalleryController implements ControllerInterface
                   and ($page['section'] === 'recent_cats' or $page['section'] === 'categories')
                   and (! isset($page['category']) or ! is_array($page['category']) or ! isset($page['category']['count_categories']) or $page['category']['count_categories'] > 0)
                 ) {
-                    new CategoryCatsRenderer(new FilterService(), new HtmlService())
+                    new CategoryCatsRenderer(new FilterService(), new HtmlService(), $template)
                         ->render();
                 }
 
                 if ($page_items !== []) {
-                    new CategoryDefaultRenderer(new HtmlService())
+                    new CategoryDefaultRenderer(new HtmlService(), $template)
                         ->render();
 
                     if ((bool) $conf['index_sizes_icon']) {

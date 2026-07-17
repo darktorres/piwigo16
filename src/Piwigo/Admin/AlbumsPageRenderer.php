@@ -49,10 +49,10 @@ final class AlbumsPageRenderer
         /**
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $page
-         * @var Template $template
          * @var array<string, mixed> $user
          */
-        global $conf, $page, $template, $user;
+        global $conf, $page, $user;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         // This method is always invoked from inside an
         // AdminSubControllerInterface::handle() method

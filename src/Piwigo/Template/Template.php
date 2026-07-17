@@ -20,7 +20,7 @@ use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
 use Smarty\Smarty;
 
-class Template implements \Piwigo\Core\ThemeConfProviderInterface
+class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\TemplateInterface
 {
     /**
      * @var Smarty
@@ -368,6 +368,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface
      * @param string $handle
      * @param string $filename
      */
+    #[\Override]
     public function set_filename($handle, $filename): bool
     {
         return $this->set_filenames([
@@ -382,6 +383,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface
      *   handle=>filename; a null value unsets that handle (no current
      *   first-party caller exercises this, but the API supports it)
      */
+    #[\Override]
     public function set_filenames($filename_array): bool
     {
         reset($filename_array);
@@ -479,6 +481,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface
      *    (in this case, do not use the _$value_ parameter)
      * @param mixed $value
      */
+    #[\Override]
     public function assign($tpl_var, $value = null): void
     {
         $this->smarty->assign($tpl_var, $value);
@@ -492,6 +495,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface
      * @param string $varname
      * @return true
      */
+    #[\Override]
     public function assign_var_from_handle($varname, string $handle): bool
     {
         $this->assign($varname, $this->parse($handle, true));
@@ -506,6 +510,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface
      * @param mixed $value
      * @param bool $merge
      */
+    #[\Override]
     public function append($tpl_var, $value = null, $merge = false): void
     {
         $this->smarty->append($tpl_var, $value, $merge);
@@ -532,6 +537,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface
      *
      * @param string $tpl_var
      */
+    #[\Override]
     public function clear_assign($tpl_var): void
     {
         $this->smarty->clearAssign($tpl_var);
@@ -541,8 +547,9 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface
      * Returns an assigned template variable.
      * @see http://www.smarty.net/manual/en/api.get_template_vars.php
      *
-     * @param string $tpl_var
+     * @param string|null $tpl_var
      */
+    #[\Override]
     public function get_template_vars($tpl_var = null): mixed
     {
         return $this->smarty->getTemplateVars($tpl_var);

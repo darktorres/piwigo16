@@ -20,7 +20,6 @@ use Piwigo\Notification\NotificationRepository;
 use Piwigo\Notification\NotificationService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
-use Piwigo\Template\Template;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -72,11 +71,10 @@ final class NbmController implements ControllerInterface
         $unsubscribe = $queryParams['unsubscribe'] ?? null;
 
         $body = LegacyRenderCapture::capture(static function () use ($subscribe, $unsubscribe, $nbmSender): void {
-            /**
-             * @var array<string, mixed> $page
-             * @var Template $template
-             */
-            global $page, $template, $title;
+            /** @var array<string, mixed> $page */
+            global $page;
+            global $title;
+            $template = \Piwigo\Template\CurrentTemplate::get();
 
             // $page['errors'] is always initialized to an array by
             // common.inc.php, but that isn't visible across the include()

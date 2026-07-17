@@ -25,6 +25,7 @@ use Piwigo\Core\FilterUpdaterInterface;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Core\TelemetrySenderInterface;
+use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\WebmasterMailProviderInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\TablePrefixListener;
@@ -32,6 +33,7 @@ use Piwigo\Filter\FilterService;
 use Piwigo\Html\HtmlService;
 use Piwigo\Mail\MailService;
 use Piwigo\Routing\Router;
+use Piwigo\Template\Template;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 use Psr\Cache\CacheItemPoolInterface;
@@ -103,6 +105,17 @@ return [
     // the concrete class directly, per deptrac.yaml's ruleset. See
     // src/Piwigo/Core/TelemetrySenderInterface.php's own docblock.
     TelemetrySenderInterface::class => \DI\get(PiwigoInfosSender::class),
+
+    // Interface binding (Legacy Coupling Retirement Track A) --
+    // Piwigo\Template\Template is L3Presentation; a handful of
+    // L2aCoreDomain/L2bExtendedDomain callers method-inject
+    // TemplateInterface instead of depending on the concrete class
+    // directly, per deptrac.yaml's ruleset. A factory, not \DI\get(),
+    // because the current request's Template is constructed dynamically
+    // per-request (runtime theme/path parameters) -- see
+    // src/Piwigo/Core/TemplateInterface.php's own docblock and
+    // Piwigo\Template\CurrentTemplate.
+    TemplateInterface::class => factory(static fn (): Template => \Piwigo\Template\CurrentTemplate::get()),
 
     // Interface binding (P23 batch 8f-4) -- Piwigo\Users\UserRepository
     // provides the webmaster mail address; Piwigo\Mail\MailService takes

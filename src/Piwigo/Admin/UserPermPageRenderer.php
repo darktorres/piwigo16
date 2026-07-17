@@ -14,7 +14,6 @@ use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
-use Piwigo\Template\Template;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
@@ -31,10 +30,10 @@ final class UserPermPageRenderer
     public function render(): void
     {
         /**
-         * @var array<string, mixed> $page
-         * @var Template $template
+         * @var array<string, mixed>
          */
-        global $page, $template;
+        global $page;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         $htmlRenderer = new HtmlService();
 
@@ -154,7 +153,7 @@ SELECT id,name,uppercats,global_rank
         }
         $query_true .= '
 ;';
-        $categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true', $htmlRenderer);
+        $categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true', $htmlRenderer, $template);
 
         $result = \Piwigo\Db\MysqliDb::query($query_true);
         $authorized_ids = [];
@@ -176,7 +175,7 @@ SELECT id,name,uppercats,global_rank
         }
         $query_false .= '
 ;';
-        $categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false', $htmlRenderer);
+        $categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false', $htmlRenderer, $template);
 
         $template->assign('PWG_TOKEN', (new \Piwigo\Csrf\CsrfService())->getToken());
 

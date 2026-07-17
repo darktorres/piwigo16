@@ -75,10 +75,10 @@ final class IntroSubController implements AdminSubControllerInterface
          * @var Logger $logger
          * @var array<string, mixed> $page
          * @var array<string, mixed> $pwg_loaded_plugins
-         * @var Template $template
          * @var array<string, mixed> $user
          */
-        global $conf, $lang, $link_start, $logger, $page, $pwg_loaded_plugins, $template, $user;
+        global $conf, $lang, $link_start, $logger, $page, $pwg_loaded_plugins, $user;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (! is_array($page['messages'] ?? null)) {
             $page['messages'] = [];

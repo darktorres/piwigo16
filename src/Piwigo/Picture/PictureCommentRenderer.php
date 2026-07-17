@@ -11,7 +11,6 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Html\HtmlService;
 use Piwigo\Mail\MailService;
 use Piwigo\Session\SessionService;
-use Piwigo\Template\Template;
 
 /**
  * Renders the picture page's comment list + add/edit form. Ported from
@@ -42,10 +41,10 @@ final class PictureCommentRenderer
         /**
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $page
-         * @var Template $template
          * @var array<string, mixed> $user
          */
-        global $conf, $page, $template, $user;
+        global $conf, $page, $user;
+        $template = \Piwigo\Template\CurrentTemplate::get();
         /**
          * Set by PictureController, right before this call.
          *

@@ -33,10 +33,10 @@ final class PhotosAddSubController implements AdminSubControllerInterface
     public function handle(ServerRequestInterface $request): void
     {
         /**
-         * @var Template $template
-         * @var array<string, mixed> $page
+         * @var array<string, mixed>
          */
-        global $template, $page;
+        global $page;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         // upload form config is loaded here to match the original page's
         // own behavior (validated/used by the tab templates), even though

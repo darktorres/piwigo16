@@ -43,11 +43,11 @@ final class AdminShell
     {
         /**
          * @var array<string, mixed> $conf
-         * @var Template $template
          * @var array<string, mixed> $user
          * @var array<string, mixed> $page
          */
-        global $conf, $template, $user, $page;
+        global $conf, $user, $page;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         add_event_handler('tabsheet_before_select', CoreTabs::addCoreTabs(...));
 

@@ -11,6 +11,7 @@ use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
 use Piwigo\Core\MailerInterface;
+use Piwigo\Core\TemplateInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -18,7 +19,6 @@ use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
-use Piwigo\Template\Template;
 
 /**
  * Renders the search-refinement sidebar (author/tags/date_posted/
@@ -38,6 +38,7 @@ final class SearchFilterRenderer
     public function __construct(
         private readonly MailerInterface $mailer,
         private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly TemplateInterface $template,
     ) {}
 
     public function render(): void
@@ -46,10 +47,10 @@ final class SearchFilterRenderer
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $lang
          * @var array<string, mixed> $page
-         * @var Template $template
          * @var array<string, mixed> $user
          */
-        global $conf, $lang, $page, $persistent_cache, $template, $user;
+        global $conf, $lang, $page, $persistent_cache, $user;
+        $template = $this->template;
         if (! $persistent_cache instanceof PersistentCache) {
             $this->htmlRenderer->fatalError('persistent cache not initialized');
         }
@@ -340,7 +341,8 @@ SELECT
                     '6m' => l10n('last 6 months'),
                 ],
                 'LIST_DATE_POSTED',
-                'DATE_POSTED'
+                'DATE_POSTED',
+                $template
             );
         } elseif (isset($searchFields['date_posted'])) {
             unset($searchFields['date_posted']);
@@ -362,7 +364,8 @@ SELECT
                     '12m' => l10n('last 12 months'),
                 ],
                 'LIST_DATE_CREATED',
-                'DATE_CREATED'
+                'DATE_CREATED',
+                $template
             );
         } elseif (isset($searchFields['date_created'])) {
             unset($searchFields['date_created']);
@@ -905,8 +908,8 @@ SELECT
         // $page['search_details'] is already known array here (guarded above).
         $pageStart = $page['start'] ?? null;
         if ((is_numeric($pageStart) ? (int) $pageStart : 0) === 0 and ! isset($page['chronology_field'])) {
-            $this->renderAlbumsFound($page, $user, $userId);
-            $this->renderTagsFound($page);
+            $this->renderAlbumsFound($page, $user, $userId, $template);
+            $this->renderTagsFound($page, $template);
         }
     }
 
@@ -927,11 +930,8 @@ SELECT
      * @param array<string, mixed> $page
      * @param array<string, mixed> $user
      */
-    private function renderAlbumsFound(array $page, array $user, string $userId): void
+    private function renderAlbumsFound(array $page, array $user, string $userId, TemplateInterface $template): void
     {
-        /** @var Template $template */
-        global $template;
-
         $searchDetails = $page['search_details'] ?? null;
         $matchingCatIds = is_array($searchDetails) ? ($searchDetails['matching_cat_ids'] ?? null) : null;
         if (! is_array($matchingCatIds)) {
@@ -1012,11 +1012,8 @@ SELECT
     /**
      * @param array<string, mixed> $page
      */
-    private function renderTagsFound(array $page): void
+    private function renderTagsFound(array $page, TemplateInterface $template): void
     {
-        /** @var Template $template */
-        global $template;
-
         $searchDetails = $page['search_details'] ?? null;
         $matchingTagIds = is_array($searchDetails) ? ($searchDetails['matching_tag_ids'] ?? null) : null;
         if (! is_array($matchingTagIds)) {
@@ -1077,11 +1074,9 @@ SELECT
         string $dbField,
         array $labelForThreshold,
         string $listTemplateVar,
-        string $counterTemplateVar
+        string $counterTemplateVar,
+        TemplateInterface $template
     ): void {
-        /** @var Template $template */
-        global $template;
-
         $filterClause = $this->getClauseForFilter($filterName);
         $cacheKey = $persistentCache->make_key('filter_' . $filterName . $userId . $userCacheUpdateTime);
         // we use persistent_cache only for fetching lines filtered only by

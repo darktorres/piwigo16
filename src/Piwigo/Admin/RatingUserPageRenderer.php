@@ -9,7 +9,6 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Rate\RateRepository;
-use Piwigo\Template\Template;
 
 /**
  * Ported from admin/rating_user.php (page slug "rating_user") -- the admin
@@ -21,10 +20,10 @@ final class RatingUserPageRenderer
     public function render(): void
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var Template $template
+         * @var array<string, mixed>
          */
-        global $conf, $template;
+        global $conf;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         $tabsheet = new tabsheet();
         $tabsheet->set_id('rating');

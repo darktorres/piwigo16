@@ -23,7 +23,6 @@ use Piwigo\Mail\MailService;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
-use Piwigo\Template\Template;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -45,10 +44,10 @@ final class CommentsController implements ControllerInterface
     {
         /**
          * @var array<string, mixed> $conf
-         * @var Template $template
          * @var array<string, mixed> $page
          */
-        global $conf, $template, $page;
+        global $conf, $page;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (! (bool) $conf['activate_comments']) {
             new HtmlService()
@@ -377,11 +376,10 @@ final class CommentsController implements ControllerInterface
             $selected_items_number,
             $edit_comment
         ): void {
-            /**
-             * @var array<string, mixed> $page
-             * @var Template $template
-             */
-            global $page, $template, $title;
+            /** @var array<string, mixed> $page */
+            global $page;
+            global $title;
+            $template = \Piwigo\Template\CurrentTemplate::get();
 
             // +---------------------------------------------------------------+
             // |                    page header and options                    |
@@ -424,7 +422,7 @@ SELECT id, name, uppercats, global_rank
             new CategoryService(
                 new CategoryRepository($categoryConn),
                 new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
-            )->displaySelectCatWrapper($query, [@$_GET['cat']], $blockname, new HtmlService(), true);
+            )->displaySelectCatWrapper($query, [@$_GET['cat']], $blockname, new HtmlService(), $template, true);
 
             // Filter on recent comments...
             $tpl_var = [];

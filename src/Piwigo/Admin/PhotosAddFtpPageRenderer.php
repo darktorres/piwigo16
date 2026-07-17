@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Core\Lang;
-use Piwigo\Template\Template;
 
 /**
  * Ported from admin/photos_add_ftp.php (the "ftp" tab of the "photos_add"
@@ -15,8 +14,7 @@ final class PhotosAddFtpPageRenderer
 {
     public function render(): void
     {
-        /** @var Template $template */
-        global $template;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         $template->assign(
             'FTP_HELP_CONTENT',

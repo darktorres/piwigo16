@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Page;
 
-use Piwigo\Template\Template;
-
 /**
  * Renders the page `<head>`/opening chrome into $template. Injects
  * nothing -- same "no constructor deps" shape as Html\HtmlService/
@@ -28,10 +26,10 @@ final class PageHeaderRenderer
         /**
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $page
-         * @var Template $template
          * @var list<string>|null $header_notes
          */
-        global $conf, $page, $template, $header_notes;
+        global $conf, $page, $header_notes;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         $template->set_filenames([
             'header' => 'header.tpl',

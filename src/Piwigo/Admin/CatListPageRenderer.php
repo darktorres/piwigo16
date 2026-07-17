@@ -43,9 +43,9 @@ final class CatListPageRenderer
         /**
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $page
-         * @var Template $template
          */
-        global $conf, $page, $template;
+        global $conf, $page;
+        $template = \Piwigo\Template\CurrentTemplate::get();
         global $my_base_url;
 
         $categoryConn = DbConnection::build();

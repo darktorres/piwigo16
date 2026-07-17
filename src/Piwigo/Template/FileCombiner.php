@@ -160,8 +160,7 @@ final class FileCombiner
                 }
             }
 
-            /** @var Template $template */
-            global $template;
+            $template = \Piwigo\Template\CurrentTemplate::get();
             $handle = $this->type . '.' . $combinable->id;
             $real_path = realpath(PHPWG_ROOT_PATH . $combinable->path);
             if ($real_path === false) {

@@ -9,6 +9,7 @@ use Piwigo\Core\Env;
 use Piwigo\Core\FilterUpdaterInterface;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Logger;
+use Piwigo\Core\TemplateInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -16,7 +17,6 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
-use Piwigo\Template\Template;
 use Psr\Cache\CacheItemPoolInterface;
 
 /**
@@ -56,6 +56,7 @@ final class CategoryCatsRenderer
     public function __construct(
         private readonly FilterUpdaterInterface $filterUpdater,
         private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly TemplateInterface $template,
     ) {}
 
     public function render(): void
@@ -64,10 +65,10 @@ final class CategoryCatsRenderer
          * @var array<string, mixed> $conf
          * @var Logger $logger
          * @var array<string, mixed> $page
-         * @var Template $template
          * @var array<string, mixed> $user
          */
-        global $conf, $logger, $page, $template, $user;
+        global $conf, $logger, $page, $user;
+        $template = $this->template;
 
         $conn = DbConnection::build();
         $categoryRepo = new CategoryRepository($conn);

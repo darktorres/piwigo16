@@ -156,8 +156,7 @@ class tabsheet
      */
     public function assign(): void
     {
-        /** @var Template $template */
-        global $template;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         $template->set_filename('tabsheet', 'tabsheet.tpl');
         $template->assign('tabsheet', $this->sheets);

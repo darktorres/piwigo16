@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Maintenance;
 
 use Piwigo\Db\Tables;
-use Piwigo\Template\Template;
 
 /**
  * Ported from admin/include/functions.php's fs_quick_check()/
@@ -83,8 +82,7 @@ SELECT
             // path is a NOT NULL column in the images table.
             assert(is_string($path));
             if (! file_exists($path)) {
-                /** @var Template $template */
-                global $template;
+                $template = \Piwigo\Template\CurrentTemplate::get();
 
                 $template->assign(
                     'header_msgs',
@@ -108,8 +106,7 @@ SELECT
         $duplicate_paths = \Piwigo\Db\MysqliDb::query2Array($query);
 
         if (count($duplicate_paths) > 0) {
-            /** @var Template $template */
-            global $template;
+            $template = \Piwigo\Template\CurrentTemplate::get();
 
             $template->assign(
                 'header_msgs',

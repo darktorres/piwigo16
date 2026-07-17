@@ -7,7 +7,6 @@ namespace Piwigo\Admin;
 use Piwigo\Db\DbConnection;
 use Piwigo\Menu\BlockManager;
 use Piwigo\Menu\MenubarLayoutRepository;
-use Piwigo\Template\Template;
 
 /**
  * Ported from admin/menubar.php (page slug "menubar").
@@ -29,9 +28,9 @@ final class MenubarPageRenderer
         /**
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $page
-         * @var Template $template
          */
-        global $conf, $page, $template;
+        global $conf, $page;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
             if (! is_array($page['warnings'] ?? null)) {

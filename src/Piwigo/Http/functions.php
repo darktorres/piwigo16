@@ -88,8 +88,10 @@ if (! function_exists('redirect_html')) {
                 'local' => true,
             ]);
             $template = new Template(PHPWG_ROOT_PATH . 'themes', (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->getDefaultTheme());
+            \Piwigo\Template\CurrentTemplate::set($template);
         } elseif (defined('IN_ADMIN') and IN_ADMIN) {
             $template = new Template(PHPWG_ROOT_PATH . 'themes', (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->getDefaultTheme());
+            \Piwigo\Template\CurrentTemplate::set($template);
         }
 
         // Neither branch above runs when $template was already set and we're
@@ -97,6 +99,7 @@ if (! function_exists('redirect_html')) {
         // but re-check for real since that isn't provable here statically.
         if (! ($template instanceof Template)) {
             $template = new Template(PHPWG_ROOT_PATH . 'themes', (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->getDefaultTheme());
+            \Piwigo\Template\CurrentTemplate::set($template);
         }
 
         if (empty($msg)) {

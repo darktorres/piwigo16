@@ -27,10 +27,10 @@ final class UserActivityPageRenderer
     {
         /**
          * @var array<string, mixed> $conf
-         * @var Template $template
          * @var array<string, mixed> $page
          */
-        global $conf, $template, $page;
+        global $conf, $page;
+        $template = \Piwigo\Template\CurrentTemplate::get();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 

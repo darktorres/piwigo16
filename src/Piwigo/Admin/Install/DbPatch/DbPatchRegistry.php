@@ -19,12 +19,13 @@ namespace Piwigo\Admin\Install\DbPatch;
  * and the version-upgrade range loops rely on it, and the registry
  * integrity test asserts it.
  *
- * TRANSITION NOTE (8g-1..8g-5): patches not yet ported (101-181) are
- * still discovered and executed from their install/db/*.php files;
- * getAvailableUpgradeIds() unions this registry with the directory scan
- * and UpgradeFeedRunner prefers a registry class when one exists. The
- * scan, the include fallback, and the files themselves all go away when
- * the port completes (8g-6).
+ * TRANSITION NOTE (8g-3..8g-5): the registry is COMPLETE (all 121
+ * upstream ids, 61-181), but the install/db/*.php files stay on disk
+ * until 8g-4/8g-5 port the frozen install/upgrade_X.Y.Z.php version
+ * scripts that still include them by literal path (their file_exists()
+ * range guards would silently skip deleted patches). The directory scan
+ * in getAvailableUpgradeIds(), UpgradeFeedRunner's include fallback, and
+ * the files themselves all go away in 8g-6.
  */
 final class DbPatchRegistry
 {
@@ -112,14 +113,61 @@ final class DbPatchRegistry
         '138' => Patch138::class,
         '139' => Patch139::class,
         '140' => Patch140::class,
+        '141' => Patch141::class,
+        '142' => Patch142::class,
+        '143' => Patch143::class,
+        '144' => Patch144::class,
+        '145' => Patch145::class,
+        '146' => Patch146::class,
+        '147' => Patch147::class,
+        '148' => Patch148::class,
+        '149' => Patch149::class,
+        '150' => Patch150::class,
+        '151' => Patch151::class,
+        '152' => Patch152::class,
+        '153' => Patch153::class,
+        '154' => Patch154::class,
+        '155' => Patch155::class,
+        '156' => Patch156::class,
+        '157' => Patch157::class,
+        '158' => Patch158::class,
+        '159' => Patch159::class,
+        '160' => Patch160::class,
+        '161' => Patch161::class,
+        '162' => Patch162::class,
+        '163' => Patch163::class,
+        '164' => Patch164::class,
+        '165' => Patch165::class,
+        '166' => Patch166::class,
+        '167' => Patch167::class,
+        '168' => Patch168::class,
+        '169' => Patch169::class,
+        '170' => Patch170::class,
+        '171' => Patch171::class,
+        '172' => Patch172::class,
+        '173' => Patch173::class,
+        '174' => Patch174::class,
+        '175' => Patch175::class,
+        '176' => Patch176::class,
+        '177' => Patch177::class,
+        '178' => Patch178::class,
+        '179' => Patch179::class,
+        '180' => Patch180::class,
+        '181' => Patch181::class,
     ];
 
     /**
+     * PHP silently casts numeric-string array keys to int, so the keys
+     * come back re-stringified here -- callers get the exact string ids
+     * the historical filename scan produced (ledger rows, array_diff
+     * against DB-fetched strings, and DbPatchInterface::id() all use
+     * strings).
+     *
      * @return list<string>
      */
     public static function ids(): array
     {
-        return array_keys(self::PATCHES);
+        return array_map(strval(...), array_keys(self::PATCHES));
     }
 
     public static function has(string $id): bool

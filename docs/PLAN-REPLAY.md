@@ -4060,8 +4060,23 @@ handler (legacy `action.php`); it enforces the served-path check ([SEC-33]) here
 > single front controller). `Tables.php`/`AbstractRepository` are
 > retained until the post-P23 ORM migration (see the P14 audit note).
 > The exact remaining layout is pinned by
-> `tests/Arch/LegacyDirectoryTest.php` (batch 9). The `$GLOBALS`/static-
-> bridge retirement bullets remain in P23 scope (batch 10).
+> `tests/Arch/LegacyDirectoryTest.php` (batch 9).
+>
+> **Batch 10 outcome (2026-07-17):** the `$GLOBALS`/static-bridge
+> retirement bullets were audited and deliberately NOT executed in P23 —
+> their premise ("zero callers remain after `include/` deletion") does
+> not hold in this fork, because the retained root entry shells and the
+> ported classes' preserved `global` contracts (~230 src/ files, kept
+> verbatim by the migration discipline) are live, correct consumers of
+> the bridge. `ServiceLocator.php` never existed here to delete;
+> of the named registries only `SectionContextRegistry` was ever built
+> (all statics have live callers); `Config::instance()` (genuinely
+> zero-caller) was removed in batch 9. The static→DI conversion maps
+> onto the later replay phases (P31's typed event system, the post-P23
+> ORM/repository remediation) rather than P23. admin.php's ~440-line
+> top-level orchestration was folded into `Piwigo\Admin\AdminShell`
+> (batch 10), leaving every root entry point in index.php's thin
+> bootstrap+dispatch form.
 
 - Delete `ServiceLocator.php`, retire `$GLOBALS` bridges
   ($conf, $user, $page, $lang, $filter, $template, $logger,

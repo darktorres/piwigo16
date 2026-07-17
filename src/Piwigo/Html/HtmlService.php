@@ -15,11 +15,10 @@ use Piwigo\Template\Template;
  * HTML rendering helpers, error pages, and status/header utilities.
  *
  * Injects nothing -- same "no constructor deps" shape as Piwigo\Url\
- * UrlService (this phase's sibling namespace): cross-domain calls
- * (trigger_change(), get_cat_info(), redirect_http()/redirect_html(),
- * script_basename(), is_a_guest(), pwg_transliterate(), \Piwigo\Db\MysqliDb::query2Array(),
- * l10n()) stay as plain global-function calls to modules not yet migrated
- * in P17.
+ * UrlService (its P17 sibling namespace): the remaining bare calls
+ * (trigger_change(), get_cat_info(), get_root_url()/add_url_params(),
+ * l10n()) are all settled composer-autoloaded utilities, not unmigrated
+ * legacy.
  *
  * Implements HtmlRenderingInterface (P23 batch 8f-3) so L1/L2a/L2b classes
  * that can't depend on this L3Presentation class directly can depend on

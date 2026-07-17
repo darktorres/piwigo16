@@ -140,9 +140,9 @@ SELECT
             $protected_users = array_merge($protected_users, $admin_ids);
 
             // user_infos.id (primary key, NOT NULL): a raw DB fetch value is a
-            // numeric string, build_user() may also set it as int -- either way
-            // it's always scalar and string-castable (same invariant as the
-            // equivalent block in functions_user.inc.php's ws_users_setInfo()).
+            // numeric string, UserService::buildUser() may also set it as int --
+            // either way it's always scalar and string-castable (same invariant
+            // as the equivalent block in Piwigo\Ws\PwgUsers::setInfo()).
             $current_user_id = $user['id'];
             $current_user_id = is_scalar($current_user_id) ? (string) $current_user_id : '0';
 
@@ -152,7 +152,7 @@ SELECT
 
         // user_fields is a string=>string map (see config_default.inc.php's
         // $conf['user_fields']); same invariant relied on by
-        // functions_user.inc.php's ws_users_setInfo().
+        // Piwigo\Ws\PwgUsers::setInfo().
         /** @var array<string, string> $user_fields */
         $user_fields = $conf['user_fields'];
 

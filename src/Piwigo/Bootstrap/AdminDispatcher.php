@@ -9,21 +9,19 @@ use Piwigo\Core\Kernel;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * Replaces admin.php's `include PHPWG_ROOT_PATH . 'admin/' . $page_slug .
- * '.php';` dispatch. Lives in Bootstrap/ (not admin.php itself) because
- * Kernel::container() is arch-test-restricted to Bootstrap/ + root
- * index.php (tests/Arch/StructuralTest.php) -- admin.php is a different
- * root file, so it must reach the container through this class, the same
- * seam CommonBootstrap/RequestPipeline already use.
+ * Replaces admin.php's historical `include PHPWG_ROOT_PATH . 'admin/' .
+ * $page_slug . '.php';` dispatch. Lives in Bootstrap/ (not admin.php
+ * itself) because Kernel::container() is arch-test-restricted to
+ * Bootstrap/ + root index.php (tests/Arch/StructuralTest.php) --
+ * admin.php is a different root file, so it must reach the container
+ * through this class, the same seam CommonBootstrap/RequestPipeline
+ * already use.
  *
- * $pageSlug is trusted pre-validated: admin.php's own
- * `/^[a-z_]*$/` + is_file() check (its "Variables init" section) already
- * ran before this is called, same guard it always used to gate the raw
- * `include`.
- *
- * Slugs not yet in config/admin_pages.php fall back to the legacy include
- * unchanged -- lets P21 migrate one batch at a time without ever breaking
- * an un-migrated page mid-phase.
+ * Every admin page is a config/admin_pages.php sub-controller since P23
+ * batch 6; the legacy-include fallback for not-yet-migrated slugs was
+ * removed in P23 batch 9 (admin.php already falls back to 'intro' for
+ * any slug not in the map, so an unmapped slug reaching this point is a
+ * programming error, not user input).
  */
 final class AdminDispatcher
 {
@@ -32,8 +30,9 @@ final class AdminDispatcher
         $map = self::map();
 
         if (! isset($map[$pageSlug])) {
-            include PHPWG_ROOT_PATH . 'admin/' . $pageSlug . '.php';
-            return;
+            throw new \LogicException(
+                "Admin page '{$pageSlug}' is not registered in config/admin_pages.php."
+            );
         }
 
         $controller = Kernel::container()->get($map[$pageSlug]);

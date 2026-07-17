@@ -249,10 +249,10 @@ final class PermissionService
      * PermissionService precedent already resolved elsewhere by picking
      * the L2a domain owner as the target instead of Piwigo\Admin.
      *
-     * get_uppercat_ids()/get_subcat_ids() (Categories domain) stay bare
-     * calls -- not yet migrated, still live in admin/include/
-     * functions.php (a later sub-batch's scope). \Piwigo\Db\MysqliDb::massInserts() is a
-     * permanent free-function facade (finding 8).
+     * get_uppercat_ids()/get_subcat_ids() stay bare calls -- they are
+     * settled composer-autoloaded utilities (src/Piwigo/Category/
+     * functions.php, the P23 batch 8c "relocate ubiquitous utilities"
+     * track), not unmigrated legacy.
      *
      * @param int|array<int, int> $categoryIds real callers pass a mix of
      *   `list<int>` and array-key-preserving results of array_map()/
@@ -283,9 +283,8 @@ final class PermissionService
             $catIds = array_merge($catIds, get_subcat_ids($categoryIds));
         }
 
-        // get_uppercat_ids()/get_subcat_ids() are still bare, untyped
-        // (Categories domain, not yet migrated) -- normalize their mixed
-        // element type for implode()'s strict array<string> param.
+        // get_uppercat_ids()/get_subcat_ids() return int elements --
+        // normalize for implode()'s strict array<string> param.
         $query = '
 SELECT id
   FROM ' . Tables::categories() . '

@@ -3283,6 +3283,14 @@ repositories (via the `AbstractRepository` DBAL shim). Once `include/` is
 deleted in P23, `Tables` is deleted too. Arch test:
 `grep -rn 'Tables::' src/` → 0 after P23.
 
+> **Replay note (2026-07-17):** superseded — per the P14 audit note above,
+> `Tables`/`AbstractRepository` became the real, tested pattern for the ~27
+> query-heavy domain repositories, so both are **retained through P23** in
+> active, correct use (P23 batch 9 closed the legacy deletion with them still
+> in place). They are deleted by the separately-tracked post-P23 ORM
+> migration (Step 5) instead, when the repositories move onto
+> `ServiceEntityRepository` for real.
+
 Full table list: activity, caddie, categories, comments, config,
 derivative\_settings, derivative\_size, extension\_ignored\_updates, favorites,
 group\_access, groups, history, history\_summary, image\_category,
@@ -4039,6 +4047,21 @@ handler (legacy `action.php`); it enforces the served-path check ([SEC-33]) here
 ### P23 — Legacy deletion & cleanup
 
 > **Tier** T1 · **Depends on** P22 · **Greenfield delta:** none. **Replay:** delete `include/`+`admin/`, `$GLOBALS`/static bridges, `Tables`; drop the 3 cache tables (replaced by CTEs + cache pools).
+
+> **Replay note (2026-07-17, after P23 batches 8f-9):** this fork's replay
+> deliberately diverges from several bullets below. `include/` is not
+> deleted entirely — it keeps the 4-file bootstrap seam
+> (`common.inc.php`, `config_default.inc.php`, `env.inc.php`, plus the
+> anti-listing stub; the 8f-5 design keeps every root entry point
+> including the same seam path, with SEC-60 keeping its `define()`s out
+> of `src/`). `admin/` keeps its anti-listing stub, `popuphelp.php`, and
+> the live `themes/` assets. The root entry points are retained as thin
+> shells (this fork keeps Piwigo's URL surface rather than moving to a
+> single front controller). `Tables.php`/`AbstractRepository` are
+> retained until the post-P23 ORM migration (see the P14 audit note).
+> The exact remaining layout is pinned by
+> `tests/Arch/LegacyDirectoryTest.php` (batch 9). The `$GLOBALS`/static-
+> bridge retirement bullets remain in P23 scope (batch 10).
 
 - Delete `ServiceLocator.php`, retire `$GLOBALS` bridges
   ($conf, $user, $page, $lang, $filter, $template, $logger,

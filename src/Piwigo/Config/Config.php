@@ -30,8 +30,6 @@ final class Config
      */
     private static array $data = [];
 
-    private static ?self $singleton = null;
-
     /**
      * Source-of-truth registry of every Piwigo config key. Empirically
      * derived from this repo's own include/config_default.inc.php (187
@@ -1801,14 +1799,6 @@ final class Config
     ];
 
     private function __construct() {}
-
-    /**
-     * Singleton handle — all data methods are static.
-     */
-    public static function instance(): self
-    {
-        return self::$singleton ??= new self();
-    }
 
     /**
      * @return array<string,mixed>
@@ -3677,6 +3667,5 @@ final class Config
     public static function reset(): void
     {
         self::$data = [];
-        self::$singleton = null;
     }
 }

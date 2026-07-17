@@ -73,8 +73,8 @@ final class PwgUsers
         global $conf;
 
         // $conf['user_fields'] maps generic field names to table-specific DB
-        // column names (see include/functions_user.inc.php for the same
-        // pattern); extracted once here since this function reads id/username/
+        // column names (see Piwigo\Users\UserService for the same pattern);
+        // extracted once here since this function reads id/username/
         // email repeatedly below.
         $user_fields = $conf['user_fields'];
         $user_fields = is_array($user_fields) ? $user_fields : [];
@@ -580,8 +580,8 @@ SELECT
         $updated_users = self::userService()->checkAndSaveUserInfos($params);
 
         if (isset($updated_users['error'])) {
-            // check_and_save_user_infos() is declared to return plain `array`
-            // (include/functions_user.inc.php); its error branches always
+            // UserService::checkAndSaveUserInfos() is declared to return plain
+            // `array`; its error branches always
             // populate error.code (int) and error.message (string), but that
             // shape isn't statically expressed, so narrow defensively here
             // rather than trust the mixed offsets.
@@ -662,7 +662,7 @@ SELECT
             }
 
             // $conf['user_fields'] maps generic field names to table-specific
-            // DB column names (see include/functions_user.inc.php for the same
+            // DB column names (see Piwigo\Users\UserService for the same
             // pattern).
             $user_fields = $conf['user_fields'];
             $user_fields = is_array($user_fields) ? $user_fields : [];
@@ -708,8 +708,8 @@ SELECT ' . $user_field_password . ' AS password
         $updated_users = self::userService()->checkAndSaveUserInfos($params);
 
         if (isset($updated_users['error'])) {
-            // check_and_save_user_infos() is declared to return plain `array`
-            // (include/functions_user.inc.php); its error branches always
+            // UserService::checkAndSaveUserInfos() is declared to return plain
+            // `array`; its error branches always
             // populate error.code (int) and error.message (string), but that
             // shape isn't statically expressed, so narrow defensively here
             // rather than trust the mixed offsets.
@@ -941,8 +941,8 @@ SELECT
             return new PwgError(WsError::INVALID_PARAM, 'This user does not exist.');
         }
 
-        // getuserdata() is declared to return array<string, mixed> (its own
-        // @return docblock, include/functions_user.inc.php); narrow the
+        // UserService::getUserData() is declared to return
+        // array<string, mixed> (its own @return docblock); narrow the
         // specific fields this function consumes to their real column types.
         $user_lost = self::userService()->getUserData($params['user_id']);
         $user_lost_status = is_string($user_lost['status']) ? $user_lost['status'] : '';
@@ -1076,9 +1076,9 @@ SELECT
         // it can never be 0 here.
         $duration = $params['duration'];
 
-        // create_api_key() requires a real int $user_id (its own @param
-        // docblock, include/functions_user.inc.php); a logged-in, non-guest
-        // session's $user['id'] is always the numeric users.id primary key.
+        // ApiKeyService::create() requires a real int $user_id (its own
+        // @param docblock); a logged-in, non-guest session's $user['id'] is
+        // always the numeric users.id primary key.
         $user_id = is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0;
 
         $secret = new ApiKeyService(new MailService())
@@ -1117,9 +1117,9 @@ SELECT
             return new PwgError(403, l10n('Invalid pkid format'));
         }
 
-        // revoke_api_key() requires a real int $user_id (its own @param
-        // docblock, include/functions_user.inc.php); a logged-in, non-guest
-        // session's $user['id'] is always the numeric users.id primary key.
+        // ApiKeyService::revoke() requires a real int $user_id (its own
+        // @param docblock); a logged-in, non-guest session's $user['id'] is
+        // always the numeric users.id primary key.
         $user_id = is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0;
 
         $revoked_key = new ApiKeyService(new MailService())

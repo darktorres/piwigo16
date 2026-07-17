@@ -10,10 +10,6 @@ use Piwigo\Session\SessionService;
  * P23 batch 8d: device-type detection relocated from
  * include/functions.inc.php -- no natural existing class home, stateless
  * beyond the session it reads/writes through SessionService.
- *
- * `\Piwigo\Db\MysqliDb::getBoolean()` (bare call inside mobileTheme()) stays a free function --
- * lives in include/dblayer/functions_mysqli.inc.php, relocate-only in
- * batch 8f (finding 2), not becoming a class method.
  */
 final class DeviceHelper
 {

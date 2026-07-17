@@ -3,11 +3,11 @@
 declare(strict_types=1);
 
 // Maps an admin.php `?page=` slug to the AdminSubControllerInterface class
-// that now handles it. Slugs absent from this map still fall back to the
-// legacy `include admin/<slug>.php` (Piwigo\Bootstrap\AdminDispatcher) --
-// P21 migrates this map's entries batch by batch; a slug only leaves the
-// legacy path once its sub-controller is built, tested, and live-verified.
-// P23 deletes the fallback once every real slug has an entry here.
+// that handles it. This map is the complete admin page registry: admin.php
+// falls back to 'intro' for any slug not listed here, and
+// Piwigo\Bootstrap\AdminDispatcher treats an unmapped slug reaching it as
+// a programming error (the legacy `include admin/<slug>.php` fallback was
+// removed in P23 batch 9, once batch 6 had migrated every page).
 
 /** @var array<string, class-string<\Piwigo\Controller\Admin\AdminSubControllerInterface>> */
 return [

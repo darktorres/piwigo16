@@ -208,17 +208,12 @@ if (isset($_GET['page']) and is_string($_GET['page']) and (bool) preg_match('/^p
     }
 }
 
-// A valid page slug used to mean exactly "a real admin/<slug>.php file
-// exists" -- true when every page was still a raw legacy include. Now
-// that AdminDispatcher/config/admin_pages.php can fully absorb a page
-// (deleting its legacy file entirely, P23 batch 6a onward), that check
-// alone silently rejects every fully-ported slug and falls back to
-// 'intro' -- found live: admin.php?page=cat_options rendered the
-// dashboard instead of the album-options page once its legacy file was
-// deleted, with no error of any kind (a real, previously-undetected
-// verification gap: HTTP 200 + no error markers looks identical to this
-// silent fallback). A slug is valid when *either* its legacy file still
-// exists *or* it's registered in config/admin_pages.php.
+// A valid page slug is exactly "registered in config/admin_pages.php" --
+// every admin page has been an AdminDispatcher sub-controller since P23
+// batch 6, and batch 9 removed the transitional is_file() half of this
+// check (admin/ holds no page files anymore, so it only matched the
+// anti-listing stub and popuphelp.php, neither a real admin page).
+// Anything else falls back to 'intro'.
 /** @var array<string, class-string<\Piwigo\Controller\Admin\AdminSubControllerInterface>> $admin_pages */
 $admin_pages = require PHPWG_ROOT_PATH . 'config/admin_pages.php';
 
@@ -226,7 +221,7 @@ $admin_pages = require PHPWG_ROOT_PATH . 'config/admin_pages.php';
 if (isset($_GET['page'])
     and is_string($_GET['page'])
     and (bool) preg_match('/^[a-z_]*$/', $_GET['page'])
-    and (is_file(PHPWG_ROOT_PATH . 'admin/' . $_GET['page'] . '.php') or array_key_exists($_GET['page'], $admin_pages))) {
+    and array_key_exists($_GET['page'], $admin_pages)) {
     $page['page'] = $_GET['page'];
 } else {
     $page['page'] = 'intro';
@@ -315,7 +310,7 @@ SELECT COUNT(*)
 
 // any photo in the caddie?
 // Real invariant: $user['id'] is always the numeric user id set in
-// build_user() (include/functions_user.inc.php).
+// Piwigo\Users\UserService::buildUser().
 $user_id = is_numeric($user['id']) ? (int) $user['id'] : 0;
 $query = '
 SELECT COUNT(*)

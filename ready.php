@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 // Readiness: can we reach the configured DB. Extend once P11 adds Redis to
 // the dependency graph. Deliberately doesn't go through \Piwigo\Db\MysqliDb::connect()
-// (include/dblayer/functions_mysqli.inc.php) — that wrapper assumes the
-// full request bootstrap ($page['count_queries'], $conf['show_queries'],
+// — that wrapper assumes the full request bootstrap
+// ($page['count_queries'], $conf['show_queries'],
 // \Piwigo\Db\MysqliDb::myError() output), which doesn't belong in a probe response. Reuses only
 // the same config-resolution path common.inc.php uses, so this reflects
 // whatever DB the real app would connect to (local/config/config.inc.php

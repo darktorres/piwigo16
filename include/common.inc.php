@@ -70,7 +70,7 @@ include PHPWG_ROOT_PATH . 'include/env.inc.php';
 
 defined('PHPWG_INSTALLED') or define('PHPWG_INSTALLED', true);
 
-// dblayer include, error collector, session save handler, DB connection,
+// error collector, session save handler, DB connection,
 // DB-backed config, logger, plugins, current-user resolution
 \Piwigo\Bootstrap\RequestBootstrap::connect();
 

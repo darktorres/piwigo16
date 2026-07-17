@@ -12,13 +12,6 @@ parameters:
             # JS dependency tree — some npm packages ship stray .php files
             # (e.g. flatted's PHP port) that aren't part of this project.
             - node_modules/*
-            # Historical numbered DB-migration snippets, not maintained code.
-            - install/db/*.php
-            # Historical numbered upgrade-from-old-version snippets (define()
-            # their own PREFIX_TABLE via the including upgrade.php/upgrade_feed.php).
-            # Not maintained code — ADR-0002 rules out in-place upgrade from
-            # upstream entirely, so these bodies are already dead in this fork.
-            - install/upgrade_*.php
             # Translation data files (arrays of strings), not logic.
             - language/*.php
             # Runtime-compiled Smarty templates + combined JS/CSS cache, not source.

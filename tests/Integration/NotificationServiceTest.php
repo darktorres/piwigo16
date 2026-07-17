@@ -3,8 +3,9 @@
 declare(strict_types=1);
 
 // NotificationService::newsExists() now calls Piwigo\Auth\AccessControl::
-// isAdmin() directly (P23 batch 8d), a pure `global $user;` read, so no
-// stub is needed; tests below set $GLOBALS['user']['status'] instead.
+// isAdmin() directly (P23 batch 8d), which reads Piwigo\Users\CurrentUser
+// (Legacy Coupling Retirement Track A batch A3) -- tests below seed
+// CurrentUser instead.
 namespace {
     if (! defined('PHPWG_ROOT_PATH')) {
         define('PHPWG_ROOT_PATH', './');
@@ -25,6 +26,9 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Notification\NotificationService;
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
+    use Piwigo\Users\CurrentUser;
+    use Piwigo\Users\User;
+    use Piwigo\Users\UserStatus;
 
 /**
  * Same fixture shape as NotificationRepositoryTest.
@@ -77,7 +81,7 @@ final class NotificationServiceTest extends IntegrationTestCase
         $this->cacheDir = dirname(__DIR__, 2) . '/_data/notification-service-test-cache';
         @mkdir($this->cacheDir . '/cache', 0o777, true);
 
-        $GLOBALS['user'] = [
+        CurrentUser::set(User::fromUserArray([
             'id' => 1,
             'status' => 'normal',
             'cache_update_time' => '2026-07-07 05:02:38',
@@ -85,7 +89,7 @@ final class NotificationServiceTest extends IntegrationTestCase
             'level' => '0',
             'image_access_type' => 'NOT IN',
             'image_access_list' => '',
-        ];
+        ]));
         $GLOBALS['filter'] = [];
         $GLOBALS['conf'] = ['data_location' => '_data/notification-service-test-cache/'];
 
@@ -159,14 +163,14 @@ final class NotificationServiceTest extends IntegrationTestCase
 
     public function test_news_exists_is_true_when_new_elements_exist(): void
     {
-        $GLOBALS['user']['status'] = 'normal';
+        CurrentUser::set(CurrentUser::get()->withStatus(UserStatus::Normal));
 
         self::assertTrue($this->service->newsExists('2026-07-07 05:02:36', '2026-07-07 05:02:38'));
     }
 
     public function test_news_exists_is_false_for_an_empty_window(): void
     {
-        $GLOBALS['user']['status'] = 'normal';
+        CurrentUser::set(CurrentUser::get()->withStatus(UserStatus::Normal));
 
         self::assertFalse($this->service->newsExists('2026-07-08 00:00:00', '2026-07-09 00:00:00'));
     }
@@ -181,10 +185,10 @@ final class NotificationServiceTest extends IntegrationTestCase
             ['test author', '127.0.0.9', 'pending test comment']
         );
 
-        $GLOBALS['user']['status'] = 'normal';
+        CurrentUser::set(CurrentUser::get()->withStatus(UserStatus::Normal));
         self::assertFalse($this->service->newsExists('2026-07-31 00:00:00', '2026-08-02 00:00:00'));
 
-        $GLOBALS['user']['status'] = 'admin';
+        CurrentUser::set(CurrentUser::get()->withStatus(UserStatus::Admin));
         self::assertTrue($this->service->newsExists('2026-07-31 00:00:00', '2026-08-02 00:00:00'));
 
         $this->conn->executeStatement("DELETE FROM " . Tables::comments() . " WHERE author = 'test author'");

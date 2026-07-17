@@ -56,10 +56,7 @@ class PwgTOTP
      */
     public static function getOtpAuthUrl($secret): string
     {
-        /** @var array<string, mixed> $user */
-        global $user;
-        $username = $user['username'] ?? null;
-        $username = is_string($username) ? $username : '';
+        $username = \Piwigo\Users\CurrentUser::get()->username;
         $url = substr(get_absolute_root_url(), 0, -1);
         return 'otpauth://totp/' . $username . ':' . $url . '?secret=' . $secret . '&issuer=Piwigo&algorithm=sha1&digits=6&period=30';
     }

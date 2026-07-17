@@ -316,9 +316,6 @@ class updates
 
     public function get_server_extensions(string $version = AppInfo::VERSION): bool
     {
-        /** @var array<string, mixed> $user */
-        global $user;
-
         // PEM_URL is defined via define('PEM_URL', $conf['alternative_pem_url']) in
         // one branch of include/common.inc.php, so PHPStan can't prove it's a
         // string across that file boundary — narrow it once here.
@@ -391,7 +388,7 @@ class updates
             [
                 'last_revision_only' => 'true',
                 'version' => implode(',', $versions_to_check),
-                'lang' => substr(is_string($user['language']) ? $user['language'] : (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->getDefaultLanguage(), 0, 2),
+                'lang' => substr(\Piwigo\Users\CurrentUser::get()->language, 0, 2),
                 'get_nb_downloads' => 'true',
             ]
         );

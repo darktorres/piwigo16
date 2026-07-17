@@ -140,13 +140,9 @@ final class NotificationService
      */
     public function getRecentPostDates(int $maxDates, int $maxElements, int $maxCats): array
     {
-        /** @var array<string, mixed> $user */
-        global $user;
-
-        $userId = $user['id'] ?? null;
-        $userId = is_scalar($userId) ? (string) $userId : '';
-        $userCacheUpdateTime = $user['cache_update_time'] ?? null;
-        $userCacheUpdateTime = is_scalar($userCacheUpdateTime) ? (string) $userCacheUpdateTime : '';
+        $currentUser = \Piwigo\Users\CurrentUser::get();
+        $userId = (string) $currentUser->id;
+        $userCacheUpdateTime = $currentUser->cacheUpdateTime;
 
         $cacheKey = $this->cache->make_key('recent_posts' . $userId . $userCacheUpdateTime . $maxDates . $maxElements . $maxCats);
         $cached = null;

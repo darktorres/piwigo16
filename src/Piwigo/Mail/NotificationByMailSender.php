@@ -60,6 +60,8 @@ final class NotificationByMailSender
      */
     private array $saveUser = [];
 
+    private ?\Piwigo\Users\User $saveCurrentUser = null;
+
     private bool $isToSendMail = false;
 
     private ?string $emailFormat = null;
@@ -150,9 +152,10 @@ final class NotificationByMailSender
         global $user, $conf;
 
         $this->saveUser = $user;
-        $userLanguage = $user['language'] ?? null;
+        $this->saveCurrentUser = \Piwigo\Users\CurrentUser::get();
+        $userLanguage = $this->saveCurrentUser->language;
         new MailService()
-            ->switchLangTo(is_string($userLanguage) ? $userLanguage : (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->getDefaultLanguage());
+            ->switchLangTo($userLanguage !== '' ? $userLanguage : (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->getDefaultLanguage());
 
         $this->isToSendMail = $isToSendMail;
 
@@ -188,6 +191,9 @@ final class NotificationByMailSender
         global $user;
 
         $user = $this->saveUser;
+        if ($this->saveCurrentUser !== null) {
+            \Piwigo\Users\CurrentUser::set($this->saveCurrentUser);
+        }
         new MailService()
             ->switchLangBack();
 
@@ -203,6 +209,7 @@ final class NotificationByMailSender
         }
 
         $this->saveUser = [];
+        $this->saveCurrentUser = null;
         $this->isToSendMail = false;
     }
 
@@ -220,9 +227,11 @@ final class NotificationByMailSender
         $nbmUserIdRaw = $nbmUser['user_id'];
         assert(is_string($nbmUserIdRaw) && is_numeric($nbmUserIdRaw));
         $user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->buildUser((int) $nbmUserIdRaw, true);
+        \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));
 
+        $currentUserLanguage = \Piwigo\Users\CurrentUser::get()->language;
         new MailService()
-            ->switchLangTo(is_string($user['language']) ? $user['language'] : (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->getDefaultLanguage());
+            ->switchLangTo($currentUserLanguage !== '' ? $currentUserLanguage : (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->getDefaultLanguage());
 
         if ($isActionSend) {
             $emailFormat = $this->emailFormat ?? new MailService()

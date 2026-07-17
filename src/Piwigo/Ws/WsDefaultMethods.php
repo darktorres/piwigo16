@@ -38,8 +38,6 @@ final class WsDefaultMethods
     {
         /** @var array<string, mixed> $conf */
         global $conf;
-        /** @var array<string, mixed> $user */
-        global $user;
         $service = &$arr[0];
 
         // $conf['available_permission_levels'] defaults to [0, 1, 2, 4, 8] (see
@@ -306,7 +304,7 @@ final class WsDefaultMethods
                     'type' => WsParamType::ID,
                 ],
                 'author' => [
-                    'default' => \Piwigo\Auth\AccessControl::isAGuest() ? 'guest' : $user['username'],
+                    'default' => \Piwigo\Auth\AccessControl::isAGuest() ? 'guest' : \Piwigo\Users\CurrentUser::get()->username,
                 ],
                 'content' => [],
                 'key' => [],

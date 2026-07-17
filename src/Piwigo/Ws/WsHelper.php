@@ -178,9 +178,7 @@ final class WsHelper
         $provide_download_url = false;
 
         if ($src_image->is_original()) {// we have a photo
-            /** @var array<string, mixed> $user */
-            global $user;
-            if ((bool) $user['enabled_high']) {
+            if (\Piwigo\Users\CurrentUser::get()->enabledHigh) {
                 $ret['element_url'] = $src_image->get_url();
                 $provide_download_url = true;
             }

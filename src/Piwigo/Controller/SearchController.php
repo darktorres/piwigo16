@@ -34,11 +34,8 @@ final class SearchController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $user
-         */
-        global $conf, $user;
+        /** @var array<string, mixed> $conf */
+        global $conf;
 
         $searchConn = DbConnection::build();
         $searchService = new SearchService(
@@ -142,10 +139,10 @@ final class SearchController implements ControllerInterface
             // used to mean "category exists AND isn't forbidden/empty for
             // this user" -- exactly what build_user()/getuserdata()
             // (include/functions_user.inc.php) already computes into
-            // $user['forbidden_categories'] (see SearchService::
+            // CurrentUser::get()->forbiddenCategories (see SearchService::
             // qsearchGetCategories()'s identical fix for the full trace).
-            $forbidden_categories = $user['forbidden_categories'] ?? null;
-            $forbidden_categories_csv = is_string($forbidden_categories) && $forbidden_categories !== '' ? $forbidden_categories : '0';
+            $forbidden_categories = \Piwigo\Users\CurrentUser::get()->forbiddenCategories;
+            $forbidden_categories_csv = $forbidden_categories !== '' ? $forbidden_categories : '0';
 
             $query = '
 SELECT

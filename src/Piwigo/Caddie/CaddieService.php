@@ -22,10 +22,7 @@ final class CaddieService
      */
     public static function fillCurrentUserCaddie(array $elementsId): void
     {
-        /** @var array<string, mixed> $user */
-        global $user;
-
-        $userId = is_numeric($user['id']) ? (int) $user['id'] : 0;
+        $userId = \Piwigo\Users\CurrentUser::get()->id;
 
         new CaddieRepository(DbConnection::build())
             ->addElements($userId, $elementsId);

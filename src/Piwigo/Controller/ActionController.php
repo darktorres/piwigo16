@@ -114,6 +114,7 @@ SELECT * FROM ' . Tables::images() . '
         if (\Piwigo\Auth\AccessControl::isAdmin() and isset($_GET['pwg_token']) and $_GET['pwg_token'] === (new \Piwigo\Csrf\CsrfService())->getToken()) {
             $is_admin_download = true;
             $user['enabled_high'] = true;
+            \Piwigo\Users\CurrentUser::set(\Piwigo\Users\CurrentUser::get()->withEnabledHigh(true));
         }
 
         $src_image = new SrcImage($element_info);
@@ -143,7 +144,7 @@ SELECT id
         $file = '';
         switch ($get_part) {
             case 'e':
-                if ($src_image->is_original() and ! (bool) $user['enabled_high']) {// we have a photo and the user has no access to HD
+                if ($src_image->is_original() and ! \Piwigo\Users\CurrentUser::get()->enabledHigh) {// we have a photo and the user has no access to HD
                     $deriv = new DerivativeImage(ImageStdParams::XXLARGE, $src_image);
                     if (! $deriv->same_as_source()) {
                         $this->doError(401, 'Access denied e');

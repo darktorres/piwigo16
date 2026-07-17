@@ -46,12 +46,15 @@ UPDATE ' . Tables::userCache() . '
         trigger_notify('invalidate_user_cache', $full);
     }
 
+    /**
+     * Only real callers are Piwigo\Tag\TagService (L2aCoreDomain) -- this
+     * class stays L1Infrastructure (see class docblock), so it may not
+     * depend on Piwigo\Users\CurrentUser itself (deptrac); each caller
+     * syncs CurrentUser's own cached 'nb_available_tags' rawAttribute
+     * right after calling this, same-layer as Piwigo\Users.
+     */
     public static function invalidateNbTags(): void
     {
-        /** @var array<string, mixed> $user */
-        global $user;
-        unset($user['nb_available_tags']);
-
         $query = '
 UPDATE ' . Tables::userCache() . '
   SET nb_available_tags = NULL';

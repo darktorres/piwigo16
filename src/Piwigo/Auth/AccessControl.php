@@ -8,22 +8,20 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
 
 /**
- * Current-request access-level checks: status/ACCESS_* introspection for
- * the legacy `global $user;`/`global $conf;` bridge arrays. Static, no
- * constructor -- every method is a pure read of those two globals (same
- * "global read inside a service method" shape already established by
- * TagService::addLevelToTags()/NotificationService's news() family), zero
- * DB access, so a static utility (matching AccessLevel's own static-const
- * convention) is cheaper for ~250 combined call sites than instance
- * construction.
+ * Current-request access-level checks: status/ACCESS_* introspection,
+ * reading Piwigo\Users\CurrentUser (Legacy Coupling Retirement Track A
+ * batch A3 -- previously the legacy `global $user;` bridge array directly)
+ * and `global $conf;`. Static, no constructor -- every method is a pure
+ * read (same "global read inside a service method" shape already
+ * established by TagService::addLevelToTags()/NotificationService's news()
+ * family), zero DB access, so a static utility (matching AccessLevel's own
+ * static-const convention) is cheaper for ~250 combined call sites than
+ * instance construction.
  *
  * P23 batch 8d: ported from include/functions_user.inc.php's
  * get_user_status()/get_access_type_status()/is_autorize_status()/
  * check_status()/is_generic()/is_a_guest()/is_classic_user()/is_admin()/
- * is_webmaster()/can_manage_comment(). Deliberately does NOT read
- * Piwigo\Users\CurrentUser -- that's a separate, not-yet-unified P17-P23
- * bridge value object (its own docblock: "deleted in P23"); unifying it
- * with `global $user` is out of this batch's scope (P23 batch 8g/9).
+ * is_webmaster()/can_manage_comment().
  */
 final class AccessControl
 {
@@ -46,15 +44,8 @@ final class AccessControl
 
     public static function getUserStatus(string $userStatus = ''): string
     {
-        /** @var array<string, mixed> $user */
-        global $user;
-
         if ($userStatus === '') {
-            if (isset($user['status']) && is_string($user['status'])) {
-                return $user['status'];
-            }
-
-            return '';
+            return \Piwigo\Users\CurrentUser::get()->status->value;
         }
 
         return $userStatus;
@@ -117,11 +108,8 @@ final class AccessControl
 
     public static function canManageComment(string $action, int|string $commentAuthorId): bool
     {
-        /**
-         * @var array<string, mixed> $user
-         * @var array<string, mixed> $conf
-         */
-        global $user, $conf;
+        /** @var array<string, mixed> $conf */
+        global $conf;
 
         if (self::isAGuest()) {
             return false;
@@ -135,14 +123,16 @@ final class AccessControl
             return true;
         }
 
+        $currentUserId = \Piwigo\Users\CurrentUser::get()->id;
+
         if ($action === 'edit' && (bool) $conf['user_can_edit_comment']) {
-            if ($commentAuthorId == $user['id']) {
+            if ((int) $commentAuthorId === $currentUserId) {
                 return true;
             }
         }
 
         if ($action === 'delete' && (bool) $conf['user_can_delete_comment']) {
-            if ($commentAuthorId == $user['id']) {
+            if ((int) $commentAuthorId === $currentUserId) {
                 return true;
             }
         }

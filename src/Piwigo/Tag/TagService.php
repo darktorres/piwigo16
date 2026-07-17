@@ -182,11 +182,8 @@ final class TagService
      */
     public function getAvailableTags(array $tagIds = []): array
     {
-        /**
-         * @var array<string, mixed> $user
-         * @var PersistentFileCache $persistent_cache
-         */
-        global $user, $persistent_cache;
+        /** @var PersistentFileCache $persistent_cache */
+        global $persistent_cache;
 
         $usePersistentCache = $tagIds === [];
 
@@ -200,8 +197,9 @@ final class TagService
         );
 
         if ($usePersistentCache) {
-            $userId = is_scalar($user['id'] ?? null) ? (string) $user['id'] : '';
-            $userCacheUpdateTime = is_scalar($user['cache_update_time'] ?? null) ? (string) $user['cache_update_time'] : '';
+            $currentUser = \Piwigo\Users\CurrentUser::get();
+            $userId = (string) $currentUser->id;
+            $userCacheUpdateTime = $currentUser->cacheUpdateTime;
             $cacheKey = $persistent_cache->make_key(__METHOD__ . $userId . $userCacheUpdateTime);
 
             if (! $persistent_cache->get($cacheKey, $tagCounters)) {
@@ -241,23 +239,26 @@ final class TagService
      */
     public function getNbAvailableTags(): int
     {
-        /** @var array<string, mixed> $user */
-        global $user;
+        $currentUser = \Piwigo\Users\CurrentUser::get();
 
-        if (! isset($user['nb_available_tags'])) {
-            $user['nb_available_tags'] = count($this->getAvailableTags());
+        if (! isset($currentUser->rawAttributes['nb_available_tags'])) {
+            $nbAvailableTags = count($this->getAvailableTags());
+            $currentUser = $currentUser->withRawAttribute('nb_available_tags', $nbAvailableTags);
+            \Piwigo\Users\CurrentUser::set($currentUser);
             \Piwigo\Db\MysqliDb::singleUpdate(
                 Tables::userCache(),
                 [
-                    'nb_available_tags' => $user['nb_available_tags'],
+                    'nb_available_tags' => $nbAvailableTags,
                 ],
                 [
-                    'user_id' => $user['id'],
+                    'user_id' => $currentUser->id,
                 ]
             );
         }
 
-        return is_numeric($user['nb_available_tags']) ? (int) $user['nb_available_tags'] : 0;
+        $nbAvailableTags = $currentUser->rawAttributes['nb_available_tags'] ?? null;
+
+        return is_numeric($nbAvailableTags) ? (int) $nbAvailableTags : 0;
     }
 
     /**
@@ -422,6 +423,7 @@ final class TagService
             ->updateImagesLastmodified($imagesToUpdate);
 
         UserCacheInvalidator::invalidateNbTags();
+        \Piwigo\Users\CurrentUser::set(\Piwigo\Users\CurrentUser::get()->withRawAttribute('nb_available_tags', null));
     }
 
     /**
@@ -445,6 +447,7 @@ final class TagService
         $this->newImageService()
             ->updateImagesLastmodified($imageIds);
         UserCacheInvalidator::invalidateNbTags();
+        \Piwigo\Users\CurrentUser::set(\Piwigo\Users\CurrentUser::get()->withRawAttribute('nb_available_tags', null));
     }
 
     /**
@@ -493,6 +496,7 @@ final class TagService
                     $tagIdCache[$tagName] = $this->repo->insertWithoutTimestamp($tagName, $urlName);
 
                     UserCacheInvalidator::invalidateNbTags();
+                    \Piwigo\Users\CurrentUser::set(\Piwigo\Users\CurrentUser::get()->withRawAttribute('nb_available_tags', null));
 
                     return $tagIdCache[$tagName];
                 }
@@ -549,6 +553,7 @@ final class TagService
         $this->newImageService()
             ->updateImagesLastmodified($imagesToUpdate);
         UserCacheInvalidator::invalidateNbTags();
+        \Piwigo\Users\CurrentUser::set(\Piwigo\Users\CurrentUser::get()->withRawAttribute('nb_available_tags', null));
     }
 
     /**

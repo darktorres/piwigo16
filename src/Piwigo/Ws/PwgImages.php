@@ -403,10 +403,9 @@ SELECT DISTINCT image_id
     public static function getInfo(array $params, PwgServer $service): PwgError|array
     {
         /**
-         * @var array<string, mixed> $user
-         * @var array<string, mixed> $conf
+         * @var array<string, mixed>
          */
-        global $user, $conf;
+        global $conf;
 
         $query = '
 SELECT *
@@ -598,8 +597,8 @@ SELECT id, date, author, content
               or (bool) $conf['comments_forall']
             )
         ) {
-            $username = $user['username'];
-            $comment_post_data['author'] = stripslashes(is_string($username) ? $username : '');
+            $username = \Piwigo\Users\CurrentUser::get()->username;
+            $comment_post_data['author'] = stripslashes($username);
             $comment_post_data['key'] = new EphemeralKeyService()->generate(2, (string) $params['image_id']);
         }
 
@@ -816,10 +815,9 @@ SELECT *
     public static function filteredSearchCreate(array $params, PwgServer $service): PwgError|array
     {
         /**
-         * @var array<string, mixed> $user
-         * @var array<string, mixed> $conf
+         * @var array<string, mixed>
          */
-        global $user, $conf;
+        global $conf;
 
         $searchConn = DbConnection::build();
         $searchService = new SearchService(
@@ -1424,10 +1422,9 @@ SELECT
     {
         /**
          * @var array<string, mixed> $conf
-         * @var array<string, mixed> $user
          * @var Logger $logger
          */
-        global $conf, $user, $logger;
+        global $conf, $logger;
 
         foreach ($params as $param_key => $param_value) {
             $logger->debug(sprintf(
@@ -1992,9 +1989,7 @@ SELECT COUNT(*)
 
         $upload_dir_conf = $conf['upload_dir'];
         $upload_dir_conf = is_string($upload_dir_conf) ? $upload_dir_conf : '';
-        $user_id_raw = $user['id'] ?? null;
-        $user_id_for_path = is_numeric($user_id_raw) ? (int) $user_id_raw : 0;
-        $output_filepath_prefix = $upload_dir_conf . '/buffer/' . $params['original_sum'] . '-u' . $user_id_for_path;
+        $output_filepath_prefix = $upload_dir_conf . '/buffer/' . $params['original_sum'] . '-u' . \Piwigo\Users\CurrentUser::get()->id;
         $chunkfile_path_pattern = $output_filepath_prefix . '-%03uof%03u.chunk';
 
         $chunkfile_path = sprintf($chunkfile_path_pattern, $params['chunk'] + 1, $params['chunks']);
@@ -2190,6 +2185,11 @@ SELECT COUNT(*)
         if (! empty($params['level']) and $params['level'] > $user['level']) {
             // this will not persist
             $user['level'] = $params['level'];
+            // Legacy Coupling Retirement Track A batch A3: dual-write,
+            // matching RequestBootstrap's own sync points -- downstream
+            // readers of the elevated level are being retargeted onto
+            // CurrentUser too.
+            \Piwigo\Users\CurrentUser::set(\Piwigo\Users\CurrentUser::get()->withLevel($params['level']));
         }
 
         // delete chunks older than a week

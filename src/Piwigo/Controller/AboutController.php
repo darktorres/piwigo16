@@ -42,9 +42,8 @@ final class AboutController implements ControllerInterface
             /**
              * @var array<string, mixed> $conf
              * @var array<string, mixed> $page
-             * @var array<string, mixed> $user
              */
-            global $conf, $page, $user, $title;
+            global $conf, $page, $title;
             $template = \Piwigo\Template\CurrentTemplate::get();
 
             $title = l10n('About Piwigo');
@@ -58,13 +57,7 @@ final class AboutController implements ControllerInterface
                 'return' => true,
             ]));
 
-            // build_user() (include/functions_user.inc.php) always resolves
-            // $user['theme'] to a validated, installed theme string before
-            // include/common.inc.php returns; $user itself is only known
-            // here as array<string, mixed>, so narrow with a defensive
-            // fallback rather than trust the shape blindly.
-            $user_theme = $user['theme'] ?? null;
-            $user_theme = is_string($user_theme) ? $user_theme : '';
+            $user_theme = \Piwigo\Users\CurrentUser::get()->theme;
 
             $theme_about = Lang::load('about.html', Config::themesPath() . $user_theme . '/', [
                 'return' => true,

@@ -28,11 +28,8 @@ final class GroupPermPageRenderer
 {
     public function render(): void
     {
-        /**
-         * @var array<string, mixed> $page
-         * @var array<string, mixed> $user
-         */
-        global $page, $user;
+        /** @var array<string, mixed> $page */
+        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $categoryConn = DbConnection::build();
@@ -82,8 +79,7 @@ final class GroupPermPageRenderer
         $group_service = new GroupService(new GroupRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
 
         // [SEC-57] actor for either branch below
-        $actor_id = $user['id'] ?? null;
-        $actor_id = is_numeric($actor_id) ? (int) $actor_id : null;
+        $actor_id = \Piwigo\Users\CurrentUser::get()->id;
 
         if (isset($_POST['falsify'])
             and count($cat_true) > 0) {

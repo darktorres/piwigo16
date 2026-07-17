@@ -79,9 +79,6 @@ final class PwgGroups
      */
     public static function add(array $params, PwgServer &$service): mixed
     {
-        /** @var array<string, mixed> $user */
-        global $user;
-
         $name = strip_tags(stripslashes($params['name']));
 
         try {
@@ -92,9 +89,9 @@ final class PwgGroups
         }
 
         // [SEC-57]
-        $actor_id = $user['id'] ?? null;
+        $actor_id = \Piwigo\Users\CurrentUser::get()->id;
         new AuditService(new AuditRepository(DbConnection::build()))
-            ->record(is_numeric($actor_id) ? (int) $actor_id : null, 'create', 'group', $inserted_id, null, [
+            ->record($actor_id, 'create', 'group', $inserted_id, null, [
                 'name' => $name,
             ]);
 

@@ -49,9 +49,8 @@ final class AlbumsPageRenderer
         /**
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $page
-         * @var array<string, mixed> $user
          */
-        global $conf, $page, $user;
+        global $conf, $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         // This method is always invoked from inside an
@@ -281,11 +280,7 @@ SELECT id,name,`rank`,status, visible, uppercats, lastmodified
         // of an album or change permissions, this variable is reset and not recalculated until
         // you open the gallery. As this situation doesn't occur each time you use the
         // administration, it's quite reliable but not as much as on gallery side.
-        // $user is array<string, mixed> -- re-derive a real string the same way
-        // $_POST values are validated above, rather than casting a still-mixed
-        // offset value directly (array/object-without-__toString would fatal).
-        $forbidden_categories = $user['forbidden_categories'] ?? null;
-        $forbidden_categories = is_scalar($forbidden_categories) ? (string) $forbidden_categories : '';
+        $forbidden_categories = \Piwigo\Users\CurrentUser::get()->forbiddenCategories;
         $is_forbidden = array_fill_keys(@explode(',', $forbidden_categories), 1);
 
         $query = '

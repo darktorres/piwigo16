@@ -170,9 +170,23 @@ final class UserBootstrap
         $user_id_int = is_numeric($user['id']) ? (int) $user['id'] : $guest_id_int;
 
         $user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->buildUser($user_id_int, $page['user_use_cache']);
+        // Legacy Coupling Retirement Track A batch A3: sync CurrentUser here,
+        // not only in RequestBootstrap::connect() after this method returns
+        // -- AccessControl::isAGuest()/isGeneric() right below already read
+        // CurrentUser, and common.inc.php (every classic HTTP entry point)
+        // never calls CommonBootstrap::run()/CurrentUser::attachGlobals(),
+        // so without this sync CurrentUser::get() throws "not initialised"
+        // the first time any retargeted consumer runs within this same
+        // request (caught via a live Contract-test HTTP 500, not a unit
+        // test -- the Integration/Unit harnesses independently seed
+        // CurrentUser in their own setUp(), masking the gap).
+        \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));
 
         if ((bool) $conf['browser_language'] and (\Piwigo\Auth\AccessControl::isAGuest() or \Piwigo\Auth\AccessControl::isGeneric()) and (bool) ($language = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->getBrowserLanguage())) {
             $user['language'] = $language;
+            if (is_string($language)) {
+                \Piwigo\Users\CurrentUser::updateLanguage($language);
+            }
         }
         trigger_notify('user_init', $user);
     }

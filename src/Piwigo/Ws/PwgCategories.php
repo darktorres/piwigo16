@@ -58,7 +58,7 @@ final class PwgCategories
     public static function getImages(array $params, PwgServer &$service): PwgError|array
     {
         /** @var array<string, mixed> $conf */
-        global $user, $conf;
+        global $conf;
 
         $params['cat_id'] = array_unique($params['cat_id']);
 
@@ -284,11 +284,9 @@ SELECT
      */
     public static function getList(array $params, PwgServer &$service): PwgError|array
     {
-        /**
-         * @var array<string, mixed> $user
-         * @var array<string, mixed> $conf
-         */
-        global $user, $conf;
+        /** @var array<string, mixed> $conf */
+        global $conf;
+        $currentUser = \Piwigo\Users\CurrentUser::get();
 
         $categoryConn = DbConnection::build();
         $categoryService = self::categoryService($categoryConn);
@@ -304,9 +302,7 @@ SELECT
         $output = [];
         $where = ['1=1'];
         $join_type = 'INNER';
-        // narrowed once and reused everywhere below instead of re-reading the
-        // mixed $user['id'] offset at each site.
-        $user_id = is_numeric($user['id']) ? (int) $user['id'] : 0;
+        $user_id = $currentUser->id;
         $join_user = $user_id;
 
         if (! $params['recursive']) {
@@ -334,8 +330,7 @@ SELECT
             // categories that are either locked or private and not permitted
             //
             // calculate_permissions does not consider empty categories as forbidden
-            $user_status = is_string($user['status']) ? $user['status'] : '';
-            $forbidden_categories = new PermissionService(new PermissionRepository(DbConnection::build()), new GroupRepository(DbConnection::build()))->getForbiddenCategories($user_id, $user_status);
+            $forbidden_categories = new PermissionService(new PermissionRepository(DbConnection::build()), new GroupRepository(DbConnection::build()))->getForbiddenCategories($user_id, $currentUser->status->value);
             $where[] = 'id NOT IN (' . $forbidden_categories . ')';
             $join_type = 'LEFT';
         }
@@ -504,7 +499,7 @@ SELECT id, path, representative_ext, level
             $result = \Piwigo\Db\MysqliDb::query($query);
 
             while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
-                if ($row['level'] <= $user['level']) {
+                if ($row['level'] <= $currentUser->level) {
                     // id is images.id, a NOT NULL primary key -- verified
                     // against install/piwigo_structure-mysql.sql.
                     $thumbnail_src_of[(int) $row['id']] = DerivativeImage::url($params['thumbnail_size'], $row);

@@ -26,9 +26,10 @@ use Piwigo\Ws\PwgServer;
 
 /**
  * Ported from admin/include/functions_upload.inc.php (22 free functions).
- * Behavior-preserving port -- global $conf/$user/$logger reads stay inline
- * (same "keep legacy global reads inline" pattern as every P17-20 domain
- * service), except two real fixes made during the port:
+ * Behavior-preserving port -- global $conf/$logger reads stay inline (same
+ * "keep legacy global reads inline" pattern as every P17-20 domain service;
+ * $user reads retargeted onto Piwigo\Users\CurrentUser in Legacy Coupling
+ * Retirement Track A batch A3), except two real fixes made during the port:
  *
  * [SEC-21] addUploadedFile()'s SVG branch validated that the sniffed MIME
  * type matched the ".svg" extension, but never sanitized the SVG's own
@@ -203,10 +204,9 @@ final class UploadService
     {
         /**
          * @var array<string, mixed> $conf
-         * @var array<string, mixed> $user
          * @var Logger $logger
          */
-        global $conf, $user, $logger;
+        global $conf, $logger;
 
         if ($original_filename !== null) {
             $original_filename = htmlspecialchars($original_filename);
@@ -456,7 +456,7 @@ SELECT
                 'width' => $file_infos['width'],
                 'height' => $file_infos['height'],
                 'md5sum' => $md5sum,
-                'added_by' => $user['id'],
+                'added_by' => \Piwigo\Users\CurrentUser::get()->id,
                 'rotation' => $rotation,
             ];
 
@@ -495,7 +495,7 @@ SELECT
                 'width' => $file_infos['width'],
                 'height' => $file_infos['height'],
                 'md5sum' => $md5sum,
-                'added_by' => $user['id'],
+                'added_by' => \Piwigo\Users\CurrentUser::get()->id,
                 'rotation' => $rotation,
             ];
 

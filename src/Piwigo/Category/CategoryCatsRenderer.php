@@ -65,9 +65,8 @@ final class CategoryCatsRenderer
          * @var array<string, mixed> $conf
          * @var Logger $logger
          * @var array<string, mixed> $page
-         * @var array<string, mixed> $user
          */
-        global $conf, $logger, $page, $user;
+        global $conf, $logger, $page;
         $template = $this->template;
 
         $conn = DbConnection::build();
@@ -79,14 +78,15 @@ final class CategoryCatsRenderer
         $reprPool = CachePools::categoryTree();
         $treeCache = new CategoryTreeCache($categoryService, $categoryRepo, $reprPool);
 
-        $userId = is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0;
+        $currentUser = \Piwigo\Users\CurrentUser::get();
+        $userId = $currentUser->id;
         $isRecentCats = $page['section'] === 'recent_cats';
 
-        $tree = $treeCache->getForUser($user);
+        $tree = $treeCache->getForUser($currentUser->rawAttributes);
 
         if ($isRecentCats) {
-            $recentPeriod = is_numeric($user['recent_period'] ?? null) ? (int) $user['recent_period'] : 0;
-            $lastPhotoDate = is_string($user['last_photo_date'] ?? null) ? $user['last_photo_date'] : null;
+            $recentPeriod = is_numeric($currentUser->rawAttributes['recent_period'] ?? null) ? (int) $currentUser->rawAttributes['recent_period'] : 0;
+            $lastPhotoDate = is_string($currentUser->rawAttributes['last_photo_date'] ?? null) ? $currentUser->rawAttributes['last_photo_date'] : null;
             $now = \DateTimeImmutable::createFromMutable(Env::now());
 
             $filtered = array_filter($tree, static function (array $row) use ($recentPeriod, $lastPhotoDate, $now): bool {
@@ -283,7 +283,7 @@ SELECT *
                     continue;
                 }
 
-                if ($row['level'] <= $user['level']) {
+                if ($row['level'] <= $currentUser->level) {
                     $infosOfImage[$imageRowId] = $row;
                 } else {
                     // problem: we must not display the thumbnail of a photo which has a
@@ -429,7 +429,8 @@ SELECT *
                     $categoryMaxDateLast = is_string($categoryMaxDateLast) ? $categoryMaxDateLast : '';
                     $categoryIsChildDateLast = $category['is_child_date_last'];
                     $categoryIsChildDateLast = is_bool($categoryIsChildDateLast) ? $categoryIsChildDateLast : false;
-                    $tplVar['icon_ts'] = \Piwigo\Core\RecentIconResolver::getIcon($categoryMaxDateLast, $categoryIsChildDateLast);
+                    $recentPeriodForIcon = is_numeric($currentUser->rawAttributes['recent_period'] ?? null) ? (int) $currentUser->rawAttributes['recent_period'] : 0;
+                    $tplVar['icon_ts'] = \Piwigo\Core\RecentIconResolver::getIcon($categoryMaxDateLast, $recentPeriodForIcon, $categoryIsChildDateLast);
                 }
 
                 if ((bool) $conf['display_fromto']) {

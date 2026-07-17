@@ -48,9 +48,8 @@ final class PictureModifyPageRenderer
          * @var array<string, mixed> $cache
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $page
-         * @var array<string, mixed> $user
          */
-        global $admin_photo_base_url, $cache, $conf, $page, $user;
+        global $admin_photo_base_url, $cache, $conf, $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $imageConn = DbConnection::build();
@@ -494,7 +493,7 @@ SELECT category_id, uppercats, dir
             $template->assign('U_JUMPTO', make_picture_url([
                 'image_id' => $image_id,
             ]) . '/' . $custom_context);
-        } elseif ((is_numeric($user['level']) ? (int) $user['level'] : 0) >= $image_level) {
+        } elseif (\Piwigo\Users\CurrentUser::get()->level >= $image_level) {
             $query = '
 SELECT category_id
   FROM ' . Tables::imageCategory() . '
@@ -510,7 +509,7 @@ SELECT category_id
                 $authorized_category_ids,
                 explode(
                     ',',
-                    (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getForbiddenCategories(is_numeric($user['id']) ? (int) $user['id'] : 0, is_string($user['status']) ? $user['status'] : '')
+                    (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getForbiddenCategories(\Piwigo\Users\CurrentUser::get()->id, \Piwigo\Users\CurrentUser::get()->status->value)
                 )
             );
 

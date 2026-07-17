@@ -55,9 +55,8 @@ final class BatchManagerGlobalPageRenderer
         /**
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $page
-         * @var array<string, mixed> $user
          */
-        global $conf, $page, $user;
+        global $conf, $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (count($_POST) > 0) {
@@ -167,16 +166,12 @@ final class BatchManagerGlobalPageRenderer
             $imageService = new ImageService(new ImageRepository($tagConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
 
             if ($action === 'remove_from_caddie') {
-                // $user['id'] is always numeric: include/user.inc.php (part of the
-                // include/common.inc.php bootstrap that always runs before this
-                // file) sets it from $conf['guest_id'], $_SESSION['pwg_uid'], or
-                // get_userid()/register_user(), all of which are ints.
-                assert(is_numeric($user['id']));
+                $current_user_id = \Piwigo\Users\CurrentUser::get()->id;
                 $query = '
 DELETE
   FROM ' . Tables::caddie() . '
   WHERE element_id IN (' . implode(',', $collection) . ')
-    AND user_id = ' . $user['id'] . '
+    AND user_id = ' . $current_user_id . '
 ;';
                 \Piwigo\Db\MysqliDb::query($query);
 

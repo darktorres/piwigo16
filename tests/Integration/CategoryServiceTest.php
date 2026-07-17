@@ -40,8 +40,9 @@ namespace {
     // handlers registered, so no local stub is needed.
 
     // is_admin() -- CategoryService now calls Piwigo\Auth\AccessControl::
-    // isAdmin() directly (P23 batch 8d), a pure `global $user;` read, so no
-    // stub is needed; tests below set $GLOBALS['user']['status'] instead.
+    // isAdmin() directly (P23 batch 8d), which reads Piwigo\Users\CurrentUser
+    // (Legacy Coupling Retirement Track A batch A3); tests below seed
+    // CurrentUser instead.
 
     if (! function_exists('get_boolean')) {
         function get_boolean(mixed $input): bool
@@ -82,6 +83,8 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Group\GroupRepository;
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
+    use Piwigo\Users\CurrentUser;
+    use Piwigo\Users\User;
 
 /**
  * Same fixture shape as CategoryRepositoryTest: category 1 "Sample Album"
@@ -118,7 +121,7 @@ final class CategoryServiceTest extends IntegrationTestCase
             new PermissionService(new PermissionRepository($this->conn), new GroupRepository($this->conn))
         );
 
-        $GLOBALS['user'] = [];
+        CurrentUser::set(User::fromUserArray([]));
         $GLOBALS['filter'] = [];
         $GLOBALS['conf'] = ['rate' => true];
     }
@@ -192,7 +195,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_get_preferred_image_orders_returns_the_fixed_option_list(): void
     {
-        $GLOBALS['user'] = ['status' => 'normal'];
+        CurrentUser::set(User::fromUserArray(['status' => 'normal']));
 
         $orders = $this->service->getPreferredImageOrders();
 
@@ -205,7 +208,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_get_preferred_image_orders_permissions_option_visible_to_admin(): void
     {
-        $GLOBALS['user'] = ['status' => 'admin'];
+        CurrentUser::set(User::fromUserArray(['status' => 'admin']));
 
         $orders = $this->service->getPreferredImageOrders();
 
@@ -375,8 +378,8 @@ final class CategoryServiceTest extends IntegrationTestCase
     {
         // exercising usePermissions=true with a genuinely non-empty
         // condition is what catches the andWhere() double-AND-wrap bug
-        // that an empty $GLOBALS['user'] silently skips.
-        $GLOBALS['user'] = self::realisticUserGlobal();
+        // that an empty (guest-default) CurrentUser silently skips.
+        CurrentUser::set(User::fromUserArray(self::realisticUserGlobal()));
 
         $ids = $this->service->getImageIdsForCategories([1], 'AND', '', '', true);
         sort($ids);
@@ -386,7 +389,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_get_common_categories_with_permissions_builds_valid_sql(): void
     {
-        $GLOBALS['user'] = self::realisticUserGlobal();
+        CurrentUser::set(User::fromUserArray(self::realisticUserGlobal()));
 
         $common = $this->service->getCommonCategories([1, 2, 3], null, [4, 5], true);
 
@@ -398,7 +401,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         // getRelatedCategoriesMenu() always calls getCommonCategories()
         // with usePermissions defaulted to true internally -- this is the
         // real menubar.inc.php code path the bug above was caught on.
-        $GLOBALS['user'] = self::realisticUserGlobal();
+        CurrentUser::set(User::fromUserArray(self::realisticUserGlobal()));
 
         $cats = $this->service->getRelatedCategoriesMenu([1, 2, 3], []);
 

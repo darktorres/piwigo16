@@ -887,18 +887,13 @@ INSERT IGNORE INTO ' . Tables::userCache() . '
      */
     public function checkUserFavorites(): void
     {
-        /** @var array<string, mixed> $user */
-        global $user;
+        $currentUser = CurrentUser::get();
 
-        if ($user['forbidden_categories'] == '') {
+        if ($currentUser->forbiddenCategories === '') {
             return;
         }
 
-        // user_infos.id (primary key, NOT NULL): a raw DB fetch value is a
-        // numeric string, buildUser() may also set it as int -- either way
-        // it's always scalar and safe to interpolate into SQL below.
-        $user_id_val = $user['id'];
-        $user_id_str = is_scalar($user_id_val) ? (string) $user_id_val : '0';
+        $user_id_str = (string) $currentUser->id;
 
         // $filter['visible_categories'] and $filter['visible_images']
         // must be not used because filter <> restriction
@@ -963,6 +958,17 @@ DELETE FROM ' . Tables::favorites() . '
     {
         $language = $this->getDefaultUserValue('language', AppInfo::DEFAULT_LANGUAGE);
         return is_string($language) ? $language : AppInfo::DEFAULT_LANGUAGE;
+    }
+
+    /**
+     * Returns the current (logged-in or guest) user's language preference,
+     * per DefaultLanguageProviderInterface::getCurrentLanguage()'s own
+     * docblock.
+     */
+    #[\Override]
+    public function getCurrentLanguage(): ?string
+    {
+        return CurrentUser::isInitialized() ? CurrentUser::get()->language : null;
     }
 
     /**
@@ -1041,18 +1047,17 @@ DELETE FROM ' . Tables::favorites() . '
      */
     public function getRecentPhotosSql(string $dbField): string
     {
-        /** @var array<string, mixed> $user */
-        global $user;
-        if (! isset($user['last_photo_date'])) {
+        $currentUser = CurrentUser::get();
+        if (! isset($currentUser->rawAttributes['last_photo_date'])) {
             return '0=1';
         }
 
         // same narrowing as get_icon()'s $recent_period handling in
         // functions.inc.php: a raw user_infos DB value, numeric string or int
-        $recent_period = $user['recent_period'] ?? null;
+        $recent_period = $currentUser->rawAttributes['recent_period'] ?? null;
         $recent_period = is_numeric($recent_period) ? (int) $recent_period : (is_string($recent_period) ? $recent_period : 0);
 
-        $last_photo_date = $user['last_photo_date'];
+        $last_photo_date = $currentUser->rawAttributes['last_photo_date'];
         $last_photo_date = is_string($last_photo_date) ? $last_photo_date : '';
 
         return $dbField . '>=LEAST('
@@ -1163,11 +1168,8 @@ DELETE FROM ' . Tables::favorites() . '
             }
         }
 
-        /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $user
-         */
-        global $conf, $user;
+        /** @var array<string, mixed> $conf */
+        global $conf;
 
         // see validateMailAddress() for why this is string=>string
         /** @var array<string, string> $user_fields */
@@ -1247,11 +1249,7 @@ SELECT
 ;';
                     $admin_ids = \Piwigo\Db\MysqliDb::query2Array($query, null, 'user_id');
 
-                    // user_infos.id (primary key, NOT NULL): a raw DB fetch
-                    // value is a numeric string, buildUser() may also set it as
-                    // int -- either way it's always scalar and string-castable.
-                    $current_user_id_val = $user['id'];
-                    $current_user_id_str = is_scalar($current_user_id_val) ? (string) $current_user_id_val : '0';
+                    $current_user_id_str = (string) CurrentUser::get()->id;
 
                     // we add all admin+webmaster users BUT the user herself
                     $password_protected_users = array_merge($password_protected_users, array_diff($admin_ids, [$current_user_id_str]));
@@ -1291,11 +1289,11 @@ SELECT
                 ];
             }
 
-            // user['id']/conf's guest_id/webmaster_id are always scalar (raw DB
-            // fetch value / int config values) and string-castable.
+            // conf's guest_id/webmaster_id are always scalar (int config
+            // values) and string-castable.
             $protected_users = array_filter(
                 [
-                    $user['id'],
+                    CurrentUser::get()->id,
                     $conf['guest_id'],
                     $conf['webmaster_id'],
                 ],
@@ -1303,7 +1301,7 @@ SELECT
             );
 
             // an admin can't change status of other admin/webmaster
-            if ($user['status'] == 'admin') {
+            if (CurrentUser::get()->status === UserStatus::Admin) {
                 $query = '
 SELECT
     user_id

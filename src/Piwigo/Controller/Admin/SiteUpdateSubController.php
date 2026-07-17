@@ -99,13 +99,12 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        global $conf, $logger, $user;
+        global $conf, $logger;
         $template = \Piwigo\Template\CurrentTemplate::get();
         /**
          * @var array<string, mixed> $conf
          * @var Logger $logger
          * @var Template $template
-         * @var array<string, mixed> $user
          */
 
         // +-----------------------------------------------------------------------+
@@ -670,7 +669,7 @@ SELECT id, path
                     'path' => \Piwigo\Db\MysqliDb::realEscapeString($path),
                     'representative_ext' => $fs[$path]['representative_ext'],
                     'storage_category_id' => $db_fulldirs[$dirname],
-                    'added_by' => $user['id'],
+                    'added_by' => \Piwigo\Users\CurrentUser::get()->id,
                 ];
 
                 if ($_POST['privacy_level'] != 0) {

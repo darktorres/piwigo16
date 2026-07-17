@@ -42,10 +42,9 @@ final class MenubarRenderer
         /**
          * @var array<string, mixed> $page
          * @var array<string, mixed> $conf
-         * @var array<string, mixed> $user
          * @var array<string, mixed> $filter
          */
-        global $page, $conf, $user, $filter;
+        global $page, $conf, $filter;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $conn = DbConnection::build();
@@ -113,7 +112,7 @@ final class MenubarRenderer
                     ])
                 );
             } else {
-                $recent_period = $user['recent_period'] ?? null;
+                $recent_period = \Piwigo\Users\CurrentUser::get()->rawAttributes['recent_period'] ?? null;
                 $recent_period = is_numeric($recent_period) ? (int) $recent_period : (is_string($recent_period) ? $recent_period : 0);
                 $template->assign(
                     'U_START_FILTER',
@@ -126,7 +125,7 @@ final class MenubarRenderer
 
         if ($block !== null) {
             $block->data = [
-                'NB_PICTURE' => $user['nb_total_images'],
+                'NB_PICTURE' => \Piwigo\Users\CurrentUser::get()->rawAttributes['nb_total_images'] ?? null,
                 'MENU_CATEGORIES' => $categoryService->getCategoriesMenu(new FilterService()),
                 'U_CATEGORIES' => make_index_url([
                     'section' => 'categories',
@@ -346,8 +345,7 @@ final class MenubarRenderer
                 $template->assign('U_REGISTER', get_root_url() . 'register.php');
             }
         } else {
-            $username = $user['username'] ?? null;
-            $username = is_string($username) ? $username : '';
+            $username = \Piwigo\Users\CurrentUser::get()->username;
             $template->assign('USERNAME', stripslashes($username));
             if (\Piwigo\Auth\AccessControl::isAuthorizeStatus(AccessLevel::Classic)) {
                 $template->assign('U_PROFILE', get_root_url() . 'profile.php');

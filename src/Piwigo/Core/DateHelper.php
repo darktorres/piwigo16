@@ -137,9 +137,6 @@ final class DateHelper
      */
     public static function formatDate(int|string|\DateTime|false $original, ?array $show = null, ?string $format = null): string
     {
-        /** @var array<string, mixed> $user */
-        global $user;
-
         $date = self::str2DateTime($original, $format);
 
         if (! (bool) $date) {
@@ -162,9 +159,7 @@ final class DateHelper
                 $dateType = \IntlDateFormatter::LONG;
             }
 
-            $user_language = $user['language'] ?? null;
-            $user_language = is_string($user_language) ? $user_language : null;
-            $fmt = new \IntlDateFormatter($user_language, $dateType, $timeType);
+            $fmt = new \IntlDateFormatter(Lang::currentUserLanguage() ?? AppInfo::DEFAULT_LANGUAGE, $dateType, $timeType);
             $formatted = $fmt->format($date);
             if ($formatted !== false) {
                 return $formatted;

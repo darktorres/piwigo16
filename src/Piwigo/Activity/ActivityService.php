@@ -33,6 +33,15 @@ final class ActivityService implements ActivityLoggerInterface
     #[\Override]
     public function record(string $object, int|string|array $objectId, string $action, array $details = []): void
     {
+        // Legacy Coupling Retirement Track A batch A3: deliberately NOT
+        // retargeted to CurrentUser::get()->id below -- CurrentUser is
+        // always at least guest-seeded by request time (attachGlobals()),
+        // so it can't express the "$user genuinely not loaded yet" state
+        // this method's own null fallback exists for (see the comment at
+        // the read site); switching to CurrentUser would silently
+        // misattribute those activity rows to the guest user instead of
+        // 'unknown actor' (null). global $user still correctly reads
+        // "unset" in that case.
         /** @var array<string, mixed> $user */
         global $user;
 

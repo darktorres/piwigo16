@@ -34,6 +34,8 @@ use Piwigo\Mail\MailService;
 use Piwigo\Page\NoPhotoYetRenderer;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Users\User;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
@@ -320,6 +322,17 @@ final class RequestBootstrap
         // inside a method the `global` declarations above already carry
         // array<string, mixed> for both, which is all the old dance
         // re-established.
+
+        // Legacy Coupling Retirement Track A batch A3: CurrentUser is the
+        // real target every retargeted consumer reads from now; `global
+        // $user` stays live alongside it (dual-write) until every consumer
+        // is retargeted off the raw global, matching CurrentTemplate's own
+        // migration shape (Track A batch A1). Synced here (real
+        // id/status/etc. from UserBootstrap::initialize()'s build_user()
+        // call, just above) AND again in finalize() below, since the
+        // guest's localized username is only known once the language is
+        // loaded -- not a redundant call, a second real mutation point.
+        CurrentUser::set(User::fromUserArray($user));
     }
 
     /**
@@ -380,6 +393,12 @@ final class RequestBootstrap
         // UserBootstrap::initialize())
         if (\Piwigo\Auth\AccessControl::isAGuest()) {
             $user['username'] = l10n('guest');
+            // Second CurrentUser sync point -- see connect()'s own comment.
+            // isAGuest() itself already reads CurrentUser (synced there with
+            // the pre-localization username), so only the localized-username
+            // case needs a second sync; the non-guest path never mutates
+            // $user again after connect()'s sync.
+            CurrentUser::set(User::fromUserArray($user));
         }
 
         // in case an auth key was provided and is no longer valid, we must wait to

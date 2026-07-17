@@ -38,11 +38,8 @@ final class RateService
      */
     public function rate(int $imageId, int|string|null $rate): array|false
     {
-        /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $user
-         */
-        global $conf, $user;
+        /** @var array<string, mixed> $conf */
+        global $conf;
 
         $rateItems = $conf['rate_items'] ?? null;
         $rateItems = is_array($rateItems) ? $rateItems : [];
@@ -70,8 +67,7 @@ final class RateService
             return false;
         }
 
-        $userId = $user['id'] ?? 0;
-        $userId = is_numeric($userId) ? (int) $userId : 0;
+        $userId = \Piwigo\Users\CurrentUser::get()->id;
 
         $remoteAddr = $_SERVER['REMOTE_ADDR'] ?? '';
         $remoteAddr = is_string($remoteAddr) ? $remoteAddr : '';

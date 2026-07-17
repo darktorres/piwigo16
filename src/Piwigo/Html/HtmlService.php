@@ -297,9 +297,7 @@ SELECT id, name, permalink
     #[\Override]
     public function accessDenied(): never
     {
-        global $user;
-
-        if (isset($user) and ! \Piwigo\Auth\AccessControl::isAGuest()) {
+        if (\Piwigo\Users\CurrentUser::isInitialized() and ! \Piwigo\Auth\AccessControl::isAGuest()) {
             $this->setStatusHeader(401);
 
             echo '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">

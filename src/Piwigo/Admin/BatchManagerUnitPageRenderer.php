@@ -57,9 +57,8 @@ final class BatchManagerUnitPageRenderer
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $page
          * @var array<string, mixed> $pwg_loaded_plugins
-         * @var array<string, mixed> $user
          */
-        global $cache, $conf, $page, $pwg_loaded_plugins, $user;
+        global $cache, $conf, $page, $pwg_loaded_plugins;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $htmlRenderer = new HtmlService();
@@ -428,21 +427,12 @@ SELECT
     FROM ' . Tables::imageCategory() . '
     WHERE image_id = ' . $row['id'] . '
     ;';
-                // $user['id']/$user['status'] are always numeric/string
-                // respectively: include/user.inc.php (part of the
-                // include/common.inc.php bootstrap that always runs before this
-                // file) populates $user via build_user(), whose 'id' is always the
-                // int passed to it and whose 'status' always comes from the
-                // Tables::userInfos().status column (a NOT NULL string column) --
-                // matches the same established pattern in
-                // BatchManagerGlobalPageRenderer.
-                assert(is_numeric($user['id']));
-                assert(is_string($user['status']));
+                $currentUser = \Piwigo\Users\CurrentUser::get();
                 $authorizeds = array_diff(
                     array_filter(\Piwigo\Db\MysqliDb::query2Array($query, null, 'category_id'), is_string(...)),
                     explode(
                         ',',
-                        (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getForbiddenCategories((int) $user['id'], $user['status'])
+                        (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getForbiddenCategories($currentUser->id, $currentUser->status->value)
                     )
                 );
 
@@ -511,7 +501,7 @@ SELECT
                             'FILE' => l10n('%s', $row['file']),
                             'related_categories' => $related_categories,
                             'related_category_ids' => json_encode($related_category_ids),
-                            'U_JUMPTO' => (isset($url_img) and $user['level'] >= $media['image']['level']) ? $url_img : null,
+                            'U_JUMPTO' => (isset($url_img) and $currentUser->level >= $media['image']['level']) ? $url_img : null,
                             'tag_selection' => $tag_selection,
                             'U_DOWNLOAD' => 'action.php?id=' . $row['id'] . '&amp;part=e&amp;pwg_token=' . (new \Piwigo\Csrf\CsrfService())->getToken() . '&amp;download',
                             'U_HISTORY' => get_root_url() . 'admin.php?page=history&amp;filter_image_id=' . $row['id'],

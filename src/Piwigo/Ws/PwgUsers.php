@@ -512,20 +512,21 @@ SELECT DISTINCT ';
         }
 
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $user
+         * @var array<string, mixed>
          */
-        global $conf, $user;
+        global $conf;
+
+        $currentUser = \Piwigo\Users\CurrentUser::get();
 
         $protected_users = [
-            $user['id'],
+            $currentUser->id,
             $conf['guest_id'],
             $conf['default_user_id'],
             $conf['webmaster_id'],
         ];
 
         // an admin can't delete other admin/webmaster
-        if ($user['status'] == 'admin') {
+        if ($currentUser->status === \Piwigo\Users\UserStatus::Admin) {
             $query = '
 SELECT
     user_id
@@ -539,8 +540,8 @@ SELECT
         // array_diff() requires every element to be string-castable;
         // \Piwigo\Db\MysqliDb::query2Array()'s list<string|null> return (key_name=null,
         // value_name='user_id') can contain null for a NULL user_id column, and
-        // $protected_users' own entries are still `mixed` even after typing
-        // $conf/$user above, so filter down to scalars (int/string) before
+        // $protected_users' $conf-sourced entries are still `mixed` even after
+        // typing $conf above, so filter down to scalars (int/string) before
         // diffing.
         $protected_users = array_filter($protected_users, is_scalar(...));
         $params['user_id'] = array_diff($params['user_id'], $protected_users);
@@ -623,10 +624,11 @@ SELECT
         }
 
         /**
-         * @var array<string, mixed> $user
-         * @var array<string, mixed> $conf
+         * @var array<string, mixed>
          */
-        global $user, $conf;
+        global $conf;
+
+        $currentUser = \Piwigo\Users\CurrentUser::get();
 
         // ACTIVATE_COMMENTS
         if (! (bool) $conf['activate_comments']) {
@@ -647,7 +649,7 @@ SELECT
         }
 
         // SPECIAL_USER
-        $special_user = in_array($user['id'], [$conf['guest_id'], $conf['default_user_id']]);
+        $special_user = in_array($currentUser->id, [$conf['guest_id'], $conf['default_user_id']]);
         if ($special_user) {
             unset(
                 $params['password'],
@@ -668,7 +670,7 @@ SELECT
             $user_fields = is_array($user_fields) ? $user_fields : [];
             $user_field_password = is_string($user_fields['password'] ?? null) ? $user_fields['password'] : 'password';
             $user_field_id = is_string($user_fields['id'] ?? null) ? $user_fields['id'] : 'id';
-            $current_user_id = is_scalar($user['id']) ? (string) $user['id'] : '';
+            $current_user_id = (string) $currentUser->id;
 
             $query = '
 SELECT ' . $user_field_password . ' AS password
@@ -704,7 +706,7 @@ SELECT ' . $user_field_password . ' AS password
             $params['enabled_high']
         );
 
-        $params['user_id'] = [$user['id']];
+        $params['user_id'] = [$currentUser->id];
         $updated_users = self::userService()->checkAndSaveUserInfos($params);
 
         if (isset($updated_users['error'])) {
@@ -734,9 +736,6 @@ SELECT ' . $user_field_password . ' AS password
      */
     public static function preferencesSet(array $params, PwgServer &$service): mixed
     {
-        /** @var array<string, mixed> $user */
-        global $user;
-
         if (! (bool) preg_match('/^[a-zA-Z0-9_-]+$/', $params['param'])) {
             return new PwgError(WsError::INVALID_PARAM, 'Invalid param name #' . $params['param'] . '#');
         }
@@ -748,7 +747,7 @@ SELECT ' . $user_field_password . ' AS password
 
         new PreferencesService(new UserRepository(DbConnection::build()))->updateParam($params['param'], $value);
 
-        return $user['preferences'];
+        return \Piwigo\Users\CurrentUser::get()->preferences;
     }
 
     /**
@@ -760,9 +759,6 @@ SELECT ' . $user_field_password . ' AS password
      */
     public static function favoritesAdd(array $params, PwgServer &$service): PwgError|true
     {
-        /** @var array<string, mixed> $user */
-        global $user;
-
         if (AccessControl::isAGuest()) {
             return new PwgError(403, 'User must be logged in.');
         }
@@ -784,7 +780,7 @@ SELECT COUNT(*)
             Tables::favorites(),
             [
                 'image_id' => $params['image_id'],
-                'user_id' => $user['id'],
+                'user_id' => \Piwigo\Users\CurrentUser::get()->id,
             ],
             [
                 'ignore' => true,
@@ -803,9 +799,6 @@ SELECT COUNT(*)
      */
     public static function favoritesRemove(array $params, PwgServer &$service): PwgError|true
     {
-        /** @var array<string, mixed> $user */
-        global $user;
-
         if (AccessControl::isAGuest()) {
             return new PwgError(403, 'User must be logged in.');
         }
@@ -823,7 +816,7 @@ SELECT COUNT(*)
             return new PwgError(404, 'image_id not found');
         }
 
-        $current_user_id = is_scalar($user['id']) ? (string) $user['id'] : '';
+        $current_user_id = (string) \Piwigo\Users\CurrentUser::get()->id;
         $query = '
 DELETE
   FROM ' . Tables::favorites() . '
@@ -849,10 +842,9 @@ DELETE
     public static function favoritesGetList(array $params, PwgServer &$service): false|array
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $user
+         * @var array<string, mixed>
          */
-        global $conf, $user;
+        global $conf;
 
         if (AccessControl::isAGuest()) {
             return false;
@@ -863,7 +855,7 @@ DELETE
         $order_by = WsHelper::stdImageSqlOrder($params, 'i.');
         $conf_order_by = is_string($conf['order_by'] ?? null) ? $conf['order_by'] : '';
         $order_by = empty($order_by) ? $conf_order_by : 'ORDER BY ' . $order_by;
-        $current_user_id = is_scalar($user['id']) ? (string) $user['id'] : '';
+        $current_user_id = (string) \Piwigo\Users\CurrentUser::get()->id;
 
         $query = '
 SELECT
@@ -927,10 +919,9 @@ SELECT
     public static function generatePasswordLink(array $params, PwgServer &$service): PwgError|array
     {
         /**
-         * @var array<string, mixed> $user
-         * @var array<string, mixed> $conf
+         * @var array<string, mixed>
          */
-        global $user, $conf;
+        global $conf;
 
         if (new CsrfService()->getToken() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -953,7 +944,7 @@ SELECT
         }
 
         // Only webmaster can perform this action for another webmaster
-        if ($user['status'] === 'admin' && $user_lost_status === 'webmaster') {
+        if (\Piwigo\Users\CurrentUser::get()->status === \Piwigo\Users\UserStatus::Admin && $user_lost_status === 'webmaster') {
             return new PwgError(403, 'You cannot perform this action');
         }
 
@@ -1048,11 +1039,8 @@ SELECT
      */
     public static function createApiKey(array $params, PwgServer &$service): PwgError|array
     {
-        /**
-         * @var array<string, mixed> $user
-         * @var Logger $logger
-         */
-        global $user, $logger;
+        /** @var Logger $logger */
+        global $logger;
 
         if (AccessControl::isAGuest() or ! new ApiKeyService(new MailService())->connectedWithPwgUi()) {
             return new PwgError(401, 'Acces Denied');
@@ -1076,10 +1064,7 @@ SELECT
         // it can never be 0 here.
         $duration = $params['duration'];
 
-        // ApiKeyService::create() requires a real int $user_id (its own
-        // @param docblock); a logged-in, non-guest session's $user['id'] is
-        // always the numeric users.id primary key.
-        $user_id = is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0;
+        $user_id = \Piwigo\Users\CurrentUser::get()->id;
 
         $secret = new ApiKeyService(new MailService())
             ->create($user_id, $duration, $key_name);
@@ -1099,11 +1084,8 @@ SELECT
      */
     public static function revokeApiKey(array $params, PwgServer &$service): PwgError|string
     {
-        /**
-         * @var array<string, mixed> $user
-         * @var Logger $logger
-         */
-        global $user, $logger;
+        /** @var Logger $logger */
+        global $logger;
 
         if (AccessControl::isAGuest() or ! new ApiKeyService(new MailService())->connectedWithPwgUi()) {
             return new PwgError(401, 'Acces Denied');
@@ -1117,10 +1099,7 @@ SELECT
             return new PwgError(403, l10n('Invalid pkid format'));
         }
 
-        // ApiKeyService::revoke() requires a real int $user_id (its own
-        // @param docblock); a logged-in, non-guest session's $user['id'] is
-        // always the numeric users.id primary key.
-        $user_id = is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0;
+        $user_id = \Piwigo\Users\CurrentUser::get()->id;
 
         $revoked_key = new ApiKeyService(new MailService())
             ->revoke($user_id, $params['pkid']);
@@ -1145,11 +1124,8 @@ SELECT
      */
     public static function editApiKey(array $params, PwgServer &$service): PwgError|string
     {
-        /**
-         * @var array<string, mixed> $user
-         * @var Logger $logger
-         */
-        global $user, $logger;
+        /** @var Logger $logger */
+        global $logger;
 
         if (AccessControl::isAGuest()) {
             return new PwgError(401, 'Acces Denied');
@@ -1168,10 +1144,7 @@ SELECT
         }
 
         $key_name = \Piwigo\Db\MysqliDb::realEscapeString($params['key_name']);
-        // edit_api_key() requires a real int $user_id (its own @param
-        // docblock, include/functions_user.inc.php); a logged-in, non-guest
-        // session's $user['id'] is always the numeric users.id primary key.
-        $user_id = is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0;
+        $user_id = \Piwigo\Users\CurrentUser::get()->id;
         $edited_key = new ApiKeyService(new MailService())
             ->edit($user_id, $params['pkid'], $key_name);
 
@@ -1195,9 +1168,6 @@ SELECT
      */
     public static function getApiKey(array $params, PwgServer &$service): PwgError|array|string
     {
-        /** @var array<string, mixed> $user */
-        global $user;
-
         if (AccessControl::isAGuest()) {
             return new PwgError(401, 'Acces Denied');
         }
@@ -1216,8 +1186,8 @@ SELECT
         // *string* (matching a stale docblock claim that get_api_key()
         // "requires a string $user_id", which was itself just describing
         // the bug). Every other ApiKeyService method here (create/revoke/
-        // edit) already passes a plain int for the same $user['id'] value.
-        $user_id = is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0;
+        // edit) already passes a plain int for the same user id value.
+        $user_id = \Piwigo\Users\CurrentUser::get()->id;
         $api_keys = new ApiKeyService(new MailService())
             ->get($user_id);
 

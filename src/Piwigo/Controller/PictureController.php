@@ -78,10 +78,9 @@ final class PictureController implements ControllerInterface
         /**
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $page
-         * @var array<string, mixed> $user
          * @var string $url_self
          */
-        global $conf, $page, $user, $url_self;
+        global $conf, $page, $url_self;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->saveEditContext();
@@ -125,10 +124,8 @@ final class PictureController implements ControllerInterface
         $image_id = $page['image_id'];
         $image_id = is_numeric($image_id) ? (int) $image_id : 0;
 
-        // $user['id'] (the logged in / guest user id) is never reassigned
-        // below.
-        $user_id = $user['id'];
-        $user_id = is_numeric($user_id) ? (int) $user_id : 0;
+        $currentUser = \Piwigo\Users\CurrentUser::get();
+        $user_id = $currentUser->id;
 
         // if this image_id doesn't correspond to this category, an error
         // message is displayed, and execution is stopped
@@ -156,8 +153,8 @@ SELECT id, file, level
                     );
             }
             $row_level = $row['level'];
-            $user_level = $user['level'];
-            if ((is_numeric($row_level) ? (int) $row_level : 0) > (is_numeric($user_level) ? (int) $user_level : 0)) {
+            $user_level = $currentUser->level;
+            if ((is_numeric($row_level) ? (int) $row_level : 0) > $user_level) {
                 new HtmlService()
                     ->accessDenied();
             }
@@ -514,14 +511,13 @@ UPDATE ' . Tables::categories() . '
             /**
              * @var array<string, mixed> $conf
              * @var array<string, mixed> $page
-             * @var array<string, mixed> $user
              * @var string $url_self
              * @var array<string, array<string, mixed>> $picture
              * @var list<array<string, string|null>> $related_categories
              * @var int|string|null $refresh
              * @var string|null $url_link
              */
-            global $conf, $page, $user, $title, $url_self, $picture, $related_categories, $refresh, $url_link;
+            global $conf, $page, $title, $url_self, $picture, $related_categories, $refresh, $url_link;
             $template = \Piwigo\Template\CurrentTemplate::get();
 
             // ---------- incrementation of the number of hits
@@ -622,7 +618,7 @@ SELECT *
                     assert(is_string($row_id)); // images.id is the NOT NULL primary key
 
                     if ($row['src_image']->is_original()) {// we have a photo
-                        if ((bool) $user['enabled_high']) {
+                        if (\Piwigo\Users\CurrentUser::get()->enabledHigh) {
                             $row['element_url'] = $row['src_image']->get_url();
                             $row['download_url'] = get_action_url($row_id, 'e', true);
                         }
@@ -793,7 +789,7 @@ SELECT *
             }
             $download_url = $picture['current']['download_url'] ?? null;
             $download_url_present = is_string($download_url) && $download_url !== '' && $download_url !== '0';
-            if ((bool) $conf['picture_download_icon'] and $download_url_present and (bool) $user['enabled_high']) {
+            if ((bool) $conf['picture_download_icon'] and $download_url_present and \Piwigo\Users\CurrentUser::get()->enabledHigh) {
                 $template->append('current', [
                     'U_DOWNLOAD' => $download_url,
                 ], true);

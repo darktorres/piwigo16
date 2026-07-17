@@ -95,6 +95,18 @@ final class Lang
         self::$defaultLanguageProvider = $provider;
     }
 
+    /**
+     * Current (logged-in or guest) user's language preference, for other
+     * L1Infrastructure callers (e.g. DateHelper) that need it but may not
+     * depend on Piwigo\Users\CurrentUser directly (deptrac) -- see
+     * DefaultLanguageProviderInterface's own docblock. Null when no
+     * provider has been set yet or it has no preference to report.
+     */
+    public static function currentUserLanguage(): ?string
+    {
+        return self::$defaultLanguageProvider?->getCurrentLanguage();
+    }
+
     public static function t(string $key, mixed ...$args): string
     {
         return Translator::get()->translate($key, ...$args);
@@ -190,10 +202,9 @@ final class Lang
     public static function load(string $filename, string $dirname = '', array $options = []): string|bool
     {
         /**
-         * @var array<string, mixed> $user
-         * @var array<string, array<string, mixed>> $language_files
+         * @var array<string, array<string, mixed>>
          */
-        global $user, $language_files;
+        global $language_files;
 
         // keep trace of plugins loaded files for switch_lang_to() function
         if ($dirname !== '' && $filename !== '' && ! ($options['return'] ?? false)
@@ -214,17 +225,18 @@ final class Lang
             : AppInfo::DEFAULT_LANGUAGE;
 
         // construct list of potential languages
-        // Every element pushed here must be a real string: $user['language'] and
-        // $options['force_fallback'] are the only entries whose static type
-        // isn't already a plain string, so both get an explicit is_string()
-        // guard before joining the list (array_unique()/implode() below need
-        // string-castable elements, not just an array container).
+        // Every element pushed here must be a real string: $options['force_fallback']
+        // is the only entry whose static type isn't already a plain string, so
+        // it gets an explicit is_string() guard before joining the list
+        // (array_unique()/implode() below need string-castable elements, not
+        // just an array container).
         $languages = [];
         if (! empty($options['language'])) { // explicit language
             $languages[] = $options['language'];
         }
-        if (! empty($user['language']) && is_string($user['language'])) { // use language
-            $languages[] = $user['language'];
+        $current_user_language = self::$defaultLanguageProvider?->getCurrentLanguage();
+        if (! empty($current_user_language)) { // use language
+            $languages[] = $current_user_language;
         }
         if (($parent = self::getParentLanguage()) != null) { // parent language
             // this is only for when the "child" language is missing

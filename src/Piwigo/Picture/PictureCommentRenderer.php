@@ -41,9 +41,8 @@ final class PictureCommentRenderer
         /**
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $page
-         * @var array<string, mixed> $user
          */
-        global $conf, $page, $user;
+        global $conf, $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
         /**
          * Set by PictureController, right before this call.
@@ -293,8 +292,8 @@ final class PictureCommentRenderer
         if ($showAddCommentForm) {
             $key = (new \Piwigo\Auth\EphemeralKeyService())->generate(3, (string) $imageId);
 
-            $userEmail = $user['email'] ?? null;
-            $userEmailEmpty = ! is_string($userEmail) || $userEmail === '' || $userEmail === '0';
+            $userEmail = \Piwigo\Users\CurrentUser::get()->email;
+            $userEmailEmpty = $userEmail === '' || $userEmail === '0';
 
             $tplVar = [
                 'F_ACTION' => $url_self,

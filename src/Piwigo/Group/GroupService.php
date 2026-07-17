@@ -246,9 +246,6 @@ final class GroupService
      */
     public function delete(array $groupIds): false|array
     {
-        /** @var array<string, mixed> $user */
-        global $user;
-
         if (count($groupIds) === 0) {
             trigger_error('There is no group to delete', E_USER_WARNING);
             return false;
@@ -274,8 +271,7 @@ final class GroupService
         $this->activityLogger->record('group', $ids, 'delete');
 
         // [SEC-57] one row per group actually deleted
-        $actorId = $user['id'] ?? null;
-        $actorId = is_numeric($actorId) ? (int) $actorId : null;
+        $actorId = \Piwigo\Users\CurrentUser::get()->id;
         $audit = new AuditService(new AuditRepository(DbConnection::build()));
         foreach ($deleted as $deletedId => $deletedName) {
             $audit->record($actorId, 'delete', 'group', $deletedId, [

@@ -263,11 +263,8 @@ UPDATE ' . Tables::userInfos() . '
      */
     public function get_server_languages(bool $new = false): bool
     {
-        /**
-         * @var array<string, mixed> $user
-         * @var array<string, mixed> $conf
-         */
-        global $user, $conf;
+        /** @var array<string, mixed> $conf */
+        global $conf;
 
         // PEM_URL is defined via define('PEM_URL', $conf['alternative_pem_url']) in
         // one branch of include/common.inc.php, so PHPStan can't prove it's a
@@ -335,7 +332,7 @@ UPDATE ' . Tables::userInfos() . '
             [
                 'last_revision_only' => 'true',
                 'version' => implode(',', $versions_to_check),
-                'lang' => $user['language'],
+                'lang' => \Piwigo\Users\CurrentUser::get()->language,
                 'get_nb_downloads' => 'true',
             ]
         );

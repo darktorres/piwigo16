@@ -82,12 +82,12 @@ final class HistoryService
     {
         /**
          * @var array<string, mixed> $conf
-         * @var array<string, mixed> $user
          * @var array<string, mixed> $page
          */
-        global $conf, $user, $page;
+        global $conf, $page;
 
-        $lastVisit = $user['last_visit'] ?? null;
+        $currentUser = \Piwigo\Users\CurrentUser::get();
+        $lastVisit = $currentUser->rawAttributes['last_visit'] ?? null;
         $lastVisitStr = is_string($lastVisit) ? $lastVisit : (is_numeric($lastVisit) ? (string) $lastVisit : '');
         $sessionLength = $conf['session_length'];
         $sessionLength = is_numeric($sessionLength) ? (int) $sessionLength : 0;
@@ -98,7 +98,7 @@ final class HistoryService
         }
         $updateLastVisit = trigger_change('pwg_log_update_last_visit', $updateLastVisit);
 
-        $userId = is_numeric($user['id']) ? (int) $user['id'] : 0;
+        $userId = $currentUser->id;
 
         if ((bool) $updateLastVisit) {
             $query = '

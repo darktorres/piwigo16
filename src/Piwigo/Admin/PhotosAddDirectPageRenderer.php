@@ -53,18 +53,13 @@ final class PhotosAddDirectPageRenderer
         /**
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $page
-         * @var array<string, mixed> $user
          */
-        global $conf, $page, $user;
+        global $conf, $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $htmlRenderer = new HtmlService();
 
-        // $user['id'] (the logged in / guest user id) is always numeric here
-        // (DB primary key, or $conf['guest_id']); narrow once and reuse at
-        // every site below instead of re-reading the offset (each re-read
-        // is `mixed`), same pattern as admin/batch_manager.php.
-        $user_id = is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0;
+        $user_id = \Piwigo\Users\CurrentUser::get()->id;
 
         // +-------------------------------------------------------------------+
         // |                        batch management request                   |

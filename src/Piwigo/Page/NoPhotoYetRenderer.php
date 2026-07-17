@@ -28,11 +28,8 @@ final class NoPhotoYetRenderer
 
     public function render(): void
     {
-        /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $user
-         */
-        global $conf, $user;
+        /** @var array<string, mixed> $conf */
+        global $conf;
 
         if (
             ! defined('IN_ADMIN')   // no message inside administration
@@ -50,8 +47,8 @@ final class NoPhotoYetRenderer
             if ($nb_photos === 0) {
                 // make sure we don't use the mobile theme, which is not compatible with
                 // the "no photo yet" feature
-                $user_theme = $user['theme'] ?? null;
-                $user_theme = is_string($user_theme) ? $user_theme : (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->getDefaultTheme();
+                $user_theme = \Piwigo\Users\CurrentUser::get()->theme;
+                $user_theme = $user_theme !== '' ? $user_theme : (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->getDefaultTheme();
                 /** @var Template $template */
                 global $template;
                 $template = new Template(PHPWG_ROOT_PATH . 'themes', $user_theme);
@@ -86,7 +83,7 @@ final class NoPhotoYetRenderer
                             'step' => 2,
                             'intro' => l10n(
                                 'Hello %s, your Piwigo photo gallery is empty!',
-                                $user['username']
+                                \Piwigo\Users\CurrentUser::get()->username
                             ),
                             'next_step_url' => $url,
                             'deactivate_url' => get_root_url() . '?no_photo_yet=deactivate',

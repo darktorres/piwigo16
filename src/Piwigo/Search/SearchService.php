@@ -881,11 +881,8 @@ final class SearchService
 
     public function qsearchGetCategories(QExpression $expr, QResults $qsr): void
     {
-        /**
-         * @var array<string, mixed> $user
-         * @var array<string, mixed> $conf
-         */
-        global $user, $conf;
+        /** @var array<string, mixed> $conf */
+        global $conf;
 
         // P23 batch 3: user_cache_categories's INNER JOIN below used to
         // filter to "categories this user's cache row exists for" -- exactly
@@ -898,8 +895,8 @@ final class SearchService
         // user_cache_categories via get_computed_categories()/\Piwigo\Db\MysqliDb::massInserts()).
         // Reading it directly here needs no query at all, on either a
         // cache-hit or cache-miss request.
-        $forbiddenCategories = $user['forbidden_categories'] ?? null;
-        $forbiddenCategoriesCsv = is_string($forbiddenCategories) && $forbiddenCategories !== '' ? $forbiddenCategories : '0';
+        $forbiddenCategories = \Piwigo\Users\CurrentUser::get()->forbiddenCategories;
+        $forbiddenCategoriesCsv = $forbiddenCategories !== '' ? $forbiddenCategories : '0';
 
         $tokenCatIds = $qsr->cat_iids = array_fill(0, count($expr->stokens), []);
         $allCats = [];
@@ -1054,13 +1051,12 @@ final class SearchService
     {
         /** @var array<string, mixed> $conf */
         global $conf;
-        /** @var array<string, mixed> $user */
-        global $user;
+        $currentUser = \Piwigo\Users\CurrentUser::get();
 
         $cacheKey = $this->cache->make_key([
             strtolower($q),
             $conf['order_by'],
-            $user['id'], $user['cache_update_time'],
+            $currentUser->id, $currentUser->cacheUpdateTime,
             isset($options['permissions']) ? (bool) $options['permissions'] : true,
             $options['images_where'] ?? '',
         ]);
@@ -1319,13 +1315,10 @@ final class SearchService
      */
     public function saveSearch(array $rules, ?int $forkedFrom = null): array
     {
-        /** @var array<string, mixed> $user */
-        global $user;
-
         $dbNow = $this->repo->now();
         $searchUuid = $this->getAvailableSearchUuid();
 
-        $userId = is_numeric($user['id'] ?? null) ? (int) $user['id'] : null;
+        $userId = \Piwigo\Users\CurrentUser::get()->id;
 
         $this->repo->insertSearch(serialize($rules), $dbNow, $userId, $searchUuid, $forkedFrom);
 

@@ -43,10 +43,9 @@ final class AdminShell
     {
         /**
          * @var array<string, mixed> $conf
-         * @var array<string, mixed> $user
          * @var array<string, mixed> $page
          */
-        global $conf, $user, $page;
+        global $conf, $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         add_event_handler('tabsheet_before_select', CoreTabs::addCoreTabs(...));
@@ -239,7 +238,7 @@ final class AdminShell
 
         $template->assign(
             [
-                'USERNAME' => $user['username'],
+                'USERNAME' => \Piwigo\Users\CurrentUser::get()->username,
                 'ENABLE_SYNCHRONIZATION' => $conf['enable_synchronization'],
                 'U_SITE_MANAGER' => $link_start . 'site_manager',
                 'U_HISTORY_STAT' => $link_start . 'stats&amp;year=' . date('Y') . '&amp;month=' . date('n'),
@@ -299,9 +298,7 @@ SELECT COUNT(*)
         }
 
         // any photo in the caddie?
-        // Real invariant: $user['id'] is always the numeric user id set in
-        // Piwigo\Users\UserService::buildUser().
-        $user_id = is_numeric($user['id']) ? (int) $user['id'] : 0;
+        $user_id = \Piwigo\Users\CurrentUser::get()->id;
         $query = '
 SELECT COUNT(*)
   FROM ' . Tables::caddie() . '
@@ -391,27 +388,21 @@ SELECT COUNT(*)
         $whats_new_major_version = \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION);
 
         if ((bool) (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->getParam('show_whats_new_' . $whats_new_major_version, true) and \Piwigo\Config\ConfigDb::pwgIsDbconfWriteable()) {
-            if ($user['registration_date'] > $conf['last_major_update']) {
+            if (\Piwigo\Users\CurrentUser::get()->rawAttributes['registration_date'] > $conf['last_major_update']) {
                 (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->updateParam('show_whats_new_' . $whats_new_major_version, false);
             } else {
                 // purge old whats_new_*
-                // Real invariant: build_user()/getuserdata() always populate the
-                // 'preferences' key (as [] when there is nothing to unserialize),
-                // so this is a type guard against a corrupted unserialize()
-                // result, not a "key might be absent" check.
-                $user_preferences = $user['preferences'] ?? null;
-                if (is_array($user_preferences)) {
-                    $userprefs_params_to_delete = [];
+                $user_preferences = \Piwigo\Users\CurrentUser::get()->preferences;
+                $userprefs_params_to_delete = [];
 
-                    foreach (array_keys($user_preferences) as $pref_param) {
-                        if ((bool) preg_match('/^whats_new_/', (string) $pref_param)) {
-                            $userprefs_params_to_delete[] = (string) $pref_param;
-                        }
+                foreach (array_keys($user_preferences) as $pref_param) {
+                    if ((bool) preg_match('/^whats_new_/', $pref_param)) {
+                        $userprefs_params_to_delete[] = $pref_param;
                     }
+                }
 
-                    if (count($userprefs_params_to_delete) > 0) {
-                        (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->deleteParam($userprefs_params_to_delete);
-                    }
+                if (count($userprefs_params_to_delete) > 0) {
+                    (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->deleteParam($userprefs_params_to_delete);
                 }
 
                 $show_whats_new = true;

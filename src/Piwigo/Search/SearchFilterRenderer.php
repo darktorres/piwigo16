@@ -46,9 +46,8 @@ final class SearchFilterRenderer
         /**
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $page
-         * @var array<string, mixed> $user
          */
-        global $conf, $page, $persistent_cache, $user;
+        global $conf, $page, $persistent_cache;
         $template = $this->template;
         if (! $persistent_cache instanceof PersistentCache) {
             $this->htmlRenderer->fatalError('persistent cache not initialized');
@@ -101,11 +100,9 @@ final class SearchFilterRenderer
             }
         }
 
-        // $user['id']/$user['cache_update_time'] key every persistent-cache
-        // entry built by the filter blocks below; narrow them once to real
-        // strings.
-        $userId = is_scalar($user['id'] ?? null) ? (string) $user['id'] : '';
-        $userCacheUpdateTime = is_scalar($user['cache_update_time'] ?? null) ? (string) $user['cache_update_time'] : '';
+        $currentUser = \Piwigo\Users\CurrentUser::get();
+        $userId = (string) $currentUser->id;
+        $userCacheUpdateTime = $currentUser->cacheUpdateTime;
 
         $langMonth = \Piwigo\Core\Lang::months();
 
@@ -898,7 +895,7 @@ SELECT
         // $page['search_details'] is already known array here (guarded above).
         $pageStart = $page['start'] ?? null;
         if ((is_numeric($pageStart) ? (int) $pageStart : 0) === 0 and ! isset($page['chronology_field'])) {
-            $this->renderAlbumsFound($page, $user, $userId, $template);
+            $this->renderAlbumsFound($page, $userId, $template);
             $this->renderTagsFound($page, $template);
         }
     }
@@ -913,14 +910,13 @@ SELECT
      * original file's own `user_cache_categories` JOIN was the real,
      * load-bearing permission filter, not redundant belt-and-suspenders.
      * Ported as a plain PHP existence-filter against
-     * $user['forbidden_categories'] (same concept as batch 3a) instead of
-     * that JOIN, then CategoryRepository::findFullCategoriesByIds() (batch
-     * 4b) for the row data.
+     * CurrentUser::get()->forbiddenCategories (same concept as batch 3a)
+     * instead of that JOIN, then CategoryRepository::findFullCategoriesByIds()
+     * (batch 4b) for the row data.
      *
      * @param array<string, mixed> $page
-     * @param array<string, mixed> $user
      */
-    private function renderAlbumsFound(array $page, array $user, string $userId, TemplateInterface $template): void
+    private function renderAlbumsFound(array $page, string $userId, TemplateInterface $template): void
     {
         $searchDetails = $page['search_details'] ?? null;
         $matchingCatIds = is_array($searchDetails) ? ($searchDetails['matching_cat_ids'] ?? null) : null;
@@ -943,10 +939,9 @@ SELECT
             return;
         }
 
-        $forbiddenCategories = $user['forbidden_categories'] ?? null;
         $allowedCatIds = self::filterAccessibleCategoryIds(
             $catIds,
-            is_string($forbiddenCategories) ? $forbiddenCategories : null
+            \Piwigo\Users\CurrentUser::get()->forbiddenCategories
         );
         if ($allowedCatIds === []) {
             return;

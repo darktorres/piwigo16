@@ -9,7 +9,9 @@ use Piwigo\Config\Config;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PreferencesService;
+use Piwigo\Users\User;
 use Piwigo\Users\UserRepository;
 
 final class PreferencesServiceTest extends IntegrationTestCase
@@ -39,7 +41,7 @@ final class PreferencesServiceTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         $this->service = new PreferencesService(new UserRepository($this->conn));
 
-        $GLOBALS['user'] = ['id' => 1, 'preferences' => []];
+        CurrentUser::set(User::fromUserArray(['id' => 1, 'preferences' => []]));
     }
 
     #[\Override]
@@ -55,10 +57,7 @@ final class PreferencesServiceTest extends IntegrationTestCase
 
         self::assertSame('dark', $this->service->getParam('theme'));
 
-        $user = $GLOBALS['user'];
-        self::assertIsArray($user);
-        self::assertIsArray($user['preferences']);
-        self::assertSame('dark', $user['preferences']['theme']);
+        self::assertSame('dark', CurrentUser::get()->preferences['theme']);
     }
 
     public function test_update_param_persists_to_the_database(): void

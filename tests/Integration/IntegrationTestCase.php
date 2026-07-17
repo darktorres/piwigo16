@@ -56,6 +56,21 @@ abstract class IntegrationTestCase extends TestCase
     {
         parent::setUp();
         unset($GLOBALS['cache']);
+        // Piwigo\Users\CurrentUser (Legacy Coupling Retirement Track A batch
+        // A3) is a request-lifetime singleton; PHPUnit/Pest run every test
+        // file in one shared process (see this class's own docblock above
+        // for the identical $GLOBALS['cache'] reasoning), so each test gets
+        // a fresh guest baseline here -- idempotent, so a subclass's own
+        // setUp() calling CurrentUser::set() with a specific fixture user
+        // right after parent::setUp() simply overwrites it.
+        \Piwigo\Users\CurrentUser::attachGlobals();
+    }
+
+    #[\Override]
+    protected function tearDown(): void
+    {
+        \Piwigo\Users\CurrentUser::reset();
+        parent::tearDown();
     }
 
     protected function setUpConnectionFromEnv(): void

@@ -975,14 +975,11 @@ final class UrlService
      */
     public function getUserFavorites(): array
     {
-        /** @var array<string, mixed> $user */
-        global $user;
-
         if (\Piwigo\Auth\AccessControl::isAGuest()) {
             return [];
         }
 
-        $user_id = is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0;
+        $user_id = \Piwigo\Users\CurrentUser::get()->id;
 
         $query = '
 SELECT

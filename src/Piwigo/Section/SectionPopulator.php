@@ -72,10 +72,9 @@ final class SectionPopulator
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $filter
          * @var array<string, mixed> $page
-         * @var array<string, mixed> $user
          * @var Logger $logger
          */
-        global $conf, $filter, $logger, $page, $persistent_cache, $user;
+        global $conf, $filter, $logger, $page, $persistent_cache;
         $template = $this->template;
         if (! $persistent_cache instanceof PersistentCache) {
             $this->htmlRenderer->fatalError('persistent cache not initialized');
@@ -151,8 +150,8 @@ final class SectionPopulator
         }
 
         // $page['nb_image_page'] is the number of picture to display on this page
-        // By default, it is the same as the $user['nb_image_page']
-        $page['nb_image_page'] = $user['nb_image_page'];
+        // By default, it is the same as CurrentUser::get()->rawAttributes['nb_image_page']
+        $page['nb_image_page'] = \Piwigo\Users\CurrentUser::get()->rawAttributes['nb_image_page'] ?? null;
 
         // if flat mode is active, we must consider the image set as a standard set
         // and not as a category set because we can't use the #image_category.rank :
@@ -315,10 +314,9 @@ SELECT id
                             'visible_images' => 'id',
                         ], 'AND');
                     } else {
-                        $user_id_for_cache = $user['id'] ?? null;
-                        $user_id_for_cache = is_scalar($user_id_for_cache) ? $user_id_for_cache : '';
-                        $cache_update_time = $user['cache_update_time'] ?? null;
-                        $cache_update_time = is_scalar($cache_update_time) ? $cache_update_time : '';
+                        $currentUser = \Piwigo\Users\CurrentUser::get();
+                        $user_id_for_cache = $currentUser->id;
+                        $cache_update_time = $currentUser->cacheUpdateTime;
                         $order_by_for_cache = is_string($conf['order_by']) ? $conf['order_by'] : '';
                         $cache_key = $persistent_cache->make_key('all_iids' . $user_id_for_cache . $cache_update_time . $order_by_for_cache);
                         unset($page['is_homepage']);
@@ -466,8 +464,7 @@ SELECT DISTINCT(image_id)
                     ]
                 );
 
-                $user_id_sql = $user['id'] ?? null;
-                $user_id_sql = is_scalar($user_id_sql) ? $user_id_sql : 0;
+                $user_id_sql = \Piwigo\Users\CurrentUser::get()->id;
                 if (($_GET['action'] ?? null) === 'remove_all_from_favorites') {
                     $query = '
 DELETE FROM ' . Tables::favorites() . '

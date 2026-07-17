@@ -58,9 +58,9 @@ final class CommentService
      */
     public static function getNbAvailableComments(): int
     {
-        /** @var array<string, mixed> $user */
-        global $user;
-        if (! isset($user['nb_available_comments'])) {
+        $currentUser = \Piwigo\Users\CurrentUser::get();
+
+        if (! isset($currentUser->rawAttributes['nb_available_comments'])) {
             $where = [];
             if (! AccessControl::isAdmin()) {
                 $where[] = 'validated=\'true\'';
@@ -80,21 +80,21 @@ SELECT COUNT(DISTINCT(com.id))
     AND ', $where);
             $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
             assert($row !== null);
-            [$user['nb_available_comments']] = $row;
-
-            $user_id = is_numeric($user['id']) ? (int) $user['id'] : 0;
+            [$nbAvailableComments] = $row;
+            $currentUser = $currentUser->withRawAttribute('nb_available_comments', $nbAvailableComments);
+            \Piwigo\Users\CurrentUser::set($currentUser);
 
             \Piwigo\Db\MysqliDb::singleUpdate(
                 Tables::userCache(),
                 [
-                    'nb_available_comments' => $user['nb_available_comments'],
+                    'nb_available_comments' => $nbAvailableComments,
                 ],
                 [
-                    'user_id' => $user_id,
+                    'user_id' => $currentUser->id,
                 ]
             );
         }
-        $nb_available_comments = $user['nb_available_comments'];
+        $nb_available_comments = $currentUser->rawAttributes['nb_available_comments'];
         return is_numeric($nb_available_comments) ? (int) $nb_available_comments : 0;
     }
 
@@ -159,11 +159,8 @@ SELECT COUNT(DISTINCT(com.id))
      */
     public function insertComment(array &$comm, string $key, array &$infos): string
     {
-        /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $user
-         */
-        global $conf, $user;
+        /** @var array<string, mixed> $conf */
+        global $conf;
 
         $comm['ip'] = is_scalar($_SERVER['REMOTE_ADDR'] ?? null) ? (string) $_SERVER['REMOTE_ADDR'] : '';
         $comm['agent'] = is_scalar($_SERVER['HTTP_USER_AGENT'] ?? null) ? (string) $_SERVER['HTTP_USER_AGENT'] : '';
@@ -198,10 +195,9 @@ SELECT COUNT(DISTINCT(com.id))
                 }
             }
         } else {
-            $username = is_string($user['username'] ?? null) ? $user['username'] : '';
-            $comm['author'] = addslashes($username);
-            $userId = $user['id'] ?? 0;
-            $comm['author_id'] = is_numeric($userId) ? (int) $userId : 0;
+            $currentUser = \Piwigo\Users\CurrentUser::get();
+            $comm['author'] = addslashes($currentUser->username);
+            $comm['author_id'] = $currentUser->id;
         }
 
         if (self::emptyValue($comm['content'] ?? null)) {
@@ -238,8 +234,9 @@ SELECT COUNT(DISTINCT(com.id))
 
         // email
         if (self::emptyValue($comm['email'] ?? null)) {
-            if (! self::emptyValue($user['email'] ?? null)) {
-                $comm['email'] = $user['email'];
+            $currentUserEmail = \Piwigo\Users\CurrentUser::get()->email;
+            if (! self::emptyValue($currentUserEmail)) {
+                $comm['email'] = $currentUserEmail;
             } elseif ((bool) $conf['comments_email_mandatory']) {
                 $infos[] = l10n('Email address is missing. Please specify an email address.');
                 $commentAction = 'reject';
@@ -346,15 +343,11 @@ SELECT COUNT(DISTINCT(com.id))
      */
     public function deleteComment(int|array $commentId): bool
     {
-        /** @var array<string, mixed> $user */
-        global $user;
-
         $ids = is_array($commentId) ? array_values(array_map(intval(...), $commentId)) : [$commentId];
 
         $authorId = null;
         if (! \Piwigo\Auth\AccessControl::isAdmin()) {
-            $userId = $user['id'] ?? null;
-            $authorId = is_numeric($userId) ? (int) $userId : 0;
+            $authorId = \Piwigo\Users\CurrentUser::get()->id;
         }
 
         if ($this->repo->delete($ids, $authorId) === 0) {
@@ -363,7 +356,7 @@ SELECT COUNT(DISTINCT(com.id))
 
         $this->invalidateNbCommentsCache();
 
-        $username = is_string($user['username'] ?? null) ? $user['username'] : '';
+        $username = \Piwigo\Users\CurrentUser::get()->username;
         $this->emailAdmin('delete', [
             'author' => $username,
             'comment_id' => $commentId,
@@ -392,11 +385,10 @@ SELECT COUNT(DISTINCT(com.id))
         /**
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $page
-         * @var array<string, mixed> $user
          */
-        global $conf, $page, $user;
+        global $conf, $page;
 
-        $username = is_string($user['username'] ?? null) ? $user['username'] : '';
+        $username = \Piwigo\Users\CurrentUser::get()->username;
 
         $imageIdRaw = is_scalar($comment['image_id'] ?? null) ? (string) $comment['image_id'] : '';
 
@@ -443,8 +435,7 @@ SELECT COUNT(DISTINCT(com.id))
         if ($commentAction !== 'reject') {
             $authorId = null;
             if (! \Piwigo\Auth\AccessControl::isAdmin()) {
-                $userId = $user['id'] ?? null;
-                $authorId = is_numeric($userId) ? (int) $userId : 0;
+                $authorId = \Piwigo\Users\CurrentUser::get()->id;
             }
 
             $content = is_string($comment['content']) ? $comment['content'] : '';
@@ -566,10 +557,7 @@ SELECT COUNT(DISTINCT(com.id))
      */
     public function invalidateNbCommentsCache(): void
     {
-        /** @var array<string, mixed> $user */
-        global $user;
-
-        unset($user['nb_available_comments']);
+        \Piwigo\Users\CurrentUser::set(\Piwigo\Users\CurrentUser::get()->withRawAttribute('nb_available_comments', null));
         $this->repo->clearNbCommentsCache();
     }
 

@@ -3,8 +3,9 @@
 declare(strict_types=1);
 
 // RateService now calls Piwigo\Auth\AccessControl::isAuthorizeStatus()
-// directly (P23 batch 8d), a pure `global $user;` read -- tests below set
-// $GLOBALS['user']['status'] instead.
+// directly (P23 batch 8d), which reads Piwigo\Users\CurrentUser (Legacy
+// Coupling Retirement Track A batch A3) -- tests below seed CurrentUser
+// instead.
 // CookieService::cookiePath() needs PHPWG_ROOT_PATH defined, same as
 // tests/Unit/Auth/CookieServiceTest.php.
 namespace {
@@ -23,6 +24,8 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\Tables;
     use Piwigo\Rate\RateRepository;
     use Piwigo\Rate\RateService;
+    use Piwigo\Users\CurrentUser;
+    use Piwigo\Users\User;
 
     final class RateServiceTest extends IntegrationTestCase
     {
@@ -54,7 +57,7 @@ namespace Piwigo\Tests\Integration {
                 'rate_items' => [0, 1, 2, 3, 4, 5],
                 'guest_access' => true,
             ];
-            $GLOBALS['user'] = ['id' => 3, 'status' => 'normal'];
+            CurrentUser::set(User::fromUserArray(['id' => 3, 'status' => 'normal']));
             $_SERVER['REMOTE_ADDR'] = '10.20.30.40';
             unset($_COOKIE['pwg_anonymous_rater']);
 
@@ -87,7 +90,7 @@ namespace Piwigo\Tests\Integration {
         public function test_rate_returns_false_for_an_anonymous_user_when_rate_anonymous_is_disabled(): void
         {
             $this->setConf('rate_anonymous', false);
-            $GLOBALS['user'] = ['id' => 2, 'status' => 'guest'];
+            CurrentUser::set(User::fromUserArray(['id' => 2, 'status' => 'guest']));
 
             self::assertFalse($this->service->rate(5, 3));
         }
@@ -140,7 +143,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_rate_for_an_anonymous_user_sets_the_cookie_and_records_the_ip(): void
         {
-            $GLOBALS['user'] = ['id' => 2, 'status' => 'guest'];
+            CurrentUser::set(User::fromUserArray(['id' => 2, 'status' => 'guest']));
 
             try {
                 $result = $this->service->rate(5, 3);

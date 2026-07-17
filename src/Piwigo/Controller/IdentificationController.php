@@ -171,7 +171,7 @@ final class IdentificationController implements ControllerInterface
             // Load language if cookie is set from login/register/password
             // pages
             $lang_cookie = $_COOKIE['lang'] ?? null;
-            if ($lang_cookie !== null and (! is_string($lang_cookie) or $user['language'] !== $lang_cookie)) {
+            if ($lang_cookie !== null and (! is_string($lang_cookie) or \Piwigo\Users\CurrentUser::get()->language !== $lang_cookie)) {
                 if (! is_string($lang_cookie)) {
                     new HtmlService()
                         ->fatalError('[Hacking attempt] the input parameter "lang" is not valid');
@@ -182,8 +182,9 @@ final class IdentificationController implements ControllerInterface
                 }
 
                 $user['language'] = $lang_cookie;
+                \Piwigo\Users\CurrentUser::updateLanguage($lang_cookie);
                 Lang::load('common.lang', '', [
-                    'language' => $user['language'],
+                    'language' => $lang_cookie,
                 ]);
             }
 
@@ -194,12 +195,10 @@ final class IdentificationController implements ControllerInterface
 
             $template->assign([
                 'language_options' => $language_options,
-                'current_language' => $user['language'],
+                'current_language' => \Piwigo\Users\CurrentUser::get()->language,
             ]);
 
-            $user_language_for_help = $user['language'] ?? '';
-            $user_language_for_help = is_string($user_language_for_help) ? $user_language_for_help : '';
-            if (str_starts_with($user_language_for_help, 'fr')) {
+            if (str_starts_with(\Piwigo\Users\CurrentUser::get()->language, 'fr')) {
                 $help_link = 'https://upstream.example.invalid/help/fr/';
             } else {
                 $help_link = 'https://upstream.example.invalid/help/';

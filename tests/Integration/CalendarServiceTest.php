@@ -16,6 +16,8 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Group\GroupRepository;
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
+    use Piwigo\Users\CurrentUser;
+    use Piwigo\Users\User;
 
 /**
  * Same fixture shape as CategoryRepositoryTest: category 1 "Sample Album"
@@ -56,12 +58,12 @@ final class CalendarServiceTest extends IntegrationTestCase
         // forbidden_images fallthrough build a malformed 'level<=' fragment
         // with no right-hand value, same gotcha documented in
         // CategoryServiceTest/SearchServiceTest.
-        $GLOBALS['user'] = [
+        CurrentUser::set(User::fromUserArray([
             'forbidden_categories' => '0',
             'level' => '0',
             'image_access_type' => 'NOT IN',
             'image_access_list' => '',
-        ];
+        ]));
         $GLOBALS['filter'] = [];
     }
 

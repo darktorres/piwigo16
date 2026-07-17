@@ -108,9 +108,7 @@ final class ExtensionScanner
         }
         if ((bool) preg_match('/Has Settings:\s*([Tt]rue|[Ww]ebmaster)/', $data, $val)) {
             if (strtolower($val[1]) === 'webmaster') {
-                /** @var array<string, mixed> $user */
-                global $user;
-                if (($user['status'] ?? null) === 'webmaster') {
+                if (\Piwigo\Users\CurrentUser::get()->status === \Piwigo\Users\UserStatus::Webmaster) {
                     $plugin['hasSettings'] = true;
                 }
             } else {

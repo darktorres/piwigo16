@@ -11,6 +11,7 @@ use Piwigo\Core\WebmasterMailProviderInterface;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Template\Template;
+use Piwigo\Users\CurrentUser;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\Mailer;
 use Symfony\Component\Mailer\Transport;
@@ -349,14 +350,12 @@ final class MailService implements MailerInterface
     public function switchLangTo(string $language): void
     {
         /**
-         * @var array<string, mixed> $user
          * @var array<string, mixed> $lang_info
          * @var array<string, array<string, array{language?: string, return?: bool, no_fallback?: bool, force_fallback?: bool|string, local?: bool}>> $language_files
          */
-        global $user, $lang_info, $language_files;
+        global $lang_info, $language_files;
 
-        $currentUserLanguage = $user['language'] ?? null;
-        $currentUserLanguage = is_string($currentUserLanguage) ? $currentUserLanguage : '';
+        $currentUserLanguage = CurrentUser::get()->language;
 
         // Language of the current user is saved (considered OK on first call).
         if (! self::$switchLangInitialised && ! isset(self::$switchLangLanguages[$currentUserLanguage])) {
@@ -368,7 +367,7 @@ final class MailService implements MailerInterface
         }
 
         self::$switchLangStack[] = $currentUserLanguage;
-        $user['language'] = $language;
+        CurrentUser::updateLanguage($language);
 
         if (! isset(self::$switchLangLanguages[$language])) {
             // Re-init language arrays.
@@ -420,11 +419,8 @@ final class MailService implements MailerInterface
      */
     public function switchLangBack(): void
     {
-        /**
-         * @var array<string, mixed> $user
-         * @var array<string, mixed> $lang_info
-         */
-        global $user, $lang_info;
+        /** @var array<string, mixed> $lang_info */
+        global $lang_info;
 
         if (self::$switchLangStack === []) {
             return;
@@ -437,7 +433,7 @@ final class MailService implements MailerInterface
             $lang_info = $entry['lang_info'];
             Lang::restore($entry['lang']);
         }
-        $user['language'] = $language;
+        CurrentUser::updateLanguage($language);
     }
 
     /**
@@ -455,11 +451,8 @@ final class MailService implements MailerInterface
             return false;
         }
 
-        /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $user
-         */
-        global $conf, $user;
+        /** @var array<string, mixed> $conf */
+        global $conf;
 
         if (is_array($subject) || is_array($content)) {
             $this->switchLangTo((new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new self(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->getDefaultLanguage());
@@ -476,8 +469,7 @@ final class MailService implements MailerInterface
 
         $tplVars = [];
         if ($sendTechnicalDetails) {
-            $username = $user['username'] ?? null;
-            $username = is_string($username) ? $username : '';
+            $username = \Piwigo\Users\CurrentUser::get()->username;
             $tplVars['TECHNICAL'] = [
                 'username' => stripslashes($username),
                 'ip' => $_SERVER['REMOTE_ADDR'] ?? '',
@@ -519,9 +511,6 @@ final class MailService implements MailerInterface
             return false;
         }
 
-        /** @var array<string, mixed> $user */
-        global $user;
-
         $userStatuses = ['webmaster'];
         if (! $onlyWebmasters) {
             $userStatuses[] = 'admin';
@@ -554,8 +543,7 @@ SELECT
         }
 
         if ($excludeCurrentUser) {
-            $currentUserId = $user['id'] ?? null;
-            $currentUserId = is_numeric($currentUserId) ? (int) $currentUserId : 0;
+            $currentUserId = \Piwigo\Users\CurrentUser::get()->id;
             $query .= '
     AND i.user_id <> ' . $currentUserId;
         }
@@ -1020,18 +1008,16 @@ SELECT
     {
         /**
          * @var array<string, mixed> $conf
-         * @var array<string, mixed> $user
          * @var array<string, mixed> $lang_info
          */
-        global $conf, $user, $lang_info;
+        global $conf, $lang_info;
 
         $dataLocation = $conf['data_location'] ?? null;
         $dataLocation = is_string($dataLocation) ? $dataLocation : '';
 
         $dir = PHPWG_ROOT_PATH . $dataLocation . 'tmp';
         if (\Piwigo\Core\FilesystemHelper::mkgetdir($dir, \Piwigo\Core\FilesystemHelper::MKGETDIR_DEFAULT & ~\Piwigo\Core\FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
-            $username = $user['username'] ?? null;
-            $username = is_string($username) ? $username : '';
+            $username = \Piwigo\Users\CurrentUser::get()->username;
             $langCode = $lang_info['code'] ?? null;
             $langCode = is_string($langCode) ? $langCode : '';
 

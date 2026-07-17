@@ -374,10 +374,7 @@ DELETE FROM ' . Tables::plugins() . '
             }
             if ((bool) preg_match('/Has Settings:\\s*([Tt]rue|[Ww]ebmaster)/', $plg_data, $val)) {
                 if (strtolower($val[1]) == 'webmaster') {
-                    /** @var array<string, mixed> $user */
-                    global $user;
-
-                    if ($user['status'] == 'webmaster') {
+                    if (\Piwigo\Users\CurrentUser::get()->status === \Piwigo\Users\UserStatus::Webmaster) {
                         $plugin['hasSettings'] = true;
                     }
                 } else {
@@ -522,11 +519,8 @@ DELETE FROM ' . Tables::plugins() . '
      */
     public function get_server_plugins(bool $new = false, bool $beta_test = false): bool
     {
-        /**
-         * @var array<string, mixed> $user
-         * @var array<string, mixed> $conf
-         */
-        global $user, $conf;
+        /** @var array<string, mixed> $conf */
+        global $conf;
 
         $versions_to_check = $this->get_versions_to_check($beta_test);
         if (empty($versions_to_check)) {
@@ -559,8 +553,7 @@ DELETE FROM ' . Tables::plugins() . '
         // pattern as updates.class.php::get_server_extensions()).
         $pem_base_url = is_string(PEM_URL) ? PEM_URL : '';
         $url = $pem_base_url . '/api/get_revision_list-next.php';
-        $user_language = $user['language'] ?? null;
-        $user_language = is_scalar($user_language) ? (string) $user_language : '';
+        $user_language = \Piwigo\Users\CurrentUser::get()->language;
         $get_data = [
             'category_id' => $conf['pem_plugins_category'],
             'format' => 'php',

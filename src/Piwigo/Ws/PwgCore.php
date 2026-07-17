@@ -349,11 +349,7 @@ SELECT id, path, representative_ext, width, height, rotation
      */
     public static function caddieAdd(array $params, PwgServer &$service): int
     {
-        /** @var array<string, mixed> $user */
-        global $user;
-
-        $user_id = $user['id'];
-        $user_id = is_numeric($user_id) ? (int) $user_id : 0;
+        $user_id = \Piwigo\Users\CurrentUser::get()->id;
 
         return new CaddieRepository(DbConnection::build())
             ->addElements($user_id, $params['image_id']);
@@ -440,19 +436,15 @@ DELETE FROM ' . Tables::rate() . '
      */
     public static function sessionGetStatus(array $params, PwgServer &$service): array
     {
-        /**
-         * @var array<string, mixed> $user
-         * @var array<string, mixed> $conf
-         */
-        global $user, $conf;
+        /** @var array<string, mixed> $conf */
+        global $conf;
 
-        $username_raw = $user['username'];
-        $username_raw = is_string($username_raw) ? $username_raw : '';
+        $currentUser = \Piwigo\Users\CurrentUser::get();
         $res = [];
-        $res['username'] = \Piwigo\Auth\AccessControl::isAGuest() ? 'guest' : stripslashes($username_raw);
-        foreach (['status', 'theme', 'language'] as $k) {
-            $res[$k] = $user[$k];
-        }
+        $res['username'] = \Piwigo\Auth\AccessControl::isAGuest() ? 'guest' : stripslashes($currentUser->username);
+        $res['status'] = $currentUser->status->value;
+        $res['theme'] = $currentUser->theme;
+        $res['language'] = $currentUser->language;
         $res['pwg_token'] = new \Piwigo\Csrf\CsrfService()->getToken();
         $res['charset'] = \Piwigo\Core\CharsetHelper::getPwgCharset();
 

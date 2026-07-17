@@ -74,9 +74,8 @@ final class IntroSubController implements AdminSubControllerInterface
          * @var Logger $logger
          * @var array<string, mixed> $page
          * @var array<string, mixed> $pwg_loaded_plugins
-         * @var array<string, mixed> $user
          */
-        global $conf, $link_start, $logger, $page, $pwg_loaded_plugins, $user;
+        global $conf, $link_start, $logger, $page, $pwg_loaded_plugins;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (! is_array($page['messages'] ?? null)) {
@@ -193,12 +192,12 @@ SELECT COUNT(*)
             // To see the newsletter promote, the account must have 2 weeks ancient, 3 albums created and 30 photos uploaded
 
             if (strtotime((string) $register_date) < strtotime('2 weeks ago') and $nb_cats >= 3 and $nb_images >= 30) {
-                $user_language = $user['language'] ?? null;
-                $user_language = is_string($user_language) ? $user_language : 'en_UK';
+                $currentUser = \Piwigo\Users\CurrentUser::get();
+                $user_language = $currentUser->language !== '' ? $currentUser->language : 'en_UK';
 
                 $template->assign(
                     [
-                        'EMAIL' => $user['email'],
+                        'EMAIL' => $currentUser->email,
                         'SUBSCRIBE_BASE_URL' => AdminUiHelper::getNewsletterSubscribeBaseUrl($user_language),
                         'OLD_NEWSLETTERS_URL' => AdminUiHelper::getOldNewslettersBaseUrl($user_language),
                     ]

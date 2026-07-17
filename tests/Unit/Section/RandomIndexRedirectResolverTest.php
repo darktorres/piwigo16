@@ -3,13 +3,33 @@
 declare(strict_types=1);
 
 use Piwigo\Section\RandomIndexRedirectResolver;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Users\User;
+use Piwigo\Users\UserStatus;
 
 // RandomIndexRedirectResolver now calls Piwigo\Auth\AccessControl::isAGuest()
-// directly (P23 batch 8d) -- a pure `global $user;` read, zero DB
-// dependency, so no stub is needed here; setting the same global this
-// resolver's real dependency reads is enough.
+// directly (P23 batch 8d), which reads Piwigo\Users\CurrentUser (Legacy
+// Coupling Retirement Track A batch A3) -- so seeding CurrentUser with the
+// desired status is enough, matching this test's old $GLOBALS['user'] stub.
+function seedCurrentUserStatus(UserStatus $status): void
+{
+    CurrentUser::set(new User(
+        id: 1,
+        username: '',
+        email: '',
+        language: '',
+        theme: '',
+        status: $status,
+        enabledHigh: false,
+    ));
+}
+
 beforeEach(function (): void {
-    $GLOBALS['user'] = ['status' => 'normal'];
+    seedCurrentUserStatus(UserStatus::Normal);
+});
+
+afterEach(function (): void {
+    CurrentUser::reset();
 });
 
 test('resolveCandidates matches an empty-string condition', function (): void {
@@ -28,10 +48,10 @@ test('resolveCandidates matches "return is_a_guest();" only for a real guest', f
     $resolver = new RandomIndexRedirectResolver();
     $candidates = ['guest.php' => 'return is_a_guest();'];
 
-    $GLOBALS['user'] = ['status' => 'guest'];
+    seedCurrentUserStatus(UserStatus::Guest);
     expect($resolver->resolveCandidates($candidates))->toBe(['guest.php']);
 
-    $GLOBALS['user'] = ['status' => 'normal'];
+    seedCurrentUserStatus(UserStatus::Normal);
     expect($resolver->resolveCandidates($candidates))->toBe([]);
 });
 

@@ -40,9 +40,8 @@ final class CalendarRenderer
         /**
          * @var array<string, mixed> $page
          * @var array<string, mixed> $conf
-         * @var array<string, mixed> $user
          */
-        global $page, $conf, $user, $persistent_cache, $filter;
+        global $page, $conf, $persistent_cache, $filter;
         $template = $this->template;
         if (! $persistent_cache instanceof PersistentCache) {
             $this->htmlRenderer->fatalError('persistent cache not initialized');
@@ -62,8 +61,7 @@ final class CalendarRenderer
                 && (is_int($page_category['id']) || is_string($page_category['id']))
                 ? $page_category['id']
                 : null;
-            $forbidden_categories = $user['forbidden_categories'] ?? null;
-            $forbidden_categories = is_scalar($forbidden_categories) ? (string) $forbidden_categories : '';
+            $forbidden_categories = \Piwigo\Users\CurrentUser::get()->forbiddenCategories;
 
             $inner_sql = $calendarService->buildInnerSql('categories', isset($page['category']), $category_id, $forbidden_categories, []);
 
@@ -260,11 +258,8 @@ final class CalendarRenderer
               && (count($page_chronology_date) == 0
                     or ($page_chronology_date[0] == 'any' && count($page_chronology_date) == 1))
             ) {
-                $user_id = $user['id'] ?? null;
-                $user_id = is_scalar($user_id) ? (string) $user_id : '';
-                $user_cache_update_time = $user['cache_update_time'] ?? null;
-                $user_cache_update_time = is_scalar($user_cache_update_time) ? (string) $user_cache_update_time : '';
-                $cache_key = $persistent_cache->make_key($user_id . $user_cache_update_time
+                $currentUser = \Piwigo\Users\CurrentUser::get();
+                $cache_key = $persistent_cache->make_key($currentUser->id . $currentUser->cacheUpdateTime
                   . $calendar->date_field . $order_by);
             }
 

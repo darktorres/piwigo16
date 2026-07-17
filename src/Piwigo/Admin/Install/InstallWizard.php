@@ -586,6 +586,14 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
                 $user['preferences'] = $preferences;
             }
 
+            // Legacy Coupling Retirement Track A batch A3: sync CurrentUser
+            // (dual-write alongside the still-live global $user, matching
+            // RequestBootstrap's own sync points) before PreferencesService::
+            // save() reads it -- this install-time $user is a fresh
+            // buildUser(1, false) result, never routed through
+            // RequestBootstrap/UserBootstrap's own sync calls.
+            \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));
+
             (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->save();
 
             // email notification

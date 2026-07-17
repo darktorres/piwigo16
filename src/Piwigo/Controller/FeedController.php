@@ -79,6 +79,13 @@ final class FeedController implements ControllerInterface
             $user_id_before = is_numeric($user['id']) ? (int) $user['id'] : null;
             if ($feed_row['userId'] !== $user_id_before) { // new user
                 $user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->buildUser($feed_row['userId'], true);
+                // The feed is per-user-token, so this request's "current user"
+                // genuinely becomes the feed owner, not the real session user
+                // -- sync CurrentUser too (dual-write, matching
+                // RequestBootstrap's own pattern), since checkStatus() below
+                // and every retargeted consumer now read CurrentUser, not
+                // this raw array.
+                \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));
             }
         } else {
             $image_only = true;
@@ -86,6 +93,7 @@ final class FeedController implements ControllerInterface
                 $guest_id = $conf['guest_id'];
                 $guest_id = is_numeric($guest_id) ? (int) $guest_id : 0;
                 $user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->buildUser($guest_id, true);
+                \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));
             }
         }
 
@@ -111,8 +119,7 @@ final class FeedController implements ControllerInterface
         $conf_gallery_title = is_string($conf_gallery_title) ? $conf_gallery_title : '';
         $conf_rss_feed_author = $conf['rss_feed_author'] ?? '';
         $conf_rss_feed_author = is_string($conf_rss_feed_author) ? $conf_rss_feed_author : '';
-        $user_username = $user['username'] ?? '';
-        $user_username = is_string($user_username) ? $user_username : '';
+        $user_username = \Piwigo\Users\CurrentUser::get()->username;
 
         $rss_title = $conf_gallery_title . ' (as ' . stripslashes($user_username) . ')';
         $rss_link = get_gallery_home_url();

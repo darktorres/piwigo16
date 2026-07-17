@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Template\Combinable;
 use Piwigo\Template\FileCombiner;
+use Piwigo\Users\CurrentUser;
 
 // combine()'s multi-item merge path (mkgetdir()+file_put_contents() under
 // PHPWG_ROOT_PATH) and its is_template path (needs a real Smarty $template
@@ -15,9 +16,9 @@ use Piwigo\Template\FileCombiner;
 // own branches).
 //
 // combine() now calls Piwigo\Auth\AccessControl::isAdmin() directly (P23
-// batch 8d) -- a pure `global $user;` read, zero DB dependency -- so no
-// stub is needed; beforeEach()'s $GLOBALS['user']['status'] = 'guest'
-// below already makes it return false, matching this test's old stub.
+// batch 8d), which reads Piwigo\Users\CurrentUser (Legacy Coupling
+// Retirement Track A batch A3) -- so no stub is needed beyond seeding a
+// guest CurrentUser below, matching this test's old $GLOBALS['user'] stub.
 
 // url_is_remote() -- always available now via composer autoload.files
 // (src/Piwigo/Url/functions.php, P23 batch 8c), no explicit require needed.
@@ -28,7 +29,11 @@ beforeEach(function (): void {
         'template_combine_files' => false,
         'guest_access' => true,
     ];
-    $GLOBALS['user'] = ['status' => 'guest'];
+    CurrentUser::attachGlobals();
+});
+
+afterEach(function (): void {
+    CurrentUser::reset();
 });
 
 test('combine returns an empty array for no combinables', function (): void {

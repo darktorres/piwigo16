@@ -625,13 +625,9 @@ final class CategoryService
      */
     public function checkRestrictions(int $categoryId, HtmlRenderingInterface $htmlRenderer): void
     {
-        /** @var array<string, mixed> $user */
-        global $user;
-
         // $filter['visible_categories'] and $filter['visible_images']
         // are not used because it's not necessary (filter <> restriction)
-        $forbiddenCategories = $user['forbidden_categories'] ?? null;
-        $forbiddenCategoriesStr = is_scalar($forbiddenCategories) ? (string) $forbiddenCategories : '';
+        $forbiddenCategoriesStr = \Piwigo\Users\CurrentUser::get()->forbiddenCategories;
         if (in_array($categoryId, explode(',', $forbiddenCategoriesStr))) {
             $htmlRenderer->accessDenied();
         }
@@ -681,11 +677,11 @@ final class CategoryService
     {
         /**
          * @var array<string, mixed> $page
-         * @var array<string, mixed> $user
          * @var array<string, mixed> $filter
          * @var array<string, mixed> $conf
          */
-        global $page, $user, $filter, $conf;
+        global $page, $filter, $conf;
+        $currentUser = \Piwigo\Users\CurrentUser::get();
 
         // category currently displayed, if any; narrowed once here and reused
         // at every nested-offset access site below (see fix pattern #4/#7)
@@ -707,13 +703,13 @@ final class CategoryService
             $this,
             $this->repo,
             CachePools::categoryTree()
-        )->getForUser($user);
+        )->getForUser($currentUser->rawAttributes);
 
         $visibleCategoriesRaw = $filter['visible_categories'] ?? null;
         $rows = self::filterMenuRows(
             $allRows,
             $categoryPage,
-            (bool) $user['expand'],
+            (bool) $currentUser->rawAttributes['expand'],
             (bool) $filter['enabled'],
             is_scalar($visibleCategoriesRaw) ? (string) $visibleCategoriesRaw : ''
         );
@@ -758,7 +754,8 @@ final class CategoryService
             );
             if ((bool) $conf['index_new_icon']) {
                 $maxDateLast = $row['max_date_last'] ?? null;
-                $row['icon_ts'] = \Piwigo\Core\RecentIconResolver::getIcon(is_string($maxDateLast) ? $maxDateLast : '', $childDateLast);
+                $recentPeriodForIcon = is_numeric($currentUser->rawAttributes['recent_period'] ?? null) ? (int) $currentUser->rawAttributes['recent_period'] : 0;
+                $row['icon_ts'] = \Piwigo\Core\RecentIconResolver::getIcon(is_string($maxDateLast) ? $maxDateLast : '', $recentPeriodForIcon, $childDateLast);
             }
             $cats[] = $row;
             $categoryPageId = $categoryPage['id'] ?? null;
@@ -1608,11 +1605,8 @@ final class CategoryService
      */
     public function createVirtualCategory(string $categoryName, ActivityLoggerInterface $activityLogger, int|string|null $parentId = null, array $options = []): array
     {
-        /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $user
-         */
-        global $conf, $user;
+        /** @var array<string, mixed> $conf */
+        global $conf;
 
         // is the given category name only containing blank spaces ?
         if ((bool) preg_match('/^\s*$/', $categoryName)) {
@@ -1743,8 +1737,7 @@ final class CategoryService
             $grantedUsers = $this->repo->findAccessUserIds($insertIdUppercat);
             $this->permissionService->addPermissionOnCategory((int) $insertedId, $grantedUsers);
         } elseif ($insert['status'] === 'private') {
-            $currentUserId = $user['id'];
-            $currentUserId = is_numeric($currentUserId) ? (int) $currentUserId : 0;
+            $currentUserId = \Piwigo\Users\CurrentUser::get()->id;
             $adminIds = $this->userRepository()
                 ->findAdminIds();
             $this->permissionService->addPermissionOnCategory((int) $insertedId, array_unique(array_merge($adminIds, [$currentUserId])));
@@ -1768,13 +1761,9 @@ final class CategoryService
      */
     public function catAdminAccess(int $categoryId): bool
     {
-        /** @var array<string, mixed> $user */
-        global $user;
-
         // $filter['visible_categories'] and $filter['visible_images']
         // are not used because it's not necessary (filter <> restriction)
-        $forbiddenCategories = $user['forbidden_categories'];
-        $forbiddenCategories = is_string($forbiddenCategories) ? $forbiddenCategories : '';
+        $forbiddenCategories = \Piwigo\Users\CurrentUser::get()->forbiddenCategories;
         return ! in_array((string) $categoryId, explode(',', $forbiddenCategories), true);
     }
 }

@@ -42,15 +42,13 @@ final class FilterService implements FilterUpdaterInterface
      */
     public function initializeFromRequest(): void
     {
-        // Bootstrap global, set by include/common.inc.php.
-        /** @var array<string, mixed> $user */
-        global $user;
-
         /**
          * @var array<string, mixed> $filter
          * @var array<string, mixed> $header_notes
          */
         global $filter, $header_notes;
+
+        $currentUser = \Piwigo\Users\CurrentUser::get();
 
         if (! (bool) \Piwigo\Core\PageFilterHelper::getFilterPageValue('cancel')) {
             if (isset($_GET['filter'])) {
@@ -98,7 +96,7 @@ final class FilterService implements FilterUpdaterInterface
                 // populates both matches[0] and matches[1].
                 $filter['recent_period'] = $filter_matches[1] ?? null;
             } else {
-                $filter['recent_period'] = $filter_key['recent_period'] > 0 ? $filter_key['recent_period'] : $user['recent_period'];
+                $filter['recent_period'] = $filter_key['recent_period'] > 0 ? $filter_key['recent_period'] : $currentUser->rawAttributes['recent_period'];
             }
 
             // $filter['recent_period'] above comes from an untyped regex capture,
@@ -110,25 +108,35 @@ final class FilterService implements FilterUpdaterInterface
                 // New filter
                 ! (bool) SessionService::get()->getSessionVar('filter_enabled', false) or
                 // Cache data updated
-                $filter_key['time'] <= $user['cache_update_time'] or
+                $filter_key['time'] <= $currentUser->cacheUpdateTime or
                 // Date, period, user are changed
-                $filter_key['user'] != $user['id'] or
+                $filter_key['user'] !== $currentUser->id or
                 $filter_key['recent_period'] != $filter['recent_period'] or
                 $filter_key['date'] != date('Ymd')
             ) {
                 // Need to compute dats
                 $filter_key = [
-                    'user' => is_numeric($user['id']) ? (int) $user['id'] : 0,
+                    'user' => $currentUser->id,
                     'recent_period' => $filter_recent_period,
                     'time' => time(),
                     'date' => date('Ymd'),
                 ];
 
                 $categoryConn = DbConnection::build();
+                // getComputedCategories() mutates its $userdata argument by
+                // reference (sets 'last_photo_date') -- pass the still-live
+                // legacy array (dual-write source of truth alongside
+                // CurrentUser, see RequestBootstrap) so the mutation is
+                // real, then re-sync CurrentUser so every other retargeted
+                // consumer (e.g. CategoryCatsRenderer) observes the same
+                // value.
+                /** @var array<string, mixed> $user */
+                global $user;
                 $filter['categories'] = new CategoryService(
                     new CategoryRepository($categoryConn),
                     new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
                 )->getComputedCategories($user, $filter_recent_period);
+                \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));
 
                 $filter['visible_categories'] = implode(',', array_keys($filter['categories']));
                 if (empty($filter['visible_categories'])) {

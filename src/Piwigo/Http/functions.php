@@ -81,6 +81,7 @@ if (! function_exists('redirect_html')) {
             $guest_id = $conf['guest_id'];
             $guest_id = is_numeric($guest_id) ? (int) $guest_id : 0;
             $user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->buildUser($guest_id, true);
+            \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));
             \Piwigo\Core\Lang::load('common.lang');
             trigger_notify('loading_lang');
             \Piwigo\Core\Lang::load('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, [

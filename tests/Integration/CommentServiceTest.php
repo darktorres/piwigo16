@@ -39,8 +39,9 @@ namespace {
 
     // is_admin()/is_a_guest()/is_classic_user() -- CommentService now calls
     // Piwigo\Auth\AccessControl::isAdmin()/isAGuest()/isClassicUser()
-    // directly (P23 batch 8d), pure `global $user;` reads, so no stub is
-    // needed; tests below set $GLOBALS['user']['status'] instead.
+    // directly (P23 batch 8d), which read Piwigo\Users\CurrentUser (Legacy
+    // Coupling Retirement Track A batch A3); tests below seed CurrentUser
+    // instead.
 }
 
 namespace Piwigo\Tests\Integration {
@@ -55,6 +56,9 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\Tables;
     use Piwigo\Html\HtmlService;
     use Piwigo\Mail\MailService;
+    use Piwigo\Users\CurrentUser;
+    use Piwigo\Users\User;
+    use Piwigo\Users\UserStatus;
 
     /**
      * Covers checkForSpam()/insertComment()/updateComment()/deleteComment()/
@@ -106,7 +110,7 @@ namespace Piwigo\Tests\Integration {
                 'email_admin_on_comment_edition' => false,
                 'email_admin_on_comment_deletion' => false,
             ];
-            $GLOBALS['user'] = ['id' => 1, 'status' => 'normal', 'username' => 'fixture_admin', 'email' => 'fixture_admin@example.test'];
+            CurrentUser::set(User::fromUserArray(['id' => 1, 'status' => 'normal', 'username' => 'fixture_admin', 'email' => 'fixture_admin@example.test']));
             $GLOBALS['page'] = [];
             $_POST['cr'] = [];
 
@@ -123,14 +127,14 @@ namespace Piwigo\Tests\Integration {
 
         public function test_check_for_spam_leaves_action_alone_for_a_non_guest(): void
         {
-            $GLOBALS['user']['status'] = 'normal';
+            CurrentUser::set(CurrentUser::get()->withStatus(UserStatus::Normal));
 
             self::assertSame('moderate', $this->service->checkForSpam('moderate', ['content' => 'hi', 'author' => 'a']));
         }
 
         public function test_check_for_spam_escalates_when_link_count_exceeds_the_max(): void
         {
-            $GLOBALS['user']['status'] = 'guest';
+            CurrentUser::set(CurrentUser::get()->withStatus(UserStatus::Guest));
 
             $content = 'http://a.test http://b.test http://c.test http://d.test';
             self::assertSame('reject', $this->service->checkForSpam('moderate', ['content' => $content, 'author' => 'a']));
@@ -139,7 +143,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_check_for_spam_leaves_action_alone_under_the_link_limit(): void
         {
-            $GLOBALS['user']['status'] = 'guest';
+            CurrentUser::set(CurrentUser::get()->withStatus(UserStatus::Guest));
 
             self::assertSame('moderate', $this->service->checkForSpam('moderate', ['content' => 'http://a.test', 'author' => 'a']));
         }
@@ -198,7 +202,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_insert_comment_rejects_a_guest_impersonating_an_existing_username(): void
         {
-            $GLOBALS['user']['status'] = 'guest';
+            CurrentUser::set(CurrentUser::get()->withStatus(UserStatus::Guest));
 
             $comm = $this->baseComm();
             $comm['author'] = 'fixture_admin';
@@ -251,7 +255,7 @@ namespace Piwigo\Tests\Integration {
         {
             $this->setConf('comments_validation', false);
             $this->setConf('anti-flood_time', 3600);
-            $GLOBALS['user'] = ['id' => 3, 'status' => 'normal', 'username' => 'regular_user'];
+            CurrentUser::set(User::fromUserArray(['id' => 3, 'status' => 'normal', 'username' => 'regular_user']));
 
             $first = $this->baseComm();
             $infos = [];
@@ -284,7 +288,7 @@ namespace Piwigo\Tests\Integration {
             // authorized this exact edit, same as the real comments.php/
             // picture_comment.inc.php callers do via can_manage_comment()
             // before ever reaching this method.
-            $GLOBALS['user'] = ['id' => 3, 'status' => 'normal', 'username' => 'regular_user'];
+            CurrentUser::set(User::fromUserArray(['id' => 3, 'status' => 'normal', 'username' => 'regular_user']));
             $comment = ['comment_id' => 2, 'image_id' => 2, 'content' => 'edited content', 'website_url' => ''];
 
             $action = $this->service->updateComment($comment, $this->validKey(2));
@@ -308,14 +312,14 @@ namespace Piwigo\Tests\Integration {
 
         public function test_delete_comment_returns_false_for_a_missing_comment(): void
         {
-            $GLOBALS['user']['status'] = 'admin';
+            CurrentUser::set(CurrentUser::get()->withStatus(UserStatus::Admin));
 
             self::assertFalse($this->service->deleteComment(999999));
         }
 
         public function test_delete_comment_removes_as_admin(): void
         {
-            $GLOBALS['user']['status'] = 'admin';
+            CurrentUser::set(CurrentUser::get()->withStatus(UserStatus::Admin));
 
             self::assertTrue($this->service->deleteComment(3));
             self::assertNull($this->fetchColumn(3, 'content'));
@@ -323,7 +327,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_delete_comment_denied_for_a_non_owning_user(): void
         {
-            $GLOBALS['user'] = ['id' => 999, 'status' => 'normal', 'username' => 'someone-else'];
+            CurrentUser::set(User::fromUserArray(['id' => 999, 'status' => 'normal', 'username' => 'someone-else']));
 
             self::assertFalse($this->service->deleteComment(4)); // owned by author_id 4
             self::assertNotNull($this->fetchColumn(4, 'content'));
@@ -331,7 +335,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_delete_comment_allowed_for_the_owning_user(): void
         {
-            $GLOBALS['user'] = ['id' => 4, 'status' => 'normal', 'username' => 'power_user'];
+            CurrentUser::set(User::fromUserArray(['id' => 4, 'status' => 'normal', 'username' => 'power_user']));
 
             self::assertTrue($this->service->deleteComment(4));
         }
@@ -363,10 +367,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_invalidate_nb_comments_cache_unsets_the_global_and_clears_the_db(): void
         {
-            /** @var array<string, mixed> $user */
-            $user = $GLOBALS['user'];
-            $user['nb_available_comments'] = 5;
-            $GLOBALS['user'] = $user;
+            CurrentUser::set(CurrentUser::get()->withRawAttribute('nb_available_comments', 5));
             $this->conn->createQueryBuilder()
                 ->update(Tables::userCache())
                 ->set('nb_available_comments', '5')
@@ -374,9 +375,7 @@ namespace Piwigo\Tests\Integration {
 
             $this->service->invalidateNbCommentsCache();
 
-            /** @var array<string, mixed> $userAfter */
-            $userAfter = $GLOBALS['user'];
-            self::assertArrayNotHasKey('nb_available_comments', $userAfter);
+            self::assertFalse(isset(CurrentUser::get()->rawAttributes['nb_available_comments']));
             $value = $this->conn->createQueryBuilder()
                 ->select('nb_available_comments')
                 ->from(Tables::userCache())

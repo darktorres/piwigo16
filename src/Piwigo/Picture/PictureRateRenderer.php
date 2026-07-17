@@ -22,9 +22,8 @@ final class PictureRateRenderer
         /**
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $page
-         * @var array<string, mixed> $user
          */
-        global $conf, $page, $user;
+        global $conf, $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
         // Set by picture.php/PictureController, right before this call.
         /**
@@ -64,12 +63,11 @@ SELECT COUNT(rate) AS count
         $user_rate = null;
         if ((bool) $conf['rate_anonymous'] or \Piwigo\Auth\AccessControl::isAuthorizeStatus(AccessLevel::Classic)) {
             if ($rate_summary['count'] > 0) {
-                // $page['image_id'] / $user['id'] are always numeric (int or
-                // numeric string) -- see the identical narrowing in picture.php.
+                // $page['image_id'] is always numeric (int or numeric
+                // string) -- see the identical narrowing in picture.php.
                 $rate_image_id = $page['image_id'];
                 $rate_image_id = is_numeric($rate_image_id) ? (int) $rate_image_id : 0;
-                $rate_user_id = $user['id'];
-                $rate_user_id = is_numeric($rate_user_id) ? (int) $rate_user_id : 0;
+                $rate_user_id = \Piwigo\Users\CurrentUser::get()->id;
 
                 $query = 'SELECT rate
       FROM ' . Tables::rate() . '

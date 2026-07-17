@@ -134,7 +134,7 @@ SELECT ' . implode(',', $fields) . '
 
             // Load language if cookie is set from login/register/password pages
             $cookie_lang = $_COOKIE['lang'] ?? null;
-            if ($cookie_lang !== null and (! is_string($cookie_lang) or $user['language'] !== $cookie_lang)) {
+            if ($cookie_lang !== null and (! is_string($cookie_lang) or \Piwigo\Users\CurrentUser::get()->language !== $cookie_lang)) {
                 if (! is_string($cookie_lang)) {
                     new HtmlService()
                         ->fatalError('[Hacking attempt] the input parameter "lang" is not valid');
@@ -145,18 +145,19 @@ SELECT ' . implode(',', $fields) . '
                 }
 
                 $user['language'] = $cookie_lang;
+                \Piwigo\Users\CurrentUser::updateLanguage($cookie_lang);
                 \Piwigo\Db\MysqliDb::singleUpdate(
                     Tables::userInfos(),
                     [
                         'language' => $cookie_lang,
                     ],
                     [
-                        'user_id' => $user['id'],
+                        'user_id' => \Piwigo\Users\CurrentUser::get()->id,
                     ]
                 );
 
                 Lang::load('common.lang', '', [
-                    'language' => $user['language'],
+                    'language' => $cookie_lang,
                 ]);
             }
 
@@ -168,16 +169,11 @@ SELECT ' . implode(',', $fields) . '
 
             $template->assign([
                 'language_options' => $language_options,
-                'language_selection' => $user['language'],
+                'language_selection' => \Piwigo\Users\CurrentUser::get()->language,
             ]);
 
             // Get link to doc
-            // $user['language'] is always a language code string (from
-            // get_default_language(), a cookie value already validated against
-            // get_languages(), or a DB-persisted value); a non-string means no
-            // language could be determined, so it degrades to the default link.
-            $user_language = $user['language'];
-            if (is_string($user_language) and str_starts_with($user_language, 'fr')) {
+            if (str_starts_with(\Piwigo\Users\CurrentUser::get()->language, 'fr')) {
                 $help_link = 'https://upstream.example.invalid/help/fr/';
             } else {
                 $help_link = 'https://upstream.example.invalid/help/';

@@ -38,18 +38,13 @@ final class NotificationController implements ControllerInterface
         $feedId = $this->findAvailableFeedId($feedRepo);
 
         $body = LegacyRenderCapture::capture(static function () use ($feedRepo, $feedId): void {
-            /**
-             * @var array<string, mixed> $page
-             * @var array<string, mixed> $user
-             */
-            global $page, $user, $title;
+            /** @var array<string, mixed> $page */
+            global $page, $title;
             $template = \Piwigo\Template\CurrentTemplate::get();
 
             $page['feed'] = $feedId;
 
-            // $user['id'] (the logged in / guest user id) is never
-            // reassigned below.
-            $user_id = is_numeric($user['id']) ? (int) $user['id'] : 0;
+            $user_id = \Piwigo\Users\CurrentUser::get()->id;
 
             $feedRepo->insert($feedId, $user_id);
 

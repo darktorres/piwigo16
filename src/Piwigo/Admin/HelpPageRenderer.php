@@ -14,11 +14,8 @@ final class HelpPageRenderer
 {
     public function render(): void
     {
-        /**
-         * @var array<string, mixed> $page
-         * @var array<string, mixed> $user
-         */
-        global $page, $user;
+        /** @var array<string, mixed> $page */
+        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
@@ -58,8 +55,7 @@ final class HelpPageRenderer
             $page['messages'] = [];
         }
 
-        $user_language = $user['language'] ?? null;
-        $user_language = is_string($user_language) ? $user_language : 'en_UK';
+        $user_language = \Piwigo\Users\CurrentUser::get()->language;
         $language_prefix = substr($user_language, 0, 3);
         if ($language_prefix === 'en_') {
             $page['messages'][] = sprintf(

@@ -32,9 +32,8 @@ final class StatsPageRenderer
         /**
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $page
-         * @var array<string, mixed> $user
          */
-        global $conf, $page, $user;
+        global $conf, $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
@@ -121,9 +120,6 @@ final class StatsPageRenderer
             $stat_compare_year_displayed = 5;
         }
 
-        $user_language = $user['language'] ?? null;
-        $user_language = is_scalar($user_language) ? $user_language : '';
-
         $template->assign([
             'compareYears' => self::getMonthOfLastYears($stat_compare_year_displayed),
             'monthStats' => self::getMonthStats(),
@@ -131,7 +127,7 @@ final class StatsPageRenderer
             'lastDays' => $last_days,
             'lastMonths' => $last_months,
             'lastYears' => $last_years,
-            'langCode' => strval($user_language),
+            'langCode' => \Piwigo\Users\CurrentUser::get()->language,
             'month_labels' => join('~', array_filter($lang_month, is_string(...))),
             'ADMIN_PAGE_TITLE' => l10n('History'),
         ]);

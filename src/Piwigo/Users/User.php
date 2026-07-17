@@ -8,15 +8,23 @@ namespace Piwigo\Users;
  * Typed user entity. `rawAttributes` carries the full legacy `$user` array
  * for P17-23 reads during migration -- retirement gates per the plan doc:
  * P18 records a baseline read-count, P27's arch test enforces zero reads
- * outside `Users/`, P32 deletes the property entirely. Nothing populates
- * it yet (no caller has a full legacy `$user` array to hand in this
- * phase); the property exists now so `fromUserArray()`'s eventual P17-23
- * callers don't need a signature change.
+ * outside `Users/`, P32 deletes the property entirely.
+ *
+ * `forbiddenCategories`/`level`/`cacheUpdateTime`/`preferences` were
+ * promoted from `rawAttributes` to named properties in Legacy Coupling
+ * Retirement Track A batch A3 -- a real key-frequency audit of every
+ * `global $user; ... $user['key']` read across `src/Piwigo/` found these 4
+ * used 13/9/10/13 times respectively (vs. id/username/etc.'s existing
+ * 124/21/10/43-range frequencies), clearing the same "common enough to
+ * warrant a named property" bar those were promoted under. Lower-frequency
+ * keys (`recent_period`, `nb_available_tags`, etc., all under 7 reads
+ * combined) stay in `rawAttributes`.
  */
 final readonly class User
 {
     /**
      * @param array<string, mixed> $internalStatus
+     * @param array<string, mixed> $preferences
      * @param array<string, mixed> $rawAttributes
      */
     public function __construct(
@@ -27,6 +35,10 @@ final readonly class User
         public string $theme,
         public UserStatus $status,
         public bool $enabledHigh,
+        public string $forbiddenCategories = '',
+        public int $level = 0,
+        public string $cacheUpdateTime = '',
+        public array $preferences = [],
         public array $internalStatus = [],
         public array $rawAttributes = [],
     ) {}
@@ -37,6 +49,7 @@ final readonly class User
     public static function fromUserArray(array $row): self
     {
         $status = $row['status'] ?? null;
+        $preferences = $row['preferences'] ?? null;
 
         return new self(
             id: is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0,
@@ -46,12 +59,19 @@ final readonly class User
             theme: is_string($row['theme'] ?? null) ? $row['theme'] : '',
             status: is_string($status) ? (UserStatus::tryFrom($status) ?? UserStatus::Guest) : UserStatus::Guest,
             enabledHigh: (bool) ($row['enabled_high'] ?? false),
+            forbiddenCategories: is_string($row['forbidden_categories'] ?? null) ? $row['forbidden_categories'] : '',
+            level: is_numeric($row['level'] ?? null) ? (int) $row['level'] : 0,
+            cacheUpdateTime: is_scalar($row['cache_update_time'] ?? null) ? (string) $row['cache_update_time'] : '',
+            preferences: is_array($preferences) ? array_filter($preferences, is_string(...), ARRAY_FILTER_USE_KEY) : [],
             rawAttributes: $row,
         );
     }
 
     public function withLanguage(string $language): self
     {
+        $rawAttributes = $this->rawAttributes;
+        $rawAttributes['language'] = $language;
+
         return new self(
             id: $this->id,
             username: $this->username,
@@ -60,13 +80,20 @@ final readonly class User
             theme: $this->theme,
             status: $this->status,
             enabledHigh: $this->enabledHigh,
+            forbiddenCategories: $this->forbiddenCategories,
+            level: $this->level,
+            cacheUpdateTime: $this->cacheUpdateTime,
+            preferences: $this->preferences,
             internalStatus: $this->internalStatus,
-            rawAttributes: $this->rawAttributes,
+            rawAttributes: $rawAttributes,
         );
     }
 
     public function withUsername(string $username): self
     {
+        $rawAttributes = $this->rawAttributes;
+        $rawAttributes['username'] = $username;
+
         return new self(
             id: $this->id,
             username: $username,
@@ -75,11 +102,112 @@ final readonly class User
             theme: $this->theme,
             status: $this->status,
             enabledHigh: $this->enabledHigh,
+            forbiddenCategories: $this->forbiddenCategories,
+            level: $this->level,
+            cacheUpdateTime: $this->cacheUpdateTime,
+            preferences: $this->preferences,
             internalStatus: $this->internalStatus,
-            rawAttributes: $this->rawAttributes,
+            rawAttributes: $rawAttributes,
         );
     }
 
+    public function withLevel(int $level): self
+    {
+        $rawAttributes = $this->rawAttributes;
+        $rawAttributes['level'] = $level;
+
+        return new self(
+            id: $this->id,
+            username: $this->username,
+            email: $this->email,
+            language: $this->language,
+            theme: $this->theme,
+            status: $this->status,
+            enabledHigh: $this->enabledHigh,
+            forbiddenCategories: $this->forbiddenCategories,
+            level: $level,
+            cacheUpdateTime: $this->cacheUpdateTime,
+            preferences: $this->preferences,
+            internalStatus: $this->internalStatus,
+            rawAttributes: $rawAttributes,
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $preferences
+     */
+    public function withPreferences(array $preferences): self
+    {
+        $rawAttributes = $this->rawAttributes;
+        $rawAttributes['preferences'] = $preferences;
+
+        return new self(
+            id: $this->id,
+            username: $this->username,
+            email: $this->email,
+            language: $this->language,
+            theme: $this->theme,
+            status: $this->status,
+            enabledHigh: $this->enabledHigh,
+            forbiddenCategories: $this->forbiddenCategories,
+            level: $this->level,
+            cacheUpdateTime: $this->cacheUpdateTime,
+            preferences: $preferences,
+            internalStatus: $this->internalStatus,
+            rawAttributes: $rawAttributes,
+        );
+    }
+
+    public function withEnabledHigh(bool $enabledHigh): self
+    {
+        $rawAttributes = $this->rawAttributes;
+        $rawAttributes['enabled_high'] = $enabledHigh;
+
+        return new self(
+            id: $this->id,
+            username: $this->username,
+            email: $this->email,
+            language: $this->language,
+            theme: $this->theme,
+            status: $this->status,
+            enabledHigh: $enabledHigh,
+            forbiddenCategories: $this->forbiddenCategories,
+            level: $this->level,
+            cacheUpdateTime: $this->cacheUpdateTime,
+            preferences: $this->preferences,
+            internalStatus: $this->internalStatus,
+            rawAttributes: $rawAttributes,
+        );
+    }
+
+    public function withStatus(UserStatus $status): self
+    {
+        $rawAttributes = $this->rawAttributes;
+        $rawAttributes['status'] = $status->value;
+
+        return new self(
+            id: $this->id,
+            username: $this->username,
+            email: $this->email,
+            language: $this->language,
+            theme: $this->theme,
+            status: $status,
+            enabledHigh: $this->enabledHigh,
+            forbiddenCategories: $this->forbiddenCategories,
+            level: $this->level,
+            cacheUpdateTime: $this->cacheUpdateTime,
+            preferences: $this->preferences,
+            internalStatus: $this->internalStatus,
+            rawAttributes: $rawAttributes,
+        );
+    }
+
+    /**
+     * For genuinely non-promoted keys only -- use withLanguage()/withLevel()/
+     * withPreferences()/withEnabledHigh()/withUsername() for the named
+     * properties instead; those keep rawAttributes in sync too, this one
+     * doesn't (it has no way to know a $key it's given aliases one).
+     */
     public function withRawAttribute(string $key, mixed $value): self
     {
         $rawAttributes = $this->rawAttributes;
@@ -93,6 +221,10 @@ final readonly class User
             theme: $this->theme,
             status: $this->status,
             enabledHigh: $this->enabledHigh,
+            forbiddenCategories: $this->forbiddenCategories,
+            level: $this->level,
+            cacheUpdateTime: $this->cacheUpdateTime,
+            preferences: $this->preferences,
             internalStatus: $this->internalStatus,
             rawAttributes: $rawAttributes,
         );

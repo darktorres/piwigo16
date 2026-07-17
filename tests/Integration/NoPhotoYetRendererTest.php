@@ -17,6 +17,8 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Page\NoPhotoYetRenderer;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Users\User;
 
 /**
  * Only exercises the guard-condition-false and nb_photos>0 branches --
@@ -62,15 +64,11 @@ final class NoPhotoYetRendererTest extends IntegrationTestCase
         $this->renderer = new NoPhotoYetRenderer($this->conn);
 
         $GLOBALS['conf'] = is_array($GLOBALS['conf'] ?? null) ? $GLOBALS['conf'] : [];
-        $GLOBALS['user'] = ['status' => 'guest', 'username' => 'fixture_guest'];
-        // is_a_guest()/is_admin() are real functions_user.inc.php functions,
-        // but whichever Integration test file's own function_exists()-
-        // guarded global stub for them loaded first in this shared process
-        // wins for the whole run (see CommentServiceTest.php's own stub) --
-        // that stub reads $GLOBALS['test_is_guest'], not global $user, when
-        // called with no argument (this class's own real call convention).
-        $GLOBALS['test_is_guest'] = true;
-        $GLOBALS['test_is_admin'] = false;
+        // NoPhotoYetRenderer calls Piwigo\Auth\AccessControl::isAGuest()/
+        // isAdmin() directly (real class methods), which read
+        // Piwigo\Users\CurrentUser (Legacy Coupling Retirement Track A
+        // batch A3).
+        CurrentUser::set(User::fromUserArray(['status' => 'guest', 'username' => 'fixture_guest']));
         unset($_SESSION['no_photo_yet']);
     }
 

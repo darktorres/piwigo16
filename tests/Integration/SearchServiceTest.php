@@ -40,9 +40,10 @@ namespace {
 
     // is_admin()/is_classic_user() -- SearchService/SearchFilterRenderer now
     // call Piwigo\Auth\AccessControl::isAdmin()/isClassicUser() directly
-    // (P23 batch 8d), pure `global $user;` reads, so no stub is needed;
-    // realisticUserGlobal() below sets 'status' => 'normal' to match this
-    // file's old defaults (not admin, is a classic user).
+    // (P23 batch 8d), which read Piwigo\Users\CurrentUser (Legacy Coupling
+    // Retirement Track A batch A3); realisticUserGlobal() below sets
+    // 'status' => 'normal' to match this file's old defaults (not admin,
+    // is a classic user).
 
     // conf_get_param() -- P23 batch 8f-4: the function stub is gone.
     // SearchService/SearchFilterRenderer now call
@@ -117,6 +118,8 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Search\QSingleToken;
     use Piwigo\Search\SearchRepository;
     use Piwigo\Search\SearchService;
+    use Piwigo\Users\CurrentUser;
+    use Piwigo\Users\User;
 
 /**
  * Same fixture shape as CategoryRepositoryTest/SearchRepositoryTest:
@@ -161,7 +164,7 @@ final class SearchServiceTest extends IntegrationTestCase
         $this->cacheDir = dirname(__DIR__, 2) . '/_data/search-service-test-cache';
         @mkdir($this->cacheDir . '/cache', 0o777, true);
 
-        $GLOBALS['user'] = self::realisticUserGlobal();
+        CurrentUser::set(User::fromUserArray(self::realisticUserGlobal()));
         $GLOBALS['filter'] = [];
         $GLOBALS['conf'] = [
             'data_location' => '_data/search-service-test-cache/',
@@ -447,7 +450,7 @@ final class SearchServiceTest extends IntegrationTestCase
         // Same search as above, but with category 2 marked forbidden for
         // this user -- proves the NOT IN (...) replacement actually
         // excludes it, not just that it's syntactically present.
-        $GLOBALS['user'] = array_merge(self::realisticUserGlobal(), ['forbidden_categories' => '2']);
+        CurrentUser::set(User::fromUserArray(array_merge(self::realisticUserGlobal(), ['forbidden_categories' => '2'])));
 
         $results = $this->service->getQuickSearchResultsNoCache('Nested', []);
 

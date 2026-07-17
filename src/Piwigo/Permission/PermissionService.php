@@ -105,7 +105,7 @@ final class PermissionService
 
     /**
      * Returns a SQL condition string filtering by forbidden/visible
-     * categories and images, from the request-scoped $user/$filter globals
+     * categories and images, from CurrentUser and the request-scoped $filter global
      * -- same "reads session/request globals directly" shape as
      * AuditService's $_SERVER['REMOTE_ADDR'] read; a pure string builder
      * with no DB access of its own.
@@ -121,28 +121,24 @@ final class PermissionService
         ?string $prefixCondition = null,
         bool $forceOneCondition = false,
     ): string {
-        /**
-         * @var array<string, mixed> $user
-         * @var array<string, mixed> $filter
-         */
-        global $user, $filter;
+        /** @var array<string, mixed> $filter */
+        global $filter;
 
-        // forbidden_categories/image_access_list are comma-separated id
-        // lists built with implode(',', ...) in getuserdata(), level is a
-        // raw DB fetch value (string|null); image_access_type is the
-        // literal string 'NOT IN' (see getuserdata()) -- all always
+        $currentUser = \Piwigo\Users\CurrentUser::get();
+
+        // image_access_list is a comma-separated id list built with
+        // implode(',', ...) in getuserdata(); image_access_type is the
+        // literal string 'NOT IN' (see getuserdata()) -- both always
         // scalar/string-castable.
-        $userForbiddenCategories = $user['forbidden_categories'] ?? null;
-        $userForbiddenCategories = is_scalar($userForbiddenCategories) ? (string) $userForbiddenCategories : '';
+        $userForbiddenCategories = $currentUser->forbiddenCategories;
         $filterVisibleCategories = $filter['visible_categories'] ?? null;
         $filterVisibleCategories = is_scalar($filterVisibleCategories) ? (string) $filterVisibleCategories : '';
         $filterVisibleImages = $filter['visible_images'] ?? null;
         $filterVisibleImages = is_scalar($filterVisibleImages) ? (string) $filterVisibleImages : '';
-        $userLevel = $user['level'] ?? null;
-        $userLevel = is_scalar($userLevel) ? (string) $userLevel : '';
-        $userImageAccessType = $user['image_access_type'] ?? null;
+        $userLevel = (string) $currentUser->level;
+        $userImageAccessType = $currentUser->rawAttributes['image_access_type'] ?? null;
         $userImageAccessType = is_scalar($userImageAccessType) ? (string) $userImageAccessType : '';
-        $userImageAccessList = $user['image_access_list'] ?? null;
+        $userImageAccessList = $currentUser->rawAttributes['image_access_list'] ?? null;
         $userImageAccessList = is_scalar($userImageAccessList) ? (string) $userImageAccessList : '';
 
         $sqlList = [];

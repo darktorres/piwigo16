@@ -520,11 +520,8 @@ SELECT
      */
     public function get_server_themes(bool $new = false): bool
     {
-        /**
-         * @var array<string, mixed> $user
-         * @var array<string, mixed> $conf
-         */
-        global $user, $conf;
+        /** @var array<string, mixed> $conf */
+        global $conf;
 
         // PEM_URL is defined via define('PEM_URL', $conf['alternative_pem_url']) in
         // one branch of include/common.inc.php, so PHPStan can't prove it's a
@@ -585,8 +582,7 @@ SELECT
 
         // Retrieve PEM themes infos
         $url = $pem_base_url . '/api/get_revision_list-next.php';
-        $user_language = $user['language'] ?? null;
-        $user_language = is_scalar($user_language) ? (string) $user_language : '';
+        $user_language = \Piwigo\Users\CurrentUser::get()->language;
         $get_data = array_merge(
             $get_data,
             [

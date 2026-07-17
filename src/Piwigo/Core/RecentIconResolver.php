@@ -20,20 +20,16 @@ final class RecentIconResolver
      *
      * @return false|array<string, mixed>
      */
-    public static function getIcon(string $date, bool $isChildDate = false): false|array
+    public static function getIcon(string $date, int $recentPeriod, bool $isChildDate = false): false|array
     {
-        /**
-         * @var array<string, mixed> $cache
-         * @var array<string, mixed> $user
-         */
-        global $cache, $user;
+        /** @var array<string, mixed> $cache */
+        global $cache;
 
         if ($date === '' || $date === '0') {
             return false;
         }
 
-        $recent_period = $user['recent_period'] ?? null;
-        $recent_period = is_numeric($recent_period) ? (int) $recent_period : (is_string($recent_period) ? $recent_period : 0);
+        $recent_period = $recentPeriod;
 
         $get_icon_cache = is_array($cache['get_icon'] ?? null) ? $cache['get_icon'] : [];
 

@@ -35,11 +35,8 @@ final class PasswordController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        /**
-         * @var array<string, mixed> $page
-         * @var array<string, mixed> $user
-         */
-        global $page, $user;
+        /** @var array<string, mixed> $page */
+        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         // $page['infos'] is always initialized to an array by
@@ -164,7 +161,7 @@ final class PasswordController implements ControllerInterface
                     'title' => $title,
                     'form_action' => get_root_url() . 'password.php',
                     'action' => $page['action'],
-                    'username' => $page['username'] ?? $user['username'],
+                    'username' => $page['username'] ?? \Piwigo\Users\CurrentUser::get()->username,
                     'PWG_TOKEN' => (new \Piwigo\Csrf\CsrfService())->getToken(),
                 ]
             );
@@ -180,13 +177,14 @@ final class PasswordController implements ControllerInterface
             // Load language if cookie is set from login/register/password
             // pages
             $cookie_lang = $_COOKIE['lang'] ?? null;
-            if (is_string($cookie_lang) and $user['language'] !== $cookie_lang) {
+            if (is_string($cookie_lang) and \Piwigo\Users\CurrentUser::get()->language !== $cookie_lang) {
                 if (! array_key_exists($cookie_lang, \Piwigo\Lang\LangService::getLanguages())) {
                     new HtmlService()
                         ->fatalError('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');
                 }
 
                 $user['language'] = $cookie_lang;
+                \Piwigo\Users\CurrentUser::updateLanguage($cookie_lang);
                 Lang::load('common.lang', '', [
                     'language' => $cookie_lang,
                 ]);
@@ -199,12 +197,10 @@ final class PasswordController implements ControllerInterface
 
             $template->assign([
                 'language_options' => $language_options,
-                'current_language' => $user['language'],
+                'current_language' => \Piwigo\Users\CurrentUser::get()->language,
             ]);
 
-            $user_language_for_help = $user['language'] ?? '';
-            $user_language_for_help = is_string($user_language_for_help) ? $user_language_for_help : '';
-            if (str_starts_with($user_language_for_help, 'fr')) {
+            if (str_starts_with(\Piwigo\Users\CurrentUser::get()->language, 'fr')) {
                 $help_link = 'https://upstream.example.invalid/help/fr/';
             } else {
                 $help_link = 'https://upstream.example.invalid/help/';
@@ -391,9 +387,17 @@ final class PasswordController implements ControllerInterface
                 // lockout account for 1hour
                 if ($has_valid_user_id) {
                     $save_user = $user;
+                    $saveCurrentUser = \Piwigo\Users\CurrentUser::get();
                     $user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->buildUser((int) $user_id_raw, false);
+                    // PreferencesService writes onto CurrentUser::get()->id
+                    // (Legacy Coupling Retirement Track A batch A3), so the
+                    // temporary identity switch above must be mirrored here
+                    // too, or the preference would land on the ORIGINAL
+                    // requester instead of the locked-out target user.
+                    \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));
                     (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->updateParam('reset_password_forbidden_until', time() + 60 * 60);
                     $user = $save_user;
+                    \Piwigo\Users\CurrentUser::set($saveCurrentUser);
 
                     (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('user', (int) $user_id_raw, 'reset_password_failure_too_many');
                 }
@@ -418,21 +422,26 @@ final class PasswordController implements ControllerInterface
         $user_id = (int) $user_id_raw;
 
         $save_user = $user;
+        $saveCurrentUser = \Piwigo\Users\CurrentUser::get();
         $user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->buildUser($user_id, false);
+        // Same CurrentUser identity-switch requirement as the lockout branch
+        // above -- PreferencesService::deleteParam() writes onto
+        // CurrentUser::get()->id.
+        \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));
         (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->deleteParam('reset_password_forbidden_until');
 
+        $targetUser = \Piwigo\Users\CurrentUser::get();
         $_SESSION['valid_reset_password_code'] = [
             'user_id' => $user_id,
-            'username' => $user['username'],
-            'email' => $user['email'],
-            'language' => $user['language'],
+            'username' => $targetUser->username,
+            'email' => $targetUser->email,
+            'language' => $targetUser->language,
         ];
-        $status = $user['status'] ?? '';
-        $status = is_string($status) ? $status : '';
-        $user_email = $user['email'] ?? null;
-        $has_no_email = ! is_string($user_email) || $user_email === '';
-        $page['username'] = $user['username'];
+        $status = $targetUser->status->value;
+        $has_no_email = $targetUser->email === '';
+        $page['username'] = $targetUser->username;
         $user = $save_user;
+        \Piwigo\Users\CurrentUser::set($saveCurrentUser);
 
         // fallback check: don't send mail when user is guest, generic or
         // doesn't have email

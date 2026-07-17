@@ -31,9 +31,8 @@ final class CategoryDefaultRenderer
         /**
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $page
-         * @var array<string, mixed> $user
          */
-        global $conf, $page, $user;
+        global $conf, $page;
         $template = $this->template;
 
         $pictures = [];
@@ -106,7 +105,7 @@ SELECT *
                   ]
               );
 
-            if ((bool) $conf['activate_comments'] and (bool) $user['show_nb_comments']) {
+            if ((bool) $conf['activate_comments'] and (bool) \Piwigo\Users\CurrentUser::get()->rawAttributes['show_nb_comments']) {
                 $query = '
 SELECT image_id, COUNT(*) AS nb_comments
   FROM ' . Tables::comments() . '
@@ -170,10 +169,12 @@ SELECT image_id, COUNT(*) AS nb_comments
                 // exactly like a non-string/null column value would, so
                 // behavior is unchanged.
                 $dateAvailable = is_string($row['date_available']) ? $row['date_available'] : '';
-                $tplVar['icon_ts'] = \Piwigo\Core\RecentIconResolver::getIcon($dateAvailable);
+                $recentPeriodRaw = \Piwigo\Users\CurrentUser::get()->rawAttributes['recent_period'] ?? null;
+                $recentPeriodForIcon = is_numeric($recentPeriodRaw) ? (int) $recentPeriodRaw : 0;
+                $tplVar['icon_ts'] = \Piwigo\Core\RecentIconResolver::getIcon($dateAvailable, $recentPeriodForIcon);
             }
 
-            if ((bool) $user['show_nb_hits']) {
+            if ((bool) \Piwigo\Users\CurrentUser::get()->rawAttributes['show_nb_hits']) {
                 $tplVar['NB_HITS'] = $row['hit'];
             }
 
@@ -184,7 +185,7 @@ SELECT image_id, COUNT(*) AS nb_comments
                     break;
 
                 case 'most_visited':
-                    if (! (bool) $user['show_nb_hits']) {
+                    if (! (bool) \Piwigo\Users\CurrentUser::get()->rawAttributes['show_nb_hits']) {
                         $hit = $row['hit'];
                         $name = '(' . (is_string($hit) || is_int($hit) ? $hit : '') . ') ' . $name;
                     }

@@ -123,7 +123,7 @@ final class AuthService
         // New default login and register pages, if users changes languages
         // and succesfully logs in we want to update the userpref language
         // stored in a cookie
-        if (isset($_COOKIE['lang']) && ($user['language'] ?? null) !== $_COOKIE['lang']) {
+        if (isset($_COOKIE['lang']) && \Piwigo\Users\CurrentUser::get()->language !== $_COOKIE['lang']) {
             $lang_cookie = $_COOKIE['lang'];
             if (! is_string($lang_cookie)) {
                 $this->htmlRenderer->fatalError('[Hacking attempt] the input parameter "lang" is not valid');

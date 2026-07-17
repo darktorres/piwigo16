@@ -21,9 +21,8 @@ final class UserListPageRenderer
         /**
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $page
-         * @var array<string, mixed> $user
          */
-        global $conf, $page, $user;
+        global $conf, $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         (new \Piwigo\Validation\InputValidator())->validate('group', $_GET, false, ValidationPattern::ID);
@@ -118,7 +117,7 @@ ORDER BY registration_date
         $webmaster_id = is_numeric($webmaster_id) ? (int) $webmaster_id : 0;
 
         $protected_users = [
-            $user['id'],
+            \Piwigo\Users\CurrentUser::get()->id,
             $guest_id,
             $default_user_id,
             $webmaster_id,
@@ -127,7 +126,7 @@ ORDER BY registration_date
         $password_protected_users = [$guest_id];
 
         // an admin can't delete other admin/webmaster
-        if ($user['status'] === 'admin') {
+        if (\Piwigo\Users\CurrentUser::get()->status === \Piwigo\Users\UserStatus::Admin) {
             $query = '
 SELECT
     user_id
@@ -138,12 +137,7 @@ SELECT
 
             $protected_users = array_merge($protected_users, $admin_ids);
 
-            // user_infos.id (primary key, NOT NULL): a raw DB fetch value is a
-            // numeric string, UserService::buildUser() may also set it as int --
-            // either way it's always scalar and string-castable (same invariant
-            // as the equivalent block in Piwigo\Ws\PwgUsers::setInfo()).
-            $current_user_id = $user['id'];
-            $current_user_id = is_scalar($current_user_id) ? (string) $current_user_id : '0';
+            $current_user_id = (string) \Piwigo\Users\CurrentUser::get()->id;
 
             // we add all admin+webmaster users BUT the user herself
             $password_protected_users = array_merge($password_protected_users, array_diff($admin_ids, [$current_user_id]));
@@ -164,7 +158,7 @@ SELECT
 
         $owner_username = \Piwigo\Db\MysqliDb::query2Array($query, null, 'username');
 
-        // protected_users/password_protected_users mix $user['id'], several $conf
+        // protected_users/password_protected_users mix CurrentUser::get()->id, several $conf
         // ids (already normalized to int above) and $admin_ids (query2array
         // user_id values, always numeric strings from a NOT NULL primary key);
         // stringify for implode() below.
@@ -187,8 +181,8 @@ SELECT
                 'guest_user' => $guest_id,
                 'filter_group' => ($_GET['group'] ?? null),
                 'search_input' => ((isset($_GET['user_id']) && is_string($_GET['user_id'])) ? 'id:' . $_GET['user_id'] : null),
-                'connected_user' => $user['id'],
-                'connected_user_status' => $user['status'],
+                'connected_user' => \Piwigo\Users\CurrentUser::get()->id,
+                'connected_user_status' => \Piwigo\Users\CurrentUser::get()->status->value,
                 'owner' => $webmaster_id,
                 'owner_username' => $owner_username[0],
             ]
@@ -231,7 +225,7 @@ SELECT
         $pref_status_options = $label_of_status;
 
         // a simple "admin" can't set/remove statuses webmaster/admin
-        if ($user['status'] === 'admin') {
+        if (\Piwigo\Users\CurrentUser::get()->status === \Piwigo\Users\UserStatus::Admin) {
             unset($pref_status_options['webmaster']);
             unset($pref_status_options['admin']);
         }

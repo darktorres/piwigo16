@@ -286,11 +286,8 @@ final class ProfileFormHandler
      */
     public function loadIntoTemplate($url_action, $url_redirect, array $userdata, ?string $template_prefixe = null): void
     {
-        /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $user
-         */
-        global $conf, $user;
+        /** @var array<string, mixed> $conf */
+        global $conf;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $template->assign(
@@ -370,8 +367,9 @@ SELECT
         $template->assign('API_SELECTED_EXPIRATION', array_key_first($display_duration));
         $template->assign('API_CAN_MANAGE', 'pwg_ui' === ($_SESSION['connected_with'] ?? null));
 
-        $email_notifications_infos = (bool) $user['email'] ?
-          l10n('The email <em>%s</em> will be used to notify you when your API key is about to expire.', $user['email'])
+        $current_user_email = \Piwigo\Users\CurrentUser::get()->email;
+        $email_notifications_infos = $current_user_email !== '' ?
+          l10n('The email <em>%s</em> will be used to notify you when your API key is about to expire.', $current_user_email)
           : l10n('You have no email address, so you will not be notified when your API key is about to expire.');
         $template->assign('API_EMAIL_INFOS', $email_notifications_infos);
 

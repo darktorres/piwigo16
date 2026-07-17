@@ -28,14 +28,7 @@ class CalendarMonthly extends CalendarBase
     public function initialize($inner_sql): void
     {
         parent::initialize($inner_sql);
-        /** @var array<string, mixed> $lang */
-        global $lang;
-        // $lang['month'] is a labels array (numeric month => translated name)
-        // defined by every language file as array<int, string>; filter to
-        // string values to match CalendarBase::$calendar_levels' declared
-        // element shape (array<int|string, string>|null) instead of a bare
-        // mixed cast.
-        $month_labels = is_array($lang['month']) ? array_filter($lang['month'], is_string(...)) : null;
+        $month_labels = \Piwigo\Core\Lang::months();
         $this->calendar_levels = [
             [
                 'sql' => \Piwigo\Db\MysqliDb::getYear($this->date_field),
@@ -278,9 +271,7 @@ class CalendarMonthly extends CalendarBase
             return false;
         }
 
-        /** @var array<string, mixed> $lang */
-        global $lang;
-        $month_labels = is_array($lang['month']) ? array_filter($lang['month'], is_string(...)) : null;
+        $month_labels = \Piwigo\Core\Lang::months();
         $calendar_bars = [];
         foreach ($items as $year => $year_data) {
             $chronology_date = [$year];
@@ -350,9 +341,7 @@ class CalendarMonthly extends CalendarBase
             $page['chronology_date'][self::CMONTH] = $m;
             return false;
         }
-        /** @var array<string, mixed> $lang */
-        global $lang;
-        $month_labels = is_array($lang['month']) ? array_filter($lang['month'], is_string(...)) : [];
+        $month_labels = \Piwigo\Core\Lang::months();
         $calendar_bars = [];
         // $page['chronology_date'] is not mutated between the snapshot above
         // and here (the only mutation happens in the early-return branch
@@ -392,10 +381,9 @@ class CalendarMonthly extends CalendarBase
     {
         /**
          * @var array<string, mixed> $page
-         * @var array<string, mixed> $lang
          * @var array<string, mixed> $conf
          */
-        global $page, $lang, $conf;
+        global $page, $conf;
 
         // self::CYEAR/self::CMONTH are never touched below (only self::CDAY is toggled, per
         // day, inside the loop), so a single snapshot taken here stays valid
@@ -460,7 +448,7 @@ class CalendarMonthly extends CalendarBase
                 $first_day_dow += 7;
             }
             // first_day_dow = week day corresponding to the first day of this month
-            $wday_labels = is_array($lang['day']) ? $lang['day'] : [];
+            $wday_labels = \Piwigo\Core\Lang::days();
 
             if ($conf['week_starts_on'] == 'monday') {
                 if ($first_day_dow == 0) {

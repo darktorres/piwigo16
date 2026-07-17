@@ -100,6 +100,35 @@ final class Lang
         return Translator::get()->translate($key, ...$args);
     }
 
+    /**
+     * Returns the currently active translation table -- for callers that
+     * need to temporarily swap it out wholesale and restore it later (e.g.
+     * MailService::switchLangTo()/switchLangBack(), building a
+     * notification email in a language different from the current
+     * request's), not for reading individual keys (use t()/has() instead).
+     *
+     * @return array<string, string|array<int, string>>
+     */
+    public static function snapshot(): array
+    {
+        return self::$data;
+    }
+
+    /**
+     * Restores a translation table previously obtained from snapshot(), or
+     * resets to empty -- ready for a fresh load() -- when $data is null.
+     * Re-establishes the $GLOBALS['lang'] reference l10n() still reads
+     * (see attachGlobals()'s own docblock), so old and new call sites stay
+     * in sync.
+     *
+     * @param array<string, string|array<int, string>>|null $data
+     */
+    public static function restore(?array $data): void
+    {
+        self::$data = $data ?? [];
+        $GLOBALS['lang'] = &self::$data;
+    }
+
     public static function has(string $key): bool
     {
         return isset(self::$data[$key]);
@@ -119,6 +148,29 @@ final class Lang
     public static function month(int $month): string
     {
         return self::fromLangArray('month', $month);
+    }
+
+    /**
+     * All day names, keyed by day-of-week index (0 = Sunday). Bulk
+     * counterpart to day() for callers building a full labels map (e.g.
+     * calendar navigation bars) instead of looking up a single index.
+     *
+     * @return array<int, string>
+     */
+    public static function days(): array
+    {
+        return self::langArrayGroup('day');
+    }
+
+    /**
+     * All month names, keyed by month number (1 = January). Bulk
+     * counterpart to month() -- see days().
+     *
+     * @return array<int, string>
+     */
+    public static function months(): array
+    {
+        return self::langArrayGroup('month');
     }
 
     /**
@@ -393,15 +445,32 @@ final class Lang
 
     private static function fromLangArray(string $key, int $index): string
     {
+        $group = self::langArrayGroup($key);
+        $val = $group[$index] ?? null;
+
+        return $val ?? '';
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private static function langArrayGroup(string $key): array
+    {
         $raw = $GLOBALS['lang'] ?? [];
         $lang = is_array($raw) ? $raw : [];
         $group = $lang[$key] ?? null;
-        if (! is_array($group) || ! isset($group[$index])) {
-            return '';
+        if (! is_array($group)) {
+            return [];
         }
-        $val = $group[$index];
 
-        return is_scalar($val) ? (string) $val : '';
+        $result = [];
+        foreach ($group as $k => $v) {
+            if (is_int($k) && is_string($v)) {
+                $result[$k] = $v;
+            }
+        }
+
+        return $result;
     }
 
     private static function getParentLanguage(?string $lang_id = null): ?string
@@ -503,11 +572,13 @@ final class Lang
     public static function loadArray(array $data): void
     {
         self::$data = $data;
+        $GLOBALS['lang'] = &self::$data;
     }
 
     public static function reset(): void
     {
         self::$data = [];
+        $GLOBALS['lang'] = &self::$data;
         self::$defaultLanguageProvider = null;
         self::$htmlRenderer = null;
     }

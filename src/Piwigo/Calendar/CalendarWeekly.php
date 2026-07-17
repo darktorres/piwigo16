@@ -24,23 +24,15 @@ class CalendarWeekly extends CalendarBase
     public function initialize($inner_sql): void
     {
         parent::initialize($inner_sql);
-        /**
-         * @var array<string, mixed> $lang
-         * @var array<string, mixed> $conf
-         */
-        global $lang, $conf;
+        /** @var array<string, mixed> $conf */
+        global $conf;
         $week_no_labels = [];
         for ($i = 1; $i <= 53; $i++) {
             $week_no_labels[$i] = l10n('Week %d', $i);
             // $week_no_labels[$i] = $i;
         }
 
-        // $lang['day'] is a labels array (numeric weekday => translated name)
-        // defined by every language file as array<int, string>; filter to
-        // string values to match CalendarBase::$calendar_levels' declared
-        // element shape (array<int|string, string>|null) instead of a bare
-        // mixed cast.
-        $day_labels = is_array($lang['day']) ? array_filter($lang['day'], is_string(...)) : null;
+        $day_labels = \Piwigo\Core\Lang::days();
 
         $this->calendar_levels = [
             [
@@ -61,14 +53,14 @@ class CalendarWeekly extends CalendarBase
         if ($conf['week_starts_on'] == 'monday') {
             $this->calendar_levels[self::CWEEK]['sql'] = \Piwigo\Db\MysqliDb::getWeek($this->date_field, 5) . '+1';
             $this->calendar_levels[self::CDAY]['sql'] = \Piwigo\Db\MysqliDb::getWeekday($this->date_field);
+            // Always a real array here: $day_labels above comes from
+            // Lang::days(), which never returns null.
             $cday_labels = $this->calendar_levels[self::CDAY]['labels'];
-            if (is_array($cday_labels)) {
-                $shifted = array_shift($cday_labels);
-                if (is_string($shifted)) {
-                    $cday_labels[] = $shifted;
-                }
-                $this->calendar_levels[self::CDAY]['labels'] = $cday_labels;
+            $shifted = array_shift($cday_labels);
+            if (is_string($shifted)) {
+                $cday_labels[] = $shifted;
             }
+            $this->calendar_levels[self::CDAY]['labels'] = $cday_labels;
         }
     }
 

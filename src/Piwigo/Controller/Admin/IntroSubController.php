@@ -70,14 +70,13 @@ final class IntroSubController implements AdminSubControllerInterface
     {
         /**
          * @var array<string, mixed> $conf
-         * @var array<string, mixed> $lang
          * @var string $link_start
          * @var Logger $logger
          * @var array<string, mixed> $page
          * @var array<string, mixed> $pwg_loaded_plugins
          * @var array<string, mixed> $user
          */
-        global $conf, $lang, $link_start, $logger, $page, $pwg_loaded_plugins, $user;
+        global $conf, $link_start, $logger, $page, $pwg_loaded_plugins, $user;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (! is_array($page['messages'] ?? null)) {
@@ -471,8 +470,7 @@ SELECT COUNT(*)
         $template->assign('ACTIVITY_CHART_DATA', $chart_data);
         $template->assign('ACTIVITY_CHART_NUMBER_SIZES', $size);
 
-        $lang_days = $lang['day'] ?? null;
-        $lang_days = is_array($lang_days) ? $lang_days : [];
+        $lang_days = \Piwigo\Core\Lang::days();
 
         $day_labels = [];
         for ($i = 0; $i <= 6; $i++) {

@@ -31,11 +31,10 @@ final class StatsPageRenderer
     {
         /**
          * @var array<string, mixed> $conf
-         * @var array<string, mixed> $lang
          * @var array<string, mixed> $page
          * @var array<string, mixed> $user
          */
-        global $conf, $lang, $page, $user;
+        global $conf, $page, $user;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
@@ -101,12 +100,13 @@ final class StatsPageRenderer
             );
         }
 
-        // $lang['month'] is the language file's month-index (1-12) to name map;
-        // narrow it once, sort it, then write the sorted copy back so both the
-        // ksort() mutation and the join() below observe the same array.
-        $lang_month = is_array($lang['month'] ?? null) ? $lang['month'] : [];
+        // Lang::months() is the language file's month-index (1-12) to name
+        // map; a local sorted copy is all join() below needs -- an earlier
+        // version also wrote the sorted copy back into the global table
+        // (dead: nothing downstream in this request re-reads it, and the
+        // join() call already reads this local variable, not the global).
+        $lang_month = \Piwigo\Core\Lang::months();
         ksort($lang_month);
-        $lang['month'] = $lang_month;
 
         // $conf['stat_compare_year_displayed'] can come back as a numeric string
         // when overridden from the config table (see load_conf_from_db()), or the

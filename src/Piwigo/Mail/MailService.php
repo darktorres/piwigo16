@@ -101,7 +101,7 @@ final class MailService implements MailerInterface
     private static array $switchLangStack = [];
 
     /**
-     * @var array<string, array{lang_info: array<string, mixed>, lang: array<string, mixed>}>
+     * @var array<string, array{lang_info: array<string, mixed>, lang: array<string, string|array<int, string>>}>
      */
     private static array $switchLangLanguages = [];
 
@@ -350,11 +350,10 @@ final class MailService implements MailerInterface
     {
         /**
          * @var array<string, mixed> $user
-         * @var array<string, mixed> $lang
          * @var array<string, mixed> $lang_info
          * @var array<string, array<string, array{language?: string, return?: bool, no_fallback?: bool, force_fallback?: bool|string, local?: bool}>> $language_files
          */
-        global $user, $lang, $lang_info, $language_files;
+        global $user, $lang_info, $language_files;
 
         $currentUserLanguage = $user['language'] ?? null;
         $currentUserLanguage = is_string($currentUserLanguage) ? $currentUserLanguage : '';
@@ -364,7 +363,7 @@ final class MailService implements MailerInterface
             self::$switchLangInitialised = true;
             self::$switchLangLanguages[$currentUserLanguage] = [
                 'lang_info' => $lang_info,
-                'lang' => $lang,
+                'lang' => Lang::snapshot(),
             ];
         }
 
@@ -374,7 +373,7 @@ final class MailService implements MailerInterface
         if (! isset(self::$switchLangLanguages[$language])) {
             // Re-init language arrays.
             $lang_info = [];
-            $lang = [];
+            Lang::restore(null);
 
             Lang::load('common.lang', '', [
                 'language' => $language,
@@ -406,12 +405,12 @@ final class MailService implements MailerInterface
 
             self::$switchLangLanguages[$language] = [
                 'lang_info' => $lang_info,
-                'lang' => $lang,
+                'lang' => Lang::snapshot(),
             ];
         } else {
             $entry = self::$switchLangLanguages[$language];
             $lang_info = $entry['lang_info'];
-            $lang = $entry['lang'];
+            Lang::restore($entry['lang']);
         }
     }
 
@@ -423,10 +422,9 @@ final class MailService implements MailerInterface
     {
         /**
          * @var array<string, mixed> $user
-         * @var array<string, mixed> $lang
          * @var array<string, mixed> $lang_info
          */
-        global $user, $lang, $lang_info;
+        global $user, $lang_info;
 
         if (self::$switchLangStack === []) {
             return;
@@ -437,7 +435,7 @@ final class MailService implements MailerInterface
         if (isset(self::$switchLangLanguages[$language])) {
             $entry = self::$switchLangLanguages[$language];
             $lang_info = $entry['lang_info'];
-            $lang = $entry['lang'];
+            Lang::restore($entry['lang']);
         }
         $user['language'] = $language;
     }

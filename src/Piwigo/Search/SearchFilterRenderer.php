@@ -45,11 +45,10 @@ final class SearchFilterRenderer
     {
         /**
          * @var array<string, mixed> $conf
-         * @var array<string, mixed> $lang
          * @var array<string, mixed> $page
          * @var array<string, mixed> $user
          */
-        global $conf, $lang, $page, $persistent_cache, $user;
+        global $conf, $page, $persistent_cache, $user;
         $template = $this->template;
         if (! $persistent_cache instanceof PersistentCache) {
             $this->htmlRenderer->fatalError('persistent cache not initialized');
@@ -108,16 +107,7 @@ final class SearchFilterRenderer
         $userId = is_scalar($user['id'] ?? null) ? (string) $user['id'] : '';
         $userCacheUpdateTime = is_scalar($user['cache_update_time'] ?? null) ? (string) $user['cache_update_time'] : '';
 
-        // $lang['month'] is the language file's month-index (1-12) to name
-        // map; narrow it once for the date_posted/date_created breakdowns
-        // below.
-        $langMonthRaw = is_array($lang['month'] ?? null) ? $lang['month'] : [];
-        $langMonth = [];
-        foreach ($langMonthRaw as $monthIndex => $monthName) {
-            if (is_int($monthIndex) && is_string($monthName)) {
-                $langMonth[$monthIndex] = $monthName;
-            }
-        }
+        $langMonth = \Piwigo\Core\Lang::months();
 
         $searchId = $page['search'] ?? null;
         $searchId = (is_int($searchId) || is_string($searchId)) ? $searchId : '';

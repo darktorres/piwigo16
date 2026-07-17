@@ -17,10 +17,6 @@ final class PictureFormatsPageRenderer
 {
     public function render(): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $lang;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
@@ -54,7 +50,7 @@ SELECT
 
             $format['label'] = strtoupper((string) $format['ext']);
             $lang_key = 'format ' . strtoupper((string) $format['ext']);
-            $lang_label = isset($lang[$lang_key]) && is_string($lang[$lang_key]) ? $lang[$lang_key] : null;
+            $lang_label = \Piwigo\Core\Lang::has($lang_key) ? \Piwigo\Core\Lang::t($lang_key) : null;
             if ($lang_label !== null) {
                 $format['label'] = $lang_label;
             }

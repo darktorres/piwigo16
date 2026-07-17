@@ -14,11 +14,10 @@ use Piwigo\Permission\PermissionService;
  * `include/functions_notification.inc.php`'s 18 functions (P23 batch 8c
  * folded the remaining 4 -- `addNewsLine()`/`news()`/
  * `getHtmlDescriptionRecentPostDate()`/`getTitleRecentPostDate()` -- in
- * here too; none read `$page`/`$template`, only `global $conf;`/
- * `global $lang;` plus URL-building/l10n free functions
- * (make_index_url(), make_picture_url(), DerivativeImage::thumb_url()),
- * same "global read inside a service method" precedent as
- * TagService::addLevelToTags()).
+ * here too; none read `$page`/`$template`, only `global $conf;` plus
+ * URL-building/l10n free functions (make_index_url(), make_picture_url(),
+ * DerivativeImage::thumb_url()), same "global read inside a service
+ * method" precedent as TagService::addLevelToTags().
  */
 final class NotificationService
 {
@@ -382,9 +381,6 @@ final class NotificationService
      */
     public function getTitleRecentPostDate(array $dateDetail): string
     {
-        /** @var array<string, mixed> $lang */
-        global $lang;
-
         $nbElements = $dateDetail['nb_elements'] ?? null;
         $nbElements = is_numeric($nbElements) ? (int) $nbElements : 0;
         $title = l10n_dec('%d new photo', '%d new photos', $nbElements);
@@ -392,10 +388,7 @@ final class NotificationService
         $dateAvailable = $dateDetail['date_available'] ?? null;
         $dateAvailable = is_string($dateAvailable) ? $dateAvailable : '';
         if ((bool) preg_match('/^\d+-(\d+)-(\d+) /', $dateAvailable, $matches)) {
-            // $lang['month'] is the language file's month-index (1-12) to name map
-            $langMonth = is_array($lang['month'] ?? null) ? $lang['month'] : [];
-            $monthName = $langMonth[(int) $matches[1]] ?? '';
-            $monthName = is_string($monthName) ? $monthName : '';
+            $monthName = \Piwigo\Core\Lang::month((int) $matches[1]);
             $title .= ' (' . $monthName . ' ' . $matches[2] . ')';
         }
 

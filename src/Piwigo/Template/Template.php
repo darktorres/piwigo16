@@ -723,11 +723,8 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
      */
     public static function modcompiler_translate(array $params): string
     {
-        /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $lang
-         */
-        global $conf, $lang;
+        /** @var array<string, mixed> $conf */
+        global $conf;
 
         switch (count($params)) {
             case 1:
@@ -739,9 +736,9 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
                 // explicitly since the callee's return type is opaque.
                 if ((bool) $conf['compiled_template_cache_language']
                   && is_string($key)
-                  && isset($lang[$key])
+                  && Lang::has($key)
                 ) {
-                    return var_export($lang[$key], true);
+                    return var_export(Lang::t($key), true);
                 }
                 return 'l10n(' . $params[0] . ')';
 
@@ -770,7 +767,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
          * @var array<string, mixed> $conf
          * @var array<string, mixed> $lang_info
          */
-        global $conf, $lang, $lang_info;
+        global $conf, $lang_info;
         if ((bool) $conf['compiled_template_cache_language']) {
             $ret = 'sprintf(';
             if ((bool) $lang_info['zero_plural']) {

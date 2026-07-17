@@ -26,10 +26,9 @@ final class PictureMetadataRenderer
     {
         /**
          * @var array<string, mixed> $conf
-         * @var array<string, mixed> $lang
          * @var array<string, array{src_image: SrcImage, ...}> $picture
          */
-        global $conf, $lang, $picture;
+        global $conf, $picture;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $metadataService = new MetadataService(new MetadataRepository(DbConnection::build()));
@@ -55,8 +54,8 @@ final class PictureMetadataRenderer
                     if (! str_contains($field, ';')) {
                         if (isset($exif[$field]) and ! is_array($exif[$field])) {
                             $key = $field;
-                            if (isset($lang['exif_field_' . $field]) and is_string($lang['exif_field_' . $field])) {
-                                $key = $lang['exif_field_' . $field];
+                            if (\Piwigo\Core\Lang::has('exif_field_' . $field)) {
+                                $key = \Piwigo\Core\Lang::t('exif_field_' . $field);
                             }
                             $tplMeta['lines'][$key] = $exif[$field];
                         }
@@ -64,8 +63,8 @@ final class PictureMetadataRenderer
                         $tokens = explode(';', $field);
                         if (isset($exif[$field]) and ! is_array($exif[$field])) {
                             $key = $tokens[1];
-                            if (isset($lang['exif_field_' . $key]) and is_string($lang['exif_field_' . $key])) {
-                                $key = $lang['exif_field_' . $key];
+                            if (\Piwigo\Core\Lang::has('exif_field_' . $key)) {
+                                $key = \Piwigo\Core\Lang::t('exif_field_' . $key);
                             }
                             $tplMeta['lines'][$key] = $exif[$field];
                         }
@@ -96,8 +95,8 @@ final class PictureMetadataRenderer
 
                 foreach ($iptc as $field => $value) {
                     $key = $field;
-                    if (isset($lang[$field]) and is_string($lang[$field])) {
-                        $key = $lang[$field];
+                    if (\Piwigo\Core\Lang::has($field)) {
+                        $key = \Piwigo\Core\Lang::t($field);
                     }
                     $tplMeta['lines'][$key] = $value;
                 }

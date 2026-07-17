@@ -85,9 +85,6 @@ final class DateHelper
      */
     public static function formatDateLegacy(int|string|\DateTime|false $original, ?array $show = null, ?string $format = null): string
     {
-        /** @var array<string, mixed> $lang */
-        global $lang;
-
         $date = self::str2DateTime($original, $format);
 
         if (! (bool) $date) {
@@ -98,15 +95,9 @@ final class DateHelper
             $show = ['day_name', 'day', 'month', 'year'];
         }
 
-        $day_names = $lang['day'] ?? [];
-        $day_names = is_array($day_names) ? $day_names : [];
-        $month_names = $lang['month'] ?? [];
-        $month_names = is_array($month_names) ? $month_names : [];
-
         $print = '';
         if (in_array('day_name', $show, true)) {
-            $day_name = $day_names[$date->format('w')] ?? '';
-            $print .= (is_string($day_name) ? $day_name : '') . ' ';
+            $print .= Lang::day((int) $date->format('w')) . ' ';
         }
 
         if (in_array('day', $show, true)) {
@@ -114,8 +105,7 @@ final class DateHelper
         }
 
         if (in_array('month', $show, true)) {
-            $month_name = $month_names[$date->format('n')] ?? '';
-            $print .= (is_string($month_name) ? $month_name : '') . ' ';
+            $print .= Lang::month((int) $date->format('n')) . ' ';
         }
 
         if (in_array('year', $show, true)) {

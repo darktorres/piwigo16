@@ -515,14 +515,13 @@ UPDATE ' . Tables::categories() . '
              * @var array<string, mixed> $conf
              * @var array<string, mixed> $page
              * @var array<string, mixed> $user
-             * @var array<string, mixed> $lang
              * @var string $url_self
              * @var array<string, array<string, mixed>> $picture
              * @var list<array<string, string|null>> $related_categories
              * @var int|string|null $refresh
              * @var string|null $url_link
              */
-            global $conf, $page, $user, $title, $lang, $url_self, $picture, $related_categories, $refresh, $url_link;
+            global $conf, $page, $user, $title, $url_self, $picture, $related_categories, $refresh, $url_link;
             $template = \Piwigo\Template\CurrentTemplate::get();
 
             // ---------- incrementation of the number of hits
@@ -835,8 +834,8 @@ SELECT *
                         $format_ext = is_string($format_ext) ? $format_ext : '';
                         $format['label'] = strtoupper($format_ext);
                         $lang_key = 'format ' . strtoupper($format_ext);
-                        if (isset($lang[$lang_key])) {
-                            $format['label'] = $lang[$lang_key];
+                        if (\Piwigo\Core\Lang::has($lang_key)) {
+                            $format['label'] = \Piwigo\Core\Lang::t($lang_key);
                         }
 
                         $format_filesize = $format['filesize'];

@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\Lang;
+use Piwigo\Lang\Translator;
 use Piwigo\Template\Template;
 
 // Constructing a real Template instance needs a booted Smarty engine +
@@ -12,6 +14,16 @@ use Piwigo\Template\Template;
 // (modcompiler_translate*(), referenced during the SEC-15 eval() audit --
 // get_php_str_val()'s eval() is the only remaining eval() surface in this
 // codebase) and the simple variable modifiers.
+//
+// modcompiler_translate() now goes through Lang::t() (Legacy Coupling
+// Retirement Track A batch A2), which delegates to Translator::get()'s
+// singleton -- reset both, matching LangTest.php's own established
+// pattern, so no test's loaded PO state/lang table leaks into another.
+
+afterEach(function (): void {
+    Lang::reset();
+    Translator::reset();
+});
 
 test('get_php_str_val evaluates a single-quoted PHP string literal', function (): void {
     expect(Template::get_php_str_val("'hello world'"))->toBe('hello world');
@@ -31,7 +43,7 @@ test('get_php_str_val returns null for a string too short to be quoted', functio
 
 test('modcompiler_translate returns a cached lang lookup when compiled_template_cache_language is on', function (): void {
     $GLOBALS['conf'] = ['compiled_template_cache_language' => true];
-    $GLOBALS['lang'] = ['Comment' => 'Commentaire'];
+    Lang::loadArray(['Comment' => 'Commentaire']);
 
     $result = Template::modcompiler_translate(["'Comment'"]);
 
@@ -40,7 +52,7 @@ test('modcompiler_translate returns a cached lang lookup when compiled_template_
 
 test('modcompiler_translate falls back to a runtime l10n() call when caching is off', function (): void {
     $GLOBALS['conf'] = ['compiled_template_cache_language' => false];
-    $GLOBALS['lang'] = ['Comment' => 'Commentaire'];
+    Lang::loadArray(['Comment' => 'Commentaire']);
 
     $result = Template::modcompiler_translate(["'Comment'"]);
 
@@ -49,7 +61,7 @@ test('modcompiler_translate falls back to a runtime l10n() call when caching is 
 
 test('modcompiler_translate falls back to a runtime l10n() call when the key is not in the cached lang table', function (): void {
     $GLOBALS['conf'] = ['compiled_template_cache_language' => true];
-    $GLOBALS['lang'] = [];
+    Lang::loadArray([]);
 
     $result = Template::modcompiler_translate(["'Unknown'"]);
 
@@ -58,7 +70,7 @@ test('modcompiler_translate falls back to a runtime l10n() call when the key is 
 
 test('modcompiler_translate wraps a runtime l10n() call in sprintf when extra params are given', function (): void {
     $GLOBALS['conf'] = ['compiled_template_cache_language' => false];
-    $GLOBALS['lang'] = [];
+    Lang::loadArray([]);
 
     $result = Template::modcompiler_translate(["'%d comments'", '$count']);
 

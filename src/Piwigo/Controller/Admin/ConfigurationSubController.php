@@ -87,11 +87,8 @@ final class ConfigurationSubController implements AdminSubControllerInterface
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $lang
-         */
-        global $conf, $lang;
+        /** @var array<string, mixed> $conf */
+        global $conf;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         // $page['errors']/['warnings']/['infos'] are always initialized to [] by
@@ -497,14 +494,7 @@ WHERE param = \'' . $row['param'] . '\'
                 $conf_page_banner = $conf['page_banner'];
                 $conf_email_admin_on_new_user = $conf['email_admin_on_new_user'];
                 $conf_email_admin_on_new_user_str = is_string($conf_email_admin_on_new_user) ? $conf_email_admin_on_new_user : '';
-                // $lang['day'] is never actually set by any language/*/common.lang.php
-                // in this codebase (confirmed by grep across every locale) nor by any
-                // runtime code -- a genuinely dead key, not a per-locale gap. Guard
-                // with ?? rather than a direct read, matching the same defensive
-                // pattern already used for this exact key by admin/intro.php and
-                // \Piwigo\Core\DateHelper::formatDateLegacy().
-                $lang_day = $lang['day'] ?? null;
-                $lang_day = is_array($lang_day) ? $lang_day : [];
+                $lang_day = \Piwigo\Core\Lang::days();
 
                 $template->assign(
                     'main',

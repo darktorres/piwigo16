@@ -362,9 +362,16 @@ WHERE ' . $username_field . '=\'' . $username . '\'
      */
     public static function getAvailableUpgradeIds(): array
     {
-        $upgrades_path = PHPWG_ROOT_PATH . 'install/db';
+        // P23 sub-batch 8g: ported patches come from the registry; ids not
+        // yet ported are still discovered by the historical filename scan
+        // of install/db/. The union is deduplicated because during the
+        // transition a ported id's file also still exists on disk (the
+        // frozen install/upgrade_X.Y.Z.php scripts include patches by
+        // path until 8g-4/8g-5 port them). Scan + files + this comment
+        // all go away in 8g-6.
+        $available_upgrade_ids = \Piwigo\Admin\Install\DbPatch\DbPatchRegistry::ids();
 
-        $available_upgrade_ids = [];
+        $upgrades_path = PHPWG_ROOT_PATH . 'install/db';
 
         if ((bool) ($contents = opendir($upgrades_path))) {
             while (($node = readdir($contents)) !== false) {
@@ -374,9 +381,10 @@ WHERE ' . $username_field . '=\'' . $username . '\'
                 }
             }
         }
+        $available_upgrade_ids = array_unique($available_upgrade_ids);
         natcasesort($available_upgrade_ids);
 
-        return $available_upgrade_ids;
+        return array_values($available_upgrade_ids);
     }
 
     /**

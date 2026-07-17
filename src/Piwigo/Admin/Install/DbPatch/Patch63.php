@@ -1,0 +1,72 @@
+<?php
+
+declare(strict_types=1);
+
+// +-----------------------------------------------------------------------+
+// | This file is part of Piwigo.                                          |
+// |                                                                       |
+// | For copyright and license information, please view the COPYING.txt    |
+// | file that was distributed with this source code.                      |
+// +-----------------------------------------------------------------------+
+
+namespace Piwigo\Admin\Install\DbPatch;
+
+use Piwigo\Db\MysqliDb;
+use Piwigo\Db\Tables;
+
+/**
+ * Former install/db/63-database.php (P23 sub-batch 8g-1).
+ */
+final class Patch63 implements DbPatchInterface
+{
+    #[\Override]
+    public function id(): string
+    {
+        return '63';
+    }
+
+    #[\Override]
+    public function description(): string
+    {
+        return 'Add #user_infos.level, #images.level and #user_cache.forbidden_images';
+    }
+
+    #[\Override]
+    public function apply(): void
+    {
+        $query = '
+ALTER TABLE ' . Tables::images() . ' ADD COLUMN level TINYINT UNSIGNED NOT NULL DEFAULT 0
+';
+        MysqliDb::query($query);
+
+        $query = '
+ALTER TABLE ' . Tables::userInfos() . ' ADD COLUMN level TINYINT UNSIGNED NOT NULL DEFAULT 0
+';
+        MysqliDb::query($query);
+
+        $query = '
+ALTER TABLE ' . Tables::userCache() . ' ADD COLUMN image_access_type enum("NOT IN","IN") NOT NULL default "NOT IN"
+';
+        MysqliDb::query($query);
+
+        $query = '
+ALTER TABLE ' . Tables::userCache() . ' ADD COLUMN image_access_list TEXT DEFAULT NULL
+';
+        MysqliDb::query($query);
+
+        $query = '
+UPDATE ' . Tables::userInfos() . ' SET level=8 WHERE status="webmaster"
+';
+        MysqliDb::query($query);
+
+        $query = '
+UPDATE ' . Tables::userCache() . ' SET need_update=true
+';
+        MysqliDb::query($query);
+
+        echo "\n"
+        . '"' . $this->description() . '" ended'
+        . "\n"
+        ;
+    }
+}

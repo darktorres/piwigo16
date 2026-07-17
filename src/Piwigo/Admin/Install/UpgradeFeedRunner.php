@@ -90,10 +90,19 @@ SELECT id
             echo "\n\n";
             echo '=== upgrade ' . $upgrade_id . "\n";
 
-            // include & execute upgrade script. Each upgrade script must contain
-            // $upgrade_description variable which describe briefly what the upgrade
-            // script does.
-            include UPGRADES_PATH . '/' . $upgrade_id . '-database.php';
+            if (DbPatch\DbPatchRegistry::has($upgrade_id)) {
+                // P23 sub-batch 8g: ported patches are real classes; the
+                // ledger description comes from the class instead of the
+                // former include-scope $upgrade_description variable.
+                $patch = DbPatch\DbPatchRegistry::make($upgrade_id);
+                $patch->apply();
+                $upgrade_description = $patch->description();
+            } else {
+                // TRANSITION (8g-1..8g-5): not-yet-ported patches still
+                // run as include'd install/db/*.php scripts. Each must set
+                // $upgrade_description, briefly describing what it does.
+                include UPGRADES_PATH . '/' . $upgrade_id . '-database.php';
+            }
 
             // notify upgrade
             $query = '

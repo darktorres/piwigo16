@@ -54,10 +54,10 @@ $dblayer = $conf['dblayer'];
 if (! is_string($dblayer)) {
     die("Invalid \$conf['dblayer'] configuration: expected a string.");
 }
-// The frozen install/db/*.php scripts run by UpgradeFeedRunner::run() call
-// the bare pwg_query() family, deliberately kept as thin facades in this
-// file (P23 batch 8f-2).
-include PHPWG_ROOT_PATH . 'include/dblayer/functions_' . $dblayer . '.inc.php';
+// P23 sub-batch 8g-6: the dblayer facade include is gone -- the frozen
+// scripts that called the bare pwg_query() family are now DbPatch classes
+// calling MysqliDb:: directly, and the facade file's define()s became
+// MysqliDb class constants.
 
 // P23 sub-batch 8f-5: the former include/functions_session.inc.php include
 // became Piwigo\Bootstrap\SessionBootstrap::register() (same body, same
@@ -65,12 +65,6 @@ include PHPWG_ROOT_PATH . 'include/dblayer/functions_' . $dblayer . '.inc.php';
 // its fatal-error renderer wired for this non-common.inc.php entry path.
 \Piwigo\Bootstrap\SessionBootstrap::register();
 \Piwigo\Config\ConfigDb::setHtmlRenderer(new \Piwigo\Html\HtmlService());
-
-// Frozen-script compatibility surface (bare load_conf_from_db()/
-// conf_update_param()/get_available_upgrade_ids() delegates + IMG_*
-// define()s) consumed at runtime by the FROZEN install/db/*.php scripts
-// included from UpgradeFeedRunner::run().
-include_once PHPWG_ROOT_PATH . 'admin/include/functions_upgrade.php';
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when it is not ok                               |
@@ -80,51 +74,21 @@ if (! (bool) $conf['check_upgrade_feed']) {
     die('upgrade feed is not active');
 }
 
-// Former admin/include/functions_upgrade.php prepare_conf_upgrade() block,
-// inlined verbatim (P23 sub-batch 8f-6): SEC-60 forbids define() in
-// src/Piwigo, so this constant wiring stays in the entry shell. NOTE the
-// constant NAMES are the literal strings 'Tables::categories()' etc. --
-// a historical mechanical-rename artifact preserved as-is for strict
-// behavior parity (the frozen scripts actually read the *_TABLE spellings,
-// a pre-existing breakage documented in the 8f-6 report, not fixed here).
-// concerning upgrade, we use the default tables
-// $conf is not used for users tables
-// define cannot be re-defined
-define('Tables::categories()', $prefixeTable . 'categories');
-define('Tables::comments()', $prefixeTable . 'comments');
-define('Tables::config()', $prefixeTable . 'config');
-define('Tables::favorites()', $prefixeTable . 'favorites');
-define('Tables::groupAccess()', $prefixeTable . 'group_access');
-define('Tables::groups()', $prefixeTable . 'groups');
-define('Tables::history()', $prefixeTable . 'history');
-define('Tables::historySummary()', $prefixeTable . 'history_summary');
-define('Tables::imageCategory()', $prefixeTable . 'image_category');
-define('Tables::images()', $prefixeTable . 'images');
-define('Tables::sessions()', $prefixeTable . 'sessions');
-define('Tables::sites()', $prefixeTable . 'sites');
-define('Tables::userAccess()', $prefixeTable . 'user_access');
-define('Tables::userGroup()', $prefixeTable . 'user_group');
-define('Tables::users()', $prefixeTable . 'users');
-define('Tables::userInfos()', $prefixeTable . 'user_infos');
-define('Tables::userFeed()', $prefixeTable . 'user_feed');
-define('Tables::rate()', $prefixeTable . 'rate');
-define('Tables::userCache()', $prefixeTable . 'user_cache');
-define('Tables::userCacheCategories()', $prefixeTable . 'user_cache_categories');
-define('Tables::caddie()', $prefixeTable . 'caddie');
-define('Tables::upgrade()', $prefixeTable . 'upgrade');
-define('Tables::search()', $prefixeTable . 'search');
-define('Tables::userMailNotification()', $prefixeTable . 'user_mail_notification');
-define('Tables::tags()', $prefixeTable . 'tags');
-define('Tables::imageTag()', $prefixeTable . 'image_tag');
-define('Tables::plugins()', $prefixeTable . 'plugins');
-define('Tables::oldPermalinks()', $prefixeTable . 'old_permalinks');
-define('Tables::themes()', $prefixeTable . 'themes');
-define('Tables::languages()', $prefixeTable . 'languages');
+// P23 sub-batch 8g-6: the frozen install/db scripts (and their
+// prepare_conf_upgrade() codemod-artifact constant block, whose names were
+// the literal strings 'Tables::categories()' -- a documented pre-existing
+// breakage) are gone; the DbPatch classes read Piwigo\Db\Tables::*(),
+// which resolves its prefix from Config::dbPrefix(). This script never
+// goes through Kernel::boot()/ConfigLoader, so seed the prefix directly
+// (same as upgrade.php does), or every Tables::*() call would silently
+// fall back to the 'piwigo_' schema default.
+\Piwigo\Config\Config::override('db_prefix', $prefixeTable);
 
-// Read at include time by the frozen install/db/*.php scripts -- must stay
-// real global constants (SEC-60 keeps the define()s here).
+// Read by UpgradeFeedRunner's ledger SQL (SEC-60 keeps the define() here).
 define('PREFIX_TABLE', $prefixeTable);
-define('UPGRADES_PATH', PHPWG_ROOT_PATH . 'install/db');
+// P23 sub-batch 8g-6: replaces the former define('UPGRADES_PATH', ...) as
+// the "this request is the upgrade flow" marker Lang::loadLanguage() reads.
+\Piwigo\Core\UpgradeFlow::mark();
 
 // +-----------------------------------------------------------------------+
 // |                              Upgrades                                 |

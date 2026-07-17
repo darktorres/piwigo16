@@ -117,17 +117,10 @@ final class ImageDerivativeController
         // string types the same way described above (see the comment near the
         // Logger construction); 'db_password' was already re-narrowed there
         // and is reused as-is since nothing reassigns it in between.
-        $dblayer = $conf['dblayer'];
-        if (! is_string($dblayer)) {
-            $this->ierror("Invalid \$conf['dblayer'] configuration: expected a string.", 500);
-        }
-        // Frozen thin-facade file (kept deliberately for the frozen
-        // install/db scripts) -- still needed here for the top-level
-        // DB_ENGINE/REQUIRED_MYSQL_VERSION/MASS_UPDATES_SKIP_EMPTY define()s
-        // MysqliDb's own methods read at call time (SEC-60 keeps define()
-        // out of src/, so the constants live in this legacy file on every
-        // real include path).
-        include_once PHPWG_ROOT_PATH . 'include/dblayer/functions_' . $dblayer . '.inc.php';
+        // P23 sub-batch 8g-6: the include of the frozen dblayer facade file
+        // is gone -- its DB_ENGINE/REQUIRED_MYSQL_VERSION/
+        // MASS_UPDATES_SKIP_EMPTY define()s became MysqliDb class constants,
+        // so the fast path no longer loads any legacy file for them.
 
         $db_host = $conf['db_host'];
         $db_user = $conf['db_user'];

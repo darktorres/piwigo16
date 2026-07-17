@@ -163,16 +163,10 @@ final class RequestBootstrap
         global $conf, $page, $user;
         global $persistent_cache, $logger;
 
-        // config_default.inc.php/Env::applyEnvToConf() always set
-        // $conf['dblayer'] to a string ('mysqli'), but applyEnvToConf(array
-        // &$conf, ...)'s generic `array` by-ref parameter erases per-key type
-        // info PHPStan had built up for $conf, so we re-narrow at the point
-        // of use.
-        $dblayer = $conf['dblayer'];
-        if (! is_string($dblayer)) {
-            die("Invalid \$conf['dblayer'] configuration: expected a string.");
-        }
-        include PHPWG_ROOT_PATH . 'include/dblayer/functions_' . $dblayer . '.inc.php';
+        // P23 sub-batch 8g-6: the dynamic include of include/dblayer/
+        // functions_<dblayer>.inc.php is gone -- the file's 45 facades died
+        // with the frozen install/db scripts and its top-level define()s
+        // became MysqliDb class constants, so nothing on this path needs it.
 
         if (isset($conf['show_php_errors']) && ! empty($conf['show_php_errors'])) {
             if (is_scalar($conf['show_php_errors'])) {

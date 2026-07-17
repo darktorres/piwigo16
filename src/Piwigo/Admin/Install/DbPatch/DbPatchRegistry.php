@@ -19,13 +19,11 @@ namespace Piwigo\Admin\Install\DbPatch;
  * and the version-upgrade range loops rely on it, and the registry
  * integrity test asserts it.
  *
- * TRANSITION NOTE (8g-3..8g-5): the registry is COMPLETE (all 121
- * upstream ids, 61-181), but the install/db/*.php files stay on disk
- * until 8g-4/8g-5 port the frozen install/upgrade_X.Y.Z.php version
- * scripts that still include them by literal path (their file_exists()
- * range guards would silently skip deleted patches). The directory scan
- * in getAvailableUpgradeIds(), UpgradeFeedRunner's include fallback, and
- * the files themselves all go away in 8g-6.
+ * The registry is complete: all 121 upstream ids (61-181). The
+ * install/db/*.php files, the directory scan, and UpgradeFeedRunner's
+ * include fallback were all deleted in 8g-6 -- this map (with the
+ * VersionUpgrade chain that drives ranged application) is the whole
+ * mechanism now.
  */
 final class DbPatchRegistry
 {

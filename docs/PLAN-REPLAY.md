@@ -1661,6 +1661,19 @@ Migrations become the core-schema source of truth (P14 architectural improvement
 fresh installs use the generated per-provider `install/schema/*.sql` snapshots (P15) —
 the hand-maintained `piwigo_structure-mysql.sql` is deleted.
 
+> **Deliberate divergence from the reference (P23 sub-batch 8g, 2026-07-16, explicit
+> user decision):** unlike `16.x-rewrite` (which deleted all 145 historical
+> `install/db/*.php` + `install/upgrade_X.Y.Z.php` scripts), this fork **retains the
+> in-place upstream upgrade mechanism, migrated to real OOP**: the 121 one-shot
+> patches are `Piwigo\Admin\Install\DbPatch\Patch61..Patch181` (ledger-driven via
+> `DbPatchRegistry`), and the 23 version-step scripts are
+> `Piwigo\Admin\Install\VersionUpgrade\UpgradeFrom_*` (a class chain entered by
+> `UpgradeRunner`'s release-detection ladder). The frozen script files and their
+> whole compat surface (mysqli free-function facades, `functions_upgrade.php`
+> delegates, `IMG_*`/`UPGRADES_PATH` defines) are deleted. ADR-0002's clean-fork
+> stance and the future `import:legacy` tool are unchanged as the *recommended*
+> adoption path; the migrated in-place chain simply remains functional alongside it.
+
 ### P7 — Kernel + boot skeleton
 
 > **Tier** T2 · **Depends on** P6 · **Greenfield delta:** FrankenPHP worker loop (SEC-60, rider). **Replay:** `Kernel`, `CommonBootstrap`, `index.php`, fast-paths.

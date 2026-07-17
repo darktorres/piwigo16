@@ -18,3 +18,10 @@ if (PHP_SAPI !== 'cli') {
 if (! defined('PREFIX_TABLE')) {
     define('PREFIX_TABLE', '');
 }
+
+// Same shell-defined-constant situation for CURRENT_DATE (P23 sub-batch
+// 8g-6): upgrade.php define()s it (SEC-60 keeps the define out of src/)
+// before AbstractRangeVersionUpgrade::markPreRangeNotApplied() reads it.
+if (! defined('CURRENT_DATE')) {
+    define('CURRENT_DATE', '');
+}

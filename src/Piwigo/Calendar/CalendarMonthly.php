@@ -437,7 +437,7 @@ class CalendarMonthly extends CalendarBase
             $query .= $this->inner_sql;
             $query .= $this->get_date_where();
             $query .= '
-    ORDER BY ' . DB_RANDOM_FUNCTION . '()
+    ORDER BY ' . \Piwigo\Db\MysqliDb::DB_RANDOM_FUNCTION . '()
     LIMIT 1';
             unset($page['chronology_date'][self::CDAY]);
 

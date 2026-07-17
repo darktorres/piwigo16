@@ -24,6 +24,22 @@ use Piwigo\Core\HtmlRenderingInterface;
  */
 final class MysqliDb
 {
+    /**
+     * Former top-level define()s of include/dblayer/functions_mysqli.inc.php
+     * (deleted, P23 sub-batch 8g-6) -- SEC-60 forbids define() in
+     * src/Piwigo, so the dblayer's engine facts live here as class
+     * constants; every former constant reader was retargeted.
+     */
+    public const string DB_ENGINE = 'MySQL';
+
+    public const string REQUIRED_MYSQL_VERSION = '5.0.0';
+
+    public const string DB_REGEX_OPERATOR = 'REGEXP';
+
+    public const string DB_RANDOM_FUNCTION = 'RAND';
+
+    public const int MASS_UPDATES_SKIP_EMPTY = 1;
+
     private static ?HtmlRenderingInterface $htmlRenderer = null;
 
     /**
@@ -116,12 +132,12 @@ final class MysqliDb
     public static function checkVersion(): void
     {
         $current_mysql = self::getDbVersion();
-        if (version_compare($current_mysql, REQUIRED_MYSQL_VERSION, '<')) {
+        if (version_compare($current_mysql, self::REQUIRED_MYSQL_VERSION, '<')) {
             self::fatalError(
                 sprintf(
                     'your MySQL version is too old, you have "%s" and you need at least "%s"',
                     $current_mysql,
-                    REQUIRED_MYSQL_VERSION
+                    self::REQUIRED_MYSQL_VERSION
                 )
             );
         }
@@ -376,7 +392,7 @@ SELECT IF(MAX(' . $column . ')+1 IS NULL, 1, MAX(' . $column . ')+1)
      *
      * @param array{primary: string[], update: string[]} $dbfields
      * @param array<int, array<string, mixed>> $datas - indexed by column names
-     * @param int $flags - if MASS_UPDATES_SKIP_EMPTY, empty values do not overwrite existing ones
+     * @param int $flags - if self::MASS_UPDATES_SKIP_EMPTY, empty values do not overwrite existing ones
      */
     public static function massUpdates(string $tablename, array $dbfields, array $datas, int $flags = 0): void
     {
@@ -399,7 +415,7 @@ UPDATE ' . self::protectColumnName($tablename) . '
                     if (isset($data[$key]) and $data[$key] != '' and is_scalar($data[$key])) {
                         $query .= $separator . self::protectColumnName($key) . ' = \'' . $data[$key] . '\'';
                     } else {
-                        if ((bool) ($flags & MASS_UPDATES_SKIP_EMPTY)) {
+                        if ((bool) ($flags & self::MASS_UPDATES_SKIP_EMPTY)) {
                             continue; // next field
                         }
                         $query .= $separator . self::protectColumnName($key) . ' = NULL';
@@ -468,7 +484,7 @@ CREATE TABLE ' . $temporary_tablename . '
             self::query($query);
             self::massInserts($temporary_tablename, $all_fields, $datas);
 
-            if ((bool) ($flags & MASS_UPDATES_SKIP_EMPTY)) {
+            if ((bool) ($flags & self::MASS_UPDATES_SKIP_EMPTY)) {
                 $func_set = (fn (string $s): string => "t1.{$s} = IFNULL(t2.{$s}, t1.{$s})");
             } else {
                 $func_set = (fn (string $s): string => "t1.{$s} = t2.{$s}");
@@ -501,7 +517,7 @@ UPDATE ' . self::protectColumnName($tablename) . ' AS t1, ' . $temporary_tablena
      *
      * @param array<string, mixed> $datas
      * @param array<string, mixed> $where
-     * @param int $flags - if MASS_UPDATES_SKIP_EMPTY, empty values do not overwrite existing ones
+     * @param int $flags - if self::MASS_UPDATES_SKIP_EMPTY, empty values do not overwrite existing ones
      */
     public static function singleUpdate(string $tablename, array $datas, array $where, int $flags = 0): void
     {
@@ -521,7 +537,7 @@ UPDATE ' . self::protectColumnName($tablename) . '
             if (isset($value) and $value !== '' and is_scalar($value)) {
                 $query .= $separator . self::protectColumnName($key) . ' = \'' . $value . '\'';
             } else {
-                if ((bool) ($flags & MASS_UPDATES_SKIP_EMPTY)) {
+                if ((bool) ($flags & self::MASS_UPDATES_SKIP_EMPTY)) {
                     continue; // next field
                 }
                 $query .= $separator . self::protectColumnName($key) . ' = NULL';

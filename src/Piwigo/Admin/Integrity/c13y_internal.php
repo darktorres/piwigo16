@@ -45,7 +45,7 @@ class c13y_internal
         $check_list[] = [
             'type' => 'MySQL',
             'current' => \Piwigo\Db\MysqliDb::getDbVersion(),
-            'required' => REQUIRED_MYSQL_VERSION,
+            'required' => \Piwigo\Db\MysqliDb::REQUIRED_MYSQL_VERSION,
         ];
 
         foreach ($check_list as $elem) {

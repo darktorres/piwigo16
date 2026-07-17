@@ -85,7 +85,7 @@ SELECT id
         $where_clauses = [];
         foreach ($params['cat_id'] as $cat_id) {
             if ($params['recursive']) {
-                $where_clauses[] = 'uppercats ' . DB_REGEX_OPERATOR . ' \'(^|,)' . $cat_id . '(,|$)\'';
+                $where_clauses[] = 'uppercats ' . \Piwigo\Db\MysqliDb::DB_REGEX_OPERATOR . ' \'(^|,)' . $cat_id . '(,|$)\'';
             } else {
                 $where_clauses[] = 'id=' . $cat_id;
             }
@@ -319,7 +319,7 @@ SELECT
                 $where[] = 'id_uppercat IS NULL';
             }
         } elseif ($params['cat_id'] > 0) {
-            $where[] = 'uppercats ' . DB_REGEX_OPERATOR . ' \'(^|,)' .
+            $where[] = 'uppercats ' . \Piwigo\Db\MysqliDb::DB_REGEX_OPERATOR . ' \'(^|,)' .
               $params['cat_id'] . '(,|$)\'';
         }
 
@@ -458,7 +458,7 @@ SELECT representative_picture_id
         ' . new PermissionService(new PermissionRepository(DbConnection::build()), new GroupRepository(DbConnection::build()))->getSqlConditionFandF([
                         'visible_categories' => 'id',
                     ], "\n  AND") . '
-  ORDER BY ' . DB_RANDOM_FUNCTION . '()
+  ORDER BY ' . \Piwigo\Db\MysqliDb::DB_RANDOM_FUNCTION . '()
   LIMIT 1
 ;';
                     $subresult = \Piwigo\Db\MysqliDb::query($query);
@@ -647,7 +647,7 @@ SELECT category_id, COUNT(*) AS counter
                 $where[] = 'id_uppercat IS NULL';
             }
         } elseif ($params['cat_id'] > 0) {
-            $where[] = 'uppercats ' . DB_REGEX_OPERATOR . ' \'(^|,)' .
+            $where[] = 'uppercats ' . \Piwigo\Db\MysqliDb::DB_REGEX_OPERATOR . ' \'(^|,)' .
               $params['cat_id'] . '(,|$)\'';
         }
 

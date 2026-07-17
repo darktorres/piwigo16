@@ -251,7 +251,7 @@ SELECT id, uppercats, global_rank, status, visible
             if (isset($_POST['cat']) and is_numeric($_POST['cat'])) {
                 if (isset($_POST['subcats-included']) and $_POST['subcats-included'] == 1) {
                     $query .= '
-    AND uppercats ' . DB_REGEX_OPERATOR . ' \'(^|,)' . $_POST['cat'] . '(,|$)\'
+    AND uppercats ' . \Piwigo\Db\MysqliDb::DB_REGEX_OPERATOR . ' \'(^|,)' . $_POST['cat'] . '(,|$)\'
 ';
                 } else {
                     $query .= '
@@ -1061,7 +1061,7 @@ DELETE
                             ),
                         ],
                         $datas,
-                        isset($_POST['meta_empty_overrides']) ? 0 : MASS_UPDATES_SKIP_EMPTY
+                        isset($_POST['meta_empty_overrides']) ? 0 : \Piwigo\Db\MysqliDb::MASS_UPDATES_SKIP_EMPTY
                     );
                 }
                 $tagService->setTagsOf($tags_of);

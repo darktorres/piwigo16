@@ -568,7 +568,7 @@ final class MetadataService
                     'update' => $updateFields,
                 ],
                 $datas,
-                MASS_UPDATES_SKIP_EMPTY
+                \Piwigo\Db\MysqliDb::MASS_UPDATES_SKIP_EMPTY
             );
         }
 

@@ -49,7 +49,7 @@ SELECT id
     'visible_categories' => 'category_id',
     'visible_images' => 'id',
 ], 'WHERE') . '
-  ORDER BY ' . DB_RANDOM_FUNCTION . '()
+  ORDER BY ' . \Piwigo\Db\MysqliDb::DB_RANDOM_FUNCTION . '()
   LIMIT ' . min(50, $top_number, $nb_image_page) . '
 ;';
 

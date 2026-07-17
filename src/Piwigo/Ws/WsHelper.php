@@ -136,16 +136,16 @@ final class WsHelper
                     $matches[1][$i] = 'date_available';
                     break;
                 case 'rand': case 'random':
-                    $matches[1][$i] = DB_RANDOM_FUNCTION . '()';
+                    $matches[1][$i] = \Piwigo\Db\MysqliDb::DB_RANDOM_FUNCTION . '()';
                     break;
             }
             $sortable_fields = ['id', 'file', 'name', 'hit', 'rating_score',
-                'date_creation', 'date_available', DB_RANDOM_FUNCTION . '()'];
+                'date_creation', 'date_available', \Piwigo\Db\MysqliDb::DB_RANDOM_FUNCTION . '()'];
             if (in_array($matches[1][$i], $sortable_fields, true)) {
                 if ($ret !== '') {
                     $ret .= ', ';
                 }
-                if ($matches[1][$i] !== DB_RANDOM_FUNCTION . '()') {
+                if ($matches[1][$i] !== \Piwigo\Db\MysqliDb::DB_RANDOM_FUNCTION . '()') {
                     $ret .= $tbl_name;
                 }
                 $ret .= $matches[1][$i];

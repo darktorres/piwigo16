@@ -71,7 +71,10 @@ include $config_file;
 // default instead of the real prefix.
 Config::override('db_prefix', $prefixeTable);
 define('PREFIX_TABLE', $prefixeTable);
-define('UPGRADES_PATH', PHPWG_ROOT_PATH . 'install/db');
+// P23 sub-batch 8g-6: replaces the former define('UPGRADES_PATH', ...) as
+// the "this request is the upgrade flow" marker Lang::loadLanguage() reads
+// (skip DB default-language lookups against a mid-migration database).
+\Piwigo\Core\UpgradeFlow::mark();
 
 // P23 sub-batch 8f-5: the former include/functions_session.inc.php include
 // became Piwigo\Bootstrap\SessionBootstrap::register() (same body, same
@@ -95,23 +98,12 @@ $runner->loadLanguage();
 // |                          database connection                          |
 // +-----------------------------------------------------------------------+
 
-// Frozen-script compatibility surface (bare load_conf_from_db()/
-// conf_update_param()/get_available_upgrade_ids() delegates + IMG_*
-// define()s) consumed at runtime by the FROZEN install/upgrade_X.Y.Z.php
-// and install/db/*.php scripts included from UpgradeRunner::performUpgrade().
-include_once PHPWG_ROOT_PATH . 'admin/include/functions_upgrade.php';
-
-// config_default.inc.php/database.inc.php always set $conf['dblayer'] to a
-// string ('mysqli'), but the value crosses an include() boundary invisible
-// to static analysis, so we re-narrow at the point of use (same pattern as
-// include/common.inc.php).
-$dblayer = $conf['dblayer'];
-if (! is_string($dblayer)) {
-    die("Invalid \$conf['dblayer'] configuration: expected a string.");
-}
-// The frozen scripts run by performUpgrade() call the bare pwg_query()
-// family, deliberately kept as thin facades in this file (P23 batch 8f-2).
-include PHPWG_ROOT_PATH . 'include/dblayer/functions_' . $dblayer . '.inc.php';
+// P23 sub-batch 8g-6: the frozen-script compatibility include
+// (admin/include/functions_upgrade.php) and the dblayer facade include
+// are gone -- the frozen install/db and install/upgrade_X.Y.Z.php scripts
+// are now real DbPatch/VersionUpgrade classes calling MysqliDb::/
+// ConfigDb:: directly, and the facade file's define()s became MysqliDb
+// class constants.
 
 UpgradeService::upgradeDbConnect();
 \Piwigo\Db\MysqliDb::checkCharset();

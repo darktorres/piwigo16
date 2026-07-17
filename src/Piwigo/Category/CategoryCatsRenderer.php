@@ -200,7 +200,7 @@ SELECT representative_picture_id
   . (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
       'visible_categories' => 'id',
   ], "\n  AND") . '
-  ORDER BY ' . DB_RANDOM_FUNCTION . '()
+  ORDER BY ' . \Piwigo\Db\MysqliDb::DB_RANDOM_FUNCTION . '()
   LIMIT 1
 ;';
                 $subresult = \Piwigo\Db\MysqliDb::query($query);

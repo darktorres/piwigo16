@@ -70,8 +70,6 @@ if (! function_exists('redirect_html')) {
         global $user;
         global $template;
         global $lang_info;
-        global $t2;
-        global $debug;
 
         // $template/$lang_info are genuinely not always set here: this function
         // can be called very early (e.g. a fatal before common.inc.php finishes

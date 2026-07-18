@@ -44,9 +44,6 @@ class check_integrity
      */
     public function check(): void
     {
-        /** @var array<string, mixed> $header_notes */
-        global $header_notes;
-
         // Ignore list
         $conf_c13y_ignore_raw = \Piwigo\Config\Config::c13yIgnore() ?? null;
         $conf_c13y_ignore = is_string($conf_c13y_ignore_raw) ? unserialize($conf_c13y_ignore_raw) : false;
@@ -71,11 +68,11 @@ class check_integrity
 
         // Information
         if (count($this->retrieve_list) > 0) {
-            $header_notes[] = l10n_dec(
+            \Piwigo\Core\PageState::current()->addHeaderNote(l10n_dec(
                 '%d anomaly has been detected.',
                 '%d anomalies have been detected.',
                 count($this->retrieve_list)
-            );
+            ));
         }
 
         // Treatments

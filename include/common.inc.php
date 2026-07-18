@@ -33,9 +33,6 @@ defined('PHPWG_ROOT_PATH') or trigger_error('Hacking attempt!', E_USER_ERROR);
 // determine the initial instant to indicate the generation time of this page
 $t2 = microtime(true);
 
-// accumulates pwg_debug() messages for display in the page footer
-$debug = '';
-
 //
 // Define some basic configuration arrays this also prevents malicious
 // rewriting of language and otherarray values via URI params
@@ -51,8 +48,6 @@ $page = [
 ];
 $user = [];
 $lang = [];
-$header_msgs = [];
-$header_notes = [];
 $filter = [];
 
 include PHPWG_ROOT_PATH . 'include/config_default.inc.php';

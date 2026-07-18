@@ -672,11 +672,9 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
         $this->flush();
 
         if ((bool) $this->smarty->debugging) {
-            /** @var float $t2 */
-            global $t2;
             $this->smarty->assign(
                 [
-                    'AAAA_DEBUG_TOTAL_TIME__' => \Piwigo\Core\TimingHelper::getElapsedTime($t2, \Piwigo\Core\TimingHelper::getMoment()),
+                    'AAAA_DEBUG_TOTAL_TIME__' => \Piwigo\Core\TimingHelper::getElapsedTime(\Piwigo\Core\PageState::current()->requestStart, \Piwigo\Core\TimingHelper::getMoment()),
                 ]
             );
             // Pre-existing dead code, unchanged by this extraction: class

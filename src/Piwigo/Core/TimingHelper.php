@@ -44,25 +44,13 @@ final class TimingHelper
      */
     public static function debug(string $string): void
     {
-        /**
-         * @var string
-         */
-        global $debug;
-        /**
-         * @var float
-         */
-        global $t2;
-
         $now = explode(' ', microtime());
         $now2 = explode('.', $now[0]);
         // microtime()'s own format ("<fraction> <seconds>", both always numeric)
         // guarantees this concatenation is always a numeric string.
         $now2_float = (float) ($now[1] . '.' . $now2[1]);
-        $time = number_format($now2_float - $t2, 3, '.', ' ') . ' s';
-        $debug .= '<p>';
-        $debug .= '[' . $time . ', ';
+        $time = number_format($now2_float - PageState::current()->requestStart, 3, '.', ' ') . ' s';
         $count_queries = PageState::current()->countQueries;
-        $debug .= $count_queries . ' queries] : ' . $string;
-        $debug .= "</p>\n";
+        PageState::current()->addDebugOutput('<p>[' . $time . ', ' . $count_queries . ' queries] : ' . $string . "</p>\n");
     }
 }

@@ -23,10 +23,6 @@ final class PageHeaderRenderer
      */
     public function render(string $title, ?string $refresh = null, ?string $urlLink = null): void
     {
-        /**
-         * @var list<string>|null
-         */
-        global $header_notes;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $template->set_filenames([
@@ -75,6 +71,7 @@ final class PageHeaderRenderer
         );
 
         // Header notes
+        $header_notes = \Piwigo\Core\PageState::current()->headerNotes;
         if (! self::emptyValue($header_notes)) {
             $template->assign('header_notes', $header_notes);
         }

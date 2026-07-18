@@ -46,10 +46,6 @@ final class FilterService implements FilterUpdaterInterface
          * @var array<string, mixed>
          */
         global $filter;
-        /**
-         * @var array<string, mixed>
-         */
-        global $header_notes;
 
         $currentUser = \Piwigo\Users\CurrentUser::get();
 
@@ -184,11 +180,11 @@ WHERE ';
             }
             unset($filter_key);
             if ((bool) \Piwigo\Core\PageFilterHelper::getFilterPageValue('add_notes')) {
-                $header_notes[] = l10n_dec(
+                \Piwigo\Core\PageState::current()->addHeaderNote(l10n_dec(
                     'Photos posted within the last %d day.',
                     'Photos posted within the last %d days.',
                     $filter_recent_period
-                );
+                ));
             }
         } else {
             if ((bool) SessionService::get()->getSessionVar('filter_enabled', false)) {

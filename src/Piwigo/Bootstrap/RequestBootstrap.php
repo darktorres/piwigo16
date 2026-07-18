@@ -85,6 +85,16 @@ final class RequestBootstrap
         /** @var array<string, mixed> $conf */
         global $conf;
         global $prefixeTable;
+        /**
+         * @var float
+         */
+        global $t2;
+
+        // include/common.inc.php captures $t2 = microtime(true) at true
+        // top-level scope (before this class is even autoloadable) for
+        // maximum precision; this is the one-time handoff into
+        // PageState, which every other consumer reads from instead.
+        \Piwigo\Core\PageState::current()->requestStart = $t2;
 
         // @set_magic_quotes_runtime(0); // Disable magic_quotes_runtime
         //
@@ -378,8 +388,6 @@ final class RequestBootstrap
          */
         global $user;
         global $template;
-        global $header_msgs;
-        global $header_notes;
         global $filter;
 
         // language files
@@ -499,11 +507,11 @@ final class RequestBootstrap
 
         $user_internal_status = $user['internal_status'] ?? null;
         if (is_array($user_internal_status) && ($user_internal_status['guest_must_be_guest'] ?? false) === true) {
-            $header_msgs[] = l10n('Bad status for user "guest", using default status. Please notify the webmaster.');
+            $pageState->addHeaderMessage(l10n('Bad status for user "guest", using default status. Please notify the webmaster.'));
         }
 
         if (\Piwigo\Config\Config::galleryLocked()) {
-            $header_msgs[] = l10n('The gallery is locked for maintenance. Please, come back later.');
+            $pageState->addHeaderMessage(l10n('The gallery is locked for maintenance. Please, come back later.'));
 
             if (\Piwigo\Core\PageFilterHelper::scriptBasename() != 'identification' and ! \Piwigo\Auth\AccessControl::isAdmin()) {
                 new HtmlService()
@@ -522,14 +530,14 @@ final class RequestBootstrap
             // 8f-6; the legacy file now only carries frozen-script
             // delegates this path doesn't need).
             if (\Piwigo\Admin\Install\UpgradeService::checkUpgradeFeed()) {
-                $header_msgs[] = 'Some database upgrades are missing, '
-                  . '<a href="' . get_absolute_root_url(false) . 'upgrade_feed.php">upgrade now</a>';
+                $pageState->addHeaderMessage('Some database upgrades are missing, '
+                  . '<a href="' . get_absolute_root_url(false) . 'upgrade_feed.php">upgrade now</a>');
             }
         }
 
-        if (count($header_msgs) > 0) {
-            $template->assign('header_msgs', $header_msgs);
-            $header_msgs = [];
+        if ($pageState->headerMessages !== []) {
+            $template->assign('header_msgs', $pageState->headerMessages);
+            $pageState->headerMessages = [];
         }
 
         if (! empty(\Piwigo\Config\Config::filterPages()) and (bool) \Piwigo\Core\PageFilterHelper::getFilterPageValue('used')) {
@@ -542,7 +550,7 @@ final class RequestBootstrap
         }
 
         if (\Piwigo\Config\Config::has('header_notes') && is_array(\Piwigo\Config\Config::headerNotes())) {
-            $header_notes = array_merge($header_notes, \Piwigo\Config\Config::headerNotes());
+            $pageState->headerNotes = array_merge($pageState->headerNotes, \Piwigo\Config\Config::headerNotes());
         }
 
         // default event handlers

@@ -118,6 +118,23 @@ final class PageState
     public float $queriesTime = 0.0;
 
     /**
+     * The instant (microtime(true)) this request began -- former
+     * `global $t2`. Still captured at the seam's true top-level scope
+     * (include/common.inc.php, before the autoload boundary, for maximum
+     * precision) and handed off here by
+     * RequestBootstrap::configure()'s first statement; every other
+     * consumer reads it from here.
+     */
+    public float $requestStart = 0.0;
+
+    /**
+     * Accumulated debug-mode query/timing HTML, shown in the page footer
+     * -- former `global $debug`, only ever populated when
+     * Config::showQueries() is on.
+     */
+    public string $debugOutput = '';
+
+    /**
      * Batch A5.2i: the CSS id assigned to the page's `<body>` tag, set by
      * whichever of 13 controllers handled the request (each assigns its own
      * fixed literal, e.g. 'theCategoryPage'/'theProfilePage') and read once
@@ -284,6 +301,11 @@ final class PageState
     {
         $this->countQueries++;
         $this->queriesTime += $time;
+    }
+
+    public function addDebugOutput(string $line): void
+    {
+        $this->debugOutput .= $line;
     }
 
     /**

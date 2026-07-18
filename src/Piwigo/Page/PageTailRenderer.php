@@ -33,10 +33,6 @@ final readonly class PageTailRenderer
 
     public function render(float $startTime): void
     {
-        /**
-         * @var string
-         */
-        global $debug;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $template->set_filenames([
@@ -72,7 +68,7 @@ final readonly class PageTailRenderer
 
         if (\Piwigo\Config\Config::showQueries()) {
             $debug_vars = array_merge($debug_vars, [
-                'QUERIES_LIST' => $debug,
+                'QUERIES_LIST' => \Piwigo\Core\PageState::current()->debugOutput,
             ]);
         }
 

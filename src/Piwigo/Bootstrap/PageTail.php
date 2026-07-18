@@ -27,17 +27,15 @@ use Piwigo\Page\PageTailRenderer;
  *
  * Every former `include PHPWG_ROOT_PATH . 'include/page_tail.php';` site
  * (the P22 controllers, admin.php, redirect_html()) calls
- * PageTail::render() instead; the $t2 global the seam read is declared
- * here, so call sites need no `global` declaration of their own.
+ * PageTail::render() instead; the request-start instant the seam captures
+ * into `global $t2` is read here from PageState (Legacy Coupling
+ * Retirement Track A gap-fill batch G5), so call sites need no bootstrap
+ * variable of their own.
  */
 final class PageTail
 {
     public static function render(): void
     {
-        // Bootstrap global, set by include/common.inc.php.
-        /** @var float $t2 */
-        global $t2;
-
         // ----------------------------------------------- update notification
         $update_notify_check_period = \Piwigo\Config\Config::updateNotifyCheckPeriod();
         if (is_int($update_notify_check_period) && $update_notify_check_period > 0) {
@@ -70,6 +68,6 @@ final class PageTail
         // (L4) is the one place the concrete L4 implementation gets
         // constructed.
         new PageTailRenderer(new PiwigoInfosSender())
-            ->render($t2);
+            ->render(\Piwigo\Core\PageState::current()->requestStart);
     }
 }

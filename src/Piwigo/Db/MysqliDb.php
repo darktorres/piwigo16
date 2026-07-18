@@ -163,14 +163,6 @@ final class MysqliDb
          * @var \mysqli
          */
         global $mysqli;
-        /**
-         * @var string
-         */
-        global $debug;
-        /**
-         * @var float
-         */
-        global $t2;
 
         $die_on_sql_error = \Piwigo\Config\Config::dieOnSqlError();
 
@@ -194,7 +186,7 @@ final class MysqliDb
             $output .= "\n" . '(total SQL time  : ';
             $output .= number_format($queries_time, 3, '.', ' ') . ' s)';
             $output .= "\n" . '(total time      : ';
-            $output .= number_format(($time + $start - $t2), 3, '.', ' ') . ' s)';
+            $output .= number_format(($time + $start - \Piwigo\Core\PageState::current()->requestStart), 3, '.', ' ') . ' s)';
             if ($result != null and (bool) preg_match('/\s*SELECT\s+/i', $query)) {
                 $output .= "\n" . '(num rows        : ';
                 $output .= self::numRows($result) . ' )';
@@ -205,7 +197,7 @@ final class MysqliDb
             }
             $output .= "</pre>\n";
 
-            $debug .= $output;
+            \Piwigo\Core\PageState::current()->addDebugOutput($output);
         }
 
         return $result;

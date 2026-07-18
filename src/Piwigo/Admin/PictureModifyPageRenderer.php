@@ -50,10 +50,6 @@ final class PictureModifyPageRenderer
         /**
          * @var array<string, mixed>
          */
-        global $cache;
-        /**
-         * @var array<string, mixed>
-         */
         global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -524,7 +520,8 @@ SELECT category_id
                 $authorizeds_values = array_values($authorizeds);
                 $category = $authorizeds_values[random_int(0, count($authorizeds_values) - 1)];
 
-                $cat_names = is_array($cache['cat_names']) ? $cache['cat_names'] : [];
+                $cat_names_raw = \Piwigo\Core\ProcessCache::get('cat_names');
+                $cat_names = is_array($cat_names_raw) ? $cat_names_raw : [];
                 $url_img = make_picture_url(
                     [
                         'image_id' => $image_id,

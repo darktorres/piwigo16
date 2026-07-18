@@ -9,9 +9,11 @@ namespace Piwigo\Core;
  * include/functions.inc.php -- no natural existing class home (real
  * callers span Category and Users domains: CategoryCatsRenderer/
  * CategoryService/CategoryDefaultRenderer, and UserService), stateless
- * beyond the per-request `$cache['get_icon']` memoization bridge it reads/
- * writes through, unchanged. `\Piwigo\Db\MysqliDb::getRecentPeriod()` stays a bare
- * call -- functions_mysqli.inc.php, relocate-only (batch 8f, finding 2).
+ * beyond the per-request `ProcessCache::get('get_icon')` memoization
+ * bridge it reads/writes through (Legacy Coupling Retirement Track A
+ * gap-fill batch G5, formerly `$cache['get_icon']`), unchanged.
+ * `\Piwigo\Db\MysqliDb::getRecentPeriod()` stays a bare call --
+ * functions_mysqli.inc.php, relocate-only (batch 8f, finding 2).
  */
 final class RecentIconResolver
 {
@@ -22,16 +24,14 @@ final class RecentIconResolver
      */
     public static function getIcon(string $date, int $recentPeriod, bool $isChildDate = false): false|array
     {
-        /** @var array<string, mixed> $cache */
-        global $cache;
-
         if ($date === '' || $date === '0') {
             return false;
         }
 
         $recent_period = $recentPeriod;
 
-        $get_icon_cache = is_array($cache['get_icon'] ?? null) ? $cache['get_icon'] : [];
+        $get_icon_cache_raw = ProcessCache::get('get_icon');
+        $get_icon_cache = is_array($get_icon_cache_raw) ? $get_icon_cache_raw : [];
 
         if (! isset($get_icon_cache['title'])) {
             $get_icon_cache['title'] = l10n(
@@ -46,7 +46,7 @@ final class RecentIconResolver
         ];
 
         if (isset($get_icon_cache[$date])) {
-            $cache['get_icon'] = $get_icon_cache;
+            ProcessCache::set('get_icon', $get_icon_cache);
             return ((bool) $get_icon_cache[$date]) ? $icon : [];
         }
 
@@ -56,7 +56,7 @@ final class RecentIconResolver
         }
 
         $get_icon_cache[$date] = $date > $get_icon_cache['sql_recent_date'];
-        $cache['get_icon'] = $get_icon_cache;
+        ProcessCache::set('get_icon', $get_icon_cache);
 
         return $get_icon_cache[$date] ? $icon : [];
     }

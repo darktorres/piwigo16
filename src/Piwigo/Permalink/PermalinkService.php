@@ -33,11 +33,6 @@ final readonly class PermalinkService
      */
     public function deleteCatPermalink(int $catId, bool $save): bool
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $cache;
-
         $permalink = $this->repo->findPermalinkByCategoryId($catId);
         if ($permalink === null) { // no permalink; nothing to do
             return true;
@@ -58,7 +53,7 @@ final readonly class PermalinkService
         }
 
         $this->repo->clearCategoryPermalink($catId);
-        unset($cache['cat_names']); // force regeneration
+        \Piwigo\Core\ProcessCache::forget('cat_names'); // force regeneration
 
         if ($save) {
             if ($oldCatId !== null) {
@@ -79,11 +74,6 @@ final readonly class PermalinkService
      */
     public function setCatPermalink(int $catId, string $permalink, bool $save): bool
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $cache;
-
         $sanitized_permalink = preg_replace('#[^a-zA-Z0-9_/-]#', '', $permalink);
         $sanitized_permalink = trim((string) $sanitized_permalink, '/');
         $sanitized_permalink = str_replace('//', '/', $sanitized_permalink);
@@ -130,7 +120,7 @@ final readonly class PermalinkService
         }
 
         $this->repo->setCategoryPermalink($catId, $permalink);
-        unset($cache['cat_names']); // force regeneration
+        \Piwigo\Core\ProcessCache::forget('cat_names'); // force regeneration
 
         return true;
     }

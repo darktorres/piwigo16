@@ -95,10 +95,6 @@ final class HtmlService implements HtmlRenderingInterface
         ?string $linkClass = null,
         ?string $authKey = null,
     ): string {
-        /**
-         * @var array<string, mixed>
-         */
-        global $cache;
         $level_separator = \Piwigo\Config\Config::levelSeparator();
 
         $add_url_params = [];
@@ -106,17 +102,18 @@ final class HtmlService implements HtmlRenderingInterface
             $add_url_params['auth'] = $authKey;
         }
 
-        if (! isset($cache['cat_names'])) {
+        if (! \Piwigo\Core\ProcessCache::has('cat_names')) {
             $query = '
 SELECT id, name, permalink
   FROM ' . Tables::categories() . '
 ;';
-            $cache['cat_names'] = \Piwigo\Db\MysqliDb::query2Array($query, 'id');
+            \Piwigo\Core\ProcessCache::set('cat_names', \Piwigo\Db\MysqliDb::query2Array($query, 'id'));
         }
-        // Narrowed once here (fix pattern #7): $cache is array<string, mixed>,
-        // proving $cache is array-like does not prove $cache['cat_names'] is
-        // also array-like, since the declared value type is mixed.
-        $cat_names = is_array($cache['cat_names']) ? $cache['cat_names'] : [];
+        // Narrowed once here (fix pattern #7): ProcessCache::get() returns
+        // mixed, proving the key exists does not prove the stored value is
+        // array-like.
+        $cat_names_raw = \Piwigo\Core\ProcessCache::get('cat_names');
+        $cat_names = is_array($cat_names_raw) ? $cat_names_raw : [];
 
         $output = '';
         if ($singleLink) {
@@ -258,17 +255,13 @@ SELECT id, name, permalink
     #[\Override]
     public function tagAlphaCompare(array $a, array $b): int
     {
-        /** @var array<string, mixed> $cache */
-        global $cache;
-
         $name_a = is_string($a['name'] ?? null) ? $a['name'] : '';
         $name_b = is_string($b['name'] ?? null) ? $b['name'] : '';
 
-        // Narrowed once here (fix pattern #7): $cache is array<string, mixed>,
-        // so $cache[self::class] is still mixed even after $cache is typed.
-        $transliterated = is_array($cache[self::class . '::tagAlphaCompare'] ?? null)
-            ? $cache[self::class . '::tagAlphaCompare']
-            : [];
+        // Narrowed once here (fix pattern #7): ProcessCache::get() returns
+        // mixed, so the stored value is still mixed even after this check.
+        $transliterated_raw = \Piwigo\Core\ProcessCache::get(self::class . '::tagAlphaCompare');
+        $transliterated = is_array($transliterated_raw) ? $transliterated_raw : [];
 
         foreach ([$name_a, $name_b] as $tag_name) {
             // pwg_transliterate() always returns string, so a cached entry that
@@ -280,7 +273,7 @@ SELECT id, name, permalink
             }
         }
 
-        $cache[self::class . '::tagAlphaCompare'] = $transliterated;
+        \Piwigo\Core\ProcessCache::set(self::class . '::tagAlphaCompare', $transliterated);
 
         $translit_a = is_string($transliterated[$name_a] ?? null) ? $transliterated[$name_a] : \Piwigo\Core\StringHelper::pwgTransliterate($name_a);
         $translit_b = is_string($transliterated[$name_b] ?? null) ? $transliterated[$name_b] : \Piwigo\Core\StringHelper::pwgTransliterate($name_b);

@@ -58,10 +58,6 @@ final class BatchManagerUnitPageRenderer
         /**
          * @var array<string, mixed>
          */
-        global $cache;
-        /**
-         * @var array<string, mixed>
-         */
         global $pwg_loaded_plugins;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -436,12 +432,14 @@ SELECT
                     )
                 );
 
-                // $cache['cat_names'] is populated as array<int|string, array<string,
-                // mixed>> by get_cat_display_name_cache() (already called above,
-                // for every $item in the while loop, before this point) -- matches
-                // the established narrowing pattern in Piwigo\Admin\
-                // PictureModifyPageRenderer.
-                $cat_names = is_array($cache['cat_names']) ? $cache['cat_names'] : [];
+                // ProcessCache::get('cat_names') is populated as
+                // array<int|string, array<string, mixed>> by
+                // get_cat_display_name_cache() (already called above, for
+                // every $item in the while loop, before this point) --
+                // matches the established narrowing pattern in
+                // Piwigo\Admin\PictureModifyPageRenderer.
+                $cat_names_raw = \Piwigo\Core\ProcessCache::get('cat_names');
+                $cat_names = is_array($cat_names_raw) ? $cat_names_raw : [];
 
                 if (isset($row['cat_id'])
                 and in_array($row['cat_id'], $authorizeds, true)) {

@@ -373,24 +373,19 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      */
     public function getDefaultUserInfo(bool $convertStr = true): array|false
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $cache;
-
-        if (! isset($cache['default_user'])) {
+        if (! \Piwigo\Core\ProcessCache::has('default_user')) {
             $defaultUserId = \Piwigo\Config\Config::defaultUserId();
 
             $row = $this->repo->findDefaultUserInfoRow($defaultUserId);
             if ($row !== null) {
                 unset($row['user_id'], $row['status'], $row['registration_date'], $row['last_visit'], $row['last_visit_from_history']);
-                $cache['default_user'] = $row;
+                \Piwigo\Core\ProcessCache::set('default_user', $row);
             } else {
-                $cache['default_user'] = false;
+                \Piwigo\Core\ProcessCache::set('default_user', false);
             }
         }
 
-        $defaultUserCached = $cache['default_user'];
+        $defaultUserCached = \Piwigo\Core\ProcessCache::get('default_user');
         if (! is_array($defaultUserCached)) {
             return false;
         }

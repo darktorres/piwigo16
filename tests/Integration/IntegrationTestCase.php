@@ -39,27 +39,29 @@ abstract class IntegrationTestCase extends TestCase
 
     /**
      * Piwigo\Users\UserService::getDefaultUserInfo() memoizes its DB read
-     * into `global $cache['default_user'];` for the lifetime of the
-     * process (a real production optimization -- one row read per
-     * request, not per call). Since PHPUnit/Pest run every test file in
-     * one shared process, a test with a minimal `$GLOBALS['conf']`
-     * (missing `default_user_id`) can cache `false` and poison the value
-     * every later test file reads (P23 batch 8d found this the moment a
-     * 2nd Integration test file started exercising the real
-     * getDefaultUserInfo()/getDefaultTheme()/getDefaultLanguage() call
-     * chain instead of a fixed-value stub). Every subclass's own setUp()
-     * already calls parent::setUp() first, so resetting here guarantees
-     * each test starts with a fresh memoization slot.
+     * into Piwigo\Core\ProcessCache (Legacy Coupling Retirement Track A
+     * gap-fill batch G5, formerly `global $cache['default_user'];`) for
+     * the lifetime of the process (a real production optimization -- one
+     * row read per request, not per call). Since PHPUnit/Pest run every
+     * test file in one shared process, a test with a minimal
+     * `$GLOBALS['conf']` (missing `default_user_id`) can cache `false`
+     * and poison the value every later test file reads (P23 batch 8d
+     * found this the moment a 2nd Integration test file started
+     * exercising the real getDefaultUserInfo()/getDefaultTheme()/
+     * getDefaultLanguage() call chain instead of a fixed-value stub).
+     * Every subclass's own setUp() already calls parent::setUp() first,
+     * so resetting here guarantees each test starts with a fresh
+     * memoization slot.
      */
     #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
-        unset($GLOBALS['cache']);
+        \Piwigo\Core\ProcessCache::reset();
         // Piwigo\Users\CurrentUser (Legacy Coupling Retirement Track A batch
         // A3) is a request-lifetime singleton; PHPUnit/Pest run every test
         // file in one shared process (see this class's own docblock above
-        // for the identical $GLOBALS['cache'] reasoning), so each test gets
+        // for the identical ProcessCache reasoning), so each test gets
         // a fresh guest baseline here -- idempotent, so a subclass's own
         // setUp() calling CurrentUser::set() with a specific fixture user
         // right after parent::setUp() simply overwrites it.
@@ -80,6 +82,7 @@ abstract class IntegrationTestCase extends TestCase
     {
         \Piwigo\Users\CurrentUser::reset();
         \Piwigo\Core\CurrentLogger::reset();
+        \Piwigo\Core\ProcessCache::reset();
         \Piwigo\Config\Config::reset();
         \Piwigo\Core\PageState::reset();
         parent::tearDown();

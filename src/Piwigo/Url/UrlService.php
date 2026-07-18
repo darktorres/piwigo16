@@ -653,7 +653,7 @@ final class UrlService
 
                 $page['combined_categories'] = $combined_categories;
             }
-        } elseif (@$tokens[$nextToken] === 'tags') {
+        } elseif (($tokens[$nextToken] ?? null) === 'tags') {
             $page['section'] = 'tags';
             $page['tags'] = [];
 
@@ -689,35 +689,35 @@ final class UrlService
             if ($page['tags'] === []) {
                 $this->htmlRenderer->pageNotFound(l10n('Requested tag does not exist'), $this->getRootUrl() . 'tags.php');
             }
-        } elseif (@$tokens[$nextToken] === 'favorites') {
+        } elseif (($tokens[$nextToken] ?? null) === 'favorites') {
             $page['section'] = 'favorites';
             $nextToken++;
-        } elseif (@$tokens[$nextToken] === 'most_visited') {
+        } elseif (($tokens[$nextToken] ?? null) === 'most_visited') {
             $page['section'] = 'most_visited';
             $nextToken++;
-        } elseif (@$tokens[$nextToken] === 'best_rated') {
+        } elseif (($tokens[$nextToken] ?? null) === 'best_rated') {
             $page['section'] = 'best_rated';
             $nextToken++;
-        } elseif (@$tokens[$nextToken] === 'recent_pics') {
+        } elseif (($tokens[$nextToken] ?? null) === 'recent_pics') {
             $page['section'] = 'recent_pics';
             $nextToken++;
-        } elseif (@$tokens[$nextToken] === 'recent_cats') {
+        } elseif (($tokens[$nextToken] ?? null) === 'recent_cats') {
             $page['section'] = 'recent_cats';
             $nextToken++;
-        } elseif (@$tokens[$nextToken] === 'search') {
+        } elseif (($tokens[$nextToken] ?? null) === 'search') {
             $page['section'] = 'search';
             $nextToken++;
 
-            preg_match('/^(psk-\d{8}-[a-zA-Z0-9]{10})$/', @$tokens[$nextToken], $matches);
+            preg_match('/^(psk-\d{8}-[a-zA-Z0-9]{10})$/', ($tokens[$nextToken] ?? ''), $matches);
             if (! isset($matches[1])) {
-                preg_match('/(\d+)/', @$tokens[$nextToken], $matches);
+                preg_match('/(\d+)/', ($tokens[$nextToken] ?? ''), $matches);
                 if (! isset($matches[1])) {
                     $this->htmlRenderer->badRequest('search identifier is missing');
                 }
             }
             $page['search'] = $matches[1];
             $nextToken++;
-        } elseif (@$tokens[$nextToken] === 'list') {
+        } elseif (($tokens[$nextToken] ?? null) === 'list') {
             $page['section'] = 'list';
             $nextToken++;
 

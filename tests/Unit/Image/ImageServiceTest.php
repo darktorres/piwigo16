@@ -130,9 +130,5 @@ test('countPdfPages counts page markers', function (): void {
 });
 
 test('countPdfPages returns false for a missing file', function (): void {
-    // Matches the original count_pdf_pages()'s own contract: file_get_contents()
-    // is never @-suppressed there either (only ever called with a path
-    // that's expected to exist) -- suppressed here only to assert the
-    // false-return branch without failing on the resulting PHP warning.
-    expect(@new ImageService(new ImageRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())))->countPdfPages('/no/such/file.pdf'))->toBeFalse();
+    expect(new ImageService(new ImageRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())))->countPdfPages('/no/such/file.pdf'))->toBeFalse();
 });

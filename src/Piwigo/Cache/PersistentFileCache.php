@@ -27,7 +27,12 @@ class PersistentFileCache extends PersistentCache
     #[\Override]
     public function get($key, mixed &$value): bool
     {
-        $loaded = @file_get_contents($this->dir . $key . '.cache');
+        $file = $this->dir . $key . '.cache';
+        if (! is_readable($file)) {
+            return false;
+        }
+
+        $loaded = file_get_contents($file);
         if ($loaded === false) {
             return false;
         }

@@ -160,8 +160,18 @@ final class MetadataServiceTest extends IntegrationTestCase
 
     public function test_get_sync_metadata_reads_filesize_from_a_real_file(): void
     {
+        // A real (if minimal) JPEG, not arbitrary bytes -- exif_read_data()
+        // treats truly non-JPEG content as an unsupported-format warning,
+        // even file_get_contents()-@-suppressed. Padded with trailing NUL
+        // bytes (ignored by every JPEG reader, which only look between
+        // markers) to reach exactly 2048 bytes for the filesize assertion
+        // below.
+        $image = imagecreatetruecolor(1, 1);
+        ob_start();
+        imagejpeg($image);
+        $jpegBytes = ob_get_clean();
         $relativePath = '_data/metadata-service-test-scratch/sample.jpg';
-        file_put_contents(dirname(__DIR__, 2) . '/' . $relativePath, str_repeat('x', 2048));
+        file_put_contents(dirname(__DIR__, 2) . '/' . $relativePath, str_pad($jpegBytes, 2048, "\0"));
 
         $result = $this->service->getSyncMetadata(['path' => $relativePath]);
 

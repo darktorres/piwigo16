@@ -143,7 +143,15 @@ final class MetadataService
             die('Exif extension not available, admin should disable exif use');
         }
 
-        $exif = @exif_read_data($filename);
+        // exif_read_data() only ever supports JPEG/TIFF (per its own docs)
+        // and warns "File not supported" for anything else -- skip the call
+        // entirely for a file extension that can never carry EXIF data
+        // (SVG, PNG, ...) instead of relying on @ to hide the resulting
+        // warning, which PHPUnit's error handler surfaces regardless.
+        $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+        $exif = in_array($extension, ['jpg', 'jpeg', 'tif', 'tiff'], true)
+            ? exif_read_data($filename)
+            : false;
         $exif2 = (bool) $exif ? null : trigger_change('format_exif_data', null, $filename, $map);
 
         if ((bool) $exif || (bool) $exif2) {
@@ -365,8 +373,11 @@ final class MetadataService
         $path = $infos['path'] ?? null;
         $path = is_string($path) ? $path : '';
         $file = PHPWG_ROOT_PATH . $path;
-        $fs = @filesize($file);
+        if (! is_readable($file)) {
+            return false;
+        }
 
+        $fs = filesize($file);
         if ($fs === false) {
             return false;
         }
@@ -460,7 +471,14 @@ final class MetadataService
             return null;
         }
 
-        $svg = @simplexml_load_string($xml, \SimpleXMLElement::class, LIBXML_NONET);
+        // libxml_use_internal_errors() (not @) is the correct way to parse
+        // possibly-malformed/adversarial XML without a PHP-level warning --
+        // malformed input (or a mangled post-DOCTYPE-strip remnant) is an
+        // expected outcome here, not a bug to suppress after the fact.
+        $previousUseInternalErrors = libxml_use_internal_errors(true);
+        $svg = simplexml_load_string($xml, \SimpleXMLElement::class, LIBXML_NONET);
+        libxml_clear_errors();
+        libxml_use_internal_errors($previousUseInternalErrors);
         if ($svg === false) {
             return null;
         }

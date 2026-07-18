@@ -1,0 +1,16 @@
+--- a/src/Execution.php
++++ b/src/Execution.php
+@@ -171,7 +171,11 @@
+         $reflector = new ReflectionClass(Assert::class);
+         $property = $reflector->getProperty('count');
+ 
+-        // @phpstan-ignore-next-line
+-        $property->setValue(Assert::class, $originalCount);
++        // ReflectionProperty::setValue()'s first argument must be null (not
++        // the class name) when setting a static property -- passing a
++        // non-null, non-object value there has been deprecated since PHP
++        // 8.1 ("Calling ReflectionProperty::setValue() with a 1st argument
++        // which is not null or an object is deprecated").
++        $property->setValue(null, $originalCount);
+     }
+ }

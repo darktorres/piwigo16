@@ -150,6 +150,10 @@ final class ImageService
      */
     public function countPdfPages(string $pdfPath): int|false
     {
+        if (! is_readable($pdfPath)) {
+            return false;
+        }
+
         $pdfText = file_get_contents($pdfPath);
         if ($pdfText === false) {
             return false;

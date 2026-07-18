@@ -69,14 +69,15 @@ if (! function_exists('redirect_html')) {
     {
         global $user;
         global $template;
-        global $lang_info;
 
-        // $template/$lang_info are genuinely not always set here: this function
+        // $template/lang_info are genuinely not always set here: this function
         // can be called very early (e.g. a fatal before common.inc.php finishes
-        // bootstrapping), which is exactly what this isset() check detects --
-        // do not declare $template's type above, it would make PHPStan wrongly
-        // treat this real fallback path as dead code.
-        if (! isset($lang_info) || ! isset($template)) {
+        // bootstrapping), which is exactly what this check detects -- do not
+        // declare $template's type above, it would make PHPStan wrongly treat
+        // this real fallback path as dead code. Lang::isLangInfoInitialized()
+        // (Legacy Coupling Retirement Track A gap-fill batch G5) preserves the
+        // former raw global's isset() semantics exactly (see its own docblock).
+        if (! \Piwigo\Core\Lang::isLangInfoInitialized() || ! isset($template)) {
             $guest_id = \Piwigo\Config\Config::guestId();
             $user = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->buildUser($guest_id, true);
             \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));

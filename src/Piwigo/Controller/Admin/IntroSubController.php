@@ -623,14 +623,11 @@ SELECT
      */
     private static function getLatestNews(): mixed
     {
-        /** @var array<string, mixed> $lang_info */
-        global $lang_info;
-
         $news = null;
 
         $data_location = \Piwigo\Config\ConfigDb::confGetParam('data_location');
         $data_location = is_string($data_location) ? $data_location : '';
-        $lang_code = $lang_info['code'] ?? null;
+        $lang_code = \Piwigo\Core\Lang::langInfo()['code'] ?? null;
         $lang_code = is_string($lang_code) ? $lang_code : '';
         $cache_path = PHPWG_ROOT_PATH . $data_location . 'cache/piwigo_latest_news-' . $lang_code . '.cache.php';
         if (! is_file($cache_path) or filemtime($cache_path) < strtotime('24 hours ago')) {

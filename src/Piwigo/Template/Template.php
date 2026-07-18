@@ -92,11 +92,6 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
         string $theme = '',
         string $path = 'template'
     ) {
-        /**
-         * @var array<string, mixed>
-         */
-        global $lang_info;
-
         // \Smarty\Exception::$escape = false;
 
         $this->scriptLoader = new ScriptLoader();
@@ -214,6 +209,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
             $this->set_template_dir($root);
         }
 
+        $lang_info = Lang::langInfo();
         if (isset($lang_info['code']) and ! isset($lang_info['jquery_code'])) {
             $lang_info['jquery_code'] = $lang_info['code'];
         }
@@ -222,6 +218,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
             $lang_info['plupload_code'] = str_replace('-', '_', $lang_info['jquery_code']);
         }
 
+        Lang::setLangInfo($lang_info);
         $this->smarty->assign('lang_info', $lang_info);
 
         if (! defined('IN_ADMIN') and \Piwigo\Config\Config::has('extents_for_templates')) {
@@ -571,10 +568,7 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
         $save_compile_id = $this->smarty->compile_id;
         $this->load_external_filters($handle);
 
-        /**
-         * @var array<string, mixed>
-         */
-        global $lang_info;
+        $lang_info = Lang::langInfo();
         if (\Piwigo\Config\Config::compiledTemplateCacheLanguage() and isset($lang_info['code']) and is_string($lang_info['code'])) {
             $this->smarty->compile_id .= '_' . $lang_info['code'];
         }
@@ -756,13 +750,9 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
      */
     public static function modcompiler_translate_dec(array $params): string
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $lang_info;
         if (\Piwigo\Config\Config::compiledTemplateCacheLanguage()) {
             $ret = 'sprintf(';
-            if ((bool) $lang_info['zero_plural']) {
+            if ((bool) Lang::langInfo()['zero_plural']) {
                 $ret .= '($tmp=(' . $params[0] . '))>1||$tmp==0';
             } else {
                 $ret .= '($tmp=(' . $params[0] . '))>1';

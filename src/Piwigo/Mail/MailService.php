@@ -328,22 +328,13 @@ final class MailService implements MailerInterface
      */
     public function switchLangTo(string $language): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $lang_info;
-        /**
-         * @var array<string, array<string, array{language?: string, return?: bool, no_fallback?: bool, force_fallback?: bool|string, local?: bool}>>
-         */
-        global $language_files;
-
         $currentUserLanguage = CurrentUser::get()->language;
 
         // Language of the current user is saved (considered OK on first call).
         if (! self::$switchLangInitialised && ! isset(self::$switchLangLanguages[$currentUserLanguage])) {
             self::$switchLangInitialised = true;
             self::$switchLangLanguages[$currentUserLanguage] = [
-                'lang_info' => $lang_info,
+                'lang_info' => Lang::langInfo(),
                 'lang' => Lang::snapshot(),
             ];
         }
@@ -353,7 +344,7 @@ final class MailService implements MailerInterface
 
         if (! isset(self::$switchLangLanguages[$language])) {
             // Re-init language arrays.
-            $lang_info = [];
+            Lang::setLangInfo([]);
             Lang::restore(null);
 
             Lang::load('common.lang', '', [
@@ -366,7 +357,7 @@ final class MailService implements MailerInterface
             ]);
 
             // Reload all plugin files (see Lang::load()'s own docblock).
-            foreach ($language_files as $dirname => $files) {
+            foreach (Lang::languageFiles() as $dirname => $files) {
                 foreach ($files as $filename => $options) {
                     $options['language'] = $language;
                     Lang::load($filename, $dirname, $options);
@@ -385,12 +376,12 @@ final class MailService implements MailerInterface
             );
 
             self::$switchLangLanguages[$language] = [
-                'lang_info' => $lang_info,
+                'lang_info' => Lang::langInfo(),
                 'lang' => Lang::snapshot(),
             ];
         } else {
             $entry = self::$switchLangLanguages[$language];
-            $lang_info = $entry['lang_info'];
+            Lang::setLangInfo($entry['lang_info']);
             Lang::restore($entry['lang']);
         }
     }
@@ -401,9 +392,6 @@ final class MailService implements MailerInterface
      */
     public function switchLangBack(): void
     {
-        /** @var array<string, mixed> $lang_info */
-        global $lang_info;
-
         if (self::$switchLangStack === []) {
             return;
         }
@@ -412,7 +400,7 @@ final class MailService implements MailerInterface
 
         if (isset(self::$switchLangLanguages[$language])) {
             $entry = self::$switchLangLanguages[$language];
-            $lang_info = $entry['lang_info'];
+            Lang::setLangInfo($entry['lang_info']);
             Lang::restore($entry['lang']);
         }
         CurrentUser::updateLanguage($language);
@@ -688,11 +676,6 @@ SELECT
             return true;
         }
 
-        /**
-         * @var array<string, mixed>
-         */
-        global $lang_info;
-
         $confMail = $this->getMailConfiguration();
 
         $email = new Email();
@@ -783,7 +766,7 @@ SELECT
         }
         $contentTypeList[] = 'text/plain';
 
-        $langCode = $lang_info['code'] ?? null;
+        $langCode = Lang::langInfo()['code'] ?? null;
         $langCode = is_string($langCode) ? $langCode : '';
 
         $contents = [];
@@ -982,15 +965,12 @@ SELECT
      */
     public function sendMailTest(bool $success, Email $mail, array $args, ?string $errorMessage = null): void
     {
-        /** @var array<string, mixed> $lang_info */
-        global $lang_info;
-
         $dataLocation = \Piwigo\Config\Config::dataLocation();
 
         $dir = PHPWG_ROOT_PATH . $dataLocation . 'tmp';
         if (\Piwigo\Core\FilesystemHelper::mkgetdir($dir, \Piwigo\Core\FilesystemHelper::MKGETDIR_DEFAULT & ~\Piwigo\Core\FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
             $username = \Piwigo\Users\CurrentUser::get()->username;
-            $langCode = $lang_info['code'] ?? null;
+            $langCode = Lang::langInfo()['code'] ?? null;
             $langCode = is_string($langCode) ? $langCode : '';
 
             $filename = $dir . '/mail.' . stripslashes($username) . '.' . $langCode . '-' . date('YmdHis') . ($success ? '' : '.ERROR');

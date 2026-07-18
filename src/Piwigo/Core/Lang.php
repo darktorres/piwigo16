@@ -45,6 +45,42 @@ final class Lang
      */
     private static array $data = [];
 
+    /**
+     * Backs load()'s $lang_info (parent/code/direction/jquery_code/... --
+     * see poHeadersToLangInfo()'s own docblock for the full key list).
+     * Legacy Coupling Retirement Track A gap-fill batch G5: every real
+     * external reader (MailService, IntroSubController, Template,
+     * Http/functions.php's redirect_html()) goes through langInfo()/
+     * setLangInfo()/isLangInfoInitialized() instead of a raw global -- unlike
+     * $data above, nothing outside this class reads $GLOBALS['lang_info']
+     * directly, so no $GLOBALS bridge is needed here.
+     *
+     * @var array<string, mixed>
+     */
+    private static array $langInfo = [];
+
+    /**
+     * True once load() has populated $langInfo at least once in this
+     * request. Http/functions.php's redirect_html() uses this to detect
+     * "called before common.inc.php finished bootstrapping" (a real early-
+     * fatal path) -- the same role CurrentTemplate::isInitialized() plays a
+     * few lines below it in that same function. Deliberately a separate
+     * flag rather than `$langInfo !== []`: a real load() call can legitimately
+     * produce an empty array-shaped result, and that must still count as
+     * "initialised", matching the original global's isset() semantics.
+     */
+    private static bool $langInfoInitialized = false;
+
+    /**
+     * Tracks which plugin/theme language files load() has already loaded in
+     * this request, keyed by dirname then filename -- MailService::
+     * switchLangTo() replays this list to reload every plugin/theme
+     * translation when the user switches language mid-request.
+     *
+     * @var array<string, array<string, array{language?: string, return?: bool, no_fallback?: bool, force_fallback?: bool|string, local?: bool}>>
+     */
+    private static array $languageFiles = [];
+
     private static ?DefaultLanguageProviderInterface $defaultLanguageProvider = null;
 
     private static ?HtmlRenderingInterface $htmlRenderer = null;
@@ -147,6 +183,39 @@ final class Lang
     }
 
     /**
+     * @return array<string, mixed>
+     */
+    public static function langInfo(): array
+    {
+        return self::$langInfo;
+    }
+
+    /**
+     * @see $langInfoInitialized
+     */
+    public static function isLangInfoInitialized(): bool
+    {
+        return self::$langInfoInitialized;
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    public static function setLangInfo(array $data): void
+    {
+        self::$langInfo = $data;
+        self::$langInfoInitialized = true;
+    }
+
+    /**
+     * @return array<string, array<string, array{language?: string, return?: bool, no_fallback?: bool, force_fallback?: bool|string, local?: bool}>>
+     */
+    public static function languageFiles(): array
+    {
+        return self::$languageFiles;
+    }
+
+    /**
      * Day name by day-of-week index (0 = Sunday).
      */
     public static function day(int $dayOfWeek): string
@@ -201,15 +270,10 @@ final class Lang
      */
     public static function load(string $filename, string $dirname = '', array $options = []): string|bool
     {
-        /**
-         * @var array<string, array<string, mixed>>
-         */
-        global $language_files;
-
         // keep trace of plugins loaded files for switch_lang_to() function
         if ($dirname !== '' && $filename !== '' && ! ($options['return'] ?? false)
-          && ! isset($language_files[$dirname][$filename])) {
-            $language_files[$dirname][$filename] = $options;
+          && ! isset(self::$languageFiles[$dirname][$filename])) {
+            self::$languageFiles[$dirname][$filename] = $options;
         }
 
         if (! ($options['return'] ?? false)) {
@@ -300,13 +364,14 @@ final class Lang
         $po_file = preg_replace('/\.lang\.php$/', '.po', $source_file);
 
         global $lang;
-        global $lang_info;
         if (! isset($lang) || ! is_array($lang)) {
             $lang = [];
         }
-        if (! isset($lang_info) || ! is_array($lang_info)) {
-            $lang_info = [];
-        }
+        // A real local copy, not self::$langInfo read directly -- the
+        // @include below (legacy .lang.php files) sets a bare $lang_info at
+        // this method's own scope, and get_defined_vars() needs a real local
+        // variable already in scope to capture that write back out.
+        $lang_info = self::$langInfo;
 
         if ($po_file !== null && is_readable($po_file)) {
             $translations = Translator::get()->load($selected_language, $po_file);
@@ -345,6 +410,7 @@ final class Lang
             }
 
             $lang_info = array_merge($lang_info, $load_lang_info);
+            self::setLangInfo($lang_info);
             return true;
         }
 
@@ -378,7 +444,8 @@ final class Lang
 
         // merge contents
         $lang = array_merge($lang, (array) $load_lang);
-        $lang_info = array_merge($lang_info, (array) $load_lang_info);
+        $lang_info = array_merge($lang_info, self::withStringKeysOnly((array) $load_lang_info));
+        self::setLangInfo($lang_info);
         return true;
     }
 
@@ -489,9 +556,7 @@ final class Lang
     private static function getParentLanguage(?string $lang_id = null): ?string
     {
         if (empty($lang_id)) {
-            /** @var array<string, mixed> $lang_info */
-            global $lang_info;
-            $parent = $lang_info['parent'] ?? null;
+            $parent = self::$langInfo['parent'] ?? null;
             return (is_string($parent) && $parent !== '') ? $parent : null;
         }
 
@@ -539,6 +604,30 @@ final class Lang
         $info['zero_plural'] = $headers->get('X-Piwigo-Zero-Plural') === 'true';
 
         return $info;
+    }
+
+    /**
+     * A .lang.php file included by load() sets $lang_info at this class's own
+     * method scope (see load()'s own docblock on the @include below) -- its
+     * keys are always string in practice (language_name/country/direction/
+     * code/parent/zero_plural/jquery_code/plupload_code, per
+     * poHeadersToLangInfo()'s own key list), but get_defined_vars() can't
+     * statically prove that, so this narrows for real instead of widening
+     * langInfo()'s declared array<string, mixed> shape to satisfy PHPStan.
+     *
+     * @param array<mixed, mixed> $value
+     * @return array<string, mixed>
+     */
+    private static function withStringKeysOnly(array $value): array
+    {
+        $result = [];
+        foreach ($value as $k => $v) {
+            if (is_string($k)) {
+                $result[$k] = $v;
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -593,6 +682,9 @@ final class Lang
     {
         self::$data = [];
         $GLOBALS['lang'] = &self::$data;
+        self::$langInfo = [];
+        self::$langInfoInitialized = false;
+        self::$languageFiles = [];
         self::$defaultLanguageProvider = null;
         self::$htmlRenderer = null;
     }

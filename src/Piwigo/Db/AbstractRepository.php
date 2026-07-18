@@ -21,4 +21,17 @@ abstract class AbstractRepository
     public function __construct(
         protected readonly Connection $conn,
     ) {}
+
+    /**
+     * Shared batch-insert/update helper (Legacy Coupling Retirement:
+     * DI+DBAL migration Phase 1a), replacing `MysqliDb::singleInsert()`/
+     * `massInserts()`/`singleUpdate()`/`massUpdates()` -- used by ~20
+     * call sites across many domains, not any one repository's own
+     * concern, so it's constructed here once for every subclass to reuse
+     * rather than duplicated.
+     */
+    protected function batchWriter(): BatchWriter
+    {
+        return new BatchWriter($this->conn);
+    }
 }

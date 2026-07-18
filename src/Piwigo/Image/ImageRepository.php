@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Image;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\Tables;
 
@@ -395,5 +396,36 @@ SELECT *
 ;')->fetchAllAssociative();
 
         return $rows[0] ?? null;
+    }
+
+    /**
+     * @param  list<int|string>  $ids
+     * @return array<string, array<string, mixed>> keyed by image id
+     */
+    public function findByIds(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+
+        $rows = $this->conn->executeQuery('
+SELECT *
+  FROM ' . Tables::images() . '
+  WHERE id IN (:ids)
+;', [
+            'ids' => $ids,
+        ], [
+            'ids' => ArrayParameterType::STRING,
+        ])->fetchAllAssociative();
+
+        $byId = [];
+        foreach ($rows as $row) {
+            $id = $row['id'] ?? null;
+            if (is_scalar($id)) {
+                $byId[(string) $id] = $row;
+            }
+        }
+
+        return $byId;
     }
 }

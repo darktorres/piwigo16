@@ -192,7 +192,7 @@ final readonly class CategoryService
 
         foreach ($cat as $k => $v) {
             if ($v === 'true' || $v === 'false') {
-                $cat[$k] = \Piwigo\Db\MysqliDb::getBoolean($v);
+                $cat[$k] = \Piwigo\Db\SqlDialect::getBoolean($v);
             }
         }
 
@@ -840,7 +840,7 @@ final readonly class CategoryService
         TemplateInterface $template,
         bool $fullname = true
     ): void {
-        $categories = \Piwigo\Db\MysqliDb::query2Array($query);
+        $categories = $this->repo->fetchCallerBuiltQuery($query);
         usort($categories, self::compareByGlobalRank(...));
         $this->displaySelectCategories($categories, $selecteds, $blockname, $htmlRenderer, $template, $fullname);
     }
@@ -1083,11 +1083,7 @@ final readonly class CategoryService
                 'rank' => $currentRank,
             ];
         }
-        $fields = [
-            'primary' => ['id'],
-            'update' => ['rank'],
-        ];
-        \Piwigo\Db\MysqliDb::massUpdates(Tables::categories(), $fields, $datas);
+        $this->repo->massUpdateRanks($datas);
 
         $this->updateGlobalRank();
     }
@@ -1154,14 +1150,8 @@ final readonly class CategoryService
             }
         }
 
-        \Piwigo\Db\MysqliDb::massUpdates(
-            Tables::categories(),
-            [
-                'primary' => ['id'],
-                'update' => ['rank', 'global_rank'],
-            ],
-            $datas
-        );
+        $this->repo->massUpdateRanksAndGlobalRank($datas);
+
         return count($datas);
     }
 
@@ -1396,14 +1386,7 @@ final readonly class CategoryService
             ];
         }
 
-        \Piwigo\Db\MysqliDb::massUpdates(
-            Tables::categories(),
-            [
-                'primary' => ['id'],
-                'update' => ['representative_picture_id'],
-            ],
-            $datas
-        );
+        $this->repo->massUpdateRepresentativePictures($datas);
     }
 
     /**
@@ -1487,11 +1470,7 @@ final readonly class CategoryService
                 ];
             }
         }
-        $fields = [
-            'primary' => ['id'],
-            'update' => ['uppercats'],
-        ];
-        \Piwigo\Db\MysqliDb::massUpdates(Tables::categories(), $fields, $datas);
+        $this->repo->massUpdateUppercats($datas);
     }
 
     /**
@@ -1628,7 +1607,7 @@ final readonly class CategoryService
         } else {
             $insert['commentable'] = \Piwigo\Config\Config::newcatDefaultCommentable();
         }
-        $insert['commentable'] = \Piwigo\Db\MysqliDb::booleanToString($insert['commentable']);
+        $insert['commentable'] = \Piwigo\Db\SqlDialect::booleanToString($insert['commentable']);
 
         // is the album temporarily locked? (only visible by administrators,
         // whatever permissions) (may be overwritten if parent album is not
@@ -1638,7 +1617,7 @@ final readonly class CategoryService
         } else {
             $insert['visible'] = \Piwigo\Config\Config::newcatDefaultVisible();
         }
-        $insert['visible'] = \Piwigo\Db\MysqliDb::booleanToString($insert['visible']);
+        $insert['visible'] = \Piwigo\Db\SqlDialect::booleanToString($insert['visible']);
 
         // is the album private? (may be overwritten if parent album is private)
         if (isset($options['status']) && $options['status'] === 'private') {
@@ -1685,27 +1664,20 @@ final readonly class CategoryService
         }
 
         // we have then to add the virtual category
-        \Piwigo\Db\MysqliDb::singleInsert(Tables::categories(), $insert);
-        $insertedId = \Piwigo\Db\MysqliDb::insertId();
+        $insertedId = $this->repo->insertCategory($insert);
 
-        \Piwigo\Db\MysqliDb::singleUpdate(
-            Tables::categories(),
-            [
-                'uppercats' => $uppercatsPrefix . $insertedId,
-                // This UPDATE is an unconditional, immediate follow-up to the
-                // INSERT above (needs the auto-generated id first) -- part of
-                // the same logical "create category" operation, not a later,
-                // independent edit. Re-set explicitly, since ON UPDATE
-                // CURRENT_TIMESTAMP would otherwise silently overwrite the
-                // INSERT's own frozen lastmodified with the real DB-server
-                // clock the moment this UPDATE runs.
-                'lastmodified' => Env::now()
-                    ->format('Y-m-d H:i:s'),
-            ],
-            [
-                'id' => $insertedId,
-            ]
-        );
+        $this->repo->updateCategoryAfterInsert($insertedId, [
+            'uppercats' => $uppercatsPrefix . $insertedId,
+            // This UPDATE is an unconditional, immediate follow-up to the
+            // INSERT above (needs the auto-generated id first) -- part of
+            // the same logical "create category" operation, not a later,
+            // independent edit. Re-set explicitly, since ON UPDATE
+            // CURRENT_TIMESTAMP would otherwise silently overwrite the
+            // INSERT's own frozen lastmodified with the real DB-server
+            // clock the moment this UPDATE runs.
+            'lastmodified' => Env::now()
+                ->format('Y-m-d H:i:s'),
+        ]);
 
         $this->updateGlobalRank();
 
@@ -1719,7 +1691,7 @@ final readonly class CategoryService
                     'cat_id' => $insertedId,
                 ];
             }
-            \Piwigo\Db\MysqliDb::massInserts(Tables::groupAccess(), ['group_id', 'cat_id'], $inserts);
+            $this->repo->massInsertGroupAccess($inserts);
 
             $grantedUsers = $this->repo->findAccessUserIds($insertIdUppercat);
             $this->permissionService->addPermissionOnCategory((int) $insertedId, $grantedUsers);

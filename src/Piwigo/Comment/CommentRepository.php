@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Comment;
 
 use Doctrine\DBAL\ArrayParameterType;
+use Piwigo\Core\CommentCounterInterface;
 use Piwigo\Core\Env;
 use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\Tables;
@@ -16,8 +17,12 @@ use Piwigo\Db\Tables;
  * precedent as GroupRepository::findMemberUsernames() reading `users`
  * directly) -- usernameExists() (the guest-impersonation guard in
  * insert_user_comment()) and clearNbCommentsCache() (`user_cache`).
+ *
+ * Implements `CommentCounterInterface` (see that interface's own docblock)
+ * so `Category\CategoryDefaultRenderer` (L2aCoreDomain) can depend on it
+ * without a `deptrac analyse` `DependsOnDisallowedLayer` violation.
  */
-final class CommentRepository extends AbstractRepository
+final class CommentRepository extends AbstractRepository implements CommentCounterInterface
 {
     /**
      * @param array{
@@ -252,6 +257,43 @@ final class CommentRepository extends AbstractRepository
             ->fetchOne();
 
         return is_numeric($value) ? (int) $value : 0;
+    }
+
+    /**
+     * Validated comment count per image, for a batch of images at once
+     * (`CategoryDefaultRenderer`'s main-page thumbnail grid, one query
+     * instead of one `countForImage()` call per thumbnail).
+     *
+     * @param  list<int|string>  $imageIds
+     * @return array<string, int> keyed by image id
+     */
+    #[\Override]
+    public function countValidatedByImageIds(array $imageIds): array
+    {
+        if ($imageIds === []) {
+            return [];
+        }
+
+        $rows = $this->conn->createQueryBuilder()
+            ->select('image_id', 'COUNT(*) AS nb_comments')
+            ->from(Tables::comments())
+            ->where("validated = 'true'")
+            ->andWhere('image_id IN (:imageIds)')
+            ->setParameter('imageIds', $imageIds, ArrayParameterType::STRING)
+            ->groupBy('image_id')
+            ->executeQuery()
+            ->fetchAllAssociative();
+
+        $byImageId = [];
+        foreach ($rows as $row) {
+            $imageId = $row['image_id'] ?? null;
+            $nbComments = $row['nb_comments'] ?? null;
+            if (is_scalar($imageId) && is_numeric($nbComments)) {
+                $byImageId[(string) $imageId] = (int) $nbComments;
+            }
+        }
+
+        return $byImageId;
     }
 
     /**

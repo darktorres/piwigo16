@@ -9,12 +9,9 @@ use Piwigo\Core\Env;
 use Piwigo\Core\FilterUpdaterInterface;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\TemplateInterface;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
-use Piwigo\Group\GroupRepository;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
-use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Psr\Cache\CacheItemPoolInterface;
 
@@ -44,8 +41,8 @@ use Psr\Cache\CacheItemPoolInterface;
  * - `user_representative_picture_id` -- a real, stateful write-back cache
  *   (not a pure rollup value; see the plan's finding 6) -- moves to
  *   `CachePools::categoryTree()`, distinctly key-prefixed (`repr_*`) from
- *   the tree cache's own `tree_*` keys, replacing the `\Piwigo\Db\MysqliDb::massUpdates()` write
- *   onto `user_cache_categories`.
+ *   the tree cache's own `tree_*` keys, replacing the former
+ *   `MysqliDb::massUpdates()` write onto `user_cache_categories`.
  * - The representative-image fallback chain, privacy-level re-pick,
  *   `\Piwigo\Config\Config::displayFromto()` query, and all template-variable building are
  *   unaffected and port unchanged.
@@ -56,6 +53,10 @@ final readonly class CategoryCatsRenderer
         private FilterUpdaterInterface $filterUpdater,
         private HtmlRenderingInterface $htmlRenderer,
         private TemplateInterface $template,
+        private CategoryRepository $categoryRepo,
+        private CategoryService $categoryService,
+        private PermissionService $permissionService,
+        private ImageRepository $imageRepo,
     ) {}
 
     /**
@@ -75,12 +76,8 @@ final readonly class CategoryCatsRenderer
         $logger = \Piwigo\Core\CurrentLogger::get();
         $template = $this->template;
 
-        $conn = DbConnection::build();
-        $categoryRepo = new CategoryRepository($conn);
-        $categoryService = new CategoryService(
-            $categoryRepo,
-            new PermissionService(new PermissionRepository($conn), new GroupRepository($conn))
-        );
+        $categoryRepo = $this->categoryRepo;
+        $categoryService = $this->categoryService;
         $reprPool = CachePools::categoryTree();
         $treeCache = new CategoryTreeCache($categoryService, $categoryRepo, $reprPool);
 
@@ -196,23 +193,12 @@ final readonly class CategoryCatsRenderer
             } elseif ($merged['count_categories'] > 0 and $merged['count_images'] > 0) { // at this point, count_images should always be >0 (used as condition above)
                 // searching a random representant among representant of sub-categories
                 $uppercats = is_string($merged['uppercats'] ?? null) ? $merged['uppercats'] : '';
-                $query = '
-SELECT representative_picture_id
-  FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::userCacheCategories() . '
-  ON id = cat_id and user_id = ' . $userId . '
-  WHERE uppercats LIKE \'' . $uppercats . ',%\'
-    AND representative_picture_id IS NOT NULL'
-  . new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()))->getSqlConditionFandF([
-      'visible_categories' => 'id',
-  ], "\n  AND") . '
-  ORDER BY ' . \Piwigo\Db\MysqliDb::DB_RANDOM_FUNCTION . '()
-  LIMIT 1
-;';
-                $subresult = \Piwigo\Db\MysqliDb::query($query);
-                if (\Piwigo\Db\MysqliDb::numRows($subresult) > 0) {
-                    $subrow = \Piwigo\Db\MysqliDb::fetchRow($subresult);
-                    assert($subrow !== null);
-                    [$imageId] = $subrow;
+                $permissionCondition = $this->permissionService->getSqlConditionFandF([
+                    'visible_categories' => 'id',
+                ], "\n  AND");
+                $found = $this->categoryRepo->findRandomRepresentativeIdAmongSubcategories($uppercats, $userId, $permissionCondition);
+                if ($found !== null) {
+                    $imageId = $found;
                 }
             }
 
@@ -247,21 +233,11 @@ SELECT representative_picture_id
 
         if (\Piwigo\Config\Config::displayFromto()) {
             if (count($categoryIds) > 0) {
-                $query = '
-SELECT
-    category_id,
-    MIN(date_creation) AS `from`,
-    MAX(date_creation) AS `to`
-  FROM ' . Tables::imageCategory() . '
-    INNER JOIN ' . Tables::images() . ' ON image_id = id
-  WHERE category_id IN (' . implode(',', $categoryIds) . ')
-' . new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()))->getSqlConditionFandF([
+                $permissionCondition = $this->permissionService->getSqlConditionFandF([
                     'visible_categories' => 'category_id',
                     'visible_images' => 'id',
-                ], 'AND') . '
-  GROUP BY category_id
-;';
-                $datesOfCategory = \Piwigo\Db\MysqliDb::query2Array($query, 'category_id');
+                ], 'AND');
+                $datesOfCategory = $this->categoryRepo->findDateRangeByCategory($categoryIds, $permissionCondition);
             }
         }
 
@@ -274,19 +250,7 @@ SELECT
             $infosOfImage = [];
             $newImageIds = [];
 
-            $query = '
-SELECT *
-  FROM ' . Tables::images() . '
-  WHERE id IN (' . implode(',', array_filter($imageIds, is_string(...))) . ')
-;';
-            $result = \Piwigo\Db\MysqliDb::query($query);
-            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
-                $imageRowId = $row['id'];
-                if (! is_string($imageRowId)) {
-                    // 'id' is the images table primary key (NOT NULL); this should never happen
-                    continue;
-                }
-
+            foreach ($this->imageRepo->findByIds(array_values(array_filter($imageIds, is_string(...)))) as $imageRowId => $row) {
                 if ($row['level'] <= $currentUser->level) {
                     $infosOfImage[$imageRowId] = $row;
                 } else {
@@ -325,19 +289,7 @@ SELECT *
             }
 
             if (count($newImageIds) > 0) {
-                $query = '
-SELECT *
-  FROM ' . Tables::images() . '
-  WHERE id IN (' . implode(',', $newImageIds) . ')
-;';
-                $result = \Piwigo\Db\MysqliDb::query($query);
-                while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
-                    $newImageRowId = $row['id'];
-                    if (! is_string($newImageRowId)) {
-                        // 'id' is the images table primary key (NOT NULL); this should never happen
-                        continue;
-                    }
-
+                foreach ($this->imageRepo->findByIds($newImageIds) as $newImageRowId => $row) {
                     $infosOfImage[$newImageRowId] = $row;
                 }
             }

@@ -17,9 +17,11 @@ use Monolog\Logger as MonologLogger;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\PiwigoInfosSender;
 use Piwigo\Cache\CacheFactory;
+use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigRepository;
 use Piwigo\Core\ActivityLoggerInterface;
+use Piwigo\Core\CommentCounterInterface;
 use Piwigo\Core\DefaultLanguageProviderInterface;
 use Piwigo\Core\FilterUpdaterInterface;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -73,6 +75,14 @@ return [
     // ruleset. See src/Piwigo/Core/ActivityLoggerInterface.php's own
     // docblock.
     ActivityLoggerInterface::class => \DI\get(ActivityService::class),
+
+    // Interface binding (Legacy Coupling Retirement: DI+DBAL migration
+    // Phase 1a) -- Piwigo\Comment\CommentRepository is L2bExtendedDomain;
+    // Category\CategoryDefaultRenderer (L2aCoreDomain) constructor-injects
+    // CommentCounterInterface instead of depending on the concrete class
+    // directly, per deptrac.yaml's ruleset. See src/Piwigo/Core/
+    // CommentCounterInterface.php's own docblock.
+    CommentCounterInterface::class => \DI\get(CommentRepository::class),
 
     // Interface binding (P23 batch 8d) -- Piwigo\Core\Lang::load() is a
     // static L1Infrastructure method that needs the DB-configured default

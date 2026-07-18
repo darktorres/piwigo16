@@ -6,6 +6,7 @@ namespace Piwigo\Category;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Db\AbstractRepository;
+use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 
 /**
@@ -217,7 +218,7 @@ final class CategoryRepository extends AbstractRepository
         // correctly before its own post-hoc pruning step runs.
         $imagesJoinCondition = 'ic.image_id = i.id AND i.level <= :level';
         if ($filterDays !== null) {
-            $imagesJoinCondition .= ' AND i.date_available > ' . \Piwigo\Db\MysqliDb::getRecentPeriodExpression($filterDays);
+            $imagesJoinCondition .= ' AND i.date_available > ' . SqlDialect::getRecentPeriodExpression($filterDays);
         }
 
         $qb = $this->conn->createQueryBuilder()
@@ -818,7 +819,7 @@ SELECT DISTINCT(storage_category_id)
     {
         $this->conn->executeStatement('
 UPDATE ' . Tables::images() . '
-  SET path = ' . \Piwigo\Db\MysqliDb::concat(["'" . $fulldir . "/'", 'file']) . '
+  SET path = ' . SqlDialect::concat(["'" . $fulldir . "/'", 'file']) . '
   WHERE storage_category_id = ' . $categoryId . '
 ;');
     }
@@ -904,5 +905,196 @@ SELECT id, uppercats, global_rank, visible, status
 
         /** @var array{id: int, uppercats: string, global_rank: string, visible: string, status: string}|false $row */
         return $row === false ? null : $row;
+    }
+
+    /**
+     * Executes an already-built SELECT query verbatim and returns every row.
+     * Transitional -- `CategoryService::displaySelectCatWrapper()`'s own
+     * callers (`Admin/UserPermPageRenderer.php`, `Admin/GroupPermPageRenderer.php`,
+     * `Admin/CatOptionsPageRenderer.php`, `Controller/CommentsController.php`,
+     * `Controller/Admin/PermalinksSubController.php`,
+     * `Controller/Admin/SiteUpdateSubController.php`) build the raw SQL
+     * string themselves instead of this repository, so there's no single
+     * query shape to give a real `find*()` method -- retiring `MysqliDb::`
+     * here only swaps the execution mechanism (Legacy Coupling Retirement:
+     * DI+DBAL migration Phase 1a). Revisit once those 6 caller files get
+     * their own pass (Phase 1g/1h) and can build a real `QueryBuilder`
+     * instead of a raw string.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function fetchCallerBuiltQuery(string $query): array
+    {
+        return $this->conn->executeQuery($query)
+            ->fetchAllAssociative();
+    }
+
+    /**
+     * @param array<int, array{id: mixed, rank: mixed}> $datas
+     */
+    public function massUpdateRanks(array $datas): void
+    {
+        $this->batchWriter()
+            ->massUpdate(
+                Tables::categories(),
+                [
+                    'primary' => ['id'],
+                    'update' => ['rank'],
+                ],
+                $datas
+            );
+    }
+
+    /**
+     * @param array<int, array{id: mixed, rank: mixed, global_rank: mixed}> $datas
+     */
+    public function massUpdateRanksAndGlobalRank(array $datas): void
+    {
+        $this->batchWriter()
+            ->massUpdate(
+                Tables::categories(),
+                [
+                    'primary' => ['id'],
+                    'update' => ['rank', 'global_rank'],
+                ],
+                $datas
+            );
+    }
+
+    /**
+     * @param array<int, array{id: mixed, representative_picture_id: mixed}> $datas
+     */
+    public function massUpdateRepresentativePictures(array $datas): void
+    {
+        $this->batchWriter()
+            ->massUpdate(
+                Tables::categories(),
+                [
+                    'primary' => ['id'],
+                    'update' => ['representative_picture_id'],
+                ],
+                $datas
+            );
+    }
+
+    /**
+     * @param array<int, array{id: mixed, uppercats: mixed}> $datas
+     */
+    public function massUpdateUppercats(array $datas): void
+    {
+        $this->batchWriter()
+            ->massUpdate(
+                Tables::categories(),
+                [
+                    'primary' => ['id'],
+                    'update' => ['uppercats'],
+                ],
+                $datas
+            );
+    }
+
+    /**
+     * Inserts a new category row and returns its auto-generated id.
+     *
+     * @param array<string, mixed> $insert
+     */
+    public function insertCategory(array $insert): int|string
+    {
+        $this->batchWriter()
+            ->singleInsert(Tables::categories(), $insert);
+
+        return $this->conn->lastInsertId();
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    public function updateCategoryAfterInsert(int|string $id, array $data): void
+    {
+        $this->batchWriter()
+            ->singleUpdate(Tables::categories(), $data, [
+                'id' => $id,
+            ]);
+    }
+
+    /**
+     * @param array<int, array{group_id: mixed, cat_id: mixed}> $inserts
+     */
+    public function massInsertGroupAccess(array $inserts): void
+    {
+        $this->batchWriter()
+            ->massInsert(Tables::groupAccess(), ['group_id', 'cat_id'], $inserts);
+    }
+
+    /**
+     * Picks a random representative image among a category's sub-categories
+     * (`CategoryCatsRenderer`'s own fallback when a category has no direct
+     * representative but does have sub-albums with images). $permissionCondition
+     * is an already-built SQL fragment (leading "\n  AND"), same
+     * pre-built-permission-string shape as every other repository method
+     * here.
+     */
+    public function findRandomRepresentativeIdAmongSubcategories(string $uppercats, int $userId, string $permissionCondition): ?string
+    {
+        $value = $this->conn->executeQuery('
+SELECT representative_picture_id
+  FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::userCacheCategories() . '
+  ON id = cat_id and user_id = :userId
+  WHERE uppercats LIKE :uppercatsLike
+    AND representative_picture_id IS NOT NULL'
+  . $permissionCondition . '
+  ORDER BY ' . SqlDialect::DB_RANDOM_FUNCTION . '()
+  LIMIT 1
+;', [
+      'userId' => $userId,
+      'uppercatsLike' => $uppercats . ',%',
+  ])->fetchOne();
+
+        return is_scalar($value) ? (string) $value : null;
+    }
+
+    /**
+     * First/last photo creation date per category (`CategoryCatsRenderer`'s
+     * "from/to" date-range display, gated by `Config::displayFromto()`).
+     * $permissionCondition is an already-built SQL fragment, same shape as
+     * {@see findRandomRepresentativeIdAmongSubcategories()}.
+     *
+     * @param  list<int>  $categoryIds
+     * @return array<string, array{from: ?string, to: ?string}> keyed by category id
+     */
+    public function findDateRangeByCategory(array $categoryIds, string $permissionCondition): array
+    {
+        if ($categoryIds === []) {
+            return [];
+        }
+
+        $rows = $this->conn->executeQuery('
+SELECT
+    category_id,
+    MIN(date_creation) AS `from`,
+    MAX(date_creation) AS `to`
+  FROM ' . Tables::imageCategory() . '
+    INNER JOIN ' . Tables::images() . ' ON image_id = id
+  WHERE category_id IN (:categoryIds)
+' . $permissionCondition . '
+  GROUP BY category_id
+;', [
+            'categoryIds' => $categoryIds,
+        ], [
+            'categoryIds' => ArrayParameterType::INTEGER,
+        ])->fetchAllAssociative();
+
+        $byId = [];
+        foreach ($rows as $row) {
+            $categoryId = $row['category_id'] ?? null;
+            if (is_scalar($categoryId)) {
+                $byId[(string) $categoryId] = [
+                    'from' => isset($row['from']) && is_scalar($row['from']) ? (string) $row['from'] : null,
+                    'to' => isset($row['to']) && is_scalar($row['to']) ? (string) $row['to'] : null,
+                ];
+            }
+        }
+
+        return $byId;
     }
 }

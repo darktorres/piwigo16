@@ -8,6 +8,7 @@ use Piwigo\Category\CategoryCatsRenderer;
 use Piwigo\Category\CategoryDefaultRenderer;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Comment\CommentRepository;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Filter\FilterService;
@@ -18,6 +19,7 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeParams;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Mail\MailService;
 use Piwigo\Menu\MenubarRenderer;
@@ -485,14 +487,25 @@ final class GalleryController implements ControllerInterface
               and ($section_context->section === 'recent_cats' or $section_context->section === 'categories')
               and ($section_context->category === null or $categoryCountCategories === null or $categoryCountCategories > 0)
             ) {
-                new CategoryCatsRenderer(new FilterService(), new HtmlService(), $template)
-                    ->render($section_context->section, $section_context->category, $section_context->startcat);
+                new CategoryCatsRenderer(
+                    new FilterService(),
+                    new HtmlService(),
+                    $template,
+                    new CategoryRepository($tagConn),
+                    $categoryService,
+                    new PermissionService(new PermissionRepository($tagConn), new GroupRepository($tagConn)),
+                    new ImageRepository($tagConn)
+                )->render($section_context->section, $section_context->category, $section_context->startcat);
             }
 
             $slideshow_url = null;
             if ($page_items !== []) {
-                $slideshow_url = new CategoryDefaultRenderer(new HtmlService(), $template)
-                    ->render($page_items, $page_start, $page_nb_image_page, $section_context->section);
+                $slideshow_url = new CategoryDefaultRenderer(
+                    new HtmlService(),
+                    $template,
+                    new ImageRepository($tagConn),
+                    new CommentRepository($tagConn)
+                )->render($page_items, $page_start, $page_nb_image_page, $section_context->section);
 
                 if (\Piwigo\Config\Config::indexSizesIcon()) {
                     $url = add_url_params(

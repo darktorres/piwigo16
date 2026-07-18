@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Category;
 
+use Piwigo\Core\CommentCounterInterface;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\TemplateInterface;
-use Piwigo\Db\Tables;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Session\SessionService;
@@ -24,6 +25,8 @@ final readonly class CategoryDefaultRenderer
     public function __construct(
         private HtmlRenderingInterface $htmlRenderer,
         private TemplateInterface $template,
+        private ImageRepository $imageRepo,
+        private CommentCounterInterface $commentCounter,
     ) {}
 
     /**
@@ -71,14 +74,7 @@ final readonly class CategoryDefaultRenderer
         if (count($selection) > 0) {
             $rankOf = array_flip($selection);
 
-            $query = '
-SELECT *
-  FROM ' . Tables::images() . '
-  WHERE id IN (' . implode(',', $selection) . ')
-;';
-            $result = \Piwigo\Db\MysqliDb::query($query);
-            while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
-                $imageId = $row['id'] ?? '';
+            foreach ($this->imageRepo->findByIds($selection) as $imageId => $row) {
                 $row['rank'] = $rankOf[$imageId] ?? 0;
                 $pictures[] = $row;
             }
@@ -91,8 +87,8 @@ SELECT *
         // show_nb_comments both truthy AND at least one picture) --
         // declared up front (rather than relying on isset() to gate a
         // maybe-undefined variable) so PHPStan can prove its real type --
-        // null, or \Piwigo\Db\MysqliDb::query2Array()'s actual inferred return type -- at every
-        // later read.
+        // null, or CommentRepository::countValidatedByImageIds()'s actual
+        // inferred return type -- at every later read.
         $nbCommentsOf = null;
 
         if (count($pictures) > 0) {
@@ -114,14 +110,7 @@ SELECT *
               );
 
             if (\Piwigo\Config\Config::activateComments() and (bool) \Piwigo\Users\CurrentUser::get()->rawAttributes['show_nb_comments']) {
-                $query = '
-SELECT image_id, COUNT(*) AS nb_comments
-  FROM ' . Tables::comments() . '
-  WHERE validated = \'true\'
-    AND image_id IN (' . implode(',', $selection) . ')
-  GROUP BY image_id
-;';
-                $nbCommentsOf = \Piwigo\Db\MysqliDb::query2Array($query, 'image_id', 'nb_comments');
+                $nbCommentsOf = $this->commentCounter->countValidatedByImageIds($selection);
             }
         }
 
@@ -149,7 +138,8 @@ SELECT image_id, COUNT(*) AS nb_comments
             );
 
             if ($nbCommentsOf !== null) {
-                $row['NB_COMMENTS'] = $row['nb_comments'] = (int) @$nbCommentsOf[$imageId];
+                $nbComments = is_scalar($imageId) ? ($nbCommentsOf[(string) $imageId] ?? 0) : 0;
+                $row['NB_COMMENTS'] = $row['nb_comments'] = $nbComments;
             }
 
             $name = $this->htmlRenderer->renderElementName($row);

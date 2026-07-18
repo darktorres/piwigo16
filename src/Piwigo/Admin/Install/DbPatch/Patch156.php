@@ -35,7 +35,7 @@ final class Patch156 implements DbPatchInterface
     public function apply(): void
     {
         $row = MysqliDb::fetchAssoc(MysqliDb::query('SHOW COLUMNS FROM `' . Tables::activity() . '` LIKE "occured_on";'));
-        if (! preg_match('/^TIMESTAMP/i', $row['Type'])) {
+        if (! preg_match('/^TIMESTAMP/i', (string) $row['Type'])) {
             $query = 'ALTER TABLE `' . Tables::activity() . '` CHANGE `occured_on` `occured_on` TIMESTAMP DEFAULT CURRENT_TIMESTAMP;';
             MysqliDb::query($query);
         }

@@ -31,10 +31,10 @@ use Piwigo\Mail\MailService;
  * admin/updates_pwg.php page (this batch's real scope) is migrated to use
  * this new class instead.
  */
-final class CoreUpdateService
+final readonly class CoreUpdateService
 {
     public function __construct(
-        private readonly ZipExtractor $zipExtractor,
+        private ZipExtractor $zipExtractor,
     ) {}
 
     public function checkPiwigoUpgrade(): void
@@ -202,7 +202,7 @@ final class CoreUpdateService
         }
 
         new MailService()
-            ->switchLangTo((new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->getDefaultLanguage());
+            ->switchLangTo(new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getDefaultLanguage());
 
         $content = l10n('Hello,');
         $content .= "\n\n" . l10n(
@@ -357,7 +357,7 @@ final class CoreUpdateService
         FilesystemHelper::deltree(PHPWG_ROOT_PATH . $dataLocation . 'update');
         UserCacheInvalidator::invalidate(true);
         \Piwigo\Config\ConfigDb::confUpdateParam('piwigo_installed_version', $upgradeTo);
-        (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('system', ActivitySystem::Core, 'update', [
+        new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('system', ActivitySystem::Core, 'update', [
             'from_version' => AppInfo::VERSION,
             'to_version' => $upgradeTo,
         ]);

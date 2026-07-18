@@ -80,7 +80,7 @@ test('unformatEmail accepts an array input with email and name keys', function (
 test('unformatEmail throws on an array input missing the email key', function (): void {
     $service = new MailService();
 
-    expect(fn () => $service->unformatEmail(['name' => 'Jane']))->toThrow(InvalidArgumentException::class);
+    expect(fn (): array => $service->unformatEmail(['name' => 'Jane']))->toThrow(InvalidArgumentException::class);
 });
 
 test('getCleanRecipientsList returns an empty list for empty input', function (): void {

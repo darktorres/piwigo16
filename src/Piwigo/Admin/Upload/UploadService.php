@@ -508,7 +508,7 @@ SELECT
             \Piwigo\Db\MysqliDb::singleInsert(Tables::images(), $insert);
 
             $image_id = \Piwigo\Db\MysqliDb::insertId();
-            (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('photo', $image_id, 'add');
+            new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('photo', $image_id, 'add');
         }
 
         $this->addUploadedFileAddToCategories($image_id, $categories);
@@ -629,7 +629,7 @@ SELECT
         $loaded = $dom->loadXML($xml, LIBXML_NONET);
         libxml_clear_errors();
         libxml_use_internal_errors($previous_use_errors);
-        if (! $loaded || $dom->documentElement === null) {
+        if (! $loaded || ! $dom->documentElement instanceof \DOMElement) {
             return;
         }
 
@@ -637,7 +637,7 @@ SELECT
 
         $scriptNodes = $xpath->query('//*[local-name()="script"]');
         foreach (iterator_to_array($scriptNodes !== false ? $scriptNodes : new \ArrayIterator([])) as $scriptNode) {
-            if ($scriptNode instanceof \DOMNode && $scriptNode->parentNode !== null) {
+            if ($scriptNode instanceof \DOMNode && $scriptNode->parentNode instanceof \DOMNode) {
                 $scriptNode->parentNode->removeChild($scriptNode);
             }
         }
@@ -747,7 +747,7 @@ SELECT
             $add_status = 'add';
         }
 
-        (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('photo', $format_of, 'edit', [
+        new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('photo', $format_of, 'edit', [
             'action' => 'add format',
             'format_ext' => $format_ext,
             'format_id' => $format_id,

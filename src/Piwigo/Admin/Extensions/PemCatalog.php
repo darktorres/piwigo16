@@ -23,10 +23,10 @@ use Piwigo\Http\HttpClientService;
  * it's fundamentally the same "talk to PEM, then handle what comes back"
  * concern, just followed by a local ZipExtractor call.
  */
-final class PemCatalog
+final readonly class PemCatalog
 {
     public function __construct(
-        private readonly ZipExtractor $zipExtractor,
+        private ZipExtractor $zipExtractor,
     ) {}
 
     /**

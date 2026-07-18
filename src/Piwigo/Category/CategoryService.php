@@ -42,11 +42,11 @@ use Piwigo\Users\UserRepository;
  * never touch activity logging. Instead, only those 4 write methods take
  * `ActivityLoggerInterface` as an explicit parameter.
  */
-final class CategoryService
+final readonly class CategoryService
 {
     public function __construct(
-        private readonly CategoryRepository $repo,
-        private readonly PermissionService $permissionService,
+        private CategoryRepository $repo,
+        private PermissionService $permissionService,
     ) {}
 
     /**

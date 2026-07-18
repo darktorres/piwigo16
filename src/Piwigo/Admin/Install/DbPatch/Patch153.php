@@ -56,7 +56,7 @@ INSERT INTO ' . Tables::config() . ' (param,value,comment)
     /**
      * Former local value_display_fromto() function.
      */
-    private function valueDisplayFromto()
+    private function valueDisplayFromto(): string
     {
         $file = PHPWG_ROOT_PATH . 'local/config/config.inc.php';
         if (file_exists($file)) {

@@ -36,7 +36,7 @@ use Symfony\Contracts\HttpClient\ResponseInterface as SymfonyResponseInterface;
  * zero SSRF/IP-range validation). Built from the security doc's own SEC-23
  * description.
  */
-final class HttpClientService implements ClientInterface
+final readonly class HttpClientService implements ClientInterface
 {
     private const int MAX_REDIRECTS = 5;
 
@@ -50,11 +50,12 @@ final class HttpClientService implements ClientInterface
      */
     private const array BODY_DROPPING_STATUSES = [301, 302, 303];
 
-    private readonly HttpClientInterface $client;
+    private HttpClientInterface $client;
 
-    private readonly Psr17Factory $factory;
+    private Psr17Factory $factory;
 
-    /**
+    public function __construct(
+        ?HttpClientInterface $client = null, /**
      * A target host exempted from the SSRF guard entirely (both the
      * https-only scheme check and the private/reserved-IP check). The only
      * legitimate use is fetchRemote()'s own self-requests back into this
@@ -74,13 +75,10 @@ final class HttpClientService implements ClientInterface
      * for self-hosted software (localhost dev environments, Docker-internal
      * networking, LAN-only installs behind a private-IP reverse proxy).
      */
-    private readonly ?string $trustedSelfHost;
-
-    public function __construct(?HttpClientInterface $client = null, ?string $trustedSelfHost = null)
-    {
+        private ?string $trustedSelfHost = null
+    ) {
         $this->client = $client ?? self::defaultClient();
         $this->factory = new Psr17Factory();
-        $this->trustedSelfHost = $trustedSelfHost;
     }
 
     /**
@@ -130,7 +128,7 @@ final class HttpClientService implements ClientInterface
     public static function fetch(string $url, array $getData = [], array $postData = [], string $userAgent = 'Piwigo'): string|false
     {
         $response = self::guardedFetch($url, $getData, $postData, $userAgent);
-        if ($response === null) {
+        if (! $response instanceof \Symfony\Contracts\HttpClient\ResponseInterface) {
             return false;
         }
 
@@ -150,7 +148,7 @@ final class HttpClientService implements ClientInterface
     public static function fetchToFile($fileHandle, string $url, array $getData = [], array $postData = [], string $userAgent = 'Piwigo'): bool
     {
         $response = self::guardedFetch($url, $getData, $postData, $userAgent);
-        if ($response === null) {
+        if (! $response instanceof \Symfony\Contracts\HttpClient\ResponseInterface) {
             return false;
         }
 

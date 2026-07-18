@@ -71,7 +71,8 @@ final class PhotosAddDirectPageRenderer
         if (isset($_GET['batch'])) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(new HtmlService());
-            (new \Piwigo\Validation\InputValidator())->validate('batch', $_GET, false, '/^\d+(,\d+)*$/');
+            new \Piwigo\Validation\InputValidator()
+                ->validate('batch', $_GET, false, '/^\d+(,\d+)*$/');
 
             $query = '
 DELETE FROM ' . Tables::caddie() . '
@@ -96,7 +97,7 @@ DELETE FROM ' . Tables::caddie() . '
             redirect(get_root_url() . 'admin.php?page=batch_manager&filter=prefilter-caddie');
         }
 
-        if ((bool) (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->getParam('promote-mobile-apps', true)) {
+        if ((bool) new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->getParam('promote-mobile-apps', true)) {
             $query = '
 SELECT registration_date
   FROM ' . Tables::userInfos() . '
@@ -150,7 +151,8 @@ SELECT COUNT(*)
 
         // If URL parameter isn't empty
         if ($display_formats && (bool) $_GET['formats']) {
-            (new \Piwigo\Validation\InputValidator())->validate('formats', $_GET, false, ValidationPattern::ID, false);
+            new \Piwigo\Validation\InputValidator()
+                ->validate('formats', $_GET, false, ValidationPattern::ID, false);
 
             $formats_id_param = $_GET['formats'];
             $imageConn = DbConnection::build();
@@ -309,7 +311,8 @@ SELECT *
         $template->assign(
             [
                 'form_action' => self::baseUrl(),
-                'pwg_token' => (new \Piwigo\Csrf\CsrfService())->getToken(),
+                'pwg_token' => new \Piwigo\Csrf\CsrfService()
+                    ->getToken(),
             ]
         );
 
@@ -335,7 +338,8 @@ SELECT *
 
         if (isset($_GET['album'])) {
             // set the category from get url or ...
-            (new \Piwigo\Validation\InputValidator())->validate('album', $_GET, false, ValidationPattern::ID);
+            new \Piwigo\Validation\InputValidator()
+                ->validate('album', $_GET, false, ValidationPattern::ID);
 
             // check_input_parameter() above validated (or killed the request via
             // fatal_error()) that a non-empty $_GET['album'] matches ValidationPattern::ID

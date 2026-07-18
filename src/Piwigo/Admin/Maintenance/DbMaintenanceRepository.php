@@ -15,10 +15,10 @@ use Piwigo\Db\Tables;
  * MaintenanceActionDispatcher's own docblock for why that duplication is
  * consolidated there, not just here).
  */
-final class DbMaintenanceRepository
+final readonly class DbMaintenanceRepository
 {
     public function __construct(
-        private readonly Connection $conn,
+        private Connection $conn,
     ) {}
 
     public function purgeHistoryDetail(): void

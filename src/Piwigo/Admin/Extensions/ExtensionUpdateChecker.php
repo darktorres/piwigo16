@@ -23,11 +23,11 @@ use Piwigo\Http\HttpClientService;
  * PemCatalog::getLocallyMergedExtensions()'s docblock. This class only
  * covers the former.
  */
-final class ExtensionUpdateChecker
+final readonly class ExtensionUpdateChecker
 {
     public function __construct(
-        private readonly ExtensionScanner $scanner,
-        private readonly PemCatalog $pemCatalog,
+        private ExtensionScanner $scanner,
+        private PemCatalog $pemCatalog,
     ) {}
 
     /**

@@ -62,7 +62,7 @@ final class Lang
 
     private static function fatalError(string $msg): never
     {
-        if (self::$htmlRenderer !== null) {
+        if (self::$htmlRenderer instanceof \Piwigo\Core\HtmlRenderingInterface) {
             self::$htmlRenderer->fatalError($msg);
         }
         throw new \RuntimeException($msg);
@@ -310,7 +310,7 @@ final class Lang
 
         if ($po_file !== null && is_readable($po_file)) {
             $translations = Translator::get()->load($selected_language, $po_file);
-            $load_lang_info = $translations !== null ? self::poHeadersToLangInfo($translations->getHeaders()) : [];
+            $load_lang_info = $translations instanceof \Gettext\Translations ? self::poHeadersToLangInfo($translations->getHeaders()) : [];
 
             if (isset($options['force_fallback']) && is_string($options['force_fallback'])
               && $options['force_fallback'] !== $selected_language) {
@@ -497,7 +497,8 @@ final class Lang
 
         $f = PHPWG_ROOT_PATH . 'language/' . $lang_id . '/common.po';
         if (is_readable($f)) {
-            $parent = (new PoLoader())->loadFile($f)
+            $parent = new PoLoader()
+                ->loadFile($f)
                 ->getHeaders()
                 ->get('X-Piwigo-Parent');
             return ($parent !== null && $parent !== '') ? $parent : null;

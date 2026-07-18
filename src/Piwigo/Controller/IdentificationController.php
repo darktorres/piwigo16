@@ -67,7 +67,8 @@ final class IdentificationController implements ControllerInterface
         if (isset($_POST['redirect']) && is_string($_POST['redirect'])) {
             $_POST['redirect_decoded'] = urldecode($_POST['redirect']);
         }
-        (new \Piwigo\Validation\InputValidator())->validate('redirect_decoded', $_POST, false, '{^' . preg_quote(new CookieService()->cookiePath()) . '}');
+        new \Piwigo\Validation\InputValidator()
+            ->validate('redirect_decoded', $_POST, false, '{^' . preg_quote(new CookieService()->cookiePath()) . '}');
 
         $redirect_to = '';
         $get_redirect = $_GET['redirect'] ?? null;
@@ -94,14 +95,14 @@ final class IdentificationController implements ControllerInterface
                 $password = is_string($_POST['password'] ?? null) ? $_POST['password'] : null;
 
                 if (\Piwigo\Config\Config::insensitiveCaseLogon()) {
-                    $username = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->searchCaseUsername($username);
+                    $username = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->searchCaseUsername($username);
                 }
 
                 $redirect_to = is_string($_POST['redirect'] ?? null) ? urldecode($_POST['redirect']) : '';
                 $remember_me_raw = $_POST['remember_me'] ?? null;
                 $remember_me = isset($_POST['remember_me']) && is_scalar($remember_me_raw) && (string) $remember_me_raw === '1';
 
-                if ((new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->tryLogUser($username, $password, $remember_me)) {
+                if (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->tryLogUser($username, $password, $remember_me)) {
                     // security (level 2): force redirect within Piwigo. We
                     // redirect to absolute root url, including http(s)://,
                     // without the cookie path, concatenated with

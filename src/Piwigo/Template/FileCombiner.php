@@ -204,9 +204,9 @@ final class FileCombiner
      *
      * @param string $js file content
      */
-    private static function process_js($js): string
+    private static function process_js(?string $js): string
     {
-        return trim($js, " \t\r\n;") . ";\n";
+        return trim((string) $js, " \t\r\n;") . ";\n";
     }
 
     /**
@@ -217,7 +217,7 @@ final class FileCombiner
      * @param string $header CSS directives that must appear first in
      *                       the minified file.
      */
-    private static function process_css($css, $file, string &$header): string
+    private static function process_css(?string $css, $file, string &$header): string
     {
         $css = self::process_css_rec($css, dirname($file), $header);
         $css = trigger_change('combined_css_postfilter', $css);
@@ -233,16 +233,15 @@ final class FileCombiner
      * @param string $css file content
      * @param string $header CSS directives that must appear first in
      *                       the minified file.
-     * @return string
      */
-    private static function process_css_rec($css, string $dir, &$header)
+    private static function process_css_rec(?string $css, string $dir, &$header): ?string
     {
         /** @var string */
         static $PATTERN_URL = "#url\(\s*['|\"]{0,1}(.*?)['|\"]{0,1}\s*\)#";
         /** @var string */
         static $PATTERN_IMPORT = "#@import\s*['|\"]{0,1}(.*?)['|\"]{0,1};#";
 
-        if ((bool) preg_match_all($PATTERN_URL, $css, $matches, PREG_SET_ORDER)) {
+        if ((bool) preg_match_all($PATTERN_URL, $css ?? '', $matches, PREG_SET_ORDER)) {
             $search = $replace = [];
             foreach ($matches as $match) {
                 if (! url_is_remote($match[1]) && $match[1][0] != '/' && ! str_contains($match[1], 'data:image/')) {
@@ -251,10 +250,10 @@ final class FileCombiner
                     $replace[] = 'url(' . embellish_url(get_absolute_root_url(false) . $relative) . ')';
                 }
             }
-            $css = str_replace($search, $replace, $css);
+            $css = str_replace($search, $replace, $css ?? '');
         }
 
-        if ((bool) preg_match_all($PATTERN_IMPORT, $css, $matches, PREG_SET_ORDER)) {
+        if ((bool) preg_match_all($PATTERN_IMPORT, $css ?? '', $matches, PREG_SET_ORDER)) {
             $search = $replace = [];
 
             foreach ($matches as $match) {
@@ -276,10 +275,10 @@ final class FileCombiner
                     if ($sub_css === false) {
                         throw new \Exception('process_css_rec(): unable to read ' . $dir . "/{$match[1]}");
                     }
-                    $replace[] = self::process_css_rec($sub_css, dirname($dir . "/{$match[1]}"), $header);
+                    $replace[] = self::process_css_rec($sub_css, dirname($dir . "/{$match[1]}"), $header) ?? '';
                 }
             }
-            $css = str_replace($search, $replace, $css);
+            $css = str_replace($search, $replace, $css ?? '');
         }
         return $css;
     }

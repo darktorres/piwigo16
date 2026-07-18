@@ -42,10 +42,10 @@ use Piwigo\Db\Tables;
  * StatsPageRenderer instead (same shape as every other admin renderer's
  * own tabsheet construction, see P23 sub-batch 8b-2).
  */
-final class HistoryService
+final readonly class HistoryService
 {
     public function __construct(
-        private readonly HistoryRepository $repo,
+        private HistoryRepository $repo,
     ) {}
 
     /**
@@ -474,7 +474,7 @@ INSERT INTO ' . Tables::history() . '
 
         $deleteBeforeId = min($searchMin);
 
-        $logger->debug(__CLASS__ . '::autopurge, ' . implode('/', array_map(strval(...), $searchMin)));
+        $logger->debug(self::class . '::autopurge, ' . implode('/', array_map(strval(...), $searchMin)));
 
         $this->repo->deleteBefore($deleteBeforeId);
     }

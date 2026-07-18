@@ -65,7 +65,7 @@ final class FilesystemHelper
 
     private static function fatalError(string $msg): never
     {
-        if (self::$htmlRenderer !== null) {
+        if (self::$htmlRenderer instanceof \Piwigo\Core\HtmlRenderingInterface) {
             self::$htmlRenderer->fatalError($msg);
         }
         throw new \RuntimeException($msg);

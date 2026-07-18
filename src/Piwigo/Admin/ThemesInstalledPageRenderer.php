@@ -92,7 +92,7 @@ final class ThemesInstalledPageRenderer
         $fs_themes = $extension_scanner->scan(ExtensionType::Theme);
         uasort($fs_themes, new HtmlService()->nameCompare(...));
 
-        $default_theme = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->getDefaultTheme();
+        $default_theme = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getDefaultTheme();
 
         $db_theme_ids = array_keys($extension_repository->findAll(ExtensionType::Theme));
 
@@ -171,7 +171,8 @@ final class ThemesInstalledPageRenderer
 
         usort($tpl_themes, $this->compareThemes(...));
 
-        $pwg_token = (new \Piwigo\Csrf\CsrfService())->getToken();
+        $pwg_token = new \Piwigo\Csrf\CsrfService()
+            ->getToken();
 
         $template->assign(
             [

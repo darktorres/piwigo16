@@ -158,7 +158,7 @@ final class LanguagesNewPageRenderer
 
                 $url_auto_install = htmlentities($base_url)
                   . '&amp;revision=' . $revision_id
-                  . '&amp;pwg_token=' . (new \Piwigo\Csrf\CsrfService())->getToken()
+                  . '&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken()
                 ;
 
                 $template->append('languages', [

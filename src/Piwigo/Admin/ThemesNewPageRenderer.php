@@ -89,7 +89,7 @@ final class ThemesNewPageRenderer
                     $installed_theme_id = $_GET['theme_id'] ?? null;
                     $installed_fs_theme = is_string($installed_theme_id) ? ($extension_scanner->scan(ExtensionType::Theme)[$installed_theme_id] ?? null) : null;
                     if ($installed_fs_theme !== null) {
-                        (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('system', ActivitySystem::Theme, 'install', [
+                        new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('system', ActivitySystem::Theme, 'install', [
                             'theme_id' => $installed_theme_id,
                             'version' => $installed_fs_theme['version'],
                         ]);
@@ -153,7 +153,7 @@ final class ThemesNewPageRenderer
                 $url_auto_install = htmlentities($base_url)
                   . '&amp;revision=' . $revision_id
                   . '&amp;extension=' . $extension_id
-                  . '&amp;pwg_token=' . (new \Piwigo\Csrf\CsrfService())->getToken()
+                  . '&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken()
                 ;
 
                 $template->append(
@@ -170,7 +170,7 @@ final class ThemesNewPageRenderer
             $this->pushPageMessage('errors', l10n('Can\'t connect to server.'), $page);
         }
 
-        $admin_theme_pref = (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->getParam('admin_theme', 'clear');
+        $admin_theme_pref = new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->getParam('admin_theme', 'clear');
         $template->assign(
             'default_screenshot',
             get_root_url() . 'admin/themes/' . (is_string($admin_theme_pref) ? $admin_theme_pref : 'clear') . '/images/missing_screenshot.png'

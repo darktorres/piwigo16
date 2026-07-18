@@ -28,11 +28,11 @@ use Piwigo\Permission\PermissionService;
  * staying outside the DB-query-builder split. Single real caller:
  * `SectionPopulator::populate()`.
  */
-final class CalendarRenderer
+final readonly class CalendarRenderer
 {
     public function __construct(
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly TemplateInterface $template,
+        private HtmlRenderingInterface $htmlRenderer,
+        private TemplateInterface $template,
     ) {}
 
     public function render(): void

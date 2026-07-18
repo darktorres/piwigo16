@@ -41,7 +41,7 @@ function findMissingOverrideAttributes(string $fqcn): array
         }
 
         foreach ($reflection->getInterfaceNames() as $interfaceName) {
-            if ((new ReflectionClass($interfaceName))->hasMethod($method->getName())) {
+            if (new ReflectionClass($interfaceName)->hasMethod($method->getName())) {
                 $overridesSomething = true;
             }
         }
@@ -443,7 +443,7 @@ test('RequestFactory, ResponseEmitter, CommonBootstrap, and the P9 middleware/pi
         Piwigo\Bootstrap\RequestPipeline::class,
     ] as $fqcn) {
         $mutableProperties = array_filter(
-            (new ReflectionClass($fqcn))->getProperties(),
+            new ReflectionClass($fqcn)->getProperties(),
             static fn (ReflectionProperty $property): bool => ! $property->isReadOnly()
         );
         $violations = array_map(

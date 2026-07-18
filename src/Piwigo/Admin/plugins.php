@@ -298,7 +298,7 @@ DELETE FROM ' . Tables::plugins() . '
                 break;
         }
 
-        (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('system', ActivitySystem::Plugin, $action, $activity_details);
+        new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('system', ActivitySystem::Plugin, $action, $activity_details);
 
         return $errors;
     }

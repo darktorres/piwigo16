@@ -40,11 +40,11 @@ use Piwigo\Html\HtmlService;
  *   public entry point, so the delete-disabled guard below -- which only
  *   ever gates a top-level 'delete' call -- doesn't re-run pointlessly).
  */
-final class ExtensionLifecycle
+final readonly class ExtensionLifecycle
 {
     public function __construct(
-        private readonly ExtensionRepository $repo,
-        private readonly PemCatalog $pemCatalog,
+        private ExtensionRepository $repo,
+        private PemCatalog $pemCatalog,
     ) {}
 
     /**
@@ -125,7 +125,8 @@ final class ExtensionLifecycle
                 $errors[0] = $extraction['status'];
 
                 if ($errors[0] === 'ok') {
-                    $newFsEntry = (new ExtensionScanner())->scan(ExtensionType::Plugin)[$id] ?? null;
+                    $newFsEntry = new ExtensionScanner()
+                        ->scan(ExtensionType::Plugin)[$id] ?? null;
                     $newVersion = $this->stringOrDefault($newFsEntry['version'] ?? null, '0');
                     $activityDetails['to_version'] = $newVersion;
 
@@ -220,7 +221,7 @@ final class ExtensionLifecycle
                 break;
         }
 
-        (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('system', ActivitySystem::Plugin, $action, $activityDetails);
+        new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('system', ActivitySystem::Plugin, $action, $activityDetails);
 
         return array_values($errors);
     }
@@ -284,7 +285,7 @@ final class ExtensionLifecycle
                     break;
                 }
 
-                if ($id === (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->getDefaultTheme()) {
+                if ($id === new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getDefaultTheme()) {
                     $newTheme = $this->pickReplacementDefaultTheme($id);
                     $this->setDefaultTheme($newTheme);
                 }
@@ -325,7 +326,7 @@ final class ExtensionLifecycle
                 break;
         }
 
-        (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('system', ActivitySystem::Theme, $action, $activityDetails);
+        new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('system', ActivitySystem::Theme, $action, $activityDetails);
 
         return array_values($errors);
     }
@@ -357,7 +358,7 @@ final class ExtensionLifecycle
                     $errors[] = 'CANNOT DEACTIVATE - LANGUAGE IS ALREADY DEACTIVATED';
                     break;
                 }
-                if ($id === (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->getDefaultLanguage()) {
+                if ($id === new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getDefaultLanguage()) {
                     $errors[] = 'CANNOT DEACTIVATE - LANGUAGE IS DEFAULT LANGUAGE';
                     break;
                 }
@@ -375,7 +376,7 @@ final class ExtensionLifecycle
                     break;
                 }
 
-                $this->repo->reassignUsersFromLanguage($id, (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->getDefaultLanguage());
+                $this->repo->reassignUsersFromLanguage($id, new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getDefaultLanguage());
 
                 FilesystemHelper::deltree(PHPWG_ROOT_PATH . 'language/' . $id, PHPWG_ROOT_PATH . 'language/trash');
                 break;
@@ -403,7 +404,8 @@ final class ExtensionLifecycle
             return null;
         }
 
-        $parentFsEntry = (new ExtensionScanner())->scan(ExtensionType::Theme)[$parent] ?? null;
+        $parentFsEntry = new ExtensionScanner()
+            ->scan(ExtensionType::Theme)[$parent] ?? null;
         if ($parentFsEntry === null) {
             return $parent;
         }
@@ -420,7 +422,7 @@ final class ExtensionLifecycle
     public function getChildrenThemes(string $themeId): array
     {
         $children = [];
-        foreach ((new ExtensionScanner())->scan(ExtensionType::Theme) as $candidate) {
+        foreach (new ExtensionScanner()->scan(ExtensionType::Theme) as $candidate) {
             if (($candidate['parent'] ?? null) === $themeId) {
                 $name = $candidate['name'] ?? null;
                 if (is_string($name)) {
@@ -440,7 +442,7 @@ final class ExtensionLifecycle
     private function setDefaultTheme(string $themeId): void
     {
 
-        $defaultTheme = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->getDefaultTheme();
+        $defaultTheme = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getDefaultTheme();
         $userIds = $this->repo->findUserIdsByTheme($defaultTheme);
 
         $defaultUserId = \Piwigo\Config\Config::defaultUserId();

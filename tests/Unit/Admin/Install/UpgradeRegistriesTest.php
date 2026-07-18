@@ -57,6 +57,6 @@ test('VersionUpgradeRegistry carries the full 1.3.0..15.0.0 chain and every step
 });
 
 test('unknown ids and releases are rejected', function (): void {
-    expect(fn () => DbPatchRegistry::make('60'))->toThrow(InvalidArgumentException::class)
-        ->and(fn () => VersionUpgradeRegistry::make('16.0.0'))->toThrow(InvalidArgumentException::class);
+    expect(fn (): \Piwigo\Admin\Install\DbPatch\DbPatchInterface => DbPatchRegistry::make('60'))->toThrow(InvalidArgumentException::class)
+        ->and(fn (): \Piwigo\Admin\Install\VersionUpgrade\VersionUpgradeInterface => VersionUpgradeRegistry::make('16.0.0'))->toThrow(InvalidArgumentException::class);
 });

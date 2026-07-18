@@ -177,7 +177,8 @@ final class ThemesStandardPagesPageRenderer
         }
 
         // We want to now if any themes use standard pages and which ones
-        $fs_themes = (new ExtensionScanner())->scan(ExtensionType::Theme);
+        $fs_themes = new ExtensionScanner()
+            ->scan(ExtensionType::Theme);
 
         $is_standard_pages_used = false;
         $standard_pages_used_by = [];
@@ -204,7 +205,8 @@ final class ThemesStandardPagesPageRenderer
                 'is_standard_pages_used' => $is_standard_pages_used,
                 'standard_pages_used_by' => $standard_pages_used_by,
                 'std_pgs_selected_logo_path' => \Piwigo\Config\ConfigDb::confGetParam('standard_pages_selected_logo_path', null),
-                'PWG_TOKEN' => (new \Piwigo\Csrf\CsrfService())->getToken(),
+                'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
+                    ->getToken(),
             ]
         );
 

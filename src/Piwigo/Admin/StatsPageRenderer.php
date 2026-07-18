@@ -346,12 +346,12 @@ ORDER BY
         $limit = count($data);
         $result = [];
 
-        if ($firstDate === null) {
+        if (! $firstDate instanceof \DateTime) {
             $date = self::getDateObject($data[count($data) - 1]);
         } else {
             $date = $firstDate;
         }
-        if ($lastDate === null) {
+        if (! $lastDate instanceof \DateTime) {
             $date_end = self::getDateObject($data[0]);
         } else {
             $date_end = $lastDate;

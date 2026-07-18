@@ -96,14 +96,14 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.getVersion',
-            [PwgCore::class, 'getVersion'],
+            PwgCore::getVersion(...),
             null,
             'Returns the Piwigo version.'
         );
 
         $service->addMethod(
             'pwg.getInfos',
-            [PwgCore::class, 'getInfos'],
+            PwgCore::getInfos(...),
             null,
             'Returns general informations.',
             options: [
@@ -113,7 +113,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.getCacheSize',
-            [PwgCore::class, 'getCacheSize'],
+            PwgCore::getCacheSize(...),
             null,
             'Returns general informations.',
             options: [
@@ -123,7 +123,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.activity.getList',
-            [PwgCore::class, 'getActivityList'],
+            PwgCore::getActivityList(...),
             [
                 'page' => [
                     'default' => null,
@@ -180,7 +180,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.caddie.add',
-            [PwgCore::class, 'caddieAdd'],
+            PwgCore::caddieAdd(...),
             [
                 'image_id' => [
                     'flags' => WsParamFlag::FORCE_ARRAY,
@@ -195,7 +195,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.categories.getImages',
-            [PwgCategories::class, 'getImages'],
+            PwgCategories::getImages(...),
             array_merge([
                 'cat_id' => [
                     'default' => null,
@@ -227,7 +227,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.categories.getList',
-            [PwgCategories::class, 'getList'],
+            PwgCategories::getList(...),
             [
                 'cat_id' => [
                     'default' => null,
@@ -268,7 +268,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.getMissingDerivatives',
-            [PwgCore::class, 'getMissingDerivatives'],
+            PwgCore::getMissingDerivatives(...),
             array_merge([
                 'types' => [
                     'default' => null,
@@ -297,7 +297,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.addComment',
-            [PwgImages::class, 'addComment'],
+            PwgImages::addComment(...),
             [
                 'image_id' => [
                     'type' => WsParamType::ID,
@@ -316,7 +316,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.getInfo',
-            [PwgImages::class, 'getInfo'],
+            PwgImages::getInfo(...),
             [
                 'image_id' => [
                     'type' => WsParamType::ID,
@@ -336,7 +336,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.rate',
-            [PwgImages::class, 'rate'],
+            PwgImages::rate(...),
             [
                 'image_id' => [
                     'type' => WsParamType::ID,
@@ -350,7 +350,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.search',
-            [PwgImages::class, 'search'],
+            PwgImages::search(...),
             array_merge([
                 'query' => [],
                 'per_page' => [
@@ -372,7 +372,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.setPrivacyLevel',
-            [PwgImages::class, 'setPrivacyLevel'],
+            PwgImages::setPrivacyLevel(...),
             [
                 'image_id' => [
                     'flags' => WsParamFlag::FORCE_ARRAY,
@@ -392,7 +392,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.formats.searchImage',
-            [PwgImages::class, 'formatsSearchImage'],
+            PwgImages::formatsSearchImage(...),
             [
                 'filename_list' => [],
             ],
@@ -405,7 +405,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.formats.delete',
-            [PwgImages::class, 'formatsDelete'],
+            PwgImages::formatsDelete(...),
             [
                 'format_id' => [
                     'type' => WsParamType::ID,
@@ -423,7 +423,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.setRank',
-            [PwgImages::class, 'setRank'],
+            PwgImages::setRank(...),
             [
                 'image_id' => [
                     'type' => WsParamType::ID,
@@ -451,7 +451,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.setCategory',
-            [PwgImages::class, 'setCategory'],
+            PwgImages::setCategory(...),
             [
                 'image_id' => [
                     'flags' => WsParamFlag::FORCE_ARRAY,
@@ -475,7 +475,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.rates.delete',
-            [PwgCore::class, 'ratesDelete'],
+            PwgCore::ratesDelete(...),
             [
                 'user_id' => [
                     'type' => WsParamType::ID,
@@ -497,14 +497,14 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.session.getStatus',
-            [PwgCore::class, 'sessionGetStatus'],
+            PwgCore::sessionGetStatus(...),
             null,
             'Gets information about the current session. Also provides a token useable with admin methods.'
         );
 
         $service->addMethod(
             'pwg.session.login',
-            [PwgCore::class, 'sessionLogin'],
+            PwgCore::sessionLogin(...),
             [
                 'username' => [],
                 'password' => [
@@ -519,14 +519,14 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.session.logout',
-            [PwgCore::class, 'sessionLogout'],
+            PwgCore::sessionLogout(...),
             null,
             'Ends the current session.'
         );
 
         $service->addMethod(
             'pwg.tags.getList',
-            [PwgTags::class, 'getList'],
+            PwgTags::getList(...),
             [
                 'sort_by_counter' => [
                     'default' => false,
@@ -538,7 +538,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.tags.getImages',
-            [PwgTags::class, 'getImages'],
+            PwgTags::getImages(...),
             array_merge([
                 'tag_id' => [
                     'default' => null,
@@ -576,7 +576,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.addChunk',
-            [PwgImages::class, 'addChunk'],
+            PwgImages::addChunk(...),
             [
                 'data' => [],
                 'original_sum' => [],
@@ -595,7 +595,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.addFile',
-            [PwgImages::class, 'addFile'],
+            PwgImages::addFile(...),
             [
                 'image_id' => [
                     'type' => WsParamType::ID,
@@ -615,7 +615,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.add',
-            [PwgImages::class, 'add'],
+            PwgImages::add(...),
             [
                 'thumbnail_sum' => [
                     'default' => null,
@@ -672,7 +672,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.addSimple',
-            [PwgImages::class, 'addSimple'],
+            PwgImages::addSimple(...),
             [
                 'category' => [
                     'default' => null,
@@ -714,7 +714,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.upload',
-            [PwgImages::class, 'upload'],
+            PwgImages::upload(...),
             [
                 'name' => [
                     'default' => null,
@@ -752,7 +752,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.uploadAsync',
-            [PwgImages::class, 'uploadAsync'],
+            PwgImages::uploadAsync(...),
             [
                 'username' => [
                     'flags' => WsParamFlag::OPTIONAL,
@@ -815,7 +815,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.delete',
-            [PwgImages::class, 'delete'],
+            PwgImages::delete(...),
             [
                 'image_id' => [
                     'flags' => WsParamFlag::ACCEPT_ARRAY,
@@ -831,7 +831,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.setMd5sum',
-            [PwgImages::class, 'setMd5sum'],
+            PwgImages::setMd5sum(...),
             [
                 'block_size' => [
                     'default' => \Piwigo\Config\Config::checksumComputeBlocksize(),
@@ -848,7 +848,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.syncMetadata',
-            [PwgImages::class, 'syncMetadata'],
+            PwgImages::syncMetadata(...),
             [
                 'image_id' => [
                     'flags' => WsParamFlag::ACCEPT_ARRAY,
@@ -865,7 +865,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.deleteOrphans',
-            [PwgImages::class, 'deleteOrphans'],
+            PwgImages::deleteOrphans(...),
             [
                 'block_size' => [
                     'default' => 1000,
@@ -882,7 +882,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.categories.calculateOrphans',
-            [PwgCategories::class, 'calculateOrphans'],
+            PwgCategories::calculateOrphans(...),
             [
                 'category_id' => [
                     'type' => WsParamType::ID,
@@ -897,7 +897,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.categories.getAdminList',
-            [PwgCategories::class, 'getAdminList'],
+            PwgCategories::getAdminList(...),
             [
                 'cat_id' => [
                     'default' => null,
@@ -926,7 +926,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.categories.add',
-            [PwgCategories::class, 'add'],
+            PwgCategories::add(...),
             [
                 'name' => [],
                 'parent' => [
@@ -964,7 +964,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.categories.delete',
-            [PwgCategories::class, 'delete'],
+            PwgCategories::delete(...),
             [
                 'category_id' => [
                     'flags' => WsParamFlag::ACCEPT_ARRAY,
@@ -985,7 +985,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.categories.move',
-            [PwgCategories::class, 'move'],
+            PwgCategories::move(...),
             [
                 'category_id' => [
                     'flags' => WsParamFlag::ACCEPT_ARRAY,
@@ -1005,7 +1005,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.categories.setRepresentative',
-            [PwgCategories::class, 'setRepresentative'],
+            PwgCategories::setRepresentative(...),
             [
                 'category_id' => [
                     'type' => WsParamType::ID,
@@ -1023,7 +1023,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.categories.deleteRepresentative',
-            [PwgCategories::class, 'deleteRepresentative'],
+            PwgCategories::deleteRepresentative(...),
             [
                 'category_id' => [
                     'type' => WsParamType::ID,
@@ -1038,7 +1038,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.categories.refreshRepresentative',
-            [PwgCategories::class, 'refreshRepresentative'],
+            PwgCategories::refreshRepresentative(...),
             [
                 'category_id' => [
                     'type' => WsParamType::ID,
@@ -1053,7 +1053,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.tags.getAdminList',
-            [PwgTags::class, 'getAdminList'],
+            PwgTags::getAdminList(...),
             null,
             '<b>Admin only.</b>',
             options: [
@@ -1063,7 +1063,7 @@ final class WsDefaultMethods
 
         $service->addMethod( // TODO: create multiple tags
             'pwg.tags.add',
-            [PwgTags::class, 'add'],
+            PwgTags::add(...),
             [
                 'name' => [],
             ],
@@ -1075,7 +1075,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.tags.delete',
-            [PwgTags::class, 'delete'],
+            PwgTags::delete(...),
             [
                 'tag_id' => [
                     'type' => WsParamType::ID,
@@ -1091,7 +1091,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.tags.rename',
-            [PwgTags::class, 'rename'],
+            PwgTags::rename(...),
             [
                 'tag_id' => [
                     'type' => WsParamType::ID,
@@ -1107,7 +1107,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.tags.duplicate',
-            [PwgTags::class, 'duplicate'],
+            PwgTags::duplicate(...),
             [
                 'tag_id' => [
                     'type' => WsParamType::ID,
@@ -1124,7 +1124,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.tags.merge',
-            [PwgTags::class, 'merge'],
+            PwgTags::merge(...),
             [
                 'destination_tag_id' => [
                     'type' => WsParamType::ID,
@@ -1145,7 +1145,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.exist',
-            [PwgImages::class, 'exist'],
+            PwgImages::exist(...),
             [
                 'md5sum_list' => [
                     'default' => null,
@@ -1163,7 +1163,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.checkFiles',
-            [PwgImages::class, 'checkFiles'],
+            PwgImages::checkFiles(...),
             [
                 'image_id' => [
                     'type' => WsParamType::ID,
@@ -1187,7 +1187,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.checkUpload',
-            [PwgImages::class, 'checkUpload'],
+            PwgImages::checkUpload(...),
             null,
             'Checks if Piwigo is ready for upload.',
             options: [
@@ -1197,7 +1197,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.emptyLounge',
-            [PwgImages::class, 'emptyLounge'],
+            PwgImages::emptyLounge(...),
             null,
             'Empty lounge, where images may be waiting before taking off.',
             options: [
@@ -1207,7 +1207,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.uploadCompleted',
-            [PwgImages::class, 'uploadCompleted'],
+            PwgImages::uploadCompleted(...),
             [
                 'image_id' => [
                     'default' => null,
@@ -1226,7 +1226,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.setInfo',
-            [PwgImages::class, 'setInfo'],
+            PwgImages::setInfo(...),
             [
                 'image_id' => [
                     'type' => WsParamType::ID,
@@ -1282,7 +1282,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.categories.setInfo',
-            [PwgCategories::class, 'setInfo'],
+            PwgCategories::setInfo(...),
             [
                 'category_id' => [
                     'type' => WsParamType::ID,
@@ -1327,7 +1327,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.categories.setRank',
-            [PwgCategories::class, 'setRank'],
+            PwgCategories::setRank(...),
             [
                 'category_id' => [
                     'type' => WsParamType::ID,
@@ -1352,7 +1352,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.plugins.getList',
-            [PwgExtensions::class, 'pluginsGetList'],
+            PwgExtensions::pluginsGetList(...),
             null,
             'Gets the list of plugins with id, name, version, state and description.',
             options: [
@@ -1362,7 +1362,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.plugins.performAction',
-            [PwgExtensions::class, 'pluginsPerformAction'],
+            PwgExtensions::pluginsPerformAction(...),
             [
                 'action' => [
                     'info' => 'install, activate, deactivate, uninstall, delete',
@@ -1378,7 +1378,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.themes.performAction',
-            [PwgExtensions::class, 'themesPerformAction'],
+            PwgExtensions::themesPerformAction(...),
             [
                 'action' => [
                     'info' => 'activate, deactivate, delete, set_default',
@@ -1394,7 +1394,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.extensions.update',
-            [PwgExtensions::class, 'update'],
+            PwgExtensions::update(...),
             [
                 'type' => [
                     'info' => 'plugins, languages, themes',
@@ -1411,7 +1411,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.extensions.ignoreUpdate',
-            [PwgExtensions::class, 'ignoreUpdate'],
+            PwgExtensions::ignoreUpdate(...),
             [
                 'type' => [
                     'default' => null,
@@ -1435,7 +1435,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.extensions.checkUpdates',
-            [PwgExtensions::class, 'checkUpdates'],
+            PwgExtensions::checkUpdates(...),
             null,
             'Checks if piwigo or extensions are up to date.',
             options: [
@@ -1445,7 +1445,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.groups.getList',
-            [PwgGroups::class, 'getList'],
+            PwgGroups::getList(...),
             [
                 'group_id' => [
                     'flags' => WsParamFlag::OPTIONAL | WsParamFlag::FORCE_ARRAY,
@@ -1477,7 +1477,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.groups.add',
-            [PwgGroups::class, 'add'],
+            PwgGroups::add(...),
             [
                 'name' => [],
                 'is_default' => [
@@ -1494,7 +1494,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.groups.delete',
-            [PwgGroups::class, 'delete'],
+            PwgGroups::delete(...),
             [
                 'group_id' => [
                     'flags' => WsParamFlag::FORCE_ARRAY,
@@ -1511,7 +1511,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.groups.setInfo',
-            [PwgGroups::class, 'setInfo'],
+            PwgGroups::setInfo(...),
             [
                 'group_id' => [
                     'type' => WsParamType::ID,
@@ -1534,7 +1534,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.groups.addUser',
-            [PwgGroups::class, 'addUser'],
+            PwgGroups::addUser(...),
             [
                 'group_id' => [
                     'type' => WsParamType::ID,
@@ -1554,7 +1554,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.groups.deleteUser',
-            [PwgGroups::class, 'deleteUser'],
+            PwgGroups::deleteUser(...),
             [
                 'group_id' => [
                     'type' => WsParamType::ID,
@@ -1574,7 +1574,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.groups.merge',
-            [PwgGroups::class, 'merge'],
+            PwgGroups::merge(...),
             [
                 'destination_group_id' => [
                     'type' => WsParamType::ID,
@@ -1595,7 +1595,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.groups.duplicate',
-            [PwgGroups::class, 'duplicate'],
+            PwgGroups::duplicate(...),
             [
                 'group_id' => [
                     'type' => WsParamType::ID,
@@ -1612,7 +1612,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.users.getList',
-            [PwgUsers::class, 'getList'],
+            PwgUsers::getList(...),
             [
                 'user_id' => [
                     'flags' => WsParamFlag::OPTIONAL | WsParamFlag::FORCE_ARRAY,
@@ -1686,7 +1686,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.users.add',
-            [PwgUsers::class, 'add'],
+            PwgUsers::add(...),
             [
                 'username' => [],
                 'auto_password' => [
@@ -1718,7 +1718,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.users.delete',
-            [PwgUsers::class, 'delete'],
+            PwgUsers::delete(...),
             [
                 'user_id' => [
                     'flags' => WsParamFlag::FORCE_ARRAY,
@@ -1735,7 +1735,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.users.getAuthKey',
-            [PwgUsers::class, 'getAuthKey'],
+            PwgUsers::getAuthKey(...),
             [
                 'user_id' => [
                     'type' => WsParamType::ID,
@@ -1751,7 +1751,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.users.setInfo',
-            [PwgUsers::class, 'setInfo'],
+            PwgUsers::setInfo(...),
             [
                 'user_id' => [
                     'flags' => WsParamFlag::FORCE_ARRAY,
@@ -1823,7 +1823,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.users.setMyInfo',
-            [PwgUsers::class, 'setMyInfo'],
+            PwgUsers::setMyInfo(...),
             [
                 'email' => [
                     'flags' => WsParamFlag::OPTIONAL,
@@ -1874,7 +1874,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.permissions.getList',
-            [PwgPermissions::class, 'getList'],
+            PwgPermissions::getList(...),
             [
                 'cat_id' => [
                     'flags' => WsParamFlag::FORCE_ARRAY | WsParamFlag::OPTIONAL,
@@ -1898,7 +1898,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.permissions.add',
-            [PwgPermissions::class, 'add'],
+            PwgPermissions::add(...),
             [
                 'cat_id' => [
                     'flags' => WsParamFlag::FORCE_ARRAY,
@@ -1927,7 +1927,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.permissions.remove',
-            [PwgPermissions::class, 'remove'],
+            PwgPermissions::remove(...),
             [
                 'cat_id' => [
                     'flags' => WsParamFlag::FORCE_ARRAY,
@@ -1952,7 +1952,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.users.preferences.set',
-            [PwgUsers::class, 'preferencesSet'],
+            PwgUsers::preferencesSet(...),
             [
                 'param' => [],
                 'value' => [
@@ -1968,7 +1968,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.users.favorites.add',
-            [PwgUsers::class, 'favoritesAdd'],
+            PwgUsers::favoritesAdd(...),
             [
                 'image_id' => [
                     'type' => WsParamType::ID,
@@ -1979,7 +1979,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.users.favorites.remove',
-            [PwgUsers::class, 'favoritesRemove'],
+            PwgUsers::favoritesRemove(...),
             [
                 'image_id' => [
                     'type' => WsParamType::ID,
@@ -1990,7 +1990,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.users.favorites.getList',
-            [PwgUsers::class, 'favoritesGetList'],
+            PwgUsers::favoritesGetList(...),
             [
                 'per_page' => [
                     'default' => 100,
@@ -2011,7 +2011,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.history.log',
-            [PwgCore::class, 'historyLog'],
+            PwgCore::historyLog(...),
             [
                 'image_id' => [
                     'type' => WsParamType::ID,
@@ -2036,7 +2036,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.history.search',
-            [PwgCore::class, 'historySearch'],
+            PwgCore::historySearch(...),
             [
                 'start' => [
                     'default' => null,
@@ -2085,7 +2085,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.filteredSearch.create',
-            [PwgImages::class, 'filteredSearchCreate'],
+            PwgImages::filteredSearchCreate(...),
             [
                 'search_id' => [
                     'flags' => WsParamFlag::OPTIONAL,
@@ -2182,7 +2182,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.users.generatePasswordLink',
-            [PwgUsers::class, 'generatePasswordLink'],
+            PwgUsers::generatePasswordLink(...),
             [
                 'user_id' => [
                     'type' => WsParamType::ID,
@@ -2204,7 +2204,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.users.setMainUser',
-            [PwgUsers::class, 'setMainUser'],
+            PwgUsers::setMainUser(...),
             [
                 'user_id' => [
                     'type' => WsParamType::ID,
@@ -2222,7 +2222,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.users.api_key.create',
-            [PwgUsers::class, 'createApiKey'],
+            PwgUsers::createApiKey(...),
             [
                 'key_name' => [],
                 'duration' => [
@@ -2240,7 +2240,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.users.api_key.revoke',
-            [PwgUsers::class, 'revokeApiKey'],
+            PwgUsers::revokeApiKey(...),
             [
                 'pkid' => [],
                 'pwg_token' => [],
@@ -2254,7 +2254,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.users.api_key.edit',
-            [PwgUsers::class, 'editApiKey'],
+            PwgUsers::editApiKey(...),
             [
                 'key_name' => [],
                 'pkid' => [],
@@ -2269,7 +2269,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.users.api_key.get',
-            [PwgUsers::class, 'getApiKey'],
+            PwgUsers::getApiKey(...),
             [
                 'pwg_token' => [],
             ],
@@ -2282,7 +2282,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.userComments.getList',
-            [PwgComments::class, 'getList'],
+            PwgComments::getList(...),
             [
                 'status' => [
                     'default' => 'all',
@@ -2324,7 +2324,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.userComments.delete',
-            [PwgComments::class, 'delete'],
+            PwgComments::delete(...),
             [
                 'comment_id' => [
                     'flags' => WsParamFlag::FORCE_ARRAY,
@@ -2341,7 +2341,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.userComments.validate',
-            [PwgComments::class, 'validate'],
+            PwgComments::validate(...),
             [
                 'comment_id' => [
                     'flags' => WsParamFlag::FORCE_ARRAY,

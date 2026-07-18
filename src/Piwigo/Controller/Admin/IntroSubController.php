@@ -98,7 +98,7 @@ final class IntroSubController implements AdminSubControllerInterface
         // +-----------------------------------------------------------------------+
 
         if (isset($_GET['action']) and $_GET['action'] == 'hide_newsletter_subscription') {
-            (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->updateParam('show_newsletter_subscription', 'false');
+            new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->updateParam('show_newsletter_subscription', 'false');
             exit();
         }
 
@@ -170,7 +170,7 @@ SELECT COUNT(*)
             'intro' => 'intro.tpl',
         ]);
 
-        if (\Piwigo\Config\Config::showNewsletterSubscription() and (bool) (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->getParam('show_newsletter_subscription', true)) {
+        if (\Piwigo\Config\Config::showNewsletterSubscription() and (bool) new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->getParam('show_newsletter_subscription', true)) {
             $query = '
   SELECT registration_date
     FROM ' . Tables::userInfos() . '
@@ -244,7 +244,7 @@ SELECT COUNT(*)
                 'NB_VIEWS' => AdminUiHelper::numberFormatHumanReadable($nb_views),
                 'NB_PLUGINS' => count($pwg_loaded_plugins),
                 'STORAGE_USED' => str_replace(' ', '&nbsp;', l10n('%sGB', number_format($du_gb, $du_decimals))),
-                'U_QUICK_SYNC' => PHPWG_ROOT_PATH . 'admin.php?page=site_update&amp;site=1&amp;quick_sync=1&amp;pwg_token=' . (new \Piwigo\Csrf\CsrfService())->getToken(),
+                'U_QUICK_SYNC' => PHPWG_ROOT_PATH . 'admin.php?page=site_update&amp;site=1&amp;quick_sync=1&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken(),
                 'CHECK_FOR_UPDATES' => \Piwigo\Config\Config::dashboardCheckForUpdates(),
             ]
         );

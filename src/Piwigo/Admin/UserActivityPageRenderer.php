@@ -37,9 +37,12 @@ final class UserActivityPageRenderer
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
-        (new \Piwigo\Validation\InputValidator())->validate('photo', $_GET, false, ValidationPattern::ID);
-        (new \Piwigo\Validation\InputValidator())->validate('album', $_GET, false, ValidationPattern::ID);
-        (new \Piwigo\Validation\InputValidator())->validate('group', $_GET, false, ValidationPattern::ID);
+        new \Piwigo\Validation\InputValidator()
+            ->validate('photo', $_GET, false, ValidationPattern::ID);
+        new \Piwigo\Validation\InputValidator()
+            ->validate('album', $_GET, false, ValidationPattern::ID);
+        new \Piwigo\Validation\InputValidator()
+            ->validate('group', $_GET, false, ValidationPattern::ID);
 
         $page['tab'] = 'user_activity';
         // The inline tabsheet block below (formerly admin/include/
@@ -107,7 +110,8 @@ final class UserActivityPageRenderer
         $template->assign('ADMIN_PAGE_TITLE', l10n('Users'));
 
         $template->assign([
-            'PWG_TOKEN' => (new \Piwigo\Csrf\CsrfService())->getToken(),
+            'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
+                ->getToken(),
             'INHERIT' => \Piwigo\Config\Config::inheritanceByDefault(),
             'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys(['users']),
         ]);

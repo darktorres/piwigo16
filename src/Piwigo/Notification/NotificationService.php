@@ -19,13 +19,13 @@ use Piwigo\Permission\PermissionService;
  * DerivativeImage::thumb_url()), same "global read inside a service
  * method" precedent as TagService::addLevelToTags().
  */
-final class NotificationService
+final readonly class NotificationService
 {
     public function __construct(
-        private readonly NotificationRepository $repo,
-        private readonly PermissionService $permissionService,
-        private readonly PersistentCache $cache,
-        private readonly HtmlRenderingInterface $htmlRenderer,
+        private NotificationRepository $repo,
+        private PermissionService $permissionService,
+        private PersistentCache $cache,
+        private HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     /**
@@ -41,7 +41,7 @@ final class NotificationService
         ], $prefixCondition, $forceOneCondition);
     }
 
-    private const KNOWN_TYPES = ['new_comments', 'unvalidated_comments', 'new_elements', 'updated_categories', 'new_users'];
+    private const array KNOWN_TYPES = ['new_comments', 'unvalidated_comments', 'new_elements', 'updated_categories', 'new_users'];
 
     /**
      * @return int|list<int>|null null for an unrecognized $type/$action

@@ -38,7 +38,7 @@ final class CurrentTemplate
 
     public static function get(): Template
     {
-        if (self::$instance === null) {
+        if (! self::$instance instanceof \Piwigo\Template\Template) {
             throw new \LogicException('CurrentTemplate not initialised -- call Piwigo\Bootstrap\RequestBootstrap::finalize() first.');
         }
 
@@ -52,7 +52,7 @@ final class CurrentTemplate
 
     public static function isInitialized(): bool
     {
-        return self::$instance !== null;
+        return self::$instance instanceof \Piwigo\Template\Template;
     }
 
     /**

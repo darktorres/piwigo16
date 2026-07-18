@@ -48,7 +48,7 @@ use Piwigo\Lang\Translator;
  * @return string
  */
 if (! function_exists('l10n')) {
-    function l10n($key)
+    function l10n($key): string
     {
         /**
          * @var array<string, mixed>
@@ -95,7 +95,7 @@ if (! function_exists('l10n')) {
  *     passed exactly such a string).
  */
 if (! function_exists('l10n_dec')) {
-    function l10n_dec($singular_key, $plural_key, $decimal): string
+    function l10n_dec(string $singular_key, string $plural_key, $decimal): string
     {
         $n = is_numeric($decimal) ? (int) $decimal : 0;
 

@@ -20,10 +20,10 @@ use Piwigo\Core\Env;
  * caller (dozens of L4Integration/legacy sites) still retargets straight
  * to this class.
  */
-final class ActivityService implements ActivityLoggerInterface
+final readonly class ActivityService implements ActivityLoggerInterface
 {
     public function __construct(
-        private readonly ActivityRepository $repo,
+        private ActivityRepository $repo,
     ) {}
 
     /**

@@ -31,7 +31,8 @@ final class ThemeSubController implements AdminSubControllerInterface
         }
         $theme = $theme_raw;
 
-        $fs_themes = (new ExtensionScanner())->scan(ExtensionType::Theme);
+        $fs_themes = new ExtensionScanner()
+            ->scan(ExtensionType::Theme);
         if (! in_array($theme, array_keys($fs_themes), true)) {
             die('Invalid theme');
         }

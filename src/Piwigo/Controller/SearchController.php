@@ -105,7 +105,7 @@ final class SearchController implements ControllerInterface
         if (\Piwigo\Auth\AccessControl::isAGuest() or \Piwigo\Auth\AccessControl::isGeneric() or ! (bool) $last_filters_conf) {
             $fields = $default_fields;
         } else {
-            $raw_fields = (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->getParam('gallery_search_filters', $default_fields);
+            $raw_fields = new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->getParam('gallery_search_filters', $default_fields);
             $fields = is_array($raw_fields) ? $raw_fields : $default_fields;
         }
 
@@ -125,7 +125,8 @@ final class SearchController implements ControllerInterface
 
         $cat_ids = [];
         if (isset($_GET['cat_id'])) {
-            (new \Piwigo\Validation\InputValidator())->validate('cat_id', $_GET, false, ValidationPattern::ID);
+            new \Piwigo\Validation\InputValidator()
+                ->validate('cat_id', $_GET, false, ValidationPattern::ID);
 
             $cat_id_value = $_GET['cat_id'];
             if (! is_scalar($cat_id_value)) {
@@ -173,7 +174,8 @@ SELECT
         if (count($tagService->getAvailableTags()) > 0) {
             $tag_ids = [];
             if (isset($_GET['tag_id'])) {
-                (new \Piwigo\Validation\InputValidator())->validate('tag_id', $_GET, false, '/^\d+(,\d+)*$/');
+                new \Piwigo\Validation\InputValidator()
+                    ->validate('tag_id', $_GET, false, '/^\d+(,\d+)*$/');
 
                 $tag_id_value = $_GET['tag_id'];
                 if (! is_scalar($tag_id_value)) {
@@ -199,7 +201,7 @@ SELECT
     id
   FROM ' . Tables::images() . ' AS i
     JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
-  ' . (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
+  ' . new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()))->getSqlConditionFandF([
                 'forbidden_categories' => 'category_id',
                 'visible_categories' => 'category_id',
                 'visible_images' => 'id',

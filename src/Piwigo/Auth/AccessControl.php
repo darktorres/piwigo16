@@ -72,7 +72,7 @@ final class AccessControl
     public static function checkStatus(int $accessType, string $userStatus = ''): void
     {
         if (! self::isAuthorizeStatus($accessType, $userStatus)) {
-            if (self::$htmlRenderer !== null) {
+            if (self::$htmlRenderer instanceof \Piwigo\Core\HtmlRenderingInterface) {
                 self::$htmlRenderer->accessDenied();
             }
             throw new \RuntimeException('Access denied');

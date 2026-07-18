@@ -11,10 +11,10 @@ namespace Piwigo\Users;
  * `global $user['preferences']`). Constructor-injects UserRepository,
  * plain constructor injection (same shape as PermalinkService/GroupService).
  */
-final class PreferencesService
+final readonly class PreferencesService
 {
     public function __construct(
-        private readonly UserRepository $repo,
+        private UserRepository $repo,
     ) {}
 
     public function save(): void

@@ -37,13 +37,13 @@ use Piwigo\Permission\PermissionService;
  * explicitly out of scope for this phase (see task #343), too widely used
  * app-wide to safely wrap here.
  */
-final class CommentService
+final readonly class CommentService
 {
     public function __construct(
-        private readonly CommentRepository $repo,
-        private readonly EphemeralKeyService $ephemeralKeys,
-        private readonly MailerInterface $mailer,
-        private readonly HtmlRenderingInterface $htmlRenderer,
+        private CommentRepository $repo,
+        private EphemeralKeyService $ephemeralKeys,
+        private MailerInterface $mailer,
+        private HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     /**

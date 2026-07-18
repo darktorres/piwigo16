@@ -154,8 +154,8 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
         $this->smarty->setCompileDir($compile_dir);
 
         $this->smarty->assign('pwg', new PwgTemplateAdapter());
-        $this->smarty->registerPlugin('modifiercompiler', 'translate', [self::class, 'modcompiler_translate']);
-        $this->smarty->registerPlugin('modifiercompiler', 'translate_dec', [self::class, 'modcompiler_translate_dec']);
+        $this->smarty->registerPlugin('modifiercompiler', 'translate', self::modcompiler_translate(...));
+        $this->smarty->registerPlugin('modifiercompiler', 'translate_dec', self::modcompiler_translate_dec(...));
         $this->smarty->registerPlugin('modifier', 'sprintf', 'sprintf');
         $this->smarty->registerPlugin('modifier', 'urlencode', 'urlencode');
         $this->smarty->registerPlugin('modifier', 'intval', 'intval');
@@ -174,8 +174,8 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
         $this->smarty->registerPlugin('modifier', 'md5', 'md5');
         $this->smarty->registerPlugin('modifier', 'strtolower', 'strtolower');
         $this->smarty->registerPlugin('modifier', 'str_ireplace', 'str_ireplace');
-        $this->smarty->registerPlugin('modifier', 'explode', [self::class, 'mod_explode']);
-        $this->smarty->registerPlugin('modifier', 'ternary', [self::class, 'mod_ternary']);
+        $this->smarty->registerPlugin('modifier', 'explode', self::mod_explode(...));
+        $this->smarty->registerPlugin('modifier', 'ternary', self::mod_ternary(...));
         $this->smarty->registerPlugin('modifier', 'get_extent', $this->get_extent(...));
         $this->smarty->registerPlugin('block', 'html_head', $this->block_html_head(...));
         $this->smarty->registerPlugin('block', 'html_style', $this->block_html_style(...));
@@ -185,14 +185,14 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
         $this->smarty->registerPlugin('function', 'define_derivative', $this->func_define_derivative(...));
         $this->smarty->registerPlugin('compiler', 'get_combined_css', $this->func_get_combined_css(...));
         $this->smarty->registerPlugin('block', 'footer_script', $this->block_footer_script(...));
-        $this->smarty->registerFilter('pre', [self::class, 'prefilter_white_space']);
+        $this->smarty->registerFilter('pre', self::prefilter_white_space(...));
         $this->smarty->registerPlugin('modifier', 'url_is_remote', 'url_is_remote');
         $this->smarty->registerPlugin('modifier', 'is_null', 'is_null');
         $this->smarty->registerPlugin('modifier', 'l10n', 'l10n');
         $this->smarty->registerPlugin('modifier', 'str_replace', 'str_replace');
-        $this->smarty->registerPlugin('modifier', 'is_admin', [AccessControl::class, 'isAdmin']);
-        $this->smarty->registerPlugin('modifier', 'is_classic_user', [AccessControl::class, 'isClassicUser']);
-        $this->smarty->registerPlugin('modifier', 'get_device', [DeviceHelper::class, 'getDevice']);
+        $this->smarty->registerPlugin('modifier', 'is_admin', AccessControl::isAdmin(...));
+        $this->smarty->registerPlugin('modifier', 'is_classic_user', AccessControl::isClassicUser(...));
+        $this->smarty->registerPlugin('modifier', 'get_device', DeviceHelper::getDevice(...));
         $this->smarty->registerPlugin('modifier', 'is_file', 'is_file');
         $this->smarty->registerPlugin('modifier', 'strpos', 'strpos');
         $this->smarty->registerPlugin('modifier', 'preg_match', 'preg_match');
@@ -201,14 +201,14 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
         $this->smarty->registerPlugin('modifier', 'array_key_exists', 'array_key_exists');
 
         if (\Piwigo\Config\Config::compiledTemplateCacheLanguage()) {
-            $this->smarty->registerFilter('post', [self::class, 'postfilter_language']);
+            $this->smarty->registerFilter('post', self::postfilter_language(...));
         }
 
         $this->smarty->setTemplateDir([]);
         if (! empty($theme)) {
             $this->set_theme($root, $theme, $path);
             if (! defined('IN_ADMIN')) {
-                $this->set_prefilter('header', [self::class, 'prefilter_local_css']);
+                $this->set_prefilter('header', self::prefilter_local_css(...));
             }
         } else {
             $this->set_template_dir($root);

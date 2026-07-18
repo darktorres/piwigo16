@@ -41,7 +41,7 @@ final class SrcImage
 
     private static function fatalError(string $msg): never
     {
-        if (self::$htmlRenderer !== null) {
+        if (self::$htmlRenderer instanceof \Piwigo\Core\HtmlRenderingInterface) {
             self::$htmlRenderer->fatalError($msg);
         }
         throw new \RuntimeException($msg);
@@ -69,7 +69,7 @@ final class SrcImage
 
     private static function themeConf(string $key): string
     {
-        if (self::$themeConfProvider === null) {
+        if (! self::$themeConfProvider instanceof \Piwigo\Core\ThemeConfProviderInterface) {
             throw new \RuntimeException('SrcImage: no theme-conf provider set (Template not constructed yet?)');
         }
 

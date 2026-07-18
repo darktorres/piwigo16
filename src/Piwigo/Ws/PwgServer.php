@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
+use Closure;
 use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\WsError;
 use Piwigo\Core\WsParamFlag;
@@ -29,7 +30,7 @@ class PwgServer
     public ?string $_responseFormat = null;
 
     /**
-     * @var array<string, array{callback: string|array<int, string>, description: string, signature: array<string, array<string, mixed>>, options: array<string, mixed>}>
+     * @var array<string, array{callback: string|array<int, string>|Closure, description: string, signature: array<string, array<string, mixed>>, options: array<string, mixed>}>
      */
     public $_methods = [];
 
@@ -98,11 +99,11 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
         // add reflection methods
         $this->addMethod(
             'reflection.getMethodList',
-            [self::class, 'ws_getMethodList']
+            self::ws_getMethodList(...)
         );
         $this->addMethod(
             'reflection.getMethodDetails',
-            [self::class, 'ws_getMethodDetails'],
+            self::ws_getMethodDetails(...),
             ['methodName']
         );
 
@@ -130,10 +131,9 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
     /**
      * Registers a web service method.
      * @param string $methodName - the name of the method as seen externally
-     * @param string|array<int, string> $callback - a callable (function name,
-     *   or [class, method]); typed as string|array rather than native
-     *   `callable` for parity with every registration's literal
-     *   [ClassName::class, 'method'] array form
+     * @param string|array<int, string>|Closure $callback - a callable
+     *   (function name, [class, method], or a first-class callable
+     *   Closure -- every real registration in ws.php uses the latter)
      * @param array<int, string>|array<string, mixed>|null $params - either a
      *   plain list of allowed parameter names (shorthand, no options) or a map
      *   of allowed parameter names to their options; many real registrations
@@ -153,7 +153,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
      *    @option bool admin_only (optional)
      *    @option bool post_only (optional)
      */
-    public function addMethod(string $methodName, string|array $callback, ?array $params = [], ?string $description = '', array $options = []): void
+    public function addMethod(string $methodName, string|array|Closure $callback, ?array $params = [], ?string $description = '', array $options = []): void
     {
         if (! is_array($params)) {
             $params = [];

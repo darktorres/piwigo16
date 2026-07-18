@@ -26,10 +26,10 @@ use Piwigo\Db\Tables;
  * ExtensionLifecycle/ExtensionUpdateChecker still calling
  * pwg_activity()/conf_update_param().
  */
-final class FilterResolver
+final readonly class FilterResolver
 {
     public function __construct(
-        private readonly Connection $conn,
+        private Connection $conn,
     ) {}
 
     /**

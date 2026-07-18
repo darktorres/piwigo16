@@ -119,7 +119,8 @@ final class FilterPanelRenderer
                 'selection' => $collection,
                 'all_elements' => $catElementsId,
                 'START' => $pageStart,
-                'PWG_TOKEN' => (new \Piwigo\Csrf\CsrfService())->getToken(),
+                'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
+                    ->getToken(),
                 'U_DISPLAY' => $baseUrl . get_query_string_diff(['display']),
                 'F_ACTION' => $baseUrl . get_query_string_diff(['cat', 'start', 'tag', 'filter']),
                 'ADMIN_PAGE_TITLE' => l10n('Batch Manager'),

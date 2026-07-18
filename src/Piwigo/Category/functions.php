@@ -55,10 +55,11 @@ use Piwigo\Permission\PermissionService;
  * @return list<int> array_values() below always reindexes the result
  */
 if (! function_exists('get_subcat_ids')) {
-    function get_subcat_ids($ids): array
+    function get_subcat_ids(array $ids): array
     {
         $conn = DbConnection::build();
 
+        /** @var array<int|string> $ids */
         return new CategoryService(
             new CategoryRepository($conn),
             new PermissionService(new PermissionRepository($conn), new GroupRepository($conn))

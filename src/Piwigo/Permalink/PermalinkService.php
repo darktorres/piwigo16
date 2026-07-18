@@ -18,10 +18,10 @@ namespace Piwigo\Permalink;
  * dependencies) -- that shape belongs to P21/P22 (controller migration),
  * not this phase's scope.
  */
-final class PermalinkService
+final readonly class PermalinkService
 {
     public function __construct(
-        private readonly PermalinkRepository $repo,
+        private PermalinkRepository $repo,
     ) {}
 
     /**

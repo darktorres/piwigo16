@@ -22,10 +22,10 @@ use Piwigo\Session\SessionService;
  * Piwigo\Mail\MailService is L3Presentation, this class is
  * L2aCoreDomain).
  */
-final class ApiKeyService
+final readonly class ApiKeyService
 {
     public function __construct(
-        private readonly MailerInterface $mailer,
+        private MailerInterface $mailer,
     ) {}
 
     /**
@@ -72,9 +72,8 @@ SELECT
 
     /**
      * @since 16
-     * @return string|true
      */
-    public function revoke(int $userId, string $pkid)
+    public function revoke(int $userId, string $pkid): string|true
     {
         $query = '
 SELECT
@@ -108,9 +107,8 @@ SELECT
 
     /**
      * @since 16
-     * @return string|true
      */
-    public function edit(int $userId, string $pkid, ?string $apiName)
+    public function edit(int $userId, string $pkid, ?string $apiName): string|true
     {
         $query = '
 SELECT

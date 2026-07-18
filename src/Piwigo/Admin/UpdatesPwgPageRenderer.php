@@ -66,11 +66,13 @@ final class UpdatesPwgPageRenderer
             ]);
             // Remove optional ? on [a-z]? since it will only be available on piwigo 16.3
             // Docker images started to use letter suffix in 16.2
-            (new \Piwigo\Validation\InputValidator())->validate('to', $_GET, false, '/^\d+\.\d+\.\d+[a-z]?$/');
+            new \Piwigo\Validation\InputValidator()
+                ->validate('to', $_GET, false, '/^\d+\.\d+\.\d+[a-z]?$/');
             $get_to = $_GET['to'] ?? null;
             $upgrade_to = is_string($get_to) ? (preg_replace('/[a-z]$/', '', $get_to) ?? '') : '';
         } else {
-            (new \Piwigo\Validation\InputValidator())->validate('to', $_GET, false, '/^\d+\.\d+\.\d+$/');
+            new \Piwigo\Validation\InputValidator()
+                ->validate('to', $_GET, false, '/^\d+\.\d+\.\d+$/');
             $get_to = $_GET['to'] ?? '';
             $upgrade_to = is_string($get_to) ? $get_to : '';
         }
@@ -158,7 +160,8 @@ final class UpdatesPwgPageRenderer
                 'STEP' => $step,
                 'PIWIGO_CURRENT_VERSION' => $page['updated_version'] ?? AppInfo::VERSION,
                 'UPGRADE_TO' => $upgrade_to,
-                'PWG_TOKEN' => (new \Piwigo\Csrf\CsrfService())->getToken(),
+                'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
+                    ->getToken(),
             ]
         );
 

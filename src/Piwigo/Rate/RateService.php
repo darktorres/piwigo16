@@ -20,11 +20,11 @@ use Piwigo\Core\AccessLevel;
  * did -- the entire access-level-check family is explicitly out of scope
  * for this phase (see task #343).
  */
-final class RateService
+final readonly class RateService
 {
     public function __construct(
-        private readonly RateRepository $repo,
-        private readonly CookieService $cookies,
+        private RateRepository $repo,
+        private CookieService $cookies,
     ) {}
 
     /**

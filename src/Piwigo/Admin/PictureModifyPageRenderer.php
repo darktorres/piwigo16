@@ -63,9 +63,12 @@ final class PictureModifyPageRenderer
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
-        (new \Piwigo\Validation\InputValidator())->validate('image_id', $_GET, false, ValidationPattern::ID);
-        (new \Piwigo\Validation\InputValidator())->validate('level', $_POST, false, '/^\d+$/');
-        (new \Piwigo\Validation\InputValidator())->validate('date_creation', $_POST, false, '/^\d\d\d\d-\d\d-\d\d( \d\d:\d\d:\d\d)?$/');
+        new \Piwigo\Validation\InputValidator()
+            ->validate('image_id', $_GET, false, ValidationPattern::ID);
+        new \Piwigo\Validation\InputValidator()
+            ->validate('level', $_POST, false, '/^\d+$/');
+        new \Piwigo\Validation\InputValidator()
+            ->validate('date_creation', $_POST, false, '/^\d\d\d\d-\d\d-\d\d( \d\d:\d\d:\d\d)?$/');
 
         // check_input_parameter() only validates the raw $_GET value against
         // ValidationPattern::ID (or dies); it does not narrow $_GET's type for PHPStan, so
@@ -113,7 +116,7 @@ SELECT id
             // 2. else use the first reachable linked category
             // 3. redirect to gallery root
 
-            if ((bool) ($custom_context = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->getEditContext($image_id))) {
+            if ((bool) ($custom_context = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getEditContext($image_id))) {
                 // considering we have a context available, we fake one to build the url
                 // and we replace it with the context found in the session for this image_id
                 redirect(str_replace('list/1,2', $custom_context, make_index_url([
@@ -202,7 +205,8 @@ SELECT id
             if (! isset($_POST['associate'])) {
                 $_POST['associate'] = [];
             }
-            (new \Piwigo\Validation\InputValidator())->validate('associate', $_POST, true, ValidationPattern::ID);
+            new \Piwigo\Validation\InputValidator()
+                ->validate('associate', $_POST, true, ValidationPattern::ID);
 
             $associate_categories = [];
             if (is_array($_POST['associate'])) {
@@ -220,7 +224,8 @@ SELECT id
             if (! isset($_POST['represent'])) {
                 $_POST['represent'] = [];
             }
-            (new \Piwigo\Validation\InputValidator())->validate('represent', $_POST, true, ValidationPattern::ID);
+            new \Piwigo\Validation\InputValidator()
+                ->validate('represent', $_POST, true, ValidationPattern::ID);
 
             $represent_categories = [];
             if (is_array($_POST['represent'])) {
@@ -258,7 +263,7 @@ UPDATE ' . Tables::categories() . '
                 ]
             );
 
-            (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('photo', $image_id, 'edit');
+            new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('photo', $image_id, 'edit');
 
             // refresh page cache
             $page['image'] = $imageService->getImageInfos($image_id, $htmlRenderer, true);
@@ -328,9 +333,9 @@ SELECT
         $template->assign(
             [
                 'tag_selection' => $tag_selection,
-                'U_DOWNLOAD' => 'action.php?id=' . $image_id . '&amp;part=e&amp;pwg_token=' . (new \Piwigo\Csrf\CsrfService())->getToken(),
-                'U_SYNC' => $admin_url_start . '&amp;sync_metadata=1&amp;pwg_token=' . (new \Piwigo\Csrf\CsrfService())->getToken(),
-                'U_DELETE' => $admin_url_start . '&amp;delete=1&amp;pwg_token=' . (new \Piwigo\Csrf\CsrfService())->getToken(),
+                'U_DOWNLOAD' => 'action.php?id=' . $image_id . '&amp;part=e&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken(),
+                'U_SYNC' => $admin_url_start . '&amp;sync_metadata=1&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken(),
+                'U_DELETE' => $admin_url_start . '&amp;delete=1&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken(),
                 'U_HISTORY' => get_root_url() . 'admin.php?page=history&amp;filter_image_id=' . $image_id,
                 'U_ACTIVITY' => get_root_url() . 'admin.php?page=user_activity&photo=' . $image_id,
 
@@ -494,7 +499,7 @@ SELECT category_id, uppercats, dir
             $image_level = (int) $page['image']['level'];
         }
 
-        if ((bool) ($custom_context = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->getEditContext($image_id))) {
+        if ((bool) ($custom_context = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getEditContext($image_id))) {
             $template->assign('U_JUMPTO', make_picture_url([
                 'image_id' => $image_id,
             ]) . '/' . $custom_context);
@@ -514,7 +519,7 @@ SELECT category_id
                 $authorized_category_ids,
                 explode(
                     ',',
-                    (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getForbiddenCategories(\Piwigo\Users\CurrentUser::get()->id, \Piwigo\Users\CurrentUser::get()->status->value)
+                    new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()))->getForbiddenCategories(\Piwigo\Users\CurrentUser::get()->id, \Piwigo\Users\CurrentUser::get()->status->value)
                 )
             );
 
@@ -549,7 +554,8 @@ SELECT id
             'represented_albums' => $represented_albums,
             'STORAGE_ALBUM' => $storage_category_id,
             'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys(['tags', 'categories']),
-            'PWG_TOKEN' => (new \Piwigo\Csrf\CsrfService())->getToken(),
+            'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
+                ->getToken(),
         ]);
 
         trigger_notify('loc_end_picture_modify');

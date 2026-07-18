@@ -54,8 +54,8 @@ SELECT
         if (count($history_lines) > 0) {
             $last_summarized = $history_lines[0];
 
-            [$year, $month, $day] = explode('-', $last_summarized['date']);
-            [$hour] = explode(':', $last_summarized['time']);
+            [$year, $month, $day] = explode('-', (string) $last_summarized['date']);
+            [$hour] = explode(':', (string) $last_summarized['time']);
 
             MysqliDb::singleUpdate(
                 Tables::historySummary(),

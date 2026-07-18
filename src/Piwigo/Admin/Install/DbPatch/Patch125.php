@@ -164,7 +164,7 @@ SELECT
     /**
      * Former local replace_hotlinks() function.
      */
-    private function replaceHotlinks($string)
+    private function replaceHotlinks(array|string $string): string|array|null
     {
         /** @var array<string, mixed> $conf */
         global $conf;

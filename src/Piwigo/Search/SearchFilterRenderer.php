@@ -33,12 +33,12 @@ use Piwigo\Tag\TagService;
  * it's used identically throughout many other already-shipped files in this
  * codebase, unrelated to this phase's actual goal (deleting `include/`).
  */
-final class SearchFilterRenderer
+final readonly class SearchFilterRenderer
 {
     public function __construct(
-        private readonly MailerInterface $mailer,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly TemplateInterface $template,
+        private MailerInterface $mailer,
+        private HtmlRenderingInterface $htmlRenderer,
+        private TemplateInterface $template,
     ) {}
 
     public function render(): void
@@ -118,7 +118,7 @@ final class SearchFilterRenderer
         /** @var array<string, mixed> $searchFields */
         $searchFields = &$mySearch['fields'];
 
-        $page['search_details']['forbidden'] = (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
+        $page['search_details']['forbidden'] = new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()))->getSqlConditionFandF([
             'forbidden_categories' => 'category_id',
             'visible_categories' => 'category_id',
             'visible_images' => 'id',

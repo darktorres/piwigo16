@@ -50,7 +50,7 @@ SELECT user_id, theme
 
         $users = [];
         while ($row = MysqliDb::fetchAssoc($result)) {
-            [$user_template, $user_theme] = explode('/', $row['theme']);
+            [$user_template, $user_theme] = explode('/', (string) $row['theme']);
 
             switch ($user_template) {
                 case 'yoga':

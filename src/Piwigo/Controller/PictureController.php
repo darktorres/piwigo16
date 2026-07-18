@@ -89,7 +89,7 @@ final class PictureController implements ControllerInterface
         global $url_self;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->saveEditContext();
+        new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->saveEditContext();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
@@ -191,7 +191,7 @@ SELECT id, file, level
 SELECT id
   FROM ' . Tables::images() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id=image_id
   WHERE id=' . $image_id
-                      . (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
+                      . new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()))->getSqlConditionFandF([
                           'forbidden_categories' => 'category_id',
                       ], ' AND') . '
   LIMIT 1';
@@ -350,7 +350,7 @@ UPDATE ' . Tables::categories() . '
   WHERE id = ' . $representative_category_id . '
 ;';
                         \Piwigo\Db\MysqliDb::query($query);
-                        (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('album', $representative_category_id, 'edit', [
+                        new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('album', $representative_category_id, 'edit', [
                             'action' => $_GET['action'],
                             'image_id' => $image_id,
                         ]);
@@ -381,7 +381,8 @@ UPDATE ' . Tables::categories() . '
                 case 'edit_comment':
 
                     $commentService = new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService(), new HtmlService());
-                    (new \Piwigo\Validation\InputValidator())->validate('comment_to_edit', $_GET, false, ValidationPattern::ID);
+                    new \Piwigo\Validation\InputValidator()
+                        ->validate('comment_to_edit', $_GET, false, ValidationPattern::ID);
                     // check_input_parameter() validated this against
                     // ValidationPattern::ID (/^\d+$/) above -- it would
                     // have called fatal_error() otherwise.
@@ -456,7 +457,8 @@ UPDATE ' . Tables::categories() . '
 
                     $commentService = new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService(), new HtmlService());
 
-                    (new \Piwigo\Validation\InputValidator())->validate('comment_to_delete', $_GET, false, ValidationPattern::ID);
+                    new \Piwigo\Validation\InputValidator()
+                        ->validate('comment_to_delete', $_GET, false, ValidationPattern::ID);
                     // check_input_parameter() validated this against
                     // ValidationPattern::ID (/^\d+$/) above -- it would
                     // have called fatal_error() otherwise.
@@ -481,7 +483,8 @@ UPDATE ' . Tables::categories() . '
 
                     $commentService = new CommentService(new CommentRepository(DbConnection::build()), new EphemeralKeyService(), new MailService(), new HtmlService());
 
-                    (new \Piwigo\Validation\InputValidator())->validate('comment_to_validate', $_GET, false, ValidationPattern::ID);
+                    new \Piwigo\Validation\InputValidator()
+                        ->validate('comment_to_validate', $_GET, false, ValidationPattern::ID);
                     // check_input_parameter() validated this against
                     // ValidationPattern::ID (/^\d+$/) above -- it would
                     // have called fatal_error() otherwise.
@@ -572,7 +575,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
   FROM ' . Tables::imageCategory() . '
     INNER JOIN ' . Tables::categories() . ' ON category_id = id
   WHERE image_id = ' . $image_id . '
-' . (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
+' . new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()))->getSqlConditionFandF([
                 'forbidden_categories' => 'id',
                 'visible_categories' => 'id',
             ], 'AND') . '
@@ -1252,6 +1255,7 @@ SELECT id, name, permalink
             // (auto-advance meta refresh); same null-unless-numeric narrowing
             // the deleted include/page_header.php seam applied.
             $refresh_str = isset($refresh) && is_numeric($refresh) ? (string) $refresh : null;
+            /** @var string|null $url_link */
             new \Piwigo\Page\PageHeaderRenderer()
                 ->render($title, $refresh_str, $url_link ?? null);
             trigger_notify('loc_end_picture');

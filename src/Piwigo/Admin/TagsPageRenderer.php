@@ -49,7 +49,8 @@ final class TagsPageRenderer
         $template->assign(
             [
                 'F_ACTION' => PHPWG_ROOT_PATH . 'admin.php?page=tags',
-                'PWG_TOKEN' => (new \Piwigo\Csrf\CsrfService())->getToken(),
+                'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
+                    ->getToken(),
             ]
         );
 
@@ -70,7 +71,7 @@ final class TagsPageRenderer
                 count($orphan_tag_names),
                 '<a
       class="icon-eye"
-      data-url="' . get_root_url() . 'admin.php?page=tags&amp;action=delete_orphans&amp;pwg_token=' . (new \Piwigo\Csrf\CsrfService())->getToken() . '">'
+      data-url="' . get_root_url() . 'admin.php?page=tags&amp;action=delete_orphans&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken() . '">'
                 . l10n('Review') . '</a>'
             );
 

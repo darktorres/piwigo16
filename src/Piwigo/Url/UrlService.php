@@ -31,10 +31,10 @@ use Piwigo\Tag\TagService;
  * (Piwigo\Core), same pattern as CategoryService/AuthService/CommentService/
  * UserService's own equivalent treatment.
  */
-final class UrlService
+final readonly class UrlService
 {
     public function __construct(
-        private readonly HtmlRenderingInterface $htmlRenderer,
+        private HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     /**
@@ -318,7 +318,7 @@ final class UrlService
             case 'file':
                 if (isset($params['image_file']) and is_string($params['image_file'])) {
                     $fname_wo_ext = \Piwigo\Core\StringHelper::getFilenameWoExtension($params['image_file']);
-                    if (ord($fname_wo_ext) > ord('9') or ! (bool) preg_match('/^\d+(-|$)/', $fname_wo_ext)) {
+                    if (ord($fname_wo_ext[0]) > ord('9') or ! (bool) preg_match('/^\d+(-|$)/', $fname_wo_ext)) {
                         $url .= $fname_wo_ext;
 
                         break;

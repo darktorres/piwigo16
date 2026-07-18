@@ -402,7 +402,7 @@ REPLACE INTO ' . Tables::plugins() . '
                     $template->assign(
                         [
                             'button_label' => l10n('Discover what\'s new in Piwigo %s', \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION)),
-                            'button_link' => 'admin.php?submited_tour_path=tours/' . $version_ . '&amp;pwg_token=' . (new \Piwigo\Csrf\CsrfService())->getToken(),
+                            'button_link' => 'admin.php?submited_tour_path=tours/' . $version_ . '&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken(),
                         ]
                     );
                 }

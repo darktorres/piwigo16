@@ -43,8 +43,10 @@ final class GroupPermPageRenderer
         if ($_POST !== []) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(new HtmlService());
-            (new \Piwigo\Validation\InputValidator())->validate('cat_true', $_POST, true, ValidationPattern::ID);
-            (new \Piwigo\Validation\InputValidator())->validate('cat_false', $_POST, true, ValidationPattern::ID);
+            new \Piwigo\Validation\InputValidator()
+                ->validate('cat_true', $_POST, true, ValidationPattern::ID);
+            new \Piwigo\Validation\InputValidator()
+                ->validate('cat_false', $_POST, true, ValidationPattern::ID);
         }
 
         // check_input_parameter() above already fatal_error()s out unless
@@ -63,7 +65,8 @@ final class GroupPermPageRenderer
                 ->fatalError('group_id URL parameter is missing');
         }
 
-        (new \Piwigo\Validation\InputValidator())->validate('group_id', $_GET, false, ValidationPattern::ID);
+        new \Piwigo\Validation\InputValidator()
+            ->validate('group_id', $_GET, false, ValidationPattern::ID);
 
         // check_input_parameter() above already fatal_error()s out unless
         // group_id matches ValidationPattern::ID (digits only), but that
@@ -170,7 +173,7 @@ SELECT id,name,uppercats,global_rank
 ;';
         $categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false', new HtmlService(), $template);
 
-        $template->assign('PWG_TOKEN', (new \Piwigo\Csrf\CsrfService())->getToken());
+        $template->assign('PWG_TOKEN', new \Piwigo\Csrf\CsrfService()->getToken());
 
         $template->assign_var_from_handle('DOUBLE_SELECT', 'double_select');
         $template->assign_var_from_handle('ADMIN_CONTENT', 'group_perm');

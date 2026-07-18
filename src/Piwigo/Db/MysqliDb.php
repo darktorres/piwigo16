@@ -55,7 +55,7 @@ final class MysqliDb
 
     private static function fatalError(string $msg): never
     {
-        if (self::$htmlRenderer !== null) {
+        if (self::$htmlRenderer instanceof \Piwigo\Core\HtmlRenderingInterface) {
             self::$htmlRenderer->fatalError($msg);
         }
         throw new \RuntimeException($msg);
@@ -104,7 +104,7 @@ final class MysqliDb
         [$sql_mode_current] = $row;
 
         // remove ONLY_FULL_GROUP_BY from the list
-        $sql_mode_altered = implode(',', array_diff(explode(',', $sql_mode_current), ['ONLY_FULL_GROUP_BY']));
+        $sql_mode_altered = implode(',', array_diff(explode(',', (string) $sql_mode_current), ['ONLY_FULL_GROUP_BY']));
 
         if ($sql_mode_altered != $sql_mode_current) {
             self::query("SET SESSION sql_mode='" . $sql_mode_altered . "'");

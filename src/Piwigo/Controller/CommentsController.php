@@ -172,7 +172,8 @@ final class CommentsController implements ControllerInterface
         // which category to filter on ?
         $cat_param = $_GET['cat'] ?? null;
         if (isset($_GET['cat']) and ! (is_numeric($cat_param) and (int) $cat_param === 0)) {
-            (new \Piwigo\Validation\InputValidator())->validate('cat', $_GET, false, ValidationPattern::ID);
+            new \Piwigo\Validation\InputValidator()
+                ->validate('cat', $_GET, false, ValidationPattern::ID);
 
             $cat_id = $_GET['cat'];
             $cat_id = is_scalar($cat_id) ? (string) $cat_id : '0';
@@ -208,7 +209,8 @@ final class CommentsController implements ControllerInterface
         // admin notification email)
         $comment_id_raw = $_GET['comment_id'] ?? null;
         if (is_scalar($comment_id_raw) && $comment_id_raw !== '' && $comment_id_raw !== '0' && $comment_id_raw !== 0 && $comment_id_raw !== 0.0 && $comment_id_raw !== false) {
-            (new \Piwigo\Validation\InputValidator())->validate('comment_id', $_GET, false, ValidationPattern::ID);
+            new \Piwigo\Validation\InputValidator()
+                ->validate('comment_id', $_GET, false, ValidationPattern::ID);
             // check_input_parameter() validated this against
             // ValidationPattern::ID (/^\d+$/) above -- it would have called
             // fatal_error() otherwise.
@@ -259,7 +261,7 @@ final class CommentsController implements ControllerInterface
             $page['where_clauses'][] = 'validated=\'true\'';
         }
 
-        $page['where_clauses'][] = (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
+        $page['where_clauses'][] = new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()))->getSqlConditionFandF([
             'forbidden_categories' => 'category_id',
             'visible_categories' => 'category_id',
             'visible_images' => 'ic.image_id',
@@ -279,7 +281,8 @@ final class CommentsController implements ControllerInterface
         foreach ($actions as $loop_action) {
             if (isset($_GET[$loop_action])) {
                 $action = $loop_action;
-                (new \Piwigo\Validation\InputValidator())->validate($action, $_GET, false, ValidationPattern::ID);
+                new \Piwigo\Validation\InputValidator()
+                    ->validate($action, $_GET, false, ValidationPattern::ID);
                 // check_input_parameter() validated this against
                 // ValidationPattern::ID (/^\d+$/) above -- it would have
                 // called fatal_error() otherwise.
@@ -414,7 +417,7 @@ final class CommentsController implements ControllerInterface
             $query = '
 SELECT id, name, uppercats, global_rank
   FROM ' . Tables::categories() . '
-' . (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
+' . new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()))->getSqlConditionFandF([
                 'forbidden_categories' => 'id',
                 'visible_categories' => 'id',
             ], 'WHERE') . '
@@ -521,7 +524,8 @@ SELECT SQL_CALC_FOUND_ROWS com.id AS comment_id,
             // rendered (matching the 'all' UX intent).
             $items_number_for_navbar = is_numeric($selected_items_number) ? (int) $selected_items_number : PHP_INT_MAX;
 
-            $navbar = (new \Piwigo\Core\PaginationService())->createNavigationBar($url, $counter, $start, $items_number_for_navbar);
+            $navbar = new \Piwigo\Core\PaginationService()
+                ->createNavigationBar($url, $counter, $start, $items_number_for_navbar);
 
             $template->assign('navbar', $navbar);
 
@@ -612,7 +616,8 @@ SELECT *
                             $url_self,
                             [
                                 'delete' => $comment['comment_id'],
-                                'pwg_token' => (new \Piwigo\Csrf\CsrfService())->getToken(),
+                                'pwg_token' => new \Piwigo\Csrf\CsrfService()
+                                    ->getToken(),
                             ]
                         );
                     }
@@ -627,11 +632,12 @@ SELECT *
 
                         if ($edit_comment !== null and is_numeric($edit_comment) and (string) $comment['comment_id'] === (string) $edit_comment) {
                             $tpl_comment['IN_EDIT'] = true;
-                            $key = (new \Piwigo\Auth\EphemeralKeyService())->generate(2, $image_id);
+                            $key = new \Piwigo\Auth\EphemeralKeyService()
+                                ->generate(2, $image_id);
                             $tpl_comment['KEY'] = $key;
                             $tpl_comment['IMAGE_ID'] = $image_id;
                             $tpl_comment['CONTENT'] = $comment['content'];
-                            $tpl_comment['PWG_TOKEN'] = (new \Piwigo\Csrf\CsrfService())->getToken();
+                            $tpl_comment['PWG_TOKEN'] = new \Piwigo\Csrf\CsrfService()->getToken();
                             $tpl_comment['U_CANCEL'] = $url_self;
                         }
                     }
@@ -642,7 +648,8 @@ SELECT *
                                 $url_self,
                                 [
                                     'validate' => $comment['comment_id'],
-                                    'pwg_token' => (new \Piwigo\Csrf\CsrfService())->getToken(),
+                                    'pwg_token' => new \Piwigo\Csrf\CsrfService()
+                                        ->getToken(),
                                 ]
                             );
                         }

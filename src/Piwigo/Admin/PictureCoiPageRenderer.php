@@ -33,7 +33,8 @@ final class PictureCoiPageRenderer
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
-        (new \Piwigo\Validation\InputValidator())->validate('image_id', $_GET, false, ValidationPattern::ID);
+        new \Piwigo\Validation\InputValidator()
+            ->validate('image_id', $_GET, false, ValidationPattern::ID);
 
         // check_input_parameter() only validates the raw $_GET value against
         // ValidationPattern::ID (or dies); it does not narrow $_GET's type for PHPStan, so

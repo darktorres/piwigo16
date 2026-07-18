@@ -64,7 +64,8 @@ final class ActionController implements ControllerInterface
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
         if (\Piwigo\Config\Config::isFormatsEnabled() and isset($_GET['format'])) {
-            (new \Piwigo\Validation\InputValidator())->validate('format', $_GET, false, ValidationPattern::ID);
+            new \Piwigo\Validation\InputValidator()
+                ->validate('format', $_GET, false, ValidationPattern::ID);
 
             if (! is_numeric($_GET['format'])) {
                 $this->doError(400, 'Invalid request - format');
@@ -110,7 +111,7 @@ SELECT * FROM ' . Tables::images() . '
 
         // special download action for admins
         $is_admin_download = false;
-        if (\Piwigo\Auth\AccessControl::isAdmin() and isset($_GET['pwg_token']) and $_GET['pwg_token'] === (new \Piwigo\Csrf\CsrfService())->getToken()) {
+        if (\Piwigo\Auth\AccessControl::isAdmin() and isset($_GET['pwg_token']) and $_GET['pwg_token'] === new \Piwigo\Csrf\CsrfService()->getToken()) {
             $is_admin_download = true;
             $user['enabled_high'] = true;
             \Piwigo\Users\CurrentUser::set(\Piwigo\Users\CurrentUser::get()->withEnabledHigh(true));
@@ -125,7 +126,7 @@ SELECT id
   FROM ' . Tables::categories() . '
     INNER JOIN ' . Tables::imageCategory() . ' ON category_id = id
   WHERE image_id = ' . $_GET['id'] . '
-' . (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
+' . new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()))->getSqlConditionFandF([
             'forbidden_categories' => 'category_id',
             'forbidden_images' => 'image_id',
         ], '    AND') . '

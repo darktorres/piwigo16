@@ -155,7 +155,8 @@ final class MaintenanceSubController implements AdminSubControllerInterface
         // +-------------------------------------------------------------------+
 
         if (isset($_GET['tab'])) {
-            (new \Piwigo\Validation\InputValidator())->validate('tab', $_GET, false, '/^(actions|env|sys)$/');
+            new \Piwigo\Validation\InputValidator()
+                ->validate('tab', $_GET, false, '/^(actions|env|sys)$/');
             // check_input_parameter() validates the raw value against the pattern
             // above (fatal_error()-ing on anything else) but does not narrow its
             // type for static analysis -- $_GET values are string|array<mixed> at

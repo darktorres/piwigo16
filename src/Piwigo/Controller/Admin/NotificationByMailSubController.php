@@ -114,7 +114,8 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
             )
         );
 
-        (new \Piwigo\Validation\InputValidator())->validate('mode', $_GET, false, '/^(param|subscribe|send)$/');
+        new \Piwigo\Validation\InputValidator()
+            ->validate('mode', $_GET, false, '/^(param|subscribe|send)$/');
 
         // +-----------------------------------------------------------------------+
         // | Initialization                                                        |
@@ -178,9 +179,12 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                     $nbm_send_mail_as = $_POST['nbm_send_mail_as'] ?? null;
                     $_POST['nbm_send_mail_as'] = strip_tags(is_string($nbm_send_mail_as) ? $nbm_send_mail_as : '');
 
-                    (new \Piwigo\Validation\InputValidator())->validate('nbm_send_html_mail', $_POST, false, '/^(true|false)$/');
-                    (new \Piwigo\Validation\InputValidator())->validate('nbm_send_detailed_content', $_POST, false, '/^(true|false)$/');
-                    (new \Piwigo\Validation\InputValidator())->validate('nbm_send_recent_post_dates', $_POST, false, '/^(true|false)$/');
+                    new \Piwigo\Validation\InputValidator()
+                        ->validate('nbm_send_html_mail', $_POST, false, '/^(true|false)$/');
+                    new \Piwigo\Validation\InputValidator()
+                        ->validate('nbm_send_detailed_content', $_POST, false, '/^(true|false)$/');
+                    new \Piwigo\Validation\InputValidator()
+                        ->validate('nbm_send_recent_post_dates', $_POST, false, '/^(true|false)$/');
 
                     $updated_param_count = 0;
                     // Update param
@@ -254,7 +258,8 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
 
         $template->assign(
             [
-                'PWG_TOKEN' => (new \Piwigo\Csrf\CsrfService())->getToken(),
+                'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
+                    ->getToken(),
                 'U_HELP' => get_root_url() . 'admin/popuphelp.php?page=notification_by_mail',
                 'F_ACTION' => $base_url . get_query_string_diff([]),
             ]

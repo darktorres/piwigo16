@@ -37,14 +37,14 @@ use Piwigo\Users\UserService;
  * a `?`-bound parameter can't cleanly compose; `quote()` is the correct,
  * driver-safe way to inline a free-text value into that kind of clause.
  */
-final class SearchService
+final readonly class SearchService
 {
     public function __construct(
-        private readonly SearchRepository $repo,
-        private readonly PermissionService $permissionService,
-        private readonly PersistentFileCache $cache,
-        private readonly MailerInterface $mailer,
-        private readonly HtmlRenderingInterface $htmlRenderer,
+        private SearchRepository $repo,
+        private PermissionService $permissionService,
+        private PersistentFileCache $cache,
+        private MailerInterface $mailer,
+        private HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     public static function getSearchIdPattern(int|string $candidate): ?string
@@ -1321,7 +1321,7 @@ final class SearchService
 
         if (! \Piwigo\Auth\AccessControl::isAGuest() && ! \Piwigo\Auth\AccessControl::isGeneric()) {
             $rulesFields = $rules['fields'] ?? [];
-            (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->updateParam('gallery_search_filters', array_keys(is_array($rulesFields) ? $rulesFields : []));
+            new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->updateParam('gallery_search_filters', array_keys(is_array($rulesFields) ? $rulesFields : []));
         }
 
         $url = make_index_url([

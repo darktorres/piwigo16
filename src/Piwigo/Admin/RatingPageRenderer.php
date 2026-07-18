@@ -25,7 +25,8 @@ final class RatingPageRenderer
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
-        (new \Piwigo\Validation\InputValidator())->validate('display', $_GET, false, ValidationPattern::ID);
+        new \Piwigo\Validation\InputValidator()
+            ->validate('display', $_GET, false, ValidationPattern::ID);
 
         $tabsheet = new tabsheet();
         $tabsheet->set_id('rating');
@@ -87,7 +88,8 @@ final class RatingPageRenderer
 
         $template->assign(
             [
-                'navbar' => (new \Piwigo\Core\PaginationService())->createNavigationBar(PHPWG_ROOT_PATH . 'admin.php' . get_query_string_diff(['start', 'del']), $nb_images, $start, $elements_per_page),
+                'navbar' => new \Piwigo\Core\PaginationService()
+                    ->createNavigationBar(PHPWG_ROOT_PATH . 'admin.php' . get_query_string_diff(['start', 'del']), $nb_images, $start, $elements_per_page),
                 'F_ACTION' => PHPWG_ROOT_PATH . 'admin.php',
                 'DISPLAY' => $elements_per_page,
                 'NB_ELEMENTS' => $nb_elements,

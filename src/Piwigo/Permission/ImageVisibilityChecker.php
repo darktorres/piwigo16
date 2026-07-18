@@ -22,10 +22,10 @@ use Piwigo\Db\MysqliDb;
  * (deliberately NOT PermissionService, whose live recomputation and DI
  * graph are exactly what this fast path must avoid).
  */
-final class ImageVisibilityChecker
+final readonly class ImageVisibilityChecker
 {
     public function __construct(
-        private readonly string $prefixeTable,
+        private string $prefixeTable,
     ) {}
 
     public function isVisibleToUser(int $imageId, int $userId): bool

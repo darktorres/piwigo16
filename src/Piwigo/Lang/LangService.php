@@ -36,10 +36,10 @@ use Piwigo\Db\Tables;
  * authoritative (a "locale" with no matching core directory isn't a real,
  * loadable locale regardless of what a DB row claims).
  */
-final class LangService
+final readonly class LangService
 {
     public function __construct(
-        private readonly Paths $paths,
+        private Paths $paths,
     ) {}
 
     public function t(?string $key, mixed ...$args): string

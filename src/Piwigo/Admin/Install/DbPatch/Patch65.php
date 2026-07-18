@@ -75,7 +75,7 @@ SELECT language, COUNT(user_id) AS count FROM ' . Tables::userInfos() . '
         $result = MysqliDb::query($query);
         while ($row = MysqliDb::fetchAssoc($result)) {
             $language = $row['language'];
-            $lang_def = explode('.', $language);
+            $lang_def = explode('.', (string) $language);
             if (count($lang_def) == 2) {
                 $new_lang = $lang_def[0];
                 $charset = strtolower($lang_def[1]);
@@ -171,7 +171,7 @@ SELECT language FROM ' . Tables::userInfos() . '
             $pwg_charset = 'utf-8';
             $db_charset = 'utf8';
             foreach ($all_tables as $table) {
-                if (! isset($safe_tables[substr($table, strlen($prefixeTable))])) {
+                if (! isset($safe_tables[substr((string) $table, strlen($prefixeTable))])) {
                     $this->changeTableToBlob($table, $all_tables_definition[$table]);
                 }
                 $this->changeTableToCharset($table, $all_tables_definition[$table], 'utf8');
@@ -184,7 +184,7 @@ SELECT language FROM ' . Tables::userInfos() . '
             $pwg_charset = 'utf-8';
             $db_charset = 'utf8';
             foreach ($all_tables as $table) {
-                if (! isset($safe_tables[substr($table, strlen($prefixeTable))])) {
+                if (! isset($safe_tables[substr((string) $table, strlen($prefixeTable))])) {
                     $this->changeTableToBlob($table, $all_tables_definition[$table]);
                     $this->changeTableToCharset($table, $all_tables_definition[$table], 'latin2');
                 }
@@ -250,11 +250,11 @@ define(\'DB_COLLATE\',  \'\');'
             if (! isset($row['Collation']) or $row['Collation'] == 'NULL') {
                 continue;
             }
-            [$type] = explode('(', $row['Type']);
+            [$type] = explode('(', (string) $row['Type']);
             if (! isset($types[$type])) {
                 continue;
             } // no need
-            $binaryType = preg_replace('/' . $type . '/i', $types[$type], $row['Type']);
+            $binaryType = preg_replace('/' . $type . '/i', $types[$type], (string) $row['Type']);
             $changes[] = 'MODIFY COLUMN ' . $row['Field'] . ' ' . $binaryType;
         }
         if (count($changes)) {
@@ -277,19 +277,19 @@ define(\'DB_COLLATE\',  \'\');'
             }
             $query = $row['Field'] . ' ' . $row['Type'];
             $query .= ' CHARACTER SET ' . $db_charset;
-            if (strpos($row['Collation'], '_bin') !== false) {
+            if (str_contains((string) $row['Collation'], '_bin')) {
                 $query .= ' BINARY';
             }
             if ($row['Null'] != 'YES') {
                 $query .= ' NOT NULL';
                 if (isset($row['Default'])) {
-                    $query .= ' DEFAULT "' . addslashes($row['Default']) . '"';
+                    $query .= ' DEFAULT "' . addslashes((string) $row['Default']) . '"';
                 }
             } else {
                 if (! isset($row['Default'])) {
                     $query .= ' DEFAULT NULL';
                 } else {
-                    $query .= ' DEFAULT "' . addslashes($row['Default']) . '"';
+                    $query .= ' DEFAULT "' . addslashes((string) $row['Default']) . '"';
                 }
             }
 

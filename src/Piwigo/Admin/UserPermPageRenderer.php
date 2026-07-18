@@ -48,8 +48,10 @@ final class UserPermPageRenderer
         if ($_POST !== []) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail($htmlRenderer);
-            (new \Piwigo\Validation\InputValidator())->validate('cat_true', $_POST, true, ValidationPattern::ID);
-            (new \Piwigo\Validation\InputValidator())->validate('cat_false', $_POST, true, ValidationPattern::ID);
+            new \Piwigo\Validation\InputValidator()
+                ->validate('cat_true', $_POST, true, ValidationPattern::ID);
+            new \Piwigo\Validation\InputValidator()
+                ->validate('cat_false', $_POST, true, ValidationPattern::ID);
         }
 
         // check_input_parameter() above already fatal_error()s out unless
@@ -96,7 +98,7 @@ final class UserPermPageRenderer
             [
                 'TITLE' => l10n(
                     'Manage permissions for user "%s"',
-                    (new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())), $htmlRenderer))->getUsername($page['user'])
+                    new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())), $htmlRenderer)->getUsername($page['user'])
                 ),
                 'L_CAT_OPTIONS_TRUE' => l10n('Authorized'),
                 'L_CAT_OPTIONS_FALSE' => l10n('Forbidden'),
@@ -177,7 +179,7 @@ SELECT id,name,uppercats,global_rank
 ;';
         $categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false', $htmlRenderer, $template);
 
-        $template->assign('PWG_TOKEN', (new \Piwigo\Csrf\CsrfService())->getToken());
+        $template->assign('PWG_TOKEN', new \Piwigo\Csrf\CsrfService()->getToken());
 
         $template->assign_var_from_handle('DOUBLE_SELECT', 'double_select');
         $template->assign_var_from_handle('ADMIN_CONTENT', 'user_perm');

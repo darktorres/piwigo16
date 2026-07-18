@@ -46,14 +46,14 @@ use Piwigo\Session\SessionService;
  * DB-configured default language without depending on this class
  * directly -- see that interface's own docblock.
  */
-final class UserService implements DefaultLanguageProviderInterface
+final readonly class UserService implements DefaultLanguageProviderInterface
 {
     public function __construct(
-        private readonly UserRepository $repo,
-        private readonly GroupRepository $groupRepo,
-        private readonly MailerInterface $mailer,
-        private readonly ActivityLoggerInterface $activityLogger,
-        private readonly HtmlRenderingInterface $htmlRenderer,
+        private UserRepository $repo,
+        private GroupRepository $groupRepo,
+        private MailerInterface $mailer,
+        private ActivityLoggerInterface $activityLogger,
+        private HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     /**
@@ -261,7 +261,7 @@ final class UserService implements DefaultLanguageProviderInterface
         $user_fields = \Piwigo\Config\Config::userFields();
         $userId = $this->repo->insertUser([
             $user_fields['username'] => $login,
-            $user_fields['password'] => (new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())))->hash($password),
+            $user_fields['password'] => new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build()))->hash($password),
             $user_fields['email'] => $mailAddress,
         ]);
 
@@ -494,7 +494,7 @@ final class UserService implements DefaultLanguageProviderInterface
             Lang::buildArgs('Password: %s', str_repeat('*', $length)),
             Lang::buildArgs('Email: %s', $mailAddress),
             Lang::buildArgs('', ''),
-            Lang::buildArgs('If you think you\'ve received this email in error, please contact us at %s', (new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->getWebmasterMailAddress()),
+            Lang::buildArgs('If you think you\'ve received this email in error, please contact us at %s', new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())->getWebmasterMailAddress()),
         ];
 
         $gallery_title = \Piwigo\Config\Config::galleryTitle();

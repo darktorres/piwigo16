@@ -31,12 +31,12 @@ use Piwigo\Session\SessionService;
  * -- preserved as-is, not the Config::secretKey() bug found and fixed
  * elsewhere this phase (CsrfService/EphemeralKeyService).
  */
-final class AuthService
+final readonly class AuthService
 {
     public function __construct(
-        private readonly AuthRepository $repo,
-        private readonly ActivityLoggerInterface $activityLogger,
-        private readonly HtmlRenderingInterface $htmlRenderer,
+        private AuthRepository $repo,
+        private ActivityLoggerInterface $activityLogger,
+        private HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     /**

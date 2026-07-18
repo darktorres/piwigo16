@@ -344,7 +344,7 @@ WHERE ' . $username_field . '=\'' . $username . '\'
 
         if (! is_array($row) or ! isset($row['password'])) {
             $page['errors'][] = l10n('Invalid password!');
-        } elseif (! (new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())))->verify($password, $row['password'])) {
+        } elseif (! new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build()))->verify($password, $row['password'])) {
             $page['errors'][] = l10n('Invalid password!');
         } elseif ($row['status'] != 'admin' and $row['status'] != 'webmaster') {
             $page['errors'][] = l10n('You do not have access rights to run upgrade');

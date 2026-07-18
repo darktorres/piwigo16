@@ -18,10 +18,10 @@ use Piwigo\Session\SessionService;
  * the one real `pwg_mail()` call site
  * (`do_subscribe_unsubscribe_notification_by_mail()`) stays procedural.
  */
-final class NotificationByMailService
+final readonly class NotificationByMailService
 {
     public function __construct(
-        private readonly NotificationByMailRepository $repo,
+        private NotificationByMailRepository $repo,
     ) {}
 
     public function findAvailableCheckKey(): string

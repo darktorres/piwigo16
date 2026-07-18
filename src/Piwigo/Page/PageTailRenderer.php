@@ -25,10 +25,10 @@ use Piwigo\Core\TelemetrySenderInterface;
  * injection: exactly one construction site, Bootstrap\PageTail::render(),
  * which passes the concrete Piwigo\Admin\PiwigoInfosSender).
  */
-final class PageTailRenderer
+final readonly class PageTailRenderer
 {
     public function __construct(
-        private readonly TelemetrySenderInterface $telemetrySender,
+        private TelemetrySenderInterface $telemetrySender,
     ) {}
 
     public function render(float $startTime): void
@@ -65,7 +65,7 @@ final class PageTailRenderer
         if (! \Piwigo\Auth\AccessControl::isAGuest()) {
             $template->assign(
                 'CONTACT_MAIL',
-                (new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->getWebmasterMailAddress()
+                new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())->getWebmasterMailAddress()
             );
         }
 

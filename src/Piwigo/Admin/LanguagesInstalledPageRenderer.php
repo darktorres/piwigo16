@@ -79,8 +79,10 @@ final class LanguagesInstalledPageRenderer
         $db_languages = $extension_repository->findAll(ExtensionType::Language);
 
         // --------------------------------------------------perform requested actions
-        (new \Piwigo\Validation\InputValidator())->validate('action', $_GET, false, '/^(activate|deactivate|set_default|delete)$/');
-        (new \Piwigo\Validation\InputValidator())->validate('language', $_GET, false, '/^(' . join('|', array_keys($fs_languages)) . ')$/');
+        new \Piwigo\Validation\InputValidator()
+            ->validate('action', $_GET, false, '/^(activate|deactivate|set_default|delete)$/');
+        new \Piwigo\Validation\InputValidator()
+            ->validate('language', $_GET, false, '/^(' . join('|', array_keys($fs_languages)) . ')$/');
 
         if (isset($_GET['action']) and isset($_GET['language']) and \Piwigo\Auth\AccessControl::isWebmaster()) {
             new \Piwigo\Csrf\CsrfService()
@@ -107,14 +109,15 @@ final class LanguagesInstalledPageRenderer
         // +-----------------------------------------------------------------------+
         // |                     start template output                             |
         // +-----------------------------------------------------------------------+
-        $default_language = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->getDefaultLanguage();
+        $default_language = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getDefaultLanguage();
 
         $tpl_languages = [];
 
         foreach ($fs_languages as $language_id => $language) {
             $language['u_action'] = add_url_params($base_url, [
                 'language' => $language_id,
-                'pwg_token' => (new \Piwigo\Csrf\CsrfService())->getToken(),
+                'pwg_token' => new \Piwigo\Csrf\CsrfService()
+                    ->getToken(),
             ]);
 
             if (in_array($language_id, array_keys($db_languages), true)) {
@@ -157,7 +160,7 @@ final class LanguagesInstalledPageRenderer
         );
 
         foreach ($missing_language_ids as $language_id) {
-            $extension_repository->reassignUsersFromLanguage($language_id, (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->getDefaultLanguage());
+            $extension_repository->reassignUsersFromLanguage($language_id, new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getDefaultLanguage());
             $extension_repository->delete(ExtensionType::Language, $language_id);
         }
 

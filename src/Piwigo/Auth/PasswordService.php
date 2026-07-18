@@ -15,10 +15,10 @@ namespace Piwigo\Auth;
  * Constructor-injects PasswordRepository, plain constructor injection (same
  * shape as PermalinkService/GroupService).
  */
-final class PasswordService
+final readonly class PasswordService
 {
     public function __construct(
-        private readonly PasswordRepository $repo,
+        private PasswordRepository $repo,
     ) {}
 
     /**

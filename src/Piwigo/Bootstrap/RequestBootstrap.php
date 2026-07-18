@@ -266,7 +266,7 @@ final class RequestBootstrap
             \Piwigo\Config\ConfigDb::confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
         } elseif (\Piwigo\Config\Config::piwigoInstalledVersion() !== AppInfo::VERSION) {
             // Piwigo has been updated "from filesystem" and not "from the administration UI". We mark it as an autoupdate in the system activities log
-            (new ActivityService(new ActivityRepository(DbConnection::build())))->record('system', ActivitySystem::Core, 'autoupdate', [
+            new ActivityService(new ActivityRepository(DbConnection::build()))->record('system', ActivitySystem::Core, 'autoupdate', [
                 'from_version' => \Piwigo\Config\Config::piwigoInstalledVersion(),
                 'to_version' => AppInfo::VERSION,
             ]);
@@ -454,7 +454,8 @@ final class RequestBootstrap
             $notify_username = is_string($notify_username) ? $notify_username : '';
             $notify_email = $user['email'];
             $notify_email = is_string($notify_email) ? $notify_email : '';
-            $is_mail_send = (new \Piwigo\Auth\ApiKeyService(new MailService()))->notifyExpiration($notify_username, $notify_email, $days_left);
+            $is_mail_send = new \Piwigo\Auth\ApiKeyService(new MailService())
+                ->notifyExpiration($notify_username, $notify_email, $days_left);
 
             if ($is_mail_send) {
                 \Piwigo\Db\MysqliDb::singleUpdate(
@@ -478,7 +479,7 @@ final class RequestBootstrap
             // comes from the equally-untyped global $user['preferences'][$param]),
             // so its return is inferred as mixed; narrow to the same 'clear'
             // fallback already passed as the default value.
-            $admin_theme = (new \Piwigo\Users\PreferencesService(new UserRepository(DbConnection::build())))->getParam('admin_theme', 'clear');
+            $admin_theme = new \Piwigo\Users\PreferencesService(new UserRepository(DbConnection::build()))->getParam('admin_theme', 'clear');
             $admin_theme = is_string($admin_theme) ? $admin_theme : 'clear';
             $template = new Template(PHPWG_ROOT_PATH . 'admin/themes', $admin_theme);
         } else { // Classic template
@@ -610,12 +611,12 @@ final class RequestBootstrap
         // unchanged rather than "fixed", per that same documented decision.
         add_event_handler('upload_image_resize', 'pwg_image_resize');
         add_event_handler('upload_thumbnail_resize', 'pwg_image_resize');
-        add_event_handler('upload_file', [UploadService::class, 'uploadFilePdf']);
-        add_event_handler('upload_file', [UploadService::class, 'uploadFileHeic']);
-        add_event_handler('upload_file', [UploadService::class, 'uploadFileTiff']);
-        add_event_handler('upload_file', [UploadService::class, 'uploadFileVideo']);
-        add_event_handler('upload_file', [UploadService::class, 'uploadFilePsd']);
-        add_event_handler('upload_file', [UploadService::class, 'uploadFileEps']);
+        add_event_handler('upload_file', UploadService::uploadFilePdf(...));
+        add_event_handler('upload_file', UploadService::uploadFileHeic(...));
+        add_event_handler('upload_file', UploadService::uploadFileTiff(...));
+        add_event_handler('upload_file', UploadService::uploadFileVideo(...));
+        add_event_handler('upload_file', UploadService::uploadFilePsd(...));
+        add_event_handler('upload_file', UploadService::uploadFileEps(...));
         if (! empty(\Piwigo\Config\Config::originalUrlProtection())) {
             add_event_handler('get_element_url', new HtmlService()->getElementUrlProtectionHandler(...));
             add_event_handler('get_src_image_url', new HtmlService()->getSrcImageUrlProtectionHandler(...));

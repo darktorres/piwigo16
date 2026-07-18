@@ -274,7 +274,7 @@ class updates
         if ($notify) {
             // send email
             new MailService()
-                ->switchLangTo((new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->getDefaultLanguage());
+                ->switchLangTo(new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getDefaultLanguage());
 
             $content = l10n('Hello,');
             $content .= "\n\n" . l10n(
@@ -705,7 +705,7 @@ class updates
                         FilesystemHelper::deltree(PHPWG_ROOT_PATH . $data_location . 'update');
                         UserCacheInvalidator::invalidate(true);
                         \Piwigo\Config\ConfigDb::confUpdateParam('piwigo_installed_version', $upgrade_to);
-                        (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('system', ActivitySystem::Core, 'update', [
+                        new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('system', ActivitySystem::Core, 'update', [
                             'from_version' => AppInfo::VERSION,
                             'to_version' => $upgrade_to,
                         ]);

@@ -446,7 +446,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                         }
                     }
 
-                    (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('album', $category_ids, 'add', [
+                    new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('album', $category_ids, 'add', [
                         'sync' => true,
                     ]);
 
@@ -814,7 +814,7 @@ SELECT *
                         $insert_links
                     );
 
-                    (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('photo', $caddiables, 'add', [
+                    new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('photo', $caddiables, 'add', [
                         'sync' => true,
                     ]);
 
@@ -1106,7 +1106,8 @@ DELETE
                 'METADATA_LIST' => $used_metadata,
                 'U_HELP' => get_root_url() . 'admin/popuphelp.php?page=synchronize',
                 'ADMIN_PAGE_TITLE' => l10n('Synchronize'),
-                'PWG_TOKEN' => (new \Piwigo\Csrf\CsrfService())->getToken(),
+                'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
+                    ->getToken(),
             ]
         );
 
@@ -1150,7 +1151,8 @@ DELETE
             $cat_selected = [];
 
             if (isset($_GET['cat_id'])) {
-                (new \Piwigo\Validation\InputValidator())->validate('cat_id', $_GET, false, ValidationPattern::ID);
+                new \Piwigo\Validation\InputValidator()
+                    ->validate('cat_id', $_GET, false, ValidationPattern::ID);
 
                 $cat_selected = [$_GET['cat_id']];
                 $tpl_introduction['sync'] = 'files';

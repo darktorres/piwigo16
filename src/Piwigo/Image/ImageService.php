@@ -29,11 +29,11 @@ use Piwigo\Session\SessionService;
  * orphan methods below -- every existing no-arg `new ImageService()` call
  * site needed updating for the new required constructor.
  */
-final class ImageService
+final readonly class ImageService
 {
     public function __construct(
-        private readonly ImageRepository $repo,
-        private readonly ActivityLoggerInterface $activityLogger,
+        private ImageRepository $repo,
+        private ActivityLoggerInterface $activityLogger,
     ) {}
 
     /**

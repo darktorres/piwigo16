@@ -58,12 +58,12 @@ use Piwigo\Users\UserService;
  * behavior-preserving in every case (each conversion accounts for the real
  * runtime type of the value being compared, not a blind ==-to-=== swap).
  */
-final class SectionPopulator
+final readonly class SectionPopulator
 {
     public function __construct(
-        private readonly MailerInterface $mailer,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly TemplateInterface $template,
+        private MailerInterface $mailer,
+        private HtmlRenderingInterface $htmlRenderer,
+        private TemplateInterface $template,
     ) {}
 
     public function populate(): void
@@ -212,7 +212,7 @@ final class SectionPopulator
             }
         }
 
-        $forbidden = (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
+        $forbidden = new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()))->getSqlConditionFandF([
             'forbidden_categories' => 'category_id',
             'visible_categories' => 'category_id',
             'visible_images' => 'id',
@@ -318,7 +318,7 @@ SELECT id
   FROM ' . Tables::categories() . '
   WHERE
     uppercats LIKE \'' . $uppercats . ',%\' '
-    . (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
+    . new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()))->getSqlConditionFandF([
         'forbidden_categories' => 'id',
         'visible_categories' => 'id',
     ], "\n  AND");
@@ -331,7 +331,7 @@ SELECT id
                         }
                         $where_sql = 'category_id IN (' . implode(',', $subcat_ids) . ')';
                         // remove categories from forbidden because just checked above
-                        $forbidden = (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
+                        $forbidden = new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()))->getSqlConditionFandF([
                             'visible_images' => 'id',
                         ], 'AND');
                     } else {
@@ -500,7 +500,7 @@ SELECT image_id
   FROM ' . Tables::favorites() . '
     INNER JOIN ' . Tables::images() . ' ON image_id = id
   WHERE user_id = ' . $user_id_sql . '
-' . (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
+' . new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()))->getSqlConditionFandF([
                         'visible_images' => 'id',
                     ], 'AND') . '
   ' . $order_by . '

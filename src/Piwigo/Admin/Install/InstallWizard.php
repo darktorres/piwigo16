@@ -42,9 +42,9 @@ use Piwigo\Template\Template;
  */
 class InstallWizard
 {
-    private string $confDataLocation;
+    private readonly string $confDataLocation;
 
-    private string $configFile;
+    private readonly string $configFile;
 
     private string $dbhost = 'localhost';
 
@@ -113,7 +113,8 @@ class InstallWizard
         global $template;
 
         // download database config file if exists
-        (new \Piwigo\Validation\InputValidator())->validate('dl', $_GET, false, '/^[a-f0-9]{32}$/');
+        new \Piwigo\Validation\InputValidator()
+            ->validate('dl', $_GET, false, '/^[a-f0-9]{32}$/');
 
         $dl_param = $_GET['dl'] ?? null;
         if (is_string($dl_param) && $dl_param !== '' && file_exists(PHPWG_ROOT_PATH . $this->confDataLocation . 'pwg_' . $dl_param)) {
@@ -253,7 +254,7 @@ class InstallWizard
         if (empty($this->adminMail)) {
             $this->errors[] = l10n('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
         } else {
-            $error_mail_address = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->validateMailAddress(null, $this->adminMail);
+            $error_mail_address = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->validateMailAddress(null, $this->adminMail);
             if (! empty($error_mail_address)) {
                 $this->errors[] = $error_mail_address;
             }
@@ -429,7 +430,7 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
             [
                 'id' => 1, // must be the same value as webmaster_id in config.sql
                 'username' => $this->adminName,
-                'password' => (new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())))->hash($this->adminPass1),
+                'password' => new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build()))->hash($this->adminPass1),
                 'mail_address' => $this->adminMail,
             ],
             [
@@ -439,7 +440,7 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
         ];
         \Piwigo\Db\MysqliDb::massInserts(Tables::users(), array_keys($inserts[0]), $inserts);
 
-        (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->createUserInfos([1, 2], [
+        new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->createUserInfos([1, 2], [
             'language' => $this->language,
         ]);
 
@@ -517,7 +518,7 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
         if ($this->step == 1) {
             $template->assign('install', true);
         } else {
-            (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('system', ActivitySystem::Core, 'install', [
+            new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('system', ActivitySystem::Core, 'install', [
                 'version' => AppInfo::VERSION,
             ]);
             $this->infos[] = l10n('Congratulations, Piwigo installation is completed');
@@ -557,13 +558,13 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
 
             // we don't load user cache because since Piwigo 15.4.0 the calculation of user
             // cache requires $logger which is not instanciated
-            $user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->buildUser(1, false);
+            $user = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->buildUser(1, false);
             // build_user() returns array<string, mixed>; the 'id' key we just set
             // to the literal user id 1 doesn't retain that literal type through
             // the return, so narrow to what log_user() actually accepts.
             $login_user_id = $user['id'];
             $login_user_id = is_int($login_user_id) || (is_string($login_user_id) && is_numeric($login_user_id)) ? $login_user_id : false;
-            (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->logUser($login_user_id, false);
+            new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->logUser($login_user_id, false);
             $_SESSION['connected_with'] = 'pwg_ui';
 
             // Same reason: narrow 'preferences' to array without discarding
@@ -597,7 +598,7 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
             // RequestBootstrap/UserBootstrap's own sync calls.
             \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));
 
-            (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->save();
+            new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->save();
 
             // email notification
             if (isset($_POST['send_credentials_by_mail'])) {

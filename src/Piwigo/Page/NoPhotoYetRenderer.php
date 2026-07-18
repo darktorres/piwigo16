@@ -20,10 +20,10 @@ use Piwigo\Template\Template;
  * same "don't stub what would kill the test process" reasoning as
  * fatal_error().
  */
-final class NoPhotoYetRenderer
+final readonly class NoPhotoYetRenderer
 {
     public function __construct(
-        private readonly Connection $conn,
+        private Connection $conn,
     ) {}
 
     public function render(): void
@@ -45,7 +45,7 @@ final class NoPhotoYetRenderer
                 // make sure we don't use the mobile theme, which is not compatible with
                 // the "no photo yet" feature
                 $user_theme = \Piwigo\Users\CurrentUser::get()->theme;
-                $user_theme = $user_theme !== '' ? $user_theme : (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->getDefaultTheme();
+                $user_theme = $user_theme !== '' ? $user_theme : new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getDefaultTheme();
                 /** @var Template $template */
                 global $template;
                 $template = new Template(PHPWG_ROOT_PATH . 'themes', $user_theme);

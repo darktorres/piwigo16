@@ -65,10 +65,14 @@ final class BatchManagerGlobalPageRenderer
 
         trigger_notify('loc_begin_element_set_global');
 
-        (new \Piwigo\Validation\InputValidator())->validate('del_tags', $_POST, true, ValidationPattern::ID);
-        (new \Piwigo\Validation\InputValidator())->validate('associate', $_POST, true, ValidationPattern::ID);
-        (new \Piwigo\Validation\InputValidator())->validate('move', $_POST, false, ValidationPattern::ID);
-        (new \Piwigo\Validation\InputValidator())->validate('dissociate', $_POST, false, ValidationPattern::ID);
+        new \Piwigo\Validation\InputValidator()
+            ->validate('del_tags', $_POST, true, ValidationPattern::ID);
+        new \Piwigo\Validation\InputValidator()
+            ->validate('associate', $_POST, true, ValidationPattern::ID);
+        new \Piwigo\Validation\InputValidator()
+            ->validate('move', $_POST, false, ValidationPattern::ID);
+        new \Piwigo\Validation\InputValidator()
+            ->validate('dissociate', $_POST, false, ValidationPattern::ID);
 
         // +-------------------------------------------------------------------+
         // |                            current selection                          |
@@ -76,7 +80,8 @@ final class BatchManagerGlobalPageRenderer
 
         $collection = [];
         if (isset($_POST['nb_photos_deleted'])) {
-            (new \Piwigo\Validation\InputValidator())->validate('nb_photos_deleted', $_POST, false, '/^\d+$/');
+            new \Piwigo\Validation\InputValidator()
+                ->validate('nb_photos_deleted', $_POST, false, '/^\d+$/');
 
             // let's fake a collection (we don't know the image_ids so we use 0 as a
             // placeholder, we only care about the number of items here): this
@@ -317,7 +322,7 @@ DELETE
                     $datas
                 );
 
-                (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('photo', $collection, 'edit', [
+                new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('photo', $collection, 'edit', [
                     'action' => 'author',
                 ]);
             }
@@ -345,7 +350,7 @@ DELETE
                     $datas
                 );
 
-                (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('photo', $collection, 'edit', [
+                new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('photo', $collection, 'edit', [
                     'action' => 'title',
                 ]);
             }
@@ -375,7 +380,7 @@ DELETE
                     $datas
                 );
 
-                (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('photo', $collection, 'edit', [
+                new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('photo', $collection, 'edit', [
                     'action' => 'date_creation',
                 ]);
             }
@@ -399,7 +404,7 @@ DELETE
                     $datas
                 );
 
-                (new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())))->record('photo', $collection, 'edit', [
+                new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('photo', $collection, 'edit', [
                     'action' => 'privacy_level',
                 ]);
 
@@ -585,7 +590,8 @@ DELETE
         $nb_thumbs_page = 0;
 
         if (count($cat_elements_id) > 0) {
-            $nav_bar = (new \Piwigo\Core\PaginationService())->createNavigationBar($base_url . get_query_string_diff(['start']), count($cat_elements_id), $page_start, $nb_images);
+            $nav_bar = new \Piwigo\Core\PaginationService()
+                ->createNavigationBar($base_url . get_query_string_diff(['start']), count($cat_elements_id), $page_start, $nb_images);
             $template->assign('navbar', $nav_bar);
 
             $is_category = false;

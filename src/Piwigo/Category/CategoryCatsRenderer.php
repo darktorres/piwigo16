@@ -51,12 +51,12 @@ use Psr\Cache\CacheItemPoolInterface;
  *   `\Piwigo\Config\Config::displayFromto()` query, and all template-variable building are
  *   unaffected and port unchanged.
  */
-final class CategoryCatsRenderer
+final readonly class CategoryCatsRenderer
 {
     public function __construct(
-        private readonly FilterUpdaterInterface $filterUpdater,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly TemplateInterface $template,
+        private FilterUpdaterInterface $filterUpdater,
+        private HtmlRenderingInterface $htmlRenderer,
+        private TemplateInterface $template,
     ) {}
 
     public function render(): void
@@ -200,7 +200,7 @@ SELECT representative_picture_id
   ON id = cat_id and user_id = ' . $userId . '
   WHERE uppercats LIKE \'' . $uppercats . ',%\'
     AND representative_picture_id IS NOT NULL'
-  . (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
+  . new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()))->getSqlConditionFandF([
       'visible_categories' => 'id',
   ], "\n  AND") . '
   ORDER BY ' . \Piwigo\Db\MysqliDb::DB_RANDOM_FUNCTION . '()
@@ -253,7 +253,7 @@ SELECT
   FROM ' . Tables::imageCategory() . '
     INNER JOIN ' . Tables::images() . ' ON image_id = id
   WHERE category_id IN (' . implode(',', $categoryIds) . ')
-' . (new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build())))->getSqlConditionFandF([
+' . new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()))->getSqlConditionFandF([
                     'visible_categories' => 'category_id',
                     'visible_images' => 'id',
                 ], 'AND') . '
@@ -468,7 +468,7 @@ SELECT *
             // navigation bar
             $page['cats_navigation_bar'] = [];
             if ($totalCategories > $nbCategoriesPage) {
-                $page['cats_navigation_bar'] = (new \Piwigo\Core\PaginationService())->createNavigationBar(duplicate_index_url([], ['startcat']), $totalCategories, $startcat, $nbCategoriesPage, true, 'startcat');
+                $page['cats_navigation_bar'] = new \Piwigo\Core\PaginationService()->createNavigationBar(duplicate_index_url([], ['startcat']), $totalCategories, $startcat, $nbCategoriesPage, true, 'startcat');
             }
 
             $template->assign('cats_navbar', $page['cats_navigation_bar']);

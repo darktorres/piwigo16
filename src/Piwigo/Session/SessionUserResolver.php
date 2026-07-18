@@ -20,10 +20,10 @@ namespace Piwigo\Session;
  * $conf (Config::$data isn't authoritatively populated from local config
  * overrides on that path, only from ConfigLoader's own defaults/env).
  */
-final class SessionUserResolver
+final readonly class SessionUserResolver
 {
     public function __construct(
-        private readonly SessionRepository $repo,
+        private SessionRepository $repo,
     ) {}
 
     public function resolveLoggedUserId(string $cookieValue, bool $useIpAddressInKey): ?int

@@ -174,7 +174,7 @@ class LocalSiteReader
      * @param array<string, mixed> $infos
      * @return array<string, mixed>|false
      */
-    public function get_element_metadata($infos): array|false
+    public function get_element_metadata(array $infos): array|false
     {
         return new MetadataService(new MetadataRepository(DbConnection::build()))->getSyncMetadata($infos);
     }

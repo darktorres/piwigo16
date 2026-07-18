@@ -23,10 +23,10 @@ namespace Piwigo\Audit;
  * table and recomputes every hash to confirm nothing has been tampered
  * with.
  */
-final class AuditService
+final readonly class AuditService
 {
     public function __construct(
-        private readonly AuditRepository $repo,
+        private AuditRepository $repo,
     ) {}
 
     /**

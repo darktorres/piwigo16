@@ -41,11 +41,9 @@ use Piwigo\Template\Template;
 
 /**
  * Redirects to the given URL (HTTP method).
- *
- * @param string $url
  */
 if (! function_exists('redirect_http')) {
-    function redirect_http($url): never
+    function redirect_http(string $url): never
     {
         if (ob_get_length() !== false) {
             ob_clean();
@@ -85,7 +83,7 @@ if (! function_exists('redirect_html')) {
         // treat this real fallback path as dead code.
         if (! isset($lang_info) || ! isset($template)) {
             $guest_id = \Piwigo\Config\Config::guestId();
-            $user = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->buildUser($guest_id, true);
+            $user = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->buildUser($guest_id, true);
             \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));
             \Piwigo\Core\Lang::load('common.lang');
             trigger_notify('loading_lang');
@@ -93,10 +91,10 @@ if (! function_exists('redirect_html')) {
                 'no_fallback' => true,
                 'local' => true,
             ]);
-            $template = new Template(PHPWG_ROOT_PATH . 'themes', (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->getDefaultTheme());
+            $template = new Template(PHPWG_ROOT_PATH . 'themes', new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getDefaultTheme());
             \Piwigo\Template\CurrentTemplate::set($template);
         } elseif (defined('IN_ADMIN') and IN_ADMIN) {
-            $template = new Template(PHPWG_ROOT_PATH . 'themes', (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->getDefaultTheme());
+            $template = new Template(PHPWG_ROOT_PATH . 'themes', new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getDefaultTheme());
             \Piwigo\Template\CurrentTemplate::set($template);
         }
 
@@ -104,7 +102,7 @@ if (! function_exists('redirect_html')) {
         // not in admin -- it's the pre-existing bootstrap Template in that case,
         // but re-check for real since that isn't provable here statically.
         if (! ($template instanceof Template)) {
-            $template = new Template(PHPWG_ROOT_PATH . 'themes', (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->getDefaultTheme());
+            $template = new Template(PHPWG_ROOT_PATH . 'themes', new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getDefaultTheme());
             \Piwigo\Template\CurrentTemplate::set($template);
         }
 
@@ -141,18 +139,14 @@ if (! function_exists('redirect_html')) {
 
 /**
  * Redirects to the given URL (automatically choose HTTP or HTML method).
- *
- * @param string $url
- * @param string $msg
- * @param int $refresh_time
  */
 if (! function_exists('redirect')) {
-    function redirect($url, $msg = '', $refresh_time = 0): never
+    function redirect(string $url, string $msg = '', int $refresh_time = 0): never
     {
 
         // with RefeshTime <> 0, only html must be used
         if (\Piwigo\Config\Config::defaultRedirectMethod() === 'http'
-            and $refresh_time == 0
+            and $refresh_time === 0
             and ! headers_sent()
         ) {
             redirect_http($url);

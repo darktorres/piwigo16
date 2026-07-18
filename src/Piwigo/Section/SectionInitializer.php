@@ -21,10 +21,10 @@ use Piwigo\Core\HtmlRenderingInterface;
  * around, since that's the original's real terminal behavior for a
  * malformed picture identifier.
  */
-final class SectionInitializer
+final readonly class SectionInitializer
 {
     public function __construct(
-        private readonly HtmlRenderingInterface $htmlRenderer,
+        private HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     public function parse(): SectionContext

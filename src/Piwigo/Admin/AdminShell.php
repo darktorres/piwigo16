@@ -61,8 +61,10 @@ final class AdminShell
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
-        (new \Piwigo\Validation\InputValidator())->validate('page', $_GET, false, '/^[a-zA-Z\d_-]+$/');
-        (new \Piwigo\Validation\InputValidator())->validate('section', $_GET, false, '/^[a-z]+[a-z_\/-]*(\.php)?$/i');
+        new \Piwigo\Validation\InputValidator()
+            ->validate('page', $_GET, false, '/^[a-zA-Z\d_-]+$/');
+        new \Piwigo\Validation\InputValidator()
+            ->validate('section', $_GET, false, '/^[a-z]+[a-z_\/-]*(\.php)?$/i');
 
         // +-------------------------------------------------------------------+
         // | Filesystem checks                                                 |
@@ -107,7 +109,7 @@ final class AdminShell
         // theme changer
         if (isset($_GET['change_theme'])) {
             $admin_themes = ['roma', 'clear'];
-            $admin_theme_param = (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->getParam('admin_theme', 'clear');
+            $admin_theme_param = new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->getParam('admin_theme', 'clear');
             $admin_theme_array = [is_string($admin_theme_param) ? $admin_theme_param : 'clear'];
             $result = array_diff(
                 $admin_themes,
@@ -118,7 +120,7 @@ final class AdminShell
                 $result
             );
 
-            (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->updateParam('admin_theme', $new_admin_theme);
+            new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->updateParam('admin_theme', $new_admin_theme);
 
             $url_params = [];
             foreach (['page', 'tab', 'section'] as $url_param) {
@@ -225,7 +227,8 @@ final class AdminShell
         // $_GET['tab'] is often used to perform and
         // include('admin_page_'.$_GET['tab'].'.php') : we need to protect it to
         // avoid any unexpected file inclusion
-        (new \Piwigo\Validation\InputValidator())->validate('tab', $_GET, false, '/^[a-zA-Z\d_-]+$/');
+        new \Piwigo\Validation\InputValidator()
+            ->validate('tab', $_GET, false, '/^[a-zA-Z\d_-]+$/');
 
         // +-------------------------------------------------------------------+
         // | Template init                                                     |
@@ -390,9 +393,9 @@ SELECT COUNT(*)
 
         $whats_new_major_version = \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION);
 
-        if ((bool) (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->getParam('show_whats_new_' . $whats_new_major_version, true) and \Piwigo\Config\ConfigDb::pwgIsDbconfWriteable()) {
+        if ((bool) new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->getParam('show_whats_new_' . $whats_new_major_version, true) and \Piwigo\Config\ConfigDb::pwgIsDbconfWriteable()) {
             if (\Piwigo\Users\CurrentUser::get()->rawAttributes['registration_date'] > \Piwigo\Config\Config::lastMajorUpdate()) {
-                (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->updateParam('show_whats_new_' . $whats_new_major_version, false);
+                new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->updateParam('show_whats_new_' . $whats_new_major_version, false);
             } else {
                 // purge old whats_new_*
                 $user_preferences = \Piwigo\Users\CurrentUser::get()->preferences;
@@ -405,7 +408,7 @@ SELECT COUNT(*)
                 }
 
                 if (count($userprefs_params_to_delete) > 0) {
-                    (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->deleteParam($userprefs_params_to_delete);
+                    new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->deleteParam($userprefs_params_to_delete);
                 }
 
                 $show_whats_new = true;

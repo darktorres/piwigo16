@@ -65,7 +65,8 @@ final class PermalinksSubController implements AdminSubControllerInterface
 
         $htmlRenderer = new HtmlService();
 
-        (new \Piwigo\Validation\InputValidator())->validate('cat_id', $_POST, false, ValidationPattern::ID);
+        new \Piwigo\Validation\InputValidator()
+            ->validate('cat_id', $_POST, false, ValidationPattern::ID);
 
         $selected_cat = [];
         // check_input_parameter() above only validates the format when 'cat_id' is
@@ -133,7 +134,8 @@ FROM ' . Tables::categories();
             new PermissionService(new PermissionRepository($categoryConn), new GroupRepository($categoryConn))
         )->displaySelectCatWrapper($query, $selected_cat, 'categories', $htmlRenderer, $template, false);
 
-        $pwg_token = (new \Piwigo\Csrf\CsrfService())->getToken();
+        $pwg_token = new \Piwigo\Csrf\CsrfService()
+            ->getToken();
 
         // --- generate display of active permalinks -----------------------------------
         $sort_by = $this->parseSortVariables(

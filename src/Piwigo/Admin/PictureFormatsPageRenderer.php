@@ -21,7 +21,8 @@ final class PictureFormatsPageRenderer
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
-        (new \Piwigo\Validation\InputValidator())->validate('image_id', $_GET, false, ValidationPattern::ID);
+        new \Piwigo\Validation\InputValidator()
+            ->validate('image_id', $_GET, false, ValidationPattern::ID);
 
         // $_GET['image_id'], when present, matches ValidationPattern::ID (digits only), but
         // that guarantee isn't visible to static analysis, hence the explicit
@@ -64,7 +65,8 @@ SELECT
             'ADD_FORMATS_URL' => get_root_url() . 'admin.php?page=photos_add&formats=' . $image_id,
             'IMG_SQUARE_SRC' => DerivativeImage::url(ImageStdParams::get_by_type(ImageStdParams::SQUARE), $image),
             'FORMATS' => $formats,
-            'PWG_TOKEN' => (new \Piwigo\Csrf\CsrfService())->getToken(),
+            'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
+                ->getToken(),
         ]);
 
         $template->set_filename('picture_formats', 'picture_formats.tpl');

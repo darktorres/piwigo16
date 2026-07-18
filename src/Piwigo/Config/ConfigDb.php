@@ -59,7 +59,7 @@ final class ConfigDb
 
     private static function fatalError(string $msg): never
     {
-        if (self::$htmlRenderer !== null) {
+        if (self::$htmlRenderer instanceof \Piwigo\Core\HtmlRenderingInterface) {
             self::$htmlRenderer->fatalError($msg);
         }
         throw new \RuntimeException($msg);
@@ -133,13 +133,12 @@ SELECT param, value
     /**
      * Add or update a config parameter
      *
-     * @param string $param
      * @param mixed $value scalar, array, or object (arrays/objects are serialized)
      * @param bool $updateGlobal update global *$conf* variable
      * @param ?callable $parser function to apply to the value before save in database
      * (eg: serialize, json_encode) will not be applied to *$conf* if *$parser* is *true*
      */
-    public static function confUpdateParam($param, $value, $updateGlobal = false, $parser = null): void
+    public static function confUpdateParam(string $param, $value, $updateGlobal = false, $parser = null): void
     {
         if ($parser != null) {
             $dbValue = call_user_func($parser, $value);
@@ -212,7 +211,7 @@ DELETE FROM ' . Tables::config() . '
      *
      * @return mixed The configuration value if the variable exists, otherwise the default.
      */
-    public static function confGetParam($param, $default_value = null)
+    public static function confGetParam(string $param, $default_value = null)
     {
         /** @var array<string, mixed> $conf */
         global $conf;

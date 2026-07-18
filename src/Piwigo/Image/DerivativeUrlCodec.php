@@ -69,7 +69,7 @@ final class DerivativeUrlCodec
      */
     public static function charToFraction(string $char): float|int
     {
-        return (ord($char) - ord('a')) / 25;
+        return (ord($char[0]) - ord('a')) / 25;
     }
 
     /**

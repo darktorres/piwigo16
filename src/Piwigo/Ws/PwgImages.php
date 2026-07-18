@@ -59,11 +59,10 @@ final class PwgImages
 {
     /**
      * Sets associations of an image
-     * @param int $image_id
      * @param string $categories_string - "cat_id[,rank];cat_id[,rank]"
      * @param bool $replace_mode - removes old associations
      */
-    private static function addImageCategoryRelations($image_id, $categories_string, $replace_mode = false): true|PwgError
+    private static function addImageCategoryRelations(int $image_id, string $categories_string, bool $replace_mode = false): true|PwgError
     {
         $categoryConn = DbConnection::build();
         $categoryService = new CategoryService(
@@ -297,7 +296,7 @@ SELECT category_id, MAX(`rank`) AS max_rank
      * will be the biggest (we could remove the thumb, but let's use the same
      * algorithm)
      */
-    private static function removeChunks($original_sum, $type): void
+    private static function removeChunks($original_sum, string $type): void
     {
 
         $upload_dir_conf = \Piwigo\Config\Config::uploadDir();

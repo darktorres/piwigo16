@@ -15,11 +15,11 @@ use Piwigo\Group\GroupRepository;
  * Group had to land in this same layer (L2aCoreDomain), see deptrac.yaml's
  * own comment on that namespace.
  */
-final class PermissionService
+final readonly class PermissionService
 {
     public function __construct(
-        private readonly PermissionRepository $repo,
-        private readonly GroupRepository $groupRepo,
+        private PermissionRepository $repo,
+        private GroupRepository $groupRepo,
     ) {}
 
     /**

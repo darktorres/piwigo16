@@ -70,11 +70,13 @@ final class PluginsInstalledPageRenderer
         $page_page = $page['page'] ?? null;
         $page_page = is_string($page_page) ? $page_page : '';
         $base_url = get_root_url() . 'admin.php?page=' . $page_page;
-        $pwg_token = (new \Piwigo\Csrf\CsrfService())->getToken();
+        $pwg_token = new \Piwigo\Csrf\CsrfService()
+            ->getToken();
 
         $extension_repository = new ExtensionRepository(DbConnection::build());
         $pem_catalog = new PemCatalog(new ZipExtractor());
-        $fs_plugins = (new ExtensionScanner())->scan(ExtensionType::Plugin);
+        $fs_plugins = new ExtensionScanner()
+            ->scan(ExtensionType::Plugin);
         uasort($fs_plugins, new HtmlService()->nameCompare(...));
         $db_plugins_by_id = $extension_repository->findAll(ExtensionType::Plugin);
 
@@ -255,7 +257,7 @@ final class PluginsInstalledPageRenderer
                 'max_inactive_before_hide' => isset($_GET['show_inactive']) ? 999 : 8,
                 'isWebmaster' => (\Piwigo\Auth\AccessControl::isWebmaster()) ? 1 : 0,
                 'ADMIN_PAGE_TITLE' => l10n('Plugins'),
-                'view_selector' => (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->getParam('plugin-manager-view', 'classic'),
+                'view_selector' => new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->getParam('plugin-manager-view', 'classic'),
                 'CONF_ENABLE_EXTENSIONS_INSTALL' => \Piwigo\Config\Config::enableExtensionsInstall(),
             ]
         );

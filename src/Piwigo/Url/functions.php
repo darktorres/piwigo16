@@ -47,7 +47,7 @@ if (! function_exists('get_root_url')) {
  * @param bool $with_scheme if false - does not add http://toto.com
  */
 if (! function_exists('get_absolute_root_url')) {
-    function get_absolute_root_url($with_scheme = true): string
+    function get_absolute_root_url(bool $with_scheme = true): string
     {
         return new UrlService(new HtmlService())
             ->getAbsoluteRootUrl($with_scheme);
@@ -63,7 +63,7 @@ if (! function_exists('get_absolute_root_url')) {
  * @return string
  */
 if (! function_exists('add_url_params')) {
-    function add_url_params($url, $params, string $arg_separator = '&amp;')
+    function add_url_params(string $url, array $params, string $arg_separator = '&amp;'): string
     {
         return new UrlService(new HtmlService())
             ->addUrlParams($url, $params, $arg_separator);
@@ -97,8 +97,12 @@ if (! function_exists('make_index_url')) {
  * @param array<int, string> $removed keys
  */
 if (! function_exists('duplicate_index_url')) {
-    function duplicate_index_url($redefined = [], $removed = []): string
+    function duplicate_index_url(array $redefined = [], array $removed = []): string
     {
+        /**
+         * @var array<string, mixed> $redefined
+         * @var array<int, string> $removed
+         */
         return new UrlService(new HtmlService())
             ->duplicateIndexUrl($redefined, $removed);
     }
@@ -112,8 +116,12 @@ if (! function_exists('duplicate_index_url')) {
  * @param array<int, string> $removed keys
  */
 if (! function_exists('duplicate_picture_url')) {
-    function duplicate_picture_url($redefined = [], $removed = []): string
+    function duplicate_picture_url(array $redefined = [], array $removed = []): string
     {
+        /**
+         * @var array<string, mixed> $redefined
+         * @var array<int, string> $removed
+         */
         return new UrlService(new HtmlService())
             ->duplicatePictureUrl($redefined, $removed);
     }
@@ -216,7 +224,7 @@ if (! function_exists('unset_make_full_url')) {
  * @param string $url
  */
 if (! function_exists('embellish_url')) {
-    function embellish_url($url): string
+    function embellish_url(string $url): string
     {
         return new UrlService(new HtmlService())
             ->embellishUrl($url);
@@ -241,8 +249,9 @@ if (! function_exists('get_gallery_home_url')) {
  * @param bool $escape escape *&* to *&amp;*
  */
 if (! function_exists('get_query_string_diff')) {
-    function get_query_string_diff($rejects = [], $escape = true): string
+    function get_query_string_diff(array $rejects = [], bool $escape = true): string
     {
+        /** @var array<string> $rejects */
         return new UrlService(new HtmlService())
             ->getQueryStringDiff($rejects, $escape);
     }
@@ -254,7 +263,7 @@ if (! function_exists('get_query_string_diff')) {
  * @param string $url
  */
 if (! function_exists('url_is_remote')) {
-    function url_is_remote($url): bool
+    function url_is_remote(string $url): bool
     {
         return new UrlService(new HtmlService())
             ->urlIsRemote($url);

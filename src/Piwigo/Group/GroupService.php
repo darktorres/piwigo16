@@ -22,11 +22,11 @@ use Piwigo\Db\DbConnection;
  * P23 batch 8d) directly for cache invalidation -- a real class dependency,
  * always allowed (L2a may depend on L1).
  */
-final class GroupService
+final readonly class GroupService
 {
     public function __construct(
-        private readonly GroupRepository $repo,
-        private readonly ActivityLoggerInterface $activityLogger,
+        private GroupRepository $repo,
+        private ActivityLoggerInterface $activityLogger,
     ) {}
 
     /**

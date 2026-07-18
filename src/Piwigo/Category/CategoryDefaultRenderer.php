@@ -19,11 +19,11 @@ use Piwigo\Session\SessionService;
  * user_cache_categories/user_cache reads at all (that's category_cats.inc.php's
  * concern, see CategoryCatsRenderer), and no bare-scope-sharing risk.
  */
-final class CategoryDefaultRenderer
+final readonly class CategoryDefaultRenderer
 {
     public function __construct(
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly TemplateInterface $template,
+        private HtmlRenderingInterface $htmlRenderer,
+        private TemplateInterface $template,
     ) {}
 
     public function render(): void

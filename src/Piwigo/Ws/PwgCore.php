@@ -798,7 +798,7 @@ SELECT
      * @param list<string> $types
      * @return array<int, array<string, mixed>>
      */
-    public static function historyGet($data, array $search, $types): array
+    public static function historyGet(array $data, array $search, array $types): array
     {
         return new HistoryService(new HistoryRepository(DbConnection::build()))
             ->getHistory($data, $search, $types);

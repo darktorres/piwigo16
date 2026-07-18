@@ -28,10 +28,10 @@ use Piwigo\Tag\TagService;
  * original called `simplexml_load_string($xml)` on raw, uploaded-file
  * content with zero flags and no DOCTYPE stripping, an XXE vector.
  */
-final class MetadataService
+final readonly class MetadataService
 {
     public function __construct(
-        private readonly MetadataRepository $repo,
+        private MetadataRepository $repo,
     ) {}
 
     /**

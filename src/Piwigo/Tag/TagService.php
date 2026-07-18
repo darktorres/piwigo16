@@ -36,12 +36,12 @@ use Piwigo\Permission\PermissionService;
  * HtmlService for their own unrelated needs, or can trivially do so (all
  * L3/L4/L2b, HtmlService itself injects nothing).
  */
-final class TagService
+final readonly class TagService
 {
     public function __construct(
-        private readonly TagRepository $repo,
-        private readonly PermissionService $permissionService,
-        private readonly ActivityLoggerInterface $activityLogger,
+        private TagRepository $repo,
+        private PermissionService $permissionService,
+        private ActivityLoggerInterface $activityLogger,
     ) {}
 
     /**

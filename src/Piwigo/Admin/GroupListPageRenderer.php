@@ -36,7 +36,8 @@ final class GroupListPageRenderer
         $template->assign(
             [
                 'F_ADD_ACTION' => get_root_url() . 'admin.php?page=group_list',
-                'PWG_TOKEN' => (new \Piwigo\Csrf\CsrfService())->getToken(),
+                'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
+                    ->getToken(),
                 'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys(['groups', 'users']),
             ]
         );
@@ -67,10 +68,10 @@ final class GroupListPageRenderer
                     'NB_MEMBERS' => count($members),
                     'L_MEMBERS' => implode(' <span class="userSeparator">&middot;</span> ', $members),
                     'MEMBERS' => l10n_dec('%d member', '%d members', count($members)),
-                    'U_DELETE' => $del_url . $row['id'] . '&amp;pwg_token=' . (new \Piwigo\Csrf\CsrfService())->getToken(),
+                    'U_DELETE' => $del_url . $row['id'] . '&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken(),
                     'U_PERM' => $perm_url . $row['id'],
                     'U_USERS' => $users_url . $row['id'],
-                    'U_ISDEFAULT' => $toggle_is_default_url . $row['id'] . '&amp;pwg_token=' . (new \Piwigo\Csrf\CsrfService())->getToken(),
+                    'U_ISDEFAULT' => $toggle_is_default_url . $row['id'] . '&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken(),
                 ]
             );
 

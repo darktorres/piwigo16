@@ -401,12 +401,11 @@ class pwg_image
 
     public static function get_ext_imagick_command(): string
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
+        // Per-process memoization of an exec() probe -- a static local
+        // rather than a class property since this static method has no
+        // instance to hang state off of.
+        static $command = null;
 
-        $command = $page['ext_imagick_command'] ?? null;
         if (! is_string($command)) {
             $retval = null;
             $cmd_out = null;
@@ -417,7 +416,6 @@ class pwg_image
             // (e.g. '/usr/bin/'magick), so this stays functionally identical.
             exec('command -v ' . escapeshellarg($imagick_dir) . 'magick', $cmd_out, $retval);
             $command = ($retval == 0) ? 'magick' : 'convert';
-            $page['ext_imagick_command'] = $command;
         }
 
         return $command;

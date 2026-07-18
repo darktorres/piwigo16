@@ -38,11 +38,20 @@ use Piwigo\Permission\PermissionService;
  */
 final readonly class TagService
 {
+    /**
+     * Per-instance memoization for tagIdFromTagName() -- every real caller
+     * constructs one TagService and calls tagIdFromTagName() in a loop on
+     * it.
+     */
+    private TagIdCache $tagIdFromTagNameCache;
+
     public function __construct(
         private TagRepository $repo,
         private PermissionService $permissionService,
         private ActivityLoggerInterface $activityLogger,
-    ) {}
+    ) {
+        $this->tagIdFromTagNameCache = new TagIdCache();
+    }
 
     /**
      * Inline-constructed rather than constructor-injected -- ImageService
@@ -452,18 +461,10 @@ final readonly class TagService
      */
     public function tagIdFromTagName(string $tagName): int
     {
-        /** @var array<string, mixed> $page */
-        global $page;
-
-        if (! isset($page['tag_id_from_tag_name_cache']) || ! is_array($page['tag_id_from_tag_name_cache'])) {
-            $page['tag_id_from_tag_name_cache'] = [];
-        }
-        /** @var array<string, int> $tagIdCache */
-        $tagIdCache = &$page['tag_id_from_tag_name_cache'];
-
         $tagName = trim($tagName);
-        if (isset($tagIdCache[$tagName])) {
-            return $tagIdCache[$tagName];
+        $cached = $this->tagIdFromTagNameCache->get($tagName);
+        if ($cached !== null) {
+            return $cached;
         }
 
         // search existing by exact name
@@ -490,18 +491,19 @@ final readonly class TagService
 
                 if ($existingId === null) {
                     // finally create the tag
-                    $tagIdCache[$tagName] = $this->repo->insertWithoutTimestamp($tagName, $urlName);
+                    $newId = $this->repo->insertWithoutTimestamp($tagName, $urlName);
+                    $this->tagIdFromTagNameCache->set($tagName, $newId);
 
                     UserCacheInvalidator::invalidateNbTags();
                     \Piwigo\Users\CurrentUser::set(\Piwigo\Users\CurrentUser::get()->withRawAttribute('nb_available_tags', null));
 
-                    return $tagIdCache[$tagName];
+                    return $newId;
                 }
             }
         }
 
-        $tagIdCache[$tagName] = $existingId;
-        return $tagIdCache[$tagName];
+        $this->tagIdFromTagNameCache->set($tagName, $existingId);
+        return $existingId;
     }
 
     /**

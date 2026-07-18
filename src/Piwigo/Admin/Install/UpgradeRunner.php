@@ -293,7 +293,7 @@ SELECT id
             $page['queries_time'] = 0;
             $page['count_queries'] = 0;
 
-            $page['upgrade_start'] = \Piwigo\Core\TimingHelper::getMoment();
+            $upgrade_start = \Piwigo\Core\TimingHelper::getMoment();
             $conf['die_on_sql_error'] = false;
             \Piwigo\Config\Config::override('die_on_sql_error', false);
             // P23 sub-batch 8g-4: the former `include install/upgrade_
@@ -334,14 +334,10 @@ SELECT id
             UpgradeService::deactivateNonStandardThemes();
             UpgradeService::deactivateTemplates();
 
-            $page['upgrade_end'] = \Piwigo\Core\TimingHelper::getMoment();
+            $upgrade_end = \Piwigo\Core\TimingHelper::getMoment();
 
-            // $page['upgrade_start']/'upgrade_end'/'queries_time'] are only ever
-            // set within this same scope: get_moment() (native float return)
-            // above and at reset time, and 'queries_time' as a numeric
-            // accumulator, never touched elsewhere.
-            $upgrade_start = $page['upgrade_start'];
-            $upgrade_end = $page['upgrade_end'];
+            // $page['queries_time'] is only ever set within this same scope,
+            // as a numeric accumulator, never touched elsewhere.
             $queries_time = $page['queries_time'];
 
             $template->assign(

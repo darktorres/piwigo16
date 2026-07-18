@@ -46,10 +46,6 @@ final class CommentsController implements ControllerInterface
          * @var array<string, mixed>
          */
         global $conf;
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (! \Piwigo\Config\Config::activateComments()) {
@@ -127,47 +123,41 @@ final class CommentsController implements ControllerInterface
         $since_raw = $_GET['since'] ?? null;
         $since_present = is_scalar($since_raw) && $since_raw !== '' && $since_raw !== '0' && $since_raw !== 0 && $since_raw !== 0.0 && $since_raw !== false;
         if ($since_present) {
-            $page['since'] = intval($since_raw);
+            $since = intval($since_raw);
         } else {
-            $page['since'] = 4;
+            $since = 4;
         }
 
         // on which field sorting
         //
-        $page['sort_by'] = 'date';
+        $sort_by_value = 'date';
         // if the form was submitted, it overloads default behaviour
         if (isset($_GET['sort_by']) and is_string($_GET['sort_by']) and isset($sort_by[$_GET['sort_by']])) {
-            $page['sort_by'] = $_GET['sort_by'];
+            $sort_by_value = $_GET['sort_by'];
         }
-        // $page['sort_by'] is always a string by construction above
-        // (literal 'date' or a validated $_GET string).
-        $sort_by_value = $page['sort_by'];
 
         // order to sort
         //
-        $page['sort_order'] = 'DESC';
+        $sort_order_value = 'DESC';
         // if the form was submitted, it overloads default behaviour
         if (isset($_GET['sort_order']) and is_string($_GET['sort_order']) and isset($sort_order[$_GET['sort_order']])) {
-            $page['sort_order'] = $_GET['sort_order'];
+            $sort_order_value = $_GET['sort_order'];
         }
-        // $page['sort_order'] is always a string by construction above
-        // (literal 'DESC' or a validated $_GET string).
-        $sort_order_value = $page['sort_order'];
 
         // number of items to display
         //
-        $page['items_number'] = $comments_page_nb_comments;
+        $items_number_value = $comments_page_nb_comments;
         if (isset($_GET['items_number'])) {
-            $page['items_number'] = $_GET['items_number'];
+            $items_number_value = $_GET['items_number'];
         }
-        if (! is_numeric($page['items_number']) and $page['items_number'] !== 'all') {
-            $page['items_number'] = 10;
+        if (! is_numeric($items_number_value) and $items_number_value !== 'all') {
+            $items_number_value = 10;
         }
-        // after the checks above, items_number is guaranteed to be either
-        // numeric or the literal string 'all'.
-        $selected_items_number = is_numeric($page['items_number']) ? $page['items_number'] : 'all';
+        // after the checks above, items_number_value is guaranteed to be
+        // either numeric or the literal string 'all'.
+        $selected_items_number = is_numeric($items_number_value) ? $items_number_value : 'all';
 
-        $page['where_clauses'] = [];
+        $whereClauses = [];
 
         // which category to filter on ?
         $cat_param = $_GET['cat'] ?? null;
@@ -183,7 +173,7 @@ final class CommentsController implements ControllerInterface
                 $category_ids = [-1];
             }
 
-            $page['where_clauses'][] =
+            $whereClauses[] =
               'category_id IN (' . implode(',', $category_ids) . ')';
         }
 
@@ -201,7 +191,7 @@ final class CommentsController implements ControllerInterface
         $author_raw = $_GET['author'] ?? null;
         if (is_scalar($author_raw) && $author_raw !== '' && $author_raw !== '0' && $author_raw !== 0 && $author_raw !== 0.0 && $author_raw !== false) {
             $author_search = (string) $author_raw;
-            $page['where_clauses'][] =
+            $whereClauses[] =
               '(u.' . $username_field . ' = \'' . $author_search . '\' OR author = \'' . $author_search . '\')';
         }
 
@@ -229,7 +219,7 @@ final class CommentsController implements ControllerInterface
                 redirect($login_url);
             }
 
-            $page['where_clauses'][] = 'com.id = ' . $get_comment_id;
+            $whereClauses[] = 'com.id = ' . $get_comment_id;
         }
 
         // search a substring among comments content
@@ -239,7 +229,7 @@ final class CommentsController implements ControllerInterface
             $keywords = preg_split('/[\s,;]+/', $keyword_search);
             // the pattern above is a hardcoded, always-valid regex
             assert($keywords !== false);
-            $page['where_clauses'][] =
+            $whereClauses[] =
               '(' .
               implode(
                   ' AND ',
@@ -251,17 +241,14 @@ final class CommentsController implements ControllerInterface
               ')';
         }
 
-        // $page['since'] is always an int by construction above (intval()
-        // result or the literal 4).
-        $since_id = $page['since'];
-        $page['where_clauses'][] = $since_options[$since_id]['clause'];
+        $whereClauses[] = $since_options[$since]['clause'];
 
         // which status to filter on ?
         if (! \Piwigo\Auth\AccessControl::isAdmin()) {
-            $page['where_clauses'][] = 'validated=\'true\'';
+            $whereClauses[] = 'validated=\'true\'';
         }
 
-        $page['where_clauses'][] = new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()))->getSqlConditionFandF([
+        $whereClauses[] = new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()))->getSqlConditionFandF([
             'forbidden_categories' => 'category_id',
             'visible_categories' => 'category_id',
             'visible_images' => 'ic.image_id',
@@ -369,6 +356,7 @@ final class CommentsController implements ControllerInterface
 
         $body = LegacyRenderCapture::capture(static function () use (
             $url_self,
+            $since,
             $since_options,
             $sort_by,
             $sort_order,
@@ -378,6 +366,7 @@ final class CommentsController implements ControllerInterface
             $sort_by_value,
             $sort_order_value,
             $selected_items_number,
+            $whereClauses,
             $edit_comment
         ): void {
             /** @var array<string, mixed> $page */
@@ -434,15 +423,15 @@ SELECT id, name, uppercats, global_rank
                 $tpl_var[$id] = $option['label'];
             }
             $template->assign('since_options', $tpl_var);
-            $template->assign('since_options_selected', $page['since']);
+            $template->assign('since_options_selected', $since);
 
             // Sort by
             $template->assign('sort_by_options', $sort_by);
-            $template->assign('sort_by_options_selected', $page['sort_by']);
+            $template->assign('sort_by_options_selected', $sort_by_value);
 
             // Sorting order
             $template->assign('sort_order_options', $sort_order);
-            $template->assign('sort_order_options_selected', $page['sort_order']);
+            $template->assign('sort_order_options_selected', $sort_order_value);
 
             // Number of items
             $blockname = 'items_number_option';
@@ -451,7 +440,7 @@ SELECT id, name, uppercats, global_rank
                 $tpl_var[$option] = is_numeric($option) ? $option : l10n($option);
             }
             $template->assign('item_number_options', $tpl_var);
-            $template->assign('item_number_options_selected', $page['items_number']);
+            $template->assign('item_number_options_selected', $selected_items_number);
 
             // +---------------------------------------------------------------+
             // |                        navigation bar                         |
@@ -471,10 +460,7 @@ SELECT id, name, uppercats, global_rank
             $element_ids = [];
             $category_ids = [];
 
-            // $page['where_clauses'] only ever receives string pushes
-            // above; narrow it once here for implode().
-            $page_where_clauses = is_array($page['where_clauses'] ?? null) ? $page['where_clauses'] : [];
-            $where_clauses = array_values(array_filter($page_where_clauses, is_string(...)));
+            $where_clauses = $whereClauses;
 
             $query = '
 SELECT SQL_CALC_FOUND_ROWS com.id AS comment_id,

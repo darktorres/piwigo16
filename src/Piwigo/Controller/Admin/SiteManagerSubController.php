@@ -122,11 +122,12 @@ final class SiteManagerSubController implements AdminSubControllerInterface
         // +-----------------------------------------------------------------------+
         // |                            actions on site                            |
         // +-----------------------------------------------------------------------+
+        $site = null;
         if (isset($_GET['site']) and is_numeric($_GET['site'])) {
-            $page['site'] = $_GET['site'];
+            $site = $_GET['site'];
         }
-        if (isset($_GET['action']) and isset($page['site']) and is_numeric($page['site'])) {
-            $site_id = (int) $page['site'];
+        if (isset($_GET['action']) and $site !== null) {
+            $site_id = (int) $site;
             $galleries_url = new SiteRepository(DbConnection::build())
                 ->findGalleriesUrlById($site_id);
             switch ($_GET['action']) {

@@ -125,7 +125,6 @@ final class PictureController implements ControllerInterface
         }
         $page['items'] = $items;
         $rank_of = array_flip($items);
-        $page['rank_of'] = $rank_of;
 
         $image_id = $page['image_id'];
         $image_id = is_numeric($image_id) ? (int) $image_id : 0;
@@ -201,7 +200,6 @@ SELECT id
                     } else {
                         if ($page_section === 'best_rated') {
                             $rank_of[$image_id] = count($items);
-                            $page['rank_of'] = $rank_of;
                             $items[] = $image_id;
                             $page['items'] = $items;
                         } else {
@@ -250,12 +248,6 @@ SELECT id
         // page_not_found()/access_denied() otherwise) already guarantee
         // this key exists by this point.
         $current_rank = $rank_of[$image_id];
-        $page['first_rank'] = $first_rank;
-        $page['last_rank'] = $last_rank;
-        $page['current_rank'] = $current_rank;
-
-        // caching current item : readability purpose
-        $page['current_item'] = $image_id;
 
         $previous_item = null;
         $first_item = null;
@@ -263,8 +255,6 @@ SELECT id
             // caching first & previous item : readability purpose
             $previous_item = $items[$current_rank - 1];
             $first_item = $items[$first_rank];
-            $page['previous_item'] = $previous_item;
-            $page['first_item'] = $first_item;
         }
 
         $next_item = null;
@@ -273,8 +263,6 @@ SELECT id
             // caching next & last item : readability purpose
             $next_item = $items[$current_rank + 1];
             $last_item = $items[$last_rank];
-            $page['next_item'] = $next_item;
-            $page['last_item'] = $last_item;
         }
 
         $nb_image_page = $page['nb_image_page'];
@@ -686,7 +674,7 @@ SELECT *
             $slideshow_url_params = [];
 
             if (isset($_GET['slideshow'])) {
-                $page['slideshow'] = true;
+                $slideshow = true;
                 $page['meta_robots'] = [
                     'noindex' => 1,
                     'nofollow' => 1,
@@ -719,9 +707,9 @@ SELECT *
                     }
                 }
             } else {
-                $page['slideshow'] = false;
+                $slideshow = false;
             }
-            if ($page['slideshow'] and \Piwigo\Config\Config::lightSlideshow()) {
+            if ($slideshow and \Piwigo\Config\Config::lightSlideshow()) {
                 $template->set_filenames([
                     'slideshow' => 'slideshow.tpl',
                 ]);
@@ -873,7 +861,7 @@ SELECT *
                 }
             }
 
-            if ($page['slideshow']) {
+            if ($slideshow) {
                 $tpl_slideshow = [];
 
                 // slideshow end
@@ -1261,7 +1249,7 @@ SELECT id, name, permalink
             trigger_notify('loc_end_picture');
             new HtmlService()
                 ->flushPageMessages();
-            if ($page['slideshow'] and \Piwigo\Config\Config::lightSlideshow()) {
+            if ($slideshow and \Piwigo\Config\Config::lightSlideshow()) {
                 $template->pparse('slideshow');
             } else {
                 $template->parse_picture_buttons();
@@ -1337,10 +1325,6 @@ SELECT id, name, permalink
             }
         }
 
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         if ($show_original and isset($element_info['element_url'])) {

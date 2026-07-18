@@ -127,7 +127,6 @@ final readonly class CategoryCatsRenderer
         }
 
         $totalCategories = count($filtered);
-        $page['total_categories'] = $totalCategories;
 
         $nbCategoriesPage = \Piwigo\Config\Config::nbCategoriesPage();
         $startcat = is_numeric($page['startcat'] ?? null) ? (int) $page['startcat'] : 0;
@@ -466,12 +465,13 @@ SELECT *
             $template->assign_var_from_handle('CATEGORIES', 'index_category_thumbnails');
 
             // navigation bar
-            $page['cats_navigation_bar'] = [];
+            $catsNavigationBar = [];
             if ($totalCategories > $nbCategoriesPage) {
-                $page['cats_navigation_bar'] = new \Piwigo\Core\PaginationService()->createNavigationBar(duplicate_index_url([], ['startcat']), $totalCategories, $startcat, $nbCategoriesPage, true, 'startcat');
+                $catsNavigationBar = new \Piwigo\Core\PaginationService()
+                    ->createNavigationBar(duplicate_index_url([], ['startcat']), $totalCategories, $startcat, $nbCategoriesPage, true, 'startcat');
             }
 
-            $template->assign('cats_navbar', $page['cats_navigation_bar']);
+            $template->assign('cats_navbar', $catsNavigationBar);
         }
 
         \Piwigo\Core\TimingHelper::debug('end CategoryCatsRenderer::render()');

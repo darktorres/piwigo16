@@ -44,10 +44,6 @@ final class ElementSetRanksPageRenderer
 {
     public function render(): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $htmlRenderer = new HtmlService();
@@ -75,7 +71,7 @@ final class ElementSetRanksPageRenderer
             trigger_error('missing cat_id param', E_USER_ERROR);
         }
 
-        $page['category_id'] = $_GET['cat_id'];
+        $category_id = $_GET['cat_id'];
 
         // +-------------------------------------------------------------------+
         // |                       global mode form submission                 |
@@ -95,7 +91,7 @@ final class ElementSetRanksPageRenderer
                 $imageConn = DbConnection::build();
                 new ImageService(new ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)))
                     ->saveImagesOrder(
-                        (int) $page['category_id'],
+                        (int) $category_id,
                         array_map(intval(...), array_keys($rank_of_image))
                     );
             }
@@ -125,7 +121,7 @@ final class ElementSetRanksPageRenderer
                 $message = l10n('Images manual order was saved');
             }
             new CategoryAdminService()
-                ->saveImageOrder((int) $page['category_id'], $image_order, isset($_POST['image_order_subcats']));
+                ->saveImageOrder((int) $category_id, $image_order, isset($_POST['image_order_subcats']));
 
             $template->assign(
                 [
@@ -148,7 +144,7 @@ final class ElementSetRanksPageRenderer
         $query = '
 SELECT *
   FROM ' . Tables::categories() . '
-  WHERE id = ' . $page['category_id'] . '
+  WHERE id = ' . $category_id . '
 ;';
         $category = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
         if (! is_array($category) || ! is_string($category['uppercats'] ?? null)) {
@@ -191,7 +187,7 @@ SELECT
     `rank`
   FROM ' . Tables::images() . '
     JOIN ' . Tables::imageCategory() . ' ON image_id = id
-  WHERE category_id = ' . $page['category_id'] . '
+  WHERE category_id = ' . $category_id . '
   ORDER BY `rank`
 ;';
         $result = \Piwigo\Db\MysqliDb::query($query);

@@ -28,8 +28,6 @@ final class GroupPermPageRenderer
 {
     public function render(): void
     {
-        /** @var array<string, mixed> $page */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $categoryConn = DbConnection::build();
@@ -77,7 +75,7 @@ final class GroupPermPageRenderer
                 ->fatalError('group_id URL parameter is missing');
         }
 
-        $page['group'] = (int) $_GET['group_id'];
+        $group_id = (int) $_GET['group_id'];
 
         $group_service = new GroupService(new GroupRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())));
 
@@ -90,10 +88,10 @@ final class GroupPermPageRenderer
             // automatically forbidden
             $subcats = get_subcat_ids($cat_true);
             $subcat_ids = array_map(intval(...), $subcats);
-            $group_service->removeAccess($page['group'], $subcat_ids);
+            $group_service->removeAccess($group_id, $subcat_ids);
 
             new AuditService(new AuditRepository(DbConnection::build()))
-                ->record($actor_id, 'permission_revoke', 'group', $page['group'], [
+                ->record($actor_id, 'permission_revoke', 'group', $group_id, [
                     'category_ids' => $subcat_ids,
                 ], null);
         } elseif (isset($_POST['trueify'])
@@ -116,10 +114,10 @@ SELECT id
             // already authorized for (retrying to authorize an already-authorized
             // category may cause a duplicate-key SQL error otherwise).
             $private_uppercat_ids = array_map(intval(...), $private_uppercats);
-            $group_service->addAccess($page['group'], $private_uppercat_ids);
+            $group_service->addAccess($group_id, $private_uppercat_ids);
 
             new AuditService(new AuditRepository(DbConnection::build()))
-                ->record($actor_id, 'permission_grant', 'group', $page['group'], null, [
+                ->record($actor_id, 'permission_grant', 'group', $group_id, null, [
                     'category_ids' => $private_uppercat_ids,
                 ]);
         }
@@ -135,14 +133,14 @@ SELECT id
             [
                 'TITLE' => l10n(
                     'Manage permissions for group "%s"',
-                    new GroupRepository(DbConnection::build())->findName($page['group']) ?? false
+                    new GroupRepository(DbConnection::build())->findName($group_id) ?? false
                 ),
                 'L_CAT_OPTIONS_TRUE' => l10n('Authorized'),
                 'L_CAT_OPTIONS_FALSE' => l10n('Forbidden'),
 
                 'F_ACTION' => get_root_url() .
                     'admin.php?page=group_perm&amp;group_id=' .
-                    $page['group'],
+                    $group_id,
             ]
         );
 
@@ -151,7 +149,7 @@ SELECT id
 SELECT id,name,uppercats,global_rank
   FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::groupAccess() . ' ON cat_id = id
   WHERE status = \'private\'
-    AND group_id = ' . $page['group'] . '
+    AND group_id = ' . $group_id . '
 ;';
         $categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true', new HtmlService(), $template);
 

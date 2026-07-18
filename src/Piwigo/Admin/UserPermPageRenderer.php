@@ -29,10 +29,6 @@ final class UserPermPageRenderer
 {
     public function render(): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $htmlRenderer = new HtmlService();
@@ -66,7 +62,7 @@ final class UserPermPageRenderer
             : [];
 
         if (isset($_GET['user_id']) and is_numeric($_GET['user_id'])) {
-            $page['user'] = (int) $_GET['user_id'];
+            $user_id = (int) $_GET['user_id'];
         } else {
             die('user_id URL parameter is missing');
         }
@@ -81,10 +77,10 @@ final class UserPermPageRenderer
             // if you forbid access to a category, all sub-categories become
             // automatically forbidden
             $subcats = array_map(intval(...), get_subcat_ids($cat_true));
-            $permission_service->removeUserAccess($page['user'], $subcats);
+            $permission_service->removeUserAccess($user_id, $subcats);
         } elseif (isset($_POST['trueify'])
             and count($cat_false) > 0) {
-            $permission_service->grantUserAccess($page['user'], $cat_false);
+            $permission_service->grantUserAccess($user_id, $cat_false);
         }
 
         $template->set_filenames(
@@ -98,14 +94,14 @@ final class UserPermPageRenderer
             [
                 'TITLE' => l10n(
                     'Manage permissions for user "%s"',
-                    new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())), $htmlRenderer)->getUsername($page['user'])
+                    new UserService(new UserRepository(DbConnection::build()), new GroupRepository(DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())), $htmlRenderer)->getUsername($user_id)
                 ),
                 'L_CAT_OPTIONS_TRUE' => l10n('Authorized'),
                 'L_CAT_OPTIONS_FALSE' => l10n('Forbidden'),
 
                 'F_ACTION' => PHPWG_ROOT_PATH .
                     'admin.php?page=user_perm' .
-                    '&amp;user_id=' . $page['user'],
+                    '&amp;user_id=' . $user_id,
             ]
         );
 
@@ -119,7 +115,7 @@ SELECT DISTINCT cat_id, c.uppercats, c.global_rank
       ON ug.group_id = ga.group_id
     INNER JOIN ' . Tables::categories() . ' AS c
       ON c.id = ga.cat_id
-  WHERE ug.user_id = ' . $page['user'] . '
+  WHERE ug.user_id = ' . $user_id . '
 ;';
         $result = \Piwigo\Db\MysqliDb::query($query);
 
@@ -148,7 +144,7 @@ SELECT DISTINCT cat_id, c.uppercats, c.global_rank
 SELECT id,name,uppercats,global_rank
   FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::userAccess() . ' ON cat_id = id
   WHERE status = \'private\'
-    AND user_id = ' . $page['user'];
+    AND user_id = ' . $user_id;
         if (count($group_authorized) > 0) {
             $query_true .= '
     AND cat_id NOT IN (' . implode(',', $group_authorized) . ')';

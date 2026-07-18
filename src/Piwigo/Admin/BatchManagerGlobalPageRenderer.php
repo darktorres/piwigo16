@@ -126,22 +126,22 @@ final class BatchManagerGlobalPageRenderer
         /** @var array<string, mixed> $bulk_manager_filter */
         $bulk_manager_filter = isset($_SESSION['bulk_manager_filter']) && is_array($_SESSION['bulk_manager_filter']) ? $_SESSION['bulk_manager_filter'] : [];
 
-        // $page['prefilter'] is a shortcut to test if the current filter contains a
+        // prefilter is a shortcut to test if the current filter contains a
         // given prefilter. The idea is to make conditions simpler to write in the
         // code.
-        $page['prefilter'] = 'none';
+        $prefilter = 'none';
         if (isset($bulk_manager_filter['prefilter'])) {
-            $page['prefilter'] = $bulk_manager_filter['prefilter'];
+            $prefilter = $bulk_manager_filter['prefilter'];
         }
 
         $get_page = isset($_GET['page']) && is_string($_GET['page']) ? $_GET['page'] : '';
         $redirect_url = get_root_url() . 'admin.php?page=' . $get_page;
 
-        // $page['prefilter'] never changes after the assignment above; narrowed
-        // once here and reused for every `== 'xxx'` comparison below (PHPStan
-        // only sees $page as array<string, mixed>, so a bare offset read stays
+        // $prefilter never changes after the assignment above; narrowed once
+        // here and reused for every `== 'xxx'` comparison below ($bulk_manager_filter
+        // is only known as array<string, mixed>, so a bare offset read stays
         // `mixed` even though it's provably a string at this point).
-        $prefilter_value = is_string($page['prefilter']) ? $page['prefilter'] : 'none';
+        $prefilter_value = is_string($prefilter) ? $prefilter : 'none';
 
         if (isset($_POST['submit'])) {
             // if the user tries to apply an action, it means that there is at least 1

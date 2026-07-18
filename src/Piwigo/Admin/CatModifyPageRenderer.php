@@ -375,32 +375,20 @@ SELECT COUNT(*)
      */
     private function getLocalDir(int|string $category_id): string
     {
-        /** @var array<string, mixed> $page */
-        global $page;
-
-        $uppercats = '';
         $local_dir = '';
 
-        // $page['plain_structure'] is a legacy category-structure cache key;
-        // grepped the whole codebase and nothing ever populates it, so this
-        // branch is dead in practice. Kept (and typed defensively rather than
-        // assumed) in case a future cache layer starts filling it in.
-        $plain_structure = $page['plain_structure'] ?? null;
-        $structure_entry = is_array($plain_structure) ? ($plain_structure[$category_id] ?? null) : null;
-        $structure_uppercats = is_array($structure_entry) ? ($structure_entry['uppercats'] ?? null) : null;
-
-        if (is_string($structure_uppercats)) {
-            $uppercats = $structure_uppercats;
-        } else {
-            $query = 'SELECT uppercats';
-            $query .= ' FROM ' . Tables::categories() . ' WHERE id = ' . $category_id;
-            $query .= ';';
-            $row = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
-            if (! is_array($row)) {
-                throw new \Exception(__FUNCTION__ . "(): category #{$category_id} not found");
-            }
-            $uppercats = is_string($row['uppercats']) ? $row['uppercats'] : '';
+        // The legacy $page['plain_structure'] category-structure cache key
+        // this used to read as a shortcut is confirmed dead (nothing in the
+        // codebase ever populated it) and $page is retired as a channel
+        // altogether, so this always takes the DB-lookup path now.
+        $query = 'SELECT uppercats';
+        $query .= ' FROM ' . Tables::categories() . ' WHERE id = ' . $category_id;
+        $query .= ';';
+        $row = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
+        if (! is_array($row)) {
+            throw new \Exception(__FUNCTION__ . "(): category #{$category_id} not found");
         }
+        $uppercats = is_string($row['uppercats']) ? $row['uppercats'] : '';
 
         $upper_array = explode(',', $uppercats);
 

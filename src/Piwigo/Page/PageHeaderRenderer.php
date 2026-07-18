@@ -58,7 +58,7 @@ final class PageHeaderRenderer
 
         $template->assign(
             [
-                'GALLERY_TITLE' => $page['gallery_title'] ?? $conf_gallery_title,
+                'GALLERY_TITLE' => $conf_gallery_title,
 
                 'PAGE_BANNER' => trigger_change(
                     'render_page_banner',

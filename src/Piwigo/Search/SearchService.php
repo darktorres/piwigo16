@@ -640,9 +640,6 @@ final readonly class SearchService
      */
     public function qsearchGetTextTokenSearchSql(QSingleToken $token, array $fields): array
     {
-        /** @var array<string, mixed> $page */
-        global $page;
-
         $clauses = [];
         $variants = array_merge([$token->term], $token->variants);
         $fts = [];
@@ -669,16 +666,13 @@ final readonly class SearchService
             }
 
             if (! $useFt) {
-                if (! isset($page['use_regexp_ICU'])) {
-                    $page['use_regexp_ICU'] = false;
-                    $dbVersion = \Piwigo\Db\MysqliDb::getDbVersion();
-                    if (preg_match('/mariadb/i', $dbVersion) !== 1 && version_compare($dbVersion, '8.0.4', '>')) {
-                        $page['use_regexp_ICU'] = true;
-                    }
-                }
+                // getDbVersion() is a property read on the already-connected
+                // mysqli handle, not a query -- no memoization needed.
+                $dbVersion = \Piwigo\Db\MysqliDb::getDbVersion();
+                $useRegexpICU = preg_match('/mariadb/i', $dbVersion) !== 1 && version_compare($dbVersion, '8.0.4', '>');
 
-                $pre = ((bool) ($token->modifier & QSingleToken::QST_WILDCARD_BEGIN)) ? '' : (((bool) $page['use_regexp_ICU']) ? '\\\\b' : '[[:<:]]');
-                $post = ((bool) ($token->modifier & QSingleToken::QST_WILDCARD_END)) ? '' : (((bool) $page['use_regexp_ICU']) ? '\\\\b' : '[[:>:]]');
+                $pre = ((bool) ($token->modifier & QSingleToken::QST_WILDCARD_BEGIN)) ? '' : ($useRegexpICU ? '\\\\b' : '[[:<:]]');
+                $post = ((bool) ($token->modifier & QSingleToken::QST_WILDCARD_END)) ? '' : ($useRegexpICU ? '\\\\b' : '[[:>:]]');
                 foreach ($fields as $field) {
                     $clauses[] = $field . ' REGEXP ' . $this->repo->quote($pre . preg_quote($variant) . $post);
                 }

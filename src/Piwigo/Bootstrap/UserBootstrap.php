@@ -30,12 +30,10 @@ use Piwigo\Ws\PwgError;
  *
  * The original file already declared its own `global $conf, $user;` /
  * `global $service;` at true top-level script scope (index.php ->
- * common.inc.php -> user.inc.php, all raw `include`s) -- but its own
- * `$page['user_use_cache'] = ...` write (no `global $page;` in the
- * original's own header) only worked because common.inc.php's own
- * top-level `$page` was directly shared via include()'s scope-sharing
- * behavior. That bare reference is real and load-bearing -- a `global
- * $page;` declaration is added here that the original file never needed.
+ * common.inc.php -> user.inc.php, all raw `include`s). Its own
+ * `$page['user_use_cache'] = ...` write (Legacy Coupling Retirement Track
+ * A batch A5) is now a plain local variable -- shouldUseUserCache()'s
+ * result is only ever read a few lines below, in this same method.
  */
 final class UserBootstrap
 {
@@ -49,10 +47,6 @@ final class UserBootstrap
          * @var array<string, mixed>
          */
         global $user;
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         // Set by Piwigo\Ws\WsInitializer::init(), called conditionally below
         // (it publishes the shared PwgServer to $GLOBALS['service'] itself,
         // preserving the deleted include/ws_init.inc.php's top-level
@@ -162,7 +156,7 @@ final class UserBootstrap
         }
 
         $http_referer = $_SERVER['HTTP_REFERER'] ?? null;
-        $page['user_use_cache'] = self::shouldUseUserCache(
+        $user_use_cache = self::shouldUseUserCache(
             defined('IN_ADMIN') && (bool) IN_ADMIN,
             isset($_REQUEST['method']),
             is_string($http_referer) ? $http_referer : null,
@@ -175,7 +169,7 @@ final class UserBootstrap
         // guest_id fallback already used earlier in this file.
         $user_id_int = is_numeric($user['id']) ? (int) $user['id'] : $guest_id_int;
 
-        $user = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->buildUser($user_id_int, $page['user_use_cache']);
+        $user = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->buildUser($user_id_int, $user_use_cache);
         // Legacy Coupling Retirement Track A batch A3: sync CurrentUser here,
         // not only in RequestBootstrap::connect() after this method returns
         // -- AccessControl::isAGuest()/isGeneric() right below already read

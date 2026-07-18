@@ -43,8 +43,6 @@ final class NotificationController implements ControllerInterface
             global $title;
             $template = \Piwigo\Template\CurrentTemplate::get();
 
-            $page['feed'] = $feedId;
-
             $user_id = \Piwigo\Users\CurrentUser::get()->id;
 
             $feedRepo->insert($feedId, $user_id);

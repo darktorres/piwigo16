@@ -43,11 +43,18 @@ final class PasswordController implements ControllerInterface
      */
     private array $errors = [];
 
+    /**
+     * Shared across __invoke()/processPasswordRequest() (the latter is
+     * called from the former) -- same "multiple methods of this class"
+     * shape as $errors above.
+     */
+    private ?string $action = null;
+
+    private ?string $username = null;
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        /** @var array<string, mixed> $page */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Free);
@@ -66,20 +73,20 @@ final class PasswordController implements ControllerInterface
             if ($action_param === 'lost') {
                 if ($this->processVerificationCode()) {
                     \Piwigo\Core\PageState::current()->addInfo(l10n('If your account exists, a verification code has been sent to your email address.'));
-                    $page['action'] = 'lost_code';
+                    $this->action = 'lost_code';
                 }
             }
 
             if ($action_param === 'lost_code') {
                 if ($this->processPasswordRequest()) {
                     \Piwigo\Core\PageState::current()->addInfo(l10n('Verification successful! You can now choose a new password.'));
-                    $page['action'] = 'reset';
+                    $this->action = 'reset';
                 }
             }
 
             if ($action_param === 'reset') {
                 if ($this->resetPassword()) {
-                    $page['action'] = 'reset_end';
+                    $this->action = 'reset_end';
                 }
             }
         }
@@ -96,50 +103,53 @@ final class PasswordController implements ControllerInterface
             $user_id = $this->checkPasswordResetKey($_GET['key']);
             if (is_numeric($user_id)) {
                 $userdata = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getUserData((int) $user_id, false);
-                $page['username'] = $userdata['username'];
+                $userdata_username = $userdata['username'] ?? null;
+                $this->username = is_string($userdata_username) ? $userdata_username : '';
                 $template->assign('key', $_GET['key']);
                 $first_login = new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->hasAlreadyLoggedIn((int) $user_id);
 
-                if (! isset($page['action'])) {
-                    $page['action'] = 'reset';
+                if ($this->action === null) {
+                    $this->action = 'reset';
                 }
             } else {
-                $page['action'] = 'none';
+                $this->action = 'none';
             }
         }
 
-        if (! isset($page['action'])) {
+        if ($this->action === null) {
             if ($action_param === null) {
-                $page['action'] = 'lost';
+                $this->action = 'lost';
             } elseif (in_array($action_param, ['lost', 'lost_code', 'reset', 'none'], true)) {
-                $page['action'] = $action_param;
+                $this->action = $action_param;
             }
         }
 
-        if (($page['action'] ?? null) === 'reset') {
+        if ($this->action === 'reset') {
             if ((! isset($_GET['key']) and (\Piwigo\Auth\AccessControl::isAGuest() or \Piwigo\Auth\AccessControl::isGeneric())) and ! isset($_SESSION['valid_reset_password_code'])) {
                 $gallery_home_url = get_gallery_home_url();
                 redirect(is_string($gallery_home_url) ? $gallery_home_url : '');
             }
         }
 
-        if (($page['action'] ?? null) === 'lost' and ! \Piwigo\Auth\AccessControl::isAGuest()) {
+        if ($this->action === 'lost' and ! \Piwigo\Auth\AccessControl::isAGuest()) {
             $gallery_home_url = get_gallery_home_url();
             redirect(is_string($gallery_home_url) ? $gallery_home_url : '');
         }
 
-        if (($page['action'] ?? null) === 'lost_code' and ! isset($_SESSION['reset_password_code'])) {
+        if ($this->action === 'lost_code' and ! isset($_SESSION['reset_password_code'])) {
             $gallery_home_url = get_gallery_home_url();
             $gallery_home_url = is_string($gallery_home_url) ? $gallery_home_url : '';
             redirect($gallery_home_url . 'identification.php');
         }
 
-        if (($page['action'] ?? null) === 'lost' and isset($_SESSION['reset_password_code'])) {
-            $page['action'] = 'lost_code';
+        if ($this->action === 'lost' and isset($_SESSION['reset_password_code'])) {
+            $this->action = 'lost_code';
         }
 
         $formErrors = $this->errors;
-        $body = LegacyRenderCapture::capture(static function () use ($first_login, $formErrors): void {
+        $action = $this->action;
+        $username = $this->username;
+        $body = LegacyRenderCapture::capture(static function () use ($first_login, $formErrors, $action, $username): void {
             /**
              * @var array<string, mixed>
              */
@@ -152,13 +162,13 @@ final class PasswordController implements ControllerInterface
             $template = \Piwigo\Template\CurrentTemplate::get();
 
             $title = l10n('Password Reset');
-            if (($page['action'] ?? null) === 'lost') {
+            if ($action === 'lost') {
                 $title = l10n('Forgot your password?');
 
                 if (isset($_POST['username_or_email']) and is_string($_POST['username_or_email'])) {
                     $template->assign('username_or_email', htmlspecialchars(stripslashes($_POST['username_or_email'])));
                 }
-            } elseif (($page['action'] ?? null) === 'reset' and $first_login) {
+            } elseif ($action === 'reset' and $first_login) {
                 $title = l10n('Welcome');
                 $template->assign('is_first_login', true);
             }
@@ -172,8 +182,8 @@ final class PasswordController implements ControllerInterface
                 [
                     'title' => $title,
                     'form_action' => get_root_url() . 'password.php',
-                    'action' => $page['action'],
-                    'username' => $page['username'] ?? \Piwigo\Users\CurrentUser::get()->username,
+                    'action' => $action,
+                    'username' => $username ?? \Piwigo\Users\CurrentUser::get()->username,
                     'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
                         ->getToken(),
                 ]
@@ -340,10 +350,6 @@ final class PasswordController implements ControllerInterface
          * @var array<string, mixed>
          */
         global $user;
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
 
         $state = $_SESSION['reset_password_code'] ?? null;
         if (! is_array($state)) {
@@ -446,7 +452,7 @@ final class PasswordController implements ControllerInterface
         ];
         $status = $targetUser->status->value;
         $has_no_email = $targetUser->email === '';
-        $page['username'] = $targetUser->username;
+        $this->username = $targetUser->username;
         $user = $save_user;
         \Piwigo\Users\CurrentUser::set($saveCurrentUser);
 

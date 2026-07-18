@@ -56,7 +56,6 @@ final class TagsController implements ControllerInterface
             if (is_string($displayModeParam) && in_array($displayModeParam, ['cloud', 'letters'], true)) {
                 $display_mode = $displayModeParam;
             }
-            $page['display_mode'] = $display_mode;
 
             foreach (['cloud', 'letters'] as $mode) {
                 $template->assign(

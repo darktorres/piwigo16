@@ -85,13 +85,6 @@ final class AdminUiHelper
 
     public static function getActiveMenu(string $menuPage): int
     {
-        /** @var array<string, mixed> $page */
-        global $page;
-
-        if (isset($page['active_menu']) && is_int($page['active_menu'])) {
-            return $page['active_menu'];
-        }
-
         return match ($menuPage) {
             'photo', 'photos_add', 'rating', 'tags', 'batch_manager' => 0,
             'album', 'cat_list', 'albums', 'cat_options', 'cat_search', 'permalinks' => 1,

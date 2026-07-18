@@ -71,15 +71,15 @@ final class PictureCommentRenderer
 
         // the picture is commentable if it belongs at least to one category
         // which is commentable
-        $page['show_comments'] = false;
+        $showComments = false;
         foreach ($related_categories as $category) {
             if ($category['commentable'] === 'true') {
-                $page['show_comments'] = true;
+                $showComments = true;
                 break;
             }
         }
 
-        if ($page['show_comments'] and isset($_POST['content'])) {
+        if ($showComments and isset($_POST['content'])) {
             if (\Piwigo\Auth\AccessControl::isAGuest() and ! \Piwigo\Config\Config::commentsForall()) {
                 die('Session expired');
             }
@@ -145,7 +145,7 @@ final class PictureCommentRenderer
             die('ugly spammer');
         }
 
-        if (! $page['show_comments']) {
+        if (! $showComments) {
             return;
         }
 

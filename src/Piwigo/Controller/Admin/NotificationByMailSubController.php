@@ -140,10 +140,6 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         } else {
             $page_mode = $_GET['mode'];
         }
-        /** @var array<string, mixed> $page */
-        global $page;
-        $page['mode'] = $page_mode;
-
         // +-----------------------------------------------------------------------+
         // | Check Access and exit when user status is not ok                      |
         // +-----------------------------------------------------------------------+

@@ -84,6 +84,16 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class ConfigurationSubController implements AdminSubControllerInterface
 {
+    /**
+     * Set by processSizes() (a static method) when a submitted "sizes" tab
+     * form fails validation, so handle()'s own tab-render branch below
+     * knows the template vars are already populated with the (invalid)
+     * submitted values and skips overwriting them with fresh defaults --
+     * shared across two static call sites of this same class, hence a
+     * static property rather than a local variable.
+     */
+    private static bool $sizesLoadedInTpl = false;
+
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
@@ -599,7 +609,7 @@ WHERE param = \'' . $row['param'] . '\'
 
                 // we only load the derivatives if it was not already loaded: it occurs
                 // when submitting the form and an error remains
-                if (! isset($page['sizes_loaded_in_tpl'])) {
+                if (! self::$sizesLoadedInTpl) {
                     $is_gd = (pwg_image::get_library() == 'gd') ? true : false;
                     $template->assign('is_gd', $is_gd);
                     $template->assign(
@@ -791,10 +801,6 @@ WHERE param = \'' . $row['param'] . '\'
      */
     private static function processSizes(): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
@@ -1057,7 +1063,7 @@ WHERE param = \'' . $row['param'] . '\'
             $template->assign('derivatives', $pderivatives);
             $template->assign('ferrors', $errors + $derivative_errors);
             $template->assign('resize_quality', $_POST['resize_quality']);
-            $page['sizes_loaded_in_tpl'] = true;
+            self::$sizesLoadedInTpl = true;
         }
     }
 

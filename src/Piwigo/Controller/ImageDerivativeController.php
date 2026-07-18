@@ -44,25 +44,50 @@ use Piwigo\Session\SessionUserResolver;
  * deleted, not replaced: not firing plugin hooks here is achieved by not
  * registering any, which is the fast-bootstrap design itself.
  *
- * Globals: $conf, $page, $prefixeTable and $logger deliberately stay real
+ * Globals: $conf, $prefixeTable and $logger deliberately stay real
  * globals (declared in every method that touches them) -- shared classes
  * on this exact path read them from global scope: pwg_image and
- * ImageStdParams read $conf, MysqliDb::query() maintains
- * $page['count_queries']/'queries_time', image_ext_imagick.php reads
- * $logger, and Env::applyEnvToConf() fills $prefixeTable by reference.
+ * ImageStdParams read $conf, MysqliDb::query() maintains PageState's
+ * request-wide query counters, image_ext_imagick.php reads $logger, and
+ * Env::applyEnvToConf() fills $prefixeTable by reference. The
+ * rootPath/derivativePath/derivativeExt/derivativeType/coi/srcLocation/
+ * srcPath/srcUrl/originalSize/rotationAngle/derivativeParams
+ * scratch state below is this controller's own -- never read outside it
+ * (this fast-bootstrap path never runs alongside the normal
+ * RequestBootstrap flow that populates the unrelated, same-named
+ * $page['root_path'] gallery-navigation concept elsewhere) -- so it's
+ * private instance state instead of going through PageState at all.
  */
 final class ImageDerivativeController
 {
+    private string $rootPath = '';
+
+    private string $derivativePath = '';
+
+    private string $derivativeExt = '';
+
+    private ?string $derivativeType = null;
+
+    private mixed $coi = null;
+
+    private string $srcLocation = '';
+
+    private string $srcPath = '';
+
+    private string $srcUrl = '';
+
+    private mixed $originalSize = null;
+
+    private int $rotationAngle = 0;
+
+    private ?DerivativeParams $derivativeParams = null;
+
     public function serve(): void
     {
         /**
          * @var array<string, mixed>
          */
         global $conf;
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         /**
          * @var string
          */
@@ -115,7 +140,6 @@ final class ImageDerivativeController
             'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . $db_password) . '.txt',
         ]);
 
-        $page = [];
         $begin = $step = microtime(true);
         $timing = [];
         foreach (explode(',', 'load,rotate,crop,scale,sharpen,watermark,save,send') as $k) {
@@ -173,30 +197,12 @@ SELECT param, value
         }
         ImageStdParams::load_from_db();
 
-        // parseRequest() fills these by mutating the $page global from inside
-        // its own method scope; the defaults below only keep analysis sound
-        // for the reads that follow (always overwritten before use in every
-        // real path).
-        $page['root_path'] = '';
-        $page['derivative_path'] = '';
-        $page['derivative_ext'] = '';
-        $page['derivative_type'] = null;
-        $page['coi'] = null;
-        $page['src_location'] = '';
-        $page['src_path'] = '';
-        $page['src_url'] = '';
-        $page['original_size'] = null;
-        $page['rotation_angle'] = 0;
-
-        // parseRequest() always either sets $page['derivative_params'] itself
-        // (both non-error paths do) or calls ierror(), which never returns —
-        // so its return value here is never null; returning it directly
-        // (rather than re-reading $page['derivative_params'] afterwards)
-        // keeps this typed soundly, since PHPStan can't trace the global
-        // mutation back through the call.
+        // parseRequest() fills these by mutating $this's own properties;
+        // returning its result directly (rather than re-reading
+        // $this->derivativeParams afterwards) keeps this typed soundly.
         $params = $this->parseRequest();
 
-        $src_mtime = @filemtime($page['src_path']);
+        $src_mtime = @filemtime($this->srcPath);
         if ($src_mtime === false) {
             $this->ierror('Source not found', 404);
         }
@@ -208,15 +214,15 @@ SELECT param, value
         // derivative, once generated once, would be served to anyone who
         // knows/guesses the URL on every later request forever, without ever
         // touching the DB again.
-        $page['coi'] = null;
-        if (! str_contains($page['src_location'], '/pwg_representative/')
-            && ! str_contains($page['src_location'], 'themes/')
-            && ! str_contains($page['src_location'], 'plugins/')) {
+        $this->coi = null;
+        if (! str_contains($this->srcLocation, '/pwg_representative/')
+            && ! str_contains($this->srcLocation, 'themes/')
+            && ! str_contains($this->srcLocation, 'plugins/')) {
             try {
                 $query = '
 SELECT *
   FROM ' . $prefixeTable . 'images
-  WHERE path=\'' . addslashes($page['src_location']) . '\'
+  WHERE path=\'' . addslashes($this->srcLocation) . '\'
 ;';
 
                 $row = MysqliDb::fetchAssoc(MysqliDb::query($query));
@@ -232,17 +238,21 @@ SELECT *
                 $this->checkDerivativePermission($image_id);
 
                 if (isset($row['width'])) {
-                    $page['original_size'] = [$row['width'], $row['height']];
+                    $this->originalSize = [$row['width'], $row['height']];
                 }
-                $page['coi'] = $row['coi'];
+                $this->coi = $row['coi'];
 
                 if (! isset($row['rotation'])) {
-                    $page['rotation_angle'] = pwg_image::get_rotation_angle($page['src_path']);
+                    // get_rotation_angle() returns null for "no EXIF
+                    // orientation / non-JPEG source" -- get_rotation_code_
+                    // from_angle()'s own docblock confirms that means the
+                    // same thing as an explicit 0 (no rotation).
+                    $this->rotationAngle = pwg_image::get_rotation_angle($this->srcPath) ?? 0;
 
                     MysqliDb::singleUpdate(
                         $prefixeTable . 'images',
                         [
-                            'rotation' => pwg_image::get_rotation_code_from_angle($page['rotation_angle']),
+                            'rotation' => pwg_image::get_rotation_code_from_angle($this->rotationAngle),
                         ],
                         [
                             'id' => $row['id'],
@@ -259,18 +269,18 @@ SELECT *
                     if (! is_numeric($rotation)) {
                         $this->ierror('Invalid rotation value in database', 500);
                     }
-                    $page['rotation_angle'] = pwg_image::get_rotation_angle_from_code($rotation);
+                    $this->rotationAngle = pwg_image::get_rotation_angle_from_code($rotation);
                 }
             } catch (\Exception $e) {
                 $logger->error($e->getMessage(), 'i.php');
             }
         } else {
-            $page['rotation_angle'] = 0;
+            $this->rotationAngle = 0;
         }
         MysqliDb::close();
 
         $need_generate = false;
-        $derivative_mtime = @filemtime($page['derivative_path']);
+        $derivative_mtime = @filemtime($this->derivativePath);
         if ($derivative_mtime === false or
             $derivative_mtime < $src_mtime or
             $derivative_mtime < $params->last_mod_time) {
@@ -311,7 +321,7 @@ SELECT *
         // masked out -- the fast path has no HtmlRenderer wired, and the
         // failure response must be ierror()'s own 500, not a fatal).
         if (! FilesystemHelper::mkgetdir(
-            dirname($page['derivative_path']),
+            dirname($this->derivativePath),
             FilesystemHelper::MKGETDIR_DEFAULT & ~FilesystemHelper::MKGETDIR_DIE_ON_ERROR
         )) {
             $this->ierror('dir create error', 500);
@@ -320,14 +330,14 @@ SELECT *
         ignore_user_abort(true);
         @set_time_limit(0);
 
-        $image = new pwg_image($page['src_path']);
+        $image = new pwg_image($this->srcPath);
         $timing['load'] = $this->timeStep($step);
 
         $changes = 0;
 
         // rotate
-        if ($page['rotation_angle'] != 0) {
-            $image->rotate($page['rotation_angle']);
+        if ($this->rotationAngle !== 0) {
+            $image->rotate($this->rotationAngle);
             $changes++;
             $timing['rotate'] = $this->timeStep($step);
         }
@@ -339,7 +349,7 @@ SELECT *
         // ?array parameter types (an undefined variable is otherwise seen as mixed).
         $crop_rect = null;
         $scaled_size = null;
-        $params->sizing->compute($o_size, $page['coi'], $crop_rect, $scaled_size);
+        $params->sizing->compute($o_size, $this->coi, $crop_rect, $scaled_size);
         if ((bool) $crop_rect) {
             $changes++;
             $image->crop($crop_rect->width(), $crop_rect->height(), $crop_rect->l, $crop_rect->t);
@@ -414,7 +424,7 @@ SELECT *
         // no change required - redirect to source
         if (! (bool) $changes) {
             header('X-i: No change');
-            $this->ierror($page['src_url'], 301);
+            $this->ierror($this->srcUrl, 301);
         }
 
         if (\Piwigo\Config\Config::derivativesStripMetadataThreshold() > $d_size[0] * $d_size[1]) {// strip metadata for small images
@@ -424,13 +434,13 @@ SELECT *
         $compression_quality = ImageStdParams::$quality;
 
         // for big sizing never go beyond 75 quality
-        if (in_array($page['derivative_type'], [ImageStdParams::FOUR_XLARGE, ImageStdParams::THREE_XLARGE])) {
+        if (in_array($this->derivativeType, [ImageStdParams::FOUR_XLARGE, ImageStdParams::THREE_XLARGE])) {
             $compression_quality = min(ImageStdParams::$quality, 75);
         }
 
-        $image->write($page['derivative_path']);
+        $image->write($this->derivativePath);
         $image->destroy();
-        @chmod($page['derivative_path'], 0644);
+        @chmod($this->derivativePath, 0644);
         $timing['save'] = $this->timeStep($step);
 
         $this->sendDerivative($expires);
@@ -440,8 +450,8 @@ SELECT *
 
         if ($logger->severity() >= Logger::DEBUG) {
             $logger->debug('', 'i.php', [
-                'src_path' => basename($page['src_path']),
-                'derivative_path' => basename($page['derivative_path']),
+                'src_path' => basename($this->srcPath),
+                'derivative_path' => basename($this->derivativePath),
                 'o_size' => $o_size[0] . ' ' . $o_size[1] . ' ' . ($o_size[0] * $o_size[1]),
                 'd_size' => $d_size[0] . ' ' . $d_size[1] . ' ' . ($d_size[0] * $d_size[1]),
                 'mem_usage' => function_exists('memory_get_peak_usage') ? round(memory_get_peak_usage() / (1024 * 1024), 1) : '',
@@ -580,11 +590,6 @@ SELECT *
 
     private function parseRequest(): DerivativeParams
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
-
         if (\Piwigo\Config\Config::questionMarkInUrls() === false and
              isset($_SERVER['PATH_INFO']) and ! empty($_SERVER['PATH_INFO'])) {
             $req = $_SERVER['PATH_INFO'];
@@ -595,7 +600,7 @@ SELECT *
             $req = is_string($req) ? $req : '';
             $req = str_replace('//', '/', $req);
             $path_count = count(explode('/', $req));
-            $page['root_path'] = PHPWG_ROOT_PATH . str_repeat('../', $path_count - 1);
+            $this->rootPath = PHPWG_ROOT_PATH . str_repeat('../', $path_count - 1);
         } else {
             $req = $_SERVER['QUERY_STRING'];
             $req = is_string($req) ? $req : '';
@@ -603,7 +608,7 @@ SELECT *
                 $req = substr($req, 0, $pos);
             }
             $req = rawurldecode($req);
-            $page['root_path'] = PHPWG_ROOT_PATH;
+            $this->rootPath = PHPWG_ROOT_PATH;
         }
 
         $req = ltrim($req, '/');
@@ -622,12 +627,12 @@ SELECT *
             (bool) preg_match($sync_chars_regex, $token) or $this->ierror('Invalid chars in request', 400);
         }
 
-        $page['derivative_path'] = PHPWG_ROOT_PATH . Config::derivativeDir() . $req;
+        $this->derivativePath = PHPWG_ROOT_PATH . Config::derivativeDir() . $req;
 
         $pos = strrpos($req, '.');
         $pos !== false || $this->ierror('Missing .', 400);
         $ext = substr($req, $pos);
-        $page['derivative_ext'] = $ext;
+        $this->derivativeExt = $ext;
         $req = substr($req, 0, $pos);
 
         $pos = strrpos($req, '-');
@@ -638,23 +643,23 @@ SELECT *
         $deriv = explode('_', $deriv);
         foreach (ImageStdParams::get_defined_type_map() as $type => $params) {
             if (DerivativeUrlCodec::derivativeToUrl($type) == $deriv[0]) {
-                $page['derivative_type'] = $type;
-                $page['derivative_params'] = $params;
+                $this->derivativeType = $type;
+                $this->derivativeParams = $params;
                 break;
             }
         }
 
-        if (! isset($page['derivative_type'])) {
+        if ($this->derivativeType === null) {
             if (DerivativeUrlCodec::derivativeToUrl(ImageStdParams::CUSTOM) == $deriv[0]) {
-                $page['derivative_type'] = ImageStdParams::CUSTOM;
+                $this->derivativeType = ImageStdParams::CUSTOM;
             } else {
                 $this->ierror('Unknown parsing type', 400);
             }
         }
         array_shift($deriv);
 
-        if ($page['derivative_type'] == ImageStdParams::CUSTOM) {
-            $params = $page['derivative_params'] = $this->parseCustomParams($deriv);
+        if ($this->derivativeType === ImageStdParams::CUSTOM) {
+            $params = $this->derivativeParams = $this->parseCustomParams($deriv);
             ImageStdParams::apply_global($params);
 
             if ($params->sizing->ideal_size[0] < 20 or $params->sizing->ideal_size[1] < 20) {
@@ -678,15 +683,15 @@ SELECT *
             $req = '../' . $req;
         }
 
-        $page['src_location'] = $req . $ext;
-        $page['src_path'] = PHPWG_ROOT_PATH . $page['src_location'];
-        $page['src_url'] = $page['root_path'] . $page['src_location'];
+        $this->srcLocation = $req . $ext;
+        $this->srcPath = PHPWG_ROOT_PATH . $this->srcLocation;
+        $this->srcUrl = $this->rootPath . $this->srcLocation;
 
-        // Every non-erroring path above sets $page['derivative_params'] itself
+        // Every non-erroring path above sets $this->derivativeParams itself
         // (either from the ImageStdParams::get_defined_type_map() match or from
         // parseCustomParams()) before reaching this point; guard explicitly
         // rather than trust flow analysis across the foreach/if branches above.
-        $derivative_params = $page['derivative_params'];
+        $derivative_params = $this->derivativeParams;
         if (! $derivative_params instanceof DerivativeParams) {
             $this->ierror('Internal error: unresolved derivative params', 500);
         }
@@ -695,16 +700,14 @@ SELECT *
 
     private function trySwitchSource(DerivativeParams $params, int $original_mtime): bool
     {
-        /** @var array<string, mixed> $page */
-        global $page;
-        if (! isset($page['original_size'])) {
+        if ($this->originalSize === null) {
             return false;
         }
 
-        // $page['original_size'] is only ever set (see serve()'s flow) from a
+        // $this->originalSize is only ever set (see serve()'s flow) from a
         // DB row's width/height columns, which MysqliDb::fetchAssoc() types
         // as numeric strings; guard the shape and coerce rather than trust it.
-        $original_size = $page['original_size'];
+        $original_size = $this->originalSize;
         if (! is_array($original_size)
             || ! isset($original_size[0], $original_size[1])
             || ! is_numeric($original_size[0])
@@ -713,7 +716,7 @@ SELECT *
         }
         $original_size = [(int) $original_size[0], (int) $original_size[1]];
 
-        if ($page['rotation_angle'] == 90 || $page['rotation_angle'] == 270) {
+        if ($this->rotationAngle === 90 || $this->rotationAngle === 270) {
             $tmp = $original_size[0];
             $original_size[0] = $original_size[1];
             $original_size[1] = $tmp;
@@ -760,10 +763,7 @@ SELECT *
         }
 
         foreach (array_reverse($candidates) as $candidate) {
-            $candidate_path = $page['derivative_path'];
-            if (! is_string($candidate_path)) {
-                continue;
-            }
+            $candidate_path = $this->derivativePath;
             $candidate_path = str_replace('-' . DerivativeUrlCodec::derivativeToUrl($params->type), '-' . DerivativeUrlCodec::derivativeToUrl($candidate->type), $candidate_path);
             $candidate_mtime = @filemtime($candidate_path);
             if ($candidate_mtime === false
@@ -773,11 +773,9 @@ SELECT *
             }
             $params->use_watermark = false;
             $params->sharpen = min(1, $params->sharpen);
-            $page['src_path'] = $candidate_path;
-            $root_path = $page['root_path'];
-            $root_path = is_string($root_path) ? $root_path : '';
-            $page['src_url'] = $root_path . substr($candidate_path, strlen(PHPWG_ROOT_PATH));
-            $page['rotation_angle'] = 0;
+            $this->srcPath = $candidate_path;
+            $this->srcUrl = $this->rootPath . substr($candidate_path, strlen(PHPWG_ROOT_PATH));
+            $this->rotationAngle = 0;
             return true;
         }
         return false;
@@ -785,14 +783,7 @@ SELECT *
 
     private function sendDerivative(false|int $expires): void
     {
-        /** @var array<string, mixed> $page */
-        global $page;
-
-        // 'derivative_path' is always built as a string concatenation inside
-        // parseRequest() (a separate scope PHPStan can't trace here); narrow
-        // once for every read in this method rather than trust a bare cast.
-        $derivative_path = $page['derivative_path'];
-        $derivative_path = is_string($derivative_path) ? $derivative_path : '';
+        $derivative_path = $this->derivativePath;
 
         if (isset($_GET['ajaxload']) and $_GET['ajaxload'] == 'true') {
             echo json_encode([
@@ -815,8 +806,7 @@ SELECT *
         }
         header('Connection: close');
 
-        $derivative_ext = $page['derivative_ext'];
-        $derivative_ext = is_string($derivative_ext) ? $derivative_ext : '';
+        $derivative_ext = $this->derivativeExt;
 
         $ctype = 'application/octet-stream';
         switch (strtolower($derivative_ext)) {

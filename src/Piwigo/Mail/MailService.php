@@ -819,7 +819,7 @@ SELECT
                 $template->assign(
                     [
                         'GALLERY_URL' => add_url_params($galleryHomeUrl, $addUrlParams),
-                        'GALLERY_TITLE' => $page['gallery_title'] ?? \Piwigo\Config\Config::galleryTitle(),
+                        'GALLERY_TITLE' => \Piwigo\Config\Config::galleryTitle(),
                         'VERSION' => ((bool) (\Piwigo\Config\Config::showVersion())) ? AppInfo::VERSION : '',
                         'PHPWG_URL' => defined('PHPWG_URL') ? PHPWG_URL : '',
                         'CONTENT_ENCODING' => \Piwigo\Core\CharsetHelper::getPwgCharset(),

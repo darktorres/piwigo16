@@ -38,8 +38,6 @@ final class DeviceHelper
      */
     public static function mobileTheme(): bool
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $mobile_theme_conf = \Piwigo\Config\Config::mobilTheme();
         if ($mobile_theme_conf === null || $mobile_theme_conf === '' || $mobile_theme_conf === 0

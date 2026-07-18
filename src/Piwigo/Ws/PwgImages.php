@@ -299,8 +299,6 @@ SELECT category_id, MAX(`rank`) AS max_rank
      */
     private static function removeChunks($original_sum, $type): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $upload_dir_conf = \Piwigo\Config\Config::uploadDir();
         $upload_dir = $upload_dir_conf . '/buffer';
@@ -334,8 +332,6 @@ SELECT category_id, MAX(`rank`) AS max_rank
      */
     public static function addComment(array $params, PwgServer $service): PwgError|array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         if (! \Piwigo\Config\Config::activateComments()) {
             return new PwgError(403, 'Comments are disabled');
@@ -675,8 +671,6 @@ SELECT DISTINCT id
             ->rate($params['image_id'], (int) $params['rate']);
 
         if ($res == false) {
-            /** @var array<string, mixed> $conf */
-            global $conf;
             $rate_items = \Piwigo\Config\Config::rateItems();
             $rate_items = is_array($rate_items) ? array_filter($rate_items, is_scalar(...)) : [];
             return new PwgError(403, 'Forbidden or rate not in ' . implode(',', $rate_items));
@@ -1100,8 +1094,6 @@ SELECT *
      */
     public static function setPrivacyLevel(array $params, PwgServer $service): PwgError|int|string
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $available_permission_levels = \Piwigo\Config\Config::availablePermissionLevels();
 
@@ -1716,8 +1708,6 @@ SELECT id, name, permalink
      */
     public static function upload(array $params, PwgServer $service): PwgError|array|null
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $format_ext = null;
 
@@ -2602,8 +2592,6 @@ SELECT path
      */
     public static function setInfo(array $params, PwgServer $service): ?PwgError
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         if (isset($params['pwg_token']) and new \Piwigo\Csrf\CsrfService()->getToken() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');

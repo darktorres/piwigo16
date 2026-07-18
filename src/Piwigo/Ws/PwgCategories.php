@@ -57,8 +57,6 @@ final class PwgCategories
      */
     public static function getImages(array $params, PwgServer &$service): PwgError|array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $params['cat_id'] = array_unique($params['cat_id']);
 
@@ -613,8 +611,6 @@ SELECT id, path, representative_ext
      */
     public static function getAdminList(array $params, PwgServer &$service): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         if (! isset($params['additional_output'])) {
             $params['additional_output'] = '';
@@ -893,8 +889,6 @@ SELECT id
      */
     public static function setInfo(array $params, PwgServer &$service): ?PwgError
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         if (isset($params['pwg_token']) and new CsrfService()->getToken() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -1048,8 +1042,6 @@ UPDATE ' . Tables::userCacheCategories() . '
      */
     public static function deleteRepresentative(array $params, PwgServer &$service): ?PwgError
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         // does the category really exist?
         $query = '

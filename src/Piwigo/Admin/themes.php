@@ -113,8 +113,6 @@ class themes
      */
     public function perform_action($action, $theme_id): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         if (! \Piwigo\Config\Config::enableExtensionsInstall() and $action == 'delete') {
             die('Piwigo extensions install/update/delete system is disabled');

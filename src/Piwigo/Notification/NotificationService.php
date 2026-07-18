@@ -291,8 +291,6 @@ final class NotificationService
      */
     public function getHtmlDescriptionRecentPostDate(array $dateDetail, ?string $authKey = null): string
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $addUrlParams = [];
         if ($authKey !== null) {

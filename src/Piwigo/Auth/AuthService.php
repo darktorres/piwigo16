@@ -53,8 +53,6 @@ final class AuthService
      */
     public function calculateAutoLoginKey(int|string $userId, int|string $time): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         // see validate_mail_address() for why this is string=>string
         /** @var array<string, string> $user_fields */
@@ -187,8 +185,6 @@ final class AuthService
      */
     public function autoLogin(): bool
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         // see logUser() for why these accept both the config-default
         // scalar type and the DB-persisted string form
@@ -256,8 +252,6 @@ final class AuthService
      */
     public function logoutUser(): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $pwg_uid = $_SESSION['pwg_uid'] ?? null;
         trigger_notify('user_logout', $pwg_uid);
@@ -400,8 +394,6 @@ final class AuthService
      */
     public function findUserByUsernameOrEmail(string $usernameOrEmail): ?array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         // see UserService::validateMailAddress() for why this is string=>string
         /** @var array<string, string> $user_fields */
@@ -873,8 +865,6 @@ SELECT COUNT(*)
      */
     public static function verifyUserCode(string $secret, string $code): bool
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         // see generateUserCode() for why this needs numeric narrowing
         $password_reset_code_duration = \Piwigo\Config\Config::passwordResetCodeDuration();

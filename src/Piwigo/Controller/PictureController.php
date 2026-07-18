@@ -1287,8 +1287,6 @@ SELECT id, name, permalink
      */
     private function defaultPictureContent(string $content, array $element_info): string
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         if ($content !== '') {// someone hooked us - so we skip;
             return $content;

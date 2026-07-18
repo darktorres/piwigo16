@@ -119,8 +119,6 @@ class updates
      */
     public function get_piwigo_new_versions(): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $new_versions = [
             'piwigo.org-checked' => false,

@@ -23,8 +23,6 @@ final class ThemeCatalog
      */
     public static function getPwgThemes(bool $showMobile = false): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $themes = [];
 
@@ -76,8 +74,6 @@ SELECT
      */
     public static function checkThemeInstalled(string $themeId): bool
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $themes_dir = \Piwigo\Config\Config::themesDir();
 

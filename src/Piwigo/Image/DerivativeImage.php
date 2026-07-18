@@ -214,8 +214,6 @@ final class DerivativeImage
 
         $rel_path = Config::derivativeDir() . $loc;
 
-        /** @var array<string, mixed> $conf */
-        global $conf;
         $url_style = \Piwigo\Config\Config::derivativeUrlStyle();
         if (! (bool) $url_style) {
             $mtime = @filemtime(PHPWG_ROOT_PATH . $rel_path);

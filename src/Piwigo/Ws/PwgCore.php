@@ -438,8 +438,6 @@ DELETE FROM ' . Tables::rate() . '
      */
     public static function sessionGetStatus(array $params, PwgServer &$service): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $currentUser = \Piwigo\Users\CurrentUser::get();
         $res = [];
@@ -505,8 +503,6 @@ DELETE FROM ' . Tables::rate() . '
      */
     public static function getActivityList(array $param, PwgServer &$service): PwgError|array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         foreach (['date_min', 'date_max'] as $datefield) {
             if (! empty($param[$datefield]) and ! \Piwigo\Core\DateHelper::isValidMysqlDatetime($param[$datefield])) {

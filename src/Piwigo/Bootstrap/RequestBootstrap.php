@@ -356,8 +356,6 @@ final class RequestBootstrap
      */
     public static function pemUrl(): string
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         if (\Piwigo\Config\Config::has('alternative_pem_url') and \Piwigo\Config\Config::alternativePemUrl() != '') {
             $alternative_pem_url = \Piwigo\Config\Config::alternativePemUrl();

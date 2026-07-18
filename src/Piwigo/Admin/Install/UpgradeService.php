@@ -396,8 +396,6 @@ SELECT id
 
     public static function upgradeDbConnect(): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         try {
             $db_host = \Piwigo\Config\Config::dbHost();

@@ -149,8 +149,6 @@ if (! function_exists('redirect_html')) {
 if (! function_exists('redirect')) {
     function redirect($url, $msg = '', $refresh_time = 0): never
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         // with RefeshTime <> 0, only html must be used
         if (\Piwigo\Config\Config::defaultRedirectMethod() === 'http'

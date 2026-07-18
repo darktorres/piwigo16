@@ -62,8 +62,6 @@ final class FileCombiner
      */
     public function combine(): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
         $force = false;
         if (\Piwigo\Auth\AccessControl::isAdmin() && ($this->is_css || ! \Piwigo\Config\Config::templateCompileCheck())) {
             $force = (isset($_SERVER['HTTP_CACHE_CONTROL']) && is_string($_SERVER['HTTP_CACHE_CONTROL']) && str_contains($_SERVER['HTTP_CACHE_CONTROL'], 'max-age=0'))
@@ -143,8 +141,6 @@ final class FileCombiner
      */
     private function process_combinable($combinable, bool $return_content, bool $force, string &$header): ?string
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
         if ($combinable->is_template) {
             if (! $return_content) {
                 $key = [$combinable->path, $combinable->version];

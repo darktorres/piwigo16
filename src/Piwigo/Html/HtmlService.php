@@ -38,8 +38,6 @@ final class HtmlService implements HtmlRenderingInterface
     #[\Override]
     public function getCatDisplayName(array $catInformations, ?string $url = ''): string
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
         $level_separator = \Piwigo\Config\Config::levelSeparator();
 
         $output = '';
@@ -622,8 +620,6 @@ SELECT id, name, permalink
     #[\Override]
     public function getThumbnailTitle(array $info, string $title, string $comment = ''): string
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $details = [];
 
@@ -671,8 +667,6 @@ SELECT id, name, permalink
      */
     public function getElementUrlProtectionHandler(string $url, array $infos): string
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
         if (\Piwigo\Config\Config::originalUrlProtection() === 'images') { // protect only images and not other file types (for example large movies that we don't want to send through our file proxy)
             $path = $infos['path'] ?? null;
             $ext = \Piwigo\Core\StringHelper::getExtension(is_string($path) ? $path : null);

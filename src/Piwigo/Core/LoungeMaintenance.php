@@ -24,8 +24,6 @@ final class LoungeMaintenance
      */
     public static function needsEmptying(): bool
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         if (! \Piwigo\Config\Config::has('lounge_active') || ! \Piwigo\Config\Config::loungeActive()) {
             return false;

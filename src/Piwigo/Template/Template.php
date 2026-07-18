@@ -720,8 +720,6 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
      */
     public static function modcompiler_translate(array $params): string
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         switch (count($params)) {
             case 1:

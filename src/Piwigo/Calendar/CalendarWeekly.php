@@ -24,8 +24,6 @@ class CalendarWeekly extends CalendarBase
     public function initialize($inner_sql): void
     {
         parent::initialize($inner_sql);
-        /** @var array<string, mixed> $conf */
-        global $conf;
         $week_no_labels = [];
         for ($i = 1; $i <= 53; $i++) {
             $week_no_labels[$i] = l10n('Week %d', $i);

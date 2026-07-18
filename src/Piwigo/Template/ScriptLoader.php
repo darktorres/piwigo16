@@ -232,8 +232,6 @@ class ScriptLoader
      */
     private static function check_load_dep(array $scripts): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
         do {
             $changed = false;
             foreach ($scripts as $id => $script) {

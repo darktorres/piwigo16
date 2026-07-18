@@ -50,8 +50,6 @@ class pwg_image
         public string $source_filepath,
         ?string $library = null
     ) {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         trigger_notify('load_image_library', [&$this]);
 
@@ -427,8 +425,6 @@ class pwg_image
 
     public static function is_ext_imagick(): bool
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         if (! function_exists('exec')) {
             return false;
@@ -453,8 +449,6 @@ class pwg_image
 
     public static function get_library(?string $library = null, ?string $extension = null): string|false
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         if ($library === null) {
             $conf_library = \Piwigo\Config\Config::graphicsLibrary();
@@ -497,8 +491,6 @@ class pwg_image
      */
     public static function get_graphics_library(): string|false
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $library = self::get_library();
 

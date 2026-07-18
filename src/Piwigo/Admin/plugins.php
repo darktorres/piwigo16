@@ -128,8 +128,6 @@ class plugins
      */
     public function perform_action($action, $plugin_id, array $options = []): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         if (! \Piwigo\Config\Config::enableExtensionsInstall() and $action == 'delete') {
             die('Piwigo extensions install/update/delete system is disabled');

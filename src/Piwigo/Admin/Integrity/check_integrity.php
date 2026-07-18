@@ -48,8 +48,6 @@ class check_integrity
         global $page;
         /** @var array<string, mixed> $header_notes */
         global $header_notes;
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         // Ignore list
         $conf_c13y_ignore_raw = \Piwigo\Config\Config::c13yIgnore() ?? null;

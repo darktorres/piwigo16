@@ -108,8 +108,6 @@ final class TagService
      */
     public function addLevelToTags(array $tags): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         if ($tags === []) {
             return $tags;
@@ -276,8 +274,6 @@ final class TagService
      */
     public function getImageIdsForTags(array $tagIds, string $mode = 'AND', ?string $extraImagesWhereSql = '', ?string $orderBy = '', bool $usePermissions = true): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         if ($tagIds === []) {
             return [];

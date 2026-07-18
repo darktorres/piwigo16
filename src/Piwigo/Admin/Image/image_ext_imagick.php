@@ -40,8 +40,6 @@ class image_ext_imagick implements imageInterface
     public function __construct(
         public string $source_filepath
     ) {
-        /** @var array<string, mixed> $conf */
-        global $conf;
         $imagick_dir = \Piwigo\Config\Config::extImagickDir();
         $this->imagickdir = $imagick_dir;
 
@@ -138,8 +136,6 @@ class image_ext_imagick implements imageInterface
     #[\Override]
     public function set_compression_quality(int $quality): bool
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         if ($this->is_animated_webp) {
             // in cas of animated WebP, we need to maximize quality to 70 to avoid

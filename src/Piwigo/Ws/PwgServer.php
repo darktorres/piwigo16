@@ -516,8 +516,6 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
 
     public function isAuthorizedMethodForAPIKEY(): bool
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         // if the request is made with an API key (via header or session API key),
         // we check whether the requested method is on the

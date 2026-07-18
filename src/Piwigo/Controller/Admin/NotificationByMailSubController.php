@@ -569,8 +569,6 @@ order by
      */
     private static function renderGlobalCustomizeMailContent(mixed $customize_mail_content): mixed
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         // Real callers always pass a string (config value or POSTed content);
         // this handler is registered as a generic event filter (mixed in/out),

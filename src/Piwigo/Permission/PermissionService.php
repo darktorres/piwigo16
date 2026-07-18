@@ -34,8 +34,6 @@ final class PermissionService
      */
     public static function getPrivacyLevelOptions(): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $available_permission_levels = \Piwigo\Config\Config::availablePermissionLevels();
 

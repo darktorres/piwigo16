@@ -110,8 +110,6 @@ final class SrcImage
     public function __construct(
         array $infos
     ) {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         // images.id/.path/.file are all NOT NULL DB columns, but every
         // element read back from a DB row is string|null per this driver

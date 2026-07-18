@@ -31,8 +31,6 @@ final class SessionBootstrap
 {
     public static function register(): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         if (\Piwigo\Config\Config::has('session_save_handler')
           and (\Piwigo\Config\Config::sessionSaveHandler() === 'db')

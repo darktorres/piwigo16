@@ -39,8 +39,6 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
     #[\Override]
     public function getWebmasterMailAddress(): string
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $user_fields = \Piwigo\Config\Config::userFields();
         $email_field = $user_fields['email'];
@@ -295,8 +293,6 @@ final class UserRepository extends AbstractRepository implements \Piwigo\Core\We
      */
     public function deleteUser(int $userId): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $tables = [
             Tables::userAccess(),

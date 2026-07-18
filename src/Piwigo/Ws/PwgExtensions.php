@@ -77,11 +77,9 @@ final class PwgExtensions
      */
     public static function pluginsPerformAction(array $params, PwgServer &$service): PwgError|true
     {
-        global $conf;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         /** @var Template $template */
-        /** @var array<string, mixed> $conf */
         if (new CsrfService()->getToken() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -126,11 +124,9 @@ final class PwgExtensions
      */
     public static function themesPerformAction(array $params, PwgServer &$service): PwgError|true
     {
-        global $conf;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         /** @var Template $template */
-        /** @var array<string, mixed> $conf */
         if (new CsrfService()->getToken() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -169,9 +165,6 @@ final class PwgExtensions
      */
     public static function update(array $params, PwgServer &$service): PwgError|string
     {
-        global $conf;
-
-        /** @var array<string, mixed> $conf */
         if (! \Piwigo\Config\Config::enableExtensionsInstall()) {
             return new PwgError(401, 'Piwigo extensions install/update system is disabled');
         }

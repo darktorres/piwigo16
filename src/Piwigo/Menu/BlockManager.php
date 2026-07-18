@@ -80,8 +80,6 @@ class BlockManager
      */
     public function prepare_display(): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
         $conf_id = 'blk_' . $this->id;
         $mb_conf = \Piwigo\Config\Config::all()[$conf_id] ?? [];
         if (! is_array($mb_conf)) {

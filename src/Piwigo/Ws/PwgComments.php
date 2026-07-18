@@ -48,8 +48,6 @@ final class PwgComments
      */
     public static function getList(array $params, PwgServer &$service): PwgError|array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         if (! \Piwigo\Config\Config::activateComments()) {
             return new PwgError(403, 'Comments are disabled');

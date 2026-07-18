@@ -226,8 +226,6 @@ final class CategoryService
      */
     public function getPreferredImageOrders(): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $orders = trigger_change('get_category_preferred_image_orders', [
             [l10n('Default'), '', true],
@@ -490,8 +488,6 @@ final class CategoryService
         string $orderBy = '',
         bool $usePermissions = true
     ): array {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         if ($catIds === []) {
             return [];
@@ -554,8 +550,6 @@ final class CategoryService
      */
     public function getRelatedCategoriesMenu(array $items, array $excludedCatIds = []): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $relatedAlbumsDisplayLimit = \Piwigo\Config\Config::relatedAlbumsDisplayLimit();
         $relatedAlbumsDisplayLimitInt = $relatedAlbumsDisplayLimit;
@@ -988,8 +982,6 @@ final class CategoryService
      */
     public function updateCategory(array|int|string $ids = 'all'): ?false
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         if ($ids === 'all') {
             $whereCats = '1=1';
@@ -1607,8 +1599,6 @@ final class CategoryService
      */
     public function createVirtualCategory(string $categoryName, ActivityLoggerInterface $activityLogger, int|string|null $parentId = null, array $options = []): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         // is the given category name only containing blank spaces ?
         if ((bool) preg_match('/^\s*$/', $categoryName)) {

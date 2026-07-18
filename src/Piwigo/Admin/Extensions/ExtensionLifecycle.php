@@ -60,8 +60,6 @@ final class ExtensionLifecycle
         ?array $fsEntry,
         array $options = [],
     ): array {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         if (! \Piwigo\Config\Config::enableExtensionsInstall() and $action === 'delete') {
             die('Piwigo extensions install/update/delete system is disabled');
@@ -233,8 +231,6 @@ final class ExtensionLifecycle
      */
     private function performThemeAction(string $action, string $id, ?array $fsEntry): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $dbRow = $this->repo->find(ExtensionType::Theme, $id);
         $errors = [];
@@ -340,8 +336,6 @@ final class ExtensionLifecycle
      */
     private function performLanguageAction(string $action, string $id, ?array $fsEntry): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $dbRow = $this->repo->find(ExtensionType::Language, $id);
         $errors = [];
@@ -445,8 +439,6 @@ final class ExtensionLifecycle
 
     private function setDefaultTheme(string $themeId): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $defaultTheme = (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->getDefaultTheme();
         $userIds = $this->repo->findUserIdsByTheme($defaultTheme);

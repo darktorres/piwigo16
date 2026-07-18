@@ -221,8 +221,6 @@ abstract class CalendarBase
         $show_empty = false,
         $labels = null
     ) {
-        /** @var array<string, mixed> $conf */
-        global $conf;
         global $page;
 
         $nav_bar_datas = [];

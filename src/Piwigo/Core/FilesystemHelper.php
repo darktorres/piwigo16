@@ -79,8 +79,6 @@ final class FilesystemHelper
     public static function mkgetdir(string $dir, int $flags = self::MKGETDIR_DEFAULT): bool
     {
         if (! is_dir($dir)) {
-            /** @var array<string, mixed> $conf */
-            global $conf;
             if (str_starts_with(PHP_OS, 'WIN')) {
                 $dir = str_replace('/', DIRECTORY_SEPARATOR, $dir);
             }
@@ -136,8 +134,6 @@ final class FilesystemHelper
      */
     public static function getFsDirectories(string $path, bool $recursive = true): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $dirs = [];
         $path = rtrim($path, '/');

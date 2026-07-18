@@ -51,8 +51,6 @@ final class PasswordService
         string $hash,
         ?int $userId = null
     ): bool {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         if (str_starts_with($hash, '$P$') || str_starts_with($hash, '$H$')) {
             if (! $this->verifyLegacyPhpass($password, $hash)) {

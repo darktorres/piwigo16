@@ -38,8 +38,6 @@ final class RateService
      */
     public function rate(int $imageId, int|string|null $rate): array|false
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $rateItems = \Piwigo\Config\Config::rateItems();
 

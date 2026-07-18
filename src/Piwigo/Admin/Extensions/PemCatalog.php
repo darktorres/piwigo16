@@ -38,8 +38,6 @@ final class PemCatalog
      */
     public function getVersionsToCheck(ExtensionType $type, bool $betaTest = false, string $version = AppInfo::VERSION): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $pemBaseUrl = is_string(PEM_URL) ? PEM_URL : '';
         $versionsToCheck = [];
@@ -110,8 +108,6 @@ final class PemCatalog
      */
     public function getServerExtensions(ExtensionType $type, array $fsExtensionIds, bool $new = false, bool $betaTest = false, string $version = AppInfo::VERSION): ?array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $versionsToCheck = $this->getVersionsToCheck($type, $betaTest, $version);
         if ($versionsToCheck === []) {
@@ -202,9 +198,6 @@ final class PemCatalog
         if ($versionsToCheck === []) {
             return false;
         }
-
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $extensionIds = [];
         foreach ($fsExtensions as $fsExtension) {

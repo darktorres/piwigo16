@@ -130,8 +130,6 @@ final class ImageStdParams
      */
     public static function get_disabled_type_map(): array|string
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         if ((bool) count(self::$disabled_type_map)) {
             return self::$disabled_type_map;
@@ -195,8 +193,6 @@ final class ImageStdParams
      */
     public static function load_from_db(): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         // \Piwigo\Config\Config::derivatives() does not exist at all until save() has been
         // called once (a fresh install's config.sql has no 'derivatives'

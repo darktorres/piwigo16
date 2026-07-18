@@ -62,8 +62,6 @@ final class UserService implements DefaultLanguageProviderInterface
      */
     public function validateMailAddress(?int $userId, ?string $mailAddress): string
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $isEmpty = $mailAddress === null || $mailAddress === '';
         if (
@@ -95,8 +93,6 @@ final class UserService implements DefaultLanguageProviderInterface
      */
     public function validateLoginCase(string $login): string
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         if (\defined('PHPWG_INSTALLED')) {
             /** @var array<string, string> $user_fields */
@@ -115,8 +111,6 @@ final class UserService implements DefaultLanguageProviderInterface
      */
     public function searchCaseUsername(string $username): string
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         /** @var array<string, string> $user_fields */
         $user_fields = \Piwigo\Config\Config::userFields();
@@ -139,8 +133,6 @@ final class UserService implements DefaultLanguageProviderInterface
 
     public function getUserId(string $username): int|false
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         /** @var array<string, string> $user_fields */
         $user_fields = \Piwigo\Config\Config::userFields();
@@ -150,8 +142,6 @@ final class UserService implements DefaultLanguageProviderInterface
 
     public function getUserIdByEmail(string $email): int|false
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         /** @var array<string, string> $user_fields */
         $user_fields = \Piwigo\Config\Config::userFields();
@@ -166,8 +156,6 @@ final class UserService implements DefaultLanguageProviderInterface
      */
     public function getUsername(int $userId): false|string
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         /** @var array<string, string> $user_fields */
         $user_fields = \Piwigo\Config\Config::userFields();
@@ -215,8 +203,6 @@ final class UserService implements DefaultLanguageProviderInterface
         bool $notifyAdmin = true,
         bool $notifyUser = false
     ): array {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $errors = [];
         $duplicateUsername = false;
@@ -326,8 +312,6 @@ final class UserService implements DefaultLanguageProviderInterface
      */
     public function createUserInfos(array $userIds, ?array $overrideValues = null): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         if ($userIds === []) {
             return;
@@ -442,8 +426,6 @@ final class UserService implements DefaultLanguageProviderInterface
 
     private function notifyExistingAccountOfDuplicateRegistration(string $login, ?string $mailAddress): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         /** @var array<string, string> $user_fields */
         $user_fields = \Piwigo\Config\Config::userFields();
@@ -472,8 +454,6 @@ final class UserService implements DefaultLanguageProviderInterface
 
     private function notifyAdminsOfNewRegistration(int $userId, string $login, ?string $mailAddress): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $adminUrl = get_absolute_root_url() . 'admin.php?page=user_list&user_id=' . $userId;
 
@@ -501,8 +481,6 @@ final class UserService implements DefaultLanguageProviderInterface
 
     private function sendWelcomeEmail(string $login, string $mailAddress): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $length = mt_rand(10, 15);
         $keyargsContent = [
@@ -548,8 +526,6 @@ final class UserService implements DefaultLanguageProviderInterface
      */
     public function buildUser(int $userId, bool $useCache = true): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $user = [];
         $user['id'] = $userId;
@@ -1508,8 +1484,6 @@ SELECT
      */
     public function syncUsers(): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $userFields = \Piwigo\Config\Config::userFields();
         $userIdField = is_array($userFields) && is_string($userFields['id'] ?? null) ? $userFields['id'] : 'id';

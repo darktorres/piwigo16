@@ -40,8 +40,6 @@ final class MetadataService
      */
     public function getIptcData(string $filename, array $map, string $arraySep = ','): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $result = [];
 
@@ -250,8 +248,6 @@ final class MetadataService
      */
     public function getSyncIptcData(string $file): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $map = $this->stringMap(\Piwigo\Config\Config::useIptcMapping());
 
@@ -291,8 +287,6 @@ final class MetadataService
      */
     public function getSyncExifData(string $file): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $map = $this->stringMap(\Piwigo\Config\Config::useExifMapping());
 
@@ -339,8 +333,6 @@ final class MetadataService
      */
     public function getSyncMetadataAttributes(): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $updateFields = ['filesize', 'width', 'height'];
 
@@ -369,8 +361,6 @@ final class MetadataService
      */
     public function getSyncMetadata(array $infos): array|false
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $path = $infos['path'] ?? null;
         $path = is_string($path) ? $path : '';
@@ -597,8 +587,6 @@ final class MetadataService
      */
     public function metadataNormalizeKeywordsString(string $keywordsString): string
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $separatorRegex = \Piwigo\Config\Config::metadataKeywordSeparatorRegex();
 

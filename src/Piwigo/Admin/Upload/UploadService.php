@@ -558,8 +558,6 @@ SELECT
      */
     private function addUploadedFileAddToCategories(int|string $image_id, ?array $categories): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         if (! \Piwigo\Config\Config::has('lounge_active')) {
             \Piwigo\Config\ConfigDb::confUpdateParam('lounge_active', false, true);
@@ -1318,8 +1316,6 @@ SELECT
 
     public function readyForUploadMessage(): ?string
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $upload_dir = \Piwigo\Config\Config::uploadDir();
 

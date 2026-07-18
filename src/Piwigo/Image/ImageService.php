@@ -59,8 +59,6 @@ final class ImageService
      */
     public function getDefaultSlideshowParams(): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         return [
             'period' => \Piwigo\Config\Config::slideshowPeriod(),
@@ -75,8 +73,6 @@ final class ImageService
      */
     public function correctSlideshowParams(array $params = []): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $period = $params['period'] ?? 0;
         $min = \Piwigo\Config\Config::slideshowPeriodMin();
@@ -171,8 +167,6 @@ final class ImageService
      */
     public function deleteElementFiles(array $ids): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         if ($ids === []) {
             return [];

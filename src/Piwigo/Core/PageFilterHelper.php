@@ -46,8 +46,6 @@ final class PageFilterHelper
      */
     public static function getFilterPageValue(string $valueName): mixed
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $page_name = self::scriptBasename();
 

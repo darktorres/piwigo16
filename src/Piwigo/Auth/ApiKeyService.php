@@ -277,8 +277,6 @@ SELECT
      */
     public function notifyExpiration(string $username, string $email, int $daysLeft): bool
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $days_left_str = $daysLeft <= 1 ?
           l10n('Your API key will expire in %d day.', $daysLeft)

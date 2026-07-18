@@ -53,8 +53,6 @@ final class AccessControl
 
     public static function getAccessTypeStatus(string $userStatus = ''): int
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         return match (self::getUserStatus($userStatus)) {
             'guest' => \Piwigo\Config\Config::guestAccess() ? AccessLevel::Guest : AccessLevel::Free,
@@ -108,8 +106,6 @@ final class AccessControl
 
     public static function canManageComment(string $action, int|string $commentAuthorId): bool
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         if (self::isAGuest()) {
             return false;

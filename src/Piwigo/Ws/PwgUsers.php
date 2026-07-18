@@ -69,8 +69,6 @@ final class PwgUsers
      */
     public static function getList(array $params, PwgServer &$service): PwgError|array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         // \Piwigo\Config\Config::userFields() maps generic field names to table-specific DB
         // column names (see Piwigo\Users\UserService for the same pattern);
@@ -419,9 +417,6 @@ SELECT DISTINCT ';
         if (strlen(str_replace(' ', '', $params['username'])) == 0) {
             return new PwgError(WsError::INVALID_PARAM, 'Name field must not be empty');
         }
-
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         if (\Piwigo\Config\Config::doublePasswordTypeInAdmin()) {
             if ($params['password'] != ($params['password_confirm'] ?? null)) {

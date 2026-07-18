@@ -58,8 +58,6 @@ final class CoreUpdateService
      */
     public function getPiwigoNewVersions(): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $newVersions = [
             'piwigo.org-checked' => false,

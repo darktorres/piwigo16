@@ -55,8 +55,6 @@ final class HistoryService
      */
     public function isLoggingAllowed(?int $imageId = null, ?string $imageType = null): bool
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $doLog = \Piwigo\Config\Config::logConf();
         if (AccessControl::isAdmin()) {

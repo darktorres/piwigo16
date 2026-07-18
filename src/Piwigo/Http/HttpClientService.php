@@ -163,8 +163,6 @@ final class HttpClientService implements ClientInterface
      */
     private static function guardedFetch(string $url, array $getData, array $postData, string $userAgent): ?SymfonyResponseInterface
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $method = $postData === [] ? 'GET' : 'POST';
         if ($getData !== []) {

@@ -111,8 +111,6 @@ SELECT COUNT(DISTINCT(com.id))
      */
     public function checkForSpam(string $action, array $comment): string
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         if ($action === 'reject') {
             return $action;
@@ -158,8 +156,6 @@ SELECT COUNT(DISTINCT(com.id))
      */
     public function insertComment(array &$comm, string $key, array &$infos): string
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $comm['ip'] = is_scalar($_SERVER['REMOTE_ADDR'] ?? null) ? (string) $_SERVER['REMOTE_ADDR'] : '';
         $comm['agent'] = is_scalar($_SERVER['HTTP_USER_AGENT'] ?? null) ? (string) $_SERVER['HTTP_USER_AGENT'] : '';

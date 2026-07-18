@@ -42,10 +42,7 @@ final class FeedController implements ControllerInterface
          * @var array<string, mixed>
          */
         global $user;
-        /**
-         * @var mixed
-         */
-        global $persistent_cache;
+        $persistent_cache = \Piwigo\Cache\CurrentPersistentCache::get();
 
         $htmlRenderer = new HtmlService();
 

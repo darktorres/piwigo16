@@ -6,7 +6,6 @@ namespace Piwigo\Admin\Maintenance;
 
 use Piwigo\Admin\Integrity\check_integrity;
 use Piwigo\Auth\CookieService;
-use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
@@ -63,10 +62,7 @@ final class MaintenanceActionDispatcher
 {
     public function dispatch(string $action): void
     {
-        /**
-         * @var PersistentFileCache
-         */
-        global $persistent_cache;
+        $persistent_cache = \Piwigo\Cache\CurrentPersistentCache::get();
 
         $register_activity = true;
         $db_maintenance = new DbMaintenanceRepository(DbConnection::build());
@@ -205,6 +201,10 @@ final class MaintenanceActionDispatcher
 
                 \Piwigo\Template\CurrentTemplate::get()->delete_compiled_templates();
                 FileCombiner::clear_combined_files();
+                if (! $persistent_cache instanceof \Piwigo\Cache\PersistentCache) {
+                    new \Piwigo\Html\HtmlService()
+                        ->fatalError('persistent cache not initialized');
+                }
                 $persistent_cache->purge(true);
                 \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', l10n('Purge compiled templates'), l10n('action successfully performed.')));
                 break;

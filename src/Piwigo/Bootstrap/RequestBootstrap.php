@@ -175,7 +175,6 @@ final class RequestBootstrap
          * @var array<string, mixed>
          */
         global $user;
-        global $persistent_cache;
 
         // P23 sub-batch 8g-6: the dynamic include of include/dblayer/
         // functions_<dblayer>.inc.php is gone -- the file's 45 facades died
@@ -204,7 +203,7 @@ final class RequestBootstrap
 
         \Piwigo\Core\PageState::current()->executionUuid = SessionService::get()->generateKey(10);
 
-        $persistent_cache = new PersistentFileCache();
+        \Piwigo\Cache\CurrentPersistentCache::set(new PersistentFileCache());
 
         // Database connection
         try {

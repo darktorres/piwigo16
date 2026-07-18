@@ -90,8 +90,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
 
         include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 
-        /** @var mixed $persistent_cache */
-        global $persistent_cache;
+        $persistent_cache = \Piwigo\Cache\CurrentPersistentCache::get();
 
         $htmlRenderer = new HtmlService();
 

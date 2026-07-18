@@ -68,7 +68,7 @@ final readonly class SearchFilterRenderer
             'start' => $sectionContext->start,
             'chronology_field' => $sectionContext->chronologyField,
         ];
-        global $persistent_cache;
+        $persistent_cache = \Piwigo\Cache\CurrentPersistentCache::get();
         $template = $this->template;
         if (! $persistent_cache instanceof PersistentCache) {
             $this->htmlRenderer->fatalError('persistent cache not initialized');

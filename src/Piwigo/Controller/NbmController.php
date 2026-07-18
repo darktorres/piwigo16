@@ -46,8 +46,7 @@ final class NbmController implements ControllerInterface
             'local' => true,
         ]);
 
-        /** @var mixed $persistent_cache */
-        global $persistent_cache;
+        $persistent_cache = \Piwigo\Cache\CurrentPersistentCache::get();
 
         $htmlRenderer = new HtmlService();
 

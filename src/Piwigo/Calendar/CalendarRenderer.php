@@ -66,7 +66,7 @@ final readonly class CalendarRenderer
         array $chronologyDate,
         bool $superOrderBy,
     ): CalendarRenderResult {
-        global $persistent_cache;
+        $persistent_cache = \Piwigo\Cache\CurrentPersistentCache::get();
         $template = $this->template;
         if (! $persistent_cache instanceof PersistentCache) {
             $this->htmlRenderer->fatalError('persistent cache not initialized');

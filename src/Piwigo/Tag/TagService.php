@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Tag;
 
-use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Cache\UserCacheInvalidator;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -188,9 +187,6 @@ final readonly class TagService
      */
     public function getAvailableTags(array $tagIds = []): array
     {
-        /** @var PersistentFileCache $persistent_cache */
-        global $persistent_cache;
-
         $usePersistentCache = $tagIds === [];
 
         $fandFSql = $this->permissionService->getSqlConditionFandF(
@@ -203,6 +199,10 @@ final readonly class TagService
         );
 
         if ($usePersistentCache) {
+            $persistent_cache = \Piwigo\Cache\CurrentPersistentCache::get();
+            if (! $persistent_cache instanceof \Piwigo\Cache\PersistentCache) {
+                throw new \LogicException('Piwigo\Cache\CurrentPersistentCache not initialised.');
+            }
             $currentUser = \Piwigo\Users\CurrentUser::get();
             $userId = (string) $currentUser->id;
             $userCacheUpdateTime = $currentUser->cacheUpdateTime;

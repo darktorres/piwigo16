@@ -19,10 +19,7 @@ final class UserCacheInvalidator
 {
     public static function invalidate(bool $full = true): void
     {
-        /**
-         * @var PersistentCache
-         */
-        global $persistent_cache;
+        $persistent_cache = CurrentPersistentCache::get();
         $logger = \Piwigo\Core\CurrentLogger::get();
 
         $logger->info(__FUNCTION__ . ' called');
@@ -39,6 +36,9 @@ TRUNCATE TABLE ' . Tables::userCache() . ';';
 UPDATE ' . Tables::userCache() . '
   SET need_update = \'true\';';
             \Piwigo\Db\MysqliDb::query($query);
+        }
+        if (! $persistent_cache instanceof PersistentCache) {
+            throw new \LogicException('Piwigo\Cache\CurrentPersistentCache not initialised.');
         }
         $persistent_cache->purge(true);
         \Piwigo\Config\ConfigDb::confDeleteParam('count_orphans');

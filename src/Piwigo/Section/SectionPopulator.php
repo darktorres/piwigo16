@@ -72,7 +72,7 @@ final readonly class SectionPopulator
          */
         global $filter;
         $logger = \Piwigo\Core\CurrentLogger::get();
-        global $persistent_cache;
+        $persistent_cache = \Piwigo\Cache\CurrentPersistentCache::get();
         $template = $this->template;
 
         // Legacy Coupling Retirement Track A batch A5.2e: $page is a local

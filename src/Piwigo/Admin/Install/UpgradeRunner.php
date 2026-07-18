@@ -29,11 +29,13 @@ use Piwigo\Template\Template;
  * PHPWG_IN_UPGRADE define] -> performUpgrade() or renderIntro() ->
  * finish().
  *
- * Every method declares the globals the code it calls still needs:
- * $template because updates/mail-era template helpers historically resolve
- * the shared instance through the global, and (in performUpgrade())
- * $persistent_cache because UserCacheInvalidator::invalidate() reads
- * `global $persistent_cache`. The former install/upgrade_X.Y.Z.php and
+ * Every method declares the $template global the code it calls still
+ * needs -- updates/mail-era template helpers historically resolve the
+ * shared instance through the global. performUpgrade()'s
+ * PersistentFileCache is published via Piwigo\Cache\
+ * CurrentPersistentCache::set() instead (Legacy Coupling Retirement
+ * Track A gap-fill batch G5), which UserCacheInvalidator::invalidate()
+ * reads. The former install/upgrade_X.Y.Z.php and
  * install/db/*.php scripts are no longer raw includes sharing this
  * method's scope -- P23 sub-batch 8g ported them to real
  * VersionUpgrade/DbPatch classes, each with its own independent
@@ -266,13 +268,14 @@ SELECT id
      * The VersionUpgrade/DbPatch class chain applied below (P23 sub-batch
      * 8g) each declares its own `global $conf, $prefixeTable;` where
      * needed, so this method itself only needs $template (assigned into
-     * further down) and $persistent_cache -- UserCacheInvalidator::
-     * invalidate() reads `global $persistent_cache`.
+     * further down); the PersistentFileCache instance built further down
+     * publishes to Piwigo\Cache\CurrentPersistentCache, which
+     * UserCacheInvalidator::invalidate() reads (Legacy Coupling
+     * Retirement Track A gap-fill batch G5).
      */
     public function performUpgrade(): void
     {
         global $template;
-        global $persistent_cache;
 
         if (\Piwigo\Admin\Install\VersionUpgrade\VersionUpgradeRegistry::has($this->currentRelease)) {
             // reset SQL counters
@@ -378,7 +381,7 @@ REPLACE INTO ' . Tables::plugins() . '
 
             // Delete cache data
             // invalidate_user_cache will purge persistent_cache so it needs to be instantiated first
-            $persistent_cache = new PersistentFileCache();
+            \Piwigo\Cache\CurrentPersistentCache::set(new PersistentFileCache());
 
             UserCacheInvalidator::invalidate(true);
             $template->delete_compiled_templates();

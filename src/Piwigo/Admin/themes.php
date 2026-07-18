@@ -464,7 +464,6 @@ SELECT
                     if (file_exists($screenshot_path)) {
                         $theme['screenshot'] = $screenshot_path;
                     } else {
-                        global $conf;
                         $admin_theme = (new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build())))->getParam('admin_theme', 'clear');
                         $theme['screenshot'] =
                           PHPWG_ROOT_PATH . 'admin/themes/'

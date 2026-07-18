@@ -621,11 +621,6 @@ SELECT
             return new PwgError(401, 'Access Denied');
         }
 
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
-
         $currentUser = \Piwigo\Users\CurrentUser::get();
 
         // ACTIVATE_COMMENTS
@@ -838,10 +833,6 @@ DELETE
      */
     public static function favoritesGetList(array $params, PwgServer &$service): false|array
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
 
         if (AccessControl::isAGuest()) {
             return false;

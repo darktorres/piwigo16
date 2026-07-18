@@ -37,10 +37,13 @@ final class Patch110 implements DbPatchInterface
     public function apply(): void
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $page
+         * @var array<string, mixed>
          */
-        global $conf, $page;
+        global $conf;
+        /**
+         * @var array<string, mixed>
+         */
+        global $page;
 
         if (! isset($page)) {
             $page = [];

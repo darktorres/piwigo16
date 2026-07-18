@@ -597,10 +597,13 @@ class updates
     public static function upgrade_to(string $upgrade_to, int|string &$step, bool $check_current_version = true): void
     {
         /**
-         * @var array<string, mixed> $page
-         * @var array<string, mixed> $conf
+         * @var array<string, mixed>
          */
-        global $page, $conf;
+        global $page;
+        /**
+         * @var array<string, mixed>
+         */
+        global $conf;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         // $page['errors']/$page['infos'] are always initialized to an array by

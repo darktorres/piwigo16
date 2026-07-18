@@ -19,10 +19,6 @@ final class RatingUserPageRenderer
 {
     public function render(): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $tabsheet = new tabsheet();

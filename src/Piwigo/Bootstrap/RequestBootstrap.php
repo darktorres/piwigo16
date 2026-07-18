@@ -158,12 +158,19 @@ final class RequestBootstrap
     public static function connect(): void
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $page
-         * @var array<string, mixed> $user
+         * @var array<string, mixed>
          */
-        global $conf, $page, $user;
-        global $persistent_cache, $logger;
+        global $conf;
+        /**
+         * @var array<string, mixed>
+         */
+        global $page;
+        /**
+         * @var array<string, mixed>
+         */
+        global $user;
+        global $persistent_cache;
+        global $logger;
 
         // P23 sub-batch 8g-6: the dynamic include of include/dblayer/
         // functions_<dblayer>.inc.php is gone -- the file's 45 facades died
@@ -369,12 +376,21 @@ final class RequestBootstrap
     public static function finalize(): void
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $page
-         * @var array<string, mixed> $user
+         * @var array<string, mixed>
          */
-        global $conf, $page, $user;
-        global $template, $header_msgs, $header_notes, $filter;
+        global $conf;
+        /**
+         * @var array<string, mixed>
+         */
+        global $page;
+        /**
+         * @var array<string, mixed>
+         */
+        global $user;
+        global $template;
+        global $header_msgs;
+        global $header_notes;
+        global $filter;
 
         // language files
         Lang::setDefaultLanguageProvider(new UserService(

@@ -61,10 +61,13 @@ final class GalleryController implements ControllerInterface
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $page
+         * @var array<string, mixed>
          */
-        global $conf, $page;
+        global $conf;
+        /**
+         * @var array<string, mixed>
+         */
+        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         new SectionPopulator(new MailService(), new HtmlService(), $template)
@@ -113,10 +116,14 @@ final class GalleryController implements ControllerInterface
 
         $body = LegacyRenderCapture::capture(static function () use ($page_items, $page_start, $page_nb_image_page): void {
             /**
-             * @var array<string, mixed> $conf
-             * @var array<string, mixed> $page
+             * @var array<string, mixed>
              */
-            global $conf, $page, $title;
+            global $conf;
+            /**
+             * @var array<string, mixed>
+             */
+            global $page;
+            global $title;
             $template = \Piwigo\Template\CurrentTemplate::get();
 
             $tagConn = DbConnection::build();

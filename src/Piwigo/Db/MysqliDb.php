@@ -160,13 +160,21 @@ final class MysqliDb
     public static function query(string $query): \mysqli_result|bool
     {
         /**
-         * @var \mysqli $mysqli
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $page
-         * @var string $debug
-         * @var float $t2
+         * @var \mysqli
          */
-        global $mysqli, $conf, $page, $debug, $t2;
+        global $mysqli;
+        /**
+         * @var array<string, mixed>
+         */
+        global $page;
+        /**
+         * @var string
+         */
+        global $debug;
+        /**
+         * @var float
+         */
+        global $t2;
 
         $die_on_sql_error = \Piwigo\Config\Config::dieOnSqlError();
 
@@ -688,10 +696,13 @@ INSERT ' . $ignore . ' INTO ' . self::protectColumnName($table_name) . '
     public static function doMaintenanceAllTables(): void
     {
         /**
-         * @var string $prefixeTable
-         * @var array<string, mixed> $page
+         * @var string
          */
-        global $prefixeTable, $page;
+        global $prefixeTable;
+        /**
+         * @var array<string, mixed>
+         */
+        global $page;
 
         // $page['infos']/$page['errors'] are always initialized to arrays by
         // common.inc.php (see the PAGE default there), but that isn't visible

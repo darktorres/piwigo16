@@ -32,10 +32,13 @@ class UpgradeFeedRunner
     public function run(): void
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var string $prefixeTable
+         * @var array<string, mixed>
          */
-        global $conf, $prefixeTable;
+        global $conf;
+        /**
+         * @var string
+         */
+        global $prefixeTable;
 
         // +-------------------------------------------------------------------+
         // |                         Database connection                        |

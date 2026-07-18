@@ -51,10 +51,13 @@ final class PluginLoader
     public static function loadPlugins(): void
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, array<string, mixed>> $pwg_loaded_plugins
+         * @var array<string, mixed>
          */
-        global $conf, $pwg_loaded_plugins;
+        global $conf;
+        /**
+         * @var array<string, array<string, mixed>>
+         */
+        global $pwg_loaded_plugins;
         $pwg_loaded_plugins = [];
         if (\Piwigo\Config\Config::enablePlugins()) {
             $plugins = new PluginRepository(DbConnection::build())->getDbPlugins('active');

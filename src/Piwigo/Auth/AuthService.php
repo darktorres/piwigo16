@@ -100,10 +100,13 @@ final class AuthService
     public function logUser(int|string|false $userId, bool $rememberMe): void
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $user
+         * @var array<string, mixed>
          */
-        global $conf, $user;
+        global $conf;
+        /**
+         * @var array<string, mixed>
+         */
+        global $user;
 
         // false is not reachable in practice -- see this method's own
         // docblock on $userId
@@ -489,11 +492,13 @@ FROM ' . Tables::users() . ' AS u
     public function authKeyLogin(mixed $authKey, bool $connectionByHeader = false): bool
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $user
-         * @var array<string, mixed> $page
+         * @var array<string, mixed>
          */
-        global $conf, $user, $page;
+        global $user;
+        /**
+         * @var array<string, mixed>
+         */
+        global $page;
 
         // see UserService::validateMailAddress() for why this is string=>string
         /** @var array<string, string> $user_fields */

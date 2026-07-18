@@ -44,7 +44,8 @@ final class SearchFilterRenderer
     public function render(): void
     {
         /** @var array<string, mixed> $page */
-        global $page, $persistent_cache;
+        global $page;
+        global $persistent_cache;
         $template = $this->template;
         if (! $persistent_cache instanceof PersistentCache) {
             $this->htmlRenderer->fatalError('persistent cache not initialized');
@@ -1237,10 +1238,13 @@ SELECT
     private function getItemsForFilter(string $filterName): false|array
     {
         /**
-         * @var array<string, mixed> $page
-         * @var Logger $logger
+         * @var array<string, mixed>
          */
-        global $page, $logger;
+        global $page;
+        /**
+         * @var Logger
+         */
+        global $logger;
 
         // $page['search_details'] is set (as
         // SearchService::getRegularSearchResults()'s return

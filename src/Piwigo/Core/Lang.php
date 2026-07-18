@@ -299,7 +299,8 @@ final class Lang
         // with PO-loaded core strings).
         $po_file = preg_replace('/\.lang\.php$/', '.po', $source_file);
 
-        global $lang, $lang_info;
+        global $lang;
+        global $lang_info;
         if (! isset($lang) || ! is_array($lang)) {
             $lang = [];
         }

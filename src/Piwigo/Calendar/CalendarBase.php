@@ -121,10 +121,13 @@ abstract class CalendarBase
     public function get_display_name()
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $page
+         * @var array<string, mixed>
          */
-        global $conf, $page;
+        global $conf;
+        /**
+         * @var array<string, mixed>
+         */
+        global $page;
         $res = '';
 
         // level_separator is documented as a character string
@@ -219,7 +222,8 @@ abstract class CalendarBase
         $labels = null
     ) {
         /** @var array<string, mixed> $conf */
-        global $conf, $page;
+        global $conf;
+        global $page;
 
         $nav_bar_datas = [];
 
@@ -286,10 +290,9 @@ abstract class CalendarBase
     protected function build_nav_bar($level, ?array $labels, \Piwigo\Core\TemplateInterface $template): void
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $page
+         * @var array<string, mixed>
          */
-        global $conf, $page;
+        global $page;
 
         $query = '
 SELECT DISTINCT(' . $this->calendar_levels[$level]['sql'] . ') as period,

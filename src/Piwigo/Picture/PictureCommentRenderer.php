@@ -39,18 +39,24 @@ final class PictureCommentRenderer
     public function render(?int $editCommentId): void
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $page
+         * @var array<string, mixed>
          */
-        global $conf, $page;
+        global $conf;
+        /**
+         * @var array<string, mixed>
+         */
+        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
         /**
          * Set by PictureController, right before this call.
          *
-         * @var list<array<string, string|null>> $related_categories
-         * @var string $url_self
+         * @var list<array<string, string|null>>
          */
-        global $related_categories, $url_self;
+        global $related_categories;
+        /**
+         * @var string
+         */
+        global $url_self;
 
         $commentRepository = new CommentRepository(DbConnection::build());
         $commentService = new CommentService($commentRepository, new EphemeralKeyService(), new MailService(), new HtmlService());

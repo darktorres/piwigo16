@@ -62,10 +62,9 @@ final class BatchManagerSubController implements AdminSubControllerInterface
     public function handle(ServerRequestInterface $request): void
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $page
+         * @var array<string, mixed>
          */
-        global $conf, $page;
+        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         (new \Piwigo\Validation\InputValidator())->validate('selection', $_POST, true, ValidationPattern::ID);

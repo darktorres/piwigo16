@@ -42,10 +42,13 @@ final class Patch94 implements DbPatchInterface
     public function apply(): void
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var string $prefixeTable
+         * @var array<string, mixed>
          */
-        global $conf, $prefixeTable;
+        global $conf;
+        /**
+         * @var string
+         */
+        global $prefixeTable;
 
         $user_upload_conf = [];
 

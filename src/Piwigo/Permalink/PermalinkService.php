@@ -34,10 +34,13 @@ final class PermalinkService
     public function deleteCatPermalink(int $catId, bool $save): bool
     {
         /**
-         * @var array<string, mixed> $page
-         * @var array<string, mixed> $cache
+         * @var array<string, mixed>
          */
-        global $page, $cache;
+        global $page;
+        /**
+         * @var array<string, mixed>
+         */
+        global $cache;
 
         // $page['errors'] is always initialized to an array by common.inc.php,
         // but that isn't visible across the include() boundary -- narrow it
@@ -86,10 +89,13 @@ final class PermalinkService
     public function setCatPermalink(int $catId, string $permalink, bool $save): bool
     {
         /**
-         * @var array<string, mixed> $page
-         * @var array<string, mixed> $cache
+         * @var array<string, mixed>
          */
-        global $page, $cache;
+        global $page;
+        /**
+         * @var array<string, mixed>
+         */
+        global $cache;
 
         // $page['errors'] is always initialized to an array by common.inc.php,
         // but that isn't visible across the include() boundary -- narrow it

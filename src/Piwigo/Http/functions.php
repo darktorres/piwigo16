@@ -69,8 +69,14 @@ if (! function_exists('redirect_http')) {
 if (! function_exists('redirect_html')) {
     function redirect_html($url, $msg = '', $refresh_time = 0): never
     {
+        global $user;
+        global $template;
+        global $lang_info;
         /** @var array<string, mixed> $conf */
-        global $user, $template, $lang_info, $conf, $t2, $page, $debug;
+        global $conf;
+        global $t2;
+        global $page;
+        global $debug;
 
         // $template/$lang_info are genuinely not always set here: this function
         // can be called very early (e.g. a fatal before common.inc.php finishes

@@ -43,10 +43,13 @@ final class CommentsController implements ControllerInterface
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $page
+         * @var array<string, mixed>
          */
-        global $conf, $page;
+        global $conf;
+        /**
+         * @var array<string, mixed>
+         */
+        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (! \Piwigo\Config\Config::activateComments()) {

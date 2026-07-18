@@ -42,11 +42,17 @@ final class UserBootstrap
     public function initialize(): void
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $user
-         * @var array<string, mixed> $page
+         * @var array<string, mixed>
          */
-        global $conf, $user, $page;
+        global $conf;
+        /**
+         * @var array<string, mixed>
+         */
+        global $user;
+        /**
+         * @var array<string, mixed>
+         */
+        global $page;
         // Set by Piwigo\Ws\WsInitializer::init(), called conditionally below
         // (it publishes the shared PwgServer to $GLOBALS['service'] itself,
         // preserving the deleted include/ws_init.inc.php's top-level

@@ -45,11 +45,17 @@ final class TimingHelper
     public static function debug(string $string): void
     {
         /**
-         * @var string $debug
-         * @var float $t2
-         * @var array<string, mixed> $page
+         * @var string
          */
-        global $debug, $t2, $page;
+        global $debug;
+        /**
+         * @var float
+         */
+        global $t2;
+        /**
+         * @var array<string, mixed>
+         */
+        global $page;
 
         $now = explode(' ', microtime());
         $now2 = explode('.', $now[0]);

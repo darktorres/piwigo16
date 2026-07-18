@@ -64,10 +64,13 @@ final class MaintenanceActionDispatcher
     public function dispatch(string $action): void
     {
         /**
-         * @var array<string, mixed> $page
-         * @var PersistentFileCache $persistent_cache
+         * @var array<string, mixed>
          */
-        global $page, $persistent_cache;
+        global $page;
+        /**
+         * @var PersistentFileCache
+         */
+        global $persistent_cache;
 
         if (! is_array($page['infos'] ?? null)) {
             $page['infos'] = [];

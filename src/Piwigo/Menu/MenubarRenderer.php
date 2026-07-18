@@ -40,11 +40,13 @@ final class MenubarRenderer
     public function render(): void
     {
         /**
-         * @var array<string, mixed> $page
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $filter
+         * @var array<string, mixed>
          */
-        global $page, $conf, $filter;
+        global $page;
+        /**
+         * @var array<string, mixed>
+         */
+        global $filter;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $conn = DbConnection::build();

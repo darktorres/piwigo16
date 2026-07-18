@@ -37,10 +37,10 @@ final class TagsController implements ControllerInterface
 
         $body = LegacyRenderCapture::capture(static function () use ($displayModeParam): void {
             /**
-             * @var array<string, mixed> $conf
-             * @var array<string, mixed> $page
+             * @var array<string, mixed>
              */
-            global $conf, $page, $title;
+            global $page;
+            global $title;
             $template = \Piwigo\Template\CurrentTemplate::get();
 
             $title = l10n('Tags');

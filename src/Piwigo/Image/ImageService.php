@@ -328,10 +328,9 @@ final class ImageService
     public function emptyLounge(bool $invalidateUserCache = true): ?array
     {
         /**
-         * @var Logger $logger
-         * @var array<string, mixed> $conf
+         * @var Logger
          */
-        global $logger, $conf;
+        global $logger;
 
         if (\Piwigo\Config\Config::has('empty_lounge_running')) {
             $emptyLoungeRunning = \Piwigo\Config\Config::emptyLoungeRunning();

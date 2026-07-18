@@ -25,10 +25,9 @@ final class PictureMetadataRenderer
     public function render(): void
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, array{src_image: SrcImage, ...}> $picture
+         * @var array<string, array{src_image: SrcImage, ...}>
          */
-        global $conf, $picture;
+        global $picture;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $metadataService = new MetadataService(new MetadataRepository(DbConnection::build()));

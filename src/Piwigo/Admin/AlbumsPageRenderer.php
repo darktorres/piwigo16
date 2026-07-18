@@ -47,10 +47,13 @@ final class AlbumsPageRenderer
     public function render(): void
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $page
+         * @var array<string, mixed>
          */
-        global $conf, $page;
+        global $conf;
+        /**
+         * @var array<string, mixed>
+         */
+        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         // This method is always invoked from inside an
@@ -65,7 +68,9 @@ final class AlbumsPageRenderer
         // reach the real global scope that method expects (same fix as
         // admin/include/functions_notification_by_mail.inc.php's
         // $env_nbm).
-        global $is_forbidden, $nb_photos_in, $nb_sub_photos;
+        global $is_forbidden;
+        global $nb_photos_in;
+        global $nb_sub_photos;
         // See this class's own docblock -- required before the inline
         // tabsheet block below (P23 batch 6j-1 fix).
         global $my_base_url;
@@ -359,11 +364,17 @@ SELECT
     private static function assocToOrderedTree(array $assocT): array
     {
         /**
-         * @var array<int|string, string|null> $nb_photos_in
-         * @var array<int|string, int> $nb_sub_photos
-         * @var array<int|string, int> $is_forbidden
+         * @var array<int|string, string|null>
          */
-        global $nb_photos_in, $nb_sub_photos, $is_forbidden;
+        global $nb_photos_in;
+        /**
+         * @var array<int|string, int>
+         */
+        global $nb_sub_photos;
+        /**
+         * @var array<int|string, int>
+         */
+        global $is_forbidden;
 
         $orderedTree = [];
 

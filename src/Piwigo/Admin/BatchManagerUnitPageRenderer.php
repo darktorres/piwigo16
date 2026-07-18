@@ -53,11 +53,17 @@ final class BatchManagerUnitPageRenderer
     public function render(): void
     {
         /**
-         * @var array<string, mixed> $cache
-         * @var array<string, mixed> $page
-         * @var array<string, mixed> $pwg_loaded_plugins
+         * @var array<string, mixed>
          */
-        global $cache, $page, $pwg_loaded_plugins;
+        global $cache;
+        /**
+         * @var array<string, mixed>
+         */
+        global $page;
+        /**
+         * @var array<string, mixed>
+         */
+        global $pwg_loaded_plugins;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $htmlRenderer = new HtmlService();

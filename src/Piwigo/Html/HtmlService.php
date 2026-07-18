@@ -98,10 +98,9 @@ final class HtmlService implements HtmlRenderingInterface
         ?string $authKey = null,
     ): string {
         /**
-         * @var array<string, mixed> $cache
-         * @var array<string, mixed> $conf
+         * @var array<string, mixed>
          */
-        global $cache, $conf;
+        global $cache;
         $level_separator = \Piwigo\Config\Config::levelSeparator();
 
         $add_url_params = [];

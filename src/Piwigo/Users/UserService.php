@@ -391,10 +391,9 @@ final class UserService implements DefaultLanguageProviderInterface
     public function getDefaultUserInfo(bool $convertStr = true): array|false
     {
         /**
-         * @var array<string, mixed> $cache
-         * @var array<string, mixed> $conf
+         * @var array<string, mixed>
          */
-        global $cache, $conf;
+        global $cache;
 
         if (! isset($cache['default_user'])) {
             $defaultUserId = \Piwigo\Config\Config::defaultUserId();
@@ -586,10 +585,9 @@ final class UserService implements DefaultLanguageProviderInterface
     public function getUserData(int $userId, bool $useCache = false): array
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var Logger $logger
+         * @var Logger
          */
-        global $conf, $logger;
+        global $logger;
 
         // see validateMailAddress() for why this is string=>string
         /** @var array<string, string> $user_fields */

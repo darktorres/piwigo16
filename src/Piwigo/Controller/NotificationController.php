@@ -39,7 +39,8 @@ final class NotificationController implements ControllerInterface
 
         $body = LegacyRenderCapture::capture(static function () use ($feedRepo, $feedId): void {
             /** @var array<string, mixed> $page */
-            global $page, $title;
+            global $page;
+            global $title;
             $template = \Piwigo\Template\CurrentTemplate::get();
 
             $page['feed'] = $feedId;

@@ -20,17 +20,19 @@ final class PictureRateRenderer
     public function render(): void
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $page
+         * @var array<string, mixed>
          */
-        global $conf, $page;
+        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
         // Set by picture.php/PictureController, right before this call.
         /**
-         * @var array<string, array<string, mixed>> $picture
-         * @var string $url_self
+         * @var array<string, array<string, mixed>>
          */
-        global $picture, $url_self;
+        global $picture;
+        /**
+         * @var string
+         */
+        global $url_self;
 
         if (! \Piwigo\Config\Config::rateEnabled()) {
             return;

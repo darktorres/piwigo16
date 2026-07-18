@@ -44,12 +44,17 @@ final class PictureModifyPageRenderer
     public function render(): void
     {
         /**
-         * @var string $admin_photo_base_url
-         * @var array<string, mixed> $cache
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $page
+         * @var string
          */
-        global $admin_photo_base_url, $cache, $conf, $page;
+        global $admin_photo_base_url;
+        /**
+         * @var array<string, mixed>
+         */
+        global $cache;
+        /**
+         * @var array<string, mixed>
+         */
+        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $imageConn = DbConnection::build();

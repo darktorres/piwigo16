@@ -39,11 +39,17 @@ final class ProfileController implements ControllerInterface
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $user
-         * @var array<string, mixed> $page
+         * @var array<string, mixed>
          */
-        global $conf, $user, $page;
+        global $conf;
+        /**
+         * @var array<string, mixed>
+         */
+        global $user;
+        /**
+         * @var array<string, mixed>
+         */
+        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         // $page['errors'] is always initialized to an array by
@@ -110,10 +116,14 @@ SELECT ' . implode(',', $fields) . '
 
         $body = LegacyRenderCapture::capture(static function (): void {
             /**
-             * @var array<string, mixed> $conf
-             * @var array<string, mixed> $user
+             * @var array<string, mixed>
              */
-            global $conf, $user, $title;
+            global $conf;
+            /**
+             * @var array<string, mixed>
+             */
+            global $user;
+            global $title;
             $template = \Piwigo\Template\CurrentTemplate::get();
 
             $title = l10n('Your Gallery Customization');

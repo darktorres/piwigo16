@@ -757,8 +757,9 @@ SELECT
      */
     public static function historyLog(array $params, PwgServer &$service): void
     {
+        global $logger;
         /** @var array<string, mixed> $page */
-        global $logger, $page;
+        global $page;
 
         if (! empty($params['section']) and in_array($params['section'], \Piwigo\Db\MysqliDb::getEnums(Tables::history(), 'section'))) {
             $page['section'] = $params['section'];

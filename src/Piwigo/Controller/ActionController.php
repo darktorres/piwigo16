@@ -57,10 +57,9 @@ final class ActionController implements ControllerInterface
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $user
+         * @var array<string, mixed>
          */
-        global $conf, $user;
+        global $user;
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 

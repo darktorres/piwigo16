@@ -39,11 +39,17 @@ final class FeedController implements ControllerInterface
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $user
-         * @var mixed $persistent_cache
+         * @var array<string, mixed>
          */
-        global $conf, $user, $persistent_cache;
+        global $conf;
+        /**
+         * @var array<string, mixed>
+         */
+        global $user;
+        /**
+         * @var mixed
+         */
+        global $persistent_cache;
 
         $htmlRenderer = new HtmlService();
 

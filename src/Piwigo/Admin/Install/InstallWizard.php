@@ -477,10 +477,13 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
     public function render(): void
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $user
+         * @var array<string, mixed>
          */
-        global $conf, $user;
+        global $conf;
+        /**
+         * @var array<string, mixed>
+         */
+        global $user;
 
         $template = $this->template;
 

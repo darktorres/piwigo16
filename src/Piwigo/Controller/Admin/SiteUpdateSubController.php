@@ -99,7 +99,8 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        global $conf, $logger;
+        global $conf;
+        global $logger;
         $template = \Piwigo\Template\CurrentTemplate::get();
         /**
          * @var array<string, mixed> $conf

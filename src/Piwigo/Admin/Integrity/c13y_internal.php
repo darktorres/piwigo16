@@ -32,7 +32,6 @@ class c13y_internal
      */
     public function c13y_version($c13y): void
     {
-        global $conf;
 
         $check_list = [];
 
@@ -184,10 +183,13 @@ class c13y_internal
     public function c13y_correction_user($id, $action)
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $page
+         * @var array<string, mixed>
          */
-        global $conf, $page;
+        global $conf;
+        /**
+         * @var array<string, mixed>
+         */
+        global $page;
 
         // $page['infos'] is always initialized to an array by common.inc.php,
         // but that isn't visible across the include() boundary -- narrow it

@@ -244,10 +244,9 @@ final class CoreUpdateService
     public function upgradeTo(string $upgradeTo, int|string &$step, bool $checkCurrentVersion = true): void
     {
         /**
-         * @var array<string, mixed> $page
-         * @var array<string, mixed> $conf
+         * @var array<string, mixed>
          */
-        global $page, $conf;
+        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];

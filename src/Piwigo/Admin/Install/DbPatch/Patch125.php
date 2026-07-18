@@ -43,10 +43,13 @@ final class Patch125 implements DbPatchInterface
     public function apply(): void
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var string $prefixeTable
+         * @var array<string, mixed>
          */
-        global $conf, $prefixeTable;
+        global $conf;
+        /**
+         * @var string
+         */
+        global $prefixeTable;
 
         if (! isset($conf['prefix_thumbnail'])) {
             $conf['prefix_thumbnail'] = 'TN-';

@@ -54,10 +54,9 @@ class CalendarMonthly extends CalendarBase
     public function generate_category_content(\Piwigo\Core\TemplateInterface $template): bool
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $page
+         * @var array<string, mixed>
          */
-        global $conf, $page;
+        global $page;
 
         $view_type = $page['chronology_view'];
         if ($view_type == self::CAL_VIEW_CALENDAR) {
@@ -380,10 +379,9 @@ class CalendarMonthly extends CalendarBase
     protected function build_month_calendar(array &$tpl_var): bool
     {
         /**
-         * @var array<string, mixed> $page
-         * @var array<string, mixed> $conf
+         * @var array<string, mixed>
          */
-        global $page, $conf;
+        global $page;
 
         // self::CYEAR/self::CMONTH are never touched below (only self::CDAY is toggled, per
         // day, inside the loop), so a single snapshot taken here stays valid

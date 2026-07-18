@@ -40,10 +40,14 @@ final class AboutController implements ControllerInterface
             // closure is not real global scope (same lesson as P21's
             // AdminDispatcher scope bug).
             /**
-             * @var array<string, mixed> $conf
-             * @var array<string, mixed> $page
+             * @var array<string, mixed>
              */
-            global $conf, $page, $title;
+            global $conf;
+            /**
+             * @var array<string, mixed>
+             */
+            global $page;
+            global $title;
             $template = \Piwigo\Template\CurrentTemplate::get();
 
             $title = l10n('About Piwigo');

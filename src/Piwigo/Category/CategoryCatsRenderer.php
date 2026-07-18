@@ -62,11 +62,13 @@ final class CategoryCatsRenderer
     public function render(): void
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var Logger $logger
-         * @var array<string, mixed> $page
+         * @var Logger
          */
-        global $conf, $logger, $page;
+        global $logger;
+        /**
+         * @var array<string, mixed>
+         */
+        global $page;
         $template = $this->template;
 
         $conn = DbConnection::build();

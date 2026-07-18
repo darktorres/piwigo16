@@ -32,7 +32,6 @@ final class WsHelper
      */
     public static function isInvokeAllowed(mixed $res, string $methodName, array $params): mixed
     {
-        global $conf;
 
         if (str_starts_with($methodName, 'reflection.')) { // OK for reflection
             return $res;

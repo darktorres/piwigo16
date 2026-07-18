@@ -38,10 +38,11 @@ final class CalendarRenderer
     public function render(): void
     {
         /**
-         * @var array<string, mixed> $page
-         * @var array<string, mixed> $conf
+         * @var array<string, mixed>
          */
-        global $page, $conf, $persistent_cache, $filter;
+        global $page;
+        global $persistent_cache;
+        global $filter;
         $template = $this->template;
         if (! $persistent_cache instanceof PersistentCache) {
             $this->htmlRenderer->fatalError('persistent cache not initialized');

@@ -40,10 +40,13 @@ final class UpgradeFrom_1_3_1 implements VersionUpgradeInterface
     public function apply(): void
     {
         /**
-         * @var string $prefixeTable
-         * @var array<string, mixed> $page
+         * @var string
          */
-        global $prefixeTable, $page;
+        global $prefixeTable;
+        /**
+         * @var array<string, mixed>
+         */
+        global $page;
 
         // save data before deletion
         $query = '

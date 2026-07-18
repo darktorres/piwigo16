@@ -50,10 +50,13 @@ final class Patch65 implements DbPatchInterface
     public function apply(): void
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var string $prefixeTable
+         * @var array<string, mixed>
          */
-        global $conf, $prefixeTable;
+        global $conf;
+        /**
+         * @var string
+         */
+        global $prefixeTable;
 
         if (UpgradeCharset::isResolved()) {
             echo 'PWG_CHARSET already defined - nada';

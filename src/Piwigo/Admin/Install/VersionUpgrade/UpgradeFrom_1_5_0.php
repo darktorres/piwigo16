@@ -38,10 +38,13 @@ final class UpgradeFrom_1_5_0 implements VersionUpgradeInterface
     public function apply(): void
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var string $prefixeTable
+         * @var array<string, mixed>
          */
-        global $conf, $prefixeTable;
+        global $conf;
+        /**
+         * @var string
+         */
+        global $prefixeTable;
 
         $this->tagReplaceKeywords();
 

@@ -81,10 +81,13 @@ final class HistoryService
     public function logVisit(?int $imageId = null, ?string $imageType = null, int|string|null $formatId = null): bool
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $page
+         * @var array<string, mixed>
          */
-        global $conf, $page;
+        global $conf;
+        /**
+         * @var array<string, mixed>
+         */
+        global $page;
 
         $currentUser = \Piwigo\Users\CurrentUser::get();
         $lastVisit = $currentUser->rawAttributes['last_visit'] ?? null;
@@ -438,10 +441,9 @@ INSERT INTO ' . Tables::history() . '
     public function autopurge(): void
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var \Piwigo\Core\Logger $logger
+         * @var \Piwigo\Core\Logger
          */
-        global $conf, $logger;
+        global $logger;
 
         $keepLines = \Piwigo\Config\Config::historyAutopurgeKeepLines();
         if ($keepLines === 0) {

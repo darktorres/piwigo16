@@ -146,10 +146,9 @@ final class NotificationByMailSender
     public function beginUsersEnv(bool $isToSendMail = false): void
     {
         /**
-         * @var array<string, mixed> $user
-         * @var array<string, mixed> $conf
+         * @var array<string, mixed>
          */
-        global $user, $conf;
+        global $user;
 
         $this->saveUser = $user;
         $this->saveCurrentUser = \Piwigo\Users\CurrentUser::get();
@@ -356,10 +355,13 @@ final class NotificationByMailSender
     public function doSubscribeUnsubscribeNotificationByMail(bool $isAdminRequest, bool $isSubscribe, array $checkKeyList): array
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $page
+         * @var array<string, mixed>
          */
-        global $conf, $page;
+        global $conf;
+        /**
+         * @var array<string, mixed>
+         */
+        global $page;
 
         set_make_full_url();
 
@@ -506,10 +508,13 @@ final class NotificationByMailSender
     public function sendMailNotifications(string $action = 'list_to_send', array $checkKeyList = [], mixed $customizeMailContent = ''): array
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $page
+         * @var array<string, mixed>
          */
-        global $conf, $page;
+        global $conf;
+        /**
+         * @var array<string, mixed>
+         */
+        global $page;
         $returnList = [];
 
         if (in_array($action, ['list_to_send', 'send'])) {

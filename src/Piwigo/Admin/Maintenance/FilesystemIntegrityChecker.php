@@ -24,10 +24,9 @@ final class FilesystemIntegrityChecker
     public static function fsQuickCheck(): void
     {
         /**
-         * @var array<string, mixed> $page
-         * @var array<string, mixed> $conf
+         * @var array<string, mixed>
          */
-        global $page, $conf;
+        global $page;
 
         $fs_quick_check_period = \Piwigo\Config\Config::fsQuickCheckPeriod();
         if (is_numeric($fs_quick_check_period) && $fs_quick_check_period === 0) {

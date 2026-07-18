@@ -329,10 +329,13 @@ final class MailService implements MailerInterface
     public function switchLangTo(string $language): void
     {
         /**
-         * @var array<string, mixed> $lang_info
-         * @var array<string, array<string, array{language?: string, return?: bool, no_fallback?: bool, force_fallback?: bool|string, local?: bool}>> $language_files
+         * @var array<string, mixed>
          */
-        global $lang_info, $language_files;
+        global $lang_info;
+        /**
+         * @var array<string, array<string, array{language?: string, return?: bool, no_fallback?: bool, force_fallback?: bool|string, local?: bool}>>
+         */
+        global $language_files;
 
         $currentUserLanguage = CurrentUser::get()->language;
 
@@ -686,10 +689,13 @@ SELECT
         }
 
         /**
-         * @var array<string, mixed> $lang_info
-         * @var array<string, mixed> $page
+         * @var array<string, mixed>
          */
-        global $lang_info, $page;
+        global $lang_info;
+        /**
+         * @var array<string, mixed>
+         */
+        global $page;
 
         $confMail = $this->getMailConfiguration();
 

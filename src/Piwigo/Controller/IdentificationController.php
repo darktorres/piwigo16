@@ -36,10 +36,13 @@ final class IdentificationController implements ControllerInterface
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $page
+         * @var array<string, mixed>
          */
-        global $conf, $page;
+        global $conf;
+        /**
+         * @var array<string, mixed>
+         */
+        global $page;
 
         // $page['errors'] is always initialized to an array by
         // common.inc.php, but that isn't visible across the include()
@@ -129,11 +132,14 @@ final class IdentificationController implements ControllerInterface
 
         $body = LegacyRenderCapture::capture(static function () use ($redirect_to): void {
             /**
-             * @var array<string, mixed> $conf
-             * @var array<string, mixed> $page
-             * @var array<string, mixed> $user
+             * @var array<string, mixed>
              */
-            global $conf, $page, $user, $title;
+            global $page;
+            /**
+             * @var array<string, mixed>
+             */
+            global $user;
+            global $title;
             $template = \Piwigo\Template\CurrentTemplate::get();
 
             $title = l10n('Identification');

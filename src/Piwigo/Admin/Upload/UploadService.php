@@ -203,10 +203,13 @@ final class UploadService
     public function addUploadedFile(string $source_filepath, ?string $original_filename = null, ?array $categories = null, ?int $level = null, ?int $image_id = null, ?string $original_md5sum = null): int|string
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var Logger $logger
+         * @var array<string, mixed>
          */
-        global $conf, $logger;
+        global $conf;
+        /**
+         * @var Logger
+         */
+        global $logger;
 
         if ($original_filename !== null) {
             $original_filename = htmlspecialchars($original_filename);
@@ -763,10 +766,9 @@ SELECT
     public static function uploadFilePdf(?string $representative_ext, string $file_path): ?string
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var Logger $logger
+         * @var Logger
          */
-        global $logger, $conf;
+        global $logger;
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
@@ -820,10 +822,9 @@ SELECT
     public static function uploadFileHeic(?string $representative_ext, string $file_path): ?string
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var Logger $logger
+         * @var Logger
          */
-        global $logger, $conf;
+        global $logger;
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
@@ -870,10 +871,9 @@ SELECT
     public static function uploadFileTiff(?string $representative_ext, string $file_path): ?string
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var Logger $logger
+         * @var Logger
          */
-        global $logger, $conf;
+        global $logger;
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
@@ -936,10 +936,9 @@ SELECT
     public static function uploadFileVideo(?string $representative_ext, string $file_path): ?string
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var Logger $logger
+         * @var Logger
          */
-        global $logger, $conf;
+        global $logger;
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
@@ -1016,10 +1015,9 @@ SELECT
     public static function uploadFilePsd(?string $representative_ext, string $file_path): ?string
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var Logger $logger
+         * @var Logger
          */
-        global $logger, $conf;
+        global $logger;
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
@@ -1079,10 +1077,9 @@ SELECT
     public static function uploadFileEps(?string $representative_ext, string $file_path): ?string
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var Logger $logger
+         * @var Logger
          */
-        global $logger, $conf;
+        global $logger;
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
@@ -1165,10 +1162,9 @@ SELECT
     private function needResize(string $image_filepath, int $max_width, int $max_height): bool
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var Logger $logger
+         * @var Logger
          */
-        global $conf, $logger;
+        global $logger;
 
         $picture_ext = \Piwigo\Config\Config::pictureExtensions();
         if (! in_array(strtolower(\Piwigo\Core\StringHelper::getExtension($image_filepath)), $picture_ext, true)) {

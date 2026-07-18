@@ -56,12 +56,21 @@ final class ImageDerivativeController
     public function serve(): void
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $page
-         * @var string $prefixeTable
-         * @var Logger $logger
+         * @var array<string, mixed>
          */
-        global $conf, $page, $prefixeTable, $logger;
+        global $conf;
+        /**
+         * @var array<string, mixed>
+         */
+        global $page;
+        /**
+         * @var string
+         */
+        global $prefixeTable;
+        /**
+         * @var Logger
+         */
+        global $logger;
 
         // \Piwigo\Config\Config::dataLocation() needs narrowing here specifically (used
         // before Env::applyEnvToConf() below widens $conf's per-key type
@@ -457,10 +466,9 @@ SELECT *
     private function checkDerivativePermission(int $imageId): void
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var string $prefixeTable
+         * @var string
          */
-        global $conf, $prefixeTable;
+        global $prefixeTable;
 
         $guestId = \Piwigo\Config\Config::guestId();
         $userId = $guestId;
@@ -573,10 +581,9 @@ SELECT *
     private function parseRequest(): DerivativeParams
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $page
+         * @var array<string, mixed>
          */
-        global $conf, $page;
+        global $page;
 
         if (\Piwigo\Config\Config::questionMarkInUrls() === false and
              isset($_SERVER['PATH_INFO']) and ! empty($_SERVER['PATH_INFO'])) {

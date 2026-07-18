@@ -467,11 +467,17 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
     private static function insertNewDataUserMailNotification(NotificationByMailSender $nbmSender): void
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $page
+         * @var array<string, mixed>
+         */
+        global $conf;
+        /**
+         * @var array<string, mixed>
+         */
+        global $page;
+        /**
          * @var string $base_url set at the top of handle()
          */
-        global $conf, $page, $base_url;
+        global $base_url;
 
         // user_fields maps generic field names to table-specific column names
         // (see include/config_default.inc.php); every value is a plain string.

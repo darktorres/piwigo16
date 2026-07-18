@@ -135,10 +135,9 @@ final class MetadataService
     public function getExifData(string $filename, array $map): array
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var Logger $logger
+         * @var Logger
          */
-        global $conf, $logger;
+        global $logger;
 
         $result = [];
 

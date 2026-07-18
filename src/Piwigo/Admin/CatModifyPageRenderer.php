@@ -35,11 +35,18 @@ final class CatModifyPageRenderer
     public function render(): void
     {
         /**
-         * @var string $admin_album_base_url
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $page
+         * @var string
          */
-        global $admin_album_base_url, $category, $conf, $page;
+        global $admin_album_base_url;
+        global $category;
+        /**
+         * @var array<string, mixed>
+         */
+        global $conf;
+        /**
+         * @var array<string, mixed>
+         */
+        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $htmlRenderer = new HtmlService();

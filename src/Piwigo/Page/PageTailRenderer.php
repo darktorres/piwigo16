@@ -34,11 +34,13 @@ final class PageTailRenderer
     public function render(float $startTime): void
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var string $debug
-         * @var array<string, mixed> $page
+         * @var string
          */
-        global $conf, $debug, $page;
+        global $debug;
+        /**
+         * @var array<string, mixed>
+         */
+        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $template->set_filenames([

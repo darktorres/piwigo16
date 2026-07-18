@@ -37,10 +37,13 @@ final class ProfileFormHandler
     public function saveFromPost(array $userdata, array &$errors): bool
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $page
+         * @var array<string, mixed>
          */
-        global $conf, $page;
+        global $conf;
+        /**
+         * @var array<string, mixed>
+         */
+        global $page;
         $errors = [];
 
         if (! isset($_POST['validate'])) {

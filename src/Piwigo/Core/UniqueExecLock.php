@@ -18,10 +18,9 @@ final class UniqueExecLock
     public static function begins(string $tokenName, int $timeout = 60): false|string
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var Logger $logger
+         * @var Logger
          */
-        global $conf, $logger;
+        global $logger;
 
         $exec_id = substr(sha1(random_bytes(1000)), 0, 8);
         $logger->info('[' . $tokenName . '][exec=' . $exec_id . '] starts now');

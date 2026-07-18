@@ -93,10 +93,9 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
         string $path = 'template'
     ) {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $lang_info
+         * @var array<string, mixed>
          */
-        global $conf, $lang_info;
+        global $lang_info;
 
         // \Smarty\Exception::$escape = false;
 
@@ -573,10 +572,9 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
         $this->load_external_filters($handle);
 
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $lang_info
+         * @var array<string, mixed>
          */
-        global $conf, $lang_info;
+        global $lang_info;
         if (\Piwigo\Config\Config::compiledTemplateCacheLanguage() and isset($lang_info['code']) and is_string($lang_info['code'])) {
             $this->smarty->compile_id .= '_' . $lang_info['code'];
         }
@@ -763,10 +761,9 @@ class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo\Core\
     public static function modcompiler_translate_dec(array $params): string
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $lang_info
+         * @var array<string, mixed>
          */
-        global $conf, $lang_info;
+        global $lang_info;
         if (\Piwigo\Config\Config::compiledTemplateCacheLanguage()) {
             $ret = 'sprintf(';
             if ((bool) $lang_info['zero_plural']) {
@@ -1341,7 +1338,8 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
     public function load_themeconf($dir)
     {
         /** @var array<string, array<string, mixed>> $themeconfs */
-        global $themeconfs, $conf;
+        global $themeconfs;
+        global $conf;
 
         $real_dir = realpath($dir);
         if ($real_dir === false) {

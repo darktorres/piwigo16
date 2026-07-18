@@ -76,11 +76,17 @@ final class PictureController implements ControllerInterface
             ->populate();
 
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $page
-         * @var string $url_self
+         * @var array<string, mixed>
          */
-        global $conf, $page, $url_self;
+        global $conf;
+        /**
+         * @var array<string, mixed>
+         */
+        global $page;
+        /**
+         * @var string
+         */
+        global $url_self;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         (new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService()))->saveEditContext();
@@ -509,15 +515,34 @@ UPDATE ' . Tables::categories() . '
             $edit_comment
         ): void {
             /**
-             * @var array<string, mixed> $conf
-             * @var array<string, mixed> $page
-             * @var string $url_self
-             * @var array<string, array<string, mixed>> $picture
-             * @var list<array<string, string|null>> $related_categories
-             * @var int|string|null $refresh
-             * @var string|null $url_link
+             * @var array<string, mixed>
              */
-            global $conf, $page, $title, $url_self, $picture, $related_categories, $refresh, $url_link;
+            global $conf;
+            /**
+             * @var array<string, mixed>
+             */
+            global $page;
+            global $title;
+            /**
+             * @var string
+             */
+            global $url_self;
+            /**
+             * @var array<string, array<string, mixed>>
+             */
+            global $picture;
+            /**
+             * @var list<array<string, string|null>>
+             */
+            global $related_categories;
+            /**
+             * @var int|string|null
+             */
+            global $refresh;
+            /**
+             * @var string|null
+             */
+            global $url_link;
             $template = \Piwigo\Template\CurrentTemplate::get();
 
             // ---------- incrementation of the number of hits

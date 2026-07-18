@@ -1098,7 +1098,6 @@ UPDATE ' . Tables::categories() . '
      */
     public static function refreshRepresentative(array $params, PwgServer &$service): PwgError|array
     {
-        global $conf;
 
         // does the category really exist?
         $query = '
@@ -1423,7 +1422,6 @@ SELECT
      */
     public static function calculateOrphans(array $param, PwgServer &$service): array
     {
-        global $conf;
 
         $category_id = $param['category_id'][0];
 

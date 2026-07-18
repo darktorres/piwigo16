@@ -676,11 +676,13 @@ final class CategoryService
     public function getCategoriesMenu(FilterUpdaterInterface $filterUpdater): array
     {
         /**
-         * @var array<string, mixed> $page
-         * @var array<string, mixed> $filter
-         * @var array<string, mixed> $conf
+         * @var array<string, mixed>
          */
-        global $page, $filter, $conf;
+        global $page;
+        /**
+         * @var array<string, mixed>
+         */
+        global $filter;
         $currentUser = \Piwigo\Users\CurrentUser::get();
 
         // category currently displayed, if any; narrowed once here and reused

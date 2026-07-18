@@ -108,10 +108,10 @@ class UpgradeRunner
     public function prepare(): string
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $page
+         * @var array<string, mixed>
          */
-        global $conf, $page, $template;
+        global $page;
+        global $template;
 
         // +-------------------------------------------------------------------+
         // |                        template initialization                     |
@@ -276,11 +276,20 @@ SELECT id
     public function performUpgrade(): void
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var string $prefixeTable
-         * @var array<string, mixed> $page
+         * @var array<string, mixed>
          */
-        global $conf, $prefixeTable, $page, $template, $persistent_cache, $last_time;
+        global $conf;
+        /**
+         * @var string
+         */
+        global $prefixeTable;
+        /**
+         * @var array<string, mixed>
+         */
+        global $page;
+        global $template;
+        global $persistent_cache;
+        global $last_time;
 
         if (\Piwigo\Admin\Install\VersionUpgrade\VersionUpgradeRegistry::has($this->currentRelease)) {
             // reset SQL counters
@@ -456,7 +465,8 @@ REPLACE INTO ' . Tables::plugins() . '
     public function finish(): void
     {
         /** @var array<string, mixed> $page */
-        global $page, $template;
+        global $page;
+        global $template;
 
         // $page['errors']/'infos' are always arrays: initialized to [] in
         // prepare() above and only ever appended to via []= throughout this

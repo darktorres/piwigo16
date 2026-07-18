@@ -133,10 +133,14 @@ final class PasswordController implements ControllerInterface
 
         $body = LegacyRenderCapture::capture(static function () use ($first_login): void {
             /**
-             * @var array<string, mixed> $page
-             * @var array<string, mixed> $user
+             * @var array<string, mixed>
              */
-            global $page, $user, $title;
+            global $page;
+            /**
+             * @var array<string, mixed>
+             */
+            global $user;
+            global $title;
             $template = \Piwigo\Template\CurrentTemplate::get();
 
             $title = l10n('Password Reset');
@@ -227,10 +231,9 @@ final class PasswordController implements ControllerInterface
     private function processVerificationCode(): bool
     {
         /**
-         * @var array<string, mixed> $page
-         * @var array<string, mixed> $conf
+         * @var array<string, mixed>
          */
-        global $page, $conf;
+        global $page;
 
         $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
 
@@ -331,10 +334,13 @@ final class PasswordController implements ControllerInterface
     private function processPasswordRequest(): bool
     {
         /**
-         * @var array<string, mixed> $page
-         * @var array<string, mixed> $user
+         * @var array<string, mixed>
          */
-        global $page, $user;
+        global $page;
+        /**
+         * @var array<string, mixed>
+         */
+        global $user;
 
         $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
 
@@ -515,10 +521,9 @@ SELECT
     private function resetPassword(): bool
     {
         /**
-         * @var array<string, mixed> $page
-         * @var array<string, mixed> $conf
+         * @var array<string, mixed>
          */
-        global $page, $conf;
+        global $page;
 
         $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
         $page['infos'] = is_array($page['infos'] ?? null) ? $page['infos'] : [];

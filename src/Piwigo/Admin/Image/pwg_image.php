@@ -404,10 +404,9 @@ class pwg_image
     public static function get_ext_imagick_command(): string
     {
         /**
-         * @var array<string, mixed> $page
-         * @var array<string, mixed> $conf
+         * @var array<string, mixed>
          */
-        global $page, $conf;
+        global $page;
 
         $command = $page['ext_imagick_command'] ?? null;
         if (! is_string($command)) {

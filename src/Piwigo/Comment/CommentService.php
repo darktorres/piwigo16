@@ -380,10 +380,9 @@ SELECT COUNT(DISTINCT(com.id))
     public function updateComment(array $comment, string $postKey): string
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $page
+         * @var array<string, mixed>
          */
-        global $conf, $page;
+        global $page;
 
         $username = \Piwigo\Users\CurrentUser::get()->username;
 

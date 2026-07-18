@@ -43,10 +43,13 @@ final class FilterService implements FilterUpdaterInterface
     public function initializeFromRequest(): void
     {
         /**
-         * @var array<string, mixed> $filter
-         * @var array<string, mixed> $header_notes
+         * @var array<string, mixed>
          */
-        global $filter, $header_notes;
+        global $filter;
+        /**
+         * @var array<string, mixed>
+         */
+        global $header_notes;
 
         $currentUser = \Piwigo\Users\CurrentUser::get();
 

@@ -29,10 +29,9 @@ final class CategoryDefaultRenderer
     public function render(): void
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $page
+         * @var array<string, mixed>
          */
-        global $conf, $page;
+        global $page;
         $template = $this->template;
 
         $pictures = [];

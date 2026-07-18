@@ -69,13 +69,21 @@ final class IntroSubController implements AdminSubControllerInterface
     public function handle(ServerRequestInterface $request): void
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var string $link_start
-         * @var Logger $logger
-         * @var array<string, mixed> $page
-         * @var array<string, mixed> $pwg_loaded_plugins
+         * @var string
          */
-        global $conf, $link_start, $logger, $page, $pwg_loaded_plugins;
+        global $link_start;
+        /**
+         * @var Logger
+         */
+        global $logger;
+        /**
+         * @var array<string, mixed>
+         */
+        global $page;
+        /**
+         * @var array<string, mixed>
+         */
+        global $pwg_loaded_plugins;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (! is_array($page['messages'] ?? null)) {

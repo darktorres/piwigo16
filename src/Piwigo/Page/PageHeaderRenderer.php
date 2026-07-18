@@ -24,11 +24,17 @@ final class PageHeaderRenderer
     public function render(string $title, ?string $refresh = null, ?string $urlLink = null): void
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $page
-         * @var list<string>|null $header_notes
+         * @var array<string, mixed>
          */
-        global $conf, $page, $header_notes;
+        global $conf;
+        /**
+         * @var array<string, mixed>
+         */
+        global $page;
+        /**
+         * @var list<string>|null
+         */
+        global $header_notes;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $template->set_filenames([

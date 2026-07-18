@@ -35,10 +35,14 @@ final class UpgradeFrom_1_4_0 implements VersionUpgradeInterface
     public function apply(): void
     {
         /**
-         * @var string $prefixeTable
-         * @var array<string, mixed> $page
+         * @var string
          */
-        global $prefixeTable, $page, $last_time;
+        global $prefixeTable;
+        /**
+         * @var array<string, mixed>
+         */
+        global $page;
+        global $last_time;
 
         $last_time = TimingHelper::getMoment();
 

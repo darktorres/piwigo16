@@ -227,10 +227,9 @@ SELECT category_id, MAX(`rank`) AS max_rank
     private static function mergeChunks(string $output_filepath, string $original_sum, string $type): ?PwgError
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var Logger $logger
+         * @var Logger
          */
-        global $conf, $logger;
+        global $logger;
 
         $logger->debug('[merge_chunks] input parameter $output_filepath : ' . $output_filepath, 'WS');
 
@@ -400,10 +399,6 @@ SELECT DISTINCT image_id
      */
     public static function getInfo(array $params, PwgServer $service): PwgError|array
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
 
         $query = '
 SELECT *
@@ -815,10 +810,6 @@ SELECT *
      */
     public static function filteredSearchCreate(array $params, PwgServer $service): PwgError|array
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
 
         $searchConn = DbConnection::build();
         $searchService = new SearchService(
@@ -1261,10 +1252,9 @@ UPDATE ' . Tables::imageCategory() . '
     public static function addChunk(array $params, PwgServer $service): ?PwgError
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var Logger $logger
+         * @var Logger
          */
-        global $conf, $logger;
+        global $logger;
 
         foreach ($params as $param_key => $param_value) {
             if ($param_key == 'data') {
@@ -1320,10 +1310,9 @@ UPDATE ' . Tables::imageCategory() . '
     public static function addFile(array $params, PwgServer $service): PwgError|bool|null
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var Logger $logger
+         * @var Logger
          */
-        global $conf, $logger;
+        global $logger;
 
         $logger->debug(__FUNCTION__, 'WS', $params);
 
@@ -1419,10 +1408,9 @@ SELECT
     public static function add(array $params, PwgServer $service): PwgError|array
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var Logger $logger
+         * @var Logger
          */
-        global $conf, $logger;
+        global $logger;
 
         foreach ($params as $param_key => $param_value) {
             $logger->debug(sprintf(
@@ -1581,10 +1569,9 @@ SELECT id, name, permalink
     public static function addSimple(array $params, PwgServer $service): PwgError|array
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var Logger $logger
+         * @var Logger
          */
-        global $conf, $logger;
+        global $logger;
 
         if (! isset($_FILES['image']) || ! is_array($_FILES['image'])) {
             return new PwgError(405, 'The image (file) is missing');
@@ -1955,11 +1942,17 @@ SELECT
     public static function uploadAsync(array $params, PwgServer &$service): mixed
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $user
-         * @var Logger $logger
+         * @var array<string, mixed>
          */
-        global $conf, $user, $logger;
+        global $conf;
+        /**
+         * @var array<string, mixed>
+         */
+        global $user;
+        /**
+         * @var Logger
+         */
+        global $logger;
 
         // the username/password parameters have been used in include/user.inc.php
         // to authenticate the request (a much better time/place than here)
@@ -2237,10 +2230,9 @@ SELECT COUNT(*)
     public static function exist(array $params, PwgServer $service): array
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var Logger $logger
+         * @var Logger
          */
-        global $conf, $logger;
+        global $logger;
 
         $logger->debug(__FUNCTION__, 'WS', $params);
 
@@ -2315,10 +2307,13 @@ SELECT id, file
     public static function formatsSearchImage(array $params, PwgServer $service): array
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var Logger $logger
+         * @var array<string, mixed>
          */
-        global $conf, $logger;
+        global $conf;
+        /**
+         * @var Logger
+         */
+        global $logger;
 
         $logger->debug(__FUNCTION__, 'WS', $params);
 

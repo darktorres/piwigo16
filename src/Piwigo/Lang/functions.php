@@ -51,10 +51,9 @@ if (! function_exists('l10n')) {
     function l10n($key)
     {
         /**
-         * @var array<string, mixed> $lang
-         * @var array<string, mixed> $conf
+         * @var array<string, mixed>
          */
-        global $lang, $conf;
+        global $lang;
 
         $key = is_string($key) ? $key : (string) $key;
 

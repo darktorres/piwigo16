@@ -21,10 +21,13 @@ final class UserCacheInvalidator
     public static function invalidate(bool $full = true): void
     {
         /**
-         * @var PersistentCache $persistent_cache
-         * @var Logger $logger
+         * @var PersistentCache
          */
-        global $persistent_cache, $logger;
+        global $persistent_cache;
+        /**
+         * @var Logger
+         */
+        global $logger;
 
         $logger->info(__FUNCTION__ . ' called');
 

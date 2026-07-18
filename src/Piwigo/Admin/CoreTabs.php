@@ -276,10 +276,13 @@ final class CoreTabs
 
             case 'photo':
                 /**
-                 * @var string $admin_photo_base_url
-                 * @var array<string, mixed> $conf
+                 * @var string
                  */
-                global $admin_photo_base_url, $conf;
+                global $admin_photo_base_url;
+                /**
+                 * @var array<string, mixed>
+                 */
+                global $conf;
                 $sheets['properties'] = [
                     'caption' => '<span class="icon-file-image"></span>' . l10n('Properties'),
                     'url' => $admin_photo_base_url . '-properties',

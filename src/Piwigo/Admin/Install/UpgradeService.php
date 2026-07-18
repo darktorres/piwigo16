@@ -158,10 +158,13 @@ WHERE id IN (\'' . implode('\',\'', $plugins) . '\')
     public static function deactivateNonStandardThemes(): void
     {
         /**
-         * @var array<string, mixed> $page
-         * @var array<string, mixed> $conf
+         * @var array<string, mixed>
          */
-        global $page, $conf;
+        global $page;
+        /**
+         * @var array<string, mixed>
+         */
+        global $conf;
 
         if (! is_array($page['infos'] ?? null)) {
             $page['infos'] = [];
@@ -264,10 +267,13 @@ UPDATE ' . PREFIX_TABLE . 'user_infos
     public static function checkUpgradeAccessRights(string $current_release): bool
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var array<string, mixed> $page
+         * @var array<string, mixed>
          */
-        global $conf, $page;
+        global $conf;
+        /**
+         * @var array<string, mixed>
+         */
+        global $page;
 
         if (! is_array($page['errors'] ?? null)) {
             $page['errors'] = [];

@@ -58,10 +58,13 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
     public function send(): void
     {
         /**
-         * @var Logger $logger
-         * @var array<string, mixed> $conf
+         * @var Logger
          */
-        global $logger, $conf;
+        global $logger;
+        /**
+         * @var array<string, mixed>
+         */
+        global $conf;
 
         $startTime = TimingHelper::getMoment();
 
@@ -611,10 +614,9 @@ SELECT
     private function retryLater(int $waitTime): void
     {
         /**
-         * @var array<string, mixed> $conf
-         * @var Logger $logger
+         * @var Logger
          */
-        global $conf, $logger;
+        global $logger;
 
         // let's fake a last_notice so that we only try 1 day later
         $existingLastNotice = \Piwigo\Config\Config::sendPiwigoInfosLastNotice() ?? null;

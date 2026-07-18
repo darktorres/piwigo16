@@ -69,11 +69,18 @@ final class SectionPopulator
     public function populate(): void
     {
         /**
-         * @var array<string, mixed> $filter
-         * @var array<string, mixed> $page
-         * @var Logger $logger
+         * @var array<string, mixed>
          */
-        global $filter, $logger, $page, $persistent_cache;
+        global $filter;
+        /**
+         * @var Logger
+         */
+        global $logger;
+        /**
+         * @var array<string, mixed>
+         */
+        global $page;
+        global $persistent_cache;
         $template = $this->template;
 
         // Legacy Coupling Retirement Track A batch A4: 'order_by' is

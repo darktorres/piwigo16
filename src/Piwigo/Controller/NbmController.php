@@ -71,8 +71,6 @@ final class NbmController implements ControllerInterface
         $unsubscribe = $queryParams['unsubscribe'] ?? null;
 
         $body = LegacyRenderCapture::capture(static function () use ($subscribe, $unsubscribe, $nbmSender): void {
-            /** @var array<string, mixed> $page */
-            global $page;
             global $title;
             $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -85,7 +83,7 @@ final class NbmController implements ControllerInterface
             }
 
             $title = l10n('Notification');
-            $page['body_id'] = 'theNBMPage';
+            \Piwigo\Core\PageState::current()->setBodyId('theNBMPage');
 
             $template->set_filenames([
                 'nbm' => 'nbm.tpl',

@@ -594,14 +594,6 @@ class updates
 
     public static function upgrade_to(string $upgrade_to, int|string &$step, bool $check_current_version = true): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $data_location_raw = \Piwigo\Config\Config::dataLocation();
@@ -714,7 +706,7 @@ class updates
 
                             \Piwigo\Core\PageState::current()->addInfo(l10n('Update Complete'));
                             \Piwigo\Core\PageState::current()->addInfo($upgrade_to);
-                            $page['updated_version'] = $upgrade_to;
+                            \Piwigo\Core\PageState::current()->setUpdatedVersion($upgrade_to);
                             $step = -1;
                         } else {
                             redirect(PHPWG_ROOT_PATH . 'upgrade.php?now=');

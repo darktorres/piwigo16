@@ -97,9 +97,9 @@ class UpgradeRunner
     }
 
     /**
-     * Template init, remote-site refusal, current-release detection and
-     * $page init (former upgrade.php "template initialization" through
-     * "upgrade launch" preamble). May exit(): remote sites, or an already
+     * Template init, remote-site refusal, current-release detection
+     * (former upgrade.php "template initialization" through "upgrade
+     * launch" preamble). May exit(): remote sites, or an already
      * up-to-date database.
      *
      * @return string the detected current release, for the entry shell's
@@ -107,10 +107,6 @@ class UpgradeRunner
      */
     public function prepare(): string
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         global $template;
 
         // +-------------------------------------------------------------------+

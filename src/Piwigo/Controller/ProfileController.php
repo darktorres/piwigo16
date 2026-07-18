@@ -41,15 +41,7 @@ final class ProfileController implements ControllerInterface
         /**
          * @var array<string, mixed>
          */
-        global $conf;
-        /**
-         * @var array<string, mixed>
-         */
         global $user;
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Classic);
@@ -98,7 +90,7 @@ SELECT ' . implode(',', $fields) . '
         $profileFormHandler->saveFromPost($userdata, $page_errors);
         \Piwigo\Core\PageState::current()->errors = array_values($page_errors);
 
-        $page['body_id'] = 'theProfilePage';
+        \Piwigo\Core\PageState::current()->setBodyId('theProfilePage');
         $template->set_filename('profile', 'profile.tpl');
         $template->set_filename('profile_content', 'profile_content.tpl');
 

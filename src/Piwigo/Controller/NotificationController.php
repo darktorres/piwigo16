@@ -38,8 +38,6 @@ final class NotificationController implements ControllerInterface
         $feedId = $this->findAvailableFeedId($feedRepo);
 
         $body = LegacyRenderCapture::capture(static function () use ($feedRepo, $feedId): void {
-            /** @var array<string, mixed> $page */
-            global $page;
             global $title;
             $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -57,7 +55,7 @@ final class NotificationController implements ControllerInterface
             }
 
             $title = l10n('Notification');
-            $page['body_id'] = 'theNotificationPage';
+            \Piwigo\Core\PageState::current()->setBodyId('theNotificationPage');
             \Piwigo\Core\PageState::current()->setMetaRobots([
                 'noindex' => 1,
                 'nofollow' => 1,

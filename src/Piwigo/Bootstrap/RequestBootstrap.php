@@ -164,10 +164,6 @@ final class RequestBootstrap
         /**
          * @var array<string, mixed>
          */
-        global $page;
-        /**
-         * @var array<string, mixed>
-         */
         global $user;
         global $persistent_cache;
         global $logger;
@@ -315,17 +311,16 @@ final class RequestBootstrap
         }
 
         // Piwigo\Bootstrap\UserBootstrap::initialize() sets these by calling
-        // build_user()/AuthService::autoLogin()/auth_key_login(), each mutating the
-        // $user/$page globals via their own `global` declarations. $user's keys are
-        // always overwritten before use in every real path; $page's are genuinely
-        // optional (only auth_key_login() sets them, and only on an invalid/expiring
-        // auth key), so these defaults are real fallbacks, not just analysis
-        // scaffolding.
+        // build_user()/AuthService::autoLogin()/auth_key_login(), the latter
+        // mutating the $user global via its own `global` declaration and
+        // PageState::current()'s authKeyInvalid/notifyApiKeyExpiration
+        // (Legacy Coupling Retirement Track A batch A5.2i) -- $user's keys
+        // are always overwritten before use in every real path; PageState's
+        // own typed defaults (false/null) already cover the "no auth key
+        // presented" case, so no explicit reset is needed here.
         $user['id'] = \Piwigo\Config\Config::guestId();
         $user['email'] = null;
         $user['theme'] = '';
-        $page['auth_key_invalid'] = false;
-        $page['notify_api_key_expiration'] = null;
 
         new UserBootstrap()
             ->initialize();
@@ -333,9 +328,10 @@ final class RequestBootstrap
         // The original file followed this call with a get_defined_vars()
         // based re-read of $user/$page -- pure PHPStan narrowing
         // scaffolding (a self-assignment at runtime), dropped in this port:
-        // inside a method the `global` declarations above already carry
-        // array<string, mixed> for both, which is all the old dance
-        // re-established.
+        // inside a method the `global` declaration above already carries
+        // array<string, mixed>, which is all the old dance re-established.
+        // ($page itself is gone from this method as of batch A5.2i --
+        // auth_key_invalid/notify_api_key_expiration moved to PageState.)
 
         // Legacy Coupling Retirement Track A batch A3: CurrentUser is the
         // real target every retargeted consumer reads from now; `global
@@ -380,10 +376,6 @@ final class RequestBootstrap
         /**
          * @var array<string, mixed>
          */
-        global $page;
-        /**
-         * @var array<string, mixed>
-         */
         global $user;
         global $template;
         global $header_msgs;
@@ -422,22 +414,20 @@ final class RequestBootstrap
             CurrentUser::set(User::fromUserArray($user));
         }
 
+        $pageState = \Piwigo\Core\PageState::current();
+
         // in case an auth key was provided and is no longer valid, we must wait to
         // be here, with language loaded, to prepare the message
-        if ((bool) $page['auth_key_invalid']) {
-            \Piwigo\Core\PageState::current()->addError(
+        if ($pageState->authKeyInvalid) {
+            $pageState->addError(
                 l10n('Your authentication key is no longer valid.')
               . sprintf(' <a href="%s">%s</a>', get_root_url() . 'identification.php', l10n('Login'))
             );
         }
 
         // check if we need to notified user about api_key expiration
-        if (is_array($page['notify_api_key_expiration'])) {
-            // auth_key_login() (Piwigo\Auth\AuthService) always sets
-            // 'days_left' to intval($key['days_left']), i.e. an int, but the
-            // `global` declaration above erases that per-key type info.
-            $days_left = $page['notify_api_key_expiration']['days_left'] ?? null;
-            $days_left = is_int($days_left) ? $days_left : (is_numeric($days_left) ? (int) $days_left : 0);
+        $notify_api_key_expiration = $pageState->notifyApiKeyExpiration;
+        if ($notify_api_key_expiration !== null) {
             // build_user() always populates 'username'/'email' from the database (see
             // getuserdata()), so these are real strings on every path that reaches
             // here (an auth key was just validated); the is_string() checks are a
@@ -447,22 +437,22 @@ final class RequestBootstrap
             $notify_email = $user['email'];
             $notify_email = is_string($notify_email) ? $notify_email : '';
             $is_mail_send = new \Piwigo\Auth\ApiKeyService(new MailService())
-                ->notifyExpiration($notify_username, $notify_email, $days_left);
+                ->notifyExpiration($notify_username, $notify_email, $notify_api_key_expiration['days_left']);
 
             if ($is_mail_send) {
                 \Piwigo\Db\MysqliDb::singleUpdate(
                     Tables::userAuthKeys(),
                     [
-                        'last_notified_on' => $page['notify_api_key_expiration']['dbnow'],
+                        'last_notified_on' => $notify_api_key_expiration['dbnow'],
                     ],
                     [
                         'user_id' => $user['id'],
-                        'auth_key' => $page['notify_api_key_expiration']['auth_key'],
+                        'auth_key' => $notify_api_key_expiration['auth_key'],
                     ],
                 );
             }
 
-            unset($page['notify_api_key_expiration']);
+            $pageState->notifyApiKeyExpiration = null;
         }
 
         // template instance

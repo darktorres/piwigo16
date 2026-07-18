@@ -174,9 +174,7 @@ SELECT galleries_url
             $site_reader = new LocalSiteReader($site_url);
         }
 
-        /** @var array<string, mixed> $page */
-        global $page;
-        if (isset($page['no_md5sum_number'])) {
+        if (\Piwigo\Core\PageState::current()->noMd5sumNumber !== null) {
             $template->assign(
                 [
                     'save_error' => '<a href="admin.php?page=batch_manager&amp;filter=prefilter-no_sync_md5sum">' . l10n('Some checksums are missing.') . '<i class="icon-right"></i></a>',

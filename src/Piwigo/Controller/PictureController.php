@@ -79,14 +79,6 @@ final class PictureController implements ControllerInterface
             ->populate();
 
         /**
-         * @var array<string, mixed>
-         */
-        global $conf;
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
-        /**
          * @var string
          */
         global $url_self;
@@ -506,14 +498,6 @@ UPDATE ' . Tables::categories() . '
             $url_up,
             $edit_comment
         ): void {
-            /**
-             * @var array<string, mixed>
-             */
-            global $conf;
-            /**
-             * @var array<string, mixed>
-             */
-            global $page;
             global $title;
             /**
              * @var string
@@ -751,7 +735,7 @@ SELECT *
                 ]);
             }
 
-            $page['body_id'] = 'thePicturePage';
+            \Piwigo\Core\PageState::current()->setBodyId('thePicturePage');
 
             // allow plugins to change what we computed before passing data
             // to template

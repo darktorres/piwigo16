@@ -131,16 +131,12 @@ final class IdentificationController implements ControllerInterface
             /**
              * @var array<string, mixed>
              */
-            global $page;
-            /**
-             * @var array<string, mixed>
-             */
             global $user;
             global $title;
             $template = \Piwigo\Template\CurrentTemplate::get();
 
             $title = l10n('Identification');
-            $page['body_id'] = 'theIdentificationPage';
+            \Piwigo\Core\PageState::current()->setBodyId('theIdentificationPage');
 
             $template->set_filenames([
                 'identification' => 'identification.tpl',

@@ -487,10 +487,6 @@ FROM ' . Tables::users() . ' AS u
          * @var array<string, mixed>
          */
         global $user;
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
 
         // see UserService::validateMailAddress() for why this is string=>string
         /** @var array<string, string> $user_fields */
@@ -536,7 +532,7 @@ SELECT
 
         // is the key still valid?
         if (strtotime((string) $key['expired_on']) < strtotime((string) $key['dbnow'])) {
-            $page['auth_key_invalid'] = true;
+            \Piwigo\Core\PageState::current()->markAuthKeyInvalid();
             return false;
         }
 
@@ -568,11 +564,11 @@ SELECT
                     or strtotime($key['last_notified_on']) < strtotime((string) $key['48h_ago']) // OR when the last email was sent more than 48 hours ago
                 )
             ) {
-                $page['notify_api_key_expiration'] = [
+                \Piwigo\Core\PageState::current()->setNotifyApiKeyExpiration([
                     'days_left' => $days_left,
                     'dbnow' => $key['dbnow'],
                     'auth_key' => $key['auth_key'],
-                ];
+                ]);
             }
         }
 

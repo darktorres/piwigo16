@@ -45,14 +45,12 @@ final class PopuphelpController implements ControllerInterface
             // arch-tested to contain zero define() calls at all
             // (tests/Arch/StructuralTest.php).
 
-            /** @var array<string, mixed> $page */
-            global $page;
             global $title;
             $template = \Piwigo\Template\CurrentTemplate::get();
 
-            $page['body_id'] = 'thePopuphelpPage';
+            \Piwigo\Core\PageState::current()->setBodyId('thePopuphelpPage');
             $title = l10n('Piwigo Help');
-            $page['page_banner'] = '';
+            \Piwigo\Core\PageState::current()->setPageBanner('');
             \Piwigo\Core\PageState::current()->setMetaRobots([
                 'noindex' => 1,
                 'nofollow' => 1,

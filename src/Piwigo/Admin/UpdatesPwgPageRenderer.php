@@ -37,10 +37,6 @@ final class UpdatesPwgPageRenderer
 {
     public function render(): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (! \Piwigo\Config\Config::enableCoreUpdate()) {
@@ -154,7 +150,7 @@ final class UpdatesPwgPageRenderer
         $template->assign(
             [
                 'STEP' => $step,
-                'PIWIGO_CURRENT_VERSION' => $page['updated_version'] ?? AppInfo::VERSION,
+                'PIWIGO_CURRENT_VERSION' => \Piwigo\Core\PageState::current()->updatedVersion ?? AppInfo::VERSION,
                 'UPGRADE_TO' => $upgrade_to,
                 'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
                     ->getToken(),

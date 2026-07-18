@@ -35,23 +35,11 @@ final class AboutController implements ControllerInterface
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
         $body = LegacyRenderCapture::capture(static function (): void {
-            // Bootstrap globals, set by include/common.inc.php; reads and
-            // writes of them need an explicit `global` here since this
-            // closure is not real global scope (same lesson as P21's
-            // AdminDispatcher scope bug).
-            /**
-             * @var array<string, mixed>
-             */
-            global $conf;
-            /**
-             * @var array<string, mixed>
-             */
-            global $page;
             global $title;
             $template = \Piwigo\Template\CurrentTemplate::get();
 
             $title = l10n('About Piwigo');
-            $page['body_id'] = 'theAboutPage';
+            \Piwigo\Core\PageState::current()->setBodyId('theAboutPage');
 
             trigger_notify('loc_begin_about');
 

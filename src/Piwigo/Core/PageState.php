@@ -50,6 +50,15 @@ namespace Piwigo\Core;
  * `queriesTime` -- confirmed via a repo-wide grep that every real
  * reader/writer is retargeted in this same batch, so there is no
  * remaining legacy consumer left to bridge for.
+ *
+ * `bodyId`/`pageBanner`/`nbPendingComments`/`noMd5sumNumber`/
+ * `updatedVersion`/`authKeyInvalid`/`notifyApiKeyExpiration` (batch
+ * A5.2i) were found by a final exhaustive repo-wide `$page` sweep done
+ * while closing out Track A5.2 Phase B -- small single-writer-or-few
+ * -writers/single-reader clusters missed by the original B1/page-slug/
+ * meta_robots/tab-cluster batches. Same "no attachGlobals() bridging"
+ * rule applies: every real reader/writer is retargeted in this same
+ * batch.
  */
 final class PageState
 {
@@ -107,6 +116,40 @@ final class PageState
     public int $countQueries = 0;
 
     public float $queriesTime = 0.0;
+
+    /**
+     * Batch A5.2i: the CSS id assigned to the page's `<body>` tag, set by
+     * whichever of 13 controllers handled the request (each assigns its own
+     * fixed literal, e.g. 'theCategoryPage'/'theProfilePage') and read once
+     * by PageHeaderRenderer. Ambient like metaRobots/bodyClasses -- no
+     * per-caller variation, just "whichever controller ran, set this once."
+     */
+    public string $bodyId = '';
+
+    /**
+     * Nullable (not '') so PageHeaderRenderer's `?? Config::pageBanner()`
+     * fallback still works: AdminShell/AdminPopuphelpController set a real
+     * banner string, but PopuphelpController deliberately sets '' to mean
+     * "no banner", which must NOT fall back to the configured default.
+     */
+    public ?string $pageBanner = null;
+
+    public ?int $nbPendingComments = null;
+
+    public ?int $noMd5sumNumber = null;
+
+    public int $nbOrphans = 0;
+
+    public int $nbPhotosTotal = 0;
+
+    public ?string $updatedVersion = null;
+
+    public bool $authKeyInvalid = false;
+
+    /**
+     * @var array{days_left: int, dbnow: mixed, auth_key: mixed}|null
+     */
+    public ?array $notifyApiKeyExpiration = null;
 
     private function __construct() {}
 
@@ -252,6 +295,54 @@ final class PageState
     {
         $this->countQueries = 0;
         $this->queriesTime = 0.0;
+    }
+
+    public function setBodyId(string $id): void
+    {
+        $this->bodyId = $id;
+    }
+
+    public function setPageBanner(string $banner): void
+    {
+        $this->pageBanner = $banner;
+    }
+
+    public function setNbPendingComments(int $count): void
+    {
+        $this->nbPendingComments = $count;
+    }
+
+    public function setNoMd5sumNumber(int $count): void
+    {
+        $this->noMd5sumNumber = $count;
+    }
+
+    public function setNbOrphans(int $count): void
+    {
+        $this->nbOrphans = $count;
+    }
+
+    public function setNbPhotosTotal(int $count): void
+    {
+        $this->nbPhotosTotal = $count;
+    }
+
+    public function setUpdatedVersion(string $version): void
+    {
+        $this->updatedVersion = $version;
+    }
+
+    public function markAuthKeyInvalid(): void
+    {
+        $this->authKeyInvalid = true;
+    }
+
+    /**
+     * @param array{days_left: int, dbnow: mixed, auth_key: mixed} $data
+     */
+    public function setNotifyApiKeyExpiration(array $data): void
+    {
+        $this->notifyApiKeyExpiration = $data;
     }
 
     public function hasErrors(): bool

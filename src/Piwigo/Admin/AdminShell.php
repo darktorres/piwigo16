@@ -31,24 +31,17 @@ use Piwigo\Template\Template;
  * from admin.php's former top-level body so the root file is a thin
  * bootstrap shell matching index.php's own final form.
  *
- * run() declares the bootstrap globals explicitly -- this body ran at
- * true top-level scope for two decades and both reads and writes
- * $conf/$user/$page/$template state that common.inc.php seeded and the
- * dispatched sub-controllers consume (the recurring method-scoped-include
- * bug class; the `global` declarations are load-bearing).
+ * Legacy Coupling Retirement Track A batch A5.2i: the last real `global
+ * $conf;`/`global $page;` reads/writes in run() are gone -- $conf was
+ * dead (never referenced), $page's keys (page_banner/body_id/
+ * nb_pending_comments/no_md5sum_number/nb_orphans/nb_photos_total) are
+ * all PageState::current() calls now, consumed by IntroSubController/
+ * PageHeaderRenderer/FilterPanelRenderer/SiteUpdateSubController.
  */
 final class AdminShell
 {
     public function run(): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         add_event_handler('tabsheet_before_select', CoreTabs::addCoreTabs(...));
@@ -235,8 +228,8 @@ final class AdminShell
         // +-------------------------------------------------------------------+
 
         $title = l10n('Piwigo Administration'); // for the PageHeaderRenderer::render() call below
-        $page['page_banner'] = '<h1>' . l10n('Piwigo Administration') . '</h1>';
-        $page['body_id'] = 'theAdminPage';
+        \Piwigo\Core\PageState::current()->setPageBanner('<h1>' . l10n('Piwigo Administration') . '</h1>');
+        \Piwigo\Core\PageState::current()->setBodyId('theAdminPage');
 
         $template->set_filenames([
             'admin' => 'admin.tpl',
@@ -299,7 +292,7 @@ SELECT COUNT(*)
 
             if ($nb_comments > 0) {
                 $template->assign('NB_PENDING_COMMENTS', $nb_comments);
-                $page['nb_pending_comments'] = $nb_comments;
+                \Piwigo\Core\PageState::current()->setNbPendingComments(is_numeric($nb_comments) ? (int) $nb_comments : 0);
             }
         }
 
@@ -338,25 +331,29 @@ SELECT COUNT(*)
             $nb_no_md5sum = count($imageService->getPhotosNoMd5sum());
 
             if ($nb_no_md5sum > 0) {
-                $page['no_md5sum_number'] = $nb_no_md5sum;
+                \Piwigo\Core\PageState::current()->setNoMd5sumNumber($nb_no_md5sum);
             }
         }
 
         // only calculate number of orphans on all pages if the number of images is "not huge"
-        $page['nb_orphans'] = 0;
+        $nb_orphans = 0;
 
         $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT COUNT(*) FROM ' . Tables::images()));
         assert($row !== null);
-        [$page['nb_photos_total']] = $row;
-        if ($page['nb_photos_total'] < 100000) { // 100k is already a big gallery
+        [$nb_photos_total_raw] = $row;
+        $nb_photos_total = is_numeric($nb_photos_total_raw) ? (int) $nb_photos_total_raw : 0;
+        if ($nb_photos_total < 100000) { // 100k is already a big gallery
             $imageConn = \Piwigo\Db\DbConnection::build();
-            $page['nb_orphans'] = new \Piwigo\Image\ImageService(new \Piwigo\Image\ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)))
+            $nb_orphans_raw = new \Piwigo\Image\ImageService(new \Piwigo\Image\ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)))
                 ->countOrphans();
+            $nb_orphans = is_numeric($nb_orphans_raw) ? (int) $nb_orphans_raw : 0;
         }
+        \Piwigo\Core\PageState::current()->setNbPhotosTotal($nb_photos_total);
+        \Piwigo\Core\PageState::current()->setNbOrphans($nb_orphans);
 
         $template->assign(
             [
-                'NB_ORPHANS' => $page['nb_orphans'],
+                'NB_ORPHANS' => $nb_orphans,
                 'U_ORPHANS' => $link_start . 'batch_manager&amp;filter=prefilter-no_album',
             ]
         );

@@ -241,10 +241,6 @@ final readonly class CoreUpdateService
 
     public function upgradeTo(string $upgradeTo, int|string &$step, bool $checkCurrentVersion = true): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $dataLocationRaw = \Piwigo\Config\Config::dataLocation();
@@ -365,7 +361,7 @@ final readonly class CoreUpdateService
 
             \Piwigo\Core\PageState::current()->addInfo(l10n('Update Complete'));
             \Piwigo\Core\PageState::current()->addInfo($upgradeTo);
-            $page['updated_version'] = $upgradeTo;
+            \Piwigo\Core\PageState::current()->setUpdatedVersion($upgradeTo);
             $step = -1;
         } else {
             redirect(PHPWG_ROOT_PATH . 'upgrade.php?now=');

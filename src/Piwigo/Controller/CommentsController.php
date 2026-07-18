@@ -369,8 +369,6 @@ final class CommentsController implements ControllerInterface
             $whereClauses,
             $edit_comment
         ): void {
-            /** @var array<string, mixed> $page */
-            global $page;
             global $title;
             $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -379,7 +377,7 @@ final class CommentsController implements ControllerInterface
             // +---------------------------------------------------------------+
 
             $title = l10n('User comments');
-            $page['body_id'] = 'theCommentsPage';
+            \Piwigo\Core\PageState::current()->setBodyId('theCommentsPage');
 
             $template->set_filenames([
                 'comments' => 'comments.tpl',

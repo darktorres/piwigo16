@@ -24,14 +24,6 @@ final class PageHeaderRenderer
     public function render(string $title, ?string $refresh = null, ?string $urlLink = null): void
     {
         /**
-         * @var array<string, mixed>
-         */
-        global $conf;
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
-        /**
          * @var list<string>|null
          */
         global $header_notes;
@@ -48,13 +40,9 @@ final class PageHeaderRenderer
             $show_mobile_app_banner = \Piwigo\Config\ConfigDb::confGetParam('show_mobile_app_banner_in_admin', true);
         }
 
-        // Config values loaded from the piwigo_config DB table (TEXT column) are
-        // always strings; $page['page_banner'] is only ever assigned string literals
-        // (see popuphelp.php, admin.php, admin/popuphelp.php).
         /** @var string $conf_gallery_title */
         $conf_gallery_title = \Piwigo\Config\Config::galleryTitle();
-        /** @var string $page_banner */
-        $page_banner = $page['page_banner'] ?? \Piwigo\Config\Config::pageBanner();
+        $page_banner = \Piwigo\Core\PageState::current()->pageBanner ?? \Piwigo\Config\Config::pageBanner();
 
         $template->assign(
             [
@@ -69,7 +57,7 @@ final class PageHeaderRenderer
                     )
                 ),
 
-                'BODY_ID' => $page['body_id'] ?? '',
+                'BODY_ID' => \Piwigo\Core\PageState::current()->bodyId,
 
                 'CONTENT_ENCODING' => \Piwigo\Core\CharsetHelper::getPwgCharset(),
                 'PAGE_TITLE' => strip_tags($title),

@@ -50,16 +50,15 @@ use Piwigo\Template\Template;
  */
 final class BatchManagerUnitPageRenderer
 {
-    public function render(): void
+    /**
+     * @param array<mixed> $catElementsId
+     */
+    public function render(array $catElementsId, int $pageStart): void
     {
         /**
          * @var array<string, mixed>
          */
         global $cache;
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         /**
          * @var array<string, mixed>
          */
@@ -203,13 +202,10 @@ SELECT id, date_creation
             ]
         );
 
-        // $page['cat_elements_id']/$page['start'] are always set (a list of
-        // scalar image ids / 0 or a validated numeric $_REQUEST value) by
-        // BatchManagerSubController before dispatching to this renderer;
-        // PHPStan cannot see across that boundary, so we narrow both once
-        // here for every use below (including the FilterPanelRenderer call).
-        $cat_elements_id = is_array($page['cat_elements_id']) ? array_filter($page['cat_elements_id'], is_scalar(...)) : [];
-        $page_start = is_numeric($page['start']) ? (int) $page['start'] : 0;
+        // $catElementsId is a list of scalar image ids; narrowed once here
+        // for every use below (including the FilterPanelRenderer call).
+        $cat_elements_id = array_filter($catElementsId, is_scalar(...));
+        $page_start = $pageStart;
 
         new FilterPanelRenderer()
             ->render($template, $base_url, $collection, $cat_elements_id, $page_start);
@@ -222,19 +218,17 @@ SELECT id, date_creation
         // how many items to display on this page
         if (isset($_GET['display']) && $_GET['display'] !== '' && $_GET['display'] !== '0') {
             // \Piwigo\Config\ConfigDb::confUpdateParam('batch_manager_images_per_page_unit' , intval($_GET['display']));
-            // $page['nb_images'] = \Piwigo\Config\Config::batchManagerImagesPerPageUnit();
-            $page['nb_images'] = is_numeric($_GET['display']) ? intval($_GET['display']) : 0;
+            // $nb_images = \Piwigo\Config\Config::batchManagerImagesPerPageUnit();
+            $nb_images = is_numeric($_GET['display']) ? intval($_GET['display']) : 0;
         } elseif (in_array(\Piwigo\Config\Config::batchManagerImagesPerPageUnit(), [5, 10, 50], true)) {
-            $page['nb_images'] = \Piwigo\Config\Config::batchManagerImagesPerPageUnit();
+            $nb_images = \Piwigo\Config\Config::batchManagerImagesPerPageUnit();
         } else {
-            $page['nb_images'] = 5;
+            $nb_images = 5;
         }
-        $template->assign('per_page', $page['nb_images']);
+        $template->assign('per_page', $nb_images);
 
         if (count($cat_elements_id) > 0) {
-            // $page['nb_images'] is always int here, same reasoning as
-            // BatchManagerGlobalPageRenderer's own nb_images narrowing.
-            $page_nb_images = $page['nb_images'];
+            $page_nb_images = $nb_images;
 
             $nav_bar = new \Piwigo\Core\PaginationService()
                 ->createNavigationBar($base_url . get_query_string_diff(['start']), count($cat_elements_id), $page_start, $page_nb_images);

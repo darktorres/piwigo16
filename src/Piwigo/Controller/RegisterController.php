@@ -165,16 +165,12 @@ final class RegisterController implements ControllerInterface
             /**
              * @var array<string, mixed>
              */
-            global $page;
-            /**
-             * @var array<string, mixed>
-             */
             global $user;
             global $title;
             $template = \Piwigo\Template\CurrentTemplate::get();
 
             $title = l10n('Registration');
-            $page['body_id'] = 'theRegisterPage';
+            \Piwigo\Core\PageState::current()->setBodyId('theRegisterPage');
 
             $template->set_filenames([
                 'register' => 'register.tpl',

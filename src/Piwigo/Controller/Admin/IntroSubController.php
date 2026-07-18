@@ -79,10 +79,6 @@ final class IntroSubController implements AdminSubControllerInterface
         /**
          * @var array<string, mixed>
          */
-        global $page;
-        /**
-         * @var array<string, mixed>
-         */
         global $pwg_loaded_plugins;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -104,20 +100,20 @@ final class IntroSubController implements AdminSubControllerInterface
         // |                                actions                                |
         // +-----------------------------------------------------------------------+
 
-        if (isset($page['nb_pending_comments'])) {
+        $nb_pending_comments = \Piwigo\Core\PageState::current()->nbPendingComments;
+        if ($nb_pending_comments !== null) {
             $message = l10n('User comments') . ' <i class="icon-chat"></i> ';
             $message .= '<a href="' . $link_start . 'comments">';
-            $message .= l10n('%d waiting for validation', $page['nb_pending_comments']);
+            $message .= l10n('%d waiting for validation', $nb_pending_comments);
             $message .= ' <i class="icon-right"></i></a>';
 
             \Piwigo\Core\PageState::current()->addMessage($message);
         }
 
         // any orphan photo?
-        $nb_orphans = $page['nb_orphans']; // already calculated in admin.php
-        $nb_orphans = is_numeric($nb_orphans) ? (int) $nb_orphans : 0;
+        $nb_orphans = \Piwigo\Core\PageState::current()->nbOrphans; // already calculated in admin.php
 
-        if ($page['nb_photos_total'] >= 100000) { // but has not been calculated on a big gallery, so force it now
+        if (\Piwigo\Core\PageState::current()->nbPhotosTotal >= 100000) { // but has not been calculated on a big gallery, so force it now
             $imageConn = DbConnection::build();
             $nb_orphans = new ImageService(new ImageRepository($imageConn), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($imageConn)))
                 ->countOrphans();

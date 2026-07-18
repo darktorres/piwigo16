@@ -42,10 +42,13 @@ use Psr\Http\Message\ServerRequestInterface;
  * into Piwigo\Section\SectionPopulator in P23 batch 4d.
  *
  * Unlike every other P22 controller, SectionPopulator::populate() must run
- * BEFORE check_status() -- check_restrictions() (called right after)
- * depends on $page['category'] already being populated. populate()
- * declares its own `global $page, $conf, ...;` at its top level, so it
- * binds to the real $GLOBALS table correctly regardless of nesting depth.
+ * BEFORE check_status() -- check_restrictions() (called right after) depends
+ * on the built SectionContext's `category` already being populated. `$page`
+ * itself is long gone from populate() (Legacy Coupling Retirement Track A
+ * batch A5.2e converted it to a local scratch array feeding
+ * SectionContextRegistry::set()) and from this controller's own closure
+ * below (batch A5.2i retargeted its last 2 keys, body_id/cat_slideshow_url,
+ * onto PageState/an explicit return value respectively).
  *
  * check_status()/check_restrictions()/page_not_found() all stay outside the
  * captured closure. Everything else -- including the interleaved
@@ -103,14 +106,6 @@ final class GalleryController implements ControllerInterface
         }
 
         $body = LegacyRenderCapture::capture(static function () use ($page_items, $page_start, $page_nb_image_page, $section_context): void {
-            // body_id (this controller's own write)/cat_slideshow_url
-            // (written by CategoryDefaultRenderer::render(), called later
-            // in this same closure) are the only real remaining reasons
-            // this closure still needs the global.
-            /**
-             * @var array<string, mixed>
-             */
-            global $page;
             global $title;
             $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -197,7 +192,7 @@ final class GalleryController implements ControllerInterface
             // defaults false and nothing ever passes true) -- not a 17.x
             // porting gap, so the guard is dropped rather than ported.
             // ------------------------------------------------- template init
-            $page['body_id'] = 'theCategoryPage';
+            \Piwigo\Core\PageState::current()->setBodyId('theCategoryPage');
 
             if ($section_context->flat or $section_context->chronologyField !== null) {
                 $template->assign(
@@ -494,8 +489,9 @@ final class GalleryController implements ControllerInterface
                     ->render($section_context->section, $section_context->category, $section_context->startcat);
             }
 
+            $slideshow_url = null;
             if ($page_items !== []) {
-                new CategoryDefaultRenderer(new HtmlService(), $template)
+                $slideshow_url = new CategoryDefaultRenderer(new HtmlService(), $template)
                     ->render($page_items, $page_start, $page_nb_image_page, $section_context->section);
 
                 if (\Piwigo\Config\Config::indexSizesIcon()) {
@@ -528,7 +524,6 @@ final class GalleryController implements ControllerInterface
             // slideshow
             // execute after init thumbs in order to have all picture
             // informations
-            $slideshow_url = $page['cat_slideshow_url'] ?? null;
             $slideshow_url_present = is_string($slideshow_url) && $slideshow_url !== '' && $slideshow_url !== '0';
             if ($slideshow_url_present) {
                 if (isset($_GET['slideshow'])) {

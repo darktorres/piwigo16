@@ -61,10 +61,6 @@ final class BatchManagerSubController implements AdminSubControllerInterface
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         new \Piwigo\Validation\InputValidator()
@@ -97,29 +93,31 @@ final class BatchManagerSubController implements AdminSubControllerInterface
 
         $filter_resolver = new FilterResolver(DbConnection::build());
 
-        $page['cat_elements_id'] = $this->computeCurrentSet(
+        $duplicates_on_fields = null;
+        $cat_elements_id = $this->computeCurrentSet(
             $filter_resolver,
             $bulk_filter,
             $get_page,
             $user_id,
             $conf_order_by,
+            $duplicates_on_fields,
         );
 
         // +-------------------------------------------------------------------+
         // |                       first element to display                        |
         // +-------------------------------------------------------------------+
 
-        // $page['start'] contains the number of the first element in its
-        // category. For exampe, $page['start'] = 12 means we must show elements #12
-        // and $page['nb_images'] next elements
+        // $start contains the number of the first element in its category.
+        // For example, $start = 12 means we must show elements #12 and the
+        // renderer's own nb_images next elements.
 
         if (! isset($_REQUEST['start'])
             or ! is_numeric($_REQUEST['start'])
             or $_REQUEST['start'] < 0
             or (isset($_REQUEST['display']) and $_REQUEST['display'] === 'all')) {
-            $page['start'] = 0;
+            $start = 0;
         } else {
-            $page['start'] = $_REQUEST['start'];
+            $start = (int) $_REQUEST['start'];
         }
 
         // +-------------------------------------------------------------------+
@@ -157,10 +155,10 @@ final class BatchManagerSubController implements AdminSubControllerInterface
 
         if ($tab === 'unit') {
             new BatchManagerUnitPageRenderer()
-                ->render();
+                ->render($cat_elements_id, $start);
         } else {
             new BatchManagerGlobalPageRenderer()
-                ->render();
+                ->render($cat_elements_id, $start, $duplicates_on_fields);
         }
     }
 
@@ -489,6 +487,16 @@ DELETE FROM ' . Tables::caddie() . '
 
     /**
      * @param array<string, mixed> $bulkFilter
+     * @param ?list<string> $duplicatesOnFields by-ref out-param, only ever
+     *   computed for the 'duplicates' prefilter (matching the legacy
+     *   switch's own scoping) -- fed back to the caller so it can pass it on
+     *   to BatchManagerGlobalPageRenderer for its own duplicates-mode
+     *   thumbnail ordering (Legacy Coupling Retirement Track A batch A5.2i;
+     *   the original admin/batch_manager.php shared this via PHP's
+     *   include() scope instead, which doesn't survive splitting the shell
+     *   and the tab body into separate classes -- and the `$page` global it
+     *   was ported onto in P23 batch 6g doesn't survive FrankenPHP worker
+     *   mode either).
      *
      * @return array<mixed>
      */
@@ -498,26 +506,16 @@ DELETE FROM ' . Tables::caddie() . '
         string $getPage,
         int $userId,
         string $confOrderBy,
+        ?array &$duplicatesOnFields = null,
     ): array {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $filter_sets = [];
         if (isset($bulkFilter['prefilter']) && is_string($bulkFilter['prefilter'])) {
             $prefilter = $bulkFilter['prefilter'];
 
-            // $duplicates_on_fields is only ever computed for the 'duplicates'
-            // prefilter (matching the legacy switch's own scoping) -- assigned to
-            // $page['duplicates_on_fields'] so BatchManagerGlobalPageRenderer can
-            // read it back for its own duplicates-mode thumbnail ordering; the
-            // original admin/batch_manager.php shared this via PHP's include()
-            // scope instead, which doesn't survive splitting the shell and the
-            // tab body into separate classes.
             if ($prefilter === 'duplicates') {
-                $page['duplicates_on_fields'] = $filterResolver->duplicateFieldsFromFilter($bulkFilter);
+                $duplicatesOnFields = $filterResolver->duplicateFieldsFromFilter($bulkFilter);
             }
 
             $prefilter_result = match ($prefilter) {

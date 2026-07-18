@@ -35,22 +35,22 @@ final readonly class CategoryDefaultRenderer
      * is L2bExtendedDomain, so a SectionContext parameter here is a real
      * `deptrac analyse` DependsOnDisallowedLayer violation (L2a may not
      * depend on L2b), caught during A5.2e-8's verification gate.
-     * cat_slideshow_url stays on `global $page;` (see the write below):
-     * it's produced here for GalleryController's own later read, after
-     * SectionContext was already built, so it's out of SectionContext's
-     * own scope (see that class's docblock).
+     *
+     * Batch A5.2i: the slideshow URL (formerly `$page['cat_slideshow_url']`)
+     * is now this method's return value instead -- it's produced here for
+     * GalleryController's own later read, after SectionContext was already
+     * built, so it's out of SectionContext's own scope (see that class's
+     * docblock), but the two are always in the same call and don't need a
+     * shared PageState field.
      *
      * @param list<int|string> $items
      */
-    public function render(array $items, int $start, int $nbImagePage, string $section): void
+    public function render(array $items, int $start, int $nbImagePage, string $section): ?string
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $template = $this->template;
 
         $pictures = [];
+        $slideshowUrl = null;
 
         $selection = array_slice($items, $start, $nbImagePage);
 
@@ -98,7 +98,7 @@ SELECT *
         if (count($pictures) > 0) {
             // define category slideshow url
             $row = reset($pictures);
-            $page['cat_slideshow_url'] =
+            $slideshowUrl =
               add_url_params(
                   duplicate_picture_url(
                       [
@@ -218,5 +218,7 @@ SELECT image_id, COUNT(*) AS nb_comments
         unset($pictures, $selection, $tplThumbnailsVar);
         $template->clear_assign('thumbnails');
         \Piwigo\Core\TimingHelper::debug('end CategoryDefaultRenderer::render()');
+
+        return $slideshowUrl;
     }
 }

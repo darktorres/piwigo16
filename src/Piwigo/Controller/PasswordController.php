@@ -153,10 +153,6 @@ final class PasswordController implements ControllerInterface
             /**
              * @var array<string, mixed>
              */
-            global $page;
-            /**
-             * @var array<string, mixed>
-             */
             global $user;
             global $title;
             $template = \Piwigo\Template\CurrentTemplate::get();
@@ -173,7 +169,7 @@ final class PasswordController implements ControllerInterface
                 $template->assign('is_first_login', true);
             }
 
-            $page['body_id'] = 'thePasswordPage';
+            \Piwigo\Core\PageState::current()->setBodyId('thePasswordPage');
 
             $template->set_filenames([
                 'password' => 'password.tpl',

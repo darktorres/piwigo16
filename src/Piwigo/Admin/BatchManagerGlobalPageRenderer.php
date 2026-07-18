@@ -40,22 +40,23 @@ use Piwigo\Template\Template;
  * CSRF gap here, unlike this same sub-batch's admin/batch_manager.php shell
  * (see BatchManagerSubController's own docblock for that real fix).
  *
- * $duplicates_on_fields is only computed by BatchManagerSubController for
- * the 'duplicates' prefilter, and is read back here (for this file's own
- * duplicates-mode thumbnail ordering) via $page['duplicates_on_fields']
- * instead of the original file's PHP-include-scope variable sharing (the
- * legacy admin/batch_manager.php included this file directly, so a bare
- * local variable it set was still in scope here; that implicit sharing
- * doesn't survive splitting the shell and this tab into separate classes).
+ * $duplicatesOnFields is only computed by BatchManagerSubController for the
+ * 'duplicates' prefilter, and is passed in here as an explicit parameter
+ * (for this file's own duplicates-mode thumbnail ordering) -- Legacy
+ * Coupling Retirement Track A batch A5.2i retargeted this off the
+ * `$page['duplicates_on_fields']` global it was ported onto in P23 batch
+ * 6g, which itself replaced the original file's PHP-include-scope variable
+ * sharing (the legacy admin/batch_manager.php included this file directly,
+ * so a bare local variable it set was still in scope here).
  */
 final class BatchManagerGlobalPageRenderer
 {
-    public function render(): void
+    /**
+     * @param array<mixed> $catElementsId
+     * @param ?list<string> $duplicatesOnFields
+     */
+    public function render(array $catElementsId, int $pageStart, ?array $duplicatesOnFields = null): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (count($_POST) > 0) {
@@ -486,15 +487,10 @@ DELETE
 
         $base_url = get_root_url() . 'admin.php';
 
-        // $page['cat_elements_id']/$page['start'] are always set (a list of
-        // scalar image ids / 0 or a validated numeric $_REQUEST value) by
-        // BatchManagerSubController before dispatching to this renderer;
-        // PHPStan cannot see across that boundary, so we narrow both once
-        // here for every use below (including the FilterPanelRenderer call).
-        $cat_elements_id = is_array($page['cat_elements_id'])
-            ? array_map(intval(...), array_filter($page['cat_elements_id'], is_numeric(...)))
-            : [];
-        $page_start = is_numeric($page['start']) ? (int) $page['start'] : 0;
+        // $catElementsId is a list of scalar image ids; narrowed once here
+        // for every use below (including the FilterPanelRenderer call).
+        $cat_elements_id = array_map(intval(...), array_filter($catElementsId, is_numeric(...)));
+        $page_start = $pageStart;
 
         new FilterPanelRenderer()
             ->render($template, $base_url, $collection, $cat_elements_id, $page_start);
@@ -560,23 +556,15 @@ DELETE
         // how many items to display on this page
         if (isset($_GET['display']) && $_GET['display'] !== '' && $_GET['display'] !== '0') {
             if ($_GET['display'] === 'all') {
-                $page['nb_images'] = count($cat_elements_id);
+                $nb_images = count($cat_elements_id);
             } else {
-                $page['nb_images'] = is_numeric($_GET['display']) ? intval($_GET['display']) : 0;
+                $nb_images = is_numeric($_GET['display']) ? intval($_GET['display']) : 0;
             }
         } elseif (in_array(\Piwigo\Config\Config::batchManagerImagesPerPageGlobal(), [20, 50, 100], true)) {
-            $page['nb_images'] = \Piwigo\Config\Config::batchManagerImagesPerPageGlobal();
+            $nb_images = \Piwigo\Config\Config::batchManagerImagesPerPageGlobal();
         } else {
-            $page['nb_images'] = 20;
+            $nb_images = 20;
         }
-
-        // $page['nb_images'] is always int here: the block above assigns
-        // count()/intval() (both int), or Config::batchManagerImagesPerPageGlobal()
-        // already narrowed to one of the literal ints in the in_array(..., true)
-        // check, or a literal int fallback -- PHPStan proves this, so no cast is needed.
-        // $page_start (the pagination offset) was already narrowed once,
-        // above, and is reused here.
-        $nb_images = $page['nb_images'];
 
         $nb_thumbs_page = 0;
 
@@ -595,16 +583,10 @@ DELETE
 
             // If using the 'duplicates' filter,
             // order by the fields that are used to find duplicates.
-            $duplicates_on_fields = $page['duplicates_on_fields'] ?? null;
             if (isset($bulk_manager_filter['prefilter'])
                 and $bulk_manager_filter['prefilter'] === 'duplicates'
-                and is_array($duplicates_on_fields)) {
-                // $page['duplicates_on_fields'] is only ever set by
-                // BatchManagerSubController for the 'duplicates' prefilter (always a
-                // list of column-name strings when set); PHPStan can't see across
-                // that boundary, hence the is_array()/is_string() checks.
-                $duplicates_on_fields = array_filter($duplicates_on_fields, is_string(...));
-                $order_by_fields = array_merge($duplicates_on_fields, ['id']);
+                and $duplicatesOnFields !== null) {
+                $order_by_fields = array_merge($duplicatesOnFields, ['id']);
                 $order_by = ' ORDER BY ' . join(', ', $order_by_fields);
             } else {
                 // Config::orderBy() (the typed SCHEMA accessor) models a

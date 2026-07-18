@@ -46,15 +46,6 @@ final class FilterPanelRenderer
         array $catElementsId,
         int $pageStart,
     ): void {
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
-
         /** @var array<string, mixed> $bulk_manager_filter */
         $bulk_manager_filter = isset($_SESSION['bulk_manager_filter']) && is_array($_SESSION['bulk_manager_filter']) ? $_SESSION['bulk_manager_filter'] : [];
 
@@ -127,17 +118,18 @@ final class FilterPanelRenderer
             ]
         );
 
-        // $page['no_md5sum_number'] is never set anywhere in the batch_manager
-        // request flow (confirmed via a direct grep -- the only other writer,
-        // admin/site_update.php, is a wholly separate top-level page/request);
-        // this branch is vestigial, always taking the else arm in practice,
-        // preserved unchanged from the original include rather than removed,
-        // matching this batch's "mechanical port, don't fold in unrelated
-        // cleanup" discipline.
-        if (isset($page['no_md5sum_number'])) {
+        // Legacy Coupling Retirement Track A batch A5.2i: the original
+        // docblock here mis-described admin/site_update.php (actually
+        // Controller\Admin\SiteUpdateSubController, a *reader* of this same
+        // value, not a writer) as "the only other writer" -- AdminShell is
+        // the sole real writer, computed once per admin request and shared
+        // by both this filter panel and SiteUpdateSubController's own
+        // save-error notice, hence PageState rather than a per-caller param.
+        $no_md5sum_number = \Piwigo\Core\PageState::current()->noMd5sumNumber;
+        if ($no_md5sum_number !== null) {
             $template->assign(
                 [
-                    'NB_NO_MD5SUM' => $page['no_md5sum_number'],
+                    'NB_NO_MD5SUM' => $no_md5sum_number,
                 ]
             );
         } else {

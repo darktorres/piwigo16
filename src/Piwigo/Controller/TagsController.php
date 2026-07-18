@@ -36,15 +36,11 @@ final class TagsController implements ControllerInterface
         $displayModeParam = $request->getQueryParams()['display_mode'] ?? null;
 
         $body = LegacyRenderCapture::capture(static function () use ($displayModeParam): void {
-            /**
-             * @var array<string, mixed>
-             */
-            global $page;
             global $title;
             $template = \Piwigo\Template\CurrentTemplate::get();
 
             $title = l10n('Tags');
-            $page['body_id'] = 'theTagsPage';
+            \Piwigo\Core\PageState::current()->setBodyId('theTagsPage');
 
             $template->set_filenames([
                 'tags' => 'tags.tpl',

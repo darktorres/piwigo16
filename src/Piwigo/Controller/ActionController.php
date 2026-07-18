@@ -56,11 +56,6 @@ final class ActionController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $user;
-
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
         if (\Piwigo\Config\Config::isFormatsEnabled() and isset($_GET['format'])) {
@@ -113,7 +108,6 @@ SELECT * FROM ' . Tables::images() . '
         $is_admin_download = false;
         if (\Piwigo\Auth\AccessControl::isAdmin() and isset($_GET['pwg_token']) and $_GET['pwg_token'] === new \Piwigo\Csrf\CsrfService()->getToken()) {
             $is_admin_download = true;
-            $user['enabled_high'] = true;
             \Piwigo\Users\CurrentUser::set(\Piwigo\Users\CurrentUser::get()->withEnabledHigh(true));
         }
 

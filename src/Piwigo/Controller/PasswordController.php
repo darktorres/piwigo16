@@ -150,10 +150,6 @@ final class PasswordController implements ControllerInterface
         $action = $this->action;
         $username = $this->username;
         $body = LegacyRenderCapture::capture(static function () use ($first_login, $formErrors, $action, $username): void {
-            /**
-             * @var array<string, mixed>
-             */
-            global $user;
             global $title;
             $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -202,7 +198,6 @@ final class PasswordController implements ControllerInterface
                         ->fatalError('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');
                 }
 
-                $user['language'] = $cookie_lang;
                 \Piwigo\Users\CurrentUser::updateLanguage($cookie_lang);
                 Lang::load('common.lang', '', [
                     'language' => $cookie_lang,

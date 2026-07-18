@@ -157,10 +157,6 @@ final class RegisterController implements ControllerInterface
         $email = is_string($mail_raw) && $mail_raw !== '' && $mail_raw !== '0' ? htmlspecialchars(stripslashes($mail_raw)) : '';
 
         $body = LegacyRenderCapture::capture(static function () use ($registration_post_key, $login, $email, $errors): void {
-            /**
-             * @var array<string, mixed>
-             */
-            global $user;
             global $title;
             $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -199,7 +195,6 @@ final class RegisterController implements ControllerInterface
                         ->fatalError('[Hacking attempt] the input parameter "' . $lang_cookie . '" is not valid');
                 }
 
-                $user['language'] = $lang_cookie;
                 \Piwigo\Users\CurrentUser::updateLanguage($lang_cookie);
                 Lang::load('common.lang', '', [
                     'language' => $lang_cookie,

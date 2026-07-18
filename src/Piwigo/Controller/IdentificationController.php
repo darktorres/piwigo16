@@ -123,10 +123,6 @@ final class IdentificationController implements ControllerInterface
         }
 
         $body = LegacyRenderCapture::capture(static function () use ($redirect_to, $errors): void {
-            /**
-             * @var array<string, mixed>
-             */
-            global $user;
             global $title;
             $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -175,7 +171,6 @@ final class IdentificationController implements ControllerInterface
                         ->fatalError('[Hacking attempt] the input parameter "' . $lang_cookie . '" is not valid');
                 }
 
-                $user['language'] = $lang_cookie;
                 \Piwigo\Users\CurrentUser::updateLanguage($lang_cookie);
                 Lang::load('common.lang', '', [
                     'language' => $lang_cookie,

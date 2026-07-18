@@ -605,8 +605,9 @@ SELECT
         $this->logUser($key_user_id, false);
         trigger_notify('login_success', $key['username']);
 
-        // to be registered in history table by pwg_log function
-        $page['auth_key_id'] = $key['auth_key_id'];
+        // to be registered in history table by HistoryService::logVisit()
+        $auth_key_id = $key['auth_key_id'];
+        \Piwigo\Core\PageState::current()->setAuthKeyId(is_numeric($auth_key_id) ? (int) $auth_key_id : null);
 
         return true;
     }

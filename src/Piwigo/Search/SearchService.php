@@ -80,29 +80,29 @@ final readonly class SearchService
      * refuses (outside the web-service API) to resolve an old-style
      * numeric-only id once the search row already has a search_uuid (spies
      * shouldn't be able to walk index.php?/search/123, .../124, ...), and
-     * records the resolved id onto $page['search_id'] for
+     * hands the resolved id back through $resolvedSearchId for
      * HistoryService::logVisit() to read later, when rendering the
      * "search" section.
      *
-     * Legacy Coupling Retirement Track A batch A5.2e: $section is an
-     * explicit param instead of `global $page['section']` -- this
-     * method's two real callers are SearchFilterRenderer::render()
-     * (passes SectionContext::section, always available there) and
-     * Ws\PwgImages::filteredSearchCreate() (a WS method that never runs
-     * SectionPopulator, passes null -- matching this gate's own original
-     * behavior there: `$page['section']` was never 'search' for a WS
-     * request either). search_id itself stays on `global $page;` for
-     * now (a separate, not-yet-retired cluster, Legacy Coupling
-     * Retirement Track A batch A5.2h) -- unrelated to the section value
-     * that only gates whether this write happens.
+     * Legacy Coupling Retirement Track A: $section (batch A5.2e) and
+     * $resolvedSearchId (batch A5.2h, replacing the former
+     * `$page['search_id']` write) are explicit params instead of
+     * `global $page;` -- this method's two real callers are
+     * SearchFilterRenderer::render() (passes SectionContext::section,
+     * always available there, and returns the resolved id up its own
+     * call chain to GalleryController) and Ws\PwgImages::
+     * filteredSearchCreate() (a WS method that never runs
+     * SectionPopulator, passes null section and no out-param -- matching
+     * this gate's own original behavior there: `$page['section']` was
+     * never 'search' for a WS request either, so the write never
+     * happened for that caller anyway).
      *
+     * @param int|null $resolvedSearchId in/out; set to the resolved
+     *   search id when $section === 'search', left untouched otherwise
      * @return array<string, mixed>|null
      */
-    public function getValidatedSearchInfo(int|string $candidate, ?string $section): ?array
+    public function getValidatedSearchInfo(int|string $candidate, ?string $section, ?int &$resolvedSearchId = null): ?array
     {
-        /** @var array<string, mixed> $page */
-        global $page;
-
         $clausePattern = self::getSearchIdPattern($candidate);
         if ($clausePattern === null) {
             die('Invalid search identifier');
@@ -116,7 +116,8 @@ final readonly class SearchService
             }
 
             if ($section === 'search') {
-                $page['search_id'] = $search['id'];
+                $searchId = $search['id'] ?? null;
+                $resolvedSearchId = is_numeric($searchId) ? (int) $searchId : null;
             }
         }
 
@@ -157,11 +158,12 @@ final readonly class SearchService
      * same composition as the former free function get_search_array()
      * (functions_search.inc.php, P23 batch 8c).
      *
+     * @param int|null $resolvedSearchId in/out, see getValidatedSearchInfo()
      * @return array<string, mixed>|false
      */
-    public function getValidatedSearchArray(int|string $searchId, ?string $section): array|false
+    public function getValidatedSearchArray(int|string $searchId, ?string $section, ?int &$resolvedSearchId = null): array|false
     {
-        $search = $this->getValidatedSearchInfo($searchId, $section);
+        $search = $this->getValidatedSearchInfo($searchId, $section, $resolvedSearchId);
         if (empty($search)) {
             $this->htmlRenderer->badRequest('this search identifier does not exist');
         }

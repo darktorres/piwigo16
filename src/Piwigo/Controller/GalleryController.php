@@ -254,7 +254,7 @@ final class GalleryController implements ControllerInterface
                 }
             }
 
-            new SearchFilterRenderer(new MailService(), new HtmlService(), $template)
+            $resolved_search_id = new SearchFilterRenderer(new MailService(), new HtmlService(), $template)
                 ->render($section_context);
 
             if ($section_context->section === 'categories' and $section_context->category !== null and $section_context->combinedCategories === null) {
@@ -580,6 +580,7 @@ final class GalleryController implements ControllerInterface
                 section: $section_context->section,
                 category: $section_context->category,
                 tagIds: $section_context->tagIds,
+                searchId: $resolved_search_id,
             );
             \Piwigo\Bootstrap\PageTail::render();
         });

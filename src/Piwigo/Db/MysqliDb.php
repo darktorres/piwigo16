@@ -164,10 +164,6 @@ final class MysqliDb
          */
         global $mysqli;
         /**
-         * @var array<string, mixed>
-         */
-        global $page;
-        /**
          * @var string
          */
         global $debug;
@@ -185,19 +181,9 @@ final class MysqliDb
 
         $time = microtime(true) - $start;
 
-        $count_queries = $page['count_queries'] ?? null;
-        if (! is_int($count_queries)) {
-            $count_queries = 0;
-            $page['queries_time'] = 0;
-        }
-
-        $count_queries++;
-        $page['count_queries'] = $count_queries;
-
-        $queries_time = $page['queries_time'] ?? 0;
-        $queries_time = is_numeric($queries_time) ? (float) $queries_time : 0.0;
-        $queries_time += $time;
-        $page['queries_time'] = $queries_time;
+        \Piwigo\Core\PageState::current()->addQueryTime($time);
+        $count_queries = \Piwigo\Core\PageState::current()->countQueries;
+        $queries_time = \Piwigo\Core\PageState::current()->queriesTime;
 
         if ((bool) (\Piwigo\Config\Config::showQueries())) {
             $output = '';

@@ -70,7 +70,6 @@ final class PhotoSubController implements AdminSubControllerInterface
 
         $tab_param = $_GET['tab'] ?? null;
         $tab = is_string($tab_param) && in_array($tab_param, self::KNOWN_TABS, true) ? $tab_param : 'properties';
-        $page['tab'] = $tab;
 
         $tabsheet = new tabsheet();
         $tabsheet->set_id('photo');

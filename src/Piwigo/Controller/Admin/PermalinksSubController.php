@@ -56,10 +56,6 @@ final class PermalinksSubController implements AdminSubControllerInterface
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
         global $my_base_url;
 
@@ -99,13 +95,11 @@ final class PermalinksSubController implements AdminSubControllerInterface
         // | tabs                                                                  |
         // +-----------------------------------------------------------------------+
 
-        $page['tab'] = 'permalinks';
-
         $my_base_url = get_root_url() . 'admin.php?page=';
 
         $tabsheet = new tabsheet();
         $tabsheet->set_id('albums');
-        $tabsheet->select($page['tab']);
+        $tabsheet->select('permalinks');
         $tabsheet->assign();
 
         $query = '

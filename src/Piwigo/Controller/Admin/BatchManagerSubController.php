@@ -129,14 +129,14 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         if (isset($_GET['mode'])) {
             new \Piwigo\Validation\InputValidator()
                 ->validate('mode', $_GET, false, '/^(global|unit)$/');
-            $page['tab'] = is_string($_GET['mode']) ? $_GET['mode'] : 'global';
+            $tab = is_string($_GET['mode']) ? $_GET['mode'] : 'global';
         } else {
-            $page['tab'] = 'global';
+            $tab = 'global';
         }
 
         $tabsheet = new tabsheet();
         $tabsheet->set_id('batch_manager');
-        $tabsheet->select($page['tab']);
+        $tabsheet->select($tab);
         $tabsheet->assign();
 
         // +-------------------------------------------------------------------+
@@ -155,7 +155,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         // |                         open specific mode                            |
         // +-------------------------------------------------------------------+
 
-        if ($page['tab'] === 'unit') {
+        if ($tab === 'unit') {
             new BatchManagerUnitPageRenderer()
                 ->render();
         } else {

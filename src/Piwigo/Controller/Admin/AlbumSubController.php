@@ -36,10 +36,6 @@ final class AlbumSubController implements AdminSubControllerInterface
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $query_params = $request->getQueryParams();
@@ -61,7 +57,6 @@ SELECT *
 
         $tab_param = $query_params['tab'] ?? null;
         $tab = is_string($tab_param) && in_array($tab_param, self::KNOWN_TABS, true) ? $tab_param : 'properties';
-        $page['tab'] = $tab;
 
         $tabsheet = new tabsheet();
         $tabsheet->set_id('album');

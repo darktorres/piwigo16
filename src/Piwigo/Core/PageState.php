@@ -31,6 +31,25 @@ namespace Piwigo\Core;
  * NotificationController each set it independently for their own
  * non-gallery pages, so it belongs here rather than on SectionContext
  * (which only exists for the gallery-navigation-context cluster, B1).
+ *
+ * `authKeyId` (batch A5.2h) is request-wide auth-method state
+ * (AuthService::tryAuthKeyLogin() sets it, HistoryService::logVisit()
+ * reads it), uniform across all 3 of logVisit()'s mutually-exclusive
+ * callers -- unlike section/category/tagIds (real per-caller gallery-
+ * navigation values, threaded as explicit params), any of logVisit()'s
+ * callers could equally be reached via an auth-keyed request, so an
+ * ambient read here is correct, not a repeat of that same-shaped
+ * mistake.
+ *
+ * `countQueries`/`queriesTime` (batch A5.2h) are a running per-request
+ * accumulator incremented by MysqliDb::query() on every database query;
+ * TimingHelper/PageTailRenderer read the running total, UpgradeRunner
+ * resets both to 0 as a checkpoint before a version-upgrade step so its
+ * own displayed total reflects only that step's queries. No
+ * `attachGlobals()` bridging for `authKeyId`/`countQueries`/
+ * `queriesTime` -- confirmed via a repo-wide grep that every real
+ * reader/writer is retargeted in this same batch, so there is no
+ * remaining legacy consumer left to bridge for.
  */
 final class PageState
 {
@@ -82,6 +101,12 @@ final class PageState
      * @var array<string, int>
      */
     public array $metaRobots = [];
+
+    public ?int $authKeyId = null;
+
+    public int $countQueries = 0;
+
+    public float $queriesTime = 0.0;
 
     private function __construct() {}
 
@@ -200,6 +225,33 @@ final class PageState
     public function setMetaRobotsFlag(string $name): void
     {
         $this->metaRobots[$name] = 1;
+    }
+
+    public function setAuthKeyId(?int $authKeyId): void
+    {
+        $this->authKeyId = $authKeyId;
+    }
+
+    /**
+     * Called by MysqliDb::query() after every real query -- accumulates
+     * both counters together, matching that call site's own original
+     * combined increment.
+     */
+    public function addQueryTime(float $time): void
+    {
+        $this->countQueries++;
+        $this->queriesTime += $time;
+    }
+
+    /**
+     * Called by UpgradeRunner as a checkpoint before a version-upgrade
+     * step, so its own displayed "queries during this step" total isn't
+     * inflated by whatever ran earlier in the same request.
+     */
+    public function resetQueryCounters(): void
+    {
+        $this->countQueries = 0;
+        $this->queriesTime = 0.0;
     }
 
     public function hasErrors(): bool

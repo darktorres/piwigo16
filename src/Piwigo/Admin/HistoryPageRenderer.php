@@ -16,10 +16,16 @@ use Piwigo\Users\UserRepository;
  * filtered history lines panel. The actual line listing is fetched
  * client-side via an async ws.php?method=pwg.history.search call
  * (include/ws_functions/pwg.php's ws_history_search(), unchanged, out of
- * this batch's scope); this page only renders the filter form and, when
- * search_id is already present in $page (reachable via a direct URL, not
- * the current UI flow -- ws_history_search()'s own redirect for this is
- * commented out), a navigation bar for a prior search's results.
+ * this batch's scope); this page only renders the filter form.
+ *
+ * Legacy Coupling Retirement Track A batch A5.2h: dropped a confirmed-dead
+ * `if (isset($page['search_id'])) { ... }` navbar block -- the only write
+ * path was `Ws\PwgCore::historySearch()`'s own redirect to
+ * `admin.php?page=history&search_id=...`, which is commented out there
+ * (confirmed by direct read), so this `isset()` was always false on a
+ * real admin.php request. `nb_lines`/`start` had no other reader in this
+ * file (both were read only inside that same dead block), so they're
+ * gone too, not retargeted.
  */
 final class HistoryPageRenderer
 {
@@ -31,15 +37,12 @@ final class HistoryPageRenderer
      * 'history' slug in config/admin_pages.php); selects this page's
      * own tab within the shared 'history' tabsheet group (see
      * StatsPageRenderer, its sibling in that same group).
-     * `search`/`search_id`/`nb_lines`/`start` stay on `global $page;` --
-     * a separate, not-yet-retired cluster.
+     * `search` stays on `global $page;` -- a separate, not-yet-retired
+     * cluster (see this class's own docblock for `search_id`/`nb_lines`/
+     * `start`, all confirmed dead and removed instead).
      */
     public function render(string $pageSlug): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
         /**
          * @var array<string, mixed>
          */
@@ -76,24 +79,6 @@ final class HistoryPageRenderer
                 'API_METHOD' => 'ws.php?format=json&method=pwg.history.search',
             ]
         );
-
-        if (isset($page['search_id'])) {
-            // $page['nb_lines']/['start'] and \Piwigo\Config\Config::nbLogsPage() come from
-            // loosely-typed global bags; create_navigation_bar() needs a real
-            // int|string/int, so narrow each before the call.
-            $nb_lines = $page['nb_lines'] ?? null;
-            $nb_lines = is_numeric($nb_lines) ? (int) $nb_lines : 0;
-
-            $navbar_start = $page['start'] ?? null;
-            $navbar_start = is_numeric($navbar_start) ? (int) $navbar_start : 0;
-
-            $nb_logs_page = \Piwigo\Config\Config::nbLogsPage();
-
-            $navbar = new \Piwigo\Core\PaginationService()
-                ->createNavigationBar(get_root_url() . 'admin.php' . get_query_string_diff(['start']), $nb_lines, $navbar_start, $nb_logs_page);
-
-            $template->assign('navbar', $navbar);
-        }
 
         $form = [];
 

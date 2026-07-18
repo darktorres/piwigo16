@@ -51,8 +51,15 @@ final readonly class SearchFilterRenderer
      * 'search_details' in place exactly as before, just no longer visible
      * outside this call (nothing downstream ever read the mutated
      * version).
+     *
+     * Batch A5.2h: returns the search id resolved by
+     * SearchService::getValidatedSearchArray() (null when this page isn't
+     * a search results page), replacing the former
+     * `$page['search_id'] = ...` write -- the one real caller
+     * (GalleryController) passes it straight into its own
+     * HistoryService::logVisit() call.
      */
-    public function render(SectionContext $sectionContext): void
+    public function render(SectionContext $sectionContext): ?int
     {
         $page = [
             'section' => $sectionContext->section,
@@ -91,7 +98,7 @@ final readonly class SearchFilterRenderer
         // Piwigo 14 will still be able to show an old quicksearch
         // result, we must check this condition too.
         if ($page['section'] !== 'search' || $page['search_details'] === []) {
-            return;
+            return null;
         }
 
         $displayFilters = $filtersViews;
@@ -121,7 +128,8 @@ final readonly class SearchFilterRenderer
             $this->mailer,
             $this->htmlRenderer,
         );
-        $mySearch = $searchService->getValidatedSearchArray($searchId, $sectionContext->section);
+        $resolvedSearchId = null;
+        $mySearch = $searchService->getValidatedSearchArray($searchId, $sectionContext->section, $resolvedSearchId);
         if (! is_array($mySearch)) {
             // get_search_array() only returns false when unserialize() fails
             // on malformed data; this method only runs for an
@@ -908,6 +916,8 @@ SELECT
             $this->renderAlbumsFound($page, $userId, $template);
             $this->renderTagsFound($page, $template);
         }
+
+        return $resolvedSearchId;
     }
 
     /**

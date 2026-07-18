@@ -18,10 +18,6 @@ final class UserListPageRenderer
 {
     public function render(): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         new \Piwigo\Validation\InputValidator()
@@ -29,7 +25,6 @@ final class UserListPageRenderer
         new \Piwigo\Validation\InputValidator()
             ->validate('user_id', $_GET, false, ValidationPattern::ID);
 
-        $page['tab'] = 'user_list';
         // The inline tabsheet block below (formerly admin/include/
         // user_tabs.inc.php, folded in P23 batch 8b-5) does a bare
         // top-level $my_base_url = ...; assignment -- without this global
@@ -42,7 +37,7 @@ final class UserListPageRenderer
 
         $tabsheet = new tabsheet();
         $tabsheet->set_id('users');
-        $tabsheet->select($page['tab']);
+        $tabsheet->select('user_list');
         $tabsheet->assign();
 
         $groups = [];

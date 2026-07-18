@@ -25,14 +25,6 @@ final class UserActivityPageRenderer
 {
     public function render(): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
@@ -44,7 +36,6 @@ final class UserActivityPageRenderer
         new \Piwigo\Validation\InputValidator()
             ->validate('group', $_GET, false, ValidationPattern::ID);
 
-        $page['tab'] = 'user_activity';
         // The inline tabsheet block below (formerly admin/include/
         // user_tabs.inc.php, folded in P23 batch 8b-5) does a bare
         // top-level $my_base_url = ...; assignment -- without this global
@@ -57,7 +48,7 @@ final class UserActivityPageRenderer
 
         $tabsheet = new tabsheet();
         $tabsheet->set_id('users');
-        $tabsheet->select($page['tab']);
+        $tabsheet->select('user_activity');
         $tabsheet->assign();
 
         // \Piwigo\Config\Config::userFields() maps generic field names to table-specific column

@@ -52,10 +52,6 @@ final class TimingHelper
          * @var float
          */
         global $t2;
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
 
         $now = explode(' ', microtime());
         $now2 = explode('.', $now[0]);
@@ -65,8 +61,7 @@ final class TimingHelper
         $time = number_format($now2_float - $t2, 3, '.', ' ') . ' s';
         $debug .= '<p>';
         $debug .= '[' . $time . ', ';
-        $count_queries = $page['count_queries'] ?? 0;
-        $count_queries = is_numeric($count_queries) ? $count_queries : 0;
+        $count_queries = PageState::current()->countQueries;
         $debug .= $count_queries . ' queries] : ' . $string;
         $debug .= "</p>\n";
     }

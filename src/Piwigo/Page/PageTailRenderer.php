@@ -37,10 +37,6 @@ final readonly class PageTailRenderer
          * @var string
          */
         global $debug;
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $template->set_filenames([
@@ -81,15 +77,8 @@ final readonly class PageTailRenderer
         }
 
         if (\Piwigo\Config\Config::showGt()) {
-            $count_queries = $page['count_queries'] ?? null;
-            if (! is_int($count_queries)) {
-                $count_queries = 0;
-                $page['count_queries'] = 0;
-                $page['queries_time'] = 0;
-            }
-
-            $queries_time = $page['queries_time'] ?? 0;
-            $queries_time = is_numeric($queries_time) ? (float) $queries_time : 0.0;
+            $count_queries = \Piwigo\Core\PageState::current()->countQueries;
+            $queries_time = \Piwigo\Core\PageState::current()->queriesTime;
 
             $time = \Piwigo\Core\TimingHelper::getElapsedTime($startTime, \Piwigo\Core\TimingHelper::getMoment());
 

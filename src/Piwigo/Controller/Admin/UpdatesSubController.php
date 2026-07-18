@@ -56,11 +56,6 @@ final class UpdatesSubController implements AdminSubControllerInterface
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
-
         if (! \Piwigo\Config\Config::enableExtensionsInstall() and ! \Piwigo\Config\Config::enableCoreUpdate()) {
             die('update system is disabled');
         }
@@ -75,17 +70,17 @@ final class UpdatesSubController implements AdminSubControllerInterface
         new \Piwigo\Validation\InputValidator()
             ->validate('tab', $_GET, false, '/^(pwg|ext)$/');
         if (isset($_GET['tab']) && is_string($_GET['tab'])) {
-            $page['tab'] = $_GET['tab'];
+            $tab = $_GET['tab'];
         } else {
-            $page['tab'] = 'pwg';
+            $tab = 'pwg';
         }
 
         $tabsheet = new tabsheet();
         $tabsheet->set_id('updates');
-        $tabsheet->select($page['tab']);
+        $tabsheet->select($tab);
         $tabsheet->assign();
 
-        if ($page['tab'] === 'ext') {
+        if ($tab === 'ext') {
             new UpdatesExtPageRenderer()
                 ->render('updates');
         } else {

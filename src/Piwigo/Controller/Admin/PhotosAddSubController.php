@@ -32,10 +32,6 @@ final class PhotosAddSubController implements AdminSubControllerInterface
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         // upload form config is loaded here to match the original page's
@@ -63,8 +59,6 @@ final class PhotosAddSubController implements AdminSubControllerInterface
         if (! in_array($tab, ['direct', 'applications', 'ftp'], true)) {
             $tab = 'direct';
         }
-
-        $page['tab'] = $tab;
 
         $tabsheet = new tabsheet();
         $tabsheet->set_id('photos_add');

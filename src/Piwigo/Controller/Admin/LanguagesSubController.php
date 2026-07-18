@@ -45,10 +45,6 @@ final class LanguagesSubController implements AdminSubControllerInterface
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         // Consumed by CoreTabs::addCoreTabs()'s own 'languages' case via
@@ -65,24 +61,24 @@ final class LanguagesSubController implements AdminSubControllerInterface
             // above (fatal_error()-ing on anything else) but does not narrow its
             // type for static analysis -- $_GET values are string|array<mixed> at
             // best, so re-check it is a string before trusting it as the tab name.
-            $tab = $_GET['tab'];
-            $page['tab'] = is_string($tab) ? $tab : 'installed';
+            $tab_raw = $_GET['tab'];
+            $tab = is_string($tab_raw) ? $tab_raw : 'installed';
         } else {
-            $page['tab'] = 'installed';
+            $tab = 'installed';
         }
 
         $tabsheet = new tabsheet();
         $tabsheet->set_id('languages');
-        $tabsheet->select($page['tab']);
+        $tabsheet->select($tab);
         $tabsheet->assign();
 
-        if ($page['tab'] === 'update') {
+        if ($tab === 'update') {
             new UpdatesExtPageRenderer()
                 ->render('languages');
             $template->assign('ADMIN_PAGE_TITLE', l10n('Languages'));
-        } elseif ($page['tab'] === 'new') {
+        } elseif ($tab === 'new') {
             new LanguagesNewPageRenderer()
-                ->render('languages');
+                ->render('languages', $tab);
         } else {
             new LanguagesInstalledPageRenderer()
                 ->render('languages');

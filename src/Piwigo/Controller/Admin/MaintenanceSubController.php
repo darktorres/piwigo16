@@ -54,10 +54,6 @@ final class MaintenanceSubController implements AdminSubControllerInterface
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         // Explicit `global` for $maint_actions (assigned as a bare
@@ -161,21 +157,21 @@ final class MaintenanceSubController implements AdminSubControllerInterface
             // above (fatal_error()-ing on anything else) but does not narrow its
             // type for static analysis -- $_GET values are string|array<mixed> at
             // best, so re-check it is a string before trusting it as the tab name.
-            $tab = $_GET['tab'];
-            $page['tab'] = is_string($tab) ? $tab : 'actions';
+            $tab_raw = $_GET['tab'];
+            $tab = is_string($tab_raw) ? $tab_raw : 'actions';
         } else {
-            $page['tab'] = 'actions';
+            $tab = 'actions';
         }
 
         $tabsheet = new tabsheet();
         $tabsheet->set_id('maintenance');
-        $tabsheet->select($page['tab']);
+        $tabsheet->select($tab);
         $tabsheet->assign();
 
-        if ($page['tab'] === 'env') {
+        if ($tab === 'env') {
             new MaintenanceEnvPageRenderer()
                 ->render();
-        } elseif ($page['tab'] === 'sys') {
+        } elseif ($tab === 'sys') {
             new MaintenanceSysPageRenderer()
                 ->render();
         } else {

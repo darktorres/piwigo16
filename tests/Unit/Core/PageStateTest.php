@@ -55,6 +55,34 @@ test('setMetaRobots replaces the whole map, setMetaRobotsFlag adds to it', funct
     expect($state->metaRobots)->toBe(['noindex' => 1, 'nofollow' => 1]);
 });
 
+test('setAuthKeyId sets and clears the current auth key id', function (): void {
+    $state = PageState::current();
+
+    expect($state->authKeyId)->toBeNull();
+
+    $state->setAuthKeyId(42);
+
+    expect($state->authKeyId)->toBe(42);
+
+    $state->setAuthKeyId(null);
+
+    expect($state->authKeyId)->toBeNull();
+});
+
+test('addQueryTime accumulates count and time, resetQueryCounters zeroes both', function (): void {
+    $state = PageState::current();
+    $state->addQueryTime(0.5);
+    $state->addQueryTime(0.25);
+
+    expect($state->countQueries)->toBe(2)
+        ->and($state->queriesTime)->toBe(0.75);
+
+    $state->resetQueryCounters();
+
+    expect($state->countQueries)->toBe(0)
+        ->and($state->queriesTime)->toBe(0.0);
+});
+
 test('attachGlobals seeds from an already-populated $GLOBALS[page]', function (): void {
     $GLOBALS['page'] = [
         'errors' => ['pre-existing error'],

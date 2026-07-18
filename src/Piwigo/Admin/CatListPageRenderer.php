@@ -40,14 +40,6 @@ final class CatListPageRenderer
 {
     public function render(): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
         global $my_base_url;
 
@@ -100,13 +92,11 @@ final class CatListPageRenderer
         // | tabs                                                              |
         // +-------------------------------------------------------------------+
 
-        $page['tab'] = 'list';
-
         $my_base_url = get_root_url() . 'admin.php?page=';
 
         $tabsheet = new tabsheet();
         $tabsheet->set_id('albums');
-        $tabsheet->select($page['tab']);
+        $tabsheet->select('list');
         $tabsheet->assign();
 
         $query = '

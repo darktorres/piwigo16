@@ -77,15 +77,22 @@ final readonly class HistoryService
      * Logs the visit into the history table.
      *
      * $section/$category/$tagIds are the caller's own gallery-navigation
-     * context (Legacy Coupling Retirement Track A batch A5.2e): this
-     * method has 3 mutually-exclusive real callers -- GalleryController/
+     * context (Legacy Coupling Retirement Track A batch A5.2e); $searchId
+     * (batch A5.2h) is the same shape -- resolved by SearchFilterRenderer
+     * (via SearchService::getValidatedSearchArray()) while rendering the
+     * "search" section, only ever non-null for the GalleryController
+     * caller. All 4 params are threaded explicitly because this method
+     * has 3 mutually-exclusive real callers -- GalleryController/
      * PictureController (a real SectionContext always exists, pass
      * SectionContextRegistry::current()'s values), PwgCore::historyLog()
      * (a WS method that never runs SectionPopulator, passes its own
      * WS-param-derived values), and ActionController (no section context
      * available at all, passes nothing) -- so these can't be read
      * implicitly off a shared registry/global here without silently
-     * breaking the other two callers.
+     * breaking the other two callers. $authKeyId is read directly off
+     * PageState (not threaded) since, unlike the gallery-navigation
+     * values above, it's equally possible for any of the 3 callers to
+     * have been reached via an auth-keyed request.
      *
      * @param array<string, mixed>|null $category
      * @param list<int>|null $tagIds
@@ -97,19 +104,12 @@ final readonly class HistoryService
         ?string $section = null,
         ?array $category = null,
         ?array $tagIds = null,
+        ?int $searchId = null,
     ): bool {
         /**
          * @var array<string, mixed>
          */
         global $conf;
-        // search_id/auth_key_id stay on the global $page bag for now --
-        // a separate, not-yet-retired cluster (Legacy Coupling
-        // Retirement Track A batch A5.2h), unrelated to the gallery-
-        // navigation-context values this signature change is scoped to.
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
 
         $currentUser = \Piwigo\Users\CurrentUser::get();
         $lastVisit = $currentUser->rawAttributes['last_visit'] ?? null;
@@ -209,16 +209,13 @@ UPDATE ' . Tables::userInfos() . '
             }
         }
 
-        // $user['id']/$page[...] are read from loosely-typed global bags fed by
-        // DB rows (string|null) and session/config data (mixed); narrow each
-        // to the scalar the column actually stores before splicing into SQL.
+        // $user['id'] is read from a loosely-typed global bag fed by DB rows
+        // (string|null); narrow to the scalar the column actually stores
+        // before splicing into SQL.
         $categoryForQuery = $category ?? [];
         $categoryId = $categoryForQuery['id'] ?? null;
         $categoryId = is_numeric($categoryId) ? (int) $categoryId : null;
-        $searchId = $page['search_id'] ?? null;
-        $searchId = is_numeric($searchId) ? (int) $searchId : null;
-        $authKeyId = $page['auth_key_id'] ?? null;
-        $authKeyId = is_numeric($authKeyId) ? (int) $authKeyId : null;
+        $authKeyId = \Piwigo\Core\PageState::current()->authKeyId;
 
         $query = '
 INSERT INTO ' . Tables::history() . '

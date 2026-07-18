@@ -280,18 +280,13 @@ SELECT id
          * @var string
          */
         global $prefixeTable;
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         global $template;
         global $persistent_cache;
         global $last_time;
 
         if (\Piwigo\Admin\Install\VersionUpgrade\VersionUpgradeRegistry::has($this->currentRelease)) {
             // reset SQL counters
-            $page['queries_time'] = 0;
-            $page['count_queries'] = 0;
+            \Piwigo\Core\PageState::current()->resetQueryCounters();
 
             $upgrade_start = \Piwigo\Core\TimingHelper::getMoment();
             $conf['die_on_sql_error'] = false;
@@ -336,22 +331,18 @@ SELECT id
 
             $upgrade_end = \Piwigo\Core\TimingHelper::getMoment();
 
-            // $page['queries_time'] is only ever set within this same scope,
-            // as a numeric accumulator, never touched elsewhere.
-            $queries_time = $page['queries_time'];
-
             $template->assign(
                 'upgrade',
                 [
                     'VERSION' => $this->currentRelease,
                     'TOTAL_TIME' => \Piwigo\Core\TimingHelper::getElapsedTime($upgrade_start, $upgrade_end),
                     'SQL_TIME' => number_format(
-                        $queries_time,
+                        \Piwigo\Core\PageState::current()->queriesTime,
                         3,
                         '.',
                         ' '
                     ) . ' s',
-                    'NB_QUERIES' => $page['count_queries'],
+                    'NB_QUERIES' => \Piwigo\Core\PageState::current()->countQueries,
                 ]
             );
 

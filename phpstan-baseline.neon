@@ -2005,12 +2005,6 @@ parameters:
 			path: src/Piwigo/Admin/updates.php
 
 		-
-			rawMessage: Implicit array creation is not allowed - variable $conf does not exist.
-			identifier: variable.implicitArray
-			count: 1
-			path: src/Piwigo/Admin/updates.php
-
-		-
 			rawMessage: 'Loose comparison via "!=" between string and mixed is not allowed.'
 			identifier: notEqual.notAllowed
 			count: 1

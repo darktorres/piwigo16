@@ -38,9 +38,6 @@ final class CoreTabs
      */
     public static function addCoreTabs(array $sheets, mixed $tabId): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
-
         switch ($tabId) {
             case 'admin_home':
                 $sheets[''] = [
@@ -279,10 +276,6 @@ final class CoreTabs
                  * @var string
                  */
                 global $admin_photo_base_url;
-                /**
-                 * @var array<string, mixed>
-                 */
-                global $conf;
                 $sheets['properties'] = [
                     'caption' => '<span class="icon-file-image"></span>' . l10n('Properties'),
                     'url' => $admin_photo_base_url . '-properties',

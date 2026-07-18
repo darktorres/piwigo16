@@ -26,10 +26,12 @@ use Piwigo\Ws\PwgServer;
 
 /**
  * Ported from admin/include/functions_upload.inc.php (22 free functions).
- * Behavior-preserving port -- global $conf/$logger reads stay inline (same
+ * Behavior-preserving port -- global $logger reads stay inline (same
  * "keep legacy global reads inline" pattern as every P17-20 domain service;
  * $user reads retargeted onto Piwigo\Users\CurrentUser in Legacy Coupling
- * Retirement Track A batch A3), except two real fixes made during the port:
+ * Retirement Track A batch A3; $conf reads retargeted onto Piwigo\Config\Config
+ * in Legacy Coupling Retirement Track A gap-fill batch G2), except two real
+ * fixes made during the port:
  *
  * [SEC-21] addUploadedFile()'s SVG branch validated that the sniffed MIME
  * type matched the ".svg" extension, but never sanitized the SVG's own
@@ -202,10 +204,6 @@ final class UploadService
      */
     public function addUploadedFile(string $source_filepath, ?string $original_filename = null, ?array $categories = null, ?int $level = null, ?int $image_id = null, ?string $original_md5sum = null): int|string
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
         /**
          * @var Logger
          */
@@ -515,7 +513,6 @@ SELECT
 
         // update metadata from the uploaded file (exif/iptc)
         if (\Piwigo\Config\Config::useExif() and ! function_exists('exif_read_data')) {
-            $conf['use_exif'] = false;
             \Piwigo\Config\Config::override('use_exif', false);
         }
         new MetadataService(new MetadataRepository(DbConnection::build()))->syncMetadata([(int) $image_id]);
@@ -1237,9 +1234,6 @@ SELECT
      */
     public function isValidImageExtension(string $extension): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
-
         if (\Piwigo\Config\Config::has('upload_form_all_types') and \Piwigo\Config\Config::uploadFormAllTypes()) {
             $extensions = \Piwigo\Config\Config::fileExtensions();
         } else {

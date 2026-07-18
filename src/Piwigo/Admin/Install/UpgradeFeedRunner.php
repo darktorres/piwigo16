@@ -32,10 +32,6 @@ class UpgradeFeedRunner
     public function run(): void
     {
         /**
-         * @var array<string, mixed>
-         */
-        global $conf;
-        /**
          * @var string
          */
         global $prefixeTable;

@@ -86,10 +86,6 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
@@ -464,10 +460,6 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
      */
     private static function insertNewDataUserMailNotification(NotificationByMailSender $nbmSender): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
         /**
          * @var string $base_url set at the top of handle()
          */

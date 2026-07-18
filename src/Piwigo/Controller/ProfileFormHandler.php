@@ -36,10 +36,6 @@ final class ProfileFormHandler
      */
     public function saveFromPost(array $userdata, array &$errors): bool
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
         $errors = [];
 
         if (! isset($_POST['validate'])) {
@@ -282,8 +278,6 @@ final class ProfileFormHandler
      */
     public function loadIntoTemplate($url_action, $url_redirect, array $userdata, ?string $template_prefixe = null): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $template->assign(

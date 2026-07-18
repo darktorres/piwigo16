@@ -86,9 +86,6 @@ final class NotificationByMailSender
         private readonly NotificationByMailService $notificationByMailService,
         private readonly NotificationService $notificationService,
     ) {
-        /** @var array<string, mixed> $conf */
-        global $conf;
-
         // \Piwigo\Config\Config::nbmMaxTreatmentTimeoutPercent()/'nbm_treatment_timeout_default'
         // are always numeric (config_default.inc.php: 0.8 and 20
         // respectively), but that isn't visible through $conf's own
@@ -345,11 +342,6 @@ final class NotificationByMailSender
      */
     public function doSubscribeUnsubscribeNotificationByMail(bool $isAdminRequest, bool $isSubscribe, array $checkKeyList): array
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
-
         set_make_full_url();
 
         // \Piwigo\Config\Config::galleryTitle() is always a string (config_default.inc.php),
@@ -494,10 +486,6 @@ final class NotificationByMailSender
      */
     public function sendMailNotifications(string $action = 'list_to_send', array $checkKeyList = [], mixed $customizeMailContent = ''): array
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
         $returnList = [];
 
         if (in_array($action, ['list_to_send', 'send'])) {

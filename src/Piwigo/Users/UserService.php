@@ -1138,9 +1138,6 @@ DELETE FROM ' . Tables::favorites() . '
             }
         }
 
-        /** @var array<string, mixed> $conf */
-        global $conf;
-
         // see validateMailAddress() for why this is string=>string
         /** @var array<string, string> $user_fields */
         $user_fields = \Piwigo\Config\Config::userFields();

@@ -43,9 +43,6 @@ final class WsController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
-
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Free);
 
         if (! \Piwigo\Config\Config::allowWebServices()) {

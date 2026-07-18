@@ -150,11 +150,6 @@ WHERE id IN (\'' . implode('\',\'', $plugins) . '\')
     // Deactivate all non-standard themes
     public static function deactivateNonStandardThemes(): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
-
         $standard_themes = [
             'modus',
             'elegant',
@@ -251,11 +246,6 @@ UPDATE ' . PREFIX_TABLE . 'user_infos
      */
     public static function checkUpgradeAccessRights(string $current_release): bool
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
-
         if (version_compare($current_release, '2.0', '>=') and isset($_COOKIE[session_name()])) {
             // Check if user is already connected as webmaster
             session_start();

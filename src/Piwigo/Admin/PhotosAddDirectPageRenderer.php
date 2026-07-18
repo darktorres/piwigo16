@@ -50,10 +50,6 @@ final class PhotosAddDirectPageRenderer
 
     public function render(): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $htmlRenderer = new HtmlService();
@@ -239,10 +235,6 @@ SELECT *
      */
     private function prepareUploadForm(): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $htmlRenderer = new HtmlService();

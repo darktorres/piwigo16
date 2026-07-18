@@ -34,9 +34,6 @@ final class SearchController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
-
         $searchConn = DbConnection::build();
         $searchService = new SearchService(
             new SearchRepository($searchConn),

@@ -61,10 +61,6 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
          * @var Logger
          */
         global $logger;
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
 
         $startTime = TimingHelper::getMoment();
 

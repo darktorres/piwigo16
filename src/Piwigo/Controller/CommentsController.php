@@ -42,10 +42,6 @@ final class CommentsController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (! \Piwigo\Config\Config::activateComments()) {

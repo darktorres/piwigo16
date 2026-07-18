@@ -430,9 +430,6 @@ DELETE FROM ' . Tables::plugins() . '
      */
     public function get_versions_to_check(bool $beta_test = false, string $version = AppInfo::VERSION): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
-
         // PEM_URL is defined via define('PEM_URL', \Piwigo\Config\Config::alternativePemUrl()) in
         // one branch of include/common.inc.php, so PHPStan can't prove it's a
         // string across that file boundary — narrow it once here (same
@@ -517,9 +514,6 @@ DELETE FROM ' . Tables::plugins() . '
      */
     public function get_server_plugins(bool $new = false, bool $beta_test = false): bool
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
-
         $versions_to_check = $this->get_versions_to_check($beta_test);
         if (empty($versions_to_check)) {
             return true;
@@ -626,9 +620,6 @@ DELETE FROM ' . Tables::plugins() . '
                 $versions_to_check_strings[] = (string) $version_to_check;
             }
         }
-
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         // Plugins to check
         $plugins_to_check = [];

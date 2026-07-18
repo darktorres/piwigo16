@@ -23,10 +23,6 @@ final class PictureCoiPageRenderer
 {
     public function render(): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $htmlRenderer = new HtmlService();
@@ -84,12 +80,10 @@ final class PictureCoiPageRenderer
             new DerivativeCacheService()
                 ->deleteElementDerivatives($derivative_infos, ImageStdParams::CUSTOM);
             $uid = '&b=' . time();
-            $conf['question_mark_in_urls'] = $conf['php_extension_in_urls'] = true;
             \Piwigo\Config\Config::override('question_mark_in_urls', true);
             \Piwigo\Config\Config::override('php_extension_in_urls', true);
             if (\Piwigo\Config\Config::derivativeUrlStyle() === 1) {
-                $conf['derivative_url_style'] = 0; // auto
-                \Piwigo\Config\Config::override('derivative_url_style', 0);
+                \Piwigo\Config\Config::override('derivative_url_style', 0); // auto
             }
         } else {
             $uid = '';

@@ -204,9 +204,6 @@ class updates
      */
     public function notify_piwigo_new_versions(): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
-
         if (! \Piwigo\Config\ConfigDb::pwgIsDbconfWriteable()) {
             return;
         }
@@ -252,7 +249,6 @@ class updates
                 ? \Piwigo\Core\ArrayHelper::safeUnserialize($last_notification_setting)
                 : false;
             $last_notification_data = is_array($last_notification_raw) ? $last_notification_raw : [];
-            $conf['update_notify_last_notification'] = $last_notification_data;
             \Piwigo\Config\Config::override('update_notify_last_notification', $last_notification_data);
             $last_notification = $last_notification_data['notified_on'] ?? null;
             $last_notification_version = $last_notification_data['version'] ?? null;
@@ -491,7 +487,6 @@ class updates
             }
             $updates_ignored[$type] = $ignore_list;
         }
-        $conf['updates_ignored'] = $updates_ignored;
         \Piwigo\Config\Config::override('updates_ignored', $updates_ignored);
         \Piwigo\Config\ConfigDb::confUpdateParam('updates_ignored', \Piwigo\Db\MysqliDb::realEscapeString(serialize($updates_ignored)));
     }

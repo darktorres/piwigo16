@@ -29,9 +29,6 @@ final readonly class SectionInitializer
 
     public function parse(): SectionUrlParse
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
-
         // some ISPs set PATH_INFO to empty string or to SCRIPT_FILENAME while in the
         // default apache implementation it is not set
         if (\Piwigo\Config\Config::questionMarkInUrls() === false and

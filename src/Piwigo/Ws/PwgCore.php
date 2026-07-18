@@ -55,9 +55,6 @@ final class PwgCore
      */
     public static function getMissingDerivatives(array $params, PwgServer &$service): PwgError|array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
-
         if (empty($params['types'])) {
             $types = array_keys(ImageStdParams::get_defined_type_map());
         } else {
@@ -89,11 +86,9 @@ final class PwgCore
 
         $uid = '&b=' . time();
 
-        $conf['question_mark_in_urls'] = $conf['php_extension_in_urls'] = true;
         \Piwigo\Config\Config::override('question_mark_in_urls', true);
         \Piwigo\Config\Config::override('php_extension_in_urls', true);
-        $conf['derivative_url_style'] = 2; // script
-        \Piwigo\Config\Config::override('derivative_url_style', 2);
+        \Piwigo\Config\Config::override('derivative_url_style', 2); // script
 
         $qlimit = min(5000, ceil(max($image_count / 500, $max_urls / count($types))));
         $where_clauses = WsHelper::stdImageSqlFilter($params, '');
@@ -263,9 +258,6 @@ SELECT id, path, representative_ext, width, height, rotation
      */
     public static function getCacheSize(array $params, PwgServer &$service): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
-
         $data_location = \Piwigo\Config\Config::dataLocation();
 
         // Cache size
@@ -828,9 +820,6 @@ SELECT
      */
     public static function historySearch(array $param, PwgServer &$service): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
-
         if (isset($_GET['start']) and is_numeric($_GET['start'])) {
             /** @var array<string, mixed> $page */
             $page['start'] = $_GET['start'];

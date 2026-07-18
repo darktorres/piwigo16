@@ -32,11 +32,6 @@ final class RegisterController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
-
         // Field-keyed, controller-local -- read by specific key
         // ('register_page_error'/'register_form_error') in register.tpl, a
         // different shape than PageState::$errors' plain list<string>.

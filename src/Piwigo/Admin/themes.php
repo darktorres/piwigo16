@@ -310,9 +310,6 @@ DELETE
 
     public function set_default_theme(string $theme_id): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
-
         // first we need to know which users are using the current default theme
         $default_theme = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getDefaultTheme();
 
@@ -517,9 +514,6 @@ SELECT
      */
     public function get_server_themes(bool $new = false): bool
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
-
         // PEM_URL is defined via define('PEM_URL', \Piwigo\Config\Config::alternativePemUrl()) in
         // one branch of include/common.inc.php, so PHPStan can't prove it's a
         // string across that file boundary — narrow it once here (same

@@ -106,11 +106,6 @@ final readonly class HistoryService
         ?array $tagIds = null,
         ?int $searchId = null,
     ): bool {
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
-
         $currentUser = \Piwigo\Users\CurrentUser::get();
         $lastVisit = $currentUser->rawAttributes['last_visit'] ?? null;
         $lastVisitStr = is_string($lastVisit) ? $lastVisit : (is_numeric($lastVisit) ? (string) $lastVisit : '');
@@ -187,7 +182,6 @@ UPDATE ' . Tables::userInfos() . '
                 }
             }
 
-            $conf['history_sections_cache'] = $historySectionsCache;
             \Piwigo\Config\Config::override('history_sections_cache', $historySectionsCache);
 
             if (

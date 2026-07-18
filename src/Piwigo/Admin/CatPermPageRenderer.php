@@ -34,10 +34,6 @@ final class CatPermPageRenderer
         /**
          * @var array<string, mixed>
          */
-        global $conf;
-        /**
-         * @var array<string, mixed>
-         */
         global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 

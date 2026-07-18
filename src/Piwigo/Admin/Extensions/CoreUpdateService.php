@@ -145,9 +145,6 @@ final readonly class CoreUpdateService
      */
     public function notifyPiwigoNewVersions(): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
-
         if (! \Piwigo\Config\ConfigDb::pwgIsDbconfWriteable()) {
             return;
         }
@@ -178,7 +175,6 @@ final readonly class CoreUpdateService
                 ? \Piwigo\Core\ArrayHelper::safeUnserialize($lastNotificationSetting)
                 : false;
             $lastNotificationData = is_array($lastNotificationRaw) ? $lastNotificationRaw : [];
-            $conf['update_notify_last_notification'] = $lastNotificationData;
             \Piwigo\Config\Config::override('update_notify_last_notification', $lastNotificationData);
             $lastNotification = $lastNotificationData['notified_on'] ?? null;
             $lastNotificationVersion = $lastNotificationData['version'] ?? null;

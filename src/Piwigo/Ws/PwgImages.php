@@ -1933,10 +1933,6 @@ SELECT
         /**
          * @var array<string, mixed>
          */
-        global $conf;
-        /**
-         * @var array<string, mixed>
-         */
         global $user;
         /**
          * @var Logger
@@ -2295,10 +2291,6 @@ SELECT id, file
      */
     public static function formatsSearchImage(array $params, PwgServer $service): array
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
         /**
          * @var Logger
          */

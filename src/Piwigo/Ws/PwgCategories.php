@@ -282,8 +282,6 @@ SELECT
      */
     public static function getList(array $params, PwgServer &$service): PwgError|array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
         $currentUser = \Piwigo\Users\CurrentUser::get();
 
         $categoryConn = DbConnection::build();
@@ -757,16 +755,12 @@ SELECT
      */
     public static function add(array $params, PwgServer &$service): PwgError|array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
-
         if (isset($params['pwg_token']) and new CsrfService()->getToken() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
         if (! empty($params['position']) and in_array($params['position'], ['first', 'last'])) {
             // TODO make persistent with user prefs
-            $conf['newcat_default_position'] = $params['position'];
             \Piwigo\Config\Config::override('newcat_default_position', $params['position']);
         }
 

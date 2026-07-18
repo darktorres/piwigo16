@@ -42,10 +42,6 @@ final class UserBootstrap
         /**
          * @var array<string, mixed>
          */
-        global $conf;
-        /**
-         * @var array<string, mixed>
-         */
         global $user;
         // Set by Piwigo\Ws\WsInitializer::init(), called conditionally below
         // (it publishes the shared PwgServer to $GLOBALS['service'] itself,

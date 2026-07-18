@@ -39,10 +39,6 @@ final class CatModifyPageRenderer
          */
         global $admin_album_base_url;
         global $category;
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $htmlRenderer = new HtmlService();

@@ -16,9 +16,6 @@ final class PageFilterHelper
      */
     public static function scriptBasename(): string
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
-
         foreach (['SCRIPT_NAME', 'SCRIPT_FILENAME', 'PHP_SELF'] as $key) {
             $raw = $_SERVER[$key] ?? null;
             if (is_string($raw) && $raw !== '') {

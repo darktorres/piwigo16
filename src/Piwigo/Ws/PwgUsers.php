@@ -504,11 +504,6 @@ SELECT DISTINCT ';
             return new PwgError(403, 'Invalid security token');
         }
 
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
-
         $currentUser = \Piwigo\Users\CurrentUser::get();
 
         $protected_users = [
@@ -902,11 +897,6 @@ SELECT
      */
     public static function generatePasswordLink(array $params, PwgServer &$service): PwgError|array
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
-
         if (new CsrfService()->getToken() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }

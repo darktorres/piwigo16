@@ -68,9 +68,6 @@ class c13y_internal
      */
     public function c13y_exif($c13y): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
-
         foreach (['show_exif', 'use_exif'] as $value) {
             if (((bool) (\Piwigo\Config\Config::all()[$value] ?? null)) and (! function_exists('exif_read_data'))) {
                 $c13y->add_anomaly(
@@ -92,9 +89,6 @@ class c13y_internal
      */
     public function c13y_user($c13y): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
-
         // guest_id/default_user_id/webmaster_id are always scalar (raw DB
         // primary keys or config defaults, see include/config_default.inc.php).
         $guest_id = \Piwigo\Config\Config::guestId();
@@ -182,11 +176,6 @@ class c13y_internal
      */
     public function c13y_correction_user($id, $action)
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
-
         // guest_id/default_user_id/webmaster_id are always scalar (raw DB
         // primary keys or config defaults, see include/config_default.inc.php).
         $guest_id = \Piwigo\Config\Config::guestId();

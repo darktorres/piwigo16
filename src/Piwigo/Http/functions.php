@@ -70,8 +70,6 @@ if (! function_exists('redirect_html')) {
         global $user;
         global $template;
         global $lang_info;
-        /** @var array<string, mixed> $conf */
-        global $conf;
         global $t2;
         global $debug;
 

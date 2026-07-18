@@ -29,10 +29,6 @@ final class ExtendForTemplatesPageRenderer
 {
     public function render(): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
@@ -155,7 +151,6 @@ SELECT permalink
                 $i++;
             }
             $serialized_extents = serialize($replacements);
-            $conf['extents_for_templates'] = $serialized_extents;
             \Piwigo\Config\Config::override('extents_for_templates', $replacements);
             $tpl_extension = $replacements;
             /* ecrire la nouvelle conf */

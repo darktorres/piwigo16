@@ -27,16 +27,14 @@ use Piwigo\Page\PageTailRenderer;
  *
  * Every former `include PHPWG_ROOT_PATH . 'include/page_tail.php';` site
  * (the P22 controllers, admin.php, redirect_html()) calls
- * PageTail::render() instead; the $conf/$t2 globals the seam read are
- * declared here, so call sites need no `global` declarations of their own.
+ * PageTail::render() instead; the $t2 global the seam read is declared
+ * here, so call sites need no `global` declaration of their own.
  */
 final class PageTail
 {
     public static function render(): void
     {
-        // Bootstrap globals, set by include/common.inc.php.
-        /** @var array<string, mixed> $conf */
-        global $conf;
+        // Bootstrap global, set by include/common.inc.php.
         /** @var float $t2 */
         global $t2;
 

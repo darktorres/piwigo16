@@ -30,10 +30,6 @@ final class MaintenanceSysPageRenderer
         /**
          * @var array<string, mixed>
          */
-        global $conf;
-        /**
-         * @var array<string, mixed>
-         */
         global $maint_actions;
         $template = \Piwigo\Template\CurrentTemplate::get();
 

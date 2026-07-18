@@ -41,10 +41,6 @@ final class FeedController implements ControllerInterface
         /**
          * @var array<string, mixed>
          */
-        global $conf;
-        /**
-         * @var array<string, mixed>
-         */
         global $user;
         /**
          * @var mixed

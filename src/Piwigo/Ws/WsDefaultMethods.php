@@ -36,8 +36,6 @@ final class WsDefaultMethods
      */
     public static function register(array $arr): void
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
         $service = &$arr[0];
 
         // \Piwigo\Config\Config::availablePermissionLevels() defaults to [0, 1, 2, 4, 8] (see

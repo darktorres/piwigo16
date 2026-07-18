@@ -51,10 +51,6 @@ final class PluginLoader
     public static function loadPlugins(): void
     {
         /**
-         * @var array<string, mixed>
-         */
-        global $conf;
-        /**
          * @var array<string, array<string, mixed>>
          */
         global $pwg_loaded_plugins;

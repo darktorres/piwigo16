@@ -273,9 +273,6 @@ final class PwgExtensions
      */
     public static function ignoreUpdate(array $params, PwgServer &$service): PwgError|true
     {
-        global $conf;
-
-        /** @var array<string, mixed> $conf */
         // P23 batch 8e-2: the original define('IN_ADMIN', true)+
         // include_once admin/include/functions.php here are both dropped --
         // IN_ADMIN has no reader left in this request's lifecycle (see
@@ -293,22 +290,22 @@ final class PwgExtensions
             return new PwgError(403, 'Invalid security token');
         }
 
-        $conf['updates_ignored'] = \Piwigo\Config\Config::updatesIgnored();
+        $updates_ignored = \Piwigo\Config\Config::updatesIgnored();
 
         // Reset ignored extension
         if ($params['reset']) {
-            if (! empty($params['type']) and isset($conf['updates_ignored'][$params['type']])) {
-                $conf['updates_ignored'][$params['type']] = [];
+            if (! empty($params['type']) and isset($updates_ignored[$params['type']])) {
+                $updates_ignored[$params['type']] = [];
             } else {
-                $conf['updates_ignored'] = [
+                $updates_ignored = [
                     'plugins' => [],
                     'themes' => [],
                     'languages' => [],
                 ];
             }
-            \Piwigo\Config\Config::override('updates_ignored', $conf['updates_ignored']);
+            \Piwigo\Config\Config::override('updates_ignored', $updates_ignored);
 
-            \Piwigo\Config\ConfigDb::confUpdateParam('updates_ignored', \Piwigo\Db\MysqliDb::realEscapeString(serialize($conf['updates_ignored'])));
+            \Piwigo\Config\ConfigDb::confUpdateParam('updates_ignored', \Piwigo\Db\MysqliDb::realEscapeString(serialize($updates_ignored)));
             unset($_SESSION['extensions_need_update']);
             return true;
         }
@@ -318,12 +315,12 @@ final class PwgExtensions
         }
 
         // Add or remove extension from ignore list
-        if (! in_array($params['id'], $conf['updates_ignored'][$params['type']])) {
-            $conf['updates_ignored'][$params['type']][] = $params['id'];
+        if (! in_array($params['id'], $updates_ignored[$params['type']])) {
+            $updates_ignored[$params['type']][] = $params['id'];
         }
 
-        \Piwigo\Config\Config::override('updates_ignored', $conf['updates_ignored']);
-        \Piwigo\Config\ConfigDb::confUpdateParam('updates_ignored', \Piwigo\Db\MysqliDb::realEscapeString(serialize($conf['updates_ignored'])));
+        \Piwigo\Config\Config::override('updates_ignored', $updates_ignored);
+        \Piwigo\Config\ConfigDb::confUpdateParam('updates_ignored', \Piwigo\Db\MysqliDb::realEscapeString(serialize($updates_ignored)));
         unset($_SESSION['extensions_need_update']);
         return true;
     }

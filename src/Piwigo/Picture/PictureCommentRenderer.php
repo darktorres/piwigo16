@@ -48,10 +48,6 @@ final class PictureCommentRenderer
      */
     public function render(?int $editCommentId, int $imageId, int $start): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
         $template = \Piwigo\Template\CurrentTemplate::get();
         /**
          * Set by PictureController, right before this call.

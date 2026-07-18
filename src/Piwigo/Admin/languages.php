@@ -52,9 +52,6 @@ class languages
      */
     public function perform_action($action, $language_id): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
-
         if (! \Piwigo\Config\Config::enableExtensionsInstall() and $action == 'delete') {
             die('Piwigo extensions install/update/delete system is disabled');
         }
@@ -263,9 +260,6 @@ UPDATE ' . Tables::userInfos() . '
      */
     public function get_server_languages(bool $new = false): bool
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
-
         // PEM_URL is defined via define('PEM_URL', \Piwigo\Config\Config::alternativePemUrl()) in
         // one branch of include/common.inc.php, so PHPStan can't prove it's a
         // string across that file boundary — narrow it once here (same

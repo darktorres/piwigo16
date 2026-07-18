@@ -105,10 +105,6 @@ SELECT ' . implode(',', $fields) . '
             /**
              * @var array<string, mixed>
              */
-            global $conf;
-            /**
-             * @var array<string, mixed>
-             */
             global $user;
             global $title;
             $template = \Piwigo\Template\CurrentTemplate::get();

@@ -1337,7 +1337,6 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
     {
         /** @var array<string, array<string, mixed>> $themeconfs */
         global $themeconfs;
-        global $conf;
 
         $real_dir = realpath($dir);
         if ($real_dir === false) {

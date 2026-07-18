@@ -100,10 +100,6 @@ final readonly class AuthService
         /**
          * @var array<string, mixed>
          */
-        global $conf;
-        /**
-         * @var array<string, mixed>
-         */
         global $user;
 
         // false is not reachable in practice -- see this method's own
@@ -616,9 +612,6 @@ SELECT
      */
     public function createUserAuthKey(int $userId, ?string $userStatus = null): array|false
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
-
         // auth_key_duration defaults to 3*24*60*60 (int) in
         // include/config_default.inc.php, but once persisted to the config DB
         // table it comes back as a raw string (see load_conf_from_db())
@@ -726,8 +719,6 @@ UPDATE ' . Tables::userAuthKeys() . '
      */
     public function generatePasswordLink(int $userId, bool $firstLogin = false): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $activation_key = SessionService::get()->generateKey(20);
 
@@ -839,8 +830,6 @@ SELECT COUNT(*)
      */
     public static function generateUserCode(): array
     {
-        /** @var array<string, mixed> $conf */
-        global $conf;
 
         $secret = PwgTOTP::generateSecret();
         // password_reset_code_duration defaults to 5*60 (int) in

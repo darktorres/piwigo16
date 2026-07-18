@@ -44,12 +44,16 @@ use Piwigo\Session\SessionUserResolver;
  * deleted, not replaced: not firing plugin hooks here is achieved by not
  * registering any, which is the fast-bootstrap design itself.
  *
- * Globals: $conf, $prefixeTable and $logger deliberately stay real
- * globals (declared in every method that touches them) -- shared classes
- * on this exact path read them from global scope: pwg_image and
- * ImageStdParams read $conf, MysqliDb::query() maintains PageState's
- * request-wide query counters, image_ext_imagick.php reads $logger, and
- * Env::applyEnvToConf() fills $prefixeTable by reference. The
+ * Globals: $prefixeTable and $logger deliberately stay real globals
+ * (declared in every method that touches them) -- shared classes on this
+ * exact path read them from global scope: MysqliDb::query() maintains
+ * PageState's request-wide query counters and image_ext_imagick.php reads
+ * $logger. $conf itself is not one of them any more (pwg_image and
+ * ImageStdParams read Piwigo\Config\Config:: accessors, not a raw global
+ * -- Legacy Coupling Retirement Track A gap-fill batch G2); the throwaway
+ * $conf_unused local below only exists to satisfy Env::applyEnvToConf()'s
+ * by-ref array parameter, which is how it fills $prefixeTable by
+ * reference. The
  * rootPath/derivativePath/derivativeExt/derivativeType/coi/srcLocation/
  * srcPath/srcUrl/originalSize/rotationAngle/derivativeParams
  * scratch state below is this controller's own -- never read outside it
@@ -85,10 +89,6 @@ final class ImageDerivativeController
     public function serve(): void
     {
         /**
-         * @var array<string, mixed>
-         */
-        global $conf;
-        /**
          * @var string
          */
         global $prefixeTable;
@@ -98,8 +98,8 @@ final class ImageDerivativeController
         global $logger;
 
         // \Piwigo\Config\Config::dataLocation() needs narrowing here specifically (used
-        // before Env::applyEnvToConf() below widens $conf's per-key type
-        // info again -- see the comment near the Logger construction).
+        // before Env::applyEnvToConf() below widens $conf_unused's per-key
+        // type info again -- see the comment near the Logger construction).
         $data_location = \Piwigo\Config\Config::dataLocation();
         if (! is_string($data_location)) {
             die("Invalid \\Piwigo\Config\Config::dataLocation() configuration: expected a string.");
@@ -107,7 +107,14 @@ final class ImageDerivativeController
 
         Env::loadEnvFile(PHPWG_ROOT_PATH);
         $prefixeTable = '';
-        Env::applyEnvToConf($conf, $prefixeTable);
+        // Env::applyEnvToConf(array &$conf, ...)'s first param is dead here
+        // (Legacy Coupling Retirement Track A gap-fill batch G2: this
+        // controller's own $conf reads are retargeted onto
+        // Piwigo\Config\Config, synced independently a few lines below via
+        // ConfigLoader::applyEnvOverrides()) -- only $prefixeTable, filled
+        // by reference, is real.
+        $conf_unused = [];
+        Env::applyEnvToConf($conf_unused, $prefixeTable);
 
         // [SEC-33] populates Piwigo\Config\Config, needed below for
         // DbConnection::build() (the SessionRepository lookup backing
@@ -122,7 +129,7 @@ final class ImageDerivativeController
         // string types the same way the common bootstrap's equivalent config
         // reads do (see Piwigo\Bootstrap\RequestBootstrap): Env::
         // applyEnvToConf(array &$conf, ...)'s by-ref `array` parameter erases
-        // the per-key type info PHPStan had built up for $conf, so we
+        // the per-key type info PHPStan had built up for $conf_unused, so we
         // re-narrow here.
         $log_data_location = \Piwigo\Config\Config::dataLocation();
         $log_dir = \Piwigo\Config\Config::logDir();
@@ -146,10 +153,11 @@ final class ImageDerivativeController
             $timing[$k] = '';
         }
 
-        // $conf['dblayer']/'db_host'/'db_user'/'db_base' lost their specific
-        // string types the same way described above (see the comment near the
-        // Logger construction); 'db_password' was already re-narrowed there
-        // and is reused as-is since nothing reassigns it in between.
+        // $conf_unused['dblayer']/'db_host'/'db_user'/'db_base' lost their
+        // specific string types the same way described above (see the
+        // comment near the Logger construction); 'db_password' was already
+        // re-narrowed there and is reused as-is since nothing reassigns it
+        // in between.
         // P23 sub-batch 8g-6: the include of the frozen dblayer facade file
         // is gone -- its DB_ENGINE/REQUIRED_MYSQL_VERSION/
         // MASS_UPDATES_SKIP_EMPTY define()s became MysqliDb class constants,
@@ -188,11 +196,11 @@ SELECT param, value
             if (! is_string($row['param'])) {
                 continue;
             }
-            $conf[$row['param']] = $row['value'];
             // ImageStdParams::load_from_db() reads Config::derivatives()/
             // Config::disabledDerivatives() (Legacy Coupling Retirement
-            // Track A batch A4), not the raw $conf global, so this
-            // fast-path mini-bootstrap's own DB load must sync both.
+            // Track A batch A4), not a raw $conf global, so this
+            // fast-path mini-bootstrap's own DB load only needs to sync
+            // Config::.
             \Piwigo\Config\Config::override($row['param'], $row['value']);
         }
         ImageStdParams::load_from_db();

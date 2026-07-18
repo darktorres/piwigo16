@@ -197,7 +197,7 @@ final class RequestBootstrap
 
         SessionBootstrap::register();
 
-        $page['execution_uuid'] = SessionService::get()->generateKey(10);
+        \Piwigo\Core\PageState::current()->executionUuid = SessionService::get()->generateKey(10);
 
         $persistent_cache = new PersistentFileCache();
 
@@ -425,18 +425,10 @@ final class RequestBootstrap
         // in case an auth key was provided and is no longer valid, we must wait to
         // be here, with language loaded, to prepare the message
         if ((bool) $page['auth_key_invalid']) {
-            // $page itself is only known as array<string, mixed>, so
-            // $page['errors'] needs its own guard before the nested push --
-            // it's always set to [] by the seam file's plain-data
-            // initialization, but that specific narrowing is not visible
-            // through the `global` declaration above.
-            if (! is_array($page['errors'] ?? null)) {
-                $page['errors'] = [];
-            }
-            $page['errors'][] =
-              l10n('Your authentication key is no longer valid.')
+            \Piwigo\Core\PageState::current()->addError(
+                l10n('Your authentication key is no longer valid.')
               . sprintf(' <a href="%s">%s</a>', get_root_url() . 'identification.php', l10n('Login'))
-            ;
+            );
         }
 
         // check if we need to notified user about api_key expiration

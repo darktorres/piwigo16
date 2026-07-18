@@ -89,23 +89,11 @@ final class ConfigurationSubController implements AdminSubControllerInterface
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        // $page['errors']/['warnings']/['infos'] are always initialized to [] by
-        // include/common.inc.php, but that isn't visible across the include()
-        // boundary -- narrow once here so every top-level append below type-checks.
         /** @var array<string, mixed> $page */
         global $page;
-        if (! is_array($page['errors'] ?? null)) {
-            $page['errors'] = [];
-        }
-        if (! is_array($page['warnings'] ?? null)) {
-            $page['warnings'] = [];
-        }
-        if (! is_array($page['infos'] ?? null)) {
-            $page['infos'] = [];
-        }
 
         if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
-            $page['warnings'][] = str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'));
+            \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
         }
 
         // -------------------------------------------------------- sections definitions
@@ -264,7 +252,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                                 }
                             }
                             if (! (bool) count($order_by_input)) {
-                                $page['errors'][] = l10n('No order field selected');
+                                \Piwigo\Core\PageState::current()->addError(l10n('No order field selected'));
                             } else {
                                 // limit to the number of available parameters
                                 $order_by = $order_by_inside_category = array_slice($order_by_input, 0, (int) ceil(count($sort_fields) / 2));
@@ -283,7 +271,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                                 $_POST['order_by_inside_category'] = 'ORDER BY ' . implode(', ', $order_by_inside_category);
                             }
                         } else {
-                            $page['errors'][] = l10n('No order field selected');
+                            \Piwigo\Core\PageState::current()->addError(l10n('No order field selected'));
                         }
                     }
 
@@ -323,7 +311,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     if (! (bool) preg_match($int_pattern, is_scalar($nb_comment_page) ? (string) $nb_comment_page : '')
                          or $_POST['nb_comment_page'] < 5
                          or $_POST['nb_comment_page'] > 50) {
-                        $page['errors'][] = l10n('The number of comments a page must be between 5 and 50 included.');
+                        \Piwigo\Core\PageState::current()->addError(l10n('The number of comments a page must be between 5 and 50 included.'));
                     }
                     foreach ($comments_checkboxes as $checkbox) {
                         $_POST[$checkbox] = empty($_POST[$checkbox]) ? 'false' : 'true';
@@ -340,7 +328,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     $nb_categories_page = $_POST['nb_categories_page'] ?? null;
                     if (! (bool) preg_match($int_pattern, is_scalar($nb_categories_page) ? (string) $nb_categories_page : '')
                           or $_POST['nb_categories_page'] < 4) {
-                        $page['errors'][] = l10n('The number of albums a page must be above 4.');
+                        \Piwigo\Core\PageState::current()->addError(l10n('The number of albums a page must be above 4.'));
                     }
                     foreach ($display_checkboxes as $checkbox) {
                         $_POST[$checkbox] = empty($_POST[$checkbox]) ? 'false' : 'true';
@@ -378,9 +366,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             }
 
             // updating configuration if no error found
-            // ($page['errors'] is already narrowed to array above).
-            $page_errors_for_count = $page['errors'];
-            if (! in_array($page_section, ['sizes', 'watermark']) and count($page_errors_for_count) == 0 and \Piwigo\Auth\AccessControl::isWebmaster()) {
+            if (! in_array($page_section, ['sizes', 'watermark']) and ! \Piwigo\Core\PageState::current()->hasErrors() and \Piwigo\Auth\AccessControl::isWebmaster()) {
                 // echo '<pre>'; print_r($_POST); echo '</pre>';
                 $result = \Piwigo\Db\MysqliDb::query('SELECT param FROM ' . Tables::config());
                 while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
@@ -473,7 +459,7 @@ WHERE param = \'' . $row['param'] . '\'
             case 'main':
 
                 if (self::orderByIsLocal()) {
-                    $page['warnings'][] = l10n('You have specified <i>$conf[\'order_by\']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf[\'order_by_custom\']</i> !');
+                    \Piwigo\Core\PageState::current()->addWarning(l10n('You have specified <i>$conf[\'order_by\']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf[\'order_by_custom\']</i> !'));
                 }
 
                 if (\Piwigo\Config\Config::has('order_by_custom') or \Piwigo\Config\Config::has('order_by_inside_category_custom')) {
@@ -575,9 +561,9 @@ WHERE param = \'' . $row['param'] . '\'
                 if ($profileFormHandler->saveFromPost($edit_user, $errors)) {
                     // Reload user
                     $edit_user = new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->buildUser($guest_id, false);
-                    $page['infos'][] = l10n('Information data registered in database');
+                    \Piwigo\Core\PageState::current()->addInfo(l10n('Information data registered in database'));
                 }
-                $page['errors'] = array_merge($page['errors'], $errors);
+                \Piwigo\Core\PageState::current()->errors = array_merge(\Piwigo\Core\PageState::current()->errors, array_values(array_filter($errors, is_string(...))));
 
                 $profileFormHandler->loadIntoTemplate(
                     $action,
@@ -832,27 +818,16 @@ WHERE param = \'' . $row['param'] . '\'
             $updates[$field] = $value;
         }
 
-        // $page['errors'] is only known to be array<string, mixed> one level deep;
-        // narrow the nested value to array<int, string> before passing it by
-        // reference into UploadService::saveUploadFormConfig() (same
-        // filter-into-a-fresh-array pattern as $pderivatives below), then write
-        // the possibly-appended-to result back so callers of this method still
-        // see the errors.
-        $page_errors_raw = $page['errors'] ?? null;
-        /** @var array<int, string> $page_errors */
-        $page_errors = [];
-        if (is_array($page_errors_raw)) {
-            foreach ($page_errors_raw as $page_error) {
-                if (is_string($page_error)) {
-                    $page_errors[] = $page_error;
-                }
-            }
-        }
+        // saveUploadFormConfig()'s $errors is only known as array<int, string>,
+        // narrower than PageState::$errors' list<string> -- round-trip through
+        // a local var and re-index on the way back in (same pattern as
+        // PluginLoader::autoupdatePlugin()).
+        $page_errors = \Piwigo\Core\PageState::current()->errors;
 
         new UploadService()
             ->saveUploadFormConfig($updates, $page_errors, $errors);
 
-        $page['errors'] = $page_errors;
+        \Piwigo\Core\PageState::current()->errors = array_values($page_errors);
 
         if ($_POST['resize_quality'] < 50 or $_POST['resize_quality'] > 98) {
             $errors['resize_quality'] = '[50..98]';
@@ -1095,15 +1070,6 @@ WHERE param = \'' . $row['param'] . '\'
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        // $page['errors'] is always initialized to [] by handle() itself,
-        // but that isn't visible across this method's own scope boundary --
-        // narrow once here so the appends below type-check.
-        /** @var array<string, mixed> $page */
-        global $page;
-        if (! is_array($page['errors'] ?? null)) {
-            $page['errors'] = [];
-        }
-
         if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
             return;
         }
@@ -1170,10 +1136,10 @@ WHERE param = \'' . $row['param'] . '\'
                         fclose($watermark_stream);
                         $pwatermark['file'] = substr($file_path, strlen(PHPWG_ROOT_PATH));
                     } else {
-                        $page['errors'][] = $errors['watermarkImage'] = "{$file_path} " . l10n('no write access');
+                        \Piwigo\Core\PageState::current()->addError($errors['watermarkImage'] = "{$file_path} " . l10n('no write access'));
                     }
                 } else {
-                    $page['errors'][] = $errors['watermarkImage'] = sprintf(l10n('Add write access to the "%s" directory'), $upload_dir);
+                    \Piwigo\Core\PageState::current()->addError($errors['watermarkImage'] = sprintf(l10n('Add write access to the "%s" directory'), $upload_dir));
                 }
             }
         }

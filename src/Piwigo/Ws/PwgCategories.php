@@ -1238,9 +1238,6 @@ SELECT id
      */
     public static function move(array $params, PwgServer &$service): PwgError|array
     {
-        /** @var array<string, mixed> $page */
-        global $page;
-
         if (new CsrfService()->getToken() != $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -1327,8 +1324,9 @@ SELECT id, name, dir, uppercats
             }
         }
 
-        $page['infos'] = [];
-        $page['errors'] = [];
+        $pageState = \Piwigo\Core\PageState::current();
+        $pageState->infos = [];
+        $pageState->errors = [];
 
         $categoryConn = DbConnection::build();
         self::categoryService($categoryConn)->moveCategories(
@@ -1338,17 +1336,15 @@ SELECT id, name, dir, uppercats
         );
         UserCacheInvalidator::invalidate();
 
-        // move_categories() mutates $page['errors'] from its own function scope
-        // (global $page;) — get_defined_vars() (rather than reading $page
-        // directly) keeps its real, post-call shape visible here instead of
-        // appearing to still be exactly the empty array set above.
-        $included_vars = get_defined_vars();
-        /** @var array<string, mixed> $page */
-        $page = $included_vars['page'];
-
-        $page_errors = is_array($page['errors'] ?? null) ? $page['errors'] : [];
-        if (count($page_errors) != 0) {
-            return new PwgError(403, implode('; ', array_filter($page_errors, is_string(...))));
+        // moveCategories() writes onto PageState::current() directly (Legacy
+        // Coupling Retirement Track A batch A5) -- reading it back through
+        // the same $pageState instance reflects the mutation without
+        // needing get_defined_vars(). hasErrors() (a real method call, not
+        // a bare property re-read) is what stops PHPStan from treating the
+        // property as still statically `[]` from the reset a few lines
+        // above -- it has no visibility into moveCategories()'s internals.
+        if ($pageState->hasErrors()) {
+            return new PwgError(403, implode('; ', $pageState->errors));
         }
 
         $query = '

@@ -604,12 +604,6 @@ class updates
         global $conf;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        // $page['errors']/$page['infos'] are always initialized to an array by
-        // common.inc.php, but that isn't visible across the include() boundary
-        // -- narrow them once here so the appends below type-check.
-        $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
-        $page['infos'] = is_array($page['infos'] ?? null) ? $page['infos'] : [];
-
         $data_location_raw = \Piwigo\Config\Config::dataLocation();
         $data_location = $data_location_raw;
 
@@ -634,7 +628,7 @@ class updates
             $obsolete_list = PHPWG_ROOT_PATH . 'install/obsolete.list';
         }
 
-        if (empty($page['errors'])) {
+        if (! \Piwigo\Core\PageState::current()->hasErrors()) {
             $path = PHPWG_ROOT_PATH . $data_location . 'update';
             $filename = $path . '/' . $code . '.zip';
             @\Piwigo\Core\FilesystemHelper::mkgetdir($path);
@@ -718,8 +712,8 @@ class updates
                             $template->delete_compiled_templates();
                             \Piwigo\Config\ConfigDb::confDeleteParam('fs_quick_check_last_check');
 
-                            $page['infos'][] = l10n('Update Complete');
-                            $page['infos'][] = $upgrade_to;
+                            \Piwigo\Core\PageState::current()->addInfo(l10n('Update Complete'));
+                            \Piwigo\Core\PageState::current()->addInfo($upgrade_to);
                             $page['updated_version'] = $upgrade_to;
                             $step = -1;
                         } else {
@@ -728,17 +722,17 @@ class updates
                     } else {
                         file_put_contents(PHPWG_ROOT_PATH . $data_location . 'update/log_error.txt', $error);
 
-                        $page['errors'][] = l10n(
+                        \Piwigo\Core\PageState::current()->addError(l10n(
                             'An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href="%s">Click here to show log error</a>.',
                             get_root_url() . $data_location . 'update/log_error.txt'
-                        );
+                        ));
                     }
                 } else {
                     FilesystemHelper::deltree(PHPWG_ROOT_PATH . $data_location . 'update');
-                    $page['errors'][] = l10n('An error has occured during upgrade.');
+                    \Piwigo\Core\PageState::current()->addError(l10n('An error has occured during upgrade.'));
                 }
             } else {
-                $page['errors'][] = l10n('Piwigo cannot retrieve upgrade file from server');
+                \Piwigo\Core\PageState::current()->addError(l10n('Piwigo cannot retrieve upgrade file from server'));
             }
         }
     }

@@ -53,7 +53,7 @@ final class ThemesNewPageRenderer
 
         $themes_dir = PHPWG_ROOT_PATH . 'themes';
         if (! is_writable($themes_dir)) {
-            $this->pushPageMessage('errors', l10n('Add write access to the "%s" directory', 'themes'), $page);
+            \Piwigo\Core\PageState::current()->addError(l10n('Add write access to the "%s" directory', 'themes'));
         }
 
         // +-----------------------------------------------------------------------+
@@ -64,7 +64,7 @@ final class ThemesNewPageRenderer
             and is_string($_GET['revision']) and is_string($_GET['extension'])
         ) {
             if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
-                $this->pushPageMessage('errors', l10n('Webmaster status is required.'), $page);
+                \Piwigo\Core\PageState::current()->addError(l10n('Webmaster status is required.'));
             } else {
                 new \Piwigo\Csrf\CsrfService()
                     ->checkOrFail(new \Piwigo\Html\HtmlService());
@@ -84,7 +84,7 @@ final class ThemesNewPageRenderer
         if (isset($_GET['installstatus'])) {
             switch ($_GET['installstatus']) {
                 case 'ok':
-                    $this->pushPageMessage('infos', l10n('Theme has been successfully installed'), $page);
+                    \Piwigo\Core\PageState::current()->addInfo(l10n('Theme has been successfully installed'));
 
                     $installed_theme_id = $_GET['theme_id'] ?? null;
                     $installed_fs_theme = is_string($installed_theme_id) ? ($extension_scanner->scan(ExtensionType::Theme)[$installed_theme_id] ?? null) : null;
@@ -97,27 +97,25 @@ final class ThemesNewPageRenderer
                     break;
 
                 case 'temp_path_error':
-                    $this->pushPageMessage('errors', l10n('Can\'t create temporary file.'), $page);
+                    \Piwigo\Core\PageState::current()->addError(l10n('Can\'t create temporary file.'));
                     break;
 
                 case 'dl_archive_error':
-                    $this->pushPageMessage('errors', l10n('Can\'t download archive.'), $page);
+                    \Piwigo\Core\PageState::current()->addError(l10n('Can\'t download archive.'));
                     break;
 
                 case 'archive_error':
-                    $this->pushPageMessage('errors', l10n('Can\'t read or extract archive.'), $page);
+                    \Piwigo\Core\PageState::current()->addError(l10n('Can\'t read or extract archive.'));
                     break;
 
                 default:
                     $installstatus_raw = $_GET['installstatus'];
                     $installstatus_str = is_scalar($installstatus_raw) ? (string) $installstatus_raw : '';
-                    $this->pushPageMessage(
-                        'errors',
+                    \Piwigo\Core\PageState::current()->addError(
                         l10n(
                             'An error occured during extraction (%s).',
                             htmlspecialchars($installstatus_str)
-                        ),
-                        $page
+                        )
                     );
             }
         }
@@ -167,7 +165,7 @@ final class ThemesNewPageRenderer
                 );
             }
         } else {
-            $this->pushPageMessage('errors', l10n('Can\'t connect to server.'), $page);
+            \Piwigo\Core\PageState::current()->addError(l10n('Can\'t connect to server.'));
         }
 
         $admin_theme_pref = new \Piwigo\Users\PreferencesService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()))->getParam('admin_theme', 'clear');
@@ -178,16 +176,5 @@ final class ThemesNewPageRenderer
         $template->assign('ADMIN_PAGE_TITLE', l10n('Themes'));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'themes');
-    }
-
-    /**
-     * @param array<string, mixed> $page
-     */
-    private function pushPageMessage(string $key, string $message, array &$page): void
-    {
-        $list = $page[$key] ?? [];
-        $list = is_array($list) ? $list : [];
-        $list[] = $message;
-        $page[$key] = $list;
     }
 }

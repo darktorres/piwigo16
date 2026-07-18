@@ -86,13 +86,6 @@ final class IntroSubController implements AdminSubControllerInterface
         global $pwg_loaded_plugins;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        if (! is_array($page['messages'] ?? null)) {
-            $page['messages'] = [];
-        }
-        if (! is_array($page['warnings'] ?? null)) {
-            $page['warnings'] = [];
-        }
-
         // +-----------------------------------------------------------------------+
         // | tabs                                                                  |
         // +-----------------------------------------------------------------------+
@@ -117,7 +110,7 @@ final class IntroSubController implements AdminSubControllerInterface
             $message .= l10n('%d waiting for validation', $page['nb_pending_comments']);
             $message .= ' <i class="icon-right"></i></a>';
 
-            $page['messages'][] = $message;
+            \Piwigo\Core\PageState::current()->addMessage($message);
         }
 
         // any orphan photo?
@@ -138,7 +131,7 @@ final class IntroSubController implements AdminSubControllerInterface
             $message .= l10n('Orphans') . '</a>';
             $message .= '<span class="adminMenubarCounter">' . $nb_orphans . '</span>';
 
-            $page['warnings'][] = $message;
+            \Piwigo\Core\PageState::current()->addWarning($message);
         }
 
         // locked album ?
@@ -157,7 +150,7 @@ SELECT COUNT(*)
             $message .= l10n('Locked album') . '</a>';
             $message .= '<span class="adminMenubarCounter">' . $locked_album . '</span>';
 
-            $page['warnings'][] = $message;
+            \Piwigo\Core\PageState::current()->addWarning($message);
         }
 
         FilesystemIntegrityChecker::fsQuickCheck();
@@ -285,13 +278,13 @@ SELECT COUNT(*)
                 $news_subject = $latest_news['subject'] ?? null;
                 $news_subject = is_string($news_subject) ? $news_subject : '';
 
-                $page['messages'][] = sprintf(
+                \Piwigo\Core\PageState::current()->addMessage(sprintf(
                     '%s <a href="%s" title="%s" target="_blank"><i class="icon-bell"></i> %s</a>',
                     l10n('Latest Piwigo news'),
                     $news_url,
                     \Piwigo\Core\DateHelper::timeSince($news_posted_on, 'year') . ' (' . $news_posted . ')',
                     $news_subject
-                );
+                ));
             }
         }
 

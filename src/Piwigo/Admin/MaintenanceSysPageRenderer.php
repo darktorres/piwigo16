@@ -35,10 +35,6 @@ final class MaintenanceSysPageRenderer
          * @var array<string, mixed>
          */
         global $maint_actions;
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         // +-------------------------------------------------------------------+
@@ -76,10 +72,7 @@ final class MaintenanceSysPageRenderer
                 exit;
             }
         } else {
-            if (! is_array($page['warnings'] ?? null)) {
-                $page['warnings'] = [];
-            }
-            $page['warnings'][] = str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'));
+            \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
         }
 
         // +-------------------------------------------------------------------+

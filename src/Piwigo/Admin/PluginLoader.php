@@ -153,9 +153,6 @@ final class PluginLoader
 
             // autoupdate is applicable only to plugins with 2.7 architecture
             if (file_exists($maintain_file)) {
-                /** @var array<string, mixed> $page */
-                global $page;
-
                 // call update method
                 include_once $maintain_file;
 
@@ -169,15 +166,18 @@ final class PluginLoader
                 if (! $plugin_maintain instanceof PluginMaintain) {
                     throw new \LogicException("PluginLoader::autoupdatePlugin(): {$classname} does not extend PluginMaintain");
                 }
-                // $page['errors'] is initialized to an array by common.inc.php,
-                // but PHPStan can't prove it here; re-narrow to list<string> to
-                // match PluginMaintain::update()'s array<int, string> $errors.
-                $page['errors'] = is_array($page['errors'] ?? null) ? array_values(array_filter($page['errors'], is_string(...))) : [];
                 // $old_version (pre-mutation), not $plugin['version'] (already
                 // overwritten with $fs_version above) -- passing the mutated
                 // value here made update() always see old==new, defeating any
                 // version-gated migration logic in a plugin's own update().
-                $plugin_maintain->update($old_version, $fs_version, $page['errors']);
+                // update()'s $errors is only known as array<int, string> (a
+                // plugin's own update() could in principle reassign with
+                // non-sequential keys), narrower than PageState::$errors'
+                // list<string> -- round-trip through a local var and
+                // re-index on the way back in.
+                $errors = \Piwigo\Core\PageState::current()->errors;
+                $plugin_maintain->update($old_version, $fs_version, $errors);
+                \Piwigo\Core\PageState::current()->errors = array_values($errors);
             }
 
             // update database (only on production). We want to avoid registering an "auto" to "auto" update,

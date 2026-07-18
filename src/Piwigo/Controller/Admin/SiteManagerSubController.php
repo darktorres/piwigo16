@@ -104,24 +104,18 @@ final class SiteManagerSubController implements AdminSubControllerInterface
 
             // site must not exists
             $site_repo = new SiteRepository(DbConnection::build());
-            // $page['errors'] is always a plain array, initialized by
-            // include/common.inc.php
-            assert(is_array($page['errors']));
             if ($site_repo->countByUrl($url) > 0) {
-                $page['errors'][] = l10n('This site already exists') . ' [' . $url . ']';
+                \Piwigo\Core\PageState::current()->addError(l10n('This site already exists') . ' [' . $url . ']');
             }
-            if (count($page['errors']) == 0) {
+            if (! \Piwigo\Core\PageState::current()->hasErrors()) {
                 if (! file_exists($url)) {
-                    $page['errors'][] = l10n('Directory does not exist') . ' [' . $url . ']';
+                    \Piwigo\Core\PageState::current()->addError(l10n('Directory does not exist') . ' [' . $url . ']');
                 }
             }
 
-            if (count($page['errors']) == 0) {
+            if (! \Piwigo\Core\PageState::current()->hasErrors()) {
                 $site_repo->insert($url);
-                // $page['infos'] is always a plain array, initialized by
-                // include/common.inc.php
-                assert(is_array($page['infos']));
-                $page['infos'][] = $url . ' ' . l10n('created');
+                \Piwigo\Core\PageState::current()->addInfo($url . ' ' . l10n('created'));
             }
         }
 
@@ -143,10 +137,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
                         new CategoryRepository($conn),
                         new PermissionService(new PermissionRepository($conn), new GroupRepository($conn))
                     )->deleteSite($site_id, new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository($conn)));
-                    // $page['infos'] is always a plain array, initialized by
-                    // include/common.inc.php
-                    assert(is_array($page['infos']));
-                    $page['infos'][] = $galleries_url . ' ' . l10n('deleted');
+                    \Piwigo\Core\PageState::current()->addInfo($galleries_url . ' ' . l10n('deleted'));
                     break;
 
             }

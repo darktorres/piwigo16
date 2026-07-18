@@ -114,13 +114,6 @@ DESC `' . $table . '`
     // Deactivate all non-standard plugins
     public static function deactivateNonStandardPlugins(): void
     {
-        /** @var array<string, mixed> $page */
-        global $page;
-
-        if (! is_array($page['infos'] ?? null)) {
-            $page['infos'] = [];
-        }
-
         $standard_plugins = [
             'AdminTools',
             'TakeATour',
@@ -149,8 +142,8 @@ WHERE id IN (\'' . implode('\',\'', $plugins) . '\')
 ;';
             \Piwigo\Db\MysqliDb::query($query);
 
-            $page['infos'][] = l10n('As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:')
-                                . '<p><i>' . implode(', ', $plugins) . '</i></p>';
+            \Piwigo\Core\PageState::current()->addInfo(l10n('As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:')
+                                . '<p><i>' . implode(', ', $plugins) . '</i></p>');
         }
     }
 
@@ -160,15 +153,7 @@ WHERE id IN (\'' . implode('\',\'', $plugins) . '\')
         /**
          * @var array<string, mixed>
          */
-        global $page;
-        /**
-         * @var array<string, mixed>
-         */
         global $conf;
-
-        if (! is_array($page['infos'] ?? null)) {
-            $page['infos'] = [];
-        }
 
         $standard_themes = [
             'modus',
@@ -199,8 +184,8 @@ DELETE
 ;';
             \Piwigo\Db\MysqliDb::query($query);
 
-            $page['infos'][] = l10n('As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:')
-                                . '<p><i>' . implode(', ', $theme_names) . '</i></p>';
+            \Piwigo\Core\PageState::current()->addInfo(l10n('As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:')
+                                . '<p><i>' . implode(', ', $theme_names) . '</i></p>');
 
             // what is the default theme?
             // \Piwigo\Config\Config::defaultUserId() is always an int (see include/config_default.inc.php)
@@ -270,14 +255,6 @@ UPDATE ' . PREFIX_TABLE . 'user_infos
          * @var array<string, mixed>
          */
         global $conf;
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
-
-        if (! is_array($page['errors'] ?? null)) {
-            $page['errors'] = [];
-        }
 
         if (version_compare($current_release, '2.0', '>=') and isset($_COOKIE[session_name()])) {
             // Check if user is already connected as webmaster
@@ -343,11 +320,11 @@ WHERE ' . $username_field . '=\'' . $username . '\'
         $row = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query));
 
         if (! is_array($row) or ! isset($row['password'])) {
-            $page['errors'][] = l10n('Invalid password!');
+            \Piwigo\Core\PageState::current()->addError(l10n('Invalid password!'));
         } elseif (! new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build()))->verify($password, $row['password'])) {
-            $page['errors'][] = l10n('Invalid password!');
+            \Piwigo\Core\PageState::current()->addError(l10n('Invalid password!'));
         } elseif ($row['status'] != 'admin' and $row['status'] != 'webmaster') {
-            $page['errors'][] = l10n('You do not have access rights to run upgrade');
+            \Piwigo\Core\PageState::current()->addError(l10n('You do not have access rights to run upgrade'));
         } else {
             return true;
         }

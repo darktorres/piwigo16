@@ -38,10 +38,6 @@ final class UpgradeFrom_1_4_0 implements VersionUpgradeInterface
          * @var string
          */
         global $prefixeTable;
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         global $last_time;
 
         $last_time = TimingHelper::getMoment();
@@ -285,8 +281,7 @@ INSERT INTO ' . Tables::config() . "
         }
 
         if ($prefix_thumbnail != 'TN-') {
-            array_push(
-                $page['infos'],
+            \Piwigo\Core\PageState::current()->addInfo(
                 'the thumbnail prefix configuration parameter was moved to configuration
 file, copy config.inc.php from "tools" directory to "local/config" directory
 and edit $conf[\'prefix_thumbnail\'] = ' . $prefix_thumbnail

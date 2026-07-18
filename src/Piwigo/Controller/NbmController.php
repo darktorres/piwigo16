@@ -76,17 +76,12 @@ final class NbmController implements ControllerInterface
             global $title;
             $template = \Piwigo\Template\CurrentTemplate::get();
 
-            // $page['errors'] is always initialized to an array by
-            // common.inc.php, but that isn't visible across the include()
-            // boundary -- narrow it once here so the write below type-checks.
-            $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
-
             if (is_string($subscribe) && (bool) preg_match('/^[A-Za-z0-9]{16}$/', $subscribe)) {
                 $nbmSender->subscribeNotificationByMail(false, [$subscribe]);
             } elseif (is_string($unsubscribe) && (bool) preg_match('/^[A-Za-z0-9]{16}$/', $unsubscribe)) {
                 $nbmSender->unsubscribeNotificationByMail(false, [$unsubscribe]);
             } else {
-                $page['errors'][] = l10n('Unknown identifier');
+                \Piwigo\Core\PageState::current()->addError(l10n('Unknown identifier'));
             }
 
             $title = l10n('Notification');

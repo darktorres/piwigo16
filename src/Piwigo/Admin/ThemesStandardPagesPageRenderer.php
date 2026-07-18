@@ -44,19 +44,10 @@ final class ThemesStandardPagesPageRenderer
 {
     public function render(): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
-            $page_warnings = $page['warnings'] ?? [];
-            if (! is_array($page_warnings)) {
-                $page_warnings = [];
-            }
-            $page_warnings[] = str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'));
-            $page['warnings'] = $page_warnings;
+            \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
         }
 
         // +-----------------------------------------------------------------------+

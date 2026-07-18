@@ -40,10 +40,6 @@ final class ProfileFormHandler
          * @var array<string, mixed>
          */
         global $conf;
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $errors = [];
 
         if (! isset($_POST['validate'])) {
@@ -182,10 +178,7 @@ final class ProfileFormHandler
                 if (is_string($username_for_update) and $username_for_update !== '' and $username_for_update !== '0') {
                     $username = $username_for_update;
                     if ($username !== $userdata['username'] and (bool) new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getUserId($username)) {
-                        if (! is_array($page['errors'])) {
-                            $page['errors'] = [];
-                        }
-                        $page['errors'][] = l10n('this login is already used');
+                        \Piwigo\Core\PageState::current()->addError(l10n('this login is already used'));
                         unset($_POST['redirect']);
                     } else {
                         $fields[] = $user_fields['username'];

@@ -100,18 +100,18 @@ final class PictureCommentRenderer
 
             $postKey = $_POST['key'] ?? null;
             // insertComment() overwrites $commentErrors unconditionally as its
-            // very first statement, so whatever was previously in
-            // $page['errors'] is never actually read by it; a fresh array is
-            // passed and the result is written back below.
+            // very first statement, so whatever was previously there is
+            // never actually read by it; a fresh array is passed and the
+            // result is written back below.
             $commentErrors = [];
             $commentAction = $commentService->insertComment($comm, is_string($postKey) ? $postKey : '', $commentErrors);
-            $page['errors'] = $commentErrors;
+            \Piwigo\Core\PageState::current()->errors = $commentErrors;
 
             // Narrowed once into local variables and written back after the
-            // switch, so the case bodies below don't re-read the $page[...]
-            // offsets directly (switch branches lose array-offset narrowing
-            // in this codebase, see the other L10 fixes for the same pattern).
-            $commentInfos = is_array($page['infos'] ?? null) ? $page['infos'] : [];
+            // switch, so the case bodies below don't re-read PageState
+            // directly (switch branches lose property narrowing in this
+            // codebase, see the other L10 fixes for the same pattern).
+            $commentInfos = \Piwigo\Core\PageState::current()->infos;
 
             switch ($commentAction) {
                 case 'moderate':
@@ -129,8 +129,8 @@ final class PictureCommentRenderer
                     trigger_error('Invalid comment action ' . $commentAction, E_USER_WARNING);
             }
 
-            $page['infos'] = $commentInfos;
-            $page['errors'] = $commentErrors;
+            \Piwigo\Core\PageState::current()->infos = $commentInfos;
+            \Piwigo\Core\PageState::current()->errors = $commentErrors;
 
             // allow plugins to notify what's going on
             trigger_notify(

@@ -129,15 +129,6 @@ final class BatchManagerGlobalPageRenderer
         // $page['prefilter'] is a shortcut to test if the current filter contains a
         // given prefilter. The idea is to make conditions simpler to write in the
         // code.
-        //
-        // $page is bootstrap-initialized by include/common.inc.php (always run
-        // before this file) with 'infos'/'errors'/'warnings' pre-populated as empty
-        // arrays; this file only ever appends to those three keys (never reassigns
-        // them wholesale), so the invariant holds for every use below. PHPStan
-        // can't see across the include boundary, hence the explicit narrowing.
-        assert(is_array($page['errors']));
-        assert(is_array($page['infos']));
-        assert(is_array($page['warnings']));
         $page['prefilter'] = 'none';
         if (isset($bulk_manager_filter['prefilter'])) {
             $page['prefilter'] = $bulk_manager_filter['prefilter'];
@@ -156,7 +147,7 @@ final class BatchManagerGlobalPageRenderer
             // if the user tries to apply an action, it means that there is at least 1
             // photo in the selection
             if (count($collection) === 0) {
-                $page['errors'][] = l10n('Select at least one photo');
+                \Piwigo\Core\PageState::current()->addError(l10n('Select at least one photo'));
             }
 
             // $_POST values are always strings for a plain <select>/hidden
@@ -183,7 +174,7 @@ DELETE
                 $redirect = true;
             } elseif ($action === 'add_tags') {
                 if (! is_array($_POST['add_tags'] ?? null) || count($_POST['add_tags']) === 0) {
-                    $page['errors'][] = l10n('Select at least one tag');
+                    \Piwigo\Core\PageState::current()->addError(l10n('Select at least one tag'));
                 } else {
                     $add_tags = [];
                     foreach ($_POST['add_tags'] as $raw_tag) {
@@ -221,13 +212,13 @@ DELETE
                         $redirect = true;
                     }
                 } else {
-                    $page['errors'][] = l10n('Select at least one tag');
+                    \Piwigo\Core\PageState::current()->addError(l10n('Select at least one tag'));
                 }
             }
 
             if ($action === 'associate') {
                 if (! is_array($_POST['associate'] ?? null) || count($_POST['associate']) === 0) {
-                    $page['errors'][] = l10n('Select at least one album');
+                    \Piwigo\Core\PageState::current()->addError(l10n('Select at least one album'));
                 } else {
                     $associate_categories = [];
                     foreach ($_POST['associate'] as $raw_category_id) {
@@ -438,16 +429,16 @@ DELETE
                         $redirect_url = get_root_url() . 'admin.php?page=' . $get_page;
                         $redirect = true;
                     } else {
-                        $page['errors'][] = l10n('No photo can be deleted');
+                        \Piwigo\Core\PageState::current()->addError(l10n('No photo can be deleted'));
                     }
                 } else {
-                    $page['errors'][] = l10n('You need to confirm deletion');
+                    \Piwigo\Core\PageState::current()->addError(l10n('You need to confirm deletion'));
                 }
             }
 
             // synchronize metadata
             elseif ($action === 'metadata') {
-                $page['infos'][] = l10n('Metadata synchronized from file') . ' <span class="badge">' . count($collection) . '</span>';
+                \Piwigo\Core\PageState::current()->addInfo(l10n('Metadata synchronized from file') . ' <span class="badge">' . count($collection) . '</span>');
             } elseif ($action === 'delete_derivatives' && isset($_POST['del_derivatives_type']) && is_array($_POST['del_derivatives_type']) && count($_POST['del_derivatives_type']) > 0) {
                 $query = 'SELECT path,representative_ext FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', $collection) . ')';
@@ -468,10 +459,10 @@ DELETE
                 }
             } elseif ($action === 'generate_derivatives') {
                 if (($_POST['regenerateSuccess'] ?? '0') !== '0') {
-                    $page['infos'][] = l10n('%s photos have been regenerated', $_POST['regenerateSuccess']);
+                    \Piwigo\Core\PageState::current()->addInfo(l10n('%s photos have been regenerated', $_POST['regenerateSuccess']));
                 }
                 if (($_POST['regenerateError'] ?? '0') !== '0') {
-                    $page['warnings'][] = l10n('%s photos can not be regenerated', $_POST['regenerateError']);
+                    \Piwigo\Core\PageState::current()->addWarning(l10n('%s photos can not be regenerated', $_POST['regenerateError']));
                 }
             }
 

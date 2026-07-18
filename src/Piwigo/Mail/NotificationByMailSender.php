@@ -254,13 +254,10 @@ final class NotificationByMailSender
      */
     public function incMailSentSuccess(array $nbmUser): void
     {
-        /** @var array<string, mixed> $page */
-        global $page;
-
         $this->sentMailCount++;
 
         $msgInfo = $this->msgInfo ?? 'Mail sent to %s [%s].';
-        self::pushPageMessage($page, 'infos', sprintf($msgInfo, stripslashes((string) $nbmUser['username']), $nbmUser['mail_address']));
+        \Piwigo\Core\PageState::current()->addInfo(sprintf($msgInfo, stripslashes((string) $nbmUser['username']), $nbmUser['mail_address']));
     }
 
     /**
@@ -268,29 +265,23 @@ final class NotificationByMailSender
      */
     public function incMailSentFailed(array $nbmUser): void
     {
-        /** @var array<string, mixed> $page */
-        global $page;
-
         $this->errorOnMailCount++;
 
         $msgError = $this->msgError ?? 'Error when sending email to %s [%s].';
-        self::pushPageMessage($page, 'errors', sprintf($msgError, stripslashes((string) $nbmUser['username']), $nbmUser['mail_address']));
+        \Piwigo\Core\PageState::current()->addError(sprintf($msgError, stripslashes((string) $nbmUser['username']), $nbmUser['mail_address']));
     }
 
     public function displayCounterInfo(): void
     {
-        /** @var array<string, mixed> $page */
-        global $page;
-
         if ($this->errorOnMailCount != 0) {
-            self::pushPageMessage($page, 'errors', l10n_dec(
+            \Piwigo\Core\PageState::current()->addError(l10n_dec(
                 '%d mail was not sent.',
                 '%d mails were not sent.',
                 $this->errorOnMailCount
             ));
 
             if ($this->sentMailCount != 0) {
-                self::pushPageMessage($page, 'infos', l10n_dec(
+                \Piwigo\Core\PageState::current()->addInfo(l10n_dec(
                     '%d mail was sent.',
                     '%d mails were sent.',
                     $this->sentMailCount
@@ -298,9 +289,9 @@ final class NotificationByMailSender
             }
         } else {
             if ($this->sentMailCount == 0) {
-                self::pushPageMessage($page, 'infos', l10n('No mail to send.'));
+                \Piwigo\Core\PageState::current()->addInfo(l10n('No mail to send.'));
             } else {
-                self::pushPageMessage($page, 'infos', l10n_dec(
+                \Piwigo\Core\PageState::current()->addInfo(l10n_dec(
                     '%d mail was sent.',
                     '%d mails were sent.',
                     $this->sentMailCount
@@ -358,10 +349,6 @@ final class NotificationByMailSender
          * @var array<string, mixed>
          */
         global $conf;
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
 
         set_make_full_url();
 
@@ -394,7 +381,7 @@ final class NotificationByMailSender
             foreach ($dataUsers as $nbmUser) {
                 if ($this->checkSendmailTimeout()) {
                     // Stop fill list on 'send', if the quota is override
-                    self::pushPageMessage($page, 'errors', $msgBreakTimeout);
+                    \Piwigo\Core\PageState::current()->addError($msgBreakTimeout);
                     break;
                 }
 
@@ -457,10 +444,10 @@ final class NotificationByMailSender
                         'enabled' => $enabledValue,
                     ];
                     ++$updatedDataCount;
-                    self::pushPageMessage($page, 'infos', sprintf($msgInfo, stripslashes((string) $nbmUser['username']), $nbmUser['mail_address']));
+                    \Piwigo\Core\PageState::current()->addInfo(sprintf($msgInfo, stripslashes((string) $nbmUser['username']), $nbmUser['mail_address']));
                 } else {
                     ++$errorOnUpdatedDataCount;
-                    self::pushPageMessage($page, 'errors', sprintf($msgError, stripslashes((string) $nbmUser['username']), $nbmUser['mail_address']));
+                    \Piwigo\Core\PageState::current()->addError(sprintf($msgError, stripslashes((string) $nbmUser['username']), $nbmUser['mail_address']));
                 }
             }
 
@@ -478,14 +465,14 @@ final class NotificationByMailSender
             );
         }
 
-        self::pushPageMessage($page, 'infos', l10n_dec(
+        \Piwigo\Core\PageState::current()->addInfo(l10n_dec(
             '%d user was updated.',
             '%d users were updated.',
             $updatedDataCount
         ));
 
         if ($errorOnUpdatedDataCount != 0) {
-            self::pushPageMessage($page, 'errors', l10n_dec(
+            \Piwigo\Core\PageState::current()->addError(l10n_dec(
                 '%d user was not updated.',
                 '%d users were not updated.',
                 $errorOnUpdatedDataCount
@@ -511,10 +498,6 @@ final class NotificationByMailSender
          * @var array<string, mixed>
          */
         global $conf;
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $returnList = [];
 
         if (in_array($action, ['list_to_send', 'send'])) {
@@ -554,12 +537,12 @@ final class NotificationByMailSender
                     foreach ($dataUsers as $nbmUser) {
                         if ((! $isActionSend) and $this->checkSendmailTimeout()) {
                             // Stop fill list on 'list_to_send', if the quota is override
-                            self::pushPageMessage($page, 'infos', $msgBreakTimeout);
+                            \Piwigo\Core\PageState::current()->addInfo($msgBreakTimeout);
                             break;
                         }
                         if (($isActionSend) and $this->checkSendmailTimeout()) {
                             // Stop fill list on 'send', if the quota is override
-                            self::pushPageMessage($page, 'errors', $msgBreakTimeout);
+                            \Piwigo\Core\PageState::current()->addError($msgBreakTimeout);
                             break;
                         }
 
@@ -753,7 +736,7 @@ final class NotificationByMailSender
                     }
                 } else {
                     if ($isActionSend) {
-                        self::pushPageMessage($page, 'errors', l10n('No user to send notifications by mail.'));
+                        \Piwigo\Core\PageState::current()->addError(l10n('No user to send notifications by mail.'));
                     }
                 }
             } else {
@@ -784,22 +767,6 @@ final class NotificationByMailSender
     public function unsubscribeNotificationByMail(bool $isAdminRequest, array $checkKeyList = []): array
     {
         return $this->doSubscribeUnsubscribeNotificationByMail($isAdminRequest, false, $checkKeyList);
-    }
-
-    /**
-     * Append a message to a $page message bucket (e.g. 'infos'/'errors'),
-     * narrowing it to an array first if it isn't provably one yet ($page
-     * itself is only known as array<string, mixed>, so $page[$key] is still
-     * mixed).
-     *
-     * @param array<string, mixed> $page
-     */
-    public static function pushPageMessage(array &$page, string $key, string $message): void
-    {
-        $list = $page[$key] ?? [];
-        $list = is_array($list) ? $list : [];
-        $list[] = $message;
-        $page[$key] = $list;
     }
 
     /**

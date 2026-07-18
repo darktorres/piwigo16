@@ -36,15 +36,11 @@ final class RegisterController implements ControllerInterface
          * @var array<string, mixed>
          */
         global $conf;
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
 
-        // $page['errors'] is always initialized to an array by
-        // common.inc.php, but that isn't visible across the include()
-        // boundary -- narrow it once here so every write below type-checks.
-        $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
+        // Field-keyed, controller-local -- read by specific key
+        // ('register_page_error'/'register_form_error') in register.tpl, a
+        // different shape than PageState::$errors' plain list<string>.
+        $errors = [];
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Free);
 
@@ -63,33 +59,33 @@ final class RegisterController implements ControllerInterface
             if (! new \Piwigo\Auth\EphemeralKeyService()->verify($post_key)) {
                 new HtmlService()
                     ->setStatusHeader(403);
-                $page['errors']['register_page_error'] = l10n('Invalid/expired form key');
+                $errors['register_page_error'] = l10n('Invalid/expired form key');
             }
 
             $post_password_raw = $_POST['password'] ?? null;
             $post_password_conf_raw = $_POST['password_conf'] ?? null;
 
             if ($post_password_raw === null || $post_password_raw === '' || $post_password_raw === '0') {
-                $page['errors']['register_form_error'] = l10n('Password is missing. Please enter the password.');
+                $errors['register_form_error'] = l10n('Password is missing. Please enter the password.');
             } elseif ($post_password_conf_raw === null || $post_password_conf_raw === '' || $post_password_conf_raw === '0') {
-                $page['errors']['register_form_error'] = l10n('Password confirmation is missing. Please confirm the chosen password.');
+                $errors['register_form_error'] = l10n('Password confirmation is missing. Please confirm the chosen password.');
             } elseif (
                 (is_string($post_password_raw) ? $post_password_raw : '')
                 !== (is_string($post_password_conf_raw) ? $post_password_conf_raw : '')
             ) {
-                $page['errors']['register_form_error'] = l10n('The passwords do not match');
+                $errors['register_form_error'] = l10n('The passwords do not match');
             }
 
             $post_login = is_string($_POST['login'] ?? null) ? $_POST['login'] : '';
             $post_password = is_string($post_password_raw) ? $post_password_raw : '';
             $post_mail_address = is_string($_POST['mail_address'] ?? null) ? $_POST['mail_address'] : null;
 
-            // UserService::registerUser()'s $errors is a plain
+            // UserService::registerUser()'s $registration_errors is a plain
             // list<string> of validation messages, a different shape than
-            // $page['errors'], which register.tpl reads by the specific
-            // keys 'register_page_error'/'register_form_error' set above.
-            // Fold it into 'register_form_error' instead of overwriting
-            // those keys.
+            // the local $errors array above, which register.tpl reads by
+            // the specific keys 'register_page_error'/'register_form_error'
+            // set above. Fold it into 'register_form_error' instead of
+            // overwriting those keys.
             //
             // [SEC-31] registerUser() never puts a "this login is already
             // used" message in $errors -- a duplicate username comes back
@@ -126,14 +122,14 @@ final class RegisterController implements ControllerInterface
             }
 
             if ($registration_errors !== []) {
-                $existing_form_error = $page['errors']['register_form_error'] ?? null;
+                $existing_form_error = $errors['register_form_error'] ?? null;
                 $form_error_messages = is_string($existing_form_error)
                     ? [$existing_form_error, ...$registration_errors]
                     : $registration_errors;
-                $page['errors']['register_form_error'] = implode(' ', $form_error_messages);
+                $errors['register_form_error'] = implode(' ', $form_error_messages);
             }
 
-            if (count($page['errors']) === 0) {
+            if (count($errors) === 0) {
                 // email notification
                 if (isset($_POST['send_password_by_mail']) and \Piwigo\Validation\InputValidator::checkEmailFormat($post_mail_address)) {
                     if (! isset($_SESSION['page_infos']) or ! is_array($_SESSION['page_infos'])) {
@@ -165,7 +161,7 @@ final class RegisterController implements ControllerInterface
         $mail_raw = $_POST['mail_address'] ?? null;
         $email = is_string($mail_raw) && $mail_raw !== '' && $mail_raw !== '0' ? htmlspecialchars(stripslashes($mail_raw)) : '';
 
-        $body = LegacyRenderCapture::capture(static function () use ($registration_post_key, $login, $email): void {
+        $body = LegacyRenderCapture::capture(static function () use ($registration_post_key, $login, $email, $errors): void {
             /**
              * @var array<string, mixed>
              */
@@ -242,6 +238,8 @@ final class RegisterController implements ControllerInterface
             trigger_notify('loc_end_register');
             new HtmlService()
                 ->flushPageMessages();
+            new HtmlService()
+                ->flushKeyedErrors($errors);
             $template->parse('register');
             \Piwigo\Bootstrap\PageTail::render();
         });

@@ -39,15 +39,11 @@ final class IdentificationController implements ControllerInterface
          * @var array<string, mixed>
          */
         global $conf;
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
 
-        // $page['errors'] is always initialized to an array by
-        // common.inc.php, but that isn't visible across the include()
-        // boundary -- narrow it once here so every write below type-checks.
-        $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
+        // Field-keyed, controller-local -- read by specific key
+        // ('login_page_error'/'login_form_error') in identification.tpl, a
+        // different shape than PageState::$errors' plain list<string>.
+        $errors = [];
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Free);
 
@@ -75,7 +71,7 @@ final class IdentificationController implements ControllerInterface
         if (is_string($get_redirect) && $get_redirect !== '') {
             $redirect_to = urldecode($get_redirect);
             if (\Piwigo\Config\Config::guestAccess() and ! isset($_GET['hide_redirect_error'])) {
-                $page['errors']['login_page_error'] = l10n('You are not authorized to access the requested page');
+                $errors['login_page_error'] = l10n('You are not authorized to access the requested page');
             }
         }
 
@@ -83,7 +79,7 @@ final class IdentificationController implements ControllerInterface
             $session_cookie_name = session_name();
             $has_session_cookie = $session_cookie_name !== false && isset($_COOKIE[$session_cookie_name]);
             if (! $has_session_cookie) {
-                $page['errors']['login_page_error'] = l10n('Cookies are blocked or not supported by your browser. You must enable cookies to connect.');
+                $errors['login_page_error'] = l10n('Cookies are blocked or not supported by your browser. You must enable cookies to connect.');
             } else {
                 // $_POST['username'] is required to be a string for
                 // try_log_user(); an unset/non-string value falls back to
@@ -126,12 +122,12 @@ final class IdentificationController implements ControllerInterface
                         : substr($root_url, 0, strlen($root_url) - strlen(new CookieService()->cookiePath())) . $redirect_to
                     );
                 } else {
-                    $page['errors']['login_form_error'] = l10n('Invalid username or password!');
+                    $errors['login_form_error'] = l10n('Invalid username or password!');
                 }
             }
         }
 
-        $body = LegacyRenderCapture::capture(static function () use ($redirect_to): void {
+        $body = LegacyRenderCapture::capture(static function () use ($redirect_to, $errors): void {
             /**
              * @var array<string, mixed>
              */
@@ -218,6 +214,8 @@ final class IdentificationController implements ControllerInterface
             trigger_notify('loc_end_identification');
             new HtmlService()
                 ->flushPageMessages();
+            new HtmlService()
+                ->flushKeyedErrors($errors);
             $template->pparse('identification');
             \Piwigo\Bootstrap\PageTail::render();
         });

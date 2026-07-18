@@ -71,6 +71,7 @@ abstract class IntegrationTestCase extends TestCase
     {
         \Piwigo\Users\CurrentUser::reset();
         \Piwigo\Config\Config::reset();
+        \Piwigo\Core\PageState::reset();
         parent::tearDown();
     }
 

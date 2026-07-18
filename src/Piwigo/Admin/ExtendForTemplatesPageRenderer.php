@@ -33,16 +33,7 @@ final class ExtendForTemplatesPageRenderer
          * @var array<string, mixed>
          */
         global $conf;
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
-
-        // $page['infos'] is always initialized to an array by common.inc.php, but
-        // that isn't visible across the include() boundary -- narrow it once here
-        // so the $page['infos'][] = ... append below type-checks.
-        $page['infos'] = is_array($page['infos'] ?? null) ? $page['infos'] : [];
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
@@ -173,7 +164,7 @@ UPDATE ' . Tables::config() . '
   SET value = \'' . str_replace("\'", "''", $serialized_extents) . '\'
 WHERE param = \'extents_for_templates\';';
             if ((bool) \Piwigo\Db\MysqliDb::query($query)) {
-                $page['infos'][] = l10n('Templates configuration has been recorded.');
+                \Piwigo\Core\PageState::current()->addInfo(l10n('Templates configuration has been recorded.'));
             }
         }
 

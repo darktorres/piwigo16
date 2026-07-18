@@ -154,17 +154,12 @@ SELECT COUNT(*)
                 ->createVirtualCategory($virtual_name, $parent_id);
 
             UserCacheInvalidator::invalidate();
-            // $page['errors']/$page['infos'] are always initialized to an array by
-            // include/common.inc.php; re-assert it here so PHPStan can prove the
-            // pushes below are array-like (same pattern as
-            // admin/include/functions.php).
-            $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
-            $page['infos'] = is_array($page['infos'] ?? null) ? $page['infos'] : [];
+            $output_create_message = is_string($output_create->message) ? $output_create->message : '';
             if (! $output_create->success) {
-                $page['errors'][] = $output_create->message;
+                \Piwigo\Core\PageState::current()->addError($output_create_message);
             } else {
                 $edit_url = get_root_url() . 'admin.php?page=album-' . $output_create->categoryId;
-                $page['infos'][] = $output_create->message . ' <a class="icon-pencil" href="' . $edit_url . '">' . l10n('Edit album') . '</a>';
+                \Piwigo\Core\PageState::current()->addInfo($output_create_message . ' <a class="icon-pencil" href="' . $edit_url . '">' . l10n('Edit album') . '</a>');
             }
         }
         // +-------------------------------------------------------------------+

@@ -54,10 +54,6 @@ final class PhotosAddDirectPageRenderer
          * @var array<string, mixed>
          */
         global $conf;
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $htmlRenderer = new HtmlService();
@@ -199,11 +195,7 @@ SELECT *
 
                 $have_formats_original = true;
             } else {
-                // $page['errors'] is always initialized to an array by
-                // include/common.inc.php; re-assert it here so PHPStan can prove
-                // the push below is array-like (same pattern as admin/cat_list.php).
-                $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
-                $page['errors'][] = l10n('The original picture selected dosen\'t exists.');
+                \Piwigo\Core\PageState::current()->addError(l10n('The original picture selected dosen\'t exists.'));
             }
         }
 

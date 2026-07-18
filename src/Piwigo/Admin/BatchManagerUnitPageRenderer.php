@@ -70,14 +70,6 @@ final class BatchManagerUnitPageRenderer
 
         trigger_notify('loc_begin_element_set_unit');
 
-        // $page is bootstrap-initialized by include/common.inc.php with
-        // 'infos'/'errors'/'warnings'/'messages'/'body_classes'/'body_data'
-        // pre-populated as empty arrays; this file only ever appends to 'infos'
-        // (matches the same established pattern in BatchManagerGlobalPageRenderer).
-        // Declared unconditionally here, before the first (conditional) use below,
-        // so the narrowing holds for every later read/write in this file.
-        assert(is_array($page['infos']));
-
         // +-------------------------------------------------------------------+
         // |                        unit mode form submission                      |
         // +-------------------------------------------------------------------+
@@ -155,7 +147,7 @@ SELECT id, date_creation
                 $datas
             );
 
-            $page['infos'][] = l10n('Photo informations updated');
+            \Piwigo\Core\PageState::current()->addInfo(l10n('Photo informations updated'));
             UserCacheInvalidator::invalidate();
         }
 

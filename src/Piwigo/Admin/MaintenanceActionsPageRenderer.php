@@ -41,10 +41,6 @@ final class MaintenanceActionsPageRenderer
          * @var array<string, mixed>
          */
         global $maint_actions;
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         FilesystemIntegrityChecker::fsQuickCheck();
@@ -65,14 +61,7 @@ final class MaintenanceActionsPageRenderer
         $url_format = get_root_url() . 'admin.php?page=maintenance&amp;action=%s&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken();
 
         if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
-            // $page['warnings'] is always an array by this point --
-            // MaintenanceActionDispatcher::dispatch() (already called above)
-            // guarantees it, but PHPStan can't see across that method-call
-            // boundary for a global, hence the guard.
-            if (! is_array($page['warnings'] ?? null)) {
-                $page['warnings'] = [];
-            }
-            $page['warnings'][] = str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'));
+            \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
         }
 
         /** @var array<string, string> $purge_urls */

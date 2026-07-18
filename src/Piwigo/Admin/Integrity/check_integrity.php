@@ -44,8 +44,6 @@ class check_integrity
      */
     public function check(): void
     {
-        /** @var array<string, mixed> $page */
-        global $page;
         /** @var array<string, mixed> $header_notes */
         global $header_notes;
 
@@ -111,24 +109,18 @@ class check_integrity
             }
 
             if ($corrected_count > 0) {
-                if (! is_array($page['infos'] ?? null)) {
-                    $page['infos'] = [];
-                }
-                $page['infos'][] = l10n_dec(
+                \Piwigo\Core\PageState::current()->addInfo(l10n_dec(
                     '%d anomaly has been corrected.',
                     '%d anomalies have been detected corrected.',
                     $corrected_count
-                );
+                ));
             }
             if ($not_corrected_count > 0) {
-                if (! is_array($page['errors'] ?? null)) {
-                    $page['errors'] = [];
-                }
-                $page['errors'][] = l10n_dec(
+                \Piwigo\Core\PageState::current()->addError(l10n_dec(
                     '%d anomaly has not been corrected.',
                     '%d anomalies have not been corrected.',
                     $not_corrected_count
-                );
+                ));
             }
         } else {
             if (isset($_POST['c13y_submit_ignore']) and isset($_POST['c13y_selection']) and is_array($_POST['c13y_selection'])) {
@@ -144,14 +136,11 @@ class check_integrity
                 }
 
                 if ($ignored_count > 0) {
-                    if (! is_array($page['infos'] ?? null)) {
-                        $page['infos'] = [];
-                    }
-                    $page['infos'][] = l10n_dec(
+                    \Piwigo\Core\PageState::current()->addInfo(l10n_dec(
                         '%d anomaly has been ignored.',
                         '%d anomalies have been ignored.',
                         $ignored_count
-                    );
+                    ));
                 }
             }
         }

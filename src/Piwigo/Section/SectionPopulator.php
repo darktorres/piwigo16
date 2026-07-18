@@ -728,14 +728,8 @@ SELECT DISTINCT(id)
             unset($page['hit_by']);
         }
 
-        // $page['body_classes']/$page['body_data'] are seeded as [] in
-        // include/common.inc.php, but that's a different file/scope from
-        // PHPStan's point of view, so re-prove array-ness once here and work on
-        // local copies (repeatedly array_push()-ing into a mixed-typed nested
-        // offset defeats PHPStan's tracking even when the offset is provably an
-        // array at each individual call site).
-        $body_classes = is_array($page['body_classes'] ?? null) ? $page['body_classes'] : [];
-        $body_data = is_array($page['body_data'] ?? null) ? $page['body_data'] : [];
+        $body_classes = [];
+        $body_data = [];
 
         array_push($body_classes, 'section-' . $section);
         $body_data['section'] = $page['section'];
@@ -779,8 +773,8 @@ SELECT DISTINCT(id)
             $body_data['image_id'] = $body_image_id;
         }
 
-        $page['body_classes'] = $body_classes;
-        $page['body_data'] = $body_data;
+        \Piwigo\Core\PageState::current()->bodyClasses = $body_classes;
+        \Piwigo\Core\PageState::current()->bodyData = $body_data;
 
         trigger_notify('loc_end_section_init');
     }

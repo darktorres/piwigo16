@@ -36,16 +36,7 @@ final readonly class PermalinkService
         /**
          * @var array<string, mixed>
          */
-        global $page;
-        /**
-         * @var array<string, mixed>
-         */
         global $cache;
-
-        // $page['errors'] is always initialized to an array by common.inc.php,
-        // but that isn't visible across the include() boundary -- narrow it
-        // once here so the append below type-checks.
-        $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
 
         $permalink = $this->repo->findPermalinkByCategoryId($catId);
         if ($permalink === null) { // no permalink; nothing to do
@@ -56,11 +47,11 @@ final readonly class PermalinkService
         if ($save) {
             $oldCatId = $this->repo->findOldCategoryId($permalink);
             if ($oldCatId !== null && $oldCatId !== $catId) {
-                $page['errors'][] = sprintf(
+                \Piwigo\Core\PageState::current()->addError(sprintf(
                     l10n('Permalink %s has been previously used by album %s. Delete from the permalink history first'),
                     $permalink,
                     $oldCatId,
-                );
+                ));
 
                 return false;
             }
@@ -91,23 +82,14 @@ final readonly class PermalinkService
         /**
          * @var array<string, mixed>
          */
-        global $page;
-        /**
-         * @var array<string, mixed>
-         */
         global $cache;
-
-        // $page['errors'] is always initialized to an array by common.inc.php,
-        // but that isn't visible across the include() boundary -- narrow it
-        // once here so the appends below type-check.
-        $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
 
         $sanitized_permalink = preg_replace('#[^a-zA-Z0-9_/-]#', '', $permalink);
         $sanitized_permalink = trim((string) $sanitized_permalink, '/');
         $sanitized_permalink = str_replace('//', '/', $sanitized_permalink);
         if ($sanitized_permalink !== $permalink
             or (bool) preg_match('#^(\d)+(-.*)?$#', $permalink)) {
-            $page['errors'][] = '{' . $permalink . '} ' . l10n('The permalink name must be composed of a-z, A-Z, 0-9, "-", "_" or "/". It must not be numeric or start with number followed by "-"');
+            \Piwigo\Core\PageState::current()->addError('{' . $permalink . '} ' . l10n('The permalink name must be composed of a-z, A-Z, 0-9, "-", "_" or "/". It must not be numeric or start with number followed by "-"'));
 
             return false;
         }
@@ -118,11 +100,11 @@ final readonly class PermalinkService
             if ($existingCatId === $catId) { // no change required
                 return true;
             }
-            $page['errors'][] = sprintf(
+            \Piwigo\Core\PageState::current()->addError(sprintf(
                 l10n('Permalink %s is already used by album %s'),
                 $permalink,
                 $existingCatId,
-            );
+            ));
 
             return false;
         }
@@ -130,11 +112,11 @@ final readonly class PermalinkService
         // check if the new permalink was historically used
         $oldCatId = $this->repo->findOldCategoryId($permalink);
         if ($oldCatId !== null && $oldCatId !== $catId) {
-            $page['errors'][] = sprintf(
+            \Piwigo\Core\PageState::current()->addError(sprintf(
                 l10n('Permalink %s has been previously used by album %s. Delete from the permalink history first'),
                 $permalink,
                 $oldCatId,
-            );
+            ));
 
             return false;
         }
@@ -155,19 +137,13 @@ final readonly class PermalinkService
 
     /**
      * Permanently deletes an old-permalink history row by its permalink
-     * value. Returns true on success, appending a $page['errors'] entry
-     * (same global-bridge convention as deleteCatPermalink()/
-     * setCatPermalink() above) and returning false if nothing matched.
+     * value. Returns true on success, appending a PageState error entry
+     * and returning false if nothing matched.
      */
     public function deleteOldPermalinkByValue(string $permalink): bool
     {
-        /** @var array<string, mixed> $page */
-        global $page;
-
-        $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
-
         if (! $this->repo->deleteOldPermalinkByValue($permalink)) {
-            $page['errors'][] = l10n('Cannot delete the old permalink !');
+            \Piwigo\Core\PageState::current()->addError(l10n('Cannot delete the old permalink !'));
 
             return false;
         }

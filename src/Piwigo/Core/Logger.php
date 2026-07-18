@@ -381,13 +381,11 @@ class Logger
      */
     private function formatMessage($level, $message, $cat, $context): string
     {
-        global $page;
-        /** @var array<string, mixed> $page */
         if (! empty($context)) {
             $message .= "\n" . $this->indent($this->contextToString($context));
         }
-        $executionUuid = $page['execution_uuid'] ?? 'unkonwn';
-        $executionUuid = is_string($executionUuid) ? $executionUuid : 'unkonwn';
+        $executionUuid = PageState::current()->executionUuid;
+        $executionUuid = $executionUuid !== '' ? $executionUuid : 'unkonwn';
         $line = '[' . $this->getTimestamp() . '][exec=' . $executionUuid . "]\t[" . self::levelToCode($level) . "]\t";
         if ($cat != null) {
             $line .= '[' . $cat . "]\t";

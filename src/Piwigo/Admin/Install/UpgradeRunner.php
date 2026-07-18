@@ -145,14 +145,11 @@ class UpgradeRunner
         }
 
         if ($has_remote_site) {
-            $page['errors'] = [];
+            \Piwigo\Core\PageState::current()->errors = [];
             $step = 3;
             updates::upgrade_to('2.3.4', $step, false);
 
-            // updates::upgrade_to() mutates $page['errors'] from its own function
-            // scope via global $page -- static analysis can't trace that, so
-            // re-narrow here rather than trust the pre-call [] assignment.
-            $upgrade_errors = is_array($page['errors']) ? array_filter($page['errors'], is_string(...)) : [];
+            $upgrade_errors = \Piwigo\Core\PageState::current()->errors;
             if (! empty($upgrade_errors)) {
                 echo '<ul>';
                 foreach ($upgrade_errors as $error) {
@@ -246,12 +243,12 @@ SELECT id
         // |                            upgrade launch                          |
         // +-------------------------------------------------------------------+
 
-        $page['infos'] = [];
-        $page['errors'] = [];
+        \Piwigo\Core\PageState::current()->infos = [];
+        \Piwigo\Core\PageState::current()->errors = [];
 
         // check php version
         if (version_compare(PHP_VERSION, AppInfo::REQUIRED_PHP_VERSION, '<')) {
-            $page['errors'][] = l10n('PHP version %s required (you are running on PHP %s)', AppInfo::REQUIRED_PHP_VERSION, PHP_VERSION);
+            \Piwigo\Core\PageState::current()->addError(l10n('PHP version %s required (you are running on PHP %s)', AppInfo::REQUIRED_PHP_VERSION, PHP_VERSION));
         }
 
         $this->currentRelease = $current_release;
@@ -323,18 +320,12 @@ SELECT id
                   . substr($this->configFileContents, $this->phpEndTag);
 
                 if (! (bool) @file_put_contents($this->configFile, $config_file_contents)) {
-                    // various by-ref function calls above (global $page inside
-                    // their own scope) mutate $page in ways static analysis
-                    // can't trace, so re-narrow before appending.
-                    if (! is_array($page['infos'] ?? null)) {
-                        $page['infos'] = [];
-                    }
-                    $page['infos'][] = l10n(
+                    \Piwigo\Core\PageState::current()->addInfo(l10n(
                         'In <i>%s</i>, before <b>?></b>, insert:',
                         PWG_LOCAL_DIR . 'config/database.inc.php'
                     )
                     . '<p><textarea rows="4" cols="40">'
-                    . implode("\r\n", $mysql_changes) . '</textarea></p>';
+                    . implode("\r\n", $mysql_changes) . '</textarea></p>');
                 }
             }
 
@@ -368,14 +359,11 @@ SELECT id
                 ]
             );
 
-            if (! is_array($page['infos'] ?? null)) {
-                $page['infos'] = [];
-            }
-            $page['infos'][] = l10n('Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem.');
+            \Piwigo\Core\PageState::current()->addInfo(l10n('Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem.'));
 
-            // Save $page['infos'] in order to restore after maintenance actions
-            $page['infos_sav'] = $page['infos'];
-            $page['infos'] = [];
+            // Save PageState's infos in order to restore after maintenance actions
+            $infos_sav = \Piwigo\Core\PageState::current()->infos;
+            \Piwigo\Core\PageState::current()->infos = [];
 
             $template->assign(
                 [
@@ -419,9 +407,9 @@ REPLACE INTO ' . Tables::plugins() . '
             UserCacheInvalidator::invalidate(true);
             $template->delete_compiled_templates();
 
-            // Restore $page['infos'] in order to hide informations messages from functions calles
+            // Restore PageState's infos in order to hide informations messages from functions calles
             // errors messages are not hide
-            $page['infos'] = $page['infos_sav'];
+            \Piwigo\Core\PageState::current()->infos = $infos_sav;
 
         }
     }
@@ -464,21 +452,14 @@ REPLACE INTO ' . Tables::plugins() . '
      */
     public function finish(): void
     {
-        /** @var array<string, mixed> $page */
-        global $page;
         global $template;
 
-        // $page['errors']/'infos' are always arrays: initialized to [] in
-        // prepare() above and only ever appended to via []= throughout this
-        // request.
-        $page_errors = $page['errors'];
-        $page_errors = is_array($page_errors) ? $page_errors : [];
+        $page_errors = \Piwigo\Core\PageState::current()->errors;
         if (count($page_errors) != 0) {
             $template->assign('errors', $page_errors);
         }
 
-        $page_infos = $page['infos'];
-        $page_infos = is_array($page_infos) ? $page_infos : [];
+        $page_infos = \Piwigo\Core\PageState::current()->infos;
         if (count($page_infos) != 0) {
             $template->assign('infos', $page_infos);
         }

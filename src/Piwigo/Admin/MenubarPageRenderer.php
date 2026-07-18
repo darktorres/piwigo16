@@ -18,24 +18,19 @@ use Piwigo\Menu\MenubarLayoutRepository;
  * scope directly. Once wrapped inside AdminDispatcher::dispatch()'s (or
  * MenubarSubController::handle()'s) own method scope, that write silently
  * landed in a method-local variable discarded on return -- a non-webmaster
- * admin editing this page never saw the warning. `global $page;` below is
- * a real, load-bearing addition the original file never needed.
+ * admin editing this page never saw the warning. Retargeting onto
+ * PageState::current() (Legacy Coupling Retirement Track A batch A5)
+ * structurally closes off this whole bug class here: no `global`
+ * declaration is needed to reach it from any scope.
  */
 final class MenubarPageRenderer
 {
     public function render(): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
-            if (! is_array($page['warnings'] ?? null)) {
-                $page['warnings'] = [];
-            }
-            $page['warnings'][] = str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'));
+            \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
         }
 
         $tabsheet = new tabsheet();

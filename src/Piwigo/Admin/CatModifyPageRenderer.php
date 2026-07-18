@@ -43,10 +43,6 @@ final class CatModifyPageRenderer
          * @var array<string, mixed>
          */
         global $conf;
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $htmlRenderer = new HtmlService();
@@ -129,11 +125,7 @@ final class CatModifyPageRenderer
         }
 
         // We show or hide this warning in JS
-        /** @var array<string, mixed> $page */
-        if (! is_array($page['warnings'] ?? null)) {
-            $page['warnings'] = [];
-        }
-        $page['warnings'][] = l10n('This album is currently locked, visible only to administrators.') . '<span class="icon-cone unlock-album">' . l10n('Unlock it') . '</span>';
+        \Piwigo\Core\PageState::current()->addWarning(l10n('This album is currently locked, visible only to administrators.') . '<span class="icon-cone unlock-album">' . l10n('Unlock it') . '</span>');
 
         $template->assign(
             [

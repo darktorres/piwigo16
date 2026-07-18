@@ -278,14 +278,15 @@ final class GalleryController implements ControllerInterface
                     );
                 }
 
-                if (isset($page['body_data']) and is_array($page['body_data']) and isset($page['body_data']['tag_ids']) and is_array($page['body_data']['tag_ids'])) {
+                $bodyData = \Piwigo\Core\PageState::current()->bodyData;
+                if (isset($bodyData['tag_ids']) and is_array($bodyData['tag_ids'])) {
                     // get tags for related tags "button", with the
                     // possibility to combine them
                     //
                     // NB: the excluded tag ids intentionally come from
                     // $page['tag_ids'] (the tags currently being viewed,
                     // only set on the "tags" section), not from
-                    // $page['body_data']['tag_ids'] (a broader,
+                    // PageState::bodyData['tag_ids'] (a broader,
                     // always-present mirror of the same data used for
                     // JS/body attributes).
                     $excluded_tag_ids = [];
@@ -380,7 +381,7 @@ final class GalleryController implements ControllerInterface
                     $template->set_filename('selected_tags', 'include/selected_tags.inc.tpl');
                     $template->assign_var_from_handle('SELECTED_TAGS_TEMPLATE', 'selected_tags');
 
-                    $body_data_tag_ids = array_values(array_filter($page['body_data']['tag_ids'], is_scalar(...)));
+                    $body_data_tag_ids = array_values(array_filter($bodyData['tag_ids'], is_scalar(...)));
 
                     $template->assign(
                         [
@@ -574,8 +575,8 @@ final class GalleryController implements ControllerInterface
                 // We want all pages that display thumbnails, except on the
                 // tags page
                 // Fill related tags action
-                $body_data_section = is_array($page['body_data'] ?? null) ? ($page['body_data']['section'] ?? null) : null;
-                if ($page_items !== [] and is_array($page['body_data'] ?? null) and $body_data_section !== 'tags') {
+                $body_data_section = \Piwigo\Core\PageState::current()->bodyData['section'] ?? null;
+                if ($page_items !== [] and $body_data_section !== 'tags') {
                     $selection = array_slice($page_items, $page_start, $page_nb_image_page);
                     $tags = $tagService->addLevelToTags($tagService->getCommonTags($selection, is_numeric(\Piwigo\Config\Config::contentTagCloudItemsNumber()) ? (int) \Piwigo\Config\Config::contentTagCloudItemsNumber() : 0, new HtmlService()));
                     $related_tags = [];

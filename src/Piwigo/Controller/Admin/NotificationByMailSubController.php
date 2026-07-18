@@ -423,9 +423,6 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
      */
     private static function doTimeoutTreatment(NotificationByMailSender $nbmSender, string $post_keyname, array $check_key_treated = []): bool
     {
-        /** @var array<string, mixed> $page */
-        global $page;
-
         if ($nbmSender->isSendmailTimeout()) {
             if (isset($_POST[$post_keyname]) and is_array($_POST[$post_keyname])) {
                 $post_count = count($_POST[$post_keyname]);
@@ -441,7 +438,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                 $check_key_treated_strings = array_filter($check_key_treated, is_string(...));
                 $_POST[$post_keyname] = array_diff(array_filter($_POST[$post_keyname], is_string(...)), $check_key_treated_strings);
 
-                NotificationByMailSender::pushPageMessage($page, 'errors', l10n_dec(
+                \Piwigo\Core\PageState::current()->addError(l10n_dec(
                     'Execution time is out, treatment must be continue [Estimated time: %d second].',
                     'Execution time is out, treatment must be continue [Estimated time: %d seconds].',
                     $time_refresh
@@ -475,10 +472,6 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
          * @var array<string, mixed>
          */
         global $conf;
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         /**
          * @var string $base_url set at the top of handle()
          */
@@ -535,7 +528,7 @@ order by
                     'enabled' => 'false', // By default if false, set to true with specific functions
                 ];
 
-                NotificationByMailSender::pushPageMessage($page, 'infos', l10n(
+                \Piwigo\Core\PageState::current()->addInfo(l10n(
                     'User %s [%s] added.',
                     stripslashes((string) $nbm_user['username']),
                     $nbm_user['mail_address']

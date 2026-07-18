@@ -52,11 +52,6 @@ final class ProfileController implements ControllerInterface
         global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        // $page['errors'] is always initialized to an array by
-        // common.inc.php, but that isn't visible across the include()
-        // boundary -- narrow it once here so every write below type-checks.
-        $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
-
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Classic);
 
         if ($_POST !== []) {
@@ -99,9 +94,9 @@ SELECT ' . implode(',', $fields) . '
 
         $profileFormHandler = new ProfileFormHandler();
 
-        $page_errors = array_values(array_filter($page['errors'], is_string(...)));
+        $page_errors = \Piwigo\Core\PageState::current()->errors;
         $profileFormHandler->saveFromPost($userdata, $page_errors);
-        $page['errors'] = $page_errors;
+        \Piwigo\Core\PageState::current()->errors = array_values($page_errors);
 
         $page['body_id'] = 'theProfilePage';
         $template->set_filename('profile', 'profile.tpl');

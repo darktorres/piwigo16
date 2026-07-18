@@ -297,15 +297,7 @@ SELECT id, name, is_default
         }
 
         if ((bool) self::webmasterIdIsLocal()) {
-            // include/common.inc.php seeds $page['warnings'] as [] -- always an
-            // array; defensively re-initialized here in case that invariant is
-            // ever broken by a prior include.
-            $page_warnings = $page['warnings'] ?? [];
-            if (! is_array($page_warnings)) {
-                $page_warnings = [];
-            }
-            $page_warnings[] = l10n('You have specified <i>$conf[\'webmaster_id\']</i> in your local configuration file, this parameter in deprecated, please remove it!');
-            $page['warnings'] = $page_warnings;
+            \Piwigo\Core\PageState::current()->addWarning(l10n('You have specified <i>$conf[\'webmaster_id\']</i> in your local configuration file, this parameter in deprecated, please remove it!'));
         }
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'user_list');

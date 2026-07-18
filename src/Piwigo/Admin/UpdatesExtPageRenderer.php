@@ -39,18 +39,12 @@ final class UpdatesExtPageRenderer
         global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        // $page['warnings']/$page['errors'] are always initialized to an array by
-        // common.inc.php, but that isn't visible across the include() boundary --
-        // narrow them once here so the appends below type-check.
-        $page['warnings'] = is_array($page['warnings'] ?? null) ? $page['warnings'] : [];
-        $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
-
         if (! \Piwigo\Config\Config::enableExtensionsInstall()) {
             die('Piwigo extensions install/update system is disabled');
         }
 
         if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
-            $page['warnings'][] = str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'));
+            \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
         }
 
         $updates_ignored = \Piwigo\Config\Config::updatesIgnored();
@@ -158,7 +152,7 @@ final class UpdatesExtPageRenderer
         }
 
         if (! $all_types_reachable) {
-            $page['errors'][] = l10n('Can\'t connect to server.');
+            \Piwigo\Core\PageState::current()->addError(l10n('Can\'t connect to server.'));
             return; // TODO: remove this return and add a proper "page killer"
         }
 

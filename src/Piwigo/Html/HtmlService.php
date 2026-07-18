@@ -682,37 +682,58 @@ SELECT id, name, permalink
     }
 
     /**
-     * Sends to the template all messages stored in $page and in the session.
+     * Sends to the template all messages stored in PageState and in the
+     * session.
      */
     public function flushPageMessages(): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
         if ($template->get_template_vars('page_refresh') === null) {
-            foreach (['errors', 'infos', 'warnings', 'messages'] as $mode) {
-                // Narrowed once here (fix pattern #7): $page is
-                // array<string, mixed>, so $page[$mode] is still mixed even
-                // after $page is typed.
-                $page_messages = is_array($page[$mode] ?? null) ? $page[$mode] : [];
+            $pageState = \Piwigo\Core\PageState::current();
+            $this->flushMessageMode('errors', $pageState->errors, $template);
+            $this->flushMessageMode('infos', $pageState->infos, $template);
+            $this->flushMessageMode('warnings', $pageState->warnings, $template);
+            $this->flushMessageMode('messages', $pageState->messages, $template);
+        }
+    }
 
-                // Every writer of $_SESSION['page_*'] elsewhere in the codebase
-                // (comments.php, picture.php, admin/batch_manager*.php, ...)
-                // guards with is_array() before appending, so this mirrors that
-                // same invariant instead of trusting the superglobal's mixed
-                // element type.
-                if (isset($_SESSION['page_' . $mode]) and is_array($_SESSION['page_' . $mode])) {
-                    $page_messages = array_merge($page_messages, $_SESSION['page_' . $mode]);
-                    unset($_SESSION['page_' . $mode]);
-                }
-                $page[$mode] = $page_messages;
+    /**
+     * Sends a controller-local, field-keyed error map (e.g.
+     * ['login_page_error' => '...'], read by specific key in
+     * identification.tpl/register.tpl/password.tpl) to the template --
+     * a different shape than PageState::$errors' plain list<string>, so it
+     * doesn't live on PageState (see IdentificationController/
+     * RegisterController/PasswordController). Merges with the same
+     * $_SESSION['page_errors'] flash channel as flushPageMessages(), so
+     * calling both in the same request is safe.
+     *
+     * @param array<string, mixed> $keyedErrors
+     */
+    public function flushKeyedErrors(array $keyedErrors): void
+    {
+        $template = \Piwigo\Template\CurrentTemplate::get();
+        if ($template->get_template_vars('page_refresh') === null) {
+            $this->flushMessageMode('errors', $keyedErrors, $template);
+        }
+    }
 
-                if ($page_messages !== []) {
-                    $template->assign($mode, $page_messages);
-                }
-            }
+    /**
+     * @param array<int|string, mixed> $messages
+     */
+    private function flushMessageMode(string $mode, array $messages, Template $template): void
+    {
+        // Every writer of $_SESSION['page_*'] elsewhere in the codebase
+        // (comments.php, picture.php, admin/batch_manager*.php, ...)
+        // guards with is_array() before appending, so this mirrors that
+        // same invariant instead of trusting the superglobal's mixed
+        // element type.
+        if (isset($_SESSION['page_' . $mode]) and is_array($_SESSION['page_' . $mode])) {
+            $messages = array_merge($messages, $_SESSION['page_' . $mode]);
+            unset($_SESSION['page_' . $mode]);
+        }
+
+        if ($messages !== []) {
+            $template->assign($mode, $messages);
         }
     }
 

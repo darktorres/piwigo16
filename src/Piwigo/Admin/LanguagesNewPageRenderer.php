@@ -65,7 +65,7 @@ final class LanguagesNewPageRenderer
 
         $languages_dir = PHPWG_ROOT_PATH . 'language';
         if (! is_writable($languages_dir)) {
-            $this->pushPageMessage('errors', l10n('Add write access to the "%s" directory', 'language'), $page);
+            \Piwigo\Core\PageState::current()->addError(l10n('Add write access to the "%s" directory', 'language'));
         }
 
         // +-----------------------------------------------------------------------+
@@ -74,7 +74,7 @@ final class LanguagesNewPageRenderer
 
         if (isset($_GET['revision'])) {
             if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
-                $this->pushPageMessage('errors', l10n('Webmaster status is required.'), $page);
+                \Piwigo\Core\PageState::current()->addError(l10n('Webmaster status is required.'));
             } else {
                 new \Piwigo\Csrf\CsrfService()
                     ->checkOrFail(new \Piwigo\Html\HtmlService());
@@ -110,11 +110,11 @@ final class LanguagesNewPageRenderer
             $installstatus = is_string($installstatus) ? $installstatus : '';
 
             match ($installstatus) {
-                'ok' => $this->pushPageMessage('infos', l10n('Language has been successfully installed'), $page),
-                'temp_path_error' => $this->pushPageMessage('errors', l10n('Can\'t create temporary file.'), $page),
-                'dl_archive_error' => $this->pushPageMessage('errors', l10n('Can\'t download archive.'), $page),
-                'archive_error' => $this->pushPageMessage('errors', l10n('Can\'t read or extract archive.'), $page),
-                default => $this->pushPageMessage('errors', l10n('An error occured during extraction (%s).', htmlspecialchars($installstatus)), $page),
+                'ok' => \Piwigo\Core\PageState::current()->addInfo(l10n('Language has been successfully installed')),
+                'temp_path_error' => \Piwigo\Core\PageState::current()->addError(l10n('Can\'t create temporary file.')),
+                'dl_archive_error' => \Piwigo\Core\PageState::current()->addError(l10n('Can\'t download archive.')),
+                'archive_error' => \Piwigo\Core\PageState::current()->addError(l10n('Can\'t read or extract archive.')),
+                default => \Piwigo\Core\PageState::current()->addError(l10n('An error occured during extraction (%s).', htmlspecialchars($installstatus))),
             };
         }
 
@@ -174,22 +174,11 @@ final class LanguagesNewPageRenderer
                 ]);
             }
         } else {
-            $this->pushPageMessage('errors', l10n('Can\'t connect to server.'), $page);
+            \Piwigo\Core\PageState::current()->addError(l10n('Can\'t connect to server.'));
         }
         $template->assign('ADMIN_PAGE_TITLE', l10n('Languages'));
         $template->assign('isWebmaster', (\Piwigo\Auth\AccessControl::isWebmaster()) ? 1 : 0);
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'languages');
-    }
-
-    /**
-     * @param array<string, mixed> $page
-     */
-    private function pushPageMessage(string $key, string $message, array &$page): void
-    {
-        $list = $page[$key] ?? [];
-        $list = is_array($list) ? $list : [];
-        $list[] = $message;
-        $page[$key] = $list;
     }
 }

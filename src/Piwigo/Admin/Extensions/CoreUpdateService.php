@@ -247,9 +247,6 @@ final readonly class CoreUpdateService
         global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
-        $page['infos'] = is_array($page['infos'] ?? null) ? $page['infos'] : [];
-
         $dataLocationRaw = \Piwigo\Config\Config::dataLocation();
         $dataLocation = $dataLocationRaw;
 
@@ -270,7 +267,7 @@ final readonly class CoreUpdateService
             $obsoleteList = PHPWG_ROOT_PATH . 'install/obsolete.list';
         }
 
-        if ($page['errors'] !== []) {
+        if (\Piwigo\Core\PageState::current()->hasErrors()) {
             return;
         }
 
@@ -310,14 +307,14 @@ final readonly class CoreUpdateService
         }
 
         if (! (bool) @filesize($filename)) {
-            $page['errors'][] = l10n('Piwigo cannot retrieve upgrade file from server');
+            \Piwigo\Core\PageState::current()->addError(l10n('Piwigo cannot retrieve upgrade file from server'));
             return;
         }
 
         $result = $this->zipExtractor->extract($filename, PHPWG_ROOT_PATH, $removePath, 0755);
         if ($result === null) {
             FilesystemHelper::deltree(PHPWG_ROOT_PATH . $dataLocation . 'update');
-            $page['errors'][] = l10n('An error has occured during upgrade.');
+            \Piwigo\Core\PageState::current()->addError(l10n('An error has occured during upgrade.'));
             return;
         }
 
@@ -343,10 +340,10 @@ final readonly class CoreUpdateService
         if ($error !== '') {
             file_put_contents(PHPWG_ROOT_PATH . $dataLocation . 'update/log_error.txt', $error);
 
-            $page['errors'][] = l10n(
+            \Piwigo\Core\PageState::current()->addError(l10n(
                 'An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href="%s">Click here to show log error</a>.',
                 get_root_url() . $dataLocation . 'update/log_error.txt'
-            );
+            ));
             return;
         }
 
@@ -366,8 +363,8 @@ final readonly class CoreUpdateService
             $template->delete_compiled_templates();
             \Piwigo\Config\ConfigDb::confDeleteParam('fs_quick_check_last_check');
 
-            $page['infos'][] = l10n('Update Complete');
-            $page['infos'][] = $upgradeTo;
+            \Piwigo\Core\PageState::current()->addInfo(l10n('Update Complete'));
+            \Piwigo\Core\PageState::current()->addInfo($upgradeTo);
             $page['updated_version'] = $upgradeTo;
             $step = -1;
         } else {

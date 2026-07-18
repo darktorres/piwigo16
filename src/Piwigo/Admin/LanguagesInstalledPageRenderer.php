@@ -48,15 +48,7 @@ final class LanguagesInstalledPageRenderer
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
-            // include/common.inc.php seeds $page['warnings'] as [] -- always an
-            // array; defensively re-initialized here in case that invariant is
-            // ever broken by a prior include.
-            $page_warnings = $page['warnings'] ?? [];
-            if (! is_array($page_warnings)) {
-                $page_warnings = [];
-            }
-            $page_warnings[] = str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'));
-            $page['warnings'] = $page_warnings;
+            \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
         }
 
         $template->set_filenames([
@@ -98,7 +90,7 @@ final class LanguagesInstalledPageRenderer
             if (is_string($action) and is_string($language_id)) {
                 $fs_language_entry = $fs_languages[$language_id] ?? null;
                 $action_errors = $extension_lifecycle->performAction(ExtensionType::Language, $action, $language_id, $fs_language_entry);
-                $page['errors'] = $action_errors;
+                \Piwigo\Core\PageState::current()->errors = array_values(array_filter($action_errors, is_string(...)));
 
                 if ($action_errors === []) {
                     redirect($base_url);

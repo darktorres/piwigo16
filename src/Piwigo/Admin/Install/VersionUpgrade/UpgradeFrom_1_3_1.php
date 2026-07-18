@@ -43,10 +43,6 @@ final class UpgradeFrom_1_3_1 implements VersionUpgradeInterface
          * @var string
          */
         global $prefixeTable;
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
 
         // save data before deletion
         $query = '
@@ -599,8 +595,8 @@ UPDATE ' . Tables::categories() . '
         DatabaseConfigChanges::push('define(\'PHPWG_INSTALLED\', true);');
 
         // Send infos
-        $page['infos'] = array_merge(
-            $page['infos'],
+        \Piwigo\Core\PageState::current()->infos = array_merge(
+            \Piwigo\Core\PageState::current()->infos,
             [
                 l10n('All sub-albums of private albums become private'),
                 l10n('User permissions and group permissions have been erased'),

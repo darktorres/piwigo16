@@ -45,12 +45,7 @@ final class ThemesInstalledPageRenderer
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
-            $page_warnings = $page['warnings'] ?? [];
-            if (! is_array($page_warnings)) {
-                $page_warnings = [];
-            }
-            $page_warnings[] = str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'));
-            $page['warnings'] = $page_warnings;
+            \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
         }
 
         // admin.php always populates $page['page'] with a string (either the
@@ -75,7 +70,7 @@ final class ThemesInstalledPageRenderer
 
             $fs_theme_entry = $extension_scanner->scan(ExtensionType::Theme)[$_GET['theme']] ?? null;
             $action_errors = $extension_lifecycle->performAction(ExtensionType::Theme, $_GET['action'], $_GET['theme'], $fs_theme_entry);
-            $page['errors'] = $action_errors;
+            \Piwigo\Core\PageState::current()->errors = array_values(array_filter($action_errors, is_string(...)));
 
             if ($action_errors === []) {
                 if ($_GET['action'] === 'activate' or $_GET['action'] === 'deactivate') {

@@ -64,9 +64,6 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
 
     private MaintenanceActionDispatcher $dispatcher;
 
-    /** @var array<string, mixed> */
-    private array $page;
-
     #[\Override]
     protected function setUp(): void
     {
@@ -85,18 +82,6 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
         $this->dispatcher = new MaintenanceActionDispatcher();
-
-        // dispatch() reads/writes these via `global`; a fresh array each
-        // test avoids leaking $page['infos']/errors state across tests.
-        $this->page = [];
-        $GLOBALS['page'] = &$this->page;
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        unset($GLOBALS['page']);
-        parent::tearDown();
     }
 
     public function test_search_purges_history_and_assigns_the_real_info_message(): void
@@ -114,10 +99,9 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         // batch carried forward unchanged (see MaintenanceSubController's
         // own docblock): this message must be "Purge search history", not
         // a copy-paste of the 'c13y' case's "Reinitialize check integrity".
-        $infos = is_array($this->page['infos'] ?? null) ? $this->page['infos'] : [];
         self::assertContains(
             'Purge search history : action successfully performed.',
-            $infos
+            \Piwigo\Core\PageState::current()->infos
         );
     }
 

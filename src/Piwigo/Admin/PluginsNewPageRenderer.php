@@ -64,7 +64,7 @@ final class PluginsNewPageRenderer
             and is_string($_GET['revision']) and is_string($_GET['extension'])
         ) {
             if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
-                $this->pushPageMessage('errors', l10n('Webmaster status is required.'), $page);
+                \Piwigo\Core\PageState::current()->addError(l10n('Webmaster status is required.'));
             } else {
                 new \Piwigo\Csrf\CsrfService()
                     ->checkOrFail(new \Piwigo\Html\HtmlService());
@@ -87,8 +87,8 @@ final class PluginsNewPageRenderer
                     // installed plugin and click on the activation switch.
                     $activate_url = get_root_url() . 'admin.php?page=plugins&amp;filter=deactivated';
 
-                    $this->pushPageMessage('infos', l10n('Plugin has been successfully copied'), $page);
-                    $this->pushPageMessage('infos', '<a href="' . $activate_url . '">' . l10n('Activate it now') . '</a>', $page);
+                    \Piwigo\Core\PageState::current()->addInfo(l10n('Plugin has been successfully copied'));
+                    \Piwigo\Core\PageState::current()->addInfo('<a href="' . $activate_url . '">' . l10n('Activate it now') . '</a>');
 
                     $installed_plugin_id = $_GET['plugin_id'] ?? null;
                     $installed_fs_plugin = is_string($installed_plugin_id) ? ($extension_scanner->scan(ExtensionType::Plugin)[$installed_plugin_id] ?? null) : null;
@@ -101,22 +101,22 @@ final class PluginsNewPageRenderer
                     break;
 
                 case 'temp_path_error':
-                    $this->pushPageMessage('errors', l10n('Can\'t create temporary file.'), $page);
+                    \Piwigo\Core\PageState::current()->addError(l10n('Can\'t create temporary file.'));
                     break;
 
                 case 'dl_archive_error':
-                    $this->pushPageMessage('errors', l10n('Can\'t download archive.'), $page);
+                    \Piwigo\Core\PageState::current()->addError(l10n('Can\'t download archive.'));
                     break;
 
                 case 'archive_error':
-                    $this->pushPageMessage('errors', l10n('Can\'t read or extract archive.'), $page);
+                    \Piwigo\Core\PageState::current()->addError(l10n('Can\'t read or extract archive.'));
                     break;
 
                 default:
                     $installstatus_raw = $_GET['installstatus'];
                     $installstatus_str = is_scalar($installstatus_raw) ? (string) $installstatus_raw : '';
-                    $this->pushPageMessage('errors', l10n('An error occured during extraction (%s).', htmlspecialchars($installstatus_str)), $page);
-                    $this->pushPageMessage('errors', l10n('Please check "plugins" folder and sub-folders permissions (CHMOD).'), $page);
+                    \Piwigo\Core\PageState::current()->addError(l10n('An error occured during extraction (%s).', htmlspecialchars($installstatus_str)));
+                    \Piwigo\Core\PageState::current()->addError(l10n('Please check "plugins" folder and sub-folders permissions (CHMOD).'));
             }
         }
 
@@ -262,7 +262,7 @@ final class PluginsNewPageRenderer
             }
 
         } else {
-            $this->pushPageMessage('errors', l10n('Can\'t connect to server.'), $page);
+            \Piwigo\Core\PageState::current()->addError(l10n('Can\'t connect to server.'));
         }
 
         if (! $beta_test and (bool) preg_match('/(beta|RC)/', AppInfo::VERSION)) {
@@ -271,16 +271,5 @@ final class PluginsNewPageRenderer
         $template->assign('ADMIN_PAGE_TITLE', l10n('Plugins'));
         $template->assign('BETA_TEST', $beta_test);
         $template->assign_var_from_handle('ADMIN_CONTENT', 'plugins');
-    }
-
-    /**
-     * @param array<string, mixed> $page
-     */
-    private function pushPageMessage(string $key, string $message, array &$page): void
-    {
-        $list = $page[$key] ?? [];
-        $list = is_array($list) ? $list : [];
-        $list[] = $message;
-        $page[$key] = $list;
     }
 }

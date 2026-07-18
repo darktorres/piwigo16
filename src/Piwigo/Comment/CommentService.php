@@ -375,11 +375,6 @@ SELECT COUNT(DISTINCT(com.id))
      */
     public function updateComment(array $comment, string $postKey): string
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
-
         $username = \Piwigo\Users\CurrentUser::get()->username;
 
         $imageIdRaw = is_scalar($comment['image_id'] ?? null) ? (string) $comment['image_id'] : '';
@@ -415,11 +410,7 @@ SELECT COUNT(DISTINCT(com.id))
 
             $comment['website_url'] = $websiteUrl;
             if (! \Piwigo\Validation\InputValidator::checkUrlFormat($websiteUrl)) {
-                if (! is_array($page['errors'] ?? null)) {
-                    $page['errors'] = [];
-                }
-
-                $page['errors'][] = l10n('Your website URL is invalid');
+                \Piwigo\Core\PageState::current()->addError(l10n('Your website URL is invalid'));
                 $commentAction = 'reject';
             }
         }

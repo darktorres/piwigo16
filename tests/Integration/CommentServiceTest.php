@@ -109,7 +109,7 @@ namespace Piwigo\Tests\Integration {
             Config::override('email_admin_on_comment_edition', false);
             Config::override('email_admin_on_comment_deletion', false);
             CurrentUser::set(User::fromUserArray(['id' => 1, 'status' => 'normal', 'username' => 'fixture_admin', 'email' => 'fixture_admin@example.test']));
-            $GLOBALS['page'] = [];
+            \Piwigo\Core\PageState::reset();
             $_POST['cr'] = [];
 
             $this->conn = DbConnection::build();
@@ -404,12 +404,7 @@ namespace Piwigo\Tests\Integration {
          */
         private function pageErrors(): array
         {
-            /** @var array<string, mixed> $page */
-            $page = $GLOBALS['page'];
-            /** @var list<string> $errors */
-            $errors = $page['errors'] ?? [];
-
-            return $errors;
+            return \Piwigo\Core\PageState::current()->errors;
         }
 
         private function insertedId(mixed $comm): int

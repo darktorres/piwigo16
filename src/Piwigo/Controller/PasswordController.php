@@ -32,17 +32,23 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class PasswordController implements ControllerInterface
 {
+    /**
+     * Field-keyed, controller-local -- read by specific key
+     * ('password_page_error'/'password_form_error'/'login_page_error') in
+     * password.tpl, a different shape than PageState::$errors' plain
+     * list<string>. Shared across the private handler methods below via
+     * this property since they're all called from the same __invoke().
+     *
+     * @var array<string, mixed>
+     */
+    private array $errors = [];
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
         /** @var array<string, mixed> $page */
         global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
-
-        // $page['infos'] is always initialized to an array by
-        // common.inc.php, but that isn't visible across the include()
-        // boundary -- narrow it once here so every append below type-checks.
-        $page['infos'] = is_array($page['infos'] ?? null) ? $page['infos'] : [];
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Free);
 
@@ -59,14 +65,14 @@ final class PasswordController implements ControllerInterface
 
             if ($action_param === 'lost') {
                 if ($this->processVerificationCode()) {
-                    $page['infos'][] = l10n('If your account exists, a verification code has been sent to your email address.');
+                    \Piwigo\Core\PageState::current()->addInfo(l10n('If your account exists, a verification code has been sent to your email address.'));
                     $page['action'] = 'lost_code';
                 }
             }
 
             if ($action_param === 'lost_code') {
                 if ($this->processPasswordRequest()) {
-                    $page['infos'][] = l10n('Verification successful! You can now choose a new password.');
+                    \Piwigo\Core\PageState::current()->addInfo(l10n('Verification successful! You can now choose a new password.'));
                     $page['action'] = 'reset';
                 }
             }
@@ -132,7 +138,8 @@ final class PasswordController implements ControllerInterface
             $page['action'] = 'lost_code';
         }
 
-        $body = LegacyRenderCapture::capture(static function () use ($first_login): void {
+        $formErrors = $this->errors;
+        $body = LegacyRenderCapture::capture(static function () use ($first_login, $formErrors): void {
             /**
              * @var array<string, mixed>
              */
@@ -219,6 +226,8 @@ final class PasswordController implements ControllerInterface
             trigger_notify('loc_end_password');
             new HtmlService()
                 ->flushPageMessages();
+            new HtmlService()
+                ->flushKeyedErrors($formErrors);
             $template->pparse('password');
             \Piwigo\Bootstrap\PageTail::render();
         });
@@ -227,18 +236,11 @@ final class PasswordController implements ControllerInterface
     }
 
     /**
-     * checks the validity of input parameters, fills $page['errors'] and
-     * $page['infos'] and send an email with the verification code
+     * checks the validity of input parameters, fills $this->errors and
+     * PageState's infos, and sends an email with the verification code
      */
     private function processVerificationCode(): bool
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
-
-        $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
-
         if (isset($_SESSION['reset_password_code'])) {
             return true;
         }
@@ -247,7 +249,7 @@ final class PasswordController implements ControllerInterface
         $username_or_email_raw = $_POST['username_or_email'] ?? '';
         $username_or_email = is_string($username_or_email_raw) ? trim($username_or_email_raw) : '';
         if ($username_or_email === '') {
-            $page['errors']['password_form_error'] = l10n('Invalid username or email');
+            $this->errors['password_form_error'] = l10n('Invalid username or email');
             return false;
         }
 
@@ -279,7 +281,7 @@ final class PasswordController implements ControllerInterface
             // consider theses users has sensible for username/email
             // enumeration
             if (\Piwigo\Auth\AccessControl::isAGuest($status) or \Piwigo\Auth\AccessControl::isGeneric($status)) {
-                $page['errors']['password_form_error'] = l10n('Password reset is not allowed for this user');
+                $this->errors['password_form_error'] = l10n('Password reset is not allowed for this user');
                 return false;
             }
 
@@ -290,7 +292,7 @@ final class PasswordController implements ControllerInterface
                 and isset($preferences['reset_password_forbidden_until'])
                 and $preferences['reset_password_forbidden_until'] > time()
             ) {
-                $page['errors']['password_form_error'] = l10n('Too many attempts, please try later..');
+                $this->errors['password_form_error'] = l10n('Too many attempts, please try later..');
                 return false;
             }
         }
@@ -330,21 +332,18 @@ final class PasswordController implements ControllerInterface
     }
 
     /**
-     * checks the validity of input parameters, fills $page['errors'] and
-     * $page['infos']
+     * checks the validity of input parameters, fills $this->errors
      */
     private function processPasswordRequest(): bool
     {
         /**
          * @var array<string, mixed>
          */
-        global $page;
+        global $user;
         /**
          * @var array<string, mixed>
          */
-        global $user;
-
-        $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
+        global $page;
 
         $state = $_SESSION['reset_password_code'] ?? null;
         if (! is_array($state)) {
@@ -359,7 +358,7 @@ final class PasswordController implements ControllerInterface
         // check expired
         if (time() > $created_at + $ttl) {
             unset($_SESSION['reset_password_code']);
-            $page['errors']['password_form_error'] = l10n('Code expired');
+            $this->errors['password_form_error'] = l10n('Code expired');
             return false;
         }
 
@@ -409,14 +408,14 @@ final class PasswordController implements ControllerInterface
 
                     new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('user', (int) $user_id_raw, 'reset_password_failure_too_many');
                 }
-                $page['errors']['login_page_error'] = l10n('Too many attempts, please try later..');
+                $this->errors['login_page_error'] = l10n('Too many attempts, please try later..');
                 return false;
             }
 
             if ($has_valid_user_id) {
                 new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('user', (int) $user_id_raw, 'reset_password_failure_code');
             }
-            $page['errors']['password_form_error'] = l10n('Invalid verification code');
+            $this->errors['password_form_error'] = l10n('Invalid verification code');
             return false;
         }
 
@@ -424,7 +423,7 @@ final class PasswordController implements ControllerInterface
         unset($_SESSION['reset_password_code']);
 
         if (! $has_valid_user_id) {
-            $page['errors']['password_form_error'] = l10n('Invalid verification code');
+            $this->errors['password_form_error'] = l10n('Invalid verification code');
             return false;
         }
         $user_id = (int) $user_id_raw;
@@ -454,7 +453,7 @@ final class PasswordController implements ControllerInterface
         // fallback check: don't send mail when user is guest, generic or
         // doesn't have email
         if (\Piwigo\Auth\AccessControl::isAGuest($status) || \Piwigo\Auth\AccessControl::isGeneric($status) || $has_no_email) {
-            $page['errors']['password_form_error'] = l10n('Password reset is not allowed for this user');
+            $this->errors['password_form_error'] = l10n('Password reset is not allowed for this user');
             return false;
         }
 
@@ -469,14 +468,9 @@ final class PasswordController implements ControllerInterface
      */
     private function checkPasswordResetKey(mixed $reset_key): mixed
     {
-        /** @var array<string, mixed> $page */
-        global $page;
-
-        $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
-
         $key = is_string($reset_key) ? $reset_key : '';
         if (! (bool) preg_match('/^[a-z0-9]{20}$/i', $key)) {
-            $page['errors']['password_page_error'] = l10n('Invalid key');
+            $this->errors['password_page_error'] = l10n('Invalid key');
             return false;
         }
 
@@ -499,7 +493,7 @@ SELECT
             if (new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build()))->verify($key, $activation_key)) {
                 $status = $row['status'] ?? '';
                 if (\Piwigo\Auth\AccessControl::isAGuest($status) or \Piwigo\Auth\AccessControl::isGeneric($status)) {
-                    $page['errors']['password_page_error'] = l10n('Password reset is not allowed for this user');
+                    $this->errors['password_page_error'] = l10n('Password reset is not allowed for this user');
                     return false;
                 }
 
@@ -509,7 +503,7 @@ SELECT
         }
 
         if (! is_numeric($user_id) || (int) $user_id === 0) {
-            $page['errors']['password_page_error'] = l10n('Invalid key');
+            $this->errors['password_page_error'] = l10n('Invalid key');
             return false;
         }
 
@@ -518,25 +512,17 @@ SELECT
 
     /**
      * checks the passwords, checks that user is allowed to reset his
-     * password, update password, fills $page['errors'] and $page['infos'].
+     * password, update password, fills $this->errors and PageState's infos.
      */
     private function resetPassword(): bool
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
-
-        $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
-        $page['infos'] = is_array($page['infos'] ?? null) ? $page['infos'] : [];
-
         $new_password_raw = $_POST['use_new_pwd'] ?? '';
         $new_password = is_string($new_password_raw) ? $new_password_raw : '';
         $password_conf_raw = $_POST['passwordConf'] ?? '';
         $password_conf = is_string($password_conf_raw) ? $password_conf_raw : '';
 
         if ($new_password !== $password_conf) {
-            $page['errors']['password_form_error'] = l10n('The passwords do not match');
+            $this->errors['password_form_error'] = l10n('The passwords do not match');
             return false;
         }
 
@@ -544,7 +530,7 @@ SELECT
         $user_id = (bool) $reset_password_key_result ? $reset_password_key_result : $this->resetPasswordCode();
 
         if (! is_numeric($user_id)) {
-            $page['errors']['password_form_error'] = l10n('Invalid key or code');
+            $this->errors['password_form_error'] = l10n('Invalid key or code');
             return false;
         }
 
@@ -594,8 +580,8 @@ SELECT
 
         new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build()))->record('user', (int) $user_id, 'reset_password_success');
 
-        $page['infos'][] = l10n('Your password has been reset');
-        $page['infos'][] = '<a href="' . get_root_url() . 'identification.php">' . l10n('Login') . '</a>';
+        \Piwigo\Core\PageState::current()->addInfo(l10n('Your password has been reset'));
+        \Piwigo\Core\PageState::current()->addInfo('<a href="' . get_root_url() . 'identification.php">' . l10n('Login') . '</a>');
 
         return true;
     }

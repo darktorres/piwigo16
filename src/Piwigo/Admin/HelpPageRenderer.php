@@ -14,8 +14,6 @@ final class HelpPageRenderer
 {
     public function render(): void
     {
-        /** @var array<string, mixed> $page */
-        global $page;
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
@@ -51,22 +49,18 @@ final class HelpPageRenderer
             ]
         );
 
-        if (! is_array($page['messages'] ?? null)) {
-            $page['messages'] = [];
-        }
-
         $user_language = \Piwigo\Users\CurrentUser::get()->language;
         $language_prefix = substr($user_language, 0, 3);
         if ($language_prefix === 'en_') {
-            $page['messages'][] = sprintf(
+            \Piwigo\Core\PageState::current()->addMessage(sprintf(
                 'Need help to use Piwigo? <a href="%s" target="_blank">Check the online documentation</a> !',
                 'https://upstream.example.invalid/help/'
-            );
+            ));
         } elseif ($language_prefix === 'fr_') {
-            $page['messages'][] = sprintf(
+            \Piwigo\Core\PageState::current()->addMessage(sprintf(
                 'Besoin d\'aide pour utiliser Piwigo ? Consultez la <a href="%s" target="_blank">documentation en ligne</a> !',
                 'https://upstream.example.invalid/help/fr/'
-            );
+            ));
         }
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'help');

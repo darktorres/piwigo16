@@ -80,9 +80,9 @@ final class PageHeaderRenderer
 
                 'SHOW_MOBILE_APP_BANNER' => $show_mobile_app_banner,
 
-                'BODY_CLASSES' => $page['body_classes'],
+                'BODY_CLASSES' => \Piwigo\Core\PageState::current()->bodyClasses,
 
-                'BODY_DATA' => json_encode($page['body_data']),
+                'BODY_DATA' => json_encode(\Piwigo\Core\PageState::current()->bodyData),
             ]
         );
 

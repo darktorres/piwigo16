@@ -15,9 +15,10 @@ use Piwigo\Db\MysqliDb;
 use Piwigo\Db\Tables;
 
 /**
- * Former install/db/110-database.php (P23 sub-batch 8g-2). $page is the
- * true global (its isset() bootstrap guard is preserved verbatim); error
- * lines are both pushed onto $page['errors'] and echoed, as before.
+ * Former install/db/110-database.php (P23 sub-batch 8g-2). Error lines are
+ * both pushed onto PageState (safe even when this patch runs outside an
+ * HTTP request -- PageState::current() always returns a usable instance)
+ * and echoed, as before.
  */
 final class Patch110 implements DbPatchInterface
 {
@@ -40,18 +41,6 @@ final class Patch110 implements DbPatchInterface
          * @var array<string, mixed>
          */
         global $conf;
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
-
-        if (! isset($page)) {
-            $page = [];
-        }
-
-        if (! isset($page['errors'])) {
-            $page['errors'] = [];
-        }
 
         $query = '
 SELECT
@@ -78,7 +67,7 @@ SELECT
                 if ($config_file_contents === false) {
                     $error = 'Cannot load ' . $local_conf . ', add by hand: ' . $conf_line;
 
-                    array_push($page['errors'], $error);
+                    \Piwigo\Core\PageState::current()->addError($error);
                     echo $error;
                 } else {
                     $php_end_tag = strrpos($config_file_contents, '?>');
@@ -99,7 +88,7 @@ SELECT
                 if (! @file_put_contents($local_conf, $config_file_contents_new)) {
                     $error = 'Cannot write into local configuration file ' . $local_conf . ', add by hand: ' . $conf_line;
 
-                    array_push($page['errors'], $error);
+                    \Piwigo\Core\PageState::current()->addError($error);
                     echo $error;
                 }
             }

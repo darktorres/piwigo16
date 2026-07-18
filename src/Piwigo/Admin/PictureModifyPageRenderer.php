@@ -136,10 +136,7 @@ SELECT id
                 ->checkOrFail(new HtmlService());
 
             new MetadataService(new MetadataRepository(DbConnection::build()))->syncMetadata([$image_id]);
-            if (! is_array($page['infos'] ?? null)) {
-                $page['infos'] = [];
-            }
-            $page['infos'][] = l10n('Metadata synchronized from file');
+            \Piwigo\Core\PageState::current()->addInfo(l10n('Metadata synchronized from file'));
         }
 
         // --------------------------------------------------------- update informations

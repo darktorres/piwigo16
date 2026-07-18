@@ -699,17 +699,6 @@ INSERT ' . $ignore . ' INTO ' . self::protectColumnName($table_name) . '
          * @var string
          */
         global $prefixeTable;
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
-
-        // $page['infos']/$page['errors'] are always initialized to arrays by
-        // common.inc.php (see the PAGE default there), but that isn't visible
-        // from this function's own scope -- narrow it once here so the
-        // $page['infos'][]/$page['errors'][] appends below type-check.
-        $page['infos'] = is_array($page['infos'] ?? null) ? $page['infos'] : [];
-        $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
 
         $all_tables = [];
 
@@ -746,9 +735,9 @@ INSERT ' . $ignore . ' INTO ' . self::protectColumnName($table_name) . '
         $query = 'OPTIMIZE TABLE ' . implode(', ', $all_tables);
         $mysqli_rc = ((bool) $mysqli_rc) && ((bool) self::query($query));
         if ($mysqli_rc) {
-            $page['infos'][] = l10n('All optimizations have been successfully completed.');
+            \Piwigo\Core\PageState::current()->addInfo(l10n('All optimizations have been successfully completed.'));
         } else {
-            $page['errors'][] = l10n('Optimizations have been completed with some errors.');
+            \Piwigo\Core\PageState::current()->addError(l10n('Optimizations have been completed with some errors.'));
         }
     }
 

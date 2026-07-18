@@ -186,15 +186,6 @@ class c13y_internal
          * @var array<string, mixed>
          */
         global $conf;
-        /**
-         * @var array<string, mixed>
-         */
-        global $page;
-
-        // $page['infos'] is always initialized to an array by common.inc.php,
-        // but that isn't visible across the include() boundary -- narrow it
-        // once here so every $page['infos'][] = ... append below type-checks.
-        $page['infos'] = is_array($page['infos'] ?? null) ? $page['infos'] : [];
 
         // guest_id/default_user_id/webmaster_id are always scalar (raw DB
         // primary keys or config defaults, see include/config_default.inc.php).
@@ -241,7 +232,7 @@ class c13y_internal
 
                         new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->createUserInfos($id);
 
-                        $page['infos'][] = sprintf(l10n('User "%s" created with "%s" like password'), $name, $password);
+                        \Piwigo\Core\PageState::current()->addInfo(sprintf(l10n('User "%s" created with "%s" like password'), $name, $password));
 
                         $result = true;
                     }
@@ -271,7 +262,7 @@ class c13y_internal
                             $updates
                         );
 
-                        $page['infos'][] = sprintf(l10n('Status of user "%s" updated'), new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getUsername($id));
+                        \Piwigo\Core\PageState::current()->addInfo(sprintf(l10n('Status of user "%s" updated'), new \Piwigo\Users\UserService(new \Piwigo\Users\UserRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Group\GroupRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->getUsername($id)));
 
                         $result = true;
                     }

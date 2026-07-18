@@ -1511,16 +1511,6 @@ final readonly class CategoryService
      */
     public function moveCategories(array $categoryIds, ActivityLoggerInterface $activityLogger, int $newParent = -1): void
     {
-        /** @var array<string, mixed> $page */
-        global $page;
-
-        // $page['errors']/$page['infos'] are always initialized to an array by
-        // common.inc.php, but that isn't visible across this method's own
-        // scope boundary -- narrow them once here so the appends below
-        // type-check, matching the original free function's own comment.
-        $page['errors'] = is_array($page['errors'] ?? null) ? $page['errors'] : [];
-        $page['infos'] = is_array($page['infos'] ?? null) ? $page['infos'] : [];
-
         if (count($categoryIds) === 0) {
             return;
         }
@@ -1554,7 +1544,7 @@ final readonly class CategoryService
                 // technically, you can't move a category with uppercats 12,125,13,14
                 // into a new parent category with uppercats 12,125,13,14,24
                 if ((bool) preg_match('/^' . $category['uppercats'] . '(,|$)/', $newParentUppercats)) {
-                    $page['errors'][] = l10n('You cannot move an album in its own sub album');
+                    \Piwigo\Core\PageState::current()->addError(l10n('You cannot move an album in its own sub album'));
                     return;
                 }
             }
@@ -1576,11 +1566,11 @@ final readonly class CategoryService
             $this->setCatStatus(array_map(intval(...), array_keys($categories)), 'private');
         }
 
-        $page['infos'][] = l10n_dec(
+        \Piwigo\Core\PageState::current()->addInfo(l10n_dec(
             '%d album moved',
             '%d albums moved',
             count($categories)
-        );
+        ));
 
         $activityLogger->record('album', $categoryIds, 'move', [
             'parent' => $newParentSql,

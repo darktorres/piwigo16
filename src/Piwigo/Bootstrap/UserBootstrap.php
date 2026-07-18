@@ -6,6 +6,9 @@ namespace Piwigo\Bootstrap;
 
 use Piwigo\Auth\AuthRepository;
 use Piwigo\Auth\AuthService;
+use Piwigo\Auth\CookieService;
+use Piwigo\Auth\PasswordRepository;
+use Piwigo\Auth\PasswordService;
 use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\Logger;
 use Piwigo\Db\DbConnection;
@@ -49,7 +52,13 @@ final class UserBootstrap
         // global-scope contract).
         global $service;
 
-        $authService = new AuthService(new AuthRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService());
+        $authService = new AuthService(
+            new AuthRepository(DbConnection::build()),
+            new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())),
+            new HtmlService(),
+            new PasswordService(new PasswordRepository(DbConnection::build())),
+            new CookieService(),
+        );
 
         $guest_id_int = \Piwigo\Config\Config::guestId();
 
@@ -95,7 +104,7 @@ final class UserBootstrap
 
         // automatic login by authentication key
         if (isset($_GET['auth'])) {
-            new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->authKeyLogin($_GET['auth']);
+            new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())), new \Piwigo\Auth\CookieService())->authKeyLogin($_GET['auth']);
         }
 
         // HTTP_AUTHORIZATION api_key
@@ -110,7 +119,7 @@ final class UserBootstrap
             $auth_header = \Piwigo\Db\MysqliDb::realEscapeString($_SERVER['HTTP_X_PIWIGO_API']) ?? null;
 
             if ((bool) $auth_header) {
-                $authenticate = new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->authKeyLogin($auth_header, true);
+                $authenticate = new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())), new \Piwigo\Auth\CookieService())->authKeyLogin($auth_header, true);
                 if (! $authenticate) {
                     $service = \Piwigo\Ws\WsInitializer::init();
                     $service->sendResponse(new PwgError(401, 'Invalid api_key'));

@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Auth;
 
+use Piwigo\Core\Env;
 use Piwigo\Core\MailerInterface;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Session\SessionService;
 
 /**
@@ -26,6 +25,8 @@ final readonly class ApiKeyService
 {
     public function __construct(
         private MailerInterface $mailer,
+        private ApiKeyRepository $repo,
+        private PasswordService $passwordService,
     ) {}
 
     /**
@@ -38,33 +39,28 @@ final readonly class ApiKeyService
         $key_id = 'pkid-' . date('Ymd') . '-' . SessionService::get()->generateKey(20);
         $key_secret = SessionService::get()->generateKey(40);
 
-        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT NOW();'));
-        assert($row !== null);
-        [$dbnow] = $row;
-
-        $key = [
-            'auth_key' => $key_id,
-            'apikey_secret' => new PasswordService(new PasswordRepository(DbConnection::build()))->hash($key_secret),
-            'apikey_name' => $keyName,
-            'user_id' => $userId,
-            'created_on' => $dbnow,
-            'key_type' => 'api_key',
-        ];
+        $now = Env::now();
 
         $expiration = null;
         if (! empty($duration)) {
-            $query = '
-SELECT
-  ADDDATE(NOW(), INTERVAL ' . ($duration * 60 * 60 * 24) . ' SECOND)
-;';
-            $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-            assert($row !== null);
-            [$expiration] = $row;
-            $key['duration'] = $duration;
+            $expiration = (clone $now)->modify('+' . ($duration * 60 * 60 * 24) . ' seconds')->format('Y-m-d H:i:s');
         }
-        $key['expired_on'] = $expiration;
 
-        \Piwigo\Db\MysqliDb::singleInsert(Tables::userAuthKeys(), $key);
+        $key = [
+            'auth_key' => $key_id,
+            'apikey_secret' => $this->passwordService->hash($key_secret),
+            'apikey_name' => $keyName,
+            'user_id' => $userId,
+            'created_on' => $now->format('Y-m-d H:i:s'),
+            // matches the original's own `if (! empty($duration))` gate:
+            // a falsy $duration (null or 0) leaves the column at its NULL
+            // default rather than storing a literal 0.
+            'duration' => ($duration === null || $duration === 0) ? null : $duration,
+            'key_type' => 'api_key',
+            'expired_on' => $expiration,
+        ];
+
+        $this->repo->insert($key);
 
         $key['apikey_secret'] = $key_secret;
         return $key;
@@ -75,32 +71,11 @@ SELECT
      */
     public function revoke(int $userId, string $pkid): string|true
     {
-        $query = '
-SELECT
-  COUNT(*),
-  NOW()
-  FROM `' . Tables::userAuthKeys() . '`
-  WHERE auth_key = "' . $pkid . '"
-  AND user_id = ' . $userId . '
-;';
-
-        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-        assert($row !== null);
-        [$key, $now] = $row;
-        if ($key == 0) {
+        if ($this->repo->countByAuthKeyAndUser($pkid, $userId) === 0) {
             return l10n('API Key not found');
         }
 
-        \Piwigo\Db\MysqliDb::singleUpdate(
-            Tables::userAuthKeys(),
-            [
-                'revoked_on' => $now,
-            ],
-            [
-                'auth_key' => $pkid,
-                'user_id' => $userId,
-            ]
-        );
+        $this->repo->revoke($pkid, $userId, Env::now());
 
         return true;
     }
@@ -110,31 +85,11 @@ SELECT
      */
     public function edit(int $userId, string $pkid, ?string $apiName): string|true
     {
-        $query = '
-SELECT
-  COUNT(*)
-  FROM `' . Tables::userAuthKeys() . '`
-  WHERE auth_key = "' . $pkid . '"
-  AND user_id = ' . $userId . '
-;';
-
-        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-        assert($row !== null);
-        [$key] = $row;
-        if ($key == 0) {
+        if ($this->repo->countByAuthKeyAndUser($pkid, $userId) === 0) {
             return l10n('API Key not found');
         }
 
-        \Piwigo\Db\MysqliDb::singleUpdate(
-            Tables::userAuthKeys(),
-            [
-                'apikey_name' => $apiName,
-            ],
-            [
-                'auth_key' => $pkid,
-                'user_id' => $userId,
-            ]
-        );
+        $this->repo->updateName($pkid, $userId, $apiName);
 
         return true;
     }
@@ -145,37 +100,19 @@ SELECT
      */
     public function get(int $userId): false|array
     {
-        $query = '
-SELECT *
-  FROM `' . Tables::userAuthKeys() . '`
-  WHERE user_id = ' . $userId . '
-  AND key_type = "api_key"
-;';
-
-        // \Piwigo\Db\MysqliDb::query2Array() with no key_name/value_name always returns a
-        // sequential list (array<int, mixed>) -- see qsearch_get_images()'s
-        // comment in the (now-deleted) functions_search.inc.php for the
-        // general pattern; it's already a list, so no array_values()
-        // wrapper is needed.
-        $api_keys = \Piwigo\Db\MysqliDb::query2Array($query);
+        $api_keys = $this->repo->findByUser($userId);
         if (! (bool) $api_keys) {
             return false;
         }
 
-        $query = '
-SELECT
-  NOW()
-;';
-        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-        assert($row !== null);
-        [$now] = $row;
-        assert($now !== null);
+        $now = Env::now()->format('Y-m-d H:i:s');
 
         foreach ($api_keys as $i => $api_key) {
             $api_key['apikey_secret'] = str_repeat('*', 40);
             unset($api_key['auth_key_id'], $api_key['user_id'], $api_key['key_type']);
 
-            $api_key['apikey_name'] = stripslashes((string) $api_key['apikey_name']);
+            $apikey_name = $api_key['apikey_name'];
+            $api_key['apikey_name'] = stripslashes(is_string($apikey_name) ? $apikey_name : '');
 
             // extracted before any bool value is assigned into $api_key below
             // (e.g. 'is_expired'), which would otherwise widen every sibling
@@ -191,10 +128,13 @@ SELECT
             // also extracted early, for the same reason -- read again below,
             // after 'is_expired' has already widened $api_key's value type
             $revoked_on = $api_key['revoked_on'];
+            $revoked_on = is_string($revoked_on) ? $revoked_on : null;
 
+            $last_used_on = $api_key['last_used_on'];
+            $last_used_on = is_string($last_used_on) ? $last_used_on : null;
             $api_key['last_used_on_since'] =
-              (bool) $api_key['last_used_on']
-              ? \Piwigo\Core\DateHelper::timeSince($api_key['last_used_on'], 'day')
+              $last_used_on !== null
+              ? \Piwigo\Core\DateHelper::timeSince($last_used_on, 'day')
               : l10n('Never');
 
             $expired_on = \Piwigo\Core\DateHelper::str2DateTime($expired_on_raw);

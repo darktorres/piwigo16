@@ -139,7 +139,7 @@ final class RegisterController implements ControllerInterface
                 // would be a full account-takeover, not just an
                 // information leak. Both cases redirect identically.
                 if ($new_user_id !== null) {
-                    new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->logUser($new_user_id, false);
+                    new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())), new \Piwigo\Auth\CookieService())->logUser($new_user_id, false);
                 }
                 redirect(make_index_url());
             }

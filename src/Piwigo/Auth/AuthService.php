@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Auth;
 
 use Piwigo\Core\ActivityLoggerInterface;
+use Piwigo\Core\Env;
 use Piwigo\Core\HtmlRenderingInterface;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Session\SessionService;
 
 /**
@@ -37,6 +36,8 @@ final readonly class AuthService
         private AuthRepository $repo,
         private ActivityLoggerInterface $activityLogger,
         private HtmlRenderingInterface $htmlRenderer,
+        private PasswordService $passwordService,
+        private CookieService $cookieService,
     ) {}
 
     /**
@@ -146,8 +147,7 @@ final readonly class AuthService
                     $cookie,
                     [
                         'expires' => time() + $remember_me_length,
-                        'path' => new CookieService()
-                            ->cookiePath(),
+                        'path' => $this->cookieService->cookiePath(),
                         'domain' => (string) ini_get('session.cookie_domain'),
                         'secure' => (bool) ini_get('session.cookie_secure'),
                         'httponly' => (bool) ini_get('session.cookie_httponly'),
@@ -157,8 +157,7 @@ final readonly class AuthService
         } else { // make sure we clean any remember me ...
             setcookie($remember_me_name, '', [
                 'expires' => 0,
-                'path' => new CookieService()
-                    ->cookiePath(),
+                'path' => $this->cookieService->cookiePath(),
                 'domain' => (string) ini_get('session.cookie_domain'),
             ]);
         }
@@ -216,8 +215,7 @@ final readonly class AuthService
             }
             setcookie($remember_me_name, '', [
                 'expires' => 0,
-                'path' => new CookieService()
-                    ->cookiePath(),
+                'path' => $this->cookieService->cookiePath(),
                 'domain' => (string) ini_get('session.cookie_domain'),
             ]);
         }
@@ -275,8 +273,7 @@ final readonly class AuthService
         $remember_me_name = \Piwigo\Config\Config::rememberMeName();
         setcookie($remember_me_name, '', [
             'expires' => 0,
-            'path' => new CookieService()
-                ->cookiePath(),
+            'path' => $this->cookieService->cookiePath(),
             'domain' => (string) ini_get('session.cookie_domain'),
         ]);
     }
@@ -318,8 +315,7 @@ final readonly class AuthService
             assert(is_numeric($verify_user_id));
             $verify_user_id = (int) $verify_user_id;
         }
-        $password_verify = new PasswordService(new PasswordRepository(DbConnection::build()))
-            ->verify($password ?? '', $hash, $verify_user_id);
+        $password_verify = $this->passwordService->verify($password ?? '', $hash, $verify_user_id);
 
         // If the user was not found, is a guest, or the password is incorrect
         if (empty($user_found) || $user_found['status'] === 'guest' || ! $password_verify) {
@@ -395,33 +391,13 @@ final readonly class AuthService
         /** @var array<string, string> $user_fields */
         $user_fields = \Piwigo\Config\Config::userFields();
 
-        $usernameOrEmail = \Piwigo\Db\MysqliDb::realEscapeString($usernameOrEmail);
-
-        $query = '
-SELECT
-  ' . $user_fields['id'] . ' AS id,
-  ' . $user_fields['username'] . ' AS username,
-  ' . $user_fields['email'] . ' AS email,
-  ' . $user_fields['password'] . ' AS password,
-  status
-FROM ' . Tables::users() . ' AS u
-  LEFT JOIN ' . Tables::userInfos() . ' AS i
-    ON u.' . $user_fields['id'] . ' = i.user_id
-  WHERE ';
-
-        $where_username = $user_fields['username'] . ' = \'' . $usernameOrEmail . '\'';
-        $where_email = $user_fields['email'] . ' = \'' . $usernameOrEmail . '\'';
-
-        $user_by_username = \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query . $where_username));
-        $user = (bool) $user_by_username ? $user_by_username : \Piwigo\Db\MysqliDb::fetchAssoc(\Piwigo\Db\MysqliDb::query($query . $where_email));
-
-        if (! empty($user)) {
-            // The user may not exist in the user_infos table, so we consider it's a "normal" user by default
-            $user['status'] ??= 'normal';
-            return $user;
-        }
-
-        return null;
+        return $this->repo->findByUsernameOrEmail(
+            $usernameOrEmail,
+            $user_fields['id'],
+            $user_fields['username'],
+            $user_fields['email'],
+            $user_fields['password'],
+        );
     }
 
     /**
@@ -443,7 +419,7 @@ FROM ' . Tables::users() . ' AS u
             $fake_password = bin2hex(random_bytes(10));
             $_SESSION['fake_user_cache'] = [
                 'id' => null,
-                'password' => new PasswordService(new PasswordRepository(DbConnection::build()))->hash($fake_password),
+                'password' => $this->passwordService->hash($fake_password),
             ];
         }
 
@@ -505,29 +481,16 @@ FROM ' . Tables::users() . ' AS u
             return false;
         }
 
-        $query = '
-SELECT
-    *,
-    ' . $user_fields['username'] . ' AS username,
-    ' . $user_fields['email'] . ' AS email,
-    NOW() AS dbnow,
-    DATEDIFF(uak.expired_on, NOW()) AS days_left,
-    SUBDATE(NOW(), INTERVAL 48 HOUR) AS 48h_ago
-  FROM ' . Tables::userAuthKeys() . ' AS uak
-    JOIN ' . Tables::userInfos() . ' AS ui ON uak.user_id = ui.user_id
-    JOIN ' . Tables::users() . ' AS u ON u.' . $user_fields['id'] . ' = ui.user_id
-  WHERE auth_key = \'' . $authKey . '\'
-;';
-        $keys = \Piwigo\Db\MysqliDb::query2Array($query);
+        $key = $this->repo->findAuthKeyDetails($authKey, $user_fields['id'], $user_fields['username'], $user_fields['email']);
 
-        if (count($keys) == 0) {
+        if ($key === null) {
             return false;
         }
 
-        $key = $keys[0];
+        $now = Env::now();
 
         // is the key still valid?
-        if (strtotime((string) $key['expired_on']) < strtotime((string) $key['dbnow'])) {
+        if (strtotime($key['expired_on']) < $now->getTimestamp()) {
             \Piwigo\Core\PageState::current()->markAuthKeyInvalid();
             return false;
         }
@@ -541,48 +504,48 @@ SELECT
         if ($valid_key === 'api_key') {
             // check secret
             $apikey_secret = $key['apikey_secret'];
-            if (! is_string($apikey_secret) || ! new PasswordService(new PasswordRepository(DbConnection::build()))->verify($secret_key ?? '', $apikey_secret)) {
+            if ($apikey_secret === null || ! $this->passwordService->verify($secret_key ?? '', $apikey_secret)) {
                 return false;
             }
 
             // is the key is revoked?
-            if ($key['revoked_on'] != null) {
+            if ($key['revoked_on'] !== null) {
                 return false;
             }
 
-            // check if we need to notificate the user
-            $days_left = intval($key['days_left']);
+            // check if we need to notificate the user -- DATEDIFF() is a
+            // calendar-day (not 24h-period) difference, sign-aware; matched
+            // here via two date-only DateTimeImmutable instances rather
+            // than a raw timestamp subtraction.
+            $expiredOnDateOnly = new \DateTimeImmutable(substr($key['expired_on'], 0, 10));
+            $nowDateOnly = new \DateTimeImmutable($now->format('Y-m-d'));
+            $days_left = (int) $nowDateOnly->diff($expiredOnDateOnly)
+                ->format('%r%a');
+            $fortyEightHoursAgo = (clone $now)->modify('-48 hours');
             if (
                 $days_left <= 7 // the key expire in max 7 days
                 and ! empty($key['email']) // the user have an email
                 and (
                     $key['last_notified_on'] === null // we never send an email for this key
-                    or strtotime($key['last_notified_on']) < strtotime((string) $key['48h_ago']) // OR when the last email was sent more than 48 hours ago
+                    or strtotime($key['last_notified_on']) < $fortyEightHoursAgo->getTimestamp() // OR when the last email was sent more than 48 hours ago
                 )
             ) {
                 \Piwigo\Core\PageState::current()->setNotifyApiKeyExpiration([
                     'days_left' => $days_left,
-                    'dbnow' => $key['dbnow'],
+                    'dbnow' => $now->format('Y-m-d H:i:s'),
                     'auth_key' => $key['auth_key'],
                 ]);
             }
         }
 
         $key_user_id = $key['user_id'];
+        // user_id is a NOT NULL FK column, always a numeric string --
+        // narrows for logUser()'s own numeric-string docblock type.
         assert(is_numeric($key_user_id));
         $user['id'] = $key_user_id;
 
         // update last used key
-        \Piwigo\Db\MysqliDb::singleUpdate(
-            Tables::userAuthKeys(),
-            [
-                'last_used_on' => $key['dbnow'],
-            ],
-            [
-                'user_id' => $key_user_id,
-                'auth_key' => $key['auth_key'],
-            ],
-        );
+        $this->repo->touchAuthKeyLastUsed($key_user_id, $key['auth_key'], $now);
 
         // set the type of connection
         $_SESSION['connected_with'] = $valid_key;
@@ -598,8 +561,7 @@ SELECT
         trigger_notify('login_success', $key['username']);
 
         // to be registered in history table by HistoryService::logVisit()
-        $auth_key_id = $key['auth_key_id'];
-        \Piwigo\Core\PageState::current()->setAuthKeyId(is_numeric($auth_key_id) ? (int) $auth_key_id : null);
+        \Piwigo\Core\PageState::current()->setAuthKeyId((int) $key['auth_key_id']);
 
         return true;
     }
@@ -623,19 +585,11 @@ SELECT
 
         if (! isset($userStatus)) {
             // we have to find the user status
-            $query = '
-SELECT
-    status
-  FROM ' . Tables::userInfos() . '
-  WHERE user_id = ' . $userId . '
-;';
-            $user_infos = \Piwigo\Db\MysqliDb::query2Array($query);
+            $userStatus = $this->repo->findUserStatus($userId);
 
-            if (count($user_infos) == 0) {
+            if ($userStatus === null) {
                 return false;
             }
-
-            $userStatus = $user_infos[0]['status'];
         }
 
         if (! in_array($userStatus, ['normal', 'generic'])) {
@@ -644,30 +598,20 @@ SELECT
 
         $candidate = SessionService::get()->generateKey(30);
 
-        $query = '
-SELECT
-    COUNT(*),
-    NOW(),
-    ADDDATE(NOW(), INTERVAL ' . $auth_key_duration . ' SECOND)
-  FROM ' . Tables::userAuthKeys() . '
-  WHERE auth_key = \'' . $candidate . '\'
-;';
-        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-        assert($row !== null);
-        [$counter, $now, $expiration] = $row;
-        if ($counter == 0) {
+        if (! $this->repo->authKeyCandidateExists($candidate)) {
+            $now = Env::now();
+            $expiration = (clone $now)->modify('+' . $auth_key_duration . ' seconds');
+
             $key = [
                 'auth_key' => $candidate,
                 'user_id' => $userId,
-                'created_on' => $now,
+                'created_on' => $now->format('Y-m-d H:i:s'),
                 'duration' => $auth_key_duration,
-                'expired_on' => $expiration,
+                'expired_on' => $expiration->format('Y-m-d H:i:s'),
                 'key_type' => 'auth_key',
             ];
 
-            \Piwigo\Db\MysqliDb::singleInsert(Tables::userAuthKeys(), $key);
-
-            $key['auth_key_id'] = \Piwigo\Db\MysqliDb::insertId();
+            $key['auth_key_id'] = $this->repo->insertAuthKey($key);
 
             return $key;
         } else {
@@ -682,14 +626,7 @@ SELECT
      */
     public function deactivateUserAuthKeys(int $userId): void
     {
-        $query = '
-UPDATE ' . Tables::userAuthKeys() . '
-  SET expired_on = NOW()
-  WHERE user_id = ' . $userId . '
-    AND expired_on > NOW()
-    AND key_type = \'auth_key\'
-;';
-        \Piwigo\Db\MysqliDb::query($query);
+        $this->repo->deactivateAuthKeys($userId, Env::now());
     }
 
     /**
@@ -699,16 +636,7 @@ UPDATE ' . Tables::userAuthKeys() . '
      */
     public function deactivatePasswordResetKey(int $userId): void
     {
-        \Piwigo\Db\MysqliDb::singleUpdate(
-            Tables::userInfos(),
-            [
-                'activation_key' => null,
-                'activation_key_expire' => null,
-            ],
-            [
-                'user_id' => $userId,
-            ]
-        );
+        $this->repo->clearActivationKey($userId);
     }
 
     /**
@@ -729,20 +657,9 @@ UPDATE ' . Tables::userAuthKeys() . '
         ? \Piwigo\Config\Config::passwordActivationDuration()
         : \Piwigo\Config\Config::passwordResetDuration();
         $duration = is_numeric($duration) ? (int) $duration : 0;
-        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query('SELECT ADDDATE(NOW(), INTERVAL ' . $duration . ' SECOND)'));
-        assert($row !== null);
-        [$expire] = $row;
+        $expire = (clone Env::now())->modify('+' . $duration . ' seconds');
 
-        \Piwigo\Db\MysqliDb::singleUpdate(
-            Tables::userInfos(),
-            [
-                'activation_key' => new PasswordService(new PasswordRepository(DbConnection::build()))->hash($activation_key),
-                'activation_key_expire' => $expire,
-            ],
-            [
-                'user_id' => $userId,
-            ]
-        );
+        $this->repo->setActivationKey($userId, $this->passwordService->hash($activation_key), $expire);
 
         set_make_full_url();
 
@@ -771,31 +688,10 @@ UPDATE ' . Tables::userAuthKeys() . '
      */
     public function getUserLastVisitFromHistory(int $userId, bool $saveInUserInfos = false): ?string
     {
-        $last_visit = null;
-
-        $query = '
-SELECT
-    date,
-    time
-FROM ' . Tables::history() . '
-  WHERE user_id = ' . $userId . '
-  ORDER BY id DESC
-  LIMIT 1
-;';
-        $result = \Piwigo\Db\MysqliDb::query($query);
-        while ((bool) ($row = \Piwigo\Db\MysqliDb::fetchAssoc($result))) {
-            $last_visit = $row['date'] . ' ' . $row['time'];
-        }
+        $last_visit = $this->repo->findLastVisitFromHistory($userId);
 
         if ($saveInUserInfos) {
-            $query = '
-UPDATE ' . Tables::userInfos() . '
-  SET last_visit = ' . ($last_visit === null ? 'NULL' : "'" . $last_visit . "'") . ',
-      last_visit_from_history = \'true\',
-      lastmodified = lastmodified
-  WHERE user_id = ' . $userId . '
-';
-            \Piwigo\Db\MysqliDb::query($query);
+            $this->repo->saveLastVisitFromHistory($userId, $last_visit);
         }
 
         return $last_visit;
@@ -808,18 +704,7 @@ UPDATE ' . Tables::userInfos() . '
      */
     public function hasAlreadyLoggedIn(int $userId): bool
     {
-        $query = '
-SELECT COUNT(*)
-  FROM ' . Tables::activity() . '
-  WHERE action = \'login\' and performed_by = ' . $userId . '';
-
-        $row = \Piwigo\Db\MysqliDb::fetchRow(\Piwigo\Db\MysqliDb::query($query));
-        assert($row !== null);
-        [$logged_in] = $row;
-        if ($logged_in > 0) {
-            return false;
-        }
-        return true;
+        return $this->repo->countLoginActivity($userId) === 0;
     }
 
     /**

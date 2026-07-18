@@ -10,6 +10,9 @@ namespace Piwigo\Tests\Integration {
 
     use Piwigo\Auth\AuthRepository;
     use Piwigo\Auth\AuthService;
+    use Piwigo\Auth\CookieService;
+    use Piwigo\Auth\PasswordRepository;
+    use Piwigo\Auth\PasswordService;
     use Piwigo\Config\Config;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
@@ -53,7 +56,13 @@ namespace Piwigo\Tests\Integration {
             Config::override('user_fields', ['id' => 'id', 'username' => 'username', 'password' => 'password']);
             Config::override('secret_key', 'test-secret-key');
 
-            $this->service = new AuthService(new AuthRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService());
+            $this->service = new AuthService(
+                new AuthRepository(DbConnection::build()),
+                new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())),
+                new HtmlService(),
+                new PasswordService(new PasswordRepository(DbConnection::build())),
+                new CookieService(),
+            );
         }
 
         public function test_calculate_auto_login_key_returns_a_key_and_username_for_a_real_user(): void

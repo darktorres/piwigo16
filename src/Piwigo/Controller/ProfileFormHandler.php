@@ -166,7 +166,7 @@ final class ProfileFormHandler
                     $fields[] = $user_fields['password'];
                     $data[$user_fields['password']] = new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build()))->hash($new_pwd_for_update);
 
-                    new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->deactivateUserAuthKeys($user_id);
+                    new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())), new \Piwigo\Auth\CookieService())->deactivateUserAuthKeys($user_id);
                 }
 
                 // username is updated only if allowed
@@ -218,7 +218,7 @@ final class ProfileFormHandler
                 );
 
                 if ($mail_address !== $userdata['email']) {
-                    new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->deactivatePasswordResetKey($user_id);
+                    new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())), new \Piwigo\Auth\CookieService())->deactivatePasswordResetKey($user_id);
                 }
 
                 $activity_details_tables[] = 'users';

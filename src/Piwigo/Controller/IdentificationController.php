@@ -93,7 +93,7 @@ final class IdentificationController implements ControllerInterface
                 $remember_me_raw = $_POST['remember_me'] ?? null;
                 $remember_me = isset($_POST['remember_me']) && is_scalar($remember_me_raw) && (string) $remember_me_raw === '1';
 
-                if (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->tryLogUser($username, $password, $remember_me)) {
+                if (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())), new \Piwigo\Auth\CookieService())->tryLogUser($username, $password, $remember_me)) {
                     // security (level 2): force redirect within Piwigo. We
                     // redirect to absolute root url, including http(s)://,
                     // without the cookie path, concatenated with

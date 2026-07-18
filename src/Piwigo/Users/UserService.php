@@ -7,6 +7,7 @@ namespace Piwigo\Users;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AuthRepository;
 use Piwigo\Auth\AuthService;
+use Piwigo\Auth\CookieService;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Cache\UserCacheInvalidator;
@@ -1350,7 +1351,13 @@ SELECT
             ]
         );
 
-        $authService = new AuthService(new AuthRepository(DbConnection::build()), $this->activityLogger, $this->htmlRenderer);
+        $authService = new AuthService(
+            new AuthRepository(DbConnection::build()),
+            $this->activityLogger,
+            $this->htmlRenderer,
+            new PasswordService(new PasswordRepository(DbConnection::build())),
+            new CookieService(),
+        );
 
         if (isset($updates[$user_fields['password']])) {
             $authService->deactivateUserAuthKeys($user_ids[0]);

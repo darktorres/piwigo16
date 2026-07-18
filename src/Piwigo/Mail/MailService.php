@@ -609,7 +609,7 @@ SELECT
                 $uEmail = $u['email'] ?? null;
                 $uEmail = is_string($uEmail) ? $uEmail : '';
 
-                $authkey = new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->createUserAuthKey((int) $uUserId, $uStatus);
+                $authkey = new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())), new \Piwigo\Auth\CookieService())->createUserAuthKey((int) $uUserId, $uStatus);
 
                 $userTpl = $tpl;
 

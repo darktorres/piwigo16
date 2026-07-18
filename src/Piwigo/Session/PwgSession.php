@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Session;
 
-use Piwigo\Db\DbConnection;
-
 // see https://php.watch/versions/8.4/session_set_save_handler-alt-signature-deprecated
 class PwgSession implements \SessionHandlerInterface
 {
@@ -13,7 +11,7 @@ class PwgSession implements \SessionHandlerInterface
 
     public function __construct(?SessionService $service = null)
     {
-        $this->service = $service ?? new SessionService(new SessionRepository(DbConnection::build()));
+        $this->service = $service ?? SessionService::get();
     }
 
     #[\Override]

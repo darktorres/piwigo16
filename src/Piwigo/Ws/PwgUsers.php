@@ -14,9 +14,11 @@ namespace Piwigo\Ws;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\ApiKeyRepository;
 use Piwigo\Auth\ApiKeyService;
 use Piwigo\Auth\AuthRepository;
 use Piwigo\Auth\AuthService;
+use Piwigo\Auth\CookieService;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Core\DateHelper;
@@ -351,7 +353,7 @@ SELECT DISTINCT ';
                     $users[$cur_user_id]['last_visit'] = $last_visit;
 
                     if (! \Piwigo\Db\MysqliDb::getBoolean($cur_user['last_visit_from_history']) and empty($last_visit)) {
-                        $last_visit = new AuthService(new AuthRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())), new HtmlService())->getUserLastVisitFromHistory($cur_user_id, true);
+                        $last_visit = new AuthService(new AuthRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())), new HtmlService(), new PasswordService(new PasswordRepository(DbConnection::build())), new CookieService())->getUserLastVisitFromHistory($cur_user_id, true);
                         $users[$cur_user_id]['last_visit'] = $last_visit;
                     }
 
@@ -480,7 +482,7 @@ SELECT DISTINCT ';
             return new PwgError(403, 'Invalid security token');
         }
 
-        $authkey = new AuthService(new AuthRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())), new HtmlService())->createUserAuthKey($params['user_id']);
+        $authkey = new AuthService(new AuthRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())), new HtmlService(), new PasswordService(new PasswordRepository(DbConnection::build())), new CookieService())->createUserAuthKey($params['user_id']);
 
         if ($authkey === false) {
             return new PwgError(WsError::INVALID_PARAM, 'invalid user_id');
@@ -921,14 +923,14 @@ SELECT
             return new PwgError(403, 'You cannot perform this action');
         }
 
-        $first_login = new AuthService(new AuthRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())), new HtmlService())->hasAlreadyLoggedIn($params['user_id']);
+        $first_login = new AuthService(new AuthRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())), new HtmlService(), new PasswordService(new PasswordRepository(DbConnection::build())), new CookieService())->hasAlreadyLoggedIn($params['user_id']);
         $send_by_mail_response = null;
         $user_lost_language = is_string($user_lost['language']) ? $user_lost['language'] : self::userService()->getDefaultLanguage();
         $lang_to_use = $first_login ? self::userService()->getDefaultLanguage() : $user_lost_language;
 
         new MailService()
             ->switchLangTo($lang_to_use);
-        $generate_link = new AuthService(new AuthRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())), new HtmlService())->generatePasswordLink($params['user_id'], $first_login);
+        $generate_link = new AuthService(new AuthRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())), new HtmlService(), new PasswordService(new PasswordRepository(DbConnection::build())), new CookieService())->generatePasswordLink($params['user_id'], $first_login);
 
         $user_lost_email = is_string($user_lost['email']) ? $user_lost['email'] : null;
 
@@ -1014,7 +1016,7 @@ SELECT
     {
         $logger = \Piwigo\Core\CurrentLogger::get();
 
-        if (AccessControl::isAGuest() or ! new ApiKeyService(new MailService())->connectedWithPwgUi()) {
+        if (AccessControl::isAGuest() or ! new ApiKeyService(new MailService(), new ApiKeyRepository(DbConnection::build()), new PasswordService(new PasswordRepository(DbConnection::build())))->connectedWithPwgUi()) {
             return new PwgError(401, 'Acces Denied');
         }
 
@@ -1038,7 +1040,7 @@ SELECT
 
         $user_id = \Piwigo\Users\CurrentUser::get()->id;
 
-        $secret = new ApiKeyService(new MailService())
+        $secret = new ApiKeyService(new MailService(), new ApiKeyRepository(DbConnection::build()), new PasswordService(new PasswordRepository(DbConnection::build())))
             ->create($user_id, $duration, $key_name);
 
         $logger->info('[api_key][user_id=' . $user_id . '][action=create][key_name=' . $params['key_name'] . ']');
@@ -1058,7 +1060,7 @@ SELECT
     {
         $logger = \Piwigo\Core\CurrentLogger::get();
 
-        if (AccessControl::isAGuest() or ! new ApiKeyService(new MailService())->connectedWithPwgUi()) {
+        if (AccessControl::isAGuest() or ! new ApiKeyService(new MailService(), new ApiKeyRepository(DbConnection::build()), new PasswordService(new PasswordRepository(DbConnection::build())))->connectedWithPwgUi()) {
             return new PwgError(401, 'Acces Denied');
         }
 
@@ -1072,7 +1074,7 @@ SELECT
 
         $user_id = \Piwigo\Users\CurrentUser::get()->id;
 
-        $revoked_key = new ApiKeyService(new MailService())
+        $revoked_key = new ApiKeyService(new MailService(), new ApiKeyRepository(DbConnection::build()), new PasswordService(new PasswordRepository(DbConnection::build())))
             ->revoke($user_id, $params['pkid']);
 
         if ($revoked_key !== true) {
@@ -1101,7 +1103,7 @@ SELECT
             return new PwgError(401, 'Acces Denied');
         }
 
-        if (! new ApiKeyService(new MailService())->connectedWithPwgUi()) {
+        if (! new ApiKeyService(new MailService(), new ApiKeyRepository(DbConnection::build()), new PasswordService(new PasswordRepository(DbConnection::build())))->connectedWithPwgUi()) {
             return new PwgError(401, 'Acces Denied');
         }
 
@@ -1115,7 +1117,7 @@ SELECT
 
         $key_name = \Piwigo\Db\MysqliDb::realEscapeString($params['key_name']);
         $user_id = \Piwigo\Users\CurrentUser::get()->id;
-        $edited_key = new ApiKeyService(new MailService())
+        $edited_key = new ApiKeyService(new MailService(), new ApiKeyRepository(DbConnection::build()), new PasswordService(new PasswordRepository(DbConnection::build())))
             ->edit($user_id, $params['pkid'], $key_name);
 
         if ($edited_key !== true) {
@@ -1142,7 +1144,7 @@ SELECT
             return new PwgError(401, 'Acces Denied');
         }
 
-        if (! new ApiKeyService(new MailService())->connectedWithPwgUi()) {
+        if (! new ApiKeyService(new MailService(), new ApiKeyRepository(DbConnection::build()), new PasswordService(new PasswordRepository(DbConnection::build())))->connectedWithPwgUi()) {
             return new PwgError(401, 'Acces Denied');
         }
 
@@ -1158,7 +1160,7 @@ SELECT
         // the bug). Every other ApiKeyService method here (create/revoke/
         // edit) already passes a plain int for the same user id value.
         $user_id = \Piwigo\Users\CurrentUser::get()->id;
-        $api_keys = new ApiKeyService(new MailService())
+        $api_keys = new ApiKeyService(new MailService(), new ApiKeyRepository(DbConnection::build()), new PasswordService(new PasswordRepository(DbConnection::build())))
             ->get($user_id);
 
         return ((bool) $api_keys) ? $api_keys : l10n('No API key found');

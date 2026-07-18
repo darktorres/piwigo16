@@ -106,7 +106,7 @@ final class PasswordController implements ControllerInterface
                 $userdata_username = $userdata['username'] ?? null;
                 $this->username = is_string($userdata_username) ? $userdata_username : '';
                 $template->assign('key', $_GET['key']);
-                $first_login = new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->hasAlreadyLoggedIn((int) $user_id);
+                $first_login = new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())), new \Piwigo\Auth\CookieService())->hasAlreadyLoggedIn((int) $user_id);
 
                 if ($this->action === null) {
                     $this->action = 'reset';
@@ -555,7 +555,7 @@ SELECT
 
             $reset_user_id = $reset_session['user_id'] ?? null;
             $reset_user_id_str = is_numeric($reset_user_id) ? (string) $reset_user_id : '';
-            $api_keys = new \Piwigo\Auth\ApiKeyService(new \Piwigo\Mail\MailService())
+            $api_keys = new \Piwigo\Auth\ApiKeyService(new \Piwigo\Mail\MailService(), new \Piwigo\Auth\ApiKeyRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())))
                 ->getAvailable($reset_user_id_str);
             $nb_of_apikeys = (bool) $api_keys ? count($api_keys) : 0;
 
@@ -595,8 +595,8 @@ SELECT
             return false;
         }
 
-        new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->deactivatePasswordResetKey((int) $user_id);
-        new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->deactivateUserAuthKeys((int) $user_id);
+        new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())), new \Piwigo\Auth\CookieService())->deactivatePasswordResetKey((int) $user_id);
+        new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())), new \Piwigo\Auth\CookieService())->deactivateUserAuthKeys((int) $user_id);
         return $user_id;
     }
 

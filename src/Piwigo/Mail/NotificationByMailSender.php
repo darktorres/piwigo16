@@ -547,7 +547,7 @@ final class NotificationByMailSender
                             // non-null numeric DB value.
                             $nbmUserIdRaw = $nbmUser['user_id'];
                             assert(is_string($nbmUserIdRaw) && is_numeric($nbmUserIdRaw));
-                            $authKey = new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->createUserAuthKey((int) $nbmUserIdRaw, $nbmUser['status']);
+                            $authKey = new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())), new \Piwigo\Auth\CookieService())->createUserAuthKey((int) $nbmUserIdRaw, $nbmUser['status']);
 
                             if ($authKey !== false and is_string($authKey['auth_key'])) {
                                 $auth = $authKey['auth_key'];

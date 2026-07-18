@@ -564,7 +564,7 @@ INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
             // the return, so narrow to what log_user() actually accepts.
             $login_user_id = $user['id'];
             $login_user_id = is_int($login_user_id) || (is_string($login_user_id) && is_numeric($login_user_id)) ? $login_user_id : false;
-            new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->logUser($login_user_id, false);
+            new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())), new \Piwigo\Auth\CookieService())->logUser($login_user_id, false);
             $_SESSION['connected_with'] = 'pwg_ui';
 
             // Same reason: narrow 'preferences' to array without discarding

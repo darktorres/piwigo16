@@ -393,12 +393,12 @@ DELETE FROM ' . Tables::rate() . '
 
         if ((bool) preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $params['username'])) {
             $secret = \Piwigo\Db\MysqliDb::realEscapeString($params['password']);
-            $authenticate = new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->authKeyLogin($params['username'] . ':' . $secret);
+            $authenticate = new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())), new \Piwigo\Auth\CookieService())->authKeyLogin($params['username'] . ':' . $secret);
             if ($authenticate) {
                 $_SESSION['connected_with'] = 'ws_session_login_api_key';
                 return true;
             }
-        } elseif (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->tryLogUser($params['username'], $params['password'], false)) {
+        } elseif (new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())), new \Piwigo\Auth\CookieService())->tryLogUser($params['username'], $params['password'], false)) {
             $_SESSION['connected_with'] = 'ws_session_login';
             return true;
         }
@@ -417,7 +417,7 @@ DELETE FROM ' . Tables::rate() . '
         }
 
         if (! \Piwigo\Auth\AccessControl::isAGuest()) {
-            new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService())->logoutUser();
+            new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(\Piwigo\Db\DbConnection::build())), new HtmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())), new \Piwigo\Auth\CookieService())->logoutUser();
         }
         return true;
     }

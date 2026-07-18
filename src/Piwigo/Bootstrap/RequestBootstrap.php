@@ -10,7 +10,10 @@ use Piwigo\Admin\PluginLoader;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Auth\AuthRepository;
 use Piwigo\Auth\AuthService;
+use Piwigo\Auth\CookieService;
 use Piwigo\Auth\EphemeralKeyService;
+use Piwigo\Auth\PasswordRepository;
+use Piwigo\Auth\PasswordService;
 use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
@@ -448,7 +451,7 @@ final class RequestBootstrap
             $notify_username = is_string($notify_username) ? $notify_username : '';
             $notify_email = $user['email'];
             $notify_email = is_string($notify_email) ? $notify_email : '';
-            $is_mail_send = new \Piwigo\Auth\ApiKeyService(new MailService())
+            $is_mail_send = new \Piwigo\Auth\ApiKeyService(new MailService(), new \Piwigo\Auth\ApiKeyRepository(\Piwigo\Db\DbConnection::build()), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())))
                 ->notifyExpiration($notify_username, $notify_email, $notify_api_key_expiration['days_left']);
 
             if ($is_mail_send) {
@@ -590,7 +593,13 @@ final class RequestBootstrap
         // including the old file, so this registration has to live somewhere that
         // always executes. pwgLogin() is a bound instance method, same
         // first-class-callable shape as checkForSpam() above.
-        add_event_handler('try_log_user', new AuthService(new AuthRepository(DbConnection::build()), new ActivityService(new ActivityRepository(DbConnection::build())), new HtmlService())->pwgLogin(...));
+        add_event_handler('try_log_user', new AuthService(
+            new AuthRepository(DbConnection::build()),
+            new ActivityService(new ActivityRepository(DbConnection::build())),
+            new HtmlService(),
+            new PasswordService(new PasswordRepository(DbConnection::build())),
+            new CookieService(),
+        )->pwgLogin(...));
         // Relocated from admin/include/functions_upload.inc.php (deleted in P23
         // sub-batch 8b-3) -- must stay after PluginLoader::loadPlugins() (in
         // connect() above) so a plugin's own 'upload_file' handler (if any)

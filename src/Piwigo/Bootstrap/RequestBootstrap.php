@@ -84,7 +84,6 @@ final class RequestBootstrap
     {
         /** @var array<string, mixed> $conf */
         global $conf;
-        global $prefixeTable;
         /**
          * @var float
          */
@@ -115,8 +114,15 @@ final class RequestBootstrap
         }
 
         Env::loadEnvFile(PHPWG_ROOT_PATH);
-        $prefixeTable = '';
-        Env::applyEnvToConf($conf, $prefixeTable);
+        // Env::applyEnvToConf(array &$conf, string &$prefixeTable)'s
+        // second by-ref param is dead here (Legacy Coupling Retirement
+        // Track A gap-fill batch G5: every real $prefixeTable read was
+        // already the same value as Piwigo\Config\Config::dbPrefix(),
+        // synced independently a few lines below via
+        // ConfigLoader::applyEnvOverrides(), so consumers were retargeted
+        // there directly) -- kept only to satisfy the by-ref signature.
+        $prefixeTable_unused = '';
+        Env::applyEnvToConf($conf, $prefixeTable_unused);
 
         // P23 batch 8f-3: wires the static-setter HtmlRenderingInterface
         // consumers (Piwigo\Core class-level fatal-error/access-denied paths

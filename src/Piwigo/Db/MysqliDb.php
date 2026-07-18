@@ -673,15 +673,10 @@ INSERT ' . $ignore . ' INTO ' . self::protectColumnName($table_name) . '
      */
     public static function doMaintenanceAllTables(): void
     {
-        /**
-         * @var string
-         */
-        global $prefixeTable;
-
         $all_tables = [];
 
         // List all tables
-        $query = 'SHOW TABLES LIKE \'' . $prefixeTable . '%\'';
+        $query = 'SHOW TABLES LIKE \'' . \Piwigo\Config\Config::dbPrefix() . '%\'';
         $result = self::query($query);
         while ((bool) ($row = self::fetchRow($result))) {
             $all_tables[] = $row[0];

@@ -20,22 +20,16 @@ use Exception;
  * check_upgrade_feed gate, the SEC-60-constrained define()s including the
  * former prepare_conf_upgrade() block) and then calls run().
  *
- * The frozen install/db/*-database.php scripts included by run() execute
- * inside this method's scope: the global declarations below are what keep
- * their bare top-level $conf/$prefixeTable references (e.g.
- * 125-database.php's `$conf_orig = $conf; ... $conf = $conf_orig;` swap)
- * pointing at the true globals, exactly as when this code ran at
- * upgrade_feed.php's own top level.
+ * The frozen install/db/*-database.php scripts this class used to include
+ * are gone (P23 sub-batch 8g-6 replaced them with real DbPatch classes),
+ * so run() itself only reads the PREFIX_TABLE constant the entry shell
+ * already define()'d -- no $conf/$prefixeTable global needed here anymore
+ * (Legacy Coupling Retirement Track A gap-fill batch G5).
  */
 class UpgradeFeedRunner
 {
     public function run(): void
     {
-        /**
-         * @var string
-         */
-        global $prefixeTable;
-
         // +-------------------------------------------------------------------+
         // |                         Database connection                        |
         // +-------------------------------------------------------------------+

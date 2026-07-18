@@ -44,17 +44,19 @@ use Piwigo\Session\SessionUserResolver;
  * deleted, not replaced: not firing plugin hooks here is achieved by not
  * registering any, which is the fast-bootstrap design itself.
  *
- * Globals: $prefixeTable deliberately stays a real global (declared in
- * every method that touches it) -- MysqliDb::query() maintains PageState's
- * request-wide query counters. $logger and $conf are not globals any more
- * (Legacy Coupling Retirement Track A gap-fill batches G2/G5): pwg_image
- * and ImageStdParams read Piwigo\Config\Config:: accessors instead of a
- * raw $conf, and this controller's own Logger instance is published via
- * Piwigo\Core\CurrentLogger::set() right after construction -- the same
+ * No globals left: $conf, $logger and $prefixeTable used to be (Legacy
+ * Coupling Retirement Track A gap-fill batches G2/G5) -- pwg_image and
+ * ImageStdParams read Piwigo\Config\Config:: accessors instead of a raw
+ * $conf; this controller's own Logger instance is published via
+ * Piwigo\Core\CurrentLogger::set() right after construction, the same
  * static accessor image_ext_imagick.php and every other shared consumer
- * read from now. The throwaway $conf_unused local below only exists to
- * satisfy Env::applyEnvToConf()'s by-ref array parameter, which is how it
- * fills $prefixeTable by reference. The
+ * read from now; and every real $prefixeTable read here was already the
+ * same value as Piwigo\Config\Config::dbPrefix() (both trace back to the
+ * same PIWIGO_DB_PREFIX env var / 'piwigo_' default), so reads were
+ * retargeted there directly -- MysqliDb::query() still maintains
+ * PageState's request-wide query counters, unrelated to any of these. The
+ * throwaway $conf_unused/$prefixeTable_unused locals below only exist to
+ * satisfy Env::applyEnvToConf()'s by-ref parameters. The
  * rootPath/derivativePath/derivativeExt/derivativeType/coi/srcLocation/
  * srcPath/srcUrl/originalSize/rotationAngle/derivativeParams
  * scratch state below is this controller's own -- never read outside it
@@ -89,11 +91,6 @@ final class ImageDerivativeController
 
     public function serve(): void
     {
-        /**
-         * @var string
-         */
-        global $prefixeTable;
-
         // \Piwigo\Config\Config::dataLocation() needs narrowing here specifically (used
         // before Env::applyEnvToConf() below widens $conf_unused's per-key
         // type info again -- see the comment near the Logger construction).
@@ -103,15 +100,16 @@ final class ImageDerivativeController
         }
 
         Env::loadEnvFile(PHPWG_ROOT_PATH);
-        $prefixeTable = '';
-        // Env::applyEnvToConf(array &$conf, ...)'s first param is dead here
-        // (Legacy Coupling Retirement Track A gap-fill batch G2: this
-        // controller's own $conf reads are retargeted onto
-        // Piwigo\Config\Config, synced independently a few lines below via
-        // ConfigLoader::applyEnvOverrides()) -- only $prefixeTable, filled
-        // by reference, is real.
+        // Env::applyEnvToConf(array &$conf, string &$prefixeTable)'s two
+        // by-ref params are both dead here now (Legacy Coupling Retirement
+        // Track A gap-fill batch G2/G5: this controller's own $conf/
+        // $prefixeTable reads are retargeted onto Piwigo\Config\Config,
+        // synced independently a few lines below via
+        // ConfigLoader::applyEnvOverrides()) -- kept only to satisfy the
+        // by-ref signature.
         $conf_unused = [];
-        Env::applyEnvToConf($conf_unused, $prefixeTable);
+        $prefixeTable_unused = '';
+        Env::applyEnvToConf($conf_unused, $prefixeTable_unused);
 
         // [SEC-33] populates Piwigo\Config\Config, needed below for
         // DbConnection::build() (the SessionRepository lookup backing
@@ -182,7 +180,7 @@ final class ImageDerivativeController
 
         $query = '
 SELECT param, value
-  FROM ' . $prefixeTable . 'config
+  FROM ' . \Piwigo\Config\Config::dbPrefix() . 'config
   WHERE param IN (\'derivatives\', \'disabled_derivatives\')
 ;';
 
@@ -227,7 +225,7 @@ SELECT param, value
             try {
                 $query = '
 SELECT *
-  FROM ' . $prefixeTable . 'images
+  FROM ' . \Piwigo\Config\Config::dbPrefix() . 'images
   WHERE path=\'' . addslashes($this->srcLocation) . '\'
 ;';
 
@@ -256,7 +254,7 @@ SELECT *
                     $this->rotationAngle = pwg_image::get_rotation_angle($this->srcPath) ?? 0;
 
                     MysqliDb::singleUpdate(
-                        $prefixeTable . 'images',
+                        \Piwigo\Config\Config::dbPrefix() . 'images',
                         [
                             'rotation' => pwg_image::get_rotation_code_from_angle($this->rotationAngle),
                         ],
@@ -481,11 +479,6 @@ SELECT *
      */
     private function checkDerivativePermission(int $imageId): void
     {
-        /**
-         * @var string
-         */
-        global $prefixeTable;
-
         $guestId = \Piwigo\Config\Config::guestId();
         $userId = $guestId;
 
@@ -504,7 +497,7 @@ SELECT *
             }
         }
 
-        if (! new ImageVisibilityChecker($prefixeTable)->isVisibleToUser($imageId, $userId)) {
+        if (! new ImageVisibilityChecker(\Piwigo\Config\Config::dbPrefix())->isVisibleToUser($imageId, $userId)) {
             $this->ierror('Forbidden', 403);
         }
     }

@@ -29,12 +29,17 @@ use Piwigo\Template\Template;
  * PHPWG_IN_UPGRADE define] -> performUpgrade() or renderIntro() ->
  * finish().
  *
- * Every method declares the globals the former top-level scope shared with
- * the code it runs: the frozen install/upgrade_X.Y.Z.php scripts included
- * by performUpgrade() execute in that method's variable scope, so their
- * bare $conf/$prefixeTable/$last_time references only keep resolving to the
- * true globals because of those declarations (the recurring
- * "method-scoped include breaks bare global bootstrap vars" bug class).
+ * Every method declares the globals the code it calls still needs:
+ * $template because updates/mail-era template helpers historically resolve
+ * the shared instance through the global, and (in performUpgrade())
+ * $persistent_cache because UserCacheInvalidator::invalidate() reads
+ * `global $persistent_cache`. The former install/upgrade_X.Y.Z.php and
+ * install/db/*.php scripts are no longer raw includes sharing this
+ * method's scope -- P23 sub-batch 8g ported them to real
+ * VersionUpgrade/DbPatch classes, each with its own independent
+ * `global $conf, $prefixeTable;` declarations, so this method no longer
+ * needs to declare those two itself (Legacy Coupling Retirement Track A
+ * gap-fill batch G3).
  */
 class UpgradeRunner
 {
@@ -258,34 +263,22 @@ SELECT id
      * i.e. checkUpgradeAccessRights() authorized the requester and the
      * shell define()d PHPWG_IN_UPGRADE (the auth gate; never weakened).
      *
-     * The frozen install/upgrade_X.Y.Z.php script (and, transitively, the
-     * frozen install/db/*.php scripts it includes) executes inside this
-     * method's scope: the global declarations below are what keep its bare
-     * top-level $conf/$prefixeTable/$last_time references pointing at the
-     * true globals, exactly as when this code ran at upgrade.php's own
-     * top level. $persistent_cache must be a real global too --
-     * UserCacheInvalidator::invalidate() reads `global $persistent_cache`.
+     * The VersionUpgrade/DbPatch class chain applied below (P23 sub-batch
+     * 8g) each declares its own `global $conf, $prefixeTable;` where
+     * needed, so this method itself only needs $template (assigned into
+     * further down) and $persistent_cache -- UserCacheInvalidator::
+     * invalidate() reads `global $persistent_cache`.
      */
     public function performUpgrade(): void
     {
-        /**
-         * @var array<string, mixed>
-         */
-        global $conf;
-        /**
-         * @var string
-         */
-        global $prefixeTable;
         global $template;
         global $persistent_cache;
-        global $last_time;
 
         if (\Piwigo\Admin\Install\VersionUpgrade\VersionUpgradeRegistry::has($this->currentRelease)) {
             // reset SQL counters
             \Piwigo\Core\PageState::current()->resetQueryCounters();
 
             $upgrade_start = \Piwigo\Core\TimingHelper::getMoment();
-            $conf['die_on_sql_error'] = false;
             \Piwigo\Config\Config::override('die_on_sql_error', false);
             // P23 sub-batch 8g-4: the former `include install/upgrade_
             // <release>.php` (whose chain of scripts array_push()ed onto a

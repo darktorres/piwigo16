@@ -58,10 +58,10 @@ final class NotificationController implements ControllerInterface
 
             $title = l10n('Notification');
             $page['body_id'] = 'theNotificationPage';
-            $page['meta_robots'] = [
+            \Piwigo\Core\PageState::current()->setMetaRobots([
                 'noindex' => 1,
                 'nofollow' => 1,
-            ];
+            ]);
 
             $template->set_filenames([
                 'notification' => 'notification.tpl',

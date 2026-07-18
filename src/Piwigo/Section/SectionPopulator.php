@@ -738,22 +738,7 @@ SELECT DISTINCT(id)
 
         // add meta robots noindex, nofollow to avoid unnecesary robot crawls
         $filter_enabled = (bool) ($filter['enabled'] ?? false);
-        $page['meta_robots'] = self::computeMetaRobots($page, $filter_enabled);
-
-        // meta_robots is its own not-yet-retired cluster (Legacy Coupling
-        // Retirement Track A batch A5.2g, 7 files: PageHeaderRenderer,
-        // GalleryController, PictureController, PopuphelpController,
-        // AdminPopuphelpController, NotificationController, and this file)
-        // -- out of the B1 gallery-navigation-context cluster's own scope,
-        // so SectionContext doesn't carry it. GalleryController/
-        // PictureController still read it via their own `global $page;`,
-        // so the value computed above is also published onto the real
-        // global here until batch A5.2g's own retarget replaces this
-        // bridge.
-        if (! is_array($GLOBALS['page'] ?? null)) {
-            $GLOBALS['page'] = [];
-        }
-        $GLOBALS['page']['meta_robots'] = $page['meta_robots'];
+        \Piwigo\Core\PageState::current()->setMetaRobots(self::computeMetaRobots($page, $filter_enabled));
 
         // see if we need a redirect because of a permalink
         if ($section === 'categories' and $page_category !== null and ! isset($page['combined_categories'])) {

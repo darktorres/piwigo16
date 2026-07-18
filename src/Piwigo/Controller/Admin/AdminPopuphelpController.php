@@ -58,10 +58,10 @@ final class AdminPopuphelpController implements ControllerInterface
                 $page['body_id'] = 'thePopuphelpPage';
                 $title = l10n('Piwigo Help');
                 $page['page_banner'] = '<h1>' . $title . '</h1>';
-                $page['meta_robots'] = [
+                \Piwigo\Core\PageState::current()->setMetaRobots([
                     'noindex' => 1,
                     'nofollow' => 1,
-                ];
+                ]);
 
                 // set required template variables to avoid "Undefined array key" with PHP 8
                 $template->assign(

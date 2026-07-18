@@ -676,10 +676,10 @@ SELECT *
 
             if (isset($_GET['slideshow'])) {
                 $slideshow = true;
-                $page['meta_robots'] = [
+                \Piwigo\Core\PageState::current()->setMetaRobots([
                     'noindex' => 1,
                     'nofollow' => 1,
-                ];
+                ]);
 
                 $get_slideshow = $_GET['slideshow'];
                 $slideshow_params = new ImageService(new ImageRepository(DbConnection::build()), new \Piwigo\Activity\ActivityService(new \Piwigo\Activity\ActivityRepository(DbConnection::build())))
@@ -745,10 +745,10 @@ SELECT *
             );
 
             if (isset($_GET['metadata'])) {
-                $page['meta_robots'] = [
+                \Piwigo\Core\PageState::current()->setMetaRobots([
                     'noindex' => 1,
                     'nofollow' => 1,
-                ];
+                ]);
             }
 
             $page['body_id'] = 'thePicturePage';

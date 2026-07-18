@@ -91,27 +91,21 @@ final class PageHeaderRenderer
             $template->assign('header_notes', $header_notes);
         }
 
-        // No referencing is required
-        // (real invariant: $page['meta_robots'], when set, is always a name=>1 map --
-        // see notification.php, popuphelp.php, picture.php, index.php,
-        // admin/popuphelp.php, include/section_init.inc.php)
-        if (! isset($page['meta_robots']) || ! is_array($page['meta_robots'])) {
-            $page['meta_robots'] = [];
-        }
+        $pageState = \Piwigo\Core\PageState::current();
         if (! \Piwigo\Config\Config::metaRef()) {
-            $page['meta_robots']['noindex'] = 1;
-            $page['meta_robots']['nofollow'] = 1;
+            $pageState->setMetaRobotsFlag('noindex');
+            $pageState->setMetaRobotsFlag('nofollow');
         }
 
-        if (! self::emptyValue($page['meta_robots'])) {
+        if (! self::emptyValue($pageState->metaRobots)) {
             $template->append(
                 'head_elements',
                 '<meta name="robots" content="'
-                  . implode(',', array_keys($page['meta_robots']))
+                  . implode(',', array_keys($pageState->metaRobots))
                   . '">'
             );
         }
-        if (! isset($page['meta_robots']['noindex'])) {
+        if (! isset($pageState->metaRobots['noindex'])) {
             $template->assign('meta_ref', 1);
         }
 

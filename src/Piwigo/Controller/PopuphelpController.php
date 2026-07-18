@@ -53,10 +53,10 @@ final class PopuphelpController implements ControllerInterface
             $page['body_id'] = 'thePopuphelpPage';
             $title = l10n('Piwigo Help');
             $page['page_banner'] = '';
-            $page['meta_robots'] = [
+            \Piwigo\Core\PageState::current()->setMetaRobots([
                 'noindex' => 1,
                 'nofollow' => 1,
-            ];
+            ]);
             new \Piwigo\Page\PageHeaderRenderer()
                 ->render($title);
 

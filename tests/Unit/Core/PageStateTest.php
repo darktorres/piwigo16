@@ -43,11 +43,24 @@ test('add* methods accumulate into the singleton', function (): void {
         ->and($state->hasErrors())->toBeTrue();
 });
 
+test('setMetaRobots replaces the whole map, setMetaRobotsFlag adds to it', function (): void {
+    $state = PageState::current();
+    $state->setMetaRobots(['noindex' => 1]);
+    $state->setMetaRobotsFlag('nofollow');
+
+    expect($state->metaRobots)->toBe(['noindex' => 1, 'nofollow' => 1]);
+
+    $state->setMetaRobots(['noindex' => 1, 'nofollow' => 1]);
+
+    expect($state->metaRobots)->toBe(['noindex' => 1, 'nofollow' => 1]);
+});
+
 test('attachGlobals seeds from an already-populated $GLOBALS[page]', function (): void {
     $GLOBALS['page'] = [
         'errors' => ['pre-existing error'],
         'body_data' => ['section' => 'categories'],
         'execution_uuid' => 'abc123',
+        'meta_robots' => ['noindex' => 1],
     ];
     $GLOBALS['header_msgs'] = ['upgrade needed'];
 
@@ -57,6 +70,7 @@ test('attachGlobals seeds from an already-populated $GLOBALS[page]', function ()
     expect($state->errors)->toBe(['pre-existing error'])
         ->and($state->bodyData)->toBe(['section' => 'categories'])
         ->and($state->executionUuid)->toBe('abc123')
+        ->and($state->metaRobots)->toBe(['noindex' => 1])
         ->and($state->headerMessages)->toBe(['upgrade needed']);
 });
 
@@ -74,8 +88,10 @@ test('attachGlobals bridges the typed side so add* calls are visible on $GLOBALS
     $state = PageState::current();
 
     $state->addWarning('typed push');
+    $state->setMetaRobotsFlag('noindex');
 
-    expect($GLOBALS['page']['warnings'])->toBe(['typed push']);
+    expect($GLOBALS['page']['warnings'])->toBe(['typed push'])
+        ->and($GLOBALS['page']['meta_robots'])->toBe(['noindex' => 1]);
 });
 
 test('attachGlobals bridges $GLOBALS[header_msgs] and $GLOBALS[header_notes] independently of $page', function (): void {

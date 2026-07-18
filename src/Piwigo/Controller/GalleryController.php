@@ -103,11 +103,10 @@ final class GalleryController implements ControllerInterface
         }
 
         $body = LegacyRenderCapture::capture(static function () use ($page_items, $page_start, $page_nb_image_page, $section_context): void {
-            // meta_robots (not yet part of SectionContext, see batch
-            // A5.2g)/body_id (this controller's own write)/
-            // cat_slideshow_url (written by CategoryDefaultRenderer::
-            // render(), called later in this same closure) are the only
-            // real remaining reasons this closure still needs the global.
+            // body_id (this controller's own write)/cat_slideshow_url
+            // (written by CategoryDefaultRenderer::render(), called later
+            // in this same closure) are the only real remaining reasons
+            // this closure still needs the global.
             /**
              * @var array<string, mixed>
              */
@@ -136,10 +135,7 @@ final class GalleryController implements ControllerInterface
                 );
             }
             if (isset($_GET['display'])) {
-                if (! isset($page['meta_robots']) || ! is_array($page['meta_robots'])) {
-                    $page['meta_robots'] = [];
-                }
-                $page['meta_robots']['noindex'] = 1;
+                \Piwigo\Core\PageState::current()->setMetaRobotsFlag('noindex');
                 if (is_string($_GET['display']) && array_key_exists($_GET['display'], ImageStdParams::get_defined_type_map())) {
                     SessionService::get()->setSessionVar('index_deriv', $_GET['display']);
                 }

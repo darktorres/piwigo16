@@ -23,10 +23,10 @@ namespace Piwigo\Config;
  * that legacy escaping was only ever needed for raw SQL string
  * concatenation.
  */
-final class ConfigService
+final readonly class ConfigService
 {
     public function __construct(
-        private readonly ConfigRepository $repo,
+        private ConfigRepository $repo,
     ) {}
 
     /**

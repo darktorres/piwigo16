@@ -14,8 +14,8 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 function containerInvokerFakeContainer(mixed $value): ContainerInterface
 {
-    return new class ($value) implements ContainerInterface {
-        public function __construct(private readonly mixed $value)
+    return new readonly class ($value) implements ContainerInterface {
+        public function __construct(private mixed $value)
         {
         }
 
@@ -46,11 +46,11 @@ function containerInvokerNoopHandler(): RequestHandlerInterface
 
 test('invokes the resolved handler for a found route and passes route args', function (): void {
     $captured = new ArrayObject();
-    $controller = new class ($captured) implements ControllerInterface {
+    $controller = new readonly class ($captured) implements ControllerInterface {
         /**
          * @param ArrayObject<string, mixed> $captured
          */
-        public function __construct(private readonly ArrayObject $captured)
+        public function __construct(private ArrayObject $captured)
         {
         }
 

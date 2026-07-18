@@ -44,12 +44,12 @@ final class CurrentUser
 
     public static function isInitialized(): bool
     {
-        return self::$instance !== null;
+        return self::$instance instanceof \Piwigo\Users\User;
     }
 
     public static function get(): User
     {
-        if (self::$instance === null) {
+        if (! self::$instance instanceof \Piwigo\Users\User) {
             throw new \LogicException('CurrentUser not initialised -- call Kernel::boot() first.');
         }
 

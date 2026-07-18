@@ -23,7 +23,7 @@ test('config/commands.php entries resolve to registered command names', function
     foreach ($commandClasses as $commandClass) {
         expect(is_subclass_of($commandClass, Command::class))->toBeTrue();
 
-        $name = (new ReflectionClass($commandClass))->getAttributes()[0]->newInstance()->name;
+        $name = new ReflectionClass($commandClass)->getAttributes()[0]->newInstance()->name;
         expect($application->has($name))->toBeTrue();
     }
 });

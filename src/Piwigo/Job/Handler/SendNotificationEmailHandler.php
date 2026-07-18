@@ -13,10 +13,10 @@ use Piwigo\Mail\MailService;
  * Piwigo\Job\MessengerFactory wires this class to SendNotificationEmailJob
  * explicitly via config/messenger.php's handler map.
  */
-final class SendNotificationEmailHandler
+final readonly class SendNotificationEmailHandler
 {
     public function __construct(
-        private readonly MailService $mailService,
+        private MailService $mailService,
     ) {}
 
     public function __invoke(SendNotificationEmailJob $job): void

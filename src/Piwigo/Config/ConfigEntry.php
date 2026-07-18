@@ -24,20 +24,13 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Table(name: 'config')]
 final class ConfigEntry
 {
-    #[ORM\Id]
-    #[ORM\Column(type: 'string', length: 40)]
-    public string $param;
-
-    #[ORM\Column(type: 'text', nullable: true)]
-    public ?string $value = null;
-
-    #[ORM\Column(type: 'string', length: 255, nullable: true)]
-    public ?string $comment = null;
-
-    public function __construct(string $param, ?string $value = null, ?string $comment = null)
-    {
-        $this->param = $param;
-        $this->value = $value;
-        $this->comment = $comment;
-    }
+    public function __construct(
+        #[ORM\Id]
+        #[ORM\Column(type: 'string', length: 40)]
+        public string $param,
+        #[ORM\Column(type: 'text', nullable: true)]
+        public ?string $value = null,
+        #[ORM\Column(type: 'string', length: 255, nullable: true)]
+        public ?string $comment = null
+    ) {}
 }

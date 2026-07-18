@@ -67,9 +67,9 @@ final class MessengerFactory
     public static function transport(DbalConnection $connection): TransportInterface&MessageCountAwareInterface
     {
         $config = self::config();
-        $registry = new class($connection) implements ConnectionRegistry {
+        $registry = new readonly class($connection) implements ConnectionRegistry {
             public function __construct(
-                private readonly DbalConnection $connection,
+                private DbalConnection $connection,
             ) {}
 
             public function getDefaultConnectionName(): string
@@ -77,7 +77,7 @@ final class MessengerFactory
                 return 'default';
             }
 
-            public function getConnection(?string $name = null): object
+            public function getConnection(?string $name = null): \Doctrine\DBAL\Connection
             {
                 return $this->connection;
             }
@@ -150,12 +150,12 @@ final class MessengerFactory
      */
     private static function containerOf(array $factories): ContainerInterface
     {
-        return new class($factories) implements ContainerInterface {
+        return new readonly class($factories) implements ContainerInterface {
             /**
              * @param array<string, \Closure(): mixed> $factories
              */
             public function __construct(
-                private readonly array $factories,
+                private array $factories,
             ) {}
 
             public function get(string $id): mixed

@@ -28,12 +28,12 @@ use Psr\Cache\CacheItemPoolInterface;
  * `user_cache.need_update`-flagged (effectively immediate) invalidation,
  * accepted as part of P23's cache-table-rationalization design.
  */
-final class CategoryTreeCache
+final readonly class CategoryTreeCache
 {
     public function __construct(
-        private readonly CategoryService $service,
-        private readonly CategoryRepository $repo,
-        private readonly CacheItemPoolInterface $pool,
+        private CategoryService $service,
+        private CategoryRepository $repo,
+        private CacheItemPoolInterface $pool,
     ) {}
 
     /**

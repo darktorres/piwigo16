@@ -15,11 +15,11 @@ use Psr\Http\Server\RequestHandlerInterface;
  */
 function tracingMiddleware(string $label, ArrayObject $trace): MiddlewareInterface
 {
-    return new class ($label, $trace) implements MiddlewareInterface {
+    return new readonly class ($label, $trace) implements MiddlewareInterface {
         /**
          * @param ArrayObject<int, string> $trace
          */
-        public function __construct(private readonly string $label, private readonly ArrayObject $trace)
+        public function __construct(private string $label, private ArrayObject $trace)
         {
         }
 
@@ -40,11 +40,11 @@ function tracingMiddleware(string $label, ArrayObject $trace): MiddlewareInterfa
  */
 function terminalHandler(ArrayObject $trace): RequestHandlerInterface
 {
-    return new class ($trace) implements RequestHandlerInterface {
+    return new readonly class ($trace) implements RequestHandlerInterface {
         /**
          * @param ArrayObject<int, string> $trace
          */
-        public function __construct(private readonly ArrayObject $trace)
+        public function __construct(private ArrayObject $trace)
         {
         }
 

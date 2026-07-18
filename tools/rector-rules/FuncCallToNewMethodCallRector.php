@@ -27,7 +27,7 @@ final class FuncCallToNewMethodCallRector extends AbstractRector
     /**
      * @var array<string, array{0: string, 1: string}> old func name => [constructor expr PHP code, method name]
      */
-    private array $map;
+    private readonly array $map;
 
     /**
      * @var array<string, New_> old func name => parsed+cached constructor AST (cloned per use)
@@ -78,7 +78,8 @@ final class FuncCallToNewMethodCallRector extends AbstractRector
             return $this->parsedCtor[$oldFuncName];
         }
 
-        $parser = (new ParserFactory())->createForNewestSupportedVersion();
+        $parser = new ParserFactory()
+            ->createForNewestSupportedVersion();
         $stmts = $parser->parse('<?php ' . $ctorCode . ';');
         if ($stmts === null || ! isset($stmts[0]) || ! $stmts[0] instanceof Expression || ! $stmts[0]->expr instanceof New_) {
             throw new \RuntimeException('FuncCallToNewMethodCallRector: failed to parse constructor snippet for ' . $oldFuncName . ': ' . $ctorCode);

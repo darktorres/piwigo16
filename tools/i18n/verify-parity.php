@@ -18,7 +18,8 @@ use Gettext\Loader\PoLoader;
  */
 function read_po_keys(string $poFile): array
 {
-    $translations = (new PoLoader())->loadFile($poFile);
+    $translations = new PoLoader()
+        ->loadFile($poFile);
     $keys = [];
     foreach ($translations->getTranslations() as $t) {
         $orig = $t->getOriginal();
@@ -90,7 +91,7 @@ foreach (scandir($langDir) ?: [] as $locale) {
             return is_array($included['lang'] ?? null) ? $included['lang'] : [];
         })();
 
-        $stringKeys = array_filter($lang, 'is_string');
+        $stringKeys = array_filter($lang, is_string(...));
 
         // 'day'/'month' are array-valued (index => name) -- php-to-po-fn.php
         // flattens each index into its own piwigo_day_N/piwigo_month_N key

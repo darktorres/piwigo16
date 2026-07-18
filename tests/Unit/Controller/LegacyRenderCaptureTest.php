@@ -33,7 +33,7 @@ test('capture returns an empty string when nothing is echoed', function (): void
 test('capture does not leak an output buffer when the closure throws', function (): void {
     $levelBefore = ob_get_level();
 
-    expect(static fn () => LegacyRenderCapture::capture(static function (): void {
+    expect(static fn (): string => LegacyRenderCapture::capture(static function (): void {
         echo 'partial output';
         throw new RuntimeException('boom');
     }))->toThrow(RuntimeException::class, 'boom');

@@ -121,10 +121,6 @@ final class CookieService
      */
     public function getCookieVar(string $var, mixed $default = null): mixed
     {
-        if (isset($_COOKIE['pwg_' . $var])) {
-            return $_COOKIE['pwg_' . $var];
-        }
-
-        return $default;
+        return $_COOKIE['pwg_' . $var] ?? $default;
     }
 }

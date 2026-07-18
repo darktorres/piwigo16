@@ -10,10 +10,10 @@ use Piwigo\Job\GenerateDerivativeJob;
 /**
  * Not attribute-discovered -- see SendNotificationEmailHandler's docblock.
  */
-final class GenerateDerivativeHandler
+final readonly class GenerateDerivativeHandler
 {
     public function __construct(
-        private readonly DerivativeCacheService $derivativeCacheService,
+        private DerivativeCacheService $derivativeCacheService,
     ) {}
 
     public function __invoke(GenerateDerivativeJob $job): void

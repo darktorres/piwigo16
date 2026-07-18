@@ -28,11 +28,11 @@ use Symfony\Component\Process\Process;
  * (pcntl's handler calls exit() directly, bypassing the awaiting `finally`
  * entirely) -- the two paths are disjoint, not redundant.
  */
-final class BackupService
+final readonly class BackupService
 {
-    private readonly string $repoRoot;
+    private string $repoRoot;
 
-    private readonly string $backupsDir;
+    private string $backupsDir;
 
     public function __construct()
     {

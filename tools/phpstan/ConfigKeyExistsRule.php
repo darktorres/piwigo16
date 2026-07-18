@@ -38,9 +38,9 @@ use Piwigo\Config\Config;
  */
 final class ConfigKeyExistsRule implements Rule
 {
-    private const TARGET_CLASS = 'Piwigo\\Config\\Config';
+    private const string TARGET_CLASS = \Piwigo\Config\Config::class;
 
-    private const VALIDATED_METHODS = ['has', 'override', 'delete'];
+    private const array VALIDATED_METHODS = ['has', 'override', 'delete'];
 
     /**
      * Keys that are NOT in SCHEMA but ARE legitimately accessed via literal
@@ -59,7 +59,7 @@ final class ConfigKeyExistsRule implements Rule
      * use_standard_pages (all three are admin toggles with no SCHEMA entry
      * yet, pending the admin UI that would own them).
      */
-    private const ALLOWED_RUNTIME_KEYS = [
+    private const array ALLOWED_RUNTIME_KEYS = [
         'blk_menubar',
         'c13y_ignore',
         'updates_ignored',

@@ -49,10 +49,10 @@ test('an explicit apcu request succeeds if available, else fails loudly', functi
     if (ApcuAdapter::isSupported()) {
         expect(CacheFactory::create('apcu'))->toBeInstanceOf(ApcuAdapter::class);
     } else {
-        expect(static fn () => CacheFactory::create('apcu'))->toThrow(RuntimeException::class);
+        expect(static fn (): \Psr\Cache\CacheItemPoolInterface => CacheFactory::create('apcu'))->toThrow(RuntimeException::class);
     }
 });
 
 test('an unknown adapter name throws', function (): void {
-    expect(static fn () => CacheFactory::create('bogus'))->toThrow(InvalidArgumentException::class);
+    expect(static fn (): \Psr\Cache\CacheItemPoolInterface => CacheFactory::create('bogus'))->toThrow(InvalidArgumentException::class);
 });

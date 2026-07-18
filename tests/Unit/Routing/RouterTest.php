@@ -89,11 +89,11 @@ test('dispatch strips one extra SCRIPT_NAME directory level per MOUNT_DEPTH_ATTR
     $routes = new RouteCollection();
     $routes->add('admin_popuphelp', new Route('/admin/popuphelp.php', defaults: ['_controller' => 'AdminPopuphelpController']));
 
-    $request = (new ServerRequest(
+    $request = new ServerRequest(
         'GET',
         '/piwigo17/admin/popuphelp.php',
         serverParams: ['SCRIPT_NAME' => '/piwigo17/admin/popuphelp.php'],
-    ))->withAttribute(Router::MOUNT_DEPTH_ATTRIBUTE, 1);
+    )->withAttribute(Router::MOUNT_DEPTH_ATTRIBUTE, 1);
     $result = new Router($routes)->dispatch($request);
 
     expect($result->status)->toBe(RouteMatchStatus::Found);

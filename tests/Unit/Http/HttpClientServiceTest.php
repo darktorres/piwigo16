@@ -23,7 +23,7 @@ test('sendRequest rejects a non-https scheme before contacting the transport', f
     });
     $service = new HttpClientService($client);
 
-    expect(fn () => $service->sendRequest(makeHttpRequest('GET', 'http://example.test/')))
+    expect(fn (): \Psr\Http\Message\ResponseInterface => $service->sendRequest(makeHttpRequest('GET', 'http://example.test/')))
         ->toThrow(HttpClientSsrfException::class);
     expect($calls)->toBe(0);
 });
@@ -31,28 +31,28 @@ test('sendRequest rejects a non-https scheme before contacting the transport', f
 test('sendRequest rejects a malformed URL', function (): void {
     $service = new HttpClientService(new MockHttpClient());
 
-    expect(fn () => $service->sendRequest(makeHttpRequest('GET', 'not-a-url')))
+    expect(fn (): \Psr\Http\Message\ResponseInterface => $service->sendRequest(makeHttpRequest('GET', 'not-a-url')))
         ->toThrow(HttpClientSsrfException::class);
 });
 
 test('sendRequest rejects a loopback IP host', function (): void {
     $service = new HttpClientService(new MockHttpClient());
 
-    expect(fn () => $service->sendRequest(makeHttpRequest('GET', 'https://127.0.0.1/')))
+    expect(fn (): \Psr\Http\Message\ResponseInterface => $service->sendRequest(makeHttpRequest('GET', 'https://127.0.0.1/')))
         ->toThrow(HttpClientSsrfException::class);
 });
 
 test('sendRequest rejects the link-local cloud metadata IP', function (): void {
     $service = new HttpClientService(new MockHttpClient());
 
-    expect(fn () => $service->sendRequest(makeHttpRequest('GET', 'https://169.254.169.254/latest/meta-data/')))
+    expect(fn (): \Psr\Http\Message\ResponseInterface => $service->sendRequest(makeHttpRequest('GET', 'https://169.254.169.254/latest/meta-data/')))
         ->toThrow(HttpClientSsrfException::class);
 });
 
 test('sendRequest rejects a private RFC1918 IP host', function (): void {
     $service = new HttpClientService(new MockHttpClient());
 
-    expect(fn () => $service->sendRequest(makeHttpRequest('GET', 'https://10.0.0.5/')))
+    expect(fn (): \Psr\Http\Message\ResponseInterface => $service->sendRequest(makeHttpRequest('GET', 'https://10.0.0.5/')))
         ->toThrow(HttpClientSsrfException::class);
 });
 
@@ -73,7 +73,7 @@ test('sendRequest throws when a redirect target is a private IP', function (): v
     ]));
     $service = new HttpClientService($client);
 
-    expect(fn () => $service->sendRequest(makeHttpRequest('GET', 'https://93.184.216.34/start')))
+    expect(fn (): \Psr\Http\Message\ResponseInterface => $service->sendRequest(makeHttpRequest('GET', 'https://93.184.216.34/start')))
         ->toThrow(HttpClientSsrfException::class);
 });
 
@@ -153,7 +153,7 @@ test('sendRequest wraps a transport failure as HttpClientNetworkException', func
     $client = new MockHttpClient(new MockResponse('', ['error' => 'Connection refused']));
     $service = new HttpClientService($client);
 
-    expect(fn () => $service->sendRequest(makeHttpRequest('GET', 'https://93.184.216.34/down')))
+    expect(fn (): \Psr\Http\Message\ResponseInterface => $service->sendRequest(makeHttpRequest('GET', 'https://93.184.216.34/down')))
         ->toThrow(HttpClientNetworkException::class);
 });
 
@@ -171,7 +171,7 @@ test('requestRaw returns Symfony\'s own response type and applies the same SSRF 
 test('requestRaw rejects a private IP host', function (): void {
     $service = new HttpClientService(new MockHttpClient());
 
-    expect(fn () => $service->requestRaw('GET', 'https://192.168.1.1/', [], ''))
+    expect(fn (): \Symfony\Contracts\HttpClient\ResponseInterface => $service->requestRaw('GET', 'https://192.168.1.1/', [], ''))
         ->toThrow(HttpClientSsrfException::class);
 });
 
@@ -211,6 +211,6 @@ test('requestRaw honors a trustedSelfHost that includes a non-standard port', fu
 test('requestRaw still guards a different host even when a trustedSelfHost is set', function (): void {
     $service = new HttpClientService(new MockHttpClient(), trustedSelfHost: 'localhost');
 
-    expect(fn () => $service->requestRaw('GET', 'http://127.0.0.1/', [], ''))
+    expect(fn (): \Symfony\Contracts\HttpClient\ResponseInterface => $service->requestRaw('GET', 'http://127.0.0.1/', [], ''))
         ->toThrow(HttpClientSsrfException::class);
 });

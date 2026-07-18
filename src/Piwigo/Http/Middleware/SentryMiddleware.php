@@ -24,7 +24,7 @@ final class SentryMiddleware implements MiddlewareInterface
     #[\Override]
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        if (SentrySdk::getCurrentHub()->getClient() === null) {
+        if (! SentrySdk::getCurrentHub()->getClient() instanceof \Sentry\ClientInterface) {
             return $handler->handle($request);
         }
 

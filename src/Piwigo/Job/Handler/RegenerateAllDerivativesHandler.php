@@ -10,10 +10,10 @@ use Piwigo\Job\RegenerateAllDerivativesJob;
 /**
  * Not attribute-discovered -- see SendNotificationEmailHandler's docblock.
  */
-final class RegenerateAllDerivativesHandler
+final readonly class RegenerateAllDerivativesHandler
 {
     public function __construct(
-        private readonly DerivativeCacheService $derivativeCacheService,
+        private DerivativeCacheService $derivativeCacheService,
     ) {}
 
     public function __invoke(RegenerateAllDerivativesJob $job): void

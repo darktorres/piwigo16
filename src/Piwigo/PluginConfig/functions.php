@@ -36,11 +36,12 @@ use Piwigo\PluginConfig\EventDispatcher;
  */
 if (! function_exists('add_event_handler')) {
     function add_event_handler(
-        $event,
-        $func,
-        $priority = 50,
+        string $event,
+        string|array|object $func,
+        int $priority = 50,
         $include_path = null
     ): bool {
+        /** @var array<int, mixed>|object|string $func */
         return EventDispatcher::get()->addEventHandler(
             $event,
             $func,
@@ -63,7 +64,7 @@ if (! function_exists('add_event_handler')) {
  * @return mixed
  */
 if (! function_exists('trigger_change')) {
-    function trigger_change($event, $data = null)
+    function trigger_change(string $event, $data = null): mixed
     {
         $args = func_get_args();
         array_shift($args);
@@ -83,7 +84,7 @@ if (! function_exists('trigger_change')) {
  * @param mixed ...$args extra event data, forwarded to registered handlers
  */
 if (! function_exists('trigger_notify')) {
-    function trigger_notify($event, ...$args): void
+    function trigger_notify(string $event, ...$args): void
     {
         EventDispatcher::get()->triggerNotify($event, ...$args);
     }

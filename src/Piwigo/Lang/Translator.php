@@ -34,7 +34,7 @@ final class Translator
 {
     private static ?self $instance = null;
 
-    private GettextTranslator $inner;
+    private readonly GettextTranslator $inner;
 
     public function __construct()
     {
@@ -71,7 +71,8 @@ final class Translator
             return null;
         }
 
-        $translations = (new PoLoader())->loadFile($poFile);
+        $translations = new PoLoader()
+            ->loadFile($poFile);
 
         $this->inner->addTranslations($this->toDictionaryEntry($translations));
 

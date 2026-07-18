@@ -10,10 +10,10 @@ use Piwigo\Metadata\MetadataService;
 /**
  * Not attribute-discovered -- see SendNotificationEmailHandler's docblock.
  */
-final class ReindexImagesHandler
+final readonly class ReindexImagesHandler
 {
     public function __construct(
-        private readonly MetadataService $metadataService,
+        private MetadataService $metadataService,
     ) {}
 
     public function __invoke(ReindexImagesJob $job): void

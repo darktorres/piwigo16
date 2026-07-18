@@ -45,10 +45,10 @@ use Symfony\Component\Process\Process;
  * BackupService (P12) already uses -- schema-only, no data
  * (`--no-data` / `--schema-only`).
  */
-final class SchemaDumpService
+final readonly class SchemaDumpService
 {
     public function __construct(
-        private readonly Connection $connection,
+        private Connection $connection,
     ) {}
 
     /**

@@ -16,10 +16,10 @@ use Piwigo\Permission\PermissionService;
  * `$template`-coupled and stays in the free-function delegate, same split
  * as every other P19 domain.
  */
-final class CalendarService
+final readonly class CalendarService
 {
     public function __construct(
-        private readonly PermissionService $permissionService,
+        private PermissionService $permissionService,
     ) {}
 
     /**

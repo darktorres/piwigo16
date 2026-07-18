@@ -42,7 +42,7 @@ final class ShutdownHandler
         self::$installed = true;
 
         pcntl_async_signals(true);
-        pcntl_signal(SIGTERM, static function (): void {
+        pcntl_signal(SIGTERM, static function (): never {
             self::runAll();
             exit(143); // 128 + SIGTERM(15), conventional signal-termination exit code
         });
